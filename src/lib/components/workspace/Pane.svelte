@@ -41,6 +41,12 @@
   let active = $derived(
     props.group?.activeTabId ? props.tabs[props.group.activeTabId] : undefined,
   );
+
+  function customSplit(direction: 'horizontal' | 'vertical'): void {
+    const count = Number(window.prompt('Split count', '4'));
+    if (Number.isInteger(count))
+      props.splitInto(props.pane.id, direction, count);
+  }
 </script>
 
 <section class="pane" aria-label="Workspace pane">
@@ -73,6 +79,12 @@
         type="button"
         onclick={() => props.splitInto(props.pane.id, 'vertical', 5)}
         >5 rows</button
+      >
+      <button type="button" onclick={() => customSplit('horizontal')}
+        >Custom columns</button
+      >
+      <button type="button" onclick={() => customSplit('vertical')}
+        >Custom rows</button
       >
       <button type="button" onclick={() => props.closePane(props.pane.id)}
         >Close pane</button

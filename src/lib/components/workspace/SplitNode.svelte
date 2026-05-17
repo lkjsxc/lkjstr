@@ -98,6 +98,11 @@
           resize={(delta) => props.resize(props.node.id, index, delta)}
           equalize={() => props.equalize(props.node.id)}
         />
+        <button
+          type="button"
+          class="equalize"
+          onclick={() => props.equalize(props.node.id)}>Equalize</button
+        >
       {/if}
     {/each}
   </div>

@@ -8,7 +8,9 @@
     searchSettings,
   } from '$lib/settings/settings-search';
   import {
+    importSettingsJson,
     loadSettings,
+    resetNamespace,
     resetSetting,
     saveSetting,
   } from '$lib/settings/settings-store';
@@ -35,6 +37,19 @@
 
   async function reset(key: string): Promise<void> {
     settings = await resetSetting(key);
+    applyAppearance(settings);
+  }
+
+  async function resetCurrentNamespace(): Promise<void> {
+    if (namespace === 'all') return;
+    settings = await resetNamespace(namespace);
+    applyAppearance(settings);
+  }
+
+  async function importJson(): Promise<void> {
+    const raw = window.prompt('Settings JSON');
+    if (!raw) return;
+    settings = await importSettingsJson(raw);
     applyAppearance(settings);
   }
 
@@ -66,6 +81,10 @@
       onclick={() => navigator.clipboard?.writeText(JSON.stringify(settings))}
       >Copy JSON export</button
     >
+    <button type="button" onclick={importJson}>Import JSON</button>
+    <button type="button" onclick={resetCurrentNamespace}>
+      Reset namespace
+    </button>
   </div>
   <SettingsTable settings={visible} {save} {reset} />
 </section>

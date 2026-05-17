@@ -51,6 +51,53 @@ export async function resetSetting(key: string): Promise<SettingRecord[]> {
   return mergeSettings(memoryOverrides);
 }
 
+export async function resetNamespace(
+  namespace: string,
+): Promise<SettingRecord[]> {
+  memoryOverrides = memoryOverrides.filter(
+    (item) => item.namespace !== namespace,
+  );
+  const keys = defaultSettings()
+    .filter((setting) => setting.namespace === namespace)
+    .map((setting) => setting.key);
+  await browserDb()
+    .settings.bulkDelete(keys)
+    .catch(() => undefined);
+  return mergeSettings(memoryOverrides);
+}
+
+export async function importSettingsJson(
+  raw: string,
+): Promise<SettingRecord[]> {
+  const parsed = JSON.parse(raw) as SettingRecord[];
+  const byKey = new Map(
+    defaultSettings().map((setting) => [setting.key, setting]),
+  );
+  const overrides = parsed.flatMap((item) => {
+    const setting = byKey.get(item.key);
+    if (!setting) return [];
+    const clean = coerceValue(setting, item.value);
+    return clean.ok
+      ? [
+          {
+            key: item.key,
+            namespace: setting.namespace,
+            value: clean.value,
+            updatedAt: Date.now(),
+          },
+        ]
+      : [];
+  });
+  memoryOverrides = overrides;
+  await browserDb()
+    .settings.clear()
+    .catch(() => undefined);
+  await browserDb()
+    .settings.bulkPut(overrides)
+    .catch(() => undefined);
+  return mergeSettings(overrides);
+}
+
 export function mergeSettings(
   overrides: readonly SettingOverride[],
 ): SettingRecord[] {

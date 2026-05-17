@@ -47,6 +47,9 @@
         <td>{setting.valueType}</td>
         <td>
           {setting.description}
+          {#if JSON.stringify(setting.value) !== JSON.stringify(setting.defaultValue)}
+            <small>Dirty</small>
+          {/if}
           {#if setting.requiresReload}
             <small>Requires reload</small>
           {/if}

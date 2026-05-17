@@ -40,6 +40,8 @@
       <option value={option}>{option}</option>
     {/each}
   </select>
+{:else if props.setting.sensitive}
+  <span>masked</span>
 {:else}
   <input
     aria-label={`Edit ${props.setting.key}`}
