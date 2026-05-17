@@ -5,7 +5,7 @@ State: Canon
 
 ## Product Definition
 
-Build a browser-first SvelteKit Nostr deck client for configuring relays, managing accounts, reading timelines, composing events, and monitoring relay behavior.
+Build a browser-first SvelteKit Nostr workspace client for configuring relays, managing accounts, reading timelines, composing events, and monitoring relay behavior.
 
 The product treats relays as user-owned infrastructure choices. The app must never assume a global default relay set as the source of truth after onboarding.
 
@@ -15,13 +15,13 @@ The product treats relays as user-owned infrastructure choices. The app must nev
 - User-configured relay sets with labels, read/write flags, and health state.
 - Protocol kernel that validates, signs, verifies, filters, and normalizes Nostr events.
 - Relay pool that multiplexes subscriptions and publishes across configured relays.
-- IndexedDB cache for events, profiles, relay metadata, drafts, account metadata, and deck layout.
+- IndexedDB cache for events, profiles, relay metadata, drafts, account metadata, and workspace layout.
 - Web workers for protocol-heavy and cache-heavy tasks.
 - Account model for local keys, external signers, and read-only public-key profiles.
-- Deck UI with movable tiles and saved workspace state.
-- Timeline tile for home, relay-scoped, author-scoped, tag-scoped, search-like, and custom filter views.
-- Relay monitor tile for connection, latency, error, publish, and subscription status.
-- Composer tile for text notes, replies, quotes, mentions, tags, and relay targeting.
+- Split-pane workspace UI with saved pane state.
+- Timeline pane for home, relay-scoped, author-scoped, tag-scoped, search-like, and custom filter views.
+- Relay monitor pane for connection, latency, error, publish, and subscription status.
+- Composer pane for text notes, replies, quotes, mentions, tags, and relay targeting.
 
 ## Out Of Scope
 

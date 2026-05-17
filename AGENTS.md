@@ -12,8 +12,8 @@
 
 ## Product Target
 
-- Build `lkjstr` as a browser-first TypeScript Nostr deck client.
-- Keep the deck and tile model central.
+- Build `lkjstr` as a browser-first TypeScript Nostr workspace client.
+- Keep the editor-style split-pane workspace model central.
 - Keep runtime relay defaults user-configured.
 - Keep protocol code independent from UI code.
 - Keep relay, cache, query, and worker contracts explicit.
@@ -33,4 +33,4 @@
 - Use Docker Compose for build, test, and verification.
 - Run `docker compose run --rm verify` before claiming a batch is complete.
 - Run Playwright when UI behavior changes.
-- Add tests for protocol, relay, cache, query, and deck changes.
+- Add tests for protocol, relay, cache, query, and workspace changes.

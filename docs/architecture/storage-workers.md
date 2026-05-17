@@ -5,7 +5,7 @@ State: Canon
 
 ## IndexedDB Role
 
-IndexedDB is the durable local source for browser-owned state. It enables offline reading, refresh recovery, and fast deck restoration.
+IndexedDB is the durable local source for browser-owned state. It enables offline reading, refresh recovery, and fast workspace restoration.
 
 ## Stores
 
@@ -16,7 +16,7 @@ IndexedDB is the durable local source for browser-owned state. It enables offlin
 - `relays`: relay records and health snapshots.
 - `accounts`: account metadata and signer capability.
 - `drafts`: composer drafts by draft id.
-- `deck_layouts`: tile positions, type, and configuration.
+- `workspace_layouts`: pane splits, active panes, focus, and configuration.
 - `operation_log`: recent publish and relay outcomes for diagnostics.
 
 Private key material, when supported locally, must be stored separately from account metadata and guarded by explicit user consent.

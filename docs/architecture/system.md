@@ -5,12 +5,12 @@ State: Canon
 
 ## Runtime Shape
 
-The app is a browser-first SvelteKit client. SvelteKit provides routing, app shell, build pipeline, and progressive loading. Protocol work, relay connections, cache access, and deck state run in browser-owned modules.
+The app is a browser-first SvelteKit client. SvelteKit provides routing, app shell, build pipeline, and progressive loading. Protocol work, relay connections, cache access, and workspace state run in browser-owned modules.
 
 ## Primary Modules
 
 - Product shell: SvelteKit routes, layout, navigation, settings entry points.
-- Deck UI: tile layout, tile lifecycle, user interactions, visual state.
+- Workspace UI: pane layout, pane lifecycle, user interactions, visual state.
 - Account service: account metadata, signer capability, active identity.
 - Protocol kernel: event, filter, message, tag, and validation logic.
 - Relay pool: WebSocket connections, subscriptions, publish results, monitor events.
@@ -21,11 +21,11 @@ The app is a browser-first SvelteKit client. SvelteKit provides routing, app she
 
 UI may depend on app services. App services may depend on protocol kernel and storage interfaces. Protocol kernel does not depend on UI, SvelteKit, IndexedDB, or WebSocket implementations.
 
-Relay pool depends on protocol message helpers but not on tile components. Tile ownership is passed as data.
+Relay pool depends on protocol message helpers but not on pane components. Pane ownership is passed as data.
 
 ## State Classes
 
-- Canonical durable state: accounts, relay sets, deck layout, drafts, cached events.
+- Canonical durable state: accounts, relay sets, workspace layout, drafts, cached events.
 - Live operational state: WebSocket status, subscription handles, publish attempts, worker queues.
 - Derived state: visible timelines, grouped relay health, validation summaries.
 
@@ -33,7 +33,7 @@ Durable state belongs in IndexedDB. Live operational state belongs in memory and
 
 ## Failure Boundaries
 
-- Relay failure must not crash deck rendering.
+- Relay failure must not crash workspace rendering.
 - Cache failure must degrade to live-only mode with clear user state.
 - Worker failure must fall back to main-thread limited operation or surface a bounded disabled state.
 - Signer failure must block only actions requiring that signer.

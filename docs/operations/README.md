@@ -5,7 +5,7 @@ State: Canon
 
 ## Purpose
 
-This directory defines browser operations for running, diagnosing, and maintaining the Nostr deck client. These docs are canonical for observability, failure handling, data safety, and release readiness.
+This directory defines browser operations for running, diagnosing, and maintaining the Nostr workspace client. These docs are canonical for observability, failure handling, data safety, and release readiness.
 
 ## Documents
 

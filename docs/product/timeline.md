@@ -5,11 +5,11 @@ State: Canon
 
 ## Purpose
 
-The timeline tile presents Nostr events from cache and live relay subscriptions.
+The timeline pane presents Nostr events from cache and live relay subscriptions.
 
 ## Contract
 
-- The tile accepts explicit relays and filters.
+- The pane accepts explicit relays and filters.
 - Empty relays produce an actionable setup state.
 - Kind `1` notes are the first supported live event surface.
 - New live events enter a buffer before joining the visible list.

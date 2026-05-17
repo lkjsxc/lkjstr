@@ -5,7 +5,7 @@ State: Canon
 
 ## Purpose
 
-The composer creates and publishes signed Nostr notes.
+The composer pane creates and publishes signed Nostr notes.
 
 ## Contract
 

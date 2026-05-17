@@ -21,19 +21,19 @@ Use these checks before treating a product slice as ready.
 - Disabled relays receive no new subscriptions.
 - Connection failures appear in the relay monitor.
 - Publish results are recorded per relay.
-- Subscription cleanup happens when a tile closes or pauses.
+- Subscription cleanup happens when a pane closes or pauses.
 
 ## Account Behavior
 
 - Public-key-only accounts cannot publish.
 - External signer failures are visible and scoped to signing actions.
 - Local key persistence requires explicit consent.
-- Account switching keeps deck layout stable.
+- Account switching keeps workspace layout stable.
 
 ## UI Behavior
 
 - Cached timelines render before live events.
 - Empty states identify filters and relay scope.
 - Composer drafts survive refresh.
-- Tile layout survives refresh.
+- Workspace layout survives refresh.
 - Mobile layout can reach every core action.

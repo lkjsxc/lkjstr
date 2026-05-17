@@ -1,6 +1,6 @@
 # lkjstr
 
-`lkjstr` is a TypeScript Nostr deck client.
+`lkjstr` is a TypeScript Nostr workspace client.
 
 Treat [docs/README.md](docs/README.md) as the active canon for product
 behavior, architecture, operations, and repository policy.
@@ -9,7 +9,7 @@ behavior, architecture, operations, and repository policy.
 
 - Canon root: [docs/README.md](docs/README.md)
 - Current state: [docs/current-state.md](docs/current-state.md)
-- Product deck contract: [docs/product/deck.md](docs/product/deck.md)
+- Product workspace contract: [docs/product/workspace.md](docs/product/workspace.md)
 - Protocol support: [docs/protocol/nip-support.md](docs/protocol/nip-support.md)
 - Architecture: [docs/architecture/README.md](docs/architecture/README.md)
 - Verification: [docs/operations/verification.md](docs/operations/verification.md)
@@ -20,7 +20,7 @@ behavior, architecture, operations, and repository policy.
 
 - Browser-first SvelteKit and Vite web app.
 - User-configured relay defaults.
-- Multi-tile deck UI.
+- Editor-style split-pane workspace UI.
 - Nostr protocol kernel.
 - IndexedDB cache.
 - Web Worker verification and indexing.

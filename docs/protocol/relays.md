@@ -5,7 +5,7 @@ State: Canon
 
 ## Role
 
-The relay pool owns browser WebSocket connections to user-configured relays. It turns deck and tile demands into subscriptions, publishes, and monitor signals.
+The relay pool owns browser WebSocket connections to user-configured relays. It turns workspace and pane demands into subscriptions, publishes, and monitor signals.
 
 ## Relay Configuration
 
@@ -21,7 +21,7 @@ A relay record contains:
 - Last successful event time.
 - Health counters.
 
-The product must support multiple named relay sets. A tile may use the default account relay set or an explicit tile relay set.
+The product must support multiple named relay sets. A pane may use the default account relay set or an explicit pane relay set.
 
 ## Connection Policy
 
@@ -33,11 +33,11 @@ The product must support multiple named relay sets. A tile may use the default a
 
 ## Subscription Policy
 
-- Deduplicate equivalent filters across tiles where possible.
-- Preserve tile ownership so events can be routed back to interested tiles.
+- Deduplicate equivalent filters across panes where possible.
+- Preserve pane ownership so events can be routed back to interested panes.
 - Use bounded limits for initial fetches.
 - Separate initial catch-up from live continuation.
-- Allow pausing a tile to release live subscriptions without deleting cached events.
+- Allow pausing a pane to release live subscriptions without deleting cached events.
 
 ## Publish Policy
 

@@ -5,7 +5,7 @@ State: Canon
 
 ## Purpose
 
-This directory records current research assumptions and evaluation criteria for the Nostr deck client. These docs guide implementation choices but remain subordinate to accepted decision docs.
+This directory records current research assumptions and evaluation criteria for the Nostr workspace client. These docs guide implementation choices but remain subordinate to accepted decision docs.
 
 ## Documents
 

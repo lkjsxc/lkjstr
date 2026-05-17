@@ -28,4 +28,4 @@ aligned.
 
 - Run the narrowest useful command before the full gate.
 - Run the Compose gate before each coherent commit.
-- Run Playwright when deck, account, publish, or relay UI behavior changes.
+- Run Playwright when workspace, account, publish, or relay UI behavior changes.

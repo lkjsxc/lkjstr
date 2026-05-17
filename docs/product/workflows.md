@@ -23,22 +23,22 @@ Acceptance:
 - Local signing requires explicit confirmation before key persistence.
 - External signer accounts can request signatures without importing private keys.
 - Public-key accounts cannot publish, delete, or react as that identity.
-- Account switching does not destroy open deck state.
+- Account switching does not destroy open workspace state.
 
 ## Read Timeline
 
-The user creates or opens a timeline tile backed by one or more filters and one or more relay sets. Cached events render first, then live events update the tile.
+The user creates or opens a timeline pane backed by one or more filters and one or more relay sets. Cached events render first, then live events update the pane.
 
 Acceptance:
 
 - Each event shows source relay evidence when expanded.
 - Duplicate events from multiple relays collapse into one display item.
 - Muted, blocked, or invalid events are hidden or marked according to user settings.
-- The tile reports stale, loading, empty, and error states separately.
+- The pane reports stale, loading, empty, and error states separately.
 
 ## Monitor Relays
 
-The user opens a relay monitor tile to inspect health across configured relays.
+The user opens a relay monitor pane to inspect health across configured relays.
 
 Acceptance:
 
@@ -49,7 +49,7 @@ Acceptance:
 
 ## Compose And Publish
 
-The user writes a note, reply, quote, or tagged post in the composer tile and selects target relays before publishing.
+The user writes a note, reply, quote, or tagged post in the composer pane and selects target relays before publishing.
 
 Acceptance:
 

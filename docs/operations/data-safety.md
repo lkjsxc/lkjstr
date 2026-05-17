@@ -6,7 +6,7 @@ State: Canon
 ## Local Data Classes
 
 - Public Nostr data: events, public keys, profiles, relay evidence.
-- User configuration: relay sets, tile layout, display preferences.
+- User configuration: relay sets, workspace layout, display preferences.
 - User-authored data: drafts, publish attempts, local notes.
 - Sensitive data: private keys and signer authorization material.
 
@@ -22,9 +22,9 @@ State: Canon
 The app must support:
 
 - clearing relay health without deleting relay configuration.
-- deleting cached events without deleting deck layout.
+- deleting cached events without deleting workspace layout.
 - deleting an account without deleting public cached events.
-- exporting deck and relay configuration.
+- exporting workspace and relay configuration.
 - importing configuration into an empty profile.
 
 ## Deletion

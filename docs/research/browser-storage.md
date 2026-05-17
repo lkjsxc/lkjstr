@@ -5,7 +5,7 @@ State: Current
 
 ## Storage Assumptions
 
-IndexedDB is the practical browser store for event cache, relay evidence, deck layout, drafts, and account metadata. Local storage is acceptable only for tiny non-sensitive preferences that do not need query behavior.
+IndexedDB is the practical browser store for event cache, relay evidence, workspace layout, drafts, and account metadata. Local storage is acceptable only for tiny non-sensitive preferences that do not need query behavior.
 
 ## Risks
 
@@ -16,7 +16,7 @@ IndexedDB is the practical browser store for event cache, relay evidence, deck l
 
 ## Mitigations
 
-- Read bounded data for initial deck restoration.
+- Read bounded data for initial workspace restoration.
 - Keep cache writes idempotent.
 - Separate sensitive stores from public event stores.
 - Show cache failure as a degraded state.
@@ -26,5 +26,5 @@ IndexedDB is the practical browser store for event cache, relay evidence, deck l
 
 - Practical event cache size limits across target browsers.
 - Worker throughput for signature verification batches.
-- IndexedDB query patterns needed by timeline tiles.
+- IndexedDB query patterns needed by timeline panes.
 - Quota behavior during long-running relay subscriptions.

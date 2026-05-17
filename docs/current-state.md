@@ -33,13 +33,12 @@ compose services, tests, scripts, project licensing, and this documentation set.
 
 ## Gaps
 
-- Protocol modules are not implemented yet.
-- Relay, cache, query, account, and deck state modules are not implemented yet.
-- Relay, cache, query, account, and deck modules are implemented as browser
-  foundation modules.
-- The deck route can add relays, persist tiles, connect read-only accounts,
+- The workspace route can add relays, persist panes, connect read-only accounts,
   request NIP-07 signing, subscribe to relays, and publish notes through NIP-07.
-- Playwright covers the deck shell and local interaction flow.
+- Playwright covers the workspace shell and local interaction flow.
+- Relay, cache, query, account, and workspace modules exist as browser
+  foundation modules.
+- Protocol modules are still incomplete.
 
 ## Remaining Gaps
 

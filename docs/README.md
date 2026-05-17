@@ -13,10 +13,10 @@ State: Canon
 
 ## System Goal
 
-- Build a browser-first TypeScript Nostr deck client.
+- Build a browser-first TypeScript Nostr workspace client.
 - Keep relays user-configured until the user opts in.
 - Keep protocol, relay, cache, query, worker, account, and UI contracts explicit.
-- Keep the deck and tile model central to every product surface.
+- Keep the editor-style split-pane workspace model central to every product surface.
 
 ## Global Rules
 
@@ -43,7 +43,7 @@ State: Canon
 
 ## Task Routes
 
-- Deck UI: [product/deck.md](product/deck.md), [architecture/ui-composition.md](architecture/ui-composition.md).
+- Workspace UI: [product/workspace.md](product/workspace.md), [architecture/ui-composition.md](architecture/ui-composition.md).
 - Protocol support: [protocol/nip-support.md](protocol/nip-support.md), [protocol/kernel.md](protocol/kernel.md).
 - Relay lifecycle: [protocol/relays.md](protocol/relays.md), [decisions/relay-ownership.md](decisions/relay-ownership.md).
 - Storage and workers: [architecture/storage-workers.md](architecture/storage-workers.md).
