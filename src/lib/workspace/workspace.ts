@@ -14,7 +14,7 @@ import {
   createTabGroup,
   type TabGroup,
 } from './tab-group';
-import { createTab, type TabKind, type WorkspaceTab } from './tab';
+import { convertTab, createTab, type TabKind, type WorkspaceTab } from './tab';
 import {
   closeTabAndRecover,
   ensureUsableWorkspace,
@@ -48,8 +48,8 @@ export function createWorkspace(): Workspace {
     focusedPaneId: layout.id,
     focusedTabId: tab.id,
     activeAccountId: null,
-    sidebarVisible: true,
-    activityBarVisible: true,
+    sidebarVisible: false,
+    activityBarVisible: false,
     updatedAt: Date.now(),
   };
 }
@@ -64,23 +64,17 @@ export function createEmptyWorkspace(): Workspace {
     focusedPaneId: null,
     focusedTabId: null,
     activeAccountId: null,
-    sidebarVisible: true,
-    activityBarVisible: true,
+    sidebarVisible: false,
+    activityBarVisible: false,
     updatedAt: Date.now(),
   };
 }
 
-export function ensureWorkspaceHasPane(workspace: Workspace): Workspace {
-  return ensureUsableWorkspace(workspace);
-}
-
-export function openFirstPaneTab(
+export function openNewTabChooser(
   workspace: Workspace,
-  kind: TabKind,
+  paneId: string,
 ): Workspace {
-  const withPane = ensureUsableWorkspace(workspace);
-  const paneId = withPane.focusedPaneId ?? paneIds(withPane.layout!)[0] ?? null;
-  return openTab(withPane, paneId, kind, titleFor(kind));
+  return openTab(workspace, paneId, 'new-tab', titleFor('new-tab'));
 }
 
 export function openTab(
@@ -155,6 +149,24 @@ export function focusTab(
       ...workspace.tabGroups,
       [group.id]: activateTab(group, tabId),
     },
+  });
+}
+
+export function convertWorkspaceTab(
+  workspace: Workspace,
+  tabId: string,
+  kind: TabKind,
+  config: Record<string, unknown> = {},
+): Workspace {
+  const tab = workspace.tabs[tabId];
+  if (!tab) return workspace;
+  return touch({
+    ...workspace,
+    tabs: {
+      ...workspace.tabs,
+      [tabId]: convertTab(tab, kind, titleFor(kind), config),
+    },
+    focusedTabId: tabId,
   });
 }
 

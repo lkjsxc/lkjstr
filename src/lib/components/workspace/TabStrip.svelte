@@ -16,25 +16,29 @@
   {#each group.tabIds as tabId (tabId)}
     {@const tab = tabs[tabId]}
     {#if tab}
-      <button
-        type="button"
+      <div
         role="tab"
         class:active={group.activeTabId === tab.id}
-        onclick={() => focusTab(tab.id)}
+        class="tab-frame"
       >
-        <span>{tab.title}</span>
-        {#if tab.unreadCount}
-          <small>{tab.unreadCount}</small>
-        {/if}
-      </button>
-      <button
-        type="button"
-        class="icon"
-        aria-label={`Close ${tab.title}`}
-        onclick={() => closeTab(tab.id)}
-      >
-        x
-      </button>
+        <button type="button" class="tab-main" onclick={() => focusTab(tab.id)}>
+          <span>{tab.title}</span>
+          {#if tab.unreadCount}
+            <small>{tab.unreadCount}</small>
+          {/if}
+        </button>
+        <button
+          type="button"
+          class="tab-close"
+          aria-label={`Close ${tab.title}`}
+          onclick={(event) => {
+            event.stopPropagation();
+            closeTab(tab.id);
+          }}
+        >
+          x
+        </button>
+      </div>
     {/if}
   {/each}
 </div>

@@ -21,17 +21,25 @@
     focusTab: (paneId: string, tabId: string) => void;
     closeTab: (paneId: string, tabId: string) => void;
     openTab: (paneId: string | null, kind: TabKind) => void;
+    openNewTab: (paneId: string) => void;
+    convertTab: (
+      tabId: string,
+      kind: TabKind,
+      config?: Record<string, unknown>,
+    ) => void;
     split: (paneId: string, direction: 'horizontal' | 'vertical') => void;
     closePane: (paneId: string) => void;
     resize: (splitId: string, handleIndex: number, deltaRatio: number) => void;
     addReadonly: () => void;
     addNip07: () => void;
     createDraft: () => void;
+    refreshData: () => void;
     toggleRelay: (setId: string, url: string, enabled: boolean) => void;
     removeRelay: (setId: string, url: string) => void;
   };
 
   let props: Props = $props();
+  let splitElement: HTMLElement | undefined = $state();
 </script>
 
 {#if props.node.type === 'pane'}
@@ -47,16 +55,19 @@
     focusTab={props.focusTab}
     closeTab={props.closeTab}
     openTab={props.openTab}
+    openNewTab={props.openNewTab}
+    convertTab={props.convertTab}
     split={props.split}
     closePane={props.closePane}
     addReadonly={props.addReadonly}
     addNip07={props.addNip07}
     createDraft={props.createDraft}
+    refreshData={props.refreshData}
     toggleRelay={props.toggleRelay}
     removeRelay={props.removeRelay}
   />
 {:else}
-  <div class={`split ${props.node.direction}`}>
+  <div class={`split ${props.node.direction}`} bind:this={splitElement}>
     {#each props.node.children as child, index (child.id)}
       <div
         class="split-child"
@@ -73,12 +84,15 @@
           focusTab={props.focusTab}
           closeTab={props.closeTab}
           openTab={props.openTab}
+          openNewTab={props.openNewTab}
+          convertTab={props.convertTab}
           split={props.split}
           closePane={props.closePane}
           resize={props.resize}
           addReadonly={props.addReadonly}
           addNip07={props.addNip07}
           createDraft={props.createDraft}
+          refreshData={props.refreshData}
           toggleRelay={props.toggleRelay}
           removeRelay={props.removeRelay}
         />
@@ -86,6 +100,7 @@
       {#if index < props.node.children.length - 1}
         <ResizeHandle
           direction={props.node.direction}
+          container={splitElement}
           resize={(delta) => props.resize(props.node.id, index, delta)}
         />
       {/if}

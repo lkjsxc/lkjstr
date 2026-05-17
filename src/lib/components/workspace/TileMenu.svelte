@@ -1,4 +1,6 @@
 <script lang="ts">
+  import AnchoredPopover from '$lib/components/popover/AnchoredPopover.svelte';
+
   type Props = {
     split: (direction: 'horizontal' | 'vertical') => void;
     closePane: () => void;
@@ -6,23 +8,7 @@
 
   let props: Props = $props();
   let open = $state(false);
-  let root: HTMLElement;
-
-  $effect(() => {
-    if (!open) return;
-    function closeOnPointerDown(event: PointerEvent): void {
-      if (!root.contains(event.target as Node)) open = false;
-    }
-    function closeOnEscape(event: KeyboardEvent): void {
-      if (event.key === 'Escape') open = false;
-    }
-    document.addEventListener('pointerdown', closeOnPointerDown, true);
-    document.addEventListener('keydown', closeOnEscape);
-    return () => {
-      document.removeEventListener('pointerdown', closeOnPointerDown, true);
-      document.removeEventListener('keydown', closeOnEscape);
-    };
-  });
+  let trigger: HTMLElement = $state() as HTMLElement;
 
   function run(action: () => void): void {
     open = false;
@@ -30,10 +16,11 @@
   }
 </script>
 
-<div class="tile-menu" bind:this={root}>
+<div class="tile-menu">
   <button
+    bind:this={trigger}
     type="button"
-    class="tile-menu-trigger"
+    class="tile-icon-button"
     aria-label={open ? 'Close tile menu' : 'Open tile menu'}
     aria-expanded={open}
     onclick={() => (open = !open)}
@@ -41,7 +28,11 @@
     ...
   </button>
   {#if open}
-    <div class="tile-menu-popover" aria-label="Tile actions">
+    <AnchoredPopover
+      anchor={trigger}
+      label="Tile actions"
+      close={() => (open = false)}
+    >
       <button
         type="button"
         onclick={() => run(() => props.split('horizontal'))}
@@ -54,6 +45,6 @@
       <button type="button" onclick={() => run(props.closePane)}>
         Tile close
       </button>
-    </div>
+    </AnchoredPopover>
   {/if}
 </div>

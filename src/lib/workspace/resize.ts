@@ -19,6 +19,15 @@ export function resizeSplit(
   return resizeHere(node, handleIndex, deltaRatio);
 }
 
+export function pointerDeltaToSplitRatio(
+  deltaPx: number,
+  containerSizePx: number,
+  sensitivity = 0.45,
+): number {
+  if (Math.abs(deltaPx) < 2) return 0;
+  return (deltaPx / Math.max(containerSizePx, 240)) * sensitivity;
+}
+
 export function resizeHere(
   split: WorkspaceSplitNode,
   handleIndex: number,

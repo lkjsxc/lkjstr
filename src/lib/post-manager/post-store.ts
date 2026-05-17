@@ -47,6 +47,29 @@ export async function createDraftNode(
   return node;
 }
 
+export async function updateDraftNode(
+  node: PostTreeNode,
+  patch: Pick<Partial<PostTreeNode>, 'title' | 'contentPreview' | 'status'>,
+): Promise<PostTreeNode> {
+  const next = { ...node, ...patch, updatedAt: Date.now() };
+  await browserDb().postNodes.put(next);
+  return next;
+}
+
+export async function duplicateDraftNode(
+  node: PostTreeNode,
+): Promise<PostTreeNode> {
+  const tree = await browserDb().postTrees.get(node.treeId);
+  if (!tree) throw new Error('Post tree missing.');
+  return createDraftNode(tree, `${node.title} copy`, node.parentId);
+}
+
+export async function archiveDraftNode(
+  node: PostTreeNode,
+): Promise<PostTreeNode> {
+  return updateDraftNode(node, { status: 'archived-local' });
+}
+
 export async function treeNodes(treeId: string): Promise<PostTreeNode[]> {
   return browserDb().postNodes.where('treeId').equals(treeId).toArray();
 }

@@ -1,15 +1,24 @@
 <script lang="ts">
-  import IdentityChip from '$lib/components/identity/IdentityChip.svelte';
   import type { Account } from '$lib/accounts/account';
   import type { NotificationRecord } from '$lib/notifications/notification';
   import type { PostTreeNode } from '$lib/post-manager/post-tree';
   import type { RelaySet } from '$lib/relays/relay-store';
-  import type { WorkspacePaneNode } from '$lib/workspace/pane';
-  import type { TabGroup } from '$lib/workspace/tab-group';
-  import type { WorkspaceTab, TabKind } from '$lib/workspace/tab';
+  import AccountManagerTab from '$lib/tabs/accounts/AccountManagerTab.svelte';
+  import CacheStatusTab from '$lib/tabs/cache/CacheStatusTab.svelte';
+  import ComposerTab from '$lib/tabs/composer/ComposerTab.svelte';
+  import NewTab from '$lib/tabs/new-tab/NewTab.svelte';
+  import NotificationsTab from '$lib/tabs/notifications/NotificationsTab.svelte';
+  import PostManagerTab from '$lib/tabs/posts/PostManagerTab.svelte';
+  import ProfileTab from '$lib/tabs/profile/ProfileTab.svelte';
   import RelayMonitorTab from '$lib/tabs/relays/RelayMonitorTab.svelte';
+  import RelaySettingsTab from '$lib/tabs/relays/RelaySettingsTab.svelte';
   import SettingsTab from '$lib/tabs/settings/SettingsTab.svelte';
+  import ThreadTab from '$lib/tabs/thread/ThreadTab.svelte';
   import TimelineTab from '$lib/tabs/timeline/TimelineTab.svelte';
+  import type { WorkspacePaneNode } from '$lib/workspace/pane';
+  import type { TabKind, WorkspaceTab } from '$lib/workspace/tab';
+  import type { TabGroup } from '$lib/workspace/tab-group';
+  import NewTabButton from './NewTabButton.svelte';
   import TabStrip from './TabStrip.svelte';
   import TileMenu from './TileMenu.svelte';
 
@@ -24,11 +33,18 @@
     focusTab: (paneId: string, tabId: string) => void;
     closeTab: (paneId: string, tabId: string) => void;
     openTab: (paneId: string | null, kind: TabKind) => void;
+    openNewTab: (paneId: string) => void;
+    convertTab: (
+      tabId: string,
+      kind: TabKind,
+      config?: Record<string, unknown>,
+    ) => void;
     split: (paneId: string, direction: 'horizontal' | 'vertical') => void;
     closePane: (paneId: string) => void;
     addReadonly: () => void;
     addNip07: () => void;
     createDraft: () => void;
+    refreshData: () => void;
     toggleRelay: (setId: string, url: string, enabled: boolean) => void;
     removeRelay: (setId: string, url: string) => void;
   };
@@ -49,76 +65,62 @@
         closeTab={(tabId) => props.closeTab(props.pane.id, tabId)}
       />
     {/if}
-    <TileMenu
-      split={(direction) => props.split(props.pane.id, direction)}
-      closePane={() => props.closePane(props.pane.id)}
-    />
+    <div class="pane-actions">
+      <NewTabButton open={() => props.openNewTab(props.pane.id)} />
+      <TileMenu
+        split={(direction) => props.split(props.pane.id, direction)}
+        closePane={() => props.closePane(props.pane.id)}
+      />
+    </div>
   </header>
 
   {#if active}
     <div class="pane-body">
-      {#if active.kind === 'timeline'}
+      {#if active.kind === 'new-tab'}
+        <NewTab tabId={active.id} convert={props.convertTab} />
+      {:else if active.kind === 'timeline'}
         <TimelineTab tabId={active.id} relaySets={props.relaySets} />
       {:else if active.kind === 'account-manager'}
-        <h2>Accounts</h2>
-        <div class="toolbar">
-          <button type="button" onclick={props.addReadonly}
-            >Add read-only</button
-          >
-          <button type="button" onclick={props.addNip07}>Add NIP-07</button>
-        </div>
-        {#each props.accounts as account (account.id)}
-          <article class="row">
-            <IdentityChip pubkey={account.pubkey} />
-            <small>{account.signerType}</small>
-          </article>
-        {:else}
-          <p>No accounts yet.</p>
-        {/each}
+        <AccountManagerTab
+          accounts={props.accounts}
+          addReadonly={props.addReadonly}
+          addNip07={props.addNip07}
+        />
       {:else if active.kind === 'notifications'}
-        <h2>Notifications</h2>
-        {#each props.notifications as notification (notification.id)}
-          <article class="row">
-            <IdentityChip pubkey={notification.actorPubkey} compact />
-            <small>{notification.kind}</small>
-          </article>
-        {:else}
-          <p>No notifications indexed for the active account.</p>
-        {/each}
+        <NotificationsTab notifications={props.notifications} />
       {:else if active.kind === 'profile'}
-        <h2>Profile</h2>
-        <IdentityChip pubkey={String(active.config.pubkey ?? '')} />
-        <p>
-          User timeline, replies, media, relay list, and raw metadata share this
-          tab.
-        </p>
+        <ProfileTab
+          tabId={active.id}
+          pubkey={String(active.config.pubkey ?? '')}
+          relaySets={props.relaySets}
+        />
       {:else if active.kind === 'post-manager'}
-        <h2>Post Manager</h2>
-        <button type="button" onclick={props.createDraft}>New draft</button>
-        {#each props.postNodes as node (node.id)}
-          <article class="row">
-            <strong>{node.title}</strong>
-            <small>{node.status}</small>
-          </article>
-        {:else}
-          <p>No draft tree nodes yet.</p>
-        {/each}
+        <PostManagerTab
+          accounts={props.accounts}
+          postNodes={props.postNodes}
+          createDraft={props.createDraft}
+          refresh={props.refreshData}
+        />
       {:else if active.kind === 'relay-monitor'}
         <RelayMonitorTab
           relaySets={props.relaySets}
           toggleRelay={props.toggleRelay}
           removeRelay={props.removeRelay}
         />
+      {:else if active.kind === 'relay-settings'}
+        <RelaySettingsTab
+          relaySets={props.relaySets}
+          refresh={props.refreshData}
+          removeRelay={props.removeRelay}
+        />
       {:else if active.kind === 'settings'}
         <SettingsTab />
       {:else if active.kind === 'cache-status'}
-        <h2>Cache</h2>
-        <p>
-          Storage usage, compaction, and memory-pressure counters render here.
-        </p>
-      {:else}
-        <h2>{active.title}</h2>
-        <p>This tab kind is registered and ready for a typed runtime.</p>
+        <CacheStatusTab />
+      {:else if active.kind === 'composer'}
+        <ComposerTab />
+      {:else if active.kind === 'thread'}
+        <ThreadTab eventId={String(active.config.eventId ?? '')} />
       {/if}
     </div>
   {/if}

@@ -1,30 +1,17 @@
 <script lang="ts">
   import { onMount } from 'svelte';
-  import SettingsInspector from '$lib/components/settings/SettingsInspector.svelte';
-  import SettingsSearch from '$lib/components/settings/SettingsSearch.svelte';
-  import SettingsTable from '$lib/components/settings/SettingsTable.svelte';
+  import SettingsSection from '$lib/components/settings/SettingsSection.svelte';
+  import { groupSettings } from '$lib/settings/settings-groups';
   import type { SettingRecord } from '$lib/settings/settings-key';
-  import {
-    settingNamespaces,
-    searchSettings,
-  } from '$lib/settings/settings-search';
   import {
     importSettingsJson,
     loadSettings,
-    resetNamespace,
     resetSetting,
     saveSetting,
   } from '$lib/settings/settings-store';
 
   let settings = $state<SettingRecord[]>([]);
-  let query = $state('');
-  let namespace = $state('all');
-  let selectedKey = $state<string | null>(null);
-  let visible = $derived(searchSettings(settings, query, namespace));
-  let namespaces = $derived(settingNamespaces(settings));
-  let selected = $derived(
-    settings.find((setting) => setting.key === selectedKey) ?? visible[0],
-  );
+  let groups = $derived(groupSettings(settings));
   let changedCount = $derived(
     settings.filter(
       (setting) =>
@@ -38,22 +25,12 @@
   });
 
   async function save(key: string, value: unknown): Promise<void> {
-    try {
-      settings = await saveSetting(settings, key, value);
-      applyAppearance(settings);
-    } catch {
-      settings = await loadSettings();
-    }
+    settings = await saveSetting(settings, key, value);
+    applyAppearance(settings);
   }
 
   async function reset(key: string): Promise<void> {
     settings = await resetSetting(key);
-    applyAppearance(settings);
-  }
-
-  async function resetCurrentNamespace(): Promise<void> {
-    if (namespace === 'all') return;
-    settings = await resetNamespace(namespace);
     applyAppearance(settings);
   }
 
@@ -66,19 +43,13 @@
 
   function applyAppearance(records: readonly SettingRecord[]): void {
     const root = document.documentElement;
-    for (const record of records) {
-      if (record.key === 'appearance.radius.ui')
-        root.style.setProperty('--radius-ui', `${record.value}px`);
-      if (record.key === 'appearance.radius.button')
-        root.style.setProperty('--radius-button', `${record.value}px`);
-      if (record.key === 'appearance.radius.tab')
-        root.style.setProperty('--radius-tab', `${record.value}px`);
-      if (record.key === 'appearance.cornerRadius') {
-        root.style.setProperty('--radius-ui', `${record.value}px`);
-        root.style.setProperty('--radius-button', `${record.value}px`);
-        root.style.setProperty('--radius-tab', `${record.value}px`);
-      }
-    }
+    const radius = records.find(
+      (item) => item.key === 'appearance.cornerRadius',
+    );
+    if (!radius) return;
+    root.style.setProperty('--radius-ui', `${radius.value}px`);
+    root.style.setProperty('--radius-button', `${radius.value}px`);
+    root.style.setProperty('--radius-tab', `${radius.value}px`);
   }
 </script>
 
@@ -86,44 +57,19 @@
   <header class="settings-header">
     <h2>Settings</h2>
     <span>{changedCount} changed</span>
-    <SettingsSearch
-      {query}
-      {namespace}
-      {namespaces}
-      updateQuery={(value) => (query = value)}
-      updateNamespace={(value) => (namespace = value)}
-    />
     <div class="settings-actions">
       <button
         type="button"
         onclick={() => navigator.clipboard?.writeText(JSON.stringify(settings))}
-        >Copy JSON export</button
       >
-      <button type="button" onclick={importJson}>Import JSON</button>
-      <button type="button" onclick={resetCurrentNamespace}>
-        Reset visible
+        Copy JSON export
       </button>
+      <button type="button" onclick={importJson}>Import JSON</button>
     </div>
   </header>
-  <div class="settings-layout">
-    <nav class="settings-categories" aria-label="Settings categories">
-      {#each namespaces as item (item)}
-        <button
-          type="button"
-          class:active={namespace === item}
-          onclick={() => (namespace = item)}
-        >
-          {item}
-        </button>
-      {/each}
-    </nav>
-    <SettingsTable
-      settings={visible}
-      {selectedKey}
-      {save}
-      {reset}
-      select={(key) => (selectedKey = key)}
-    />
-    <SettingsInspector setting={selected} {reset} />
+  <div class="settings-layout grouped">
+    {#each groups as group (group.id)}
+      <SettingsSection {group} {save} {reset} />
+    {/each}
   </div>
 </section>

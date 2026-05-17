@@ -17,8 +17,8 @@ export function createRecoveryWorkspace(): Workspace {
     focusedPaneId: layout.id,
     focusedTabId: tab.id,
     activeAccountId: null,
-    sidebarVisible: true,
-    activityBarVisible: true,
+    sidebarVisible: false,
+    activityBarVisible: false,
     updatedAt: Date.now(),
   };
 }
@@ -30,8 +30,8 @@ export function ensureUsableWorkspace(workspace: Workspace): Workspace {
       id: workspace.id,
       name: workspace.name,
       activeAccountId: workspace.activeAccountId,
-      sidebarVisible: workspace.sidebarVisible,
-      activityBarVisible: workspace.activityBarVisible,
+      sidebarVisible: false,
+      activityBarVisible: false,
     });
   if (!workspace.layout) return recovery();
   const ids = paneIds(workspace.layout);

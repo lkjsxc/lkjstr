@@ -41,6 +41,7 @@ export class TabRegistry {
 export function createDefaultTabRegistry(): TabRegistry {
   const registry = new TabRegistry();
   const kinds: TabKind[] = [
+    'new-tab',
     'timeline',
     'notifications',
     'profile',
@@ -48,6 +49,7 @@ export function createDefaultTabRegistry(): TabRegistry {
     'post-manager',
     'thread',
     'relay-monitor',
+    'relay-settings',
     'composer',
     'settings',
     'cache-status',

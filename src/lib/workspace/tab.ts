@@ -1,4 +1,5 @@
 export type TabKind =
+  | 'new-tab'
   | 'timeline'
   | 'notifications'
   | 'profile'
@@ -6,6 +7,7 @@ export type TabKind =
   | 'post-manager'
   | 'thread'
   | 'relay-monitor'
+  | 'relay-settings'
   | 'composer'
   | 'settings'
   | 'cache-status';
@@ -46,6 +48,7 @@ export function createTab(
 
 export function iconFor(kind: TabKind): string {
   const icons: Record<TabKind, string> = {
+    'new-tab': 'plus',
     timeline: 'list',
     notifications: 'bell',
     profile: 'user',
@@ -53,6 +56,7 @@ export function iconFor(kind: TabKind): string {
     'post-manager': 'tree',
     thread: 'message',
     'relay-monitor': 'radio',
+    'relay-settings': 'sliders',
     composer: 'edit',
     settings: 'settings',
     'cache-status': 'database',
@@ -62,4 +66,21 @@ export function iconFor(kind: TabKind): string {
 
 export function touchTab(tab: WorkspaceTab): WorkspaceTab {
   return { ...tab, updatedAt: Date.now() };
+}
+
+export function convertTab(
+  tab: WorkspaceTab,
+  kind: TabKind,
+  title: string,
+  config: Record<string, unknown> = {},
+): WorkspaceTab {
+  return {
+    ...tab,
+    kind,
+    title,
+    icon: iconFor(kind),
+    config,
+    state: {},
+    updatedAt: Date.now(),
+  };
 }

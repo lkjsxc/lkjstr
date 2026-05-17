@@ -1,4 +1,5 @@
-.relay-monitor {
+.relay-monitor,
+.relay-settings {
   min-width: 32rem;
 }
 
@@ -22,9 +23,15 @@
     );
 }
 
+.settings-layout.grouped {
+  grid-template-columns: repeat(auto-fit, minmax(18rem, 1fr));
+}
+
 .settings-categories,
 .settings-list,
-.settings-inspector {
+.settings-inspector,
+.settings-section,
+.option-grid {
   display: grid;
   gap: var(--space-2);
   min-width: 0;
@@ -40,10 +47,32 @@
 }
 
 .setting-row,
+.option-card,
+.draft-node,
 .settings-inspector {
   border: 1px solid var(--color-border);
   border-radius: var(--radius-panel);
   padding: var(--space-3);
+}
+
+.new-tab,
+.data-tab,
+.profile-tab {
+  display: grid;
+  gap: var(--space-3);
+}
+
+.new-tab-inputs {
+  display: grid;
+  gap: var(--space-2);
+  grid-template-columns: repeat(auto-fit, minmax(12rem, 1fr));
+}
+
+.option-card,
+.draft-node,
+.metric-list {
+  display: grid;
+  gap: var(--space-2);
 }
 
 .setting-row.active {

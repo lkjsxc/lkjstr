@@ -1,6 +1,7 @@
 import { browserDb } from '../storage/browser-db';
 import type { RelayConnectionState } from './types';
 import { defaultRelaySet } from './default-relays';
+import { normalizeRelayUrl } from '../protocol';
 
 export type RelayRecord = {
   readonly url: string;
@@ -49,6 +50,42 @@ export async function saveRelaySets(
     .catch(() => undefined);
 }
 
+export async function addRelay(
+  setId: string,
+  input: string,
+): Promise<RelaySet[]> {
+  const url = normalizeRelayUrl(input);
+  if (!url) throw new Error('Relay URL is invalid.');
+  return updateSet(setId, (set) =>
+    set.relays.some((relay) => relay.url === url)
+      ? set
+      : { ...set, relays: [...set.relays, createRelay(url)] },
+  );
+}
+
+export async function updateRelay(
+  setId: string,
+  url: string,
+  patch: Partial<Pick<RelayRecord, 'label' | 'enabled' | 'read' | 'write'>>,
+): Promise<RelaySet[]> {
+  return updateSet(setId, (set) => ({
+    ...set,
+    relays: set.relays.map((relay) =>
+      relay.url === url ? { ...relay, ...patch, updatedAt: Date.now() } : relay,
+    ),
+  }));
+}
+
+export async function restoreDefaultRelaySet(): Promise<RelaySet[]> {
+  const sets = await listRelaySets();
+  const next = [
+    ...sets.filter((set) => set.id !== defaultRelaySet.id),
+    { ...defaultRelaySet, updatedAt: Date.now() },
+  ];
+  await saveRelaySets(next);
+  return next;
+}
+
 export async function removeRelay(
   setId: string,
   url: string,
@@ -87,4 +124,29 @@ export async function setRelayEnabled(
   );
   await saveRelaySets(next);
   return next;
+}
+
+async function updateSet(
+  setId: string,
+  update: (set: RelaySet) => RelaySet,
+): Promise<RelaySet[]> {
+  const next = (await listRelaySets()).map((set) =>
+    set.id === setId ? { ...update(set), updatedAt: Date.now() } : set,
+  );
+  await saveRelaySets(next);
+  return next;
+}
+
+function createRelay(url: string): RelayRecord {
+  const host = new URL(url).host;
+  return {
+    url,
+    label: host,
+    enabled: true,
+    read: true,
+    write: true,
+    state: 'idle',
+    updatedAt: Date.now(),
+    health: { attempts: 0, successes: 0, failures: 0 },
+  };
 }

@@ -1,63 +1,29 @@
 .workspace-shell {
-  display: grid;
-  grid-template-columns: 5rem minmax(0, 1fr);
   height: 100vh;
-}
-
-.workspace-shell.sidebar-collapsed {
-  grid-template-columns: 3rem minmax(0, 1fr);
-}
-
-.activity-bar,
-.activity-rail,
-.top-bar,
-.status-bar {
-  background: var(--color-bg-elevated);
-  border-color: var(--color-border);
-  color: var(--color-text);
-}
-
-.activity-bar {
-  align-items: stretch;
-  border-right: 1px solid var(--color-border);
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-2);
-  padding: var(--space-3) var(--space-2);
-}
-
-.activity-rail {
-  border-right: 1px solid var(--color-border);
   display: grid;
-  padding: var(--space-2);
-  place-items: start center;
-}
-
-.activity-bar button {
-  font-size: 0.75rem;
-  padding: 0.4rem 0.25rem;
 }
 
 .workspace-main {
   background: var(--color-bg);
   display: grid;
-  grid-template-rows: auto minmax(0, 1fr) auto;
+  grid-template-rows: auto minmax(0, 1fr);
   min-width: 0;
 }
 
-.top-bar,
-.status-bar {
+.app-header {
   align-items: center;
+  background: var(--color-bg-elevated);
   border-bottom: 1px solid var(--color-border);
+  color: var(--color-text);
   display: flex;
   gap: 1rem;
-  justify-content: space-between;
+  height: 2.5rem;
   padding: 0.45rem 0.75rem;
 }
 
-.status-bar {
-  border-bottom: 0;
-  border-top: 1px solid var(--color-border);
+.app-header span {
+  color: var(--color-text-muted);
+  font-size: 0.8rem;
 }
 
 .split {
@@ -110,9 +76,8 @@
 
 .pane-head,
 .toolbar,
-.settings-search,
 .settings-actions,
-.empty-actions {
+.pane-actions {
   align-items: center;
   display: flex;
   flex-wrap: wrap;
@@ -122,7 +87,7 @@
 
 .pane-head {
   border-bottom: 1px solid var(--color-border);
-  justify-content: space-between;
+  flex-wrap: nowrap;
 }
 
 .pane-body,
@@ -142,23 +107,53 @@
 .tab-strip {
   display: flex;
   gap: 0.15rem;
+  flex: 1 1 auto;
   min-width: 0;
   overflow-x: auto;
 }
 
-.tab-strip button {
+.tab-frame {
+  align-items: stretch;
   background: transparent;
   border: 1px solid transparent;
   border-bottom-color: var(--color-border);
   border-radius: var(--radius-tab);
+  display: flex;
+  flex: 0 0 auto;
+  max-width: 14rem;
+  min-width: 4rem;
+}
+
+.tab-frame.active {
+  background: var(--color-surface-2);
+  border-color: var(--color-border-strong);
+}
+
+.tab-main,
+.tab-close {
+  background: transparent;
+  border: 0;
   color: var(--color-text-muted);
+}
+
+.tab-main {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
   white-space: nowrap;
 }
 
-.tab-strip button.active {
-  background: var(--color-surface-2);
-  border-color: var(--color-border-strong);
+.tab-close {
+  flex: 0 0 1.75rem;
+}
+
+.tab-frame.active .tab-main,
+.tab-frame.active .tab-close {
   color: var(--color-text);
+}
+
+.tile-icon-button {
+  min-width: 2rem;
 }
 
 .identity-chip,

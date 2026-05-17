@@ -1,11 +1,17 @@
 <script lang="ts">
+  import { onDestroy } from 'svelte';
+  import { pointerDeltaToSplitRatio } from '$lib/workspace/resize';
+
   type Props = {
     direction: 'horizontal' | 'vertical';
+    container: HTMLElement | undefined;
     resize: (deltaRatio: number) => void;
   };
 
-  let { direction, resize }: Props = $props();
+  let { direction, container, resize }: Props = $props();
   let start = 0;
+  let frame = 0;
+  let pending = 0;
 
   function pointerDown(event: PointerEvent): void {
     start = direction === 'horizontal' ? event.clientX : event.clientY;
@@ -15,13 +21,29 @@
 
   function pointerMove(event: PointerEvent): void {
     const current = direction === 'horizontal' ? event.clientX : event.clientY;
-    resize((current - start) / 800);
+    const size =
+      direction === 'horizontal'
+        ? (container?.clientWidth ?? 0)
+        : (container?.clientHeight ?? 0);
+    pending += pointerDeltaToSplitRatio(current - start, size);
     start = current;
+    if (!frame)
+      frame = requestAnimationFrame(() => {
+        const delta = pending;
+        pending = 0;
+        frame = 0;
+        if (delta) resize(delta);
+      });
   }
 
   function pointerUp(): void {
     window.removeEventListener('pointermove', pointerMove);
   }
+
+  onDestroy(() => {
+    window.removeEventListener('pointermove', pointerMove);
+    if (frame) cancelAnimationFrame(frame);
+  });
 </script>
 
 <button

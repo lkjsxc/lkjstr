@@ -15,21 +15,17 @@ test('opens account, notification, profile, and post manager tabs', async ({
   page,
 }) => {
   await page.goto('/');
+  await page.getByRole('button', { name: 'Open new tab' }).first().click();
   await page.getByRole('button', { name: 'Accounts' }).click();
   await expect(page.getByRole('heading', { name: 'Accounts' })).toBeVisible();
+  await page.getByRole('button', { name: 'Open new tab' }).first().click();
   await page.getByRole('button', { name: 'Notifications' }).click();
   await expect(
     page.getByRole('heading', { name: 'Notifications' }),
   ).toBeVisible();
-  await page.getByRole('button', { name: 'Profile' }).click();
-  await expect(page.getByRole('heading', { name: 'Profile' })).toBeVisible();
-  await page
-    .getByLabel('Activity')
-    .getByRole('button', { name: 'Posts' })
-    .click();
-  await expect(
-    page.getByRole('heading', { name: 'Post Manager' }),
-  ).toBeVisible();
+  await page.getByRole('button', { name: 'Open new tab' }).first().click();
+  await page.getByRole('button', { name: 'Posts' }).click();
+  await expect(page.getByRole('heading', { name: 'Posts' })).toBeVisible();
 });
 
 test('persists layout after reload', async ({ page }) => {

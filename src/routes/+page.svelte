@@ -14,7 +14,9 @@
   import type { TabKind } from '$lib/workspace/tab';
   import {
     closeWorkspaceTab,
+    convertWorkspaceTab,
     focusTab,
+    openNewTabChooser,
     openTab,
     splitFocusedPane,
     titleFor,
@@ -37,18 +39,15 @@
   let notifications = $state<NotificationRecord[]>([]);
   let postNodes = $state<PostTreeNode[]>([]);
   let relaySets = $state<RelaySet[]>([]);
-  let status = $state('Workspace loading.');
 
   onMount(async () => {
     workspace = await loadWorkspace();
     await refreshData();
-    status = 'Workspace restored from IndexedDB.';
   });
 
   async function update(next: Workspace): Promise<void> {
     workspace = next;
     await saveWorkspace(next);
-    status = 'Workspace saved.';
   }
 
   async function refreshData(): Promise<void> {
@@ -64,6 +63,20 @@
     const config =
       kind === 'profile' ? { pubkey: accounts[0]?.pubkey ?? '' } : {};
     await update(openTab(workspace, paneId, kind, titleFor(kind), config));
+  }
+
+  async function handleOpenNewTab(paneId: string): Promise<void> {
+    if (!workspace) return;
+    await update(openNewTabChooser(workspace, paneId));
+  }
+
+  async function handleConvertTab(
+    tabId: string,
+    kind: TabKind,
+    config: Record<string, unknown> = {},
+  ): Promise<void> {
+    if (!workspace) return;
+    await update(convertWorkspaceTab(workspace, tabId, kind, config));
   }
 
   async function handleSplit(
@@ -92,24 +105,26 @@
     const input = window.prompt('npub or hex pubkey');
     if (!input) return;
     try {
-      status = await addReadonlyFromInput(input);
+      await addReadonlyFromInput(input);
       await refreshData();
     } catch (error) {
-      status = error instanceof Error ? error.message : 'Account add failed.';
+      window.alert(
+        error instanceof Error ? error.message : 'Account add failed.',
+      );
     }
   }
 
   async function handleAddNip07(): Promise<void> {
     try {
-      status = await addNip07FromProvider();
+      await addNip07FromProvider();
       await refreshData();
     } catch {
-      status = 'NIP-07 unavailable.';
+      window.alert('NIP-07 unavailable.');
     }
   }
 
   async function handleCreateDraft(): Promise<void> {
-    status = await createDraftForActiveAccount();
+    await createDraftForActiveAccount();
     await refreshData();
   }
 
@@ -133,16 +148,6 @@
 
   async function handleRestoreWorkspace(): Promise<void> {
     workspace = await resetWorkspace();
-  }
-
-  function handleToggleSidebar(): Promise<void> {
-    return workspace
-      ? update({
-          ...workspace,
-          sidebarVisible: !workspace.activityBarVisible,
-          activityBarVisible: !workspace.activityBarVisible,
-        })
-      : Promise.resolve();
   }
 
   async function handleToggleRelay(
@@ -169,10 +174,11 @@
     {notifications}
     {postNodes}
     {relaySets}
-    {status}
     focusTab={handleFocusTab}
     closeTab={handleCloseTab}
     openTab={handleOpenTab}
+    openNewTab={handleOpenNewTab}
+    convertTab={handleConvertTab}
     split={handleSplit}
     closePane={handleClosePane}
     resize={handleResize}
@@ -180,7 +186,7 @@
     addReadonly={handleAddReadonly}
     addNip07={handleAddNip07}
     createDraft={handleCreateDraft}
-    toggleSidebar={handleToggleSidebar}
+    {refreshData}
     toggleRelay={handleToggleRelay}
     removeRelay={handleRemoveRelay}
   />

@@ -1,22 +1,11 @@
 import { expect, test } from '@playwright/test';
 
-test('opens and searches settings', async ({ page }) => {
+test('opens grouped settings without filter UI', async ({ page }) => {
   await page.goto('/');
-  await page
-    .getByLabel('Activity')
-    .getByRole('button', { name: 'Settings' })
-    .click();
+  await page.getByRole('button', { name: 'Open new tab' }).first().click();
+  await page.getByRole('button', { name: 'Settings', exact: true }).click();
   await expect(page.getByRole('heading', { name: 'Settings' })).toBeVisible();
-  await page.getByLabel('Search settings').fill('workspace.route');
-  await expect(
-    page.getByRole('button', { name: /workspace.route/ }),
-  ).toBeVisible();
-  await expect(
-    page.getByRole('button', { name: /appearance.cornerRadius/ }),
-  ).toHaveCount(0);
-  await expect(page.getByLabel('Setting inspector')).toBeVisible();
-  await page.getByLabel('Search settings').fill('timeline');
-  await expect(
-    page.getByRole('button', { name: /timeline.initialLimit/ }),
-  ).toBeVisible();
+  await expect(page.getByLabel('Search settings')).toHaveCount(0);
+  await expect(page.getByText('appearance.cornerRadius')).toBeVisible();
+  await expect(page.getByText('timeline.initialLimit')).toBeVisible();
 });

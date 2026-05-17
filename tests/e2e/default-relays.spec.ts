@@ -2,11 +2,13 @@ import { expect, test } from '@playwright/test';
 
 test('shows seeded default relays', async ({ page }) => {
   await page.goto('/');
-  await page
-    .getByLabel('Activity')
-    .getByRole('button', { name: 'Relays' })
-    .click();
-  await expect(page.getByRole('heading', { name: 'Relays' })).toBeVisible();
-  await expect(page.getByText('Damus', { exact: true })).toBeVisible();
+  await page.getByRole('button', { name: 'Open new tab' }).first().click();
+  await page.getByRole('button', { name: 'Relay Settings' }).click();
+  await expect(
+    page.getByRole('heading', { name: 'Relay Settings' }),
+  ).toBeVisible();
+  await expect(
+    page.getByRole('textbox', { name: 'Label wss://relay.damus.io' }),
+  ).toHaveValue('Damus');
   await expect(page.getByText('wss://relay.damus.io')).toBeVisible();
 });
