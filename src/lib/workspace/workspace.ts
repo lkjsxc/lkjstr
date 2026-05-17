@@ -2,7 +2,6 @@ import {
   createLayout,
   findPane,
   paneIds,
-  splitPane,
   type SplitDirection,
   type WorkspaceLayoutNode,
 } from './layout-tree';
@@ -20,6 +19,7 @@ import {
   closeTabAndRecover,
   ensureUsableWorkspace,
 } from './workspace-recovery';
+import { smartSplitPane } from './smart-split';
 
 export type Workspace = {
   readonly id: string;
@@ -125,12 +125,7 @@ export function splitFocusedPane(
   const pane = createPane(group.id);
   return touch({
     ...usable,
-    layout: splitPane(
-      usable.layout,
-      usable.focusedPaneId,
-      direction,
-      pane,
-    ),
+    layout: smartSplitPane(usable.layout, usable.focusedPaneId, direction, pane),
     tabGroups: { ...usable.tabGroups, [group.id]: group },
     tabs: { ...usable.tabs, [tab.id]: tab },
     focusedPaneId: pane.id,
