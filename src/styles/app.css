@@ -15,16 +15,39 @@ body {
   margin: 0;
 }
 
+button,
 .button {
   background: #1d5c63;
   border: 0;
   border-radius: 6px;
   color: white;
   cursor: pointer;
-  display: inline-block;
   font: inherit;
-  padding: 0.75rem 1rem;
+  padding: 0.55rem 0.75rem;
+}
+
+button {
+  text-align: center;
+}
+
+.button {
+  display: inline-block;
   text-decoration: none;
+}
+
+input,
+textarea {
+  border: 1px solid #aebbb4;
+  border-radius: 6px;
+  box-sizing: border-box;
+  font: inherit;
+  padding: 0.55rem 0.65rem;
+  width: 100%;
+}
+
+textarea {
+  min-height: 10rem;
+  resize: vertical;
 }
 
 .home {
@@ -74,6 +97,10 @@ h1 {
   padding: 1rem;
 }
 
+.rail button {
+  width: 100%;
+}
+
 .deck {
   display: flex;
   gap: 0.75rem;
@@ -97,6 +124,16 @@ h1 {
   padding: 0.75rem;
 }
 
+.tile nav {
+  display: flex;
+  gap: 0.25rem;
+}
+
+.tile nav button {
+  min-width: 2rem;
+  padding: 0.35rem;
+}
+
 .tile h2 {
   font-size: 1rem;
   margin: 0;
@@ -105,6 +142,43 @@ h1 {
 .tile p {
   color: #59666d;
   padding: 0.75rem;
+}
+
+.timeline {
+  display: grid;
+  max-height: calc(100vh - 5rem);
+  overflow: auto;
+}
+
+.event {
+  border-bottom: 1px solid #e5ebe7;
+  padding: 0.75rem;
+}
+
+.event time {
+  color: #6b767c;
+  display: block;
+  font-size: 0.8rem;
+  margin-top: 0.2rem;
+}
+
+.monitor {
+  display: grid;
+  gap: 0.5rem;
+  list-style: none;
+  margin: 0;
+  padding: 0.75rem;
+}
+
+.monitor li {
+  align-items: center;
+  display: flex;
+  gap: 0.5rem;
+  justify-content: space-between;
+}
+
+.monitor span {
+  overflow-wrap: anywhere;
 }
 
 @media (max-width: 720px) {
