@@ -9,6 +9,7 @@
   import type { WorkspaceTab, TabKind } from '$lib/workspace/tab';
   import RelayMonitorTab from '$lib/tabs/relays/RelayMonitorTab.svelte';
   import SettingsTab from '$lib/tabs/settings/SettingsTab.svelte';
+  import TimelineTab from '$lib/tabs/timeline/TimelineTab.svelte';
   import TabStrip from './TabStrip.svelte';
   import TileMenu from './TileMenu.svelte';
 
@@ -57,8 +58,7 @@
   {#if active}
     <div class="pane-body">
       {#if active.kind === 'timeline'}
-        <h2>{active.title}</h2>
-        <p>Timeline events render here from cache first, then relay updates.</p>
+        <TimelineTab tabId={active.id} relaySets={props.relaySets} />
       {:else if active.kind === 'account-manager'}
         <h2>Accounts</h2>
         <div class="toolbar">

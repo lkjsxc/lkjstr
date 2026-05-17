@@ -1,0 +1,47 @@
+.timeline-tab {
+  display: grid;
+  gap: var(--space-3);
+}
+
+.timeline-status {
+  align-items: center;
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-3);
+  justify-content: space-between;
+}
+
+.timeline-status h2 {
+  margin: 0;
+}
+
+.event-list {
+  display: grid;
+  gap: var(--space-3);
+}
+
+.event-row {
+  align-items: flex-start;
+  border-bottom: 1px solid var(--color-border);
+  display: grid;
+  gap: var(--space-3);
+  grid-template-columns: auto minmax(0, 1fr);
+  padding: var(--space-3) 0;
+}
+
+.event-main {
+  min-width: 0;
+}
+
+.event-meta {
+  color: var(--color-text-muted);
+  display: flex;
+  flex-wrap: wrap;
+  font-size: 0.78rem;
+  gap: var(--space-2);
+}
+
+.event-content {
+  overflow-wrap: anywhere;
+  white-space: pre-wrap;
+}
