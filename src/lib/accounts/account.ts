@@ -1,29 +1,79 @@
-import { decodeEntity } from '../protocol';
+import { decodeEntity, encodeNpub } from '../protocol';
 
-export type Account =
-  | {
-      readonly mode: 'readonly';
-      readonly pubkey: string;
-      readonly label: string;
-    }
-  | { readonly mode: 'nip07'; readonly pubkey: string; readonly label: string };
+export type SignerType = 'readonly' | 'nip07';
+
+export type AccountCapabilities = {
+  readonly read: boolean;
+  readonly sign: boolean;
+  readonly publish: boolean;
+  readonly decrypt: boolean;
+  readonly wallet: boolean;
+};
+
+export type Account = {
+  readonly id: string;
+  readonly pubkey: string;
+  readonly npub: string;
+  readonly label: string;
+  readonly signerType: SignerType;
+  readonly capabilities: AccountCapabilities;
+  readonly defaultRelayGroupId: string | null;
+  readonly profileEventId: string | null;
+  readonly avatarUrl: string | null;
+  readonly displayName: string | null;
+  readonly nip05: string | null;
+  readonly createdAt: number;
+  readonly updatedAt: number;
+  readonly lastUsedAt: number | null;
+};
+
+export function createAccount(
+  pubkey: string,
+  signerType: SignerType,
+  label = shortKey(pubkey),
+): Account {
+  const now = Date.now();
+  return {
+    id: `${signerType}:${pubkey}`,
+    pubkey,
+    npub: encodeNpub(pubkey),
+    label,
+    signerType,
+    capabilities: capabilitiesFor(signerType),
+    defaultRelayGroupId: null,
+    profileEventId: null,
+    avatarUrl: null,
+    displayName: null,
+    nip05: null,
+    createdAt: now,
+    updatedAt: now,
+    lastUsedAt: null,
+  };
+}
 
 export function parseReadonlyAccount(input: string): Account | undefined {
-  const trimmed = input.trim();
+  const pubkey = parsePubkey(input);
+  return pubkey ? createAccount(pubkey, 'readonly') : undefined;
+}
+
+export function parsePubkey(input: string): string | undefined {
+  const trimmed = input.trim().toLowerCase();
   const decoded = decodeEntity(trimmed);
-  if (decoded?.type === 'npub') {
-    return {
-      mode: 'readonly',
-      pubkey: decoded.data,
-      label: shortKey(decoded.data),
-    };
-  }
-  if (/^[0-9a-f]{64}$/.test(trimmed)) {
-    return { mode: 'readonly', pubkey: trimmed, label: shortKey(trimmed) };
-  }
-  return undefined;
+  if (decoded?.type === 'npub') return decoded.data;
+  return /^[0-9a-f]{64}$/.test(trimmed) ? trimmed : undefined;
 }
 
 export function shortKey(pubkey: string): string {
   return `${pubkey.slice(0, 8)}:${pubkey.slice(-6)}`;
+}
+
+function capabilitiesFor(signerType: SignerType): AccountCapabilities {
+  const canSign = signerType === 'nip07';
+  return {
+    read: true,
+    sign: canSign,
+    publish: canSign,
+    decrypt: canSign,
+    wallet: false,
+  };
 }

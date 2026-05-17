@@ -21,16 +21,17 @@ describe('account helpers', () => {
   });
 
   it('parses readonly accounts from hex public keys', () => {
-    expect(parseReadonlyAccount(` ${pubkey} `)).toEqual({
-      mode: 'readonly',
+    expect(parseReadonlyAccount(` ${pubkey} `)).toMatchObject({
+      signerType: 'readonly',
       pubkey,
       label: 'aaaaaaaa:aaaaaa',
+      capabilities: { read: true, sign: false, publish: false },
     });
   });
 
   it('parses readonly accounts from npub entities', () => {
-    expect(parseReadonlyAccount(encodeNpub(pubkey))).toEqual({
-      mode: 'readonly',
+    expect(parseReadonlyAccount(encodeNpub(pubkey))).toMatchObject({
+      signerType: 'readonly',
       pubkey,
       label: 'aaaaaaaa:aaaaaa',
     });
@@ -47,10 +48,11 @@ describe('account helpers', () => {
       signEvent: vi.fn(),
     };
 
-    await expect(connectNip07(provider)).resolves.toEqual({
-      mode: 'nip07',
+    await expect(connectNip07(provider)).resolves.toMatchObject({
+      signerType: 'nip07',
       pubkey,
-      label: 'NIP-07 aaaaaaaa:aaaaaa',
+      label: 'NIP-07 aaaaaaaa',
+      capabilities: { read: true, sign: true, publish: true },
     });
     expect(provider.getPublicKey).toHaveBeenCalledOnce();
   });

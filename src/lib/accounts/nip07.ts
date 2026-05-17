@@ -1,5 +1,5 @@
 import type { NostrEvent, UnsignedNostrEvent } from '../protocol';
-import { shortKey, type Account } from './account';
+import { createAccount, type Account } from './account';
 
 export type Nip07Provider = {
   readonly getPublicKey: () => Promise<string>;
@@ -21,5 +21,5 @@ export async function connectNip07(
 ): Promise<Account | undefined> {
   if (!provider) return undefined;
   const pubkey = await provider.getPublicKey();
-  return { mode: 'nip07', pubkey, label: `NIP-07 ${shortKey(pubkey)}` };
+  return createAccount(pubkey, 'nip07', `NIP-07 ${pubkey.slice(0, 8)}`);
 }

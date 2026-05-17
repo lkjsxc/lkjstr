@@ -12,7 +12,7 @@ const event = finalizeEvent(
     kind: 1,
     tags: [
       ['p', 'a'.repeat(64)],
-      ['t', 'deck'],
+      ['t', 'workspace'],
     ],
     content: 'hello',
   },
@@ -21,11 +21,13 @@ const event = finalizeEvent(
 
 describe('protocol filters', () => {
   it('parses valid filters', () => {
-    expect(parseFilter({ kinds: [1], '#t': ['deck'], limit: 10 })).toEqual({
-      kinds: [1],
-      '#t': ['deck'],
-      limit: 10,
-    });
+    expect(parseFilter({ kinds: [1], '#t': ['workspace'], limit: 10 })).toEqual(
+      {
+        kinds: [1],
+        '#t': ['workspace'],
+        limit: 10,
+      },
+    );
   });
 
   it('rejects malformed filters', () => {
@@ -37,12 +39,14 @@ describe('protocol filters', () => {
     expect(
       matchesFilter(event, {
         kinds: [1],
-        '#t': ['deck'],
+        '#t': ['workspace'],
         since: 50,
         until: 100,
       }),
     ).toBe(true);
-    expect(matchesFilter(event, { kinds: [0], '#t': ['deck'] })).toBe(false);
+    expect(matchesFilter(event, { kinds: [0], '#t': ['workspace'] })).toBe(
+      false,
+    );
   });
 
   it('matches filter arrays with OR semantics', () => {

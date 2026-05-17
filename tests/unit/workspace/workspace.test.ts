@@ -1,0 +1,74 @@
+import { describe, expect, it, vi, beforeEach, afterEach } from 'vitest';
+import { createPane } from '../../../src/lib/workspace/pane';
+import { parseLayout, splitPane } from '../../../src/lib/workspace/layout-tree';
+import { resizeHere } from '../../../src/lib/workspace/resize';
+import {
+  closeWorkspaceTab,
+  createWorkspace,
+  openTab,
+  splitFocusedPane,
+} from '../../../src/lib/workspace/workspace';
+import { createDefaultTabRegistry } from '../../../src/lib/workspace/tab-registry';
+
+describe('workspace model', () => {
+  beforeEach(() => {
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date('2026-01-02T03:04:05Z'));
+  });
+
+  afterEach(() => vi.useRealTimers());
+
+  it('creates and serializes a restorable workspace', () => {
+    const workspace = createWorkspace();
+    const raw = JSON.parse(JSON.stringify(workspace.layout)) as unknown;
+    expect(parseLayout(raw)).toEqual(workspace.layout);
+    expect(parseLayout({ type: 'split', children: [] })).toBeUndefined();
+  });
+
+  it('supports horizontal and vertical nested splits', () => {
+    const workspace = createWorkspace();
+    const firstPane = workspace.focusedPaneId;
+    const horizontal = splitFocusedPane(workspace, 'horizontal');
+    const vertical = splitFocusedPane(horizontal, 'vertical');
+    expect(vertical.layout.type).toBe('split');
+    expect(JSON.stringify(vertical.layout)).toContain(firstPane);
+    expect(JSON.stringify(vertical.layout)).toContain('vertical');
+  });
+
+  it('opens and closes tabs inside a pane group', () => {
+    const workspace = createWorkspace();
+    const opened = openTab(
+      workspace,
+      workspace.focusedPaneId,
+      'notifications',
+      'Notifications',
+    );
+    expect(Object.keys(opened.tabs)).toHaveLength(2);
+    const closed = closeWorkspaceTab(
+      opened,
+      opened.focusedPaneId,
+      opened.focusedTabId,
+    );
+    expect(Object.keys(closed.tabs)).toHaveLength(1);
+  });
+
+  it('resizes split ratios without changing child identity', () => {
+    const pane = createPane('group-a');
+    const split = splitPane(pane, pane.id, 'horizontal', createPane('group-b'));
+    if (split.type !== 'split') throw new Error('expected split');
+    const resized = resizeHere(split, 0, 0.2);
+    expect(resized.children).toBe(split.children);
+    expect(Math.round(resized.sizes.reduce((a, b) => a + b) * 100)).toBe(100);
+  });
+
+  it('creates default runtimes with idempotent cleanup', () => {
+    const runtime = createDefaultTabRegistry()
+      .require('timeline')
+      .createRuntime({ tabId: 'tab-a', config: {} });
+    runtime.suspend();
+    runtime.resume();
+    runtime.close();
+    runtime.close();
+    expect(runtime.metadata().title).toBe('Home');
+  });
+});

@@ -18,7 +18,7 @@ const event = finalizeEvent(
       ['e', '1'.repeat(64), 'wss://relay.example', 'root'],
       ['e', '2'.repeat(64), 'wss://relay.example', 'reply'],
       ['p', '3'.repeat(64)],
-      ['t', 'deck'],
+      ['t', 'workspace'],
     ],
     content: 'tag test',
   },
@@ -29,7 +29,7 @@ describe('tags, relay URLs, and NIP-19', () => {
   it('extracts indexed tags and reply markers', () => {
     expect(indexTags(event)).toMatchObject({
       events: ['1'.repeat(64), '2'.repeat(64)],
-      topics: ['deck'],
+      topics: ['workspace'],
     });
     expect(replyRoot(event)).toBe('1'.repeat(64));
     expect(replyParent(event)).toBe('2'.repeat(64));
