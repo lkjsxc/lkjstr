@@ -1,0 +1,51 @@
+Owner: `docs/README.md`
+State: Canon
+
+# Documentation Canon
+
+`docs/` is the active canon for `lkjstr`.
+
+## Read This Section When
+
+- You need the top-level map.
+- You need global repository rules.
+- You need the fastest route to a task-specific owner.
+
+## System Goal
+
+- Build a browser-first TypeScript Nostr deck client.
+- Keep relays user-configured until the user opts in.
+- Keep protocol, relay, cache, query, worker, account, and UI contracts explicit.
+- Keep the deck and tile model central to every product surface.
+
+## Global Rules
+
+1. Keep one canonical owner for each contract.
+2. Keep each docs directory to one `README.md` plus multiple children.
+3. Keep each docs file at `<= 300` lines.
+4. Keep each authored source file at `<= 200` lines.
+5. Prefer exact commands, paths, defaults, routes, and payload shapes.
+6. Remove conflicting retired behavior instead of preserving it.
+7. Change docs first, then implementation, then verification.
+8. Optimize for LLM retrieval before human ornament.
+
+## Child Index
+
+- [Current state](current-state.md)
+- [Vision](vision/README.md)
+- [Product](product/README.md)
+- [Protocol](protocol/README.md)
+- [Architecture](architecture/README.md)
+- [Operations](operations/README.md)
+- [Repository](repository/README.md)
+- [Decisions](decisions/README.md)
+- [Research](research/README.md)
+
+## Task Routes
+
+- Deck UI: [product/deck.md](product/deck.md), [architecture/ui-composition.md](architecture/ui-composition.md).
+- Protocol support: [protocol/nip-support.md](protocol/nip-support.md), [protocol/kernel.md](protocol/kernel.md).
+- Relay lifecycle: [protocol/relays.md](protocol/relays.md), [decisions/relay-ownership.md](decisions/relay-ownership.md).
+- Storage and workers: [architecture/storage-workers.md](architecture/storage-workers.md).
+- Verification: [operations/verification.md](operations/verification.md), [operations/readiness.md](operations/readiness.md).
+- Repository rules: [repository/README.md](repository/README.md).

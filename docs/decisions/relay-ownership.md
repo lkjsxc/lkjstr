@@ -1,0 +1,19 @@
+# User-Owned Relay Configuration
+
+Owner: Product
+State: Accepted
+
+## Decision
+
+Users configure the relays that drive reading, publishing, and monitoring. The app may provide starter suggestions, but saved user relay sets define runtime behavior.
+
+## Consequences
+
+- Relay scope must be visible in timelines, composer publish controls, and monitor views.
+- Empty states must identify whether filters or relay selection caused the result.
+- Publish success is measured per relay, not globally.
+- Relay health is local evidence and must not become hidden global policy.
+
+## Rejected Direction
+
+The app will not hard-code a permanent universal relay list as the silent source of truth.
