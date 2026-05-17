@@ -17,7 +17,14 @@ export const defaultRelaySet: RelaySet = {
 };
 
 function labelFor(url: string): string {
-  return new URL(url).hostname.replace(/^relay\./, '');
+  const labels: Record<string, string> = {
+    'wss://relay.damus.io': 'Damus',
+    'wss://nos.lol': 'nos.lol',
+    'wss://relay.primal.net': 'Primal',
+    'wss://relay.nostr.band': 'Nostr.Band',
+    'wss://offchain.pub': 'Offchain',
+  };
+  return labels[url] ?? new URL(url).hostname.replace(/^relay\./, '');
 }
 
 function relay(url: string, label: string) {
