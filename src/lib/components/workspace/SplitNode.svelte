@@ -54,7 +54,7 @@
     {#each props.node.children as child, index (child.id)}
       <div
         class="split-child"
-        style={`flex-grow: ${props.node.sizes[index] ?? 1}`}
+        style={`flex: ${props.node.sizes[index] ?? 1} 1 0`}
       >
         <RecursiveSplit
           node={child}
