@@ -189,5 +189,11 @@ h1 {
   .rail {
     flex-direction: row;
     justify-content: space-between;
+    overflow-x: auto;
+  }
+
+  .rail > * {
+    flex: 0 0 auto;
+    max-width: 12rem;
   }
 }

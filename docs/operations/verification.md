@@ -17,6 +17,7 @@ aligned.
 - `pnpm build` builds the browser app.
 - `pnpm test:e2e` runs Playwright behavior checks.
 - `pnpm verify` runs the standard local gate.
+- `pnpm verify:e2e` runs the full local gate plus Playwright.
 
 ## Compose Commands
 

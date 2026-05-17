@@ -35,10 +35,19 @@ compose services, tests, scripts, project licensing, and this documentation set.
 
 - Protocol modules are not implemented yet.
 - Relay, cache, query, account, and deck state modules are not implemented yet.
-- The deck route is a static shell.
-- Playwright exists but is not part of the standard `verify` script.
+- Relay, cache, query, account, and deck modules are implemented as browser
+  foundation modules.
+- The deck route can add relays, persist tiles, connect read-only accounts,
+  request NIP-07 signing, subscribe to relays, and publish notes through NIP-07.
+- Playwright covers the deck shell and local interaction flow.
 
-## Verification Status
+## Remaining Gaps
+
+- IndexedDB persistence is not implemented yet.
+- Relay reconnect backoff is not implemented yet.
+- Worker verification and indexing are not implemented yet.
+- Timeline virtualization is not implemented yet.
+- Public relay smoke testing is manual and user-configured.
 
 Available package scripts include `check:repo`, `lint`, `check`, `test`,
 `build`, `verify`, and `verify:e2e`.
