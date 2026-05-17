@@ -3,39 +3,56 @@
   import type { Account } from '$lib/accounts/account';
   import type { NotificationRecord } from '$lib/notifications/notification';
   import type { PostTreeNode } from '$lib/post-manager/post-tree';
+  import type { RelaySet } from '$lib/relays/relay-store';
   import type { WorkspacePaneNode } from '$lib/workspace/pane';
   import type { TabGroup } from '$lib/workspace/tab-group';
   import type { WorkspaceTab, TabKind } from '$lib/workspace/tab';
+  import RelayMonitorTab from '$lib/tabs/relays/RelayMonitorTab.svelte';
+  import SettingsTab from '$lib/tabs/settings/SettingsTab.svelte';
+  import EmptyPane from './EmptyPane.svelte';
   import TabStrip from './TabStrip.svelte';
 
   type Props = {
     pane: WorkspacePaneNode;
-    group: TabGroup;
+    group?: TabGroup;
     tabs: Record<string, WorkspaceTab>;
     accounts: Account[];
     notifications: NotificationRecord[];
     postNodes: PostTreeNode[];
+    relaySets: RelaySet[];
     focusTab: (paneId: string, tabId: string) => void;
     closeTab: (paneId: string, tabId: string) => void;
-    openTab: (paneId: string, kind: TabKind) => void;
+    openTab: (paneId: string | null, kind: TabKind) => void;
     split: (paneId: string, direction: 'horizontal' | 'vertical') => void;
+    splitInto: (
+      paneId: string,
+      direction: 'horizontal' | 'vertical',
+      count: number,
+    ) => void;
+    closePane: (paneId: string) => void;
     addReadonly: () => void;
     addNip07: () => void;
     createDraft: () => void;
+    toggleRelay: (setId: string, url: string, enabled: boolean) => void;
+    removeRelay: (setId: string, url: string) => void;
   };
 
   let props: Props = $props();
-  let active = $derived(props.tabs[props.group.activeTabId]);
+  let active = $derived(
+    props.group?.activeTabId ? props.tabs[props.group.activeTabId] : undefined,
+  );
 </script>
 
 <section class="pane" aria-label="Workspace pane">
   <header class="pane-head">
-    <TabStrip
-      group={props.group}
-      tabs={props.tabs}
-      focusTab={(tabId) => props.focusTab(props.pane.id, tabId)}
-      closeTab={(tabId) => props.closeTab(props.pane.id, tabId)}
-    />
+    {#if props.group}
+      <TabStrip
+        group={props.group}
+        tabs={props.tabs}
+        focusTab={(tabId) => props.focusTab(props.pane.id, tabId)}
+        closeTab={(tabId) => props.closeTab(props.pane.id, tabId)}
+      />
+    {/if}
     <nav>
       <button
         type="button"
@@ -46,6 +63,19 @@
         type="button"
         onclick={() => props.split(props.pane.id, 'vertical')}
         >Split down</button
+      >
+      <button
+        type="button"
+        onclick={() => props.splitInto(props.pane.id, 'horizontal', 3)}
+        >3 columns</button
+      >
+      <button
+        type="button"
+        onclick={() => props.splitInto(props.pane.id, 'vertical', 5)}
+        >5 rows</button
+      >
+      <button type="button" onclick={() => props.closePane(props.pane.id)}
+        >Close pane</button
       >
     </nav>
   </header>
@@ -100,11 +130,13 @@
           <p>No draft tree nodes yet.</p>
         {/each}
       {:else if active.kind === 'relay-monitor'}
-        <h2>Relays</h2>
-        <p>
-          Relay health, subscription counts, publish results, and auth state
-          render here.
-        </p>
+        <RelayMonitorTab
+          relaySets={props.relaySets}
+          toggleRelay={props.toggleRelay}
+          removeRelay={props.removeRelay}
+        />
+      {:else if active.kind === 'settings'}
+        <SettingsTab />
       {:else if active.kind === 'cache-status'}
         <h2>Cache</h2>
         <p>
@@ -115,6 +147,12 @@
         <p>This tab kind is registered and ready for a typed runtime.</p>
       {/if}
     </div>
+  {:else}
+    <EmptyPane
+      paneId={props.pane.id}
+      openTab={props.openTab}
+      split={props.split}
+    />
   {/if}
 
   <footer class="pane-tabs">
@@ -139,6 +177,10 @@
       type="button"
       onclick={() => props.openTab(props.pane.id, 'relay-monitor')}
       >Relays</button
+    >
+    <button
+      type="button"
+      onclick={() => props.openTab(props.pane.id, 'settings')}>Settings</button
     >
   </footer>
 </section>

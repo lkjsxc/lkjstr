@@ -30,6 +30,7 @@ describe('workspace model', () => {
     const firstPane = workspace.focusedPaneId;
     const horizontal = splitFocusedPane(workspace, 'horizontal');
     const vertical = splitFocusedPane(horizontal, 'vertical');
+    if (!vertical.layout) throw new Error('expected layout');
     expect(vertical.layout.type).toBe('split');
     expect(JSON.stringify(vertical.layout)).toContain(firstPane);
     expect(JSON.stringify(vertical.layout)).toContain('vertical');
@@ -44,6 +45,8 @@ describe('workspace model', () => {
       'Notifications',
     );
     expect(Object.keys(opened.tabs)).toHaveLength(2);
+    if (!opened.focusedPaneId || !opened.focusedTabId)
+      throw new Error('expected focused tab');
     const closed = closeWorkspaceTab(
       opened,
       opened.focusedPaneId,

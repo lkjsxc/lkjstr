@@ -1,56 +1,33 @@
-:root {
-  color: #1e2528;
-  background: #eef2ef;
-  font-family: system-ui, sans-serif;
-}
-
-body {
-  margin: 0;
-}
-
-button {
-  background: #24545c;
-  border: 0;
-  border-radius: 6px;
-  color: white;
-  cursor: pointer;
-  font: inherit;
-  padding: 0.45rem 0.65rem;
-}
-
-button.icon {
-  background: transparent;
-  color: #516066;
-  padding: 0.25rem;
-}
-
 .workspace-shell {
   display: grid;
-  grid-template-columns: 4.5rem minmax(0, 1fr);
+  grid-template-columns: 5rem minmax(0, 1fr);
   height: 100vh;
 }
 
 .activity-bar,
 .top-bar,
 .status-bar {
-  background: #182225;
-  color: white;
+  background: var(--color-bg-elevated);
+  border-color: var(--color-border);
+  color: var(--color-text);
 }
 
 .activity-bar {
   align-items: stretch;
+  border-right: 1px solid var(--color-border);
   display: flex;
   flex-direction: column;
-  gap: 0.5rem;
-  padding: 0.75rem 0.4rem;
+  gap: var(--space-2);
+  padding: var(--space-3) var(--space-2);
 }
 
 .activity-bar button {
   font-size: 0.75rem;
-  padding: 0.45rem 0.25rem;
+  padding: 0.4rem 0.25rem;
 }
 
 .workspace-main {
+  background: var(--color-bg);
   display: grid;
   grid-template-rows: auto minmax(0, 1fr) auto;
   min-width: 0;
@@ -59,10 +36,16 @@ button.icon {
 .top-bar,
 .status-bar {
   align-items: center;
+  border-bottom: 1px solid var(--color-border);
   display: flex;
   gap: 1rem;
   justify-content: space-between;
   padding: 0.45rem 0.75rem;
+}
+
+.status-bar {
+  border-bottom: 0;
+  border-top: 1px solid var(--color-border);
 }
 
 .split {
@@ -82,13 +65,14 @@ button.icon {
 
 .split-child {
   display: flex;
-  overflow: hidden;
   min-height: 0;
   min-width: 0;
+  overflow: hidden;
 }
 
 .resize {
-  background: #9aa8a2;
+  background: var(--color-border);
+  border: 0;
   border-radius: 0;
   flex: 0 0 0.35rem;
   min-height: 0;
@@ -96,9 +80,15 @@ button.icon {
   padding: 0;
 }
 
+.resize:hover {
+  background: var(--color-text-faint);
+}
+
 .pane {
-  background: white;
-  border: 1px solid #ccd6d0;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-panel);
+  color: var(--color-text);
   display: grid;
   flex: 1 1 auto;
   grid-template-rows: auto minmax(0, 1fr) auto;
@@ -108,30 +98,38 @@ button.icon {
 
 .pane-head,
 .pane-tabs,
-.toolbar {
+.toolbar,
+.settings-search,
+.settings-actions,
+.empty-actions {
   align-items: center;
   display: flex;
-  gap: 0.4rem;
-  padding: 0.45rem;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+  padding: var(--space-2);
 }
 
 .pane-head {
-  border-bottom: 1px solid #dbe3de;
+  border-bottom: 1px solid var(--color-border);
   justify-content: space-between;
 }
 
-.pane-body {
+.pane-body,
+.empty-pane,
+.empty-workspace {
   overflow: auto;
   padding: 0.9rem;
 }
 
-.pane-body h2 {
-  font-size: 1.15rem;
+.pane-body h2,
+.empty-pane h2,
+.empty-workspace h2 {
+  font-size: 1.05rem;
   margin: 0 0 0.75rem;
 }
 
 .pane-tabs {
-  border-top: 1px solid #dbe3de;
+  border-top: 1px solid var(--color-border);
   overflow-x: auto;
 }
 
@@ -143,14 +141,18 @@ button.icon {
 }
 
 .tab-strip button {
-  background: #e5ece8;
-  color: #1f2b2f;
+  background: transparent;
+  border: 1px solid transparent;
+  border-bottom-color: var(--color-border);
+  border-radius: var(--radius-tab);
+  color: var(--color-text-muted);
   white-space: nowrap;
 }
 
 .tab-strip button.active {
-  background: #24545c;
-  color: white;
+  background: var(--color-surface-2);
+  border-color: var(--color-border-strong);
+  color: var(--color-text);
 }
 
 .identity-chip,
@@ -162,7 +164,7 @@ button.icon {
 
 .identity-chip small,
 .row small {
-  color: #5f6c72;
+  color: var(--color-text-muted);
 }
 
 .identity-chip.compact small {
@@ -170,7 +172,7 @@ button.icon {
 }
 
 .avatar {
-  border-radius: 50%;
+  border-radius: var(--radius-avatar);
   display: inline-grid;
   flex: 0 0 auto;
   height: 2rem;
@@ -180,12 +182,12 @@ button.icon {
 }
 
 .avatar.fallback {
-  color: white;
+  color: var(--color-bg);
   font-weight: 700;
 }
 
 .row {
-  border-bottom: 1px solid #edf2ef;
+  border-bottom: 1px solid var(--color-border);
   justify-content: space-between;
-  padding: 0.7rem 0;
+  padding: 0.65rem 0;
 }

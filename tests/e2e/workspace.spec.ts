@@ -1,7 +1,7 @@
 import { expect, test } from '@playwright/test';
 
 test('opens the workspace and creates split panes', async ({ page }) => {
-  await page.goto('/workspace');
+  await page.goto('/');
   await expect(page.getByRole('heading', { name: 'Home' })).toBeVisible();
   await page.getByRole('button', { name: 'Split right' }).click();
   await expect(page.getByRole('heading', { name: 'Home' })).toHaveCount(2);
@@ -12,7 +12,7 @@ test('opens the workspace and creates split panes', async ({ page }) => {
 test('opens account, notification, profile, and post manager tabs', async ({
   page,
 }) => {
-  await page.goto('/workspace');
+  await page.goto('/');
   await page.getByRole('button', { name: 'Accounts' }).click();
   await expect(page.getByRole('heading', { name: 'Accounts' })).toBeVisible();
   await page.getByRole('button', { name: 'Notifications' }).click();
@@ -31,7 +31,7 @@ test('opens account, notification, profile, and post manager tabs', async ({
 });
 
 test('persists layout after reload', async ({ page }) => {
-  await page.goto('/workspace');
+  await page.goto('/');
   await page.getByRole('button', { name: 'Split right' }).click();
   await expect(page.getByRole('heading', { name: 'Home' })).toHaveCount(2);
   await page.reload();

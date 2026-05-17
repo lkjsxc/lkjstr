@@ -3,10 +3,20 @@ import type { WorkspaceTab } from './tab';
 export type TabGroup = {
   readonly id: string;
   readonly tabIds: readonly string[];
-  readonly activeTabId: string;
+  readonly activeTabId: string | null;
   readonly pinnedTabIds: readonly string[];
   readonly closedTabs: readonly WorkspaceTab[];
 };
+
+export function createEmptyTabGroup(): TabGroup {
+  return {
+    id: crypto.randomUUID(),
+    tabIds: [],
+    activeTabId: null,
+    pinnedTabIds: [],
+    closedTabs: [],
+  };
+}
 
 export function createTabGroup(tab: WorkspaceTab): TabGroup {
   return {
@@ -31,7 +41,7 @@ export function activateTab(group: TabGroup, tabId: string): TabGroup {
 export function closeTab(group: TabGroup, tab: WorkspaceTab): TabGroup {
   const tabIds = group.tabIds.filter((id) => id !== tab.id);
   const activeTabId =
-    group.activeTabId === tab.id ? (tabIds.at(-1) ?? '') : group.activeTabId;
+    group.activeTabId === tab.id ? (tabIds.at(-1) ?? null) : group.activeTabId;
   return {
     ...group,
     tabIds,

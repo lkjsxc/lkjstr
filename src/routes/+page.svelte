@@ -1,19 +1,16 @@
 <script lang="ts">
   import { onMount } from 'svelte';
-  import {
-    addNip07Account,
-    addReadonlyAccount,
-  } from '$lib/accounts/account-manager';
-  import { activeAccount, listAccounts } from '$lib/accounts/account-store';
   import type { Account } from '$lib/accounts/account';
-  import { accountNotifications } from '$lib/notifications/notification-store';
   import type { NotificationRecord } from '$lib/notifications/notification';
-  import {
-    createDraftNode,
-    getOrCreatePostTree,
-    treeNodes,
-  } from '$lib/post-manager/post-store';
   import type { PostTreeNode } from '$lib/post-manager/post-tree';
+  import {
+    removeRelay,
+    setRelayEnabled,
+    type RelaySet,
+  } from '$lib/relays/relay-store';
+  import WorkspaceRoot from '$lib/components/workspace/WorkspaceRoot.svelte';
+  import { closeWorkspacePane } from '$lib/workspace/pane-commands';
+  import { splitPaneInto } from '$lib/workspace/n-way-split';
   import { equalizeSplit, resizeSplit } from '$lib/workspace/resize';
   import type { TabKind } from '$lib/workspace/tab';
   import {
@@ -25,15 +22,22 @@
     type Workspace,
   } from '$lib/workspace/workspace';
   import {
+    addNip07FromProvider,
+    addReadonlyFromInput,
+    createDraftForActiveAccount,
+    loadWorkspacePageData,
+  } from '$lib/workspace/workspace-page-data';
+  import {
     loadWorkspace,
+    resetWorkspace,
     saveWorkspace,
   } from '$lib/workspace/workspace-persistence';
-  import WorkspaceRoot from '$lib/components/workspace/WorkspaceRoot.svelte';
 
   let workspace = $state<Workspace>();
   let accounts = $state<Account[]>([]);
   let notifications = $state<NotificationRecord[]>([]);
   let postNodes = $state<PostTreeNode[]>([]);
+  let relaySets = $state<RelaySet[]>([]);
   let status = $state('Workspace loading.');
 
   onMount(async () => {
@@ -44,27 +48,19 @@
 
   async function update(next: Workspace): Promise<void> {
     workspace = next;
-    try {
-      await saveWorkspace(next);
-      status = 'Workspace saved.';
-    } catch {
-      status = 'Workspace snapshot saved; IndexedDB write failed.';
-    }
+    await saveWorkspace(next);
+    status = 'Workspace saved.';
   }
 
   async function refreshData(): Promise<void> {
-    accounts = await listAccounts();
-    const active = await activeAccount();
-    notifications = active ? await accountNotifications(active.pubkey) : [];
-    if (!active) {
-      postNodes = [];
-      return;
-    }
-    const tree = await getOrCreatePostTree(active.pubkey);
-    postNodes = await treeNodes(tree.id);
+    ({ accounts, notifications, postNodes, relaySets } =
+      await loadWorkspacePageData());
   }
 
-  async function handleOpenTab(paneId: string, kind: TabKind): Promise<void> {
+  async function handleOpenTab(
+    paneId: string | null,
+    kind: TabKind,
+  ): Promise<void> {
     if (!workspace) return;
     const config =
       kind === 'profile' ? { pubkey: accounts[0]?.pubkey ?? '' } : {};
@@ -81,33 +77,41 @@
     );
   }
 
+  async function handleSplitInto(
+    paneId: string,
+    direction: 'horizontal' | 'vertical',
+    count: number,
+  ): Promise<void> {
+    if (workspace)
+      await update(splitPaneInto(workspace, paneId, direction, count));
+  }
+
   async function handleResize(
     splitId: string,
     handleIndex: number,
     deltaRatio: number,
   ): Promise<void> {
-    if (!workspace) return;
-    await update({
-      ...workspace,
-      layout: resizeSplit(workspace.layout, splitId, handleIndex, deltaRatio),
-    });
+    if (workspace?.layout)
+      await update({
+        ...workspace,
+        layout: resizeSplit(workspace.layout, splitId, handleIndex, deltaRatio),
+      });
   }
 
   async function handleEqualize(splitId: string): Promise<void> {
-    if (!workspace) return;
-    await update({
-      ...workspace,
-      layout: equalizeSplit(workspace.layout, splitId),
-    });
+    if (workspace?.layout)
+      await update({
+        ...workspace,
+        layout: equalizeSplit(workspace.layout, splitId),
+      });
   }
 
   async function handleAddReadonly(): Promise<void> {
     const input = window.prompt('npub or hex pubkey');
     if (!input) return;
     try {
-      await addReadonlyAccount(input);
+      status = await addReadonlyFromInput(input);
       await refreshData();
-      status = 'Read-only account added.';
     } catch (error) {
       status = error instanceof Error ? error.message : 'Account add failed.';
     }
@@ -115,24 +119,16 @@
 
   async function handleAddNip07(): Promise<void> {
     try {
-      await addNip07Account();
+      status = await addNip07FromProvider();
       await refreshData();
-      status = 'NIP-07 account added.';
-    } catch (error) {
-      status = error instanceof Error ? error.message : 'NIP-07 unavailable.';
+    } catch {
+      status = 'NIP-07 unavailable.';
     }
   }
 
   async function handleCreateDraft(): Promise<void> {
-    const active = await activeAccount();
-    if (!active) {
-      status = 'Add an account before creating drafts.';
-      return;
-    }
-    const tree = await getOrCreatePostTree(active.pubkey);
-    await createDraftNode(tree, 'Untitled draft');
-    postNodes = await treeNodes(tree.id);
-    status = 'Draft node created.';
+    status = await createDraftForActiveAccount();
+    await refreshData();
   }
 
   function handleFocusTab(paneId: string, tabId: string): Promise<void> {
@@ -146,6 +142,28 @@
       ? update(closeWorkspaceTab(workspace, paneId, tabId))
       : Promise.resolve();
   }
+
+  function handleClosePane(paneId: string): Promise<void> {
+    return workspace
+      ? update(closeWorkspacePane(workspace, paneId))
+      : Promise.resolve();
+  }
+
+  async function handleRestoreWorkspace(): Promise<void> {
+    workspace = await resetWorkspace();
+  }
+
+  async function handleToggleRelay(
+    setId: string,
+    url: string,
+    enabled: boolean,
+  ) {
+    relaySets = await setRelayEnabled(setId, url, enabled);
+  }
+
+  async function handleRemoveRelay(setId: string, url: string) {
+    relaySets = await removeRelay(setId, url);
+  }
 </script>
 
 <svelte:head>
@@ -158,15 +176,21 @@
     {accounts}
     {notifications}
     {postNodes}
+    {relaySets}
     {status}
     focusTab={handleFocusTab}
     closeTab={handleCloseTab}
     openTab={handleOpenTab}
     split={handleSplit}
+    splitInto={handleSplitInto}
+    closePane={handleClosePane}
     resize={handleResize}
     equalize={handleEqualize}
+    restoreWorkspace={handleRestoreWorkspace}
     addReadonly={handleAddReadonly}
     addNip07={handleAddNip07}
     createDraft={handleCreateDraft}
+    toggleRelay={handleToggleRelay}
+    removeRelay={handleRemoveRelay}
   />
 {/if}

@@ -16,6 +16,19 @@ export function createLayout(tabGroupId: string): WorkspacePaneNode {
   return createPane(tabGroupId);
 }
 
+export function createSplit(
+  direction: SplitDirection,
+  children: readonly WorkspaceLayoutNode[],
+): WorkspaceSplitNode {
+  return {
+    id: crypto.randomUUID(),
+    type: 'split',
+    direction,
+    children,
+    sizes: equalSizes(children.length),
+  };
+}
+
 export function splitPane(
   root: WorkspaceLayoutNode,
   paneId: string,
@@ -81,6 +94,7 @@ export function parseLayout(value: unknown): WorkspaceLayoutNode | undefined {
   const children = item.children.map(parseLayout);
   if (children.some((child) => !child)) return undefined;
   const nodes = children as WorkspaceLayoutNode[];
+  if (nodes.length < 2) return undefined;
   const sizes = Array.isArray(item.sizes)
     ? item.sizes
     : equalSizes(nodes.length);
@@ -95,19 +109,6 @@ export function parseLayout(value: unknown): WorkspaceLayoutNode | undefined {
   };
 }
 
-function createSplit(
-  direction: SplitDirection,
-  children: readonly WorkspaceLayoutNode[],
-): WorkspaceSplitNode {
-  return {
-    id: crypto.randomUUID(),
-    type: 'split',
-    direction,
-    children,
-    sizes: equalSizes(children.length),
-  };
-}
-
-function equalSizes(count: number): number[] {
+export function equalSizes(count: number): number[] {
   return Array.from({ length: count }, () => 1 / count);
 }

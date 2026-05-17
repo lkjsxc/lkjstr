@@ -22,10 +22,15 @@ export function minimumSize(node: WorkspaceLayoutNode): RectSize {
   };
 }
 
-export function normalizeRatios(sizes: readonly number[]): number[] {
+export function normalizeRatios(
+  sizes: readonly number[],
+  expectedCount = sizes.length,
+): number[] {
   const clean = sizes.map((size) =>
     Number.isFinite(size) && size > 0 ? size : 1,
   );
+  while (clean.length < expectedCount) clean.push(1);
+  if (clean.length > expectedCount) clean.length = expectedCount;
   const total = clean.reduce((sum, size) => sum + size, 0);
   return clean.map((size) => size / total);
 }

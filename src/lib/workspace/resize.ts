@@ -27,10 +27,12 @@ export function resizeHere(
   if (handleIndex < 0 || handleIndex >= split.sizes.length - 1) return split;
   const sizes = [...split.sizes];
   const min = 0.08;
-  const left = Math.max(min, sizes[handleIndex] + deltaRatio);
-  const right = Math.max(min, sizes[handleIndex + 1] - deltaRatio);
-  sizes[handleIndex] = left;
-  sizes[handleIndex + 1] = right;
+  const left = sizes[handleIndex] ?? 1 / split.children.length;
+  const right = sizes[handleIndex + 1] ?? 1 / split.children.length;
+  const pair = left + right;
+  const nextLeft = Math.min(pair - min, Math.max(min, left + deltaRatio));
+  sizes[handleIndex] = nextLeft;
+  sizes[handleIndex + 1] = pair - nextLeft;
   return { ...split, sizes: normalizeRatios(sizes) };
 }
 
@@ -49,4 +51,21 @@ export function equalizeSplit(
     ...node,
     sizes: node.children.map(() => 1 / node.children.length),
   };
+}
+
+export function setSplitRatios(
+  node: WorkspaceLayoutNode,
+  splitId: string,
+  ratios: readonly number[],
+): WorkspaceLayoutNode {
+  if (node.type === 'pane') return node;
+  if (node.id !== splitId) {
+    return {
+      ...node,
+      children: node.children.map((child) =>
+        setSplitRatios(child, splitId, ratios),
+      ),
+    };
+  }
+  return { ...node, sizes: normalizeRatios(ratios, node.children.length) };
 }

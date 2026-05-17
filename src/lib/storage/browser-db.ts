@@ -4,6 +4,8 @@ import type { CacheMetadata } from '../cache/cache-status';
 import type { NotificationRecord } from '../notifications/notification';
 import type { PostTree, PostTreeNode } from '../post-manager/post-tree';
 import type { NostrEvent } from '../protocol';
+import type { RelaySet } from '../relays/relay-store';
+import type { SettingOverride } from '../settings/settings-store';
 import type { Workspace } from '../workspace/workspace';
 
 export type TabStateRecord = {
@@ -22,6 +24,8 @@ export class LkjstrDb extends Dexie {
   events!: Table<NostrEvent, string>;
   cacheMeta!: Table<CacheMetadata, string>;
   tabStates!: Table<TabStateRecord, string>;
+  settings!: Table<SettingOverride, string>;
+  relaySets!: Table<RelaySet, string>;
 
   constructor() {
     super('lkjstr');
@@ -42,6 +46,8 @@ export class LkjstrDb extends Dexie {
       events: '&id, pubkey, kind, created_at',
       cacheMeta: '&id, updatedAt',
       tabStates: '&id, tabId, updatedAt',
+      settings: '&key, namespace, updatedAt',
+      relaySets: '&id, updatedAt, seeded',
     });
   }
 }
