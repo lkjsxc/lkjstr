@@ -1,16 +1,87 @@
-.settings-table {
-  border-collapse: collapse;
+.relay-monitor {
+  min-width: 32rem;
+}
+
+.settings-tab {
+  display: grid;
+  gap: var(--space-3);
+  min-width: 0;
+}
+
+.settings-header {
+  display: grid;
+  gap: var(--space-2);
+}
+
+.settings-layout {
+  display: grid;
+  gap: var(--space-3);
+  grid-template-columns: minmax(8rem, 0.5fr) minmax(14rem, 1.4fr) minmax(
+      12rem,
+      0.8fr
+    );
+}
+
+.settings-categories,
+.settings-list,
+.settings-inspector {
+  display: grid;
+  gap: var(--space-2);
+  min-width: 0;
+}
+
+.settings-categories {
+  align-content: start;
+}
+
+.settings-categories button.active {
+  border-color: var(--color-border-strong);
+  color: var(--color-text);
+}
+
+.setting-row,
+.settings-inspector {
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-panel);
+  padding: var(--space-3);
+}
+
+.setting-row.active {
+  border-color: var(--color-border-strong);
+}
+
+.setting-key {
+  display: grid;
+  gap: var(--space-1);
+  text-align: left;
   width: 100%;
 }
 
-.settings-table th,
-.settings-table td {
-  border-bottom: 1px solid var(--color-border);
-  padding: 0.45rem;
-  text-align: left;
+.setting-key span,
+.setting-row p,
+.setting-badges,
+.settings-inspector dd {
+  color: var(--color-text-muted);
 }
 
-.settings-tab,
-.relay-monitor {
-  min-width: 32rem;
+.setting-badges {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+}
+
+.settings-inspector textarea,
+.setting-row textarea {
+  max-width: 100%;
+  width: 100%;
+}
+
+@media (max-width: 760px) {
+  .settings-layout {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .settings-categories {
+    grid-template-columns: repeat(auto-fit, minmax(6rem, 1fr));
+  }
 }

@@ -7,14 +7,14 @@ describe('settings search', () => {
     const settings = defaultSettings();
     expect(searchSettings(settings, '', 'relays')).toEqual(
       expect.arrayContaining([
-        expect.objectContaining({ key: 'relays.defaultSetId' }),
+        expect.objectContaining({ key: 'relays.defaultSet' }),
       ]),
     );
     expect(searchSettings(settings, 'workspace.route')[0]?.key).toBe(
       'workspace.route',
     );
-    expect(searchSettings(settings, 'Button radius')[0]?.key).toBe(
-      'appearance.radius.button',
+    expect(searchSettings(settings, 'Corner radius')[0]?.key).toBe(
+      'appearance.cornerRadius',
     );
   });
 });

@@ -1,5 +1,6 @@
 <script lang="ts">
   import { onMount } from 'svelte';
+  import SettingsInspector from '$lib/components/settings/SettingsInspector.svelte';
   import SettingsSearch from '$lib/components/settings/SettingsSearch.svelte';
   import SettingsTable from '$lib/components/settings/SettingsTable.svelte';
   import type { SettingRecord } from '$lib/settings/settings-key';
@@ -18,8 +19,18 @@
   let settings = $state<SettingRecord[]>([]);
   let query = $state('');
   let namespace = $state('all');
+  let selectedKey = $state<string | null>(null);
   let visible = $derived(searchSettings(settings, query, namespace));
   let namespaces = $derived(settingNamespaces(settings));
+  let selected = $derived(
+    settings.find((setting) => setting.key === selectedKey) ?? visible[0],
+  );
+  let changedCount = $derived(
+    settings.filter(
+      (setting) =>
+        JSON.stringify(setting.value) !== JSON.stringify(setting.defaultValue),
+    ).length,
+  );
 
   onMount(async () => {
     settings = await loadSettings();
@@ -62,29 +73,57 @@
         root.style.setProperty('--radius-button', `${record.value}px`);
       if (record.key === 'appearance.radius.tab')
         root.style.setProperty('--radius-tab', `${record.value}px`);
+      if (record.key === 'appearance.cornerRadius') {
+        root.style.setProperty('--radius-ui', `${record.value}px`);
+        root.style.setProperty('--radius-button', `${record.value}px`);
+        root.style.setProperty('--radius-tab', `${record.value}px`);
+      }
     }
   }
 </script>
 
 <section class="settings-tab">
-  <h2>Settings</h2>
-  <SettingsSearch
-    {query}
-    {namespace}
-    {namespaces}
-    updateQuery={(value) => (query = value)}
-    updateNamespace={(value) => (namespace = value)}
-  />
-  <div class="settings-actions">
-    <button
-      type="button"
-      onclick={() => navigator.clipboard?.writeText(JSON.stringify(settings))}
-      >Copy JSON export</button
-    >
-    <button type="button" onclick={importJson}>Import JSON</button>
-    <button type="button" onclick={resetCurrentNamespace}>
-      Reset namespace
-    </button>
+  <header class="settings-header">
+    <h2>Settings</h2>
+    <span>{changedCount} changed</span>
+    <SettingsSearch
+      {query}
+      {namespace}
+      {namespaces}
+      updateQuery={(value) => (query = value)}
+      updateNamespace={(value) => (namespace = value)}
+    />
+    <div class="settings-actions">
+      <button
+        type="button"
+        onclick={() => navigator.clipboard?.writeText(JSON.stringify(settings))}
+        >Copy JSON export</button
+      >
+      <button type="button" onclick={importJson}>Import JSON</button>
+      <button type="button" onclick={resetCurrentNamespace}>
+        Reset visible
+      </button>
+    </div>
+  </header>
+  <div class="settings-layout">
+    <nav class="settings-categories" aria-label="Settings categories">
+      {#each namespaces as item (item)}
+        <button
+          type="button"
+          class:active={namespace === item}
+          onclick={() => (namespace = item)}
+        >
+          {item}
+        </button>
+      {/each}
+    </nav>
+    <SettingsTable
+      settings={visible}
+      {selectedKey}
+      {save}
+      {reset}
+      select={(key) => (selectedKey = key)}
+    />
+    <SettingsInspector setting={selected} {reset} />
   </div>
-  <SettingsTable settings={visible} {save} {reset} />
 </section>

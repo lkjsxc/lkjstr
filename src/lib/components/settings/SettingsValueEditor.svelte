@@ -40,6 +40,22 @@
       <option value={option}>{option}</option>
     {/each}
   </select>
+{:else if props.setting.valueType === 'number'}
+  <input
+    aria-label={`Edit ${props.setting.key}`}
+    type="number"
+    value={String(props.setting.value)}
+    oninput={(event) =>
+      props.save(props.setting.key, event.currentTarget.value)}
+  />
+{:else if props.setting.valueType === 'json'}
+  <textarea
+    aria-label={`Edit ${props.setting.key}`}
+    value={draft}
+    rows="3"
+    oninput={(event) => (draft = event.currentTarget.value)}
+    onblur={saveText}
+  ></textarea>
 {:else if props.setting.sensitive}
   <span>masked</span>
 {:else}

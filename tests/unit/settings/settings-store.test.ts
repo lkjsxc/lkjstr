@@ -10,14 +10,14 @@ describe('settings store helpers', () => {
     const updatedAt = 123;
     const settings = mergeSettings([
       {
-        key: 'appearance.radius.button',
+        key: 'appearance.cornerRadius',
         namespace: 'appearance',
         value: 1,
         updatedAt,
       },
     ]);
     const button = settings.find(
-      (item) => item.key === 'appearance.radius.button',
+      (item) => item.key === 'appearance.cornerRadius',
     );
     expect(button?.value).toBe(1);
     expect(button?.updatedAt).toBe(updatedAt);

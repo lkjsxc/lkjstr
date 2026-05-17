@@ -4,57 +4,42 @@
 
   type Props = {
     settings: SettingRecord[];
+    selectedKey: string | null;
     save: (key: string, value: unknown) => void;
     reset: (key: string) => void;
+    select: (key: string) => void;
   };
 
   let props: Props = $props();
 </script>
 
-<table class="settings-table">
-  <thead>
-    <tr>
-      <th>Key</th>
-      <th>Value</th>
-      <th>Default</th>
-      <th>Type</th>
-      <th>Description</th>
-    </tr>
-  </thead>
-  <tbody>
-    {#each props.settings as setting (setting.key)}
-      <tr>
-        <td>
-          <button
-            type="button"
-            class="link-button"
-            onclick={() => navigator.clipboard?.writeText(setting.key)}
-            >{setting.key}</button
-          >
-        </td>
-        <td>
-          <SettingsValueEditor
-            {setting}
-            save={props.save}
-            reset={props.reset}
-          />
-        </td>
-        <td
-          >{setting.sensitive
-            ? 'masked'
-            : JSON.stringify(setting.defaultValue)}</td
-        >
-        <td>{setting.valueType}</td>
-        <td>
-          {setting.description}
-          {#if JSON.stringify(setting.value) !== JSON.stringify(setting.defaultValue)}
-            <small>Dirty</small>
-          {/if}
-          {#if setting.requiresReload}
-            <small>Requires reload</small>
-          {/if}
-        </td>
-      </tr>
-    {/each}
-  </tbody>
-</table>
+<div class="settings-list">
+  {#each props.settings as setting (setting.key)}
+    {@const dirty =
+      JSON.stringify(setting.value) !== JSON.stringify(setting.defaultValue)}
+    <article
+      class:active={props.selectedKey === setting.key}
+      class="setting-row"
+    >
+      <button
+        type="button"
+        class="setting-key"
+        onclick={() => props.select(setting.key)}
+      >
+        <strong>{setting.label}</strong>
+        <span>{setting.key}</span>
+      </button>
+      <p>{setting.description}</p>
+      <SettingsValueEditor {setting} save={props.save} reset={props.reset} />
+      <div class="setting-badges">
+        <small>{setting.valueType}</small>
+        {#if dirty}
+          <small>Changed</small>
+        {/if}
+        {#if setting.requiresReload}
+          <small>Requires reload</small>
+        {/if}
+      </div>
+    </article>
+  {/each}
+</div>

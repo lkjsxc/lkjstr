@@ -9,9 +9,14 @@ test('opens and searches settings', async ({ page }) => {
   await expect(page.getByRole('heading', { name: 'Settings' })).toBeVisible();
   await page.getByLabel('Search settings').fill('workspace.route');
   await expect(
-    page.getByRole('button', { name: 'workspace.route' }),
+    page.getByRole('button', { name: /workspace.route/ }),
   ).toBeVisible();
   await expect(
-    page.getByRole('button', { name: 'appearance.radius.button' }),
+    page.getByRole('button', { name: /appearance.cornerRadius/ }),
   ).toHaveCount(0);
+  await expect(page.getByLabel('Setting inspector')).toBeVisible();
+  await page.getByLabel('Search settings').fill('timeline');
+  await expect(
+    page.getByRole('button', { name: /timeline.initialLimit/ }),
+  ).toBeVisible();
 });
