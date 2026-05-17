@@ -11,12 +11,15 @@ import { titleFor } from './tab-title';
 import {
   activateTab,
   addTab,
-  closeTab,
   createEmptyTabGroup,
   createTabGroup,
   type TabGroup,
 } from './tab-group';
 import { createTab, type TabKind, type WorkspaceTab } from './tab';
+import {
+  closeTabAndRecover,
+  ensureUsableWorkspace,
+} from './workspace-recovery';
 
 export type Workspace = {
   readonly id: string;
@@ -68,23 +71,14 @@ export function createEmptyWorkspace(): Workspace {
 }
 
 export function ensureWorkspaceHasPane(workspace: Workspace): Workspace {
-  if (workspace.layout) return workspace;
-  const group = createEmptyTabGroup();
-  const layout = createLayout(group.id);
-  return touch({
-    ...workspace,
-    layout,
-    tabGroups: { ...workspace.tabGroups, [group.id]: group },
-    focusedPaneId: layout.id,
-    focusedTabId: null,
-  });
+  return ensureUsableWorkspace(workspace);
 }
 
 export function openFirstPaneTab(
   workspace: Workspace,
   kind: TabKind,
 ): Workspace {
-  const withPane = ensureWorkspaceHasPane(workspace);
+  const withPane = ensureUsableWorkspace(workspace);
   const paneId = withPane.focusedPaneId ?? paneIds(withPane.layout!)[0] ?? null;
   return openTab(withPane, paneId, kind, titleFor(kind));
 }
@@ -96,7 +90,7 @@ export function openTab(
   title: string,
   config: Record<string, unknown> = {},
 ): Workspace {
-  const withPane = ensureWorkspaceHasPane(workspace);
+  const withPane = ensureUsableWorkspace(workspace);
   if (!withPane.layout) return withPane;
   const targetPaneId =
     paneId ?? withPane.focusedPaneId ?? paneIds(withPane.layout)[0] ?? null;
@@ -124,20 +118,21 @@ export function splitFocusedPane(
   direction: SplitDirection,
   kind: TabKind = 'timeline',
 ): Workspace {
-  if (!workspace.layout || !workspace.focusedPaneId) return workspace;
+  const usable = ensureUsableWorkspace(workspace);
+  if (!usable.layout || !usable.focusedPaneId) return usable;
   const tab = createTab(kind, titleFor(kind));
   const group = createTabGroup(tab);
   const pane = createPane(group.id);
   return touch({
-    ...workspace,
+    ...usable,
     layout: splitPane(
-      workspace.layout,
-      workspace.focusedPaneId,
+      usable.layout,
+      usable.focusedPaneId,
       direction,
       pane,
     ),
-    tabGroups: { ...workspace.tabGroups, [group.id]: group },
-    tabs: { ...workspace.tabs, [tab.id]: tab },
+    tabGroups: { ...usable.tabGroups, [group.id]: group },
+    tabs: { ...usable.tabs, [tab.id]: tab },
     focusedPaneId: pane.id,
     focusedTabId: tab.id,
   });
@@ -168,32 +163,16 @@ export function closeWorkspaceTab(
   paneId: string,
   tabId: string,
 ): Workspace {
-  if (!workspace.layout) return workspace;
-  const pane = findPane(workspace.layout, paneId);
-  const group = pane ? workspace.tabGroups[pane.tabGroupId] : undefined;
-  const tab = workspace.tabs[tabId];
-  if (!pane || !group || !tab) return workspace;
-  const nextGroup = closeTab(group, tab);
-  const tabs = { ...workspace.tabs };
-  delete tabs[tabId];
-  if (nextGroup.tabIds.length > 0) {
-    return touch({
-      ...workspace,
-      tabs,
-      tabGroups: { ...workspace.tabGroups, [group.id]: nextGroup },
-      focusedTabId: nextGroup.activeTabId,
-    });
-  }
-  return touch({
-    ...workspace,
-    tabGroups: { ...workspace.tabGroups, [group.id]: nextGroup },
-    tabs,
-    focusedPaneId: pane.id,
-    focusedTabId: null,
-  });
+  return closeTabAndRecover(workspace, paneId, tabId);
 }
 
 export { titleFor } from './tab-title';
+export {
+  closePaneAndRecover,
+  closeTabAndRecover,
+  createRecoveryWorkspace,
+  ensureUsableWorkspace,
+} from './workspace-recovery';
 
 function touch(workspace: Workspace): Workspace {
   return { ...workspace, updatedAt: Date.now() };

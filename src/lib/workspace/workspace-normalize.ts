@@ -1,7 +1,11 @@
 import { findPane, parseLayout } from './layout-tree';
 import type { TabGroup } from './tab-group';
 import type { WorkspaceTab } from './tab';
-import { createEmptyWorkspace, type Workspace } from './workspace';
+import {
+  createEmptyWorkspace,
+  ensureUsableWorkspace,
+  type Workspace,
+} from './workspace';
 
 export function normalizeWorkspace(value: unknown): Workspace {
   const item = value as Partial<Workspace>;
@@ -11,7 +15,7 @@ export function normalizeWorkspace(value: unknown): Workspace {
   const tabs = normalizeTabs(item.tabs);
   const paneId = stringOrNull(item.focusedPaneId);
   const tabId = item.focusedTabId;
-  return {
+  return ensureUsableWorkspace({
     ...base,
     ...item,
     layout: layout ?? null,
@@ -19,7 +23,7 @@ export function normalizeWorkspace(value: unknown): Workspace {
     tabs,
     focusedPaneId: layout && paneId && findPane(layout, paneId) ? paneId : null,
     focusedTabId: typeof tabId === 'string' && tabs[tabId] ? tabId : null,
-  };
+  });
 }
 
 function normalizeGroups(value: unknown): Record<string, TabGroup> {
