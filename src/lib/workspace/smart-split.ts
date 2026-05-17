@@ -83,7 +83,12 @@ function findPath(
   node: WorkspaceLayoutNode,
   paneId: string,
   path: { split: WorkspaceSplitNode; index: number }[] = [],
-): { pane: WorkspacePaneNode; path: { split: WorkspaceSplitNode; index: number }[] } | undefined {
+):
+  | {
+      pane: WorkspacePaneNode;
+      path: { split: WorkspaceSplitNode; index: number }[];
+    }
+  | undefined {
   if (node.type === 'pane')
     return node.id === paneId ? { pane: node, path } : undefined;
   for (const [index, child] of node.children.entries()) {

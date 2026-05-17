@@ -2,10 +2,9 @@
   type Props = {
     direction: 'horizontal' | 'vertical';
     resize: (deltaRatio: number) => void;
-    equalize: () => void;
   };
 
-  let { direction, resize, equalize }: Props = $props();
+  let { direction, resize }: Props = $props();
   let start = 0;
 
   function pointerDown(event: PointerEvent): void {
@@ -30,5 +29,4 @@
   class={`resize ${direction}`}
   aria-label="Resize panes"
   onpointerdown={pointerDown}
-  ondblclick={equalize}
 ></button>

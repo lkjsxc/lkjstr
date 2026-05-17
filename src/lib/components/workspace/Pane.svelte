@@ -9,8 +9,8 @@
   import type { WorkspaceTab, TabKind } from '$lib/workspace/tab';
   import RelayMonitorTab from '$lib/tabs/relays/RelayMonitorTab.svelte';
   import SettingsTab from '$lib/tabs/settings/SettingsTab.svelte';
-  import EmptyPane from './EmptyPane.svelte';
   import TabStrip from './TabStrip.svelte';
+  import TileMenu from './TileMenu.svelte';
 
   type Props = {
     pane: WorkspacePaneNode;
@@ -24,11 +24,6 @@
     closeTab: (paneId: string, tabId: string) => void;
     openTab: (paneId: string | null, kind: TabKind) => void;
     split: (paneId: string, direction: 'horizontal' | 'vertical') => void;
-    splitInto: (
-      paneId: string,
-      direction: 'horizontal' | 'vertical',
-      count: number,
-    ) => void;
     closePane: (paneId: string) => void;
     addReadonly: () => void;
     addNip07: () => void;
@@ -41,12 +36,6 @@
   let active = $derived(
     props.group?.activeTabId ? props.tabs[props.group.activeTabId] : undefined,
   );
-
-  function customSplit(direction: 'horizontal' | 'vertical'): void {
-    const count = Number(window.prompt('Split count', '4'));
-    if (Number.isInteger(count))
-      props.splitInto(props.pane.id, direction, count);
-  }
 </script>
 
 <section class="pane" aria-label="Workspace pane">
@@ -59,37 +48,10 @@
         closeTab={(tabId) => props.closeTab(props.pane.id, tabId)}
       />
     {/if}
-    <nav>
-      <button
-        type="button"
-        onclick={() => props.split(props.pane.id, 'horizontal')}
-        >Split right</button
-      >
-      <button
-        type="button"
-        onclick={() => props.split(props.pane.id, 'vertical')}
-        >Split down</button
-      >
-      <button
-        type="button"
-        onclick={() => props.splitInto(props.pane.id, 'horizontal', 3)}
-        >3 columns</button
-      >
-      <button
-        type="button"
-        onclick={() => props.splitInto(props.pane.id, 'vertical', 5)}
-        >5 rows</button
-      >
-      <button type="button" onclick={() => customSplit('horizontal')}
-        >Custom columns</button
-      >
-      <button type="button" onclick={() => customSplit('vertical')}
-        >Custom rows</button
-      >
-      <button type="button" onclick={() => props.closePane(props.pane.id)}
-        >Close pane</button
-      >
-    </nav>
+    <TileMenu
+      split={(direction) => props.split(props.pane.id, direction)}
+      closePane={() => props.closePane(props.pane.id)}
+    />
   </header>
 
   {#if active}
@@ -159,40 +121,5 @@
         <p>This tab kind is registered and ready for a typed runtime.</p>
       {/if}
     </div>
-  {:else}
-    <EmptyPane
-      paneId={props.pane.id}
-      openTab={props.openTab}
-      split={props.split}
-    />
   {/if}
-
-  <footer class="pane-tabs">
-    <button
-      type="button"
-      onclick={() => props.openTab(props.pane.id, 'timeline')}>Timeline</button
-    >
-    <button
-      type="button"
-      onclick={() => props.openTab(props.pane.id, 'notifications')}
-      >Notifications</button
-    >
-    <button
-      type="button"
-      onclick={() => props.openTab(props.pane.id, 'profile')}>Profile</button
-    >
-    <button
-      type="button"
-      onclick={() => props.openTab(props.pane.id, 'post-manager')}>Posts</button
-    >
-    <button
-      type="button"
-      onclick={() => props.openTab(props.pane.id, 'relay-monitor')}
-      >Relays</button
-    >
-    <button
-      type="button"
-      onclick={() => props.openTab(props.pane.id, 'settings')}>Settings</button
-    >
-  </footer>
 </section>

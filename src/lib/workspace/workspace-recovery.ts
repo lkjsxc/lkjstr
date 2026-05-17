@@ -1,9 +1,4 @@
-import {
-  createLayout,
-  findPane,
-  paneIds,
-  removePane,
-} from './layout-tree';
+import { createLayout, findPane, paneIds, removePane } from './layout-tree';
 import { createTab, type WorkspaceTab } from './tab';
 import { titleFor } from './tab-title';
 import { closeTab, createTabGroup, type TabGroup } from './tab-group';
@@ -107,11 +102,15 @@ export function closeTabAndRecover(
 function normalizePaneRecords(
   workspace: Workspace,
   ids: readonly string[],
-): { tabs: Record<string, WorkspaceTab>; tabGroups: Record<string, TabGroup> } | undefined {
+):
+  | { tabs: Record<string, WorkspaceTab>; tabGroups: Record<string, TabGroup> }
+  | undefined {
   const tabs: Record<string, WorkspaceTab> = {};
   const tabGroups: Record<string, TabGroup> = {};
   for (const paneId of ids) {
-    const pane = workspace.layout ? findPane(workspace.layout, paneId) : undefined;
+    const pane = workspace.layout
+      ? findPane(workspace.layout, paneId)
+      : undefined;
     const group = pane ? workspace.tabGroups[pane.tabGroupId] : undefined;
     const tabIds = group?.tabIds.filter((id) => workspace.tabs[id]) ?? [];
     if (!pane || !group || tabIds.length === 0) return undefined;
@@ -138,10 +137,15 @@ function focusedPane(workspace: Workspace, ids: readonly string[]): string {
 
 function focusedTab(
   workspace: Workspace,
-  normalized: { tabs: Record<string, WorkspaceTab>; tabGroups: Record<string, TabGroup> },
+  normalized: {
+    tabs: Record<string, WorkspaceTab>;
+    tabGroups: Record<string, TabGroup>;
+  },
   focusedPaneId: string,
 ): string {
-  const pane = workspace.layout ? findPane(workspace.layout, focusedPaneId) : undefined;
+  const pane = workspace.layout
+    ? findPane(workspace.layout, focusedPaneId)
+    : undefined;
   const group = pane ? normalized.tabGroups[pane.tabGroupId] : undefined;
   if (workspace.focusedTabId && normalized.tabs[workspace.focusedTabId])
     return workspace.focusedTabId;

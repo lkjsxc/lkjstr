@@ -125,7 +125,12 @@ export function splitFocusedPane(
   const pane = createPane(group.id);
   return touch({
     ...usable,
-    layout: smartSplitPane(usable.layout, usable.focusedPaneId, direction, pane),
+    layout: smartSplitPane(
+      usable.layout,
+      usable.focusedPaneId,
+      direction,
+      pane,
+    ),
     tabGroups: { ...usable.tabGroups, [group.id]: group },
     tabs: { ...usable.tabs, [tab.id]: tab },
     focusedPaneId: pane.id,

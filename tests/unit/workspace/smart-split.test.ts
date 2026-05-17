@@ -1,5 +1,8 @@
 import { describe, expect, it } from 'vitest';
-import { createWorkspace, splitFocusedPane } from '../../../src/lib/workspace/workspace';
+import {
+  createWorkspace,
+  splitFocusedPane,
+} from '../../../src/lib/workspace/workspace';
 
 describe('smart split', () => {
   it('repeated split right creates one horizontal sibling group', () => {

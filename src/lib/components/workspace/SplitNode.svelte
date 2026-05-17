@@ -22,14 +22,8 @@
     closeTab: (paneId: string, tabId: string) => void;
     openTab: (paneId: string | null, kind: TabKind) => void;
     split: (paneId: string, direction: 'horizontal' | 'vertical') => void;
-    splitInto: (
-      paneId: string,
-      direction: 'horizontal' | 'vertical',
-      count: number,
-    ) => void;
     closePane: (paneId: string) => void;
     resize: (splitId: string, handleIndex: number, deltaRatio: number) => void;
-    equalize: (splitId: string) => void;
     addReadonly: () => void;
     addNip07: () => void;
     createDraft: () => void;
@@ -54,7 +48,6 @@
     closeTab={props.closeTab}
     openTab={props.openTab}
     split={props.split}
-    splitInto={props.splitInto}
     closePane={props.closePane}
     addReadonly={props.addReadonly}
     addNip07={props.addNip07}
@@ -81,10 +74,8 @@
           closeTab={props.closeTab}
           openTab={props.openTab}
           split={props.split}
-          splitInto={props.splitInto}
           closePane={props.closePane}
           resize={props.resize}
-          equalize={props.equalize}
           addReadonly={props.addReadonly}
           addNip07={props.addNip07}
           createDraft={props.createDraft}
@@ -96,13 +87,7 @@
         <ResizeHandle
           direction={props.node.direction}
           resize={(delta) => props.resize(props.node.id, index, delta)}
-          equalize={() => props.equalize(props.node.id)}
         />
-        <button
-          type="button"
-          class="equalize"
-          onclick={() => props.equalize(props.node.id)}>Equalize</button
-        >
       {/if}
     {/each}
   </div>

@@ -4,7 +4,12 @@
   height: 100vh;
 }
 
+.workspace-shell.sidebar-collapsed {
+  grid-template-columns: 3rem minmax(0, 1fr);
+}
+
 .activity-bar,
+.activity-rail,
 .top-bar,
 .status-bar {
   background: var(--color-bg-elevated);
@@ -19,6 +24,13 @@
   flex-direction: column;
   gap: var(--space-2);
   padding: var(--space-3) var(--space-2);
+}
+
+.activity-rail {
+  border-right: 1px solid var(--color-border);
+  display: grid;
+  padding: var(--space-2);
+  place-items: start center;
 }
 
 .activity-bar button {
@@ -84,12 +96,6 @@
   background: var(--color-text-faint);
 }
 
-.equalize {
-  align-self: center;
-  flex: 0 0 auto;
-  padding: 0.2rem;
-}
-
 .pane {
   background: var(--color-surface);
   border: 1px solid var(--color-border);
@@ -97,13 +103,12 @@
   color: var(--color-text);
   display: grid;
   flex: 1 1 auto;
-  grid-template-rows: auto minmax(0, 1fr) auto;
+  grid-template-rows: auto minmax(0, 1fr);
   min-height: 0;
   min-width: 0;
 }
 
 .pane-head,
-.pane-tabs,
 .toolbar,
 .settings-search,
 .settings-actions,
@@ -132,11 +137,6 @@
 .empty-workspace h2 {
   font-size: 1.05rem;
   margin: 0 0 0.75rem;
-}
-
-.pane-tabs {
-  border-top: 1px solid var(--color-border);
-  overflow-x: auto;
 }
 
 .tab-strip {

@@ -50,12 +50,7 @@ describe('last-tab tile close', () => {
   });
 
   it('closing a tile removes all tabs in that tile', () => {
-    const workspace = openTab(
-      createWorkspace(),
-      null,
-      'settings',
-      'Settings',
-    );
+    const workspace = openTab(createWorkspace(), null, 'settings', 'Settings');
     const closed = closeWorkspacePane(workspace, workspace.focusedPaneId!);
     expect(closed.layout?.type).toBe('pane');
     expect(Object.keys(closed.tabs)).toHaveLength(1);

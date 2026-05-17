@@ -10,8 +10,7 @@
   } from '$lib/relays/relay-store';
   import WorkspaceRoot from '$lib/components/workspace/WorkspaceRoot.svelte';
   import { closeWorkspacePane } from '$lib/workspace/pane-commands';
-  import { splitPaneInto } from '$lib/workspace/n-way-split';
-  import { equalizeSplit, resizeSplit } from '$lib/workspace/resize';
+  import { resizeSplit } from '$lib/workspace/resize';
   import type { TabKind } from '$lib/workspace/tab';
   import {
     closeWorkspaceTab,
@@ -77,15 +76,6 @@
     );
   }
 
-  async function handleSplitInto(
-    paneId: string,
-    direction: 'horizontal' | 'vertical',
-    count: number,
-  ): Promise<void> {
-    if (workspace)
-      await update(splitPaneInto(workspace, paneId, direction, count));
-  }
-
   async function handleResize(
     splitId: string,
     handleIndex: number,
@@ -95,14 +85,6 @@
       await update({
         ...workspace,
         layout: resizeSplit(workspace.layout, splitId, handleIndex, deltaRatio),
-      });
-  }
-
-  async function handleEqualize(splitId: string): Promise<void> {
-    if (workspace?.layout)
-      await update({
-        ...workspace,
-        layout: equalizeSplit(workspace.layout, splitId),
       });
   }
 
@@ -153,6 +135,16 @@
     workspace = await resetWorkspace();
   }
 
+  function handleToggleSidebar(): Promise<void> {
+    return workspace
+      ? update({
+          ...workspace,
+          sidebarVisible: !workspace.activityBarVisible,
+          activityBarVisible: !workspace.activityBarVisible,
+        })
+      : Promise.resolve();
+  }
+
   async function handleToggleRelay(
     setId: string,
     url: string,
@@ -182,14 +174,13 @@
     closeTab={handleCloseTab}
     openTab={handleOpenTab}
     split={handleSplit}
-    splitInto={handleSplitInto}
     closePane={handleClosePane}
     resize={handleResize}
-    equalize={handleEqualize}
     restoreWorkspace={handleRestoreWorkspace}
     addReadonly={handleAddReadonly}
     addNip07={handleAddNip07}
     createDraft={handleCreateDraft}
+    toggleSidebar={handleToggleSidebar}
     toggleRelay={handleToggleRelay}
     removeRelay={handleRemoveRelay}
   />
