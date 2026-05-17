@@ -12,8 +12,9 @@ The workspace is the primary product surface and is served at `/`.
 - A workspace is a browser-owned editor surface made of split tiles.
 - A pane is the internal model term for one visible tile.
 - A tab group belongs to one tile and contains at least one tab after each command.
-- Initial tabs can include timeline, account manager, relay monitor, composer,
-  settings, cache, notifications, profile, and posts.
+- Initial tabs can include timeline, account manager, relay monitor, relay
+  settings, composer, settings, cache, notifications, profile, posts, thread,
+  and New Tab.
 - Later tab kinds must register through the pane registry before rendering.
 - Workspace layout persists locally.
 - `/` is the canonical route.
@@ -30,9 +31,13 @@ The workspace is the primary product surface and is served at `/`.
 ## Screen Model
 
 The first authenticated or read-only screen is the workspace. It is not a
-landing page. A collapsible left sidebar exposes accounts, notifications,
-posts, relays, settings, cache, compose, and timeline actions. New tabs are
-opened from the sidebar, not from each tile footer.
+landing page. The top header is compact and shows only `lkjstr` plus a build
+label. It does not show save state, status text, tab creation, compose, or menu
+controls.
+
+Tabs are created per tile. Each tile header exposes a plus button immediately
+before the three-dot tile menu. The plus button opens a New Tab chooser in that
+same tile. The chooser converts itself into the selected tab kind.
 
 ## Pane Behavior
 
@@ -45,8 +50,8 @@ opened from the sidebar, not from each tile footer.
 - A pane can be duplicated with the same configuration.
 - A pane can be paused, which closes live subscriptions but preserves cached content.
 - Focused pane actions must be reachable by keyboard and pointer.
-- Tile header actions live in a three-dot menu with Split right, Split down,
-  and Tile close.
+- Tile header actions live in a three-dot menu anchored to the clicked button
+  with Split right, Split down, and Tile close.
 - Manual split-size reset controls are not part of the UI.
 
 ## User Actions
@@ -62,11 +67,12 @@ opened from the sidebar, not from each tile footer.
 - Open raw event details.
 - Open relay diagnostics.
 - Open settings.
-- Collapse and reopen the sidebar.
+- Open a New Tab chooser from the current tile.
 
 ## Acceptance
 
 - A user can create a workspace with three timeline tiles through repeated split actions.
+- A user can add a tab from a tile plus button without a left tab-add menu.
 - Closing a final tab closes its tile.
 - Closing the final tile creates one usable recovery tile.
 - The workspace never stays blank after a close command.

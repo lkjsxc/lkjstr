@@ -5,8 +5,8 @@ State: Canon
 
 ## Role
 
-The settings store owns the schema, user overrides, search records, validation,
-and persistence for the settings tab.
+The settings store owns the schema, user overrides, validation, grouping, and
+persistence for the settings tab.
 
 ## Data Flow
 
@@ -14,7 +14,7 @@ and persistence for the settings tab.
   reload flag, and sensitivity.
 - User overrides store only values that differ from defaults.
 - Effective records merge schema defaults with overrides.
-- Search indexes namespace, key, label, description, type, default, and value.
+- Group helpers expose stable sections without hiding records.
 - Import validates every key before writing any accepted override.
 
 ## Persistence

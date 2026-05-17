@@ -51,6 +51,10 @@ State: Canon
 - Protocol support: [protocol/nip-support.md](protocol/nip-support.md), [protocol/kernel.md](protocol/kernel.md).
 - Relay lifecycle: [product/relay-management.md](product/relay-management.md), [architecture/relay-pool.md](architecture/relay-pool.md), [protocol/relays.md](protocol/relays.md), [protocol/default-relays.md](protocol/default-relays.md), [decisions/relay-ownership.md](decisions/relay-ownership.md).
 - Timeline runtime: [product/timeline.md](product/timeline.md), [architecture/timeline-runtime.md](architecture/timeline-runtime.md).
+- Profile runtime: [product/profiles.md](product/profiles.md), [architecture/profile-runtime.md](architecture/profile-runtime.md).
+- Post manager: [product/post-manager.md](product/post-manager.md), [architecture/post-manager.md](architecture/post-manager.md).
+- Tile menu and resize: [architecture/tile-menu.md](architecture/tile-menu.md), [architecture/resize.md](architecture/resize.md).
+- Tab runtime: [architecture/tab-runtime.md](architecture/tab-runtime.md).
 - Storage and workers: [architecture/storage-workers.md](architecture/storage-workers.md).
 - Verification: [operations/verification.md](operations/verification.md), [operations/readiness.md](operations/readiness.md).
 - Repository rules: [repository/README.md](repository/README.md).

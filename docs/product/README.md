@@ -11,8 +11,9 @@ This directory defines the browser-first Nostr workspace client as a product. Th
 
 The client is a SvelteKit web app for people who read, compose, and monitor
 Nostr across editable relay sets. The primary screen is the root `/`
-workspace: split panes can show timelines, relay health, accounts, searches,
-composer drafts, settings, raw events, and operational status.
+workspace: split tiles can show timelines, profiles, relay tools, accounts,
+post drafts, notifications, settings, cache state, composer drafts, and
+threads.
 
 The app must work well before any server dependency is introduced. Browser storage, workers, and relay connections are first-class product surfaces, not implementation details hidden from users.
 
@@ -23,7 +24,9 @@ The app must work well before any server dependency is introduced. Browser stora
 - [workspace.md](workspace.md): canonical split-pane workspace behavior.
 - [panes.md](panes.md): tile behavior, close recovery, and split rules.
 - [tabs.md](tabs.md): tab group, tab, and final-tab recovery behavior.
-- [settings.md](settings.md): searchable key-value settings tab.
+- [settings.md](settings.md): grouped key-value settings tab.
 - [relay-management.md](relay-management.md): relay set editing and default seeding.
 - [timeline.md](timeline.md): timeline pane behavior.
+- [profiles.md](profiles.md): profile identity and authored-post behavior.
+- [post-manager.md](post-manager.md): local post draft tree behavior.
 - [composer.md](composer.md): note composer and publish UX.

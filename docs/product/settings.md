@@ -5,19 +5,15 @@ State: Canon
 
 ## Purpose
 
-Settings are edited through a searchable, categorized key-value settings tab.
+Settings are edited through a stable grouped key-value settings tab.
 
 ## Settings Tab Contract
 
-- The settings tab opens from the left sidebar.
-- Search is always visible at the top.
-- A category rail filters by namespace.
-- Narrow tiles collapse categories into a dropdown.
-- The main panel shows grouped key-value rows.
-- Selecting a row opens an inspector with key, description, type, default,
-  current value, JSON preview, reset, and copy actions.
-- Settings are grouped by namespace and searched by namespace, key, label,
-  description, type, default value, and current value.
+- The settings tab opens from the New Tab chooser or existing workspace links.
+- The tab has no search input, namespace filter, category rail, or filtered
+  visible subset.
+- The main panel shows grouped key-value sections in stable order.
+- Every row shows key, label, description, editor, changed state, and reset.
 - Values edit inline and validate before saving.
 - Boolean values use switches.
 - Enum values use select controls.
@@ -26,7 +22,6 @@ Settings are edited through a searchable, categorized key-value settings tab.
 - JSON values use compact textareas.
 - Invalid edits fail safely and keep the previous value.
 - Each key can reset to its default.
-- Each namespace can reset all keys it owns.
 - Sensitive values are masked by default.
 - Changed values are marked.
 - JSON export and import use validation.
@@ -34,29 +29,23 @@ Settings are edited through a searchable, categorized key-value settings tab.
 
 ## Required Namespaces
 
-`appearance`, `workspace`, `tiles`, `tabs`, `relays`, `accounts`,
-`notifications`, `timeline`, `composer`, `cache`, `security`, `settings`, and
-`debug`.
+`appearance`, `workspace`, `tabs`, `timeline`, `relays`, `profiles`, `posts`,
+`accounts`, `notifications`, `composer`, `cache`, `security`, and `debug`.
 
 ## Required Keys
 
-`workspace.route`, `workspace.autoRecoverZeroPanels`,
-`workspace.closeTileWhenLastTabCloses`, `workspace.sidebarVisible`,
-`tiles.defaultSplitDirection`, `tiles.smartSplitSameDirection`,
-`tiles.closeRemovesSubscriptions`, `tiles.menuActions`, `tabs.openSource`,
-`tabs.closeLastTabBehavior`, `timeline.defaultKind`,
-`timeline.initialLimit`, `timeline.useDefaultRelays`, `timeline.cacheFirst`,
+`appearance.theme`, `appearance.cornerRadius`, `appearance.showAvatars`,
+`workspace.recoverLastTile`, `workspace.defaultTabKind`,
+`tabs.closeLastTabClosesTile`, `tabs.newTabChooserEnabled`,
+`timeline.initialLimit`, `timeline.defaultRelays`,
 `timeline.showRelayProvenance`, `relays.defaultSet`,
-`relays.seedOnFirstBoot`, `relays.connectTimeoutMs`,
-`relays.reconnectBackoffMs`, `appearance.theme`,
-`appearance.neutralPalette`, `appearance.cornerRadius`,
-`appearance.showAvatars`, `settings.searchMode`,
-`settings.showInspector`, and `settings.compactNarrowLayout`.
+`relays.connectTimeoutMs`, `profiles.fetchMetadata`, `profiles.showNip05`,
+`posts.persistDrafts`, `posts.showTree`, and `security.allowLocalNsecImport`.
 
 ## Acceptance
 
-- Searching for `relays`, `timeline`, split behavior, or `workspace.route`
-  narrows rows.
+- Settings has no search or filter controls.
+- Appearance, workspace, tabs, timeline, relays, profiles, posts, and security
+  groups render in stable order.
 - Editing theme and radius keys changes the UI.
-- The inspector updates when a row is selected.
 - Settings persist after reload and work with zero accounts.

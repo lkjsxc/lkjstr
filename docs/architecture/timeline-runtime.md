@@ -20,6 +20,7 @@ UI state for a single visible timeline tab.
 - Sort newest first.
 - Track relay provenance for live events.
 - Expose loading, error, connected relay count, and EOSE state.
+- Keep runtime cache scoped to the tab filter and subscription id.
 
 ## Lifecycle
 
@@ -28,3 +29,5 @@ UI state for a single visible timeline tab.
 - Closing a tile stops every timeline subscription owned by that tile.
 - Relay failure does not block cached rendering.
 - Timeline rendering does not require an account.
+- Relay setting changes require a fresh relay resolution before a new
+  subscription starts.

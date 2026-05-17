@@ -19,6 +19,11 @@ Relay management makes relay sets visible, editable, and diagnosable.
 - Removed seeded relays do not reappear on reload unless the user restores
   defaults.
 - Relay connections are lazy and are not required for shell render.
+- Relay Settings owns editing relay sets and relay records.
+- Relay Monitor owns health and connection diagnostics.
+- Relay Settings can add relays, normalize URLs, validate URLs, edit labels,
+  toggle enabled/read/write, remove relays, create sets, rename sets, delete
+  sets, select the default set, and restore defaults.
 
 ## Default Relay Set
 
@@ -29,4 +34,6 @@ Primal, Nostr.Band, and Offchain relays.
 
 - First boot creates one editable default relay set.
 - Existing relay configuration is never overwritten.
+- Relay Settings opens from New Tab and persists changes.
 - Relay Monitor shows seeded relays and does not block boot on failures.
+- Disabled relays are not used by timeline subscriptions.

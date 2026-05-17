@@ -28,7 +28,7 @@ The normalized layout tree is one pane node or a split node.
 
 Saved workspaces are normalized before rendering. Invalid layout records,
 missing groups, missing tabs, zero panes, and zero-tab groups recover to one
-timeline pane while preserving workspace id, account id, and sidebar state.
+timeline pane while preserving workspace id and account id.
 
 ## Smart Splits
 

@@ -13,10 +13,10 @@ Panes are the visible workspace regions that host tab groups.
 - A pane is called a tile in visible UI.
 - A pane does not persist with an empty tab group.
 - A missing tab group is invalid persisted state and must be recovered.
-- New tab creation lives in the left sidebar, not in each tile footer.
+- New tab creation lives in each tile header through the plus button.
 - Closing a pane removes its tab group and tab runtime state.
 - Closing the final pane creates one recovery pane with a timeline tab.
-- Tile header actions live in a three-dot menu.
+- Tile header actions live in a three-dot menu anchored to the clicked trigger.
 - The menu exposes Split right, Split down, and Tile close.
 
 ## Split Contract
@@ -26,6 +26,8 @@ Panes are the visible workspace regions that host tab groups.
 - Vertical splits create rows.
 - Split nodes may have any child count of two or more.
 - Resizing one handle changes only the two adjacent siblings.
+- Resize pointer movement is converted from real split container size and then
+  damped so small tiles stay controllable.
 - Repeated split right creates horizontal N-way siblings.
 - Repeated split down creates vertical N-way siblings.
 - Direction changes wrap only the target pane and the new pane.
