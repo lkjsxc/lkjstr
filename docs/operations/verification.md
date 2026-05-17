@@ -29,3 +29,6 @@ aligned.
 - Run the narrowest useful command before the full gate.
 - Run the Compose gate before each coherent commit.
 - Run Playwright when workspace, account, publish, or relay UI behavior changes.
+- Use synthetic relays for automated timeline behavior.
+- Run root route, sidebar, tile close, smart split, settings, and timeline
+  checks after UI changes.

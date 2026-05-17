@@ -15,9 +15,16 @@
 - Build `lkjstr` as a browser-first TypeScript Nostr workspace client.
 - Serve the workspace at `/`.
 - Use an editor-style split-pane tab workspace.
-- Support valid empty workspace, empty pane, and zero-tab states.
-- Support horizontal and vertical two-way and N-way pane splits.
-- Keep settings in a searchable key-value settings tab.
+- Open new tabs from the collapsible left sidebar.
+- Remove tile footer tab-creation controls.
+- Close a tile automatically when its final tab closes.
+- Recover a new tile automatically when the final tile closes.
+- Put tile actions in a three-dot menu.
+- Do not expose manual split-size reset UI.
+- Do not add explicit 3-way or 5-way split buttons.
+- Make normal split actions create smart N-way layouts.
+- Fetch and render real timeline events from relays.
+- Keep settings searchable, categorized, and key-value editable.
 - Use a dark mostly achromatic theme.
 - Keep rounded corners very small.
 - Seed default relays only when no relay configuration exists.
@@ -34,7 +41,8 @@
 - Never log private keys or wallet secrets.
 - Never let closed tabs retain live subscriptions.
 - Never let durable drafts be removed by automatic cache pruning.
-- Never assume `focusedPaneId`, `focusedTabId`, or `layout` is non-null.
+- Never leave dangling pane, tab group, or tab references.
+- Never let the workspace remain blank after closing the final tile.
 
 ## Verification
 
@@ -42,5 +50,6 @@
 - Use Docker Compose for build, test, and verification.
 - Run `docker compose run --rm verify` before claiming a batch is complete.
 - Run Playwright when UI behavior changes.
-- Add tests for empty workspace, root route, settings search, default relays,
-  N-way splits, theme, and radius changes.
+- Use synthetic relays for automated timeline tests.
+- Add tests for root route, sidebar toggle, last-tab tile close, zero-panel
+  recovery, smart split, tile menu, settings layout, and timeline fetch.

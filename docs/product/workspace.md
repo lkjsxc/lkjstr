@@ -9,17 +9,19 @@ The workspace is the primary product surface and is served at `/`.
 
 ## Workspace Contract
 
-- A workspace is a browser-owned editor surface made of split panes.
-- A pane is an independently configured Nostr view.
-- A tab group belongs to one pane and may contain zero or more tabs.
+- A workspace is a browser-owned editor surface made of split tiles.
+- A pane is the internal model term for one visible tile.
+- A tab group belongs to one tile and contains at least one tab after each command.
 - Initial tabs can include timeline, account manager, relay monitor, composer,
   settings, cache, notifications, profile, and posts.
 - Later tab kinds must register through the pane registry before rendering.
 - Workspace layout persists locally.
-- `layout: null` is a valid empty workspace with zero panes.
-- A workspace layout with one pane and zero tabs is a valid empty pane state.
-- A user can close every tab without breaking the UI.
-- A user can create one pane from a zero-pane workspace.
+- `/` is the canonical route.
+- `/workspace` is retired and is not a documented entry point.
+- Empty tiles are not a normal persistent state.
+- A tile closes automatically when its final tab closes.
+- If the final tile closes, the app creates one stable recovery tile.
+- The recovery tile opens a timeline tab using the default relay set.
 - Pane state is separate from relay connection state.
 - Closing a pane releases subscriptions owned by that pane.
 - Splitting, moving focus, and resizing panes must not recreate unrelated subscriptions.
@@ -28,21 +30,24 @@ The workspace is the primary product surface and is served at `/`.
 ## Screen Model
 
 The first authenticated or read-only screen is the workspace. It is not a
-landing page. The retired `/workspace` route is not a normal entry point. A
-persistent activity bar exposes accounts, notifications, posts, relays,
-settings, cache, compose, and timeline actions.
+landing page. A collapsible left sidebar exposes accounts, notifications,
+posts, relays, settings, cache, compose, and timeline actions. New tabs are
+opened from the sidebar, not from each tile footer.
 
 ## Pane Behavior
 
 - Panes have stable identity, title, kind, data source, and layout coordinates.
 - Splitting or resizing a pane persists without requiring a server.
-- Split nodes support horizontal and vertical two-way and N-way division.
-- Quick split counts are two, three, and five; custom split counts support two
-  through twelve panes.
+- Split nodes support horizontal and vertical N-way division.
+- Normal split right and split down actions create N-way siblings when the
+  nearest split already uses the requested direction.
 - A pane must expose its relay scope when the content depends on relay choice.
 - A pane can be duplicated with the same configuration.
 - A pane can be paused, which closes live subscriptions but preserves cached content.
 - Focused pane actions must be reachable by keyboard and pointer.
+- Tile header actions live in a three-dot menu with Split right, Split down,
+  and Tile close.
+- Manual split-size reset controls are not part of the UI.
 
 ## User Actions
 
@@ -57,14 +62,14 @@ settings, cache, compose, and timeline actions.
 - Open raw event details.
 - Open relay diagnostics.
 - Open settings.
-- Restore the default workspace from an empty workspace.
+- Collapse and reopen the sidebar.
 
 ## Acceptance
 
-- A user can create a workspace with three timeline panes.
-- A user can close all tabs and reopen settings, accounts, or timeline.
-- A user can close all panes and create a pane from the empty workspace.
-- A user can split one pane into three columns or five rows.
+- A user can create a workspace with three timeline tiles through repeated split actions.
+- Closing a final tab closes its tile.
+- Closing the final tile creates one usable recovery tile.
+- The workspace never stays blank after a close command.
 - Each pane can use different filters.
 - Layout survives reload.
 - The workspace remains usable with ten active panes.

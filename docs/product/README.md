@@ -21,8 +21,8 @@ The app must work well before any server dependency is introduced. Browser stora
 - [scope.md](scope.md): product boundaries and non-goals.
 - [workflows.md](workflows.md): user workflows that define acceptance.
 - [workspace.md](workspace.md): canonical split-pane workspace behavior.
-- [panes.md](panes.md): pane and empty pane behavior.
-- [tabs.md](tabs.md): tab group, tab, and zero-tab behavior.
+- [panes.md](panes.md): tile behavior, close recovery, and split rules.
+- [tabs.md](tabs.md): tab group, tab, and final-tab recovery behavior.
 - [settings.md](settings.md): searchable key-value settings tab.
 - [relay-management.md](relay-management.md): relay set editing and default seeding.
 - [timeline.md](timeline.md): timeline pane behavior.

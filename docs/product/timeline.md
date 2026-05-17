@@ -9,20 +9,26 @@ The timeline pane presents Nostr events from cache and live relay subscriptions.
 
 ## Contract
 
-- The pane accepts explicit relays and filters.
-- Empty relays produce an actionable setup state.
+- The timeline tab accepts explicit relays and filters.
+- Empty user relays fall back to the default relay set.
 - Kind `1` notes are the first supported live event surface.
-- New live events enter a buffer before joining the visible list.
-- The visible list is virtualized.
+- The first filter is `{ kinds: [1], limit: 50 }`.
+- Cached kind `1` events load before live relay results.
+- New live events merge into the visible list.
 - Ordering is `created_at` descending, then event ID ascending.
 - Duplicate relay deliveries appear once.
 - Verification state is visible per event.
 - Relay provenance is visible per event.
-- Muted pubkeys and words are hidden before rendering.
+- Event rows show author, time, content, event id, and relay source.
+- Loading, connected relay count, EOSE, and all-relays-failed states are visible.
+- Timeline works without an account.
+- Closing a timeline tab or tile closes its relay subscription.
 
 ## Acceptance
 
 - Cached timeline renders without relay connection.
-- Live relay events appear after user action.
+- Live relay events appear after opening a timeline tab.
+- Public relay failures do not block successful relays.
+- Automated tests use a synthetic relay.
 - New events do not move the scroll position unexpectedly.
 - Backfill can request older events.

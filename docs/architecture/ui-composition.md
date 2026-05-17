@@ -20,8 +20,8 @@ A workspace layout record contains:
 - default relay set id.
 - selected density and display preferences.
 
-The split tree may be null when the workspace has zero panes. Views must treat
-null focus ids and null active tab ids as valid render states.
+The split tree is normalized before render. Views should receive a usable tree
+with at least one pane and one active tab after command completion.
 
 Workspace layout is durable and can be restored before live relay connections complete.
 

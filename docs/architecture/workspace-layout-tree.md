@@ -5,24 +5,37 @@ State: Canon
 
 ## Shape
 
-The layout tree is either `null`, one pane node, or a split node.
+The normalized layout tree is one pane node or a split node.
 
-- `null` means the workspace has zero panes.
 - A pane node references a tab group id.
 - A split node contains a direction, child nodes, and ratios.
 - Split children can contain panes or nested splits.
 
 ## Invariants
 
-- `focusedPaneId` may be `null`.
-- `focusedTabId` may be `null`.
-- A missing tab group renders as an empty pane.
-- A tab group may have `activeTabId: null`.
+- `layout` is non-null after command completion.
+- At least one pane exists after command completion.
+- `focusedPaneId` points to an existing pane.
+- `focusedTabId` points to an existing tab.
+- A pane references an existing tab group.
+- A tab group has at least one tab.
+- `activeTabId` points to one tab in the group.
 - Split ratios normalize to one.
 - Split nodes require at least two children.
-- Direct split counts support two through twelve children.
+- Direct split-count UI is not exposed.
 
 ## Recovery
 
-Saved workspaces are normalized before rendering. Invalid layout records fall
-back to an empty workspace instead of throwing during shell render.
+Saved workspaces are normalized before rendering. Invalid layout records,
+missing groups, missing tabs, zero panes, and zero-tab groups recover to one
+timeline pane while preserving workspace id, account id, and sidebar state.
+
+## Smart Splits
+
+- Split right requests horizontal insertion.
+- Split down requests vertical insertion.
+- If the target pane already belongs to a same-direction split, insert the new
+  pane beside the target and set equal sizes for that sibling group.
+- If the parent split direction differs, wrap only the target and new pane.
+- Repeated normal split actions create predictable N-way layouts without
+  explicit 3-way or 5-way controls.
