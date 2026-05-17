@@ -33,8 +33,8 @@ compose services, tests, scripts, project licensing, and this documentation set.
 
 ## Gaps
 
-- The workspace route can add relays, persist panes, connect read-only accounts,
-  request NIP-07 signing, subscribe to relays, and publish notes through NIP-07.
+- The workspace can persist panes, connect read-only accounts, and request
+  NIP-07 signing.
 - Playwright covers the workspace shell and local interaction flow.
 - Relay, cache, query, account, and workspace modules exist as browser
   foundation modules.
@@ -42,7 +42,8 @@ compose services, tests, scripts, project licensing, and this documentation set.
 
 ## Remaining Gaps
 
-- IndexedDB persistence is not implemented yet.
+- IndexedDB persistence exists for workspace foundation records, while full
+  cache and settings persistence are still being completed.
 - Relay reconnect backoff is not implemented yet.
 - Worker verification and indexing are not implemented yet.
 - Timeline virtualization is not implemented yet.

@@ -12,3 +12,5 @@ This directory defines the protocol kernel and Nostr behavior expected by the pr
 - [kernel.md](kernel.md): protocol kernel responsibilities and boundaries.
 - [relays.md](relays.md): relay pool, subscriptions, and publish semantics.
 - [events.md](events.md): event normalization, validation, and cache-ready shape.
+- [nip-support.md](nip-support.md): supported Nostr improvement proposals.
+- [default-relays.md](default-relays.md): seeded default relay set.

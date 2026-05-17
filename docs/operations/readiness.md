@@ -9,7 +9,7 @@ Use these checks before treating a product slice as ready.
 
 ## Browser Runtime
 
-- App starts with no configured relays.
+- App starts with seeded editable relays when no relay configuration exists.
 - App starts with existing IndexedDB data.
 - App recovers from blocked or unavailable IndexedDB.
 - App survives refresh during active relay subscriptions.

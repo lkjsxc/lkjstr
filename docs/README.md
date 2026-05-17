@@ -14,7 +14,7 @@ State: Canon
 ## System Goal
 
 - Build a browser-first TypeScript Nostr workspace client.
-- Keep relays user-configured until the user opts in.
+- Seed editable default relays only when no relay configuration exists.
 - Keep protocol, relay, cache, query, worker, account, and UI contracts explicit.
 - Keep the editor-style split-pane workspace model central to every product surface.
 
@@ -43,9 +43,11 @@ State: Canon
 
 ## Task Routes
 
-- Workspace UI: [product/workspace.md](product/workspace.md), [architecture/ui-composition.md](architecture/ui-composition.md).
+- Workspace UI: [product/workspace.md](product/workspace.md), [product/panes.md](product/panes.md), [product/tabs.md](product/tabs.md), [architecture/workspace-layout-tree.md](architecture/workspace-layout-tree.md).
+- Settings UI: [product/settings.md](product/settings.md), [architecture/settings-store.md](architecture/settings-store.md).
+- Theme: [architecture/theme.md](architecture/theme.md).
 - Protocol support: [protocol/nip-support.md](protocol/nip-support.md), [protocol/kernel.md](protocol/kernel.md).
-- Relay lifecycle: [protocol/relays.md](protocol/relays.md), [decisions/relay-ownership.md](decisions/relay-ownership.md).
+- Relay lifecycle: [product/relay-management.md](product/relay-management.md), [protocol/relays.md](protocol/relays.md), [protocol/default-relays.md](protocol/default-relays.md), [decisions/relay-ownership.md](decisions/relay-ownership.md).
 - Storage and workers: [architecture/storage-workers.md](architecture/storage-workers.md).
 - Verification: [operations/verification.md](operations/verification.md), [operations/readiness.md](operations/readiness.md).
 - Repository rules: [repository/README.md](repository/README.md).

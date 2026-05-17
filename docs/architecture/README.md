@@ -12,3 +12,6 @@ This directory defines the browser architecture for the SvelteKit Nostr workspac
 - [system.md](system.md): high-level runtime and ownership boundaries.
 - [storage-workers.md](storage-workers.md): IndexedDB and worker model.
 - [ui-composition.md](ui-composition.md): workspace, pane, and state composition.
+- [workspace-layout-tree.md](workspace-layout-tree.md): nullable layout and N-way split rules.
+- [settings-store.md](settings-store.md): settings schema, persistence, and search.
+- [theme.md](theme.md): dark neutral low-radius styling contract.

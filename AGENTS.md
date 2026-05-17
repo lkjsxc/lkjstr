@@ -13,10 +13,16 @@
 ## Product Target
 
 - Build `lkjstr` as a browser-first TypeScript Nostr workspace client.
-- Keep the editor-style split-pane workspace model central.
-- Keep runtime relay defaults user-configured.
+- Serve the workspace at `/`.
+- Use an editor-style split-pane tab workspace.
+- Support valid empty workspace, empty pane, and zero-tab states.
+- Support horizontal and vertical two-way and N-way pane splits.
+- Keep settings in a searchable key-value settings tab.
+- Use a dark mostly achromatic theme.
+- Keep rounded corners very small.
+- Seed default relays only when no relay configuration exists.
 - Keep protocol code independent from UI code.
-- Keep relay, cache, query, and worker contracts explicit.
+- Keep relay, cache, query, worker, account, settings, and workspace contracts explicit.
 
 ## Implementation Rules
 
@@ -26,6 +32,9 @@
 - Preserve unrelated working-tree changes.
 - Prefer typed parsers and local helpers.
 - Never log private keys or wallet secrets.
+- Never let closed tabs retain live subscriptions.
+- Never let durable drafts be removed by automatic cache pruning.
+- Never assume `focusedPaneId`, `focusedTabId`, or `layout` is non-null.
 
 ## Verification
 
@@ -33,4 +42,5 @@
 - Use Docker Compose for build, test, and verification.
 - Run `docker compose run --rm verify` before claiming a batch is complete.
 - Run Playwright when UI behavior changes.
-- Add tests for protocol, relay, cache, query, and workspace changes.
+- Add tests for empty workspace, root route, settings search, default relays,
+  N-way splits, theme, and radius changes.

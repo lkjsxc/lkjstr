@@ -5,7 +5,9 @@ State: Canon
 
 ## Role
 
-The relay pool owns browser WebSocket connections to user-configured relays. It turns workspace and pane demands into subscriptions, publishes, and monitor signals.
+The relay pool owns browser WebSocket connections to configured relays. It
+turns workspace and pane demands into subscriptions, publishes, and monitor
+signals.
 
 ## Relay Configuration
 
@@ -21,11 +23,15 @@ A relay record contains:
 - Last successful event time.
 - Health counters.
 
-The product must support multiple named relay sets. A pane may use the default account relay set or an explicit pane relay set.
+The product must support multiple named relay sets. A pane may use the default
+account relay set or an explicit pane relay set. When no relay configuration
+exists, the app seeds the editable public default set described in
+[default-relays.md](default-relays.md).
 
 ## Connection Policy
 
 - Open connections lazily when a subscription or publish requires them.
+- Never require default relay connections during workspace shell render.
 - Reuse one WebSocket per relay URL.
 - Back off reconnect attempts after repeated network failures.
 - Close connections for disabled relays after active work drains.

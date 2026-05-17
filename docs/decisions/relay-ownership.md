@@ -5,7 +5,9 @@ State: Accepted
 
 ## Decision
 
-Users configure the relays that drive reading, publishing, and monitoring. The app may provide starter suggestions, but saved user relay sets define runtime behavior.
+Users own the relays that drive reading, publishing, and monitoring. The app
+may seed a starter set when no relay configuration exists, but saved user relay
+sets define runtime behavior.
 
 ## Consequences
 

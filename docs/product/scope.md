@@ -7,12 +7,13 @@ State: Canon
 
 Build a browser-first SvelteKit Nostr workspace client for configuring relays, managing accounts, reading timelines, composing events, and monitoring relay behavior.
 
-The product treats relays as user-owned infrastructure choices. The app must never assume a global default relay set as the source of truth after onboarding.
+The product treats relays as user-owned infrastructure choices. The app seeds
+an editable default set only when no relay configuration exists.
 
 ## In Scope
 
 - SvelteKit single-page product shell with route-level loading only where it improves startup clarity.
-- User-configured relay sets with labels, read/write flags, and health state.
+- Editable relay sets with labels, read/write flags, and health state.
 - Protocol kernel that validates, signs, verifies, filters, and normalizes Nostr events.
 - Relay pool that multiplexes subscriptions and publishes across configured relays.
 - IndexedDB cache for events, profiles, relay metadata, drafts, account metadata, and workspace layout.

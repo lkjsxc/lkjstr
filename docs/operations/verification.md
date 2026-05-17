@@ -10,14 +10,14 @@ aligned.
 
 ## Local Commands
 
-- `pnpm check:repo` validates docs topology and line limits.
-- `pnpm lint` runs ESLint and Prettier checks.
-- `pnpm check` runs Svelte and TypeScript checks.
-- `pnpm test` runs unit and integration tests.
-- `pnpm build` builds the browser app.
-- `pnpm test:e2e` runs Playwright behavior checks.
-- `pnpm verify` runs the standard local gate.
-- `pnpm verify:e2e` runs the full local gate plus Playwright.
+- `CI=1 pnpm check:repo` validates docs topology and line limits.
+- `CI=1 pnpm lint` runs ESLint and Prettier checks.
+- `CI=1 pnpm check` runs Svelte and TypeScript checks.
+- `CI=1 pnpm test` runs unit and integration tests.
+- `CI=1 pnpm build` builds the browser app.
+- `CI=1 pnpm test:e2e` runs Playwright behavior checks.
+- `CI=1 pnpm verify` runs the standard local gate.
+- `CI=1 pnpm verify:e2e` runs the full local gate plus Playwright.
 
 ## Compose Commands
 
