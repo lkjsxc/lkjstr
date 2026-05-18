@@ -1,38 +1,35 @@
-Owner: Product
-State: Canon
-
 # Timeline
 
 ## Purpose
 
-The timeline pane presents Nostr events from cache and live relay subscriptions.
+Timeline is Account home. It shows the selected account, its NIP-02 follows,
+cache evidence, and relay diagnostics.
 
 ## Contract
 
-- The timeline tab accepts explicit relays and filters.
-- Empty user relays fall back to the default relay set.
-- Kind `1` notes are the first supported live event surface.
-- The first filter is `{ kinds: [1], limit: 50 }`.
-- Cached kind `1` events load before live relay results.
-- New live events merge into the visible list.
-- Ordering is `created_at` descending, then event ID ascending.
-- Duplicate relay deliveries appear once.
-- Verification state is visible per event.
-- Relay provenance is visible per event.
-- Event rows show author, time, content, event id, and relay source.
-- Author actions can open Profile tabs.
-- Reply or thread actions can open Thread tabs.
-- Loading, connected relay count, EOSE, and all-relays-failed states are visible.
-- Timeline works without an account.
-- Closing a timeline tab or tile closes its relay subscription.
-- Disabled relays are excluded from new timeline subscriptions.
+- Timeline opens from New Tab and is the recovery tab.
+- Cached notes render before relay results.
+- Cached-only notes stay visible and are labeled as cache-only.
+- Account home authors are the active account plus `p` tags from the latest
+  kind `3` follow list.
+- Relay reads use enabled read relays from the selected default relay set.
+- Deleted or disabled relays are not replaced by hidden public defaults.
+- No active account means no relay subscription.
+- No follow list means self notes are queried and the state remains visible.
+- Loading ends on EOSE even when no events arrive.
+- Relay `CLOSED`, `NOTICE`, `AUTH`, parse failure, and invalid signatures are
+  visible diagnostics.
+- Author controls open Profile tabs in the same tile.
+- Event id controls open Thread tabs in the same tile.
 
-## Acceptance
+## States
 
-- Cached timeline renders without relay connection.
-- Live relay events appear after opening a timeline tab.
-- Relay setting changes are respected after tab refresh or runtime restart.
-- Public relay failures do not block successful relays.
-- Automated tests use a synthetic relay.
-- New events do not move the scroll position unexpectedly.
-- Backfill can request older events.
+- `no-active-account`: cache only; account action required.
+- `loading-follows`: active account exists and follow discovery or notes load.
+- `no-follow-list`: latest kind `3` is absent; self notes are queried.
+- `no-enabled-relay`: selected set has no enabled read relay.
+- `auth-required`: a relay sent `AUTH`.
+- `subscription-closed`: a relay sent `CLOSED`.
+- `relay-failed`: selected relays are unreachable.
+- `ready-empty`: relay EOSE completed with no matching notes.
+- `ready-with-events`: cache or relay data has matching notes.

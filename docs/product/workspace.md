@@ -1,81 +1,16 @@
-Owner: Product
-State: Canon
-
 # Workspace
 
 ## Purpose
 
-The workspace is the primary product surface and is served at `/`.
+The workspace is the first screen and owns split tiles.
 
-## Workspace Contract
+## Contract
 
-- A workspace is a browser-owned editor surface made of split tiles.
-- A pane is the internal model term for one visible tile.
-- A tab group belongs to one tile and contains at least one tab after each command.
-- Initial tabs can include timeline, account manager, relay monitor, relay
-  settings, composer, settings, cache, notifications, profile, posts, thread,
-  and New Tab.
-- Later tab kinds must register through the pane registry before rendering.
-- Workspace layout persists locally.
-- `/` is the canonical route.
-- `/workspace` is retired and is not a documented entry point.
-- Empty tiles are not a normal persistent state.
-- A tile closes automatically when its final tab closes.
-- If the final tile closes, the app creates one stable recovery tile.
-- The recovery tile opens a timeline tab using the default relay set.
-- Pane state is separate from relay connection state.
-- Closing a pane releases subscriptions owned by that pane.
-- Splitting, moving focus, and resizing panes must not recreate unrelated subscriptions.
-- Small screens use focused pane navigation instead of horizontal crowding.
-
-## Screen Model
-
-The first authenticated or read-only screen is the workspace. It is not a
-landing page. The top header is compact and shows only `lkjstr` plus a build
-label. It does not show save state, status text, tab creation, compose, or menu
-controls.
-
-Tabs are created per tile. Each tile header exposes a plus button immediately
-before the three-dot tile menu. The plus button opens a New Tab chooser in that
-same tile. The chooser converts itself into the selected tab kind.
-
-## Pane Behavior
-
-- Panes have stable identity, title, kind, data source, and layout coordinates.
-- Splitting or resizing a pane persists without requiring a server.
-- Split nodes support horizontal and vertical N-way division.
-- Normal split right and split down actions create N-way siblings when the
-  nearest split already uses the requested direction.
-- A pane must expose its relay scope when the content depends on relay choice.
-- A pane can be duplicated with the same configuration.
-- A pane can be paused, which closes live subscriptions but preserves cached content.
-- Focused pane actions must be reachable by keyboard and pointer.
-- Tile header actions live in a three-dot menu anchored to the clicked button
-  with Split right, Split down, and Tile close.
-- Manual split-size reset controls are not part of the UI.
-
-## User Actions
-
-- Create a workspace.
-- Rename a workspace.
-- Split a pane horizontally or vertically.
-- Close a pane.
-- Duplicate a pane.
-- Move focus between panes.
-- Resize pane boundaries.
-- Configure pane relays and filters.
-- Open raw event details.
-- Open relay diagnostics.
-- Open settings.
-- Open a New Tab chooser from the current tile.
-
-## Acceptance
-
-- A user can create a workspace with three timeline tiles through repeated split actions.
-- A user can add a tab from a tile plus button without a left tab-add menu.
-- Closing a final tab closes its tile.
-- Closing the final tile creates one usable recovery tile.
-- The workspace never stays blank after a close command.
-- Each pane can use different filters.
-- Layout survives reload.
-- The workspace remains usable with ten active panes.
+- Tiles contain a tab strip, plus button, and tile menu.
+- Plus opens a New Tab chooser in the same tile.
+- New Tab conversion preserves the tab id.
+- Closing the last tab closes its tile.
+- Closing the last tile recovers a timeline tile.
+- Split actions create recursive layout nodes and persist through the workspace
+  store.
+- Resize uses a `0.9` pointer sensitivity multiplier and persists in layout.

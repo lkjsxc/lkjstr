@@ -1,22 +1,22 @@
-Owner: Repository maintainers
-State: Draft
+# Repository
 
-# Repository Guide
+## Purpose
 
-This directory describes how the repository should stay organized as work is
-added.
+Repository docs describe layout, workflow, and documentation standards for
+maintaining the app.
 
-Read these topics:
+## Tree
 
-- [Layout](layout.md)
-- [Documentation standards](documentation-standards.md)
-- [Workflow](workflow.md)
+```text
+repository/
+|-- README.md
+|-- documentation-standards.md
+|-- layout.md
+`-- workflow.md
+```
 
-Repository rules:
+## Documents
 
-- Keep root files minimal and intentional.
-- Put durable project knowledge in `docs/`.
-- Preserve clear ownership and state markers in every documentation file.
-- Prefer small source files with focused responsibilities.
-- Keep generated output out of hand-written documentation unless it is reviewed
-  and maintained as source.
+- [layout.md](layout.md): root and source layout.
+- [workflow.md](workflow.md): docs-first change flow.
+- [documentation-standards.md](documentation-standards.md): docs rules.

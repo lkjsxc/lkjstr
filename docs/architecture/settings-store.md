@@ -1,24 +1,14 @@
-Owner: Architecture
-State: Canon
-
 # Settings Store
 
-## Role
+## Purpose
 
-The settings store owns the schema, user overrides, validation, grouping, and
-persistence for the settings tab.
+Settings store owns flat schema records and user overrides.
 
-## Data Flow
+## Contract
 
-- Schema records define key, namespace, label, description, type, default,
-  reload flag, and sensitivity.
-- User overrides store only values that differ from defaults.
-- Effective records merge schema defaults with overrides.
-- Group helpers expose stable sections without hiding records.
-- Import validates every key before writing any accepted override.
-
-## Persistence
-
-Settings persist in IndexedDB and a local snapshot fallback. Settings must load
-before workspace render can apply theme tokens, but a settings load failure must
-fall back to defaults.
+- Schema records include key, namespace, label, description, type, default, and
+  current value.
+- Settings UI renders one flat list ordered by schema.
+- Overrides store only user-provided values.
+- Import ignores unknown keys and invalid values.
+- Tweet settings use `tweet.*`.

@@ -1,15 +1,28 @@
-# Operations Canon
-
-Owner: Operations
-State: Canon
+# Operations
 
 ## Purpose
 
-This directory defines browser operations for running, diagnosing, and maintaining the Nostr workspace client. These docs are canonical for observability, failure handling, data safety, and release readiness.
+Operations docs define local verification, Docker verification, diagnostics,
+data safety, and test ownership.
+
+## Tree
+
+```text
+operations/
+|-- README.md
+|-- data-safety.md
+|-- diagnostics.md
+|-- docker.md
+|-- readiness.md
+|-- testing-ownership.md
+`-- verification.md
+```
 
 ## Documents
 
-- [diagnostics.md](diagnostics.md): visible diagnostics and operational signals.
-- [data-safety.md](data-safety.md): local data, keys, import, export, and recovery.
-- [readiness.md](readiness.md): readiness checks before shipping changes.
-- [verification.md](verification.md): local and Compose verification commands.
+- [verification.md](verification.md): command gate.
+- [docker.md](docker.md): built-image Compose workflow.
+- [testing-ownership.md](testing-ownership.md): unit and e2e ownership.
+- [readiness.md](readiness.md): release readiness checks.
+- [diagnostics.md](diagnostics.md): debugging guidance.
+- [data-safety.md](data-safety.md): local data safety.

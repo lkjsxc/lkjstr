@@ -1,32 +1,44 @@
-# Product Canon
-
-Owner: Product
-State: Canon
+# Product
 
 ## Purpose
 
-This directory defines the browser-first Nostr workspace client as a product. These docs are canonical for scope, user workflows, and UI behavior.
+Product docs define the visible workspace contract. The first screen is the app
+itself: split tiles, tabs, relay-backed data, and local state.
 
-## Product Shape
+## Tree
 
-The client is a SvelteKit web app for people who read, compose, and monitor
-Nostr across editable relay sets. The primary screen is the root `/`
-workspace: split tiles can show timelines, profiles, relay tools, accounts,
-post drafts, notifications, settings, cache state, composer drafts, and
-threads.
-
-The app must work well before any server dependency is introduced. Browser storage, workers, and relay connections are first-class product surfaces, not implementation details hidden from users.
+```text
+product/
+|-- README.md
+|-- accounts.md
+|-- cache.md
+|-- notifications.md
+|-- panes.md
+|-- profiles.md
+|-- relay-management.md
+|-- scope.md
+|-- settings.md
+|-- tabs.md
+|-- threads.md
+|-- timeline.md
+|-- tweet.md
+|-- workflows.md
+`-- workspace.md
+```
 
 ## Documents
 
-- [scope.md](scope.md): product boundaries and non-goals.
-- [workflows.md](workflows.md): user workflows that define acceptance.
-- [workspace.md](workspace.md): canonical split-pane workspace behavior.
-- [panes.md](panes.md): tile behavior, close recovery, and split rules.
-- [tabs.md](tabs.md): tab group, tab, and final-tab recovery behavior.
-- [settings.md](settings.md): grouped key-value settings tab.
-- [relay-management.md](relay-management.md): relay set editing and default seeding.
-- [timeline.md](timeline.md): timeline pane behavior.
-- [profiles.md](profiles.md): profile identity and authored-post behavior.
-- [post-manager.md](post-manager.md): local post draft tree behavior.
-- [composer.md](composer.md): note composer and publish UX.
+- [scope.md](scope.md): included and excluded product surface.
+- [workspace.md](workspace.md): split tile behavior.
+- [tabs.md](tabs.md): tab list and opening rules.
+- [timeline.md](timeline.md): home timeline behavior.
+- [tweet.md](tweet.md): draft and publish behavior.
+- [relay-management.md](relay-management.md): relay set editing.
+- [settings.md](settings.md): flat key-value settings.
+- [profiles.md](profiles.md): profile opening and rendering.
+- [threads.md](threads.md): event thread opening and rendering.
+- [accounts.md](accounts.md): account records and signers.
+- [notifications.md](notifications.md): notification tab behavior.
+- [cache.md](cache.md): local cache tab behavior.
+- [panes.md](panes.md): pane surface rules.
+- [workflows.md](workflows.md): common user flows.

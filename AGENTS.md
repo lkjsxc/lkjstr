@@ -1,64 +1,35 @@
 # Agent Instructions
 
-## Repository Canon
+## Contract
 
-- Treat `docs/` as the source of truth before changing behavior.
-- Keep docs files at 300 lines or fewer.
-- Keep authored source files at 200 lines or fewer.
-- Keep one canonical owner for each contract.
-- Update parent `README.md` files when docs children change.
-- Remove stale contracts instead of preserving conflicts.
-- Avoid numbered release shorthand in authored docs.
+lkjstr is a docs-first SvelteKit Nostr workspace. Keep docs and implementation
+aligned in the same change, keep source files under 200 lines, keep docs under
+300 lines, and avoid release shorthand wording in docs.
 
-## Product Target
+## Product Rules
 
-- Build `lkjstr` as a browser-first TypeScript Nostr workspace client.
-- Serve the workspace at `/`.
-- Use an editor-style split-pane tab workspace.
-- Keep the top header limited to `lkjstr` and a build label.
-- Add tabs through the per-tile plus button.
-- Use a New Tab chooser to select tab kind.
-- Do not use a left sidebar tab-add menu.
-- Close a tile automatically when its final tab closes.
-- Recover a new tile automatically when the final tile closes.
-- Put tile actions in an anchored three-dot menu.
-- Ensure tile menu positioning is local to the clicked trigger.
-- Put tab close buttons inside tab frames.
-- Use real container-size-based resize sensitivity.
-- Do not expose manual split-size reset UI.
-- Do not add explicit 3-way or 5-way split buttons.
-- Make normal split actions create smart N-way layouts.
-- Fetch and render real timeline events from relays.
-- Keep settings grouped and key-value editable without filtering.
-- Make Timeline, Profile, Relay Settings, Posts, Accounts, Notifications,
-  Cache, Composer, and Thread production tabs.
-- Use a dark mostly achromatic theme.
-- Keep rounded corners very small.
-- Seed default relays only when no relay configuration exists.
-- Keep protocol code independent from UI code.
-- Keep relay, cache, query, worker, account, settings, and workspace contracts explicit.
+- The root route renders the workspace app.
+- Tiles have a tab strip, plus button, tile menu, and persistent resize state.
+- New Tab offers Timeline, Relay Settings, Relay Monitor, Notifications,
+  Accounts, Tweet, Settings, and Cache only.
+- Profile tabs open from identity clicks. Thread tabs open from event clicks.
+- Settings are one flat key-value list.
+- Relay reads and Tweet writes use the selected default relay set.
+- Disabled or removed relays are excluded until the user enables or restores
+  them.
+- Docker checks build images and do not mount the source tree.
 
-## Implementation Rules
+## Source Map
 
-- Read local code before changing contracts.
-- Update docs before implementation.
-- Keep changes small enough to verify.
-- Preserve unrelated working-tree changes.
-- Prefer typed parsers and local helpers.
-- Never log private keys or wallet secrets.
-- Never let closed tabs retain live subscriptions.
-- Never let durable drafts be removed by automatic cache pruning.
-- Never leave dangling pane, tab group, or tab references.
-- Never let the workspace remain blank after closing the final tile.
-- Never render mock placeholder text in production tabs.
+- `src/lib/protocol`: Nostr event, filter, tag, and relay URL contracts.
+- `src/lib/workspace`: layout, tab, split, recovery, and persistence commands.
+- `src/lib/relays`: relay set storage, clients, and pool behavior.
+- `src/lib/timeline`, `src/lib/profile`, `src/lib/thread`: read runtimes.
+- `src/lib/tweet`: durable drafts and NIP-07 publish helpers.
+- `src/lib/tabs`: tab-owned Svelte surfaces.
 
 ## Verification
 
-- Run the narrowest useful command first.
-- Use Docker Compose for build, test, and verification.
-- Run `docker compose run --rm verify` before claiming a batch is complete.
-- Run Playwright when UI behavior changes.
-- Use synthetic relays for automated timeline and profile tests.
-- Add tests for tile menu positioning, plus-to-new-tab, tab conversion,
-  minimal header, settings layout, tab close geometry, resize sensitivity,
-  and production tab data flows.
+Run focused checks after edits and `pnpm verify` before handoff when practical.
+Use synthetic relay tests for network behavior and Playwright for workspace
+flows.

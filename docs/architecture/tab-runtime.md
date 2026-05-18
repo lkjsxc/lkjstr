@@ -1,32 +1,19 @@
-Owner: Architecture
-State: Canon
-
 # Tab Runtime
 
-## Role
+## Purpose
 
-Tab runtime code maps durable workspace tab records to mounted tab surfaces and
-their subscriptions, timers, and local state.
+Tab runtime defines valid tab kinds and lifecycle ownership.
 
-## Contracts
-
-- Every tab kind has a title, icon, default config, and component owner.
-- `new-tab` has no relay subscription.
-- Opening the tile plus creates a focused `new-tab` in that tile.
-- New Tab conversion preserves the same tab id and tab group.
-- Conversion updates kind, title, icon, config, state, and timestamp.
-- Conversion does not change pane layout.
-- Closing a tab releases subscriptions owned by its mounted component.
-- Closing a tile releases every mounted runtime in that tile.
-
-## Tab Kinds
+## Kinds
 
 `new-tab`, `timeline`, `notifications`, `profile`, `account-manager`,
-`post-manager`, `thread`, `relay-monitor`, `relay-settings`, `composer`,
-`settings`, and `cache-status`.
+`thread`, `relay-monitor`, `relay-settings`, `tweet`, `settings`,
+`cache-status`.
 
-## Acceptance
+## Contract
 
-- New Tab can become every registered real tab kind.
-- Conversion never duplicates a tab.
-- Closed tabs cannot keep relay subscriptions alive.
+- New Tab can convert only to direct New Tab choices.
+- Profile and Thread remain valid tab kinds but open from timeline actions.
+- Conversion preserves tab id and tab group.
+- Closing a tab must close any runtime subscription owned by that tab.
+- Persisted tabs are normalized by the current tab contracts.

@@ -1,55 +1,38 @@
-Owner: Repository maintainers
-State: Canon
-
 # Current State
 
-The repository currently contains a SvelteKit application scaffold, local
-compose services, tests, scripts, project licensing, and this documentation set.
+## Purpose
 
-## Known Assets
+This document records the current implemented contract for the app.
 
-- `LICENSE` exists at the repository root.
-- `package.json` defines a private module package managed by `pnpm`.
-- `compose.yaml` defines `app` and `verify` services using Node 24.
-- `src/` contains Svelte application routes and styles.
-- `tests/` contains unit and end-to-end test entry points.
-- `scripts/check-repo.ts` provides repository checks.
-- `docs/` records repository guidance, vision, and current-state notes.
+## State
 
-## Current Stack Signals
-
-- Runtime target: Node 24 or newer.
-- App framework: SvelteKit with Vite.
-- Language tooling: TypeScript, ESLint, Prettier, and Svelte checks.
-- Test tooling: Vitest and Playwright.
-- Local orchestration: compose services for development and verification.
-
-## Present Docs
-
-- Product, protocol, architecture, operations, decisions, and research docs are
-  populated as initial canon.
-- `pnpm-lock.yaml` is present.
-- Operations docs define local and Compose verification.
+- Root `/` renders the workspace shell.
+- Workspace layout, tab groups, tabs, accounts, relay sets, settings, events,
+  notifications, Tweet drafts, and cache metadata are local browser data.
+- New Tab opens only Timeline, Relay Settings, Relay Monitor, Notifications,
+  Accounts, Tweet, Settings, and Cache.
+- Profile tabs are opened from identity actions.
+- Thread tabs are opened from event actions.
+- Settings render as one flat key-value list.
+- Timeline is Account home: active account plus NIP-02 follows from the latest
+  kind `3` event.
+- Timeline loads cached matching notes first, then subscribes to enabled read
+  relays in the selected default relay set.
+- Timeline has no public fallback when the selected account or read relays
+  cannot produce a feed.
+- Timeline loading ends when all active relays report EOSE, including the empty
+  event case.
+- Timeline states are `no-active-account`, `loading-follows`, `no-follow-list`,
+  `no-enabled-relay`, `auth-required`, `subscription-closed`, `relay-failed`,
+  `ready-empty`, and `ready-with-events`.
+- Timeline and Relay Monitor show relay diagnostics.
+- Tweet uses durable draft storage and publishes NIP-07 signed text notes to
+  enabled write relays.
+- Docker verification uses built images with no bind mounts.
 
 ## Gaps
 
-- The workspace can persist panes, connect read-only accounts, and request
-  NIP-07 signing.
-- Playwright covers the workspace shell and local interaction flow.
-- Relay, cache, query, account, and workspace modules exist as browser
-  foundation modules.
-- Protocol modules are still incomplete.
-
-## Remaining Gaps
-
-- IndexedDB persistence exists for workspace foundation records, while full
-  cache and settings persistence are still being completed.
-- Relay reconnect backoff is not implemented yet.
-- Worker verification and indexing are not implemented yet.
-- Timeline virtualization is not implemented yet.
-- Public relay smoke testing is manual and user-configured.
-
-Available package scripts include `check:repo`, `lint`, `check`, `test`,
-`build`, `verify`, and `verify:e2e`.
-
-Compose verification uses `docker compose run --rm verify`.
+- Relay health is visible from live pool snapshots but is not written back.
+- Profile metadata cache is memory-assisted and event-backed.
+- Notifications are local records; relay notification subscriptions are not yet
+  a dedicated runtime.

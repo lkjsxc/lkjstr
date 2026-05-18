@@ -1,26 +1,13 @@
-Owner: Protocol
-State: Canon
-
 # Default Relays
 
-## Role
+## Purpose
 
-Default relays give a fresh browser a useful relay configuration without making
-that configuration a hidden dependency.
+Default relay docs define initial relay set seeding.
 
-## Seed Set
+## Contract
 
-- Set id: `public-default`.
-- Name: `Public Default`.
-- Relays: Damus, nos.lol, Primal, Nostr.Band, and Offchain.
-- Every seeded relay is enabled for read and write.
-
-## Rules
-
-- Seed only when no relay set exists.
-- Never overwrite user relay settings.
-- Never re-add a removed default relay after reload.
-- Store seeded relays in IndexedDB.
-- Treat seeded relays as user-editable and removable.
-- Relay Monitor shows seeded relay health.
-- Failed default relays do not block app boot.
+- The seeded set id is `public-default`.
+- Seeding happens only when no relay set exists.
+- Users may remove or disable seeded relays.
+- Disabled or removed relays are not silently restored.
+- Restore defaults is an explicit Relay Settings action.

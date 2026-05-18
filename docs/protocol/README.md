@@ -1,16 +1,25 @@
-# Protocol Canon
-
-Owner: Protocol
-State: Canon
+# Protocol
 
 ## Purpose
 
-This directory defines the protocol kernel and Nostr behavior expected by the product. These docs are canonical for event validation, relay interaction, filters, publishing, and local data semantics.
+Protocol docs define Nostr event, filter, relay, and NIP contracts.
+
+## Tree
+
+```text
+protocol/
+|-- README.md
+|-- default-relays.md
+|-- events.md
+|-- kernel.md
+|-- nip-support.md
+`-- relays.md
+```
 
 ## Documents
 
-- [kernel.md](kernel.md): protocol kernel responsibilities and boundaries.
-- [relays.md](relays.md): relay pool, subscriptions, and publish semantics.
-- [events.md](events.md): event normalization, validation, and cache-ready shape.
-- [nip-support.md](nip-support.md): supported Nostr improvement proposals.
-- [default-relays.md](default-relays.md): seeded default relay set.
+- [kernel.md](kernel.md): protocol module boundary.
+- [events.md](events.md): event shape and validation.
+- [relays.md](relays.md): relay URL and set behavior.
+- [default-relays.md](default-relays.md): seeded relay set.
+- [nip-support.md](nip-support.md): supported NIP surface.

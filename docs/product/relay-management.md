@@ -1,39 +1,13 @@
-Owner: Product
-State: Canon
-
 # Relay Management
 
 ## Purpose
 
-Relay management makes relay sets visible, editable, and diagnosable.
+Relay Settings owns editable relay sets and the selected default set.
 
-## Relay Set Contract
+## Contract
 
-- A relay set has an id, name, seeded flag, and relay records.
-- Relay records include URL, label, enabled, read, write, connection state,
-  error, timestamps, and health counters.
-- The browser seeds the public default relay set only when no relay
-  configuration exists.
-- Seeded relays are ordinary user-editable relays.
-- Users can disable, edit, or remove seeded relays.
-- Removed seeded relays do not reappear on reload unless the user restores
-  defaults.
-- Relay connections are lazy and are not required for shell render.
-- Relay Settings owns editing relay sets and relay records.
-- Relay Monitor owns health and connection diagnostics.
-- Relay Settings can add relays, normalize URLs, validate URLs, edit labels,
-  toggle enabled/read/write, remove relays, create sets, rename sets, delete
-  sets, select the default set, and restore defaults.
-
-## Default Relay Set
-
-The default relay set id is `public-default` and contains Damus, nos.lol,
-Primal, Nostr.Band, and Offchain relays.
-
-## Acceptance
-
-- First boot creates one editable default relay set.
-- Existing relay configuration is never overwritten.
-- Relay Settings opens from New Tab and persists changes.
-- Relay Monitor shows seeded relays and does not block boot on failures.
-- Disabled relays are not used by timeline subscriptions.
+- First boot seeds one editable public default set only when no set exists.
+- Users can add, remove, enable, and disable relay records.
+- Users can toggle read and write capability per relay.
+- The selected default set drives timeline, profile, thread, and Tweet runtime.
+- Restore defaults replaces the public default set by explicit user action.

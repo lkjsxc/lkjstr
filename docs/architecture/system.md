@@ -27,7 +27,7 @@ Relay pool depends on protocol message helpers but not on pane components. Pane 
 
 - Canonical durable state: accounts, relay sets, workspace layout, drafts, cached events.
 - Live operational state: WebSocket status, subscription handles, publish attempts, worker queues.
-- Derived state: visible timelines, grouped relay health, validation summaries.
+- Derived state: visible timelines, relay health summaries, validation summaries.
 
 Durable state belongs in IndexedDB. Live operational state belongs in memory and can be rebuilt.
 

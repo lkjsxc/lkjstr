@@ -1,30 +1,13 @@
-Owner: Architecture
-State: Canon
-
 # Profile Runtime
 
-## Role
+## Purpose
 
-The profile runtime resolves profile input, reads cached metadata and authored
-events, subscribes to relays, and exposes profile tab state.
+Profile runtime owns metadata and authored-note loading for one pubkey.
 
-## Data Flow
+## Contract
 
-- Resolve hex pubkey, npub, nprofile, or active account before subscribing.
-- Load cached kind `0` metadata and kind `1` authored notes first.
-- Subscribe to enabled read relays for kind `0` and authored kind `1`.
-- Store received kind `0` metadata and kind `1` notes in IndexedDB.
-- Track relay provenance and freshness per metadata event.
-- Merge posts by event id and sort newest first.
-
-## Lifecycle
-
-- Runtime starts when a Profile tab mounts.
-- Runtime closes all subscriptions when the tab unmounts.
-- Relay failure must not block cached identity display.
-
-## Acceptance
-
-- Cached metadata appears before relay updates.
-- Unknown pubkeys return a stable empty profile state.
-- Synthetic relay tests can provide metadata and posts deterministically.
+- Profile tabs receive a pubkey from workspace actions.
+- Runtime reads cached metadata and notes first.
+- Runtime subscribes for kind `0` metadata and kind `1` notes by author.
+- Relay reads use enabled read relays from the selected default relay set.
+- Closing the tab closes subscriptions.

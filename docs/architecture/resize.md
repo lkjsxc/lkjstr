@@ -1,27 +1,13 @@
-Owner: Architecture
-State: Canon
-
 # Resize
 
-## Role
+## Purpose
 
-Resize code converts pointer movement on split handles into layout ratio
-changes.
+Resize docs define split handle math.
 
 ## Contract
 
-- Horizontal split handles use the split container width.
-- Vertical split handles use the split container height.
-- Pointer delta converts to `deltaPx / max(containerSizePx, 240)`.
-- A sensitivity multiplier of `0.45` damps the ratio change.
-- Tiny movement is ignored.
-- Pointer listeners are cleaned up on pointer up and component unmount.
-- Workspace persistence happens after a damped resize update, not from raw
-  pixel movement.
-- Adjacent split siblings keep minimum ratios and normalized totals.
-
-## Acceptance
-
-- Small tiles resize controllably.
-- Large tiles still resize with practical pointer movement.
-- Unit tests cover container-size conversion and damping.
+- Pointer movement is divided by container size with a minimum of `240px`.
+- Movements smaller than `2px` are ignored.
+- The sensitivity multiplier is `1.8`.
+- Adjacent panels keep a minimum ratio of `0.08`.
+- Updated ratios are normalized and persisted in the workspace layout.

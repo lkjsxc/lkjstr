@@ -11,7 +11,8 @@ sets define runtime behavior.
 
 ## Consequences
 
-- Relay scope must be visible in timelines, composer publish controls, and monitor views.
+- Relay scope must be visible in timelines, Tweet publish controls, and monitor
+  views.
 - Empty states must identify whether filters or relay selection caused the result.
 - Publish success is measured per relay, not globally.
 - Relay health is local evidence and must not become hidden global policy.

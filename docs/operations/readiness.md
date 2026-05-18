@@ -1,39 +1,20 @@
-# Readiness Checks
-
-Owner: Operations
-State: Canon
+# Readiness
 
 ## Purpose
 
-Use these checks before treating a product slice as ready.
+Readiness checks whether the app contract is shippable.
 
-## Browser Runtime
+## Checklist
 
-- App starts with seeded editable relays when no relay configuration exists.
-- App starts with existing IndexedDB data.
-- App recovers from blocked or unavailable IndexedDB.
-- App survives refresh during active relay subscriptions.
-- App handles worker startup failure with a visible degraded state.
-
-## Relay Behavior
-
-- Invalid relay URLs are rejected before connection.
-- Disabled relays receive no new subscriptions.
-- Connection failures appear in the relay monitor.
-- Publish results are recorded per relay.
-- Subscription cleanup happens when a pane closes or pauses.
-
-## Account Behavior
-
-- Public-key-only accounts cannot publish.
-- External signer failures are visible and scoped to signing actions.
-- Local key persistence requires explicit consent.
-- Account switching keeps workspace layout stable.
-
-## UI Behavior
-
-- Cached timelines render before live events.
-- Empty states identify filters and relay scope.
-- Composer drafts survive refresh.
-- Workspace layout survives refresh.
-- Mobile layout can reach every core action.
+- Docs and implementation agree.
+- New Tab has no retired choices or free-form inputs.
+- Settings are flat.
+- Relay changes restart active read runtimes.
+- Timeline handles Account home authors, cached data, EOSE, failed relays, no
+  active account, no follow list, auth-required, subscription-closed,
+  no-enabled-relay, ready-empty, and ready-with-events.
+- Timeline and Relay Monitor expose relay diagnostics instead of hiding relay
+  failures behind public fallback reads.
+- Tweet publishes only with NIP-07 and enabled write relays.
+- Docker config contains no bind mounts.
+- Unit and e2e checks pass for the changed surface.

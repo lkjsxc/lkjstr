@@ -1,48 +1,37 @@
 # lkjstr
 
-`lkjstr` is a browser-first TypeScript Nostr client with an editor-style
-split-pane tab workspace.
+lkjstr is a browser-first Nostr workspace built with SvelteKit. The app opens
+directly into split tiles, stores local state in IndexedDB, and uses the
+selected default relay set for timeline, profile, thread, and Tweet behavior.
 
-Treat [docs/README.md](docs/README.md) as the active canon for product
-behavior, architecture, operations, and repository policy.
+## Docs
 
-## Start Here
-
-- Canon root: [docs/README.md](docs/README.md)
+- Canon: [docs/README.md](docs/README.md)
 - Current state: [docs/current-state.md](docs/current-state.md)
-- Workspace contract: [docs/product/workspace.md](docs/product/workspace.md)
-- Tab runtime: [docs/architecture/tab-runtime.md](docs/architecture/tab-runtime.md)
-- Timeline runtime: [docs/architecture/timeline-runtime.md](docs/architecture/timeline-runtime.md)
-- Profile runtime: [docs/architecture/profile-runtime.md](docs/architecture/profile-runtime.md)
-- Settings tab: [docs/product/settings.md](docs/product/settings.md)
-- Relay management: [docs/product/relay-management.md](docs/product/relay-management.md)
-- Post manager: [docs/product/post-manager.md](docs/product/post-manager.md)
-- Architecture: [docs/architecture/README.md](docs/architecture/README.md)
+- Product tabs: [docs/product/tabs.md](docs/product/tabs.md)
+- Runtime contracts: [docs/architecture/tab-runtime.md](docs/architecture/tab-runtime.md)
 - Verification: [docs/operations/verification.md](docs/operations/verification.md)
-- Repository rules: [docs/repository/README.md](docs/repository/README.md)
-- Agent instructions: [AGENTS.md](AGENTS.md)
 
-## Current Shape
+## Contract
 
-- Browser-first SvelteKit and Vite web app.
-- Root `/` workspace route.
-- Minimal header with `lkjstr` and a build label.
-- Editor-style split-pane workspace UI.
-- Per-tile plus button for opening a New Tab chooser.
-- New Tab chooser converts the tab into the selected tab kind.
-- Anchored three-dot tile menu for split and close actions.
-- Tiles close automatically when their final tab closes.
-- The workspace recovers a new tile when the final tile closes.
-- Smart split behavior creates N-way layouts through normal split actions.
-- Timeline tabs fetch and render relay events.
-- Profile, relay settings, post, account, notification, cache, composer, and
-  thread tabs are data-backed surfaces.
-- Grouped key-value settings without filtering.
-- Dark neutral low-radius theme.
-- User-editable default relays.
-- IndexedDB cache.
-- Vitest and Playwright verification.
+- New Tab choices are Timeline, Relay Settings, Relay Monitor, Notifications,
+  Accounts, Tweet, Settings, and Cache.
+- Profile tabs open from identity actions. Thread tabs open from event actions.
+- Settings are one flat key-value list.
+- Timeline, profile, and thread reads use enabled read relays in the selected
+  default set. Disabled or removed relays are not silent fallbacks.
+- Tweet drafts are durable and publish through NIP-07 to enabled write relays.
+- Tile resize uses a `0.9` pointer sensitivity multiplier.
+- Docker verification uses built images with no bind mounts.
 
-## Rule
+## Commands
 
-When implementation and docs diverge, update docs first, then realign code.
+```sh
+pnpm install
+pnpm dev
+pnpm verify
+docker compose config
+docker compose build app verify e2e
+docker compose run --rm verify
+docker compose run --rm e2e
+```

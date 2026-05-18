@@ -1,33 +1,24 @@
-Owner: Architecture
-State: Canon
-
 # Timeline Runtime
 
-## Role
+## Purpose
 
-The timeline runtime connects cached events, relay subscriptions, and timeline
-UI state for a single visible timeline tab.
+Timeline runtime owns Account home loading.
 
-## Data Flow
+## Contract
 
-- Load cached kind `1` events first.
-- Resolve enabled read relays from user relay sets.
-- Use the default relay set when no user relay set is available.
-- Subscribe with `{ kinds: [1], limit: 50 }` by default.
-- Accept verified relay events from the relay pool.
-- Store received events in IndexedDB.
-- Merge cached and live events by id.
-- Sort newest first.
-- Track relay provenance for live events.
-- Expose loading, error, connected relay count, and EOSE state.
-- Keep runtime cache scoped to the tab filter and subscription id.
-
-## Lifecycle
-
-- A timeline tab starts its subscription when mounted.
-- A timeline tab stops its subscription when closed or unmounted.
-- Closing a tile stops every timeline subscription owned by that tile.
-- Relay failure does not block cached rendering.
-- Timeline rendering does not require an account.
-- Relay setting changes require a fresh relay resolution before a new
-  subscription starts.
+- Load cached kind `3` follows and matching cached kind `1` notes first.
+- Build authors from active account plus latest follow-list `p` tags.
+- Deduplicate authors and chunk author filters when needed.
+- Subscribe to follow discovery before note reads when no cached follow list
+  exists.
+- Subscribe to kind `1` notes with explicit authors.
+- Use enabled read relays from the selected default relay set.
+- Do not fall back to disabled, deleted, or hidden relays.
+- Do not subscribe when there is no active account.
+- Stop loading when all active relays send EOSE, including zero-event reads.
+- Expose `no-active-account`, `loading-follows`, `no-follow-list`,
+  `no-enabled-relay`, `auth-required`, `subscription-closed`, `relay-failed`,
+  `ready-empty`, and `ready-with-events`.
+- Surface relay `CLOSED`, `NOTICE`, `AUTH`, message parse errors, and invalid
+  event signatures as diagnostics.
+- Close old subscriptions when relay settings change or the tab closes.

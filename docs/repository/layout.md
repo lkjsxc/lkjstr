@@ -1,47 +1,23 @@
-Owner: Repository maintainers
-State: Draft
-
 # Layout
 
-The repository contains a SvelteKit app scaffold, verification tooling, compose
-services, tests, and documentation.
+## Purpose
 
-```text
-.
-├── AGENTS.md
-├── LICENSE
-├── README.md
-├── compose.yaml
-├── docs/
-    ├── README.md
-    ├── current-state.md
-    ├── repository/
-    └── vision/
-├── package.json
-├── scripts/
-├── src/
-└── tests/
-```
+Layout docs map repository paths to ownership.
 
-## Direction
+## Root
 
-Future directories should be added only when they have a clear responsibility.
-When implementation begins, prefer names that describe the role of the code
-rather than temporary milestones.
+- `src/`: SvelteKit app and TypeScript modules.
+- `docs/`: product and engineering contract.
+- `tests/unit/`: Vitest unit tests.
+- `tests/e2e/`: Playwright browser tests.
+- `Dockerfile`: app, verify, and e2e image targets.
+- `compose.yaml`: built-image services.
 
-Expected boundaries:
+## Source
 
-- `docs/` contains maintained project knowledge.
-- `src/` contains application source.
-- `tests/` contains automated test entry points.
-- `scripts/` contains repository automation.
-- Root package and tooling files are standard entry points for the selected
-  stack.
-
-## Constraints
-
-- Each documentation directory has one `README.md`.
-- Each documentation directory also has supporting Markdown files or
-  subdirectories.
-- Documentation files stay at or below 300 lines.
-- Source files stay at or below 200 lines where practical.
+- `src/lib/workspace`: workspace model.
+- `src/lib/relays`: relay storage and pool.
+- `src/lib/timeline`: timeline cache and runtime.
+- `src/lib/profile`: profile cache and runtime.
+- `src/lib/thread`: thread cache and runtime.
+- `src/lib/tweet`: Tweet drafts and publish helpers.

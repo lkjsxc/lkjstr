@@ -1,17 +1,21 @@
-Owner: Repository maintainers
-State: Draft
-
 # Vision
 
-This directory records the project direction before implementation decisions
-accumulate.
+## Purpose
 
-Read these topics:
+Vision docs describe the long-term direction for the app.
 
-- [North star](north-star.md)
-- [Principles](principles.md)
-- [Scope](scope.md)
+## Tree
 
-The vision is intentionally small while the repository has no application code.
-It should become more specific as real product, architecture, and operational
-choices are made.
+```text
+vision/
+|-- README.md
+|-- north-star.md
+|-- principles.md
+`-- scope.md
+```
+
+## Documents
+
+- [north-star.md](north-star.md): target product shape.
+- [principles.md](principles.md): design principles.
+- [scope.md](scope.md): long-term boundaries.

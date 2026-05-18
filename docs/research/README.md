@@ -1,14 +1,22 @@
-# Research Canon
-
-Owner: Research
-State: Canon
+# Research
 
 ## Purpose
 
-This directory records current research assumptions and evaluation criteria for the Nostr workspace client. These docs guide implementation choices but remain subordinate to accepted decision docs.
+Research docs hold background assumptions and open questions. Accepted product
+and decision docs take precedence.
+
+## Tree
+
+```text
+research/
+|-- README.md
+|-- browser-storage.md
+|-- nostr-client-surfaces.md
+`-- open-questions.md
+```
 
 ## Documents
 
-- [nostr-client-surfaces.md](nostr-client-surfaces.md): required Nostr client surfaces.
-- [browser-storage.md](browser-storage.md): browser storage and cache assumptions.
-- [open-questions.md](open-questions.md): unresolved questions that need evidence.
+- [browser-storage.md](browser-storage.md): local storage assumptions.
+- [nostr-client-surfaces.md](nostr-client-surfaces.md): client surface notes.
+- [open-questions.md](open-questions.md): unresolved questions.
