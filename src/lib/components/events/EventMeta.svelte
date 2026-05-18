@@ -1,6 +1,5 @@
 <script lang="ts">
   import type { NostrEvent } from '$lib/protocol';
-  import IdentityChip from '$lib/components/identity/IdentityChip.svelte';
   import Avatar from '$lib/components/identity/Avatar.svelte';
   import { identityDisplay, type ProfileSummary } from '$lib/identity/identity';
 
@@ -41,11 +40,7 @@
       class="identity-button"
       onclick={() => props.openProfile?.(props.event.pubkey)}
     >
-      <IdentityChip
-        pubkey={props.event.pubkey}
-        profile={props.profile}
-        compact
-      />
+      <strong>{display.title}</strong>
     </button>
     <span>{time}</span>
     <button type="button" onclick={() => props.openThread?.(props.event.id)}>
