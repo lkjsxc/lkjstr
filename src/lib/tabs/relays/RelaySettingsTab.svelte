@@ -2,6 +2,8 @@
   import {
     addRelay,
     restoreDefaultRelaySet,
+    selectedDefaultRelaySetId,
+    setDefaultRelaySetId,
     updateRelay,
     type RelaySet,
   } from '$lib/relays/relay-store';
@@ -15,6 +17,7 @@
   let props: Props = $props();
   let input = $state('');
   let error = $state('');
+  let defaultSetId = $state(selectedDefaultRelaySetId());
 
   async function add(setId: string): Promise<void> {
     try {
@@ -40,6 +43,12 @@
     await restoreDefaultRelaySet();
     props.refresh();
   }
+
+  function makeDefault(setId: string): void {
+    setDefaultRelaySetId(setId);
+    defaultSetId = setId;
+    props.refresh();
+  }
 </script>
 
 <section class="relay-settings">
@@ -47,10 +56,13 @@
   {#if error}<p role="alert">{error}</p>{/if}
   {#each props.relaySets as set (set.id)}
     <article class="relay-set">
-      <h3>{set.name}</h3>
+      <h3>{set.name}{defaultSetId === set.id ? ' default' : ''}</h3>
       <div class="toolbar">
         <input aria-label="Relay URL" bind:value={input} />
         <button type="button" onclick={() => add(set.id)}>Add relay</button>
+        <button type="button" onclick={() => makeDefault(set.id)}>
+          Use as default
+        </button>
         <button type="button" onclick={restore}>Restore defaults</button>
       </div>
       {#each set.relays as relay (relay.url)}

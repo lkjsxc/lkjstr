@@ -3,6 +3,8 @@ import type { RelayConnectionState } from './types';
 import { defaultRelaySet } from './default-relays';
 import { normalizeRelayUrl } from '../protocol';
 
+const selectedDefaultKey = 'lkjstr.defaultRelaySetId';
+
 export type RelayRecord = {
   readonly url: string;
   readonly label: string;
@@ -19,6 +21,7 @@ export type RelayRecord = {
 export type RelaySet = {
   readonly id: string;
   readonly name: string;
+  readonly isDefault?: boolean;
   readonly seeded: boolean;
   readonly relays: readonly RelayRecord[];
   readonly updatedAt: number;
@@ -34,6 +37,24 @@ export async function listRelaySets(): Promise<RelaySet[]> {
   const seeded = seedDefaultRelays([]);
   await saveRelaySets(seeded);
   return seeded;
+}
+
+export function selectedDefaultRelaySetId(): string {
+  const storage = localStore();
+  return storage?.getItem(selectedDefaultKey) ?? defaultRelaySet.id;
+}
+
+export function setDefaultRelaySetId(setId: string): void {
+  localStore()?.setItem(selectedDefaultKey, setId);
+}
+
+export function selectedDefaultRelaySet(
+  relaySets: readonly RelaySet[],
+): RelaySet | undefined {
+  return (
+    relaySets.find((set) => set.id === selectedDefaultRelaySetId()) ??
+    relaySets[0]
+  );
 }
 
 export function seedDefaultRelays(existing: readonly RelaySet[]): RelaySet[] {
@@ -149,4 +170,8 @@ function createRelay(url: string): RelayRecord {
     updatedAt: Date.now(),
     health: { attempts: 0, successes: 0, failures: 0 },
   };
+}
+
+function localStore(): Storage | undefined {
+  return typeof localStorage === 'undefined' ? undefined : localStorage;
 }

@@ -1,20 +1,18 @@
 <script lang="ts">
   import type { Account } from '$lib/accounts/account';
   import type { NotificationRecord } from '$lib/notifications/notification';
-  import type { PostTreeNode } from '$lib/post-manager/post-tree';
   import type { RelaySet } from '$lib/relays/relay-store';
   import AccountManagerTab from '$lib/tabs/accounts/AccountManagerTab.svelte';
   import CacheStatusTab from '$lib/tabs/cache/CacheStatusTab.svelte';
-  import ComposerTab from '$lib/tabs/composer/ComposerTab.svelte';
   import NewTab from '$lib/tabs/new-tab/NewTab.svelte';
   import NotificationsTab from '$lib/tabs/notifications/NotificationsTab.svelte';
-  import PostManagerTab from '$lib/tabs/posts/PostManagerTab.svelte';
   import ProfileTab from '$lib/tabs/profile/ProfileTab.svelte';
   import RelayMonitorTab from '$lib/tabs/relays/RelayMonitorTab.svelte';
   import RelaySettingsTab from '$lib/tabs/relays/RelaySettingsTab.svelte';
   import SettingsTab from '$lib/tabs/settings/SettingsTab.svelte';
   import ThreadTab from '$lib/tabs/thread/ThreadTab.svelte';
   import TimelineTab from '$lib/tabs/timeline/TimelineTab.svelte';
+  import TweetTab from '$lib/tabs/tweet/TweetTab.svelte';
   import type { WorkspacePaneNode } from '$lib/workspace/pane';
   import type { TabKind, WorkspaceTab } from '$lib/workspace/tab';
   import type { TabGroup } from '$lib/workspace/tab-group';
@@ -27,8 +25,8 @@
     group?: TabGroup;
     tabs: Record<string, WorkspaceTab>;
     accounts: Account[];
+    activeAccount?: Account;
     notifications: NotificationRecord[];
-    postNodes: PostTreeNode[];
     relaySets: RelaySet[];
     focusTab: (paneId: string, tabId: string) => void;
     closeTab: (paneId: string, tabId: string) => void;
@@ -43,10 +41,11 @@
     closePane: (paneId: string) => void;
     addReadonly: () => void;
     addNip07: () => void;
-    createDraft: () => void;
     refreshData: () => void;
     toggleRelay: (setId: string, url: string, enabled: boolean) => void;
     removeRelay: (setId: string, url: string) => void;
+    openProfile: (paneId: string, pubkey: string) => void;
+    openThread: (paneId: string, eventId: string) => void;
   };
 
   let props: Props = $props();
@@ -79,7 +78,13 @@
       {#if active.kind === 'new-tab'}
         <NewTab tabId={active.id} convert={props.convertTab} />
       {:else if active.kind === 'timeline'}
-        <TimelineTab tabId={active.id} relaySets={props.relaySets} />
+        <TimelineTab
+          tabId={active.id}
+          activeAccountPubkey={props.activeAccount?.pubkey}
+          relaySets={props.relaySets}
+          openProfile={(pubkey) => props.openProfile(props.pane.id, pubkey)}
+          openThread={(eventId) => props.openThread(props.pane.id, eventId)}
+        />
       {:else if active.kind === 'account-manager'}
         <AccountManagerTab
           accounts={props.accounts}
@@ -93,13 +98,6 @@
           tabId={active.id}
           pubkey={String(active.config.pubkey ?? '')}
           relaySets={props.relaySets}
-        />
-      {:else if active.kind === 'post-manager'}
-        <PostManagerTab
-          accounts={props.accounts}
-          postNodes={props.postNodes}
-          createDraft={props.createDraft}
-          refresh={props.refreshData}
         />
       {:else if active.kind === 'relay-monitor'}
         <RelayMonitorTab
@@ -117,10 +115,14 @@
         <SettingsTab />
       {:else if active.kind === 'cache-status'}
         <CacheStatusTab />
-      {:else if active.kind === 'composer'}
-        <ComposerTab />
+      {:else if active.kind === 'tweet'}
+        <TweetTab accounts={props.accounts} relaySets={props.relaySets} />
       {:else if active.kind === 'thread'}
-        <ThreadTab eventId={String(active.config.eventId ?? '')} />
+        <ThreadTab
+          tabId={active.id}
+          eventId={String(active.config.eventId ?? '')}
+          relaySets={props.relaySets}
+        />
       {/if}
     </div>
   {/if}

@@ -7,11 +7,10 @@ export function titleFor(kind: TabKind): string {
     notifications: 'Notifications',
     profile: 'Profile',
     'account-manager': 'Accounts',
-    'post-manager': 'Posts',
     thread: 'Thread',
     'relay-monitor': 'Relays',
     'relay-settings': 'Relay Settings',
-    composer: 'Compose',
+    tweet: 'Tweet',
     settings: 'Settings',
     'cache-status': 'Cache',
   };

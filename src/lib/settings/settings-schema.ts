@@ -24,12 +24,11 @@ relays.defaultSet|Default relays|json|["wss://relay.damus.io","wss://nos.lol","w
 relays.connectTimeoutMs|Connect timeout|number|5000|Relay connect timeout.
 profiles.fetchMetadata|Fetch metadata|boolean|true|Fetch profile metadata from relays.
 profiles.showNip05|Show NIP-05|boolean|true|Show NIP-05 identifiers.
-posts.persistDrafts|Persist drafts|boolean|true|Keep local drafts durable.
-posts.showTree|Show tree|boolean|true|Render draft hierarchy.
 notifications.enabled|Notifications|boolean|true|Enable notifications.
 notifications.showUnreadInTab|Unread tab|boolean|true|Show unread in tab.
 notifications.defaultCategories|Categories|json|["mentions"]|Notification categories.
-composer.defaultPublishMode|Publish mode|enum|selected-relays|Composer publish target.|selected-relays
+tweet.defaultPublishMode|Publish mode|enum|selected-relays|Tweet publish target.|selected-relays
+tweet.persistDrafts|Persist drafts|boolean|true|Keep Tweet drafts durable.
 cache.maxEvents|Max events|number|50000|Cached event limit.
 cache.compactionEnabled|Compaction|boolean|true|Enable compaction.
 cache.pruneDrafts|Prune drafts|boolean|false|Prune drafts automatically.
@@ -69,7 +68,7 @@ export function defaultSettings(now = 0): SettingRecord[] {
       defaultValue: value,
       value,
       options: item.options,
-      requiresReload: item.key === 'workspace.route',
+      requiresReload: false,
       sensitive: item.key.startsWith('security.'),
       searchableText: searchText(
         item.key,

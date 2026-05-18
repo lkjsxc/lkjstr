@@ -2,7 +2,6 @@
   import { onMount } from 'svelte';
   import type { Account } from '$lib/accounts/account';
   import type { NotificationRecord } from '$lib/notifications/notification';
-  import type { PostTreeNode } from '$lib/post-manager/post-tree';
   import {
     removeRelay,
     setRelayEnabled,
@@ -25,19 +24,17 @@
   import {
     addNip07FromProvider,
     addReadonlyFromInput,
-    createDraftForActiveAccount,
     loadWorkspacePageData,
   } from '$lib/workspace/workspace-page-data';
   import {
     loadWorkspace,
-    resetWorkspace,
     saveWorkspace,
   } from '$lib/workspace/workspace-persistence';
 
   let workspace = $state<Workspace>();
   let accounts = $state<Account[]>([]);
+  let activeAccount = $state<Account>();
   let notifications = $state<NotificationRecord[]>([]);
-  let postNodes = $state<PostTreeNode[]>([]);
   let relaySets = $state<RelaySet[]>([]);
 
   onMount(async () => {
@@ -51,7 +48,7 @@
   }
 
   async function refreshData(): Promise<void> {
-    ({ accounts, notifications, postNodes, relaySets } =
+    ({ accounts, activeAccount, notifications, relaySets } =
       await loadWorkspacePageData());
   }
 
@@ -77,6 +74,22 @@
   ): Promise<void> {
     if (!workspace) return;
     await update(convertWorkspaceTab(workspace, tabId, kind, config));
+  }
+
+  async function handleOpenProfile(
+    paneId: string,
+    pubkey: string,
+  ): Promise<void> {
+    if (!workspace) return;
+    await update(openTab(workspace, paneId, 'profile', 'Profile', { pubkey }));
+  }
+
+  async function handleOpenThread(
+    paneId: string,
+    eventId: string,
+  ): Promise<void> {
+    if (!workspace) return;
+    await update(openTab(workspace, paneId, 'thread', 'Thread', { eventId }));
   }
 
   async function handleSplit(
@@ -123,11 +136,6 @@
     }
   }
 
-  async function handleCreateDraft(): Promise<void> {
-    await createDraftForActiveAccount();
-    await refreshData();
-  }
-
   function handleFocusTab(paneId: string, tabId: string): Promise<void> {
     return workspace
       ? update(focusTab(workspace, paneId, tabId))
@@ -144,10 +152,6 @@
     return workspace
       ? update(closeWorkspacePane(workspace, paneId))
       : Promise.resolve();
-  }
-
-  async function handleRestoreWorkspace(): Promise<void> {
-    workspace = await resetWorkspace();
   }
 
   async function handleToggleRelay(
@@ -171,8 +175,8 @@
   <WorkspaceRoot
     {workspace}
     {accounts}
+    {activeAccount}
     {notifications}
-    {postNodes}
     {relaySets}
     focusTab={handleFocusTab}
     closeTab={handleCloseTab}
@@ -182,12 +186,12 @@
     split={handleSplit}
     closePane={handleClosePane}
     resize={handleResize}
-    restoreWorkspace={handleRestoreWorkspace}
     addReadonly={handleAddReadonly}
     addNip07={handleAddNip07}
-    createDraft={handleCreateDraft}
     {refreshData}
     toggleRelay={handleToggleRelay}
     removeRelay={handleRemoveRelay}
+    openProfile={handleOpenProfile}
+    openThread={handleOpenThread}
   />
 {/if}

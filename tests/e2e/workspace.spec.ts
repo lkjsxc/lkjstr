@@ -11,9 +11,7 @@ test('opens the workspace and creates split panes', async ({ page }) => {
   await expect(page.getByRole('heading', { name: 'Home' })).toHaveCount(3);
 });
 
-test('opens account, notification, profile, and post manager tabs', async ({
-  page,
-}) => {
+test('opens account, notification, and tweet tabs', async ({ page }) => {
   await page.goto('/');
   await page.getByRole('button', { name: 'Open new tab' }).first().click();
   await page.getByRole('button', { name: 'Accounts' }).click();
@@ -24,8 +22,8 @@ test('opens account, notification, profile, and post manager tabs', async ({
     page.getByRole('heading', { name: 'Notifications' }),
   ).toBeVisible();
   await page.getByRole('button', { name: 'Open new tab' }).first().click();
-  await page.getByRole('button', { name: 'Posts' }).click();
-  await expect(page.getByRole('heading', { name: 'Posts' })).toBeVisible();
+  await page.getByRole('button', { name: 'Tweet' }).click();
+  await expect(page.getByRole('heading', { name: 'Tweet' })).toBeVisible();
 });
 
 test('persists layout after reload', async ({ page }) => {

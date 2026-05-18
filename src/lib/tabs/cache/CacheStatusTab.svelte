@@ -29,8 +29,8 @@
       <dd>{cache.profileCount}</dd>
       <dt>Notifications</dt>
       <dd>{cache.notificationCount}</dd>
-      <dt>Draft nodes</dt>
-      <dd>{cache.postNodeCount}</dd>
+      <dt>Tweet drafts</dt>
+      <dd>{cache.tweetDraftCount}</dd>
       <dt>Storage bytes</dt>
       <dd>{cache.storageEstimateBytes ?? 'unknown'}</dd>
     </dl>

@@ -1,14 +1,16 @@
 import type { ProfileSummary } from '$lib/identity/identity';
 import { profileFromMetadataEvent } from '$lib/identity/profile-cache';
 import type { NostrEvent } from '$lib/protocol';
-import { RelayPool, type PoolEvent } from '$lib/relays/relay-pool';
+import {
+  sharedRelayPool,
+  type PoolEvent,
+  type RelayPool,
+} from '$lib/relays/relay-pool';
 import {
   cachedProfileEvent,
-  cachedProfilePosts,
+  cachedProfileNotes,
   storeProfileEvent,
 } from './profile-store';
-
-const sharedPool = new RelayPool();
 
 export type ProfileState = {
   readonly profile: ProfileSummary | null;
@@ -31,7 +33,7 @@ export class ProfileRuntime {
     readonly subId = `profile:${crypto.randomUUID()}`,
     pool?: RelayPool,
   ) {
-    this.#pool = pool ?? sharedPool;
+    this.#pool = pool ?? sharedRelayPool;
   }
 
   subscribe(listener: (state: ProfileState) => void): () => void {
@@ -43,7 +45,7 @@ export class ProfileRuntime {
   async start(): Promise<void> {
     const [meta, posts] = await Promise.all([
       cachedProfileEvent(this.pubkey),
-      cachedProfilePosts(this.pubkey),
+      cachedProfileNotes(this.pubkey),
     ]);
     this.#emit({
       ...this.#state,

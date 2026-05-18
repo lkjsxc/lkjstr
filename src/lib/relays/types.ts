@@ -1,5 +1,20 @@
 import type { NostrEvent, RelayMessage } from '../protocol';
 
+export type RelayDiagnosticKind =
+  | 'closed'
+  | 'notice'
+  | 'auth'
+  | 'parse-error'
+  | 'invalid-event';
+
+export type RelayDiagnostic = {
+  readonly relay: string;
+  readonly subId?: string;
+  readonly kind: RelayDiagnosticKind;
+  readonly message: string;
+  readonly timestamp: number;
+};
+
 export type RelayConnectionState =
   | 'idle'
   | 'connecting'
@@ -12,6 +27,7 @@ export type RelaySnapshot = {
   readonly state: RelayConnectionState;
   readonly lastMessageAt?: number;
   readonly lastError?: string;
+  readonly diagnostics: readonly RelayDiagnostic[];
   readonly eoseBySub: Readonly<Record<string, boolean>>;
 };
 

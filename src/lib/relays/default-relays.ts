@@ -11,6 +11,7 @@ export const DEFAULT_RELAYS = [
 export const defaultRelaySet: RelaySet = {
   id: 'public-default',
   name: 'Public Default',
+  isDefault: true,
   seeded: true,
   updatedAt: 0,
   relays: DEFAULT_RELAYS.map((url) => relay(url, labelFor(url))),

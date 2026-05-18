@@ -5,7 +5,7 @@ export type CacheMetadata = {
   readonly rawEventCount: number;
   readonly profileCount: number;
   readonly notificationCount: number;
-  readonly postNodeCount: number;
+  readonly tweetDraftCount: number;
   readonly storageEstimateBytes: number | null;
   readonly updatedAt: number;
 };
@@ -17,7 +17,7 @@ export async function cacheStatus(): Promise<CacheMetadata> {
     rawEventCount: await browserDb().events.count(),
     profileCount: 0,
     notificationCount: await browserDb().notifications.count(),
-    postNodeCount: await browserDb().postNodes.count(),
+    tweetDraftCount: await browserDb().tweetDrafts.count(),
     storageEstimateBytes,
     updatedAt: Date.now(),
   };

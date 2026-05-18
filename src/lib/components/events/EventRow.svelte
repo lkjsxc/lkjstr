@@ -1,20 +1,41 @@
 <script lang="ts">
   import type { TimelineItem } from '$lib/timeline/timeline-store';
+  import type { ProfileSummary } from '$lib/identity/identity';
   import EventContent from './EventContent.svelte';
   import EventMeta from './EventMeta.svelte';
 
   type Props = {
     item: TimelineItem;
+    profile?: ProfileSummary;
+    openProfile?: (pubkey: string) => void;
+    openThread?: (eventId: string) => void;
   };
 
   let props: Props = $props();
-  let initials = $derived(props.item.event.pubkey.slice(0, 2).toUpperCase());
 </script>
 
 <article class="event-row">
-  <div class="avatar fallback" aria-hidden="true">{initials}</div>
+  <button
+    type="button"
+    class="avatar-button"
+    aria-label="Open profile"
+    onclick={() => props.openProfile?.(props.item.event.pubkey)}
+  >
+    <EventMeta
+      event={props.item.event}
+      relays={[]}
+      profile={props.profile}
+      avatarOnly
+    />
+  </button>
   <div class="event-main">
-    <EventMeta event={props.item.event} relays={props.item.relays} />
+    <EventMeta
+      event={props.item.event}
+      relays={props.item.relays}
+      profile={props.profile}
+      openProfile={props.openProfile}
+      openThread={props.openThread}
+    />
     <EventContent content={props.item.event.content} />
   </div>
 </article>

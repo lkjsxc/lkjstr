@@ -1,7 +1,6 @@
 <script lang="ts">
   import type { Account } from '$lib/accounts/account';
   import type { NotificationRecord } from '$lib/notifications/notification';
-  import type { PostTreeNode } from '$lib/post-manager/post-tree';
   import type { RelaySet } from '$lib/relays/relay-store';
   import type { WorkspaceLayoutNode } from '$lib/workspace/layout-tree';
   import type { TabGroup } from '$lib/workspace/tab-group';
@@ -15,8 +14,8 @@
     groups: Record<string, TabGroup>;
     tabs: Record<string, WorkspaceTab>;
     accounts: Account[];
+    activeAccount?: Account;
     notifications: NotificationRecord[];
-    postNodes: PostTreeNode[];
     relaySets: RelaySet[];
     focusTab: (paneId: string, tabId: string) => void;
     closeTab: (paneId: string, tabId: string) => void;
@@ -32,10 +31,11 @@
     resize: (splitId: string, handleIndex: number, deltaRatio: number) => void;
     addReadonly: () => void;
     addNip07: () => void;
-    createDraft: () => void;
     refreshData: () => void;
     toggleRelay: (setId: string, url: string, enabled: boolean) => void;
     removeRelay: (setId: string, url: string) => void;
+    openProfile: (paneId: string, pubkey: string) => void;
+    openThread: (paneId: string, eventId: string) => void;
   };
 
   let props: Props = $props();
@@ -49,8 +49,8 @@
     {group}
     tabs={props.tabs}
     accounts={props.accounts}
+    activeAccount={props.activeAccount}
     notifications={props.notifications}
-    postNodes={props.postNodes}
     relaySets={props.relaySets}
     focusTab={props.focusTab}
     closeTab={props.closeTab}
@@ -61,10 +61,11 @@
     closePane={props.closePane}
     addReadonly={props.addReadonly}
     addNip07={props.addNip07}
-    createDraft={props.createDraft}
     refreshData={props.refreshData}
     toggleRelay={props.toggleRelay}
     removeRelay={props.removeRelay}
+    openProfile={props.openProfile}
+    openThread={props.openThread}
   />
 {:else}
   <div class={`split ${props.node.direction}`} bind:this={splitElement}>
@@ -78,8 +79,8 @@
           groups={props.groups}
           tabs={props.tabs}
           accounts={props.accounts}
+          activeAccount={props.activeAccount}
           notifications={props.notifications}
-          postNodes={props.postNodes}
           relaySets={props.relaySets}
           focusTab={props.focusTab}
           closeTab={props.closeTab}
@@ -91,10 +92,11 @@
           resize={props.resize}
           addReadonly={props.addReadonly}
           addNip07={props.addNip07}
-          createDraft={props.createDraft}
           refreshData={props.refreshData}
           toggleRelay={props.toggleRelay}
           removeRelay={props.removeRelay}
+          openProfile={props.openProfile}
+          openThread={props.openThread}
         />
       </div>
       {#if index < props.node.children.length - 1}

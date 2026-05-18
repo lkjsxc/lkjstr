@@ -22,7 +22,7 @@ export function resizeSplit(
 export function pointerDeltaToSplitRatio(
   deltaPx: number,
   containerSizePx: number,
-  sensitivity = 0.45,
+  sensitivity = 1.8,
 ): number {
   if (Math.abs(deltaPx) < 2) return 0;
   return (deltaPx / Math.max(containerSizePx, 240)) * sensitivity;

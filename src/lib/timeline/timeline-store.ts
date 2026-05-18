@@ -1,5 +1,6 @@
 import { browserDb } from '../storage/browser-db';
 import { compareEventsDesc, type NostrEvent } from '../protocol';
+import { latestFollowList } from './follow-list';
 
 export type TimelineItem = {
   readonly event: NostrEvent;
@@ -10,18 +11,34 @@ const memoryEvents = new Map<string, NostrEvent>();
 
 export async function loadCachedTimeline(
   limit: number,
+  authors?: readonly string[],
 ): Promise<TimelineItem[]> {
-  if (typeof indexedDB === 'undefined') return memoryTimeline(limit);
+  if (typeof indexedDB === 'undefined') return memoryTimeline(limit, authors);
   const events = await browserDb()
     .events.where('kind')
     .equals(1)
     .reverse()
     .sortBy('created_at')
     .catch(() => [...memoryEvents.values()]);
+  const allowed = authors ? new Set(authors) : undefined;
   return events
+    .filter((event) => !allowed || allowed.has(event.pubkey))
     .sort(compareEventsDesc)
     .slice(0, limit)
     .map((event) => ({ event, relays: ['cache'] }));
+}
+
+export async function loadCachedFollowList(
+  pubkey: string,
+): Promise<NostrEvent | undefined> {
+  if (typeof indexedDB === 'undefined')
+    return latestFollowList([...memoryEvents.values()], pubkey);
+  const events = await browserDb()
+    .events.where('kind')
+    .equals(3)
+    .toArray()
+    .catch(() => [...memoryEvents.values()]);
+  return latestFollowList(events, pubkey);
 }
 
 export async function storeTimelineEvent(event: NostrEvent): Promise<void> {
@@ -54,8 +71,14 @@ function mergeItem(a: TimelineItem, b: TimelineItem): TimelineItem {
   };
 }
 
-function memoryTimeline(limit: number): TimelineItem[] {
+function memoryTimeline(
+  limit: number,
+  authors?: readonly string[],
+): TimelineItem[] {
+  const allowed = authors ? new Set(authors) : undefined;
   return [...memoryEvents.values()]
+    .filter((event) => event.kind === 1)
+    .filter((event) => !allowed || allowed.has(event.pubkey))
     .sort(compareEventsDesc)
     .slice(0, limit)
     .map((event) => ({ event, relays: ['cache'] }));

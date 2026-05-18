@@ -121,3 +121,5 @@ export class RelayPool {
     this.#states.forEach((handler) => handler(states));
   }
 }
+
+export const sharedRelayPool = new RelayPool();

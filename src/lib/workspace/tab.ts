@@ -4,11 +4,10 @@ export type TabKind =
   | 'notifications'
   | 'profile'
   | 'account-manager'
-  | 'post-manager'
   | 'thread'
   | 'relay-monitor'
   | 'relay-settings'
-  | 'composer'
+  | 'tweet'
   | 'settings'
   | 'cache-status';
 
@@ -53,11 +52,10 @@ export function iconFor(kind: TabKind): string {
     notifications: 'bell',
     profile: 'user',
     'account-manager': 'users',
-    'post-manager': 'tree',
     thread: 'message',
     'relay-monitor': 'radio',
     'relay-settings': 'sliders',
-    composer: 'edit',
+    tweet: 'edit',
     settings: 'settings',
     'cache-status': 'database',
   };

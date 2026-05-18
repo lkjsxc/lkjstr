@@ -46,11 +46,10 @@ export function createDefaultTabRegistry(): TabRegistry {
     'notifications',
     'profile',
     'account-manager',
-    'post-manager',
     'thread',
     'relay-monitor',
     'relay-settings',
-    'composer',
+    'tweet',
     'settings',
     'cache-status',
   ];

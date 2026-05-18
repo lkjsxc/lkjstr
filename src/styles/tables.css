@@ -17,39 +17,17 @@
 .settings-layout {
   display: grid;
   gap: var(--space-3);
-  grid-template-columns: minmax(8rem, 0.5fr) minmax(14rem, 1.4fr) minmax(
-      12rem,
-      0.8fr
-    );
+  grid-template-columns: minmax(0, 1fr);
 }
 
-.settings-layout.grouped {
-  grid-template-columns: repeat(auto-fit, minmax(18rem, 1fr));
-}
-
-.settings-categories,
-.settings-list,
-.settings-inspector,
-.settings-section,
 .option-grid {
   display: grid;
   gap: var(--space-2);
   min-width: 0;
 }
 
-.settings-categories {
-  align-content: start;
-}
-
-.settings-categories button.active {
-  border-color: var(--color-border-strong);
-  color: var(--color-text);
-}
-
 .setting-row,
-.option-card,
-.draft-node,
-.settings-inspector {
+.option-card {
   border: 1px solid var(--color-border);
   border-radius: var(--radius-panel);
   padding: var(--space-3);
@@ -62,21 +40,57 @@
   gap: var(--space-3);
 }
 
-.new-tab-inputs {
-  display: grid;
-  gap: var(--space-2);
-  grid-template-columns: repeat(auto-fit, minmax(12rem, 1fr));
+.data-tab textarea {
+  box-sizing: border-box;
+  max-height: min(45dvh, 24rem);
+  min-height: 8rem;
+  resize: vertical;
+  width: 100%;
+}
+
+.identity-chip {
+  align-items: center;
+  display: flex;
+  gap: 0.65rem;
+}
+
+.identity-chip small {
+  color: var(--color-text-muted);
+}
+
+.identity-chip.compact small {
+  display: none;
+}
+
+.avatar {
+  border-radius: var(--radius-avatar);
+  display: inline-grid;
+  flex: 0 0 auto;
+  height: 2rem;
+  object-fit: cover;
+  place-items: center;
+  width: 2rem;
+}
+
+.avatar.fallback {
+  color: var(--color-bg);
+  font-weight: 700;
+}
+
+.avatar-button,
+.identity-button {
+  align-items: center;
+  background: transparent;
+  border: 0;
+  color: inherit;
+  display: inline-flex;
+  padding: 0;
 }
 
 .option-card,
-.draft-node,
 .metric-list {
   display: grid;
   gap: var(--space-2);
-}
-
-.setting-row.active {
-  border-color: var(--color-border-strong);
 }
 
 .setting-key {
@@ -88,8 +102,7 @@
 
 .setting-key span,
 .setting-row p,
-.setting-badges,
-.settings-inspector dd {
+.setting-badges {
   color: var(--color-text-muted);
 }
 
@@ -99,18 +112,7 @@
   gap: var(--space-2);
 }
 
-.settings-inspector textarea,
 .setting-row textarea {
   max-width: 100%;
   width: 100%;
-}
-
-@media (max-width: 760px) {
-  .settings-layout {
-    grid-template-columns: minmax(0, 1fr);
-  }
-
-  .settings-categories {
-    grid-template-columns: repeat(auto-fit, minmax(6rem, 1fr));
-  }
 }

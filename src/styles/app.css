@@ -1,13 +1,17 @@
 .workspace-shell {
-  height: 100vh;
+  height: 100dvh;
   display: grid;
+  min-height: 0;
+  overflow: hidden;
 }
 
 .workspace-main {
   background: var(--color-bg);
   display: grid;
   grid-template-rows: auto minmax(0, 1fr);
+  min-height: 0;
   min-width: 0;
+  overflow: hidden;
 }
 
 .app-header {
@@ -72,6 +76,7 @@
   grid-template-rows: auto minmax(0, 1fr);
   min-height: 0;
   min-width: 0;
+  overflow: hidden;
 }
 
 .pane-head,
@@ -156,35 +161,14 @@
   min-width: 2rem;
 }
 
-.identity-chip,
 .row {
   align-items: center;
   display: flex;
   gap: 0.65rem;
 }
 
-.identity-chip small,
 .row small {
   color: var(--color-text-muted);
-}
-
-.identity-chip.compact small {
-  display: none;
-}
-
-.avatar {
-  border-radius: var(--radius-avatar);
-  display: inline-grid;
-  flex: 0 0 auto;
-  height: 2rem;
-  object-fit: cover;
-  place-items: center;
-  width: 2rem;
-}
-
-.avatar.fallback {
-  color: var(--color-bg);
-  font-weight: 700;
 }
 
 .row {

@@ -66,12 +66,12 @@ describe('workspace model', () => {
 
   it('creates default runtimes with idempotent cleanup', () => {
     const runtime = createDefaultTabRegistry()
-      .require('timeline')
+      .require('tweet')
       .createRuntime({ tabId: 'tab-a', config: {} });
     runtime.suspend();
     runtime.resume();
     runtime.close();
     runtime.close();
-    expect(runtime.metadata().title).toBe('Home');
+    expect(runtime.metadata().title).toBe('Tweet');
   });
 });

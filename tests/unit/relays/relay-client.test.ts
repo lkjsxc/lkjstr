@@ -88,6 +88,34 @@ describe('relay helpers', () => {
 
     sockets[0]?.receive('not json');
     expect(states.at(-1)?.lastError).toBe('relay message is not valid JSON');
+    expect(states.at(-1)?.diagnostics.at(-1)).toMatchObject({
+      kind: 'parse-error',
+    });
+  });
+
+  it('records relay diagnostics for closed, notice, auth, and bad events', () => {
+    const events: unknown[] = [];
+    const states: RelaySnapshot[] = [];
+    const client = new RelayClient('wss://relay.example/', {
+      event: (_relay, _subId, event) => events.push(event),
+      state: (snapshot) => states.push(snapshot),
+    });
+    client.subscribe('sub', [{ kinds: [1] }]);
+    sockets[0]?.open();
+    sockets[0]?.receive(JSON.stringify(['CLOSED', 'sub', 'limit: slow']));
+    sockets[0]?.receive(JSON.stringify(['NOTICE', 'maintenance']));
+    sockets[0]?.receive(JSON.stringify(['AUTH', 'challenge']));
+    sockets[0]?.receive(
+      JSON.stringify(['EVENT', 'sub', { ...event, sig: '0'.repeat(128) }]),
+    );
+
+    expect(events).toEqual([]);
+    expect(states.at(-1)?.diagnostics.map((item) => item.kind)).toEqual([
+      'closed',
+      'notice',
+      'auth',
+      'invalid-event',
+    ]);
   });
 
   it('normalizes relay pool subscriptions and closes them', () => {
@@ -106,6 +134,20 @@ describe('relay helpers', () => {
 
     unsubscribe();
     expect(sockets[0]?.sent.at(-1)).toBe('["CLOSE","sub"]');
+  });
+
+  it('does not reconnect closed sockets to close subscriptions', () => {
+    const pool = new RelayPool();
+    const unsubscribe = pool.subscribe(['relay.example'], 'sub', [
+      { limit: 2 },
+    ]);
+
+    sockets[0]?.open();
+    sockets[0]?.close();
+    unsubscribe();
+
+    expect(sockets).toHaveLength(1);
+    expect(sockets[0]?.sent).toEqual(['["REQ","sub",{"limit":2}]']);
   });
 
   it('resolves relay pool publish acknowledgements', async () => {

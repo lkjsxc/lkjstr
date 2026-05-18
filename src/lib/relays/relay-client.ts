@@ -5,10 +5,13 @@ import {
   type ClientMessage,
   type NostrEvent,
   type NostrFilter,
+  type RelayMessage,
 } from '../protocol';
 import type {
   RelayClientEvents,
   RelayConnectionState,
+  RelayDiagnostic,
+  RelayDiagnosticKind,
   RelaySnapshot,
 } from './types';
 
@@ -17,6 +20,7 @@ export class RelayClient {
   #state: RelayConnectionState = 'idle';
   #lastMessageAt?: number;
   #lastError?: string;
+  #diagnostics: RelayDiagnostic[] = [];
   #eoseBySub: Record<string, boolean> = {};
   #queue: string[] = [];
 
@@ -31,6 +35,7 @@ export class RelayClient {
       state: this.#state,
       lastMessageAt: this.#lastMessageAt,
       lastError: this.#lastError,
+      diagnostics: [...this.#diagnostics],
       eoseBySub: { ...this.#eoseBySub },
     };
   }
@@ -52,11 +57,13 @@ export class RelayClient {
   }
 
   subscribe(id: string, filters: readonly NostrFilter[]): void {
+    this.#eoseBySub[id] = false;
     this.send(['REQ', id, ...filters]);
   }
 
   closeSubscription(id: string): void {
-    this.send(['CLOSE', id]);
+    delete this.#eoseBySub[id];
+    this.sendIfConnected(['CLOSE', id]);
   }
 
   publish(event: NostrEvent): void {
@@ -67,6 +74,14 @@ export class RelayClient {
     this.connect();
     const encoded = encodeClientMessage(message);
     if (this.#state === 'open') this.#socket?.send(encoded);
+    else this.#queue.push(encoded);
+  }
+
+  sendIfConnected(message: ClientMessage): void {
+    if (!this.#socket || this.#state === 'closed' || this.#state === 'idle')
+      return;
+    const encoded = encodeClientMessage(message);
+    if (this.#state === 'open') this.#socket.send(encoded);
     else this.#queue.push(encoded);
   }
 
@@ -81,16 +96,46 @@ export class RelayClient {
     const parsed = parseRelayMessage(data);
     if (!parsed.ok) {
       this.#lastError = parsed.message;
+      this.#addDiagnostic('parse-error', parsed.message);
       this.#emitState();
       return;
     }
     this.#lastMessageAt = Date.now();
     this.events.message?.(this.url, parsed.message);
-    if (parsed.message[0] === 'EVENT' && verifyEvent(parsed.message[2]).ok) {
-      this.events.event?.(this.url, parsed.message[1], parsed.message[2]);
-    }
-    if (parsed.message[0] === 'EOSE') this.#eoseBySub[parsed.message[1]] = true;
+    this.#handleRelayMessage(parsed.message);
     this.#emitState();
+  }
+
+  #handleRelayMessage(message: RelayMessage) {
+    if (message[0] === 'EVENT') {
+      const verified = verifyEvent(message[2]);
+      if (verified.ok) this.events.event?.(this.url, message[1], message[2]);
+      else this.#addDiagnostic('invalid-event', verified.message, message[1]);
+    }
+    if (message[0] === 'CLOSED')
+      this.#addDiagnostic('closed', message[2], message[1]);
+    if (message[0] === 'NOTICE') this.#addDiagnostic('notice', message[1]);
+    if (message[0] === 'AUTH') this.#addDiagnostic('auth', message[1]);
+    if (message[0] === 'EOSE') this.#eoseBySub[message[1]] = true;
+  }
+
+  #addDiagnostic(
+    kind: RelayDiagnosticKind,
+    message: string,
+    subId?: string,
+  ): void {
+    this.#diagnostics = [
+      ...this.#diagnostics.slice(-19),
+      {
+        relay: this.url,
+        subId,
+        kind,
+        message,
+        timestamp: Date.now(),
+      },
+    ];
+    if (kind === 'parse-error' || kind === 'invalid-event')
+      this.#lastError = message;
   }
 
   #setState(state: RelayConnectionState): void {

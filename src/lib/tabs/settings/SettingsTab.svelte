@@ -1,7 +1,6 @@
 <script lang="ts">
   import { onMount } from 'svelte';
-  import SettingsSection from '$lib/components/settings/SettingsSection.svelte';
-  import { groupSettings } from '$lib/settings/settings-groups';
+  import SettingsRow from '$lib/components/settings/SettingsRow.svelte';
   import type { SettingRecord } from '$lib/settings/settings-key';
   import {
     importSettingsJson,
@@ -11,7 +10,6 @@
   } from '$lib/settings/settings-store';
 
   let settings = $state<SettingRecord[]>([]);
-  let groups = $derived(groupSettings(settings));
   let changedCount = $derived(
     settings.filter(
       (setting) =>
@@ -67,9 +65,9 @@
       <button type="button" onclick={importJson}>Import JSON</button>
     </div>
   </header>
-  <div class="settings-layout grouped">
-    {#each groups as group (group.id)}
-      <SettingsSection {group} {save} {reset} />
+  <div class="settings-layout">
+    {#each settings as setting (setting.key)}
+      <SettingsRow {setting} {save} {reset} />
     {/each}
   </div>
 </section>

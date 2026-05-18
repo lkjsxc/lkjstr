@@ -1,29 +1,37 @@
-import type { NostrEvent, NostrFilter } from '../protocol';
-import { RelayPool, type PoolEvent } from '../relays/relay-pool';
-import type { RelaySnapshot } from '../relays/types';
+import { normalizeRelayUrl } from '../protocol';
+import {
+  sharedRelayPool,
+  type PoolEvent,
+  type RelayPool,
+} from '../relays/relay-pool';
+import { authorFilters } from './follow-list';
+import {
+  loadAccountHome,
+  loadCachedAccountHome,
+  type TimelineLoad,
+} from './timeline-load';
+import { profileFilter, storeTimelineProfile } from './timeline-profiles';
+import {
+  needsSelfFallback,
+  relayStatePatch,
+  selectedRelaySnapshots,
+} from './timeline-relay-state';
+import {
+  emptyState,
+  noActiveAccountState,
+  noEnabledRelayState,
+  noFollowListState,
+  readyWithEventsState,
+  upsertLive,
+  type TimelineRuntimeOptions,
+  type TimelineState,
+} from './timeline-state';
 import {
   loadCachedTimeline,
   mergeTimelineItems,
   storeTimelineEvent,
   type TimelineItem,
 } from './timeline-store';
-
-const sharedPool = new RelayPool();
-
-export type TimelineState = {
-  readonly items: readonly TimelineItem[];
-  readonly loading: boolean;
-  readonly error: string | null;
-  readonly connectedRelays: number;
-  readonly eoseRelays: number;
-};
-
-export type TimelineRuntimeOptions = {
-  readonly relays: readonly string[];
-  readonly subId: string;
-  readonly limit?: number;
-  readonly pool?: RelayPool;
-};
 
 export class TimelineRuntime {
   #pool: RelayPool;
@@ -32,15 +40,25 @@ export class TimelineRuntime {
   #state: TimelineState = emptyState();
   #listeners = new Set<(state: TimelineState) => void>();
   #cleanup: (() => void)[] = [];
-  #filters: readonly NostrFilter[];
+  #relays: string[];
+  #limit: number;
+  #authors: string[] = [];
+  #profiles: TimelineState['profiles'] = {};
+  #followList?: TimelineLoad['followList'];
+  #followFallbackStarted = false;
+  #followSubId: string;
+  #metaSubId: string;
+  #noteSubId: string;
 
   constructor(readonly options: TimelineRuntimeOptions) {
-    this.#pool = options.pool ?? sharedPool;
-    this.#filters = [{ kinds: [1], limit: this.limit }];
-  }
-
-  get limit(): number {
-    return this.options.limit ?? 50;
+    this.#pool = options.pool ?? sharedRelayPool;
+    this.#followSubId = `${options.subId}:follows`;
+    this.#metaSubId = `${options.subId}:meta`;
+    this.#noteSubId = `${options.subId}:notes`;
+    this.#limit = options.limit ?? 50;
+    this.#relays = options.relays
+      .map(normalizeRelayUrl)
+      .filter((url): url is string => Boolean(url));
   }
 
   subscribe(listener: (state: TimelineState) => void): () => void {
@@ -50,25 +68,25 @@ export class TimelineRuntime {
   }
 
   async start(): Promise<void> {
-    this.#cached = await loadCachedTimeline(this.limit);
-    this.#emit({ ...this.#state, items: this.#cached, loading: true });
-    if (this.options.relays.length === 0) {
-      this.#emit({
-        ...this.#state,
-        loading: false,
-        error: 'No relays configured.',
-      });
+    const pubkey = this.options.activeAccountPubkey;
+    if (!pubkey) {
+      this.#cached = await loadCachedTimeline(this.#limit);
+      this.#emit(noActiveAccountState(this.#state, this.#cached));
+      return;
+    }
+    const loaded = await loadCachedAccountHome(pubkey, this.#limit);
+    this.#applyLoaded(loaded);
+    this.#emit(this.#nextState({ items: this.#cached }));
+    if (this.#relays.length === 0) {
+      this.#emit(noEnabledRelayState(this.#state));
       return;
     }
     this.#cleanup.push(
       this.#pool.onEvent((event) => this.#receive(event)),
       this.#pool.onState((snapshots) => this.#receiveState(snapshots)),
-      this.#pool.subscribe(
-        this.options.relays,
-        this.options.subId,
-        this.#filters,
-      ),
     );
+    if (this.#followList) this.#subscribeNotes();
+    else this.#subscribeFollows(pubkey);
   }
 
   close(): void {
@@ -76,69 +94,104 @@ export class TimelineRuntime {
     this.#emit({ ...this.#state, loading: false });
   }
 
+  #subscribeFollows(pubkey: string): void {
+    this.#emit({ ...this.#state, loading: true, status: 'loading-follows' });
+    this.#cleanup.push(
+      this.#pool.subscribe(this.#relays, this.#followSubId, [
+        { kinds: [3], authors: [pubkey], limit: 1 },
+      ]),
+    );
+  }
+
+  #subscribeNotes(): void {
+    this.#cleanup.push(
+      this.#pool.subscribe(
+        this.#relays,
+        this.#noteSubId,
+        authorFilters(this.#authors, this.#limit),
+      ),
+    );
+    const filters = profileFilter(this.#authors);
+    if (filters.length > 0)
+      this.#cleanup.push(
+        this.#pool.subscribe(this.#relays, this.#metaSubId, filters),
+      );
+  }
+
   async #receive(poolEvent: PoolEvent): Promise<void> {
-    if (poolEvent.subId !== this.options.subId || poolEvent.event.kind !== 1)
+    if (poolEvent.subId === this.#followSubId && poolEvent.event.kind === 3)
+      return this.#receiveFollowList(poolEvent.event);
+    if (poolEvent.subId === this.#metaSubId && poolEvent.event.kind === 0)
+      return this.#receiveMetadata(poolEvent.event);
+    if (poolEvent.subId !== this.#noteSubId || poolEvent.event.kind !== 1)
       return;
+    if (!this.#authors.includes(poolEvent.event.pubkey)) return;
     await storeTimelineEvent(poolEvent.event);
     this.#live = upsertLive(this.#live, poolEvent.event, poolEvent.relay);
+    this.#emit(readyWithEventsState(this.#state, this.items()));
+  }
+
+  async #receiveFollowList(event: PoolEvent['event']): Promise<void> {
+    await storeTimelineEvent(event);
+    this.#applyLoaded(await loadAccountHome(event.pubkey, event, this.#limit));
+    this.#emit(this.#nextState({ items: this.items() }));
+    this.#subscribeNotes();
+  }
+
+  async #receiveMetadata(event: PoolEvent['event']): Promise<void> {
+    if (!this.#authors.includes(event.pubkey)) return;
+    const profile = await storeTimelineProfile(event);
+    this.#profiles = { ...this.#profiles, [event.pubkey]: profile };
+    this.#emit(this.#nextState({ loading: false, error: null }));
+  }
+
+  #receiveState(snapshots: ReturnType<RelayPool['snapshots']>): void {
+    const active = selectedRelaySnapshots(snapshots, this.#relays);
+    if (
+      needsSelfFallback(
+        active,
+        Boolean(this.#followList),
+        this.#followFallbackStarted,
+        this.#followSubId,
+      )
+    )
+      this.#handleMissingFollow();
     this.#emit({
       ...this.#state,
-      items: this.items(),
-      loading: false,
-      error: null,
+      ...relayStatePatch(this.#state, active, this.#noteSubId),
     });
   }
 
-  #receiveState(snapshots: RelaySnapshot[]): void {
-    const active = snapshots.filter((item) =>
-      this.options.relays.includes(item.url),
-    );
-    const connectedRelays = active.filter(
-      (item) => item.state === 'open',
-    ).length;
-    const eoseRelays = active.filter(
-      (item) => item.eoseBySub[this.options.subId],
-    ).length;
-    const failed =
-      active.length > 0 && active.every((item) => item.state === 'error');
-    this.#emit({
-      ...this.#state,
-      connectedRelays,
-      eoseRelays,
-      error: failed ? 'No relay is reachable.' : this.#state.error,
-    });
+  #handleMissingFollow(): void {
+    this.#followFallbackStarted = true;
+    this.#followList = undefined;
+    this.#authors = [this.options.activeAccountPubkey ?? ''].filter(Boolean);
+    this.#emit(noFollowListState(this.#state, this.#authors, this.#profiles));
+    this.#subscribeNotes();
   }
 
   private items(): TimelineItem[] {
-    return mergeTimelineItems(this.#cached, this.#live, this.limit);
+    return mergeTimelineItems(this.#cached, this.#live, this.#limit);
+  }
+
+  #applyLoaded(loaded: TimelineLoad): void {
+    this.#followList = loaded.followList;
+    this.#authors = loaded.authors;
+    this.#cached = loaded.cached;
+    this.#profiles = loaded.profiles;
   }
 
   #emit(state: TimelineState): void {
     this.#state = state;
     this.#listeners.forEach((listener) => listener(state));
   }
-}
 
-function upsertLive(
-  items: readonly TimelineItem[],
-  event: NostrEvent,
-  relay: string,
-): TimelineItem[] {
-  const existing = items.find((item) => item.event.id === event.id);
-  if (!existing) return [...items, { event, relays: [relay] }];
-  return items.map((item) =>
-    item.event.id === event.id
-      ? { event, relays: [...new Set([...item.relays, relay])] }
-      : item,
-  );
-}
-
-function emptyState(): TimelineState {
-  return {
-    items: [],
-    loading: true,
-    error: null,
-    connectedRelays: 0,
-    eoseRelays: 0,
-  };
+  #nextState(patch: Partial<TimelineState>): TimelineState {
+    return {
+      ...this.#state,
+      authors: this.#authors,
+      profiles: this.#profiles,
+      ...patch,
+    };
+  }
 }

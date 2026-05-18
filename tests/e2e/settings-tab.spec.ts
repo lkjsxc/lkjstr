@@ -1,6 +1,6 @@
 import { expect, test } from '@playwright/test';
 
-test('opens grouped settings without filter UI', async ({ page }) => {
+test('opens flat settings without filter UI', async ({ page }) => {
   await page.goto('/');
   await page.getByRole('button', { name: 'Open new tab' }).first().click();
   await page.getByRole('button', { name: 'Settings', exact: true }).click();

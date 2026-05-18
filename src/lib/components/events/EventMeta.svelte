@@ -1,25 +1,56 @@
 <script lang="ts">
   import type { NostrEvent } from '$lib/protocol';
+  import IdentityChip from '$lib/components/identity/IdentityChip.svelte';
+  import Avatar from '$lib/components/identity/Avatar.svelte';
+  import { identityDisplay, type ProfileSummary } from '$lib/identity/identity';
 
   type Props = {
     event: NostrEvent;
     relays: readonly string[];
+    profile?: ProfileSummary;
+    avatarOnly?: boolean;
+    openProfile?: (pubkey: string) => void;
+    openThread?: (eventId: string) => void;
   };
 
   let props: Props = $props();
-  let author = $derived(short(props.event.pubkey));
+  let display = $derived(identityDisplay(props.event.pubkey, props.profile));
   let eventId = $derived(short(props.event.id));
   let time = $derived(new Date(props.event.created_at * 1000).toLocaleString());
-  let relayText = $derived(props.relays.join(', '));
+  let relayText = $derived(
+    props.relays.every((relay) => relay === 'cache')
+      ? 'cache-only'
+      : props.relays.join(', '),
+  );
 
   function short(value: string): string {
     return `${value.slice(0, 8)}...${value.slice(-4)}`;
   }
 </script>
 
-<div class="event-meta">
-  <strong>{author}</strong>
-  <span>{time}</span>
-  <span>{eventId}</span>
-  <span>{relayText}</span>
-</div>
+{#if props.avatarOnly}
+  <Avatar
+    pubkey={display.pubkey}
+    name={display.title}
+    src={display.avatarUrl}
+  />
+{:else}
+  <div class="event-meta">
+    <button
+      type="button"
+      class="identity-button"
+      onclick={() => props.openProfile?.(props.event.pubkey)}
+    >
+      <IdentityChip
+        pubkey={props.event.pubkey}
+        profile={props.profile}
+        compact
+      />
+    </button>
+    <span>{time}</span>
+    <button type="button" onclick={() => props.openThread?.(props.event.id)}>
+      {eventId}
+    </button>
+    <span>{relayText}</span>
+  </div>
+{/if}

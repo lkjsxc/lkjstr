@@ -1,5 +1,4 @@
 <script lang="ts">
-  import { onDestroy, onMount } from 'svelte';
   import EventContent from '$lib/components/events/EventContent.svelte';
   import IdentityChip from '$lib/components/identity/IdentityChip.svelte';
   import { shortNpub } from '$lib/identity/display-name';
@@ -30,7 +29,7 @@
   });
   let runtime: ProfileRuntime | undefined;
 
-  onMount(() => {
+  $effect(() => {
     runtime = new ProfileRuntime(
       props.pubkey,
       timelineRelays(props.relaySets),
@@ -43,11 +42,10 @@
       runtime?.close();
     };
   });
-
-  onDestroy(() => runtime?.close());
 </script>
 
 <section class="profile-tab">
+  <h2>Profile</h2>
   <header class="profile-card">
     <IdentityChip pubkey={props.pubkey} profile={state.profile ?? undefined} />
     <small>{shortNpub(props.pubkey)}</small>
@@ -65,7 +63,7 @@
   {#if state.error}
     <p role="alert">{state.error}</p>
   {/if}
-  <h3>Posts</h3>
+  <h3>Notes</h3>
   <div class="event-list">
     {#each state.posts as event (event.id)}
       <article class="event-row">
@@ -75,7 +73,7 @@
         </div>
       </article>
     {:else}
-      <p>No cached posts have been received for this profile.</p>
+      <p>No cached notes have been received for this profile.</p>
     {/each}
   </div>
 </section>
