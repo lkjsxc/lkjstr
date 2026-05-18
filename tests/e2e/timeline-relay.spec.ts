@@ -5,6 +5,7 @@ import {
   generateSecretKey,
   getPublicKey,
 } from 'nostr-tools/pure';
+import * as nip19 from 'nostr-tools/nip19';
 
 test('timeline does not read public relays without an active account', async ({
   page,
@@ -66,6 +67,18 @@ test('timeline displays followed-author notes from a synthetic relay', async ({
   await expect(
     page.getByRole('button', { name: /Followed Writer/ }),
   ).toBeVisible();
+  const npub = nip19.npubEncode(followed);
+  const metaParts = await page
+    .locator('.event-meta')
+    .filter({ hasText: npub })
+    .first()
+    .locator('> *')
+    .evaluateAll((nodes) =>
+      nodes.map((node) => node.textContent?.trim() ?? ''),
+    );
+  expect(metaParts[0]).toContain('Followed Writer');
+  expect(metaParts[1]).toBe(npub);
+  expect(metaParts[3]).toContain(note.id.slice(0, 8));
   await expect(page.getByText('ready-with-events')).toBeVisible();
   await page.getByRole('button', { name: 'Open profile' }).first().click();
   await expect(page.getByRole('heading', { name: 'Profile' })).toBeVisible();

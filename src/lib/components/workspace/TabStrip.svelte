@@ -4,22 +4,77 @@
 
   type Props = {
     group: TabGroup;
+    paneId: string;
     tabs: Record<string, WorkspaceTab>;
     focusTab: (tabId: string) => void;
     closeTab: (tabId: string) => void;
+    moveTab: (
+      sourcePaneId: string,
+      targetPaneId: string,
+      tabId: string,
+      targetIndex: number,
+    ) => void;
   };
 
-  let { group, tabs, focusTab, closeTab }: Props = $props();
+  let { group, paneId, tabs, focusTab, closeTab, moveTab }: Props = $props();
+
+  type DraggedTab = { sourcePaneId: string; tabId: string };
+
+  function dragPayload(tabId: string): string {
+    return JSON.stringify({ sourcePaneId: paneId, tabId });
+  }
+
+  function readDraggedTab(event: DragEvent): DraggedTab | undefined {
+    const raw = event.dataTransfer?.getData('application/x-lkjstr-tab');
+    if (!raw) return undefined;
+    try {
+      const value = JSON.parse(raw) as Partial<DraggedTab>;
+      if (typeof value.sourcePaneId !== 'string') return undefined;
+      if (typeof value.tabId !== 'string') return undefined;
+      return { sourcePaneId: value.sourcePaneId, tabId: value.tabId };
+    } catch {
+      return undefined;
+    }
+  }
+
+  function dropTab(event: DragEvent, targetIndex: number): void {
+    event.preventDefault();
+    const dragged = readDraggedTab(event);
+    if (!dragged) return;
+    moveTab(dragged.sourcePaneId, paneId, dragged.tabId, targetIndex);
+  }
 </script>
 
-<div class="tab-strip" role="tablist">
+<div
+  class="tab-strip"
+  role="tablist"
+  tabindex="0"
+  ondragover={(event) => event.preventDefault()}
+  ondrop={(event) => dropTab(event, group.tabIds.length)}
+>
   {#each group.tabIds as tabId (tabId)}
     {@const tab = tabs[tabId]}
     {#if tab}
       <div
         role="tab"
+        aria-label={tab.title}
+        tabindex="-1"
         class:active={group.activeTabId === tab.id}
         class="tab-frame"
+        draggable="true"
+        ondragstart={(event) => {
+          event.dataTransfer?.setData(
+            'application/x-lkjstr-tab',
+            dragPayload(tab.id),
+          );
+          event.dataTransfer?.setData('text/plain', tab.title);
+          if (event.dataTransfer) event.dataTransfer.effectAllowed = 'move';
+        }}
+        ondragover={(event) => event.preventDefault()}
+        ondrop={(event) => {
+          event.stopPropagation();
+          dropTab(event, group.tabIds.indexOf(tab.id));
+        }}
       >
         <button type="button" class="tab-main" onclick={() => focusTab(tab.id)}>
           <span>{tab.title}</span>

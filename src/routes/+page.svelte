@@ -8,6 +8,11 @@
     type RelaySet,
   } from '$lib/relays/relay-store';
   import WorkspaceRoot from '$lib/components/workspace/WorkspaceRoot.svelte';
+  import {
+    promptAddNip07,
+    promptAddReadonly,
+  } from '$lib/workspace/account-actions';
+  import { moveWorkspaceTab } from '$lib/workspace/move-tab';
   import { closeWorkspacePane } from '$lib/workspace/pane-commands';
   import { resizeSplit } from '$lib/workspace/resize';
   import type { TabKind } from '$lib/workspace/tab';
@@ -21,11 +26,7 @@
     titleFor,
     type Workspace,
   } from '$lib/workspace/workspace';
-  import {
-    addNip07FromProvider,
-    addReadonlyFromInput,
-    loadWorkspacePageData,
-  } from '$lib/workspace/workspace-page-data';
+  import { loadWorkspacePageData } from '$lib/workspace/workspace-page-data';
   import {
     loadWorkspace,
     saveWorkspace,
@@ -63,8 +64,7 @@
   }
 
   async function handleOpenNewTab(paneId: string): Promise<void> {
-    if (!workspace) return;
-    await update(openNewTabChooser(workspace, paneId));
+    if (workspace) await update(openNewTabChooser(workspace, paneId));
   }
 
   async function handleConvertTab(
@@ -72,34 +72,36 @@
     kind: TabKind,
     config: Record<string, unknown> = {},
   ): Promise<void> {
-    if (!workspace) return;
-    await update(convertWorkspaceTab(workspace, tabId, kind, config));
+    if (workspace)
+      await update(convertWorkspaceTab(workspace, tabId, kind, config));
   }
 
   async function handleOpenProfile(
     paneId: string,
     pubkey: string,
   ): Promise<void> {
-    if (!workspace) return;
-    await update(openTab(workspace, paneId, 'profile', 'Profile', { pubkey }));
+    if (workspace)
+      await update(
+        openTab(workspace, paneId, 'profile', 'Profile', { pubkey }),
+      );
   }
 
   async function handleOpenThread(
     paneId: string,
     eventId: string,
   ): Promise<void> {
-    if (!workspace) return;
-    await update(openTab(workspace, paneId, 'thread', 'Thread', { eventId }));
+    if (workspace)
+      await update(openTab(workspace, paneId, 'thread', 'Thread', { eventId }));
   }
 
   async function handleSplit(
     paneId: string,
     direction: 'horizontal' | 'vertical',
   ): Promise<void> {
-    if (!workspace) return;
-    await update(
-      splitFocusedPane({ ...workspace, focusedPaneId: paneId }, direction),
-    );
+    if (workspace)
+      await update(
+        splitFocusedPane({ ...workspace, focusedPaneId: paneId }, direction),
+      );
   }
 
   async function handleResize(
@@ -112,28 +114,6 @@
         ...workspace,
         layout: resizeSplit(workspace.layout, splitId, handleIndex, deltaRatio),
       });
-  }
-
-  async function handleAddReadonly(): Promise<void> {
-    const input = window.prompt('npub or hex pubkey');
-    if (!input) return;
-    try {
-      await addReadonlyFromInput(input);
-      await refreshData();
-    } catch (error) {
-      window.alert(
-        error instanceof Error ? error.message : 'Account add failed.',
-      );
-    }
-  }
-
-  async function handleAddNip07(): Promise<void> {
-    try {
-      await addNip07FromProvider();
-      await refreshData();
-    } catch {
-      window.alert('NIP-07 unavailable.');
-    }
   }
 
   function handleFocusTab(paneId: string, tabId: string): Promise<void> {
@@ -151,6 +131,18 @@
   function handleClosePane(paneId: string): Promise<void> {
     return workspace
       ? update(closeWorkspacePane(workspace, paneId))
+      : Promise.resolve();
+  }
+
+  function handleMoveTab(
+    sourcePaneId: string,
+    targetPaneId: string,
+    tabId: string,
+    targetIndex: number,
+  ): Promise<void> {
+    const move = { sourcePaneId, targetPaneId, tabId, targetIndex };
+    return workspace
+      ? update(moveWorkspaceTab(workspace, move))
       : Promise.resolve();
   }
 
@@ -180,14 +172,15 @@
     {relaySets}
     focusTab={handleFocusTab}
     closeTab={handleCloseTab}
+    moveTab={handleMoveTab}
     openTab={handleOpenTab}
     openNewTab={handleOpenNewTab}
     convertTab={handleConvertTab}
     split={handleSplit}
     closePane={handleClosePane}
     resize={handleResize}
-    addReadonly={handleAddReadonly}
-    addNip07={handleAddNip07}
+    addReadonly={() => promptAddReadonly(refreshData)}
+    addNip07={() => promptAddNip07(refreshData)}
     {refreshData}
     toggleRelay={handleToggleRelay}
     removeRelay={handleRemoveRelay}

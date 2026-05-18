@@ -134,6 +134,14 @@
   border-color: var(--color-border-strong);
 }
 
+.tab-frame[draggable='true'] {
+  cursor: grab;
+}
+
+.tab-frame[draggable='true']:active {
+  cursor: grabbing;
+}
+
 .tab-main,
 .tab-close {
   background: transparent;

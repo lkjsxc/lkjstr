@@ -51,6 +51,30 @@ export function closeTab(group: TabGroup, tab: WorkspaceTab): TabGroup {
   };
 }
 
+export function removeTabForMove(group: TabGroup, tabId: string): TabGroup {
+  const tabIds = group.tabIds.filter((id) => id !== tabId);
+  if (tabIds.length === group.tabIds.length) return group;
+  const activeTabId =
+    group.activeTabId === tabId ? (tabIds.at(-1) ?? null) : group.activeTabId;
+  return {
+    ...group,
+    tabIds,
+    activeTabId,
+    pinnedTabIds: group.pinnedTabIds.filter((id) => id !== tabId),
+  };
+}
+
+export function insertMovedTab(
+  group: TabGroup,
+  tabId: string,
+  toIndex: number,
+): TabGroup {
+  const tabIds = group.tabIds.filter((id) => id !== tabId);
+  const nextIndex = Math.max(0, Math.min(toIndex, tabIds.length));
+  tabIds.splice(nextIndex, 0, tabId);
+  return { ...group, tabIds, activeTabId: tabId };
+}
+
 export function moveTabWithinGroup(
   group: TabGroup,
   tabId: string,

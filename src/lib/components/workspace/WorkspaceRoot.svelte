@@ -15,6 +15,12 @@
     relaySets: RelaySet[];
     focusTab: (paneId: string, tabId: string) => void;
     closeTab: (paneId: string, tabId: string) => void;
+    moveTab: (
+      sourcePaneId: string,
+      targetPaneId: string,
+      tabId: string,
+      targetIndex: number,
+    ) => void;
     openTab: (paneId: string | null, kind: TabKind) => void;
     openNewTab: (paneId: string) => void;
     convertTab: (
@@ -51,6 +57,7 @@
         relaySets={props.relaySets}
         focusTab={props.focusTab}
         closeTab={props.closeTab}
+        moveTab={props.moveTab}
         openTab={props.openTab}
         openNewTab={props.openNewTab}
         convertTab={props.convertTab}

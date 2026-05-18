@@ -30,6 +30,12 @@
     relaySets: RelaySet[];
     focusTab: (paneId: string, tabId: string) => void;
     closeTab: (paneId: string, tabId: string) => void;
+    moveTab: (
+      sourcePaneId: string,
+      targetPaneId: string,
+      tabId: string,
+      targetIndex: number,
+    ) => void;
     openTab: (paneId: string | null, kind: TabKind) => void;
     openNewTab: (paneId: string) => void;
     convertTab: (
@@ -59,9 +65,11 @@
     {#if props.group}
       <TabStrip
         group={props.group}
+        paneId={props.pane.id}
         tabs={props.tabs}
         focusTab={(tabId) => props.focusTab(props.pane.id, tabId)}
         closeTab={(tabId) => props.closeTab(props.pane.id, tabId)}
+        moveTab={props.moveTab}
       />
     {/if}
     <div class="pane-actions">
