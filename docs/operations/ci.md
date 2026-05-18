@@ -15,13 +15,13 @@ CI keeps repository gates reproducible outside a developer machine.
 
 ## Images
 
-`main` publishes three GHCR images:
+`main` publishes one GHCR image:
 
-- `ghcr.io/lkjsxc/lkjstr-app`
-- `ghcr.io/lkjsxc/lkjstr-verify`
-- `ghcr.io/lkjsxc/lkjstr-e2e`
+- `ghcr.io/lkjsxc/lkjstr`
 
-Images receive only the `main` tag and a `sha-<commit>` tag.
+The image builds from the `app` Dockerfile target and receives `latest` and
+`sha-<commit>` tags, so `ghcr.io/lkjsxc/lkjstr:latest` is the default runtime
+image.
 
 ## Rules
 

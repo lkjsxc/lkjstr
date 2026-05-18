@@ -53,16 +53,6 @@ jobs:
       - e2e
       - compose
     runs-on: ubuntu-latest
-    strategy:
-      fail-fast: false
-      matrix:
-        include:
-          - target: app
-            image: ghcr.io/lkjsxc/lkjstr-app
-          - target: verify
-            image: ghcr.io/lkjsxc/lkjstr-verify
-          - target: e2e
-            image: ghcr.io/lkjsxc/lkjstr-e2e
     steps:
       - uses: actions/checkout@v6
       - uses: docker/setup-buildx-action@v4
@@ -74,8 +64,8 @@ jobs:
       - uses: docker/build-push-action@v7
         with:
           context: .
-          target: ${{ matrix.target }}
+          target: app
           push: true
           tags: |
-            ${{ matrix.image }}:main
-            ${{ matrix.image }}:sha-${{ github.sha }}
+            ghcr.io/lkjsxc/lkjstr:latest
+            ghcr.io/lkjsxc/lkjstr:sha-${{ github.sha }}

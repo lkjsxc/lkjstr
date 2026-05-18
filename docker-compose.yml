@@ -3,7 +3,7 @@ services:
     build:
       context: .
       target: app
-    image: lkjstr-app:local
+    image: lkjstr:local
     ports:
       - '5173:5173'
 
