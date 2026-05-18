@@ -12,3 +12,4 @@ Workflow docs define the change process.
 4. Add or update focused tests.
 5. Run local verification.
 6. Run Docker verification when image or Compose behavior changes.
+7. Keep CI behavior aligned with local and Docker verification.

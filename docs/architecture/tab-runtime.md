@@ -16,4 +16,9 @@ Tab runtime defines valid tab kinds and lifecycle ownership.
 - Profile and Thread remain valid tab kinds but open from timeline actions.
 - Conversion preserves tab id and tab group.
 - Closing a tab must close any runtime subscription owned by that tab.
+- Moving a tab removes and inserts the existing tab id without recording closed
+  history.
+- Same-tile movement reorders the tab group.
+- Cross-tile movement updates source and target tab groups, then focuses the
+  moved tab in the target tile.
 - Persisted tabs are normalized by the current tab contracts.

@@ -10,6 +10,7 @@ data safety, and test ownership.
 ```text
 operations/
 |-- README.md
+|-- ci.md
 |-- data-safety.md
 |-- diagnostics.md
 |-- docker.md
@@ -22,6 +23,7 @@ operations/
 
 - [verification.md](verification.md): command gate.
 - [docker.md](docker.md): built-image Compose workflow.
+- [ci.md](ci.md): hosted gates and GHCR images.
 - [testing-ownership.md](testing-ownership.md): unit and e2e ownership.
 - [readiness.md](readiness.md): release readiness checks.
 - [diagnostics.md](diagnostics.md): debugging guidance.

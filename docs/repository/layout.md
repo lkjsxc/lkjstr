@@ -11,7 +11,8 @@ Layout docs map repository paths to ownership.
 - `tests/unit/`: Vitest unit tests.
 - `tests/e2e/`: Playwright browser tests.
 - `Dockerfile`: app, verify, and e2e image targets.
-- `compose.yaml`: built-image services.
+- `docker-compose.yml`: built-image services.
+- `.github/workflows/ci.yml`: hosted gates and GHCR publishing.
 
 ## Source
 

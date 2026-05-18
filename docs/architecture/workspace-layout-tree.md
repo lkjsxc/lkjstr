@@ -23,6 +23,8 @@ The normalized layout tree is one pane node or a split node.
 - Split ratios normalize to one.
 - Split nodes require at least two children.
 - Direct split-count UI is not exposed.
+- Moving the last tab out of a pane removes that pane from the layout.
+- Moving a tab into a pane does not create a new layout node.
 
 ## Recovery
 
@@ -38,4 +40,10 @@ timeline pane while preserving workspace id and account id.
   pane beside the target and set equal sizes for that sibling group.
 - If the parent split direction differs, wrap only the target and new pane.
 - Repeated normal split actions create predictable N-way layouts without
-  explicit 3-way or 5-way controls.
+explicit 3-way or 5-way controls.
+
+## Move Commands
+
+- Move commands use `findPane` and `removePane` to keep tab groups and layout
+  nodes consistent.
+- Invalid source panes, target panes, or tab ids are no-ops.

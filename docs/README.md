@@ -38,6 +38,7 @@ docs/
 |   |-- data-safety.md
 |   |-- diagnostics.md
 |   |-- docker.md
+|   |-- ci.md
 |   |-- readiness.md
 |   |-- testing-ownership.md
 |   `-- verification.md
@@ -89,7 +90,13 @@ docs/
 - [architecture/README.md](architecture/README.md): source ownership.
 - [protocol/README.md](protocol/README.md): Nostr contracts.
 - [operations/README.md](operations/README.md): verification and safety.
+- [operations/ci.md](operations/ci.md): hosted gates and GHCR publishing.
 - [repository/README.md](repository/README.md): layout and workflow rules.
 - [decisions/README.md](decisions/README.md): durable project decisions.
 - [research/README.md](research/README.md): background notes.
 - [vision/README.md](vision/README.md): long-term scope.
+
+## Active Contracts
+
+- Product metadata shows full author `npub` text before dates.
+- Workspace tabs support native drag-and-drop movement across tiles.

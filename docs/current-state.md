@@ -13,6 +13,9 @@ This document records the current implemented contract for the app.
   Accounts, Tweet, Settings, and Cache.
 - Profile tabs are opened from identity actions.
 - Thread tabs are opened from event actions.
+- Tabs can be reordered within a tile or moved between tiles with native
+  drag-and-drop.
+- Moving the last tab out of a tile removes that tile.
 - Settings render as one flat key-value list.
 - Timeline is Account home: active account plus NIP-02 follows from the latest
   kind `3` event.
@@ -26,9 +29,14 @@ This document records the current implemented contract for the app.
   `no-enabled-relay`, `auth-required`, `subscription-closed`, `relay-failed`,
   `ready-empty`, and `ready-with-events`.
 - Timeline and Relay Monitor show relay diagnostics.
+- Event metadata shows author control, full `npub`, date, event id, and relay
+  source in a wrapping row.
 - Tweet uses durable draft storage and publishes NIP-07 signed text notes to
   enabled write relays.
-- Docker verification uses built images with no bind mounts.
+- Docker verification uses `docker-compose.yml` built images with no bind
+  mounts or required environment blocks.
+- GitHub Actions runs local verification, browser tests, Docker Compose gates,
+  and GHCR image publishing on `main`.
 
 ## Gaps
 

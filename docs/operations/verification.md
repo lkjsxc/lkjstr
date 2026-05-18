@@ -19,13 +19,14 @@ pnpm test:e2e
 ## Docker
 
 ```sh
-docker compose config
-docker compose build app verify e2e
-docker compose run --rm verify
-docker compose run --rm e2e
+docker compose -f docker-compose.yml config
+docker compose -f docker-compose.yml build app verify e2e
+docker compose -f docker-compose.yml run --rm verify
+docker compose -f docker-compose.yml run --rm e2e
 ```
 
 ## Gate
 
 Use `pnpm verify` for normal local verification. Use Docker after Compose or
-Dockerfile changes and before claiming image-backed verification.
+Dockerfile changes and before claiming image-backed verification. CI must run
+the same local, browser, and Docker-backed gates.
