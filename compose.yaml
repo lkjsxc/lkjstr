@@ -1,36 +1,26 @@
 services:
   app:
-    image: node:24-bookworm-slim
-    user: '${UID:-1000}:${GID:-1000}'
-    working_dir: /workspace
-    volumes:
-      - .:/workspace
+    build:
+      context: .
+      target: app
+    image: lkjstr-app:local
     environment:
       CI: '1'
-      COREPACK_HOME: /tmp/corepack
-      PNPM_HOME: /tmp/pnpm
-      PATH: /tmp/pnpm-global/bin:/tmp/pnpm:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
-    command: >
-      sh -c "mkdir -p /tmp/corepack /tmp/pnpm /tmp/pnpm-global &&
-      npm install --global --prefix /tmp/pnpm-global pnpm@11.1.2 &&
-      pnpm install --store-dir /tmp/pnpm-store &&
-      pnpm dev --host 0.0.0.0"
     ports:
       - '5173:5173'
 
   verify:
-    image: node:24-bookworm-slim
-    user: '${UID:-1000}:${GID:-1000}'
-    working_dir: /workspace
-    volumes:
-      - .:/workspace
+    build:
+      context: .
+      target: verify
+    image: lkjstr-verify:local
     environment:
       CI: '1'
-      COREPACK_HOME: /tmp/corepack
-      PNPM_HOME: /tmp/pnpm
-      PATH: /tmp/pnpm-global/bin:/tmp/pnpm:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
-    command: >
-      sh -c "mkdir -p /tmp/corepack /tmp/pnpm /tmp/pnpm-global &&
-      npm install --global --prefix /tmp/pnpm-global pnpm@11.1.2 &&
-      pnpm install --frozen-lockfile --store-dir /tmp/pnpm-store &&
-      pnpm verify"
+
+  e2e:
+    build:
+      context: .
+      target: e2e
+    image: lkjstr-e2e:local
+    environment:
+      CI: '1'

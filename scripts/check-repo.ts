@@ -13,6 +13,7 @@ const skipDirs = new Set([
   'coverage',
   'data',
   'node_modules',
+  'test-results',
   'tmp',
 ]);
 const sourceExts = new Set(['.css', '.html', '.js', '.svelte', '.ts']);
@@ -22,6 +23,7 @@ const problems: Problem[] = [];
 const files = await walk(root);
 await checkLines(files);
 await checkDocsTopology(files);
+await checkComposeGuardrails();
 
 for (const problem of problems.sort((a, b) => a.file.localeCompare(b.file))) {
   console.error(`${problem.file}: ${problem.message}`);
@@ -56,6 +58,21 @@ async function checkDocsTopology(filesToCheck: string[]) {
     );
     if (children.length < 2)
       problems.push({ file: relDir, message: 'needs at least two children' });
+  }
+}
+
+async function checkComposeGuardrails() {
+  const composeFile = path.join(root, 'compose.yaml');
+  const text = await fs.readFile(composeFile, 'utf8').catch(() => '');
+  if (!text) return;
+  const checks: [RegExp, string][] = [
+    [/^\s*develop\s*:/m, 'defines Compose develop'],
+    [/^\s*watch\s*:/m, 'defines Compose watch sync'],
+    [/^\s*-\s*(?:\.|\.\.?\/[^:]+):/m, 'mounts the source tree'],
+    [/^\s*source\s*:\s*(?:\.|\.\.?\/)/m, 'mounts the source tree'],
+  ];
+  for (const [pattern, message] of checks) {
+    if (pattern.test(text)) problems.push({ file: 'compose.yaml', message });
   }
 }
 
