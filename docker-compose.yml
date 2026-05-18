@@ -4,8 +4,6 @@ services:
       context: .
       target: app
     image: lkjstr-app:local
-    environment:
-      CI: '1'
     ports:
       - '5173:5173'
 
@@ -14,13 +12,9 @@ services:
       context: .
       target: verify
     image: lkjstr-verify:local
-    environment:
-      CI: '1'
 
   e2e:
     build:
       context: .
       target: e2e
     image: lkjstr-e2e:local
-    environment:
-      CI: '1'

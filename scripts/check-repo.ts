@@ -62,9 +62,19 @@ async function checkDocsTopology(filesToCheck: string[]) {
 }
 
 async function checkComposeGuardrails() {
-  const composeFile = path.join(root, 'compose.yaml');
+  const legacyComposeFile = path.join(root, 'compose.yaml');
+  const hasLegacyCompose = await fs
+    .access(legacyComposeFile)
+    .then(() => true)
+    .catch(() => false);
+  if (hasLegacyCompose)
+    problems.push({ file: 'compose.yaml', message: 'use docker-compose.yml' });
+  const composeFile = path.join(root, 'docker-compose.yml');
   const text = await fs.readFile(composeFile, 'utf8').catch(() => '');
-  if (!text) return;
+  if (!text) {
+    problems.push({ file: 'docker-compose.yml', message: 'missing' });
+    return;
+  }
   const checks: [RegExp, string][] = [
     [/^\s*develop\s*:/m, 'defines Compose develop'],
     [/^\s*watch\s*:/m, 'defines Compose watch sync'],
@@ -72,7 +82,8 @@ async function checkComposeGuardrails() {
     [/^\s*source\s*:\s*(?:\.|\.\.?\/)/m, 'mounts the source tree'],
   ];
   for (const [pattern, message] of checks) {
-    if (pattern.test(text)) problems.push({ file: 'compose.yaml', message });
+    if (pattern.test(text))
+      problems.push({ file: 'docker-compose.yml', message });
   }
 }
 
