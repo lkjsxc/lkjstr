@@ -4,8 +4,7 @@ import { encodeNpub } from '../../../src/lib/protocol/nip19';
 
 describe('fullNpub', () => {
   it('renders a full npub for a hex public key', () => {
-    const pubkey =
-      'f'.repeat(64);
+    const pubkey = 'f'.repeat(64);
     expect(fullNpub(pubkey)).toBe(encodeNpub(pubkey));
   });
 

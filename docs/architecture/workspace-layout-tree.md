@@ -40,7 +40,7 @@ timeline pane while preserving workspace id and account id.
   pane beside the target and set equal sizes for that sibling group.
 - If the parent split direction differs, wrap only the target and new pane.
 - Repeated normal split actions create predictable N-way layouts without
-explicit 3-way or 5-way controls.
+  explicit 3-way or 5-way controls.
 
 ## Move Commands
 
