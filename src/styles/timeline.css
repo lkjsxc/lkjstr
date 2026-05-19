@@ -33,9 +33,20 @@
   justify-self: end;
 }
 
+.event-list__scroller,
+.event-list__empty {
+  grid-row: 2;
+  min-height: 0;
+}
+
+.event-list__scroller {
+  overflow: hidden;
+}
+
 .event-list__status {
   color: var(--color-text-muted);
   font-size: 0.85rem;
+  grid-row: 3;
   margin: 0;
 }
 

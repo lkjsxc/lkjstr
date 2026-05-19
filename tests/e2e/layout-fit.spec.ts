@@ -1,4 +1,6 @@
 import { expect, test, type Page } from '@playwright/test';
+import { finalizeEvent, generateSecretKey } from 'nostr-tools/pure';
+import { installSyntheticRelay } from './timeline-relay-helpers';
 
 const options = [
   'Home',
@@ -50,6 +52,39 @@ test('feed lists fill split tiles', async ({ page }) => {
   expect(heights.every((height) => height > 120)).toBe(true);
 });
 
+test('tab drag area does not extend past the close button', async ({
+  page,
+}) => {
+  await page.goto('/');
+  const frame = page.locator('.tab-frame').first();
+  const close = frame.locator('.tab-close');
+  const gap = await frame.evaluate((tab) => {
+    const button = tab.querySelector('.tab-close');
+    if (!button) return Number.POSITIVE_INFINITY;
+    return (
+      tab.getBoundingClientRect().right - button.getBoundingClientRect().right
+    );
+  });
+  await expect(close).toBeVisible();
+  expect(gap).toBeLessThanOrEqual(1);
+});
+
+test('global event scroller fills the tile body', async ({ page }) => {
+  await installSyntheticRelay(page, { events: syntheticNotes(40) });
+  await page.goto('/');
+  await page.getByRole('button', { name: 'Open new tab' }).first().click();
+  await page.getByRole('button', { name: 'Global', exact: true }).click();
+  await expect(page.getByText('layout fit note 0')).toBeVisible();
+  const heights = await page.locator('.event-list').evaluate((list) => {
+    const scroller = list.querySelector('.event-list__scroller');
+    return {
+      list: list.getBoundingClientRect().height,
+      scroller: scroller?.getBoundingClientRect().height ?? 0,
+    };
+  });
+  expect(heights.scroller).toBeGreaterThan(heights.list * 0.8);
+});
+
 async function assertNoHorizontalOverflow(page: Page): Promise<void> {
   await expect
     .poll(async () =>
@@ -63,4 +98,19 @@ async function assertNoHorizontalOverflow(page: Page): Promise<void> {
       }),
     )
     .toBe(true);
+}
+
+function syntheticNotes(count: number) {
+  const key = generateSecretKey();
+  return Array.from({ length: count }, (_, index) =>
+    finalizeEvent(
+      {
+        created_at: Math.floor(Date.now() / 1000) - index,
+        kind: 1,
+        tags: [],
+        content: `layout fit note ${index}`,
+      },
+      key,
+    ),
+  );
 }

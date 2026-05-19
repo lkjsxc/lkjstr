@@ -51,29 +51,29 @@
     </button>
   {/if}
   {#if nodes.length > 0}
-    <VList
-      bind:this={list}
-      data={nodes}
-      style="height: 100%; min-height: 12rem;"
-      getKey={(item) => item.event.id}
-      onscroll={handleScroll}
-    >
-      {#snippet children(node)}
-        <EventRow
-          item={node}
-          depth={node.depth}
-          profile={props.profiles?.[node.event.pubkey]}
-          openProfile={props.openProfile}
-          openThread={props.openThread}
-        />
-      {/snippet}
-    </VList>
+    <div class="event-list__scroller">
+      <VList
+        bind:this={list}
+        data={nodes}
+        style="height: 100%; min-height: 0;"
+        getKey={(item) => item.event.id}
+        onscroll={handleScroll}
+      >
+        {#snippet children(node)}
+          <EventRow
+            item={node}
+            depth={node.depth}
+            profile={props.profiles?.[node.event.pubkey]}
+            openProfile={props.openProfile}
+            openThread={props.openThread}
+          />
+        {/snippet}
+      </VList>
+    </div>
   {:else if !props.loading}
-    <p>{props.emptyText ?? 'No events found.'}</p>
+    <p class="event-list__empty">{props.emptyText ?? 'No events found.'}</p>
   {/if}
-  {#if props.loadingOlder}
-    <p class="event-list__status">Loading older events...</p>
-  {:else if props.hasOlder === false && nodes.length > 0}
+  {#if props.hasOlder === false && nodes.length > 0}
     <p class="event-list__status">End of loaded history.</p>
   {/if}
 </div>
