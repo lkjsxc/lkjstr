@@ -85,6 +85,27 @@ test('global event scroller fills the tile body', async ({ page }) => {
   expect(heights.scroller).toBeGreaterThan(heights.list * 0.8);
 });
 
+test('form fields expose id or name attributes', async ({ page }) => {
+  await page.goto('/');
+  for (const option of ['Relay Settings', 'Accounts', 'Tweet', 'Settings']) {
+    await page.getByRole('button', { name: 'Open new tab' }).first().click();
+    await page
+      .locator('.new-tab')
+      .last()
+      .getByRole('button', { name: option, exact: true })
+      .click();
+  }
+  const missing = await page
+    .locator('input, textarea, select')
+    .evaluateAll(
+      (fields) =>
+        fields.filter(
+          (field) => !field.getAttribute('id') && !field.getAttribute('name'),
+        ).length,
+    );
+  expect(missing).toBe(0);
+});
+
 async function assertNoHorizontalOverflow(page: Page): Promise<void> {
   await expect
     .poll(async () =>

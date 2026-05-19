@@ -53,6 +53,8 @@
   <textarea
     aria-label="Tweet content"
     bind:value={content}
+    id="tweet-content"
+    name="tweet-content"
     oninput={() => save()}
   ></textarea>
   <div class="toolbar">

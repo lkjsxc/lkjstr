@@ -83,7 +83,13 @@
   <h3>Mine npub</h3>
   <label>
     Prefix after npub1
-    <input bind:value={prefix} disabled={running} placeholder="lkj" />
+    <input
+      bind:value={prefix}
+      disabled={running}
+      id="npub-miner-prefix"
+      name="npub-miner-prefix"
+      placeholder="lkj"
+    />
   </label>
   {#if parsed.ok}
     <small>Expected attempts: {estimate.toLocaleString()}</small>

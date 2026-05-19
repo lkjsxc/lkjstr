@@ -67,7 +67,12 @@
     <article class="relay-set">
       <h3>{set.name}{defaultSetId === set.id ? ' default' : ''}</h3>
       <div class="toolbar">
-        <input aria-label="Relay URL" bind:value={input} />
+        <input
+          aria-label="Relay URL"
+          bind:value={input}
+          id={`relay-url-${set.id}`}
+          name={`relay-url-${set.id}`}
+        />
         <button type="button" onclick={() => add(set.id)}>Add relay</button>
         <button type="button" onclick={() => makeDefault(set.id)}>
           Use as default
@@ -78,6 +83,8 @@
         <div class="row">
           <input
             aria-label={`Label ${relay.url}`}
+            id={`relay-label-${set.id}-${relay.url}`}
+            name={`relay-label-${set.id}-${relay.url}`}
             value={relay.label}
             onblur={(event) =>
               patch(set.id, relay.url, 'label', event.currentTarget.value)}
@@ -86,8 +93,10 @@
           {#each ['enabled', 'read', 'write'] as key (key)}
             <label>
               <input
-                type="checkbox"
                 checked={Boolean(relay[key as 'enabled'])}
+                id={`relay-${key}-${set.id}-${relay.url}`}
+                name={`relay-${key}-${set.id}-${relay.url}`}
+                type="checkbox"
                 onchange={(event) =>
                   patch(set.id, relay.url, key, event.currentTarget.checked)}
               />

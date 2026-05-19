@@ -24,6 +24,8 @@
 {#if props.setting.valueType === 'boolean'}
   <input
     aria-label={`Edit ${props.setting.key}`}
+    id={`setting-${props.setting.key}`}
+    name={`setting-${props.setting.key}`}
     type="checkbox"
     checked={Boolean(props.setting.value)}
     onchange={(event) =>
@@ -32,6 +34,8 @@
 {:else if props.setting.valueType === 'enum'}
   <select
     aria-label={`Edit ${props.setting.key}`}
+    id={`setting-${props.setting.key}`}
+    name={`setting-${props.setting.key}`}
     value={String(props.setting.value)}
     onchange={(event) =>
       props.save(props.setting.key, event.currentTarget.value)}
@@ -43,6 +47,8 @@
 {:else if props.setting.valueType === 'number'}
   <input
     aria-label={`Edit ${props.setting.key}`}
+    id={`setting-${props.setting.key}`}
+    name={`setting-${props.setting.key}`}
     type="number"
     value={String(props.setting.value)}
     oninput={(event) =>
@@ -51,6 +57,8 @@
 {:else if props.setting.valueType === 'json'}
   <textarea
     aria-label={`Edit ${props.setting.key}`}
+    id={`setting-${props.setting.key}`}
+    name={`setting-${props.setting.key}`}
     value={draft}
     rows="3"
     oninput={(event) => (draft = event.currentTarget.value)}
@@ -61,6 +69,8 @@
 {:else}
   <input
     aria-label={`Edit ${props.setting.key}`}
+    id={`setting-${props.setting.key}`}
+    name={`setting-${props.setting.key}`}
     value={draft}
     oninput={(event) => (draft = event.currentTarget.value)}
     onblur={saveText}
