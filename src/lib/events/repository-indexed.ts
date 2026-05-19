@@ -29,7 +29,9 @@ async function indexedThreadPage(
     .reverse()
     .limit(limit)
     .toArray();
-  const replies = await browserDb().events.bulkGet(rows.map((row) => row.eventId));
+  const replies = await browserDb().events.bulkGet(
+    rows.map((row) => row.eventId),
+  );
   const root = await browserDb().events.get(eventId);
   return [...(root && before(root, query.until) ? [root] : []), ...replies]
     .filter((event): event is StoredEvent => Boolean(event))

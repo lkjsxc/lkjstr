@@ -1,4 +1,10 @@
 import {
+  feedPageSize,
+  oldestCreatedAt,
+  threadWindowSize,
+} from '../events/feed-window';
+import { queryFeed } from '../events/repository';
+import {
   sharedRelayPool,
   type PoolEvent,
   type RelayPool,
@@ -15,11 +21,10 @@ import {
   type ThreadItem,
 } from './thread-store';
 
+// prettier-ignore
 export type ThreadState = {
-  readonly items: readonly ThreadItem[];
-  readonly loading: boolean;
-  readonly error: string | null;
-  readonly eoseRelays: number;
+  readonly items: readonly ThreadItem[]; readonly loading: boolean; readonly error: string | null; readonly eoseRelays: number;
+  readonly loadingOlder: boolean; readonly hasOlder: boolean; readonly oldestCreatedAt?: number; readonly newerPruned: boolean;
 };
 
 export class ThreadRuntime {
@@ -30,6 +35,8 @@ export class ThreadRuntime {
   #cleanup: (() => void)[] = [];
   #listeners = new Set<(state: ThreadState) => void>();
   #state: ThreadState = emptyState();
+  #pageSize = feedPageSize;
+  #startedAt = Math.floor(Date.now() / 1000);
 
   constructor(
     readonly eventId: string,
@@ -68,7 +75,12 @@ export class ThreadRuntime {
           relays: this.relays,
           filters: [
             { ids: [this.eventId] },
-            { kinds: [1], '#e': [this.eventId], limit: 100 },
+            {
+              kinds: [1],
+              '#e': [this.eventId],
+              since: this.#startedAt,
+              limit: this.#pageSize,
+            },
           ],
         },
         (event) => this.#receive(event),
@@ -78,7 +90,61 @@ export class ThreadRuntime {
 
   close(): void {
     for (const cleanup of this.#cleanup.splice(0)) cleanup();
-    this.#emit({ ...this.#state, loading: false });
+    this.#emit({ ...this.#state, loading: false, loadingOlder: false });
+  }
+
+  async loadOlder(): Promise<void> {
+    if (this.#state.loadingOlder || !this.#state.hasOlder) return;
+    const until = this.#state.oldestCreatedAt;
+    if (!until) return;
+    this.#emit({ ...this.#state, loadingOlder: true });
+    const page = await queryFeed({
+      kind: 'thread',
+      eventId: this.eventId,
+      until,
+      limit: this.#pageSize,
+    });
+    const relayEvents =
+      this.relays.length > 0
+        ? await this.#subscriptions.readPage({
+            key: `${this.subId}:older:${until}`,
+            relays: this.relays,
+            filters: [
+              {
+                kinds: [1],
+                '#e': [this.eventId],
+                until,
+                limit: this.#pageSize,
+              },
+            ],
+          })
+        : [];
+    await Promise.all(
+      relayEvents.map((item) => storeThreadEvent(item.event, [item.relay])),
+    );
+    const items = mergeThreadItems(this.items(), [
+      ...page.items,
+      ...relayEvents.map((item) => ({
+        event: item.event,
+        relays: [item.relay],
+      })),
+    ]);
+    const pruned = items.length > threadWindowSize;
+    this.#cached = pruned ? items.slice(-threadWindowSize) : items;
+    this.#live = [];
+    this.#emit({
+      ...this.#state,
+      items: this.items(),
+      loadingOlder: false,
+      hasOlder: page.hasMore || relayEvents.length >= this.#pageSize,
+      newerPruned: this.#state.newerPruned || pruned,
+    });
+  }
+
+  async resetToLatest(): Promise<void> {
+    this.#cached = await loadCachedThread(this.eventId);
+    this.#live = [];
+    this.#emit({ ...this.#state, items: this.items(), newerPruned: false });
   }
 
   async #receive(poolEvent: PoolEvent): Promise<void> {
@@ -106,15 +172,22 @@ export class ThreadRuntime {
   }
 
   items(): ThreadItem[] {
-    return mergeThreadItems(this.#cached, this.#live);
+    return mergeThreadItems(this.#cached, this.#live).slice(
+      0,
+      threadWindowSize,
+    );
   }
 
   #emit(state: ThreadState): void {
-    this.#state = state;
-    this.#listeners.forEach((listener) => listener(state));
+    this.#state = {
+      ...state,
+      oldestCreatedAt: oldestCreatedAt(state.items),
+    };
+    this.#listeners.forEach((listener) => listener(this.#state));
   }
 }
 
+// prettier-ignore
 function emptyState(): ThreadState {
-  return { items: [], loading: true, error: null, eoseRelays: 0 };
+  return { items: [], loading: true, error: null, eoseRelays: 0, loadingOlder: false, hasOlder: true, oldestCreatedAt: undefined, newerPruned: false };
 }

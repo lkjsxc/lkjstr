@@ -11,8 +11,9 @@ export function receipt(
 
 export function tagRows(event: NostrEvent): EventTagRow[] {
   return event.tags
-    .filter((tag): tag is [string, string, ...string[]] =>
-      (tag[0] === 'e' || tag[0] === 'p') && Boolean(tag[1]),
+    .filter(
+      (tag): tag is ['e' | 'p', string, ...string[]] =>
+        (tag[0] === 'e' || tag[0] === 'p') && Boolean(tag[1]),
     )
     .map((tag, index) => ({
       id: `${event.id}:${tag[0]}:${tag[1]}:${index}`,

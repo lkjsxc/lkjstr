@@ -18,13 +18,17 @@ export function accountHomeAuthors(
 export function authorFilters(
   authors: readonly string[],
   limit: number,
+  bounds: Pick<NostrFilter, 'since' | 'until'> = {},
 ): NostrFilter[] {
   const filters: NostrFilter[] = [];
+  const chunks = Math.max(1, Math.ceil(authors.length / maxAuthorsPerFilter));
+  const perChunk = Math.max(1, Math.ceil(limit / chunks));
   for (let index = 0; index < authors.length; index += maxAuthorsPerFilter) {
     filters.push({
       kinds: [1],
       authors: authors.slice(index, index + maxAuthorsPerFilter),
-      limit,
+      limit: perChunk,
+      ...bounds,
     });
   }
   return filters;

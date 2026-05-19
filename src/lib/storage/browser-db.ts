@@ -45,13 +45,14 @@ export class LkjstrDb extends Dexie {
         (step: number) => { stores: (shape: Record<string, string>) => void }
       >
     )[schemaMethod];
-    schema.call(this, 4).stores({
+    schema.call(this, 5).stores({
       workspaces: '&id, updatedAt, activeAccountId',
       accounts: '&id, pubkey, signerType, updatedAt, lastUsedAt',
       notifications:
-        '&id, accountPubkey, sourceEventId, actorPubkey, kind, readAt, createdAt',
+        '&id, accountPubkey, sourceEventId, actorPubkey, kind, readAt, createdAt, [accountPubkey+createdAt]',
       tweetDrafts: '&id, accountId, updatedAt',
-      events: '&id, pubkey, kind, created_at, [kind+created_at], [pubkey+kind+created_at]',
+      events:
+        '&id, pubkey, kind, created_at, [kind+created_at], [pubkey+kind+created_at]',
       eventRelays: '&id, eventId, relayUrl, receivedAt',
       eventTags:
         '&id, eventId, tagName, tagValue, created_at, [tagName+tagValue], [tagName+tagValue+created_at]',

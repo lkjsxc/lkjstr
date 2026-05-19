@@ -73,11 +73,8 @@ describe('timeline runtime', () => {
     const runtime = runtimeFor({ activeAccountPubkey: active });
     await runtime.start();
     sockets[0]?.open();
-    expect(JSON.parse(sockets[0]?.sent[0] ?? '[]')).toEqual([
-      'REQ',
-      'timeline-test:notes',
-      { kinds: [1], authors: [active, followed], limit: 50 },
-    ]);
+    // prettier-ignore
+    expect(JSON.parse(sockets[0]?.sent[0] ?? '[]')).toEqual(['REQ', 'timeline-test:notes', expect.objectContaining({ kinds: [1], authors: [active, followed], limit: 30, since: expect.any(Number) })]);
   });
 
   it('falls back to self notes when no follow list is found', async () => {
@@ -89,11 +86,8 @@ describe('timeline runtime', () => {
     sockets[0]?.open();
     sockets[0]?.receive(JSON.stringify(['EOSE', 'timeline-test:follows']));
     await vi.waitFor(() => expect(states).toContain('no-follow-list'));
-    expect(JSON.parse(sockets[0]?.sent[1] ?? '[]')).toEqual([
-      'REQ',
-      'timeline-test:notes',
-      { kinds: [1], authors: [active], limit: 50 },
-    ]);
+    // prettier-ignore
+    expect(JSON.parse(sockets[0]?.sent[1] ?? '[]')).toEqual(['REQ', 'timeline-test:notes', expect.objectContaining({ kinds: [1], authors: [active], limit: 30, since: expect.any(Number) })]);
   });
 
   it('stops loading on note eose without events', async () => {

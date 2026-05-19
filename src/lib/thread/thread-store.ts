@@ -1,4 +1,5 @@
 import { compareEventsDesc, type NostrEvent } from '../protocol';
+import { feedPageSize } from '../events/feed-window';
 import { queryFeed, upsertEvent } from '../events/repository';
 
 export type ThreadItem = {
@@ -7,7 +8,10 @@ export type ThreadItem = {
 };
 
 export async function loadCachedThread(eventId: string): Promise<ThreadItem[]> {
-  return [...(await queryFeed({ kind: 'thread', eventId, limit: 100 })).items];
+  return [
+    ...(await queryFeed({ kind: 'thread', eventId, limit: feedPageSize }))
+      .items,
+  ];
 }
 
 export async function storeThreadEvent(

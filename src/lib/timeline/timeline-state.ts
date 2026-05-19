@@ -26,6 +26,10 @@ export type TimelineState = {
   readonly authors: readonly string[];
   readonly profiles: TimelineProfiles;
   readonly diagnostics: readonly RelayDiagnostic[];
+  readonly loadingOlder: boolean;
+  readonly hasOlder: boolean;
+  readonly oldestCreatedAt?: number;
+  readonly newerPruned: boolean;
 };
 
 export type TimelineRuntimeOptions = {
@@ -120,6 +124,10 @@ export function emptyState(): TimelineState {
     authors: [],
     profiles: {},
     diagnostics: [],
+    loadingOlder: false,
+    hasOlder: true,
+    oldestCreatedAt: undefined,
+    newerPruned: false,
   };
 }
 
