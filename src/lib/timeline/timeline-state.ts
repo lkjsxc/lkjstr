@@ -102,11 +102,12 @@ export function missingFollowAfterEose(
   followSubId: string,
 ): boolean {
   const terminal = active.length > 0 && active.every(isTerminalRelay);
-  return (
-    !followListFound &&
-    !fallbackStarted &&
-    (terminal || active.some((item) => item.eoseBySub[followSubId]))
-  );
+  const complete =
+    active.length > 0 &&
+    active.every(
+      (item) => item.eoseBySub[followSubId] || isTerminalRelay(item),
+    );
+  return !followListFound && !fallbackStarted && (terminal || complete);
 }
 
 function isTerminalRelay(item: RelaySnapshot): boolean {

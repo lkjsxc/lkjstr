@@ -88,7 +88,7 @@ export class TimelineRuntime {
   }
   #subscribeFollows(pubkey: string): void {
     this.#emit({ ...this.#state, loading: true, status: 'loading-follows' });
-    this.#subscribe(this.#followSubId, [{ kinds: [3], authors: [pubkey], since: this.#startedAt, limit: 1 }]);
+    this.#subscribe(this.#followSubId, [{ kinds: [3], authors: [pubkey], limit: 1 }]);
   }
   #subscribeNotes(): void {
     this.#subscribe(this.#noteSubId, authorFilters(this.#authors, this.#pageSize, { since: this.#startedAt }));
