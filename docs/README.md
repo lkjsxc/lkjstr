@@ -12,13 +12,17 @@ here before code is changed.
 docs/
 |-- architecture/
 |   |-- README.md
+|   |-- event-tree.md
 |   |-- identity-rendering.md
+|   |-- job-manager.md
 |   |-- profile-runtime.md
 |   |-- query-runtime.md
 |   |-- relay-pool.md
 |   |-- resize.md
 |   |-- settings-store.md
+|   |-- shared-storage.md
 |   |-- storage-workers.md
+|   |-- subscription-manager.md
 |   |-- system.md
 |   |-- tab-runtime.md
 |   |-- theme.md
@@ -46,6 +50,7 @@ docs/
 |   |-- README.md
 |   |-- accounts.md
 |   |-- cache.md
+|   |-- global.md
 |   |-- notifications.md
 |   |-- panes.md
 |   |-- profiles.md
@@ -98,5 +103,8 @@ docs/
 
 ## Active Contracts
 
-- Product metadata shows full author `npub` text before dates.
+- Event rows show display names, dates, and short event ids; full public keys
+  and relay URLs stay in identity, relay, and diagnostic surfaces.
+- Home, Global, and Notifications use shared storage and relay subscriptions.
+- Partial relay failure must not keep a feed in a loading state.
 - Workspace tabs support native drag-and-drop movement across tiles.

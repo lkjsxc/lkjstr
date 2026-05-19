@@ -15,17 +15,21 @@ selected default relay set for timeline, profile, thread, and Tweet behavior.
 
 ## Contract
 
-- New Tab choices are Timeline, Relay Settings, Relay Monitor, Notifications,
-  Accounts, Tweet, Settings, and Cache.
+- New Tab choices are Home, Global, Relay Settings, Notifications, Accounts,
+  Tweet, Settings, and Cache.
 - Profile tabs open from identity actions. Thread tabs open from event actions.
 - Tabs can be reordered inside a tile and moved to another tile by native
   drag-and-drop.
 - Moving the last tab out of a tile closes the source tile.
 - Settings are one flat key-value list.
-- Timeline, profile, and thread reads use enabled read relays in the selected
-  default set. Disabled or removed relays are not silent fallbacks.
-- Timeline metadata shows the author control, full `npub`, date, event id, and
-  relay text in that order.
+- Home, Global, Notifications, Profile, and Thread reads use enabled read relays
+  in the selected default set. Disabled or removed relays are not silent
+  fallbacks.
+- Partial relay failure is diagnostic; reachable relays continue serving feeds.
+- Event metadata shows the author control, date, and short event id. Full
+  public keys and relay URLs stay out of post rows.
+- Accounts include CPU-only `npub` prefix mining with export-only `nsec`
+  handling.
 - Tweet drafts are durable and publish through NIP-07 to enabled write relays.
 - Tile resize uses a `0.9` pointer sensitivity multiplier.
 - Docker verification uses `docker-compose.yml` built images with no bind
@@ -37,6 +41,8 @@ selected default relay set for timeline, profile, thread, and Tweet behavior.
 pnpm install
 pnpm dev
 pnpm verify
+pnpm verify:quiet
+pnpm test:e2e:quiet
 docker compose -f docker-compose.yml config
 docker compose -f docker-compose.yml build app verify e2e
 docker compose -f docker-compose.yml run --rm verify

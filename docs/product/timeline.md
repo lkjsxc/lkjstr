@@ -17,7 +17,9 @@ its NIP-02 follows.
 - Deleted or disabled relays are not replaced by hidden public defaults.
 - No active account means no relay subscription.
 - No follow list means self notes are queried and the state remains visible.
-- Loading ends on EOSE even when no events arrive.
+- Loading ends when cached items exist, a relay sends matching events, any relay
+  reaches EOSE, or every contacted relay reaches a terminal failure state.
+- A failed relay remains diagnostic and must not block other relays.
 - Relay `CLOSED`, `NOTICE`, `AUTH`, parse failure, and invalid signatures are
   visible diagnostics.
 - Author controls open Profile tabs in the same tile.

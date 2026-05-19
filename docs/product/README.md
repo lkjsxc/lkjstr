@@ -12,6 +12,7 @@ product/
 |-- README.md
 |-- accounts.md
 |-- cache.md
+|-- global.md
 |-- notifications.md
 |-- panes.md
 |-- profiles.md
@@ -32,6 +33,7 @@ product/
 - [workspace.md](workspace.md): split tile behavior.
 - [tabs.md](tabs.md): tab list and opening rules.
 - [timeline.md](timeline.md): home timeline behavior.
+- [global.md](global.md): relay-wide note feed behavior.
 - [tweet.md](tweet.md): draft and publish behavior.
 - [relay-management.md](relay-management.md): relay set editing.
 - [settings.md](settings.md): flat key-value settings.
