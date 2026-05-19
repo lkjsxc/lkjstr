@@ -22,3 +22,7 @@ Thread tabs show a root event and replies opened from timeline event actions.
 - Deep reply branches collapse into a continuation row that opens the hidden
   event in a matching Thread tab. Loaded thread chains keep capped indentation.
 - Closing the tab closes relay subscriptions.
+- Thread surfaces use the shared post renderer. Visible event entity text is
+  shown in full where identifiers are explicitly displayed.
+- Reply-root references can be omitted or shown only as neutral referenced
+  events; they must not be labeled `Thread root`.

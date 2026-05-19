@@ -8,11 +8,14 @@ its NIP-02 follows.
 ## Contract
 
 - Home opens from New Tab and is the recovery tab.
-- Cached notes render before relay results.
+- Home is cache-first. It must render cached matching notes as soon as account
+  and relay page data have loaded, before profile hydration and before relay
+  results.
 - After authors are known, Home performs one initial relay page without
   `since`, then keeps live subscriptions bounded with startup `since`.
 - Account home authors are the active account plus `p` tags from the latest
-  kind `3` follow list.
+  kind `3` follow list. Cache reads for the follow list use an indexed
+  latest-only kind `3` lookup for the active pubkey.
 - Relay reads use enabled read relays from the selected default relay set.
 - Relay reads go through the subscription manager.
 - Events and relay provenance are written through the shared repository.
@@ -26,7 +29,8 @@ its NIP-02 follows.
 - Live relay reads set `since` when the runtime starts.
 - Metadata fetches are limited to authors present in loaded items.
 - Deleted or disabled relays are not replaced by hidden public defaults.
-- No active account means no relay subscription.
+- No active account means no relay subscription. Home must not enter
+  `no-active-account` while workspace account data is still loading.
 - No follow list means self notes are queried and the state remains visible.
 - Loading ends when cached or initial relay data exists, contacted relays finish
   or fail, or a live relay produces matching events.
@@ -39,6 +43,14 @@ its NIP-02 follows.
 - Event rows, event id controls, quotes, and references open or focus matching
   Thread tabs in the same tile.
 - Post rows do not show relay source text or full public-key text.
+- Media URLs that successfully render as image, video, or audio embeds are
+  hidden from the text body. Other HTTPS URLs remain visible links.
+- `nostr:npub` and `nostr:nprofile` content tokens open or focus Profile in the
+  same tile. `nostr:note` and `nostr:nevent` tokens open or focus Thread in the
+  same tile.
+- Quote and reference previews are deduped by event id. The same event cannot
+  appear twice as both a quoted and referenced preview.
+- Reply-root references must not be labeled `Thread root` in visible rows.
 
 ## States
 

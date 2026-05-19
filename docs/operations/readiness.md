@@ -25,7 +25,13 @@ Readiness checks whether the app contract is shippable.
   document-level overflow.
 - Reload with cached events keeps row identity rendering stable.
 - Media embeds stay within the pane on desktop and mobile.
+- Media URLs are hidden from text only when their embed renders.
+- Mention tokens open Profile; event entity tokens open Thread.
 - Clicking a post opens Thread; clicking avatar or name opens Profile.
+- Notifications use actor/action first and target/source content below.
+- Quote and reference previews are deduped by event id.
+- Inactive tab retention keeps switched-away tabs alive for the configured
+  grace period and closes subscriptions after expiry.
 - Event cache compaction protects accounts, settings, relay sets, workspace
   state, notifications, and Tweet drafts.
 - App heap stays below `100 MB` in the heavy-feed smoke test; Chromium RSS is

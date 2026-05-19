@@ -59,12 +59,32 @@ The kernel exposes helpers for:
 
 Display code consumes parsed tag intent rather than searching tag arrays directly.
 
+## Content Tokens
+
+Post content is tokenized once and rendered consistently across Home, Global,
+Profile, Thread, embeds, and Notifications.
+
+- Plain text remains text and preserves line breaks.
+- `nostr:npub` decodes to a profile mention and opens Profile.
+- `nostr:nprofile` decodes to a profile mention, preserves relay hints for
+  entity text, and opens Profile.
+- `nostr:note` decodes to an event mention and opens Thread.
+- `nostr:nevent` decodes to an event mention, preserves relay hints for entity
+  text, and opens Thread.
+- Normal `https://` URLs render as links.
+- Media `https://` URLs render as links only when they are not successfully
+  embedded.
+- NIP-92 `imeta` `url` tokens create media attachments. The optional `m` token
+  classifies image, video, or audio.
+
 ## Embeds
 
 Event embeds are rendered from verified events only. The resolver checks cache
 first, batches relay reads by `ids`, stores verified hits, caps missing lookups,
 and prevents recursive loops. Missing, deleted, quote, repost, reply, reaction,
 and deletion states have explicit display rows.
+
+Quote and reference previews are deduped by event id before rendering.
 
 ## Media
 

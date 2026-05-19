@@ -25,8 +25,11 @@ context first and event content second.
 - Partial relay failure stays visible in diagnostics but does not block cached
   or reachable notification records.
 - Empty state is explicit when no records exist.
-- Rows show actor identity, action kind, read state, target or root context
-  when available, timestamp, and source event content.
+- Rows use a vertical layout: actor identity, action kind, read state, target or
+  root context when available, and timestamp appear first; target/source event
+  content appears below.
 - Action labels cover mention, reply, reaction, repost, quote, and
   profile-reference records.
 - Long event content, ids, relay URLs, and context fields wrap within the row.
+- Notification event content uses the shared renderer, including mention links,
+  event links, media URL hiding, bounded media embeds, and deduped previews.
