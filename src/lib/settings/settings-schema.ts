@@ -29,7 +29,8 @@ notifications.showUnreadInTab|Unread tab|boolean|true|Show unread in tab.
 notifications.defaultCategories|Categories|json|["mentions"]|Notification categories.
 tweet.defaultPublishMode|Publish mode|enum|selected-relays|Tweet publish target.|selected-relays
 tweet.persistDrafts|Persist drafts|boolean|true|Keep Tweet drafts durable.
-cache.maxEvents|Max events|number|50000|Cached event limit.
+cache.maxEvents|Max events|number|5000|Cached event limit.
+cache.maxAgeDays|Max age days|number|30|Cached event age limit.
 cache.compactionEnabled|Compaction|boolean|true|Enable compaction.
 cache.pruneDrafts|Prune drafts|boolean|false|Prune drafts automatically.
 accounts.defaultMode|Account mode|enum|read-only|Default account mode.|read-only,nip07
