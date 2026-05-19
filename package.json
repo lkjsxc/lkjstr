@@ -12,9 +12,12 @@
     "lint": "eslint . && prettier --check .",
     "format": "prettier --write .",
     "test": "vitest run",
+    "test:quiet": "tsx scripts/run-quiet.ts test",
     "test:watch": "vitest",
     "test:e2e": "playwright test",
+    "test:e2e:quiet": "tsx scripts/run-quiet.ts e2e",
     "verify": "pnpm check:repo && pnpm lint && pnpm check && pnpm test && pnpm build",
+    "verify:quiet": "tsx scripts/run-quiet.ts verify",
     "verify:e2e": "pnpm verify && pnpm test:e2e"
   },
   "dependencies": {

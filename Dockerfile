@@ -11,8 +11,8 @@ EXPOSE 5173
 CMD ["pnpm", "dev", "--host", "0.0.0.0"]
 
 FROM deps AS verify
-CMD ["pnpm", "verify"]
+CMD ["pnpm", "verify:quiet"]
 
 FROM deps AS e2e
 RUN pnpm exec playwright install --with-deps chromium
-CMD ["pnpm", "test:e2e"]
+CMD ["pnpm", "test:e2e:quiet"]
