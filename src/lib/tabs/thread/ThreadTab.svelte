@@ -19,11 +19,16 @@
     loading: true,
     error: null,
     eoseRelays: 0,
+    loadingOlder: false,
+    hasOlder: true,
+    oldestCreatedAt: undefined,
+    newerPruned: false,
   });
+  let runtime: ThreadRuntime | undefined;
 
   $effect(() => {
     if (!props.eventId) return;
-    const runtime = new ThreadRuntime(
+    runtime = new ThreadRuntime(
       props.eventId,
       timelineRelays(props.relaySets),
       createTimelineSubId(props.tabId),
@@ -32,7 +37,7 @@
     runtime.start();
     return () => {
       unsubscribe();
-      runtime.close();
+      runtime?.close();
     };
   });
 </script>
@@ -45,6 +50,11 @@
     <EventTreeList
       items={state.items}
       loading={state.loading}
+      loadingOlder={state.loadingOlder}
+      hasOlder={state.hasOlder}
+      newerPruned={state.newerPruned}
+      onNearEnd={() => runtime?.loadOlder()}
+      resetToLatest={() => runtime?.resetToLatest()}
       emptyText="No thread events found."
     />
   {:else}

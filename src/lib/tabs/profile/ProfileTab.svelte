@@ -26,6 +26,10 @@
     error: null,
     relays: [],
     updatedAt: null,
+    loadingOlder: false,
+    hasOlder: true,
+    oldestCreatedAt: undefined,
+    newerPruned: false,
   });
   let runtime: ProfileRuntime | undefined;
 
@@ -67,6 +71,11 @@
   <EventTreeList
     items={state.posts.map((event) => ({ event, relays: ['cache'] }))}
     loading={state.loading}
+    loadingOlder={state.loadingOlder}
+    hasOlder={state.hasOlder}
+    newerPruned={state.newerPruned}
+    onNearEnd={() => runtime?.loadOlder()}
+    resetToLatest={() => runtime?.resetToLatest()}
     emptyText="No notes have been received for this profile."
   />
 </section>

@@ -29,6 +29,10 @@
     authors: [],
     profiles: {},
     diagnostics: [],
+    loadingOlder: false,
+    hasOlder: true,
+    oldestCreatedAt: undefined,
+    newerPruned: false,
   });
   let runtime: TimelineRuntime | GlobalTimelineRuntime | undefined;
 
@@ -72,6 +76,11 @@
     profiles={state.profiles}
     loading={state.loading}
     emptyText="No events yet."
+    loadingOlder={state.loadingOlder}
+    hasOlder={state.hasOlder}
+    newerPruned={state.newerPruned}
+    onNearEnd={() => runtime?.loadOlder()}
+    resetToLatest={() => runtime?.resetToLatest()}
     openProfile={props.openProfile}
     openThread={props.openThread}
   />

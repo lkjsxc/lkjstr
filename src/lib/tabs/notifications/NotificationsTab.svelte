@@ -21,6 +21,10 @@
     items: [],
     loading: true,
     error: null,
+    loadingOlder: false,
+    hasOlder: true,
+    oldestCreatedAt: undefined,
+    newerPruned: false,
   });
 
   $effect(() => {
@@ -48,6 +52,11 @@
   <EventTreeList
     items={state.items}
     loading={state.loading}
+    loadingOlder={state.loadingOlder}
+    hasOlder={state.hasOlder}
+    newerPruned={state.newerPruned}
+    onNearEnd={() => runtime?.loadOlder()}
+    resetToLatest={() => runtime?.resetToLatest()}
     emptyText="No notifications for the active account."
   />
 </section>
