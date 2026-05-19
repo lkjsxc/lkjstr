@@ -4,6 +4,7 @@ import {
   cursorPoint,
   oldestCreatedAt,
 } from '$lib/events/feed-window';
+import type { FeedEvent } from '$lib/events/types';
 import { boundedErrorText } from '$lib/events/runtime-error';
 import {
   getProfile,
@@ -74,7 +75,7 @@ export class ProfileRuntime {
       posts,
       loading: this.relays.length > 0,
       updatedAt: meta ? meta.created_at * 1000 : null,
-      oldestCreatedAt: oldestCreatedAt(posts.map((event) => ({ event }))),
+      oldestCreatedAt: oldestCreatedAt(posts),
     });
     if (this.relays.length === 0) return;
     this.#cleanup.push(
@@ -123,25 +124,29 @@ export class ProfileRuntime {
     await storeProfileEvent(poolEvent.event, [poolEvent.relay]);
     if (this.#closed) return;
     if (poolEvent.event.kind === 0) this.#receiveMeta(poolEvent);
-    if (poolEvent.event.kind === 1) this.#receivePost(poolEvent.event);
+    if (poolEvent.event.kind === 1)
+      this.#receivePost(poolEvent.event, poolEvent.relay);
   }
 
   #receiveMeta(poolEvent: PoolEvent): void {
     if (poolEvent.event.pubkey !== this.pubkey) return;
     const updatedAt = poolEvent.event.created_at * 1000;
     if (this.#state.updatedAt && this.#state.updatedAt > updatedAt) return;
+    const profile =
+      getProfile(this.pubkey) ?? profileFromMetadataEvent(poolEvent.event);
+    if (profile.updatedAt > updatedAt) return;
     this.#emit({
       ...this.#state,
-      profile: profileFromMetadataEvent(poolEvent.event),
+      profile,
       loading: false,
       relays: [...new Set([...this.#state.relays, poolEvent.relay])],
-      updatedAt,
+      updatedAt: profile.updatedAt,
     });
   }
 
   // prettier-ignore
-  #receivePost(event: NostrEvent): void {
-    if (this.#closed) return; const posts = [event, ...this.#state.posts.filter((item) => item.id !== event.id)].sort((a, b) => b.created_at - a.created_at).slice(0, feedWindowSize);
+  #receivePost(event: NostrEvent, relay: string): void {
+    if (this.#closed) return; const item = { event, relays: [relay] }; const posts = [item, ...this.#state.posts.filter((post) => post.event.id !== event.id)].sort((a, b) => b.event.created_at - a.event.created_at).slice(0, feedWindowSize);
     this.#emit(this.#withOldest({ ...this.#state, posts, loading: false }));
   }
 
@@ -167,13 +172,12 @@ export class ProfileRuntime {
   #withOldest(state: ProfileState): ProfileState {
     return {
       ...state,
-      oldestCreatedAt: oldestCreatedAt(state.posts.map((event) => ({ event }))),
+      oldestCreatedAt: oldestCreatedAt(state.posts),
       oldestCursor: cursorPoint(lastPost(state.posts)),
     };
   }
 }
 
-function lastPost(posts: readonly NostrEvent[]) {
-  const event = posts.at(-1);
-  return event ? { event } : undefined;
+function lastPost(posts: readonly FeedEvent[]) {
+  return posts.at(-1);
 }

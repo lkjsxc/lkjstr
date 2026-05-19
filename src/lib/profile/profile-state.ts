@@ -1,10 +1,10 @@
 import type { FeedCursorPoint } from '$lib/events/types';
+import type { FeedEvent } from '$lib/events/types';
 import type { ProfileSummary } from '$lib/identity/identity';
-import type { NostrEvent } from '$lib/protocol';
 
 // prettier-ignore
 export type ProfileState = {
-  readonly profile: ProfileSummary | null; readonly posts: readonly NostrEvent[];
+  readonly profile: ProfileSummary | null; readonly posts: readonly FeedEvent[];
   readonly loading: boolean; readonly error: string | null; readonly relays: readonly string[];
   readonly updatedAt: number | null; readonly loadingOlder: boolean; readonly hasOlder: boolean;
   readonly oldestCreatedAt?: number; readonly oldestCursor?: FeedCursorPoint; readonly newerPruned: boolean;

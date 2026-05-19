@@ -7,10 +7,11 @@ export function getProfile(pubkey: string): ProfileSummary | undefined {
   return profiles.get(pubkey);
 }
 
-export function setProfile(profile: ProfileSummary): void {
+export function setProfile(profile: ProfileSummary): ProfileSummary {
   const existing = profiles.get(profile.pubkey);
-  if (existing && existing.updatedAt > profile.updatedAt) return;
+  if (existing && existing.updatedAt > profile.updatedAt) return existing;
   profiles.set(profile.pubkey, profile);
+  return profile;
 }
 
 export function clearProfileCacheForTests(): void {

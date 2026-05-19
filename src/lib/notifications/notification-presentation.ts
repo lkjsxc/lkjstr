@@ -16,12 +16,27 @@ export function notificationActionLabel(kind: NotificationKind): string {
 }
 
 export function notificationContext(record: NotificationRecord): string | null {
-  if (record.targetEventId)
+  if (validEventId(record.targetEventId))
     return `target ${shortEventId(record.targetEventId)}`;
-  if (record.rootEventId) return `root ${shortEventId(record.rootEventId)}`;
+  if (validEventId(record.rootEventId))
+    return `root ${shortEventId(record.rootEventId)}`;
+  if (record.targetEventId !== undefined || record.rootEventId !== undefined)
+    return 'context unavailable';
+  return null;
+}
+
+export function notificationContextEventId(
+  record: NotificationRecord,
+): string | null {
+  if (validEventId(record.targetEventId)) return record.targetEventId;
+  if (validEventId(record.rootEventId)) return record.rootEventId;
   return null;
 }
 
 function shortEventId(id: string): string {
   return `${id.slice(0, 8)}...${id.slice(-4)}`;
+}
+
+function validEventId(id: string | undefined): id is string {
+  return /^[0-9a-f]{64}$/i.test(id ?? '');
 }

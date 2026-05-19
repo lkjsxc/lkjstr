@@ -2,14 +2,17 @@ import { describe, expect, it } from 'vitest';
 import {
   clearProfileCacheForTests,
   getProfile,
+  profileFromMetadataEvent,
   setProfile,
 } from '../../../src/lib/identity/profile-cache';
+import type { NostrEvent } from '../../../src/lib/protocol';
+import { storeTimelineProfile } from '../../../src/lib/timeline/timeline-profiles';
 
 describe('profile cache', () => {
   it('does not replace newer metadata with older metadata', () => {
     clearProfileCacheForTests();
     const pubkey = 'a'.repeat(64);
-    setProfile({
+    const newer = setProfile({
       pubkey,
       displayName: 'new',
       name: null,
@@ -17,7 +20,7 @@ describe('profile cache', () => {
       avatarUrl: null,
       updatedAt: 2000,
     });
-    setProfile({
+    const effective = setProfile({
       pubkey,
       displayName: 'old',
       name: null,
@@ -26,5 +29,28 @@ describe('profile cache', () => {
       updatedAt: 1000,
     });
     expect(getProfile(pubkey)?.displayName).toBe('new');
+    expect(newer.displayName).toBe('new');
+    expect(effective.displayName).toBe('new');
+  });
+
+  it('returns the effective profile when timeline metadata is stale', async () => {
+    clearProfileCacheForTests();
+    const pubkey = 'b'.repeat(64);
+    setProfile(profileFromMetadataEvent(metadata(pubkey, 20, 'new')));
+    const effective = await storeTimelineProfile(metadata(pubkey, 10, 'old'));
+    expect(effective.displayName).toBe('new');
+    expect(getProfile(pubkey)?.displayName).toBe('new');
   });
 });
+
+function metadata(pubkey: string, createdAt: number, name: string): NostrEvent {
+  return {
+    id: `${createdAt}`.padStart(64, '0'),
+    pubkey,
+    created_at: createdAt,
+    kind: 0,
+    tags: [],
+    content: JSON.stringify({ display_name: name }),
+    sig: 'f'.repeat(128),
+  };
+}

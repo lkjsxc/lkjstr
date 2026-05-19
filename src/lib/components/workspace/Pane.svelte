@@ -3,10 +3,12 @@
   import type { NotificationRecord } from '$lib/notifications/notification';
   import type { RelaySet } from '$lib/relays/relay-store';
   import type { RelaySnapshot } from '$lib/relays/types';
-  import { SvelteMap } from 'svelte/reactivity';
+  import { onDestroy } from 'svelte';
   import type { WorkspacePaneNode } from '$lib/workspace/pane';
+  import { PaneScrollRetention } from '$lib/workspace/pane-scroll-retention';
   import type { TabKind, WorkspaceTab } from '$lib/workspace/tab';
   import type { TabGroup } from '$lib/workspace/tab-group';
+  import { TabRetention } from '$lib/workspace/tab-retention';
   import NewTabButton from './NewTabButton.svelte';
   import PaneTabBody from './PaneTabBody.svelte';
   import TabStrip from './TabStrip.svelte';
@@ -58,7 +60,13 @@
   let previousActiveId = $state<string | undefined>();
   let previousRetentionSeconds = $state<number | undefined>();
   let retained = $state<Record<string, WorkspaceTab>>({});
-  const timers = new SvelteMap<string, number>();
+  const bodyScroll = new PaneScrollRetention();
+  const retention = new TabRetention<WorkspaceTab>(
+    () =>
+      (retained = Object.fromEntries(
+        retention.records().map((tab) => [tab.id, tab]),
+      )),
+  );
   let renderedTabs = $derived([
     ...(active ? [active] : []),
     ...Object.values(retained).filter(
@@ -71,7 +79,10 @@
 
   $effect(() => {
     const activeId = active?.id;
+    if (previousActiveId && previousActiveId !== activeId)
+      bodyScroll.remember(previousActiveId);
     if (activeId) releaseRetained(activeId);
+    if (activeId) bodyScroll.restore(activeId);
     if (
       previousActiveId &&
       previousActiveId !== activeId &&
@@ -79,47 +90,33 @@
     ) {
       const previous = props.tabs[previousActiveId];
       if (previous && props.group?.tabIds.includes(previous.id))
-        retain(previous, props.inactiveRetentionSeconds);
+        retention.retain(previous, props.inactiveRetentionSeconds);
     }
     previousActiveId = activeId;
   });
 
   $effect(() => {
     if (previousRetentionSeconds !== props.inactiveRetentionSeconds) {
-      for (const tabId of Object.keys(retained)) releaseRetained(tabId);
+      retention.releaseAll();
       previousRetentionSeconds = props.inactiveRetentionSeconds;
     }
     if (props.inactiveRetentionSeconds > 0) return;
-    for (const tabId of Object.keys(retained)) releaseRetained(tabId);
+    retention.releaseAll();
   });
 
   $effect(() => {
-    for (const tabId of Object.keys(retained)) {
-      if (!props.tabs[tabId] || !props.group?.tabIds.includes(tabId))
-        releaseRetained(tabId);
-    }
+    retention.releaseMissing(new Set(props.group?.tabIds ?? []));
   });
 
-  function retain(tab: WorkspaceTab, seconds: number): void {
-    releaseRetained(tab.id);
-    retained = { ...retained, [tab.id]: tab };
-    const timeout = window.setTimeout(
-      () => releaseRetained(tab.id),
-      seconds * 1000,
-    );
-    timers.set(tab.id, timeout);
+  function releaseRetained(tabId: string): void {
+    retention.release(tabId);
   }
 
-  function releaseRetained(tabId: string): void {
-    const timeout = timers.get(tabId);
-    if (timeout !== undefined) window.clearTimeout(timeout);
-    timers.delete(tabId);
-    if (retained[tabId]) {
-      const next = { ...retained };
-      delete next[tabId];
-      retained = next;
-    }
+  function trackBody(node: HTMLElement, tabId: string) {
+    return bodyScroll.track(tabId, node);
   }
+
+  onDestroy(() => retention.releaseAll());
 </script>
 
 <section class="pane" aria-label="Workspace pane">
@@ -153,7 +150,9 @@
       <div
         class="pane-body"
         data-active-tab={tab.id === active?.id}
+        aria-hidden={tab.id === active?.id ? undefined : 'true'}
         style:display={tab.id === active?.id ? undefined : 'none'}
+        use:trackBody={tab.id}
       >
         <PaneTabBody
           {tab}

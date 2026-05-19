@@ -1,13 +1,13 @@
 import { feedWindowSize } from '$lib/events/feed-window';
 import { queryFeed } from '$lib/events/repository';
 import { boundaryUntil, readRelayPage } from '$lib/events/relay-page';
-import type { FeedCursorPoint } from '$lib/events/types';
-import { compareEventsDesc, type NostrEvent } from '$lib/protocol';
+import type { FeedCursorPoint, FeedEvent } from '$lib/events/types';
+import { compareEventsDesc } from '$lib/protocol';
 import type { RelaySubscriptionManager } from '$lib/relays/subscription-manager';
 import { storeProfileEvent } from './profile-store';
 
 export type ProfileOlderRequest = {
-  readonly posts: readonly NostrEvent[];
+  readonly posts: readonly FeedEvent[];
   readonly pubkey: string;
   readonly relays: readonly string[];
   readonly subId: string;
@@ -42,8 +42,11 @@ export async function loadOlderProfilePage(request: ProfileOlderRequest) {
     relayEvents.map((item) => storeProfileEvent(item.event, [item.relay])),
   );
   const posts = mergePosts(request.posts, [
-    ...page.items.map((item) => item.event),
-    ...relayEvents.map((item) => item.event),
+    ...page.items,
+    ...relayEvents.map((item) => ({
+      event: item.event,
+      relays: [item.relay],
+    })),
   ]);
   const pruned = posts.length > feedWindowSize;
   return {
@@ -54,10 +57,20 @@ export async function loadOlderProfilePage(request: ProfileOlderRequest) {
 }
 
 function mergePosts(
-  current: readonly NostrEvent[],
-  incoming: readonly NostrEvent[],
-): NostrEvent[] {
-  const byId = new Map<string, NostrEvent>();
-  [...current, ...incoming].forEach((event) => byId.set(event.id, event));
-  return [...byId.values()].sort(compareEventsDesc);
+  current: readonly FeedEvent[],
+  incoming: readonly FeedEvent[],
+): FeedEvent[] {
+  const byId = new Map<string, FeedEvent>();
+  for (const item of [...current, ...incoming]) {
+    const existing = byId.get(item.event.id);
+    byId.set(item.event.id, existing ? mergeItem(existing, item) : item);
+  }
+  return [...byId.values()].sort((a, b) => compareEventsDesc(a.event, b.event));
+}
+
+function mergeItem(a: FeedEvent, b: FeedEvent): FeedEvent {
+  return {
+    event: a.event.created_at >= b.event.created_at ? a.event : b.event,
+    relays: [...new Set([...a.relays, ...b.relays])],
+  };
 }

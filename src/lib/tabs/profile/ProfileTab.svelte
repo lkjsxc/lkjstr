@@ -97,7 +97,7 @@
   {/if}
   <h3>Notes</h3>
   <EventTreeList
-    items={state.posts.map((event) => ({ event, relays: ['cache'] }))}
+    items={state.posts}
     {profiles}
     loading={state.loading}
     loadingOlder={state.loadingOlder}

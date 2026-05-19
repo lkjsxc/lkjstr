@@ -1,13 +1,12 @@
 import { feedWindowSize } from '$lib/events/feed-window';
 import { readRelayPage } from '$lib/events/relay-page';
-import { profileFromMetadataEvent } from '$lib/identity/profile-cache';
 import type { ProfileSummary } from '$lib/identity/identity';
-import type { NostrEvent } from '$lib/protocol';
+import type { FeedEvent } from '$lib/events/types';
 import type { RelaySubscriptionManager } from '$lib/relays/subscription-manager';
 import { storeProfileEvent } from './profile-store';
 
 type Request = {
-  readonly posts: readonly NostrEvent[];
+  readonly posts: readonly FeedEvent[];
   readonly profile: ProfileSummary | null;
   readonly relays: readonly string[];
   readonly pubkey: string;
@@ -27,29 +26,41 @@ export async function loadInitialProfilePage(request: Request) {
     pageSize: request.pageSize + 1,
     subscriptions: request.subscriptions,
   });
-  await Promise.all(
+  const storedProfiles = await Promise.all(
     relayEvents.map((item) => storeProfileEvent(item.event, [item.relay])),
   );
-  const meta = relayEvents.find((item) => item.event.kind === 0);
+  const profile = storedProfiles.find((item) => item);
   return {
-    profile: meta ? profileFromMetadataEvent(meta.event) : request.profile,
+    profile: profile ?? request.profile,
     posts: mergePosts(
       request.posts,
-      relayEvents.map((item) => item.event),
+      relayEvents.map((item) => ({
+        event: item.event,
+        relays: [item.relay],
+      })),
     ),
     relays: [...new Set(relayEvents.map((item) => item.relay))],
   };
 }
 
 function mergePosts(
-  current: readonly NostrEvent[],
-  incoming: readonly NostrEvent[],
-): NostrEvent[] {
-  const byId = new Map<string, NostrEvent>();
-  for (const event of [...current, ...incoming]) {
-    if (event.kind === 1) byId.set(event.id, event);
+  current: readonly FeedEvent[],
+  incoming: readonly FeedEvent[],
+): FeedEvent[] {
+  const byId = new Map<string, FeedEvent>();
+  for (const item of [...current, ...incoming]) {
+    if (item.event.kind !== 1) continue;
+    const existing = byId.get(item.event.id);
+    byId.set(item.event.id, existing ? mergeItem(existing, item) : item);
   }
   return [...byId.values()]
-    .sort((a, b) => b.created_at - a.created_at)
+    .sort((a, b) => b.event.created_at - a.event.created_at)
     .slice(0, feedWindowSize);
+}
+
+function mergeItem(a: FeedEvent, b: FeedEvent): FeedEvent {
+  return {
+    event: a.event.created_at >= b.event.created_at ? a.event : b.event,
+    relays: [...new Set([...a.relays, ...b.relays])],
+  };
 }

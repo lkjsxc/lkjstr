@@ -32,8 +32,7 @@ export async function loadTimelineProfiles(
 export async function storeTimelineProfile(
   event: NostrEvent,
 ): Promise<ProfileSummary> {
-  await storeProfileEvent(event);
-  return profileFromMetadataEvent(event);
+  return (await storeProfileEvent(event)) ?? profileFromMetadataEvent(event);
 }
 
 export function profileFilter(

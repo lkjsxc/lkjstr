@@ -4,7 +4,11 @@ import {
   markRead,
   unreadCount,
 } from '../../../src/lib/notifications/notification-index';
-import { notificationActionLabel } from '../../../src/lib/notifications/notification-presentation';
+import {
+  notificationActionLabel,
+  notificationContext,
+  notificationContextEventId,
+} from '../../../src/lib/notifications/notification-presentation';
 import type { NostrEvent } from '../../../src/lib/protocol';
 
 describe('notification index', () => {
@@ -52,5 +56,15 @@ describe('notification index', () => {
         tags: [['p', accountPubkey]],
       }),
     ).toEqual([]);
+  });
+
+  it('does not expose an empty notification context thread id', () => {
+    const record = {
+      ...deriveNotifications(accountPubkey, event)[0],
+      targetEventId: '',
+      rootEventId: '',
+    };
+    expect(notificationContext(record)).toBe('context unavailable');
+    expect(notificationContextEventId(record)).toBeNull();
   });
 });
