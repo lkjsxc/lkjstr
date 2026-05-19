@@ -15,6 +15,12 @@ Readiness checks whether the app contract is shippable.
   no-enabled-relay, ready-empty, and ready-with-events.
 - Home, Global, Notifications, and Relay Settings expose relay diagnostics
   instead of hiding relay failures behind public fallback reads.
+- Home, Global, Profile, Thread, and Notifications load older pages only after
+  near-bottom scroll and keep their documented item windows.
+- Event cache compaction protects accounts, settings, relay sets, workspace
+  state, notifications, and Tweet drafts.
+- App heap stays below `100 MB` in the heavy-feed smoke test; Chromium RSS is
+  reported separately.
 - Tweet publishes only with NIP-07 and enabled write relays.
 - Docker config contains no bind mounts.
 - Unit and e2e checks pass for the changed surface.

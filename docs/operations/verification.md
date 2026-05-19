@@ -9,6 +9,7 @@ flows.
 
 ```sh
 pnpm check:repo
+pnpm kit:sync
 pnpm lint
 pnpm check
 pnpm test
@@ -35,3 +36,9 @@ the same local, browser, and Docker-backed gates.
 
 Quiet commands are preferred in agent runs. They print a short success line
 when commands pass and print buffered command output only when a command fails.
+
+## Memory
+
+The heavy-feed browser smoke test reports app JavaScript heap, runtime item
+counters, and total Chromium RSS. The app heap gate is `100 MB`; RSS is
+diagnostic because browser baseline memory is outside app control.

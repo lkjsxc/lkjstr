@@ -10,6 +10,12 @@ Home runtime owns account-follow loading.
 - Read cached pages through the shared repository.
 - Build authors from active account plus latest follow-list `p` tags.
 - Deduplicate authors and chunk author filters when needed.
+- Keep Home and Global to a `180` item in-memory window.
+- Load older pages through `loadOlder()` using `until`.
+- Reset to newest data through `resetToLatest()`.
+- Expose `loadingOlder`, `hasOlder`, `oldestCreatedAt`, and `newerPruned`.
+- Apply one total request budget across Home author chunks.
+- Limit missing metadata loads to `30` authors from the current page.
 - Subscribe to follow discovery before note reads when no cached follow list
   exists.
 - Subscribe to kind `1` notes with explicit authors through the subscription

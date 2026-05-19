@@ -10,6 +10,7 @@ events, publish acknowledgements, and relay snapshots.
 - Normalize relay URLs before opening sockets.
 - Reuse one client per relay URL.
 - Verify events before delivering them to callers.
+- Reject relay messages above `64 KiB` and record diagnostics before parsing.
 - Send `CLOSE` when a subscription cleanup runs.
 - Keep snapshots for connection state, last message time, last error, and EOSE.
 - Do not require relay connections during workspace shell render.

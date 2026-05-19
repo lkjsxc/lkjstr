@@ -1,11 +1,9 @@
 # Diagnostics
 
-Owner: Operations
-State: Canon
+## Purpose
 
-## Operational Principle
-
-The browser is the runtime. Diagnostics must be inspectable without server logs.
+Diagnostics define browser-visible operational signals. The browser is the
+runtime, so failures must be inspectable without server logs.
 
 ## User-Visible Signals
 
@@ -17,10 +15,13 @@ The browser is the runtime. Diagnostics must be inspectable without server logs.
 - cache health.
 - worker queue health.
 - signer availability.
+- oversized relay message rejection.
+- app heap and runtime feed counters during heavy-feed smoke tests.
 
 ## Diagnostic Events
 
-Diagnostic events are local app records, not Nostr events. They may be written to `operation_log` with bounded retention.
+Diagnostic events are local app records, not Nostr events. They may be written
+to `operation_log` with bounded retention.
 
 Each record contains:
 
@@ -39,4 +40,6 @@ Each record contains:
 
 ## Privacy Rules
 
-Diagnostics must not record private keys, full draft bodies, signer secrets, or unredacted external signer payloads. Event ids, relay URLs, public keys, and typed error codes are acceptable.
+Diagnostics must not record private keys, full draft bodies, signer secrets, or
+unredacted external signer payloads. Event ids, relay URLs, public keys, and
+typed error codes are acceptable.

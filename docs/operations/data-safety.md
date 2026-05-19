@@ -1,7 +1,9 @@
 # Data Safety
 
-Owner: Operations
-State: Canon
+## Purpose
+
+Data safety defines which browser data classes may be cleared, compacted, or
+exported.
 
 ## Local Data Classes
 
@@ -23,6 +25,8 @@ The app must support:
 
 - clearing relay health without deleting relay configuration.
 - deleting cached events without deleting workspace layout.
+- compacting cached events without deleting accounts, settings, relay sets,
+  notifications, Tweet drafts, or workspace state.
 - deleting an account without deleting public cached events.
 - exporting workspace and relay configuration.
 - importing configuration into an empty profile.
@@ -33,4 +37,7 @@ Deletion actions must name the affected data class. Destructive actions need con
 
 ## Key Handling
 
-Local private key support is allowed only when the user explicitly imports or creates key material. External signer accounts remain preferred when available. Public-key-only accounts must never prompt for signing as though they can publish.
+Local private key support is allowed only when the user explicitly imports or
+creates key material. External signer accounts remain preferred when available.
+Public-key-only accounts must never prompt for signing as though they can
+publish.

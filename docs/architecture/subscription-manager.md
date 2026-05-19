@@ -14,5 +14,10 @@ runtime surfaces.
 - Cleanup removes one listener; the relay `CLOSE` is sent only after the last
   listener is gone.
 - One-shot paged reads use the same registration path and close when complete.
+- `readPage(request, options)` returns relay-provenance events.
+- Paged reads close on EOSE from all active relays, terminal relay state, or
+  timeout.
+- Paged reads are used for historical `until` pages; live reads are used for
+  current subscriptions.
 - Home, Global, Profile, Thread, and Notifications use this layer for relay
   reads.

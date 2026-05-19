@@ -14,6 +14,13 @@ its NIP-02 follows.
 - Relay reads use enabled read relays from the selected default relay set.
 - Relay reads go through the subscription manager.
 - Events and relay provenance are written through the shared repository.
+- Initial and older pages request `30` items.
+- The tab keeps a `180` item window and exposes jump to latest after newer
+  items are pruned.
+- Older pages load only after the event list scrolls near the bottom.
+- Historical relay pages use `until` from the oldest loaded event.
+- Live relay reads set `since` when the runtime starts.
+- Metadata fetches are limited to authors present in loaded items.
 - Deleted or disabled relays are not replaced by hidden public defaults.
 - No active account means no relay subscription.
 - No follow list means self notes are queried and the state remains visible.
@@ -37,3 +44,6 @@ its NIP-02 follows.
 - `relay-failed`: selected relays are unreachable.
 - `ready-empty`: relay EOSE completed with no matching notes.
 - `ready-with-events`: cache or relay data has matching notes.
+- `loadingOlder`: an older cache or relay page is being requested.
+- `hasOlder`: more older cached or relay-backed items may exist.
+- `newerPruned`: newest items were pruned from the sliding window.

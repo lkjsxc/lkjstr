@@ -12,6 +12,8 @@ Docker docs define the Compose verification path.
 - `app` runs the dev server from the built image.
 - `verify` runs `pnpm verify` from the built image.
 - `e2e` installs Playwright browser dependencies in its image.
+- Docker verification must run after feed-memory changes because browser heap
+  behavior depends on the built app bundle.
 
 ## Commands
 

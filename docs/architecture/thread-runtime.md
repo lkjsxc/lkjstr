@@ -10,4 +10,9 @@ Thread runtime owns event root and reply loading.
 - It loads cached root and referencing events first.
 - It subscribes with `ids` for the root and `#e` for replies.
 - It stores incoming events in the shared event cache.
+- It keeps a `240` item thread window.
+- It exposes `loadOlder()` and `resetToLatest()`.
+- State exposes `loadingOlder`, `hasOlder`, `oldestCreatedAt`, and
+  `newerPruned`.
+- Historical reads use the `e` tag index and one-shot relay pages.
 - It closes subscriptions on tab close.
