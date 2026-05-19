@@ -19,16 +19,36 @@ describe('event repository fallback paging', () => {
     const first = await queryFeed({ kind: 'global', limit: 2 });
     expect(first.items.map((item) => item.event.content)).toEqual(['a', 'b']);
     expect(first.items[0]?.relays).toEqual(['wss://relay-a']);
-    expect(first.cursor?.until).toBe(2);
+    expect(first.cursor?.oldest).toEqual({
+      createdAt: 2,
+      id: '2'.repeat(64),
+    });
     expect(first.hasMore).toBe(true);
 
     const second = await queryFeed({
       kind: 'global',
-      until: first.cursor?.until,
+      before: first.cursor?.oldest,
       limit: 2,
     });
     expect(second.items.map((item) => item.event.content)).toEqual(['c']);
     expect(second.hasMore).toBe(false);
+  });
+
+  it('uses event ids to page same-second events without gaps', async () => {
+    await upsertEvent(event('1', 10, 'first'));
+    await upsertEvent(event('2', 10, 'second'));
+    await upsertEvent(event('3', 10, 'third'));
+
+    const first = await queryFeed({ kind: 'global', limit: 2 });
+    const second = await queryFeed({
+      kind: 'global',
+      before: first.cursor?.oldest,
+      limit: 2,
+    });
+
+    expect(
+      [...first.items, ...second.items].map((item) => item.event.id),
+    ).toEqual(['1'.repeat(64), '2'.repeat(64), '3'.repeat(64)]);
   });
 
   it('uses tag-backed semantics for thread pages', async () => {

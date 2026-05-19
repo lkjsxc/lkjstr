@@ -1,5 +1,6 @@
 export * from './event';
 export * from './event-id';
+export * from './event-references';
 export * from './event-verify';
 export * from './filter';
 export * from './kinds';

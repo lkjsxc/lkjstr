@@ -31,9 +31,11 @@
     profiles: {},
     diagnostics: [],
     loadingOlder: false,
+    loadingNewer: false,
     hasOlder: true,
-    oldestCreatedAt: undefined,
-    newerPruned: false,
+    hasNewer: false,
+    oldestCursor: undefined,
+    newestCursor: undefined,
   });
   let runtime: TimelineRuntime | GlobalTimelineRuntime | undefined;
 
@@ -80,10 +82,11 @@
     loading={state.loading}
     emptyText="No events yet."
     loadingOlder={state.loadingOlder}
+    loadingNewer={state.loadingNewer}
     hasOlder={state.hasOlder}
-    newerPruned={state.newerPruned}
+    hasNewer={state.hasNewer}
     onNearEnd={() => runtime?.loadOlder()}
-    resetToLatest={() => runtime?.resetToLatest()}
+    onNearStart={() => runtime?.loadNewer()}
     openProfile={props.openProfile}
     openThread={props.openThread}
   />

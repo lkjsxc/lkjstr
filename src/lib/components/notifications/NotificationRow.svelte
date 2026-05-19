@@ -51,7 +51,7 @@
       </time>
     </div>
     {#if props.item}
-      <EventContent content={props.item.event.content} />
+      <EventContent event={props.item.event} relays={props.item.relays} />
     {:else}
       <p class="event-content">Event content unavailable.</p>
     {/if}

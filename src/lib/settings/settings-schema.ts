@@ -7,6 +7,10 @@ type RawSetting = {
   rawDefault: string;
   description: string;
   options?: readonly string[];
+  min?: number;
+  max?: number;
+  step?: number;
+  integer?: boolean;
 };
 
 const rows = `
@@ -56,6 +60,17 @@ const items: readonly RawSetting[] = rows
     };
   });
 
+const numericConstraints: Record<
+  string,
+  Pick<RawSetting, 'min' | 'max' | 'step' | 'integer'>
+> = {
+  'appearance.cornerRadius': { min: 0, max: 16, step: 1, integer: true },
+  'timeline.initialLimit': { min: 10, max: 180, step: 1, integer: true },
+  'relays.connectTimeoutMs': { min: 500, max: 30000, step: 100, integer: true },
+  'cache.maxEvents': { min: 100, max: 100000, step: 100, integer: true },
+  'cache.maxAgeDays': { min: 1, max: 3650, step: 1, integer: true },
+};
+
 export function defaultSettings(now = 0): SettingRecord[] {
   return items.map((item) => {
     const namespace = item.key.split('.')[0] ?? 'debug';
@@ -69,6 +84,7 @@ export function defaultSettings(now = 0): SettingRecord[] {
       defaultValue: value,
       value,
       options: item.options,
+      ...numericConstraints[item.key],
       requiresReload: false,
       sensitive: item.key.startsWith('security.'),
       searchableText: searchText(

@@ -1,5 +1,6 @@
 <script lang="ts">
   import { onMount } from 'svelte';
+  import { logRuntimeError } from '$lib/app/runtime-log';
   import type { Account } from '$lib/accounts/account';
   import type { NotificationRecord } from '$lib/notifications/notification';
   import {
@@ -47,16 +48,22 @@
     let hadUserInput = false;
     const markUserInput = () => (hadUserInput = true);
     window.addEventListener('pointerdown', markUserInput, { capture: true });
-    const loaded = await loadWorkspace().catch(() => initialWorkspace);
+    const loaded = await loadWorkspace().catch((error: unknown) => {
+      logRuntimeError('workspace-load-failed')(error);
+      return initialWorkspace;
+    });
     window.removeEventListener('pointerdown', markUserInput, { capture: true });
     if (workspace === initialWorkspace && !hadUserInput) workspace = loaded;
-    else await saveWorkspace(workspace).catch(() => undefined);
-    await refreshData().catch(() => undefined);
+    else
+      await saveWorkspace(workspace).catch(
+        logRuntimeError('workspace-save-failed'),
+      );
+    await refreshData().catch(logRuntimeError('workspace-refresh-failed'));
   });
 
   async function update(next: Workspace): Promise<void> {
     workspace = next;
-    await saveWorkspace(next).catch(() => undefined);
+    await saveWorkspace(next).catch(logRuntimeError('workspace-save-failed'));
   }
 
   async function refreshData(): Promise<void> {
@@ -173,28 +180,5 @@
   <title>lkjstr workspace</title>
 </svelte:head>
 
-<WorkspaceRoot
-  {workspace}
-  {accounts}
-  {activeAccount}
-  {notifications}
-  {relaySets}
-  {ready}
-  focusTab={handleFocusTab}
-  closeTab={handleCloseTab}
-  moveTab={handleMoveTab}
-  openTab={handleOpenTab}
-  openNewTab={handleOpenNewTab}
-  convertTab={handleConvertTab}
-  split={handleSplit}
-  closePane={handleClosePane}
-  resize={handleResize}
-  addReadonly={() => promptAddReadonly(refreshData)}
-  addNip07={() => promptAddNip07(refreshData)}
-  addReadonlyPubkey={(pubkey) => addMinedReadonly(pubkey, refreshData)}
-  {refreshData}
-  toggleRelay={handleToggleRelay}
-  removeRelay={handleRemoveRelay}
-  openProfile={handleOpenProfile}
-  openThread={handleOpenThread}
-/>
+<!-- prettier-ignore -->
+<WorkspaceRoot {workspace} {accounts} {activeAccount} {notifications} {relaySets} {ready} focusTab={handleFocusTab} closeTab={handleCloseTab} moveTab={handleMoveTab} openTab={handleOpenTab} openNewTab={handleOpenNewTab} convertTab={handleConvertTab} split={handleSplit} closePane={handleClosePane} resize={handleResize} addReadonly={() => promptAddReadonly(refreshData)} addNip07={() => promptAddNip07(refreshData)} addReadonlyPubkey={(pubkey) => addMinedReadonly(pubkey, refreshData)} {refreshData} toggleRelay={handleToggleRelay} removeRelay={handleRemoveRelay} openProfile={handleOpenProfile} openThread={handleOpenThread} />

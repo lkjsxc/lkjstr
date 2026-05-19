@@ -75,7 +75,7 @@ test('timeline displays followed-author notes from a synthetic relay', async ({
   await expect(page.getByRole('heading', { name: 'Profile' })).toBeVisible();
 });
 
-test('timeline hides relay details and exposes them in Relay Logs', async ({
+test('timeline hides relay details and exposes them in lkjstr Log', async ({
   page,
 }) => {
   const activeKey = generateSecretKey();
@@ -102,9 +102,9 @@ test('timeline hides relay details and exposes them in Relay Logs', async ({
   await page.getByRole('button', { name: 'Open new tab' }).first().click();
   await page
     .locator('section.new-tab')
-    .getByRole('button', { name: 'Relay Logs' })
+    .getByRole('button', { name: 'lkjstr Log' })
     .click();
-  await expect(page.getByRole('heading', { name: 'Relay Logs' })).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'lkjstr Log' })).toBeVisible();
   await expect(
     page.getByText('blocked: synthetic close').first(),
   ).toBeVisible();

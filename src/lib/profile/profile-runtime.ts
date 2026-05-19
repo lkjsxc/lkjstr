@@ -125,11 +125,6 @@ export class ProfileRuntime {
     }
   }
 
-  async resetToLatest(): Promise<void> {
-    const posts = await cachedProfileNotes(this.pubkey, this.#pageSize);
-    this.#emit({ ...this.#state, posts, newerPruned: false });
-  }
-
   async #receive(poolEvent: PoolEvent): Promise<void> {
     if (poolEvent.subId !== this.subId) return;
     await storeProfileEvent(poolEvent.event, [poolEvent.relay]);

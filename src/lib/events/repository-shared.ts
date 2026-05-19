@@ -1,5 +1,10 @@
 import type { NostrEvent } from '../protocol';
-import type { EventRelayReceipt, EventTagRow, StoredEvent } from './types';
+import type {
+  EventRelayReceipt,
+  EventTagRow,
+  FeedCursorPoint,
+  StoredEvent,
+} from './types';
 
 export function receipt(
   eventId: string,
@@ -12,8 +17,8 @@ export function receipt(
 export function tagRows(event: NostrEvent): EventTagRow[] {
   return event.tags
     .filter(
-      (tag): tag is ['e' | 'p', string, ...string[]] =>
-        (tag[0] === 'e' || tag[0] === 'p') && Boolean(tag[1]),
+      (tag): tag is ['e' | 'p' | 'q' | 'a', string, ...string[]] =>
+        ['e', 'p', 'q', 'a'].includes(tag[0] ?? '') && Boolean(tag[1]),
     )
     .map((tag, index) => ({
       id: `${event.id}:${tag[0]}:${tag[1]}:${index}`,
@@ -26,6 +31,26 @@ export function tagRows(event: NostrEvent): EventTagRow[] {
 
 export function before(event: StoredEvent, until: number | undefined): boolean {
   return until === undefined || event.created_at < until;
+}
+
+export function beforeCursor(
+  event: StoredEvent,
+  cursor: FeedCursorPoint | undefined,
+): boolean {
+  if (!cursor) return true;
+  if (event.created_at !== cursor.createdAt)
+    return event.created_at < cursor.createdAt;
+  return event.id > cursor.id;
+}
+
+export function afterCursor(
+  event: StoredEvent,
+  cursor: FeedCursorPoint | undefined,
+): boolean {
+  if (!cursor) return true;
+  if (event.created_at !== cursor.createdAt)
+    return event.created_at > cursor.createdAt;
+  return event.id < cursor.id;
 }
 
 export function maxUntil(until: number | undefined): number {

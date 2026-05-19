@@ -76,6 +76,7 @@ export async function importSettingsJson(
     const setting = byKey.get(item.key);
     if (!setting) return [];
     const clean = coerceValue(setting, item.value);
+    if (!clean.ok) throw new Error(`invalid setting value: ${item.key}`);
     return clean.ok
       ? [
           {
@@ -125,7 +126,11 @@ export function coerceValue(
     return { ok: true, value: Boolean(value) };
   if (setting.valueType === 'number') {
     const n = Number(value);
-    return Number.isFinite(n) ? { ok: true, value: n } : { ok: false };
+    if (!Number.isFinite(n)) return { ok: false };
+    if (setting.integer && !Number.isInteger(n)) return { ok: false };
+    if (setting.min !== undefined && n < setting.min) return { ok: false };
+    if (setting.max !== undefined && n > setting.max) return { ok: false };
+    return { ok: true, value: n };
   }
   if (setting.valueType === 'enum')
     return setting.options?.includes(String(value))

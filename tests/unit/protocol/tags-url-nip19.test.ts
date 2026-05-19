@@ -4,6 +4,7 @@ import {
   decodeEntity,
   encodeNote,
   encodeNpub,
+  eventReferences,
   indexTags,
   normalizeRelayUrl,
   replyParent,
@@ -29,10 +30,28 @@ describe('tags, relay URLs, and NIP-19', () => {
   it('extracts indexed tags and reply markers', () => {
     expect(indexTags(event)).toMatchObject({
       events: ['1'.repeat(64), '2'.repeat(64)],
+      quotes: [],
+      addresses: [],
       topics: ['workspace'],
     });
     expect(replyRoot(event)).toBe('1'.repeat(64));
     expect(replyParent(event)).toBe('2'.repeat(64));
+  });
+
+  it('parses event embed references', () => {
+    const quoted = finalizeEvent(
+      {
+        created_at: 101,
+        kind: 1,
+        tags: [['q', '4'.repeat(64)]],
+        content: `nostr:${encodeNote('5'.repeat(64))}`,
+      },
+      generateSecretKey(),
+    );
+    expect(eventReferences(quoted)).toEqual([
+      { kind: 'quote', id: '4'.repeat(64) },
+      { kind: 'nostr-event', id: '5'.repeat(64) },
+    ]);
   });
 
   it('normalizes relay URLs', () => {

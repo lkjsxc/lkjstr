@@ -5,6 +5,7 @@ import {
   indexedDbAvailable,
 } from '../storage/safe-storage';
 import { compareEventsDesc, matchesFilter, type NostrEvent } from '../protocol';
+import { cursorPoint } from './feed-window';
 import { indexedPage } from './repository-indexed';
 import {
   allMemoryEvents,
@@ -124,11 +125,14 @@ function cursorFor(
   items: readonly FeedEvent[],
 ): FeedCursor | undefined {
   const last = items.at(-1)?.event;
+  const first = items.at(0);
   if (!last) return undefined;
   return {
     id: feedKey(query),
     feedKey: feedKey(query),
     until: last.created_at,
+    newest: first ? cursorPoint({ event: first.event }) : undefined,
+    oldest: cursorPoint({ event: last }),
     updatedAt: Date.now(),
   };
 }

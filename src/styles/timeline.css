@@ -83,6 +83,21 @@
   white-space: pre-wrap;
 }
 
+.event-embed {
+  border: 1px solid var(--color-border);
+  border-radius: 6px;
+  display: grid;
+  gap: var(--space-1);
+  margin-top: var(--space-2);
+  max-width: 100%;
+  overflow-wrap: anywhere;
+  padding: var(--space-2);
+}
+
+.event-embed p {
+  margin: 0;
+}
+
 .notification-list {
   display: grid;
   gap: var(--space-3);

@@ -140,11 +140,6 @@ export class NotificationRuntime {
     }
   }
 
-  async resetToLatest(): Promise<void> {
-    await this.#reload(false);
-    this.#emit({ ...this.#state, newerPruned: false });
-  }
-
   async #reload(
     loading = this.#state.loading,
     records?: readonly NotificationRecord[],

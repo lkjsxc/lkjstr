@@ -2,11 +2,11 @@ import { normalizeRelayUrl } from '../protocol';
 import { queryFeed, upsertEvent } from '../events/repository';
 import { boundedErrorText } from '../events/runtime-error';
 import {
+  boundaryCursors,
   feedPageSize,
   feedWindowSize,
   mergeFeedItems,
   mergeFeedWindow,
-  oldestCreatedAt,
 } from '../events/feed-window';
 import {
   sharedRelayPool,
@@ -96,22 +96,28 @@ export class GlobalTimelineRuntime {
 
   async loadOlder(): Promise<void> {
     if (this.#state.loadingOlder || !this.#state.hasOlder) return;
-    const until = this.#state.oldestCreatedAt;
-    if (!until) return;
+    const cursor = this.#state.oldestCursor;
+    if (!cursor) return;
     this.#emit({ ...this.#state, loadingOlder: true });
     try {
       const page = await queryFeed({
         kind: 'global',
-        until,
+        before: cursor,
         limit: this.#pageSize,
       });
       const relayEvents =
         this.#relays.length > 0
           ? await this.#subscriptions.readPage(
               {
-                key: `${this.#subId}:older:${until}`,
+                key: `${this.#subId}:older:${cursor.createdAt}:${cursor.id}`,
                 relays: this.#relays,
-                filters: [{ kinds: [1], until, limit: this.#pageSize }],
+                filters: [
+                  {
+                    kinds: [1],
+                    until: cursor.createdAt,
+                    limit: this.#pageSize,
+                  },
+                ],
               },
               { timeoutMs: 5000 },
             )
@@ -133,7 +139,7 @@ export class GlobalTimelineRuntime {
         this.#nextState({
           items: this.items(),
           hasOlder: page.hasMore || relayEvents.length >= this.#pageSize,
-          newerPruned: this.#state.newerPruned || window.newerPruned,
+          hasNewer: this.#state.hasNewer || window.prunedNewer,
         }),
       );
     } catch (error) {
@@ -144,12 +150,15 @@ export class GlobalTimelineRuntime {
     }
   }
 
-  async resetToLatest(): Promise<void> {
-    this.#cached = [
-      ...(await queryFeed({ kind: 'global', limit: this.#pageSize })).items,
-    ];
-    this.#live = [];
-    this.#emit(this.#nextState({ items: this.items(), newerPruned: false }));
+  // prettier-ignore
+  async loadNewer(): Promise<void> {
+    if (this.#state.loadingNewer || !this.#state.hasNewer) return; const cursor = this.#state.newestCursor; if (!cursor) return;
+    this.#emit({ ...this.#state, loadingNewer: true });
+    try {
+      const page = await queryFeed({ kind: 'global', after: cursor, limit: this.#pageSize });
+      this.#cached = mergeTimelineItems(page.items, this.items(), this.#limit);
+      this.#emit(this.#nextState({ items: this.items(), hasNewer: page.hasMore }));
+    } finally { if (this.#state.loadingNewer) this.#emit({ ...this.#state, loadingNewer: false }); }
   }
 
   async #receive(poolEvent: PoolEvent): Promise<void> {
@@ -181,7 +190,7 @@ export class GlobalTimelineRuntime {
     const items = patch.items ?? this.#state.items;
     return {
       ...this.#state,
-      oldestCreatedAt: oldestCreatedAt(items),
+      ...boundaryCursors(items),
       ...patch,
     };
   }

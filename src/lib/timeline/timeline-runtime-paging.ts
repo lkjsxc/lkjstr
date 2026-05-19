@@ -1,5 +1,6 @@
 import { feedWindowSize, mergeFeedWindow } from '../events/feed-window';
 import { queryFeed, upsertEvent } from '../events/repository';
+import type { FeedCursorPoint } from '../events/types';
 import type { RelaySubscriptionManager } from '../relays/subscription-manager';
 import { authorFilters } from './follow-list';
 import type { TimelineItem } from './timeline-store';
@@ -9,7 +10,7 @@ export type TimelineOlderRequest = {
   readonly authors: readonly string[];
   readonly relays: readonly string[];
   readonly subId: string;
-  readonly until: number;
+  readonly cursor: FeedCursorPoint;
   readonly pageSize: number;
   readonly subscriptions: RelaySubscriptionManager;
 };
@@ -17,7 +18,7 @@ export type TimelineOlderRequest = {
 export type TimelineOlderResult = {
   readonly items: TimelineItem[];
   readonly hasOlder: boolean;
-  readonly newerPruned: boolean;
+  readonly hasNewer: boolean;
 };
 
 export async function loadOlderTimelinePage(
@@ -26,16 +27,16 @@ export async function loadOlderTimelinePage(
   const page = await queryFeed({
     kind: 'home',
     authors: request.authors,
-    until: request.until,
+    before: request.cursor,
     limit: request.pageSize,
   });
   const relayEvents =
     request.relays.length > 0
       ? await request.subscriptions.readPage({
-          key: `${request.subId}:older:${request.until}`,
+          key: `${request.subId}:older:${request.cursor.createdAt}:${request.cursor.id}`,
           relays: request.relays,
           filters: authorFilters(request.authors, request.pageSize, {
-            until: request.until,
+            until: request.cursor.createdAt,
           }),
         })
       : [];
@@ -57,6 +58,6 @@ export async function loadOlderTimelinePage(
   return {
     items: window.items,
     hasOlder: page.hasMore || relayEvents.length >= request.pageSize,
-    newerPruned: window.newerPruned,
+    hasNewer: window.prunedNewer,
   };
 }

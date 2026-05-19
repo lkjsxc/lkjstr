@@ -6,7 +6,7 @@ import type {
   FeedQuery,
   StoredEvent,
 } from './types';
-import { before } from './repository-shared';
+import { afterCursor, before, beforeCursor } from './repository-shared';
 
 const fallbackLimit = 5000;
 const memoryEvents = new Map<string, StoredEvent>();
@@ -45,6 +45,8 @@ export function putMemory(
 
 function matchesFeed(event: StoredEvent, query: FeedQuery): boolean {
   if (!before(event, query.until)) return false;
+  if (!beforeCursor(event, query.before)) return false;
+  if (!afterCursor(event, query.after)) return false;
   if (query.kind === 'global') return event.kind === 1;
   if (query.kind === 'home')
     return event.kind === 1 && Boolean(query.authors?.includes(event.pubkey));

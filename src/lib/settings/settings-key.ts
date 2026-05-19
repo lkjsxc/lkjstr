@@ -18,4 +18,8 @@ export type SettingRecord = {
   readonly sensitive: boolean;
   readonly updatedAt: number;
   readonly options?: readonly string[];
+  readonly min?: number;
+  readonly max?: number;
+  readonly step?: number;
+  readonly integer?: boolean;
 };

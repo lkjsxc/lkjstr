@@ -1,6 +1,7 @@
 import { sharedRelayPool, type PoolEvent, type RelayPool } from './relay-pool';
 import type { RelaySnapshot } from './types';
 import type { RelayReadRequest } from '../events/types';
+import { appendAppLog, boundedMessage } from '../log/app-log';
 
 type Listener = (event: PoolEvent) => void;
 type Entry = {
@@ -31,7 +32,8 @@ export class RelaySubscriptionManager {
     const listeners = new Set<Listener>([listener]);
     const subId = request.key;
     const offEvent = this.#pool.onEvent((event) => {
-      if (event.subId === subId) listeners.forEach((item) => item(event));
+      if (event.subId === subId)
+        listeners.forEach((item) => safeNotify(item, event, subId));
     });
     const close = this.#pool.subscribe(request.relays, subId, request.filters);
     this.#entries.set(key, {
@@ -86,6 +88,30 @@ export class RelaySubscriptionManager {
     entry.cleanup();
     this.#entries.delete(key);
   }
+}
+
+function safeNotify(listener: Listener, event: PoolEvent, subId: string): void {
+  try {
+    void Promise.resolve(listener(event)).catch((error) =>
+      logListenerFailure(error, subId, event.relay),
+    );
+  } catch (error) {
+    logListenerFailure(error, subId, event.relay);
+  }
+}
+
+function logListenerFailure(
+  error: unknown,
+  subId: string,
+  relay: string,
+): void {
+  appendAppLog({
+    area: 'subscription',
+    severity: 'error',
+    code: 'listener-failed',
+    message: boundedMessage(error),
+    context: { subId, relay },
+  });
 }
 
 function pageComplete(

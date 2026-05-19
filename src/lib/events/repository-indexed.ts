@@ -1,7 +1,12 @@
 import { compareEventsDesc } from '../protocol';
 import { browserDb } from '../storage/browser-db';
 import type { FeedQuery, StoredEvent } from './types';
-import { before, maxUntil } from './repository-shared';
+import {
+  afterCursor,
+  before,
+  beforeCursor,
+  maxUntil,
+} from './repository-shared';
 import { normalizeStoredEvent } from './normalize';
 
 export async function indexedPage(
@@ -9,10 +14,10 @@ export async function indexedPage(
   limit: number,
 ): Promise<StoredEvent[]> {
   if (query.kind === 'thread') return indexedThreadPage(query, limit);
-  if (query.kind === 'global') return byKindPage(1, query.until, limit);
+  if (query.kind === 'global') return byKindPage(1, query, limit);
   const pages = await Promise.all(
     (query.authors ?? []).map((author) =>
-      byAuthorPage(author, 1, query.until, limit),
+      byAuthorPage(author, 1, query, limit),
     ),
   );
   return pages
@@ -32,7 +37,7 @@ async function indexedThreadPage(
     .eventTags.where('[tagName+tagValue+created_at]')
     .between(['e', eventId, 0], ['e', eventId, maxUntil(query.until)])
     .reverse()
-    .limit(limit)
+    .limit(limit * 3)
     .toArray();
   const replies = await browserDb().events.bulkGet(
     rows.map((row) => row.eventId),
@@ -41,35 +46,50 @@ async function indexedThreadPage(
   return [...(root && before(root, query.until) ? [root] : []), ...replies]
     .filter((event): event is StoredEvent => Boolean(event))
     .map(normalizeStoredEvent)
+    .filter((event) => withinCursors(event, query))
     .sort(compareEventsDesc)
     .slice(0, limit);
 }
 
 function byKindPage(
   kind: number,
-  until: number | undefined,
+  query: FeedQuery,
   limit: number,
 ): Promise<StoredEvent[]> {
   return browserDb()
     .events.where('[kind+created_at]')
-    .between([kind, 0], [kind, maxUntil(until)])
+    .between([kind, 0], [kind, maxUntil(query.until)])
     .reverse()
-    .limit(limit)
+    .limit(limit * 3)
     .toArray()
-    .then((events) => events.map(normalizeStoredEvent));
+    .then((events) =>
+      events
+        .map(normalizeStoredEvent)
+        .filter((event) => withinCursors(event, query))
+        .slice(0, limit),
+    );
 }
 
 function byAuthorPage(
   pubkey: string,
   kind: number,
-  until: number | undefined,
+  query: FeedQuery,
   limit: number,
 ): Promise<StoredEvent[]> {
   return browserDb()
     .events.where('[pubkey+kind+created_at]')
-    .between([pubkey, kind, 0], [pubkey, kind, maxUntil(until)])
+    .between([pubkey, kind, 0], [pubkey, kind, maxUntil(query.until)])
     .reverse()
-    .limit(limit)
+    .limit(limit * 3)
     .toArray()
-    .then((events) => events.map(normalizeStoredEvent));
+    .then((events) =>
+      events
+        .map(normalizeStoredEvent)
+        .filter((event) => withinCursors(event, query))
+        .slice(0, limit),
+    );
+}
+
+function withinCursors(event: StoredEvent, query: FeedQuery): boolean {
+  return beforeCursor(event, query.before) && afterCursor(event, query.after);
 }

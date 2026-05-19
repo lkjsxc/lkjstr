@@ -1,6 +1,6 @@
 <script lang="ts">
   import { VList } from 'virtua/svelte';
-  import { isNearEnd } from '$lib/events/feed-window';
+  import { isNearEnd, isNearStart } from '$lib/events/feed-window';
   import type { ProfileSummary } from '$lib/identity/identity';
   import { buildEventTree, flattenEventTree } from '$lib/events/tree';
   import type { FeedEvent } from '$lib/events/types';
@@ -11,11 +11,12 @@
     profiles?: Record<string, ProfileSummary>;
     loading?: boolean;
     loadingOlder?: boolean;
+    loadingNewer?: boolean;
     hasOlder?: boolean;
-    newerPruned?: boolean;
+    hasNewer?: boolean;
     emptyText?: string;
     onNearEnd?: () => void | Promise<void>;
-    resetToLatest?: () => void | Promise<void>;
+    onNearStart?: () => void | Promise<void>;
     openProfile?: (pubkey: string) => void;
     openThread?: (eventId: string) => void;
   };
@@ -30,6 +31,8 @@
   function handleScroll(offset: number): void {
     const viewport = list?.getViewportSize?.() ?? 0;
     const total = list?.getScrollSize?.() ?? 0;
+    if (isNearStart(offset) && !props.loadingNewer && props.hasNewer)
+      void props.onNearStart?.();
     if (
       isNearEnd(offset, viewport, total) &&
       !props.loadingOlder &&
@@ -40,16 +43,6 @@
 </script>
 
 <div class="event-list">
-  {#if props.newerPruned}
-    <button
-      class="event-list__latest"
-      type="button"
-      onclick={() => props.resetToLatest?.()}
-      title="Jump to latest"
-    >
-      Latest
-    </button>
-  {/if}
   {#if nodes.length > 0}
     <div class="event-list__scroller">
       <VList

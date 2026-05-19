@@ -28,8 +28,8 @@ export const newTabOptions: readonly NewTabOption[] = [
   },
   {
     kind: 'relay-monitor',
-    label: 'Relay Logs',
-    description: 'Relay diagnostics.',
+    label: 'lkjstr Log',
+    description: 'Session diagnostics.',
     group: 'primary',
   },
   {

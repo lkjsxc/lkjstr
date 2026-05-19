@@ -17,15 +17,22 @@ export type EventRelayReceipt = {
 export type EventTagRow = {
   readonly id: string;
   readonly eventId: string;
-  readonly tagName: 'e' | 'p';
+  readonly tagName: 'e' | 'p' | 'q' | 'a';
   readonly tagValue: string;
   readonly created_at: number;
+};
+
+export type FeedCursorPoint = {
+  readonly createdAt: number;
+  readonly id: string;
 };
 
 export type FeedCursor = {
   readonly id: string;
   readonly feedKey: string;
   readonly until?: number;
+  readonly oldest?: FeedCursorPoint;
+  readonly newest?: FeedCursorPoint;
   readonly updatedAt: number;
 };
 
@@ -34,6 +41,8 @@ export type FeedQuery = {
   readonly authors?: readonly string[];
   readonly eventId?: string;
   readonly until?: number;
+  readonly before?: FeedCursorPoint;
+  readonly after?: FeedCursorPoint;
   readonly limit?: number;
 };
 

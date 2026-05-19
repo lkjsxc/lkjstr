@@ -74,9 +74,7 @@
       loading={state.loading}
       loadingOlder={state.loadingOlder}
       hasOlder={state.hasOlder}
-      newerPruned={state.newerPruned}
       onNearEnd={() => runtime?.loadOlder()}
-      resetToLatest={() => runtime?.resetToLatest()}
       openProfile={props.openProfile}
       openThread={props.openThread}
       emptyText="No thread events found."

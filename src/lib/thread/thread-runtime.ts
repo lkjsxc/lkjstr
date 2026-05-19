@@ -4,7 +4,9 @@ import {
   threadWindowSize,
 } from '../events/feed-window';
 import { queryFeed } from '../events/repository';
+import { lookupEvent } from '../events/repository';
 import { boundedErrorText } from '../events/runtime-error';
+import { replyRoot } from '../protocol';
 import {
   sharedRelayPool,
   type PoolEvent,
@@ -38,6 +40,7 @@ export class ThreadRuntime {
   #state: ThreadState = emptyState();
   #pageSize = feedPageSize;
   #startedAt = Math.floor(Date.now() / 1000);
+  #rootId: string;
 
   constructor(
     readonly eventId: string,
@@ -49,6 +52,7 @@ export class ThreadRuntime {
     this.#pool = pool ?? sharedRelayPool;
     this.#subscriptions =
       subscriptions ?? new RelaySubscriptionManager(this.#pool);
+    this.#rootId = eventId;
   }
 
   subscribe(listener: (state: ThreadState) => void): () => void {
@@ -58,7 +62,11 @@ export class ThreadRuntime {
   }
 
   async start(): Promise<void> {
-    this.#cached = await loadCachedThread(this.eventId);
+    await this.#discoverRoot();
+    this.#cached = mergeThreadItems(
+      await loadCachedThread(this.#rootId),
+      this.#rootId === this.eventId ? [] : await loadCachedThread(this.eventId),
+    );
     this.#emit({ ...this.#state, items: this.#cached });
     if (this.relays.length === 0)
       return this.#emit({
@@ -76,9 +84,10 @@ export class ThreadRuntime {
           relays: this.relays,
           filters: [
             { ids: [this.eventId] },
+            { ids: [this.#rootId] },
             {
               kinds: [1],
-              '#e': [this.eventId],
+              '#e': [this.#rootId, this.eventId],
               since: this.#startedAt,
               limit: this.#pageSize,
             },
@@ -94,64 +103,26 @@ export class ThreadRuntime {
     this.#emit({ ...this.#state, loading: false, loadingOlder: false });
   }
 
+  // prettier-ignore
   async loadOlder(): Promise<void> {
-    if (this.#state.loadingOlder || !this.#state.hasOlder) return;
-    const until = this.#state.oldestCreatedAt;
-    if (!until) return;
+    if (this.#state.loadingOlder || !this.#state.hasOlder) return; const until = this.#state.oldestCreatedAt; if (!until) return;
     this.#emit({ ...this.#state, loadingOlder: true });
     try {
-      const page = await queryFeed({
-        kind: 'thread',
-        eventId: this.eventId,
-        until,
-        limit: this.#pageSize,
-      });
-      const relayEvents =
-        this.relays.length > 0
-          ? await this.#subscriptions.readPage({
-              key: `${this.subId}:older:${until}`,
-              relays: this.relays,
-              filters: [
-                {
-                  kinds: [1],
-                  '#e': [this.eventId],
-                  until,
-                  limit: this.#pageSize,
-                },
-              ],
-            })
-          : [];
-      await Promise.all(
-        relayEvents.map((item) => storeThreadEvent(item.event, [item.relay])),
-      );
-      const items = mergeThreadItems(this.items(), [
-        ...page.items,
-        ...relayEvents.map((item) => ({
-          event: item.event,
-          relays: [item.relay],
-        })),
-      ]);
-      const pruned = items.length > threadWindowSize;
-      this.#cached = pruned ? items.slice(-threadWindowSize) : items;
-      this.#live = [];
-      this.#emit({
-        ...this.#state,
-        items: this.items(),
-        hasOlder: page.hasMore || relayEvents.length >= this.#pageSize,
-        newerPruned: this.#state.newerPruned || pruned,
-      });
-    } catch (error) {
-      this.#emit({ ...this.#state, error: boundedErrorText(error) });
-    } finally {
-      if (this.#state.loadingOlder)
-        this.#emit({ ...this.#state, loadingOlder: false });
-    }
+      const page = await queryFeed({ kind: 'thread', eventId: this.#rootId, until, limit: this.#pageSize });
+      const relayEvents = this.relays.length > 0 ? await this.#subscriptions.readPage({ key: `${this.subId}:older:${until}`, relays: this.relays, filters: [{ kinds: [1], '#e': [this.#rootId, this.eventId], until, limit: this.#pageSize }] }) : [];
+      await Promise.all(relayEvents.map((item) => storeThreadEvent(item.event, [item.relay])));
+      const items = mergeThreadItems(this.items(), [...page.items, ...relayEvents.map((item) => ({ event: item.event, relays: [item.relay] }))]);
+      const pruned = items.length > threadWindowSize; this.#cached = pruned ? items.slice(-threadWindowSize) : items; this.#live = [];
+      this.#emit({ ...this.#state, items: this.items(), hasOlder: page.hasMore || relayEvents.length >= this.#pageSize, newerPruned: this.#state.newerPruned || pruned });
+    } catch (error) { this.#emit({ ...this.#state, error: boundedErrorText(error) }); }
+    finally { if (this.#state.loadingOlder) this.#emit({ ...this.#state, loadingOlder: false }); }
   }
 
-  async resetToLatest(): Promise<void> {
-    this.#cached = await loadCachedThread(this.eventId);
-    this.#live = [];
-    this.#emit({ ...this.#state, items: this.items(), newerPruned: false });
+  async #discoverRoot(): Promise<void> {
+    const selected = await lookupEvent(this.eventId).catch(() => undefined);
+    this.#rootId = selected
+      ? (replyRoot(selected.event) ?? this.eventId)
+      : this.eventId;
   }
 
   async #receive(poolEvent: PoolEvent): Promise<void> {

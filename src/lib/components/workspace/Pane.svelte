@@ -8,7 +8,7 @@
   import NewTab from '$lib/tabs/new-tab/NewTab.svelte';
   import NotificationsTab from '$lib/tabs/notifications/NotificationsTab.svelte';
   import ProfileTab from '$lib/tabs/profile/ProfileTab.svelte';
-  import RelayMonitorTab from '$lib/tabs/relays/RelayMonitorTab.svelte';
+  import LkjstrLogTab from '$lib/tabs/log/LkjstrLogTab.svelte';
   import RelaySettingsTab from '$lib/tabs/relays/RelaySettingsTab.svelte';
   import SettingsTab from '$lib/tabs/settings/SettingsTab.svelte';
   import ThreadTab from '$lib/tabs/thread/ThreadTab.svelte';
@@ -135,7 +135,7 @@
           openThread={(eventId) => props.openThread(props.pane.id, eventId)}
         />
       {:else if active.kind === 'relay-monitor'}
-        <RelayMonitorTab snapshots={props.relaySnapshots} />
+        <LkjstrLogTab snapshots={props.relaySnapshots} />
       {:else if active.kind === 'relay-settings'}
         <RelaySettingsTab
           relaySets={props.relaySets}

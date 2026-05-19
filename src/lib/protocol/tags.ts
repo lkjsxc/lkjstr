@@ -3,6 +3,8 @@ import type { NostrEvent, NostrTag } from './event';
 export type IndexedTags = {
   readonly events: readonly string[];
   readonly pubkeys: readonly string[];
+  readonly quotes: readonly string[];
+  readonly addresses: readonly string[];
   readonly topics: readonly string[];
   readonly relays: readonly string[];
 };
@@ -24,6 +26,8 @@ export function indexTags(event: NostrEvent): IndexedTags {
   return {
     events: tagValues(event, 'e'),
     pubkeys: tagValues(event, 'p'),
+    quotes: tagValues(event, 'q'),
+    addresses: tagValues(event, 'a'),
     topics: tagValues(event, 't'),
     relays: tagValues(event, 'r'),
   };

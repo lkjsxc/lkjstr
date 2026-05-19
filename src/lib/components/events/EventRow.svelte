@@ -37,6 +37,6 @@
       openProfile={props.openProfile}
       openThread={props.openThread}
     />
-    <EventContent content={props.item.event.content} />
+    <EventContent event={props.item.event} relays={props.item.relays} />
   </div>
 </article>

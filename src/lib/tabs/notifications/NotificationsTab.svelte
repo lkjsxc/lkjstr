@@ -90,11 +90,6 @@
   <h2>Notifications</h2>
   {#if state.loading}<p>Loading notifications...</p>{/if}
   {#if state.error}<p role="alert">{state.error}</p>{/if}
-  {#if state.newerPruned}
-    <button type="button" onclick={() => runtime?.resetToLatest()}>
-      Latest
-    </button>
-  {/if}
   <div class="notification-list" onscroll={handleScroll}>
     {#if state.records.length > 0}
       {#each state.records as record (record.id)}

@@ -50,6 +50,9 @@
     id={`setting-${props.setting.key}`}
     name={`setting-${props.setting.key}`}
     type="number"
+    min={props.setting.min}
+    max={props.setting.max}
+    step={props.setting.step}
     value={String(props.setting.value)}
     oninput={(event) =>
       props.save(props.setting.key, event.currentTarget.value)}

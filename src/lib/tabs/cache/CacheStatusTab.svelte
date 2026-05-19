@@ -14,7 +14,9 @@
 
   async function compact(): Promise<void> {
     const result = await compactOldEvents();
-    message = `${result.prunedEvents} old events removed.`;
+    message = result.skipped
+      ? (result.reason ?? 'Compaction skipped.')
+      : `${result.prunedEvents} old events removed.`;
     await refresh();
   }
 </script>

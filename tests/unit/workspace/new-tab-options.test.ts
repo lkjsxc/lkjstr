@@ -7,7 +7,7 @@ describe('new tab options', () => {
       'Home',
       'Global',
       'Relay Settings',
-      'Relay Logs',
+      'lkjstr Log',
       'Notifications',
       'Accounts',
       'Tweet',

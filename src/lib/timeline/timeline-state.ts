@@ -1,4 +1,5 @@
 import type { NostrEvent } from '../protocol';
+import type { FeedCursorPoint } from '../events/types';
 import type { RelayPool } from '../relays/relay-pool';
 import type { RelaySubscriptionManager } from '../relays/subscription-manager';
 import type { RelayDiagnostic, RelaySnapshot } from '../relays/types';
@@ -27,9 +28,11 @@ export type TimelineState = {
   readonly profiles: TimelineProfiles;
   readonly diagnostics: readonly RelayDiagnostic[];
   readonly loadingOlder: boolean;
+  readonly loadingNewer: boolean;
   readonly hasOlder: boolean;
-  readonly oldestCreatedAt?: number;
-  readonly newerPruned: boolean;
+  readonly hasNewer: boolean;
+  readonly oldestCursor?: FeedCursorPoint;
+  readonly newestCursor?: FeedCursorPoint;
 };
 
 export type TimelineRuntimeOptions = {
@@ -126,9 +129,11 @@ export function emptyState(): TimelineState {
     profiles: {},
     diagnostics: [],
     loadingOlder: false,
+    loadingNewer: false,
     hasOlder: true,
-    oldestCreatedAt: undefined,
-    newerPruned: false,
+    hasNewer: false,
+    oldestCursor: undefined,
+    newestCursor: undefined,
   };
 }
 

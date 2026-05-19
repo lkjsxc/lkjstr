@@ -7,6 +7,7 @@ import {
   type NostrFilter,
   type RelayMessage,
 } from '../protocol';
+import { logRelayDiagnostic } from './relay-diagnostic-log';
 import type {
   RelayClientEvents,
   RelayConnectionState,
@@ -163,6 +164,7 @@ export class RelayClient {
     ];
     if (kind === 'parse-error' || kind === 'invalid-event')
       this.#lastError = message;
+    logRelayDiagnostic(kind, message, this.url, subId);
   }
 
   #timeoutConnect(): void {
