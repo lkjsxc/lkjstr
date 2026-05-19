@@ -15,3 +15,5 @@ Panes are workspace tiles that host tab groups.
 - Split actions open a focused New Tab chooser in the new pane.
 - Panes accept dragged tabs from their own tab strip or another pane.
 - A pane closes when its last tab is moved to another pane.
+- Pane bodies have local vertical scroll and no default horizontal scroll.
+- Long child content wraps inside the pane instead of widening the workspace.

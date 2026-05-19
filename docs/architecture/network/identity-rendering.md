@@ -14,3 +14,7 @@ display UI.
 - Full public-key text is not shown in post rows; identity details belong in
   identity and profile surfaces.
 - Profile metadata events update the in-memory profile cache.
+- Visible event authors are hydrated across Home, Global, Notifications,
+  Profile notes, and Thread when cached or relay metadata exists.
+- Missing metadata shows shortened public key text as title and secondary
+  fallback.

@@ -14,8 +14,12 @@ Query runtime docs define how cache-first relay reads behave.
 - Feed pages use `limit`, `until`, cursor, and `hasMore` fields consistently.
 - Initial page size is `30`.
 - `loadOlder()` loads one bounded page using the current oldest timestamp.
+- `loadOlder()` clears `loadingOlder` in a `finally` path.
+- Loader failures surface bounded error text and keep the tab usable.
 - `resetToLatest()` clears older window state and loads the newest page.
 - Live reads set `since` at runtime start.
 - Empty enabled-relay lists produce a visible no-enabled-relay state.
 - Runtimes close their relay subscriptions when the owning tab unmounts.
 - Runtimes ignore events for other subscription ids.
+- Near-end detection uses scroll offset plus viewport size compared with total
+  scroll size.

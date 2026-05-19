@@ -7,18 +7,15 @@ itself: split tiles, tabs, relay-backed data, and local state.
 
 ## Documents
 
-- [accounts.md](accounts.md): account records and signers.
-- [cache.md](cache.md): local cache tab behavior.
-- [global.md](global.md): relay-wide note feed behavior.
-- [notifications.md](notifications.md): notification tab behavior.
-- [panes.md](panes.md): pane surface rules.
-- [profiles.md](profiles.md): profile opening and rendering.
-- [relay-management.md](relay-management.md): relay set editing.
-- [scope.md](scope.md): included and excluded product surface.
-- [settings.md](settings.md): flat key-value settings.
-- [tabs.md](tabs.md): tab list and opening rules.
-- [threads.md](threads.md): event thread opening and rendering.
-- [timeline.md](timeline.md): home timeline behavior.
-- [tweet.md](tweet.md): draft and publish behavior.
-- [workflows.md](workflows.md): common user flows.
-- [workspace.md](workspace.md): split tile behavior.
+- [feeds/README.md](feeds/README.md): relay-backed reading surfaces.
+- [tools/README.md](tools/README.md): local tools and settings surfaces.
+- [workspace/README.md](workspace/README.md): tiles, panes, tabs, and flows.
+
+## Shared Surface Rules
+
+- Every tab fits inside its tile without horizontal pane scrolling.
+- Tab bodies own the full available tile height so split panes do not collapse
+  feed lists.
+- Long URLs, event ids, public keys, relay messages, code, labels, and note
+  content wrap inside their visible container.
+- Action-opened Profile and Thread tabs inherit the clicked tile context.

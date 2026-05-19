@@ -33,8 +33,9 @@ This document records the current implemented contract for the app.
   `no-enabled-relay`, `auth-required`, `subscription-closed`, `relay-failed`,
   `ready-empty`, and `ready-with-events`.
 - Relay Settings shows editable relay state and Relay Logs shows
-  current-session relay diagnostics.
+  current-session relay diagnostics as a flat chronological stream.
 - Event metadata shows author control, date, and short event id.
+- Event rows and diagnostic rows wrap long content inside their tile.
 - Accounts can mine an `npub` prefix locally and export the generated `nsec`
   without storing it.
 - Tweet uses durable draft storage and publishes NIP-07 signed text notes to

@@ -26,6 +26,13 @@ Relay Logs are current-session browser state only. They show relay state, last
 error, last message time, diagnostic kind, message, relay URL, optional
 subscription id, and timestamp, and they are cleared by reload.
 
+Relay Logs present diagnostics as one chronological stream, not grouped by
+relay. Message and context fields wrap within the tile.
+
+Clean-browser Playwright is the source of truth for app-origin console
+diagnostics. If a SES lockdown message does not appear there, treat it as
+extension or provider injection outside the app.
+
 ## Diagnostic Events
 
 Diagnostic events are local app records, not Nostr events. They may be written

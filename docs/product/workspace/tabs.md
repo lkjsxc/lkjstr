@@ -29,6 +29,12 @@ Tabs define the workspace surface area.
 - Moving the last tab out of a tile closes the source tile.
 - Invalid drops do nothing.
 
+## Fit
+
+- The tab strip wraps or compresses tab titles inside the tile width.
+- Tab text may truncate, but pane content must not create horizontal scrolling.
+- Tab bodies fill the pane body height and keep scroll ownership local.
+
 ## Removed Surface
 
 There is no retired draft-planning workspace tab. There is no free-form

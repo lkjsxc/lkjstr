@@ -37,6 +37,19 @@ the same local, browser, and Docker-backed gates.
 Quiet commands are preferred in agent runs. They print a short success line
 when commands pass and print buffered command output only when a command fails.
 
+## Acceptance Checks
+
+- Open every New Tab choice at desktop and mobile widths and confirm no
+  document or pane horizontal overflow.
+- Home and Global lists fill the tile after split resizing.
+- Global, Notifications, Thread, and Profile note rows show avatar/name
+  fallbacks, timestamps, short ids, and wrapped content.
+- Notifications show actor/action rows with event content second.
+- Relay Logs render one flat chronological wrapped stream.
+- Legacy cached events without relay arrays render with `cache` provenance.
+- In clean Playwright, any SES lockdown console message must be reproduced
+  before it is treated as app-origin.
+
 ## Memory
 
 The heavy-feed browser smoke test reports app JavaScript heap, runtime item

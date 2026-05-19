@@ -2,14 +2,15 @@
 
 ## Purpose
 
-The Notifications tab shows relay-backed account activity as an infinite event
-tree.
+The Notifications tab shows relay-backed account activity with notification
+context first and event content second.
 
 ## Contract
 
 - The tab opens from New Tab.
 - Records are scoped to the active account pubkey.
 - Mentions, replies, reactions, reposts, follows, and quotes are indexed.
+- Profile references are indexed when metadata points at the active account.
 - Relay reads use enabled read relays from the selected default relay set.
 - Notification events are written through the shared repository.
 - Initial and older pages request `30` records.
@@ -25,3 +26,8 @@ tree.
   or reachable notification records.
 - Empty state is explicit when no records exist.
 - A compact jump to latest action appears when the window prunes newer items.
+- Rows show actor identity, action kind, read state, target or root context
+  when available, timestamp, and source event content.
+- Action labels cover mention, reply, reaction, repost, follow, quote, and
+  profile-reference records.
+- Long event content, ids, relay URLs, and context fields wrap within the row.
