@@ -8,6 +8,7 @@ import {
   addReadonlyAccount,
   installSyntheticRelay,
   openCleanWorkspace,
+  waitForSyntheticEvent,
 } from './timeline-relay-helpers';
 
 test('timeline does not read public relays without an active account', async ({
@@ -65,6 +66,7 @@ test('timeline displays followed-author notes from a synthetic relay', async ({
   await openCleanWorkspace(page);
   await addReadonlyAccount(page, active);
   await page.getByRole('button', { name: 'Home', exact: true }).click();
+  await waitForSyntheticEvent(page, note.id);
   await expect(page.getByText('synthetic account-home note')).toBeVisible({
     timeout: 10000,
   });

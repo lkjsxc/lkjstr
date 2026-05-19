@@ -42,7 +42,7 @@ export class TimelineRuntime {
   #subscriptions: RelaySubscriptionManager; #cached: TimelineItem[] = []; #live: TimelineItem[] = [];
   #state: TimelineState = emptyState(); #listeners = new Set<(state: TimelineState) => void>(); #cleanup: (() => void)[] = [];
   #relays: string[]; #pageSize: number; #authors: string[] = []; #profiles: TimelineState['profiles'] = {};
-  #followList?: TimelineLoad['followList']; #followFallbackStarted = false; #initialNotesKey = ''; #followSubId: string; #metaSubId: string; #noteSubId: string;
+  #followList?: TimelineLoad['followList']; #followListId = ''; #followFallbackStarted = false; #initialNotesKey = ''; #followSubId: string; #metaSubId: string; #noteSubId: string;
   #startedAt = Math.floor(Date.now() / 1000);
   constructor(readonly options: TimelineRuntimeOptions) {
     const pool = options.pool ?? sharedRelayPool; this.#subscriptions = options.subscriptions ?? new RelaySubscriptionManager(pool);
@@ -105,8 +105,12 @@ export class TimelineRuntime {
     this.#emit(this.#withCursors(readyWithEventsState(this.#state, this.items())));
   }
   async #receiveFollowList(poolEvent: PoolEvent): Promise<void> {
-    const event = poolEvent.event; this.#followList = event; this.#authors = accountHomeAuthors(event.pubkey, event);
-    await upsertEvent(event, [poolEvent.relay]); this.#applyLoaded(await loadAccountHome(event.pubkey, event, this.#pageSize));
+    const event = poolEvent.event; const current = this.#followList;
+    if (this.#followListId === event.id || (current && current.created_at > event.created_at)) { await upsertEvent(event, [poolEvent.relay]); return; }
+    this.#followList = event; this.#followListId = event.id; this.#authors = accountHomeAuthors(event.pubkey, event);
+    await upsertEvent(event, [poolEvent.relay]);
+    if (this.#followListId !== event.id) return;
+    this.#applyLoaded(await loadAccountHome(event.pubkey, event, this.#pageSize));
     this.#emit(this.#nextState({ items: this.items() })); this.#subscribeNotes();
   }
   async #receiveMetadata(poolEvent: PoolEvent): Promise<void> {
@@ -120,7 +124,7 @@ export class TimelineRuntime {
     this.#emit({ ...this.#state, ...relayStatePatch(this.#state, active, this.#noteSubId) });
   }
   #handleMissingFollow(): void {
-    this.#followFallbackStarted = true; this.#followList = undefined; this.#authors = [this.options.activeAccountPubkey ?? ''].filter(Boolean);
+    this.#followFallbackStarted = true; this.#followList = undefined; this.#followListId = ''; this.#authors = [this.options.activeAccountPubkey ?? ''].filter(Boolean);
     this.#emit(noFollowListState(this.#state, this.#authors, this.#profiles)); this.#subscribeNotes();
   }
   async #startWithoutAccount(): Promise<void> {

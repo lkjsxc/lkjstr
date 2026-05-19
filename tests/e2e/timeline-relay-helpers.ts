@@ -8,6 +8,22 @@ export async function addReadonlyAccount(page: Page, pubkey: string) {
   await expect(page.getByText('readonly')).toBeVisible();
 }
 
+export async function waitForSyntheticEvent(page: Page, eventId: string) {
+  await page.waitForFunction(
+    ({ eventId }) => {
+      const record = (value: unknown): value is Record<string, unknown> =>
+        typeof value === 'object' && value !== null;
+      return window.__syntheticSockets.some(
+        (socket) =>
+          record(socket) &&
+          Array.isArray(socket.delivered) &&
+          socket.delivered.includes(eventId),
+      );
+    },
+    { eventId },
+  );
+}
+
 export async function openCleanWorkspace(page: Page) {
   await page.goto('/');
   await page.evaluate(async () => {
@@ -58,6 +74,7 @@ export async function installSyntheticRelay(
       readyState = SyntheticWebSocket.CONNECTING;
       replies = 0;
       sent: string[] = [];
+      delivered: string[] = [];
       listeners = new Map<string, Set<(event: Event) => void>>();
 
       constructor(readonly url: string) {
@@ -91,8 +108,11 @@ export async function installSyntheticRelay(
       reply(subId: string, filters: unknown[]): void {
         if (relayOptions.closed)
           this.message(['CLOSED', subId, relayOptions.closed[1]]);
-        for (const event of matchingEvents(relayOptions.events, filters))
+        for (const event of matchingEvents(relayOptions.events, filters)) {
+          if (record(event) && typeof event.id === 'string')
+            this.delivered.push(event.id);
           this.message(['EVENT', subId, event]);
+        }
         this.message(['EOSE', subId]);
         this.replies += 1;
       }
