@@ -1,12 +1,9 @@
-.relay-monitor,
-.relay-settings {
-  min-width: 32rem;
-}
-
 .settings-tab {
   display: grid;
   gap: var(--space-3);
+  height: 100%;
   min-width: 0;
+  overflow: auto;
 }
 
 .settings-header {
@@ -38,6 +35,11 @@
 .profile-tab {
   display: grid;
   gap: var(--space-3);
+  grid-template-rows: auto auto minmax(0, 1fr);
+  height: 100%;
+  min-height: 0;
+  min-width: 0;
+  overflow: auto;
 }
 
 .data-tab textarea {
@@ -52,6 +54,12 @@
   align-items: center;
   display: flex;
   gap: 0.65rem;
+  min-width: 0;
+}
+
+.identity-chip > span {
+  display: grid;
+  min-width: 0;
 }
 
 .identity-chip small {
@@ -84,7 +92,29 @@
   border: 0;
   color: inherit;
   display: inline-flex;
+  min-width: 0;
   padding: 0;
+}
+
+.relay-monitor,
+.relay-settings {
+  display: grid;
+  gap: var(--space-3);
+  height: 100%;
+  min-width: 0;
+  overflow: auto;
+}
+
+.relay-log-row {
+  border-bottom: 1px solid var(--color-border);
+  display: grid;
+  gap: var(--space-1);
+  min-width: 0;
+  padding: var(--space-3) 0;
+}
+
+.relay-log-row p {
+  margin: 0;
 }
 
 .option-card,

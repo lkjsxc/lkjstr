@@ -1,6 +1,7 @@
 <script lang="ts">
   import EventTreeList from '$lib/components/events/EventTreeList.svelte';
   import IdentityChip from '$lib/components/identity/IdentityChip.svelte';
+  import type { ProfileSummary } from '$lib/identity/identity';
   import { shortNpub } from '$lib/identity/display-name';
   import {
     ProfileRuntime,
@@ -16,6 +17,8 @@
     tabId: string;
     pubkey: string;
     relaySets: readonly RelaySet[];
+    openProfile: (pubkey: string) => void;
+    openThread: (eventId: string) => void;
   };
 
   let props: Props = $props();
@@ -31,6 +34,9 @@
     oldestCreatedAt: undefined,
     newerPruned: false,
   });
+  let profiles = $derived<Record<string, ProfileSummary>>(
+    state.profile ? { [props.pubkey]: state.profile } : {},
+  );
   let runtime: ProfileRuntime | undefined;
 
   $effect(() => {
@@ -70,12 +76,15 @@
   <h3>Notes</h3>
   <EventTreeList
     items={state.posts.map((event) => ({ event, relays: ['cache'] }))}
+    {profiles}
     loading={state.loading}
     loadingOlder={state.loadingOlder}
     hasOlder={state.hasOlder}
     newerPruned={state.newerPruned}
     onNearEnd={() => runtime?.loadOlder()}
     resetToLatest={() => runtime?.resetToLatest()}
+    openProfile={props.openProfile}
+    openThread={props.openThread}
     emptyText="No notes have been received for this profile."
   />
 </section>

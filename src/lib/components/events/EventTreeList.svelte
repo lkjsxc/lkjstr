@@ -1,6 +1,6 @@
 <script lang="ts">
   import { VList } from 'virtua/svelte';
-  import { nearEndPixels } from '$lib/events/feed-window';
+  import { isNearEnd } from '$lib/events/feed-window';
   import type { ProfileSummary } from '$lib/identity/identity';
   import { buildEventTree, flattenEventTree } from '$lib/events/tree';
   import type { FeedEvent } from '$lib/events/types';
@@ -21,11 +21,20 @@
   };
 
   let props: Props = $props();
-  let list = $state<unknown>();
+  let list = $state<{
+    getViewportSize?: () => number;
+    getScrollSize?: () => number;
+  }>();
   let nodes = $derived(flattenEventTree(buildEventTree(props.items)));
 
   function handleScroll(offset: number): void {
-    if (offset >= nearEndPixels && !props.loadingOlder && props.hasOlder)
+    const viewport = list?.getViewportSize?.() ?? 0;
+    const total = list?.getScrollSize?.() ?? 0;
+    if (
+      isNearEnd(offset, viewport, total) &&
+      !props.loadingOlder &&
+      props.hasOlder
+    )
       void props.onNearEnd?.();
   }
 </script>
@@ -45,7 +54,7 @@
     <VList
       bind:this={list}
       data={nodes}
-      style="height: 100%; min-height: 20rem;"
+      style="height: 100%; min-height: 0;"
       getKey={(item) => item.event.id}
       onscroll={handleScroll}
     >

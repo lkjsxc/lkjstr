@@ -10,6 +10,7 @@ import {
   putMemory,
 } from './repository-memory';
 import { receipt, tagRows } from './repository-shared';
+import { normalizeStoredEvent } from './normalize';
 import type {
   FeedCursor,
   FeedEvent,
@@ -25,7 +26,11 @@ export async function upsertEvent(
 ): Promise<StoredEvent> {
   const existing = await existingEvent(event.id);
   const relays = [...new Set([...(existing?.relayUrls ?? []), ...relayUrls])];
-  const stored = { ...event, receivedAt, relayUrls: relays };
+  const stored = normalizeStoredEvent({
+    ...event,
+    receivedAt,
+    relayUrls: relays,
+  });
   const receipts = relays.map((relayUrl) =>
     receipt(event.id, relayUrl, receivedAt),
   );
@@ -90,24 +95,24 @@ async function allEvents(): Promise<StoredEvent[]> {
   const records = await browserDb()
     .events.toArray()
     .catch(() => allMemoryEvents());
-  return records.map((event) => ({
-    ...event,
-    receivedAt: event.receivedAt ?? 0,
-    relayUrls: event.relayUrls ?? ['cache'],
-  }));
+  return records.map(normalizeStoredEvent);
 }
 
 async function existingEvent(id: string): Promise<StoredEvent | undefined> {
-  if (typeof indexedDB === 'undefined') return memoryEvent(id);
-  return browserDb()
-    .events.get(id)
-    .catch(() => undefined);
+  const event =
+    typeof indexedDB === 'undefined'
+      ? memoryEvent(id)
+      : await browserDb()
+          .events.get(id)
+          .catch(() => undefined);
+  return event ? normalizeStoredEvent(event) : undefined;
 }
 
 function toFeedEvent(event: StoredEvent): FeedEvent {
+  const normalized = normalizeStoredEvent(event);
   return {
-    event,
-    relays: event.relayUrls.length > 0 ? event.relayUrls : ['cache'],
+    event: normalized,
+    relays: normalized.relayUrls,
   };
 }
 

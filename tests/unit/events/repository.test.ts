@@ -4,6 +4,8 @@ import {
   queryFeed,
   upsertEvent,
 } from '../../../src/lib/events/repository';
+import { isNearEnd } from '../../../src/lib/events/feed-window';
+import { normalizeStoredEvent } from '../../../src/lib/events/normalize';
 import type { NostrEvent } from '../../../src/lib/protocol';
 
 describe('event repository fallback paging', () => {
@@ -40,6 +42,21 @@ describe('event repository fallback paging', () => {
       'root',
       'reply',
     ]);
+  });
+
+  it('normalizes stale stored rows with cache relay provenance', () => {
+    const stored = normalizeStoredEvent({
+      ...event('4', 7, 'legacy'),
+      receivedAt: undefined,
+      relayUrls: undefined,
+    });
+    expect(stored.receivedAt).toBe(0);
+    expect(stored.relayUrls).toEqual(['cache']);
+  });
+
+  it('detects near-end scrolling from offset, viewport, and total size', () => {
+    expect(isNearEnd(100, 200, 1500, 300)).toBe(false);
+    expect(isNearEnd(1000, 250, 1500, 300)).toBe(true);
   });
 });
 

@@ -1,5 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { RelayPool } from '../../../src/lib/relays/relay-pool';
+import { flattenRelayDiagnostics } from '../../../src/lib/relays/session-snapshots';
+import type { RelaySnapshot } from '../../../src/lib/relays/types';
 
 const sockets: FakeWebSocket[] = [];
 
@@ -61,4 +63,33 @@ describe('relay pool session snapshots', () => {
       }),
     ]);
   });
+
+  it('flattens relay diagnostics chronologically with metadata', () => {
+    const diagnostics = flattenRelayDiagnostics([
+      snapshot('wss://b.example/', 20, 'b', 'sub-b'),
+      snapshot('wss://a.example/', 10, 'a'),
+    ]);
+    expect(diagnostics).toEqual([
+      expect.objectContaining({ relay: 'wss://a.example/', message: 'a' }),
+      expect.objectContaining({
+        relay: 'wss://b.example/',
+        message: 'b',
+        subId: 'sub-b',
+      }),
+    ]);
+  });
 });
+
+function snapshot(
+  relay: string,
+  timestamp: number,
+  message: string,
+  subId?: string,
+): RelaySnapshot {
+  return {
+    url: relay,
+    state: 'open',
+    eoseBySub: {},
+    diagnostics: [{ relay, timestamp, message, subId, kind: 'notice' }],
+  };
+}

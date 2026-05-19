@@ -53,6 +53,7 @@ function notificationKinds(
     (tag) => tag[0] === 'p' && tag[1] === accountPubkey,
   );
   if (!mentionsAccount) return [];
+  if (event.kind === 0) return ['profile-reference'];
   if (event.kind === 7) return ['reaction'];
   if (event.kind === 6) return ['repost'];
   if (event.kind === 3) return ['follow'];

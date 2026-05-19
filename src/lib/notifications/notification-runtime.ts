@@ -1,4 +1,5 @@
 import { lookupEvent, upsertEvent } from '../events/repository';
+import { boundedErrorText } from '../events/runtime-error';
 import { feedPageSize, feedWindowSize } from '../events/feed-window';
 import type { FeedEvent } from '../events/types';
 import {
@@ -57,7 +58,7 @@ export class NotificationRuntime {
           relays: this.relays,
           filters: [
             {
-              kinds: [1, 3, 6, 7],
+              kinds: [0, 1, 3, 6, 7],
               '#p': [this.accountPubkey],
               since: this.#startedAt,
               limit: this.#pageSize,
@@ -96,41 +97,47 @@ export class NotificationRuntime {
     const oldest = this.#state.records.at(-1)?.createdAt;
     if (!oldest) return;
     this.#emit({ ...this.#state, loadingOlder: true });
-    const records = await accountNotifications(
-      this.accountPubkey,
-      this.#pageSize,
-      oldest,
-    );
-    const until = this.#state.oldestCreatedAt;
-    const relayEvents =
-      until && this.relays.length > 0
-        ? await this.subscriptions.readPage({
-            key: `${this.subId}:older:${until}`,
-            relays: this.relays,
-            filters: [
-              {
-                kinds: [1, 3, 6, 7],
-                '#p': [this.accountPubkey],
-                until,
-                limit: this.#pageSize,
-              },
-            ],
-          })
-        : [];
-    for (const { event, relay } of relayEvents) {
-      await upsertEvent(event, [relay]);
-      await saveNotifications(
-        deriveNotifications(this.accountPubkey, event, [relay]),
+    try {
+      const records = await accountNotifications(
+        this.accountPubkey,
+        this.#pageSize,
+        oldest,
       );
+      const until = this.#state.oldestCreatedAt;
+      const relayEvents =
+        until && this.relays.length > 0
+          ? await this.subscriptions.readPage({
+              key: `${this.subId}:older:${until}`,
+              relays: this.relays,
+              filters: [
+                {
+                  kinds: [0, 1, 3, 6, 7],
+                  '#p': [this.accountPubkey],
+                  until,
+                  limit: this.#pageSize,
+                },
+              ],
+            })
+          : [];
+      for (const { event, relay } of relayEvents) {
+        await upsertEvent(event, [relay]);
+        await saveNotifications(
+          deriveNotifications(this.accountPubkey, event, [relay]),
+        );
+      }
+      await this.#reload(false, [...this.#state.records, ...records]);
+      this.#emit({
+        ...this.#state,
+        hasOlder:
+          records.length >= this.#pageSize ||
+          relayEvents.length >= this.#pageSize,
+      });
+    } catch (error) {
+      this.#emit({ ...this.#state, error: boundedErrorText(error) });
+    } finally {
+      if (this.#state.loadingOlder)
+        this.#emit({ ...this.#state, loadingOlder: false });
     }
-    await this.#reload(false, [...this.#state.records, ...records]);
-    this.#emit({
-      ...this.#state,
-      loadingOlder: false,
-      hasOlder:
-        records.length >= this.#pageSize ||
-        relayEvents.length >= this.#pageSize,
-    });
   }
 
   async resetToLatest(): Promise<void> {

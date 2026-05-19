@@ -1,5 +1,6 @@
 import { normalizeRelayUrl } from '../protocol';
 import { queryFeed, upsertEvent } from '../events/repository';
+import { boundedErrorText } from '../events/runtime-error';
 import {
   feedPageSize,
   feedWindowSize,
@@ -98,43 +99,49 @@ export class GlobalTimelineRuntime {
     const until = this.#state.oldestCreatedAt;
     if (!until) return;
     this.#emit({ ...this.#state, loadingOlder: true });
-    const page = await queryFeed({
-      kind: 'global',
-      until,
-      limit: this.#pageSize,
-    });
-    const relayEvents =
-      this.#relays.length > 0
-        ? await this.#subscriptions.readPage(
-            {
-              key: `${this.#subId}:older:${until}`,
-              relays: this.#relays,
-              filters: [{ kinds: [1], until, limit: this.#pageSize }],
-            },
-            { timeoutMs: 5000 },
-          )
-        : [];
-    await Promise.all(
-      relayEvents.map((item) => upsertEvent(item.event, [item.relay])),
-    );
-    const older = [
-      ...page.items,
-      ...relayEvents.map((item) => ({
-        event: item.event,
-        relays: [item.relay],
-      })),
-    ];
-    const window = mergeFeedWindow(this.items(), older, this.#limit, true);
-    this.#cached = window.items;
-    this.#live = [];
-    this.#emit(
-      this.#nextState({
-        items: this.items(),
-        loadingOlder: false,
-        hasOlder: page.hasMore || relayEvents.length >= this.#pageSize,
-        newerPruned: this.#state.newerPruned || window.newerPruned,
-      }),
-    );
+    try {
+      const page = await queryFeed({
+        kind: 'global',
+        until,
+        limit: this.#pageSize,
+      });
+      const relayEvents =
+        this.#relays.length > 0
+          ? await this.#subscriptions.readPage(
+              {
+                key: `${this.#subId}:older:${until}`,
+                relays: this.#relays,
+                filters: [{ kinds: [1], until, limit: this.#pageSize }],
+              },
+              { timeoutMs: 5000 },
+            )
+          : [];
+      await Promise.all(
+        relayEvents.map((item) => upsertEvent(item.event, [item.relay])),
+      );
+      const older = [
+        ...page.items,
+        ...relayEvents.map((item) => ({
+          event: item.event,
+          relays: [item.relay],
+        })),
+      ];
+      const window = mergeFeedWindow(this.items(), older, this.#limit, true);
+      this.#cached = window.items;
+      this.#live = [];
+      this.#emit(
+        this.#nextState({
+          items: this.items(),
+          hasOlder: page.hasMore || relayEvents.length >= this.#pageSize,
+          newerPruned: this.#state.newerPruned || window.newerPruned,
+        }),
+      );
+    } catch (error) {
+      this.#emit({ ...this.#state, error: boundedErrorText(error) });
+    } finally {
+      if (this.#state.loadingOlder)
+        this.#emit({ ...this.#state, loadingOlder: false });
+    }
   }
 
   async resetToLatest(): Promise<void> {

@@ -4,9 +4,9 @@ import {
   feedWindowSize,
   oldestCreatedAt,
 } from '$lib/events/feed-window';
-import { queryFeed } from '$lib/events/repository';
+import { boundedErrorText } from '$lib/events/runtime-error';
 import { profileFromMetadataEvent } from '$lib/identity/profile-cache';
-import { compareEventsDesc, type NostrEvent } from '$lib/protocol';
+import type { NostrEvent } from '$lib/protocol';
 import {
   sharedRelayPool,
   type PoolEvent,
@@ -21,6 +21,7 @@ import {
   cachedProfileNotes,
   storeProfileEvent,
 } from './profile-store';
+import { loadOlderProfilePage } from './profile-runtime-paging';
 
 // prettier-ignore
 export type ProfileState = {
@@ -31,7 +32,6 @@ export type ProfileState = {
 };
 
 export class ProfileRuntime {
-  #pool: RelayPool;
   #subscriptions: SubscriptionManager;
   #cleanup: (() => void)[] = [];
   #listeners = new Set<(state: ProfileState) => void>();
@@ -46,9 +46,9 @@ export class ProfileRuntime {
     pool?: RelayPool,
     subscriptions?: SubscriptionManager,
   ) {
-    this.#pool = pool ?? sharedRelayPool;
+    const relayPool = pool ?? sharedRelayPool;
     this.#subscriptions =
-      subscriptions ?? new RelaySubscriptionManager(this.#pool);
+      subscriptions ?? new RelaySubscriptionManager(relayPool);
   }
 
   subscribe(listener: (state: ProfileState) => void): () => void {
@@ -101,42 +101,28 @@ export class ProfileRuntime {
     const until = this.#state.oldestCreatedAt;
     if (!until) return;
     this.#emit({ ...this.#state, loadingOlder: true });
-    const page = await queryFeed({
-      kind: 'profile',
-      authors: [this.pubkey],
-      until,
-      limit: this.#pageSize,
-    });
-    const relayEvents =
-      this.relays.length > 0
-        ? await this.#subscriptions.readPage({
-            key: `${this.subId}:older:${until}`,
-            relays: this.relays,
-            filters: [
-              {
-                kinds: [1],
-                authors: [this.pubkey],
-                until,
-                limit: this.#pageSize,
-              },
-            ],
-          })
-        : [];
-    await Promise.all(
-      relayEvents.map((item) => storeProfileEvent(item.event, [item.relay])),
-    );
-    const posts = mergePosts(this.#state.posts, [
-      ...page.items.map((item) => item.event),
-      ...relayEvents.map((item) => item.event),
-    ]);
-    const pruned = posts.length > feedWindowSize;
-    this.#emit({
-      ...this.#state,
-      posts: pruned ? posts.slice(-feedWindowSize) : posts,
-      loadingOlder: false,
-      hasOlder: page.hasMore || relayEvents.length >= this.#pageSize,
-      newerPruned: this.#state.newerPruned || pruned,
-    });
+    try {
+      const page = await loadOlderProfilePage({
+        posts: this.#state.posts,
+        pubkey: this.pubkey,
+        relays: this.relays,
+        subId: this.subId,
+        until,
+        pageSize: this.#pageSize,
+        subscriptions: this.#subscriptions,
+      });
+      this.#emit({
+        ...this.#state,
+        posts: page.posts,
+        hasOlder: page.hasOlder,
+        newerPruned: this.#state.newerPruned || page.newerPruned,
+      });
+    } catch (error) {
+      this.#emit({ ...this.#state, error: boundedErrorText(error) });
+    } finally {
+      if (this.#state.loadingOlder)
+        this.#emit({ ...this.#state, loadingOlder: false });
+    }
   }
 
   async resetToLatest(): Promise<void> {
@@ -187,11 +173,4 @@ export class ProfileRuntime {
 // prettier-ignore
 function emptyState(): ProfileState {
   return { profile: null, posts: [], loading: true, error: null, relays: [], updatedAt: null, loadingOlder: false, hasOlder: true, oldestCreatedAt: undefined, newerPruned: false };
-}
-
-// prettier-ignore
-function mergePosts(current: readonly NostrEvent[], incoming: readonly NostrEvent[]): NostrEvent[] {
-  const byId = new Map<string, NostrEvent>();
-  [...current, ...incoming].forEach((event) => byId.set(event.id, event));
-  return [...byId.values()].sort(compareEventsDesc);
 }

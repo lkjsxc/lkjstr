@@ -98,8 +98,21 @@
 .pane-body,
 .empty-pane,
 .empty-workspace {
-  overflow: auto;
+  min-height: 0;
+  min-width: 0;
+  overflow: hidden;
   padding: 0.9rem;
+}
+
+.pane-body
+  :where(p, span, small, strong, button, code, pre, input, textarea, li) {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.pane-body pre,
+.pane-body code {
+  white-space: pre-wrap;
 }
 
 .pane-body h2,
@@ -111,10 +124,11 @@
 
 .tab-strip {
   display: flex;
+  flex-wrap: wrap;
   gap: 0.15rem;
   flex: 1 1 auto;
   min-width: 0;
-  overflow-x: auto;
+  overflow: hidden;
 }
 
 .tab-frame {
@@ -124,7 +138,7 @@
   border-bottom-color: var(--color-border);
   border-radius: var(--radius-tab);
   display: flex;
-  flex: 0 0 auto;
+  flex: 1 1 6rem;
   max-width: 14rem;
   min-width: 4rem;
 }
@@ -171,16 +185,15 @@
 
 .row {
   align-items: center;
+  border-bottom: 1px solid var(--color-border);
   display: flex;
+  flex-wrap: wrap;
   gap: 0.65rem;
+  justify-content: space-between;
+  min-width: 0;
+  padding: 0.65rem 0;
 }
 
 .row small {
   color: var(--color-text-muted);
-}
-
-.row {
-  border-bottom: 1px solid var(--color-border);
-  justify-content: space-between;
-  padding: 0.65rem 0;
 }

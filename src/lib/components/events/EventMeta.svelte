@@ -36,6 +36,7 @@
       onclick={() => props.openProfile?.(props.event.pubkey)}
     >
       <strong>{display.title}</strong>
+      <small>{display.subtitle}</small>
     </button>
     <span>{time}</span>
     <button type="button" onclick={() => props.openThread?.(props.event.id)}>

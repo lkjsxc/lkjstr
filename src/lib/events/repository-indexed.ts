@@ -2,6 +2,7 @@ import { compareEventsDesc } from '../protocol';
 import { browserDb } from '../storage/browser-db';
 import type { FeedQuery, StoredEvent } from './types';
 import { before, maxUntil } from './repository-shared';
+import { normalizeStoredEvent } from './normalize';
 
 export async function indexedPage(
   query: FeedQuery,
@@ -14,7 +15,11 @@ export async function indexedPage(
       byAuthorPage(author, 1, query.until, limit),
     ),
   );
-  return pages.flat().sort(compareEventsDesc).slice(0, limit);
+  return pages
+    .flat()
+    .map(normalizeStoredEvent)
+    .sort(compareEventsDesc)
+    .slice(0, limit);
 }
 
 async function indexedThreadPage(
@@ -35,6 +40,7 @@ async function indexedThreadPage(
   const root = await browserDb().events.get(eventId);
   return [...(root && before(root, query.until) ? [root] : []), ...replies]
     .filter((event): event is StoredEvent => Boolean(event))
+    .map(normalizeStoredEvent)
     .sort(compareEventsDesc)
     .slice(0, limit);
 }
@@ -49,7 +55,8 @@ function byKindPage(
     .between([kind, 0], [kind, maxUntil(until)])
     .reverse()
     .limit(limit)
-    .toArray();
+    .toArray()
+    .then((events) => events.map(normalizeStoredEvent));
 }
 
 function byAuthorPage(
@@ -63,5 +70,6 @@ function byAuthorPage(
     .between([pubkey, kind, 0], [pubkey, kind, maxUntil(until)])
     .reverse()
     .limit(limit)
-    .toArray();
+    .toArray()
+    .then((events) => events.map(normalizeStoredEvent));
 }

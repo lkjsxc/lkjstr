@@ -117,18 +117,19 @@
           tabId={active.id}
           accountPubkey={props.activeAccount?.pubkey}
           relaySets={props.relaySets}
+          openProfile={(pubkey) => props.openProfile(props.pane.id, pubkey)}
+          openThread={(eventId) => props.openThread(props.pane.id, eventId)}
         />
       {:else if active.kind === 'profile'}
         <ProfileTab
           tabId={active.id}
           pubkey={String(active.config.pubkey ?? '')}
           relaySets={props.relaySets}
+          openProfile={(pubkey) => props.openProfile(props.pane.id, pubkey)}
+          openThread={(eventId) => props.openThread(props.pane.id, eventId)}
         />
       {:else if active.kind === 'relay-monitor'}
-        <RelayMonitorTab
-          relaySets={props.relaySets}
-          snapshots={props.relaySnapshots}
-        />
+        <RelayMonitorTab snapshots={props.relaySnapshots} />
       {:else if active.kind === 'relay-settings'}
         <RelaySettingsTab
           relaySets={props.relaySets}
@@ -146,6 +147,8 @@
           tabId={active.id}
           eventId={String(active.config.eventId ?? '')}
           relaySets={props.relaySets}
+          openProfile={(pubkey) => props.openProfile(props.pane.id, pubkey)}
+          openThread={(eventId) => props.openThread(props.pane.id, eventId)}
         />
       {/if}
     </div>

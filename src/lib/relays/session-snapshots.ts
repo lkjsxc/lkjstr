@@ -1,4 +1,4 @@
-import type { RelaySnapshot } from './types';
+import type { RelayDiagnostic, RelaySnapshot } from './types';
 
 type RelaySnapshotWindow = Window & {
   __lkjstrRelaySnapshotHistory?: Map<string, RelaySnapshot>;
@@ -13,6 +13,14 @@ export function relaySnapshotHistoryMap(): Map<string, RelaySnapshot> {
 
 export function currentRelaySnapshots(): RelaySnapshot[] {
   return [...relaySnapshotHistoryMap().values()];
+}
+
+export function flattenRelayDiagnostics(
+  snapshots: readonly RelaySnapshot[],
+): RelayDiagnostic[] {
+  return snapshots
+    .flatMap((snapshot) => snapshot.diagnostics)
+    .sort((a, b) => a.timestamp - b.timestamp);
 }
 
 export function startRelaySnapshotPolling(

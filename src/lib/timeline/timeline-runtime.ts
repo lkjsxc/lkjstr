@@ -6,6 +6,7 @@ import {
   oldestCreatedAt,
 } from '../events/feed-window';
 import { upsertEvent } from '../events/repository';
+import { boundedErrorText } from '../events/runtime-error';
 import { sharedRelayPool, type PoolEvent } from '../relays/relay-pool';
 import { RelaySubscriptionManager } from '../relays/subscription-manager';
 import type { RelaySnapshot } from '../relays/types';
@@ -70,9 +71,15 @@ export class TimelineRuntime {
     const until = this.#state.oldestCreatedAt;
     if (!until || this.#authors.length === 0) return;
     this.#emit({ ...this.#state, loadingOlder: true });
-    const page = await loadOlderTimelinePage({ items: this.items(), authors: this.#authors, relays: this.#relays, subId: this.#noteSubId, until, pageSize: this.#pageSize, subscriptions: this.#subscriptions });
-    this.#cached = page.items; this.#live = [];
-    this.#emit(this.#nextState({ items: this.items(), loadingOlder: false, hasOlder: page.hasOlder, newerPruned: this.#state.newerPruned || page.newerPruned }));
+    try {
+      const page = await loadOlderTimelinePage({ items: this.items(), authors: this.#authors, relays: this.#relays, subId: this.#noteSubId, until, pageSize: this.#pageSize, subscriptions: this.#subscriptions });
+      this.#cached = page.items; this.#live = [];
+      this.#emit(this.#nextState({ items: this.items(), hasOlder: page.hasOlder, newerPruned: this.#state.newerPruned || page.newerPruned }));
+    } catch (error) {
+      this.#emit({ ...this.#state, error: boundedErrorText(error) });
+    } finally {
+      if (this.#state.loadingOlder) this.#emit({ ...this.#state, loadingOlder: false });
+    }
   }
   async resetToLatest(): Promise<void> {
     const pubkey = this.options.activeAccountPubkey; if (!pubkey) return;

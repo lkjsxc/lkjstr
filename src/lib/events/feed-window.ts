@@ -45,6 +45,15 @@ export function oldestCreatedAt(
   return items.at(-1)?.event.created_at;
 }
 
+export function isNearEnd(
+  scrollOffset: number,
+  viewportSize: number,
+  scrollSize: number,
+  threshold = nearEndPixels,
+): boolean {
+  return scrollOffset + viewportSize >= scrollSize - threshold;
+}
+
 function mergeItem(a: FeedEvent, b: FeedEvent): FeedEvent {
   return {
     event: a.event.created_at >= b.event.created_at ? a.event : b.event,

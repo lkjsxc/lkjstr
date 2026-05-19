@@ -1,6 +1,10 @@
 .timeline-tab {
   display: grid;
   gap: var(--space-3);
+  grid-template-rows: auto auto minmax(0, 1fr);
+  height: 100%;
+  min-height: 0;
+  min-width: 0;
 }
 
 .timeline-status {
@@ -18,7 +22,10 @@
 .event-list {
   display: grid;
   gap: var(--space-3);
+  grid-template-rows: auto minmax(0, 1fr) auto;
+  height: 100%;
   min-height: 0;
+  min-width: 0;
 }
 
 .event-list__latest {
@@ -51,6 +58,7 @@
   flex-wrap: wrap;
   font-size: 0.78rem;
   gap: var(--space-2);
+  min-width: 0;
 }
 
 .event-npub {
@@ -61,4 +69,38 @@
 .event-content {
   overflow-wrap: anywhere;
   white-space: pre-wrap;
+}
+
+.notification-list {
+  display: grid;
+  gap: var(--space-3);
+  min-height: 0;
+  overflow: auto;
+}
+
+.notification-row {
+  border-bottom: 1px solid var(--color-border);
+  display: grid;
+  gap: var(--space-3);
+  grid-template-columns: minmax(10rem, auto) minmax(0, 1fr);
+  min-width: 0;
+  padding: var(--space-3) 0;
+}
+
+.notification-row.unread {
+  border-left: 2px solid var(--color-focus);
+  padding-left: var(--space-2);
+}
+
+.notification-row__body,
+.notification-row__meta {
+  min-width: 0;
+}
+
+.notification-row__meta {
+  color: var(--color-text-muted);
+  display: flex;
+  flex-wrap: wrap;
+  font-size: 0.78rem;
+  gap: var(--space-2);
 }
