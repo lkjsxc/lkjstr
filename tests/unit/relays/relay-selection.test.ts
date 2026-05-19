@@ -41,4 +41,30 @@ describe('relay selection', () => {
     expect(`${subId}:follows`.length).toBeLessThanOrEqual(64);
     expect(`${subId}:notes`.length).toBeLessThanOrEqual(64);
   });
+
+  it('keeps relay selection in memory when localStorage is denied', () => {
+    const descriptor = Object.getOwnPropertyDescriptor(
+      globalThis,
+      'localStorage',
+    );
+    Object.defineProperty(globalThis, 'localStorage', {
+      configurable: true,
+      get: () => {
+        throw new Error('denied');
+      },
+    });
+    try {
+      setDefaultRelaySetId('custom');
+      expect(
+        selectedDefaultRelaySet([
+          defaultRelaySet,
+          { ...defaultRelaySet, id: 'custom' },
+        ])?.id,
+      ).toBe('custom');
+    } finally {
+      if (descriptor)
+        Object.defineProperty(globalThis, 'localStorage', descriptor);
+      else Reflect.deleteProperty(globalThis, 'localStorage');
+    }
+  });
 });
