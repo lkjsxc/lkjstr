@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { buildEventTree } from '../../../src/lib/events/tree';
+import { buildEventTree, flattenEventTree } from '../../../src/lib/events/tree';
 import type { NostrEvent } from '../../../src/lib/protocol';
 
 describe('event tree', () => {
@@ -18,6 +18,27 @@ describe('event tree', () => {
     expect(tree.map((item) => item.event.id)).toEqual([orphan.id, root.id]);
     expect(tree[1]?.children.map((item) => item.event.id)).toEqual([child.id]);
   });
+
+  it('collapses branches beyond the configured depth', () => {
+    const items = ['a', 'b', 'c', 'd'].map((seed, index) =>
+      event(
+        seed,
+        20 - index,
+        index ? [['e', previous(seed), '', 'reply']] : [],
+      ),
+    );
+    const flat = flattenEventTree(
+      buildEventTree(items.map((item) => ({ event: item, relays: ['cache'] }))),
+      1,
+    );
+
+    expect(flat.map((item) => item.event.id)).toEqual([
+      items[0]!.id,
+      items[1]!.id,
+      items[2]!.id,
+    ]);
+    expect('collapsed' in flat[2]!).toBe(true);
+  });
 });
 
 function event(
@@ -34,4 +55,10 @@ function event(
     content: seed,
     sig: 'e'.repeat(128),
   };
+}
+
+function previous(seed: string): string {
+  return String.fromCharCode(seed.charCodeAt(0) - 1)
+    .repeat(64)
+    .slice(0, 64);
 }

@@ -47,42 +47,73 @@ export async function installSyntheticRelay(
   await page.addInitScript((relayOptions) => {
     localStorage.clear();
     class SyntheticWebSocket {
+      static CONNECTING = 0;
+      static OPEN = 1;
+      static CLOSING = 2;
+      static CLOSED = 3;
       onopen: ((event: Event) => void) | null = null;
       onclose: ((event: CloseEvent) => void) | null = null;
       onerror: ((event: Event) => void) | null = null;
       onmessage: ((event: MessageEvent) => void) | null = null;
+      readyState = SyntheticWebSocket.CONNECTING;
       replies = 0;
       sent: string[] = [];
+      listeners = new Map<string, Set<(event: Event) => void>>();
 
       constructor(readonly url: string) {
         window.__syntheticSockets.push(this);
-        queueMicrotask(() => this.onopen?.({} as Event));
+        queueMicrotask(() => {
+          this.readyState = SyntheticWebSocket.OPEN;
+          this.dispatch('open', {} as Event);
+        });
+      }
+
+      addEventListener(type: string, listener: (event: Event) => void): void {
+        const listeners = this.listeners.get(type) ?? new Set();
+        listeners.add(listener);
+        this.listeners.set(type, listeners);
+      }
+
+      removeEventListener(
+        type: string,
+        listener: (event: Event) => void,
+      ): void {
+        this.listeners.get(type)?.delete(listener);
       }
 
       send(data: string): void {
         this.sent.push(data);
-        const message = JSON.parse(data);
+        const message = parseClientMessage(data);
         if (message[0] !== 'REQ') return;
         queueMicrotask(() => this.reply(String(message[1]), message.slice(2)));
       }
 
       reply(subId: string, filters: unknown[]): void {
         if (relayOptions.closed)
-          this.onmessage?.({
-            data: JSON.stringify(['CLOSED', subId, relayOptions.closed[1]]),
-          } as MessageEvent);
+          this.message(['CLOSED', subId, relayOptions.closed[1]]);
         for (const event of matchingEvents(relayOptions.events, filters))
-          this.onmessage?.({
-            data: JSON.stringify(['EVENT', subId, event]),
-          } as MessageEvent);
-        this.onmessage?.({
-          data: JSON.stringify(['EOSE', subId]),
-        } as MessageEvent);
+          this.message(['EVENT', subId, event]);
+        this.message(['EOSE', subId]);
         this.replies += 1;
       }
 
+      message(value: unknown[]): void {
+        this.dispatch('message', {
+          data: JSON.stringify(value),
+        } as MessageEvent);
+      }
+
       close(): void {
-        this.onclose?.({} as CloseEvent);
+        this.readyState = SyntheticWebSocket.CLOSED;
+        this.dispatch('close', {} as CloseEvent);
+      }
+
+      dispatch(type: string, event: Event): void {
+        if (type === 'open') this.onopen?.(event);
+        if (type === 'message') this.onmessage?.(event as MessageEvent);
+        if (type === 'close') this.onclose?.(event as CloseEvent);
+        if (type === 'error') this.onerror?.(event);
+        for (const listener of this.listeners.get(type) ?? []) listener(event);
       }
     }
     window.__syntheticSockets = [];
@@ -92,15 +123,37 @@ export async function installSyntheticRelay(
         filters.some((filter) => matches(event, filter)),
       );
     }
+    function parseClientMessage(data: string): unknown[] {
+      try {
+        const message = JSON.parse(data);
+        return Array.isArray(message) ? message : [];
+      } catch {
+        return [];
+      }
+    }
     function matches(event: unknown, filter: unknown) {
       if (!record(event) || !record(filter)) return false;
       const kinds = Array.isArray(filter.kinds) ? filter.kinds : undefined;
       const authors = Array.isArray(filter.authors)
         ? filter.authors
         : undefined;
+      const ids = Array.isArray(filter.ids) ? filter.ids : undefined;
+      const tags = Array.isArray(filter['#e']) ? filter['#e'] : undefined;
+      const since = Number.isFinite(filter.since) ? Number(filter.since) : 0;
+      const until = Number.isFinite(filter.until)
+        ? Number(filter.until)
+        : Number.MAX_SAFE_INTEGER;
       return (
+        (!ids || ids.includes(event.id)) &&
         (!kinds || kinds.includes(event.kind)) &&
-        (!authors || authors.includes(event.pubkey))
+        (!authors || authors.includes(event.pubkey)) &&
+        (!tags ||
+          (Array.isArray(event.tags) &&
+            event.tags.some(
+              (tag) => Array.isArray(tag) && tags.includes(tag[1]),
+            ))) &&
+        Number(event.created_at) >= since &&
+        Number(event.created_at) < until
       );
     }
     function record(value: unknown): value is Record<string, unknown> {

@@ -11,10 +11,13 @@ import type { FeedCursorPoint } from '../events/types';
 import { sharedRelayPool, type PoolEvent } from '../relays/relay-pool';
 import { RelaySubscriptionManager } from '../relays/subscription-manager';
 import type { RelaySnapshot } from '../relays/types';
-import { authorFilters } from './follow-list';
+import { accountHomeAuthors, authorFilters } from './follow-list';
 import { loadAccountHome, loadCachedAccountHome } from './timeline-load';
 import type { TimelineLoad } from './timeline-load';
-import { loadOlderTimelinePage } from './timeline-runtime-paging';
+import {
+  loadInitialTimelinePage,
+  loadOlderTimelinePage,
+} from './timeline-runtime-paging';
 import { profileFilter, storeTimelineProfile } from './timeline-profiles';
 import {
   needsSelfFallback,
@@ -39,7 +42,7 @@ export class TimelineRuntime {
   #subscriptions: RelaySubscriptionManager; #cached: TimelineItem[] = []; #live: TimelineItem[] = [];
   #state: TimelineState = emptyState(); #listeners = new Set<(state: TimelineState) => void>(); #cleanup: (() => void)[] = [];
   #relays: string[]; #pageSize: number; #authors: string[] = []; #profiles: TimelineState['profiles'] = {};
-  #followList?: TimelineLoad['followList']; #followFallbackStarted = false; #followSubId: string; #metaSubId: string; #noteSubId: string;
+  #followList?: TimelineLoad['followList']; #followFallbackStarted = false; #initialNotesKey = ''; #followSubId: string; #metaSubId: string; #noteSubId: string;
   #startedAt = Math.floor(Date.now() / 1000);
   constructor(readonly options: TimelineRuntimeOptions) {
     const pool = options.pool ?? sharedRelayPool; this.#subscriptions = options.subscriptions ?? new RelaySubscriptionManager(pool);
@@ -77,9 +80,19 @@ export class TimelineRuntime {
   }
   #subscribeFollows(pubkey: string): void { this.#emit({ ...this.#state, loading: true, status: 'loading-follows' }); this.#subscribe(this.#followSubId, [{ kinds: [3], authors: [pubkey], limit: 1 }]); }
   #subscribeNotes(): void {
+    this.#loadInitialNotes();
     this.#subscribe(this.#noteSubId, authorFilters(this.#authors, this.#pageSize, { since: this.#startedAt }));
     const missing = this.#authors.filter((pubkey) => !this.#profiles[pubkey]).slice(0, metadataPageLimit);
     const filters = profileFilter(missing); if (filters.length > 0) this.#subscribe(this.#metaSubId, filters);
+  }
+  async #loadInitialNotes(): Promise<void> {
+    const key = [...this.#authors].sort().join(',');
+    if (this.#initialNotesKey === key || this.#authors.length === 0) return; this.#initialNotesKey = key;
+    try {
+      const page = await loadInitialTimelinePage({ authors: this.#authors, relays: this.#relays, subId: this.#noteSubId, pageSize: this.#pageSize, subscriptions: this.#subscriptions });
+      if (page.length > 0) { this.#cached = mergeTimelineItems(page, this.items(), feedWindowSize); this.#emit(this.#nextState(readyWithEventsState(this.#state, this.items()))); }
+      else if (this.#state.items.length === 0) this.#emit(this.#nextState({ loading: false, status: 'ready-empty' }));
+    } catch (error) { this.#emit({ ...this.#state, loading: false, error: boundedErrorText(error) }); }
   }
   #subscribe(key: string, filters: readonly NostrFilter[]): void {
     this.#cleanup.push(this.#subscriptions.subscribeLive({ key, relays: this.#relays, filters }, (event) => this.#receive(event)));
@@ -92,7 +105,8 @@ export class TimelineRuntime {
     this.#emit(this.#withCursors(readyWithEventsState(this.#state, this.items())));
   }
   async #receiveFollowList(poolEvent: PoolEvent): Promise<void> {
-    const event = poolEvent.event; await upsertEvent(event, [poolEvent.relay]); this.#applyLoaded(await loadAccountHome(event.pubkey, event, this.#pageSize));
+    const event = poolEvent.event; this.#followList = event; this.#authors = accountHomeAuthors(event.pubkey, event);
+    await upsertEvent(event, [poolEvent.relay]); this.#applyLoaded(await loadAccountHome(event.pubkey, event, this.#pageSize));
     this.#emit(this.#nextState({ items: this.items() })); this.#subscribeNotes();
   }
   async #receiveMetadata(poolEvent: PoolEvent): Promise<void> {

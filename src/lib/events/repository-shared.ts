@@ -34,7 +34,7 @@ export function before(event: StoredEvent, until: number | undefined): boolean {
 }
 
 export function beforeCursor(
-  event: StoredEvent,
+  event: Pick<NostrEvent, 'created_at' | 'id'>,
   cursor: FeedCursorPoint | undefined,
 ): boolean {
   if (!cursor) return true;
@@ -44,7 +44,7 @@ export function beforeCursor(
 }
 
 export function afterCursor(
-  event: StoredEvent,
+  event: Pick<NostrEvent, 'created_at' | 'id'>,
   cursor: FeedCursorPoint | undefined,
 ): boolean {
   if (!cursor) return true;

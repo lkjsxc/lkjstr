@@ -1,21 +1,45 @@
 <script lang="ts">
   import { onMount } from 'svelte';
-  import { lookupEvent } from '$lib/events/repository';
+  import { lookupEvent, upsertEvent } from '$lib/events/repository';
+  import { readRelayPage } from '$lib/events/relay-page';
   import type { FeedEvent } from '$lib/events/types';
   import type { EventReference } from '$lib/protocol';
+  import { sharedSubscriptionManager } from '$lib/relays/subscription-manager';
   import EventContent from './EventContent.svelte';
 
   type Props = {
     reference: EventReference;
+    relays?: readonly string[];
     depth?: number;
+    openThread?: (eventId: string) => void;
   };
 
   let props: Props = $props();
   let resolved = $state<FeedEvent | null | undefined>(undefined);
 
   onMount(async () => {
-    resolved = await lookupEvent(props.reference.id);
+    resolved = await resolve();
   });
+
+  async function resolve(): Promise<FeedEvent | null> {
+    const cached = await lookupEvent(props.reference.id);
+    if (cached || !props.relays?.length) return cached ?? null;
+    const [hit] = await readRelayPage({
+      key: `embed:${props.reference.id}`,
+      relays: props.relays,
+      filters: [{ ids: [props.reference.id] }],
+      pageSize: 1,
+      subscriptions: sharedSubscriptionManager,
+    });
+    if (!hit) return null;
+    await upsertEvent(hit.event, [hit.relay]);
+    return { event: hit.event, relays: [hit.relay] };
+  }
+
+  function open(event: MouseEvent): void {
+    event.stopPropagation();
+    props.openThread?.(props.reference.id);
+  }
 
   function label(): string {
     if (props.reference.kind === 'reply-parent') return 'Replying to';
@@ -28,7 +52,15 @@
   }
 </script>
 
-<aside class="event-embed" data-kind={props.reference.kind}>
+<div
+  class="event-embed"
+  data-kind={props.reference.kind}
+  role="button"
+  tabindex="0"
+  onclick={open}
+  onkeydown={(event) =>
+    event.key === 'Enter' && props.openThread?.(props.reference.id)}
+>
   <strong>{label()}</strong>
   {#if resolved === undefined}
     <p>Loading referenced event...</p>
@@ -38,8 +70,9 @@
       event={resolved.event}
       relays={resolved.relays}
       depth={(props.depth ?? 0) + 1}
+      openThread={props.openThread}
     />
   {:else}
     <p>Referenced event not found.</p>
   {/if}
-</aside>
+</div>

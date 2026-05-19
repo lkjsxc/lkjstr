@@ -19,7 +19,12 @@ Tabs define the workspace surface area.
 ## Action-Opened Tabs
 
 - Profile opens from identity buttons in timelines and profile-related UI.
-- Thread opens from event id buttons in event metadata.
+- Profile actions focus a matching Profile tab already present in the same
+  tile; otherwise they open a new Profile tab in that tile.
+- Thread opens from event rows, event id buttons, quotes, references, and
+  collapsed continuation rows.
+- Thread actions focus a matching Thread tab already present in the same tile;
+  otherwise they open a new Thread tab in that tile.
 
 ## Movement
 

@@ -20,6 +20,16 @@
   function short(value: string): string {
     return `${value.slice(0, 8)}...${value.slice(-4)}`;
   }
+
+  function openProfile(event: MouseEvent): void {
+    event.stopPropagation();
+    props.openProfile?.(props.event.pubkey);
+  }
+
+  function openThread(event: MouseEvent): void {
+    event.stopPropagation();
+    props.openThread?.(props.event.id);
+  }
 </script>
 
 {#if props.avatarOnly}
@@ -30,16 +40,12 @@
   />
 {:else}
   <div class="event-meta">
-    <button
-      type="button"
-      class="identity-button"
-      onclick={() => props.openProfile?.(props.event.pubkey)}
-    >
+    <button type="button" class="identity-button" onclick={openProfile}>
       <strong>{display.title}</strong>
       <small>{display.subtitle}</small>
     </button>
     <span>{time}</span>
-    <button type="button" onclick={() => props.openThread?.(props.event.id)}>
+    <button type="button" onclick={openThread}>
       {eventId}
     </button>
   </div>

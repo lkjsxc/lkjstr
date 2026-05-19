@@ -7,31 +7,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { RelayPool } from '../../../src/lib/relays/relay-pool';
 import { TimelineRuntime } from '../../../src/lib/timeline/timeline-runtime';
 import { storeTimelineEvent } from '../../../src/lib/timeline/timeline-store';
-
-const sockets: FakeWebSocket[] = [];
-
-class FakeWebSocket {
-  onopen: ((event: Event) => void) | null = null;
-  onclose: ((event: CloseEvent) => void) | null = null;
-  onerror: ((event: Event) => void) | null = null;
-  onmessage: ((event: MessageEvent) => void) | null = null;
-  readonly sent: string[] = [];
-  constructor(readonly url: string) {
-    sockets.push(this);
-  }
-  send(data: string): void {
-    this.sent.push(data);
-  }
-  close(): void {
-    this.onclose?.({} as CloseEvent);
-  }
-  open(): void {
-    this.onopen?.({} as Event);
-  }
-  receive(data: unknown): void {
-    this.onmessage?.({ data } as MessageEvent);
-  }
-}
+import { FakeWebSocket, sockets } from './fake-websocket';
 
 describe('timeline runtime', () => {
   beforeEach(() => {
@@ -74,7 +50,9 @@ describe('timeline runtime', () => {
     await runtime.start();
     sockets[0]?.open();
     // prettier-ignore
-    expect(JSON.parse(sockets[0]?.sent[0] ?? '[]')).toEqual(['REQ', 'timeline-test:notes', expect.objectContaining({ kinds: [1], authors: [active, followed], limit: 30, since: expect.any(Number) })]);
+    expect(parsedSent('timeline-test:notes:initial')).toEqual(['REQ', expect.stringContaining('timeline-test:notes:initial'), expect.objectContaining({ kinds: [1], authors: [active, followed], limit: 30 })]);
+    // prettier-ignore
+    expect(parsedSent('timeline-test:notes', true)).toEqual(['REQ', 'timeline-test:notes', expect.objectContaining({ kinds: [1], authors: [active, followed], limit: 30, since: expect.any(Number) })]);
   });
 
   it('falls back to self notes when no follow list is found', async () => {
@@ -87,7 +65,9 @@ describe('timeline runtime', () => {
     sockets[0]?.receive(JSON.stringify(['EOSE', 'timeline-test:follows']));
     await vi.waitFor(() => expect(states).toContain('no-follow-list'));
     // prettier-ignore
-    expect(JSON.parse(sockets[0]?.sent[1] ?? '[]')).toEqual(['REQ', 'timeline-test:notes', expect.objectContaining({ kinds: [1], authors: [active], limit: 30, since: expect.any(Number) })]);
+    expect(parsedSent('timeline-test:notes:initial')).toEqual(['REQ', expect.stringContaining('timeline-test:notes:initial'), expect.objectContaining({ kinds: [1], authors: [active], limit: 30 })]);
+    // prettier-ignore
+    expect(parsedSent('timeline-test:notes', true)).toEqual(['REQ', 'timeline-test:notes', expect.objectContaining({ kinds: [1], authors: [active], limit: 30, since: expect.any(Number) })]);
   });
 
   it('stops loading on note eose without events', async () => {
@@ -188,4 +168,14 @@ function runtimeFor(options: {
 
 function pubkey(): string {
   return getPublicKey(generateSecretKey());
+}
+
+function parsedSent(subId: string, exact = false): unknown {
+  const raw = sockets
+    .flatMap((socket) => socket.sent)
+    .find((item) => {
+      const parsed = JSON.parse(item) as unknown[];
+      return exact ? parsed[1] === subId : String(parsed[1]).startsWith(subId);
+    });
+  return raw ? JSON.parse(raw) : undefined;
 }

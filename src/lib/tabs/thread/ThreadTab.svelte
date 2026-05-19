@@ -30,10 +30,12 @@
     loadingOlder: false,
     hasOlder: true,
     oldestCreatedAt: undefined,
+    oldestCursor: undefined,
     newerPruned: false,
     profiles: {},
   });
   let runtime: ThreadRuntime | undefined;
+  let profileRequest = 0;
 
   $effect(() => {
     if (!props.eventId) return;
@@ -56,7 +58,9 @@
     const authors = [...new Set(state.items.map((item) => item.event.pubkey))];
     const missing = authors.filter((author) => !state.profiles[author]);
     if (missing.length === 0) return;
+    const request = ++profileRequest;
     void loadTimelineProfiles(missing).then((loaded) => {
+      if (request !== profileRequest) return;
       currentProfiles = { ...loaded, ...currentProfiles };
       state = { ...state, profiles: currentProfiles };
     });

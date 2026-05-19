@@ -38,6 +38,7 @@
     newestCursor: undefined,
   });
   let runtime: TimelineRuntime | GlobalTimelineRuntime | undefined;
+  let profileRequest = 0;
 
   $effect(() => {
     const relays = timelineRelays(props.relaySets);
@@ -60,7 +61,9 @@
     const authors = [...new Set(state.items.map((item) => item.event.pubkey))];
     const missing = authors.filter((author) => !state.profiles[author]);
     if (missing.length === 0) return;
+    const request = ++profileRequest;
     void loadTimelineProfiles(missing).then((loaded) => {
+      if (request !== profileRequest) return;
       state = { ...state, profiles: { ...loaded, ...state.profiles } };
     });
   });

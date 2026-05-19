@@ -1,6 +1,15 @@
 import { compareEventsDesc } from '../protocol';
 import type { EventTreeNode, FeedEvent } from './types';
 
+export type FlatEventTreeItem =
+  | EventTreeNode
+  | (FeedEvent & {
+      readonly collapsed: true;
+      readonly depth: number;
+      readonly hiddenCount: number;
+      readonly targetId: string;
+    });
+
 export function buildEventTree(items: readonly FeedEvent[]): EventTreeNode[] {
   const byId = new Map<string, FeedEvent>();
   for (const item of items) byId.set(item.event.id, item);
@@ -19,8 +28,9 @@ export function buildEventTree(items: readonly FeedEvent[]): EventTreeNode[] {
 
 export function flattenEventTree(
   nodes: readonly EventTreeNode[],
-): EventTreeNode[] {
-  return nodes.flatMap((item) => [item, ...flattenEventTree(item.children)]);
+  maxDepth = 4,
+): FlatEventTreeItem[] {
+  return nodes.flatMap((item) => flattenNode(item, maxDepth));
 }
 
 export function replyParentId(
@@ -48,4 +58,34 @@ function node(
 
 function byEventDesc(a: FeedEvent, b: FeedEvent): number {
   return compareEventsDesc(a.event, b.event);
+}
+
+function flattenNode(
+  node: EventTreeNode,
+  maxDepth: number,
+): FlatEventTreeItem[] {
+  if (node.depth >= maxDepth && node.children.length > 0) {
+    const target = node.children[0]!;
+    return [
+      node,
+      {
+        ...target,
+        collapsed: true,
+        depth: node.depth + 1,
+        hiddenCount: countNodes(node.children),
+        targetId: target.event.id,
+      },
+    ];
+  }
+  return [
+    node,
+    ...node.children.flatMap((child) => flattenNode(child, maxDepth)),
+  ];
+}
+
+function countNodes(nodes: readonly EventTreeNode[]): number {
+  return nodes.reduce(
+    (total, item) => total + 1 + countNodes(item.children),
+    0,
+  );
 }

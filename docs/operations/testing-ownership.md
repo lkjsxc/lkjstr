@@ -27,6 +27,11 @@ Testing ownership maps behavior to the right test layer.
 - Home, Global, Profile, Thread, and Notifications `loadOlder()` and
   `loadNewer()` behavior.
 - Event list near-bottom scroll triggering.
+- Cold-cache initial relay backfill for Home, Global, Profile, and Thread.
+- Compound cursor filtering for same-second older relay results.
+- Media/content parsing for image, video, audio, normal links, and invalid URLs.
+- Deep event tree continuation rows and same-pane Profile or Thread tab reuse.
+- Identity hydration mismatch and stale async response guards.
 
 ## E2E
 
@@ -37,6 +42,10 @@ Testing ownership maps behavior to the right test layer.
 - Relay settings affecting active Account home behavior.
 - Synthetic relay diagnostics and cache-only Timeline notes.
 - Synthetic relay `since`, `until`, and `limit` handling.
+- Synthetic relay cold-cache Home notes from historical initial pages.
+- Row click Thread navigation and avatar or name Profile navigation.
+- Quote/reference clicks and media sizing inside desktop and mobile panes.
+- Long profile metadata preserving Notes list height.
 - Heavy-feed smoke coverage for thousands of events, large follows, bounded
   runtime counters, and app heap under `100 MB`.
 - Tile resize persistence.

@@ -14,6 +14,7 @@
     promptAddNip07,
     promptAddReadonly,
   } from '$lib/workspace/account-actions';
+  import { openProfileTab, openThreadTab } from '$lib/workspace/action-tabs';
   import { moveWorkspaceTab } from '$lib/workspace/move-tab';
   import { closeWorkspacePane } from '$lib/workspace/pane-commands';
   import { resizeSplit } from '$lib/workspace/resize';
@@ -97,18 +98,14 @@
     paneId: string,
     pubkey: string,
   ): Promise<void> {
-    if (workspace)
-      await update(
-        openTab(workspace, paneId, 'profile', 'Profile', { pubkey }),
-      );
+    if (workspace) await update(openProfileTab(workspace, paneId, pubkey));
   }
 
   async function handleOpenThread(
     paneId: string,
     eventId: string,
   ): Promise<void> {
-    if (workspace)
-      await update(openTab(workspace, paneId, 'thread', 'Thread', { eventId }));
+    if (workspace) await update(openThreadTab(workspace, paneId, eventId));
   }
 
   async function handleSplit(

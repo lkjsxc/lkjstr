@@ -6,7 +6,6 @@ import {
   feedPageSize,
   feedWindowSize,
   mergeFeedItems,
-  mergeFeedWindow,
 } from '../events/feed-window';
 import {
   sharedRelayPool,
@@ -29,6 +28,10 @@ import {
   relayStatePatch,
   selectedRelaySnapshots,
 } from './timeline-relay-state';
+import {
+  loadInitialGlobalPage,
+  loadOlderGlobalPage,
+} from './global-timeline-pages';
 
 export class GlobalTimelineRuntime {
   #cached: TimelineItem[] = [];
@@ -87,6 +90,7 @@ export class GlobalTimelineRuntime {
         (event) => this.#receive(event),
       ),
     );
+    void this.#loadInitialPage();
   }
 
   close(): void {
@@ -100,46 +104,21 @@ export class GlobalTimelineRuntime {
     if (!cursor) return;
     this.#emit({ ...this.#state, loadingOlder: true });
     try {
-      const page = await queryFeed({
-        kind: 'global',
-        before: cursor,
-        limit: this.#pageSize,
+      const page = await loadOlderGlobalPage({
+        items: this.items(),
+        relays: this.#relays,
+        subId: this.#subId,
+        cursor,
+        pageSize: this.#pageSize,
+        subscriptions: this.#subscriptions,
       });
-      const relayEvents =
-        this.#relays.length > 0
-          ? await this.#subscriptions.readPage(
-              {
-                key: `${this.#subId}:older:${cursor.createdAt}:${cursor.id}`,
-                relays: this.#relays,
-                filters: [
-                  {
-                    kinds: [1],
-                    until: cursor.createdAt,
-                    limit: this.#pageSize,
-                  },
-                ],
-              },
-              { timeoutMs: 5000 },
-            )
-          : [];
-      await Promise.all(
-        relayEvents.map((item) => upsertEvent(item.event, [item.relay])),
-      );
-      const older = [
-        ...page.items,
-        ...relayEvents.map((item) => ({
-          event: item.event,
-          relays: [item.relay],
-        })),
-      ];
-      const window = mergeFeedWindow(this.items(), older, this.#limit, true);
-      this.#cached = window.items;
+      this.#cached = page.items;
       this.#live = [];
       this.#emit(
         this.#nextState({
           items: this.items(),
-          hasOlder: page.hasMore || relayEvents.length >= this.#pageSize,
-          hasNewer: this.#state.hasNewer || window.prunedNewer,
+          hasOlder: page.hasOlder,
+          hasNewer: this.#state.hasNewer || page.hasNewer,
         }),
       );
     } catch (error) {
@@ -167,6 +146,29 @@ export class GlobalTimelineRuntime {
       { event: poolEvent.event, relays: [poolEvent.relay] },
     ]);
     this.#emit(readyWithEventsState(this.#state, this.items()));
+  }
+
+  async #loadInitialPage(): Promise<void> {
+    try {
+      const items = await loadInitialGlobalPage({
+        relays: this.#relays,
+        subId: this.#subId,
+        pageSize: this.#pageSize,
+        subscriptions: this.#subscriptions,
+      });
+      this.#cached = mergeTimelineItems(items, this.items(), this.#limit);
+      this.#emit(
+        items.length > 0
+          ? this.#nextState(readyWithEventsState(this.#state, this.items()))
+          : this.#nextState({ loading: false }),
+      );
+    } catch (error) {
+      this.#emit({
+        ...this.#state,
+        loading: false,
+        error: boundedErrorText(error),
+      });
+    }
   }
 
   #receiveState(snapshots: ReturnType<RelayPool['snapshots']>): void {

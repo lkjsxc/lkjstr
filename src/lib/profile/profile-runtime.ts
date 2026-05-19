@@ -1,7 +1,7 @@
-import type { ProfileSummary } from '$lib/identity/identity';
 import {
   feedPageSize,
   feedWindowSize,
+  cursorPoint,
   oldestCreatedAt,
 } from '$lib/events/feed-window';
 import { boundedErrorText } from '$lib/events/runtime-error';
@@ -21,21 +21,17 @@ import {
   cachedProfileNotes,
   storeProfileEvent,
 } from './profile-store';
+import { loadInitialProfilePage } from './profile-runtime-initial';
 import { loadOlderProfilePage } from './profile-runtime-paging';
+import { emptyProfileState, type ProfileState } from './profile-state';
 
-// prettier-ignore
-export type ProfileState = {
-  readonly profile: ProfileSummary | null; readonly posts: readonly NostrEvent[];
-  readonly loading: boolean; readonly error: string | null; readonly relays: readonly string[];
-  readonly updatedAt: number | null; readonly loadingOlder: boolean; readonly hasOlder: boolean;
-  readonly oldestCreatedAt?: number; readonly newerPruned: boolean;
-};
+export type { ProfileState } from './profile-state';
 
 export class ProfileRuntime {
   #subscriptions: SubscriptionManager;
   #cleanup: (() => void)[] = [];
   #listeners = new Set<(state: ProfileState) => void>();
-  #state: ProfileState = emptyState();
+  #state: ProfileState = emptyProfileState();
   #pageSize = feedPageSize;
   #startedAt = Math.floor(Date.now() / 1000);
 
@@ -89,6 +85,7 @@ export class ProfileRuntime {
         (event) => this.#receive(event),
       ),
     );
+    void this.#loadInitialPage();
   }
 
   close(): void {
@@ -98,8 +95,8 @@ export class ProfileRuntime {
 
   async loadOlder(): Promise<void> {
     if (this.#state.loadingOlder || !this.#state.hasOlder) return;
-    const until = this.#state.oldestCreatedAt;
-    if (!until) return;
+    const cursor = this.#state.oldestCursor;
+    if (!cursor) return;
     this.#emit({ ...this.#state, loadingOlder: true });
     try {
       const page = await loadOlderProfilePage({
@@ -107,7 +104,7 @@ export class ProfileRuntime {
         pubkey: this.pubkey,
         relays: this.relays,
         subId: this.subId,
-        until,
+        cursor,
         pageSize: this.#pageSize,
         subscriptions: this.#subscriptions,
       });
@@ -127,12 +124,14 @@ export class ProfileRuntime {
 
   async #receive(poolEvent: PoolEvent): Promise<void> {
     if (poolEvent.subId !== this.subId) return;
+    if (poolEvent.event.pubkey !== this.pubkey) return;
     await storeProfileEvent(poolEvent.event, [poolEvent.relay]);
     if (poolEvent.event.kind === 0) this.#receiveMeta(poolEvent);
     if (poolEvent.event.kind === 1) this.#receivePost(poolEvent.event);
   }
 
   #receiveMeta(poolEvent: PoolEvent): void {
+    if (poolEvent.event.pubkey !== this.pubkey) return;
     this.#emit({
       ...this.#state,
       profile: profileFromMetadataEvent(poolEvent.event),
@@ -152,6 +151,33 @@ export class ProfileRuntime {
     this.#emit(this.#withOldest({ ...this.#state, posts, loading: false }));
   }
 
+  async #loadInitialPage(): Promise<void> {
+    try {
+      const page = await loadInitialProfilePage({
+        posts: this.#state.posts,
+        profile: this.#state.profile,
+        relays: this.relays,
+        pubkey: this.pubkey,
+        subId: this.subId,
+        pageSize: this.#pageSize,
+        subscriptions: this.#subscriptions,
+      });
+      this.#emit({
+        ...this.#state,
+        profile: page.profile,
+        posts: page.posts,
+        loading: false,
+        relays: [...new Set([...this.#state.relays, ...page.relays])],
+      });
+    } catch (error) {
+      this.#emit({
+        ...this.#state,
+        loading: false,
+        error: boundedErrorText(error),
+      });
+    }
+  }
+
   #emit(state: ProfileState): void {
     this.#state = this.#withOldest(state);
     this.#listeners.forEach((listener) => listener(this.#state));
@@ -161,11 +187,12 @@ export class ProfileRuntime {
     return {
       ...state,
       oldestCreatedAt: oldestCreatedAt(state.posts.map((event) => ({ event }))),
+      oldestCursor: cursorPoint(lastPost(state.posts)),
     };
   }
 }
 
-// prettier-ignore
-function emptyState(): ProfileState {
-  return { profile: null, posts: [], loading: true, error: null, relays: [], updatedAt: null, loadingOlder: false, hasOlder: true, oldestCreatedAt: undefined, newerPruned: false };
+function lastPost(posts: readonly NostrEvent[]) {
+  const event = posts.at(-1);
+  return event ? { event } : undefined;
 }

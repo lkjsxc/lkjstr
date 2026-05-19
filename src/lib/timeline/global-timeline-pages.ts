@@ -3,40 +3,23 @@ import { queryFeed, upsertEvent } from '../events/repository';
 import { boundaryUntil, readRelayPage } from '../events/relay-page';
 import type { FeedCursorPoint } from '../events/types';
 import type { RelaySubscriptionManager } from '../relays/subscription-manager';
-import { authorFilters } from './follow-list';
 import type { TimelineItem } from './timeline-store';
 
-export type TimelineOlderRequest = {
+type Request = {
   readonly items: readonly TimelineItem[];
-  readonly authors: readonly string[];
-  readonly relays: readonly string[];
-  readonly subId: string;
-  readonly cursor: FeedCursorPoint;
-  readonly pageSize: number;
-  readonly subscriptions: RelaySubscriptionManager;
-};
-
-export type TimelineOlderResult = {
-  readonly items: TimelineItem[];
-  readonly hasOlder: boolean;
-  readonly hasNewer: boolean;
-};
-
-export type TimelineInitialRequest = {
-  readonly authors: readonly string[];
   readonly relays: readonly string[];
   readonly subId: string;
   readonly pageSize: number;
   readonly subscriptions: RelaySubscriptionManager;
 };
 
-export async function loadInitialTimelinePage(
-  request: TimelineInitialRequest,
+export async function loadInitialGlobalPage(
+  request: Omit<Request, 'items'>,
 ): Promise<TimelineItem[]> {
   const relayEvents = await readRelayPage({
-    key: `${request.subId}:initial:${request.authors.join(':')}`,
+    key: `${request.subId}:initial`,
     relays: request.relays,
-    filters: authorFilters(request.authors, request.pageSize),
+    filters: [{ kinds: [1], limit: request.pageSize }],
     pageSize: request.pageSize,
     subscriptions: request.subscriptions,
   });
@@ -49,21 +32,24 @@ export async function loadInitialTimelinePage(
   }));
 }
 
-export async function loadOlderTimelinePage(
-  request: TimelineOlderRequest,
-): Promise<TimelineOlderResult> {
+export async function loadOlderGlobalPage(
+  request: Request & { readonly cursor: FeedCursorPoint },
+) {
   const page = await queryFeed({
-    kind: 'home',
-    authors: request.authors,
+    kind: 'global',
     before: request.cursor,
     limit: request.pageSize,
   });
   const relayEvents = await readRelayPage({
     key: `${request.subId}:older:${request.cursor.createdAt}:${request.cursor.id}`,
     relays: request.relays,
-    filters: authorFilters(request.authors, request.pageSize, {
-      until: boundaryUntil(request.cursor),
-    }),
+    filters: [
+      {
+        kinds: [1],
+        until: boundaryUntil(request.cursor),
+        limit: request.pageSize,
+      },
+    ],
     before: request.cursor,
     pageSize: request.pageSize,
     subscriptions: request.subscriptions,
@@ -71,18 +57,11 @@ export async function loadOlderTimelinePage(
   await Promise.all(
     relayEvents.map((item) => upsertEvent(item.event, [item.relay])),
   );
-  const window = mergeFeedWindow(
-    request.items,
-    [
-      ...page.items,
-      ...relayEvents.map((item) => ({
-        event: item.event,
-        relays: [item.relay],
-      })),
-    ],
-    feedWindowSize,
-    true,
-  );
+  const older = [
+    ...page.items,
+    ...relayEvents.map((item) => ({ event: item.event, relays: [item.relay] })),
+  ];
+  const window = mergeFeedWindow(request.items, older, feedWindowSize, true);
   return {
     items: window.items,
     hasOlder: page.hasMore || relayEvents.length >= request.pageSize,

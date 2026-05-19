@@ -19,6 +19,13 @@ Readiness checks whether the app contract is shippable.
   failures behind public fallback reads.
 - Home, Global, Profile, Thread, and Notifications load older pages only after
   near-bottom scroll and keep their documented item windows.
+- Cold-cache Home, Global, Profile, and Thread load pre-existing relay history
+  from initial pages, not only events published after page load.
+- Bottom-scroll and viewport auto-fill repeatedly load older history without
+  document-level overflow.
+- Reload with cached events keeps row identity rendering stable.
+- Media embeds stay within the pane on desktop and mobile.
+- Clicking a post opens Thread; clicking avatar or name opens Profile.
 - Event cache compaction protects accounts, settings, relay sets, workspace
   state, notifications, and Tweet drafts.
 - App heap stays below `100 MB` in the heavy-feed smoke test; Chromium RSS is

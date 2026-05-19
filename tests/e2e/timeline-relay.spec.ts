@@ -65,14 +65,24 @@ test('timeline displays followed-author notes from a synthetic relay', async ({
   await openCleanWorkspace(page);
   await addReadonlyAccount(page, active);
   await page.getByRole('button', { name: 'Home', exact: true }).click();
-  await expect(page.getByText('synthetic account-home note')).toBeVisible();
+  await expect(page.getByText('synthetic account-home note')).toBeVisible({
+    timeout: 10000,
+  });
   await expect(
-    page.getByRole('button', { name: /Followed Writer/ }),
+    page
+      .locator('button.identity-button')
+      .filter({ hasText: 'Followed Writer' }),
   ).toBeVisible();
   await expect(page.getByText(note.id.slice(0, 8))).toBeVisible();
   await expect(page.getByText(followed)).toHaveCount(0);
-  await page.getByRole('button', { name: 'Open profile' }).first().click();
+  await page
+    .locator('button.identity-button')
+    .filter({ hasText: 'Followed Writer' })
+    .click();
   await expect(page.getByRole('heading', { name: 'Profile' })).toBeVisible();
+  await page.getByRole('button', { name: 'Home', exact: true }).click();
+  await page.getByText('synthetic account-home note').click();
+  await expect(page.getByRole('heading', { name: 'Thread' })).toBeVisible();
 });
 
 test('timeline hides relay details and exposes them in lkjstr Log', async ({

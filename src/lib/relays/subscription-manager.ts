@@ -60,7 +60,8 @@ export class RelaySubscriptionManager {
     const offEvent = this.#pool.onEvent((event) => {
       if (event.subId === subId) events.push(event);
     });
-    const close = this.#pool.subscribe(request.relays, subId, request.filters);
+    let offState: () => void = () => undefined;
+    let close: () => void = () => undefined;
     await new Promise<void>((resolve) => {
       let done = false;
       const finish = () => {
@@ -70,10 +71,11 @@ export class RelaySubscriptionManager {
         offState();
         resolve();
       };
-      const offState = this.#pool.onState((snapshots) => {
+      offState = this.#pool.onState((snapshots) => {
         if (pageComplete(snapshots, request.relays, subId)) finish();
       });
       const timer = setTimeout(finish, options.timeoutMs ?? 5000);
+      close = this.#pool.subscribe(request.relays, subId, request.filters);
     });
     offEvent();
     close();

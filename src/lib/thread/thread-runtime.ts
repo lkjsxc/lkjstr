@@ -1,11 +1,12 @@
 import {
   feedPageSize,
+  cursorPoint,
   oldestCreatedAt,
   threadWindowSize,
 } from '../events/feed-window';
-import { queryFeed } from '../events/repository';
 import { lookupEvent } from '../events/repository';
 import { boundedErrorText } from '../events/runtime-error';
+import type { FeedCursorPoint } from '../events/types';
 import { replyRoot } from '../protocol';
 import {
   sharedRelayPool,
@@ -23,11 +24,15 @@ import {
   storeThreadEvent,
   type ThreadItem,
 } from './thread-store';
+import {
+  loadInitialThreadPage,
+  loadOlderThreadPage,
+} from './thread-runtime-pages';
 
 // prettier-ignore
 export type ThreadState = {
   readonly items: readonly ThreadItem[]; readonly loading: boolean; readonly error: string | null; readonly eoseRelays: number;
-  readonly loadingOlder: boolean; readonly hasOlder: boolean; readonly oldestCreatedAt?: number; readonly newerPruned: boolean;
+  readonly loadingOlder: boolean; readonly hasOlder: boolean; readonly oldestCreatedAt?: number; readonly oldestCursor?: FeedCursorPoint; readonly newerPruned: boolean;
 };
 
 export class ThreadRuntime {
@@ -96,6 +101,7 @@ export class ThreadRuntime {
         (event) => this.#receive(event),
       ),
     );
+    void this.#loadInitialPage();
   }
 
   close(): void {
@@ -105,15 +111,12 @@ export class ThreadRuntime {
 
   // prettier-ignore
   async loadOlder(): Promise<void> {
-    if (this.#state.loadingOlder || !this.#state.hasOlder) return; const until = this.#state.oldestCreatedAt; if (!until) return;
+    if (this.#state.loadingOlder || !this.#state.hasOlder) return; const cursor = this.#state.oldestCursor; if (!cursor) return;
     this.#emit({ ...this.#state, loadingOlder: true });
     try {
-      const page = await queryFeed({ kind: 'thread', eventId: this.#rootId, until, limit: this.#pageSize });
-      const relayEvents = this.relays.length > 0 ? await this.#subscriptions.readPage({ key: `${this.subId}:older:${until}`, relays: this.relays, filters: [{ kinds: [1], '#e': [this.#rootId, this.eventId], until, limit: this.#pageSize }] }) : [];
-      await Promise.all(relayEvents.map((item) => storeThreadEvent(item.event, [item.relay])));
-      const items = mergeThreadItems(this.items(), [...page.items, ...relayEvents.map((item) => ({ event: item.event, relays: [item.relay] }))]);
-      const pruned = items.length > threadWindowSize; this.#cached = pruned ? items.slice(-threadWindowSize) : items; this.#live = [];
-      this.#emit({ ...this.#state, items: this.items(), hasOlder: page.hasMore || relayEvents.length >= this.#pageSize, newerPruned: this.#state.newerPruned || pruned });
+      const page = await loadOlderThreadPage({ eventId: this.eventId, rootId: this.#rootId, items: this.items(), relays: this.relays, subId: this.subId, cursor, pageSize: this.#pageSize, subscriptions: this.#subscriptions });
+      this.#cached = page.items; this.#live = [];
+      this.#emit({ ...this.#state, items: this.items(), hasOlder: page.hasOlder, newerPruned: this.#state.newerPruned || page.pruned });
     } catch (error) { this.#emit({ ...this.#state, error: boundedErrorText(error) }); }
     finally { if (this.#state.loadingOlder) this.#emit({ ...this.#state, loadingOlder: false }); }
   }
@@ -132,6 +135,28 @@ export class ThreadRuntime {
       { event: poolEvent.event, relays: [poolEvent.relay] },
     ]);
     this.#emit({ ...this.#state, items: this.items(), loading: false });
+  }
+
+  async #loadInitialPage(): Promise<void> {
+    try {
+      const page = await loadInitialThreadPage({
+        eventId: this.eventId,
+        rootId: this.#rootId,
+        relays: this.relays,
+        subId: this.subId,
+        pageSize: this.#pageSize,
+        subscriptions: this.#subscriptions,
+      });
+      this.#rootId = page.rootId;
+      this.#cached = mergeThreadItems(this.items(), page.items);
+      this.#emit({ ...this.#state, items: this.items(), loading: false });
+    } catch (error) {
+      this.#emit({
+        ...this.#state,
+        loading: false,
+        error: boundedErrorText(error),
+      });
+    }
   }
 
   #receiveState(snapshots: RelaySnapshot[]): void {
@@ -160,6 +185,7 @@ export class ThreadRuntime {
     this.#state = {
       ...state,
       oldestCreatedAt: oldestCreatedAt(state.items),
+      oldestCursor: cursorPoint(state.items.at(-1)),
     };
     this.#listeners.forEach((listener) => listener(this.#state));
   }
@@ -167,5 +193,5 @@ export class ThreadRuntime {
 
 // prettier-ignore
 function emptyState(): ThreadState {
-  return { items: [], loading: true, error: null, eoseRelays: 0, loadingOlder: false, hasOlder: true, oldestCreatedAt: undefined, newerPruned: false };
+  return { items: [], loading: true, error: null, eoseRelays: 0, loadingOlder: false, hasOlder: true, oldestCreatedAt: undefined, oldestCursor: undefined, newerPruned: false };
 }

@@ -1,5 +1,6 @@
 <script lang="ts">
   import { VList } from 'virtua/svelte';
+  import { tick } from 'svelte';
   import { isNearEnd, isNearStart } from '$lib/events/feed-window';
   import type { ProfileSummary } from '$lib/identity/identity';
   import { buildEventTree, flattenEventTree } from '$lib/events/tree';
@@ -26,6 +27,7 @@
     getViewportSize?: () => number;
     getScrollSize?: () => number;
   }>();
+  let autoFillPending = false;
   let nodes = $derived(flattenEventTree(buildEventTree(props.items)));
 
   function handleScroll(offset: number): void {
@@ -40,6 +42,21 @@
     )
       void props.onNearEnd?.();
   }
+
+  $effect(() => {
+    if (nodes.length >= 0 || props.hasOlder || props.loadingOlder)
+      void maybeAutoFill();
+  });
+
+  async function maybeAutoFill(): Promise<void> {
+    if (autoFillPending || props.loadingOlder || !props.hasOlder) return;
+    autoFillPending = true;
+    await tick();
+    const viewport = list?.getViewportSize?.() ?? 0;
+    const total = list?.getScrollSize?.() ?? 0;
+    if (viewport > 0 && total <= viewport + 16) await props.onNearEnd?.();
+    autoFillPending = false;
+  }
 </script>
 
 <div class="event-list">
@@ -53,13 +70,24 @@
         onscroll={handleScroll}
       >
         {#snippet children(node)}
-          <EventRow
-            item={node}
-            depth={node.depth}
-            profile={props.profiles?.[node.event.pubkey]}
-            openProfile={props.openProfile}
-            openThread={props.openThread}
-          />
+          {#if 'collapsed' in node}
+            <button
+              type="button"
+              class="thread-continuation"
+              style={`--event-depth: ${node.depth}`}
+              onclick={() => props.openThread?.(node.targetId)}
+            >
+              Continue thread ({node.hiddenCount})
+            </button>
+          {:else}
+            <EventRow
+              item={node}
+              depth={node.depth}
+              profile={props.profiles?.[node.event.pubkey]}
+              openProfile={props.openProfile}
+              openThread={props.openThread}
+            />
+          {/if}
         {/snippet}
       </VList>
     </div>

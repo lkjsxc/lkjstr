@@ -13,30 +13,50 @@
   };
 
   let props: Props = $props();
+  let profile = $derived(
+    props.profile?.pubkey === props.item.event.pubkey
+      ? props.profile
+      : undefined,
+  );
+
+  function openRow(): void {
+    props.openThread?.(props.item.event.id);
+  }
+
+  function openProfile(event: MouseEvent): void {
+    event.stopPropagation();
+    props.openProfile?.(props.item.event.pubkey);
+  }
 </script>
 
-<article class="event-row" style={`--event-depth: ${props.depth ?? 0}`}>
+<div
+  class="event-row"
+  role="button"
+  tabindex="0"
+  style={`--event-depth: ${props.depth ?? 0}`}
+  onclick={openRow}
+  onkeydown={(event) => event.key === 'Enter' && openRow()}
+>
   <button
     type="button"
     class="avatar-button"
     aria-label="Open profile"
-    onclick={() => props.openProfile?.(props.item.event.pubkey)}
+    onclick={openProfile}
   >
-    <EventMeta
-      event={props.item.event}
-      relays={[]}
-      profile={props.profile}
-      avatarOnly
-    />
+    <EventMeta event={props.item.event} relays={[]} {profile} avatarOnly />
   </button>
   <div class="event-main">
     <EventMeta
       event={props.item.event}
       relays={props.item.relays}
-      profile={props.profile}
+      {profile}
       openProfile={props.openProfile}
       openThread={props.openThread}
     />
-    <EventContent event={props.item.event} relays={props.item.relays} />
+    <EventContent
+      event={props.item.event}
+      relays={props.item.relays}
+      openThread={props.openThread}
+    />
   </div>
-</article>
+</div>

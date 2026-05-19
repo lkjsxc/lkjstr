@@ -65,3 +65,11 @@ Event embeds are rendered from verified events only. The resolver checks cache
 first, batches relay reads by `ids`, stores verified hits, caps missing lookups,
 and prevents recursive loops. Missing, deleted, quote, repost, reply, reaction,
 and deletion states have explicit display rows.
+
+## Media
+
+Direct `https://` image, video, and audio URLs render inline with bounded
+dimensions. NIP-92 `imeta` `url` values use the same renderer and may use the
+`m` token to classify media type. Video and audio use controls and never
+autoplay. Unknown or non-media `https://` URLs render as normal links. Invalid
+URLs and non-HTTPS media are not embedded.

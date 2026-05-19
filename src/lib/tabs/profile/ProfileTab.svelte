@@ -32,6 +32,7 @@
     loadingOlder: false,
     hasOlder: true,
     oldestCreatedAt: undefined,
+    oldestCursor: undefined,
     newerPruned: false,
   });
   let profiles = $derived<Record<string, ProfileSummary>>(
