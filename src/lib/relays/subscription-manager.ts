@@ -1,4 +1,3 @@
-import type { NostrEvent } from '../protocol';
 import { sharedRelayPool, type PoolEvent, type RelayPool } from './relay-pool';
 import type { RelaySnapshot } from './types';
 import type { RelayReadRequest } from '../events/types';
@@ -8,6 +7,10 @@ type Entry = {
   readonly subId: string;
   readonly listeners: Set<Listener>;
   readonly cleanup: () => void;
+};
+
+export type ReadPageOptions = {
+  readonly timeoutMs?: number;
 };
 
 export class RelaySubscriptionManager {
@@ -48,14 +51,30 @@ export class RelaySubscriptionManager {
 
   async readPage(
     request: RelayReadRequest,
-    timeoutMs = 5000,
-  ): Promise<NostrEvent[]> {
-    const events: NostrEvent[] = [];
-    const cleanup = this.subscribeLive(request, (event) =>
-      events.push(event.event),
-    );
-    await new Promise((resolve) => setTimeout(resolve, timeoutMs));
-    cleanup();
+    options: ReadPageOptions = {},
+  ): Promise<PoolEvent[]> {
+    const events: PoolEvent[] = [];
+    const subId = request.key;
+    const offEvent = this.#pool.onEvent((event) => {
+      if (event.subId === subId) events.push(event);
+    });
+    const close = this.#pool.subscribe(request.relays, subId, request.filters);
+    await new Promise<void>((resolve) => {
+      let done = false;
+      const finish = () => {
+        if (done) return;
+        done = true;
+        clearTimeout(timer);
+        offState();
+        resolve();
+      };
+      const offState = this.#pool.onState((snapshots) => {
+        if (pageComplete(snapshots, request.relays, subId)) finish();
+      });
+      const timer = setTimeout(finish, options.timeoutMs ?? 5000);
+    });
+    offEvent();
+    close();
     return events;
   }
 
@@ -67,6 +86,23 @@ export class RelaySubscriptionManager {
     entry.cleanup();
     this.#entries.delete(key);
   }
+}
+
+function pageComplete(
+  snapshots: readonly RelaySnapshot[],
+  relays: readonly string[],
+  subId: string,
+): boolean {
+  const active = snapshots.filter((item) => relays.includes(item.url));
+  return (
+    active.length > 0 &&
+    active.every(
+      (item) =>
+        item.eoseBySub[subId] ||
+        item.state === 'closed' ||
+        item.state === 'error',
+    )
+  );
 }
 
 export function subscriptionKey(request: RelayReadRequest): string {

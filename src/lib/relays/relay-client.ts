@@ -15,6 +15,8 @@ import type {
   RelaySnapshot,
 } from './types';
 
+const maxRelayMessageBytes = 64 * 1024;
+
 export class RelayClient {
   #socket?: WebSocket;
   #state: RelayConnectionState = 'idle';
@@ -112,6 +114,12 @@ export class RelayClient {
 
   #receive(data: unknown): void {
     if (typeof data !== 'string') return;
+    if (data.length > maxRelayMessageBytes) {
+      this.#lastError = 'relay message too large';
+      this.#addDiagnostic('parse-error', 'relay message too large');
+      this.#emitState();
+      return;
+    }
     const parsed = parseRelayMessage(data);
     if (!parsed.ok) {
       this.#lastError = parsed.message;

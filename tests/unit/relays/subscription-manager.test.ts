@@ -23,4 +23,49 @@ describe('subscription manager', () => {
     second();
     expect(cleanup).toHaveBeenCalledOnce();
   });
+
+  it('returns relay provenance for one-shot page reads', async () => {
+    const pool = new RelayPool();
+    const event = nostrEvent('a');
+    const cleanup = vi.fn();
+    vi.spyOn(pool, 'subscribe').mockReturnValue(cleanup);
+    vi.spyOn(pool, 'onEvent').mockImplementation((handler) => {
+      setTimeout(() =>
+        handler({ relay: 'relay.example', subId: 'page', event }),
+      );
+      return vi.fn();
+    });
+    vi.spyOn(pool, 'onState').mockImplementation((handler) => {
+      setTimeout(() =>
+        handler([
+          {
+            url: 'relay.example',
+            state: 'open',
+            diagnostics: [],
+            eoseBySub: { page: true },
+          },
+        ]),
+      );
+      return vi.fn();
+    });
+    const manager = new RelaySubscriptionManager(pool);
+    const page = await manager.readPage(
+      { key: 'page', relays: ['relay.example'], filters: [{ kinds: [1] }] },
+      { timeoutMs: 50 },
+    );
+    expect(page).toEqual([{ relay: 'relay.example', subId: 'page', event }]);
+    expect(cleanup).toHaveBeenCalledOnce();
+  });
 });
+
+function nostrEvent(seed: string) {
+  return {
+    id: seed.repeat(64),
+    pubkey: seed.repeat(64),
+    created_at: 1,
+    kind: 1,
+    tags: [],
+    content: '',
+    sig: seed.repeat(128),
+  };
+}
