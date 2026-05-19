@@ -18,9 +18,9 @@ Global shows recent kind `1` notes from the selected readable relay set.
 - Live relay reads set `since` when the runtime starts.
 - Loading ends when cached items exist, a relay sends notes, any relay reaches
   EOSE, or every contacted relay reaches a terminal failure state.
-- Partial relay failure stays visible in Relay Logs but does not block the feed.
+- Partial relay failure stays visible in lkjstr Log but does not block the feed.
 - The Global body does not render low-level relay diagnostic rows inline.
-- Infinite scrolling uses feed cursors and older relay pages.
-- A compact jump to latest action appears when the window prunes newer items.
+- Infinite scrolling uses compound feed cursors and older or newer relay pages.
+- Near-top scroll loads newer chunks when the window prunes newer items.
 - Identity controls open Profile tabs in the same tile.
 - Event controls open Thread tabs in the same tile.

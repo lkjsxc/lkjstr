@@ -10,9 +10,9 @@ Profile runtime owns metadata and authored-note loading for one pubkey.
 - Runtime reads cached metadata and notes first.
 - Runtime subscribes for kind `0` metadata and kind `1` notes by author.
 - Runtime keeps a `180` item note window.
-- Runtime exposes `loadOlder()` and `resetToLatest()`.
-- State exposes `loadingOlder`, `hasOlder`, `oldestCreatedAt`, and
-  `newerPruned`.
+- Runtime exposes `loadOlder()` and `loadNewer()`.
+- State exposes `loadingOlder`, `hasOlder`, `loadingNewer`, `hasNewer`,
+  `oldestCursor`, and `newestCursor`.
 - Historical note reads use `until`; live reads set `since` when started.
 - Relay reads use enabled read relays from the selected default relay set.
 - Closing the tab closes subscriptions.

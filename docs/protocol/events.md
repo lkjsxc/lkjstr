@@ -47,9 +47,21 @@ The kernel exposes helpers for:
 - reply root.
 - reply parent.
 - quoted event.
+- repost target.
+- reaction target.
+- deletion targets.
+- `nostr:` event entities in content.
 - mentioned pubkeys.
 - referenced events.
+- address references.
 - topics.
 - relay hints.
 
 Display code consumes parsed tag intent rather than searching tag arrays directly.
+
+## Embeds
+
+Event embeds are rendered from verified events only. The resolver checks cache
+first, batches relay reads by `ids`, stores verified hits, caps missing lookups,
+and prevents recursive loops. Missing, deleted, quote, repost, reply, reaction,
+and deletion states have explicit display rows.

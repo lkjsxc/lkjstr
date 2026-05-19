@@ -28,7 +28,7 @@ its NIP-02 follows.
   reaches EOSE, or every contacted relay reaches a terminal failure state.
 - A failed relay remains diagnostic and must not block other relays.
 - Relay `CLOSED`, `NOTICE`, `AUTH`, parse failure, and invalid signatures are
-  visible in Relay Logs, not inline in the timeline body.
+  visible in lkjstr Log, not inline in the timeline body.
 - The timeline body keeps high-level state errors visible, such as unreachable
   relays or authentication requirements.
 - Author controls open Profile tabs in the same tile.
@@ -48,4 +48,4 @@ its NIP-02 follows.
 - `ready-with-events`: cache or relay data has matching notes.
 - `loadingOlder`: an older cache or relay page is being requested.
 - `hasOlder`: more older cached or relay-backed items may exist.
-- `newerPruned`: newest items were pruned from the sliding window.
+- `hasNewer`: newer resident chunks can be loaded from the top cursor.

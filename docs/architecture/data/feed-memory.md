@@ -8,10 +8,13 @@ bounded as timelines grow.
 ## Contract
 
 - Feed pages request `30` items by default.
-- Home, Global, Profile, and Notifications keep at most `180` loaded feed
-  items per tab.
+- Home, Global, Profile, and Notifications keep at most `180` resident feed
+  items per tab across retained chunks.
 - Thread tabs keep at most `240` loaded thread items.
-- Older pages are requested with `until` set from the oldest loaded event.
+- Older pages are requested from the bottom boundary cursor.
+- Newer pages are requested from the top boundary cursor after top pruning.
+- Feed cursors use compound `{ createdAt, id }` ordering so same-second events
+  page deterministically.
 - Live relay subscriptions set `since` when the runtime starts so old relay
   history is not replayed into the live window.
 - Historical relay reads are one-shot `REQ` pages with bounded `limit`; they
@@ -22,8 +25,9 @@ bounded as timelines grow.
   capped to `30` missing profiles per loaded page.
 - Oversized relay messages above `64 KiB` are rejected before verification,
   storage, or rendering, and are surfaced through relay diagnostics.
-- When the sliding window prunes newer items, the tab exposes a compact jump to
-  latest action.
+- Loading near the bottom adds older chunks. Loading near the top adds newer
+  chunks. Rendering flattens chunks only for display.
+- Live prepends and chunk changes preserve the visible scroll anchor.
 
 ## Cache Bounds
 
@@ -31,10 +35,13 @@ bounded as timelines grow.
 - In-memory event maps are a bounded fallback for tests and non-browser
   execution, not the primary browser cache.
 - Event indexes support kind/time, author/kind/time, and `e` or `p` tag lookup.
-- Local event compaction prunes by age and count.
-- Default compaction limits are `30` days and `5000` events.
+- Local event compaction prunes by age and count from Settings.
+- Default compaction limits are `30` days and `5000` events, with numeric
+  bounds enforced by the Settings schema.
 - Accounts, settings, relay sets, workspace state, notifications, and Tweet
   drafts are protected from event cache pruning.
+- Feed cursors are removed when their page boundary no longer points to a
+  retained cached event.
 
 ## Verification
 

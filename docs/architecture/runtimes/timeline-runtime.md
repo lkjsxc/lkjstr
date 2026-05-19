@@ -11,9 +11,11 @@ Home runtime owns account-follow loading.
 - Build authors from active account plus latest follow-list `p` tags.
 - Deduplicate authors and chunk author filters when needed.
 - Keep Home and Global to a `180` item in-memory window.
-- Load older pages through `loadOlder()` using `until`.
-- Reset to newest data through `resetToLatest()`.
-- Expose `loadingOlder`, `hasOlder`, `oldestCreatedAt`, and `newerPruned`.
+- Load older pages through `loadOlder()` from the bottom cursor.
+- Load newer pages through `loadNewer()` from the top cursor when newer
+  resident chunks were pruned.
+- Expose `loadingOlder`, `hasOlder`, `loadingNewer`, `hasNewer`,
+  `oldestCursor`, and `newestCursor`.
 - Apply one total request budget across Home author chunks.
 - Limit missing metadata loads to `30` authors from the current page.
 - Subscribe to follow discovery before note reads when no cached follow list
@@ -28,6 +30,6 @@ Home runtime owns account-follow loading.
 - Expose `no-active-account`, `loading-follows`, `no-follow-list`,
   `no-enabled-relay`, `auth-required`, `subscription-closed`, `relay-failed`,
   `ready-empty`, and `ready-with-events`.
-- Surface relay `CLOSED`, `NOTICE`, `AUTH`, message parse errors, and invalid
-  event signatures as diagnostics.
+- Surface relay `CLOSED`, `NOTICE`, `AUTH`, message parse errors, invalid event
+  signatures, startup failures, and async listener failures through lkjstr Log.
 - Close old subscriptions when relay settings change or the tab closes.

@@ -15,7 +15,7 @@ Tab runtime defines valid tab kinds and lifecycle ownership.
 
 - New Tab can convert only to direct New Tab choices.
 - Profile and Thread remain valid tab kinds but open from timeline actions.
-- Relay Logs uses the existing `relay-monitor` tab kind, opens from New Tab,
+- lkjstr Log uses the existing `relay-monitor` tab kind, opens from New Tab,
   and owns read-only current-session relay diagnostics.
 - Relay Settings owns relay editing.
 - Conversion preserves tab id and tab group.

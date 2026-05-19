@@ -16,10 +16,15 @@ unimplemented behavior.
 - NIP-02 follow lists for home timelines.
 - NIP-05 identifiers for profile display.
 - NIP-10 reply and thread tags.
+- NIP-18 repost target parsing and embeds.
+- NIP-19 public-key, note, event, profile, and address references in content.
+- NIP-25 reaction target parsing and embeds.
+- NIP-42 relay auth diagnostics.
+
+## Planned Product Support
+
 - NIP-11 relay information documents.
-- NIP-25 reactions for display and later publish.
 - NIP-36 sensitive content gates.
-- NIP-42 relay auth challenge handling.
 - NIP-50 relay search when supported.
 - NIP-65 relay list metadata.
 

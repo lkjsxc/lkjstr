@@ -18,25 +18,25 @@ runtime, so failures must be inspectable without server logs.
 - oversized relay message rejection.
 - app heap and runtime feed counters during heavy-feed smoke tests.
 
-Timeline surfaces keep low-level relay diagnostics out of the feed body. Home
-and Global may show high-level state errors, while detailed relay diagnostics
-are inspected in the New Tab `Relay Logs` surface.
+Timeline surfaces keep low-level diagnostics out of the feed body. Home and
+Global may show high-level state errors, while detailed diagnostics are
+inspected in the New Tab `lkjstr Log` surface.
 
-Relay Logs are current-session browser state only. They show relay state, last
-error, last message time, diagnostic kind, message, relay URL, optional
-subscription id, and timestamp, and they are cleared by reload.
+lkjstr Log is current-session browser state only. It shows timestamp, area,
+severity, code, message, and redacted context, and it is cleared by reload.
 
-Relay Logs present diagnostics as one chronological stream, not grouped by
-relay. Message and context fields wrap within the tile.
+lkjstr Log presents diagnostics as one chronological stream. Relay diagnostics
+use `area: relay`; runtime, storage, signer, cache, and subscription failures
+use the same surface. Message and context fields wrap within the tile.
 
 Clean-browser Playwright is the source of truth for app-origin console
-diagnostics. If a SES lockdown message does not appear there, treat it as
-extension or provider injection outside the app.
+diagnostics. Suppression is limited to the external `lockdown-install.js` plus
+`SES_UNCAUGHT_EXCEPTION` plus null payload case.
 
 ## Diagnostic Events
 
-Diagnostic events are local app records, not Nostr events. They may be written
-to `operation_log` with bounded retention.
+Diagnostic events are local app records, not Nostr events. They are kept in a
+bounded session log and are not persisted by default.
 
 Each record contains:
 

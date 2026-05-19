@@ -10,13 +10,13 @@ Query runtime docs define how cache-first relay reads behave.
 - Relay reads use enabled read relays from the selected default relay set.
 - Feed-like tabs read cache pages through the shared repository.
 - Relay results are written through the repository before UI state updates.
-- Feed cursors track older pages for cache and relay backfill.
-- Feed pages use `limit`, `until`, cursor, and `hasMore` fields consistently.
+- Feed cursors track older and newer pages for cache and relay backfill.
+- Feed pages use `limit`, compound cursors, and `hasMore` fields consistently.
 - Initial page size is `30`.
-- `loadOlder()` loads one bounded page using the current oldest timestamp.
+- `loadOlder()` loads one bounded page using the current oldest cursor.
 - `loadOlder()` clears `loadingOlder` in a `finally` path.
 - Loader failures surface bounded error text and keep the tab usable.
-- `resetToLatest()` clears older window state and loads the newest page.
+- `loadNewer()` restores newer chunks from the current newest cursor.
 - Live reads set `since` at runtime start.
 - Empty enabled-relay lists produce a visible no-enabled-relay state.
 - Runtimes close their relay subscriptions when the owning tab unmounts.

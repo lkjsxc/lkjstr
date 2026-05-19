@@ -9,7 +9,7 @@ Tabs define the workspace surface area.
 - Home
 - Global
 - Relay Settings
-- Relay Logs
+- lkjstr Log
 - Notifications
 - Accounts
 - Tweet

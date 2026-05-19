@@ -2,8 +2,8 @@
 
 ## Purpose
 
-Relay Settings owns editable relay sets and the selected default set. Relay
-Logs owns session-only relay diagnostics.
+Relay Settings owns editable relay sets and the selected default set. lkjstr
+Log owns session-only diagnostics.
 
 ## Contract
 
@@ -14,13 +14,13 @@ Logs owns session-only relay diagnostics.
 - Restore defaults replaces the public default set by explicit user action.
 - Runtime relay state and last error are shown beside each Relay Settings
   record.
-- Relay Logs opens from New Tab and shows one flat chronological stream for the
+- lkjstr Log opens from New Tab and shows one flat chronological stream for the
   current browser session.
-- Relay Logs diagnostic rows include severity or kind, message, relay URL,
-  optional subscription id, and timestamp.
-- Relay Logs is read-only. Add, remove, and enablement controls remain in Relay
+- lkjstr Log diagnostic rows include area, severity, code, message, redacted
+  context, and timestamp.
+- lkjstr Log is read-only. Add, remove, and enablement controls remain in Relay
   Settings.
-- Relay Logs are not persisted; reloading the app clears current-session
+- lkjstr Log is not persisted; reloading the app clears current-session
   diagnostics.
-- Relay URLs are visible in Relay Settings and Relay Logs, not inside post rows.
+- Relay URLs are visible in Relay Settings and lkjstr Log, not inside post rows.
 - Relay messages, context, and URLs wrap without horizontal scrolling.

@@ -9,14 +9,14 @@ This document records the current implemented contract for the app.
 - Root `/` renders the workspace shell.
 - Workspace layout, tab groups, tabs, accounts, relay sets, settings, events,
   notifications, Tweet drafts, and cache metadata are local browser data.
-- New Tab opens Home, Global, Relay Settings, Relay Logs, Notifications,
+- New Tab opens Home, Global, Relay Settings, lkjstr Log, Notifications,
   Accounts, Tweet, Settings, and Cache.
 - Profile tabs are opened from identity actions.
 - Thread tabs are opened from event actions.
 - Tabs can be reordered within a tile or moved between tiles with native
   drag-and-drop.
 - Moving the last tab out of a tile removes that tile.
-- Settings render as one flat key-value list.
+- Settings render as one flat key-value list, including cache retention controls.
 - Home is Account home: active account plus NIP-02 follows from the latest
   kind `3` event.
 - Home loads cached matching notes first, then subscribes to enabled read
@@ -32,8 +32,10 @@ This document records the current implemented contract for the app.
 - Home states are `no-active-account`, `loading-follows`, `no-follow-list`,
   `no-enabled-relay`, `auth-required`, `subscription-closed`, `relay-failed`,
   `ready-empty`, and `ready-with-events`.
-- Relay Settings shows editable relay state and Relay Logs shows
-  current-session relay diagnostics as a flat chronological stream.
+- Relay Settings shows editable relay state and lkjstr Log shows
+  current-session app diagnostics as a flat chronological stream.
+- Feed memory is held as resident chunks. The top of a pruned feed loads newer
+  chunks, and the bottom loads older chunks.
 - Event metadata shows author control, date, and short event id.
 - Event rows and diagnostic rows wrap long content inside their tile.
 - Accounts can mine an `npub` prefix locally and export the generated `nsec`

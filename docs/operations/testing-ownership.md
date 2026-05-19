@@ -25,7 +25,7 @@ Testing ownership maps behavior to the right test layer.
 - Tweet draft and publish helpers.
 - Thread cache and runtime behavior.
 - Home, Global, Profile, Thread, and Notifications `loadOlder()` and
-  `resetToLatest()` behavior.
+  `loadNewer()` behavior.
 - Event list near-bottom scroll triggering.
 
 ## E2E
