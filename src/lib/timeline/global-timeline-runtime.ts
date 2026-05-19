@@ -54,7 +54,11 @@ export class GlobalTimelineRuntime {
     this.#cached = [
       ...(await queryFeed({ kind: 'global', limit: this.#limit })).items,
     ];
-    this.#emit({ ...this.#state, items: this.#cached });
+    this.#emit(
+      this.#cached.length > 0
+        ? readyWithEventsState(this.#state, this.#cached)
+        : { ...this.#state, items: this.#cached },
+    );
     if (this.#relays.length === 0)
       return this.#emit(noEnabledRelayState(this.#state));
     this.#cleanup.push(

@@ -4,11 +4,8 @@ import { RelaySubscriptionManager } from '../relays/subscription-manager';
 import type { RelaySnapshot } from '../relays/types';
 import { upsertEvent } from '../events/repository';
 import { authorFilters } from './follow-list';
-import {
-  loadAccountHome,
-  loadCachedAccountHome,
-  type TimelineLoad,
-} from './timeline-load';
+import { loadAccountHome, loadCachedAccountHome } from './timeline-load';
+import type { TimelineLoad } from './timeline-load';
 import { profileFilter, storeTimelineProfile } from './timeline-profiles';
 import {
   needsSelfFallback,
@@ -25,11 +22,8 @@ import {
   type TimelineRuntimeOptions,
   type TimelineState,
 } from './timeline-state';
-import {
-  loadCachedTimeline,
-  mergeTimelineItems,
-  type TimelineItem,
-} from './timeline-store';
+import { loadCachedTimeline, mergeTimelineItems } from './timeline-store';
+import type { TimelineItem } from './timeline-store';
 
 export class TimelineRuntime {
   #subscriptions: RelaySubscriptionManager;
@@ -76,7 +70,11 @@ export class TimelineRuntime {
     }
     const loaded = await loadCachedAccountHome(pubkey, this.#limit);
     this.#applyLoaded(loaded);
-    this.#emit(this.#nextState({ items: this.#cached }));
+    this.#emit(
+      this.#cached.length > 0
+        ? readyWithEventsState(this.#state, this.#cached)
+        : this.#nextState({ items: this.#cached }),
+    );
     if (this.#relays.length === 0) {
       this.#emit(noEnabledRelayState(this.#state));
       return;
@@ -172,7 +170,7 @@ export class TimelineRuntime {
     this.#subscribeNotes();
   }
 
-  private items(): TimelineItem[] {
+  items(): TimelineItem[] {
     return mergeTimelineItems(this.#cached, this.#live, this.#limit);
   }
 

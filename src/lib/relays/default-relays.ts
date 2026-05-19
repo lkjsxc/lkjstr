@@ -6,6 +6,9 @@ export const DEFAULT_RELAYS = [
   'wss://relay.primal.net',
   'wss://relay.nostr.band',
   'wss://offchain.pub',
+  'wss://r.kojira.io',
+  'wss://x.kojira.io',
+  'wss://yabu.me',
 ] as const;
 
 export const defaultRelaySet: RelaySet = {
@@ -24,6 +27,9 @@ function labelFor(url: string): string {
     'wss://relay.primal.net': 'Primal',
     'wss://relay.nostr.band': 'Nostr.Band',
     'wss://offchain.pub': 'Offchain',
+    'wss://r.kojira.io': 'Kojira',
+    'wss://x.kojira.io': 'Kojira X',
+    'wss://yabu.me': 'Yabumi',
   };
   return labels[url] ?? new URL(url).hostname.replace(/^relay\./, '');
 }

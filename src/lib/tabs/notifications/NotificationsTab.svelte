@@ -30,8 +30,7 @@
       createTimelineSubId(props.tabId),
     );
     const unsubscribe = runtime.subscribe((next) => (state = next));
-    runtime.start();
-    runtime.markVisibleRead();
+    void runtime.start().then(() => runtime?.markVisibleRead());
     const onFocus = () => runtime?.markVisibleRead();
     window.addEventListener('focus', onFocus);
     return () => {

@@ -70,16 +70,15 @@ export function statusFromRelayState(
   noFollowList: boolean,
   noteSubId: string,
 ): TimelineStatus {
+  if (hasItems) return 'ready-with-events';
+  if (noFollowList) return 'no-follow-list';
+  if (active.some((item) => item.eoseBySub[noteSubId])) return 'ready-empty';
+  if (active.length === 0) return 'loading-follows';
+  if (!active.every(isTerminalRelay)) return 'loading-follows';
   if (diagnostics.some((item) => item.kind === 'auth')) return 'auth-required';
   if (diagnostics.some((item) => item.kind === 'closed'))
     return 'subscription-closed';
-  if (active.length > 0 && active.every((item) => item.state === 'error'))
-    return 'relay-failed';
-  if (hasItems) return 'ready-with-events';
-  if (noFollowList) return 'no-follow-list';
-  const complete =
-    active.length > 0 && active.every((item) => item.eoseBySub[noteSubId]);
-  return complete ? 'ready-empty' : 'loading-follows';
+  return 'relay-failed';
 }
 
 export function relaySnapshotCounts(
@@ -98,11 +97,16 @@ export function missingFollowAfterEose(
   fallbackStarted: boolean,
   followSubId: string,
 ): boolean {
+  const terminal = active.length > 0 && active.every(isTerminalRelay);
   return (
     !followListFound &&
     !fallbackStarted &&
-    active.some((item) => item.eoseBySub[followSubId])
+    (terminal || active.some((item) => item.eoseBySub[followSubId]))
   );
+}
+
+function isTerminalRelay(item: RelaySnapshot): boolean {
+  return item.state === 'error' || item.state === 'closed';
 }
 
 export function emptyState(): TimelineState {

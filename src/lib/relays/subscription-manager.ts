@@ -71,6 +71,7 @@ export class RelaySubscriptionManager {
 
 export function subscriptionKey(request: RelayReadRequest): string {
   return JSON.stringify({
+    key: request.key,
     relays: [...request.relays].sort(),
     filters: request.filters,
   });

@@ -38,7 +38,7 @@ export class NotificationRuntime {
   }
 
   async start(): Promise<void> {
-    await this.#reload();
+    await this.#reload(false);
     if (!this.accountPubkey || this.relays.length === 0) {
       this.#emit({ ...this.#state, loading: false });
       return;

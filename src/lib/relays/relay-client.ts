@@ -23,10 +23,13 @@ export class RelayClient {
   #diagnostics: RelayDiagnostic[] = [];
   #eoseBySub: Record<string, boolean> = {};
   #queue: string[] = [];
+  #connectTimer?: ReturnType<typeof setTimeout>;
+  #intentionalClose = false;
 
   constructor(
     readonly url: string,
     readonly events: Partial<RelayClientEvents> = {},
+    readonly connectTimeoutMs = 5000,
   ) {}
 
   snapshot(): RelaySnapshot {
@@ -42,14 +45,28 @@ export class RelayClient {
 
   connect(): void {
     if (this.#socket && this.#state !== 'closed') return;
+    this.#intentionalClose = false;
     this.#setState('connecting');
     this.#socket = new WebSocket(this.url);
+    this.#connectTimer = setTimeout(
+      () => this.#timeoutConnect(),
+      this.connectTimeoutMs,
+    );
     this.#socket.onopen = () => {
+      this.#clearConnectTimer();
       this.#setState('open');
       this.#flush();
     };
-    this.#socket.onclose = () => this.#setState('closed');
+    this.#socket.onclose = () => {
+      this.#clearConnectTimer();
+      if (!this.#intentionalClose && this.#state !== 'error') {
+        this.#lastError = 'websocket closed';
+        this.#addDiagnostic('closed', 'websocket closed');
+      }
+      this.#setState('closed');
+    };
     this.#socket.onerror = () => {
+      this.#clearConnectTimer();
       this.#lastError = 'websocket error';
       this.#setState('error');
     };
@@ -86,6 +103,8 @@ export class RelayClient {
   }
 
   close(): void {
+    this.#intentionalClose = true;
+    this.#clearConnectTimer();
     this.#socket?.close();
     this.#socket = undefined;
     this.#setState('closed');
@@ -136,6 +155,20 @@ export class RelayClient {
     ];
     if (kind === 'parse-error' || kind === 'invalid-event')
       this.#lastError = message;
+  }
+
+  #timeoutConnect(): void {
+    if (this.#state !== 'connecting') return;
+    this.#lastError = 'connect timeout';
+    this.#addDiagnostic('timeout', 'connect timeout');
+    this.#setState('error');
+    this.#socket?.close();
+  }
+
+  #clearConnectTimer(): void {
+    if (!this.#connectTimer) return;
+    clearTimeout(this.#connectTimer);
+    this.#connectTimer = undefined;
   }
 
   #setState(state: RelayConnectionState): void {

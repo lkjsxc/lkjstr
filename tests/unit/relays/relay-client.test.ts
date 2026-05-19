@@ -118,6 +118,26 @@ describe('relay helpers', () => {
     ]);
   });
 
+  it('marks connecting relays failed when connect times out', async () => {
+    const states: RelaySnapshot[] = [];
+    const client = new RelayClient(
+      'wss://relay.example/',
+      { state: (snapshot) => states.push(snapshot) },
+      25,
+    );
+
+    client.subscribe('sub', [{ kinds: [1] }]);
+    await vi.advanceTimersByTimeAsync(25);
+
+    expect(states.at(-1)).toMatchObject({
+      state: 'closed',
+      lastError: 'connect timeout',
+    });
+    expect(states.at(-1)?.diagnostics.at(-1)).toMatchObject({
+      kind: 'timeout',
+    });
+  });
+
   it('normalizes relay pool subscriptions and closes them', () => {
     const pool = new RelayPool();
 

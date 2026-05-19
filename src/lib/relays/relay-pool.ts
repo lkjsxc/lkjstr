@@ -28,6 +28,8 @@ export class RelayPool {
     Map<string, (result: PublishResult) => void>
   >();
 
+  constructor(readonly connectTimeoutMs = 5000) {}
+
   subscribe(
     relays: readonly string[],
     subId: string,
@@ -77,12 +79,16 @@ export class RelayPool {
   #client(url: string): RelayClient {
     const existing = this.#clients.get(url);
     if (existing) return existing;
-    const client = new RelayClient(url, {
-      event: (relay, subId, event) =>
-        this.#events.forEach((handler) => handler({ relay, subId, event })),
-      message: (relay, message) => this.#handleMessage(relay, message),
-      state: () => this.#emitStates(),
-    });
+    const client = new RelayClient(
+      url,
+      {
+        event: (relay, subId, event) =>
+          this.#events.forEach((handler) => handler({ relay, subId, event })),
+        message: (relay, message) => this.#handleMessage(relay, message),
+        state: () => this.#emitStates(),
+      },
+      this.connectTimeoutMs,
+    );
     this.#clients.set(url, client);
     return client;
   }

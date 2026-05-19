@@ -4,6 +4,7 @@ export type RelayDiagnosticKind =
   | 'closed'
   | 'notice'
   | 'auth'
+  | 'timeout'
   | 'parse-error'
   | 'invalid-event';
 

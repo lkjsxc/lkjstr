@@ -8,7 +8,16 @@ describe('default relays', () => {
       id: 'public-default',
       seeded: true,
     });
-    expect(defaultRelaySet.relays).toHaveLength(5);
+    expect(defaultRelaySet.relays.map((relay) => relay.url)).toEqual([
+      'wss://relay.damus.io',
+      'wss://nos.lol',
+      'wss://relay.primal.net',
+      'wss://relay.nostr.band',
+      'wss://offchain.pub',
+      'wss://r.kojira.io',
+      'wss://x.kojira.io',
+      'wss://yabu.me',
+    ]);
     const custom = [{ ...defaultRelaySet, id: 'custom', relays: [] }];
     expect(seedDefaultRelays(custom)).toEqual(custom);
   });
@@ -17,6 +26,8 @@ describe('default relays', () => {
     const removed = [
       { ...defaultRelaySet, relays: defaultRelaySet.relays.slice(1) },
     ];
-    expect(seedDefaultRelays(removed)[0]?.relays).toHaveLength(4);
+    expect(seedDefaultRelays(removed)[0]?.relays).toHaveLength(
+      defaultRelaySet.relays.length - 1,
+    );
   });
 });
