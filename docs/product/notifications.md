@@ -2,11 +2,15 @@
 
 ## Purpose
 
-The Notifications tab shows locally stored account activity records.
+The Notifications tab shows relay-backed account activity as an infinite event
+tree.
 
 ## Contract
 
 - The tab opens from New Tab.
 - Records are scoped to the active account pubkey.
-- Empty state is explicit when no local records exist.
-- Relay-backed notification subscriptions are outside the current runtime.
+- Mentions, replies, reactions, reposts, follows, and quotes are indexed.
+- Relay reads use enabled read relays from the selected default relay set.
+- Notification events are written through the shared repository.
+- Visible notifications are marked read when the tab receives focus.
+- Empty state is explicit when no records exist.

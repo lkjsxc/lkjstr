@@ -6,9 +6,9 @@ Tabs define the workspace surface area.
 
 ## New Tab Choices
 
-- Timeline
+- Home
+- Global
 - Relay Settings
-- Relay Monitor
 - Notifications
 - Accounts
 - Tweet
@@ -32,3 +32,4 @@ Tabs define the workspace surface area.
 
 There is no retired draft-planning workspace tab. There is no free-form
 profile, thread, or filter JSON input in New Tab.
+Relay Monitor is folded into Relay Settings.

@@ -1,18 +1,19 @@
-# Timeline
+# Home
 
 ## Purpose
 
-Timeline is Account home. It shows the selected account, its NIP-02 follows,
-cache evidence, and relay diagnostics.
+Home is the account-follow feed. It shows notes from the selected account and
+its NIP-02 follows.
 
 ## Contract
 
-- Timeline opens from New Tab and is the recovery tab.
+- Home opens from New Tab and is the recovery tab.
 - Cached notes render before relay results.
-- Cached-only notes stay visible and are labeled as cache-only.
 - Account home authors are the active account plus `p` tags from the latest
   kind `3` follow list.
 - Relay reads use enabled read relays from the selected default relay set.
+- Relay reads go through the subscription manager.
+- Events and relay provenance are written through the shared repository.
 - Deleted or disabled relays are not replaced by hidden public defaults.
 - No active account means no relay subscription.
 - No follow list means self notes are queried and the state remains visible.
@@ -21,6 +22,7 @@ cache evidence, and relay diagnostics.
   visible diagnostics.
 - Author controls open Profile tabs in the same tile.
 - Event id controls open Thread tabs in the same tile.
+- Post rows do not show relay source text or full public-key text.
 
 ## States
 

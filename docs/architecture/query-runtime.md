@@ -8,6 +8,9 @@ Query runtime docs define how cache-first relay reads behave.
 
 - Cache is read before relay subscriptions start.
 - Relay reads use enabled read relays from the selected default relay set.
+- Feed-like tabs read cache pages through the shared repository.
+- Relay results are written through the repository before UI state updates.
+- Feed cursors track older pages for cache and relay backfill.
 - Empty enabled-relay lists produce a visible no-enabled-relay state.
 - Runtimes close their relay subscriptions when the owning tab unmounts.
 - Runtimes ignore events for other subscription ids.

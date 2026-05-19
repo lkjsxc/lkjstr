@@ -1,9 +1,6 @@
-Owner: Architecture
-State: Canon
-
 # Relay Pool
 
-## Role
+## Purpose
 
 The relay pool owns WebSocket clients, subscription messages, verified incoming
 events, publish acknowledgements, and relay snapshots.
@@ -19,9 +16,9 @@ events, publish acknowledgements, and relay snapshots.
 - Do not overwrite user relay settings from runtime health data.
 - Failed relays must not stop other relays in the same subscription.
 
-## Timeline Use
+## Runtime Use
 
-- Timeline tabs subscribe through the pool.
-- Timeline tabs pass enabled read relays only.
-- Each timeline tab uses its own subscription id.
-- Cleanup must close that subscription on every relay.
+- Runtime tabs subscribe through the subscription manager.
+- The subscription manager calls the pool with enabled read relays only.
+- Each relay subscription uses one subscription id.
+- Cleanup must close that subscription on every relay after the last listener.
