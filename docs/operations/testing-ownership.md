@@ -32,6 +32,11 @@ Testing ownership maps behavior to the right test layer.
 - Media/content parsing for image, video, audio, normal links, and invalid URLs.
 - Deep event tree continuation rows and same-pane Profile or Thread tab reuse.
 - Identity hydration mismatch and stale async response guards.
+- Latest-only profile cache writes and timeline metadata hydration.
+- Profile note relay provenance fallback behavior.
+- Notification context safety for malformed records without event ids.
+- Inactive tab retention expiry, setting changes, tab close cleanup, and
+  subscription release.
 
 ## E2E
 
@@ -46,6 +51,8 @@ Testing ownership maps behavior to the right test layer.
 - Row click Thread navigation and avatar or name Profile navigation.
 - Quote/reference clicks and media sizing inside desktop and mobile panes.
 - Long profile metadata preserving Notes list height.
+- Inactive tab scroll retention within the configured grace period and retained
+  body removal after expiry.
 - Heavy-feed smoke coverage for thousands of events, large follows, bounded
   runtime counters, and app heap under `100 MB`.
 - Tile resize persistence.

@@ -84,7 +84,9 @@ first, batches relay reads by `ids`, stores verified hits, caps missing lookups,
 and prevents recursive loops. Missing, deleted, quote, repost, reply, reaction,
 and deletion states have explicit display rows.
 
-Quote and reference previews are deduped by event id before rendering.
+Quote and reference previews are deduped by event id before rendering. Protocol
+reference extraction and the shared event renderer own this dedupe so Home,
+Global, Profile, Thread, and Notifications render the same preview set.
 
 ## Media
 

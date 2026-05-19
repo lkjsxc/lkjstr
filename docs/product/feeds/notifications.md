@@ -28,6 +28,8 @@ context first and event content second.
 - Rows use a vertical layout: actor identity, action kind, read state, target or
   root context when available, and timestamp appear first; target/source event
   content appears below.
+- Context actions open Thread only when a valid target or root event id exists.
+  Malformed records without an event id render context as non-clickable text.
 - Action labels cover mention, reply, reaction, repost, quote, and
   profile-reference records.
 - Long event content, ids, relay URLs, and context fields wrap within the row.

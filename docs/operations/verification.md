@@ -47,6 +47,10 @@ when commands pass and print buffered command output only when a command fails.
 - Home and Global lists fill the tile after split resizing.
 - Global, Notifications, Thread, and Profile note rows show avatar/name
   fallbacks, timestamps, short ids, and wrapped content.
+- Profile renders summary first and lets Notes consume the remaining pane
+  height at desktop and mobile widths.
+- Profile note rows preserve real relay provenance and use `cache` only as a
+  fallback for legacy records without relay evidence.
 - Home reloads with cached history visible before relay responses and before
   profile hydration.
 - Identity rendering remains stable when cached rows reload without fresh
@@ -57,9 +61,13 @@ when commands pass and print buffered command output only when a command fails.
   `nostr:nevent` clicks open Thread in the same tile.
 - Notifications show actor/action rows with event content second in a vertical
   layout.
+- Notification records without `targetEventId` or `rootEventId` do not call
+  Thread navigation with an empty id.
 - Quote and reference previews are deduped by event id.
 - Inactive feed tabs stay mounted through `tabs.inactiveRetentionSeconds`, then
   close owned subscriptions after expiry.
+- Changing `tabs.inactiveRetentionSeconds`, closing a tab, or retention expiry
+  removes retained inactive tab bodies and releases owned subscriptions.
 - lkjstr Log renders one flat chronological wrapped stream.
 - Legacy cached events without relay arrays render with `cache` provenance.
 - In clean Playwright, any SES lockdown console message must be reproduced

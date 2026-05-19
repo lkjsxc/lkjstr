@@ -9,6 +9,10 @@ Profile runtime owns metadata and authored-note loading for one pubkey.
 - Profile tabs receive a pubkey from workspace actions.
 - Runtime reads cached metadata and notes first.
 - Runtime subscribes for kind `0` metadata and kind `1` notes by author.
+- Metadata hydration stores and returns the effective latest cached profile, not
+  a stale profile parsed from an older rejected event.
+- Note rows preserve relay provenance from repository records. `cache` is used
+  only when no relay evidence is available.
 - Runtime keeps a `180` item note window.
 - Runtime exposes `loadOlder()` and `loadNewer()`.
 - State exposes `loadingOlder`, `hasOlder`, `loadingNewer`, `hasNewer`,

@@ -23,6 +23,7 @@ This document records the current implemented contract for the app.
 - Home loads cached matching notes first, performs an initial historical relay
   page, then subscribes to enabled read relays in the selected default relay
   set with startup `since`.
+- Profile metadata cache is memory-assisted, event-backed, and latest-only.
 - Global shows recent kind `1` notes from the selected read relays without an
   account requirement.
 - Notifications are relay-backed records derived from events that reference the
@@ -52,5 +53,4 @@ This document records the current implemented contract for the app.
 ## Gaps
 
 - Relay health is visible from live pool snapshots but is not written back.
-- Profile metadata cache is memory-assisted and event-backed.
 - Long-running local work should expose progress and cancellation.
