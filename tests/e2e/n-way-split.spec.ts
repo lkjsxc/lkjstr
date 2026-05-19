@@ -8,7 +8,7 @@ test('creates N-way splits and preserves them after reload', async ({
   await page.getByRole('button', { name: 'Split right' }).click();
   await page.getByRole('button', { name: 'Open tile menu' }).nth(1).click();
   await page.getByRole('button', { name: 'Split right' }).click();
-  await expect(page.getByRole('heading', { name: 'Home' })).toHaveCount(3);
+  await expect(page.getByRole('heading', { name: 'New Tab' })).toHaveCount(2);
   await page.reload();
-  await expect(page.getByRole('heading', { name: 'Home' })).toHaveCount(3);
+  await expect(page.getByRole('heading', { name: 'New Tab' })).toHaveCount(2);
 });

@@ -3,6 +3,7 @@ import {
   convertWorkspaceTab,
   createWorkspace,
   openNewTabChooser,
+  splitFocusedPane,
 } from '../../../src/lib/workspace/workspace';
 
 describe('new tab chooser workspace command', () => {
@@ -26,5 +27,11 @@ describe('new tab chooser workspace command', () => {
       kind: 'profile',
       title: 'Profile',
     });
+  });
+
+  it('opens split panes to the New Tab chooser', () => {
+    const workspace = createWorkspace();
+    const split = splitFocusedPane(workspace, 'horizontal');
+    expect(split.tabs[split.focusedTabId!]?.kind).toBe('new-tab');
   });
 });
