@@ -3,6 +3,10 @@ import {
   type PoolEvent,
   type RelayPool,
 } from '../relays/relay-pool';
+import {
+  RelaySubscriptionManager,
+  type RelaySubscriptionManager as SubscriptionManager,
+} from '../relays/subscription-manager';
 import type { RelaySnapshot } from '../relays/types';
 import {
   loadCachedThread,
@@ -20,6 +24,7 @@ export type ThreadState = {
 
 export class ThreadRuntime {
   #pool: RelayPool;
+  #subscriptions: SubscriptionManager;
   #cached: ThreadItem[] = [];
   #live: ThreadItem[] = [];
   #cleanup: (() => void)[] = [];
@@ -31,8 +36,11 @@ export class ThreadRuntime {
     readonly relays: readonly string[],
     readonly subId = `thread:${crypto.randomUUID()}`,
     pool?: RelayPool,
+    subscriptions?: SubscriptionManager,
   ) {
     this.#pool = pool ?? sharedRelayPool;
+    this.#subscriptions =
+      subscriptions ?? new RelaySubscriptionManager(this.#pool);
   }
 
   subscribe(listener: (state: ThreadState) => void): () => void {
@@ -51,12 +59,20 @@ export class ThreadRuntime {
         error: 'No enabled read relays.',
       });
     this.#cleanup.push(
-      this.#pool.onEvent((event) => this.#receive(event)),
-      this.#pool.onState((snapshots) => this.#receiveState(snapshots)),
-      this.#pool.subscribe(this.relays, this.subId, [
-        { ids: [this.eventId] },
-        { kinds: [1], '#e': [this.eventId], limit: 100 },
-      ]),
+      this.#subscriptions.subscribeState((snapshots) =>
+        this.#receiveState(snapshots),
+      ),
+      this.#subscriptions.subscribeLive(
+        {
+          key: this.subId,
+          relays: this.relays,
+          filters: [
+            { ids: [this.eventId] },
+            { kinds: [1], '#e': [this.eventId], limit: 100 },
+          ],
+        },
+        (event) => this.#receive(event),
+      ),
     );
   }
 
@@ -67,7 +83,7 @@ export class ThreadRuntime {
 
   async #receive(poolEvent: PoolEvent): Promise<void> {
     if (poolEvent.subId !== this.subId) return;
-    await storeThreadEvent(poolEvent.event);
+    await storeThreadEvent(poolEvent.event, [poolEvent.relay]);
     this.#live = mergeThreadItems(this.#live, [
       { event: poolEvent.event, relays: [poolEvent.relay] },
     ]);

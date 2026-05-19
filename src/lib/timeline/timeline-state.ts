@@ -1,5 +1,6 @@
 import type { NostrEvent } from '../protocol';
 import type { RelayPool } from '../relays/relay-pool';
+import type { RelaySubscriptionManager } from '../relays/subscription-manager';
 import type { RelayDiagnostic, RelaySnapshot } from '../relays/types';
 import type { TimelineProfiles } from './timeline-profiles';
 import type { TimelineItem } from './timeline-store';
@@ -30,9 +31,11 @@ export type TimelineState = {
 export type TimelineRuntimeOptions = {
   readonly relays: readonly string[];
   readonly subId: string;
+  readonly kind?: 'home' | 'global';
   readonly activeAccountPubkey?: string | null;
   readonly limit?: number;
   readonly pool?: RelayPool;
+  readonly subscriptions?: RelaySubscriptionManager;
 };
 
 export function upsertLive(

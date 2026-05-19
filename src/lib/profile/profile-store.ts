@@ -1,5 +1,5 @@
-import { browserDb } from '$lib/storage/browser-db';
 import { compareEventsDesc, type NostrEvent } from '$lib/protocol';
+import { queryFeed, upsertEvent } from '$lib/events/repository';
 import {
   profileFromMetadataEvent,
   setProfile,
@@ -14,6 +14,7 @@ export async function cachedProfileEvent(
     return [...memoryEvents.values()]
       .filter((event) => event.pubkey === pubkey && event.kind === 0)
       .sort(compareEventsDesc)[0];
+  const { browserDb } = await import('$lib/storage/browser-db');
   const events = await browserDb()
     .events.where('pubkey')
     .equals(pubkey)
@@ -31,22 +32,16 @@ export async function cachedProfileNotes(
       .filter((event) => event.pubkey === pubkey && event.kind === 1)
       .sort(compareEventsDesc)
       .slice(0, limit);
-  const events = await browserDb()
-    .events.where('pubkey')
-    .equals(pubkey)
-    .toArray()
-    .catch(() => []);
-  return events
-    .filter((event) => event.kind === 1)
-    .sort(compareEventsDesc)
-    .slice(0, limit);
+  return (
+    await queryFeed({ kind: 'profile', authors: [pubkey], limit })
+  ).items.map((item) => item.event);
 }
 
-export async function storeProfileEvent(event: NostrEvent): Promise<void> {
+export async function storeProfileEvent(
+  event: NostrEvent,
+  relays: readonly string[] = [],
+): Promise<void> {
   memoryEvents.set(event.id, event);
   if (event.kind === 0) setProfile(profileFromMetadataEvent(event));
-  if (typeof indexedDB === 'undefined') return;
-  await browserDb()
-    .events.put(event)
-    .catch(() => undefined);
+  await upsertEvent(event, relays);
 }

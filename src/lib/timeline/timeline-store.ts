@@ -1,5 +1,5 @@
-import { browserDb } from '../storage/browser-db';
 import { compareEventsDesc, type NostrEvent } from '../protocol';
+import { queryFeed, upsertEvent } from '../events/repository';
 import { latestFollowList } from './follow-list';
 
 export type TimelineItem = {
@@ -14,18 +14,15 @@ export async function loadCachedTimeline(
   authors?: readonly string[],
 ): Promise<TimelineItem[]> {
   if (typeof indexedDB === 'undefined') return memoryTimeline(limit, authors);
-  const events = await browserDb()
-    .events.where('kind')
-    .equals(1)
-    .reverse()
-    .sortBy('created_at')
-    .catch(() => [...memoryEvents.values()]);
-  const allowed = authors ? new Set(authors) : undefined;
-  return events
-    .filter((event) => !allowed || allowed.has(event.pubkey))
-    .sort(compareEventsDesc)
-    .slice(0, limit)
-    .map((event) => ({ event, relays: ['cache'] }));
+  return [
+    ...(
+      await queryFeed({
+        kind: authors ? 'home' : 'global',
+        authors,
+        limit,
+      })
+    ).items,
+  ];
 }
 
 export async function loadCachedFollowList(
@@ -33,20 +30,13 @@ export async function loadCachedFollowList(
 ): Promise<NostrEvent | undefined> {
   if (typeof indexedDB === 'undefined')
     return latestFollowList([...memoryEvents.values()], pubkey);
-  const events = await browserDb()
-    .events.where('kind')
-    .equals(3)
-    .toArray()
-    .catch(() => [...memoryEvents.values()]);
+  const events = await queryEvents();
   return latestFollowList(events, pubkey);
 }
 
 export async function storeTimelineEvent(event: NostrEvent): Promise<void> {
   memoryEvents.set(event.id, event);
-  if (typeof indexedDB === 'undefined') return;
-  await browserDb()
-    .events.put(event)
-    .catch(() => undefined);
+  await upsertEvent(event);
 }
 
 export function mergeTimelineItems(
@@ -82,4 +72,12 @@ function memoryTimeline(
     .sort(compareEventsDesc)
     .slice(0, limit)
     .map((event) => ({ event, relays: ['cache'] }));
+}
+
+async function queryEvents(): Promise<NostrEvent[]> {
+  if (typeof indexedDB === 'undefined') return [...memoryEvents.values()];
+  const { browserDb } = await import('../storage/browser-db');
+  return browserDb()
+    .events.toArray()
+    .catch(() => [...memoryEvents.values()]);
 }

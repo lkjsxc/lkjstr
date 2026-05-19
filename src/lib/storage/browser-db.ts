@@ -1,8 +1,13 @@
 import Dexie, { type Table } from 'dexie';
 import type { Account } from '../accounts/account';
 import type { CacheMetadata } from '../cache/cache-status';
+import type {
+  EventRelayReceipt,
+  FeedCursor,
+  JobRecord,
+  StoredEvent,
+} from '../events/types';
 import type { NotificationRecord } from '../notifications/notification';
-import type { NostrEvent } from '../protocol';
 import type { RelaySet } from '../relays/relay-store';
 import type { SettingOverride } from '../settings/settings-store';
 import type { TweetDraft } from '../tweet/draft-store';
@@ -20,7 +25,10 @@ export class LkjstrDb extends Dexie {
   accounts!: Table<Account, string>;
   notifications!: Table<NotificationRecord, string>;
   tweetDrafts!: Table<TweetDraft, string>;
-  events!: Table<NostrEvent, string>;
+  events!: Table<StoredEvent, string>;
+  eventRelays!: Table<EventRelayReceipt, string>;
+  feedCursors!: Table<FeedCursor, string>;
+  jobs!: Table<JobRecord, string>;
   cacheMeta!: Table<CacheMetadata, string>;
   tabStates!: Table<TabStateRecord, string>;
   settings!: Table<SettingOverride, string>;
@@ -35,13 +43,16 @@ export class LkjstrDb extends Dexie {
         (step: number) => { stores: (shape: Record<string, string>) => void }
       >
     )[schemaMethod];
-    schema.call(this, 2).stores({
+    schema.call(this, 3).stores({
       workspaces: '&id, updatedAt, activeAccountId',
       accounts: '&id, pubkey, signerType, updatedAt, lastUsedAt',
       notifications:
         '&id, accountPubkey, sourceEventId, actorPubkey, kind, readAt, createdAt',
       tweetDrafts: '&id, accountId, updatedAt',
       events: '&id, pubkey, kind, created_at',
+      eventRelays: '&id, eventId, relayUrl, receivedAt',
+      feedCursors: '&id, feedKey, updatedAt',
+      jobs: '&id, kind, status, updatedAt',
       cacheMeta: '&id, updatedAt',
       tabStates: '&id, tabId, updatedAt',
       settings: '&key, namespace, updatedAt',

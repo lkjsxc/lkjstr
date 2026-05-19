@@ -1,5 +1,5 @@
-import { browserDb } from '../storage/browser-db';
 import { compareEventsDesc, type NostrEvent } from '../protocol';
+import { queryFeed, upsertEvent } from '../events/repository';
 
 export type ThreadItem = {
   readonly event: NostrEvent;
@@ -7,25 +7,14 @@ export type ThreadItem = {
 };
 
 export async function loadCachedThread(eventId: string): Promise<ThreadItem[]> {
-  if (typeof indexedDB === 'undefined') return [];
-  const events = await browserDb()
-    .events.toArray()
-    .catch(() => []);
-  return events
-    .filter(
-      (event) =>
-        event.id === eventId ||
-        event.tags.some((tag) => tag[0] === 'e' && tag[1] === eventId),
-    )
-    .sort(compareEventsDesc)
-    .map((event) => ({ event, relays: ['cache'] }));
+  return [...(await queryFeed({ kind: 'thread', eventId, limit: 100 })).items];
 }
 
-export async function storeThreadEvent(event: NostrEvent): Promise<void> {
-  if (typeof indexedDB === 'undefined') return;
-  await browserDb()
-    .events.put(event)
-    .catch(() => undefined);
+export async function storeThreadEvent(
+  event: NostrEvent,
+  relays: readonly string[] = [],
+): Promise<void> {
+  await upsertEvent(event, relays);
 }
 
 export function mergeThreadItems(

@@ -7,6 +7,10 @@ import {
   type RelayPool,
 } from '$lib/relays/relay-pool';
 import {
+  RelaySubscriptionManager,
+  type RelaySubscriptionManager as SubscriptionManager,
+} from '$lib/relays/subscription-manager';
+import {
   cachedProfileEvent,
   cachedProfileNotes,
   storeProfileEvent,
@@ -23,6 +27,7 @@ export type ProfileState = {
 
 export class ProfileRuntime {
   #pool: RelayPool;
+  #subscriptions: SubscriptionManager;
   #cleanup: (() => void)[] = [];
   #listeners = new Set<(state: ProfileState) => void>();
   #state: ProfileState = emptyState();
@@ -32,8 +37,11 @@ export class ProfileRuntime {
     readonly relays: readonly string[],
     readonly subId = `profile:${crypto.randomUUID()}`,
     pool?: RelayPool,
+    subscriptions?: SubscriptionManager,
   ) {
     this.#pool = pool ?? sharedRelayPool;
+    this.#subscriptions =
+      subscriptions ?? new RelaySubscriptionManager(this.#pool);
   }
 
   subscribe(listener: (state: ProfileState) => void): () => void {
@@ -56,11 +64,17 @@ export class ProfileRuntime {
     });
     if (this.relays.length === 0) return;
     this.#cleanup.push(
-      this.#pool.onEvent((event) => this.#receive(event)),
-      this.#pool.subscribe(this.relays, this.subId, [
-        { kinds: [0], authors: [this.pubkey], limit: 1 },
-        { kinds: [1], authors: [this.pubkey], limit: 30 },
-      ]),
+      this.#subscriptions.subscribeLive(
+        {
+          key: this.subId,
+          relays: this.relays,
+          filters: [
+            { kinds: [0], authors: [this.pubkey], limit: 1 },
+            { kinds: [1], authors: [this.pubkey], limit: 30 },
+          ],
+        },
+        (event) => this.#receive(event),
+      ),
     );
   }
 
@@ -71,7 +85,7 @@ export class ProfileRuntime {
 
   async #receive(poolEvent: PoolEvent): Promise<void> {
     if (poolEvent.subId !== this.subId) return;
-    await storeProfileEvent(poolEvent.event);
+    await storeProfileEvent(poolEvent.event, [poolEvent.relay]);
     if (poolEvent.event.kind === 0) this.#receiveMeta(poolEvent);
     if (poolEvent.event.kind === 1) this.#receivePost(poolEvent.event);
   }
