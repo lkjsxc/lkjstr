@@ -7,7 +7,6 @@ const labels: Record<NotificationKind, string> = {
   repost: 'reposted you',
   quote: 'quoted you',
   zap: 'zapped you',
-  follow: 'followed you',
   'profile-reference': 'referenced your profile',
   'publish-failure': 'failed to publish',
 };

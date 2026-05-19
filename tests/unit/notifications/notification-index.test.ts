@@ -38,10 +38,19 @@ describe('notification index', () => {
     expect(notificationActionLabel('reply')).toBe('replied to you');
     expect(notificationActionLabel('reaction')).toBe('reacted to you');
     expect(notificationActionLabel('repost')).toBe('reposted you');
-    expect(notificationActionLabel('follow')).toBe('followed you');
     expect(notificationActionLabel('quote')).toBe('quoted you');
     expect(notificationActionLabel('profile-reference')).toBe(
       'referenced your profile',
     );
+  });
+
+  it('does not create follow notifications from kind 3 follow lists', () => {
+    expect(
+      deriveNotifications(accountPubkey, {
+        ...event,
+        kind: 3,
+        tags: [['p', accountPubkey]],
+      }),
+    ).toEqual([]);
   });
 });

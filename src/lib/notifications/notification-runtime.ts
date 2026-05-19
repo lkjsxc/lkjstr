@@ -58,7 +58,7 @@ export class NotificationRuntime {
           relays: this.relays,
           filters: [
             {
-              kinds: [0, 1, 3, 6, 7],
+              kinds: [0, 1, 6, 7],
               '#p': [this.accountPubkey],
               since: this.#startedAt,
               limit: this.#pageSize,
@@ -111,7 +111,7 @@ export class NotificationRuntime {
               relays: this.relays,
               filters: [
                 {
-                  kinds: [0, 1, 3, 6, 7],
+                  kinds: [0, 1, 6, 7],
                   '#p': [this.accountPubkey],
                   until,
                   limit: this.#pageSize,

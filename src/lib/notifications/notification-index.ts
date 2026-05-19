@@ -56,7 +56,7 @@ function notificationKinds(
   if (event.kind === 0) return ['profile-reference'];
   if (event.kind === 7) return ['reaction'];
   if (event.kind === 6) return ['repost'];
-  if (event.kind === 3) return ['follow'];
+  if (event.kind === 3) return [];
   if (event.tags.some((tag) => tag[0] === 'q')) return ['quote'];
   if (event.tags.some((tag) => tag[0] === 'e')) return ['reply'];
   return ['mention'];

@@ -9,7 +9,7 @@ context first and event content second.
 
 - The tab opens from New Tab.
 - Records are scoped to the active account pubkey.
-- Mentions, replies, reactions, reposts, follows, and quotes are indexed.
+- Mentions, replies, reactions, reposts, and quotes are indexed.
 - Profile references are indexed when metadata points at the active account.
 - Relay reads use enabled read relays from the selected default relay set.
 - Notification events are written through the shared repository.
@@ -25,9 +25,8 @@ context first and event content second.
 - Partial relay failure stays visible in diagnostics but does not block cached
   or reachable notification records.
 - Empty state is explicit when no records exist.
-- A compact jump to latest action appears when the window prunes newer items.
 - Rows show actor identity, action kind, read state, target or root context
   when available, timestamp, and source event content.
-- Action labels cover mention, reply, reaction, repost, follow, quote, and
+- Action labels cover mention, reply, reaction, repost, quote, and
   profile-reference records.
 - Long event content, ids, relay URLs, and context fields wrap within the row.

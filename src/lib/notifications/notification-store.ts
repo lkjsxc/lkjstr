@@ -23,6 +23,7 @@ export async function accountNotifications(
 ): Promise<NotificationRecord[]> {
   const fallback = [...memoryNotifications.values()]
     .filter((record) => record.accountPubkey === accountPubkey)
+    .filter(isSupportedNotification)
     .filter((record) => record.createdAt < beforeCreatedAt)
     .sort((a, b) => b.createdAt - a.createdAt)
     .slice(0, limit);
@@ -33,9 +34,14 @@ export async function accountNotifications(
         .between([accountPubkey, 0], [accountPubkey, beforeCreatedAt - 1])
         .reverse()
         .limit(limit)
-        .toArray(),
+        .toArray()
+        .then((records) => records.filter(isSupportedNotification)),
     fallback,
   );
+}
+
+function isSupportedNotification(record: NotificationRecord): boolean {
+  return record.kind !== ('follow' as NotificationRecord['kind']);
 }
 
 export async function markAccountNotificationsRead(

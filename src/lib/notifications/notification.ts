@@ -5,7 +5,6 @@ export type NotificationKind =
   | 'repost'
   | 'quote'
   | 'zap'
-  | 'follow'
   | 'profile-reference'
   | 'publish-failure';
 
