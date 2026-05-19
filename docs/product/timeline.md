@@ -28,7 +28,9 @@ its NIP-02 follows.
   reaches EOSE, or every contacted relay reaches a terminal failure state.
 - A failed relay remains diagnostic and must not block other relays.
 - Relay `CLOSED`, `NOTICE`, `AUTH`, parse failure, and invalid signatures are
-  visible diagnostics.
+  visible in Relay Logs, not inline in the timeline body.
+- The timeline body keeps high-level state errors visible, such as unreachable
+  relays or authentication requirements.
 - Author controls open Profile tabs in the same tile.
 - Event id controls open Thread tabs in the same tile.
 - Post rows do not show relay source text or full public-key text.

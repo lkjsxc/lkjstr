@@ -2,6 +2,7 @@
   import type { Account } from '$lib/accounts/account';
   import type { NotificationRecord } from '$lib/notifications/notification';
   import type { RelaySet } from '$lib/relays/relay-store';
+  import type { RelaySnapshot } from '$lib/relays/types';
   import AccountManagerTab from '$lib/tabs/accounts/AccountManagerTab.svelte';
   import CacheStatusTab from '$lib/tabs/cache/CacheStatusTab.svelte';
   import NewTab from '$lib/tabs/new-tab/NewTab.svelte';
@@ -28,6 +29,7 @@
     activeAccount?: Account;
     notifications: NotificationRecord[];
     relaySets: RelaySet[];
+    relaySnapshots: RelaySnapshot[];
     focusTab: (paneId: string, tabId: string) => void;
     closeTab: (paneId: string, tabId: string) => void;
     moveTab: (
@@ -125,8 +127,7 @@
       {:else if active.kind === 'relay-monitor'}
         <RelayMonitorTab
           relaySets={props.relaySets}
-          toggleRelay={props.toggleRelay}
-          removeRelay={props.removeRelay}
+          snapshots={props.relaySnapshots}
         />
       {:else if active.kind === 'relay-settings'}
         <RelaySettingsTab

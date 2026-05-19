@@ -1,60 +1,60 @@
 <script lang="ts">
-  import { sharedRelayPool } from '$lib/relays/relay-pool';
-  import type { RelaySet } from '$lib/relays/relay-store';
-  import type { RelaySnapshot } from '$lib/relays/types';
+  import { normalizeRelayUrl } from '../../protocol';
+  import type { RelaySet } from '../../relays/relay-store';
+  import type { RelaySnapshot } from '../../relays/types';
 
   type Props = {
     relaySets: RelaySet[];
-    toggleRelay: (setId: string, url: string, enabled: boolean) => void;
-    removeRelay: (setId: string, url: string) => void;
+    snapshots?: RelaySnapshot[];
   };
 
   let props: Props = $props();
-  let snapshots = $state<RelaySnapshot[]>([]);
+  let snapshotByUrl = $derived(
+    new Map(
+      (props.snapshots ?? []).map((snapshot) => [snapshot.url, snapshot]),
+    ),
+  );
 
-  $effect(() => sharedRelayPool.onState((next) => (snapshots = next)));
-
-  function snapshotFor(url: string): RelaySnapshot | undefined {
-    return snapshots.find((snapshot) => snapshot.url === url);
+  function formatTimestamp(timestamp?: number): string {
+    if (!timestamp) return 'never';
+    return new Date(timestamp).toLocaleString();
   }
 </script>
 
 <section class="relay-monitor">
-  <h2>Relays</h2>
+  <h2>Relay Logs</h2>
   {#each props.relaySets as set (set.id)}
     <article class="relay-set">
       <h3>{set.name}</h3>
       {#each set.relays as relay (relay.url)}
-        {@const snapshot = snapshotFor(relay.url)}
+        {@const snapshot = snapshotByUrl.get(
+          normalizeRelayUrl(relay.url) ?? '',
+        )}
         <div class="row">
           <span>
             <strong>{relay.label}</strong>
             <small>{relay.url}</small>
           </span>
           <span>{snapshot?.state ?? relay.state}</span>
-          <label>
-            <input
-              type="checkbox"
-              checked={relay.enabled}
-              onchange={(event) =>
-                props.toggleRelay(
-                  set.id,
-                  relay.url,
-                  event.currentTarget.checked,
-                )}
-            />
-            enabled
-          </label>
-          <button
-            type="button"
-            onclick={() => props.removeRelay(set.id, relay.url)}
+          <small>Last message: {formatTimestamp(snapshot?.lastMessageAt)}</small
           >
-            Remove
-          </button>
+          {#if snapshot?.lastError}
+            <small>Last error: {snapshot.lastError}</small>
+          {/if}
           {#if snapshot?.diagnostics.length}
             <ul aria-label={`Diagnostics ${relay.url}`}>
-              {#each snapshot.diagnostics as item (`${item.timestamp}:${item.message}`)}
-                <li>{item.kind}: {item.message}</li>
+              {#each snapshot.diagnostics as item, index (`${item.timestamp}:${item.kind}:${item.subId ?? ''}:${item.message}:${index}`)}
+                <li>
+                  <strong>{item.kind}</strong>
+                  <span>{item.message}</span>
+                  <small>{item.relay}</small>
+                  {#if item.subId}
+                    <small>subId: {item.subId}</small>
+                  {/if}
+                  <time datetime={new Date(item.timestamp).toISOString()}>
+                    {formatTimestamp(item.timestamp)}
+                  </time>
+                </li>
               {/each}
             </ul>
           {/if}

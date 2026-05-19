@@ -5,6 +5,7 @@ import {
   type RelayMessage,
 } from '../protocol';
 import { RelayClient } from './relay-client';
+import { relaySnapshotHistoryMap } from './session-snapshots';
 import type { RelaySnapshot } from './types';
 
 export type PoolEvent = {
@@ -21,6 +22,7 @@ export type PublishResult = {
 
 export class RelayPool {
   #clients = new Map<string, RelayClient>();
+  #snapshotHistory = relaySnapshotHistoryMap();
   #events = new Set<(event: PoolEvent) => void>();
   #states = new Set<(states: RelaySnapshot[]) => void>();
   #publishWaiters = new Map<
@@ -67,7 +69,11 @@ export class RelayPool {
   }
 
   snapshots(): RelaySnapshot[] {
-    return [...this.#clients.values()].map((client) => client.snapshot());
+    for (const client of this.#clients.values()) {
+      const snapshot = client.snapshot();
+      this.#snapshotHistory.set(snapshot.url, snapshot);
+    }
+    return [...this.#snapshotHistory.values()];
   }
 
   close(): void {

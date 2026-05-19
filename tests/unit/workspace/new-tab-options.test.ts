@@ -7,6 +7,7 @@ describe('new tab options', () => {
       'Home',
       'Global',
       'Relay Settings',
+      'Relay Logs',
       'Notifications',
       'Accounts',
       'Tweet',

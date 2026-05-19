@@ -15,8 +15,8 @@ selected default relay set for timeline, profile, thread, and Tweet behavior.
 
 ## Contract
 
-- New Tab choices are Home, Global, Relay Settings, Notifications, Accounts,
-  Tweet, Settings, and Cache.
+- New Tab choices are Home, Global, Relay Settings, Relay Logs, Notifications,
+  Accounts, Tweet, Settings, and Cache.
 - Profile tabs open from identity actions. Thread tabs open from event actions.
 - Tabs can be reordered inside a tile and moved to another tile by native
   drag-and-drop.
@@ -25,7 +25,8 @@ selected default relay set for timeline, profile, thread, and Tweet behavior.
 - Home, Global, Notifications, Profile, and Thread reads use enabled read relays
   in the selected default set. Disabled or removed relays are not silent
   fallbacks.
-- Partial relay failure is diagnostic; reachable relays continue serving feeds.
+- Partial relay failure is diagnostic; reachable relays continue serving feeds,
+  and low-level details are visible in Relay Logs instead of timeline bodies.
 - Event metadata shows the author control, date, and short event id. Full
   public keys and relay URLs stay out of post rows.
 - Accounts include CPU-only `npub` prefix mining with export-only `nsec`

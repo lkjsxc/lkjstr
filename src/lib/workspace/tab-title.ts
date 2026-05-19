@@ -9,7 +9,7 @@ export function titleFor(kind: TabKind): string {
     profile: 'Profile',
     'account-manager': 'Accounts',
     thread: 'Thread',
-    'relay-monitor': 'Relays',
+    'relay-monitor': 'Relay Logs',
     'relay-settings': 'Relay Settings',
     tweet: 'Tweet',
     settings: 'Settings',

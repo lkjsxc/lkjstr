@@ -27,6 +27,12 @@ export const newTabOptions: readonly NewTabOption[] = [
     group: 'primary',
   },
   {
+    kind: 'relay-monitor',
+    label: 'Relay Logs',
+    description: 'Relay diagnostics.',
+    group: 'primary',
+  },
+  {
     kind: 'notifications',
     label: 'Notifications',
     description: 'Account activity.',

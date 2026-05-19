@@ -13,8 +13,10 @@ Readiness checks whether the app contract is shippable.
 - Home handles account authors, cached data, EOSE, failed relays, no active
   account, no follow list, auth-required, subscription-closed,
   no-enabled-relay, ready-empty, and ready-with-events.
-- Home, Global, Notifications, and Relay Settings expose relay diagnostics
-  instead of hiding relay failures behind public fallback reads.
+- Home and Global keep low-level relay diagnostics out of feed bodies while
+  preserving high-level errors.
+- Relay Logs exposes current-session relay diagnostics instead of hiding relay
+  failures behind public fallback reads.
 - Home, Global, Profile, Thread, and Notifications load older pages only after
   near-bottom scroll and keep their documented item windows.
 - Event cache compaction protects accounts, settings, relay sets, workspace

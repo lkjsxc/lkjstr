@@ -9,8 +9,8 @@ This document records the current implemented contract for the app.
 - Root `/` renders the workspace shell.
 - Workspace layout, tab groups, tabs, accounts, relay sets, settings, events,
   notifications, Tweet drafts, and cache metadata are local browser data.
-- New Tab opens Home, Global, Relay Settings, Notifications, Accounts, Tweet,
-  Settings, and Cache.
+- New Tab opens Home, Global, Relay Settings, Relay Logs, Notifications,
+  Accounts, Tweet, Settings, and Cache.
 - Profile tabs are opened from identity actions.
 - Thread tabs are opened from event actions.
 - Tabs can be reordered within a tile or moved between tiles with native
@@ -32,7 +32,8 @@ This document records the current implemented contract for the app.
 - Home states are `no-active-account`, `loading-follows`, `no-follow-list`,
   `no-enabled-relay`, `auth-required`, `subscription-closed`, `relay-failed`,
   `ready-empty`, and `ready-with-events`.
-- Relay Settings shows relay diagnostics.
+- Relay Settings shows editable relay state and Relay Logs shows
+  current-session relay diagnostics.
 - Event metadata shows author control, date, and short event id.
 - Accounts can mine an `npub` prefix locally and export the generated `nsec`
   without storing it.

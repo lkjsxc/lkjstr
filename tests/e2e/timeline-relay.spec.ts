@@ -1,10 +1,14 @@
 import { expect, test } from '@playwright/test';
-import type { Page } from '@playwright/test';
 import {
   finalizeEvent,
   generateSecretKey,
   getPublicKey,
 } from 'nostr-tools/pure';
+import {
+  addReadonlyAccount,
+  installSyntheticRelay,
+  openCleanWorkspace,
+} from './timeline-relay-helpers';
 
 test('timeline does not read public relays without an active account', async ({
   page,
@@ -71,7 +75,9 @@ test('timeline displays followed-author notes from a synthetic relay', async ({
   await expect(page.getByRole('heading', { name: 'Profile' })).toBeVisible();
 });
 
-test('timeline shows relay closed diagnostics', async ({ page }) => {
+test('timeline hides relay details and exposes them in Relay Logs', async ({
+  page,
+}) => {
   const activeKey = generateSecretKey();
   const active = getPublicKey(activeKey);
   await installSyntheticRelay(page, {
@@ -81,93 +87,26 @@ test('timeline shows relay closed diagnostics', async ({ page }) => {
   await openCleanWorkspace(page);
   await addReadonlyAccount(page, active);
   await page.getByRole('button', { name: 'Home', exact: true }).click();
+  await page.waitForFunction(
+    () =>
+      window.__syntheticSockets.filter(
+        (socket) => Number((socket as { replies?: number }).replies) > 0,
+      ).length >= 8,
+  );
+  await expect(page.getByText('No events yet.')).toBeVisible();
   await expect(
     page.getByText('closed: blocked: synthetic close').first(),
-  ).toBeVisible();
-});
+  ).toHaveCount(0);
+  await expect(page.getByText('blocked: synthetic close')).toHaveCount(0);
 
-async function addReadonlyAccount(page: Page, pubkey: string) {
   await page.getByRole('button', { name: 'Open new tab' }).first().click();
-  await page.getByRole('button', { name: 'Accounts' }).click();
-  page.once('dialog', (dialog) => dialog.accept(pubkey));
-  await page.getByRole('button', { name: 'Add read-only' }).click();
-}
-
-async function openCleanWorkspace(page: Page) {
-  await page.goto('/');
-  await page.evaluate(() => {
-    localStorage.clear();
-    window.__syntheticSockets.length = 0;
-  });
-  await page.reload();
-}
-
-async function installSyntheticRelay(
-  page: Page,
-  options: { events: unknown[]; closed?: [string, string] },
-) {
-  await page.addInitScript((relayOptions) => {
-    localStorage.clear();
-    class SyntheticWebSocket {
-      onopen: ((event: Event) => void) | null = null;
-      onclose: ((event: CloseEvent) => void) | null = null;
-      onerror: ((event: Event) => void) | null = null;
-      onmessage: ((event: MessageEvent) => void) | null = null;
-      sent: string[] = [];
-      constructor(readonly url: string) {
-        window.__syntheticSockets.push(this);
-        queueMicrotask(() => this.onopen?.({} as Event));
-      }
-      send(data: string): void {
-        this.sent.push(data);
-        const message = JSON.parse(data);
-        if (message[0] !== 'REQ') return;
-        const subId = String(message[1]);
-        queueMicrotask(() => this.reply(subId, message.slice(2)));
-      }
-      reply(subId: string, filters: unknown[]): void {
-        if (relayOptions.closed)
-          this.onmessage?.({
-            data: JSON.stringify(['CLOSED', subId, relayOptions.closed[1]]),
-          } as MessageEvent);
-        for (const event of matchingEvents(relayOptions.events, filters))
-          this.onmessage?.({
-            data: JSON.stringify(['EVENT', subId, event]),
-          } as MessageEvent);
-        this.onmessage?.({
-          data: JSON.stringify(['EOSE', subId]),
-        } as MessageEvent);
-      }
-      close(): void {
-        this.onclose?.({} as CloseEvent);
-      }
-    }
-    window.__syntheticSockets = [];
-    window.WebSocket = SyntheticWebSocket as unknown as typeof WebSocket;
-    function matchingEvents(events: unknown[], filters: unknown[]) {
-      return events.filter((event) =>
-        filters.some((filter) => matches(event, filter)),
-      );
-    }
-    function matches(event: unknown, filter: unknown) {
-      if (!record(event) || !record(filter)) return false;
-      const kinds = Array.isArray(filter.kinds) ? filter.kinds : undefined;
-      const authors = Array.isArray(filter.authors)
-        ? filter.authors
-        : undefined;
-      return (
-        (!kinds || kinds.includes(event.kind)) &&
-        (!authors || authors.includes(event.pubkey))
-      );
-    }
-    function record(value: unknown): value is Record<string, unknown> {
-      return typeof value === 'object' && value !== null;
-    }
-  }, options);
-}
-
-declare global {
-  interface Window {
-    __syntheticSockets: unknown[];
-  }
-}
+  await page
+    .locator('section.new-tab')
+    .getByRole('button', { name: 'Relay Logs' })
+    .click();
+  await expect(page.getByRole('heading', { name: 'Relay Logs' })).toBeVisible();
+  await expect(
+    page.getByText('blocked: synthetic close').first(),
+  ).toBeVisible();
+  await expect(page.getByText('closed').first()).toBeVisible();
+});

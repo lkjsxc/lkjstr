@@ -2,8 +2,8 @@
 
 ## Purpose
 
-Relay Settings owns editable relay sets, selected default set, and relay
-status.
+Relay Settings owns editable relay sets and the selected default set. Relay
+Logs owns session-only relay diagnostics.
 
 ## Contract
 
@@ -12,6 +12,14 @@ status.
 - Users can toggle read and write capability per relay.
 - The selected default set drives timeline, profile, thread, and Tweet runtime.
 - Restore defaults replaces the public default set by explicit user action.
-- Runtime relay state and last error are shown beside each relay record.
-- Relay URLs are visible here and in diagnostics, not inside post rows.
-- There is no separate Relay Monitor choice in New Tab.
+- Runtime relay state and last error are shown beside each Relay Settings
+  record.
+- Relay Logs opens from New Tab and shows relay state, last error, last message
+  time, and current-session diagnostics.
+- Relay Logs diagnostic rows include kind, message, relay URL, optional
+  subscription id, and timestamp.
+- Relay Logs is read-only. Add, remove, and enablement controls remain in Relay
+  Settings.
+- Relay Logs are not persisted; reloading the app clears current-session
+  diagnostics.
+- Relay URLs are visible in Relay Settings and Relay Logs, not inside post rows.

@@ -15,8 +15,9 @@ Tab runtime defines valid tab kinds and lifecycle ownership.
 
 - New Tab can convert only to direct New Tab choices.
 - Profile and Thread remain valid tab kinds but open from timeline actions.
-- Relay Monitor remains readable for old stored tabs but is not a New Tab
-  choice; Relay Settings owns relay diagnostics.
+- Relay Logs uses the existing `relay-monitor` tab kind, opens from New Tab,
+  and owns read-only current-session relay diagnostics.
+- Relay Settings owns relay editing.
 - Conversion preserves tab id and tab group.
 - Closing a tab must close any runtime subscription owned by that tab.
 - Moving a tab removes and inserts the existing tab id without recording closed

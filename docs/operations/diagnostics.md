@@ -18,6 +18,14 @@ runtime, so failures must be inspectable without server logs.
 - oversized relay message rejection.
 - app heap and runtime feed counters during heavy-feed smoke tests.
 
+Timeline surfaces keep low-level relay diagnostics out of the feed body. Home
+and Global may show high-level state errors, while detailed relay diagnostics
+are inspected in the New Tab `Relay Logs` surface.
+
+Relay Logs are current-session browser state only. They show relay state, last
+error, last message time, diagnostic kind, message, relay URL, optional
+subscription id, and timestamp, and they are cleared by reload.
+
 ## Diagnostic Events
 
 Diagnostic events are local app records, not Nostr events. They may be written

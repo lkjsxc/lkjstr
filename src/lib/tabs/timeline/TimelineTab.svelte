@@ -64,13 +64,6 @@
   {#if state.error}
     <p role="alert">{state.error}</p>
   {/if}
-  {#if state.diagnostics.length > 0}
-    <ul aria-label="Timeline relay diagnostics">
-      {#each state.diagnostics as item (`${item.relay}:${item.timestamp}:${item.message}`)}
-        <li>{item.kind}: {item.message}</li>
-      {/each}
-    </ul>
-  {/if}
   <EventTreeList
     items={state.items}
     profiles={state.profiles}

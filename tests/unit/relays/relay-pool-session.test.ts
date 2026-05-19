@@ -1,0 +1,64 @@
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { RelayPool } from '../../../src/lib/relays/relay-pool';
+
+const sockets: FakeWebSocket[] = [];
+
+class FakeWebSocket {
+  onopen: ((event: Event) => void) | null = null;
+  onclose: ((event: CloseEvent) => void) | null = null;
+  onmessage: ((event: MessageEvent) => void) | null = null;
+  readonly sent: string[] = [];
+
+  constructor(readonly url: string) {
+    sockets.push(this);
+  }
+
+  send(data: string): void {
+    this.sent.push(data);
+  }
+
+  close(): void {
+    this.onclose?.({} as CloseEvent);
+  }
+
+  open(): void {
+    this.onopen?.({} as Event);
+  }
+
+  receive(data: unknown): void {
+    this.onmessage?.({ data } as MessageEvent);
+  }
+}
+
+describe('relay pool session snapshots', () => {
+  beforeEach(() => {
+    sockets.length = 0;
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date('2026-01-02T03:04:05Z'));
+    vi.stubGlobal('WebSocket', FakeWebSocket);
+  });
+
+  afterEach(() => {
+    vi.useRealTimers();
+    vi.unstubAllGlobals();
+  });
+
+  it('keeps relay snapshots for the current session after close', () => {
+    const pool = new RelayPool();
+
+    pool.subscribe(['relay.example'], 'sub', [{ limit: 2 }]);
+    sockets[0]?.open();
+    sockets[0]?.receive(JSON.stringify(['CLOSED', 'sub', 'blocked']));
+    pool.close();
+
+    expect(pool.snapshots()).toEqual([
+      expect.objectContaining({
+        url: 'wss://relay.example/',
+        state: 'closed',
+        diagnostics: [
+          expect.objectContaining({ kind: 'closed', message: 'blocked' }),
+        ],
+      }),
+    ]);
+  });
+});

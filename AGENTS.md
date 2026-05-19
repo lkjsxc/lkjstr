@@ -10,8 +10,8 @@ aligned in the same change, keep source files under 200 lines, keep docs under
 
 - The root route renders the workspace app.
 - Tiles have a tab strip, plus button, tile menu, and persistent resize state.
-- New Tab offers Home, Global, Relay Settings, Notifications, Accounts, Tweet,
-  Settings, and Cache only.
+- New Tab offers Home, Global, Relay Settings, Relay Logs, Notifications,
+  Accounts, Tweet, Settings, and Cache only.
 - Profile tabs open from identity clicks. Thread tabs open from event clicks.
 - Settings are one flat key-value list.
 - Home, Global, Notifications, Profile, and Thread reads use the selected
