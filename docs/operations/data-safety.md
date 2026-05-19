@@ -16,8 +16,13 @@ exported.
 
 - Public data can be cached and exported.
 - User configuration can be exported and imported.
+- Browser storage is optional for startup. IndexedDB and local storage failures
+  fall back to session-only memory.
+- Durable writes are best effort when browser storage is blocked, slow, or over
+  quota.
 - Draft export requires explicit user action.
-- Sensitive data requires separate consent and clear warning before persistence, export, or deletion.
+- Sensitive data requires separate consent and clear warning before persistence,
+  export, or deletion.
 
 ## Recovery
 
@@ -30,6 +35,7 @@ The app must support:
 - deleting an account without deleting public cached events.
 - exporting workspace and relay configuration.
 - importing configuration into an empty profile.
+- corrupt or invalid workspace storage recovering to one Home tile.
 
 ## Deletion
 

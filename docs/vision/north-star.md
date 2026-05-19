@@ -1,6 +1,3 @@
-Owner: Repository maintainers
-State: Draft
-
 # North Star
 
 Build a repository that is easy to understand, easy to change, and explicit

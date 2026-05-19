@@ -1,8 +1,5 @@
 # Protocol Kernel
 
-Owner: Protocol
-State: Canon
-
 ## Role
 
 The protocol kernel is the only layer that understands Nostr event rules. UI code, workers, and storage callers use kernel APIs instead of duplicating protocol checks.

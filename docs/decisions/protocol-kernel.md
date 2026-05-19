@@ -1,8 +1,5 @@
 # Protocol Kernel Boundary
 
-Owner: Protocol
-State: Accepted
-
 ## Decision
 
 Nostr protocol logic lives in a protocol kernel isolated from Svelte components, storage implementations, and browser WebSocket code.

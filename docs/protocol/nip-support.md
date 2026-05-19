@@ -1,6 +1,3 @@
-Owner: Protocol
-State: Canon
-
 # NIP Support
 
 ## Purpose
@@ -8,13 +5,13 @@ State: Canon
 This file records supported and planned Nostr protocol surfaces without claiming
 unimplemented behavior.
 
-## Initial Support
+## Core Support
 
 - NIP-01 event shape, IDs, signatures, filters, and relay messages.
 - NIP-07 browser extension signing.
 - NIP-19 public-key, note, event, profile, and address entities.
 
-## Early Product Support
+## Product Support
 
 - NIP-02 follow lists for home timelines.
 - NIP-05 identifiers for profile display.
@@ -26,7 +23,7 @@ unimplemented behavior.
 - NIP-50 relay search when supported.
 - NIP-65 relay list metadata.
 
-## Deferred Support
+## Later Support
 
 - Encrypted direct messages wait for security docs and signer isolation.
 - Wallet and zap sending wait for explicit wallet permission docs.

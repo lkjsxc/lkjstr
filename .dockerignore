@@ -7,4 +7,6 @@ playwright-report
 test-results
 tmp
 data
+!docs/architecture/data
+!docs/architecture/data/**
 .git

@@ -41,6 +41,9 @@ when commands pass and print buffered command output only when a command fails.
 
 - Open every New Tab choice at desktop and mobile widths and confirm no
   document or pane horizontal overflow.
+- Reload the root route with local storage and IndexedDB unavailable. Confirm
+  `.workspace-shell`, the Home tab, and nonzero body height stay visible with no
+  page error.
 - Home and Global lists fill the tile after split resizing.
 - Global, Notifications, Thread, and Profile note rows show avatar/name
   fallbacks, timestamps, short ids, and wrapped content.

@@ -1,8 +1,5 @@
 # Event Semantics
 
-Owner: Protocol
-State: Canon
-
 ## Canonical Event Record
 
 Events stored or rendered by the app use a normalized record:

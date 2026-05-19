@@ -1,6 +1,3 @@
-Owner: Repository maintainers
-State: Draft
-
 # Principles
 
 ## Clarity

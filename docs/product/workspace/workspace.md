@@ -15,4 +15,6 @@ The workspace is the first screen and owns split tiles.
 - Moving the last tab out of a tile removes the source tile.
 - Split actions create recursive layout nodes and persist through the workspace
   store.
-- Resize uses a `0.9` pointer sensitivity multiplier and persists in layout.
+- Resize uses a `1.8` pointer sensitivity multiplier and persists in layout.
+- Startup renders one Home tile before async storage finishes. Invalid,
+  blocked, or corrupt storage recovers to that Home workspace.

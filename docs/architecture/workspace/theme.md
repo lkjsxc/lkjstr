@@ -1,6 +1,3 @@
-Owner: Architecture
-State: Canon
-
 # Theme
 
 ## Contract

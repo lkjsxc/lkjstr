@@ -1,8 +1,5 @@
 # Nostr Client Surfaces
 
-Owner: Research
-State: Current
-
 ## Required Surfaces
 
 The app needs first-class surfaces for:

@@ -1,8 +1,5 @@
 # User-Owned Relay Configuration
 
-Owner: Product
-State: Accepted
-
 ## Decision
 
 Users own the relays that drive reading, publishing, and monitoring. The app

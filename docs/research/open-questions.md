@@ -1,8 +1,5 @@
 # Open Questions
 
-Owner: Research
-State: Current
-
 ## Product Questions
 
 - Should relay sets be global, account-scoped, pane-scoped, or all three?

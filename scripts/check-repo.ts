@@ -1,6 +1,8 @@
 import fs from 'node:fs/promises';
 import path from 'node:path';
 import process from 'node:process';
+import { execFile } from 'node:child_process';
+import { promisify } from 'node:util';
 
 type Problem = { file: string; message: string };
 
@@ -19,10 +21,12 @@ const skipDirs = new Set([
 const sourceExts = new Set(['.css', '.html', '.js', '.svelte', '.ts']);
 const banned = /\b(v[0-9]+|version(?:s|ed|ing)?)\b/i;
 const problems: Problem[] = [];
+const run = promisify(execFile);
 
 const files = await walk(root);
 await checkLines(files);
 await checkDocsTopology(files);
+await checkIgnoredDocs(files);
 await checkComposeGuardrails();
 
 for (const problem of problems.sort((a, b) => a.file.localeCompare(b.file))) {
@@ -38,10 +42,17 @@ async function checkLines(filesToCheck: string[]) {
     const text = await fs.readFile(file, 'utf8');
     if (isDoc(rel, ext)) {
       checkLimit(rel, text, 300, 'docs');
+      checkH1First(rel, text);
       if (!rel.endsWith('LICENSE')) checkBanned(rel, text);
     }
     if (isSource(rel, ext)) checkLimit(rel, text, 200, 'source');
   }
+}
+
+function checkH1First(file: string, text: string) {
+  const first = text.split(/\r?\n/, 1)[0] ?? '';
+  if (!first.startsWith('# '))
+    problems.push({ file, message: 'documentation must start with an H1' });
 }
 
 async function checkDocsTopology(filesToCheck: string[]) {
@@ -58,6 +69,35 @@ async function checkDocsTopology(filesToCheck: string[]) {
     );
     if (children.length < 2)
       problems.push({ file: relDir, message: 'needs at least two children' });
+  }
+}
+
+async function checkIgnoredDocs(filesToCheck: string[]) {
+  const candidates = filesToCheck
+    .map((file) => path.relative(root, file))
+    .filter((rel) => isDoc(rel, path.extname(rel)));
+  candidates.push('docs/architecture/data/probe.md');
+  const ignored = await gitCheckIgnored(candidates);
+  for (const file of ignored)
+    problems.push({ file, message: 'documentation path is ignored' });
+}
+
+async function gitCheckIgnored(filesToCheck: readonly string[]) {
+  try {
+    const { stdout } = await run('git', ['check-ignore', ...filesToCheck], {
+      cwd: root,
+    });
+    return stdout
+      .split(/\r?\n/)
+      .map((line) => line.trim())
+      .filter(Boolean);
+  } catch (error) {
+    const result = error as { stdout?: string; code?: number };
+    if (result.code === 1) return [];
+    return (result.stdout ?? '')
+      .split(/\r?\n/)
+      .map((line) => line.trim())
+      .filter(Boolean);
   }
 }
 

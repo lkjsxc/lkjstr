@@ -1,8 +1,5 @@
 # Browser-First Runtime
 
-Owner: Architecture
-State: Accepted
-
 ## Decision
 
 The Nostr workspace client is browser-first. SvelteKit supplies the app shell, but core product behavior must run in the browser with IndexedDB, workers, WebSocket relay connections, and local state.

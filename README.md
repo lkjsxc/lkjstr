@@ -9,8 +9,9 @@ selected default relay set for timeline, profile, thread, and Tweet behavior.
 - Canon: [docs/README.md](docs/README.md)
 - Current state: [docs/current-state.md](docs/current-state.md)
 - CI and images: [docs/operations/ci.md](docs/operations/ci.md)
-- Product tabs: [docs/product/tabs.md](docs/product/tabs.md)
-- Runtime contracts: [docs/architecture/tab-runtime.md](docs/architecture/tab-runtime.md)
+- Product tabs: [docs/product/workspace/tabs.md](docs/product/workspace/tabs.md)
+- Runtime contracts:
+  [docs/architecture/workspace/tab-runtime.md](docs/architecture/workspace/tab-runtime.md)
 - Verification: [docs/operations/verification.md](docs/operations/verification.md)
 
 ## Contract
@@ -32,7 +33,9 @@ selected default relay set for timeline, profile, thread, and Tweet behavior.
 - Accounts include CPU-only `npub` prefix mining with export-only `nsec`
   handling.
 - Tweet drafts are durable and publish through NIP-07 to enabled write relays.
-- Tile resize uses a `0.9` pointer sensitivity multiplier.
+- Tile resize uses a `1.8` pointer sensitivity multiplier.
+- Startup renders the Home workspace immediately. Browser storage failures
+  degrade to session memory and must not leave an empty page.
 - Docker verification uses `docker-compose.yml` built images with no bind
   mounts or required environment blocks.
 
