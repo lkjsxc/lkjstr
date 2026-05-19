@@ -4,6 +4,7 @@
   type Props = {
     split: (direction: 'horizontal' | 'vertical') => void;
     closePane: () => void;
+    disabled?: boolean;
   };
 
   let props: Props = $props();
@@ -23,6 +24,7 @@
     class="tile-icon-button"
     aria-label={open ? 'Close tile menu' : 'Open tile menu'}
     aria-expanded={open}
+    disabled={props.disabled}
     onclick={() => (open = !open)}
   >
     ...

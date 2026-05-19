@@ -1,4 +1,8 @@
 import { browserDb } from '../storage/browser-db';
+import {
+  bestEffortStorageWrite,
+  boundedStorageRead,
+} from '../storage/safe-storage';
 import type { JobKind, JobRecord, JobStatus } from '../events/types';
 
 const memoryJobs = new Map<string, JobRecord>();
@@ -50,18 +54,15 @@ export class JobManager {
   }
 
   async list(): Promise<JobRecord[]> {
-    if (typeof indexedDB === 'undefined') return [...memoryJobs.values()];
-    return browserDb()
-      .jobs.toArray()
-      .catch(() => [...memoryJobs.values()]);
+    return boundedStorageRead(
+      () => browserDb().jobs.toArray(),
+      [...memoryJobs.values()],
+    );
   }
 
   async #save(job: JobRecord): Promise<JobRecord> {
     memoryJobs.set(job.id, job);
-    if (typeof indexedDB !== 'undefined')
-      await browserDb()
-        .jobs.put(job)
-        .catch(() => undefined);
+    await bestEffortStorageWrite(() => browserDb().jobs.put(job));
     this.#emit();
     return job;
   }

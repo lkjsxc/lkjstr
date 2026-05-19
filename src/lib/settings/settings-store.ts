@@ -1,4 +1,8 @@
 import { browserDb } from '../storage/browser-db';
+import {
+  bestEffortStorageWrite,
+  boundedStorageRead,
+} from '../storage/safe-storage';
 import type { SettingRecord } from './settings-key';
 import { defaultSettings, searchText } from './settings-schema';
 
@@ -12,9 +16,10 @@ export type SettingOverride = {
 let memoryOverrides: SettingOverride[] = [];
 
 export async function loadSettings(): Promise<SettingRecord[]> {
-  const overrides = await browserDb()
-    .settings.toArray()
-    .catch(() => memoryOverrides);
+  const overrides = await boundedStorageRead(
+    () => browserDb().settings.toArray(),
+    memoryOverrides,
+  );
   return mergeSettings(overrides);
 }
 
@@ -37,17 +42,13 @@ export async function saveSetting(
     ...memoryOverrides.filter((item) => item.key !== key),
     override,
   ];
-  await browserDb()
-    .settings.put(override)
-    .catch(() => undefined);
+  await bestEffortStorageWrite(() => browserDb().settings.put(override));
   return mergeSettings(memoryOverrides);
 }
 
 export async function resetSetting(key: string): Promise<SettingRecord[]> {
   memoryOverrides = memoryOverrides.filter((item) => item.key !== key);
-  await browserDb()
-    .settings.delete(key)
-    .catch(() => undefined);
+  await bestEffortStorageWrite(() => browserDb().settings.delete(key));
   return mergeSettings(memoryOverrides);
 }
 
@@ -60,9 +61,7 @@ export async function resetNamespace(
   const keys = defaultSettings()
     .filter((setting) => setting.namespace === namespace)
     .map((setting) => setting.key);
-  await browserDb()
-    .settings.bulkDelete(keys)
-    .catch(() => undefined);
+  await bestEffortStorageWrite(() => browserDb().settings.bulkDelete(keys));
   return mergeSettings(memoryOverrides);
 }
 
@@ -89,12 +88,10 @@ export async function importSettingsJson(
       : [];
   });
   memoryOverrides = overrides;
-  await browserDb()
-    .settings.clear()
-    .catch(() => undefined);
-  await browserDb()
-    .settings.bulkPut(overrides)
-    .catch(() => undefined);
+  await bestEffortStorageWrite(async () => {
+    await browserDb().settings.clear();
+    await browserDb().settings.bulkPut(overrides);
+  });
   return mergeSettings(overrides);
 }
 

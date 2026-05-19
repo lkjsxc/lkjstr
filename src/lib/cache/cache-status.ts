@@ -1,4 +1,5 @@
 import { browserDb } from '../storage/browser-db';
+import { boundedStorageRead } from '../storage/safe-storage';
 
 export type CacheMetadata = {
   readonly id: string;
@@ -14,10 +15,19 @@ export async function cacheStatus(): Promise<CacheMetadata> {
   const storageEstimateBytes = await estimateStorageBytes();
   return {
     id: 'main',
-    rawEventCount: await browserDb().events.count(),
+    rawEventCount: await boundedStorageRead(
+      () => browserDb().events.count(),
+      0,
+    ),
     profileCount: 0,
-    notificationCount: await browserDb().notifications.count(),
-    tweetDraftCount: await browserDb().tweetDrafts.count(),
+    notificationCount: await boundedStorageRead(
+      () => browserDb().notifications.count(),
+      0,
+    ),
+    tweetDraftCount: await boundedStorageRead(
+      () => browserDb().tweetDrafts.count(),
+      0,
+    ),
     storageEstimateBytes,
     updatedAt: Date.now(),
   };

@@ -1,4 +1,5 @@
 import { browserDb } from '../storage/browser-db';
+import { indexedDbAvailable } from '../storage/safe-storage';
 import { eventRetention } from './retention';
 
 export type CompactionResult = {
@@ -10,8 +11,7 @@ export async function compactOldEvents(
   maxAgeSeconds = 30 * 24 * 60 * 60,
   maxEvents = 5000,
 ): Promise<CompactionResult> {
-  if (typeof indexedDB === 'undefined')
-    return { prunedEvents: 0, skippedDrafts: true };
+  if (!indexedDbAvailable()) return { prunedEvents: 0, skippedDrafts: true };
   const now = Math.floor(Date.now() / 1000);
   const events = (await browserDb().events.toArray()).sort(
     (a, b) => b.created_at - a.created_at,

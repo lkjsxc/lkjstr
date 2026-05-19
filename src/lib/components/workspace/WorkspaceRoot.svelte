@@ -16,6 +16,7 @@
     activeAccount?: Account;
     notifications: NotificationRecord[];
     relaySets: RelaySet[];
+    ready: boolean;
     focusTab: (paneId: string, tabId: string) => void;
     closeTab: (paneId: string, tabId: string) => void;
     moveTab: (
@@ -64,6 +65,7 @@
         activeAccount={props.activeAccount}
         notifications={props.notifications}
         relaySets={props.relaySets}
+        ready={props.ready}
         {relaySnapshots}
         focusTab={props.focusTab}
         closeTab={props.closeTab}

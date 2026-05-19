@@ -8,6 +8,7 @@
     tabs: Record<string, WorkspaceTab>;
     focusTab: (tabId: string) => void;
     closeTab: (tabId: string) => void;
+    disabled?: boolean;
     moveTab: (
       sourcePaneId: string,
       targetPaneId: string,
@@ -16,7 +17,15 @@
     ) => void;
   };
 
-  let { group, paneId, tabs, focusTab, closeTab, moveTab }: Props = $props();
+  let {
+    group,
+    paneId,
+    tabs,
+    focusTab,
+    closeTab,
+    disabled = false,
+    moveTab,
+  }: Props = $props();
 
   type DraggedTab = { sourcePaneId: string; tabId: string };
 
@@ -76,7 +85,12 @@
           dropTab(event, group.tabIds.indexOf(tab.id));
         }}
       >
-        <button type="button" class="tab-main" onclick={() => focusTab(tab.id)}>
+        <button
+          type="button"
+          class="tab-main"
+          {disabled}
+          onclick={() => focusTab(tab.id)}
+        >
           <span>{tab.title}</span>
           {#if tab.unreadCount}
             <small>{tab.unreadCount}</small>
@@ -86,6 +100,7 @@
           type="button"
           class="tab-close"
           aria-label={`Close ${tab.title}`}
+          {disabled}
           onclick={(event) => {
             event.stopPropagation();
             closeTab(tab.id);

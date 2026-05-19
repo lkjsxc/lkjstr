@@ -27,26 +27,36 @@
     titleFor,
     type Workspace,
   } from '$lib/workspace/workspace';
+  import { bootstrapWorkspace } from '$lib/workspace/workspace-bootstrap';
   import { loadWorkspacePageData } from '$lib/workspace/workspace-page-data';
   import {
     loadWorkspace,
     saveWorkspace,
   } from '$lib/workspace/workspace-persistence';
 
-  let workspace = $state<Workspace>();
+  let workspace = $state<Workspace>(bootstrapWorkspace());
   let accounts = $state<Account[]>([]);
   let activeAccount = $state<Account>();
   let notifications = $state<NotificationRecord[]>([]);
   let relaySets = $state<RelaySet[]>([]);
+  let ready = $state(false);
 
   onMount(async () => {
-    workspace = await loadWorkspace();
-    await refreshData();
+    ready = true;
+    const initialWorkspace = workspace;
+    let hadUserInput = false;
+    const markUserInput = () => (hadUserInput = true);
+    window.addEventListener('pointerdown', markUserInput, { capture: true });
+    const loaded = await loadWorkspace().catch(() => initialWorkspace);
+    window.removeEventListener('pointerdown', markUserInput, { capture: true });
+    if (workspace === initialWorkspace && !hadUserInput) workspace = loaded;
+    else await saveWorkspace(workspace).catch(() => undefined);
+    await refreshData().catch(() => undefined);
   });
 
   async function update(next: Workspace): Promise<void> {
     workspace = next;
-    await saveWorkspace(next);
+    await saveWorkspace(next).catch(() => undefined);
   }
 
   async function refreshData(): Promise<void> {
@@ -58,7 +68,6 @@
     paneId: string | null,
     kind: TabKind,
   ): Promise<void> {
-    if (!workspace) return;
     const config =
       kind === 'profile' ? { pubkey: accounts[0]?.pubkey ?? '' } : {};
     await update(openTab(workspace, paneId, kind, titleFor(kind), config));
@@ -164,29 +173,28 @@
   <title>lkjstr workspace</title>
 </svelte:head>
 
-{#if workspace}
-  <WorkspaceRoot
-    {workspace}
-    {accounts}
-    {activeAccount}
-    {notifications}
-    {relaySets}
-    focusTab={handleFocusTab}
-    closeTab={handleCloseTab}
-    moveTab={handleMoveTab}
-    openTab={handleOpenTab}
-    openNewTab={handleOpenNewTab}
-    convertTab={handleConvertTab}
-    split={handleSplit}
-    closePane={handleClosePane}
-    resize={handleResize}
-    addReadonly={() => promptAddReadonly(refreshData)}
-    addNip07={() => promptAddNip07(refreshData)}
-    addReadonlyPubkey={(pubkey) => addMinedReadonly(pubkey, refreshData)}
-    {refreshData}
-    toggleRelay={handleToggleRelay}
-    removeRelay={handleRemoveRelay}
-    openProfile={handleOpenProfile}
-    openThread={handleOpenThread}
-  />
-{/if}
+<WorkspaceRoot
+  {workspace}
+  {accounts}
+  {activeAccount}
+  {notifications}
+  {relaySets}
+  {ready}
+  focusTab={handleFocusTab}
+  closeTab={handleCloseTab}
+  moveTab={handleMoveTab}
+  openTab={handleOpenTab}
+  openNewTab={handleOpenNewTab}
+  convertTab={handleConvertTab}
+  split={handleSplit}
+  closePane={handleClosePane}
+  resize={handleResize}
+  addReadonly={() => promptAddReadonly(refreshData)}
+  addNip07={() => promptAddNip07(refreshData)}
+  addReadonlyPubkey={(pubkey) => addMinedReadonly(pubkey, refreshData)}
+  {refreshData}
+  toggleRelay={handleToggleRelay}
+  removeRelay={handleRemoveRelay}
+  openProfile={handleOpenProfile}
+  openThread={handleOpenThread}
+/>

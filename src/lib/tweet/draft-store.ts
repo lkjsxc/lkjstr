@@ -1,4 +1,8 @@
 import { browserDb } from '../storage/browser-db';
+import {
+  bestEffortStorageWrite,
+  boundedStorageRead,
+} from '../storage/safe-storage';
 
 export type TweetDraft = {
   readonly id: string;
@@ -12,9 +16,10 @@ const fallback = new Map<string, TweetDraft>();
 export async function loadTweetDraft(
   id = 'main',
 ): Promise<TweetDraft | undefined> {
-  return browserDb()
-    .tweetDrafts.get(id)
-    .catch(() => fallback.get(id));
+  return boundedStorageRead(
+    () => browserDb().tweetDrafts.get(id),
+    fallback.get(id),
+  );
 }
 
 export async function saveTweetDraft(
@@ -24,15 +29,11 @@ export async function saveTweetDraft(
 ): Promise<TweetDraft> {
   const draft = { id, accountId, content, updatedAt: Date.now() };
   fallback.set(id, draft);
-  await browserDb()
-    .tweetDrafts.put(draft)
-    .catch(() => undefined);
+  await bestEffortStorageWrite(() => browserDb().tweetDrafts.put(draft));
   return draft;
 }
 
 export async function clearTweetDraft(id = 'main'): Promise<void> {
   fallback.delete(id);
-  await browserDb()
-    .tweetDrafts.delete(id)
-    .catch(() => undefined);
+  await bestEffortStorageWrite(() => browserDb().tweetDrafts.delete(id));
 }

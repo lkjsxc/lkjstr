@@ -1,9 +1,16 @@
 import { browserDb } from '../storage/browser-db';
+import {
+  bestEffortStorageWrite,
+  boundedStorageRead,
+  safeGetItem,
+  safeSetItem,
+} from '../storage/safe-storage';
 import type { RelayConnectionState } from './types';
 import { defaultRelaySet } from './default-relays';
 import { normalizeRelayUrl } from '../protocol';
 
 const selectedDefaultKey = 'lkjstr.defaultRelaySetId';
+let memorySelectedDefaultRelaySetId = defaultRelaySet.id;
 
 export type RelayRecord = {
   readonly url: string;
@@ -30,9 +37,10 @@ export type RelaySet = {
 let memoryRelaySets: RelaySet[] = [];
 
 export async function listRelaySets(): Promise<RelaySet[]> {
-  const saved = await browserDb()
-    .relaySets.toArray()
-    .catch(() => memoryRelaySets);
+  const saved = await boundedStorageRead(
+    () => browserDb().relaySets.toArray(),
+    memoryRelaySets,
+  );
   if (saved.length > 0) return saved;
   const seeded = seedDefaultRelays([]);
   await saveRelaySets(seeded);
@@ -40,12 +48,12 @@ export async function listRelaySets(): Promise<RelaySet[]> {
 }
 
 export function selectedDefaultRelaySetId(): string {
-  const storage = localStore();
-  return storage?.getItem(selectedDefaultKey) ?? defaultRelaySet.id;
+  return safeGetItem(selectedDefaultKey) ?? memorySelectedDefaultRelaySetId;
 }
 
 export function setDefaultRelaySetId(setId: string): void {
-  localStore()?.setItem(selectedDefaultKey, setId);
+  memorySelectedDefaultRelaySetId = setId;
+  safeSetItem(selectedDefaultKey, setId);
 }
 
 export function selectedDefaultRelaySet(
@@ -66,9 +74,9 @@ export async function saveRelaySets(
   relaySets: readonly RelaySet[],
 ): Promise<void> {
   memoryRelaySets = [...relaySets];
-  await browserDb()
-    .relaySets.bulkPut([...relaySets])
-    .catch(() => undefined);
+  await bestEffortStorageWrite(() =>
+    browserDb().relaySets.bulkPut([...relaySets]),
+  );
 }
 
 export async function addRelay(
@@ -170,8 +178,4 @@ function createRelay(url: string): RelayRecord {
     updatedAt: Date.now(),
     health: { attempts: 0, successes: 0, failures: 0 },
   };
-}
-
-function localStore(): Storage | undefined {
-  return typeof localStorage === 'undefined' ? undefined : localStorage;
 }

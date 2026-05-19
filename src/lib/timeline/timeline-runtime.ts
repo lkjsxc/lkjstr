@@ -53,10 +53,10 @@ export class TimelineRuntime {
   async start(): Promise<void> {
     const pubkey = this.options.activeAccountPubkey;
     if (!pubkey) {
-      this.#cached = await loadCachedTimeline(this.#pageSize);
+      this.#cached = await loadCachedTimeline(this.#pageSize).catch(() => []);
       this.#emit(this.#withWindow(noActiveAccountState(this.#state, this.#cached))); return;
     }
-    this.#applyLoaded(await loadCachedAccountHome(pubkey, this.#pageSize));
+    this.#applyLoaded(await loadCachedAccountHome(pubkey, this.#pageSize).catch(() => ({ authors: [pubkey], cached: [], profiles: {} })));
     this.#emit(this.#withWindow(this.#cached.length > 0 ? readyWithEventsState(this.#state, this.#cached) : { ...this.#state, items: this.#cached }));
     if (this.#relays.length === 0) return this.#emit(noEnabledRelayState(this.#state));
     this.#cleanup.push(this.#subscriptions.subscribeState((snapshots) => this.#receiveState(snapshots)));
@@ -109,7 +109,7 @@ export class TimelineRuntime {
   }
   async #receiveFollowList(poolEvent: PoolEvent): Promise<void> {
     const event = poolEvent.event; await upsertEvent(event, [poolEvent.relay]);
-    this.#applyLoaded(await loadAccountHome(event.pubkey, event, this.#pageSize));
+    this.#applyLoaded(await loadAccountHome(event.pubkey, event, this.#pageSize).catch(() => ({ authors: [event.pubkey], cached: [], followList: event, profiles: {} })));
     this.#emit(this.#nextState({ items: this.items() })); this.#subscribeNotes();
   }
   async #receiveMetadata(poolEvent: PoolEvent): Promise<void> {

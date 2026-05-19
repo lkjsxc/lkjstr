@@ -1,0 +1,76 @@
+.tab-strip {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.15rem;
+  flex: 1 1 auto;
+  min-width: 0;
+  overflow: hidden;
+}
+
+.tab-frame {
+  align-items: stretch;
+  background: transparent;
+  border: 1px solid transparent;
+  border-bottom-color: var(--color-border);
+  border-radius: var(--radius-tab);
+  display: flex;
+  flex: 0 1 auto;
+  max-width: 14rem;
+  min-width: 0;
+}
+
+.tab-frame.active {
+  background: var(--color-surface-2);
+  border-color: var(--color-border-strong);
+}
+
+.tab-frame[draggable='true'] {
+  cursor: grab;
+}
+
+.tab-frame[draggable='true']:active {
+  cursor: grabbing;
+}
+
+.tab-main,
+.tab-close {
+  background: transparent;
+  border: 0;
+  color: var(--color-text-muted);
+}
+
+.tab-main {
+  flex: 1 1 auto;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.tab-close {
+  flex: 0 0 1.75rem;
+}
+
+.tab-frame.active .tab-main,
+.tab-frame.active .tab-close {
+  color: var(--color-text);
+}
+
+.tile-icon-button {
+  min-width: 2rem;
+}
+
+.row {
+  align-items: center;
+  border-bottom: 1px solid var(--color-border);
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.65rem;
+  justify-content: space-between;
+  min-width: 0;
+  padding: 0.65rem 0;
+}
+
+.row small {
+  color: var(--color-text-muted);
+}

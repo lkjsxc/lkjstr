@@ -29,6 +29,7 @@
     activeAccount?: Account;
     notifications: NotificationRecord[];
     relaySets: RelaySet[];
+    ready: boolean;
     relaySnapshots: RelaySnapshot[];
     focusTab: (paneId: string, tabId: string) => void;
     closeTab: (paneId: string, tabId: string) => void;
@@ -73,13 +74,18 @@
         focusTab={(tabId) => props.focusTab(props.pane.id, tabId)}
         closeTab={(tabId) => props.closeTab(props.pane.id, tabId)}
         moveTab={props.moveTab}
+        disabled={!props.ready}
       />
     {/if}
     <div class="pane-actions">
-      <NewTabButton open={() => props.openNewTab(props.pane.id)} />
+      <NewTabButton
+        open={() => props.openNewTab(props.pane.id)}
+        disabled={!props.ready}
+      />
       <TileMenu
         split={(direction) => props.split(props.pane.id, direction)}
         closePane={() => props.closePane(props.pane.id)}
+        disabled={!props.ready}
       />
     </div>
   </header>

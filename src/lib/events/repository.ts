@@ -1,4 +1,9 @@
 import { browserDb } from '../storage/browser-db';
+import {
+  bestEffortStorageWrite,
+  boundedStorageRead,
+  indexedDbAvailable,
+} from '../storage/safe-storage';
 import { compareEventsDesc, matchesFilter, type NostrEvent } from '../protocol';
 import { indexedPage } from './repository-indexed';
 import {
@@ -35,33 +40,33 @@ export async function upsertEvent(
     receipt(event.id, relayUrl, receivedAt),
   );
   const tags = tagRows(event);
-  if (typeof indexedDB === 'undefined') {
-    putMemory(stored, receipts, tags);
+  putMemory(stored, receipts, tags);
+  if (!indexedDbAvailable()) {
     return stored;
   }
-  await browserDb().transaction(
-    'rw',
-    browserDb().events,
-    browserDb().eventRelays,
-    browserDb().eventTags,
-    async () => {
-      await browserDb().events.put(stored);
-      await browserDb().eventRelays.bulkPut(receipts);
-      await browserDb().eventTags.where('eventId').equals(event.id).delete();
-      if (tags.length > 0) await browserDb().eventTags.bulkPut(tags);
-    },
-  );
+  await bestEffortStorageWrite(async () => {
+    await browserDb().transaction(
+      'rw',
+      browserDb().events,
+      browserDb().eventRelays,
+      browserDb().eventTags,
+      async () => {
+        await browserDb().events.put(stored);
+        await browserDb().eventRelays.bulkPut(receipts);
+        await browserDb().eventTags.where('eventId').equals(event.id).delete();
+        if (tags.length > 0) await browserDb().eventTags.bulkPut(tags);
+      },
+    );
+  });
   return stored;
 }
 
 export async function queryFeed(query: FeedQuery): Promise<FeedPage> {
   const limit = query.limit ?? 50;
-  const records =
-    typeof indexedDB === 'undefined'
-      ? memoryPage(query, limit + 1)
-      : await indexedPage(query, limit + 1).catch(() =>
-          memoryPage(query, limit + 1),
-        );
+  const records = await boundedStorageRead(
+    () => indexedPage(query, limit + 1),
+    memoryPage(query, limit + 1),
+  );
   const items = records.slice(0, limit).map(toFeedEvent);
   const cursor = cursorFor(query, items);
   if (cursor) await saveCursor(cursor);
@@ -91,20 +96,18 @@ export function feedKey(query: FeedQuery): string {
 }
 
 async function allEvents(): Promise<StoredEvent[]> {
-  if (typeof indexedDB === 'undefined') return allMemoryEvents();
-  const records = await browserDb()
-    .events.toArray()
-    .catch(() => allMemoryEvents());
+  const records = await boundedStorageRead(
+    () => browserDb().events.toArray(),
+    allMemoryEvents(),
+  );
   return records.map(normalizeStoredEvent);
 }
 
 async function existingEvent(id: string): Promise<StoredEvent | undefined> {
-  const event =
-    typeof indexedDB === 'undefined'
-      ? memoryEvent(id)
-      : await browserDb()
-          .events.get(id)
-          .catch(() => undefined);
+  const event = await boundedStorageRead(
+    () => browserDb().events.get(id),
+    memoryEvent(id),
+  );
   return event ? normalizeStoredEvent(event) : undefined;
 }
 
@@ -132,10 +135,7 @@ function cursorFor(
 
 async function saveCursor(cursor: FeedCursor): Promise<void> {
   memoryCursors.set(cursor.id, cursor);
-  if (typeof indexedDB === 'undefined') return;
-  await browserDb()
-    .feedCursors.put(cursor)
-    .catch(() => undefined);
+  await bestEffortStorageWrite(() => browserDb().feedCursors.put(cursor));
 }
 
 export function clearEventRepositoryForTests(): void {
