@@ -4,6 +4,7 @@ export function titleFor(kind: TabKind): string {
   const titles: Record<TabKind, string> = {
     'new-tab': 'New Tab',
     timeline: 'Home',
+    global: 'Global',
     notifications: 'Notifications',
     profile: 'Profile',
     'account-manager': 'Accounts',

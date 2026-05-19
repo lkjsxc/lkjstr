@@ -7,6 +7,8 @@
     updateRelay,
     type RelaySet,
   } from '$lib/relays/relay-store';
+  import { sharedRelayPool } from '$lib/relays/relay-pool';
+  import type { RelaySnapshot } from '$lib/relays/types';
 
   type Props = {
     relaySets: RelaySet[];
@@ -18,6 +20,7 @@
   let input = $state('');
   let error = $state('');
   let defaultSetId = $state(selectedDefaultRelaySetId());
+  let snapshots = $state<RelaySnapshot[]>([]);
 
   async function add(setId: string): Promise<void> {
     try {
@@ -49,6 +52,12 @@
     defaultSetId = setId;
     props.refresh();
   }
+
+  function snapshot(url: string): RelaySnapshot | undefined {
+    return snapshots.find((item) => item.url === url);
+  }
+
+  $effect(() => sharedRelayPool.onState((next) => (snapshots = next)));
 </script>
 
 <section class="relay-settings">
@@ -85,7 +94,10 @@
               {key}
             </label>
           {/each}
-          <small>{relay.state}</small>
+          <small>{snapshot(relay.url)?.state ?? relay.state}</small>
+          {#if snapshot(relay.url)?.lastError}
+            <small>{snapshot(relay.url)?.lastError}</small>
+          {/if}
           <button
             type="button"
             onclick={() => props.removeRelay(set.id, relay.url)}

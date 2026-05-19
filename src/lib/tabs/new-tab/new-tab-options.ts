@@ -10,20 +10,20 @@ export type NewTabOption = {
 export const newTabOptions: readonly NewTabOption[] = [
   {
     kind: 'timeline',
-    label: 'Timeline',
-    description: 'Global notes.',
+    label: 'Home',
+    description: 'Account follows.',
+    group: 'primary',
+  },
+  {
+    kind: 'global',
+    label: 'Global',
+    description: 'Relay notes.',
     group: 'primary',
   },
   {
     kind: 'relay-settings',
     label: 'Relay Settings',
     description: 'Relay sets.',
-    group: 'primary',
-  },
-  {
-    kind: 'relay-monitor',
-    label: 'Relay Monitor',
-    description: 'Relay status.',
     group: 'primary',
   },
   {

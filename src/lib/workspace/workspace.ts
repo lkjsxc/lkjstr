@@ -110,7 +110,7 @@ export function openTab(
 export function splitFocusedPane(
   workspace: Workspace,
   direction: SplitDirection,
-  kind: TabKind = 'timeline',
+  kind: TabKind = 'new-tab',
 ): Workspace {
   const usable = ensureUsableWorkspace(workspace);
   if (!usable.layout || !usable.focusedPaneId) return usable;

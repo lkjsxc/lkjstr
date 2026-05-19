@@ -6,6 +6,7 @@
 
   type Props = {
     item: TimelineItem;
+    depth?: number;
     profile?: ProfileSummary;
     openProfile?: (pubkey: string) => void;
     openThread?: (eventId: string) => void;
@@ -14,7 +15,7 @@
   let props: Props = $props();
 </script>
 
-<article class="event-row">
+<article class="event-row" style={`--event-depth: ${props.depth ?? 0}`}>
   <button
     type="button"
     class="avatar-button"

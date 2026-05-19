@@ -88,7 +88,16 @@
       {:else if active.kind === 'timeline'}
         <TimelineTab
           tabId={active.id}
+          kind="home"
           activeAccountPubkey={props.activeAccount?.pubkey}
+          relaySets={props.relaySets}
+          openProfile={(pubkey) => props.openProfile(props.pane.id, pubkey)}
+          openThread={(eventId) => props.openThread(props.pane.id, eventId)}
+        />
+      {:else if active.kind === 'global'}
+        <TimelineTab
+          tabId={active.id}
+          kind="global"
           relaySets={props.relaySets}
           openProfile={(pubkey) => props.openProfile(props.pane.id, pubkey)}
           openThread={(eventId) => props.openThread(props.pane.id, eventId)}
@@ -100,7 +109,11 @@
           addNip07={props.addNip07}
         />
       {:else if active.kind === 'notifications'}
-        <NotificationsTab notifications={props.notifications} />
+        <NotificationsTab
+          tabId={active.id}
+          accountPubkey={props.activeAccount?.pubkey}
+          relaySets={props.relaySets}
+        />
       {:else if active.kind === 'profile'}
         <ProfileTab
           tabId={active.id}

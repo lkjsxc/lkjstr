@@ -1,5 +1,5 @@
 <script lang="ts">
-  import EventContent from '$lib/components/events/EventContent.svelte';
+  import EventTreeList from '$lib/components/events/EventTreeList.svelte';
   import IdentityChip from '$lib/components/identity/IdentityChip.svelte';
   import { shortNpub } from '$lib/identity/display-name';
   import {
@@ -64,16 +64,9 @@
     <p role="alert">{state.error}</p>
   {/if}
   <h3>Notes</h3>
-  <div class="event-list">
-    {#each state.posts as event (event.id)}
-      <article class="event-row">
-        <div class="event-main">
-          <small>{new Date(event.created_at * 1000).toLocaleString()}</small>
-          <EventContent content={event.content} />
-        </div>
-      </article>
-    {:else}
-      <p>No cached notes have been received for this profile.</p>
-    {/each}
-  </div>
+  <EventTreeList
+    items={state.posts.map((event) => ({ event, relays: ['cache'] }))}
+    loading={state.loading}
+    emptyText="No notes have been received for this profile."
+  />
 </section>

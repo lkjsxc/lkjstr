@@ -18,6 +18,7 @@
 .event-list {
   display: grid;
   gap: var(--space-3);
+  min-height: 0;
 }
 
 .event-row {
@@ -26,6 +27,7 @@
   display: grid;
   gap: var(--space-3);
   grid-template-columns: auto minmax(0, 1fr);
+  margin-left: calc(var(--event-depth, 0) * var(--space-5));
   padding: var(--space-3) 0;
 }
 

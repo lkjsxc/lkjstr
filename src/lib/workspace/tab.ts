@@ -1,6 +1,7 @@
 export type TabKind =
   | 'new-tab'
   | 'timeline'
+  | 'global'
   | 'notifications'
   | 'profile'
   | 'account-manager'
@@ -49,6 +50,7 @@ export function iconFor(kind: TabKind): string {
   const icons: Record<TabKind, string> = {
     'new-tab': 'plus',
     timeline: 'list',
+    global: 'globe',
     notifications: 'bell',
     profile: 'user',
     'account-manager': 'users',

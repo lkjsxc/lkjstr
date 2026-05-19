@@ -2,7 +2,6 @@
   import type { NostrEvent } from '$lib/protocol';
   import Avatar from '$lib/components/identity/Avatar.svelte';
   import { identityDisplay, type ProfileSummary } from '$lib/identity/identity';
-  import { fullNpub } from '$lib/identity/npub';
 
   type Props = {
     event: NostrEvent;
@@ -15,14 +14,8 @@
 
   let props: Props = $props();
   let display = $derived(identityDisplay(props.event.pubkey, props.profile));
-  let npub = $derived(fullNpub(props.event.pubkey));
   let eventId = $derived(short(props.event.id));
   let time = $derived(new Date(props.event.created_at * 1000).toLocaleString());
-  let relayText = $derived(
-    props.relays.every((relay) => relay === 'cache')
-      ? 'cache-only'
-      : props.relays.join(', '),
-  );
 
   function short(value: string): string {
     return `${value.slice(0, 8)}...${value.slice(-4)}`;
@@ -44,11 +37,9 @@
     >
       <strong>{display.title}</strong>
     </button>
-    <span class="event-npub">{npub}</span>
     <span>{time}</span>
     <button type="button" onclick={() => props.openThread?.(props.event.id)}>
       {eventId}
     </button>
-    <span>{relayText}</span>
   </div>
 {/if}

@@ -1,6 +1,7 @@
 <script lang="ts">
-  import EventRow from '$lib/components/events/EventRow.svelte';
+  import EventTreeList from '$lib/components/events/EventTreeList.svelte';
   import type { RelaySet } from '$lib/relays/relay-store';
+  import { GlobalTimelineRuntime } from '$lib/timeline/global-timeline-runtime';
   import { TimelineRuntime } from '$lib/timeline/timeline-runtime';
   import type { TimelineState } from '$lib/timeline/timeline-state';
   import {
@@ -10,6 +11,7 @@
 
   type Props = {
     tabId: string;
+    kind?: 'home' | 'global';
     activeAccountPubkey?: string | null;
     relaySets: readonly RelaySet[];
     openProfile: (pubkey: string) => void;
@@ -28,11 +30,13 @@
     profiles: {},
     diagnostics: [],
   });
-  let runtime: TimelineRuntime | undefined;
+  let runtime: TimelineRuntime | GlobalTimelineRuntime | undefined;
 
   $effect(() => {
     const relays = timelineRelays(props.relaySets);
-    runtime = new TimelineRuntime({
+    const Runtime =
+      props.kind === 'global' ? GlobalTimelineRuntime : TimelineRuntime;
+    runtime = new Runtime({
       relays,
       subId: createTimelineSubId(props.tabId),
       activeAccountPubkey: props.activeAccountPubkey,
@@ -46,16 +50,12 @@
   });
 </script>
 
-<section class="timeline-tab" aria-label="Timeline">
-  <header class="timeline-status">
-    <h2>Home</h2>
-    <span>{state.connectedRelays} relays</span>
-    <span>{state.eoseRelays} EOSE</span>
-    <span>{state.authors.length} authors</span>
-    <span>{state.status}</span>
-  </header>
+<section
+  class="timeline-tab"
+  aria-label={props.kind === 'global' ? 'Global' : 'Home'}
+>
   {#if state.loading}
-    <p>Loading timeline events...</p>
+    <p>Loading events...</p>
   {/if}
   {#if state.error}
     <p role="alert">{state.error}</p>
@@ -67,18 +67,12 @@
       {/each}
     </ul>
   {/if}
-  <div class="event-list">
-    {#each state.items as item (item.event.id)}
-      <EventRow
-        {item}
-        profile={state.profiles[item.event.pubkey]}
-        openProfile={props.openProfile}
-        openThread={props.openThread}
-      />
-    {:else}
-      {#if !state.loading}
-        <p>No timeline events yet.</p>
-      {/if}
-    {/each}
-  </div>
+  <EventTreeList
+    items={state.items}
+    profiles={state.profiles}
+    loading={state.loading}
+    emptyText="No events yet."
+    openProfile={props.openProfile}
+    openThread={props.openThread}
+  />
 </section>
