@@ -1,10 +1,24 @@
-import { createAccount, parseReadonlyAccount, type Account } from './account';
+import {
+  createAccount,
+  parsePubkey,
+  parseReadonlyAccount,
+  type Account,
+} from './account';
 import { saveAccount, setActiveAccountId } from './account-store';
 import { connectNip07, type Nip07Provider } from './nip07';
 
 export async function addReadonlyAccount(input: string): Promise<Account> {
   const account = parseReadonlyAccount(input);
   if (!account) throw new Error('Read-only account input is invalid.');
+  await saveAccount(account);
+  setActiveAccountId(account.id);
+  return account;
+}
+
+export async function addReadonlyPubkey(pubkey: string): Promise<Account> {
+  const parsed = parsePubkey(pubkey);
+  if (!parsed) throw new Error('Mined public key is invalid.');
+  const account = createAccount(parsed, 'readonly');
   await saveAccount(account);
   setActiveAccountId(account.id);
   return account;

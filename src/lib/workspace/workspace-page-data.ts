@@ -1,6 +1,7 @@
 import {
   addNip07Account,
   addReadonlyAccount,
+  addReadonlyPubkey,
 } from '$lib/accounts/account-manager';
 import { activeAccount, listAccounts } from '$lib/accounts/account-store';
 import type { Account } from '$lib/accounts/account';
@@ -31,4 +32,9 @@ export async function addReadonlyFromInput(input: string): Promise<string> {
 export async function addNip07FromProvider(): Promise<string> {
   await addNip07Account();
   return 'NIP-07 account added.';
+}
+
+export async function addReadonlyFromPubkey(pubkey: string): Promise<string> {
+  await addReadonlyPubkey(pubkey);
+  return 'Read-only account added.';
 }

@@ -9,6 +9,7 @@
   } from '$lib/relays/relay-store';
   import WorkspaceRoot from '$lib/components/workspace/WorkspaceRoot.svelte';
   import {
+    addMinedReadonly,
     promptAddNip07,
     promptAddReadonly,
   } from '$lib/workspace/account-actions';
@@ -181,6 +182,7 @@
     resize={handleResize}
     addReadonly={() => promptAddReadonly(refreshData)}
     addNip07={() => promptAddNip07(refreshData)}
+    addReadonlyPubkey={(pubkey) => addMinedReadonly(pubkey, refreshData)}
     {refreshData}
     toggleRelay={handleToggleRelay}
     removeRelay={handleRemoveRelay}

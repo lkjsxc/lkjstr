@@ -47,6 +47,7 @@
     closePane: (paneId: string) => void;
     addReadonly: () => void;
     addNip07: () => void;
+    addReadonlyPubkey: (pubkey: string) => Promise<void>;
     refreshData: () => void;
     toggleRelay: (setId: string, url: string, enabled: boolean) => void;
     removeRelay: (setId: string, url: string) => void;
@@ -107,6 +108,7 @@
           accounts={props.accounts}
           addReadonly={props.addReadonly}
           addNip07={props.addNip07}
+          addReadonlyPubkey={props.addReadonlyPubkey}
         />
       {:else if active.kind === 'notifications'}
         <NotificationsTab

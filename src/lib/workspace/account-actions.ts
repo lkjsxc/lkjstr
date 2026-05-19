@@ -1,5 +1,6 @@
 import {
   addNip07FromProvider,
+  addReadonlyFromPubkey,
   addReadonlyFromInput,
 } from './workspace-page-data';
 
@@ -22,5 +23,19 @@ export async function promptAddNip07(refresh: () => Promise<void>) {
     await refresh();
   } catch {
     window.alert('NIP-07 unavailable.');
+  }
+}
+
+export async function addMinedReadonly(
+  pubkey: string,
+  refresh: () => Promise<void>,
+) {
+  try {
+    await addReadonlyFromPubkey(pubkey);
+    await refresh();
+  } catch (error) {
+    window.alert(
+      error instanceof Error ? error.message : 'Account add failed.',
+    );
   }
 }

@@ -33,6 +33,7 @@
     resize: (splitId: string, handleIndex: number, deltaRatio: number) => void;
     addReadonly: () => void;
     addNip07: () => void;
+    addReadonlyPubkey: (pubkey: string) => Promise<void>;
     refreshData: () => void;
     toggleRelay: (setId: string, url: string, enabled: boolean) => void;
     removeRelay: (setId: string, url: string) => void;
@@ -66,6 +67,7 @@
         resize={props.resize}
         addReadonly={props.addReadonly}
         addNip07={props.addNip07}
+        addReadonlyPubkey={props.addReadonlyPubkey}
         refreshData={props.refreshData}
         toggleRelay={props.toggleRelay}
         removeRelay={props.removeRelay}
