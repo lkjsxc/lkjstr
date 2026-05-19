@@ -1,9 +1,10 @@
 import { compareEventsDesc, type NostrEvent } from '../protocol';
-import { queryFeed, upsertEvent } from '../events/repository';
 import {
-  boundedStorageRead,
-  indexedDbAvailable,
-} from '../storage/safe-storage';
+  latestEventByAuthorKind,
+  queryFeed,
+  upsertEvent,
+} from '../events/repository';
+import { indexedDbAvailable } from '../storage/safe-storage';
 import { latestFollowList } from './follow-list';
 
 export type TimelineItem = {
@@ -34,8 +35,7 @@ export async function loadCachedFollowList(
 ): Promise<NostrEvent | undefined> {
   if (!indexedDbAvailable())
     return latestFollowList([...memoryEvents.values()], pubkey);
-  const events = await queryEvents();
-  return latestFollowList(events, pubkey);
+  return (await latestEventByAuthorKind(pubkey, 3))?.event;
 }
 
 export async function storeTimelineEvent(event: NostrEvent): Promise<void> {
@@ -76,12 +76,4 @@ function memoryTimeline(
     .sort(compareEventsDesc)
     .slice(0, limit)
     .map((event) => ({ event, relays: ['cache'] }));
-}
-
-async function queryEvents(): Promise<NostrEvent[]> {
-  const { browserDb } = await import('../storage/browser-db');
-  return boundedStorageRead(
-    () => browserDb().events.toArray(),
-    [...memoryEvents.values()],
-  );
 }

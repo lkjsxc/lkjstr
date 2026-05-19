@@ -5,6 +5,7 @@
     type NostrEvent,
   } from '$lib/protocol';
   import { contentAttachments } from '$lib/events/content-media';
+  import ContentTokens from './ContentTokens.svelte';
   import EventEmbed from './EventEmbed.svelte';
   import MediaAttachment from './MediaAttachment.svelte';
 
@@ -12,6 +13,7 @@
     event: NostrEvent;
     relays?: readonly string[];
     depth?: number;
+    openProfile?: (pubkey: string) => void;
     openThread?: (eventId: string) => void;
   };
 
@@ -20,10 +22,16 @@
   let references = $derived(
     (props.depth ?? 0) >= 1 ? [] : eventReferences(props.event).slice(0, 4),
   );
-  let attachments = $derived(contentAttachments(props.event));
+  let attachments = $derived(
+    contentAttachments(props.event).filter((item) => item.type !== 'link'),
+  );
 </script>
 
-<p class="event-content">{props.event.content}</p>
+<ContentTokens
+  event={props.event}
+  openProfile={props.openProfile}
+  openThread={props.openThread}
+/>
 {#if attachments.length > 0}
   <div class="media-grid">
     {#each attachments as attachment (attachment.url)}
@@ -35,7 +43,11 @@
   <aside class="event-embed" data-kind="repost-json">
     <strong>Reposted event</strong>
     <small>{nested.pubkey.slice(0, 12)}</small>
-    <p class="event-content">{nested.content}</p>
+    <ContentTokens
+      event={nested}
+      openProfile={props.openProfile}
+      openThread={props.openThread}
+    />
   </aside>
 {/if}
 {#each references as reference (`${reference.kind}:${reference.id}`)}
@@ -43,6 +55,7 @@
     {reference}
     relays={props.relays ?? []}
     depth={props.depth ?? 0}
+    openProfile={props.openProfile}
     openThread={props.openThread}
   />
 {/each}

@@ -51,7 +51,12 @@
       </time>
     </div>
     {#if props.item}
-      <EventContent event={props.item.event} relays={props.item.relays} />
+      <EventContent
+        event={props.item.event}
+        relays={props.item.relays}
+        openProfile={props.openProfile}
+        openThread={props.openThread}
+      />
     {:else}
       <p class="event-content">Event content unavailable.</p>
     {/if}

@@ -35,6 +35,10 @@
     loadWorkspace,
     saveWorkspace,
   } from '$lib/workspace/workspace-persistence';
+  import {
+    loadInactiveRetentionSeconds,
+    settingsChangedEvent,
+  } from '$lib/workspace/runtime-settings';
 
   let workspace = $state<Workspace>(bootstrapWorkspace());
   let accounts = $state<Account[]>([]);
@@ -42,8 +46,26 @@
   let notifications = $state<NotificationRecord[]>([]);
   let relaySets = $state<RelaySet[]>([]);
   let ready = $state(false);
+  let pageDataReady = $state(false);
+  let inactiveRetentionSeconds = $state(300);
 
-  onMount(async () => {
+  onMount(() => {
+    let disposed = false;
+    const refreshSettings = () => {
+      if (!disposed)
+        void refreshRuntimeSettings().catch(
+          logRuntimeError('settings-load-failed'),
+        );
+    };
+    window.addEventListener(settingsChangedEvent, refreshSettings);
+    void initializeWorkspace().catch(logRuntimeError('workspace-init-failed'));
+    return () => {
+      disposed = true;
+      window.removeEventListener(settingsChangedEvent, refreshSettings);
+    };
+  });
+
+  async function initializeWorkspace(): Promise<void> {
     ready = true;
     const initialWorkspace = workspace;
     let hadUserInput = false;
@@ -60,7 +82,10 @@
         logRuntimeError('workspace-save-failed'),
       );
     await refreshData().catch(logRuntimeError('workspace-refresh-failed'));
-  });
+    await refreshRuntimeSettings().catch(
+      logRuntimeError('settings-load-failed'),
+    );
+  }
 
   async function update(next: Workspace): Promise<void> {
     workspace = next;
@@ -70,14 +95,18 @@
   async function refreshData(): Promise<void> {
     ({ accounts, activeAccount, notifications, relaySets } =
       await loadWorkspacePageData());
+    pageDataReady = true;
   }
 
-  async function handleOpenTab(
-    paneId: string | null,
-    kind: TabKind,
-  ): Promise<void> {
-    const config =
-      kind === 'profile' ? { pubkey: accounts[0]?.pubkey ?? '' } : {};
+  async function refreshRuntimeSettings(): Promise<void> {
+    inactiveRetentionSeconds = await loadInactiveRetentionSeconds(
+      inactiveRetentionSeconds,
+    );
+  }
+
+  // prettier-ignore
+  async function handleOpenTab(paneId: string | null, kind: TabKind): Promise<void> {
+    const config = kind === 'profile' ? { pubkey: accounts[0]?.pubkey ?? '' } : {};
     await update(openTab(workspace, paneId, kind, titleFor(kind), config));
   }
 
@@ -85,44 +114,32 @@
     if (workspace) await update(openNewTabChooser(workspace, paneId));
   }
 
-  async function handleConvertTab(
-    tabId: string,
-    kind: TabKind,
-    config: Record<string, unknown> = {},
-  ): Promise<void> {
+  // prettier-ignore
+  async function handleConvertTab(tabId: string, kind: TabKind, config: Record<string, unknown> = {}): Promise<void> {
     if (workspace)
       await update(convertWorkspaceTab(workspace, tabId, kind, config));
   }
 
-  async function handleOpenProfile(
-    paneId: string,
-    pubkey: string,
-  ): Promise<void> {
+  // prettier-ignore
+  async function handleOpenProfile(paneId: string, pubkey: string): Promise<void> {
     if (workspace) await update(openProfileTab(workspace, paneId, pubkey));
   }
 
-  async function handleOpenThread(
-    paneId: string,
-    eventId: string,
-  ): Promise<void> {
+  // prettier-ignore
+  async function handleOpenThread(paneId: string, eventId: string): Promise<void> {
     if (workspace) await update(openThreadTab(workspace, paneId, eventId));
   }
 
-  async function handleSplit(
-    paneId: string,
-    direction: 'horizontal' | 'vertical',
-  ): Promise<void> {
+  // prettier-ignore
+  async function handleSplit(paneId: string, direction: 'horizontal' | 'vertical'): Promise<void> {
     if (workspace)
       await update(
         splitFocusedPane({ ...workspace, focusedPaneId: paneId }, direction),
       );
   }
 
-  async function handleResize(
-    splitId: string,
-    handleIndex: number,
-    deltaRatio: number,
-  ): Promise<void> {
+  // prettier-ignore
+  async function handleResize(splitId: string, handleIndex: number, deltaRatio: number): Promise<void> {
     if (workspace?.layout)
       await update({
         ...workspace,
@@ -148,12 +165,8 @@
       : Promise.resolve();
   }
 
-  function handleMoveTab(
-    sourcePaneId: string,
-    targetPaneId: string,
-    tabId: string,
-    targetIndex: number,
-  ): Promise<void> {
+  // prettier-ignore
+  function handleMoveTab(sourcePaneId: string, targetPaneId: string, tabId: string, targetIndex: number): Promise<void> {
     const move = { sourcePaneId, targetPaneId, tabId, targetIndex };
     return workspace
       ? update(moveWorkspaceTab(workspace, move))
@@ -178,4 +191,4 @@
 </svelte:head>
 
 <!-- prettier-ignore -->
-<WorkspaceRoot {workspace} {accounts} {activeAccount} {notifications} {relaySets} {ready} focusTab={handleFocusTab} closeTab={handleCloseTab} moveTab={handleMoveTab} openTab={handleOpenTab} openNewTab={handleOpenNewTab} convertTab={handleConvertTab} split={handleSplit} closePane={handleClosePane} resize={handleResize} addReadonly={() => promptAddReadonly(refreshData)} addNip07={() => promptAddNip07(refreshData)} addReadonlyPubkey={(pubkey) => addMinedReadonly(pubkey, refreshData)} {refreshData} toggleRelay={handleToggleRelay} removeRelay={handleRemoveRelay} openProfile={handleOpenProfile} openThread={handleOpenThread} />
+<WorkspaceRoot {workspace} {accounts} {activeAccount} {notifications} {relaySets} {ready} {pageDataReady} {inactiveRetentionSeconds} focusTab={handleFocusTab} closeTab={handleCloseTab} moveTab={handleMoveTab} openTab={handleOpenTab} openNewTab={handleOpenNewTab} convertTab={handleConvertTab} split={handleSplit} closePane={handleClosePane} resize={handleResize} addReadonly={() => promptAddReadonly(refreshData)} addNip07={() => promptAddNip07(refreshData)} addReadonlyPubkey={(pubkey) => addMinedReadonly(pubkey, refreshData)} {refreshData} toggleRelay={handleToggleRelay} removeRelay={handleRemoveRelay} openProfile={handleOpenProfile} openThread={handleOpenThread} />

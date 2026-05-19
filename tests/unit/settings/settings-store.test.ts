@@ -42,6 +42,22 @@ describe('settings store helpers', () => {
     expect(coerceValue(setting, 5000)).toEqual({ ok: true, value: 5000 });
   });
 
+  it('coerces inactive tab retention within documented bounds', () => {
+    const setting = defaultSettings().find(
+      (item) => item.key === 'tabs.inactiveRetentionSeconds',
+    );
+    if (!setting) throw new Error('expected setting');
+    expect(setting).toMatchObject({
+      defaultValue: 300,
+      min: 0,
+      max: 3600,
+      integer: true,
+    });
+    expect(coerceValue(setting, 0)).toEqual({ ok: true, value: 0 });
+    expect(coerceValue(setting, 3601)).toEqual({ ok: false });
+    expect(coerceValue(setting, 1.5)).toEqual({ ok: false });
+  });
+
   it('rejects invalid imported values', async () => {
     await expect(
       importSettingsJson(

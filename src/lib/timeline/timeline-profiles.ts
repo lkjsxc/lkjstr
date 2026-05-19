@@ -1,5 +1,8 @@
 import type { ProfileSummary } from '../identity/identity';
-import { profileFromMetadataEvent } from '../identity/profile-cache';
+import {
+  getProfile,
+  profileFromMetadataEvent,
+} from '../identity/profile-cache';
 import type { NostrEvent, NostrFilter } from '../protocol';
 import {
   cachedProfileEvent,
@@ -42,6 +45,8 @@ export function profileFilter(
 async function cachedProfile(
   pubkey: string,
 ): Promise<ProfileSummary | undefined> {
+  const cached = getProfile(pubkey);
+  if (cached) return cached;
   const event = await cachedProfileEvent(pubkey);
   return event ? profileFromMetadataEvent(event) : undefined;
 }

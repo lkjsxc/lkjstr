@@ -7,5 +7,6 @@ test('opens flat settings without filter UI', async ({ page }) => {
   await expect(page.getByRole('heading', { name: 'Settings' })).toBeVisible();
   await expect(page.getByLabel('Search settings')).toHaveCount(0);
   await expect(page.getByText('appearance.cornerRadius')).toBeVisible();
+  await expect(page.getByText('tabs.inactiveRetentionSeconds')).toBeVisible();
   await expect(page.getByText('timeline.initialLimit')).toBeVisible();
 });

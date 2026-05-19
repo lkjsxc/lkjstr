@@ -68,9 +68,8 @@ function push(
 function dedupe(refs: readonly EventReference[]): EventReference[] {
   const seen = new Set<string>();
   return refs.filter((ref) => {
-    const key = `${ref.kind}:${ref.id}`;
-    if (seen.has(key)) return false;
-    seen.add(key);
+    if (seen.has(ref.id)) return false;
+    seen.add(ref.id);
     return true;
   });
 }

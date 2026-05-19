@@ -8,7 +8,13 @@ export function getProfile(pubkey: string): ProfileSummary | undefined {
 }
 
 export function setProfile(profile: ProfileSummary): void {
+  const existing = profiles.get(profile.pubkey);
+  if (existing && existing.updatedAt > profile.updatedAt) return;
   profiles.set(profile.pubkey, profile);
+}
+
+export function clearProfileCacheForTests(): void {
+  profiles.clear();
 }
 
 export function profileFromMetadataEvent(event: NostrEvent): ProfileSummary {

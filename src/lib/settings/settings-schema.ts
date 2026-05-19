@@ -21,6 +21,7 @@ workspace.recoverLastTile|Recover last tile|boolean|true|Recover one tile when n
 workspace.defaultTabKind|Default tab|enum|timeline|Recovery tab kind.|timeline,new-tab
 tabs.closeLastTabClosesTile|Close empty tile|boolean|true|Close tile after final tab.
 tabs.newTabChooserEnabled|New Tab chooser|boolean|true|Use per-tile tab chooser.
+tabs.inactiveRetentionSeconds|Inactive tab retention|number|300|Seconds to retain inactive tab runtimes.
 timeline.initialLimit|Timeline limit|number|50|Initial timeline event limit.
 timeline.defaultRelays|Timeline relays|json|["wss://relay.damus.io","wss://nos.lol","wss://relay.primal.net","wss://relay.nostr.band","wss://offchain.pub"]|Fallback relay URLs.
 timeline.showRelayProvenance|Relay provenance|boolean|true|Show event relay source.
@@ -65,6 +66,12 @@ const numericConstraints: Record<
   Pick<RawSetting, 'min' | 'max' | 'step' | 'integer'>
 > = {
   'appearance.cornerRadius': { min: 0, max: 16, step: 1, integer: true },
+  'tabs.inactiveRetentionSeconds': {
+    min: 0,
+    max: 3600,
+    step: 1,
+    integer: true,
+  },
   'timeline.initialLimit': { min: 10, max: 180, step: 1, integer: true },
   'relays.connectTimeoutMs': { min: 500, max: 30000, step: 100, integer: true },
   'cache.maxEvents': { min: 100, max: 100000, step: 100, integer: true },

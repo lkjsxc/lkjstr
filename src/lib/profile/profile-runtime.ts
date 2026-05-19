@@ -5,7 +5,10 @@ import {
   oldestCreatedAt,
 } from '$lib/events/feed-window';
 import { boundedErrorText } from '$lib/events/runtime-error';
-import { profileFromMetadataEvent } from '$lib/identity/profile-cache';
+import {
+  getProfile,
+  profileFromMetadataEvent,
+} from '$lib/identity/profile-cache';
 import type { NostrEvent } from '$lib/protocol';
 import {
   sharedRelayPool,
@@ -34,6 +37,8 @@ export class ProfileRuntime {
   #state: ProfileState = emptyProfileState();
   #pageSize = feedPageSize;
   #startedAt = Math.floor(Date.now() / 1000);
+  #closed = false;
+  #generation = 0;
 
   constructor(
     readonly pubkey: string,
@@ -54,13 +59,18 @@ export class ProfileRuntime {
   }
 
   async start(): Promise<void> {
+    if (this.#closed) return;
+    const generation = ++this.#generation;
     const [meta, posts] = await Promise.all([
       cachedProfileEvent(this.pubkey),
       cachedProfileNotes(this.pubkey, this.#pageSize),
     ]);
+    if (!this.#active(generation)) return;
+    const profile =
+      getProfile(this.pubkey) ?? (meta ? profileFromMetadataEvent(meta) : null);
     this.#emit({
       ...this.#state,
-      profile: meta ? profileFromMetadataEvent(meta) : null,
+      profile,
       posts,
       loading: this.relays.length > 0,
       updatedAt: meta ? meta.created_at * 1000 : null,
@@ -89,98 +99,69 @@ export class ProfileRuntime {
   }
 
   close(): void {
+    this.#closed = true;
+    this.#generation++;
     for (const cleanup of this.#cleanup.splice(0)) cleanup();
-    this.#emit({ ...this.#state, loading: false, loadingOlder: false });
+    this.#listeners.clear();
   }
 
+  // prettier-ignore
   async loadOlder(): Promise<void> {
-    if (this.#state.loadingOlder || !this.#state.hasOlder) return;
-    const cursor = this.#state.oldestCursor;
-    if (!cursor) return;
+    if (this.#closed || this.#state.loadingOlder || !this.#state.hasOlder) return; const generation = this.#generation; const cursor = this.#state.oldestCursor; if (!cursor) return;
     this.#emit({ ...this.#state, loadingOlder: true });
     try {
-      const page = await loadOlderProfilePage({
-        posts: this.#state.posts,
-        pubkey: this.pubkey,
-        relays: this.relays,
-        subId: this.subId,
-        cursor,
-        pageSize: this.#pageSize,
-        subscriptions: this.#subscriptions,
-      });
-      this.#emit({
-        ...this.#state,
-        posts: page.posts,
-        hasOlder: page.hasOlder,
-        newerPruned: this.#state.newerPruned || page.newerPruned,
-      });
-    } catch (error) {
-      this.#emit({ ...this.#state, error: boundedErrorText(error) });
-    } finally {
-      if (this.#state.loadingOlder)
-        this.#emit({ ...this.#state, loadingOlder: false });
-    }
+      const page = await loadOlderProfilePage({ posts: this.#state.posts, pubkey: this.pubkey, relays: this.relays, subId: this.subId, cursor, pageSize: this.#pageSize, subscriptions: this.#subscriptions });
+      if (!this.#active(generation)) return; this.#emit({ ...this.#state, posts: page.posts, hasOlder: page.hasOlder, newerPruned: this.#state.newerPruned || page.newerPruned });
+    } catch (error) { this.#emit({ ...this.#state, error: boundedErrorText(error) }); }
+    finally { if (this.#state.loadingOlder) this.#emit({ ...this.#state, loadingOlder: false }); }
   }
 
   async #receive(poolEvent: PoolEvent): Promise<void> {
+    if (this.#closed) return;
     if (poolEvent.subId !== this.subId) return;
     if (poolEvent.event.pubkey !== this.pubkey) return;
     await storeProfileEvent(poolEvent.event, [poolEvent.relay]);
+    if (this.#closed) return;
     if (poolEvent.event.kind === 0) this.#receiveMeta(poolEvent);
     if (poolEvent.event.kind === 1) this.#receivePost(poolEvent.event);
   }
 
   #receiveMeta(poolEvent: PoolEvent): void {
     if (poolEvent.event.pubkey !== this.pubkey) return;
+    const updatedAt = poolEvent.event.created_at * 1000;
+    if (this.#state.updatedAt && this.#state.updatedAt > updatedAt) return;
     this.#emit({
       ...this.#state,
       profile: profileFromMetadataEvent(poolEvent.event),
       loading: false,
       relays: [...new Set([...this.#state.relays, poolEvent.relay])],
-      updatedAt: poolEvent.event.created_at * 1000,
+      updatedAt,
     });
   }
 
+  // prettier-ignore
   #receivePost(event: NostrEvent): void {
-    const posts = [
-      event,
-      ...this.#state.posts.filter((item) => item.id !== event.id),
-    ]
-      .sort((a, b) => b.created_at - a.created_at)
-      .slice(0, feedWindowSize);
+    if (this.#closed) return; const posts = [event, ...this.#state.posts.filter((item) => item.id !== event.id)].sort((a, b) => b.created_at - a.created_at).slice(0, feedWindowSize);
     this.#emit(this.#withOldest({ ...this.#state, posts, loading: false }));
   }
 
+  // prettier-ignore
   async #loadInitialPage(): Promise<void> {
+    const generation = this.#generation;
     try {
-      const page = await loadInitialProfilePage({
-        posts: this.#state.posts,
-        profile: this.#state.profile,
-        relays: this.relays,
-        pubkey: this.pubkey,
-        subId: this.subId,
-        pageSize: this.#pageSize,
-        subscriptions: this.#subscriptions,
-      });
-      this.#emit({
-        ...this.#state,
-        profile: page.profile,
-        posts: page.posts,
-        loading: false,
-        relays: [...new Set([...this.#state.relays, ...page.relays])],
-      });
-    } catch (error) {
-      this.#emit({
-        ...this.#state,
-        loading: false,
-        error: boundedErrorText(error),
-      });
-    }
+      const page = await loadInitialProfilePage({ posts: this.#state.posts, profile: this.#state.profile, relays: this.relays, pubkey: this.pubkey, subId: this.subId, pageSize: this.#pageSize, subscriptions: this.#subscriptions });
+      if (!this.#active(generation)) return; this.#emit({ ...this.#state, profile: page.profile, posts: page.posts, loading: false, relays: [...new Set([...this.#state.relays, ...page.relays])] });
+    } catch (error) { this.#emit({ ...this.#state, loading: false, error: boundedErrorText(error) }); }
   }
 
   #emit(state: ProfileState): void {
+    if (this.#closed) return;
     this.#state = this.#withOldest(state);
     this.#listeners.forEach((listener) => listener(this.#state));
+  }
+
+  #active(generation: number): boolean {
+    return !this.#closed && generation === this.#generation;
   }
 
   #withOldest(state: ProfileState): ProfileState {

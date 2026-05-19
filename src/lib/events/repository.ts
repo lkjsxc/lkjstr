@@ -6,10 +6,11 @@ import {
 } from '../storage/safe-storage';
 import { compareEventsDesc, matchesFilter, type NostrEvent } from '../protocol';
 import { cursorPoint } from './feed-window';
-import { indexedPage } from './repository-indexed';
+import { indexedLatestByAuthorKind, indexedPage } from './repository-indexed';
 import {
   allMemoryEvents,
   clearMemoryRepository,
+  latestMemoryEventByAuthorKind,
   memoryCursors,
   memoryEvent,
   memoryPage,
@@ -76,6 +77,17 @@ export async function queryFeed(query: FeedQuery): Promise<FeedPage> {
 
 export async function lookupEvent(id: string): Promise<FeedEvent | undefined> {
   const event = (await allEvents()).find((item) => item.id === id);
+  return event ? toFeedEvent(event) : undefined;
+}
+
+export async function latestEventByAuthorKind(
+  pubkey: string,
+  kind: number,
+): Promise<FeedEvent | undefined> {
+  const event = await boundedStorageRead(
+    () => indexedLatestByAuthorKind(pubkey, kind),
+    latestMemoryEventByAuthorKind(pubkey, kind),
+  );
   return event ? toFeedEvent(event) : undefined;
 }
 

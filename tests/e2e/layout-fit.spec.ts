@@ -75,13 +75,15 @@ test('global event scroller fills the tile body', async ({ page }) => {
   await page.getByRole('button', { name: 'Open new tab' }).first().click();
   await page.getByRole('button', { name: 'Global', exact: true }).click();
   await expect(page.getByText('layout fit note 0')).toBeVisible();
-  const heights = await page.locator('.event-list').evaluate((list) => {
-    const scroller = list.querySelector('.event-list__scroller');
-    return {
-      list: list.getBoundingClientRect().height,
-      scroller: scroller?.getBoundingClientRect().height ?? 0,
-    };
-  });
+  const heights = await page
+    .locator('.pane-body[data-active-tab="true"] .event-list')
+    .evaluate((list) => {
+      const scroller = list.querySelector('.event-list__scroller');
+      return {
+        list: list.getBoundingClientRect().height,
+        scroller: scroller?.getBoundingClientRect().height ?? 0,
+      };
+    });
   expect(heights.scroller).toBeGreaterThan(heights.list * 0.8);
 });
 

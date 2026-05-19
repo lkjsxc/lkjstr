@@ -45,6 +45,8 @@ export class GlobalTimelineRuntime {
   #subId: string;
   #subscriptions: SubscriptionManager;
   #startedAt = Math.floor(Date.now() / 1000);
+  #closed = false;
+  #generation = 0;
 
   constructor(readonly options: TimelineRuntimeOptions) {
     const pool: RelayPool = options.pool ?? sharedRelayPool;
@@ -65,9 +67,12 @@ export class GlobalTimelineRuntime {
   }
 
   async start(): Promise<void> {
+    if (this.#closed) return;
+    const generation = ++this.#generation;
     this.#cached = [
       ...(await queryFeed({ kind: 'global', limit: this.#pageSize })).items,
     ];
+    if (!this.#active(generation)) return;
     this.#emit(
       this.#cached.length > 0
         ? this.#nextState(readyWithEventsState(this.#state, this.#cached))
@@ -94,84 +99,58 @@ export class GlobalTimelineRuntime {
   }
 
   close(): void {
+    this.#closed = true;
+    this.#generation++;
     for (const cleanup of this.#cleanup.splice(0)) cleanup();
-    this.#emit({ ...this.#state, loading: false });
+    this.#listeners.clear();
   }
 
+  // prettier-ignore
   async loadOlder(): Promise<void> {
-    if (this.#state.loadingOlder || !this.#state.hasOlder) return;
-    const cursor = this.#state.oldestCursor;
-    if (!cursor) return;
+    if (this.#closed || this.#state.loadingOlder || !this.#state.hasOlder) return; const generation = this.#generation; const cursor = this.#state.oldestCursor; if (!cursor) return;
     this.#emit({ ...this.#state, loadingOlder: true });
     try {
-      const page = await loadOlderGlobalPage({
-        items: this.items(),
-        relays: this.#relays,
-        subId: this.#subId,
-        cursor,
-        pageSize: this.#pageSize,
-        subscriptions: this.#subscriptions,
-      });
-      this.#cached = page.items;
-      this.#live = [];
-      this.#emit(
-        this.#nextState({
-          items: this.items(),
-          hasOlder: page.hasOlder,
-          hasNewer: this.#state.hasNewer || page.hasNewer,
-        }),
-      );
-    } catch (error) {
-      this.#emit({ ...this.#state, error: boundedErrorText(error) });
-    } finally {
-      if (this.#state.loadingOlder)
-        this.#emit({ ...this.#state, loadingOlder: false });
-    }
+      const page = await loadOlderGlobalPage({ items: this.items(), relays: this.#relays, subId: this.#subId, cursor, pageSize: this.#pageSize, subscriptions: this.#subscriptions });
+      if (!this.#active(generation)) return; this.#cached = page.items; this.#live = [];
+      this.#emit(this.#nextState({ items: this.items(), hasOlder: page.hasOlder, hasNewer: this.#state.hasNewer || page.hasNewer }));
+    } catch (error) { this.#emit({ ...this.#state, error: boundedErrorText(error) }); }
+    finally { if (this.#state.loadingOlder) this.#emit({ ...this.#state, loadingOlder: false }); }
   }
 
   // prettier-ignore
   async loadNewer(): Promise<void> {
-    if (this.#state.loadingNewer || !this.#state.hasNewer) return; const cursor = this.#state.newestCursor; if (!cursor) return;
+    if (this.#closed || this.#state.loadingNewer || !this.#state.hasNewer) return; const generation = this.#generation; const cursor = this.#state.newestCursor; if (!cursor) return;
     this.#emit({ ...this.#state, loadingNewer: true });
     try {
       const page = await queryFeed({ kind: 'global', after: cursor, limit: this.#pageSize });
+      if (!this.#active(generation)) return;
       this.#cached = mergeTimelineItems(page.items, this.items(), this.#limit);
       this.#emit(this.#nextState({ items: this.items(), hasNewer: page.hasMore }));
     } finally { if (this.#state.loadingNewer) this.#emit({ ...this.#state, loadingNewer: false }); }
   }
 
   async #receive(poolEvent: PoolEvent): Promise<void> {
+    if (this.#closed) return;
     await upsertEvent(poolEvent.event, [poolEvent.relay]);
+    if (this.#closed) return;
     this.#live = mergeFeedItems(this.#live, [
       { event: poolEvent.event, relays: [poolEvent.relay] },
     ]);
     this.#emit(readyWithEventsState(this.#state, this.items()));
   }
 
+  // prettier-ignore
   async #loadInitialPage(): Promise<void> {
+    const generation = this.#generation;
     try {
-      const items = await loadInitialGlobalPage({
-        relays: this.#relays,
-        subId: this.#subId,
-        pageSize: this.#pageSize,
-        subscriptions: this.#subscriptions,
-      });
-      this.#cached = mergeTimelineItems(items, this.items(), this.#limit);
-      this.#emit(
-        items.length > 0
-          ? this.#nextState(readyWithEventsState(this.#state, this.items()))
-          : this.#nextState({ loading: false }),
-      );
-    } catch (error) {
-      this.#emit({
-        ...this.#state,
-        loading: false,
-        error: boundedErrorText(error),
-      });
-    }
+      const items = await loadInitialGlobalPage({ relays: this.#relays, subId: this.#subId, pageSize: this.#pageSize, subscriptions: this.#subscriptions });
+      if (!this.#active(generation)) return; this.#cached = mergeTimelineItems(items, this.items(), this.#limit);
+      this.#emit(items.length > 0 ? this.#nextState(readyWithEventsState(this.#state, this.items())) : this.#nextState({ loading: false }));
+    } catch (error) { this.#emit({ ...this.#state, loading: false, error: boundedErrorText(error) }); }
   }
 
   #receiveState(snapshots: ReturnType<RelayPool['snapshots']>): void {
+    if (this.#closed) return;
     const active = selectedRelaySnapshots(snapshots, this.#relays);
     this.#emit({
       ...this.#state,
@@ -184,8 +163,13 @@ export class GlobalTimelineRuntime {
   }
 
   #emit(state: TimelineState): void {
+    if (this.#closed) return;
     this.#state = state;
     this.#listeners.forEach((listener) => listener(state));
+  }
+
+  #active(generation: number): boolean {
+    return !this.#closed && generation === this.#generation;
   }
 
   #nextState(patch: Partial<TimelineState>): TimelineState {

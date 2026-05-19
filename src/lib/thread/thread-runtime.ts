@@ -46,6 +46,8 @@ export class ThreadRuntime {
   #pageSize = feedPageSize;
   #startedAt = Math.floor(Date.now() / 1000);
   #rootId: string;
+  #closed = false;
+  #generation = 0;
 
   constructor(
     readonly eventId: string,
@@ -67,11 +69,15 @@ export class ThreadRuntime {
   }
 
   async start(): Promise<void> {
+    if (this.#closed) return;
+    const generation = ++this.#generation;
     await this.#discoverRoot();
+    if (!this.#active(generation)) return;
     this.#cached = mergeThreadItems(
       await loadCachedThread(this.#rootId),
       this.#rootId === this.eventId ? [] : await loadCachedThread(this.eventId),
     );
+    if (!this.#active(generation)) return;
     this.#emit({ ...this.#state, items: this.#cached });
     if (this.relays.length === 0)
       return this.#emit({
@@ -105,16 +111,19 @@ export class ThreadRuntime {
   }
 
   close(): void {
+    this.#closed = true;
+    this.#generation++;
     for (const cleanup of this.#cleanup.splice(0)) cleanup();
-    this.#emit({ ...this.#state, loading: false, loadingOlder: false });
+    this.#listeners.clear();
   }
 
   // prettier-ignore
   async loadOlder(): Promise<void> {
-    if (this.#state.loadingOlder || !this.#state.hasOlder) return; const cursor = this.#state.oldestCursor; if (!cursor) return;
+    if (this.#closed || this.#state.loadingOlder || !this.#state.hasOlder) return; const generation = this.#generation; const cursor = this.#state.oldestCursor; if (!cursor) return;
     this.#emit({ ...this.#state, loadingOlder: true });
     try {
       const page = await loadOlderThreadPage({ eventId: this.eventId, rootId: this.#rootId, items: this.items(), relays: this.relays, subId: this.subId, cursor, pageSize: this.#pageSize, subscriptions: this.#subscriptions });
+      if (!this.#active(generation)) return;
       this.#cached = page.items; this.#live = [];
       this.#emit({ ...this.#state, items: this.items(), hasOlder: page.hasOlder, newerPruned: this.#state.newerPruned || page.pruned });
     } catch (error) { this.#emit({ ...this.#state, error: boundedErrorText(error) }); }
@@ -129,49 +138,30 @@ export class ThreadRuntime {
   }
 
   async #receive(poolEvent: PoolEvent): Promise<void> {
+    if (this.#closed) return;
     if (poolEvent.subId !== this.subId) return;
     await storeThreadEvent(poolEvent.event, [poolEvent.relay]);
+    if (this.#closed) return;
     this.#live = mergeThreadItems(this.#live, [
       { event: poolEvent.event, relays: [poolEvent.relay] },
     ]);
     this.#emit({ ...this.#state, items: this.items(), loading: false });
   }
 
+  // prettier-ignore
   async #loadInitialPage(): Promise<void> {
+    const generation = this.#generation;
     try {
-      const page = await loadInitialThreadPage({
-        eventId: this.eventId,
-        rootId: this.#rootId,
-        relays: this.relays,
-        subId: this.subId,
-        pageSize: this.#pageSize,
-        subscriptions: this.#subscriptions,
-      });
-      this.#rootId = page.rootId;
-      this.#cached = mergeThreadItems(this.items(), page.items);
+      const page = await loadInitialThreadPage({ eventId: this.eventId, rootId: this.#rootId, relays: this.relays, subId: this.subId, pageSize: this.#pageSize, subscriptions: this.#subscriptions });
+      if (!this.#active(generation)) return; this.#rootId = page.rootId; this.#cached = mergeThreadItems(this.items(), page.items);
       this.#emit({ ...this.#state, items: this.items(), loading: false });
-    } catch (error) {
-      this.#emit({
-        ...this.#state,
-        loading: false,
-        error: boundedErrorText(error),
-      });
-    }
+    } catch (error) { this.#emit({ ...this.#state, loading: false, error: boundedErrorText(error) }); }
   }
 
+  // prettier-ignore
   #receiveState(snapshots: RelaySnapshot[]): void {
-    const active = snapshots.filter((item) => this.relays.includes(item.url));
-    const eoseRelays = active.filter(
-      (item) => item.eoseBySub[this.subId],
-    ).length;
-    this.#emit({
-      ...this.#state,
-      eoseRelays,
-      loading:
-        active.length > 0 && eoseRelays >= active.length
-          ? false
-          : this.#state.loading,
-    });
+    if (this.#closed) return; const active = snapshots.filter((item) => this.relays.includes(item.url)); const eoseRelays = active.filter((item) => item.eoseBySub[this.subId]).length;
+    this.#emit({ ...this.#state, eoseRelays, loading: active.length > 0 && eoseRelays >= active.length ? false : this.#state.loading });
   }
 
   items(): ThreadItem[] {
@@ -182,12 +172,17 @@ export class ThreadRuntime {
   }
 
   #emit(state: ThreadState): void {
+    if (this.#closed) return;
     this.#state = {
       ...state,
       oldestCreatedAt: oldestCreatedAt(state.items),
       oldestCursor: cursorPoint(state.items.at(-1)),
     };
     this.#listeners.forEach((listener) => listener(this.#state));
+  }
+
+  #active(generation: number): boolean {
+    return !this.#closed && generation === this.#generation;
   }
 }
 

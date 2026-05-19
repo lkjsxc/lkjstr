@@ -14,6 +14,7 @@
     tabId: string;
     kind?: 'home' | 'global';
     activeAccountPubkey?: string | null;
+    dataReady?: boolean;
     relaySets: readonly RelaySet[];
     openProfile: (pubkey: string) => void;
     openThread: (eventId: string) => void;
@@ -41,6 +42,7 @@
   let profileRequest = 0;
 
   $effect(() => {
+    if (!props.dataReady) return;
     const relays = timelineRelays(props.relaySets);
     const Runtime =
       props.kind === 'global' ? GlobalTimelineRuntime : TimelineRuntime;
@@ -73,7 +75,9 @@
   class="timeline-tab"
   aria-label={props.kind === 'global' ? 'Global' : 'Home'}
 >
-  {#if state.loading}
+  {#if !props.dataReady}
+    <p>Loading workspace data...</p>
+  {:else if state.loading}
     <p>Loading events...</p>
   {/if}
   {#if state.error}

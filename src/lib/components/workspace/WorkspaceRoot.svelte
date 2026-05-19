@@ -17,6 +17,8 @@
     notifications: NotificationRecord[];
     relaySets: RelaySet[];
     ready: boolean;
+    pageDataReady: boolean;
+    inactiveRetentionSeconds: number;
     focusTab: (paneId: string, tabId: string) => void;
     closeTab: (paneId: string, tabId: string) => void;
     moveTab: (
@@ -66,6 +68,8 @@
         notifications={props.notifications}
         relaySets={props.relaySets}
         ready={props.ready}
+        pageDataReady={props.pageDataReady}
+        inactiveRetentionSeconds={props.inactiveRetentionSeconds}
         {relaySnapshots}
         focusTab={props.focusTab}
         closeTab={props.closeTab}

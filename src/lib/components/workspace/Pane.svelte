@@ -3,21 +3,12 @@
   import type { NotificationRecord } from '$lib/notifications/notification';
   import type { RelaySet } from '$lib/relays/relay-store';
   import type { RelaySnapshot } from '$lib/relays/types';
-  import AccountManagerTab from '$lib/tabs/accounts/AccountManagerTab.svelte';
-  import CacheStatusTab from '$lib/tabs/cache/CacheStatusTab.svelte';
-  import NewTab from '$lib/tabs/new-tab/NewTab.svelte';
-  import NotificationsTab from '$lib/tabs/notifications/NotificationsTab.svelte';
-  import ProfileTab from '$lib/tabs/profile/ProfileTab.svelte';
-  import LkjstrLogTab from '$lib/tabs/log/LkjstrLogTab.svelte';
-  import RelaySettingsTab from '$lib/tabs/relays/RelaySettingsTab.svelte';
-  import SettingsTab from '$lib/tabs/settings/SettingsTab.svelte';
-  import ThreadTab from '$lib/tabs/thread/ThreadTab.svelte';
-  import TimelineTab from '$lib/tabs/timeline/TimelineTab.svelte';
-  import TweetTab from '$lib/tabs/tweet/TweetTab.svelte';
+  import { SvelteMap } from 'svelte/reactivity';
   import type { WorkspacePaneNode } from '$lib/workspace/pane';
   import type { TabKind, WorkspaceTab } from '$lib/workspace/tab';
   import type { TabGroup } from '$lib/workspace/tab-group';
   import NewTabButton from './NewTabButton.svelte';
+  import PaneTabBody from './PaneTabBody.svelte';
   import TabStrip from './TabStrip.svelte';
   import TileMenu from './TileMenu.svelte';
 
@@ -30,6 +21,8 @@
     notifications: NotificationRecord[];
     relaySets: RelaySet[];
     ready: boolean;
+    pageDataReady: boolean;
+    inactiveRetentionSeconds: number;
     relaySnapshots: RelaySnapshot[];
     focusTab: (paneId: string, tabId: string) => void;
     closeTab: (paneId: string, tabId: string) => void;
@@ -62,6 +55,71 @@
   let active = $derived(
     props.group?.activeTabId ? props.tabs[props.group.activeTabId] : undefined,
   );
+  let previousActiveId = $state<string | undefined>();
+  let previousRetentionSeconds = $state<number | undefined>();
+  let retained = $state<Record<string, WorkspaceTab>>({});
+  const timers = new SvelteMap<string, number>();
+  let renderedTabs = $derived([
+    ...(active ? [active] : []),
+    ...Object.values(retained).filter(
+      (tab) =>
+        tab.id !== active?.id &&
+        props.group?.tabIds.includes(tab.id) &&
+        props.tabs[tab.id],
+    ),
+  ]);
+
+  $effect(() => {
+    const activeId = active?.id;
+    if (activeId) releaseRetained(activeId);
+    if (
+      previousActiveId &&
+      previousActiveId !== activeId &&
+      props.inactiveRetentionSeconds > 0
+    ) {
+      const previous = props.tabs[previousActiveId];
+      if (previous && props.group?.tabIds.includes(previous.id))
+        retain(previous, props.inactiveRetentionSeconds);
+    }
+    previousActiveId = activeId;
+  });
+
+  $effect(() => {
+    if (previousRetentionSeconds !== props.inactiveRetentionSeconds) {
+      for (const tabId of Object.keys(retained)) releaseRetained(tabId);
+      previousRetentionSeconds = props.inactiveRetentionSeconds;
+    }
+    if (props.inactiveRetentionSeconds > 0) return;
+    for (const tabId of Object.keys(retained)) releaseRetained(tabId);
+  });
+
+  $effect(() => {
+    for (const tabId of Object.keys(retained)) {
+      if (!props.tabs[tabId] || !props.group?.tabIds.includes(tabId))
+        releaseRetained(tabId);
+    }
+  });
+
+  function retain(tab: WorkspaceTab, seconds: number): void {
+    releaseRetained(tab.id);
+    retained = { ...retained, [tab.id]: tab };
+    const timeout = window.setTimeout(
+      () => releaseRetained(tab.id),
+      seconds * 1000,
+    );
+    timers.set(tab.id, timeout);
+  }
+
+  function releaseRetained(tabId: string): void {
+    const timeout = timers.get(tabId);
+    if (timeout !== undefined) window.clearTimeout(timeout);
+    timers.delete(tabId);
+    if (retained[tabId]) {
+      const next = { ...retained };
+      delete next[tabId];
+      retained = next;
+    }
+  }
 </script>
 
 <section class="pane" aria-label="Workspace pane">
@@ -90,73 +148,33 @@
     </div>
   </header>
 
-  {#if active}
-    <div class="pane-body">
-      {#if active.kind === 'new-tab'}
-        <NewTab tabId={active.id} convert={props.convertTab} />
-      {:else if active.kind === 'timeline'}
-        <TimelineTab
-          tabId={active.id}
-          kind="home"
-          activeAccountPubkey={props.activeAccount?.pubkey}
-          relaySets={props.relaySets}
-          openProfile={(pubkey) => props.openProfile(props.pane.id, pubkey)}
-          openThread={(eventId) => props.openThread(props.pane.id, eventId)}
-        />
-      {:else if active.kind === 'global'}
-        <TimelineTab
-          tabId={active.id}
-          kind="global"
-          relaySets={props.relaySets}
-          openProfile={(pubkey) => props.openProfile(props.pane.id, pubkey)}
-          openThread={(eventId) => props.openThread(props.pane.id, eventId)}
-        />
-      {:else if active.kind === 'account-manager'}
-        <AccountManagerTab
+  {#if renderedTabs.length > 0}
+    {#each renderedTabs as tab (tab.id)}
+      <div
+        class="pane-body"
+        data-active-tab={tab.id === active?.id}
+        style:display={tab.id === active?.id ? undefined : 'none'}
+      >
+        <PaneTabBody
+          {tab}
+          paneId={props.pane.id}
           accounts={props.accounts}
+          activeAccount={props.activeAccount}
+          notifications={props.notifications}
+          relaySets={props.relaySets}
+          pageDataReady={props.pageDataReady}
+          relaySnapshots={props.relaySnapshots}
+          convertTab={props.convertTab}
           addReadonly={props.addReadonly}
           addNip07={props.addNip07}
           addReadonlyPubkey={props.addReadonlyPubkey}
-        />
-      {:else if active.kind === 'notifications'}
-        <NotificationsTab
-          tabId={active.id}
-          accountPubkey={props.activeAccount?.pubkey}
-          relaySets={props.relaySets}
-          openProfile={(pubkey) => props.openProfile(props.pane.id, pubkey)}
-          openThread={(eventId) => props.openThread(props.pane.id, eventId)}
-        />
-      {:else if active.kind === 'profile'}
-        <ProfileTab
-          tabId={active.id}
-          pubkey={String(active.config.pubkey ?? '')}
-          relaySets={props.relaySets}
-          openProfile={(pubkey) => props.openProfile(props.pane.id, pubkey)}
-          openThread={(eventId) => props.openThread(props.pane.id, eventId)}
-        />
-      {:else if active.kind === 'relay-monitor'}
-        <LkjstrLogTab snapshots={props.relaySnapshots} />
-      {:else if active.kind === 'relay-settings'}
-        <RelaySettingsTab
-          relaySets={props.relaySets}
-          refresh={props.refreshData}
+          refreshData={props.refreshData}
+          toggleRelay={props.toggleRelay}
           removeRelay={props.removeRelay}
+          openProfile={props.openProfile}
+          openThread={props.openThread}
         />
-      {:else if active.kind === 'settings'}
-        <SettingsTab />
-      {:else if active.kind === 'cache-status'}
-        <CacheStatusTab />
-      {:else if active.kind === 'tweet'}
-        <TweetTab accounts={props.accounts} relaySets={props.relaySets} />
-      {:else if active.kind === 'thread'}
-        <ThreadTab
-          tabId={active.id}
-          eventId={String(active.config.eventId ?? '')}
-          relaySets={props.relaySets}
-          openProfile={(pubkey) => props.openProfile(props.pane.id, pubkey)}
-          openThread={(eventId) => props.openThread(props.pane.id, eventId)}
-        />
-      {/if}
-    </div>
+      </div>
+    {/each}
   {/if}
 </section>

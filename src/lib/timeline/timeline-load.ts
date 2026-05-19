@@ -1,9 +1,6 @@
 import type { NostrEvent } from '../protocol';
 import { accountHomeAuthors } from './follow-list';
-import {
-  loadTimelineProfiles,
-  type TimelineProfiles,
-} from './timeline-profiles';
+import type { TimelineProfiles } from './timeline-profiles';
 import {
   loadCachedFollowList,
   loadCachedTimeline,
@@ -34,6 +31,6 @@ export async function loadAccountHome(
     authors,
     cached: await loadCachedTimeline(limit, authors),
     followList,
-    profiles: await loadTimelineProfiles(authors),
+    profiles: {},
   };
 }

@@ -27,6 +27,19 @@ export async function indexedPage(
     .slice(0, limit);
 }
 
+export async function indexedLatestByAuthorKind(
+  pubkey: string,
+  kind: number,
+): Promise<StoredEvent | undefined> {
+  const [event] = await browserDb()
+    .events.where('[pubkey+kind+created_at]')
+    .between([pubkey, kind, 0], [pubkey, kind, Number.MAX_SAFE_INTEGER])
+    .reverse()
+    .limit(1)
+    .toArray();
+  return event ? normalizeStoredEvent(event) : undefined;
+}
+
 async function indexedThreadPage(
   query: FeedQuery,
   limit: number,

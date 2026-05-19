@@ -78,6 +78,7 @@
       loading={state.loading}
       loadingOlder={state.loadingOlder}
       hasOlder={state.hasOlder}
+      fullEventIds
       onNearEnd={() => runtime?.loadOlder()}
       openProfile={props.openProfile}
       openThread={props.openThread}

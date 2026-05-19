@@ -54,6 +54,20 @@ describe('tags, relay URLs, and NIP-19', () => {
     ]);
   });
 
+  it('dedupes quote and content references by event id', () => {
+    const id = '6'.repeat(64);
+    const quoted = finalizeEvent(
+      {
+        created_at: 101,
+        kind: 1,
+        tags: [['q', id]],
+        content: `nostr:${encodeNote(id)}`,
+      },
+      generateSecretKey(),
+    );
+    expect(eventReferences(quoted)).toEqual([{ kind: 'quote', id }]);
+  });
+
   it('normalizes relay URLs', () => {
     expect(normalizeRelayUrl('relay.example/')).toBe('wss://relay.example/');
     expect(normalizeRelayUrl('https://relay.example/path/?b=2&a=1#x')).toBe(

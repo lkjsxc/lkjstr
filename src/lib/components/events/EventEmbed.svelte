@@ -11,6 +11,7 @@
     reference: EventReference;
     relays?: readonly string[];
     depth?: number;
+    openProfile?: (pubkey: string) => void;
     openThread?: (eventId: string) => void;
   };
 
@@ -43,7 +44,7 @@
 
   function label(): string {
     if (props.reference.kind === 'reply-parent') return 'Replying to';
-    if (props.reference.kind === 'reply-root') return 'Thread root';
+    if (props.reference.kind === 'reply-root') return 'Referenced event';
     if (props.reference.kind === 'quote') return 'Quoted event';
     if (props.reference.kind === 'repost') return 'Reposted event';
     if (props.reference.kind === 'reaction') return 'Reacted to';
@@ -70,6 +71,7 @@
       event={resolved.event}
       relays={resolved.relays}
       depth={(props.depth ?? 0) + 1}
+      openProfile={props.openProfile}
       openThread={props.openThread}
     />
   {:else}

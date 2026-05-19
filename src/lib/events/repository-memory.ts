@@ -22,6 +22,15 @@ export function allMemoryEvents(): StoredEvent[] {
   return [...memoryEvents.values()];
 }
 
+export function latestMemoryEventByAuthorKind(
+  pubkey: string,
+  kind: number,
+): StoredEvent | undefined {
+  return allMemoryEvents()
+    .filter((event) => event.pubkey === pubkey && event.kind === kind)
+    .sort(compareEventsDesc)[0];
+}
+
 export function memoryPage(query: FeedQuery, limit: number): StoredEvent[] {
   return allMemoryEvents()
     .filter((event) => matchesFeed(event, query))

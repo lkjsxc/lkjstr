@@ -2,7 +2,7 @@
   import EventTreeList from '$lib/components/events/EventTreeList.svelte';
   import IdentityChip from '$lib/components/identity/IdentityChip.svelte';
   import type { ProfileSummary } from '$lib/identity/identity';
-  import { shortNpub } from '$lib/identity/display-name';
+  import { encodeNprofile, encodeNpub } from '$lib/protocol/nip19';
   import {
     ProfileRuntime,
     type ProfileState,
@@ -38,6 +38,10 @@
   let profiles = $derived<Record<string, ProfileSummary>>(
     state.profile ? { [props.pubkey]: state.profile } : {},
   );
+  let npub = $derived(safeNpub(props.pubkey));
+  let nprofile = $derived(
+    state.relays.length > 0 ? safeNprofile(props.pubkey, state.relays) : '',
+  );
   let runtime: ProfileRuntime | undefined;
 
   $effect(() => {
@@ -53,13 +57,30 @@
       runtime?.close();
     };
   });
+
+  function safeNpub(pubkey: string): string {
+    try {
+      return encodeNpub(pubkey);
+    } catch {
+      return pubkey;
+    }
+  }
+
+  function safeNprofile(pubkey: string, relays: readonly string[]): string {
+    try {
+      return encodeNprofile({ pubkey, relays });
+    } catch {
+      return '';
+    }
+  }
 </script>
 
 <section class="profile-tab">
   <h2>Profile</h2>
   <header class="profile-card">
     <IdentityChip pubkey={props.pubkey} profile={state.profile ?? undefined} />
-    <small>{shortNpub(props.pubkey)}</small>
+    <small>{npub}</small>
+    {#if nprofile}<small>{nprofile}</small>{/if}
     {#if state.profile?.about}
       <p>{state.profile.about}</p>
     {/if}

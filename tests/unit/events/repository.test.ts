@@ -1,6 +1,7 @@
 import { beforeEach, describe, expect, it } from 'vitest';
 import {
   clearEventRepositoryForTests,
+  latestEventByAuthorKind,
   queryFeed,
   upsertEvent,
 } from '../../../src/lib/events/repository';
@@ -62,6 +63,16 @@ describe('event repository fallback paging', () => {
       'root',
       'reply',
     ]);
+  });
+
+  it('returns latest events by author and kind', async () => {
+    const pubkey = 'a'.repeat(64);
+    await upsertEvent({ ...event('1', 10, 'old'), pubkey, kind: 3 });
+    await upsertEvent({ ...event('2', 20, 'new'), pubkey, kind: 3 });
+    await upsertEvent({ ...event('3', 30, 'note'), pubkey, kind: 1 });
+
+    const latest = await latestEventByAuthorKind(pubkey, 3);
+    expect(latest?.event.content).toBe('new');
   });
 
   it('normalizes stale stored rows with cache relay provenance', () => {

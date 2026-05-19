@@ -14,6 +14,16 @@ export function encodeNpub(pubkey: string): string {
   return upstream.npubEncode(pubkey);
 }
 
+export function encodeNprofile(input: {
+  readonly pubkey: string;
+  readonly relays?: readonly string[];
+}): string {
+  return upstream.nprofileEncode({
+    pubkey: input.pubkey,
+    relays: [...(input.relays ?? [])],
+  });
+}
+
 export function encodeNote(id: string): string {
   return upstream.noteEncode(id);
 }

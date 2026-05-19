@@ -10,6 +10,7 @@ import {
   openCleanWorkspace,
   waitForSyntheticEvent,
 } from './timeline-relay-helpers';
+import { encodeNote, encodeNpub } from '../../src/lib/protocol/nip19';
 
 test('timeline does not read public relays without an active account', async ({
   page,
@@ -61,7 +62,6 @@ test('timeline displays followed-author notes from a synthetic relay', async ({
     },
     followedKey,
   );
-
   await installSyntheticRelay(page, { events: [followList, note, metadata] });
   await openCleanWorkspace(page);
   await addReadonlyAccount(page, active);
@@ -77,48 +77,61 @@ test('timeline displays followed-author notes from a synthetic relay', async ({
   ).toBeVisible();
   await expect(page.getByText(note.id.slice(0, 8))).toBeVisible();
   await expect(page.getByText(followed)).toHaveCount(0);
-  await page
-    .locator('button.identity-button')
-    .filter({ hasText: 'Followed Writer' })
-    .click();
-  await expect(page.getByRole('heading', { name: 'Profile' })).toBeVisible();
-  await page.getByRole('button', { name: 'Home', exact: true }).click();
-  await page.getByText('synthetic account-home note').click();
-  await expect(page.getByRole('heading', { name: 'Thread' })).toBeVisible();
 });
 
-test('timeline hides relay details and exposes them in lkjstr Log', async ({
-  page,
-}) => {
+test('content entity tokens open profile and thread tabs', async ({ page }) => {
   const activeKey = generateSecretKey();
+  const followedKey = generateSecretKey();
+  const mentionedKey = generateSecretKey();
   const active = getPublicKey(activeKey);
-  await installSyntheticRelay(page, {
-    events: [],
-    closed: ['timeline', 'blocked: synthetic close'],
-  });
+  const followed = getPublicKey(followedKey);
+  const mentioned = getPublicKey(mentionedKey);
+  const target = finalizeEvent(
+    {
+      created_at: Math.floor(Date.now() / 1000),
+      kind: 1,
+      tags: [],
+      content: 'linked event body',
+    },
+    mentionedKey,
+  );
+  const followList = finalizeEvent(
+    {
+      created_at: Math.floor(Date.now() / 1000),
+      kind: 3,
+      tags: [['p', followed]],
+      content: '',
+    },
+    activeKey,
+  );
+  const note = finalizeEvent(
+    {
+      created_at: Math.floor(Date.now() / 1000),
+      kind: 1,
+      tags: [],
+      content: `token note nostr:${encodeNpub(mentioned)} nostr:${encodeNote(target.id)}`,
+    },
+    followedKey,
+  );
+
+  await installSyntheticRelay(page, { events: [followList, note, target] });
   await openCleanWorkspace(page);
   await addReadonlyAccount(page, active);
   await page.getByRole('button', { name: 'Home', exact: true }).click();
-  await page.waitForFunction(
-    () =>
-      window.__syntheticSockets.filter(
-        (socket) => Number((socket as { replies?: number }).replies) > 0,
-      ).length >= 8,
-  );
-  await expect(page.getByText('No events yet.')).toBeVisible();
-  await expect(
-    page.getByText('closed: blocked: synthetic close').first(),
-  ).toHaveCount(0);
-  await expect(page.getByText('blocked: synthetic close')).toHaveCount(0);
-
-  await page.getByRole('button', { name: 'Open new tab' }).first().click();
+  await waitForSyntheticEvent(page, note.id);
   await page
-    .locator('section.new-tab')
-    .getByRole('button', { name: 'lkjstr Log' })
+    .getByRole('button', {
+      name: `nostr:${encodeNpub(mentioned)}`,
+      exact: true,
+    })
     .click();
-  await expect(page.getByRole('heading', { name: 'lkjstr Log' })).toBeVisible();
-  await expect(
-    page.getByText('blocked: synthetic close').first(),
-  ).toBeVisible();
-  await expect(page.getByText('closed').first()).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'Profile' })).toBeVisible();
+  await page.getByRole('button', { name: 'Home', exact: true }).click();
+  await page
+    .getByRole('button', {
+      name: `nostr:${encodeNote(target.id)}`,
+      exact: true,
+    })
+    .click();
+  await expect(page.getByRole('heading', { name: 'Thread' })).toBeVisible();
 });

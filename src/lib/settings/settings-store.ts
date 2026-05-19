@@ -5,6 +5,7 @@ import {
 } from '../storage/safe-storage';
 import type { SettingRecord } from './settings-key';
 import { defaultSettings, searchText } from './settings-schema';
+import { settingsChangedEvent } from './settings-events';
 
 export type SettingOverride = {
   readonly key: string;
@@ -43,12 +44,14 @@ export async function saveSetting(
     override,
   ];
   await bestEffortStorageWrite(() => browserDb().settings.put(override));
+  notifySettingsChanged();
   return mergeSettings(memoryOverrides);
 }
 
 export async function resetSetting(key: string): Promise<SettingRecord[]> {
   memoryOverrides = memoryOverrides.filter((item) => item.key !== key);
   await bestEffortStorageWrite(() => browserDb().settings.delete(key));
+  notifySettingsChanged();
   return mergeSettings(memoryOverrides);
 }
 
@@ -62,6 +65,7 @@ export async function resetNamespace(
     .filter((setting) => setting.namespace === namespace)
     .map((setting) => setting.key);
   await bestEffortStorageWrite(() => browserDb().settings.bulkDelete(keys));
+  notifySettingsChanged();
   return mergeSettings(memoryOverrides);
 }
 
@@ -93,6 +97,7 @@ export async function importSettingsJson(
     await browserDb().settings.clear();
     await browserDb().settings.bulkPut(overrides);
   });
+  notifySettingsChanged();
   return mergeSettings(overrides);
 }
 
@@ -138,4 +143,9 @@ export function coerceValue(
       : { ok: false };
   if (setting.valueType === 'json') return { ok: true, value };
   return { ok: true, value: String(value) };
+}
+
+function notifySettingsChanged(): void {
+  if (typeof window === 'undefined') return;
+  window.dispatchEvent(new CustomEvent(settingsChangedEvent));
 }
