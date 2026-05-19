@@ -33,9 +33,9 @@
 .new-tab,
 .data-tab,
 .profile-tab {
-  display: grid;
+  display: flex;
+  flex-direction: column;
   gap: var(--space-3);
-  grid-template-rows: auto auto minmax(0, 1fr);
   height: 100%;
   min-height: 0;
   min-width: 0;
@@ -98,7 +98,8 @@
 
 .relay-monitor,
 .relay-settings {
-  display: grid;
+  display: flex;
+  flex-direction: column;
   gap: var(--space-3);
   height: 100%;
   min-width: 0;
@@ -115,6 +116,12 @@
 
 .relay-log-row p {
   margin: 0;
+}
+
+.data-tab > .notification-list,
+.data-tab > .event-list,
+.profile-tab > .event-list {
+  flex: 1 1 0;
 }
 
 .option-card,

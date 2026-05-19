@@ -1,6 +1,5 @@
 <script lang="ts">
   import EventTreeList from '$lib/components/events/EventTreeList.svelte';
-  import type { ProfileSummary } from '$lib/identity/identity';
   import type { RelaySet } from '$lib/relays/relay-store';
   import { GlobalTimelineRuntime } from '$lib/timeline/global-timeline-runtime';
   import { TimelineRuntime } from '$lib/timeline/timeline-runtime';
@@ -36,8 +35,6 @@
     oldestCreatedAt: undefined,
     newerPruned: false,
   });
-  let visibleProfiles = $state<Record<string, ProfileSummary>>({});
-  let profiles = $derived({ ...visibleProfiles, ...state.profiles });
   let runtime: TimelineRuntime | GlobalTimelineRuntime | undefined;
 
   $effect(() => {
@@ -59,8 +56,10 @@
 
   $effect(() => {
     const authors = [...new Set(state.items.map((item) => item.event.pubkey))];
-    void loadTimelineProfiles(authors).then((loaded) => {
-      visibleProfiles = loaded;
+    const missing = authors.filter((author) => !state.profiles[author]);
+    if (missing.length === 0) return;
+    void loadTimelineProfiles(missing).then((loaded) => {
+      state = { ...state, profiles: { ...loaded, ...state.profiles } };
     });
   });
 </script>
@@ -77,7 +76,7 @@
   {/if}
   <EventTreeList
     items={state.items}
-    {profiles}
+    profiles={state.profiles}
     loading={state.loading}
     emptyText="No events yet."
     loadingOlder={state.loadingOlder}

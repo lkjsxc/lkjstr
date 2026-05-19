@@ -1,10 +1,11 @@
-import type { Page } from '@playwright/test';
+import { expect, type Page } from '@playwright/test';
 
 export async function addReadonlyAccount(page: Page, pubkey: string) {
   await page.getByRole('button', { name: 'Open new tab' }).first().click();
   await page.getByRole('button', { name: 'Accounts' }).click();
   page.once('dialog', (dialog) => dialog.accept(pubkey));
   await page.getByRole('button', { name: 'Add read-only' }).click();
+  await expect(page.getByText('readonly')).toBeVisible();
 }
 
 export async function openCleanWorkspace(page: Page) {

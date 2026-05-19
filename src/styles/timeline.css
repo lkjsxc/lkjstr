@@ -1,7 +1,7 @@
 .timeline-tab {
-  display: grid;
+  display: flex;
+  flex-direction: column;
   gap: var(--space-3);
-  grid-template-rows: auto auto minmax(0, 1fr);
   height: 100%;
   min-height: 0;
   min-width: 0;
@@ -21,10 +21,11 @@
 
 .event-list {
   display: grid;
+  flex: 1 1 0;
   gap: var(--space-3);
   grid-template-rows: auto minmax(0, 1fr) auto;
   height: 100%;
-  min-height: 0;
+  min-height: 12rem;
   min-width: 0;
 }
 

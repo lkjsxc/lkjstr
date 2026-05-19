@@ -9,6 +9,9 @@
   } from '$lib/timeline/timeline-subscription';
   import { loadTimelineProfiles } from '$lib/timeline/timeline-profiles';
 
+  type ProfileMap = Record<string, ProfileSummary>;
+  type ThreadViewState = ThreadState & { profiles: ProfileMap };
+
   type Props = {
     tabId: string;
     eventId?: string;
@@ -18,8 +21,8 @@
   };
 
   let props: Props = $props();
-  let profiles = $state<Record<string, ProfileSummary>>({});
-  let state = $state<ThreadState>({
+  let currentProfiles: ProfileMap = {};
+  let state = $state<ThreadViewState>({
     items: [],
     loading: true,
     error: null,
@@ -28,6 +31,7 @@
     hasOlder: true,
     oldestCreatedAt: undefined,
     newerPruned: false,
+    profiles: {},
   });
   let runtime: ThreadRuntime | undefined;
 
@@ -38,7 +42,9 @@
       timelineRelays(props.relaySets),
       createTimelineSubId(props.tabId),
     );
-    const unsubscribe = runtime.subscribe((next) => (state = next));
+    const unsubscribe = runtime.subscribe(
+      (next) => (state = { ...next, profiles: currentProfiles }),
+    );
     runtime.start();
     return () => {
       unsubscribe();
@@ -48,8 +54,11 @@
 
   $effect(() => {
     const authors = [...new Set(state.items.map((item) => item.event.pubkey))];
-    void loadTimelineProfiles(authors).then((loaded) => {
-      profiles = loaded;
+    const missing = authors.filter((author) => !state.profiles[author]);
+    if (missing.length === 0) return;
+    void loadTimelineProfiles(missing).then((loaded) => {
+      currentProfiles = { ...loaded, ...currentProfiles };
+      state = { ...state, profiles: currentProfiles };
     });
   });
 </script>
@@ -61,7 +70,7 @@
     {#if state.error}<p role="alert">{state.error}</p>{/if}
     <EventTreeList
       items={state.items}
-      {profiles}
+      profiles={state.profiles}
       loading={state.loading}
       loadingOlder={state.loadingOlder}
       hasOlder={state.hasOlder}

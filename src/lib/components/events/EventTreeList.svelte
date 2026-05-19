@@ -54,7 +54,7 @@
     <VList
       bind:this={list}
       data={nodes}
-      style="height: 100%; min-height: 0;"
+      style="height: 100%; min-height: 12rem;"
       getKey={(item) => item.event.id}
       onscroll={handleScroll}
     >

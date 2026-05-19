@@ -5,11 +5,15 @@
   import { NotificationRuntime } from '$lib/notifications/notification-runtime';
   import type { NotificationState } from '$lib/notifications/notification-runtime';
   import type { RelaySet } from '$lib/relays/relay-store';
+  import type { FeedEvent } from '$lib/events/types';
   import {
     createTimelineSubId,
     timelineRelays,
   } from '$lib/timeline/timeline-subscription';
   import { loadTimelineProfiles } from '$lib/timeline/timeline-profiles';
+
+  type ProfileMap = Record<string, ProfileSummary>;
+  type NotificationViewState = NotificationState & { profiles: ProfileMap };
 
   type Props = {
     tabId: string;
@@ -21,8 +25,8 @@
 
   let props: Props = $props();
   let runtime: NotificationRuntime | undefined;
-  let profiles = $state<Record<string, ProfileSummary>>({});
-  let state = $state<NotificationState>({
+  let currentProfiles: ProfileMap = {};
+  let state = $state<NotificationViewState>({
     records: [],
     items: [],
     loading: true,
@@ -31,8 +35,9 @@
     hasOlder: true,
     oldestCreatedAt: undefined,
     newerPruned: false,
+    profiles: {},
   });
-  let itemById = $derived(
+  let itemById: Map<string, FeedEvent> = $derived(
     new Map(state.items.map((item) => [item.event.id, item])),
   );
 
@@ -42,7 +47,9 @@
       timelineRelays(props.relaySets),
       createTimelineSubId(props.tabId),
     );
-    const unsubscribe = runtime.subscribe((next) => (state = next));
+    const unsubscribe = runtime.subscribe(
+      (next) => (state = { ...next, profiles: currentProfiles }),
+    );
     void runtime.start().then(() => runtime?.markVisibleRead());
     const onFocus = () => runtime?.markVisibleRead();
     window.addEventListener('focus', onFocus);
@@ -60,8 +67,11 @@
         ...state.items.map((item) => item.event.pubkey),
       ]),
     ];
-    void loadTimelineProfiles(authors).then((loaded) => {
-      profiles = loaded;
+    const missing = authors.filter((author) => !state.profiles[author]);
+    if (missing.length === 0) return;
+    void loadTimelineProfiles(missing).then((loaded) => {
+      currentProfiles = { ...loaded, ...currentProfiles };
+      state = { ...state, profiles: currentProfiles };
     });
   });
 
@@ -91,7 +101,7 @@
         <NotificationRow
           {record}
           item={itemById.get(record.sourceEventId)}
-          profile={profiles[record.actorPubkey]}
+          profile={state.profiles[record.actorPubkey]}
           openProfile={props.openProfile}
           openThread={props.openThread}
         />

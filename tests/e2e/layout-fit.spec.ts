@@ -27,7 +27,7 @@ for (const viewport of [
       await page
         .locator('.new-tab')
         .last()
-        .getByRole('button', { name: option })
+        .getByRole('button', { name: option, exact: true })
         .click();
       await assertNoHorizontalOverflow(page);
     }
@@ -38,10 +38,15 @@ test('feed lists fill split tiles', async ({ page }) => {
   await page.goto('/');
   await page.getByRole('button', { name: 'Open tile menu' }).click();
   await page.getByRole('button', { name: 'Split right' }).click();
-  await page.locator('.new-tab').getByRole('button', { name: 'Global' }).click();
-  const heights = await page.locator('.event-list').evaluateAll((items) =>
-    items.map((item) => item.getBoundingClientRect().height),
-  );
+  await page
+    .locator('.new-tab')
+    .getByRole('button', { name: 'Global' })
+    .click();
+  const heights = await page
+    .locator('.event-list')
+    .evaluateAll((items) =>
+      items.map((item) => item.getBoundingClientRect().height),
+    );
   expect(heights.every((height) => height > 120)).toBe(true);
 });
 
