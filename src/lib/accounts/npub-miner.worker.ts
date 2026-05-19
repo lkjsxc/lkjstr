@@ -27,7 +27,11 @@ async function mine(prefix: string): Promise<void> {
       running = false;
       post({
         type: 'result',
-        result: progress(startedAt, attempts, { pubkey, npub, nsec: nsecEncode(secret) }),
+        result: progress(startedAt, attempts, {
+          pubkey,
+          npub,
+          nsec: nsecEncode(secret),
+        }),
       });
       return;
     }
@@ -42,8 +46,12 @@ function progress<T extends object>(
   extra?: T,
 ): { attempts: number; rate: number; elapsedMs: number } & T {
   const elapsedMs = Math.max(Date.now() - startedAt, 1);
-  return { attempts, rate: Math.round((attempts * 1000) / elapsedMs), elapsedMs, ...extra } as
-    { attempts: number; rate: number; elapsedMs: number } & T;
+  return {
+    attempts,
+    rate: Math.round((attempts * 1000) / elapsedMs),
+    elapsedMs,
+    ...extra,
+  } as { attempts: number; rate: number; elapsedMs: number } & T;
 }
 
 function post(event: NpubMinerEvent): void {

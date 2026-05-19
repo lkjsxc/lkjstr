@@ -91,7 +91,11 @@
     <small>{parsed.message}</small>
   {/if}
   <div class="toolbar">
-    <button type="button" disabled={running || !parsed.ok} onclick={startMining}>
+    <button
+      type="button"
+      disabled={running || !parsed.ok}
+      onclick={startMining}
+    >
       Start
     </button>
     <button type="button" disabled={!running} onclick={cancelMining}>

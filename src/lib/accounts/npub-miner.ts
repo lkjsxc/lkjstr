@@ -17,10 +17,15 @@ export type NpubMinerEvent =
 
 const bech32Chars = '023456789acdefghjklmnpqrstuvwxyz';
 
-export function parseNpubPrefix(input: string):
+export function parseNpubPrefix(
+  input: string,
+):
   | { readonly ok: true; readonly prefix: string }
   | { readonly ok: false; readonly message: string } {
-  const prefix = input.trim().toLowerCase().replace(/^npub1/, '');
+  const prefix = input
+    .trim()
+    .toLowerCase()
+    .replace(/^npub1/, '');
   if (!prefix) return { ok: false, message: 'Enter a prefix after npub1.' };
   if (prefix.length > 8)
     return { ok: false, message: 'Use 8 characters or fewer for CPU mining.' };
@@ -41,9 +46,12 @@ export function createNpubMiner(
   prefix: string,
   listener: (event: NpubMinerEvent) => void,
 ): { readonly cancel: () => void } {
-  const worker = new Worker(new URL('./npub-miner.worker.ts', import.meta.url), {
-    type: 'module',
-  });
+  const worker = new Worker(
+    new URL('./npub-miner.worker.ts', import.meta.url),
+    {
+      type: 'module',
+    },
+  );
   worker.onmessage = (message: MessageEvent<NpubMinerEvent>) =>
     listener(message.data);
   worker.onerror = () =>
