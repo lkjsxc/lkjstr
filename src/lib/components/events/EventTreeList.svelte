@@ -52,13 +52,14 @@
     if (
       isNearEnd(offset, viewport, total) &&
       !props.loadingOlder &&
-      props.hasOlder
+      props.hasOlder &&
+      nodes.length > 0
     )
       void props.onNearEnd?.();
   }
 
   $effect(() => {
-    if (nodes.length >= 0 || props.hasOlder || props.loadingOlder)
+    if (nodes.length > 0 && props.hasOlder && !props.loadingOlder)
       void maybeAutoFill();
   });
 

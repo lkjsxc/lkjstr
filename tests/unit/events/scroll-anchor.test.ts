@@ -11,7 +11,7 @@ describe('scroll anchors', () => {
     const nextItems = [{ id: 'x' }, { id: 'a' }, { id: 'b' }, { id: 'c' }];
     const scrollTo = vi.fn();
     const anchor = captureVirtualAnchor(oldItems, (item) => item.id, {
-      getOffset: () => 125,
+      getScrollOffset: () => 125,
       getItemOffset: (index) => index * 100,
     });
     restoreVirtualAnchor(anchor, nextItems, (item) => item.id, {
@@ -20,6 +20,18 @@ describe('scroll anchors', () => {
     });
     expect(anchor).toEqual({ key: 'b', offset: 25 });
     expect(scrollTo).toHaveBeenCalledWith(225);
+  });
+
+  it('does not restore virtual anchors captured at the top', () => {
+    const items = [{ id: 'a' }];
+    const scrollTo = vi.fn();
+    const anchor = captureVirtualAnchor(items, (item) => item.id, {
+      getScrollOffset: () => 0,
+      getItemOffset: () => 0,
+    });
+    restoreVirtualAnchor(anchor, items, (item) => item.id, { scrollTo });
+    expect(anchor).toBeUndefined();
+    expect(scrollTo).not.toHaveBeenCalled();
   });
 
   it('compensates height changes above the visible anchor', () => {

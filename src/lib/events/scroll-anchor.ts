@@ -4,6 +4,7 @@ export type VirtualAnchor = {
 };
 
 export type VirtualListHandle = {
+  readonly getScrollOffset?: () => number;
   readonly getOffset?: () => number;
   readonly getItemOffset?: (index: number) => number;
   readonly scrollTo?: (offset: number) => void;
@@ -14,7 +15,8 @@ export function captureVirtualAnchor<T>(
   key: (item: T) => string,
   list?: VirtualListHandle,
 ): VirtualAnchor | undefined {
-  const scrollOffset = list?.getOffset?.() ?? 0;
+  const scrollOffset = list?.getScrollOffset?.() ?? list?.getOffset?.() ?? 0;
+  if (scrollOffset <= 0) return undefined;
   let candidate: VirtualAnchor | undefined;
   for (const [index, item] of items.entries()) {
     const itemOffset = list?.getItemOffset?.(index) ?? index;
@@ -34,6 +36,7 @@ export function restoreVirtualAnchor<T>(
   list?: VirtualListHandle,
 ): void {
   if (!anchor || !list?.scrollTo) return;
+  if (anchor.offset <= 0) return;
   const index = items.findIndex((item) => key(item) === anchor.key);
   if (index < 0) return;
   const itemOffset = list.getItemOffset?.(index) ?? index;
