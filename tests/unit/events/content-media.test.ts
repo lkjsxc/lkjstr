@@ -7,12 +7,25 @@ describe('content media parsing', () => {
     const attachments = contentAttachments(
       event(
         'https://example.com/a.jpg https://example.com/v.mp4 https://example.com/p',
-        [['imeta', 'url https://example.com/audio.ogg', 'm audio/ogg']],
+        [
+          ['imeta', 'url https://example.com/audio.ogg', 'm audio/ogg'],
+          [
+            'imeta',
+            'url https://example.com/ratio.jpg',
+            'm image/jpeg',
+            'dim 4x3',
+          ],
+        ],
       ),
     );
 
     expect(attachments).toEqual([
       { url: 'https://example.com/audio.ogg', type: 'audio' },
+      {
+        url: 'https://example.com/ratio.jpg',
+        type: 'image',
+        aspectRatio: '4 / 3',
+      },
       { url: 'https://example.com/a.jpg', type: 'image' },
       { url: 'https://example.com/v.mp4', type: 'video' },
       { url: 'https://example.com/p', type: 'link' },

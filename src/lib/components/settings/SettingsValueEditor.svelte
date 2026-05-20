@@ -8,7 +8,18 @@
   };
 
   let props: Props = $props();
-  let draft = $derived(JSON.stringify(props.setting.value));
+  let draft = $state('');
+  let draftKey = $state('');
+  let draftValue = $state('');
+
+  $effect(() => {
+    const next = JSON.stringify(props.setting.value);
+    if (props.setting.key !== draftKey || draft === draftValue) {
+      draftKey = props.setting.key;
+      draft = next;
+      draftValue = next;
+    }
+  });
 
   function saveText(): void {
     try {

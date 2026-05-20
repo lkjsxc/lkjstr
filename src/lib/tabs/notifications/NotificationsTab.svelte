@@ -40,11 +40,13 @@
   let itemById: Map<string, FeedEvent> = $derived(
     new Map(state.items.map((item) => [item.event.id, item])),
   );
+  let relays: string[] = [];
 
   $effect(() => {
+    relays = timelineRelays(props.relaySets);
     runtime = new NotificationRuntime(
       props.accountPubkey,
-      timelineRelays(props.relaySets),
+      relays,
       createTimelineSubId(props.tabId, 'notif'),
     );
     const unsubscribe = runtime.subscribe(
@@ -69,10 +71,12 @@
     ];
     const missing = authors.filter((author) => !state.profiles[author]);
     if (missing.length === 0) return;
-    void loadTimelineProfiles(missing).then((loaded) => {
-      currentProfiles = { ...loaded, ...currentProfiles };
-      state = { ...state, profiles: currentProfiles };
-    });
+    void loadTimelineProfiles(missing, relays, `${props.tabId}:profiles`).then(
+      (loaded) => {
+        currentProfiles = { ...loaded, ...currentProfiles };
+        state = { ...state, profiles: currentProfiles };
+      },
+    );
   });
 
   function handleScroll(event: Event): void {

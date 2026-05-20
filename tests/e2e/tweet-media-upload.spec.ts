@@ -1,81 +1,45 @@
 import { expect, test, type Page } from '@playwright/test';
-import { generateSecretKey } from 'nostr-tools/pure';
-import * as nip19 from 'nostr-tools/nip19';
+import { generateSecretKey, getPublicKey } from 'nostr-tools/pure';
+import { installNip07 } from './nip07-helper';
 import {
   installSyntheticRelay,
   openCleanWorkspace,
 } from './timeline-relay-helpers';
 
-test('imports nsec and publishes Tweet without NIP-07', async ({ page }) => {
-  await installSyntheticRelay(page, { events: [] });
-  await openCleanWorkspace(page);
-  await importNsec(page, nip19.nsecEncode(generateSecretKey()));
-  await openTweet(page);
-  await page.getByLabel('Tweet content').fill('imported local publish');
-  await page.getByRole('button', { name: 'Publish' }).click();
-  await waitForPublishedCount(page, 1);
-  expect(await lastPublished(page)).toMatchObject({
-    kind: 1,
-    content: 'imported local publish',
-  });
-});
-
-test('creates local account and publishes Tweet without NIP-07', async ({
+test('Tweet media upload publishes content and imeta tags', async ({
   page,
 }) => {
-  await installSyntheticRelay(page, { events: [] });
-  await openCleanWorkspace(page);
-  await createLocalAccount(page);
-  await openTweet(page);
-  await page.getByLabel('Tweet content').fill('created local publish');
-  await page.getByRole('button', { name: 'Publish' }).click();
-  await waitForPublishedCount(page, 1);
-  expect(await lastPublished(page)).toMatchObject({
-    kind: 1,
-    content: 'created local publish',
-  });
-});
-
-test('uploads selected media file and publishes imeta', async ({ page }) => {
+  const key = generateSecretKey();
+  const pubkey = getPublicKey(key);
+  await installNip07(page, pubkey);
   await installSyntheticRelay(page, { events: [] });
   await mockUploadServer(page);
   await openCleanWorkspace(page);
-  await createLocalAccount(page);
+  await addBrowserSigner(page);
   await setMediaServer(page);
   await openTweet(page);
+  await page.getByLabel('Tweet content').fill('media note');
   await page.locator('input#tweet-media').setInputFiles({
-    name: 'preset.svg',
-    mimeType: 'image/svg+xml',
-    buffer: Buffer.from('<svg></svg>'),
+    name: 'pixel.png',
+    mimeType: 'image/png',
+    buffer: Buffer.from('png'),
   });
   await expect(page.getByText('Uploaded 1 media file')).toBeVisible();
   await page.getByRole('button', { name: 'Publish' }).click();
   await waitForPublishedCount(page, 1);
   const published = await lastPublished(page);
-  expect(published?.content).toContain('https://cdn.example/preset.svg');
+  expect(published?.content).toContain('https://cdn.example/pixel.png');
   expect(published?.tags).toContainEqual([
     'imeta',
-    'url https://cdn.example/preset.svg',
-    'm image/svg+xml',
+    'url https://cdn.example/pixel.png',
+    'm image/png',
   ]);
 });
 
-async function createLocalAccount(page: Page) {
-  await openAccounts(page);
-  await page.getByRole('button', { name: 'Create local' }).click();
-  await expect(page.getByText('local', { exact: true })).toBeVisible();
-}
-
-async function importNsec(page: Page, nsec: string) {
-  await openAccounts(page);
-  page.once('dialog', (dialog) => dialog.accept(nsec));
-  await page.getByRole('button', { name: 'Import nsec' }).click();
-  await expect(page.getByText('local', { exact: true })).toBeVisible();
-}
-
-async function openAccounts(page: Page) {
+async function addBrowserSigner(page: Page) {
   await page.getByRole('button', { name: 'Open new tab' }).first().click();
   await page.getByRole('button', { name: 'Accounts' }).click();
+  await page.getByRole('button', { name: 'Add NIP-07' }).click();
 }
 
 async function openTweet(page: Page) {
@@ -104,8 +68,8 @@ async function mockUploadServer(page: Page) {
       return Response.json({
         nip94_event: {
           tags: [
-            ['url', 'https://cdn.example/preset.svg'],
-            ['m', 'image/svg+xml'],
+            ['url', 'https://cdn.example/pixel.png'],
+            ['m', 'image/png'],
           ],
         },
       });

@@ -2,7 +2,8 @@
   import EventTreeList from '$lib/components/events/EventTreeList.svelte';
   import type { ProfileSummary } from '$lib/identity/identity';
   import type { RelaySet } from '$lib/relays/relay-store';
-  import { ThreadRuntime, type ThreadState } from '$lib/thread/thread-runtime';
+  import { ThreadRuntime } from '$lib/thread/thread-runtime';
+  import type { ThreadState } from '$lib/thread/thread-state';
   import {
     createTimelineSubId,
     timelineRelays,
@@ -32,16 +33,19 @@
     oldestCreatedAt: undefined,
     oldestCursor: undefined,
     newerPruned: false,
+    reactions: {},
     profiles: {},
   });
   let runtime: ThreadRuntime | undefined;
   let profileRequest = 0;
+  let relays: string[] = [];
 
   $effect(() => {
     if (!props.eventId) return;
+    relays = timelineRelays(props.relaySets);
     runtime = new ThreadRuntime(
       props.eventId,
-      timelineRelays(props.relaySets),
+      relays,
       createTimelineSubId(props.tabId, 'thread'),
     );
     const unsubscribe = runtime.subscribe(
@@ -55,15 +59,24 @@
   });
 
   $effect(() => {
-    const authors = [...new Set(state.items.map((item) => item.event.pubkey))];
+    const authors = [
+      ...new Set([
+        ...state.items.map((item) => item.event.pubkey),
+        ...Object.values(state.reactions).flatMap((groups) =>
+          groups.flatMap((group) => group.actors),
+        ),
+      ]),
+    ];
     const missing = authors.filter((author) => !state.profiles[author]);
     if (missing.length === 0) return;
     const request = ++profileRequest;
-    void loadTimelineProfiles(missing).then((loaded) => {
-      if (request !== profileRequest) return;
-      currentProfiles = { ...loaded, ...currentProfiles };
-      state = { ...state, profiles: currentProfiles };
-    });
+    void loadTimelineProfiles(missing, relays, `${props.tabId}:profiles`).then(
+      (loaded) => {
+        if (request !== profileRequest) return;
+        currentProfiles = { ...loaded, ...currentProfiles };
+        state = { ...state, profiles: currentProfiles };
+      },
+    );
   });
 </script>
 
@@ -76,6 +89,7 @@
       items={state.items}
       profiles={state.profiles}
       relaySets={props.relaySets}
+      reactions={state.reactions}
       loading={state.loading}
       loadingOlder={state.loadingOlder}
       hasOlder={state.hasOlder}

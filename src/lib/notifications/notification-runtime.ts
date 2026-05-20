@@ -1,4 +1,4 @@
-import { lookupEvent, upsertEvent } from '../events/repository';
+import { lookupEvents, upsertEvent } from '../events/repository';
 import { boundedErrorText } from '../events/runtime-error';
 import { feedPageSize, feedWindowSize } from '../events/feed-window';
 import type { FeedEvent } from '../events/types';
@@ -122,9 +122,8 @@ export class NotificationRuntime {
       ? await accountNotifications(this.accountPubkey, this.#pageSize)
       : [];
     if (!this.#active(generation)) return;
-    const ids = records.map((record) => record.sourceEventId);
-    const items = (await Promise.all(ids.map((id) => lookupEvent(id)))).filter(
-      (item): item is FeedEvent => Boolean(item),
+    const items = await lookupEvents(
+      records.map((record) => record.sourceEventId),
     );
     if (!this.#active(generation)) return;
     const pruned = items.length > feedWindowSize;

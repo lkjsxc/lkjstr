@@ -47,7 +47,7 @@ export class LkjstrDb extends Dexie {
         (step: number) => { stores: (shape: Record<string, string>) => void }
       >
     )[schemaMethod];
-    schema.call(this, 6).stores({
+    schema.call(this, 7).stores({
       workspaces: '&id, updatedAt, activeAccountId',
       accounts: '&id, pubkey, signerType, updatedAt, lastUsedAt',
       localAccountSecrets: '&accountId, pubkey, updatedAt',
@@ -60,7 +60,7 @@ export class LkjstrDb extends Dexie {
       eventTags:
         '&id, eventId, tagName, tagValue, created_at, [tagName+tagValue], [tagName+tagValue+created_at]',
       feedCursors: '&id, feedKey, updatedAt',
-      jobs: '&id, kind, status, updatedAt',
+      jobs: '&id, rootId, parentId, kind, status, updatedAt, [rootId+updatedAt]',
       cacheMeta: '&id, updatedAt',
       tabStates: '&id, tabId, updatedAt',
       settings: '&key, namespace, updatedAt',

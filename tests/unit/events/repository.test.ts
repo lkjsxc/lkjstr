@@ -2,6 +2,9 @@ import { beforeEach, describe, expect, it } from 'vitest';
 import {
   clearEventRepositoryForTests,
   latestEventByAuthorKind,
+  eventsByTagValue,
+  lookupEvent,
+  lookupEvents,
   queryFeed,
   upsertEvent,
 } from '../../../src/lib/events/repository';
@@ -73,6 +76,28 @@ describe('event repository fallback paging', () => {
 
     const latest = await latestEventByAuthorKind(pubkey, 3);
     expect(latest?.event.content).toBe('new');
+  });
+
+  it('uses direct and batch id lookups', async () => {
+    await upsertEvent(event('1', 10, 'one'));
+    await upsertEvent(event('2', 9, 'two'));
+
+    expect((await lookupEvent('1'.repeat(64)))?.event.content).toBe('one');
+    expect(
+      (await lookupEvents(['2'.repeat(64), 'missing'])).map(
+        (item) => item.event.content,
+      ),
+    ).toEqual(['two']);
+  });
+
+  it('returns indexed tag-value events', async () => {
+    const root = 'f'.repeat(64);
+    await upsertEvent(event('1', 10, 'reaction', [['e', root]]));
+    await upsertEvent(event('2', 9, 'other', [['e', '0'.repeat(64)]]));
+
+    expect(
+      (await eventsByTagValue('e', root)).map((item) => item.event.content),
+    ).toEqual(['reaction']);
   });
 
   it('normalizes stale stored rows with cache relay provenance', () => {

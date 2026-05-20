@@ -90,6 +90,7 @@
   <ProfileTab
     tabId={props.tab.id}
     pubkey={String(props.tab.config.pubkey ?? '')}
+    activeAccount={props.activeAccount}
     relaySets={props.relaySets}
     openProfile={(pubkey) => props.openProfile(props.paneId, pubkey)}
     openThread={(eventId) => props.openThread(props.paneId, eventId)}

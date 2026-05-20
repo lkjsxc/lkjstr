@@ -40,6 +40,29 @@ export async function indexedLatestByAuthorKind(
   return event ? normalizeStoredEvent(event) : undefined;
 }
 
+export async function indexedEventsByTagValue(
+  tagName: 'e' | 'p' | 'q' | 'a',
+  tagValue: string,
+  limit = 500,
+): Promise<StoredEvent[]> {
+  const rows = await browserDb()
+    .eventTags.where('[tagName+tagValue+created_at]')
+    .between(
+      [tagName, tagValue, 0],
+      [tagName, tagValue, Number.MAX_SAFE_INTEGER],
+    )
+    .reverse()
+    .limit(limit)
+    .toArray();
+  const events = await browserDb().events.bulkGet(
+    rows.map((row) => row.eventId),
+  );
+  return events
+    .filter((event): event is StoredEvent => Boolean(event))
+    .map(normalizeStoredEvent)
+    .sort(compareEventsDesc);
+}
+
 async function indexedThreadPage(
   query: FeedQuery,
   limit: number,

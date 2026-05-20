@@ -4,11 +4,7 @@
   import type { FeedEvent } from '$lib/events/types';
   import type { ProfileSummary } from '$lib/identity/identity';
   import type { NotificationRecord } from '$lib/notifications/notification';
-  import {
-    notificationActionLabel,
-    notificationContext,
-    notificationContextEventId,
-  } from '$lib/notifications/notification-presentation';
+  import { notificationActionLabel } from '$lib/notifications/notification-presentation';
 
   type Props = {
     record: NotificationRecord;
@@ -20,8 +16,6 @@
 
   let props: Props = $props();
   let label = $derived(notificationActionLabel(props.record.kind));
-  let context = $derived(notificationContext(props.record));
-  let contextEventId = $derived(notificationContextEventId(props.record));
   let time = $derived(new Date(props.record.createdAt * 1000).toLocaleString());
 </script>
 
@@ -37,16 +31,6 @@
     <div class="notification-row__meta">
       <strong>{label}</strong>
       <span>{props.record.readAt ? 'read' : 'unread'}</span>
-      {#if context && contextEventId}
-        <button
-          type="button"
-          onclick={() => props.openThread?.(contextEventId)}
-        >
-          {context}
-        </button>
-      {:else if context}
-        <span>{context}</span>
-      {/if}
       <time datetime={new Date(props.record.createdAt * 1000).toISOString()}>
         {time}
       </time>

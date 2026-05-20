@@ -7,6 +7,7 @@
   import '../styles/workspace-tabs.css';
   import '../styles/workspace-menu.css';
   import '../styles/timeline.css';
+  import '../styles/reactions.css';
   import '../styles/event-actions.css';
   import '../styles/tables.css';
   import '../styles/tweet.css';

@@ -5,12 +5,15 @@
   import EventContent from './EventContent.svelte';
   import EventMeta from './EventMeta.svelte';
   import EventActions from './EventActions.svelte';
+  import ReactionSummary from './ReactionSummary.svelte';
+  import type { ReactionGroup } from '$lib/thread/thread-reactions';
 
   type Props = {
     item: TimelineItem;
     depth?: number;
     profile?: ProfileSummary;
     relaySets?: readonly RelaySet[];
+    reactions?: readonly ReactionGroup[];
     openProfile?: (pubkey: string) => void;
     openThread?: (eventId: string) => void;
   };
@@ -79,5 +82,6 @@
       {profile}
       relaySets={props.relaySets ?? []}
     />
+    <ReactionSummary reactions={props.reactions} />
   </div>
 </div>

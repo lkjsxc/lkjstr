@@ -1,5 +1,6 @@
 <script lang="ts">
   import { tick } from 'svelte';
+  import type { Account } from '$lib/accounts/account';
   import EventRow from '$lib/components/events/EventRow.svelte';
   import { isNearEnd } from '$lib/events/feed-window';
   import IdentityChip from '$lib/components/identity/IdentityChip.svelte';
@@ -14,10 +15,12 @@
     createTimelineSubId,
     timelineRelays,
   } from '$lib/timeline/timeline-subscription';
+  import ProfileActions from './ProfileActions.svelte';
 
   type Props = {
     tabId: string;
     pubkey: string;
+    activeAccount?: Account;
     relaySets: readonly RelaySet[];
     openProfile: (pubkey: string) => void;
     openThread: (eventId: string) => void;
@@ -132,6 +135,12 @@
   <header class="profile-card">
     <IdentityChip pubkey={props.pubkey} profile={state.profile ?? undefined} />
     <small>{npub}</small>
+    <ProfileActions
+      account={props.activeAccount}
+      pubkey={props.pubkey}
+      profile={state.profile}
+      relaySets={props.relaySets}
+    />
     {#if nprofile}<small>{nprofile}</small>{/if}
     {#if state.profile?.about}
       <p>{state.profile.about}</p>

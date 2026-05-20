@@ -81,10 +81,25 @@ export type JobRecord = {
   readonly kind: JobKind;
   readonly status: JobStatus;
   readonly input: unknown;
+  readonly parentId?: string;
+  readonly rootId: string;
+  readonly path: readonly string[];
+  readonly label?: string;
+  readonly progress?: JobProgress;
+  readonly output?: readonly string[];
+  readonly cancelRequestedAt?: number;
+  readonly canceledBy?: string;
+  readonly staleStartedAt?: number;
   readonly error?: string;
   readonly createdAt: number;
   readonly updatedAt: number;
   readonly completedAt?: number;
+};
+
+export type JobProgress = {
+  readonly current: number;
+  readonly total?: number;
+  readonly label?: string;
 };
 
 export type RelayReadRequest = {

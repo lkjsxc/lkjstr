@@ -40,10 +40,11 @@
   });
   let runtime: TimelineRuntime | GlobalTimelineRuntime | undefined;
   let profileRequest = 0;
+  let relays: string[] = [];
 
   $effect(() => {
     if (!props.dataReady) return;
-    const relays = timelineRelays(props.relaySets);
+    relays = timelineRelays(props.relaySets);
     const Runtime =
       props.kind === 'global' ? GlobalTimelineRuntime : TimelineRuntime;
     runtime = new Runtime({
@@ -67,10 +68,12 @@
     const missing = authors.filter((author) => !state.profiles[author]);
     if (missing.length === 0) return;
     const request = ++profileRequest;
-    void loadTimelineProfiles(missing).then((loaded) => {
-      if (request !== profileRequest) return;
-      state = { ...state, profiles: { ...loaded, ...state.profiles } };
-    });
+    void loadTimelineProfiles(missing, relays, `${props.tabId}:profiles`).then(
+      (loaded) => {
+        if (request !== profileRequest) return;
+        state = { ...state, profiles: { ...loaded, ...state.profiles } };
+      },
+    );
   });
 </script>
 

@@ -100,6 +100,7 @@
   display: block;
   max-height: min(45dvh, 28rem);
   max-width: 100%;
+  overflow: hidden;
 }
 
 img.media-embed,
@@ -135,6 +136,12 @@ img.media-embed,
 video.media-embed,
 audio.media-embed {
   max-width: 100%;
+}
+
+.media-embed video,
+.media-embed audio {
+  display: block;
+  width: 100%;
 }
 
 video.media-embed {

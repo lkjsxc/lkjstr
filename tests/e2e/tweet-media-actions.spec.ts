@@ -24,35 +24,6 @@ test('Ctrl+Enter publishes a Tweet through the relay', async ({ page }) => {
   await expect(page.getByText(/Published to/)).toBeVisible();
   expect(await publishedKinds(page)).toContain(1);
 });
-test('Tweet media upload publishes content and imeta tags', async ({
-  page,
-}) => {
-  const key = generateSecretKey();
-  const pubkey = getPublicKey(key);
-  await installNip07(page, pubkey);
-  await installSyntheticRelay(page, { events: [] });
-  await mockUploadServer(page);
-  await openCleanWorkspace(page);
-  await addBrowserSigner(page);
-  await setMediaServer(page);
-  await openTweet(page);
-  await page.getByLabel('Tweet content').fill('media note');
-  await page.locator('input#tweet-media').setInputFiles({
-    name: 'pixel.png',
-    mimeType: 'image/png',
-    buffer: Buffer.from('png'),
-  });
-  await expect(page.getByText('Uploaded 1 media file')).toBeVisible();
-  await page.getByRole('button', { name: 'Publish' }).click();
-  await waitForPublishedCount(page, 1);
-  const published = await lastPublished(page);
-  expect(published?.content).toContain('https://cdn.example/pixel.png');
-  expect(published?.tags).toContainEqual([
-    'imeta',
-    'url https://cdn.example/pixel.png',
-    'm image/png',
-  ]);
-});
 test('event row actions publish without opening the row thread', async ({
   page,
 }) => {
@@ -124,33 +95,6 @@ async function openTweet(page: import('@playwright/test').Page) {
   await page.getByRole('button', { name: 'Tweet' }).click();
 }
 
-async function setMediaServer(page: import('@playwright/test').Page) {
-  await page.getByRole('button', { name: 'Open new tab' }).first().click();
-  await page.getByRole('button', { name: 'Settings', exact: true }).click();
-  await page
-    .getByLabel('Edit tweet.mediaUploadServer')
-    .fill('https://media.example');
-  await page.getByLabel('Edit tweet.mediaUploadServer').blur();
-}
-
-async function mockUploadServer(page: import('@playwright/test').Page) {
-  await page.addInitScript(() => {
-    window.fetch = async (input: RequestInfo | URL) => {
-      const url = String(input);
-      if (url.endsWith('/.well-known/nostr/nip96.json'))
-        return Response.json({ api_url: 'https://media.example/upload' });
-      return Response.json({
-        nip94_event: {
-          tags: [
-            ['url', 'https://cdn.example/pixel.png'],
-            ['m', 'image/png'],
-          ],
-        },
-      });
-    };
-  });
-}
-
 async function mockZapServer(page: import('@playwright/test').Page) {
   await page.addInitScript(() => {
     window.fetch = async (input: RequestInfo | URL) => {
@@ -159,17 +103,6 @@ async function mockZapServer(page: import('@playwright/test').Page) {
         return Response.json({ callback: 'https://example.com/callback' });
       return Response.json({ pr: 'lnbc1invoice' });
     };
-  });
-}
-
-async function lastPublished(page: import('@playwright/test').Page) {
-  return page.evaluate(() => {
-    const events = window.__syntheticSockets.flatMap((socket) =>
-      Array.isArray((socket as { published?: unknown[] }).published)
-        ? (socket as { published: unknown[] }).published
-        : [],
-    );
-    return events.at(-1) as { kind: number; content: string; tags: string[][] };
   });
 }
 

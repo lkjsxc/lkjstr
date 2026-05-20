@@ -19,6 +19,10 @@ display UI.
   or briefly render over newer identity state.
 - Visible event authors are hydrated across Home, Global, Notifications,
   Profile notes, and Thread when cached or relay metadata exists.
+- Hydration is cache-first, relay-backed, batched, in-flight deduped, timed out,
+  and gated by `profiles.fetchMetadata`.
+- Broken or slow avatar images fall back to deterministic initials without
+  changing row geometry.
 - Timeline rows keep their event authors stable while hydration enriches
   identity labels and avatars.
 - Missing metadata shows shortened public key text as title and secondary

@@ -9,8 +9,8 @@ This document records the current implemented contract for the app.
 - Root `/` renders the workspace shell.
 - Workspace layout, tab groups, tabs, accounts, relay sets, settings, events,
   notifications, Tweet drafts, and cache metadata are local browser data.
-- New Tab opens Home, Global, Relay Settings, lkjstr Log, Notifications,
-  Accounts, Tweet, Settings, and Cache.
+- Clean first launch opens Welcome. New Tab opens Welcome, Home, Global, Relay
+  Settings, lkjstr Log, Notifications, Accounts, Tweet, Settings, and Cache.
 - Profile tabs open or focus from identity actions in the same tile.
 - Thread tabs open or focus from event rows, controls, quotes, references, and
   continuation rows in the same tile. Row action buttons never trigger row
@@ -29,7 +29,8 @@ This document records the current implemented contract for the app.
 - Global shows recent kind `1` notes from the selected read relays without an
   account requirement.
 - Notifications are relay-backed records derived from events that reference the
-  active account.
+  active account. Rows show actor, action, read state, timestamp, and source
+  content without target/root context controls.
 - Home has no hidden public fallback when the selected account or read relays
   cannot produce a feed.
 - Feed loading ends when cache exists, any relay produces events, any relay
@@ -50,9 +51,13 @@ This document records the current implemented contract for the app.
 - Event rows and diagnostic rows wrap long content inside their tile.
 - Accounts can mine an `npub` prefix locally and export the generated `nsec`
   without storing it.
-- Tweet uses durable draft storage, `Ctrl+Enter`, optional NIP-96 media upload,
-  NIP-98 upload auth, NIP-94 `imeta` tags, and NIP-07 signed kind `1` notes to
-  enabled write relays.
+- Tweet uses durable draft storage, `Ctrl+Enter`, provider or custom NIP-96
+  media upload, NIP-98 upload auth, NIP-94 `imeta` tags, and signed kind `1`
+  notes to enabled write relays.
+- Event repository lookup uses direct id reads, batched id reads, and tag-value
+  indexes for thread, reaction, and notification reloads.
+- Jobs are persisted as root/child trees with progress, output, and cancel
+  metadata for inspection in lkjstr Log.
 - Docker verification uses `docker-compose.yml` built images with no bind
   mounts or required environment blocks.
 - GitHub Actions runs local verification, browser tests, Docker Compose gates,
@@ -61,4 +66,4 @@ This document records the current implemented contract for the app.
 ## Gaps
 
 - Relay health is visible from live pool snapshots but is not written back.
-- Long-running local work should expose progress and cancellation.
+- lkjstr Log renders job tree inspection before dedicated job controls exist.

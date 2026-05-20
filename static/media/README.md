@@ -2,8 +2,8 @@
 
 ## Purpose
 
-This directory contains bundled static media used by the app.
+This directory is reserved for bundled static media used by the app.
 
 ## Files
 
-- `presets/README.md`: Tweet media preset asset notes.
+- No product media upload presets are bundled.

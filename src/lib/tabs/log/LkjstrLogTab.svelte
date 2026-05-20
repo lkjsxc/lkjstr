@@ -7,6 +7,7 @@
   } from '$lib/log/app-log';
   import { flattenRelayDiagnostics } from '$lib/relays/session-snapshots';
   import type { RelaySnapshot } from '$lib/relays/types';
+  import JobTreeLog from './JobTreeLog.svelte';
 
   type Props = {
     snapshots?: RelaySnapshot[];
@@ -42,6 +43,7 @@
 
 <section class="relay-monitor">
   <h2>lkjstr Log</h2>
+  <JobTreeLog />
   {#each logs as item (item.id)}
     <article class="relay-log-row">
       <strong>{item.area}</strong>

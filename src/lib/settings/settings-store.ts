@@ -6,6 +6,7 @@ import {
 import type { SettingRecord } from './settings-key';
 import { defaultSettings, searchText } from './settings-schema';
 import { settingsChangedEvent } from './settings-events';
+import { validCustomUploadServer } from '../tweet/media-upload-providers';
 
 export type SettingOverride = {
   readonly key: string;
@@ -143,18 +144,12 @@ export function coerceValue(
       : { ok: false };
   if (setting.valueType === 'json') return { ok: true, value };
   const text = String(value).trim();
-  if (setting.key === 'tweet.mediaUploadServer' && !validUploadServer(text))
+  if (
+    setting.key === 'tweet.mediaUploadCustomServer' &&
+    !validCustomUploadServer(text)
+  )
     return { ok: false };
   return { ok: true, value: text };
-}
-
-function validUploadServer(value: string): boolean {
-  if (!value) return true;
-  try {
-    return new URL(value).protocol === 'https:';
-  } catch {
-    return false;
-  }
 }
 
 function notifySettingsChanged(): void {

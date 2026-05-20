@@ -15,7 +15,7 @@
       <li>
         <button
           type="button"
-          onclick={() => window.open(attachment.url, '_blank')}
+          onclick={() => window.open(attachment.url, '_blank', 'noopener')}
         >
           {attachment.name || attachment.url}
         </button>

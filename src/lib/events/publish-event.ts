@@ -21,6 +21,8 @@ export async function signAndPublish(
   const event = await signer.signEvent(build(signer.account.pubkey));
   await storeTimelineEvent(event);
   const results = await sharedRelayPool.publish(relays, event);
+  if (results.every((result) => !result.accepted))
+    return { ok: false, message: 'All relays rejected the event.' };
   return { ok: true, event, results };
 }
 

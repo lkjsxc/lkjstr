@@ -6,8 +6,13 @@ Media upload docs define the NIP-96 and NIP-98 contract for Tweet attachments.
 
 ## Contract
 
-- Uploads use only the configured `tweet.mediaUploadServer` setting.
-- The setting must be blank or an HTTPS URL.
+- Uploads use `tweet.mediaUploadProvider`, `tweet.mediaUploadCustomServer`,
+  and `tweet.mediaUploadNoTransform`.
+- Provider ids are `disabled`, `nostr-build`, `nostrcheck`, `void-cat`, and
+  `custom`.
+- Built-in providers map to fixed HTTPS NIP-96 origins. `custom` uses
+  `tweet.mediaUploadCustomServer`, which must be blank or HTTPS.
+- `tweet.mediaUploadServer` is not an active setting contract.
 - The client discovers `/.well-known/nostr/nip96.json` unless the configured
   URL already points to a NIP-96 API endpoint.
 - `delegated_to_url` is followed when present.
@@ -18,5 +23,5 @@ Media upload docs define the NIP-96 and NIP-98 contract for Tweet attachments.
 - Successful responses are parsed for a media URL and NIP-94 metadata tags.
 - Published notes append uploaded media URLs to content and include matching
   `imeta` tags.
-- Bundled Tweet media presets are static app assets fetched as `File` objects
-  and sent through this same upload path.
+- Composer upload uses the file picker or paste. Bundled preset uploads are not
+  part of the product flow.

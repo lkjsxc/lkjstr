@@ -42,9 +42,21 @@ describe('settings store helpers', () => {
     expect(coerceValue(setting, 5000)).toEqual({ ok: true, value: 5000 });
   });
 
-  it('coerces Tweet media upload server settings', () => {
+  it('coerces Tweet media upload provider settings', () => {
+    const provider = defaultSettings().find(
+      (item) => item.key === 'tweet.mediaUploadProvider',
+    );
+    if (!provider) throw new Error('expected setting');
+    expect(coerceValue(provider, 'nostr-build')).toEqual({
+      ok: true,
+      value: 'nostr-build',
+    });
+    expect(coerceValue(provider, 'legacy')).toEqual({ ok: false });
+  });
+
+  it('coerces Tweet custom media upload server settings', () => {
     const setting = defaultSettings().find(
-      (item) => item.key === 'tweet.mediaUploadServer',
+      (item) => item.key === 'tweet.mediaUploadCustomServer',
     );
     if (!setting) throw new Error('expected setting');
     expect(coerceValue(setting, '')).toEqual({ ok: true, value: '' });

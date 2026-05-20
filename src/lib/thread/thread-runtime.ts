@@ -1,12 +1,6 @@
-import {
-  feedPageSize,
-  cursorPoint,
-  oldestCreatedAt,
-  threadWindowSize,
-} from '../events/feed-window';
+import { feedPageSize, threadWindowSize } from '../events/feed-window';
 import { lookupEvent } from '../events/repository';
 import { boundedErrorText } from '../events/runtime-error';
-import type { FeedCursorPoint } from '../events/types';
 import { replyRoot } from '../protocol';
 import {
   sharedRelayPool,
@@ -18,6 +12,7 @@ import {
   type RelaySubscriptionManager as SubscriptionManager,
 } from '../relays/subscription-manager';
 import type { RelaySnapshot } from '../relays/types';
+import { threadRelayState } from './thread-relay-state';
 import {
   loadCachedThread,
   mergeThreadItems,
@@ -28,21 +23,23 @@ import {
   loadInitialThreadPage,
   loadOlderThreadPage,
 } from './thread-runtime-pages';
-
-// prettier-ignore
-export type ThreadState = {
-  readonly items: readonly ThreadItem[]; readonly loading: boolean; readonly error: string | null; readonly eoseRelays: number;
-  readonly loadingOlder: boolean; readonly hasOlder: boolean; readonly oldestCreatedAt?: number; readonly oldestCursor?: FeedCursorPoint; readonly newerPruned: boolean;
-};
-
+import {
+  cachedThreadReactions,
+  mergeReactionEvent,
+  storeReaction,
+} from './thread-reactions';
+import {
+  emptyThreadState,
+  withThreadCursors,
+  type ThreadState,
+} from './thread-state';
 export class ThreadRuntime {
-  #pool: RelayPool;
   #subscriptions: SubscriptionManager;
   #cached: ThreadItem[] = [];
   #live: ThreadItem[] = [];
   #cleanup: (() => void)[] = [];
   #listeners = new Set<(state: ThreadState) => void>();
-  #state: ThreadState = emptyState();
+  #state: ThreadState = emptyThreadState();
   #pageSize = feedPageSize;
   #startedAt = Math.floor(Date.now() / 1000);
   #rootId: string;
@@ -56,9 +53,9 @@ export class ThreadRuntime {
     pool?: RelayPool,
     subscriptions?: SubscriptionManager,
   ) {
-    this.#pool = pool ?? sharedRelayPool;
+    const relayPool = pool ?? sharedRelayPool;
     this.#subscriptions =
-      subscriptions ?? new RelaySubscriptionManager(this.#pool);
+      subscriptions ?? new RelaySubscriptionManager(relayPool);
     this.#rootId = eventId;
   }
 
@@ -102,6 +99,12 @@ export class ThreadRuntime {
               since: this.#startedAt,
               limit: this.#pageSize,
             },
+            {
+              kinds: [7],
+              '#e': [this.#rootId, this.eventId],
+              since: this.#startedAt,
+              limit: this.#pageSize,
+            },
           ],
         },
         (event) => this.#receive(event),
@@ -140,6 +143,7 @@ export class ThreadRuntime {
   async #receive(poolEvent: PoolEvent): Promise<void> {
     if (this.#closed) return;
     if (poolEvent.subId !== this.subId) return;
+    if (poolEvent.event.kind === 7) return this.#receiveReaction(poolEvent);
     await storeThreadEvent(poolEvent.event, [poolEvent.relay]);
     if (this.#closed) return;
     this.#live = mergeThreadItems(this.#live, [
@@ -154,14 +158,25 @@ export class ThreadRuntime {
     try {
       const page = await loadInitialThreadPage({ eventId: this.eventId, rootId: this.#rootId, relays: this.relays, subId: this.subId, pageSize: this.#pageSize, subscriptions: this.#subscriptions });
       if (!this.#active(generation)) return; this.#rootId = page.rootId; this.#cached = mergeThreadItems(this.items(), page.items);
-      this.#emit({ ...this.#state, items: this.items(), loading: false });
+      const reactions = await cachedThreadReactions(this.items().map((item) => item.event.id));
+      if (!this.#active(generation)) return;
+      this.#emit({ ...this.#state, items: this.items(), loading: false, reactions });
     } catch (error) { this.#emit({ ...this.#state, loading: false, error: boundedErrorText(error) }); }
+  }
+
+  async #receiveReaction(poolEvent: PoolEvent): Promise<void> {
+    await storeReaction(poolEvent.event, poolEvent.relay);
+    if (this.#closed) return;
+    this.#emit({
+      ...this.#state,
+      reactions: mergeReactionEvent(this.#state.reactions, poolEvent.event),
+    });
   }
 
   // prettier-ignore
   #receiveState(snapshots: RelaySnapshot[]): void {
-    if (this.#closed) return; const active = snapshots.filter((item) => this.relays.includes(item.url)); const eoseRelays = active.filter((item) => item.eoseBySub[this.subId]).length; const terminalRelays = active.filter((item) => item.eoseBySub[this.subId] || item.closedBySub[this.subId] || item.state === 'closed' || item.state === 'error').length;
-    this.#emit({ ...this.#state, eoseRelays, loading: active.length > 0 && terminalRelays >= active.length ? false : this.#state.loading });
+    if (this.#closed) return; const state = threadRelayState(snapshots, this.relays, this.subId);
+    this.#emit({ ...this.#state, eoseRelays: state.eoseRelays, loading: state.activeRelays > 0 && state.terminalRelays >= state.activeRelays ? false : this.#state.loading });
   }
 
   items(): ThreadItem[] {
@@ -173,20 +188,11 @@ export class ThreadRuntime {
 
   #emit(state: ThreadState): void {
     if (this.#closed) return;
-    this.#state = {
-      ...state,
-      oldestCreatedAt: oldestCreatedAt(state.items),
-      oldestCursor: cursorPoint(state.items.at(-1)),
-    };
+    this.#state = withThreadCursors(state);
     this.#listeners.forEach((listener) => listener(this.#state));
   }
 
   #active(generation: number): boolean {
     return !this.#closed && generation === this.#generation;
   }
-}
-
-// prettier-ignore
-function emptyState(): ThreadState {
-  return { items: [], loading: true, error: null, eoseRelays: 0, loadingOlder: false, hasOlder: true, oldestCreatedAt: undefined, oldestCursor: undefined, newerPruned: false };
 }

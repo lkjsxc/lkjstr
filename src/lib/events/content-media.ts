@@ -3,6 +3,7 @@ import type { NostrEvent } from '../protocol';
 export type ContentAttachment = {
   readonly url: string;
   readonly type: 'image' | 'video' | 'audio' | 'link';
+  readonly aspectRatio?: string;
 };
 
 const urlPattern = /\bhttps:\/\/[^\s<>"']+/gi;
@@ -34,14 +35,17 @@ export function classifyUrl(url: string): ContentAttachment {
 function imetaAttachments(event: NostrEvent): ContentAttachment[] {
   return event.tags
     .filter((tag) => tag[0] === 'imeta')
-    .flatMap((tag) => {
+    .flatMap((tag): ContentAttachment[] => {
       const url = tagToken(tag, 'url');
       if (!url?.startsWith('https://')) return [];
       const mime = tagToken(tag, 'm')?.toLowerCase() ?? '';
-      if (mime.startsWith('image/')) return [{ url, type: 'image' } as const];
-      if (mime.startsWith('video/')) return [{ url, type: 'video' } as const];
-      if (mime.startsWith('audio/')) return [{ url, type: 'audio' } as const];
-      return [classifyUrl(url)];
+      const aspectRatio = aspectRatioFromDim(tagToken(tag, 'dim'));
+      if (mime.startsWith('image/'))
+        return [{ url, type: 'image', aspectRatio } as const];
+      if (mime.startsWith('video/'))
+        return [{ url, type: 'video', aspectRatio } as const];
+      if (mime.startsWith('audio/')) return [{ url, type: 'audio' }];
+      return [{ ...classifyUrl(url), aspectRatio }];
     });
 }
 
@@ -52,6 +56,14 @@ function tagToken(tag: readonly string[], name: string): string | undefined {
 
 function cleanUrl(url: string): string {
   return url.replace(/[),.;:!?]+$/u, '');
+}
+
+function aspectRatioFromDim(dim: string | undefined): string | undefined {
+  const match = dim?.match(/^(\d+)x(\d+)$/);
+  if (!match) return undefined;
+  const width = Number(match[1]);
+  const height = Number(match[2]);
+  return width > 0 && height > 0 ? `${width} / ${height}` : undefined;
 }
 
 function dedupe(items: readonly ContentAttachment[]): ContentAttachment[] {

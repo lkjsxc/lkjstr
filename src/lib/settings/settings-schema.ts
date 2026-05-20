@@ -34,7 +34,8 @@ notifications.showUnreadInTab|Unread tab|boolean|true|Show unread in tab.
 notifications.defaultCategories|Categories|json|["mentions"]|Notification categories.
 tweet.defaultPublishMode|Publish mode|enum|selected-relays|Tweet publish target.|selected-relays
 tweet.persistDrafts|Persist drafts|boolean|true|Keep Tweet drafts durable.
-tweet.mediaUploadServer|Media upload server|string||Optional HTTPS NIP-96 upload server.
+tweet.mediaUploadProvider|Media upload provider|enum|disabled|NIP-96 upload provider.|disabled,nostr-build,nostrcheck,void-cat,custom
+tweet.mediaUploadCustomServer|Custom upload server|string||Optional HTTPS NIP-96 upload server.
 tweet.mediaUploadNoTransform|No transform upload|boolean|true|Request original media upload.
 cache.maxEvents|Max events|number|5000|Cached event limit.
 cache.maxAgeDays|Max age days|number|30|Cached event age limit.

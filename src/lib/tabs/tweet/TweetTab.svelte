@@ -27,8 +27,13 @@
   let uploading = $state(false);
   let uploadServer = $state('');
   let uploadNoTransform = $state(true);
+  let uploadProvider = $state<
+    'disabled' | 'nostr-build' | 'nostrcheck' | 'void-cat' | 'custom'
+  >('disabled');
+  let uploadCustomServer = $state('');
   let attachments = $state<TweetAttachment[]>([]);
   let draftTouched = false;
+  let saveTimer: ReturnType<typeof setTimeout> | undefined;
   let hasSigner = $derived(
     props.accounts.some((item) => item.capabilities.sign),
   );
@@ -39,31 +44,51 @@
       (content.trim().length > 0 || attachments.length > 0),
   );
 
-  onMount(async () => {
-    const draft = await loadTweetDraft();
+  onMount(() => {
+    void loadInitialState();
+    return () => flushDraft();
+  });
+
+  async function loadInitialState(): Promise<void> {
+    const [draft, settings] = await Promise.all([
+      loadTweetDraft(),
+      loadTweetUploadSettings(),
+    ]);
     if (!draftTouched) {
       content = draft?.content ?? '';
       attachments = [...(draft?.attachments ?? [])];
     }
-    const settings = await loadTweetUploadSettings();
+    uploadProvider = settings.provider;
+    uploadCustomServer = settings.customServer;
     uploadServer = settings.server;
     uploadNoTransform = settings.noTransform;
-  });
+  }
 
   function touchDraft(): void {
     draftTouched = true;
-    void save();
+    queueSave();
   }
 
   async function save(): Promise<void> {
     await saveTweetDraft(content, props.accounts[0]?.id ?? null, attachments);
   }
 
+  function queueSave(): void {
+    if (saveTimer) clearTimeout(saveTimer);
+    saveTimer = setTimeout(() => void flushDraft(), 400);
+  }
+
+  async function flushDraft(): Promise<void> {
+    if (saveTimer) clearTimeout(saveTimer);
+    saveTimer = undefined;
+    await save();
+  }
+
   async function publish(): Promise<void> {
     if (!canPublish) return;
     publishing = true;
     message = '';
-    await save();
+    await flushDraft();
     const result = await publishTweet(
       publishContent(),
       props.relaySets,
@@ -98,13 +123,15 @@
       for (const file of pending) {
         uploaded.push(
           await uploadTweetMedia(file, {
+            provider: uploadProvider,
+            customServer: uploadCustomServer,
             server: uploadServer,
             noTransform: uploadNoTransform,
           }),
         );
       }
       attachments = [...attachments, ...uploaded];
-      await save();
+      await flushDraft();
       message = `Uploaded ${uploaded.length} media file(s).`;
     } catch (error) {
       message = error instanceof Error ? error.message : 'Media upload failed.';
@@ -129,7 +156,7 @@
 
   function removeAttachment(url: string): void {
     attachments = attachments.filter((item) => item.url !== url);
-    void save();
+    void flushDraft();
   }
 </script>
 
@@ -141,6 +168,7 @@
     id="tweet-content"
     name="tweet-content"
     oninput={touchDraft}
+    onblur={() => void flushDraft()}
     onpaste={handlePaste}
     onkeydown={(event) => {
       if (event.ctrlKey && event.key === 'Enter') void publish();

@@ -6,13 +6,19 @@ import {
 } from '../storage/safe-storage';
 import { compareEventsDesc, matchesFilter, type NostrEvent } from '../protocol';
 import { cursorPoint } from './feed-window';
-import { indexedLatestByAuthorKind, indexedPage } from './repository-indexed';
+import {
+  indexedEventsByTagValue,
+  indexedLatestByAuthorKind,
+  indexedPage,
+} from './repository-indexed';
 import {
   allMemoryEvents,
   clearMemoryRepository,
   latestMemoryEventByAuthorKind,
   memoryCursors,
   memoryEvent,
+  memoryEventsByIds,
+  memoryEventsByTagValue,
   memoryPage,
   putMemory,
 } from './repository-memory';
@@ -76,8 +82,36 @@ export async function queryFeed(query: FeedQuery): Promise<FeedPage> {
 }
 
 export async function lookupEvent(id: string): Promise<FeedEvent | undefined> {
-  const event = (await allEvents()).find((item) => item.id === id);
+  const event = await boundedStorageRead(
+    () => browserDb().events.get(id),
+    memoryEvent(id),
+  );
   return event ? toFeedEvent(event) : undefined;
+}
+
+export async function lookupEvents(
+  ids: readonly string[],
+): Promise<FeedEvent[]> {
+  const unique = [...new Set(ids)];
+  const events = await boundedStorageRead(
+    () => browserDb().events.bulkGet(unique),
+    memoryEventsByIds(unique),
+  );
+  return events
+    .filter((event): event is StoredEvent => Boolean(event))
+    .map((event) => toFeedEvent(event));
+}
+
+export async function eventsByTagValue(
+  tagName: 'e' | 'p' | 'q' | 'a',
+  tagValue: string,
+  limit = 500,
+): Promise<FeedEvent[]> {
+  const events = await boundedStorageRead(
+    () => indexedEventsByTagValue(tagName, tagValue, limit),
+    memoryEventsByTagValue(tagName, tagValue).slice(0, limit),
+  );
+  return events.map(toFeedEvent);
 }
 
 export async function latestEventByAuthorKind(

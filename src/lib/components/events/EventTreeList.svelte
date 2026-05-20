@@ -15,12 +15,14 @@
     type FlatEventTreeItem,
   } from '$lib/events/tree';
   import type { FeedEvent } from '$lib/events/types';
+  import type { ReactionSummaryMap } from '$lib/thread/thread-reactions';
   import EventRow from './EventRow.svelte';
 
   type Props = {
     items: readonly FeedEvent[];
     profiles?: Record<string, ProfileSummary>;
     relaySets?: readonly RelaySet[];
+    reactions?: ReactionSummaryMap;
     loading?: boolean;
     loadingOlder?: boolean;
     loadingNewer?: boolean;
@@ -110,6 +112,7 @@
               depth={node.depth}
               profile={props.profiles?.[node.event.pubkey]}
               relaySets={props.relaySets}
+              reactions={props.reactions?.[node.event.id]}
               openProfile={props.openProfile}
               openThread={props.openThread}
             />

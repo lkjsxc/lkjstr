@@ -1,0 +1,21 @@
+.reaction-summary {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-1);
+  list-style: none;
+  margin: var(--space-2) 0 0;
+  padding: 0;
+}
+
+.reaction-summary li {
+  align-items: center;
+  border: 1px solid var(--color-border);
+  border-radius: 999px;
+  display: inline-flex;
+  gap: var(--space-1);
+  padding: 0 var(--space-2);
+}
+
+.job-tree-log li {
+  margin-left: calc(var(--job-depth, 0) * var(--space-4));
+}

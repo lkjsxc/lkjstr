@@ -1,32 +1,17 @@
 import type { ProfileSummary } from '../identity/identity';
-import {
-  getProfile,
-  profileFromMetadataEvent,
-} from '../identity/profile-cache';
+import { profileFromMetadataEvent } from '../identity/profile-cache';
+import { hydrateProfiles } from '../identity/profile-hydration';
 import type { NostrEvent, NostrFilter } from '../protocol';
-import {
-  cachedProfileEvent,
-  storeProfileEvent,
-} from '../profile/profile-store';
+import { storeProfileEvent } from '../profile/profile-store';
 
 export type TimelineProfiles = Record<string, ProfileSummary>;
 
 export async function loadTimelineProfiles(
   pubkeys: readonly string[],
+  relays: readonly string[] = [],
+  subId = 'profiles',
 ): Promise<TimelineProfiles> {
-  const entries = await Promise.all(
-    pubkeys.map(
-      async (pubkey): Promise<[string, ProfileSummary | undefined]> => [
-        pubkey,
-        await cachedProfile(pubkey),
-      ],
-    ),
-  );
-  const profiles: TimelineProfiles = {};
-  for (const [pubkey, profile] of entries) {
-    if (profile) profiles[pubkey] = profile;
-  }
-  return profiles;
+  return hydrateProfiles({ pubkeys, relays, subId });
 }
 
 export async function storeTimelineProfile(
@@ -39,13 +24,4 @@ export function profileFilter(
   pubkeys: readonly string[],
 ): readonly NostrFilter[] {
   return pubkeys.length > 0 ? [{ kinds: [0], authors: [...pubkeys] }] : [];
-}
-
-async function cachedProfile(
-  pubkey: string,
-): Promise<ProfileSummary | undefined> {
-  const cached = getProfile(pubkey);
-  if (cached) return cached;
-  const event = await cachedProfileEvent(pubkey);
-  return event ? profileFromMetadataEvent(event) : undefined;
 }

@@ -9,8 +9,11 @@ import {
   type Nip96UploadResult,
 } from '../protocol';
 import type { TweetAttachment } from './draft-store';
+import type { TweetMediaUploadProvider } from './media-upload-providers';
 
 export type UploadSettings = {
+  readonly provider: TweetMediaUploadProvider;
+  readonly customServer: string;
   readonly server: string;
   readonly noTransform: boolean;
 };

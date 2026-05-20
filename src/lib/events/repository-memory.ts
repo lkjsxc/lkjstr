@@ -18,8 +18,25 @@ export function memoryEvent(id: string): StoredEvent | undefined {
   return memoryEvents.get(id);
 }
 
+export function memoryEventsByIds(ids: readonly string[]): StoredEvent[] {
+  return ids.flatMap((id) => {
+    const event = memoryEvents.get(id);
+    return event ? [event] : [];
+  });
+}
+
 export function allMemoryEvents(): StoredEvent[] {
   return [...memoryEvents.values()];
+}
+
+export function memoryEventsByTagValue(
+  tagName: 'e' | 'p' | 'q' | 'a',
+  tagValue: string,
+): StoredEvent[] {
+  const ids = [...memoryTags.values()]
+    .filter((row) => row.tagName === tagName && row.tagValue === tagValue)
+    .map((row) => row.eventId);
+  return memoryEventsByIds([...new Set(ids)]);
 }
 
 export function latestMemoryEventByAuthorKind(
