@@ -40,14 +40,22 @@ export function repostKind(event: NostrEvent): number {
 export function zapRequestTags(input: {
   event?: NostrEvent;
   profilePubkey?: string;
+  recipientPubkey?: string;
   amountMsats: number;
+  lnurl: string;
   relays: readonly string[];
 }): NostrTag[] {
   const tags: NostrTag[] = [
+    ['relays', ...input.relays],
     ['amount', String(input.amountMsats)],
-    ...input.relays.map((relay): NostrTag => ['relays', relay]),
+    ['lnurl', input.lnurl],
   ];
-  if (input.event) tags.push(['e', input.event.id], ['p', input.event.pubkey]);
+  if (input.event)
+    tags.push(
+      ['e', input.event.id],
+      ['p', input.recipientPubkey ?? input.event.pubkey],
+      ['k', String(input.event.kind)],
+    );
   else if (input.profilePubkey) tags.push(['p', input.profilePubkey]);
   return tags;
 }

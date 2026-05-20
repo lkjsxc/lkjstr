@@ -78,13 +78,20 @@ describe('event builders', () => {
       zapRequestTags({
         event,
         amountMsats: 21000,
+        lnurl:
+          'lnurl1dp68gurn8ghj7etcv9khqmr99e3k7mf0d3h82unvwqhhw6twvus8y6t0dc',
         relays: ['wss://relay.example'],
       }),
     ).toEqual([
-      ['amount', '21000'],
       ['relays', 'wss://relay.example'],
+      ['amount', '21000'],
+      [
+        'lnurl',
+        'lnurl1dp68gurn8ghj7etcv9khqmr99e3k7mf0d3h82unvwqhhw6twvus8y6t0dc',
+      ],
       ['e', event.id],
       ['p', event.pubkey],
+      ['k', '1'],
     ]);
   });
 });
