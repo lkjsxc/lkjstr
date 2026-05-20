@@ -49,16 +49,17 @@ test('timeline row actions open profile and thread tabs', async ({ page }) => {
   await addReadonlyAccount(page, active);
   await page.getByRole('button', { name: 'Home', exact: true }).click();
   await waitForSyntheticEvent(page, note.id);
-  await expect(page.getByText('synthetic account-home note')).toBeVisible({
-    timeout: 10000,
-  });
+  const homeTimeline = page.locator('section.timeline-tab[aria-label="Home"]');
+  await expect(
+    homeTimeline.getByText('synthetic account-home note'),
+  ).toBeVisible({ timeout: 10000 });
   await page
     .locator('button.identity-button')
     .filter({ hasText: 'Followed Writer' })
     .click();
   await expect(page.getByRole('heading', { name: 'Profile' })).toBeVisible();
   await page.getByRole('button', { name: 'Home', exact: true }).click();
-  await page.getByText('synthetic account-home note').click();
+  await homeTimeline.getByText('synthetic account-home note').click();
   await expect(page.getByRole('heading', { name: 'Thread' })).toBeVisible();
 });
 

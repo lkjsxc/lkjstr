@@ -1,5 +1,9 @@
 # Scope
 
+## Purpose
+
+Scope docs define what is included and excluded from the project direction.
+
 The repository has selected a browser-first Nostr workspace product surface,
 SvelteKit runtime, local verification, and Compose development model.
 

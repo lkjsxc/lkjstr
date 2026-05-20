@@ -1,5 +1,9 @@
 # User-Owned Relay Configuration
 
+## Purpose
+
+This decision records relay ownership and hidden relay policy.
+
 ## Decision
 
 Users own the relays that drive reading, publishing, and monitoring. The app

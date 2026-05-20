@@ -15,8 +15,9 @@ Feed surface docs define relay-backed read tabs and action-opened read tabs.
 ## Shared Contract
 
 - Event rows render avatar, display name, secondary identity fallback,
-  timestamp, short event id, and wrapped content consistently.
+  timestamp, and wrapped content consistently.
 - Identity actions open Profile tabs in the same tile.
-- Event id actions open Thread tabs in the same tile.
+- Event rows, references, and continuation actions open Thread tabs in the same
+  tile.
 - Cached rows are safe to render when persisted arrays or optional fields are
   absent.

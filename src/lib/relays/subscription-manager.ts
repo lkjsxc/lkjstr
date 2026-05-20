@@ -127,6 +127,7 @@ function pageComplete(
     active.every(
       (item) =>
         item.eoseBySub[subId] ||
+        item.closedBySub[subId] ||
         item.state === 'closed' ||
         item.state === 'error',
     )

@@ -43,6 +43,7 @@ describe('subscription manager', () => {
             state: 'open',
             diagnostics: [],
             eoseBySub: { page: true },
+            closedBySub: {},
           },
         ]),
       );
@@ -54,6 +55,34 @@ describe('subscription manager', () => {
       { timeoutMs: 50 },
     );
     expect(page).toEqual([{ relay: 'relay.example', subId: 'page', event }]);
+    expect(cleanup).toHaveBeenCalledOnce();
+  });
+
+  it('treats relay CLOSED as terminal for one-shot page reads', async () => {
+    const pool = new RelayPool();
+    const cleanup = vi.fn();
+    vi.spyOn(pool, 'subscribe').mockReturnValue(cleanup);
+    vi.spyOn(pool, 'onEvent').mockReturnValue(vi.fn());
+    vi.spyOn(pool, 'onState').mockImplementation((handler) => {
+      setTimeout(() =>
+        handler([
+          {
+            url: 'relay.example',
+            state: 'open',
+            diagnostics: [],
+            eoseBySub: {},
+            closedBySub: { page: 'too large' },
+          },
+        ]),
+      );
+      return vi.fn();
+    });
+    const manager = new RelaySubscriptionManager(pool);
+    const page = await manager.readPage(
+      { key: 'page', relays: ['relay.example'], filters: [{ kinds: [1] }] },
+      { timeoutMs: 5000 },
+    );
+    expect(page).toEqual([]);
     expect(cleanup).toHaveBeenCalledOnce();
   });
 });

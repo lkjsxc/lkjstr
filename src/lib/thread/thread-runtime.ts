@@ -160,8 +160,8 @@ export class ThreadRuntime {
 
   // prettier-ignore
   #receiveState(snapshots: RelaySnapshot[]): void {
-    if (this.#closed) return; const active = snapshots.filter((item) => this.relays.includes(item.url)); const eoseRelays = active.filter((item) => item.eoseBySub[this.subId]).length;
-    this.#emit({ ...this.#state, eoseRelays, loading: active.length > 0 && eoseRelays >= active.length ? false : this.#state.loading });
+    if (this.#closed) return; const active = snapshots.filter((item) => this.relays.includes(item.url)); const eoseRelays = active.filter((item) => item.eoseBySub[this.subId]).length; const terminalRelays = active.filter((item) => item.eoseBySub[this.subId] || item.closedBySub[this.subId] || item.state === 'closed' || item.state === 'error').length;
+    this.#emit({ ...this.#state, eoseRelays, loading: active.length > 0 && terminalRelays >= active.length ? false : this.#state.loading });
   }
 
   items(): ThreadItem[] {

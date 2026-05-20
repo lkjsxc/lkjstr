@@ -1,5 +1,9 @@
 # North Star
 
+## Purpose
+
+North star docs state the long-term repository quality target.
+
 Build a repository that is easy to understand, easy to change, and explicit
 about its current limits.
 

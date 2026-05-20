@@ -1,5 +1,9 @@
 # Principles
 
+## Purpose
+
+Principles define durable collaboration and implementation preferences.
+
 ## Clarity
 
 Prefer explicit names, direct documentation, and visible ownership. Avoid

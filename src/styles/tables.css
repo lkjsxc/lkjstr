@@ -31,8 +31,7 @@
 }
 
 .new-tab,
-.data-tab,
-.profile-tab {
+.data-tab {
   display: flex;
   flex-direction: column;
   gap: var(--space-3);
@@ -42,11 +41,26 @@
   overflow: auto;
 }
 
+.profile-tab {
+  display: grid;
+  gap: var(--space-3);
+  height: 100%;
+  min-height: 0;
+  min-width: 0;
+  overflow: auto;
+}
+
 .profile-card {
   display: grid;
-  flex: 0 0 auto;
   gap: var(--space-2);
   min-height: 0;
+}
+
+.profile-notes,
+.profile-notes__list {
+  display: grid;
+  gap: var(--space-3);
+  min-width: 0;
 }
 
 .data-tab textarea {
@@ -126,8 +140,7 @@
 }
 
 .data-tab > .notification-list,
-.data-tab > .event-list,
-.profile-tab > .event-list {
+.data-tab > .event-list {
   flex: 1 1 0;
 }
 

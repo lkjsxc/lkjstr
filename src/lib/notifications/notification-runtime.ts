@@ -6,6 +6,7 @@ import {
   RelaySubscriptionManager,
   type RelaySubscriptionManager as SubscriptionManager,
 } from '../relays/subscription-manager';
+import { olderRelaySubscriptionId } from '../relays/subscription-id';
 import { deriveNotifications } from './notification-index';
 import type { NotificationRecord } from './notification';
 import {
@@ -103,7 +104,7 @@ export class NotificationRuntime {
     this.#emit({ ...this.#state, loadingOlder: true });
     try {
       const records = await accountNotifications(this.accountPubkey, this.#pageSize, oldest); const until = this.#state.oldestCreatedAt;
-      const relayEvents = until && this.relays.length > 0 ? await this.subscriptions.readPage({ key: `${this.subId}:older:${until}`, relays: this.relays, filters: [{ kinds: [0, 1, 6, 7], '#p': [this.accountPubkey], until, limit: this.#pageSize }] }) : [];
+      const relayEvents = until && this.relays.length > 0 ? await this.subscriptions.readPage({ key: olderRelaySubscriptionId(this.subId, until), relays: this.relays, filters: [{ kinds: [0, 1, 6, 7], '#p': [this.accountPubkey], until, limit: this.#pageSize }] }) : [];
       for (const { event, relay } of relayEvents) { if (!this.#active(generation)) return; await upsertEvent(event, [relay]); await saveNotifications(deriveNotifications(this.accountPubkey, event, [relay])); }
       if (!this.#active(generation)) return; await this.#reload(false, [...this.#state.records, ...records]);
       this.#emit({ ...this.#state, hasOlder: records.length >= this.#pageSize || relayEvents.length >= this.#pageSize });

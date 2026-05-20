@@ -1,5 +1,10 @@
 # Browser Storage Research
 
+## Purpose
+
+Browser storage research captures storage assumptions, risks, and evidence
+needs.
+
 ## Storage Assumptions
 
 IndexedDB is the practical browser store for event cache, relay evidence, workspace layout, drafts, and account metadata. Local storage is acceptable only for tiny non-sensitive preferences that do not need query behavior.

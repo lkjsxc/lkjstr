@@ -75,7 +75,7 @@ test('timeline displays followed-author notes from a synthetic relay', async ({
       .locator('button.identity-button')
       .filter({ hasText: 'Followed Writer' }),
   ).toBeVisible();
-  await expect(page.getByText(note.id.slice(0, 8))).toBeVisible();
+  await expect(page.getByText(note.id.slice(0, 8))).toHaveCount(0);
   await expect(page.getByText(followed)).toHaveCount(0);
 });
 

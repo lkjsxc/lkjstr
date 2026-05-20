@@ -33,5 +33,6 @@ context first and event content second.
 - Action labels cover mention, reply, reaction, repost, quote, and
   profile-reference records.
 - Long event content, ids, relay URLs, and context fields wrap within the row.
+- Notification event row metadata does not show short event ids.
 - Notification event content uses the shared renderer, including mention links,
   event links, media URL hiding, bounded media embeds, and deduped previews.

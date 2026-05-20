@@ -15,7 +15,6 @@
     loadingNewer?: boolean;
     hasOlder?: boolean;
     hasNewer?: boolean;
-    fullEventIds?: boolean;
     emptyText?: string;
     onNearEnd?: () => void | Promise<void>;
     onNearStart?: () => void | Promise<void>;
@@ -85,7 +84,6 @@
               item={node}
               depth={node.depth}
               profile={props.profiles?.[node.event.pubkey]}
-              fullEventId={props.fullEventIds}
               openProfile={props.openProfile}
               openThread={props.openThread}
             />

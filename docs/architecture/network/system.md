@@ -1,5 +1,9 @@
 # System Architecture
 
+## Purpose
+
+System architecture defines browser runtime boundaries and state ownership.
+
 ## Runtime Shape
 
 The app is a browser-first SvelteKit client. SvelteKit provides routing, app shell, build pipeline, and progressive loading. Protocol work, relay connections, cache access, and workspace state run in browser-owned modules.

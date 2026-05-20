@@ -6,7 +6,8 @@ export type RelayDiagnosticKind =
   | 'auth'
   | 'timeout'
   | 'parse-error'
-  | 'invalid-event';
+  | 'invalid-event'
+  | 'invalid-subscription';
 
 export type RelayDiagnostic = {
   readonly relay: string;
@@ -30,6 +31,7 @@ export type RelaySnapshot = {
   readonly lastError?: string;
   readonly diagnostics: readonly RelayDiagnostic[];
   readonly eoseBySub: Readonly<Record<string, boolean>>;
+  readonly closedBySub: Readonly<Record<string, string>>;
 };
 
 export type RelayClientEvents = {

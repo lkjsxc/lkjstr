@@ -16,9 +16,9 @@ Profile tabs show identity metadata and authored text notes.
   then keeps live subscriptions bounded with startup `since`.
 - Initial and older note pages request `30` items.
 - Profile note lists keep a `180` item window.
-- Profile renders as stacked sections: summary first, then Notes as a
-  full-height sibling list. The Notes list must not be trapped in a constrained
-  child panel.
+- Profile renders as one scroll flow: summary first, then Notes rows in normal
+  document order. The Profile tab is the only scroll container for this flow.
+- Notes must not render through a dedicated full-height child scroller.
 - Profile identity surfaces show the full `npub`, and full `nprofile` when
   relay hints are available. They are not abbreviated in Profile.
 - Older profile notes load after near-bottom scroll or viewport auto-fill.

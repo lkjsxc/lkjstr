@@ -1,5 +1,9 @@
 # Event Semantics
 
+## Purpose
+
+Event semantics define the stored and rendered Nostr event contract.
+
 ## Canonical Event Record
 
 Events stored or rendered by the app use a normalized record:

@@ -1,5 +1,10 @@
 # Nostr Client Surfaces
 
+## Purpose
+
+Nostr client surface research identifies relay, account, and cache visibility
+needs.
+
 ## Required Surfaces
 
 The app needs first-class surfaces for:

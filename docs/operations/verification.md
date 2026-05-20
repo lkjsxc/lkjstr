@@ -46,9 +46,9 @@ when commands pass and print buffered command output only when a command fails.
   page error.
 - Home and Global lists fill the tile after split resizing.
 - Global, Notifications, Thread, and Profile note rows show avatar/name
-  fallbacks, timestamps, short ids, and wrapped content.
-- Profile renders summary first and lets Notes consume the remaining pane
-  height at desktop and mobile widths.
+  fallbacks, timestamps, and wrapped content.
+- Profile renders summary first, then Notes rows in the same Profile tab scroll
+  flow at desktop and mobile widths.
 - Profile note rows preserve real relay provenance and use `cache` only as a
   fallback for legacy records without relay evidence.
 - Home reloads with cached history visible before relay responses and before

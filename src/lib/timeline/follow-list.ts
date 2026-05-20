@@ -22,14 +22,18 @@ export function authorFilters(
 ): NostrFilter[] {
   const filters: NostrFilter[] = [];
   const chunks = Math.max(1, Math.ceil(authors.length / maxAuthorsPerFilter));
-  const perChunk = Math.max(1, Math.ceil(limit / chunks));
+  const budget = Math.max(0, limit);
+  const baseLimit = Math.floor(budget / chunks);
+  const remainder = budget % chunks;
+  let chunk = 0;
   for (let index = 0; index < authors.length; index += maxAuthorsPerFilter) {
     filters.push({
       kinds: [1],
       authors: authors.slice(index, index + maxAuthorsPerFilter),
-      limit: perChunk,
+      limit: baseLimit + (chunk < remainder ? 1 : 0),
       ...bounds,
     });
+    chunk++;
   }
   return filters;
 }

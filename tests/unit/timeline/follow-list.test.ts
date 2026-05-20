@@ -40,4 +40,14 @@ describe('follow list helpers', () => {
     expect(filters[0]?.authors).toHaveLength(200);
     expect(filters[1]?.authors).toHaveLength(1);
   });
+
+  it('keeps chunked author request limits within the page budget', () => {
+    const authors = Array.from({ length: 7000 }, () =>
+      getPublicKey(generateSecretKey()),
+    );
+    const filters = authorFilters(authors, 30);
+    const total = filters.reduce((sum, filter) => sum + (filter.limit ?? 0), 0);
+    expect(filters.length).toBeGreaterThan(30);
+    expect(total).toBe(30);
+  });
 });

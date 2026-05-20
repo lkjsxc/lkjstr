@@ -1,5 +1,9 @@
 # Theme
 
+## Purpose
+
+Theme docs define default visual tokens and theme behavior.
+
 ## Contract
 
 The default theme is dark, mostly achromatic, and low radius.

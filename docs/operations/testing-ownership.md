@@ -50,7 +50,7 @@ Testing ownership maps behavior to the right test layer.
 - Synthetic relay cold-cache Home notes from historical initial pages.
 - Row click Thread navigation and avatar or name Profile navigation.
 - Quote/reference clicks and media sizing inside desktop and mobile panes.
-- Long profile metadata preserving Notes list height.
+- Long profile metadata followed by Notes rows in the Profile tab scroll flow.
 - Inactive tab scroll retention within the configured grace period and retained
   body removal after expiry.
 - Heavy-feed smoke coverage for thousands of events, large follows, bounded

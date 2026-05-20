@@ -8,7 +8,6 @@
     item: TimelineItem;
     depth?: number;
     profile?: ProfileSummary;
-    fullEventId?: boolean;
     openProfile?: (pubkey: string) => void;
     openThread?: (eventId: string) => void;
   };
@@ -51,9 +50,7 @@
       event={props.item.event}
       relays={props.item.relays}
       {profile}
-      fullEventId={props.fullEventId}
       openProfile={props.openProfile}
-      openThread={props.openThread}
     />
     <EventContent
       event={props.item.event}

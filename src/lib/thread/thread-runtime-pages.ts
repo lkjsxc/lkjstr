@@ -5,6 +5,11 @@ import type { FeedCursorPoint } from '../events/types';
 import { replyRoot } from '../protocol';
 import type { RelaySubscriptionManager } from '../relays/subscription-manager';
 import {
+  compactRelaySubscriptionId,
+  initialRelaySubscriptionId,
+  olderRelaySubscriptionId,
+} from '../relays/subscription-id';
+import {
   mergeThreadItems,
   storeThreadEvent,
   type ThreadItem,
@@ -21,7 +26,7 @@ type Request = {
 
 export async function loadInitialThreadPage(request: Request) {
   const focused = await readRelayPage({
-    key: `${request.subId}:initial:focus`,
+    key: compactRelaySubscriptionId(request.subId, 'focus', request.eventId),
     relays: request.relays,
     filters: [{ ids: [request.eventId] }],
     pageSize: 1,
@@ -31,7 +36,10 @@ export async function loadInitialThreadPage(request: Request) {
     ? (replyRoot(focused[0].event) ?? request.eventId)
     : request.rootId;
   const relayEvents = await readRelayPage({
-    key: `${request.subId}:initial`,
+    key: initialRelaySubscriptionId(request.subId, {
+      eventId: request.eventId,
+      rootId,
+    }),
     relays: request.relays,
     filters: [
       { ids: [request.eventId, rootId] },
@@ -60,7 +68,7 @@ export async function loadOlderThreadPage(
     limit: request.pageSize,
   });
   const relayEvents = await readRelayPage({
-    key: `${request.subId}:older:${request.cursor.createdAt}:${request.cursor.id}`,
+    key: olderRelaySubscriptionId(request.subId, request.cursor),
     relays: request.relays,
     filters: [
       {

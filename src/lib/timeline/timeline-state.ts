@@ -81,9 +81,10 @@ export function statusFromRelayState(
   if (noFollowList) return 'no-follow-list';
   if (active.some((item) => item.eoseBySub[noteSubId])) return 'ready-empty';
   if (active.length === 0) return 'loading-follows';
-  if (!active.every(isTerminalRelay)) return 'loading-follows';
+  if (!active.every((item) => isTerminalSubscription(item, noteSubId)))
+    return 'loading-follows';
   if (diagnostics.some((item) => item.kind === 'auth')) return 'auth-required';
-  if (diagnostics.some((item) => item.kind === 'closed'))
+  if (active.some((item) => item.closedBySub[noteSubId]))
     return 'subscription-closed';
   return 'relay-failed';
 }
@@ -108,13 +109,20 @@ export function missingFollowAfterEose(
   const complete =
     active.length > 0 &&
     active.every(
-      (item) => item.eoseBySub[followSubId] || isTerminalRelay(item),
+      (item) =>
+        item.eoseBySub[followSubId] ||
+        item.closedBySub[followSubId] ||
+        isTerminalRelay(item),
     );
   return !followListFound && !fallbackStarted && (terminal || complete);
 }
 
 function isTerminalRelay(item: RelaySnapshot): boolean {
   return item.state === 'error' || item.state === 'closed';
+}
+
+function isTerminalSubscription(item: RelaySnapshot, subId: string): boolean {
+  return isTerminalRelay(item) || Boolean(item.closedBySub[subId]);
 }
 
 export function emptyState(): TimelineState {

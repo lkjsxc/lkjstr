@@ -1,5 +1,9 @@
 # Protocol Kernel Boundary
 
+## Purpose
+
+This decision records the protocol kernel boundary.
+
 ## Decision
 
 Nostr protocol logic lives in a protocol kernel isolated from Svelte components, storage implementations, and browser WebSocket code.

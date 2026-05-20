@@ -48,7 +48,10 @@
       props.kind === 'global' ? GlobalTimelineRuntime : TimelineRuntime;
     runtime = new Runtime({
       relays,
-      subId: createTimelineSubId(props.tabId),
+      subId: createTimelineSubId(
+        props.tabId,
+        props.kind === 'global' ? 'global' : 'tl',
+      ),
       activeAccountPubkey: props.activeAccountPubkey,
     });
     const unsubscribe = runtime.subscribe((next) => (state = next));

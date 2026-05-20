@@ -3,6 +3,10 @@ import { queryFeed, upsertEvent } from '../events/repository';
 import { boundaryUntil, readRelayPage } from '../events/relay-page';
 import type { FeedCursorPoint } from '../events/types';
 import type { RelaySubscriptionManager } from '../relays/subscription-manager';
+import {
+  initialRelaySubscriptionId,
+  olderRelaySubscriptionId,
+} from '../relays/subscription-id';
 import type { TimelineItem } from './timeline-store';
 
 type Request = {
@@ -17,7 +21,7 @@ export async function loadInitialGlobalPage(
   request: Omit<Request, 'items'>,
 ): Promise<TimelineItem[]> {
   const relayEvents = await readRelayPage({
-    key: `${request.subId}:initial`,
+    key: initialRelaySubscriptionId(request.subId),
     relays: request.relays,
     filters: [{ kinds: [1], limit: request.pageSize }],
     pageSize: request.pageSize,
@@ -41,7 +45,7 @@ export async function loadOlderGlobalPage(
     limit: request.pageSize,
   });
   const relayEvents = await readRelayPage({
-    key: `${request.subId}:older:${request.cursor.createdAt}:${request.cursor.id}`,
+    key: olderRelaySubscriptionId(request.subId, request.cursor),
     relays: request.relays,
     filters: [
       {

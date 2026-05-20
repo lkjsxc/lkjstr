@@ -45,7 +45,7 @@
     runtime = new NotificationRuntime(
       props.accountPubkey,
       timelineRelays(props.relaySets),
-      createTimelineSubId(props.tabId),
+      createTimelineSubId(props.tabId, 'notif'),
     );
     const unsubscribe = runtime.subscribe(
       (next) => (state = { ...next, profiles: currentProfiles }),

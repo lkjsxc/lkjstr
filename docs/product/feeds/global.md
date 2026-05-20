@@ -27,4 +27,5 @@ Global shows recent kind `1` notes from the selected readable relay set.
 - Infinite scrolling uses compound feed cursors and older or newer relay pages.
 - Near-top scroll loads newer chunks when the window prunes newer items.
 - Identity controls open or focus matching Profile tabs in the same tile.
-- Event rows and controls open or focus matching Thread tabs in the same tile.
+- Event rows open or focus matching Thread tabs in the same tile.
+- Post rows do not show short event ids in row metadata.

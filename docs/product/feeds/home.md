@@ -40,9 +40,10 @@ its NIP-02 follows.
 - The timeline body keeps high-level state errors visible, such as unreachable
   relays or authentication requirements.
 - Author controls open or focus matching Profile tabs in the same tile.
-- Event rows, event id controls, quotes, and references open or focus matching
-  Thread tabs in the same tile.
+- Event rows, quotes, and references open or focus matching Thread tabs in the
+  same tile.
 - Post rows do not show relay source text or full public-key text.
+- Post rows do not show short event ids in row metadata.
 - Media URLs that successfully render as image, video, or audio embeds are
   hidden from the text body. Other HTTPS URLs remain visible links.
 - `nostr:npub` and `nostr:nprofile` content tokens open or focus Profile in the

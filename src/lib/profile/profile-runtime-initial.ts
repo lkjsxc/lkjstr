@@ -3,6 +3,7 @@ import { readRelayPage } from '$lib/events/relay-page';
 import type { ProfileSummary } from '$lib/identity/identity';
 import type { FeedEvent } from '$lib/events/types';
 import type { RelaySubscriptionManager } from '$lib/relays/subscription-manager';
+import { initialRelaySubscriptionId } from '$lib/relays/subscription-id';
 import { storeProfileEvent } from './profile-store';
 
 type Request = {
@@ -17,7 +18,7 @@ type Request = {
 
 export async function loadInitialProfilePage(request: Request) {
   const relayEvents = await readRelayPage({
-    key: `${request.subId}:initial`,
+    key: initialRelaySubscriptionId(request.subId, request.pubkey),
     relays: request.relays,
     filters: [
       { kinds: [0], authors: [request.pubkey], limit: 1 },

@@ -87,7 +87,9 @@ test('global event scroller fills the tile body', async ({ page }) => {
   expect(heights.scroller).toBeGreaterThan(heights.list * 0.8);
 });
 
-test('profile notes consume the available pane height', async ({ page }) => {
+test('profile notes follow the summary in the profile scroll flow', async ({
+  page,
+}) => {
   const key = generateSecretKey();
   const metadata = finalizeEvent(
     {
@@ -101,25 +103,43 @@ test('profile notes consume the available pane height', async ({ page }) => {
     },
     key,
   );
-  const notes = syntheticNotes(30, key, 'profile height note');
+  const notes = syntheticNotes(45, key, 'profile flow note');
   await installSyntheticRelay(page, { events: [metadata, ...notes] });
   await page.goto('/');
   await page.getByRole('button', { name: 'Open new tab' }).first().click();
   await page.getByRole('button', { name: 'Global', exact: true }).click();
-  await expect(page.getByText('profile height note 0')).toBeVisible();
+  await expect(page.getByText('profile flow note 0')).toBeVisible();
   await page.locator('.event-row .avatar-button').first().click();
   await expect(page.getByRole('heading', { name: 'Profile' })).toBeVisible();
-  const heights = await page
-    .locator('.pane-body[data-active-tab="true"] .profile-tab')
-    .evaluate((profile) => {
-      const pane = profile.closest('.pane-body') as HTMLElement;
-      const list = profile.querySelector('.event-list') as HTMLElement;
-      return {
-        pane: pane.getBoundingClientRect().height,
-        list: list.getBoundingClientRect().height,
-      };
-    });
-  expect(heights.list).toBeGreaterThan(heights.pane * 0.25);
+  const profile = page.locator(
+    '.pane-body[data-active-tab="true"] .profile-tab',
+  );
+  await expect(profile.getByText('profile flow note 0')).toBeVisible();
+  await expect(profile.locator('.event-list__scroller')).toHaveCount(0);
+  const metrics = await profile.evaluate((profileTab) => {
+    const card = profileTab.querySelector('.profile-card') as HTMLElement;
+    const notesSection = profileTab.querySelector(
+      '.profile-notes',
+    ) as HTMLElement;
+    return {
+      scrollable: profileTab.scrollHeight > profileTab.clientHeight + 1,
+      notesAfterSummary:
+        notesSection.getBoundingClientRect().top >
+        card.getBoundingClientRect().bottom,
+      rowCount: profileTab.querySelectorAll('.profile-notes .event-row').length,
+    };
+  });
+  expect(metrics.scrollable).toBe(true);
+  expect(metrics.notesAfterSummary).toBe(true);
+  expect(metrics.rowCount).toBeGreaterThanOrEqual(30);
+  const scrollTop = await profile.evaluate((profileTab) => {
+    profileTab.scrollTop = profileTab.scrollHeight;
+    profileTab.dispatchEvent(new Event('scroll'));
+    return profileTab.scrollTop;
+  });
+  expect(scrollTop).toBeGreaterThan(0);
+  await expect(profile.getByText('profile flow note 29')).toBeVisible();
+  await assertNoHorizontalOverflow(page);
 });
 
 test('form fields expose id or name attributes', async ({ page }) => {

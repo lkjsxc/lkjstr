@@ -4,6 +4,7 @@ import { boundaryUntil, readRelayPage } from '$lib/events/relay-page';
 import type { FeedCursorPoint, FeedEvent } from '$lib/events/types';
 import { compareEventsDesc } from '$lib/protocol';
 import type { RelaySubscriptionManager } from '$lib/relays/subscription-manager';
+import { olderRelaySubscriptionId } from '$lib/relays/subscription-id';
 import { storeProfileEvent } from './profile-store';
 
 export type ProfileOlderRequest = {
@@ -24,7 +25,7 @@ export async function loadOlderProfilePage(request: ProfileOlderRequest) {
     limit: request.pageSize,
   });
   const relayEvents = await readRelayPage({
-    key: `${request.subId}:older:${request.cursor.createdAt}:${request.cursor.id}`,
+    key: olderRelaySubscriptionId(request.subId, request.cursor),
     relays: request.relays,
     filters: [
       {

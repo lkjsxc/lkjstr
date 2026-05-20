@@ -32,12 +32,25 @@ describe('timeline relay state', () => {
       ),
     ).toBe('relay-failed');
   });
+
+  it('reports subscription closed when every relay closes that subscription', () => {
+    expect(
+      statusFromRelayState(
+        [snapshot('wss://a.example/', 'open', {}, { notes: 'blocked' })],
+        [],
+        false,
+        false,
+        'notes',
+      ),
+    ).toBe('subscription-closed');
+  });
 });
 
 function snapshot(
   url: string,
   state: RelaySnapshot['state'],
   eoseBySub: RelaySnapshot['eoseBySub'],
+  closedBySub: RelaySnapshot['closedBySub'] = {},
 ): RelaySnapshot {
-  return { url, state, diagnostics: [], eoseBySub };
+  return { url, state, diagnostics: [], eoseBySub, closedBySub };
 }

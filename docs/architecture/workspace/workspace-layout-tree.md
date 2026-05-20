@@ -1,5 +1,9 @@
 # Workspace Layout Tree
 
+## Purpose
+
+Workspace layout docs define normalized pane and split tree invariants.
+
 ## Shape
 
 The normalized layout tree is one pane node or a split node.

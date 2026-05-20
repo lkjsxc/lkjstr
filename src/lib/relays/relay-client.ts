@@ -1,6 +1,5 @@
 import {
   encodeClientMessage,
-  parseRelayMessage,
   verifyEvent,
   type ClientMessage,
   type NostrEvent,
@@ -8,6 +7,7 @@ import {
   type RelayMessage,
 } from '../protocol';
 import { logRelayDiagnostic } from './relay-diagnostic-log';
+import { parseRelayMessageData } from './relay-message-data';
 import type {
   RelayClientEvents,
   RelayConnectionState,
@@ -15,8 +15,10 @@ import type {
   RelayDiagnosticKind,
   RelaySnapshot,
 } from './types';
-
-const maxRelayMessageBytes = 64 * 1024;
+import {
+  maxRelaySubscriptionIdLength,
+  relaySubscriptionIdValid,
+} from './subscription-id';
 
 export class RelayClient {
   #socket?: WebSocket;
@@ -25,6 +27,7 @@ export class RelayClient {
   #lastError?: string;
   #diagnostics: RelayDiagnostic[] = [];
   #eoseBySub: Record<string, boolean> = {};
+  #closedBySub: Record<string, string> = {};
   #queue: string[] = [];
   #connectTimer?: ReturnType<typeof setTimeout>;
   #intentionalClose = false;
@@ -34,7 +37,6 @@ export class RelayClient {
     readonly events: Partial<RelayClientEvents> = {},
     readonly connectTimeoutMs = 5000,
   ) {}
-
   snapshot(): RelaySnapshot {
     return {
       url: this.url,
@@ -43,9 +45,9 @@ export class RelayClient {
       lastError: this.#lastError,
       diagnostics: [...this.#diagnostics],
       eoseBySub: { ...this.#eoseBySub },
+      closedBySub: { ...this.#closedBySub },
     };
   }
-
   connect(): void {
     if (this.#socket && this.#state !== 'closed') return;
     this.#intentionalClose = false;
@@ -75,28 +77,27 @@ export class RelayClient {
     };
     this.#socket.onmessage = (message) => this.#receive(message.data);
   }
-
   subscribe(id: string, filters: readonly NostrFilter[]): void {
+    if (!this.#validSubscriptionId(id, 'REQ')) return;
     this.#eoseBySub[id] = false;
+    delete this.#closedBySub[id];
     this.send(['REQ', id, ...filters]);
   }
-
   closeSubscription(id: string): void {
+    if (!this.#validSubscriptionId(id, 'CLOSE')) return;
     delete this.#eoseBySub[id];
+    if (this.#closedBySub[id]) return;
     this.sendIfConnected(['CLOSE', id]);
   }
-
   publish(event: NostrEvent): void {
     this.send(['EVENT', event]);
   }
-
   send(message: ClientMessage): void {
     this.connect();
     const encoded = encodeClientMessage(message);
     if (this.#state === 'open') this.#socket?.send(encoded);
     else this.#queue.push(encoded);
   }
-
   sendIfConnected(message: ClientMessage): void {
     if (!this.#socket || this.#state === 'closed' || this.#state === 'idle')
       return;
@@ -104,7 +105,6 @@ export class RelayClient {
     if (this.#state === 'open') this.#socket.send(encoded);
     else this.#queue.push(encoded);
   }
-
   close(): void {
     this.#intentionalClose = true;
     this.#clearConnectTimer();
@@ -112,41 +112,33 @@ export class RelayClient {
     this.#socket = undefined;
     this.#setState('closed');
   }
-
   #receive(data: unknown): void {
-    if (typeof data !== 'string') return;
-    if (data.length > maxRelayMessageBytes) {
-      this.#lastError = 'relay message too large';
-      this.#addDiagnostic('parse-error', 'relay message too large');
-      this.#emitState();
-      return;
-    }
-    const parsed = parseRelayMessage(data);
-    if (!parsed.ok) {
+    const parsed = parseRelayMessageData(data);
+    if (!parsed) return;
+    if (parsed.ok) {
+      this.#lastMessageAt = Date.now();
+      this.events.message?.(this.url, parsed.message);
+      this.#handleRelayMessage(parsed.message);
+    } else {
       this.#lastError = parsed.message;
       this.#addDiagnostic('parse-error', parsed.message);
-      this.#emitState();
-      return;
     }
-    this.#lastMessageAt = Date.now();
-    this.events.message?.(this.url, parsed.message);
-    this.#handleRelayMessage(parsed.message);
     this.#emitState();
   }
-
   #handleRelayMessage(message: RelayMessage) {
     if (message[0] === 'EVENT') {
       const verified = verifyEvent(message[2]);
       if (verified.ok) this.events.event?.(this.url, message[1], message[2]);
       else this.#addDiagnostic('invalid-event', verified.message, message[1]);
     }
-    if (message[0] === 'CLOSED')
+    if (message[0] === 'CLOSED') {
+      this.#closedBySub[message[1]] = message[2];
       this.#addDiagnostic('closed', message[2], message[1]);
+    }
     if (message[0] === 'NOTICE') this.#addDiagnostic('notice', message[1]);
     if (message[0] === 'AUTH') this.#addDiagnostic('auth', message[1]);
     if (message[0] === 'EOSE') this.#eoseBySub[message[1]] = true;
   }
-
   #addDiagnostic(
     kind: RelayDiagnosticKind,
     message: string,
@@ -165,6 +157,15 @@ export class RelayClient {
     if (kind === 'parse-error' || kind === 'invalid-event')
       this.#lastError = message;
     logRelayDiagnostic(kind, message, this.url, subId);
+  }
+
+  #validSubscriptionId(id: string, action: string): boolean {
+    if (relaySubscriptionIdValid(id)) return true;
+    const message = `${action} subscription id is longer than ${maxRelaySubscriptionIdLength} characters`;
+    this.#lastError = message;
+    this.#addDiagnostic('invalid-subscription', message, id.slice(0, 64));
+    this.#setState('error');
+    return false;
   }
 
   #timeoutConnect(): void {

@@ -1,5 +1,9 @@
 # Tile Menu
 
+## Purpose
+
+Tile menu docs define popover positioning and interaction behavior.
+
 ## Role
 
 The tile menu is the anchored three-dot action menu in each tile header.

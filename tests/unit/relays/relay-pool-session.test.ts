@@ -90,6 +90,7 @@ function snapshot(
     url: relay,
     state: 'open',
     eoseBySub: {},
+    closedBySub: {},
     diagnostics: [{ relay, timestamp, message, subId, kind: 'notice' }],
   };
 }

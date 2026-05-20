@@ -5,6 +5,11 @@ import {
   setDefaultRelaySetId,
 } from '../../../src/lib/relays/relay-store';
 import {
+  initialRelaySubscriptionId,
+  maxRelaySubscriptionIdLength,
+  olderRelaySubscriptionId,
+} from '../../../src/lib/relays/subscription-id';
+import {
   createTimelineSubId,
   timelineRelays,
 } from '../../../src/lib/timeline/timeline-subscription';
@@ -36,10 +41,32 @@ describe('relay selection', () => {
   });
 
   it('keeps generated subscription ids under relay limits', () => {
-    const subId = createTimelineSubId(crypto.randomUUID());
-    expect(subId.length).toBeLessThanOrEqual(64);
-    expect(`${subId}:follows`.length).toBeLessThanOrEqual(64);
-    expect(`${subId}:notes`.length).toBeLessThanOrEqual(64);
+    const home = createTimelineSubId(crypto.randomUUID(), 'tl');
+    const global = createTimelineSubId(crypto.randomUUID(), 'global');
+    const profile = createTimelineSubId(crypto.randomUUID(), 'profile');
+    const thread = createTimelineSubId(crypto.randomUUID(), 'thread');
+    const notif = createTimelineSubId(crypto.randomUUID(), 'notif');
+    const ids = [
+      `${home}:follows`,
+      `${home}:notes`,
+      `${global}:notes`,
+      profile,
+      thread,
+      notif,
+      initialRelaySubscriptionId(
+        `${home}:notes`,
+        Array.from({ length: 500 }, (_, index) => `${index}`.repeat(64)),
+      ),
+      olderRelaySubscriptionId(`${global}:notes`, {
+        createdAt: 1,
+        id: 'a'.repeat(64),
+      }),
+      olderRelaySubscriptionId(profile, { createdAt: 2, id: 'b'.repeat(64) }),
+      olderRelaySubscriptionId(thread, { createdAt: 3, id: 'c'.repeat(64) }),
+      olderRelaySubscriptionId(notif, 4),
+    ];
+    for (const id of ids)
+      expect(id.length).toBeLessThanOrEqual(maxRelaySubscriptionIdLength);
   });
 
   it('keeps relay selection in memory when localStorage is denied', () => {

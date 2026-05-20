@@ -39,7 +39,7 @@ This document records the current implemented contract for the app.
   current-session app diagnostics as a flat chronological stream.
 - Feed memory is held as resident chunks. The top of a pruned feed loads newer
   chunks, and the bottom or a short viewport loads older chunks.
-- Event metadata shows author control, date, and short event id.
+- Event metadata shows author control and date.
 - Event rows and diagnostic rows wrap long content inside their tile.
 - Accounts can mine an `npub` prefix locally and export the generated `nsec`
   without storing it.

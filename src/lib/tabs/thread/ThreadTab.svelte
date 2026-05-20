@@ -42,7 +42,7 @@
     runtime = new ThreadRuntime(
       props.eventId,
       timelineRelays(props.relaySets),
-      createTimelineSubId(props.tabId),
+      createTimelineSubId(props.tabId, 'thread'),
     );
     const unsubscribe = runtime.subscribe(
       (next) => (state = { ...next, profiles: currentProfiles }),
@@ -78,7 +78,6 @@
       loading={state.loading}
       loadingOlder={state.loadingOlder}
       hasOlder={state.hasOlder}
-      fullEventIds
       onNearEnd={() => runtime?.loadOlder()}
       openProfile={props.openProfile}
       openThread={props.openThread}

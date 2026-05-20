@@ -1,5 +1,9 @@
 # Open Questions
 
+## Purpose
+
+Open questions track unresolved product, protocol, and operations decisions.
+
 ## Product Questions
 
 - Should relay sets be global, account-scoped, pane-scoped, or all three?

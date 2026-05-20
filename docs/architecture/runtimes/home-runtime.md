@@ -2,7 +2,7 @@
 
 ## Purpose
 
-Home runtime owns account-follow loading.
+Home runtime owns active-account follow discovery and followed-note loading.
 
 ## Contract
 
@@ -10,7 +10,7 @@ Home runtime owns account-follow loading.
 - Read cached pages through the shared repository.
 - Build authors from active account plus latest follow-list `p` tags.
 - Deduplicate authors and chunk author filters when needed.
-- Keep Home and Global to a `180` item in-memory window.
+- Keep Home to a `180` item in-memory window.
 - Load older pages through `loadOlder()` from the bottom cursor.
 - Load newer pages through `loadNewer()` from the top cursor when newer
   resident chunks were pruned.
@@ -26,7 +26,8 @@ Home runtime owns account-follow loading.
 - Use enabled read relays from the selected default relay set.
 - Do not fall back to disabled, deleted, or hidden relays.
 - Do not subscribe when there is no active account.
-- Stop loading when all active relays send EOSE, including zero-event reads.
+- Stop loading when all active relays send EOSE, close the subscription, or
+  fail, including zero-event reads.
 - Expose `no-active-account`, `loading-follows`, `no-follow-list`,
   `no-enabled-relay`, `auth-required`, `subscription-closed`, `relay-failed`,
   `ready-empty`, and `ready-with-events`.

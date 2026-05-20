@@ -3,6 +3,7 @@ import {
   type RelayRecord,
   type RelaySet,
 } from '../relays/relay-store';
+import { compactRelaySubscriptionId } from '../relays/subscription-id';
 
 export function timelineRelays(relaySets: readonly RelaySet[]): string[] {
   return enabledRelayUrls(relaySets, (relay) => relay.read);
@@ -12,10 +13,9 @@ export function enabledWriteRelays(relaySets: readonly RelaySet[]): string[] {
   return enabledRelayUrls(relaySets, (relay) => relay.write);
 }
 
-export function createTimelineSubId(tabId: string): string {
+export function createTimelineSubId(tabId: string, prefix = 'tl'): string {
   const nonce = crypto.randomUUID().replaceAll('-', '').slice(0, 16);
-  const tab = tabId.replaceAll('-', '').slice(0, 8);
-  return `tl:${tab}:${nonce}`;
+  return compactRelaySubscriptionId(prefix, nonce, tabId);
 }
 
 function enabledRelayUrls(
