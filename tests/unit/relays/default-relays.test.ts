@@ -12,7 +12,6 @@ describe('default relays', () => {
       'wss://relay.damus.io',
       'wss://nos.lol',
       'wss://relay.primal.net',
-      'wss://relay.nostr.band',
       'wss://offchain.pub',
       'wss://r.kojira.io',
       'wss://x.kojira.io',
@@ -29,5 +28,29 @@ describe('default relays', () => {
     expect(seedDefaultRelays(removed)[0]?.relays).toHaveLength(
       defaultRelaySet.relays.length - 1,
     );
+  });
+
+  it('normalizes only the seeded public default relay set', () => {
+    const staleRelay = {
+      ...defaultRelaySet.relays[0]!,
+      url: 'wss://relay.nostr.band',
+    };
+    const staleDefault = {
+      ...defaultRelaySet,
+      relays: [...defaultRelaySet.relays, staleRelay],
+    };
+    const custom = {
+      ...defaultRelaySet,
+      id: 'custom',
+      seeded: false,
+      relays: [staleRelay],
+    };
+    const [normalized, preserved] = seedDefaultRelays([staleDefault, custom]);
+    expect(normalized?.relays.map((relay) => relay.url)).not.toContain(
+      'wss://relay.nostr.band',
+    );
+    expect(preserved?.relays.map((relay) => relay.url)).toEqual([
+      'wss://relay.nostr.band',
+    ]);
   });
 });

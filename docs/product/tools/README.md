@@ -8,6 +8,7 @@ Tool surfaces cover local state, writing, relay management, and diagnostics.
 
 - [accounts.md](accounts.md): account records and signers.
 - [cache.md](cache.md): local cache tab behavior.
+- [event-actions.md](event-actions.md): row action writes.
 - [relay-management.md](relay-management.md): relay settings and logs.
 - [settings.md](settings.md): flat key-value settings.
 - [tweet.md](tweet.md): draft and publish behavior.

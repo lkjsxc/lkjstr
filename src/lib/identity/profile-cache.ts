@@ -28,6 +28,8 @@ export function profileFromMetadataEvent(event: NostrEvent): ProfileSummary {
     avatarUrl: stringValue(parsed.picture),
     about: stringValue(parsed.about),
     website: stringValue(parsed.website),
+    lud16: stringValue(parsed.lud16),
+    lud06: stringValue(parsed.lud06),
     updatedAt: event.created_at * 1000,
   };
 }

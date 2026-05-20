@@ -79,7 +79,7 @@ test('timeline hides relay details and exposes them in lkjstr Log', async ({
     () =>
       window.__syntheticSockets.filter(
         (socket) => Number((socket as { replies?: number }).replies) > 0,
-      ).length >= 8,
+      ).length >= 7,
   );
   await expect(page.getByText('No events yet.')).toBeVisible();
   await expect(

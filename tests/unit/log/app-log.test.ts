@@ -39,4 +39,23 @@ describe('app log', () => {
     });
     expect(appLogRecords()).toHaveLength(1);
   });
+
+  it('suppresses only the known ResizeObserver browser noise', () => {
+    appendAppLog({
+      area: 'runtime',
+      severity: 'error',
+      code: 'window-error',
+      message: 'ResizeObserver loop completed with undelivered notifications.',
+    });
+    appendAppLog({
+      area: 'runtime',
+      severity: 'error',
+      code: 'window-error',
+      message: 'ResizeObserver broke real layout work.',
+    });
+    expect(appLogRecords()).toHaveLength(1);
+    expect(appLogRecords()[0]?.message).toBe(
+      'ResizeObserver broke real layout work.',
+    );
+  });
 });

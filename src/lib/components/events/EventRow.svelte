@@ -1,13 +1,16 @@
 <script lang="ts">
   import type { TimelineItem } from '$lib/timeline/timeline-store';
   import type { ProfileSummary } from '$lib/identity/identity';
+  import type { RelaySet } from '$lib/relays/relay-store';
   import EventContent from './EventContent.svelte';
   import EventMeta from './EventMeta.svelte';
+  import EventActions from './EventActions.svelte';
 
   type Props = {
     item: TimelineItem;
     depth?: number;
     profile?: ProfileSummary;
+    relaySets?: readonly RelaySet[];
     openProfile?: (pubkey: string) => void;
     openThread?: (eventId: string) => void;
   };
@@ -19,8 +22,21 @@
       : undefined,
   );
 
-  function openRow(): void {
+  function openRow(event?: MouseEvent): void {
+    if (event && shouldKeepLocal(event.target)) return;
     props.openThread?.(props.item.event.id);
+  }
+
+  function handleKeydown(event: KeyboardEvent): void {
+    if (event.target !== event.currentTarget) return;
+    if (event.key === 'Enter') openRow();
+  }
+
+  function shouldKeepLocal(target: EventTarget | null): boolean {
+    return Boolean(
+      target instanceof Element &&
+      target.closest('button,a,input,textarea,select,form,.event-action-zone'),
+    );
   }
 
   function openProfile(event: MouseEvent): void {
@@ -35,7 +51,7 @@
   tabindex="0"
   style={`--event-depth: ${props.depth ?? 0}`}
   onclick={openRow}
-  onkeydown={(event) => event.key === 'Enter' && openRow()}
+  onkeydown={handleKeydown}
 >
   <button
     type="button"
@@ -57,6 +73,11 @@
       relays={props.item.relays}
       openProfile={props.openProfile}
       openThread={props.openThread}
+    />
+    <EventActions
+      event={props.item.event}
+      {profile}
+      relaySets={props.relaySets ?? []}
     />
   </div>
 </div>

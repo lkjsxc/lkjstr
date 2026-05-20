@@ -42,7 +42,8 @@
 }
 
 .profile-tab {
-  display: grid;
+  display: flex;
+  flex-direction: column;
   gap: var(--space-3);
   height: 100%;
   min-height: 0;
@@ -54,6 +55,13 @@
   display: grid;
   gap: var(--space-2);
   min-height: 0;
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.profile-card p {
+  margin: 0;
+  white-space: pre-wrap;
 }
 
 .profile-notes,

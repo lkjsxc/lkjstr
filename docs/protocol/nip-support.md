@@ -19,7 +19,11 @@ unimplemented behavior.
 - NIP-18 repost target parsing and embeds.
 - NIP-19 public-key, note, event, profile, and address references in content.
 - NIP-25 reaction target parsing and embeds.
+- NIP-30 custom emoji shortcode reaction tags.
 - NIP-42 relay auth diagnostics.
+- NIP-57 zap requests and invoice handoff.
+- NIP-96 media upload discovery and response parsing.
+- NIP-98 HTTP auth events for media upload.
 
 ## Planned Product Support
 
@@ -31,8 +35,7 @@ unimplemented behavior.
 ## Later Support
 
 - Encrypted direct messages wait for security docs and signer isolation.
-- Wallet and zap sending wait for explicit wallet permission docs.
-- Media upload waits for host and proxy safety docs.
+- Wallet custody is out of scope; zap support opens or copies invoices only.
 
 ## Rule
 

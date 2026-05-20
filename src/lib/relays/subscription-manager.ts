@@ -2,6 +2,10 @@ import { sharedRelayPool, type PoolEvent, type RelayPool } from './relay-pool';
 import type { RelaySnapshot } from './types';
 import type { RelayReadRequest } from '../events/types';
 import { appendAppLog, boundedMessage } from '../log/app-log';
+import {
+  compactRelaySubscriptionId,
+  relaySubscriptionIdValid,
+} from './subscription-id';
 
 type Listener = (event: PoolEvent) => void;
 type Entry = {
@@ -30,7 +34,7 @@ export class RelaySubscriptionManager {
       return () => this.#remove(key, listener);
     }
     const listeners = new Set<Listener>([listener]);
-    const subId = request.key;
+    const subId = relayFacingSubId(request.key);
     const offEvent = this.#pool.onEvent((event) => {
       if (event.subId === subId)
         listeners.forEach((item) => safeNotify(item, event, subId));
@@ -56,7 +60,7 @@ export class RelaySubscriptionManager {
     options: ReadPageOptions = {},
   ): Promise<PoolEvent[]> {
     const events: PoolEvent[] = [];
-    const subId = request.key;
+    const subId = relayFacingSubId(request.key);
     const offEvent = this.#pool.onEvent((event) => {
       if (event.subId === subId) events.push(event);
     });
@@ -140,6 +144,12 @@ export function subscriptionKey(request: RelayReadRequest): string {
     relays: [...request.relays].sort(),
     filters: request.filters,
   });
+}
+
+export function relayFacingSubId(key: string): string {
+  return relaySubscriptionIdValid(key)
+    ? key
+    : compactRelaySubscriptionId('read', 'sub', key);
 }
 
 export const sharedSubscriptionManager = new RelaySubscriptionManager();

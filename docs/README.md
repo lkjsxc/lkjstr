@@ -89,6 +89,8 @@ here before code is changed.
 - [product/tools/README.md](product/tools/README.md): tools.
 - [product/tools/accounts.md](product/tools/accounts.md): accounts.
 - [product/tools/cache.md](product/tools/cache.md): cache.
+- [product/tools/event-actions.md](product/tools/event-actions.md): event
+  action writes.
 - [product/tools/relay-management.md](product/tools/relay-management.md):
   relay management.
 - [product/tools/settings.md](product/tools/settings.md): settings.
@@ -103,10 +105,14 @@ here before code is changed.
   workspace.
 - [protocol/README.md](protocol/README.md): Nostr contracts.
 - [protocol/default-relays.md](protocol/default-relays.md): seeded relays.
+- [protocol/event-actions.md](protocol/event-actions.md): event action writes.
 - [protocol/events.md](protocol/events.md): events.
 - [protocol/kernel.md](protocol/kernel.md): protocol kernel.
+- [protocol/media-upload.md](protocol/media-upload.md): NIP-96 upload and
+  NIP-98 auth.
 - [protocol/nip-support.md](protocol/nip-support.md): NIP support.
 - [protocol/relays.md](protocol/relays.md): relays.
+- [protocol/zaps.md](protocol/zaps.md): NIP-57 invoice handoff.
 - [repository/README.md](repository/README.md): layout and workflow rules.
 - [repository/documentation-standards.md](repository/documentation-standards.md):
   documentation standards.

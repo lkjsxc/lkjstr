@@ -42,6 +42,21 @@ describe('settings store helpers', () => {
     expect(coerceValue(setting, 5000)).toEqual({ ok: true, value: 5000 });
   });
 
+  it('coerces Tweet media upload server settings', () => {
+    const setting = defaultSettings().find(
+      (item) => item.key === 'tweet.mediaUploadServer',
+    );
+    if (!setting) throw new Error('expected setting');
+    expect(coerceValue(setting, '')).toEqual({ ok: true, value: '' });
+    expect(coerceValue(setting, 'https://media.example')).toEqual({
+      ok: true,
+      value: 'https://media.example',
+    });
+    expect(coerceValue(setting, 'http://media.example')).toEqual({
+      ok: false,
+    });
+  });
+
   it('coerces inactive tab retention within documented bounds', () => {
     const setting = defaultSettings().find(
       (item) => item.key === 'tabs.inactiveRetentionSeconds',

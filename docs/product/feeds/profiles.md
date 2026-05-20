@@ -21,6 +21,8 @@ Profile tabs show identity metadata and authored text notes.
 - Notes must not render through a dedicated full-height child scroller.
 - Profile identity surfaces show the full `npub`, and full `nprofile` when
   relay hints are available. They are not abbreviated in Profile.
+- Long `about`, `npub`, `nprofile`, and website values wrap without overlapping
+  the Notes section at desktop, mobile, or narrow split-pane widths.
 - Older profile notes load after near-bottom scroll or viewport auto-fill.
 - Historical note pages use compound `{createdAt,id}` cursors and local relay
   boundary filtering.

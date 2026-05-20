@@ -1,7 +1,11 @@
 import { describe, expect, it, vi } from 'vitest';
 import type { NostrFilter } from '../../../src/lib/protocol';
 import { RelayPool } from '../../../src/lib/relays/relay-pool';
-import { RelaySubscriptionManager } from '../../../src/lib/relays/subscription-manager';
+import {
+  RelaySubscriptionManager,
+  relayFacingSubId,
+} from '../../../src/lib/relays/subscription-manager';
+import { maxRelaySubscriptionIdLength } from '../../../src/lib/relays/subscription-id';
 
 describe('subscription manager', () => {
   it('shares identical relay reads until the last listener cleans up', () => {
@@ -84,6 +88,21 @@ describe('subscription manager', () => {
     );
     expect(page).toEqual([]);
     expect(cleanup).toHaveBeenCalledOnce();
+  });
+
+  it('compacts long logical keys before subscribing to relays', () => {
+    const pool = new RelayPool();
+    const cleanup = vi.fn();
+    const subscribe = vi.spyOn(pool, 'subscribe').mockReturnValue(cleanup);
+    const manager = new RelaySubscriptionManager(pool);
+    const key = `embed:${'a'.repeat(120)}`;
+    manager.subscribeLive(
+      { key, relays: ['relay.example'], filters: [{ kinds: [1] }] },
+      () => undefined,
+    );
+    const sentId = subscribe.mock.calls[0]?.[1];
+    expect(sentId).toBe(relayFacingSubId(key));
+    expect(sentId?.length).toBeLessThanOrEqual(maxRelaySubscriptionIdLength);
   });
 });
 

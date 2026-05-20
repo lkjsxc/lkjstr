@@ -22,6 +22,8 @@ Tab runtime defines valid tab kinds and lifecycle ownership.
 - Closing a tab must close any runtime subscription owned by that tab.
 - Inactive tabs stay mounted while retained. The retention period is configured
   by `tabs.inactiveRetentionSeconds`.
+- Retained tab DOM remains mounted in a stacked pane-body layout with inactive
+  bodies visually hidden but still sized to the active body.
 - When retention is positive, an inactive tab remains mounted for that many
   seconds after it loses focus. Its feed runtime remains keyed by tab id.
 - Retention expiry closes runtimes and owned subscriptions for that inactive

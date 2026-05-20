@@ -89,6 +89,7 @@
   <EventTreeList
     items={state.items}
     profiles={state.profiles}
+    relaySets={props.relaySets}
     loading={state.loading}
     emptyText="No events yet."
     loadingOlder={state.loadingOlder}

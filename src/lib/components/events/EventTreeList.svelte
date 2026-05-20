@@ -3,6 +3,7 @@
   import { tick } from 'svelte';
   import { isNearEnd, isNearStart } from '$lib/events/feed-window';
   import type { ProfileSummary } from '$lib/identity/identity';
+  import type { RelaySet } from '$lib/relays/relay-store';
   import { buildEventTree, flattenEventTree } from '$lib/events/tree';
   import type { FeedEvent } from '$lib/events/types';
   import EventRow from './EventRow.svelte';
@@ -10,6 +11,7 @@
   type Props = {
     items: readonly FeedEvent[];
     profiles?: Record<string, ProfileSummary>;
+    relaySets?: readonly RelaySet[];
     loading?: boolean;
     loadingOlder?: boolean;
     loadingNewer?: boolean;
@@ -84,6 +86,7 @@
               item={node}
               depth={node.depth}
               profile={props.profiles?.[node.event.pubkey]}
+              relaySets={props.relaySets}
               openProfile={props.openProfile}
               openThread={props.openThread}
             />

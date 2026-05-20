@@ -6,6 +6,10 @@ export const kinds = {
   deletion: 5,
   repost: 6,
   reaction: 7,
+  genericRepost: 16,
+  zapRequest: 9734,
+  zapReceipt: 9735,
+  httpAuth: 27235,
   relayAuth: 22242,
 } as const;
 

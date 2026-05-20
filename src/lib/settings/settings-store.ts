@@ -142,7 +142,19 @@ export function coerceValue(
       ? { ok: true, value: String(value) }
       : { ok: false };
   if (setting.valueType === 'json') return { ok: true, value };
-  return { ok: true, value: String(value) };
+  const text = String(value).trim();
+  if (setting.key === 'tweet.mediaUploadServer' && !validUploadServer(text))
+    return { ok: false };
+  return { ok: true, value: text };
+}
+
+function validUploadServer(value: string): boolean {
+  if (!value) return true;
+  try {
+    return new URL(value).protocol === 'https:';
+  } catch {
+    return false;
+  }
 }
 
 function notifySettingsChanged(): void {

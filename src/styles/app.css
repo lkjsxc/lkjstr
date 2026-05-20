@@ -104,13 +104,35 @@ body {
   flex-wrap: nowrap;
 }
 
+.pane-stack,
 .pane-body,
 .empty-pane,
 .empty-workspace {
   min-height: 0;
   min-width: 0;
   overflow: hidden;
+}
+
+.pane-stack {
+  display: grid;
+}
+
+.pane-body,
+.empty-pane,
+.empty-workspace {
   padding: 0.9rem;
+}
+
+.pane-body {
+  grid-area: 1 / 1;
+  pointer-events: none;
+  visibility: hidden;
+}
+
+.pane-body[data-active-tab='true'] {
+  pointer-events: auto;
+  visibility: visible;
+  z-index: 1;
 }
 
 .pane-body

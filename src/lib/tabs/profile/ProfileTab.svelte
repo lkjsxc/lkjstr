@@ -158,6 +158,7 @@
           <EventRow
             {item}
             profile={profiles[item.event.pubkey]}
+            relaySets={props.relaySets}
             openProfile={props.openProfile}
             openThread={props.openThread}
           />

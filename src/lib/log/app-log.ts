@@ -29,7 +29,7 @@ export function appendAppLog(
     readonly timestamp?: number;
   },
 ): AppLogRecord | undefined {
-  if (isSuppressedSesNoise(input)) return undefined;
+  if (isSuppressedRuntimeNoise(input)) return undefined;
   const record: AppLogRecord = {
     ...input,
     id: crypto.randomUUID(),
@@ -105,11 +105,17 @@ function redactContext(
   );
 }
 
-function isSuppressedSesNoise(input: {
+function isSuppressedRuntimeNoise(input: {
   readonly code: string;
   readonly message: string;
   readonly context?: Readonly<Record<string, unknown>>;
 }): boolean {
+  if (
+    input.code === 'window-error' &&
+    input.message ===
+      'ResizeObserver loop completed with undelivered notifications.'
+  )
+    return true;
   return (
     input.code === 'SES_UNCAUGHT_EXCEPTION' &&
     input.message === 'null' &&

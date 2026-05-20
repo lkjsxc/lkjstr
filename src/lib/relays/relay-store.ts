@@ -8,6 +8,7 @@ import {
 import type { RelayConnectionState } from './types';
 import { defaultRelaySet } from './default-relays';
 import { normalizeRelayUrl } from '../protocol';
+import { normalizeSeededRelaySets } from './relay-normalize';
 
 const selectedDefaultKey = 'lkjstr.defaultRelaySetId';
 let memorySelectedDefaultRelaySetId = defaultRelaySet.id;
@@ -41,7 +42,11 @@ export async function listRelaySets(): Promise<RelaySet[]> {
     () => browserDb().relaySets.toArray(),
     memoryRelaySets,
   );
-  if (saved.length > 0) return saved;
+  if (saved.length > 0) {
+    const normalized = normalizeSeededRelaySets(saved);
+    if (normalized !== saved) await saveRelaySets(normalized);
+    return normalized;
+  }
   const seeded = seedDefaultRelays([]);
   await saveRelaySets(seeded);
   return seeded;
@@ -66,7 +71,7 @@ export function selectedDefaultRelaySet(
 }
 
 export function seedDefaultRelays(existing: readonly RelaySet[]): RelaySet[] {
-  if (existing.length > 0) return [...existing];
+  if (existing.length > 0) return normalizeSeededRelaySets(existing);
   return [{ ...defaultRelaySet, updatedAt: Date.now() }];
 }
 

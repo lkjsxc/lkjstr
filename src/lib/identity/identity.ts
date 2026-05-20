@@ -9,6 +9,8 @@ export type ProfileSummary = {
   readonly avatarUrl: string | null;
   readonly about?: string | null;
   readonly website?: string | null;
+  readonly lud16?: string | null;
+  readonly lud06?: string | null;
   readonly updatedAt: number;
   readonly verifiedNip05?: boolean;
 };

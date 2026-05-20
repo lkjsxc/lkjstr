@@ -23,9 +23,9 @@ tabs.closeLastTabClosesTile|Close empty tile|boolean|true|Close tile after final
 tabs.newTabChooserEnabled|New Tab chooser|boolean|true|Use per-tile tab chooser.
 tabs.inactiveRetentionSeconds|Inactive tab retention|number|300|Seconds to retain inactive tab runtimes.
 timeline.initialLimit|Timeline limit|number|50|Initial timeline event limit.
-timeline.defaultRelays|Timeline relays|json|["wss://relay.damus.io","wss://nos.lol","wss://relay.primal.net","wss://relay.nostr.band","wss://offchain.pub"]|Fallback relay URLs.
+timeline.defaultRelays|Timeline relays|json|["wss://relay.damus.io","wss://nos.lol","wss://relay.primal.net","wss://offchain.pub"]|Fallback relay URLs.
 timeline.showRelayProvenance|Relay provenance|boolean|true|Show event relay source.
-relays.defaultSet|Default relays|json|["wss://relay.damus.io","wss://nos.lol","wss://relay.primal.net","wss://relay.nostr.band","wss://offchain.pub"]|Default relay URLs.
+relays.defaultSet|Default relays|json|["wss://relay.damus.io","wss://nos.lol","wss://relay.primal.net","wss://offchain.pub"]|Default relay URLs.
 relays.connectTimeoutMs|Connect timeout|number|5000|Relay connect timeout.
 profiles.fetchMetadata|Fetch metadata|boolean|true|Fetch profile metadata from relays.
 profiles.showNip05|Show NIP-05|boolean|true|Show NIP-05 identifiers.
@@ -34,6 +34,8 @@ notifications.showUnreadInTab|Unread tab|boolean|true|Show unread in tab.
 notifications.defaultCategories|Categories|json|["mentions"]|Notification categories.
 tweet.defaultPublishMode|Publish mode|enum|selected-relays|Tweet publish target.|selected-relays
 tweet.persistDrafts|Persist drafts|boolean|true|Keep Tweet drafts durable.
+tweet.mediaUploadServer|Media upload server|string||Optional HTTPS NIP-96 upload server.
+tweet.mediaUploadNoTransform|No transform upload|boolean|true|Request original media upload.
 cache.maxEvents|Max events|number|5000|Cached event limit.
 cache.maxAgeDays|Max age days|number|30|Cached event age limit.
 cache.compactionEnabled|Compaction|boolean|true|Enable compaction.

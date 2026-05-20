@@ -75,6 +75,7 @@
     <EventTreeList
       items={state.items}
       profiles={state.profiles}
+      relaySets={props.relaySets}
       loading={state.loading}
       loadingOlder={state.loadingOlder}
       hasOlder={state.hasOlder}

@@ -75,6 +75,7 @@ export async function installSyntheticRelay(
       replies = 0;
       sent: string[] = [];
       delivered: string[] = [];
+      published: unknown[] = [];
       listeners = new Map<string, Set<(event: Event) => void>>();
 
       constructor(readonly url: string) {
@@ -101,6 +102,13 @@ export async function installSyntheticRelay(
       send(data: string): void {
         this.sent.push(data);
         const message = parseClientMessage(data);
+        if (message[0] === 'EVENT') {
+          const event = message[1];
+          this.published.push(event);
+          if (record(event) && typeof event.id === 'string')
+            queueMicrotask(() => this.message(['OK', event.id, true, '']));
+          return;
+        }
         if (message[0] !== 'REQ') return;
         queueMicrotask(() => this.reply(String(message[1]), message.slice(2)));
       }

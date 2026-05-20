@@ -145,35 +145,36 @@
     </div>
   </header>
 
-  {#if renderedTabs.length > 0}
-    {#each renderedTabs as tab (tab.id)}
-      <div
-        class="pane-body"
-        data-active-tab={tab.id === active?.id}
-        aria-hidden={tab.id === active?.id ? undefined : 'true'}
-        style:display={tab.id === active?.id ? undefined : 'none'}
-        use:trackBody={tab.id}
-      >
-        <PaneTabBody
-          {tab}
-          paneId={props.pane.id}
-          accounts={props.accounts}
-          activeAccount={props.activeAccount}
-          notifications={props.notifications}
-          relaySets={props.relaySets}
-          pageDataReady={props.pageDataReady}
-          relaySnapshots={props.relaySnapshots}
-          convertTab={props.convertTab}
-          addReadonly={props.addReadonly}
-          addNip07={props.addNip07}
-          addReadonlyPubkey={props.addReadonlyPubkey}
-          refreshData={props.refreshData}
-          toggleRelay={props.toggleRelay}
-          removeRelay={props.removeRelay}
-          openProfile={props.openProfile}
-          openThread={props.openThread}
-        />
-      </div>
-    {/each}
-  {/if}
+  <div class="pane-stack">
+    {#if renderedTabs.length > 0}
+      {#each renderedTabs as tab (tab.id)}
+        <div
+          class="pane-body"
+          data-active-tab={tab.id === active?.id}
+          aria-hidden={tab.id === active?.id ? undefined : 'true'}
+          use:trackBody={tab.id}
+        >
+          <PaneTabBody
+            {tab}
+            paneId={props.pane.id}
+            accounts={props.accounts}
+            activeAccount={props.activeAccount}
+            notifications={props.notifications}
+            relaySets={props.relaySets}
+            pageDataReady={props.pageDataReady}
+            relaySnapshots={props.relaySnapshots}
+            convertTab={props.convertTab}
+            addReadonly={props.addReadonly}
+            addNip07={props.addNip07}
+            addReadonlyPubkey={props.addReadonlyPubkey}
+            refreshData={props.refreshData}
+            toggleRelay={props.toggleRelay}
+            removeRelay={props.removeRelay}
+            openProfile={props.openProfile}
+            openThread={props.openThread}
+          />
+        </div>
+      {/each}
+    {/if}
+  </div>
 </section>

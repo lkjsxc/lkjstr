@@ -11,6 +11,10 @@ Settings provide editable local preferences as one flat key-value list.
 - There are no category columns, inspectors, search panes, or sectioned lists.
 - Keys use namespaces only for persistence and scanning.
 - Tweet settings use the `tweet.*` namespace.
+- `tweet.mediaUploadServer` stores an optional HTTPS NIP-96 server origin or
+  endpoint. Blank disables media upload.
+- `tweet.mediaUploadNoTransform` requests no server-side media transformation
+  when uploads are sent.
 - Retired draft-tree settings are not part of the schema.
 - `tabs.inactiveRetentionSeconds` controls how long inactive tab components and
   their runtimes are retained after tab focus changes.
