@@ -1,5 +1,6 @@
 import Dexie, { type Table } from 'dexie';
 import type { Account } from '../accounts/account';
+import type { LocalAccountSecret } from '../accounts/local-secret-store';
 import type { CacheMetadata } from '../cache/cache-status';
 import type {
   EventRelayReceipt,
@@ -24,6 +25,7 @@ export type TabStateRecord = {
 export class LkjstrDb extends Dexie {
   workspaces!: Table<Workspace, string>;
   accounts!: Table<Account, string>;
+  localAccountSecrets!: Table<LocalAccountSecret, string>;
   notifications!: Table<NotificationRecord, string>;
   tweetDrafts!: Table<TweetDraft, string>;
   events!: Table<StoredEvent, string>;
@@ -45,9 +47,10 @@ export class LkjstrDb extends Dexie {
         (step: number) => { stores: (shape: Record<string, string>) => void }
       >
     )[schemaMethod];
-    schema.call(this, 5).stores({
+    schema.call(this, 6).stores({
       workspaces: '&id, updatedAt, activeAccountId',
       accounts: '&id, pubkey, signerType, updatedAt, lastUsedAt',
+      localAccountSecrets: '&accountId, pubkey, updatedAt',
       notifications:
         '&id, accountPubkey, sourceEventId, actorPubkey, kind, readAt, createdAt, [accountPubkey+createdAt]',
       tweetDrafts: '&id, accountId, updatedAt',

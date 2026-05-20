@@ -1,5 +1,4 @@
-import { activeAccount } from '../accounts/account-store';
-import { getNip07Provider } from '../accounts/nip07';
+import { resolveActiveSigner } from '../accounts/signer';
 import {
   httpAuthEvent,
   nip96DiscoveryUrl,
@@ -21,14 +20,14 @@ export async function uploadTweetMedia(
   settings: UploadSettings,
 ): Promise<TweetAttachment> {
   if (!settings.server.trim()) throw new Error('Media upload is disabled.');
-  const account = await activeAccount();
-  if (!account || account.signerType !== 'nip07')
-    throw new Error('Add a NIP-07 account before uploading media.');
-  const provider = getNip07Provider();
-  if (!provider) throw new Error('NIP-07 signer unavailable.');
+  const signer = await resolveActiveSigner();
   const endpoint = await uploadEndpoint(settings.server);
-  const auth = await provider.signEvent(
-    httpAuthEvent({ pubkey: account.pubkey, url: endpoint, method: 'POST' }),
+  const auth = await signer.signEvent(
+    httpAuthEvent({
+      pubkey: signer.account.pubkey,
+      url: endpoint,
+      method: 'POST',
+    }),
   );
   const form = new FormData();
   form.set('file', file, file.name);

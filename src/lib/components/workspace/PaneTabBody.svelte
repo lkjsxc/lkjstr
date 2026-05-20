@@ -14,6 +14,7 @@
   import ThreadTab from '$lib/tabs/thread/ThreadTab.svelte';
   import TimelineTab from '$lib/tabs/timeline/TimelineTab.svelte';
   import TweetTab from '$lib/tabs/tweet/TweetTab.svelte';
+  import WelcomeTab from '$lib/tabs/welcome/WelcomeTab.svelte';
   import type { TabKind, WorkspaceTab } from '$lib/workspace/tab';
 
   type Props = {
@@ -32,7 +33,9 @@
     ) => void;
     addReadonly: () => void;
     addNip07: () => void;
-    addReadonlyPubkey: (pubkey: string) => Promise<void>;
+    createLocal: () => void;
+    importNsec: () => void;
+    addMinedSigning: (nsec: string) => Promise<void>;
     refreshData: () => void;
     toggleRelay: (setId: string, url: string, enabled: boolean) => void;
     removeRelay: (setId: string, url: string) => void;
@@ -43,7 +46,9 @@
   let props: Props = $props();
 </script>
 
-{#if props.tab.kind === 'new-tab'}
+{#if props.tab.kind === 'welcome'}
+  <WelcomeTab />
+{:else if props.tab.kind === 'new-tab'}
   <NewTab tabId={props.tab.id} convert={props.convertTab} />
 {:else if props.tab.kind === 'timeline'}
   <TimelineTab
@@ -69,7 +74,9 @@
     accounts={props.accounts}
     addReadonly={props.addReadonly}
     addNip07={props.addNip07}
-    addReadonlyPubkey={props.addReadonlyPubkey}
+    createLocal={props.createLocal}
+    importNsec={props.importNsec}
+    addMinedSigning={props.addMinedSigning}
   />
 {:else if props.tab.kind === 'notifications'}
   <NotificationsTab

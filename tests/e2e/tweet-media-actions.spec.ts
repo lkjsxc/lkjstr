@@ -24,7 +24,6 @@ test('Ctrl+Enter publishes a Tweet through the relay', async ({ page }) => {
   await expect(page.getByText(/Published to/)).toBeVisible();
   expect(await publishedKinds(page)).toContain(1);
 });
-
 test('Tweet media upload publishes content and imeta tags', async ({
   page,
 }) => {
@@ -54,7 +53,6 @@ test('Tweet media upload publishes content and imeta tags', async ({
     'm image/png',
   ]);
 });
-
 test('event row actions publish without opening the row thread', async ({
   page,
 }) => {
@@ -117,6 +115,8 @@ async function addBrowserSigner(page: import('@playwright/test').Page) {
   await page.getByRole('button', { name: 'Accounts' }).click();
   await page.getByRole('button', { name: 'Add NIP-07' }).click();
   await expect(page.getByText('nip07')).toBeVisible();
+  await page.getByRole('button', { name: 'Open new tab' }).first().click();
+  await page.getByRole('button', { name: 'Home', exact: true }).click();
 }
 
 async function openTweet(page: import('@playwright/test').Page) {

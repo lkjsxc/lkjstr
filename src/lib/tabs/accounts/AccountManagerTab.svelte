@@ -7,7 +7,9 @@
     accounts: Account[];
     addReadonly: () => void;
     addNip07: () => void;
-    addReadonlyPubkey: (pubkey: string) => Promise<void>;
+    createLocal: () => void;
+    importNsec: () => void;
+    addMinedSigning: (nsec: string) => Promise<void>;
   };
 
   let props: Props = $props();
@@ -18,8 +20,10 @@
   <div class="toolbar">
     <button type="button" onclick={props.addReadonly}>Add read-only</button>
     <button type="button" onclick={props.addNip07}>Add NIP-07</button>
+    <button type="button" onclick={props.createLocal}>Create local</button>
+    <button type="button" onclick={props.importNsec}>Import nsec</button>
   </div>
-  <NpubMinerPanel addReadonlyPubkey={props.addReadonlyPubkey} />
+  <NpubMinerPanel addMinedSigning={props.addMinedSigning} />
   {#each props.accounts as account (account.id)}
     <article class="row">
       <IdentityChip pubkey={account.pubkey} />

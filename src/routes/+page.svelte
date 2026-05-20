@@ -10,9 +10,11 @@
   } from '$lib/relays/relay-store';
   import WorkspaceRoot from '$lib/components/workspace/WorkspaceRoot.svelte';
   import {
-    addMinedReadonly,
+    addMinedSigning,
     promptAddNip07,
     promptAddReadonly,
+    promptCreateLocal,
+    promptImportNsec,
   } from '$lib/workspace/account-actions';
   import { openProfileTab, openThreadTab } from '$lib/workspace/action-tabs';
   import { moveWorkspaceTab } from '$lib/workspace/move-tab';
@@ -191,4 +193,4 @@
 </svelte:head>
 
 <!-- prettier-ignore -->
-<WorkspaceRoot {workspace} {accounts} {activeAccount} {notifications} {relaySets} {ready} {pageDataReady} {inactiveRetentionSeconds} focusTab={handleFocusTab} closeTab={handleCloseTab} moveTab={handleMoveTab} openTab={handleOpenTab} openNewTab={handleOpenNewTab} convertTab={handleConvertTab} split={handleSplit} closePane={handleClosePane} resize={handleResize} addReadonly={() => promptAddReadonly(refreshData)} addNip07={() => promptAddNip07(refreshData)} addReadonlyPubkey={(pubkey) => addMinedReadonly(pubkey, refreshData)} {refreshData} toggleRelay={handleToggleRelay} removeRelay={handleRemoveRelay} openProfile={handleOpenProfile} openThread={handleOpenThread} />
+<WorkspaceRoot {workspace} {accounts} {activeAccount} {notifications} {relaySets} {ready} {pageDataReady} {inactiveRetentionSeconds} focusTab={handleFocusTab} closeTab={handleCloseTab} moveTab={handleMoveTab} openTab={handleOpenTab} openNewTab={handleOpenNewTab} convertTab={handleConvertTab} split={handleSplit} closePane={handleClosePane} resize={handleResize} addReadonly={() => promptAddReadonly(refreshData)} addNip07={() => promptAddNip07(refreshData)} createLocal={() => promptCreateLocal(refreshData)} importNsec={() => promptImportNsec(refreshData)} addMinedSigning={(nsec) => addMinedSigning(nsec, refreshData)} {refreshData} toggleRelay={handleToggleRelay} removeRelay={handleRemoveRelay} openProfile={handleOpenProfile} openThread={handleOpenThread} />

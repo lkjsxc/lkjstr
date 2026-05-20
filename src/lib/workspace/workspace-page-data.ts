@@ -1,5 +1,8 @@
 import {
+  addMinedLocalAccount,
   addNip07Account,
+  createLocalAccount,
+  importLocalNsec,
   addReadonlyAccount,
   addReadonlyPubkey,
 } from '$lib/accounts/account-manager';
@@ -34,7 +37,22 @@ export async function addNip07FromProvider(): Promise<string> {
   return 'NIP-07 account added.';
 }
 
+export async function createLocalSigningAccount(): Promise<string> {
+  await createLocalAccount();
+  return 'Local account created.';
+}
+
+export async function importNsecAccount(input: string): Promise<string> {
+  await importLocalNsec(input);
+  return 'Local account imported.';
+}
+
 export async function addReadonlyFromPubkey(pubkey: string): Promise<string> {
   await addReadonlyPubkey(pubkey);
   return 'Read-only account added.';
+}
+
+export async function addMinedSigningAccount(nsec: string): Promise<string> {
+  await addMinedLocalAccount(nsec);
+  return 'Mined signing account added.';
 }

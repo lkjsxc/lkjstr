@@ -5,6 +5,11 @@ import {
   type Account,
 } from './account';
 import { saveAccount, setActiveAccountId } from './account-store';
+import {
+  createLocalAccountRecord,
+  parseNsec,
+  persistLocalAccount,
+} from './local';
 import { connectNip07, type Nip07Provider } from './nip07';
 
 export async function addReadonlyAccount(input: string): Promise<Account> {
@@ -22,6 +27,28 @@ export async function addReadonlyPubkey(pubkey: string): Promise<Account> {
   await saveAccount(account);
   setActiveAccountId(account.id);
   return account;
+}
+
+export async function createLocalAccount(): Promise<Account> {
+  const { account, secretKey } = createLocalAccountRecord();
+  await persistLocalAccount(account, secretKey);
+  await saveAccount(account);
+  setActiveAccountId(account.id);
+  return account;
+}
+
+export async function importLocalNsec(input: string): Promise<Account> {
+  const secret = parseNsec(input);
+  if (!secret) throw new Error('nsec input is invalid.');
+  const { account, secretKey } = createLocalAccountRecord(secret);
+  await persistLocalAccount(account, secretKey);
+  await saveAccount(account);
+  setActiveAccountId(account.id);
+  return account;
+}
+
+export async function addMinedLocalAccount(nsec: string): Promise<Account> {
+  return importLocalNsec(nsec);
 }
 
 export async function addNip07Account(

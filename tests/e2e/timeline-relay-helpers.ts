@@ -6,6 +6,8 @@ export async function addReadonlyAccount(page: Page, pubkey: string) {
   page.once('dialog', (dialog) => dialog.accept(pubkey));
   await page.getByRole('button', { name: 'Add read-only' }).click();
   await expect(page.getByText('readonly')).toBeVisible();
+  await page.getByRole('button', { name: 'Open new tab' }).first().click();
+  await page.getByRole('button', { name: 'Home', exact: true }).click();
 }
 
 export async function waitForSyntheticEvent(page: Page, eventId: string) {

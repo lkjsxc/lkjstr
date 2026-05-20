@@ -45,7 +45,9 @@
     closePane: (paneId: string) => void;
     addReadonly: () => void;
     addNip07: () => void;
-    addReadonlyPubkey: (pubkey: string) => Promise<void>;
+    createLocal: () => void;
+    importNsec: () => void;
+    addMinedSigning: (nsec: string) => Promise<void>;
     refreshData: () => void;
     toggleRelay: (setId: string, url: string, enabled: boolean) => void;
     removeRelay: (setId: string, url: string) => void;
@@ -166,7 +168,9 @@
             convertTab={props.convertTab}
             addReadonly={props.addReadonly}
             addNip07={props.addNip07}
-            addReadonlyPubkey={props.addReadonlyPubkey}
+            createLocal={props.createLocal}
+            importNsec={props.importNsec}
+            addMinedSigning={props.addMinedSigning}
             refreshData={props.refreshData}
             toggleRelay={props.toggleRelay}
             removeRelay={props.removeRelay}

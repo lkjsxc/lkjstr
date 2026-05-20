@@ -1,5 +1,4 @@
-import { activeAccount } from '../accounts/account-store';
-import { getNip07Provider } from '../accounts/nip07';
+import { resolveActiveSigner } from '../accounts/signer';
 import type { NostrEvent, UnsignedNostrEvent } from '../protocol';
 import { sharedRelayPool, type PublishResult } from '../relays/relay-pool';
 import type { RelaySet } from '../relays/relay-store';
@@ -14,17 +13,24 @@ export async function signAndPublish(
   build: (pubkey: string) => UnsignedNostrEvent,
   relaySets: readonly RelaySet[],
 ): Promise<EventPublishStatus> {
-  const account = await activeAccount();
-  if (!account) return { ok: false, message: 'Add a NIP-07 account first.' };
-  if (account.signerType !== 'nip07')
-    return { ok: false, message: 'Select a NIP-07 account that can sign.' };
-  const provider = getNip07Provider();
-  if (!provider) return { ok: false, message: 'NIP-07 signer unavailable.' };
+  const signer = await resolveSigner();
+  if (!signer.ok) return signer;
   const relays = enabledWriteRelays(relaySets);
   if (relays.length === 0)
     return { ok: false, message: 'Enable at least one write relay.' };
-  const event = await provider.signEvent(build(account.pubkey));
+  const event = await signer.signEvent(build(signer.account.pubkey));
   await storeTimelineEvent(event);
   const results = await sharedRelayPool.publish(relays, event);
   return { ok: true, event, results };
+}
+
+async function resolveSigner() {
+  try {
+    return { ok: true as const, ...(await resolveActiveSigner()) };
+  } catch (error) {
+    return {
+      ok: false as const,
+      message: error instanceof Error ? error.message : 'Signing failed.',
+    };
+  }
 }

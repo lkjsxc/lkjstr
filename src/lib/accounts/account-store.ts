@@ -7,6 +7,7 @@ import {
   safeSetItem,
 } from '../storage/safe-storage';
 import type { Account } from './account';
+import { removeLocalSecret } from './local-secret-store';
 
 const activeKey = 'lkjstr.activeAccountId';
 let memoryAccounts: Account[] = [];
@@ -33,6 +34,7 @@ export async function saveAccount(account: Account): Promise<void> {
 export async function removeAccount(id: string): Promise<void> {
   memoryAccounts = memoryAccounts.filter((account) => account.id !== id);
   await bestEffortStorageWrite(() => browserDb().accounts.delete(id));
+  await removeLocalSecret(id);
   if (getActiveAccountId() === id) setActiveAccountId(null);
 }
 

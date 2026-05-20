@@ -1,6 +1,6 @@
 import { decodeEntity, encodeNpub } from '../protocol';
 
-export type SignerType = 'readonly' | 'nip07';
+export type SignerType = 'readonly' | 'nip07' | 'local';
 
 export type AccountCapabilities = {
   readonly read: boolean;
@@ -68,7 +68,7 @@ export function shortKey(pubkey: string): string {
 }
 
 function capabilitiesFor(signerType: SignerType): AccountCapabilities {
-  const canSign = signerType === 'nip07';
+  const canSign = signerType === 'nip07' || signerType === 'local';
   return {
     read: true,
     sign: canSign,

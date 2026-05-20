@@ -9,7 +9,7 @@
   } from '$lib/accounts/npub-miner';
 
   type Props = {
-    addReadonlyPubkey: (pubkey: string) => Promise<void>;
+    addMinedSigning: (nsec: string) => Promise<void>;
   };
 
   let props: Props = $props();
@@ -71,11 +71,11 @@
     status = 'Copied.';
   }
 
-  async function addReadonly(): Promise<void> {
+  async function addSigning(): Promise<void> {
     if (!result) return;
-    await props.addReadonlyPubkey(result.pubkey);
+    await props.addMinedSigning(result.nsec);
     saved = true;
-    status = 'Read-only account added.';
+    status = 'Mined signing account added.';
   }
 </script>
 
@@ -120,8 +120,8 @@
       <code>{mined.nsec}</code>
       <button type="button" onclick={() => copy(mined.npub)}>Copy npub</button>
       <button type="button" onclick={() => copy(mined.nsec)}>Copy nsec</button>
-      <button type="button" disabled={saved} onclick={addReadonly}>
-        Add read-only
+      <button type="button" disabled={saved} onclick={addSigning}>
+        Add signing account
       </button>
     </article>
   {/if}
