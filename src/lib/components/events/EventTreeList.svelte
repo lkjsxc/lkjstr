@@ -21,6 +21,9 @@
   } from '$lib/thread/thread-reactions';
   import EventRow from './EventRow.svelte';
 
+  type TerminalRow = { readonly terminal: true };
+  type ViewRow = FlatEventTreeItem | TerminalRow;
+
   type Props = {
     items: readonly FeedEvent[];
     profiles?: Record<string, ProfileSummary>;
@@ -47,7 +50,14 @@
     }
   >();
   let autoFillPending = false;
-  let nodes = $derived(flattenEventTree(buildEventTree(props.items)));
+  let treeKey = '';
+  let cachedNodes: FlatEventTreeItem[] = [];
+  let nodes = $derived(treeNodes(props.items));
+  let rows = $derived<ViewRow[]>(
+    props.hasOlder === false && nodes.length > 0
+      ? [...nodes, { terminal: true }]
+      : nodes,
+  );
   let previousNodes: FlatEventTreeItem[] = [];
 
   function handleScroll(offset: number): void {
@@ -70,9 +80,11 @@
   });
 
   $effect(() => {
-    const anchor = captureVirtualAnchor(previousNodes, nodeKey, list);
+    const anchor = captureVirtualAnchor(previousNodes, eventNodeKey, list);
     previousNodes = nodes;
-    void tick().then(() => restoreVirtualAnchor(anchor, nodes, nodeKey, list));
+    void tick().then(() =>
+      restoreVirtualAnchor(anchor, nodes, eventNodeKey, list),
+    );
   });
 
   async function maybeAutoFill(): Promise<void> {
@@ -85,8 +97,20 @@
     autoFillPending = false;
   }
 
-  function nodeKey(node: (typeof nodes)[number]): string {
+  function treeNodes(items: readonly FeedEvent[]): FlatEventTreeItem[] {
+    const key = items.map((item) => item.event.id).join('\u0000');
+    if (key === treeKey) return cachedNodes;
+    treeKey = key;
+    cachedNodes = flattenEventTree(buildEventTree(items));
+    return cachedNodes;
+  }
+
+  function eventNodeKey(node: FlatEventTreeItem): string {
     return node.event.id;
+  }
+
+  function rowKey(row: ViewRow): string {
+    return 'terminal' in row ? 'event-list-terminal' : row.event.id;
   }
 </script>
 
@@ -95,13 +119,15 @@
     <div class="event-list__scroller">
       <VList
         bind:this={list}
-        data={nodes}
+        data={rows}
         style="height: 100%; min-height: 0;"
-        getKey={nodeKey}
+        getKey={rowKey}
         onscroll={handleScroll}
       >
         {#snippet children(node)}
-          {#if 'collapsed' in node}
+          {#if 'terminal' in node}
+            <p class="event-list__status">End of loaded history.</p>
+          {:else if 'collapsed' in node}
             <button
               type="button"
               class="thread-continuation"
@@ -128,8 +154,5 @@
     </div>
   {:else if !props.loading}
     <p class="event-list__empty">{props.emptyText ?? 'No events found.'}</p>
-  {/if}
-  {#if props.hasOlder === false && nodes.length > 0}
-    <p class="event-list__status">End of loaded history.</p>
   {/if}
 </div>

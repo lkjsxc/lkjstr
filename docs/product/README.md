@@ -20,6 +20,8 @@ itself: split tiles, tabs, relay-backed data, and local state.
 - [tools/relay-management.md](tools/relay-management.md): relay management.
 - [tools/settings.md](tools/settings.md): settings.
 - [tools/tweet.md](tools/tweet.md): Tweet tool.
+- [tools/upload-settings.md](tools/upload-settings.md): guided media upload
+  settings.
 - [workspace/README.md](workspace/README.md): tiles, panes, tabs, and flows.
 - [workspace/panes.md](workspace/panes.md): panes.
 - [workspace/scope.md](workspace/scope.md): workspace scope.

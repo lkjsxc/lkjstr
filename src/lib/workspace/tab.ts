@@ -6,6 +6,7 @@ export type TabKind =
   | 'notifications'
   | 'profile'
   | 'profile-edit'
+  | 'upload-settings'
   | 'account-manager'
   | 'npub-miner'
   | 'thread'
@@ -58,6 +59,7 @@ export function iconFor(kind: TabKind): string {
     notifications: 'bell',
     profile: 'user',
     'profile-edit': 'id-card',
+    'upload-settings': 'upload',
     'account-manager': 'users',
     'npub-miner': 'pickaxe',
     thread: 'message',

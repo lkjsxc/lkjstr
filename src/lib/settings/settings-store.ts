@@ -6,7 +6,7 @@ import {
 import type { SettingRecord } from './settings-key';
 import { defaultSettings, searchText } from './settings-schema';
 import { settingsChangedEvent } from './settings-events';
-import { validCustomUploadServer } from '../tweet/media-upload-providers';
+import { validCustomUploadServer } from '../media/providers';
 
 export type SettingOverride = {
   readonly key: string;

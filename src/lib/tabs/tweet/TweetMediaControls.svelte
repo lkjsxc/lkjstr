@@ -1,5 +1,6 @@
 <script lang="ts">
   type Props = {
+    inputId: string;
     uploading: boolean;
     publishing: boolean;
     hasSigner: boolean;
@@ -16,13 +17,18 @@
 </script>
 
 <div class="toolbar tweet-media-controls">
-  <label class="button-like icon-button" for="tweet-media" title="Attach media">
+  <label
+    class="button-like icon-button"
+    for={props.inputId}
+    title="Attach media"
+  >
     <span aria-hidden="true">+</span>
     <span class="sr-only">Attach media</span>
   </label>
   <input
-    id="tweet-media"
-    name="tweet-media"
+    class="sr-only"
+    id={props.inputId}
+    name={props.inputId}
     type="file"
     accept="image/*,video/*"
     multiple

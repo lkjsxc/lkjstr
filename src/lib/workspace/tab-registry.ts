@@ -48,6 +48,7 @@ export function createDefaultTabRegistry(): TabRegistry {
     'notifications',
     'profile',
     'profile-edit',
+    'upload-settings',
     'account-manager',
     'npub-miner',
     'thread',

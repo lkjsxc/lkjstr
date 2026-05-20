@@ -11,8 +11,23 @@ export async function uploadTweetFiles(
   files: readonly File[],
   settings: UploadSettings,
 ): Promise<TweetAttachment[]> {
-  const uploaded: TweetAttachment[] = [];
-  for (const file of files)
-    uploaded.push(await uploadTweetMedia(file, settings));
+  const uploaded = new Array<TweetAttachment>(files.length);
+  let next = 0;
+  async function worker(): Promise<void> {
+    for (;;) {
+      const index = next;
+      next += 1;
+      const file = files[index];
+      if (!file) return;
+      try {
+        uploaded[index] = await uploadTweetMedia(file, settings);
+      } catch (error) {
+        const message =
+          error instanceof Error ? error.message : 'Media upload failed.';
+        throw new Error(`${file.name}: ${message}`);
+      }
+    }
+  }
+  await Promise.all(Array.from({ length: Math.min(2, files.length) }, worker));
   return uploaded;
 }

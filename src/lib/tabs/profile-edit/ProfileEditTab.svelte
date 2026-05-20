@@ -1,117 +1,194 @@
 <script lang="ts">
+  import { onMount } from 'svelte';
   import type { Account } from '$lib/accounts/account';
+  import { uploadMediaFile } from '$lib/media/upload';
+  import { loadUploadSettings, type UploadSettings } from '$lib/media/settings';
+  import { settingsChangedEvent } from '$lib/settings/settings-events';
   import {
     loadProfileMetadata,
     publishProfileMetadata,
   } from '$lib/profile/profile-actions';
   import {
     draftFromMetadata,
+    emptyProfileMetadataDraft,
     validateProfileMetadataDraft,
     type ProfileMetadataDraft,
   } from '$lib/profile/profile-metadata-draft';
   import type { RelaySet } from '$lib/relays/relay-store';
+  import ProfileImageUpload from './ProfileImageUpload.svelte';
+  import ProfileTextField from './ProfileTextField.svelte';
 
   type Props = {
+    tabId: string;
     activeAccount?: Account;
     relaySets: readonly RelaySet[];
   };
 
   let props: Props = $props();
-  let draft = $state<ProfileMetadataDraft>(emptyDraft());
+  let draft = $state<ProfileMetadataDraft>(emptyProfileMetadataDraft());
+  let original = $state<ProfileMetadataDraft>(emptyProfileMetadataDraft());
   let loadedFor = $state('');
   let status = $state('');
-  let busy = $state(false);
+  let loading = $state(false);
+  let saving = $state(false);
+  let uploading = $state<keyof ProfileMetadataDraft | ''>('');
+  let uploadSettings = $state<UploadSettings>({
+    provider: 'nostr-build',
+    customServer: '',
+    server: 'https://nostr.build',
+    noTransform: true,
+  });
+  let error = $derived(validateProfileMetadataDraft(draft));
+  let dirty = $derived(JSON.stringify(draft) !== JSON.stringify(original));
+  let canEdit = $derived(
+    Boolean(
+      props.activeAccount?.capabilities.sign && props.activeAccount.enabled,
+    ),
+  );
+  let canSave = $derived(canEdit && dirty && !error && !loading && !saving);
+
+  onMount(() => {
+    void refreshUploadSettings();
+    const reload = () => void refreshUploadSettings();
+    window.addEventListener(settingsChangedEvent, reload);
+    return () => window.removeEventListener(settingsChangedEvent, reload);
+  });
 
   $effect(() => {
     const pubkey = props.activeAccount?.pubkey ?? '';
     if (!pubkey || pubkey === loadedFor) return;
     loadedFor = pubkey;
-    void loadProfileMetadata(pubkey).then((metadata) => {
-      draft = draftFromMetadata(metadata);
-    });
+    loading = true;
+    status = '';
+    void loadProfileMetadata(pubkey)
+      .then((metadata) => {
+        const loaded = draftFromMetadata(metadata);
+        draft = loaded;
+        original = loaded;
+      })
+      .catch((caught) => {
+        status =
+          caught instanceof Error ? caught.message : 'Profile load failed.';
+      })
+      .finally(() => (loading = false));
   });
 
+  async function refreshUploadSettings(): Promise<void> {
+    uploadSettings = await loadUploadSettings();
+  }
+
   async function save(): Promise<void> {
-    const error = validateProfileMetadataDraft(draft);
-    if (error) return void (status = error);
-    busy = true;
+    if (!canSave || !props.activeAccount) return;
+    saving = true;
     status = '';
-    const result = await publishProfileMetadata(draft, props.relaySets);
-    busy = false;
+    const result = await publishProfileMetadata(
+      draft,
+      props.relaySets,
+      props.activeAccount.pubkey,
+    );
+    saving = false;
     status = result.ok ? 'Profile updated.' : result.message;
+    if (result.ok) original = draft;
+  }
+
+  async function upload(
+    key: Extract<keyof ProfileMetadataDraft, 'picture' | 'banner'>,
+    files: FileList | null,
+  ): Promise<void> {
+    const file = files?.[0];
+    if (!file) return;
+    if (!uploadSettings.server.trim())
+      return void (status = 'Configure a media upload server first.');
+    uploading = key;
+    status = '';
+    try {
+      const uploaded = await uploadMediaFile(file, uploadSettings);
+      update(key, uploaded.url);
+      status = `${key} uploaded.`;
+    } catch (caught) {
+      status =
+        caught instanceof Error ? caught.message : 'Media upload failed.';
+    } finally {
+      uploading = '';
+    }
   }
 
   function update(key: keyof ProfileMetadataDraft, value: string): void {
     draft = { ...draft, [key]: value };
   }
 
-  function emptyDraft(): ProfileMetadataDraft {
-    return {
-      banner: '',
-      picture: '',
-      display_name: '',
-      name: '',
-      nip05: '',
-      website: '',
-      lud16: '',
-      about: '',
-    };
+  function reset(): void {
+    draft = original;
+    status = 'Profile draft reset.';
   }
 </script>
 
 <section class="data-tab profile-edit-tab">
   <h2>Profile Edit</h2>
-  {#if props.activeAccount?.capabilities.sign && props.activeAccount.enabled}
-    <label
-      >Banner <input
-        value={draft.banner}
-        oninput={(e) => update('banner', e.currentTarget.value)}
-      /></label
-    >
-    <label
-      >Picture <input
-        value={draft.picture}
-        oninput={(e) => update('picture', e.currentTarget.value)}
-      /></label
-    >
-    <label
-      >Display name <input
-        value={draft.display_name}
-        oninput={(e) => update('display_name', e.currentTarget.value)}
-      /></label
-    >
-    <label
-      >Name <input
-        value={draft.name}
-        oninput={(e) => update('name', e.currentTarget.value)}
-      /></label
-    >
-    <label
-      >NIP-05 <input
-        value={draft.nip05}
-        oninput={(e) => update('nip05', e.currentTarget.value)}
-      /></label
-    >
-    <label
-      >Website <input
-        value={draft.website}
-        oninput={(e) => update('website', e.currentTarget.value)}
-      /></label
-    >
-    <label
-      >Lightning address <input
-        value={draft.lud16}
-        oninput={(e) => update('lud16', e.currentTarget.value)}
-      /></label
-    >
-    <label
-      >About <textarea
-        rows="5"
-        value={draft.about}
-        oninput={(e) => update('about', e.currentTarget.value)}
-      ></textarea></label
-    >
-    <button type="button" disabled={busy} onclick={save}>Save profile</button>
+  {#if canEdit}
+    {#if loading}<p>Loading profile metadata...</p>{/if}
+    <ProfileTextField
+      label="Banner"
+      value={draft.banner}
+      update={(value) => update('banner', value)}
+    />
+    <ProfileImageUpload
+      id={`profile-banner-${props.tabId}`}
+      label="Upload banner"
+      uploading={uploading === 'banner'}
+      upload={(files) => void upload('banner', files)}
+    />
+    <ProfileTextField
+      label="Picture"
+      value={draft.picture}
+      update={(value) => update('picture', value)}
+    />
+    <ProfileImageUpload
+      id={`profile-picture-${props.tabId}`}
+      label="Upload picture"
+      uploading={uploading === 'picture'}
+      upload={(files) => void upload('picture', files)}
+    />
+    <ProfileTextField
+      label="Display name"
+      value={draft.display_name}
+      update={(value) => update('display_name', value)}
+    />
+    <ProfileTextField
+      label="Name"
+      value={draft.name}
+      update={(value) => update('name', value)}
+    />
+    <ProfileTextField
+      label="NIP-05"
+      value={draft.nip05}
+      update={(value) => update('nip05', value)}
+    />
+    <ProfileTextField
+      label="Website"
+      value={draft.website}
+      update={(value) => update('website', value)}
+    />
+    <ProfileTextField
+      label="Lightning address"
+      value={draft.lud16}
+      update={(value) => update('lud16', value)}
+    />
+    <ProfileTextField
+      label="About"
+      value={draft.about}
+      multiline
+      update={(value) => update('about', value)}
+    />
+    {#if error}<p role="alert">{error}</p>{/if}
+    <div class="toolbar">
+      <button type="button" disabled={!dirty || saving} onclick={reset}
+        >Reset</button
+      >
+      <button type="button" disabled={!canSave} onclick={save}
+        >Save profile</button
+      >
+    </div>
   {:else}
     <p>Select an enabled signing account before editing a profile.</p>
   {/if}

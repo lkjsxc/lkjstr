@@ -69,6 +69,7 @@ function validKind(kind: unknown): kind is TabKind {
       'notifications',
       'profile',
       'profile-edit',
+      'upload-settings',
       'account-manager',
       'npub-miner',
       'thread',

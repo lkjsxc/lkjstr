@@ -22,6 +22,19 @@ export const profileMetadataKeys = [
   'about',
 ] as const;
 
+export function emptyProfileMetadataDraft(): ProfileMetadataDraft {
+  return {
+    banner: '',
+    picture: '',
+    display_name: '',
+    name: '',
+    nip05: '',
+    website: '',
+    lud16: '',
+    about: '',
+  };
+}
+
 export function draftFromMetadata(
   metadata: Record<string, unknown>,
 ): ProfileMetadataDraft {

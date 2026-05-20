@@ -69,6 +69,12 @@ export const newTabOptions: readonly NewTabOption[] = [
     group: 'secondary',
   },
   {
+    kind: 'upload-settings',
+    label: 'Upload Settings',
+    description: 'Media upload.',
+    group: 'secondary',
+  },
+  {
     kind: 'settings',
     label: 'Settings',
     description: 'Key-value editor.',

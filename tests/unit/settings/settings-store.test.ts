@@ -47,6 +47,7 @@ describe('settings store helpers', () => {
       (item) => item.key === 'tweet.mediaUploadProvider',
     );
     if (!provider) throw new Error('expected setting');
+    expect(provider.defaultValue).toBe('nostr-build');
     expect(coerceValue(provider, 'nostr-build')).toEqual({
       ok: true,
       value: 'nostr-build',

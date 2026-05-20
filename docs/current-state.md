@@ -11,7 +11,7 @@ This document records the current implemented contract for the app.
   notifications, Tweet drafts, and cache metadata are local browser data.
 - Clean first launch opens Welcome. New Tab opens Welcome, Home, Global, Relay
   Settings, lkjstr Log, Notifications, Accounts, Mine npub, Tweet, Profile
-  Edit, Settings, and Cache.
+  Edit, Upload Settings, Settings, and Cache.
 - Profile tabs open or focus from identity actions in the same tile.
 - Profile Edit opens or focuses from own-profile actions in the same tile and
   edits only the active enabled signing account.
@@ -22,8 +22,11 @@ This document records the current implemented contract for the app.
   drag-and-drop.
 - Moving the last tab out of a tile removes that tile.
 - Settings render as one flat key-value list, including cache retention, raw
-  string editing, formatted JSON editing, inline JSON import, and Tweet media
-  upload controls.
+  string editing, formatted JSON editing, inline JSON import, and raw Tweet
+  media upload keys.
+- Upload Settings is a guided editor for the Tweet media upload provider,
+  custom HTTPS server, no-transform option, endpoint discovery, and discovery
+  test result.
 - Home is Account home: active account plus NIP-02 follows from the latest
   kind `3` event.
 - Home loads cached matching notes first, performs an initial historical relay
@@ -33,9 +36,8 @@ This document records the current implemented contract for the app.
 - Global shows recent kind `1` notes from the selected read relays without an
   account requirement.
 - Notifications are relay-backed records derived from events that reference the
-  active account. Rows show actor, read state, timestamp, and source content
-  without target/root context controls. Reaction and repost rows use avatar
-  badge overlays.
+  active account. Rows show actor, action label, read state, timestamp, and
+  source content without target/root context controls.
 - Home has no hidden public fallback when the selected account or read relays
   cannot produce a feed.
 - Feed loading ends when cache exists, any relay produces events, any relay
@@ -60,8 +62,8 @@ This document records the current implemented contract for the app.
 - Mine npub mines an `npub` prefix locally and exports the generated `nsec`
   without storing it until the user adds it.
 - Tweet uses the active enabled signing account, durable draft storage,
-  `Ctrl+Enter`, provider or custom NIP-96 media upload, NIP-98 upload auth,
-  NIP-94 `imeta` tags, and signed kind `1` notes to enabled write relays.
+  `Ctrl+Enter`, shared provider or custom NIP-96 media upload, NIP-98 upload
+  auth, NIP-94 `imeta` tags, and signed kind `1` notes to enabled write relays.
 - Event repository lookup uses direct id reads, batched id reads, and tag-value
   indexes for thread, reaction, and notification reloads.
 - Jobs are persisted as root/child trees with progress, output, and cancel

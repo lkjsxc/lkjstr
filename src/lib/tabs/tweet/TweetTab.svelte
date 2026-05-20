@@ -21,6 +21,7 @@
   import { settingsChangedEvent } from '$lib/settings/settings-events';
 
   type Props = {
+    tabId: string;
     activeAccount?: Account;
     relaySets: readonly RelaySet[];
   };
@@ -31,9 +32,9 @@
   let publishing = $state(false);
   let uploading = $state(false);
   let uploadSettings = $state<UploadSettings>({
-    provider: 'disabled',
+    provider: 'nostr-build',
     customServer: '',
-    server: '',
+    server: 'https://nostr.build',
     noTransform: true,
   });
   let attachments = $state<TweetAttachment[]>([]);
@@ -180,6 +181,7 @@
   ></textarea>
   <TweetAttachments {attachments} remove={removeAttachment} />
   <TweetMediaControls
+    inputId={`tweet-media-${props.tabId}`}
     {uploading}
     {publishing}
     {hasSigner}

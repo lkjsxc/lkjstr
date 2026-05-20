@@ -9,6 +9,7 @@ export function titleFor(kind: TabKind): string {
     notifications: 'Notifications',
     profile: 'Profile',
     'profile-edit': 'Profile Edit',
+    'upload-settings': 'Upload Settings',
     'account-manager': 'Accounts',
     'npub-miner': 'Mine npub',
     thread: 'Thread',

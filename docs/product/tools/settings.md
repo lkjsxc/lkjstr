@@ -13,6 +13,8 @@ Settings provide editable local preferences as one flat key-value list.
 - String settings edit raw strings. JSON settings use formatted JSON text.
 - Enum upload provider controls show friendly labels while storing ids.
 - Tweet settings use the `tweet.*` namespace.
+- Guided Tweet media upload editing lives in Upload Settings; Settings remains
+  the raw flat key-value editor.
 - `tweet.mediaUploadProvider` selects `disabled`, `nostr-build`, `nostrcheck`,
   `void-cat`, or `custom`.
 - `tweet.mediaUploadCustomServer` stores an optional HTTPS NIP-96 server origin

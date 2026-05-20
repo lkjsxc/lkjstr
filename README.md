@@ -19,14 +19,15 @@ selected default relay set for timeline, profile, thread, and Tweet behavior.
 ## Contract
 
 - New Tab choices are Welcome, Home, Global, Relay Settings, lkjstr Log,
-  Notifications, Accounts, Mine npub, Tweet, Profile Edit, Settings, and
-  Cache.
+  Notifications, Accounts, Mine npub, Tweet, Profile Edit, Upload Settings,
+  Settings, and Cache.
 - Profile tabs open from identity actions. Profile Edit opens for the active
   signing account. Thread tabs open from event actions.
 - Tabs can be reordered inside a tile and moved to another tile by native
   drag-and-drop.
 - Moving the last tab out of a tile closes the source tile.
-- Settings are one flat key-value list.
+- Settings are one flat key-value list. Upload Settings is the guided editor
+  for the same Tweet media upload keys.
 - Home, Global, Notifications, Profile, and Thread reads use enabled read relays
   in the selected default set. Disabled or removed relays are not silent
   fallbacks.

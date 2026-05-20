@@ -1,9 +1,9 @@
 <script lang="ts">
   import type { SettingRecord } from '$lib/settings/settings-key';
   import {
-    tweetMediaUploadProviders,
+    mediaUploadProviders,
     validCustomUploadServer,
-  } from '$lib/tweet/media-upload-providers';
+  } from '$lib/media/providers';
 
   type Props = {
     setting: SettingRecord;
@@ -56,8 +56,8 @@
   function optionLabel(value: string): string {
     if (props.setting.key !== 'tweet.mediaUploadProvider') return value;
     return (
-      tweetMediaUploadProviders.find((provider) => provider.id === value)
-        ?.label ?? value
+      mediaUploadProviders.find((provider) => provider.id === value)?.label ??
+      value
     );
   }
 </script>

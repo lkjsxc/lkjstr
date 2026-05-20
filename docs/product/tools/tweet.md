@@ -17,7 +17,8 @@ Tweet is the single note authoring surface.
 - `Ctrl+Enter` in the editor uses the same disabled rules as the Publish
   button.
 - Paste and file-picker uploads use the configured NIP-96 HTTPS upload server.
-- The file picker is an accessible icon button.
+- Each Tweet tab owns a unique visually hidden file input behind an accessible
+  icon button, so file selection is scoped to the active composer.
 - A blank upload server disables media upload without blocking text publishing.
 - Upload provider setting changes apply to an open Tweet tab without recreating
   the tab.

@@ -48,9 +48,15 @@ export async function publishFollowMutation(
 export async function publishProfileMetadata(
   updates: ProfileMetadataDraft,
   relaySets: readonly RelaySet[],
+  expectedPubkey?: string,
 ): Promise<EventPublishStatus> {
   const account = await activeAccount();
   if (!account) return { ok: false, message: 'Add a signing account first.' };
+  if (expectedPubkey && account.pubkey !== expectedPubkey)
+    return {
+      ok: false,
+      message: 'Active account changed before profile save.',
+    };
   const metadata = mergeProfileMetadataDraft(
     await cachedMetadata(account.pubkey),
     updates,

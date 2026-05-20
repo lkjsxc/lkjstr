@@ -16,6 +16,7 @@ Tabs define the workspace surface area.
 - Mine npub
 - Tweet
 - Profile Edit
+- Upload Settings
 - Settings
 - Cache
 
@@ -29,6 +30,8 @@ Tabs define the workspace surface area.
 - Profile Edit opens from the active account profile action. The tab focuses an
   existing Profile Edit tab in the same tile before creating one.
 - Profile Edit always edits the current active signing account.
+- Upload Settings opens from New Tab and edits the shared Tweet media upload
+  provider records.
 - Thread opens from event rows, event id buttons, quotes, references, and
   collapsed continuation rows.
 - Thread actions focus a matching Thread tab already present in the same tile;

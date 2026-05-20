@@ -30,6 +30,8 @@ bounded as timelines grow.
 - Loading near the bottom adds older chunks. Loading near the top adds newer
   chunks. Rendering flattens chunks only for display.
 - Live prepends and chunk changes preserve the visible scroll anchor.
+- Virtual event lists include terminal history markers inside the row data, so
+  the marker scrolls with loaded content.
 
 ## Scroll Anchoring
 

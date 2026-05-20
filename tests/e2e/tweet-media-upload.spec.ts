@@ -19,11 +19,13 @@ test('Tweet media upload publishes content and imeta tags', async ({
   await setMediaServer(page);
   await openTweet(page);
   await page.getByLabel('Tweet content').fill('media note');
-  await page.locator('input#tweet-media').setInputFiles({
-    name: 'pixel.png',
-    mimeType: 'image/png',
-    buffer: Buffer.from('png'),
-  });
+  await tweetTab(page)
+    .locator('input[type="file"]')
+    .setInputFiles({
+      name: 'pixel.png',
+      mimeType: 'image/png',
+      buffer: Buffer.from('png'),
+    });
   await expect(page.getByText('Uploaded 1 media file')).toBeVisible();
   await page.getByRole('button', { name: 'Publish' }).click();
   await waitForPublishedCount(page, 1);
@@ -49,14 +51,18 @@ async function openTweet(page: Page) {
 
 async function setMediaServer(page: Page) {
   await page.getByRole('button', { name: 'Open new tab' }).first().click();
-  await page.getByRole('button', { name: 'Settings', exact: true }).click();
-  await page
-    .getByLabel('Edit tweet.mediaUploadProvider')
-    .selectOption('custom');
-  await page
-    .getByLabel('Edit tweet.mediaUploadCustomServer')
-    .fill('https://media.example');
-  await page.getByLabel('Edit tweet.mediaUploadCustomServer').blur();
+  await page.getByRole('button', { name: 'Upload Settings' }).click();
+  await page.getByRole('radio', { name: 'Custom' }).check();
+  await page.getByLabel('Custom upload server').fill('https://media.example');
+  await page.getByLabel('Custom upload server').blur();
+  await page.getByRole('button', { name: 'Test discovery' }).click();
+  await expect(page.getByText(/Discovery OK/)).toBeVisible();
+}
+
+function tweetTab(page: Page) {
+  return page.locator('section').filter({
+    has: page.getByLabel('Tweet content'),
+  });
 }
 
 async function mockUploadServer(page: Page) {

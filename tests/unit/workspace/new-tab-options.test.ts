@@ -14,6 +14,7 @@ describe('new tab options', () => {
       'Mine npub',
       'Tweet',
       'Profile Edit',
+      'Upload Settings',
       'Settings',
       'Cache',
     ]);

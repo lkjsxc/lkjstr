@@ -95,6 +95,8 @@ here before code is changed.
   relay management.
 - [product/tools/settings.md](product/tools/settings.md): settings.
 - [product/tools/tweet.md](product/tools/tweet.md): Tweet tool.
+- [product/tools/upload-settings.md](product/tools/upload-settings.md): guided
+  media upload settings.
 - [product/workspace/README.md](product/workspace/README.md): workspace
   behavior.
 - [product/workspace/panes.md](product/workspace/panes.md): panes.

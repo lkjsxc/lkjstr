@@ -1,7 +1,7 @@
 <script lang="ts">
   import { untrack } from 'svelte';
   import NotificationRow from '$lib/components/notifications/NotificationRow.svelte';
-  import { isNearEnd } from '$lib/events/feed-window';
+  import { isNearEnd, metadataPageLimit } from '$lib/events/feed-window';
   import type { ProfileSummary } from '$lib/identity/identity';
   import { NotificationRuntime } from '$lib/notifications/notification-runtime';
   import type { NotificationState } from '$lib/notifications/notification-runtime';
@@ -27,6 +27,7 @@
   let props: Props = $props();
   let runtime: NotificationRuntime | undefined;
   let currentProfiles: ProfileMap = {};
+  let profileRequest = 0;
   let state = $state<NotificationViewState>({
     records: [],
     items: [],
@@ -76,10 +77,14 @@
         ...state.items.map((item) => item.event.pubkey),
       ]),
     ];
-    const missing = authors.filter((author) => !state.profiles[author]);
+    const missing = authors
+      .filter((author) => !state.profiles[author])
+      .slice(0, metadataPageLimit);
     if (missing.length === 0) return;
+    const request = ++profileRequest;
     void loadTimelineProfiles(missing, relays, `${props.tabId}:profiles`).then(
       (loaded) => {
+        if (request !== profileRequest) return;
         currentProfiles = { ...loaded, ...currentProfiles };
         state = { ...state, profiles: currentProfiles };
       },

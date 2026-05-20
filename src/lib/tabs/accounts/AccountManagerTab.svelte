@@ -97,34 +97,37 @@
     >
   </div>
   {#if status}<p role="status">{status}</p>{/if}
-  {#each props.accounts as account (account.id)}
-    <article class:disabled={!account.enabled} class="row">
-      <IdentityChip pubkey={account.pubkey} />
-      <small>{account.signerType}</small>
-      <small>{account.enabled ? 'enabled' : 'disabled'}</small>
-      {#if props.activeAccount?.id === account.id}
-        <strong>active</strong>
-      {:else}
-        <button
-          type="button"
-          disabled={busy || !account.enabled}
-          onclick={() => makeActive(account)}
-        >
-          Set active
-        </button>
-      {/if}
-      <button
-        type="button"
-        disabled={busy}
-        onclick={() => toggleEnabled(account)}
-      >
-        {account.enabled ? 'Disable' : 'Enable'}
-      </button>
-      <button type="button" disabled={busy} onclick={() => remove(account)}>
-        Remove from this device
-      </button>
-    </article>
+  {#if props.accounts.length > 0}
+    <fieldset>
+      <legend>Active account</legend>
+      {#each props.accounts as account (account.id)}
+        <article class:disabled={!account.enabled} class="row">
+          <label>
+            <input
+              type="radio"
+              name="active-account"
+              checked={props.activeAccount?.id === account.id}
+              disabled={busy || !account.enabled}
+              onchange={() => void makeActive(account)}
+            />
+            <IdentityChip pubkey={account.pubkey} />
+          </label>
+          <small>{account.signerType}</small>
+          <small>{account.enabled ? 'enabled' : 'disabled'}</small>
+          <button
+            type="button"
+            disabled={busy}
+            onclick={() => toggleEnabled(account)}
+          >
+            {account.enabled ? 'Disable' : 'Enable'}
+          </button>
+          <button type="button" disabled={busy} onclick={() => remove(account)}>
+            Remove from this device
+          </button>
+        </article>
+      {/each}
+    </fieldset>
   {:else}
     <p>No account records are stored.</p>
-  {/each}
+  {/if}
 </section>

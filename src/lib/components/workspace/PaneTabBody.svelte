@@ -16,6 +16,7 @@
   import ThreadTab from '$lib/tabs/thread/ThreadTab.svelte';
   import TimelineTab from '$lib/tabs/timeline/TimelineTab.svelte';
   import TweetTab from '$lib/tabs/tweet/TweetTab.svelte';
+  import UploadSettingsTab from '$lib/tabs/upload-settings/UploadSettingsTab.svelte';
   import WelcomeTab from '$lib/tabs/welcome/WelcomeTab.svelte';
   import type { TabKind, WorkspaceTab } from '$lib/workspace/tab';
 
@@ -86,9 +87,12 @@
   />
 {:else if props.tab.kind === 'profile-edit'}
   <ProfileEditTab
+    tabId={props.tab.id}
     activeAccount={props.activeAccount}
     relaySets={props.relaySets}
   />
+{:else if props.tab.kind === 'upload-settings'}
+  <UploadSettingsTab />
 {:else if props.tab.kind === 'profile'}
   <ProfileTab
     tabId={props.tab.id}
@@ -112,7 +116,11 @@
 {:else if props.tab.kind === 'cache-status'}
   <CacheStatusTab />
 {:else if props.tab.kind === 'tweet'}
-  <TweetTab activeAccount={props.activeAccount} relaySets={props.relaySets} />
+  <TweetTab
+    tabId={props.tab.id}
+    activeAccount={props.activeAccount}
+    relaySets={props.relaySets}
+  />
 {:else if props.tab.kind === 'thread'}
   <ThreadTab
     tabId={props.tab.id}
