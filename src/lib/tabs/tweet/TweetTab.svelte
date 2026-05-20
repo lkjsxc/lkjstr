@@ -27,6 +27,7 @@
   let uploadServer = $state('');
   let uploadNoTransform = $state(true);
   let attachments = $state<TweetAttachment[]>([]);
+  let draftTouched = false;
   let hasSigner = $derived(
     props.accounts.some((item) => item.signerType === 'nip07'),
   );
@@ -39,12 +40,19 @@
 
   onMount(async () => {
     const draft = await loadTweetDraft();
-    content = draft?.content ?? '';
-    attachments = [...(draft?.attachments ?? [])];
+    if (!draftTouched) {
+      content = draft?.content ?? '';
+      attachments = [...(draft?.attachments ?? [])];
+    }
     const settings = await loadTweetUploadSettings();
     uploadServer = settings.server;
     uploadNoTransform = settings.noTransform;
   });
+
+  function touchDraft(): void {
+    draftTouched = true;
+    void save();
+  }
 
   async function save(): Promise<void> {
     await saveTweetDraft(content, props.accounts[0]?.id ?? null, attachments);
@@ -131,7 +139,7 @@
     bind:value={content}
     id="tweet-content"
     name="tweet-content"
-    oninput={() => save()}
+    oninput={touchDraft}
     onpaste={handlePaste}
     onkeydown={(event) => {
       if (event.ctrlKey && event.key === 'Enter') void publish();
