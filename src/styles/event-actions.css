@@ -11,13 +11,97 @@
   gap: var(--space-2);
 }
 
+.icon-button {
+  align-items: center;
+  aspect-ratio: 1;
+  background: transparent;
+  border: 1px solid var(--color-border);
+  border-radius: 6px;
+  color: var(--color-text);
+  cursor: pointer;
+  display: inline-flex;
+  height: 2rem;
+  justify-content: center;
+  padding: 0;
+  width: 2rem;
+}
+
+.icon-button:hover,
+.icon-button.active {
+  border-color: var(--color-focus);
+  color: var(--color-focus);
+}
+
+.icon-button:disabled {
+  cursor: not-allowed;
+  opacity: 0.55;
+}
+
+.sr-only {
+  clip: rect(0, 0, 0, 0);
+  border: 0;
+  height: 1px;
+  margin: -1px;
+  overflow: hidden;
+  padding: 0;
+  position: absolute;
+  white-space: nowrap;
+  width: 1px;
+}
+
 .event-inline-action textarea {
   flex: 1 1 14rem;
   min-height: 4rem;
+}
+
+.event-inline-action--emoji {
+  align-items: stretch;
+}
+
+.event-inline-action--emoji emoji-picker {
+  flex: 1 1 18rem;
+  height: 16rem;
+  max-width: 100%;
+}
+
+.event-inline-action--zap input {
+  max-width: 11rem;
+}
+
+.compact-button {
+  min-height: 2rem;
 }
 
 .event-action-status {
   color: var(--color-text-muted);
   font-size: 0.85rem;
   margin: 0;
+}
+
+.zap-invoices {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-3);
+}
+
+.zap-invoice {
+  align-items: center;
+  border: 1px solid var(--color-border);
+  border-radius: 6px;
+  display: grid;
+  gap: var(--space-2);
+  grid-template-columns: 7rem minmax(0, 1fr);
+  padding: var(--space-2);
+}
+
+.zap-invoice img {
+  height: 7rem;
+  width: 7rem;
+}
+
+.zap-invoice__controls {
+  align-items: center;
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
 }
