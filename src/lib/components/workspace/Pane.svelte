@@ -34,7 +34,6 @@
       tabId: string,
       targetIndex: number,
     ) => void;
-    openTab: (paneId: string | null, kind: TabKind) => void;
     openNewTab: (paneId: string) => void;
     convertTab: (
       tabId: string,
@@ -43,15 +42,12 @@
     ) => void;
     split: (paneId: string, direction: 'horizontal' | 'vertical') => void;
     closePane: (paneId: string) => void;
-    addReadonly: () => void;
-    addNip07: () => void;
-    createLocal: () => void;
-    importNsec: () => void;
     addMinedSigning: (nsec: string) => Promise<void>;
     refreshData: () => void;
     toggleRelay: (setId: string, url: string, enabled: boolean) => void;
     removeRelay: (setId: string, url: string) => void;
     openProfile: (paneId: string, pubkey: string) => void;
+    openProfileEdit: (paneId: string) => void;
     openThread: (paneId: string, eventId: string) => void;
   };
 
@@ -166,15 +162,12 @@
             pageDataReady={props.pageDataReady}
             relaySnapshots={props.relaySnapshots}
             convertTab={props.convertTab}
-            addReadonly={props.addReadonly}
-            addNip07={props.addNip07}
-            createLocal={props.createLocal}
-            importNsec={props.importNsec}
             addMinedSigning={props.addMinedSigning}
             refreshData={props.refreshData}
             toggleRelay={props.toggleRelay}
             removeRelay={props.removeRelay}
             openProfile={props.openProfile}
+            openProfileEdit={props.openProfileEdit}
             openThread={props.openThread}
           />
         </div>

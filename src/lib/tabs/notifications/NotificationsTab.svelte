@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { untrack } from 'svelte';
   import NotificationRow from '$lib/components/notifications/NotificationRow.svelte';
   import { isNearEnd } from '$lib/events/feed-window';
   import type { ProfileSummary } from '$lib/identity/identity';
@@ -41,13 +42,19 @@
     new Map(state.items.map((item) => [item.event.id, item])),
   );
   let relays: string[] = [];
+  let runtimeKey = $derived(
+    `${props.accountPubkey ?? ''}|${timelineRelays(props.relaySets).join('\u0000')}`,
+  );
 
   $effect(() => {
-    relays = timelineRelays(props.relaySets);
+    const key = runtimeKey;
+    if (key === undefined) return;
+    const { accountPubkey, relaySets, tabId } = untrack(() => props);
+    relays = timelineRelays(relaySets);
     runtime = new NotificationRuntime(
-      props.accountPubkey,
+      accountPubkey,
       relays,
-      createTimelineSubId(props.tabId, 'notif'),
+      createTimelineSubId(tabId, 'notif'),
     );
     const unsubscribe = runtime.subscribe(
       (next) => (state = { ...next, profiles: currentProfiles }),

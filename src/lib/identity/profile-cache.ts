@@ -26,6 +26,7 @@ export function profileFromMetadataEvent(event: NostrEvent): ProfileSummary {
     name: stringValue(parsed.name),
     nip05: stringValue(parsed.nip05),
     avatarUrl: stringValue(parsed.picture),
+    bannerUrl: stringValue(parsed.banner),
     about: stringValue(parsed.about),
     website: stringValue(parsed.website),
     lud16: stringValue(parsed.lud16),

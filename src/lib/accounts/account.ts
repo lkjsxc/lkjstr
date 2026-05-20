@@ -15,6 +15,7 @@ export type Account = {
   readonly pubkey: string;
   readonly npub: string;
   readonly label: string;
+  readonly enabled: boolean;
   readonly signerType: SignerType;
   readonly capabilities: AccountCapabilities;
   readonly defaultRelayGroupId: string | null;
@@ -38,6 +39,7 @@ export function createAccount(
     pubkey,
     npub: encodeNpub(pubkey),
     label,
+    enabled: true,
     signerType,
     capabilities: capabilitiesFor(signerType),
     defaultRelayGroupId: null,
@@ -48,6 +50,13 @@ export function createAccount(
     createdAt: now,
     updatedAt: now,
     lastUsedAt: null,
+  };
+}
+
+export function normalizeAccount(account: Account): Account {
+  return {
+    ...account,
+    enabled: account.enabled ?? true,
   };
 }
 

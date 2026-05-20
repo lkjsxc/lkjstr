@@ -5,7 +5,9 @@ export type TabKind =
   | 'global'
   | 'notifications'
   | 'profile'
+  | 'profile-edit'
   | 'account-manager'
+  | 'npub-miner'
   | 'thread'
   | 'relay-monitor'
   | 'relay-settings'
@@ -55,7 +57,9 @@ export function iconFor(kind: TabKind): string {
     global: 'globe',
     notifications: 'bell',
     profile: 'user',
+    'profile-edit': 'id-card',
     'account-manager': 'users',
+    'npub-miner': 'pickaxe',
     thread: 'message',
     'relay-monitor': 'radio',
     'relay-settings': 'sliders',

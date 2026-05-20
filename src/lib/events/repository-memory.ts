@@ -39,6 +39,17 @@ export function memoryEventsByTagValue(
   return memoryEventsByIds([...new Set(ids)]);
 }
 
+export function memoryEventsByTagValues(
+  tagName: 'e' | 'p' | 'q' | 'a',
+  tagValues: readonly string[],
+): StoredEvent[] {
+  const wanted = new Set(tagValues);
+  const ids = [...memoryTags.values()]
+    .filter((row) => row.tagName === tagName && wanted.has(row.tagValue))
+    .map((row) => row.eventId);
+  return memoryEventsByIds([...new Set(ids)]).sort(compareEventsDesc);
+}
+
 export function latestMemoryEventByAuthorKind(
   pubkey: string,
   kind: number,

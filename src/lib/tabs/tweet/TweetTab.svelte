@@ -12,11 +12,16 @@
     saveTweetDraft,
     type TweetAttachment,
   } from '$lib/tweet/draft-store';
-  import { uploadTweetMedia } from '$lib/tweet/media-upload';
+  import type { UploadSettings } from '$lib/tweet/media-upload';
+  import {
+    acceptedTweetMedia,
+    uploadTweetFiles,
+  } from '$lib/tweet/media-upload-files';
   import { loadTweetUploadSettings } from '$lib/tweet/settings';
+  import { settingsChangedEvent } from '$lib/settings/settings-events';
 
   type Props = {
-    accounts: Account[];
+    activeAccount?: Account;
     relaySets: readonly RelaySet[];
   };
 
@@ -25,17 +30,19 @@
   let message = $state('');
   let publishing = $state(false);
   let uploading = $state(false);
-  let uploadServer = $state('');
-  let uploadNoTransform = $state(true);
-  let uploadProvider = $state<
-    'disabled' | 'nostr-build' | 'nostrcheck' | 'void-cat' | 'custom'
-  >('disabled');
-  let uploadCustomServer = $state('');
+  let uploadSettings = $state<UploadSettings>({
+    provider: 'disabled',
+    customServer: '',
+    server: '',
+    noTransform: true,
+  });
   let attachments = $state<TweetAttachment[]>([]);
   let draftTouched = false;
   let saveTimer: ReturnType<typeof setTimeout> | undefined;
   let hasSigner = $derived(
-    props.accounts.some((item) => item.capabilities.sign),
+    Boolean(
+      props.activeAccount?.enabled && props.activeAccount.capabilities.sign,
+    ),
   );
   let canPublish = $derived(
     !publishing &&
@@ -46,7 +53,12 @@
 
   onMount(() => {
     void loadInitialState();
-    return () => flushDraft();
+    const reloadSettings = () => void loadUploadSettings();
+    window.addEventListener(settingsChangedEvent, reloadSettings);
+    return () => {
+      window.removeEventListener(settingsChangedEvent, reloadSettings);
+      void flushDraft();
+    };
   });
 
   async function loadInitialState(): Promise<void> {
@@ -58,10 +70,15 @@
       content = draft?.content ?? '';
       attachments = [...(draft?.attachments ?? [])];
     }
-    uploadProvider = settings.provider;
-    uploadCustomServer = settings.customServer;
-    uploadServer = settings.server;
-    uploadNoTransform = settings.noTransform;
+    applyUploadSettings(settings);
+  }
+
+  async function loadUploadSettings(): Promise<void> {
+    applyUploadSettings(await loadTweetUploadSettings());
+  }
+
+  function applyUploadSettings(settings: UploadSettings): void {
+    uploadSettings = settings;
   }
 
   function touchDraft(): void {
@@ -70,7 +87,7 @@
   }
 
   async function save(): Promise<void> {
-    await saveTweetDraft(content, props.accounts[0]?.id ?? null, attachments);
+    await saveTweetDraft(content, props.activeAccount?.id ?? null, attachments);
   }
 
   function queueSave(): void {
@@ -107,29 +124,16 @@
   }
 
   async function uploadFiles(files: FileList | File[]): Promise<void> {
-    const pending = Array.from(files).filter(
-      (file) =>
-        file.type.startsWith('image/') || file.type.startsWith('video/'),
-    );
+    const pending = acceptedTweetMedia(files);
     if (pending.length === 0) return;
-    if (!uploadServer.trim()) {
+    if (!uploadSettings.server.trim()) {
       message = 'Configure a media upload server in Settings first.';
       return;
     }
     uploading = true;
     message = '';
     try {
-      const uploaded = [];
-      for (const file of pending) {
-        uploaded.push(
-          await uploadTweetMedia(file, {
-            provider: uploadProvider,
-            customServer: uploadCustomServer,
-            server: uploadServer,
-            noTransform: uploadNoTransform,
-          }),
-        );
-      }
+      const uploaded = await uploadTweetFiles(pending, uploadSettings);
       attachments = [...attachments, ...uploaded];
       await flushDraft();
       message = `Uploaded ${uploaded.length} media file(s).`;
@@ -165,8 +169,6 @@
   <textarea
     aria-label="Tweet content"
     bind:value={content}
-    id="tweet-content"
-    name="tweet-content"
     oninput={touchDraft}
     onblur={() => void flushDraft()}
     onpaste={handlePaste}
@@ -179,7 +181,7 @@
     {uploading}
     {publishing}
     {hasSigner}
-    {uploadServer}
+    uploadServer={uploadSettings.server}
     {canPublish}
     {uploadFiles}
     {publish}

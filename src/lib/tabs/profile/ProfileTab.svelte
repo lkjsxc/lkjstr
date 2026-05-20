@@ -1,15 +1,18 @@
 <script lang="ts">
-  import { tick } from 'svelte';
+  import { tick, untrack } from 'svelte';
   import type { Account } from '$lib/accounts/account';
   import EventRow from '$lib/components/events/EventRow.svelte';
   import { isNearEnd } from '$lib/events/feed-window';
   import IdentityChip from '$lib/components/identity/IdentityChip.svelte';
   import type { ProfileSummary } from '$lib/identity/identity';
+  import { getProfile } from '$lib/identity/profile-cache';
+  import { profileUpdatedEvent } from '$lib/profile/profile-metadata-draft';
   import { encodeNprofile, encodeNpub } from '$lib/protocol/nip19';
   import {
     ProfileRuntime,
     type ProfileState,
   } from '$lib/profile/profile-runtime';
+  import { emptyProfileState } from '$lib/profile/profile-state';
   import type { RelaySet } from '$lib/relays/relay-store';
   import {
     createTimelineSubId,
@@ -24,22 +27,11 @@
     relaySets: readonly RelaySet[];
     openProfile: (pubkey: string) => void;
     openThread: (eventId: string) => void;
+    openProfileEdit: () => void;
   };
 
   let props: Props = $props();
-  let state = $state<ProfileState>({
-    profile: null,
-    posts: [],
-    loading: true,
-    error: null,
-    relays: [],
-    updatedAt: null,
-    loadingOlder: false,
-    hasOlder: true,
-    oldestCreatedAt: undefined,
-    oldestCursor: undefined,
-    newerPruned: false,
-  });
+  let state = $state<ProfileState>(emptyProfileState());
   let profiles = $derived<Record<string, ProfileSummary>>(
     state.profile ? { [props.pubkey]: state.profile } : {},
   );
@@ -48,18 +40,33 @@
     state.relays.length > 0 ? safeNprofile(props.pubkey, state.relays) : '',
   );
   let runtime: ProfileRuntime | undefined;
+  let runtimeKey = $derived(
+    `${props.pubkey}|${timelineRelays(props.relaySets).join('\u0000')}`,
+  );
   let profileTab: HTMLElement | undefined;
   let autoFillPending = false;
 
   $effect(() => {
+    const key = runtimeKey;
+    if (key === undefined) return;
+    const { pubkey, relaySets, tabId } = untrack(() => props);
     runtime = new ProfileRuntime(
-      props.pubkey,
-      timelineRelays(props.relaySets),
-      createTimelineSubId(props.tabId, 'profile'),
+      pubkey,
+      timelineRelays(relaySets),
+      createTimelineSubId(tabId, 'profile'),
     );
     const unsubscribe = runtime.subscribe((next) => (state = next));
     runtime.start();
+    const refreshProfile = (event: Event) => {
+      if ((event as CustomEvent<string>).detail === props.pubkey)
+        state = {
+          ...state,
+          profile: getProfile(props.pubkey) ?? state.profile,
+        };
+    };
+    window.addEventListener(profileUpdatedEvent, refreshProfile);
     return () => {
+      window.removeEventListener(profileUpdatedEvent, refreshProfile);
       unsubscribe();
       runtime?.close();
     };
@@ -133,13 +140,16 @@
 <section class="profile-tab" bind:this={profileTab} onscroll={handleScroll}>
   <h2>Profile</h2>
   <header class="profile-card">
+    {#if state.profile?.bannerUrl}
+      <img class="profile-card__banner" src={state.profile.bannerUrl} alt="" />
+    {/if}
     <IdentityChip pubkey={props.pubkey} profile={state.profile ?? undefined} />
     <small>{npub}</small>
     <ProfileActions
       account={props.activeAccount}
       pubkey={props.pubkey}
-      profile={state.profile}
       relaySets={props.relaySets}
+      openProfileEdit={props.openProfileEdit}
     />
     {#if nprofile}<small>{nprofile}</small>{/if}
     {#if state.profile?.about}

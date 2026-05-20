@@ -6,7 +6,7 @@ import {
   safeRemoveItem,
   safeSetItem,
 } from '../storage/safe-storage';
-import type { Account } from './account';
+import { normalizeAccount, type Account } from './account';
 import { removeLocalSecret } from './local-secret-store';
 
 const activeKey = 'lkjstr.activeAccountId';
@@ -18,12 +18,12 @@ export async function listAccounts(): Promise<Account[]> {
     () => browserDb().accounts.orderBy('updatedAt').reverse().toArray(),
     memoryAccounts,
   );
-  memoryAccounts = [...accounts];
-  return accounts;
+  memoryAccounts = accounts.map(normalizeAccount);
+  return memoryAccounts;
 }
 
 export async function saveAccount(account: Account): Promise<void> {
-  const saved = { ...account, updatedAt: Date.now() };
+  const saved = normalizeAccount({ ...account, updatedAt: Date.now() });
   memoryAccounts = [
     saved,
     ...memoryAccounts.filter((item) => item.id !== account.id),
@@ -32,10 +32,23 @@ export async function saveAccount(account: Account): Promise<void> {
 }
 
 export async function removeAccount(id: string): Promise<void> {
+  const wasActive = getActiveAccountId() === id;
   memoryAccounts = memoryAccounts.filter((account) => account.id !== id);
   await bestEffortStorageWrite(() => browserDb().accounts.delete(id));
   await removeLocalSecret(id);
-  if (getActiveAccountId() === id) setActiveAccountId(null);
+  if (wasActive) await selectFallbackActiveAccount();
+}
+
+export async function setAccountEnabled(
+  id: string,
+  enabled: boolean,
+): Promise<void> {
+  const accounts = await listAccounts();
+  const account = accounts.find((item) => item.id === id);
+  if (!account) return;
+  await saveAccount({ ...account, enabled });
+  if (!enabled && getActiveAccountId() === id)
+    await selectFallbackActiveAccount();
 }
 
 export function getActiveAccountId(): string | null {
@@ -50,9 +63,15 @@ export function setActiveAccountId(id: string | null): void {
 
 export async function activeAccount(): Promise<Account | undefined> {
   const id = getActiveAccountId();
-  if (!id) return undefined;
-  return boundedStorageRead(
-    () => browserDb().accounts.get(id),
-    memoryAccounts.find((account) => account.id === id),
-  );
+  const accounts = await listAccounts();
+  const active = accounts.find((account) => account.id === id);
+  if (active?.enabled) return active;
+  if (id) return selectFallbackActiveAccount();
+  return undefined;
+}
+
+async function selectFallbackActiveAccount(): Promise<Account | undefined> {
+  const next = (await listAccounts()).find((account) => account.enabled);
+  setActiveAccountId(next?.id ?? null);
+  return next;
 }

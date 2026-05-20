@@ -10,13 +10,10 @@
   } from '$lib/relays/relay-store';
   import WorkspaceRoot from '$lib/components/workspace/WorkspaceRoot.svelte';
   import {
-    addMinedSigning,
-    promptAddNip07,
-    promptAddReadonly,
-    promptCreateLocal,
-    promptImportNsec,
-  } from '$lib/workspace/account-actions';
-  import { openProfileTab, openThreadTab } from '$lib/workspace/action-tabs';
+    openProfileEditTab,
+    openProfileTab,
+    openThreadTab,
+  } from '$lib/workspace/action-tabs';
   import { moveWorkspaceTab } from '$lib/workspace/move-tab';
   import { closeWorkspacePane } from '$lib/workspace/pane-commands';
   import { resizeSplit } from '$lib/workspace/resize';
@@ -26,13 +23,14 @@
     convertWorkspaceTab,
     focusTab,
     openNewTabChooser,
-    openTab,
     splitFocusedPane,
-    titleFor,
     type Workspace,
   } from '$lib/workspace/workspace';
   import { bootstrapWorkspace } from '$lib/workspace/workspace-bootstrap';
-  import { loadWorkspacePageData } from '$lib/workspace/workspace-page-data';
+  import {
+    addMinedSigningAccount,
+    loadWorkspacePageData,
+  } from '$lib/workspace/workspace-page-data';
   import {
     loadWorkspace,
     saveWorkspace,
@@ -106,12 +104,6 @@
     );
   }
 
-  // prettier-ignore
-  async function handleOpenTab(paneId: string | null, kind: TabKind): Promise<void> {
-    const config = kind === 'profile' ? { pubkey: accounts[0]?.pubkey ?? '' } : {};
-    await update(openTab(workspace, paneId, kind, titleFor(kind), config));
-  }
-
   async function handleOpenNewTab(paneId: string): Promise<void> {
     if (workspace) await update(openNewTabChooser(workspace, paneId));
   }
@@ -130,6 +122,15 @@
   // prettier-ignore
   async function handleOpenThread(paneId: string, eventId: string): Promise<void> {
     if (workspace) await update(openThreadTab(workspace, paneId, eventId));
+  }
+
+  async function handleOpenProfileEdit(paneId: string): Promise<void> {
+    if (workspace) await update(openProfileEditTab(workspace, paneId));
+  }
+
+  async function handleAddMinedSigning(nsec: string): Promise<void> {
+    await addMinedSigningAccount(nsec);
+    await refreshData();
   }
 
   // prettier-ignore
@@ -193,4 +194,4 @@
 </svelte:head>
 
 <!-- prettier-ignore -->
-<WorkspaceRoot {workspace} {accounts} {activeAccount} {notifications} {relaySets} {ready} {pageDataReady} {inactiveRetentionSeconds} focusTab={handleFocusTab} closeTab={handleCloseTab} moveTab={handleMoveTab} openTab={handleOpenTab} openNewTab={handleOpenNewTab} convertTab={handleConvertTab} split={handleSplit} closePane={handleClosePane} resize={handleResize} addReadonly={() => promptAddReadonly(refreshData)} addNip07={() => promptAddNip07(refreshData)} createLocal={() => promptCreateLocal(refreshData)} importNsec={() => promptImportNsec(refreshData)} addMinedSigning={(nsec) => addMinedSigning(nsec, refreshData)} {refreshData} toggleRelay={handleToggleRelay} removeRelay={handleRemoveRelay} openProfile={handleOpenProfile} openThread={handleOpenThread} />
+<WorkspaceRoot {workspace} {accounts} {activeAccount} {notifications} {relaySets} {ready} {pageDataReady} {inactiveRetentionSeconds} focusTab={handleFocusTab} closeTab={handleCloseTab} moveTab={handleMoveTab} openNewTab={handleOpenNewTab} convertTab={handleConvertTab} split={handleSplit} closePane={handleClosePane} resize={handleResize} addMinedSigning={handleAddMinedSigning} {refreshData} toggleRelay={handleToggleRelay} removeRelay={handleRemoveRelay} openProfile={handleOpenProfile} openProfileEdit={handleOpenProfileEdit} openThread={handleOpenThread} />

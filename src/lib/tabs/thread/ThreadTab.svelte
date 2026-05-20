@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { untrack } from 'svelte';
   import EventTreeList from '$lib/components/events/EventTreeList.svelte';
   import type { ProfileSummary } from '$lib/identity/identity';
   import type { RelaySet } from '$lib/relays/relay-store';
@@ -34,19 +35,26 @@
     oldestCursor: undefined,
     newerPruned: false,
     reactions: {},
+    reposts: {},
     profiles: {},
   });
   let runtime: ThreadRuntime | undefined;
+  let runtimeKey = $derived(
+    `${props.eventId ?? ''}|${timelineRelays(props.relaySets).join('\u0000')}`,
+  );
   let profileRequest = 0;
   let relays: string[] = [];
 
   $effect(() => {
-    if (!props.eventId) return;
-    relays = timelineRelays(props.relaySets);
+    const key = runtimeKey;
+    if (key === undefined) return;
+    const { eventId, relaySets, tabId } = untrack(() => props);
+    if (!eventId) return;
+    relays = timelineRelays(relaySets);
     runtime = new ThreadRuntime(
-      props.eventId,
+      eventId,
       relays,
-      createTimelineSubId(props.tabId, 'thread'),
+      createTimelineSubId(tabId, 'thread'),
     );
     const unsubscribe = runtime.subscribe(
       (next) => (state = { ...next, profiles: currentProfiles }),
@@ -65,6 +73,7 @@
         ...Object.values(state.reactions).flatMap((groups) =>
           groups.flatMap((group) => group.actors),
         ),
+        ...Object.values(state.reposts).flatMap((group) => group.actors),
       ]),
     ];
     const missing = authors.filter((author) => !state.profiles[author]);
@@ -90,6 +99,7 @@
       profiles={state.profiles}
       relaySets={props.relaySets}
       reactions={state.reactions}
+      reposts={state.reposts}
       loading={state.loading}
       loadingOlder={state.loadingOlder}
       hasOlder={state.hasOlder}

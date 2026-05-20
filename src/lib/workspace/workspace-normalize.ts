@@ -1,6 +1,7 @@
 import { findPane, parseLayout } from './layout-tree';
 import type { TabGroup } from './tab-group';
 import type { WorkspaceTab } from './tab';
+import { iconFor, type TabKind } from './tab';
 import {
   createEmptyWorkspace,
   ensureUsableWorkspace,
@@ -47,9 +48,37 @@ function normalizeGroups(value: unknown): Record<string, TabGroup> {
 }
 
 function normalizeTabs(value: unknown): Record<string, WorkspaceTab> {
-  return value && typeof value === 'object'
-    ? (value as Record<string, WorkspaceTab>)
-    : {};
+  if (!value || typeof value !== 'object') return {};
+  const out: Record<string, WorkspaceTab> = {};
+  for (const [id, tab] of Object.entries(value)) {
+    const item = tab as WorkspaceTab;
+    if (!validKind(item.kind)) continue;
+    out[id] = { ...item, icon: iconFor(item.kind) };
+  }
+  return out;
+}
+
+function validKind(kind: unknown): kind is TabKind {
+  return (
+    typeof kind === 'string' &&
+    [
+      'welcome',
+      'new-tab',
+      'timeline',
+      'global',
+      'notifications',
+      'profile',
+      'profile-edit',
+      'account-manager',
+      'npub-miner',
+      'thread',
+      'relay-monitor',
+      'relay-settings',
+      'tweet',
+      'settings',
+      'cache-status',
+    ].includes(kind)
+  );
 }
 
 function stringOrNull(value: unknown): string | null {

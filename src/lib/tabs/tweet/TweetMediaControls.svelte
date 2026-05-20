@@ -16,7 +16,10 @@
 </script>
 
 <div class="toolbar tweet-media-controls">
-  <label class="button-like" for="tweet-media">Attach media</label>
+  <label class="button-like icon-button" for="tweet-media" title="Attach media">
+    <span aria-hidden="true">+</span>
+    <span class="sr-only">Attach media</span>
+  </label>
   <input
     id="tweet-media"
     name="tweet-media"

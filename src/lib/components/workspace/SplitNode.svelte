@@ -30,7 +30,6 @@
       tabId: string,
       targetIndex: number,
     ) => void;
-    openTab: (paneId: string | null, kind: TabKind) => void;
     openNewTab: (paneId: string) => void;
     convertTab: (
       tabId: string,
@@ -40,15 +39,12 @@
     split: (paneId: string, direction: 'horizontal' | 'vertical') => void;
     closePane: (paneId: string) => void;
     resize: (splitId: string, handleIndex: number, deltaRatio: number) => void;
-    addReadonly: () => void;
-    addNip07: () => void;
-    createLocal: () => void;
-    importNsec: () => void;
     addMinedSigning: (nsec: string) => Promise<void>;
     refreshData: () => void;
     toggleRelay: (setId: string, url: string, enabled: boolean) => void;
     removeRelay: (setId: string, url: string) => void;
     openProfile: (paneId: string, pubkey: string) => void;
+    openProfileEdit: (paneId: string) => void;
     openThread: (paneId: string, eventId: string) => void;
   };
 
@@ -73,20 +69,16 @@
     focusTab={props.focusTab}
     closeTab={props.closeTab}
     moveTab={props.moveTab}
-    openTab={props.openTab}
     openNewTab={props.openNewTab}
     convertTab={props.convertTab}
     split={props.split}
     closePane={props.closePane}
-    addReadonly={props.addReadonly}
-    addNip07={props.addNip07}
-    createLocal={props.createLocal}
-    importNsec={props.importNsec}
     addMinedSigning={props.addMinedSigning}
     refreshData={props.refreshData}
     toggleRelay={props.toggleRelay}
     removeRelay={props.removeRelay}
     openProfile={props.openProfile}
+    openProfileEdit={props.openProfileEdit}
     openThread={props.openThread}
   />
 {:else}
@@ -111,21 +103,17 @@
           focusTab={props.focusTab}
           closeTab={props.closeTab}
           moveTab={props.moveTab}
-          openTab={props.openTab}
           openNewTab={props.openNewTab}
           convertTab={props.convertTab}
           split={props.split}
           closePane={props.closePane}
           resize={props.resize}
-          addReadonly={props.addReadonly}
-          addNip07={props.addNip07}
-          createLocal={props.createLocal}
-          importNsec={props.importNsec}
           addMinedSigning={props.addMinedSigning}
           refreshData={props.refreshData}
           toggleRelay={props.toggleRelay}
           removeRelay={props.removeRelay}
           openProfile={props.openProfile}
+          openProfileEdit={props.openProfileEdit}
           openThread={props.openThread}
         />
       </div>

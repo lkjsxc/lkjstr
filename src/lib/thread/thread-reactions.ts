@@ -1,6 +1,6 @@
-import { eventsByTagValue, upsertEvent } from '../events/repository';
+import { eventsByTagValues, upsertEvent } from '../events/repository';
 import type { FeedEvent } from '../events/types';
-import type { NostrEvent } from '../protocol';
+import { kinds, type NostrEvent } from '../protocol';
 
 export type ReactionGroup = {
   readonly content: string;
@@ -9,19 +9,40 @@ export type ReactionGroup = {
 };
 
 export type ReactionSummaryMap = Record<string, readonly ReactionGroup[]>;
+export type RepostGroup = {
+  readonly count: number;
+  readonly actors: readonly string[];
+};
+export type RepostSummaryMap = Record<string, RepostGroup>;
 
 export async function cachedThreadReactions(
   eventIds: readonly string[],
 ): Promise<ReactionSummaryMap> {
-  const entries = await Promise.all(
-    [...new Set(eventIds)].map(
-      async (id) => [id, await reactionsByEvent(id)] as const,
-    ),
+  const events = await eventsByTagValues('e', eventIds);
+  const entries = [...new Set(eventIds)].map(
+    (id) => [id, groupReactions(eventsFor(events, id, isReaction))] as const,
   );
   return Object.fromEntries(entries.filter(([, groups]) => groups.length > 0));
 }
 
+export async function cachedThreadReposts(
+  eventIds: readonly string[],
+): Promise<RepostSummaryMap> {
+  const events = await eventsByTagValues('e', eventIds);
+  const entries = [...new Set(eventIds)].map(
+    (id) => [id, groupReposts(eventsFor(events, id, isRepost))] as const,
+  );
+  return Object.fromEntries(entries.filter(([, group]) => group.count > 0));
+}
+
 export async function storeReaction(
+  event: NostrEvent,
+  relay: string,
+): Promise<void> {
+  await upsertEvent(event, [relay]);
+}
+
+export async function storeThreadActivity(
   event: NostrEvent,
   relay: string,
 ): Promise<void> {
@@ -38,9 +59,14 @@ export function mergeReactionEvent(
   return { ...map, [target]: groupReactions([...ungroup(current), event]) };
 }
 
-async function reactionsByEvent(eventId: string): Promise<ReactionGroup[]> {
-  const events = await eventsByTagValue('e', eventId);
-  return groupReactions(events.map((item) => item.event).filter(isReaction));
+export function mergeRepostEvent(
+  map: RepostSummaryMap,
+  event: NostrEvent,
+): RepostSummaryMap {
+  const target = targetEventId(event);
+  if (!target) return map;
+  const current = map[target]?.actors ?? [];
+  return { ...map, [target]: groupReposts([event, ...actorEvents(current)]) };
 }
 
 function groupReactions(events: readonly NostrEvent[]): ReactionGroup[] {
@@ -78,11 +104,44 @@ function targetEventId(event: NostrEvent): string | undefined {
   return event.tags.find((tag) => tag[0] === 'e')?.[1];
 }
 
+function eventsFor(
+  events: readonly FeedEvent[],
+  target: string,
+  predicate: (event: NostrEvent) => boolean,
+): NostrEvent[] {
+  return events
+    .map((item) => item.event)
+    .filter((event) => predicate(event) && targetEventId(event) === target);
+}
+
 function reactionContent(event: NostrEvent): string {
   const text = event.content.trim();
   return text || '+';
 }
 
 function isReaction(item: FeedEvent['event']): boolean {
-  return item.kind === 7;
+  return item.kind === kinds.reaction;
+}
+
+function isRepost(item: FeedEvent['event']): boolean {
+  return item.kind === kinds.repost || item.kind === kinds.genericRepost;
+}
+
+function groupReposts(events: readonly NostrEvent[]): RepostGroup {
+  return {
+    count: new Set(events.map((event) => event.pubkey)).size,
+    actors: [...new Set(events.map((event) => event.pubkey))].sort(),
+  };
+}
+
+function actorEvents(actors: readonly string[]): NostrEvent[] {
+  return actors.map((pubkey) => ({
+    id: pubkey,
+    pubkey,
+    created_at: 0,
+    kind: kinds.repost,
+    tags: [],
+    content: '',
+    sig: '',
+  }));
 }

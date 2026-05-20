@@ -1,5 +1,6 @@
 <script lang="ts">
   import EventContent from '$lib/components/events/EventContent.svelte';
+  import ActivityAvatar from '$lib/components/notifications/ActivityAvatar.svelte';
   import IdentityChip from '$lib/components/identity/IdentityChip.svelte';
   import type { FeedEvent } from '$lib/events/types';
   import type { ProfileSummary } from '$lib/identity/identity';
@@ -16,6 +17,9 @@
 
   let props: Props = $props();
   let label = $derived(notificationActionLabel(props.record.kind));
+  let compactAction = $derived(
+    props.record.kind === 'reaction' || props.record.kind === 'repost',
+  );
   let time = $derived(new Date(props.record.createdAt * 1000).toLocaleString());
 </script>
 
@@ -25,11 +29,23 @@
     class="identity-button"
     onclick={() => props.openProfile?.(props.record.actorPubkey)}
   >
-    <IdentityChip pubkey={props.record.actorPubkey} profile={props.profile} />
+    {#if compactAction}
+      <ActivityAvatar
+        kind={props.record.kind}
+        pubkey={props.record.actorPubkey}
+        profile={props.profile}
+      />
+    {:else}
+      <IdentityChip pubkey={props.record.actorPubkey} profile={props.profile} />
+    {/if}
   </button>
   <div class="notification-row__body">
     <div class="notification-row__meta">
-      <strong>{label}</strong>
+      {#if compactAction}
+        <strong class="sr-only">{label}</strong>
+      {:else}
+        <strong>{label}</strong>
+      {/if}
       <span>{props.record.readAt ? 'read' : 'unread'}</span>
       <time datetime={new Date(props.record.createdAt * 1000).toISOString()}>
         {time}

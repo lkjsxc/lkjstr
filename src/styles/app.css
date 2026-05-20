@@ -44,6 +44,11 @@ body {
   font-size: 0.8rem;
 }
 
+.app-header__source {
+  color: var(--color-text-muted);
+  margin-left: auto;
+}
+
 .split {
   display: flex;
   flex: 1 1 0;
@@ -93,7 +98,6 @@ body {
   overflow: hidden;
 }
 
-.pane-head,
 .toolbar,
 .settings-actions,
 .pane-actions {
@@ -105,8 +109,12 @@ body {
 }
 
 .pane-head {
+  align-items: center;
   border-bottom: 1px solid var(--color-border);
+  display: flex;
   flex-wrap: nowrap;
+  gap: var(--space-2);
+  padding: 0;
 }
 
 .pane-stack,

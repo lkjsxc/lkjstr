@@ -8,6 +8,11 @@ import type { RelaySet } from '../relays/relay-store';
 import { latestEventByAuthorKind } from '../events/repository';
 import { storeProfileEvent } from './profile-store';
 import { activeAccount } from '../accounts/account-store';
+import {
+  mergeProfileMetadataDraft,
+  profileUpdatedEvent,
+  type ProfileMetadataDraft,
+} from './profile-metadata-draft';
 
 export async function loadFollowState(
   accountPubkey: string,
@@ -41,24 +46,36 @@ export async function publishFollowMutation(
 }
 
 export async function publishProfileMetadata(
-  updates: Record<string, unknown>,
+  updates: ProfileMetadataDraft,
   relaySets: readonly RelaySet[],
 ): Promise<EventPublishStatus> {
   const account = await activeAccount();
   if (!account) return { ok: false, message: 'Add a signing account first.' };
-  const metadata = await cachedMetadata(account.pubkey);
+  const metadata = mergeProfileMetadataDraft(
+    await cachedMetadata(account.pubkey),
+    updates,
+  );
   const result = await signAndPublish(
     (pubkey) => ({
       pubkey,
       created_at: Math.floor(Date.now() / 1000),
       kind: kinds.metadata,
       tags: [],
-      content: JSON.stringify({ ...metadata, ...updates }),
+      content: JSON.stringify(metadata),
     }),
     relaySets,
   );
-  if (result.ok) await storeProfileEvent(result.event);
+  if (result.ok) {
+    await storeProfileEvent(result.event);
+    dispatchProfileUpdated(account.pubkey);
+  }
   return result;
+}
+
+export async function loadProfileMetadata(
+  pubkey: string,
+): Promise<Record<string, unknown>> {
+  return cachedMetadata(pubkey);
 }
 
 async function nextFollowTags(
@@ -94,4 +111,11 @@ async function cachedMetadata(
   } catch {
     return {};
   }
+}
+
+function dispatchProfileUpdated(pubkey: string): void {
+  if (typeof window === 'undefined') return;
+  window.dispatchEvent(
+    new CustomEvent(profileUpdatedEvent, { detail: pubkey }),
+  );
 }

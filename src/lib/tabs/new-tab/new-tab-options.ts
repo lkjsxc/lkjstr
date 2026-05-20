@@ -51,9 +51,21 @@ export const newTabOptions: readonly NewTabOption[] = [
     group: 'secondary',
   },
   {
+    kind: 'npub-miner',
+    label: 'Mine npub',
+    description: 'Vanity key search.',
+    group: 'secondary',
+  },
+  {
     kind: 'tweet',
     label: 'Tweet',
     description: 'Single note draft.',
+    group: 'secondary',
+  },
+  {
+    kind: 'profile-edit',
+    label: 'Profile Edit',
+    description: 'Active account metadata.',
     group: 'secondary',
   },
   {

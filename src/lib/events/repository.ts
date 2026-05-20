@@ -6,11 +6,7 @@ import {
 } from '../storage/safe-storage';
 import { compareEventsDesc, matchesFilter, type NostrEvent } from '../protocol';
 import { cursorPoint } from './feed-window';
-import {
-  indexedEventsByTagValue,
-  indexedLatestByAuthorKind,
-  indexedPage,
-} from './repository-indexed';
+import { indexedLatestByAuthorKind, indexedPage } from './repository-indexed';
 import {
   allMemoryEvents,
   clearMemoryRepository,
@@ -18,7 +14,6 @@ import {
   memoryCursors,
   memoryEvent,
   memoryEventsByIds,
-  memoryEventsByTagValue,
   memoryPage,
   putMemory,
 } from './repository-memory';
@@ -102,17 +97,7 @@ export async function lookupEvents(
     .map((event) => toFeedEvent(event));
 }
 
-export async function eventsByTagValue(
-  tagName: 'e' | 'p' | 'q' | 'a',
-  tagValue: string,
-  limit = 500,
-): Promise<FeedEvent[]> {
-  const events = await boundedStorageRead(
-    () => indexedEventsByTagValue(tagName, tagValue, limit),
-    memoryEventsByTagValue(tagName, tagValue).slice(0, limit),
-  );
-  return events.map(toFeedEvent);
-}
+export { eventsByTagValue, eventsByTagValues } from './repository-tags';
 
 export async function latestEventByAuthorKind(
   pubkey: string,

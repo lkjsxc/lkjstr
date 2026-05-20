@@ -7,4 +7,5 @@ runtime code.
 
 ## Contents
 
-- Notification record types, store helpers, runtime sync, and labels.
+- Notification record types, store helpers, runtime sync, labels, and activity
+  badges.

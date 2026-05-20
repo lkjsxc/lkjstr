@@ -11,7 +11,9 @@ describe('new tab options', () => {
       'lkjstr Log',
       'Notifications',
       'Accounts',
+      'Mine npub',
       'Tweet',
+      'Profile Edit',
       'Settings',
       'Cache',
     ]);

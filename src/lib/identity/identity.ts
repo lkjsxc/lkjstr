@@ -7,6 +7,7 @@ export type ProfileSummary = {
   readonly name: string | null;
   readonly nip05: string | null;
   readonly avatarUrl: string | null;
+  readonly bannerUrl?: string | null;
   readonly about?: string | null;
   readonly website?: string | null;
   readonly lud16?: string | null;

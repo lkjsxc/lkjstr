@@ -17,6 +17,15 @@ export function openThreadTab(
   return openMatchingTab(workspace, paneId, 'thread', 'eventId', eventId);
 }
 
+export function openProfileEditTab(
+  workspace: Workspace,
+  paneId: string,
+): Workspace {
+  const existing = matchingTabId(workspace, paneId, 'profile-edit');
+  if (existing) return focusTab(workspace, paneId, existing);
+  return openTab(workspace, paneId, 'profile-edit', 'Profile Edit');
+}
+
 function openMatchingTab(
   workspace: Workspace,
   paneId: string,
@@ -32,16 +41,16 @@ function openMatchingTab(
 function matchingTabId(
   workspace: Workspace,
   paneId: string,
-  kind: 'profile' | 'thread',
-  key: 'pubkey' | 'eventId',
-  value: string,
+  kind: 'profile' | 'profile-edit' | 'thread',
+  key?: 'pubkey' | 'eventId',
+  value?: string,
 ): string | undefined {
   if (!workspace.layout) return undefined;
   const pane = findPane(workspace.layout, paneId);
   const group = pane ? workspace.tabGroups[pane.tabGroupId] : undefined;
   return group?.tabIds.find((id) => {
     const tab = workspace.tabs[id];
-    return tab?.kind === kind && tab.config[key] === value;
+    return tab?.kind === kind && (!key || tab.config[key] === value);
   });
 }
 

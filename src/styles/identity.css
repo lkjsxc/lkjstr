@@ -1,0 +1,30 @@
+.profile-card__banner {
+  aspect-ratio: 4 / 1;
+  border-radius: var(--radius-panel);
+  max-height: 10rem;
+  object-fit: cover;
+  width: 100%;
+}
+
+.avatar.sm {
+  height: 1.35rem;
+  width: 1.35rem;
+}
+
+.activity-avatar {
+  display: inline-grid;
+  position: relative;
+}
+
+.activity-avatar__badge {
+  background: var(--color-focus);
+  border: 1px solid var(--color-bg);
+  border-radius: 999px;
+  bottom: -0.2rem;
+  color: var(--color-bg);
+  font-size: 0.7rem;
+  line-height: 1;
+  padding: 0.15rem;
+  position: absolute;
+  right: -0.2rem;
+}

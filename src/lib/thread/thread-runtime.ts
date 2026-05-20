@@ -24,9 +24,17 @@ import {
   loadOlderThreadPage,
 } from './thread-runtime-pages';
 import {
+  isThreadReactionKind,
+  isThreadRepostKind,
+  threadLiveFilters,
+} from './thread-subscription-filters';
+import {
   cachedThreadReactions,
+  cachedThreadReposts,
   mergeReactionEvent,
+  mergeRepostEvent,
   storeReaction,
+  storeThreadActivity,
 } from './thread-reactions';
 import {
   emptyThreadState,
@@ -45,7 +53,6 @@ export class ThreadRuntime {
   #rootId: string;
   #closed = false;
   #generation = 0;
-
   constructor(
     readonly eventId: string,
     readonly relays: readonly string[],
@@ -58,7 +65,6 @@ export class ThreadRuntime {
       subscriptions ?? new RelaySubscriptionManager(relayPool);
     this.#rootId = eventId;
   }
-
   subscribe(listener: (state: ThreadState) => void): () => void {
     this.#listeners.add(listener);
     listener(this.#state);
@@ -90,22 +96,12 @@ export class ThreadRuntime {
         {
           key: this.subId,
           relays: this.relays,
-          filters: [
-            { ids: [this.eventId] },
-            { ids: [this.#rootId] },
-            {
-              kinds: [1],
-              '#e': [this.#rootId, this.eventId],
-              since: this.#startedAt,
-              limit: this.#pageSize,
-            },
-            {
-              kinds: [7],
-              '#e': [this.#rootId, this.eventId],
-              since: this.#startedAt,
-              limit: this.#pageSize,
-            },
-          ],
+          filters: threadLiveFilters(
+            this.eventId,
+            this.#rootId,
+            this.#startedAt,
+            this.#pageSize,
+          ),
         },
         (event) => this.#receive(event),
       ),
@@ -143,7 +139,17 @@ export class ThreadRuntime {
   async #receive(poolEvent: PoolEvent): Promise<void> {
     if (this.#closed) return;
     if (poolEvent.subId !== this.subId) return;
-    if (poolEvent.event.kind === 7) return this.#receiveReaction(poolEvent);
+    if (isThreadReactionKind(poolEvent.event.kind))
+      return this.#receiveReaction(poolEvent);
+    if (isThreadRepostKind(poolEvent.event.kind)) {
+      await storeThreadActivity(poolEvent.event, poolEvent.relay);
+      if (!this.#closed)
+        this.#emit({
+          ...this.#state,
+          reposts: mergeRepostEvent(this.#state.reposts, poolEvent.event),
+        });
+      return;
+    }
     await storeThreadEvent(poolEvent.event, [poolEvent.relay]);
     if (this.#closed) return;
     this.#live = mergeThreadItems(this.#live, [
@@ -158,9 +164,10 @@ export class ThreadRuntime {
     try {
       const page = await loadInitialThreadPage({ eventId: this.eventId, rootId: this.#rootId, relays: this.relays, subId: this.subId, pageSize: this.#pageSize, subscriptions: this.#subscriptions });
       if (!this.#active(generation)) return; this.#rootId = page.rootId; this.#cached = mergeThreadItems(this.items(), page.items);
-      const reactions = await cachedThreadReactions(this.items().map((item) => item.event.id));
+      const ids = this.items().map((item) => item.event.id);
+      const [reactions, reposts] = await Promise.all([cachedThreadReactions(ids), cachedThreadReposts(ids)]);
       if (!this.#active(generation)) return;
-      this.#emit({ ...this.#state, items: this.items(), loading: false, reactions });
+      this.#emit({ ...this.#state, items: this.items(), loading: false, reactions, reposts });
     } catch (error) { this.#emit({ ...this.#state, loading: false, error: boundedErrorText(error) }); }
   }
 
@@ -179,12 +186,8 @@ export class ThreadRuntime {
     this.#emit({ ...this.#state, eoseRelays: state.eoseRelays, loading: state.activeRelays > 0 && state.terminalRelays >= state.activeRelays ? false : this.#state.loading });
   }
 
-  items(): ThreadItem[] {
-    return mergeThreadItems(this.#cached, this.#live).slice(
-      0,
-      threadWindowSize,
-    );
-  }
+  // prettier-ignore
+  items(): ThreadItem[] { return mergeThreadItems(this.#cached, this.#live).slice(0, threadWindowSize); }
 
   #emit(state: ThreadState): void {
     if (this.#closed) return;
@@ -192,7 +195,6 @@ export class ThreadRuntime {
     this.#listeners.forEach((listener) => listener(this.#state));
   }
 
-  #active(generation: number): boolean {
-    return !this.#closed && generation === this.#generation;
-  }
+  // prettier-ignore
+  #active(generation: number): boolean { return !this.#closed && generation === this.#generation; }
 }

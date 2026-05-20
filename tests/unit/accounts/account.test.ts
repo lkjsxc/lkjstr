@@ -1,6 +1,8 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { encodeNpub } from '../../../src/lib/protocol';
 import {
+  createAccount,
+  normalizeAccount,
   parseReadonlyAccount,
   shortKey,
 } from '../../../src/lib/accounts/account';
@@ -40,6 +42,15 @@ describe('account helpers', () => {
   it('rejects unsupported readonly account input', () => {
     expect(parseReadonlyAccount('not-a-key')).toBeUndefined();
     expect(parseReadonlyAccount('f'.repeat(63))).toBeUndefined();
+  });
+
+  it('normalizes legacy accounts to enabled', () => {
+    expect(
+      normalizeAccount({
+        ...createAccount(pubkey, 'readonly'),
+        enabled: undefined as unknown as boolean,
+      }).enabled,
+    ).toBe(true);
   });
 
   it('connects to NIP-07 providers when present', async () => {

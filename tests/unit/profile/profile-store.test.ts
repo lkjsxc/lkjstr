@@ -5,6 +5,11 @@ import {
   cachedProfileNotes,
   storeProfileEvent,
 } from '../../../src/lib/profile/profile-store';
+import {
+  draftFromMetadata,
+  mergeProfileMetadataDraft,
+  validateProfileMetadataDraft,
+} from '../../../src/lib/profile/profile-metadata-draft';
 
 describe('profile store', () => {
   it('preserves relay provenance for cached profile notes', async () => {
@@ -15,6 +20,21 @@ describe('profile store', () => {
     const [cached] = await cachedProfileNotes(pubkey);
     expect(cached?.event.id).toBe(event.id);
     expect(cached?.relays).toEqual(['wss://relay.example/']);
+  });
+
+  it('merges profile drafts while preserving unknown keys and lud06', () => {
+    const base = { name: 'old', lud06: 'lnurl', extra: true };
+    const draft = { ...draftFromMetadata(base), name: '', about: 'new' };
+    expect(mergeProfileMetadataDraft(base, draft)).toEqual({
+      about: 'new',
+      lud06: 'lnurl',
+      extra: true,
+    });
+  });
+
+  it('validates HTTPS profile URLs', () => {
+    const draft = { ...draftFromMetadata({}), picture: 'http://example.test' };
+    expect(validateProfileMetadataDraft(draft)).toMatch(/HTTPS/);
   });
 });
 

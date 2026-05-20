@@ -4,6 +4,7 @@
     createNpubMiner,
     estimatedAttempts,
     parseNpubPrefix,
+    type NpubMinerEvent,
     type NpubMineProgress,
     type NpubMineResult,
   } from '$lib/accounts/npub-miner';
@@ -30,26 +31,25 @@
   onDestroy(() => miner?.cancel());
 
   function startMining(): void {
-    if (!parsed.ok) {
-      status = parsed.message;
-      return;
-    }
+    if (!parsed.ok) return void (status = parsed.message);
     miner?.cancel();
     running = true;
     saved = false;
     result = undefined;
     progress = { attempts: 0, rate: 0, elapsedMs: 0 };
     status = `Mining npub1${parsed.prefix}`;
-    miner = createNpubMiner(parsed.prefix, (event) => {
-      if (event.type === 'progress') progress = event.progress;
-      if (event.type === 'error') stopWith(event.message);
-      if (event.type === 'result') {
-        running = false;
-        result = event.result;
-        progress = event.result;
-        status = 'Match found.';
-      }
-    });
+    miner = createNpubMiner(parsed.prefix, receiveMinerEvent);
+  }
+
+  function receiveMinerEvent(event: NpubMinerEvent): void {
+    if (event.type === 'progress') progress = event.progress;
+    if (event.type === 'error') stopWith(event.message);
+    if (event.type === 'result') {
+      running = false;
+      result = event.result;
+      progress = event.result;
+      status = 'Match found.';
+    }
   }
 
   function cancelMining(): void {
@@ -73,23 +73,21 @@
 
   async function addSigning(): Promise<void> {
     if (!result) return;
-    await props.addMinedSigning(result.nsec);
-    saved = true;
-    status = 'Mined signing account added.';
+    try {
+      await props.addMinedSigning(result.nsec);
+      saved = true;
+      status = 'Mined signing account added.';
+    } catch (error) {
+      status = error instanceof Error ? error.message : 'Account add failed.';
+    }
   }
 </script>
 
-<section class="miner-panel" aria-label="Npub mining">
-  <h3>Mine npub</h3>
+<section class="miner-panel data-tab" aria-label="Mine npub">
+  <h2>Mine npub</h2>
   <label>
     Prefix after npub1
-    <input
-      bind:value={prefix}
-      disabled={running}
-      id="npub-miner-prefix"
-      name="npub-miner-prefix"
-      placeholder="lkj"
-    />
+    <input bind:value={prefix} disabled={running} placeholder="lkj" />
   </label>
   {#if parsed.ok}
     <small>Expected attempts: {estimate.toLocaleString()}</small>
@@ -97,22 +95,18 @@
     <small>{parsed.message}</small>
   {/if}
   <div class="toolbar">
-    <button
-      type="button"
-      disabled={running || !parsed.ok}
-      onclick={startMining}
+    <button type="button" disabled={running || !parsed.ok} onclick={startMining}
+      >Start</button
     >
-      Start
-    </button>
-    <button type="button" disabled={!running} onclick={cancelMining}>
-      Cancel
-    </button>
+    <button type="button" disabled={!running} onclick={cancelMining}
+      >Cancel</button
+    >
   </div>
   <p>
-    {progress.attempts.toLocaleString()} attempts,
-    {progress.rate.toLocaleString()} per second
+    {progress.attempts.toLocaleString()} attempts, {progress.rate.toLocaleString()}
+    per second
   </p>
-  {#if status}<p>{status}</p>{/if}
+  {#if status}<p role="status">{status}</p>{/if}
   {#if result}
     {@const mined = result}
     <article class="row">
@@ -120,9 +114,9 @@
       <code>{mined.nsec}</code>
       <button type="button" onclick={() => copy(mined.npub)}>Copy npub</button>
       <button type="button" onclick={() => copy(mined.nsec)}>Copy nsec</button>
-      <button type="button" disabled={saved} onclick={addSigning}>
-        Add signing account
-      </button>
+      <button type="button" disabled={saved} onclick={addSigning}
+        >Add signing account</button
+      >
     </article>
   {/if}
 </section>

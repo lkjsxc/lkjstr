@@ -4,7 +4,11 @@ import {
   parseReadonlyAccount,
   type Account,
 } from './account';
-import { saveAccount, setActiveAccountId } from './account-store';
+import {
+  removeAccount,
+  saveAccount,
+  setActiveAccountId,
+} from './account-store';
 import {
   createLocalAccountRecord,
   parseNsec,
@@ -18,6 +22,11 @@ export async function addReadonlyAccount(input: string): Promise<Account> {
   await saveAccount(account);
   setActiveAccountId(account.id);
   return account;
+}
+
+export async function addAccountFromInput(input: string): Promise<Account> {
+  const secret = parseNsec(input);
+  return secret ? importLocalNsec(input) : addReadonlyAccount(input);
 }
 
 export async function addReadonlyPubkey(pubkey: string): Promise<Account> {
@@ -70,4 +79,13 @@ export async function touchAccountUse(account: Account): Promise<Account> {
 
 export function readOnlyAccountFromPubkey(pubkey: string): Account {
   return createAccount(pubkey, 'readonly');
+}
+
+export async function setActiveAccount(account: Account): Promise<void> {
+  if (!account.enabled) throw new Error('Enable the account before using it.');
+  setActiveAccountId(account.id);
+}
+
+export async function removeStoredAccount(account: Account): Promise<void> {
+  await removeAccount(account.id);
 }

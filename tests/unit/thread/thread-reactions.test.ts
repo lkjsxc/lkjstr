@@ -1,8 +1,11 @@
 import { beforeEach, describe, expect, it } from 'vitest';
 import {
   cachedThreadReactions,
+  cachedThreadReposts,
   mergeReactionEvent,
+  mergeRepostEvent,
   storeReaction,
+  storeThreadActivity,
 } from '../../../src/lib/thread/thread-reactions';
 import { clearEventRepositoryForTests } from '../../../src/lib/events/repository';
 import type { NostrEvent } from '../../../src/lib/protocol';
@@ -31,6 +34,20 @@ describe('thread reactions', () => {
       { content: '+', count: 1, actors: ['a'.repeat(64)] },
     ]);
   });
+
+  it('loads and merges cached repost activity separately', async () => {
+    const target = 'f'.repeat(64);
+    await storeThreadActivity(repost('4', target, 'd'), 'wss://relay');
+    await storeThreadActivity(repost('5', target, 'e'), 'wss://relay');
+
+    expect(await cachedThreadReposts([target])).toEqual({
+      [target]: { count: 2, actors: ['d'.repeat(64), 'e'.repeat(64)] },
+    });
+    expect(mergeRepostEvent({}, repost('6', target, 'a'))[target]).toEqual({
+      count: 1,
+      actors: ['a'.repeat(64)],
+    });
+  });
 });
 
 function reaction(
@@ -46,6 +63,22 @@ function reaction(
     kind: 7,
     tags: [['e', target]],
     content,
+    sig: idSeed.repeat(128),
+  };
+}
+
+function repost(
+  idSeed: string,
+  target: string,
+  pubkeySeed: string,
+): NostrEvent {
+  return {
+    id: idSeed.repeat(64),
+    pubkey: pubkeySeed.repeat(64),
+    created_at: Number(idSeed),
+    kind: 6,
+    tags: [['e', target]],
+    content: '',
     sig: idSeed.repeat(128),
   };
 }

@@ -6,7 +6,9 @@
   import AccountManagerTab from '$lib/tabs/accounts/AccountManagerTab.svelte';
   import CacheStatusTab from '$lib/tabs/cache/CacheStatusTab.svelte';
   import NewTab from '$lib/tabs/new-tab/NewTab.svelte';
+  import NpubMinerTab from '$lib/tabs/npub-miner/NpubMinerTab.svelte';
   import NotificationsTab from '$lib/tabs/notifications/NotificationsTab.svelte';
+  import ProfileEditTab from '$lib/tabs/profile-edit/ProfileEditTab.svelte';
   import ProfileTab from '$lib/tabs/profile/ProfileTab.svelte';
   import LkjstrLogTab from '$lib/tabs/log/LkjstrLogTab.svelte';
   import RelaySettingsTab from '$lib/tabs/relays/RelaySettingsTab.svelte';
@@ -31,15 +33,12 @@
       kind: TabKind,
       config?: Record<string, unknown>,
     ) => void;
-    addReadonly: () => void;
-    addNip07: () => void;
-    createLocal: () => void;
-    importNsec: () => void;
     addMinedSigning: (nsec: string) => Promise<void>;
     refreshData: () => void;
     toggleRelay: (setId: string, url: string, enabled: boolean) => void;
     removeRelay: (setId: string, url: string) => void;
     openProfile: (paneId: string, pubkey: string) => void;
+    openProfileEdit: (paneId: string) => void;
     openThread: (paneId: string, eventId: string) => void;
   };
 
@@ -72,12 +71,11 @@
 {:else if props.tab.kind === 'account-manager'}
   <AccountManagerTab
     accounts={props.accounts}
-    addReadonly={props.addReadonly}
-    addNip07={props.addNip07}
-    createLocal={props.createLocal}
-    importNsec={props.importNsec}
-    addMinedSigning={props.addMinedSigning}
+    activeAccount={props.activeAccount}
+    refreshData={props.refreshData}
   />
+{:else if props.tab.kind === 'npub-miner'}
+  <NpubMinerTab addMinedSigning={props.addMinedSigning} />
 {:else if props.tab.kind === 'notifications'}
   <NotificationsTab
     tabId={props.tab.id}
@@ -86,6 +84,11 @@
     openProfile={(pubkey) => props.openProfile(props.paneId, pubkey)}
     openThread={(eventId) => props.openThread(props.paneId, eventId)}
   />
+{:else if props.tab.kind === 'profile-edit'}
+  <ProfileEditTab
+    activeAccount={props.activeAccount}
+    relaySets={props.relaySets}
+  />
 {:else if props.tab.kind === 'profile'}
   <ProfileTab
     tabId={props.tab.id}
@@ -93,6 +96,7 @@
     activeAccount={props.activeAccount}
     relaySets={props.relaySets}
     openProfile={(pubkey) => props.openProfile(props.paneId, pubkey)}
+    openProfileEdit={() => props.openProfileEdit(props.paneId)}
     openThread={(eventId) => props.openThread(props.paneId, eventId)}
   />
 {:else if props.tab.kind === 'relay-monitor'}
@@ -108,7 +112,7 @@
 {:else if props.tab.kind === 'cache-status'}
   <CacheStatusTab />
 {:else if props.tab.kind === 'tweet'}
-  <TweetTab accounts={props.accounts} relaySets={props.relaySets} />
+  <TweetTab activeAccount={props.activeAccount} relaySets={props.relaySets} />
 {:else if props.tab.kind === 'thread'}
   <ThreadTab
     tabId={props.tab.id}

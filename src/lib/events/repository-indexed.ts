@@ -63,6 +63,23 @@ export async function indexedEventsByTagValue(
     .sort(compareEventsDesc);
 }
 
+export async function indexedEventsByTagValues(
+  tagName: 'e' | 'p' | 'q' | 'a',
+  tagValues: readonly string[],
+  limit = 500,
+): Promise<StoredEvent[]> {
+  const pages = await Promise.all(
+    [...new Set(tagValues)].map((tagValue) =>
+      indexedEventsByTagValue(tagName, tagValue, limit),
+    ),
+  );
+  return pages
+    .flat()
+    .map(normalizeStoredEvent)
+    .sort(compareEventsDesc)
+    .slice(0, limit);
+}
+
 async function indexedThreadPage(
   query: FeedQuery,
   limit: number,

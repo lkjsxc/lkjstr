@@ -10,6 +10,9 @@
   } from '$lib/settings/settings-store';
 
   let settings = $state<SettingRecord[]>([]);
+  let importOpen = $state(false);
+  let importDraft = $state('');
+  let importStatus = $state('');
   let changedCount = $derived(
     settings.filter(
       (setting) =>
@@ -33,10 +36,16 @@
   }
 
   async function importJson(): Promise<void> {
-    const raw = window.prompt('Settings JSON');
-    if (!raw) return;
-    settings = await importSettingsJson(raw);
-    applyAppearance(settings);
+    try {
+      settings = await importSettingsJson(importDraft);
+      applyAppearance(settings);
+      importStatus = 'Settings imported.';
+      importDraft = '';
+      importOpen = false;
+    } catch (error) {
+      importStatus =
+        error instanceof Error ? error.message : 'Settings import failed.';
+    }
   }
 
   function applyAppearance(records: readonly SettingRecord[]): void {
@@ -62,9 +71,28 @@
       >
         Copy JSON export
       </button>
-      <button type="button" onclick={importJson}>Import JSON</button>
+      <button type="button" onclick={() => (importOpen = !importOpen)}>
+        Import JSON
+      </button>
     </div>
   </header>
+  {#if importOpen}
+    <form
+      class="settings-import"
+      onsubmit={(event) => {
+        event.preventDefault();
+        void importJson();
+      }}
+    >
+      <textarea
+        aria-label="Settings JSON import"
+        bind:value={importDraft}
+        rows="5"
+      ></textarea>
+      <button type="submit" disabled={!importDraft.trim()}>Import</button>
+    </form>
+  {/if}
+  {#if importStatus}<p role="status">{importStatus}</p>{/if}
   <div class="settings-layout">
     {#each settings as setting (setting.key)}
       <SettingsRow {setting} {save} {reset} />

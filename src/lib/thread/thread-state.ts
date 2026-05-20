@@ -1,6 +1,6 @@
 import { cursorPoint, oldestCreatedAt } from '../events/feed-window';
 import type { FeedCursorPoint } from '../events/types';
-import type { ReactionSummaryMap } from './thread-reactions';
+import type { ReactionSummaryMap, RepostSummaryMap } from './thread-reactions';
 import type { ThreadItem } from './thread-store';
 
 export type ThreadState = {
@@ -14,6 +14,7 @@ export type ThreadState = {
   readonly oldestCursor?: FeedCursorPoint;
   readonly newerPruned: boolean;
   readonly reactions: ReactionSummaryMap;
+  readonly reposts: RepostSummaryMap;
 };
 
 export function emptyThreadState(): ThreadState {
@@ -28,6 +29,7 @@ export function emptyThreadState(): ThreadState {
     oldestCursor: undefined,
     newerPruned: false,
     reactions: {},
+    reposts: {},
   };
 }
 
