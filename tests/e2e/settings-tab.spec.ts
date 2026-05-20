@@ -9,4 +9,6 @@ test('opens flat settings without filter UI', async ({ page }) => {
   await expect(page.getByText('appearance.cornerRadius')).toBeVisible();
   await expect(page.getByText('tabs.inactiveRetentionSeconds')).toBeVisible();
   await expect(page.getByText('timeline.initialLimit')).toBeVisible();
+  await page.getByRole('button', { name: 'Import JSON' }).click();
+  await expect(page.getByLabel('Settings JSON import')).toBeVisible();
 });

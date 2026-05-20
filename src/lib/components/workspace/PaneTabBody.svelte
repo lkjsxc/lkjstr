@@ -108,7 +108,7 @@
     removeRelay={props.removeRelay}
   />
 {:else if props.tab.kind === 'settings'}
-  <SettingsTab />
+  <SettingsTab tabId={props.tab.id} />
 {:else if props.tab.kind === 'cache-status'}
   <CacheStatusTab />
 {:else if props.tab.kind === 'tweet'}

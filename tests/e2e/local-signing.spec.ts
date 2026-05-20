@@ -68,8 +68,8 @@ async function createLocalAccount(page: Page) {
 
 async function importNsec(page: Page, nsec: string) {
   await openAccounts(page);
-  page.once('dialog', (dialog) => dialog.accept(nsec));
-  await page.getByRole('button', { name: 'Import nsec' }).click();
+  await page.getByLabel('npub, hex pubkey, or nsec').fill(nsec);
+  await page.getByRole('button', { name: 'Add', exact: true }).click();
   await expect(page.getByText('local', { exact: true })).toBeVisible();
 }
 

@@ -31,6 +31,12 @@ export class TabRetention<T extends RetainedTab> {
     this.changed();
   }
 
+  keep(tabId: string): void {
+    const timer = this.#timers.get(tabId);
+    if (timer) clearTimeout(timer);
+    this.#timers.delete(tabId);
+  }
+
   releaseAll(): void {
     for (const tabId of [...this.#items.keys()]) this.release(tabId);
   }

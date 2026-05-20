@@ -65,11 +65,14 @@
         retention.records().map((tab) => [tab.id, tab]),
       )),
   );
+  let activeBody = $derived(
+    active ? (retained[active.id] ?? active) : undefined,
+  );
   let renderedTabs = $derived([
-    ...(active ? [active] : []),
+    ...(activeBody ? [activeBody] : []),
     ...Object.values(retained).filter(
       (tab) =>
-        tab.id !== active?.id &&
+        tab.id !== activeBody?.id &&
         props.group?.tabIds.includes(tab.id) &&
         props.tabs[tab.id],
     ),
@@ -79,7 +82,7 @@
     const activeId = active?.id;
     if (previousActiveId && previousActiveId !== activeId)
       bodyScroll.remember(previousActiveId);
-    if (activeId) releaseRetained(activeId);
+    if (activeId) retention.keep(activeId);
     if (activeId) bodyScroll.restore(activeId);
     if (
       previousActiveId &&
@@ -105,10 +108,6 @@
   $effect(() => {
     retention.releaseMissing(new Set(props.group?.tabIds ?? []));
   });
-
-  function releaseRetained(tabId: string): void {
-    retention.release(tabId);
-  }
 
   function trackBody(node: HTMLElement, tabId: string) {
     return bodyScroll.track(tabId, node);

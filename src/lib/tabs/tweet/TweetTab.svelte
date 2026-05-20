@@ -169,6 +169,8 @@
   <textarea
     aria-label="Tweet content"
     bind:value={content}
+    id="tweet-content"
+    name="tweet-content"
     oninput={touchDraft}
     onblur={() => void flushDraft()}
     onpaste={handlePaste}

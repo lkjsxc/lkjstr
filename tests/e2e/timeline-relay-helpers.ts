@@ -3,8 +3,8 @@ import { expect, type Page } from '@playwright/test';
 export async function addReadonlyAccount(page: Page, pubkey: string) {
   await page.getByRole('button', { name: 'Open new tab' }).first().click();
   await page.getByRole('button', { name: 'Accounts' }).click();
-  page.once('dialog', (dialog) => dialog.accept(pubkey));
-  await page.getByRole('button', { name: 'Add read-only' }).click();
+  await page.getByLabel('npub, hex pubkey, or nsec').fill(pubkey);
+  await page.getByRole('button', { name: 'Add', exact: true }).click();
   await expect(page.getByText('readonly')).toBeVisible();
   await page.getByRole('button', { name: 'Open new tab' }).first().click();
   await page.getByRole('button', { name: 'Home', exact: true }).click();

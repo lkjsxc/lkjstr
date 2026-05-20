@@ -82,6 +82,8 @@
       aria-label="npub, hex pubkey, or nsec"
       bind:value={input}
       disabled={busy}
+      id="account-input"
+      name="account-input"
       placeholder="npub, hex pubkey, or nsec"
     />
     <button type="submit" disabled={busy || !input.trim()}>Add</button>

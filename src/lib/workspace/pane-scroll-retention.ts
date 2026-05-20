@@ -31,8 +31,10 @@ export class PaneScrollRetention {
   #scrollable(tabId: string): HTMLElement | undefined {
     const body = this.#bodies.get(tabId);
     if (!body) return undefined;
-    return [body, ...body.querySelectorAll<HTMLElement>('*')]
-      .reverse()
-      .find((node) => node.scrollHeight > node.clientHeight + 8);
+    const scrollables = [
+      body,
+      ...body.querySelectorAll<HTMLElement>('*'),
+    ].filter((node) => node.scrollHeight > node.clientHeight + 8);
+    return scrollables.find((node) => node.scrollTop > 0) ?? scrollables.at(0);
   }
 }

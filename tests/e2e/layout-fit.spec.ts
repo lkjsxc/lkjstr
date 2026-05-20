@@ -10,7 +10,9 @@ const options = [
   'lkjstr Log',
   'Notifications',
   'Accounts',
+  'Mine npub',
   'Tweet',
+  'Profile Edit',
   'Settings',
   'Cache',
 ] as const;
