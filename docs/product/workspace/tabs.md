@@ -6,6 +6,7 @@ Tabs define the workspace surface area.
 
 ## New Tab Choices
 
+- Welcome
 - Home
 - Global
 - Relay Settings
@@ -18,6 +19,8 @@ Tabs define the workspace surface area.
 
 ## Action-Opened Tabs
 
+- Welcome is the clean first-launch tab and can also be opened from New Tab.
+- Welcome gives startup guidance for accounts, relays, Tweet, Home, and Global.
 - Profile opens from identity buttons in timelines and profile-related UI.
 - Profile actions focus a matching Profile tab already present in the same
   tile; otherwise they open a new Profile tab in that tile.

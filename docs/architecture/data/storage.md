@@ -17,8 +17,9 @@ Storage docs define browser persistence ownership.
 
 ## Contract
 
-Private keys are not stored by lkjstr. NIP-07 signing stays in the browser
-signer boundary.
+Local signing secrets are stored in a dedicated IndexedDB table separate from
+public account records. Account listing APIs return public account metadata
+only. NIP-07 signing stays in the browser signer boundary.
 
 ## Cleanup
 

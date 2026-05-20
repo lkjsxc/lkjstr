@@ -34,8 +34,9 @@ bounded as timelines grow.
 ## Scroll Anchoring
 
 Feed views capture the visible key and offset before feed changes, then restore
-that key after virtual or plain list updates. Height changes above the anchor
-adjust scroll offset so delayed embeds and media do not move the visible row.
+that key after virtual or plain list updates. Virtual lists capture the real
+`getScrollOffset` value, skip restoration at offset `0`, and keep live prepends
+or older-page loads from moving the visible row.
 
 ## Cache Bounds
 

@@ -4,7 +4,7 @@
 
 Tool surfaces cover local state, writing, relay management, and diagnostics.
 
-## Documents
+## Tree
 
 - [accounts.md](accounts.md): account records and signers.
 - [cache.md](cache.md): local cache tab behavior.

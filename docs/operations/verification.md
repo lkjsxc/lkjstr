@@ -42,13 +42,17 @@ when commands pass and print buffered command output only when a command fails.
 - Open every New Tab choice at desktop and mobile widths and confirm no
   document or pane horizontal overflow.
 - Reload the root route with local storage and IndexedDB unavailable. Confirm
-  `.workspace-shell`, the Home tab, and nonzero body height stay visible with no
-  page error.
+  `.workspace-shell`, the Welcome tab, and nonzero body height stay visible with
+  no page error.
 - Home and Global lists fill the tile after split resizing.
 - Global, Notifications, Thread, and Profile note rows show avatar/name
   fallbacks, timestamps, and wrapped content.
 - Profile renders summary first, then Notes rows in the same Profile tab scroll
   flow at desktop and mobile widths.
+- Timeline scroll position remains nonzero after older loads and live prepends
+  when the user was not at the top.
+- Profile notes render below the profile header without horizontal overflow on
+  narrow panes.
 - Profile note rows preserve real relay provenance and use `cache` only as a
   fallback for legacy records without relay evidence.
 - Home reloads with cached history visible before relay responses and before
