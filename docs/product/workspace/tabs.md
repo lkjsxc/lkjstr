@@ -13,7 +13,9 @@ Tabs define the workspace surface area.
 - lkjstr Log
 - Notifications
 - Accounts
+- Mine npub
 - Tweet
+- Profile Edit
 - Settings
 - Cache
 
@@ -24,10 +26,15 @@ Tabs define the workspace surface area.
 - Profile opens from identity buttons in timelines and profile-related UI.
 - Profile actions focus a matching Profile tab already present in the same
   tile; otherwise they open a new Profile tab in that tile.
+- Profile Edit opens from the active account profile action. The tab focuses an
+  existing Profile Edit tab in the same tile before creating one.
+- Profile Edit always edits the current active signing account.
 - Thread opens from event rows, event id buttons, quotes, references, and
   collapsed continuation rows.
 - Thread actions focus a matching Thread tab already present in the same tile;
   otherwise they open a new Thread tab in that tile.
+- Mine npub owns vanity key generation. Accounts can add exported results only
+  after explicit user action.
 
 ## Movement
 

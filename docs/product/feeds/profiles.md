@@ -18,6 +18,15 @@ Profile tabs show identity metadata and authored text notes.
 - Profile note lists keep a `180` item window.
 - Profile renders as one scroll flow: summary first, then Notes rows in normal
   document order. The Profile tab is the only scroll container for this flow.
+- Profile metadata supports banner, picture, display name, name, NIP-05,
+  website, Lightning address, and about text.
+- Profile displays banner media when metadata provides `banner`.
+- Profile editing is not inline. Own-profile actions open Profile Edit in the
+  same tile.
+- Profile Edit merges with the latest cached kind `0` metadata. Blank known
+  fields delete those keys; unknown keys and `lud06` remain preserved.
+- Successful Profile Edit publishes kind `0` to enabled write relays, stores
+  the result locally, and notifies open Profile tabs to refresh.
 - Notes must not render through a dedicated full-height child scroller.
 - Profile identity surfaces show the full `npub`, and full `nprofile` when
   relay hints are available. They are not abbreviated in Profile.

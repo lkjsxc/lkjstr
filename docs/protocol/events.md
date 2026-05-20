@@ -60,8 +60,12 @@ The kernel exposes helpers for:
 - address references.
 - topics.
 - relay hints.
+- batch tag-value lookups such as event ids referenced by `e` tags.
 
 Display code consumes parsed tag intent rather than searching tag arrays directly.
+
+Batch tag-value lookup must use IndexedDB compound tag indexes when available
+and the memory repository fallback when IndexedDB is unavailable.
 
 ## Content Tokens
 

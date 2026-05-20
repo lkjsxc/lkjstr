@@ -7,14 +7,16 @@ Tab runtime defines valid tab kinds and lifecycle ownership.
 ## Kinds
 
 `new-tab`, `timeline`, `global`, `notifications`, `profile`,
-`account-manager`, `thread`, `relay-monitor`, `relay-settings`, `tweet`,
-`settings`,
+`profile-edit`, `account-manager`, `npub-miner`, `thread`, `relay-monitor`,
+`relay-settings`, `tweet`, `settings`,
 `cache-status`.
 
 ## Contract
 
 - New Tab can convert only to direct New Tab choices.
-- Profile and Thread remain valid tab kinds but open from timeline actions.
+- Profile, Profile Edit, and Thread remain valid tab kinds but open from
+  actions.
+- Mine npub is a valid New Tab choice and owns the worker-backed vanity miner.
 - lkjstr Log uses the existing `relay-monitor` tab kind, opens from New Tab,
   and owns read-only current-session relay diagnostics.
 - Relay Settings owns relay editing.
@@ -36,3 +38,5 @@ Tab runtime defines valid tab kinds and lifecycle ownership.
 - Cross-tile movement updates source and target tab groups, then focuses the
   moved tab in the target tile.
 - Persisted tabs are normalized by the current tab contracts.
+- Runtime recreation is guarded by stable keys so unrelated account, settings,
+  relay, or local state changes do not rebuild relay subscriptions.

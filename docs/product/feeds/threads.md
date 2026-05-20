@@ -13,6 +13,7 @@ Thread tabs show a root event and replies opened from timeline event actions.
   replies without `since`, then keeps live subscriptions bounded with startup
   `since`.
 - Runtime subscribes for the root id and text notes referencing that id.
+- Runtime caches reactions and reposts as thread metadata, not replies.
 - Initial and older thread pages request `30` items.
 - Thread tabs keep a `240` item window.
 - Older replies load after near-bottom scroll or viewport auto-fill.
@@ -23,6 +24,10 @@ Thread tabs show a root event and replies opened from timeline event actions.
   event in a matching Thread tab. Loaded thread chains keep capped indentation.
 - Closing the tab closes relay subscriptions.
 - Thread surfaces use the shared post renderer.
+- Reaction chips are local disclosure toggles such as `❤️ 5`. Expanded details
+  show compact actor avatars and names and expose `aria-expanded` with
+  `aria-controls`.
+- Cached reposts render as a compact repost chip/list when available.
 - Thread row metadata does not show short event ids.
 - Reply-root references can be omitted or shown only as neutral referenced
   events; they must not be labeled `Thread root`.

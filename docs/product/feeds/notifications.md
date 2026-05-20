@@ -28,6 +28,8 @@ context first and event content second.
 - Rows use a vertical layout: actor identity, action kind, read state,
   timestamp, and source event content. Target event and thread root controls are
   not shown.
+- Reaction and repost rows use avatar overlay badges plus screen-reader action
+  text. They do not show visible `reacted with` style noise.
 - Action labels cover mention, reply, reaction, repost, quote, and
   profile-reference records.
 - Long event content, ids, relay URLs, and context fields wrap within the row.
