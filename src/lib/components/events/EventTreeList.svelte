@@ -2,9 +2,18 @@
   import { VList } from 'virtua/svelte';
   import { tick } from 'svelte';
   import { isNearEnd, isNearStart } from '$lib/events/feed-window';
+  import {
+    captureVirtualAnchor,
+    restoreVirtualAnchor,
+    type VirtualListHandle,
+  } from '$lib/events/scroll-anchor';
   import type { ProfileSummary } from '$lib/identity/identity';
   import type { RelaySet } from '$lib/relays/relay-store';
-  import { buildEventTree, flattenEventTree } from '$lib/events/tree';
+  import {
+    buildEventTree,
+    flattenEventTree,
+    type FlatEventTreeItem,
+  } from '$lib/events/tree';
   import type { FeedEvent } from '$lib/events/types';
   import EventRow from './EventRow.svelte';
 
@@ -25,12 +34,15 @@
   };
 
   let props: Props = $props();
-  let list = $state<{
-    getViewportSize?: () => number;
-    getScrollSize?: () => number;
-  }>();
+  let list = $state<
+    VirtualListHandle & {
+      getViewportSize?: () => number;
+      getScrollSize?: () => number;
+    }
+  >();
   let autoFillPending = false;
   let nodes = $derived(flattenEventTree(buildEventTree(props.items)));
+  let previousNodes: FlatEventTreeItem[] = [];
 
   function handleScroll(offset: number): void {
     const viewport = list?.getViewportSize?.() ?? 0;
@@ -50,6 +62,12 @@
       void maybeAutoFill();
   });
 
+  $effect(() => {
+    const anchor = captureVirtualAnchor(previousNodes, nodeKey, list);
+    previousNodes = nodes;
+    void tick().then(() => restoreVirtualAnchor(anchor, nodes, nodeKey, list));
+  });
+
   async function maybeAutoFill(): Promise<void> {
     if (autoFillPending || props.loadingOlder || !props.hasOlder) return;
     autoFillPending = true;
@@ -58,6 +76,10 @@
     const total = list?.getScrollSize?.() ?? 0;
     if (viewport > 0 && total <= viewport + 16) await props.onNearEnd?.();
     autoFillPending = false;
+  }
+
+  function nodeKey(node: (typeof nodes)[number]): string {
+    return node.event.id;
   }
 </script>
 
@@ -68,7 +90,7 @@
         bind:this={list}
         data={nodes}
         style="height: 100%; min-height: 0;"
-        getKey={(item) => item.event.id}
+        getKey={nodeKey}
         onscroll={handleScroll}
       >
         {#snippet children(node)}

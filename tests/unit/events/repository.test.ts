@@ -5,7 +5,7 @@ import {
   queryFeed,
   upsertEvent,
 } from '../../../src/lib/events/repository';
-import { isNearEnd } from '../../../src/lib/events/feed-window';
+import { FeedWindow, isNearEnd } from '../../../src/lib/events/feed-window';
 import { normalizeStoredEvent } from '../../../src/lib/events/normalize';
 import type { NostrEvent } from '../../../src/lib/protocol';
 
@@ -88,6 +88,24 @@ describe('event repository fallback paging', () => {
   it('detects near-end scrolling from offset, viewport, and total size', () => {
     expect(isNearEnd(100, 200, 1500, 300)).toBe(false);
     expect(isNearEnd(1000, 250, 1500, 300)).toBe(true);
+  });
+
+  it('prunes feed windows and exposes compound cursors', () => {
+    const window = new FeedWindow<{ event: NostrEvent; relays: string[] }>(2);
+    const snapshot = window.merge([
+      { event: event('1', 10, 'new'), relays: ['a'] },
+      { event: event('2', 9, 'mid'), relays: ['b'] },
+      { event: event('3', 8, 'old'), relays: ['c'] },
+    ]);
+    expect(snapshot.items.map((item) => item.event.content)).toEqual([
+      'new',
+      'mid',
+    ]);
+    expect(snapshot.prunedOlder).toBe(true);
+    expect(snapshot.oldestCursor).toEqual({
+      createdAt: 9,
+      id: '2'.repeat(64),
+    });
   });
 });
 

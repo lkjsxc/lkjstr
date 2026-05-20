@@ -13,6 +13,65 @@ export type WindowedFeed<T> = {
   readonly prunedOlder: boolean;
 };
 
+export type FeedWindowSnapshot<T> = WindowedFeed<T> & {
+  readonly newestCursor?: FeedCursorPoint;
+  readonly oldestCursor?: FeedCursorPoint;
+};
+
+export class FeedWindow<T extends { event: NostrEvent }> {
+  readonly #items = new Map<string, T>();
+
+  constructor(
+    readonly limit = feedWindowSize,
+    private readonly compare = compareFeedItems<T>,
+  ) {}
+
+  merge(
+    incoming: readonly T[],
+    options: { readonly keepOlder?: boolean } = {},
+  ): FeedWindowSnapshot<T> {
+    for (const item of incoming) {
+      const existing = this.#items.get(item.event.id);
+      this.#items.set(
+        item.event.id,
+        existing ? this.#merge(existing, item) : item,
+      );
+    }
+    return this.#prune(Boolean(options.keepOlder));
+  }
+
+  replace(items: readonly T[]): FeedWindowSnapshot<T> {
+    this.#items.clear();
+    return this.merge(items);
+  }
+
+  items(): T[] {
+    return [...this.#items.values()].sort(this.compare);
+  }
+
+  #prune(keepOlder: boolean): FeedWindowSnapshot<T> {
+    const ordered = this.items();
+    const prunedNewer = ordered.length > this.limit && keepOlder;
+    const prunedOlder = ordered.length > this.limit && !keepOlder;
+    const kept =
+      ordered.length <= this.limit
+        ? ordered
+        : keepOlder
+          ? ordered.slice(-this.limit)
+          : ordered.slice(0, this.limit);
+    this.#items.clear();
+    kept.forEach((item) => this.#items.set(item.event.id, item));
+    return { items: kept, prunedNewer, prunedOlder, ...boundaryCursors(kept) };
+  }
+
+  #merge(existing: T, incoming: T): T {
+    const relays = relayArray(existing, incoming);
+    const event =
+      this.compare(existing, incoming) <= 0 ? existing.event : incoming.event;
+    return relays ? ({ ...incoming, event, relays } as T) : incoming;
+  }
+}
+
 export function mergeFeedWindow(
   existing: readonly FeedEvent[],
   incoming: readonly FeedEvent[],
@@ -89,4 +148,14 @@ function mergeItem(a: FeedEvent, b: FeedEvent): FeedEvent {
     event: a.event.created_at >= b.event.created_at ? a.event : b.event,
     relays: [...new Set([...a.relays, ...b.relays])],
   };
+}
+
+function compareFeedItems<T extends { event: NostrEvent }>(a: T, b: T): number {
+  return compareEventsDesc(a.event, b.event);
+}
+
+function relayArray<T>(a: T, b: T): string[] | undefined {
+  const left = (a as { relays?: readonly string[] }).relays;
+  const right = (b as { relays?: readonly string[] }).relays;
+  return left && right ? [...new Set([...left, ...right])] : undefined;
 }
