@@ -4,6 +4,7 @@
   import type { RelaySet } from '$lib/relays/relay-store';
   import type { NostrTag } from '$lib/protocol';
   import TweetAttachments from './TweetAttachments.svelte';
+  import TweetMediaControls from './TweetMediaControls.svelte';
   import { publishTweet } from '$lib/tweet/publish';
   import {
     clearTweetDraft,
@@ -29,7 +30,7 @@
   let attachments = $state<TweetAttachment[]>([]);
   let draftTouched = false;
   let hasSigner = $derived(
-    props.accounts.some((item) => item.signerType === 'nip07'),
+    props.accounts.some((item) => item.capabilities.sign),
   );
   let canPublish = $derived(
     !publishing &&
@@ -146,27 +147,17 @@
     }}
   ></textarea>
   <TweetAttachments {attachments} remove={removeAttachment} />
-  <div class="toolbar">
-    <label class="button-like" for="tweet-media">Attach media</label>
-    <input
-      id="tweet-media"
-      name="tweet-media"
-      type="file"
-      accept="image/*,video/*"
-      multiple
-      disabled={uploading || !hasSigner || !uploadServer.trim()}
-      onchange={(event) => {
-        const files = event.currentTarget.files;
-        if (files) void uploadFiles(files);
-        event.currentTarget.value = '';
-      }}
-    />
-    <button type="button" disabled={!canPublish} onclick={publish}>
-      {publishing ? 'Publishing...' : uploading ? 'Uploading...' : 'Publish'}
-    </button>
-  </div>
+  <TweetMediaControls
+    {uploading}
+    {publishing}
+    {hasSigner}
+    {uploadServer}
+    {canPublish}
+    {uploadFiles}
+    {publish}
+  />
   {#if !hasSigner}
-    <p>Add a NIP-07 account before publishing.</p>
+    <p>Add a signing account before publishing.</p>
   {/if}
   {#if message}
     <p role="status">{message}</p>
