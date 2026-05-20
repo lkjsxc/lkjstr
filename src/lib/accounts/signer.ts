@@ -30,5 +30,5 @@ async function localSigner(account: Account): Promise<AccountSigner> {
 function nip07Signer(account: Account): AccountSigner {
   const provider = getNip07Provider();
   if (!provider) throw new Error('NIP-07 signer unavailable.');
-  return { account, signEvent: provider.signEvent };
+  return { account, signEvent: (event) => provider.signEvent(event) };
 }
