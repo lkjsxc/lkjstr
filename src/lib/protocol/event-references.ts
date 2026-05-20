@@ -20,16 +20,21 @@ export type EventReference = {
 
 export function eventReferences(event: NostrEvent): EventReference[] {
   const refs: EventReference[] = [];
+  if (event.kind === kinds.repost) {
+    push(refs, 'repost', tagValues(event, 'e').at(-1));
+    return dedupe(refs);
+  }
+  if (event.kind === kinds.reaction) {
+    push(refs, 'reaction', tagValues(event, 'e').at(-1));
+    return dedupe(refs);
+  }
+  if (event.kind === kinds.deletion) {
+    for (const id of tagValues(event, 'e')) push(refs, 'deletion', id);
+    return dedupe(refs);
+  }
   push(refs, 'reply-root', replyRoot(event));
   push(refs, 'reply-parent', replyParent(event));
   for (const id of tagValues(event, 'q')) push(refs, 'quote', id);
-  if (event.kind === kinds.repost)
-    push(refs, 'repost', tagValues(event, 'e').at(-1));
-  if (event.kind === kinds.reaction)
-    push(refs, 'reaction', tagValues(event, 'e').at(-1));
-  if (event.kind === kinds.deletion) {
-    for (const id of tagValues(event, 'e')) push(refs, 'deletion', id);
-  }
   for (const id of nostrEventIds(event.content)) push(refs, 'nostr-event', id);
   return dedupe(refs);
 }

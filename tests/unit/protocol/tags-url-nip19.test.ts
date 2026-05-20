@@ -6,6 +6,7 @@ import {
   encodeNpub,
   eventReferences,
   indexTags,
+  kinds,
   normalizeRelayUrl,
   replyParent,
   replyRoot,
@@ -66,6 +67,26 @@ describe('tags, relay URLs, and NIP-19', () => {
       generateSecretKey(),
     );
     expect(eventReferences(quoted)).toEqual([{ kind: 'quote', id }]);
+  });
+
+  it('uses action targets instead of reply roots for action events', () => {
+    const target = '7'.repeat(64);
+    const root = '8'.repeat(64);
+    const reaction = finalizeEvent(
+      {
+        created_at: 102,
+        kind: kinds.reaction,
+        tags: [
+          ['e', root, '', 'root'],
+          ['e', target],
+        ],
+        content: '+',
+      },
+      generateSecretKey(),
+    );
+    expect(eventReferences(reaction)).toEqual([
+      { kind: 'reaction', id: target },
+    ]);
   });
 
   it('normalizes relay URLs', () => {
