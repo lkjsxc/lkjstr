@@ -23,12 +23,26 @@ async function localSigner(account: Account): Promise<AccountSigner> {
   if (!secret) throw new Error('Local account secret is unavailable.');
   return {
     account,
-    signEvent: async (event) => signLocalEvent(event, secret.secretKey),
+    signEvent: async (event) =>
+      signLocalEvent(plainUnsignedEvent(event), secret.secretKey),
   };
 }
 
 function nip07Signer(account: Account): AccountSigner {
   const provider = getNip07Provider();
   if (!provider) throw new Error('NIP-07 signer unavailable.');
-  return { account, signEvent: (event) => provider.signEvent(event) };
+  return {
+    account,
+    signEvent: (event) => provider.signEvent(plainUnsignedEvent(event)),
+  };
+}
+
+function plainUnsignedEvent(event: UnsignedNostrEvent): UnsignedNostrEvent {
+  return {
+    pubkey: String(event.pubkey),
+    created_at: Number(event.created_at),
+    kind: Number(event.kind),
+    tags: event.tags.map((tag) => tag.map((part) => String(part))),
+    content: String(event.content),
+  };
 }
