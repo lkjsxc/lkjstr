@@ -11,6 +11,8 @@ bounded as timelines grow.
 - Home, Global, Profile, and Notifications keep at most `180` resident feed
   items per tab across retained chunks.
 - Thread tabs keep at most `240` loaded thread items.
+- Feed windows keep ordered event ids, an item map, prune metadata, and compound
+  oldest/newest cursors.
 - Older pages are requested from the bottom boundary cursor.
 - Newer pages are requested from the top boundary cursor after top pruning.
 - Feed cursors use compound `{ createdAt, id }` ordering so same-second events
@@ -28,6 +30,12 @@ bounded as timelines grow.
 - Loading near the bottom adds older chunks. Loading near the top adds newer
   chunks. Rendering flattens chunks only for display.
 - Live prepends and chunk changes preserve the visible scroll anchor.
+
+## Scroll Anchoring
+
+Feed views capture the visible key and offset before feed changes, then restore
+that key after virtual or plain list updates. Height changes above the anchor
+adjust scroll offset so delayed embeds and media do not move the visible row.
 
 ## Cache Bounds
 

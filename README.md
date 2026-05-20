@@ -1,5 +1,7 @@
 # lkjstr
 
+## Purpose
+
 lkjstr is a browser-first Nostr workspace built with SvelteKit. The app opens
 directly into split tiles, stores local state in IndexedDB, and uses the
 selected default relay set for timeline, profile, thread, and Tweet behavior.
@@ -28,7 +30,7 @@ selected default relay set for timeline, profile, thread, and Tweet behavior.
   fallbacks.
 - Partial relay failure is diagnostic; reachable relays continue serving feeds,
   and low-level details are visible in Relay Logs instead of timeline bodies.
-- Event metadata shows the author control, date, and short event id. Full
+- Event metadata shows the author control and date. Full
   public keys and relay URLs stay out of post rows.
 - Accounts include CPU-only `npub` prefix mining with export-only `nsec`
   handling.

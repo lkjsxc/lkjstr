@@ -8,8 +8,10 @@ narrative background.
 
 ## File Shape
 
-Every documentation file starts with an H1, then a `Purpose` section. Directory
-indexes add `Documents` and may add `Tree` when recursive navigation helps.
+Every documentation file starts with an H1, then a `Purpose` section. Every
+tracked, non-generated directory has a `README.md` local table of contents.
+Directory indexes add `Documents` and may add `Tree` when recursive navigation
+helps.
 
 ## Content Rules
 
@@ -28,7 +30,8 @@ indexes add `Documents` and may add `Tree` when recursive navigation helps.
 
 ## Directory Rules
 
-- A documentation directory contains exactly one `README.md`.
+- Every tracked, non-generated directory contains exactly one `README.md`.
+- The stricter branching rule applies only under `docs/`.
 - `docs/README.md` is the recursive table of contents for the full docs tree.
 - Child `README.md` files are local directory indexes for sibling topics.
 - Supporting files hold the detail so the `README.md` remains scannable.

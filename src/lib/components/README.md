@@ -1,0 +1,13 @@
+# Components
+
+## Purpose
+
+This directory contains shared Svelte components grouped by product surface.
+
+## Contents
+
+- `app/`: shell components.
+- `events/`: event rows, embeds, and actions.
+- `identity/`: profile identity display.
+- `notifications/`: notification rows.
+- `popover/`, `settings/`, and `workspace/`: reusable UI controls.

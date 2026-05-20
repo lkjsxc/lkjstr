@@ -1,5 +1,9 @@
 # Agent Instructions
 
+## Purpose
+
+This file defines repository instructions for automated coding agents.
+
 ## Contract
 
 lkjstr is a docs-first SvelteKit Nostr workspace. Keep docs and implementation

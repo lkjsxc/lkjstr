@@ -3,6 +3,8 @@ import path from 'node:path';
 import process from 'node:process';
 import { execFile } from 'node:child_process';
 import { promisify } from 'node:util';
+import { checkComposeGuardrails } from './repo-compose';
+import { trackedDirs } from './repo-readmes';
 
 type Problem = { file: string; message: string };
 
@@ -25,9 +27,10 @@ const run = promisify(execFile);
 
 const files = await walk(root);
 await checkLines(files);
+await checkReadmeCoverage();
 await checkDocsTopology(files);
 await checkIgnoredDocs(files);
-await checkComposeGuardrails();
+problems.push(...(await checkComposeGuardrails(root)));
 
 for (const problem of problems.sort((a, b) => a.file.localeCompare(b.file))) {
   console.error(`${problem.file}: ${problem.message}`);
@@ -43,6 +46,7 @@ async function checkLines(filesToCheck: string[]) {
     if (isDoc(rel, ext)) {
       checkLimit(rel, text, 300, 'docs');
       checkH1First(rel, text);
+      checkPurpose(rel, text);
       if (!rel.endsWith('LICENSE')) checkBanned(rel, text);
     }
     if (isSource(rel, ext)) checkLimit(rel, text, 200, 'source');
@@ -53,6 +57,21 @@ function checkH1First(file: string, text: string) {
   const first = text.split(/\r?\n/, 1)[0] ?? '';
   if (!first.startsWith('# '))
     problems.push({ file, message: 'documentation must start with an H1' });
+}
+
+function checkPurpose(file: string, text: string) {
+  if (!/^## Purpose$/m.test(text))
+    problems.push({ file, message: 'documentation must include Purpose' });
+}
+
+async function checkReadmeCoverage() {
+  const dirs = await trackedDirs(root, skipDirs);
+  for (const dir of dirs) {
+    const readme = dir === '.' ? 'README.md' : path.join(dir, 'README.md');
+    await fs.access(path.join(root, readme)).catch(() => {
+      problems.push({ file: dir, message: 'missing README.md' });
+    });
+  }
 }
 
 async function checkDocsTopology(filesToCheck: string[]) {
@@ -101,32 +120,6 @@ async function gitCheckIgnored(filesToCheck: readonly string[]) {
   }
 }
 
-async function checkComposeGuardrails() {
-  const legacyComposeFile = path.join(root, 'compose.yaml');
-  const hasLegacyCompose = await fs
-    .access(legacyComposeFile)
-    .then(() => true)
-    .catch(() => false);
-  if (hasLegacyCompose)
-    problems.push({ file: 'compose.yaml', message: 'use docker-compose.yml' });
-  const composeFile = path.join(root, 'docker-compose.yml');
-  const text = await fs.readFile(composeFile, 'utf8').catch(() => '');
-  if (!text) {
-    problems.push({ file: 'docker-compose.yml', message: 'missing' });
-    return;
-  }
-  const checks: [RegExp, string][] = [
-    [/^\s*develop\s*:/m, 'defines Compose develop'],
-    [/^\s*watch\s*:/m, 'defines Compose watch sync'],
-    [/^\s*-\s*(?:\.|\.\.?\/[^:]+):/m, 'mounts the source tree'],
-    [/^\s*source\s*:\s*(?:\.|\.\.?\/)/m, 'mounts the source tree'],
-  ];
-  for (const [pattern, message] of checks) {
-    if (pattern.test(text))
-      problems.push({ file: 'docker-compose.yml', message });
-  }
-}
-
 function checkLimit(file: string, text: string, limit: number, kind: string) {
   const lines =
     text.length === 0
@@ -152,6 +145,7 @@ function checkBanned(file: string, text: string) {
 function isDoc(rel: string, ext: string) {
   return (
     rel === 'README.md' ||
+    rel.endsWith(`${path.sep}README.md`) ||
     rel === 'AGENTS.md' ||
     (rel.startsWith(`docs${path.sep}`) && ext === '.md')
   );

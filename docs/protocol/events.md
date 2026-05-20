@@ -88,6 +88,14 @@ first, batches relay reads by `ids`, stores verified hits, caps missing lookups,
 and prevents recursive loops. Missing, deleted, quote, repost, reply, reaction,
 and deletion states have explicit display rows.
 
+Action events use target precedence. Reposts, reactions, and deletions expose
+only their action target references for preview lookup; reply-root tags on those
+events do not create extra visible previews.
+
+Reposts with verified embedded JSON own their target preview through the nested
+repost surface. The same target must not also render as a separate referenced
+preview.
+
 Quote and reference previews are deduped by event id before rendering. Protocol
 reference extraction and the shared event renderer own this dedupe so Home,
 Global, Profile, Thread, and Notifications render the same preview set.

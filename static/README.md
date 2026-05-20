@@ -1,0 +1,9 @@
+# Static
+
+## Purpose
+
+This directory contains static browser assets served by SvelteKit.
+
+## Contents
+
+- App icons, favicon, SVG source icon, and web manifest.

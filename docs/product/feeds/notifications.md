@@ -36,3 +36,5 @@ context first and event content second.
 - Notification event row metadata does not show short event ids.
 - Notification event content uses the shared renderer, including mention links,
   event links, media URL hiding, bounded media embeds, and deduped previews.
+- Reactions and reposts use the shared action summary renderer, so notification
+  rows do not expose raw reaction markers or repost JSON.

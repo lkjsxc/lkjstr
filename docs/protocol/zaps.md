@@ -9,7 +9,15 @@ Zap docs define the NIP-57 invoice handoff used by event actions.
 - Zap actions require a NIP-07 active account.
 - Event zap tags are preferred over profile Lightning identifiers.
 - Profile `lud16` and `lud06` are used when event zap tags are absent.
-- The client signs a kind `9734` zap request with amount, relays, target event
-  or pubkey tags, and an optional message.
-- The app fetches the callback invoice and shows a `lightning:` URI.
-- The app may open or copy the URI, but it does not store wallet secrets.
+- Event zap tags may split a zap across multiple weighted recipients. Missing
+  weights are equal only when every zap tag omits weight; partially weighted
+  tags without weight receive no amount.
+- The client signs one kind `9734` zap request per recipient with amount,
+  `lnurl`, one `relays` tag containing all receipt relays, recipient `p`, target
+  `e`, and target `k` tags.
+- The callback request sends `amount`, `nostr`, and `lnurl` query parameters.
+- The app validates callback invoice responses before rendering invoice
+  controls.
+- Each invoice renders one QR code whose payload is the raw BOLT11 invoice.
+- The app may open a `lightning:` URI or copy the raw invoice, but it does not
+  store wallet secrets.
