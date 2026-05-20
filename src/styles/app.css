@@ -1,6 +1,8 @@
 html,
 body {
+  height: 100%;
   min-height: 100%;
+  overflow: hidden;
 }
 
 body {
@@ -8,10 +10,13 @@ body {
 }
 
 .workspace-shell {
-  height: 100dvh;
   display: grid;
+  height: 100dvh;
+  inset: 0;
   min-height: 0;
   overflow: hidden;
+  position: fixed;
+  width: 100%;
 }
 
 .workspace-main {
@@ -115,11 +120,14 @@ body {
 
 .pane-stack {
   display: grid;
+  grid-template-rows: minmax(0, 1fr);
 }
 
 .pane-body,
 .empty-pane,
 .empty-workspace {
+  box-sizing: border-box;
+  height: 100%;
   padding: 0.9rem;
 }
 
