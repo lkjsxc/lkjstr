@@ -41,8 +41,10 @@ export class TabRegistry {
 export function createDefaultTabRegistry(): TabRegistry {
   const registry = new TabRegistry();
   const kinds: TabKind[] = [
+    'welcome',
     'new-tab',
     'timeline',
+    'global',
     'notifications',
     'profile',
     'account-manager',

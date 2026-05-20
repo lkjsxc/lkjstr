@@ -2,7 +2,8 @@ import { expect, test } from '@playwright/test';
 
 test('root opens the workspace', async ({ page }) => {
   await page.goto('/');
-  await expect(page.getByRole('tab', { name: 'Home' })).toBeVisible();
+  await expect(page.getByRole('tab', { name: 'Welcome' })).toBeVisible();
+  await expect(page.getByRole('tab', { name: 'Home' })).toHaveCount(0);
   await expect(page).toHaveTitle(/lkjstr workspace/);
 });
 
@@ -27,12 +28,12 @@ test('root reload stays visible when browser storage is unavailable', async ({
   });
   await page.goto('/');
   await expect(page.locator('.workspace-shell')).toBeVisible();
-  await expect(page.getByRole('tab', { name: 'Home' })).toBeVisible();
+  await expect(page.getByRole('tab', { name: 'Welcome' })).toBeVisible();
   expect(await page.evaluate(() => document.body.clientHeight)).toBeGreaterThan(
     0,
   );
   await page.reload();
   await expect(page.locator('.workspace-shell')).toBeVisible();
-  await expect(page.getByRole('tab', { name: 'Home' })).toBeVisible();
+  await expect(page.getByRole('tab', { name: 'Welcome' })).toBeVisible();
   expect(errors).toHaveLength(0);
 });

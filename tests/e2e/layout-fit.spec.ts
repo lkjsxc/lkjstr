@@ -3,6 +3,7 @@ import { finalizeEvent, generateSecretKey } from 'nostr-tools/pure';
 import { installSyntheticRelay } from './timeline-relay-helpers';
 
 const options = [
+  'Welcome',
   'Home',
   'Global',
   'Relay Settings',

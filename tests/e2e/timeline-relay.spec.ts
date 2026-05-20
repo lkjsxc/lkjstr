@@ -17,6 +17,8 @@ test('timeline does not read public relays without an active account', async ({
 }) => {
   await installSyntheticRelay(page, { events: [] });
   await openCleanWorkspace(page);
+  await page.getByRole('button', { name: 'Open new tab' }).first().click();
+  await page.getByRole('button', { name: 'Home', exact: true }).click();
   await expect(page.getByText('Add or activate an account')).toBeVisible();
   await page.evaluate(() => {
     window.__syntheticSockets.length = 0;

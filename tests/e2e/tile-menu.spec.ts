@@ -18,5 +18,5 @@ test('tile plus opens New Tab chooser', async ({ page }) => {
   await page.getByRole('button', { name: 'Open new tab' }).first().click();
   await expect(page.getByRole('heading', { name: 'New Tab' })).toBeVisible();
   await page.locator('.new-tab').getByRole('button', { name: 'Home' }).click();
-  await expect(page.getByRole('tab', { name: 'Home' })).toHaveCount(2);
+  await expect(page.getByRole('tab', { name: 'Home' })).toBeVisible();
 });

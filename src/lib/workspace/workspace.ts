@@ -36,7 +36,7 @@ export type Workspace = {
 };
 
 export function createWorkspace(): Workspace {
-  const tab = createTab('timeline', 'Home', { variant: 'home' });
+  const tab = createTab('welcome', titleFor('welcome'));
   const group = createTabGroup(tab);
   const layout = createLayout(group.id);
   return {

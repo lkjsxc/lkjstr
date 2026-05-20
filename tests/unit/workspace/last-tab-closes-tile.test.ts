@@ -38,7 +38,7 @@ describe('last-tab tile close', () => {
     expect(closed.focusedPaneId).toBe(closed.layout?.id);
   });
 
-  it('closing the final tab in the final tile recovers a timeline tile', () => {
+  it('closing the final tab in the final tile recovers a Welcome tile', () => {
     const workspace = createWorkspace();
     const closed = closeWorkspaceTab(
       workspace,
@@ -46,7 +46,7 @@ describe('last-tab tile close', () => {
       workspace.focusedTabId!,
     );
     expect(closed.layout?.type).toBe('pane');
-    expect(Object.values(closed.tabs)[0]?.kind).toBe('timeline');
+    expect(Object.values(closed.tabs)[0]?.kind).toBe('welcome');
   });
 
   it('closing a tile removes all tabs in that tile', () => {
@@ -54,6 +54,6 @@ describe('last-tab tile close', () => {
     const closed = closeWorkspacePane(workspace, workspace.focusedPaneId!);
     expect(closed.layout?.type).toBe('pane');
     expect(Object.keys(closed.tabs)).toHaveLength(1);
-    expect(Object.values(closed.tabs)[0]?.kind).toBe('timeline');
+    expect(Object.values(closed.tabs)[0]?.kind).toBe('welcome');
   });
 });

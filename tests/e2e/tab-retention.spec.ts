@@ -2,6 +2,8 @@ import { expect, test, type Page } from '@playwright/test';
 
 test('retains inactive tab body after switching tabs', async ({ page }) => {
   await page.goto('/');
+  await page.getByRole('button', { name: 'Open new tab' }).first().click();
+  await page.getByRole('button', { name: 'Home', exact: true }).click();
   await expect(page.locator('.timeline-tab')).toHaveCount(1);
   await page.getByRole('button', { name: 'Open new tab' }).first().click();
   await page.getByRole('button', { name: 'Settings', exact: true }).click();
@@ -13,6 +15,8 @@ test('retains tab scroll briefly and removes inactive body after expiry', async 
   page,
 }) => {
   await page.goto('/');
+  await page.getByRole('button', { name: 'Open new tab' }).first().click();
+  await page.getByRole('button', { name: 'Home', exact: true }).click();
   await page.getByRole('button', { name: 'Open new tab' }).first().click();
   await page.getByRole('button', { name: 'Settings', exact: true }).click();
   await page.getByLabel('Edit tabs.inactiveRetentionSeconds').fill('3');

@@ -19,11 +19,11 @@ describe('startup workspace storage', () => {
     restoreGlobal('indexedDB', indexedDbDescriptor);
   });
 
-  it('creates a deterministic Home bootstrap workspace', () => {
+  it('creates a deterministic Welcome bootstrap workspace', () => {
     expect(bootstrapWorkspace()).toEqual(bootstrapWorkspace());
     const workspace = bootstrapWorkspace();
     expect(workspace.id).toBe('main');
-    expect(workspace.tabs[workspace.focusedTabId!]?.title).toBe('Home');
+    expect(workspace.tabs[workspace.focusedTabId!]?.title).toBe('Welcome');
     expect(workspace.layout?.type).toBe('pane');
   });
 

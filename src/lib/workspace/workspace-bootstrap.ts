@@ -3,9 +3,9 @@ import type { Workspace } from './workspace';
 export const bootstrapWorkspaceId = 'main';
 
 export function bootstrapWorkspace(): Workspace {
-  const tabId = 'bootstrap-home-tab';
-  const groupId = 'bootstrap-home-group';
-  const paneId = 'bootstrap-home-pane';
+  const tabId = 'bootstrap-welcome-tab';
+  const groupId = 'bootstrap-welcome-group';
+  const paneId = 'bootstrap-welcome-pane';
   return {
     id: bootstrapWorkspaceId,
     name: 'Main workspace',
@@ -28,10 +28,10 @@ export function bootstrapWorkspace(): Workspace {
     tabs: {
       [tabId]: {
         id: tabId,
-        kind: 'timeline',
-        title: 'Home',
-        icon: 'list',
-        config: { variant: 'home' },
+        kind: 'welcome',
+        title: 'Welcome',
+        icon: 'star',
+        config: {},
         state: {},
         createdAt: 0,
         updatedAt: 0,

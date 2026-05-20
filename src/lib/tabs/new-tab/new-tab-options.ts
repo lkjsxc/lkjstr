@@ -9,6 +9,12 @@ export type NewTabOption = {
 
 export const newTabOptions: readonly NewTabOption[] = [
   {
+    kind: 'welcome',
+    label: 'Welcome',
+    description: 'Startup guide.',
+    group: 'primary',
+  },
+  {
     kind: 'timeline',
     label: 'Home',
     description: 'Account follows.',

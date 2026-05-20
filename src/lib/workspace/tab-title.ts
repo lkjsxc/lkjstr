@@ -2,6 +2,7 @@ import type { TabKind } from './tab';
 
 export function titleFor(kind: TabKind): string {
   const titles: Record<TabKind, string> = {
+    welcome: 'Welcome',
     'new-tab': 'New Tab',
     timeline: 'Home',
     global: 'Global',

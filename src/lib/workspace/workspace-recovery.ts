@@ -5,7 +5,7 @@ import { closeTab, createTabGroup, type TabGroup } from './tab-group';
 import type { Workspace } from './workspace';
 
 export function createRecoveryWorkspace(): Workspace {
-  const tab = createTab('timeline', titleFor('timeline'), { variant: 'home' });
+  const tab = createTab('welcome', titleFor('welcome'));
   const group = createTabGroup(tab);
   const layout = createLayout(group.id);
   return {

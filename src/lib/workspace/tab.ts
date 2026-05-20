@@ -1,4 +1,5 @@
 export type TabKind =
+  | 'welcome'
   | 'new-tab'
   | 'timeline'
   | 'global'
@@ -48,6 +49,7 @@ export function createTab(
 
 export function iconFor(kind: TabKind): string {
   const icons: Record<TabKind, string> = {
+    welcome: 'star',
     'new-tab': 'plus',
     timeline: 'list',
     global: 'globe',
