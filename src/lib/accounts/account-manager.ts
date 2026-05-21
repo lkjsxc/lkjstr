@@ -16,13 +16,6 @@ import {
   persistLocalAccount,
 } from './local';
 import { connectNip07, type Nip07Provider } from './nip07';
-export {
-  createPasskeyLocalAccount,
-  isPasskeyUnlocked,
-  lockPasskeyAccount,
-  loginWithPasskey,
-  unlockPasskeyAccount,
-} from './passkey-local';
 
 export { generateNsec };
 

@@ -81,8 +81,8 @@ describe('account signer resolution', () => {
     expect(provider.signEvent).toHaveBeenCalledOnce();
   });
 
-  it('does not invoke WebAuthn while publishing from locked passkey accounts', async () => {
-    const account = createAccount('a'.repeat(64), 'passkey-local');
+  it('rejects read-only accounts before publishing', async () => {
+    const account = createAccount('a'.repeat(64), 'readonly');
     vi.doMock('../../../src/lib/accounts/account-store', () => ({
       activeAccount: vi.fn(async () => account),
     }));
@@ -91,7 +91,7 @@ describe('account signer resolution', () => {
       await import('../../../src/lib/accounts/signer');
 
     await expect(resolveActiveSigner()).rejects.toThrow(
-      'Unlock the active passkey account before publishing.',
+      'Select an account that can sign.',
     );
   });
 });

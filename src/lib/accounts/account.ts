@@ -1,6 +1,6 @@
 import { decodeEntity, encodeNpub } from '../protocol';
 
-export type SignerType = 'readonly' | 'nip07' | 'local' | 'passkey-local';
+export type SignerType = 'readonly' | 'nip07' | 'local';
 
 export type AccountCapabilities = {
   readonly read: boolean;
@@ -61,6 +61,15 @@ export function normalizeAccount(account: Account): Account {
   };
 }
 
+export function normalizeStoredAccount(account: Account): Account | undefined {
+  if (!isSignerType(account.signerType)) return undefined;
+  return normalizeAccount(account);
+}
+
+export function isSignerType(value: unknown): value is SignerType {
+  return value === 'readonly' || value === 'nip07' || value === 'local';
+}
+
 export function parseReadonlyAccount(input: string): Account | undefined {
   const pubkey = parsePubkey(input);
   return pubkey ? createAccount(pubkey, 'readonly') : undefined;
@@ -78,10 +87,7 @@ export function shortKey(pubkey: string): string {
 }
 
 function capabilitiesFor(signerType: SignerType): AccountCapabilities {
-  const canSign =
-    signerType === 'nip07' ||
-    signerType === 'local' ||
-    signerType === 'passkey-local';
+  const canSign = signerType === 'nip07' || signerType === 'local';
   return {
     read: true,
     sign: canSign,

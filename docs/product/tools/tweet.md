@@ -9,7 +9,7 @@ Tweet is the single note authoring surface.
 - Tweet opens from New Tab.
 - Draft content is durable in IndexedDB.
 - Publishing, draft `accountId`, and upload authentication use the active
-  signing account. Locked passkey accounts show a dedicated unlock message.
+  signing account.
 - Publishing targets enabled write relays in the selected default relay set.
 - The tab shows concrete missing-account, missing-signer, and missing-relay
   prerequisites.

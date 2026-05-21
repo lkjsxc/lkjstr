@@ -16,6 +16,16 @@ selected default relay set for timeline, profile, thread, and Tweet behavior.
   [docs/architecture/workspace/tab-runtime.md](docs/architecture/workspace/tab-runtime.md)
 - Verification: [docs/operations/verification.md](docs/operations/verification.md)
 
+## Tree
+
+- [.github/](.github/): GitHub automation metadata.
+- [AGENTS.md](AGENTS.md): agent-facing repository rules.
+- [docs/](docs/): implementation contract documents.
+- [scripts/](scripts/): verification and generation scripts.
+- [src/](src/): SvelteKit application source.
+- [static/](static/): browser-served static assets.
+- [tests/](tests/): unit and browser tests.
+
 ## Contract
 
 - New Tab choices are Home, Tweet, Notifications, Search, Global, Profile Edit,

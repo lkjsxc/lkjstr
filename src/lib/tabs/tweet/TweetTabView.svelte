@@ -15,7 +15,6 @@
     uploading: boolean;
     publishing: boolean;
     hasSigner: boolean;
-    passkeyLocked: boolean;
     uploadSettings: UploadSettings;
     canPublish: boolean;
     message: string;
@@ -47,7 +46,6 @@
   uploading={props.uploading}
   publishing={props.publishing}
   hasSigner={props.hasSigner}
-  passkeyLocked={props.passkeyLocked}
   uploadSettings={props.uploadSettings}
   canPublish={props.canPublish}
   message={props.message}

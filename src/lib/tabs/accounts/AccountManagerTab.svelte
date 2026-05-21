@@ -4,14 +4,9 @@
     addAccountFromInput,
     addNip07Account,
     createLocalAccount,
-    createPasskeyLocalAccount,
     generateNsec,
-    isPasskeyUnlocked,
-    lockPasskeyAccount,
-    loginWithPasskey,
     removeStoredAccount,
     setActiveAccount,
-    unlockPasskeyAccount,
   } from '$lib/accounts/account-manager';
   import { getLocalSecret } from '$lib/accounts/local-secret-store';
   import { encodeNsec } from '$lib/protocol';
@@ -63,18 +58,7 @@
 
   function fillGeneratedNsec(): void {
     input = generateNsec();
-    status = 'Generated nsec. Create a local or passkey account from it.';
-  }
-
-  function createPasskey(): Promise<void> {
-    return run(
-      () => createPasskeyLocalAccount(input),
-      'Passkey account created.',
-    );
-  }
-
-  function loginPasskey(): Promise<void> {
-    return run(() => loginWithPasskey(), 'Passkey account unlocked.');
+    status = 'Generated nsec. Add it as a local account when ready.';
   }
 
   function makeActive(account: Account): Promise<void> {
@@ -83,19 +67,6 @@
 
   function remove(account: Account): Promise<void> {
     return run(() => removeStoredAccount(account), 'Account disconnected.');
-  }
-
-  function unlockPasskey(account: Account): Promise<void> {
-    return run(
-      () => unlockPasskeyAccount(account),
-      'Passkey account unlocked.',
-    );
-  }
-
-  async function lockPasskey(account: Account): Promise<void> {
-    lockPasskeyAccount(account.id);
-    status = 'Passkey account locked.';
-    await props.refreshData();
   }
 
   async function reveal(account: Account): Promise<void> {
@@ -144,14 +115,6 @@
     <button type="button" disabled={busy} onclick={fillGeneratedNsec}
       >Generate nsec</button
     >
-    <button
-      type="button"
-      disabled={busy || !input.trim()}
-      onclick={createPasskey}>Create passkey from nsec</button
-    >
-    <button type="button" disabled={busy} onclick={loginPasskey}
-      >Login with passkey</button
-    >
   </div>
   {#if status}<p role="status">{status}</p>{/if}
   {#if props.accounts.length > 0}
@@ -163,12 +126,9 @@
           activeAccount={props.activeAccount}
           {busy}
           revealed={revealed[account.id]}
-          passkeyUnlocked={isPasskeyUnlocked(account.id)}
           makeActive={(item) => void makeActive(item)}
           reveal={(item) => void reveal(item)}
           copy={(item) => void copy(item)}
-          unlockPasskey={(item) => void unlockPasskey(item)}
-          lockPasskey={(item) => void lockPasskey(item)}
           remove={(item) => void remove(item)}
         />
       {/each}

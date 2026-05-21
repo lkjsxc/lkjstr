@@ -11,7 +11,6 @@
     snapshotTweetDraft,
     type TweetAttachment,
   } from '$lib/tweet/draft-store';
-  import { isPasskeyUnlocked } from '$lib/accounts/account-manager';
   import {
     acceptedTweetMedia,
     uploadTweetFiles,
@@ -47,15 +46,10 @@
   let saveTimer: ReturnType<typeof setTimeout> | undefined;
   let draftId = $derived(`tab:${props.tabId}`);
   let hasSigner = $derived(Boolean(props.activeAccount?.capabilities.sign));
-  let passkeyLocked = $derived(
-    props.activeAccount?.signerType === 'passkey-local' &&
-      !isPasskeyUnlocked(props.activeAccount.id),
-  );
   let canPublish = $derived(
     !publishing &&
       !uploading &&
       hasSigner &&
-      !passkeyLocked &&
       (content.trim().length > 0 || attachments.length > 0),
   );
 
@@ -190,5 +184,5 @@
 
 <section class="data-tab" aria-label="Tweet">
   <!-- prettier-ignore -->
-  <TweetTabView tabId={props.tabId} bind:sensitive bind:warningReason bind:content {attachments} {customEmojis} {uploading} {publishing} {hasSigner} {passkeyLocked} {uploadSettings} {canPublish} {message} {confirmedRelays} {touchDraft} {flushDraft} {uploadFiles} {publish} {removeAttachment} {handlePaste} addCustomEmoji={addCustomEmoji} removeCustomEmoji={removeCustomEmoji} />
+  <TweetTabView tabId={props.tabId} bind:sensitive bind:warningReason bind:content {attachments} {customEmojis} {uploading} {publishing} {hasSigner} {uploadSettings} {canPublish} {message} {confirmedRelays} {touchDraft} {flushDraft} {uploadFiles} {publish} {removeAttachment} {handlePaste} addCustomEmoji={addCustomEmoji} removeCustomEmoji={removeCustomEmoji} />
 </section>

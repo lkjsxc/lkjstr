@@ -6,9 +6,12 @@ import {
   safeRemoveItem,
   safeSetItem,
 } from '../storage/safe-storage';
-import { normalizeAccount, type Account } from './account';
+import {
+  normalizeAccount,
+  normalizeStoredAccount,
+  type Account,
+} from './account';
 import { removeLocalSecret } from './local-secret-store';
-import { lockPasskeyAccount } from './passkey-session';
 
 const activeKey = 'lkjstr.activeAccountId';
 let memoryAccounts: Account[] = [];
@@ -19,7 +22,10 @@ export async function listAccounts(): Promise<Account[]> {
     () => browserDb().accounts.orderBy('updatedAt').reverse().toArray(),
     memoryAccounts,
   );
-  memoryAccounts = accounts.map(normalizeAccount);
+  memoryAccounts = accounts.flatMap((account) => {
+    const normalized = normalizeStoredAccount(account);
+    return normalized ? [normalized] : [];
+  });
   return memoryAccounts;
 }
 
@@ -37,7 +43,6 @@ export async function removeAccount(id: string): Promise<void> {
   memoryAccounts = memoryAccounts.filter((account) => account.id !== id);
   await bestEffortStorageWrite(() => browserDb().accounts.delete(id));
   await removeLocalSecret(id);
-  lockPasskeyAccount(id);
   if (wasActive) await selectFallbackActiveAccount();
 }
 

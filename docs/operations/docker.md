@@ -14,7 +14,7 @@ Docker docs define the Compose verification path.
 - `e2e` installs Playwright browser dependencies in its image.
 - Docker verification must run after feed-memory changes because browser heap
   behavior depends on the built app bundle.
-- Docker verification must also run after passkey, workspace, protocol, or
+- Docker verification must also run after account, workspace, protocol, or
   settings contract changes when Docker is available.
 
 ## Commands

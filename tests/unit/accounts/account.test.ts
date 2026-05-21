@@ -53,9 +53,9 @@ describe('account helpers', () => {
     ).toBe(true);
   });
 
-  it('creates passkey-local signing accounts', () => {
-    expect(createAccount(pubkey, 'passkey-local')).toMatchObject({
-      signerType: 'passkey-local',
+  it('creates local signing accounts', () => {
+    expect(createAccount(pubkey, 'local')).toMatchObject({
+      signerType: 'local',
       capabilities: { read: true, sign: true, publish: true, decrypt: true },
     });
   });

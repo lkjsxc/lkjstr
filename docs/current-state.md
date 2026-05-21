@@ -63,14 +63,9 @@ This document records the current implemented contract for the app.
 - Event actions publish NIP-25 hearts and emoji reactions, NIP-18 reposts,
   tagged replies, and NIP-57 zap requests where targets expose zap data.
 - Event rows and diagnostic rows wrap long content inside their tile.
-- Accounts are managed inline with active, disconnect, local reveal, passkey
-  unlock, passkey lock, and passkey login controls. Stored account records
-  normalize to enabled and the UI does not retire accounts by disabling them.
-- Passkey accounts use a stored browser credential to unlock encrypted local
-  Nostr key material. New portable passkeys require discoverable credentials,
-  WebAuthn PRF, and largeBlob support. Passkeys never sign Nostr events
-  directly, encrypted passkey material is retained on disconnect, decrypted
-  keys stay in memory only, and reloads start locked.
+- Accounts are managed inline with active, disconnect, and local reveal/copy
+  controls. Stored account records normalize to enabled, unsupported signer
+  types are ignored, and the UI does not retire accounts by disabling them.
 - Mine npub mines an `npub` prefix locally and exports the generated `nsec`
   without storing it until the user adds it.
 - Tweet uses the active signing account, durable composer recovery,

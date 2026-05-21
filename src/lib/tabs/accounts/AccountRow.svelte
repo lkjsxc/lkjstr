@@ -7,12 +7,9 @@
     activeAccount?: Account;
     busy?: boolean;
     revealed?: string;
-    passkeyUnlocked?: boolean;
     makeActive: (account: Account) => void;
     reveal: (account: Account) => void;
     copy: (account: Account) => void;
-    unlockPasskey: (account: Account) => void;
-    lockPasskey: (account: Account) => void;
     remove: (account: Account) => void;
   };
 
@@ -31,9 +28,6 @@
     <IdentityChip pubkey={props.account.pubkey} />
   </label>
   <small>{props.account.signerType}</small>
-  {#if props.account.signerType === 'passkey-local'}
-    <small>{props.passkeyUnlocked ? 'unlocked' : 'locked'}</small>
-  {/if}
   {#if props.account.signerType === 'local'}
     {#if props.revealed}
       <code>{props.revealed}</code>
@@ -51,24 +45,6 @@
         onclick={() => props.reveal(props.account)}
       >
         Reveal nsec
-      </button>
-    {/if}
-  {:else if props.account.signerType === 'passkey-local'}
-    {#if props.passkeyUnlocked}
-      <button
-        type="button"
-        disabled={props.busy}
-        onclick={() => props.lockPasskey(props.account)}
-      >
-        Lock
-      </button>
-    {:else}
-      <button
-        type="button"
-        disabled={props.busy}
-        onclick={() => props.unlockPasskey(props.account)}
-      >
-        Unlock
       </button>
     {/if}
   {/if}

@@ -24,7 +24,7 @@ Thread tabs show a root event and replies opened from timeline event actions.
   event in a matching Thread tab. Loaded thread chains keep capped indentation.
 - Closing the tab closes relay subscriptions.
 - Thread surfaces use the shared post renderer.
-- Reaction chips are local disclosure toggles such as `❤️ 5`. Expanded details
+- Reaction chips are local disclosure toggles such as `<3 5`. Expanded details
   show compact actor avatars and names and expose `aria-expanded` with
   `aria-controls`.
 - Cached reposts render as a compact repost chip/list when available.
