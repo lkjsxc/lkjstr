@@ -1,6 +1,7 @@
 <script lang="ts">
   import Avatar from './Avatar.svelte';
   import { identityDisplay, type ProfileSummary } from '$lib/identity/identity';
+  import EmojifiedText from '$lib/components/events/EmojifiedText.svelte';
 
   type Props = {
     pubkey: string;
@@ -19,7 +20,12 @@
     src={display.avatarUrl}
   />
   <span>
-    <strong>{display.title}</strong>
+    <strong>
+      <EmojifiedText
+        text={display.title}
+        emojis={profile?.customEmojis ?? []}
+      />
+    </strong>
     {#if !compact}
       <small>{display.subtitle}{display.stale ? ' stale' : ''}</small>
     {/if}

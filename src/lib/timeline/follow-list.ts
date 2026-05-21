@@ -1,4 +1,5 @@
 import { isPubkey, type NostrEvent, type NostrFilter } from '../protocol';
+import { feedDisplayKinds } from '../events/feed-kinds';
 
 const maxAuthorsPerFilter = 200;
 
@@ -28,7 +29,7 @@ export function authorFilters(
   let chunk = 0;
   for (let index = 0; index < authors.length; index += maxAuthorsPerFilter) {
     filters.push({
-      kinds: [1],
+      kinds: feedDisplayKinds,
       authors: authors.slice(index, index + maxAuthorsPerFilter),
       limit: baseLimit + (chunk < remainder ? 1 : 0),
       ...bounds,

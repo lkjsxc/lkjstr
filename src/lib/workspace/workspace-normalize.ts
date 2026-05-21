@@ -75,6 +75,7 @@ function validKind(kind: unknown): kind is TabKind {
       'thread',
       'relay-monitor',
       'relay-settings',
+      'network-stats',
       'tweet',
       'settings',
       'cache-status',

@@ -6,6 +6,7 @@ import {
   metadataPageLimit,
 } from '../events/feed-window';
 import { queryFeed, upsertEvent } from '../events/repository';
+import { isFeedDisplayKind } from '../events/feed-kinds';
 import { boundedErrorText } from '../events/runtime-error';
 import type { FeedCursorPoint } from '../events/types';
 import { sharedRelayPool, type PoolEvent } from '../relays/relay-pool';
@@ -36,6 +37,7 @@ import {
 } from './timeline-state';
 import { loadCachedTimeline, mergeTimelineItems } from './timeline-store';
 import type { TimelineItem } from './timeline-store';
+import { TimelineProfileCoordinator } from './timeline-profile-coordinator';
 
 // prettier-ignore
 export class TimelineRuntime {
@@ -43,11 +45,13 @@ export class TimelineRuntime {
   #state: TimelineState = emptyState(); #listeners = new Set<(state: TimelineState) => void>(); #cleanup: (() => void)[] = [];
   #relays: string[]; #pageSize: number; #authors: string[] = []; #profiles: TimelineState['profiles'] = {};
   #followList?: TimelineLoad['followList']; #followListId = ''; #followFallbackStarted = false; #initialNotesKey = ''; #followSubId: string; #metaSubId: string; #noteSubId: string;
+  #profileCoordinator: TimelineProfileCoordinator;
   #startedAt = Math.floor(Date.now() / 1000); #closed = false; #generation = 0;
   constructor(readonly options: TimelineRuntimeOptions) {
     const pool = options.pool ?? sharedRelayPool; this.#subscriptions = options.subscriptions ?? new RelaySubscriptionManager(pool);
     this.#followSubId = `${options.subId}:follows`; this.#metaSubId = `${options.subId}:meta`; this.#noteSubId = `${options.subId}:notes`;
     this.#pageSize = options.limit ?? feedPageSize; this.#relays = options.relays.map(normalizeRelayUrl).filter((url): url is string => Boolean(url));
+    this.#profileCoordinator = new TimelineProfileCoordinator(this.#relays, this.#metaSubId);
   }
   subscribe(listener: (state: TimelineState) => void): () => void { this.#listeners.add(listener); listener(this.#state); return () => this.#listeners.delete(listener); }
   async start(): Promise<void> {
@@ -106,7 +110,7 @@ export class TimelineRuntime {
     if (this.#closed) return;
     if (poolEvent.subId === this.#followSubId && poolEvent.event.kind === 3) return this.#receiveFollowList(poolEvent);
     if (poolEvent.subId === this.#metaSubId && poolEvent.event.kind === 0) return this.#receiveMetadata(poolEvent);
-    if (poolEvent.subId !== this.#noteSubId || poolEvent.event.kind !== 1) return; if (!this.#authors.includes(poolEvent.event.pubkey)) return;
+    if (poolEvent.subId !== this.#noteSubId || !isFeedDisplayKind(poolEvent.event.kind)) return; if (!this.#authors.includes(poolEvent.event.pubkey)) return;
     await upsertEvent(poolEvent.event, [poolEvent.relay]); this.#live = upsertLive(this.#live, poolEvent.event, poolEvent.relay);
     this.#emit(this.#withCursors(readyWithEventsState(this.#state, this.items())));
   }
@@ -152,6 +156,12 @@ export class TimelineRuntime {
   #applyLoaded(loaded: TimelineLoad): void { this.#followList = loaded.followList; this.#authors = loaded.authors; this.#cached = loaded.cached; this.#profiles = loaded.profiles; }
   #withCursors(state: TimelineState): TimelineState { return { ...state, ...boundaryCursors(state.items) }; }
   #active(generation: number): boolean { return !this.#closed && generation === this.#generation; }
-  #emit(state: TimelineState): void { if (this.#closed) return; this.#state = state; this.#listeners.forEach((listener) => listener(state)); }
+  #emit(state: TimelineState): void { if (this.#closed) return; this.#state = state; this.#listeners.forEach((listener) => listener(state)); void this.#hydrateVisibleProfiles(); }
   #nextState(patch: Partial<TimelineState>): TimelineState { return this.#withCursors({ ...this.#state, authors: this.#authors, profiles: this.#profiles, ...patch }); }
+  async #hydrateVisibleProfiles(): Promise<void> {
+    this.#profileCoordinator.merge(this.#profiles);
+    const loaded = await this.#profileCoordinator.hydrate(this.#state.items);
+    if (this.#closed || loaded === this.#profiles) return;
+    this.#profiles = loaded; this.#emit({ ...this.#state, profiles: loaded });
+  }
 }

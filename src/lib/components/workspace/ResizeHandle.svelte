@@ -14,6 +14,8 @@
   let pending = 0;
 
   function pointerDown(event: PointerEvent): void {
+    event.preventDefault();
+    (event.currentTarget as HTMLElement).setPointerCapture(event.pointerId);
     start = direction === 'horizontal' ? event.clientX : event.clientY;
     window.addEventListener('pointermove', pointerMove);
     window.addEventListener('pointerup', pointerUp, { once: true });

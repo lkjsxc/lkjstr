@@ -5,6 +5,7 @@ import {
 } from 'nostr-tools/pure';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { RelayPool } from '../../../src/lib/relays/relay-pool';
+import { feedDisplayKinds } from '../../../src/lib/events/feed-kinds';
 import { TimelineRuntime } from '../../../src/lib/timeline/timeline-runtime';
 import { storeTimelineEvent } from '../../../src/lib/timeline/timeline-store';
 import { FakeWebSocket, sockets } from './fake-websocket';
@@ -50,9 +51,9 @@ describe('timeline runtime', () => {
     await runtime.start();
     sockets[0]?.open();
     // prettier-ignore
-    expect(parsedSent('timeline-test:notes:initial')).toEqual(['REQ', expect.stringContaining('timeline-test:notes:initial'), expect.objectContaining({ kinds: [1], authors: [active, followed], limit: 30 })]);
+    expect(parsedSent('timeline-test:notes:initial')).toEqual(['REQ', expect.stringContaining('timeline-test:notes:initial'), expect.objectContaining({ kinds: feedDisplayKinds, authors: [active, followed], limit: 30 })]);
     // prettier-ignore
-    expect(parsedSent('timeline-test:notes', true)).toEqual(['REQ', 'timeline-test:notes', expect.objectContaining({ kinds: [1], authors: [active, followed], limit: 30, since: expect.any(Number) })]);
+    expect(parsedSent('timeline-test:notes', true)).toEqual(['REQ', 'timeline-test:notes', expect.objectContaining({ kinds: feedDisplayKinds, authors: [active, followed], limit: 30, since: expect.any(Number) })]);
   });
 
   it('falls back to self notes when no follow list is found', async () => {
@@ -65,9 +66,9 @@ describe('timeline runtime', () => {
     sockets[0]?.receive(JSON.stringify(['EOSE', 'timeline-test:follows']));
     await vi.waitFor(() => expect(states).toContain('no-follow-list'));
     // prettier-ignore
-    expect(parsedSent('timeline-test:notes:initial')).toEqual(['REQ', expect.stringContaining('timeline-test:notes:initial'), expect.objectContaining({ kinds: [1], authors: [active], limit: 30 })]);
+    expect(parsedSent('timeline-test:notes:initial')).toEqual(['REQ', expect.stringContaining('timeline-test:notes:initial'), expect.objectContaining({ kinds: feedDisplayKinds, authors: [active], limit: 30 })]);
     // prettier-ignore
-    expect(parsedSent('timeline-test:notes', true)).toEqual(['REQ', 'timeline-test:notes', expect.objectContaining({ kinds: [1], authors: [active], limit: 30, since: expect.any(Number) })]);
+    expect(parsedSent('timeline-test:notes', true)).toEqual(['REQ', 'timeline-test:notes', expect.objectContaining({ kinds: feedDisplayKinds, authors: [active], limit: 30, since: expect.any(Number) })]);
   });
 
   it('stops loading on note eose without events', async () => {

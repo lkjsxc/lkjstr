@@ -12,6 +12,7 @@ export type TabKind =
   | 'thread'
   | 'relay-monitor'
   | 'relay-settings'
+  | 'network-stats'
   | 'tweet'
   | 'settings'
   | 'cache-status';
@@ -65,6 +66,7 @@ export function iconFor(kind: TabKind): string {
     thread: 'message',
     'relay-monitor': 'radio',
     'relay-settings': 'sliders',
+    'network-stats': 'activity',
     tweet: 'edit',
     settings: 'settings',
     'cache-status': 'database',

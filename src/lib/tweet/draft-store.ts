@@ -9,6 +9,8 @@ export type TweetDraft = {
   readonly accountId: string | null;
   readonly content: string;
   readonly attachments?: readonly TweetAttachment[];
+  readonly sensitive?: boolean;
+  readonly contentWarningReason?: string;
   readonly updatedAt: number;
 };
 
@@ -35,9 +37,19 @@ export async function saveTweetDraft(
   content: string,
   accountId: string | null,
   attachments: readonly TweetAttachment[] = [],
+  sensitive = false,
+  contentWarningReason = '',
   id = 'main',
 ): Promise<TweetDraft> {
-  const draft = { id, accountId, content, attachments, updatedAt: Date.now() };
+  const draft = {
+    id,
+    accountId,
+    content,
+    attachments,
+    sensitive,
+    contentWarningReason,
+    updatedAt: Date.now(),
+  };
   fallback.set(id, draft);
   await bestEffortStorageWrite(() => browserDb().tweetDrafts.put(draft));
   return draft;

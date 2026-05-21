@@ -24,6 +24,10 @@ export function eventReferences(event: NostrEvent): EventReference[] {
     push(refs, 'repost', tagValues(event, 'e').at(-1));
     return dedupe(refs);
   }
+  if (event.kind === kinds.genericRepost) {
+    push(refs, 'repost', tagValues(event, 'e').at(-1));
+    return dedupe(refs);
+  }
   if (event.kind === kinds.reaction) {
     push(refs, 'reaction', tagValues(event, 'e').at(-1));
     return dedupe(refs);
@@ -42,7 +46,9 @@ export function eventReferences(event: NostrEvent): EventReference[] {
 export function verifiedNestedRepost(
   event: NostrEvent,
 ): NostrEvent | undefined {
-  if (event.kind !== kinds.repost || !event.content.trim()) return undefined;
+  const repost =
+    event.kind === kinds.repost || event.kind === kinds.genericRepost;
+  if (!repost || !event.content.trim()) return undefined;
   try {
     const parsed = parseNostrEvent(JSON.parse(event.content));
     if (!parsed.ok) return undefined;

@@ -1,4 +1,5 @@
 import { feedWindowSize, mergeFeedWindow } from '../events/feed-window';
+import { feedDisplayKinds } from '../events/feed-kinds';
 import { queryFeed, upsertEvent } from '../events/repository';
 import { boundaryUntil, readRelayPage } from '../events/relay-page';
 import type { FeedCursorPoint } from '../events/types';
@@ -23,7 +24,7 @@ export async function loadInitialGlobalPage(
   const relayEvents = await readRelayPage({
     key: initialRelaySubscriptionId(request.subId),
     relays: request.relays,
-    filters: [{ kinds: [1], limit: request.pageSize }],
+    filters: [{ kinds: feedDisplayKinds, limit: request.pageSize }],
     pageSize: request.pageSize,
     subscriptions: request.subscriptions,
   });
@@ -49,7 +50,7 @@ export async function loadOlderGlobalPage(
     relays: request.relays,
     filters: [
       {
-        kinds: [1],
+        kinds: feedDisplayKinds,
         until: boundaryUntil(request.cursor),
         limit: request.pageSize,
       },

@@ -29,9 +29,24 @@ export type RelaySnapshot = {
   readonly state: RelayConnectionState;
   readonly lastMessageAt?: number;
   readonly lastError?: string;
+  readonly stats?: RelaySessionStats;
   readonly diagnostics: readonly RelayDiagnostic[];
   readonly eoseBySub: Readonly<Record<string, boolean>>;
   readonly closedBySub: Readonly<Record<string, string>>;
+};
+
+export type RelaySessionStats = {
+  readonly receivedBytes: number;
+  readonly sentBytes: number;
+  readonly eventCount: number;
+  readonly eoseCount: number;
+  readonly noticeCount: number;
+  readonly authCount: number;
+  readonly closedCount: number;
+  readonly okAcceptedCount: number;
+  readonly okRejectedCount: number;
+  readonly parseErrorCount: number;
+  readonly activeSubscriptionIds: readonly string[];
 };
 
 export type RelayClientEvents = {

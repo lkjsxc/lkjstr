@@ -1,4 +1,5 @@
 import { feedWindowSize } from '$lib/events/feed-window';
+import { feedDisplayKinds } from '$lib/events/feed-kinds';
 import { readRelayPage } from '$lib/events/relay-page';
 import type { ProfileSummary } from '$lib/identity/identity';
 import type { FeedEvent } from '$lib/events/types';
@@ -22,7 +23,11 @@ export async function loadInitialProfilePage(request: Request) {
     relays: request.relays,
     filters: [
       { kinds: [0], authors: [request.pubkey], limit: 1 },
-      { kinds: [1], authors: [request.pubkey], limit: request.pageSize },
+      {
+        kinds: feedDisplayKinds,
+        authors: [request.pubkey],
+        limit: request.pageSize,
+      },
     ],
     pageSize: request.pageSize + 1,
     subscriptions: request.subscriptions,
@@ -50,7 +55,6 @@ function mergePosts(
 ): FeedEvent[] {
   const byId = new Map<string, FeedEvent>();
   for (const item of [...current, ...incoming]) {
-    if (item.event.kind !== 1) continue;
     const existing = byId.get(item.event.id);
     byId.set(item.event.id, existing ? mergeItem(existing, item) : item);
   }

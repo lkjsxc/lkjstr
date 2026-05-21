@@ -14,6 +14,7 @@ export type ProfileSummary = {
   readonly lud06?: string | null;
   readonly updatedAt: number;
   readonly verifiedNip05?: boolean;
+  readonly customEmojis?: readonly import('../protocol').CustomEmoji[];
 };
 
 export type IdentityDisplay = {

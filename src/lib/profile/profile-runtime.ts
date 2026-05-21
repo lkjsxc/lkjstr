@@ -6,6 +6,7 @@ import {
 } from '$lib/events/feed-window';
 import type { FeedEvent } from '$lib/events/types';
 import { boundedErrorText } from '$lib/events/runtime-error';
+import { feedDisplayKinds, isFeedDisplayKind } from '$lib/events/feed-kinds';
 import {
   getProfile,
   profileFromMetadataEvent,
@@ -86,7 +87,7 @@ export class ProfileRuntime {
           filters: [
             { kinds: [0], authors: [this.pubkey], limit: 1 },
             {
-              kinds: [1],
+              kinds: feedDisplayKinds,
               authors: [this.pubkey],
               since: this.#startedAt,
               limit: this.#pageSize,
@@ -124,7 +125,7 @@ export class ProfileRuntime {
     await storeProfileEvent(poolEvent.event, [poolEvent.relay]);
     if (this.#closed) return;
     if (poolEvent.event.kind === 0) this.#receiveMeta(poolEvent);
-    if (poolEvent.event.kind === 1)
+    if (isFeedDisplayKind(poolEvent.event.kind))
       this.#receivePost(poolEvent.event, poolEvent.relay);
   }
 

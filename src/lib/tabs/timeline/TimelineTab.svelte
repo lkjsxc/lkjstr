@@ -8,7 +8,6 @@
     createTimelineSubId,
     timelineRelays,
   } from '$lib/timeline/timeline-subscription';
-  import { loadTimelineProfiles } from '$lib/timeline/timeline-profiles';
 
   type Props = {
     tabId: string;
@@ -39,7 +38,6 @@
     newestCursor: undefined,
   });
   let runtime: TimelineRuntime | GlobalTimelineRuntime | undefined;
-  let profileRequest = 0;
   let relays: string[] = [];
 
   $effect(() => {
@@ -61,19 +59,6 @@
       unsubscribe();
       runtime?.close();
     };
-  });
-
-  $effect(() => {
-    const authors = [...new Set(state.items.map((item) => item.event.pubkey))];
-    const missing = authors.filter((author) => !state.profiles[author]);
-    if (missing.length === 0) return;
-    const request = ++profileRequest;
-    void loadTimelineProfiles(missing, relays, `${props.tabId}:profiles`).then(
-      (loaded) => {
-        if (request !== profileRequest) return;
-        state = { ...state, profiles: { ...loaded, ...state.profiles } };
-      },
-    );
   });
 </script>
 

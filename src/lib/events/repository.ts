@@ -122,6 +122,7 @@ export async function eventsMatching(
 export function feedKey(query: FeedQuery): string {
   return JSON.stringify({
     kind: query.kind,
+    kinds: query.kinds ? [...query.kinds].sort((a, b) => a - b) : undefined,
     authors: query.authors ? [...query.authors].sort() : undefined,
     eventId: query.eventId,
   });

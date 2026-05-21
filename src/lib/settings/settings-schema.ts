@@ -32,6 +32,7 @@ profiles.showNip05|Show NIP-05|boolean|true|Show NIP-05 identifiers.
 notifications.enabled|Notifications|boolean|true|Enable notifications.
 notifications.showUnreadInTab|Unread tab|boolean|true|Show unread in tab.
 notifications.defaultCategories|Categories|json|["mentions"]|Notification categories.
+content.hideSensitiveEvents|Hide sensitive events|boolean|true|Hide NIP-36 content until revealed.
 tweet.defaultPublishMode|Publish mode|enum|selected-relays|Tweet publish target.|selected-relays
 tweet.persistDrafts|Persist drafts|boolean|true|Keep Tweet drafts durable.
 tweet.mediaUploadProvider|Media upload provider|enum|nostr-build|NIP-96 upload provider.|disabled,nostr-build,nostrcheck,void-cat,custom

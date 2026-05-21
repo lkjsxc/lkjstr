@@ -16,13 +16,21 @@
   }
 </script>
 
+<!-- eslint-disable svelte/no-navigation-without-resolve -->
 <p class="event-content">
   {#each tokens as token, index (`${index}:${token.type}`)}
     {#if token.type === 'text'}
       {token.text}
     {:else if token.type === 'url'}
-      <!-- eslint-disable-next-line svelte/no-navigation-without-resolve -->
-      <a class="event-link" href={token.url} onclick={stop}>{token.text}</a>
+      <a
+        class="event-link"
+        href={token.url}
+        target="_blank"
+        rel="noopener noreferrer"
+        onclick={stop}>{token.text}</a
+      >
+    {:else if token.type === 'custom-emoji'}
+      <img class="custom-emoji" src={token.url} alt={token.text} />
     {:else if token.type === 'profile'}
       <button
         type="button"

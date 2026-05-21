@@ -20,6 +20,7 @@
     RepostSummaryMap,
   } from '$lib/thread/thread-reactions';
   import EventRow from './EventRow.svelte';
+  import { pinVisibleEvents } from '$lib/cache/pins';
 
   type TerminalRow = { readonly terminal: true };
   type ViewRow = FlatEventTreeItem | TerminalRow;
@@ -82,6 +83,7 @@
   $effect(() => {
     const anchor = captureVirtualAnchor(previousNodes, eventNodeKey, list);
     previousNodes = nodes;
+    pinVisibleEvents(nodes.map((node) => node.event.id));
     void tick().then(() =>
       restoreVirtualAnchor(anchor, nodes, eventNodeKey, list),
     );

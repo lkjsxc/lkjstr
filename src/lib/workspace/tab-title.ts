@@ -15,6 +15,7 @@ export function titleFor(kind: TabKind): string {
     thread: 'Thread',
     'relay-monitor': 'lkjstr Log',
     'relay-settings': 'Relay Settings',
+    'network-stats': 'Stats',
     tweet: 'Tweet',
     settings: 'Settings',
     'cache-status': 'Cache',

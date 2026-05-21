@@ -1,5 +1,6 @@
 <script lang="ts">
   import Avatar from '$lib/components/identity/Avatar.svelte';
+  import EmojifiedText from './EmojifiedText.svelte';
   import { bestDisplayName } from '$lib/identity/display-name';
   import type { ProfileSummary } from '$lib/identity/identity';
   import type {
@@ -37,7 +38,7 @@
           aria-controls={id}
           onclick={() => toggle(id)}
         >
-          <span>{reaction.content}</span>
+          <span><EmojifiedText text={reaction.content} /></span>
           <strong>{reaction.count}</strong>
         </button>
         {#if expanded === id}
@@ -50,7 +51,12 @@
                   src={props.profiles?.[actor]?.avatarUrl}
                   size="sm"
                 />
-                <span>{name(actor)}</span>
+                <span>
+                  <EmojifiedText
+                    text={name(actor)}
+                    emojis={props.profiles?.[actor]?.customEmojis ?? []}
+                  />
+                </span>
               </button>
             {/each}
           </div>
@@ -80,7 +86,12 @@
               src={props.profiles?.[actor]?.avatarUrl}
               size="sm"
             />
-            <span>{name(actor)}</span>
+            <span>
+              <EmojifiedText
+                text={name(actor)}
+                emojis={props.profiles?.[actor]?.customEmojis ?? []}
+              />
+            </span>
           </button>
         {/each}
       </div>

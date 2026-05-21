@@ -1,4 +1,5 @@
 import { compareEventsDesc, type NostrEvent } from '../protocol';
+import { isFeedDisplayKind } from '../events/feed-kinds';
 import {
   latestEventByAuthorKind,
   queryFeed,
@@ -71,7 +72,7 @@ function memoryTimeline(
 ): TimelineItem[] {
   const allowed = authors ? new Set(authors) : undefined;
   return [...memoryEvents.values()]
-    .filter((event) => event.kind === 1)
+    .filter((event) => isFeedDisplayKind(event.kind))
     .filter((event) => !allowed || allowed.has(event.pubkey))
     .sort(compareEventsDesc)
     .slice(0, limit)

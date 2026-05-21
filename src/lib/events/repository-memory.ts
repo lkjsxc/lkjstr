@@ -1,4 +1,5 @@
 import { compareEventsDesc } from '../protocol';
+import { feedDisplayKinds } from './feed-kinds';
 import type {
   EventRelayReceipt,
   EventTagRow,
@@ -81,14 +82,21 @@ export function putMemory(
 }
 
 function matchesFeed(event: StoredEvent, query: FeedQuery): boolean {
+  const displayKinds = query.kinds ?? feedDisplayKinds;
   if (!before(event, query.until)) return false;
   if (!beforeCursor(event, query.before)) return false;
   if (!afterCursor(event, query.after)) return false;
-  if (query.kind === 'global') return event.kind === 1;
+  if (query.kind === 'global') return displayKinds.includes(event.kind);
   if (query.kind === 'home')
-    return event.kind === 1 && Boolean(query.authors?.includes(event.pubkey));
+    return (
+      displayKinds.includes(event.kind) &&
+      Boolean(query.authors?.includes(event.pubkey))
+    );
   if (query.kind === 'profile')
-    return event.kind === 1 && Boolean(query.authors?.includes(event.pubkey));
+    return (
+      displayKinds.includes(event.kind) &&
+      Boolean(query.authors?.includes(event.pubkey))
+    );
   if (query.kind === 'thread')
     return (
       event.id === query.eventId ||

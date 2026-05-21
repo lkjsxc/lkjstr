@@ -1,5 +1,11 @@
 import { decodeEntity } from '../protocol/nip19';
-import { isEventId, isPubkey, type NostrEvent } from '../protocol';
+import {
+  customEmojis,
+  isEventId,
+  isPubkey,
+  type CustomEmoji,
+  type NostrEvent,
+} from '../protocol';
 import { contentAttachments, type ContentAttachment } from './content-media';
 
 export type ContentToken =
@@ -16,9 +22,16 @@ export type ContentToken =
       readonly eventId: string;
       readonly text: string;
       readonly relays: readonly string[];
+    }
+  | {
+      readonly type: 'custom-emoji';
+      readonly shortcode: string;
+      readonly url: string;
+      readonly text: string;
     };
 
-const tokenPattern = /\b(?:nostr:([a-z0-9]+)|https:\/\/[^\s<>"']+)/gi;
+const tokenPattern =
+  /(:[A-Za-z0-9_+-]+:)|\b(?:nostr:([a-z0-9]+)|https:\/\/[^\s<>"']+)/gi;
 
 export function contentTokens(event: NostrEvent): ContentToken[] {
   const hiddenUrls = new Set(
@@ -26,14 +39,18 @@ export function contentTokens(event: NostrEvent): ContentToken[] {
       .filter(isEmbeddedMedia)
       .map((attachment) => attachment.url),
   );
-  return tokenizeText(event.content, hiddenUrls);
+  return tokenizeText(event.content, hiddenUrls, customEmojis(event));
 }
 
 export function tokenizeText(
   content: string,
   hiddenUrls: ReadonlySet<string> = new Set(),
+  emoji: readonly CustomEmoji[] = [],
 ): ContentToken[] {
   const tokens: ContentToken[] = [];
+  const emojiByText = new Map(
+    emoji.map((item) => [`:${item.shortcode}:`, item]),
+  );
   let index = 0;
   for (const match of content.matchAll(tokenPattern)) {
     const full = match[0] ?? '';
@@ -43,7 +60,13 @@ export function tokenizeText(
     if (start > index) pushText(tokens, content.slice(index, start));
     index = start + full.length;
     if (!raw) continue;
-    const entity = match[1];
+    const emojiHit = emojiByText.get(raw);
+    if (emojiHit) {
+      tokens.push({ type: 'custom-emoji', text: raw, ...emojiHit });
+      pushText(tokens, suffix);
+      continue;
+    }
+    const entity = match[2];
     if (entity) {
       tokens.push(entityToken(raw, entity) ?? { type: 'text', text: raw });
       pushText(tokens, suffix);

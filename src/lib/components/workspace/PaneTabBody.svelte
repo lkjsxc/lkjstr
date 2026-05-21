@@ -13,6 +13,7 @@
   import LkjstrLogTab from '$lib/tabs/log/LkjstrLogTab.svelte';
   import RelaySettingsTab from '$lib/tabs/relays/RelaySettingsTab.svelte';
   import SettingsTab from '$lib/tabs/settings/SettingsTab.svelte';
+  import NetworkStatsTab from '$lib/tabs/stats/NetworkStatsTab.svelte';
   import ThreadTab from '$lib/tabs/thread/ThreadTab.svelte';
   import TimelineTab from '$lib/tabs/timeline/TimelineTab.svelte';
   import TweetTab from '$lib/tabs/tweet/TweetTab.svelte';
@@ -111,6 +112,8 @@
     refresh={props.refreshData}
     removeRelay={props.removeRelay}
   />
+{:else if props.tab.kind === 'network-stats'}
+  <NetworkStatsTab />
 {:else if props.tab.kind === 'settings'}
   <SettingsTab tabId={props.tab.id} />
 {:else if props.tab.kind === 'cache-status'}

@@ -3,8 +3,8 @@
   import type { Account } from '$lib/accounts/account';
   import type { RelaySet } from '$lib/relays/relay-store';
   import type { NostrTag } from '$lib/protocol';
-  import TweetAttachments from './TweetAttachments.svelte';
-  import TweetMediaControls from './TweetMediaControls.svelte';
+  import { contentWarningTag } from '$lib/protocol';
+  import TweetComposer from './TweetComposer.svelte';
   import { publishTweet } from '$lib/tweet/publish';
   import {
     clearTweetDraft,
@@ -30,7 +30,10 @@
   let content = $state('');
   let message = $state('');
   let publishing = $state(false);
+  let confirmedRelays = $state('');
   let uploading = $state(false);
+  let sensitive = $state(false);
+  let warningReason = $state('');
   let uploadSettings = $state<UploadSettings>({
     provider: 'nostr-build',
     customServer: '',
@@ -70,16 +73,14 @@
     if (!draftTouched) {
       content = draft?.content ?? '';
       attachments = [...(draft?.attachments ?? [])];
+      sensitive = Boolean(draft?.sensitive);
+      warningReason = draft?.contentWarningReason ?? '';
     }
-    applyUploadSettings(settings);
+    uploadSettings = settings;
   }
 
   async function loadUploadSettings(): Promise<void> {
-    applyUploadSettings(await loadTweetUploadSettings());
-  }
-
-  function applyUploadSettings(settings: UploadSettings): void {
-    uploadSettings = settings;
+    uploadSettings = await loadTweetUploadSettings();
   }
 
   function touchDraft(): void {
@@ -88,7 +89,13 @@
   }
 
   async function save(): Promise<void> {
-    await saveTweetDraft(content, props.activeAccount?.id ?? null, attachments);
+    await saveTweetDraft(
+      content,
+      props.activeAccount?.id ?? null,
+      attachments,
+      sensitive,
+      warningReason,
+    );
   }
 
   function queueSave(): void {
@@ -105,6 +112,7 @@
   async function publish(): Promise<void> {
     if (!canPublish) return;
     publishing = true;
+    confirmedRelays = '';
     message = '';
     await flushDraft();
     const result = await publishTweet(
@@ -118,9 +126,12 @@
       return;
     }
     const accepted = result.results.filter((item) => item.accepted).length;
-    message = `Published to ${accepted}/${result.results.length} relays.`;
+    confirmedRelays = `${accepted}/${result.results.length}`;
+    message = `Published to ${confirmedRelays} relays.`;
     content = '';
     attachments = [];
+    sensitive = false;
+    warningReason = '';
     await clearTweetDraft();
   }
 
@@ -155,9 +166,8 @@
     return [content.trim(), ...urls].filter(Boolean).join('\n');
   }
 
-  function tags(): NostrTag[] {
-    return attachments.map((item) => item.imeta);
-  }
+  // prettier-ignore
+  function tags(): NostrTag[] { return [...attachments.map((item) => item.imeta), ...(sensitive ? [contentWarningTag(warningReason)] : [])]; }
 
   function removeAttachment(url: string): void {
     attachments = attachments.filter((item) => item.url !== url);
@@ -167,33 +177,24 @@
 
 <section class="data-tab">
   <h2>Tweet</h2>
-  <textarea
-    aria-label="Tweet content"
-    bind:value={content}
-    id="tweet-content"
-    name="tweet-content"
-    oninput={touchDraft}
-    onblur={() => void flushDraft()}
-    onpaste={handlePaste}
-    onkeydown={(event) => {
-      if (event.ctrlKey && event.key === 'Enter') void publish();
-    }}
-  ></textarea>
-  <TweetAttachments {attachments} remove={removeAttachment} />
-  <TweetMediaControls
-    inputId={`tweet-media-${props.tabId}`}
+  <TweetComposer
+    tabId={props.tabId}
+    bind:sensitive
+    bind:warningReason
+    bind:content
+    {attachments}
     {uploading}
     {publishing}
     {hasSigner}
-    uploadServer={uploadSettings.server}
+    {uploadSettings}
     {canPublish}
+    {message}
+    {confirmedRelays}
+    {touchDraft}
+    {flushDraft}
     {uploadFiles}
     {publish}
+    {removeAttachment}
+    {handlePaste}
   />
-  {#if !hasSigner}
-    <p>Add a signing account before publishing.</p>
-  {/if}
-  {#if message}
-    <p role="status">{message}</p>
-  {/if}
 </section>

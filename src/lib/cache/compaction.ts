@@ -2,6 +2,7 @@ import { browserDb } from '../storage/browser-db';
 import { indexedDbAvailable } from '../storage/safe-storage';
 import { loadSettings } from '../settings/settings-store';
 import { eventRetention } from './retention';
+import { pinnedEventIds } from './pins';
 
 export type CacheCompactionOptions = {
   readonly enabled: boolean;
@@ -35,14 +36,16 @@ export async function compactOldEvents(
   const events = (await browserDb().events.toArray()).sort(
     (a, b) => b.created_at - a.created_at,
   );
-  const keepIds = new Set(
+  const recentIds = new Set(
     events.slice(0, resolved.maxEvents).map((event) => event.id),
   );
+  const priorityIds = await priorityEventIds(events);
   const pruneIds = events
     .filter(
       (event) =>
-        !keepIds.has(event.id) ||
-        eventRetention(event, now, resolved.maxAgeSeconds) === 'prune',
+        !priorityIds.has(event.id) &&
+        (!recentIds.has(event.id) ||
+          eventRetention(event, now, resolved.maxAgeSeconds) === 'prune'),
     )
     .map((event) => event.id);
   const retainedIds = new Set(
@@ -66,6 +69,45 @@ export async function compactOldEvents(
     },
   );
   return { prunedEvents: pruneIds.length, skippedDrafts: true, skipped: false };
+}
+
+async function priorityEventIds(
+  events: readonly {
+    id: string;
+    pubkey: string;
+    kind: number;
+    created_at: number;
+  }[],
+): Promise<Set<string>> {
+  const ids = pinnedEventIds();
+  latestByKey(
+    events.filter((event) => event.kind === 0),
+    (event) => event.pubkey,
+  ).forEach((event) => ids.add(event.id));
+  const accounts = await browserDb()
+    .accounts.toArray()
+    .catch(() => []);
+  const accountPubkeys = new Set(accounts.map((account) => account.pubkey));
+  latestByKey(
+    events.filter(
+      (event) => event.kind === 3 && accountPubkeys.has(event.pubkey),
+    ),
+    (event) => event.pubkey,
+  ).forEach((event) => ids.add(event.id));
+  return ids;
+}
+
+function latestByKey<T extends { created_at: number }>(
+  events: readonly T[],
+  key: (event: T) => string,
+): T[] {
+  const byKey = new Map<string, T>();
+  for (const event of events) {
+    const current = byKey.get(key(event));
+    if (!current || current.created_at < event.created_at)
+      byKey.set(key(event), event);
+  }
+  return [...byKey.values()];
 }
 
 export async function cacheCompactionOptions(): Promise<CacheCompactionOptions> {

@@ -1,4 +1,5 @@
 import type { NostrEvent } from '../protocol';
+import { customEmojis } from '../protocol';
 import type { ProfileSummary } from './identity';
 
 const profiles = new Map<string, ProfileSummary>();
@@ -32,6 +33,7 @@ export function profileFromMetadataEvent(event: NostrEvent): ProfileSummary {
     lud16: stringValue(parsed.lud16),
     lud06: stringValue(parsed.lud06),
     updatedAt: event.created_at * 1000,
+    customEmojis: customEmojis(event),
   };
 }
 

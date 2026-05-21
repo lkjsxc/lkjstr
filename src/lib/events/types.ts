@@ -38,6 +38,7 @@ export type FeedCursor = {
 
 export type FeedQuery = {
   readonly kind: FeedKind;
+  readonly kinds?: readonly number[];
   readonly authors?: readonly string[];
   readonly eventId?: string;
   readonly until?: number;

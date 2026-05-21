@@ -7,11 +7,18 @@ export type ActionSummary = {
 
 export function actionSummary(event: NostrEvent): ActionSummary | undefined {
   if (event.kind === kinds.repost) return { verb: 'reposted' };
+  if (event.kind === kinds.genericRepost)
+    return { verb: 'reposted', detail: genericTarget(event) };
   if (event.kind === kinds.reaction) return reactionSummary(event);
   if (event.kind === kinds.deletion)
     return { verb: 'deleted a referenced event' };
   if (event.kind === kinds.zapReceipt) return { verb: 'zapped this event' };
   return undefined;
+}
+
+function genericTarget(event: NostrEvent): string {
+  const kind = tagValues(event, 'k')[0];
+  return kind ? ` kind ${kind}` : ' an event';
 }
 
 function reactionSummary(event: NostrEvent): ActionSummary {

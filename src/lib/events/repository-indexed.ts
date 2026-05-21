@@ -8,13 +8,15 @@ import {
   maxUntil,
 } from './repository-shared';
 import { normalizeStoredEvent } from './normalize';
+import { feedDisplayKinds } from './feed-kinds';
 
 export async function indexedPage(
   query: FeedQuery,
   limit: number,
 ): Promise<StoredEvent[]> {
   if (query.kind === 'thread') return indexedThreadPage(query, limit);
-  if (query.kind === 'global') return byKindPage(1, query, limit);
+  if (query.kind === 'global')
+    return byKindsPage(feedKinds(query), query, limit);
   return indexedAuthorPage(query, limit);
 }
 
@@ -24,13 +26,17 @@ async function indexedAuthorPage(
 ): Promise<StoredEvent[]> {
   const authors = [...new Set(query.authors ?? [])];
   if (authors.length === 0) return [];
-  if (authors.length > 24) return byKindAuthorPage(1, authors, query, limit);
+  if (authors.length > 24) return byKindAuthorPage(authors, query, limit);
   const perAuthorLimit =
     authors.length <= 3
       ? limit * 2
       : Math.ceil((limit * 3) / authors.length) + 2;
   const pages = await Promise.all(
-    authors.map((author) => byAuthorPage(author, 1, query, perAuthorLimit)),
+    authors.flatMap((author) =>
+      feedKinds(query).map((kind) =>
+        byAuthorPage(author, kind, query, perAuthorLimit),
+      ),
+    ),
   );
   return pages
     .flat()
@@ -39,29 +45,31 @@ async function indexedAuthorPage(
     .slice(0, limit);
 }
 
-function byKindAuthorPage(
-  kind: number,
+async function byKindAuthorPage(
   authors: readonly string[],
   query: FeedQuery,
   limit: number,
 ): Promise<StoredEvent[]> {
   const authorSet = new Set(authors);
   const cap = Math.max(limit * 25, 500);
-  return browserDb()
-    .events.where('[kind+created_at]')
-    .between([kind, 0], [kind, maxUntil(query.until)])
-    .reverse()
-    .limit(cap)
-    .toArray()
-    .then((events) =>
-      events
-        .map(normalizeStoredEvent)
-        .filter(
-          (event) => authorSet.has(event.pubkey) && withinCursors(event, query),
-        )
-        .sort(compareEventsDesc)
-        .slice(0, limit),
-    );
+  const pages = await Promise.all(
+    feedKinds(query).map((kind) =>
+      browserDb()
+        .events.where('[kind+created_at]')
+        .between([kind, 0], [kind, maxUntil(query.until)])
+        .reverse()
+        .limit(cap)
+        .toArray(),
+    ),
+  );
+  return pages
+    .flat()
+    .map(normalizeStoredEvent)
+    .filter(
+      (event) => authorSet.has(event.pubkey) && withinCursors(event, query),
+    )
+    .sort(compareEventsDesc)
+    .slice(0, limit);
 }
 
 export async function indexedLatestByAuthorKind(
@@ -141,23 +149,27 @@ async function indexedThreadPage(
     .slice(0, limit);
 }
 
-function byKindPage(
-  kind: number,
+async function byKindsPage(
+  kinds: readonly number[],
   query: FeedQuery,
   limit: number,
 ): Promise<StoredEvent[]> {
-  return browserDb()
-    .events.where('[kind+created_at]')
-    .between([kind, 0], [kind, maxUntil(query.until)])
-    .reverse()
-    .limit(limit * 3)
-    .toArray()
-    .then((events) =>
-      events
-        .map(normalizeStoredEvent)
-        .filter((event) => withinCursors(event, query))
-        .slice(0, limit),
-    );
+  const pages = await Promise.all(
+    kinds.map((kind) =>
+      browserDb()
+        .events.where('[kind+created_at]')
+        .between([kind, 0], [kind, maxUntil(query.until)])
+        .reverse()
+        .limit(limit * 3)
+        .toArray(),
+    ),
+  );
+  return pages
+    .flat()
+    .map(normalizeStoredEvent)
+    .filter((event) => withinCursors(event, query))
+    .sort(compareEventsDesc)
+    .slice(0, limit);
 }
 
 function byAuthorPage(
@@ -183,3 +195,6 @@ function byAuthorPage(
 function withinCursors(event: StoredEvent, query: FeedQuery): boolean {
   return beforeCursor(event, query.before) && afterCursor(event, query.after);
 }
+
+// prettier-ignore
+function feedKinds(query: FeedQuery): readonly number[] { return query.kinds ?? feedDisplayKinds; }

@@ -19,6 +19,7 @@ import {
   maxRelaySubscriptionIdLength,
   relaySubscriptionIdValid,
 } from './subscription-id';
+import { RelaySessionStatsCounter } from './relay-session-stats';
 
 export class RelayClient {
   #socket?: WebSocket;
@@ -28,6 +29,7 @@ export class RelayClient {
   #diagnostics: RelayDiagnostic[] = [];
   #eoseBySub: Record<string, boolean> = {};
   #closedBySub: Record<string, string> = {};
+  #stats = new RelaySessionStatsCounter();
   #queue: string[] = [];
   #connectTimer?: ReturnType<typeof setTimeout>;
   #intentionalClose = false;
@@ -43,6 +45,7 @@ export class RelayClient {
       state: this.#state,
       lastMessageAt: this.#lastMessageAt,
       lastError: this.#lastError,
+      stats: this.#stats.snapshot(),
       diagnostics: [...this.#diagnostics],
       eoseBySub: { ...this.#eoseBySub },
       closedBySub: { ...this.#closedBySub },
@@ -80,12 +83,14 @@ export class RelayClient {
   subscribe(id: string, filters: readonly NostrFilter[]): void {
     if (!this.#validSubscriptionId(id, 'REQ')) return;
     this.#eoseBySub[id] = false;
+    this.#stats.activeSubscriptionIds.add(id);
     delete this.#closedBySub[id];
     this.send(['REQ', id, ...filters]);
   }
   closeSubscription(id: string): void {
     if (!this.#validSubscriptionId(id, 'CLOSE')) return;
     delete this.#eoseBySub[id];
+    this.#stats.activeSubscriptionIds.delete(id);
     if (this.#closedBySub[id]) return;
     this.sendIfConnected(['CLOSE', id]);
   }
@@ -95,6 +100,7 @@ export class RelayClient {
   send(message: ClientMessage): void {
     this.connect();
     const encoded = encodeClientMessage(message);
+    this.#stats.sentBytes += encoded.length;
     if (this.#state === 'open') this.#socket?.send(encoded);
     else this.#queue.push(encoded);
   }
@@ -102,17 +108,14 @@ export class RelayClient {
     if (!this.#socket || this.#state === 'closed' || this.#state === 'idle')
       return;
     const encoded = encodeClientMessage(message);
+    this.#stats.sentBytes += encoded.length;
     if (this.#state === 'open') this.#socket.send(encoded);
     else this.#queue.push(encoded);
   }
-  close(): void {
-    this.#intentionalClose = true;
-    this.#clearConnectTimer();
-    this.#socket?.close();
-    this.#socket = undefined;
-    this.#setState('closed');
-  }
+  // prettier-ignore
+  close(): void { this.#intentionalClose = true; this.#clearConnectTimer(); this.#socket?.close(); this.#socket = undefined; this.#setState('closed'); }
   #receive(data: unknown): void {
+    this.#stats.receivedBytes += typeof data === 'string' ? data.length : 0;
     const parsed = parseRelayMessageData(data);
     if (!parsed) return;
     if (parsed.ok) {
@@ -121,11 +124,13 @@ export class RelayClient {
       this.#handleRelayMessage(parsed.message);
     } else {
       this.#lastError = parsed.message;
+      this.#stats.parseErrorCount++;
       this.#addDiagnostic('parse-error', parsed.message);
     }
     this.#emitState();
   }
   #handleRelayMessage(message: RelayMessage) {
+    this.#stats.receive(message);
     if (message[0] === 'EVENT') {
       const verified = verifyEvent(message[2]);
       if (verified.ok) this.events.event?.(this.url, message[1], message[2]);
@@ -133,11 +138,18 @@ export class RelayClient {
     }
     if (message[0] === 'CLOSED') {
       this.#closedBySub[message[1]] = message[2];
+      this.#stats.activeSubscriptionIds.delete(message[1]);
       this.#addDiagnostic('closed', message[2], message[1]);
     }
-    if (message[0] === 'NOTICE') this.#addDiagnostic('notice', message[1]);
-    if (message[0] === 'AUTH') this.#addDiagnostic('auth', message[1]);
-    if (message[0] === 'EOSE') this.#eoseBySub[message[1]] = true;
+    if (message[0] === 'NOTICE') {
+      this.#addDiagnostic('notice', message[1]);
+    }
+    if (message[0] === 'AUTH') {
+      this.#addDiagnostic('auth', message[1]);
+    }
+    if (message[0] === 'EOSE') {
+      this.#eoseBySub[message[1]] = true;
+    }
   }
   #addDiagnostic(
     kind: RelayDiagnosticKind,
@@ -168,31 +180,20 @@ export class RelayClient {
     return false;
   }
 
-  #timeoutConnect(): void {
-    if (this.#state !== 'connecting') return;
-    this.#lastError = 'connect timeout';
-    this.#addDiagnostic('timeout', 'connect timeout');
-    this.#setState('error');
-    this.#socket?.close();
-  }
+  // prettier-ignore
+  #timeoutConnect(): void { if (this.#state !== 'connecting') return; this.#lastError = 'connect timeout'; this.#addDiagnostic('timeout', 'connect timeout'); this.#setState('error'); this.#socket?.close(); }
 
-  #clearConnectTimer(): void {
-    if (!this.#connectTimer) return;
-    clearTimeout(this.#connectTimer);
-    this.#connectTimer = undefined;
-  }
+  // prettier-ignore
+  #clearConnectTimer(): void { if (!this.#connectTimer) return; clearTimeout(this.#connectTimer); this.#connectTimer = undefined; }
 
-  #setState(state: RelayConnectionState): void {
-    this.#state = state;
-    this.#emitState();
-  }
+  // prettier-ignore
+  #setState(state: RelayConnectionState): void { this.#state = state; this.#emitState(); }
 
   #emitState(): void {
     this.events.state?.(this.snapshot());
   }
 
   #flush(): void {
-    const queued = this.#queue.splice(0);
-    queued.forEach((message) => this.#socket?.send(message));
+    this.#queue.splice(0).forEach((message) => this.#socket?.send(message));
   }
 }

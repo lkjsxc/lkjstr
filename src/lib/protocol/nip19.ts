@@ -1,4 +1,5 @@
 import * as upstream from 'nostr-tools/nip19';
+import { hexToBytes } from 'nostr-tools/utils';
 
 export type NostrEntity = ReturnType<typeof upstream.decode>;
 
@@ -26,4 +27,8 @@ export function encodeNprofile(input: {
 
 export function encodeNote(id: string): string {
   return upstream.noteEncode(id);
+}
+
+export function encodeNsec(secretKeyHex: string): string {
+  return upstream.nsecEncode(hexToBytes(secretKeyHex));
 }

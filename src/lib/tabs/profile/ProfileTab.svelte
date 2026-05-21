@@ -19,6 +19,7 @@
     timelineRelays,
   } from '$lib/timeline/timeline-subscription';
   import ProfileActions from './ProfileActions.svelte';
+  import ProfileAbout from './ProfileAbout.svelte';
 
   type Props = {
     tabId: string;
@@ -47,8 +48,7 @@
   let autoFillPending = false;
 
   $effect(() => {
-    const key = runtimeKey;
-    if (key === undefined) return;
+    if (!runtimeKey) return;
     const { pubkey, relaySets, tabId } = untrack(() => props);
     runtime = new ProfileRuntime(
       pubkey,
@@ -153,7 +153,10 @@
     />
     {#if nprofile}<small>{nprofile}</small>{/if}
     {#if state.profile?.about}
-      <p>{state.profile.about}</p>
+      <ProfileAbout
+        text={state.profile.about}
+        emojis={state.profile.customEmojis ?? []}
+      />
     {/if}
     {#if state.profile?.website}
       <span>{state.profile.website}</span>

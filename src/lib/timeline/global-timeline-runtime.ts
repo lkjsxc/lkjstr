@@ -7,6 +7,7 @@ import {
   feedWindowSize,
   mergeFeedItems,
 } from '../events/feed-window';
+import { feedDisplayKinds, isFeedDisplayKind } from '../events/feed-kinds';
 import {
   sharedRelayPool,
   type PoolEvent,
@@ -32,6 +33,7 @@ import {
   loadInitialGlobalPage,
   loadOlderGlobalPage,
 } from './global-timeline-pages';
+import { TimelineProfileCoordinator } from './timeline-profile-coordinator';
 
 export class GlobalTimelineRuntime {
   #cached: TimelineItem[] = [];
@@ -44,6 +46,7 @@ export class GlobalTimelineRuntime {
   #pageSize: number;
   #subId: string;
   #subscriptions: SubscriptionManager;
+  #profileCoordinator: TimelineProfileCoordinator;
   #startedAt = Math.floor(Date.now() / 1000);
   #closed = false;
   #generation = 0;
@@ -58,6 +61,10 @@ export class GlobalTimelineRuntime {
     this.#relays = options.relays
       .map(normalizeRelayUrl)
       .filter((url): url is string => Boolean(url));
+    this.#profileCoordinator = new TimelineProfileCoordinator(
+      this.#relays,
+      `${options.subId}:profiles`,
+    );
   }
 
   subscribe(listener: (state: TimelineState) => void): () => void {
@@ -89,7 +96,11 @@ export class GlobalTimelineRuntime {
           key: this.#subId,
           relays: this.#relays,
           filters: [
-            { kinds: [1], since: this.#startedAt, limit: this.#pageSize },
+            {
+              kinds: feedDisplayKinds,
+              since: this.#startedAt,
+              limit: this.#pageSize,
+            },
           ],
         },
         (event) => this.#receive(event),
@@ -131,6 +142,7 @@ export class GlobalTimelineRuntime {
 
   async #receive(poolEvent: PoolEvent): Promise<void> {
     if (this.#closed) return;
+    if (!isFeedDisplayKind(poolEvent.event.kind)) return;
     await upsertEvent(poolEvent.event, [poolEvent.relay]);
     if (this.#closed) return;
     this.#live = mergeFeedItems(this.#live, [
@@ -166,6 +178,7 @@ export class GlobalTimelineRuntime {
     if (this.#closed) return;
     this.#state = state;
     this.#listeners.forEach((listener) => listener(state));
+    void this.#hydrateVisibleProfiles();
   }
 
   #active(generation: number): boolean {
@@ -174,10 +187,13 @@ export class GlobalTimelineRuntime {
 
   #nextState(patch: Partial<TimelineState>): TimelineState {
     const items = patch.items ?? this.#state.items;
-    return {
-      ...this.#state,
-      ...boundaryCursors(items),
-      ...patch,
-    };
+    return { ...this.#state, ...boundaryCursors(items), ...patch };
+  }
+
+  async #hydrateVisibleProfiles(): Promise<void> {
+    this.#profileCoordinator.merge(this.#state.profiles);
+    const profiles = await this.#profileCoordinator.hydrate(this.#state.items);
+    if (this.#closed || profiles === this.#state.profiles) return;
+    this.#emit({ ...this.#state, profiles });
   }
 }

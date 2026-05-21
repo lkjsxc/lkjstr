@@ -9,6 +9,8 @@
     setActiveAccount,
   } from '$lib/accounts/account-manager';
   import { setAccountEnabled } from '$lib/accounts/account-store';
+  import { getLocalSecret } from '$lib/accounts/local-secret-store';
+  import { encodeNsec } from '$lib/protocol';
 
   type Props = {
     accounts: Account[];
@@ -20,6 +22,7 @@
   let input = $state('');
   let status = $state('');
   let busy = $state(false);
+  let revealed = $state<Record<string, string>>({});
 
   async function run(
     action: () => Promise<unknown>,
@@ -65,7 +68,24 @@
   }
 
   function remove(account: Account): Promise<void> {
-    return run(() => removeStoredAccount(account), 'Account removed.');
+    return run(() => removeStoredAccount(account), 'Account disconnected.');
+  }
+
+  async function reveal(account: Account): Promise<void> {
+    if (account.signerType !== 'local') return;
+    const secret = await getLocalSecret(account.id);
+    if (!secret) {
+      status = 'Local secret is unavailable.';
+      return;
+    }
+    revealed = { ...revealed, [account.id]: encodeNsec(secret.secretKey) };
+  }
+
+  async function copy(account: Account): Promise<void> {
+    const nsec = revealed[account.id];
+    if (!nsec) return;
+    await navigator.clipboard?.writeText(nsec);
+    status = 'Local nsec copied.';
   }
 </script>
 
@@ -121,8 +141,28 @@
           >
             {account.enabled ? 'Disable' : 'Enable'}
           </button>
+          {#if account.signerType === 'local'}
+            {#if revealed[account.id]}
+              <code>{revealed[account.id]}</code>
+              <button
+                type="button"
+                disabled={busy}
+                onclick={() => copy(account)}
+              >
+                Copy nsec
+              </button>
+            {:else}
+              <button
+                type="button"
+                disabled={busy}
+                onclick={() => reveal(account)}
+              >
+                Reveal nsec
+              </button>
+            {/if}
+          {/if}
           <button type="button" disabled={busy} onclick={() => remove(account)}>
-            Remove from this device
+            Disconnect
           </button>
         </article>
       {/each}

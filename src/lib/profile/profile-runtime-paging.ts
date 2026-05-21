@@ -1,4 +1,5 @@
 import { feedWindowSize } from '$lib/events/feed-window';
+import { feedDisplayKinds } from '$lib/events/feed-kinds';
 import { queryFeed } from '$lib/events/repository';
 import { boundaryUntil, readRelayPage } from '$lib/events/relay-page';
 import type { FeedCursorPoint, FeedEvent } from '$lib/events/types';
@@ -29,7 +30,7 @@ export async function loadOlderProfilePage(request: ProfileOlderRequest) {
     relays: request.relays,
     filters: [
       {
-        kinds: [1],
+        kinds: feedDisplayKinds,
         authors: [request.pubkey],
         until: boundaryUntil(request.cursor),
         limit: request.pageSize,
