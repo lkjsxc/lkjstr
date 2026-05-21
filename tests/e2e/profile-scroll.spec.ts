@@ -1,6 +1,7 @@
 import { expect, test } from '@playwright/test';
 import { finalizeEvent, generateSecretKey } from 'nostr-tools/pure';
 import { installSyntheticRelay } from './timeline-relay-helpers';
+import { openNewTabOption } from './workspace-helpers';
 
 test('Profile tab scroll does not move the page', async ({ page }) => {
   const key = generateSecretKey();
@@ -29,8 +30,7 @@ test('Profile tab scroll does not move the page', async ({ page }) => {
   );
   await installSyntheticRelay(page, { events: [metadata, ...notes] });
   await page.goto('/');
-  await page.getByRole('button', { name: 'Open new tab' }).first().click();
-  await page.getByRole('button', { name: 'Global', exact: true }).click();
+  await openNewTabOption(page, 'Global');
   await expect(page.getByText('profile page scroll note 0')).toBeVisible();
   await page.locator('.event-row .avatar-button').first().click();
   const profile = page.locator(

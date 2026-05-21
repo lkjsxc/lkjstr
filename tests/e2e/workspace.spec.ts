@@ -1,12 +1,13 @@
 import { expect, test } from '@playwright/test';
+import { pane } from './workspace-helpers';
 
 test('opens the workspace and creates split panes', async ({ page }) => {
   await page.goto('/');
   await expect(page.getByRole('tab', { name: 'Welcome' })).toBeVisible();
-  await page.getByRole('button', { name: 'Open tile menu' }).first().click();
+  await pane(page, 0).getByRole('button', { name: 'Open tile menu' }).click();
   await page.getByRole('button', { name: 'Split right' }).click();
   await expect(page.getByRole('heading', { name: 'New Tab' })).toBeVisible();
-  await page.getByRole('button', { name: 'Open tile menu' }).first().click();
+  await pane(page, 0).getByRole('button', { name: 'Open tile menu' }).click();
   await page.getByRole('button', { name: 'Split down' }).click();
   await expect(page.getByRole('heading', { name: 'New Tab' })).toHaveCount(2);
 });
@@ -28,7 +29,7 @@ test('opens account, notification, and tweet tabs', async ({ page }) => {
 
 test('persists layout after reload', async ({ page }) => {
   await page.goto('/');
-  await page.getByRole('button', { name: 'Open tile menu' }).first().click();
+  await pane(page, 0).getByRole('button', { name: 'Open tile menu' }).click();
   await page.getByRole('button', { name: 'Split right' }).click();
   await expect(page.getByRole('heading', { name: 'New Tab' })).toBeVisible();
   await page.reload();

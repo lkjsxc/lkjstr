@@ -10,6 +10,7 @@ import {
   openCleanWorkspace,
   waitForSyntheticEvent,
 } from './timeline-relay-helpers';
+import { selectStartupTab } from './workspace-helpers';
 import { encodeNote, encodeNpub } from '../../src/lib/protocol/nip19';
 
 test('timeline does not read public relays without an active account', async ({
@@ -17,8 +18,7 @@ test('timeline does not read public relays without an active account', async ({
 }) => {
   await installSyntheticRelay(page, { events: [] });
   await openCleanWorkspace(page);
-  await page.getByRole('button', { name: 'Open new tab' }).first().click();
-  await page.getByRole('button', { name: 'Home', exact: true }).click();
+  await selectStartupTab(page, 'Home');
   await expect(page.getByText('Add or activate an account')).toBeVisible();
   await page.evaluate(() => {
     window.__syntheticSockets.length = 0;
@@ -67,7 +67,7 @@ test('timeline displays followed-author notes from a synthetic relay', async ({
   await installSyntheticRelay(page, { events: [followList, note, metadata] });
   await openCleanWorkspace(page);
   await addReadonlyAccount(page, active);
-  await page.getByRole('button', { name: 'Home', exact: true }).click();
+  await selectStartupTab(page, 'Home');
   await waitForSyntheticEvent(page, note.id);
   await expect(page.getByText('synthetic account-home note')).toBeVisible({
     timeout: 10000,
@@ -119,7 +119,7 @@ test('content entity tokens open profile and thread tabs', async ({ page }) => {
   await installSyntheticRelay(page, { events: [followList, note, target] });
   await openCleanWorkspace(page);
   await addReadonlyAccount(page, active);
-  await page.getByRole('button', { name: 'Home', exact: true }).click();
+  await selectStartupTab(page, 'Home');
   await waitForSyntheticEvent(page, note.id);
   await page
     .getByRole('button', {
@@ -128,7 +128,7 @@ test('content entity tokens open profile and thread tabs', async ({ page }) => {
     })
     .click();
   await expect(page.getByRole('heading', { name: 'Profile' })).toBeVisible();
-  await page.getByRole('button', { name: 'Home', exact: true }).click();
+  await selectStartupTab(page, 'Home');
   await page
     .getByRole('button', {
       name: `nostr:${encodeNote(target.id)}`,

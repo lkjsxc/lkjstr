@@ -54,6 +54,11 @@
   min-height: 4rem;
 }
 
+.event-inline-action input {
+  flex: 1 1 8rem;
+  min-width: 0;
+}
+
 .event-inline-action--emoji {
   align-items: stretch;
 }

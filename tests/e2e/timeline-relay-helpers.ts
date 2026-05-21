@@ -1,13 +1,12 @@
 import { expect, type Page } from '@playwright/test';
 
 export async function addReadonlyAccount(page: Page, pubkey: string) {
-  await page.getByRole('button', { name: 'Open new tab' }).first().click();
-  await page.getByRole('button', { name: 'Accounts' }).click();
+  const tabStrip = page.locator('.pane').nth(1).locator('.tab-strip');
+  await tabStrip.getByRole('button', { name: 'Accounts', exact: true }).click();
   await page.getByLabel('npub, hex pubkey, or nsec').fill(pubkey);
   await page.getByRole('button', { name: 'Add', exact: true }).click();
   await expect(page.getByText('readonly')).toBeVisible();
-  await page.getByRole('button', { name: 'Open new tab' }).first().click();
-  await page.getByRole('button', { name: 'Home', exact: true }).click();
+  await tabStrip.getByRole('button', { name: 'Home', exact: true }).click();
 }
 
 export async function waitForSyntheticEvent(page: Page, eventId: string) {

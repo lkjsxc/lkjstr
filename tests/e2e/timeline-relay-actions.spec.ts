@@ -10,6 +10,7 @@ import {
   openCleanWorkspace,
   waitForSyntheticEvent,
 } from './timeline-relay-helpers';
+import { openNewTabOption, selectStartupTab } from './workspace-helpers';
 
 test('timeline row actions open profile and thread tabs', async ({ page }) => {
   const activeKey = generateSecretKey();
@@ -47,7 +48,7 @@ test('timeline row actions open profile and thread tabs', async ({ page }) => {
   await installSyntheticRelay(page, { events: [followList, note, metadata] });
   await openCleanWorkspace(page);
   await addReadonlyAccount(page, active);
-  await page.getByRole('button', { name: 'Home', exact: true }).click();
+  await selectStartupTab(page, 'Home');
   await waitForSyntheticEvent(page, note.id);
   const homeTimeline = page.locator('section.timeline-tab[aria-label="Home"]');
   await expect(
@@ -58,7 +59,7 @@ test('timeline row actions open profile and thread tabs', async ({ page }) => {
     .filter({ hasText: 'Followed Writer' })
     .click();
   await expect(page.getByRole('heading', { name: 'Profile' })).toBeVisible();
-  await page.getByRole('button', { name: 'Home', exact: true }).click();
+  await selectStartupTab(page, 'Home');
   await homeTimeline.getByText('synthetic account-home note').click();
   await expect(page.getByRole('heading', { name: 'Thread' })).toBeVisible();
 });
@@ -74,7 +75,7 @@ test('timeline hides relay details and exposes them in lkjstr Log', async ({
   });
   await openCleanWorkspace(page);
   await addReadonlyAccount(page, active);
-  await page.getByRole('button', { name: 'Home', exact: true }).click();
+  await selectStartupTab(page, 'Home');
   await page.waitForFunction(
     () =>
       window.__syntheticSockets.filter(
@@ -87,11 +88,7 @@ test('timeline hides relay details and exposes them in lkjstr Log', async ({
   ).toHaveCount(0);
   await expect(page.getByText('blocked: synthetic close')).toHaveCount(0);
 
-  await page.getByRole('button', { name: 'Open new tab' }).first().click();
-  await page
-    .locator('section.new-tab')
-    .getByRole('button', { name: 'lkjstr Log' })
-    .click();
+  await openNewTabOption(page, 'lkjstr Log');
   await expect(page.getByRole('heading', { name: 'lkjstr Log' })).toBeVisible();
   await expect(
     page.getByText('blocked: synthetic close').first(),

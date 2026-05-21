@@ -5,6 +5,7 @@ import {
   installSyntheticRelay,
   openCleanWorkspace,
 } from './timeline-relay-helpers';
+import { openNewTabOption, selectStartupTab } from './workspace-helpers';
 
 test('imports nsec and publishes Tweet without NIP-07', async ({ page }) => {
   await installSyntheticRelay(page, { events: [] });
@@ -76,18 +77,15 @@ async function importNsec(page: Page, nsec: string) {
 }
 
 async function openAccounts(page: Page) {
-  await page.getByRole('button', { name: 'Open new tab' }).first().click();
-  await page.getByRole('button', { name: 'Accounts' }).click();
+  await selectStartupTab(page, 'Accounts');
 }
 
 async function openTweet(page: Page) {
-  await page.getByRole('button', { name: 'Open new tab' }).first().click();
-  await page.getByRole('button', { name: 'Tweet' }).click();
+  await selectStartupTab(page, 'Tweet');
 }
 
 async function setMediaServer(page: Page) {
-  await page.getByRole('button', { name: 'Open new tab' }).first().click();
-  await page.getByRole('button', { name: 'Upload Settings' }).click();
+  await openNewTabOption(page, 'Upload Settings');
   await page.getByRole('radio', { name: 'Custom' }).check();
   await page.getByLabel('Custom upload server').fill('https://media.example');
   await page.getByLabel('Custom upload server').blur();

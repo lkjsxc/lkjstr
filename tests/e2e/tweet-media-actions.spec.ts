@@ -10,6 +10,7 @@ import {
   openCleanWorkspace,
   waitForSyntheticEvent,
 } from './timeline-relay-helpers';
+import { selectStartupTab } from './workspace-helpers';
 
 test('Ctrl+Enter publishes a Tweet through the relay', async ({ page }) => {
   const key = generateSecretKey();
@@ -57,7 +58,7 @@ test('event row actions publish without opening the row thread', async ({
   await mockZapServer(page);
   await openCleanWorkspace(page);
   await addBrowserSigner(page);
-  await page.getByRole('button', { name: 'Home', exact: true }).click();
+  await selectStartupTab(page, 'Home');
   await waitForSyntheticEvent(page, note.id);
   const row = page
     .locator('.event-row')
@@ -71,7 +72,7 @@ test('event row actions publish without opening the row thread', async ({
   await waitForPublishedCount(page, 2);
   await row.getByRole('button', { name: 'Emoji', exact: true }).click();
   await row.getByLabel('Emoji reaction').fill('+1');
-  await row.getByRole('button', { name: 'React' }).click();
+  await row.getByLabel('Emoji reaction').press('Enter');
   await waitForPublishedCount(page, 3);
   await row.getByRole('button', { name: 'Repost', exact: true }).click();
   await waitForPublishedCount(page, 4);
@@ -82,17 +83,14 @@ test('event row actions publish without opening the row thread', async ({
 });
 
 async function addBrowserSigner(page: import('@playwright/test').Page) {
-  await page.getByRole('button', { name: 'Open new tab' }).first().click();
-  await page.getByRole('button', { name: 'Accounts' }).click();
+  await selectStartupTab(page, 'Accounts');
   await page.getByRole('button', { name: 'Add NIP-07' }).click();
   await expect(page.getByText('nip07')).toBeVisible();
-  await page.getByRole('button', { name: 'Open new tab' }).first().click();
-  await page.getByRole('button', { name: 'Home', exact: true }).click();
+  await selectStartupTab(page, 'Home');
 }
 
 async function openTweet(page: import('@playwright/test').Page) {
-  await page.getByRole('button', { name: 'Open new tab' }).first().click();
-  await page.getByRole('button', { name: 'Tweet' }).click();
+  await selectStartupTab(page, 'Tweet');
 }
 
 async function mockZapServer(page: import('@playwright/test').Page) {

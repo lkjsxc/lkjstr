@@ -1,6 +1,7 @@
 import { expect, test, type Page } from '@playwright/test';
 import { finalizeEvent, generateSecretKey } from 'nostr-tools/pure';
 import { installSyntheticRelay } from './timeline-relay-helpers';
+import { openNewTabOption, pane } from './workspace-helpers';
 
 const options = [
   'Welcome',
@@ -14,7 +15,7 @@ const options = [
   'Tweet',
   'Profile Edit',
   'Settings',
-  'Cache',
+  'Search',
 ] as const;
 
 for (const viewport of [
@@ -28,12 +29,7 @@ for (const viewport of [
     await page.goto('/');
     await assertNoHorizontalOverflow(page);
     for (const option of options) {
-      await page.getByRole('button', { name: 'Open new tab' }).first().click();
-      await page
-        .locator('.new-tab')
-        .last()
-        .getByRole('button', { name: option, exact: true })
-        .click();
+      await openNewTabOption(page, option);
       await assertNoHorizontalOverflow(page);
     }
   });
@@ -41,11 +37,11 @@ for (const viewport of [
 
 test('feed lists fill split tiles', async ({ page }) => {
   await page.goto('/');
-  await page.getByRole('button', { name: 'Open tile menu' }).click();
+  await pane(page, 0).getByRole('button', { name: 'Open tile menu' }).click();
   await page.getByRole('button', { name: 'Split right' }).click();
   await page
     .locator('.new-tab')
-    .getByRole('button', { name: 'Global' })
+    .getByRole('button', { name: 'Global', exact: true })
     .click();
   const heights = await page
     .locator('.event-list')
@@ -75,8 +71,7 @@ test('tab drag area does not extend past the close button', async ({
 test('global event scroller fills the tile body', async ({ page }) => {
   await installSyntheticRelay(page, { events: syntheticNotes(40) });
   await page.goto('/');
-  await page.getByRole('button', { name: 'Open new tab' }).first().click();
-  await page.getByRole('button', { name: 'Global', exact: true }).click();
+  await openNewTabOption(page, 'Global');
   await expect(page.getByText('layout fit note 0')).toBeVisible();
   const heights = await page
     .locator('.pane-body[data-active-tab="true"] .event-list')
@@ -109,8 +104,7 @@ test('profile notes follow the summary in the profile scroll flow', async ({
   const notes = syntheticNotes(45, key, 'profile flow note');
   await installSyntheticRelay(page, { events: [metadata, ...notes] });
   await page.goto('/');
-  await page.getByRole('button', { name: 'Open new tab' }).first().click();
-  await page.getByRole('button', { name: 'Global', exact: true }).click();
+  await openNewTabOption(page, 'Global');
   await expect(page.getByText('profile flow note 0')).toBeVisible();
   await page.locator('.event-row .avatar-button').first().click();
   await expect(page.getByRole('heading', { name: 'Profile' })).toBeVisible();
@@ -148,12 +142,7 @@ test('profile notes follow the summary in the profile scroll flow', async ({
 test('form fields expose id or name attributes', async ({ page }) => {
   await page.goto('/');
   for (const option of ['Relay Settings', 'Accounts', 'Tweet', 'Settings']) {
-    await page.getByRole('button', { name: 'Open new tab' }).first().click();
-    await page
-      .locator('.new-tab')
-      .last()
-      .getByRole('button', { name: option, exact: true })
-      .click();
+    await openNewTabOption(page, option);
   }
   const missing = await page
     .locator('input, textarea, select')

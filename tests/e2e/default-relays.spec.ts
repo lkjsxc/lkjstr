@@ -1,9 +1,9 @@
 import { expect, test } from '@playwright/test';
+import { selectStartupTab } from './workspace-helpers';
 
 test('shows seeded default relays', async ({ page }) => {
   await page.goto('/');
-  await page.getByRole('button', { name: 'Open new tab' }).first().click();
-  await page.getByRole('button', { name: 'Relay Settings' }).click();
+  await selectStartupTab(page, 'Relay Settings');
   await expect(
     page.getByRole('heading', { name: 'Relay Settings' }),
   ).toBeVisible();

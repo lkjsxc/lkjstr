@@ -5,6 +5,7 @@ import {
   installSyntheticRelay,
   openCleanWorkspace,
 } from './timeline-relay-helpers';
+import { openNewTabOption, selectStartupTab } from './workspace-helpers';
 
 test('Tweet media upload publishes content and imeta tags', async ({
   page,
@@ -39,19 +40,16 @@ test('Tweet media upload publishes content and imeta tags', async ({
 });
 
 async function addBrowserSigner(page: Page) {
-  await page.getByRole('button', { name: 'Open new tab' }).first().click();
-  await page.getByRole('button', { name: 'Accounts' }).click();
+  await selectStartupTab(page, 'Accounts');
   await page.getByRole('button', { name: 'Add NIP-07' }).click();
 }
 
 async function openTweet(page: Page) {
-  await page.getByRole('button', { name: 'Open new tab' }).first().click();
-  await page.getByRole('button', { name: 'Tweet' }).click();
+  await selectStartupTab(page, 'Tweet');
 }
 
 async function setMediaServer(page: Page) {
-  await page.getByRole('button', { name: 'Open new tab' }).first().click();
-  await page.getByRole('button', { name: 'Upload Settings' }).click();
+  await openNewTabOption(page, 'Upload Settings');
   await page.getByRole('radio', { name: 'Custom' }).check();
   await page.getByLabel('Custom upload server').fill('https://media.example');
   await page.getByLabel('Custom upload server').blur();

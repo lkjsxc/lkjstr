@@ -1,4 +1,5 @@
 import { expect, test, type Page } from '@playwright/test';
+import { openNewTabOption } from './workspace-helpers';
 
 test('drags a tab from one tile to another', async ({ page }) => {
   await moveSettingsTabToSecondTile(page);
@@ -26,8 +27,7 @@ async function moveSettingsTabToSecondTile(page: Page) {
   await page.goto('/');
   await page.evaluate(() => localStorage.clear());
   await page.reload();
-  await secondPane(page).getByRole('button', { name: 'Open new tab' }).click();
-  await page.getByRole('button', { name: 'Settings', exact: true }).click();
+  await openNewTabOption(page, 'Settings', 1);
   await secondPane(page)
     .getByRole('tab', { name: 'Settings', exact: true })
     .dragTo(firstPane(page).locator('.tab-frame').first());

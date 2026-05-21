@@ -1,9 +1,9 @@
 import { expect, test } from '@playwright/test';
+import { openNewTabOption } from './workspace-helpers';
 
 test('opens flat settings without filter UI', async ({ page }) => {
   await page.goto('/');
-  await page.getByRole('button', { name: 'Open new tab' }).first().click();
-  await page.getByRole('button', { name: 'Settings', exact: true }).click();
+  await openNewTabOption(page, 'Settings');
   await expect(page.getByRole('heading', { name: 'Settings' })).toBeVisible();
   await expect(page.getByLabel('Search settings')).toHaveCount(0);
   await expect(page.getByText('appearance.cornerRadius')).toBeVisible();
