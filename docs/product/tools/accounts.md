@@ -10,35 +10,35 @@ Accounts represent public identities and signing capability.
 - NIP-07 accounts are created from the browser signer public key.
 - Local signing accounts are created from a generated secret key or an imported
   `nsec` after explicit user action.
-- Passkey local accounts are created from a generated secret key or imported
-  `nsec`, then encrypted with WebAuthn PRF material from a stored browser
-  credential.
+- Passkey local accounts are created from an explicit `nsec`, then encrypted
+  with WebAuthn PRF material from a stored browser credential.
 - Local account secret keys are stored separately from public account records.
 - Passkey account secret keys are stored only as encrypted records separate
   from public account records and raw local secret records.
 - Account lists, workspace data, and UI props must never expose local key
   material.
-- Local and NIP-07 accounts can sign and publish. Passkey local accounts can
-  sign and publish only after explicit unlock in the current browser session.
-- A locked passkey account reports `Unlock this passkey account before
+- Local, NIP-07, and passkey local accounts are signing accounts. Passkey local
+  accounts can publish only after explicit unlock in the current browser
+  session.
+- A locked passkey account reports `Unlock the active passkey account before
 publishing.` and publishing must not trigger WebAuthn implicitly.
-- Accounts have an `enabled` flag. Missing stored flags normalize to enabled.
-- Disabled accounts remain on device but are ignored for active account,
-  signing, upload auth, Home, Notifications, Profile Edit, and Tweet.
-- The active account is stored locally and must be enabled to be used.
-- Disabling or removing the active account selects the newest enabled account,
-  or clears active state when none remain.
+- Account records always normalize to `enabled: true`. The UI has no
+  enable/disable control; disabling is treated as account retirement and is not
+  exposed.
+- Removing the active account selects the newest remaining account or clears
+  active state when none remain.
 - Accounts supports one inline input for `npub`, hex pubkey, or `nsec`.
 - Read-only account add, local `nsec` import, NIP-07 connect, local account
-  creation, active selection, enablement, disconnect, and local secret reveal
-  report inline status.
-- Passkey create, passkey `nsec` import, stored-account unlock, lock, and
+  creation, active selection, disconnect, and local secret reveal report inline
+  status.
+- Generate nsec, create passkey from nsec, stored-account unlock, lock, and
   login report inline status.
 - Local signing accounts can reveal or copy their `nsec` only after an inline
   user action. Read-only and NIP-07 accounts never expose local secret controls.
 - Passkey local accounts do not reveal or copy decrypted `nsec`.
-- Login with passkey uses stored passkey records with `allowCredentials`; there
-  is no discoverable-only login path.
+- Login with passkey uses retained local passkey records when present and can
+  restore a disconnected or fresh-browser account from discoverable largeBlob
+  data.
 - Unsupported WebAuthn PRF or missing PRF output surfaces an honest inline
   error. The app must not create a fake fallback passkey account.
 - Account flows must not use browser prompt or alert dialogs.

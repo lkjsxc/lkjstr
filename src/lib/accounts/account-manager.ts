@@ -11,18 +11,20 @@ import {
 } from './account-store';
 import {
   createLocalAccountRecord,
+  generateNsec,
   parseNsec,
   persistLocalAccount,
 } from './local';
 import { connectNip07, type Nip07Provider } from './nip07';
 export {
   createPasskeyLocalAccount,
-  importPasskeyLocalNsec,
   isPasskeyUnlocked,
   lockPasskeyAccount,
   loginWithPasskey,
   unlockPasskeyAccount,
 } from './passkey-local';
+
+export { generateNsec };
 
 export async function addReadonlyAccount(input: string): Promise<Account> {
   const account = parseReadonlyAccount(input);
@@ -90,7 +92,6 @@ export function readOnlyAccountFromPubkey(pubkey: string): Account {
 }
 
 export async function setActiveAccount(account: Account): Promise<void> {
-  if (!account.enabled) throw new Error('Enable the account before using it.');
   setActiveAccountId(account.id);
 }
 

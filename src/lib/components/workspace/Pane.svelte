@@ -121,13 +121,13 @@
 <section class="pane" aria-label="Workspace pane">
   <header class="pane-head">
     <div class="pane-actions">
-      <NewTabButton
-        open={() => props.openNewTab(props.pane.id)}
-        disabled={!props.ready}
-      />
       <TileMenu
         split={(direction) => props.split(props.pane.id, direction)}
         closePane={() => props.closePane(props.pane.id)}
+        disabled={!props.ready}
+      />
+      <NewTabButton
+        open={() => props.openNewTab(props.pane.id)}
         disabled={!props.ready}
       />
     </div>

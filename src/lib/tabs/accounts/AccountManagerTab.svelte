@@ -5,7 +5,7 @@
     addNip07Account,
     createLocalAccount,
     createPasskeyLocalAccount,
-    importPasskeyLocalNsec,
+    generateNsec,
     isPasskeyUnlocked,
     lockPasskeyAccount,
     loginWithPasskey,
@@ -13,7 +13,6 @@
     setActiveAccount,
     unlockPasskeyAccount,
   } from '$lib/accounts/account-manager';
-  import { setAccountEnabled } from '$lib/accounts/account-store';
   import { getLocalSecret } from '$lib/accounts/local-secret-store';
   import { encodeNsec } from '$lib/protocol';
   import AccountRow from './AccountRow.svelte';
@@ -62,14 +61,15 @@
     return run(() => createLocalAccount(), 'Local account created.');
   }
 
-  function createPasskey(): Promise<void> {
-    return run(() => createPasskeyLocalAccount(), 'Passkey account created.');
+  function fillGeneratedNsec(): void {
+    input = generateNsec();
+    status = 'Generated nsec. Create a local or passkey account from it.';
   }
 
-  function importPasskey(): Promise<void> {
+  function createPasskey(): Promise<void> {
     return run(
-      () => importPasskeyLocalNsec(input),
-      'Passkey account imported.',
+      () => createPasskeyLocalAccount(input),
+      'Passkey account created.',
     );
   }
 
@@ -79,13 +79,6 @@
 
   function makeActive(account: Account): Promise<void> {
     return run(() => setActiveAccount(account), 'Active account updated.');
-  }
-
-  function toggleEnabled(account: Account): Promise<void> {
-    return run(
-      () => setAccountEnabled(account.id, !account.enabled),
-      account.enabled ? 'Account disabled.' : 'Account enabled.',
-    );
   }
 
   function remove(account: Account): Promise<void> {
@@ -148,13 +141,13 @@
     <button type="button" disabled={busy} onclick={createLocal}
       >Create local</button
     >
-    <button type="button" disabled={busy} onclick={createPasskey}
-      >Create passkey</button
+    <button type="button" disabled={busy} onclick={fillGeneratedNsec}
+      >Generate nsec</button
     >
     <button
       type="button"
       disabled={busy || !input.trim()}
-      onclick={importPasskey}>Import passkey nsec</button
+      onclick={createPasskey}>Create passkey from nsec</button
     >
     <button type="button" disabled={busy} onclick={loginPasskey}
       >Login with passkey</button
@@ -172,7 +165,6 @@
           revealed={revealed[account.id]}
           passkeyUnlocked={isPasskeyUnlocked(account.id)}
           makeActive={(item) => void makeActive(item)}
-          toggleEnabled={(item) => void toggleEnabled(item)}
           reveal={(item) => void reveal(item)}
           copy={(item) => void copy(item)}
           unlockPasskey={(item) => void unlockPasskey(item)}

@@ -75,13 +75,15 @@ Profile, Thread, embeds, and Notifications.
 - Plain text remains text and preserves line breaks.
 - `nostr:npub` decodes to a profile mention and opens Profile.
 - `nostr:nprofile` decodes to a profile mention, preserves relay hints for
-  entity text, and opens Profile.
+  entity text and publish tags, and opens Profile.
 - Profile mentions render as readable `@name` labels when profile metadata is
   available and keep the raw token in `title`.
 - `nostr:note` decodes to a compact event mention and opens Thread.
 - `nostr:nevent` decodes to an event mention, preserves relay hints for entity
-  text, and opens Thread.
-- Event mentions render as compact buttons instead of raw entity strings.
+  text, reference resolution, and publish tags, and opens Thread.
+- Event mentions render as compact buttons instead of raw entity strings. When
+  a referenced event is cached or relay-resolved, the chip can show author
+  identity, a short event id, and an excerpt.
 - Event mention tokens are hidden when the same event is expanded as a
   reference below the content.
 - Normal `https://` URLs render as links.
@@ -92,6 +94,8 @@ Profile, Thread, embeds, and Notifications.
 - Custom emoji render in content, profile names, mention labels, referenced
   author labels, nested repost author labels, and reaction summaries when HTTPS
   emoji metadata is available.
+- Custom emoji images are lazy, async-decoded, no-referrer images. Custom emoji
+  shortcode metadata is case-sensitive and HTTPS-only.
 
 ## Embeds
 

@@ -58,6 +58,12 @@ describe('local account signing', () => {
     expect(JSON.stringify(listed)).not.toContain('secretKey');
     expect(tables.localAccountSecrets.records).toHaveLength(1);
   });
+
+  it('generates valid nsec strings', async () => {
+    const { generateNsec, parseNsec } =
+      await import('../../../src/lib/accounts/local');
+    expect(parseNsec(generateNsec())).toBeInstanceOf(Uint8Array);
+  });
 });
 
 function fakeTables() {

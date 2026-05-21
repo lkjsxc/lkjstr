@@ -78,6 +78,7 @@
   {:else}
     <ContentTokens
       event={props.event}
+      relays={props.relays}
       profiles={props.profiles}
       hiddenEventIds={referenceIds}
       openProfile={props.openProfile}
@@ -102,6 +103,7 @@
       />
       <ContentTokens
         event={nested}
+        relays={props.relays}
         profiles={props.profiles}
         openProfile={props.openProfile}
         openThread={props.openThread}

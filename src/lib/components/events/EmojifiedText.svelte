@@ -1,6 +1,7 @@
 <script lang="ts">
   import { tokenizeText } from '$lib/events/content-tokens';
   import type { CustomEmoji } from '$lib/protocol';
+  import CustomEmojiImage from './CustomEmojiImage.svelte';
 
   type Props = {
     text: string;
@@ -13,7 +14,7 @@
 
 {#each tokens as token, index (`${index}:${token.type}`)}
   {#if token.type === 'custom-emoji'}
-    <img class="custom-emoji" src={token.url} alt={token.text} />
+    <CustomEmojiImage emoji={token} />
   {:else}
     {token.text}
   {/if}

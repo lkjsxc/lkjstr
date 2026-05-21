@@ -7,6 +7,7 @@ Tile menu docs define popover positioning and interaction behavior.
 ## Role
 
 The tile menu is the anchored three-dot action menu in each tile header.
+It appears before the New Tab button in visual order and focus order.
 
 ## Positioning Contract
 

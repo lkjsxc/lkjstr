@@ -3,12 +3,14 @@ import {
   bestEffortStorageWrite,
   boundedStorageRead,
 } from '../storage/safe-storage';
+import type { CustomEmoji } from '../protocol';
 
 export type TweetDraft = {
   readonly id: string;
   readonly accountId: string | null;
   readonly content: string;
   readonly attachments?: readonly TweetAttachment[];
+  readonly customEmojis?: readonly CustomEmoji[];
   readonly sensitive?: boolean;
   readonly contentWarningReason?: string;
   readonly updatedAt: number;
@@ -47,6 +49,7 @@ export function snapshotTweetDraft(
   content: string,
   accountId: string | null,
   attachments: readonly TweetAttachment[] = [],
+  customEmojis: readonly CustomEmoji[] = [],
   sensitive = false,
   contentWarningReason = '',
 ): TweetDraft {
@@ -55,6 +58,7 @@ export function snapshotTweetDraft(
     content,
     accountId,
     attachments,
+    customEmojis,
     sensitive,
     contentWarningReason,
   );
@@ -66,6 +70,7 @@ export async function saveTweetDraft(
   content: string,
   accountId: string | null,
   attachments: readonly TweetAttachment[] = [],
+  customEmojis: readonly CustomEmoji[] = [],
   sensitive = false,
   contentWarningReason = '',
   id = 'main',
@@ -75,6 +80,7 @@ export async function saveTweetDraft(
     content,
     accountId,
     attachments,
+    customEmojis,
     sensitive,
     contentWarningReason,
   );
@@ -88,6 +94,7 @@ function createDraft(
   content: string,
   accountId: string | null,
   attachments: readonly TweetAttachment[],
+  customEmojis: readonly CustomEmoji[],
   sensitive: boolean,
   contentWarningReason: string,
 ): TweetDraft {
@@ -96,6 +103,7 @@ function createDraft(
     accountId,
     content,
     attachments,
+    customEmojis,
     sensitive,
     contentWarningReason,
     updatedAt: Date.now(),

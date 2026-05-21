@@ -29,6 +29,16 @@ export function encodeNote(id: string): string {
   return upstream.noteEncode(id);
 }
 
+export function encodeNevent(input: {
+  readonly id: string;
+  readonly relays?: readonly string[];
+}): string {
+  return upstream.neventEncode({
+    id: input.id,
+    relays: [...(input.relays ?? [])],
+  });
+}
+
 export function encodeNsec(secretKeyHex: string): string {
   return upstream.nsecEncode(hexToBytes(secretKeyHex));
 }

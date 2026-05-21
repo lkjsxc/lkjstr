@@ -15,6 +15,7 @@
     uploading: boolean;
     publishing: boolean;
     hasSigner: boolean;
+    passkeyLocked: boolean;
     uploadSettings: UploadSettings;
     canPublish: boolean;
     message: string;
@@ -67,7 +68,9 @@
   uploadFiles={props.uploadFiles}
   publish={props.publish}
 />
-{#if !props.hasSigner}
+{#if props.passkeyLocked}
+  <p>Unlock the active passkey account before publishing.</p>
+{:else if !props.hasSigner}
   <p>Add a signing account before publishing.</p>
 {/if}
 {#if props.message}

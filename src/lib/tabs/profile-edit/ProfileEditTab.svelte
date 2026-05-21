@@ -40,11 +40,7 @@
   });
   let error = $derived(validateProfileMetadataDraft(draft));
   let dirty = $derived(JSON.stringify(draft) !== JSON.stringify(original));
-  let canEdit = $derived(
-    Boolean(
-      props.activeAccount?.capabilities.sign && props.activeAccount.enabled,
-    ),
-  );
+  let canEdit = $derived(Boolean(props.activeAccount?.capabilities.sign));
   let canSave = $derived(canEdit && dirty && !error && !loading && !saving);
 
   onMount(() => {
@@ -189,7 +185,7 @@
       >
     </div>
   {:else}
-    <p>Select an enabled signing account before editing a profile.</p>
+    <p>Select a signing account before editing a profile.</p>
   {/if}
   {#if status}<p role="status">{status}</p>{/if}
 </section>

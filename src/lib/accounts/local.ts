@@ -20,6 +20,10 @@ export function createLocalAccountRecord(secretKey = generateSecretKey()): {
   };
 }
 
+export function generateNsec(): string {
+  return nip19.nsecEncode(generateSecretKey());
+}
+
 export function parseNsec(input: string): Uint8Array | undefined {
   try {
     const decoded = nip19.decode(input.trim());

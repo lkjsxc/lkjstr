@@ -8,7 +8,6 @@ import {
 } from '../storage/safe-storage';
 import { normalizeAccount, type Account } from './account';
 import { removeLocalSecret } from './local-secret-store';
-import { removePasskeySecret } from './passkey-secret-store';
 import { lockPasskeyAccount } from './passkey-session';
 
 const activeKey = 'lkjstr.activeAccountId';
@@ -38,21 +37,8 @@ export async function removeAccount(id: string): Promise<void> {
   memoryAccounts = memoryAccounts.filter((account) => account.id !== id);
   await bestEffortStorageWrite(() => browserDb().accounts.delete(id));
   await removeLocalSecret(id);
-  await removePasskeySecret(id);
   lockPasskeyAccount(id);
   if (wasActive) await selectFallbackActiveAccount();
-}
-
-export async function setAccountEnabled(
-  id: string,
-  enabled: boolean,
-): Promise<void> {
-  const accounts = await listAccounts();
-  const account = accounts.find((item) => item.id === id);
-  if (!account) return;
-  await saveAccount({ ...account, enabled });
-  if (!enabled && getActiveAccountId() === id)
-    await selectFallbackActiveAccount();
 }
 
 export function getActiveAccountId(): string | null {
@@ -69,13 +55,13 @@ export async function activeAccount(): Promise<Account | undefined> {
   const id = getActiveAccountId();
   const accounts = await listAccounts();
   const active = accounts.find((account) => account.id === id);
-  if (active?.enabled) return active;
+  if (active) return active;
   if (id) return selectFallbackActiveAccount();
   return undefined;
 }
 
 async function selectFallbackActiveAccount(): Promise<Account | undefined> {
-  const next = (await listAccounts()).find((account) => account.enabled);
+  const next = (await listAccounts()).at(0);
   setActiveAccountId(next?.id ?? null);
   return next;
 }

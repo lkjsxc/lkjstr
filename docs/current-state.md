@@ -17,7 +17,7 @@ This document records the current implemented contract for the app.
   Welcome.
 - Profile tabs open or focus from identity actions in the same tile.
 - Profile Edit opens or focuses from own-profile actions in the same tile and
-  edits only the active enabled signing account.
+  edits only the active signing account.
 - Thread tabs open or focus from event rows, controls, quotes, references, and
   continuation rows in the same tile. Row action buttons never trigger row
   navigation.
@@ -63,20 +63,25 @@ This document records the current implemented contract for the app.
 - Event actions publish NIP-25 hearts and emoji reactions, NIP-18 reposts,
   tagged replies, and NIP-57 zap requests where targets expose zap data.
 - Event rows and diagnostic rows wrap long content inside their tile.
-- Accounts are managed inline with enable, active, and remove controls. Disabled
-  accounts are ignored for signing and active-account resolution.
+- Accounts are managed inline with active, disconnect, local reveal, passkey
+  unlock, passkey lock, and passkey login controls. Stored account records
+  normalize to enabled and the UI does not retire accounts by disabling them.
 - Passkey accounts use a stored browser credential to unlock encrypted local
-  Nostr key material. Passkeys never sign Nostr events directly, decrypted
+  Nostr key material. New portable passkeys require discoverable credentials,
+  WebAuthn PRF, and largeBlob support. Passkeys never sign Nostr events
+  directly, encrypted passkey material is retained on disconnect, decrypted
   keys stay in memory only, and reloads start locked.
 - Mine npub mines an `npub` prefix locally and exports the generated `nsec`
   without storing it until the user adds it.
-- Tweet uses the active enabled signing account, durable composer recovery,
-  `Ctrl+Enter`, shared provider or custom NIP-96 media upload, NIP-98 upload
-  auth, NIP-94 `imeta` tags, and signed kind `1` notes to enabled write relays.
+- Tweet uses the active signing account, durable composer recovery,
+  `Ctrl+Enter`, draft custom emoji attachments, shared provider or custom
+  NIP-96 media upload, NIP-98 upload auth, NIP-94 `imeta` tags, content-derived
+  mention and emoji tags, and signed kind `1` notes to enabled write relays.
 - Sensitive content hides bodies, media, custom emoji images, reference
   previews, and nested repost bodies until locally revealed.
-- Custom emoji tags render in event text, nested reposts, reaction summaries,
-  profile names, and profile about text when they use HTTPS image URLs.
+- Custom emoji tags render with lazy, async-decoded, no-referrer images in
+  event text, nested reposts, reaction summaries, profile names, and profile
+  about text when they use HTTPS image URLs.
 - Event repository lookup uses direct id reads, batched id reads, and tag-value
   indexes for thread, reference, reaction, and notification reloads.
 - Stats shows current-session relay counters, subscription ids, OK counts,

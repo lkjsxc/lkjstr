@@ -30,4 +30,5 @@ emoji, and zap controls open compact inline panels without triggering row thread
 navigation.
 
 Emoji reactions may use a picker-provided Unicode value or a custom emoji input
-in the `:shortcode:https://...` form, which retains the NIP-30 `emoji` tag.
+in the `:shortcode:https://...` form. The shared NIP-30 parser validates the
+case-sensitive shortcode and HTTPS URL before retaining the `emoji` tag.

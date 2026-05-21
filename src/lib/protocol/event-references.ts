@@ -16,6 +16,7 @@ export type EventReferenceKind =
 export type EventReference = {
   readonly kind: EventReferenceKind;
   readonly id: string;
+  readonly relays?: readonly string[];
 };
 
 export function eventReferences(event: NostrEvent): EventReference[] {
@@ -39,7 +40,7 @@ export function eventReferences(event: NostrEvent): EventReference[] {
   push(refs, 'reply-root', replyRoot(event));
   push(refs, 'reply-parent', replyParent(event));
   for (const id of tagValues(event, 'q')) push(refs, 'quote', id);
-  for (const id of nostrEventIds(event.content)) push(refs, 'nostr-event', id);
+  refs.push(...nostrEventReferences(event.content));
   return dedupe(refs);
 }
 
@@ -58,12 +59,20 @@ export function verifiedNestedRepost(
   }
 }
 
-function nostrEventIds(content: string): string[] {
+function nostrEventReferences(content: string): EventReference[] {
   return [...content.matchAll(/\bnostr:([a-z0-9]+)/gi)].flatMap((match) => {
     const decoded = decodeEntity(match[1] ?? '');
     if (!decoded) return [];
-    if (decoded.type === 'note') return [decoded.data];
-    if (decoded.type === 'nevent') return [decoded.data.id];
+    if (decoded.type === 'note' && isEventId(decoded.data))
+      return [{ kind: 'nostr-event', id: decoded.data }];
+    if (decoded.type === 'nevent' && isEventId(decoded.data.id))
+      return [
+        {
+          kind: 'nostr-event',
+          id: decoded.data.id,
+          relays: decoded.data.relays ?? [],
+        },
+      ];
     return [];
   });
 }

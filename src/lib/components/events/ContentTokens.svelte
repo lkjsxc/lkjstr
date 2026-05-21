@@ -2,10 +2,13 @@
   import { contentTokens } from '$lib/events/content-tokens';
   import type { ProfileSummary } from '$lib/identity/identity';
   import type { NostrEvent } from '$lib/protocol';
-  import EmojifiedText from './EmojifiedText.svelte';
+  import CustomEmojiImage from './CustomEmojiImage.svelte';
+  import EventMentionChip from './EventMentionChip.svelte';
+  import ProfileMentionChip from './ProfileMentionChip.svelte';
 
   type Props = {
     event: NostrEvent;
+    relays?: readonly string[];
     profiles?: Record<string, ProfileSummary>;
     hiddenEventIds?: ReadonlySet<string>;
     openProfile?: (pubkey: string) => void;
@@ -40,34 +43,24 @@
         onclick={stop}>{token.text}</a
       >
     {:else if token.type === 'custom-emoji'}
-      <img class="custom-emoji" src={token.url} alt={token.text} />
+      <CustomEmojiImage emoji={token} />
     {:else if token.type === 'profile'}
-      <button
-        type="button"
-        class="content-token"
-        title={token.rawText}
-        onclick={(event) => {
-          event.stopPropagation();
-          props.openProfile?.(token.pubkey);
-        }}
-      >
-        <EmojifiedText
-          text={token.text}
-          emojis={props.profiles?.[token.pubkey]?.customEmojis ?? []}
-        />
-      </button>
+      <ProfileMentionChip
+        pubkey={token.pubkey}
+        text={token.text}
+        rawText={token.rawText}
+        profile={props.profiles?.[token.pubkey]}
+        openProfile={props.openProfile}
+      />
     {:else if token.type === 'event'}
-      <button
-        type="button"
-        class="content-token"
-        title={token.rawText}
-        onclick={(event) => {
-          event.stopPropagation();
-          props.openThread?.(token.eventId);
-        }}
-      >
-        {token.text}
-      </button>
+      <EventMentionChip
+        eventId={token.eventId}
+        rawText={token.rawText}
+        relays={token.relays}
+        fallbackRelays={props.relays}
+        profiles={props.profiles}
+        openThread={props.openThread}
+      />
     {/if}
   {/each}
 </p>

@@ -19,10 +19,16 @@ export async function resolveReferences(input: {
   const cached = await lookupEvents(ids);
   const byId = new Map(cached.map((item) => [item.event.id, item]));
   const missing = ids.filter((id) => !byId.has(id));
-  if (missing.length > 0 && input.relays.length > 0) {
+  const relays = [
+    ...new Set([
+      ...input.references.flatMap((item) => item.relays ?? []),
+      ...input.relays,
+    ]),
+  ];
+  if (missing.length > 0 && relays.length > 0) {
     const hits = await readRelayPage({
       key: input.key,
-      relays: input.relays,
+      relays,
       filters: [{ ids: missing }],
       pageSize: missing.length,
       subscriptions: input.subscriptions ?? sharedSubscriptionManager,

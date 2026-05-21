@@ -2,8 +2,7 @@
   import { onMount } from 'svelte';
   import type { Account } from '$lib/accounts/account';
   import type { RelaySet } from '$lib/relays/relay-store';
-  import { contentWarningTag } from '$lib/protocol';
-  import TweetComposer from './TweetComposer.svelte';
+  import type { CustomEmoji } from '$lib/protocol';
   import { publishTweet } from '$lib/tweet/publish';
   import {
     clearTweetDraft,
@@ -12,13 +11,20 @@
     snapshotTweetDraft,
     type TweetAttachment,
   } from '$lib/tweet/draft-store';
-  import type { UploadSettings } from '$lib/tweet/media-upload';
+  import { isPasskeyUnlocked } from '$lib/accounts/account-manager';
   import {
     acceptedTweetMedia,
     uploadTweetFiles,
   } from '$lib/tweet/media-upload-files';
   import { loadTweetUploadSettings } from '$lib/tweet/settings';
   import { settingsChangedEvent } from '$lib/settings/settings-events';
+  import TweetTabView from './TweetTabView.svelte';
+  import {
+    defaultTweetUploadSettings,
+    tweetPublishContent,
+    tweetPublishTags,
+    upsertCustomEmoji,
+  } from './tweet-tab-helpers';
 
   type Props = {
     tabId: string;
@@ -34,25 +40,22 @@
   let uploading = $state(false);
   let sensitive = $state(false);
   let warningReason = $state('');
-  let uploadSettings = $state<UploadSettings>({
-    provider: 'nostr-build',
-    customServer: '',
-    server: 'https://nostr.build',
-    noTransform: true,
-  });
+  let uploadSettings = $state(defaultTweetUploadSettings);
   let attachments = $state<TweetAttachment[]>([]);
+  let customEmojis = $state<CustomEmoji[]>([]);
   let draftTouched = false;
   let saveTimer: ReturnType<typeof setTimeout> | undefined;
   let draftId = $derived(`tab:${props.tabId}`);
-  let hasSigner = $derived(
-    Boolean(
-      props.activeAccount?.enabled && props.activeAccount.capabilities.sign,
-    ),
+  let hasSigner = $derived(Boolean(props.activeAccount?.capabilities.sign));
+  let passkeyLocked = $derived(
+    props.activeAccount?.signerType === 'passkey-local' &&
+      !isPasskeyUnlocked(props.activeAccount.id),
   );
   let canPublish = $derived(
     !publishing &&
       !uploading &&
       hasSigner &&
+      !passkeyLocked &&
       (content.trim().length > 0 || attachments.length > 0),
   );
 
@@ -74,6 +77,7 @@
     if (!draftTouched) {
       content = draft?.content ?? '';
       attachments = [...(draft?.attachments ?? [])];
+      customEmojis = [...(draft?.customEmojis ?? [])];
       sensitive = Boolean(draft?.sensitive);
       warningReason = draft?.contentWarningReason ?? '';
     }
@@ -91,10 +95,10 @@
   }
 
   // prettier-ignore
-  function snapshot(): void { snapshotTweetDraft(draftId, content, props.activeAccount?.id ?? null, attachments, sensitive, warningReason); }
+  function snapshot(): void { snapshotTweetDraft(draftId, content, props.activeAccount?.id ?? null, attachments, customEmojis, sensitive, warningReason); }
 
   // prettier-ignore
-  async function save(): Promise<void> { await saveTweetDraft(content, props.activeAccount?.id ?? null, attachments, sensitive, warningReason, draftId); }
+  async function save(): Promise<void> { await saveTweetDraft(content, props.activeAccount?.id ?? null, attachments, customEmojis, sensitive, warningReason, draftId); }
 
   function queueSave(): void {
     if (saveTimer) clearTimeout(saveTimer);
@@ -114,9 +118,15 @@
     message = '';
     await flushDraft();
     const result = await publishTweet(
-      publishContent(),
+      tweetPublishContent(content, attachments),
       props.relaySets,
-      tags(),
+      tweetPublishTags({
+        content,
+        attachments,
+        customEmojis,
+        sensitive,
+        warningReason,
+      }),
     );
     publishing = false;
     if (!result.ok) {
@@ -128,6 +138,7 @@
     message = `Published to ${confirmedRelays} relays.`;
     content = '';
     attachments = [];
+    customEmojis = [];
     sensitive = false;
     warningReason = '';
     await Promise.all([clearTweetDraft(draftId), clearTweetDraft('main')]);
@@ -160,40 +171,24 @@
     if (files?.length) void uploadFiles(files);
   }
 
-  function publishContent(): string {
-    const urls = attachments.map((item) => item.url);
-    return [content.trim(), ...urls].filter(Boolean).join('\n');
-  }
-
-  // prettier-ignore
-  function tags() { return [...attachments.map((item) => item.imeta), ...(sensitive ? [contentWarningTag(warningReason)] : [])]; }
-
   function removeAttachment(url: string): void {
     attachments = attachments.filter((item) => item.url !== url);
+    snapshot();
+    void flushDraft();
+  }
+
+  function addCustomEmoji(emoji: CustomEmoji): void {
+    customEmojis = upsertCustomEmoji(customEmojis, emoji);
+  }
+
+  function removeCustomEmoji(shortcode: string): void {
+    customEmojis = customEmojis.filter((item) => item.shortcode !== shortcode);
     snapshot();
     void flushDraft();
   }
 </script>
 
 <section class="data-tab" aria-label="Tweet">
-  <TweetComposer
-    tabId={props.tabId}
-    bind:sensitive
-    bind:warningReason
-    bind:content
-    {attachments}
-    {uploading}
-    {publishing}
-    {hasSigner}
-    {uploadSettings}
-    {canPublish}
-    {message}
-    {confirmedRelays}
-    {touchDraft}
-    {flushDraft}
-    {uploadFiles}
-    {publish}
-    {removeAttachment}
-    {handlePaste}
-  />
+  <!-- prettier-ignore -->
+  <TweetTabView tabId={props.tabId} bind:sensitive bind:warningReason bind:content {attachments} {customEmojis} {uploading} {publishing} {hasSigner} {passkeyLocked} {uploadSettings} {canPublish} {message} {confirmedRelays} {touchDraft} {flushDraft} {uploadFiles} {publish} {removeAttachment} {handlePaste} addCustomEmoji={addCustomEmoji} removeCustomEmoji={removeCustomEmoji} />
 </section>

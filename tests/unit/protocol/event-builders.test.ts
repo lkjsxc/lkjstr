@@ -9,7 +9,9 @@ import {
   repostKind,
   repostTags,
   zapRequestTags,
+  contentDerivedTags,
 } from '../../../src/lib/protocol';
+import { encodeNevent, encodeNprofile } from '../../../src/lib/protocol/nip19';
 import type { NostrEvent } from '../../../src/lib/protocol';
 
 describe('event builders', () => {
@@ -92,6 +94,33 @@ describe('event builders', () => {
       ['e', event.id],
       ['p', event.pubkey],
       ['k', '1'],
+    ]);
+  });
+
+  it('derives mention and used custom emoji tags from note content', () => {
+    const pubkey = 'a'.repeat(64);
+    const eventId = 'b'.repeat(64);
+    const nprofile = encodeNprofile({
+      pubkey,
+      relays: ['wss://profiles.example'],
+    });
+    const nevent = encodeNevent({
+      id: eventId,
+      relays: ['wss://events.example'],
+    });
+    expect(
+      contentDerivedTags(
+        `hi nostr:${nprofile} nostr:${nevent} :party:`,
+        [
+          { shortcode: 'unused', url: 'https://x/unused.png' },
+          { shortcode: 'party', url: 'https://x/party.png' },
+        ],
+        [['p', pubkey]],
+      ),
+    ).toEqual([
+      ['p', pubkey, 'wss://profiles.example'],
+      ['q', eventId, 'wss://events.example'],
+      ['emoji', 'party', 'https://x/party.png'],
     ]);
   });
 });

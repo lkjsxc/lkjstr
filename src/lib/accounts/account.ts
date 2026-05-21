@@ -56,7 +56,8 @@ export function createAccount(
 export function normalizeAccount(account: Account): Account {
   return {
     ...account,
-    enabled: account.enabled ?? true,
+    enabled: true,
+    capabilities: capabilitiesFor(account.signerType),
   };
 }
 
@@ -77,7 +78,10 @@ export function shortKey(pubkey: string): string {
 }
 
 function capabilitiesFor(signerType: SignerType): AccountCapabilities {
-  const canSign = signerType === 'nip07' || signerType === 'local';
+  const canSign =
+    signerType === 'nip07' ||
+    signerType === 'local' ||
+    signerType === 'passkey-local';
   return {
     read: true,
     sign: canSign,

@@ -1,0 +1,16 @@
+.event-mention-chip {
+  align-items: center;
+  display: inline-flex;
+  flex-wrap: wrap;
+  gap: 0.25rem;
+  max-width: 100%;
+  vertical-align: baseline;
+}
+
+.event-mention-chip small {
+  color: var(--color-text-muted);
+  max-width: 16rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}

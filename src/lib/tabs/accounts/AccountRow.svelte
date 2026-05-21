@@ -9,7 +9,6 @@
     revealed?: string;
     passkeyUnlocked?: boolean;
     makeActive: (account: Account) => void;
-    toggleEnabled: (account: Account) => void;
     reveal: (account: Account) => void;
     copy: (account: Account) => void;
     unlockPasskey: (account: Account) => void;
@@ -20,29 +19,21 @@
   let props: Props = $props();
 </script>
 
-<article class:disabled={!props.account.enabled} class="row">
+<article class="row">
   <label>
     <input
       type="radio"
       name="active-account"
       checked={props.activeAccount?.id === props.account.id}
-      disabled={props.busy || !props.account.enabled}
+      disabled={props.busy}
       onchange={() => props.makeActive(props.account)}
     />
     <IdentityChip pubkey={props.account.pubkey} />
   </label>
   <small>{props.account.signerType}</small>
-  <small>{props.account.enabled ? 'enabled' : 'disabled'}</small>
   {#if props.account.signerType === 'passkey-local'}
     <small>{props.passkeyUnlocked ? 'unlocked' : 'locked'}</small>
   {/if}
-  <button
-    type="button"
-    disabled={props.busy}
-    onclick={() => props.toggleEnabled(props.account)}
-  >
-    {props.account.enabled ? 'Disable' : 'Enable'}
-  </button>
   {#if props.account.signerType === 'local'}
     {#if props.revealed}
       <code>{props.revealed}</code>

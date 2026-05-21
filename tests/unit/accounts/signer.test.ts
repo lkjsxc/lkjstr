@@ -91,7 +91,7 @@ describe('account signer resolution', () => {
       await import('../../../src/lib/accounts/signer');
 
     await expect(resolveActiveSigner()).rejects.toThrow(
-      'Unlock this passkey account before publishing.',
+      'Unlock the active passkey account before publishing.',
     );
   });
 });

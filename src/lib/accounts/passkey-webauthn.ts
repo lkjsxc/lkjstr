@@ -4,9 +4,21 @@ export const passkeySaltLabel = 'lkjstr passkey local account unlock';
 
 type PrfResults = {
   prf?: { enabled?: boolean; results?: { first?: BufferSource } };
+  largeBlob?: { supported?: boolean; blob?: BufferSource; written?: boolean };
 };
 type PublicKeyCredentialWithResults = PublicKeyCredential & {
   getClientExtensionResults: () => PrfResults;
+};
+type CredentialExtensions = AuthenticationExtensionsClientInputs & {
+  prf?: {
+    eval?: { first: BufferSource };
+    evalByCredential?: Record<string, { first: BufferSource }>;
+  };
+  largeBlob?: {
+    support?: 'required';
+    read?: boolean;
+    write?: BufferSource;
+  };
 };
 
 const rpName = 'lkjstr';
@@ -29,14 +41,20 @@ export async function createPasskeyPrf(input: {
       },
       pubKeyCredParams: [{ type: 'public-key', alg: -7 }],
       authenticatorSelection: {
-        residentKey: 'discouraged',
+        residentKey: 'required',
+        requireResidentKey: true,
         userVerification: 'required',
       },
-      extensions: { prf: { eval: { first: salt } } },
+      extensions: {
+        prf: { eval: { first: salt } },
+        largeBlob: { support: 'required' },
+      } as CredentialExtensions,
     } as PublicKeyCredentialCreationOptions,
   });
   const publicKey = credential as PublicKeyCredentialWithResults | null;
   if (!publicKey) throw new Error('Passkey creation was canceled.');
+  if (publicKey.getClientExtensionResults().largeBlob?.supported !== true)
+    throw new Error('WebAuthn largeBlob is required for portable passkeys.');
   return {
     credentialId: bytesToBase64url(new Uint8Array(publicKey.rawId)),
     prf: prfOutput(publicKey),
@@ -57,7 +75,9 @@ export async function getPasskeyPrf(
         id: base64urlToBytes(id),
       })),
       userVerification: 'required',
-      extensions: { prf: { eval: { first: salt } } },
+      extensions: {
+        prf: { evalByCredential: prfInputs(credentialIds) },
+      } as CredentialExtensions,
     } as PublicKeyCredentialRequestOptions,
   });
   const publicKey = credential as PublicKeyCredentialWithResults | null;
@@ -65,6 +85,48 @@ export async function getPasskeyPrf(
   return {
     credentialId: bytesToBase64url(new Uint8Array(publicKey.rawId)),
     prf: prfOutput(publicKey),
+  };
+}
+
+export async function writePasskeyLargeBlob(
+  credentialId: string,
+  blob: Uint8Array,
+): Promise<void> {
+  const credential = await navigator.credentials.get({
+    publicKey: {
+      challenge: randomBytes(32),
+      allowCredentials: [
+        { type: 'public-key', id: base64urlToBytes(credentialId) },
+      ],
+      userVerification: 'required',
+      extensions: { largeBlob: { write: blob } } as CredentialExtensions,
+    } as PublicKeyCredentialRequestOptions,
+  });
+  const publicKey = credential as PublicKeyCredentialWithResults | null;
+  if (!publicKey) throw new Error('Passkey largeBlob write was canceled.');
+  if (publicKey.getClientExtensionResults().largeBlob?.written !== true)
+    throw new Error('Passkey largeBlob write was not confirmed.');
+}
+
+export async function readDiscoverablePasskeyLargeBlob(): Promise<{
+  credentialId: string;
+  blob: BufferSource;
+}> {
+  ensureWebAuthn();
+  const credential = await navigator.credentials.get({
+    publicKey: {
+      challenge: randomBytes(32),
+      userVerification: 'required',
+      extensions: { largeBlob: { read: true } } as CredentialExtensions,
+    } as PublicKeyCredentialRequestOptions,
+  });
+  const publicKey = credential as PublicKeyCredentialWithResults | null;
+  if (!publicKey) throw new Error('Passkey login was canceled.');
+  const blob = publicKey.getClientExtensionResults().largeBlob?.blob;
+  if (!blob) throw new Error('Passkey largeBlob data was not returned.');
+  return {
+    credentialId: bytesToBase64url(new Uint8Array(publicKey.rawId)),
+    blob,
   };
 }
 
@@ -85,6 +147,14 @@ function prfOutput(credential: PublicKeyCredentialWithResults): Uint8Array {
   const first = result.results?.first;
   if (!first) throw new Error('WebAuthn PRF output was not returned.');
   return bufferSourceBytes(first);
+}
+
+function prfInputs(
+  credentialIds: readonly string[],
+): Record<string, { first: BufferSource }> {
+  return Object.fromEntries(
+    credentialIds.map((credentialId) => [credentialId, { first: salt }]),
+  );
 }
 
 function bufferSourceBytes(source: BufferSource): Uint8Array {

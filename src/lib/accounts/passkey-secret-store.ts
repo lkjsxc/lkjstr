@@ -46,10 +46,3 @@ export async function listPasskeySecrets(): Promise<PasskeyAccountSecret[]> {
   secrets.forEach((secret) => memorySecrets.set(secret.accountId, secret));
   return secrets;
 }
-
-export async function removePasskeySecret(accountId: string): Promise<void> {
-  memorySecrets.delete(accountId);
-  await bestEffortStorageWrite(() =>
-    browserDb().passkeyAccountSecrets.delete(accountId),
-  );
-}

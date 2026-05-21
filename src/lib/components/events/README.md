@@ -7,4 +7,5 @@ actions.
 
 ## Contents
 
-- Event rows, metadata, content tokens, embeds, media, and action panels.
+- Event rows, metadata, content tokens, mention chips, custom emoji images,
+  embeds, media, and action panels.

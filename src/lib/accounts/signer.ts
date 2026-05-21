@@ -24,7 +24,7 @@ export async function resolveActiveSigner(): Promise<AccountSigner> {
 function passkeyLocalSigner(account: Account): AccountSigner {
   const secret = getUnlockedPasskeySecret(account.id);
   if (!secret)
-    throw new Error('Unlock this passkey account before publishing.');
+    throw new Error('Unlock the active passkey account before publishing.');
   return {
     account,
     signEvent: async (event) =>

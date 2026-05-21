@@ -45,6 +45,19 @@
     window.removeEventListener('pointermove', pointerMove);
   }
 
+  function keydown(event: KeyboardEvent): void {
+    const step = event.shiftKey ? 0.08 : 0.03;
+    const negative =
+      (direction === 'horizontal' && event.key === 'ArrowLeft') ||
+      (direction === 'vertical' && event.key === 'ArrowUp');
+    const positive =
+      (direction === 'horizontal' && event.key === 'ArrowRight') ||
+      (direction === 'vertical' && event.key === 'ArrowDown');
+    if (!negative && !positive) return;
+    event.preventDefault();
+    resize(negative ? -step : step);
+  }
+
   onDestroy(() => {
     if (typeof window === 'undefined') return;
     window.removeEventListener('pointermove', pointerMove);
@@ -58,4 +71,5 @@
   class:active={dragging}
   aria-label="Resize panes"
   onpointerdown={pointerDown}
+  onkeydown={keydown}
 ></button>

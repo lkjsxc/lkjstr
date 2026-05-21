@@ -44,19 +44,19 @@ describe('account helpers', () => {
     expect(parseReadonlyAccount('f'.repeat(63))).toBeUndefined();
   });
 
-  it('normalizes legacy accounts to enabled', () => {
+  it('normalizes all account records to enabled', () => {
     expect(
       normalizeAccount({
         ...createAccount(pubkey, 'readonly'),
-        enabled: undefined as unknown as boolean,
+        enabled: false,
       }).enabled,
     ).toBe(true);
   });
 
-  it('creates locked passkey-local accounts without static signing capability', () => {
+  it('creates passkey-local signing accounts', () => {
     expect(createAccount(pubkey, 'passkey-local')).toMatchObject({
       signerType: 'passkey-local',
-      capabilities: { read: true, sign: false, publish: false },
+      capabilities: { read: true, sign: true, publish: true, decrypt: true },
     });
   });
 

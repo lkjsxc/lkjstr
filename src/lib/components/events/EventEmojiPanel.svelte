@@ -1,5 +1,6 @@
 <script lang="ts">
   import { onMount } from 'svelte';
+  import { customEmojiTokenText, parseCustomEmojiInput } from '$lib/protocol';
 
   type EmojiReaction = {
     readonly content: string;
@@ -28,18 +29,15 @@
   });
 
   function submit(): void {
-    const parsed = customEmoji(emoji.trim());
-    props.publish(parsed ?? { content: emoji.trim() });
-  }
-
-  function customEmoji(value: string): EmojiReaction | undefined {
-    const match = /^:([^:]+):(https:\/\/\S+)$/.exec(value);
-    return match
-      ? {
-          content: `:${match[1]}:`,
-          emoji: { shortcode: match[1], url: match[2] },
-        }
-      : undefined;
+    const parsed = parseCustomEmojiInput(emoji);
+    props.publish(
+      parsed
+        ? {
+            content: customEmojiTokenText(parsed.shortcode),
+            emoji: parsed,
+          }
+        : { content: emoji.trim() },
+    );
   }
 </script>
 

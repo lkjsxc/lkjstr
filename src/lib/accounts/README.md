@@ -9,4 +9,7 @@ helpers.
 
 - Account storage and active account helpers.
 - NIP-07 signer integration.
+- Local `nsec` generation, import, and signing helpers.
+- Passkey-local encryption, WebAuthn PRF, largeBlob portability, and session
+  unlock helpers.
 - CPU-only public key prefix mining.
