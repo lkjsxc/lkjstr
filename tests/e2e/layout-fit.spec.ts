@@ -107,7 +107,7 @@ test('profile notes follow the summary in the profile scroll flow', async ({
   await openNewTabOption(page, 'Global');
   await expect(page.getByText('profile flow note 0')).toBeVisible();
   await page.locator('.event-row .avatar-button').first().click();
-  await expect(page.getByRole('heading', { name: 'Profile' })).toBeVisible();
+  await expect(page.getByRole('region', { name: 'Profile' })).toBeVisible();
   const profile = page.locator(
     '.pane-body[data-active-tab="true"] .profile-tab',
   );

@@ -1,15 +1,25 @@
 <script lang="ts">
   import { contentTokens } from '$lib/events/content-tokens';
+  import type { ProfileSummary } from '$lib/identity/identity';
   import type { NostrEvent } from '$lib/protocol';
+  import EmojifiedText from './EmojifiedText.svelte';
 
   type Props = {
     event: NostrEvent;
+    profiles?: Record<string, ProfileSummary>;
+    hiddenEventIds?: ReadonlySet<string>;
     openProfile?: (pubkey: string) => void;
     openThread?: (eventId: string) => void;
   };
 
   let props: Props = $props();
-  let tokens = $derived(contentTokens(props.event));
+  let tokens = $derived(
+    contentTokens(
+      props.event,
+      props.profiles ?? {},
+      props.hiddenEventIds ?? new Set(),
+    ),
+  );
 
   function stop(event: MouseEvent): void {
     event.stopPropagation();
@@ -35,17 +45,22 @@
       <button
         type="button"
         class="content-token"
+        title={token.rawText}
         onclick={(event) => {
           event.stopPropagation();
           props.openProfile?.(token.pubkey);
         }}
       >
-        {token.text}
+        <EmojifiedText
+          text={token.text}
+          emojis={props.profiles?.[token.pubkey]?.customEmojis ?? []}
+        />
       </button>
     {:else if token.type === 'event'}
       <button
         type="button"
         class="content-token"
+        title={token.rawText}
         onclick={(event) => {
           event.stopPropagation();
           props.openThread?.(token.eventId);

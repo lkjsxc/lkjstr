@@ -9,8 +9,10 @@
   } from '$lib/protocol';
   import { actionSummary } from '$lib/events/action-summary';
   import { contentAttachments } from '$lib/events/content-media';
+  import type { ProfileSummary } from '$lib/identity/identity';
   import ContentTokens from './ContentTokens.svelte';
   import EventReferences from './EventReferences.svelte';
+  import EventMeta from './EventMeta.svelte';
   import MediaAttachment from './MediaAttachment.svelte';
   import { loadSettings } from '$lib/settings/settings-store';
 
@@ -18,6 +20,7 @@
     event: NostrEvent;
     relays?: readonly string[];
     depth?: number;
+    profiles?: Record<string, ProfileSummary>;
     openProfile?: (pubkey: string) => void;
     openThread?: (eventId: string) => void;
   };
@@ -37,6 +40,7 @@
           .filter((reference) => reference.id !== nested?.id)
           .filter((reference) => reference.id !== props.event.id),
   );
+  let referenceIds = $derived(new Set(references.map((item) => item.id)));
   let attachments = $derived(
     contentAttachments(props.event).filter((item) => item.type !== 'link'),
   );
@@ -74,6 +78,8 @@
   {:else}
     <ContentTokens
       event={props.event}
+      profiles={props.profiles}
+      hiddenEventIds={referenceIds}
       openProfile={props.openProfile}
       openThread={props.openThread}
     />
@@ -88,9 +94,15 @@
   {#if nested}
     <aside class="event-embed" data-kind="nested-repost">
       <strong>Reposted event</strong>
-      <small>{nested.pubkey.slice(0, 12)}</small>
+      <EventMeta
+        event={nested}
+        relays={[]}
+        profile={props.profiles?.[nested.pubkey]}
+        openProfile={props.openProfile}
+      />
       <ContentTokens
         event={nested}
+        profiles={props.profiles}
         openProfile={props.openProfile}
         openThread={props.openThread}
       />
@@ -100,6 +112,7 @@
     {references}
     relays={props.relays ?? []}
     depth={props.depth ?? 0}
+    profiles={props.profiles}
     openProfile={props.openProfile}
     openThread={props.openThread}
   />

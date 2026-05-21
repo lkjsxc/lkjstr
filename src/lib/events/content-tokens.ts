@@ -6,6 +6,8 @@ import {
   type CustomEmoji,
   type NostrEvent,
 } from '../protocol';
+import { bestDisplayName } from '../identity/display-name';
+import type { ProfileSummary } from '../identity/identity';
 import { contentAttachments, type ContentAttachment } from './content-media';
 
 export type ContentToken =
@@ -15,12 +17,14 @@ export type ContentToken =
       readonly type: 'profile';
       readonly pubkey: string;
       readonly text: string;
+      readonly rawText: string;
       readonly relays: readonly string[];
     }
   | {
       readonly type: 'event';
       readonly eventId: string;
       readonly text: string;
+      readonly rawText: string;
       readonly relays: readonly string[];
     }
   | {
@@ -33,19 +37,31 @@ export type ContentToken =
 const tokenPattern =
   /(:[A-Za-z0-9_+-]+:)|\b(?:nostr:([a-z0-9]+)|https:\/\/[^\s<>"']+)/gi;
 
-export function contentTokens(event: NostrEvent): ContentToken[] {
+export function contentTokens(
+  event: NostrEvent,
+  profiles: Record<string, ProfileSummary> = {},
+  hiddenEventIds: ReadonlySet<string> = new Set(),
+): ContentToken[] {
   const hiddenUrls = new Set(
     contentAttachments(event)
       .filter(isEmbeddedMedia)
       .map((attachment) => attachment.url),
   );
-  return tokenizeText(event.content, hiddenUrls, customEmojis(event));
+  return tokenizeText(
+    event.content,
+    hiddenUrls,
+    customEmojis(event),
+    profiles,
+    hiddenEventIds,
+  );
 }
 
 export function tokenizeText(
   content: string,
   hiddenUrls: ReadonlySet<string> = new Set(),
   emoji: readonly CustomEmoji[] = [],
+  profiles: Record<string, ProfileSummary> = {},
+  hiddenEventIds: ReadonlySet<string> = new Set(),
 ): ContentToken[] {
   const tokens: ContentToken[] = [];
   const emojiByText = new Map(
@@ -68,7 +84,12 @@ export function tokenizeText(
     }
     const entity = match[2];
     if (entity) {
-      tokens.push(entityToken(raw, entity) ?? { type: 'text', text: raw });
+      const token = entityToken(raw, entity, profiles);
+      if (token?.type === 'event' && hiddenEventIds.has(token.eventId)) {
+        pushText(tokens, suffix);
+        continue;
+      }
+      tokens.push(token ?? { type: 'text', text: raw });
       pushText(tokens, suffix);
       continue;
     }
@@ -79,28 +100,52 @@ export function tokenizeText(
   return mergeText(tokens);
 }
 
-function entityToken(raw: string, value: string): ContentToken | undefined {
+function entityToken(
+  raw: string,
+  value: string,
+  profiles: Record<string, ProfileSummary>,
+): ContentToken | undefined {
   const decoded = decodeEntity(value);
   if (!decoded) return undefined;
   if (decoded.type === 'npub' && isPubkey(decoded.data))
-    return { type: 'profile', pubkey: decoded.data, text: raw, relays: [] };
+    return profileToken(raw, decoded.data, [], profiles);
   if (decoded.type === 'nprofile' && isPubkey(decoded.data.pubkey))
-    return {
-      type: 'profile',
-      pubkey: decoded.data.pubkey,
-      text: raw,
-      relays: decoded.data.relays ?? [],
-    };
+    return profileToken(
+      raw,
+      decoded.data.pubkey,
+      decoded.data.relays ?? [],
+      profiles,
+    );
   if (decoded.type === 'note' && isEventId(decoded.data))
-    return { type: 'event', eventId: decoded.data, text: raw, relays: [] };
+    return eventToken(raw, decoded.data, []);
   if (decoded.type === 'nevent' && isEventId(decoded.data.id))
-    return {
-      type: 'event',
-      eventId: decoded.data.id,
-      text: raw,
-      relays: decoded.data.relays ?? [],
-    };
+    return eventToken(raw, decoded.data.id, decoded.data.relays ?? []);
   return undefined;
+}
+
+function profileToken(
+  raw: string,
+  pubkey: string,
+  relays: readonly string[],
+  profiles: Record<string, ProfileSummary>,
+): ContentToken {
+  const profile = profiles[pubkey];
+  const label = profile ? `@${bestDisplayName(profile)}` : raw;
+  return { type: 'profile', pubkey, text: label, rawText: raw, relays };
+}
+
+function eventToken(
+  raw: string,
+  eventId: string,
+  relays: readonly string[],
+): ContentToken {
+  return {
+    type: 'event',
+    eventId,
+    text: `event:${eventId.slice(0, 8)}`,
+    rawText: raw,
+    relays,
+  };
 }
 
 function isEmbeddedMedia(attachment: ContentAttachment): boolean {

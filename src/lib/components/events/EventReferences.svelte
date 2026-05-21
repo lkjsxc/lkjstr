@@ -4,19 +4,24 @@
     resolveReferences,
     type ResolvedReference,
   } from '$lib/events/reference-resolver';
+  import { hydrateProfiles } from '$lib/identity/profile-hydration';
+  import type { ProfileSummary } from '$lib/identity/identity';
   import type { EventReference } from '$lib/protocol';
+  import EventMeta from './EventMeta.svelte';
   import EventContent from './EventContent.svelte';
 
   type Props = {
     references: readonly EventReference[];
     relays?: readonly string[];
     depth?: number;
+    profiles?: Record<string, ProfileSummary>;
     openProfile?: (pubkey: string) => void;
     openThread?: (eventId: string) => void;
   };
 
   let props: Props = $props();
   let resolved = $state<ResolvedReference[]>([]);
+  let profiles = $state<Record<string, ProfileSummary>>({});
   let loaded = $state(false);
   let expanded = $state(false);
   let visible = $derived(expanded ? resolved : resolved.slice(0, 4));
@@ -27,6 +32,17 @@
       relays: props.relays ?? [],
       key: `refs:${props.references.length}:${props.references[0]?.id.slice(0, 12)}`,
     });
+    const authors = [
+      ...new Set(resolved.flatMap((item) => item.event?.event.pubkey ?? [])),
+    ].filter((pubkey) => !props.profiles?.[pubkey]);
+    profiles = {
+      ...(props.profiles ?? {}),
+      ...(await hydrateProfiles({
+        pubkeys: authors,
+        relays: props.relays ?? [],
+        subId: 'event-references',
+      })),
+    };
     loaded = true;
   });
 
@@ -60,11 +76,17 @@
   >
     <strong>{label(reference)}</strong>
     {#if reference.event}
-      <small>{reference.event.event.pubkey.slice(0, 12)}</small>
+      <EventMeta
+        event={reference.event.event}
+        relays={reference.event.relays}
+        profile={profiles[reference.event.event.pubkey]}
+        openProfile={props.openProfile}
+      />
       <EventContent
         event={reference.event.event}
         relays={reference.event.relays}
         depth={(props.depth ?? 0) + 1}
+        {profiles}
         openProfile={props.openProfile}
         openThread={props.openThread}
       />

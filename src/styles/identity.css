@@ -10,3 +10,12 @@
   height: 1.35rem;
   width: 1.35rem;
 }
+
+.identity-button {
+  gap: 0.3rem;
+}
+
+.identity-chip > span,
+.identity-button {
+  line-height: 1.25;
+}

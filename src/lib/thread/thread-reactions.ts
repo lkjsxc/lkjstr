@@ -1,9 +1,15 @@
 import { eventsByTagValues, upsertEvent } from '../events/repository';
 import type { FeedEvent } from '../events/types';
-import { kinds, type NostrEvent } from '../protocol';
+import {
+  customEmojiTag,
+  kinds,
+  type CustomEmoji,
+  type NostrEvent,
+} from '../protocol';
 
 export type ReactionGroup = {
   readonly content: string;
+  readonly emoji?: CustomEmoji;
   readonly count: number;
   readonly actors: readonly string[];
 };
@@ -70,18 +76,24 @@ export function mergeRepostEvent(
 }
 
 function groupReactions(events: readonly NostrEvent[]): ReactionGroup[] {
-  const groups = new Map<string, Set<string>>();
+  const groups = new Map<
+    string,
+    { content: string; emoji?: CustomEmoji; actors: Set<string> }
+  >();
   for (const event of events) {
-    const key = reactionContent(event);
-    const actors = groups.get(key) ?? new Set<string>();
-    actors.add(event.pubkey);
-    groups.set(key, actors);
+    const content = reactionContent(event);
+    const emoji = reactionEmoji(event, content);
+    const key = emoji ? `${content}\u0000${emoji.url}` : content;
+    const group = groups.get(key) ?? { content, emoji, actors: new Set() };
+    group.actors.add(event.pubkey);
+    groups.set(key, group);
   }
-  return [...groups.entries()]
-    .map(([content, actors]) => ({
-      content,
-      count: actors.size,
-      actors: [...actors].sort(),
+  return [...groups.values()]
+    .map((group) => ({
+      content: group.content,
+      emoji: group.emoji,
+      count: group.actors.size,
+      actors: [...group.actors].sort(),
     }))
     .sort((a, b) => b.count - a.count || a.content.localeCompare(b.content));
 }
@@ -93,11 +105,24 @@ function ungroup(groups: readonly ReactionGroup[]): NostrEvent[] {
       pubkey,
       created_at: 0,
       kind: 7,
-      tags: [],
+      tags: group.emoji
+        ? [['emoji', group.emoji.shortcode, group.emoji.url]]
+        : [],
       content: group.content,
       sig: '',
     })),
   );
+}
+
+function reactionEmoji(
+  event: NostrEvent,
+  content: string,
+): CustomEmoji | undefined {
+  const match = /^:([A-Za-z0-9_+-]+):$/.exec(content);
+  if (!match) return undefined;
+  return event.tags
+    .map(customEmojiTag)
+    .find((emoji) => emoji?.shortcode === match[1]);
 }
 
 function targetEventId(event: NostrEvent): string | undefined {

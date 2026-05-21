@@ -88,6 +88,7 @@
     <EventContent
       event={props.item.event}
       relays={props.item.relays}
+      profiles={props.profiles}
       openProfile={props.openProfile}
       openThread={props.openThread}
     />

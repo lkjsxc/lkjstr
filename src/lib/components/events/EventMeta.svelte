@@ -2,6 +2,7 @@
   import type { NostrEvent } from '$lib/protocol';
   import Avatar from '$lib/components/identity/Avatar.svelte';
   import { identityDisplay, type ProfileSummary } from '$lib/identity/identity';
+  import EmojifiedText from './EmojifiedText.svelte';
 
   type Props = {
     event: NostrEvent;
@@ -30,7 +31,12 @@
 {:else}
   <div class="event-meta">
     <button type="button" class="identity-button" onclick={openProfile}>
-      <strong>{display.title}</strong>
+      <strong>
+        <EmojifiedText
+          text={display.title}
+          emojis={props.profile?.customEmojis ?? []}
+        />
+      </strong>
       <small>{display.subtitle}</small>
     </button>
     <span>{time}</span>

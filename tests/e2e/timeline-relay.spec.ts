@@ -127,13 +127,11 @@ test('content entity tokens open profile and thread tabs', async ({ page }) => {
       exact: true,
     })
     .click();
-  await expect(page.getByRole('heading', { name: 'Profile' })).toBeVisible();
+  await expect(page.getByRole('region', { name: 'Profile' })).toBeVisible();
   await selectStartupTab(page, 'Home');
-  await page
-    .getByRole('button', {
-      name: `nostr:${encodeNote(target.id)}`,
-      exact: true,
-    })
-    .click();
-  await expect(page.getByRole('heading', { name: 'Thread' })).toBeVisible();
+  const reference = page.locator('.event-embed').filter({
+    hasText: 'Referenced event',
+  });
+  await reference.getByText('linked event body').click();
+  await expect(page.getByRole('region', { name: 'Thread' })).toBeVisible();
 });

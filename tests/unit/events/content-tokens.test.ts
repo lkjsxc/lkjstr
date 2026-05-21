@@ -38,19 +38,60 @@ describe('content tokens', () => {
     const tokens = contentTokens(event(`${npub} ${nprofile} ${encodedNote}`));
 
     expect(tokens).toMatchObject([
-      { type: 'profile', pubkey, text: npub, relays: [] },
+      { type: 'profile', pubkey, text: npub, rawText: npub, relays: [] },
       { type: 'text', text: ' ' },
       {
         type: 'profile',
         pubkey,
         text: nprofile,
+        rawText: nprofile,
         relays: ['wss://relay.example'],
       },
       { type: 'text', text: ' ' },
-      { type: 'event', eventId: note, text: encodedNote, relays: [] },
+      {
+        type: 'event',
+        eventId: note,
+        text: `event:${note.slice(0, 8)}`,
+        rawText: encodedNote,
+        relays: [],
+      },
+    ]);
+  });
+
+  it('renders profile labels and hides expanded event mentions', () => {
+    const pubkey = getPublicKey(generateSecretKey());
+    const note = '2'.repeat(64);
+    const npub = `nostr:${encodeNpub(pubkey)}`;
+    const encodedNote = `nostr:${encodeNote(note)}`;
+    const tokens = contentTokens(
+      event(`${npub} ${encodedNote}`),
+      { [pubkey]: profile(pubkey, 'Ada') },
+      new Set([note]),
+    );
+
+    expect(tokens).toEqual([
+      {
+        type: 'profile',
+        pubkey,
+        text: '@Ada',
+        rawText: npub,
+        relays: [],
+      },
+      { type: 'text', text: ' ' },
     ]);
   });
 });
+
+function profile(pubkey: string, name: string) {
+  return {
+    pubkey,
+    displayName: name,
+    name: null,
+    nip05: null,
+    avatarUrl: null,
+    updatedAt: 1,
+  };
+}
 
 function event(content: string) {
   return finalizeEvent(

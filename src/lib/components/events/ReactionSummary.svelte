@@ -29,8 +29,8 @@
 
 {#if props.reactions && props.reactions.length > 0}
   <ul class="reaction-summary" aria-label="Reactions">
-    {#each props.reactions as reaction (reaction.content)}
-      {@const id = `reaction-${reaction.content.codePointAt(0) ?? 0}`}
+    {#each props.reactions as reaction (`${reaction.content}:${reaction.emoji?.url ?? ''}`)}
+      {@const id = `reaction-${reaction.content}:${reaction.emoji?.url ?? ''}`}
       <li>
         <button
           type="button"
@@ -38,7 +38,12 @@
           aria-controls={id}
           onclick={() => toggle(id)}
         >
-          <span><EmojifiedText text={reaction.content} /></span>
+          <span>
+            <EmojifiedText
+              text={reaction.content}
+              emojis={reaction.emoji ? [reaction.emoji] : []}
+            />
+          </span>
           <strong>{reaction.count}</strong>
         </button>
         {#if expanded === id}

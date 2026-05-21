@@ -10,6 +10,7 @@
     record: NotificationRecord;
     item?: FeedEvent;
     profile?: ProfileSummary;
+    profiles?: Record<string, ProfileSummary>;
     openProfile?: (pubkey: string) => void;
     openThread?: (eventId: string) => void;
   };
@@ -39,6 +40,7 @@
       <EventContent
         event={props.item.event}
         relays={props.item.relays}
+        profiles={props.profiles}
         openProfile={props.openProfile}
         openThread={props.openThread}
       />

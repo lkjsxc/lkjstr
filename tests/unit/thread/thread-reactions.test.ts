@@ -35,6 +35,35 @@ describe('thread reactions', () => {
     ]);
   });
 
+  it('groups custom emoji reactions by content and emoji url', async () => {
+    const target = 'f'.repeat(64);
+    await storeReaction(
+      reaction('7', target, ':party:', 'a', 'https://x/party.png'),
+      'wss://relay',
+    );
+    await storeReaction(
+      reaction('8', target, ':party:', 'b', 'https://x/other.png'),
+      'wss://relay',
+    );
+
+    expect(await cachedThreadReactions([target])).toEqual({
+      [target]: [
+        {
+          content: ':party:',
+          emoji: { shortcode: 'party', url: 'https://x/other.png' },
+          count: 1,
+          actors: ['b'.repeat(64)],
+        },
+        {
+          content: ':party:',
+          emoji: { shortcode: 'party', url: 'https://x/party.png' },
+          count: 1,
+          actors: ['a'.repeat(64)],
+        },
+      ],
+    });
+  });
+
   it('loads and merges cached repost activity separately', async () => {
     const target = 'f'.repeat(64);
     await storeThreadActivity(repost('4', target, 'd'), 'wss://relay');
@@ -55,13 +84,14 @@ function reaction(
   target: string,
   content: string,
   pubkeySeed: string,
+  emojiUrl?: string,
 ): NostrEvent {
   return {
     id: idSeed.repeat(64),
     pubkey: pubkeySeed.repeat(64),
     created_at: Number(idSeed),
     kind: 7,
-    tags: [['e', target]],
+    tags: [['e', target], ...(emojiUrl ? [['emoji', 'party', emojiUrl]] : [])],
     content,
     sig: idSeed.repeat(128),
   };

@@ -58,10 +58,10 @@ test('timeline row actions open profile and thread tabs', async ({ page }) => {
     .locator('button.identity-button')
     .filter({ hasText: 'Followed Writer' })
     .click();
-  await expect(page.getByRole('heading', { name: 'Profile' })).toBeVisible();
+  await expect(page.getByRole('region', { name: 'Profile' })).toBeVisible();
   await selectStartupTab(page, 'Home');
   await homeTimeline.getByText('synthetic account-home note').click();
-  await expect(page.getByRole('heading', { name: 'Thread' })).toBeVisible();
+  await expect(page.getByRole('region', { name: 'Thread' })).toBeVisible();
 });
 
 test('timeline hides relay details and exposes them in lkjstr Log', async ({
@@ -89,7 +89,7 @@ test('timeline hides relay details and exposes them in lkjstr Log', async ({
   await expect(page.getByText('blocked: synthetic close')).toHaveCount(0);
 
   await openNewTabOption(page, 'lkjstr Log');
-  await expect(page.getByRole('heading', { name: 'lkjstr Log' })).toBeVisible();
+  await expect(page.getByRole('region', { name: 'lkjstr Log' })).toBeVisible();
   await expect(
     page.getByText('blocked: synthetic close').first(),
   ).toBeVisible();
