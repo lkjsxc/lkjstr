@@ -22,7 +22,10 @@ Accounts represent public identities and signing capability.
   or clears active state when none remain.
 - Accounts supports one inline input for `npub`, hex pubkey, or `nsec`.
 - Read-only account add, local `nsec` import, NIP-07 connect, local account
-  creation, active selection, enablement, and removal report inline status.
+  creation, active selection, enablement, disconnect, and local secret reveal
+  report inline status.
+- Local signing accounts can reveal or copy their `nsec` only after an inline
+  user action. Read-only and NIP-07 accounts never expose local secret controls.
 - Account flows must not use browser prompt or alert dialogs.
 - Tweet publishing requires an active signing account and enabled write relays.
 - Accounts can mine a CPU-only vanity `npub` prefix after `npub1`.

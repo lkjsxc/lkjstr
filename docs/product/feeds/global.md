@@ -2,14 +2,14 @@
 
 ## Purpose
 
-Global shows recent kind `1` notes from the selected readable relay set.
+Global shows recent notes and reposts from the selected readable relay set.
 
 ## Contract
 
 - Global opens from New Tab.
 - It does not require an active account.
 - Cached notes render before relay results.
-- Relay reads request recent kind `1` notes without author filtering.
+- Relay reads request recent kinds `1`, `6`, and `16` without author filtering.
 - Global performs one initial relay page without `since`, then keeps live
   subscriptions bounded with startup `since`.
 - Live relay events prepend into the same repository-backed feed model.
@@ -29,3 +29,7 @@ Global shows recent kind `1` notes from the selected readable relay set.
 - Identity controls open or focus matching Profile tabs in the same tile.
 - Event rows open or focus matching Thread tabs in the same tile.
 - Post rows do not show short event ids in row metadata.
+- Global uses the same runtime-owned profile hydration and sensitive-content
+  behavior as Home.
+- Repost rows render embedded content when verified, otherwise a target
+  reference fallback. Generic repost rows label the target kind when available.

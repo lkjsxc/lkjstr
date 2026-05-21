@@ -6,19 +6,20 @@ Tabs define the workspace surface area.
 
 ## New Tab Choices
 
-- Welcome
 - Home
-- Global
-- Relay Settings
-- lkjstr Log
-- Notifications
-- Accounts
-- Mine npub
 - Tweet
+- Notifications
+- Global
 - Profile Edit
-- Upload Settings
+- Accounts
+- Relay Settings
+- Stats
 - Settings
+- Upload Settings
 - Cache
+- lkjstr Log
+- Mine npub
+- Welcome
 
 ## Action-Opened Tabs
 
@@ -38,6 +39,7 @@ Tabs define the workspace surface area.
   otherwise they open a new Thread tab in that tile.
 - Mine npub owns vanity key generation. Accounts can add exported results only
   after explicit user action.
+- Stats is a workspace tab kind named `network-stats`.
 
 ## Movement
 

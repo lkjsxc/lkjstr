@@ -28,6 +28,8 @@ docker compose -f docker-compose.yml run --rm verify
 docker compose -f docker-compose.yml run --rm e2e
 ```
 
+Run all four Docker commands before claiming image-backed verification.
+
 ## Gate
 
 Use `pnpm verify` for normal local verification. Use Docker after Compose or

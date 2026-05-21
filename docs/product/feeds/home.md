@@ -16,6 +16,8 @@ its NIP-02 follows.
 - Account home authors are the active account plus `p` tags from the latest
   kind `3` follow list. Cache reads for the follow list use an indexed
   latest-only kind `3` lookup for the active pubkey.
+- Home displays event kinds `1`, `6`, and `16`; cache queries and relay
+  filters must not include other feed kinds.
 - Relay reads use enabled read relays from the selected default relay set.
 - Relay reads go through the subscription manager.
 - Events and relay provenance are written through the shared repository.
@@ -41,7 +43,7 @@ its NIP-02 follows.
   relays or authentication requirements.
 - Author controls open or focus matching Profile tabs in the same tile.
 - Event rows, quotes, and references open or focus matching Thread tabs in the
-  same tile.
+  same tile. Empty event ids must never open a Thread tab.
 - Post rows do not show relay source text or full public-key text.
 - Post rows do not show short event ids in row metadata.
 - Media URLs that successfully render as image, video, or audio embeds are
@@ -49,9 +51,12 @@ its NIP-02 follows.
 - `nostr:npub` and `nostr:nprofile` content tokens open or focus Profile in the
   same tile. `nostr:note` and `nostr:nevent` tokens open or focus Thread in the
   same tile.
-- Quote and reference previews are deduped by event id. The same event cannot
-  appear twice as both a quoted and referenced preview.
+- Quote and reference previews are deduped by event id and resolved in one
+  local id batch plus one relay id batch per row. First four previews are
+  visible; remaining previews stay behind Show all references.
 - Reply-root references must not be labeled `Thread root` in visible rows.
+- Sensitive rows show only warning metadata and local reveal controls until
+  revealed. Hidden media and custom emoji images must not preload.
 
 ## States
 

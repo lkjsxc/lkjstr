@@ -20,6 +20,9 @@ Profile tabs show identity metadata and authored text notes.
   document order. The Profile tab is the only scroll container for this flow.
 - Profile metadata supports banner, picture, display name, name, NIP-05,
   website, Lightning address, and about text.
+- Profile note lists display kinds `1`, `6`, and `16`.
+- Profile about text and display names render valid HTTPS custom emoji tags.
+- Sensitive authored rows use the same reveal gate as Home and Global.
 - Profile displays banner media when metadata provides `banner`.
 - Profile editing is not inline. Own-profile actions open Profile Edit in the
   same tile.
