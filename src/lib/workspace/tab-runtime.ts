@@ -2,7 +2,6 @@ export type TabMetadata = {
   readonly title: string;
   readonly icon: string;
   readonly avatarUrl?: string | null;
-  readonly unreadCount?: number;
   readonly dirty?: boolean;
   readonly loading?: boolean;
 };

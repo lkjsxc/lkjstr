@@ -19,7 +19,6 @@
   }
 
   function toggleAuto(): void {
-    autoRefresh = !autoRefresh;
     stopAutoRefresh();
     if (autoRefresh) timer = setInterval(() => void refresh(), 2000);
   }
@@ -64,14 +63,18 @@
   }
 </script>
 
-<section class="data-tab stats-tab">
+<section class="data-tab stats-tab" aria-label="Stats">
   <header class="settings-header">
-    <h2>Stats</h2>
     <div class="settings-actions">
       <button type="button" onclick={() => void refresh()}>Refresh</button>
-      <button type="button" aria-pressed={autoRefresh} onclick={toggleAuto}>
-        Auto 2s
-      </button>
+      <label class="stats-auto">
+        <input
+          type="checkbox"
+          bind:checked={autoRefresh}
+          onchange={toggleAuto}
+        />
+        <span>Auto refresh every 2s</span>
+      </label>
     </div>
   </header>
   <div class="stats-cards">

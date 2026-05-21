@@ -6,7 +6,7 @@ test('retains inactive tab body after switching tabs', async ({ page }) => {
   await selectStartupTab(page, 'Home');
   await expect(page.locator('.timeline-tab')).toHaveCount(1);
   await openNewTabOption(page, 'Settings', 1);
-  await expect(page.getByRole('heading', { name: 'Settings' })).toBeVisible();
+  await expect(page.getByRole('region', { name: 'Settings' })).toBeVisible();
   await expect(page.locator('.timeline-tab')).toHaveCount(1);
 });
 

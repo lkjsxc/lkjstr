@@ -64,7 +64,7 @@ test('event row actions publish without opening the row thread', async ({
     .locator('.event-row')
     .filter({ hasText: 'action target note' });
   await row.getByRole('button', { name: 'Heart', exact: true }).click();
-  await expect(page.getByRole('heading', { name: 'Thread' })).toHaveCount(0);
+  await expect(page.getByRole('region', { name: 'Thread' })).toHaveCount(0);
   await waitForPublishedCount(page, 1);
   await row.getByRole('button', { name: 'Reply', exact: true }).click();
   await row.getByLabel('Reply').fill('inline reply');

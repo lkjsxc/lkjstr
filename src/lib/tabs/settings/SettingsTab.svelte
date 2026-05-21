@@ -77,9 +77,8 @@
   }
 </script>
 
-<section class="settings-tab" bind:this={root}>
+<section class="settings-tab" aria-label="Settings" bind:this={root}>
   <header class="settings-header">
-    <h2>Settings</h2>
     <span>{changedCount} changed</span>
     <div class="settings-actions">
       <button

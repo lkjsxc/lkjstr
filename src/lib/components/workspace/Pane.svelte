@@ -120,17 +120,6 @@
 
 <section class="pane" aria-label="Workspace pane">
   <header class="pane-head">
-    {#if props.group}
-      <TabStrip
-        group={props.group}
-        paneId={props.pane.id}
-        tabs={props.tabs}
-        focusTab={(tabId) => props.focusTab(props.pane.id, tabId)}
-        closeTab={(tabId) => props.closeTab(props.pane.id, tabId)}
-        moveTab={props.moveTab}
-        disabled={!props.ready}
-      />
-    {/if}
     <div class="pane-actions">
       <NewTabButton
         open={() => props.openNewTab(props.pane.id)}
@@ -142,6 +131,17 @@
         disabled={!props.ready}
       />
     </div>
+    {#if props.group}
+      <TabStrip
+        group={props.group}
+        paneId={props.pane.id}
+        tabs={props.tabs}
+        focusTab={(tabId) => props.focusTab(props.pane.id, tabId)}
+        closeTab={(tabId) => props.closeTab(props.pane.id, tabId)}
+        moveTab={props.moveTab}
+        disabled={!props.ready}
+      />
+    {/if}
   </header>
 
   <div class="pane-stack">

@@ -5,7 +5,7 @@ test('shows seeded default relays', async ({ page }) => {
   await page.goto('/');
   await selectStartupTab(page, 'Relay Settings');
   await expect(
-    page.getByRole('heading', { name: 'Relay Settings' }),
+    page.getByRole('region', { name: 'Relay Settings' }),
   ).toBeVisible();
   await expect(
     page.getByRole('textbox', { name: 'Label wss://relay.damus.io' }),

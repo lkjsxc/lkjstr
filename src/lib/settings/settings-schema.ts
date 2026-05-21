@@ -30,7 +30,6 @@ relays.connectTimeoutMs|Connect timeout|number|5000|Relay connect timeout.
 profiles.fetchMetadata|Fetch metadata|boolean|true|Fetch profile metadata from relays.
 profiles.showNip05|Show NIP-05|boolean|true|Show NIP-05 identifiers.
 notifications.enabled|Notifications|boolean|true|Enable notifications.
-notifications.showUnreadInTab|Unread tab|boolean|true|Show unread in tab.
 notifications.defaultCategories|Categories|json|["mentions"]|Notification categories.
 content.hideSensitiveEvents|Hide sensitive events|boolean|true|Hide NIP-36 content until revealed.
 tweet.defaultPublishMode|Publish mode|enum|selected-relays|Tweet publish target.|selected-relays

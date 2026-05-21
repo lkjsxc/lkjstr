@@ -16,3 +16,9 @@
   border-collapse: collapse;
   width: 100%;
 }
+
+.stats-auto {
+  align-items: center;
+  display: inline-flex;
+  gap: var(--space-1);
+}

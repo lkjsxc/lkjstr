@@ -29,7 +29,6 @@
     type Workspace,
   } from '$lib/workspace/workspace';
   import { bootstrapWorkspace } from '$lib/workspace/workspace-bootstrap';
-  import { withNotificationUnreadCounts } from '$lib/workspace/notification-tabs';
   import {
     addMinedSigningAccount,
     loadWorkspacePageData,
@@ -101,7 +100,6 @@
   async function refreshData(): Promise<void> {
     ({ accounts, activeAccount, notifications, relaySets } =
       await loadWorkspacePageData());
-    workspace = await withNotificationUnreadCounts(workspace, notifications);
     startNotificationSync();
     pageDataReady = true;
   }

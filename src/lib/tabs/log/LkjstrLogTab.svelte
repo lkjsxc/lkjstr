@@ -41,8 +41,7 @@
   }
 </script>
 
-<section class="relay-monitor">
-  <h2>lkjstr Log</h2>
+<section class="relay-monitor" aria-label="lkjstr Log">
   <JobTreeLog />
   {#each logs as item (item.id)}
     <article class="relay-log-row">

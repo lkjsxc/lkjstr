@@ -9,7 +9,7 @@ test('drags a tab from one tile to another', async ({ page }) => {
   await expect(
     secondPane(page).getByRole('tab', { name: 'Settings', exact: true }),
   ).toHaveCount(0);
-  await expect(page.getByRole('heading', { name: 'Settings' })).toBeVisible();
+  await expect(page.getByRole('region', { name: 'Settings' })).toBeVisible();
 });
 
 test('persists a moved tab after reload', async ({ page }) => {

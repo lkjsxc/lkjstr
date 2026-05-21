@@ -175,8 +175,7 @@
   }
 </script>
 
-<section class="data-tab">
-  <h2>Tweet</h2>
+<section class="data-tab" aria-label="Tweet">
   <TweetComposer
     tabId={props.tabId}
     bind:sensitive

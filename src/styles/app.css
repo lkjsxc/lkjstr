@@ -108,6 +108,7 @@ body {
 }
 
 .pane-head .pane-actions {
+  flex: 0 0 auto;
   padding-block: 0;
 }
 

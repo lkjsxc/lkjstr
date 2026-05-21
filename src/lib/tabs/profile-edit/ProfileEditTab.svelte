@@ -123,8 +123,7 @@
   }
 </script>
 
-<section class="data-tab profile-edit-tab">
-  <h2>Profile Edit</h2>
+<section class="data-tab profile-edit-tab" aria-label="Profile Edit">
   {#if canEdit}
     {#if loading}<p>Loading profile metadata...</p>{/if}
     <ProfileTextField

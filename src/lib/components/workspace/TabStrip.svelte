@@ -95,9 +95,6 @@
           onclick={() => focusTab(tab.id)}
         >
           <span>{tab.title}</span>
-          {#if tab.unreadCount}
-            <small>{tab.unreadCount}</small>
-          {/if}
         </button>
         <button
           type="button"

@@ -1,10 +1,16 @@
 .tab-strip {
   display: flex;
-  flex-wrap: wrap;
+  flex-wrap: nowrap;
   gap: 0.15rem;
   flex: 1 1 auto;
   min-width: 0;
-  overflow: hidden;
+  overflow-x: auto;
+  overflow-y: hidden;
+  scrollbar-width: none;
+}
+
+.tab-strip::-webkit-scrollbar {
+  display: none;
 }
 
 .tab-frame {
@@ -14,7 +20,7 @@
   border-bottom-color: var(--color-border);
   border-radius: var(--radius-tab);
   display: flex;
-  flex: 0 1 auto;
+  flex: 0 0 auto;
   max-width: 14rem;
   min-width: 0;
 }
@@ -57,7 +63,22 @@
 }
 
 .tile-icon-button {
-  min-width: 2rem;
+  align-items: center;
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: var(--radius-button);
+  color: var(--color-text-muted);
+  display: inline-flex;
+  height: 1.75rem;
+  justify-content: center;
+  min-width: 1.75rem;
+  padding: 0;
+}
+
+.tile-icon-button:focus-visible {
+  border-color: var(--color-focus);
+  outline: 2px solid var(--color-focus);
+  outline-offset: 1px;
 }
 
 .row {
@@ -95,16 +116,16 @@
 
 .resize.horizontal::before {
   bottom: 0;
-  left: calc(50% - 1px);
+  left: calc(50% - 0.5px);
   top: 0;
-  width: 2px;
+  width: 1px;
 }
 
 .resize.vertical::before {
-  height: 2px;
+  height: 1px;
   left: 0;
   right: 0;
-  top: calc(50% - 1px);
+  top: calc(50% - 0.5px);
 }
 
 .resize.active::before {

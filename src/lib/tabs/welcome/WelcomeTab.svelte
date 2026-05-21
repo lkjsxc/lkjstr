@@ -20,7 +20,6 @@
 </script>
 
 <section class="data-tab welcome-tab" aria-label="Welcome">
-  <h2>Welcome</h2>
   <dl class="metric-list">
     <dt>Active account</dt>
     <dd>{props.activeAccount?.label ?? 'none'}</dd>

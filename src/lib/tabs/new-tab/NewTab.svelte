@@ -18,8 +18,7 @@
   }
 </script>
 
-<section class="new-tab">
-  <h2>New Tab</h2>
+<section class="new-tab" aria-label="New Tab">
   {#each ['primary', 'secondary'] as group (group)}
     <div class="option-grid" aria-label={`${group} options`}>
       {#each newTabOptions.filter((option) => option.group === group) as option (option.label)}

@@ -21,8 +21,7 @@
   }
 </script>
 
-<section class="data-tab">
-  <h2>Cache</h2>
+<section class="data-tab" aria-label="Cache">
   {#if cache}
     <dl class="metric-list">
       <dt>Events</dt>

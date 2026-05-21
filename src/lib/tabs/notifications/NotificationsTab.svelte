@@ -113,7 +113,6 @@
 </script>
 
 <section class="data-tab" aria-label="Notifications">
-  <h2>Notifications</h2>
   {#if state.loading}<p>Loading notifications...</p>{/if}
   {#if state.error}<p role="alert">{state.error}</p>{/if}
   <div class="notification-list" onscroll={handleScroll}>
@@ -123,6 +122,7 @@
           {record}
           item={itemById.get(record.sourceEventId)}
           profile={state.profiles[record.actorPubkey]}
+          profiles={state.profiles}
           openProfile={props.openProfile}
           openThread={props.openThread}
         />

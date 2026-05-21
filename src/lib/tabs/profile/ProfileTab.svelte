@@ -137,8 +137,12 @@
   }
 </script>
 
-<section class="profile-tab" bind:this={profileTab} onscroll={handleScroll}>
-  <h2>Profile</h2>
+<section
+  class="profile-tab"
+  aria-label="Profile"
+  bind:this={profileTab}
+  onscroll={handleScroll}
+>
   <header class="profile-card">
     {#if state.profile?.bannerUrl}
       <img class="profile-card__banner" src={state.profile.bannerUrl} alt="" />
@@ -169,11 +173,7 @@
   {#if state.error}
     <p role="alert">{state.error}</p>
   {/if}
-  <section
-    class="profile-notes"
-    aria-labelledby={`profile-notes-${props.tabId}`}
-  >
-    <h3 id={`profile-notes-${props.tabId}`}>Notes</h3>
+  <section class="profile-notes" aria-label="Notes">
     <div class="profile-notes__list">
       {#if state.posts.length > 0}
         {#each state.posts as item (item.event.id)}

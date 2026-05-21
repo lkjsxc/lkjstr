@@ -60,8 +60,7 @@
   $effect(() => sharedRelayPool.onState((next) => (snapshots = next)));
 </script>
 
-<section class="relay-settings">
-  <h2>Relay Settings</h2>
+<section class="relay-settings" aria-label="Relay Settings">
   {#if error}<p role="alert">{error}</p>{/if}
   {#each props.relaySets as set (set.id)}
     <article class="relay-set">
