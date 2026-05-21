@@ -25,6 +25,9 @@ Nostr keys.
 - Login can read a discoverable credential largeBlob, store the recovered
   encrypted record locally, evaluate PRF for the selected credential id, and
   restore the account row.
+- If a selected discoverable credential has no portable lkjstr data, login
+  reports that the user must use the browser profile that created it, unlock a
+  listed passkey account, or create a new passkey from nsec.
 - Publishing from a locked passkey account fails before relay writes and before
   WebAuthn is invoked.
 - Passkey accounts never expose an `nsec` reveal or copy control.

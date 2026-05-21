@@ -1,4 +1,5 @@
 import { base64urlToBytes, bytesToBase64url } from './base64url';
+import { missingPortablePasskeyDataMessage } from './passkey-portable';
 
 export const passkeySaltLabel = 'lkjstr passkey local account unlock';
 
@@ -123,7 +124,7 @@ export async function readDiscoverablePasskeyLargeBlob(): Promise<{
   const publicKey = credential as PublicKeyCredentialWithResults | null;
   if (!publicKey) throw new Error('Passkey login was canceled.');
   const blob = publicKey.getClientExtensionResults().largeBlob?.blob;
-  if (!blob) throw new Error('Passkey largeBlob data was not returned.');
+  if (!blob) throw new Error(missingPortablePasskeyDataMessage);
   return {
     credentialId: bytesToBase64url(new Uint8Array(publicKey.rawId)),
     blob,

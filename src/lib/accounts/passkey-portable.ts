@@ -3,6 +3,8 @@ import type { PasskeyAccountSecret } from './passkey-secret-store';
 
 export const portablePasskeyApp = 'lkjstr';
 export const portablePasskeyFormat = 'lkjstr-passkey-secret';
+export const missingPortablePasskeyDataMessage =
+  'This passkey does not contain portable lkjstr data. Use the browser profile that created it, unlock a listed passkey account, or create a new passkey from nsec.';
 
 export type PortablePasskeyBlob = PasskeyAccountSecret & {
   readonly app: typeof portablePasskeyApp;
@@ -23,7 +25,7 @@ export function encodePortablePasskeyBlob(
 export function decodePortablePasskeyBlob(
   source: BufferSource | undefined,
 ): PasskeyAccountSecret {
-  if (!source) throw new Error('Passkey largeBlob data was not returned.');
+  if (!source) throw new Error(missingPortablePasskeyDataMessage);
   const parsed = JSON.parse(
     new TextDecoder().decode(bytes(source)),
   ) as Partial<PortablePasskeyBlob>;

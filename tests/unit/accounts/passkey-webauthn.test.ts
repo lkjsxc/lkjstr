@@ -83,4 +83,20 @@ describe('passkey WebAuthn PRF', () => {
       'evalByCredential',
     );
   });
+
+  it('explains discoverable passkeys without portable data', async () => {
+    const credential = {
+      rawId: new Uint8Array([1, 2, 3]).buffer,
+      getClientExtensionResults: () => ({ largeBlob: {} }),
+    };
+    vi.stubGlobal('navigator', {
+      credentials: { get: vi.fn(async () => credential) },
+    });
+    vi.stubGlobal('window', { PublicKeyCredential: function () {} });
+    const { readDiscoverablePasskeyLargeBlob } =
+      await import('../../../src/lib/accounts/passkey-webauthn');
+    await expect(readDiscoverablePasskeyLargeBlob()).rejects.toThrow(
+      'This passkey does not contain portable lkjstr data.',
+    );
+  });
 });
