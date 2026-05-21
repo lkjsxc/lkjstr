@@ -24,6 +24,10 @@ Settings provide editable local preferences as one flat key-value list.
 - Invalid custom upload server values stay inline and are not saved.
 - `tweet.mediaUploadNoTransform` requests no server-side media transformation
   when uploads are sent.
+- Notification unread tab badge settings are retired and must not be loaded,
+  displayed, or used.
+- Stats auto-refresh is controlled by a checkbox in Stats, not by a text-like
+  button.
 - JSON import uses an inline textarea and status. Browser prompt dialogs are
   not used.
 - Retired draft-tree settings are not part of the schema.

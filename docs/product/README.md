@@ -17,6 +17,8 @@ itself: split tiles, tabs, relay-backed data, and local state.
 - [tools/accounts.md](tools/accounts.md): account records and signers.
 - [tools/cache.md](tools/cache.md): local cache tab behavior.
 - [tools/event-actions.md](tools/event-actions.md): event action writes.
+- [tools/passkey-accounts.md](tools/passkey-accounts.md): passkey-protected
+  local account behavior.
 - [tools/relay-management.md](tools/relay-management.md): relay management.
 - [tools/settings.md](tools/settings.md): settings.
 - [tools/tweet.md](tools/tweet.md): Tweet tool.

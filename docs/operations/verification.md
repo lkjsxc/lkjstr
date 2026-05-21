@@ -39,6 +39,8 @@ the same local, browser, and Docker-backed gates.
 Quiet commands are preferred in agent runs. They print a short success line
 when commands pass and print buffered command output only when a command fails.
 
+Run `pnpm check:repo` after documentation changes before code work continues.
+
 ## Acceptance Checks
 
 - Open every New Tab choice at desktop and mobile widths and confirm no
@@ -70,6 +72,9 @@ when commands pass and print buffered command output only when a command fails.
 - Notification records without `targetEventId` or `rootEventId` do not call
   Thread navigation with an empty id.
 - Quote and reference previews are deduped by event id.
+- Passkey PRF acceptance is checked manually in a browser that supports the
+  extension: create a passkey account, reload, unlock, publish, and confirm no
+  decrypted secret was stored in `localAccountSecrets`.
 - Inactive feed tabs stay mounted through `tabs.inactiveRetentionSeconds`, then
   close owned subscriptions after expiry.
 - Changing `tabs.inactiveRetentionSeconds`, closing a tab, or retention expiry

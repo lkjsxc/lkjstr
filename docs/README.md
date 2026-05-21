@@ -16,6 +16,8 @@ here before code is changed.
   tree model.
 - [architecture/data/feed-memory.md](architecture/data/feed-memory.md): feed
   cache and relay windows.
+- [architecture/data/passkey-storage.md](architecture/data/passkey-storage.md):
+  passkey local secret storage.
 - [architecture/data/shared-storage.md](architecture/data/shared-storage.md):
   shared event storage.
 - [architecture/data/storage.md](architecture/data/storage.md): durable storage.
@@ -91,6 +93,8 @@ here before code is changed.
 - [product/tools/cache.md](product/tools/cache.md): cache.
 - [product/tools/event-actions.md](product/tools/event-actions.md): event
   action writes.
+- [product/tools/passkey-accounts.md](product/tools/passkey-accounts.md):
+  WebAuthn-protected local keys.
 - [product/tools/relay-management.md](product/tools/relay-management.md):
   relay management.
 - [product/tools/settings.md](product/tools/settings.md): settings.

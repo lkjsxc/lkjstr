@@ -36,6 +36,11 @@ Readiness checks whether the app contract is shippable.
   state, notifications, and composer recovery data.
 - App heap stays below `100 MB` in the heavy-feed smoke test; Chromium RSS is
   reported separately.
-- Tweet publishes only with NIP-07 and enabled write relays.
+- Tweet publishes only with an unlocked signing account and enabled write
+  relays.
+- Passkey PRF create, reload, unlock, and publish flows pass manual browser
+  acceptance where the browser exposes WebAuthn PRF.
 - Docker config contains no bind mounts.
+- Docker Compose config, image build, verify, and e2e gates pass when Docker is
+  available.
 - Unit and e2e checks pass for the changed surface.

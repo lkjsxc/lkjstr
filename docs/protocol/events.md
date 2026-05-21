@@ -76,14 +76,22 @@ Profile, Thread, embeds, and Notifications.
 - `nostr:npub` decodes to a profile mention and opens Profile.
 - `nostr:nprofile` decodes to a profile mention, preserves relay hints for
   entity text, and opens Profile.
-- `nostr:note` decodes to an event mention and opens Thread.
+- Profile mentions render as readable `@name` labels when profile metadata is
+  available and keep the raw token in `title`.
+- `nostr:note` decodes to a compact event mention and opens Thread.
 - `nostr:nevent` decodes to an event mention, preserves relay hints for entity
   text, and opens Thread.
+- Event mentions render as compact buttons instead of raw entity strings.
+- Event mention tokens are hidden when the same event is expanded as a
+  reference below the content.
 - Normal `https://` URLs render as links.
 - Media `https://` URLs render as links only when they are not successfully
   embedded.
 - NIP-92 `imeta` `url` tokens create media attachments. The optional `m` token
   classifies image, video, or audio.
+- Custom emoji render in content, profile names, mention labels, referenced
+  author labels, nested repost author labels, and reaction summaries when HTTPS
+  emoji metadata is available.
 
 ## Embeds
 
@@ -103,6 +111,9 @@ preview.
 Quote and reference previews are deduped by event id before rendering. Protocol
 reference extraction and the shared event renderer own this dedupe so Home,
 Global, Profile, Thread, and Notifications render the same preview set.
+
+Referenced event previews load author profiles when possible and render
+identity UI instead of public-key slices.
 
 ## Media
 

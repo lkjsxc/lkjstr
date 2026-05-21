@@ -26,7 +26,8 @@ This document records the current implemented contract for the app.
 - Moving the last tab out of a tile removes that tile.
 - Settings render as one flat key-value list, including cache retention, raw
   string editing, formatted JSON editing, inline JSON import, and raw Tweet
-  media upload keys.
+  media upload keys. Notification unread tab badges are not configurable or
+  rendered.
 - Upload Settings is a guided editor for the Tweet media upload provider,
   custom HTTPS server, no-transform option, endpoint discovery, and discovery
   test result.
@@ -42,7 +43,7 @@ This document records the current implemented contract for the app.
 - Notifications are background-captured relay-backed records derived from
   supported `#p` events that reference the active account. Rows show actor,
   action label, read state, timestamp, and source content without target/root
-  context controls.
+  context controls. The Notifications tab label never includes an unread count.
 - Home has no hidden public fallback when the selected account or read relays
   cannot produce a feed.
 - Feed loading ends when cache exists, any relay produces events, any relay
@@ -64,6 +65,9 @@ This document records the current implemented contract for the app.
 - Event rows and diagnostic rows wrap long content inside their tile.
 - Accounts are managed inline with enable, active, and remove controls. Disabled
   accounts are ignored for signing and active-account resolution.
+- Passkey accounts use a stored browser credential to unlock encrypted local
+  Nostr key material. Passkeys never sign Nostr events directly, decrypted
+  keys stay in memory only, and reloads start locked.
 - Mine npub mines an `npub` prefix locally and exports the generated `nsec`
   without storing it until the user adds it.
 - Tweet uses the active enabled signing account, durable composer recovery,
@@ -77,7 +81,7 @@ This document records the current implemented contract for the app.
   indexes for thread, reference, reaction, and notification reloads.
 - Stats shows current-session relay counters, subscription ids, OK counts,
   cache event/profile/notification totals, storage usage, manual refresh, and
-  optional short auto-refresh.
+  an auto-refresh checkbox.
 - Jobs are persisted as root/child trees with progress, output, and cancel
   metadata for inspection in lkjstr Log.
 - Docker verification uses `docker-compose.yml` built images with no bind
