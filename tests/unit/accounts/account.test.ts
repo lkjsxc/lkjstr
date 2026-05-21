@@ -53,6 +53,13 @@ describe('account helpers', () => {
     ).toBe(true);
   });
 
+  it('creates locked passkey-local accounts without static signing capability', () => {
+    expect(createAccount(pubkey, 'passkey-local')).toMatchObject({
+      signerType: 'passkey-local',
+      capabilities: { read: true, sign: false, publish: false },
+    });
+  });
+
   it('connects to NIP-07 providers when present', async () => {
     const provider = {
       getPublicKey: vi.fn().mockResolvedValue(pubkey),

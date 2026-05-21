@@ -15,6 +15,14 @@ import {
   persistLocalAccount,
 } from './local';
 import { connectNip07, type Nip07Provider } from './nip07';
+export {
+  createPasskeyLocalAccount,
+  importPasskeyLocalNsec,
+  isPasskeyUnlocked,
+  lockPasskeyAccount,
+  loginWithPasskey,
+  unlockPasskeyAccount,
+} from './passkey-local';
 
 export async function addReadonlyAccount(input: string): Promise<Account> {
   const account = parseReadonlyAccount(input);

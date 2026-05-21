@@ -80,4 +80,18 @@ describe('account signer resolution', () => {
 
     expect(provider.signEvent).toHaveBeenCalledOnce();
   });
+
+  it('does not invoke WebAuthn while publishing from locked passkey accounts', async () => {
+    const account = createAccount('a'.repeat(64), 'passkey-local');
+    vi.doMock('../../../src/lib/accounts/account-store', () => ({
+      activeAccount: vi.fn(async () => account),
+    }));
+
+    const { resolveActiveSigner } =
+      await import('../../../src/lib/accounts/signer');
+
+    await expect(resolveActiveSigner()).rejects.toThrow(
+      'Unlock this passkey account before publishing.',
+    );
+  });
 });

@@ -1,6 +1,7 @@
 import Dexie, { type Table } from 'dexie';
 import type { Account } from '../accounts/account';
 import type { LocalAccountSecret } from '../accounts/local-secret-store';
+import type { PasskeyAccountSecret } from '../accounts/passkey-secret-store';
 import type { CacheMetadata } from '../cache/cache-status';
 import type {
   EventRelayReceipt,
@@ -26,6 +27,7 @@ export class LkjstrDb extends Dexie {
   workspaces!: Table<Workspace, string>;
   accounts!: Table<Account, string>;
   localAccountSecrets!: Table<LocalAccountSecret, string>;
+  passkeyAccountSecrets!: Table<PasskeyAccountSecret, string>;
   notifications!: Table<NotificationRecord, string>;
   tweetDrafts!: Table<TweetDraft, string>;
   events!: Table<StoredEvent, string>;
@@ -47,10 +49,11 @@ export class LkjstrDb extends Dexie {
         (step: number) => { stores: (shape: Record<string, string>) => void }
       >
     )[schemaMethod];
-    schema.call(this, 7).stores({
+    schema.call(this, 8).stores({
       workspaces: '&id, updatedAt, activeAccountId',
       accounts: '&id, pubkey, signerType, updatedAt, lastUsedAt',
       localAccountSecrets: '&accountId, pubkey, updatedAt',
+      passkeyAccountSecrets: '&accountId, pubkey, credentialId, updatedAt',
       notifications:
         '&id, accountPubkey, sourceEventId, actorPubkey, kind, readAt, createdAt, [accountPubkey+createdAt]',
       tweetDrafts: '&id, accountId, updatedAt',

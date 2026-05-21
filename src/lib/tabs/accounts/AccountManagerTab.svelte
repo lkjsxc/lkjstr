@@ -1,16 +1,22 @@
 <script lang="ts">
-  import IdentityChip from '$lib/components/identity/IdentityChip.svelte';
   import type { Account } from '$lib/accounts/account';
   import {
     addAccountFromInput,
     addNip07Account,
     createLocalAccount,
+    createPasskeyLocalAccount,
+    importPasskeyLocalNsec,
+    isPasskeyUnlocked,
+    lockPasskeyAccount,
+    loginWithPasskey,
     removeStoredAccount,
     setActiveAccount,
+    unlockPasskeyAccount,
   } from '$lib/accounts/account-manager';
   import { setAccountEnabled } from '$lib/accounts/account-store';
   import { getLocalSecret } from '$lib/accounts/local-secret-store';
   import { encodeNsec } from '$lib/protocol';
+  import AccountRow from './AccountRow.svelte';
 
   type Props = {
     accounts: Account[];
@@ -56,6 +62,21 @@
     return run(() => createLocalAccount(), 'Local account created.');
   }
 
+  function createPasskey(): Promise<void> {
+    return run(() => createPasskeyLocalAccount(), 'Passkey account created.');
+  }
+
+  function importPasskey(): Promise<void> {
+    return run(
+      () => importPasskeyLocalNsec(input),
+      'Passkey account imported.',
+    );
+  }
+
+  function loginPasskey(): Promise<void> {
+    return run(() => loginWithPasskey(), 'Passkey account unlocked.');
+  }
+
   function makeActive(account: Account): Promise<void> {
     return run(() => setActiveAccount(account), 'Active account updated.');
   }
@@ -69,6 +90,19 @@
 
   function remove(account: Account): Promise<void> {
     return run(() => removeStoredAccount(account), 'Account disconnected.');
+  }
+
+  function unlockPasskey(account: Account): Promise<void> {
+    return run(
+      () => unlockPasskeyAccount(account),
+      'Passkey account unlocked.',
+    );
+  }
+
+  async function lockPasskey(account: Account): Promise<void> {
+    lockPasskeyAccount(account.id);
+    status = 'Passkey account locked.';
+    await props.refreshData();
   }
 
   async function reveal(account: Account): Promise<void> {
@@ -89,8 +123,7 @@
   }
 </script>
 
-<section class="data-tab">
-  <h2>Accounts</h2>
+<section class="data-tab" aria-label="Accounts">
   <form
     class="toolbar"
     onsubmit={(event) => {
@@ -115,56 +148,37 @@
     <button type="button" disabled={busy} onclick={createLocal}
       >Create local</button
     >
+    <button type="button" disabled={busy} onclick={createPasskey}
+      >Create passkey</button
+    >
+    <button
+      type="button"
+      disabled={busy || !input.trim()}
+      onclick={importPasskey}>Import passkey nsec</button
+    >
+    <button type="button" disabled={busy} onclick={loginPasskey}
+      >Login with passkey</button
+    >
   </div>
   {#if status}<p role="status">{status}</p>{/if}
   {#if props.accounts.length > 0}
     <fieldset>
       <legend>Active account</legend>
       {#each props.accounts as account (account.id)}
-        <article class:disabled={!account.enabled} class="row">
-          <label>
-            <input
-              type="radio"
-              name="active-account"
-              checked={props.activeAccount?.id === account.id}
-              disabled={busy || !account.enabled}
-              onchange={() => void makeActive(account)}
-            />
-            <IdentityChip pubkey={account.pubkey} />
-          </label>
-          <small>{account.signerType}</small>
-          <small>{account.enabled ? 'enabled' : 'disabled'}</small>
-          <button
-            type="button"
-            disabled={busy}
-            onclick={() => toggleEnabled(account)}
-          >
-            {account.enabled ? 'Disable' : 'Enable'}
-          </button>
-          {#if account.signerType === 'local'}
-            {#if revealed[account.id]}
-              <code>{revealed[account.id]}</code>
-              <button
-                type="button"
-                disabled={busy}
-                onclick={() => copy(account)}
-              >
-                Copy nsec
-              </button>
-            {:else}
-              <button
-                type="button"
-                disabled={busy}
-                onclick={() => reveal(account)}
-              >
-                Reveal nsec
-              </button>
-            {/if}
-          {/if}
-          <button type="button" disabled={busy} onclick={() => remove(account)}>
-            Disconnect
-          </button>
-        </article>
+        <AccountRow
+          {account}
+          activeAccount={props.activeAccount}
+          {busy}
+          revealed={revealed[account.id]}
+          passkeyUnlocked={isPasskeyUnlocked(account.id)}
+          makeActive={(item) => void makeActive(item)}
+          toggleEnabled={(item) => void toggleEnabled(item)}
+          reveal={(item) => void reveal(item)}
+          copy={(item) => void copy(item)}
+          unlockPasskey={(item) => void unlockPasskey(item)}
+          lockPasskey={(item) => void lockPasskey(item)}
+          remove={(item) => void remove(item)}
+        />
       {/each}
     </fieldset>
   {:else}

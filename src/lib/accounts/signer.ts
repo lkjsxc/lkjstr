@@ -4,6 +4,7 @@ import { activeAccount } from './account-store';
 import { signLocalEvent } from './local';
 import { getLocalSecret } from './local-secret-store';
 import { getNip07Provider } from './nip07';
+import { getUnlockedPasskeySecret } from './passkey-session';
 
 export type AccountSigner = {
   readonly account: Account;
@@ -14,8 +15,21 @@ export async function resolveActiveSigner(): Promise<AccountSigner> {
   const account = await activeAccount();
   if (!account) throw new Error('Add a signing account first.');
   if (account.signerType === 'local') return localSigner(account);
+  if (account.signerType === 'passkey-local')
+    return passkeyLocalSigner(account);
   if (account.signerType === 'nip07') return nip07Signer(account);
   throw new Error('Select an account that can sign.');
+}
+
+function passkeyLocalSigner(account: Account): AccountSigner {
+  const secret = getUnlockedPasskeySecret(account.id);
+  if (!secret)
+    throw new Error('Unlock this passkey account before publishing.');
+  return {
+    account,
+    signEvent: async (event) =>
+      signLocalEvent(plainUnsignedEvent(event), secret),
+  };
 }
 
 async function localSigner(account: Account): Promise<AccountSigner> {

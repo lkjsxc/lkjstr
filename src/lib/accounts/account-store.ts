@@ -8,6 +8,8 @@ import {
 } from '../storage/safe-storage';
 import { normalizeAccount, type Account } from './account';
 import { removeLocalSecret } from './local-secret-store';
+import { removePasskeySecret } from './passkey-secret-store';
+import { lockPasskeyAccount } from './passkey-session';
 
 const activeKey = 'lkjstr.activeAccountId';
 let memoryAccounts: Account[] = [];
@@ -36,6 +38,8 @@ export async function removeAccount(id: string): Promise<void> {
   memoryAccounts = memoryAccounts.filter((account) => account.id !== id);
   await bestEffortStorageWrite(() => browserDb().accounts.delete(id));
   await removeLocalSecret(id);
+  await removePasskeySecret(id);
+  lockPasskeyAccount(id);
   if (wasActive) await selectFallbackActiveAccount();
 }
 

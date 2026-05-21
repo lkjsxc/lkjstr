@@ -1,6 +1,6 @@
 import { decodeEntity, encodeNpub } from '../protocol';
 
-export type SignerType = 'readonly' | 'nip07' | 'local';
+export type SignerType = 'readonly' | 'nip07' | 'local' | 'passkey-local';
 
 export type AccountCapabilities = {
   readonly read: boolean;
