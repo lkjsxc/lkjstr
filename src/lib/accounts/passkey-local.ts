@@ -44,6 +44,7 @@ export async function unlockPasskeyAccount(account: Account): Promise<void> {
   if (!secret) throw new Error('Passkey account secret is unavailable.');
   const result = await getPasskeyPrf([secret.credentialId]);
   const plain = await decryptPasskeySecret(secret, result.prf);
+  void backfillPortableSecret(secret);
   unlockPasskeySession(account.id, plain);
 }
 
@@ -67,6 +68,7 @@ async function chooseStoredSecret(
     (item) => item.credentialId === result.credentialId,
   );
   if (!secret) throw new Error('Passkey account record was not found.');
+  void backfillPortableSecret(secret);
   return { secret, prf: result.prf };
 }
 
@@ -99,6 +101,19 @@ async function restorePasskeyAccount(
   };
   await saveAccount(account);
   return account;
+}
+
+async function backfillPortableSecret(
+  secret: PasskeyAccountSecret,
+): Promise<void> {
+  try {
+    await writePasskeyLargeBlob(
+      secret.credentialId,
+      encodePortablePasskeyBlob(secret),
+    );
+  } catch {
+    // Older same-browser passkeys remain usable through retained local records.
+  }
 }
 
 async function persistPasskeyAccount(secret: Uint8Array): Promise<Account> {

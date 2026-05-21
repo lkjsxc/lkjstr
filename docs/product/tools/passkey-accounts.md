@@ -22,6 +22,9 @@ Nostr keys.
 - A reloaded passkey account starts locked.
 - Unlock uses stored credential ids through `allowCredentials` and PRF
   `evalByCredential`.
+- Unlocking or logging in with a retained local encrypted record best-effort
+  rewrites the credential largeBlob so older same-browser passkeys can become
+  portable when the authenticator supports it.
 - Login can read a discoverable credential largeBlob, store the recovered
   encrypted record locally, evaluate PRF for the selected credential id, and
   restore the account row.
