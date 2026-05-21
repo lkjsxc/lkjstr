@@ -16,9 +16,9 @@ export function titleFor(kind: TabKind): string {
     'relay-monitor': 'lkjstr Log',
     'relay-settings': 'Relay Settings',
     'network-stats': 'Stats',
+    search: 'Search',
     tweet: 'Tweet',
     settings: 'Settings',
-    'cache-status': 'Cache',
   };
   return titles[kind];
 }

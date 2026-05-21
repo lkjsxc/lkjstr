@@ -19,6 +19,7 @@
   type Props = {
     tabId: string;
     accountPubkey?: string;
+    visible: boolean;
     relaySets: readonly RelaySet[];
     openProfile: (pubkey: string) => void;
     openThread: (eventId: string) => void;
@@ -60,14 +61,18 @@
     const unsubscribe = runtime.subscribe(
       (next) => (state = { ...next, profiles: currentProfiles }),
     );
-    void runtime.start().then(() => runtime?.markVisibleRead());
-    const onFocus = () => runtime?.markVisibleRead();
+    void runtime.start().then(() => markVisibleRead());
+    const onFocus = () => void markVisibleRead();
     window.addEventListener('focus', onFocus);
     return () => {
       window.removeEventListener('focus', onFocus);
       unsubscribe();
       runtime?.close();
     };
+  });
+
+  $effect(() => {
+    if (props.visible) void markVisibleRead();
   });
 
   $effect(() => {
@@ -99,6 +104,11 @@
       state.hasOlder
     )
       void runtime?.loadOlder();
+  }
+
+  async function markVisibleRead(): Promise<void> {
+    if (!props.visible || document.visibilityState !== 'visible') return;
+    await runtime?.markVisibleRead();
   }
 </script>
 

@@ -8,6 +8,7 @@ import {
   openTab,
   splitFocusedPane,
 } from '../../../src/lib/workspace/workspace';
+import { bootstrapWorkspace } from '../../../src/lib/workspace/workspace-bootstrap';
 import { createDefaultTabRegistry } from '../../../src/lib/workspace/tab-registry';
 
 describe('workspace model', () => {
@@ -23,6 +24,25 @@ describe('workspace model', () => {
     const raw = JSON.parse(JSON.stringify(workspace.layout)) as unknown;
     expect(parseLayout(raw)).toEqual(workspace.layout);
     expect(parseLayout({ type: 'split', children: [] })).toBeUndefined();
+  });
+
+  it('boots into welcome plus main startup tabs', () => {
+    const workspace = bootstrapWorkspace();
+    expect(workspace.layout?.type).toBe('split');
+    if (workspace.layout?.type !== 'split') throw new Error('expected split');
+    expect(workspace.layout.direction).toBe('horizontal');
+    expect(workspace.layout.sizes).toEqual([0.5, 0.5]);
+    const right = workspace.layout.children[1];
+    if (right.type !== 'pane') throw new Error('expected right pane');
+    const group = workspace.tabGroups[right.tabGroupId];
+    expect(group.tabIds.map((id) => workspace.tabs[id]?.title)).toEqual([
+      'Accounts',
+      'Relay Settings',
+      'Home',
+      'Notifications',
+      'Tweet',
+    ]);
+    expect(workspace.tabs[group.activeTabId!]?.title).toBe('Accounts');
   });
 
   it('supports horizontal and vertical nested splits', () => {

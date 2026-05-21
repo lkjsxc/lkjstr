@@ -72,42 +72,6 @@ body {
   overflow: hidden;
 }
 
-.resize {
-  background: transparent;
-  border: 0;
-  border-radius: 0;
-  flex: 0 0 1.5rem;
-  min-height: 0;
-  min-width: 0;
-  padding: 0;
-  position: relative;
-  touch-action: none;
-}
-
-.resize::before {
-  background: var(--color-border);
-  content: '';
-  position: absolute;
-}
-
-.resize.horizontal::before {
-  bottom: 0;
-  left: calc(50% - 1px);
-  top: 0;
-  width: 2px;
-}
-
-.resize.vertical::before {
-  height: 2px;
-  left: 0;
-  right: 0;
-  top: calc(50% - 1px);
-}
-
-.resize:hover::before {
-  background: var(--color-text-faint);
-}
-
 .pane {
   background: var(--color-surface);
   border: 1px solid var(--color-border);
@@ -156,6 +120,7 @@ body {
 .pane-stack {
   display: grid;
   grid-template-rows: minmax(0, 1fr);
+  position: relative;
 }
 
 .pane-body,

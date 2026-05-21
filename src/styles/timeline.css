@@ -47,6 +47,10 @@
   padding: var(--space-3) 0;
 }
 
+.event-row--action-success {
+  box-shadow: inset 0 0 0 2px var(--color-focus);
+}
+
 .event-row:focus-visible,
 .thread-continuation:focus-visible {
   outline: 2px solid var(--color-focus);

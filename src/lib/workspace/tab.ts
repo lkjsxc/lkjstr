@@ -13,9 +13,9 @@ export type TabKind =
   | 'relay-monitor'
   | 'relay-settings'
   | 'network-stats'
+  | 'search'
   | 'tweet'
-  | 'settings'
-  | 'cache-status';
+  | 'settings';
 
 export type WorkspaceTab = {
   readonly id: string;
@@ -67,9 +67,9 @@ export function iconFor(kind: TabKind): string {
     'relay-monitor': 'radio',
     'relay-settings': 'sliders',
     'network-stats': 'activity',
+    search: 'search',
     tweet: 'edit',
     settings: 'settings',
-    'cache-status': 'database',
   };
   return icons[kind];
 }

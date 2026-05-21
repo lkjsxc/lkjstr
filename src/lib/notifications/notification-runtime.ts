@@ -15,6 +15,8 @@ import {
   saveNotifications,
 } from './notification-store';
 
+export const notificationEventKinds = [0, 1, 6, 7, 16, 9735] as const;
+
 export type NotificationState = {
   readonly records: readonly NotificationRecord[];
   readonly items: readonly FeedEvent[];
@@ -57,6 +59,8 @@ export class NotificationRuntime {
       this.#emit({ ...this.#state, loading: false });
       return;
     }
+    await this.#readInitialRelayPage(generation);
+    if (!this.#active(generation)) return;
     this.#cleanup.push(
       this.subscriptions.subscribeLive(
         {
@@ -64,7 +68,7 @@ export class NotificationRuntime {
           relays: this.relays,
           filters: [
             {
-              kinds: [0, 1, 6, 7],
+              kinds: notificationEventKinds,
               '#p': [this.accountPubkey],
               since: this.#startedAt,
               limit: this.#pageSize,
@@ -91,6 +95,28 @@ export class NotificationRuntime {
     await this.#reload(false);
   }
 
+  async #readInitialRelayPage(generation: number): Promise<void> {
+    const events = await this.subscriptions.readPage({
+      key: `${this.subId}:initial`,
+      relays: this.relays,
+      filters: [
+        {
+          kinds: notificationEventKinds,
+          '#p': [this.accountPubkey!],
+          limit: this.#pageSize,
+        },
+      ],
+    });
+    for (const { event, relay } of events) {
+      if (!this.#active(generation)) return;
+      await upsertEvent(event, [relay]);
+      await saveNotifications(
+        deriveNotifications(this.accountPubkey!, event, [relay]),
+      );
+    }
+    await this.#reload(false);
+  }
+
   close(): void {
     this.#closed = true;
     this.#generation++;
@@ -104,7 +130,7 @@ export class NotificationRuntime {
     this.#emit({ ...this.#state, loadingOlder: true });
     try {
       const records = await accountNotifications(this.accountPubkey, this.#pageSize, oldest); const until = this.#state.oldestCreatedAt;
-      const relayEvents = until && this.relays.length > 0 ? await this.subscriptions.readPage({ key: olderRelaySubscriptionId(this.subId, until), relays: this.relays, filters: [{ kinds: [0, 1, 6, 7], '#p': [this.accountPubkey], until, limit: this.#pageSize }] }) : [];
+      const relayEvents = until && this.relays.length > 0 ? await this.subscriptions.readPage({ key: olderRelaySubscriptionId(this.subId, until), relays: this.relays, filters: [{ kinds: notificationEventKinds, '#p': [this.accountPubkey], until, limit: this.#pageSize }] }) : [];
       for (const { event, relay } of relayEvents) { if (!this.#active(generation)) return; await upsertEvent(event, [relay]); await saveNotifications(deriveNotifications(this.accountPubkey, event, [relay])); }
       if (!this.#active(generation)) return; await this.#reload(false, [...this.#state.records, ...records]);
       this.#emit({ ...this.#state, hasOlder: records.length >= this.#pageSize || relayEvents.length >= this.#pageSize });

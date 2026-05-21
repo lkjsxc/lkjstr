@@ -9,6 +9,7 @@ Tabs define the workspace surface area.
 - Home
 - Tweet
 - Notifications
+- Search
 - Global
 - Profile Edit
 - Accounts
@@ -16,7 +17,6 @@ Tabs define the workspace surface area.
 - Stats
 - Settings
 - Upload Settings
-- Cache
 - lkjstr Log
 - Mine npub
 - Welcome
@@ -40,11 +40,12 @@ Tabs define the workspace surface area.
 - Mine npub owns vanity key generation. Accounts can add exported results only
   after explicit user action.
 - Stats is a workspace tab kind named `network-stats`.
+- Search runs local cached content matches and relay NIP-50 search filters.
 
 ## Movement
 
 - Tabs can be dragged to reorder within a tile.
-- Tabs can be dragged into another tile.
+- Tabs can be dragged into another tile, or to a tile edge to split there.
 - Moving a tab activates and focuses it in the target tile.
 - Moving the last tab out of a tile closes the source tile.
 - Invalid drops do nothing.

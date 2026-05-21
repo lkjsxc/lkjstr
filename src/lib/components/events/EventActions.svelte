@@ -23,6 +23,7 @@
     event: NostrEvent;
     profile?: ProfileSummary;
     relaySets: readonly RelaySet[];
+    onSuccess?: () => void;
   };
 
   let props: Props = $props();
@@ -36,8 +37,11 @@
     status = '';
     try {
       const result = await action();
-      status = result.ok ? 'Published.' : (result.message ?? 'Action failed.');
-      if (result.ok) mode = 'none';
+      status = result.ok ? '' : (result.message ?? 'Action failed.');
+      if (result.ok) {
+        mode = 'none';
+        props.onSuccess?.();
+      }
     } catch (error) {
       status = error instanceof Error ? error.message : 'Action failed.';
     } finally {

@@ -8,10 +8,13 @@ This document records the current implemented contract for the app.
 
 - Root `/` renders the workspace shell.
 - Workspace layout, tab groups, tabs, accounts, relay sets, settings, events,
-  notifications, Tweet drafts, and cache metadata are local browser data.
-- Clean first launch opens Welcome. New Tab opens Home, Tweet, Notifications,
-  Global, Profile Edit, Accounts, Relay Settings, Stats, Settings, Upload
-  Settings, Cache, lkjstr Log, Mine npub, and Welcome.
+  notifications, composer recovery data, and cache metadata are local browser
+  data.
+- Clean first launch opens two equal tiles: Welcome on the left and Accounts,
+  Relay Settings, Home, Notifications, and Tweet on the right. New Tab opens
+  Home, Tweet, Notifications, Search, Global, Profile Edit, Accounts, Relay
+  Settings, Stats, Settings, Upload Settings, lkjstr Log, Mine npub, and
+  Welcome.
 - Profile tabs open or focus from identity actions in the same tile.
 - Profile Edit opens or focuses from own-profile actions in the same tile and
   edits only the active enabled signing account.
@@ -36,9 +39,10 @@ This document records the current implemented contract for the app.
   runtime-owned for Home and Global timelines.
 - Global shows recent notes and reposts from the selected read relays without
   an account requirement.
-- Notifications are relay-backed records derived from events that reference the
-  active account. Rows show actor, action label, read state, timestamp, and
-  source content without target/root context controls.
+- Notifications are background-captured relay-backed records derived from
+  supported `#p` events that reference the active account. Rows show actor,
+  action label, read state, timestamp, and source content without target/root
+  context controls.
 - Home has no hidden public fallback when the selected account or read relays
   cannot produce a feed.
 - Feed loading ends when cache exists, any relay produces events, any relay
@@ -62,7 +66,7 @@ This document records the current implemented contract for the app.
   accounts are ignored for signing and active-account resolution.
 - Mine npub mines an `npub` prefix locally and exports the generated `nsec`
   without storing it until the user adds it.
-- Tweet uses the active enabled signing account, durable draft storage,
+- Tweet uses the active enabled signing account, durable composer recovery,
   `Ctrl+Enter`, shared provider or custom NIP-96 media upload, NIP-98 upload
   auth, NIP-94 `imeta` tags, and signed kind `1` notes to enabled write relays.
 - Sensitive content hides bodies, media, custom emoji images, reference
@@ -72,7 +76,8 @@ This document records the current implemented contract for the app.
 - Event repository lookup uses direct id reads, batched id reads, and tag-value
   indexes for thread, reference, reaction, and notification reloads.
 - Stats shows current-session relay counters, subscription ids, OK counts,
-  cache totals, storage usage, manual refresh, and optional short auto-refresh.
+  cache event/profile/notification totals, storage usage, manual refresh, and
+  optional short auto-refresh.
 - Jobs are persisted as root/child trees with progress, output, and cancel
   metadata for inspection in lkjstr Log.
 - Docker verification uses `docker-compose.yml` built images with no bind

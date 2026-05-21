@@ -33,6 +33,35 @@ export async function loadTweetDraft(
   );
 }
 
+export async function loadTweetDraftWithLegacy(
+  id: string,
+): Promise<TweetDraft | undefined> {
+  return (
+    (await loadTweetDraft(id)) ??
+    (id === 'main' ? undefined : await loadTweetDraft())
+  );
+}
+
+export function snapshotTweetDraft(
+  id: string,
+  content: string,
+  accountId: string | null,
+  attachments: readonly TweetAttachment[] = [],
+  sensitive = false,
+  contentWarningReason = '',
+): TweetDraft {
+  const draft = createDraft(
+    id,
+    content,
+    accountId,
+    attachments,
+    sensitive,
+    contentWarningReason,
+  );
+  fallback.set(id, draft);
+  return draft;
+}
+
 export async function saveTweetDraft(
   content: string,
   accountId: string | null,
@@ -41,7 +70,28 @@ export async function saveTweetDraft(
   contentWarningReason = '',
   id = 'main',
 ): Promise<TweetDraft> {
-  const draft = {
+  const draft = createDraft(
+    id,
+    content,
+    accountId,
+    attachments,
+    sensitive,
+    contentWarningReason,
+  );
+  fallback.set(id, draft);
+  await bestEffortStorageWrite(() => browserDb().tweetDrafts.put(draft));
+  return draft;
+}
+
+function createDraft(
+  id: string,
+  content: string,
+  accountId: string | null,
+  attachments: readonly TweetAttachment[],
+  sensitive: boolean,
+  contentWarningReason: string,
+): TweetDraft {
+  return {
     id,
     accountId,
     content,
@@ -50,9 +100,6 @@ export async function saveTweetDraft(
     contentWarningReason,
     updatedAt: Date.now(),
   };
-  fallback.set(id, draft);
-  await bestEffortStorageWrite(() => browserDb().tweetDrafts.put(draft));
-  return draft;
 }
 
 export async function clearTweetDraft(id = 'main'): Promise<void> {

@@ -9,7 +9,8 @@ context first and event content second.
 
 - The tab opens from New Tab.
 - Records are scoped to the active account pubkey.
-- Mentions, replies, reactions, reposts, and quotes are indexed.
+- Mentions, replies, reactions, reposts, quotes, profile references, and zap
+  receipts are indexed.
 - Profile references are indexed when metadata points at the active account.
 - Relay reads use enabled read relays from the selected default relay set.
 - Notification events are written through the shared repository.
@@ -19,7 +20,8 @@ context first and event content second.
 - Historical relay pages use `until` from the oldest loaded notification
   event.
 - Live relay reads set `since` when the notification runtime starts.
-- Visible notifications are marked read when the tab receives focus.
+- Visible notifications are marked read when the tab is visible and receives
+  focus. Background sync does not mark records read.
 - Initial loading settles after local records load and subscription setup
   finishes, even when no notification event arrives.
 - Partial relay failure stays visible in diagnostics but does not block cached

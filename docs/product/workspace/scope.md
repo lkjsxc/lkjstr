@@ -8,11 +8,11 @@ Scope defines what lkjstr currently promises.
 
 - Browser-first SvelteKit workspace at `/`.
 - Recursive split tiles with persisted layout.
-- Home, Global, Relay Settings, Notifications, Accounts, Tweet, Settings, and
-  Cache from New Tab.
+- Home, Global, Search, Relay Settings, Notifications, Accounts, Tweet, and
+  Settings from New Tab.
 - Profile and Thread tabs from event actions.
 - IndexedDB storage for workspace, events, accounts, relay sets, settings,
-  notifications, Tweet drafts, and cache metadata.
+  notifications, composer recovery data, and cache metadata.
 - NIP-07 text note publishing.
 - CPU-only `npub` prefix mining with export-only secret handling.
 

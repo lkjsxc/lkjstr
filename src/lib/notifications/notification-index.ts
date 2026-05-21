@@ -54,8 +54,9 @@ function notificationKinds(
   );
   if (!mentionsAccount) return [];
   if (event.kind === 0) return ['profile-reference'];
+  if (event.kind === 9735) return ['zap'];
   if (event.kind === 7) return ['reaction'];
-  if (event.kind === 6) return ['repost'];
+  if (event.kind === 6 || event.kind === 16) return ['repost'];
   if (event.kind === 3) return [];
   if (event.tags.some((tag) => tag[0] === 'q')) return ['quote'];
   if (event.tags.some((tag) => tag[0] === 'e')) return ['reply'];

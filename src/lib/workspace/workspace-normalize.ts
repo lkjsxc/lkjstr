@@ -51,36 +51,48 @@ function normalizeTabs(value: unknown): Record<string, WorkspaceTab> {
   if (!value || typeof value !== 'object') return {};
   const out: Record<string, WorkspaceTab> = {};
   for (const [id, tab] of Object.entries(value)) {
-    const item = tab as WorkspaceTab;
-    if (!validKind(item.kind)) continue;
-    out[id] = { ...item, icon: iconFor(item.kind) };
+    const item = tab as WorkspaceTab & { kind?: unknown };
+    const kind = normalizeKind(item.kind);
+    if (!kind) continue;
+    out[id] = {
+      ...item,
+      kind,
+      icon: iconFor(kind),
+      title: normalizedTitle(item.title, kind),
+    };
   }
   return out;
 }
 
-function validKind(kind: unknown): kind is TabKind {
-  return (
-    typeof kind === 'string' &&
-    [
-      'welcome',
-      'new-tab',
-      'timeline',
-      'global',
-      'notifications',
-      'profile',
-      'profile-edit',
-      'upload-settings',
-      'account-manager',
-      'npub-miner',
-      'thread',
-      'relay-monitor',
-      'relay-settings',
-      'network-stats',
-      'tweet',
-      'settings',
-      'cache-status',
-    ].includes(kind)
-  );
+function normalizeKind(kind: unknown): TabKind | undefined {
+  if (kind === 'cache-status') return 'network-stats';
+  if (typeof kind !== 'string') return undefined;
+  return validKinds.includes(kind as TabKind) ? (kind as TabKind) : undefined;
+}
+
+const validKinds: readonly TabKind[] = [
+  'welcome',
+  'new-tab',
+  'timeline',
+  'global',
+  'notifications',
+  'profile',
+  'profile-edit',
+  'upload-settings',
+  'account-manager',
+  'npub-miner',
+  'thread',
+  'relay-monitor',
+  'relay-settings',
+  'network-stats',
+  'search',
+  'tweet',
+  'settings',
+];
+
+function normalizedTitle(title: unknown, kind: TabKind): string {
+  if (kind === 'network-stats' && title === 'Cache') return 'Stats';
+  return typeof title === 'string' && title ? title : kind;
 }
 
 function stringOrNull(value: unknown): string | null {

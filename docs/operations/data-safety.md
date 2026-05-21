@@ -31,7 +31,7 @@ The app must support:
 - clearing relay health without deleting relay configuration.
 - deleting cached events without deleting workspace layout.
 - compacting cached events without deleting accounts, settings, relay sets,
-  notifications, Tweet drafts, or workspace state.
+  notifications, composer recovery data, or workspace state.
 - deleting an account without deleting public cached events.
 - exporting workspace and relay configuration.
 - importing configuration into an empty profile.

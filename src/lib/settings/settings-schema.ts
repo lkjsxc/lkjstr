@@ -34,14 +34,12 @@ notifications.showUnreadInTab|Unread tab|boolean|true|Show unread in tab.
 notifications.defaultCategories|Categories|json|["mentions"]|Notification categories.
 content.hideSensitiveEvents|Hide sensitive events|boolean|true|Hide NIP-36 content until revealed.
 tweet.defaultPublishMode|Publish mode|enum|selected-relays|Tweet publish target.|selected-relays
-tweet.persistDrafts|Persist drafts|boolean|true|Keep Tweet drafts durable.
 tweet.mediaUploadProvider|Media upload provider|enum|nostr-build|NIP-96 upload provider.|disabled,nostr-build,nostrcheck,void-cat,custom
 tweet.mediaUploadCustomServer|Custom upload server|string||Optional HTTPS NIP-96 upload server.
 tweet.mediaUploadNoTransform|No transform upload|boolean|true|Request original media upload.
 cache.maxEvents|Max events|number|5000|Cached event limit.
 cache.maxAgeDays|Max age days|number|30|Cached event age limit.
 cache.compactionEnabled|Compaction|boolean|true|Enable compaction.
-cache.pruneDrafts|Prune drafts|boolean|false|Prune drafts automatically.
 accounts.defaultMode|Account mode|enum|read-only|Default account mode.|read-only,nip07
 security.allowLocalNsecImport|Local nsec|boolean|false|Allow local nsec import.
 security.logSensitiveValues|Sensitive logs|boolean|false|Log sensitive values.

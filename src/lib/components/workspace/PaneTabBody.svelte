@@ -4,7 +4,6 @@
   import type { RelaySet } from '$lib/relays/relay-store';
   import type { RelaySnapshot } from '$lib/relays/types';
   import AccountManagerTab from '$lib/tabs/accounts/AccountManagerTab.svelte';
-  import CacheStatusTab from '$lib/tabs/cache/CacheStatusTab.svelte';
   import NewTab from '$lib/tabs/new-tab/NewTab.svelte';
   import NpubMinerTab from '$lib/tabs/npub-miner/NpubMinerTab.svelte';
   import NotificationsTab from '$lib/tabs/notifications/NotificationsTab.svelte';
@@ -12,6 +11,7 @@
   import ProfileTab from '$lib/tabs/profile/ProfileTab.svelte';
   import LkjstrLogTab from '$lib/tabs/log/LkjstrLogTab.svelte';
   import RelaySettingsTab from '$lib/tabs/relays/RelaySettingsTab.svelte';
+  import SearchTab from '$lib/tabs/search/SearchTab.svelte';
   import SettingsTab from '$lib/tabs/settings/SettingsTab.svelte';
   import NetworkStatsTab from '$lib/tabs/stats/NetworkStatsTab.svelte';
   import ThreadTab from '$lib/tabs/thread/ThreadTab.svelte';
@@ -23,6 +23,7 @@
 
   type Props = {
     tab: WorkspaceTab;
+    visible: boolean;
     paneId: string;
     accounts: Account[];
     activeAccount?: Account;
@@ -48,7 +49,11 @@
 </script>
 
 {#if props.tab.kind === 'welcome'}
-  <WelcomeTab />
+  <WelcomeTab
+    activeAccount={props.activeAccount}
+    accounts={props.accounts}
+    relaySets={props.relaySets}
+  />
 {:else if props.tab.kind === 'new-tab'}
   <NewTab tabId={props.tab.id} convert={props.convertTab} />
 {:else if props.tab.kind === 'timeline'}
@@ -70,6 +75,14 @@
     openProfile={(pubkey) => props.openProfile(props.paneId, pubkey)}
     openThread={(eventId) => props.openThread(props.paneId, eventId)}
   />
+{:else if props.tab.kind === 'search'}
+  <SearchTab
+    tabId={props.tab.id}
+    activeAccount={props.activeAccount}
+    relaySets={props.relaySets}
+    openProfile={(pubkey) => props.openProfile(props.paneId, pubkey)}
+    openThread={(eventId) => props.openThread(props.paneId, eventId)}
+  />
 {:else if props.tab.kind === 'account-manager'}
   <AccountManagerTab
     accounts={props.accounts}
@@ -82,6 +95,7 @@
   <NotificationsTab
     tabId={props.tab.id}
     accountPubkey={props.activeAccount?.pubkey}
+    visible={props.visible}
     relaySets={props.relaySets}
     openProfile={(pubkey) => props.openProfile(props.paneId, pubkey)}
     openThread={(eventId) => props.openThread(props.paneId, eventId)}
@@ -116,8 +130,6 @@
   <NetworkStatsTab />
 {:else if props.tab.kind === 'settings'}
   <SettingsTab tabId={props.tab.id} />
-{:else if props.tab.kind === 'cache-status'}
-  <CacheStatusTab />
 {:else if props.tab.kind === 'tweet'}
   <TweetTab
     tabId={props.tab.id}

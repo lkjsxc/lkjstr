@@ -55,9 +55,9 @@ export function createDefaultTabRegistry(): TabRegistry {
     'relay-monitor',
     'relay-settings',
     'network-stats',
+    'search',
     'tweet',
     'settings',
-    'cache-status',
   ];
   for (const kind of kinds) registry.register(defaultDefinition(kind));
   return registry;

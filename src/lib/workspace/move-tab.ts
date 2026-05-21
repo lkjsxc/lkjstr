@@ -1,16 +1,26 @@
-import { findPane, removePane } from './layout-tree';
+import {
+  findPane,
+  removePane,
+  splitPane,
+  type SplitDirection,
+} from './layout-tree';
+import { createPane } from './pane';
 import {
   insertMovedTab,
   moveTabWithinGroup,
   removeTabForMove,
+  type TabGroup,
 } from './tab-group';
 import type { Workspace } from './workspace';
+
+export type TabDropEdge = 'left' | 'right' | 'top' | 'bottom';
 
 export type MoveWorkspaceTabInput = {
   readonly sourcePaneId: string;
   readonly targetPaneId: string;
   readonly tabId: string;
   readonly targetIndex: number;
+  readonly edge?: TabDropEdge;
 };
 
 export function moveWorkspaceTab(
@@ -35,6 +45,14 @@ export function moveWorkspaceTab(
     !sourceGroup.tabIds.includes(input.tabId)
   )
     return workspace;
+
+  if (input.edge)
+    return moveWorkspaceTabToEdge(
+      workspace,
+      { ...input, edge: input.edge },
+      sourceGroup,
+      targetPane.id,
+    );
 
   if (sourcePane.id === targetPane.id)
     return touch({
@@ -74,6 +92,52 @@ export function moveWorkspaceTab(
     focusedPaneId: targetPane.id,
     focusedTabId: input.tabId,
   });
+}
+
+function moveWorkspaceTabToEdge(
+  workspace: Workspace,
+  input: MoveWorkspaceTabInput & { edge: TabDropEdge },
+  sourceGroup: TabGroup,
+  targetPaneId: string,
+): Workspace {
+  if (!workspace.layout) return workspace;
+  if (sourceGroup.tabIds.length <= 1 && input.sourcePaneId === targetPaneId)
+    return workspace;
+  const nextSourceGroup = removeTabForMove(sourceGroup, input.tabId);
+  const newGroup = {
+    id: crypto.randomUUID(),
+    tabIds: [input.tabId],
+    activeTabId: input.tabId,
+    pinnedTabIds: [],
+    closedTabs: [],
+  };
+  const newPane = createPane(newGroup.id);
+  const tabGroups = { ...workspace.tabGroups, [newGroup.id]: newGroup };
+  let layout = workspace.layout;
+  if (nextSourceGroup.tabIds.length === 0) {
+    delete tabGroups[sourceGroup.id];
+    layout = removePane(layout, input.sourcePaneId) ?? layout;
+  } else tabGroups[sourceGroup.id] = nextSourceGroup;
+  const side =
+    input.edge === 'left' || input.edge === 'top' ? 'before' : 'after';
+  layout = splitPane(
+    layout,
+    targetPaneId,
+    directionFor(input.edge),
+    newPane,
+    side,
+  );
+  return touch({
+    ...workspace,
+    layout,
+    tabGroups,
+    focusedPaneId: newPane.id,
+    focusedTabId: input.tabId,
+  });
+}
+
+function directionFor(edge: TabDropEdge): SplitDirection {
+  return edge === 'left' || edge === 'right' ? 'horizontal' : 'vertical';
 }
 
 function touch(workspace: Workspace): Workspace {

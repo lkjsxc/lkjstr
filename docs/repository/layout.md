@@ -30,5 +30,5 @@ Layout docs map repository paths to ownership.
 - `src/lib/telemetry`: runtime health measurements.
 - `src/lib/timeline`: Home and Global timeline runtimes.
 - `src/lib/thread`: thread cache, runtime, and focused event loading.
-- `src/lib/tweet`: Tweet drafts and publish helpers.
+- `src/lib/tweet`: composer recovery and publish helpers.
 - `src/lib/workspace`: workspace model, layout, tab registry, and persistence.

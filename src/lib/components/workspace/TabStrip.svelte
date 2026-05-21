@@ -14,6 +14,7 @@
       targetPaneId: string,
       tabId: string,
       targetIndex: number,
+      edge?: 'left' | 'right' | 'top' | 'bottom',
     ) => void;
   };
 
@@ -72,6 +73,7 @@
         class="tab-frame"
         draggable="true"
         ondragstart={(event) => {
+          document.body.classList.add('dragging-tab');
           event.dataTransfer?.setData(
             'application/x-lkjstr-tab',
             dragPayload(tab.id),
@@ -79,6 +81,7 @@
           event.dataTransfer?.setData('text/plain', tab.title);
           if (event.dataTransfer) event.dataTransfer.effectAllowed = 'move';
         }}
+        ondragend={() => document.body.classList.remove('dragging-tab')}
         ondragover={(event) => event.preventDefault()}
         ondrop={(event) => {
           event.stopPropagation();

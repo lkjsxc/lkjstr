@@ -2,6 +2,7 @@
   import { onMount } from 'svelte';
   import { logRuntimeError } from '$lib/app/runtime-log';
   import type { Account } from '$lib/accounts/account';
+  import { BackgroundNotificationSync } from '$lib/notifications/background-notifications';
   import type { NotificationRecord } from '$lib/notifications/notification';
   import {
     removeRelay,
@@ -17,6 +18,7 @@
   import { moveWorkspaceTab } from '$lib/workspace/move-tab';
   import { closeWorkspacePane } from '$lib/workspace/pane-commands';
   import { resizeSplit } from '$lib/workspace/resize';
+  import { timelineRelays } from '$lib/timeline/timeline-subscription';
   import type { TabKind } from '$lib/workspace/tab';
   import {
     closeWorkspaceTab,
@@ -27,6 +29,7 @@
     type Workspace,
   } from '$lib/workspace/workspace';
   import { bootstrapWorkspace } from '$lib/workspace/workspace-bootstrap';
+  import { withNotificationUnreadCounts } from '$lib/workspace/notification-tabs';
   import {
     addMinedSigningAccount,
     loadWorkspacePageData,
@@ -48,6 +51,8 @@
   let ready = $state(false);
   let pageDataReady = $state(false);
   let inactiveRetentionSeconds = $state(300);
+  let notificationSync: BackgroundNotificationSync | undefined;
+  let notificationSyncKey = '';
 
   onMount(() => {
     let disposed = false;
@@ -61,6 +66,7 @@
     void initializeWorkspace().catch(logRuntimeError('workspace-init-failed'));
     return () => {
       disposed = true;
+      notificationSync?.close();
       window.removeEventListener(settingsChangedEvent, refreshSettings);
     };
   });
@@ -95,7 +101,29 @@
   async function refreshData(): Promise<void> {
     ({ accounts, activeAccount, notifications, relaySets } =
       await loadWorkspacePageData());
+    workspace = await withNotificationUnreadCounts(workspace, notifications);
+    startNotificationSync();
     pageDataReady = true;
+  }
+
+  function startNotificationSync(): void {
+    const relays = timelineRelays(relaySets);
+    const key = `${activeAccount?.pubkey ?? ''}|${relays.join('\0')}`;
+    if (key === notificationSyncKey) return;
+    notificationSync?.close();
+    notificationSyncKey = key;
+    notificationSync = new BackgroundNotificationSync(
+      activeAccount?.pubkey,
+      relays,
+      undefined,
+      () =>
+        void refreshData().catch(
+          logRuntimeError('notification-refresh-failed'),
+        ),
+    );
+    void notificationSync
+      .start()
+      .catch(logRuntimeError('notification-sync-failed'));
   }
 
   async function refreshRuntimeSettings(): Promise<void> {
@@ -124,9 +152,8 @@
     if (workspace) await update(openThreadTab(workspace, paneId, eventId));
   }
 
-  async function handleOpenProfileEdit(paneId: string): Promise<void> {
-    if (workspace) await update(openProfileEditTab(workspace, paneId));
-  }
+  // prettier-ignore
+  async function handleOpenProfileEdit(paneId: string): Promise<void> { if (workspace) await update(openProfileEditTab(workspace, paneId)); }
 
   async function handleAddMinedSigning(nsec: string): Promise<void> {
     await addMinedSigningAccount(nsec);
@@ -134,63 +161,32 @@
   }
 
   // prettier-ignore
-  async function handleSplit(paneId: string, direction: 'horizontal' | 'vertical'): Promise<void> {
-    if (workspace)
-      await update(
-        splitFocusedPane({ ...workspace, focusedPaneId: paneId }, direction),
-      );
-  }
+  async function handleSplit(paneId: string, direction: 'horizontal' | 'vertical'): Promise<void> { if (workspace) await update(splitFocusedPane({ ...workspace, focusedPaneId: paneId }, direction)); }
 
   // prettier-ignore
-  async function handleResize(splitId: string, handleIndex: number, deltaRatio: number): Promise<void> {
-    if (workspace?.layout)
-      await update({
-        ...workspace,
-        layout: resizeSplit(workspace.layout, splitId, handleIndex, deltaRatio),
-      });
-  }
-
-  function handleFocusTab(paneId: string, tabId: string): Promise<void> {
-    return workspace
-      ? update(focusTab(workspace, paneId, tabId))
-      : Promise.resolve();
-  }
-
-  function handleCloseTab(paneId: string, tabId: string): Promise<void> {
-    return workspace
-      ? update(closeWorkspaceTab(workspace, paneId, tabId))
-      : Promise.resolve();
-  }
-
-  function handleClosePane(paneId: string): Promise<void> {
-    return workspace
-      ? update(closeWorkspacePane(workspace, paneId))
-      : Promise.resolve();
-  }
+  async function handleResize(splitId: string, handleIndex: number, deltaRatio: number): Promise<void> { if (workspace?.layout) await update({ ...workspace, layout: resizeSplit(workspace.layout, splitId, handleIndex, deltaRatio) }); }
 
   // prettier-ignore
-  function handleMoveTab(sourcePaneId: string, targetPaneId: string, tabId: string, targetIndex: number): Promise<void> {
-    const move = { sourcePaneId, targetPaneId, tabId, targetIndex };
-    return workspace
-      ? update(moveWorkspaceTab(workspace, move))
-      : Promise.resolve();
-  }
+  function handleFocusTab(paneId: string, tabId: string): Promise<void> { return workspace ? update(focusTab(workspace, paneId, tabId)) : Promise.resolve(); }
 
-  async function handleToggleRelay(
-    setId: string,
-    url: string,
-    enabled: boolean,
-  ) {
-    relaySets = await setRelayEnabled(setId, url, enabled);
-  }
+  // prettier-ignore
+  function handleCloseTab(paneId: string, tabId: string): Promise<void> { return workspace ? update(closeWorkspaceTab(workspace, paneId, tabId)) : Promise.resolve(); }
 
-  async function handleRemoveRelay(setId: string, url: string) {
-    relaySets = await removeRelay(setId, url);
-  }
+  // prettier-ignore
+  function handleClosePane(paneId: string): Promise<void> { return workspace ? update(closeWorkspacePane(workspace, paneId)) : Promise.resolve(); }
+
+  // prettier-ignore
+  function handleMoveTab(sourcePaneId: string, targetPaneId: string, tabId: string, targetIndex: number, edge?: 'left' | 'right' | 'top' | 'bottom'): Promise<void> { return workspace ? update(moveWorkspaceTab(workspace, { sourcePaneId, targetPaneId, tabId, targetIndex, edge })) : Promise.resolve(); }
+
+  // prettier-ignore
+  async function handleToggleRelay(setId: string, url: string, enabled: boolean) { relaySets = await setRelayEnabled(setId, url, enabled); }
+
+  // prettier-ignore
+  async function handleRemoveRelay(setId: string, url: string) { relaySets = await removeRelay(setId, url); }
 </script>
 
 <svelte:head>
-  <title>lkjstr workspace</title>
+  <title>lkjstr</title>
 </svelte:head>
 
 <!-- prettier-ignore -->

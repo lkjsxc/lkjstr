@@ -3,8 +3,8 @@ import { expect, test } from '@playwright/test';
 test('root opens the workspace', async ({ page }) => {
   await page.goto('/');
   await expect(page.getByRole('tab', { name: 'Welcome' })).toBeVisible();
-  await expect(page.getByRole('tab', { name: 'Home' })).toHaveCount(0);
-  await expect(page).toHaveTitle(/lkjstr workspace/);
+  await expect(page.getByRole('tab', { name: 'Accounts' })).toBeVisible();
+  await expect(page).toHaveTitle('lkjstr');
 });
 
 test('root reload stays visible when browser storage is unavailable', async ({

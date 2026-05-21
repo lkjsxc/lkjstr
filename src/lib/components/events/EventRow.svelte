@@ -29,6 +29,8 @@
       ? props.profile
       : undefined,
   );
+  let highlighted = $state(false);
+  let highlightTimer: ReturnType<typeof setTimeout> | undefined;
 
   function openRow(event?: MouseEvent): void {
     if (event && shouldKeepLocal(event.target)) return;
@@ -51,10 +53,17 @@
     event.stopPropagation();
     props.openProfile?.(props.item.event.pubkey);
   }
+
+  function highlightAction(): void {
+    highlighted = true;
+    if (highlightTimer) clearTimeout(highlightTimer);
+    highlightTimer = setTimeout(() => (highlighted = false), 900);
+  }
 </script>
 
 <div
   class="event-row"
+  class:event-row--action-success={highlighted}
   role="button"
   tabindex="0"
   style={`--event-depth: ${props.depth ?? 0}`}
@@ -86,6 +95,7 @@
       event={props.item.event}
       {profile}
       relaySets={props.relaySets ?? []}
+      onSuccess={highlightAction}
     />
     <ReactionSummary
       reactions={props.reactions}

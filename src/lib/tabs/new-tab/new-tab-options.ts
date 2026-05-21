@@ -27,6 +27,12 @@ export const newTabOptions: readonly NewTabOption[] = [
     group: 'primary',
   },
   {
+    kind: 'search',
+    label: 'Search',
+    description: 'Ego search.',
+    group: 'primary',
+  },
+  {
     kind: 'global',
     label: 'Global',
     description: 'Relay notes.',
@@ -66,12 +72,6 @@ export const newTabOptions: readonly NewTabOption[] = [
     kind: 'upload-settings',
     label: 'Upload Settings',
     description: 'Media upload.',
-    group: 'secondary',
-  },
-  {
-    kind: 'cache-status',
-    label: 'Cache',
-    description: 'Local storage.',
     group: 'secondary',
   },
   {

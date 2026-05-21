@@ -12,9 +12,11 @@
   let start = 0;
   let frame = 0;
   let pending = 0;
+  let dragging = $state(false);
 
   function pointerDown(event: PointerEvent): void {
     event.preventDefault();
+    dragging = true;
     (event.currentTarget as HTMLElement).setPointerCapture(event.pointerId);
     start = direction === 'horizontal' ? event.clientX : event.clientY;
     window.addEventListener('pointermove', pointerMove);
@@ -39,10 +41,12 @@
   }
 
   function pointerUp(): void {
+    dragging = false;
     window.removeEventListener('pointermove', pointerMove);
   }
 
   onDestroy(() => {
+    if (typeof window === 'undefined') return;
     window.removeEventListener('pointermove', pointerMove);
     if (frame) cancelAnimationFrame(frame);
   });
@@ -51,6 +55,7 @@
 <button
   type="button"
   class={`resize ${direction}`}
+  class:active={dragging}
   aria-label="Resize panes"
   onpointerdown={pointerDown}
 ></button>

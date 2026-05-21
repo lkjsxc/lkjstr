@@ -58,6 +58,23 @@ describe('notification index', () => {
     ).toEqual([]);
   });
 
+  it('derives zap and generic repost notifications', () => {
+    expect(
+      deriveNotifications(accountPubkey, {
+        ...event,
+        kind: 9735,
+        tags: [['p', accountPubkey]],
+      })[0]?.kind,
+    ).toBe('zap');
+    expect(
+      deriveNotifications(accountPubkey, {
+        ...event,
+        kind: 16,
+        tags: [['p', accountPubkey]],
+      })[0]?.kind,
+    ).toBe('repost');
+  });
+
   it('does not expose an empty notification context thread id', () => {
     const record = {
       ...deriveNotifications(accountPubkey, event)[0],

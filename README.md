@@ -18,8 +18,8 @@ selected default relay set for timeline, profile, thread, and Tweet behavior.
 
 ## Contract
 
-- New Tab choices are Home, Tweet, Notifications, Global, Profile Edit,
-  Accounts, Relay Settings, Stats, Settings, Upload Settings, Cache,
+- New Tab choices are Home, Tweet, Notifications, Search, Global, Profile Edit,
+  Accounts, Relay Settings, Stats, Settings, Upload Settings,
   lkjstr Log, Mine npub, and Welcome.
 - Profile tabs open from identity actions. Profile Edit opens for the active
   signing account. Thread tabs open from event actions.
@@ -40,14 +40,15 @@ selected default relay set for timeline, profile, thread, and Tweet behavior.
 - Accounts include inline add, enable, active, disconnect, and guarded local
   `nsec` reveal/copy controls.
 - Mine npub performs CPU-only prefix mining with export-only `nsec` handling.
-- Tweet drafts are durable and publish through the active enabled signing
-  account to enabled write relays. Drafts can mark content as sensitive with
+- Tweet composer recovery is durable and publish uses the active enabled
+  signing account to enabled write relays. Notes can mark content as sensitive with
   an optional reason.
 - Stats shows current-session relay, subscription, publish, cache, and storage
   counters without opening relay subscriptions.
 - Tile resize uses a `1.8` pointer sensitivity multiplier.
-- Startup renders the Home workspace immediately. Browser storage failures
-  degrade to session memory and must not leave an empty page.
+- Startup renders Welcome beside Accounts, Relay Settings, Home,
+  Notifications, and Tweet. Browser storage failures degrade to session memory
+  and must not leave an empty page.
 - Docker verification uses `docker-compose.yml` built images with no bind
   mounts or required environment blocks.
 

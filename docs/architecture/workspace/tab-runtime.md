@@ -9,7 +9,7 @@ Tab runtime defines valid tab kinds and lifecycle ownership.
 `new-tab`, `timeline`, `global`, `notifications`, `profile`,
 `profile-edit`, `account-manager`, `npub-miner`, `thread`, `relay-monitor`,
 `relay-settings`, `tweet`, `settings`,
-`cache-status`.
+`network-stats`. Persisted legacy `cache-status` tabs normalize to Stats.
 
 ## Contract
 

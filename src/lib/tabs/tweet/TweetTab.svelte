@@ -2,14 +2,14 @@
   import { onMount } from 'svelte';
   import type { Account } from '$lib/accounts/account';
   import type { RelaySet } from '$lib/relays/relay-store';
-  import type { NostrTag } from '$lib/protocol';
   import { contentWarningTag } from '$lib/protocol';
   import TweetComposer from './TweetComposer.svelte';
   import { publishTweet } from '$lib/tweet/publish';
   import {
     clearTweetDraft,
-    loadTweetDraft,
+    loadTweetDraftWithLegacy,
     saveTweetDraft,
+    snapshotTweetDraft,
     type TweetAttachment,
   } from '$lib/tweet/draft-store';
   import type { UploadSettings } from '$lib/tweet/media-upload';
@@ -43,6 +43,7 @@
   let attachments = $state<TweetAttachment[]>([]);
   let draftTouched = false;
   let saveTimer: ReturnType<typeof setTimeout> | undefined;
+  let draftId = $derived(`tab:${props.tabId}`);
   let hasSigner = $derived(
     Boolean(
       props.activeAccount?.enabled && props.activeAccount.capabilities.sign,
@@ -67,7 +68,7 @@
 
   async function loadInitialState(): Promise<void> {
     const [draft, settings] = await Promise.all([
-      loadTweetDraft(),
+      loadTweetDraftWithLegacy(draftId),
       loadTweetUploadSettings(),
     ]);
     if (!draftTouched) {
@@ -85,18 +86,15 @@
 
   function touchDraft(): void {
     draftTouched = true;
+    snapshot();
     queueSave();
   }
 
-  async function save(): Promise<void> {
-    await saveTweetDraft(
-      content,
-      props.activeAccount?.id ?? null,
-      attachments,
-      sensitive,
-      warningReason,
-    );
-  }
+  // prettier-ignore
+  function snapshot(): void { snapshotTweetDraft(draftId, content, props.activeAccount?.id ?? null, attachments, sensitive, warningReason); }
+
+  // prettier-ignore
+  async function save(): Promise<void> { await saveTweetDraft(content, props.activeAccount?.id ?? null, attachments, sensitive, warningReason, draftId); }
 
   function queueSave(): void {
     if (saveTimer) clearTimeout(saveTimer);
@@ -132,7 +130,7 @@
     attachments = [];
     sensitive = false;
     warningReason = '';
-    await clearTweetDraft();
+    await Promise.all([clearTweetDraft(draftId), clearTweetDraft('main')]);
   }
 
   async function uploadFiles(files: FileList | File[]): Promise<void> {
@@ -147,6 +145,7 @@
     try {
       const uploaded = await uploadTweetFiles(pending, uploadSettings);
       attachments = [...attachments, ...uploaded];
+      snapshot();
       await flushDraft();
       message = `Uploaded ${uploaded.length} media file(s).`;
     } catch (error) {
@@ -167,10 +166,11 @@
   }
 
   // prettier-ignore
-  function tags(): NostrTag[] { return [...attachments.map((item) => item.imeta), ...(sensitive ? [contentWarningTag(warningReason)] : [])]; }
+  function tags() { return [...attachments.map((item) => item.imeta), ...(sensitive ? [contentWarningTag(warningReason)] : [])]; }
 
   function removeAttachment(url: string): void {
     attachments = attachments.filter((item) => item.url !== url);
+    snapshot();
     void flushDraft();
   }
 </script>

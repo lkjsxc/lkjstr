@@ -116,8 +116,9 @@
   <h3>Cache</h3>
   {#if cache}
     <p>
-      {cache.rawEventCount} events, {cache.notificationCount} notifications,
-      {cache.tweetDraftCount} drafts, {cache.storageEstimateBytes ?? 0} bytes
+      {cache.rawEventCount} events, {cache.profileCount} profiles,
+      {cache.notificationCount} notifications, {cache.storageEstimateBytes ?? 0}
+      bytes
     </p>
   {/if}
 </section>

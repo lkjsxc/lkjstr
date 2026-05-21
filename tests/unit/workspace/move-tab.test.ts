@@ -69,6 +69,26 @@ describe('workspace tab movement', () => {
     expect(groupForPane(moved, targetPaneId).tabIds).toContain(tabId);
   });
 
+  it('splits a target pane on edge drop and focuses the moved tab', () => {
+    const split = splitFocusedPane(createWorkspace(), 'horizontal');
+    const sourcePaneId = split.focusedPaneId!;
+    const opened = openTab(split, sourcePaneId, 'settings', 'Settings');
+    const targetPaneId = paneIds(opened.layout!).find(
+      (id) => id !== sourcePaneId,
+    )!;
+    const tabId = opened.focusedTabId!;
+    const moved = moveWorkspaceTab(opened, {
+      sourcePaneId,
+      targetPaneId,
+      tabId,
+      targetIndex: 0,
+      edge: 'left',
+    });
+    expect(paneIds(moved.layout!)).toHaveLength(3);
+    expect(moved.focusedTabId).toBe(tabId);
+    expect(groupForPane(moved, moved.focusedPaneId!).tabIds).toEqual([tabId]);
+  });
+
   it('ignores invalid panes and tabs', () => {
     const workspace = createWorkspace();
     expect(

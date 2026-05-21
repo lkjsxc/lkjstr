@@ -10,6 +10,7 @@
   import type { TabGroup } from '$lib/workspace/tab-group';
   import { TabRetention } from '$lib/workspace/tab-retention';
   import NewTabButton from './NewTabButton.svelte';
+  import PaneDropLayer from './PaneDropLayer.svelte';
   import PaneTabBody from './PaneTabBody.svelte';
   import TabStrip from './TabStrip.svelte';
   import TileMenu from './TileMenu.svelte';
@@ -33,6 +34,7 @@
       targetPaneId: string,
       tabId: string,
       targetIndex: number,
+      edge?: 'left' | 'right' | 'top' | 'bottom',
     ) => void;
     openNewTab: (paneId: string) => void;
     convertTab: (
@@ -143,6 +145,12 @@
   </header>
 
   <div class="pane-stack">
+    <PaneDropLayer
+      paneId={props.pane.id}
+      targetIndex={props.group?.tabIds.length ?? 0}
+      disabled={!props.ready}
+      moveTab={props.moveTab}
+    />
     {#if renderedTabs.length > 0}
       {#each renderedTabs as tab (tab.id)}
         <div
@@ -153,6 +161,7 @@
         >
           <PaneTabBody
             {tab}
+            visible={tab.id === active?.id}
             paneId={props.pane.id}
             accounts={props.accounts}
             activeAccount={props.activeAccount}

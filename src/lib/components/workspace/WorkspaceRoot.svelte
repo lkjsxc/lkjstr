@@ -26,6 +26,7 @@
       targetPaneId: string,
       tabId: string,
       targetIndex: number,
+      edge?: 'left' | 'right' | 'top' | 'bottom',
     ) => void;
     openNewTab: (paneId: string) => void;
     convertTab: (
