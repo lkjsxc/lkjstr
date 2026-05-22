@@ -10,6 +10,7 @@ This directory contains reusable application code shared by routes and tabs.
 - [app/](app/): app metadata and runtime logging.
 - [cache/](cache/): cache status and retention.
 - [components/](components/): shared Svelte components.
+- [emoji/](emoji/): custom emoji discovery and parsing.
 - [events/](events/): event repositories, parsing, and actions.
 - [identity/](identity/): profile identity helpers.
 - [jobs/](jobs/): persisted job records.

@@ -7,6 +7,7 @@ This directory contains shared Svelte components grouped by product surface.
 ## Contents
 
 - `app/`: shell components.
+- `emoji/`: shared Unicode and custom emoji picker components.
 - `events/`: event rows, embeds, and actions.
 - `identity/`: profile identity display.
 - `notifications/`: notification rows.
