@@ -4,13 +4,18 @@ import {
   type RelaySet,
 } from '../relays/relay-store';
 import { compactRelaySubscriptionId } from '../relays/subscription-id';
+import { normalizeRelayUrl } from '../protocol';
 
 export function timelineRelays(relaySets: readonly RelaySet[]): string[] {
-  return enabledRelayUrls(relaySets, (relay) => relay.read);
+  return sortedRelayUrls(enabledRelayUrls(relaySets, (relay) => relay.read));
 }
 
 export function enabledWriteRelays(relaySets: readonly RelaySet[]): string[] {
-  return enabledRelayUrls(relaySets, (relay) => relay.write);
+  return sortedRelayUrls(enabledRelayUrls(relaySets, (relay) => relay.write));
+}
+
+export function relayRuntimeKey(relays: readonly string[]): string {
+  return sortedRelayUrls(relays).join('\u0000');
 }
 
 export function createTimelineSubId(tabId: string, prefix = 'tl'): string {
@@ -28,4 +33,14 @@ function enabledRelayUrls(
       .filter((relay) => relay.enabled && mode(relay))
       .map((relay) => relay.url) ?? [];
   return [...new Set(relays)];
+}
+
+function sortedRelayUrls(relays: readonly string[]): string[] {
+  return [
+    ...new Set(
+      relays
+        .map(normalizeRelayUrl)
+        .filter((url): url is string => Boolean(url)),
+    ),
+  ].sort();
 }

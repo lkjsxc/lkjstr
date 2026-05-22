@@ -1,11 +1,14 @@
 <script lang="ts">
+  import { onDestroy } from 'svelte';
   import EventTreeList from '$lib/components/events/EventTreeList.svelte';
+  import { appendAppLog } from '$lib/log/app-log';
   import type { RelaySet } from '$lib/relays/relay-store';
   import { GlobalTimelineRuntime } from '$lib/timeline/global-timeline-runtime';
   import { TimelineRuntime } from '$lib/timeline/timeline-runtime';
   import type { TimelineState } from '$lib/timeline/timeline-state';
   import {
     createTimelineSubId,
+    relayRuntimeKey,
     timelineRelays,
   } from '$lib/timeline/timeline-subscription';
 
@@ -38,11 +41,23 @@
     newestCursor: undefined,
   });
   let runtime: TimelineRuntime | GlobalTimelineRuntime | undefined;
+  let unsubscribe: (() => void) | undefined;
   let relays: string[] = [];
+  let runtimeKey = '';
 
   $effect(() => {
     if (!props.dataReady) return;
-    relays = timelineRelays(props.relaySets);
+    const nextRelays = timelineRelays(props.relaySets);
+    const nextKey = [
+      props.kind ?? 'home',
+      props.activeAccountPubkey ?? '',
+      relayRuntimeKey(nextRelays),
+      props.tabId,
+    ].join('|');
+    if (nextKey === runtimeKey) return;
+    closeRuntime('timeline-runtime-recreate');
+    runtimeKey = nextKey;
+    relays = nextRelays;
     const Runtime =
       props.kind === 'global' ? GlobalTimelineRuntime : TimelineRuntime;
     runtime = new Runtime({
@@ -53,13 +68,33 @@
       ),
       activeAccountPubkey: props.activeAccountPubkey,
     });
-    const unsubscribe = runtime.subscribe((next) => (state = next));
+    appendAppLog({
+      area: 'runtime',
+      severity: 'info',
+      code: 'timeline-runtime-create',
+      message: 'Timeline runtime created.',
+      context: { key: runtimeKey, relays: relays.length },
+    });
+    unsubscribe = runtime.subscribe((next) => (state = next));
     runtime.start();
-    return () => {
-      unsubscribe();
-      runtime?.close();
-    };
   });
+
+  onDestroy(() => closeRuntime('timeline-runtime-destroy'));
+
+  function closeRuntime(code: string): void {
+    if (!runtime) return;
+    unsubscribe?.();
+    runtime.close();
+    appendAppLog({
+      area: 'runtime',
+      severity: 'info',
+      code,
+      message: 'Timeline runtime closed.',
+      context: { key: runtimeKey },
+    });
+    unsubscribe = undefined;
+    runtime = undefined;
+  }
 </script>
 
 <section

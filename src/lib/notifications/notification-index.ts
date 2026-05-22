@@ -1,4 +1,4 @@
-import type { NostrEvent } from '../protocol';
+import { reactionTargetEventId, type NostrEvent } from '../protocol';
 import {
   notificationId,
   type NotificationKind,
@@ -68,5 +68,6 @@ function rootEventId(event: NostrEvent): string | undefined {
 }
 
 function targetEventId(event: NostrEvent): string | undefined {
+  if (event.kind === 7) return reactionTargetEventId(event);
   return event.tags.find((tag) => tag[0] === 'e')?.[1];
 }

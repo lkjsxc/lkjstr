@@ -69,9 +69,9 @@ export class BackgroundNotificationSync {
   async #store(event: Parameters<typeof upsertEvent>[0], relay: string) {
     if (this.#closed || !this.accountPubkey) return;
     await upsertEvent(event, [relay]);
-    await saveNotifications(
-      deriveNotifications(this.accountPubkey, event, [relay]),
-    );
+    const records = deriveNotifications(this.accountPubkey, event, [relay]);
+    if (records.length === 0) return;
+    await saveNotifications(records);
     this.onStored();
   }
 }

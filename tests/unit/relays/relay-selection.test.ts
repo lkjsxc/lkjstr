@@ -11,6 +11,7 @@ import {
 } from '../../../src/lib/relays/subscription-id';
 import {
   createTimelineSubId,
+  relayRuntimeKey,
   timelineRelays,
 } from '../../../src/lib/timeline/timeline-subscription';
 
@@ -35,9 +36,15 @@ describe('relay selection', () => {
       'custom',
     );
     expect(timelineRelays([defaultRelaySet, custom])).toEqual([
-      'wss://read.example',
+      'wss://read.example/',
     ]);
     vi.unstubAllGlobals();
+  });
+
+  it('builds stable sorted relay runtime keys', () => {
+    expect(relayRuntimeKey(['relay-b.example', 'wss://relay-a.example'])).toBe(
+      'wss://relay-a.example/\u0000wss://relay-b.example/',
+    );
   });
 
   it('keeps generated subscription ids under relay limits', () => {

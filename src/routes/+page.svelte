@@ -4,6 +4,7 @@
   import type { Account } from '$lib/accounts/account';
   import { BackgroundNotificationSync } from '$lib/notifications/background-notifications';
   import type { NotificationRecord } from '$lib/notifications/notification';
+  import { accountNotifications } from '$lib/notifications/notification-store';
   import {
     removeRelay,
     setRelayEnabled,
@@ -52,6 +53,7 @@
   let inactiveRetentionSeconds = $state(300);
   let notificationSync: BackgroundNotificationSync | undefined;
   let notificationSyncKey = '';
+  let notificationRefreshTimer: ReturnType<typeof setTimeout> | undefined;
 
   onMount(() => {
     let disposed = false;
@@ -66,6 +68,7 @@
     return () => {
       disposed = true;
       notificationSync?.close();
+      if (notificationRefreshTimer) clearTimeout(notificationRefreshTimer);
       window.removeEventListener(settingsChangedEvent, refreshSettings);
     };
   });
@@ -104,6 +107,12 @@
     pageDataReady = true;
   }
 
+  // prettier-ignore
+  async function refreshNotificationsOnly(): Promise<void> { notifications = activeAccount ? await accountNotifications(activeAccount.pubkey) : []; }
+
+  // prettier-ignore
+  function queueNotificationRefresh(): void { if (notificationRefreshTimer) clearTimeout(notificationRefreshTimer); notificationRefreshTimer = setTimeout(() => { notificationRefreshTimer = undefined; void refreshNotificationsOnly().catch(logRuntimeError('notification-refresh-failed')); }, 150); }
+
   function startNotificationSync(): void {
     const relays = timelineRelays(relaySets);
     const key = `${activeAccount?.pubkey ?? ''}|${relays.join('\0')}`;
@@ -114,10 +123,7 @@
       activeAccount?.pubkey,
       relays,
       undefined,
-      () =>
-        void refreshData().catch(
-          logRuntimeError('notification-refresh-failed'),
-        ),
+      queueNotificationRefresh,
     );
     void notificationSync
       .start()
@@ -177,10 +183,10 @@
   function handleMoveTab(sourcePaneId: string, targetPaneId: string, tabId: string, targetIndex: number, edge?: 'left' | 'right' | 'top' | 'bottom'): Promise<void> { return workspace ? update(moveWorkspaceTab(workspace, { sourcePaneId, targetPaneId, tabId, targetIndex, edge })) : Promise.resolve(); }
 
   // prettier-ignore
-  async function handleToggleRelay(setId: string, url: string, enabled: boolean) { relaySets = await setRelayEnabled(setId, url, enabled); }
+  async function handleToggleRelay(setId: string, url: string, enabled: boolean) { relaySets = await setRelayEnabled(setId, url, enabled); startNotificationSync(); }
 
   // prettier-ignore
-  async function handleRemoveRelay(setId: string, url: string) { relaySets = await removeRelay(setId, url); }
+  async function handleRemoveRelay(setId: string, url: string) { relaySets = await removeRelay(setId, url); startNotificationSync(); }
 </script>
 
 <svelte:head>
