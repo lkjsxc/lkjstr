@@ -44,14 +44,19 @@ describe('tags, relay URLs, and NIP-19', () => {
       {
         created_at: 101,
         kind: 1,
-        tags: [['q', '4'.repeat(64)]],
+        tags: [['q', '4'.repeat(64), 'wss://quote.example']],
         content: `nostr:${encodeNote('5'.repeat(64))}`,
       },
       generateSecretKey(),
     );
     expect(eventReferences(quoted)).toEqual([
-      { kind: 'quote', id: '4'.repeat(64) },
-      { kind: 'nostr-event', id: '5'.repeat(64) },
+      {
+        kind: 'quote',
+        id: '4'.repeat(64),
+        relays: ['wss://quote.example'],
+        source: 'q',
+      },
+      { kind: 'nostr-event', id: '5'.repeat(64), source: 'content' },
     ]);
   });
 
@@ -66,7 +71,9 @@ describe('tags, relay URLs, and NIP-19', () => {
       },
       generateSecretKey(),
     );
-    expect(eventReferences(quoted)).toEqual([{ kind: 'quote', id }]);
+    expect(eventReferences(quoted)).toEqual([
+      { kind: 'quote', id, source: 'q' },
+    ]);
   });
 
   it('uses action targets instead of reply roots for action events', () => {
@@ -85,7 +92,7 @@ describe('tags, relay URLs, and NIP-19', () => {
       generateSecretKey(),
     );
     expect(eventReferences(reaction)).toEqual([
-      { kind: 'reaction', id: target },
+      { kind: 'reaction', id: target, source: 'reaction' },
     ]);
   });
 

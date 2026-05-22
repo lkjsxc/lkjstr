@@ -31,11 +31,12 @@ export type ContentToken =
       readonly type: 'custom-emoji';
       readonly shortcode: string;
       readonly url: string;
+      readonly address?: string;
       readonly text: string;
     };
 
 const tokenPattern =
-  /(:[A-Za-z0-9_+-]+:)|\b(?:nostr:([a-z0-9]+)|https:\/\/[^\s<>"']+)/gi;
+  /(:[A-Za-z0-9_]+:)|\b(?:nostr:([a-z0-9]+)|https:\/\/[^\s<>"']+)/gi;
 
 export function contentTokens(
   event: NostrEvent,
