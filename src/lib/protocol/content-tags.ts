@@ -1,6 +1,10 @@
 import { decodeEntity } from './nip19';
 import { isEventId, isPubkey, type NostrTag } from './event';
-import { customEmojiTokenText, type CustomEmoji } from './nip30';
+import {
+  customEmojiTagParts,
+  customEmojiTokenText,
+  type CustomEmoji,
+} from './nip30';
 
 const nostrEntityPattern = /\bnostr:([a-z0-9]+)/giu;
 
@@ -39,7 +43,7 @@ export function emojiTags(
   const byCode = new Map(emoji.map((item) => [item.shortcode, item]));
   return [...byCode.values()]
     .filter((item) => content.includes(customEmojiTokenText(item.shortcode)))
-    .map((item) => ['emoji', item.shortcode, item.url]);
+    .map((item) => customEmojiTagParts(item));
 }
 
 function appendUnique(tags: NostrTag[], tag: NostrTag): void {

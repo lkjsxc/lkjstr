@@ -1,5 +1,6 @@
 import type { NostrEvent, NostrTag } from './event';
 import { kinds } from './kinds';
+import { customEmojiTagParts, type CustomEmoji } from './nip30';
 import { replyParent, replyRoot, tagValues } from './tags';
 
 export function replyTags(event: NostrEvent): NostrTag[] {
@@ -14,13 +15,14 @@ export function replyTags(event: NostrEvent): NostrTag[] {
 
 export function reactionTags(
   event: NostrEvent,
-  emoji?: { shortcode: string; url: string },
+  emoji?: CustomEmoji,
 ): NostrTag[] {
   const tags: NostrTag[] = [
     ['e', event.id],
     ['p', event.pubkey],
+    ['k', String(event.kind)],
   ];
-  if (emoji) tags.push(['emoji', emoji.shortcode, emoji.url]);
+  if (emoji) tags.push(customEmojiTagParts(emoji));
   return tags;
 }
 

@@ -29,10 +29,20 @@ describe('event builders', () => {
     expect(reactionTags(event)).toEqual([
       ['e', event.id],
       ['p', event.pubkey],
+      ['k', '1'],
     ]);
     expect(
-      reactionTags(event, { shortcode: 'party', url: 'https://x/party.png' }),
-    ).toContainEqual(['emoji', 'party', 'https://x/party.png']);
+      reactionTags(event, {
+        shortcode: 'party',
+        url: 'https://x/party.png',
+        address: `30030:${event.pubkey}:set`,
+      }),
+    ).toContainEqual([
+      'emoji',
+      'party',
+      'https://x/party.png',
+      `30030:${event.pubkey}:set`,
+    ]);
   });
 
   it('builds repost kinds and generic k tags', () => {
@@ -113,14 +123,18 @@ describe('event builders', () => {
         `hi nostr:${nprofile} nostr:${nevent} :party:`,
         [
           { shortcode: 'unused', url: 'https://x/unused.png' },
-          { shortcode: 'party', url: 'https://x/party.png' },
+          {
+            shortcode: 'party',
+            url: 'https://x/party.png',
+            address: `30030:${pubkey}:set`,
+          },
         ],
         [['p', pubkey]],
       ),
     ).toEqual([
       ['p', pubkey, 'wss://profiles.example'],
       ['q', eventId, 'wss://events.example'],
-      ['emoji', 'party', 'https://x/party.png'],
+      ['emoji', 'party', 'https://x/party.png', `30030:${pubkey}:set`],
     ]);
   });
 });

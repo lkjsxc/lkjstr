@@ -13,5 +13,6 @@ export * from './nip30';
 export * from './nip36';
 export * from './nip19';
 export * from './relay-url';
+export * from './reactions';
 export * from './tags';
 export * from './time';

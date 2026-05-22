@@ -3,10 +3,13 @@ import type { NostrEvent } from './event';
 export type CustomEmoji = {
   readonly shortcode: string;
   readonly url: string;
+  readonly address?: string;
 };
 
-const shortcodePattern = /^[A-Za-z0-9_+-]+$/;
-const customEmojiInputPattern = /^:([^:]+):(https:\/\/\S+)$/u;
+const shortcodePattern = /^[A-Za-z0-9_]+$/;
+const customEmojiInputPattern =
+  /^:([^:]+):(https:\/\/\S+?)(?::(30030:[0-9a-f]{64}:.+))?$/u;
+const emojiSetAddressPattern = /^30030:[0-9a-f]{64}:[^\s:]+$/u;
 
 export function customEmojis(event: NostrEvent): CustomEmoji[] {
   const byCode = new Map<string, CustomEmoji>();
@@ -24,7 +27,10 @@ export function customEmojiTag(
   if (name !== 'emoji' || !shortcode || !url) return undefined;
   if (!shortcodePattern.test(shortcode)) return undefined;
   if (!isHttpsUrl(url)) return undefined;
-  return { shortcode, url };
+  const address = tag[3];
+  return validCustomEmojiAddress(address)
+    ? { shortcode, url, address }
+    : { shortcode, url };
 }
 
 export function validCustomEmojiShortcode(value: string): boolean {
@@ -33,6 +39,12 @@ export function validCustomEmojiShortcode(value: string): boolean {
 
 export function validCustomEmojiUrl(value: string): boolean {
   return isHttpsUrl(value);
+}
+
+export function validCustomEmojiAddress(
+  value: string | undefined,
+): value is string {
+  return Boolean(value && emojiSetAddressPattern.test(value));
 }
 
 export function customEmojiTokenText(shortcode: string): string {
@@ -45,7 +57,16 @@ export function parseCustomEmojiInput(value: string): CustomEmoji | undefined {
   const [, shortcode = '', url = ''] = match;
   if (!validCustomEmojiShortcode(shortcode)) return undefined;
   if (!validCustomEmojiUrl(url)) return undefined;
-  return { shortcode, url };
+  const address = match[3];
+  return validCustomEmojiAddress(address)
+    ? { shortcode, url, address }
+    : { shortcode, url };
+}
+
+export function customEmojiTagParts(emoji: CustomEmoji): string[] {
+  return emoji.address
+    ? ['emoji', emoji.shortcode, emoji.url, emoji.address]
+    : ['emoji', emoji.shortcode, emoji.url];
 }
 
 function isHttpsUrl(value: string): boolean {
