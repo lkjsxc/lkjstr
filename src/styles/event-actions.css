@@ -63,6 +63,10 @@
   align-items: stretch;
 }
 
+.event-inline-action--emoji .emoji-popover {
+  position: static;
+}
+
 .event-inline-action--emoji emoji-picker {
   flex: 1 1 18rem;
   height: 16rem;

@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { Heart, ThumbsDown } from '@lucide/svelte';
   import Avatar from '$lib/components/identity/Avatar.svelte';
   import EmojifiedText from './EmojifiedText.svelte';
   import { bestDisplayName } from '$lib/identity/display-name';
@@ -25,6 +26,12 @@
   function name(pubkey: string): string {
     return bestDisplayName({ ...(props.profiles?.[pubkey] ?? {}), pubkey });
   }
+
+  function reactionLabel(content: string): string {
+    if (content === '+' || content === 'heart') return 'like';
+    if (content === '-') return 'dislike';
+    return content;
+  }
 </script>
 
 {#if props.reactions && props.reactions.length > 0}
@@ -39,11 +46,18 @@
           onclick={() => toggle(id)}
         >
           <span>
-            <EmojifiedText
-              text={reaction.content}
-              emojis={reaction.emoji ? [reaction.emoji] : []}
-            />
+            {#if reaction.content === '+' || reaction.content === 'heart'}
+              <Heart size={14} fill="currentColor" aria-label="like" />
+            {:else if reaction.content === '-'}
+              <ThumbsDown size={14} aria-label="dislike" />
+            {:else}
+              <EmojifiedText
+                text={reaction.content}
+                emojis={reaction.emoji ? [reaction.emoji] : []}
+              />
+            {/if}
           </span>
+          <span class="sr-only">{reactionLabel(reaction.content)}</span>
           <strong>{reaction.count}</strong>
         </button>
         {#if expanded === id}

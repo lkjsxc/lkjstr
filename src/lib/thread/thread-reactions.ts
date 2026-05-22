@@ -1,7 +1,10 @@
 import { eventsByTagValues, upsertEvent } from '../events/repository';
 import type { FeedEvent } from '../events/types';
 import {
-  customEmojiTag,
+  customEmojiTagParts,
+  parseReaction,
+  reactionContent,
+  reactionTargetEventId,
   kinds,
   type CustomEmoji,
   type NostrEvent,
@@ -59,7 +62,7 @@ export function mergeReactionEvent(
   map: ReactionSummaryMap,
   event: NostrEvent,
 ): ReactionSummaryMap {
-  const target = targetEventId(event);
+  const target = reactionTargetEventId(event);
   if (!target) return map;
   const current = map[target] ?? [];
   return { ...map, [target]: groupReactions([...ungroup(current), event]) };
@@ -69,7 +72,7 @@ export function mergeRepostEvent(
   map: RepostSummaryMap,
   event: NostrEvent,
 ): RepostSummaryMap {
-  const target = targetEventId(event);
+  const target = reactionTargetEventId(event);
   if (!target) return map;
   const current = map[target]?.actors ?? [];
   return { ...map, [target]: groupReposts([event, ...actorEvents(current)]) };
@@ -81,9 +84,12 @@ function groupReactions(events: readonly NostrEvent[]): ReactionGroup[] {
     { content: string; emoji?: CustomEmoji; actors: Set<string> }
   >();
   for (const event of events) {
+    const parsed = parseReaction(event);
     const content = reactionContent(event);
-    const emoji = reactionEmoji(event, content);
-    const key = emoji ? `${content}\u0000${emoji.url}` : content;
+    const emoji = parsed.emoji;
+    const key = emoji
+      ? `${content}\u0000${emoji.url}\u0000${emoji.address ?? ''}`
+      : content;
     const group = groups.get(key) ?? { content, emoji, actors: new Set() };
     group.actors.add(event.pubkey);
     groups.set(key, group);
@@ -105,28 +111,11 @@ function ungroup(groups: readonly ReactionGroup[]): NostrEvent[] {
       pubkey,
       created_at: 0,
       kind: 7,
-      tags: group.emoji
-        ? [['emoji', group.emoji.shortcode, group.emoji.url]]
-        : [],
+      tags: group.emoji ? [customEmojiTagParts(group.emoji)] : [],
       content: group.content,
       sig: '',
     })),
   );
-}
-
-function reactionEmoji(
-  event: NostrEvent,
-  content: string,
-): CustomEmoji | undefined {
-  const match = /^:([A-Za-z0-9_+-]+):$/.exec(content);
-  if (!match) return undefined;
-  return event.tags
-    .map(customEmojiTag)
-    .find((emoji) => emoji?.shortcode === match[1]);
-}
-
-function targetEventId(event: NostrEvent): string | undefined {
-  return event.tags.find((tag) => tag[0] === 'e')?.[1];
 }
 
 function eventsFor(
@@ -136,12 +125,9 @@ function eventsFor(
 ): NostrEvent[] {
   return events
     .map((item) => item.event)
-    .filter((event) => predicate(event) && targetEventId(event) === target);
-}
-
-function reactionContent(event: NostrEvent): string {
-  const text = event.content.trim();
-  return text || '+';
+    .filter(
+      (event) => predicate(event) && reactionTargetEventId(event) === target,
+    );
 }
 
 function isReaction(item: FeedEvent['event']): boolean {

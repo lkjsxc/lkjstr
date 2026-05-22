@@ -1,4 +1,4 @@
-import { kinds, tagValues, type NostrEvent } from '../protocol';
+import { kinds, parseReaction, tagValues, type NostrEvent } from '../protocol';
 
 export type ActionSummary = {
   readonly verb: string;
@@ -22,11 +22,8 @@ function genericTarget(event: NostrEvent): string {
 }
 
 function reactionSummary(event: NostrEvent): ActionSummary {
-  const content = event.content.trim();
-  if (!content || content === '+') return { verb: 'reacted' };
-  const emoji = tagValues(event, 'emoji').find((shortcode) =>
-    content.includes(`:${shortcode}:`),
-  );
-  if (emoji) return { verb: 'reacted with', detail: `:${emoji}:` };
-  return { verb: 'reacted with', detail: content };
+  const reaction = parseReaction(event);
+  if (reaction.kind === 'like') return { verb: 'liked' };
+  if (reaction.kind === 'dislike') return { verb: 'disliked' };
+  return { verb: 'reacted with', detail: reaction.display };
 }

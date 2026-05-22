@@ -1,64 +1,30 @@
 <script lang="ts">
-  import { onMount } from 'svelte';
-  import { customEmojiTokenText, parseCustomEmojiInput } from '$lib/protocol';
+  import EmojiPopover from '$lib/components/emoji/EmojiPopover.svelte';
+  import { customEmojiReactionContent, type CustomEmoji } from '$lib/protocol';
 
   type EmojiReaction = {
     readonly content: string;
-    readonly emoji?: { shortcode: string; url: string };
+    readonly emoji?: CustomEmoji;
   };
 
   type Props = {
     busy: boolean;
+    customEmojis?: readonly CustomEmoji[];
     publish: (reaction: EmojiReaction) => void;
   };
 
   let props: Props = $props();
-  let emoji = $state('');
-  let picker: HTMLElement | undefined = $state();
-  const pickerTag = 'emoji-picker';
 
-  onMount(() => {
-    void import('emoji-picker-element');
-    if (!picker) return;
-    const choose = (event: Event) => {
-      const detail = (event as CustomEvent<{ unicode?: string }>).detail;
-      if (detail?.unicode) emoji = detail.unicode;
-    };
-    picker.addEventListener('emoji-click', choose);
-    return () => picker?.removeEventListener('emoji-click', choose);
-  });
-
-  function submit(): void {
-    const parsed = parseCustomEmojiInput(emoji);
-    props.publish(
-      parsed
-        ? {
-            content: customEmojiTokenText(parsed.shortcode),
-            emoji: parsed,
-          }
-        : { content: emoji.trim() },
-    );
+  function publishCustom(emoji: CustomEmoji): void {
+    props.publish({ content: customEmojiReactionContent(emoji), emoji });
   }
 </script>
 
-<form
-  class="event-inline-action event-inline-action--emoji"
-  onsubmit={(event) => {
-    event.preventDefault();
-    submit();
-  }}
->
-  <input
-    aria-label="Emoji reaction"
-    bind:value={emoji}
-    placeholder="emoji or :shortcode:https://..."
+<div class="event-inline-action event-inline-action--emoji">
+  <EmojiPopover
+    customEmojis={props.customEmojis}
+    onUnicode={(emoji) => props.publish({ content: emoji })}
+    onCustom={publishCustom}
+    close={() => undefined}
   />
-  <button
-    class="compact-button"
-    type="submit"
-    disabled={props.busy || !emoji.trim()}
-  >
-    React
-  </button>
-  <svelte:element this={pickerTag} bind:this={picker} />
-</form>
+</div>

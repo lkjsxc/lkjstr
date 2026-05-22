@@ -6,6 +6,7 @@ import {
   repostTags,
   type NostrEvent,
   type NostrTag,
+  type CustomEmoji,
 } from '../protocol';
 import type { RelaySet } from '../relays/relay-store';
 import { signAndPublish, type EventPublishStatus } from './publish-event';
@@ -14,7 +15,7 @@ export function publishReaction(
   target: NostrEvent,
   relaySets: readonly RelaySet[],
   content = '+',
-  emoji?: { shortcode: string; url: string },
+  emoji?: CustomEmoji,
 ): Promise<EventPublishStatus> {
   return publishAction(relaySets, (pubkey, now) => ({
     pubkey,

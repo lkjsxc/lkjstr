@@ -8,7 +8,7 @@
     Zap,
   } from '@lucide/svelte';
   import type { ProfileSummary } from '$lib/identity/identity';
-  import type { NostrEvent } from '$lib/protocol';
+  import type { CustomEmoji, NostrEvent } from '$lib/protocol';
   import type { RelaySet } from '$lib/relays/relay-store';
   import {
     publishReaction,
@@ -51,7 +51,7 @@
 
   function submitEmoji(reaction: {
     content: string;
-    emoji?: { shortcode: string; url: string };
+    emoji?: CustomEmoji;
   }): void {
     void run(() =>
       publishReaction(
@@ -150,7 +150,11 @@
       </button>
     </form>
   {:else if mode === 'emoji'}
-    <EventEmojiPanel {busy} publish={submitEmoji} />
+    <EventEmojiPanel
+      {busy}
+      customEmojis={props.profile?.customEmojis ?? []}
+      publish={submitEmoji}
+    />
   {:else if mode === 'zap'}
     <EventZapPanel
       event={props.event}
