@@ -18,8 +18,13 @@ unimplemented behavior.
 - NIP-10 reply and thread tags.
 - NIP-18 repost target parsing, generic repost feeds, and embeds.
 - NIP-19 public-key, note, event, profile, and address references in content.
-- NIP-25 reaction target parsing and embeds.
-- NIP-30 custom emoji shortcode reaction tags and HTTPS emoji rendering.
+- NIP-25 reaction target parsing, `+`/empty likes, `-` dislikes, Unicode emoji
+  reactions, custom emoji reactions, and `k` target-kind tags.
+- NIP-30 custom emoji tags, optional kind `30030` emoji-set addresses, custom
+  emoji reactions, HTTPS emoji rendering, and strict project shortcodes limited
+  to `[A-Za-z0-9_]`.
+- NIP-51 kind `10030` emoji lists and kind `30030` emoji sets for active-account
+  custom emoji choices.
 - NIP-36 sensitive content gates.
 - NIP-42 relay auth diagnostics.
 - NIP-57 zap requests and invoice handoff.

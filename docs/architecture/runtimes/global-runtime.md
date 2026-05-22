@@ -17,6 +17,8 @@ Global runtime owns unauthenticated recent-note loading from readable relays.
 - Stop loading when cached notes exist, relay notes arrive, relays reach EOSE,
   relay subscriptions close, or relays fail.
 - Write relay events and relay provenance through the shared repository.
-- Use enabled read relays from the selected default relay set.
+- Use enabled read relays from the selected default relay set after
+  normalization, dedupe, and stable sorting.
 - Do not require an active account.
-- Close subscriptions when relay settings change or the tab closes.
+- Close subscriptions when the primitive runtime key changes or the tab closes.
+  Relay order alone does not recreate the runtime.

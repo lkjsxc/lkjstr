@@ -23,7 +23,8 @@ Home runtime owns active-account follow discovery and followed-note loading.
 - Subscribe to kind `1` notes with explicit authors through the subscription
   manager.
 - Write relay events and relay provenance through the shared repository.
-- Use enabled read relays from the selected default relay set.
+- Use enabled read relays from the selected default relay set after
+  normalization, dedupe, and stable sorting.
 - Do not fall back to disabled, deleted, or hidden relays.
 - Do not subscribe when there is no active account.
 - Stop loading when all active relays send EOSE, close the subscription, or
@@ -33,4 +34,6 @@ Home runtime owns active-account follow discovery and followed-note loading.
   `ready-empty`, and `ready-with-events`.
 - Surface relay `CLOSED`, `NOTICE`, `AUTH`, message parse errors, invalid event
   signatures, startup failures, and async listener failures through lkjstr Log.
-- Close old subscriptions when relay settings change or the tab closes.
+- Close old subscriptions when the primitive runtime key changes or the tab
+  closes. The key is tab kind, active account pubkey, sorted normalized relays,
+  and tab id.

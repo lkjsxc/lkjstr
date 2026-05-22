@@ -8,8 +8,9 @@ Tab runtime defines valid tab kinds and lifecycle ownership.
 
 `new-tab`, `timeline`, `global`, `notifications`, `profile`,
 `profile-edit`, `account-manager`, `npub-miner`, `thread`, `relay-monitor`,
-`relay-settings`, `tweet`, `settings`,
-`network-stats`. Persisted `cache-status` tabs normalize to Stats.
+`relay-settings`, `tweet`, `settings`, `search`, `upload-settings`,
+`network-stats`, and `welcome`. Persisted `cache-status` tabs normalize to
+Stats.
 
 ## Contract
 
@@ -38,5 +39,8 @@ Tab runtime defines valid tab kinds and lifecycle ownership.
 - Cross-tile movement updates source and target tab groups, then focuses the
   moved tab in the target tile.
 - Persisted tabs are normalized by the current tab contracts.
-- Runtime recreation is guarded by stable keys so unrelated account, settings,
-  relay, or local state changes do not rebuild relay subscriptions.
+- Timeline runtime recreation is guarded by primitive keys:
+  `kind | activeAccountPubkey | sortedNormalizedRelays | tabId`. Equivalent
+  relay order, unrelated settings, notification refreshes, and local state
+  changes do not rebuild Home or Global subscriptions.
+- Timeline runtime create and close events are written to lkjstr Log.

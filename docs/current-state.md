@@ -60,8 +60,10 @@ This document records the current implemented contract for the app.
 - Retained inactive tab bodies stay stacked at the active body size so scroll
   position and layout geometry survive tab switches.
 - Event metadata shows author control and date.
-- Event actions publish NIP-25 hearts and emoji reactions, NIP-18 reposts,
-  tagged replies, and NIP-57 zap requests where targets expose zap data.
+- Event actions publish NIP-25 hearts, dislikes, Unicode emoji reactions, and
+  strict NIP-30 custom emoji reactions with `e`, `p`, `k`, and matching
+  `emoji` tags, plus NIP-18 reposts, tagged replies, and NIP-57 zap requests
+  where targets expose zap data.
 - Event rows and diagnostic rows wrap long content inside their tile.
 - Accounts are managed inline with active, disconnect, and local reveal/copy
   controls. Stored account records normalize to enabled, unsupported signer
@@ -69,14 +71,22 @@ This document records the current implemented contract for the app.
 - Mine npub mines an `npub` prefix locally and exports the generated `nsec`
   without storing it until the user adds it.
 - Tweet uses the active signing account, durable composer recovery,
-  `Ctrl+Enter`, draft custom emoji attachments, shared provider or custom
-  NIP-96 media upload, NIP-98 upload auth, NIP-94 `imeta` tags, content-derived
-  mention and emoji tags, and signed kind `1` notes to enabled write relays.
+  `Ctrl+Enter`, a compact media/emoji/publish toolbar, custom emoji loaded from
+  the active account's NIP-51 emoji lists and sets, shared provider or custom
+  NIP-96 media upload, NIP-98 upload auth, NIP-94 `imeta` tags,
+  content-derived mention and emoji tags, and signed kind `1` notes to enabled
+  write relays.
 - Sensitive content hides bodies, media, custom emoji images, reference
   previews, and nested repost bodies until locally revealed.
 - Custom emoji tags render with lazy, async-decoded, no-referrer images in
   event text, nested reposts, reaction summaries, profile names, and profile
-  about text when they use HTTPS image URLs.
+  about text when they use HTTPS image URLs. lkjstr accepts optional NIP-30
+  emoji-set addresses on tags and intentionally restricts shortcodes to
+  letters, numbers, and underscores.
+- Event references classify reply roots, reply parents, quote tags,
+  `nostr:note`, `nostr:nevent`, repost, reaction, and deletion targets. Up to
+  three reference cards show author metadata, preview text, media count, and a
+  compact missing-event state.
 - Event repository lookup uses direct id reads, batched id reads, and tag-value
   indexes for thread, reference, reaction, and notification reloads.
 - Stats shows current-session relay counters, subscription ids, OK counts,
