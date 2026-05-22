@@ -3,7 +3,6 @@
   import type { TweetAttachment } from '$lib/tweet/draft-store';
   import type { UploadSettings } from '$lib/tweet/media-upload';
   import TweetComposer from './TweetComposer.svelte';
-  import TweetCustomEmojiControls from './TweetCustomEmojiControls.svelte';
 
   type Props = {
     tabId: string;
@@ -19,6 +18,7 @@
     canPublish: boolean;
     message: string;
     confirmedRelays: string;
+    focusNonce: number;
     touchDraft: () => void;
     flushDraft: () => Promise<void>;
     uploadFiles: (files: FileList | File[]) => Promise<void>;
@@ -26,7 +26,6 @@
     removeAttachment: (url: string) => void;
     handlePaste: (event: ClipboardEvent) => void;
     addCustomEmoji: (emoji: CustomEmoji) => void;
-    removeCustomEmoji: (shortcode: string) => void;
   };
 
   let {
@@ -43,6 +42,7 @@
   bind:warningReason
   bind:content
   attachments={props.attachments}
+  customEmojis={props.customEmojis}
   uploading={props.uploading}
   publishing={props.publishing}
   hasSigner={props.hasSigner}
@@ -50,18 +50,12 @@
   canPublish={props.canPublish}
   message={props.message}
   confirmedRelays={props.confirmedRelays}
+  focusNonce={props.focusNonce}
   touchDraft={props.touchDraft}
   flushDraft={props.flushDraft}
   uploadFiles={props.uploadFiles}
   publish={props.publish}
   removeAttachment={props.removeAttachment}
   handlePaste={props.handlePaste}
-/>
-<TweetCustomEmojiControls
-  inputId={`tweet-emoji-${props.tabId}`}
-  customEmojis={props.customEmojis}
-  add={props.addCustomEmoji}
-  remove={props.removeCustomEmoji}
-  touchDraft={props.touchDraft}
-  flushDraft={props.flushDraft}
+  addCustomEmoji={props.addCustomEmoji}
 />

@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { onMount } from 'svelte';
+  import { onMount, tick } from 'svelte';
   import type { Account } from '$lib/accounts/account';
   import type { RelaySet } from '$lib/relays/relay-store';
   import type { CustomEmoji } from '$lib/protocol';
@@ -16,7 +16,9 @@
     uploadTweetFiles,
   } from '$lib/tweet/media-upload-files';
   import { loadTweetUploadSettings } from '$lib/tweet/settings';
+  import { loadAccountEmojiSource } from '$lib/emoji/source';
   import { settingsChangedEvent } from '$lib/settings/settings-events';
+  import { timelineRelays } from '$lib/timeline/timeline-subscription';
   import TweetTabView from './TweetTabView.svelte';
   import {
     defaultTweetUploadSettings,
@@ -42,6 +44,8 @@
   let uploadSettings = $state(defaultTweetUploadSettings);
   let attachments = $state<TweetAttachment[]>([]);
   let customEmojis = $state<CustomEmoji[]>([]);
+  let availableCustomEmojis = $state<CustomEmoji[]>([]);
+  let focusNonce = $state(0);
   let draftTouched = false;
   let saveTimer: ReturnType<typeof setTimeout> | undefined;
   let draftId = $derived(`tab:${props.tabId}`);
@@ -64,9 +68,13 @@
   });
 
   async function loadInitialState(): Promise<void> {
-    const [draft, settings] = await Promise.all([
+    const [draft, settings, sourceEmoji] = await Promise.all([
       loadTweetDraftWithLegacy(draftId),
       loadTweetUploadSettings(),
+      loadAccountEmojiSource({
+        pubkey: props.activeAccount?.pubkey,
+        relays: timelineRelays(props.relaySets),
+      }),
     ]);
     if (!draftTouched) {
       content = draft?.content ?? '';
@@ -76,6 +84,7 @@
       warningReason = draft?.contentWarningReason ?? '';
     }
     uploadSettings = settings;
+    availableCustomEmojis = sourceEmoji;
   }
 
   async function loadUploadSettings(): Promise<void> {
@@ -129,13 +138,15 @@
     }
     const accepted = result.results.filter((item) => item.accepted).length;
     confirmedRelays = `${accepted}/${result.results.length}`;
-    message = `Published to ${confirmedRelays} relays.`;
+    message = `Sent to ${confirmedRelays} relays.`;
     content = '';
     attachments = [];
     customEmojis = [];
     sensitive = false;
     warningReason = '';
     await Promise.all([clearTweetDraft(draftId), clearTweetDraft('main')]);
+    await tick();
+    focusNonce += 1;
   }
 
   async function uploadFiles(files: FileList | File[]): Promise<void> {
@@ -174,15 +185,9 @@
   function addCustomEmoji(emoji: CustomEmoji): void {
     customEmojis = upsertCustomEmoji(customEmojis, emoji);
   }
-
-  function removeCustomEmoji(shortcode: string): void {
-    customEmojis = customEmojis.filter((item) => item.shortcode !== shortcode);
-    snapshot();
-    void flushDraft();
-  }
 </script>
 
 <section class="data-tab" aria-label="Tweet">
   <!-- prettier-ignore -->
-  <TweetTabView tabId={props.tabId} bind:sensitive bind:warningReason bind:content {attachments} {customEmojis} {uploading} {publishing} {hasSigner} {uploadSettings} {canPublish} {message} {confirmedRelays} {touchDraft} {flushDraft} {uploadFiles} {publish} {removeAttachment} {handlePaste} addCustomEmoji={addCustomEmoji} removeCustomEmoji={removeCustomEmoji} />
+  <TweetTabView tabId={props.tabId} bind:sensitive bind:warningReason bind:content {attachments} customEmojis={[...availableCustomEmojis, ...customEmojis]} {uploading} {publishing} {hasSigner} {uploadSettings} {canPublish} {message} {confirmedRelays} {focusNonce} {touchDraft} {flushDraft} {uploadFiles} {publish} {removeAttachment} {handlePaste} addCustomEmoji={addCustomEmoji} />
 </section>

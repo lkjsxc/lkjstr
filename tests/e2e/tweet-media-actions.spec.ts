@@ -22,7 +22,8 @@ test('Ctrl+Enter publishes a Tweet through the relay', async ({ page }) => {
   await openTweet(page);
   await page.getByLabel('Tweet content').fill('keyboard publish');
   await page.getByLabel('Tweet content').press('Control+Enter');
-  await expect(page.getByText(/Published to/)).toBeVisible();
+  await expect(page.getByText(/Sent to/)).toBeVisible();
+  await expect(page.getByText('Attach emoji')).toHaveCount(0);
   expect(await publishedKinds(page)).toContain(1);
 });
 test('event row actions publish without opening the row thread', async ({
@@ -71,8 +72,14 @@ test('event row actions publish without opening the row thread', async ({
   await row.getByRole('button', { name: 'Publish reply' }).click();
   await waitForPublishedCount(page, 2);
   await row.getByRole('button', { name: 'Emoji', exact: true }).click();
-  await row.getByLabel('Emoji reaction').fill('+1');
-  await row.getByLabel('Emoji reaction').press('Enter');
+  await row.locator('emoji-picker').evaluate((picker) =>
+    picker.dispatchEvent(
+      new CustomEvent('emoji-click', {
+        detail: { unicode: '👍' },
+        bubbles: true,
+      }),
+    ),
+  );
   await waitForPublishedCount(page, 3);
   await row.getByRole('button', { name: 'Repost', exact: true }).click();
   await waitForPublishedCount(page, 4);
