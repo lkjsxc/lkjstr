@@ -3,7 +3,6 @@
   import type { Account } from '$lib/accounts/account';
   import EventRow from '$lib/components/events/EventRow.svelte';
   import { isNearEnd } from '$lib/events/feed-window';
-  import IdentityChip from '$lib/components/identity/IdentityChip.svelte';
   import type { ProfileSummary } from '$lib/identity/identity';
   import { getProfile } from '$lib/identity/profile-cache';
   import { profileUpdatedEvent } from '$lib/profile/profile-metadata-draft';
@@ -18,8 +17,7 @@
     createTimelineSubId,
     timelineRelays,
   } from '$lib/timeline/timeline-subscription';
-  import ProfileActions from './ProfileActions.svelte';
-  import ProfileAbout from './ProfileAbout.svelte';
+  import ProfileHeader from './ProfileHeader.svelte';
 
   type Props = {
     tabId: string;
@@ -143,30 +141,17 @@
   bind:this={profileTab}
   onscroll={handleScroll}
 >
-  <header class="profile-card">
-    {#if state.profile?.bannerUrl}
-      <img class="profile-card__banner" src={state.profile.bannerUrl} alt="" />
-    {/if}
-    <IdentityChip pubkey={props.pubkey} profile={state.profile ?? undefined} />
-    <small>{npub}</small>
-    <ProfileActions
-      account={props.activeAccount}
-      pubkey={props.pubkey}
-      relaySets={props.relaySets}
-      openProfileEdit={props.openProfileEdit}
-    />
-    {#if nprofile}<small>{nprofile}</small>{/if}
-    {#if state.profile?.about}
-      <ProfileAbout
-        text={state.profile.about}
-        emojis={state.profile.customEmojis ?? []}
-      />
-    {/if}
-    {#if state.profile?.website}
-      <span>{state.profile.website}</span>
-    {/if}
-    <small>{state.relays.length} metadata relays</small>
-  </header>
+  <ProfileHeader
+    pubkey={props.pubkey}
+    profile={state.profile}
+    activeAccount={props.activeAccount}
+    relaySets={props.relaySets}
+    {npub}
+    {nprofile}
+    postCount={state.posts.length}
+    relayCount={state.relays.length}
+    openProfileEdit={props.openProfileEdit}
+  />
   {#if state.loading}
     <p>Loading profile data...</p>
   {/if}
@@ -181,6 +166,7 @@
             {item}
             profile={profiles[item.event.pubkey]}
             relaySets={props.relaySets}
+            activeAccountPubkey={props.activeAccount?.pubkey}
             openProfile={props.openProfile}
             openThread={props.openThread}
           />

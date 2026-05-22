@@ -29,6 +29,7 @@
     items: readonly FeedEvent[];
     profiles?: Record<string, ProfileSummary>;
     relaySets?: readonly RelaySet[];
+    activeAccountPubkey?: string | null;
     reactions?: ReactionSummaryMap;
     reposts?: RepostSummaryMap;
     loading?: boolean;
@@ -144,6 +145,7 @@
               depth={node.depth}
               profile={props.profiles?.[node.event.pubkey]}
               relaySets={props.relaySets}
+              activeAccountPubkey={props.activeAccountPubkey}
               reactions={props.reactions?.[node.event.id]}
               reposts={props.reposts?.[node.event.id]}
               profiles={props.profiles}

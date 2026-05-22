@@ -1,77 +1,78 @@
 # lkjstr
 
+lkjstr is a browser-first Nostr workspace. It opens directly into a tiled
+desktop-style app for reading timelines, composing notes, inspecting relay
+behavior, managing signing accounts, and following event threads without a
+server-side account system.
+
 ## Purpose
 
-lkjstr is a browser-first Nostr workspace built with SvelteKit. The app opens
-directly into split tiles, stores local state in IndexedDB, and uses the
-selected default relay set for timeline, profile, thread, and Tweet behavior.
+This repository contains the lkjstr web app, its protocol/runtime
+documentation, verification scripts, static assets, and tests.
 
-## Docs
+## What It Does
 
-- Canon: [docs/README.md](docs/README.md)
-- Current state: [docs/current-state.md](docs/current-state.md)
-- CI and images: [docs/operations/ci.md](docs/operations/ci.md)
-- Product tabs: [docs/product/workspace/tabs.md](docs/product/workspace/tabs.md)
-- Runtime contracts:
-  [docs/architecture/workspace/tab-runtime.md](docs/architecture/workspace/tab-runtime.md)
-- Verification: [docs/operations/verification.md](docs/operations/verification.md)
+- Reads Home, Global, Profile, Thread, and Notifications from the selected
+  default relay set.
+- Publishes Tweet notes, replies, reposts, reactions, and zaps with the active
+  signing account.
+- Keeps workspace layout, tabs, accounts, settings, drafts, notifications, and
+  cache state in browser storage with session-memory fallback.
+- Renders Nostr entities, media, custom emoji, event references, content
+  warnings, nested reposts, and compact notification previews from real events.
+- Provides lkjstr Log and Stats tabs for relay, subscription, publish, cache,
+  storage, runtime, and job diagnostics.
 
-## Tree
+## Product Contract
 
-- [.github/](.github/): GitHub automation metadata.
-- [AGENTS.md](AGENTS.md): agent-facing repository rules.
-- [docs/](docs/): implementation contract documents.
-- [scripts/](scripts/): verification and generation scripts.
-- [src/](src/): SvelteKit application source.
-- [static/](static/): browser-served static assets.
-- [tests/](tests/): unit and browser tests.
+- The app starts on `/` as the workspace, not a landing page.
+- New Tab offers Home, Tweet, Notifications, Search, Global, Profile Edit,
+  Accounts, Relay Settings, Stats, Settings, Upload Settings, lkjstr Log, Mine
+  npub, and Welcome.
+- Home uses the active account and its latest NIP-02 follow list. Global does
+  not require an account. Profile and Thread tabs are opened from identity and
+  event actions.
+- Tweet publish signs the event, stores it locally, starts relay publishing,
+  clears and focuses the composer immediately, and only reports late all-relay
+  rejection or publish errors.
+- lkjstr intentionally emits strict custom emoji shortcodes containing only
+  letters, numbers, and underscores. Invalid incoming shortcodes remain text.
+- Sensitive posts stay revealed for the current app session after the user
+  reveals them.
+- Docker verification uses built images from `docker-compose.yml`; it does not
+  depend on bind mounts or required environment variables.
 
-## Contract
+## Documentation
 
-- New Tab choices are Home, Tweet, Notifications, Search, Global, Profile Edit,
-  Accounts, Relay Settings, Stats, Settings, Upload Settings,
-  lkjstr Log, Mine npub, and Welcome.
-- Profile tabs open from identity actions. Profile Edit opens for the active
-  signing account. Thread tabs open from event actions.
-- Tabs can be reordered inside a tile and moved to another tile by native
-  drag-and-drop.
-- Moving the last tab out of a tile closes the source tile.
-- Settings are one flat key-value list. Upload Settings is the guided editor
-  for the same Tweet media upload keys.
-- Home, Global, Notifications, Profile, and Thread reads use enabled read
-  relays in the selected default set. Home, Global, and Profile display text
-  notes, reposts, and generic reposts.
-- Partial relay failure is diagnostic; reachable relays continue serving feeds,
-  and low-level details are visible in Relay Logs instead of timeline bodies.
-- Event metadata shows the author control and date. Full
-  public keys and relay URLs stay out of post rows.
-- Sensitive events hide text, media, embeds, emoji images, and nested reposts
-  until revealed unless the content setting is disabled.
-- Accounts include inline add, enable, active, disconnect, and guarded local
-  `nsec` reveal/copy controls.
-- Mine npub performs CPU-only prefix mining with export-only `nsec` handling.
-- Tweet composer recovery is durable and publish uses the active enabled
-  signing account to enabled write relays. Notes can mark content as sensitive with
-  an optional reason.
-- Stats shows current-session relay, subscription, publish, cache, and storage
-  counters without opening relay subscriptions.
-- Tile resize uses a `1.8` pointer sensitivity multiplier.
-- Startup renders Welcome beside Accounts, Relay Settings, Home,
-  Notifications, and Tweet. Browser storage failures degrade to session memory
-  and must not leave an empty page.
-- Docker verification uses `docker-compose.yml` built images with no bind
-  mounts or required environment blocks.
+- [Current state](docs/current-state.md)
+- [Product workspace tabs](docs/product/workspace/tabs.md)
+- [Tweet tool](docs/product/tools/tweet.md)
+- [Event actions](docs/product/tools/event-actions.md)
+- [Protocol support](docs/protocol/nip-support.md)
+- [Verification](docs/operations/verification.md)
 
-## Commands
+## Development
 
 ```sh
 pnpm install
 pnpm dev
+pnpm check:repo
+pnpm test
 pnpm verify
-pnpm verify:quiet
-pnpm test:e2e:quiet
+pnpm test:e2e
 docker compose -f docker-compose.yml config
 docker compose -f docker-compose.yml build app verify e2e
 docker compose -f docker-compose.yml run --rm verify
 docker compose -f docker-compose.yml run --rm e2e
 ```
+
+## Repository Map
+
+- [.github/](.github/): GitHub Actions and repository automation notes.
+- [AGENTS.md](AGENTS.md): agent-facing repository rules.
+- [docs/](docs/): product, protocol, architecture, operations, and repository
+  contracts.
+- [scripts/](scripts/): repository checks and quiet verification wrappers.
+- [src/](src/): SvelteKit application source.
+- [static/](static/): static browser assets and manifest files.
+- [tests/](tests/): Vitest unit tests and Playwright browser tests.

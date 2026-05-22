@@ -9,7 +9,14 @@ export type ResolvedReference = EventReference & {
   readonly event?: FeedEvent;
 };
 
-const cache = new Map<string, FeedEvent | undefined>();
+type CacheEntry = {
+  readonly value: FeedEvent | undefined;
+  readonly expiresAt: number;
+};
+
+const cache = new Map<string, CacheEntry>();
+const inFlight = new Map<string, Promise<readonly FeedEvent[]>>();
+const cacheTtlMs = 5 * 60 * 1000;
 
 export async function resolveReferences(input: {
   readonly references: readonly EventReference[];
@@ -25,28 +32,48 @@ export async function resolveReferences(input: {
   ];
   const ids = [...new Set(input.references.map((item) => item.id))];
   const byId = new Map<string, FeedEvent | undefined>();
+  const now = Date.now();
   for (const id of ids) {
     const key = cacheKey(id, relays);
-    if (cache.has(key)) byId.set(id, cache.get(key));
+    const entry = cache.get(key);
+    if (entry && entry.expiresAt > now) byId.set(id, entry.value);
+    else if (entry) cache.delete(key);
   }
   const uncached = ids.filter((id) => !byId.has(id));
   const cached = await lookupEvents(uncached);
   cached.forEach((item) => byId.set(item.event.id, item));
   const missing = ids.filter((id) => !byId.get(id));
   if (missing.length > 0 && relays.length > 0) {
-    const hits = await readRelayPage({
-      key: input.key,
-      relays,
-      filters: [{ ids: missing }],
-      pageSize: missing.length,
-      subscriptions: input.subscriptions ?? sharedSubscriptionManager,
-    });
-    await Promise.all(hits.map((hit) => upsertEvent(hit.event, [hit.relay])));
-    hits.forEach((hit) =>
-      byId.set(hit.event.id, { event: hit.event, relays: [hit.relay] }),
-    );
+    const flightKey = cacheKey(missing.join(','), relays);
+    const hits =
+      inFlight.get(flightKey) ??
+      readRelayPage({
+        key: input.key,
+        relays,
+        filters: [{ ids: missing }],
+        pageSize: missing.length,
+        subscriptions: input.subscriptions ?? sharedSubscriptionManager,
+      }).then(async (hits) => {
+        await Promise.all(
+          hits.map((hit) => upsertEvent(hit.event, [hit.relay])),
+        );
+        return hits.map((hit) => ({
+          event: hit.event,
+          relays: [hit.relay],
+        }));
+      });
+    inFlight.set(flightKey, hits);
+    try {
+      (await hits).forEach((item) => byId.set(item.event.id, item));
+    } finally {
+      inFlight.delete(flightKey);
+    }
   }
-  for (const id of ids) cache.set(cacheKey(id, relays), byId.get(id));
+  for (const id of ids)
+    cache.set(cacheKey(id, relays), {
+      value: byId.get(id),
+      expiresAt: Date.now() + cacheTtlMs,
+    });
   return input.references.map((reference) => ({
     ...reference,
     event: byId.get(reference.id),

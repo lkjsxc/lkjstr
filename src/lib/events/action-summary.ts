@@ -1,8 +1,15 @@
-import { kinds, parseReaction, tagValues, type NostrEvent } from '../protocol';
+import {
+  kinds,
+  parseReaction,
+  tagValues,
+  type NostrEvent,
+  type ParsedReaction,
+} from '../protocol';
 
 export type ActionSummary = {
   readonly verb: string;
   readonly detail?: string;
+  readonly reaction?: ParsedReaction;
 };
 
 export function actionSummary(event: NostrEvent): ActionSummary | undefined {
@@ -23,7 +30,7 @@ function genericTarget(event: NostrEvent): string {
 
 function reactionSummary(event: NostrEvent): ActionSummary {
   const reaction = parseReaction(event);
-  if (reaction.kind === 'like') return { verb: 'liked' };
-  if (reaction.kind === 'dislike') return { verb: 'disliked' };
-  return { verb: 'reacted with', detail: reaction.display };
+  if (reaction.kind === 'like') return { verb: 'liked', reaction };
+  if (reaction.kind === 'dislike') return { verb: 'disliked', reaction };
+  return { verb: 'reacted with', detail: reaction.display, reaction };
 }

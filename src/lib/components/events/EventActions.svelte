@@ -1,12 +1,5 @@
 <script lang="ts">
-  import {
-    Heart,
-    MessageCircle,
-    Repeat2,
-    Send,
-    Smile,
-    Zap,
-  } from '@lucide/svelte';
+  import { Heart, MessageCircle, Repeat2, Send, Zap } from '@lucide/svelte';
   import type { ProfileSummary } from '$lib/identity/identity';
   import type { CustomEmoji, NostrEvent } from '$lib/protocol';
   import type { RelaySet } from '$lib/relays/relay-store';
@@ -15,10 +8,10 @@
     publishReply,
     publishRepost,
   } from '$lib/events/actions';
-  import EventEmojiPanel from './EventEmojiPanel.svelte';
+  import EmojiPaletteButton from '$lib/components/emoji/EmojiPaletteButton.svelte';
   import EventZapPanel from './EventZapPanel.svelte';
 
-  type Mode = 'none' | 'reply' | 'emoji' | 'zap';
+  type Mode = 'none' | 'reply' | 'zap';
   type Props = {
     event: NostrEvent;
     profile?: ProfileSummary;
@@ -110,18 +103,13 @@
       <Zap size={16} />
       <span class="sr-only">Zap</span>
     </button>
-    <button
-      type="button"
-      class:active={mode === 'emoji'}
-      class="icon-button"
-      title="Emoji"
-      aria-pressed={mode === 'emoji'}
+    <EmojiPaletteButton
+      customEmojis={props.profile?.customEmojis ?? []}
       disabled={busy}
-      onclick={() => (mode = mode === 'emoji' ? 'none' : 'emoji')}
-    >
-      <Smile size={16} />
-      <span class="sr-only">Emoji</span>
-    </button>
+      onUnicode={(emoji) => submitEmoji({ content: emoji })}
+      onCustom={(emoji) =>
+        submitEmoji({ content: `:${emoji.shortcode}:`, emoji })}
+    />
   </div>
   {#if mode === 'reply'}
     <form
@@ -149,12 +137,6 @@
         <span class="sr-only">Publish reply</span>
       </button>
     </form>
-  {:else if mode === 'emoji'}
-    <EventEmojiPanel
-      {busy}
-      customEmojis={props.profile?.customEmojis ?? []}
-      publish={submitEmoji}
-    />
   {:else if mode === 'zap'}
     <EventZapPanel
       event={props.event}

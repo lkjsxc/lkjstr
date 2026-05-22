@@ -1,4 +1,5 @@
 import type { NotificationKind, NotificationRecord } from './notification';
+import { parseReaction, type NostrEvent } from '../protocol';
 
 const labels: Record<NotificationKind, string> = {
   mention: 'mentioned you',
@@ -13,6 +14,22 @@ const labels: Record<NotificationKind, string> = {
 
 export function notificationActionLabel(kind: NotificationKind): string {
   return labels[kind];
+}
+
+export function notificationActionText(
+  record: NotificationRecord,
+  source?: NostrEvent,
+): string {
+  if (record.kind === 'reaction' && source) {
+    const reaction = parseReaction(source);
+    if (reaction.kind === 'like') return 'liked your post';
+    if (reaction.kind === 'dislike') return 'disliked your post';
+    return `reacted with ${reaction.display}`;
+  }
+  if (record.kind === 'repost') return 'reposted your post';
+  if (record.kind === 'quote') return 'quoted your post';
+  if (record.kind === 'zap') return 'zapped your post';
+  return notificationActionLabel(record.kind);
 }
 
 export function notificationContext(record: NotificationRecord): string | null {

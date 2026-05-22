@@ -42,8 +42,9 @@ This document records the current implemented contract for the app.
   an account requirement.
 - Notifications are background-captured relay-backed records derived from
   supported `#p` events that reference the active account. Rows show actor,
-  action label, read state, timestamp, and source content without target/root
-  context controls. The Notifications tab label never includes an unread count.
+  compact action text, timestamp, visual unread state, and a real target/root
+  event preview when the target is cached or fetched. The Notifications tab
+  label never includes an unread count.
 - Home has no hidden public fallback when the selected account or read relays
   cannot produce a feed.
 - Feed loading ends when cache exists, any relay produces events, any relay
@@ -55,8 +56,9 @@ This document records the current implemented contract for the app.
   current-session app diagnostics as a flat chronological stream.
 - Feed memory is held as resident chunks. The top of a pruned feed loads newer
   chunks, and the bottom or a short viewport loads older chunks.
-- Profile renders banner-capable summary, status, then Notes in one tab scroll
-  flow.
+- Profile renders a banner, overlapping avatar, display name, handle/NIP-05,
+  about, website, action cluster, and local loaded-post/metadata-relay counts
+  from real metadata, then Notes in one tab scroll flow.
 - Retained inactive tab bodies stay stacked at the active body size so scroll
   position and layout geometry survive tab switches.
 - Event metadata shows author control and date.
@@ -75,9 +77,11 @@ This document records the current implemented contract for the app.
   the active account's NIP-51 emoji lists and sets, shared provider or custom
   NIP-96 media upload, NIP-98 upload auth, NIP-94 `imeta` tags,
   content-derived mention and emoji tags, and signed kind `1` notes to enabled
-  write relays.
+  write relays. After signing and local queueing, the composer clears and
+  focuses immediately; only late all-relay rejection diagnostics are shown.
 - Sensitive content hides bodies, media, custom emoji images, reference
-  previews, and nested repost bodies until locally revealed.
+  previews, and nested repost bodies until locally revealed. Reveals persist
+  for the current app session across virtualization remounts.
 - Custom emoji tags render with lazy, async-decoded, no-referrer images in
   event text, nested reposts, reaction summaries, profile names, and profile
   about text when they use HTTPS image URLs. lkjstr accepts optional NIP-30
@@ -86,7 +90,7 @@ This document records the current implemented contract for the app.
 - Event references classify reply roots, reply parents, quote tags,
   `nostr:note`, `nostr:nevent`, repost, reaction, and deletion targets. Up to
   three reference cards show author metadata, preview text, media count, and a
-  compact missing-event state.
+  compact missing-event state without visible protocol labels.
 - Event repository lookup uses direct id reads, batched id reads, and tag-value
   indexes for thread, reference, reaction, and notification reloads.
 - Stats shows current-session relay counters, subscription ids, OK counts,

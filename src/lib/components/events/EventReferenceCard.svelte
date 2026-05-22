@@ -34,7 +34,9 @@
   onkeydown={(event) =>
     event.key === 'Enter' && open(props.reference.id, event)}
 >
-  <strong>{eventReferenceLabel(props.reference as EventReference)}</strong>
+  <strong class="sr-only">
+    {eventReferenceLabel(props.reference as EventReference)}
+  </strong>
   {#if event}
     <EventMeta
       {event}
@@ -49,6 +51,6 @@
     {/if}
     {#if mediaCount > 0}<small>{mediaCount} media attachment(s)</small>{/if}
   {:else}
-    <p>Referenced event not found.</p>
+    <p>Event unavailable.</p>
   {/if}
 </div>

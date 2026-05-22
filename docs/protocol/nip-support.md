@@ -23,6 +23,9 @@ unimplemented behavior.
 - NIP-30 custom emoji tags, optional kind `30030` emoji-set addresses, custom
   emoji reactions, HTTPS emoji rendering, and strict project shortcodes limited
   to `[A-Za-z0-9_]`.
+- lkjstr keeps that stricter shortcode rule even when upstream NIP-30 accepts
+  additional characters; invalid incoming custom emoji shortcodes render as
+  plain text and are never emitted by lkjstr.
 - NIP-51 kind `10030` emoji lists and kind `30030` emoji sets for active-account
   custom emoji choices.
 - NIP-36 sensitive content gates.

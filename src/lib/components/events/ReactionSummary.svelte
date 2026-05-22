@@ -13,6 +13,7 @@
     reactions?: readonly ReactionGroup[];
     reposts?: RepostGroup;
     profiles?: Record<string, ProfileSummary>;
+    activeAccountPubkey?: string | null;
     openProfile?: (pubkey: string) => void;
   };
 
@@ -41,6 +42,9 @@
       <li>
         <button
           type="button"
+          class:reaction-summary__own={reaction.actors.includes(
+            props.activeAccountPubkey ?? '',
+          )}
           aria-expanded={expanded === id}
           aria-controls={id}
           onclick={() => toggle(id)}

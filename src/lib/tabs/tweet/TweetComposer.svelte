@@ -21,7 +21,6 @@
     uploadSettings: UploadSettings;
     canPublish: boolean;
     message: string;
-    confirmedRelays: string;
     touchDraft: () => void;
     flushDraft: () => Promise<void>;
     uploadFiles: (files: FileList | File[]) => Promise<void>;

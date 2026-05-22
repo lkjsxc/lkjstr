@@ -22,8 +22,9 @@ Tweet is the single note authoring surface.
   right.
 - Unicode emoji selection inserts at the textarea cursor.
 - Custom emoji selection inserts `:shortcode:` at the cursor and persists that
-  emoji in draft state. Publishing emits NIP-30 `emoji` tags only for selected
-  shortcodes used in the note body.
+  emoji in draft state. Manually typed valid `:shortcode:` tokens are resolved
+  against the active account emoji source at publish time, and publishing emits
+  NIP-30 `emoji` tags only for used shortcodes.
 - Custom emoji choices come from the active account's kind `10030` emoji list,
   direct `emoji` tags, and referenced kind `30030` emoji sets discovered from
   cache first and then selected read relays.
@@ -37,8 +38,9 @@ Tweet is the single note authoring surface.
   `imeta` tags.
 - Publishing derives profile mention, event mention, quote, and custom emoji
   tags from the note body without duplicating existing media or warning tags.
-- Publish controls show active work and confirmed relay counts without leaving
-  a stale generic published state. Successful publish clears content, media,
-  custom emoji, sensitive state, tab draft and old `main` draft, then focuses
-  the editor.
+- Publish controls show active signing work without persistent success text or
+  relay-count status. After signing, local storage, and relay queueing succeed,
+  Tweet clears content, media, custom emoji, sensitive state, tab draft and old
+  `main` draft, then focuses the editor. Late diagnostics are shown only when
+  every relay rejects the event or relay publishing fails.
 - Tweet does not bypass relay settings or bundle a public media host.

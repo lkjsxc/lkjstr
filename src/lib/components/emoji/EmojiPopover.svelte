@@ -1,3 +1,12 @@
+<script lang="ts" module>
+  let pickerModule: Promise<unknown> | undefined;
+
+  function loadEmojiPicker(): Promise<unknown> {
+    pickerModule ??= import('emoji-picker-element');
+    return pickerModule;
+  }
+</script>
+
 <script lang="ts">
   import { onMount } from 'svelte';
   import type { CustomEmoji } from '$lib/protocol';
@@ -15,7 +24,7 @@
   const pickerTag = 'emoji-picker';
 
   onMount(() => {
-    void import('emoji-picker-element');
+    void loadEmojiPicker();
     const choose = (event: Event) => {
       const detail = (event as CustomEvent<{ unicode?: string }>).detail;
       if (!detail?.unicode) return;

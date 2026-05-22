@@ -32,6 +32,7 @@
   let state = $state<NotificationViewState>({
     records: [],
     items: [],
+    targetItems: [],
     loading: true,
     error: null,
     loadingOlder: false,
@@ -42,6 +43,9 @@
   });
   let itemById: Map<string, FeedEvent> = $derived(
     new Map(state.items.map((item) => [item.event.id, item])),
+  );
+  let targetItemById: Map<string, FeedEvent> = $derived(
+    new Map(state.targetItems.map((item) => [item.event.id, item])),
   );
   let relays: string[] = [];
   let runtimeKey = $derived(
@@ -80,6 +84,7 @@
       ...new Set([
         ...state.records.map((record) => record.actorPubkey),
         ...state.items.map((item) => item.event.pubkey),
+        ...state.targetItems.map((item) => item.event.pubkey),
       ]),
     ];
     const missing = authors
@@ -121,6 +126,9 @@
         <NotificationRow
           {record}
           item={itemById.get(record.sourceEventId)}
+          targetItem={targetItemById.get(
+            record.targetEventId ?? record.rootEventId ?? '',
+          )}
           profile={state.profiles[record.actorPubkey]}
           profiles={state.profiles}
           openProfile={props.openProfile}

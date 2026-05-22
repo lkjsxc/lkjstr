@@ -81,9 +81,8 @@ Profile, Thread, embeds, and Notifications.
 - `nostr:note` decodes to a compact event mention and opens Thread.
 - `nostr:nevent` decodes to an event mention, preserves relay hints for entity
   text, reference resolution, and publish tags, and opens Thread.
-- Event mentions render as compact buttons instead of raw entity strings. When
-  a referenced event is cached or relay-resolved, the chip can show author
-  identity, a short event id, and an excerpt.
+- Event mentions render as compact buttons instead of raw entity strings only
+  when the same event is not expanded as a reference card below the content.
 - Event mention tokens are hidden when the same event is expanded as a
   reference below the content.
 - Normal `https://` URLs render as links.
@@ -99,10 +98,10 @@ Profile, Thread, embeds, and Notifications.
 
 ## Embeds
 
-Event embeds are rendered from verified events only. The resolver checks cache
-first, batches relay reads by `ids`, stores verified hits, caps missing lookups,
-and prevents recursive loops. Missing, deleted, quote, repost, reply, reaction,
-and deletion states have explicit display rows.
+Event embeds are rendered from real events only. The resolver checks cache
+first, batches relay reads by `ids`, stores hits, uses a short in-memory TTL
+for misses and hits, shares in-flight lookups, caps missing lookups, and
+prevents recursive loops. Missing targets render as compact unavailable cards.
 
 Action events use target precedence. Reposts, reactions, and deletions expose
 only their action target references for preview lookup; reply-root tags on those
@@ -117,7 +116,20 @@ reference extraction and the shared event renderer own this dedupe so Home,
 Global, Profile, Thread, and Notifications render the same preview set.
 
 Referenced event previews load author profiles when possible and render
-identity UI instead of public-key slices.
+identity UI instead of public-key slices. Visible protocol labels such as
+reply, reaction, and referenced event are screen-reader-only by default.
+
+## Reactions
+
+Kind `7` reaction parsing is structured:
+
+- `+` and empty content are likes and render as hearts.
+- `-` is a dislike.
+- Unicode content is an emoji reaction.
+- `:shortcode:` content is a custom emoji reaction only when a matching valid
+  NIP-30 `emoji` tag exists on the reaction event.
+- Reaction groups include the custom emoji URL and optional address in their
+  grouping key, so the same shortcode with different media remains distinct.
 
 ## Media
 

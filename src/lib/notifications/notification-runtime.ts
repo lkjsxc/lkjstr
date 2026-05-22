@@ -9,6 +9,7 @@ import {
 import { olderRelaySubscriptionId } from '../relays/subscription-id';
 import { deriveNotifications } from './notification-index';
 import type { NotificationRecord } from './notification';
+import { notificationContextEventId } from './notification-presentation';
 import {
   accountNotifications,
   markAccountNotificationsRead,
@@ -20,6 +21,7 @@ export const notificationEventKinds = [0, 1, 6, 7, 16, 9735] as const;
 export type NotificationState = {
   readonly records: readonly NotificationRecord[];
   readonly items: readonly FeedEvent[];
+  readonly targetItems: readonly FeedEvent[];
   readonly loading: boolean;
   readonly error: string | null;
   readonly loadingOlder: boolean;
@@ -148,15 +150,21 @@ export class NotificationRuntime {
       ? await accountNotifications(this.accountPubkey, this.#pageSize)
       : [];
     if (!this.#active(generation)) return;
-    const items = await lookupEvents(
-      records.map((record) => record.sourceEventId),
-    );
+    const [items, targetItems] = await Promise.all([
+      lookupEvents(records.map((record) => record.sourceEventId)),
+      lookupEvents(
+        records
+          .map(notificationContextEventId)
+          .filter((id): id is string => Boolean(id)),
+      ),
+    ]);
     if (!this.#active(generation)) return;
     const pruned = items.length > feedWindowSize;
     this.#emit({
       ...this.#state,
       records: pruned ? records.slice(-feedWindowSize) : records,
       items: pruned ? items.slice(-feedWindowSize) : items,
+      targetItems: pruned ? targetItems.slice(-feedWindowSize) : targetItems,
       loading,
       error: null,
       newerPruned: this.#state.newerPruned || pruned,
@@ -181,6 +189,7 @@ function emptyState(): NotificationState {
   return {
     records: [],
     items: [],
+    targetItems: [],
     loading: true,
     error: null,
     loadingOlder: false,

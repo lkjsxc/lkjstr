@@ -15,6 +15,10 @@
   import EventMeta from './EventMeta.svelte';
   import MediaAttachment from './MediaAttachment.svelte';
   import { loadSettings } from '$lib/settings/settings-store';
+  import {
+    isSensitiveEventRevealed,
+    revealSensitiveEvent,
+  } from '$lib/events/sensitive-reveal';
 
   type Props = {
     event: NostrEvent;
@@ -27,7 +31,7 @@
 
   let props: Props = $props();
   let hideSensitive = $state(true);
-  let revealed = $state(false);
+  let revealed = $derived(isSensitiveEventRevealed(props.event.id));
   let nested = $derived(verifiedNestedRepost(props.event));
   let summary = $derived(actionSummary(props.event));
   let sensitive = $derived(hasContentWarning(props.event));
@@ -62,6 +66,7 @@
       type="button"
       onclick={(event) => {
         event.stopPropagation();
+        revealSensitiveEvent(props.event.id);
         revealed = true;
       }}>Reveal</button
     >
@@ -94,7 +99,7 @@
   {/if}
   {#if nested}
     <aside class="event-embed" data-kind="nested-repost">
-      <strong>Reposted event</strong>
+      <strong class="sr-only">Reposted event</strong>
       <EventMeta
         event={nested}
         relays={[]}

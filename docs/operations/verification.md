@@ -67,11 +67,14 @@ Run `pnpm check:repo` after documentation changes before code work continues.
   renders as an image, video, or audio attachment.
 - `nostr:npub` and `nostr:nprofile` clicks open Profile; `nostr:note` and
   `nostr:nevent` clicks open Thread in the same tile.
-- Notifications show actor/action rows with event content second in a vertical
-  layout.
+- Notifications show compact actor/action rows and target/root event previews
+  for reactions, reposts, replies, and quotes when the referenced event is
+  available.
 - Notification records without `targetEventId` or `rootEventId` do not call
   Thread navigation with an empty id.
 - Quote and reference previews are deduped by event id.
+- Tweet publish clears and focuses the composer after signing/local queueing
+  without showing persistent `Sent to` or `Published` success text.
 - Inactive feed tabs stay mounted through `tabs.inactiveRetentionSeconds`, then
   close owned subscriptions after expiry.
 - Changing `tabs.inactiveRetentionSeconds`, closing a tab, or retention expiry

@@ -17,7 +17,6 @@
     uploadSettings: UploadSettings;
     canPublish: boolean;
     message: string;
-    confirmedRelays: string;
     focusNonce: number;
     touchDraft: () => void;
     flushDraft: () => Promise<void>;
@@ -49,7 +48,6 @@
   uploadSettings={props.uploadSettings}
   canPublish={props.canPublish}
   message={props.message}
-  confirmedRelays={props.confirmedRelays}
   focusNonce={props.focusNonce}
   touchDraft={props.touchDraft}
   flushDraft={props.flushDraft}

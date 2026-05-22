@@ -1,9 +1,60 @@
 .profile-card__banner {
-  aspect-ratio: 4 / 1;
-  border-radius: var(--radius-panel);
-  max-height: 10rem;
+  height: 100%;
   object-fit: cover;
   width: 100%;
+}
+
+.profile-card__banner-wrap {
+  background: color-mix(in srgb, var(--color-focus) 14%, var(--color-surface));
+  border-radius: var(--radius-panel);
+  height: clamp(7rem, 24vw, 13rem);
+  overflow: hidden;
+}
+
+.profile-card__main {
+  align-items: end;
+  display: grid;
+  gap: var(--space-3);
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  margin-top: -2.25rem;
+  padding: 0 var(--space-3);
+}
+
+.profile-card__avatar .avatar.lg {
+  border: 3px solid var(--color-surface);
+  height: 5rem;
+  width: 5rem;
+}
+
+.profile-card__identity {
+  display: grid;
+  gap: var(--space-1);
+  min-width: 0;
+}
+
+.profile-card__identity h2,
+.profile-card__identity p {
+  margin: 0;
+}
+
+.profile-card__identity h2 {
+  font-size: 1.4rem;
+}
+
+.profile-card__identity p,
+.profile-card__identity small,
+.profile-card__facts {
+  color: var(--color-text-muted);
+}
+
+.profile-card__actions {
+  align-self: center;
+}
+
+.profile-card__facts {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
 }
 
 .avatar.sm {

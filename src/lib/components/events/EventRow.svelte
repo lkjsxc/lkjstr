@@ -19,6 +19,7 @@
     reactions?: readonly ReactionGroup[];
     reposts?: RepostGroup;
     profiles?: Record<string, ProfileSummary>;
+    activeAccountPubkey?: string | null;
     openProfile?: (pubkey: string) => void;
     openThread?: (eventId: string) => void;
   };
@@ -102,6 +103,7 @@
       reactions={props.reactions}
       reposts={props.reposts}
       profiles={props.profiles}
+      activeAccountPubkey={props.activeAccountPubkey}
       openProfile={props.openProfile}
     />
   </div>

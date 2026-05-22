@@ -37,7 +37,6 @@
   let content = $state('');
   let message = $state('');
   let publishing = $state(false);
-  let confirmedRelays = $state('');
   let uploading = $state(false);
   let sensitive = $state(false);
   let warningReason = $state('');
@@ -46,9 +45,13 @@
   let customEmojis = $state<CustomEmoji[]>([]);
   let availableCustomEmojis = $state<CustomEmoji[]>([]);
   let focusNonce = $state(0);
+  let emojiLoadRequest = 0;
   let draftTouched = false;
   let saveTimer: ReturnType<typeof setTimeout> | undefined;
   let draftId = $derived(`tab:${props.tabId}`);
+  let emojiSourceKey = $derived(
+    `${props.activeAccount?.pubkey ?? ''}|${timelineRelays(props.relaySets).join('\u0000')}`,
+  );
   let hasSigner = $derived(Boolean(props.activeAccount?.capabilities.sign));
   let canPublish = $derived(
     !publishing &&
@@ -67,14 +70,21 @@
     };
   });
 
+  $effect(() => {
+    const key = emojiSourceKey;
+    if (key === undefined) return;
+    const request = ++emojiLoadRequest;
+    const pubkey = props.activeAccount?.pubkey;
+    const relays = timelineRelays(props.relaySets);
+    void loadAccountEmojiSource({ pubkey, relays }).then((emoji) => {
+      if (request === emojiLoadRequest) availableCustomEmojis = emoji;
+    });
+  });
+
   async function loadInitialState(): Promise<void> {
-    const [draft, settings, sourceEmoji] = await Promise.all([
+    const [draft, settings] = await Promise.all([
       loadTweetDraftWithLegacy(draftId),
       loadTweetUploadSettings(),
-      loadAccountEmojiSource({
-        pubkey: props.activeAccount?.pubkey,
-        relays: timelineRelays(props.relaySets),
-      }),
     ]);
     if (!draftTouched) {
       content = draft?.content ?? '';
@@ -84,12 +94,10 @@
       warningReason = draft?.contentWarningReason ?? '';
     }
     uploadSettings = settings;
-    availableCustomEmojis = sourceEmoji;
   }
 
-  async function loadUploadSettings(): Promise<void> {
-    uploadSettings = await loadTweetUploadSettings();
-  }
+  // prettier-ignore
+  async function loadUploadSettings(): Promise<void> { uploadSettings = await loadTweetUploadSettings(); }
 
   function touchDraft(): void {
     draftTouched = true;
@@ -117,7 +125,6 @@
   async function publish(): Promise<void> {
     if (!canPublish) return;
     publishing = true;
-    confirmedRelays = '';
     message = '';
     await flushDraft();
     const result = await publishTweet(
@@ -126,7 +133,7 @@
       tweetPublishTags({
         content,
         attachments,
-        customEmojis,
+        customEmojis: [...availableCustomEmojis, ...customEmojis],
         sensitive,
         warningReason,
       }),
@@ -136,17 +143,17 @@
       message = result.message;
       return;
     }
-    const accepted = result.results.filter((item) => item.accepted).length;
-    confirmedRelays = `${accepted}/${result.results.length}`;
-    message = `Sent to ${confirmedRelays} relays.`;
     content = '';
     attachments = [];
     customEmojis = [];
     sensitive = false;
     warningReason = '';
+    message = '';
     await Promise.all([clearTweetDraft(draftId), clearTweetDraft('main')]);
     await tick();
     focusNonce += 1;
+    // prettier-ignore
+    void result.delivery.then((results) => { if (results.every((item) => !item.accepted)) message = 'All relays rejected the event.'; }).catch((error) => { message = error instanceof Error ? error.message : 'Relay publishing failed.'; });
   }
 
   async function uploadFiles(files: FileList | File[]): Promise<void> {
@@ -171,10 +178,8 @@
     }
   }
 
-  function handlePaste(event: ClipboardEvent): void {
-    const files = event.clipboardData?.files;
-    if (files?.length) void uploadFiles(files);
-  }
+  // prettier-ignore
+  function handlePaste(event: ClipboardEvent): void { const files = event.clipboardData?.files; if (files?.length) void uploadFiles(files); }
 
   function removeAttachment(url: string): void {
     attachments = attachments.filter((item) => item.url !== url);
@@ -182,12 +187,11 @@
     void flushDraft();
   }
 
-  function addCustomEmoji(emoji: CustomEmoji): void {
-    customEmojis = upsertCustomEmoji(customEmojis, emoji);
-  }
+  // prettier-ignore
+  function addCustomEmoji(emoji: CustomEmoji): void { customEmojis = upsertCustomEmoji(customEmojis, emoji); }
 </script>
 
 <section class="data-tab" aria-label="Tweet">
   <!-- prettier-ignore -->
-  <TweetTabView tabId={props.tabId} bind:sensitive bind:warningReason bind:content {attachments} customEmojis={[...availableCustomEmojis, ...customEmojis]} {uploading} {publishing} {hasSigner} {uploadSettings} {canPublish} {message} {confirmedRelays} {focusNonce} {touchDraft} {flushDraft} {uploadFiles} {publish} {removeAttachment} {handlePaste} addCustomEmoji={addCustomEmoji} />
+  <TweetTabView tabId={props.tabId} bind:sensitive bind:warningReason bind:content {attachments} customEmojis={[...availableCustomEmojis, ...customEmojis]} {uploading} {publishing} {hasSigner} {uploadSettings} {canPublish} {message} {focusNonce} {touchDraft} {flushDraft} {uploadFiles} {publish} {removeAttachment} {handlePaste} addCustomEmoji={addCustomEmoji} />
 </section>

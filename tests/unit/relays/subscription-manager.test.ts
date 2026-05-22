@@ -32,25 +32,33 @@ describe('subscription manager', () => {
     const pool = new RelayPool();
     const event = nostrEvent('a');
     const cleanup = vi.fn();
-    vi.spyOn(pool, 'subscribe').mockReturnValue(cleanup);
-    vi.spyOn(pool, 'onEvent').mockImplementation((handler) => {
+    let onEvent:
+      | ((event: Parameters<Parameters<typeof pool.onEvent>[0]>[0]) => void)
+      | undefined;
+    let onState:
+      | ((snapshots: Parameters<Parameters<typeof pool.onState>[0]>[0]) => void)
+      | undefined;
+    vi.spyOn(pool, 'subscribe').mockImplementation((_relays, subId) => {
+      setTimeout(() => onEvent?.({ relay: 'relay.example', subId, event }));
       setTimeout(() =>
-        handler({ relay: 'relay.example', subId: 'page', event }),
-      );
-      return vi.fn();
-    });
-    vi.spyOn(pool, 'onState').mockImplementation((handler) => {
-      setTimeout(() =>
-        handler([
+        onState?.([
           {
             url: 'relay.example',
             state: 'open',
             diagnostics: [],
-            eoseBySub: { page: true },
+            eoseBySub: { [subId]: true },
             closedBySub: {},
           },
         ]),
       );
+      return cleanup;
+    });
+    vi.spyOn(pool, 'onEvent').mockImplementation((handler) => {
+      onEvent = handler;
+      return vi.fn();
+    });
+    vi.spyOn(pool, 'onState').mockImplementation((handler) => {
+      onState = handler;
       return vi.fn();
     });
     const manager = new RelaySubscriptionManager(pool);
@@ -58,27 +66,35 @@ describe('subscription manager', () => {
       { key: 'page', relays: ['relay.example'], filters: [{ kinds: [1] }] },
       { timeoutMs: 50 },
     );
-    expect(page).toEqual([{ relay: 'relay.example', subId: 'page', event }]);
+    expect(page).toEqual([
+      { relay: 'relay.example', subId: expect.any(String), event },
+    ]);
     expect(cleanup).toHaveBeenCalledOnce();
   });
 
   it('treats relay CLOSED as terminal for one-shot page reads', async () => {
     const pool = new RelayPool();
     const cleanup = vi.fn();
-    vi.spyOn(pool, 'subscribe').mockReturnValue(cleanup);
-    vi.spyOn(pool, 'onEvent').mockReturnValue(vi.fn());
-    vi.spyOn(pool, 'onState').mockImplementation((handler) => {
+    vi.spyOn(pool, 'subscribe').mockImplementation((_relays, subId) => {
       setTimeout(() =>
-        handler([
+        onState?.([
           {
             url: 'relay.example',
             state: 'open',
             diagnostics: [],
             eoseBySub: {},
-            closedBySub: { page: 'too large' },
+            closedBySub: { [subId]: 'too large' },
           },
         ]),
       );
+      return cleanup;
+    });
+    vi.spyOn(pool, 'onEvent').mockReturnValue(vi.fn());
+    let onState:
+      | ((snapshots: Parameters<Parameters<typeof pool.onState>[0]>[0]) => void)
+      | undefined;
+    vi.spyOn(pool, 'onState').mockImplementation((handler) => {
+      onState = handler;
       return vi.fn();
     });
     const manager = new RelaySubscriptionManager(pool);
@@ -96,13 +112,36 @@ describe('subscription manager', () => {
     const subscribe = vi.spyOn(pool, 'subscribe').mockReturnValue(cleanup);
     const manager = new RelaySubscriptionManager(pool);
     const key = `embed:${'a'.repeat(120)}`;
-    manager.subscribeLive(
-      { key, relays: ['relay.example'], filters: [{ kinds: [1] }] },
-      () => undefined,
-    );
+    const request = {
+      key,
+      relays: ['relay.example'],
+      filters: [{ kinds: [1] }],
+    };
+    manager.subscribeLive(request, () => undefined);
     const sentId = subscribe.mock.calls[0]?.[1];
     expect(sentId).toBe(relayFacingSubId(key));
     expect(sentId?.length).toBeLessThanOrEqual(maxRelaySubscriptionIdLength);
+  });
+
+  it('uses distinct relay ids for reads with the same key but different filters', async () => {
+    const pool = new RelayPool();
+    const cleanup = vi.fn();
+    const subscribe = vi.spyOn(pool, 'subscribe').mockReturnValue(cleanup);
+    vi.spyOn(pool, 'onEvent').mockReturnValue(vi.fn());
+    vi.spyOn(pool, 'onState').mockReturnValue(vi.fn());
+    const manager = new RelaySubscriptionManager(pool);
+
+    const first = manager.readPage(
+      { key: 'same', relays: ['relay.example'], filters: [{ kinds: [1] }] },
+      { timeoutMs: 1 },
+    );
+    const second = manager.readPage(
+      { key: 'same', relays: ['relay.example'], filters: [{ kinds: [7] }] },
+      { timeoutMs: 1 },
+    );
+    await Promise.all([first, second]);
+
+    expect(subscribe.mock.calls[0]?.[1]).not.toBe(subscribe.mock.calls[1]?.[1]);
   });
 });
 

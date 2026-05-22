@@ -1,11 +1,11 @@
 import { kinds, type NostrTag } from '../protocol';
 import {
-  signAndPublish,
-  type EventPublishStatus,
+  signAndStartPublishing,
+  type EventQueuedPublishStatus,
 } from '../events/publish-event';
 import type { RelaySet } from '../relays/relay-store';
 
-export type TweetPublishStatus = EventPublishStatus;
+export type TweetPublishStatus = EventQueuedPublishStatus;
 
 export async function publishTweet(
   content: string,
@@ -14,7 +14,7 @@ export async function publishTweet(
 ): Promise<TweetPublishStatus> {
   const text = content.trim();
   if (!text) return { ok: false, message: 'Write a note before publishing.' };
-  return signAndPublish(
+  return signAndStartPublishing(
     (pubkey) => ({
       pubkey,
       created_at: Math.floor(Date.now() / 1000),

@@ -27,6 +27,11 @@
   padding: 0 var(--space-2);
 }
 
+.reaction-summary button.reaction-summary__own {
+  background: color-mix(in srgb, var(--color-focus) 12%, transparent);
+  border-color: var(--color-focus);
+}
+
 .reaction-summary__actors {
   background: var(--color-bg-elevated);
   border: 1px solid var(--color-border);

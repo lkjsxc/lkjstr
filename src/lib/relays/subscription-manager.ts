@@ -21,6 +21,9 @@ export type ReadPageOptions = {
 export class RelaySubscriptionManager {
   #entries = new Map<string, Entry>();
   #pool: RelayPool;
+  #readSeq = 0;
+  #activeReadBaseIds = new Set<string>();
+  #usedReadRequestKeys = new Set<string>();
 
   constructor(pool: RelayPool = sharedRelayPool) {
     this.#pool = pool;
@@ -60,7 +63,14 @@ export class RelaySubscriptionManager {
     options: ReadPageOptions = {},
   ): Promise<PoolEvent[]> {
     const events: PoolEvent[] = [];
-    const subId = relayFacingSubId(request.key);
+    const requestKey = subscriptionKey(request);
+    const baseSubId = relayFacingSubId(request.key);
+    const subId =
+      this.#activeReadBaseIds.has(baseSubId) ||
+      this.#usedReadRequestKeys.has(requestKey)
+        ? relayFacingSubId(`${requestKey}:${++this.#readSeq}`)
+        : baseSubId;
+    this.#activeReadBaseIds.add(baseSubId);
     const offEvent = this.#pool.onEvent((event) => {
       if (event.subId === subId) events.push(event);
     });
@@ -83,6 +93,8 @@ export class RelaySubscriptionManager {
     });
     offEvent();
     close();
+    this.#activeReadBaseIds.delete(baseSubId);
+    this.#usedReadRequestKeys.add(requestKey);
     return events;
   }
 

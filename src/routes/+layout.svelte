@@ -7,6 +7,7 @@
   import '../styles/workspace-tabs.css';
   import '../styles/workspace-menu.css';
   import '../styles/timeline.css';
+  import '../styles/notifications.css';
   import '../styles/content-warning.css';
   import '../styles/mentions.css';
   import '../styles/reactions.css';

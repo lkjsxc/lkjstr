@@ -22,7 +22,8 @@ test('Ctrl+Enter publishes a Tweet through the relay', async ({ page }) => {
   await openTweet(page);
   await page.getByLabel('Tweet content').fill('keyboard publish');
   await page.getByLabel('Tweet content').press('Control+Enter');
-  await expect(page.getByText(/Sent to/)).toBeVisible();
+  await expect(page.getByLabel('Tweet content')).toHaveValue('');
+  await expect(page.getByText(/Sent to|Published/)).toHaveCount(0);
   await expect(page.getByText('Attach emoji')).toHaveCount(0);
   expect(await publishedKinds(page)).toContain(1);
 });

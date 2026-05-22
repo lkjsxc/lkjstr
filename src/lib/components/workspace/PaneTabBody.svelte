@@ -140,6 +140,7 @@
   <ThreadTab
     tabId={props.tab.id}
     eventId={String(props.tab.config.eventId ?? '')}
+    activeAccountPubkey={props.activeAccount?.pubkey}
     relaySets={props.relaySets}
     openProfile={(pubkey) => props.openProfile(props.paneId, pubkey)}
     openThread={(eventId) => props.openThread(props.paneId, eventId)}

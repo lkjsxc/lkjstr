@@ -6,6 +6,7 @@ import {
 } from '../../../src/lib/notifications/notification-index';
 import {
   notificationActionLabel,
+  notificationActionText,
   notificationContext,
   notificationContextEventId,
 } from '../../../src/lib/notifications/notification-presentation';
@@ -46,6 +47,20 @@ describe('notification index', () => {
     expect(notificationActionLabel('profile-reference')).toBe(
       'referenced your profile',
     );
+  });
+
+  it('formats compact reaction notification text from the source event', () => {
+    const record = deriveNotifications(accountPubkey, {
+      ...event,
+      kind: 7,
+      content: '+',
+    })[0];
+    expect(
+      notificationActionText(record, { ...event, kind: 7, content: '+' }),
+    ).toBe('liked your post');
+    expect(
+      notificationActionText(record, { ...event, kind: 7, content: '☆' }),
+    ).toBe('reacted with ☆');
   });
 
   it('does not create follow notifications from kind 3 follow lists', () => {

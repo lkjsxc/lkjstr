@@ -9,10 +9,26 @@ export type EventPublishStatus =
   | { ok: true; event: NostrEvent; results: PublishResult[] }
   | { ok: false; message: string };
 
+export type EventQueuedPublishStatus =
+  | { ok: true; event: NostrEvent; delivery: Promise<PublishResult[]> }
+  | { ok: false; message: string };
+
 export async function signAndPublish(
   build: (pubkey: string) => UnsignedNostrEvent,
   relaySets: readonly RelaySet[],
 ): Promise<EventPublishStatus> {
+  const queued = await signAndStartPublishing(build, relaySets);
+  if (!queued.ok) return queued;
+  const results = await queued.delivery;
+  if (results.every((result) => !result.accepted))
+    return { ok: false, message: 'All relays rejected the event.' };
+  return { ok: true, event: queued.event, results };
+}
+
+export async function signAndStartPublishing(
+  build: (pubkey: string) => UnsignedNostrEvent,
+  relaySets: readonly RelaySet[],
+): Promise<EventQueuedPublishStatus> {
   const signer = await resolveSigner();
   if (!signer.ok) return signer;
   const relays = enabledWriteRelays(relaySets);
@@ -20,10 +36,7 @@ export async function signAndPublish(
     return { ok: false, message: 'Enable at least one write relay.' };
   const event = await signer.signEvent(build(signer.account.pubkey));
   await storeTimelineEvent(event);
-  const results = await sharedRelayPool.publish(relays, event);
-  if (results.every((result) => !result.accepted))
-    return { ok: false, message: 'All relays rejected the event.' };
-  return { ok: true, event, results };
+  return { ok: true, event, delivery: sharedRelayPool.publish(relays, event) };
 }
 
 async function resolveSigner() {

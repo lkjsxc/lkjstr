@@ -15,12 +15,18 @@ aligned in the same change, keep source files under 200 lines, keep docs under
 - The root route renders the workspace app.
 - Tiles have a tab strip, plus button, tile menu, and persistent resize state.
 - New Tab offers Welcome, Home, Search, Global, Relay Settings, lkjstr Log,
-  Notifications, Accounts, Mine npub, Tweet, Profile Edit, and Settings.
+  Notifications, Accounts, Mine npub, Tweet, Profile Edit, Stats, Upload
+  Settings, and Settings.
 - Profile tabs open from identity clicks. Profile Edit opens for active-account
   metadata editing. Thread tabs open from event clicks.
 - Settings are one flat key-value list.
 - Home, Global, Notifications, Profile, and Thread reads use the selected
   default relay set. Tweet writes use enabled write relays in that set.
+- Tweet publish clears after local signing and queueing, not after relay OKs.
+- Custom emoji shortcodes are intentionally stricter than upstream NIP-30:
+  lkjstr emits only letters, numbers, and underscores.
+- Notification and reference previews must be backed by real events or a
+  compact unavailable state; do not add mock preview content.
 - Partial relay failure stays diagnostic and must not block reachable relays.
 - Disabled or removed relays are excluded until the user enables or restores
   them.

@@ -17,6 +17,7 @@
   type Props = {
     tabId: string;
     eventId?: string;
+    activeAccountPubkey?: string | null;
     relaySets: readonly RelaySet[];
     openProfile: (pubkey: string) => void;
     openThread: (eventId: string) => void;
@@ -97,6 +98,7 @@
       items={state.items}
       profiles={state.profiles}
       relaySets={props.relaySets}
+      activeAccountPubkey={props.activeAccountPubkey}
       reactions={state.reactions}
       reposts={state.reposts}
       loading={state.loading}
