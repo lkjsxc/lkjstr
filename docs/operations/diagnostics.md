@@ -13,6 +13,7 @@ runtime, so failures must be inspectable without server logs.
 - cache health.
 - signer availability.
 - oversized relay message rejection.
+- send queue overflow when a relay socket has not opened.
 - app heap and runtime feed counters during heavy-feed smoke tests.
 - persisted relay attempt, success, failure, last-connected, and last-error
   evidence where relay settings record it.
@@ -34,6 +35,16 @@ severity, code, message, and redacted context, and it is cleared by reload.
 lkjstr Log presents diagnostics as one chronological stream. Relay diagnostics
 use `area: relay`; runtime, storage, signer, cache, and subscription failures
 use the same surface. Message and context fields wrap within the tile.
+
+Repeated identical relay diagnostics are throttled in the app log for
+`10` seconds by relay, subscription id, kind, and message. The first row is
+shown immediately; suppressed repeats are counted, and the next visible row
+adds a bounded `repeats suppressed` suffix. Relay snapshots and relay session
+counters still record the raw behavior.
+
+Oversized relay messages are size-aware diagnostics. They include measured
+bytes and the configured `512 KiB` limit, skip JSON parsing, and do not store
+the payload.
 
 Stats and Relay Settings show persisted relay and job summaries. They must not
 duplicate lkjstr Log rows.

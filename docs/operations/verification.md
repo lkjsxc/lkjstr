@@ -36,9 +36,14 @@ Focused relay paging changes should also run:
 
 ```sh
 pnpm check:repo
-pnpm test -- tests/unit/events/relay-page.test.ts
-pnpm test -- tests/unit/profile
-pnpm test -- tests/unit/search tests/unit/thread tests/unit/timeline
+pnpm test -- tests/unit/relays/relay-message-data.test.ts tests/unit/relays/relay-diagnostic-log.test.ts tests/unit/relays/relay-discovery.test.ts
+pnpm test -- tests/unit/relays/relay-client.test.ts tests/unit/relays/relay-routing.test.ts tests/unit/profile/profile-runtime-paging.test.ts
+pnpm verify
+docker compose -f docker-compose.yml config
+docker compose -f docker-compose.yml build app verify e2e cloudflare
+docker compose -f docker-compose.yml run --rm verify
+docker compose -f docker-compose.yml run --rm e2e
+docker compose -f docker-compose.yml run --rm cloudflare
 ```
 
 ## Gate

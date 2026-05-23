@@ -12,7 +12,7 @@ relays into Relay Settings or relying on a backend proxy.
 - NIP-02 kind `3` `p` tag relay hints add followed-author routes.
 - `nevent`, `naddr`, `e`, and `q` tag relay hints add event lookup routes.
 - Event relay receipts add local evidence for exact event and author routes.
-- Discovery relays are only used for kind `0`, `3`, and `10002` metadata
+- Discovery relays are only used for metadata and relay-list metadata
   discovery.
 
 ## Priority
@@ -22,7 +22,7 @@ relays into Relay Settings or relying on a backend proxy.
 3. NIP-65 author routes for the requested purpose.
 4. NIP-02 follow hints.
 5. Selected read relays.
-6. Discovery relays for metadata discovery only.
+6. Discovery relays for metadata and relay-list metadata discovery only.
 
 ## Bounds
 
@@ -49,6 +49,11 @@ The default discovery relays are:
 
 Discovery results are runtime route evidence. They do not silently change Relay
 Settings and do not overwrite disabled relay records.
+
+Bulk author route discovery requests only kind `10002` relay-list metadata.
+Kind `3` relay hints are stored from observed follow-list events, not broad
+discovery sweeps. Profile post and content reads exclude discovery relays unless
+the user explicitly selected or imported the same relay.
 
 ## Non-Goals
 

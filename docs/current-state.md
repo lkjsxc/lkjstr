@@ -22,6 +22,10 @@ This document records the current implemented contract for the app.
   tab lifecycle, retention, and startup recovery.
 - [architecture/network/job-manager.md](architecture/network/job-manager.md):
   persisted job trees, hydration, stale startup marking, and cancellation.
+- [architecture/network/relay-pool.md](architecture/network/relay-pool.md):
+  relay frame limits, diagnostics, send queue bounds, and pool ownership.
+- [architecture/network/relay-routing.md](architecture/network/relay-routing.md):
+  route sources, discovery relay scope, and profile relay targeting.
 - [operations/verification.md](operations/verification.md): local verification
   commands.
 - [operations/docker.md](operations/docker.md): Docker Compose verification.
