@@ -31,7 +31,10 @@ This document records the current implemented contract for the app.
 ## Gaps
 
 - Relay support determines whether NIP-50 search returns remote matches.
-- Relay latency, last-event-per-relay, worker queue health, event validation
-  state, and passkey-protected secret storage are not persisted.
+- Cloudflare Workers is a verified hosting target only; it does not add a
+  backend account service, relay proxy, or Cloudflare storage dependency.
+- Broad worker queue instrumentation is limited to persisted job records.
+- Passkey-protected local secret storage has a security design only; local
+  signing secrets still use the raw local secret table.
 - Broad runtime instrumentation is not automatic; only explicitly job-backed
   flows appear in the job tree.

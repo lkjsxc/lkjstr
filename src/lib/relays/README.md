@@ -8,4 +8,5 @@ subscription management.
 ## Contents
 
 - Relay URL normalization, default relays, WebSocket client, pool, health
-  evidence, diagnostics, and store.
+  evidence, diagnostic summaries, NIP-11 relay information, NIP-65 relay list
+  suggestions, and relay set storage.

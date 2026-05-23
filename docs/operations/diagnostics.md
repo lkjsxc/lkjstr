@@ -16,6 +16,11 @@ runtime, so failures must be inspectable without server logs.
 - app heap and runtime feed counters during heavy-feed smoke tests.
 - persisted relay attempt, success, failure, last-connected, and last-error
   evidence where relay settings record it.
+- persisted relay summary counters, last event id, first-message latency, EOSE
+  latency, validation counters, and bounded recent relay diagnostics.
+- persisted job health derived from stored jobs, including status counts,
+  root-job counts, oldest queued age, latest failure, and latest stale startup
+  mark.
 
 Timeline surfaces keep low-level diagnostics out of the feed body. Home and
 Global may show high-level state errors, while detailed diagnostics are
@@ -28,8 +33,8 @@ lkjstr Log presents diagnostics as one chronological stream. Relay diagnostics
 use `area: relay`; runtime, storage, signer, cache, and subscription failures
 use the same surface. Message and context fields wrap within the tile.
 
-Relay latency, last event received per relay, and worker queue health are not
-claimed diagnostics until implemented by focused runtime code.
+Stats and Relay Settings show persisted relay and job summaries. They must not
+duplicate lkjstr Log rows.
 
 Clean-browser Playwright is the source of truth for app-origin console
 diagnostics. Suppression is limited to the external `lockdown-install.js` plus

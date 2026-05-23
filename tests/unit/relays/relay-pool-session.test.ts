@@ -89,6 +89,11 @@ function snapshot(
   return {
     url: relay,
     state: 'open',
+    validation: {
+      validEventCount: 0,
+      invalidEventCount: 0,
+      invalidSubscriptionCount: 0,
+    },
     eoseBySub: {},
     closedBySub: {},
     diagnostics: [{ relay, timestamp, message, subId, kind: 'notice' }],

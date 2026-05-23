@@ -27,12 +27,25 @@ export type RelayConnectionState =
 export type RelaySnapshot = {
   readonly url: string;
   readonly state: RelayConnectionState;
+  readonly connectionAttemptAt?: number;
+  readonly openedAt?: number;
   readonly lastMessageAt?: number;
+  readonly lastEventAt?: number;
+  readonly lastEventId?: string;
   readonly lastError?: string;
+  readonly firstMessageLatencyMs?: number;
+  readonly eoseLatencyMs?: number;
+  readonly validation: RelayValidationStats;
   readonly stats?: RelaySessionStats;
   readonly diagnostics: readonly RelayDiagnostic[];
   readonly eoseBySub: Readonly<Record<string, boolean>>;
   readonly closedBySub: Readonly<Record<string, string>>;
+};
+
+export type RelayValidationStats = {
+  readonly validEventCount: number;
+  readonly invalidEventCount: number;
+  readonly invalidSubscriptionCount: number;
 };
 
 export type RelaySessionStats = {

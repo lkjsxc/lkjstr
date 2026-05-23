@@ -7,7 +7,7 @@ its NIP-02 follows.
 
 ## Contract
 
-- Home opens from New Tab and is the recovery tab.
+- Home opens from New Tab and as one of the default work tabs at startup.
 - Home is cache-first. It must render cached matching notes as soon as account
   and relay page data have loaded, before profile hydration and before relay
   results.

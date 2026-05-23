@@ -7,6 +7,7 @@ export const kinds = {
   repost: 6,
   reaction: 7,
   genericRepost: 16,
+  relayListMetadata: 10002,
   zapRequest: 9734,
   zapReceipt: 9735,
   httpAuth: 27235,

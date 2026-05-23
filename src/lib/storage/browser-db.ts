@@ -10,6 +10,9 @@ import type {
   StoredEvent,
 } from '../events/types';
 import type { NotificationRecord } from '../notifications/notification';
+import type { RelayDiagnosticSummary } from '../relays/relay-diagnostic-summary';
+import type { RelayInformationRecord } from '../relays/relay-info';
+import type { RelayListSuggestionRecord } from '../relays/relay-list-suggestions';
 import type { RelaySet } from '../relays/relay-store';
 import type { SettingOverride } from '../settings/settings-store';
 import type { TweetDraft } from '../tweet/draft-store';
@@ -37,6 +40,9 @@ export class LkjstrDb extends Dexie {
   tabStates!: Table<TabStateRecord, string>;
   settings!: Table<SettingOverride, string>;
   relaySets!: Table<RelaySet, string>;
+  relayDiagnosticSummaries!: Table<RelayDiagnosticSummary, string>;
+  relayInformation!: Table<RelayInformationRecord, string>;
+  relayListSuggestions!: Table<RelayListSuggestionRecord, string>;
 
   constructor() {
     super('lkjstr');
@@ -49,7 +55,7 @@ export class LkjstrDb extends Dexie {
         }
       >
     )[schemaMethod];
-    schema.call(this, 9).stores({
+    schema.call(this, 10).stores({
       workspaces: '&id, updatedAt, activeAccountId',
       accounts: '&id, pubkey, signerType, updatedAt, lastUsedAt',
       localAccountSecrets: '&accountId, pubkey, updatedAt',
@@ -68,6 +74,10 @@ export class LkjstrDb extends Dexie {
       tabStates: '&id, tabId, updatedAt',
       settings: '&key, namespace, updatedAt',
       relaySets: '&id, updatedAt, seeded',
+      relayDiagnosticSummaries: '&relayUrl, updatedAt',
+      relayInformation: '&relayUrl, fetchedAt, status',
+      relayListSuggestions:
+        '&id, accountPubkey, relayUrl, updatedAt, [accountPubkey+relayUrl]',
     });
   }
 }

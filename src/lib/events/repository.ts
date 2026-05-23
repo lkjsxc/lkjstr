@@ -19,6 +19,7 @@ import {
 } from './repository-memory';
 import { receipt, tagRows } from './repository-shared';
 import { normalizeStoredEvent } from './normalize';
+import { storeRelayListSuggestionsFromEvent } from '../relays/relay-list-suggestions';
 import type {
   FeedCursor,
   FeedEvent,
@@ -45,6 +46,7 @@ export async function upsertEvent(
   const tags = tagRows(event);
   putMemory(stored, receipts, tags);
   if (!indexedDbAvailable()) {
+    await storeRelayListSuggestionsFromEvent(event);
     return stored;
   }
   await bestEffortStorageWrite(async () => {
@@ -61,6 +63,7 @@ export async function upsertEvent(
       },
     );
   });
+  await storeRelayListSuggestionsFromEvent(event);
   return stored;
 }
 

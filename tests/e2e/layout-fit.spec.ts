@@ -16,6 +16,9 @@ const options = [
   'Profile Edit',
   'Settings',
   'Search',
+  'Custom Request',
+  'Stats',
+  'Upload Settings',
 ] as const;
 
 for (const viewport of [

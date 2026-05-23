@@ -14,9 +14,12 @@ aligned in the same change, keep source files under 200 lines, keep docs under
 
 - The root route renders the workspace app.
 - Tiles have a tab strip, plus button, tile menu, and persistent resize state.
-- New Tab offers Welcome, Home, Search, Global, Relay Settings, lkjstr Log,
-  Notifications, Accounts, Mine npub, Tweet, Profile Edit, Stats, Upload
-  Settings, and Settings.
+- New Tab offers Home, Tweet, Notifications, Search, Custom Request, Global,
+  Profile Edit, Accounts, Relay Settings, Stats, Settings, Upload Settings,
+  lkjstr Log, Mine npub, and Welcome.
+- Clean startup shows Welcome plus Accounts, Relay Settings, Home,
+  Notifications, and Tweet. Storage failure must recover to a usable Welcome
+  workspace.
 - Profile tabs open from identity clicks. Profile Edit opens for active-account
   metadata editing. Thread tabs open from event clicks.
 - Settings are one flat key-value list.
@@ -31,6 +34,9 @@ aligned in the same change, keep source files under 200 lines, keep docs under
 - Partial relay failure stays diagnostic and must not block reachable relays.
 - Disabled or removed relays are excluded until the user enables or restores
   them.
+- NIP-11 relay metadata and NIP-65 relay-list suggestions must come from real
+  protocol data. Suggestions require explicit import and must not overwrite a
+  disabled relay record.
 - Docker checks build images and do not mount the source tree.
 
 ## Source Map

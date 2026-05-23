@@ -1,10 +1,20 @@
 <script lang="ts">
   import { onDestroy, onMount } from 'svelte';
   import { cacheStatus, type CacheMetadata } from '$lib/cache/cache-status';
+  import {
+    listRelayDiagnosticSummaries,
+    type RelayDiagnosticSummary,
+  } from '$lib/relays/relay-diagnostic-summary';
+  import {
+    loadJobHealthSummary,
+    type JobHealthSummary,
+  } from '$lib/jobs/job-health';
   import { currentRelaySnapshots } from '$lib/relays/session-snapshots';
   import type { RelaySessionStats, RelaySnapshot } from '$lib/relays/types';
 
   let snapshots = $state<RelaySnapshot[]>([]);
+  let summaries = $state<RelayDiagnosticSummary[]>([]);
+  let jobHealth = $state<JobHealthSummary | null>(null);
   let cache = $state<CacheMetadata | null>(null);
   let autoRefresh = $state(false);
   let timer: ReturnType<typeof setInterval> | undefined;
@@ -15,6 +25,8 @@
 
   async function refresh(): Promise<void> {
     snapshots = currentRelaySnapshots();
+    summaries = await listRelayDiagnosticSummaries();
+    jobHealth = await loadJobHealthSummary();
     cache = await cacheStatus();
   }
 
@@ -60,6 +72,17 @@
         activeSubscriptionIds: [],
       }
     );
+  }
+
+  function formatAge(ms?: number): string {
+    if (ms === undefined) return 'none';
+    const minutes = Math.floor(ms / 60000);
+    if (minutes < 1) return `${Math.max(0, Math.floor(ms / 1000))}s`;
+    return `${minutes}m`;
+  }
+
+  function formatTime(timestamp?: number): string {
+    return timestamp ? new Date(timestamp).toLocaleString() : 'never';
   }
 </script>
 
@@ -116,6 +139,56 @@
       {/each}
     {/each}
   </ul>
+  <h3>Persisted relay summaries</h3>
+  <table class="stats-table">
+    <thead>
+      <tr
+        ><th>Relay</th><th>Attempts</th><th>Events</th><th>Last event</th><th
+          >Latency</th
+        ></tr
+      >
+    </thead>
+    <tbody>
+      {#each summaries as summary (summary.relayUrl)}
+        <tr>
+          <td>{summary.relayUrl}</td>
+          <td>
+            {summary.attemptCount}/{summary.openCount}/{summary.errorCount}
+          </td>
+          <td>
+            {summary.validEventCount} ok · {summary.invalidEventCount} invalid
+          </td>
+          <td>{summary.lastEventId ?? 'none'}</td>
+          <td>
+            {summary.firstMessageLatencyMs ?? '-'}ms first ·
+            {summary.eoseLatencyMs ?? '-'}ms EOSE
+          </td>
+        </tr>
+      {/each}
+    </tbody>
+  </table>
+  {#if jobHealth}
+    <h3>Jobs</h3>
+    <div class="stats-cards">
+      <article>
+        <strong>{jobHealth.total}</strong><span>stored jobs</span>
+      </article>
+      <article>
+        <strong>{jobHealth.statusCounts.queued}</strong><span>queued</span>
+      </article>
+      <article>
+        <strong>{jobHealth.statusCounts.running}</strong><span>running</span>
+      </article>
+      <article>
+        <strong>{formatAge(jobHealth.oldestQueuedAgeMs)}</strong>
+        <span>oldest queued</span>
+      </article>
+    </div>
+    <p>
+      latest failure {jobHealth.latestFailure?.error ?? 'none'} · stale startup
+      {formatTime(jobHealth.latestStaleStartupMark?.staleStartedAt)}
+    </p>
+  {/if}
   <h3>Cache</h3>
   {#if cache}
     <p>

@@ -7,8 +7,9 @@ Workflows describe common user paths through the app.
 ## Open Data
 
 1. Open New Tab.
-2. Select Home, Global, Search, Relay Settings, Notifications, Accounts,
-   Tweet, or Settings.
+2. Select any New Tab choice: Home, Tweet, Notifications, Search, Custom
+   Request, Global, Profile Edit, Accounts, Relay Settings, Stats, Settings,
+   Upload Settings, lkjstr Log, Mine npub, or Welcome.
 3. Use identity and event actions to open Profile or Thread tabs.
 
 ## Publish

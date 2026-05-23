@@ -16,6 +16,8 @@ here before code is changed.
   tree model.
 - [architecture/data/feed-memory.md](architecture/data/feed-memory.md): feed
   cache and relay windows.
+- [architecture/data/local-secret-security.md](architecture/data/local-secret-security.md):
+  local secret security boundary.
 - [architecture/data/shared-storage.md](architecture/data/shared-storage.md):
   shared event storage.
 - [architecture/data/storage.md](architecture/data/storage.md): durable storage.

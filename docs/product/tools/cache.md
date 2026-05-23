@@ -7,7 +7,8 @@ operation.
 
 ## Contract
 
-- Stats shows event, profile, notification, and storage estimates.
+- Stats shows event, profile, notification, storage estimates, persisted relay
+  summaries, and persisted job health summaries.
 - Compaction prunes old cache events through the cache module by Settings
   values for age, count, and enablement.
 - Defaults are `30` days and `5000` events.

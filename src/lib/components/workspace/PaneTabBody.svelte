@@ -159,6 +159,7 @@
 {:else if props.tab.kind === 'relay-settings'}
   <RelaySettingsTab
     relaySets={props.relaySets}
+    activeAccount={props.activeAccount}
     refresh={props.refreshData}
     removeRelay={props.removeRelay}
   />

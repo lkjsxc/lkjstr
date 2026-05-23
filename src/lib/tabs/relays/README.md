@@ -6,4 +6,5 @@ This directory contains relay settings tab components.
 
 ## Contents
 
-- Relay set editing and relay diagnostics controls.
+- Relay set editing, NIP-11 relay details, NIP-65 suggestion review, and relay
+  diagnostics controls.

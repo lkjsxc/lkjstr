@@ -10,11 +10,12 @@ The workspace is the first screen and owns split tiles.
 - Plus opens a New Tab chooser in the same tile.
 - New Tab conversion preserves the tab id.
 - Closing the last tab closes its tile.
-- Closing the last tile recovers a timeline tile.
+- Closing the last tile recovers a Welcome tile.
 - Tabs move across tiles by drag-and-drop.
 - Moving the last tab out of a tile removes the source tile.
 - Split actions create recursive layout nodes and persist through the workspace
   store.
 - Resize uses a `1.8` pointer sensitivity multiplier and persists in layout.
-- Startup renders one Home tile before async storage finishes. Invalid,
-  blocked, or corrupt storage recovers to that Home workspace.
+- Startup renders Welcome plus Accounts, Relay Settings, Home, Notifications,
+  and Tweet before async storage finishes. Invalid, blocked, or corrupt storage
+  recovers to a usable Welcome workspace.

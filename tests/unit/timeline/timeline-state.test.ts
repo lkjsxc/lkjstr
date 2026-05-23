@@ -52,5 +52,16 @@ function snapshot(
   eoseBySub: RelaySnapshot['eoseBySub'],
   closedBySub: RelaySnapshot['closedBySub'] = {},
 ): RelaySnapshot {
-  return { url, state, diagnostics: [], eoseBySub, closedBySub };
+  return {
+    url,
+    state,
+    validation: {
+      validEventCount: 0,
+      invalidEventCount: 0,
+      invalidSubscriptionCount: 0,
+    },
+    diagnostics: [],
+    eoseBySub,
+    closedBySub,
+  };
 }

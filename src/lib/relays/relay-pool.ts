@@ -5,6 +5,7 @@ import {
   type RelayMessage,
 } from '../protocol';
 import { RelayClient } from './relay-client';
+import { recordRelayDiagnosticSummary } from './relay-diagnostic-summary';
 import { recordRelayHealthEvidence } from './relay-health';
 import { relaySnapshotHistoryMap } from './session-snapshots';
 import type { RelayConnectionState, RelaySnapshot } from './types';
@@ -142,22 +143,31 @@ export class RelayPool {
   #recordHealth(states: readonly RelaySnapshot[]): void {
     for (const snapshot of states) {
       const previous = this.#healthStates.get(snapshot.url);
-      if (previous?.state !== 'connecting' && snapshot.state === 'connecting')
+      const attempted =
+        previous?.state !== 'connecting' && snapshot.state === 'connecting';
+      const opened = previous?.state !== 'open' && snapshot.state === 'open';
+      const errored = Boolean(
+        snapshot.lastError &&
+        (previous?.lastError !== snapshot.lastError ||
+          (previous?.state !== 'error' && snapshot.state === 'error')),
+      );
+      if (attempted)
         void recordRelayHealthEvidence(snapshot.url, { attempted: true });
-      if (previous?.state !== 'open' && snapshot.state === 'open')
+      if (opened)
         void recordRelayHealthEvidence(snapshot.url, {
           connectedAt: Date.now(),
         });
-      if (
-        snapshot.lastError &&
-        (previous?.lastError !== snapshot.lastError ||
-          (previous?.state !== 'error' && snapshot.state === 'error'))
-      ) {
+      if (errored) {
         void recordRelayHealthEvidence(snapshot.url, {
           failure: snapshot.state === 'error' ? snapshot.lastError : undefined,
           lastError: snapshot.lastError,
         });
       }
+      void recordRelayDiagnosticSummary(snapshot, {
+        attempted,
+        opened,
+        errored,
+      });
       this.#healthStates.set(snapshot.url, {
         state: snapshot.state,
         lastError: snapshot.lastError,

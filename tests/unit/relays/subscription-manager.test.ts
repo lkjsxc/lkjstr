@@ -45,6 +45,7 @@ describe('subscription manager', () => {
           {
             url: 'relay.example',
             state: 'open',
+            validation: validation(),
             diagnostics: [],
             eoseBySub: { [subId]: true },
             closedBySub: {},
@@ -81,6 +82,7 @@ describe('subscription manager', () => {
           {
             url: 'relay.example',
             state: 'open',
+            validation: validation(),
             diagnostics: [],
             eoseBySub: {},
             closedBySub: { [subId]: 'too large' },
@@ -144,6 +146,14 @@ describe('subscription manager', () => {
     expect(subscribe.mock.calls[0]?.[1]).not.toBe(subscribe.mock.calls[1]?.[1]);
   });
 });
+
+function validation() {
+  return {
+    validEventCount: 0,
+    invalidEventCount: 0,
+    invalidSubscriptionCount: 0,
+  };
+}
 
 function nostrEvent(seed: string) {
   return {

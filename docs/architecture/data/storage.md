@@ -20,6 +20,9 @@ Storage docs define browser persistence ownership.
 - `tabStates`: retained tab state snapshots.
 - `settings`: settings overrides.
 - `relaySets`: editable relay sets.
+- `relayDiagnosticSummaries`: persisted relay diagnostic summaries.
+- `relayInformation`: fetched NIP-11 relay information documents.
+- `relayListSuggestions`: per-account NIP-65 relay list suggestions.
 
 ## Contract
 
@@ -27,6 +30,9 @@ Local signing secrets are stored in dedicated IndexedDB tables separate from
 public account records. Raw local accounts use the local secret table. Account
 listing APIs return public account metadata only. NIP-07 signing stays in the
 browser signer boundary.
+
+Passkey-protected local secret storage is not implemented. The security design
+is documented separately before any passkey secret table is restored.
 
 ## Cleanup
 

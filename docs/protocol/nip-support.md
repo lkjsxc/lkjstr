@@ -32,19 +32,20 @@ unimplemented behavior.
   emoji sets for active-account custom emoji choices.
 - NIP-36 sensitive content gates.
 - NIP-42 relay auth diagnostics.
+- NIP-50 search filters from Search, with cached fallback and relay support
+  constrained by relay behavior.
 - NIP-57 zap requests, invoice handoff, receipt amount parsing, and event zap
   summaries.
+- NIP-65 relay list metadata parsing for kind `10002` `r` tags with explicit
+  import controls.
 - NIP-96 media upload discovery and response parsing.
 - NIP-98 HTTP auth events for media upload.
-
-## Planned Product Support
-
-- NIP-11 relay information documents.
-- NIP-50 relay search when supported.
-- NIP-65 relay list metadata.
+- NIP-11 relay information documents from relay HTTP endpoints with
+  `application/nostr+json` accept headers.
 
 ## Later Support
 
+- Passkey-protected local secret storage is design-only.
 - Encrypted direct messages wait for security docs and signer isolation.
 - Wallet custody is out of scope; zap support opens or copies invoices only.
 

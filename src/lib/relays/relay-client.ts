@@ -7,6 +7,7 @@ import {
   type RelayMessage,
 } from '../protocol';
 import { logRelayDiagnostic } from './relay-diagnostic-log';
+import { RelayClientMetrics } from './relay-client-metrics';
 import { parseRelayMessageData } from './relay-message-data';
 import type {
   RelayClientEvents,
@@ -24,8 +25,8 @@ import { RelaySessionStatsCounter } from './relay-session-stats';
 export class RelayClient {
   #socket?: WebSocket;
   #state: RelayConnectionState = 'idle';
-  #lastMessageAt?: number;
   #lastError?: string;
+  #metrics = new RelayClientMetrics();
   #diagnostics: RelayDiagnostic[] = [];
   #eoseBySub: Record<string, boolean> = {};
   #closedBySub: Record<string, string> = {};
@@ -39,21 +40,12 @@ export class RelayClient {
     readonly events: Partial<RelayClientEvents> = {},
     readonly connectTimeoutMs = 5000,
   ) {}
-  snapshot(): RelaySnapshot {
-    return {
-      url: this.url,
-      state: this.#state,
-      lastMessageAt: this.#lastMessageAt,
-      lastError: this.#lastError,
-      stats: this.#stats.snapshot(),
-      diagnostics: [...this.#diagnostics],
-      eoseBySub: { ...this.#eoseBySub },
-      closedBySub: { ...this.#closedBySub },
-    };
-  }
+  // prettier-ignore
+  snapshot(): RelaySnapshot { return { url: this.url, state: this.#state, lastError: this.#lastError, ...this.#metrics.snapshotFields(), stats: this.#stats.snapshot(), diagnostics: [...this.#diagnostics], eoseBySub: { ...this.#eoseBySub }, closedBySub: { ...this.#closedBySub } }; }
   connect(): void {
     if (this.#socket && this.#state !== 'closed') return;
     this.#intentionalClose = false;
+    this.#metrics.startConnect();
     this.#setState('connecting');
     this.#socket = new WebSocket(this.url);
     this.#connectTimer = setTimeout(
@@ -62,6 +54,7 @@ export class RelayClient {
     );
     this.#socket.onopen = () => {
       this.#clearConnectTimer();
+      this.#metrics.open();
       this.#setState('open');
       this.#flush();
     };
@@ -119,7 +112,7 @@ export class RelayClient {
     const parsed = parseRelayMessageData(data);
     if (!parsed) return;
     if (parsed.ok) {
-      this.#lastMessageAt = Date.now();
+      this.#metrics.receiveMessage();
       this.events.message?.(this.url, parsed.message);
       this.#handleRelayMessage(parsed.message);
     } else {
@@ -133,8 +126,13 @@ export class RelayClient {
     this.#stats.receive(message);
     if (message[0] === 'EVENT') {
       const verified = verifyEvent(message[2]);
-      if (verified.ok) this.events.event?.(this.url, message[1], message[2]);
-      else this.#addDiagnostic('invalid-event', verified.message, message[1]);
+      if (verified.ok) {
+        this.#metrics.acceptEvent(message[2].id);
+        this.events.event?.(this.url, message[1], message[2]);
+      } else {
+        this.#metrics.rejectEvent();
+        this.#addDiagnostic('invalid-event', verified.message, message[1]);
+      }
     }
     if (message[0] === 'CLOSED') {
       this.#closedBySub[message[1]] = message[2];
@@ -149,6 +147,7 @@ export class RelayClient {
     }
     if (message[0] === 'EOSE') {
       this.#eoseBySub[message[1]] = true;
+      this.#metrics.eose();
     }
   }
   #addDiagnostic(
@@ -175,6 +174,7 @@ export class RelayClient {
     if (relaySubscriptionIdValid(id)) return true;
     const message = `${action} subscription id is longer than ${maxRelaySubscriptionIdLength} characters`;
     this.#lastError = message;
+    this.#metrics.rejectSubscription();
     this.#addDiagnostic('invalid-subscription', message, id.slice(0, 64));
     this.#setState('error');
     return false;

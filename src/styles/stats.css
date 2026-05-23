@@ -14,7 +14,13 @@
 
 .stats-table {
   border-collapse: collapse;
+  table-layout: fixed;
   width: 100%;
+}
+
+.stats-table th,
+.stats-table td {
+  overflow-wrap: anywhere;
 }
 
 .stats-auto {

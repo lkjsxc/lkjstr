@@ -1,6 +1,6 @@
 <script lang="ts">
   import EventTreeList from '$lib/components/events/EventTreeList.svelte';
-  import { feedPageSize } from '$lib/events/feed-window';
+  import { cursorPoint, feedPageSize } from '$lib/events/feed-window';
   import type { ProfileSummary } from '$lib/identity/identity';
   import type { FeedEvent } from '$lib/events/types';
   import type { RelaySet } from '$lib/relays/relay-store';
@@ -31,6 +31,7 @@
   let searched = $state(false);
   let requestId = 0;
   const subscriptions = new RelaySubscriptionManager();
+
   $effect(() => {
     const pubkeys = [...new Set(items.map((item) => item.event.pubkey))].filter(
       (pubkey) => !profiles[pubkey],
@@ -71,8 +72,8 @@
 
   async function loadOlder(): Promise<void> {
     if (loadingOlder || !hasOlder) return;
-    const until = items.at(-1)?.event.created_at;
-    if (!until) return;
+    const before = cursorPoint(items.at(-1));
+    if (!before) return;
     loadingOlder = true;
     try {
       const page = await searchPage({
@@ -81,7 +82,7 @@
         subId: createTimelineSubId(props.tabId, 'search-old'),
         subscriptions,
         limit: feedPageSize,
-        until,
+        before,
       });
       items = merge(items, page.items);
       hasOlder = page.hasOlder;
@@ -98,7 +99,11 @@
         ids.push(item.event.id);
         return true;
       })
-      .sort((a, b) => b.event.created_at - a.event.created_at);
+      .sort((a, b) =>
+        b.event.created_at === a.event.created_at
+          ? a.event.id.localeCompare(b.event.id)
+          : b.event.created_at - a.event.created_at,
+      );
   }
 </script>
 

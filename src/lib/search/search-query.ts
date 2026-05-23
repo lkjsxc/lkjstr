@@ -1,7 +1,9 @@
 import { feedDisplayKinds } from '$lib/events/feed-kinds';
-import { readRelayPage } from '$lib/events/relay-page';
+import { beforeCursor } from '$lib/events/repository-shared';
+import { boundaryUntil, readRelayPage } from '$lib/events/relay-page';
 import { eventsMatching, upsertEvent } from '$lib/events/repository';
-import type { FeedEvent } from '$lib/events/types';
+import type { FeedCursorPoint, FeedEvent } from '$lib/events/types';
+import { compareEventsDesc } from '$lib/protocol';
 import type { RelaySubscriptionManager } from '$lib/relays/subscription-manager';
 import { initialRelaySubscriptionId } from '$lib/relays/subscription-id';
 
@@ -11,7 +13,7 @@ export type SearchPageRequest = {
   readonly subId: string;
   readonly subscriptions: RelaySubscriptionManager;
   readonly limit: number;
-  readonly until?: number;
+  readonly before?: FeedCursorPoint;
 };
 
 export async function searchPage(
@@ -20,7 +22,7 @@ export async function searchPage(
   const query = request.query.trim();
   if (!query) return { items: [], hasOlder: false };
   const [local, relay] = await Promise.all([
-    cachedSearch(query, request.limit, request.until),
+    cachedSearch(query, request.limit, request.before),
     relaySearch(request, query),
   ]);
   const merged = mergeItems([...local, ...relay]);
@@ -37,7 +39,7 @@ async function relaySearch(
   const relayEvents = await readRelayPage({
     key: initialRelaySubscriptionId(
       request.subId,
-      `${query}:${request.until ?? 0}`,
+      `${query}:${request.before?.createdAt ?? 0}:${request.before?.id ?? ''}`,
     ),
     relays: request.relays,
     filters: [
@@ -45,9 +47,10 @@ async function relaySearch(
         kinds: feedDisplayKinds,
         search: query,
         limit: request.limit,
-        until: request.until,
+        until: boundaryUntil(request.before),
       },
     ],
+    before: request.before,
     pageSize: request.limit + 1,
     subscriptions: request.subscriptions,
   });
@@ -63,11 +66,14 @@ async function relaySearch(
 async function cachedSearch(
   query: string,
   limit: number,
-  until?: number,
+  before?: FeedCursorPoint,
 ): Promise<FeedEvent[]> {
   const needle = query.toLowerCase();
-  const events = await eventsMatching([{ kinds: feedDisplayKinds, until }]);
+  const events = await eventsMatching([
+    { kinds: feedDisplayKinds, until: boundaryUntil(before) },
+  ]);
   return events
+    .filter((item) => beforeCursor(item.event, before))
     .filter((item) => item.event.content.toLowerCase().includes(needle))
     .slice(0, limit + 1);
 }
@@ -78,9 +84,7 @@ function mergeItems(items: readonly FeedEvent[]): FeedEvent[] {
     const existing = byId.get(item.event.id);
     byId.set(item.event.id, existing ? mergeItem(existing, item) : item);
   }
-  return [...byId.values()].sort(
-    (a, b) => b.event.created_at - a.event.created_at,
-  );
+  return [...byId.values()].sort((a, b) => compareEventsDesc(a.event, b.event));
 }
 
 function mergeItem(a: FeedEvent, b: FeedEvent): FeedEvent {

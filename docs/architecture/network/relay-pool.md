@@ -12,11 +12,13 @@ events, publish acknowledgements, and relay snapshots.
 - Verify events before delivering them to callers.
 - Reject relay messages above `64 KiB` and record diagnostics before parsing.
 - Send `CLOSE` when a subscription cleanup runs.
-- Keep snapshots for connection state, last message time, last error, and EOSE.
+- Keep snapshots for connection state, connection timing, last message time,
+  last event id, last error, validation counters, and EOSE.
 - Keep snapshot counters for bytes, active subscription ids, relay message
   totals, OK accepts, OK rejects, and last message timestamps.
 - Stats reads snapshots only and must not create relay subscriptions.
 - Keep current-session diagnostics as a flat stream derivable from snapshots.
+- Persist relay diagnostic summaries without changing user relay settings.
 - Do not require relay connections during workspace shell render.
 - Do not overwrite user relay settings from runtime health data.
 - Failed relays must not stop other relays in the same subscription.

@@ -12,6 +12,10 @@ Relay docs define URL and relay-set behavior.
 - Read runtimes use enabled read relays only.
 - Tweet publishing uses enabled write relays only.
 - No runtime should connect to a disabled relay.
+- NIP-11 relay information is fetched from the HTTP endpoint corresponding to
+  the normalized relay URL.
+- NIP-65 relay list metadata suggestions are stored separately from configured
+  relay sets and require explicit import.
 
 ## Subscription IDs
 

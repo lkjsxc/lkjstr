@@ -56,6 +56,7 @@ export function createDefaultTabRegistry(): TabRegistry {
     'relay-settings',
     'network-stats',
     'search',
+    'custom-request',
     'tweet',
     'settings',
   ];
