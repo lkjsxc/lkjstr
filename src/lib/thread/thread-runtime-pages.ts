@@ -43,6 +43,7 @@ export async function loadInitialThreadPage(request: Request) {
     filters: [{ ids: [request.eventId] }],
     pageSize: 1,
     subscriptions: request.subscriptions,
+    purpose: 'event-lookup',
   });
   const rootId = focused[0]?.event
     ? (replyRoot(focused[0].event) ?? request.eventId)
@@ -59,6 +60,7 @@ export async function loadInitialThreadPage(request: Request) {
     ],
     pageSize: request.pageSize,
     subscriptions: request.subscriptions,
+    purpose: 'event-lookup',
   });
   const all = [...toItems(focused), ...relayEvents];
   await Promise.all(
@@ -95,6 +97,7 @@ export async function loadOlderThreadPage(
     before: request.cursor,
     pageSize: request.pageSize,
     subscriptions: request.subscriptions,
+    purpose: 'feed',
   });
   await Promise.all(
     relayEvents.map((item) => storeThreadEvent(item.event, item.relays)),
@@ -139,6 +142,7 @@ export async function loadNewerThreadPage(
     after: request.cursor,
     pageSize: request.pageSize,
     subscriptions: request.subscriptions,
+    purpose: 'feed',
   });
   await Promise.all(
     relayEvents.map((item) => storeThreadEvent(item.event, item.relays)),

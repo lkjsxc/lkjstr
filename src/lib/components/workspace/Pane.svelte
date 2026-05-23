@@ -7,6 +7,7 @@
   import type { WorkspacePaneNode } from '$lib/workspace/pane';
   import { PaneScrollRetention } from '$lib/workspace/pane-scroll-retention';
   import type { TabKind, WorkspaceTab } from '$lib/workspace/tab';
+  import { recordTabCloseReason } from '$lib/workspace/tab-lifecycle-reasons';
   import type { TabGroup } from '$lib/workspace/tab-group';
   import { TabRetention } from '$lib/workspace/tab-retention';
   import NewTabButton from './NewTabButton.svelte';
@@ -71,6 +72,7 @@
       (retained = Object.fromEntries(
         retention.records().map((tab) => [tab.id, tab]),
       )),
+    (tabId, reason) => recordTabCloseReason(tabId, reason),
   );
   let activeBody = $derived(
     active ? (retained[active.id] ?? active) : undefined,
@@ -105,11 +107,11 @@
 
   $effect(() => {
     if (previousRetentionSeconds !== props.inactiveRetentionSeconds) {
-      retention.releaseAll();
+      retention.releaseAll('retention-disabled');
       previousRetentionSeconds = props.inactiveRetentionSeconds;
     }
     if (props.inactiveRetentionSeconds > 0) return;
-    retention.releaseAll();
+    retention.releaseAll('retention-disabled');
   });
 
   $effect(() => {
@@ -120,7 +122,7 @@
     return bodyScroll.track(tabId, node);
   }
 
-  onDestroy(() => retention.releaseAll());
+  onDestroy(() => retention.releaseAll('pane-destroyed'));
 </script>
 
 <section class="pane" data-pane-id={props.pane.id} aria-label="Workspace pane">

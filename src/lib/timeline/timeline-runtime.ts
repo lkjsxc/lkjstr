@@ -9,10 +9,12 @@ import { queryFeed, upsertEvent } from '../events/repository';
 import { isFeedDisplayKind } from '../events/feed-kinds';
 import { boundedErrorText } from '../events/runtime-error';
 import type { FeedCursorPoint } from '../events/types';
-import { sharedRelayPool, type PoolEvent } from '../relays/relay-pool';
+import type { PoolEvent } from '../relays/relay-pool';
 import { discoverAuthorRelayRoutes } from '../relays/relay-discovery';
+import { runtimeSubscriptions } from '../relays/runtime-subscriptions';
 import { routedAuthorRelays } from '../relays/relay-routing';
-import { RelaySubscriptionManager } from '../relays/subscription-manager';
+import type { RelaySubscriptionManager } from '../relays/subscription-manager';
+import { childRelaySubscriptionId } from '../relays/subscription-id';
 import type { RelaySnapshot } from '../relays/types';
 import { accountHomeAuthors, authorFilters } from './follow-list';
 import { loadAccountHome, loadCachedAccountHome } from './timeline-load';
@@ -50,8 +52,8 @@ export class TimelineRuntime {
   #profileCoordinator: TimelineProfileCoordinator;
   #startedAt = Math.floor(Date.now() / 1000); #closed = false; #generation = 0;
   constructor(readonly options: TimelineRuntimeOptions) {
-    const pool = options.pool ?? sharedRelayPool; this.#subscriptions = options.subscriptions ?? new RelaySubscriptionManager(pool);
-    this.#followSubId = `${options.subId}:follows`; this.#metaSubId = `${options.subId}:meta`; this.#noteSubId = `${options.subId}:notes`;
+    this.#subscriptions = runtimeSubscriptions(options.pool, options.subscriptions);
+    this.#followSubId = childRelaySubscriptionId(options.subId, 'follows'); this.#metaSubId = childRelaySubscriptionId(options.subId, 'meta'); this.#noteSubId = childRelaySubscriptionId(options.subId, 'notes');
     this.#pageSize = options.limit ?? feedPageSize; this.#relays = options.relays.map(normalizeRelayUrl).filter((url): url is string => Boolean(url));
     this.#profileCoordinator = new TimelineProfileCoordinator(this.#relays, this.#metaSubId);
   }
@@ -112,7 +114,7 @@ export class TimelineRuntime {
   }
   #subscribe(key: string, filters: readonly NostrFilter[], relays = this.#relays): void {
     if (this.#closed) return;
-    this.#cleanup.push(this.#subscriptions.subscribeLive({ key, relays, filters }, (event) => this.#receive(event)));
+    this.#cleanup.push(this.#subscriptions.subscribeLive({ key, relays, filters, purpose: key === this.#metaSubId ? 'metadata' : 'feed' }, (event) => this.#receive(event)));
   }
   async #receive(poolEvent: PoolEvent): Promise<void> {
     if (this.#closed) return;

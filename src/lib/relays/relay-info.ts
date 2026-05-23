@@ -98,6 +98,13 @@ export async function relayInformation(
   );
 }
 
+export function cachedRelayInformation(
+  inputUrl: string,
+): RelayInformationRecord | undefined {
+  const relayUrl = normalizeRelayUrl(inputUrl);
+  return relayUrl ? memoryInfo.get(relayUrl) : undefined;
+}
+
 export function relayRequestLimit(
   requested: number,
   info: RelayInformationDocument | undefined,
@@ -106,6 +113,13 @@ export function relayRequestLimit(
   if (!Number.isInteger(cap) || (cap as number) < 1)
     return Math.max(1, requested);
   return Math.max(1, Math.min(requested, cap as number));
+}
+
+export async function relayMaySupportNip50(relayUrl: string): Promise<boolean> {
+  const record = await relayInformation(relayUrl);
+  if (record?.status !== 'available') return true;
+  const nips = record.info?.supported_nips;
+  return !nips || nips.includes(50);
 }
 
 export function relayHttpUrl(relayUrl: string): string {

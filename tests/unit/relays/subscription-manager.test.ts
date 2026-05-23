@@ -122,6 +122,7 @@ describe('subscription manager', () => {
     manager.subscribeLive(request, () => undefined);
     const sentId = subscribe.mock.calls[0]?.[1];
     expect(sentId).toBe(relayFacingSubId(key));
+    expect(sentId).not.toBe(key);
     expect(sentId?.length).toBeLessThanOrEqual(maxRelaySubscriptionIdLength);
   });
 

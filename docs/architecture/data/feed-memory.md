@@ -64,3 +64,7 @@ or older-page loads from moving the visible row.
 - The app JavaScript heap must stay below `100 MB`.
 - Total Chromium process RSS is reported separately because browser baseline
   memory is outside app control.
+- The synthetic WebSocket relay emits real signed Nostr events. The smoke test
+  checks `performance.memory` when Chromium exposes it.
+- Runtime counters keep counts and timestamps only. They do not retain event
+  payloads, relay messages, or row objects.

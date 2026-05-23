@@ -1,7 +1,12 @@
 <script lang="ts">
   import { onDestroy } from 'svelte';
+  import {
+    countRuntime,
+    setRuntimeCounterActive,
+  } from '$lib/app/runtime-counters';
   import EventTreeList from '$lib/components/events/EventTreeList.svelte';
   import { appendAppLog } from '$lib/log/app-log';
+  import { consumeTabCloseReason } from '$lib/workspace/tab-lifecycle-reasons';
   import type { RelaySet } from '$lib/relays/relay-store';
   import { GlobalTimelineRuntime } from '$lib/timeline/global-timeline-runtime';
   import { TimelineRuntime } from '$lib/timeline/timeline-runtime';
@@ -45,6 +50,7 @@
   let unsubscribe: (() => void) | undefined;
   let relays: string[] = [];
   let runtimeKey = '';
+  let runtimeStartedAt = 0;
 
   $effect(() => {
     if (!props.dataReady) return;
@@ -59,6 +65,7 @@
     closeRuntime('timeline-runtime-recreate');
     runtimeKey = nextKey;
     relays = nextRelays;
+    runtimeStartedAt = Date.now();
     const Runtime =
       props.kind === 'global' ? GlobalTimelineRuntime : TimelineRuntime;
     runtime = new Runtime({
@@ -74,8 +81,10 @@
       severity: 'info',
       code: 'timeline-runtime-create',
       message: 'Timeline runtime created.',
-      context: { key: runtimeKey, relays: relays.length },
+      context: runtimeContext('create'),
     });
+    countRuntime(runtimeMetricKey(), 'created');
+    setRuntimeCounterActive(runtimeMetricKey(), 1);
     unsubscribe = runtime.subscribe((next) => (state = next));
     runtime.start();
   });
@@ -86,15 +95,38 @@
     if (!runtime) return;
     unsubscribe?.();
     runtime.close();
+    const reason =
+      code === 'timeline-runtime-destroy'
+        ? consumeTabCloseReason(props.tabId)
+        : code;
     appendAppLog({
       area: 'runtime',
       severity: 'info',
       code,
       message: 'Timeline runtime closed.',
-      context: { key: runtimeKey },
+      context: runtimeContext(reason),
     });
+    countRuntime(runtimeMetricKey(), 'closed');
+    setRuntimeCounterActive(runtimeMetricKey(), -1);
     unsubscribe = undefined;
     runtime = undefined;
+  }
+
+  function runtimeMetricKey(): string {
+    return `${props.kind ?? 'home'}:${props.tabId}`;
+  }
+
+  function runtimeContext(reason: string): Record<string, unknown> {
+    return {
+      tabId: props.tabId,
+      kind: props.kind ?? 'home',
+      relays: relays.length,
+      reason,
+      uptimeMs: runtimeStartedAt ? Date.now() - runtimeStartedAt : 0,
+      itemCount: state.items.length,
+      connectedRelays: state.connectedRelays,
+      eoseRelays: state.eoseRelays,
+    };
   }
 </script>
 

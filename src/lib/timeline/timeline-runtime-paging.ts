@@ -44,6 +44,7 @@ export async function loadInitialTimelinePage(
     filters: authorFilters(request.authors, request.pageSize),
     pageSize: request.pageSize,
     subscriptions: request.subscriptions,
+    purpose: 'feed',
   });
   await Promise.all(
     relayItems.map((item) => upsertEvent(item.event, item.relays)),
@@ -74,6 +75,7 @@ export async function loadOlderTimelinePage(
     before: request.cursor,
     pageSize: request.pageSize,
     subscriptions: request.subscriptions,
+    purpose: 'feed',
   });
   const relayItems = relayPage.items;
   await Promise.all(

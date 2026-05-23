@@ -62,6 +62,7 @@
         filters: request.filters,
         pageSize: feedPageSize,
         subscriptions,
+        purpose: 'feed',
       });
       await Promise.all(
         events.map((item) => upsertEvent(item.event, item.relays)),

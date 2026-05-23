@@ -6,6 +6,10 @@ import {
 import { RelayClient } from './relay-client';
 import { recordRelayDiagnosticSummary } from './relay-diagnostic-summary';
 import { recordRelayHealthEvidence } from './relay-health';
+import {
+  compatibleRelayList,
+  type RelayRequestPurpose,
+} from './relay-request-compat';
 import { normalizedRelayList } from './relay-url-list';
 import { relaySnapshotHistoryMap } from './session-snapshots';
 import type { RelayConnectionState, RelaySnapshot } from './types';
@@ -42,8 +46,9 @@ export class RelayPool {
     relays: readonly string[],
     subId: string,
     filters: readonly NostrFilter[],
+    purpose?: RelayRequestPurpose,
   ): () => void {
-    const urls = normalizedRelayList(relays);
+    const urls = compatibleRelayList(relays, filters, purpose);
     for (const url of urls) this.#client(url).subscribe(subId, filters);
     return () =>
       urls.forEach((url) => this.#client(url).closeSubscription(subId));

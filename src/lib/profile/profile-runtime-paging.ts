@@ -51,6 +51,7 @@ export async function loadOlderProfilePage(request: ProfileOlderRequest) {
     before: request.cursor,
     pageSize: request.pageSize,
     subscriptions: request.subscriptions,
+    purpose: 'feed',
   });
   const relayItems = relayPage.items;
   await Promise.all(
@@ -99,6 +100,7 @@ export async function loadNewerProfilePage(request: ProfileNewerRequest) {
     after: request.cursor,
     pageSize: request.pageSize,
     subscriptions: request.subscriptions,
+    purpose: 'feed',
   });
   const relayItems = relayPage.items;
   await Promise.all(

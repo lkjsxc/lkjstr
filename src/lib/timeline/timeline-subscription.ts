@@ -3,7 +3,7 @@ import {
   type RelayRecord,
   type RelaySet,
 } from '../relays/relay-store';
-import { compactRelaySubscriptionId } from '../relays/subscription-id';
+import { childRelaySubscriptionId } from '../relays/subscription-id';
 import { normalizeRelayUrl } from '../protocol';
 
 export function timelineRelays(relaySets: readonly RelaySet[]): string[] {
@@ -20,7 +20,7 @@ export function relayRuntimeKey(relays: readonly string[]): string {
 
 export function createTimelineSubId(tabId: string, prefix = 'tl'): string {
   const nonce = crypto.randomUUID().replaceAll('-', '').slice(0, 16);
-  return compactRelaySubscriptionId(prefix, nonce, tabId);
+  return childRelaySubscriptionId(prefix, nonce, tabId);
 }
 
 function enabledRelayUrls(

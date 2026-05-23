@@ -98,6 +98,7 @@ async function relayProfileBatch(
       key: `${subId}:profiles:${pubkeys.slice(0, 8).join(',')}`,
       relays,
       filters: [{ kinds: [0], authors: [...pubkeys] }],
+      purpose: 'metadata',
     },
     { timeoutMs },
   );

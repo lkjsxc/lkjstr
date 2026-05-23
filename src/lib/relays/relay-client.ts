@@ -11,6 +11,7 @@ import { RelayClientMetrics } from './relay-client-metrics';
 import { parseRelayMessageData } from './relay-message-data';
 import { utf8ByteLengthWithin } from './relay-message-size';
 import { RelaySendQueue } from './relay-send-queue';
+import { recordRelayClosedPolicy } from './relay-request-compat';
 import type {
   RelayClientEvents,
   RelayConnectionState,
@@ -18,10 +19,8 @@ import type {
   RelayDiagnosticKind,
   RelaySnapshot,
 } from './types';
-import {
-  maxRelaySubscriptionIdLength,
-  relaySubscriptionIdValid,
-} from './subscription-id';
+// prettier-ignore
+import { maxRelaySubscriptionIdLength, relaySubscriptionIdValid } from './subscription-id';
 import { RelaySessionStatsCounter } from './relay-session-stats';
 
 export class RelayClient {
@@ -32,6 +31,7 @@ export class RelayClient {
   #diagnostics: RelayDiagnostic[] = [];
   #eoseBySub: Record<string, boolean> = {};
   #closedBySub: Record<string, string> = {};
+  #filtersBySub = new Map<string, readonly NostrFilter[]>();
   #stats = new RelaySessionStatsCounter();
   #queue = new RelaySendQueue();
   #connectTimer?: ReturnType<typeof setTimeout>;
@@ -78,6 +78,7 @@ export class RelayClient {
   subscribe(id: string, filters: readonly NostrFilter[]): void {
     if (!this.#validSubscriptionId(id, 'REQ')) return;
     this.#eoseBySub[id] = false;
+    this.#filtersBySub.set(id, filters);
     this.#stats.activeSubscriptionIds.add(id);
     delete this.#closedBySub[id];
     this.send(['REQ', id, ...filters]);
@@ -85,6 +86,7 @@ export class RelayClient {
   closeSubscription(id: string): void {
     if (!this.#validSubscriptionId(id, 'CLOSE')) return;
     delete this.#eoseBySub[id];
+    this.#filtersBySub.delete(id);
     this.#stats.activeSubscriptionIds.delete(id);
     if (this.#closedBySub[id]) return;
     this.sendIfConnected(['CLOSE', id]);
@@ -129,6 +131,8 @@ export class RelayClient {
     }
     if (message[0] === 'CLOSED') {
       this.#closedBySub[message[1]] = message[2];
+      // prettier-ignore
+      recordRelayClosedPolicy(this.url, message[2], this.#filtersBySub.get(message[1]) ?? []);
       this.#stats.activeSubscriptionIds.delete(message[1]);
       this.#addDiagnostic('closed', message[2], message[1]);
     }
@@ -159,15 +163,8 @@ export class RelayClient {
     logRelayDiagnostic(kind, message, this.url, subId);
   }
 
-  #validSubscriptionId(id: string, action: string): boolean {
-    if (relaySubscriptionIdValid(id)) return true;
-    const message = `${action} subscription id is longer than ${maxRelaySubscriptionIdLength} characters`;
-    this.#lastError = message;
-    this.#metrics.rejectSubscription();
-    this.#addDiagnostic('invalid-subscription', message, id.slice(0, 64));
-    this.#setState('error');
-    return false;
-  }
+  // prettier-ignore
+  #validSubscriptionId(id: string, action: string): boolean { if (relaySubscriptionIdValid(id)) return true; const message = `${action} subscription id is longer than ${maxRelaySubscriptionIdLength} characters`; this.#lastError = message; this.#metrics.rejectSubscription(); this.#addDiagnostic('invalid-subscription', message, id.slice(0, 48)); this.#setState('error'); return false; }
 
   // prettier-ignore
   #timeoutConnect(): void { if (this.#state !== 'connecting') return; this.#lastError = 'connect timeout'; this.#addDiagnostic('timeout', 'connect timeout'); this.#setState('error'); this.#socket?.close(); }

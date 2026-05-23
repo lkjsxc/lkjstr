@@ -32,11 +32,15 @@ events, publish acknowledgements, and relay snapshots.
 
 - Runtime tabs subscribe through the subscription manager.
 - The subscription manager calls the pool with enabled read relays only.
-- Each relay subscription uses one subscription id.
-- Relay-facing subscription ids are bounded to `64` characters.
+- Each relay subscription uses one compact relay-facing subscription id.
+- Relay-facing subscription ids are bounded to `48` characters.
+- Request purposes are forwarded with subscriptions so session compatibility
+  evidence can skip only incompatible relay/request pairs.
 - Overlong `REQ` and `CLOSE` ids are rejected locally with diagnostics and are
   not sent to relays.
 - Relay `CLOSED` marks that subscription terminal for that relay.
+- Relay `CLOSED` policy messages such as missing `kinds` or missing `search`
+  are retained as current-session compatibility evidence.
 - Oversized inbound frames are recorded as parse errors with measured byte size
   and configured limit; the frame payload is not stored.
 - Cleanup must close that subscription on every relay after the last listener.

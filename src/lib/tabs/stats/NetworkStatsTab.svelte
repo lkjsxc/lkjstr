@@ -11,6 +11,7 @@
   } from '$lib/jobs/job-health';
   import { currentRelaySnapshots } from '$lib/relays/session-snapshots';
   import type { RelaySessionStats, RelaySnapshot } from '$lib/relays/types';
+  import RuntimeCounters from './RuntimeCounters.svelte';
 
   let snapshots = $state<RelaySnapshot[]>([]);
   let summaries = $state<RelayDiagnosticSummary[]>([]);
@@ -40,7 +41,6 @@
     clearInterval(timer);
     timer = undefined;
   }
-
   function totalStats(items: readonly RelaySnapshot[]) {
     return items.reduce(
       (sum, item) => ({
@@ -55,7 +55,6 @@
       { relays: 0, open: 0, events: 0, bytes: 0, ok: 0, rejected: 0, subs: 0 },
     );
   }
-
   function stats(snapshot: RelaySnapshot): RelaySessionStats {
     return (
       snapshot.stats ?? {
@@ -197,4 +196,5 @@
       bytes
     </p>
   {/if}
+  <RuntimeCounters />
 </section>

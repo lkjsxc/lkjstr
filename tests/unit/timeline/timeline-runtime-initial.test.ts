@@ -7,7 +7,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { RelayPool } from '../../../src/lib/relays/relay-pool';
 import { TimelineRuntime } from '../../../src/lib/timeline/timeline-runtime';
 import { storeTimelineEvent } from '../../../src/lib/timeline/timeline-store';
-import { FakeWebSocket, sockets } from './fake-websocket';
+import { FakeWebSocket, parsedSocketMessage, sockets } from './fake-websocket';
 
 describe('timeline initial relay pages', () => {
   beforeEach(() => {
@@ -41,9 +41,11 @@ describe('timeline initial relay pages', () => {
     await runtime.start();
     sockets[0]?.open();
     await vi.waitFor(() =>
-      expect(subIdStarting('timeline-test:notes:initial')).toBeTruthy(),
+      expect(parsedSocketMessage('timeline-test:notes:initial')).toBeTruthy(),
     );
-    const initialSub = subIdStarting('timeline-test:notes:initial');
+    const initialSub = String(
+      (parsedSocketMessage('timeline-test:notes:initial') as unknown[])[1],
+    );
     const oldNote = finalizeEvent(
       { created_at: 1, kind: 1, tags: [], content: 'old relay note' },
       followedKey,
@@ -55,14 +57,6 @@ describe('timeline initial relay pages', () => {
     await vi.waitFor(() => expect(states.at(-1)).toContain('old relay note'));
   });
 });
-
-function subIdStarting(prefix: string): string {
-  const sent = sockets.flatMap((socket) => socket.sent);
-  const raw = sent.find((item) =>
-    String(JSON.parse(item)[1]).startsWith(prefix),
-  );
-  return raw ? String((JSON.parse(raw) as unknown[])[1]) : '';
-}
 
 function socketForSub(subId: string): FakeWebSocket | undefined {
   return sockets.find((socket) =>

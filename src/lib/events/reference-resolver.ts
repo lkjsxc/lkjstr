@@ -102,6 +102,7 @@ async function readGroup(
       filters: [{ ids: group.ids, limit: group.ids.length }],
       pageSize: group.ids.length,
       subscriptions: input.subscriptions ?? sharedSubscriptionManager,
+      purpose: 'event-lookup',
     }).then(async (hits) => {
       await Promise.all(hits.map((hit) => upsertEvent(hit.event, hit.relays)));
       return hits;

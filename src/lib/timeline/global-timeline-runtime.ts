@@ -8,15 +8,11 @@ import {
   mergeFeedItems,
 } from '../events/feed-window';
 import { feedDisplayKinds, isFeedDisplayKind } from '../events/feed-kinds';
-import {
-  sharedRelayPool,
-  type PoolEvent,
-  type RelayPool,
-} from '../relays/relay-pool';
-import {
-  RelaySubscriptionManager,
-  type RelaySubscriptionManager as SubscriptionManager,
-} from '../relays/subscription-manager';
+import type { PoolEvent } from '../relays/relay-pool';
+import { runtimeSubscriptions } from '../relays/runtime-subscriptions';
+import type { RelaySubscriptionManager as SubscriptionManager } from '../relays/subscription-manager';
+import { childRelaySubscriptionId } from '../relays/subscription-id';
+import type { RelaySnapshot } from '../relays/types';
 import {
   emptyState,
   noEnabledRelayState,
@@ -52,10 +48,11 @@ export class GlobalTimelineRuntime {
   #generation = 0;
 
   constructor(readonly options: TimelineRuntimeOptions) {
-    const pool: RelayPool = options.pool ?? sharedRelayPool;
-    this.#subscriptions =
-      options.subscriptions ?? new RelaySubscriptionManager(pool);
-    this.#subId = `${options.subId}:notes`;
+    this.#subscriptions = runtimeSubscriptions(
+      options.pool,
+      options.subscriptions,
+    );
+    this.#subId = childRelaySubscriptionId(options.subId, 'notes');
     this.#pageSize = options.limit ?? feedPageSize;
     this.#limit = feedWindowSize;
     this.#relays = options.relays
@@ -102,6 +99,7 @@ export class GlobalTimelineRuntime {
               limit: this.#pageSize,
             },
           ],
+          purpose: 'feed',
         },
         (event) => this.#receive(event),
       ),
@@ -161,7 +159,7 @@ export class GlobalTimelineRuntime {
     } catch (error) { this.#emit({ ...this.#state, loading: false, error: boundedErrorText(error) }); }
   }
 
-  #receiveState(snapshots: ReturnType<RelayPool['snapshots']>): void {
+  #receiveState(snapshots: RelaySnapshot[]): void {
     if (this.#closed) return;
     const active = selectedRelaySnapshots(snapshots, this.#relays);
     this.#emit({

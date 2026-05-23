@@ -1,10 +1,15 @@
 import type { NostrFilter } from '../protocol';
-import { compareEventsDesc } from '../protocol';
 import type { PoolEvent } from '../relays/relay-pool';
 import type { RelaySubscriptionManager } from '../relays/subscription-manager';
 import type { RelayRouteGroup } from '../relays/relay-route-types';
 import type { FeedCursorPoint, FeedEvent } from './types';
 import { afterCursor, beforeCursor } from './repository-shared';
+import { limitedRelayFilterGroups } from './relay-page-limits';
+import {
+  mergeFeedEvents,
+  mergePoolEvents,
+  sortFeedEvents,
+} from './relay-page-merge';
 
 export type RelayPageRequest = {
   readonly key: string;
@@ -14,6 +19,12 @@ export type RelayPageRequest = {
   readonly before?: FeedCursorPoint;
   readonly after?: FeedCursorPoint;
   readonly pageSize: number;
+  readonly purpose?:
+    | 'feed'
+    | 'metadata'
+    | 'event-lookup'
+    | 'route-discovery'
+    | 'search';
 };
 
 export type RelayGroupPageRequest = Omit<
@@ -32,28 +43,38 @@ export async function readRelayPage(
   request: RelayPageRequest,
 ): Promise<PoolEvent[]> {
   if (request.relays.length === 0) return [];
-  return request.subscriptions.readPage({
-    key: request.key,
-    relays: request.relays,
-    filters: positiveFilters(request.filters, request.pageSize),
-  });
+  const filters = positiveFilters(request.filters, request.pageSize);
+  const groups = await limitedRelayFilterGroups(
+    request.relays,
+    filters,
+    request.pageSize,
+  );
+  const pages = await Promise.all(
+    groups.map((group) =>
+      request.subscriptions.readPage({
+        key: request.key,
+        relays: group.relays,
+        filters: group.filters,
+        purpose: request.purpose,
+      }),
+    ),
+  );
+  return pages.flat();
 }
 
 export async function readRelayFeedPage(
   request: RelayPageRequest,
 ): Promise<FeedEvent[]> {
   if (request.relays.length === 0) return [];
-  const events = await request.subscriptions.readPage({
-    key: request.key,
-    relays: request.relays,
-    filters: positiveFilters(request.filters, request.pageSize).map((filter) =>
+  const events = await readRelayPage({
+    ...request,
+    filters: request.filters.map((filter) =>
       boundaryFilter(filter, request.before, request.after),
     ),
   });
-  return mergeEvents(events)
+  return sortFeedEvents(mergePoolEvents(events))
     .filter((item) => beforeCursor(item.event, request.before))
     .filter((item) => afterCursor(item.event, request.after))
-    .sort((a, b) => compareEventsDesc(a.event, b.event))
     .slice(0, request.pageSize);
 }
 
@@ -79,10 +100,9 @@ export async function readRelayFeedGroups(
       }),
     );
   }
-  const items = mergeFeedEvents(pages.flat())
+  const items = sortFeedEvents(mergeFeedEvents(pages.flat()))
     .filter((item) => beforeCursor(item.event, request.before))
     .filter((item) => afterCursor(item.event, request.after))
-    .sort((a, b) => compareEventsDesc(a.event, b.event))
     .slice(0, request.pageSize);
   return {
     items,
@@ -133,32 +153,6 @@ function nextInterval(createdAt: number): number {
   return (
     intervalWindows.find((window) => age < window) ?? intervalWindows.at(-1)!
   );
-}
-
-function mergeEvents(events: readonly PoolEvent[]): FeedEvent[] {
-  const byId = new Map<string, FeedEvent>();
-  for (const item of events) {
-    const existing = byId.get(item.event.id);
-    byId.set(item.event.id, {
-      event: existing?.event ?? item.event,
-      relays: [...new Set([...(existing?.relays ?? []), item.relay])].sort(),
-    });
-  }
-  return [...byId.values()];
-}
-
-function mergeFeedEvents(events: readonly FeedEvent[]): FeedEvent[] {
-  const byId = new Map<string, FeedEvent>();
-  for (const item of events) {
-    const existing = byId.get(item.event.id);
-    byId.set(item.event.id, {
-      event: existing?.event ?? item.event,
-      relays: [
-        ...new Set([...(existing?.relays ?? []), ...item.relays]),
-      ].sort(),
-    });
-  }
-  return [...byId.values()];
 }
 
 function positiveFilters(

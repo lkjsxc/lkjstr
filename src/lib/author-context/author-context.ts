@@ -52,6 +52,7 @@ export async function loadAuthorContext(
       ],
       pageSize: 22,
       subscriptions: request.subscriptions,
+      purpose: 'feed',
     }),
   ]);
   await Promise.all(
@@ -76,6 +77,7 @@ async function loadAnchor(
     filters: [{ ids: [request.eventId], authors: [request.pubkey], limit: 1 }],
     pageSize: 1,
     subscriptions: request.subscriptions,
+    purpose: 'event-lookup',
   });
   if (!relay) return undefined;
   await upsertEvent(relay.event, [relay.relay]);

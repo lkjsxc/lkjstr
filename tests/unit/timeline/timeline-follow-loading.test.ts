@@ -45,9 +45,10 @@ describe('timeline follow loading', () => {
     const runtime = runtimeFor({ activeAccountPubkey: active });
     await runtime.start();
     sockets[0]?.open();
-    expect(JSON.parse(sockets[0]?.sent[0] ?? '[]')).toEqual([
+    const sent = JSON.parse(sockets[0]?.sent[0] ?? '[]') as unknown[];
+    expect(sent).toEqual([
       'REQ',
-      'timeline-test:follows',
+      expect.any(String),
       { kinds: [3], authors: [active], limit: 1 },
     ]);
   });
@@ -62,9 +63,11 @@ describe('timeline follow loading', () => {
     runtime.subscribe((state) => states.push(state.status));
     await runtime.start();
     sockets.forEach((socket) => socket.open());
-    sockets[0]?.receive(JSON.stringify(['EOSE', 'timeline-test:follows']));
+    const firstSub = subId(sockets[0]);
+    const secondSub = subId(sockets[1]);
+    sockets[0]?.receive(JSON.stringify(['EOSE', firstSub]));
     expect(states).not.toContain('no-follow-list');
-    sockets[1]?.receive(JSON.stringify(['EOSE', 'timeline-test:follows']));
+    sockets[1]?.receive(JSON.stringify(['EOSE', secondSub]));
     await vi.waitFor(() => expect(states).toContain('no-follow-list'));
   });
 });
@@ -83,4 +86,8 @@ function runtimeFor(options: {
 
 function pubkey(): string {
   return getPublicKey(generateSecretKey());
+}
+
+function subId(socket: FakeWebSocket | undefined): string {
+  return String((JSON.parse(socket?.sent[0] ?? '[]') as unknown[])[1] ?? '');
 }

@@ -13,15 +13,9 @@ import {
   profileFromMetadataEvent,
 } from '$lib/identity/profile-cache';
 import type { NostrEvent } from '$lib/protocol';
-import {
-  sharedRelayPool,
-  type PoolEvent,
-  type RelayPool,
-} from '$lib/relays/relay-pool';
-import {
-  RelaySubscriptionManager,
-  type RelaySubscriptionManager as SubscriptionManager,
-} from '$lib/relays/subscription-manager';
+import type { PoolEvent, RelayPool } from '$lib/relays/relay-pool';
+import { runtimeSubscriptions } from '$lib/relays/runtime-subscriptions';
+import { type RelaySubscriptionManager as SubscriptionManager } from '$lib/relays/subscription-manager';
 import {
   cachedProfileEvent,
   cachedProfileFollowList,
@@ -55,9 +49,7 @@ export class ProfileRuntime {
     pool?: RelayPool,
     subscriptions?: SubscriptionManager,
   ) {
-    const relayPool = pool ?? sharedRelayPool;
-    this.#subscriptions =
-      subscriptions ?? new RelaySubscriptionManager(relayPool);
+    this.#subscriptions = runtimeSubscriptions(pool, subscriptions);
   }
 
   subscribe(listener: (state: ProfileState) => void): () => void {
@@ -97,6 +89,7 @@ export class ProfileRuntime {
             this.#startedAt,
             this.#pageSize,
           ),
+          purpose: 'feed',
         },
         (event) => this.#receive(event),
       ),

@@ -42,6 +42,10 @@ shown immediately; suppressed repeats are counted, and the next visible row
 adds a bounded `repeats suppressed` suffix. Relay snapshots and relay session
 counters still record the raw behavior.
 
+Runtime lifecycle diagnostics include tab id, runtime kind, relay count, close
+reason, uptime, item count, and subscription counters when the owner exposes
+them. These records are local app-log entries and do not persist across reloads.
+
 Oversized relay messages are size-aware diagnostics. They include measured
 bytes and the configured `512 KiB` limit, skip JSON parsing, and do not store
 the payload.

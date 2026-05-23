@@ -51,16 +51,15 @@ describe('timeline runtime', () => {
         activeKey,
       ),
     );
-
     const runtime = runtimeFor({ activeAccountPubkey: active });
     await runtime.start();
     sockets[0]?.open();
     await waitForSub('timeline-test:notes:initial');
     await waitForSub('timeline-test:notes', true);
     // prettier-ignore
-    expect(parsedSent('timeline-test:notes:initial')).toEqual(['REQ', expect.stringContaining('timeline-test:notes:initial'), expect.objectContaining({ kinds: feedDisplayKinds, authors: [active, followed], limit: 30 })]);
+    expect(parsedSent('timeline-test:notes:initial')).toEqual(['REQ', expect.any(String), expect.objectContaining({ kinds: feedDisplayKinds, authors: [active, followed], limit: 30 })]);
     // prettier-ignore
-    expect(parsedSent('timeline-test:notes', true)).toEqual(['REQ', 'timeline-test:notes', expect.objectContaining({ kinds: feedDisplayKinds, authors: [active, followed], limit: 30, since: expect.any(Number) })]);
+    expect(parsedSent('timeline-test:notes', true)).toEqual(['REQ', expect.any(String), expect.objectContaining({ kinds: feedDisplayKinds, authors: [active, followed], limit: 30, since: expect.any(Number) })]);
   });
 
   it('falls back to self notes when no follow list is found', async () => {
@@ -75,9 +74,9 @@ describe('timeline runtime', () => {
     await waitForSub('timeline-test:notes:initial');
     await waitForSub('timeline-test:notes', true);
     // prettier-ignore
-    expect(parsedSent('timeline-test:notes:initial')).toEqual(['REQ', expect.stringContaining('timeline-test:notes:initial'), expect.objectContaining({ kinds: feedDisplayKinds, authors: [active], limit: 30 })]);
+    expect(parsedSent('timeline-test:notes:initial')).toEqual(['REQ', expect.any(String), expect.objectContaining({ kinds: feedDisplayKinds, authors: [active], limit: 30 })]);
     // prettier-ignore
-    expect(parsedSent('timeline-test:notes', true)).toEqual(['REQ', 'timeline-test:notes', expect.objectContaining({ kinds: feedDisplayKinds, authors: [active], limit: 30, since: expect.any(Number) })]);
+    expect(parsedSent('timeline-test:notes', true)).toEqual(['REQ', expect.any(String), expect.objectContaining({ kinds: feedDisplayKinds, authors: [active], limit: 30, since: expect.any(Number) })]);
   });
 
   it('stops loading on note eose without events', async () => {
@@ -132,11 +131,13 @@ describe('timeline runtime', () => {
     );
     await vi.waitFor(() => expect(states.at(-1)).toContain('followed note'));
     runtime.close();
+    const noteSub = (parsedSent('timeline-test:notes', true) as unknown[])[1];
+    const metaSub = (parsedSent('timeline-test:meta', true) as unknown[])[1];
     expect(socketForSub('timeline-test:notes')?.sent).toContain(
-      '["CLOSE","timeline-test:notes"]',
+      JSON.stringify(['CLOSE', noteSub]),
     );
     expect(socketForSub('timeline-test:meta')?.sent).toContain(
-      '["CLOSE","timeline-test:meta"]',
+      JSON.stringify(['CLOSE', metaSub]),
     );
   });
 
@@ -190,7 +191,6 @@ function runtimeFor(options: {
 function pubkey(): string {
   return getPublicKey(generateSecretKey());
 }
-
 async function waitForSub(subId: string, exact = false): Promise<void> {
   await vi.waitFor(() => expect(parsedSent(subId, exact)).toBeTruthy());
 }

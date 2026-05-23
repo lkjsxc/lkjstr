@@ -11,12 +11,16 @@ runtime surfaces.
 - The manager registers live subscriptions by relay set and filter shape.
 - Identical live reads share one relay subscription and fan events out to each
   listener.
-- Logical subscription keys are compacted to relay-safe IDs before they reach
-  the relay pool. Long profile, thread, older-page, and embed keys must never
-  send IDs longer than 64 characters.
+- Logical subscription keys are compacted to opaque relay-safe IDs before they
+  reach the relay pool. Long profile, thread, older-page, and embed keys must
+  never send IDs longer than 48 characters.
+- Default runtimes use the shared subscription manager. Injected custom relay
+  pools or managers get isolated managers.
 - Cleanup removes one listener; the relay `CLOSE` is sent only after the last
   listener is gone.
 - One-shot paged reads use the same registration path and close when complete.
+- In-flight one-shot paged reads dedupe by normalized relays, filters, logical
+  request key, request purpose, and timeout.
 - `readPage(request, options)` returns raw relay-provenance receipts. Feed page
   helpers decide event sorting, duplicate merging, and cursor filtering.
 - Paged reads close on EOSE from all active relays, terminal relay state, or
@@ -25,6 +29,8 @@ runtime surfaces.
   reads.
 - The local de-duplication key may include filters, but the relay-facing id is
   short and opaque.
+- Runtime listeners receive the logical key again even when the relay sees a
+  compact ID.
 - Paged reads are used for historical `until` pages; live reads are used for
   current subscriptions.
 - Home, Global, Profile, Thread, and Notifications use this layer for relay

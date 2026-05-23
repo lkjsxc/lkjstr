@@ -32,6 +32,13 @@ relays into Relay Settings or relying on a backend proxy.
 - Use at most `200` authors in a selected fallback filter.
 - Historical pages use interval windows and include both `since` and `until`.
 - `limit` is a safety cap and must never be `0`.
+- Request purposes are `feed`, `metadata`, `event-lookup`, `route-discovery`,
+  and `search`.
+- Cached NIP-11 `limitation.max_limit` caps relay request limits per relay
+  group while final page slicing stays local.
+- Search uses relays known to support NIP-50 plus relays with unknown support.
+  Relays known not to support NIP-50 are skipped for search requests.
+- Unknown NIP-11 data is not treated as lack of support.
 
 ## Blocks
 

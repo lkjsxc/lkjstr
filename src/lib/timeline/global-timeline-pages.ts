@@ -27,6 +27,7 @@ export async function loadInitialGlobalPage(
     filters: [{ kinds: feedDisplayKinds, limit: request.pageSize }],
     pageSize: request.pageSize,
     subscriptions: request.subscriptions,
+    purpose: 'feed',
   });
   await Promise.all(
     relayItems.map((item) => upsertEvent(item.event, item.relays)),
@@ -55,6 +56,7 @@ export async function loadOlderGlobalPage(
     before: request.cursor,
     pageSize: request.pageSize,
     subscriptions: request.subscriptions,
+    purpose: 'feed',
   });
   await Promise.all(
     relayItems.map((item) => upsertEvent(item.event, item.relays)),

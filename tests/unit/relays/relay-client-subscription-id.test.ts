@@ -46,7 +46,7 @@ describe('relay subscription id guards', () => {
     expect(sockets).toHaveLength(0);
     expect(states.at(-1)).toMatchObject({
       state: 'error',
-      lastError: expect.stringContaining('64 characters'),
+      lastError: expect.stringContaining('48 characters'),
     });
     expect(states.at(-1)?.diagnostics.at(-1)).toMatchObject({
       kind: 'invalid-subscription',

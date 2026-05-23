@@ -109,6 +109,7 @@ async function relayProfile(
     filters: [{ kinds: [kinds.metadata], authors: [target.pubkey] }],
     pageSize: 1,
     subscriptions: sharedSubscriptionManager,
+    purpose: 'metadata',
   });
   return hit ? profileFromMetadataEvent(hit.event) : undefined;
 }

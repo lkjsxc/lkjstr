@@ -44,3 +44,9 @@ Stats.
   relay order, unrelated settings, notification refreshes, and local state
   changes do not rebuild Home or Global subscriptions.
 - Timeline runtime create and close events are written to lkjstr Log.
+- Runtime lifecycle logs include tab id, runtime kind, relay count, reason,
+  uptime, item count, and subscription counters when available.
+- Tab retention records close reasons for expiry, tab removal, retention
+  setting changes, and pane destroy so retained runtime teardown is diagnosable.
+- Runtime counters are debug-only. `debug.showRuntimeCounters` defaults to
+  `false`; Stats is the only tab that renders them.

@@ -15,9 +15,10 @@ Testing ownership maps behavior to the right test layer.
 - Event repository paging, tag lookup, relay provenance, memory fallback, and
   compaction.
 - Subscription manager one-shot page reads, EOSE cleanup, timeout cleanup, and
-  relay provenance.
+  relay provenance, in-flight dedupe, logical key restoration, compact relay
+  IDs, and session compatibility filtering.
 - Relay page helper sorting, duplicate relay provenance, `before` and `after`
-  cursor filtering, and same-second boundaries.
+  cursor filtering, same-second boundaries, and NIP-11 limit shaping.
 - Follow-list parsing, dedupe, and self inclusion.
 - Timeline no-active-account, loading-follows, no-follow-list,
   no-enabled-relay, auth-required, subscription-closed, relay-failed,
@@ -59,5 +60,6 @@ Testing ownership maps behavior to the right test layer.
 - Inactive tab scroll retention within the configured grace period and retained
   body removal after expiry.
 - Heavy-feed smoke coverage for thousands of events, large follows, bounded
-  runtime counters, and app heap under `100 MB`.
+  runtime counters, real signed synthetic relay events, and app heap under
+  `100 MB`.
 - Tile resize persistence.

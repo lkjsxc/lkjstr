@@ -60,6 +60,7 @@ async function relayEmojiList(
     filters: [{ kinds: [emojiListKind], authors: [pubkey], limit: 1 }],
     pageSize: 1,
     subscriptions: sharedSubscriptionManager,
+    purpose: 'metadata',
   });
   await Promise.all(hits.map((hit) => upsertEvent(hit.event, [hit.relay])));
   return hits.map((hit) => hit.event);
@@ -92,6 +93,7 @@ async function relayEmojiSets(
     })),
     pageSize: addresses.length,
     subscriptions: sharedSubscriptionManager,
+    purpose: 'metadata',
   });
   await Promise.all(hits.map((hit) => upsertEvent(hit.event, [hit.relay])));
   return hits.map((hit) => hit.event);

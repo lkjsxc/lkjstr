@@ -2,7 +2,7 @@ import { upsertEvent } from '$lib/events/repository';
 import { accountNotifications, saveNotifications } from './notification-store';
 import { deriveNotifications } from './notification-index';
 import { notificationEventKinds } from './notification-runtime';
-import { RelaySubscriptionManager } from '$lib/relays/subscription-manager';
+import { sharedSubscriptionManager } from '$lib/relays/subscription-manager';
 import { initialRelaySubscriptionId } from '$lib/relays/subscription-id';
 import { notificationRelays } from './notification-relays';
 
@@ -13,7 +13,7 @@ export class BackgroundNotificationSync {
   constructor(
     readonly accountPubkey: string | undefined,
     readonly relays: readonly string[],
-    readonly subscriptions = new RelaySubscriptionManager(),
+    readonly subscriptions = sharedSubscriptionManager,
     readonly onStored: () => void = () => undefined,
   ) {}
 
@@ -37,6 +37,7 @@ export class BackgroundNotificationSync {
               limit: 50,
             },
           ],
+          purpose: 'feed',
         },
         ({ event, relay }) => this.#store(event, relay),
       ),
@@ -63,6 +64,7 @@ export class BackgroundNotificationSync {
           limit: 50,
         },
       ],
+      purpose: 'feed',
     });
     await Promise.all(
       events.map(({ event, relay }) => this.#store(event, relay)),

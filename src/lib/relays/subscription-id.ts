@@ -2,7 +2,7 @@ import { sha256 } from '@noble/hashes/sha2.js';
 import { bytesToHex } from '@noble/hashes/utils.js';
 import type { FeedCursorPoint } from '../events/types';
 
-export const maxRelaySubscriptionIdLength = 64;
+export const maxRelaySubscriptionIdLength = 48;
 
 export function relaySubscriptionHash(value: unknown, length = 12): string {
   const text = typeof value === 'string' ? value : JSON.stringify(value);
@@ -20,6 +20,14 @@ export function compactRelaySubscriptionId(
   const id = parts.join(':');
   if (id.length <= maxRelaySubscriptionIdLength) return id;
   return `${prefix.slice(0, 8)}:${topic.slice(0, 10)}:${relaySubscriptionHash(id, 16)}`;
+}
+
+export function childRelaySubscriptionId(
+  parent: string,
+  topic: string,
+  discriminator?: unknown,
+): string {
+  return compactRelaySubscriptionId(parent, topic, discriminator);
 }
 
 export function liveRelaySubscriptionId(prefix: string, topic: string): string {

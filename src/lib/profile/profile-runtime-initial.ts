@@ -51,6 +51,7 @@ export async function loadInitialProfilePage(request: Request) {
       ],
       pageSize: 2,
       subscriptions: request.subscriptions,
+      purpose: 'metadata',
     }),
     readRelayPage({
       key: `${key}:follows`,
@@ -60,6 +61,7 @@ export async function loadInitialProfilePage(request: Request) {
       ],
       pageSize: 1,
       subscriptions: request.subscriptions,
+      purpose: 'metadata',
     }),
     readRelayFeedPage({
       key: `${key}:posts`,
@@ -73,6 +75,7 @@ export async function loadInitialProfilePage(request: Request) {
       ],
       pageSize: request.pageSize,
       subscriptions: request.subscriptions,
+      purpose: 'feed',
     }),
   ]);
   const relayEvents = [...metadata, ...follows];

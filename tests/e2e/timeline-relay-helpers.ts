@@ -3,7 +3,9 @@ import { expect, type Page } from '@playwright/test';
 export async function addReadonlyAccount(page: Page, pubkey: string) {
   const tabStrip = page.locator('.pane').nth(1).locator('.tab-strip');
   await tabStrip.getByRole('button', { name: 'Accounts', exact: true }).click();
-  await page.getByLabel('npub, hex pubkey, or nsec').fill(pubkey);
+  const input = page.getByLabel('npub, hex pubkey, or nsec');
+  await expect(input).toBeEnabled();
+  await input.fill(pubkey);
   await page.getByRole('button', { name: 'Add', exact: true }).click();
   await expect(page.getByText('readonly')).toBeVisible();
   await tabStrip.getByRole('button', { name: 'Home', exact: true }).click();
@@ -29,6 +31,7 @@ export async function openCleanWorkspace(page: Page) {
   await page.goto('/');
   await page.evaluate(async () => {
     localStorage.clear();
+    window.__syntheticSockets ??= [];
     window.__syntheticSockets.length = 0;
     await new Promise<void>((resolve) => {
       const request = indexedDB.open('lkjstr');
@@ -62,7 +65,6 @@ export async function installSyntheticRelay(
   options: { events: unknown[]; closed?: [string, string] },
 ) {
   await page.addInitScript((relayOptions) => {
-    localStorage.clear();
     class SyntheticWebSocket {
       static CONNECTING = 0;
       static OPEN = 1;

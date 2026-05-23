@@ -1,21 +1,18 @@
 import { sharedRelayPool, type PoolEvent, type RelayPool } from './relay-pool';
-import type { RelaySnapshot } from './types';
 import type { RelayReadRequest } from '../events/types';
 import { appendAppLog, boundedMessage } from '../log/app-log';
-import { readStatuses, type ReadPageResult } from './read-page-status';
-import {
-  limitedReadRelays,
-  PerRelayReadLimiter,
-  readPageComplete,
-} from './read-limiter';
-import {
-  compactRelaySubscriptionId,
-  relaySubscriptionIdValid,
-} from './subscription-id';
+import { countRuntime } from '../app/runtime-counters';
+import type { RelaySnapshot } from './types';
+import type { ReadPageResult } from './read-page-status';
+import { PerRelayReadLimiter } from './read-limiter';
+import { compactRelaySubscriptionId } from './subscription-id';
+import { normalizedRelayList } from './relay-url-list';
+import { executeReadPage, type ReadPageState } from './subscription-read-page';
 
 type Listener = (event: PoolEvent) => void;
 type Entry = {
   readonly subId: string;
+  readonly key: string;
   readonly listeners: Set<Listener>;
   readonly cleanup: () => void;
 };
@@ -32,10 +29,13 @@ export class RelaySubscriptionManager {
   #entries = new Map<string, Entry>();
   #pool: RelayPool;
   #readLimiter: PerRelayReadLimiter;
-  #readSeq = 0;
-  #activeReadBaseIds = new Set<string>();
-  #usedReadRequestKeys = new Set<string>();
-  #usedReadBaseIds = new Set<string>();
+  #readState: ReadPageState = {
+    readSeq: 0,
+    activeReadBaseIds: new Set<string>(),
+    usedReadRequestKeys: new Set<string>(),
+    usedReadBaseIds: new Set<string>(),
+  };
+  #inFlightReads = new Map<string, Promise<ReadPageResult>>();
 
   constructor(
     pool: RelayPool = sharedRelayPool,
@@ -58,11 +58,20 @@ export class RelaySubscriptionManager {
     const subId = relayFacingSubId(request.key);
     const offEvent = this.#pool.onEvent((event) => {
       if (event.subId === subId)
-        listeners.forEach((item) => safeNotify(item, event, subId));
+        listeners.forEach((item) =>
+          safeNotify(item, { ...event, subId: request.key }, request.key),
+        );
+      if (event.subId === subId) countRuntime('subscription-manager', 'events');
     });
-    const close = this.#pool.subscribe(request.relays, subId, request.filters);
+    const close = this.#pool.subscribe(
+      request.relays,
+      subId,
+      request.filters,
+      request.purpose,
+    );
     this.#entries.set(key, {
       subId,
+      key: request.key,
       listeners,
       cleanup: () => {
         offEvent();
@@ -73,7 +82,9 @@ export class RelaySubscriptionManager {
   }
 
   subscribeState(listener: (snapshots: RelaySnapshot[]) => void): () => void {
-    return this.#pool.onState(listener);
+    return this.#pool.onState((snapshots) =>
+      listener(normalizeSnapshots(snapshots, [...this.#entries.values()])),
+    );
   }
 
   async readPage(
@@ -87,66 +98,19 @@ export class RelaySubscriptionManager {
     request: RelayReadRequest,
     options: ReadPageOptions = {},
   ): Promise<ReadPageResult> {
-    const events: PoolEvent[] = [];
-    let timedOut = false;
-    let lastSnapshots: RelaySnapshot[] = [];
-    const startedAt = Date.now();
-    const requestKey = subscriptionKey(request);
-    const baseSubId = relayFacingSubId(request.key);
-    const subId =
-      this.#activeReadBaseIds.has(baseSubId) ||
-      this.#usedReadBaseIds.has(baseSubId) ||
-      this.#usedReadRequestKeys.has(requestKey)
-        ? relayFacingSubId(`${requestKey}:${++this.#readSeq}`)
-        : baseSubId;
-    this.#activeReadBaseIds.add(baseSubId);
-    const releaseReadSlots = await this.#readLimiter.acquire(
-      limitedReadRelays(request.relays),
-    );
-    let offEvent: () => void = () => undefined;
-    let offState: () => void = () => undefined;
-    let close: () => void = () => undefined;
-    try {
-      offEvent = this.#pool.onEvent((event) => {
-        if (event.subId === subId) events.push(event);
-      });
-      await new Promise<void>((resolve) => {
-        let done = false;
-        const timer = setTimeout(() => finish(true), options.timeoutMs ?? 5000);
-        const finish = (timeout = false) => {
-          if (done) return;
-          done = true;
-          timedOut = timeout;
-          clearTimeout(timer);
-          offState();
-          resolve();
-        };
-        offState = this.#pool.onState((snapshots) => {
-          lastSnapshots = snapshots;
-          if (readPageComplete(snapshots, request.relays, subId)) finish();
-        });
-        if (!done)
-          close = this.#pool.subscribe(request.relays, subId, request.filters);
-      });
-      return {
-        events,
-        statuses: readStatuses({
-          relays: request.relays,
-          subId,
-          events,
-          snapshots: lastSnapshots,
-          timedOut,
-          durationMs: Date.now() - startedAt,
-        }),
-      };
-    } finally {
-      offEvent();
-      close();
-      this.#activeReadBaseIds.delete(baseSubId);
-      this.#usedReadRequestKeys.add(requestKey);
-      this.#usedReadBaseIds.add(baseSubId);
-      releaseReadSlots();
-    }
+    const dedupeKey = readDedupeKey(request, options);
+    const existing = this.#inFlightReads.get(dedupeKey);
+    if (existing) return existing;
+    const promise = executeReadPage(
+      this.#pool,
+      this.#readLimiter,
+      this.#readState,
+      request,
+      options,
+    ).finally(() => this.#inFlightReads.delete(dedupeKey));
+    this.#inFlightReads.set(dedupeKey, promise);
+    countRuntime('subscription-manager', 'pageReads');
+    return promise;
   }
 
   #remove(key: string, listener: Listener): void {
@@ -183,18 +147,48 @@ function logListenerFailure(
   });
 }
 
+function normalizeSnapshots(
+  snapshots: readonly RelaySnapshot[],
+  entries: readonly Entry[],
+): RelaySnapshot[] {
+  const logicalByRelay = new Map(entries.map((entry) => [entry.subId, entry]));
+  return snapshots.map((snapshot) => {
+    const eoseBySub = { ...snapshot.eoseBySub };
+    const closedBySub = { ...snapshot.closedBySub };
+    for (const [relaySubId, entry] of logicalByRelay) {
+      if (snapshot.eoseBySub[relaySubId]) eoseBySub[entryKey(entry)] = true;
+      if (snapshot.closedBySub[relaySubId])
+        closedBySub[entryKey(entry)] = snapshot.closedBySub[relaySubId];
+    }
+    return { ...snapshot, eoseBySub, closedBySub };
+  });
+}
+
+function entryKey(entry: Entry): string {
+  return entry.key;
+}
+
 export function subscriptionKey(request: RelayReadRequest): string {
   return JSON.stringify({
     key: request.key,
-    relays: [...request.relays].sort(),
+    relays: normalizedRelayList(request.relays),
     filters: request.filters,
+    purpose: request.purpose,
   });
 }
 
 export function relayFacingSubId(key: string): string {
-  return relaySubscriptionIdValid(key)
-    ? key
-    : compactRelaySubscriptionId('read', 'sub', key);
+  return compactRelaySubscriptionId('read', 'sub', key);
 }
 
 export const sharedSubscriptionManager = new RelaySubscriptionManager();
+
+function readDedupeKey(
+  request: RelayReadRequest,
+  options: ReadPageOptions,
+): string {
+  return JSON.stringify({
+    request: subscriptionKey(request),
+    timeoutMs: options.timeoutMs ?? 5000,
+  });
+}

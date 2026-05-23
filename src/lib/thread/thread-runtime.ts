@@ -3,15 +3,9 @@ import { lookupEvent } from '../events/repository';
 import { afterCursor } from '../events/repository-shared';
 import { boundedErrorText } from '../events/runtime-error';
 import { replyRoot } from '../protocol';
-import {
-  sharedRelayPool,
-  type PoolEvent,
-  type RelayPool,
-} from '../relays/relay-pool';
-import {
-  RelaySubscriptionManager,
-  type RelaySubscriptionManager as SubscriptionManager,
-} from '../relays/subscription-manager';
+import type { PoolEvent, RelayPool } from '../relays/relay-pool';
+import { runtimeSubscriptions } from '../relays/runtime-subscriptions';
+import { type RelaySubscriptionManager as SubscriptionManager } from '../relays/subscription-manager';
 import type { RelaySnapshot } from '../relays/types';
 import { threadRelayState } from './thread-relay-state';
 import {
@@ -62,9 +56,7 @@ export class ThreadRuntime {
     pool?: RelayPool,
     subscriptions?: SubscriptionManager,
   ) {
-    const relayPool = pool ?? sharedRelayPool;
-    this.#subscriptions =
-      subscriptions ?? new RelaySubscriptionManager(relayPool);
+    this.#subscriptions = runtimeSubscriptions(pool, subscriptions);
     this.#rootId = eventId;
   }
   // prettier-ignore
@@ -97,6 +89,7 @@ export class ThreadRuntime {
             this.#startedAt,
             this.#pageSize,
           ),
+          purpose: 'feed',
         },
         (event) => this.#receive(event),
       ),

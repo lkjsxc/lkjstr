@@ -34,6 +34,7 @@ export async function discoverAuthorRelayRoutes(input: {
     ],
     pageSize: authors.length,
     subscriptions: input.subscriptions,
+    purpose: 'route-discovery',
   });
   await Promise.all(
     events.map((item) => upsertEvent(item.event, [item.relay])),

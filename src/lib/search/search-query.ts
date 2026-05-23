@@ -4,6 +4,7 @@ import { boundaryUntil, readRelayFeedPage } from '$lib/events/relay-page';
 import { eventsMatching, upsertEvent } from '$lib/events/repository';
 import type { FeedCursorPoint, FeedEvent } from '$lib/events/types';
 import { compareEventsDesc } from '$lib/protocol';
+import { relayMaySupportNip50 } from '$lib/relays/relay-info';
 import type { RelaySubscriptionManager } from '$lib/relays/subscription-manager';
 import { initialRelaySubscriptionId } from '$lib/relays/subscription-id';
 
@@ -41,7 +42,7 @@ async function relaySearch(
       request.subId,
       `${query}:${request.before?.createdAt ?? 0}:${request.before?.id ?? ''}`,
     ),
-    relays: request.relays,
+    relays: await searchRelays(request.relays),
     filters: [
       {
         kinds: feedDisplayKinds,
@@ -53,11 +54,22 @@ async function relaySearch(
     before: request.before,
     pageSize: request.limit + 1,
     subscriptions: request.subscriptions,
+    purpose: 'search',
   });
   await Promise.all(
     relayItems.map((item) => upsertEvent(item.event, item.relays)),
   );
   return relayItems;
+}
+
+async function searchRelays(relays: readonly string[]): Promise<string[]> {
+  const support = await Promise.all(
+    relays.map(async (relay) => ({
+      relay,
+      supported: await relayMaySupportNip50(relay),
+    })),
+  );
+  return support.filter((item) => item.supported).map((item) => item.relay);
 }
 
 async function cachedSearch(
