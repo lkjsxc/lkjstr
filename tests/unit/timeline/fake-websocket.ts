@@ -27,3 +27,19 @@ export class FakeWebSocket {
     this.onmessage?.({ data } as MessageEvent);
   }
 }
+
+export function parsedSocketMessage(subId: string, exact = false): unknown {
+  const raw = sockets
+    .flatMap((socket) => socket.sent)
+    .find((item) => {
+      const parsed = JSON.parse(item) as unknown[];
+      return exact ? parsed[1] === subId : String(parsed[1]).startsWith(subId);
+    });
+  return raw ? JSON.parse(raw) : undefined;
+}
+
+export function socketForSub(subId: string): FakeWebSocket | undefined {
+  return sockets.find((socket) =>
+    socket.sent.some((item) => (JSON.parse(item) as unknown[])[1] === subId),
+  );
+}

@@ -7,6 +7,7 @@ import type { NostrEvent } from '$lib/protocol';
 import type { FeedEvent } from '$lib/events/types';
 import type { RelaySubscriptionManager } from '$lib/relays/subscription-manager';
 import { initialRelaySubscriptionId } from '$lib/relays/subscription-id';
+import { routedAuthorRelays } from '$lib/relays/relay-routing';
 import { storeProfileEvent } from './profile-store';
 
 type Request = {
@@ -22,24 +23,30 @@ type Request = {
 
 export async function loadInitialProfilePage(request: Request) {
   const key = initialRelaySubscriptionId(request.subId, request.pubkey);
+  const relays = await routedAuthorRelays({
+    authors: [request.pubkey],
+    selectedRelays: request.relays,
+    purpose: 'write',
+    includeDiscovery: true,
+  });
   const [metadata, follows, posts] = await Promise.all([
     readRelayPage({
       key: `${key}:meta`,
-      relays: request.relays,
-      filters: [{ kinds: [0], authors: [request.pubkey], limit: 1 }],
-      pageSize: 1,
+      relays,
+      filters: [{ kinds: [0, 10002], authors: [request.pubkey], limit: 2 }],
+      pageSize: 2,
       subscriptions: request.subscriptions,
     }),
     readRelayPage({
       key: `${key}:follows`,
-      relays: request.relays,
+      relays,
       filters: [{ kinds: [3], authors: [request.pubkey], limit: 1 }],
       pageSize: 1,
       subscriptions: request.subscriptions,
     }),
     readRelayFeedPage({
       key: `${key}:posts`,
-      relays: request.relays,
+      relays,
       filters: [
         {
           kinds: feedDisplayKinds,

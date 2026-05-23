@@ -23,8 +23,11 @@ aligned in the same change, keep source files under 200 lines, keep docs under
 - Profile tabs open from identity clicks. Profile Edit opens for active-account
   metadata editing. Thread tabs open from event clicks.
 - Settings are one flat key-value list.
-- Home, Global, Notifications, Profile, and Thread reads use the selected
-  default relay set. Tweet writes use enabled write relays in that set.
+- Selected read relays are the base and fallback for Home, Global,
+  Notifications, Profile, and Thread. Targeted reads may also use bounded
+  protocol-derived routes from NIP-65, NIP-02, entity or tag hints, event relay
+  receipts, and local route evidence. Global stays selected-relay based.
+- Tweet writes use enabled write relays in the selected default set.
 - Tweet publish clears after local signing and queueing, not after relay OKs.
 - Incoming NIP-30 custom emoji shortcodes accept letters, numbers,
   underscores, and hyphens. Manual lkjstr shortcode creation remains stricter:

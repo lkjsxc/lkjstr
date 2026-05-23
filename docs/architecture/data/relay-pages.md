@@ -28,6 +28,8 @@ preserving where each real event was seen.
   unix time zero so newer relay pages can fetch every same-second candidate.
 - Raw reads remain valid for exact id lookup, latest replaceable selection, and
   other cases where caller-specific ordering is required.
+- Historical routed reads use interval windows with both `since` and `until`;
+  `limit` is always a positive safety cap.
 
 ## Callers
 

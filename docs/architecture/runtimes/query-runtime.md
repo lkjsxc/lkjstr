@@ -7,11 +7,13 @@ Query runtime docs define how cache-first relay reads behave.
 ## Contract
 
 - Cache is read before relay subscriptions start.
-- Relay reads use enabled read relays from the selected default relay set.
+- Selected read relays are the base and fallback. Targeted query runtimes may
+  add bounded protocol-derived routes.
 - Feed-like tabs read cache pages through the shared repository.
 - Relay results are written through the repository before UI state updates.
 - Feed cursors track older and newer pages for cache and relay backfill.
-- Feed pages use `limit`, compound cursors, and `hasMore` fields consistently.
+- Feed pages use nonzero `limit`, compound cursors, interval boundaries, and
+  `hasMore` fields consistently.
 - Relay feed pages apply cursor filters after relay collection, merge duplicate
   relay provenance, sort by `{created_at,id}`, and slice only after sorting.
 - Initial page size is `30`.

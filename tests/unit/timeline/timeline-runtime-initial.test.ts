@@ -40,13 +40,18 @@ describe('timeline initial relay pages', () => {
     );
     await runtime.start();
     sockets[0]?.open();
+    await vi.waitFor(() =>
+      expect(subIdStarting('timeline-test:notes:initial')).toBeTruthy(),
+    );
     const initialSub = subIdStarting('timeline-test:notes:initial');
     const oldNote = finalizeEvent(
       { created_at: 1, kind: 1, tags: [], content: 'old relay note' },
       followedKey,
     );
-    sockets[0]?.receive(JSON.stringify(['EVENT', initialSub, oldNote]));
-    sockets[0]?.receive(JSON.stringify(['EOSE', initialSub]));
+    socketForSub(initialSub)?.receive(
+      JSON.stringify(['EVENT', initialSub, oldNote]),
+    );
+    socketForSub(initialSub)?.receive(JSON.stringify(['EOSE', initialSub]));
     await vi.waitFor(() => expect(states.at(-1)).toContain('old relay note'));
   });
 });
@@ -56,5 +61,11 @@ function subIdStarting(prefix: string): string {
   const raw = sent.find((item) =>
     String(JSON.parse(item)[1]).startsWith(prefix),
   );
-  return String((JSON.parse(raw ?? '[]') as unknown[])[1]);
+  return raw ? String((JSON.parse(raw) as unknown[])[1]) : '';
+}
+
+function socketForSub(subId: string): FakeWebSocket | undefined {
+  return sockets.find((socket) =>
+    socket.sent.some((item) => String(JSON.parse(item)[1]) === subId),
+  );
 }

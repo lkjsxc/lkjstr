@@ -9,6 +9,8 @@ import type { RelayConnectionState } from './types';
 import { defaultRelaySet } from './default-relays';
 import { normalizeRelayUrl } from '../protocol';
 import { normalizeSeededRelaySets } from './relay-normalize';
+import { clearRouteBlock, saveRouteBlock } from './relay-route-store';
+import { createRelay, resetRelayLiveState } from './relay-store-helpers';
 const selectedDefaultKey = 'lkjstr.defaultRelaySetId';
 let memorySelectedDefaultRelaySetId = defaultRelaySet.id;
 
@@ -91,6 +93,7 @@ export async function addRelay(
 ): Promise<RelaySet[]> {
   const url = normalizeRelayUrl(input);
   if (!url) throw new Error('Relay URL is invalid.');
+  await clearRouteBlock(url);
   return updateSet(setId, (set) =>
     set.relays.some((relay) => relay.url === url)
       ? set
@@ -103,6 +106,8 @@ export async function updateRelay(
   url: string,
   patch: Partial<Pick<RelayRecord, 'label' | 'enabled' | 'read' | 'write'>>,
 ): Promise<RelaySet[]> {
+  if (patch.enabled === true) await clearRouteBlock(url);
+  if (patch.enabled === false) await saveRouteBlock(url, 'user-disabled');
   return updateSet(setId, (set) => ({
     ...set,
     relays: set.relays.map((relay) =>
@@ -113,6 +118,9 @@ export async function updateRelay(
 
 export async function restoreDefaultRelaySet(): Promise<RelaySet[]> {
   const sets = await listRelaySets();
+  await Promise.all(
+    defaultRelaySet.relays.map((relay) => clearRouteBlock(relay.url)),
+  );
   const next = [
     ...sets.filter((set) => set.id !== defaultRelaySet.id),
     { ...defaultRelaySet, updatedAt: Date.now() },
@@ -125,6 +133,7 @@ export async function removeRelay(
   setId: string,
   url: string,
 ): Promise<RelaySet[]> {
+  await saveRouteBlock(url, 'user-removed');
   const relaySets = await listRelaySets();
   const next = relaySets.map((set) =>
     set.id !== setId
@@ -144,6 +153,8 @@ export async function setRelayEnabled(
   url: string,
   enabled: boolean,
 ): Promise<RelaySet[]> {
+  if (enabled) await clearRouteBlock(url);
+  else await saveRouteBlock(url, 'user-disabled');
   const relaySets = await listRelaySets();
   const next = relaySets.map((set) =>
     set.id !== setId
@@ -170,31 +181,4 @@ async function updateSet(
   );
   await saveRelaySets(next);
   return next;
-}
-
-function createRelay(url: string): RelayRecord {
-  const host = new URL(url).host;
-  return {
-    url,
-    label: host,
-    enabled: true,
-    read: true,
-    write: true,
-    state: 'idle',
-    updatedAt: Date.now(),
-    health: { attempts: 0, successes: 0, failures: 0 },
-  };
-}
-
-function resetRelayLiveState(relaySets: readonly RelaySet[]): RelaySet[] {
-  let changed = false;
-  const next = relaySets.map((set) => ({
-    ...set,
-    relays: set.relays.map((relay) => {
-      if (relay.state === 'idle') return relay;
-      changed = true;
-      return { ...relay, state: 'idle' as const };
-    }),
-  }));
-  return changed ? next : [...relaySets];
 }

@@ -27,6 +27,8 @@ Profile runtime owns metadata and authored-note loading for one pubkey.
   following count.
 - Live posts are stored while browsing an older pruned window, but visible
   insertion is deferred until newer notes are loaded.
-- Historical note reads use `until`; live reads set `since` when started.
-- Relay reads use enabled read relays from the selected default relay set.
+- Historical note reads use interval windows with `since` and `until`; live
+  reads set `since` when started.
+- Relay reads use selected read relays as base and fallback plus bounded author
+  routes from NIP-65, NIP-02, relay receipts, and discovery evidence.
 - Closing the tab closes subscriptions.

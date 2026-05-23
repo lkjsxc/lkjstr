@@ -33,6 +33,8 @@ here before code is changed.
   parsing, rendering, and publishing rules.
 - [architecture/network/relay-pool.md](architecture/network/relay-pool.md):
   WebSocket relay clients.
+- [architecture/network/relay-routing.md](architecture/network/relay-routing.md):
+  protocol-derived read routing.
 - [architecture/network/settings-store.md](architecture/network/settings-store.md):
   settings storage.
 - [architecture/network/subscription-manager.md](architecture/network/subscription-manager.md):
@@ -149,5 +151,7 @@ here before code is changed.
 - Event rows show display names and dates; full public keys and relay URLs stay
   in identity, relay, and diagnostic surfaces.
 - Home, Global, and Notifications use shared storage and relay subscriptions.
+- Selected relays are the base and fallback for targeted reads; route evidence
+  does not silently import Relay Settings.
 - Partial relay failure must not keep a feed in a loading state.
 - Workspace tabs support native drag-and-drop movement across tiles.

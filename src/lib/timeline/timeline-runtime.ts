@@ -10,6 +10,8 @@ import { isFeedDisplayKind } from '../events/feed-kinds';
 import { boundedErrorText } from '../events/runtime-error';
 import type { FeedCursorPoint } from '../events/types';
 import { sharedRelayPool, type PoolEvent } from '../relays/relay-pool';
+import { discoverAuthorRelayRoutes } from '../relays/relay-discovery';
+import { routedAuthorRelays } from '../relays/relay-routing';
 import { RelaySubscriptionManager } from '../relays/subscription-manager';
 import type { RelaySnapshot } from '../relays/types';
 import { accountHomeAuthors, authorFilters } from './follow-list';
@@ -43,7 +45,7 @@ import { TimelineProfileCoordinator } from './timeline-profile-coordinator';
 export class TimelineRuntime {
   #subscriptions: RelaySubscriptionManager; #cached: TimelineItem[] = []; #live: TimelineItem[] = [];
   #state: TimelineState = emptyState(); #listeners = new Set<(state: TimelineState) => void>(); #cleanup: (() => void)[] = [];
-  #relays: string[]; #pageSize: number; #authors: string[] = []; #profiles: TimelineState['profiles'] = {};
+  #relays: string[]; #routeRelays: string[] = []; #pageSize: number; #authors: string[] = []; #profiles: TimelineState['profiles'] = {};
   #followList?: TimelineLoad['followList']; #followListId = ''; #followFallbackStarted = false; #initialNotesKey = ''; #followSubId: string; #metaSubId: string; #noteSubId: string;
   #profileCoordinator: TimelineProfileCoordinator;
   #startedAt = Math.floor(Date.now() / 1000); #closed = false; #generation = 0;
@@ -62,7 +64,7 @@ export class TimelineRuntime {
     this.#applyLoaded(loaded); const state = this.#cached.length > 0 ? readyWithEventsState(this.#state, this.#cached) : { ...this.#state, items: this.#cached };
     this.#emit(this.#withCursors(state)); if (this.#relays.length === 0) return this.#emit(noEnabledRelayState(this.#state));
     this.#cleanup.push(this.#subscriptions.subscribeState((snapshots) => this.#receiveState(snapshots)));
-    if (this.#followList) this.#subscribeNotes(); else this.#subscribeFollows(pubkey);
+    if (this.#followList) await this.#subscribeNotes(); else this.#subscribeFollows(pubkey);
   }
   close(): void { this.#closed = true; this.#generation++; for (const cleanup of this.#cleanup.splice(0)) cleanup(); this.#listeners.clear(); }
   async loadOlder(): Promise<void> {
@@ -87,9 +89,11 @@ export class TimelineRuntime {
     finally { if (this.#state.loadingNewer) this.#emit({ ...this.#state, loadingNewer: false }); }
   }
   #subscribeFollows(pubkey: string): void { this.#emit({ ...this.#state, loading: true, status: 'loading-follows' }); this.#subscribe(this.#followSubId, [{ kinds: [3], authors: [pubkey], limit: 1 }]); }
-  #subscribeNotes(): void {
+  async #subscribeNotes(): Promise<void> {
     this.#loadInitialNotes();
-    this.#subscribe(this.#noteSubId, authorFilters(this.#authors, this.#pageSize, { since: this.#startedAt }));
+    void discoverAuthorRelayRoutes({ authors: this.#authors, selectedRelays: this.#relays, key: `${this.#noteSubId}:routes`, subscriptions: this.#subscriptions });
+    this.#routeRelays = await routedAuthorRelays({ authors: this.#authors, selectedRelays: this.#relays, purpose: 'write' });
+    this.#subscribe(this.#noteSubId, authorFilters(this.#authors, this.#pageSize, { since: this.#startedAt }), this.#routeRelays);
     const missing = this.#authors.filter((pubkey) => !this.#profiles[pubkey]).slice(0, metadataPageLimit);
     const filters = profileFilter(missing); if (filters.length > 0) this.#subscribe(this.#metaSubId, filters);
   }
@@ -102,9 +106,9 @@ export class TimelineRuntime {
       else if (this.#state.items.length === 0) this.#emit(this.#nextState({ loading: false, status: 'ready-empty' }));
     } catch (error) { this.#emit({ ...this.#state, loading: false, error: boundedErrorText(error) }); }
   }
-  #subscribe(key: string, filters: readonly NostrFilter[]): void {
+  #subscribe(key: string, filters: readonly NostrFilter[], relays = this.#relays): void {
     if (this.#closed) return;
-    this.#cleanup.push(this.#subscriptions.subscribeLive({ key, relays: this.#relays, filters }, (event) => this.#receive(event)));
+    this.#cleanup.push(this.#subscriptions.subscribeLive({ key, relays, filters }, (event) => this.#receive(event)));
   }
   async #receive(poolEvent: PoolEvent): Promise<void> {
     if (this.#closed) return;

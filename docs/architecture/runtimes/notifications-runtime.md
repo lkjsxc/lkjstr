@@ -26,11 +26,13 @@ backfill.
   memory window.
 - Older pages load local records first, then one bounded relay page when a
   cursor exists.
-- Historical relay pages use the oldest loaded event time as `until`.
+- Historical relay pages use the oldest loaded event time to build interval
+  windows with both `since` and `until`.
 - Live relay reads set `since` when the runtime starts.
 - Mark visible records read only when the Notifications tab is visible and the
   window is focused.
 - No active account or no enabled read relays settles loading without opening
   hidden relay connections.
-- Use enabled read relays from the selected default relay set.
+- Use selected read relays as base and fallback plus the active account's
+  NIP-65 read relays for account notification reads.
 - Close subscriptions when relay settings change or the tab closes.

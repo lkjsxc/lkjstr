@@ -1,12 +1,9 @@
 import { feedWindowSize, mergeFeedWindow } from '$lib/events/feed-window';
 import { feedDisplayKinds } from '$lib/events/feed-kinds';
 import { queryFeed } from '$lib/events/repository';
-import {
-  boundarySince,
-  boundaryUntil,
-  readRelayFeedPage,
-} from '$lib/events/relay-page';
+import { readRelayFeedGroups } from '$lib/events/relay-page';
 import type { FeedCursorPoint, FeedEvent } from '$lib/events/types';
+import { routeGroups } from '$lib/relays/relay-routing';
 import type { RelaySubscriptionManager } from '$lib/relays/subscription-manager';
 import { olderRelaySubscriptionId } from '$lib/relays/subscription-id';
 import { storeProfileEvent } from './profile-store';
@@ -30,21 +27,28 @@ export async function loadOlderProfilePage(request: ProfileOlderRequest) {
     before: request.cursor,
     limit: request.pageSize,
   });
-  const relayItems = await readRelayFeedPage({
+  const groups = await routeGroups({
+    authors: [request.pubkey],
+    selectedRelays: request.relays,
+    purpose: 'write',
+  });
+  const relayPage = await readRelayFeedGroups({
     key: olderRelaySubscriptionId(request.subId, request.cursor),
-    relays: request.relays,
-    filters: [
+    groups,
+    filters: (_group, bounds) => [
       {
         kinds: feedDisplayKinds,
         authors: [request.pubkey],
-        until: boundaryUntil(request.cursor),
+        ...bounds,
         limit: request.pageSize,
       },
     ],
+    direction: 'older',
     before: request.cursor,
     pageSize: request.pageSize,
     subscriptions: request.subscriptions,
   });
+  const relayItems = relayPage.items;
   await Promise.all(
     relayItems.map((item) => storeProfileEvent(item.event, item.relays)),
   );
@@ -56,7 +60,7 @@ export async function loadOlderProfilePage(request: ProfileOlderRequest) {
   );
   return {
     posts: window.items,
-    hasOlder: page.hasMore || relayItems.length >= request.pageSize,
+    hasOlder: page.hasMore || relayPage.hasMorePossible,
     newerPruned: window.prunedNewer,
   };
 }
@@ -68,21 +72,28 @@ export async function loadNewerProfilePage(request: ProfileNewerRequest) {
     after: request.cursor,
     limit: request.pageSize,
   });
-  const relayItems = await readRelayFeedPage({
+  const groups = await routeGroups({
+    authors: [request.pubkey],
+    selectedRelays: request.relays,
+    purpose: 'write',
+  });
+  const relayPage = await readRelayFeedGroups({
     key: olderRelaySubscriptionId(request.subId, request.cursor),
-    relays: request.relays,
-    filters: [
+    groups,
+    filters: (_group, bounds) => [
       {
         kinds: feedDisplayKinds,
         authors: [request.pubkey],
-        since: boundarySince(request.cursor),
+        ...bounds,
         limit: request.pageSize,
       },
     ],
+    direction: 'newer',
     after: request.cursor,
     pageSize: request.pageSize,
     subscriptions: request.subscriptions,
   });
+  const relayItems = relayPage.items;
   await Promise.all(
     relayItems.map((item) => storeProfileEvent(item.event, item.relays)),
   );
@@ -93,7 +104,7 @@ export async function loadNewerProfilePage(request: ProfileNewerRequest) {
   );
   return {
     posts: window.items,
-    hasNewer: page.hasMore || relayItems.length >= request.pageSize,
+    hasNewer: page.hasMore || relayPage.hasMorePossible,
     olderPruned: window.prunedOlder,
   };
 }

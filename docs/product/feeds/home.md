@@ -11,14 +11,17 @@ its NIP-02 follows.
 - Home is cache-first. It must render cached matching notes as soon as account
   and relay page data have loaded, before profile hydration and before relay
   results.
-- After authors are known, Home performs one initial relay page without
-  `since`, then keeps live subscriptions bounded with startup `since`.
+- After authors are known, Home performs an immediate selected-relay initial
+  page, discovers routes in parallel, then keeps live subscriptions bounded
+  with startup `since`.
 - Account home authors are the active account plus `p` tags from the latest
   kind `3` follow list. Cache reads for the follow list use an indexed
   latest-only kind `3` lookup for the active pubkey.
 - Home displays event kinds `1`, `6`, and `16`; cache queries and relay
   filters must not include other feed kinds.
-- Relay reads use enabled read relays from the selected default relay set.
+- Selected read relays are the base and fallback. Home may also use NIP-65
+  author write relays, NIP-02 follow hints, relay receipts, and discovery
+  evidence. Disabled or removed relays remain excluded.
 - Relay reads go through the subscription manager.
 - Events and relay provenance are written through the shared repository.
 - Initial and older pages request `30` items.
@@ -26,8 +29,8 @@ its NIP-02 follows.
   items are pruned.
 - Older pages load after near-bottom scroll or when the loaded rows are shorter
   than the viewport and `hasOlder` remains true.
-- Historical relay pages use compound `{createdAt,id}` cursors. Relay `until`
-  may over-fetch the boundary second, and results are filtered before merging.
+- Historical relay pages use compound `{createdAt,id}` cursors and interval
+  windows with both `since` and `until`. Results are filtered before merging.
 - Relay results are deterministic event rows. Duplicate events from multiple
   relays render once with merged relay provenance.
 - Live relay reads set `since` when the runtime starts.

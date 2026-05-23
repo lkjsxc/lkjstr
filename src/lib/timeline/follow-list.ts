@@ -3,17 +3,42 @@ import { feedDisplayKinds } from '../events/feed-kinds';
 
 const maxAuthorsPerFilter = 200;
 
+export type AccountHomeFollowEntry = {
+  readonly pubkey: string;
+  readonly relayUrl?: string;
+  readonly petname?: string;
+};
+
 export function accountHomeAuthors(
   activePubkey: string,
   followList?: NostrEvent,
 ): string[] {
+  return accountHomeFollowEntries(activePubkey, followList).map(
+    (entry) => entry.pubkey,
+  );
+}
+
+export function accountHomeFollowEntries(
+  activePubkey: string,
+  followList?: NostrEvent,
+): AccountHomeFollowEntry[] {
   const authors = new Set<string>([activePubkey]);
-  if (followList?.kind !== 3) return [...authors];
+  const entries = new Map<string, AccountHomeFollowEntry>([
+    [activePubkey, { pubkey: activePubkey }],
+  ]);
+  if (followList?.kind !== 3) return [...entries.values()];
   for (const tag of followList.tags) {
     const pubkey = tag[0] === 'p' ? tag[1] : undefined;
-    if (pubkey && isPubkey(pubkey)) authors.add(pubkey);
+    if (pubkey && isPubkey(pubkey) && !authors.has(pubkey)) {
+      authors.add(pubkey);
+      entries.set(pubkey, {
+        pubkey,
+        relayUrl: tag[2],
+        petname: tag[3],
+      });
+    }
   }
-  return [...authors];
+  return [...entries.values()];
 }
 
 export function authorFilters(
@@ -23,7 +48,7 @@ export function authorFilters(
 ): NostrFilter[] {
   const filters: NostrFilter[] = [];
   const chunks = Math.max(1, Math.ceil(authors.length / maxAuthorsPerFilter));
-  const budget = Math.max(0, limit);
+  const budget = Math.max(1, limit);
   const baseLimit = Math.floor(budget / chunks);
   const remainder = budget % chunks;
   let chunk = 0;
@@ -31,7 +56,7 @@ export function authorFilters(
     filters.push({
       kinds: feedDisplayKinds,
       authors: authors.slice(index, index + maxAuthorsPerFilter),
-      limit: baseLimit + (chunk < remainder ? 1 : 0),
+      limit: Math.max(1, baseLimit + (chunk < remainder ? 1 : 0)),
       ...bounds,
     });
     chunk++;

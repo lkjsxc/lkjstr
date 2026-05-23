@@ -3,6 +3,7 @@ import {
   fetchRelayInformation,
   parseRelayInformation,
   relayHttpUrl,
+  relayRequestLimit,
 } from '../../../src/lib/relays/relay-info';
 
 describe('relay information documents', () => {
@@ -76,5 +77,11 @@ describe('relay information documents', () => {
       software: 'https://relay.example/software',
     });
     expect(parsed).not.toHaveProperty('ignored');
+  });
+
+  it('caps request limits with NIP-11 max_limit when present', () => {
+    expect(relayRequestLimit(100, { limitation: { max_limit: 20 } })).toBe(20);
+    expect(relayRequestLimit(30, { limitation: {} })).toBe(30);
+    expect(relayRequestLimit(0, { limitation: { max_limit: 20 } })).toBe(1);
   });
 });

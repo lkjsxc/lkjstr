@@ -8,7 +8,12 @@ import { RelayPool } from '../../../src/lib/relays/relay-pool';
 import { feedDisplayKinds } from '../../../src/lib/events/feed-kinds';
 import { TimelineRuntime } from '../../../src/lib/timeline/timeline-runtime';
 import { storeTimelineEvent } from '../../../src/lib/timeline/timeline-store';
-import { FakeWebSocket, sockets } from './fake-websocket';
+import {
+  FakeWebSocket,
+  parsedSocketMessage,
+  socketForSub,
+  sockets,
+} from './fake-websocket';
 
 describe('timeline runtime', () => {
   beforeEach(() => {
@@ -50,6 +55,8 @@ describe('timeline runtime', () => {
     const runtime = runtimeFor({ activeAccountPubkey: active });
     await runtime.start();
     sockets[0]?.open();
+    await waitForSub('timeline-test:notes:initial');
+    await waitForSub('timeline-test:notes', true);
     // prettier-ignore
     expect(parsedSent('timeline-test:notes:initial')).toEqual(['REQ', expect.stringContaining('timeline-test:notes:initial'), expect.objectContaining({ kinds: feedDisplayKinds, authors: [active, followed], limit: 30 })]);
     // prettier-ignore
@@ -65,6 +72,8 @@ describe('timeline runtime', () => {
     sockets[0]?.open();
     sockets[0]?.receive(JSON.stringify(['EOSE', 'timeline-test:follows']));
     await vi.waitFor(() => expect(states).toContain('no-follow-list'));
+    await waitForSub('timeline-test:notes:initial');
+    await waitForSub('timeline-test:notes', true);
     // prettier-ignore
     expect(parsedSent('timeline-test:notes:initial')).toEqual(['REQ', expect.stringContaining('timeline-test:notes:initial'), expect.objectContaining({ kinds: feedDisplayKinds, authors: [active], limit: 30 })]);
     // prettier-ignore
@@ -88,7 +97,10 @@ describe('timeline runtime', () => {
     );
     await runtime.start();
     sockets[0]?.open();
-    sockets[0]?.receive(JSON.stringify(['EOSE', 'timeline-test:notes']));
+    await waitForSub('timeline-test:notes', true);
+    socketForSub('timeline-test:notes')?.receive(
+      JSON.stringify(['EOSE', 'timeline-test:notes']),
+    );
     await vi.waitFor(() => expect(latest).toBe('false:ready-empty:1'));
   });
 
@@ -114,11 +126,18 @@ describe('timeline runtime', () => {
       { created_at: 103, kind: 1, tags: [], content: 'followed note' },
       followedKey,
     );
-    sockets[0]?.receive(JSON.stringify(['EVENT', 'timeline-test:notes', note]));
+    await waitForSub('timeline-test:notes', true);
+    socketForSub('timeline-test:notes')?.receive(
+      JSON.stringify(['EVENT', 'timeline-test:notes', note]),
+    );
     await vi.waitFor(() => expect(states.at(-1)).toContain('followed note'));
     runtime.close();
-    expect(sockets[0]?.sent).toContain('["CLOSE","timeline-test:notes"]');
-    expect(sockets[0]?.sent).toContain('["CLOSE","timeline-test:meta"]');
+    expect(socketForSub('timeline-test:notes')?.sent).toContain(
+      '["CLOSE","timeline-test:notes"]',
+    );
+    expect(socketForSub('timeline-test:meta')?.sent).toContain(
+      '["CLOSE","timeline-test:meta"]',
+    );
   });
 
   it('exposes profile display names from metadata', async () => {
@@ -148,7 +167,8 @@ describe('timeline runtime', () => {
       },
       followedKey,
     );
-    sockets[0]?.receive(
+    await waitForSub('timeline-test:meta', true);
+    socketForSub('timeline-test:meta')?.receive(
       JSON.stringify(['EVENT', 'timeline-test:meta', metadata]),
     );
     await vi.waitFor(() => expect(displayName).toBe('Followed Writer'));
@@ -171,12 +191,10 @@ function pubkey(): string {
   return getPublicKey(generateSecretKey());
 }
 
+async function waitForSub(subId: string, exact = false): Promise<void> {
+  await vi.waitFor(() => expect(parsedSent(subId, exact)).toBeTruthy());
+}
+
 function parsedSent(subId: string, exact = false): unknown {
-  const raw = sockets
-    .flatMap((socket) => socket.sent)
-    .find((item) => {
-      const parsed = JSON.parse(item) as unknown[];
-      return exact ? parsed[1] === subId : String(parsed[1]).startsWith(subId);
-    });
-  return raw ? JSON.parse(raw) : undefined;
+  return parsedSocketMessage(subId, exact);
 }

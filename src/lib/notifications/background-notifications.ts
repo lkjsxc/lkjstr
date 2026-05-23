@@ -4,6 +4,7 @@ import { deriveNotifications } from './notification-index';
 import { notificationEventKinds } from './notification-runtime';
 import { RelaySubscriptionManager } from '$lib/relays/subscription-manager';
 import { initialRelaySubscriptionId } from '$lib/relays/subscription-id';
+import { notificationRelays } from './notification-relays';
 
 export class BackgroundNotificationSync {
   #cleanup: (() => void)[] = [];
@@ -20,13 +21,14 @@ export class BackgroundNotificationSync {
     if (this.#closed || !this.accountPubkey) return;
     await accountNotifications(this.accountPubkey);
     if (this.relays.length === 0 || this.#closed) return;
+    const relays = await notificationRelays(this.accountPubkey, this.relays);
     await this.#readInitial();
     if (this.#closed) return;
     this.#cleanup.push(
       this.subscriptions.subscribeLive(
         {
           key: `background-notifications:${this.accountPubkey}`,
-          relays: this.relays,
+          relays,
           filters: [
             {
               kinds: notificationEventKinds,
@@ -47,12 +49,13 @@ export class BackgroundNotificationSync {
   }
 
   async #readInitial(): Promise<void> {
+    const relays = await notificationRelays(this.accountPubkey!, this.relays);
     const events = await this.subscriptions.readPage({
       key: initialRelaySubscriptionId(
         'background-notifications',
         this.accountPubkey!,
       ),
-      relays: this.relays,
+      relays,
       filters: [
         {
           kinds: notificationEventKinds,

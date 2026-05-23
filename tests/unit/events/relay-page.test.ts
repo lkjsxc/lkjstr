@@ -3,8 +3,10 @@ import {
   boundarySince,
   boundaryUntil,
   readRelayFeedPage,
+  readRelayFeedGroups,
 } from '../../../src/lib/events/relay-page';
 import type { NostrEvent } from '../../../src/lib/protocol';
+import type { RelayReadRequest } from '../../../src/lib/events/types';
 import type { PoolEvent } from '../../../src/lib/relays/relay-pool';
 import type { RelaySubscriptionManager } from '../../../src/lib/relays/subscription-manager';
 
@@ -73,6 +75,50 @@ describe('relay feed pages', () => {
     expect(boundaryUntil({ createdAt: 10, id: 'a'.repeat(64) })).toBe(11);
     expect(boundarySince({ createdAt: 10, id: 'a'.repeat(64) })).toBe(9);
     expect(boundarySince({ createdAt: 0, id: 'a'.repeat(64) })).toBe(0);
+  });
+
+  it('keeps relay limits positive', async () => {
+    let limit = 0;
+    await readRelayFeedPage({
+      key: 'relay-page-positive-limit',
+      relays: ['wss://relay.example/'],
+      filters: [{ kinds: [1], limit: 0 }],
+      pageSize: 10,
+      subscriptions: {
+        readPage: async (request: RelayReadRequest) => {
+          limit = request.filters[0]?.limit ?? 0;
+          return [];
+        },
+      } as unknown as RelaySubscriptionManager,
+    });
+    expect(limit).toBe(1);
+  });
+
+  it('adds interval bounds to historical relay groups', async () => {
+    let since: number | undefined;
+    let until: number | undefined;
+    await readRelayFeedGroups({
+      key: 'relay-page-groups',
+      groups: [
+        {
+          key: 'group',
+          relays: ['wss://relay.example/'],
+          authors: ['a'.repeat(64)],
+          source: 'fallback',
+        },
+      ],
+      filters: (_group, bounds) => {
+        since = bounds.since;
+        until = bounds.until;
+        return [{ kinds: [1], ...bounds, limit: 10 }];
+      },
+      direction: 'older',
+      before: { createdAt: 1000, id: 'b'.repeat(64) },
+      pageSize: 10,
+      subscriptions: subscriptions([]),
+    });
+    expect(since).toBeDefined();
+    expect(until).toBe(1001);
   });
 });
 

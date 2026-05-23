@@ -2,6 +2,7 @@ import { sharedRelayPool, type PoolEvent, type RelayPool } from './relay-pool';
 import type { RelaySnapshot } from './types';
 import type { RelayReadRequest } from '../events/types';
 import { appendAppLog, boundedMessage } from '../log/app-log';
+import { readStatuses, type ReadPageResult } from './read-page-status';
 import {
   compactRelaySubscriptionId,
   relaySubscriptionIdValid,
@@ -62,7 +63,17 @@ export class RelaySubscriptionManager {
     request: RelayReadRequest,
     options: ReadPageOptions = {},
   ): Promise<PoolEvent[]> {
+    return (await this.readPageDetailed(request, options)).events;
+  }
+
+  async readPageDetailed(
+    request: RelayReadRequest,
+    options: ReadPageOptions = {},
+  ): Promise<ReadPageResult> {
     const events: PoolEvent[] = [];
+    let timedOut = false;
+    let lastSnapshots: RelaySnapshot[] = [];
+    const startedAt = Date.now();
     const requestKey = subscriptionKey(request);
     const baseSubId = relayFacingSubId(request.key);
     const subId =
@@ -78,24 +89,36 @@ export class RelaySubscriptionManager {
     let close: () => void = () => undefined;
     await new Promise<void>((resolve) => {
       let done = false;
-      const finish = () => {
+      const finish = (timeout = false) => {
         if (done) return;
         done = true;
+        timedOut = timeout;
         clearTimeout(timer);
         offState();
         resolve();
       };
       offState = this.#pool.onState((snapshots) => {
+        lastSnapshots = snapshots;
         if (pageComplete(snapshots, request.relays, subId)) finish();
       });
-      const timer = setTimeout(finish, options.timeoutMs ?? 5000);
+      const timer = setTimeout(() => finish(true), options.timeoutMs ?? 5000);
       close = this.#pool.subscribe(request.relays, subId, request.filters);
     });
     offEvent();
     close();
     this.#activeReadBaseIds.delete(baseSubId);
     this.#usedReadRequestKeys.add(requestKey);
-    return events;
+    return {
+      events,
+      statuses: readStatuses({
+        relays: request.relays,
+        subId,
+        events,
+        snapshots: lastSnapshots,
+        timedOut,
+        durationMs: Date.now() - startedAt,
+      }),
+    };
   }
 
   #remove(key: string, listener: Listener): void {

@@ -50,24 +50,16 @@ async function byKindAuthorPage(
   query: FeedQuery,
   limit: number,
 ): Promise<StoredEvent[]> {
-  const authorSet = new Set(authors);
-  const cap = Math.max(limit * 25, 500);
   const pages = await Promise.all(
-    feedKinds(query).map((kind) =>
-      browserDb()
-        .events.where('[kind+created_at]')
-        .between([kind, 0], [kind, maxUntil(query.until)])
-        .reverse()
-        .limit(cap)
-        .toArray(),
+    authors.flatMap((author) =>
+      feedKinds(query).map((kind) =>
+        byAuthorPage(author, kind, query, Math.ceil(limit / 2)),
+      ),
     ),
   );
   return pages
     .flat()
     .map(normalizeStoredEvent)
-    .filter(
-      (event) => authorSet.has(event.pubkey) && withinCursors(event, query),
-    )
     .sort(compareEventsDesc)
     .slice(0, limit);
 }

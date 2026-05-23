@@ -98,6 +98,16 @@ export async function relayInformation(
   );
 }
 
+export function relayRequestLimit(
+  requested: number,
+  info: RelayInformationDocument | undefined,
+): number {
+  const cap = info?.limitation?.max_limit;
+  if (!Number.isInteger(cap) || (cap as number) < 1)
+    return Math.max(1, requested);
+  return Math.max(1, Math.min(requested, cap as number));
+}
+
 export function relayHttpUrl(relayUrl: string): string {
   const url = new URL(relayUrl);
   url.protocol = url.protocol === 'ws:' ? 'http:' : 'https:';

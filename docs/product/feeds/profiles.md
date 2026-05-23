@@ -11,7 +11,9 @@ Profile tabs show identity metadata and authored text notes.
 - Runtime loads cached metadata and notes before relay data.
 - Metadata cache reads are latest-only and consult memory before IndexedDB.
   Older metadata events must never replace newer profile metadata.
-- Relay reads use enabled read relays from the selected default relay set.
+- Selected read relays are the base and fallback. Profile may also use the
+  author's NIP-65 write relays, NIP-02 hints, event receipts, and discovery
+  evidence. Disabled or removed relays remain excluded.
 - Profile performs split initial metadata, follow-list, and note relay pages
   without `since`, then keeps live subscriptions bounded with startup `since`.
 - Only authored feed-display events consume visible note page slots.
@@ -54,8 +56,9 @@ Profile tabs show identity metadata and authored text notes.
   section at desktop, mobile, or narrow split-pane widths.
 - Profile notes start below the full profile header.
 - Older profile notes load after near-bottom scroll or viewport auto-fill.
-- Historical note pages use compound `{createdAt,id}` cursors, local relay
-  boundary filtering, and merged relay provenance.
+- Historical note pages use compound `{createdAt,id}` cursors, interval
+  windows with `since` and `until`, local relay boundary filtering, and merged
+  relay provenance.
 - When older scrolling prunes newer notes, Profile shows a load-newer affordance
   above Notes and recovers newer notes from the current newest cursor.
 - Live authored posts received while viewing an older pruned window are stored

@@ -1,6 +1,7 @@
 import { feedWindowSize, mergeFeedWindow } from '../events/feed-window';
 import { queryFeed, upsertEvent } from '../events/repository';
-import { boundaryUntil, readRelayFeedPage } from '../events/relay-page';
+import { readRelayFeedGroups, readRelayFeedPage } from '../events/relay-page';
+import { routeGroups } from '../relays/relay-routing';
 import type { FeedCursorPoint } from '../events/types';
 import type { RelaySubscriptionManager } from '../relays/subscription-manager';
 import {
@@ -59,16 +60,22 @@ export async function loadOlderTimelinePage(
     before: request.cursor,
     limit: request.pageSize,
   });
-  const relayItems = await readRelayFeedPage({
+  const groups = await routeGroups({
+    authors: request.authors,
+    selectedRelays: request.relays,
+    purpose: 'write',
+  });
+  const relayPage = await readRelayFeedGroups({
     key: olderRelaySubscriptionId(request.subId, request.cursor),
-    relays: request.relays,
-    filters: authorFilters(request.authors, request.pageSize, {
-      until: boundaryUntil(request.cursor),
-    }),
+    groups,
+    filters: (group, bounds) =>
+      authorFilters(group.authors ?? [], request.pageSize, bounds),
+    direction: 'older',
     before: request.cursor,
     pageSize: request.pageSize,
     subscriptions: request.subscriptions,
   });
+  const relayItems = relayPage.items;
   await Promise.all(
     relayItems.map((item) => upsertEvent(item.event, item.relays)),
   );
@@ -80,7 +87,7 @@ export async function loadOlderTimelinePage(
   );
   return {
     items: window.items,
-    hasOlder: page.hasMore || relayItems.length >= request.pageSize,
+    hasOlder: page.hasMore || relayPage.hasMorePossible,
     hasNewer: window.prunedNewer,
   };
 }

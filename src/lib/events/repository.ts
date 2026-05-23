@@ -20,6 +20,7 @@ import {
 import { receipt, tagRows } from './repository-shared';
 import { normalizeStoredEvent } from './normalize';
 import { storeRelayListSuggestionsFromEvent } from '../relays/relay-list-suggestions';
+import { storeRoutesFromEvent } from '../relays/relay-route-store';
 import type {
   FeedCursor,
   FeedEvent,
@@ -47,6 +48,7 @@ export async function upsertEvent(
   putMemory(stored, receipts, tags);
   if (!indexedDbAvailable()) {
     await storeRelayListSuggestionsFromEvent(event);
+    await storeRoutesFromEvent(event, relays);
     return stored;
   }
   await bestEffortStorageWrite(async () => {
@@ -64,6 +66,7 @@ export async function upsertEvent(
     );
   });
   await storeRelayListSuggestionsFromEvent(event);
+  await storeRoutesFromEvent(event, relays);
   return stored;
 }
 

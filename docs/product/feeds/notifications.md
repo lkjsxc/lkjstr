@@ -12,14 +12,16 @@ notification context header and the source event as the primary body.
 - Mentions, replies, reactions, reposts, quotes, profile references, and zap
   receipts are indexed.
 - Profile references are indexed when metadata points at the active account.
-- Relay reads use enabled read relays from the selected default relay set.
+- Selected read relays are the base and fallback. Notifications may also use
+  the active account's NIP-65 read relays for `#p` reads and selected fallback
+  for context.
 - Notification events are written through the shared repository.
 - Notifications tab initial and older pages request `30` records.
 - Background notification sync relay reads request `50` records.
 - Notification tabs keep a `180` item window.
 - Older notifications load only after scrolling near the bottom.
-- Historical relay pages use `until` from the oldest loaded notification
-  event.
+- Historical relay pages use interval windows with `since` and `until` from
+  the oldest loaded notification event.
 - Live relay reads set `since` when the notification runtime starts.
 - Visible notifications are marked read when the tab is visible and receives
   focus. Background sync does not mark records read.

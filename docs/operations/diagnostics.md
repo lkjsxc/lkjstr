@@ -18,6 +18,8 @@ runtime, so failures must be inspectable without server logs.
   evidence where relay settings record it.
 - persisted relay summary counters, last event id, first-message latency, EOSE
   latency, validation counters, and bounded recent relay diagnostics.
+- structured read-page status with EOSE, timeout, CLOSED, AUTH, socket
+  closed/error, duration, candidate count, and final event count.
 - persisted job health derived from stored jobs, including status counts,
   root-job counts, oldest queued age, latest failure, and latest stale startup
   mark.
