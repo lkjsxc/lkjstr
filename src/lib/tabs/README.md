@@ -7,7 +7,9 @@ This directory contains tab body implementations grouped by tab kind.
 ## Contents
 
 - [accounts/](accounts/): account management tab.
+- [author-context/](author-context/): nearby authored posts tab.
 - [cache/](cache/): cache status tab.
+- [custom-request/](custom-request/): validated relay request tab.
 - [log/](log/): lkjstr Log tab.
 - [new-tab/](new-tab/): New Tab chooser.
 - [notifications/](notifications/): Notifications tab.

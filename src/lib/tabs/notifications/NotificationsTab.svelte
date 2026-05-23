@@ -132,6 +132,7 @@
           )}
           profile={state.profiles[record.actorPubkey]}
           profiles={state.profiles}
+          relaySets={props.relaySets}
           openProfile={props.openProfile}
           openThread={props.openThread}
           openAuthorContext={props.openAuthorContext}

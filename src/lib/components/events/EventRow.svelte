@@ -21,6 +21,10 @@
     reposts?: RepostGroup;
     profiles?: Record<string, ProfileSummary>;
     activeAccountPubkey?: string | null;
+    compact?: boolean;
+    showActions?: boolean;
+    showSummary?: boolean;
+    showMore?: boolean;
     openProfile?: (pubkey: string) => void;
     openThread?: (eventId: string) => void;
     openAuthorContext?: (eventId: string, pubkey: string) => void;
@@ -66,6 +70,7 @@
 
 <div
   class="event-row"
+  class:event-row--compact={props.compact}
   class:event-row--action-success={highlighted}
   role="button"
   tabindex="0"
@@ -88,23 +93,28 @@
       {profile}
       openProfile={props.openProfile}
     />
-    <EventMoreMenu
-      event={props.item.event}
-      openAuthorContext={props.openAuthorContext}
-    />
+    {#if props.showMore !== false}
+      <EventMoreMenu
+        event={props.item.event}
+        openAuthorContext={props.openAuthorContext}
+      />
+    {/if}
     <EventContent
       event={props.item.event}
       relays={props.item.relays}
       profiles={props.profiles}
+      showSummary={props.showSummary}
       openProfile={props.openProfile}
       openThread={props.openThread}
     />
-    <EventActions
-      event={props.item.event}
-      {profile}
-      relaySets={props.relaySets ?? []}
-      onSuccess={highlightAction}
-    />
+    {#if props.showActions !== false}
+      <EventActions
+        event={props.item.event}
+        {profile}
+        relaySets={props.relaySets ?? []}
+        onSuccess={highlightAction}
+      />
+    {/if}
     <ReactionSummary
       reactions={props.reactions}
       reposts={props.reposts}

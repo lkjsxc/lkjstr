@@ -8,6 +8,7 @@ This directory contains Vitest unit tests grouped by source domain.
 
 - [accounts/](accounts/): account and signer tests.
 - [cache/](cache/): cache behavior tests.
+- [custom-request/](custom-request/): custom relay request tests.
 - [events/](events/): event parsing and repository tests.
 - [identity/](identity/): profile identity tests.
 - [jobs/](jobs/): job manager tests.

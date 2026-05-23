@@ -25,6 +25,7 @@
     relays?: readonly string[];
     depth?: number;
     profiles?: Record<string, ProfileSummary>;
+    showSummary?: boolean;
     openProfile?: (pubkey: string) => void;
     openThread?: (eventId: string) => void;
   };
@@ -33,7 +34,9 @@
   let hideSensitive = $state(true);
   let revealed = $derived(isSensitiveEventRevealed(props.event.id));
   let nested = $derived(verifiedNestedRepost(props.event));
-  let summary = $derived(actionSummary(props.event));
+  let summary = $derived(
+    props.showSummary === false ? undefined : actionSummary(props.event),
+  );
   let sensitive = $derived(hasContentWarning(props.event));
   let reason = $derived(contentWarningReason(props.event) ?? '');
   let gated = $derived(sensitive && hideSensitive && !revealed);

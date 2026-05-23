@@ -1,11 +1,11 @@
 <script lang="ts">
-  import EventContent from '$lib/components/events/EventContent.svelte';
-  import EventMeta from '$lib/components/events/EventMeta.svelte';
+  import EventRow from '$lib/components/events/EventRow.svelte';
   import IdentityChip from '$lib/components/identity/IdentityChip.svelte';
   import type { FeedEvent } from '$lib/events/types';
   import type { ProfileSummary } from '$lib/identity/identity';
   import type { NotificationRecord } from '$lib/notifications/notification';
   import { notificationActionText } from '$lib/notifications/notification-presentation';
+  import type { RelaySet } from '$lib/relays/relay-store';
 
   type Props = {
     record: NotificationRecord;
@@ -13,6 +13,7 @@
     targetItem?: FeedEvent;
     profile?: ProfileSummary;
     profiles?: Record<string, ProfileSummary>;
+    relaySets?: readonly RelaySet[];
     openProfile?: (pubkey: string) => void;
     openThread?: (eventId: string) => void;
     openAuthorContext?: (eventId: string, pubkey: string) => void;
@@ -42,18 +43,17 @@
     </div>
     {#if preview}
       <div class="notification-row__preview">
-        <EventMeta
-          event={preview.event}
-          relays={preview.relays}
+        <EventRow
+          item={preview}
           profile={props.profiles?.[preview.event.pubkey]}
-          openProfile={props.openProfile}
-        />
-        <EventContent
-          event={preview.event}
-          relays={preview.relays}
           profiles={props.profiles}
+          relaySets={props.relaySets}
+          compact
+          showActions={false}
+          showMore={false}
           openProfile={props.openProfile}
           openThread={props.openThread}
+          openAuthorContext={props.openAuthorContext}
         />
       </div>
     {:else}
