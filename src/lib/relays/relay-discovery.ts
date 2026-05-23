@@ -14,21 +14,25 @@ export async function discoverAuthorRelayRoutes(input: {
   const authors = [...new Set(input.authors)].slice(0, 50);
   if (authors.length === 0) return;
   const blocked = await blockedRelayUrls();
-  const relays = [...new Set([...input.selectedRelays, ...discoveryRelays])]
-    .map(normalizeRelayUrl)
-    .filter((relay): relay is string => Boolean(relay))
-    .filter((relay) => !blocked.has(relay));
+  const relays = [
+    ...new Set(
+      [...input.selectedRelays, ...discoveryRelays]
+        .map(normalizeRelayUrl)
+        .filter((relay): relay is string => Boolean(relay))
+        .filter((relay) => !blocked.has(relay)),
+    ),
+  ];
   const events = await readRelayPage({
     key: input.key,
     relays,
     filters: [
       {
-        kinds: [kinds.metadata, kinds.followList, kinds.relayListMetadata],
+        kinds: [kinds.relayListMetadata],
         authors,
-        limit: authors.length * 3,
+        limit: authors.length,
       },
     ],
-    pageSize: authors.length * 3,
+    pageSize: authors.length,
     subscriptions: input.subscriptions,
   });
   await Promise.all(

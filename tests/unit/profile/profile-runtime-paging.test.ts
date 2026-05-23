@@ -6,6 +6,10 @@ import {
 } from '../../../src/lib/events/repository';
 import type { NostrEvent } from '../../../src/lib/protocol';
 import type { PoolEvent } from '../../../src/lib/relays/relay-pool';
+import {
+  clearRelayRoutesForTests,
+  saveAuthorRelayRoute,
+} from '../../../src/lib/relays/relay-route-store';
 import type { RelaySubscriptionManager } from '../../../src/lib/relays/subscription-manager';
 import { loadInitialProfilePage } from '../../../src/lib/profile/profile-runtime-initial';
 import {
@@ -14,10 +18,20 @@ import {
 } from '../../../src/lib/profile/profile-runtime-paging';
 
 describe('profile runtime paging', () => {
-  beforeEach(() => clearEventRepositoryForTests());
+  beforeEach(() => {
+    clearEventRepositoryForTests();
+    clearRelayRoutesForTests();
+  });
 
   it('splits initial metadata, follows, and full post page reads', async () => {
     const pubkey = 'a'.repeat(64);
+    const reads: ReadRequest[] = [];
+    await saveAuthorRelayRoute({
+      authorPubkey: pubkey,
+      relayUrl: 'wss://purplepag.es/',
+      source: 'event-receipt',
+      purpose: 'write',
+    });
     const posts = Array.from({ length: 30 }, (_, index) =>
       event(String(index + 1), 100 - index, pubkey, 1),
     );
@@ -29,9 +43,15 @@ describe('profile runtime paging', () => {
       subId: 'profile-test',
       pageSize: 30,
       followList: undefined,
-      subscriptions: initialSubscriptions(pubkey, posts),
+      subscriptions: initialSubscriptions(pubkey, posts, reads),
     });
 
+    const metadataRead = reads.find((item) => item.kinds.includes(0));
+    const followRead = reads.find((item) => item.kinds.includes(3));
+    const postRead = reads.find((item) => item.kinds.includes(1));
+    expect(metadataRead?.relays).toContain('wss://purplepag.es/');
+    expect(followRead?.relays).not.toContain('wss://purplepag.es/');
+    expect(postRead?.relays).not.toContain('wss://purplepag.es/');
     expect(page.profile?.pubkey).toBe(pubkey);
     expect(page.followList?.kind).toBe(3);
     expect(page.posts).toHaveLength(30);
@@ -84,10 +104,15 @@ describe('profile runtime paging', () => {
 function initialSubscriptions(
   pubkey: string,
   posts: readonly NostrEvent[],
+  reads: ReadRequest[] = [],
 ): RelaySubscriptionManager {
   return {
-    readPage: async (request: { filters: readonly { kinds?: number[] }[] }) => {
+    readPage: async (request: {
+      relays: readonly string[];
+      filters: readonly { kinds?: number[] }[];
+    }) => {
       const kinds = request.filters[0]?.kinds ?? [];
+      reads.push({ relays: [...request.relays], kinds });
       if (kinds.includes(0))
         return [receipt(event('meta', 200, pubkey, 0), 'wss://relay-a/')];
       if (kinds.includes(3))
@@ -100,6 +125,11 @@ function initialSubscriptions(
     },
   } as unknown as RelaySubscriptionManager;
 }
+
+type ReadRequest = {
+  readonly relays: readonly string[];
+  readonly kinds: readonly number[];
+};
 
 function emptySubscriptions(): RelaySubscriptionManager {
   return { readPage: async () => [] } as unknown as RelaySubscriptionManager;

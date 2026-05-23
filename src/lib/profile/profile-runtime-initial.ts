@@ -3,11 +3,12 @@ import { feedDisplayKinds, isFeedDisplayKind } from '$lib/events/feed-kinds';
 import { readRelayFeedPage, readRelayPage } from '$lib/events/relay-page';
 import type { ProfileSummary } from '$lib/identity/identity';
 import { getProfile } from '$lib/identity/profile-cache';
-import type { NostrEvent } from '$lib/protocol';
+import { kinds, type NostrEvent } from '$lib/protocol';
 import type { FeedEvent } from '$lib/events/types';
 import type { RelaySubscriptionManager } from '$lib/relays/subscription-manager';
 import { initialRelaySubscriptionId } from '$lib/relays/subscription-id';
 import { routedAuthorRelays } from '$lib/relays/relay-routing';
+import { profileContentRelays } from './profile-relays';
 import { storeProfileEvent } from './profile-store';
 
 type Request = {
@@ -23,30 +24,46 @@ type Request = {
 
 export async function loadInitialProfilePage(request: Request) {
   const key = initialRelaySubscriptionId(request.subId, request.pubkey);
-  const relays = await routedAuthorRelays({
+  const metadataRelays = await routedAuthorRelays({
     authors: [request.pubkey],
     selectedRelays: request.relays,
     purpose: 'write',
     includeDiscovery: true,
   });
+  const contentRelays = profileContentRelays(
+    await routedAuthorRelays({
+      authors: [request.pubkey],
+      selectedRelays: request.relays,
+      purpose: 'write',
+    }),
+    request.relays,
+  );
   const [metadata, follows, posts] = await Promise.all([
     readRelayPage({
       key: `${key}:meta`,
-      relays,
-      filters: [{ kinds: [0, 10002], authors: [request.pubkey], limit: 2 }],
+      relays: metadataRelays,
+      filters: [
+        {
+          kinds: [kinds.metadata, kinds.relayListMetadata],
+          authors: [request.pubkey],
+          limit: 2,
+        },
+      ],
       pageSize: 2,
       subscriptions: request.subscriptions,
     }),
     readRelayPage({
       key: `${key}:follows`,
-      relays,
-      filters: [{ kinds: [3], authors: [request.pubkey], limit: 1 }],
+      relays: contentRelays,
+      filters: [
+        { kinds: [kinds.followList], authors: [request.pubkey], limit: 1 },
+      ],
       pageSize: 1,
       subscriptions: request.subscriptions,
     }),
     readRelayFeedPage({
       key: `${key}:posts`,
-      relays,
+      relays: contentRelays,
       filters: [
         {
           kinds: feedDisplayKinds,

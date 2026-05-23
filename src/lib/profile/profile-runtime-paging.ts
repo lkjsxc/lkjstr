@@ -6,6 +6,7 @@ import type { FeedCursorPoint, FeedEvent } from '$lib/events/types';
 import { routeGroups } from '$lib/relays/relay-routing';
 import type { RelaySubscriptionManager } from '$lib/relays/subscription-manager';
 import { olderRelaySubscriptionId } from '$lib/relays/subscription-id';
+import { profileContentGroups } from './profile-relays';
 import { storeProfileEvent } from './profile-store';
 
 export type ProfileOlderRequest = {
@@ -27,11 +28,14 @@ export async function loadOlderProfilePage(request: ProfileOlderRequest) {
     before: request.cursor,
     limit: request.pageSize,
   });
-  const groups = await routeGroups({
-    authors: [request.pubkey],
-    selectedRelays: request.relays,
-    purpose: 'write',
-  });
+  const groups = profileContentGroups(
+    await routeGroups({
+      authors: [request.pubkey],
+      selectedRelays: request.relays,
+      purpose: 'write',
+    }),
+    request.relays,
+  );
   const relayPage = await readRelayFeedGroups({
     key: olderRelaySubscriptionId(request.subId, request.cursor),
     groups,
@@ -72,11 +76,14 @@ export async function loadNewerProfilePage(request: ProfileNewerRequest) {
     after: request.cursor,
     limit: request.pageSize,
   });
-  const groups = await routeGroups({
-    authors: [request.pubkey],
-    selectedRelays: request.relays,
-    purpose: 'write',
-  });
+  const groups = profileContentGroups(
+    await routeGroups({
+      authors: [request.pubkey],
+      selectedRelays: request.relays,
+      purpose: 'write',
+    }),
+    request.relays,
+  );
   const relayPage = await readRelayFeedGroups({
     key: olderRelaySubscriptionId(request.subId, request.cursor),
     groups,
