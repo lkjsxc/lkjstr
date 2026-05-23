@@ -9,6 +9,8 @@ import {
 import { logRelayDiagnostic } from './relay-diagnostic-log';
 import { RelayClientMetrics } from './relay-client-metrics';
 import { parseRelayMessageData } from './relay-message-data';
+import { utf8ByteLengthWithin } from './relay-message-size';
+import { RelaySendQueue } from './relay-send-queue';
 import type {
   RelayClientEvents,
   RelayConnectionState,
@@ -31,7 +33,7 @@ export class RelayClient {
   #eoseBySub: Record<string, boolean> = {};
   #closedBySub: Record<string, string> = {};
   #stats = new RelaySessionStatsCounter();
-  #queue: string[] = [];
+  #queue = new RelaySendQueue();
   #connectTimer?: ReturnType<typeof setTimeout>;
   #intentionalClose = false;
 
@@ -87,28 +89,19 @@ export class RelayClient {
     if (this.#closedBySub[id]) return;
     this.sendIfConnected(['CLOSE', id]);
   }
-  publish(event: NostrEvent): void {
-    this.send(['EVENT', event]);
-  }
-  send(message: ClientMessage): void {
-    this.connect();
-    const encoded = encodeClientMessage(message);
-    this.#stats.sentBytes += encoded.length;
-    if (this.#state === 'open') this.#socket?.send(encoded);
-    else this.#queue.push(encoded);
-  }
+  // prettier-ignore
+  publish(event: NostrEvent): void { this.send(['EVENT', event]); }
+  // prettier-ignore
+  send(message: ClientMessage): void { this.connect(); this.#sendEncoded(encodeClientMessage(message)); }
+  // prettier-ignore
   sendIfConnected(message: ClientMessage): void {
-    if (!this.#socket || this.#state === 'closed' || this.#state === 'idle')
-      return;
-    const encoded = encodeClientMessage(message);
-    this.#stats.sentBytes += encoded.length;
-    if (this.#state === 'open') this.#socket.send(encoded);
-    else this.#queue.push(encoded);
+    if (!this.#socket || this.#state === 'closed' || this.#state === 'idle') return; this.#sendEncoded(encodeClientMessage(message));
   }
   // prettier-ignore
   close(): void { this.#intentionalClose = true; this.#clearConnectTimer(); this.#socket?.close(); this.#socket = undefined; this.#setState('closed'); }
   #receive(data: unknown): void {
-    this.#stats.receivedBytes += typeof data === 'string' ? data.length : 0;
+    // prettier-ignore
+    this.#stats.receivedBytes += typeof data === 'string' ? utf8ByteLengthWithin(data, Number.MAX_SAFE_INTEGER).bytes : 0;
     const parsed = parseRelayMessageData(data);
     if (!parsed) return;
     if (parsed.ok) {
@@ -139,12 +132,8 @@ export class RelayClient {
       this.#stats.activeSubscriptionIds.delete(message[1]);
       this.#addDiagnostic('closed', message[2], message[1]);
     }
-    if (message[0] === 'NOTICE') {
-      this.#addDiagnostic('notice', message[1]);
-    }
-    if (message[0] === 'AUTH') {
-      this.#addDiagnostic('auth', message[1]);
-    }
+    if (message[0] === 'NOTICE') this.#addDiagnostic('notice', message[1]);
+    if (message[0] === 'AUTH') this.#addDiagnostic('auth', message[1]);
     if (message[0] === 'EOSE') {
       this.#eoseBySub[message[1]] = true;
       this.#metrics.eose();
@@ -189,11 +178,21 @@ export class RelayClient {
   // prettier-ignore
   #setState(state: RelayConnectionState): void { this.#state = state; this.#emitState(); }
 
-  #emitState(): void {
-    this.events.state?.(this.snapshot());
+  // prettier-ignore
+  #emitState(): void { this.events.state?.(this.snapshot()); }
+
+  #sendEncoded(encoded: string): void {
+    const bytes = utf8ByteLengthWithin(encoded, Number.MAX_SAFE_INTEGER).bytes;
+    if (this.#state === 'open') {
+      this.#stats.sentBytes += bytes;
+      this.#socket?.send(encoded);
+    } else if (this.#queue.enqueue(encoded)) {
+      this.#stats.sentBytes += bytes;
+    } else {
+      this.#addDiagnostic('send-queue-full', 'send queue full');
+    }
   }
 
-  #flush(): void {
-    this.#queue.splice(0).forEach((message) => this.#socket?.send(message));
-  }
+  // prettier-ignore
+  #flush(): void { this.#queue.drain().forEach((message) => this.#socket?.send(message)); }
 }

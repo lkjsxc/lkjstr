@@ -7,7 +7,8 @@ export type RelayDiagnosticKind =
   | 'timeout'
   | 'parse-error'
   | 'invalid-event'
-  | 'invalid-subscription';
+  | 'invalid-subscription'
+  | 'send-queue-full';
 
 export type RelayDiagnostic = {
   readonly relay: string;

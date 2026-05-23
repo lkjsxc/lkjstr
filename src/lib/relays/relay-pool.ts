@@ -1,5 +1,4 @@
 import {
-  normalizeRelayUrl,
   type NostrEvent,
   type NostrFilter,
   type RelayMessage,
@@ -7,6 +6,7 @@ import {
 import { RelayClient } from './relay-client';
 import { recordRelayDiagnosticSummary } from './relay-diagnostic-summary';
 import { recordRelayHealthEvidence } from './relay-health';
+import { normalizedRelayList } from './relay-url-list';
 import { relaySnapshotHistoryMap } from './session-snapshots';
 import type { RelayConnectionState, RelaySnapshot } from './types';
 
@@ -43,9 +43,7 @@ export class RelayPool {
     subId: string,
     filters: readonly NostrFilter[],
   ): () => void {
-    const urls = relays
-      .map(normalizeRelayUrl)
-      .filter((url): url is string => Boolean(url));
+    const urls = normalizedRelayList(relays);
     for (const url of urls) this.#client(url).subscribe(subId, filters);
     return () =>
       urls.forEach((url) => this.#client(url).closeSubscription(subId));
@@ -56,9 +54,7 @@ export class RelayPool {
     event: NostrEvent,
     timeoutMs = 5000,
   ): Promise<PublishResult[]> {
-    const urls = relays
-      .map(normalizeRelayUrl)
-      .filter((url): url is string => Boolean(url));
+    const urls = normalizedRelayList(relays);
     const promises = urls.map((url) => this.#publishOne(url, event, timeoutMs));
     return Promise.all(promises);
   }
@@ -118,9 +114,11 @@ export class RelayPool {
       this.#publishWaiters.set(event.id, waiters);
       this.#client(url).publish(event);
       setTimeout(() => {
-        if (!waiters.has(url)) return;
-        waiters.delete(url);
-        resolve({ relay: url, accepted: false, message: 'timeout' });
+        this.#resolvePublish(event.id, url, {
+          relay: url,
+          accepted: false,
+          message: 'timeout',
+        });
       }, timeoutMs);
     });
   }
@@ -130,8 +128,20 @@ export class RelayPool {
     const waiters = this.#publishWaiters.get(message[1]);
     const resolve = waiters?.get(relay);
     if (!resolve) return;
-    waiters?.delete(relay);
-    resolve({ relay, accepted: message[2], message: message[3] });
+    this.#resolvePublish(message[1], relay, {
+      relay,
+      accepted: message[2],
+      message: message[3],
+    });
+  }
+
+  #resolvePublish(eventId: string, relay: string, result: PublishResult): void {
+    const waiters = this.#publishWaiters.get(eventId);
+    const resolve = waiters?.get(relay);
+    if (!waiters || !resolve) return;
+    waiters.delete(relay);
+    if (waiters.size === 0) this.#publishWaiters.delete(eventId);
+    resolve(result);
   }
 
   #emitStates(): void {
