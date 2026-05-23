@@ -5,6 +5,7 @@
     listRelayDiagnosticSummaries,
     type RelayDiagnosticSummary,
   } from '$lib/relays/relay-diagnostic-summary';
+  import { relayDiagnosticDisplayMessage } from '$lib/relays/relay-diagnostic-display';
   import {
     fetchRelayInformation,
     listRelayInformation,
@@ -161,9 +162,13 @@
           {/if}
           <small>last connected {formatTime(relay.lastConnectedAt)}</small>
           {#if snapshot(relay.url)?.lastError}
-            <small>{snapshot(relay.url)?.lastError}</small>
+            <small>
+              {relayDiagnosticDisplayMessage(
+                snapshot(relay.url)?.lastError ?? '',
+              )}
+            </small>
           {:else if relay.lastError}
-            <small>{relay.lastError}</small>
+            <small>{relayDiagnosticDisplayMessage(relay.lastError)}</small>
           {/if}
           <button
             type="button"

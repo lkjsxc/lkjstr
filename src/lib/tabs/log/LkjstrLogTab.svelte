@@ -5,6 +5,7 @@
     subscribeAppLog,
     type AppLogRecord,
   } from '$lib/log/app-log';
+  import { relayDiagnosticDisplayMessage } from '$lib/relays/relay-diagnostic-display';
   import { flattenRelayDiagnostics } from '$lib/relays/session-snapshots';
   import type { RelaySnapshot } from '$lib/relays/types';
   import JobTreeLog from './JobTreeLog.svelte';
@@ -51,7 +52,7 @@
       </time>
       <small>{item.severity}</small>
       <small>{item.code}</small>
-      <p>{item.message}</p>
+      <p>{relayDiagnosticDisplayMessage(item.message)}</p>
       {#if contextText(item)}
         <small>{contextText(item)}</small>
       {/if}
