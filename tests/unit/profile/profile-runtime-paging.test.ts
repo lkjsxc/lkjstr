@@ -52,6 +52,8 @@ describe('profile runtime paging', () => {
     expect(metadataRead?.relays).toContain('wss://purplepag.es/');
     expect(followRead?.relays).not.toContain('wss://purplepag.es/');
     expect(postRead?.relays).not.toContain('wss://purplepag.es/');
+    expect(postRead?.since).toEqual(expect.any(Number));
+    expect(postRead?.until).toEqual(expect.any(Number));
     expect(page.profile?.pubkey).toBe(pubkey);
     expect(page.followList?.kind).toBe(3);
     expect(page.posts).toHaveLength(30);
@@ -112,7 +114,12 @@ function initialSubscriptions(
       filters: readonly { kinds?: number[] }[];
     }) => {
       const kinds = request.filters[0]?.kinds ?? [];
-      reads.push({ relays: [...request.relays], kinds });
+      reads.push({
+        relays: [...request.relays],
+        kinds,
+        since: request.filters[0]?.since,
+        until: request.filters[0]?.until,
+      });
       if (kinds.includes(0))
         return [receipt(event('meta', 200, pubkey, 0), 'wss://relay-a/')];
       if (kinds.includes(3))
@@ -129,6 +136,8 @@ function initialSubscriptions(
 type ReadRequest = {
   readonly relays: readonly string[];
   readonly kinds: readonly number[];
+  readonly since?: number;
+  readonly until?: number;
 };
 
 function emptySubscriptions(): RelaySubscriptionManager {
