@@ -18,6 +18,10 @@ stricter local shortcode creation.
 - Invalid tags remain text and do not create image loads.
 - Image load failure falls back to visible `:shortcode:` text without a
   placeholder image.
+- Inline custom emoji render at normal text emoji height, preserve intrinsic
+  aspect ratio, and cap width at `6em`.
+- Emoji picker buttons keep custom emoji images inside the compact button
+  bounds.
 - Sensitive hidden content does not load custom emoji images until revealed.
 - Event content, nested reposts, references, profile names, profile about text,
   reaction summaries, composer insertion, picker choices, and publish helpers

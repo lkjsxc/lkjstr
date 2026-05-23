@@ -6,7 +6,7 @@ Event semantics define the stored and rendered Nostr event contract.
 
 ## Canonical Event Record
 
-Events stored or rendered by the app use a normalized record:
+Events rendered by the app use `NostrEvent`:
 
 - `id`.
 - `pubkey`.
@@ -15,25 +15,20 @@ Events stored or rendered by the app use a normalized record:
 - `tags`.
 - `content`.
 - `sig`.
-- `validation`.
-- `seen_on`.
-- `first_seen_at`.
-- `last_seen_at`.
 
-`seen_on` is relay evidence. It records relay URL, receive time, and whether the event came from an initial query or live subscription.
+Stored events add cache metadata:
 
-## Validation States
+- `receivedAt`.
+- `relayUrls`.
 
-- `valid`: id and signature verified.
-- `invalid_signature`: signature failed.
-- `invalid_shape`: event cannot be interpreted as a valid Nostr event.
-- `unverified`: accepted temporarily only when verification is queued in a worker.
-
-Unverified events may be staged in cache but must not be rendered as trusted content.
+Relay evidence is also stored as one receipt per event and relay URL. The
+current cache does not persist event validation state or worker staging state.
 
 ## Duplicate Handling
 
-The event id is the identity. Repeated events merge relay evidence and timestamps. Conflicting payloads for the same id are invalid shape incidents and must be reported to protocol diagnostics.
+The event id is the identity. Repeated events merge relay URLs and keep the
+newest receive time. Conflicting payloads for the same id are ignored by the
+repository rather than rendered as separate rows.
 
 ## Timeline Ordering
 
@@ -93,9 +88,11 @@ Profile, Thread, embeds, and Notifications.
 - Custom emoji render in content, profile names, mention labels, referenced
   author labels, nested repost author labels, nested repost content, and
   reaction summaries when HTTPS emoji metadata is available.
-- Custom emoji images are lazy, async-decoded, no-referrer images. Custom emoji
-  shortcode metadata is case-sensitive and HTTPS-only. Unknown or invalid emoji
-  remains visible text, and image load failure falls back to shortcode text.
+- Custom emoji images are lazy, async-decoded, no-referrer images. They keep
+  normal text emoji height, preserve intrinsic aspect ratio, and cap inline
+  width at `6em`. Custom emoji shortcode metadata is case-sensitive and
+  HTTPS-only. Unknown or invalid emoji remains visible text, and image load
+  failure falls back to shortcode text.
 
 ## Embeds
 

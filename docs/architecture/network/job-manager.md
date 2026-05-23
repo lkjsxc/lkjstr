@@ -2,16 +2,16 @@
 
 ## Purpose
 
-Job manager records long-running in-app work so runtime state survives tab
-changes and can be inspected by diagnostics.
+Job manager records supported in-app work so runtime state survives tab changes
+and can be inspected by lkjstr Log.
 
 ## Contract
 
 - Jobs are persisted in IndexedDB and mirrored in memory for tests.
 - Jobs form a tree with optional `rootId`, `parentId`, path, label, progress,
   output, and cancellation metadata.
-- Supported jobs are relay subscription, paged backfill, notification sync,
-  publish, and cache maintenance.
+- Supported job kinds are relay subscription, paged backfill, notification
+  sync, publish, and cache maintenance.
 - A job starts as queued, may become running, and finishes as completed, failed,
   or canceled.
 - Job listeners receive hydrated memory snapshots and updates after enqueue,
@@ -22,5 +22,5 @@ changes and can be inspected by diagnostics.
 - `cancelTree` cancels only non-terminal jobs; completed, failed, and already
   canceled descendants keep their terminal status and metadata.
 - lkjstr Log is the control surface for non-terminal root-job cancellation.
-- Runtime code records errors on the job instead of hiding them in component
-  state only.
+- Runtime instrumentation is limited to code paths that explicitly enqueue or
+  update jobs.

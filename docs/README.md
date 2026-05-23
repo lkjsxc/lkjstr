@@ -90,11 +90,17 @@ here before code is changed.
 - [product/feeds/threads.md](product/feeds/threads.md): Thread feed.
 - [product/tools/README.md](product/tools/README.md): tools.
 - [product/tools/accounts.md](product/tools/accounts.md): accounts.
+- [product/tools/author-context.md](product/tools/author-context.md): Author
+  Context.
 - [product/tools/cache.md](product/tools/cache.md): cache.
+- [product/tools/custom-request.md](product/tools/custom-request.md): Custom
+  Request.
 - [product/tools/event-actions.md](product/tools/event-actions.md): event
   action writes.
+- [product/tools/profile-edit.md](product/tools/profile-edit.md): Profile Edit.
 - [product/tools/relay-management.md](product/tools/relay-management.md):
   relay management.
+- [product/tools/search.md](product/tools/search.md): Search.
 - [product/tools/settings.md](product/tools/settings.md): settings.
 - [product/tools/tweet.md](product/tools/tweet.md): Tweet tool.
 - [product/tools/upload-settings.md](product/tools/upload-settings.md): guided

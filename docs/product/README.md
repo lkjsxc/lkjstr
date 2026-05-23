@@ -15,9 +15,16 @@ itself: split tiles, tabs, relay-backed data, and local state.
 - [feeds/threads.md](feeds/threads.md): Thread feed.
 - [tools/README.md](tools/README.md): local tools and settings surfaces.
 - [tools/accounts.md](tools/accounts.md): account records and signers.
+- [tools/author-context.md](tools/author-context.md): nearby posts by an event
+  author.
 - [tools/cache.md](tools/cache.md): local cache tab behavior.
+- [tools/custom-request.md](tools/custom-request.md): validated one-shot relay
+  reads.
 - [tools/event-actions.md](tools/event-actions.md): event action writes.
+- [tools/profile-edit.md](tools/profile-edit.md): active-account metadata
+  writes.
 - [tools/relay-management.md](tools/relay-management.md): relay management.
+- [tools/search.md](tools/search.md): local and relay-backed search.
 - [tools/settings.md](tools/settings.md): settings.
 - [tools/tweet.md](tools/tweet.md): Tweet tool.
 - [tools/upload-settings.md](tools/upload-settings.md): guided media upload

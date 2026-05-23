@@ -4,124 +4,32 @@
 
 This document records the current implemented contract for the app.
 
-## State
+## Index
 
-- Root `/` renders the workspace shell.
-- Workspace layout, tab groups, tabs, accounts, relay sets, settings, events,
-  notifications, composer recovery data, and cache metadata are local browser
-  data.
-- Clean first launch opens two equal tiles: Welcome on the left and Accounts,
-  Relay Settings, Home, Notifications, and Tweet on the right. New Tab opens
-  Home, Tweet, Notifications, Search, Custom Request, Global, Profile Edit,
-  Accounts, Relay Settings, Stats, Settings, Upload Settings, lkjstr Log, Mine
-  npub, and Welcome.
-- Profile tabs open or focus from identity actions in the same tile.
-- Profile Edit opens or focuses from own-profile actions in the same tile and
-  edits only the active signing account.
-- Thread tabs open or focus from event rows, notification event bodies,
-  controls, quotes, references, and continuation rows in the same tile. Row action
-  buttons never trigger row navigation.
-- Tabs can be reordered within a tile or moved between tiles with native
-  desktop drag-and-drop or pointer dragging on mobile.
-- Moving the last tab out of a tile removes that tile.
-- Settings render as one flat key-value list, including cache retention, raw
-  string editing, formatted JSON editing, inline JSON import, and raw Tweet
-  media upload keys. `notifications.enabled` and
-  `notifications.defaultCategories` are inert and do not gate notification
-  capture, indexing, unread state, or rendering. Notification unread tab badges
-  are not configurable or rendered.
-- Upload Settings is a guided editor for the Tweet media upload provider,
-  custom HTTPS server, no-transform option, endpoint discovery, and discovery
-  test result.
-- Home is Account home: active account plus NIP-02 follows from the latest
-  kind `3` event. Home, Global, and Profile display kinds `1`, `6`, and `16`.
-- Home loads cached matching notes first, performs an initial historical relay
-  page, then subscribes to enabled read relays in the selected default relay
-  set with startup `since`.
-- Profile metadata cache is memory-assisted, event-backed, latest-only, and
-  runtime-owned for Home and Global timelines.
-- Global shows recent notes and reposts from the selected read relays without
-  an account requirement.
-- Notifications are background-captured relay-backed records derived from
-  supported `#p` events that reference the active account. Rows show a
-  lightweight action context header, timestamp, visual unread state, and the
-  source notification event rendered through the canonical `EventRow`. The
-  outer actor chip is hidden when the source event already shows the
-  notification actor. Target/root context is fallback-only, explicitly labeled,
-  and shown only when the source notification event is unavailable; fallback
-  rows keep the outer actor chip because the fallback author can differ. Kind
-  `7` content `+` or empty content renders as a heart reaction. The
-  Notifications tab label never includes an unread count.
-- Home has no hidden public fallback when the selected account or read relays
-  cannot produce a feed.
-- Feed loading ends when cache exists, any relay produces events, any relay
-  reaches EOSE, or all contacted relays fail or close.
-- Home states are `no-active-account`, `loading-follows`, `no-follow-list`,
-  `no-enabled-relay`, `auth-required`, `subscription-closed`, `relay-failed`,
-  `ready-empty`, and `ready-with-events`.
-- Relay Settings shows editable relay state, persisted relay health counters,
-  and live connection state. lkjstr Log shows current-session app diagnostics
-  as a flat chronological stream.
-- Feed memory is held as resident chunks. The top of a pruned feed loads newer
-  chunks, and the bottom or a short viewport loads older chunks.
-- Profile renders a banner, avatar overlap, display name, handle/NIP-05,
-  about, safe clickable website, following count from the latest kind `3`,
-  action cluster, and copy menu from real metadata, then Notes in one tab
-  scroll flow.
-- Retained inactive tab bodies stay stacked at the active body size so scroll
-  position and layout geometry survive tab switches.
-- Event metadata shows author control and date. Referenced event previews place
-  the referenced author avatar immediately before the author name.
-- Event actions publish NIP-25 hearts, dislikes, Unicode emoji reactions, and
-  NIP-30 custom emoji reactions with `e`, `p`, `k`, and exactly one matching
-  `emoji` tag, plus NIP-18 reposts, tagged replies, and NIP-57 zap requests
-  where targets expose zap data.
-- Event rows and diagnostic rows wrap long content inside their tile. The row
-  menu copies event ids and opens Author Context for nearby posts by the row
-  author.
-- Accounts are managed inline with active, disconnect, and local reveal/copy
-  controls. Stored account records normalize to enabled, unsupported signer
-  types are ignored, and the UI does not retire accounts by disabling them.
-- Mine npub mines an `npub` prefix locally and exports the generated `nsec`
-  without storing it until the user adds it.
-- Tweet uses the active signing account, durable composer recovery,
-  `Ctrl+Enter`, a compact media/emoji/publish toolbar, custom emoji loaded from
-  the active account's newest NIP-51 emoji list and referenced sets, shared
-  provider or custom NIP-96 media upload, NIP-98 upload auth, NIP-94 `imeta`
-  tags, content-derived mention and emoji tags, and signed kind `1` notes to
-  enabled write relays. After signing and local queueing, the composer clears
-  and focuses immediately; only late all-relay rejection diagnostics are shown.
-- Sensitive content hides bodies, media, custom emoji images, reference
-  previews, and nested repost bodies until locally revealed. Reveals persist
-  for the current app session across virtualization remounts.
-- Custom Request accepts validated filter objects, filter arrays, request
-  objects with optional `relays`, and `["REQ", subId, ...filters]` messages.
-  It reads selected default relays unless the request supplies relay URLs.
-- Custom emoji tags render with lazy, async-decoded, no-referrer images in
-  event text, nested reposts, references, reaction summaries, profile names,
-  and profile about text when they use HTTPS image URLs. Incoming NIP-30
-  shortcodes accept letters, numbers, underscores, and hyphens. Manual local
-  shortcode creation remains stricter and accepts only letters, numbers, and
-  underscores. Unknown or invalid emoji stays text; failed image loads fall
-  back to shortcode text.
-- Event references classify reply roots, reply parents, quote tags,
-  `nostr:note`, `nostr:nevent`, repost, reaction, and deletion targets. Up to
-  three reference cards show author metadata, preview text, media count, and a
-  compact missing-event state without visible protocol labels.
-- Event repository lookup uses direct id reads, batched id reads, and tag-value
-  indexes for thread, reference, reaction, and notification reloads.
-- Stats shows current-session relay counters, subscription ids, OK counts,
-  cache event/profile/notification totals, storage usage, manual refresh, and
-  an auto-refresh checkbox.
-- Jobs are persisted as root/child trees with progress, output, completion,
-  stale-startup, and cancel metadata. lkjstr Log exposes inspection and cancel
-  controls for non-terminal root jobs.
-- Docker verification uses `docker-compose.yml` built images with no bind
-  mounts or required environment blocks.
-- GitHub Actions runs local verification, browser tests, Docker Compose gates,
-  and GHCR image publishing on `main`.
+- [product/README.md](product/README.md): implemented workspace, feed, and
+  tool behavior.
+- [product/workspace/tabs.md](product/workspace/tabs.md): startup tabs, New
+  Tab choices, and action-opened surfaces.
+- [product/tools/README.md](product/tools/README.md): Accounts, Search, Custom
+  Request, Profile Edit, Author Context, Tweet, settings, relays, and logs.
+- [protocol/README.md](protocol/README.md): Nostr event, relay, NIP, custom
+  emoji, media, and action contracts.
+- [architecture/README.md](architecture/README.md): source ownership, runtime
+  ownership, storage, workspace, and network boundaries.
+- [architecture/data/shared-storage.md](architecture/data/shared-storage.md):
+  `NostrEvent` cache shape, relay receipts, tag rows, cursors, and jobs.
+- [architecture/workspace/tab-runtime.md](architecture/workspace/tab-runtime.md):
+  tab lifecycle, retention, and startup recovery.
+- [architecture/network/job-manager.md](architecture/network/job-manager.md):
+  persisted job trees, hydration, stale startup marking, and cancellation.
+- [operations/verification.md](operations/verification.md): local verification
+  commands.
+- [operations/docker.md](operations/docker.md): Docker Compose verification.
 
 ## Gaps
 
-- Relay latency, last-event-per-relay, and worker queue health are not yet
-  persisted diagnostics unless a focused feature adds them.
+- Relay support determines whether NIP-50 search returns remote matches.
+- Relay latency, last-event-per-relay, worker queue health, event validation
+  state, and passkey-protected secret storage are not persisted.
+- Broad runtime instrumentation is not automatic; only explicitly job-backed
+  flows appear in the job tree.
