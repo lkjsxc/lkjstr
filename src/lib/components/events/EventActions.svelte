@@ -3,6 +3,8 @@
   import type { ProfileSummary } from '$lib/identity/identity';
   import type { CustomEmoji, NostrEvent } from '$lib/protocol';
   import type { RelaySet } from '$lib/relays/relay-store';
+  import { loadAccountEmojiSource } from '$lib/emoji/source';
+  import { timelineRelays } from '$lib/timeline/timeline-subscription';
   import {
     publishReaction,
     publishReply,
@@ -15,6 +17,7 @@
   type Props = {
     event: NostrEvent;
     profile?: ProfileSummary;
+    activeAccountPubkey?: string | null;
     relaySets: readonly RelaySet[];
     onSuccess?: () => void;
   };
@@ -24,6 +27,22 @@
   let reply = $state('');
   let status = $state('');
   let busy = $state(false);
+  let customEmojis = $state<readonly CustomEmoji[]>([]);
+  let emojiLoadRequest = 0;
+  let emojiSourceKey = $derived(
+    `${props.activeAccountPubkey ?? ''}|${timelineRelays(props.relaySets).join('\u0000')}`,
+  );
+
+  $effect(() => {
+    const key = emojiSourceKey;
+    if (key === undefined) return;
+    const request = ++emojiLoadRequest;
+    const pubkey = props.activeAccountPubkey ?? undefined;
+    const relays = timelineRelays(props.relaySets);
+    void loadAccountEmojiSource({ pubkey, relays }).then((emoji) => {
+      if (request === emojiLoadRequest) customEmojis = emoji;
+    });
+  });
 
   async function run(action: () => Promise<{ ok: boolean; message?: string }>) {
     busy = true;
@@ -104,7 +123,7 @@
       <span class="sr-only">Zap</span>
     </button>
     <EmojiPaletteButton
-      customEmojis={props.profile?.customEmojis ?? []}
+      {customEmojis}
       disabled={busy}
       onUnicode={(emoji) => submitEmoji({ content: emoji })}
       onCustom={(emoji) =>

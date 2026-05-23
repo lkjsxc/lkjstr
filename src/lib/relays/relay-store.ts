@@ -9,7 +9,6 @@ import type { RelayConnectionState } from './types';
 import { defaultRelaySet } from './default-relays';
 import { normalizeRelayUrl } from '../protocol';
 import { normalizeSeededRelaySets } from './relay-normalize';
-
 const selectedDefaultKey = 'lkjstr.defaultRelaySetId';
 let memorySelectedDefaultRelaySetId = defaultRelaySet.id;
 
@@ -44,8 +43,10 @@ export async function listRelaySets(): Promise<RelaySet[]> {
   );
   if (saved.length > 0) {
     const normalized = normalizeSeededRelaySets(saved);
-    if (normalized !== saved) await saveRelaySets(normalized);
-    return normalized;
+    const reset = resetRelayLiveState(normalized);
+    if (normalized !== saved || reset !== normalized)
+      await saveRelaySets(reset);
+    return reset;
   }
   const seeded = seedDefaultRelays([]);
   await saveRelaySets(seeded);
@@ -183,4 +184,17 @@ function createRelay(url: string): RelayRecord {
     updatedAt: Date.now(),
     health: { attempts: 0, successes: 0, failures: 0 },
   };
+}
+
+function resetRelayLiveState(relaySets: readonly RelaySet[]): RelaySet[] {
+  let changed = false;
+  const next = relaySets.map((set) => ({
+    ...set,
+    relays: set.relays.map((relay) => {
+      if (relay.state === 'idle') return relay;
+      changed = true;
+      return { ...relay, state: 'idle' as const };
+    }),
+  }));
+  return changed ? next : [...relaySets];
 }

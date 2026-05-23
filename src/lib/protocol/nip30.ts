@@ -7,6 +7,7 @@ export type CustomEmoji = {
 };
 
 const shortcodePattern = /^[A-Za-z0-9_]+$/;
+const incomingShortcodePattern = /^[A-Za-z0-9_-]+$/;
 const customEmojiInputPattern =
   /^:([^:]+):(https:\/\/\S+?)(?::(30030:[0-9a-f]{64}:.+))?$/u;
 const emojiSetAddressPattern = /^30030:[0-9a-f]{64}:[^\s:]+$/u;
@@ -25,7 +26,7 @@ export function customEmojiTag(
 ): CustomEmoji | undefined {
   const [name, shortcode, url] = tag;
   if (name !== 'emoji' || !shortcode || !url) return undefined;
-  if (!shortcodePattern.test(shortcode)) return undefined;
+  if (!validIncomingCustomEmojiShortcode(shortcode)) return undefined;
   if (!isHttpsUrl(url)) return undefined;
   const address = tag[3];
   return validCustomEmojiAddress(address)
@@ -35,6 +36,10 @@ export function customEmojiTag(
 
 export function validCustomEmojiShortcode(value: string): boolean {
   return shortcodePattern.test(value);
+}
+
+export function validIncomingCustomEmojiShortcode(value: string): boolean {
+  return incomingShortcodePattern.test(value);
 }
 
 export function validCustomEmojiUrl(value: string): boolean {

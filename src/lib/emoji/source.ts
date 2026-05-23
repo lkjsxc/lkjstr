@@ -28,23 +28,24 @@ export async function loadAccountEmojiSource(input: {
   if (!input.pubkey) return [];
   const cachedList = await latestEventByAuthorKind(input.pubkey, emojiListKind);
   const relayList = await relayEmojiList(input.pubkey, input.relays);
-  const lists = [cachedList?.event, ...relayList].filter(
-    (event): event is NostrEvent => Boolean(event),
-  );
+  const list = newestEvent([cachedList?.event, ...relayList]);
+  const lists = list ? [list] : [];
   const addresses = parseAddresses(lists);
   const cachedSets = await cachedEmojiSets(addresses);
   const relaySets = await relayEmojiSets(addresses, input.relays);
+  const sets = newestEventsByAddress([...cachedSets, ...relaySets]);
   return sortEmoji([
     ...lists.flatMap((event) => customEmojisFromEvent(event)),
-    ...cachedSets.flatMap((event) => customEmojisFromEvent(event)),
-    ...relaySets.flatMap((event) => customEmojisFromEvent(event)),
+    ...sets.flatMap((event) => customEmojisFromEvent(event)),
   ]);
 }
 
 function customEmojisFromEvent(event: NostrEvent): CustomEmoji[] {
+  const address = emojiSetAddress(event);
   return event.tags.flatMap((tag) => {
     const emoji = customEmojiTag(tag);
-    return emoji ? [emoji] : [];
+    if (!emoji) return [];
+    return emoji.address || !address ? [emoji] : [{ ...emoji, address }];
   });
 }
 
@@ -87,6 +88,7 @@ async function relayEmojiSets(
       kinds: [emojiSetKind],
       authors: [item.pubkey],
       '#d': [item.d],
+      limit: 1,
     })),
     pageSize: addresses.length,
     subscriptions: sharedSubscriptionManager,
@@ -113,10 +115,41 @@ function parseAddress(address: string): EmojiAddress | undefined {
 }
 
 function sortEmoji(items: readonly CustomEmoji[]): CustomEmoji[] {
+  return dedupeBy([...items].reverse(), (item) => item.shortcode)
+    .reverse()
+    .sort((a, b) => a.shortcode.localeCompare(b.shortcode));
+}
+
+function newestEvent(
+  events: readonly (NostrEvent | undefined)[],
+): NostrEvent | undefined {
+  return events
+    .filter((event): event is NostrEvent => Boolean(event))
+    .sort((a, b) => b.created_at - a.created_at || a.id.localeCompare(b.id))[0];
+}
+
+function newestEventsByAddress(events: readonly NostrEvent[]): NostrEvent[] {
   return dedupeBy(
-    items,
-    (item) => `${item.shortcode}\u0000${item.url}\u0000${item.address ?? ''}`,
-  ).sort((a, b) => a.shortcode.localeCompare(b.shortcode));
+    [...events]
+      .filter((event) => Boolean(emojiSetAddress(event)))
+      .sort((a, b) => b.created_at - a.created_at || a.id.localeCompare(b.id)),
+    (event) => emojiSetAddress(event) ?? '',
+  );
+}
+
+function emojiSetAddress(event: NostrEvent): string | undefined {
+  if (event.kind !== emojiSetKind) return undefined;
+  const d = event.tags.find((tag) => tag[0] === 'd')?.[1];
+  const address = d ? `30030:${event.pubkey}:${d}` : undefined;
+  return validCustomEmojiAddress(address) ? address : undefined;
+}
+
+export function dedupeCustomEmojiByShortcode(
+  items: readonly CustomEmoji[],
+): CustomEmoji[] {
+  return dedupeBy([...items].reverse(), (item) => item.shortcode).sort((a, b) =>
+    a.shortcode.localeCompare(b.shortcode),
+  );
 }
 
 function dedupeBy<T>(items: readonly T[], key: (item: T) => string): T[] {

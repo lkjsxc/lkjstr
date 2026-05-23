@@ -6,13 +6,19 @@
   };
 
   let props: Props = $props();
+  let failed = $state(false);
 </script>
 
-<img
-  class="custom-emoji"
-  src={props.emoji.url}
-  alt={`:${props.emoji.shortcode}:`}
-  loading="lazy"
-  decoding="async"
-  referrerpolicy="no-referrer"
-/>
+{#if failed}
+  <span class="custom-emoji-fallback">:{props.emoji.shortcode}:</span>
+{:else}
+  <img
+    class="custom-emoji"
+    src={props.emoji.url}
+    alt={`:${props.emoji.shortcode}:`}
+    loading="lazy"
+    decoding="async"
+    referrerpolicy="no-referrer"
+    onerror={() => (failed = true)}
+  />
+{/if}

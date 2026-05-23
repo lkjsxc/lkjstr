@@ -5,8 +5,9 @@ import {
   type RelayMessage,
 } from '../protocol';
 import { RelayClient } from './relay-client';
+import { recordRelayHealthEvidence } from './relay-health';
 import { relaySnapshotHistoryMap } from './session-snapshots';
-import type { RelaySnapshot } from './types';
+import type { RelayConnectionState, RelaySnapshot } from './types';
 
 export type PoolEvent = {
   readonly relay: string;
@@ -23,6 +24,10 @@ export type PublishResult = {
 export class RelayPool {
   #clients = new Map<string, RelayClient>();
   #snapshotHistory = relaySnapshotHistoryMap();
+  #healthStates = new Map<
+    string,
+    { readonly state: RelayConnectionState; readonly lastError?: string }
+  >();
   #events = new Set<(event: PoolEvent) => void>();
   #states = new Set<(states: RelaySnapshot[]) => void>();
   #publishWaiters = new Map<
@@ -130,7 +135,34 @@ export class RelayPool {
 
   #emitStates(): void {
     const states = this.snapshots();
+    this.#recordHealth(states);
     this.#states.forEach((handler) => handler(states));
+  }
+
+  #recordHealth(states: readonly RelaySnapshot[]): void {
+    for (const snapshot of states) {
+      const previous = this.#healthStates.get(snapshot.url);
+      if (previous?.state !== 'connecting' && snapshot.state === 'connecting')
+        void recordRelayHealthEvidence(snapshot.url, { attempted: true });
+      if (previous?.state !== 'open' && snapshot.state === 'open')
+        void recordRelayHealthEvidence(snapshot.url, {
+          connectedAt: Date.now(),
+        });
+      if (
+        snapshot.lastError &&
+        (previous?.lastError !== snapshot.lastError ||
+          (previous?.state !== 'error' && snapshot.state === 'error'))
+      ) {
+        void recordRelayHealthEvidence(snapshot.url, {
+          failure: snapshot.state === 'error' ? snapshot.lastError : undefined,
+          lastError: snapshot.lastError,
+        });
+      }
+      this.#healthStates.set(snapshot.url, {
+        state: snapshot.state,
+        lastError: snapshot.lastError,
+      });
+    }
   }
 }
 

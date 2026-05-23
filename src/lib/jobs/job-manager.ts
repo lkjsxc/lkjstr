@@ -15,6 +15,7 @@ const memoryJobs = new Map<string, JobRecord>();
 
 export class JobManager {
   #listeners = new Set<(jobs: readonly JobRecord[]) => void>();
+  #staleStartupMarked = false;
 
   subscribe(listener: (jobs: readonly JobRecord[]) => void): () => void {
     this.#listeners.add(listener);
@@ -28,6 +29,14 @@ export class JobManager {
     label?: string,
   ): Promise<JobRecord> {
     return this.enqueueRoot(kind, input, label);
+  }
+
+  async load(): Promise<JobRecord[]> {
+    const jobs = await this.list();
+    memoryJobs.clear();
+    for (const job of jobs) memoryJobs.set(job.id, job);
+    this.#emit();
+    return jobs;
   }
 
   async enqueueRoot(
@@ -111,15 +120,23 @@ export class JobManager {
     if (!root) return [];
     const records = await this.listTree(root.rootId);
     const now = Date.now();
-    const next = records.map((job) => ({
-      ...job,
-      status: terminalJobStatus(job.status) ? job.status : 'canceled',
-      cancelRequestedAt: job.cancelRequestedAt ?? now,
-      canceledBy,
-      updatedAt: now,
-      completedAt: job.completedAt ?? now,
-    }));
-    await Promise.all(next.map((job) => this.#save(job)));
+    const next = records.map((job) =>
+      terminalJobStatus(job.status)
+        ? job
+        : {
+            ...job,
+            status: 'canceled' as const,
+            cancelRequestedAt: job.cancelRequestedAt ?? now,
+            canceledBy,
+            updatedAt: now,
+            completedAt: now,
+          },
+    );
+    await Promise.all(
+      next
+        .filter((job, index) => job !== records[index])
+        .map((job) => this.#save(job)),
+    );
     return next;
   }
 
@@ -138,6 +155,8 @@ export class JobManager {
   }
 
   async markStaleStartupJobs(now = Date.now()): Promise<JobRecord[]> {
+    if (this.#staleStartupMarked) return [];
+    this.#staleStartupMarked = true;
     const stale = (await this.list()).filter((job) =>
       ['queued', 'running'].includes(job.status),
     );

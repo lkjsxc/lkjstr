@@ -7,4 +7,5 @@ subscription management.
 
 ## Contents
 
-- Relay URL normalization, default relays, WebSocket client, pool, and store.
+- Relay URL normalization, default relays, WebSocket client, pool, health
+  evidence, diagnostics, and store.

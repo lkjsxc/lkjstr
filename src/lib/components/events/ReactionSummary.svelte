@@ -33,12 +33,20 @@
     if (content === '-') return 'dislike';
     return content;
   }
+
+  function reactionKey(reaction: ReactionGroup): string {
+    return [
+      reaction.content,
+      reaction.emoji?.url ?? '',
+      reaction.emoji?.address ?? '',
+    ].join(':');
+  }
 </script>
 
 {#if props.reactions && props.reactions.length > 0}
   <ul class="reaction-summary" aria-label="Reactions">
-    {#each props.reactions as reaction (`${reaction.content}:${reaction.emoji?.url ?? ''}`)}
-      {@const id = `reaction-${reaction.content}:${reaction.emoji?.url ?? ''}`}
+    {#each props.reactions as reaction (reactionKey(reaction))}
+      {@const id = `reaction-${reactionKey(reaction)}`}
       <li>
         <button
           type="button"

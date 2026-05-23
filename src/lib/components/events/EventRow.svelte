@@ -111,6 +111,7 @@
       <EventActions
         event={props.item.event}
         {profile}
+        activeAccountPubkey={props.activeAccountPubkey}
         relaySets={props.relaySets ?? []}
         onSuccess={highlightAction}
       />

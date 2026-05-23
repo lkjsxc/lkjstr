@@ -57,6 +57,10 @@
     return snapshots.find((item) => item.url === url);
   }
 
+  function formatTime(timestamp?: number): string {
+    return timestamp ? new Date(timestamp).toLocaleString() : 'never';
+  }
+
   $effect(() => sharedRelayPool.onState((next) => (snapshots = next)));
 </script>
 
@@ -103,8 +107,15 @@
             </label>
           {/each}
           <small>{snapshot(relay.url)?.state ?? relay.state}</small>
+          <small>
+            {relay.health.attempts} attempts · {relay.health.successes} ok ·
+            {relay.health.failures} failed
+          </small>
+          <small>last connected {formatTime(relay.lastConnectedAt)}</small>
           {#if snapshot(relay.url)?.lastError}
             <small>{snapshot(relay.url)?.lastError}</small>
+          {:else if relay.lastError}
+            <small>{relay.lastError}</small>
           {/if}
           <button
             type="button"

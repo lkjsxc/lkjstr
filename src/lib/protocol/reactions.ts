@@ -5,7 +5,7 @@ import {
 } from './nip30';
 import type { NostrEvent } from './event';
 
-const customEmojiReactionPattern = /^:([A-Za-z0-9_]+):$/u;
+const customEmojiReactionPattern = /^:([A-Za-z0-9_-]+):$/u;
 
 export type ReactionKind = 'like' | 'dislike' | 'emoji' | 'custom-emoji';
 

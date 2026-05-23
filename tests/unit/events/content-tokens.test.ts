@@ -80,6 +80,46 @@ describe('content tokens', () => {
       { type: 'text', text: ' ' },
     ]);
   });
+
+  it('renders matching custom emoji and leaves unknown shortcode text', () => {
+    const emojiEvent = {
+      ...event('Hi :party-1: and :missing:'),
+      tags: [['emoji', 'party-1', 'https://emoji.example/party.png']],
+    };
+    expect(contentTokens(emojiEvent, {}, new Set())).toEqual([
+      { type: 'text', text: 'Hi ' },
+      {
+        type: 'custom-emoji',
+        shortcode: 'party-1',
+        url: 'https://emoji.example/party.png',
+        text: ':party-1:',
+      },
+      { type: 'text', text: ' and :missing:' },
+    ]);
+  });
+
+  it('keeps punctuation outside emoji and urls', () => {
+    const emojiEvent = {
+      ...event('Look :party:, https://example.com/page.'),
+      tags: [['emoji', 'party', 'https://emoji.example/party.png']],
+    };
+    expect(contentTokens(emojiEvent).at(1)).toMatchObject({
+      type: 'custom-emoji',
+      text: ':party:',
+    });
+    expect(contentTokens(emojiEvent).at(2)).toEqual({
+      type: 'text',
+      text: ', ',
+    });
+    expect(contentTokens(emojiEvent).at(3)).toMatchObject({
+      type: 'url',
+      text: 'https://example.com/page',
+    });
+    expect(contentTokens(emojiEvent).at(4)).toEqual({
+      type: 'text',
+      text: '.',
+    });
+  });
 });
 
 function profile(pubkey: string, name: string) {

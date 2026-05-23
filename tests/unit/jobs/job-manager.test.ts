@@ -46,5 +46,31 @@ describe('job manager', () => {
       status: 'failed',
       staleStartedAt: 123,
     });
+    expect(await manager.markStaleStartupJobs(456)).toEqual([]);
+  });
+
+  it('hydrates persisted jobs and preserves terminal jobs during cancel tree', async () => {
+    const manager = new JobManager();
+    const root = await manager.enqueueRoot('paged-backfill');
+    const complete = await manager.enqueueChild(root.id, 'relay-subscription');
+    const queued = await manager.enqueueChild(root.id, 'relay-subscription');
+    if (!complete || !queued) throw new Error('expected children');
+    await manager.setStatus(complete.id, 'completed');
+
+    const loaded = new JobManager();
+    expect(await loaded.load()).toEqual(
+      expect.arrayContaining([expect.objectContaining({ id: root.id })]),
+    );
+    await loaded.cancelTree(root.id, 'test');
+    const tree = await loaded.listTree(root.id);
+
+    const completed = tree.find((job) => job.id === complete.id);
+    expect(completed).toMatchObject({ status: 'completed' });
+    expect(completed).not.toHaveProperty('cancelRequestedAt');
+    expect(completed).not.toHaveProperty('canceledBy');
+    expect(tree.find((job) => job.id === queued.id)).toMatchObject({
+      status: 'canceled',
+      canceledBy: 'test',
+    });
   });
 });

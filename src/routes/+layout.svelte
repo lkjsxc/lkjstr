@@ -1,5 +1,6 @@
 <script lang="ts">
   import { onMount } from 'svelte';
+  import { sharedJobManager } from '$lib/jobs/job-manager';
   import { startGlobalLogCapture } from '$lib/log/app-log';
   import '../styles/tokens.css';
   import '../styles/theme.css';
@@ -19,7 +20,13 @@
 
   let { children } = $props();
 
-  onMount(startGlobalLogCapture);
+  onMount(() => {
+    const stopLogCapture = startGlobalLogCapture();
+    void sharedJobManager
+      .load()
+      .then(() => sharedJobManager.markStaleStartupJobs());
+    return stopLogCapture;
+  });
 </script>
 
 {@render children()}

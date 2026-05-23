@@ -17,7 +17,7 @@ export type ProfileTextToken =
     };
 
 const profileTextPattern =
-  /(:[A-Za-z0-9_]+:)|((?:[a-z][a-z0-9+.-]*:\/\/|[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?\.)[^\s<>"']+)/giu;
+  /(:[A-Za-z0-9_-]+:)|((?:[a-z][a-z0-9+.-]*:\/\/|[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?\.)[^\s<>"']+)/giu;
 
 export function normalizedProfileWebsite(value?: string | null): string {
   const text = value?.trim();

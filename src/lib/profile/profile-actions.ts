@@ -1,5 +1,10 @@
-import type { NostrTag } from '../protocol';
-import { kinds } from '../protocol';
+import type { NostrEvent, NostrTag } from '../protocol';
+import {
+  customEmojiTag,
+  customEmojiTagParts,
+  customEmojiTokenText,
+  kinds,
+} from '../protocol';
 import {
   signAndPublish,
   type EventPublishStatus,
@@ -57,17 +62,17 @@ export async function publishProfileMetadata(
       ok: false,
       message: 'Active account changed before profile save.',
     };
-  const metadata = mergeProfileMetadataDraft(
-    await cachedMetadata(account.pubkey),
-    updates,
-  );
+  const current = await cachedMetadataEvent(account.pubkey);
+  const metadata = mergeProfileMetadataDraft(metadataContent(current), updates);
+  const content = JSON.stringify(metadata);
+  const tags = preservedProfileEmojiTags(current, content);
   const result = await signAndPublish(
     (pubkey) => ({
       pubkey,
       created_at: Math.floor(Date.now() / 1000),
       kind: kinds.metadata,
-      tags: [],
-      content: JSON.stringify(metadata),
+      tags,
+      content,
     }),
     relaySets,
   );
@@ -106,17 +111,38 @@ async function cachedFollowTags(pubkey: string): Promise<NostrTag[]> {
 async function cachedMetadata(
   pubkey: string,
 ): Promise<Record<string, unknown>> {
-  const content = (await latestEventByAuthorKind(pubkey, kinds.metadata))?.event
-    .content;
-  if (!content) return {};
+  return metadataContent(await cachedMetadataEvent(pubkey));
+}
+
+async function cachedMetadataEvent(
+  pubkey: string,
+): Promise<NostrEvent | undefined> {
+  return (await latestEventByAuthorKind(pubkey, kinds.metadata))?.event;
+}
+
+function metadataContent(event?: NostrEvent): Record<string, unknown> {
+  if (!event?.content) return {};
   try {
-    const value = JSON.parse(content) as unknown;
+    const value = JSON.parse(event.content) as unknown;
     return typeof value === 'object' && value
       ? (value as Record<string, unknown>)
       : {};
   } catch {
     return {};
   }
+}
+
+function preservedProfileEmojiTags(
+  event: NostrEvent | undefined,
+  content: string,
+): NostrTag[] {
+  if (!event) return [];
+  return event.tags.flatMap((tag) => {
+    const emoji = customEmojiTag(tag);
+    return emoji && content.includes(customEmojiTokenText(emoji.shortcode))
+      ? [customEmojiTagParts(emoji)]
+      : [];
+  });
 }
 
 function dispatchProfileUpdated(pubkey: string): void {

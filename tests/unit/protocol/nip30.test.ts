@@ -6,6 +6,7 @@ import {
   validCustomEmojiAddress,
   validCustomEmojiShortcode,
   validCustomEmojiUrl,
+  validIncomingCustomEmojiShortcode,
 } from '../../../src/lib/protocol';
 
 describe('NIP-30 helpers', () => {
@@ -21,9 +22,12 @@ describe('NIP-30 helpers', () => {
   it('validates shortcode and URL fields', () => {
     expect(validCustomEmojiShortcode('party_1')).toBe(true);
     expect(validCustomEmojiShortcode('party-1')).toBe(false);
+    expect(validIncomingCustomEmojiShortcode('party-1')).toBe(true);
     expect(validCustomEmojiShortcode('party:1')).toBe(false);
     expect(validCustomEmojiUrl('https://x/p.png')).toBe(true);
+    expect(validCustomEmojiUrl('http://x/p.png')).toBe(false);
     expect(validCustomEmojiUrl('data:image/png;base64,a')).toBe(false);
+    expect(validCustomEmojiUrl('javascript:alert(1)')).toBe(false);
     expect(customEmojiTokenText('party')).toBe(':party:');
   });
 
@@ -37,5 +41,12 @@ describe('NIP-30 helpers', () => {
     expect(
       customEmojiTag(['emoji', 'party', 'https://x/party.png', 'bad']),
     ).toEqual({ shortcode: 'party', url: 'https://x/party.png' });
+    expect(customEmojiTag(['emoji', 'party-1', 'https://x/p.png'])).toEqual({
+      shortcode: 'party-1',
+      url: 'https://x/p.png',
+    });
+    expect(
+      customEmojiTag(['emoji', 'bad code', 'https://x/p.png']),
+    ).toBeUndefined();
   });
 });

@@ -16,7 +16,10 @@
     uploadTweetFiles,
   } from '$lib/tweet/media-upload-files';
   import { loadTweetUploadSettings } from '$lib/tweet/settings';
-  import { loadAccountEmojiSource } from '$lib/emoji/source';
+  import {
+    dedupeCustomEmojiByShortcode,
+    loadAccountEmojiSource,
+  } from '$lib/emoji/source';
   import { settingsChangedEvent } from '$lib/settings/settings-events';
   import { timelineRelays } from '$lib/timeline/timeline-subscription';
   import TweetTabView from './TweetTabView.svelte';
@@ -26,13 +29,11 @@
     tweetPublishTags,
     upsertCustomEmoji,
   } from './tweet-tab-helpers';
-
   type Props = {
     tabId: string;
     activeAccount?: Account;
     relaySets: readonly RelaySet[];
   };
-
   let props: Props = $props();
   let content = $state('');
   let message = $state('');
@@ -51,6 +52,9 @@
   let draftId = $derived(`tab:${props.tabId}`);
   let emojiSourceKey = $derived(
     `${props.activeAccount?.pubkey ?? ''}|${timelineRelays(props.relaySets).join('\u0000')}`,
+  );
+  let allCustomEmojis = $derived(
+    dedupeCustomEmojiByShortcode([...availableCustomEmojis, ...customEmojis]),
   );
   let hasSigner = $derived(Boolean(props.activeAccount?.capabilities.sign));
   let canPublish = $derived(
@@ -80,7 +84,6 @@
       if (request === emojiLoadRequest) availableCustomEmojis = emoji;
     });
   });
-
   async function loadInitialState(): Promise<void> {
     const [draft, settings] = await Promise.all([
       loadTweetDraftWithLegacy(draftId),
@@ -133,7 +136,7 @@
       tweetPublishTags({
         content,
         attachments,
-        customEmojis: [...availableCustomEmojis, ...customEmojis],
+        customEmojis: allCustomEmojis,
         sensitive,
         warningReason,
       }),
@@ -193,5 +196,5 @@
 
 <section class="data-tab" aria-label="Tweet">
   <!-- prettier-ignore -->
-  <TweetTabView tabId={props.tabId} bind:sensitive bind:warningReason bind:content {attachments} customEmojis={[...availableCustomEmojis, ...customEmojis]} {uploading} {publishing} {hasSigner} {uploadSettings} {canPublish} {message} {focusNonce} {touchDraft} {flushDraft} {uploadFiles} {publish} {removeAttachment} {handlePaste} addCustomEmoji={addCustomEmoji} />
+  <TweetTabView tabId={props.tabId} bind:sensitive bind:warningReason bind:content {attachments} customEmojis={allCustomEmojis} {uploading} {publishing} {hasSigner} {uploadSettings} {canPublish} {message} {focusNonce} {touchDraft} {flushDraft} {uploadFiles} {publish} {removeAttachment} {handlePaste} addCustomEmoji={addCustomEmoji} />
 </section>

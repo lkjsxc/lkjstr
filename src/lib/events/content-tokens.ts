@@ -36,7 +36,7 @@ export type ContentToken =
     };
 
 const tokenPattern =
-  /(:[A-Za-z0-9_]+:)|\b(?:nostr:([a-z0-9]+)|https:\/\/[^\s<>"']+)/gi;
+  /(:[A-Za-z0-9_-]+:)|\b(?:nostr:([a-z0-9]+)|https:\/\/[^\s<>"']+)/gi;
 
 export function contentTokens(
   event: NostrEvent,
@@ -71,18 +71,21 @@ export function tokenizeText(
   let index = 0;
   for (const match of content.matchAll(tokenPattern)) {
     const full = match[0] ?? '';
-    const raw = cleanToken(full);
-    const suffix = full.slice(raw.length);
     const start = match.index ?? 0;
     if (start > index) pushText(tokens, content.slice(index, start));
     index = start + full.length;
-    if (!raw) continue;
-    const emojiHit = emojiByText.get(raw);
-    if (emojiHit) {
-      tokens.push({ type: 'custom-emoji', text: raw, ...emojiHit });
-      pushText(tokens, suffix);
+    if (match[1]) {
+      const emojiHit = emojiByText.get(full);
+      tokens.push(
+        emojiHit
+          ? { type: 'custom-emoji', text: full, ...emojiHit }
+          : { type: 'text', text: full },
+      );
       continue;
     }
+    const raw = cleanToken(full);
+    const suffix = full.slice(raw.length);
+    if (!raw) continue;
     const entity = match[2];
     if (entity) {
       const token = entityToken(raw, entity, profiles);
