@@ -42,6 +42,7 @@
     onNearStart?: () => void | Promise<void>;
     openProfile?: (pubkey: string) => void;
     openThread?: (eventId: string) => void;
+    openAuthorContext?: (eventId: string, pubkey: string) => void;
   };
 
   let props: Props = $props();
@@ -151,6 +152,7 @@
               profiles={props.profiles}
               openProfile={props.openProfile}
               openThread={props.openThread}
+              openAuthorContext={props.openAuthorContext}
             />
           {/if}
         {/snippet}

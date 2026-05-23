@@ -14,6 +14,8 @@ export type TabKind =
   | 'relay-settings'
   | 'network-stats'
   | 'search'
+  | 'custom-request'
+  | 'author-context'
   | 'tweet'
   | 'settings';
 
@@ -67,6 +69,8 @@ export function iconFor(kind: TabKind): string {
     'relay-settings': 'sliders',
     'network-stats': 'activity',
     search: 'search',
+    'custom-request': 'braces',
+    'author-context': 'user-round-search',
     tweet: 'edit',
     settings: 'settings',
   };

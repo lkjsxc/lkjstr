@@ -44,6 +44,11 @@
     openProfile: (paneId: string, pubkey: string) => void;
     openProfileEdit: (paneId: string) => void;
     openThread: (paneId: string, eventId: string) => void;
+    openAuthorContext: (
+      paneId: string,
+      eventId: string,
+      pubkey: string,
+    ) => void;
   };
 
   let props: Props = $props();
@@ -85,6 +90,7 @@
         openProfile={props.openProfile}
         openProfileEdit={props.openProfileEdit}
         openThread={props.openThread}
+        openAuthorContext={props.openAuthorContext}
       />
     {/if}
   </section>

@@ -5,13 +5,10 @@
   import { BackgroundNotificationSync } from '$lib/notifications/background-notifications';
   import type { NotificationRecord } from '$lib/notifications/notification';
   import { accountNotifications } from '$lib/notifications/notification-store';
-  import {
-    removeRelay,
-    setRelayEnabled,
-    type RelaySet,
-  } from '$lib/relays/relay-store';
+  import { removeRelay, setRelayEnabled, type RelaySet } from '$lib/relays/relay-store';
   import WorkspaceRoot from '$lib/components/workspace/WorkspaceRoot.svelte';
   import {
+    openAuthorContextTab,
     openProfileEditTab,
     openProfileTab,
     openThreadTab,
@@ -157,6 +154,9 @@
   }
 
   // prettier-ignore
+  async function handleOpenAuthorContext(paneId: string, eventId: string, pubkey: string): Promise<void> { if (workspace) await update(openAuthorContextTab(workspace, paneId, eventId, pubkey)); }
+
+  // prettier-ignore
   async function handleOpenProfileEdit(paneId: string): Promise<void> { if (workspace) await update(openProfileEditTab(workspace, paneId)); }
 
   async function handleAddMinedSigning(nsec: string): Promise<void> {
@@ -194,4 +194,4 @@
 </svelte:head>
 
 <!-- prettier-ignore -->
-<WorkspaceRoot {workspace} {accounts} {activeAccount} {notifications} {relaySets} {ready} {pageDataReady} {inactiveRetentionSeconds} focusTab={handleFocusTab} closeTab={handleCloseTab} moveTab={handleMoveTab} openNewTab={handleOpenNewTab} convertTab={handleConvertTab} split={handleSplit} closePane={handleClosePane} resize={handleResize} addMinedSigning={handleAddMinedSigning} {refreshData} toggleRelay={handleToggleRelay} removeRelay={handleRemoveRelay} openProfile={handleOpenProfile} openProfileEdit={handleOpenProfileEdit} openThread={handleOpenThread} />
+<WorkspaceRoot {workspace} {accounts} {activeAccount} {notifications} {relaySets} {ready} {pageDataReady} {inactiveRetentionSeconds} focusTab={handleFocusTab} closeTab={handleCloseTab} moveTab={handleMoveTab} openNewTab={handleOpenNewTab} convertTab={handleConvertTab} split={handleSplit} closePane={handleClosePane} resize={handleResize} addMinedSigning={handleAddMinedSigning} {refreshData} toggleRelay={handleToggleRelay} removeRelay={handleRemoveRelay} openProfile={handleOpenProfile} openProfileEdit={handleOpenProfileEdit} openThread={handleOpenThread} openAuthorContext={handleOpenAuthorContext} />

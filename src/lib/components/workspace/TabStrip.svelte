@@ -1,6 +1,13 @@
 <script lang="ts">
   import type { TabGroup } from '$lib/workspace/tab-group';
   import type { WorkspaceTab } from '$lib/workspace/tab';
+  import {
+    activatePointerDrag,
+    pointerDropZone,
+    pointerPaneAt,
+    startPointerTabDrag,
+    type PointerDragSnapshot,
+  } from '$lib/workspace/pointer-tab-drag';
 
   type Props = {
     group: TabGroup;
@@ -27,6 +34,8 @@
     disabled = false,
     moveTab,
   }: Props = $props();
+  let pointerDrag = $state<PointerDragSnapshot | undefined>();
+  let ghost = $state<{ x: number; y: number; title: string } | undefined>();
 
   type DraggedTab = { sourcePaneId: string; tabId: string };
 
@@ -52,6 +61,49 @@
     const dragged = readDraggedTab(event);
     if (!dragged) return;
     moveTab(dragged.sourcePaneId, paneId, dragged.tabId, targetIndex);
+  }
+
+  function pointerDown(event: PointerEvent, tab: WorkspaceTab): void {
+    if (event.button !== 0) return;
+    pointerDrag = startPointerTabDrag(paneId, tab.id, event.clientX, event.clientY);
+    ghost = { x: event.clientX, y: event.clientY, title: tab.title };
+  }
+
+  function pointerMove(event: PointerEvent): void {
+    if (!pointerDrag) return;
+    pointerDrag = activatePointerDrag(pointerDrag, event.clientX, event.clientY);
+    if (!pointerDrag.active) return;
+    event.preventDefault();
+    document.body.classList.add('dragging-tab');
+    ghost = { ...(ghost ?? { title: '' }), x: event.clientX, y: event.clientY };
+  }
+
+  function pointerUp(event: PointerEvent): void {
+    if (!pointerDrag) return clearPointerDrag();
+    if (!pointerDrag.active) return clearPointerDrag();
+    const targetPane = pointerPaneAt(document, event.clientX, event.clientY);
+    const targetPaneId = targetPane?.dataset.paneId;
+    if (targetPane && targetPaneId) {
+      const zone = pointerDropZone(
+        targetPane.getBoundingClientRect(),
+        event.clientX,
+        event.clientY,
+      );
+      moveTab(
+        pointerDrag.sourcePaneId,
+        targetPaneId,
+        pointerDrag.tabId,
+        group.tabIds.length,
+        zone === 'center' ? undefined : zone,
+      );
+    }
+    clearPointerDrag();
+  }
+
+  function clearPointerDrag(): void {
+    pointerDrag = undefined;
+    ghost = undefined;
+    document.body.classList.remove('dragging-tab');
   }
 </script>
 
@@ -82,6 +134,10 @@
           if (event.dataTransfer) event.dataTransfer.effectAllowed = 'move';
         }}
         ondragend={() => document.body.classList.remove('dragging-tab')}
+        onpointerdown={(event) => pointerDown(event, tab)}
+        onpointermove={pointerMove}
+        onpointerup={pointerUp}
+        onpointercancel={clearPointerDrag}
         ondragover={(event) => event.preventDefault()}
         ondrop={(event) => {
           event.stopPropagation();
@@ -111,4 +167,12 @@
       </div>
     {/if}
   {/each}
+  {#if pointerDrag?.active && ghost}
+    <div
+      class="tab-drag-ghost"
+      style={`left: ${ghost.x}px; top: ${ghost.y}px`}
+    >
+      {ghost.title}
+    </div>
+  {/if}
 </div>

@@ -51,6 +51,11 @@
     openProfile: (paneId: string, pubkey: string) => void;
     openProfileEdit: (paneId: string) => void;
     openThread: (paneId: string, eventId: string) => void;
+    openAuthorContext: (
+      paneId: string,
+      eventId: string,
+      pubkey: string,
+    ) => void;
   };
 
   let props: Props = $props();
@@ -118,7 +123,7 @@
   onDestroy(() => retention.releaseAll());
 </script>
 
-<section class="pane" aria-label="Workspace pane">
+<section class="pane" data-pane-id={props.pane.id} aria-label="Workspace pane">
   <header class="pane-head">
     <div class="pane-actions">
       <TileMenu
@@ -177,6 +182,7 @@
             openProfile={props.openProfile}
             openProfileEdit={props.openProfileEdit}
             openThread={props.openThread}
+            openAuthorContext={props.openAuthorContext}
           />
         </div>
       {/each}

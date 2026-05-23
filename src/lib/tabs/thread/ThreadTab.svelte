@@ -21,6 +21,7 @@
     relaySets: readonly RelaySet[];
     openProfile: (pubkey: string) => void;
     openThread: (eventId: string) => void;
+    openAuthorContext?: (eventId: string, pubkey: string) => void;
   };
 
   let props: Props = $props();
@@ -107,6 +108,7 @@
       onNearEnd={() => runtime?.loadOlder()}
       openProfile={props.openProfile}
       openThread={props.openThread}
+      openAuthorContext={props.openAuthorContext}
       emptyText="No thread events found."
     />
   {:else}

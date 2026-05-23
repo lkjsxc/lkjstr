@@ -9,6 +9,7 @@
     relays: readonly string[];
     profile?: ProfileSummary;
     avatarOnly?: boolean;
+    avatarInline?: boolean;
     openProfile?: (pubkey: string) => void;
   };
 
@@ -31,6 +32,14 @@
 {:else}
   <div class="event-meta">
     <button type="button" class="identity-button" onclick={openProfile}>
+      {#if props.avatarInline}
+        <Avatar
+          pubkey={display.pubkey}
+          name={display.title}
+          src={display.avatarUrl}
+          size="sm"
+        />
+      {/if}
       <strong>
         <EmojifiedText
           text={display.title}

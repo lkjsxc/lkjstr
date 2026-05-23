@@ -4,6 +4,8 @@
   import type { RelaySet } from '$lib/relays/relay-store';
   import type { RelaySnapshot } from '$lib/relays/types';
   import AccountManagerTab from '$lib/tabs/accounts/AccountManagerTab.svelte';
+  import AuthorContextTab from '$lib/tabs/author-context/AuthorContextTab.svelte';
+  import CustomRequestTab from '$lib/tabs/custom-request/CustomRequestTab.svelte';
   import NewTab from '$lib/tabs/new-tab/NewTab.svelte';
   import NpubMinerTab from '$lib/tabs/npub-miner/NpubMinerTab.svelte';
   import NotificationsTab from '$lib/tabs/notifications/NotificationsTab.svelte';
@@ -43,6 +45,11 @@
     openProfile: (paneId: string, pubkey: string) => void;
     openProfileEdit: (paneId: string) => void;
     openThread: (paneId: string, eventId: string) => void;
+    openAuthorContext: (
+      paneId: string,
+      eventId: string,
+      pubkey: string,
+    ) => void;
   };
 
   let props: Props = $props();
@@ -65,6 +72,8 @@
     relaySets={props.relaySets}
     openProfile={(pubkey) => props.openProfile(props.paneId, pubkey)}
     openThread={(eventId) => props.openThread(props.paneId, eventId)}
+    openAuthorContext={(eventId, pubkey) =>
+      props.openAuthorContext(props.paneId, eventId, pubkey)}
   />
 {:else if props.tab.kind === 'global'}
   <TimelineTab
@@ -74,6 +83,8 @@
     relaySets={props.relaySets}
     openProfile={(pubkey) => props.openProfile(props.paneId, pubkey)}
     openThread={(eventId) => props.openThread(props.paneId, eventId)}
+    openAuthorContext={(eventId, pubkey) =>
+      props.openAuthorContext(props.paneId, eventId, pubkey)}
   />
 {:else if props.tab.kind === 'search'}
   <SearchTab
@@ -82,6 +93,17 @@
     relaySets={props.relaySets}
     openProfile={(pubkey) => props.openProfile(props.paneId, pubkey)}
     openThread={(eventId) => props.openThread(props.paneId, eventId)}
+    openAuthorContext={(eventId, pubkey) =>
+      props.openAuthorContext(props.paneId, eventId, pubkey)}
+  />
+{:else if props.tab.kind === 'custom-request'}
+  <CustomRequestTab
+    tabId={props.tab.id}
+    relaySets={props.relaySets}
+    openProfile={(pubkey) => props.openProfile(props.paneId, pubkey)}
+    openThread={(eventId) => props.openThread(props.paneId, eventId)}
+    openAuthorContext={(eventId, pubkey) =>
+      props.openAuthorContext(props.paneId, eventId, pubkey)}
   />
 {:else if props.tab.kind === 'account-manager'}
   <AccountManagerTab
@@ -99,6 +121,19 @@
     relaySets={props.relaySets}
     openProfile={(pubkey) => props.openProfile(props.paneId, pubkey)}
     openThread={(eventId) => props.openThread(props.paneId, eventId)}
+    openAuthorContext={(eventId, pubkey) =>
+      props.openAuthorContext(props.paneId, eventId, pubkey)}
+  />
+{:else if props.tab.kind === 'author-context'}
+  <AuthorContextTab
+    tabId={props.tab.id}
+    eventId={String(props.tab.config.eventId ?? '')}
+    pubkey={String(props.tab.config.pubkey ?? '')}
+    relaySets={props.relaySets}
+    openProfile={(pubkey) => props.openProfile(props.paneId, pubkey)}
+    openThread={(eventId) => props.openThread(props.paneId, eventId)}
+    openAuthorContext={(eventId, pubkey) =>
+      props.openAuthorContext(props.paneId, eventId, pubkey)}
   />
 {:else if props.tab.kind === 'profile-edit'}
   <ProfileEditTab
@@ -117,6 +152,8 @@
     openProfile={(pubkey) => props.openProfile(props.paneId, pubkey)}
     openProfileEdit={() => props.openProfileEdit(props.paneId)}
     openThread={(eventId) => props.openThread(props.paneId, eventId)}
+    openAuthorContext={(eventId, pubkey) =>
+      props.openAuthorContext(props.paneId, eventId, pubkey)}
   />
 {:else if props.tab.kind === 'relay-monitor'}
   <LkjstrLogTab snapshots={props.relaySnapshots} />
@@ -144,5 +181,7 @@
     relaySets={props.relaySets}
     openProfile={(pubkey) => props.openProfile(props.paneId, pubkey)}
     openThread={(eventId) => props.openThread(props.paneId, eventId)}
+    openAuthorContext={(eventId, pubkey) =>
+      props.openAuthorContext(props.paneId, eventId, pubkey)}
   />
 {/if}

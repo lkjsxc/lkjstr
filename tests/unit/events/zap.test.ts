@@ -1,6 +1,10 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { createZapInvoices } from '../../../src/lib/events/zap';
 import {
+  groupZapReceipts,
+  zapReceiptAmountMsats,
+} from '../../../src/lib/events/zap-summary';
+import {
   splitZapAmounts,
   zapTargets,
 } from '../../../src/lib/events/zap-targets';
@@ -90,6 +94,36 @@ describe('zaps', () => {
       'wss://receipt.example',
     );
   });
+
+  it('parses zap receipt amount tags and description requests', () => {
+    expect(zapReceiptAmountMsats(zapReceipt([['amount', '21000']]))).toBe(
+      21000,
+    );
+    expect(
+      zapReceiptAmountMsats(
+        zapReceipt([
+          [
+            'description',
+            JSON.stringify({ tags: [['amount', '42000']] }),
+          ],
+        ]),
+      ),
+    ).toBe(42000);
+  });
+
+  it('groups zap receipts by target event', () => {
+    const grouped = groupZapReceipts([
+      zapReceipt([
+        ['e', 'e'.repeat(64)],
+        ['amount', '1000'],
+      ]),
+      zapReceipt([
+        ['e', 'e'.repeat(64)],
+        ['amount', '2000'],
+      ]),
+    ]);
+    expect(grouped['e'.repeat(64)]?.amountMsats).toBe(3000);
+  });
 });
 
 function event(): NostrEvent {
@@ -113,5 +147,14 @@ function profile(): ProfileSummary {
     avatarUrl: null,
     lud16: 'zap@example.com',
     updatedAt: 1,
+  };
+}
+
+function zapReceipt(tags: string[][]): NostrEvent {
+  return {
+    ...event(),
+    id: crypto.randomUUID().replaceAll('-', '').padEnd(64, '0').slice(0, 64),
+    kind: 9735,
+    tags,
   };
 }

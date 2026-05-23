@@ -43,6 +43,7 @@
       relays={props.reference.event?.relays ?? []}
       profile={props.profiles[event.pubkey]}
       openProfile={props.openProfile}
+      avatarInline
     />
     {#if preview}
       <p class="event-content">

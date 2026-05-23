@@ -17,6 +17,8 @@ export function titleFor(kind: TabKind): string {
     'relay-settings': 'Relay Settings',
     'network-stats': 'Stats',
     search: 'Search',
+    'custom-request': 'Custom Request',
+    'author-context': 'Author Context',
     tweet: 'Tweet',
     settings: 'Settings',
   };

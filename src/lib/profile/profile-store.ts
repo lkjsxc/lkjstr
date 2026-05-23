@@ -31,6 +31,12 @@ export async function cachedProfileNotes(
   ];
 }
 
+export async function cachedProfileFollowList(
+  pubkey: string,
+): Promise<NostrEvent | undefined> {
+  return (await latestEventByAuthorKind(pubkey, 3))?.event;
+}
+
 export async function storeProfileEvent(
   event: NostrEvent,
   relays: readonly string[] = [],

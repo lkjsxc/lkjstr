@@ -5,6 +5,7 @@
   import EventContent from './EventContent.svelte';
   import EventMeta from './EventMeta.svelte';
   import EventActions from './EventActions.svelte';
+  import EventMoreMenu from './EventMoreMenu.svelte';
   import ReactionSummary from './ReactionSummary.svelte';
   import type {
     ReactionGroup,
@@ -22,6 +23,7 @@
     activeAccountPubkey?: string | null;
     openProfile?: (pubkey: string) => void;
     openThread?: (eventId: string) => void;
+    openAuthorContext?: (eventId: string, pubkey: string) => void;
   };
 
   let props: Props = $props();
@@ -85,6 +87,10 @@
       relays={props.item.relays}
       {profile}
       openProfile={props.openProfile}
+    />
+    <EventMoreMenu
+      event={props.item.event}
+      openAuthorContext={props.openAuthorContext}
     />
     <EventContent
       event={props.item.event}

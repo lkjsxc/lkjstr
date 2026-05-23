@@ -47,6 +47,11 @@
     openProfile: (paneId: string, pubkey: string) => void;
     openProfileEdit: (paneId: string) => void;
     openThread: (paneId: string, eventId: string) => void;
+    openAuthorContext: (
+      paneId: string,
+      eventId: string,
+      pubkey: string,
+    ) => void;
   };
 
   let props: Props = $props();
@@ -81,6 +86,7 @@
     openProfile={props.openProfile}
     openProfileEdit={props.openProfileEdit}
     openThread={props.openThread}
+    openAuthorContext={props.openAuthorContext}
   />
 {:else}
   <div class={`split ${props.node.direction}`} bind:this={splitElement}>
@@ -116,6 +122,7 @@
           openProfile={props.openProfile}
           openProfileEdit={props.openProfileEdit}
           openThread={props.openThread}
+          openAuthorContext={props.openAuthorContext}
         />
       </div>
       {#if index < props.node.children.length - 1}

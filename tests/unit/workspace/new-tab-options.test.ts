@@ -8,6 +8,7 @@ describe('new tab options', () => {
       'Tweet',
       'Notifications',
       'Search',
+      'Custom Request',
       'Global',
       'Profile Edit',
       'Accounts',

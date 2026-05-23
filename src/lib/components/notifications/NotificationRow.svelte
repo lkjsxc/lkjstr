@@ -15,6 +15,7 @@
     profiles?: Record<string, ProfileSummary>;
     openProfile?: (pubkey: string) => void;
     openThread?: (eventId: string) => void;
+    openAuthorContext?: (eventId: string, pubkey: string) => void;
   };
 
   let props: Props = $props();

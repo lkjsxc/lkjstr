@@ -17,6 +17,26 @@ export function openThreadTab(
   return openMatchingTab(workspace, paneId, 'thread', 'eventId', eventId);
 }
 
+export function openAuthorContextTab(
+  workspace: Workspace,
+  paneId: string,
+  eventId: string,
+  pubkey: string,
+): Workspace {
+  const existing = matchingTabId(
+    workspace,
+    paneId,
+    'author-context',
+    'eventId',
+    eventId,
+  );
+  if (existing) return focusTab(workspace, paneId, existing);
+  return openTab(workspace, paneId, 'author-context', 'Author Context', {
+    eventId,
+    pubkey,
+  });
+}
+
 export function openProfileEditTab(
   workspace: Workspace,
   paneId: string,
@@ -41,7 +61,7 @@ function openMatchingTab(
 function matchingTabId(
   workspace: Workspace,
   paneId: string,
-  kind: 'profile' | 'profile-edit' | 'thread',
+  kind: 'profile' | 'profile-edit' | 'thread' | 'author-context',
   key?: 'pubkey' | 'eventId',
   value?: string,
 ): string | undefined {

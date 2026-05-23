@@ -11,6 +11,30 @@
   gap: var(--space-2);
 }
 
+.event-more {
+  position: absolute;
+  right: 0;
+  top: 0;
+}
+
+.event-more > summary {
+  cursor: pointer;
+  list-style: none;
+}
+
+.event-more__items {
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-panel);
+  display: grid;
+  gap: var(--space-1);
+  min-width: 13rem;
+  padding: var(--space-2);
+  position: absolute;
+  right: 0;
+  z-index: 10;
+}
+
 .icon-button {
   align-items: center;
   aspect-ratio: 1;

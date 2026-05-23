@@ -38,6 +38,25 @@
   cursor: grabbing;
 }
 
+.tab-drag-ghost {
+  background: var(--color-surface-2);
+  border: 1px solid var(--color-border-strong);
+  border-radius: var(--radius-tab);
+  box-shadow: 0 0.4rem 1rem rgb(0 0 0 / 18%);
+  color: var(--color-text);
+  left: 0;
+  max-width: 12rem;
+  overflow: hidden;
+  padding: 0.35rem 0.6rem;
+  pointer-events: none;
+  position: fixed;
+  text-overflow: ellipsis;
+  top: 0;
+  transform: translate(0.4rem, 0.4rem);
+  white-space: nowrap;
+  z-index: 100;
+}
+
 .tab-main,
 .tab-close {
   background: transparent;

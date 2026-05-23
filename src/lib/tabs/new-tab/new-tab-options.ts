@@ -33,6 +33,12 @@ export const newTabOptions: readonly NewTabOption[] = [
     group: 'primary',
   },
   {
+    kind: 'custom-request',
+    label: 'Custom Request',
+    description: 'Validated relay filters.',
+    group: 'primary',
+  },
+  {
     kind: 'global',
     label: 'Global',
     description: 'Relay notes.',

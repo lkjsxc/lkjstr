@@ -23,6 +23,7 @@ import {
 } from '$lib/relays/subscription-manager';
 import {
   cachedProfileEvent,
+  cachedProfileFollowList,
   cachedProfileNotes,
   storeProfileEvent,
 } from './profile-store';
@@ -63,9 +64,10 @@ export class ProfileRuntime {
   async start(): Promise<void> {
     if (this.#closed) return;
     const generation = ++this.#generation;
-    const [meta, posts] = await Promise.all([
+    const [meta, posts, followList] = await Promise.all([
       cachedProfileEvent(this.pubkey),
       cachedProfileNotes(this.pubkey, this.#pageSize),
+      cachedProfileFollowList(this.pubkey),
     ]);
     if (!this.#active(generation)) return;
     const profile =
@@ -74,6 +76,7 @@ export class ProfileRuntime {
       ...this.#state,
       profile,
       posts,
+      followList,
       loading: this.relays.length > 0,
       updatedAt: meta ? meta.created_at * 1000 : null,
       oldestCreatedAt: oldestCreatedAt(posts),
@@ -86,6 +89,7 @@ export class ProfileRuntime {
           relays: this.relays,
           filters: [
             { kinds: [0], authors: [this.pubkey], limit: 1 },
+            { kinds: [3], authors: [this.pubkey], limit: 1 },
             {
               kinds: feedDisplayKinds,
               authors: [this.pubkey],
@@ -125,8 +129,16 @@ export class ProfileRuntime {
     await storeProfileEvent(poolEvent.event, [poolEvent.relay]);
     if (this.#closed) return;
     if (poolEvent.event.kind === 0) this.#receiveMeta(poolEvent);
+    if (poolEvent.event.kind === 3) this.#receiveFollowList(poolEvent.event);
     if (isFeedDisplayKind(poolEvent.event.kind))
       this.#receivePost(poolEvent.event, poolEvent.relay);
+  }
+
+  #receiveFollowList(event: NostrEvent): void {
+    const current = this.#state.followList;
+    if (current && current.created_at > event.created_at) return;
+    if (current?.id === event.id) return;
+    this.#emit({ ...this.#state, followList: event, loading: false });
   }
 
   #receiveMeta(poolEvent: PoolEvent): void {
@@ -155,8 +167,8 @@ export class ProfileRuntime {
   async #loadInitialPage(): Promise<void> {
     const generation = this.#generation;
     try {
-      const page = await loadInitialProfilePage({ posts: this.#state.posts, profile: this.#state.profile, relays: this.relays, pubkey: this.pubkey, subId: this.subId, pageSize: this.#pageSize, subscriptions: this.#subscriptions });
-      if (!this.#active(generation)) return; this.#emit({ ...this.#state, profile: page.profile, posts: page.posts, loading: false, relays: [...new Set([...this.#state.relays, ...page.relays])] });
+      const page = await loadInitialProfilePage({ posts: this.#state.posts, profile: this.#state.profile, followList: this.#state.followList, relays: this.relays, pubkey: this.pubkey, subId: this.subId, pageSize: this.#pageSize, subscriptions: this.#subscriptions });
+      if (!this.#active(generation)) return; this.#emit({ ...this.#state, profile: page.profile, followList: page.followList, posts: page.posts, loading: false, relays: [...new Set([...this.#state.relays, ...page.relays])] });
     } catch (error) { this.#emit({ ...this.#state, loading: false, error: boundedErrorText(error) }); }
   }
 

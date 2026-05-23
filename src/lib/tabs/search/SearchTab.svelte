@@ -19,6 +19,7 @@
     relaySets: readonly RelaySet[];
     openProfile: (pubkey: string) => void;
     openThread: (eventId: string) => void;
+    openAuthorContext?: (eventId: string, pubkey: string) => void;
   };
 
   let props: Props = $props();
@@ -142,5 +143,6 @@
     onNearStart={() => undefined}
     openProfile={props.openProfile}
     openThread={props.openThread}
+    openAuthorContext={props.openAuthorContext}
   />
 </section>

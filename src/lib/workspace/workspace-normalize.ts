@@ -86,6 +86,8 @@ const validKinds: readonly TabKind[] = [
   'relay-settings',
   'network-stats',
   'search',
+  'custom-request',
+  'author-context',
   'tweet',
   'settings',
 ];

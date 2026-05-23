@@ -12,6 +12,7 @@
     type ProfileState,
   } from '$lib/profile/profile-runtime';
   import { emptyProfileState } from '$lib/profile/profile-state';
+  import { followingCount } from '$lib/profile/profile-links';
   import type { RelaySet } from '$lib/relays/relay-store';
   import {
     createTimelineSubId,
@@ -26,6 +27,7 @@
     relaySets: readonly RelaySet[];
     openProfile: (pubkey: string) => void;
     openThread: (eventId: string) => void;
+    openAuthorContext?: (eventId: string, pubkey: string) => void;
     openProfileEdit: () => void;
   };
 
@@ -38,6 +40,7 @@
   let nprofile = $derived(
     state.relays.length > 0 ? safeNprofile(props.pubkey, state.relays) : '',
   );
+  let followCount = $derived(followingCount(state.followList));
   let runtime: ProfileRuntime | undefined;
   let runtimeKey = $derived(
     `${props.pubkey}|${timelineRelays(props.relaySets).join('\u0000')}`,
@@ -148,8 +151,8 @@
     relaySets={props.relaySets}
     {npub}
     {nprofile}
-    postCount={state.posts.length}
-    relayCount={state.relays.length}
+    followList={state.followList}
+    followingCount={followCount}
     openProfileEdit={props.openProfileEdit}
   />
   {#if state.loading}
@@ -169,6 +172,7 @@
             activeAccountPubkey={props.activeAccount?.pubkey}
             openProfile={props.openProfile}
             openThread={props.openThread}
+            openAuthorContext={props.openAuthorContext}
           />
         {/each}
       {:else if !state.loading}

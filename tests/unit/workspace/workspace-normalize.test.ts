@@ -36,4 +36,44 @@ describe('workspace normalization', () => {
     expect(workspace.tabs['tab-a']?.kind).toBe('network-stats');
     expect(workspace.tabs['tab-a']?.title).toBe('Stats');
   });
+
+  it('keeps custom request and author context tabs', () => {
+    const workspace = normalizeWorkspace({
+      layout: {
+        id: 'pane-a',
+        type: 'pane',
+        tabGroupId: 'group-a',
+        minWidth: 260,
+        minHeight: 180,
+      },
+      tabGroups: {
+        'group-a': {
+          id: 'group-a',
+          tabIds: ['custom', 'author'],
+          activeTabId: 'custom',
+          pinnedTabIds: [],
+          closedTabs: [],
+        },
+      },
+      tabs: {
+        custom: tab('custom-request'),
+        author: tab('author-context'),
+      },
+    });
+    expect(workspace.tabs.custom?.kind).toBe('custom-request');
+    expect(workspace.tabs.author?.kind).toBe('author-context');
+  });
 });
+
+function tab(kind: string) {
+  return {
+    id: kind,
+    kind,
+    title: kind,
+    icon: '',
+    config: {},
+    state: {},
+    createdAt: 1,
+    updatedAt: 1,
+  };
+}
