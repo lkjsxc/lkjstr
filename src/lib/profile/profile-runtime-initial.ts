@@ -1,6 +1,6 @@
 import { feedWindowSize } from '$lib/events/feed-window';
 import { feedDisplayKinds, isFeedDisplayKind } from '$lib/events/feed-kinds';
-import { readRelayFeedPage, readRelayPage } from '$lib/events/relay-page';
+import { readRelayFeedGroups, readRelayPage } from '$lib/events/relay-page';
 import type { ProfileSummary } from '$lib/identity/identity';
 import { getProfile } from '$lib/identity/profile-cache';
 import { kinds, type NostrEvent } from '$lib/protocol';
@@ -63,16 +63,25 @@ export async function loadInitialProfilePage(request: Request) {
       subscriptions: request.subscriptions,
       purpose: 'metadata',
     }),
-    readRelayFeedPage({
+    readRelayFeedGroups({
       key: `${key}:posts`,
-      relays: contentRelays,
-      filters: [
+      groups: [
+        {
+          key: 'selected',
+          relays: contentRelays,
+          authors: [request.pubkey],
+          source: 'selected',
+        },
+      ],
+      filters: (group, bounds) => [
         {
           kinds: feedDisplayKinds,
-          authors: [request.pubkey],
+          authors: group.authors,
+          ...bounds,
           limit: request.pageSize,
         },
       ],
+      direction: 'initial',
       pageSize: request.pageSize,
       subscriptions: request.subscriptions,
       purpose: 'feed',
@@ -93,12 +102,12 @@ export async function loadInitialProfilePage(request: Request) {
     followList,
     posts: mergePosts(
       request.posts,
-      posts.filter((item) => isFeedDisplayKind(item.event.kind)),
+      posts.items.filter((item) => isFeedDisplayKind(item.event.kind)),
     ),
     relays: [
       ...new Set([
         ...relayEvents.map((item) => item.relay),
-        ...posts.flatMap((item) => item.relays),
+        ...posts.items.flatMap((item) => item.relays),
       ]),
     ],
   };

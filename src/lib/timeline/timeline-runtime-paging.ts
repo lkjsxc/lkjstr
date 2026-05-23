@@ -1,6 +1,6 @@
 import { feedWindowSize, mergeFeedWindow } from '../events/feed-window';
 import { queryFeed, upsertEvent } from '../events/repository';
-import { readRelayFeedGroups, readRelayFeedPage } from '../events/relay-page';
+import { readRelayFeedGroups } from '../events/relay-page';
 import { routeGroups } from '../relays/relay-routing';
 import type { FeedCursorPoint } from '../events/types';
 import type { RelaySubscriptionManager } from '../relays/subscription-manager';
@@ -38,14 +38,24 @@ export type TimelineInitialRequest = {
 export async function loadInitialTimelinePage(
   request: TimelineInitialRequest,
 ): Promise<TimelineItem[]> {
-  const relayItems = await readRelayFeedPage({
+  const relayPage = await readRelayFeedGroups({
     key: initialRelaySubscriptionId(request.subId, [...request.authors].sort()),
-    relays: request.relays,
-    filters: authorFilters(request.authors, request.pageSize),
+    groups: [
+      {
+        key: 'selected',
+        relays: request.relays,
+        authors: request.authors,
+        source: 'selected',
+      },
+    ],
+    filters: (group, bounds) =>
+      authorFilters(group.authors ?? [], request.pageSize, bounds),
+    direction: 'initial',
     pageSize: request.pageSize,
     subscriptions: request.subscriptions,
     purpose: 'feed',
   });
+  const relayItems = relayPage.items;
   await Promise.all(
     relayItems.map((item) => upsertEvent(item.event, item.relays)),
   );

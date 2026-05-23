@@ -1,7 +1,7 @@
 import { feedWindowSize, mergeFeedWindow } from '../events/feed-window';
 import { feedDisplayKinds } from '../events/feed-kinds';
 import { queryFeed, upsertEvent } from '../events/repository';
-import { boundaryUntil, readRelayFeedPage } from '../events/relay-page';
+import { readRelayFeedGroups } from '../events/relay-page';
 import type { FeedCursorPoint } from '../events/types';
 import type { RelaySubscriptionManager } from '../relays/subscription-manager';
 import {
@@ -21,14 +21,18 @@ type Request = {
 export async function loadInitialGlobalPage(
   request: Omit<Request, 'items'>,
 ): Promise<TimelineItem[]> {
-  const relayItems = await readRelayFeedPage({
+  const relayPage = await readRelayFeedGroups({
     key: initialRelaySubscriptionId(request.subId),
-    relays: request.relays,
-    filters: [{ kinds: feedDisplayKinds, limit: request.pageSize }],
+    groups: [{ key: 'selected', relays: request.relays, source: 'selected' }],
+    filters: (_group, bounds) => [
+      { kinds: feedDisplayKinds, ...bounds, limit: request.pageSize },
+    ],
+    direction: 'initial',
     pageSize: request.pageSize,
     subscriptions: request.subscriptions,
     purpose: 'feed',
   });
+  const relayItems = relayPage.items;
   await Promise.all(
     relayItems.map((item) => upsertEvent(item.event, item.relays)),
   );
@@ -43,21 +47,19 @@ export async function loadOlderGlobalPage(
     before: request.cursor,
     limit: request.pageSize,
   });
-  const relayItems = await readRelayFeedPage({
+  const relayPage = await readRelayFeedGroups({
     key: olderRelaySubscriptionId(request.subId, request.cursor),
-    relays: request.relays,
-    filters: [
-      {
-        kinds: feedDisplayKinds,
-        until: boundaryUntil(request.cursor),
-        limit: request.pageSize,
-      },
+    groups: [{ key: 'selected', relays: request.relays, source: 'selected' }],
+    filters: (_group, bounds) => [
+      { kinds: feedDisplayKinds, ...bounds, limit: request.pageSize },
     ],
+    direction: 'older',
     before: request.cursor,
     pageSize: request.pageSize,
     subscriptions: request.subscriptions,
     purpose: 'feed',
   });
+  const relayItems = relayPage.items;
   await Promise.all(
     relayItems.map((item) => upsertEvent(item.event, item.relays)),
   );
@@ -65,7 +67,7 @@ export async function loadOlderGlobalPage(
   const window = mergeFeedWindow(request.items, older, feedWindowSize, true);
   return {
     items: window.items,
-    hasOlder: page.hasMore || relayItems.length >= request.pageSize,
+    hasOlder: page.hasMore || relayPage.hasMorePossible,
     hasNewer: window.prunedNewer,
   };
 }
