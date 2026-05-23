@@ -83,12 +83,14 @@
     <p class="event-content action-summary">
       <strong>{summary.verb}</strong>{#if summary.detail}
         {#if summary.reaction?.emoji}
-          <EmojifiedText
-            text={` ${summary.detail}`}
-            emojis={[summary.reaction.emoji]}
-          />
+          <span>
+            <EmojifiedText
+              text={summary.detail}
+              emojis={[summary.reaction.emoji]}
+            />
+          </span>
         {:else}
-          {' '}{summary.detail}
+          <span>{summary.detail}</span>
         {/if}{/if}
     </p>
   {:else}

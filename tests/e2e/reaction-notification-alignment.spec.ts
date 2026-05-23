@@ -25,9 +25,7 @@ test('expanded reaction actor rows are left aligned', async ({ page }) => {
   expect(await leftAligned(row)).toBe(true);
 });
 
-test('notification actor and action row is left aligned', async ({
-  page,
-}) => {
+test('notification actor and action row is left aligned', async ({ page }) => {
   const account = generateSecretKey();
   const actor = generateSecretKey();
   const target = finalizeEvent(
