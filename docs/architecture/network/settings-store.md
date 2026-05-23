@@ -12,3 +12,6 @@ Settings store owns flat schema records and user overrides.
 - Overrides store only user-provided values.
 - Import ignores unknown keys and invalid values.
 - Tweet settings use `tweet.*`.
+- `notifications.enabled` and `notifications.defaultCategories` are inert
+  schema records. Notification capture, indexing, unread state, and rendering
+  do not read them.

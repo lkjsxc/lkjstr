@@ -14,7 +14,8 @@ notification context header and the source event as the primary body.
 - Profile references are indexed when metadata points at the active account.
 - Relay reads use enabled read relays from the selected default relay set.
 - Notification events are written through the shared repository.
-- Initial and older pages request `30` records.
+- Notifications tab initial and older pages request `30` records.
+- Background notification sync relay reads request `50` records.
 - Notification tabs keep a `180` item window.
 - Older notifications load only after scrolling near the bottom.
 - Historical relay pages use `until` from the oldest loaded notification
@@ -27,17 +28,21 @@ notification context header and the source event as the primary body.
 - Partial relay failure stays visible in diagnostics but does not block cached
   or reachable notification records.
 - Empty state is explicit when no records exist.
-- Rows use a left-aligned actor/action context header followed by the source
+- Rows use a left-aligned action context header followed by the source
   notification event rendered with the canonical Timeline `EventRow`.
+- The outer actor chip is hidden when the loaded source event already shows
+  the same actor, defined by `sourceEvent.pubkey === record.actorPubkey`.
 - Target/root context is fallback-only, explicitly labeled, and shown only when
-  the source notification event is unavailable.
+  the source notification event is unavailable. Fallback rows still show the
+  outer actor because the target/root author can differ from the notification
+  actor.
 - Notification rows do not force compact event display, disable event actions,
   or hide the event More menu.
 - Clicking the event row opens or focuses the correct Thread tab. Buttons and
   links inside the event keep their local behavior.
 - Reaction and repost rows show the same visible action label style as other
   notification rows and do not use avatar overlay badges.
-- Action labels cover mention, reply, reaction, repost, quote, and
+- Action labels cover mention, reply, reaction, repost, quote, zap, and
   profile-reference records.
 - Long event content, ids, relay URLs, and context fields wrap within the row.
 - Notification event row metadata does not show short event ids.

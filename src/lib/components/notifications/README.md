@@ -7,5 +7,7 @@ and fallback target/root context.
 
 ## Contents
 
-- Lightweight actor/action context headers, unread styling hooks, canonical
-  source `EventRow` composition, and explicitly labeled fallback context.
+- Lightweight action context headers, unread styling hooks, canonical source
+  `EventRow` composition, actor-chip deduplication when the source event
+  already shows the notification actor, and explicitly labeled fallback
+  context that keeps the outer actor chip.

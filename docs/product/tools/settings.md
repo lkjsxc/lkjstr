@@ -26,6 +26,9 @@ Settings provide editable local preferences as one flat key-value list.
   when uploads are sent.
 - Notification unread tab badge settings are retired and must not be loaded,
   displayed, or used.
+- `notifications.enabled` and `notifications.defaultCategories` remain inert
+  flat settings. They do not gate notification capture, indexing, unread state,
+  or rendering.
 - Stats auto-refresh is controlled by a checkbox in Stats, not by a text-like
   button.
 - JSON import uses an inline textarea and status. Browser prompt dialogs are

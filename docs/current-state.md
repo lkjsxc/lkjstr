@@ -26,8 +26,10 @@ This document records the current implemented contract for the app.
 - Moving the last tab out of a tile removes that tile.
 - Settings render as one flat key-value list, including cache retention, raw
   string editing, formatted JSON editing, inline JSON import, and raw Tweet
-  media upload keys. Notification unread tab badges are not configurable or
-  rendered.
+  media upload keys. `notifications.enabled` and
+  `notifications.defaultCategories` are inert and do not gate notification
+  capture, indexing, unread state, or rendering. Notification unread tab badges
+  are not configurable or rendered.
 - Upload Settings is a guided editor for the Tweet media upload provider,
   custom HTTPS server, no-transform option, endpoint discovery, and discovery
   test result.
@@ -42,12 +44,14 @@ This document records the current implemented contract for the app.
   an account requirement.
 - Notifications are background-captured relay-backed records derived from
   supported `#p` events that reference the active account. Rows show a
-  lightweight actor/action context header, timestamp, visual unread state, and
-  the source notification event rendered through the canonical `EventRow`.
-  Target/root context is fallback-only, explicitly labeled, and shown only when
-  the source notification event is unavailable. Kind `7` content `+` or empty
-  content renders as a heart reaction. The Notifications tab label never
-  includes an unread count.
+  lightweight action context header, timestamp, visual unread state, and the
+  source notification event rendered through the canonical `EventRow`. The
+  outer actor chip is hidden when the source event already shows the
+  notification actor. Target/root context is fallback-only, explicitly labeled,
+  and shown only when the source notification event is unavailable; fallback
+  rows keep the outer actor chip because the fallback author can differ. Kind
+  `7` content `+` or empty content renders as a heart reaction. The
+  Notifications tab label never includes an unread count.
 - Home has no hidden public fallback when the selected account or read relays
   cannot produce a feed.
 - Feed loading ends when cache exists, any relay produces events, any relay

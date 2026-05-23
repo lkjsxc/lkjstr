@@ -10,10 +10,17 @@ backfill.
 - Load local notification records before relying on relay events.
 - Background sync and the tab runtime subscribe to supported active-account
   `#p` events: kinds `0`, `1`, `6`, `7`, `16`, and `9735`.
+- Notifications tab relay pages use the shared `30` item feed page size;
+  background notification sync relay reads use `50`.
 - Store notification source events through the shared repository.
 - Resolve target/root event context from the shared repository only as
   explicitly labeled fallback content when the source notification event is
   unavailable.
+- Source event rows are canonical `EventRow` renders. The row-level actor chip
+  is presentation context only and is hidden when
+  `sourceEvent.pubkey === record.actorPubkey`.
+- Fallback target/root rows keep the row-level actor chip because fallback
+  authors can differ from the notification actor.
 - Derive notification records from stored events.
 - Keep Notifications source event and fallback target context state to the feed
   memory window.
