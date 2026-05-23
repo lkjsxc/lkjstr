@@ -21,6 +21,8 @@ state lives, which modules own subscriptions, and how tabs close cleanly.
   hydration.
 - [network/job-manager.md](network/job-manager.md): background jobs.
 - [network/relay-pool.md](network/relay-pool.md): WebSocket relay clients.
+- [network/relay-routing.md](network/relay-routing.md): protocol-derived read
+  routing.
 - [network/settings-store.md](network/settings-store.md): settings storage.
 - [network/subscription-manager.md](network/subscription-manager.md): shared
   relay reads.
