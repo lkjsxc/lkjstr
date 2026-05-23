@@ -5,6 +5,7 @@ import type { CacheMetadata } from '../cache/cache-status';
 import type {
   EventRelayReceipt,
   EventTagRow,
+  FeedCoverage,
   FeedCursor,
   JobRecord,
   StoredEvent,
@@ -36,6 +37,7 @@ export class LkjstrDb extends Dexie {
   eventRelays!: Table<EventRelayReceipt, string>;
   eventTags!: Table<EventTagRow, string>;
   feedCursors!: Table<FeedCursor, string>;
+  feedCoverage!: Table<FeedCoverage, string>;
   jobs!: Table<JobRecord, string>;
   cacheMeta!: Table<CacheMetadata, string>;
   tabStates!: Table<TabStateRecord, string>;
@@ -58,7 +60,7 @@ export class LkjstrDb extends Dexie {
         }
       >
     )[schemaMethod];
-    schema.call(this, 11).stores({
+    schema.call(this, 12).stores({
       workspaces: '&id, updatedAt, activeAccountId',
       accounts: '&id, pubkey, signerType, updatedAt, lastUsedAt',
       localAccountSecrets: '&accountId, pubkey, updatedAt',
@@ -72,6 +74,8 @@ export class LkjstrDb extends Dexie {
       eventTags:
         '&id, eventId, tagName, tagValue, created_at, [tagName+tagValue], [tagName+tagValue+created_at]',
       feedCursors: '&id, feedKey, updatedAt',
+      feedCoverage:
+        '&id, feedKey, status, updatedAt, [feedKey+status], [feedKey+updatedAt]',
       jobs: '&id, rootId, parentId, kind, status, updatedAt, [rootId+updatedAt]',
       cacheMeta: '&id, updatedAt',
       tabStates: '&id, tabId, updatedAt',

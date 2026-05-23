@@ -21,6 +21,7 @@ import { receipt, tagRows } from './repository-shared';
 import { normalizeStoredEvent } from './normalize';
 import { storeRelayListSuggestionsFromEvent } from '../relays/relay-list-suggestions';
 import { storeRoutesFromEvent } from '../relays/relay-route-store';
+import { countRuntime } from '../app/runtime-counters';
 import type {
   FeedCursor,
   FeedEvent,
@@ -46,6 +47,7 @@ export async function upsertEvent(
   );
   const tags = tagRows(event);
   putMemory(stored, receipts, tags);
+  countRuntime('timeline', 'storedEvents');
   if (!indexedDbAvailable()) {
     await storeRelayListSuggestionsFromEvent(event);
     await storeRoutesFromEvent(event, relays);

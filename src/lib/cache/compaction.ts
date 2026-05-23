@@ -3,6 +3,7 @@ import { indexedDbAvailable } from '../storage/safe-storage';
 import { loadSettings } from '../settings/settings-store';
 import { eventRetention } from './retention';
 import { pinnedEventIds } from './pins';
+import { deleteFeedCoverageForFeeds } from '../events/feed-coverage-store';
 
 export type CacheCompactionOptions = {
   readonly enabled: boolean;
@@ -65,9 +66,9 @@ export async function compactOldEvents(
           browserDb().eventTags.where('eventId').equals(id).delete(),
         ]),
       );
-      await deleteStaleFeedCursors(retainedIds);
     },
   );
+  await deleteStaleFeedCursors(retainedIds);
   return { prunedEvents: pruneIds.length, skippedDrafts: true, skipped: false };
 }
 
@@ -131,6 +132,8 @@ async function deleteStaleFeedCursors(retainedIds: Set<string>): Promise<void> {
       );
       return ids.some((id) => !retainedIds.has(id));
     })
-    .map((cursor) => cursor.id);
-  if (stale.length > 0) await browserDb().feedCursors.bulkDelete(stale);
+    .map((cursor) => ({ id: cursor.id, feedKey: cursor.feedKey }));
+  if (stale.length === 0) return;
+  await browserDb().feedCursors.bulkDelete(stale.map((cursor) => cursor.id));
+  await deleteFeedCoverageForFeeds(stale.map((cursor) => cursor.feedKey));
 }

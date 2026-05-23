@@ -5,6 +5,13 @@ export type RuntimeCounterSnapshot = {
   readonly active: number;
   readonly events: number;
   readonly pageReads: number;
+  readonly scanReads: number;
+  readonly storedEvents: number;
+  readonly denseWindows: number;
+  readonly incompleteWindows: number;
+  readonly selectedFallbackGroups: number;
+  readonly targetedGroups: number;
+  readonly completedCoverageWindows: number;
   readonly lastUpdatedAt: number;
 };
 
@@ -14,6 +21,13 @@ type MutableCounter = {
   active: number;
   events: number;
   pageReads: number;
+  scanReads: number;
+  storedEvents: number;
+  denseWindows: number;
+  incompleteWindows: number;
+  selectedFallbackGroups: number;
+  targetedGroups: number;
+  completedCoverageWindows: number;
   lastUpdatedAt: number;
 };
 
@@ -60,6 +74,13 @@ function emptyCounter(): MutableCounter {
     active: 0,
     events: 0,
     pageReads: 0,
+    scanReads: 0,
+    storedEvents: 0,
+    denseWindows: 0,
+    incompleteWindows: 0,
+    selectedFallbackGroups: 0,
+    targetedGroups: 0,
+    completedCoverageWindows: 0,
     lastUpdatedAt: Date.now(),
   };
 }

@@ -42,6 +42,14 @@ export type RelayGroupPageRequest = Omit<
   readonly direction?: 'older' | 'newer' | 'initial';
 };
 
+export type RelayGroupPageResult = {
+  readonly items: FeedEvent[];
+  readonly hasMorePossible: boolean;
+  readonly nextCursor?: FeedCursorPoint;
+  readonly incomplete: boolean;
+  readonly dense: boolean;
+};
+
 export async function readRelayPage(
   request: RelayPageRequest,
 ): Promise<PoolEvent[]> {
@@ -83,7 +91,7 @@ export async function readRelayFeedPage(
 
 export async function readRelayFeedGroups(
   request: RelayGroupPageRequest,
-): Promise<{ items: FeedEvent[]; hasMorePossible: boolean }> {
+): Promise<RelayGroupPageResult> {
   return scanRelayFeedGroups(request);
 }
 
