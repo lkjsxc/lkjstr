@@ -1,4 +1,5 @@
 import { normalizeRelayUrl } from '../protocol';
+import { countRuntime } from '../app/runtime-counters';
 import {
   authorRelayRoutes,
   blockedRelayUrls,
@@ -35,19 +36,38 @@ export async function routeGroups(input: {
   const blocked = await blockedRelayUrls();
   const selected = normalizeRelays(input.selectedRelays, blocked);
   const routes = await authorRelayRoutes(input.authors);
-  const groups = authorGroups(input.authors, routes, input.purpose);
+  const groups = authorGroups(input.authors, routes, input.purpose).slice(
+    0,
+    maxRouteGroups,
+  );
   const discovery = input.includeDiscovery
     ? normalizeRelays(discoveryRelays, blocked)
     : [];
+  const selectedGroups =
+    selected.length > 0
+      ? fallbackGroups(
+          input.authors,
+          selected,
+          'fallback',
+          selectedFallbackAuthorLimit,
+        )
+      : [];
+  for (let index = 0; index < groups.length; index += 1)
+    countRuntime('timeline', 'targetedGroups');
+  for (let index = 0; index < selectedGroups.length; index += 1)
+    countRuntime('timeline', 'selectedFallbackGroups');
   return [
     ...groups,
-    ...(selected.length > 0
-      ? fallbackGroups(input.authors, selected, 'fallback')
-      : []),
+    ...selectedGroups,
     ...(discovery.length > 0
-      ? fallbackGroups(input.authors, discovery, 'discovery')
+      ? fallbackGroups(
+          input.authors,
+          discovery,
+          'discovery',
+          selectedFallbackAuthorLimit,
+        )
       : []),
-  ].slice(0, maxRouteGroups);
+  ];
 }
 
 export async function routedEventRelays(input: {
@@ -98,13 +118,14 @@ function fallbackGroups(
   authors: readonly string[],
   relays: readonly string[],
   source: RelayRouteGroup['source'],
+  limit = maxAuthorsPerRouteGroup,
 ): RelayRouteGroup[] {
   const groups: RelayRouteGroup[] = [];
-  for (let index = 0; index < authors.length; index += maxAuthorsPerRouteGroup)
+  for (let index = 0; index < authors.length; index += limit)
     groups.push({
       key: `${source}:${index}`,
       relays,
-      authors: authors.slice(index, index + maxAuthorsPerRouteGroup),
+      authors: authors.slice(index, index + limit),
       source,
     });
   return groups;

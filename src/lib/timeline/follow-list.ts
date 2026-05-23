@@ -3,6 +3,8 @@ import { feedDisplayKinds } from '../events/feed-kinds';
 
 const maxAuthorsPerFilter = 200;
 
+export type AuthorFilterLimitMode = 'shared-budget' | 'per-filter';
+
 export type AccountHomeFollowEntry = {
   readonly pubkey: string;
   readonly relayUrl?: string;
@@ -45,6 +47,7 @@ export function authorFilters(
   authors: readonly string[],
   limit: number,
   bounds: Pick<NostrFilter, 'since' | 'until'> = {},
+  limitMode: AuthorFilterLimitMode = 'shared-budget',
 ): NostrFilter[] {
   const filters: NostrFilter[] = [];
   const chunks = Math.max(1, Math.ceil(authors.length / maxAuthorsPerFilter));
@@ -56,7 +59,10 @@ export function authorFilters(
     filters.push({
       kinds: feedDisplayKinds,
       authors: authors.slice(index, index + maxAuthorsPerFilter),
-      limit: Math.max(1, baseLimit + (chunk < remainder ? 1 : 0)),
+      limit:
+        limitMode === 'per-filter'
+          ? budget
+          : Math.max(1, baseLimit + (chunk < remainder ? 1 : 0)),
       ...bounds,
     });
     chunk++;

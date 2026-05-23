@@ -2,6 +2,7 @@ import { browserDb } from '../storage/browser-db';
 import {
   bestEffortStorageWrite,
   boundedStorageRead,
+  indexedDbAvailable,
 } from '../storage/safe-storage';
 import {
   isPubkey,
@@ -68,7 +69,7 @@ export async function authorRelayRoutes(
   const wanted = new Set(authors.filter(isPubkey));
   if (wanted.size === 0) return [];
   const rows = await boundedStorageRead(
-    () => browserDb().authorRelayRoutes.toArray(),
+    () => indexedAuthorRoutes([...wanted]),
     [...memoryRoutes.values()],
   );
   const blocked = await blockedRelayUrls();
@@ -76,6 +77,14 @@ export async function authorRelayRoutes(
     .filter((row) => wanted.has(row.authorPubkey))
     .filter((row) => !blocked.has(row.relayUrl))
     .sort((a, b) => routeScore(b) - routeScore(a) || b.updatedAt - a.updatedAt);
+}
+
+async function indexedAuthorRoutes(authors: readonly string[]) {
+  if (!indexedDbAvailable()) return [...memoryRoutes.values()];
+  return browserDb()
+    .authorRelayRoutes.where('authorPubkey')
+    .anyOf(authors)
+    .toArray();
 }
 
 export async function storeRoutesFromEvent(

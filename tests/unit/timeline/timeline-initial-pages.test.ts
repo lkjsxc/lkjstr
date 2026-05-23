@@ -24,6 +24,22 @@ describe('timeline initial relay pages', () => {
     );
   });
 
+  it('uses per-filter Home author budgets across selected fallback chunks', async () => {
+    const reads: RelayReadRequest[] = [];
+    await loadInitialTimelinePage({
+      authors: Array.from({ length: 401 }, (_, index) => pubkey(index)),
+      relays: ['wss://relay.example/'],
+      subId: 'home-initial',
+      pageSize: 30,
+      subscriptions: subscriptions(reads),
+    });
+
+    expect(reads.slice(0, 3).map((read) => read.filters[0]?.limit)).toEqual([
+      30, 30, 30,
+    ]);
+    expect(reads.every((read) => read.filters[0]?.limit === 30)).toBe(true);
+  });
+
   it('bounds Global initial feed requests', async () => {
     const reads: RelayReadRequest[] = [];
     await loadInitialGlobalPage({
@@ -65,4 +81,8 @@ function subscriptions(reads: RelayReadRequest[]): RelaySubscriptionManager {
       };
     },
   } as unknown as RelaySubscriptionManager;
+}
+
+function pubkey(index: number): string {
+  return index.toString(16).padStart(64, '0');
 }
