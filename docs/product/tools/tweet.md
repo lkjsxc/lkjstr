@@ -22,12 +22,12 @@ Tweet is the single note authoring surface.
   right.
 - Unicode emoji selection inserts at the textarea cursor.
 - Custom emoji selection inserts `:shortcode:` at the cursor and persists that
-  emoji in draft state. Manually typed valid `:shortcode:` tokens are resolved
-  against the active account emoji source at publish time, and publishing emits
-  NIP-30 `emoji` tags only for used shortcodes.
-- Custom emoji choices come from the active account's kind `10030` emoji list,
-  direct `emoji` tags, and referenced kind `30030` emoji sets discovered from
-  cache first and then selected read relays.
+  emoji in draft state. Manually typed valid `:shortcode:` tokens resolve only
+  against the loaded active-account emoji source at publish time. Publishing
+  emits exactly one NIP-30 `emoji` tag for each used shortcode.
+- Custom emoji choices come from the active account's newest kind `10030` emoji
+  list, direct `emoji` tags, and referenced newest kind `30030` emoji sets
+  discovered from cache first and then selected read relays.
 - Paste and file-picker uploads use the configured NIP-96 HTTPS upload server.
 - Each Tweet tab owns a unique visually hidden file input behind an accessible
   icon button, so file selection is scoped to the active composer.

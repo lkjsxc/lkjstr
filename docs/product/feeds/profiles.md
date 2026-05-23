@@ -28,12 +28,14 @@ Profile tabs show identity metadata and authored text notes.
   Unsafe schemes such as `javascript:` never render as links.
 - Profile note lists display kinds `1`, `6`, and `16`.
 - Profile about text and display names render valid HTTPS custom emoji tags.
+  Unknown, invalid, or failed-image emoji stays visible as shortcode text.
 - Sensitive authored rows use the same reveal gate as Home and Global.
 - Profile displays banner media when metadata provides `banner`.
 - Profile editing is not inline. Own-profile actions open Profile Edit in the
   same tile.
 - Profile Edit merges with the latest cached kind `0` metadata. Blank known
-  fields delete those keys; unknown keys and `lud06` remain preserved.
+  fields delete those keys; unknown keys, `lud06`, and matching latest profile
+  custom emoji tags remain preserved.
 - Successful Profile Edit publishes kind `0` to enabled write relays, stores
   the result locally, and notifies open Profile tabs to refresh.
 - Notes must not render through a dedicated full-height child scroller.

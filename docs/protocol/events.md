@@ -91,10 +91,11 @@ Profile, Thread, embeds, and Notifications.
 - NIP-92 `imeta` `url` tokens create media attachments. The optional `m` token
   classifies image, video, or audio.
 - Custom emoji render in content, profile names, mention labels, referenced
-  author labels, nested repost author labels, and reaction summaries when HTTPS
-  emoji metadata is available.
+  author labels, nested repost author labels, nested repost content, and
+  reaction summaries when HTTPS emoji metadata is available.
 - Custom emoji images are lazy, async-decoded, no-referrer images. Custom emoji
-  shortcode metadata is case-sensitive and HTTPS-only.
+  shortcode metadata is case-sensitive and HTTPS-only. Unknown or invalid emoji
+  remains visible text, and image load failure falls back to shortcode text.
 
 ## Embeds
 
@@ -127,7 +128,8 @@ Kind `7` reaction parsing is structured:
 - `-` is a dislike.
 - Unicode content is an emoji reaction.
 - `:shortcode:` content is a custom emoji reaction only when a matching valid
-  NIP-30 `emoji` tag exists on the reaction event.
+  NIP-30 `emoji` tag exists on the reaction event. Incoming shortcode matching
+  accepts letters, numbers, underscores, and hyphens.
 - Reaction groups include the custom emoji URL and optional address in their
   grouping key, so the same shortcode with different media remains distinct.
 

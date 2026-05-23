@@ -12,14 +12,14 @@ Log owns session-only diagnostics.
 - Users can toggle read and write capability per relay.
 - The selected default set drives timeline, profile, thread, and Tweet runtime.
 - Restore defaults replaces the public default set by explicit user action.
-- Runtime relay state and last error are shown beside each Relay Settings
-  record.
+- Runtime relay state, persisted attempts, successes, failures, last connected
+  time, and last error are shown beside each Relay Settings record.
 - lkjstr Log opens from New Tab and shows one flat chronological stream for the
   current browser session.
 - lkjstr Log diagnostic rows include area, severity, code, message, redacted
   context, and timestamp.
-- lkjstr Log is read-only. Add, remove, and enablement controls remain in Relay
-  Settings.
+- lkjstr Log keeps relay settings read-only. Add, remove, and enablement
+  controls remain in Relay Settings.
 - lkjstr Log is not persisted; reloading the app clears current-session
   diagnostics.
 - Relay URLs are visible in Relay Settings and lkjstr Log, not inside post rows.

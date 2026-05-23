@@ -39,8 +39,9 @@ documentation, verification scripts, static assets, and tests.
 - Tweet publish signs the event, stores it locally, starts relay publishing,
   clears and focuses the composer immediately, and only reports late all-relay
   rejection or publish errors.
-- lkjstr intentionally emits strict custom emoji shortcodes containing only
-  letters, numbers, and underscores. Invalid incoming shortcodes remain text.
+- Incoming NIP-30 custom emoji shortcodes may contain letters, numbers,
+  underscores, and hyphens. lkjstr-created local shortcode fields stay stricter
+  and emit only letters, numbers, and underscores.
 - Sensitive posts stay revealed for the current app session after the user
   reveals them.
 - Docker verification uses built images from `docker-compose.yml`; it does not
@@ -52,6 +53,7 @@ documentation, verification scripts, static assets, and tests.
 - [Product workspace tabs](docs/product/workspace/tabs.md)
 - [Tweet tool](docs/product/tools/tweet.md)
 - [Event actions](docs/product/tools/event-actions.md)
+- [Custom emoji](docs/protocol/custom-emoji.md)
 - [Protocol support](docs/protocol/nip-support.md)
 - [Verification](docs/operations/verification.md)
 

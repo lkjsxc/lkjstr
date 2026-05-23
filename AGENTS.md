@@ -23,8 +23,9 @@ aligned in the same change, keep source files under 200 lines, keep docs under
 - Home, Global, Notifications, Profile, and Thread reads use the selected
   default relay set. Tweet writes use enabled write relays in that set.
 - Tweet publish clears after local signing and queueing, not after relay OKs.
-- Custom emoji shortcodes are intentionally stricter than upstream NIP-30:
-  lkjstr emits only letters, numbers, and underscores.
+- Incoming NIP-30 custom emoji shortcodes accept letters, numbers,
+  underscores, and hyphens. Manual lkjstr shortcode creation remains stricter:
+  emit only letters, numbers, and underscores.
 - Notification and reference previews must be backed by real events or a
   compact unavailable state; do not add mock preview content.
 - Partial relay failure stays diagnostic and must not block reachable relays.

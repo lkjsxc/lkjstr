@@ -8,15 +8,14 @@ runtime, so failures must be inspectable without server logs.
 ## User-Visible Signals
 
 - relay connection state.
-- relay latency.
 - publish outcome per relay.
 - subscription count per relay.
-- last event received per relay.
 - cache health.
-- worker queue health.
 - signer availability.
 - oversized relay message rejection.
 - app heap and runtime feed counters during heavy-feed smoke tests.
+- persisted relay attempt, success, failure, last-connected, and last-error
+  evidence where relay settings record it.
 
 Timeline surfaces keep low-level diagnostics out of the feed body. Home and
 Global may show high-level state errors, while detailed diagnostics are
@@ -28,6 +27,9 @@ severity, code, message, and redacted context, and it is cleared by reload.
 lkjstr Log presents diagnostics as one chronological stream. Relay diagnostics
 use `area: relay`; runtime, storage, signer, cache, and subscription failures
 use the same surface. Message and context fields wrap within the tile.
+
+Relay latency, last event received per relay, and worker queue health are not
+claimed diagnostics until implemented by focused runtime code.
 
 Clean-browser Playwright is the source of truth for app-origin console
 diagnostics. Suppression is limited to the external `lockdown-install.js` plus

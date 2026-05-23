@@ -9,4 +9,4 @@ reactions.
 
 | File        | Purpose                                                                           |
 | ----------- | --------------------------------------------------------------------------------- |
-| `source.ts` | Loads NIP-30 emoji tags from cached and relay-backed NIP-51 emoji lists and sets. |
+| `source.ts` | Loads NIP-30 emoji tags from the newest cached and relay-backed NIP-51 emoji list and referenced emoji sets. |

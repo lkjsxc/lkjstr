@@ -25,6 +25,8 @@ here before code is changed.
   identity hydration.
 - [architecture/network/job-manager.md](architecture/network/job-manager.md):
   background jobs.
+- [protocol/custom-emoji.md](protocol/custom-emoji.md): NIP-30 custom emoji
+  parsing, rendering, and publishing rules.
 - [architecture/network/relay-pool.md](architecture/network/relay-pool.md):
   WebSocket relay clients.
 - [architecture/network/settings-store.md](architecture/network/settings-store.md):

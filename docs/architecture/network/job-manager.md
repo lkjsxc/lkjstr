@@ -14,9 +14,13 @@ changes and can be inspected by diagnostics.
   publish, and cache maintenance.
 - A job starts as queued, may become running, and finishes as completed, failed,
   or canceled.
-- Job listeners receive state snapshots after enqueue, cancellation, completion,
-  and failure.
+- Job listeners receive hydrated memory snapshots and updates after enqueue,
+  cancellation, completion, and failure.
 - Root, child, progress, `cancelTree`, `listTree`, and stale-startup helpers
   keep diagnostics grouped without adding separate New Tab choices.
+- Startup marks queued or running jobs stale once per workspace load.
+- `cancelTree` cancels only non-terminal jobs; completed, failed, and already
+  canceled descendants keep their terminal status and metadata.
+- lkjstr Log is the control surface for non-terminal root-job cancellation.
 - Runtime code records errors on the job instead of hiding them in component
   state only.

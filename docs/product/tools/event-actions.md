@@ -12,10 +12,11 @@ Event actions define the row-level write controls available on feed events.
 - Emoji opens the shared anchored picker without changing row height and
   publishes a NIP-25 kind `7` reaction with picker-provided Unicode content.
 - Custom emoji reactions publish exactly one `:shortcode:` content value and
-  one matching NIP-30 `emoji` tag.
+  one matching NIP-30 `emoji` tag from the active account emoji source.
 - Reaction summaries render `+` and empty content as heart reactions, render
-  `-` as dislikes, render custom emoji from matching tags, and mark rows
-  containing the active account's reaction with stronger visual treatment.
+  `-` as dislikes, render custom emoji from matching tags, keep same-shortcode
+  emoji distinct by URL and address, and mark rows containing the active
+  account's reaction with stronger visual treatment.
 - Expanded reaction and repost actor lists render as left-aligned rows with
   avatar before name.
 - Repost publishes NIP-18 kind `6` for kind `1` notes.

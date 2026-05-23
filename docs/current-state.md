@@ -59,8 +59,9 @@ This document records the current implemented contract for the app.
 - Home states are `no-active-account`, `loading-follows`, `no-follow-list`,
   `no-enabled-relay`, `auth-required`, `subscription-closed`, `relay-failed`,
   `ready-empty`, and `ready-with-events`.
-- Relay Settings shows editable relay state and lkjstr Log shows
-  current-session app diagnostics as a flat chronological stream.
+- Relay Settings shows editable relay state, persisted relay health counters,
+  and live connection state. lkjstr Log shows current-session app diagnostics
+  as a flat chronological stream.
 - Feed memory is held as resident chunks. The top of a pruned feed loads newer
   chunks, and the bottom or a short viewport loads older chunks.
 - Profile renders a banner, avatar overlap, display name, handle/NIP-05,
@@ -72,8 +73,8 @@ This document records the current implemented contract for the app.
 - Event metadata shows author control and date. Referenced event previews place
   the referenced author avatar immediately before the author name.
 - Event actions publish NIP-25 hearts, dislikes, Unicode emoji reactions, and
-  strict NIP-30 custom emoji reactions with `e`, `p`, `k`, and matching
-  `emoji` tags, plus NIP-18 reposts, tagged replies, and NIP-57 zap requests
+  NIP-30 custom emoji reactions with `e`, `p`, `k`, and exactly one matching
+  `emoji` tag, plus NIP-18 reposts, tagged replies, and NIP-57 zap requests
   where targets expose zap data.
 - Event rows and diagnostic rows wrap long content inside their tile. The row
   menu copies event ids and opens Author Context for nearby posts by the row
@@ -85,11 +86,11 @@ This document records the current implemented contract for the app.
   without storing it until the user adds it.
 - Tweet uses the active signing account, durable composer recovery,
   `Ctrl+Enter`, a compact media/emoji/publish toolbar, custom emoji loaded from
-  the active account's NIP-51 emoji lists and sets, shared provider or custom
-  NIP-96 media upload, NIP-98 upload auth, NIP-94 `imeta` tags,
-  content-derived mention and emoji tags, and signed kind `1` notes to enabled
-  write relays. After signing and local queueing, the composer clears and
-  focuses immediately; only late all-relay rejection diagnostics are shown.
+  the active account's newest NIP-51 emoji list and referenced sets, shared
+  provider or custom NIP-96 media upload, NIP-98 upload auth, NIP-94 `imeta`
+  tags, content-derived mention and emoji tags, and signed kind `1` notes to
+  enabled write relays. After signing and local queueing, the composer clears
+  and focuses immediately; only late all-relay rejection diagnostics are shown.
 - Sensitive content hides bodies, media, custom emoji images, reference
   previews, and nested repost bodies until locally revealed. Reveals persist
   for the current app session across virtualization remounts.
@@ -97,10 +98,12 @@ This document records the current implemented contract for the app.
   objects with optional `relays`, and `["REQ", subId, ...filters]` messages.
   It reads selected default relays unless the request supplies relay URLs.
 - Custom emoji tags render with lazy, async-decoded, no-referrer images in
-  event text, nested reposts, reaction summaries, profile names, and profile
-  about text when they use HTTPS image URLs. lkjstr accepts optional NIP-30
-  emoji-set addresses on tags and intentionally restricts shortcodes to
-  letters, numbers, and underscores.
+  event text, nested reposts, references, reaction summaries, profile names,
+  and profile about text when they use HTTPS image URLs. Incoming NIP-30
+  shortcodes accept letters, numbers, underscores, and hyphens. Manual local
+  shortcode creation remains stricter and accepts only letters, numbers, and
+  underscores. Unknown or invalid emoji stays text; failed image loads fall
+  back to shortcode text.
 - Event references classify reply roots, reply parents, quote tags,
   `nostr:note`, `nostr:nevent`, repost, reaction, and deletion targets. Up to
   three reference cards show author metadata, preview text, media count, and a
@@ -110,8 +113,9 @@ This document records the current implemented contract for the app.
 - Stats shows current-session relay counters, subscription ids, OK counts,
   cache event/profile/notification totals, storage usage, manual refresh, and
   an auto-refresh checkbox.
-- Jobs are persisted as root/child trees with progress, output, and cancel
-  metadata for inspection in lkjstr Log.
+- Jobs are persisted as root/child trees with progress, output, completion,
+  stale-startup, and cancel metadata. lkjstr Log exposes inspection and cancel
+  controls for non-terminal root jobs.
 - Docker verification uses `docker-compose.yml` built images with no bind
   mounts or required environment blocks.
 - GitHub Actions runs local verification, browser tests, Docker Compose gates,
@@ -119,5 +123,5 @@ This document records the current implemented contract for the app.
 
 ## Gaps
 
-- Relay health is visible from live pool snapshots but is not written back.
-- lkjstr Log renders job tree inspection before dedicated job controls exist.
+- Relay latency, last-event-per-relay, and worker queue health are not yet
+  persisted diagnostics unless a focused feature adds them.

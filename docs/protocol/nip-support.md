@@ -21,13 +21,13 @@ unimplemented behavior.
 - NIP-25 reaction target parsing, `+`/empty likes, `-` dislikes, Unicode emoji
   reactions, custom emoji reactions, and `k` target-kind tags.
 - NIP-30 custom emoji tags, optional kind `30030` emoji-set addresses, custom
-  emoji reactions, HTTPS emoji rendering, and strict project shortcodes limited
-  to `[A-Za-z0-9_]`.
-- lkjstr keeps that stricter shortcode rule even when upstream NIP-30 accepts
-  additional characters; invalid incoming custom emoji shortcodes render as
-  plain text and are never emitted by lkjstr.
-- NIP-51 kind `10030` emoji lists and kind `30030` emoji sets for active-account
-  custom emoji choices.
+  emoji reactions, HTTPS emoji rendering, and incoming shortcodes limited to
+  `[A-Za-z0-9_-]`.
+- Manual lkjstr-created local shortcode input stays stricter at
+  `[A-Za-z0-9_]`; invalid incoming tags render as plain text and invalid image
+  loads fall back to shortcode text.
+- NIP-51 newest kind `10030` emoji list and referenced newest kind `30030`
+  emoji sets for active-account custom emoji choices.
 - NIP-36 sensitive content gates.
 - NIP-42 relay auth diagnostics.
 - NIP-57 zap requests, invoice handoff, receipt amount parsing, and event zap
