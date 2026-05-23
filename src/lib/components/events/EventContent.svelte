@@ -19,6 +19,7 @@
     isSensitiveEventRevealed,
     revealSensitiveEvent,
   } from '$lib/events/sensitive-reveal';
+  import EmojifiedText from './EmojifiedText.svelte';
 
   type Props = {
     event: NostrEvent;
@@ -81,7 +82,14 @@
   {#if summary}
     <p class="event-content action-summary">
       <strong>{summary.verb}</strong>{#if summary.detail}
-        {summary.detail}{/if}
+        {#if summary.reaction?.emoji}
+          <EmojifiedText
+            text={` ${summary.detail}`}
+            emojis={[summary.reaction.emoji]}
+          />
+        {:else}
+          {' '}{summary.detail}
+        {/if}{/if}
     </p>
   {:else}
     <ContentTokens

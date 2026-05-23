@@ -49,7 +49,7 @@ describe('notification index', () => {
     );
   });
 
-  it('formats compact reaction notification text from the source event', () => {
+  it('formats reaction notification text from the source event', () => {
     const record = deriveNotifications(accountPubkey, {
       ...event,
       kind: 7,
@@ -57,7 +57,10 @@ describe('notification index', () => {
     })[0];
     expect(
       notificationActionText(record, { ...event, kind: 7, content: '+' }),
-    ).toBe('liked your post');
+    ).toBe('reacted with ❤️');
+    expect(
+      notificationActionText(record, { ...event, kind: 7, content: '' }),
+    ).toBe('reacted with ❤️');
     expect(
       notificationActionText(record, { ...event, kind: 7, content: '☆' }),
     ).toBe('reacted with ☆');
