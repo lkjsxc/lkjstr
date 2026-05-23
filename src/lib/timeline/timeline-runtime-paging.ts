@@ -25,6 +25,8 @@ export type TimelineOlderResult = {
   readonly items: TimelineItem[];
   readonly hasOlder: boolean;
   readonly hasNewer: boolean;
+  readonly nextOlderCursor?: FeedCursorPoint;
+  readonly incomplete?: boolean;
 };
 
 export type TimelineInitialRequest = {
@@ -37,19 +39,22 @@ export type TimelineInitialRequest = {
 
 export async function loadInitialTimelinePage(
   request: TimelineInitialRequest,
-): Promise<TimelineItem[]> {
+): Promise<TimelinePageResult> {
+  const groups = await routeGroups({
+    authors: request.authors,
+    selectedRelays: request.relays,
+    purpose: 'write',
+  });
   const relayPage = await readRelayFeedGroups({
     key: initialRelaySubscriptionId(request.subId, [...request.authors].sort()),
-    groups: [
-      {
-        key: 'selected',
-        relays: request.relays,
-        authors: request.authors,
-        source: 'selected',
-      },
-    ],
+    groups,
     filters: (group, bounds) =>
-      authorFilters(group.authors ?? [], request.pageSize, bounds),
+      authorFilters(
+        group.authors ?? [],
+        request.pageSize,
+        bounds,
+        'per-filter',
+      ),
     direction: 'initial',
     pageSize: request.pageSize,
     subscriptions: request.subscriptions,
@@ -59,7 +64,12 @@ export async function loadInitialTimelinePage(
   await Promise.all(
     relayItems.map((item) => upsertEvent(item.event, item.relays)),
   );
-  return relayItems;
+  return {
+    items: relayItems,
+    hasOlder: relayPage.hasMorePossible,
+    nextOlderCursor: relayPage.nextCursor,
+    incomplete: relayPage.incomplete,
+  };
 }
 
 export async function loadOlderTimelinePage(
@@ -80,7 +90,12 @@ export async function loadOlderTimelinePage(
     key: olderRelaySubscriptionId(request.subId, request.cursor),
     groups,
     filters: (group, bounds) =>
-      authorFilters(group.authors ?? [], request.pageSize, bounds),
+      authorFilters(
+        group.authors ?? [],
+        request.pageSize,
+        bounds,
+        'per-filter',
+      ),
     direction: 'older',
     before: request.cursor,
     pageSize: request.pageSize,
@@ -101,5 +116,14 @@ export async function loadOlderTimelinePage(
     items: window.items,
     hasOlder: page.hasMore || relayPage.hasMorePossible,
     hasNewer: window.prunedNewer,
+    nextOlderCursor: relayPage.nextCursor,
+    incomplete: relayPage.incomplete,
   };
 }
+
+export type TimelinePageResult = {
+  readonly items: TimelineItem[];
+  readonly hasOlder: boolean;
+  readonly nextOlderCursor?: FeedCursorPoint;
+  readonly incomplete?: boolean;
+};

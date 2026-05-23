@@ -67,6 +67,8 @@ export async function loadOlderProfilePage(request: ProfileOlderRequest) {
     posts: window.items,
     hasOlder: page.hasMore || relayPage.hasMorePossible,
     newerPruned: window.prunedNewer,
+    nextOlderCursor: relayPage.nextCursor,
+    incomplete: relayPage.incomplete,
   };
 }
 
@@ -115,5 +117,7 @@ export async function loadNewerProfilePage(request: ProfileNewerRequest) {
     posts: window.items,
     hasNewer: page.hasMore || relayPage.hasMorePossible,
     olderPruned: window.prunedOlder,
+    nextNewerCursor: relayPage.nextCursor,
+    incomplete: relayPage.incomplete,
   };
 }

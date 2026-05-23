@@ -9,6 +9,7 @@ import {
 } from '../events/feed-window';
 import { feedDisplayKinds, isFeedDisplayKind } from '../events/feed-kinds';
 import type { PoolEvent } from '../relays/relay-pool';
+import type { FeedCursorPoint } from '../events/types';
 import { runtimeSubscriptions } from '../relays/runtime-subscriptions';
 import type { RelaySubscriptionManager as SubscriptionManager } from '../relays/subscription-manager';
 import { childRelaySubscriptionId } from '../relays/subscription-id';
@@ -43,6 +44,7 @@ export class GlobalTimelineRuntime {
   #subId: string;
   #subscriptions: SubscriptionManager;
   #profileCoordinator: TimelineProfileCoordinator;
+  #olderScanCursor?: FeedCursorPoint;
   #startedAt = Math.floor(Date.now() / 1000);
   #closed = false;
   #generation = 0;
@@ -116,11 +118,11 @@ export class GlobalTimelineRuntime {
 
   // prettier-ignore
   async loadOlder(): Promise<void> {
-    if (this.#closed || this.#state.loadingOlder || !this.#state.hasOlder) return; const generation = this.#generation; const cursor = this.#state.oldestCursor; if (!cursor) return;
+    if (this.#closed || this.#state.loadingOlder || !this.#state.hasOlder) return; const generation = this.#generation; const cursor = this.#olderScanCursor ?? this.#state.oldestCursor; if (!cursor) return;
     this.#emit({ ...this.#state, loadingOlder: true });
     try {
       const page = await loadOlderGlobalPage({ items: this.items(), relays: this.#relays, subId: this.#subId, cursor, pageSize: this.#pageSize, subscriptions: this.#subscriptions });
-      if (!this.#active(generation)) return; this.#cached = page.items; this.#live = [];
+      if (!this.#active(generation)) return; this.#cached = page.items; this.#live = []; this.#olderScanCursor = page.hasOlder ? page.nextOlderCursor : undefined;
       this.#emit(this.#nextState({ items: this.items(), hasOlder: page.hasOlder, hasNewer: this.#state.hasNewer || page.hasNewer }));
     } catch (error) { this.#emit({ ...this.#state, error: boundedErrorText(error) }); }
     finally { if (this.#state.loadingOlder) this.#emit({ ...this.#state, loadingOlder: false }); }
@@ -153,9 +155,9 @@ export class GlobalTimelineRuntime {
   async #loadInitialPage(): Promise<void> {
     const generation = this.#generation;
     try {
-      const items = await loadInitialGlobalPage({ relays: this.#relays, subId: this.#subId, pageSize: this.#pageSize, subscriptions: this.#subscriptions });
-      if (!this.#active(generation)) return; this.#cached = mergeTimelineItems(items, this.items(), this.#limit);
-      this.#emit(items.length > 0 ? this.#nextState(readyWithEventsState(this.#state, this.items())) : this.#nextState({ loading: false }));
+      const page = await loadInitialGlobalPage({ relays: this.#relays, subId: this.#subId, pageSize: this.#pageSize, subscriptions: this.#subscriptions });
+      if (!this.#active(generation)) return; this.#olderScanCursor = page.hasOlder ? page.nextOlderCursor : undefined; this.#cached = mergeTimelineItems(page.items, this.items(), this.#limit);
+      this.#emit(page.items.length > 0 ? this.#nextState(readyWithEventsState(this.#state, this.items())) : this.#nextState({ loading: false, hasOlder: page.hasOlder }));
     } catch (error) { this.#emit({ ...this.#state, loading: false, error: boundedErrorText(error) }); }
   }
 

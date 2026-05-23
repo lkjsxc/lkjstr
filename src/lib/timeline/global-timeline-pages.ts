@@ -20,7 +20,7 @@ type Request = {
 
 export async function loadInitialGlobalPage(
   request: Omit<Request, 'items'>,
-): Promise<TimelineItem[]> {
+): Promise<GlobalPageResult> {
   const relayPage = await readRelayFeedGroups({
     key: initialRelaySubscriptionId(request.subId),
     groups: [{ key: 'selected', relays: request.relays, source: 'selected' }],
@@ -36,7 +36,12 @@ export async function loadInitialGlobalPage(
   await Promise.all(
     relayItems.map((item) => upsertEvent(item.event, item.relays)),
   );
-  return relayItems;
+  return {
+    items: relayItems,
+    hasOlder: relayPage.hasMorePossible,
+    nextOlderCursor: relayPage.nextCursor,
+    incomplete: relayPage.incomplete,
+  };
 }
 
 export async function loadOlderGlobalPage(
@@ -69,5 +74,15 @@ export async function loadOlderGlobalPage(
     items: window.items,
     hasOlder: page.hasMore || relayPage.hasMorePossible,
     hasNewer: window.prunedNewer,
+    nextOlderCursor: relayPage.nextCursor,
+    incomplete: relayPage.incomplete,
   };
 }
+
+export type GlobalPageResult = {
+  readonly items: TimelineItem[];
+  readonly hasOlder: boolean;
+  readonly hasNewer?: boolean;
+  readonly nextOlderCursor?: FeedCursorPoint;
+  readonly incomplete?: boolean;
+};

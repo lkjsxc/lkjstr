@@ -13,6 +13,7 @@ import {
   profileFromMetadataEvent,
 } from '$lib/identity/profile-cache';
 import type { NostrEvent } from '$lib/protocol';
+import type { FeedCursorPoint } from '$lib/events/types';
 import type { PoolEvent, RelayPool } from '$lib/relays/relay-pool';
 import { runtimeSubscriptions } from '$lib/relays/runtime-subscriptions';
 import { type RelaySubscriptionManager as SubscriptionManager } from '$lib/relays/subscription-manager';
@@ -39,6 +40,8 @@ export class ProfileRuntime {
   #state: ProfileState = emptyProfileState();
   #pageSize = feedPageSize;
   #startedAt = Math.floor(Date.now() / 1000);
+  #olderScanCursor?: FeedCursorPoint;
+  #newerScanCursor?: FeedCursorPoint;
   #closed = false;
   #generation = 0;
 
@@ -102,22 +105,22 @@ export class ProfileRuntime {
 
   // prettier-ignore
   async loadOlder(): Promise<void> {
-    if (this.#closed || this.#state.loadingOlder || !this.#state.hasOlder) return; const generation = this.#generation; const cursor = this.#state.oldestCursor; if (!cursor) return;
+    if (this.#closed || this.#state.loadingOlder || !this.#state.hasOlder) return; const generation = this.#generation; const cursor = this.#olderScanCursor ?? this.#state.oldestCursor; if (!cursor) return;
     this.#emit({ ...this.#state, loadingOlder: true });
     try {
       const page = await loadOlderProfilePage({ posts: this.#state.posts, pubkey: this.pubkey, relays: this.relays, subId: this.subId, cursor, pageSize: this.#pageSize, subscriptions: this.#subscriptions });
-      if (!this.#active(generation)) return; this.#emit({ ...this.#state, posts: page.posts, hasOlder: page.hasOlder, hasNewer: this.#state.hasNewer || page.newerPruned, newerPruned: this.#state.newerPruned || page.newerPruned });
+      if (!this.#active(generation)) return; this.#olderScanCursor = page.hasOlder ? page.nextOlderCursor : undefined; this.#emit({ ...this.#state, posts: page.posts, hasOlder: page.hasOlder, hasNewer: this.#state.hasNewer || page.newerPruned, newerPruned: this.#state.newerPruned || page.newerPruned });
     } catch (error) { this.#emit({ ...this.#state, error: boundedErrorText(error) }); }
     finally { if (this.#state.loadingOlder) this.#emit({ ...this.#state, loadingOlder: false }); }
   }
 
   // prettier-ignore
   async loadNewer(): Promise<void> {
-    if (this.#closed || this.#state.loadingNewer || !this.#state.hasNewer) return; const generation = this.#generation; const cursor = this.#state.newestCursor; if (!cursor) return;
+    if (this.#closed || this.#state.loadingNewer || !this.#state.hasNewer) return; const generation = this.#generation; const cursor = this.#newerScanCursor ?? this.#state.newestCursor; if (!cursor) return;
     this.#emit({ ...this.#state, loadingNewer: true });
     try {
       const page = await loadNewerProfilePage({ posts: this.#state.posts, pubkey: this.pubkey, relays: this.relays, subId: this.subId, cursor, pageSize: this.#pageSize, subscriptions: this.#subscriptions });
-      if (!this.#active(generation)) return; this.#emit({ ...this.#state, posts: page.posts, hasNewer: page.hasNewer, hasOlder: this.#state.hasOlder || page.olderPruned, newerPruned: page.hasNewer });
+      if (!this.#active(generation)) return; this.#newerScanCursor = page.hasNewer ? page.nextNewerCursor : undefined; this.#emit({ ...this.#state, posts: page.posts, hasNewer: page.hasNewer, hasOlder: this.#state.hasOlder || page.olderPruned, newerPruned: page.hasNewer });
     } catch (error) { this.#emit({ ...this.#state, error: boundedErrorText(error) }); }
     finally { if (this.#state.loadingNewer) this.#emit({ ...this.#state, loadingNewer: false }); }
   }

@@ -42,13 +42,16 @@ import {
 import { loadCachedTimeline, mergeTimelineItems } from './timeline-store';
 import type { TimelineItem } from './timeline-store';
 import { TimelineProfileCoordinator } from './timeline-profile-coordinator';
+import { startTimelineBackfill } from './timeline-backfill';
 
 // prettier-ignore
 export class TimelineRuntime {
   #subscriptions: RelaySubscriptionManager; #cached: TimelineItem[] = []; #live: TimelineItem[] = [];
   #state: TimelineState = emptyState(); #listeners = new Set<(state: TimelineState) => void>(); #cleanup: (() => void)[] = [];
   #relays: string[]; #routeRelays: string[] = []; #pageSize: number; #authors: string[] = []; #profiles: TimelineState['profiles'] = {};
+  #olderScanCursor?: FeedCursorPoint; #routeRefreshGeneration = 0;
   #followList?: TimelineLoad['followList']; #followListId = ''; #followFallbackStarted = false; #initialNotesKey = ''; #followSubId: string; #metaSubId: string; #noteSubId: string;
+  #backfillStarted = false;
   #profileCoordinator: TimelineProfileCoordinator;
   #startedAt = Math.floor(Date.now() / 1000); #closed = false; #generation = 0;
   constructor(readonly options: TimelineRuntimeOptions) {
@@ -70,12 +73,12 @@ export class TimelineRuntime {
   }
   close(): void { this.#closed = true; this.#generation++; for (const cleanup of this.#cleanup.splice(0)) cleanup(); this.#listeners.clear(); }
   async loadOlder(): Promise<void> {
-    if (this.#closed || this.#state.loadingOlder || !this.#state.hasOlder) return; const generation = this.#generation; const cursor = this.#state.oldestCursor; if (!cursor || this.#authors.length === 0) return;
+    if (this.#closed || this.#state.loadingOlder || !this.#state.hasOlder) return; const generation = this.#generation; const cursor = this.#olderScanCursor ?? this.#state.oldestCursor; if (!cursor || this.#authors.length === 0) return;
     this.#emit({ ...this.#state, loadingOlder: true });
     try {
       const page = await loadOlderTimelinePage({ items: this.items(), authors: this.#authors, relays: this.#relays, subId: this.#noteSubId, cursor, pageSize: this.#pageSize, subscriptions: this.#subscriptions });
       if (!this.#active(generation)) return;
-      this.#cached = page.items; this.#live = [];
+      this.#cached = page.items; this.#live = []; this.#olderScanCursor = page.hasOlder ? page.nextOlderCursor : undefined;
       this.#emit(this.#nextState({ items: this.items(), hasOlder: page.hasOlder, hasNewer: this.#state.hasNewer || page.hasNewer }));
     } catch (error) { this.#emit({ ...this.#state, error: boundedErrorText(error) }); }
     finally { if (this.#state.loadingOlder) this.#emit({ ...this.#state, loadingOlder: false }); }
@@ -94,23 +97,42 @@ export class TimelineRuntime {
   async #subscribeNotes(): Promise<void> {
     const initialPage = this.#loadInitialNotes();
     this.#routeRelays = await routedAuthorRelays({ authors: this.#authors, selectedRelays: this.#relays, purpose: 'write' });
-    this.#subscribe(this.#noteSubId, authorFilters(this.#authors, this.#pageSize, { since: this.#startedAt }), this.#routeRelays);
+    this.#subscribe(this.#noteSubId, authorFilters(this.#authors, this.#pageSize, { since: this.#startedAt }, 'per-filter'), this.#routeRelays);
     const missing = this.#authors.filter((pubkey) => !this.#profiles[pubkey]).slice(0, metadataPageLimit);
     const filters = profileFilter(missing); if (filters.length > 0) this.#subscribe(this.#metaSubId, filters);
     void initialPage.then(() => this.#discoverRoutesAfterInitial());
   }
   async #discoverRoutesAfterInitial(): Promise<void> {
+    const generation = this.#generation;
     if (this.#closed) return;
     await discoverAuthorRelayRoutes({ authors: this.#authors, selectedRelays: this.#relays, key: `${this.#noteSubId}:routes`, subscriptions: this.#subscriptions }).catch(() => undefined);
+    if (this.#active(generation)) await this.#refreshAfterRouteDiscovery(generation);
+    if (this.#active(generation)) this.#startBackfill();
   }
   async #loadInitialNotes(): Promise<void> {
     const key = [...this.#authors].sort().join(',');
     if (this.#initialNotesKey === key || this.#authors.length === 0) return; this.#initialNotesKey = key;
     try {
       const page = await loadInitialTimelinePage({ authors: this.#authors, relays: this.#relays, subId: this.#noteSubId, pageSize: this.#pageSize, subscriptions: this.#subscriptions });
-      if (page.length > 0) { this.#cached = mergeTimelineItems(page, this.items(), feedWindowSize); this.#emit(this.#nextState(readyWithEventsState(this.#state, this.items()))); }
-      else if (this.#state.items.length === 0) this.#emit(this.#nextState({ loading: false, status: 'ready-empty' }));
+      this.#olderScanCursor = page.hasOlder ? page.nextOlderCursor : undefined;
+      if (page.items.length > 0) { this.#cached = mergeTimelineItems(page.items, this.items(), feedWindowSize); this.#emit(this.#nextState(readyWithEventsState(this.#state, this.items()))); }
+      else if (this.#state.items.length === 0) this.#emit(this.#nextState({ loading: false, status: 'ready-empty', hasOlder: page.hasOlder }));
     } catch (error) { this.#emit({ ...this.#state, loading: false, error: boundedErrorText(error) }); }
+  }
+  async #refreshAfterRouteDiscovery(generation: number): Promise<void> {
+    if (this.#routeRefreshGeneration === generation || this.#authors.length === 0) return;
+    this.#routeRefreshGeneration = generation;
+    const page = await loadInitialTimelinePage({ authors: this.#authors, relays: this.#relays, subId: `${this.#noteSubId}:route-refresh`, pageSize: this.#pageSize, subscriptions: this.#subscriptions }).catch(() => undefined);
+    if (!page || !this.#active(generation) || page.items.length === 0) return;
+    const next = mergeTimelineItems(page.items, this.items(), feedWindowSize);
+    if (next.map((item) => item.event.id).join(',') === this.items().map((item) => item.event.id).join(',')) return;
+    this.#cached = next; this.#live = []; this.#olderScanCursor = page.hasOlder ? page.nextOlderCursor : this.#olderScanCursor;
+    this.#emit(this.#nextState(readyWithEventsState(this.#state, this.items())));
+  }
+  #startBackfill(): void {
+    if (this.#closed || this.#backfillStarted || this.#authors.length === 0) return;
+    this.#backfillStarted = true;
+    this.#cleanup.push(startTimelineBackfill({ items: () => this.items(), authors: this.#authors, relays: this.#relays, subId: this.#noteSubId, pageSize: this.#pageSize, subscriptions: this.#subscriptions }));
   }
   #subscribe(key: string, filters: readonly NostrFilter[], relays = this.#relays): void {
     if (this.#closed) return;
