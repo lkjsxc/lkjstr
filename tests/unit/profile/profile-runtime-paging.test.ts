@@ -111,7 +111,7 @@ function initialSubscriptions(
   return {
     readPage: async (request: {
       relays: readonly string[];
-      filters: readonly { kinds?: number[] }[];
+      filters: readonly { kinds?: number[]; since?: number; until?: number }[];
     }) => {
       const kinds = request.filters[0]?.kinds ?? [];
       reads.push({

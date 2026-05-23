@@ -16,8 +16,10 @@ describe('relay page windows', () => {
       until: 2_000_001,
     });
     expect(windows.at(-1)?.since).toBe(0);
-    for (let index = 1; index < windows.length; index += 1)
-      expect(windows[index]?.until).toBe(windows[index - 1]!.since + 1);
+    for (let index = 1; index < windows.length; index += 1) {
+      const previous = windows[index - 1]!;
+      expect(windows[index]?.until).toBe(previous.since! + 1);
+    }
   });
 
   it('starts old cursors with a 180 day span', () => {
