@@ -2,9 +2,11 @@
 
 ## Purpose
 
-This directory contains unit and end-to-end tests.
+This directory owns Vitest and Playwright coverage for repository contracts.
 
 ## Contents
 
 - `unit/`: Vitest unit coverage.
 - `e2e/`: Playwright browser coverage.
+- Profile, reaction, notification, relay, workspace, and rendering contracts
+  should be covered near the owning module when possible.

@@ -53,6 +53,13 @@ Run `pnpm check:repo` after documentation changes before code work continues.
   fallbacks, timestamps, and wrapped content.
 - Profile renders summary first, then Notes rows in the same Profile tab scroll
   flow at desktop and mobile widths.
+- Profile header display name, `npub`, actions, facts, and about text remain
+  below the banner bottom at desktop, mobile, and split-pane widths.
+- Profile website and safe about-text URLs are clickable anchors with HTTP or
+  HTTPS `href` values; unsafe schemes are not anchors.
+- Profile visible facts do not include `nprofile` or loaded-post counts.
+- Profile copy menu exposes `Copy npub`, `Copy nprofile`,
+  `Copy follow list JSON`, and `Copy relay sets JSON`.
 - Timeline scroll position remains nonzero after older loads and live prepends
   when the user was not at the top.
 - Profile notes render below the profile header without horizontal overflow on
@@ -70,6 +77,8 @@ Run `pnpm check:repo` after documentation changes before code work continues.
 - Notifications show compact actor/action rows and target/root event previews
   for reactions, reposts, replies, and quotes when the referenced event is
   available.
+- Reaction/repost expanded actor rows and notification actor/action rows are
+  left-aligned by computed style and geometry.
 - Notification records without `targetEventId` or `rootEventId` do not call
   Thread navigation with an empty id.
 - Quote and reference previews are deduped by event id.

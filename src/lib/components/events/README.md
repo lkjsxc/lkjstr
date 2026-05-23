@@ -2,10 +2,10 @@
 
 ## Purpose
 
-This directory contains Svelte components for rendering Nostr events and event
-actions.
+This directory owns shared Nostr event display: rows, content, references,
+actions, reaction summaries, zaps, emoji, and media.
 
 ## Contents
 
 - Event rows, metadata, content tokens, mention chips, custom emoji images,
-  embeds, media, and action panels.
+  embeds, media, reaction actor lists, and action panels.

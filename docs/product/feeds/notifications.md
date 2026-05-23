@@ -27,8 +27,8 @@ context first and event content second.
 - Partial relay failure stays visible in diagnostics but does not block cached
   or reachable notification records.
 - Empty state is explicit when no records exist.
-- Rows use a vertical layout: actor identity, action kind, read state,
-  timestamp, notification context text, and compact shared event previews.
+- Rows use a compact left-aligned actor/action row followed by wrapped compact
+  shared event previews.
 - Clicking a preview opens or focuses the correct Thread tab. Buttons and links
   inside the preview keep their local behavior.
 - Reaction and repost rows show the same visible action label style as other

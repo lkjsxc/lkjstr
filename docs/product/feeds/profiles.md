@@ -20,8 +20,12 @@ Profile tabs show identity metadata and authored text notes.
   document order. The Profile tab is the only scroll container for this flow.
 - Profile metadata supports banner, picture, display name, name, NIP-05,
   website, Lightning address, and about text.
-- Website values render as safe clickable links when they normalize to HTTP or
-  HTTPS.
+- Profile header identity content starts below the banner. The avatar may
+  overlap banner media, but display name, subtitle, full `npub`, actions,
+  facts, about text, and notes never overlap the banner.
+- Website values and safe HTTP, HTTPS, or schemeless domain-like URLs inside
+  about text render as clickable links after HTTP/HTTPS normalization.
+  Unsafe schemes such as `javascript:` never render as links.
 - Profile note lists display kinds `1`, `6`, and `16`.
 - Profile about text and display names render valid HTTPS custom emoji tags.
 - Sensitive authored rows use the same reveal gate as Home and Global.
@@ -33,10 +37,15 @@ Profile tabs show identity metadata and authored text notes.
 - Successful Profile Edit publishes kind `0` to enabled write relays, stores
   the result locally, and notifies open Profile tabs to refresh.
 - Notes must not render through a dedicated full-height child scroller.
-- Profile identity surfaces show the full `npub`. A menu can copy `npub`,
-  `nprofile`, follow-list JSON, and registered relay-set JSON.
+- Profile identity surfaces show display name, subtitle, and the full `npub`.
+  A three-dot menu can copy `npub`, `nprofile`, follow-list JSON, and
+  registered relay-set JSON.
 - Profile hides `nprofile`, loaded-post count, and diagnostic metadata relay
   count from visible facts.
+- Profile `nprofile` relay hints use selected enabled default read relays.
+- Follow-list JSON is the latest viewed profile kind `3` event or `null`.
+- Registered relay-set JSON includes all configured relay sets with normalized
+  relay URL plus relay enabled, read, and write flags.
 - Profile shows following count from the viewed profile's latest kind `3`.
 - Long `about`, `npub`, and website values wrap without overlapping the Notes
   section at desktop, mobile, or narrow split-pane widths.

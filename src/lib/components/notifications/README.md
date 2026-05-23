@@ -2,8 +2,9 @@
 
 ## Purpose
 
-This directory contains Svelte components for notification rows.
+This directory owns notification row presentation around shared event previews.
 
 ## Contents
 
-- Notification row layout and shared event content composition.
+- Compact actor/action rows, unread styling hooks, and shared event preview
+  composition.
