@@ -12,8 +12,8 @@ its NIP-02 follows.
   and relay page data have loaded, before profile hydration and before relay
   results.
 - After authors are known, Home performs an immediate selected-relay initial
-  page, discovers routes in parallel, then keeps live subscriptions bounded
-  with startup `since`.
+  scan with bounded `since`/`until` windows, discovers routes in parallel, then
+  keeps live subscriptions bounded with startup `since`.
 - Account home authors are the active account plus `p` tags from the latest
   kind `3` follow list. Cache reads for the follow list use an indexed
   latest-only kind `3` lookup for the active pubkey.
@@ -29,8 +29,10 @@ its NIP-02 follows.
   items are pruned.
 - Older pages load after near-bottom scroll or when the loaded rows are shorter
   than the viewport and `hasOlder` remains true.
-- Historical relay pages use compound `{createdAt,id}` cursors and interval
-  windows with both `since` and `until`. Results are filtered before merging.
+- Initial and historical relay pages use compound `{createdAt,id}` cursors and
+  adaptive bounded windows with both `since` and `until`. Empty complete
+  windows continue older; incomplete or dense windows keep `hasOlder`
+  conservative.
 - Relay results are deterministic event rows. Duplicate events from multiple
   relays render once with merged relay provenance.
 - Live relay reads set `since` when the runtime starts.

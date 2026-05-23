@@ -10,15 +10,17 @@ Global shows recent notes and reposts from the selected readable relay set.
 - It does not require an active account.
 - Cached notes render before relay results.
 - Relay reads request recent kinds `1`, `6`, and `16` without author filtering.
-- Global performs one initial relay page without `since`, then keeps live
-  subscriptions bounded with startup `since`.
+- Global performs one initial adaptive relay scan with bounded `since`/`until`
+  windows, then keeps live subscriptions bounded with startup `since`.
 - Live relay events prepend into the same repository-backed feed model.
 - Initial and older pages request `30` items.
 - The tab keeps a `180` item window.
 - Older pages load after near-bottom scroll or when the loaded rows are shorter
   than the viewport and `hasOlder` remains true.
-- Historical relay pages use compound `{createdAt,id}` cursors, local boundary
-  filtering, merged relay provenance, and close after EOSE or timeout.
+- Initial and historical relay pages use compound `{createdAt,id}` cursors,
+  adaptive bounded `since`/`until` windows, local boundary filtering, and
+  merged relay provenance. Timeout or non-EOSE relay status does not prove
+  exhaustion.
 - Live relay reads set `since` when the runtime starts.
 - Loading ends when cached items exist, a relay sends notes, any relay reaches
   EOSE, or every contacted relay reaches a terminal failure state.

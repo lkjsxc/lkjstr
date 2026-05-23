@@ -15,8 +15,9 @@ Profile runtime owns metadata and authored-note loading for one pubkey.
   kind `3` follow lists, and authored feed-display events by author.
 - Initial metadata reads use selected relays, author routes, and discovery
   relays for kinds `0` and `10002`.
-- Initial follow-list and post reads use selected relays and author routes
-  only, excluding discovery relays unless explicitly selected/imported.
+- Initial follow-list reads use selected relays and author routes only. Initial
+  post reads use the same relay set through adaptive bounded scan windows,
+  excluding discovery relays unless explicitly selected/imported.
 - Metadata and follow-list events are stored for profile state but never mixed
   into the visible posts list.
 - Metadata hydration stores and returns the effective latest cached profile, not
@@ -31,8 +32,8 @@ Profile runtime owns metadata and authored-note loading for one pubkey.
   following count.
 - Live posts are stored while browsing an older pruned window, but visible
   insertion is deferred until newer notes are loaded.
-- Historical note reads use interval windows with `since` and `until`; live
-  reads set `since` when started.
+- Initial and historical note reads use adaptive windows with `since` and
+  `until`; live reads set `since` when started.
 - Relay reads use selected read relays as base and fallback plus bounded author
   routes from NIP-65, NIP-02, relay receipts, and observed discovery evidence.
 - Closing the tab closes subscriptions.

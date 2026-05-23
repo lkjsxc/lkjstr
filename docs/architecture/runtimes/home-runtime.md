@@ -25,14 +25,15 @@ Home runtime owns active-account follow discovery and followed-note loading.
 - Write relay events and relay provenance through the shared repository.
 - Initial, older, and newer relay pages are sorted by `{created_at,id}` and
   preserve duplicate relay provenance before merging into the feed window.
-  Initial Home reads keep the selected fallback path immediate; older and live
-  reads may add route evidence.
+  Initial and historical Home feed reads use adaptive bounded scans; initial
+  reads keep the selected fallback path immediate, while older and live reads
+  may add route evidence.
 - Use selected read relays as base and fallback, then add bounded author routes
   from NIP-65, NIP-02, relay receipts, and discovery evidence.
 - Do not fall back to disabled, removed, or hidden relays.
 - Do not subscribe when there is no active account.
-- Stop loading when all active relays send EOSE, close the subscription, or
-  fail, including zero-event reads.
+- Stop loading when a page is filled, all scanned windows reach terminal EOSE
+  completion, or an incomplete relay window requires conservative `hasOlder`.
 - Expose `no-active-account`, `loading-follows`, `no-follow-list`,
   `no-enabled-relay`, `auth-required`, `subscription-closed`, `relay-failed`,
   `ready-empty`, and `ready-with-events`.

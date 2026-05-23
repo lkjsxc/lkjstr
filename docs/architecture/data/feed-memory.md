@@ -22,8 +22,11 @@ bounded as timelines grow.
   locally before page slicing.
 - Live relay subscriptions set `since` when the runtime starts so old relay
   history is not replayed into the live window.
-- Historical relay reads are one-shot `REQ` pages with bounded `limit`; they
-  close on EOSE, terminal relay state, or timeout.
+- Home, Global, and Profile initial or historical relay reads are adaptive
+  bounded scans. Each contacted relay must complete a window with EOSE before
+  that window can prove there are no matching events there.
+- A timeout, relay closure, auth requirement, socket close, or socket error
+  stops older scanning at that window and keeps `hasMore` conservative.
 - Home author chunks share one total page budget. A large follow list must not
   multiply the request limit by chunk count.
 - Metadata lookup is scoped to authors currently present in loaded items and is

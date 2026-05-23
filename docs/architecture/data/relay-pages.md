@@ -9,7 +9,8 @@ preserving where each real event was seen.
 
 - `readRelayPage()` is the raw relay primitive. It returns relay receipts from
   the subscription manager and keeps exact relay provenance available to callers.
-- Feed surfaces use `readRelayFeedPage()` for event rows.
+- Exact-request feed surfaces use `readRelayFeedPage()` for event rows. Home,
+  Profile, and Global initial or historical feeds use adaptive grouped scans.
 - Feed pages sort by descending `{created_at,id}` with lower ids first inside
   the same second.
 - Duplicate events from multiple relays merge into one feed row with the union
@@ -28,13 +29,20 @@ preserving where each real event was seen.
   unix time zero so newer relay pages can fetch every same-second candidate.
 - Raw reads remain valid for exact id lookup, latest replaceable selection, and
   other cases where caller-specific ordering is required.
-- Historical routed reads use interval windows with both `since` and `until`;
-  `limit` is always a positive safety cap.
+- Home, Profile, and Global initial or historical relay reads scan bounded
+  `since`/`until` windows from newest to oldest. Sparse scans continue across
+  empty complete windows until a page fills, an incomplete window is reached, or
+  the terminal `since: 0` window proves exhaustion.
+- Dense or incomplete windows are non-exhaustive. Relay timeout, closure, auth,
+  socket closed, and socket error never prove history exhaustion.
+- `limit` is always a positive safety cap. A full page, relay-effective limit,
+  or duplicate-heavy raw result marks more relay history possible.
 
 ## Callers
 
-- Home, Global, Profile, Search, Custom Request, Author Context, and Thread
-  reply pages use sorted provenance-preserving feed pages.
+- Home, Global, and Profile feed pages use adaptive bounded scans. Search,
+  Custom Request, Author Context, and Thread reply pages keep exact requested
+  filter semantics with sorted provenance-preserving feed pages.
 - Reference resolution and other id-batch lookups may use raw relay pages when
   output order is driven by the requested ids.
 - Metadata and follow-list reads remain separate from visible post pages.

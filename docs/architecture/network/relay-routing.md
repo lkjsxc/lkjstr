@@ -30,7 +30,8 @@ relays into Relay Settings or relying on a backend proxy.
 - Use at most `12` route groups per operation.
 - Use at most `50` authors in an author-specific group.
 - Use at most `200` authors in a selected fallback filter.
-- Historical pages use interval windows and include both `since` and `until`.
+- Home, Profile, and Global historical pages use adaptive bounded windows with
+  both `since` and `until`; sparse complete windows continue scanning older.
 - `limit` is a safety cap and must never be `0`.
 - Request purposes are `feed`, `metadata`, `event-lookup`, `route-discovery`,
   and `search`.

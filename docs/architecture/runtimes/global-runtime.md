@@ -8,14 +8,14 @@ Global runtime owns unauthenticated recent-note loading from readable relays.
 
 - Load cached kind `1` notes from the shared repository first.
 - Subscribe to live kind `1` notes with startup `since`.
-- Perform one bounded initial relay page without `since`.
+- Perform one adaptive bounded initial relay scan with `since` and `until`.
 - Keep Global to a `180` item in-memory window.
 - Load older pages through `loadOlder()` from the bottom cursor.
 - Load newer pages through `loadNewer()` from the top cursor when newer
   resident chunks were pruned.
-- Historical relay pages use compound `{createdAt,id}` cursors, `until` or
-  `since` boundary widening, local cursor filtering, and provenance-preserving
-  event rows.
+- Initial and historical relay pages use compound `{createdAt,id}` cursors,
+  adaptive `since`/`until` windows, local cursor filtering, and
+  provenance-preserving event rows.
 - Stop loading when cached notes exist, relay notes arrive, relays reach EOSE,
   relay subscriptions close, or relays fail.
 - Write relay events and relay provenance through the shared repository.

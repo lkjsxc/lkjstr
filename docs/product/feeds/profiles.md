@@ -14,8 +14,9 @@ Profile tabs show identity metadata and authored text notes.
 - Selected read relays are the base and fallback. Profile may also use the
   author's NIP-65 write relays, NIP-02 hints, event receipts, and discovery
   evidence. Disabled or removed relays remain excluded.
-- Profile performs split initial metadata, follow-list, and note relay pages
-  without `since`, then keeps live subscriptions bounded with startup `since`.
+- Profile performs split initial metadata, follow-list, and note relay reads.
+  Metadata and follow-list reads keep exact filters; visible notes use bounded
+  `since`/`until` scan windows, then live subscriptions use startup `since`.
 - Only authored feed-display events consume visible note page slots.
 - Initial and older note pages request `30` items.
 - Profile note lists keep a `180` item window.
@@ -56,9 +57,10 @@ Profile tabs show identity metadata and authored text notes.
   section at desktop, mobile, or narrow split-pane widths.
 - Profile notes start below the full profile header.
 - Older profile notes load after near-bottom scroll or viewport auto-fill.
-- Historical note pages use compound `{createdAt,id}` cursors, interval
-  windows with `since` and `until`, local relay boundary filtering, and merged
-  relay provenance.
+- Initial and historical note pages use compound `{createdAt,id}` cursors,
+  adaptive bounded windows with `since` and `until`, local relay boundary
+  filtering, and merged relay provenance. Sparse complete windows keep scanning
+  older; dense or incomplete windows remain non-exhaustive.
 - When older scrolling prunes newer notes, Profile shows a load-newer affordance
   above Notes and recovers newer notes from the current newest cursor.
 - Live authored posts received while viewing an older pruned window are stored
