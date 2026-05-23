@@ -20,8 +20,6 @@ type WindowRead = {
   readonly contacted: boolean;
 };
 
-const maxDenseAttempts = 3;
-
 export async function scanRelayFeedGroups(
   request: RelayGroupPageRequest,
 ): Promise<{ items: FeedEvent[]; hasMorePossible: boolean }> {
@@ -76,21 +74,20 @@ async function readGroup(
 ): Promise<WindowRead> {
   const group = request.groups[groupIndex]!;
   const raw: PoolEvent[] = [];
-  let bounds = windowBounds;
   let complete = true;
   let dense = false;
   let contacted = false;
-  for (let attempt = 0; attempt < maxDenseAttempts; attempt += 1) {
-    const filters = positiveFilters(
-      request.filters(group, bounds),
-      request.pageSize,
-    );
+  const baseFilters = positiveFilters(
+    request.filters(group, windowBounds),
+    request.pageSize,
+  );
+  for (let attempt = 0; attempt < 2; attempt += 1) {
+    const filters = attempt === 0 ? baseFilters : slackFilters(baseFilters);
     const batches = await limitedRelayFilterGroups(
       group.relays,
       filters,
       request.pageSize,
     );
-    if (batches.length === 0) break;
     for (const [batchIndex, batch] of batches.entries()) {
       const result = await readPageDetailedCompat(request.subscriptions, {
         key: `${request.key}:${windowIndex}:${groupIndex}:${attempt}:${batchIndex}`,
@@ -107,10 +104,7 @@ async function readGroup(
       contacted = true;
     }
     const items = pageItems(mergePoolEvents(raw), request);
-    if (!complete || !dense || items.length >= request.pageSize) break;
-    const next = internalBounds(windowBounds, raw, request);
-    if (!next || sameBounds(next, bounds)) break;
-    bounds = next;
+    if (!needsCursorSlack(raw, items.length, request)) break;
   }
   const items = pageItems(mergePoolEvents(raw), request);
   return { items, complete, dense, contacted };
@@ -132,8 +126,8 @@ function denseResult(
   pageSize: number,
 ): boolean {
   const limit = Math.max(
-    ...filters.map((filter) => filter.limit ?? pageSize),
-    pageSize,
+    1,
+    Math.min(pageSize, ...filters.map((filter) => filter.limit ?? pageSize)),
   );
   const unique = new Set(events.map((item) => item.event.id)).size;
   return (
@@ -142,33 +136,21 @@ function denseResult(
   );
 }
 
-function internalBounds(
-  windowBounds: Pick<NostrFilter, 'since' | 'until'>,
+function needsCursorSlack(
   raw: readonly PoolEvent[],
+  itemCount: number,
   request: RelayGroupPageRequest,
-): Pick<NostrFilter, 'since' | 'until'> | undefined {
-  const events = sortFeedEvents(mergePoolEvents(raw))
-    .filter((item) => beforeCursor(item.event, request.before))
-    .filter((item) => afterCursor(item.event, request.after));
-  if (events.length === 0 && request.direction === 'newer' && request.after)
-    return { ...windowBounds, since: request.after.createdAt + 1 };
-  if (events.length === 0 && request.before)
-    return {
-      ...windowBounds,
-      until: Math.max(0, request.before.createdAt - 1),
-    };
-  if (events.length === 0) return undefined;
-  if (request.direction === 'newer') {
-    const newest = events[0]!.event;
-    return { ...windowBounds, since: Math.max(0, newest.created_at + 1) };
-  }
-  const oldest = events.at(-1)!.event;
-  return { ...windowBounds, until: Math.max(0, oldest.created_at - 1) };
+): boolean {
+  return (
+    Boolean(request.before || request.after) &&
+    raw.length > itemCount &&
+    itemCount < request.pageSize
+  );
 }
 
-function sameBounds(
-  a: Pick<NostrFilter, 'since' | 'until'>,
-  b: Pick<NostrFilter, 'since' | 'until'>,
-): boolean {
-  return a.since === b.since && a.until === b.until;
+function slackFilters(filters: readonly NostrFilter[]): NostrFilter[] {
+  return filters.map((filter) => ({
+    ...filter,
+    limit: (filter.limit ?? 1) * 2,
+  }));
 }

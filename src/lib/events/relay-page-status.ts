@@ -18,7 +18,7 @@ export async function readPageDetailedCompat(
   return {
     events,
     statuses: request.relays.map((relay) =>
-      completeFallbackStatus(relay, events),
+      incompleteFallbackStatus(relay, events),
     ),
   };
 }
@@ -40,14 +40,14 @@ export function statusesComplete(
   );
 }
 
-function completeFallbackStatus(
+function incompleteFallbackStatus(
   relay: string,
   events: readonly PoolEvent[],
 ): ReadPageRelayStatus {
   const count = events.filter((item) => item.relay === relay).length;
   return {
     relay,
-    eose: true,
+    eose: false,
     timeout: false,
     closed: false,
     auth: false,

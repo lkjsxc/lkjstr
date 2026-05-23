@@ -45,18 +45,18 @@ function newerWindows(
   request: RelayWindowRequest,
   now: number,
 ): Pick<NostrFilter, 'since' | 'until'>[] {
-  const end = now + 1;
-  let lower = request.after
+  let upper = now + 1;
+  const lower = request.after
     ? boundarySince(request.after)!
-    : Math.max(0, end - spans[0]!);
+    : Math.max(0, upper - spans[0]!);
   const windows: Pick<NostrFilter, 'since' | 'until'>[] = [];
   for (const span of spans) {
-    const until = Math.min(end, lower + span);
-    windows.push({ since: lower, until });
-    if (until >= end) return windows;
-    lower = Math.max(0, until - 1);
+    const since = Math.max(lower, upper - span);
+    windows.push({ since, until: upper });
+    if (since <= lower) return windows;
+    upper = since + 1;
   }
-  windows.push({ since: lower, until: end });
+  windows.push({ since: lower, until: upper });
   return windows;
 }
 

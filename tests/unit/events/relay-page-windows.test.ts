@@ -41,4 +41,22 @@ describe('relay page windows', () => {
     });
     expect(windows.at(-1)?.since).toBe(0);
   });
+
+  it('builds newer windows from now down toward the after cursor', () => {
+    const windows = relayPageWindows({
+      direction: 'newer',
+      after: { createdAt: 1_000_000, id: 'a'.repeat(64) },
+      now: 2_000_000,
+    });
+
+    expect(windows[0]).toEqual({
+      since: 2_000_001 - 6 * 60 * 60,
+      until: 2_000_001,
+    });
+    expect(windows.at(-1)?.since).toBe(999_999);
+    for (let index = 1; index < windows.length; index += 1) {
+      const previous = windows[index - 1]!;
+      expect(windows[index]?.until).toBe(previous.since! + 1);
+    }
+  });
 });
