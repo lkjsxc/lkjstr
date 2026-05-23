@@ -11,10 +11,12 @@ backfill.
 - Background sync and the tab runtime subscribe to supported active-account
   `#p` events: kinds `0`, `1`, `6`, `7`, `16`, and `9735`.
 - Store notification source events through the shared repository.
-- Resolve target/root event previews from the shared repository for rows that
-  reference another event.
+- Resolve target/root event context from the shared repository only as
+  explicitly labeled fallback content when the source notification event is
+  unavailable.
 - Derive notification records from stored events.
-- Keep Notifications source and target preview state to the feed memory window.
+- Keep Notifications source event and fallback target context state to the feed
+  memory window.
 - Older pages load local records first, then one bounded relay page when a
   cursor exists.
 - Historical relay pages use the oldest loaded event time as `until`.

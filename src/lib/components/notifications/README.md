@@ -2,9 +2,10 @@
 
 ## Purpose
 
-This directory owns notification row presentation around shared event previews.
+This directory owns notification row presentation around the source event body
+and fallback target/root context.
 
 ## Contents
 
-- Compact actor/action rows, unread styling hooks, and shared event preview
-  composition.
+- Lightweight actor/action context headers, unread styling hooks, canonical
+  source `EventRow` composition, and explicitly labeled fallback context.

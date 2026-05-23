@@ -18,8 +18,8 @@ This document records the current implemented contract for the app.
 - Profile tabs open or focus from identity actions in the same tile.
 - Profile Edit opens or focuses from own-profile actions in the same tile and
   edits only the active signing account.
-- Thread tabs open or focus from event rows, notification previews, controls,
-  quotes, references, and continuation rows in the same tile. Row action
+- Thread tabs open or focus from event rows, notification event bodies,
+  controls, quotes, references, and continuation rows in the same tile. Row action
   buttons never trigger row navigation.
 - Tabs can be reordered within a tile or moved between tiles with native
   desktop drag-and-drop or pointer dragging on mobile.
@@ -41,10 +41,13 @@ This document records the current implemented contract for the app.
 - Global shows recent notes and reposts from the selected read relays without
   an account requirement.
 - Notifications are background-captured relay-backed records derived from
-  supported `#p` events that reference the active account. Rows show actor,
-  compact action text, timestamp, visual unread state, and a real target/root
-  event preview when the target is cached or fetched. The Notifications tab
-  label never includes an unread count.
+  supported `#p` events that reference the active account. Rows show a
+  lightweight actor/action context header, timestamp, visual unread state, and
+  the source notification event rendered through the canonical `EventRow`.
+  Target/root context is fallback-only, explicitly labeled, and shown only when
+  the source notification event is unavailable. Kind `7` content `+` or empty
+  content renders as a heart reaction. The Notifications tab label never
+  includes an unread count.
 - Home has no hidden public fallback when the selected account or read relays
   cannot produce a feed.
 - Feed loading ends when cache exists, any relay produces events, any relay

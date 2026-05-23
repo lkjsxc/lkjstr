@@ -35,7 +35,8 @@ Tabs define the workspace surface area.
 - Upload Settings opens from New Tab and edits the shared Tweet media upload
   provider records.
 - Thread opens from event rows, event id buttons, quotes, compact reference
-  cards, notification previews, and collapsed continuation rows.
+  cards, notification event bodies, fallback notification context, and
+  collapsed continuation rows.
 - Thread actions focus a matching Thread tab already present in the same tile;
   otherwise they open a new Thread tab in that tile.
 - Author Context opens from an event row menu and loads the anchor plus nearby
@@ -47,7 +48,8 @@ Tabs define the workspace surface area.
 - Stats is a workspace tab kind named `network-stats`.
 - Search runs local cached content matches and relay NIP-50 search filters.
 - Tweet clears immediately after signed local queueing. Notifications show
-  compact action rows with real target previews when available.
+  lightweight action context headers and render source notification events with
+  canonical Timeline row behavior; target/root context is fallback-only.
 
 ## Movement
 

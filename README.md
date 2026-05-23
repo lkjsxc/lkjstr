@@ -21,7 +21,7 @@ documentation, verification scripts, static assets, and tests.
 - Keeps workspace layout, tabs, accounts, settings, drafts, notifications, and
   cache state in browser storage with session-memory fallback.
 - Renders Nostr entities, media, custom emoji, event references, content
-  warnings, nested reposts, and compact notification previews from real events.
+  warnings, nested reposts, and notification event bodies from real events.
 - Provides lkjstr Log and Stats tabs for relay, subscription, publish, cache,
   storage, runtime, and job diagnostics.
 

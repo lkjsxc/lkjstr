@@ -28,7 +28,10 @@ Readiness checks whether the app contract is shippable.
 - Media URLs are hidden from text only when their embed renders.
 - Mention tokens open Profile; event entity tokens open Thread.
 - Clicking a post opens Thread; clicking avatar or name opens Profile.
-- Notifications use actor/action first and target/source content below.
+- Notifications use a lightweight actor/action context header and canonical
+  source event body first; target/root context is fallback-only and explicitly
+  labeled.
+- Like reactions render as heart reactions, never as `liked`.
 - Quote and reference previews are deduped by event id.
 - Inactive tab retention keeps switched-away tabs alive for the configured
   grace period and closes subscriptions after expiry.

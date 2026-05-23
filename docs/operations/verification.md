@@ -74,9 +74,13 @@ Run `pnpm check:repo` after documentation changes before code work continues.
   renders as an image, video, or audio attachment.
 - `nostr:npub` and `nostr:nprofile` clicks open Profile; `nostr:note` and
   `nostr:nevent` clicks open Thread in the same tile.
-- Notifications show compact actor/action rows and target/root event previews
-  for reactions, reposts, replies, and quotes when the referenced event is
-  available.
+- Notifications show left-aligned actor/action headers and render source
+  notification events with canonical `EventRow` behavior for reactions,
+  reposts, replies, and quotes.
+- Notification fallback target/root context is explicitly labeled and appears
+  only when the source notification event is unavailable.
+- Kind `7` content `+` and empty content render as heart reactions, and
+  notification rows do not render `liked`.
 - Reaction/repost expanded actor rows and notification actor/action rows are
   left-aligned by computed style and geometry.
 - Notification records without `targetEventId` or `rootEventId` do not call
