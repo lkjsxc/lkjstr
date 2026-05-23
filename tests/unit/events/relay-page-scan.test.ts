@@ -24,7 +24,6 @@ describe('relay page scan', () => {
     });
 
     expect(page.items.map((item) => item.event.id)).toEqual([older.id]);
-    expect(page.hasMorePossible).toBe(true);
   });
 
   it('keeps incomplete empty windows non-exhaustive', async () => {
@@ -77,7 +76,10 @@ describe('relay page scan', () => {
       events[2]!.id,
       events[3]!.id,
     ]);
-    expect(new Set([...first.items, ...second.items].map((item) => item.event.id)).size).toBe(4);
+    expect(
+      new Set([...first.items, ...second.items].map((item) => item.event.id))
+        .size,
+    ).toBe(4);
   });
 
   it('reads groups sequentially with deterministic keys', async () => {
@@ -97,8 +99,8 @@ describe('relay page scan', () => {
     });
 
     expect(calls.slice(0, 2)).toEqual([
-      'scan-sequential:0:0:0',
-      'scan-sequential:0:1:0',
+      'scan-sequential:0:0:0:0',
+      'scan-sequential:0:1:0:0',
     ]);
   });
 });

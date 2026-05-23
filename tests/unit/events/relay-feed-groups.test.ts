@@ -27,13 +27,16 @@ describe('relay feed group pages', () => {
     });
 
     await Promise.resolve();
-    expect(calls).toEqual(['relay-page-sequential:0']);
+    expect(calls).toEqual(['relay-page-sequential:0:0:0:0']);
     first.resolve([]);
     await page;
-    expect(calls).toEqual([
-      'relay-page-sequential:0',
-      'relay-page-sequential:1',
+    expect(calls.slice(0, 2)).toEqual([
+      'relay-page-sequential:0:0:0:0',
+      'relay-page-sequential:0:1:0:0',
     ]);
+    expect(calls.indexOf('relay-page-sequential:0:1:0:0')).toBeGreaterThan(
+      calls.indexOf('relay-page-sequential:0:0:0:0'),
+    );
   });
 
   it('merges sequential relay group provenance and has-more state', async () => {

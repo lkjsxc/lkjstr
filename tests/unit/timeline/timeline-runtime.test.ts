@@ -57,7 +57,7 @@ describe('timeline runtime', () => {
     await waitForSub('timeline-test:notes:initial');
     await waitForSub('timeline-test:notes', true);
     // prettier-ignore
-    expect(parsedSent('timeline-test:notes:initial')).toEqual(['REQ', expect.any(String), expect.objectContaining({ kinds: feedDisplayKinds, authors: [active, followed], limit: 30 })]);
+    expect(parsedSent('timeline-test:notes:initial')).toEqual(['REQ', expect.any(String), expect.objectContaining({ kinds: feedDisplayKinds, authors: [active, followed], limit: 30, since: expect.any(Number), until: expect.any(Number) })]);
     // prettier-ignore
     expect(parsedSent('timeline-test:notes', true)).toEqual(['REQ', expect.any(String), expect.objectContaining({ kinds: feedDisplayKinds, authors: [active, followed], limit: 30, since: expect.any(Number) })]);
   });
@@ -74,7 +74,7 @@ describe('timeline runtime', () => {
     await waitForSub('timeline-test:notes:initial');
     await waitForSub('timeline-test:notes', true);
     // prettier-ignore
-    expect(parsedSent('timeline-test:notes:initial')).toEqual(['REQ', expect.any(String), expect.objectContaining({ kinds: feedDisplayKinds, authors: [active], limit: 30 })]);
+    expect(parsedSent('timeline-test:notes:initial')).toEqual(['REQ', expect.any(String), expect.objectContaining({ kinds: feedDisplayKinds, authors: [active], limit: 30, since: expect.any(Number), until: expect.any(Number) })]);
     // prettier-ignore
     expect(parsedSent('timeline-test:notes', true)).toEqual(['REQ', expect.any(String), expect.objectContaining({ kinds: feedDisplayKinds, authors: [active], limit: 30, since: expect.any(Number) })]);
   });

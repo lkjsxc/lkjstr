@@ -89,9 +89,13 @@ function logicalMatch(
     if (logical.endsWith(':follows')) return kinds.includes(3);
     if (logical.endsWith(':meta')) return kinds.includes(0);
     if (logical.includes(':notes:initial'))
-      return kinds.includes(1) && filter?.since === undefined;
+      return kinds.includes(1) && filter?.until !== undefined;
     if (logical.endsWith(':notes'))
-      return kinds.includes(1) && filter?.since !== undefined;
+      return (
+        kinds.includes(1) &&
+        filter?.since !== undefined &&
+        filter?.until === undefined
+      );
     return false;
   });
   return hit?.[1] as string | undefined;
