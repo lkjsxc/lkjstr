@@ -182,3 +182,9 @@ body {
   gap: var(--space-1);
   grid-template-columns: repeat(auto-fill, minmax(2rem, 1fr));
 }
+
+.emoji-popover__custom .custom-emoji {
+  height: 1.25rem;
+  max-height: 1.25rem;
+  max-width: 1.5rem;
+}
