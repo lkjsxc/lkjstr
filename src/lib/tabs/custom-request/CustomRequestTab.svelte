@@ -63,8 +63,13 @@
         pageSize: feedPageSize,
         subscriptions,
       });
-      await Promise.all(events.map((item) => upsertEvent(item.event, [item.relay])));
-      items = events.map((item) => ({ event: item.event, relays: [item.relay] }));
+      await Promise.all(
+        events.map((item) => upsertEvent(item.event, [item.relay])),
+      );
+      items = events.map((item) => ({
+        event: item.event,
+        relays: [item.relay],
+      }));
     } catch (err) {
       error = err instanceof Error ? err.message : 'Request failed.';
       items = [];

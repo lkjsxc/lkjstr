@@ -50,9 +50,11 @@ export function pointerPaneAt(
   clientX: number,
   clientY: number,
 ): HTMLElement | undefined {
-  return doc
-    .elementFromPoint(clientX, clientY)
-    ?.closest<HTMLElement>('[data-pane-id]') ?? undefined;
+  return (
+    doc
+      .elementFromPoint(clientX, clientY)
+      ?.closest<HTMLElement>('[data-pane-id]') ?? undefined
+  );
 }
 
 function edgeThreshold(size: number): number {

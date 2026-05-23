@@ -40,9 +40,7 @@ export async function loadInitialProfilePage(request: Request) {
   );
   const profile = storedProfiles.find((item) => item);
   const followList = latestEvent(
-    relayEvents
-      .map((item) => item.event)
-      .filter((event) => event.kind === 3),
+    relayEvents.map((item) => item.event).filter((event) => event.kind === 3),
     request.followList,
   );
   return {

@@ -30,9 +30,7 @@ export function zapTargetEventId(event: NostrEvent): string | undefined {
   return tagValues(event, 'e').at(-1);
 }
 
-export function groupZapReceipts(
-  events: readonly NostrEvent[],
-): ZapSummaryMap {
+export function groupZapReceipts(events: readonly NostrEvent[]): ZapSummaryMap {
   const groups = new Map<string, { amount: number; actors: Set<string> }>();
   for (const event of events) {
     if (event.kind !== kinds.zapReceipt) continue;

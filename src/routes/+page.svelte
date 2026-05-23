@@ -5,7 +5,11 @@
   import { BackgroundNotificationSync } from '$lib/notifications/background-notifications';
   import type { NotificationRecord } from '$lib/notifications/notification';
   import { accountNotifications } from '$lib/notifications/notification-store';
-  import { removeRelay, setRelayEnabled, type RelaySet } from '$lib/relays/relay-store';
+  import {
+    removeRelay,
+    setRelayEnabled,
+    type RelaySet,
+  } from '$lib/relays/relay-store';
   import WorkspaceRoot from '$lib/components/workspace/WorkspaceRoot.svelte';
   import {
     openAuthorContextTab,
@@ -155,7 +159,6 @@
 
   // prettier-ignore
   async function handleOpenAuthorContext(paneId: string, eventId: string, pubkey: string): Promise<void> { if (workspace) await update(openAuthorContextTab(workspace, paneId, eventId, pubkey)); }
-
   // prettier-ignore
   async function handleOpenProfileEdit(paneId: string): Promise<void> { if (workspace) await update(openProfileEditTab(workspace, paneId)); }
 

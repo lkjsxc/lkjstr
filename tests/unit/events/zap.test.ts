@@ -102,10 +102,7 @@ describe('zaps', () => {
     expect(
       zapReceiptAmountMsats(
         zapReceipt([
-          [
-            'description',
-            JSON.stringify({ tags: [['amount', '42000']] }),
-          ],
+          ['description', JSON.stringify({ tags: [['amount', '42000']] })],
         ]),
       ),
     ).toBe(42000);

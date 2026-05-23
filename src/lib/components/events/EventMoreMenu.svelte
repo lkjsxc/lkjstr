@@ -28,7 +28,9 @@
     <MoreHorizontal size={16} />
   </summary>
   <div class="event-more__items">
-    <button type="button" onclick={openNearby}>Nearby posts by this author</button>
+    <button type="button" onclick={openNearby}
+      >Nearby posts by this author</button
+    >
     <button type="button" onclick={copyEventId}>Copy event ID</button>
     {#if copied}<small role="status">Copied</small>{/if}
   </div>

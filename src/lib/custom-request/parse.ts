@@ -1,4 +1,8 @@
-import { normalizeRelayUrl, parseFilter, type NostrFilter } from '$lib/protocol';
+import {
+  normalizeRelayUrl,
+  parseFilter,
+  type NostrFilter,
+} from '$lib/protocol';
 
 export type CustomRequest = {
   readonly filters: readonly NostrFilter[];
@@ -18,7 +22,9 @@ function parseValue(value: unknown): CustomRequest {
   if (Array.isArray(value)) return { filters: parseFilters(value), relays: [] };
   if (isRecord(value) && ('filters' in value || 'filter' in value)) {
     const raw = 'filters' in value ? value.filters : value.filter;
-    const filters = Array.isArray(raw) ? parseFilters(raw) : parseFilters([raw]);
+    const filters = Array.isArray(raw)
+      ? parseFilters(raw)
+      : parseFilters([raw]);
     return { filters, relays: parseRelays(value.relays) };
   }
   return { filters: parseFilters([value]), relays: [] };

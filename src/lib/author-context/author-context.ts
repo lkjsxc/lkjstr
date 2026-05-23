@@ -21,20 +21,42 @@ export async function loadAuthorContext(
   if (!anchor) return [];
   const cursor = cursorPoint(anchor);
   const [olderCache, newerCache, relayEvents] = await Promise.all([
-    queryFeed({ kind: 'profile', authors: [request.pubkey], before: cursor, limit: 10 }),
-    queryFeed({ kind: 'profile', authors: [request.pubkey], after: cursor, limit: 10 }),
+    queryFeed({
+      kind: 'profile',
+      authors: [request.pubkey],
+      before: cursor,
+      limit: 10,
+    }),
+    queryFeed({
+      kind: 'profile',
+      authors: [request.pubkey],
+      after: cursor,
+      limit: 10,
+    }),
     readRelayPage({
       key: request.subId,
       relays: request.relays,
       filters: [
-        { kinds: feedDisplayKinds, authors: [request.pubkey], until: anchor.event.created_at, limit: 10 },
-        { kinds: feedDisplayKinds, authors: [request.pubkey], since: anchor.event.created_at, limit: 11 },
+        {
+          kinds: feedDisplayKinds,
+          authors: [request.pubkey],
+          until: anchor.event.created_at,
+          limit: 10,
+        },
+        {
+          kinds: feedDisplayKinds,
+          authors: [request.pubkey],
+          since: anchor.event.created_at,
+          limit: 11,
+        },
       ],
       pageSize: 22,
       subscriptions: request.subscriptions,
     }),
   ]);
-  await Promise.all(relayEvents.map((item) => upsertEvent(item.event, [item.relay])));
+  await Promise.all(
+    relayEvents.map((item) => upsertEvent(item.event, [item.relay])),
+  );
   return merge([
     ...newerCache.items,
     anchor,
@@ -70,7 +92,10 @@ function merge(items: readonly FeedEvent[]): FeedEvent[] {
 }
 
 function mergeItem(a: FeedEvent, b: FeedEvent): FeedEvent {
-  return { event: newer(a.event, b.event), relays: [...new Set([...a.relays, ...b.relays])] };
+  return {
+    event: newer(a.event, b.event),
+    relays: [...new Set([...a.relays, ...b.relays])],
+  };
 }
 
 function newer(a: NostrEvent, b: NostrEvent): NostrEvent {

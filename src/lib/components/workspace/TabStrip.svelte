@@ -65,13 +65,22 @@
 
   function pointerDown(event: PointerEvent, tab: WorkspaceTab): void {
     if (event.button !== 0) return;
-    pointerDrag = startPointerTabDrag(paneId, tab.id, event.clientX, event.clientY);
+    pointerDrag = startPointerTabDrag(
+      paneId,
+      tab.id,
+      event.clientX,
+      event.clientY,
+    );
     ghost = { x: event.clientX, y: event.clientY, title: tab.title };
   }
 
   function pointerMove(event: PointerEvent): void {
     if (!pointerDrag) return;
-    pointerDrag = activatePointerDrag(pointerDrag, event.clientX, event.clientY);
+    pointerDrag = activatePointerDrag(
+      pointerDrag,
+      event.clientX,
+      event.clientY,
+    );
     if (!pointerDrag.active) return;
     event.preventDefault();
     document.body.classList.add('dragging-tab');
@@ -168,10 +177,7 @@
     {/if}
   {/each}
   {#if pointerDrag?.active && ghost}
-    <div
-      class="tab-drag-ghost"
-      style={`left: ${ghost.x}px; top: ${ghost.y}px`}
-    >
+    <div class="tab-drag-ghost" style={`left: ${ghost.x}px; top: ${ghost.y}px`}>
       {ghost.title}
     </div>
   {/if}
