@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { MoreHorizontal } from '@lucide/svelte';
   import type { Account } from '$lib/accounts/account';
   import EmojifiedText from '$lib/components/events/EmojifiedText.svelte';
   import Avatar from '$lib/components/identity/Avatar.svelte';
@@ -68,7 +69,9 @@
     </div>
     <div class="profile-card__actions">
       <details class="profile-copy-menu">
-        <summary aria-label="Profile copy menu">...</summary>
+        <summary aria-label="Profile copy menu" title="Profile copy menu">
+          <MoreHorizontal size={18} aria-hidden="true" />
+        </summary>
         <div class="profile-copy-menu__items">
           <button type="button" onclick={() => copy('npub', props.npub)}>
             Copy npub
@@ -91,7 +94,7 @@
             type="button"
             onclick={() => copy('relays', relaySetsCopyJson(props.relaySets))}
           >
-            Copy relay set JSON
+            Copy relay sets JSON
           </button>
         </div>
       </details>

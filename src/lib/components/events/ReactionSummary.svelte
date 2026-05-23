@@ -42,6 +42,7 @@
       <li>
         <button
           type="button"
+          class="reaction-summary__trigger"
           class:reaction-summary__own={reaction.actors.includes(
             props.activeAccountPubkey ?? '',
           )}
@@ -92,6 +93,7 @@
   <div class="reaction-summary repost-summary">
     <button
       type="button"
+      class="reaction-summary__trigger"
       aria-expanded={expanded === 'reposts'}
       aria-controls="reposts"
       onclick={() => toggle('reposts')}

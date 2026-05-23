@@ -1,3 +1,47 @@
+.notification-list {
+  display: grid;
+  gap: var(--space-3);
+  min-height: 0;
+  overflow: auto;
+}
+
+.notification-row {
+  border-bottom: 1px solid var(--color-border);
+  display: block;
+  gap: var(--space-3);
+  min-width: 0;
+  padding: var(--space-3) 0;
+}
+
+.notification-row.unread {
+  border-left: 2px solid var(--color-focus);
+  padding-left: var(--space-2);
+}
+
+.notification-row__body,
+.notification-row__meta {
+  min-width: 0;
+}
+
+.notification-row__meta {
+  align-items: center;
+  color: var(--color-text-muted);
+  display: flex;
+  flex-wrap: wrap;
+  font-size: 0.78rem;
+  gap: var(--space-2);
+  justify-content: flex-start;
+  text-align: left;
+}
+
+.notification-row__actor {
+  flex: 0 1 auto;
+  justify-content: flex-start;
+  max-width: 100%;
+  min-width: 0;
+  text-align: left;
+}
+
 .notification-row__preview {
   border: 1px solid var(--color-border);
   border-radius: 6px;

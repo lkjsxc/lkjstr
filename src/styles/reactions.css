@@ -15,7 +15,7 @@
   position: relative;
 }
 
-.reaction-summary button {
+.reaction-summary__trigger {
   align-items: center;
   background: transparent;
   border: 1px solid var(--color-border);
@@ -27,7 +27,7 @@
   padding: 0 var(--space-2);
 }
 
-.reaction-summary button.reaction-summary__own {
+.reaction-summary__trigger.reaction-summary__own {
   background: color-mix(in srgb, var(--color-focus) 12%, transparent);
   border-color: var(--color-focus);
 }
@@ -39,6 +39,7 @@
   gap: var(--space-1);
   left: 0;
   max-width: min(18rem, 80vw);
+  min-width: 12rem;
   padding: var(--space-2);
   position: absolute;
   top: 100%;
@@ -46,9 +47,18 @@
 }
 
 .reaction-summary__actors button {
+  align-items: center;
+  background: transparent;
   border: 0;
   border-radius: var(--radius-button);
+  color: var(--color-text);
+  display: flex;
+  gap: var(--space-2);
   justify-content: flex-start;
+  min-height: 1.9rem;
+  padding: var(--space-1);
+  text-align: left;
+  width: 100%;
 }
 
 .job-tree-log li {

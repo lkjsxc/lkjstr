@@ -38,7 +38,7 @@
   );
   let npub = $derived(safeNpub(props.pubkey));
   let nprofile = $derived(
-    state.relays.length > 0 ? safeNprofile(props.pubkey, state.relays) : '',
+    safeNprofile(props.pubkey, timelineRelays(props.relaySets)),
   );
   let followCount = $derived(followingCount(state.followList));
   let runtime: ProfileRuntime | undefined;
