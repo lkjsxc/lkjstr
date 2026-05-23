@@ -12,6 +12,7 @@ const skipDirs = new Set([
   '.git',
   '.pnpm-store',
   '.svelte-kit',
+  '.wrangler',
   'build',
   'coverage',
   'data',

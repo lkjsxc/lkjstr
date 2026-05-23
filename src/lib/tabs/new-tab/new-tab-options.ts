@@ -29,7 +29,7 @@ export const newTabOptions: readonly NewTabOption[] = [
   {
     kind: 'search',
     label: 'Search',
-    description: 'Ego search.',
+    description: 'Event text lookup.',
     group: 'primary',
   },
   {

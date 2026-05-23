@@ -18,6 +18,8 @@ unimplemented behavior.
 - NIP-10 reply and thread tags.
 - NIP-18 repost target parsing, generic repost feeds, and embeds.
 - NIP-19 public-key, note, event, profile, and address references in content.
+- NIP-19 profile and event references render as visibly underlined mention
+  tokens in shared post surfaces.
 - NIP-25 reaction target parsing, `+`/empty likes, `-` dislikes, Unicode emoji
   reactions, custom emoji reactions, and `k` target-kind tags.
 - NIP-30 custom emoji tags, optional kind `30030` emoji-set addresses, custom

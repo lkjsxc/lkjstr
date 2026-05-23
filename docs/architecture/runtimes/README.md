@@ -20,3 +20,5 @@ Runtime docs define how tab-owned loaders combine cache and relay data.
 - Bounded error text is exposed instead of unhandled promise failures.
 - Near-end loading depends on scroll offset, viewport size, and total scroll
   size.
+- Hosted Worker code serves the SvelteKit shell only. Tab runtimes do not depend
+  on Cloudflare storage, a server-side account service, or a relay proxy.

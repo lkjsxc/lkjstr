@@ -14,6 +14,9 @@ The Nostr workspace client is browser-first. SvelteKit supplies the app shell, b
 - Local cache and recovery behavior are product requirements.
 - Browser diagnostics matter as much as server observability would in a hosted system.
 - Performance work must consider main-thread pressure and worker offload.
+- Cloudflare Workers hosting is allowed as an app-shell target, but the core
+  runtime still uses browser storage, browser WebSockets, and local signing
+  boundaries.
 
 ## Rejected Direction
 

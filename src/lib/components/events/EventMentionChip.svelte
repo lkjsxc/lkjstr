@@ -51,7 +51,7 @@
 
 <button
   type="button"
-  class="content-token event-mention-chip"
+  class="content-token content-mention-token event-mention-chip"
   title={props.rawText}
   onclick={(event) => {
     event.stopPropagation();

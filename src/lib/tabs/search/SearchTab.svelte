@@ -1,6 +1,5 @@
 <script lang="ts">
   import EventTreeList from '$lib/components/events/EventTreeList.svelte';
-  import type { Account } from '$lib/accounts/account';
   import { feedPageSize } from '$lib/events/feed-window';
   import type { ProfileSummary } from '$lib/identity/identity';
   import type { FeedEvent } from '$lib/events/types';
@@ -15,7 +14,6 @@
 
   type Props = {
     tabId: string;
-    activeAccount?: Account;
     relaySets: readonly RelaySet[];
     openProfile: (pubkey: string) => void;
     openThread: (eventId: string) => void;
@@ -33,20 +31,6 @@
   let searched = $state(false);
   let requestId = 0;
   const subscriptions = new RelaySubscriptionManager();
-  let defaultQuery = $derived(
-    props.activeAccount?.displayName ||
-      props.activeAccount?.nip05 ||
-      props.activeAccount?.npub ||
-      '',
-  );
-
-  $effect(() => {
-    if (!query && defaultQuery) {
-      query = defaultQuery;
-      void runSearch();
-    }
-  });
-
   $effect(() => {
     const pubkeys = [...new Set(items.map((item) => item.event.pubkey))].filter(
       (pubkey) => !profiles[pubkey],
@@ -64,6 +48,7 @@
 
   async function runSearch(): Promise<void> {
     const term = query.trim();
+    if (!term) return;
     searched = true;
     loading = true;
     error = null;

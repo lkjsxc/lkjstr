@@ -1,3 +1,9 @@
+.content-mention-token {
+  text-decoration-line: underline;
+  text-decoration-thickness: 0.08em;
+  text-underline-offset: 0.14em;
+}
+
 .event-mention-chip {
   align-items: center;
   display: inline-flex;

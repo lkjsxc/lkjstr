@@ -89,7 +89,6 @@
 {:else if props.tab.kind === 'search'}
   <SearchTab
     tabId={props.tab.id}
-    activeAccount={props.activeAccount}
     relaySets={props.relaySets}
     openProfile={(pubkey) => props.openProfile(props.paneId, pubkey)}
     openThread={(eventId) => props.openThread(props.paneId, eventId)}

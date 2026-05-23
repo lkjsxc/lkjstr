@@ -72,6 +72,8 @@ here before code is changed.
   relays.
 - [operations/README.md](operations/README.md): verification and safety.
 - [operations/ci.md](operations/ci.md): continuous integration.
+- [operations/cloudflare-workers.md](operations/cloudflare-workers.md):
+  Cloudflare Workers dry-run target.
 - [operations/data-safety.md](operations/data-safety.md): local data safety.
 - [operations/diagnostics.md](operations/diagnostics.md): logs and diagnostics.
 - [operations/docker.md](operations/docker.md): Docker checks.

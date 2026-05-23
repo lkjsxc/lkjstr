@@ -24,9 +24,15 @@ export function httpAuthEvent(input: {
 
 export function nostrAuthorizationHeader(event: unknown): string {
   const text = JSON.stringify(event);
-  const encoded =
-    typeof btoa === 'function'
-      ? btoa(text)
-      : Buffer.from(text, 'utf8').toString('base64');
-  return `Nostr ${encoded}`;
+  return `Nostr ${base64Utf8(text)}`;
+}
+
+function base64Utf8(text: string): string {
+  const bytes = new TextEncoder().encode(text);
+  let binary = '';
+  const chunkSize = 0x8000;
+  for (let offset = 0; offset < bytes.length; offset += chunkSize) {
+    binary += String.fromCharCode(...bytes.slice(offset, offset + chunkSize));
+  }
+  return btoa(binary);
 }

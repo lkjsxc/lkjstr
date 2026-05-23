@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import {
   httpAuthEvent,
+  nostrAuthorizationHeader,
   kinds,
   parseNip96Server,
   parseNip96UploadResult,
@@ -84,6 +85,26 @@ describe('event builders', () => {
     ).toEqual(['imeta', 'url https://cdn.example/a.png', 'm image/png']);
   });
 
+  it('encodes NIP-98 auth headers as UTF-8 base64 without Buffer', () => {
+    const globals = globalThis as typeof globalThis & { Buffer?: unknown };
+    const descriptor = Object.getOwnPropertyDescriptor(globalThis, 'Buffer');
+    Reflect.deleteProperty(globalThis, 'Buffer');
+    try {
+      const header = nostrAuthorizationHeader({
+        kind: kinds.httpAuth,
+        content: 'unicode snow 雪',
+        tags: [['u', 'https://media.example/upload']],
+      });
+      expect(decodeNostrHeader(header)).toMatchObject({
+        kind: kinds.httpAuth,
+        content: 'unicode snow 雪',
+      });
+      expect(globals.Buffer).toBeUndefined();
+    } finally {
+      if (descriptor) Object.defineProperty(globalThis, 'Buffer', descriptor);
+    }
+  });
+
   it('builds zap request tags', () => {
     const event = nostrEvent();
     expect(
@@ -150,4 +171,11 @@ function nostrEvent(patch: Partial<NostrEvent> = {}): NostrEvent {
     sig: 'a'.repeat(128),
     ...patch,
   };
+}
+
+function decodeNostrHeader(header: string): unknown {
+  const bytes = Uint8Array.from(atob(header.slice('Nostr '.length)), (item) =>
+    item.charCodeAt(0),
+  );
+  return JSON.parse(new TextDecoder().decode(bytes));
 }

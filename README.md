@@ -20,6 +20,9 @@ documentation, verification scripts, static assets, and tests.
   signing account.
 - Keeps workspace layout, tabs, accounts, settings, drafts, notifications, and
   cache state in browser storage with session-memory fallback.
+- Builds for Cloudflare Workers Static Assets as a hosting target without
+  adding a required backend account system, relay proxy, or Cloudflare storage
+  dependency.
 - Renders Nostr entities, media, custom emoji, event references, content
   warnings, nested reposts, and notification event bodies from real events.
 - Provides lkjstr Log and Stats tabs for relay, subscription, publish, cache,
@@ -56,6 +59,7 @@ documentation, verification scripts, static assets, and tests.
 - [Custom emoji](docs/protocol/custom-emoji.md)
 - [Protocol support](docs/protocol/nip-support.md)
 - [Verification](docs/operations/verification.md)
+- [Cloudflare Workers](docs/operations/cloudflare-workers.md)
 
 ## Development
 
@@ -65,11 +69,13 @@ pnpm dev
 pnpm check:repo
 pnpm test
 pnpm verify
+pnpm cloudflare:dry-run
 pnpm test:e2e
 docker compose -f docker-compose.yml config
-docker compose -f docker-compose.yml build app verify e2e
+docker compose -f docker-compose.yml build app verify e2e cloudflare
 docker compose -f docker-compose.yml run --rm verify
 docker compose -f docker-compose.yml run --rm e2e
+docker compose -f docker-compose.yml run --rm cloudflare
 ```
 
 ## Repository Map

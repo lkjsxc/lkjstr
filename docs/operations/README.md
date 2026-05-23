@@ -8,6 +8,7 @@ data safety, and test ownership.
 ## Documents
 
 - [ci.md](ci.md): hosted gates and GHCR images.
+- [cloudflare-workers.md](cloudflare-workers.md): Workers dry-run target.
 - [data-safety.md](data-safety.md): local data safety.
 - [diagnostics.md](diagnostics.md): debugging guidance.
 - [docker.md](docker.md): built-image Compose workflow.

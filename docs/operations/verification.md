@@ -14,6 +14,7 @@ pnpm lint
 pnpm check
 pnpm test
 pnpm build
+pnpm cloudflare:dry-run
 pnpm test:e2e
 pnpm verify:quiet
 pnpm test:e2e:quiet
@@ -23,18 +24,20 @@ pnpm test:e2e:quiet
 
 ```sh
 docker compose -f docker-compose.yml config
-docker compose -f docker-compose.yml build app verify e2e
+docker compose -f docker-compose.yml build app verify e2e cloudflare
 docker compose -f docker-compose.yml run --rm verify
 docker compose -f docker-compose.yml run --rm e2e
+docker compose -f docker-compose.yml run --rm cloudflare
 ```
 
-Run all four Docker commands before claiming image-backed verification.
+Run all four Docker command groups before claiming image-backed verification.
 
 ## Gate
 
-Use `pnpm verify` for normal local verification. Use Docker after Compose or
-Dockerfile changes and before claiming image-backed verification. CI must run
-the same local, browser, and Docker-backed gates.
+Use `pnpm verify` for normal local verification. Use `pnpm cloudflare:dry-run`
+after Cloudflare adapter or Wrangler configuration changes. Use Docker after
+Compose or Dockerfile changes and before claiming image-backed verification. CI
+must run the same local, browser, and Docker-backed gates.
 
 Quiet commands are preferred in agent runs. They print a short success line
 when commands pass and print buffered command output only when a command fails.

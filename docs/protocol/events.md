@@ -73,11 +73,13 @@ Profile, Thread, embeds, and Notifications.
   entity text and publish tags, and opens Profile.
 - Profile mentions render as readable `@name` labels when profile metadata is
   available and keep the raw token in `title`.
+- Profile mentions are visibly underlined in every shared post surface.
 - `nostr:note` decodes to a compact event mention and opens Thread.
 - `nostr:nevent` decodes to an event mention, preserves relay hints for entity
   text, reference resolution, and publish tags, and opens Thread.
 - Event mentions render as compact buttons instead of raw entity strings only
   when the same event is not expanded as a reference card below the content.
+- Event mentions are visibly underlined in every shared post surface.
 - Event mention tokens are hidden when the same event is expanded as a
   reference below the content.
 - Normal `https://` URLs render as links.

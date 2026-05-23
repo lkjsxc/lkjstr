@@ -25,6 +25,8 @@ This document records the current implemented contract for the app.
 - [operations/verification.md](operations/verification.md): local verification
   commands.
 - [operations/docker.md](operations/docker.md): Docker Compose verification.
+- [operations/cloudflare-workers.md](operations/cloudflare-workers.md):
+  Cloudflare Workers dry-run hosting target.
 
 ## Gaps
 

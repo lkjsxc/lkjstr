@@ -15,7 +15,7 @@
 
 <button
   type="button"
-  class="content-token"
+  class="content-token content-mention-token"
   title={props.rawText}
   onclick={(event) => {
     event.stopPropagation();
