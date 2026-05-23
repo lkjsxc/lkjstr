@@ -90,12 +90,16 @@ export class TimelineRuntime {
   }
   #subscribeFollows(pubkey: string): void { this.#emit({ ...this.#state, loading: true, status: 'loading-follows' }); this.#subscribe(this.#followSubId, [{ kinds: [3], authors: [pubkey], limit: 1 }]); }
   async #subscribeNotes(): Promise<void> {
-    this.#loadInitialNotes();
-    void discoverAuthorRelayRoutes({ authors: this.#authors, selectedRelays: this.#relays, key: `${this.#noteSubId}:routes`, subscriptions: this.#subscriptions });
+    const initialPage = this.#loadInitialNotes();
     this.#routeRelays = await routedAuthorRelays({ authors: this.#authors, selectedRelays: this.#relays, purpose: 'write' });
     this.#subscribe(this.#noteSubId, authorFilters(this.#authors, this.#pageSize, { since: this.#startedAt }), this.#routeRelays);
     const missing = this.#authors.filter((pubkey) => !this.#profiles[pubkey]).slice(0, metadataPageLimit);
     const filters = profileFilter(missing); if (filters.length > 0) this.#subscribe(this.#metaSubId, filters);
+    void initialPage.then(() => this.#discoverRoutesAfterInitial());
+  }
+  async #discoverRoutesAfterInitial(): Promise<void> {
+    if (this.#closed) return;
+    await discoverAuthorRelayRoutes({ authors: this.#authors, selectedRelays: this.#relays, key: `${this.#noteSubId}:routes`, subscriptions: this.#subscriptions }).catch(() => undefined);
   }
   async #loadInitialNotes(): Promise<void> {
     const key = [...this.#authors].sort().join(',');

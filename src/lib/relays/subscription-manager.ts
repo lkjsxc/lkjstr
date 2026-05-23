@@ -4,6 +4,11 @@ import type { RelayReadRequest } from '../events/types';
 import { appendAppLog, boundedMessage } from '../log/app-log';
 import { readStatuses, type ReadPageResult } from './read-page-status';
 import {
+  limitedReadRelays,
+  PerRelayReadLimiter,
+  readPageComplete,
+} from './read-limiter';
+import {
   compactRelaySubscriptionId,
   relaySubscriptionIdValid,
 } from './subscription-id';
@@ -19,15 +24,27 @@ export type ReadPageOptions = {
   readonly timeoutMs?: number;
 };
 
+export type RelaySubscriptionManagerOptions = {
+  readonly maxConcurrentReadPagesPerRelay?: number;
+};
+
 export class RelaySubscriptionManager {
   #entries = new Map<string, Entry>();
   #pool: RelayPool;
+  #readLimiter: PerRelayReadLimiter;
   #readSeq = 0;
   #activeReadBaseIds = new Set<string>();
   #usedReadRequestKeys = new Set<string>();
+  #usedReadBaseIds = new Set<string>();
 
-  constructor(pool: RelayPool = sharedRelayPool) {
+  constructor(
+    pool: RelayPool = sharedRelayPool,
+    options: RelaySubscriptionManagerOptions = {},
+  ) {
     this.#pool = pool;
+    this.#readLimiter = new PerRelayReadLimiter(
+      options.maxConcurrentReadPagesPerRelay ?? 1,
+    );
   }
 
   subscribeLive(request: RelayReadRequest, listener: Listener): () => void {
@@ -78,47 +95,58 @@ export class RelaySubscriptionManager {
     const baseSubId = relayFacingSubId(request.key);
     const subId =
       this.#activeReadBaseIds.has(baseSubId) ||
+      this.#usedReadBaseIds.has(baseSubId) ||
       this.#usedReadRequestKeys.has(requestKey)
         ? relayFacingSubId(`${requestKey}:${++this.#readSeq}`)
         : baseSubId;
     this.#activeReadBaseIds.add(baseSubId);
-    const offEvent = this.#pool.onEvent((event) => {
-      if (event.subId === subId) events.push(event);
-    });
+    const releaseReadSlots = await this.#readLimiter.acquire(
+      limitedReadRelays(request.relays),
+    );
+    let offEvent: () => void = () => undefined;
     let offState: () => void = () => undefined;
     let close: () => void = () => undefined;
-    await new Promise<void>((resolve) => {
-      let done = false;
-      const finish = (timeout = false) => {
-        if (done) return;
-        done = true;
-        timedOut = timeout;
-        clearTimeout(timer);
-        offState();
-        resolve();
-      };
-      offState = this.#pool.onState((snapshots) => {
-        lastSnapshots = snapshots;
-        if (pageComplete(snapshots, request.relays, subId)) finish();
+    try {
+      offEvent = this.#pool.onEvent((event) => {
+        if (event.subId === subId) events.push(event);
       });
-      const timer = setTimeout(() => finish(true), options.timeoutMs ?? 5000);
-      close = this.#pool.subscribe(request.relays, subId, request.filters);
-    });
-    offEvent();
-    close();
-    this.#activeReadBaseIds.delete(baseSubId);
-    this.#usedReadRequestKeys.add(requestKey);
-    return {
-      events,
-      statuses: readStatuses({
-        relays: request.relays,
-        subId,
+      await new Promise<void>((resolve) => {
+        let done = false;
+        const timer = setTimeout(() => finish(true), options.timeoutMs ?? 5000);
+        const finish = (timeout = false) => {
+          if (done) return;
+          done = true;
+          timedOut = timeout;
+          clearTimeout(timer);
+          offState();
+          resolve();
+        };
+        offState = this.#pool.onState((snapshots) => {
+          lastSnapshots = snapshots;
+          if (readPageComplete(snapshots, request.relays, subId)) finish();
+        });
+        if (!done)
+          close = this.#pool.subscribe(request.relays, subId, request.filters);
+      });
+      return {
         events,
-        snapshots: lastSnapshots,
-        timedOut,
-        durationMs: Date.now() - startedAt,
-      }),
-    };
+        statuses: readStatuses({
+          relays: request.relays,
+          subId,
+          events,
+          snapshots: lastSnapshots,
+          timedOut,
+          durationMs: Date.now() - startedAt,
+        }),
+      };
+    } finally {
+      offEvent();
+      close();
+      this.#activeReadBaseIds.delete(baseSubId);
+      this.#usedReadRequestKeys.add(requestKey);
+      this.#usedReadBaseIds.add(baseSubId);
+      releaseReadSlots();
+    }
   }
 
   #remove(key: string, listener: Listener): void {
@@ -153,24 +181,6 @@ function logListenerFailure(
     message: boundedMessage(error),
     context: { subId, relay },
   });
-}
-
-function pageComplete(
-  snapshots: readonly RelaySnapshot[],
-  relays: readonly string[],
-  subId: string,
-): boolean {
-  const active = snapshots.filter((item) => relays.includes(item.url));
-  return (
-    active.length > 0 &&
-    active.every(
-      (item) =>
-        item.eoseBySub[subId] ||
-        item.closedBySub[subId] ||
-        item.state === 'closed' ||
-        item.state === 'error',
-    )
-  );
 }
 
 export function subscriptionKey(request: RelayReadRequest): string {

@@ -61,23 +61,24 @@ export async function readRelayFeedGroups(
   request: RelayGroupPageRequest,
 ): Promise<{ items: FeedEvent[]; hasMorePossible: boolean }> {
   const bounds = intervalBounds(request);
-  const pages = await Promise.all(
-    request.groups.flatMap((group, index) => {
-      if (group.relays.length === 0) return [];
-      const filters = positiveFilters(
-        request.filters(group, bounds),
-        request.pageSize,
-      );
-      if (filters.length === 0) return [];
-      return readRelayFeedPage({
+  const pages: FeedEvent[][] = [];
+  for (const [index, group] of request.groups.entries()) {
+    if (group.relays.length === 0) continue;
+    const filters = positiveFilters(
+      request.filters(group, bounds),
+      request.pageSize,
+    );
+    if (filters.length === 0) continue;
+    pages.push(
+      await readRelayFeedPage({
         ...request,
         key: `${request.key}:${index}`,
         relays: group.relays,
         filters,
         pageSize: request.pageSize,
-      });
-    }),
-  );
+      }),
+    );
+  }
   const items = mergeFeedEvents(pages.flat())
     .filter((item) => beforeCursor(item.event, request.before))
     .filter((item) => afterCursor(item.event, request.after))
