@@ -17,7 +17,8 @@ runtime surfaces.
 - Cleanup removes one listener; the relay `CLOSE` is sent only after the last
   listener is gone.
 - One-shot paged reads use the same registration path and close when complete.
-- `readPage(request, options)` returns relay-provenance events.
+- `readPage(request, options)` returns raw relay-provenance receipts. Feed page
+  helpers decide event sorting, duplicate merging, and cursor filtering.
 - Paged reads close on EOSE from all active relays, terminal relay state, or
   timeout.
 - Relay `CLOSED`, EOSE, socket closed, and socket error are terminal for paged

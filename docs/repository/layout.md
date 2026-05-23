@@ -16,7 +16,8 @@ Layout docs map repository paths to ownership.
 
 ## Source
 
-- `src/lib/accounts`: account records, NIP-07 access, and mining.
+- `src/lib/accounts`: account records, local secret handling, NIP-07 access,
+  and mining.
 - `src/lib/cache`: cache status, retention, and compaction.
 - `src/lib/events`: stored event repository, feed windows, and event trees.
 - `src/lib/identity`: display names, avatars, profiles, and npub helpers.
@@ -24,6 +25,7 @@ Layout docs map repository paths to ownership.
 - `src/lib/profile`: profile cache and runtime.
 - `src/lib/protocol`: Nostr events, filters, NIP-19, tags, and verification.
 - `src/lib/relays`: relay storage, relay pool, and subscriptions.
+- `src/lib/search`: search query parsing and relay-backed search helpers.
 - `src/lib/settings`: flat Settings schema, storage, and validation.
 - `src/lib/storage`: browser database and safe storage wrappers.
 - `src/lib/tabs`: tab surfaces and tab-specific UI.

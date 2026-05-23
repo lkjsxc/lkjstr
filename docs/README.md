@@ -18,6 +18,8 @@ here before code is changed.
   cache and relay windows.
 - [architecture/data/local-secret-security.md](architecture/data/local-secret-security.md):
   local secret security boundary.
+- [architecture/data/relay-pages.md](architecture/data/relay-pages.md): relay
+  page ordering and provenance.
 - [architecture/data/shared-storage.md](architecture/data/shared-storage.md):
   shared event storage.
 - [architecture/data/storage.md](architecture/data/storage.md): durable storage.

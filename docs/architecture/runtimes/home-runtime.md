@@ -23,6 +23,8 @@ Home runtime owns active-account follow discovery and followed-note loading.
 - Subscribe to kind `1` notes with explicit authors through the subscription
   manager.
 - Write relay events and relay provenance through the shared repository.
+- Initial, older, and newer relay pages are sorted by `{created_at,id}` and
+  preserve duplicate relay provenance before merging into the feed window.
 - Use enabled read relays from the selected default relay set after
   normalization, dedupe, and stable sorting.
 - Do not fall back to disabled, deleted, or hidden relays.

@@ -18,7 +18,9 @@ Thread tabs show a root event and replies opened from timeline event actions.
 - Thread tabs keep a `240` item window.
 - Older replies load after near-bottom scroll or viewport auto-fill.
 - Historical reply pages use the event tag index, compound `{createdAt,id}`
-  cursors, and local relay boundary filtering.
+  cursors, local relay boundary filtering, and merged relay provenance.
+- When older reply paging prunes newer replies, Thread exposes near-top newer
+  recovery from the current newest cursor.
 - Live relay reads set `since` when the thread runtime starts.
 - Deep reply branches collapse into a continuation row that opens the hidden
   event in a matching Thread tab. Loaded thread chains keep capped indentation.

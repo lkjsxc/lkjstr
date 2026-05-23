@@ -13,7 +13,9 @@ Global runtime owns unauthenticated recent-note loading from readable relays.
 - Load older pages through `loadOlder()` from the bottom cursor.
 - Load newer pages through `loadNewer()` from the top cursor when newer
   resident chunks were pruned.
-- Historical relay pages use compound `{createdAt,id}` cursors and `until`.
+- Historical relay pages use compound `{createdAt,id}` cursors, `until` or
+  `since` boundary widening, local cursor filtering, and provenance-preserving
+  event rows.
 - Stop loading when cached notes exist, relay notes arrive, relays reach EOSE,
   relay subscriptions close, or relays fail.
 - Write relay events and relay provenance through the shared repository.

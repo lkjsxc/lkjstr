@@ -18,7 +18,7 @@ Global shows recent notes and reposts from the selected readable relay set.
 - Older pages load after near-bottom scroll or when the loaded rows are shorter
   than the viewport and `hasOlder` remains true.
 - Historical relay pages use compound `{createdAt,id}` cursors, local boundary
-  filtering, and close after EOSE or timeout.
+  filtering, merged relay provenance, and close after EOSE or timeout.
 - Live relay reads set `since` when the runtime starts.
 - Loading ends when cached items exist, a relay sends notes, any relay reaches
   EOSE, or every contacted relay reaches a terminal failure state.

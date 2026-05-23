@@ -28,6 +28,8 @@ its NIP-02 follows.
   than the viewport and `hasOlder` remains true.
 - Historical relay pages use compound `{createdAt,id}` cursors. Relay `until`
   may over-fetch the boundary second, and results are filtered before merging.
+- Relay results are deterministic event rows. Duplicate events from multiple
+  relays render once with merged relay provenance.
 - Live relay reads set `since` when the runtime starts.
 - Metadata fetches are limited to authors present in loaded items.
 - Deleted or disabled relays are not replaced by hidden public defaults.

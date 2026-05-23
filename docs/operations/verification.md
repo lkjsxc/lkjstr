@@ -32,6 +32,15 @@ docker compose -f docker-compose.yml run --rm cloudflare
 
 Run all four Docker command groups before claiming image-backed verification.
 
+Focused relay paging changes should also run:
+
+```sh
+pnpm check:repo
+pnpm test -- tests/unit/events/relay-page.test.ts
+pnpm test -- tests/unit/profile
+pnpm test -- tests/unit/search tests/unit/thread tests/unit/timeline
+```
+
 ## Gate
 
 Use `pnpm verify` for normal local verification. Use `pnpm cloudflare:dry-run`

@@ -17,6 +17,9 @@ bounded as timelines grow.
 - Newer pages are requested from the top boundary cursor after top pruning.
 - Feed cursors use compound `{ createdAt, id }` ordering so same-second events
   page deterministically.
+- Relay feed pages merge duplicate event ids, preserve all relay provenance,
+  sort by `{created_at,id}`, and apply `before` or `after` cursor filters
+  locally before page slicing.
 - Live relay subscriptions set `since` when the runtime starts so old relay
   history is not replayed into the live window.
 - Historical relay reads are one-shot `REQ` pages with bounded `limit`; they

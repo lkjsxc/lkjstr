@@ -16,5 +16,7 @@ Custom Request lets users run one-shot relay reads from validated JSON.
 - Custom Request opens from New Tab.
 - Requests use selected default read relays unless the JSON supplies `relays`.
 - Relay URLs must pass the shared relay URL normalizer.
+- Results are sorted event rows with duplicate relay provenance merged. They do
+  not render in relay arrival order.
 - Results render through the shared event row surface.
 - Invalid JSON or invalid request shapes stay local and are not sent to relays.

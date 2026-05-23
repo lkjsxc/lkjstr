@@ -14,5 +14,8 @@ Thread runtime owns event root and reply loading.
 - It exposes `loadOlder()` and `loadNewer()`.
 - State exposes `loadingOlder`, `hasOlder`, `loadingNewer`, `hasNewer`,
   `oldestCursor`, and `newestCursor`.
-- Historical reads use the `e` tag index and one-shot relay pages.
+- Historical reads use the `e` tag index and one-shot relay pages sorted by
+  `{created_at,id}` with relay provenance merged across duplicate replies.
+- Older-window pruning sets `hasNewer`; `loadNewer()` restores newer cached or
+  relay replies from the top cursor.
 - It closes subscriptions on tab close.

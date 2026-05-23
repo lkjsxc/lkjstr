@@ -19,6 +19,7 @@ This directory contains Vitest unit tests grouped by source domain.
 - [profile/](profile/): profile store tests.
 - [protocol/](protocol/): protocol kernel tests.
 - [relays/](relays/): relay client and selection tests.
+- [search/](search/): search parsing and result tests.
 - [settings/](settings/): settings store tests.
 - [storage/](storage/): safe storage tests.
 - [thread/](thread/): thread runtime tests.

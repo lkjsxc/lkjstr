@@ -16,6 +16,8 @@ Testing ownership maps behavior to the right test layer.
   compaction.
 - Subscription manager one-shot page reads, EOSE cleanup, timeout cleanup, and
   relay provenance.
+- Relay page helper sorting, duplicate relay provenance, `before` and `after`
+  cursor filtering, and same-second boundaries.
 - Follow-list parsing, dedupe, and self inclusion.
 - Timeline no-active-account, loading-follows, no-follow-list,
   no-enabled-relay, auth-required, subscription-closed, relay-failed,
@@ -34,6 +36,9 @@ Testing ownership maps behavior to the right test layer.
 - Identity hydration mismatch and stale async response guards.
 - Latest-only profile cache writes and timeline metadata hydration.
 - Profile note relay provenance fallback behavior.
+- Profile split initial metadata, follow-list, and note reads; post-only
+  visible pages; older/newer pruning recovery; and live-event deferral while an
+  older window is visible.
 - Notification context safety for malformed records without event ids.
 - Inactive tab retention expiry, setting changes, tab close cleanup, and
   subscription release.

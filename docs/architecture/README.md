@@ -10,6 +10,10 @@ state lives, which modules own subscriptions, and how tabs close cleanly.
 - [data/README.md](data/README.md): repository, cache, and event tree model.
 - [data/event-tree.md](data/event-tree.md): event row tree model.
 - [data/feed-memory.md](data/feed-memory.md): feed windows and scroll anchors.
+- [data/local-secret-security.md](data/local-secret-security.md):
+  passkey-protected local secret storage.
+- [data/relay-pages.md](data/relay-pages.md): relay page ordering and
+  provenance.
 - [data/shared-storage.md](data/shared-storage.md): shared event storage.
 - [data/storage.md](data/storage.md): IndexedDB storage boundaries.
 - [network/README.md](network/README.md): relay, identity, jobs, and settings.

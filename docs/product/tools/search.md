@@ -18,7 +18,7 @@ matches.
   NIP-11 `supported_nips`; relays that ignore `search` do not produce matches.
 - Older search pages use compound `{createdAt,id}` cursors so same-second
   cached events are not skipped.
-- Cached matches and relay matches are merged by real event id and relay
-  provenance.
+- Cached matches and relay matches are sorted by `{created_at,id}` and merged
+  by real event id with all relay provenance preserved.
 - Results render through the shared event row surface.
 - Search does not require an active signing account.
