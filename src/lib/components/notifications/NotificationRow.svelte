@@ -23,22 +23,27 @@
   let props: Props = $props();
   let label = $derived(notificationActionLabel(props.record.kind));
   let time = $derived(new Date(props.record.createdAt * 1000).toLocaleString());
+  let sourceShowsActor = $derived(
+    props.item?.event.pubkey === props.record.actorPubkey,
+  );
 </script>
 
 <article class:unread={!props.record.readAt} class="notification-row">
   {#if !props.record.readAt}<span class="sr-only">Unread</span>{/if}
   <div class="notification-row__body">
     <div class="notification-row__meta">
-      <button
-        type="button"
-        class="identity-button notification-row__actor"
-        onclick={() => props.openProfile?.(props.record.actorPubkey)}
-      >
-        <IdentityChip
-          pubkey={props.record.actorPubkey}
-          profile={props.profile}
-        />
-      </button>
+      {#if !sourceShowsActor}
+        <button
+          type="button"
+          class="identity-button notification-row__actor"
+          onclick={() => props.openProfile?.(props.record.actorPubkey)}
+        >
+          <IdentityChip
+            pubkey={props.record.actorPubkey}
+            profile={props.profile}
+          />
+        </button>
+      {/if}
       <strong>{label}</strong>
       <time datetime={new Date(props.record.createdAt * 1000).toISOString()}>
         {time}
