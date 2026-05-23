@@ -34,6 +34,7 @@ Home runtime owns active-account follow discovery and followed-note loading.
 - Do not subscribe when there is no active account.
 - Stop loading when a page is filled, all scanned windows reach terminal EOSE
   completion, or an incomplete relay window requires conservative `hasOlder`.
+  Missing detailed page status is incomplete for adaptive feed scans.
 - Expose `no-active-account`, `loading-follows`, `no-follow-list`,
   `no-enabled-relay`, `auth-required`, `subscription-closed`, `relay-failed`,
   `ready-empty`, and `ready-with-events`.

@@ -15,7 +15,8 @@ Global runtime owns unauthenticated recent-note loading from readable relays.
   resident chunks were pruned.
 - Initial and historical relay pages use compound `{createdAt,id}` cursors,
   adaptive `since`/`until` windows, local cursor filtering, and
-  provenance-preserving event rows.
+  provenance-preserving event rows. Newer catch-up scans read newest bounded
+  windows first and only EOSE-complete detailed statuses prove exhaustion.
 - Stop loading when cached notes exist, relay notes arrive, relays reach EOSE,
   relay subscriptions close, or relays fail.
 - Write relay events and relay provenance through the shared repository.

@@ -21,6 +21,8 @@ Global shows recent notes and reposts from the selected readable relay set.
   adaptive bounded `since`/`until` windows, local boundary filtering, and
   merged relay provenance. Timeout or non-EOSE relay status does not prove
   exhaustion.
+- Newer catch-up reads scan newest bounded windows first so the newest matching
+  relay events are restored before older catch-up candidates.
 - Live relay reads set `since` when the runtime starts.
 - Loading ends when cached items exist, a relay sends notes, any relay reaches
   EOSE, or every contacted relay reaches a terminal failure state.

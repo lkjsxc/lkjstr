@@ -25,6 +25,10 @@ bounded as timelines grow.
 - Home, Global, and Profile initial or historical relay reads are adaptive
   bounded scans. Each contacted relay must complete a window with EOSE before
   that window can prove there are no matching events there.
+- Scanner windows are applied at relay dispatch even when a caller's filter
+  builder forgets to copy the provided `since` or `until` bounds.
+- Newer relay reads scan from the newest bounded window down toward the current
+  top cursor before local compound cursor filtering slices the page.
 - A timeout, relay closure, auth requirement, socket close, or socket error
   stops older scanning at that window and keeps `hasMore` conservative.
 - Home author chunks share one total page budget. A large follow list must not

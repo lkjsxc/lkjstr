@@ -61,6 +61,8 @@ Profile tabs show identity metadata and authored text notes.
   adaptive bounded windows with `since` and `until`, local relay boundary
   filtering, and merged relay provenance. Sparse complete windows keep scanning
   older; dense or incomplete windows remain non-exhaustive.
+- Scanner-owned bounds are enforced at relay dispatch. A relay-effective limit
+  smaller than the visible page size is dense when it fills.
 - When older scrolling prunes newer notes, Profile shows a load-newer affordance
   above Notes and recovers newer notes from the current newest cursor.
 - Live authored posts received while viewing an older pruned window are stored

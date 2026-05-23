@@ -33,6 +33,9 @@ its NIP-02 follows.
   adaptive bounded windows with both `since` and `until`. Empty complete
   windows continue older; incomplete or dense windows keep `hasOlder`
   conservative.
+- Adaptive feed requests remain bounded even if a route-specific filter omits
+  the provided scan bounds. Missing detailed relay status is treated as
+  incomplete.
 - Relay results are deterministic event rows. Duplicate events from multiple
   relays render once with merged relay provenance.
 - Live relay reads set `since` when the runtime starts.

@@ -33,8 +33,16 @@ preserving where each real event was seen.
   `since`/`until` windows from newest to oldest. Sparse scans continue across
   empty complete windows until a page fills, an incomplete window is reached, or
   the terminal `since: 0` window proves exhaustion.
+- Grouped feed scans own their relay `since` and `until` bounds at dispatch
+  time. A caller filter builder may add tighter bounds, but omitting scan bounds
+  must not produce an unbounded feed request.
+- Newer catch-up scans also start at the newest bounded window and move
+  downward toward the `after` cursor so the newest matching relay events return
+  first.
 - Dense or incomplete windows are non-exhaustive. Relay timeout, closure, auth,
   socket closed, and socket error never prove history exhaustion.
+- Only detailed relay statuses with EOSE and no terminal failure prove a grouped
+  feed scan window complete. Missing detailed status is incomplete.
 - `limit` is always a positive safety cap. A full page, relay-effective limit,
   or duplicate-heavy raw result marks more relay history possible.
 
