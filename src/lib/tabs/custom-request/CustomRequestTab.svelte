@@ -2,7 +2,7 @@
   import EventTreeList from '$lib/components/events/EventTreeList.svelte';
   import { parseCustomRequest } from '$lib/custom-request/parse';
   import { feedPageSize } from '$lib/events/feed-window';
-  import { readRelayPage } from '$lib/events/relay-page';
+  import { readRelayFeedPage } from '$lib/events/relay-page';
   import { upsertEvent } from '$lib/events/repository';
   import type { FeedEvent } from '$lib/events/types';
   import type { ProfileSummary } from '$lib/identity/identity';
@@ -56,7 +56,7 @@
       const relays = request.relays.length
         ? request.relays
         : timelineRelays(props.relaySets);
-      const events = await readRelayPage({
+      const events = await readRelayFeedPage({
         key: request.subId ?? createTimelineSubId(props.tabId, 'custom'),
         relays,
         filters: request.filters,
@@ -64,12 +64,9 @@
         subscriptions,
       });
       await Promise.all(
-        events.map((item) => upsertEvent(item.event, [item.relay])),
+        events.map((item) => upsertEvent(item.event, item.relays)),
       );
-      items = events.map((item) => ({
-        event: item.event,
-        relays: [item.relay],
-      }));
+      items = events;
     } catch (err) {
       error = err instanceof Error ? err.message : 'Request failed.';
       items = [];

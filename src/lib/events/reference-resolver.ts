@@ -1,5 +1,5 @@
 import { lookupEvents, upsertEvent } from './repository';
-import { readRelayPage } from './relay-page';
+import { readRelayFeedPage } from './relay-page';
 import type { FeedEvent } from './types';
 import type { EventReference } from '../protocol';
 import type { RelaySubscriptionManager } from '../relays/subscription-manager';
@@ -47,7 +47,7 @@ export async function resolveReferences(input: {
     const flightKey = cacheKey(missing.join(','), relays);
     const hits =
       inFlight.get(flightKey) ??
-      readRelayPage({
+      readRelayFeedPage({
         key: input.key,
         relays,
         filters: [{ ids: missing }],
@@ -55,12 +55,9 @@ export async function resolveReferences(input: {
         subscriptions: input.subscriptions ?? sharedSubscriptionManager,
       }).then(async (hits) => {
         await Promise.all(
-          hits.map((hit) => upsertEvent(hit.event, [hit.relay])),
+          hits.map((hit) => upsertEvent(hit.event, hit.relays)),
         );
-        return hits.map((hit) => ({
-          event: hit.event,
-          relays: [hit.relay],
-        }));
+        return hits;
       });
     inFlight.set(flightKey, hits);
     try {

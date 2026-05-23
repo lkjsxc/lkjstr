@@ -33,6 +33,9 @@
     eoseRelays: 0,
     loadingOlder: false,
     hasOlder: true,
+    loadingNewer: false,
+    hasNewer: false,
+    newestCursor: undefined,
     oldestCreatedAt: undefined,
     oldestCursor: undefined,
     newerPruned: false,
@@ -104,8 +107,11 @@
       reposts={state.reposts}
       loading={state.loading}
       loadingOlder={state.loadingOlder}
+      loadingNewer={state.loadingNewer}
       hasOlder={state.hasOlder}
+      hasNewer={state.hasNewer}
       onNearEnd={() => runtime?.loadOlder()}
+      onNearStart={() => runtime?.loadNewer()}
       openProfile={props.openProfile}
       openThread={props.openThread}
       openAuthorContext={props.openAuthorContext}

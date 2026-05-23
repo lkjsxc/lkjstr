@@ -1,7 +1,8 @@
 import { feedWindowSize } from '$lib/events/feed-window';
 import { feedDisplayKinds, isFeedDisplayKind } from '$lib/events/feed-kinds';
-import { readRelayPage } from '$lib/events/relay-page';
+import { readRelayFeedPage, readRelayPage } from '$lib/events/relay-page';
 import type { ProfileSummary } from '$lib/identity/identity';
+import { getProfile } from '$lib/identity/profile-cache';
 import type { NostrEvent } from '$lib/protocol';
 import type { FeedEvent } from '$lib/events/types';
 import type { RelaySubscriptionManager } from '$lib/relays/subscription-manager';
@@ -20,25 +21,42 @@ type Request = {
 };
 
 export async function loadInitialProfilePage(request: Request) {
-  const relayEvents = await readRelayPage({
-    key: initialRelaySubscriptionId(request.subId, request.pubkey),
-    relays: request.relays,
-    filters: [
-      { kinds: [0], authors: [request.pubkey], limit: 1 },
-      { kinds: [3], authors: [request.pubkey], limit: 1 },
-      {
-        kinds: feedDisplayKinds,
-        authors: [request.pubkey],
-        limit: request.pageSize,
-      },
-    ],
-    pageSize: request.pageSize + 1,
-    subscriptions: request.subscriptions,
-  });
+  const key = initialRelaySubscriptionId(request.subId, request.pubkey);
+  const [metadata, follows, posts] = await Promise.all([
+    readRelayPage({
+      key: `${key}:meta`,
+      relays: request.relays,
+      filters: [{ kinds: [0], authors: [request.pubkey], limit: 1 }],
+      pageSize: 1,
+      subscriptions: request.subscriptions,
+    }),
+    readRelayPage({
+      key: `${key}:follows`,
+      relays: request.relays,
+      filters: [{ kinds: [3], authors: [request.pubkey], limit: 1 }],
+      pageSize: 1,
+      subscriptions: request.subscriptions,
+    }),
+    readRelayFeedPage({
+      key: `${key}:posts`,
+      relays: request.relays,
+      filters: [
+        {
+          kinds: feedDisplayKinds,
+          authors: [request.pubkey],
+          limit: request.pageSize,
+        },
+      ],
+      pageSize: request.pageSize,
+      subscriptions: request.subscriptions,
+    }),
+  ]);
+  const relayEvents = [...metadata, ...follows];
   const storedProfiles = await Promise.all(
     relayEvents.map((item) => storeProfileEvent(item.event, [item.relay])),
   );
-  const profile = storedProfiles.find((item) => item);
+  const profile =
+    getProfile(request.pubkey) ?? storedProfiles.find((item) => item);
   const followList = latestEvent(
     relayEvents.map((item) => item.event).filter((event) => event.kind === 3),
     request.followList,
@@ -48,14 +66,14 @@ export async function loadInitialProfilePage(request: Request) {
     followList,
     posts: mergePosts(
       request.posts,
-      relayEvents
-        .filter((item) => isFeedDisplayKind(item.event.kind))
-        .map((item) => ({
-          event: item.event,
-          relays: [item.relay],
-        })),
+      posts.filter((item) => isFeedDisplayKind(item.event.kind)),
     ),
-    relays: [...new Set(relayEvents.map((item) => item.relay))],
+    relays: [
+      ...new Set([
+        ...relayEvents.map((item) => item.relay),
+        ...posts.flatMap((item) => item.relays),
+      ]),
+    ],
   };
 }
 

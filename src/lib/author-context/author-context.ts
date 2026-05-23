@@ -1,7 +1,7 @@
 import { feedDisplayKinds } from '$lib/events/feed-kinds';
 import { cursorPoint } from '$lib/events/feed-window';
 import { lookupEvent, queryFeed, upsertEvent } from '$lib/events/repository';
-import { readRelayPage } from '$lib/events/relay-page';
+import { readRelayFeedPage, readRelayPage } from '$lib/events/relay-page';
 import type { FeedEvent } from '$lib/events/types';
 import { compareEventsDesc, type NostrEvent } from '$lib/protocol';
 import type { RelaySubscriptionManager } from '$lib/relays/subscription-manager';
@@ -33,7 +33,7 @@ export async function loadAuthorContext(
       after: cursor,
       limit: 10,
     }),
-    readRelayPage({
+    readRelayFeedPage({
       key: request.subId,
       relays: request.relays,
       filters: [
@@ -55,13 +55,13 @@ export async function loadAuthorContext(
     }),
   ]);
   await Promise.all(
-    relayEvents.map((item) => upsertEvent(item.event, [item.relay])),
+    relayEvents.map((item) => upsertEvent(item.event, item.relays)),
   );
   return merge([
     ...newerCache.items,
     anchor,
     ...olderCache.items,
-    ...relayEvents.map((item) => ({ event: item.event, relays: [item.relay] })),
+    ...relayEvents,
   ]);
 }
 

@@ -10,6 +10,9 @@ export type ThreadState = {
   readonly eoseRelays: number;
   readonly loadingOlder: boolean;
   readonly hasOlder: boolean;
+  readonly loadingNewer: boolean;
+  readonly hasNewer: boolean;
+  readonly newestCursor?: FeedCursorPoint;
   readonly oldestCreatedAt?: number;
   readonly oldestCursor?: FeedCursorPoint;
   readonly newerPruned: boolean;
@@ -25,6 +28,9 @@ export function emptyThreadState(): ThreadState {
     eoseRelays: 0,
     loadingOlder: false,
     hasOlder: true,
+    loadingNewer: false,
+    hasNewer: false,
+    newestCursor: undefined,
     oldestCreatedAt: undefined,
     oldestCursor: undefined,
     newerPruned: false,
@@ -36,6 +42,7 @@ export function emptyThreadState(): ThreadState {
 export function withThreadCursors(state: ThreadState): ThreadState {
   return {
     ...state,
+    newestCursor: cursorPoint(state.items.at(0)),
     oldestCreatedAt: oldestCreatedAt(state.items),
     oldestCursor: cursorPoint(state.items.at(-1)),
   };

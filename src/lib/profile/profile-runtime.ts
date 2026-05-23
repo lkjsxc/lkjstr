@@ -2,11 +2,12 @@ import {
   feedPageSize,
   feedWindowSize,
   cursorPoint,
+  mergeFeedWindow,
   oldestCreatedAt,
 } from '$lib/events/feed-window';
-import type { FeedEvent } from '$lib/events/types';
+import { afterCursor } from '$lib/events/repository-shared';
 import { boundedErrorText } from '$lib/events/runtime-error';
-import { feedDisplayKinds, isFeedDisplayKind } from '$lib/events/feed-kinds';
+import { isFeedDisplayKind } from '$lib/events/feed-kinds';
 import {
   getProfile,
   profileFromMetadataEvent,
@@ -28,8 +29,12 @@ import {
   storeProfileEvent,
 } from './profile-store';
 import { loadInitialProfilePage } from './profile-runtime-initial';
-import { loadOlderProfilePage } from './profile-runtime-paging';
+import {
+  loadNewerProfilePage,
+  loadOlderProfilePage,
+} from './profile-runtime-paging';
 import { emptyProfileState, type ProfileState } from './profile-state';
+import { profileLiveFilters } from './profile-subscription-filters';
 
 export type { ProfileState } from './profile-state';
 
@@ -87,16 +92,11 @@ export class ProfileRuntime {
         {
           key: this.subId,
           relays: this.relays,
-          filters: [
-            { kinds: [0], authors: [this.pubkey], limit: 1 },
-            { kinds: [3], authors: [this.pubkey], limit: 1 },
-            {
-              kinds: feedDisplayKinds,
-              authors: [this.pubkey],
-              since: this.#startedAt,
-              limit: this.#pageSize,
-            },
-          ],
+          filters: profileLiveFilters(
+            this.pubkey,
+            this.#startedAt,
+            this.#pageSize,
+          ),
         },
         (event) => this.#receive(event),
       ),
@@ -104,12 +104,8 @@ export class ProfileRuntime {
     void this.#loadInitialPage();
   }
 
-  close(): void {
-    this.#closed = true;
-    this.#generation++;
-    for (const cleanup of this.#cleanup.splice(0)) cleanup();
-    this.#listeners.clear();
-  }
+  // prettier-ignore
+  close(): void { this.#closed = true; this.#generation++; for (const cleanup of this.#cleanup.splice(0)) cleanup(); this.#listeners.clear(); }
 
   // prettier-ignore
   async loadOlder(): Promise<void> {
@@ -117,9 +113,20 @@ export class ProfileRuntime {
     this.#emit({ ...this.#state, loadingOlder: true });
     try {
       const page = await loadOlderProfilePage({ posts: this.#state.posts, pubkey: this.pubkey, relays: this.relays, subId: this.subId, cursor, pageSize: this.#pageSize, subscriptions: this.#subscriptions });
-      if (!this.#active(generation)) return; this.#emit({ ...this.#state, posts: page.posts, hasOlder: page.hasOlder, newerPruned: this.#state.newerPruned || page.newerPruned });
+      if (!this.#active(generation)) return; this.#emit({ ...this.#state, posts: page.posts, hasOlder: page.hasOlder, hasNewer: this.#state.hasNewer || page.newerPruned, newerPruned: this.#state.newerPruned || page.newerPruned });
     } catch (error) { this.#emit({ ...this.#state, error: boundedErrorText(error) }); }
     finally { if (this.#state.loadingOlder) this.#emit({ ...this.#state, loadingOlder: false }); }
+  }
+
+  // prettier-ignore
+  async loadNewer(): Promise<void> {
+    if (this.#closed || this.#state.loadingNewer || !this.#state.hasNewer) return; const generation = this.#generation; const cursor = this.#state.newestCursor; if (!cursor) return;
+    this.#emit({ ...this.#state, loadingNewer: true });
+    try {
+      const page = await loadNewerProfilePage({ posts: this.#state.posts, pubkey: this.pubkey, relays: this.relays, subId: this.subId, cursor, pageSize: this.#pageSize, subscriptions: this.#subscriptions });
+      if (!this.#active(generation)) return; this.#emit({ ...this.#state, posts: page.posts, hasNewer: page.hasNewer, hasOlder: this.#state.hasOlder || page.olderPruned, newerPruned: page.hasNewer });
+    } catch (error) { this.#emit({ ...this.#state, error: boundedErrorText(error) }); }
+    finally { if (this.#state.loadingNewer) this.#emit({ ...this.#state, loadingNewer: false }); }
   }
 
   async #receive(poolEvent: PoolEvent): Promise<void> {
@@ -159,8 +166,8 @@ export class ProfileRuntime {
 
   // prettier-ignore
   #receivePost(event: NostrEvent, relay: string): void {
-    if (this.#closed) return; const item = { event, relays: [relay] }; const posts = [item, ...this.#state.posts.filter((post) => post.event.id !== event.id)].sort((a, b) => b.event.created_at - a.event.created_at).slice(0, feedWindowSize);
-    this.#emit(this.#withOldest({ ...this.#state, posts, loading: false }));
+    if (this.#closed) return; const item = { event, relays: [relay] }; if (this.#state.newerPruned && afterCursor(event, this.#state.newestCursor)) { this.#emit({ ...this.#state, loading: false, hasNewer: true }); return; }
+    const window = mergeFeedWindow(this.#state.posts, [item], feedWindowSize); this.#emit(this.#withCursors({ ...this.#state, posts: window.items, loading: false, hasOlder: this.#state.hasOlder || window.prunedOlder }));
   }
 
   // prettier-ignore
@@ -174,23 +181,19 @@ export class ProfileRuntime {
 
   #emit(state: ProfileState): void {
     if (this.#closed) return;
-    this.#state = this.#withOldest(state);
+    this.#state = this.#withCursors(state);
     this.#listeners.forEach((listener) => listener(this.#state));
   }
 
-  #active(generation: number): boolean {
-    return !this.#closed && generation === this.#generation;
-  }
+  // prettier-ignore
+  #active(generation: number): boolean { return !this.#closed && generation === this.#generation; }
 
-  #withOldest(state: ProfileState): ProfileState {
+  #withCursors(state: ProfileState): ProfileState {
     return {
       ...state,
+      newestCursor: cursorPoint(state.posts.at(0)),
       oldestCreatedAt: oldestCreatedAt(state.posts),
-      oldestCursor: cursorPoint(lastPost(state.posts)),
+      oldestCursor: cursorPoint(state.posts.at(-1)),
     };
   }
-}
-
-function lastPost(posts: readonly FeedEvent[]) {
-  return posts.at(-1);
 }

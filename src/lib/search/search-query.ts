@@ -1,6 +1,6 @@
 import { feedDisplayKinds } from '$lib/events/feed-kinds';
 import { beforeCursor } from '$lib/events/repository-shared';
-import { boundaryUntil, readRelayPage } from '$lib/events/relay-page';
+import { boundaryUntil, readRelayFeedPage } from '$lib/events/relay-page';
 import { eventsMatching, upsertEvent } from '$lib/events/repository';
 import type { FeedCursorPoint, FeedEvent } from '$lib/events/types';
 import { compareEventsDesc } from '$lib/protocol';
@@ -36,7 +36,7 @@ async function relaySearch(
   request: SearchPageRequest,
   query: string,
 ): Promise<FeedEvent[]> {
-  const relayEvents = await readRelayPage({
+  const relayItems = await readRelayFeedPage({
     key: initialRelaySubscriptionId(
       request.subId,
       `${query}:${request.before?.createdAt ?? 0}:${request.before?.id ?? ''}`,
@@ -55,12 +55,9 @@ async function relaySearch(
     subscriptions: request.subscriptions,
   });
   await Promise.all(
-    relayEvents.map((item) => upsertEvent(item.event, [item.relay])),
+    relayItems.map((item) => upsertEvent(item.event, item.relays)),
   );
-  return relayEvents.map((item) => ({
-    event: item.event,
-    relays: [item.relay],
-  }));
+  return relayItems;
 }
 
 async function cachedSearch(

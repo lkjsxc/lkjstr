@@ -1,7 +1,7 @@
 import { feedWindowSize, mergeFeedWindow } from '../events/feed-window';
 import { feedDisplayKinds } from '../events/feed-kinds';
 import { queryFeed, upsertEvent } from '../events/repository';
-import { boundaryUntil, readRelayPage } from '../events/relay-page';
+import { boundaryUntil, readRelayFeedPage } from '../events/relay-page';
 import type { FeedCursorPoint } from '../events/types';
 import type { RelaySubscriptionManager } from '../relays/subscription-manager';
 import {
@@ -21,7 +21,7 @@ type Request = {
 export async function loadInitialGlobalPage(
   request: Omit<Request, 'items'>,
 ): Promise<TimelineItem[]> {
-  const relayEvents = await readRelayPage({
+  const relayItems = await readRelayFeedPage({
     key: initialRelaySubscriptionId(request.subId),
     relays: request.relays,
     filters: [{ kinds: feedDisplayKinds, limit: request.pageSize }],
@@ -29,12 +29,9 @@ export async function loadInitialGlobalPage(
     subscriptions: request.subscriptions,
   });
   await Promise.all(
-    relayEvents.map((item) => upsertEvent(item.event, [item.relay])),
+    relayItems.map((item) => upsertEvent(item.event, item.relays)),
   );
-  return relayEvents.map((item) => ({
-    event: item.event,
-    relays: [item.relay],
-  }));
+  return relayItems;
 }
 
 export async function loadOlderGlobalPage(
@@ -45,7 +42,7 @@ export async function loadOlderGlobalPage(
     before: request.cursor,
     limit: request.pageSize,
   });
-  const relayEvents = await readRelayPage({
+  const relayItems = await readRelayFeedPage({
     key: olderRelaySubscriptionId(request.subId, request.cursor),
     relays: request.relays,
     filters: [
@@ -60,16 +57,13 @@ export async function loadOlderGlobalPage(
     subscriptions: request.subscriptions,
   });
   await Promise.all(
-    relayEvents.map((item) => upsertEvent(item.event, [item.relay])),
+    relayItems.map((item) => upsertEvent(item.event, item.relays)),
   );
-  const older = [
-    ...page.items,
-    ...relayEvents.map((item) => ({ event: item.event, relays: [item.relay] })),
-  ];
+  const older = [...page.items, ...relayItems];
   const window = mergeFeedWindow(request.items, older, feedWindowSize, true);
   return {
     items: window.items,
-    hasOlder: page.hasMore || relayEvents.length >= request.pageSize,
+    hasOlder: page.hasMore || relayItems.length >= request.pageSize,
     hasNewer: window.prunedNewer,
   };
 }

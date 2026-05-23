@@ -2,7 +2,7 @@
   import { tick, untrack } from 'svelte';
   import type { Account } from '$lib/accounts/account';
   import EventRow from '$lib/components/events/EventRow.svelte';
-  import { isNearEnd } from '$lib/events/feed-window';
+  import { isNearEnd, isNearStart } from '$lib/events/feed-window';
   import type { ProfileSummary } from '$lib/identity/identity';
   import { getProfile } from '$lib/identity/profile-cache';
   import { profileUpdatedEvent } from '$lib/profile/profile-metadata-draft';
@@ -19,6 +19,7 @@
     timelineRelays,
   } from '$lib/timeline/timeline-subscription';
   import ProfileHeader from './ProfileHeader.svelte';
+  import ProfileNewerButton from './ProfileNewerButton.svelte';
 
   type Props = {
     tabId: string;
@@ -91,6 +92,8 @@
 
   function handleScroll(event: Event): void {
     const el = event.currentTarget as HTMLElement;
+    if (isNearStart(el.scrollTop) && state.hasNewer && !state.loadingNewer)
+      void runtime?.loadNewer();
     if (shouldLoadOlder(el.scrollTop, el.clientHeight, el.scrollHeight))
       void runtime?.loadOlder();
   }
@@ -162,6 +165,12 @@
     <p role="alert">{state.error}</p>
   {/if}
   <section class="profile-notes" aria-label="Notes">
+    {#if state.hasNewer}
+      <ProfileNewerButton
+        loading={state.loadingNewer}
+        load={() => runtime?.loadNewer()}
+      />
+    {/if}
     <div class="profile-notes__list">
       {#if state.posts.length > 0}
         {#each state.posts as item (item.event.id)}

@@ -1,9 +1,12 @@
-import { feedWindowSize } from '$lib/events/feed-window';
+import { feedWindowSize, mergeFeedWindow } from '$lib/events/feed-window';
 import { feedDisplayKinds } from '$lib/events/feed-kinds';
 import { queryFeed } from '$lib/events/repository';
-import { boundaryUntil, readRelayPage } from '$lib/events/relay-page';
+import {
+  boundarySince,
+  boundaryUntil,
+  readRelayFeedPage,
+} from '$lib/events/relay-page';
 import type { FeedCursorPoint, FeedEvent } from '$lib/events/types';
-import { compareEventsDesc } from '$lib/protocol';
 import type { RelaySubscriptionManager } from '$lib/relays/subscription-manager';
 import { olderRelaySubscriptionId } from '$lib/relays/subscription-id';
 import { storeProfileEvent } from './profile-store';
@@ -18,6 +21,8 @@ export type ProfileOlderRequest = {
   readonly subscriptions: RelaySubscriptionManager;
 };
 
+export type ProfileNewerRequest = ProfileOlderRequest;
+
 export async function loadOlderProfilePage(request: ProfileOlderRequest) {
   const page = await queryFeed({
     kind: 'profile',
@@ -25,7 +30,7 @@ export async function loadOlderProfilePage(request: ProfileOlderRequest) {
     before: request.cursor,
     limit: request.pageSize,
   });
-  const relayEvents = await readRelayPage({
+  const relayItems = await readRelayFeedPage({
     key: olderRelaySubscriptionId(request.subId, request.cursor),
     relays: request.relays,
     filters: [
@@ -41,38 +46,54 @@ export async function loadOlderProfilePage(request: ProfileOlderRequest) {
     subscriptions: request.subscriptions,
   });
   await Promise.all(
-    relayEvents.map((item) => storeProfileEvent(item.event, [item.relay])),
+    relayItems.map((item) => storeProfileEvent(item.event, item.relays)),
   );
-  const posts = mergePosts(request.posts, [
-    ...page.items,
-    ...relayEvents.map((item) => ({
-      event: item.event,
-      relays: [item.relay],
-    })),
-  ]);
-  const pruned = posts.length > feedWindowSize;
+  const window = mergeFeedWindow(
+    request.posts,
+    [...page.items, ...relayItems],
+    feedWindowSize,
+    true,
+  );
   return {
-    posts: pruned ? posts.slice(-feedWindowSize) : posts,
-    hasOlder: page.hasMore || relayEvents.length >= request.pageSize,
-    newerPruned: pruned,
+    posts: window.items,
+    hasOlder: page.hasMore || relayItems.length >= request.pageSize,
+    newerPruned: window.prunedNewer,
   };
 }
 
-function mergePosts(
-  current: readonly FeedEvent[],
-  incoming: readonly FeedEvent[],
-): FeedEvent[] {
-  const byId = new Map<string, FeedEvent>();
-  for (const item of [...current, ...incoming]) {
-    const existing = byId.get(item.event.id);
-    byId.set(item.event.id, existing ? mergeItem(existing, item) : item);
-  }
-  return [...byId.values()].sort((a, b) => compareEventsDesc(a.event, b.event));
-}
-
-function mergeItem(a: FeedEvent, b: FeedEvent): FeedEvent {
+export async function loadNewerProfilePage(request: ProfileNewerRequest) {
+  const page = await queryFeed({
+    kind: 'profile',
+    authors: [request.pubkey],
+    after: request.cursor,
+    limit: request.pageSize,
+  });
+  const relayItems = await readRelayFeedPage({
+    key: olderRelaySubscriptionId(request.subId, request.cursor),
+    relays: request.relays,
+    filters: [
+      {
+        kinds: feedDisplayKinds,
+        authors: [request.pubkey],
+        since: boundarySince(request.cursor),
+        limit: request.pageSize,
+      },
+    ],
+    after: request.cursor,
+    pageSize: request.pageSize,
+    subscriptions: request.subscriptions,
+  });
+  await Promise.all(
+    relayItems.map((item) => storeProfileEvent(item.event, item.relays)),
+  );
+  const window = mergeFeedWindow(
+    request.posts,
+    [...page.items, ...relayItems],
+    feedWindowSize,
+  );
   return {
-    event: a.event.created_at >= b.event.created_at ? a.event : b.event,
-    relays: [...new Set([...a.relays, ...b.relays])],
+    posts: window.items,
+    hasNewer: page.hasMore || relayItems.length >= request.pageSize,
+    olderPruned: window.prunedOlder,
   };
 }

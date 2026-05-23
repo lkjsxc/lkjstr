@@ -1,6 +1,6 @@
 import { feedWindowSize, mergeFeedWindow } from '../events/feed-window';
 import { queryFeed, upsertEvent } from '../events/repository';
-import { boundaryUntil, readRelayPage } from '../events/relay-page';
+import { boundaryUntil, readRelayFeedPage } from '../events/relay-page';
 import type { FeedCursorPoint } from '../events/types';
 import type { RelaySubscriptionManager } from '../relays/subscription-manager';
 import {
@@ -37,7 +37,7 @@ export type TimelineInitialRequest = {
 export async function loadInitialTimelinePage(
   request: TimelineInitialRequest,
 ): Promise<TimelineItem[]> {
-  const relayEvents = await readRelayPage({
+  const relayItems = await readRelayFeedPage({
     key: initialRelaySubscriptionId(request.subId, [...request.authors].sort()),
     relays: request.relays,
     filters: authorFilters(request.authors, request.pageSize),
@@ -45,12 +45,9 @@ export async function loadInitialTimelinePage(
     subscriptions: request.subscriptions,
   });
   await Promise.all(
-    relayEvents.map((item) => upsertEvent(item.event, [item.relay])),
+    relayItems.map((item) => upsertEvent(item.event, item.relays)),
   );
-  return relayEvents.map((item) => ({
-    event: item.event,
-    relays: [item.relay],
-  }));
+  return relayItems;
 }
 
 export async function loadOlderTimelinePage(
@@ -62,7 +59,7 @@ export async function loadOlderTimelinePage(
     before: request.cursor,
     limit: request.pageSize,
   });
-  const relayEvents = await readRelayPage({
+  const relayItems = await readRelayFeedPage({
     key: olderRelaySubscriptionId(request.subId, request.cursor),
     relays: request.relays,
     filters: authorFilters(request.authors, request.pageSize, {
@@ -73,23 +70,17 @@ export async function loadOlderTimelinePage(
     subscriptions: request.subscriptions,
   });
   await Promise.all(
-    relayEvents.map((item) => upsertEvent(item.event, [item.relay])),
+    relayItems.map((item) => upsertEvent(item.event, item.relays)),
   );
   const window = mergeFeedWindow(
     request.items,
-    [
-      ...page.items,
-      ...relayEvents.map((item) => ({
-        event: item.event,
-        relays: [item.relay],
-      })),
-    ],
+    [...page.items, ...relayItems],
     feedWindowSize,
     true,
   );
   return {
     items: window.items,
-    hasOlder: page.hasMore || relayEvents.length >= request.pageSize,
+    hasOlder: page.hasMore || relayItems.length >= request.pageSize,
     hasNewer: window.prunedNewer,
   };
 }
