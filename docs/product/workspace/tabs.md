@@ -10,6 +10,7 @@ Tabs define the workspace surface area.
 - Tweet
 - Notifications
 - Search
+- Custom Request
 - Global
 - Profile Edit
 - Accounts
@@ -37,6 +38,10 @@ Tabs define the workspace surface area.
   cards, notification previews, and collapsed continuation rows.
 - Thread actions focus a matching Thread tab already present in the same tile;
   otherwise they open a new Thread tab in that tile.
+- Author Context opens from an event row menu and loads the anchor plus nearby
+  authored events in the same tile.
+- Custom Request opens from New Tab, validates JSON relay filters, and renders
+  real relay results with the shared event row surface.
 - Mine npub owns vanity key generation. Accounts can add exported results only
   after explicit user action.
 - Stats is a workspace tab kind named `network-stats`.
@@ -46,7 +51,8 @@ Tabs define the workspace surface area.
 
 ## Movement
 
-- Tabs can be dragged to reorder within a tile.
+- Tabs can be dragged to reorder within a tile with native desktop
+  drag-and-drop or pointer dragging.
 - Tabs can be dragged into another tile, or to a tile edge to split there.
 - Moving a tab activates and focuses it in the target tile.
 - Moving the last tab out of a tile closes the source tile.
@@ -63,5 +69,5 @@ Tabs define the workspace surface area.
 
 ## Removed Surface
 
-There is no retired draft-planning workspace tab. There is no free-form
-profile, thread, or filter JSON input in New Tab.
+There is no retired draft-planning workspace tab. Profile and Thread are opened
+from actions rather than free-form New Tab inputs.

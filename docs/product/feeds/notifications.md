@@ -28,8 +28,9 @@ context first and event content second.
   or reachable notification records.
 - Empty state is explicit when no records exist.
 - Rows use a vertical layout: actor identity, action kind, read state,
-  timestamp, and source event content. Target event and thread root controls are
-  not shown.
+  timestamp, notification context text, and compact shared event previews.
+- Clicking a preview opens or focuses the correct Thread tab. Buttons and links
+  inside the preview keep their local behavior.
 - Reaction and repost rows show the same visible action label style as other
   notification rows and do not use avatar overlay badges.
 - Action labels cover mention, reply, reaction, repost, quote, and

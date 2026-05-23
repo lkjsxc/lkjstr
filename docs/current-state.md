@@ -12,17 +12,17 @@ This document records the current implemented contract for the app.
   data.
 - Clean first launch opens two equal tiles: Welcome on the left and Accounts,
   Relay Settings, Home, Notifications, and Tweet on the right. New Tab opens
-  Home, Tweet, Notifications, Search, Global, Profile Edit, Accounts, Relay
-  Settings, Stats, Settings, Upload Settings, lkjstr Log, Mine npub, and
-  Welcome.
+  Home, Tweet, Notifications, Search, Custom Request, Global, Profile Edit,
+  Accounts, Relay Settings, Stats, Settings, Upload Settings, lkjstr Log, Mine
+  npub, and Welcome.
 - Profile tabs open or focus from identity actions in the same tile.
 - Profile Edit opens or focuses from own-profile actions in the same tile and
   edits only the active signing account.
-- Thread tabs open or focus from event rows, controls, quotes, references, and
-  continuation rows in the same tile. Row action buttons never trigger row
-  navigation.
+- Thread tabs open or focus from event rows, notification previews, controls,
+  quotes, references, and continuation rows in the same tile. Row action
+  buttons never trigger row navigation.
 - Tabs can be reordered within a tile or moved between tiles with native
-  drag-and-drop.
+  desktop drag-and-drop or pointer dragging on mobile.
 - Moving the last tab out of a tile removes that tile.
 - Settings render as one flat key-value list, including cache retention, raw
   string editing, formatted JSON editing, inline JSON import, and raw Tweet
@@ -56,17 +56,21 @@ This document records the current implemented contract for the app.
   current-session app diagnostics as a flat chronological stream.
 - Feed memory is held as resident chunks. The top of a pruned feed loads newer
   chunks, and the bottom or a short viewport loads older chunks.
-- Profile renders a banner, overlapping avatar, display name, handle/NIP-05,
-  about, website, action cluster, and local loaded-post/metadata-relay counts
-  from real metadata, then Notes in one tab scroll flow.
+- Profile renders a banner, avatar overlap, display name, handle/NIP-05,
+  about, safe clickable website, following count from the latest kind `3`,
+  action cluster, and copy menu from real metadata, then Notes in one tab
+  scroll flow.
 - Retained inactive tab bodies stay stacked at the active body size so scroll
   position and layout geometry survive tab switches.
-- Event metadata shows author control and date.
+- Event metadata shows author control and date. Referenced event previews place
+  the referenced author avatar immediately before the author name.
 - Event actions publish NIP-25 hearts, dislikes, Unicode emoji reactions, and
   strict NIP-30 custom emoji reactions with `e`, `p`, `k`, and matching
   `emoji` tags, plus NIP-18 reposts, tagged replies, and NIP-57 zap requests
   where targets expose zap data.
-- Event rows and diagnostic rows wrap long content inside their tile.
+- Event rows and diagnostic rows wrap long content inside their tile. The row
+  menu copies event ids and opens Author Context for nearby posts by the row
+  author.
 - Accounts are managed inline with active, disconnect, and local reveal/copy
   controls. Stored account records normalize to enabled, unsupported signer
   types are ignored, and the UI does not retire accounts by disabling them.
@@ -82,6 +86,9 @@ This document records the current implemented contract for the app.
 - Sensitive content hides bodies, media, custom emoji images, reference
   previews, and nested repost bodies until locally revealed. Reveals persist
   for the current app session across virtualization remounts.
+- Custom Request accepts validated filter objects, filter arrays, request
+  objects with optional `relays`, and `["REQ", subId, ...filters]` messages.
+  It reads selected default relays unless the request supplies relay URLs.
 - Custom emoji tags render with lazy, async-decoded, no-referrer images in
   event text, nested reposts, reaction summaries, profile names, and profile
   about text when they use HTTPS image URLs. lkjstr accepts optional NIP-30

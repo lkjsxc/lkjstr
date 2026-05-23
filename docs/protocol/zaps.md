@@ -18,6 +18,10 @@ Zap docs define the NIP-57 invoice handoff used by event actions.
 - The callback request sends `amount`, `nostr`, and `lnurl` query parameters.
 - The app validates callback invoice responses before rendering invoice
   controls.
+- Zap receipts derive visible amounts from an `amount` tag first, then from
+  parseable zap request JSON in the `description` tag.
+- Zap receipt summaries group receipts by target event and actor for shared row
+  rendering.
 - Each invoice renders one QR code whose payload is the raw BOLT11 invoice.
 - The app may open a `lightning:` URI or copy the raw invoice, but it does not
   store wallet secrets.

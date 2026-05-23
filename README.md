@@ -14,6 +14,8 @@ documentation, verification scripts, static assets, and tests.
 
 - Reads Home, Global, Profile, Thread, and Notifications from the selected
   default relay set.
+- Opens Author Context tabs for nearby posts by one author and Custom Request
+  tabs for validated one-shot relay filters.
 - Publishes Tweet notes, replies, reposts, reactions, and zaps with the active
   signing account.
 - Keeps workspace layout, tabs, accounts, settings, drafts, notifications, and
@@ -26,12 +28,14 @@ documentation, verification scripts, static assets, and tests.
 ## Product Contract
 
 - The app starts on `/` as the workspace, not a landing page.
-- New Tab offers Home, Tweet, Notifications, Search, Global, Profile Edit,
-  Accounts, Relay Settings, Stats, Settings, Upload Settings, lkjstr Log, Mine
-  npub, and Welcome.
+- New Tab offers Home, Tweet, Notifications, Search, Custom Request, Global,
+  Profile Edit, Accounts, Relay Settings, Stats, Settings, Upload Settings,
+  lkjstr Log, Mine npub, and Welcome.
 - Home uses the active account and its latest NIP-02 follow list. Global does
   not require an account. Profile and Thread tabs are opened from identity and
   event actions.
+- Event menus can copy event IDs and open Author Context tabs with nearby real
+  authored events.
 - Tweet publish signs the event, stores it locally, starts relay publishing,
   clears and focuses the composer immediately, and only reports late all-relay
   rejection or publish errors.

@@ -30,7 +30,8 @@ unimplemented behavior.
   custom emoji choices.
 - NIP-36 sensitive content gates.
 - NIP-42 relay auth diagnostics.
-- NIP-57 zap requests and invoice handoff.
+- NIP-57 zap requests, invoice handoff, receipt amount parsing, and event zap
+  summaries.
 - NIP-96 media upload discovery and response parsing.
 - NIP-98 HTTP auth events for media upload.
 
