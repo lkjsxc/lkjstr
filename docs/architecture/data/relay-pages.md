@@ -9,6 +9,8 @@ preserving where each real event was seen.
 
 - `readRelayPage()` is the raw relay primitive. It returns relay receipts from
   the subscription manager and keeps exact relay provenance available to callers.
+- `readRelayFeedGroups()` returns feed items, completeness flags, a safe scan
+  cursor, density state, and conservative `hasMorePossible`.
 - Exact-request feed surfaces use `readRelayFeedPage()` for event rows. Home,
   Profile, and Global initial or historical feeds use adaptive grouped scans.
 - Feed pages sort by descending `{created_at,id}` with lower ids first inside
@@ -41,6 +43,9 @@ preserving where each real event was seen.
   first.
 - Dense or incomplete windows are non-exhaustive. Relay timeout, closure, auth,
   socket closed, and socket error never prove history exhaustion.
+- Dense shard boundaries constrain the next scan cursor. Older scans must not
+  advance below a dense or incomplete boundary newer than the rendered oldest
+  event; newer scans use the symmetric rule above the rendered newest event.
 - Only detailed relay statuses with EOSE and no terminal failure prove a grouped
   feed scan window complete. Missing detailed status is incomplete.
 - `limit` is always a positive safety cap. A full page, relay-effective limit,

@@ -27,6 +27,9 @@ Profile runtime owns metadata and authored-note loading for one pubkey.
 - Runtime keeps a `180` item note window.
 - Runtime exposes `loadOlder()` with an explicit oldest cursor and
   `loadNewer()` with an explicit newest cursor after top pruning.
+- Display cursors remain visible post boundaries. Private scan cursors are used
+  for older and newer relay reads when dense or incomplete relay windows need
+  overlap.
 - State exposes `loadingOlder`, `hasOlder`, `loadingNewer`, `hasNewer`,
   `oldestCursor`, `newestCursor`, and follow-list metadata used for the visible
   following count.
@@ -37,4 +40,6 @@ Profile runtime owns metadata and authored-note loading for one pubkey.
   cursor; live reads set `since` when started.
 - Relay reads use selected read relays as base and fallback plus bounded author
   routes from NIP-65, NIP-02, relay receipts, and observed discovery evidence.
+- Post paging uses selected fallback route groups plus safe scan cursors.
+  Metadata and follow-list reads stay separate from post paging.
 - Closing the tab closes subscriptions.

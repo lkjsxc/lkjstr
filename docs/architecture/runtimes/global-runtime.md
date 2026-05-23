@@ -17,6 +17,10 @@ Global runtime owns unauthenticated recent-note loading from readable relays.
   adaptive `since`/`until` windows, local cursor filtering, and
   provenance-preserving event rows. Newer catch-up scans read newest bounded
   windows first and only EOSE-complete detailed statuses prove exhaustion.
+- Global remains selected-relay based. It uses private safe scan cursors and
+  coverage diagnostics, but it does not add author route expansion.
+- Do not show terminal history state while the selected-relay scan is
+  incomplete.
 - Stop loading when cached notes exist, relay notes arrive, relays reach EOSE,
   relay subscriptions close, or relays fail.
 - Write relay events and relay provenance through the shared repository.

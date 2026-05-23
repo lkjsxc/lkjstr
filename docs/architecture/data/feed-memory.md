@@ -15,6 +15,9 @@ bounded as timelines grow.
   oldest/newest cursors.
 - Older pages are requested from the bottom boundary cursor.
 - Newer pages are requested from the top boundary cursor after top pruning.
+- Rendered cursors describe visible rows only. Relay scan cursors are private
+  runtime cursors and may overlap the visible boundary when relay coverage was
+  dense or incomplete.
 - Feed cursors use compound `{ createdAt, id }` ordering so same-second events
   page deterministically.
 - Relay feed pages merge duplicate event ids, preserve all relay provenance,
@@ -31,8 +34,12 @@ bounded as timelines grow.
   top cursor before local compound cursor filtering slices the page.
 - A timeout, relay closure, auth requirement, socket close, or socket error
   stops older scanning at that window and keeps `hasMore` conservative.
-- Home author chunks share one total page budget. A large follow list must not
-  multiply the request limit by chunk count.
+- Dense or incomplete relay ranges do not advance past unproven boundaries.
+  The next scan overlaps or retries from the safe scan cursor before falling
+  through to older sparse events.
+- Historical Home author filters use per-filter relay budgets so large follow
+  lists do not starve author chunks. Final display slicing remains local and
+  capped by page and window size.
 - Metadata lookup is scoped to authors currently present in loaded items and is
   capped to `30` missing profiles per loaded page.
 - Oversized relay messages above `64 KiB` are rejected before verification,

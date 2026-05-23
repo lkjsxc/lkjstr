@@ -26,8 +26,11 @@ Home runtime owns active-account follow discovery and followed-note loading.
 - Initial, older, and newer relay pages are sorted by `{created_at,id}` and
   preserve duplicate relay provenance before merging into the feed window.
   Initial and historical Home feed reads use adaptive bounded scans; initial
-  reads keep the selected fallback path immediate, while older and live reads
-  may add route evidence.
+  reads use cached route evidence plus selected fallback. Route discovery may
+  trigger one bounded current-window refresh, but selected fallback remains
+  base coverage.
+- `oldestCursor` and `newestCursor` are display boundaries. Private relay scan
+  cursors drive older relay reads when safe relay coverage requires overlap.
 - Use selected read relays as base and fallback, then add bounded author routes
   from NIP-65, NIP-02, relay receipts, and discovery evidence.
 - Do not fall back to disabled, removed, or hidden relays.
@@ -35,6 +38,8 @@ Home runtime owns active-account follow discovery and followed-note loading.
 - Stop loading when a page is filled, all scanned windows reach terminal EOSE
   completion, or an incomplete relay window requires conservative `hasOlder`.
   Missing detailed page status is incomplete for adaptive feed scans.
+- Do not show terminal history state while the most recent relay scan is
+  incomplete.
 - Expose `no-active-account`, `loading-follows`, `no-follow-list`,
   `no-enabled-relay`, `auth-required`, `subscription-closed`, `relay-failed`,
   `ready-empty`, and `ready-with-events`.

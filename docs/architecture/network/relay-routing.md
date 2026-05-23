@@ -27,9 +27,15 @@ relays into Relay Settings or relying on a backend proxy.
 ## Bounds
 
 - Use at most `4` route relays per author.
-- Use at most `12` route groups per operation.
+- Use at most `12` targeted author route groups per operation.
 - Use at most `50` authors in an author-specific group.
-- Use at most `200` authors in a selected fallback filter.
+- Selected fallback groups are mandatory base coverage whenever any selected
+  relays survive normalization and block filtering. They are appended after
+  targeted author groups and are not counted against the targeted group cap.
+- Use at most `200` authors in a selected fallback filter. Large follow lists
+  are chunked into as many selected fallback groups as needed.
+- Discovery groups are appended after selected fallback groups when discovery
+  is requested, and blocked discovery relays are excluded.
 - Home, Profile, and Global historical pages use adaptive bounded windows with
   both `since` and `until`; sparse complete windows continue scanning older.
 - Grouped feed routing cannot widen adaptive scanner windows. Dispatch applies

@@ -15,6 +15,7 @@ Storage docs define browser persistence ownership.
 - `eventRelays`: event relay receipts.
 - `eventTags`: searchable `e`, `p`, `q`, and `a` tag rows.
 - `feedCursors`: feed paging cursors.
+- `feedCoverage`: durable relay/filter/range coverage evidence for feed scans.
 - `jobs`: persisted in-app job records.
 - `cacheMeta`: cache status records.
 - `tabStates`: retained tab state snapshots.
@@ -37,5 +38,6 @@ is documented separately before any passkey secret table is restored.
 ## Cleanup
 
 Event cache cleanup may prune cached events, event relay receipts, event tag
-rows, and feed cursors. It must not prune accounts, settings, relay sets,
-workspace layout, notifications, or Tweet drafts.
+rows, feed cursors, and feed coverage affected by the pruned feed keys. It must
+not prune accounts, settings, relay sets, workspace layout, notifications, or
+Tweet drafts.
