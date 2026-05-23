@@ -4,7 +4,7 @@
   import type { FeedEvent } from '$lib/events/types';
   import type { ProfileSummary } from '$lib/identity/identity';
   import type { NotificationRecord } from '$lib/notifications/notification';
-  import { notificationActionText } from '$lib/notifications/notification-presentation';
+  import { notificationActionLabel } from '$lib/notifications/notification-presentation';
   import type { RelaySet } from '$lib/relays/relay-store';
 
   type Props = {
@@ -14,15 +14,15 @@
     profile?: ProfileSummary;
     profiles?: Record<string, ProfileSummary>;
     relaySets?: readonly RelaySet[];
+    activeAccountPubkey?: string | null;
     openProfile?: (pubkey: string) => void;
     openThread?: (eventId: string) => void;
     openAuthorContext?: (eventId: string, pubkey: string) => void;
   };
 
   let props: Props = $props();
-  let label = $derived(notificationActionText(props.record, props.item?.event));
+  let label = $derived(notificationActionLabel(props.record.kind));
   let time = $derived(new Date(props.record.createdAt * 1000).toLocaleString());
-  let preview = $derived(props.targetItem ?? props.item);
 </script>
 
 <article class:unread={!props.record.readAt} class="notification-row">
@@ -44,16 +44,30 @@
         {time}
       </time>
     </div>
-    {#if preview}
-      <div class="notification-row__preview">
+    {#if props.item}
+      <div class="notification-row__event">
         <EventRow
-          item={preview}
-          profile={props.profiles?.[preview.event.pubkey]}
+          item={props.item}
+          profile={props.profiles?.[props.item.event.pubkey]}
           profiles={props.profiles}
           relaySets={props.relaySets}
-          compact
-          showActions={false}
-          showMore={false}
+          activeAccountPubkey={props.activeAccountPubkey}
+          openProfile={props.openProfile}
+          openThread={props.openThread}
+          openAuthorContext={props.openAuthorContext}
+        />
+      </div>
+    {:else if props.targetItem}
+      <p class="event-content">
+        Notification event unavailable. Showing target context.
+      </p>
+      <div class="notification-row__event">
+        <EventRow
+          item={props.targetItem}
+          profile={props.profiles?.[props.targetItem.event.pubkey]}
+          profiles={props.profiles}
+          relaySets={props.relaySets}
+          activeAccountPubkey={props.activeAccountPubkey}
           openProfile={props.openProfile}
           openThread={props.openThread}
           openAuthorContext={props.openAuthorContext}

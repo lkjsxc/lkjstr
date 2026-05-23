@@ -25,31 +25,49 @@ test('expanded reaction actor rows are left aligned', async ({ page }) => {
   expect(await leftAligned(row)).toBe(true);
 });
 
-test('notification actor and action row is compact and left aligned', async ({
+test('notification actor and action row is left aligned', async ({
   page,
 }) => {
   const account = generateSecretKey();
   const actor = generateSecretKey();
-  const mention = finalizeEvent(
+  const target = finalizeEvent(
+    {
+      created_at: now() - 1,
+      kind: 1,
+      tags: [],
+      content: 'target body',
+    },
+    account,
+  );
+  const reaction = finalizeEvent(
     {
       created_at: now(),
-      kind: 1,
-      tags: [['p', getPublicKey(account)]],
-      content: 'notification mention body',
+      kind: 7,
+      tags: [
+        ['p', getPublicKey(account)],
+        ['e', target.id],
+      ],
+      content: '+',
     },
     actor,
   );
-  await installSyntheticRelay(page, { events: [mention] });
+  await installSyntheticRelay(page, { events: [target, reaction] });
   await page.goto('/');
   await addReadonlyAccount(page, getPublicKey(account));
   await page
     .getByRole('button', { name: 'Notifications', exact: true })
     .click();
-  await expect(page.getByText('mentioned you')).toBeVisible();
+  await expect(page.getByText('reacted to you')).toBeVisible();
+  await expect(page.getByText('reacted with ❤️')).toBeVisible();
+  await expect(page.getByText('liked')).toHaveCount(0);
 
   const meta = page.locator('.notification-row__meta').first();
   await expect(meta).toBeVisible();
   expect(await leftAligned(meta)).toBe(true);
+
+  const eventRow = page.locator('.notification-row__event .event-row').first();
+  await expect(eventRow).toBeVisible();
+  await expect(eventRow).not.toHaveClass(/event-row--compact/u);
 });
 
 function now(): number {
