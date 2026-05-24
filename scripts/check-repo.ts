@@ -2,6 +2,7 @@ import fs from 'node:fs/promises';
 import path from 'node:path';
 import process from 'node:process';
 import { checkComposeGuardrails } from './repo-compose';
+import { isStrictDoc } from './repo-doc-rules';
 import { checkDocs } from './repo-docs';
 import { trackedDirs } from './repo-readmes';
 
@@ -41,7 +42,7 @@ async function checkLines(filesToCheck: string[]) {
     const rel = path.relative(root, file);
     const ext = path.extname(rel);
     const text = await fs.readFile(file, 'utf8');
-    if (isDoc(rel, ext)) {
+    if (isStrictDoc(rel, ext)) {
       checkLimit(rel, text, 300, 'docs');
     }
     if (isSource(rel, ext)) checkLimit(rel, text, 200, 'source');
@@ -90,15 +91,6 @@ function checkLimit(file: string, text: string, limit: number, kind: string) {
       file,
       message: `${kind} file has ${lines} lines over limit ${limit}`,
     });
-}
-
-function isDoc(rel: string, ext: string) {
-  return (
-    rel === 'README.md' ||
-    rel.endsWith(`${path.sep}README.md`) ||
-    rel === 'AGENTS.md' ||
-    (rel.startsWith(`docs${path.sep}`) && ext === '.md')
-  );
 }
 
 function isSource(rel: string, ext: string) {

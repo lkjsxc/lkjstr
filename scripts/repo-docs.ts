@@ -2,6 +2,7 @@ import fs from 'node:fs/promises';
 import path from 'node:path';
 import { execFile } from 'node:child_process';
 import { promisify } from 'node:util';
+import { isStrictDoc, rootDocLinkProblems, tocMentions } from './repo-doc-rules';
 import { trackedDirs } from './repo-readmes';
 
 export type RepoProblem = { file: string; message: string };
@@ -16,7 +17,7 @@ export async function checkDocs(
   const problems: RepoProblem[] = [];
   const docs = files
     .map((file) => path.relative(root, file))
-    .filter((rel) => isDoc(rel, path.extname(rel)));
+    .filter((rel) => isStrictDoc(rel, path.extname(rel)));
   for (const rel of docs) {
     const text = await fs.readFile(path.join(root, rel), 'utf8');
     checkH1First(problems, rel, text);
@@ -27,6 +28,12 @@ export async function checkDocs(
   await checkDocsTopology(problems, root, files, skipDirs);
   await checkIgnoredDocs(problems, root, docs);
   await checkReadmeTocs(problems, root, skipDirs);
+  const tracked = new Set(files.map((file) => path.relative(root, file)));
+  for (const file of ['README.md', 'AGENTS.md']) {
+    if (!tracked.has(file)) continue;
+    const text = await fs.readFile(path.join(root, file), 'utf8');
+    problems.push(...rootDocLinkProblems(file, text));
+  }
   return problems;
 }
 
@@ -67,8 +74,11 @@ async function checkDocsTopology(
     const readme = path.join(relDir, 'README.md');
     if (!docsFiles.has(readme))
       problems.push({ file: relDir, message: 'missing README.md' });
-    const children = (await fs.readdir(dir)).filter(
-      (name) => name !== 'README.md',
+    const children = (await fs.readdir(dir, { withFileTypes: true })).filter(
+      (entry) =>
+        entry.name !== 'README.md' &&
+        ((entry.isFile() && path.extname(entry.name) === '.md') ||
+          entry.isDirectory()),
     );
     if (children.length < 2)
       problems.push({ file: relDir, message: 'needs at least two children' });
@@ -146,10 +156,6 @@ function localChildren(
   return [...children].sort();
 }
 
-function tocMentions(text: string, target: string): boolean {
-  return text.includes(`](${target})`) || text.includes(`\`${target}\``);
-}
-
 async function trackedFiles(root: string): Promise<string[]> {
   const { stdout } = await run('git', ['ls-files', '-z'], { cwd: root }).catch(
     () => ({ stdout: '' }),
@@ -176,15 +182,6 @@ async function gitCheckIgnored(root: string, files: readonly string[]) {
     if (result.code === 1) return [];
     return (result.stdout ?? '').split(/\r?\n/).filter(Boolean);
   }
-}
-
-function isDoc(rel: string, ext: string) {
-  return (
-    rel === 'README.md' ||
-    rel.endsWith(`${path.sep}README.md`) ||
-    rel === 'AGENTS.md' ||
-    (rel.startsWith(`docs${path.sep}`) && ext === '.md')
-  );
 }
 
 async function walkDirs(dir: string, skipDirs: ReadonlySet<string>) {

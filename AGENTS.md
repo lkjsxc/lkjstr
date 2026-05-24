@@ -6,7 +6,8 @@ This file defines repository instructions for automated coding agents.
 
 ## Contract
 
-lkjstr is a docs-first SvelteKit Nostr workspace. Keep
+lkjstr is a docs-first SvelteKit Nostr workspace. Use
+[docs/README.md](docs/README.md) as the docs tree index. Keep
 [docs/current-state.md](docs/current-state.md), the relevant `docs/` contract,
 and implementation aligned in the same change. Keep source files under 200
 lines, docs under 300 lines, avoid release shorthand wording in docs, and use
