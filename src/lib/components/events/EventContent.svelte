@@ -53,12 +53,18 @@
     contentAttachments(props.event).filter((item) => item.type !== 'link'),
   );
 
-  onMount(async () => {
-    const settings = await loadSettings();
-    const setting = settings.find(
-      (item) => item.key === 'content.hideSensitiveEvents',
-    );
-    hideSensitive = setting?.value !== false;
+  onMount(() => {
+    let alive = true;
+    void loadSettings().then((settings) => {
+      if (!alive) return;
+      const setting = settings.find(
+        (item) => item.key === 'content.hideSensitiveEvents',
+      );
+      hideSensitive = setting?.value !== false;
+    });
+    return () => {
+      alive = false;
+    };
   });
 </script>
 

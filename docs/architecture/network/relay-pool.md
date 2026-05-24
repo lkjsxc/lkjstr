@@ -66,12 +66,23 @@ events, publish acknowledgements, and relay snapshots.
   subscription.
 - Publish OK waiters must clear their timeout and remove waiter entries exactly
   once.
+- Duplicate publishes for the same normalized relay and event id share the
+  same waiter promise; they must not send duplicate `EVENT` frames.
+- Each publish waiter settles once from OK, timeout, or pool close. Late OK
+  messages after timeout or close are ignored.
+- Publish timeout and pool-close cleanup clear timers, remove waiter maps, and
+  delete the pending event once no relay waiters remain.
+- Pool close resolves pending publishes with `accepted: false` and `closed`,
+  clears handlers and active runtime maps, clears idle timers, closes clients,
+  and leaves the debug client count at zero.
 - Pending publishes are retried once per new connection generation until their
   existing timeout resolves.
 - A relay pool client is active while it has at least one subscription or
   publish waiter. When active work reaches zero, the pool schedules idle
   eviction, closes the client after the grace period, deletes it from the
   client map, and keeps the latest bounded snapshot for diagnostics.
+- Idle eviction must clear the client from the live map and retain no live
+  socket, queue, waiter, or timer handle for the evicted relay.
 
 ## Browser Diagnostics
 

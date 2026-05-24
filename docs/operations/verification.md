@@ -55,6 +55,7 @@ pnpm check:repo
 pnpm test -- tests/unit/protocol/bytes.test.ts tests/unit/protocol/crypto.test.ts tests/unit/protocol/event.test.ts tests/unit/protocol/nip19.test.ts
 pnpm test -- tests/unit/accounts/local.test.ts tests/unit/accounts/npub-miner.test.ts
 pnpm test -- tests/unit/relays/subscription-manager.test.ts tests/unit/relays/relay-client.test.ts tests/unit/relays/relay-diagnostic-log.test.ts
+pnpm test -- tests/unit/relays/relay-pool-publish.test.ts tests/unit/relays/subscription-manager-dedupe.test.ts tests/unit/relays/relay-client-hardening.test.ts
 pnpm test -- tests/unit/relays/relay-client-queue.test.ts tests/unit/relays/subscription-manager-read-limiter.test.ts
 pnpm test -- tests/unit/timeline/timeline-runtime-close.test.ts tests/unit/timeline/timeline-runtime-route-discovery.test.ts
 pnpm test -- tests/unit/events/relay-page.test.ts tests/unit/events/relay-feed-groups.test.ts tests/unit/search/search-query.test.ts tests/unit/relays/relay-info.test.ts tests/unit/relays/relay-discovery.test.ts
@@ -73,8 +74,27 @@ Functional memory changes should also cover:
 
 ```sh
 pnpm test -- tests/unit/relays/relay-client.test.ts tests/unit/relays/subscription-manager.test.ts tests/unit/relays/subscription-manager-read-limiter.test.ts
+pnpm test -- tests/unit/app/runtime-counters.test.ts tests/unit/accounts/npub-miner.test.ts tests/unit/repo-source-classes.test.ts
 pnpm test -- tests/unit/workspace/tab-retention.test.ts tests/unit/events/repository.test.ts tests/unit/jobs/job-manager.test.ts
-pnpm test:e2e -- tests/e2e/heavy-feed-memory.spec.ts
+pnpm test:e2e -- tests/e2e/heavy-feed-memory.spec.ts tests/e2e/memory-churn.spec.ts --workers=1
+```
+
+Memory churn verification uses signed synthetic Nostr events and the synthetic
+relay helper. App JavaScript heap is the owned assertion; Chromium RSS is
+diagnostic only.
+
+Final release verification for this class of change is:
+
+```sh
+pnpm check:repo
+pnpm verify
+pnpm test:e2e
+pnpm cloudflare:dry-run
+docker compose -f docker-compose.yml config
+docker compose -f docker-compose.yml build app verify e2e cloudflare
+docker compose -f docker-compose.yml run --rm verify
+docker compose -f docker-compose.yml run --rm e2e
+docker compose -f docker-compose.yml run --rm cloudflare
 ```
 
 ## Gate

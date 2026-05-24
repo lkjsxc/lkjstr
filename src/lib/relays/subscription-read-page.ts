@@ -15,11 +15,13 @@ import {
   subscriptionKey,
   type ReadPageOptions,
 } from './subscription-manager';
+import {
+  leaseRelayReadSubId,
+  releaseRelayReadSubId,
+  type RelayReadLeaseState,
+} from './relay-read-leases';
 
-export type ReadPageState = {
-  readSeq: number;
-  activeReadBaseIds: Set<string>;
-};
+export type ReadPageState = RelayReadLeaseState;
 
 export async function executeReadPage(
   pool: RelayPool,
@@ -48,7 +50,7 @@ export async function executeReadPage(
   const startedAt = Date.now();
   const requestKey = subscriptionKey(effective);
   const baseSubId = relayFacingSubId(effective.key);
-  const subId = nextSubId(state, baseSubId, requestKey);
+  const subId = leaseRelayReadSubId(state, baseSubId, requestKey);
   const release = await readLimiter.acquire(limitedReadRelays(relays));
   let offEvent: () => void = () => undefined;
   let offState: () => void = () => undefined;
@@ -115,22 +117,9 @@ export async function executeReadPage(
     finishRead = undefined;
     offEvent();
     closeOnce();
-    state.activeReadBaseIds.delete(baseSubId);
+    releaseRelayReadSubId(state, subId);
     release();
   }
-}
-
-function nextSubId(
-  state: ReadPageState,
-  baseSubId: string,
-  requestKey: string,
-): string {
-  if (!state.activeReadBaseIds.has(baseSubId)) {
-    state.activeReadBaseIds.add(baseSubId);
-    return baseSubId;
-  }
-  state.readSeq += 1;
-  return relayFacingSubId(`${requestKey}:${state.readSeq}`);
 }
 
 function readResult(

@@ -20,10 +20,11 @@
   let popover: HTMLElement;
   let top = $state(0);
   let left = $state(0);
+  let destroyed = false;
 
   async function update(): Promise<void> {
     await tick();
-    if (!anchor || !popover) return;
+    if (destroyed || !anchor || !popover) return;
     const rect = anchor.getBoundingClientRect();
     const box = popover.getBoundingClientRect();
     const next = computeAnchoredPosition({
@@ -51,6 +52,7 @@
     window.addEventListener('resize', update);
     window.addEventListener('scroll', update, true);
     return () => {
+      destroyed = true;
       document.removeEventListener('pointerdown', onPointer, true);
       document.removeEventListener('keydown', onKey);
       window.removeEventListener('resize', update);

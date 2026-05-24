@@ -1,4 +1,4 @@
-import { describe, expect, it, vi } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 import type { NostrFilter } from '../../../src/lib/protocol';
 import { createRelayPool } from '../../../src/lib/relays/relay-pool';
 import {
@@ -7,6 +7,10 @@ import {
 } from '../../../src/lib/relays/subscription-manager';
 
 describe('subscription manager read sharing', () => {
+  afterEach(() => {
+    vi.useRealTimers();
+  });
+
   it('dedupes matching in-flight page reads', async () => {
     const pool = createRelayPool();
     const subscribe = vi.spyOn(pool, 'subscribe').mockReturnValue(vi.fn());
@@ -86,6 +90,73 @@ describe('subscription manager read sharing', () => {
     expect(listener).toHaveBeenCalledWith(
       expect.objectContaining({ subId: logical }),
     );
+  });
+
+  it('aborts shared relay work when a later caller aborts', async () => {
+    vi.useFakeTimers();
+    const pool = createRelayPool();
+    const cleanup = vi.fn();
+    const subscribe = vi.spyOn(pool, 'subscribe').mockReturnValue(cleanup);
+    vi.spyOn(pool, 'onEvent').mockReturnValue(vi.fn());
+    vi.spyOn(pool, 'onState').mockReturnValue(vi.fn());
+    const manager = createRelaySubscriptionManager(pool);
+    const request = {
+      key: 'abort-page',
+      relays: ['relay.example'],
+      filters: [{ kinds: [1] }],
+    };
+    const later = new AbortController();
+
+    const first = manager.readPageDetailed(request, { timeoutMs: 5000 });
+    const second = manager.readPageDetailed(request, {
+      timeoutMs: 5000,
+      signal: later.signal,
+    });
+    for (let index = 0; index < 5 && subscribe.mock.calls.length === 0; index++)
+      await Promise.resolve();
+    later.abort();
+
+    await expect(Promise.all([first, second])).resolves.toEqual([
+      expect.objectContaining({
+        statuses: [expect.objectContaining({ aborted: true })],
+      }),
+      expect.objectContaining({
+        statuses: [expect.objectContaining({ aborted: true })],
+      }),
+    ]);
+    expect(cleanup).toHaveBeenCalledOnce();
+  });
+
+  it('removes every attached abort listener after shared reads settle', async () => {
+    vi.useFakeTimers();
+    const pool = createRelayPool();
+    vi.spyOn(pool, 'subscribe').mockReturnValue(vi.fn());
+    vi.spyOn(pool, 'onEvent').mockReturnValue(vi.fn());
+    vi.spyOn(pool, 'onState').mockReturnValue(vi.fn());
+    const manager = createRelaySubscriptionManager(pool);
+    const firstAbort = new AbortController();
+    const laterAbort = new AbortController();
+    const firstRemove = vi.spyOn(firstAbort.signal, 'removeEventListener');
+    const laterRemove = vi.spyOn(laterAbort.signal, 'removeEventListener');
+    const request = {
+      key: 'listener-page',
+      relays: ['relay.example'],
+      filters: [{ kinds: [1] }],
+    };
+
+    const first = manager.readPageDetailed(request, {
+      timeoutMs: 5,
+      signal: firstAbort.signal,
+    });
+    const second = manager.readPageDetailed(request, {
+      timeoutMs: 5,
+      signal: laterAbort.signal,
+    });
+    await vi.advanceTimersByTimeAsync(5);
+    await Promise.all([first, second]);
+
+    expect(firstRemove).toHaveBeenCalledOnce();
+    expect(laterRemove).toHaveBeenCalledOnce();
   });
 });
 

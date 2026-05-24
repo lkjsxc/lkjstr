@@ -1,6 +1,6 @@
 <script lang="ts">
   import { VList } from 'virtua/svelte';
-  import { tick } from 'svelte';
+  import { onDestroy, tick } from 'svelte';
   import { isNearEnd, isNearStart } from '$lib/events/feed-window';
   import {
     captureVirtualAnchor,
@@ -55,6 +55,7 @@
   >();
   let autoFillPending = false;
   let treeKey = '';
+  let destroyed = false;
   let cachedNodes: FlatEventTreeItem[] = [];
   let nodes = $derived(treeNodes(props.items));
   let rows = $derived<ViewRow[]>(
@@ -65,6 +66,10 @@
         : nodes,
   );
   let previousNodes: FlatEventTreeItem[] = [];
+
+  onDestroy(() => {
+    destroyed = true;
+  });
 
   function handleScroll(offset: number): void {
     const viewport = list?.getViewportSize?.() ?? 0;
@@ -89,19 +94,20 @@
     const anchor = captureVirtualAnchor(previousNodes, eventNodeKey, list);
     previousNodes = nodes;
     pinVisibleEvents(nodes.map((node) => node.event.id));
-    void tick().then(() =>
-      restoreVirtualAnchor(anchor, nodes, eventNodeKey, list),
-    );
+    void tick().then(() => {
+      if (!destroyed) restoreVirtualAnchor(anchor, nodes, eventNodeKey, list);
+    });
   });
 
   async function maybeAutoFill(): Promise<void> {
     if (autoFillPending || props.loadingOlder || !props.hasOlder) return;
     autoFillPending = true;
     await tick();
+    if (destroyed) return;
     const viewport = list?.getViewportSize?.() ?? 0;
     const total = list?.getScrollSize?.() ?? 0;
     if (viewport > 0 && total <= viewport + 16) await props.onNearEnd?.();
-    autoFillPending = false;
+    if (!destroyed) autoFillPending = false;
   }
 
   function treeNodes(items: readonly FeedEvent[]): FlatEventTreeItem[] {

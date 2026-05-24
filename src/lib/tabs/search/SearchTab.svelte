@@ -31,9 +31,13 @@
   let error = $state<string | null>(null);
   let searched = $state(false);
   let requestId = 0;
+  let destroyed = false;
   const subscriptions = createRelaySubscriptionManager();
 
-  onDestroy(() => subscriptions.close());
+  onDestroy(() => {
+    destroyed = true;
+    subscriptions.close();
+  });
 
   $effect(() => {
     const pubkeys = [...new Set(items.map((item) => item.event.pubkey))].filter(
@@ -46,7 +50,7 @@
       timelineRelays(props.relaySets),
       `${props.tabId}:search-profiles`,
     ).then((loaded) => {
-      if (id === requestId) profiles = { ...profiles, ...loaded };
+      if (!destroyed && id === requestId) profiles = { ...profiles, ...loaded };
     });
   });
 
@@ -64,12 +68,14 @@
         subscriptions,
         limit: feedPageSize,
       });
+      if (destroyed) return;
       items = page.items;
       hasOlder = page.hasOlder;
     } catch (err) {
+      if (destroyed) return;
       error = err instanceof Error ? err.message : 'Search failed.';
     } finally {
-      loading = false;
+      if (!destroyed) loading = false;
     }
   }
 
@@ -87,10 +93,11 @@
         limit: feedPageSize,
         before,
       });
+      if (destroyed) return;
       items = merge(items, page.items);
       hasOlder = page.hasOlder;
     } finally {
-      loadingOlder = false;
+      if (!destroyed) loadingOlder = false;
     }
   }
 

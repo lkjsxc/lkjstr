@@ -150,6 +150,25 @@ describe('relay client hardening', () => {
     await vi.advanceTimersByTimeAsync(1000);
     expect(sockets).toHaveLength(2);
   });
+
+  it('makes explicit close final and clears live client state', async () => {
+    const client = createRelayClient('wss://relay.example/');
+    client.subscribe('sub', [{ kinds: [1] }]);
+
+    expect(client.snapshot().stats?.activeSubscriptionIds).toEqual(['sub']);
+    client.close();
+    client.publish(event);
+    client.subscribe('next', [{ kinds: [1] }]);
+    await vi.advanceTimersByTimeAsync(1000);
+
+    expect(client.snapshot()).toMatchObject({
+      state: 'closed',
+      eoseBySub: {},
+      closedBySub: {},
+      stats: { activeSubscriptionIds: [] },
+    });
+    expect(sockets).toHaveLength(1);
+  });
 });
 
 async function relayInfo(url: string, limitation: Record<string, unknown>) {

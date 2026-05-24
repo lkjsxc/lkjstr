@@ -12,6 +12,7 @@ import { relaySubscribeOptions, type RelaySubscribeOptions } from './relay-subsc
 import { normalizedRelayList } from './relay-url-list';
 import { relaySnapshotHistoryMap } from './session-snapshots';
 import type { RelaySnapshot } from './types';
+import { createRelayPublishWaiters } from './relay-publish-waiters';
 
 export type PoolEvent = {
   readonly relay: string;
@@ -25,11 +26,6 @@ export type PublishResult = {
   readonly message?: string;
 };
 
-type PublishWaiter = {
-  readonly resolve: (result: PublishResult) => void;
-  readonly timer: ReturnType<typeof setTimeout>;
-};
-
 export type RelayPool = ReturnType<typeof createRelayPool>;
 
 export function createRelayPool(connectTimeoutMs = 5000, idleGraceMs = 15_000) {
@@ -38,7 +34,7 @@ export function createRelayPool(connectTimeoutMs = 5000, idleGraceMs = 15_000) {
   const health = createRelayPoolHealthRecorder();
   const events = new Set<(event: PoolEvent) => void>();
   const states = new Set<(states: RelaySnapshot[]) => void>();
-  const publishWaiters = new Map<string, Map<string, PublishWaiter>>();
+  const publishWaiters = createRelayPublishWaiters();
   const pendingPublishEvents = new Map<string, NostrEvent>();
   const idle = createRelayPoolIdleTracker({
     clients,
@@ -64,22 +60,16 @@ export function createRelayPool(connectTimeoutMs = 5000, idleGraceMs = 15_000) {
     relay: string,
     result: PublishResult,
   ): void => {
-    const waiters = publishWaiters.get(eventId);
-    const waiter = waiters?.get(relay);
-    if (!waiters || !waiter) return;
-    waiters.delete(relay);
-    clearTimeout(waiter.timer);
-    if (waiters.size === 0) publishWaiters.delete(eventId);
-    if (!publishWaiters.has(eventId)) pendingPublishEvents.delete(eventId);
+    if (!publishWaiters.settle(eventId, relay, result)) return;
+    if (!publishWaiters.eventHasWaiters(eventId))
+      pendingPublishEvents.delete(eventId);
     idle.end(relay);
-    waiter.resolve(result);
   };
   const resendPendingPublishes = (url: string): void => {
     const relayClient = clients.get(url);
     if (!relayClient) return;
-    for (const [eventId, event] of pendingPublishEvents) {
-      if (publishWaiters.get(eventId)?.has(url)) relayClient.publish(event);
-    }
+    for (const event of publishWaiters.pendingEventsForRelay(url))
+      relayClient.publish(event);
   };
   const handleMessage = (relay: string, message: RelayMessage): void => {
     if (message[0] !== 'OK') return;
@@ -109,22 +99,21 @@ export function createRelayPool(connectTimeoutMs = 5000, idleGraceMs = 15_000) {
     url: string,
     event: NostrEvent,
     timeoutMs: number,
-  ): Promise<PublishResult> =>
-    new Promise((resolve) => {
-      const waiters = publishWaiters.get(event.id) ?? new Map();
+  ): Promise<PublishResult> => {
+    const waiter = publishWaiters.begin(event, url, timeoutMs, () => {
+      resolvePublish(event.id, url, {
+        relay: url,
+        accepted: false,
+        message: 'timeout',
+      });
+    });
+    if (waiter.created) {
       idle.begin(url);
-      const timer = setTimeout(() => {
-        resolvePublish(event.id, url, {
-          relay: url,
-          accepted: false,
-          message: 'timeout',
-        });
-      }, timeoutMs);
-      waiters.set(url, { resolve, timer });
-      publishWaiters.set(event.id, waiters);
       pendingPublishEvents.set(event.id, event);
       client(url).publish(event);
-    });
+    }
+    return waiter.promise;
+  };
 
   return {
     // prettier-ignore
@@ -165,14 +154,17 @@ export function createRelayPool(connectTimeoutMs = 5000, idleGraceMs = 15_000) {
     snapshots,
     __debugClientCount: () => idle.clientCount(),
     close: (): void => {
-      for (const waiters of publishWaiters.values()) {
-        for (const waiter of waiters.values()) clearTimeout(waiter.timer);
-      }
-      publishWaiters.clear();
+      publishWaiters.settleAll('closed');
+      pendingPublishEvents.clear();
       idle.clear();
-      for (const relayClient of clients.values()) relayClient.close();
+      for (const relayClient of clients.values()) {
+        snapshotHistory.set(relayClient.snapshot().url, relayClient.snapshot());
+        relayClient.close();
+        snapshotHistory.set(relayClient.snapshot().url, relayClient.snapshot());
+      }
       clients.clear();
-      emitStates();
+      events.clear();
+      states.clear();
     },
   };
 }

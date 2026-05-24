@@ -146,6 +146,36 @@ describe('subscription manager', () => {
 
     expect(subscribe.mock.calls[0]?.[1]).not.toBe(subscribe.mock.calls[1]?.[1]);
   });
+
+  it('releases exact read leases and reuses the base relay id', async () => {
+    const pool = createRelayPool();
+    const cleanup = vi.fn();
+    const subscribe = vi.spyOn(pool, 'subscribe').mockReturnValue(cleanup);
+    vi.spyOn(pool, 'onEvent').mockReturnValue(vi.fn());
+    vi.spyOn(pool, 'onState').mockReturnValue(vi.fn());
+    const manager = createRelaySubscriptionManager(pool);
+    const base = { key: 'same', relays: ['relay.example'] };
+
+    await Promise.all([
+      manager.readPage(
+        { ...base, filters: [{ kinds: [1] }] },
+        { timeoutMs: 1 },
+      ),
+      manager.readPage(
+        { ...base, filters: [{ kinds: [7] }] },
+        { timeoutMs: 1 },
+      ),
+    ]);
+    await manager.readPage(
+      { ...base, filters: [{ kinds: [9735] }] },
+      { timeoutMs: 1 },
+    );
+
+    expect(subscribe.mock.calls[2]?.[1]).toBe(relayFacingSubId('same'));
+    expect(subscribe.mock.calls[2]?.[1].length).toBeLessThanOrEqual(
+      maxRelaySubscriptionIdLength,
+    );
+  });
 });
 
 function validation() {

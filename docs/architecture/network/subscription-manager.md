@@ -25,6 +25,12 @@ runtime surfaces.
   helpers decide event sorting, duplicate merging, and cursor filtering.
 - `readPage(request, { signal })` cancels local relay work when the signal
   aborts and returns collected events with abort status metadata.
+- Deduped one-shot reads attach every caller signal to the shared abort
+  controller. Any caller abort cancels the shared relay work for all attached
+  callers.
+- Shared read abort listeners are removed when the shared promise settles by
+  success, abort, timeout, event cap, relay terminal state, thrown error, or
+  manager close.
 - `readPage` has a default hard cap of `1000` relay events. Callers may pass a
   smaller cap for tighter surfaces.
 - Paged reads close their relay subscription early when the event cap is
@@ -39,7 +45,11 @@ runtime surfaces.
   short and opaque.
 - Runtime listeners receive the logical key again even when the relay sees a
   compact ID.
-- One-shot relay-facing ids are unique while active without retaining an
+- One-shot relay-facing ids are leased exactly as sent to the relay pool and
+  released by that exact id in `finally`.
+- Colliding one-shot reads generate alternate compact ids until no active
+  collision remains, and every generated id stays within 48 characters.
+- One-shot relay-facing ids are unique only while active without retaining an
   unbounded history of old request keys.
 - Paged reads are used for historical `until` pages; live reads are used for
   current subscriptions.

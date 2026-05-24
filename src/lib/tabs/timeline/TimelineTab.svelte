@@ -3,6 +3,7 @@
   import {
     countRuntime,
     setRuntimeCounterActive,
+    type RuntimeCounterKey,
   } from '$lib/app/runtime-counters';
   import EventTreeList from '$lib/components/events/EventTreeList.svelte';
   import { appendAppLog } from '$lib/log/app-log';
@@ -120,8 +121,8 @@
     runtime = undefined;
   }
 
-  function runtimeMetricKey(): string {
-    return `${props.kind ?? 'home'}:${props.tabId}`;
+  function runtimeMetricKey(): RuntimeCounterKey {
+    return props.kind === 'global' ? 'timeline:global' : 'timeline:home';
   }
 
   function runtimeContext(reason: string): Record<string, unknown> {

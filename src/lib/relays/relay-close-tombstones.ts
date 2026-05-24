@@ -25,5 +25,8 @@ export function createRelayCloseTombstones(ttlMs = 10_000, maxSize = 256) {
       prune(now);
       return ids.some((id) => expiresById.has(id));
     },
+    clear: (): void => {
+      expiresById.clear();
+    },
   };
 }

@@ -17,5 +17,8 @@ export function createRelaySendQueue() {
       return out;
     },
     hasPending: (): boolean => messages.length > 0,
+    clear: (): void => {
+      messages = [];
+    },
   };
 }

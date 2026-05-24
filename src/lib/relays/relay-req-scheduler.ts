@@ -49,5 +49,9 @@ export function createRelayReqScheduler() {
       pending = pending.filter((item) => item.id !== id);
       active.delete(id);
     },
+    clear: (): void => {
+      pending = [];
+      active.clear();
+    },
   };
 }

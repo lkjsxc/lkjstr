@@ -68,6 +68,31 @@ describe('npub miner helpers', () => {
       { type: 'error', message: 'Npub mining worker failed.' },
     ]);
   });
+
+  it('ignores late result and error events after cancel', () => {
+    const workers = stubWorkers();
+    const events: unknown[] = [];
+    const miner = createNpubMiner('ab', (event) => events.push(event));
+
+    miner.cancel();
+    workers[0]?.onmessage?.({
+      data: {
+        type: 'result',
+        result: {
+          attempts: 1,
+          rate: 1,
+          elapsedMs: 1,
+          pubkey: 'a'.repeat(64),
+          npub: 'npub1ab',
+          nsec: 'nsec1',
+        },
+      },
+    } as MessageEvent);
+    workers[0]?.onerror?.({} as ErrorEvent);
+
+    expect(events).toEqual([]);
+    expect(workers[0]?.terminated).toBe(true);
+  });
 });
 
 function stubWorkers(): FakeWorker[] {

@@ -1,5 +1,6 @@
 <script lang="ts">
   import { Heart, MessageCircle, Repeat2, Send, Zap } from '@lucide/svelte';
+  import { onDestroy } from 'svelte';
   import type { ProfileSummary } from '$lib/identity/identity';
   import type { CustomEmoji, NostrEvent } from '$lib/protocol';
   import type { RelaySet } from '$lib/relays/relay-store';
@@ -29,9 +30,14 @@
   let busy = $state(false);
   let customEmojis = $state<readonly CustomEmoji[]>([]);
   let emojiLoadRequest = 0;
+  let destroyed = false;
   let emojiSourceKey = $derived(
     `${props.activeAccountPubkey ?? ''}|${timelineRelays(props.relaySets).join('\u0000')}`,
   );
+
+  onDestroy(() => {
+    destroyed = true;
+  });
 
   $effect(() => {
     const key = emojiSourceKey;
@@ -40,7 +46,7 @@
     const pubkey = props.activeAccountPubkey ?? undefined;
     const relays = timelineRelays(props.relaySets);
     void loadAccountEmojiSource({ pubkey, relays }).then((emoji) => {
-      if (request === emojiLoadRequest) customEmojis = emoji;
+      if (!destroyed && request === emojiLoadRequest) customEmojis = emoji;
     });
   });
 
@@ -49,15 +55,17 @@
     status = '';
     try {
       const result = await action();
+      if (destroyed) return;
       status = result.ok ? '' : (result.message ?? 'Action failed.');
       if (result.ok) {
         mode = 'none';
         props.onSuccess?.();
       }
     } catch (error) {
+      if (destroyed) return;
       status = error instanceof Error ? error.message : 'Action failed.';
     } finally {
-      busy = false;
+      if (!destroyed) busy = false;
     }
   }
 

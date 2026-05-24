@@ -27,6 +27,10 @@ export function createRelaySubscriptionAliases() {
       logicalToWire.delete(logicalId);
       if (wire) wireToLogical.delete(wire);
     },
+    clear: (): void => {
+      logicalToWire.clear();
+      wireToLogical.clear();
+    },
   };
 }
 

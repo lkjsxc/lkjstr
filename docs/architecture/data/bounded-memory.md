@@ -18,10 +18,18 @@ state after the user navigates, closes tabs, or leaves reads unfinished.
   read limiter slots.
 - Subscription manager handles close live subscriptions and abort in-flight
   reads from `close()`.
+- Deduped reads remove all attached abort listeners after settlement.
 - Search, Custom Request, and Author Context tabs close their local
   subscription manager when destroyed.
+- Async Svelte continuations check component liveness before mutating local
+  state after tab or row teardown.
 - Publish OK waiters clear timeout timers when an OK arrives or the timeout
   fires.
+- Relay pool close resolves pending publish waiters, clears idle timers, closes
+  clients, drops live handlers, and leaves no live client handles.
+- Relay client final close clears reconnect/connect timers, socket handlers,
+  queues, request scheduler state, aliases, tombstones, subscription maps, and
+  active-id counters.
 - Idle relay pool clients close and leave the client map after a short grace
   period once they have no active subscriptions or publish waiters.
 - Relay snapshots are current-session diagnostic history only, keep the most
@@ -39,6 +47,11 @@ state after the user navigates, closes tabs, or leaves reads unfinished.
 - Workspace snapshots above the fixed local size cap are rejected before JSON
   parsing, and restored closed-tab history is capped.
 - Runtime factories ignore async results and relay events after close.
+- Runtime counters use a static key set such as `timeline:home`,
+  `timeline:global`, `timeline`, and `subscription-manager`; they must not
+  include tab ids or request ids.
+- Runtime counter diagnostics are compact counters only and must not retain raw
+  relay payloads, event arrays, or per-tab histories.
 - Worker handles terminate on result, error, cancellation, and tab destroy.
 - UI timers are cleared when their owning row, menu, header, or tab is
   destroyed.

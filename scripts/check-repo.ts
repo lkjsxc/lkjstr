@@ -5,6 +5,7 @@ import { checkComposeGuardrails } from './repo-compose';
 import { isStrictDoc } from './repo-doc-rules';
 import { checkDocs } from './repo-docs';
 import { trackedDirs } from './repo-readmes';
+import { checkSourceClasses } from './repo-source-classes';
 
 type Problem = { file: string; message: string };
 
@@ -30,6 +31,7 @@ await checkReadmeCoverage();
 await checkForbiddenDependencyText(files);
 problems.push(...(await checkDocs(root, files, skipDirs)));
 problems.push(...(await checkComposeGuardrails(root)));
+problems.push(...(await checkSourceClasses(root, files)));
 
 for (const problem of problems.sort((a, b) => a.file.localeCompare(b.file))) {
   console.error(`${problem.file}: ${problem.message}`);

@@ -11,24 +11,16 @@
     snapshotTweetDraft,
     type TweetAttachment,
   } from '$lib/tweet/draft-store';
-  import {
-    acceptedTweetMedia,
-    uploadTweetFiles,
-  } from '$lib/tweet/media-upload-files';
+  // prettier-ignore
+  import { acceptedTweetMedia, uploadTweetFiles } from '$lib/tweet/media-upload-files';
   import { loadTweetUploadSettings } from '$lib/tweet/settings';
-  import {
-    dedupeCustomEmojiByShortcode,
-    loadAccountEmojiSource,
-  } from '$lib/emoji/source';
+  // prettier-ignore
+  import { dedupeCustomEmojiByShortcode, loadAccountEmojiSource } from '$lib/emoji/source';
   import { settingsChangedEvent } from '$lib/settings/settings-events';
   import { timelineRelays } from '$lib/timeline/timeline-subscription';
   import TweetTabView from './TweetTabView.svelte';
-  import {
-    defaultTweetUploadSettings,
-    tweetPublishContent,
-    tweetPublishTags,
-    upsertCustomEmoji,
-  } from './tweet-tab-helpers';
+  // prettier-ignore
+  import { defaultTweetUploadSettings, tweetPublishContent, tweetPublishTags, upsertCustomEmoji } from './tweet-tab-helpers';
   type Props = {
     tabId: string;
     activeAccount?: Account;
@@ -48,6 +40,7 @@
   let focusNonce = $state(0);
   let emojiLoadRequest = 0;
   let draftTouched = false;
+  let destroyed = false;
   let saveTimer: ReturnType<typeof setTimeout> | undefined;
   let draftId = $derived(`tab:${props.tabId}`);
   let emojiSourceKey = $derived(
@@ -57,18 +50,15 @@
     dedupeCustomEmojiByShortcode([...availableCustomEmojis, ...customEmojis]),
   );
   let hasSigner = $derived(Boolean(props.activeAccount?.capabilities.sign));
-  let canPublish = $derived(
-    !publishing &&
-      !uploading &&
-      hasSigner &&
-      (content.trim().length > 0 || attachments.length > 0),
-  );
+  // prettier-ignore
+  let canPublish = $derived(!publishing && !uploading && hasSigner && (content.trim().length > 0 || attachments.length > 0));
 
   onMount(() => {
     void loadInitialState();
     const reloadSettings = () => void loadUploadSettings();
     window.addEventListener(settingsChangedEvent, reloadSettings);
     return () => {
+      destroyed = true;
       window.removeEventListener(settingsChangedEvent, reloadSettings);
       void flushDraft();
     };
@@ -81,7 +71,8 @@
     const pubkey = props.activeAccount?.pubkey;
     const relays = timelineRelays(props.relaySets);
     void loadAccountEmojiSource({ pubkey, relays }).then((emoji) => {
-      if (request === emojiLoadRequest) availableCustomEmojis = emoji;
+      if (!destroyed && request === emojiLoadRequest)
+        availableCustomEmojis = emoji;
     });
   });
   async function loadInitialState(): Promise<void> {
@@ -89,6 +80,7 @@
       loadTweetDraftWithLegacy(draftId),
       loadTweetUploadSettings(),
     ]);
+    if (destroyed) return;
     if (!draftTouched) {
       content = draft?.content ?? '';
       attachments = [...(draft?.attachments ?? [])];
@@ -100,7 +92,7 @@
   }
 
   // prettier-ignore
-  async function loadUploadSettings(): Promise<void> { uploadSettings = await loadTweetUploadSettings(); }
+  async function loadUploadSettings(): Promise<void> { const settings = await loadTweetUploadSettings(); if (!destroyed) uploadSettings = settings; }
 
   function touchDraft(): void {
     draftTouched = true;
@@ -130,6 +122,7 @@
     publishing = true;
     message = '';
     await flushDraft();
+    if (destroyed) return;
     const result = await publishTweet(
       tweetPublishContent(content, attachments),
       props.relaySets,
@@ -141,6 +134,7 @@
         warningReason,
       }),
     );
+    if (destroyed) return;
     publishing = false;
     if (!result.ok) {
       message = result.message;
@@ -154,9 +148,10 @@
     message = '';
     await Promise.all([clearTweetDraft(draftId), clearTweetDraft('main')]);
     await tick();
+    if (destroyed) return;
     focusNonce += 1;
     // prettier-ignore
-    void result.delivery.then((results) => { if (results.every((item) => !item.accepted)) message = 'All relays rejected the event.'; }).catch((error) => { message = error instanceof Error ? error.message : 'Relay publishing failed.'; });
+    void result.delivery.then((results) => { if (!destroyed && results.every((item) => !item.accepted)) message = 'All relays rejected the event.'; }).catch((error) => { if (!destroyed) message = error instanceof Error ? error.message : 'Relay publishing failed.'; });
   }
 
   async function uploadFiles(files: FileList | File[]): Promise<void> {
@@ -170,14 +165,16 @@
     message = '';
     try {
       const uploaded = await uploadTweetFiles(pending, uploadSettings);
+      if (destroyed) return;
       attachments = [...attachments, ...uploaded];
       snapshot();
       await flushDraft();
       message = `Uploaded ${uploaded.length} media file(s).`;
     } catch (error) {
+      if (destroyed) return;
       message = error instanceof Error ? error.message : 'Media upload failed.';
     } finally {
-      uploading = false;
+      if (!destroyed) uploading = false;
     }
   }
 

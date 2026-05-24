@@ -45,5 +45,18 @@ export function createRelaySessionStatsCounter() {
       if (message[0] === 'OK' && message[2]) okAcceptedCount++;
       if (message[0] === 'OK' && !message[2]) okRejectedCount++;
     },
+    clear: (): void => {
+      activeSubscriptionIds.clear();
+      receivedBytes = 0;
+      sentBytes = 0;
+      eventCount = 0;
+      eoseCount = 0;
+      noticeCount = 0;
+      authCount = 0;
+      closedCount = 0;
+      okAcceptedCount = 0;
+      okRejectedCount = 0;
+      parseErrorCount = 0;
+    },
   };
 }

@@ -28,10 +28,14 @@
   let loading = $state(true);
   let error = $state('');
   let requestId = 0;
+  let destroyed = false;
   const subscriptions = createRelaySubscriptionManager();
 
   onMount(() => void load());
-  onDestroy(() => subscriptions.close());
+  onDestroy(() => {
+    destroyed = true;
+    subscriptions.close();
+  });
 
   $effect(() => {
     const pubkeys = [...new Set(items.map((item) => item.event.pubkey))].filter(
@@ -44,7 +48,7 @@
       timelineRelays(props.relaySets),
       `${props.tabId}:author-context-profiles`,
     ).then((loaded) => {
-      if (id === requestId) profiles = { ...profiles, ...loaded };
+      if (!destroyed && id === requestId) profiles = { ...profiles, ...loaded };
     });
   });
 
@@ -52,17 +56,20 @@
     loading = true;
     error = '';
     try {
-      items = await loadAuthorContext({
+      const loaded = await loadAuthorContext({
         eventId: props.eventId,
         pubkey: props.pubkey,
         relays: timelineRelays(props.relaySets),
         subId: createTimelineSubId(props.tabId, 'author'),
         subscriptions,
       });
+      if (destroyed) return;
+      items = loaded;
     } catch (err) {
+      if (destroyed) return;
       error = err instanceof Error ? err.message : 'Author context failed.';
     } finally {
-      loading = false;
+      if (!destroyed) loading = false;
     }
   }
 </script>

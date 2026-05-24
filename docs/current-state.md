@@ -37,6 +37,13 @@ linked product, protocol, architecture, and operations pages.
   before runtime use.
 - Relay clients, relay pool, subscription manager, and tab runtimes own network
   reads and deterministic cleanup.
+- Relay publish waiters, paged read leases, deduped read abort listeners, relay
+  client final close state, and idle pool eviction are covered by lifecycle
+  cleanup tests.
+- Runtime counters use static aggregate keys only, and `check:repo` rejects
+  first-party source classes outside the Dexie database binding.
+- Search, Custom Request, Author Context, Tweet, event rows, references, event
+  lists, and anchored popovers guard async UI continuations after teardown.
 - Cloudflare Workers Static Assets is a hosting target only; it does not add a
   backend account service, relay proxy, or Cloudflare storage dependency.
 
@@ -48,6 +55,8 @@ linked product, protocol, architecture, and operations pages.
 - Wallet custody is out of scope; zap support opens or copies invoices only.
 - Broad runtime instrumentation is limited to explicit runtime counters and
   persisted job records.
+- RSS remains diagnostic-only for memory verification; app JavaScript heap is
+  the owned browser memory assertion.
 
 ## Canonical Docs
 

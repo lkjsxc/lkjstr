@@ -1,5 +1,5 @@
 export type RuntimeCounterSnapshot = {
-  readonly key: string;
+  readonly key: RuntimeCounterKey;
   readonly created: number;
   readonly closed: number;
   readonly active: number;
@@ -20,6 +20,12 @@ export type RuntimeCounterSnapshot = {
   readonly completedCoverageWindows: number;
   readonly lastUpdatedAt: number;
 };
+
+export type RuntimeCounterKey =
+  | 'subscription-manager'
+  | 'timeline'
+  | 'timeline:global'
+  | 'timeline:home';
 
 type MutableCounter = {
   created: number;
@@ -43,8 +49,15 @@ type MutableCounter = {
   lastUpdatedAt: number;
 };
 
+const runtimeCounterKeys = new Set<RuntimeCounterKey>([
+  'subscription-manager',
+  'timeline',
+  'timeline:global',
+  'timeline:home',
+]);
+
 let enabled = false;
-const counters = new Map<string, MutableCounter>();
+const counters = new Map<RuntimeCounterKey, MutableCounter>();
 
 export function setRuntimeCountersEnabled(value: boolean): void {
   enabled = value;
@@ -57,20 +70,33 @@ export function runtimeCountersEnabled(): boolean {
 
 type CountedRuntimeField = Exclude<keyof MutableCounter, 'lastUpdatedAt'>;
 
-export function countRuntime(key: string, field: CountedRuntimeField): void {
+export function countRuntime(
+  key: RuntimeCounterKey,
+  field: CountedRuntimeField,
+): void {
   if (!enabled) return;
+  assertRuntimeCounterKey(key);
   const counter = counters.get(key) ?? emptyCounter();
   counter[field]++;
   counter.lastUpdatedAt = Date.now();
   counters.set(key, counter);
 }
 
-export function setRuntimeCounterActive(key: string, delta: 1 | -1): void {
+export function setRuntimeCounterActive(
+  key: RuntimeCounterKey,
+  delta: 1 | -1,
+): void {
   if (!enabled) return;
+  assertRuntimeCounterKey(key);
   const counter = counters.get(key) ?? emptyCounter();
   counter.active = Math.max(0, counter.active + delta);
   counter.lastUpdatedAt = Date.now();
   counters.set(key, counter);
+}
+
+function assertRuntimeCounterKey(key: RuntimeCounterKey): void {
+  if (runtimeCounterKeys.has(key)) return;
+  throw new Error(`Unknown runtime counter key: ${key}`);
 }
 
 export function runtimeCounterSnapshots(): RuntimeCounterSnapshot[] {

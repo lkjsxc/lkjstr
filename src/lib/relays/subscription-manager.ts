@@ -14,12 +14,16 @@ import {
   type SubscriptionEntry,
   type SubscriptionListener,
 } from './subscription-manager-events';
+import {
+  createSharedAbortController,
+  type SharedAbortController,
+} from './shared-abort-controller';
 
 type Listener = SubscriptionListener;
 type Entry = SubscriptionEntry;
 type InFlightRead = {
   readonly promise: Promise<ReadPageResult>;
-  readonly abort: () => void;
+  readonly aborts: SharedAbortController;
 };
 
 export type ReadPageOptions = {
@@ -48,7 +52,7 @@ export function createRelaySubscriptionManager(
   );
   const readState: ReadPageState = {
     readSeq: 0,
-    activeReadBaseIds: new Set<string>(),
+    activeRelaySubIds: new Set<string>(),
   };
   const inFlightReads = new Map<string, InFlightRead>();
   let closed = false;
@@ -119,11 +123,12 @@ export function createRelaySubscriptionManager(
       const safeRequest = relaySafeReadRequest(request);
       const dedupeKey = readDedupeKey(safeRequest, options);
       const existing = inFlightReads.get(dedupeKey);
-      if (existing) return existing.promise;
-      const controller = new AbortController();
-      const abort = () => controller.abort();
-      if (options.signal?.aborted) abort();
-      else options.signal?.addEventListener('abort', abort, { once: true });
+      if (existing) {
+        existing.aborts.attachSignal(options.signal);
+        return existing.promise;
+      }
+      const aborts = createSharedAbortController();
+      aborts.attachSignal(options.signal);
       const promise = executeReadPage(
         pool,
         readLimiter,
@@ -131,20 +136,23 @@ export function createRelaySubscriptionManager(
         safeRequest,
         {
           ...options,
-          signal: controller.signal,
+          signal: aborts.signal,
         },
       ).finally(() => {
-        options.signal?.removeEventListener('abort', abort);
+        aborts.detachSignals();
         inFlightReads.delete(dedupeKey);
       });
-      inFlightReads.set(dedupeKey, { promise, abort });
+      inFlightReads.set(dedupeKey, { promise, aborts });
       countRuntime('subscription-manager', 'pageReads');
       return promise;
     },
     close: (): void => {
       if (closed) return;
       closed = true;
-      for (const read of inFlightReads.values()) read.abort();
+      for (const read of inFlightReads.values()) {
+        read.aborts.abort();
+        read.aborts.detachSignals();
+      }
       inFlightReads.clear();
       for (const entry of entries.values()) entry.cleanup();
       entries.clear();

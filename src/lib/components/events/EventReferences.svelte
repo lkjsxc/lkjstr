@@ -23,24 +23,33 @@
   let profiles = $state<Record<string, ProfileSummary>>({});
   let loaded = $state(false);
 
-  onMount(async () => {
-    resolved = await resolveReferences({
-      references: props.references,
-      relays: props.relays ?? [],
-      key: `refs:${props.references.length}:${props.references[0]?.id.slice(0, 12)}`,
-    });
-    const authors = [
-      ...new Set(resolved.flatMap((item) => item.event?.event.pubkey ?? [])),
-    ].filter((pubkey) => !props.profiles?.[pubkey]);
-    profiles = {
-      ...(props.profiles ?? {}),
-      ...(await hydrateProfiles({
+  onMount(() => {
+    let alive = true;
+    void load();
+    return () => {
+      alive = false;
+    };
+
+    async function load(): Promise<void> {
+      const next = await resolveReferences({
+        references: props.references,
+        relays: props.relays ?? [],
+        key: `refs:${props.references.length}:${props.references[0]?.id.slice(0, 12)}`,
+      });
+      if (!alive) return;
+      resolved = next;
+      const authors = [
+        ...new Set(next.flatMap((item) => item.event?.event.pubkey ?? [])),
+      ].filter((pubkey) => !props.profiles?.[pubkey]);
+      const hydrated = await hydrateProfiles({
         pubkeys: authors,
         relays: props.relays ?? [],
         subId: 'event-references',
-      })),
-    };
-    loaded = true;
+      });
+      if (!alive) return;
+      profiles = { ...(props.profiles ?? {}), ...hydrated };
+      loaded = true;
+    }
   });
 </script>
 

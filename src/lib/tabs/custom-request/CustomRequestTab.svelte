@@ -31,9 +31,13 @@
   let error = $state('');
   let ran = $state(false);
   let requestId = 0;
+  let destroyed = false;
   const subscriptions = createRelaySubscriptionManager();
 
-  onDestroy(() => subscriptions.close());
+  onDestroy(() => {
+    destroyed = true;
+    subscriptions.close();
+  });
 
   $effect(() => {
     const pubkeys = [...new Set(items.map((item) => item.event.pubkey))].filter(
@@ -46,7 +50,7 @@
       timelineRelays(props.relaySets),
       `${props.tabId}:custom-profiles`,
     ).then((loaded) => {
-      if (id === requestId) profiles = { ...profiles, ...loaded };
+      if (!destroyed && id === requestId) profiles = { ...profiles, ...loaded };
     });
   });
 
@@ -70,12 +74,14 @@
       await Promise.all(
         events.map((item) => upsertEvent(item.event, item.relays)),
       );
+      if (destroyed) return;
       items = events;
     } catch (err) {
+      if (destroyed) return;
       error = err instanceof Error ? err.message : 'Request failed.';
       items = [];
     } finally {
-      loading = false;
+      if (!destroyed) loading = false;
     }
   }
 </script>
