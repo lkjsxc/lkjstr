@@ -12,6 +12,8 @@ here before code is changed.
 - [architecture/README.md](architecture/README.md): source ownership.
 - [architecture/data/README.md](architecture/data/README.md): storage and feed
   memory.
+- [architecture/data/bounded-memory.md](architecture/data/bounded-memory.md):
+  bounded memory and leak cleanup.
 - [architecture/data/event-tree.md](architecture/data/event-tree.md): event row
   tree model.
 - [architecture/data/feed-memory.md](architecture/data/feed-memory.md): feed
@@ -134,6 +136,8 @@ here before code is changed.
 - [repository/README.md](repository/README.md): layout and workflow rules.
 - [repository/documentation-standards.md](repository/documentation-standards.md):
   documentation standards.
+- [repository/functional-style.md](repository/functional-style.md):
+  source functional style.
 - [repository/layout.md](repository/layout.md): repository layout.
 - [repository/workflow.md](repository/workflow.md): workflow.
 - [research/README.md](research/README.md): background notes.
@@ -154,4 +158,8 @@ here before code is changed.
 - Selected relays are the base and fallback for targeted reads; route evidence
   does not silently import Relay Settings.
 - Partial relay failure must not keep a feed in a loading state.
+- Source runtime modules use factory functions and explicit close handles rather
+  than first-party classes.
+- Long-lived relay, cache, diagnostic, and tab collections must be bounded or
+  deterministically cleaned up.
 - Workspace tabs support native drag-and-drop movement across tiles.

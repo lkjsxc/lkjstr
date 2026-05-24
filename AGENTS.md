@@ -8,7 +8,8 @@ This file defines repository instructions for automated coding agents.
 
 lkjstr is a docs-first SvelteKit Nostr workspace. Keep docs and implementation
 aligned in the same change, keep source files under 200 lines, keep docs under
-300 lines, and avoid release shorthand wording in docs.
+300 lines, avoid release shorthand wording in docs, and use factory functions
+instead of first-party classes in `src/` except for the Dexie database binding.
 
 ## Product Rules
 
@@ -41,6 +42,8 @@ aligned in the same change, keep source files under 200 lines, keep docs under
   protocol data. Suggestions require explicit import and must not overwrite a
   disabled relay record.
 - Docker checks build images and do not mount the source tree.
+- Relay, cache, diagnostic, and tab memory must be bounded or cleaned up through
+  explicit close and destroy paths.
 
 ## Source Map
 

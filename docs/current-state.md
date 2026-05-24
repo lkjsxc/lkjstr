@@ -18,6 +18,8 @@ This document records the current implemented contract for the app.
   ownership, storage, workspace, and network boundaries.
 - [architecture/data/shared-storage.md](architecture/data/shared-storage.md):
   `NostrEvent` cache shape, relay receipts, tag rows, cursors, and jobs.
+- [architecture/data/bounded-memory.md](architecture/data/bounded-memory.md):
+  relay, cache, tab, and runtime memory bounds.
 - [architecture/workspace/tab-runtime.md](architecture/workspace/tab-runtime.md):
   tab lifecycle, retention, and startup recovery.
 - [architecture/network/job-manager.md](architecture/network/job-manager.md):
@@ -45,3 +47,5 @@ This document records the current implemented contract for the app.
   signing secrets still use the raw local secret table.
 - Broad runtime instrumentation is not automatic; only explicitly job-backed
   flows appear in the job tree.
+- Source runtime APIs are migrating to factory handles so subscriptions, timers,
+  and local read resources have explicit cleanup.

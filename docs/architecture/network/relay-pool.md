@@ -13,6 +13,7 @@ events, publish acknowledgements, and relay snapshots.
 - Reject inbound relay frames above `512 KiB` before JSON parsing.
 - Oversized frames are skipped and must not block other relay work.
 - Send `CLOSE` when a subscription cleanup runs.
+- Delete per-subscription `EOSE`, `CLOSED`, and filter state when cleanup runs.
 - Keep snapshots for connection state, connection timing, last message time,
   last event id, last error, validation counters, and EOSE.
 - Keep snapshot counters for bytes, active subscription ids, relay message
@@ -41,11 +42,15 @@ events, publish acknowledgements, and relay snapshots.
 - Relay `CLOSED` marks that subscription terminal for that relay.
 - Relay `CLOSED` policy messages such as missing `kinds` or missing `search`
   are retained as current-session compatibility evidence.
+- Current-session compatibility evidence is bounded and expires; it must not
+  grow with every historical subscription id.
 - Oversized inbound frames are recorded as parse errors with measured byte size
   and configured limit; the frame payload is not stored.
 - Cleanup must close that subscription on every relay after the last listener.
 - Cleanup must not send `CLOSE` after a relay has already sent `CLOSED` for the
   subscription.
+- Publish OK waiters must clear their timeout and remove waiter entries exactly
+  once.
 
 ## Browser Diagnostics
 

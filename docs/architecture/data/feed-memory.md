@@ -90,3 +90,8 @@ or older-page loads from moving the visible row.
 - Runtime counters keep counts and timestamps only. Segment counters include
   split, grown, dense, unresolved, complete coverage, and incomplete coverage
   counts. They do not retain event payloads, relay messages, or row objects.
+- Reference, profile, relay snapshot, relay policy, and diagnostic caches use
+  bounded in-memory maps with time-based pruning where stale entries can affect
+  routing or presentation.
+- Runtime factories drop async results after close and release owned
+  subscriptions, timers, workers, and DOM listeners.

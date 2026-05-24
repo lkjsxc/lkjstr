@@ -58,6 +58,14 @@ pnpm test -- tests/unit/workspace/tab-retention.test.ts tests/unit/settings/sett
 pnpm test:e2e -- tests/e2e/tab-retention.spec.ts tests/e2e/settings-tab.spec.ts tests/e2e/heavy-feed-memory.spec.ts
 ```
 
+Functional memory changes should also cover:
+
+```sh
+pnpm test -- tests/unit/relays/relay-client.test.ts tests/unit/relays/subscription-manager.test.ts tests/unit/relays/subscription-manager-read-limiter.test.ts
+pnpm test -- tests/unit/workspace/tab-retention.test.ts tests/unit/events/repository.test.ts tests/unit/jobs/job-manager.test.ts
+pnpm test:e2e -- tests/e2e/heavy-feed-memory.spec.ts
+```
+
 ## Gate
 
 Use `pnpm verify` for normal local verification. Use `pnpm cloudflare:dry-run`

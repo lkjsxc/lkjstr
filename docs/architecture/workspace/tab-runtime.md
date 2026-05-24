@@ -23,6 +23,7 @@ Stats.
 - Relay Settings owns relay editing.
 - Conversion preserves tab id and tab group.
 - Closing a tab must close any runtime subscription owned by that tab.
+- Closing a tab must abort one-shot reads owned by that tab.
 - Inactive tabs stay mounted while retained. The retention period is configured
   by `tabs.inactiveRetentionSeconds`.
 - Retained tab DOM remains mounted in a stacked pane-body layout with inactive
@@ -48,5 +49,7 @@ Stats.
   uptime, item count, and subscription counters when available.
 - Tab retention records close reasons for expiry, tab removal, retention
   setting changes, and pane destroy so retained runtime teardown is diagnosable.
+- Tab retention handles are factory-created resources with explicit
+  `releaseAll` cleanup.
 - Runtime counters are debug-only. `debug.showRuntimeCounters` defaults to
   `false`; Stats is the only tab that renders them.
