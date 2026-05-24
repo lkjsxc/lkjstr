@@ -89,6 +89,36 @@ describe('workspace tab movement', () => {
     expect(groupForPane(moved, moved.focusedPaneId!).tabIds).toEqual([tabId]);
   });
 
+  it('ignores same-pane edge drops for a last-tab pane', () => {
+    const workspace = createWorkspace();
+    const moved = moveWorkspaceTab(workspace, {
+      sourcePaneId: workspace.focusedPaneId!,
+      targetPaneId: workspace.focusedPaneId!,
+      tabId: workspace.focusedTabId!,
+      targetIndex: 0,
+      edge: 'right',
+    });
+    expect(moved).toBe(workspace);
+  });
+
+  it('clamps center drop target indexes', () => {
+    const workspace = openTab(
+      openTab(createWorkspace(), null, 'settings', 'Settings'),
+      null,
+      'notifications',
+      'Notifications',
+    );
+    const paneId = workspace.focusedPaneId!;
+    const tabId = groupForPane(workspace, paneId).tabIds[0]!;
+    const moved = moveWorkspaceTab(workspace, {
+      sourcePaneId: paneId,
+      targetPaneId: paneId,
+      tabId,
+      targetIndex: 99,
+    });
+    expect(groupForPane(moved, paneId).tabIds.at(-1)).toBe(tabId);
+  });
+
   it('ignores invalid panes and tabs', () => {
     const workspace = createWorkspace();
     expect(

@@ -2,7 +2,12 @@
   import type { Account } from '$lib/accounts/account';
   import AppHeader from '$lib/components/app/AppHeader.svelte';
   import type { RelaySet } from '$lib/relays/relay-store';
+  import { setContext } from 'svelte';
   import type { TabKind } from '$lib/workspace/tab';
+  import {
+    createTabDragState,
+    tabDragStateKey,
+  } from '$lib/workspace/tab-drag-state';
   import type { Workspace } from '$lib/workspace/workspace';
   import SplitNode from './SplitNode.svelte';
 
@@ -47,6 +52,7 @@
   };
 
   let props: Props = $props();
+  setContext(tabDragStateKey, createTabDragState());
 </script>
 
 <main class="workspace-shell">

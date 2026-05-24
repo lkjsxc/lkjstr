@@ -30,8 +30,8 @@ describe('workspace model', () => {
     const workspace = bootstrapWorkspace();
     expect(workspace.layout?.type).toBe('split');
     if (workspace.layout?.type !== 'split') throw new Error('expected split');
-    expect(workspace.layout.direction).toBe('horizontal');
-    expect(workspace.layout.sizes).toEqual([0.5, 0.5]);
+    expect(workspace.layout.direction).toBe('vertical');
+    expect(workspace.layout.sizes).toEqual([0.4, 0.6]);
     const right = workspace.layout.children[1];
     if (right.type !== 'pane') throw new Error('expected right pane');
     const group = workspace.tabGroups[right.tabGroupId];

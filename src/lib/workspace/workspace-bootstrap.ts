@@ -21,12 +21,12 @@ export function bootstrapWorkspace(): Workspace {
     layout: {
       id: 'bootstrap-root-split',
       type: 'split',
-      direction: 'horizontal',
+      direction: 'vertical',
       children: [
         pane(welcomePaneId, welcomeGroupId),
         pane(rightPaneId, rightGroupId),
       ],
-      sizes: [0.5, 0.5],
+      sizes: [0.4, 0.6],
     },
     tabGroups: {
       [welcomeGroupId]: {

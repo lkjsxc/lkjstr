@@ -17,10 +17,35 @@
   let writeRelays = $derived(
     defaultSet?.relays.filter((relay) => relay.enabled && relay.write) ?? [],
   );
+  let setupStatus = $derived(
+    !props.activeAccount
+      ? 'Choose or add a signing identity in Accounts.'
+      : readRelays.length === 0
+        ? 'Enable at least one read relay in Relay Settings.'
+        : 'Core reading and publishing surfaces are ready.',
+  );
+  let coreSurfaces = [
+    ['Accounts', 'Local signing identities and active-account selection.'],
+    ['Relay Settings', 'User-owned read and write relay configuration.'],
+    ['Home', 'Active-account follows and live notes.'],
+    ['Notifications', 'Mentions, reactions, reposts, and zap activity.'],
+    ['Search', 'Cached content matches and relay NIP-50 queries.'],
+    ['Tweet', 'Compose notes, replies, media, and event actions.'],
+    ['lkjstr Log', 'Current-session relay and runtime diagnostics.'],
+  ] as const;
 </script>
 
 <section class="data-tab welcome-tab" aria-label="Welcome">
+  <section class="option-card">
+    <h2>Quick start</h2>
+    <p>{setupStatus}</p>
+  </section>
+
   <dl class="metric-list">
+    <dt>Setup</dt>
+    <dd>
+      {readRelays.length > 0 && props.activeAccount ? 'ready' : 'needs setup'}
+    </dd>
     <dt>Active account</dt>
     <dd>{props.activeAccount?.label ?? 'none'}</dd>
     <dt>Accounts</dt>
@@ -32,11 +57,22 @@
     <dt>Write relays</dt>
     <dd>{writeRelays.length}</dd>
   </dl>
-  {#if !props.activeAccount}
-    <p>Accounts is open on the right so you can choose or add an identity.</p>
-  {:else if readRelays.length === 0}
-    <p>Relay Settings is open on the right so you can enable read relays.</p>
-  {:else}
-    <p>Home, Notifications, Search, and Tweet are ready in the workspace.</p>
-  {/if}
+
+  <section class="option-card">
+    <h2>lkjstr</h2>
+    <p>
+      lkjstr is a browser-first Nostr workspace for reading timelines, composing
+      notes, inspecting relay behavior, managing signing accounts, and following
+      event threads without a server-side account system.
+    </p>
+  </section>
+
+  <section class="option-grid" aria-label="Core surfaces">
+    {#each coreSurfaces as [name, description] (name)}
+      <article class="option-card">
+        <strong>{name}</strong>
+        <span>{description}</span>
+      </article>
+    {/each}
+  </section>
 </section>

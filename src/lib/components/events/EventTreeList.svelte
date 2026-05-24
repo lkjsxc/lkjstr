@@ -23,7 +23,8 @@
   import { pinVisibleEvents } from '$lib/cache/pins';
 
   type TerminalRow = { readonly terminal: true };
-  type ViewRow = FlatEventTreeItem | TerminalRow;
+  type LoadingRow = { readonly loadingOlder: true };
+  type ViewRow = FlatEventTreeItem | TerminalRow | LoadingRow;
 
   type Props = {
     items: readonly FeedEvent[];
@@ -57,9 +58,11 @@
   let cachedNodes: FlatEventTreeItem[] = [];
   let nodes = $derived(treeNodes(props.items));
   let rows = $derived<ViewRow[]>(
-    props.hasOlder === false && nodes.length > 0
-      ? [...nodes, { terminal: true }]
-      : nodes,
+    props.loadingOlder && props.hasOlder
+      ? [...nodes, { loadingOlder: true }]
+      : props.hasOlder === false && nodes.length > 0
+        ? [...nodes, { terminal: true }]
+        : nodes,
   );
   let previousNodes: FlatEventTreeItem[] = [];
 
@@ -114,7 +117,9 @@
   }
 
   function rowKey(row: ViewRow): string {
-    return 'terminal' in row ? 'event-list-terminal' : row.event.id;
+    if ('terminal' in row) return 'event-list-terminal';
+    if ('loadingOlder' in row) return 'event-list-loading-older';
+    return row.event.id;
   }
 </script>
 
@@ -131,6 +136,8 @@
         {#snippet children(node)}
           {#if 'terminal' in node}
             <p class="event-list__status">End of loaded history.</p>
+          {:else if 'loadingOlder' in node}
+            <p class="event-list__status">Loading older events...</p>
           {:else if 'collapsed' in node}
             <button
               type="button"

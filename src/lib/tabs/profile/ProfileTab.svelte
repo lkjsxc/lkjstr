@@ -42,7 +42,6 @@
   let nprofile = $derived(
     safeNprofile(props.pubkey, timelineRelays(props.relaySets)),
   );
-  let followCount = $derived(followingCount(state.followList));
   let runtime: ProfileRuntime | undefined;
   let runtimeKey = $derived(
     `${props.pubkey}|${timelineRelays(props.relaySets).join('\u0000')}`,
@@ -156,7 +155,7 @@
     {npub}
     {nprofile}
     followList={state.followList}
-    followingCount={followCount}
+    followingCount={followingCount(state.followList)}
     openProfileEdit={props.openProfileEdit}
   />
   {#if state.loading}
@@ -190,7 +189,7 @@
           No notes have been received for this profile.
         </p>
       {/if}
-      {#if state.loadingOlder}
+      {#if state.loadingOlder && state.hasOlder}
         <p class="event-list__status">Loading older notes...</p>
       {:else if state.hasOlder === false && state.posts.length > 0}
         <p class="event-list__status">End of loaded history.</p>

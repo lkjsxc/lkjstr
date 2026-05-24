@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { untrack } from 'svelte';
+  import { tick, untrack } from 'svelte';
   import NotificationRow from '$lib/components/notifications/NotificationRow.svelte';
   import { isNearEnd, metadataPageLimit } from '$lib/events/feed-window';
   import type { ProfileSummary } from '$lib/identity/identity';
@@ -52,6 +52,8 @@
     new Map(state.targetItems.map((item) => [item.event.id, item])),
   );
   let relays: string[] = [];
+  let listElement: HTMLElement | undefined;
+  let autoFillPending = false;
   let runtimeKey = $derived(
     `${props.accountPubkey ?? ''}|${timelineRelays(props.relaySets).join('\u0000')}`,
   );
@@ -105,6 +107,10 @@
     );
   });
 
+  $effect(() => {
+    if (!state.loading && state.records.length > 0) void maybeAutoFill();
+  });
+
   function handleScroll(event: Event): void {
     const el = event.currentTarget as HTMLElement;
     if (
@@ -119,12 +125,27 @@
     if (!props.visible || document.visibilityState !== 'visible') return;
     await runtime?.markVisibleRead();
   }
+
+  async function maybeAutoFill(): Promise<void> {
+    if (autoFillPending || state.loadingOlder || !state.hasOlder || !runtime)
+      return;
+    autoFillPending = true;
+    await tick();
+    const el = listElement;
+    if (el && el.clientHeight > 0 && el.scrollHeight <= el.clientHeight + 16)
+      await runtime.loadOlder();
+    autoFillPending = false;
+  }
 </script>
 
 <section class="data-tab" aria-label="Notifications">
   {#if state.loading}<p>Loading notifications...</p>{/if}
   {#if state.error}<p role="alert">{state.error}</p>{/if}
-  <div class="notification-list" onscroll={handleScroll}>
+  <div
+    class="notification-list"
+    bind:this={listElement}
+    onscroll={handleScroll}
+  >
     {#if state.records.length > 0}
       {#each state.records as record (record.id)}
         <NotificationRow
@@ -145,7 +166,7 @@
     {:else if !state.loading}
       <p>No notifications for the active account.</p>
     {/if}
-    {#if state.loadingOlder}
+    {#if state.loadingOlder && state.hasOlder}
       <p class="event-list__status">Loading older notifications...</p>
     {:else if state.hasOlder === false && state.records.length > 0}
       <p class="event-list__status">End of loaded notifications.</p>

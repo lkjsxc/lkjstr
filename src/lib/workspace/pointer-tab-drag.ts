@@ -1,22 +1,42 @@
-import type { TabDropEdge } from './move-tab';
-
-export type PointerDropZone = TabDropEdge | 'center';
+import { tabDropZone, type TabDropZone } from './tab-drop-zone';
 
 export type PointerDragSnapshot = {
   readonly sourcePaneId: string;
   readonly tabId: string;
+  readonly pointerId: number;
   readonly startX: number;
   readonly startY: number;
+  readonly x: number;
+  readonly y: number;
   readonly active: boolean;
+  readonly targetPaneId?: string;
+  readonly targetIndex?: number;
+  readonly zone?: TabDropZone;
+};
+
+export type TabInsertionFrame = {
+  readonly tabId: string;
+  readonly left: number;
+  readonly width: number;
 };
 
 export function startPointerTabDrag(
   sourcePaneId: string,
   tabId: string,
+  pointerId: number,
   startX: number,
   startY: number,
 ): PointerDragSnapshot {
-  return { sourcePaneId, tabId, startX, startY, active: false };
+  return {
+    sourcePaneId,
+    tabId,
+    pointerId,
+    startX,
+    startY,
+    x: startX,
+    y: startY,
+    active: false,
+  };
 }
 
 export function activatePointerDrag(
@@ -25,24 +45,8 @@ export function activatePointerDrag(
   y: number,
   threshold = 6,
 ): PointerDragSnapshot {
-  if (snapshot.active || distance(snapshot, x, y) < threshold) return snapshot;
-  return { ...snapshot, active: true };
-}
-
-export function pointerDropZone(
-  rect: Pick<DOMRect, 'left' | 'top' | 'width' | 'height'>,
-  clientX: number,
-  clientY: number,
-): PointerDropZone {
-  const x = clientX - rect.left;
-  const y = clientY - rect.top;
-  const xLimit = edgeThreshold(rect.width);
-  const yLimit = edgeThreshold(rect.height);
-  if (x <= xLimit) return 'left';
-  if (x >= rect.width - xLimit) return 'right';
-  if (y <= yLimit) return 'top';
-  if (y >= rect.height - yLimit) return 'bottom';
-  return 'center';
+  const active = snapshot.active || distance(snapshot, x, y) >= threshold;
+  return { ...snapshot, x, y, active };
 }
 
 export function pointerPaneAt(
@@ -57,8 +61,80 @@ export function pointerPaneAt(
   );
 }
 
-function edgeThreshold(size: number): number {
-  return Math.min(72, Math.max(32, size * 0.18));
+export function pointerDragTarget(
+  doc: Document,
+  snapshot: PointerDragSnapshot,
+): PointerDragSnapshot {
+  const target = pointerPaneAt(doc, snapshot.x, snapshot.y);
+  const targetPaneId = target?.dataset.paneId;
+  if (!target || !targetPaneId)
+    return {
+      ...snapshot,
+      targetPaneId: undefined,
+      targetIndex: undefined,
+      zone: undefined,
+    };
+  const zoneRect = pointerZoneRect(target) ?? target.getBoundingClientRect();
+  const zone = tabDropZone(zoneRect, snapshot.x, snapshot.y);
+  return {
+    ...snapshot,
+    targetPaneId,
+    targetIndex: pointerInsertionIndex(doc, targetPaneId, snapshot),
+    zone,
+  };
+}
+
+export function tabInsertionIndex(
+  frames: readonly TabInsertionFrame[],
+  clientX: number,
+  draggedTabId?: string,
+): number {
+  const candidates = frames.filter((frame) => frame.tabId !== draggedTabId);
+  const target = candidates.findIndex(
+    (frame) => clientX < frame.left + frame.width / 2,
+  );
+  return target === -1 ? candidates.length : target;
+}
+
+function pointerInsertionIndex(
+  doc: Document,
+  targetPaneId: string,
+  snapshot: PointerDragSnapshot,
+): number {
+  return tabInsertionIndex(
+    tabFrames(doc, targetPaneId),
+    snapshot.x,
+    snapshot.sourcePaneId === targetPaneId ? snapshot.tabId : undefined,
+  );
+}
+
+function tabFrames(doc: Document, targetPaneId: string): TabInsertionFrame[] {
+  return [
+    ...doc.querySelectorAll<HTMLElement>(
+      `[data-pane-id="${cssEscape(targetPaneId)}"] .tab-frame[data-tab-id]`,
+    ),
+  ].map((element) => {
+    const rect = element.getBoundingClientRect();
+    return {
+      tabId: element.dataset.tabId ?? '',
+      left: rect.left,
+      width: rect.width,
+    };
+  });
+}
+
+function pointerZoneRect(target: HTMLElement): DOMRect | undefined {
+  return (
+    target.matches('.pane-drop-layer')
+      ? target
+      : target.querySelector<HTMLElement>('.pane-drop-layer')
+  )?.getBoundingClientRect();
+}
+
+function cssEscape(value: string): string {
+  return 'CSS' in globalThis && typeof CSS.escape === 'function'
+    ? CSS.escape(value)
+    : value.replace(/["\\]/g, '\\$&');
 }
 
 function distance(

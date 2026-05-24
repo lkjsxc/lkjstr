@@ -1,13 +1,20 @@
 <script lang="ts">
   import type { TabGroup } from '$lib/workspace/tab-group';
   import type { WorkspaceTab } from '$lib/workspace/tab';
+  import { readDraggedTab } from '$lib/workspace/tab-drag-payload';
   import {
     activatePointerDrag,
-    pointerDropZone,
-    pointerPaneAt,
+    pointerDragTarget,
     startPointerTabDrag,
     type PointerDragSnapshot,
   } from '$lib/workspace/pointer-tab-drag';
+  import { tabDropEdge } from '$lib/workspace/tab-drop-zone';
+  import { getContext, onDestroy } from 'svelte';
+  import {
+    tabDragStateKey,
+    type TabDragState,
+  } from '$lib/workspace/tab-drag-state';
+  import TabFrame from './TabFrame.svelte';
 
   type Props = {
     group: TabGroup;
@@ -34,27 +41,10 @@
     disabled = false,
     moveTab,
   }: Props = $props();
+  const dragState = getContext<TabDragState | undefined>(tabDragStateKey);
   let pointerDrag = $state<PointerDragSnapshot | undefined>();
   let ghost = $state<{ x: number; y: number; title: string } | undefined>();
-
-  type DraggedTab = { sourcePaneId: string; tabId: string };
-
-  function dragPayload(tabId: string): string {
-    return JSON.stringify({ sourcePaneId: paneId, tabId });
-  }
-
-  function readDraggedTab(event: DragEvent): DraggedTab | undefined {
-    const raw = event.dataTransfer?.getData('application/x-lkjstr-tab');
-    if (!raw) return undefined;
-    try {
-      const value = JSON.parse(raw) as Partial<DraggedTab>;
-      if (typeof value.sourcePaneId !== 'string') return undefined;
-      if (typeof value.tabId !== 'string') return undefined;
-      return { sourcePaneId: value.sourcePaneId, tabId: value.tabId };
-    } catch {
-      return undefined;
-    }
-  }
+  let dragElement: HTMLElement | undefined;
 
   function dropTab(event: DragEvent, targetIndex: number): void {
     event.preventDefault();
@@ -65,17 +55,27 @@
 
   function pointerDown(event: PointerEvent, tab: WorkspaceTab): void {
     if (event.button !== 0) return;
+    dragElement = event.currentTarget as HTMLElement;
+    try {
+      dragElement.setPointerCapture(event.pointerId);
+    } catch {
+      /* synthetic pointer tests may not create a capturable pointer */
+    }
     pointerDrag = startPointerTabDrag(
       paneId,
       tab.id,
+      event.pointerId,
       event.clientX,
       event.clientY,
     );
     ghost = { x: event.clientX, y: event.clientY, title: tab.title };
+    window.addEventListener('pointermove', pointerMove);
+    window.addEventListener('pointerup', pointerUp);
+    window.addEventListener('pointercancel', pointerCancel);
   }
 
   function pointerMove(event: PointerEvent): void {
-    if (!pointerDrag) return;
+    if (!pointerDrag || event.pointerId !== pointerDrag.pointerId) return;
     pointerDrag = activatePointerDrag(
       pointerDrag,
       event.clientX,
@@ -84,36 +84,67 @@
     if (!pointerDrag.active) return;
     event.preventDefault();
     document.body.classList.add('dragging-tab');
+    pointerDrag = pointerDragTarget(document, pointerDrag);
+    dragState?.setTarget(
+      pointerDrag.targetPaneId && pointerDrag.zone
+        ? { paneId: pointerDrag.targetPaneId, zone: pointerDrag.zone }
+        : undefined,
+    );
     ghost = { ...(ghost ?? { title: '' }), x: event.clientX, y: event.clientY };
   }
 
   function pointerUp(event: PointerEvent): void {
-    if (!pointerDrag) return clearPointerDrag();
-    if (!pointerDrag.active) return clearPointerDrag();
-    const targetPane = pointerPaneAt(document, event.clientX, event.clientY);
-    const targetPaneId = targetPane?.dataset.paneId;
-    if (targetPane && targetPaneId) {
-      const zone = pointerDropZone(
-        targetPane.getBoundingClientRect(),
-        event.clientX,
-        event.clientY,
-      );
+    if (!pointerDrag || event.pointerId !== pointerDrag.pointerId) return;
+    pointerDrag = pointerDragTarget(document, {
+      ...pointerDrag,
+      x: event.clientX,
+      y: event.clientY,
+    });
+    if (pointerDrag.active && pointerDrag.targetPaneId && pointerDrag.zone)
       moveTab(
         pointerDrag.sourcePaneId,
-        targetPaneId,
+        pointerDrag.targetPaneId,
         pointerDrag.tabId,
-        group.tabIds.length,
-        zone === 'center' ? undefined : zone,
+        pointerDrag.targetIndex ?? targetCount(pointerDrag.targetPaneId),
+        tabDropEdge(pointerDrag.zone),
       );
-    }
+    clearPointerDrag();
+  }
+
+  function pointerCancel(event: PointerEvent): void {
+    if (!pointerDrag || event.pointerId !== pointerDrag.pointerId) return;
     clearPointerDrag();
   }
 
   function clearPointerDrag(): void {
+    if (pointerDrag) {
+      if (typeof window !== 'undefined') {
+        window.removeEventListener('pointermove', pointerMove);
+        window.removeEventListener('pointerup', pointerUp);
+        window.removeEventListener('pointercancel', pointerCancel);
+      }
+      if (dragElement?.hasPointerCapture(pointerDrag.pointerId))
+        dragElement.releasePointerCapture(pointerDrag.pointerId);
+    }
     pointerDrag = undefined;
     ghost = undefined;
-    document.body.classList.remove('dragging-tab');
+    dragElement = undefined;
+    dragState?.setTarget(undefined);
+    if (typeof document !== 'undefined')
+      document.body.classList.remove('dragging-tab');
   }
+
+  function targetCount(targetPaneId: string): number {
+    return targetPaneId === paneId
+      ? group.tabIds.length
+      : Number(
+          document
+            .querySelector(`[data-pane-id="${targetPaneId}"]`)
+            ?.getAttribute('data-tab-count') ?? 0,
+        );
+  }
+
+  onDestroy(clearPointerDrag);
 </script>
 
 <div
@@ -126,54 +157,17 @@
   {#each group.tabIds as tabId (tabId)}
     {@const tab = tabs[tabId]}
     {#if tab}
-      <div
-        role="tab"
-        aria-label={tab.title}
-        tabindex="-1"
-        class:active={group.activeTabId === tab.id}
-        class="tab-frame"
-        draggable="true"
-        ondragstart={(event) => {
-          document.body.classList.add('dragging-tab');
-          event.dataTransfer?.setData(
-            'application/x-lkjstr-tab',
-            dragPayload(tab.id),
-          );
-          event.dataTransfer?.setData('text/plain', tab.title);
-          if (event.dataTransfer) event.dataTransfer.effectAllowed = 'move';
-        }}
-        ondragend={() => document.body.classList.remove('dragging-tab')}
-        onpointerdown={(event) => pointerDown(event, tab)}
-        onpointermove={pointerMove}
-        onpointerup={pointerUp}
-        onpointercancel={clearPointerDrag}
-        ondragover={(event) => event.preventDefault()}
-        ondrop={(event) => {
-          event.stopPropagation();
-          dropTab(event, group.tabIds.indexOf(tab.id));
-        }}
-      >
-        <button
-          type="button"
-          class="tab-main"
-          {disabled}
-          onclick={() => focusTab(tab.id)}
-        >
-          <span>{tab.title}</span>
-        </button>
-        <button
-          type="button"
-          class="tab-close"
-          aria-label={`Close ${tab.title}`}
-          {disabled}
-          onclick={(event) => {
-            event.stopPropagation();
-            closeTab(tab.id);
-          }}
-        >
-          x
-        </button>
-      </div>
+      <TabFrame
+        {tab}
+        {paneId}
+        index={group.tabIds.indexOf(tab.id)}
+        active={group.activeTabId === tab.id}
+        {disabled}
+        focus={() => focusTab(tab.id)}
+        close={() => closeTab(tab.id)}
+        {pointerDown}
+        {dropTab}
+      />
     {/if}
   {/each}
   {#if pointerDrag?.active && ghost}

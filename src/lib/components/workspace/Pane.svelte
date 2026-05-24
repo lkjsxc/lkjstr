@@ -121,7 +121,12 @@
   onDestroy(() => retention.releaseAll('pane-destroyed'));
 </script>
 
-<section class="pane" data-pane-id={props.pane.id} aria-label="Workspace pane">
+<section
+  class="pane"
+  data-pane-id={props.pane.id}
+  data-tab-count={props.group?.tabIds.length ?? 0}
+  aria-label="Workspace pane"
+>
   <header class="pane-head">
     <div class="pane-actions">
       <TileMenu
