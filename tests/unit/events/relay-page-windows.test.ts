@@ -22,14 +22,14 @@ describe('relay page windows', () => {
     }
   });
 
-  it('starts old cursors with a 180 day span', () => {
+  it('starts old cursors with the adaptive initial span', () => {
     const windows = relayPageWindows({
       direction: 'older',
       before: { createdAt: 20_000_000, id: 'a'.repeat(64) },
       now: 20_000_000 + 40 * day,
     });
 
-    expect(windows[0]?.since).toBe(20_000_001 - 180 * day);
+    expect(windows[0]?.since).toBe(20_000_001 - 6 * 60 * 60);
   });
 
   it('bounds initial windows with since and until', () => {
