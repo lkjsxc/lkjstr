@@ -6,6 +6,7 @@ import type { FeedCursorPoint } from '../events/types';
 import type { RelaySubscriptionManager } from '../relays/subscription-manager';
 import {
   initialRelaySubscriptionId,
+  newerRelaySubscriptionId,
   olderRelaySubscriptionId,
 } from '../relays/subscription-id';
 import { authorFilters } from './follow-list';
@@ -26,6 +27,14 @@ export type TimelineOlderResult = {
   readonly hasOlder: boolean;
   readonly hasNewer: boolean;
   readonly nextOlderCursor?: FeedCursorPoint;
+  readonly incomplete?: boolean;
+};
+
+export type TimelineNewerResult = {
+  readonly items: TimelineItem[];
+  readonly hasNewer: boolean;
+  readonly hasOlder: boolean;
+  readonly nextNewerCursor?: FeedCursorPoint;
   readonly incomplete?: boolean;
 };
 
@@ -60,12 +69,12 @@ export async function loadInitialTimelinePage(
     subscriptions: request.subscriptions,
     purpose: 'feed',
   });
-  const relayItems = relayPage.items;
+  const relayItems = relayPage.receivedItems ?? relayPage.items;
   await Promise.all(
     relayItems.map((item) => upsertEvent(item.event, item.relays)),
   );
   return {
-    items: relayItems,
+    items: relayPage.items,
     hasOlder: relayPage.hasMorePossible,
     nextOlderCursor: relayPage.nextCursor,
     incomplete: relayPage.incomplete,
@@ -102,13 +111,13 @@ export async function loadOlderTimelinePage(
     subscriptions: request.subscriptions,
     purpose: 'feed',
   });
-  const relayItems = relayPage.items;
+  const relayItems = relayPage.receivedItems ?? relayPage.items;
   await Promise.all(
     relayItems.map((item) => upsertEvent(item.event, item.relays)),
   );
   const window = mergeFeedWindow(
     request.items,
-    [...page.items, ...relayItems],
+    [...page.items, ...relayPage.items],
     feedWindowSize,
     true,
   );
@@ -117,6 +126,54 @@ export async function loadOlderTimelinePage(
     hasOlder: page.hasMore || relayPage.hasMorePossible,
     hasNewer: window.prunedNewer,
     nextOlderCursor: relayPage.nextCursor,
+    incomplete: relayPage.incomplete,
+  };
+}
+
+export async function loadNewerTimelinePage(
+  request: TimelineOlderRequest,
+): Promise<TimelineNewerResult> {
+  const page = await queryFeed({
+    kind: 'home',
+    authors: request.authors,
+    after: request.cursor,
+    limit: request.pageSize,
+  });
+  const groups = await routeGroups({
+    authors: request.authors,
+    selectedRelays: request.relays,
+    purpose: 'write',
+  });
+  const relayPage = await readRelayFeedGroups({
+    key: newerRelaySubscriptionId(request.subId, request.cursor),
+    groups,
+    filters: (group, bounds) =>
+      authorFilters(
+        group.authors ?? [],
+        request.pageSize,
+        bounds,
+        'per-filter',
+      ),
+    direction: 'newer',
+    after: request.cursor,
+    pageSize: request.pageSize,
+    subscriptions: request.subscriptions,
+    purpose: 'feed',
+  });
+  const relayItems = relayPage.receivedItems ?? relayPage.items;
+  await Promise.all(
+    relayItems.map((item) => upsertEvent(item.event, item.relays)),
+  );
+  const window = mergeFeedWindow(
+    request.items,
+    [...page.items, ...relayPage.items],
+    feedWindowSize,
+  );
+  return {
+    items: window.items,
+    hasNewer: page.hasMore || relayPage.hasMorePossible,
+    hasOlder: window.prunedOlder,
+    nextNewerCursor: relayPage.nextCursor,
     incomplete: relayPage.incomplete,
   };
 }

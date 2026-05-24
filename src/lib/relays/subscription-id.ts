@@ -48,6 +48,13 @@ export function olderRelaySubscriptionId(
   return compactRelaySubscriptionId(prefix, 'older', cursor);
 }
 
+export function newerRelaySubscriptionId(
+  prefix: string,
+  cursor: FeedCursorPoint | number,
+): string {
+  return compactRelaySubscriptionId(prefix, 'newer', cursor);
+}
+
 export function relaySubscriptionIdValid(id: string): boolean {
   return id.length > 0 && id.length <= maxRelaySubscriptionIdLength;
 }

@@ -28,6 +28,7 @@ import {
 } from './timeline-relay-state';
 import {
   loadInitialGlobalPage,
+  loadNewerGlobalPage,
   loadOlderGlobalPage,
 } from './global-timeline-pages';
 import { TimelineProfileCoordinator } from './timeline-profile-coordinator';
@@ -133,10 +134,10 @@ export class GlobalTimelineRuntime {
     if (this.#closed || this.#state.loadingNewer || !this.#state.hasNewer) return; const generation = this.#generation; const cursor = this.#state.newestCursor; if (!cursor) return;
     this.#emit({ ...this.#state, loadingNewer: true });
     try {
-      const page = await queryFeed({ kind: 'global', after: cursor, limit: this.#pageSize });
+      const page = await loadNewerGlobalPage({ items: this.items(), relays: this.#relays, subId: this.#subId, cursor, pageSize: this.#pageSize, subscriptions: this.#subscriptions });
       if (!this.#active(generation)) return;
-      this.#cached = mergeTimelineItems(page.items, this.items(), this.#limit);
-      this.#emit(this.#nextState({ items: this.items(), hasNewer: page.hasMore }));
+      this.#cached = page.items; this.#live = [];
+      this.#emit(this.#nextState({ items: this.items(), hasNewer: page.hasNewer, hasOlder: this.#state.hasOlder || page.hasOlder }));
     } finally { if (this.#state.loadingNewer) this.#emit({ ...this.#state, loadingNewer: false }); }
   }
 

@@ -33,35 +33,46 @@ async function runBackfill(
   );
   await sharedJobManager.setStatus(job.id, 'running');
   await sharedJobManager.appendOutput(job.id, 'Backfill started.');
-  let cursor: FeedCursorPoint | undefined = nowCursor();
-  const phases = [2, 7];
+  let cursor: FeedCursorPoint | undefined =
+    cursorFromOldest(request.items()) ?? nowCursor();
+  const workBudget = 12;
+  const seenCursors = new Set<string>();
   try {
-    for (const [index, days] of phases.entries()) {
+    for (let index = 0; index < workBudget; index += 1) {
       if (stopped() || !cursor) break;
+      const cursorKey = `${cursor.createdAt}:${cursor.id}`;
+      if (seenCursors.has(cursorKey)) {
+        await sharedJobManager.appendOutput(job.id, 'Backfill cursor stalled.');
+        break;
+      }
+      seenCursors.add(cursorKey);
       await sharedJobManager.updateProgress(job.id, {
-        current: index,
-        total: phases.length,
-        label: `Scanning ${days} day window`,
+        current: index + 1,
+        total: workBudget,
+        label: 'Scanning relay segment',
       });
       const page = await loadOlderTimelinePage({
         items: request.items(),
         authors: request.authors,
         relays: request.relays,
-        subId: `${request.subId}:backfill:${days}`,
+        subId: `${request.subId}:backfill:${index}`,
         cursor,
         pageSize: request.pageSize,
         subscriptions: request.subscriptions,
       });
       await sharedJobManager.appendOutput(
         job.id,
-        `Stored ${page.items.length} rows for ${days} day window.`,
+        `Stored ${page.items.length} visible rows after relay segment scan.`,
       );
-      const last = page.items.at(-1)?.event;
-      cursor =
-        page.nextOlderCursor ??
-        (last
-          ? { createdAt: last.created_at, id: last.id }
-          : cursorForDaysAgo(days));
+      if (!page.hasOlder) break;
+      if (!page.nextOlderCursor) {
+        await sharedJobManager.appendOutput(
+          job.id,
+          'Backfill stopped without a continuation cursor.',
+        );
+        break;
+      }
+      cursor = page.nextOlderCursor;
     }
   } catch (error) {
     await sharedJobManager.appendOutput(job.id, String(error));
@@ -71,8 +82,8 @@ async function runBackfill(
   if (stopped()) await sharedJobManager.setStatus(job.id, 'canceled');
   else {
     await sharedJobManager.updateProgress(job.id, {
-      current: phases.length,
-      total: phases.length,
+      current: workBudget,
+      total: workBudget,
       label: 'Complete',
     });
     await sharedJobManager.appendOutput(job.id, 'Backfill completed.');
@@ -84,9 +95,9 @@ function nowCursor(): FeedCursorPoint {
   return { createdAt: Math.floor(Date.now() / 1000), id: 'f'.repeat(64) };
 }
 
-function cursorForDaysAgo(days: number): FeedCursorPoint {
-  return {
-    createdAt: Math.floor(Date.now() / 1000) - days * 24 * 60 * 60,
-    id: 'f'.repeat(64),
-  };
+function cursorFromOldest(
+  items: readonly TimelineItem[],
+): FeedCursorPoint | undefined {
+  const oldest = items.at(-1)?.event;
+  return oldest ? { createdAt: oldest.created_at, id: oldest.id } : undefined;
 }

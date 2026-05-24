@@ -5,7 +5,7 @@ import {
   feedWindowSize,
   metadataPageLimit,
 } from '../events/feed-window';
-import { queryFeed, upsertEvent } from '../events/repository';
+import { upsertEvent } from '../events/repository';
 import { isFeedDisplayKind } from '../events/feed-kinds';
 import { boundedErrorText } from '../events/runtime-error';
 import type { FeedCursorPoint } from '../events/types';
@@ -21,6 +21,7 @@ import { loadAccountHome, loadCachedAccountHome } from './timeline-load';
 import type { TimelineLoad } from './timeline-load';
 import {
   loadInitialTimelinePage,
+  loadNewerTimelinePage,
   loadOlderTimelinePage,
 } from './timeline-runtime-paging';
 import { profileFilter, storeTimelineProfile } from './timeline-profiles';
@@ -87,9 +88,9 @@ export class TimelineRuntime {
     if (this.#closed || this.#state.loadingNewer || !this.#state.hasNewer) return; const generation = this.#generation; const cursor = this.#state.newestCursor; if (!cursor || this.#authors.length === 0) return;
     this.#emit({ ...this.#state, loadingNewer: true });
     try {
-      const page = await this.#newerPage(cursor); this.#cached = mergeTimelineItems(page, this.items(), feedWindowSize);
+      const page = await loadNewerTimelinePage({ items: this.items(), authors: this.#authors, relays: this.#relays, subId: this.#noteSubId, cursor, pageSize: this.#pageSize, subscriptions: this.#subscriptions }); this.#cached = page.items; this.#live = [];
       if (!this.#active(generation)) return;
-      this.#emit(this.#nextState({ items: this.items(), hasNewer: page.length >= this.#pageSize }));
+      this.#emit(this.#nextState({ items: this.items(), hasNewer: page.hasNewer, hasOlder: this.#state.hasOlder || page.hasOlder }));
     } catch (error) { this.#emit({ ...this.#state, error: boundedErrorText(error) }); }
     finally { if (this.#state.loadingNewer) this.#emit({ ...this.#state, loadingNewer: false }); }
   }
@@ -180,9 +181,6 @@ export class TimelineRuntime {
     this.#cached = await loadCachedTimeline(this.#pageSize).catch(() => []);
     if (this.#closed) return;
     this.#emit(this.#withCursors(noActiveAccountState(this.#state, this.#cached)));
-  }
-  async #newerPage(cursor: FeedCursorPoint): Promise<TimelineItem[]> {
-    const page = await queryFeed({ kind: 'home', authors: this.#authors, after: cursor, limit: this.#pageSize }); return [...page.items];
   }
   items(): TimelineItem[] { return mergeTimelineItems(this.#cached, this.#live, feedWindowSize); }
   #applyLoaded(loaded: TimelineLoad): void { this.#followList = loaded.followList; this.#authors = loaded.authors; this.#cached = loaded.cached; this.#profiles = loaded.profiles; }

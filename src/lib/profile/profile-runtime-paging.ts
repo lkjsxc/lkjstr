@@ -5,7 +5,10 @@ import { readRelayFeedGroups } from '$lib/events/relay-page';
 import type { FeedCursorPoint, FeedEvent } from '$lib/events/types';
 import { routeGroups } from '$lib/relays/relay-routing';
 import type { RelaySubscriptionManager } from '$lib/relays/subscription-manager';
-import { olderRelaySubscriptionId } from '$lib/relays/subscription-id';
+import {
+  newerRelaySubscriptionId,
+  olderRelaySubscriptionId,
+} from '$lib/relays/subscription-id';
 import { profileContentGroups } from './profile-relays';
 import { storeProfileEvent } from './profile-store';
 
@@ -53,13 +56,13 @@ export async function loadOlderProfilePage(request: ProfileOlderRequest) {
     subscriptions: request.subscriptions,
     purpose: 'feed',
   });
-  const relayItems = relayPage.items;
+  const relayItems = relayPage.receivedItems ?? relayPage.items;
   await Promise.all(
     relayItems.map((item) => storeProfileEvent(item.event, item.relays)),
   );
   const window = mergeFeedWindow(
     request.posts,
-    [...page.items, ...relayItems],
+    [...page.items, ...relayPage.items],
     feedWindowSize,
     true,
   );
@@ -88,7 +91,7 @@ export async function loadNewerProfilePage(request: ProfileNewerRequest) {
     request.relays,
   );
   const relayPage = await readRelayFeedGroups({
-    key: olderRelaySubscriptionId(request.subId, request.cursor),
+    key: newerRelaySubscriptionId(request.subId, request.cursor),
     groups,
     filters: (_group, bounds) => [
       {
@@ -104,13 +107,13 @@ export async function loadNewerProfilePage(request: ProfileNewerRequest) {
     subscriptions: request.subscriptions,
     purpose: 'feed',
   });
-  const relayItems = relayPage.items;
+  const relayItems = relayPage.receivedItems ?? relayPage.items;
   await Promise.all(
     relayItems.map((item) => storeProfileEvent(item.event, item.relays)),
   );
   const window = mergeFeedWindow(
     request.posts,
-    [...page.items, ...relayItems],
+    [...page.items, ...relayPage.items],
     feedWindowSize,
   );
   return {

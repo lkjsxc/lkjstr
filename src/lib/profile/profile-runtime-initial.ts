@@ -87,6 +87,10 @@ export async function loadInitialProfilePage(request: Request) {
       purpose: 'feed',
     }),
   ]);
+  const postRelayItems = posts.receivedItems ?? posts.items;
+  await Promise.all(
+    postRelayItems.map((item) => storeProfileEvent(item.event, item.relays)),
+  );
   const relayEvents = [...metadata, ...follows];
   const storedProfiles = await Promise.all(
     relayEvents.map((item) => storeProfileEvent(item.event, [item.relay])),
@@ -107,7 +111,7 @@ export async function loadInitialProfilePage(request: Request) {
     relays: [
       ...new Set([
         ...relayEvents.map((item) => item.relay),
-        ...posts.items.flatMap((item) => item.relays),
+        ...postRelayItems.flatMap((item) => item.relays),
       ]),
     ],
   };
