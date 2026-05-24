@@ -44,6 +44,24 @@ export async function deleteFeedCoverageForFeeds(
   });
 }
 
+export async function compactFeedCoverage(
+  maxAgeSeconds: number,
+): Promise<void> {
+  const now = Date.now();
+  const completeCutoff = now - maxAgeSeconds * 1000;
+  const diagnosticCutoff = now - maxAgeSeconds * 3 * 1000;
+  const expired = (coverage: FeedCoverage) =>
+    coverage.updatedAt <
+    (coverage.status === 'complete' ? completeCutoff : diagnosticCutoff);
+  for (const [id, value] of memoryCoverage)
+    if (expired(value)) memoryCoverage.delete(id);
+  await bestEffortStorageWrite(async () => {
+    const rows = await browserDb().feedCoverage.toArray();
+    const ids = rows.filter(expired).map((row) => row.id);
+    if (ids.length > 0) await browserDb().feedCoverage.bulkDelete(ids);
+  });
+}
+
 export function clearFeedCoverageForTests(): void {
   memoryCoverage.clear();
 }

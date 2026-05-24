@@ -37,7 +37,12 @@ export type FeedCursor = {
   readonly updatedAt: number;
 };
 
-export type FeedCoverageStatus = 'complete' | 'dense' | 'incomplete' | 'failed';
+export type FeedCoverageStatus =
+  | 'complete'
+  | 'dense'
+  | 'incomplete'
+  | 'unresolved'
+  | 'failed';
 
 export type FeedCoverage = {
   readonly id: string;
@@ -48,6 +53,12 @@ export type FeedCoverage = {
   readonly status: FeedCoverageStatus;
   readonly since?: number;
   readonly until?: number;
+  readonly reason?: string;
+  readonly limit?: number;
+  readonly eventCount?: number;
+  readonly uniqueCount?: number;
+  readonly attempt?: number;
+  readonly durationMs?: number;
   readonly updatedAt: number;
 };
 

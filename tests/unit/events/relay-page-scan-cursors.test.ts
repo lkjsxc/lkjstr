@@ -10,6 +10,7 @@ import {
   clearAppLogForTests,
 } from '../../../src/lib/log/app-log';
 import type { NostrEvent } from '../../../src/lib/protocol';
+import { saveRelayInformation } from '../../../src/lib/relays/relay-info';
 import type { PoolEvent } from '../../../src/lib/relays/relay-pool';
 import type { ReadPageResult } from '../../../src/lib/relays/read-page-status';
 import type { RelaySubscriptionManager } from '../../../src/lib/relays/subscription-manager';
@@ -17,8 +18,14 @@ import type { RelaySubscriptionManager } from '../../../src/lib/relays/subscript
 const relay = 'wss://relay.example/';
 
 describe('relay page scan cursors', () => {
-  it('returns dense shard cursor before sparse older rendered items', async () => {
-    const dense = [event('a', 100), event('b', 100)];
+  it('returns unresolved dense shard cursor before sparse older ranges', async () => {
+    await saveRelayInformation({
+      relayUrl: relay,
+      fetchedAt: Date.now(),
+      status: 'available',
+      info: { limitation: { max_limit: 2 } },
+    });
+    const dense = [event('a', 100), event('b', 100), event('c', 100)];
     const sparse = event('old', 90);
     const page = await readRelayFeedGroups({
       key: 'scan-safe-cursor',
@@ -40,7 +47,7 @@ describe('relay page scan cursors', () => {
     });
 
     expect(page.items.map((item) => item.event.created_at)).toEqual([
-      100, 100, 90,
+      100, 100, 100,
     ]);
     expect(page.nextCursor?.createdAt).toBe(100);
   });
@@ -61,15 +68,24 @@ describe('relay page scan cursors', () => {
       } as unknown as RelaySubscriptionManager,
     });
 
-    expect(await coverageForFeed('scan-coverage')).toEqual([
-      expect.objectContaining({ status: 'incomplete' }),
-    ]);
-    expect(appLogRecords()).toEqual([
-      expect.objectContaining({
-        code: 'relay-feed-incomplete',
-        context: expect.objectContaining({ feedKey: 'scan-coverage' }),
-      }),
-    ]);
+    expect(await coverageForFeed('scan-coverage')).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          status: 'unresolved',
+          reason: 'incomplete-minimum',
+          eventCount: 0,
+          limit: expect.any(Number),
+        }),
+      ]),
+    );
+    expect(appLogRecords()).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          code: 'relay-feed-incomplete',
+          context: expect.objectContaining({ feedKey: 'scan-coverage' }),
+        }),
+      ]),
+    );
   });
 });
 

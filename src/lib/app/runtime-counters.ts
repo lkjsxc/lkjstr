@@ -9,6 +9,12 @@ export type RuntimeCounterSnapshot = {
   readonly storedEvents: number;
   readonly denseWindows: number;
   readonly incompleteWindows: number;
+  readonly splitWindows: number;
+  readonly grownWindows: number;
+  readonly denseSegments: number;
+  readonly unresolvedSegments: number;
+  readonly coverageCompleteSegments: number;
+  readonly coverageIncompleteSegments: number;
   readonly selectedFallbackGroups: number;
   readonly targetedGroups: number;
   readonly completedCoverageWindows: number;
@@ -25,6 +31,12 @@ type MutableCounter = {
   storedEvents: number;
   denseWindows: number;
   incompleteWindows: number;
+  splitWindows: number;
+  grownWindows: number;
+  denseSegments: number;
+  unresolvedSegments: number;
+  coverageCompleteSegments: number;
+  coverageIncompleteSegments: number;
   selectedFallbackGroups: number;
   targetedGroups: number;
   completedCoverageWindows: number;
@@ -78,6 +90,12 @@ function emptyCounter(): MutableCounter {
     storedEvents: 0,
     denseWindows: 0,
     incompleteWindows: 0,
+    splitWindows: 0,
+    grownWindows: 0,
+    denseSegments: 0,
+    unresolvedSegments: 0,
+    coverageCompleteSegments: 0,
+    coverageIncompleteSegments: 0,
     selectedFallbackGroups: 0,
     targetedGroups: 0,
     completedCoverageWindows: 0,

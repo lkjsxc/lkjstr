@@ -3,7 +3,10 @@ import { indexedDbAvailable } from '../storage/safe-storage';
 import { loadSettings } from '../settings/settings-store';
 import { eventRetention } from './retention';
 import { pinnedEventIds } from './pins';
-import { deleteFeedCoverageForFeeds } from '../events/feed-coverage-store';
+import {
+  compactFeedCoverage,
+  deleteFeedCoverageForFeeds,
+} from '../events/feed-coverage-store';
 
 export type CacheCompactionOptions = {
   readonly enabled: boolean;
@@ -69,6 +72,7 @@ export async function compactOldEvents(
     },
   );
   await deleteStaleFeedCursors(retainedIds);
+  await compactFeedCoverage(resolved.maxAgeSeconds);
   return { prunedEvents: pruneIds.length, skippedDrafts: true, skipped: false };
 }
 

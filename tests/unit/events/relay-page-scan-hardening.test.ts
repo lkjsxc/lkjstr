@@ -39,7 +39,7 @@ describe('relay page scan hardening', () => {
       pageSize: 10,
       subscriptions: {
         readPageDetailed: async (request: RelayReadRequest) => {
-          dispatched = request.filters[0];
+          dispatched ??= request.filters[0];
           return detailed([], request, completeStatus);
         },
       } as unknown as RelaySubscriptionManager,

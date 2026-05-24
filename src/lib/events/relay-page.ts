@@ -44,6 +44,7 @@ export type RelayGroupPageRequest = Omit<
 
 export type RelayGroupPageResult = {
   readonly items: FeedEvent[];
+  readonly receivedItems?: FeedEvent[];
   readonly hasMorePossible: boolean;
   readonly nextCursor?: FeedCursorPoint;
   readonly incomplete: boolean;
