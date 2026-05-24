@@ -67,10 +67,14 @@
   const bodyScroll = createPaneScrollRetention();
   const snapshots = createSessionTabSnapshots<TabSnapshot>();
 
-  $effect(() => {
+  $effect.pre(() => {
     const activeId = active?.id;
     if (previousActiveId && previousActiveId !== activeId)
       bodyScroll.remember(previousActiveId);
+  });
+
+  $effect(() => {
+    const activeId = active?.id;
     if (activeId) {
       bodyScroll.restoreSnapshot(activeId, snapshots.take(activeId));
       bodyScroll.restore(activeId);
@@ -149,6 +153,7 @@
       moveTab={props.moveTab}
     />
     {#if active}
+      {#key active.id}
         <div
           class="pane-body"
           data-active-tab="true"
@@ -173,6 +178,7 @@
             openAuthorContext={props.openAuthorContext}
           />
         </div>
+      {/key}
     {/if}
   </div>
 </section>

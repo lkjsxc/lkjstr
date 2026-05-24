@@ -1,8 +1,24 @@
 import { describe, expect, it, vi } from 'vitest';
+import { createPerRelayReadLimiter } from '../../../src/lib/relays/read-limiter';
 import { createRelayPool } from '../../../src/lib/relays/relay-pool';
 import { createRelaySubscriptionManager } from '../../../src/lib/relays/subscription-manager';
 
 describe('subscription manager read limiter', () => {
+  it('removes queued relay waiters on abort', async () => {
+    const limiter = createPerRelayReadLimiter(1);
+    const release = await limiter.acquire(['wss://relay.example/']);
+    const abort = new AbortController();
+
+    const queued = limiter.acquire(['wss://relay.example/'], abort.signal);
+    expect(limiter.queuedCount('wss://relay.example/')).toBe(1);
+    abort.abort();
+
+    await expect(queued).rejects.toMatchObject({ name: 'AbortError' });
+    expect(limiter.queuedCount('wss://relay.example/')).toBe(0);
+    release();
+    expect(limiter.activeCount('wss://relay.example/')).toBe(0);
+  });
+
   it('queues concurrent one-shot reads to the same relay', async () => {
     const pool = createRelayPool();
     const cleanup = vi.fn();

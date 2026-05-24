@@ -6,14 +6,17 @@ export type PaneScrollSnapshot = {
 export function createPaneScrollRetention() {
   const bodies = new Map<string, HTMLElement>();
   const scroll = new Map<string, number>();
-  const scrollable = (tabId: string): HTMLElement | undefined => {
+  const scrollables = (tabId: string): HTMLElement[] => {
     const body = bodies.get(tabId);
-    if (!body) return undefined;
-    const scrollables = [
+    if (!body) return [];
+    return [
       body,
       ...body.querySelectorAll<HTMLElement>('*'),
     ].filter((node) => node.scrollHeight > node.clientHeight + 8);
-    return scrollables.find((node) => node.scrollTop > 0) ?? scrollables.at(0);
+  };
+  const scrollable = (tabId: string): HTMLElement | undefined => {
+    const nodes = scrollables(tabId);
+    return nodes.find((node) => node.scrollTop > 0) ?? nodes.at(0);
   };
   return {
     track: (tabId: string, node: HTMLElement) => {
@@ -23,6 +26,11 @@ export function createPaneScrollRetention() {
       };
       bodies.set(tabId, node);
       node.addEventListener('scroll', remember, true);
+      const top = scroll.get(tabId);
+      if (top)
+        requestAnimationFrame(() => {
+          for (const target of scrollables(tabId)) target.scrollTop = top;
+        });
       return {
         destroy: () => {
           const top = scrollable(tabId)?.scrollTop ?? 0;
@@ -38,8 +46,10 @@ export function createPaneScrollRetention() {
     },
     restore: (tabId: string): void => {
       const top = scroll.get(tabId);
-      const body = scrollable(tabId);
-      if (top && body) requestAnimationFrame(() => (body.scrollTop = top));
+      if (top)
+        requestAnimationFrame(() => {
+          for (const target of scrollables(tabId)) target.scrollTop = top;
+        });
     },
     snapshot: (tabId: string): PaneScrollSnapshot => ({
       scrollTop: scroll.get(tabId),

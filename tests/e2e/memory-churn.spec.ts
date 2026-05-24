@@ -47,6 +47,11 @@ test('workspace churn keeps owned heap and counters bounded', async ({
 
   await selectStartupTab(page, 'Home');
   await waitForSyntheticEvent(page, events.at(-1)!.id);
+  await openNewTabOption(page, 'Settings', 1);
+  await selectStartupTab(page, 'Home');
+  await expect(page.locator('.settings-tab')).toHaveCount(0);
+  await selectStartupTab(page, 'Settings');
+  await closeTab(page, 'Settings');
   for (const name of [
     'Global',
     'Notifications',

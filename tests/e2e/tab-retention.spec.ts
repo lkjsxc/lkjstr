@@ -1,16 +1,16 @@
 import { expect, test, type Page } from '@playwright/test';
 import { openNewTabOption, selectStartupTab } from './workspace-helpers';
 
-test('retains inactive tab body after switching tabs', async ({ page }) => {
+test('unmounts inactive tab body after switching tabs', async ({ page }) => {
   await page.goto('/');
   await selectStartupTab(page, 'Home');
   await expect(page.locator('.timeline-tab')).toHaveCount(1);
   await openNewTabOption(page, 'Settings', 1);
   await expect(page.getByRole('region', { name: 'Settings' })).toBeVisible();
-  await expect(page.locator('.timeline-tab')).toHaveCount(1);
+  await expect(page.locator('.timeline-tab')).toHaveCount(0);
 });
 
-test('retains tab scroll briefly and removes inactive body after expiry', async ({
+test('restores tab scroll from snapshot and keeps inactive body unmounted', async ({
   page,
 }) => {
   await page.goto('/');
@@ -24,10 +24,7 @@ test('retains tab scroll briefly and removes inactive body after expiry', async 
   await selectStartupTab(page, 'Settings');
   await expect.poll(() => getSettingsScroll(page)).toBeGreaterThan(0);
   await selectStartupTab(page, 'Home');
-  await expect(page.locator('.settings-tab')).toHaveCount(1);
-  await expect(page.locator('.settings-tab')).toHaveCount(0, {
-    timeout: 4500,
-  });
+  await expect(page.locator('.settings-tab')).toHaveCount(0);
 });
 
 async function setSettingsScroll(page: Page) {
@@ -35,6 +32,7 @@ async function setSettingsScroll(page: Page) {
     .locator('.pane-body[data-active-tab="true"] .settings-tab')
     .evaluate((node) => {
       node.scrollTop = 500;
+      node.dispatchEvent(new Event('scroll', { bubbles: true }));
       return node.scrollTop;
     });
 }

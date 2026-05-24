@@ -11,6 +11,7 @@ This directory contains Vitest unit tests grouped by source domain.
 - [cache/](cache/): cache behavior tests.
 - [custom-request/](custom-request/): custom relay request tests.
 - [events/](events/): event parsing and repository tests.
+- [fp/](fp/): shared functional helper tests.
 - [identity/](identity/): profile identity tests.
 - [jobs/](jobs/): job manager tests.
 - [log/](log/): app log tests.
