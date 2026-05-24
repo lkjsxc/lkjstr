@@ -21,14 +21,18 @@ itself: split tiles, tabs, relay-backed data, and local state.
 - [tools/custom-request.md](tools/custom-request.md): validated one-shot relay
   reads.
 - [tools/event-actions.md](tools/event-actions.md): event action writes.
+- [tools/mine-npub.md](tools/mine-npub.md): vanity local signing key
+  generation.
 - [tools/profile-edit.md](tools/profile-edit.md): active-account metadata
   writes.
 - [tools/relay-management.md](tools/relay-management.md): relay management.
 - [tools/search.md](tools/search.md): local and relay-backed search.
 - [tools/settings.md](tools/settings.md): settings.
+- [tools/stats.md](tools/stats.md): relay, cache, job, and runtime summaries.
 - [tools/tweet.md](tools/tweet.md): Tweet tool.
 - [tools/upload-settings.md](tools/upload-settings.md): guided media upload
   settings.
+- [tools/welcome.md](tools/welcome.md): startup readiness status.
 - [workspace/README.md](workspace/README.md): tiles, panes, tabs, and flows.
 - [workspace/panes.md](workspace/panes.md): panes.
 - [workspace/scope.md](workspace/scope.md): workspace scope.

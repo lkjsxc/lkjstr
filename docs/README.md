@@ -107,14 +107,18 @@ here before code is changed.
   Request.
 - [product/tools/event-actions.md](product/tools/event-actions.md): event
   action writes.
+- [product/tools/mine-npub.md](product/tools/mine-npub.md): vanity local
+  signing key generation.
 - [product/tools/profile-edit.md](product/tools/profile-edit.md): Profile Edit.
 - [product/tools/relay-management.md](product/tools/relay-management.md):
   relay management.
 - [product/tools/search.md](product/tools/search.md): Search.
 - [product/tools/settings.md](product/tools/settings.md): settings.
+- [product/tools/stats.md](product/tools/stats.md): Stats.
 - [product/tools/tweet.md](product/tools/tweet.md): Tweet tool.
 - [product/tools/upload-settings.md](product/tools/upload-settings.md): guided
   media upload settings.
+- [product/tools/welcome.md](product/tools/welcome.md): Welcome.
 - [product/workspace/README.md](product/workspace/README.md): workspace
   behavior.
 - [product/workspace/panes.md](product/workspace/panes.md): panes.
