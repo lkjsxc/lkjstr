@@ -9,10 +9,9 @@ export function createPaneScrollRetention() {
   const scrollables = (tabId: string): HTMLElement[] => {
     const body = bodies.get(tabId);
     if (!body) return [];
-    return [
-      body,
-      ...body.querySelectorAll<HTMLElement>('*'),
-    ].filter((node) => node.scrollHeight > node.clientHeight + 8);
+    return [body, ...body.querySelectorAll<HTMLElement>('*')].filter(
+      (node) => node.scrollHeight > node.clientHeight + 8,
+    );
   };
   const scrollable = (tabId: string): HTMLElement | undefined => {
     const nodes = scrollables(tabId);

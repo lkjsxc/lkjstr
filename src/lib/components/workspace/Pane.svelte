@@ -154,11 +154,7 @@
     />
     {#if active}
       {#key active.id}
-        <div
-          class="pane-body"
-          data-active-tab="true"
-          use:trackBody={active.id}
-        >
+        <div class="pane-body" data-active-tab="true" use:trackBody={active.id}>
           <PaneTabBody
             tab={active}
             visible={true}

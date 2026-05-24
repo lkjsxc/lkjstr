@@ -19,10 +19,9 @@ export type HydrateProfilesOptions = {
 
 type ProfileMap = Record<string, ProfileSummary>;
 
-const inFlight = createBoundedMap<
-  string,
-  Promise<ProfileSummary | undefined>
->({ maxSize: 500 });
+const inFlight = createBoundedMap<string, Promise<ProfileSummary | undefined>>({
+  maxSize: 500,
+});
 
 export async function hydrateProfiles({
   pubkeys,

@@ -60,9 +60,6 @@ describe('session tab snapshots', () => {
     snapshots.releaseMissing(new Set(['three']));
 
     expect(snapshots.records()).toEqual([{ id: 'three' }]);
-    expect(released).toEqual([
-      'one:retention-replaced',
-      'two:tab-removed',
-    ]);
+    expect(released).toEqual(['one:retention-replaced', 'two:tab-removed']);
   });
 });
