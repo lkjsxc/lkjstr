@@ -8,6 +8,7 @@ visual rules.
 ## Documents
 
 - [resize.md](resize.md): split resize math.
+- [tab-dragging.md](tab-dragging.md): tab drag zones and feedback.
 - [tab-runtime.md](tab-runtime.md): tab kinds and lifecycle.
 - [theme.md](theme.md): visual constraints.
 - [tile-menu.md](tile-menu.md): anchored tile commands.
@@ -19,3 +20,4 @@ visual rules.
 - Pane bodies and active tab roots own full available height.
 - Virtualized lists use the tab body height, not fixed minimum heights.
 - Wrapped content must not widen split children.
+- Tab movement feedback is shared by pointer and native drag paths.

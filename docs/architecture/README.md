@@ -39,6 +39,8 @@ state lives, which modules own subscriptions, and how tabs close cleanly.
 - [runtimes/tweet-runtime.md](runtimes/tweet-runtime.md): Tweet publishing.
 - [workspace/README.md](workspace/README.md): layout, tabs, and visual shell.
 - [workspace/resize.md](workspace/resize.md): resizing.
+- [workspace/tab-dragging.md](workspace/tab-dragging.md): tab drag zones and
+  feedback.
 - [workspace/tab-runtime.md](workspace/tab-runtime.md): tab lifecycle.
 - [workspace/theme.md](workspace/theme.md): theme.
 - [workspace/tile-menu.md](workspace/tile-menu.md): tile menus.

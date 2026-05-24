@@ -24,6 +24,9 @@ runtime, so failures must be inspectable without server logs.
 - `relay-feed-incomplete` warnings use detailed read-page statuses when
   present. `missing-status` means no detailed status was available for that
   read.
+- Dense cap-limited feed windows record coverage metadata with
+  `reason: event-limit` and keep conservative paging, but expected dense cap
+  stops do not add `relay-feed-incomplete` log rows.
 - Late `EVENT` messages for locally closed subscription ids are ignored after
   successful event verification. They are not true unknown-id diagnostics.
 - persisted job health derived from stored jobs, including status counts,

@@ -35,7 +35,8 @@ The app must support:
 - deleting an account without deleting public cached events.
 - exporting workspace and relay configuration.
 - importing configuration into an empty profile.
-- corrupt or invalid workspace storage recovering to one Home tile.
+- corrupt, invalid, or blocked workspace storage recovering to a usable
+  Welcome-focused workspace.
 
 ## Deletion
 

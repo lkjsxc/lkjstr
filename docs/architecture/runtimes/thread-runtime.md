@@ -14,6 +14,8 @@ Thread runtime owns event root and reply loading.
 - It keeps a `240` item thread window.
 - Retain at most `240` live and cached Thread rows even if relays stream more.
 - It exposes `loadOlder()` and `loadNewer()`.
+- Shared event lists show a loading row while `loadingOlder && hasOlder`, and
+  terminal history only when `hasOlder === false`.
 - State exposes `loadingOlder`, `hasOlder`, `loadingNewer`, `hasNewer`,
   `oldestCursor`, and `newestCursor`.
 - Historical reads use the `e` tag index and one-shot routed relay pages sorted

@@ -25,6 +25,10 @@ backfill.
   memory window.
 - Older pages load local records first, then one bounded relay page when a
   cursor exists.
+- The Notifications tab is a plain scroll flow. It prefetches near the bottom,
+  guards duplicate older loads, shows loading status while `loadingOlder &&
+hasOlder`, and auto-fills older pages when rows do not fill the viewport.
+- Terminal history appears only when `hasOlder === false`.
 - Historical relay pages use the oldest loaded event time to build interval
   windows with both `since` and `until`.
 - Live relay reads set `since` when the runtime starts.

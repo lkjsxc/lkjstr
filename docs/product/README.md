@@ -17,7 +17,8 @@ itself: split tiles, tabs, relay-backed data, and local state.
 - [tools/accounts.md](tools/accounts.md): account records and signers.
 - [tools/author-context.md](tools/author-context.md): nearby posts by an event
   author.
-- [tools/cache.md](tools/cache.md): local cache tab behavior.
+- [tools/cache.md](tools/cache.md): local cache behavior surfaced through
+  Stats and settings.
 - [tools/custom-request.md](tools/custom-request.md): validated one-shot relay
   reads.
 - [tools/event-actions.md](tools/event-actions.md): event action writes.

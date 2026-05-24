@@ -20,6 +20,10 @@ Query runtime docs define how cache-first relay reads behave.
 - Home, Profile, and Global `loadOlder()` may scan multiple bounded complete
   windows from the current oldest cursor. Other query tools keep exact filters.
 - `loadOlder()` clears `loadingOlder` in a `finally` path.
+- A loading spinner may settle after the current bounded read produces enough
+  rows or reaches a conservative unresolved frontier; `hasOlder` only becomes
+  `false` after complete bounded relay coverage proves there is no older
+  history for the requested filters.
 - Loader failures surface bounded error text and keep the tab usable.
 - `loadNewer()` restores newer chunks from the current newest cursor.
 - Live reads set `since` at runtime start.
@@ -28,3 +32,7 @@ Query runtime docs define how cache-first relay reads behave.
 - Runtimes ignore events for other subscription ids.
 - Near-end detection uses scroll offset plus viewport size compared with total
   scroll size.
+- Shared event list surfaces, including Home, Global, Thread, Search, and
+  Author Context when paged, render an in-list loading row while
+  `loadingOlder && hasOlder`.
+- Terminal rows are only rendered when `hasOlder === false`.

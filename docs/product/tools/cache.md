@@ -2,7 +2,9 @@
 
 ## Purpose
 
-Cache docs define local event pruning behavior.
+Cache docs define local event status and pruning behavior. Cache is not a New
+Tab surface; status is shown in Stats, and pruning behavior is controlled by
+settings-backed cache compaction.
 
 ## Contract
 

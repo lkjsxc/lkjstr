@@ -8,8 +8,9 @@ linked product, protocol, architecture, and operations pages.
 ## Product Surfaces
 
 - The root route opens the tiled workspace app.
-- Clean launch focuses Welcome and also creates Accounts, Relay Settings, Home,
-  Notifications, and Tweet tabs.
+- Clean launch uses a vertical root split: Welcome is focused in the top pane,
+  and Accounts is active in the lower pane with Relay Settings, Home,
+  Notifications, and Tweet already open.
 - Home, Global, Profile, Thread, Notifications, Search, Custom Request, Author
   Context, Accounts, Relay Settings, Stats, Settings, Upload Settings, lkjstr
   Log, Mine npub, Profile Edit, and Welcome are implemented product surfaces.
@@ -19,8 +20,9 @@ linked product, protocol, architecture, and operations pages.
 ## Protocol Support
 
 - Implemented Nostr support includes NIP-01, NIP-02, NIP-05, NIP-07, NIP-10,
-  NIP-11, NIP-18, NIP-19, NIP-25, NIP-30, NIP-36, NIP-50, NIP-57, NIP-65,
-  NIP-96, and NIP-98 surfaces documented in [protocol](protocol/README.md).
+  NIP-11, NIP-18, NIP-19, NIP-25, NIP-30, NIP-36, NIP-50, NIP-51, NIP-57,
+  NIP-65, NIP-96, and NIP-98 surfaces documented in
+  [protocol](protocol/README.md).
 - Relay AUTH is diagnostic-only.
 - Search uses cached matches plus NIP-50 relay filters when selected relays
   support them.
@@ -29,6 +31,8 @@ linked product, protocol, architecture, and operations pages.
 
 - Workspace layout, tabs, settings, accounts, drafts, notifications, relay
   information, relay summaries, jobs, and cached events are browser-owned data.
+- Pointer tab dragging is the canonical cross-device movement path. Native
+  desktop drag uses the same pane drop zones and overlay contract.
 - Shared storage normalizes events, relay receipts, tag rows, cursors, and jobs
   before runtime use.
 - Relay clients, relay pool, subscription manager, and tab runtimes own network

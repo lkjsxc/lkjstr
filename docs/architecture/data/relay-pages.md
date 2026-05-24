@@ -46,9 +46,15 @@ preserving where each real event was seen.
   first.
 - Dense segments retry with higher limits up to `4x`, then split. Older scans
   split the newer half first. Dense minimum-span segments become unresolved.
+- Relay reads use a bounded event cap computed from the sum of relay-effective
+  filter limits, contacted relay count, and visible page size, then capped by
+  the subscription manager safety ceiling.
 - Incomplete segments split once when large, then stop conservatively if the
   next contacted segment is still incomplete. Relay timeout, closure, auth,
   socket closed, and socket error never prove history exhaustion.
+- Event-limit stops are non-exhaustive. Expected dense event-limit windows
+  record coverage metadata with `reason: event-limit` without appending
+  `relay-feed-incomplete`; empty or non-dense event-limit stops still warn.
 - Dense or unresolved boundaries constrain the next scan cursor. Older scans
   must not advance below the nearest unresolved frontier newer than the rendered
   oldest event; newer scans use the symmetric rule above the rendered newest

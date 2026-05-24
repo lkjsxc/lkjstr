@@ -20,7 +20,7 @@ IndexedDB is the practical browser store for event cache, relay evidence, worksp
 
 - Read bounded data for initial workspace restoration.
 - Keep cache writes idempotent.
-- Render the Home workspace before storage reads finish.
+- Render the Welcome-focused workspace before storage reads finish.
 - Fall back to session memory when storage APIs throw or time out.
 - Separate sensitive stores from public event stores.
 - Show cache failure as a degraded state.

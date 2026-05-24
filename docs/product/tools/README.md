@@ -8,7 +8,8 @@ Tool surfaces cover local state, writing, relay management, and diagnostics.
 
 - [accounts.md](accounts.md): account records and signers.
 - [author-context.md](author-context.md): nearby posts by an event author.
-- [cache.md](cache.md): local cache tab behavior.
+- [cache.md](cache.md): local cache behavior surfaced through Stats and
+  settings.
 - [custom-request.md](custom-request.md): validated one-shot relay reads.
 - [event-actions.md](event-actions.md): row action writes.
 - [log.md](log.md): current-session app, relay, and job diagnostics.

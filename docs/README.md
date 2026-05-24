@@ -64,6 +64,8 @@ for detailed contracts.
 - [architecture/workspace/README.md](architecture/workspace/README.md):
   workspace modules.
 - [architecture/workspace/resize.md](architecture/workspace/resize.md): resizing.
+- [architecture/workspace/tab-dragging.md](architecture/workspace/tab-dragging.md):
+  tab drag zones and feedback.
 - [architecture/workspace/tab-runtime.md](architecture/workspace/tab-runtime.md):
   tab lifecycle.
 - [architecture/workspace/theme.md](architecture/workspace/theme.md): theme.

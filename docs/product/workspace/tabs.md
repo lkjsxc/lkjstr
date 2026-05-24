@@ -24,8 +24,10 @@ Tabs define the workspace surface area.
 
 ## Action-Opened Tabs
 
-- Welcome is the clean first-launch tab and can also be opened from New Tab.
-- Welcome gives startup guidance for accounts, relays, Tweet, Home, and Global.
+- Welcome is the clean first-launch tab in the top startup pane and can also be
+  opened from New Tab.
+- Welcome gives quick-start status for accounts, relays, Home, Notifications,
+  Search, Tweet, and the core workspace surfaces.
 - Profile opens from identity buttons in timelines and profile-related UI.
 - Profile actions focus a matching Profile tab already present in the same
   tile; otherwise they open a new Profile tab in that tile.
@@ -53,9 +55,11 @@ Tabs define the workspace surface area.
 
 ## Movement
 
-- Tabs can be dragged to reorder within a tile with native desktop
-  drag-and-drop or pointer dragging.
+- Tabs can be dragged to reorder within a tile with pointer dragging or native
+  desktop drag-and-drop.
 - Tabs can be dragged into another tile, or to a tile edge to split there.
+- Pane drop feedback shows a translucent full-pane center region or a matching
+  left, right, top, or bottom edge region.
 - Moving a tab activates and focuses it in the target tile.
 - Moving the last tab out of a tile closes the source tile.
 - Invalid drops do nothing.
