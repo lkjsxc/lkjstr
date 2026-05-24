@@ -43,6 +43,7 @@ describe('workspace model', () => {
       'Tweet',
     ]);
     expect(workspace.tabs[group.activeTabId!]?.title).toBe('Accounts');
+    expect(workspace.tabs[workspace.focusedTabId!]?.title).toBe('Welcome');
   });
 
   it('supports horizontal and vertical nested splits', () => {

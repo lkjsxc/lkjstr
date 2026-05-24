@@ -23,7 +23,7 @@ describe('startup workspace storage', () => {
     expect(bootstrapWorkspace()).toEqual(bootstrapWorkspace());
     const workspace = bootstrapWorkspace();
     expect(workspace.id).toBe('main');
-    expect(workspace.tabs[workspace.focusedTabId!]?.title).toBe('Accounts');
+    expect(workspace.tabs[workspace.focusedTabId!]?.title).toBe('Welcome');
     expect(workspace.layout?.type).toBe('split');
   });
 
