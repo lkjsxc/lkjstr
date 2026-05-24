@@ -2,9 +2,10 @@
 
 ## Purpose
 
-This tree is the implementation contract for lkjstr. Product behavior,
-runtime ownership, relay policy, and verification expectations are documented
-here before code is changed.
+This tree is the implementation contract for lkjstr. Use
+[current-state.md](current-state.md) as the implemented-state summary, then
+follow the product, protocol, architecture, operations, and repository indexes
+for detailed contracts.
 
 ## Current State
 
@@ -179,16 +180,11 @@ here before code is changed.
 - [vision/principles.md](vision/principles.md): principles.
 - [vision/scope.md](vision/scope.md): scope.
 
-## Active Contracts
+## Canonical Contracts
 
-- Event rows show display names and dates; full public keys and relay URLs stay
-  in identity, relay, and diagnostic surfaces.
-- Home, Global, and Notifications use shared storage and relay subscriptions.
-- Selected relays are the base and fallback for targeted reads; route evidence
-  does not silently import Relay Settings.
-- Partial relay failure must not keep a feed in a loading state.
-- Source runtime modules use factory functions and explicit close handles rather
-  than first-party classes.
-- Long-lived relay, cache, diagnostic, and tab collections must be bounded or
-  deterministically cleaned up.
-- Workspace tabs support native drag-and-drop movement across tiles.
+- [current-state.md](current-state.md): implemented-state summary.
+- [product/README.md](product/README.md): user-facing workspace behavior.
+- [protocol/README.md](protocol/README.md): Nostr and relay protocol behavior.
+- [architecture/README.md](architecture/README.md): runtime and data ownership.
+- [operations/README.md](operations/README.md): verification and data safety.
+- [repository/README.md](repository/README.md): repository rules.

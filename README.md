@@ -10,26 +10,12 @@ server-side account system.
 This repository contains the lkjstr web app, its protocol/runtime
 documentation, verification scripts, static assets, and tests.
 
-## What It Does
+## Current Contract
 
-- Reads Home, Global, Profile, Thread, and Notifications from the selected
-  default relay set.
-- Opens Author Context tabs for nearby posts by one author and Custom Request
-  tabs for validated one-shot relay filters.
-- Publishes Tweet notes, replies, reposts, reactions, and zaps with the active
-  signing account.
-- Keeps workspace layout, tabs, accounts, settings, drafts, notifications, and
-  cache state in browser storage with session-memory fallback.
-- Builds for Cloudflare Workers Static Assets as a hosting target without
-  adding a required backend account system, relay proxy, or Cloudflare storage
-  dependency.
-- Renders Nostr entities, media, custom emoji, event references, content
-  warnings, nested reposts, and notification event bodies from real events.
-- Provides session-only lkjstr Log plus persisted Stats and Relay Settings
-  summaries for relay, subscription, cache, storage, runtime, and job
-  diagnostics.
-- Fetches NIP-11 relay information documents and records NIP-65 relay list
-  suggestions for explicit review and import.
+The implemented app state is summarized in
+[docs/current-state.md](docs/current-state.md). Product behavior, protocol
+support, architecture ownership, operations, and repository rules live under
+[docs/](docs/README.md).
 
 ## Product Contract
 
@@ -37,41 +23,23 @@ documentation, verification scripts, static assets, and tests.
 - New Tab offers Home, Tweet, Notifications, Search, Custom Request, Global,
   Profile Edit, Accounts, Relay Settings, Stats, Settings, Upload Settings,
   lkjstr Log, Mine npub, and Welcome.
-- A clean startup shows Welcome beside the default work tabs: Accounts, Relay
-  Settings, Home, Notifications, and Tweet. Storage failure falls back to a
-  usable Welcome workspace.
-- Home uses the active account and its latest NIP-02 follow list. Global does
-  not require an account. Profile and Thread tabs are opened from identity and
-  event actions.
-- Home and Global display notes and reposts with kinds `1`, `6`, and `16`.
-- Search combines cached content matches with NIP-50 relay `search` filters.
-  The query field starts empty and only runs after user input. Remote matches
-  depend on relay support advertised through NIP-11.
-- Relay Settings shows real NIP-11 metadata, unavailable states, persisted
-  relay summaries, and explicit NIP-65 suggestion import controls.
-- Event menus can copy event IDs and open Author Context tabs with nearby real
-  authored events.
-- Tweet publish signs the event, stores it locally, starts relay publishing,
-  clears and focuses the composer immediately, and only reports late all-relay
-  rejection or publish errors.
-- Incoming NIP-30 custom emoji shortcodes may contain letters, numbers,
-  underscores, and hyphens. lkjstr-created local shortcode fields stay stricter
-  and emit only letters, numbers, and underscores.
-- Sensitive posts stay revealed for the current app session after the user
-  reveals them.
-- Docker verification uses built images from `docker-compose.yml`; it does not
-  depend on bind mounts or required environment variables.
+- Clean startup focuses Welcome and also creates Accounts, Relay Settings,
+  Home, Notifications, and Tweet tabs.
+- Browser storage owns workspace, account, settings, draft, notification, cache,
+  relay, and job data with session-memory fallback.
+- Selected relays remain user-owned; protocol-derived relay hints require
+  explicit import before changing Relay Settings.
+- Final verification uses built Docker Compose images from
+  `docker-compose.yml`.
 
 ## Documentation
 
+- [Docs index](docs/README.md)
 - [Current state](docs/current-state.md)
-- [Product workspace tabs](docs/product/workspace/tabs.md)
-- [Tweet tool](docs/product/tools/tweet.md)
-- [Event actions](docs/product/tools/event-actions.md)
-- [Custom emoji](docs/protocol/custom-emoji.md)
+- [Product contract](docs/product/README.md)
 - [Protocol support](docs/protocol/nip-support.md)
 - [Verification](docs/operations/verification.md)
-- [Cloudflare Workers](docs/operations/cloudflare-workers.md)
+- [Repository rules](docs/repository/README.md)
 
 ## Development
 

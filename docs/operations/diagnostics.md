@@ -21,6 +21,11 @@ runtime, so failures must be inspectable without server logs.
   latency, validation counters, and bounded recent relay diagnostics.
 - structured read-page status with EOSE, timeout, CLOSED, AUTH, socket
   closed/error, duration, candidate count, and final event count.
+- `relay-feed-incomplete` warnings use detailed read-page statuses when
+  present. `missing-status` means no detailed status was available for that
+  read.
+- Late `EVENT` messages for locally closed subscription ids are ignored after
+  successful event verification. They are not true unknown-id diagnostics.
 - persisted job health derived from stored jobs, including status counts,
   root-job counts, oldest queued age, latest failure, and latest stale startup
   mark.

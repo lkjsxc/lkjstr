@@ -16,6 +16,6 @@ The workspace is the first screen and owns split tiles.
 - Split actions create recursive layout nodes and persist through the workspace
   store.
 - Resize uses a `1.8` pointer sensitivity multiplier and persists in layout.
-- Startup renders Welcome plus Accounts, Relay Settings, Home, Notifications,
-  and Tweet before async storage finishes. Invalid, blocked, or corrupt storage
-  recovers to a usable Welcome workspace.
+- Startup focuses Welcome and also creates Accounts, Relay Settings, Home,
+  Notifications, and Tweet before async storage finishes. Invalid, blocked, or
+  corrupt storage recovers to a usable Welcome workspace.

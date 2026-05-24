@@ -2,8 +2,8 @@
 
 ## Purpose
 
-This file records supported and planned Nostr protocol surfaces without claiming
-unimplemented behavior.
+This file records implemented, design-only, not implemented, and out-of-scope
+Nostr protocol surfaces without claiming unavailable behavior.
 
 ## Core Support
 
@@ -47,11 +47,12 @@ unimplemented behavior.
 - NIP-11 relay information documents from relay HTTP endpoints with
   `application/nostr+json` accept headers.
 
-## Later Support
+## Status
 
-- Passkey-protected local secret storage is design-only.
-- Encrypted direct messages wait for security docs and signer isolation.
-- Wallet custody is out of scope; zap support opens or copies invoices only.
+- Implemented: listed core and product support above.
+- Design-only: passkey-protected local secret storage.
+- Not implemented: encrypted direct messages.
+- Out of scope: wallet custody. Zap support opens or copies invoices only.
 
 ## Rule
 

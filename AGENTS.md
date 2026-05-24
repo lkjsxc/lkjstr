@@ -6,10 +6,12 @@ This file defines repository instructions for automated coding agents.
 
 ## Contract
 
-lkjstr is a docs-first SvelteKit Nostr workspace. Keep docs and implementation
-aligned in the same change, keep source files under 200 lines, keep docs under
-300 lines, avoid release shorthand wording in docs, and use factory functions
-instead of first-party classes in `src/` except for the Dexie database binding.
+lkjstr is a docs-first SvelteKit Nostr workspace. Keep
+[docs/current-state.md](docs/current-state.md), the relevant `docs/` contract,
+and implementation aligned in the same change. Keep source files under 200
+lines, docs under 300 lines, avoid release shorthand wording in docs, and use
+factory functions instead of first-party classes in `src/` except for the Dexie
+database binding.
 
 ## Product Rules
 
@@ -18,9 +20,9 @@ instead of first-party classes in `src/` except for the Dexie database binding.
 - New Tab offers Home, Tweet, Notifications, Search, Custom Request, Global,
   Profile Edit, Accounts, Relay Settings, Stats, Settings, Upload Settings,
   lkjstr Log, Mine npub, and Welcome.
-- Clean startup shows Welcome plus Accounts, Relay Settings, Home,
-  Notifications, and Tweet. Storage failure must recover to a usable Welcome
-  workspace.
+- Clean startup focuses Welcome and also creates Accounts, Relay Settings,
+  Home, Notifications, and Tweet. Storage failure must recover to a usable
+  Welcome workspace.
 - Profile tabs open from identity clicks. Profile Edit opens for active-account
   metadata editing. Thread tabs open from event clicks.
 - Settings are one flat key-value list.
@@ -56,6 +58,8 @@ instead of first-party classes in `src/` except for the Dexie database binding.
 
 ## Verification
 
-Run focused checks after edits and `pnpm verify` before handoff when practical.
+Run focused checks after edits. Docker Compose is the authoritative final gate:
+`docker compose -f docker-compose.yml config`, build `app`, `verify`, `e2e`,
+and `cloudflare`, then run the `verify`, `e2e`, and `cloudflare` services.
 Use synthetic relay tests for network behavior and Playwright for workspace
 flows.
