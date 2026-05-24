@@ -83,6 +83,12 @@ export function relayPageSegmentCursor(
     : { createdAt: Math.max(0, (segment.until ?? 1) - 1), id: 'f'.repeat(64) };
 }
 
+export function segmentBounds(
+  segment: RelayPageSegment,
+): Pick<NostrFilter, 'since' | 'until'> {
+  return { since: segment.since, until: segment.until };
+}
+
 function lowerBound(request: RelaySegmentRequest): number {
   return request.after ? boundarySince(request.after)! : 0;
 }

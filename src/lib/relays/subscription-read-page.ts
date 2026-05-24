@@ -1,4 +1,5 @@
 import type { RelayReadRequest } from '../events/types';
+import { relaySafeFilters } from '../events/nostr-filter-sanitize';
 import type { PoolEvent, RelayPool } from './relay-pool';
 import {
   limitedReadRelays,
@@ -28,13 +29,17 @@ export async function executeReadPage(
   request: RelayReadRequest,
   options: ReadPageOptions,
 ): Promise<ReadPageResult> {
+  const safeRequest = {
+    ...request,
+    filters: relaySafeFilters(request.filters),
+  };
   const relays = compatibleRelayList(
-    request.relays,
-    request.filters,
-    request.purpose,
+    safeRequest.relays,
+    safeRequest.filters,
+    safeRequest.purpose,
   );
   if (relays.length === 0) return { events: [], statuses: [] };
-  const effective = { ...request, relays };
+  const effective = { ...safeRequest, relays };
   const events: PoolEvent[] = [];
   let timedOut = false;
   let lastSnapshots: RelaySnapshot[] = [];
@@ -68,7 +73,12 @@ export async function executeReadPage(
         if (readPageComplete(snapshots, relays, subId)) finish();
       });
       if (!done)
-        close = pool.subscribe(relays, subId, request.filters, request.purpose);
+        close = pool.subscribe(
+          relays,
+          subId,
+          effective.filters,
+          effective.purpose,
+        );
     });
     return readResult(
       effective,

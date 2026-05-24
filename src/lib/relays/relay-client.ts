@@ -6,6 +6,7 @@ import {
   type NostrFilter,
   type RelayMessage,
 } from '../protocol';
+import { relaySafeFilters } from '../events/nostr-filter-sanitize';
 import { logRelayDiagnostic } from './relay-diagnostic-log';
 import { RelayClientMetrics } from './relay-client-metrics';
 import { parseRelayMessageData } from './relay-message-data';
@@ -77,11 +78,12 @@ export class RelayClient {
   }
   subscribe(id: string, filters: readonly NostrFilter[]): void {
     if (!this.#validSubscriptionId(id, 'REQ')) return;
+    const safeFilters = relaySafeFilters(filters);
     this.#eoseBySub[id] = false;
-    this.#filtersBySub.set(id, filters);
+    this.#filtersBySub.set(id, safeFilters);
     this.#stats.activeSubscriptionIds.add(id);
     delete this.#closedBySub[id];
-    this.send(['REQ', id, ...filters]);
+    this.send(['REQ', id, ...safeFilters]);
   }
   closeSubscription(id: string): void {
     if (!this.#validSubscriptionId(id, 'CLOSE')) return;
@@ -134,9 +136,12 @@ export class RelayClient {
       // prettier-ignore
       recordRelayClosedPolicy(this.url, message[2], this.#filtersBySub.get(message[1]) ?? []);
       this.#stats.activeSubscriptionIds.delete(message[1]);
-      this.#addDiagnostic('closed', message[2], message[1]);
+      // prettier-ignore
+      this.#addDiagnostic('closed', message[2], message[1], this.#filtersBySub.get(message[1]) ?? []);
     }
-    if (message[0] === 'NOTICE') this.#addDiagnostic('notice', message[1]);
+    if (message[0] === 'NOTICE')
+      // prettier-ignore
+      this.#addDiagnostic('notice', message[1], undefined, [...this.#filtersBySub.values()].flat());
     if (message[0] === 'AUTH') this.#addDiagnostic('auth', message[1]);
     if (message[0] === 'EOSE') {
       this.#eoseBySub[message[1]] = true;
@@ -147,6 +152,7 @@ export class RelayClient {
     kind: RelayDiagnosticKind,
     message: string,
     subId?: string,
+    filters: readonly NostrFilter[] = [],
   ): void {
     this.#diagnostics = [
       ...this.#diagnostics.slice(-19),
@@ -160,9 +166,8 @@ export class RelayClient {
     ];
     if (kind === 'parse-error' || kind === 'invalid-event')
       this.#lastError = message;
-    logRelayDiagnostic(kind, message, this.url, subId);
+    logRelayDiagnostic(kind, message, this.url, subId, filters);
   }
-
   // prettier-ignore
   #validSubscriptionId(id: string, action: string): boolean { if (relaySubscriptionIdValid(id)) return true; const message = `${action} subscription id is longer than ${maxRelaySubscriptionIdLength} characters`; this.#lastError = message; this.#metrics.rejectSubscription(); this.#addDiagnostic('invalid-subscription', message, id.slice(0, 48)); this.#setState('error'); return false; }
 

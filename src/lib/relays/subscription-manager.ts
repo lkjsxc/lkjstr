@@ -1,5 +1,6 @@
 import { sharedRelayPool, type PoolEvent, type RelayPool } from './relay-pool';
 import type { RelayReadRequest } from '../events/types';
+import { relaySafeFilters } from '../events/nostr-filter-sanitize';
 import { appendAppLog, boundedMessage } from '../log/app-log';
 import { countRuntime } from '../app/runtime-counters';
 import type { RelaySnapshot } from './types';
@@ -48,14 +49,15 @@ export class RelaySubscriptionManager {
   }
 
   subscribeLive(request: RelayReadRequest, listener: Listener): () => void {
-    const key = subscriptionKey(request);
+    const safeRequest = relaySafeReadRequest(request);
+    const key = subscriptionKey(safeRequest);
     const existing = this.#entries.get(key);
     if (existing) {
       existing.listeners.add(listener);
       return () => this.#remove(key, listener);
     }
     const listeners = new Set<Listener>([listener]);
-    const subId = relayFacingSubId(request.key);
+    const subId = relayFacingSubId(safeRequest.key);
     const offEvent = this.#pool.onEvent((event) => {
       if (event.subId === subId)
         listeners.forEach((item) =>
@@ -64,10 +66,10 @@ export class RelaySubscriptionManager {
       if (event.subId === subId) countRuntime('subscription-manager', 'events');
     });
     const close = this.#pool.subscribe(
-      request.relays,
+      safeRequest.relays,
       subId,
-      request.filters,
-      request.purpose,
+      safeRequest.filters,
+      safeRequest.purpose,
     );
     this.#entries.set(key, {
       subId,
@@ -98,14 +100,15 @@ export class RelaySubscriptionManager {
     request: RelayReadRequest,
     options: ReadPageOptions = {},
   ): Promise<ReadPageResult> {
-    const dedupeKey = readDedupeKey(request, options);
+    const safeRequest = relaySafeReadRequest(request);
+    const dedupeKey = readDedupeKey(safeRequest, options);
     const existing = this.#inFlightReads.get(dedupeKey);
     if (existing) return existing;
     const promise = executeReadPage(
       this.#pool,
       this.#readLimiter,
       this.#readState,
-      request,
+      safeRequest,
       options,
     ).finally(() => this.#inFlightReads.delete(dedupeKey));
     this.#inFlightReads.set(dedupeKey, promise);
@@ -172,7 +175,7 @@ export function subscriptionKey(request: RelayReadRequest): string {
   return JSON.stringify({
     key: request.key,
     relays: normalizedRelayList(request.relays),
-    filters: request.filters,
+    filters: relaySafeFilters(request.filters),
     purpose: request.purpose,
   });
 }
@@ -192,3 +195,6 @@ function readDedupeKey(
     timeoutMs: options.timeoutMs ?? 5000,
   });
 }
+
+// prettier-ignore
+function relaySafeReadRequest(request: RelayReadRequest): RelayReadRequest { return { ...request, filters: relaySafeFilters(request.filters) }; }

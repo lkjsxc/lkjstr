@@ -12,6 +12,7 @@ import { needsCursorSlack, pageScanItems } from './relay-page-scan-items';
 import { readScanBatch, type BatchReadResult } from './relay-page-scan-batch';
 import {
   canSplitRelayPageSegment,
+  segmentBounds,
   type RelayPageSegment,
 } from './relay-page-segments';
 import type { RelayGroupPageRequest } from './relay-page';
@@ -66,8 +67,9 @@ async function readGroup(
   let complete = true;
   let dense = false;
   let contacted = false;
+  const bounds = segmentBounds(segment);
   const baseFilters = positiveFilters(
-    request.filters(group, segment),
+    request.filters(group, bounds),
     request.pageSize,
   );
   for (const [attemptIndex, attempt] of [1, 2, 4].entries()) {
@@ -82,7 +84,7 @@ async function readGroup(
     contacted = false;
     for (const [batchIndex, batch] of batches.entries()) {
       const filters = batch.filters.map((filter) =>
-        mergeBounds(filter, segment),
+        mergeBounds(filter, bounds),
       );
       const read = await readScanBatch(request, group.key, {
         segmentIndex,
@@ -168,11 +170,12 @@ async function recordUnresolved(
   dense: boolean,
   raw: readonly PoolEvent[],
 ): Promise<void> {
+  const bounds = segmentBounds(segment);
   await recordScanCoverage(
     request,
     groupKey,
     relays,
-    filters.map((filter) => mergeBounds(filter, segment)),
+    filters.map((filter) => mergeBounds(filter, bounds)),
     'unresolved',
     {
       reason: dense ? 'dense-minimum-or-budget' : 'incomplete-minimum',

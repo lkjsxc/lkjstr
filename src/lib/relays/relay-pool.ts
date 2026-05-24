@@ -3,6 +3,7 @@ import {
   type NostrFilter,
   type RelayMessage,
 } from '../protocol';
+import { relaySafeFilters } from '../events/nostr-filter-sanitize';
 import { RelayClient } from './relay-client';
 import { recordRelayDiagnosticSummary } from './relay-diagnostic-summary';
 import { recordRelayHealthEvidence } from './relay-health';
@@ -48,8 +49,9 @@ export class RelayPool {
     filters: readonly NostrFilter[],
     purpose?: RelayRequestPurpose,
   ): () => void {
-    const urls = compatibleRelayList(relays, filters, purpose);
-    for (const url of urls) this.#client(url).subscribe(subId, filters);
+    const safeFilters = relaySafeFilters(filters);
+    const urls = compatibleRelayList(relays, safeFilters, purpose);
+    for (const url of urls) this.#client(url).subscribe(subId, safeFilters);
     return () =>
       urls.forEach((url) => this.#client(url).closeSubscription(subId));
   }

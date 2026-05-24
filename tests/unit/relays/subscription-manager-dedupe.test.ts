@@ -1,4 +1,5 @@
 import { describe, expect, it, vi } from 'vitest';
+import type { NostrFilter } from '../../../src/lib/protocol';
 import { RelayPool } from '../../../src/lib/relays/relay-pool';
 import {
   RelaySubscriptionManager,
@@ -22,6 +23,38 @@ describe('subscription manager read sharing', () => {
     await Promise.all([
       manager.readPage(request, { timeoutMs: 1 }),
       manager.readPage(request, { timeoutMs: 1 }),
+    ]);
+
+    expect(subscribe).toHaveBeenCalledOnce();
+  });
+
+  it('dedupes reads that differ only by internal filter metadata', async () => {
+    const pool = new RelayPool();
+    const subscribe = vi.spyOn(pool, 'subscribe').mockReturnValue(vi.fn());
+    vi.spyOn(pool, 'onEvent').mockReturnValue(vi.fn());
+    vi.spyOn(pool, 'onState').mockReturnValue(vi.fn());
+    const manager = new RelaySubscriptionManager(pool);
+    const base = {
+      key: 'metadata-page',
+      relays: ['relay.example'],
+      purpose: 'feed' as const,
+    };
+
+    await Promise.all([
+      manager.readPage(
+        {
+          ...base,
+          filters: [{ kinds: [1], depth: 1 } as unknown as NostrFilter],
+        },
+        { timeoutMs: 1 },
+      ),
+      manager.readPage(
+        {
+          ...base,
+          filters: [{ kinds: [1], span: 60 } as unknown as NostrFilter],
+        },
+        { timeoutMs: 1 },
+      ),
     ]);
 
     expect(subscribe).toHaveBeenCalledOnce();
