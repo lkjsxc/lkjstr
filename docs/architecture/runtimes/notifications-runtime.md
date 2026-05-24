@@ -8,10 +8,9 @@ backfill.
 ## Contract
 
 - Load local notification records before relying on relay events.
-- Background sync and the tab runtime subscribe to supported active-account
-  `#p` events: kinds `0`, `1`, `6`, `7`, `16`, and `9735`.
-- Notifications tab relay pages use the shared `30` item feed page size;
-  background notification sync relay reads use `50`.
+- The Notifications tab runtime owns notification relay sync for supported
+  active-account `#p` events: kinds `0`, `1`, `6`, `7`, `16`, and `9735`.
+- Notifications tab relay pages use the shared `30` item feed page size.
 - Store notification source events through the shared repository.
 - Resolve target/root event context from the shared repository only as
   explicitly labeled fallback content when the source notification event is

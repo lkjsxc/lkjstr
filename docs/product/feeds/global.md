@@ -12,7 +12,8 @@ Global shows recent notes and reposts from the selected readable relay set.
 - Relay reads request recent kinds `1`, `6`, and `16` without author filtering.
 - Global performs one initial adaptive relay scan with bounded `since`/`until`
   windows, then keeps live subscriptions bounded with startup `since`.
-- Live relay events prepend into the same repository-backed feed model.
+- Live relay events prepend into the same repository-backed feed model and are
+  capped by the `180` item window.
 - Initial and older pages request `30` items.
 - The tab keeps a `180` item window.
 - Older pages load after near-bottom scroll or when the loaded rows are shorter

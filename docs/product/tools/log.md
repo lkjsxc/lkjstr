@@ -13,6 +13,7 @@ editing user data.
   repeats quickly.
 - Relay snapshots and diagnostic summaries remain the source for raw relay
   counters.
+- The Log tool owns relay snapshot polling while it is visible.
 - The tool does not create relay subscriptions, mutate relay settings, clear
   IndexedDB data, or retry failed jobs.
 - Closing the tab releases only UI-owned timers and DOM state.

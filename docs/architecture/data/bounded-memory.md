@@ -13,6 +13,7 @@ state after the user navigates, closes tabs, or leaves reads unfinished.
   subscription cleanup removes client-side subscription maps.
 - One-shot reads generate unique relay-facing ids without retaining historical
   request-key sets.
+- One-shot reads close early at the event cap and report incomplete coverage.
 - `AbortSignal` cancels paged reads, closes relay subscriptions, and releases
   read limiter slots.
 - Subscription manager handles close live subscriptions and abort in-flight
@@ -23,8 +24,8 @@ state after the user navigates, closes tabs, or leaves reads unfinished.
   fires.
 - Idle relay pool clients close and leave the client map after a short grace
   period once they have no active subscriptions or publish waiters.
-- Relay snapshots are current-session diagnostic history only and keep the most
-  recent `100` relays.
+- Relay snapshots are current-session diagnostic history only, keep the most
+  recent `100` relays, and are polled only by diagnostics surfaces.
 - Profile summaries keep the most recent `1000` pubkeys in memory.
 - Relay request compatibility evidence keeps the most recent `250` relays and
   expires after one hour.
@@ -35,6 +36,8 @@ state after the user navigates, closes tabs, or leaves reads unfinished.
 - Feed coverage memory fallback keeps the most recent `500` rows; IndexedDB
   coverage rows are compacted by age and status.
 - Reference indexes use bounded maps or time-based expiration.
+- Workspace snapshots above the fixed local size cap are rejected before JSON
+  parsing, and restored closed-tab history is capped.
 - Runtime factories ignore async results and relay events after close.
 - Worker handles terminate on result, error, cancellation, and tab destroy.
 - UI timers are cleared when their owning row, menu, header, or tab is

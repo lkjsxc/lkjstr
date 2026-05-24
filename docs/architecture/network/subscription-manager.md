@@ -25,6 +25,10 @@ runtime surfaces.
   helpers decide event sorting, duplicate merging, and cursor filtering.
 - `readPage(request, { signal })` cancels local relay work when the signal
   aborts and returns collected events with abort status metadata.
+- `readPage` has a default hard cap of `1000` relay events. Callers may pass a
+  smaller cap for tighter surfaces.
+- Paged reads close their relay subscription early when the event cap is
+  reached. Status metadata marks that relay coverage as incomplete.
 - Paged reads close on EOSE from all active relays, terminal relay state, or
   timeout.
 - Relay `CLOSED`, EOSE, socket closed, and socket error are terminal for paged

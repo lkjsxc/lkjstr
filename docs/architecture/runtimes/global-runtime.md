@@ -10,6 +10,7 @@ Global runtime owns unauthenticated recent-note loading from readable relays.
 - Subscribe to live kind `1` notes with startup `since`.
 - Perform one adaptive bounded initial relay scan with `since` and `until`.
 - Keep Global to a `180` item in-memory window.
+- Retain at most `180` live and cached Global rows even if relays stream more.
 - Load older pages through `loadOlder()` from the bottom cursor.
 - Load newer pages through `loadNewer()` from the top cursor when newer
   resident chunks were pruned. Newer pages read both cache and relays.

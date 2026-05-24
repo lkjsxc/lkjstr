@@ -12,6 +12,7 @@ Thread runtime owns event root and reply loading.
 - It subscribes with `ids` for the root and `#e` for replies.
 - It stores incoming events in the shared event cache.
 - It keeps a `240` item thread window.
+- Retain at most `240` live and cached Thread rows even if relays stream more.
 - It exposes `loadOlder()` and `loadNewer()`.
 - State exposes `loadingOlder`, `hasOlder`, `loadingNewer`, `hasNewer`,
   `oldestCursor`, and `newestCursor`.

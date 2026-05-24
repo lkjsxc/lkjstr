@@ -6,9 +6,12 @@ This tree is the implementation contract for lkjstr. Product behavior,
 runtime ownership, relay policy, and verification expectations are documented
 here before code is changed.
 
-## Tree
+## Current State
 
 - [current-state.md](current-state.md): implemented app state.
+
+## Architecture
+
 - [architecture/README.md](architecture/README.md): source ownership.
 - [architecture/data/README.md](architecture/data/README.md): storage and feed
   memory.
@@ -31,8 +34,6 @@ here before code is changed.
   identity hydration.
 - [architecture/network/job-manager.md](architecture/network/job-manager.md):
   background jobs.
-- [protocol/custom-emoji.md](protocol/custom-emoji.md): NIP-30 custom emoji
-  parsing, rendering, and publishing rules.
 - [architecture/network/relay-pool.md](architecture/network/relay-pool.md):
   WebSocket relay clients.
 - [architecture/network/relay-routing.md](architecture/network/relay-routing.md):
@@ -71,6 +72,9 @@ here before code is changed.
   UI ownership.
 - [architecture/workspace/workspace-layout-tree.md](architecture/workspace/workspace-layout-tree.md):
   layout tree.
+
+## Decisions
+
 - [decisions/README.md](decisions/README.md): durable decisions.
 - [decisions/browser-first.md](decisions/browser-first.md): browser-first
   runtime.
@@ -78,6 +82,9 @@ here before code is changed.
   boundary.
 - [decisions/relay-ownership.md](decisions/relay-ownership.md): user-owned
   relays.
+
+## Operations
+
 - [operations/README.md](operations/README.md): verification and safety.
 - [operations/ci.md](operations/ci.md): continuous integration.
 - [operations/cloudflare-workers.md](operations/cloudflare-workers.md):
@@ -85,11 +92,14 @@ here before code is changed.
 - [operations/data-safety.md](operations/data-safety.md): local data safety.
 - [operations/diagnostics.md](operations/diagnostics.md): logs and diagnostics.
 - [operations/docker.md](operations/docker.md): Docker checks.
-- [operations/readiness.md](operations/readiness.md): handoff readiness.
+- [operations/readiness.md](operations/readiness.md): handoff checks.
 - [operations/testing-ownership.md](operations/testing-ownership.md): test
   ownership.
 - [operations/verification.md](operations/verification.md): local
   verification.
+
+## Product
+
 - [product/README.md](product/README.md): user-facing workspace contract.
 - [product/feeds/README.md](product/feeds/README.md): reading surfaces.
 - [product/feeds/global.md](product/feeds/global.md): Global feed.
@@ -110,7 +120,8 @@ here before code is changed.
 - [product/tools/log.md](product/tools/log.md): current-session diagnostics.
 - [product/tools/mine-npub.md](product/tools/mine-npub.md): vanity local
   signing key generation.
-- [product/tools/profile-edit.md](product/tools/profile-edit.md): Profile Edit.
+- [product/tools/profile-edit.md](product/tools/profile-edit.md): active-account
+  metadata writes.
 - [product/tools/relay-management.md](product/tools/relay-management.md):
   relay management.
 - [product/tools/search.md](product/tools/search.md): Search.
@@ -126,9 +137,13 @@ here before code is changed.
 - [product/workspace/scope.md](product/workspace/scope.md): workspace scope.
 - [product/workspace/tabs.md](product/workspace/tabs.md): tabs.
 - [product/workspace/workflows.md](product/workspace/workflows.md): workflows.
-- [product/workspace/workspace.md](product/workspace/workspace.md):
-  workspace.
+- [product/workspace/workspace.md](product/workspace/workspace.md): workspace.
+
+## Protocol
+
 - [protocol/README.md](protocol/README.md): Nostr contracts.
+- [protocol/custom-emoji.md](protocol/custom-emoji.md): NIP-30 custom emoji
+  parsing, rendering, and publishing rules.
 - [protocol/default-relays.md](protocol/default-relays.md): seeded relays.
 - [protocol/event-actions.md](protocol/event-actions.md): event action writes.
 - [protocol/events.md](protocol/events.md): events.
@@ -138,18 +153,27 @@ here before code is changed.
 - [protocol/nip-support.md](protocol/nip-support.md): NIP support.
 - [protocol/relays.md](protocol/relays.md): relays.
 - [protocol/zaps.md](protocol/zaps.md): NIP-57 invoice handoff.
+
+## Repository
+
 - [repository/README.md](repository/README.md): layout and workflow rules.
 - [repository/documentation-standards.md](repository/documentation-standards.md):
   documentation standards.
-- [repository/functional-style.md](repository/functional-style.md):
-  source functional style.
+- [repository/functional-style.md](repository/functional-style.md): source
+  functional style.
 - [repository/layout.md](repository/layout.md): repository layout.
 - [repository/workflow.md](repository/workflow.md): workflow.
+
+## Research
+
 - [research/README.md](research/README.md): background notes.
 - [research/browser-storage.md](research/browser-storage.md): browser storage.
 - [research/nostr-client-surfaces.md](research/nostr-client-surfaces.md):
   client surfaces.
 - [research/open-questions.md](research/open-questions.md): open questions.
+
+## Vision
+
 - [vision/README.md](vision/README.md): long-term scope.
 - [vision/north-star.md](vision/north-star.md): north star.
 - [vision/principles.md](vision/principles.md): principles.

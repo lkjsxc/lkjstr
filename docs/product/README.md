@@ -21,6 +21,7 @@ itself: split tiles, tabs, relay-backed data, and local state.
 - [tools/custom-request.md](tools/custom-request.md): validated one-shot relay
   reads.
 - [tools/event-actions.md](tools/event-actions.md): event action writes.
+- [tools/log.md](tools/log.md): current-session diagnostics.
 - [tools/mine-npub.md](tools/mine-npub.md): vanity local signing key
   generation.
 - [tools/profile-edit.md](tools/profile-edit.md): active-account metadata

@@ -9,8 +9,8 @@ bounded as timelines grow.
 
 - Feed pages request `30` items by default.
 - Home, Global, Profile, and Notifications keep at most `180` resident feed
-  items per tab across retained chunks.
-- Thread tabs keep at most `240` loaded thread items.
+  items per tab across retained chunks and live inserts.
+- Thread tabs keep at most `240` loaded thread items, including live inserts.
 - Feed windows keep ordered event ids, an item map, prune metadata, and compound
   oldest/newest cursors.
 - Older pages are requested from the bottom boundary cursor.
@@ -41,6 +41,8 @@ bounded as timelines grow.
 - Historical Home author filters use per-filter relay budgets so large follow
   lists do not starve author chunks. Final display slicing remains local and
   capped by page and window size.
+- Relay page reads stop collecting once their event cap is reached and treat
+  the affected coverage as incomplete.
 - Metadata lookup is scoped to authors currently present in loaded items and is
   capped to `30` missing profiles per loaded page.
 - Relay text frames are parsed without an app-imposed byte ceiling. Parse
@@ -76,9 +78,8 @@ or older-page loads from moving the visible row.
   attempt, and duration metadata. The memory fallback keeps `500` recent rows.
   Complete coverage compacts sooner than dense, incomplete, unresolved, or
   failed diagnostics.
-- Home backfill follows adaptive relay cursors from the oldest loaded item or
-  current time. It stops on exhaustion, cancellation, work budget, repeated
-  cursor, unresolved cursor, or missing continuation cursor.
+- Home does not start hidden session backfill when opened. Older history loads
+  through scroll-driven or explicit page requests.
 
 ## Verification
 
@@ -92,8 +93,11 @@ or older-page loads from moving the visible row.
 - Runtime counters keep counts and timestamps only. Segment counters include
   split, grown, dense, unresolved, complete coverage, and incomplete coverage
   counts. They do not retain event payloads, relay messages, or row objects.
-- Reference, profile, relay snapshot, relay policy, relay info, diagnostic,
+- Reference, profile, relay policy, relay info, diagnostic,
   and feed coverage caches use bounded in-memory maps with time-based pruning
   where stale entries can affect routing or presentation.
+- Relay snapshots are pulled by diagnostics surfaces only.
+- Oversized workspace snapshots are ignored before parsing and recovered from
+  durable storage or bootstrap state.
 - Runtime factories drop async results after close and release owned
   subscriptions, timers, workers, and DOM listeners.

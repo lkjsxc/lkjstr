@@ -17,14 +17,14 @@ notification context header and the source event as the primary body.
   for context.
 - Notification events are written through the shared repository.
 - Notifications tab initial and older pages request `30` records.
-- Background notification sync relay reads request `50` records.
+- Notification relay sync starts when the Notifications tab is opened.
 - Notification tabs keep a `180` item window.
 - Older notifications load only after scrolling near the bottom.
 - Historical relay pages use interval windows with `since` and `until` from
   the oldest loaded notification event.
 - Live relay reads set `since` when the notification runtime starts.
 - Visible notifications are marked read when the tab is visible and receives
-  focus. Background sync does not mark records read.
+  focus.
 - Initial loading settles after local records load and subscription setup
   finishes, even when no notification event arrives.
 - Partial relay failure stays visible in diagnostics but does not block cached

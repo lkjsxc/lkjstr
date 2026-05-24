@@ -27,6 +27,7 @@ its NIP-02 follows.
 - Initial and older pages request `30` items.
 - The tab keeps a `180` item window and exposes jump to latest after newer
   items are pruned.
+- Live events are retained only inside the same `180` item window.
 - Older pages load after near-bottom scroll or when the loaded rows are shorter
   than the viewport and `hasOlder` remains true.
 - Initial and historical relay pages use compound `{createdAt,id}` cursors and
@@ -35,9 +36,8 @@ its NIP-02 follows.
   conservative.
 - Newer catch-up reads cache and relays from the newest bounded segment toward
   the top cursor.
-- Session backfill follows adaptive continuation cursors and stops on
-  exhaustion, cancellation, work budget, repeated cursor, unresolved cursor, or
-  missing continuation cursor.
+- Home does not start automatic session backfill on open. Older history loads
+  after scroll or explicit page requests.
 - Adaptive feed requests remain bounded even if a route-specific filter omits
   the provided scan bounds. Missing detailed relay status is treated as
   incomplete.

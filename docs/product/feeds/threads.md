@@ -16,6 +16,7 @@ Thread tabs show a root event and replies opened from timeline event actions.
 - Runtime caches reactions and reposts as thread metadata, not replies.
 - Initial and older thread pages request `30` items.
 - Thread tabs keep a `240` item window.
+- Live replies are retained only inside the same `240` item window.
 - Older replies load after near-bottom scroll or viewport auto-fill.
 - Historical reply pages use the event tag index, compound `{createdAt,id}`
   cursors, interval windows, local relay boundary filtering, and merged relay

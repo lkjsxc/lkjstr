@@ -11,6 +11,7 @@ Home runtime owns active-account follow discovery and followed-note loading.
 - Build authors from active account plus latest follow-list `p` tags.
 - Deduplicate authors and chunk author filters when needed.
 - Keep Home to a `180` item in-memory window.
+- Retain at most `180` live and cached Home rows even if relays stream more.
 - Load older pages through `loadOlder()` from the bottom cursor.
 - Load newer pages through `loadNewer()` from the top cursor when newer
   resident chunks were pruned. The newer page reads cache and relay catch-up
@@ -39,8 +40,8 @@ Home runtime owns active-account follow discovery and followed-note loading.
 - Stop loading when a page is filled, all adaptive segments reach terminal EOSE
   completion, or an unresolved relay segment requires conservative `hasOlder`.
   Missing detailed page status is incomplete for adaptive feed scans.
-- Background Home backfill follows adaptive older cursors and never uses fixed
-  day phases.
+- Home does not start automatic session backfill on open. Older history loads by
+  scroll-driven or explicit page requests.
 - Do not show terminal history state while the most recent relay scan is
   incomplete.
 - Expose `no-active-account`, `loading-follows`, `no-follow-list`,
