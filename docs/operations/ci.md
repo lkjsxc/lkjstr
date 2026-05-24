@@ -10,8 +10,9 @@ CI keeps repository gates reproducible outside a developer machine.
   build.
 - Playwright runs browser workflows with the checked-in app.
 - Docker Compose validates `docker-compose.yml` and builds `app`, `verify`,
-  and `e2e` targets.
-- Docker Compose runs the `verify` and `e2e` targets from built images.
+  `e2e`, and `cloudflare` targets.
+- Docker Compose runs the `verify`, `e2e`, and `cloudflare` targets from built
+  images.
 
 ## Images
 
@@ -27,4 +28,5 @@ image.
 
 - CI must use `docker-compose.yml`.
 - Compose services must not require environment blocks.
+- The Compose gate includes `cloudflare`.
 - GHCR publishing is limited to `main`.

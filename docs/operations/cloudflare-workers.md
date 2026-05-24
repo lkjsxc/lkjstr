@@ -26,6 +26,7 @@ Cloudflare Workers docs define the hosted build target for lkjstr.
 
 ```sh
 pnpm cloudflare:dry-run
+docker compose -f docker-compose.yml config
 docker compose -f docker-compose.yml build cloudflare
 docker compose -f docker-compose.yml run --rm cloudflare
 ```

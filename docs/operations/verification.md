@@ -30,7 +30,7 @@ docker compose -f docker-compose.yml run --rm e2e
 docker compose -f docker-compose.yml run --rm cloudflare
 ```
 
-Run all four Docker command groups before claiming image-backed verification.
+Run all five Docker command groups before claiming image-backed verification.
 
 Focused relay paging changes should also run:
 
