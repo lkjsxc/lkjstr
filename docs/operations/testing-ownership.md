@@ -19,6 +19,9 @@ Testing ownership maps behavior to the right test layer.
   IDs, and session compatibility filtering.
 - Relay page helper sorting, duplicate relay provenance, `before` and `after`
   cursor filtering, same-second boundaries, and NIP-11 limit shaping.
+- Adaptive relay segment planning, per-relay density classification, dense
+  subdivision, sparse growth, unresolved coverage, and aggregate false-positive
+  guards.
 - Follow-list parsing, dedupe, and self inclusion.
 - Timeline no-active-account, loading-follows, no-follow-list,
   no-enabled-relay, auth-required, subscription-closed, relay-failed,
@@ -31,6 +34,8 @@ Testing ownership maps behavior to the right test layer.
   `loadNewer()` behavior.
 - Event list near-bottom scroll triggering.
 - Cold-cache initial relay backfill for Home, Global, Profile, and Thread.
+- Home and Global newer relay catch-up, Profile initial post persistence, and
+  adaptive Home backfill without fixed day labels.
 - Compound cursor filtering for same-second older relay results.
 - Media/content parsing for image, video, audio, normal links, and invalid URLs.
 - Deep event tree continuation rows and same-pane Profile or Thread tab reuse.
@@ -51,7 +56,7 @@ Testing ownership maps behavior to the right test layer.
 - Flat Settings tab.
 - Tweet tab label and prerequisites.
 - Relay settings affecting active Account home behavior.
-- Synthetic relay diagnostics and cache-only Timeline notes.
+- Synthetic relay diagnostics and cache-first Timeline notes.
 - Synthetic relay `since`, `until`, and `limit` handling.
 - Synthetic relay cold-cache Home notes from historical initial pages.
 - Row click Thread navigation and avatar or name Profile navigation.

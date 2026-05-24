@@ -13,7 +13,8 @@ Home runtime owns active-account follow discovery and followed-note loading.
 - Keep Home to a `180` item in-memory window.
 - Load older pages through `loadOlder()` from the bottom cursor.
 - Load newer pages through `loadNewer()` from the top cursor when newer
-  resident chunks were pruned.
+  resident chunks were pruned. The newer page reads cache and relay catch-up
+  before merging into the resident window.
 - Expose `loadingOlder`, `hasOlder`, `loadingNewer`, `hasNewer`,
   `oldestCursor`, and `newestCursor`.
 - Apply one total request budget across Home author chunks.
@@ -35,9 +36,11 @@ Home runtime owns active-account follow discovery and followed-note loading.
   from NIP-65, NIP-02, relay receipts, and discovery evidence.
 - Do not fall back to disabled, removed, or hidden relays.
 - Do not subscribe when there is no active account.
-- Stop loading when a page is filled, all scanned windows reach terminal EOSE
-  completion, or an incomplete relay window requires conservative `hasOlder`.
+- Stop loading when a page is filled, all adaptive segments reach terminal EOSE
+  completion, or an unresolved relay segment requires conservative `hasOlder`.
   Missing detailed page status is incomplete for adaptive feed scans.
+- Background Home backfill follows adaptive older cursors and never uses fixed
+  day phases.
 - Do not show terminal history state while the most recent relay scan is
   incomplete.
 - Expose `no-active-account`, `loading-follows`, `no-follow-list`,

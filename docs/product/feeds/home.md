@@ -33,6 +33,11 @@ its NIP-02 follows.
   adaptive bounded windows with both `since` and `until`. Empty complete
   windows continue older; incomplete or dense windows keep `hasOlder`
   conservative.
+- Newer catch-up reads cache and relays from the newest bounded segment toward
+  the top cursor.
+- Session backfill follows adaptive continuation cursors and stops on
+  exhaustion, cancellation, work budget, repeated cursor, unresolved cursor, or
+  missing continuation cursor.
 - Adaptive feed requests remain bounded even if a route-specific filter omits
   the provided scan bounds. Missing detailed relay status is treated as
   incomplete.
@@ -81,4 +86,5 @@ its NIP-02 follows.
 - `ready-with-events`: cache or relay data has matching notes.
 - `loadingOlder`: an older cache or relay page is being requested.
 - `hasOlder`: more older cached or relay-backed items may exist.
-- `hasNewer`: newer resident chunks can be loaded from the top cursor.
+- `hasNewer`: newer resident chunks or relay catch-up can be loaded from the
+  top cursor.

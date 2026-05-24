@@ -12,7 +12,7 @@ Global runtime owns unauthenticated recent-note loading from readable relays.
 - Keep Global to a `180` item in-memory window.
 - Load older pages through `loadOlder()` from the bottom cursor.
 - Load newer pages through `loadNewer()` from the top cursor when newer
-  resident chunks were pruned.
+  resident chunks were pruned. Newer pages read both cache and relays.
 - Initial and historical relay pages use compound `{createdAt,id}` cursors,
   adaptive `since`/`until` windows, local cursor filtering, and
   provenance-preserving event rows. Newer catch-up scans read newest bounded

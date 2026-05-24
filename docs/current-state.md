@@ -26,6 +26,8 @@ This document records the current implemented contract for the app.
   relay frame limits, diagnostics, send queue bounds, and pool ownership.
 - [architecture/network/relay-routing.md](architecture/network/relay-routing.md):
   route sources, discovery relay scope, and profile relay targeting.
+- [architecture/data/relay-pages.md](architecture/data/relay-pages.md):
+  adaptive relay segment scanning, density handling, and safe cursors.
 - [operations/verification.md](operations/verification.md): local verification
   commands.
 - [operations/docker.md](operations/docker.md): Docker Compose verification.
@@ -37,7 +39,8 @@ This document records the current implemented contract for the app.
 - Relay support determines whether NIP-50 search returns remote matches.
 - Cloudflare Workers is a verified hosting target only; it does not add a
   backend account service, relay proxy, or Cloudflare storage dependency.
-- Broad worker queue instrumentation is limited to persisted job records.
+- Broad worker queue instrumentation is limited to persisted job records and
+  runtime counters.
 - Passkey-protected local secret storage has a security design only; local
   signing secrets still use the raw local secret table.
 - Broad runtime instrumentation is not automatic; only explicitly job-backed

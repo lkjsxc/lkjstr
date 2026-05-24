@@ -33,10 +33,11 @@ bounded as timelines grow.
 - Newer relay reads scan from the newest bounded window down toward the current
   top cursor before local compound cursor filtering slices the page.
 - A timeout, relay closure, auth requirement, socket close, or socket error
-  stops older scanning at that window and keeps `hasMore` conservative.
-- Dense or incomplete relay ranges do not advance past unproven boundaries.
-  The next scan overlaps or retries from the safe scan cursor before falling
-  through to older sparse events.
+  stops scanning at the nearest unresolved frontier and keeps `hasMore`
+  conservative.
+- Dense and incomplete relay ranges do not advance past unproven boundaries.
+  Dense ranges retry up to `4x` limits and split; unresolved ranges keep the
+  next scan overlapping the safe frontier.
 - Historical Home author filters use per-filter relay budgets so large follow
   lists do not starve author chunks. Final display slicing remains local and
   capped by page and window size.
@@ -70,6 +71,12 @@ or older-page loads from moving the visible row.
   drafts are protected from event cache pruning.
 - Feed cursors are removed when their page boundary no longer points to a
   retained cached event.
+- Feed coverage rows store status, reason, limit, event count, unique count,
+  attempt, and duration metadata. Complete coverage compacts sooner than dense,
+  incomplete, unresolved, or failed diagnostics.
+- Home backfill follows adaptive relay cursors from the oldest loaded item or
+  current time. It stops on exhaustion, cancellation, work budget, repeated
+  cursor, unresolved cursor, or missing continuation cursor.
 
 ## Verification
 
@@ -80,5 +87,6 @@ or older-page loads from moving the visible row.
   memory is outside app control.
 - The synthetic WebSocket relay emits real signed Nostr events. The smoke test
   checks `performance.memory` when Chromium exposes it.
-- Runtime counters keep counts and timestamps only. They do not retain event
-  payloads, relay messages, or row objects.
+- Runtime counters keep counts and timestamps only. Segment counters include
+  split, grown, dense, unresolved, complete coverage, and incomplete coverage
+  counts. They do not retain event payloads, relay messages, or row objects.

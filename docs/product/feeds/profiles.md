@@ -64,7 +64,8 @@ Profile tabs show identity metadata and authored text notes.
 - Scanner-owned bounds are enforced at relay dispatch. A relay-effective limit
   smaller than the visible page size is dense when it fills.
 - When older scrolling prunes newer notes, Profile shows a load-newer affordance
-  above Notes and recovers newer notes from the current newest cursor.
+  above Notes and recovers newer notes from cache and relays with a dedicated
+  newer relay read id.
 - Live authored posts received while viewing an older pruned window are stored
   but not inserted visibly until newer notes are loaded.
 - Live relay reads set `since` when the profile runtime starts.
