@@ -9,9 +9,10 @@ import type {
   JobRecord,
   JobStatus,
 } from '../events/types';
+import { createBoundedMap } from '../fp/bounded-map';
 import { baseJob, terminalJobStatus } from './job-record';
 
-const memoryJobs = new Map<string, JobRecord>();
+const memoryJobs = createBoundedMap<string, JobRecord>({ maxSize: 500 });
 
 export type JobManager = ReturnType<typeof createJobManager>;
 

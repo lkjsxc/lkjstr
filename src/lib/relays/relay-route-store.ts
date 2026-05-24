@@ -4,6 +4,7 @@ import {
   boundedStorageRead,
   indexedDbAvailable,
 } from '../storage/safe-storage';
+import { createBoundedMap } from '../fp/bounded-map';
 import {
   isPubkey,
   kinds,
@@ -17,8 +18,10 @@ import type {
   RelayRouteSource,
 } from './relay-route-types';
 
-const memoryRoutes = new Map<string, RelayRoute>();
-const memoryBlocks = new Map<string, RelayRouteBlock>();
+const memoryRoutes = createBoundedMap<string, RelayRoute>({ maxSize: 2000 });
+const memoryBlocks = createBoundedMap<string, RelayRouteBlock>({
+  maxSize: 250,
+});
 
 export async function saveAuthorRelayRoute(
   input: Omit<RelayRoute, 'id' | 'updatedAt'>,

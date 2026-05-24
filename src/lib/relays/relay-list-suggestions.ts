@@ -4,6 +4,7 @@ import {
   bestEffortStorageWrite,
   boundedStorageRead,
 } from '../storage/safe-storage';
+import { createBoundedMap } from '../fp/bounded-map';
 import { listRelaySets, saveRelaySets, type RelayRecord } from './relay-store';
 
 export type RelayListSuggestionRecord = {
@@ -22,7 +23,9 @@ export type RelayListSuggestionInput = Pick<
   'relayUrl' | 'read' | 'write'
 >;
 
-const memorySuggestions = new Map<string, RelayListSuggestionRecord>();
+const memorySuggestions = createBoundedMap<string, RelayListSuggestionRecord>({
+  maxSize: 500,
+});
 
 export async function storeRelayListSuggestionsFromEvent(
   event: NostrEvent,

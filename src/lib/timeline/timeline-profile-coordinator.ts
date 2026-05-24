@@ -1,5 +1,6 @@
 import { hydrateProfiles } from '../identity/profile-hydration';
 import type { ProfileSummary } from '../identity/identity';
+import { createBoundedMap } from '../fp/bounded-map';
 import type { TimelineItem } from './timeline-store';
 
 export type TimelineProfileMap = Record<string, ProfileSummary>;
@@ -15,7 +16,7 @@ export function createTimelineProfileCoordinator(
   subId: string,
 ) {
   let profiles: TimelineProfileMap = {};
-  const misses = new Map<string, number>();
+  const misses = createBoundedMap<string, number>({ maxSize: 1000 });
   let requestKey = '';
   const missingAuthors = (items: readonly TimelineItem[]): string[] => {
     const now = Date.now();

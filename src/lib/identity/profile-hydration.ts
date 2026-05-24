@@ -1,4 +1,5 @@
 import { loadSettings } from '../settings/settings-store';
+import { createBoundedMap } from '../fp/bounded-map';
 import type { RelaySubscriptionManager } from '../relays/subscription-manager';
 import { sharedSubscriptionManager } from '../relays/subscription-manager';
 import type { ProfileSummary } from './identity';
@@ -18,7 +19,10 @@ export type HydrateProfilesOptions = {
 
 type ProfileMap = Record<string, ProfileSummary>;
 
-const inFlight = new Map<string, Promise<ProfileSummary | undefined>>();
+const inFlight = createBoundedMap<
+  string,
+  Promise<ProfileSummary | undefined>
+>({ maxSize: 500 });
 
 export async function hydrateProfiles({
   pubkeys,
@@ -33,7 +37,7 @@ export async function hydrateProfiles({
   if (missing.length === 0 || relays.length === 0) return cached;
   if (!(await metadataFetchEnabled())) return cached;
 
-  const pending = missing.filter((pubkey) => !inFlight.has(pubkey));
+  const pending = missing.filter((pubkey) => !inFlight.get(pubkey));
   if (pending.length > 0) {
     const batch = relayProfileBatch(
       pending,

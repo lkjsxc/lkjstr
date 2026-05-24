@@ -75,9 +75,11 @@
     const onFocus = () => void markVisibleRead();
     window.addEventListener('focus', onFocus);
     return () => {
+      profileRequest += 1;
       window.removeEventListener('focus', onFocus);
       unsubscribe();
       runtime?.close();
+      runtime = undefined;
     };
   });
 
@@ -100,7 +102,7 @@
     const request = ++profileRequest;
     void loadTimelineProfiles(missing, relays, `${props.tabId}:profiles`).then(
       (loaded) => {
-        if (request !== profileRequest) return;
+        if (request !== profileRequest || !runtime) return;
         currentProfiles = { ...loaded, ...currentProfiles };
         state = { ...state, profiles: currentProfiles };
       },

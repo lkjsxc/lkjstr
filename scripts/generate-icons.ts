@@ -14,16 +14,13 @@ const outputs = [
 await mkdir(staticDir, { recursive: true });
 const svg = await readFile(svgPath, 'utf8');
 const browser = await chromium.launch({ headless: true });
-const page = await browser.newPage();
-
-const pngs = await Promise.all(
-  outputs.map(async (output) => ({
-    ...output,
-    png: await renderPng(page, svg, output.size),
-  })),
-);
-
-await browser.close();
+let pngs: Awaited<ReturnType<typeof renderAll>>;
+try {
+  const page = await browser.newPage();
+  pngs = await renderAll(page, svg);
+} finally {
+  await browser.close();
+}
 
 for (const output of pngs) {
   await writeFile(new URL(output.path, staticDir), output.png);
@@ -64,6 +61,18 @@ async function renderPng(
     { dataUrl, size },
   );
   return Buffer.from(bytes);
+}
+
+async function renderAll(
+  page: Awaited<ReturnType<typeof browser.newPage>>,
+  svg: string,
+) {
+  return Promise.all(
+    outputs.map(async (output) => ({
+      ...output,
+      png: await renderPng(page, svg, output.size),
+    })),
+  );
 }
 
 function icoFromPngs(images: readonly { size: number; png: Buffer }[]): Buffer {

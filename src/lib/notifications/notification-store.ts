@@ -3,9 +3,12 @@ import {
   bestEffortStorageWrite,
   boundedStorageRead,
 } from '../storage/safe-storage';
+import { createBoundedMap } from '../fp/bounded-map';
 import type { NotificationRecord } from './notification';
 
-const memoryNotifications = new Map<string, NotificationRecord>();
+const memoryNotifications = createBoundedMap<string, NotificationRecord>({
+  maxSize: 1000,
+});
 
 export async function saveNotifications(
   records: readonly NotificationRecord[],

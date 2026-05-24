@@ -5,6 +5,7 @@ import {
   queryFeed,
   upsertEvent,
 } from '../events/repository';
+import { createBoundedMap } from '../fp/bounded-map';
 import { indexedDbAvailable } from '../storage/safe-storage';
 import { latestFollowList } from './follow-list';
 
@@ -13,7 +14,7 @@ export type TimelineItem = {
   readonly relays: readonly string[];
 };
 
-const memoryEvents = new Map<string, NostrEvent>();
+const memoryEvents = createBoundedMap<string, NostrEvent>({ maxSize: 2000 });
 
 export async function loadCachedTimeline(
   limit: number,

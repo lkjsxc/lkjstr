@@ -37,6 +37,7 @@ const plans: Record<string, readonly Step[]> = {
 
 const name = process.argv[2];
 const steps = name ? plans[name] : undefined;
+const maxOutputChunks = 200;
 if (!steps) {
   console.error(
     `usage: tsx scripts/run-quiet.ts ${Object.keys(plans).join('|')}`,
@@ -49,12 +50,17 @@ console.log(`ok ${name}`);
 
 async function run(step: Step): Promise<void> {
   const output: string[] = [];
+  const push = (data: Buffer): void => {
+    output.push(String(data));
+    if (output.length > maxOutputChunks)
+      output.splice(0, output.length - maxOutputChunks);
+  };
   const code = await new Promise<number | null>((resolve) => {
     const child = spawn(step.command, step.args, {
       stdio: ['ignore', 'pipe', 'pipe'],
     });
-    child.stdout.on('data', (data) => output.push(String(data)));
-    child.stderr.on('data', (data) => output.push(String(data)));
+    child.stdout.on('data', push);
+    child.stderr.on('data', push);
     child.on('close', resolve);
   });
   if (code === 0) {
