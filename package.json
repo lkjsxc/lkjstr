@@ -16,6 +16,7 @@
     "test:quiet": "tsx scripts/run-quiet.ts test",
     "test:watch": "vitest",
     "test:e2e": "playwright test",
+    "test:e2e:memory": "playwright test tests/e2e/heavy-feed-memory.spec.ts",
     "test:e2e:quiet": "tsx scripts/run-quiet.ts e2e",
     "cloudflare:dry-run": "pnpm build && wrangler deploy --dry-run",
     "verify": "pnpm check:repo && pnpm lint && pnpm check && pnpm test && pnpm build",

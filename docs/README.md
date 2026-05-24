@@ -107,6 +107,7 @@ here before code is changed.
   Request.
 - [product/tools/event-actions.md](product/tools/event-actions.md): event
   action writes.
+- [product/tools/log.md](product/tools/log.md): current-session diagnostics.
 - [product/tools/mine-npub.md](product/tools/mine-npub.md): vanity local
   signing key generation.
 - [product/tools/profile-edit.md](product/tools/profile-edit.md): Profile Edit.

@@ -21,9 +21,24 @@ state after the user navigates, closes tabs, or leaves reads unfinished.
   subscription manager when destroyed.
 - Publish OK waiters clear timeout timers when an OK arrives or the timeout
   fires.
-- Reference, profile, relay snapshot, relay policy, and diagnostic in-memory
-  indexes use bounded maps or time-based expiration.
+- Idle relay pool clients close and leave the client map after a short grace
+  period once they have no active subscriptions or publish waiters.
+- Relay snapshots are current-session diagnostic history only and keep the most
+  recent `100` relays.
+- Profile summaries keep the most recent `1000` pubkeys in memory.
+- Relay request compatibility evidence keeps the most recent `250` relays and
+  expires after one hour.
+- Relay information keeps the most recent `128` NIP-11 records in memory and
+  expires after thirty minutes; IndexedDB remains the durable source.
+- Relay diagnostic suppression and diagnostic summaries keep bounded memory
+  maps and never retain raw relay payloads.
+- Feed coverage memory fallback keeps the most recent `500` rows; IndexedDB
+  coverage rows are compacted by age and status.
+- Reference indexes use bounded maps or time-based expiration.
 - Runtime factories ignore async results and relay events after close.
+- Worker handles terminate on result, error, cancellation, and tab destroy.
+- UI timers are cleared when their owning row, menu, header, or tab is
+  destroyed.
 - Tab retention clears timers and closes retained runtimes on replacement,
   expiry, tab removal, pane destruction, and retention disablement.
 

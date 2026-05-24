@@ -49,5 +49,3 @@ This document records the current implemented contract for the app.
   signing secrets still use the raw local secret table.
 - Broad runtime instrumentation is not automatic; only explicitly job-backed
   flows appear in the job tree.
-- Source runtime APIs are migrating to factory handles so subscriptions, timers,
-  and local read resources have explicit cleanup.

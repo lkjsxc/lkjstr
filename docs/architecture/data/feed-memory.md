@@ -73,8 +73,9 @@ or older-page loads from moving the visible row.
 - Feed cursors are removed when their page boundary no longer points to a
   retained cached event.
 - Feed coverage rows store status, reason, limit, event count, unique count,
-  attempt, and duration metadata. Complete coverage compacts sooner than dense,
-  incomplete, unresolved, or failed diagnostics.
+  attempt, and duration metadata. The memory fallback keeps `500` recent rows.
+  Complete coverage compacts sooner than dense, incomplete, unresolved, or
+  failed diagnostics.
 - Home backfill follows adaptive relay cursors from the oldest loaded item or
   current time. It stops on exhaustion, cancellation, work budget, repeated
   cursor, unresolved cursor, or missing continuation cursor.
@@ -91,8 +92,8 @@ or older-page loads from moving the visible row.
 - Runtime counters keep counts and timestamps only. Segment counters include
   split, grown, dense, unresolved, complete coverage, and incomplete coverage
   counts. They do not retain event payloads, relay messages, or row objects.
-- Reference, profile, relay snapshot, relay policy, and diagnostic caches use
-  bounded in-memory maps with time-based pruning where stale entries can affect
-  routing or presentation.
+- Reference, profile, relay snapshot, relay policy, relay info, diagnostic,
+  and feed coverage caches use bounded in-memory maps with time-based pruning
+  where stale entries can affect routing or presentation.
 - Runtime factories drop async results after close and release owned
   subscriptions, timers, workers, and DOM listeners.

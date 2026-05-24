@@ -12,6 +12,12 @@ describe('package scripts', () => {
     expect(packageJson.scripts.lint).toContain('eslint');
   });
 
+  it('exposes focused memory browser smoke coverage', () => {
+    expect(packageJson.scripts['test:e2e:memory']).toBe(
+      'playwright test tests/e2e/heavy-feed-memory.spec.ts',
+    );
+  });
+
   it('exposes Cloudflare dry-run verification without a publish script', () => {
     expect(packageJson.scripts['cloudflare:dry-run']).toBe(
       'pnpm build && wrangler deploy --dry-run',

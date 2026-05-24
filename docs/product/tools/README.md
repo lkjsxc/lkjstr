@@ -11,6 +11,7 @@ Tool surfaces cover local state, writing, relay management, and diagnostics.
 - [cache.md](cache.md): local cache tab behavior.
 - [custom-request.md](custom-request.md): validated one-shot relay reads.
 - [event-actions.md](event-actions.md): row action writes.
+- [log.md](log.md): current-session app, relay, and job diagnostics.
 - [mine-npub.md](mine-npub.md): vanity local signing key generation.
 - [profile-edit.md](profile-edit.md): active-account metadata writes.
 - [relay-management.md](relay-management.md): relay settings and logs.
@@ -25,7 +26,8 @@ Tool surfaces cover local state, writing, relay management, and diagnostics.
 
 - Tool rows wrap long labels, values, URLs, keys, and status text.
 - Relay Settings is the only editable relay surface.
-- lkjstr Log is read-only and current-session only.
+- lkjstr Log is read-only, current-session only, and does not start relay
+  reads.
 - Stats is read-only and may refresh current-session snapshots.
 - Upload Settings edits the same `tweet.*` records as Settings.
 - Search, Custom Request, Profile Edit, and Author Context render existing

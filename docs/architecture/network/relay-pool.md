@@ -20,6 +20,8 @@ events, publish acknowledgements, and relay snapshots.
 - Delete per-subscription `EOSE`, `CLOSED`, and filter state when cleanup runs.
 - Keep snapshots for connection state, connection timing, last message time,
   last event id, last error, validation counters, and EOSE.
+- Keep only the most recent `100` relay snapshots for current-session
+  diagnostics.
 - Keep snapshot counters for bytes, active subscription ids, relay message
   totals, OK accepts, OK rejects, and last message timestamps.
 - Stats reads snapshots only and must not create relay subscriptions.
@@ -66,6 +68,10 @@ events, publish acknowledgements, and relay snapshots.
   once.
 - Pending publishes are retried once per new connection generation until their
   existing timeout resolves.
+- A relay pool client is active while it has at least one subscription or
+  publish waiter. When active work reaches zero, the pool schedules idle
+  eviction, closes the client after the grace period, deletes it from the
+  client map, and keeps the latest bounded snapshot for diagnostics.
 
 ## Browser Diagnostics
 

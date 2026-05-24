@@ -16,6 +16,7 @@ pnpm test
 pnpm build
 pnpm cloudflare:dry-run
 pnpm test:e2e
+pnpm test:e2e:memory
 pnpm verify:quiet
 pnpm test:e2e:quiet
 ```
@@ -150,5 +151,7 @@ Run `pnpm check:repo` after documentation changes before code work continues.
 ## Memory
 
 The heavy-feed browser smoke test reports app JavaScript heap, runtime item
-counters, and total Chromium RSS. The app heap gate is `100 MB`; RSS is
-diagnostic because browser baseline memory is outside app control.
+counters, and total Chromium RSS when available. The app heap assertion runs
+only when Chromium exposes `performance.memory`; otherwise the heap value is
+skipped and the browser flow still verifies rendering. RSS remains diagnostic
+because browser baseline memory is outside app control.

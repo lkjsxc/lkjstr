@@ -22,3 +22,5 @@ Open questions track unresolved product, protocol, and operations decisions.
 - What retention window should local operation logs use?
 - What export format should workspace and relay configuration use?
 - How should users compare relay health across different networks and browsers?
+- Which remaining source runtime APIs should move to factory handles so
+  subscriptions, timers, and local read resources have explicit cleanup?
