@@ -6,6 +6,7 @@ This directory owns Vitest and Playwright coverage for repository contracts.
 
 ## Contents
 
+- `helpers/`: shared fixtures and browser test helpers.
 - `unit/`: Vitest unit coverage.
 - `e2e/`: Playwright browser coverage.
 - Profile, reaction, notification, relay, workspace, and rendering contracts

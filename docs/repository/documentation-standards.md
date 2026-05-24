@@ -31,7 +31,8 @@ contents for that subtree.
 ## Directory Rules
 
 - Every tracked, non-generated directory contains exactly one `README.md`.
-- The stricter branching rule applies only under `docs/`.
+- The stricter branching rule applies only under `docs/`: each directory has a
+  `README.md` plus at least two children.
 - `docs/README.md` is the recursive table of contents for the full docs tree.
 - Child `README.md` files recursively list descendant documentation for that
   subtree.
