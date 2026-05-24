@@ -5,7 +5,7 @@ import {
   boundaryCursors,
   feedPageSize,
   feedWindowSize,
-  mergeFeedItems,
+  mergeFeedWindowItems,
 } from '../events/feed-window';
 import { feedDisplayKinds, isFeedDisplayKind } from '../events/feed-kinds';
 import type { PoolEvent } from '../relays/relay-pool';
@@ -85,7 +85,7 @@ export function createGlobalTimelineRuntime(options: TimelineRuntimeOptions) {
     if (closed || !isFeedDisplayKind(poolEvent.event.kind)) return;
     await upsertEvent(poolEvent.event, [poolEvent.relay]);
     if (closed) return;
-    live = mergeFeedItems(live, [{ event: poolEvent.event, relays: [poolEvent.relay] }]);
+    live = mergeFeedWindowItems(live, [{ event: poolEvent.event, relays: [poolEvent.relay] }], feedWindowSize);
     emit(readyWithEventsState(state, items()));
   };
   // prettier-ignore

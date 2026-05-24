@@ -69,9 +69,8 @@ export async function loadInitialTimelinePage(
     subscriptions: request.subscriptions,
     purpose: 'feed',
   });
-  const relayItems = relayPage.receivedItems ?? relayPage.items;
   await Promise.all(
-    relayItems.map((item) => upsertEvent(item.event, item.relays)),
+    relayPage.items.map((item) => upsertEvent(item.event, item.relays)),
   );
   return {
     items: relayPage.items,
@@ -111,9 +110,8 @@ export async function loadOlderTimelinePage(
     subscriptions: request.subscriptions,
     purpose: 'feed',
   });
-  const relayItems = relayPage.receivedItems ?? relayPage.items;
   await Promise.all(
-    relayItems.map((item) => upsertEvent(item.event, item.relays)),
+    relayPage.items.map((item) => upsertEvent(item.event, item.relays)),
   );
   const window = mergeFeedWindow(
     request.items,
@@ -160,9 +158,8 @@ export async function loadNewerTimelinePage(
     subscriptions: request.subscriptions,
     purpose: 'feed',
   });
-  const relayItems = relayPage.receivedItems ?? relayPage.items;
   await Promise.all(
-    relayItems.map((item) => upsertEvent(item.event, item.relays)),
+    relayPage.items.map((item) => upsertEvent(item.event, item.relays)),
   );
   const window = mergeFeedWindow(
     request.items,

@@ -5,6 +5,7 @@ import type { EventReference } from '../protocol';
 import type { RelaySubscriptionManager } from '../relays/subscription-manager';
 import { sharedSubscriptionManager } from '../relays/subscription-manager';
 import { routedEventRelays } from '../relays/relay-routing';
+import { createBoundedMap } from '../fp/bounded-map';
 
 export type ResolvedReference = EventReference & {
   readonly event?: FeedEvent;
@@ -15,9 +16,15 @@ type CacheEntry = {
   readonly expiresAt: number;
 };
 
-const cache = new Map<string, CacheEntry>();
-const inFlight = new Map<string, Promise<readonly FeedEvent[]>>();
+const cache = createBoundedMap<string, CacheEntry>({ maxSize: 500 });
+const inFlight = createBoundedMap<string, Promise<readonly FeedEvent[]>>({
+  maxSize: 100,
+});
 const cacheTtlMs = 5 * 60 * 1000;
+
+export function referenceCacheSizeForTests(): number {
+  return cache.size();
+}
 
 export async function resolveReferences(input: {
   readonly references: readonly EventReference[];

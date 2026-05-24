@@ -2,9 +2,6 @@
   import { onMount } from 'svelte';
   import { logRuntimeError } from '$lib/app/runtime-log';
   import type { Account } from '$lib/accounts/account';
-  import { createBackgroundNotificationSync } from '$lib/notifications/background-notifications';
-  import type { NotificationRecord } from '$lib/notifications/notification';
-  import { accountNotifications } from '$lib/notifications/notification-store';
   import {
     removeRelay,
     setRelayEnabled,
@@ -20,7 +17,6 @@
   import { moveWorkspaceTab } from '$lib/workspace/move-tab';
   import { closeWorkspacePane } from '$lib/workspace/pane-commands';
   import { resizeSplit } from '$lib/workspace/resize';
-  import { timelineRelays } from '$lib/timeline/timeline-subscription';
   import type { TabKind } from '$lib/workspace/tab';
   import {
     closeWorkspaceTab,
@@ -47,15 +43,10 @@
   let workspace = $state<Workspace>(bootstrapWorkspace());
   let accounts = $state<Account[]>([]);
   let activeAccount = $state<Account>();
-  let notifications = $state<NotificationRecord[]>([]);
   let relaySets = $state<RelaySet[]>([]);
   let ready = $state(false);
   let pageDataReady = $state(false);
   let inactiveRetentionSeconds = $state(300);
-  // prettier-ignore
-  let notificationSync: ReturnType<typeof createBackgroundNotificationSync> | undefined;
-  let notificationSyncKey = '';
-  let notificationRefreshTimer: ReturnType<typeof setTimeout> | undefined;
 
   onMount(() => {
     let disposed = false;
@@ -65,8 +56,6 @@
     void initializeWorkspace().catch(logRuntimeError('workspace-init-failed'));
     return () => {
       disposed = true;
-      notificationSync?.close();
-      if (notificationRefreshTimer) clearTimeout(notificationRefreshTimer);
       window.removeEventListener(settingsChangedEvent, refreshSettings);
     };
   });
@@ -99,33 +88,8 @@
   }
 
   async function refreshData(): Promise<void> {
-    ({ accounts, activeAccount, notifications, relaySets } =
-      await loadWorkspacePageData());
-    startNotificationSync();
+    ({ accounts, activeAccount, relaySets } = await loadWorkspacePageData());
     pageDataReady = true;
-  }
-
-  // prettier-ignore
-  async function refreshNotificationsOnly(): Promise<void> { notifications = activeAccount ? await accountNotifications(activeAccount.pubkey) : []; }
-
-  // prettier-ignore
-  function queueNotificationRefresh(): void { if (notificationRefreshTimer) clearTimeout(notificationRefreshTimer); notificationRefreshTimer = setTimeout(() => { notificationRefreshTimer = undefined; void refreshNotificationsOnly().catch(logRuntimeError('notification-refresh-failed')); }, 150); }
-
-  function startNotificationSync(): void {
-    const relays = timelineRelays(relaySets);
-    const key = `${activeAccount?.pubkey ?? ''}|${relays.join('\0')}`;
-    if (key === notificationSyncKey) return;
-    notificationSync?.close();
-    notificationSyncKey = key;
-    notificationSync = createBackgroundNotificationSync(
-      activeAccount?.pubkey,
-      relays,
-      undefined,
-      queueNotificationRefresh,
-    );
-    void notificationSync
-      .start()
-      .catch(logRuntimeError('notification-sync-failed'));
   }
 
   async function refreshRuntimeSettings(): Promise<void> {
@@ -183,10 +147,10 @@
   function handleMoveTab(sourcePaneId: string, targetPaneId: string, tabId: string, targetIndex: number, edge?: 'left' | 'right' | 'top' | 'bottom'): Promise<void> { return workspace ? update(moveWorkspaceTab(workspace, { sourcePaneId, targetPaneId, tabId, targetIndex, edge })) : Promise.resolve(); }
 
   // prettier-ignore
-  async function handleToggleRelay(setId: string, url: string, enabled: boolean) { relaySets = await setRelayEnabled(setId, url, enabled); startNotificationSync(); }
+  async function handleToggleRelay(setId: string, url: string, enabled: boolean) { relaySets = await setRelayEnabled(setId, url, enabled); }
 
   // prettier-ignore
-  async function handleRemoveRelay(setId: string, url: string) { relaySets = await removeRelay(setId, url); startNotificationSync(); }
+  async function handleRemoveRelay(setId: string, url: string) { relaySets = await removeRelay(setId, url); }
 </script>
 
 <svelte:head>
@@ -194,4 +158,4 @@
 </svelte:head>
 
 <!-- prettier-ignore -->
-<WorkspaceRoot {workspace} {accounts} {activeAccount} {notifications} {relaySets} {ready} {pageDataReady} {inactiveRetentionSeconds} focusTab={handleFocusTab} closeTab={handleCloseTab} moveTab={handleMoveTab} openNewTab={handleOpenNewTab} convertTab={handleConvertTab} split={handleSplit} closePane={handleClosePane} resize={handleResize} addMinedSigning={handleAddMinedSigning} {refreshData} toggleRelay={handleToggleRelay} removeRelay={handleRemoveRelay} openProfile={handleOpenProfile} openProfileEdit={handleOpenProfileEdit} openThread={handleOpenThread} openAuthorContext={handleOpenAuthorContext} />
+<WorkspaceRoot {workspace} {accounts} {activeAccount} {relaySets} {ready} {pageDataReady} {inactiveRetentionSeconds} focusTab={handleFocusTab} closeTab={handleCloseTab} moveTab={handleMoveTab} openNewTab={handleOpenNewTab} convertTab={handleConvertTab} split={handleSplit} closePane={handleClosePane} resize={handleResize} addMinedSigning={handleAddMinedSigning} {refreshData} toggleRelay={handleToggleRelay} removeRelay={handleRemoveRelay} openProfile={handleOpenProfile} openProfileEdit={handleOpenProfileEdit} openThread={handleOpenThread} openAuthorContext={handleOpenAuthorContext} />

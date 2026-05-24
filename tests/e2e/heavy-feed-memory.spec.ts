@@ -24,7 +24,7 @@ test('heavy feed keeps app heap below the smoke limit', async ({ page }) => {
     { created_at: now, kind: 3, tags: [['p', author]], content: '' },
     activeKey,
   );
-  const events = Array.from({ length: 240 }, (_, index) =>
+  const events = Array.from({ length: 1200 }, (_, index) =>
     finalizeEvent(
       {
         created_at: now - index,

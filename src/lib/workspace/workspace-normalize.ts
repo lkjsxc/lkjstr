@@ -40,11 +40,21 @@ function normalizeGroups(value: unknown): Record<string, TabGroup> {
       tabIds,
       activeTabId:
         activeTabId && tabIds.includes(activeTabId) ? activeTabId : null,
-      pinnedTabIds: Array.isArray(item.pinnedTabIds) ? item.pinnedTabIds : [],
-      closedTabs: Array.isArray(item.closedTabs) ? item.closedTabs : [],
+      pinnedTabIds: Array.isArray(item.pinnedTabIds)
+        ? item.pinnedTabIds.filter((tabId) => typeof tabId === 'string')
+        : [],
+      closedTabs: normalizeClosedTabs(item.closedTabs),
     };
   }
   return out;
+}
+
+function normalizeClosedTabs(value: unknown): WorkspaceTab[] {
+  if (!Array.isArray(value)) return [];
+  return value
+    .map((tab) => normalizeTab(tab))
+    .filter((tab): tab is WorkspaceTab => Boolean(tab))
+    .slice(0, 20);
 }
 
 function normalizeTabs(value: unknown): Record<string, WorkspaceTab> {
@@ -52,16 +62,23 @@ function normalizeTabs(value: unknown): Record<string, WorkspaceTab> {
   const out: Record<string, WorkspaceTab> = {};
   for (const [id, tab] of Object.entries(value)) {
     const item = tab as WorkspaceTab & { kind?: unknown };
-    const kind = normalizeKind(item.kind);
-    if (!kind) continue;
-    out[id] = {
-      ...item,
-      kind,
-      icon: iconFor(kind),
-      title: normalizedTitle(item.title, kind),
-    };
+    const normalized = normalizeTab(item);
+    if (normalized) out[id] = normalized;
   }
   return out;
+}
+
+function normalizeTab(value: unknown): WorkspaceTab | undefined {
+  if (!value || typeof value !== 'object') return undefined;
+  const item = value as WorkspaceTab & { kind?: unknown };
+  const kind = normalizeKind(item.kind);
+  if (!kind || typeof item.id !== 'string') return undefined;
+  return {
+    ...item,
+    kind,
+    icon: iconFor(kind),
+    title: normalizedTitle(item.title, kind),
+  };
 }
 
 function normalizeKind(kind: unknown): TabKind | undefined {

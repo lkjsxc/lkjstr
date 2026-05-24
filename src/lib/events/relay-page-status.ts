@@ -5,16 +5,21 @@ import type {
   ReadPageResult,
 } from '../relays/read-page-status';
 import type { RelaySubscriptionManager } from '../relays/subscription-manager';
+import type { ReadPageOptions } from '../relays/subscription-manager';
 
 export async function readPageDetailedCompat(
   subscriptions: RelaySubscriptionManager,
   request: RelayReadRequest,
+  options: ReadPageOptions = {},
 ): Promise<ReadPageResult> {
   const detailed = subscriptions.readPageDetailed as
-    | ((request: RelayReadRequest) => Promise<ReadPageResult>)
+    | ((
+        request: RelayReadRequest,
+        options?: ReadPageOptions,
+      ) => Promise<ReadPageResult>)
     | undefined;
-  if (detailed) return detailed.call(subscriptions, request);
-  const events = await subscriptions.readPage(request);
+  if (detailed) return detailed.call(subscriptions, request, options);
+  const events = await subscriptions.readPage(request, options);
   return {
     events,
     statuses: request.relays.map((relay) =>
@@ -35,7 +40,8 @@ export function statusesComplete(
         !status.closed &&
         !status.auth &&
         !status.socketClosed &&
-        !status.socketError,
+        !status.socketError &&
+        !status.eventLimitReached,
     )
   );
 }
@@ -53,6 +59,7 @@ function incompleteFallbackStatus(
     auth: false,
     socketClosed: false,
     socketError: false,
+    eventLimitReached: false,
     durationMs: 0,
     candidateCount: count,
     finalCount: count,

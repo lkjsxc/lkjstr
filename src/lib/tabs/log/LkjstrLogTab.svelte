@@ -6,18 +6,17 @@
     type AppLogRecord,
   } from '$lib/log/app-log';
   import { relayDiagnosticDisplayMessage } from '$lib/relays/relay-diagnostic-display';
-  import { flattenRelayDiagnostics } from '$lib/relays/session-snapshots';
+  import {
+    flattenRelayDiagnostics,
+    startRelaySnapshotPolling,
+  } from '$lib/relays/session-snapshots';
   import type { RelaySnapshot } from '$lib/relays/types';
   import JobTreeLog from './JobTreeLog.svelte';
 
-  type Props = {
-    snapshots?: RelaySnapshot[];
-  };
-
-  let props: Props = $props();
+  let snapshots = $state<RelaySnapshot[]>([]);
   let sessionLogs = $state<readonly AppLogRecord[]>(appLogRecords());
   let relayLogs = $derived(
-    flattenRelayDiagnostics(props.snapshots ?? []).map((item, index) => ({
+    flattenRelayDiagnostics(snapshots).map((item, index) => ({
       id: `${item.timestamp}:${item.relay}:${item.kind}:${index}`,
       timestamp: item.timestamp,
       area: 'relay',
@@ -31,7 +30,16 @@
     [...sessionLogs, ...relayLogs].sort((a, b) => a.timestamp - b.timestamp),
   );
 
-  onMount(() => subscribeAppLog((records) => (sessionLogs = records)));
+  onMount(() => {
+    const stopLog = subscribeAppLog((records) => (sessionLogs = records));
+    const stopSnapshots = startRelaySnapshotPolling((next) => {
+      snapshots = next;
+    });
+    return () => {
+      stopLog();
+      stopSnapshots();
+    };
+  });
 
   function formatTimestamp(timestamp: number): string {
     return new Date(timestamp).toLocaleString();

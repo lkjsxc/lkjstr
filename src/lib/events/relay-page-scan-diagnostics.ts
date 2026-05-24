@@ -75,6 +75,7 @@ export function incompleteReason(
   if (statuses.some((status) => status.socketClosed)) return 'socket-closed';
   if (statuses.some((status) => status.socketError)) return 'socket-error';
   if (statuses.some((status) => status.closed)) return 'closed';
+  if (statuses.some((status) => status.eventLimitReached)) return 'event-limit';
   return 'no-eose';
 }
 

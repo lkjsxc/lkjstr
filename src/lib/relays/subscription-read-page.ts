@@ -39,8 +39,10 @@ export async function executeReadPage(
   if (relays.length === 0) return { events: [], statuses: [] };
   const effective = { ...safeRequest, relays };
   const events: PoolEvent[] = [];
+  const maxEvents = Math.max(1, options.maxEvents ?? 1000);
   let timedOut = false;
   let aborted = false;
+  let eventLimitReached = false;
   let lastSnapshots: RelaySnapshot[] = [];
   const startedAt = Date.now();
   const requestKey = subscriptionKey(effective);
@@ -50,6 +52,7 @@ export async function executeReadPage(
   let offEvent: () => void = () => undefined;
   let offState: () => void = () => undefined;
   let close: () => void = () => undefined;
+  let finishRead: (() => void) | undefined;
   let closedSubscription = false;
   const closeOnce = () => {
     if (closedSubscription) return;
@@ -58,8 +61,11 @@ export async function executeReadPage(
   };
   try {
     offEvent = pool.onEvent((event) => {
-      if (event.subId === subId)
-        events.push({ ...event, subId: effective.key });
+      if (event.subId !== subId || eventLimitReached) return;
+      events.push({ ...event, subId: effective.key });
+      if (events.length < maxEvents) return;
+      eventLimitReached = true;
+      finishRead?.();
     });
     await new Promise<void>((resolve) => {
       let done = false;
@@ -73,6 +79,7 @@ export async function executeReadPage(
         closeOnce();
         resolve();
       };
+      finishRead = () => finish(false);
       const abort = () => {
         aborted = true;
         finish(false);
@@ -92,6 +99,7 @@ export async function executeReadPage(
         });
       }
     });
+    finishRead = undefined;
     return readResult(
       effective,
       subId,
@@ -99,9 +107,11 @@ export async function executeReadPage(
       lastSnapshots,
       timedOut,
       aborted,
+      eventLimitReached,
       startedAt,
     );
   } finally {
+    finishRead = undefined;
     offEvent();
     closeOnce();
     state.activeReadBaseIds.delete(baseSubId);
@@ -129,6 +139,7 @@ function readResult(
   snapshots: readonly RelaySnapshot[],
   timedOut: boolean,
   aborted: boolean,
+  eventLimitReached: boolean,
   startedAt: number,
 ): ReadPageResult {
   return {
@@ -140,6 +151,7 @@ function readResult(
       snapshots,
       timedOut,
       aborted,
+      eventLimitReached,
       durationMs: Date.now() - startedAt,
     }),
   };

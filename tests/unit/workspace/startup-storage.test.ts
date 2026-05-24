@@ -58,6 +58,20 @@ describe('startup workspace storage', () => {
     await vi.advanceTimersByTimeAsync(400);
     expect(await loaded).toMatchObject({ id: 'main', name: 'Main workspace' });
   });
+
+  it('ignores oversized local workspace snapshots before parsing', async () => {
+    const parse = vi.spyOn(JSON, 'parse');
+    vi.stubGlobal('localStorage', {
+      getItem: () => '{'.repeat(250_000),
+      setItem: () => undefined,
+    });
+    const { loadWorkspace } =
+      await import('../../../src/lib/workspace/workspace-persistence');
+    const loaded = await loadWorkspace();
+    expect(loaded.id).toBe('main');
+    expect(parse).not.toHaveBeenCalledWith('{'.repeat(250_000));
+    parse.mockRestore();
+  });
 });
 
 function restoreGlobal(

@@ -33,12 +33,16 @@ export async function readScanBatch(
   },
 ): Promise<BatchReadResult> {
   try {
-    const result = await readPageDetailedCompat(request.subscriptions, {
-      key: `${request.key}:${input.segmentIndex}:${input.groupIndex}:${input.attemptIndex}:${input.batchIndex}`,
-      relays: input.relays,
-      filters: input.filters,
-      purpose: request.purpose,
-    });
+    const result = await readPageDetailedCompat(
+      request.subscriptions,
+      {
+        key: `${request.key}:${input.segmentIndex}:${input.groupIndex}:${input.attemptIndex}:${input.batchIndex}`,
+        relays: input.relays,
+        filters: input.filters,
+        purpose: request.purpose,
+      },
+      { maxEvents: request.pageSize * 4 },
+    );
     const complete = statusesComplete(result.statuses);
     const density = relayPageDensity(result, input.filters, request.pageSize);
     return {

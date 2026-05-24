@@ -9,6 +9,7 @@ export type ReadPageRelayStatus = {
   readonly auth: boolean;
   readonly socketClosed: boolean;
   readonly socketError: boolean;
+  readonly eventLimitReached?: boolean;
   readonly aborted?: boolean;
   readonly durationMs: number;
   readonly candidateCount: number;
@@ -26,6 +27,7 @@ export function readStatuses(input: {
   readonly events: readonly PoolEvent[];
   readonly snapshots: readonly RelaySnapshot[];
   readonly timedOut: boolean;
+  readonly eventLimitReached?: boolean;
   readonly aborted?: boolean;
   readonly durationMs: number;
 }): ReadPageRelayStatus[] {
@@ -43,6 +45,7 @@ function relayStatus(
     relay,
     eose: Boolean(snapshot?.eoseBySub[input.subId]),
     timeout: input.timedOut,
+    eventLimitReached: Boolean(input.eventLimitReached),
     aborted: Boolean(input.aborted),
     closed: Boolean(snapshot?.closedBySub[input.subId]),
     auth: diagnostics.some((item) => item.kind === 'auth'),

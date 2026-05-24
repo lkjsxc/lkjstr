@@ -13,6 +13,7 @@ import {
 import { normalizeWorkspace } from './workspace-normalize';
 
 const snapshotKey = 'lkjstr.workspaceSnapshot';
+const maxWorkspaceSnapshotBytes = 200_000;
 let memoryWorkspace: Workspace | undefined;
 
 export async function loadWorkspace(): Promise<Workspace> {
@@ -53,6 +54,7 @@ function saveSnapshot(workspace: Workspace): void {
 function loadSnapshot(): Workspace | undefined {
   const raw = safeGetItem(snapshotKey);
   if (!raw) return undefined;
+  if (raw.length > maxWorkspaceSnapshotBytes) return undefined;
   try {
     return normalizeWorkspace(JSON.parse(raw));
   } catch {

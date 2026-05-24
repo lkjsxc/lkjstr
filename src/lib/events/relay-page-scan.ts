@@ -3,7 +3,7 @@ import { mergeSafeCursor, nextScanCursor } from './relay-page-scan-cursors';
 import type { RelayGroupPageRequest, RelayGroupPageResult } from './relay-page';
 import type { FeedCursorPoint, FeedEvent } from './types';
 import { mergeFeedEvents, sortFeedEvents } from './relay-page-merge';
-import { pageScanItems } from './relay-page-scan-items';
+import { pageScanItems, scanCandidates } from './relay-page-scan-items';
 import {
   canSplitRelayPageSegment,
   initialRelayPageSegment,
@@ -20,7 +20,7 @@ export async function scanRelayFeedGroups(
 ): Promise<RelayGroupPageResult> {
   countRuntime('timeline', 'scanReads');
   const direction = request.direction ?? 'older';
-  const collected: FeedEvent[] = [];
+  let collected: FeedEvent[] = [];
   let safeCursor: FeedCursorPoint | undefined;
   let segment = initialRelayPageSegment({ ...request, direction });
   const queue: RelayPageSegment[] = [segment];
@@ -30,6 +30,7 @@ export async function scanRelayFeedGroups(
     processed += 1;
     const read = await readSegment(request, segment, processed - 1);
     collected.push(...read.receivedItems);
+    collected = scanCandidates(collected, request.pageSize);
     const items = pageScanItems(collected, request);
     if (!read.contacted) continue;
     if (read.complete && !read.dense) {

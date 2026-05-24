@@ -16,13 +16,11 @@ export type SettingOverride = {
 };
 
 let memoryOverrides: SettingOverride[] = [];
+let settingsCache: Promise<SettingRecord[]> | undefined;
 
 export async function loadSettings(): Promise<SettingRecord[]> {
-  const overrides = await boundedStorageRead(
-    () => browserDb().settings.toArray(),
-    memoryOverrides,
-  );
-  return mergeSettings(overrides);
+  settingsCache ??= loadSettingsUncached();
+  return settingsCache;
 }
 
 export async function saveSetting(
@@ -45,6 +43,7 @@ export async function saveSetting(
     override,
   ];
   await bestEffortStorageWrite(() => browserDb().settings.put(override));
+  settingsCache = undefined;
   notifySettingsChanged();
   return mergeSettings(memoryOverrides);
 }
@@ -52,6 +51,7 @@ export async function saveSetting(
 export async function resetSetting(key: string): Promise<SettingRecord[]> {
   memoryOverrides = memoryOverrides.filter((item) => item.key !== key);
   await bestEffortStorageWrite(() => browserDb().settings.delete(key));
+  settingsCache = undefined;
   notifySettingsChanged();
   return mergeSettings(memoryOverrides);
 }
@@ -66,6 +66,7 @@ export async function resetNamespace(
     .filter((setting) => setting.namespace === namespace)
     .map((setting) => setting.key);
   await bestEffortStorageWrite(() => browserDb().settings.bulkDelete(keys));
+  settingsCache = undefined;
   notifySettingsChanged();
   return mergeSettings(memoryOverrides);
 }
@@ -98,7 +99,16 @@ export async function importSettingsJson(
     await browserDb().settings.clear();
     await browserDb().settings.bulkPut(overrides);
   });
+  settingsCache = undefined;
   notifySettingsChanged();
+  return mergeSettings(overrides);
+}
+
+async function loadSettingsUncached(): Promise<SettingRecord[]> {
+  const overrides = await boundedStorageRead(
+    () => browserDb().settings.toArray(),
+    memoryOverrides,
+  );
   return mergeSettings(overrides);
 }
 

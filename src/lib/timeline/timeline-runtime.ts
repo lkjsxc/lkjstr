@@ -25,7 +25,6 @@ import { emptyState, noActiveAccountState, noEnabledRelayState, noFollowListStat
 import { loadCachedTimeline, mergeTimelineItems } from './timeline-store';
 import type { TimelineItem } from './timeline-store';
 import { createTimelineProfileCoordinator } from './timeline-profile-coordinator';
-import { startTimelineBackfill } from './timeline-backfill';
 
 export type TimelineRuntime = ReturnType<typeof createTimelineRuntime>;
 
@@ -54,7 +53,6 @@ export function createTimelineRuntime(options: TimelineRuntimeOptions) {
   const followSubId = childRelaySubscriptionId(options.subId, 'follows');
   const metaSubId = childRelaySubscriptionId(options.subId, 'meta');
   const noteSubId = childRelaySubscriptionId(options.subId, 'notes');
-  let backfillStarted = false;
   const profileCoordinator = createTimelineProfileCoordinator(
     relays,
     metaSubId,
@@ -100,18 +98,11 @@ export function createTimelineRuntime(options: TimelineRuntimeOptions) {
     cached = next; live = []; olderScanCursor = page.hasOlder ? page.nextOlderCursor : olderScanCursor; emit(nextState(readyWithEventsState(state, items())));
   };
   // prettier-ignore
-  const startBackfill = (): void => {
-    if (closed || backfillStarted || authors.length === 0) return;
-    backfillStarted = true;
-    cleanup.push(startTimelineBackfill({ items, authors, relays, subId: noteSubId, pageSize, subscriptions }));
-  };
-  // prettier-ignore
   const discoverRoutesAfterInitial = async (): Promise<void> => {
     const run = generation;
     if (closed) return;
     await discoverAuthorRelayRoutes({ authors, selectedRelays: relays, key: `${noteSubId}:routes`, subscriptions }).catch(() => undefined);
     if (active(run)) await refreshAfterRouteDiscovery(run);
-    if (active(run)) startBackfill();
   };
   // prettier-ignore
   const subscribeNotes = async (): Promise<void> => {

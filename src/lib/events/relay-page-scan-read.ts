@@ -9,6 +9,7 @@ import { mergeBounds, positiveFilters } from './relay-page-filter';
 import { limitedRelayFilterGroups } from './relay-page-limits';
 import { mergeFeedEvents, mergePoolEvents } from './relay-page-merge';
 import { needsCursorSlack, pageScanItems } from './relay-page-scan-items';
+import { retainedRawCandidates, scaleFilters } from './relay-page-scan-raw';
 import { readScanBatch, type BatchReadResult } from './relay-page-scan-batch';
 import {
   canSplitRelayPageSegment,
@@ -63,7 +64,7 @@ async function readGroup(
   groupIndex: number,
 ): Promise<SegmentRead> {
   const group = request.groups[groupIndex]!;
-  const raw: PoolEvent[] = [];
+  let raw: PoolEvent[] = [];
   let complete = true;
   let dense = false;
   let contacted = false;
@@ -95,6 +96,7 @@ async function readGroup(
         filters,
       });
       raw.push(...read.events);
+      raw = retainedRawCandidates(raw, request.pageSize);
       await recordBatchCoverage(
         request,
         group.key,
@@ -185,14 +187,4 @@ async function recordUnresolved(
       attempt: 4,
     },
   );
-}
-
-function scaleFilters(
-  filters: readonly NostrFilter[],
-  multiplier: number,
-): NostrFilter[] {
-  return filters.map((filter) => ({
-    ...filter,
-    limit: (filter.limit ?? 1) * multiplier,
-  }));
 }

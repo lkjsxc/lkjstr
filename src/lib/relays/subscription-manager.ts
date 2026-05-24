@@ -24,6 +24,7 @@ type InFlightRead = {
 
 export type ReadPageOptions = {
   readonly timeoutMs?: number;
+  readonly maxEvents?: number;
   readonly signal?: AbortSignal;
 };
 
@@ -172,6 +173,7 @@ function readDedupeKey(
   return JSON.stringify({
     request: subscriptionKey(request),
     timeoutMs: options.timeoutMs ?? 5000,
+    maxEvents: options.maxEvents ?? 1000,
   });
 }
 

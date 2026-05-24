@@ -1,8 +1,6 @@
 <script lang="ts">
   import type { Account } from '$lib/accounts/account';
-  import type { NotificationRecord } from '$lib/notifications/notification';
   import type { RelaySet } from '$lib/relays/relay-store';
-  import type { RelaySnapshot } from '$lib/relays/types';
   import type { WorkspaceLayoutNode } from '$lib/workspace/layout-tree';
   import type { TabGroup } from '$lib/workspace/tab-group';
   import type { TabKind, WorkspaceTab } from '$lib/workspace/tab';
@@ -16,12 +14,10 @@
     tabs: Record<string, WorkspaceTab>;
     accounts: Account[];
     activeAccount?: Account;
-    notifications: NotificationRecord[];
     relaySets: RelaySet[];
     ready: boolean;
     pageDataReady: boolean;
     inactiveRetentionSeconds: number;
-    relaySnapshots: RelaySnapshot[];
     focusTab: (paneId: string, tabId: string) => void;
     closeTab: (paneId: string, tabId: string) => void;
     moveTab: (
@@ -66,12 +62,10 @@
     tabs={props.tabs}
     accounts={props.accounts}
     activeAccount={props.activeAccount}
-    notifications={props.notifications}
     relaySets={props.relaySets}
     ready={props.ready}
     pageDataReady={props.pageDataReady}
     inactiveRetentionSeconds={props.inactiveRetentionSeconds}
-    relaySnapshots={props.relaySnapshots}
     focusTab={props.focusTab}
     closeTab={props.closeTab}
     moveTab={props.moveTab}
@@ -101,12 +95,10 @@
           tabs={props.tabs}
           accounts={props.accounts}
           activeAccount={props.activeAccount}
-          notifications={props.notifications}
           relaySets={props.relaySets}
           ready={props.ready}
           pageDataReady={props.pageDataReady}
           inactiveRetentionSeconds={props.inactiveRetentionSeconds}
-          relaySnapshots={props.relaySnapshots}
           focusTab={props.focusTab}
           closeTab={props.closeTab}
           moveTab={props.moveTab}

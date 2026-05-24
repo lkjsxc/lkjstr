@@ -56,9 +56,8 @@ export async function loadOlderProfilePage(request: ProfileOlderRequest) {
     subscriptions: request.subscriptions,
     purpose: 'feed',
   });
-  const relayItems = relayPage.receivedItems ?? relayPage.items;
   await Promise.all(
-    relayItems.map((item) => storeProfileEvent(item.event, item.relays)),
+    relayPage.items.map((item) => storeProfileEvent(item.event, item.relays)),
   );
   const window = mergeFeedWindow(
     request.posts,
@@ -107,9 +106,8 @@ export async function loadNewerProfilePage(request: ProfileNewerRequest) {
     subscriptions: request.subscriptions,
     purpose: 'feed',
   });
-  const relayItems = relayPage.receivedItems ?? relayPage.items;
   await Promise.all(
-    relayItems.map((item) => storeProfileEvent(item.event, item.relays)),
+    relayPage.items.map((item) => storeProfileEvent(item.event, item.relays)),
   );
   const window = mergeFeedWindow(
     request.posts,

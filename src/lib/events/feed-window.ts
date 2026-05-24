@@ -104,6 +104,14 @@ export function mergeFeedItems(
   );
 }
 
+export function mergeFeedWindowItems(
+  existing: readonly FeedEvent[],
+  incoming: readonly FeedEvent[],
+  limit = feedWindowSize,
+): FeedEvent[] {
+  return mergeFeedItems(existing, incoming).slice(0, limit);
+}
+
 export function oldestCreatedAt(
   items: readonly { event: NostrEvent }[],
 ): number | undefined {

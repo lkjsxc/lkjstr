@@ -1,4 +1,5 @@
-import type { NostrEvent } from '../protocol';
+import { compareEventsDesc, type NostrEvent } from '../protocol';
+import { feedWindowSize } from '../events/feed-window';
 import type { FeedCursorPoint } from '../events/types';
 import type { RelayPool } from '../relays/relay-pool';
 import type { RelaySubscriptionManager } from '../relays/subscription-manager';
@@ -49,14 +50,19 @@ export function upsertLive(
   items: readonly TimelineItem[],
   event: NostrEvent,
   relay: string,
+  limit = feedWindowSize,
 ): TimelineItem[] {
   const existing = items.find((item) => item.event.id === event.id);
-  if (!existing) return [...items, { event, relays: [relay] }];
-  return items.map((item) =>
-    item.event.id === event.id
-      ? { event, relays: [...new Set([...item.relays, relay])] }
-      : item,
-  );
+  const next = existing
+    ? items.map((item) =>
+        item.event.id === event.id
+          ? { event, relays: [...new Set([...item.relays, relay])] }
+          : item,
+      )
+    : [...items, { event, relays: [relay] }];
+  return next
+    .sort((left, right) => compareEventsDesc(left.event, right.event))
+    .slice(0, limit);
 }
 
 export function errorFor(status: TimelineStatus): string | null {

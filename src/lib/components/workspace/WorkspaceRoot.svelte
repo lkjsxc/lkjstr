@@ -1,11 +1,7 @@
 <script lang="ts">
-  import { onMount } from 'svelte';
   import type { Account } from '$lib/accounts/account';
   import AppHeader from '$lib/components/app/AppHeader.svelte';
-  import type { NotificationRecord } from '$lib/notifications/notification';
   import type { RelaySet } from '$lib/relays/relay-store';
-  import { startRelaySnapshotPolling } from '$lib/relays/session-snapshots';
-  import type { RelaySnapshot } from '$lib/relays/types';
   import type { TabKind } from '$lib/workspace/tab';
   import type { Workspace } from '$lib/workspace/workspace';
   import SplitNode from './SplitNode.svelte';
@@ -14,7 +10,6 @@
     workspace: Workspace;
     accounts: Account[];
     activeAccount?: Account;
-    notifications: NotificationRecord[];
     relaySets: RelaySet[];
     ready: boolean;
     pageDataReady: boolean;
@@ -52,11 +47,6 @@
   };
 
   let props: Props = $props();
-  let relaySnapshots = $state<RelaySnapshot[]>([]);
-
-  onMount(() =>
-    startRelaySnapshotPolling((snapshots) => (relaySnapshots = snapshots)),
-  );
 </script>
 
 <main class="workspace-shell">
@@ -69,12 +59,10 @@
         tabs={props.workspace.tabs}
         accounts={props.accounts}
         activeAccount={props.activeAccount}
-        notifications={props.notifications}
         relaySets={props.relaySets}
         ready={props.ready}
         pageDataReady={props.pageDataReady}
         inactiveRetentionSeconds={props.inactiveRetentionSeconds}
-        {relaySnapshots}
         focusTab={props.focusTab}
         closeTab={props.closeTab}
         moveTab={props.moveTab}

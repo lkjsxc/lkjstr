@@ -38,7 +38,30 @@ export async function loadInitialProfilePage(request: Request) {
     }),
     request.relays,
   );
-  const [metadata, follows, posts] = await Promise.all([
+  const [posts, metadata, follows] = await Promise.all([
+    readRelayFeedGroups({
+      key: `${key}:posts`,
+      groups: [
+        {
+          key: 'selected',
+          relays: contentRelays,
+          authors: [request.pubkey],
+          source: 'selected',
+        },
+      ],
+      filters: (group, bounds) => [
+        {
+          kinds: feedDisplayKinds,
+          authors: group.authors,
+          ...bounds,
+          limit: request.pageSize,
+        },
+      ],
+      direction: 'initial',
+      pageSize: request.pageSize,
+      subscriptions: request.subscriptions,
+      purpose: 'feed',
+    }),
     readRelayPage({
       key: `${key}:meta`,
       relays: metadataRelays,
@@ -63,33 +86,9 @@ export async function loadInitialProfilePage(request: Request) {
       subscriptions: request.subscriptions,
       purpose: 'metadata',
     }),
-    readRelayFeedGroups({
-      key: `${key}:posts`,
-      groups: [
-        {
-          key: 'selected',
-          relays: contentRelays,
-          authors: [request.pubkey],
-          source: 'selected',
-        },
-      ],
-      filters: (group, bounds) => [
-        {
-          kinds: feedDisplayKinds,
-          authors: group.authors,
-          ...bounds,
-          limit: request.pageSize,
-        },
-      ],
-      direction: 'initial',
-      pageSize: request.pageSize,
-      subscriptions: request.subscriptions,
-      purpose: 'feed',
-    }),
   ]);
-  const postRelayItems = posts.receivedItems ?? posts.items;
   await Promise.all(
-    postRelayItems.map((item) => storeProfileEvent(item.event, item.relays)),
+    posts.items.map((item) => storeProfileEvent(item.event, item.relays)),
   );
   const relayEvents = [...metadata, ...follows];
   const storedProfiles = await Promise.all(
@@ -111,7 +110,7 @@ export async function loadInitialProfilePage(request: Request) {
     relays: [
       ...new Set([
         ...relayEvents.map((item) => item.relay),
-        ...postRelayItems.flatMap((item) => item.relays),
+        ...posts.items.flatMap((item) => item.relays),
       ]),
     ],
   };

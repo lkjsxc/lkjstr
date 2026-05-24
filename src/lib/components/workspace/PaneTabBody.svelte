@@ -1,8 +1,6 @@
 <script lang="ts">
   import type { Account } from '$lib/accounts/account';
-  import type { NotificationRecord } from '$lib/notifications/notification';
   import type { RelaySet } from '$lib/relays/relay-store';
-  import type { RelaySnapshot } from '$lib/relays/types';
   import AccountManagerTab from '$lib/tabs/accounts/AccountManagerTab.svelte';
   import AuthorContextTab from '$lib/tabs/author-context/AuthorContextTab.svelte';
   import CustomRequestTab from '$lib/tabs/custom-request/CustomRequestTab.svelte';
@@ -29,10 +27,8 @@
     paneId: string;
     accounts: Account[];
     activeAccount?: Account;
-    notifications: NotificationRecord[];
     relaySets: RelaySet[];
     pageDataReady: boolean;
-    relaySnapshots: RelaySnapshot[];
     convertTab: (
       tabId: string,
       kind: TabKind,
@@ -155,7 +151,7 @@
       props.openAuthorContext(props.paneId, eventId, pubkey)}
   />
 {:else if props.tab.kind === 'relay-monitor'}
-  <LkjstrLogTab snapshots={props.relaySnapshots} />
+  <LkjstrLogTab />
 {:else if props.tab.kind === 'relay-settings'}
   <RelaySettingsTab
     relaySets={props.relaySets}

@@ -37,3 +37,11 @@ export function mergeThreadItems(
     compareEventsDesc(left.event, right.event),
   );
 }
+
+export function mergeThreadWindow(
+  a: readonly ThreadItem[],
+  b: readonly ThreadItem[],
+  limit: number,
+): ThreadItem[] {
+  return mergeThreadItems(a, b).slice(0, limit);
+}

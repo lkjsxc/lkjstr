@@ -11,6 +11,7 @@ import { threadRelayState } from './thread-relay-state';
 import {
   loadCachedThread,
   mergeThreadItems,
+  mergeThreadWindow,
   storeThreadEvent,
   type ThreadItem,
 } from './thread-store';
@@ -91,7 +92,7 @@ export function createThreadRuntime(
       emit({ ...state, loading: false, hasNewer: true });
       return;
     }
-    live = mergeThreadItems(live, [{ event: poolEvent.event, relays: [poolEvent.relay] }]);
+    live = mergeThreadWindow(live, [{ event: poolEvent.event, relays: [poolEvent.relay] }], threadWindowSize);
     emit({ ...state, items: items(), loading: false });
   };
   // prettier-ignore

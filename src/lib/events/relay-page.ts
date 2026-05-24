@@ -63,12 +63,17 @@ export async function readRelayPage(
   );
   const pages = await Promise.all(
     groups.map((group) =>
-      request.subscriptions.readPage({
-        key: request.key,
-        relays: group.relays,
-        filters: group.filters,
-        purpose: request.purpose,
-      }),
+      request.subscriptions.readPage(
+        {
+          key: request.key,
+          relays: group.relays,
+          filters: group.filters,
+          purpose: request.purpose,
+        },
+        {
+          maxEvents: request.pageSize * 4,
+        },
+      ),
     ),
   );
   return pages.flat();

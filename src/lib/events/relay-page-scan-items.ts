@@ -9,10 +9,24 @@ export function pageScanItems(
   events: readonly FeedEvent[],
   request: Pick<RelayGroupPageRequest, 'before' | 'after' | 'pageSize'>,
 ): FeedEvent[] {
-  return sortFeedEvents(mergeFeedEvents(events))
+  return scanCandidates(events, request.pageSize)
     .filter((item) => beforeCursor(item.event, request.before))
     .filter((item) => afterCursor(item.event, request.after))
     .slice(0, request.pageSize);
+}
+
+export function scanCandidates(
+  events: readonly FeedEvent[],
+  pageSize: number,
+): FeedEvent[] {
+  return sortFeedEvents(mergeFeedEvents(events)).slice(
+    0,
+    retainedCandidateLimit(pageSize),
+  );
+}
+
+export function retainedCandidateLimit(pageSize: number): number {
+  return Math.max(pageSize, pageSize * 4);
 }
 
 export function denseScanResult(

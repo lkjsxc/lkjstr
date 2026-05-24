@@ -63,6 +63,36 @@ describe('workspace normalization', () => {
     expect(workspace.tabs.custom?.kind).toBe('custom-request');
     expect(workspace.tabs.author?.kind).toBe('author-context');
   });
+
+  it('caps and normalizes closed tabs', () => {
+    const closedTabs = Array.from({ length: 25 }, (_, index) =>
+      tab(index % 2 === 0 ? 'timeline' : 'cache-status'),
+    );
+    const workspace = normalizeWorkspace({
+      layout: {
+        id: 'pane-a',
+        type: 'pane',
+        tabGroupId: 'group-a',
+        minWidth: 260,
+        minHeight: 180,
+      },
+      tabGroups: {
+        'group-a': {
+          id: 'group-a',
+          tabIds: ['active'],
+          activeTabId: 'active',
+          pinnedTabIds: [],
+          closedTabs,
+        },
+      },
+      tabs: { active: tab('timeline') },
+    });
+    const group = workspace.tabGroups['group-a'];
+    expect(group.closedTabs).toHaveLength(20);
+    expect(group.closedTabs.some((item) => item.kind === 'network-stats')).toBe(
+      true,
+    );
+  });
 });
 
 function tab(kind: string) {
