@@ -115,6 +115,9 @@ test('profile notes follow the summary in the profile scroll flow', async ({
     '.pane-body[data-active-tab="true"] .profile-tab',
   );
   await expect(profile.getByText('profile flow note 0')).toBeVisible();
+  await expect
+    .poll(() => profile.locator('.profile-notes .event-row').count())
+    .toBeGreaterThanOrEqual(30);
   await expect(profile.locator('.event-list__scroller')).toHaveCount(0);
   const metrics = await profile.evaluate((profileTab) => {
     const card = profileTab.querySelector('.profile-card') as HTMLElement;
