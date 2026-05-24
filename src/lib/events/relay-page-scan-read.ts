@@ -6,7 +6,10 @@ import {
   recordScanCoverage,
 } from './relay-page-scan-diagnostics';
 import { mergeBounds, positiveFilters } from './relay-page-filter';
-import { limitedRelayFilterGroups } from './relay-page-limits';
+import {
+  limitedRelayFilterGroups,
+  relayReadEventCap,
+} from './relay-page-limits';
 import { mergeFeedEvents, mergePoolEvents } from './relay-page-merge';
 import { needsCursorSlack, pageScanItems } from './relay-page-scan-items';
 import { retainedRawCandidates, scaleFilters } from './relay-page-scan-raw';
@@ -83,10 +86,9 @@ async function readGroup(
     complete = true;
     dense = false;
     contacted = false;
+    let eventLimitDense = false;
     for (const [batchIndex, batch] of batches.entries()) {
-      const filters = batch.filters.map((filter) =>
-        mergeBounds(filter, bounds),
-      );
+      const filters = batch.filters.map((item) => mergeBounds(item, bounds));
       const read = await readScanBatch(request, group.key, {
         segmentIndex,
         groupIndex,
@@ -96,7 +98,11 @@ async function readGroup(
         filters,
       });
       raw.push(...read.events);
-      raw = retainedRawCandidates(raw, request.pageSize);
+      raw = retainedRawCandidates(
+        raw,
+        request.pageSize,
+        relayReadEventCap(filters, batch.relays.length, request.pageSize),
+      );
       await recordBatchCoverage(
         request,
         group.key,
@@ -107,9 +113,11 @@ async function readGroup(
       );
       complete = complete && read.complete;
       dense = dense || read.dense;
+      eventLimitDense ||= read.reason === 'event-limit' && read.dense;
       contacted = true;
     }
     const items = pageScanItems(mergePoolEvents(raw), request);
+    if (eventLimitDense && items.length >= request.pageSize) break;
     if (dense && attempt < 4) continue;
     if (needsCursorSlack(raw, items.length, request) && attempt < 4) continue;
     break;
@@ -159,7 +167,7 @@ async function recordBatchCoverage(
       durationMs: read.durationMs,
     },
   );
-  if (!read.complete)
+  if (!read.complete && !(read.reason === 'event-limit' && read.dense))
     logIncompleteScan(request, groupKey, filters[0] ?? {}, read.statuses);
 }
 

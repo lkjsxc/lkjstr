@@ -1,4 +1,5 @@
 import type { NostrFilter } from '../protocol';
+import { defaultReadPageMaxEvents } from '../relays/subscription-manager';
 import {
   cachedRelayInformation,
   relayRequestLimit,
@@ -29,4 +30,21 @@ export async function limitedRelayFilterGroups(
     });
   }
   return [...groups.values()];
+}
+
+export function relayReadEventCap(
+  filters: readonly NostrFilter[],
+  relayCount: number,
+  pageSize: number,
+  safetyCeiling = defaultReadPageMaxEvents,
+): number {
+  const filterBudget = filters.reduce(
+    (sum, filter) => sum + Math.max(1, filter.limit ?? pageSize),
+    0,
+  );
+  const relays = Math.max(1, relayCount);
+  return Math.min(
+    Math.max(1, safetyCeiling),
+    Math.max(pageSize, filterBudget * relays + pageSize),
+  );
 }

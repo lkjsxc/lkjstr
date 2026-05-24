@@ -28,6 +28,8 @@ export type ReadPageOptions = {
   readonly signal?: AbortSignal;
 };
 
+export const defaultReadPageMaxEvents = 1000;
+
 export type RelaySubscriptionManagerOptions = {
   readonly maxConcurrentReadPagesPerRelay?: number;
 };
@@ -173,7 +175,7 @@ function readDedupeKey(
   return JSON.stringify({
     request: subscriptionKey(request),
     timeoutMs: options.timeoutMs ?? 5000,
-    maxEvents: options.maxEvents ?? 1000,
+    maxEvents: options.maxEvents ?? defaultReadPageMaxEvents,
   });
 }
 

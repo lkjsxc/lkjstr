@@ -8,6 +8,7 @@ import {
   incompleteReason,
   recordScanCoverage,
 } from './relay-page-scan-diagnostics';
+import { relayReadEventCap } from './relay-page-limits';
 import { readPageDetailedCompat, statusesComplete } from './relay-page-status';
 import type { ReadPageRelayStatus } from '../relays/read-page-status';
 import type { RelayGroupPageRequest } from './relay-page';
@@ -43,14 +44,20 @@ export async function readScanBatch(
         filters: input.filters,
         purpose: request.purpose,
       },
-      { maxEvents: request.pageSize * 4 },
+      {
+        maxEvents: relayReadEventCap(
+          input.filters,
+          input.relays.length,
+          request.pageSize,
+        ),
+      },
     );
     const complete = statusesComplete(result.statuses);
     const density = relayPageDensity(result, input.filters, request.pageSize);
     return {
       events: result.events,
       complete,
-      dense: complete && density.dense,
+      dense: density.dense,
       density,
       durationMs: Math.max(
         0,

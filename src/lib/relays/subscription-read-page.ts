@@ -10,6 +10,7 @@ import { compatibleRelayList } from './relay-request-compat';
 import { readStatuses, type ReadPageResult } from './read-page-status';
 import type { RelaySnapshot } from './types';
 import {
+  defaultReadPageMaxEvents,
   relayFacingSubId,
   subscriptionKey,
   type ReadPageOptions,
@@ -39,7 +40,7 @@ export async function executeReadPage(
   if (relays.length === 0) return { events: [], statuses: [] };
   const effective = { ...safeRequest, relays };
   const events: PoolEvent[] = [];
-  const maxEvents = Math.max(1, options.maxEvents ?? 1000);
+  const maxEvents = Math.max(1, options.maxEvents ?? defaultReadPageMaxEvents);
   let timedOut = false;
   let aborted = false;
   let eventLimitReached = false;

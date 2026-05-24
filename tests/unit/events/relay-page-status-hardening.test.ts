@@ -70,6 +70,42 @@ describe('relay page status hardening', () => {
       ]),
     );
   });
+
+  it('keeps dense event-limit windows non-exhaustive without warning spam', async () => {
+    const events = Array.from({ length: 8 }, (_, index) =>
+      receipt(String(index + 1), 200 - index),
+    );
+    let reads = 0;
+    const page = await readRelayFeedGroups({
+      key: 'dense-event-limit',
+      groups: [group()],
+      filters: (_group, bounds) => [{ kinds: [1], ...bounds, limit: 2 }],
+      direction: 'older',
+      before: { createdAt: 300, id: 'f'.repeat(64) },
+      pageSize: 2,
+      subscriptions: {
+        readPageDetailed: async (request: RelayReadRequest) => {
+          reads += 1;
+          return detailed(
+            events
+              .filter((item) => item.event.created_at <= 300)
+              .slice(0, request.filters[0]?.limit ?? 2),
+            request,
+            { eventLimitReached: true },
+          );
+        },
+      } as unknown as RelaySubscriptionManager,
+    });
+
+    expect(page.items).toHaveLength(2);
+    expect(page.hasMorePossible).toBe(true);
+    expect(reads).toBe(1);
+    expect(appLogRecords()).not.toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({ code: 'relay-feed-incomplete' }),
+      ]),
+    );
+  });
 });
 
 function statusSubscriptions(
@@ -110,5 +146,21 @@ function group() {
     relays: [relay],
     authors: ['a'.repeat(64)],
     source: 'fallback' as const,
+  };
+}
+
+function receipt(seed: string, created_at: number): PoolEvent {
+  return {
+    relay,
+    subId: 'sub',
+    event: {
+      id: seed.repeat(64).slice(0, 64).padEnd(64, seed),
+      pubkey: 'a'.repeat(64),
+      created_at,
+      kind: 1,
+      tags: [],
+      content: seed,
+      sig: 'b'.repeat(128),
+    },
   };
 }

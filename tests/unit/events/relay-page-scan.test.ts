@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { readRelayFeedGroups } from '../../../src/lib/events/relay-page';
+import { relayReadEventCap } from '../../../src/lib/events/relay-page-limits';
 import type { NostrEvent, NostrFilter } from '../../../src/lib/protocol';
 import type { RelayReadRequest } from '../../../src/lib/events/types';
 import type { PoolEvent } from '../../../src/lib/relays/relay-pool';
@@ -10,6 +11,22 @@ const relay = 'wss://relay.example/';
 const day = 24 * 60 * 60;
 
 describe('relay page scan', () => {
+  it('computes a relay read cap from effective limits and relay count', () => {
+    expect(
+      relayReadEventCap(
+        [
+          { kinds: [1], limit: 2 },
+          { kinds: [6], limit: 3 },
+        ],
+        2,
+        10,
+      ),
+    ).toBe(20);
+    expect(relayReadEventCap([{ kinds: [1], limit: 40 }], 4, 10, 100)).toBe(
+      100,
+    );
+  });
+
   it('finds sparse older history across empty complete windows', async () => {
     const now = Math.floor(Date.now() / 1000);
     const older = event('old', now - 45 * day);

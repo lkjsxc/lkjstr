@@ -5,13 +5,14 @@ import { retainedCandidateLimit } from './relay-page-scan-items';
 export function retainedRawCandidates(
   events: readonly PoolEvent[],
   pageSize: number,
+  limit = retainedCandidateLimit(pageSize),
 ): PoolEvent[] {
   return [...events]
     .sort((a, b) => {
       const time = b.event.created_at - a.event.created_at;
       return time === 0 ? b.event.id.localeCompare(a.event.id) : time;
     })
-    .slice(0, retainedCandidateLimit(pageSize));
+    .slice(0, limit);
 }
 
 export function scaleFilters(
