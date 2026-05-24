@@ -49,6 +49,7 @@
       result = event.result;
       progress = event.result;
       status = 'Match found.';
+      miner = undefined;
     }
   }
 

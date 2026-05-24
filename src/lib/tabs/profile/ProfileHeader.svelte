@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { onDestroy } from 'svelte';
   import { MoreHorizontal } from '@lucide/svelte';
   import type { Account } from '$lib/accounts/account';
   import EmojifiedText from '$lib/components/events/EmojifiedText.svelte';
@@ -32,11 +33,17 @@
   );
   let website = $derived(normalizedProfileWebsite(props.profile?.website));
   let copied = $state('');
+  let copyTimer: ReturnType<typeof setTimeout> | undefined;
+
+  onDestroy(() => {
+    if (copyTimer) clearTimeout(copyTimer);
+  });
 
   async function copy(label: string, value: string): Promise<void> {
     await navigator.clipboard?.writeText(value);
     copied = label;
-    setTimeout(() => {
+    if (copyTimer) clearTimeout(copyTimer);
+    copyTimer = setTimeout(() => {
       if (copied === label) copied = '';
     }, 1200);
   }

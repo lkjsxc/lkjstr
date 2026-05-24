@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { onDestroy } from 'svelte';
   import type { TimelineItem } from '$lib/timeline/timeline-store';
   import type { ProfileSummary } from '$lib/identity/identity';
   import type { RelaySet } from '$lib/relays/relay-store';
@@ -38,6 +39,10 @@
   );
   let highlighted = $state(false);
   let highlightTimer: ReturnType<typeof setTimeout> | undefined;
+
+  onDestroy(() => {
+    if (highlightTimer) clearTimeout(highlightTimer);
+  });
 
   function openRow(event?: MouseEvent): void {
     if (event && shouldKeepLocal(event.target)) return;

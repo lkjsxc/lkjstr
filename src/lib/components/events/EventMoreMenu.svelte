@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { onDestroy } from 'svelte';
   import { MoreHorizontal } from '@lucide/svelte';
   import type { NostrEvent } from '$lib/protocol';
 
@@ -9,12 +10,18 @@
 
   let props: Props = $props();
   let copied = $state(false);
+  let copyTimer: ReturnType<typeof setTimeout> | undefined;
+
+  onDestroy(() => {
+    if (copyTimer) clearTimeout(copyTimer);
+  });
 
   async function copyEventId(event: MouseEvent): Promise<void> {
     event.stopPropagation();
     await navigator.clipboard?.writeText(props.event.id);
     copied = true;
-    setTimeout(() => (copied = false), 1200);
+    if (copyTimer) clearTimeout(copyTimer);
+    copyTimer = setTimeout(() => (copied = false), 1200);
   }
 
   function openNearby(event: MouseEvent): void {

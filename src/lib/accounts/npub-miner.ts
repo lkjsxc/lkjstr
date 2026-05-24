@@ -46,19 +46,29 @@ export function createNpubMiner(
   prefix: string,
   listener: (event: NpubMinerEvent) => void,
 ): { readonly cancel: () => void } {
+  let terminal = false;
   const worker = new Worker(
     new URL('./npub-miner.worker.ts', import.meta.url),
     {
       type: 'module',
     },
   );
+  const finish = (event: NpubMinerEvent): void => {
+    if (terminal) return;
+    listener(event);
+    if (event.type === 'progress') return;
+    terminal = true;
+    worker.terminate();
+  };
   worker.onmessage = (message: MessageEvent<NpubMinerEvent>) =>
-    listener(message.data);
+    finish(message.data);
   worker.onerror = () =>
-    listener({ type: 'error', message: 'Npub mining worker failed.' });
+    finish({ type: 'error', message: 'Npub mining worker failed.' });
   worker.postMessage({ type: 'start', prefix });
   return {
     cancel: () => {
+      if (terminal) return;
+      terminal = true;
       worker.postMessage({ type: 'cancel' });
       worker.terminate();
     },
