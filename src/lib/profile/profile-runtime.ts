@@ -43,6 +43,7 @@ export function createProfileRuntime(
 ) {
   const manager = runtimeSubscriptions(pool, subscriptions);
   const cleanup: (() => void)[] = [];
+  const aborts = new AbortController();
   const listeners = new Set<(state: ProfileState) => void>();
   const pageSize = feedPageSize;
   const startedAt = Math.floor(Date.now() / 1000);
@@ -110,7 +111,7 @@ export function createProfileRuntime(
   const loadInitialPage = async (): Promise<void> => {
     const run = generation;
     try {
-      const page = await loadInitialProfilePage({ posts: state.posts, profile: state.profile, followList: state.followList, relays, pubkey, subId, pageSize, subscriptions: manager });
+      const page = await loadInitialProfilePage({ posts: state.posts, profile: state.profile, followList: state.followList, relays, pubkey, subId, pageSize, subscriptions: manager, signal: aborts.signal });
       if (!active(run)) return;
       emit({ ...state, profile: page.profile, followList: page.followList, posts: page.posts, loading: false, relays: [...new Set([...state.relays, ...page.relays])] });
     } catch (error) {
@@ -129,16 +130,16 @@ export function createProfileRuntime(
       cleanup.push(manager.subscribeLive({ key: subId, relays, filters: profileLiveFilters(pubkey, startedAt, pageSize), purpose: 'feed' }, (event) => receive(event)));
       void loadInitialPage();
     },
-    close: (): void => { closed = true; generation++; for (const item of cleanup.splice(0)) item(); listeners.clear(); },
+    close: (): void => { closed = true; generation++; aborts.abort(); for (const item of cleanup.splice(0)) item(); listeners.clear(); },
     loadOlder: async (): Promise<void> => {
       if (closed || state.loadingOlder || !state.hasOlder) return; const run = generation; const cursor = olderScanCursor ?? state.oldestCursor; if (!cursor) return; emit({ ...state, loadingOlder: true });
-      try { const page = await loadOlderProfilePage({ posts: state.posts, pubkey, relays, subId, cursor, pageSize, subscriptions: manager }); if (!active(run)) return; olderScanCursor = page.hasOlder ? page.nextOlderCursor : undefined; emit({ ...state, posts: page.posts, hasOlder: page.hasOlder, hasNewer: state.hasNewer || page.newerPruned, newerPruned: state.newerPruned || page.newerPruned }); }
+      try { const page = await loadOlderProfilePage({ posts: state.posts, pubkey, relays, subId, cursor, pageSize, subscriptions: manager, signal: aborts.signal }); if (!active(run)) return; olderScanCursor = page.hasOlder ? page.nextOlderCursor : undefined; emit({ ...state, posts: page.posts, hasOlder: page.hasOlder, hasNewer: state.hasNewer || page.newerPruned, newerPruned: state.newerPruned || page.newerPruned }); }
       catch (error) { emit({ ...state, error: boundedErrorText(error) }); }
       finally { if (state.loadingOlder) emit({ ...state, loadingOlder: false }); }
     },
     loadNewer: async (): Promise<void> => {
       if (closed || state.loadingNewer || !state.hasNewer) return; const run = generation; const cursor = newerScanCursor ?? state.newestCursor; if (!cursor) return; emit({ ...state, loadingNewer: true });
-      try { const page = await loadNewerProfilePage({ posts: state.posts, pubkey, relays, subId, cursor, pageSize, subscriptions: manager }); if (!active(run)) return; newerScanCursor = page.hasNewer ? page.nextNewerCursor : undefined; emit({ ...state, posts: page.posts, hasNewer: page.hasNewer, hasOlder: state.hasOlder || page.olderPruned, newerPruned: page.hasNewer }); }
+      try { const page = await loadNewerProfilePage({ posts: state.posts, pubkey, relays, subId, cursor, pageSize, subscriptions: manager, signal: aborts.signal }); if (!active(run)) return; newerScanCursor = page.hasNewer ? page.nextNewerCursor : undefined; emit({ ...state, posts: page.posts, hasNewer: page.hasNewer, hasOlder: state.hasOlder || page.olderPruned, newerPruned: page.hasNewer }); }
       catch (error) { emit({ ...state, error: boundedErrorText(error) }); }
       finally { if (state.loadingNewer) emit({ ...state, loadingNewer: false }); }
     },

@@ -52,6 +52,7 @@ export function createThreadRuntime(
   let cached: ThreadItem[] = [];
   let live: ThreadItem[] = [];
   const cleanup: (() => void)[] = [];
+  const aborts = new AbortController();
   const listeners = new Set<(state: ThreadState) => void>();
   const pageSize = feedPageSize;
   const startedAt = Math.floor(Date.now() / 1000);
@@ -99,7 +100,7 @@ export function createThreadRuntime(
   const loadInitialPage = async (): Promise<void> => {
     const run = generation;
     try {
-      const page = await loadInitialThreadPage({ eventId, rootId, relays, subId, pageSize, subscriptions: manager });
+      const page = await loadInitialThreadPage({ eventId, rootId, relays, subId, pageSize, subscriptions: manager, signal: aborts.signal });
       if (!active(run)) return;
       rootId = page.rootId;
       cached = mergeThreadItems(items(), page.items);
@@ -127,16 +128,16 @@ export function createThreadRuntime(
       cleanup.push(manager.subscribeState(receiveState), manager.subscribeLive({ key: subId, relays, filters: threadLiveFilters(eventId, rootId, startedAt, pageSize), purpose: 'feed' }, (event) => receive(event)));
       void loadInitialPage();
     },
-    close: (): void => { closed = true; generation++; for (const item of cleanup.splice(0)) item(); listeners.clear(); },
+    close: (): void => { closed = true; generation++; aborts.abort(); for (const item of cleanup.splice(0)) item(); listeners.clear(); },
     loadOlder: async (): Promise<void> => {
       if (closed || state.loadingOlder || !state.hasOlder) return; const run = generation; const cursor = state.oldestCursor; if (!cursor) return; emit({ ...state, loadingOlder: true });
-      try { const page = await loadOlderThreadPage({ eventId, rootId, items: items(), relays, subId, cursor, pageSize, subscriptions: manager }); if (!active(run)) return; cached = page.items; live = []; emit({ ...state, items: items(), hasOlder: page.hasOlder, hasNewer: state.hasNewer || page.pruned, newerPruned: state.newerPruned || page.pruned }); }
+      try { const page = await loadOlderThreadPage({ eventId, rootId, items: items(), relays, subId, cursor, pageSize, subscriptions: manager, signal: aborts.signal }); if (!active(run)) return; cached = page.items; live = []; emit({ ...state, items: items(), hasOlder: page.hasOlder, hasNewer: state.hasNewer || page.pruned, newerPruned: state.newerPruned || page.pruned }); }
       catch (error) { emit({ ...state, error: boundedErrorText(error) }); }
       finally { if (state.loadingOlder) emit({ ...state, loadingOlder: false }); }
     },
     loadNewer: async (): Promise<void> => {
       if (closed || state.loadingNewer || !state.hasNewer) return; const run = generation; const cursor = state.newestCursor; if (!cursor) return; emit({ ...state, loadingNewer: true });
-      try { const page = await loadNewerThreadPage({ eventId, rootId, items: items(), relays, subId, cursor, pageSize, subscriptions: manager }); if (!active(run)) return; cached = page.items; live = []; emit({ ...state, items: items(), hasNewer: page.hasNewer, hasOlder: state.hasOlder || page.pruned, newerPruned: page.hasNewer }); }
+      try { const page = await loadNewerThreadPage({ eventId, rootId, items: items(), relays, subId, cursor, pageSize, subscriptions: manager, signal: aborts.signal }); if (!active(run)) return; cached = page.items; live = []; emit({ ...state, items: items(), hasNewer: page.hasNewer, hasOlder: state.hasOlder || page.pruned, newerPruned: page.hasNewer }); }
       catch (error) { emit({ ...state, error: boundedErrorText(error) }); }
       finally { if (state.loadingNewer) emit({ ...state, loadingNewer: false }); }
     },

@@ -20,6 +20,7 @@ type Request = {
   readonly subId: string;
   readonly pageSize: number;
   readonly subscriptions: RelaySubscriptionManager;
+  readonly signal?: AbortSignal;
 };
 
 export async function loadInitialProfilePage(request: Request) {
@@ -60,6 +61,7 @@ export async function loadInitialProfilePage(request: Request) {
       direction: 'initial',
       pageSize: request.pageSize,
       subscriptions: request.subscriptions,
+      signal: request.signal,
       purpose: 'feed',
     }),
     readRelayPage({
@@ -74,6 +76,7 @@ export async function loadInitialProfilePage(request: Request) {
       ],
       pageSize: 2,
       subscriptions: request.subscriptions,
+      signal: request.signal,
       purpose: 'metadata',
     }),
     readRelayPage({
@@ -84,6 +87,7 @@ export async function loadInitialProfilePage(request: Request) {
       ],
       pageSize: 1,
       subscriptions: request.subscriptions,
+      signal: request.signal,
       purpose: 'metadata',
     }),
   ]);

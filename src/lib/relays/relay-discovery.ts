@@ -10,6 +10,7 @@ export async function discoverAuthorRelayRoutes(input: {
   readonly selectedRelays: readonly string[];
   readonly key: string;
   readonly subscriptions: RelaySubscriptionManager;
+  readonly signal?: AbortSignal;
 }): Promise<void> {
   const authors = [...new Set(input.authors)].slice(0, 50);
   if (authors.length === 0) return;
@@ -34,6 +35,7 @@ export async function discoverAuthorRelayRoutes(input: {
     ],
     pageSize: authors.length,
     subscriptions: input.subscriptions,
+    signal: input.signal,
     purpose: 'route-discovery',
   });
   await Promise.all(

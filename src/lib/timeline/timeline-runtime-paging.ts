@@ -20,6 +20,7 @@ export type TimelineOlderRequest = {
   readonly cursor: FeedCursorPoint;
   readonly pageSize: number;
   readonly subscriptions: RelaySubscriptionManager;
+  readonly signal?: AbortSignal;
 };
 
 export type TimelineOlderResult = {
@@ -44,6 +45,7 @@ export type TimelineInitialRequest = {
   readonly subId: string;
   readonly pageSize: number;
   readonly subscriptions: RelaySubscriptionManager;
+  readonly signal?: AbortSignal;
 };
 
 export async function loadInitialTimelinePage(
@@ -67,6 +69,7 @@ export async function loadInitialTimelinePage(
     direction: 'initial',
     pageSize: request.pageSize,
     subscriptions: request.subscriptions,
+    signal: request.signal,
     purpose: 'feed',
   });
   await Promise.all(
@@ -108,6 +111,7 @@ export async function loadOlderTimelinePage(
     before: request.cursor,
     pageSize: request.pageSize,
     subscriptions: request.subscriptions,
+    signal: request.signal,
     purpose: 'feed',
   });
   await Promise.all(
@@ -156,6 +160,7 @@ export async function loadNewerTimelinePage(
     after: request.cursor,
     pageSize: request.pageSize,
     subscriptions: request.subscriptions,
+    signal: request.signal,
     purpose: 'feed',
   });
   await Promise.all(

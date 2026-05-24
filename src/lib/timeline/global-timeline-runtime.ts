@@ -43,6 +43,7 @@ export function createGlobalTimelineRuntime(options: TimelineRuntimeOptions) {
   let state: TimelineState = emptyState();
   const listeners = new Set<(state: TimelineState) => void>();
   const cleanup: (() => void)[] = [];
+  const aborts = new AbortController();
   const relays = options.relays
     .map(normalizeRelayUrl)
     .filter((url): url is string => Boolean(url));
@@ -92,7 +93,7 @@ export function createGlobalTimelineRuntime(options: TimelineRuntimeOptions) {
   const loadInitialPage = async (): Promise<void> => {
     const run = generation;
     try {
-      const page = await loadInitialGlobalPage({ relays, subId, pageSize, subscriptions });
+      const page = await loadInitialGlobalPage({ relays, subId, pageSize, subscriptions, signal: aborts.signal });
       if (!active(run)) return;
       olderScanCursor = page.hasOlder ? page.nextOlderCursor : undefined;
       cached = mergeTimelineItems(page.items, items(), limit);
@@ -116,16 +117,16 @@ export function createGlobalTimelineRuntime(options: TimelineRuntimeOptions) {
       cleanup.push(subscriptions.subscribeState(receiveState), subscriptions.subscribeLive({ key: subId, relays, filters: [{ kinds: feedDisplayKinds, since: startedAt, limit: pageSize }], purpose: 'feed' }, (event) => receive(event)));
       void loadInitialPage();
     },
-    close: (): void => { closed = true; generation++; for (const item of cleanup.splice(0)) item(); listeners.clear(); },
+    close: (): void => { closed = true; generation++; aborts.abort(); for (const item of cleanup.splice(0)) item(); listeners.clear(); },
     loadOlder: async (): Promise<void> => {
       if (closed || state.loadingOlder || !state.hasOlder) return; const run = generation; const cursor = olderScanCursor ?? state.oldestCursor; if (!cursor) return; emit({ ...state, loadingOlder: true });
-      try { const page = await loadOlderGlobalPage({ items: items(), relays, subId, cursor, pageSize, subscriptions }); if (!active(run)) return; cached = page.items; live = []; olderScanCursor = page.hasOlder ? page.nextOlderCursor : undefined; emit(nextState({ items: items(), hasOlder: page.hasOlder, hasNewer: state.hasNewer || page.hasNewer })); }
+      try { const page = await loadOlderGlobalPage({ items: items(), relays, subId, cursor, pageSize, subscriptions, signal: aborts.signal }); if (!active(run)) return; cached = page.items; live = []; olderScanCursor = page.hasOlder ? page.nextOlderCursor : undefined; emit(nextState({ items: items(), hasOlder: page.hasOlder, hasNewer: state.hasNewer || page.hasNewer })); }
       catch (error) { emit({ ...state, error: boundedErrorText(error) }); }
       finally { if (state.loadingOlder) emit({ ...state, loadingOlder: false }); }
     },
     loadNewer: async (): Promise<void> => {
       if (closed || state.loadingNewer || !state.hasNewer) return; const run = generation; const cursor = state.newestCursor; if (!cursor) return; emit({ ...state, loadingNewer: true });
-      try { const page = await loadNewerGlobalPage({ items: items(), relays, subId, cursor, pageSize, subscriptions }); if (!active(run)) return; cached = page.items; live = []; emit(nextState({ items: items(), hasNewer: page.hasNewer, hasOlder: state.hasOlder || page.hasOlder })); }
+      try { const page = await loadNewerGlobalPage({ items: items(), relays, subId, cursor, pageSize, subscriptions, signal: aborts.signal }); if (!active(run)) return; cached = page.items; live = []; emit(nextState({ items: items(), hasNewer: page.hasNewer, hasOlder: state.hasOlder || page.hasOlder })); }
       finally { if (state.loadingNewer) emit({ ...state, loadingNewer: false }); }
     },
   };

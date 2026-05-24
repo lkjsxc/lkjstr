@@ -17,6 +17,7 @@ type Request = {
   readonly subId: string;
   readonly pageSize: number;
   readonly subscriptions: RelaySubscriptionManager;
+  readonly signal?: AbortSignal;
 };
 
 export async function loadInitialGlobalPage(
@@ -31,6 +32,7 @@ export async function loadInitialGlobalPage(
     direction: 'initial',
     pageSize: request.pageSize,
     subscriptions: request.subscriptions,
+    signal: request.signal,
     purpose: 'feed',
   });
   await Promise.all(
@@ -62,6 +64,7 @@ export async function loadOlderGlobalPage(
     before: request.cursor,
     pageSize: request.pageSize,
     subscriptions: request.subscriptions,
+    signal: request.signal,
     purpose: 'feed',
   });
   await Promise.all(
@@ -96,6 +99,7 @@ export async function loadNewerGlobalPage(
     after: request.cursor,
     pageSize: request.pageSize,
     subscriptions: request.subscriptions,
+    signal: request.signal,
     purpose: 'feed',
   });
   await Promise.all(

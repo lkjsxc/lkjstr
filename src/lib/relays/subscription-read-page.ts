@@ -51,7 +51,7 @@ export async function executeReadPage(
   const requestKey = subscriptionKey(effective);
   const baseSubId = relayFacingSubId(effective.key);
   const subId = leaseRelayReadSubId(state, baseSubId, requestKey);
-  const release = await readLimiter.acquire(limitedReadRelays(relays));
+  let release: () => void = () => undefined;
   let offEvent: () => void = () => undefined;
   let offState: () => void = () => undefined;
   let close: () => void = () => undefined;
@@ -63,6 +63,25 @@ export async function executeReadPage(
     close();
   };
   try {
+    try {
+      release = await readLimiter.acquire(
+        limitedReadRelays(relays),
+        options.signal,
+      );
+    } catch (error) {
+      if ((error as Error).name !== 'AbortError') throw error;
+      aborted = true;
+      return readResult(
+        effective,
+        subId,
+        events,
+        lastSnapshots,
+        timedOut,
+        aborted,
+        eventLimitReached,
+        startedAt,
+      );
+    }
     offEvent = pool.onEvent((event) => {
       if (event.subId !== subId || eventLimitReached) return;
       events.push({ ...event, subId: effective.key });

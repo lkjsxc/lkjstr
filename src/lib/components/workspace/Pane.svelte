@@ -5,9 +5,8 @@
   import type { WorkspacePaneNode } from '$lib/workspace/pane';
   import { createPaneScrollRetention } from '$lib/workspace/pane-scroll-retention';
   import type { TabKind, WorkspaceTab } from '$lib/workspace/tab';
-  import { recordTabCloseReason } from '$lib/workspace/tab-lifecycle-reasons';
   import type { TabGroup } from '$lib/workspace/tab-group';
-  import { createTabRetention } from '$lib/workspace/tab-retention';
+  import { createSessionTabSnapshots } from '$lib/workspace/session-tab-snapshots';
   import NewTabButton from './NewTabButton.svelte';
   import PaneDropLayer from './PaneDropLayer.svelte';
   import PaneTabBody from './PaneTabBody.svelte';
@@ -56,39 +55,26 @@
   };
 
   let props: Props = $props();
+  type TabSnapshot = {
+    readonly id: string;
+    readonly scrollTop?: number;
+  };
   let active = $derived(
     props.group?.activeTabId ? props.tabs[props.group.activeTabId] : undefined,
   );
   let previousActiveId = $state<string | undefined>();
   let previousRetentionSeconds = $state<number | undefined>();
-  let retained = $state<Record<string, WorkspaceTab>>({});
   const bodyScroll = createPaneScrollRetention();
-  const retention = createTabRetention<WorkspaceTab>(
-    () =>
-      (retained = Object.fromEntries(
-        retention.records().map((tab) => [tab.id, tab]),
-      )),
-    (tabId, reason) => recordTabCloseReason(tabId, reason),
-  );
-  let activeBody = $derived(
-    active ? (retained[active.id] ?? active) : undefined,
-  );
-  let renderedTabs = $derived([
-    ...(activeBody ? [activeBody] : []),
-    ...Object.values(retained).filter(
-      (tab) =>
-        tab.id !== activeBody?.id &&
-        props.group?.tabIds.includes(tab.id) &&
-        props.tabs[tab.id],
-    ),
-  ]);
+  const snapshots = createSessionTabSnapshots<TabSnapshot>();
 
   $effect(() => {
     const activeId = active?.id;
     if (previousActiveId && previousActiveId !== activeId)
       bodyScroll.remember(previousActiveId);
-    if (activeId) retention.keep(activeId);
-    if (activeId) bodyScroll.restore(activeId);
+    if (activeId) {
+      bodyScroll.restoreSnapshot(activeId, snapshots.take(activeId));
+      bodyScroll.restore(activeId);
+    }
     if (
       previousActiveId &&
       previousActiveId !== activeId &&
@@ -96,29 +82,32 @@
     ) {
       const previous = props.tabs[previousActiveId];
       if (previous && props.group?.tabIds.includes(previous.id))
-        retention.retain(previous, props.inactiveRetentionSeconds);
+        snapshots.retain(
+          { id: previous.id, ...bodyScroll.snapshot(previous.id) },
+          props.inactiveRetentionSeconds,
+        );
     }
     previousActiveId = activeId;
   });
 
   $effect(() => {
     if (previousRetentionSeconds !== props.inactiveRetentionSeconds) {
-      retention.releaseAll('retention-disabled');
+      snapshots.releaseAll('retention-disabled');
       previousRetentionSeconds = props.inactiveRetentionSeconds;
     }
     if (props.inactiveRetentionSeconds > 0) return;
-    retention.releaseAll('retention-disabled');
+    snapshots.releaseAll('retention-disabled');
   });
 
   $effect(() => {
-    retention.releaseMissing(new Set(props.group?.tabIds ?? []));
+    snapshots.releaseMissing(new Set(props.group?.tabIds ?? []));
   });
 
   function trackBody(node: HTMLElement, tabId: string) {
     return bodyScroll.track(tabId, node);
   }
 
-  onDestroy(() => retention.releaseAll('pane-destroyed'));
+  onDestroy(() => snapshots.releaseAll('pane-destroyed'));
 </script>
 
 <section
@@ -159,17 +148,15 @@
       disabled={!props.ready}
       moveTab={props.moveTab}
     />
-    {#if renderedTabs.length > 0}
-      {#each renderedTabs as tab (tab.id)}
+    {#if active}
         <div
           class="pane-body"
-          data-active-tab={tab.id === active?.id}
-          aria-hidden={tab.id === active?.id ? undefined : 'true'}
-          use:trackBody={tab.id}
+          data-active-tab="true"
+          use:trackBody={active.id}
         >
           <PaneTabBody
-            {tab}
-            visible={tab.id === active?.id}
+            tab={active}
+            visible={true}
             paneId={props.pane.id}
             accounts={props.accounts}
             activeAccount={props.activeAccount}
@@ -186,7 +173,6 @@
             openAuthorContext={props.openAuthorContext}
           />
         </div>
-      {/each}
     {/if}
   </div>
 </section>

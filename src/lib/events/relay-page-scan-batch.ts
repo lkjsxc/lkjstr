@@ -50,6 +50,7 @@ export async function readScanBatch(
           input.relays.length,
           request.pageSize,
         ),
+        signal: request.signal,
       },
     );
     const complete = statusesComplete(result.statuses);

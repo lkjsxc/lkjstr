@@ -36,6 +36,7 @@ export function createTimelineRuntime(options: TimelineRuntimeOptions) {
   let state: TimelineState = emptyState();
   const listeners = new Set<(state: TimelineState) => void>();
   const cleanup: (() => void)[] = [];
+  const aborts = new AbortController();
   // prettier-ignore
   const relays = options.relays
     .map(normalizeRelayUrl)
@@ -83,7 +84,7 @@ export function createTimelineRuntime(options: TimelineRuntimeOptions) {
   const loadInitialNotes = async (): Promise<void> => {
     const key = [...authors].sort().join(','); if (initialNotesKey === key || authors.length === 0) return; initialNotesKey = key;
     try {
-      const page = await loadInitialTimelinePage({ authors, relays, subId: noteSubId, pageSize, subscriptions }); olderScanCursor = page.hasOlder ? page.nextOlderCursor : undefined;
+      const page = await loadInitialTimelinePage({ authors, relays, subId: noteSubId, pageSize, subscriptions, signal: aborts.signal }); olderScanCursor = page.hasOlder ? page.nextOlderCursor : undefined;
       if (page.items.length > 0) { cached = mergeTimelineItems(page.items, items(), feedWindowSize); emit(nextState(readyWithEventsState(state, items()))); }
       else if (state.items.length === 0) emit(nextState({ loading: false, status: 'ready-empty', hasOlder: page.hasOlder }));
     } catch (error) { emit({ ...state, loading: false, error: boundedErrorText(error) }); }
@@ -91,7 +92,7 @@ export function createTimelineRuntime(options: TimelineRuntimeOptions) {
   // prettier-ignore
   const refreshAfterRouteDiscovery = async (run: number): Promise<void> => {
     if (routeRefreshGeneration === run || authors.length === 0) return; routeRefreshGeneration = run;
-    const page = await loadInitialTimelinePage({ authors, relays, subId: `${noteSubId}:route-refresh`, pageSize, subscriptions }).catch(() => undefined);
+    const page = await loadInitialTimelinePage({ authors, relays, subId: `${noteSubId}:route-refresh`, pageSize, subscriptions, signal: aborts.signal }).catch(() => undefined);
     if (!page || !active(run) || page.items.length === 0) return;
     const next = mergeTimelineItems(page.items, items(), feedWindowSize);
     if (next.map((item) => item.event.id).join(',') === items().map((item) => item.event.id).join(',')) return;
@@ -101,7 +102,7 @@ export function createTimelineRuntime(options: TimelineRuntimeOptions) {
   const discoverRoutesAfterInitial = async (): Promise<void> => {
     const run = generation;
     if (closed) return;
-    await discoverAuthorRelayRoutes({ authors, selectedRelays: relays, key: `${noteSubId}:routes`, subscriptions }).catch(() => undefined);
+    await discoverAuthorRelayRoutes({ authors, selectedRelays: relays, key: `${noteSubId}:routes`, subscriptions, signal: aborts.signal }).catch(() => undefined);
     if (active(run)) await refreshAfterRouteDiscovery(run);
   };
   // prettier-ignore
@@ -167,16 +168,16 @@ export function createTimelineRuntime(options: TimelineRuntimeOptions) {
       cleanup.push(subscriptions.subscribeState(receiveState));
       if (followList) await subscribeNotes(); else subscribe(followSubId, [{ kinds: [3], authors: [pubkey], limit: 1 }]);
     },
-    close: (): void => { closed = true; generation++; for (const item of cleanup.splice(0)) item(); listeners.clear(); },
+    close: (): void => { closed = true; generation++; aborts.abort(); for (const item of cleanup.splice(0)) item(); listeners.clear(); },
     loadOlder: async (): Promise<void> => {
       if (closed || state.loadingOlder || !state.hasOlder) return; const run = generation; const cursor = olderScanCursor ?? state.oldestCursor; if (!cursor || authors.length === 0) return; emit({ ...state, loadingOlder: true });
-      try { const page = await loadOlderTimelinePage({ items: items(), authors, relays, subId: noteSubId, cursor, pageSize, subscriptions }); if (!active(run)) return; cached = page.items; live = []; olderScanCursor = page.hasOlder ? page.nextOlderCursor : undefined; emit(nextState({ items: items(), hasOlder: page.hasOlder, hasNewer: state.hasNewer || page.hasNewer })); }
+      try { const page = await loadOlderTimelinePage({ items: items(), authors, relays, subId: noteSubId, cursor, pageSize, subscriptions, signal: aborts.signal }); if (!active(run)) return; cached = page.items; live = []; olderScanCursor = page.hasOlder ? page.nextOlderCursor : undefined; emit(nextState({ items: items(), hasOlder: page.hasOlder, hasNewer: state.hasNewer || page.hasNewer })); }
       catch (error) { emit({ ...state, error: boundedErrorText(error) }); }
       finally { if (state.loadingOlder) emit({ ...state, loadingOlder: false }); }
     },
     loadNewer: async (): Promise<void> => {
       if (closed || state.loadingNewer || !state.hasNewer) return; const run = generation; const cursor = state.newestCursor; if (!cursor || authors.length === 0) return; emit({ ...state, loadingNewer: true });
-      try { const page = await loadNewerTimelinePage({ items: items(), authors, relays, subId: noteSubId, cursor, pageSize, subscriptions }); if (!active(run)) return; cached = page.items; live = []; emit(nextState({ items: items(), hasNewer: page.hasNewer, hasOlder: state.hasOlder || page.hasOlder })); }
+      try { const page = await loadNewerTimelinePage({ items: items(), authors, relays, subId: noteSubId, cursor, pageSize, subscriptions, signal: aborts.signal }); if (!active(run)) return; cached = page.items; live = []; emit(nextState({ items: items(), hasNewer: page.hasNewer, hasOlder: state.hasOlder || page.hasOlder })); }
       catch (error) { emit({ ...state, error: boundedErrorText(error) }); }
       finally { if (state.loadingNewer) emit({ ...state, loadingNewer: false }); }
     },

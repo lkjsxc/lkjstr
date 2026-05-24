@@ -154,6 +154,7 @@ export function createRelaySubscriptionManager(
         read.aborts.detachSignals();
       }
       inFlightReads.clear();
+      readLimiter.close();
       for (const entry of entries.values()) entry.cleanup();
       entries.clear();
     },

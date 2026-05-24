@@ -25,6 +25,7 @@ export type RelayPageRequest = {
   readonly before?: FeedCursorPoint;
   readonly after?: FeedCursorPoint;
   readonly pageSize: number;
+  readonly signal?: AbortSignal;
   readonly purpose?:
     | 'feed'
     | 'metadata'
@@ -79,6 +80,7 @@ export async function readRelayPage(
             group.relays.length,
             request.pageSize,
           ),
+          signal: request.signal,
         },
       ),
     ),
@@ -95,6 +97,7 @@ export async function readRelayFeedPage(
     filters: request.filters.map((filter) =>
       boundaryFilter(filter, request.before, request.after),
     ),
+    signal: request.signal,
   });
   return sortFeedEvents(mergePoolEvents(events))
     .filter((item) => beforeCursor(item.event, request.before))

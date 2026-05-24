@@ -1,4 +1,7 @@
 export type PaneScrollRetention = ReturnType<typeof createPaneScrollRetention>;
+export type PaneScrollSnapshot = {
+  readonly scrollTop?: number;
+};
 
 export function createPaneScrollRetention() {
   const bodies = new Map<string, HTMLElement>();
@@ -22,6 +25,8 @@ export function createPaneScrollRetention() {
       node.addEventListener('scroll', remember, true);
       return {
         destroy: () => {
+          const top = scrollable(tabId)?.scrollTop ?? 0;
+          if (top > 0) scroll.set(tabId, top);
           node.removeEventListener('scroll', remember, true);
           bodies.delete(tabId);
         },
@@ -35,6 +40,12 @@ export function createPaneScrollRetention() {
       const top = scroll.get(tabId);
       const body = scrollable(tabId);
       if (top && body) requestAnimationFrame(() => (body.scrollTop = top));
+    },
+    snapshot: (tabId: string): PaneScrollSnapshot => ({
+      scrollTop: scroll.get(tabId),
+    }),
+    restoreSnapshot: (tabId: string, snapshot?: PaneScrollSnapshot): void => {
+      if (snapshot?.scrollTop) scroll.set(tabId, snapshot.scrollTop);
     },
   };
 }

@@ -20,6 +20,7 @@ export type ProfileOlderRequest = {
   readonly cursor: FeedCursorPoint;
   readonly pageSize: number;
   readonly subscriptions: RelaySubscriptionManager;
+  readonly signal?: AbortSignal;
 };
 
 export type ProfileNewerRequest = ProfileOlderRequest;
@@ -54,6 +55,7 @@ export async function loadOlderProfilePage(request: ProfileOlderRequest) {
     before: request.cursor,
     pageSize: request.pageSize,
     subscriptions: request.subscriptions,
+    signal: request.signal,
     purpose: 'feed',
   });
   await Promise.all(
@@ -104,6 +106,7 @@ export async function loadNewerProfilePage(request: ProfileNewerRequest) {
     after: request.cursor,
     pageSize: request.pageSize,
     subscriptions: request.subscriptions,
+    signal: request.signal,
     purpose: 'feed',
   });
   await Promise.all(
