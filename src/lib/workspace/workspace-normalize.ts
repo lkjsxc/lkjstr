@@ -82,7 +82,6 @@ function normalizeTab(value: unknown): WorkspaceTab | undefined {
 }
 
 function normalizeKind(kind: unknown): TabKind | undefined {
-  if (kind === 'cache-status') return 'network-stats';
   if (typeof kind !== 'string') return undefined;
   return validKinds.includes(kind as TabKind) ? (kind as TabKind) : undefined;
 }
@@ -110,7 +109,6 @@ const validKinds: readonly TabKind[] = [
 ];
 
 function normalizedTitle(title: unknown, kind: TabKind): string {
-  if (kind === 'network-stats' && title === 'Cache') return 'Stats';
   return typeof title === 'string' && title ? title : kind;
 }
 

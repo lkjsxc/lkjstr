@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { normalizeWorkspace } from '../../../src/lib/workspace/workspace-normalize';
 
 describe('workspace normalization', () => {
-  it('migrates legacy cache status tabs to stats tabs', () => {
+  it('drops stale cache status tabs and recovers the workspace', () => {
     const workspace = normalizeWorkspace({
       layout: {
         id: 'pane-a',
@@ -33,8 +33,10 @@ describe('workspace normalization', () => {
         },
       },
     });
-    expect(workspace.tabs['tab-a']?.kind).toBe('network-stats');
-    expect(workspace.tabs['tab-a']?.title).toBe('Stats');
+    expect(Object.values(workspace.tabs).map((tab) => tab.kind)).toEqual([
+      'welcome',
+    ]);
+    expect(workspace.focusedTabId).toBeTruthy();
   });
 
   it('keeps custom request and author context tabs', () => {
@@ -65,9 +67,7 @@ describe('workspace normalization', () => {
   });
 
   it('caps and normalizes closed tabs', () => {
-    const closedTabs = Array.from({ length: 25 }, (_, index) =>
-      tab(index % 2 === 0 ? 'timeline' : 'cache-status'),
-    );
+    const closedTabs = Array.from({ length: 25 }, () => tab('timeline'));
     const workspace = normalizeWorkspace({
       layout: {
         id: 'pane-a',
@@ -89,7 +89,7 @@ describe('workspace normalization', () => {
     });
     const group = workspace.tabGroups['group-a'];
     expect(group.closedTabs).toHaveLength(20);
-    expect(group.closedTabs.some((item) => item.kind === 'network-stats')).toBe(
+    expect(group.closedTabs.every((item) => item.kind === 'timeline')).toBe(
       true,
     );
   });
