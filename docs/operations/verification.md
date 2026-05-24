@@ -159,10 +159,15 @@ Run `pnpm check:repo` after documentation changes before code work continues.
 - Quote and reference previews are deduped by event id.
 - Tweet publish clears and focuses the composer after signing/local queueing
   without showing persistent `Sent to` or `Published` success text.
-- Inactive feed tabs stay mounted through `tabs.inactiveRetentionSeconds`, then
-  close owned subscriptions after expiry.
-- Changing `tabs.inactiveRetentionSeconds`, closing a tab, or retention expiry
-  removes retained inactive tab bodies and releases owned subscriptions.
+- Inactive feed tabs unmount on focus change, close owned subscriptions and
+  page reads, then restore from a bounded session-memory snapshot when
+  reselected within `tabs.inactiveRetentionSeconds`.
+- Changing `tabs.inactiveRetentionSeconds`, closing a tab, pane destruction, or
+  retention expiry removes retained snapshots.
+- Queued relay page reads abort when the owning runtime or subscription manager
+  closes and must not remain in per-relay limiter queues.
+- Browser memory checks cover inactive-tab churn after snapshot restore,
+  bounded fallback stores, and the heavy-feed heap smoke path.
 - lkjstr Log renders one flat chronological wrapped stream.
 - Older cached events without relay arrays render with `cache` provenance.
 - In clean Playwright, any SES lockdown console message must be reproduced

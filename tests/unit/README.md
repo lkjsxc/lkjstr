@@ -7,6 +7,7 @@ This directory contains Vitest unit tests grouped by source domain.
 ## Contents
 
 - [accounts/](accounts/): account and signer tests.
+- [app/](app/): runtime counters and app-level helpers.
 - [cache/](cache/): cache behavior tests.
 - [custom-request/](custom-request/): custom relay request tests.
 - [events/](events/): event parsing and repository tests.

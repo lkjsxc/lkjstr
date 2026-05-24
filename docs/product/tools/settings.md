@@ -34,8 +34,10 @@ Settings provide editable local preferences as one flat key-value list.
 - JSON import uses an inline textarea and status. Browser prompt dialogs are
   not used.
 - Retired draft-tree settings are not part of the schema.
-- `tabs.inactiveRetentionSeconds` controls how long inactive tab components and
-  their runtimes are retained after tab focus changes.
+- `tabs.inactiveRetentionSeconds` controls how long inactive tab UI snapshots
+  are retained in session memory after focus changes.
+- It does not keep inactive tab DOM, runtimes, subscriptions, or relay reads
+  mounted.
 - `tabs.inactiveRetentionSeconds` defaults to `300`, is an integer, and accepts
   values from `0` to `3600` seconds.
 - A value of `0` disables inactive tab retention.

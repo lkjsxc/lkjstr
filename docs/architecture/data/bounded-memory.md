@@ -14,10 +14,10 @@ state after the user navigates, closes tabs, or leaves reads unfinished.
 - One-shot reads generate unique relay-facing ids without retaining historical
   request-key sets.
 - One-shot reads close early at the event cap and report incomplete coverage.
-- `AbortSignal` cancels paged reads, closes relay subscriptions, and releases
-  read limiter slots.
-- Subscription manager handles close live subscriptions and abort in-flight
-  reads from `close()`.
+- `AbortSignal` cancels paged reads, closes relay subscriptions, removes queued
+  read limiter waiters, and releases acquired read limiter slots.
+- Subscription manager close handles live subscriptions, in-flight reads, and
+  queued page reads from `close()`.
 - Deduped reads remove all attached abort listeners after settlement.
 - Search, Custom Request, and Author Context tabs close their local
   subscription manager when destroyed.
@@ -43,6 +43,9 @@ state after the user navigates, closes tabs, or leaves reads unfinished.
   maps and never retain raw relay payloads.
 - Feed coverage memory fallback keeps the most recent `500` rows; IndexedDB
   coverage rows are compacted by age and status.
+- Timeline, profile-support, notification, relay route, relay suggestion, and
+  job fallback stores are bounded in memory. IndexedDB remains the durable
+  source when available.
 - Reference indexes use bounded maps or time-based expiration.
 - Workspace snapshots above the fixed local size cap are rejected before JSON
   parsing, and restored closed-tab history is capped.
@@ -55,8 +58,9 @@ state after the user navigates, closes tabs, or leaves reads unfinished.
 - Worker handles terminate on result, error, cancellation, and tab destroy.
 - UI timers are cleared when their owning row, menu, header, or tab is
   destroyed.
-- Tab retention clears timers and closes retained runtimes on replacement,
-  expiry, tab removal, pane destruction, and retention disablement.
+- Tab snapshot retention keeps only bounded session-memory UI state. It clears
+  timers and snapshots on replacement, expiry, tab removal, pane destruction,
+  and retention disablement.
 
 ## Data Safety
 

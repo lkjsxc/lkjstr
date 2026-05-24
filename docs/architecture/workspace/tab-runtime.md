@@ -23,14 +23,15 @@ Tab runtime defines valid tab kinds and lifecycle ownership.
 - Conversion preserves tab id and tab group.
 - Closing a tab must close any runtime subscription owned by that tab.
 - Closing a tab must abort one-shot reads owned by that tab.
-- Inactive tabs stay mounted while retained. The retention period is configured
-  by `tabs.inactiveRetentionSeconds`.
-- Retained tab DOM remains mounted in a stacked pane-body layout with inactive
-  bodies visually hidden but still sized to the active body.
-- When retention is positive, an inactive tab remains mounted for that many
-  seconds after it loses focus. Its feed runtime remains keyed by tab id.
-- Retention expiry closes runtimes and owned subscriptions for that inactive
-  tab. Focusing the tab before expiry resumes the retained component.
+- Inactive tabs unmount when they lose focus. The active pane renders only one
+  tab body.
+- `tabs.inactiveRetentionSeconds` retains a bounded in-memory UI snapshot for
+  an inactive tab. It does not retain mounted DOM, live runtimes, relay
+  subscriptions, or one-shot relay reads.
+- When retention is positive, a tab reselected within the window restores its
+  session snapshot and creates fresh runtime/network work from the tab id.
+- Retention expiry drops the in-memory snapshot only; runtime and subscription
+  teardown already happened when the tab body unmounted.
 - Closing a tab, changing runtime configuration, or retention expiry closes
   owned subscriptions immediately.
 - Moving a tab removes and inserts the existing tab id without recording closed
@@ -47,9 +48,10 @@ Tab runtime defines valid tab kinds and lifecycle ownership.
 - Timeline runtime create and close events are written to lkjstr Log.
 - Runtime lifecycle logs include tab id, runtime kind, relay count, reason,
   uptime, item count, and subscription counters when available.
-- Tab retention records close reasons for expiry, tab removal, retention
-  setting changes, and pane destroy so retained runtime teardown is diagnosable.
-- Tab retention handles are factory-created resources with explicit
+- Tab snapshot retention records cleanup reasons for expiry, tab removal,
+  retention setting changes, and pane destroy so snapshot lifecycle is
+  diagnosable.
+- Tab snapshot handles are factory-created resources with explicit
   `releaseAll` cleanup.
 - Runtime counters are debug-only. `debug.showRuntimeCounters` defaults to
   `false`; Stats is the only tab that renders them.

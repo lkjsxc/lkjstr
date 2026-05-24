@@ -69,9 +69,10 @@ Tabs define the workspace surface area.
 - The tab strip wraps or compresses tab titles inside the tile width.
 - Tab text may truncate, but pane content must not create horizontal scrolling.
 - Tab bodies fill the pane body height and keep scroll ownership local.
-- Retained inactive tab bodies are stacked in the same pane-body layer instead
-  of hidden with `display:none`; this preserves body geometry and scroll
-  position when a retained tab becomes active again.
+- Inactive tab bodies unmount when focus changes. Within
+  `tabs.inactiveRetentionSeconds`, the workspace keeps a bounded session-memory
+  UI snapshot so scroll and local view state can restore when the tab is
+  selected again.
 
 ## Removed Surface
 

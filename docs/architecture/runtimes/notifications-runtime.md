@@ -38,4 +38,5 @@ hasOlder`, and auto-fills older pages when rows do not fill the viewport.
   hidden relay connections.
 - Use selected read relays as base and fallback plus the active account's
   NIP-65 read relays for account notification reads.
-- Close subscriptions when relay settings change or the tab closes.
+- Close subscriptions when relay settings change or the tab closes, and abort
+  in-flight or queued initial and older notification relay page reads.

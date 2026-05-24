@@ -30,3 +30,5 @@ Global runtime owns unauthenticated recent-note loading from readable relays.
 - Do not require an active account.
 - Close subscriptions when the primitive runtime key changes or the tab closes.
   Relay order alone does not recreate the runtime.
+- Runtime close aborts in-flight and queued initial, older, newer, and metadata
+  relay page reads before ignoring async continuations.

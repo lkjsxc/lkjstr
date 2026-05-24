@@ -47,4 +47,5 @@ Profile runtime owns metadata and authored-note loading for one pubkey.
   routes from NIP-65, NIP-02, relay receipts, and observed discovery evidence.
 - Post paging uses selected fallback route groups plus safe scan cursors.
   Metadata and follow-list reads stay separate from post paging.
-- Closing the tab closes subscriptions.
+- Closing the tab closes subscriptions and aborts in-flight or queued metadata,
+  follow-list, initial, older, and newer relay page reads.

@@ -22,4 +22,5 @@ Thread runtime owns event root and reply loading.
   by `{created_at,id}` with relay provenance merged across duplicate replies.
 - Older-window pruning sets `hasNewer`; `loadNewer()` restores newer cached or
   relay replies from the top cursor.
-- It closes subscriptions on tab close.
+- It closes subscriptions on tab close and aborts in-flight or queued root,
+  older, newer, reaction, and repost relay page reads.

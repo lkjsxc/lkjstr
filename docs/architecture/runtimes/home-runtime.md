@@ -54,3 +54,5 @@ hasOlder`, and only show terminal history when `hasOlder === false`.
 - Close old subscriptions when the primitive runtime key changes or the tab
   closes. The key is tab kind, active account pubkey, sorted normalized relays,
   and tab id.
+- Runtime close aborts in-flight and queued initial, older, newer, route
+  refresh, and metadata relay page reads before ignoring async continuations.

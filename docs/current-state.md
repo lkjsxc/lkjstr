@@ -37,6 +37,9 @@ linked product, protocol, architecture, and operations pages.
   before runtime use.
 - Relay clients, relay pool, subscription manager, and tab runtimes own network
   reads and deterministic cleanup.
+- Inactive workspace tabs unmount immediately and restore from bounded
+  session-memory snapshots when reselected within the configured retention
+  window.
 - Relay publish waiters, paged read leases, deduped read abort listeners, relay
   client final close state, and idle pool eviction are covered by lifecycle
   cleanup tests.
