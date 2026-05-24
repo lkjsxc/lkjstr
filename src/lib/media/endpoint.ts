@@ -31,11 +31,14 @@ async function discoverEndpoint(
   if (!response?.ok) return direct.href;
 
   const document = parseNip96Server(await response.json());
+  const api = validEndpoint(document?.apiUrl);
+  if (api) return api.href;
+
   const delegated = validEndpoint(document?.delegatedToUrl);
   if (delegated && !seen.has(delegated.origin))
     return discoverEndpoint(delegated.href, fetcher, seen);
 
-  return validEndpoint(document?.apiUrl)?.href ?? direct.href;
+  return direct.href;
 }
 
 function validEndpoint(value: string | undefined): URL | undefined {

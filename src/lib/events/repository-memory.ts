@@ -1,4 +1,5 @@
 import { compareEventsDesc } from '../protocol';
+import { createBoundedMap } from '../fp/bounded-map';
 import { feedDisplayKinds } from './feed-kinds';
 import type {
   EventRelayReceipt,
@@ -10,10 +11,19 @@ import type {
 import { afterCursor, before, beforeCursor } from './repository-shared';
 
 const fallbackLimit = 5000;
-const memoryEvents = new Map<string, StoredEvent>();
-const memoryReceipts = new Map<string, EventRelayReceipt>();
-const memoryTags = new Map<string, EventTagRow>();
-export const memoryCursors = new Map<string, FeedCursor>();
+const fallbackIndexLimit = fallbackLimit * 8;
+const memoryEvents = createBoundedMap<string, StoredEvent>({
+  maxSize: fallbackLimit,
+});
+const memoryReceipts = createBoundedMap<string, EventRelayReceipt>({
+  maxSize: fallbackIndexLimit,
+});
+const memoryTags = createBoundedMap<string, EventTagRow>({
+  maxSize: fallbackIndexLimit,
+});
+export const memoryCursors = createBoundedMap<string, FeedCursor>({
+  maxSize: 1000,
+});
 
 export function memoryEvent(id: string): StoredEvent | undefined {
   return memoryEvents.get(id);
@@ -78,7 +88,6 @@ export function putMemory(
     .filter((item) => item.eventId === event.id)
     .forEach((item) => memoryTags.delete(item.id));
   tags.forEach((item) => memoryTags.set(item.id, item));
-  pruneMemory();
 }
 
 function matchesFeed(event: StoredEvent, query: FeedQuery): boolean {
@@ -103,29 +112,6 @@ function matchesFeed(event: StoredEvent, query: FeedQuery): boolean {
       event.tags.some((tag) => tag[0] === 'e' && tag[1] === query.eventId)
     );
   return false;
-}
-
-function pruneMemory(): void {
-  const overflow = memoryEvents.size - fallbackLimit;
-  if (overflow <= 0) return;
-  const ids = allMemoryEvents()
-    .sort((a, b) => a.created_at - b.created_at)
-    .slice(0, overflow)
-    .map((event) => event.id);
-  ids.forEach((id) => {
-    memoryEvents.delete(id);
-    deleteByEvent(memoryReceipts, id);
-    deleteByEvent(memoryTags, id);
-  });
-}
-
-function deleteByEvent<T extends { id: string; eventId: string }>(
-  map: Map<string, T>,
-  eventId: string,
-): void {
-  [...map.values()]
-    .filter((item) => item.eventId === eventId)
-    .forEach((item) => map.delete(item.id));
 }
 
 export function clearMemoryRepository(): void {

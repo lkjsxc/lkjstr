@@ -1,7 +1,7 @@
 import type { NostrTag } from './event';
 
 export type Nip96Server = {
-  readonly apiUrl: string;
+  readonly apiUrl?: string;
   readonly delegatedToUrl?: string;
 };
 
@@ -21,9 +21,8 @@ export function parseNip96Server(value: unknown): Nip96Server | undefined {
   if (!record(value)) return undefined;
   const delegatedToUrl = stringValue(value.delegated_to_url);
   const apiUrl = stringValue(value.api_url) ?? stringValue(value.url);
-  if (!apiUrl && delegatedToUrl)
-    return { apiUrl: delegatedToUrl, delegatedToUrl };
-  return apiUrl ? { apiUrl, delegatedToUrl } : undefined;
+  if (!apiUrl && !delegatedToUrl) return undefined;
+  return { apiUrl, delegatedToUrl };
 }
 
 export function parseNip96UploadResult(

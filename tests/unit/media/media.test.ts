@@ -52,6 +52,22 @@ describe('NIP-96 endpoint resolution', () => {
     expect(endpoint).toBe('https://media.example/upload');
   });
 
+  it('prefers valid api_url over delegated_to_url', async () => {
+    const endpoint = await resolveUploadEndpoint(
+      'https://media.example',
+      fetcher({
+        'https://media.example/.well-known/nostr/nip96.json': {
+          api_url: 'https://media.example/upload',
+          delegated_to_url: 'https://delegate.example',
+        },
+        'https://delegate.example/.well-known/nostr/nip96.json': {
+          api_url: 'https://delegate.example/upload',
+        },
+      }),
+    );
+    expect(endpoint).toBe('https://media.example/upload');
+  });
+
   it('follows delegated discovery with a loop guard', async () => {
     const endpoint = await resolveUploadEndpoint(
       'https://media.example',

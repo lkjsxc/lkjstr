@@ -103,6 +103,14 @@ describe('event repository fallback paging', () => {
     ).toEqual(['reaction']);
   });
 
+  it('bounds the in-memory event fallback', async () => {
+    for (let index = 0; index < 5005; index += 1)
+      await upsertEvent(eventByIndex(index));
+
+    expect(await lookupEvent(idForIndex(0))).toBeUndefined();
+    expect((await lookupEvent(idForIndex(5004)))?.event.content).toBe('5004');
+  });
+
   it('normalizes stale stored rows with cache relay provenance', () => {
     const stored = normalizeStoredEvent({
       ...event('4', 7, 'legacy'),
@@ -153,4 +161,21 @@ function event(
     content,
     sig: idSeed.repeat(128).slice(0, 128),
   };
+}
+
+function eventByIndex(index: number): NostrEvent {
+  const id = idForIndex(index);
+  return {
+    id,
+    pubkey: id,
+    created_at: index,
+    kind: 1,
+    tags: [],
+    content: String(index),
+    sig: '0'.repeat(128),
+  };
+}
+
+function idForIndex(index: number): string {
+  return index.toString(16).padStart(64, '0');
 }
