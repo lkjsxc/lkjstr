@@ -43,8 +43,9 @@ bounded as timelines grow.
   capped by page and window size.
 - Metadata lookup is scoped to authors currently present in loaded items and is
   capped to `30` missing profiles per loaded page.
-- Oversized relay messages above `64 KiB` are rejected before verification,
-  storage, or rendering, and are surfaced through relay diagnostics.
+- Relay text frames are parsed without an app-imposed byte ceiling. Parse
+  failures and unsupported non-text frames are surfaced through relay
+  diagnostics before storage or rendering.
 - Loading near the bottom adds older chunks. Loading near the top adds newer
   chunks. Rendering flattens chunks only for display.
 - Live prepends and chunk changes preserve the visible scroll anchor.

@@ -69,6 +69,21 @@ describe('relay client hardening', () => {
     expect(events).toEqual([{ subId: 'sub', item: event }]);
   });
 
+  it('diagnoses binary relay frames with measured bytes', () => {
+    const client = createRelayClient('wss://relay.example/');
+    client.subscribe('sub', [{ kinds: [1] }]);
+    sockets[0]?.open();
+    sockets[0]?.receive(new Uint8Array([1, 2, 3, 4]));
+    expect(client.snapshot()).toMatchObject({
+      lastError: 'unsupported non-text relay frame: 4 bytes',
+      stats: { receivedBytes: 4, parseErrorCount: 1 },
+    });
+    expect(client.snapshot().diagnostics.at(-1)).toMatchObject({
+      kind: 'parse-error',
+      message: 'unsupported non-text relay frame: 4 bytes',
+    });
+  });
+
   it('uses short wire aliases for stricter relay subscription id limits', async () => {
     await relayInfo('wss://alias.example/', { max_subid_length: 8 });
     const events: unknown[] = [];

@@ -1,11 +1,10 @@
 import { cachedRelayInformation } from './relay-info';
-import { maxRelayMessageBytes } from './relay-message-size';
 import { maxRelaySubscriptionIdLength } from './subscription-id';
 
 export type RelayLimits = {
   readonly maxSubscriptions: number;
   readonly maxLimit?: number;
-  readonly maxMessageLength: number;
+  readonly maxMessageLength?: number;
   readonly maxSubscriptionIdLength: number;
 };
 
@@ -14,8 +13,7 @@ export function relayLimits(relayUrl: string): RelayLimits {
   return {
     maxSubscriptions: positiveInt(limit.max_subscriptions) ?? Infinity,
     maxLimit: positiveInt(limit.max_limit),
-    maxMessageLength:
-      positiveInt(limit.max_message_length) ?? maxRelayMessageBytes,
+    maxMessageLength: positiveInt(limit.max_message_length),
     maxSubscriptionIdLength: Math.min(
       positiveInt(limit.max_subid_length) ??
         positiveInt(limit.max_subscription_id_length) ??

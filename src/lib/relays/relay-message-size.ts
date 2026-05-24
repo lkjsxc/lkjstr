@@ -1,5 +1,3 @@
-export const maxRelayMessageBytes = 512 * 1024;
-
 export type Utf8ByteLengthResult = {
   readonly within: boolean;
   readonly bytes: number;
