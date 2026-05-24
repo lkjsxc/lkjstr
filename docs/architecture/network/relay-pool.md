@@ -10,6 +10,9 @@ events, publish acknowledgements, and relay snapshots.
 - Normalize relay URLs before opening sockets.
 - Reuse one client per relay URL.
 - Verify events before delivering them to callers.
+- Reject verified events that do not match the stored filters for their
+  subscription id.
+- Reject events for unknown subscription ids.
 - Reject inbound relay frames above `512 KiB` before JSON parsing.
 - Oversized frames are skipped and must not block other relay work.
 - Send `CLOSE` when a subscription cleanup runs.
@@ -25,6 +28,11 @@ events, publish acknowledgements, and relay snapshots.
 - Persist relay diagnostic summaries without changing user relay settings.
 - Bound pending send queues per relay and report `send-queue-full` when a
   queued message is dropped before the socket opens.
+- Bound pending `REQ` queues per relay and report queue drops.
+- Clamp filter limits to cached NIP-11 relay limits when present.
+- Reject outgoing `REQ` messages that exceed cached NIP-11 message limits.
+- Reconnect unexpected close or error with bounded exponential backoff only
+  while restorable work remains.
 - Do not require relay connections during workspace shell render.
 - Do not overwrite user relay settings from runtime health data.
 - Failed relays must not stop other relays in the same subscription.
@@ -37,8 +45,12 @@ events, publish acknowledgements, and relay snapshots.
 - Relay-facing subscription ids are bounded to `48` characters.
 - Request purposes are forwarded with subscriptions so session compatibility
   evidence can skip only incompatible relay/request pairs.
+- Subscription strategy is forwarded with subscriptions. Live managers use
+  `forward`; paged reads use `backward` and close after `EOSE` or timeout.
 - Overlong `REQ` and `CLOSE` ids are rejected locally with diagnostics and are
   not sent to relays.
+- Stricter relay subscription-id limits use wire aliases while preserving
+  logical ids in application callbacks and snapshots.
 - Relay `CLOSED` marks that subscription terminal for that relay.
 - Relay `CLOSED` policy messages such as missing `kinds` or missing `search`
   are retained as current-session compatibility evidence.
@@ -51,6 +63,8 @@ events, publish acknowledgements, and relay snapshots.
   subscription.
 - Publish OK waiters must clear their timeout and remove waiter entries exactly
   once.
+- Pending publishes are retried once per new connection generation until their
+  existing timeout resolves.
 
 ## Browser Diagnostics
 

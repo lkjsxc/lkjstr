@@ -26,6 +26,7 @@ const problems: Problem[] = [];
 const files = await walk(root);
 await checkLines(files);
 await checkReadmeCoverage();
+await checkForbiddenDependencyText(files);
 problems.push(...(await checkDocs(root, files, skipDirs)));
 problems.push(...(await checkComposeGuardrails(root)));
 
@@ -54,6 +55,26 @@ async function checkReadmeCoverage() {
     await fs.access(path.join(root, readme)).catch(() => {
       problems.push({ file: dir, message: 'missing README.md' });
     });
+  }
+}
+
+async function checkForbiddenDependencyText(filesToCheck: string[]) {
+  const forbidden = ['nostr', 'tools'].join('-');
+  const roots = [
+    'package.json',
+    'pnpm-lock.yaml',
+    `src${path.sep}`,
+    `tests${path.sep}`,
+    `scripts${path.sep}`,
+    `docs${path.sep}`,
+  ];
+  for (const file of filesToCheck) {
+    const rel = path.relative(root, file);
+    if (!roots.some((item) => rel === item || rel.startsWith(item))) continue;
+    if (rel === path.join('scripts', 'check-repo.ts')) continue;
+    const text = await fs.readFile(file, 'utf8');
+    if (text.includes(forbidden))
+      problems.push({ file: rel, message: 'forbidden dependency text' });
   }
 }
 

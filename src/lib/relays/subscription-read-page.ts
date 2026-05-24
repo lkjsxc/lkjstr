@@ -85,12 +85,11 @@ export async function executeReadPage(
           lastSnapshots = snapshots;
           if (readPageComplete(snapshots, relays, subId)) finish();
         });
-        close = pool.subscribe(
-          relays,
-          subId,
-          effective.filters,
-          effective.purpose,
-        );
+        close = pool.subscribe(relays, subId, effective.filters, {
+          purpose: effective.purpose,
+          strategy: 'backward',
+          idleCloseMs: options.timeoutMs ?? 5000,
+        });
       }
     });
     return readResult(

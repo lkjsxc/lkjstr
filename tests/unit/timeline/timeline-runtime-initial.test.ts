@@ -2,7 +2,7 @@ import {
   finalizeEvent,
   generateSecretKey,
   getPublicKey,
-} from 'nostr-tools/pure';
+} from '../../../src/lib/protocol';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { createRelayPool } from '../../../src/lib/relays/relay-pool';
 import { createTimelineRuntime } from '../../../src/lib/timeline/timeline-runtime';

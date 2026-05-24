@@ -25,7 +25,8 @@ This document records the current implemented contract for the app.
 - [architecture/network/job-manager.md](architecture/network/job-manager.md):
   persisted job trees, hydration, stale startup marking, and cancellation.
 - [architecture/network/relay-pool.md](architecture/network/relay-pool.md):
-  relay frame limits, diagnostics, send queue bounds, and pool ownership.
+  relay frame limits, diagnostics, request scheduling, reconnect, and pool
+  ownership.
 - [architecture/network/relay-routing.md](architecture/network/relay-routing.md):
   route sources, discovery relay scope, and profile relay targeting.
 - [architecture/data/relay-pages.md](architecture/data/relay-pages.md):
@@ -39,6 +40,7 @@ This document records the current implemented contract for the app.
 ## Gaps
 
 - Relay support determines whether NIP-50 search returns remote matches.
+- Relay AUTH remains diagnostic-only.
 - Cloudflare Workers is a verified hosting target only; it does not add a
   backend account service, relay proxy, or Cloudflare storage dependency.
 - Broad worker queue instrumentation is limited to persisted job records and

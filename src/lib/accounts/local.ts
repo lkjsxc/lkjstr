@@ -1,10 +1,12 @@
-import { bytesToHex, hexToBytes } from 'nostr-tools/utils';
 import {
+  bytesToHex,
+  decodeEntity,
+  encodeNsec,
   finalizeEvent,
   generateSecretKey,
   getPublicKey,
-} from 'nostr-tools/pure';
-import * as nip19 from 'nostr-tools/nip19';
+  parseSecretKeyHex,
+} from '../protocol';
 import type { NostrEvent, UnsignedNostrEvent } from '../protocol';
 import { createAccount, type Account } from './account';
 import { saveLocalSecret } from './local-secret-store';
@@ -21,19 +23,13 @@ export function createLocalAccountRecord(secretKey = generateSecretKey()): {
 }
 
 export function generateNsec(): string {
-  return nip19.nsecEncode(generateSecretKey());
+  return encodeNsec(generateSecretKey());
 }
 
 export function parseNsec(input: string): Uint8Array | undefined {
-  try {
-    const decoded = nip19.decode(input.trim());
-    if (decoded.type !== 'nsec' || !(decoded.data instanceof Uint8Array))
-      return undefined;
-    getPublicKey(decoded.data);
-    return decoded.data;
-  } catch {
-    return undefined;
-  }
+  const decoded = decodeEntity(input.trim());
+  if (decoded?.type !== 'nsec') return undefined;
+  return parseSecretKeyHex(bytesToHex(decoded.data));
 }
 
 export async function persistLocalAccount(
@@ -55,8 +51,5 @@ export function signLocalEvent(
   event: UnsignedNostrEvent,
   secretKey: string,
 ): NostrEvent {
-  return finalizeEvent(
-    { ...event, tags: event.tags.map((tag) => [...tag]) },
-    hexToBytes(secretKey),
-  ) as NostrEvent;
+  return finalizeEvent(event, secretKey);
 }

@@ -1,5 +1,5 @@
 // prettier-ignore
-import { finalizeEvent, generateSecretKey, getPublicKey } from 'nostr-tools/pure';
+import { finalizeEvent, generateSecretKey, getPublicKey } from '../../../src/lib/protocol';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { createRelayPool } from '../../../src/lib/relays/relay-pool';
 import { feedDisplayKinds } from '../../../src/lib/events/feed-kinds';
@@ -121,10 +121,8 @@ describe('timeline runtime', () => {
     );
     await runtime.start();
     sockets[0]?.open();
-    const note = finalizeEvent(
-      { created_at: 103, kind: 1, tags: [], content: 'followed note' },
-      followedKey,
-    );
+    // prettier-ignore
+    const note = finalizeEvent({ created_at: Math.floor(Date.now() / 1000) + 1, kind: 1, tags: [], content: 'followed note' }, followedKey);
     await waitForSub('timeline-test:notes', true);
     socketForSub('timeline-test:notes')?.receive(
       JSON.stringify(['EVENT', 'timeline-test:notes', note]),

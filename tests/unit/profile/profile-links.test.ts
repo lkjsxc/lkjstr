@@ -1,5 +1,4 @@
 import { describe, expect, it } from 'vitest';
-import type { ProfilePointer } from 'nostr-tools/nip19';
 import {
   followListCopyJson,
   followingCount,
@@ -7,7 +6,11 @@ import {
   relaySetsCopyJson,
   tokenizeProfileText,
 } from '../../../src/lib/profile/profile-links';
-import { decodeEntity, encodeNprofile } from '../../../src/lib/protocol/nip19';
+import {
+  decodeEntity,
+  encodeNprofile,
+  type ProfilePointer,
+} from '../../../src/lib/protocol/nip19';
 import { setDefaultRelaySetId } from '../../../src/lib/relays/relay-store';
 import { timelineRelays } from '../../../src/lib/timeline/timeline-subscription';
 import type { NostrEvent } from '../../../src/lib/protocol';

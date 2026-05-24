@@ -27,5 +27,6 @@ export function createRelaySendQueue() {
       bytes = 0;
       return out;
     },
+    hasPending: (): boolean => messages.length > 0,
   };
 }

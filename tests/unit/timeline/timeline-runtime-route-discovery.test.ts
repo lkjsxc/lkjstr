@@ -2,7 +2,7 @@ import {
   finalizeEvent,
   generateSecretKey,
   getPublicKey,
-} from 'nostr-tools/pure';
+} from '../../../src/lib/protocol';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import type { RelayReadRequest } from '../../../src/lib/events/types';
 import type { PoolEvent } from '../../../src/lib/relays/relay-pool';

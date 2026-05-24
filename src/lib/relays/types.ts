@@ -8,6 +8,9 @@ export type RelayDiagnosticKind =
   | 'parse-error'
   | 'invalid-event'
   | 'invalid-subscription'
+  | 'filter-mismatch'
+  | 'request-too-large'
+  | 'request-queue-drop'
   | 'send-queue-full';
 
 export type RelayDiagnostic = {

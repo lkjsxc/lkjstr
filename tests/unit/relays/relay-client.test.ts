@@ -1,4 +1,4 @@
-import { finalizeEvent, generateSecretKey } from 'nostr-tools/pure';
+import { finalizeEvent, generateSecretKey } from '../../../src/lib/protocol';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { createRelayClient } from '../../../src/lib/relays/relay-client';
 import { createRelayPool } from '../../../src/lib/relays/relay-pool';

@@ -2,7 +2,7 @@ import {
   finalizeEvent,
   generateSecretKey,
   getPublicKey,
-} from 'nostr-tools/pure';
+} from '../../../src/lib/protocol';
 import { describe, expect, it } from 'vitest';
 import {
   accountHomeFollowEntries,
@@ -56,9 +56,7 @@ describe('follow list helpers', () => {
   });
 
   it('chunks large author filters', () => {
-    const authors = Array.from({ length: 201 }, () =>
-      getPublicKey(generateSecretKey()),
-    );
+    const authors = Array.from({ length: 201 }, (_, index) => pubkey(index));
     const filters = authorFilters(authors, 50);
     expect(filters).toHaveLength(2);
     expect(filters[0]?.authors).toHaveLength(200);
@@ -66,9 +64,7 @@ describe('follow list helpers', () => {
   });
 
   it('keeps chunked author request limits positive', () => {
-    const authors = Array.from({ length: 7000 }, () =>
-      getPublicKey(generateSecretKey()),
-    );
+    const authors = Array.from({ length: 7000 }, (_, index) => pubkey(index));
     const filters = authorFilters(authors, 30);
     const total = filters.reduce((sum, filter) => sum + (filter.limit ?? 0), 0);
     expect(filters.length).toBeGreaterThan(30);
@@ -76,3 +72,7 @@ describe('follow list helpers', () => {
     expect(filters.every((filter) => (filter.limit ?? 0) > 0)).toBe(true);
   });
 });
+
+function pubkey(index: number): string {
+  return index.toString(16).padStart(64, '0');
+}

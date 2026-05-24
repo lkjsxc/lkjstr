@@ -1,5 +1,9 @@
-import { generateSecretKey, getPublicKey } from 'nostr-tools/pure';
-import { npubEncode, nsecEncode } from 'nostr-tools/nip19';
+import {
+  encodeNpub,
+  encodeNsec,
+  generateSecretKey,
+  getPublicKey,
+} from '../protocol';
 import { npubMatchesPrefix, type NpubMinerEvent } from './npub-miner';
 
 type Command =
@@ -21,7 +25,7 @@ async function mine(prefix: string): Promise<void> {
     for (let index = 0; index < 512; index += 1) {
       const secret = generateSecretKey();
       const pubkey = getPublicKey(secret);
-      const npub = npubEncode(pubkey);
+      const npub = encodeNpub(pubkey);
       attempts += 1;
       if (!npubMatchesPrefix(npub, prefix)) continue;
       running = false;
@@ -30,7 +34,7 @@ async function mine(prefix: string): Promise<void> {
         result: progress(startedAt, attempts, {
           pubkey,
           npub,
-          nsec: nsecEncode(secret),
+          nsec: encodeNsec(secret),
         }),
       });
       return;

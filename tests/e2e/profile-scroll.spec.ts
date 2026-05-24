@@ -1,5 +1,5 @@
 import { expect, test } from '@playwright/test';
-import { finalizeEvent, generateSecretKey } from 'nostr-tools/pure';
+import { finalizeEvent, generateSecretKey } from '../../src/lib/protocol';
 import { installSyntheticRelay } from './timeline-relay-helpers';
 import { openNewTabOption } from './workspace-helpers';
 

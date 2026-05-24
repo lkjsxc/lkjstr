@@ -30,6 +30,15 @@ The event id is the identity. Repeated events merge relay URLs and keep the
 newest receive time. Conflicting payloads for the same id are ignored by the
 repository rather than rendered as separate rows.
 
+## IDs And Signatures
+
+The protocol kernel computes event ids from the UTF-8 JSON serialization of
+`[0, pubkey, created_at, kind, tags, content]`. Local signing uses that hash and
+Schnorr signatures over secp256k1. Verification recomputes the id first and
+then verifies the signature against the event public key. Invalid ids or
+signatures are rejected before relay events are delivered to application
+callers.
+
 ## Timeline Ordering
 
 Timeline ordering is deterministic:

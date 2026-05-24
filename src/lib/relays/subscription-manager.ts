@@ -84,7 +84,7 @@ export function createRelaySubscriptionManager(
         safeRequest.relays,
         subId,
         safeRequest.filters,
-        safeRequest.purpose,
+        { purpose: safeRequest.purpose, strategy: 'forward' },
       );
       entries.set(key, {
         subId,

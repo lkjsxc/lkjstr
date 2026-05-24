@@ -14,6 +14,7 @@ This directory contains reusable application code shared by routes and tabs.
 - [custom-request/](custom-request/): validated relay request parsing.
 - [emoji/](emoji/): custom emoji discovery and parsing.
 - [events/](events/): event repositories, parsing, and actions.
+- [fp/](fp/): small functional data and resource helpers.
 - [identity/](identity/): profile identity helpers.
 - [jobs/](jobs/): persisted job records.
 - [log/](log/): app log state.

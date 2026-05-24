@@ -1,4 +1,4 @@
-import { finalizeEvent, generateSecretKey } from 'nostr-tools/pure';
+import { finalizeEvent, generateSecretKey } from '../../../src/lib/protocol';
 import { describe, expect, it } from 'vitest';
 import {
   matchesAnyFilter,

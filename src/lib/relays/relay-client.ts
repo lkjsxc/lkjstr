@@ -1,11 +1,5 @@
-import {
-  encodeClientMessage,
-  verifyEvent,
-  type ClientMessage,
-  type NostrEvent,
-  type NostrFilter,
-  type RelayMessage,
-} from '../protocol';
+// prettier-ignore
+import { encodeClientMessage, matchesAnyFilter, verifyEvent, type ClientMessage, type NostrEvent, type NostrFilter, type RelayMessage } from '../protocol';
 import { relaySafeFilters } from '../events/nostr-filter-sanitize';
 import { logRelayDiagnostic } from './relay-diagnostic-log';
 import { createRelayClientMetrics } from './relay-client-metrics';
@@ -13,13 +7,12 @@ import { parseRelayMessageData } from './relay-message-data';
 import { utf8ByteLengthWithin } from './relay-message-size';
 import { createRelaySendQueue } from './relay-send-queue';
 import { recordRelayClosedPolicy } from './relay-request-compat';
-import type {
-  RelayClientEvents,
-  RelayConnectionState,
-  RelayDiagnostic,
-  RelayDiagnosticKind,
-  RelaySnapshot,
-} from './types';
+import { relayLimits } from './relay-limits';
+import { createRelayReqScheduler } from './relay-req-scheduler';
+import { createRelaySubscriptionAliases } from './relay-subscription-alias';
+import type { RelaySubscribeOptions } from './relay-subscription-strategy';
+// prettier-ignore
+import type { RelayClientEvents, RelayConnectionState, RelayDiagnostic, RelayDiagnosticKind, RelaySnapshot } from './types';
 // prettier-ignore
 import { maxRelaySubscriptionIdLength, relaySubscriptionIdValid } from './subscription-id';
 import { createRelaySessionStatsCounter } from './relay-session-stats';
@@ -38,10 +31,18 @@ export function createRelayClient(
   let diagnostics: RelayDiagnostic[] = [];
   const eoseBySub: Record<string, boolean> = {};
   const closedBySub: Record<string, string> = {};
-  const filtersBySub = new Map<string, readonly NostrFilter[]>();
+  const filtersBySub = new Map<string, readonly NostrFilter[]>(),
+    optionsBySub = new Map<string, RelaySubscribeOptions>(),
+    deadlineBySub = new Map<string, number>(),
+    closeSentBySub = new Set<string>();
   const stats = createRelaySessionStatsCounter();
-  const queue = createRelaySendQueue();
-  let connectTimer: ReturnType<typeof setTimeout> | undefined;
+  const queue = createRelaySendQueue(),
+    reqs = createRelayReqScheduler(),
+    aliases = createRelaySubscriptionAliases();
+  let connectTimer: ReturnType<typeof setTimeout> | undefined,
+    reconnectTimer: ReturnType<typeof setTimeout> | undefined;
+  let reconnectDelayMs = 500;
+  let openCount = 0;
   let intentionalClose = false;
 
   // prettier-ignore
@@ -51,28 +52,22 @@ export function createRelayClient(
   const setState = (next: RelayConnectionState) => { state = next; emitState(); };
   // prettier-ignore
   const clearConnectTimer = () => { if (!connectTimer) return; clearTimeout(connectTimer); connectTimer = undefined; };
-  const addDiagnostic = (
-    kind: RelayDiagnosticKind,
-    message: string,
-    subId?: string,
-    filters: readonly NostrFilter[] = [],
-  ) => {
-    diagnostics = [
-      ...diagnostics.slice(-19),
-      { relay: url, subId, kind, message, timestamp: Date.now() },
-    ];
-    if (kind === 'parse-error' || kind === 'invalid-event') lastError = message;
-    logRelayDiagnostic(kind, message, url, subId, filters);
-  };
-  const validSubscriptionId = (id: string, action: string): boolean => {
-    if (relaySubscriptionIdValid(id)) return true;
-    const message = `${action} subscription id is longer than ${maxRelaySubscriptionIdLength} characters`;
-    lastError = message;
-    metrics.rejectSubscription();
-    addDiagnostic('invalid-subscription', message, id.slice(0, 48));
-    setState('error');
-    return false;
-  };
+  // prettier-ignore
+  const clearReconnectTimer = () => { if (!reconnectTimer) return; clearTimeout(reconnectTimer); reconnectTimer = undefined; };
+  // prettier-ignore
+  const addDiagnostic = (kind: RelayDiagnosticKind, message: string, subId?: string, filters: readonly NostrFilter[] = []) => { diagnostics = [...diagnostics.slice(-19), { relay: url, subId, kind, message, timestamp: Date.now() }]; if (kind === 'parse-error' || kind === 'invalid-event') lastError = message; logRelayDiagnostic(kind, message, url, subId, filters); };
+  // prettier-ignore
+  const validSubscriptionId = (id: string, action: string): boolean => { if (relaySubscriptionIdValid(id)) return true; const message = `${action} subscription id is longer than ${maxRelaySubscriptionIdLength} characters`; lastError = message; metrics.rejectSubscription(); addDiagnostic('invalid-subscription', message, id.slice(0, 48)); setState('error'); return false; };
+  const activeLimit = () => relayLimits(url).maxSubscriptions;
+  const releaseReq = (id: string) => reqs.release(id, activeLimit());
+  // prettier-ignore
+  const shouldReconnect = () => !intentionalClose && (queue.hasPending() || reqs.hasPending() || [...reqs.activeIds].some(restorableSubscription));
+  // prettier-ignore
+  const restorableSubscription = (id: string): boolean => { const strategy = optionsBySub.get(id)?.strategy ?? 'forward'; if (strategy === 'forward') return true; const deadline = deadlineBySub.get(id); return deadline === undefined || Date.now() < deadline; };
+  // prettier-ignore
+  const scheduleReconnect = () => { if (!shouldReconnect() || reconnectTimer) return; const delay = reconnectDelayMs + Math.floor(Math.random() * 100); reconnectDelayMs = Math.min(reconnectDelayMs * 2, 15_000); reconnectTimer = setTimeout(() => { reconnectTimer = undefined; socket = undefined; handle.connect(); }, delay); };
+  // prettier-ignore
+  const clampFilters = (filters: readonly NostrFilter[]): NostrFilter[] => { const maxLimit = relayLimits(url).maxLimit; return filters.map((filter) => maxLimit && filter.limit && filter.limit > maxLimit ? { ...filter, limit: maxLimit } : filter); };
   const sendEncoded = (encoded: string) => {
     const bytes = utf8ByteLengthWithin(encoded, Number.MAX_SAFE_INTEGER).bytes;
     if (state === 'open') {
@@ -88,33 +83,54 @@ export function createRelayClient(
   const send = (message: ClientMessage) => { handle.connect(); sendEncoded(encodeClientMessage(message)); };
   // prettier-ignore
   const sendIfConnected = (message: ClientMessage) => { if (!socket || state === 'closed' || state === 'idle') return; sendEncoded(encodeClientMessage(message)); };
+  // prettier-ignore
+  const startSubscription = (id: string, filters: readonly NostrFilter[], options: RelaySubscribeOptions, restore = false) => { const limits = relayLimits(url); const wireId = aliases.wireId(id, limits.maxSubscriptionIdLength); const message: ClientMessage = ['REQ', wireId, ...filters]; if (!utf8ByteLengthWithin(encodeClientMessage(message), limits.maxMessageLength).within) { addDiagnostic('request-too-large', 'REQ exceeds relay message limit', id); releaseReq(id); return; } if (!restore) { eoseBySub[id] = false; filtersBySub.set(id, filters); optionsBySub.set(id, options); if (options.idleCloseMs) deadlineBySub.set(id, Date.now() + options.idleCloseMs); delete closedBySub[id]; } stats.activeSubscriptionIds.add(id); send(message); };
+  // prettier-ignore
+  const restoreSubscriptions = () => { for (const id of reqs.activeIds) { if (restorableSubscription(id)) startSubscription(id, filtersBySub.get(id) ?? [], optionsBySub.get(id) ?? {}, true); else releaseReq(id); } };
+  const handleEventMessage = (wireId: string, event: NostrEvent) => {
+    const subId = aliases.logicalId(wireId),
+      verified = verifyEvent(event),
+      filters = filtersBySub.get(subId);
+    if (verified.ok && filters && matchesAnyFilter(event, filters)) {
+      metrics.acceptEvent(event.id);
+      events.event?.(url, subId, event);
+      return;
+    }
+    metrics.rejectEvent();
+    if (verified.ok)
+      addDiagnostic(
+        'filter-mismatch',
+        filters
+          ? 'event does not match subscription filters'
+          : 'unknown subscription id',
+        subId,
+        filters ?? [],
+      );
+    else addDiagnostic('invalid-event', verified.message, subId);
+  };
+  const handleClosedMessage = (wireId: string, reason: string) => {
+    const subId = aliases.logicalId(wireId),
+      filters = filtersBySub.get(subId) ?? [];
+    closedBySub[subId] = reason;
+    recordRelayClosedPolicy(url, reason, filters);
+    stats.activeSubscriptionIds.delete(subId);
+    addDiagnostic('closed', reason, subId, filters);
+    releaseReq(subId);
+  };
+  const handleEoseMessage = (wireId: string) => {
+    const subId = aliases.logicalId(wireId);
+    eoseBySub[subId] = true;
+    metrics.eose();
+    if ((optionsBySub.get(subId)?.strategy ?? 'forward') === 'forward') return;
+    closeSentBySub.add(subId);
+    sendIfConnected(['CLOSE', wireId]);
+    stats.activeSubscriptionIds.delete(subId);
+    releaseReq(subId);
+  };
   const handleRelayMessage = (message: RelayMessage) => {
     stats.receive(message);
-    if (message[0] === 'EVENT') {
-      const verified = verifyEvent(message[2]);
-      if (verified.ok) {
-        metrics.acceptEvent(message[2].id);
-        events.event?.(url, message[1], message[2]);
-      } else {
-        metrics.rejectEvent();
-        addDiagnostic('invalid-event', verified.message, message[1]);
-      }
-    }
-    if (message[0] === 'CLOSED') {
-      closedBySub[message[1]] = message[2];
-      recordRelayClosedPolicy(
-        url,
-        message[2],
-        filtersBySub.get(message[1]) ?? [],
-      );
-      stats.activeSubscriptionIds.delete(message[1]);
-      addDiagnostic(
-        'closed',
-        message[2],
-        message[1],
-        filtersBySub.get(message[1]) ?? [],
-      );
-    }
+    if (message[0] === 'EVENT') handleEventMessage(message[1], message[2]);
+    if (message[0] === 'CLOSED') handleClosedMessage(message[1], message[2]);
     if (message[0] === 'NOTICE')
       addDiagnostic(
         'notice',
@@ -123,74 +139,60 @@ export function createRelayClient(
         [...filtersBySub.values()].flat(),
       );
     if (message[0] === 'AUTH') addDiagnostic('auth', message[1]);
-    if (message[0] === 'EOSE') {
-      eoseBySub[message[1]] = true;
-      metrics.eose();
-    }
+    if (message[0] === 'EOSE') handleEoseMessage(message[1]);
   };
-  const receive = (data: unknown) => {
-    stats.addReceivedBytes(
-      typeof data === 'string'
-        ? utf8ByteLengthWithin(data, Number.MAX_SAFE_INTEGER).bytes
-        : 0,
-    );
-    const parsed = parseRelayMessageData(data);
-    if (!parsed) return;
-    if (parsed.ok) {
-      metrics.receiveMessage();
-      events.message?.(url, parsed.message);
-      handleRelayMessage(parsed.message);
-    } else {
-      lastError = parsed.message;
-      stats.addParseError();
-      addDiagnostic('parse-error', parsed.message);
-    }
-    emitState();
-  };
+  // prettier-ignore
+  const receive = (data: unknown) => { stats.addReceivedBytes(typeof data === 'string' ? utf8ByteLengthWithin(data, Number.MAX_SAFE_INTEGER).bytes : 0); const parsed = parseRelayMessageData(data); if (!parsed) return; if (parsed.ok) { metrics.receiveMessage(); events.message?.(url, parsed.message); handleRelayMessage(parsed.message); } else { lastError = parsed.message; stats.addParseError(); addDiagnostic('parse-error', parsed.message); } emitState(); };
   // prettier-ignore
   const timeoutConnect = () => { if (state !== 'connecting') return; lastError = 'connect timeout'; addDiagnostic('timeout', 'connect timeout'); setState('error'); socket?.close(); };
   // prettier-ignore
-  const forgetSubscription = (id: string) => { delete eoseBySub[id]; delete closedBySub[id]; filtersBySub.delete(id); stats.activeSubscriptionIds.delete(id); };
+  const forgetSubscription = (id: string) => { delete eoseBySub[id]; delete closedBySub[id]; filtersBySub.delete(id); optionsBySub.delete(id); deadlineBySub.delete(id); closeSentBySub.delete(id); aliases.forget(id); reqs.remove(id); stats.activeSubscriptionIds.delete(id); };
   const handle = {
     url,
     snapshot,
     connect: () => {
       if (socket && state !== 'closed') return;
       intentionalClose = false;
+      clearReconnectTimer();
       metrics.startConnect();
       setState('connecting');
       socket = new WebSocket(url);
       connectTimer = setTimeout(timeoutConnect, connectTimeoutMs);
       // prettier-ignore
-      socket.onopen = () => { clearConnectTimer(); metrics.open(); setState('open'); queue.drain().forEach((message) => socket?.send(message)); };
-      socket.onclose = () => {
-        clearConnectTimer();
-        if (!intentionalClose && state !== 'error') {
-          lastError = 'websocket closed';
-          addDiagnostic('closed', 'websocket closed');
-        }
-        setState('closed');
-      };
+      socket.onopen = () => { const reconnect = openCount > 0; openCount += 1; reconnectDelayMs = 500; clearConnectTimer(); metrics.open(); setState('open'); if (reconnect) restoreSubscriptions(); queue.drain().forEach((message) => socket?.send(message)); };
       // prettier-ignore
-      socket.onerror = () => { clearConnectTimer(); lastError = 'websocket error'; setState('error'); };
+      socket.onclose = () => { clearConnectTimer(); if (!intentionalClose && state !== 'error') { lastError = 'websocket closed'; addDiagnostic('closed', 'websocket closed'); } setState('closed'); scheduleReconnect(); };
+      // prettier-ignore
+      socket.onerror = () => { clearConnectTimer(); lastError = 'websocket error'; setState('error'); socket = undefined; scheduleReconnect(); };
       socket.onmessage = (message) => receive(message.data);
     },
-    subscribe: (id: string, filters: readonly NostrFilter[]) => {
+    subscribe: (
+      id: string,
+      filters: readonly NostrFilter[],
+      options: RelaySubscribeOptions = {},
+    ) => {
       if (!validSubscriptionId(id, 'REQ')) return;
-      const safeFilters = relaySafeFilters(filters);
-      eoseBySub[id] = false;
-      filtersBySub.set(id, safeFilters);
-      stats.activeSubscriptionIds.add(id);
-      delete closedBySub[id];
-      send(['REQ', id, ...safeFilters]);
+      const safeFilters = clampFilters(relaySafeFilters(filters)),
+        strategy = options.strategy ?? 'forward';
+      reqs.schedule(
+        {
+          id,
+          critical: strategy === 'forward',
+          start: () =>
+            startSubscription(id, safeFilters, { ...options, strategy }),
+          drop: () =>
+            addDiagnostic('request-queue-drop', 'pending REQ dropped', id),
+        },
+        activeLimit(),
+      );
     },
     // prettier-ignore
-    closeSubscription: (id: string) => { if (!validSubscriptionId(id, 'CLOSE')) return; const wasClosed = Boolean(closedBySub[id]); forgetSubscription(id); if (!wasClosed) sendIfConnected(['CLOSE', id]); emitState(); },
+    closeSubscription: (id: string) => { if (!validSubscriptionId(id, 'CLOSE')) return; const wasClosed = Boolean(closedBySub[id]) || closeSentBySub.has(id); const wireId = aliases.wireId(id, relayLimits(url).maxSubscriptionIdLength); forgetSubscription(id); releaseReq(id); if (!wasClosed) sendIfConnected(['CLOSE', wireId]); emitState(); },
     publish: (event: NostrEvent) => send(['EVENT', event]),
     send,
     sendIfConnected,
     // prettier-ignore
-    close: () => { intentionalClose = true; clearConnectTimer(); socket?.close(); socket = undefined; setState('closed'); },
+    close: () => { intentionalClose = true; clearConnectTimer(); clearReconnectTimer(); socket?.close(); socket = undefined; setState('closed'); },
   };
   return handle;
 }

@@ -1,4 +1,4 @@
-import { generateSecretKey, getPublicKey } from 'nostr-tools/pure';
+import { generateSecretKey, getPublicKey } from '../../../src/lib/protocol';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { createRelayPool } from '../../../src/lib/relays/relay-pool';
 import {

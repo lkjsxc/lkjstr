@@ -1,7 +1,11 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { generateSecretKey, getPublicKey } from 'nostr-tools/pure';
-import * as nip19 from 'nostr-tools/nip19';
-import { kinds, verifyEvent } from '../../../src/lib/protocol';
+import {
+  encodeNsec,
+  generateSecretKey,
+  getPublicKey,
+  kinds,
+  verifyEvent,
+} from '../../../src/lib/protocol';
 import {
   createLocalAccountRecord,
   parseNsec,
@@ -13,7 +17,7 @@ describe('local account signing', () => {
 
   it('rejects invalid nsec input and derives public keys', () => {
     const secret = generateSecretKey();
-    const nsec = nip19.nsecEncode(secret);
+    const nsec = encodeNsec(secret);
     expect(parseNsec('not-an-nsec')).toBeUndefined();
     expect(parseNsec(nsec)).toEqual(secret);
     const record = createLocalAccountRecord(parseNsec(nsec));

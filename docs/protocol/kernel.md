@@ -10,10 +10,13 @@ The protocol kernel is the only layer that understands Nostr event rules. UI cod
 
 ## Responsibilities
 
+- Own byte encoding helpers used by protocol-facing code.
+- Generate local secret keys and derive public keys.
 - Build unsigned event templates from product intents.
-- Canonicalize event payloads before hashing.
-- Compute and verify event ids.
-- Verify signatures.
+- Canonicalize event payloads before hashing as UTF-8 JSON.
+- Compute event ids.
+- Sign local events and verify Schnorr signatures.
+- Encode and decode bech32 protocol entities.
 - Validate kind, tags, content, created_at, pubkey, and id shape.
 - Parse relay messages into typed results.
 - Build relay filters from product query objects.
@@ -35,6 +38,8 @@ Kernel APIs must be pure when possible. Functions that require signing accept an
 Expected groups:
 
 - `events`: create, hash, validate, verify, normalize.
+- `crypto`: key generation, public-key derivation, signing, verification.
+- `entities`: bech32 entity encode/decode and TLV handling.
 - `filters`: build, merge, limit, compare, serialize.
 - `messages`: parse relay messages and build client messages.
 - `tags`: inspect mentions, replies, roots, quotes, topics, and relay hints.

@@ -1,8 +1,4 @@
-import {
-  type NostrEvent,
-  type NostrFilter,
-  type RelayMessage,
-} from '../protocol';
+import type { NostrEvent, NostrFilter, RelayMessage } from '../protocol';
 import { relaySafeFilters } from '../events/nostr-filter-sanitize';
 import { createRelayClient, type RelayClient } from './relay-client';
 import { recordRelayDiagnosticSummary } from './relay-diagnostic-summary';
@@ -11,6 +7,8 @@ import {
   compatibleRelayList,
   type RelayRequestPurpose,
 } from './relay-request-compat';
+// prettier-ignore
+import { relaySubscribeOptions, type RelaySubscribeOptions } from './relay-subscription-strategy';
 import { normalizedRelayList } from './relay-url-list';
 import { relaySnapshotHistoryMap } from './session-snapshots';
 import type { RelayConnectionState, RelaySnapshot } from './types';
@@ -37,13 +35,13 @@ export type RelayPool = ReturnType<typeof createRelayPool>;
 export function createRelayPool(connectTimeoutMs = 5000) {
   const clients = new Map<string, RelayClient>();
   const snapshotHistory = relaySnapshotHistoryMap();
-  const healthStates = new Map<
-    string,
-    { readonly state: RelayConnectionState; readonly lastError?: string }
-  >();
+  // prettier-ignore
+  const healthStates = new Map<string, { readonly state: RelayConnectionState; readonly lastError?: string }>();
   const events = new Set<(event: PoolEvent) => void>();
   const states = new Set<(states: RelaySnapshot[]) => void>();
   const publishWaiters = new Map<string, Map<string, PublishWaiter>>();
+  const pendingPublishEvents = new Map<string, NostrEvent>();
+  const openedOnce = new Set<string>();
 
   const snapshots = (): RelaySnapshot[] => {
     for (const relayClient of clients.values()) {
@@ -65,10 +63,13 @@ export function createRelayPool(connectTimeoutMs = 5000) {
       );
       if (attempted)
         void recordRelayHealthEvidence(snapshot.url, { attempted: true });
-      if (opened)
+      if (opened) {
         void recordRelayHealthEvidence(snapshot.url, {
           connectedAt: Date.now(),
         });
+        if (openedOnce.has(snapshot.url)) resendPendingPublishes(snapshot.url);
+        openedOnce.add(snapshot.url);
+      }
       if (errored)
         void recordRelayHealthEvidence(snapshot.url, {
           failure: snapshot.state === 'error' ? snapshot.lastError : undefined,
@@ -101,7 +102,15 @@ export function createRelayPool(connectTimeoutMs = 5000) {
     waiters.delete(relay);
     clearTimeout(waiter.timer);
     if (waiters.size === 0) publishWaiters.delete(eventId);
+    if (!publishWaiters.has(eventId)) pendingPublishEvents.delete(eventId);
     waiter.resolve(result);
+  };
+  const resendPendingPublishes = (url: string): void => {
+    const relayClient = clients.get(url);
+    if (!relayClient) return;
+    for (const [eventId, event] of pendingPublishEvents) {
+      if (publishWaiters.get(eventId)?.has(url)) relayClient.publish(event);
+    }
   };
   const handleMessage = (relay: string, message: RelayMessage): void => {
     if (message[0] !== 'OK') return;
@@ -143,19 +152,16 @@ export function createRelayPool(connectTimeoutMs = 5000) {
       }, timeoutMs);
       waiters.set(url, { resolve, timer });
       publishWaiters.set(event.id, waiters);
+      pendingPublishEvents.set(event.id, event);
       client(url).publish(event);
     });
 
   return {
-    subscribe: (
-      relays: readonly string[],
-      subId: string,
-      filters: readonly NostrFilter[],
-      purpose?: RelayRequestPurpose,
-    ): (() => void) => {
-      const safeFilters = relaySafeFilters(filters);
-      const urls = compatibleRelayList(relays, safeFilters, purpose);
-      for (const url of urls) client(url).subscribe(subId, safeFilters);
+    // prettier-ignore
+    subscribe: (relays: readonly string[], subId: string, filters: readonly NostrFilter[], options?: RelayRequestPurpose | RelaySubscribeOptions): (() => void) => {
+      const safeFilters = relaySafeFilters(filters), parsedOptions = relaySubscribeOptions(options);
+      const urls = compatibleRelayList(relays, safeFilters, parsedOptions.purpose);
+      for (const url of urls) client(url).subscribe(subId, safeFilters, parsedOptions);
       return () => urls.forEach((url) => client(url).closeSubscription(subId));
     },
     publish: (

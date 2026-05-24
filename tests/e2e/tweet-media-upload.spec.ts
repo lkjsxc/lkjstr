@@ -1,5 +1,5 @@
 import { expect, test, type Page } from '@playwright/test';
-import { generateSecretKey, getPublicKey } from 'nostr-tools/pure';
+import { generateSecretKey, getPublicKey } from '../../src/lib/protocol';
 import { installNip07 } from './nip07-helper';
 import {
   installSyntheticRelay,

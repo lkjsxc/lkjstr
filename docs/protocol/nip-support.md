@@ -7,9 +7,12 @@ unimplemented behavior.
 
 ## Core Support
 
-- NIP-01 event shape, IDs, signatures, filters, and relay messages.
+- NIP-01 event shape, first-party IDs, signatures, filters, and relay
+  messages.
+- NIP-11 relay information documents and limitation fields used for local
+  request bounds.
 - NIP-07 browser extension signing.
-- NIP-19 public-key, note, event, profile, and address entities.
+- NIP-19 `npub`, `nsec`, `note`, `nprofile`, `nevent`, and `naddr` entities.
 
 ## Product Support
 
@@ -31,7 +34,8 @@ unimplemented behavior.
 - NIP-51 newest kind `10030` emoji list and referenced newest kind `30030`
   emoji sets for active-account custom emoji choices.
 - NIP-36 sensitive content gates.
-- NIP-42 relay auth diagnostics.
+- NIP-42 relay auth diagnostics only. The app records challenges but does not
+  automatically answer relay auth.
 - NIP-50 search filters from Search, with cached fallback and relay support
   constrained by relay behavior.
 - NIP-57 zap requests, invoice handoff, receipt amount parsing, and event zap

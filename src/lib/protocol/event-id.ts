@@ -1,4 +1,5 @@
-import { getEventHash } from 'nostr-tools/pure';
+import { sha256 } from '@noble/hashes/sha2.js';
+import { bytesToHex, utf8ToBytes } from './bytes';
 import type { UnsignedNostrEvent } from './event';
 
 export function serializeEvent(event: UnsignedNostrEvent): string {
@@ -13,11 +14,5 @@ export function serializeEvent(event: UnsignedNostrEvent): string {
 }
 
 export function computeEventId(event: UnsignedNostrEvent): string {
-  return getEventHash({
-    pubkey: event.pubkey,
-    created_at: event.created_at,
-    kind: event.kind,
-    tags: event.tags.map((tag) => [...tag]),
-    content: event.content,
-  });
+  return bytesToHex(sha256(utf8ToBytes(serializeEvent(event))));
 }

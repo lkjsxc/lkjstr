@@ -3,7 +3,7 @@ import {
   finalizeEvent,
   generateSecretKey,
   getPublicKey,
-} from 'nostr-tools/pure';
+} from '../../src/lib/protocol';
 import { installNip07 } from './nip07-helper';
 import {
   installSyntheticRelay,

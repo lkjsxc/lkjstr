@@ -2,7 +2,7 @@ import {
   finalizeEvent,
   generateSecretKey,
   getPublicKey,
-} from 'nostr-tools/pure';
+} from '../../../src/lib/protocol';
 import { describe, expect, it } from 'vitest';
 import { contentTokens } from '../../../src/lib/events/content-tokens';
 import {

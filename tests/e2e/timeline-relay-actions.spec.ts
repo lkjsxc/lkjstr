@@ -3,7 +3,7 @@ import {
   finalizeEvent,
   generateSecretKey,
   getPublicKey,
-} from 'nostr-tools/pure';
+} from '../../src/lib/protocol';
 import {
   addReadonlyAccount,
   installSyntheticRelay,

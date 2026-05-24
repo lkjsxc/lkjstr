@@ -1,6 +1,5 @@
 import { expect, test, type Page } from '@playwright/test';
-import { generateSecretKey } from 'nostr-tools/pure';
-import * as nip19 from 'nostr-tools/nip19';
+import { encodeNsec, generateSecretKey } from '../../src/lib/protocol';
 import {
   installSyntheticRelay,
   openCleanWorkspace,
@@ -10,7 +9,7 @@ import { openNewTabOption, selectStartupTab } from './workspace-helpers';
 test('imports nsec and publishes Tweet without NIP-07', async ({ page }) => {
   await installSyntheticRelay(page, { events: [] });
   await openCleanWorkspace(page);
-  await importNsec(page, nip19.nsecEncode(generateSecretKey()));
+  await importNsec(page, encodeNsec(generateSecretKey()));
   await openTweet(page);
   await page.getByLabel('Tweet content').fill('imported local publish');
   await page.getByRole('button', { name: 'Publish' }).click();

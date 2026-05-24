@@ -1,4 +1,4 @@
-import { verifyEvent as verifyNostrEvent } from 'nostr-tools/pure';
+import { verifySchnorrHex } from './crypto';
 import { computeEventId } from './event-id';
 import type { NostrEvent } from './event';
 
@@ -14,15 +14,7 @@ export function verifyEvent(event: NostrEvent): VerificationResult {
       code: 'id_mismatch',
       message: 'event id does not match payload',
     };
-  const valid = verifyNostrEvent({
-    id: event.id,
-    pubkey: event.pubkey,
-    created_at: event.created_at,
-    kind: event.kind,
-    tags: event.tags.map((tag) => [...tag]),
-    content: event.content,
-    sig: event.sig,
-  });
+  const valid = verifySchnorrHex(event.sig, event.id, event.pubkey);
   if (!valid)
     return {
       ok: false,
