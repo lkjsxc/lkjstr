@@ -2,7 +2,11 @@ import fs from 'node:fs/promises';
 import path from 'node:path';
 import { execFile } from 'node:child_process';
 import { promisify } from 'node:util';
-import { isStrictDoc, rootDocLinkProblems, tocMentions } from './repo-doc-rules';
+import {
+  isStrictDoc,
+  rootDocLinkProblems,
+  tocMentions,
+} from './repo-doc-rules';
 import { trackedDirs } from './repo-readmes';
 
 export type RepoProblem = { file: string; message: string };
@@ -55,10 +59,7 @@ function checkAscii(problems: RepoProblem[], file: string, text: string) {
 
 function checkBanned(problems: RepoProblem[], file: string, text: string) {
   if (banned.test(text))
-    problems.push({
-      file,
-      message: 'contains banned release shorthand wording',
-    });
+    problems.push({ file, message: 'contains release shorthand' });
 }
 
 async function checkDocsTopology(
