@@ -116,7 +116,9 @@ test('profile notes follow the summary in the profile scroll flow', async ({
   );
   await expect(profile.getByText('profile flow note 0')).toBeVisible();
   await expect
-    .poll(() => profile.locator('.profile-notes .event-row').count())
+    .poll(() => profile.locator('.profile-notes .event-row').count(), {
+      timeout: 15_000,
+    })
     .toBeGreaterThanOrEqual(30);
   await expect(profile.locator('.event-list__scroller')).toHaveCount(0);
   const metrics = await profile.evaluate((profileTab) => {

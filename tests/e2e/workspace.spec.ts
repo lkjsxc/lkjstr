@@ -62,10 +62,31 @@ test('persists layout after reload', async ({ page }) => {
   await pane(page, 0).getByRole('button', { name: 'Open tile menu' }).click();
   await page.getByRole('button', { name: 'Split right' }).click();
   await expect(page.getByRole('region', { name: 'New Tab' })).toBeVisible();
+  await expect.poll(() => persistedNewTabCount(page)).toBeGreaterThanOrEqual(1);
   await page.reload();
   await expect(page.getByRole('region', { name: 'New Tab' })).toBeVisible();
 });
 
 function secondPane(page: import('@playwright/test').Page) {
   return page.locator('.pane').nth(1);
+}
+
+async function persistedNewTabCount(
+  page: import('@playwright/test').Page,
+): Promise<number> {
+  return page.evaluate(() => {
+    try {
+      const raw = localStorage.getItem('lkjstr.workspaceSnapshot');
+      const workspace = raw ? JSON.parse(raw) : undefined;
+      return Object.values(workspace?.tabs ?? {}).filter(
+        (tab) =>
+          typeof tab === 'object' &&
+          tab !== null &&
+          'kind' in tab &&
+          tab.kind === 'new-tab',
+      ).length;
+    } catch {
+      return 0;
+    }
+  });
 }
