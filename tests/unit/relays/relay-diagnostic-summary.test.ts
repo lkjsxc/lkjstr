@@ -3,6 +3,7 @@ import {
   clearRelayDiagnosticSummariesForTests,
   listRelayDiagnosticSummaries,
   recordRelayDiagnosticSummary,
+  relayDiagnosticSummaryMemorySizeForTests,
 } from '../../../src/lib/relays/relay-diagnostic-summary';
 import type { RelaySnapshot } from '../../../src/lib/relays/types';
 
@@ -48,6 +49,17 @@ describe('relay diagnostic summaries', () => {
     });
     expect(summary?.recentDiagnostics).toHaveLength(20);
     expect(summary?.recentDiagnostics[0]?.message).toBe('message 5');
+  });
+
+  it('bounds in-memory diagnostic summaries', async () => {
+    for (let index = 0; index < 251; index += 1) {
+      await recordRelayDiagnosticSummary({
+        ...snapshot(),
+        url: `wss://relay-${index}.example/`,
+      });
+    }
+
+    expect(relayDiagnosticSummaryMemorySizeForTests()).toBe(250);
   });
 });
 

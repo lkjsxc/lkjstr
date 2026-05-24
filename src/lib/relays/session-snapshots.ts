@@ -1,14 +1,27 @@
+import { createBoundedMap, type BoundedMap } from '../fp/bounded-map';
 import type { RelayDiagnostic, RelaySnapshot } from './types';
 
+const maxRelaySnapshots = 100;
+
 type RelaySnapshotWindow = Window & {
-  __lkjstrRelaySnapshotHistory?: Map<string, RelaySnapshot>;
+  __lkjstrRelaySnapshotHistory?: BoundedMap<string, RelaySnapshot>;
 };
 
-export function relaySnapshotHistoryMap(): Map<string, RelaySnapshot> {
-  if (typeof window === 'undefined') return new Map<string, RelaySnapshot>();
+export function relaySnapshotHistoryMap(): BoundedMap<string, RelaySnapshot> {
+  if (typeof window === 'undefined')
+    return createBoundedMap<string, RelaySnapshot>({
+      maxSize: maxRelaySnapshots,
+    });
   const global = window as RelaySnapshotWindow;
-  global.__lkjstrRelaySnapshotHistory ??= new Map<string, RelaySnapshot>();
+  global.__lkjstrRelaySnapshotHistory ??= createBoundedMap<
+    string,
+    RelaySnapshot
+  >({ maxSize: maxRelaySnapshots });
   return global.__lkjstrRelaySnapshotHistory;
+}
+
+export function relaySnapshotHistorySizeForTests(): number {
+  return relaySnapshotHistoryMap().size();
 }
 
 export function currentRelaySnapshots(): RelaySnapshot[] {

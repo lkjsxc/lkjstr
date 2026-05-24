@@ -1,4 +1,5 @@
 import type { NostrFilter } from '../protocol';
+import { createBoundedMap } from '../fp/bounded-map';
 import { normalizedRelayList } from './relay-url-list';
 
 export type RelayRequestPurpose =
@@ -13,7 +14,10 @@ type RelayPolicy = {
   readonly requiresSearch?: boolean;
 };
 
-const policies = new Map<string, RelayPolicy>();
+const policies = createBoundedMap<string, RelayPolicy>({
+  maxSize: 250,
+  ttlMs: 60 * 60 * 1000,
+});
 
 export function compatibleRelayList(
   relays: readonly string[],
@@ -41,6 +45,10 @@ export function recordRelayClosedPolicy(
 
 export function clearRelayRequestCompatibilityForTests(): void {
   policies.clear();
+}
+
+export function relayRequestCompatibilitySizeForTests(): number {
+  return policies.size();
 }
 
 function relayCompatible(

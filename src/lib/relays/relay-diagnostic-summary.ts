@@ -1,4 +1,5 @@
 import { browserDb } from '../storage/browser-db';
+import { createBoundedMap } from '../fp/bounded-map';
 import {
   bestEffortStorageWrite,
   boundedStorageRead,
@@ -30,7 +31,9 @@ export type RelayDiagnosticEvidence = {
   readonly errored?: boolean;
 };
 
-const memorySummaries = new Map<string, RelayDiagnosticSummary>();
+const memorySummaries = createBoundedMap<string, RelayDiagnosticSummary>({
+  maxSize: 250,
+});
 
 export async function recordRelayDiagnosticSummary(
   snapshot: RelaySnapshot,
@@ -57,6 +60,10 @@ export async function listRelayDiagnosticSummaries(): Promise<
 
 export function clearRelayDiagnosticSummariesForTests(): void {
   memorySummaries.clear();
+}
+
+export function relayDiagnosticSummaryMemorySizeForTests(): number {
+  return memorySummaries.size();
 }
 
 async function relayDiagnosticSummary(

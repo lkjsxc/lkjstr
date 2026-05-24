@@ -1,17 +1,17 @@
 import type { NostrEvent, NostrFilter, RelayMessage } from '../protocol';
 import { relaySafeFilters } from '../events/nostr-filter-sanitize';
 import { createRelayClient, type RelayClient } from './relay-client';
-import { recordRelayDiagnosticSummary } from './relay-diagnostic-summary';
-import { recordRelayHealthEvidence } from './relay-health';
 import {
   compatibleRelayList,
   type RelayRequestPurpose,
 } from './relay-request-compat';
+import { createRelayPoolHealthRecorder } from './relay-pool-health';
+import { createRelayPoolIdleTracker } from './relay-pool-idle';
 // prettier-ignore
 import { relaySubscribeOptions, type RelaySubscribeOptions } from './relay-subscription-strategy';
 import { normalizedRelayList } from './relay-url-list';
 import { relaySnapshotHistoryMap } from './session-snapshots';
-import type { RelayConnectionState, RelaySnapshot } from './types';
+import type { RelaySnapshot } from './types';
 
 export type PoolEvent = {
   readonly relay: string;
@@ -32,16 +32,20 @@ type PublishWaiter = {
 
 export type RelayPool = ReturnType<typeof createRelayPool>;
 
-export function createRelayPool(connectTimeoutMs = 5000) {
+export function createRelayPool(connectTimeoutMs = 5000, idleGraceMs = 15_000) {
   const clients = new Map<string, RelayClient>();
   const snapshotHistory = relaySnapshotHistoryMap();
-  // prettier-ignore
-  const healthStates = new Map<string, { readonly state: RelayConnectionState; readonly lastError?: string }>();
+  const health = createRelayPoolHealthRecorder();
   const events = new Set<(event: PoolEvent) => void>();
   const states = new Set<(states: RelaySnapshot[]) => void>();
   const publishWaiters = new Map<string, Map<string, PublishWaiter>>();
   const pendingPublishEvents = new Map<string, NostrEvent>();
-  const openedOnce = new Set<string>();
+  const idle = createRelayPoolIdleTracker({
+    clients,
+    snapshots: snapshotHistory,
+    idleGraceMs,
+    onChange: () => emitStates(),
+  });
 
   const snapshots = (): RelaySnapshot[] => {
     for (const relayClient of clients.values()) {
@@ -50,45 +54,9 @@ export function createRelayPool(connectTimeoutMs = 5000) {
     }
     return [...snapshotHistory.values()];
   };
-  const recordHealth = (items: readonly RelaySnapshot[]): void => {
-    for (const snapshot of items) {
-      const previous = healthStates.get(snapshot.url);
-      const attempted =
-        previous?.state !== 'connecting' && snapshot.state === 'connecting';
-      const opened = previous?.state !== 'open' && snapshot.state === 'open';
-      const errored = Boolean(
-        snapshot.lastError &&
-        (previous?.lastError !== snapshot.lastError ||
-          (previous?.state !== 'error' && snapshot.state === 'error')),
-      );
-      if (attempted)
-        void recordRelayHealthEvidence(snapshot.url, { attempted: true });
-      if (opened) {
-        void recordRelayHealthEvidence(snapshot.url, {
-          connectedAt: Date.now(),
-        });
-        if (openedOnce.has(snapshot.url)) resendPendingPublishes(snapshot.url);
-        openedOnce.add(snapshot.url);
-      }
-      if (errored)
-        void recordRelayHealthEvidence(snapshot.url, {
-          failure: snapshot.state === 'error' ? snapshot.lastError : undefined,
-          lastError: snapshot.lastError,
-        });
-      void recordRelayDiagnosticSummary(snapshot, {
-        attempted,
-        opened,
-        errored,
-      });
-      healthStates.set(snapshot.url, {
-        state: snapshot.state,
-        lastError: snapshot.lastError,
-      });
-    }
-  };
   const emitStates = (): void => {
     const items = snapshots();
-    recordHealth(items);
+    health.record(items, resendPendingPublishes);
     states.forEach((handler) => handler(items));
   };
   const resolvePublish = (
@@ -103,6 +71,7 @@ export function createRelayPool(connectTimeoutMs = 5000) {
     clearTimeout(waiter.timer);
     if (waiters.size === 0) publishWaiters.delete(eventId);
     if (!publishWaiters.has(eventId)) pendingPublishEvents.delete(eventId);
+    idle.end(relay);
     waiter.resolve(result);
   };
   const resendPendingPublishes = (url: string): void => {
@@ -143,6 +112,7 @@ export function createRelayPool(connectTimeoutMs = 5000) {
   ): Promise<PublishResult> =>
     new Promise((resolve) => {
       const waiters = publishWaiters.get(event.id) ?? new Map();
+      idle.begin(url);
       const timer = setTimeout(() => {
         resolvePublish(event.id, url, {
           relay: url,
@@ -161,8 +131,19 @@ export function createRelayPool(connectTimeoutMs = 5000) {
     subscribe: (relays: readonly string[], subId: string, filters: readonly NostrFilter[], options?: RelayRequestPurpose | RelaySubscribeOptions): (() => void) => {
       const safeFilters = relaySafeFilters(filters), parsedOptions = relaySubscribeOptions(options);
       const urls = compatibleRelayList(relays, safeFilters, parsedOptions.purpose);
-      for (const url of urls) client(url).subscribe(subId, safeFilters, parsedOptions);
-      return () => urls.forEach((url) => client(url).closeSubscription(subId));
+      for (const url of urls) {
+        idle.begin(url);
+        client(url).subscribe(subId, safeFilters, parsedOptions);
+      }
+      let closed = false;
+      return () => {
+        if (closed) return;
+        closed = true;
+        for (const url of urls) {
+          clients.get(url)?.closeSubscription(subId);
+          idle.end(url);
+        }
+      };
     },
     publish: (
       relays: readonly string[],
@@ -182,11 +163,13 @@ export function createRelayPool(connectTimeoutMs = 5000) {
       return () => states.delete(handler);
     },
     snapshots,
+    __debugClientCount: () => idle.clientCount(),
     close: (): void => {
       for (const waiters of publishWaiters.values()) {
         for (const waiter of waiters.values()) clearTimeout(waiter.timer);
       }
       publishWaiters.clear();
+      idle.clear();
       for (const relayClient of clients.values()) relayClient.close();
       clients.clear();
       emitStates();

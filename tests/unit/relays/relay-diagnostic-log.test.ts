@@ -6,6 +6,7 @@ import {
 import {
   clearRelayDiagnosticLogForTests,
   logRelayDiagnostic,
+  relayDiagnosticSuppressionSizeForTests,
 } from '../../../src/lib/relays/relay-diagnostic-log';
 
 describe('relay diagnostic log', () => {
@@ -62,5 +63,13 @@ describe('relay diagnostic log', () => {
     });
     expect(appLogRecords()[0]?.context).not.toHaveProperty('filters');
     expect(appLogRecords()[0]?.context).not.toHaveProperty('authors');
+  });
+
+  it('bounds diagnostic suppression state', () => {
+    for (let index = 0; index < 251; index += 1) {
+      logRelayDiagnostic('parse-error', `bad ${index}`, 'wss://relay.example/');
+    }
+
+    expect(relayDiagnosticSuppressionSizeForTests()).toBe(250);
   });
 });

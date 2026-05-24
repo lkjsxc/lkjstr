@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import {
   clearProfileCacheForTests,
   getProfile,
+  profileCacheSizeForTests,
   profileFromMetadataEvent,
   setProfile,
 } from '../../../src/lib/identity/profile-cache';
@@ -40,6 +41,24 @@ describe('profile cache', () => {
     const effective = await storeTimelineProfile(metadata(pubkey, 10, 'old'));
     expect(effective.displayName).toBe('new');
     expect(getProfile(pubkey)?.displayName).toBe('new');
+  });
+
+  it('bounds cached profile summaries', () => {
+    clearProfileCacheForTests();
+    for (let index = 0; index < 1001; index += 1) {
+      setProfile({
+        pubkey: `${index}`.padStart(64, '0'),
+        displayName: `name ${index}`,
+        name: null,
+        nip05: null,
+        avatarUrl: null,
+        updatedAt: index,
+      });
+    }
+
+    expect(profileCacheSizeForTests()).toBe(1000);
+    expect(getProfile('0'.repeat(64))).toBeUndefined();
+    expect(getProfile('1000'.padStart(64, '0'))?.displayName).toBe('name 1000');
   });
 });
 

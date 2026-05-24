@@ -1,13 +1,19 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import {
+  clearRelayInformationMemoryForTests,
   fetchRelayInformation,
   parseRelayInformation,
+  relayInformationMemorySizeForTests,
   relayHttpUrl,
   relayRequestLimit,
+  saveRelayInformation,
 } from '../../../src/lib/relays/relay-info';
 
 describe('relay information documents', () => {
-  afterEach(() => vi.unstubAllGlobals());
+  afterEach(() => {
+    clearRelayInformationMemoryForTests();
+    vi.unstubAllGlobals();
+  });
 
   it('converts websocket relay URLs to HTTP metadata endpoints', () => {
     expect(relayHttpUrl('wss://relay.example/path?a=1')).toBe(
@@ -83,5 +89,17 @@ describe('relay information documents', () => {
     expect(relayRequestLimit(100, { limitation: { max_limit: 20 } })).toBe(20);
     expect(relayRequestLimit(30, { limitation: {} })).toBe(30);
     expect(relayRequestLimit(0, { limitation: { max_limit: 20 } })).toBe(1);
+  });
+
+  it('bounds relay information memory records', async () => {
+    for (let index = 0; index < 129; index += 1) {
+      await saveRelayInformation({
+        relayUrl: `wss://relay-${index}.example/`,
+        fetchedAt: index,
+        status: 'available',
+      });
+    }
+
+    expect(relayInformationMemorySizeForTests()).toBe(128);
   });
 });

@@ -1,9 +1,13 @@
 import { appendAppLog } from '../log/app-log';
 import type { NostrFilter } from '../protocol';
+import { createBoundedMap } from '../fp/bounded-map';
 import type { RelayDiagnosticKind } from './types';
 
 const suppressionWindowMs = 10_000;
-const suppressed = new Map<string, SuppressionState>();
+const suppressed = createBoundedMap<string, SuppressionState>({
+  maxSize: 250,
+  ttlMs: 5 * 60 * 1000,
+});
 
 type SuppressionState = {
   readonly lastVisibleAt: number;
@@ -43,6 +47,10 @@ export function logRelayDiagnostic(
 
 export function clearRelayDiagnosticLogForTests(): void {
   suppressed.clear();
+}
+
+export function relayDiagnosticSuppressionSizeForTests(): number {
+  return suppressed.size();
 }
 
 function diagnosticKey(

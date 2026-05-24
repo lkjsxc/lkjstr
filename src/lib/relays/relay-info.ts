@@ -1,4 +1,5 @@
 import { normalizeRelayUrl } from '../protocol';
+import { createBoundedMap } from '../fp/bounded-map';
 import { browserDb } from '../storage/browser-db';
 import {
   bestEffortStorageWrite,
@@ -26,7 +27,10 @@ export type RelayInformationRecord = {
   readonly error?: string;
 };
 
-const memoryInfo = new Map<string, RelayInformationRecord>();
+const memoryInfo = createBoundedMap<string, RelayInformationRecord>({
+  maxSize: 128,
+  ttlMs: 30 * 60 * 1000,
+});
 
 export async function fetchRelayInformation(
   inputUrl: string,
@@ -103,6 +107,14 @@ export function cachedRelayInformation(
 ): RelayInformationRecord | undefined {
   const relayUrl = normalizeRelayUrl(inputUrl);
   return relayUrl ? memoryInfo.get(relayUrl) : undefined;
+}
+
+export function clearRelayInformationMemoryForTests(): void {
+  memoryInfo.clear();
+}
+
+export function relayInformationMemorySizeForTests(): number {
+  return memoryInfo.size();
 }
 
 export function relayRequestLimit(

@@ -1,8 +1,9 @@
 import type { NostrEvent } from '../protocol';
 import { customEmojis } from '../protocol';
+import { createBoundedMap } from '../fp/bounded-map';
 import type { ProfileSummary } from './identity';
 
-const profiles = new Map<string, ProfileSummary>();
+const profiles = createBoundedMap<string, ProfileSummary>({ maxSize: 1000 });
 
 export function getProfile(pubkey: string): ProfileSummary | undefined {
   return profiles.get(pubkey);
@@ -17,6 +18,10 @@ export function setProfile(profile: ProfileSummary): ProfileSummary {
 
 export function clearProfileCacheForTests(): void {
   profiles.clear();
+}
+
+export function profileCacheSizeForTests(): number {
+  return profiles.size();
 }
 
 export function profileFromMetadataEvent(event: NostrEvent): ProfileSummary {

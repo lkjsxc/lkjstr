@@ -1,11 +1,14 @@
 import { browserDb } from '../storage/browser-db';
+import { createBoundedMap } from '../fp/bounded-map';
 import {
   bestEffortStorageWrite,
   boundedStorageRead,
 } from '../storage/safe-storage';
 import type { FeedCoverage } from './types';
 
-const memoryCoverage = new Map<string, FeedCoverage>();
+const memoryCoverage = createBoundedMap<string, FeedCoverage>({
+  maxSize: 500,
+});
 
 export async function saveFeedCoverage(
   input: Omit<FeedCoverage, 'id' | 'updatedAt'>,
@@ -33,7 +36,7 @@ export async function deleteFeedCoverageForFeeds(
   feedKeys: readonly string[],
 ): Promise<void> {
   const keys = new Set(feedKeys);
-  for (const [id, value] of memoryCoverage)
+  for (const [id, value] of memoryCoverage.entries())
     if (keys.has(value.feedKey)) memoryCoverage.delete(id);
   await bestEffortStorageWrite(async () => {
     await Promise.all(
@@ -53,7 +56,7 @@ export async function compactFeedCoverage(
   const expired = (coverage: FeedCoverage) =>
     coverage.updatedAt <
     (coverage.status === 'complete' ? completeCutoff : diagnosticCutoff);
-  for (const [id, value] of memoryCoverage)
+  for (const [id, value] of memoryCoverage.entries())
     if (expired(value)) memoryCoverage.delete(id);
   await bestEffortStorageWrite(async () => {
     const rows = await browserDb().feedCoverage.toArray();
@@ -64,6 +67,10 @@ export async function compactFeedCoverage(
 
 export function clearFeedCoverageForTests(): void {
   memoryCoverage.clear();
+}
+
+export function feedCoverageMemorySizeForTests(): number {
+  return memoryCoverage.size();
 }
 
 function coverageId(input: Omit<FeedCoverage, 'id' | 'updatedAt'>): string {

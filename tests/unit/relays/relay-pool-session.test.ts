@@ -64,6 +64,40 @@ describe('relay pool session snapshots', () => {
     ]);
   });
 
+  it('evicts idle relay clients after subscriptions close', () => {
+    const pool = createRelayPool(5000, 50);
+    const stop = pool.subscribe(['relay.example'], 'sub', [{ limit: 2 }]);
+    expect(pool.__debugClientCount()).toBe(1);
+
+    sockets[0]?.open();
+    stop();
+    vi.advanceTimersByTime(49);
+    expect(pool.__debugClientCount()).toBe(1);
+
+    vi.advanceTimersByTime(1);
+    expect(pool.__debugClientCount()).toBe(0);
+    expect(pool.snapshots()).toEqual([
+      expect.objectContaining({
+        url: 'wss://relay.example/',
+        state: 'closed',
+      }),
+    ]);
+  });
+
+  it('bounds relay snapshot history', () => {
+    const pool = createRelayPool();
+    for (let index = 0; index < 105; index += 1) {
+      pool.subscribe([`relay-${index}.example`], `sub-${index}`, [
+        { limit: 1 },
+      ]);
+    }
+
+    pool.close();
+    const snapshots = pool.snapshots();
+    expect(snapshots).toHaveLength(100);
+    expect(snapshots[0]?.url).toBe('wss://relay-5.example/');
+  });
+
   it('flattens relay diagnostics chronologically with metadata', () => {
     const diagnostics = flattenRelayDiagnostics([
       snapshot('wss://b.example/', 20, 'b', 'sub-b'),

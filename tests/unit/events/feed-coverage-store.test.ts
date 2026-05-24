@@ -3,6 +3,7 @@ import {
   clearFeedCoverageForTests,
   coverageForFeed,
   deleteFeedCoverageForFeeds,
+  feedCoverageMemorySizeForTests,
   saveFeedCoverage,
 } from '../../../src/lib/events/feed-coverage-store';
 
@@ -42,5 +43,20 @@ describe('feed coverage store', () => {
     await deleteFeedCoverageForFeeds(['home']);
 
     expect(await coverageForFeed('home')).toEqual([]);
+  });
+
+  it('bounds memory fallback coverage rows', async () => {
+    for (let index = 0; index < 501; index += 1) {
+      await saveFeedCoverage({
+        feedKey: `feed-${index}`,
+        relayUrl: 'wss://relay.example/',
+        groupKey: 'fallback:0',
+        filterKey: `kind-${index}`,
+        status: 'complete',
+      });
+    }
+
+    expect(feedCoverageMemorySizeForTests()).toBe(500);
+    expect(await coverageForFeed('feed-0')).toEqual([]);
   });
 });
