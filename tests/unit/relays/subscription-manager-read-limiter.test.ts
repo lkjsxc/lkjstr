@@ -1,10 +1,10 @@
 import { describe, expect, it, vi } from 'vitest';
-import { RelayPool } from '../../../src/lib/relays/relay-pool';
-import { RelaySubscriptionManager } from '../../../src/lib/relays/subscription-manager';
+import { createRelayPool } from '../../../src/lib/relays/relay-pool';
+import { createRelaySubscriptionManager } from '../../../src/lib/relays/subscription-manager';
 
 describe('subscription manager read limiter', () => {
   it('queues concurrent one-shot reads to the same relay', async () => {
-    const pool = new RelayPool();
+    const pool = createRelayPool();
     const cleanup = vi.fn();
     const stateHandlers: ((
       snapshots: ReturnType<typeof snapshot>[],
@@ -15,7 +15,7 @@ describe('subscription manager read limiter', () => {
       stateHandlers.push(handler);
       return vi.fn();
     });
-    const manager = new RelaySubscriptionManager(pool);
+    const manager = createRelaySubscriptionManager(pool);
 
     const first = manager.readPage(
       {
@@ -44,11 +44,11 @@ describe('subscription manager read limiter', () => {
   });
 
   it('starts concurrent one-shot reads to different relays immediately', async () => {
-    const pool = new RelayPool();
+    const pool = createRelayPool();
     const subscribe = vi.spyOn(pool, 'subscribe').mockReturnValue(vi.fn());
     vi.spyOn(pool, 'onEvent').mockReturnValue(vi.fn());
     vi.spyOn(pool, 'onState').mockReturnValue(vi.fn());
-    const manager = new RelaySubscriptionManager(pool);
+    const manager = createRelaySubscriptionManager(pool);
 
     const first = manager.readPage(
       {
@@ -72,11 +72,11 @@ describe('subscription manager read limiter', () => {
   });
 
   it('releases a relay read slot after timeout', async () => {
-    const pool = new RelayPool();
+    const pool = createRelayPool();
     const subscribe = vi.spyOn(pool, 'subscribe').mockReturnValue(vi.fn());
     vi.spyOn(pool, 'onEvent').mockReturnValue(vi.fn());
     vi.spyOn(pool, 'onState').mockReturnValue(vi.fn());
-    const manager = new RelaySubscriptionManager(pool);
+    const manager = createRelaySubscriptionManager(pool);
 
     const first = manager.readPage(
       {

@@ -1,6 +1,6 @@
 import { finalizeEvent, generateSecretKey } from 'nostr-tools/pure';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { RelayPool } from '../../../src/lib/relays/relay-pool';
+import { createRelayPool } from '../../../src/lib/relays/relay-pool';
 
 const event = finalizeEvent(
   { created_at: 100, kind: 1, tags: [], content: 'relay test' },
@@ -41,7 +41,7 @@ describe('relay pool publish', () => {
   });
 
   it('dedupes normalized relay targets for publish', async () => {
-    const pool = new RelayPool();
+    const pool = createRelayPool();
     const published = pool.publish(
       ['relay.example', 'wss://relay.example/'],
       event,
@@ -58,7 +58,7 @@ describe('relay pool publish', () => {
   });
 
   it('ignores late publish timeouts after OK resolution', async () => {
-    const pool = new RelayPool();
+    const pool = createRelayPool();
     const published = pool.publish(['relay.example'], event, 25);
 
     sockets[0]?.onopen?.({} as Event);

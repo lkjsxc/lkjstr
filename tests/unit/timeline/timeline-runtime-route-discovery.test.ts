@@ -11,7 +11,7 @@ import {
   saveAuthorRelayRoute,
 } from '../../../src/lib/relays/relay-route-store';
 import type { RelaySubscriptionManager } from '../../../src/lib/relays/subscription-manager';
-import { TimelineRuntime } from '../../../src/lib/timeline/timeline-runtime';
+import { createTimelineRuntime } from '../../../src/lib/timeline/timeline-runtime';
 import { storeTimelineEvent } from '../../../src/lib/timeline/timeline-store';
 
 describe('timeline route discovery startup', () => {
@@ -39,7 +39,7 @@ describe('timeline route discovery startup', () => {
       eventId: '1'.repeat(64),
     });
 
-    const runtime = new TimelineRuntime({
+    const runtime = createTimelineRuntime({
       relays: ['selected.example'],
       subId: 'timeline-test',
       activeAccountPubkey: active,

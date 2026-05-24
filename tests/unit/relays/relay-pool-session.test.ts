@@ -1,5 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { RelayPool } from '../../../src/lib/relays/relay-pool';
+import { createRelayPool } from '../../../src/lib/relays/relay-pool';
 import { flattenRelayDiagnostics } from '../../../src/lib/relays/session-snapshots';
 import type { RelaySnapshot } from '../../../src/lib/relays/types';
 
@@ -46,7 +46,7 @@ describe('relay pool session snapshots', () => {
   });
 
   it('keeps relay snapshots for the current session after close', () => {
-    const pool = new RelayPool();
+    const pool = createRelayPool();
 
     pool.subscribe(['relay.example'], 'sub', [{ limit: 2 }]);
     sockets[0]?.open();

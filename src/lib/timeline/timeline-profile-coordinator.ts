@@ -6,50 +6,49 @@ export type TimelineProfileMap = Record<string, ProfileSummary>;
 
 const negativeTtlMs = 120_000;
 
-export class TimelineProfileCoordinator {
-  #profiles: TimelineProfileMap = {};
-  #misses = new Map<string, number>();
-  #requestKey = '';
+export type TimelineProfileCoordinator = ReturnType<
+  typeof createTimelineProfileCoordinator
+>;
 
-  constructor(
-    readonly relays: readonly string[],
-    readonly subId: string,
-  ) {}
-
-  profiles(): TimelineProfileMap {
-    return this.#profiles;
-  }
-
-  merge(profiles: TimelineProfileMap): TimelineProfileMap {
-    this.#profiles = monotonicMerge(this.#profiles, profiles);
-    return this.#profiles;
-  }
-
-  async hydrate(items: readonly TimelineItem[]): Promise<TimelineProfileMap> {
-    const missing = this.#missingAuthors(items);
-    const key = missing.join(',');
-    if (missing.length === 0 || key === this.#requestKey) return this.#profiles;
-    this.#requestKey = key;
-    const loaded = await hydrateProfiles({
-      pubkeys: missing,
-      relays: this.relays,
-      subId: this.subId,
-    });
-    const now = Date.now();
-    missing
-      .filter((pubkey) => !loaded[pubkey])
-      .forEach((pubkey) => this.#misses.set(pubkey, now));
-    return this.merge(loaded);
-  }
-
-  #missingAuthors(items: readonly TimelineItem[]): string[] {
+export function createTimelineProfileCoordinator(
+  relays: readonly string[],
+  subId: string,
+) {
+  let profiles: TimelineProfileMap = {};
+  const misses = new Map<string, number>();
+  let requestKey = '';
+  const missingAuthors = (items: readonly TimelineItem[]): string[] => {
     const now = Date.now();
     return [...new Set(items.map((item) => item.event.pubkey))]
-      .filter((pubkey) => !this.#profiles[pubkey])
-      .filter(
-        (pubkey) => now - (this.#misses.get(pubkey) ?? 0) > negativeTtlMs,
-      );
-  }
+      .filter((pubkey) => !profiles[pubkey])
+      .filter((pubkey) => now - (misses.get(pubkey) ?? 0) > negativeTtlMs);
+  };
+  const merge = (incoming: TimelineProfileMap): TimelineProfileMap => {
+    profiles = monotonicMerge(profiles, incoming);
+    return profiles;
+  };
+  return {
+    profiles: (): TimelineProfileMap => profiles,
+    merge,
+    hydrate: async (
+      items: readonly TimelineItem[],
+    ): Promise<TimelineProfileMap> => {
+      const missing = missingAuthors(items);
+      const key = missing.join(',');
+      if (missing.length === 0 || key === requestKey) return profiles;
+      requestKey = key;
+      const loaded = await hydrateProfiles({
+        pubkeys: missing,
+        relays,
+        subId,
+      });
+      const now = Date.now();
+      missing
+        .filter((pubkey) => !loaded[pubkey])
+        .forEach((pubkey) => misses.set(pubkey, now));
+      return merge(loaded);
+    },
+  };
 }
 
 function monotonicMerge(

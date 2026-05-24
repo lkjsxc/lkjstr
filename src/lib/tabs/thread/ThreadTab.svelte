@@ -3,7 +3,10 @@
   import EventTreeList from '$lib/components/events/EventTreeList.svelte';
   import type { ProfileSummary } from '$lib/identity/identity';
   import type { RelaySet } from '$lib/relays/relay-store';
-  import { ThreadRuntime } from '$lib/thread/thread-runtime';
+  import {
+    createThreadRuntime,
+    type ThreadRuntime,
+  } from '$lib/thread/thread-runtime';
   import type { ThreadState } from '$lib/thread/thread-state';
   import {
     createTimelineSubId,
@@ -56,7 +59,7 @@
     const { eventId, relaySets, tabId } = untrack(() => props);
     if (!eventId) return;
     relays = timelineRelays(relaySets);
-    runtime = new ThreadRuntime(
+    runtime = createThreadRuntime(
       eventId,
       relays,
       createTimelineSubId(tabId, 'thread'),

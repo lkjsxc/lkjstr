@@ -1,7 +1,7 @@
 import { finalizeEvent, generateSecretKey } from 'nostr-tools/pure';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { RelayClient } from '../../../src/lib/relays/relay-client';
-import { RelayPool } from '../../../src/lib/relays/relay-pool';
+import { createRelayClient } from '../../../src/lib/relays/relay-client';
+import { createRelayPool } from '../../../src/lib/relays/relay-pool';
 import type { RelaySnapshot } from '../../../src/lib/relays/types';
 
 const event = finalizeEvent(
@@ -64,7 +64,7 @@ describe('relay helpers', () => {
   it('sends client messages and tracks relay state', () => {
     const states: RelaySnapshot[] = [];
     const messages: unknown[] = [];
-    const client = new RelayClient('wss://relay.example/', {
+    const client = createRelayClient('wss://relay.example/', {
       message: (_relay, message) => messages.push(message),
       state: (snapshot) => states.push(snapshot),
     });
@@ -96,7 +96,7 @@ describe('relay helpers', () => {
   it('records relay diagnostics for closed, notice, auth, and bad events', () => {
     const events: unknown[] = [];
     const states: RelaySnapshot[] = [];
-    const client = new RelayClient('wss://relay.example/', {
+    const client = createRelayClient('wss://relay.example/', {
       event: (_relay, _subId, event) => events.push(event),
       state: (snapshot) => states.push(snapshot),
     });
@@ -120,7 +120,7 @@ describe('relay helpers', () => {
 
   it('marks connecting relays failed when connect times out', async () => {
     const states: RelaySnapshot[] = [];
-    const client = new RelayClient(
+    const client = createRelayClient(
       'wss://relay.example/',
       { state: (snapshot) => states.push(snapshot) },
       25,
@@ -139,7 +139,7 @@ describe('relay helpers', () => {
   });
 
   it('normalizes relay pool subscriptions and closes them', () => {
-    const pool = new RelayPool();
+    const pool = createRelayPool();
 
     const unsubscribe = pool.subscribe(
       ['relay.example', 'ftp://bad.example'],
@@ -157,7 +157,7 @@ describe('relay helpers', () => {
   });
 
   it('does not reconnect closed sockets to close subscriptions', () => {
-    const pool = new RelayPool();
+    const pool = createRelayPool();
     const unsubscribe = pool.subscribe(['relay.example'], 'sub', [
       { limit: 2 },
     ]);
@@ -171,7 +171,7 @@ describe('relay helpers', () => {
   });
 
   it('resolves relay pool publish acknowledgements', async () => {
-    const pool = new RelayPool();
+    const pool = createRelayPool();
     const published = pool.publish(['relay.example'], event, 5000);
 
     sockets[0]?.open();
@@ -185,7 +185,7 @@ describe('relay helpers', () => {
   });
 
   it('times out relay pool publishes without acknowledgements', async () => {
-    const pool = new RelayPool();
+    const pool = createRelayPool();
     const published = pool.publish(['relay.example'], event, 25);
 
     await vi.advanceTimersByTimeAsync(25);

@@ -5,11 +5,11 @@
   import type { RelaySnapshot } from '$lib/relays/types';
   import { onDestroy } from 'svelte';
   import type { WorkspacePaneNode } from '$lib/workspace/pane';
-  import { PaneScrollRetention } from '$lib/workspace/pane-scroll-retention';
+  import { createPaneScrollRetention } from '$lib/workspace/pane-scroll-retention';
   import type { TabKind, WorkspaceTab } from '$lib/workspace/tab';
   import { recordTabCloseReason } from '$lib/workspace/tab-lifecycle-reasons';
   import type { TabGroup } from '$lib/workspace/tab-group';
-  import { TabRetention } from '$lib/workspace/tab-retention';
+  import { createTabRetention } from '$lib/workspace/tab-retention';
   import NewTabButton from './NewTabButton.svelte';
   import PaneDropLayer from './PaneDropLayer.svelte';
   import PaneTabBody from './PaneTabBody.svelte';
@@ -66,8 +66,8 @@
   let previousActiveId = $state<string | undefined>();
   let previousRetentionSeconds = $state<number | undefined>();
   let retained = $state<Record<string, WorkspaceTab>>({});
-  const bodyScroll = new PaneScrollRetention();
-  const retention = new TabRetention<WorkspaceTab>(
+  const bodyScroll = createPaneScrollRetention();
+  const retention = createTabRetention<WorkspaceTab>(
     () =>
       (retained = Object.fromEntries(
         retention.records().map((tab) => [tab.id, tab]),

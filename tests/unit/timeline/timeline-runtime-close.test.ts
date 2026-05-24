@@ -4,8 +4,8 @@ import {
   getPublicKey,
 } from 'nostr-tools/pure';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { RelayPool } from '../../../src/lib/relays/relay-pool';
-import { TimelineRuntime } from '../../../src/lib/timeline/timeline-runtime';
+import { createRelayPool } from '../../../src/lib/relays/relay-pool';
+import { createTimelineRuntime } from '../../../src/lib/timeline/timeline-runtime';
 import { storeTimelineEvent } from '../../../src/lib/timeline/timeline-store';
 import { FakeWebSocket, sockets } from './fake-websocket';
 
@@ -28,11 +28,11 @@ describe('timeline runtime close guards', () => {
       ),
     );
     const seen: string[] = [];
-    const runtime = new TimelineRuntime({
+    const runtime = createTimelineRuntime({
       relays: ['relay.example'],
       subId: 'timeline-test',
       activeAccountPubkey: active,
-      pool: new RelayPool(),
+      pool: createRelayPool(),
     });
     runtime.subscribe((state) =>
       seen.push(...state.items.map((item) => item.event.content)),

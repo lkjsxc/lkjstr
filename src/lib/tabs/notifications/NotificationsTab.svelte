@@ -3,7 +3,10 @@
   import NotificationRow from '$lib/components/notifications/NotificationRow.svelte';
   import { isNearEnd, metadataPageLimit } from '$lib/events/feed-window';
   import type { ProfileSummary } from '$lib/identity/identity';
-  import { NotificationRuntime } from '$lib/notifications/notification-runtime';
+  import {
+    createNotificationRuntime,
+    type NotificationRuntime,
+  } from '$lib/notifications/notification-runtime';
   import type { NotificationState } from '$lib/notifications/notification-runtime';
   import type { RelaySet } from '$lib/relays/relay-store';
   import type { FeedEvent } from '$lib/events/types';
@@ -58,7 +61,7 @@
     if (key === undefined) return;
     const { accountPubkey, relaySets, tabId } = untrack(() => props);
     relays = timelineRelays(relaySets);
-    runtime = new NotificationRuntime(
+    runtime = createNotificationRuntime(
       accountPubkey,
       relays,
       createTimelineSubId(tabId, 'notif'),

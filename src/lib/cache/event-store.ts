@@ -1,21 +1,17 @@
 import type { NostrEvent } from '../protocol';
 
-export class EventStore {
-  #events = new Map<string, NostrEvent>();
+export type EventStore = ReturnType<typeof createEventStore>;
 
-  upsert(event: NostrEvent): void {
-    this.#events.set(event.id, event);
-  }
-
-  bulkUpsert(events: readonly NostrEvent[]): void {
-    events.forEach((event) => this.upsert(event));
-  }
-
-  list(): NostrEvent[] {
-    return [...this.#events.values()];
-  }
-
-  clear(): void {
-    this.#events.clear();
-  }
+export function createEventStore() {
+  const events = new Map<string, NostrEvent>();
+  return {
+    upsert: (event: NostrEvent): void => {
+      events.set(event.id, event);
+    },
+    bulkUpsert: (items: readonly NostrEvent[]): void => {
+      items.forEach((event) => events.set(event.id, event));
+    },
+    list: (): NostrEvent[] => [...events.values()],
+    clear: (): void => events.clear(),
+  };
 }

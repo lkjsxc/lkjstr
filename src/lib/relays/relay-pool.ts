@@ -4,7 +4,7 @@ import {
   type RelayMessage,
 } from '../protocol';
 import { relaySafeFilters } from '../events/nostr-filter-sanitize';
-import { RelayClient } from './relay-client';
+import { createRelayClient, type RelayClient } from './relay-client';
 import { recordRelayDiagnosticSummary } from './relay-diagnostic-summary';
 import { recordRelayHealthEvidence } from './relay-health';
 import {
@@ -27,139 +27,34 @@ export type PublishResult = {
   readonly message?: string;
 };
 
-export class RelayPool {
-  #clients = new Map<string, RelayClient>();
-  #snapshotHistory = relaySnapshotHistoryMap();
-  #healthStates = new Map<
+type PublishWaiter = {
+  readonly resolve: (result: PublishResult) => void;
+  readonly timer: ReturnType<typeof setTimeout>;
+};
+
+export type RelayPool = ReturnType<typeof createRelayPool>;
+
+export function createRelayPool(connectTimeoutMs = 5000) {
+  const clients = new Map<string, RelayClient>();
+  const snapshotHistory = relaySnapshotHistoryMap();
+  const healthStates = new Map<
     string,
     { readonly state: RelayConnectionState; readonly lastError?: string }
   >();
-  #events = new Set<(event: PoolEvent) => void>();
-  #states = new Set<(states: RelaySnapshot[]) => void>();
-  #publishWaiters = new Map<
-    string,
-    Map<string, (result: PublishResult) => void>
-  >();
+  const events = new Set<(event: PoolEvent) => void>();
+  const states = new Set<(states: RelaySnapshot[]) => void>();
+  const publishWaiters = new Map<string, Map<string, PublishWaiter>>();
 
-  constructor(readonly connectTimeoutMs = 5000) {}
-
-  subscribe(
-    relays: readonly string[],
-    subId: string,
-    filters: readonly NostrFilter[],
-    purpose?: RelayRequestPurpose,
-  ): () => void {
-    const safeFilters = relaySafeFilters(filters);
-    const urls = compatibleRelayList(relays, safeFilters, purpose);
-    for (const url of urls) this.#client(url).subscribe(subId, safeFilters);
-    return () =>
-      urls.forEach((url) => this.#client(url).closeSubscription(subId));
-  }
-
-  publish(
-    relays: readonly string[],
-    event: NostrEvent,
-    timeoutMs = 5000,
-  ): Promise<PublishResult[]> {
-    const urls = normalizedRelayList(relays);
-    const promises = urls.map((url) => this.#publishOne(url, event, timeoutMs));
-    return Promise.all(promises);
-  }
-
-  onEvent(handler: (event: PoolEvent) => void): () => void {
-    this.#events.add(handler);
-    return () => this.#events.delete(handler);
-  }
-
-  onState(handler: (states: RelaySnapshot[]) => void): () => void {
-    this.#states.add(handler);
-    handler(this.snapshots());
-    return () => this.#states.delete(handler);
-  }
-
-  snapshots(): RelaySnapshot[] {
-    for (const client of this.#clients.values()) {
-      const snapshot = client.snapshot();
-      this.#snapshotHistory.set(snapshot.url, snapshot);
+  const snapshots = (): RelaySnapshot[] => {
+    for (const relayClient of clients.values()) {
+      const snapshot = relayClient.snapshot();
+      snapshotHistory.set(snapshot.url, snapshot);
     }
-    return [...this.#snapshotHistory.values()];
-  }
-
-  close(): void {
-    for (const client of this.#clients.values()) client.close();
-    this.#clients.clear();
-    this.#emitStates();
-  }
-
-  #client(url: string): RelayClient {
-    const existing = this.#clients.get(url);
-    if (existing) return existing;
-    const client = new RelayClient(
-      url,
-      {
-        event: (relay, subId, event) =>
-          this.#events.forEach((handler) => handler({ relay, subId, event })),
-        message: (relay, message) => this.#handleMessage(relay, message),
-        state: () => this.#emitStates(),
-      },
-      this.connectTimeoutMs,
-    );
-    this.#clients.set(url, client);
-    return client;
-  }
-
-  #publishOne(
-    url: string,
-    event: NostrEvent,
-    timeoutMs: number,
-  ): Promise<PublishResult> {
-    return new Promise((resolve) => {
-      const waiters =
-        this.#publishWaiters.get(event.id) ??
-        new Map<string, (result: PublishResult) => void>();
-      waiters.set(url, resolve);
-      this.#publishWaiters.set(event.id, waiters);
-      this.#client(url).publish(event);
-      setTimeout(() => {
-        this.#resolvePublish(event.id, url, {
-          relay: url,
-          accepted: false,
-          message: 'timeout',
-        });
-      }, timeoutMs);
-    });
-  }
-
-  #handleMessage(relay: string, message: RelayMessage): void {
-    if (message[0] !== 'OK') return;
-    const waiters = this.#publishWaiters.get(message[1]);
-    const resolve = waiters?.get(relay);
-    if (!resolve) return;
-    this.#resolvePublish(message[1], relay, {
-      relay,
-      accepted: message[2],
-      message: message[3],
-    });
-  }
-
-  #resolvePublish(eventId: string, relay: string, result: PublishResult): void {
-    const waiters = this.#publishWaiters.get(eventId);
-    const resolve = waiters?.get(relay);
-    if (!waiters || !resolve) return;
-    waiters.delete(relay);
-    if (waiters.size === 0) this.#publishWaiters.delete(eventId);
-    resolve(result);
-  }
-
-  #emitStates(): void {
-    const states = this.snapshots();
-    this.#recordHealth(states);
-    this.#states.forEach((handler) => handler(states));
-  }
-
-  #recordHealth(states: readonly RelaySnapshot[]): void {
-    for (const snapshot of states) {
-      const previous = this.#healthStates.get(snapshot.url);
+    return [...snapshotHistory.values()];
+  };
+  const recordHealth = (items: readonly RelaySnapshot[]): void => {
+    for (const snapshot of items) {
+      const previous = healthStates.get(snapshot.url);
       const attempted =
         previous?.state !== 'connecting' && snapshot.state === 'connecting';
       const opened = previous?.state !== 'open' && snapshot.state === 'open';
@@ -174,23 +69,123 @@ export class RelayPool {
         void recordRelayHealthEvidence(snapshot.url, {
           connectedAt: Date.now(),
         });
-      if (errored) {
+      if (errored)
         void recordRelayHealthEvidence(snapshot.url, {
           failure: snapshot.state === 'error' ? snapshot.lastError : undefined,
           lastError: snapshot.lastError,
         });
-      }
       void recordRelayDiagnosticSummary(snapshot, {
         attempted,
         opened,
         errored,
       });
-      this.#healthStates.set(snapshot.url, {
+      healthStates.set(snapshot.url, {
         state: snapshot.state,
         lastError: snapshot.lastError,
       });
     }
-  }
+  };
+  const emitStates = (): void => {
+    const items = snapshots();
+    recordHealth(items);
+    states.forEach((handler) => handler(items));
+  };
+  const resolvePublish = (
+    eventId: string,
+    relay: string,
+    result: PublishResult,
+  ): void => {
+    const waiters = publishWaiters.get(eventId);
+    const waiter = waiters?.get(relay);
+    if (!waiters || !waiter) return;
+    waiters.delete(relay);
+    clearTimeout(waiter.timer);
+    if (waiters.size === 0) publishWaiters.delete(eventId);
+    waiter.resolve(result);
+  };
+  const handleMessage = (relay: string, message: RelayMessage): void => {
+    if (message[0] !== 'OK') return;
+    resolvePublish(message[1], relay, {
+      relay,
+      accepted: message[2],
+      message: message[3],
+    });
+  };
+  const client = (url: string): RelayClient => {
+    const existing = clients.get(url);
+    if (existing) return existing;
+    const created = createRelayClient(
+      url,
+      {
+        event: (relay, subId, event) =>
+          events.forEach((handler) => handler({ relay, subId, event })),
+        message: (relay, message) => handleMessage(relay, message),
+        state: () => emitStates(),
+      },
+      connectTimeoutMs,
+    );
+    clients.set(url, created);
+    return created;
+  };
+  const publishOne = (
+    url: string,
+    event: NostrEvent,
+    timeoutMs: number,
+  ): Promise<PublishResult> =>
+    new Promise((resolve) => {
+      const waiters = publishWaiters.get(event.id) ?? new Map();
+      const timer = setTimeout(() => {
+        resolvePublish(event.id, url, {
+          relay: url,
+          accepted: false,
+          message: 'timeout',
+        });
+      }, timeoutMs);
+      waiters.set(url, { resolve, timer });
+      publishWaiters.set(event.id, waiters);
+      client(url).publish(event);
+    });
+
+  return {
+    subscribe: (
+      relays: readonly string[],
+      subId: string,
+      filters: readonly NostrFilter[],
+      purpose?: RelayRequestPurpose,
+    ): (() => void) => {
+      const safeFilters = relaySafeFilters(filters);
+      const urls = compatibleRelayList(relays, safeFilters, purpose);
+      for (const url of urls) client(url).subscribe(subId, safeFilters);
+      return () => urls.forEach((url) => client(url).closeSubscription(subId));
+    },
+    publish: (
+      relays: readonly string[],
+      event: NostrEvent,
+      timeoutMs = 5000,
+    ): Promise<PublishResult[]> => {
+      const urls = normalizedRelayList(relays);
+      return Promise.all(urls.map((url) => publishOne(url, event, timeoutMs)));
+    },
+    onEvent: (handler: (event: PoolEvent) => void): (() => void) => {
+      events.add(handler);
+      return () => events.delete(handler);
+    },
+    onState: (handler: (states: RelaySnapshot[]) => void): (() => void) => {
+      states.add(handler);
+      handler(snapshots());
+      return () => states.delete(handler);
+    },
+    snapshots,
+    close: (): void => {
+      for (const waiters of publishWaiters.values()) {
+        for (const waiter of waiters.values()) clearTimeout(waiter.timer);
+      }
+      publishWaiters.clear();
+      for (const relayClient of clients.values()) relayClient.close();
+      clients.clear();
+      emitStates();
+    },
+  };
 }
 
-export const sharedRelayPool = new RelayPool();
+export const sharedRelayPool = createRelayPool();

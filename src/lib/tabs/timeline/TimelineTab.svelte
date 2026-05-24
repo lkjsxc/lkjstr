@@ -8,8 +8,14 @@
   import { appendAppLog } from '$lib/log/app-log';
   import { consumeTabCloseReason } from '$lib/workspace/tab-lifecycle-reasons';
   import type { RelaySet } from '$lib/relays/relay-store';
-  import { GlobalTimelineRuntime } from '$lib/timeline/global-timeline-runtime';
-  import { TimelineRuntime } from '$lib/timeline/timeline-runtime';
+  import {
+    createGlobalTimelineRuntime,
+    type GlobalTimelineRuntime,
+  } from '$lib/timeline/global-timeline-runtime';
+  import {
+    createTimelineRuntime,
+    type TimelineRuntime,
+  } from '$lib/timeline/timeline-runtime';
   import type { TimelineState } from '$lib/timeline/timeline-state';
   import {
     createTimelineSubId,
@@ -66,16 +72,18 @@
     runtimeKey = nextKey;
     relays = nextRelays;
     runtimeStartedAt = Date.now();
-    const Runtime =
-      props.kind === 'global' ? GlobalTimelineRuntime : TimelineRuntime;
-    runtime = new Runtime({
+    const options = {
       relays,
       subId: createTimelineSubId(
         props.tabId,
         props.kind === 'global' ? 'global' : 'tl',
       ),
       activeAccountPubkey: props.activeAccountPubkey,
-    });
+    };
+    runtime =
+      props.kind === 'global'
+        ? createGlobalTimelineRuntime(options)
+        : createTimelineRuntime(options);
     appendAppLog({
       area: 'runtime',
       severity: 'info',

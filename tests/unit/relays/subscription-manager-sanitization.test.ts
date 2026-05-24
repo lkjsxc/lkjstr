@@ -1,13 +1,13 @@
 import { describe, expect, it, vi } from 'vitest';
 import type { NostrFilter } from '../../../src/lib/protocol';
-import { RelayPool } from '../../../src/lib/relays/relay-pool';
-import { RelaySubscriptionManager } from '../../../src/lib/relays/subscription-manager';
+import { createRelayPool } from '../../../src/lib/relays/relay-pool';
+import { createRelaySubscriptionManager } from '../../../src/lib/relays/subscription-manager';
 
 describe('subscription manager sanitization', () => {
   it('subscribes live with relay-safe filters', () => {
-    const pool = new RelayPool();
+    const pool = createRelayPool();
     const subscribe = vi.spyOn(pool, 'subscribe').mockReturnValue(vi.fn());
-    const manager = new RelaySubscriptionManager(pool);
+    const manager = createRelaySubscriptionManager(pool);
     const filter = {
       kinds: [1],
       limit: 2,
@@ -27,11 +27,11 @@ describe('subscription manager sanitization', () => {
   });
 
   it('reads pages with relay-safe filters', async () => {
-    const pool = new RelayPool();
+    const pool = createRelayPool();
     const subscribe = vi.spyOn(pool, 'subscribe').mockReturnValue(vi.fn());
     vi.spyOn(pool, 'onEvent').mockReturnValue(vi.fn());
     vi.spyOn(pool, 'onState').mockReturnValue(vi.fn());
-    const manager = new RelaySubscriptionManager(pool);
+    const manager = createRelaySubscriptionManager(pool);
 
     await manager.readPage(
       {

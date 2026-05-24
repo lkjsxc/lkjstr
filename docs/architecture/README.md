@@ -8,6 +8,7 @@ state lives, which modules own subscriptions, and how tabs close cleanly.
 ## Tree
 
 - [data/README.md](data/README.md): repository, cache, and event tree model.
+- [data/bounded-memory.md](data/bounded-memory.md): bounded memory cleanup.
 - [data/event-tree.md](data/event-tree.md): event row tree model.
 - [data/feed-memory.md](data/feed-memory.md): feed windows and scroll anchors.
 - [data/local-secret-security.md](data/local-secret-security.md):

@@ -42,9 +42,10 @@ jobs:
       - uses: actions/checkout@v6
       - uses: docker/setup-buildx-action@v4
       - run: docker compose -f docker-compose.yml config
-      - run: docker compose -f docker-compose.yml build app verify e2e
+      - run: docker compose -f docker-compose.yml build app verify e2e cloudflare
       - run: docker compose -f docker-compose.yml run --rm verify
       - run: docker compose -f docker-compose.yml run --rm e2e
+      - run: docker compose -f docker-compose.yml run --rm cloudflare
 
   publish:
     if: github.ref == 'refs/heads/main'

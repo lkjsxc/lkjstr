@@ -1,12 +1,12 @@
-import {
-  finalizeEvent,
-  generateSecretKey,
-  getPublicKey,
-} from 'nostr-tools/pure';
+// prettier-ignore
+import { finalizeEvent, generateSecretKey, getPublicKey } from 'nostr-tools/pure';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { RelayPool } from '../../../src/lib/relays/relay-pool';
+import { createRelayPool } from '../../../src/lib/relays/relay-pool';
 import { feedDisplayKinds } from '../../../src/lib/events/feed-kinds';
-import { TimelineRuntime } from '../../../src/lib/timeline/timeline-runtime';
+import {
+  createTimelineRuntime,
+  type TimelineRuntime,
+} from '../../../src/lib/timeline/timeline-runtime';
 import { storeTimelineEvent } from '../../../src/lib/timeline/timeline-store';
 import {
   FakeWebSocket,
@@ -180,11 +180,11 @@ function runtimeFor(options: {
   activeAccountPubkey?: string | null;
   relays?: readonly string[];
 }): TimelineRuntime {
-  return new TimelineRuntime({
+  return createTimelineRuntime({
     relays: options.relays ?? ['relay.example'],
     subId: 'timeline-test',
     activeAccountPubkey: options.activeAccountPubkey,
-    pool: new RelayPool(),
+    pool: createRelayPool(),
   });
 }
 

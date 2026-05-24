@@ -1,7 +1,10 @@
 import { generateSecretKey, getPublicKey } from 'nostr-tools/pure';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { RelayPool } from '../../../src/lib/relays/relay-pool';
-import { TimelineRuntime } from '../../../src/lib/timeline/timeline-runtime';
+import { createRelayPool } from '../../../src/lib/relays/relay-pool';
+import {
+  createTimelineRuntime,
+  type TimelineRuntime,
+} from '../../../src/lib/timeline/timeline-runtime';
 
 const sockets: FakeWebSocket[] = [];
 
@@ -76,11 +79,11 @@ function runtimeFor(options: {
   activeAccountPubkey: string;
   relays?: readonly string[];
 }): TimelineRuntime {
-  return new TimelineRuntime({
+  return createTimelineRuntime({
     relays: options.relays ?? ['relay.example'],
     subId: 'timeline-test',
     activeAccountPubkey: options.activeAccountPubkey,
-    pool: new RelayPool(),
+    pool: createRelayPool(),
   });
 }
 

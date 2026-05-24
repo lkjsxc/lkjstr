@@ -17,29 +17,31 @@ export type TabDefinition<TConfig, TState> = {
   readonly restoreState: (raw: unknown) => TState;
 };
 
-export class TabRegistry {
-  #definitions = new Map<TabKind, TabDefinition<unknown, unknown>>();
+export type TabRegistry = ReturnType<typeof createTabRegistry>;
 
-  register<TConfig, TState>(definition: TabDefinition<TConfig, TState>): void {
-    this.#definitions.set(
-      definition.kind,
-      definition as TabDefinition<unknown, unknown>,
-    );
-  }
-
-  get(kind: TabKind): TabDefinition<unknown, unknown> | undefined {
-    return this.#definitions.get(kind);
-  }
-
-  require(kind: TabKind): TabDefinition<unknown, unknown> {
-    const definition = this.get(kind);
-    if (!definition) throw new Error(`Unknown tab kind: ${kind}`);
-    return definition;
-  }
+export function createTabRegistry() {
+  const definitions = new Map<TabKind, TabDefinition<unknown, unknown>>();
+  return {
+    register: <TConfig, TState>(
+      definition: TabDefinition<TConfig, TState>,
+    ): void => {
+      definitions.set(
+        definition.kind,
+        definition as TabDefinition<unknown, unknown>,
+      );
+    },
+    get: (kind: TabKind): TabDefinition<unknown, unknown> | undefined =>
+      definitions.get(kind),
+    require: (kind: TabKind): TabDefinition<unknown, unknown> => {
+      const definition = definitions.get(kind);
+      if (!definition) throw new Error(`Unknown tab kind: ${kind}`);
+      return definition;
+    },
+  };
 }
 
 export function createDefaultTabRegistry(): TabRegistry {
-  const registry = new TabRegistry();
+  const registry = createTabRegistry();
   const kinds: TabKind[] = [
     'welcome',
     'new-tab',

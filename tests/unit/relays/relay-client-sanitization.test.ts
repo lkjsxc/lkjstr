@@ -1,7 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import type { NostrFilter } from '../../../src/lib/protocol';
-import { RelayClient } from '../../../src/lib/relays/relay-client';
-import { RelayPool } from '../../../src/lib/relays/relay-pool';
+import { createRelayClient } from '../../../src/lib/relays/relay-client';
+import { createRelayPool } from '../../../src/lib/relays/relay-pool';
 
 const sockets: FakeWebSocket[] = [];
 
@@ -42,7 +42,7 @@ describe('relay client sanitization', () => {
   });
 
   it('sanitizes relay pool subscriptions before encoding REQ messages', () => {
-    const pool = new RelayPool();
+    const pool = createRelayPool();
 
     pool.subscribe(['relay.example'], 'sub', [
       { kinds: [1], depth: 1, span: 10, '#e': ['a'] } as unknown as NostrFilter,
@@ -57,7 +57,7 @@ describe('relay client sanitization', () => {
   });
 
   it('sanitizes direct relay client subscriptions before encoding REQ messages', () => {
-    const client = new RelayClient('wss://relay.example/');
+    const client = createRelayClient('wss://relay.example/');
 
     client.subscribe('sub', [
       { kinds: [1], reason: 'dense', attempt: 4 } as unknown as NostrFilter,

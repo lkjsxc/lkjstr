@@ -8,7 +8,10 @@ import {
   queryFeed,
   upsertEvent,
 } from '../../../src/lib/events/repository';
-import { FeedWindow, isNearEnd } from '../../../src/lib/events/feed-window';
+import {
+  createFeedWindow,
+  isNearEnd,
+} from '../../../src/lib/events/feed-window';
 import { normalizeStoredEvent } from '../../../src/lib/events/normalize';
 import type { NostrEvent } from '../../../src/lib/protocol';
 
@@ -116,7 +119,7 @@ describe('event repository fallback paging', () => {
   });
 
   it('prunes feed windows and exposes compound cursors', () => {
-    const window = new FeedWindow<{ event: NostrEvent; relays: string[] }>(2);
+    const window = createFeedWindow<{ event: NostrEvent; relays: string[] }>(2);
     const snapshot = window.merge([
       { event: event('1', 10, 'new'), relays: ['a'] },
       { event: event('2', 9, 'mid'), relays: ['b'] },

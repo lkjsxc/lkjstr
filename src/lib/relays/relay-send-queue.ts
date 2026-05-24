@@ -3,26 +3,29 @@ import { utf8ByteLengthWithin } from './relay-message-size';
 export const maxRelayQueuedMessages = 64;
 export const maxRelayQueuedBytes = 512 * 1024;
 
-export class RelaySendQueue {
-  #messages: string[] = [];
-  #bytes = 0;
+export type RelaySendQueue = ReturnType<typeof createRelaySendQueue>;
 
-  enqueue(message: string): boolean {
-    const bytes = utf8ByteLengthWithin(message, Number.MAX_SAFE_INTEGER).bytes;
-    if (
-      this.#messages.length >= maxRelayQueuedMessages ||
-      this.#bytes + bytes > maxRelayQueuedBytes
-    )
-      return false;
-    this.#messages.push(message);
-    this.#bytes += bytes;
-    return true;
-  }
+export function createRelaySendQueue() {
+  let messages: string[] = [];
+  let bytes = 0;
 
-  drain(): string[] {
-    const messages = this.#messages;
-    this.#messages = [];
-    this.#bytes = 0;
-    return messages;
-  }
+  return {
+    enqueue: (message: string): boolean => {
+      const size = utf8ByteLengthWithin(message, Number.MAX_SAFE_INTEGER).bytes;
+      if (
+        messages.length >= maxRelayQueuedMessages ||
+        bytes + size > maxRelayQueuedBytes
+      )
+        return false;
+      messages.push(message);
+      bytes += size;
+      return true;
+    },
+    drain: (): string[] => {
+      const out = messages;
+      messages = [];
+      bytes = 0;
+      return out;
+    },
+  };
 }

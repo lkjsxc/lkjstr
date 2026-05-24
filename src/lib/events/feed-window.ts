@@ -18,58 +18,58 @@ export type FeedWindowSnapshot<T> = WindowedFeed<T> & {
   readonly oldestCursor?: FeedCursorPoint;
 };
 
-export class FeedWindow<T extends { event: NostrEvent }> {
-  readonly #items = new Map<string, T>();
+export type FeedWindow<T extends { event: NostrEvent }> = ReturnType<
+  typeof createFeedWindow<T>
+>;
 
-  constructor(
-    readonly limit = feedWindowSize,
-    private readonly compare = compareFeedItems<T>,
-  ) {}
-
-  merge(
-    incoming: readonly T[],
-    options: { readonly keepOlder?: boolean } = {},
-  ): FeedWindowSnapshot<T> {
-    for (const item of incoming) {
-      const existing = this.#items.get(item.event.id);
-      this.#items.set(
-        item.event.id,
-        existing ? this.#merge(existing, item) : item,
-      );
-    }
-    return this.#prune(Boolean(options.keepOlder));
-  }
-
-  replace(items: readonly T[]): FeedWindowSnapshot<T> {
-    this.#items.clear();
-    return this.merge(items);
-  }
-
-  items(): T[] {
-    return [...this.#items.values()].sort(this.compare);
-  }
-
-  #prune(keepOlder: boolean): FeedWindowSnapshot<T> {
-    const ordered = this.items();
-    const prunedNewer = ordered.length > this.limit && keepOlder;
-    const prunedOlder = ordered.length > this.limit && !keepOlder;
-    const kept =
-      ordered.length <= this.limit
-        ? ordered
-        : keepOlder
-          ? ordered.slice(-this.limit)
-          : ordered.slice(0, this.limit);
-    this.#items.clear();
-    kept.forEach((item) => this.#items.set(item.event.id, item));
-    return { items: kept, prunedNewer, prunedOlder, ...boundaryCursors(kept) };
-  }
-
-  #merge(existing: T, incoming: T): T {
+export function createFeedWindow<T extends { event: NostrEvent }>(
+  limit = feedWindowSize,
+  compare = compareFeedItems<T>,
+) {
+  const items = new Map<string, T>();
+  const mergeItem = (existing: T, incoming: T): T => {
     const relays = relayArray(existing, incoming);
     const event =
-      this.compare(existing, incoming) <= 0 ? existing.event : incoming.event;
+      compare(existing, incoming) <= 0 ? existing.event : incoming.event;
     return relays ? ({ ...incoming, event, relays } as T) : incoming;
-  }
+  };
+  const mergeIncoming = (incoming: readonly T[]): void => {
+    for (const item of incoming) {
+      const existing = items.get(item.event.id);
+      items.set(item.event.id, existing ? mergeItem(existing, item) : item);
+    }
+  };
+  const orderedItems = (): T[] => [...items.values()].sort(compare);
+  const prune = (keepOlder: boolean): FeedWindowSnapshot<T> => {
+    const ordered = orderedItems();
+    const prunedNewer = ordered.length > limit && keepOlder;
+    const prunedOlder = ordered.length > limit && !keepOlder;
+    const kept =
+      ordered.length <= limit
+        ? ordered
+        : keepOlder
+          ? ordered.slice(-limit)
+          : ordered.slice(0, limit);
+    items.clear();
+    kept.forEach((item) => items.set(item.event.id, item));
+    return { items: kept, prunedNewer, prunedOlder, ...boundaryCursors(kept) };
+  };
+
+  return {
+    merge: (
+      incoming: readonly T[],
+      options: { readonly keepOlder?: boolean } = {},
+    ): FeedWindowSnapshot<T> => {
+      mergeIncoming(incoming);
+      return prune(Boolean(options.keepOlder));
+    },
+    replace: (nextItems: readonly T[]): FeedWindowSnapshot<T> => {
+      items.clear();
+      mergeIncoming(nextItems);
+      return prune(false);
+    },
+    items: orderedItems,
+  };
 }
 
 export function mergeFeedWindow(

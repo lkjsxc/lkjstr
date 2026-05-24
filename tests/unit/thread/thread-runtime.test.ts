@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, it } from 'vitest';
-import { ThreadRuntime } from '../../../src/lib/thread/thread-runtime';
-import { RelayPool } from '../../../src/lib/relays/relay-pool';
+import { createThreadRuntime } from '../../../src/lib/thread/thread-runtime';
+import { createRelayPool } from '../../../src/lib/relays/relay-pool';
 import { clearEventRepositoryForTests } from '../../../src/lib/events/repository';
 import { storeThreadEvent } from '../../../src/lib/thread/thread-store';
 import type { RelaySubscriptionManager } from '../../../src/lib/relays/subscription-manager';
@@ -10,11 +10,11 @@ describe('thread runtime', () => {
 
   it('reports no enabled read relays without opening sockets', async () => {
     const states: string[] = [];
-    const runtime = new ThreadRuntime(
+    const runtime = createThreadRuntime(
       'a'.repeat(64),
       [],
       'thread-test',
-      new RelayPool(),
+      createRelayPool(),
     );
     runtime.subscribe((state) =>
       states.push(`${state.loading}:${state.error ?? ''}`),
@@ -27,11 +27,11 @@ describe('thread runtime', () => {
     const root = 'a'.repeat(64);
     await storeThreadEvent(event(root, 10));
     const states: string[] = [];
-    const runtime = new ThreadRuntime(
+    const runtime = createThreadRuntime(
       root,
       ['wss://relay.example/'],
       'thread-test',
-      new RelayPool(),
+      createRelayPool(),
       failingSubscriptions(),
     );
     runtime.subscribe((state) =>

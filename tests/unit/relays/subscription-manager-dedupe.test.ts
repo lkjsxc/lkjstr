@@ -1,18 +1,18 @@
 import { describe, expect, it, vi } from 'vitest';
 import type { NostrFilter } from '../../../src/lib/protocol';
-import { RelayPool } from '../../../src/lib/relays/relay-pool';
+import { createRelayPool } from '../../../src/lib/relays/relay-pool';
 import {
-  RelaySubscriptionManager,
+  createRelaySubscriptionManager,
   relayFacingSubId,
 } from '../../../src/lib/relays/subscription-manager';
 
 describe('subscription manager read sharing', () => {
   it('dedupes matching in-flight page reads', async () => {
-    const pool = new RelayPool();
+    const pool = createRelayPool();
     const subscribe = vi.spyOn(pool, 'subscribe').mockReturnValue(vi.fn());
     vi.spyOn(pool, 'onEvent').mockReturnValue(vi.fn());
     vi.spyOn(pool, 'onState').mockReturnValue(vi.fn());
-    const manager = new RelaySubscriptionManager(pool);
+    const manager = createRelaySubscriptionManager(pool);
     const request = {
       key: 'same-page',
       relays: ['relay.example'],
@@ -29,11 +29,11 @@ describe('subscription manager read sharing', () => {
   });
 
   it('dedupes reads that differ only by internal filter metadata', async () => {
-    const pool = new RelayPool();
+    const pool = createRelayPool();
     const subscribe = vi.spyOn(pool, 'subscribe').mockReturnValue(vi.fn());
     vi.spyOn(pool, 'onEvent').mockReturnValue(vi.fn());
     vi.spyOn(pool, 'onState').mockReturnValue(vi.fn());
-    const manager = new RelaySubscriptionManager(pool);
+    const manager = createRelaySubscriptionManager(pool);
     const base = {
       key: 'metadata-page',
       relays: ['relay.example'],
@@ -61,7 +61,7 @@ describe('subscription manager read sharing', () => {
   });
 
   it('restores logical keys for live listeners', () => {
-    const pool = new RelayPool();
+    const pool = createRelayPool();
     const logical = `live:${'a'.repeat(80)}`;
     const listener = vi.fn();
     let onEvent:
@@ -73,7 +73,7 @@ describe('subscription manager read sharing', () => {
       return vi.fn();
     });
 
-    new RelaySubscriptionManager(pool).subscribeLive(
+    createRelaySubscriptionManager(pool).subscribeLive(
       { key: logical, relays: ['relay.example'], filters: [{ kinds: [1] }] },
       listener,
     );

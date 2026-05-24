@@ -37,151 +37,109 @@ import {
   withThreadCursors,
   type ThreadState,
 } from './thread-state';
-export class ThreadRuntime {
-  #subscriptions: SubscriptionManager;
-  #cached: ThreadItem[] = [];
-  #live: ThreadItem[] = [];
-  #cleanup: (() => void)[] = [];
-  #listeners = new Set<(state: ThreadState) => void>();
-  #state: ThreadState = emptyThreadState();
-  #pageSize = feedPageSize;
-  #startedAt = Math.floor(Date.now() / 1000);
-  #rootId: string;
-  #closed = false;
-  #generation = 0;
-  constructor(
-    readonly eventId: string,
-    readonly relays: readonly string[],
-    readonly subId = `thread:${crypto.randomUUID()}`,
-    pool?: RelayPool,
-    subscriptions?: SubscriptionManager,
-  ) {
-    this.#subscriptions = runtimeSubscriptions(pool, subscriptions);
-    this.#rootId = eventId;
-  }
-  // prettier-ignore
-  subscribe(listener: (state: ThreadState) => void): () => void { this.#listeners.add(listener); listener(this.#state); return () => this.#listeners.delete(listener); }
 
-  async start(): Promise<void> {
-    if (this.#closed) return;
-    const generation = ++this.#generation;
-    await this.#discoverRoot();
-    if (!this.#active(generation)) return;
-    this.#cached = mergeThreadItems(
-      await loadCachedThread(this.#rootId),
-      this.#rootId === this.eventId ? [] : await loadCachedThread(this.eventId),
-    );
-    if (!this.#active(generation)) return;
-    this.#emit({ ...this.#state, items: this.#cached });
-    // prettier-ignore
-    if (this.relays.length === 0) return this.#emit({ ...this.#state, loading: false, error: 'No enabled read relays.' });
-    this.#cleanup.push(
-      this.#subscriptions.subscribeState((snapshots) =>
-        this.#receiveState(snapshots),
-      ),
-      this.#subscriptions.subscribeLive(
-        {
-          key: this.subId,
-          relays: this.relays,
-          filters: threadLiveFilters(
-            this.eventId,
-            this.#rootId,
-            this.#startedAt,
-            this.#pageSize,
-          ),
-          purpose: 'feed',
-        },
-        (event) => this.#receive(event),
-      ),
-    );
-    void this.#loadInitialPage();
-  }
+export type ThreadRuntime = ReturnType<typeof createThreadRuntime>;
+
+export function createThreadRuntime(
+  eventId: string,
+  relays: readonly string[],
+  subId = `thread:${crypto.randomUUID()}`,
+  pool?: RelayPool,
+  subscriptions?: SubscriptionManager,
+) {
+  const manager = runtimeSubscriptions(pool, subscriptions);
+  let cached: ThreadItem[] = [];
+  let live: ThreadItem[] = [];
+  const cleanup: (() => void)[] = [];
+  const listeners = new Set<(state: ThreadState) => void>();
+  const pageSize = feedPageSize;
+  const startedAt = Math.floor(Date.now() / 1000);
+  let state: ThreadState = emptyThreadState();
+  let rootId = eventId;
+  let closed = false;
+  let generation = 0;
 
   // prettier-ignore
-  close(): void { this.#closed = true; this.#generation++; for (const cleanup of this.#cleanup.splice(0)) cleanup(); this.#listeners.clear(); }
-
+  const items = (): ThreadItem[] => mergeThreadItems(cached, live).slice(0, threadWindowSize);
+  const active = (run: number): boolean => !closed && generation === run;
+  const emit = (next: ThreadState): void => {
+    if (closed) return;
+    state = withThreadCursors(next);
+    listeners.forEach((listener) => listener(state));
+  };
+  const discoverRoot = async (): Promise<void> => {
+    const selected = await lookupEvent(eventId).catch(() => undefined);
+    rootId = selected ? (replyRoot(selected.event) ?? eventId) : eventId;
+  };
   // prettier-ignore
-  async loadOlder(): Promise<void> {
-    if (this.#closed || this.#state.loadingOlder || !this.#state.hasOlder) return; const generation = this.#generation; const cursor = this.#state.oldestCursor; if (!cursor) return;
-    this.#emit({ ...this.#state, loadingOlder: true });
-    try {
-      const page = await loadOlderThreadPage({ eventId: this.eventId, rootId: this.#rootId, items: this.items(), relays: this.relays, subId: this.subId, cursor, pageSize: this.#pageSize, subscriptions: this.#subscriptions });
-      if (!this.#active(generation)) return;
-      this.#cached = page.items; this.#live = [];
-      this.#emit({ ...this.#state, items: this.items(), hasOlder: page.hasOlder, hasNewer: this.#state.hasNewer || page.pruned, newerPruned: this.#state.newerPruned || page.pruned });
-    } catch (error) { this.#emit({ ...this.#state, error: boundedErrorText(error) }); }
-    finally { if (this.#state.loadingOlder) this.#emit({ ...this.#state, loadingOlder: false }); }
-  }
-
+  const receiveReaction = async (poolEvent: PoolEvent): Promise<void> => {
+    await storeReaction(poolEvent.event, poolEvent.relay);
+    if (!closed) emit({ ...state, reactions: mergeReactionEvent(state.reactions, poolEvent.event) });
+  };
   // prettier-ignore
-  async loadNewer(): Promise<void> {
-    if (this.#closed || this.#state.loadingNewer || !this.#state.hasNewer) return; const generation = this.#generation; const cursor = this.#state.newestCursor; if (!cursor) return;
-    this.#emit({ ...this.#state, loadingNewer: true });
-    try {
-      const page = await loadNewerThreadPage({ eventId: this.eventId, rootId: this.#rootId, items: this.items(), relays: this.relays, subId: this.subId, cursor, pageSize: this.#pageSize, subscriptions: this.#subscriptions });
-      if (!this.#active(generation)) return; this.#cached = page.items; this.#live = []; this.#emit({ ...this.#state, items: this.items(), hasNewer: page.hasNewer, hasOlder: this.#state.hasOlder || page.pruned, newerPruned: page.hasNewer });
-    } catch (error) { this.#emit({ ...this.#state, error: boundedErrorText(error) }); }
-    finally { if (this.#state.loadingNewer) this.#emit({ ...this.#state, loadingNewer: false }); }
-  }
-
-  async #discoverRoot(): Promise<void> {
-    const selected = await lookupEvent(this.eventId).catch(() => undefined);
-    this.#rootId = selected
-      ? (replyRoot(selected.event) ?? this.eventId)
-      : this.eventId;
-  }
-
-  async #receive(poolEvent: PoolEvent): Promise<void> {
-    if (this.#closed) return;
-    if (poolEvent.subId !== this.subId) return;
-    if (isThreadReactionKind(poolEvent.event.kind))
-      return this.#receiveReaction(poolEvent);
-    // prettier-ignore
-    if (isThreadRepostKind(poolEvent.event.kind)) { await storeThreadActivity(poolEvent.event, poolEvent.relay); if (!this.#closed) this.#emit({ ...this.#state, reposts: mergeRepostEvent(this.#state.reposts, poolEvent.event) }); return; }
+  const receive = async (poolEvent: PoolEvent): Promise<void> => {
+    if (closed || poolEvent.subId !== subId) return;
+    if (isThreadReactionKind(poolEvent.event.kind)) return receiveReaction(poolEvent);
+    if (isThreadRepostKind(poolEvent.event.kind)) {
+      await storeThreadActivity(poolEvent.event, poolEvent.relay);
+      if (!closed) emit({ ...state, reposts: mergeRepostEvent(state.reposts, poolEvent.event) });
+      return;
+    }
     await storeThreadEvent(poolEvent.event, [poolEvent.relay]);
-    if (this.#closed) return;
-    // prettier-ignore
-    if (this.#state.newerPruned && afterCursor(poolEvent.event, this.#state.newestCursor)) { this.#emit({ ...this.#state, loading: false, hasNewer: true }); return; }
-    this.#live = mergeThreadItems(this.#live, [
-      { event: poolEvent.event, relays: [poolEvent.relay] },
-    ]);
-    this.#emit({ ...this.#state, items: this.items(), loading: false });
-  }
-
+    if (closed) return;
+    if (state.newerPruned && afterCursor(poolEvent.event, state.newestCursor)) {
+      emit({ ...state, loading: false, hasNewer: true });
+      return;
+    }
+    live = mergeThreadItems(live, [{ event: poolEvent.event, relays: [poolEvent.relay] }]);
+    emit({ ...state, items: items(), loading: false });
+  };
   // prettier-ignore
-  async #loadInitialPage(): Promise<void> {
-    const generation = this.#generation;
+  const loadInitialPage = async (): Promise<void> => {
+    const run = generation;
     try {
-      const page = await loadInitialThreadPage({ eventId: this.eventId, rootId: this.#rootId, relays: this.relays, subId: this.subId, pageSize: this.#pageSize, subscriptions: this.#subscriptions });
-      if (!this.#active(generation)) return; this.#rootId = page.rootId; this.#cached = mergeThreadItems(this.items(), page.items);
-      const ids = this.items().map((item) => item.event.id);
+      const page = await loadInitialThreadPage({ eventId, rootId, relays, subId, pageSize, subscriptions: manager });
+      if (!active(run)) return;
+      rootId = page.rootId;
+      cached = mergeThreadItems(items(), page.items);
+      const ids = items().map((item) => item.event.id);
       const [reactions, reposts] = await Promise.all([cachedThreadReactions(ids), cachedThreadReposts(ids)]);
-      if (!this.#active(generation)) return;
-      this.#emit({ ...this.#state, items: this.items(), loading: false, reactions, reposts });
-    } catch (error) { this.#emit({ ...this.#state, loading: false, error: boundedErrorText(error) }); }
-  }
-
+      if (active(run)) emit({ ...state, items: items(), loading: false, reactions, reposts });
+    } catch (error) {
+      emit({ ...state, loading: false, error: boundedErrorText(error) });
+    }
+  };
   // prettier-ignore
-  async #receiveReaction(poolEvent: PoolEvent): Promise<void> {
-    await storeReaction(poolEvent.event, poolEvent.relay); if (this.#closed) return;
-    this.#emit({ ...this.#state, reactions: mergeReactionEvent(this.#state.reactions, poolEvent.event) });
-  }
-
+  const receiveState = (snapshots: RelaySnapshot[]): void => {
+    if (closed) return;
+    const relayState = threadRelayState(snapshots, relays, subId);
+    emit({ ...state, eoseRelays: relayState.eoseRelays, loading: relayState.activeRelays > 0 && relayState.terminalRelays >= relayState.activeRelays ? false : state.loading });
+  };
   // prettier-ignore
-  #receiveState(snapshots: RelaySnapshot[]): void {
-    if (this.#closed) return; const state = threadRelayState(snapshots, this.relays, this.subId);
-    this.#emit({ ...this.#state, eoseRelays: state.eoseRelays, loading: state.activeRelays > 0 && state.terminalRelays >= state.activeRelays ? false : this.#state.loading });
-  }
-
-  // prettier-ignore
-  items(): ThreadItem[] { return mergeThreadItems(this.#cached, this.#live).slice(0, threadWindowSize); }
-
-  #emit(state: ThreadState): void {
-    if (this.#closed) return;
-    this.#state = withThreadCursors(state);
-    this.#listeners.forEach((listener) => listener(this.#state));
-  }
-
-  // prettier-ignore
-  #active(generation: number): boolean { return !this.#closed && generation === this.#generation; }
+  const runtime = {
+    subscribe: (listener: (state: ThreadState) => void): (() => void) => { listeners.add(listener); listener(state); return () => listeners.delete(listener); },
+    start: async (): Promise<void> => {
+      if (closed) return; const run = ++generation; await discoverRoot(); if (!active(run)) return;
+      cached = mergeThreadItems(await loadCachedThread(rootId), rootId === eventId ? [] : await loadCachedThread(eventId));
+      if (!active(run)) return; emit({ ...state, items: cached });
+      if (relays.length === 0) return emit({ ...state, loading: false, error: 'No enabled read relays.' });
+      cleanup.push(manager.subscribeState(receiveState), manager.subscribeLive({ key: subId, relays, filters: threadLiveFilters(eventId, rootId, startedAt, pageSize), purpose: 'feed' }, (event) => receive(event)));
+      void loadInitialPage();
+    },
+    close: (): void => { closed = true; generation++; for (const item of cleanup.splice(0)) item(); listeners.clear(); },
+    loadOlder: async (): Promise<void> => {
+      if (closed || state.loadingOlder || !state.hasOlder) return; const run = generation; const cursor = state.oldestCursor; if (!cursor) return; emit({ ...state, loadingOlder: true });
+      try { const page = await loadOlderThreadPage({ eventId, rootId, items: items(), relays, subId, cursor, pageSize, subscriptions: manager }); if (!active(run)) return; cached = page.items; live = []; emit({ ...state, items: items(), hasOlder: page.hasOlder, hasNewer: state.hasNewer || page.pruned, newerPruned: state.newerPruned || page.pruned }); }
+      catch (error) { emit({ ...state, error: boundedErrorText(error) }); }
+      finally { if (state.loadingOlder) emit({ ...state, loadingOlder: false }); }
+    },
+    loadNewer: async (): Promise<void> => {
+      if (closed || state.loadingNewer || !state.hasNewer) return; const run = generation; const cursor = state.newestCursor; if (!cursor) return; emit({ ...state, loadingNewer: true });
+      try { const page = await loadNewerThreadPage({ eventId, rootId, items: items(), relays, subId, cursor, pageSize, subscriptions: manager }); if (!active(run)) return; cached = page.items; live = []; emit({ ...state, items: items(), hasNewer: page.hasNewer, hasOlder: state.hasOlder || page.pruned, newerPruned: page.hasNewer }); }
+      catch (error) { emit({ ...state, error: boundedErrorText(error) }); }
+      finally { if (state.loadingNewer) emit({ ...state, loadingNewer: false }); }
+    },
+    items,
+  };
+  return runtime;
 }

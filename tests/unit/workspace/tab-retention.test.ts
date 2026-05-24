@@ -1,12 +1,12 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { TabRetention } from '../../../src/lib/workspace/tab-retention';
+import { createTabRetention } from '../../../src/lib/workspace/tab-retention';
 
 describe('tab retention', () => {
   afterEach(() => vi.useRealTimers());
 
   it('expires retained tabs after the configured grace period', () => {
     vi.useFakeTimers();
-    const retention = new TabRetention<{ id: string }>();
+    const retention = createTabRetention<{ id: string }>();
     retention.retain({ id: 'home' }, 2);
     expect(retention.records().map((tab) => tab.id)).toEqual(['home']);
     vi.advanceTimersByTime(1999);
@@ -17,7 +17,7 @@ describe('tab retention', () => {
 
   it('releases retained tabs when settings or tab membership changes', () => {
     vi.useFakeTimers();
-    const retention = new TabRetention<{ id: string }>();
+    const retention = createTabRetention<{ id: string }>();
     retention.retain({ id: 'home' }, 300);
     retention.releaseMissing(new Set(['settings']));
     expect(retention.records()).toEqual([]);

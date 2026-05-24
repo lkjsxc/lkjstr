@@ -17,9 +17,18 @@ export async function checkComposeGuardrails(
     .readFile(path.join(root, 'docker-compose.yml'), 'utf8')
     .catch(() => '');
   if (!text) return [{ file: 'docker-compose.yml', message: 'missing' }];
+  const services = serviceNames(text);
+  for (const service of ['app', 'verify', 'e2e', 'cloudflare']) {
+    if (!services.has(service))
+      problems.push({
+        file: 'docker-compose.yml',
+        message: `missing ${service} service`,
+      });
+  }
   const checks: [RegExp, string][] = [
     [/^\s*develop\s*:/m, 'defines Compose develop'],
     [/^\s*watch\s*:/m, 'defines Compose watch sync'],
+    [/^\s*environment\s*:/m, 'defines Compose environment'],
     [/^\s*-\s*(?:\.|\.\.?\/[^:]+):/m, 'mounts the source tree'],
     [/^\s*source\s*:\s*(?:\.|\.\.?\/)/m, 'mounts the source tree'],
   ];
@@ -27,5 +36,36 @@ export async function checkComposeGuardrails(
     if (pattern.test(text))
       problems.push({ file: 'docker-compose.yml', message });
   }
+  const dockerfile = await fs
+    .readFile(path.join(root, 'Dockerfile'), 'utf8')
+    .catch(() => '');
+  if (
+    !/FROM deps AS app[\s\S]*RUN pnpm build[\s\S]*CMD \["pnpm", "preview"/.test(
+      dockerfile,
+    )
+  )
+    problems.push({
+      file: 'Dockerfile',
+      message: 'app target must run preview',
+    });
+  const playwright = await fs
+    .readFile(path.join(root, 'playwright.config.ts'), 'utf8')
+    .catch(() => '');
+  if (!playwright.includes('pnpm build && pnpm preview'))
+    problems.push({
+      file: 'playwright.config.ts',
+      message: 'e2e webServer must use production preview',
+    });
   return problems;
+}
+
+function serviceNames(text: string): Set<string> {
+  const names = new Set<string>();
+  const match = /^services:\n([\s\S]*)/m.exec(text);
+  if (!match) return names;
+  for (const line of match[1].split(/\r?\n/)) {
+    const item = /^ {2}([A-Za-z0-9_-]+):\s*$/.exec(line);
+    if (item) names.add(item[1]);
+  }
+  return names;
 }

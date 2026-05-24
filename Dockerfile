@@ -7,8 +7,9 @@ RUN pnpm install --frozen-lockfile
 COPY . .
 
 FROM deps AS app
+RUN pnpm build
 EXPOSE 5173
-CMD ["pnpm", "dev", "--host", "0.0.0.0"]
+CMD ["pnpm", "preview", "--host", "0.0.0.0"]
 
 FROM deps AS verify
 CMD ["pnpm", "verify:quiet"]

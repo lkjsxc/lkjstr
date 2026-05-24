@@ -1,7 +1,8 @@
 import { type RelayPool } from './relay-pool';
 import {
-  RelaySubscriptionManager,
+  createRelaySubscriptionManager,
   sharedSubscriptionManager,
+  type RelaySubscriptionManager,
 } from './subscription-manager';
 
 export function runtimeSubscriptions(
@@ -9,5 +10,7 @@ export function runtimeSubscriptions(
   subscriptions?: RelaySubscriptionManager,
 ): RelaySubscriptionManager {
   if (subscriptions) return subscriptions;
-  return pool ? new RelaySubscriptionManager(pool) : sharedSubscriptionManager;
+  return pool
+    ? createRelaySubscriptionManager(pool)
+    : sharedSubscriptionManager;
 }

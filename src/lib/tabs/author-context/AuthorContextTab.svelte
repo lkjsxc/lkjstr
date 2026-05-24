@@ -1,11 +1,11 @@
 <script lang="ts">
-  import { onMount } from 'svelte';
+  import { onDestroy, onMount } from 'svelte';
   import { loadAuthorContext } from '$lib/author-context/author-context';
   import EventTreeList from '$lib/components/events/EventTreeList.svelte';
   import type { FeedEvent } from '$lib/events/types';
   import type { ProfileSummary } from '$lib/identity/identity';
   import type { RelaySet } from '$lib/relays/relay-store';
-  import { RelaySubscriptionManager } from '$lib/relays/subscription-manager';
+  import { createRelaySubscriptionManager } from '$lib/relays/subscription-manager';
   import {
     createTimelineSubId,
     timelineRelays,
@@ -28,9 +28,10 @@
   let loading = $state(true);
   let error = $state('');
   let requestId = 0;
-  const subscriptions = new RelaySubscriptionManager();
+  const subscriptions = createRelaySubscriptionManager();
 
   onMount(() => void load());
+  onDestroy(() => subscriptions.close());
 
   $effect(() => {
     const pubkeys = [...new Set(items.map((item) => item.event.pubkey))].filter(

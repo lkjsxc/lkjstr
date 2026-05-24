@@ -1,10 +1,11 @@
 <script lang="ts">
+  import { onDestroy } from 'svelte';
   import EventTreeList from '$lib/components/events/EventTreeList.svelte';
   import { cursorPoint, feedPageSize } from '$lib/events/feed-window';
   import type { ProfileSummary } from '$lib/identity/identity';
   import type { FeedEvent } from '$lib/events/types';
   import type { RelaySet } from '$lib/relays/relay-store';
-  import { RelaySubscriptionManager } from '$lib/relays/subscription-manager';
+  import { createRelaySubscriptionManager } from '$lib/relays/subscription-manager';
   import { searchPage } from '$lib/search/search-query';
   import {
     createTimelineSubId,
@@ -30,7 +31,9 @@
   let error = $state<string | null>(null);
   let searched = $state(false);
   let requestId = 0;
-  const subscriptions = new RelaySubscriptionManager();
+  const subscriptions = createRelaySubscriptionManager();
+
+  onDestroy(() => subscriptions.close());
 
   $effect(() => {
     const pubkeys = [...new Set(items.map((item) => item.event.pubkey))].filter(

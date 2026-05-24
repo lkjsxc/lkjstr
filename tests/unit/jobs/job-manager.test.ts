@@ -1,9 +1,9 @@
 import { describe, expect, it } from 'vitest';
-import { JobManager } from '../../../src/lib/jobs/job-manager';
+import { createJobManager } from '../../../src/lib/jobs/job-manager';
 
 describe('job manager', () => {
   it('persists state transitions to subscribers', async () => {
-    const manager = new JobManager();
+    const manager = createJobManager();
     const states: string[] = [];
     manager.subscribe((jobs) => states.push(jobs[0]?.status ?? 'empty'));
 
@@ -15,7 +15,7 @@ describe('job manager', () => {
   });
 
   it('stores trees, progress, output, cancellation, and stale startup state', async () => {
-    const manager = new JobManager();
+    const manager = createJobManager();
     const root = await manager.enqueueRoot('paged-backfill', {}, 'Backfill');
     const child = await manager.enqueueChild(root.id, 'relay-subscription');
     if (!child) throw new Error('expected child');
@@ -50,14 +50,14 @@ describe('job manager', () => {
   });
 
   it('hydrates persisted jobs and preserves terminal jobs during cancel tree', async () => {
-    const manager = new JobManager();
+    const manager = createJobManager();
     const root = await manager.enqueueRoot('paged-backfill');
     const complete = await manager.enqueueChild(root.id, 'relay-subscription');
     const queued = await manager.enqueueChild(root.id, 'relay-subscription');
     if (!complete || !queued) throw new Error('expected children');
     await manager.setStatus(complete.id, 'completed');
 
-    const loaded = new JobManager();
+    const loaded = createJobManager();
     expect(await loaded.load()).toEqual(
       expect.arrayContaining([expect.objectContaining({ id: root.id })]),
     );

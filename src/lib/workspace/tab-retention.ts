@@ -9,58 +9,54 @@ export type RetentionCloseReason =
   | 'tab-removed'
   | 'pane-destroyed';
 
-export class TabRetention<T extends RetainedTab> {
-  #items = new Map<string, T>();
-  #timers = new Map<string, ReturnType<typeof setTimeout>>();
+export type TabRetention<T extends RetainedTab> = ReturnType<
+  typeof createTabRetention<T>
+>;
 
-  constructor(
-    readonly changed: () => void = () => {},
-    readonly closed: (
-      tabId: string,
-      reason: RetentionCloseReason,
-    ) => void = () => {},
-  ) {}
+export function createTabRetention<T extends RetainedTab>(
+  changed: () => void = () => {},
+  closed: (tabId: string, reason: RetentionCloseReason) => void = () => {},
+) {
+  const items = new Map<string, T>();
+  const timers = new Map<string, ReturnType<typeof setTimeout>>();
 
-  records(): T[] {
-    return [...this.#items.values()];
-  }
-
-  retain(item: T, seconds: number): void {
-    this.release(item.id, 'retention-replaced');
-    if (seconds <= 0) return;
-    this.#items.set(item.id, item);
-    this.#timers.set(
-      item.id,
-      setTimeout(
-        () => this.release(item.id, 'retention-expired'),
-        seconds * 1000,
-      ),
-    );
-    this.changed();
-  }
-
-  release(tabId: string, reason: RetentionCloseReason = 'tab-removed'): void {
-    const timer = this.#timers.get(tabId);
+  const release = (
+    tabId: string,
+    reason: RetentionCloseReason = 'tab-removed',
+  ): void => {
+    const timer = timers.get(tabId);
     if (timer) clearTimeout(timer);
-    this.#timers.delete(tabId);
-    if (!this.#items.delete(tabId)) return;
-    this.closed(tabId, reason);
-    this.changed();
-  }
+    timers.delete(tabId);
+    if (!items.delete(tabId)) return;
+    closed(tabId, reason);
+    changed();
+  };
 
-  keep(tabId: string): void {
-    const timer = this.#timers.get(tabId);
-    if (timer) clearTimeout(timer);
-    this.#timers.delete(tabId);
-  }
-
-  releaseAll(reason: RetentionCloseReason = 'retention-disabled'): void {
-    for (const tabId of [...this.#items.keys()]) this.release(tabId, reason);
-  }
-
-  releaseMissing(validIds: ReadonlySet<string>): void {
-    for (const tabId of [...this.#items.keys()]) {
-      if (!validIds.has(tabId)) this.release(tabId, 'tab-removed');
-    }
-  }
+  return {
+    records: (): T[] => [...items.values()],
+    retain: (item: T, seconds: number): void => {
+      release(item.id, 'retention-replaced');
+      if (seconds <= 0) return;
+      items.set(item.id, item);
+      timers.set(
+        item.id,
+        setTimeout(() => release(item.id, 'retention-expired'), seconds * 1000),
+      );
+      changed();
+    },
+    release,
+    keep: (tabId: string): void => {
+      const timer = timers.get(tabId);
+      if (timer) clearTimeout(timer);
+      timers.delete(tabId);
+    },
+    releaseAll: (reason: RetentionCloseReason = 'retention-disabled'): void => {
+      for (const tabId of [...items.keys()]) release(tabId, reason);
+    },
+    releaseMissing: (validIds: ReadonlySet<string>): void => {
+      for (const tabId of [...items.keys()]) {
+        if (!validIds.has(tabId)) release(tabId, 'tab-removed');
+      }
+    },
+  };
 }

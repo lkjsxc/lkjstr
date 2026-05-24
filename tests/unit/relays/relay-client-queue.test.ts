@@ -1,5 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { RelayClient } from '../../../src/lib/relays/relay-client';
+import { createRelayClient } from '../../../src/lib/relays/relay-client';
 
 const sockets: FakeWebSocket[] = [];
 
@@ -36,7 +36,7 @@ describe('relay client send queue', () => {
   });
 
   it('records a diagnostic when pending sends overflow', () => {
-    const client = new RelayClient('wss://relay.example/');
+    const client = createRelayClient('wss://relay.example/');
 
     for (let index = 0; index < 65; index++)
       client.subscribe(`sub-${index}`, [{ kinds: [1] }]);

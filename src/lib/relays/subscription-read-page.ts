@@ -18,8 +18,6 @@ import {
 export type ReadPageState = {
   readSeq: number;
   activeReadBaseIds: Set<string>;
-  usedReadRequestKeys: Set<string>;
-  usedReadBaseIds: Set<string>;
 };
 
 export async function executeReadPage(
@@ -42,16 +40,22 @@ export async function executeReadPage(
   const effective = { ...safeRequest, relays };
   const events: PoolEvent[] = [];
   let timedOut = false;
+  let aborted = false;
   let lastSnapshots: RelaySnapshot[] = [];
   const startedAt = Date.now();
   const requestKey = subscriptionKey(effective);
   const baseSubId = relayFacingSubId(effective.key);
   const subId = nextSubId(state, baseSubId, requestKey);
-  state.activeReadBaseIds.add(baseSubId);
   const release = await readLimiter.acquire(limitedReadRelays(relays));
   let offEvent: () => void = () => undefined;
   let offState: () => void = () => undefined;
   let close: () => void = () => undefined;
+  let closedSubscription = false;
+  const closeOnce = () => {
+    if (closedSubscription) return;
+    closedSubscription = true;
+    close();
+  };
   try {
     offEvent = pool.onEvent((event) => {
       if (event.subId === subId)
@@ -64,21 +68,30 @@ export async function executeReadPage(
         done = true;
         timedOut = timeout;
         clearTimeout(timer);
+        options.signal?.removeEventListener('abort', abort);
         offState();
+        closeOnce();
         resolve();
       };
+      const abort = () => {
+        aborted = true;
+        finish(false);
+      };
       const timer = setTimeout(() => finish(true), options.timeoutMs ?? 5000);
-      offState = pool.onState((snapshots) => {
-        lastSnapshots = snapshots;
-        if (readPageComplete(snapshots, relays, subId)) finish();
-      });
-      if (!done)
+      if (options.signal?.aborted) abort();
+      else options.signal?.addEventListener('abort', abort, { once: true });
+      if (!done) {
+        offState = pool.onState((snapshots) => {
+          lastSnapshots = snapshots;
+          if (readPageComplete(snapshots, relays, subId)) finish();
+        });
         close = pool.subscribe(
           relays,
           subId,
           effective.filters,
           effective.purpose,
         );
+      }
     });
     return readResult(
       effective,
@@ -86,14 +99,13 @@ export async function executeReadPage(
       events,
       lastSnapshots,
       timedOut,
+      aborted,
       startedAt,
     );
   } finally {
     offEvent();
-    close();
+    closeOnce();
     state.activeReadBaseIds.delete(baseSubId);
-    state.usedReadRequestKeys.add(requestKey);
-    state.usedReadBaseIds.add(baseSubId);
     release();
   }
 }
@@ -103,12 +115,10 @@ function nextSubId(
   baseSubId: string,
   requestKey: string,
 ): string {
-  if (
-    !state.activeReadBaseIds.has(baseSubId) &&
-    !state.usedReadBaseIds.has(baseSubId) &&
-    !state.usedReadRequestKeys.has(requestKey)
-  )
+  if (!state.activeReadBaseIds.has(baseSubId)) {
+    state.activeReadBaseIds.add(baseSubId);
     return baseSubId;
+  }
   state.readSeq += 1;
   return relayFacingSubId(`${requestKey}:${state.readSeq}`);
 }
@@ -119,6 +129,7 @@ function readResult(
   events: readonly PoolEvent[],
   snapshots: readonly RelaySnapshot[],
   timedOut: boolean,
+  aborted: boolean,
   startedAt: number,
 ): ReadPageResult {
   return {
@@ -129,6 +140,7 @@ function readResult(
       events,
       snapshots,
       timedOut,
+      aborted,
       durationMs: Date.now() - startedAt,
     }),
   };

@@ -1,18 +1,18 @@
 import { describe, expect, it, vi } from 'vitest';
 import type { NostrFilter } from '../../../src/lib/protocol';
-import { RelayPool } from '../../../src/lib/relays/relay-pool';
+import { createRelayPool } from '../../../src/lib/relays/relay-pool';
 import {
-  RelaySubscriptionManager,
+  createRelaySubscriptionManager,
   relayFacingSubId,
 } from '../../../src/lib/relays/subscription-manager';
 import { maxRelaySubscriptionIdLength } from '../../../src/lib/relays/subscription-id';
 
 describe('subscription manager', () => {
   it('shares identical relay reads until the last listener cleans up', () => {
-    const pool = new RelayPool();
+    const pool = createRelayPool();
     const cleanup = vi.fn();
     const subscribe = vi.spyOn(pool, 'subscribe').mockReturnValue(cleanup);
-    const manager = new RelaySubscriptionManager(pool);
+    const manager = createRelaySubscriptionManager(pool);
     const filters: NostrFilter[] = [{ kinds: [1], limit: 2 }];
     const request = { key: 'shared', relays: ['relay.example'], filters };
     const listener = () => undefined;
@@ -29,7 +29,7 @@ describe('subscription manager', () => {
   });
 
   it('returns relay provenance for one-shot page reads', async () => {
-    const pool = new RelayPool();
+    const pool = createRelayPool();
     const event = nostrEvent('a');
     const cleanup = vi.fn();
     let onEvent:
@@ -62,7 +62,7 @@ describe('subscription manager', () => {
       onState = handler;
       return vi.fn();
     });
-    const manager = new RelaySubscriptionManager(pool);
+    const manager = createRelaySubscriptionManager(pool);
     const page = await manager.readPage(
       { key: 'page', relays: ['relay.example'], filters: [{ kinds: [1] }] },
       { timeoutMs: 50 },
@@ -74,7 +74,7 @@ describe('subscription manager', () => {
   });
 
   it('treats relay CLOSED as terminal for one-shot page reads', async () => {
-    const pool = new RelayPool();
+    const pool = createRelayPool();
     const cleanup = vi.fn();
     vi.spyOn(pool, 'subscribe').mockImplementation((_relays, subId) => {
       setTimeout(() =>
@@ -99,7 +99,7 @@ describe('subscription manager', () => {
       onState = handler;
       return vi.fn();
     });
-    const manager = new RelaySubscriptionManager(pool);
+    const manager = createRelaySubscriptionManager(pool);
     const page = await manager.readPage(
       { key: 'page', relays: ['relay.example'], filters: [{ kinds: [1] }] },
       { timeoutMs: 5000 },
@@ -109,10 +109,10 @@ describe('subscription manager', () => {
   });
 
   it('compacts long logical keys before subscribing to relays', () => {
-    const pool = new RelayPool();
+    const pool = createRelayPool();
     const cleanup = vi.fn();
     const subscribe = vi.spyOn(pool, 'subscribe').mockReturnValue(cleanup);
-    const manager = new RelaySubscriptionManager(pool);
+    const manager = createRelaySubscriptionManager(pool);
     const key = `embed:${'a'.repeat(120)}`;
     const request = {
       key,
@@ -127,12 +127,12 @@ describe('subscription manager', () => {
   });
 
   it('uses distinct relay ids for reads with the same key but different filters', async () => {
-    const pool = new RelayPool();
+    const pool = createRelayPool();
     const cleanup = vi.fn();
     const subscribe = vi.spyOn(pool, 'subscribe').mockReturnValue(cleanup);
     vi.spyOn(pool, 'onEvent').mockReturnValue(vi.fn());
     vi.spyOn(pool, 'onState').mockReturnValue(vi.fn());
-    const manager = new RelaySubscriptionManager(pool);
+    const manager = createRelaySubscriptionManager(pool);
 
     const first = manager.readPage(
       { key: 'same', relays: ['relay.example'], filters: [{ kinds: [1] }] },

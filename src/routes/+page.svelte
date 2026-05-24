@@ -2,7 +2,7 @@
   import { onMount } from 'svelte';
   import { logRuntimeError } from '$lib/app/runtime-log';
   import type { Account } from '$lib/accounts/account';
-  import { BackgroundNotificationSync } from '$lib/notifications/background-notifications';
+  import { createBackgroundNotificationSync } from '$lib/notifications/background-notifications';
   import type { NotificationRecord } from '$lib/notifications/notification';
   import { accountNotifications } from '$lib/notifications/notification-store';
   import {
@@ -52,18 +52,15 @@
   let ready = $state(false);
   let pageDataReady = $state(false);
   let inactiveRetentionSeconds = $state(300);
-  let notificationSync: BackgroundNotificationSync | undefined;
+  // prettier-ignore
+  let notificationSync: ReturnType<typeof createBackgroundNotificationSync> | undefined;
   let notificationSyncKey = '';
   let notificationRefreshTimer: ReturnType<typeof setTimeout> | undefined;
 
   onMount(() => {
     let disposed = false;
-    const refreshSettings = () => {
-      if (!disposed)
-        void refreshRuntimeSettings().catch(
-          logRuntimeError('settings-load-failed'),
-        );
-    };
+    // prettier-ignore
+    const refreshSettings = () => { if (!disposed) void refreshRuntimeSettings().catch(logRuntimeError('settings-load-failed')); };
     window.addEventListener(settingsChangedEvent, refreshSettings);
     void initializeWorkspace().catch(logRuntimeError('workspace-init-failed'));
     return () => {
@@ -120,7 +117,7 @@
     if (key === notificationSyncKey) return;
     notificationSync?.close();
     notificationSyncKey = key;
-    notificationSync = new BackgroundNotificationSync(
+    notificationSync = createBackgroundNotificationSync(
       activeAccount?.pubkey,
       relays,
       undefined,

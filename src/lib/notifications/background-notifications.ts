@@ -6,77 +6,74 @@ import { sharedSubscriptionManager } from '$lib/relays/subscription-manager';
 import { initialRelaySubscriptionId } from '$lib/relays/subscription-id';
 import { notificationRelays } from './notification-relays';
 
-export class BackgroundNotificationSync {
-  #cleanup: (() => void)[] = [];
-  #closed = false;
+export type BackgroundNotificationSync = ReturnType<
+  typeof createBackgroundNotificationSync
+>;
 
-  constructor(
-    readonly accountPubkey: string | undefined,
-    readonly relays: readonly string[],
-    readonly subscriptions = sharedSubscriptionManager,
-    readonly onStored: () => void = () => undefined,
-  ) {}
-
-  async start(): Promise<void> {
-    if (this.#closed || !this.accountPubkey) return;
-    await accountNotifications(this.accountPubkey);
-    if (this.relays.length === 0 || this.#closed) return;
-    const relays = await notificationRelays(this.accountPubkey, this.relays);
-    await this.#readInitial();
-    if (this.#closed) return;
-    this.#cleanup.push(
-      this.subscriptions.subscribeLive(
-        {
-          key: `background-notifications:${this.accountPubkey}`,
-          relays,
-          filters: [
-            {
-              kinds: notificationEventKinds,
-              '#p': [this.accountPubkey],
-              since: Math.floor(Date.now() / 1000),
-              limit: 50,
-            },
-          ],
-          purpose: 'feed',
-        },
-        ({ event, relay }) => this.#store(event, relay),
-      ),
-    );
-  }
-
-  close(): void {
-    this.#closed = true;
-    this.#cleanup.splice(0).forEach((cleanup) => cleanup());
-  }
-
-  async #readInitial(): Promise<void> {
-    const relays = await notificationRelays(this.accountPubkey!, this.relays);
-    const events = await this.subscriptions.readPage({
+export function createBackgroundNotificationSync(
+  accountPubkey: string | undefined,
+  relays: readonly string[],
+  subscriptions = sharedSubscriptionManager,
+  onStored: () => void = () => undefined,
+) {
+  const cleanup: (() => void)[] = [];
+  let closed = false;
+  const store = async (
+    event: Parameters<typeof upsertEvent>[0],
+    relay: string,
+  ) => {
+    if (closed || !accountPubkey) return;
+    await upsertEvent(event, [relay]);
+    const records = deriveNotifications(accountPubkey, event, [relay]);
+    if (records.length === 0) return;
+    await saveNotifications(records);
+    onStored();
+  };
+  const readInitial = async (): Promise<void> => {
+    const selected = await notificationRelays(accountPubkey!, relays);
+    const events = await subscriptions.readPage({
       key: initialRelaySubscriptionId(
         'background-notifications',
-        this.accountPubkey!,
+        accountPubkey!,
       ),
-      relays,
+      relays: selected,
       filters: [
-        {
-          kinds: notificationEventKinds,
-          '#p': [this.accountPubkey!],
-          limit: 50,
-        },
+        { kinds: notificationEventKinds, '#p': [accountPubkey!], limit: 50 },
       ],
       purpose: 'feed',
     });
-    await Promise.all(
-      events.map(({ event, relay }) => this.#store(event, relay)),
-    );
-  }
-
-  async #store(event: Parameters<typeof upsertEvent>[0], relay: string) {
-    if (this.#closed || !this.accountPubkey) return;
-    await upsertEvent(event, [relay]);
-    const records = deriveNotifications(this.accountPubkey, event, [relay]);
-    if (records.length === 0) return;
-    await saveNotifications(records);
-    this.onStored();
-  }
+    await Promise.all(events.map(({ event, relay }) => store(event, relay)));
+  };
+  return {
+    start: async (): Promise<void> => {
+      if (closed || !accountPubkey) return;
+      await accountNotifications(accountPubkey);
+      if (relays.length === 0 || closed) return;
+      const selected = await notificationRelays(accountPubkey, relays);
+      await readInitial();
+      if (closed) return;
+      cleanup.push(
+        subscriptions.subscribeLive(
+          {
+            key: `background-notifications:${accountPubkey}`,
+            relays: selected,
+            filters: [
+              {
+                kinds: notificationEventKinds,
+                '#p': [accountPubkey],
+                since: Math.floor(Date.now() / 1000),
+                limit: 50,
+              },
+            ],
+            purpose: 'feed',
+          },
+          ({ event, relay }) => store(event, relay),
+        ),
+      );
+    },
+    close: (): void => {
+      closed = true;
+      cleanup.splice(0).forEach((item) => item());
+    },
+  };
 }

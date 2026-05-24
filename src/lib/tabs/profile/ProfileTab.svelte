@@ -8,8 +8,9 @@
   import { profileUpdatedEvent } from '$lib/profile/profile-metadata-draft';
   import { encodeNprofile, encodeNpub } from '$lib/protocol/nip19';
   import {
-    ProfileRuntime,
+    createProfileRuntime,
     type ProfileState,
+    type ProfileRuntime,
   } from '$lib/profile/profile-runtime';
   import { emptyProfileState } from '$lib/profile/profile-state';
   import { followingCount } from '$lib/profile/profile-links';
@@ -52,7 +53,7 @@
   $effect(() => {
     if (!runtimeKey) return;
     const { pubkey, relaySets, tabId } = untrack(() => props);
-    runtime = new ProfileRuntime(
+    runtime = createProfileRuntime(
       pubkey,
       timelineRelays(relaySets),
       createTimelineSubId(tabId, 'profile'),

@@ -1,6 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { RelayClient } from '../../../src/lib/relays/relay-client';
-import { RelayPool } from '../../../src/lib/relays/relay-pool';
+import { createRelayClient } from '../../../src/lib/relays/relay-client';
+import { createRelayPool } from '../../../src/lib/relays/relay-pool';
 import type { RelaySnapshot } from '../../../src/lib/relays/types';
 
 const sockets: FakeWebSocket[] = [];
@@ -37,7 +37,7 @@ describe('relay subscription id guards', () => {
 
   it('rejects overlong subscription ids without sending to the relay', () => {
     const states: RelaySnapshot[] = [];
-    const client = new RelayClient('wss://relay.example/', {
+    const client = createRelayClient('wss://relay.example/', {
       state: (snapshot) => states.push(snapshot),
     });
 
@@ -54,7 +54,7 @@ describe('relay subscription id guards', () => {
   });
 
   it('does not send CLOSE after the relay has closed the subscription', () => {
-    const pool = new RelayPool();
+    const pool = createRelayPool();
     const unsubscribe = pool.subscribe(['relay.example'], 'sub', [
       { limit: 2 },
     ]);
