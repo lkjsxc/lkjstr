@@ -1,6 +1,10 @@
-import { describe, expect, it } from 'vitest';
+import { beforeEach, describe, expect, it } from 'vitest';
 import { readRelayFeedGroups } from '../../../src/lib/events/relay-page';
 import type { RelayReadRequest } from '../../../src/lib/events/types';
+import {
+  appLogRecords,
+  clearAppLogForTests,
+} from '../../../src/lib/log/app-log';
 import type { PoolEvent } from '../../../src/lib/relays/relay-pool';
 import type {
   ReadPageRelayStatus,
@@ -11,13 +15,16 @@ import type { RelaySubscriptionManager } from '../../../src/lib/relays/subscript
 const relay = 'wss://status-hardening.example/';
 
 describe('relay page status hardening', () => {
-  it.each([
-    ['timeout', { timeout: true }],
-    ['closed', { closed: true }],
-    ['auth', { auth: true }],
-    ['socket closed', { socketClosed: true }],
-    ['socket error', { socketError: true }],
-  ])('keeps %s windows non-exhaustive', async (_name, status) => {
+  beforeEach(() => clearAppLogForTests());
+
+  it.each<[string, Partial<ReadPageRelayStatus>, string]>([
+    ['timeout', { timeout: true }, 'timeout'],
+    ['closed', { closed: true }, 'closed'],
+    ['auth', { auth: true }, 'auth'],
+    ['socket closed', { socketClosed: true }, 'closed'],
+    ['socket error', { socketError: true }, 'socket-error'],
+    ['event limit', { eventLimitReached: true }, 'event-limit'],
+  ])('keeps %s windows non-exhaustive', async (_name, status, reason) => {
     const page = await readRelayFeedGroups({
       key: `incomplete-${_name}`,
       groups: [group()],
@@ -30,6 +37,14 @@ describe('relay page status hardening', () => {
 
     expect(page.items).toEqual([]);
     expect(page.hasMorePossible).toBe(true);
+    expect(appLogRecords()).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          code: 'relay-feed-incomplete',
+          context: expect.objectContaining({ reason }),
+        }),
+      ]),
+    );
   });
 
   it('treats missing detailed status as incomplete', async () => {
@@ -46,6 +61,14 @@ describe('relay page status hardening', () => {
     });
 
     expect(page.hasMorePossible).toBe(true);
+    expect(appLogRecords()).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          code: 'relay-feed-incomplete',
+          context: expect.objectContaining({ reason: 'missing-status' }),
+        }),
+      ]),
+    );
   });
 });
 

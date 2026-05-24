@@ -17,6 +17,17 @@ export function relayPageDensity(
   filters: readonly NostrFilter[],
   pageSize: number,
 ): RelayDensityVerdict {
+  if (result.statuses.length === 0) {
+    const limit = relayBudget(filters, pageSize);
+    const uniqueCount = new Set(result.events.map((item) => item.event.id))
+      .size;
+    return {
+      dense: result.events.length >= limit || uniqueCount >= limit,
+      limit,
+      eventCount: result.events.length,
+      uniqueCount,
+    };
+  }
   const verdicts = result.statuses.map((status) =>
     relayDensity(status, result.events, filters, pageSize),
   );

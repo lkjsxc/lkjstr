@@ -10,15 +10,14 @@ import { recordRelayClosedPolicy } from './relay-request-compat';
 import { relayLimits } from './relay-limits';
 import { createRelayReqScheduler } from './relay-req-scheduler';
 import { createRelaySubscriptionAliases } from './relay-subscription-alias';
+import { createRelayCloseTombstones } from './relay-close-tombstones';
 import type { RelaySubscribeOptions } from './relay-subscription-strategy';
 // prettier-ignore
 import type { RelayClientEvents, RelayConnectionState, RelayDiagnostic, RelayDiagnosticKind, RelaySnapshot } from './types';
 // prettier-ignore
 import { maxRelaySubscriptionIdLength, relaySubscriptionIdValid } from './subscription-id';
 import { createRelaySessionStatsCounter } from './relay-session-stats';
-
 export type RelayClient = ReturnType<typeof createRelayClient>;
-
 export function createRelayClient(
   url: string,
   events: Partial<RelayClientEvents> = {},
@@ -38,7 +37,8 @@ export function createRelayClient(
   const stats = createRelaySessionStatsCounter();
   const queue = createRelaySendQueue(),
     reqs = createRelayReqScheduler(),
-    aliases = createRelaySubscriptionAliases();
+    aliases = createRelaySubscriptionAliases(),
+    closeTombstones = createRelayCloseTombstones();
   let connectTimer: ReturnType<typeof setTimeout> | undefined,
     reconnectTimer: ReturnType<typeof setTimeout> | undefined;
   let reconnectDelayMs = 500;
@@ -96,6 +96,8 @@ export function createRelayClient(
       events.event?.(url, subId, event);
       return;
     }
+    if (verified.ok && !filters && closeTombstones.hasAny([wireId, subId]))
+      return;
     metrics.rejectEvent();
     if (verified.ok)
       addDiagnostic(
@@ -166,28 +168,10 @@ export function createRelayClient(
       socket.onerror = () => { clearConnectTimer(); lastError = 'websocket error'; setState('error'); socket = undefined; scheduleReconnect(); };
       socket.onmessage = (message) => receive(message.data);
     },
-    subscribe: (
-      id: string,
-      filters: readonly NostrFilter[],
-      options: RelaySubscribeOptions = {},
-    ) => {
-      if (!validSubscriptionId(id, 'REQ')) return;
-      const safeFilters = clampFilters(relaySafeFilters(filters)),
-        strategy = options.strategy ?? 'forward';
-      reqs.schedule(
-        {
-          id,
-          critical: strategy === 'forward',
-          start: () =>
-            startSubscription(id, safeFilters, { ...options, strategy }),
-          drop: () =>
-            addDiagnostic('request-queue-drop', 'pending REQ dropped', id),
-        },
-        activeLimit(),
-      );
-    },
     // prettier-ignore
-    closeSubscription: (id: string) => { if (!validSubscriptionId(id, 'CLOSE')) return; const wasClosed = Boolean(closedBySub[id]) || closeSentBySub.has(id); const wireId = aliases.wireId(id, relayLimits(url).maxSubscriptionIdLength); forgetSubscription(id); releaseReq(id); if (!wasClosed) sendIfConnected(['CLOSE', wireId]); emitState(); },
+    subscribe: (id: string, filters: readonly NostrFilter[], options: RelaySubscribeOptions = {}) => { if (!validSubscriptionId(id, 'REQ')) return; const safeFilters = clampFilters(relaySafeFilters(filters)), strategy = options.strategy ?? 'forward'; reqs.schedule({ id, critical: strategy === 'forward', start: () => startSubscription(id, safeFilters, { ...options, strategy }), drop: () => addDiagnostic('request-queue-drop', 'pending REQ dropped', id) }, activeLimit()); },
+    // prettier-ignore
+    closeSubscription: (id: string) => { if (!validSubscriptionId(id, 'CLOSE')) return; const wasClosed = Boolean(closedBySub[id]) || closeSentBySub.has(id); const wireId = aliases.wireId(id, relayLimits(url).maxSubscriptionIdLength); closeTombstones.record([id, wireId]); forgetSubscription(id); releaseReq(id); if (!wasClosed) sendIfConnected(['CLOSE', wireId]); emitState(); },
     publish: (event: NostrEvent) => send(['EVENT', event]),
     send,
     sendIfConnected,

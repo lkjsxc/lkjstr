@@ -69,6 +69,34 @@ describe('relay client hardening', () => {
     expect(events).toEqual([{ subId: 'sub', item: event }]);
   });
 
+  it('ignores late events for locally closed subscriptions', () => {
+    const events: unknown[] = [];
+    const client = createRelayClient('wss://relay.example/', {
+      event: (_relay, subId) => events.push(subId),
+    });
+    client.subscribe('sub', [{ kinds: [1] }]);
+    sockets[0]?.open();
+    client.closeSubscription('sub');
+    sockets[0]?.receive(JSON.stringify(['EVENT', 'sub', event]));
+    expect(events).toEqual([]);
+    expect(client.snapshot().diagnostics).toEqual([]);
+  });
+
+  it('ignores late events for strict relay wire aliases', async () => {
+    await relayInfo('wss://alias-close.example/', { max_subid_length: 8 });
+    const events: unknown[] = [];
+    const client = createRelayClient('wss://alias-close.example/', {
+      event: (_relay, subId) => events.push(subId),
+    });
+    client.subscribe('logical-sub', [{ kinds: [1] }]);
+    sockets[0]?.open();
+    const wireId = JSON.parse(sockets[0]?.sent[0] ?? '[]')[1];
+    client.closeSubscription('logical-sub');
+    sockets[0]?.receive(JSON.stringify(['EVENT', wireId, event]));
+    expect(events).toEqual([]);
+    expect(client.snapshot().diagnostics).toEqual([]);
+  });
+
   it('diagnoses binary relay frames with measured bytes', () => {
     const client = createRelayClient('wss://relay.example/');
     client.subscribe('sub', [{ kinds: [1] }]);

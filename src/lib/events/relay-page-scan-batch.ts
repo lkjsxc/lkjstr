@@ -9,6 +9,7 @@ import {
   recordScanCoverage,
 } from './relay-page-scan-diagnostics';
 import { readPageDetailedCompat, statusesComplete } from './relay-page-status';
+import type { ReadPageRelayStatus } from '../relays/read-page-status';
 import type { RelayGroupPageRequest } from './relay-page';
 
 export type BatchReadResult = {
@@ -18,6 +19,7 @@ export type BatchReadResult = {
   readonly density: RelayDensityVerdict;
   readonly durationMs: number;
   readonly reason?: string;
+  readonly statuses: ReadPageRelayStatus[];
 };
 
 export async function readScanBatch(
@@ -55,6 +57,7 @@ export async function readScanBatch(
         ...result.statuses.map((status) => status.durationMs),
       ),
       reason: complete ? undefined : incompleteReason(result.statuses),
+      statuses: result.statuses,
     };
   } catch (error) {
     await recordScanCoverage(

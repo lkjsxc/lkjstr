@@ -160,7 +160,7 @@ async function recordBatchCoverage(
     },
   );
   if (!read.complete)
-    logIncompleteScan(request, groupKey, filters[0] ?? {}, []);
+    logIncompleteScan(request, groupKey, filters[0] ?? {}, read.statuses);
 }
 
 async function recordUnresolved(

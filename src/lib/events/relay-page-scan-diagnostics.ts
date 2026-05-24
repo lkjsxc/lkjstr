@@ -72,9 +72,9 @@ export function incompleteReason(
   if (statuses.length === 0) return 'missing-status';
   if (statuses.some((status) => status.timeout)) return 'timeout';
   if (statuses.some((status) => status.auth)) return 'auth';
-  if (statuses.some((status) => status.socketClosed)) return 'socket-closed';
   if (statuses.some((status) => status.socketError)) return 'socket-error';
-  if (statuses.some((status) => status.closed)) return 'closed';
+  if (statuses.some((status) => status.closed || status.socketClosed))
+    return 'closed';
   if (statuses.some((status) => status.eventLimitReached)) return 'event-limit';
   return 'no-eose';
 }
