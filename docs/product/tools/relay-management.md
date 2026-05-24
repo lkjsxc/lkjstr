@@ -29,8 +29,8 @@ Log owns session-only diagnostics.
   current browser session.
 - lkjstr Log diagnostic rows include area, severity, code, message, redacted
   context, and timestamp.
-- Relay Settings and lkjstr Log present oversized parse diagnostics as
-  `oversized relay message skipped` with byte details when available.
+- Relay Settings and lkjstr Log present relay parse diagnostics with byte
+  details when available.
 - Relay Settings and lkjstr Log expose `send-queue-full` diagnostics without
   automatically disabling or removing the relay.
 - lkjstr Log keeps relay settings read-only. Add, remove, and enablement

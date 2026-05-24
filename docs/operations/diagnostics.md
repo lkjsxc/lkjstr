@@ -12,7 +12,7 @@ runtime, so failures must be inspectable without server logs.
 - subscription count per relay.
 - cache health.
 - signer availability.
-- oversized relay message rejection.
+- relay parse failures.
 - send queue overflow when a relay socket has not opened.
 - app heap and runtime feed counters during heavy-feed smoke tests.
 - persisted relay attempt, success, failure, last-connected, and last-error
@@ -46,9 +46,8 @@ Runtime lifecycle diagnostics include tab id, runtime kind, relay count, close
 reason, uptime, item count, and subscription counters when the owner exposes
 them. These records are local app-log entries and do not persist across reloads.
 
-Oversized relay messages are size-aware diagnostics. They include measured
-bytes and the configured `512 KiB` limit, skip JSON parsing, and do not store
-the payload.
+Relay parse diagnostics include measured bytes when available for unsupported
+binary or non-text frames. Diagnostics do not store raw relay payloads.
 
 Stats and Relay Settings show persisted relay and job summaries. They must not
 duplicate lkjstr Log rows.

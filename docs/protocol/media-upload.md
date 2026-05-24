@@ -18,8 +18,9 @@ Media upload docs define the NIP-96 and NIP-98 contract for Tweet attachments.
 - The client discovers `/.well-known/nostr/nip96.json` from the configured
   HTTPS server and falls back to the configured endpoint when discovery is not
   available.
-- `delegated_to_url` is followed with a loop guard, and discovered `api_url`
-  is preferred as the upload endpoint.
+- A valid discovered `api_url` is preferred as the upload endpoint.
+- `delegated_to_url` is followed with a loop guard only when no valid `api_url`
+  exists.
 - Each upload signs a NIP-98 kind `27235` HTTP auth event with the active local
   or NIP-07 signing account.
 - Upload requests are multipart `POST` requests with the file in a `file` part.
