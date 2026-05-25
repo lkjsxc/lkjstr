@@ -54,6 +54,7 @@
   let relays: string[] = [];
   let listElement: HTMLElement | undefined;
   let autoFillPending = false;
+  let destroyed = false;
   let runtimeKey = $derived(
     `${props.accountPubkey ?? ''}|${timelineRelays(props.relaySets).join('\u0000')}`,
   );
@@ -75,6 +76,7 @@
     const onFocus = () => void markVisibleRead();
     window.addEventListener('focus', onFocus);
     return () => {
+      destroyed = true;
       profileRequest += 1;
       window.removeEventListener('focus', onFocus);
       unsubscribe();
@@ -133,10 +135,11 @@
       return;
     autoFillPending = true;
     await tick();
+    if (destroyed) return;
     const el = listElement;
     if (el && el.clientHeight > 0 && el.scrollHeight <= el.clientHeight + 16)
       await runtime.loadOlder();
-    autoFillPending = false;
+    if (!destroyed) autoFillPending = false;
   }
 </script>
 

@@ -1,3 +1,5 @@
+import { incMemoryCounter, decMemoryCounter, setMemoryCounter } from '../app/memory-counters';
+
 export type ScheduledReq = {
   readonly id: string;
   readonly critical: boolean;
@@ -18,6 +20,7 @@ export function createRelayReqScheduler() {
       const next = pending.shift();
       if (!next) return;
       active.add(next.id);
+      decMemoryCounter('pending-relay-request-queue');
       next.start();
     }
   };
@@ -37,8 +40,10 @@ export function createRelayReqScheduler() {
         const dropIndex = pending.findIndex((item) => !item.critical);
         const [dropped] = pending.splice(dropIndex >= 0 ? dropIndex : 0, 1);
         dropped?.drop();
+        decMemoryCounter('pending-relay-request-queue');
       }
       pending.push(req);
+      incMemoryCounter('pending-relay-request-queue');
       return false;
     },
     release: (id: string, maxActive: number): void => {
@@ -46,12 +51,15 @@ export function createRelayReqScheduler() {
       release(maxActive);
     },
     remove: (id: string): void => {
+      const before = pending.length;
       pending = pending.filter((item) => item.id !== id);
+      if (pending.length < before) decMemoryCounter('pending-relay-request-queue');
       active.delete(id);
     },
     clear: (): void => {
       pending = [];
       active.clear();
+      setMemoryCounter('pending-relay-request-queue', 0);
     },
   };
 }

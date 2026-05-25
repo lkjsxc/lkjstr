@@ -103,7 +103,10 @@
   // prettier-ignore
   function formatTime(timestamp?: number): string { return timestamp ? new Date(timestamp).toLocaleString() : 'never'; }
 
-  $effect(() => sharedRelayPool.onState((next) => (snapshots = next)));
+  $effect(() => {
+    const unsubscribe = sharedRelayPool.onState((next) => (snapshots = next));
+    return unsubscribe;
+  });
 </script>
 
 <section class="relay-settings" aria-label="Relay Settings">

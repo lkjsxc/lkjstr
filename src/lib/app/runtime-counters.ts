@@ -25,7 +25,27 @@ export type RuntimeCounterKey =
   | 'subscription-manager'
   | 'timeline'
   | 'timeline:global'
-  | 'timeline:home';
+  | 'timeline:home'
+  | 'active-relay-clients'
+  | 'active-relay-subscriptions'
+  | 'active-relay-publish-waiters'
+  | 'pending-relay-send-queue'
+  | 'pending-relay-request-queue'
+  | 'active-paged-reads'
+  | 'queued-read-waiters'
+  | 'active-abort-listeners'
+  | 'active-dom-listeners'
+  | 'active-timers'
+  | 'active-workers'
+  | 'active-indexeddb-ops'
+  | 'active-dexie-transactions'
+  | 'active-tab-runtimes'
+  | 'closed-tab-snapshots'
+  | 'feed-runtime-window-size'
+  | 'relay-diagnostic-summary-count'
+  | 'profile-summary-cache-count'
+  | 'token-cache-count'
+  | 'notification-runtime-record-count';
 
 type MutableCounter = {
   created: number;
@@ -54,6 +74,26 @@ const runtimeCounterKeys = new Set<RuntimeCounterKey>([
   'timeline',
   'timeline:global',
   'timeline:home',
+  'active-relay-clients',
+  'active-relay-subscriptions',
+  'active-relay-publish-waiters',
+  'pending-relay-send-queue',
+  'pending-relay-request-queue',
+  'active-paged-reads',
+  'queued-read-waiters',
+  'active-abort-listeners',
+  'active-dom-listeners',
+  'active-timers',
+  'active-workers',
+  'active-indexeddb-ops',
+  'active-dexie-transactions',
+  'active-tab-runtimes',
+  'closed-tab-snapshots',
+  'feed-runtime-window-size',
+  'relay-diagnostic-summary-count',
+  'profile-summary-cache-count',
+  'token-cache-count',
+  'notification-runtime-record-count',
 ]);
 
 let enabled = false;

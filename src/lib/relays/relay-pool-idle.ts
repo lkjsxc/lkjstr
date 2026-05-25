@@ -1,4 +1,5 @@
 import type { BoundedMap } from '../fp/bounded-map';
+import { decMemoryCounter } from '../app/memory-counters';
 import type { RelayClient } from './relay-client';
 import type { RelaySnapshot } from './types';
 
@@ -38,6 +39,7 @@ export function createRelayPoolIdleTracker(options: RelayPoolIdleOptions) {
         client.close();
         options.snapshots.set(url, client.snapshot());
         options.clients.delete(url);
+        decMemoryCounter('active-relay-clients');
         options.onChange();
       }, options.idleGraceMs),
     );

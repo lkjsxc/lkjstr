@@ -11,6 +11,10 @@ import { relayLimits } from './relay-limits';
 import { createRelayReqScheduler } from './relay-req-scheduler';
 import { createRelaySubscriptionAliases } from './relay-subscription-alias';
 import { createRelayCloseTombstones } from './relay-close-tombstones';
+import {
+  incMemoryCounter,
+  decMemoryCounter,
+} from '../app/memory-counters';
 import type { RelaySubscribeOptions } from './relay-subscription-strategy';
 // prettier-ignore
 import type { RelayClientEvents, RelayConnectionState, RelayDiagnostic, RelayDiagnosticKind, RelaySnapshot } from './types';
@@ -52,9 +56,9 @@ export function createRelayClient(
   // prettier-ignore
   const setState = (next: RelayConnectionState) => { state = next; emitState(); };
   // prettier-ignore
-  const clearConnectTimer = () => { if (!connectTimer) return; clearTimeout(connectTimer); connectTimer = undefined; };
+  const clearConnectTimer = () => { if (!connectTimer) return; clearTimeout(connectTimer); connectTimer = undefined; decMemoryCounter('active-timers'); };
   // prettier-ignore
-  const clearReconnectTimer = () => { if (!reconnectTimer) return; clearTimeout(reconnectTimer); reconnectTimer = undefined; };
+  const clearReconnectTimer = () => { if (!reconnectTimer) return; clearTimeout(reconnectTimer); reconnectTimer = undefined; decMemoryCounter('active-timers'); };
   // prettier-ignore
   const addDiagnostic = (kind: RelayDiagnosticKind, message: string, subId?: string, filters: readonly NostrFilter[] = []) => { diagnostics = [...diagnostics.slice(-19), { relay: url, subId, kind, message, timestamp: Date.now() }]; if (kind === 'parse-error' || kind === 'invalid-event') lastError = message; logRelayDiagnostic(kind, message, url, subId, filters); };
   // prettier-ignore
@@ -66,7 +70,7 @@ export function createRelayClient(
   // prettier-ignore
   const restorableSubscription = (id: string): boolean => { const strategy = optionsBySub.get(id)?.strategy ?? 'forward'; if (strategy === 'forward') return true; const deadline = deadlineBySub.get(id); return deadline === undefined || Date.now() < deadline; };
   // prettier-ignore
-  const scheduleReconnect = () => { if (!shouldReconnect() || reconnectTimer) return; const delay = reconnectDelayMs + Math.floor(Math.random() * 100); reconnectDelayMs = Math.min(reconnectDelayMs * 2, 15_000); reconnectTimer = setTimeout(() => { reconnectTimer = undefined; socket = undefined; handle.connect(); }, delay); };
+  const scheduleReconnect = () => { if (!shouldReconnect() || reconnectTimer) return; const delay = reconnectDelayMs + Math.floor(Math.random() * 100); reconnectDelayMs = Math.min(reconnectDelayMs * 2, 15_000); reconnectTimer = setTimeout(() => { reconnectTimer = undefined; socket = undefined; handle.connect(); }, delay); incMemoryCounter('active-timers'); };
   // prettier-ignore
   const clampFilters = (filters: readonly NostrFilter[]): NostrFilter[] => { const maxLimit = relayLimits(url).maxLimit; return filters.map((filter) => maxLimit && filter.limit && filter.limit > maxLimit ? { ...filter, limit: maxLimit } : filter); };
   const sendEncoded = (encoded: string) => {
@@ -86,7 +90,7 @@ export function createRelayClient(
   // prettier-ignore
   const sendIfConnected = (message: ClientMessage) => { if (finallyClosed || !socket || state === 'closed' || state === 'idle') return; sendEncoded(encodeClientMessage(message)); };
   // prettier-ignore
-  const startSubscription = (id: string, filters: readonly NostrFilter[], options: RelaySubscribeOptions, restore = false) => { if (finallyClosed) return; const limits = relayLimits(url); const wireId = aliases.wireId(id, limits.maxSubscriptionIdLength); const message: ClientMessage = ['REQ', wireId, ...filters]; const encoded = encodeClientMessage(message); if (limits.maxMessageLength && !utf8ByteLengthWithin(encoded, limits.maxMessageLength).within) { addDiagnostic('request-too-large', 'REQ exceeds relay message limit', id); releaseReq(id); return; } if (!restore) { eoseBySub[id] = false; filtersBySub.set(id, filters); optionsBySub.set(id, options); if (options.idleCloseMs) deadlineBySub.set(id, Date.now() + options.idleCloseMs); delete closedBySub[id]; } stats.activeSubscriptionIds.add(id); handle.connect(); sendEncoded(encoded); };
+  const startSubscription = (id: string, filters: readonly NostrFilter[], options: RelaySubscribeOptions, restore = false) => { if (finallyClosed) return; const limits = relayLimits(url); const wireId = aliases.wireId(id, limits.maxSubscriptionIdLength); const message: ClientMessage = ['REQ', wireId, ...filters]; const encoded = encodeClientMessage(message); if (limits.maxMessageLength && !utf8ByteLengthWithin(encoded, limits.maxMessageLength).within) { addDiagnostic('request-too-large', 'REQ exceeds relay message limit', id); releaseReq(id); return; } if (!restore) { eoseBySub[id] = false; filtersBySub.set(id, filters); optionsBySub.set(id, options); if (options.idleCloseMs) deadlineBySub.set(id, Date.now() + options.idleCloseMs); delete closedBySub[id]; } stats.activeSubscriptionIds.add(id); incMemoryCounter('active-relay-subscriptions'); handle.connect(); sendEncoded(encoded); };
   // prettier-ignore
   const restoreSubscriptions = () => { for (const id of reqs.activeIds) { if (restorableSubscription(id)) startSubscription(id, filtersBySub.get(id) ?? [], optionsBySub.get(id) ?? {}, true); else releaseReq(id); } };
   const handleEventMessage = (wireId: string, event: NostrEvent) => {
@@ -118,6 +122,7 @@ export function createRelayClient(
     closedBySub[subId] = reason;
     recordRelayClosedPolicy(url, reason, filters);
     stats.activeSubscriptionIds.delete(subId);
+    decMemoryCounter('active-relay-subscriptions');
     addDiagnostic('closed', reason, subId, filters);
     releaseReq(subId);
   };
@@ -129,6 +134,7 @@ export function createRelayClient(
     closeSentBySub.add(subId);
     sendIfConnected(['CLOSE', wireId]);
     stats.activeSubscriptionIds.delete(subId);
+    decMemoryCounter('active-relay-subscriptions');
     releaseReq(subId);
   };
   const handleRelayMessage = (message: RelayMessage) => {
@@ -150,13 +156,13 @@ export function createRelayClient(
   // prettier-ignore
   const timeoutConnect = () => { if (state !== 'connecting') return; lastError = 'connect timeout'; addDiagnostic('timeout', 'connect timeout'); setState('error'); socket?.close(); };
   // prettier-ignore
-  const forgetSubscription = (id: string) => { delete eoseBySub[id]; delete closedBySub[id]; filtersBySub.delete(id); optionsBySub.delete(id); deadlineBySub.delete(id); closeSentBySub.delete(id); aliases.forget(id); reqs.remove(id); stats.activeSubscriptionIds.delete(id); };
+  const forgetSubscription = (id: string) => { delete eoseBySub[id]; delete closedBySub[id]; filtersBySub.delete(id); optionsBySub.delete(id); deadlineBySub.delete(id); closeSentBySub.delete(id); aliases.forget(id); reqs.remove(id); stats.activeSubscriptionIds.delete(id); decMemoryCounter('active-relay-subscriptions'); };
   // prettier-ignore
   const clearObject = (record: Record<string, unknown>): void => { for (const key of Object.keys(record)) delete record[key]; };
   // prettier-ignore
-  const detachSocket = (): void => { if (!socket) return; socket.onopen = null; socket.onclose = null; socket.onerror = null; socket.onmessage = null; };
+  const detachSocket = (): void => { if (!socket) return; socket.onopen = null; socket.onclose = null; socket.onerror = null; socket.onmessage = null; decMemoryCounter('active-dom-listeners', 4); };
   // prettier-ignore
-  const clearRuntimeState = (): void => { clearObject(eoseBySub); clearObject(closedBySub); filtersBySub.clear(); optionsBySub.clear(); deadlineBySub.clear(); closeSentBySub.clear(); aliases.clear(); closeTombstones.clear(); queue.clear(); reqs.clear(); stats.clear(); };
+  const clearRuntimeState = (): void => { clearObject(eoseBySub); clearObject(closedBySub); filtersBySub.clear(); optionsBySub.clear(); deadlineBySub.clear(); closeSentBySub.clear(); aliases.clear(); closeTombstones.clear(); queue.clear(); reqs.clear(); decMemoryCounter('active-relay-subscriptions', stats.activeSubscriptionIds.size); stats.clear(); };
   const handle = {
     url,
     snapshot,
@@ -169,6 +175,8 @@ export function createRelayClient(
       setState('connecting');
       socket = new WebSocket(url);
       connectTimer = setTimeout(timeoutConnect, connectTimeoutMs);
+      incMemoryCounter('active-timers');
+      incMemoryCounter('active-dom-listeners', 4);
       // prettier-ignore
       socket.onopen = () => { const reconnect = openCount > 0; openCount += 1; reconnectDelayMs = 500; clearConnectTimer(); metrics.open(); setState('open'); if (reconnect) restoreSubscriptions(); queue.drain().forEach((message) => socket?.send(message)); };
       // prettier-ignore

@@ -48,6 +48,7 @@
   );
   let profileTab: HTMLElement | undefined;
   let autoFillPending = false;
+  let destroyed = false;
 
   $effect(() => {
     if (!runtimeKey) return;
@@ -68,6 +69,7 @@
     };
     window.addEventListener(profileUpdatedEvent, refreshProfile);
     return () => {
+      destroyed = true;
       window.removeEventListener(profileUpdatedEvent, refreshProfile);
       unsubscribe();
       runtime?.close();
@@ -98,18 +100,8 @@
       void runtime?.loadOlder();
   }
 
-  function shouldLoadOlder(
-    scrollTop: number,
-    clientHeight: number,
-    scrollHeight: number,
-  ): boolean {
-    return (
-      Boolean(runtime) &&
-      !state.loadingOlder &&
-      state.hasOlder &&
-      state.posts.length > 0 &&
-      isNearEnd(scrollTop, clientHeight, scrollHeight)
-    );
+  function shouldLoadOlder(st: number, ch: number, sh: number): boolean {
+    return Boolean(runtime) && !state.loadingOlder && state.hasOlder && state.posts.length > 0 && isNearEnd(st, ch, sh);
   }
 
   $effect(() => {
@@ -134,10 +126,11 @@
       return;
     autoFillPending = true;
     await tick();
+    if (destroyed) return;
     const el = profileTab;
     if (el && el.clientHeight > 0 && el.scrollHeight <= el.clientHeight + 16)
       await runtime.loadOlder();
-    autoFillPending = false;
+    if (!destroyed) autoFillPending = false;
   }
 </script>
 

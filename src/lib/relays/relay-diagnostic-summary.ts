@@ -35,6 +35,10 @@ const memorySummaries = createBoundedMap<string, RelayDiagnosticSummary>({
   maxSize: 250,
 });
 
+const pendingWrites = new Map<string, RelayDiagnosticSummary>();
+const writeTimers = new Map<string, ReturnType<typeof setTimeout>>();
+const writeThrottleMs = 5000;
+
 export async function recordRelayDiagnosticSummary(
   snapshot: RelaySnapshot,
   evidence: RelayDiagnosticEvidence = {},
@@ -42,15 +46,35 @@ export async function recordRelayDiagnosticSummary(
   const existing = await relayDiagnosticSummary(snapshot.url);
   const next = mergeSummary(snapshot, existing, evidence);
   memorySummaries.set(next.relayUrl, next);
-  await bestEffortStorageWrite(() =>
-    browserDb().relayDiagnosticSummaries.put(next),
-  );
+  scheduleWrite(next);
   return next;
+}
+
+function scheduleWrite(summary: RelayDiagnosticSummary): void {
+  const relayUrl = summary.relayUrl;
+  pendingWrites.set(relayUrl, summary);
+  const existing = writeTimers.get(relayUrl);
+  if (existing) clearTimeout(existing);
+  writeTimers.set(
+    relayUrl,
+    setTimeout(() => flushWrite(relayUrl), writeThrottleMs),
+  );
+}
+
+async function flushWrite(relayUrl: string): Promise<void> {
+  writeTimers.delete(relayUrl);
+  const summary = pendingWrites.get(relayUrl);
+  if (!summary) return;
+  pendingWrites.delete(relayUrl);
+  await bestEffortStorageWrite(() =>
+    browserDb().relayDiagnosticSummaries.put(summary),
+  );
 }
 
 export async function listRelayDiagnosticSummaries(): Promise<
   RelayDiagnosticSummary[]
 > {
+  await flushAllPendingWrites();
   const records = await boundedStorageRead(
     () => browserDb().relayDiagnosticSummaries.toArray(),
     [...memorySummaries.values()],
@@ -60,6 +84,9 @@ export async function listRelayDiagnosticSummaries(): Promise<
 
 export function clearRelayDiagnosticSummariesForTests(): void {
   memorySummaries.clear();
+  pendingWrites.clear();
+  for (const timer of writeTimers.values()) clearTimeout(timer);
+  writeTimers.clear();
 }
 
 export function relayDiagnosticSummaryMemorySizeForTests(): number {
@@ -76,6 +103,11 @@ async function relayDiagnosticSummary(
       undefined,
     ))
   );
+}
+
+async function flushAllPendingWrites(): Promise<void> {
+  const urls = [...pendingWrites.keys()];
+  await Promise.all(urls.map((url) => flushWrite(url)));
 }
 
 function mergeSummary(

@@ -53,9 +53,12 @@
     contentAttachments(props.event).filter((item) => item.type !== 'link'),
   );
 
-  onMount(() =>
-    subscribeHideSensitiveEvents((value) => (hideSensitive = value)),
-  );
+  onMount(() => {
+    const unsubscribe = subscribeHideSensitiveEvents(
+      (value) => (hideSensitive = value),
+    );
+    return unsubscribe;
+  });
 </script>
 
 {#if gated}

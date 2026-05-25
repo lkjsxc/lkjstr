@@ -1,3 +1,7 @@
+import {
+  setRuntimeCounterActive,
+} from '../app/runtime-counters';
+
 export const defaultStorageTimeoutMs = 150;
 
 export function safeLocalStorage(): Storage | undefined {
@@ -50,10 +54,13 @@ export async function boundedStorageRead<T>(
   timeoutMs = defaultStorageTimeoutMs,
 ): Promise<T> {
   if (!indexedDbAvailable()) return fallback;
+  setRuntimeCounterActive('active-indexeddb-ops', 1);
   try {
-    return withTimeout(read(), fallback, timeoutMs);
+    return await withTimeout(read(), fallback, timeoutMs);
   } catch {
     return fallback;
+  } finally {
+    setRuntimeCounterActive('active-indexeddb-ops', -1);
   }
 }
 
@@ -62,10 +69,13 @@ export async function bestEffortStorageWrite(
   timeoutMs = defaultStorageTimeoutMs,
 ): Promise<void> {
   if (!indexedDbAvailable()) return;
+  setRuntimeCounterActive('active-indexeddb-ops', 1);
   try {
     await withTimeout(write(), undefined, timeoutMs);
   } catch {
     return;
+  } finally {
+    setRuntimeCounterActive('active-indexeddb-ops', -1);
   }
 }
 

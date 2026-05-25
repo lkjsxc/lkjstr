@@ -33,11 +33,9 @@
   let saving = $state(false);
   let uploading = $state<keyof ProfileMetadataDraft | ''>('');
   let uploadSettings = $state<UploadSettings>({
-    provider: 'nostr-build',
-    customServer: '',
-    server: 'https://nostr.build',
-    noTransform: true,
+    provider: 'nostr-build', customServer: '', server: 'https://nostr.build', noTransform: true,
   });
+  let destroyed = false;
   let error = $derived(validateProfileMetadataDraft(draft));
   let dirty = $derived(JSON.stringify(draft) !== JSON.stringify(original));
   let canEdit = $derived(Boolean(props.activeAccount?.capabilities.sign));
@@ -47,7 +45,10 @@
     void refreshUploadSettings();
     const reload = () => void refreshUploadSettings();
     window.addEventListener(settingsChangedEvent, reload);
-    return () => window.removeEventListener(settingsChangedEvent, reload);
+    return () => {
+      destroyed = true;
+      window.removeEventListener(settingsChangedEvent, reload);
+    };
   });
 
   $effect(() => {
@@ -58,19 +59,23 @@
     status = '';
     void loadProfileMetadata(pubkey)
       .then((metadata) => {
+        if (destroyed) return;
         const loaded = draftFromMetadata(metadata);
         draft = loaded;
         original = loaded;
       })
       .catch((caught) => {
-        status =
-          caught instanceof Error ? caught.message : 'Profile load failed.';
+        if (destroyed) return;
+        status = caught instanceof Error ? caught.message : 'Profile load failed.';
       })
-      .finally(() => (loading = false));
+      .finally(() => {
+        if (!destroyed) loading = false;
+      });
   });
 
   async function refreshUploadSettings(): Promise<void> {
-    uploadSettings = await loadUploadSettings();
+    const settings = await loadUploadSettings();
+    if (!destroyed) uploadSettings = settings;
   }
 
   async function save(): Promise<void> {
@@ -82,6 +87,7 @@
       props.relaySets,
       props.activeAccount.pubkey,
     );
+    if (destroyed) return;
     saving = false;
     status = result.ok ? 'Profile updated.' : result.message;
     if (result.ok) original = draft;
@@ -99,13 +105,14 @@
     status = '';
     try {
       const uploaded = await uploadMediaFile(file, uploadSettings);
+      if (destroyed) return;
       update(key, uploaded.url);
       status = `${key} uploaded.`;
     } catch (caught) {
-      status =
-        caught instanceof Error ? caught.message : 'Media upload failed.';
+      if (destroyed) return;
+      status = caught instanceof Error ? caught.message : 'Media upload failed.';
     } finally {
-      uploading = '';
+      if (!destroyed) uploading = '';
     }
   }
 

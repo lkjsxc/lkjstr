@@ -13,6 +13,7 @@ import { normalizedRelayList } from './relay-url-list';
 import { relaySnapshotHistoryMap } from './session-snapshots';
 import type { RelaySnapshot } from './types';
 import { createRelayPublishWaiters } from './relay-publish-waiters';
+import { incMemoryCounter, decMemoryCounter } from '../app/memory-counters';
 
 export type PoolEvent = {
   readonly relay: string;
@@ -93,6 +94,7 @@ export function createRelayPool(connectTimeoutMs = 5000, idleGraceMs = 15_000) {
       connectTimeoutMs,
     );
     clients.set(url, created);
+    incMemoryCounter('active-relay-clients');
     return created;
   };
   const publishOne = (
@@ -162,6 +164,7 @@ export function createRelayPool(connectTimeoutMs = 5000, idleGraceMs = 15_000) {
         relayClient.close();
         snapshotHistory.set(relayClient.snapshot().url, relayClient.snapshot());
       }
+      decMemoryCounter('active-relay-clients', clients.size);
       clients.clear();
       events.clear();
       states.clear();
