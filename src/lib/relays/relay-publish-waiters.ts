@@ -1,4 +1,9 @@
 import type { NostrEvent } from '../protocol';
+import {
+  incMemoryCounter,
+  decMemoryCounter,
+  setMemoryCounter,
+} from '../app/memory-counters';
 import type { PublishResult } from './relay-pool';
 
 type PublishWaiter = {
@@ -24,6 +29,8 @@ export function createRelayPublishWaiters() {
     waiters.delete(relay);
     if (waiters.size === 0) waitersByEvent.delete(eventId);
     clearTimeout(waiter.timer);
+    decMemoryCounter('active-timers');
+    decMemoryCounter('active-relay-publish-waiters');
     return waiter;
   };
 
@@ -53,6 +60,8 @@ export function createRelayPublishWaiters() {
       const waiters = waitersByEvent.get(event.id) ?? new Map();
       waiters.set(relay, waiter);
       waitersByEvent.set(event.id, waiters);
+      incMemoryCounter('active-timers');
+      incMemoryCounter('active-relay-publish-waiters');
       return { promise, created: true };
     },
     settle: (
@@ -78,11 +87,15 @@ export function createRelayPublishWaiters() {
           waiter?.resolve(result);
         }
       }
+      setMemoryCounter('active-relay-publish-waiters', 0);
+      setMemoryCounter('active-timers', 0);
     },
     clear: (): void => {
       for (const waiters of waitersByEvent.values())
         for (const waiter of waiters.values()) clearTimeout(waiter.timer);
       waitersByEvent.clear();
+      setMemoryCounter('active-relay-publish-waiters', 0);
+      setMemoryCounter('active-timers', 0);
     },
   };
 }
