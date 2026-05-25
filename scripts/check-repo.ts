@@ -6,6 +6,10 @@ import { isStrictDoc } from './repo-doc-rules';
 import { checkDocs } from './repo-docs';
 import { trackedDirs } from './repo-readmes';
 import { checkSourceClasses } from './repo-source-classes';
+import { checkRuntimeCounters } from './repo-runtime-counters';
+import { checkUnboundedTimers } from './repo-timers';
+import { checkToArrayLimits } from './repo-toarray';
+import { checkLiveQueryOwnership } from './repo-livequery';
 
 type Problem = { file: string; message: string };
 
@@ -32,6 +36,10 @@ await checkForbiddenDependencyText(files);
 problems.push(...(await checkDocs(root, files, skipDirs)));
 problems.push(...(await checkComposeGuardrails(root)));
 problems.push(...(await checkSourceClasses(root, files)));
+problems.push(...(await checkRuntimeCounters(root, files)));
+problems.push(...(await checkUnboundedTimers(root, files)));
+problems.push(...(await checkToArrayLimits(root, files)));
+problems.push(...(await checkLiveQueryOwnership(root, files)));
 
 for (const problem of problems.sort((a, b) => a.file.localeCompare(b.file))) {
   console.error(`${problem.file}: ${problem.message}`);

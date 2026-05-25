@@ -6,7 +6,9 @@ Protocol kernel docs define the app boundary around Nostr rules.
 
 ## Role
 
-The protocol kernel is the only layer that understands Nostr event rules. UI code, workers, and storage callers use kernel APIs instead of duplicating protocol checks.
+The protocol kernel is the only layer that understands Nostr event rules. UI code,
+workers, and storage callers use kernel APIs instead of duplicating protocol
+checks.
 
 ## Responsibilities
 

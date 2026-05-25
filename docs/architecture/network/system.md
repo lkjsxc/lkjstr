@@ -6,7 +6,9 @@ System architecture defines browser runtime boundaries and state ownership.
 
 ## Runtime Shape
 
-The app is a browser-first SvelteKit client. SvelteKit provides routing, app shell, build pipeline, and progressive loading. Protocol work, relay connections, cache access, and workspace state run in browser-owned modules.
+The app is a browser-first SvelteKit client. SvelteKit provides routing, app
+shell, build pipeline, and progressive loading. Protocol work, relay connections,
+cache access, and workspace state run in browser-owned modules.
 
 ## Primary Modules
 
@@ -20,7 +22,9 @@ The app is a browser-first SvelteKit client. SvelteKit provides routing, app she
 
 ## Dependency Direction
 
-UI may depend on app services. App services may depend on protocol kernel and storage interfaces. Protocol kernel does not depend on UI, SvelteKit, IndexedDB, or WebSocket implementations.
+UI may depend on app services. App services may depend on protocol kernel
+and storage interfaces. Protocol kernel does not depend on UI, SvelteKit,
+IndexedDB, or WebSocket implementations.
 
 Relay pool depends on protocol message helpers but not on pane components. Pane ownership is passed as data.
 

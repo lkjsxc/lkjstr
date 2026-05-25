@@ -7,7 +7,14 @@ import {
   rootDocLinkProblems,
   tocMentions,
 } from './repo-doc-rules';
-import { trackedDirs } from './repo-readmes';
+import {
+  trackedDirs,
+  trackedFiles,
+  gitCheckIgnored,
+  walkDirs,
+  docsDescendants,
+  localChildren,
+} from './repo-doc-helpers';
 
 export type RepoProblem = { file: string; message: string };
 const run = promisify(execFile);
@@ -28,6 +35,7 @@ export async function checkDocs(
     checkPurpose(problems, rel, text);
     checkAscii(problems, rel, text);
     if (!rel.endsWith('LICENSE')) checkBanned(problems, rel, text);
+    checkProseLineLength(problems, rel, text);
   }
   await checkDocsTopology(problems, root, files, skipDirs);
   await checkIgnoredDocs(problems, root, docs);
@@ -60,6 +68,36 @@ function checkAscii(problems: RepoProblem[], file: string, text: string) {
 function checkBanned(problems: RepoProblem[], file: string, text: string) {
   if (banned.test(text))
     problems.push({ file, message: 'contains release shorthand' });
+}
+
+const PROSE_LINE_LIMIT = 160;
+
+function checkProseLineLength(
+  problems: RepoProblem[],
+  file: string,
+  text: string,
+) {
+  const lines = text.split(/\r?\n/);
+  let inCodeBlock = false;
+  for (let i = 0; i < lines.length; i++) {
+    const line = lines[i]!;
+    if (line.startsWith('```')) inCodeBlock = !inCodeBlock;
+    if (
+      !inCodeBlock &&
+      line.length > PROSE_LINE_LIMIT &&
+      !isTableLine(line)
+    ) {
+      problems.push({
+        file,
+        message: `line ${i + 1} exceeds ${PROSE_LINE_LIMIT} prose chars`,
+      });
+    }
+  }
+}
+
+function isTableLine(line: string): boolean {
+  const t = line.trim();
+  return t.startsWith('|') && t.endsWith('|') && t.includes('|');
 }
 
 async function checkDocsTopology(
@@ -119,80 +157,4 @@ async function checkReadmeTocs(
         problems.push({ file: readme, message: `TOC missing ${target}` });
     }
   }
-}
-
-function docsDescendants(
-  tracked: readonly string[],
-  dir: string,
-  readme: string,
-) {
-  const prefix = dir === '.' ? '' : `${dir}${path.sep}`;
-  return tracked
-    .filter((file) => file.startsWith(prefix))
-    .filter((file) => file !== readme && path.extname(file) === '.md')
-    .map((file) => path.relative(dir, file))
-    .sort();
-}
-
-function localChildren(
-  tracked: readonly string[],
-  dir: string,
-  readme: string,
-) {
-  const prefix = dir === '.' ? '' : `${dir}${path.sep}`;
-  const trackedSet = new Set(tracked);
-  const children = new Set<string>();
-  for (const file of tracked) {
-    if (!file.startsWith(prefix) || file === readme) continue;
-    const rel = path.relative(dir, file);
-    if (rel.startsWith('..') || rel.includes(`${path.sep}.`)) continue;
-    const [first, second] = rel.split(path.sep);
-    if (!first) continue;
-    if (second && trackedSet.has(path.join(dir, first, 'README.md'))) {
-      children.add(`${first}/`);
-      continue;
-    }
-    if (!second && path.extname(first) === '.md') children.add(first);
-  }
-  return [...children].sort();
-}
-
-async function trackedFiles(root: string): Promise<string[]> {
-  const { stdout } = await run('git', ['ls-files', '-z'], { cwd: root }).catch(
-    () => ({ stdout: '' }),
-  );
-  const files = stdout.split('\0').filter(Boolean).sort();
-  const existing: string[] = [];
-  for (const file of files) {
-    await fs.access(path.join(root, file)).then(
-      () => existing.push(file),
-      () => undefined,
-    );
-  }
-  return existing;
-}
-
-async function gitCheckIgnored(root: string, files: readonly string[]) {
-  try {
-    const { stdout } = await run('git', ['check-ignore', ...files], {
-      cwd: root,
-    });
-    return stdout.split(/\r?\n/).filter(Boolean);
-  } catch (error) {
-    const result = error as { stdout?: string; code?: number };
-    if (result.code === 1) return [];
-    return (result.stdout ?? '').split(/\r?\n/).filter(Boolean);
-  }
-}
-
-async function walkDirs(dir: string, skipDirs: ReadonlySet<string>) {
-  const entries = await fs
-    .readdir(dir, { withFileTypes: true })
-    .catch(() => []);
-  const out = [dir];
-  for (const entry of entries) {
-    if (entry.isDirectory() && !skipDirs.has(entry.name))
-      out.push(...(await walkDirs(path.join(dir, entry.name), skipDirs)));
-  }
-  return out;
 }

@@ -92,8 +92,8 @@
       message: 'Timeline runtime created.',
       context: runtimeContext('create'),
     });
-    countRuntime(runtimeMetricKey(), 'created');
-    setRuntimeCounterActive(runtimeMetricKey(), 1);
+    countRuntime(props.kind === 'global' ? 'timeline:global' : 'timeline:home', 'created');
+    setRuntimeCounterActive(props.kind === 'global' ? 'timeline:global' : 'timeline:home', 1);
     unsubscribe = runtime.subscribe((next) => (state = next));
     runtime.start();
   });
@@ -115,8 +115,8 @@
       message: 'Timeline runtime closed.',
       context: runtimeContext(reason),
     });
-    countRuntime(runtimeMetricKey(), 'closed');
-    setRuntimeCounterActive(runtimeMetricKey(), -1);
+    countRuntime(props.kind === 'global' ? 'timeline:global' : 'timeline:home', 'closed');
+    setRuntimeCounterActive(props.kind === 'global' ? 'timeline:global' : 'timeline:home', -1);
     unsubscribe = undefined;
     runtime = undefined;
   }
