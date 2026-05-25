@@ -11,10 +11,16 @@ state lives, which modules own subscriptions, and how tabs close cleanly.
 - [data/bounded-memory.md](data/bounded-memory.md): bounded memory cleanup.
 - [data/event-tree.md](data/event-tree.md): event row tree model.
 - [data/feed-memory.md](data/feed-memory.md): feed windows and scroll anchors.
+- [data/heap-retention.md](data/heap-retention.md): observed symptoms and
+  investigation strategy.
 - [data/local-secret-security.md](data/local-secret-security.md):
   passkey-protected local secret storage.
+- [data/memory-prioritization.md](data/memory-prioritization.md): durable data
+  and runtime retention priority.
 - [data/relay-pages.md](data/relay-pages.md): relay page ordering and
   provenance.
+- [data/resource-ownership.md](data/resource-ownership.md): who creates and
+  who closes each resource.
 - [data/shared-storage.md](data/shared-storage.md): shared event storage.
 - [data/storage.md](data/storage.md): IndexedDB storage boundaries.
 - [network/README.md](network/README.md): relay, identity, jobs, and settings.

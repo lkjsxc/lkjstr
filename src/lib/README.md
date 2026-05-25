@@ -18,6 +18,7 @@ This directory contains reusable application code shared by routes and tabs.
 - [identity/](identity/): profile identity helpers.
 - [jobs/](jobs/): persisted job records.
 - [log/](log/): app log state.
+- [memory/](memory/): runtime memory helpers and retention.
 - [media/](media/): upload settings and providers.
 - [notifications/](notifications/): notification indexing and state.
 - [profile/](profile/): profile runtimes and stores.

@@ -12,6 +12,8 @@ data safety, and test ownership.
 - [data-safety.md](data-safety.md): local data safety.
 - [diagnostics.md](diagnostics.md): debugging guidance.
 - [docker.md](docker.md): built-image Compose workflow.
+- [memory-verification.md](memory-verification.md): heap snapshot collection
+  and memory test commands.
 - [readiness.md](readiness.md): handoff checks.
 - [testing-ownership.md](testing-ownership.md): unit and e2e ownership.
 - [verification.md](verification.md): command gate.

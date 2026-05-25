@@ -15,6 +15,7 @@ This directory contains Vitest unit tests grouped by source domain.
 - [identity/](identity/): profile identity tests.
 - [jobs/](jobs/): job manager tests.
 - [log/](log/): app log tests.
+- [memory/](memory/): scored retention and runtime memory tests.
 - [media/](media/): media settings tests.
 - [notifications/](notifications/): notification index tests.
 - [popover/](popover/): popover positioning tests.
