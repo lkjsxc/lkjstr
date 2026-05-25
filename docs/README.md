@@ -112,6 +112,8 @@ for detailed contracts.
 ## Product
 
 - [product/README.md](product/README.md): user-facing workspace contract.
+- [product/backlog.md](product/backlog.md): practical backlog with test
+  strategies.
 - [product/feeds/README.md](product/feeds/README.md): reading surfaces.
 - [product/feeds/global.md](product/feeds/global.md): Global feed.
 - [product/feeds/home.md](product/feeds/home.md): Home feed.

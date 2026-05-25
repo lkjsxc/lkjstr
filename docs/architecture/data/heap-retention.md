@@ -93,6 +93,20 @@ timers, and evict idle clients from the pool map.
 Profile summaries, token caches, and feed runtime windows can grow without
 bounds. The fix is to use bounded LRU or TTL caches with documented caps.
 
+## Confirmed Root Causes
+
+Status: under active investigation. Update this section only after heap
+snapshots and memory e2e runs confirm retaining paths.
+
+| Symptom group | Suspected owner module | Cleanup owner | Verification test |
+|---------------|------------------------|---------------|-------------------|
+| `IDBRequest` / `IDBTransaction` spike | `safe-storage.ts`, store `toArray()` callers | `try/finally` on storage ops; bounded reads | `memory-churn.spec.ts` `active-indexeddb-ops` zero |
+| Relay diagnostic summary shapes | `relay-diagnostic-summary.ts` | Bounded map eviction; batched `bulkPut` | Counter `relay-diagnostic-summary-count` under cap |
+| `AbortSignal` / abort listeners | `shared-abort-controller.ts`, `read-limiter.ts` | `finally` removal; manager `close()` | Counter `active-abort-listeners` zero after tab close |
+| Svelte context / listeners | Tab Svelte surfaces, row components | `onDestroy` / `$effect` cleanup; small view models | `active-dom-listeners` zero after surface destroy |
+| Relay pool maps / timers | `relay-pool.ts`, `relay-client.ts` | `close()` idempotent; idle eviction | `active-relay-clients` zero after pool idle |
+| Feed/profile/token caches | Feed runtimes, profile cache, token cache | LRU/TTL bounded maps | Cache counters under documented caps |
+
 ## Cleanup Ownership
 
 Every retained object group must have an explicit owner. See

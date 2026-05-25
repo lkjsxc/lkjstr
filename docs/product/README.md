@@ -7,6 +7,8 @@ itself: split tiles, tabs, relay-backed data, and local state.
 
 ## Tree
 
+- [backlog.md](backlog.md): practical product work with destination docs and
+  test strategies.
 - [feeds/README.md](feeds/README.md): relay-backed reading surfaces.
 - [feeds/global.md](feeds/global.md): Global feed.
 - [feeds/home.md](feeds/home.md): Home feed.

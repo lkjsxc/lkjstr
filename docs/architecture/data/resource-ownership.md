@@ -40,6 +40,28 @@ must close, what it may retain, and what it must never retain.
 - Debug snapshots must be small JSON objects and must not expose secrets, local
   signing keys, drafts, raw events, or raw relay frames.
 
+## Source Module Map
+
+| Resource | Primary source module |
+|----------|----------------------|
+| WebSocket client | `src/lib/relays/relay-client.ts` |
+| Relay subscription | `src/lib/relays/relay-client.ts`, `relay-pool.ts` |
+| Paged read lease | `src/lib/relays/subscription-manager.ts`, `subscription-read-page.ts` |
+| Publish waiter | `src/lib/relays/relay-publish-waiters.ts` |
+| Abort listener | `src/lib/relays/shared-abort-controller.ts`, `read-limiter.ts` |
+| Timer | `src/lib/fp/resource-scope.ts`, relay/tab factories |
+| Worker | Worker owners in tab or job modules |
+| Svelte store subscription | `src/lib/tabs/*`, runtime factories |
+| DOM event listener | Tab components, drag actions, popovers |
+| IndexedDB transaction | `src/lib/storage/safe-storage.ts`, Dexie stores |
+| Feed runtime | `src/lib/timeline/timeline-runtime.ts`, profile/thread runtimes |
+| Tab runtime | Per-tab runtime under `src/lib/tabs/` and `src/lib/timeline/` |
+| Closed-tab snapshot | `src/lib/workspace/session-tab-snapshots.ts` |
+| Relay diagnostic summary | `src/lib/relays/relay-diagnostic-summary.ts` |
+| Profile summary cache | Profile hydration modules |
+| Token/content cache | Event content token cache |
+| Notification runtime state | `src/lib/notifications/` runtimes |
+
 ## Reference
 
 - [bounded-memory.md](bounded-memory.md): bounded memory rules.
