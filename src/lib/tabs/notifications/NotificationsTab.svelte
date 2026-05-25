@@ -1,5 +1,6 @@
 <script lang="ts">
   import { tick, untrack } from 'svelte';
+  import FeedSurfaceStatus from '$lib/components/events/FeedSurfaceStatus.svelte';
   import NotificationRow from '$lib/components/notifications/NotificationRow.svelte';
   import { isNearEnd, metadataPageLimit } from '$lib/events/feed-window';
   import type { ProfileSummary } from '$lib/identity/identity';
@@ -171,10 +172,9 @@
     {:else if !state.loading}
       <p>No notifications for the active account.</p>
     {/if}
-    {#if state.loadingOlder && state.hasOlder}
-      <p class="event-list__status">Loading older notifications...</p>
-    {:else if state.hasOlder === false && state.records.length > 0}
-      <p class="event-list__status">End of loaded notifications.</p>
-    {/if}
+    <FeedSurfaceStatus
+      loadingOlder={state.loadingOlder && state.hasOlder}
+      endOfHistory={state.hasOlder === false && state.records.length > 0}
+    />
   </div>
 </section>

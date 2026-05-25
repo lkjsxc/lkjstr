@@ -12,22 +12,24 @@ export function smartSplitPane(
   paneId: string,
   direction: SplitDirection,
   newPane: WorkspacePaneNode,
+  side: 'before' | 'after' = 'after',
 ): WorkspaceLayoutNode {
   const target = findPath(root, paneId);
   if (!target) return root;
   const parent = target.path.at(-1);
-  if (!parent) return createSplit(direction, [root, newPane]);
+  if (!parent) {
+    const children = side === 'before' ? [newPane, root] : [root, newPane];
+    return createSplit(direction, children);
+  }
   if (parent.split.direction === direction)
     return replaceSplit(
       root,
       parent.split.id,
-      insertPaneNearTarget(parent.split, paneId, newPane, 'after'),
+      insertPaneNearTarget(parent.split, paneId, newPane, side),
     );
-  return replacePane(
-    root,
-    paneId,
-    createSplit(direction, [target.pane, newPane]),
-  );
+  const children =
+    side === 'before' ? [newPane, target.pane] : [target.pane, newPane];
+  return replacePane(root, paneId, createSplit(direction, children));
 }
 
 export function insertPaneNearTarget(

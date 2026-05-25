@@ -7,12 +7,12 @@ scrolling, reordering, and cross-tile moves.
 
 ## Constants
 
-| Input | Constant | Value |
-| ----- | -------- | ----- |
-| Touch long-press delay | `touchLongPressMs` | 250 |
-| Long-press cancel distance | `touchLongPressCancelPx` | 8 |
-| Mouse drag activation | `mouseDragActivationPx` | 6 |
-| Source strip band height | `tabStripBandPx` | measured from tab strip layout |
+| Input                      | Constant                 | Value                          |
+| -------------------------- | ------------------------ | ------------------------------ |
+| Touch long-press delay     | `touchLongPressMs`       | 250                            |
+| Long-press cancel distance | `touchLongPressCancelPx` | 8                              |
+| Mouse drag activation      | `mouseDragActivationPx`  | 6                              |
+| Source strip band height   | `tabStripBandPx`         | measured from tab strip layout |
 
 ## Coarse Pointer (Touch)
 

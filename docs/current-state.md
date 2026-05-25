@@ -31,8 +31,13 @@ linked product, protocol, architecture, and operations pages.
 
 - Workspace layout, tabs, settings, accounts, drafts, notifications, relay
   information, relay summaries, jobs, and cached events are browser-owned data.
-- Pointer tab dragging is the canonical cross-device movement path. Native
-  desktop drag uses the same pane drop zones and overlay contract.
+- Pointer tab dragging is canonical. Native desktop drag shares pane-wide drop
+  resolution, half-pane edge previews, and smart split insertion with menu
+  splits.
+- Tab rails scroll horizontally with long-press touch drag, strip-priority
+  reorder, and active-tab reveal.
+- Event cache retention is automatic and score-indexed. Settings no longer
+  exposes cache count or age controls.
 - Shared storage normalizes events, relay receipts, tag rows, cursors, and jobs
   before runtime use.
 - Relay ingress uses app-owned byte and structure caps before expensive JSON

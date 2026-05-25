@@ -10,7 +10,15 @@ state lives, which modules own subscriptions, and how tabs close cleanly.
 - [data/README.md](data/README.md): repository, cache, and event tree model.
 - [data/bounded-memory.md](data/bounded-memory.md): bounded memory cleanup.
 - [data/event-tree.md](data/event-tree.md): event row tree model.
+- [data/event-surface-paging.md](data/event-surface-paging.md): shared feed
+  paging and status rows.
 - [data/feed-memory.md](data/feed-memory.md): feed windows and scroll anchors.
+- [data/retention/README.md](data/retention/README.md): score-based event
+  retention.
+- [data/retention/compaction.md](data/retention/compaction.md): compaction
+  queries.
+- [data/retention/index-shape.md](data/retention/index-shape.md): priority index.
+- [data/retention/score-policy.md](data/retention/score-policy.md): score rules.
 - [data/heap-retention.md](data/heap-retention.md): observed symptoms and
   investigation strategy.
 - [data/local-secret-security.md](data/local-secret-security.md):
@@ -45,8 +53,12 @@ state lives, which modules own subscriptions, and how tabs close cleanly.
 - [runtimes/tweet-runtime.md](runtimes/tweet-runtime.md): Tweet publishing.
 - [workspace/README.md](workspace/README.md): layout, tabs, and visual shell.
 - [workspace/resize.md](workspace/resize.md): resizing.
+- [workspace/pane-drop-target.md](workspace/pane-drop-target.md): pane-wide
+  drop resolver.
 - [workspace/tab-dragging.md](workspace/tab-dragging.md): tab drag zones and
   feedback.
+- [workspace/tab-strip-gestures.md](workspace/tab-strip-gestures.md): tab rail
+  gestures.
 - [workspace/tab-runtime.md](workspace/tab-runtime.md): tab lifecycle.
 - [workspace/theme.md](workspace/theme.md): theme.
 - [workspace/tile-menu.md](workspace/tile-menu.md): tile menus.

@@ -2,6 +2,7 @@
   import { tick, untrack } from 'svelte';
   import type { Account } from '$lib/accounts/account';
   import EventRow from '$lib/components/events/EventRow.svelte';
+  import FeedSurfaceStatus from '$lib/components/events/FeedSurfaceStatus.svelte';
   import { isNearEnd, isNearStart } from '$lib/events/feed-window';
   import type { ProfileSummary } from '$lib/identity/identity';
   import { getProfile } from '$lib/identity/profile-cache';
@@ -189,9 +190,9 @@
         </p>
       {/if}
       {#if state.loadingOlder && state.hasOlder}
-        <p class="event-list__status">Loading older notes...</p>
+        <FeedSurfaceStatus loadingOlder />
       {:else if state.hasOlder === false && state.posts.length > 0}
-        <p class="event-list__status">End of loaded history.</p>
+        <FeedSurfaceStatus endOfHistory />
       {/if}
     </div>
   </section>

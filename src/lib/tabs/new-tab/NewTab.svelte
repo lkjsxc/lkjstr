@@ -1,9 +1,13 @@
 <script lang="ts">
   import type { TabKind } from '$lib/workspace/tab';
-  import { newTabOptions, type NewTabOption } from './new-tab-options';
+  import {
+    newTabOptionsForAccount,
+    type NewTabOption,
+  } from './new-tab-options';
 
   type Props = {
     tabId: string;
+    activeAccountPubkey?: string;
     convert: (
       tabId: string,
       kind: TabKind,
@@ -11,17 +15,18 @@
     ) => void;
   };
 
-  let { tabId, convert }: Props = $props();
+  let { tabId, activeAccountPubkey, convert }: Props = $props();
+  let options = $derived(newTabOptionsForAccount(activeAccountPubkey));
 
   function choose(option: NewTabOption): void {
-    convert(tabId, option.kind);
+    convert(tabId, option.kind, option.config);
   }
 </script>
 
 <section class="new-tab" aria-label="New Tab">
   {#each ['primary', 'secondary'] as group (group)}
     <div class="option-grid" aria-label={`${group} options`}>
-      {#each newTabOptions.filter((option) => option.group === group) as option (option.label)}
+      {#each options.filter((option) => option.group === group) as option (option.label)}
         <button
           type="button"
           class="option-card"

@@ -58,7 +58,11 @@
     relaySets={props.relaySets}
   />
 {:else if props.tab.kind === 'new-tab'}
-  <NewTab tabId={props.tab.id} convert={props.convertTab} />
+  <NewTab
+    tabId={props.tab.id}
+    activeAccountPubkey={props.activeAccount?.pubkey}
+    convert={props.convertTab}
+  />
 {:else if props.tab.kind === 'timeline'}
   <TimelineTab
     tabId={props.tab.id}

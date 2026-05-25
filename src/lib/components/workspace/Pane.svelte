@@ -120,6 +120,11 @@
   data-tab-count={props.group?.tabIds.length ?? 0}
   aria-label="Workspace pane"
 >
+  <PaneDropLayer
+    paneId={props.pane.id}
+    disabled={!props.ready}
+    moveTab={props.moveTab}
+  />
   <header class="pane-head">
     <div class="pane-actions">
       <TileMenu
@@ -146,12 +151,6 @@
   </header>
 
   <div class="pane-stack">
-    <PaneDropLayer
-      paneId={props.pane.id}
-      targetIndex={props.group?.tabIds.length ?? 0}
-      disabled={!props.ready}
-      moveTab={props.moveTab}
-    />
     {#if active}
       {#key active.id}
         <div class="pane-body" data-active-tab="true" use:trackBody={active.id}>

@@ -1,18 +1,12 @@
 import Dexie from 'dexie';
 import { browserDb } from '../storage/browser-db';
 import { indexedDbAvailable } from '../storage/safe-storage';
-import { loadSettings } from '../settings/settings-store';
-import { eventRetention } from './retention';
+import { cacheEventBudget, type EventPriorityRecord } from './event-priority';
 import { pinnedEventIds } from './pins';
 import {
   compactFeedCoverage,
   deleteFeedCoverageForFeeds,
 } from '../events/feed-coverage-store';
-export type CacheCompactionOptions = {
-  readonly enabled: boolean;
-  readonly maxAgeSeconds: number;
-  readonly maxEvents: number;
-};
 
 export type CompactionResult = {
   readonly prunedEvents: number;
@@ -21,40 +15,32 @@ export type CompactionResult = {
   readonly reason?: string;
 };
 
-export async function compactOldEvents(
-  options?: Partial<CacheCompactionOptions>,
-): Promise<CompactionResult> {
-  const resolved = options
-    ? { ...(await cacheCompactionOptions()), ...options }
-    : await cacheCompactionOptions();
-  if (!resolved.enabled)
-    return {
-      prunedEvents: 0,
-      skippedDrafts: true,
-      skipped: true,
-      reason: 'compaction disabled',
-    };
+export async function compactOldEvents(): Promise<CompactionResult> {
   if (!indexedDbAvailable())
     return { prunedEvents: 0, skippedDrafts: true, skipped: true };
-  const now = Math.floor(Date.now() / 1000);
-  const recentIds = await recentEventIds(resolved.maxEvents);
-  const priorityIds = await priorityEventIds();
-  const pruneIds = await collectPruneIds(
-    recentIds,
-    priorityIds,
-    now,
-    resolved.maxAgeSeconds,
+  const count = await browserDb().events.count();
+  if (count <= cacheEventBudget)
+    return { prunedEvents: 0, skippedDrafts: true, skipped: false };
+  const protectedIds = await protectedEventIds();
+  const pruneIds = await lowestScorePruneIds(
+    count - cacheEventBudget,
+    protectedIds,
   );
-  const retainedIds = new Set(recentIds);
-  for (const id of priorityIds) retainedIds.add(id);
+  if (pruneIds.length === 0)
+    return { prunedEvents: 0, skippedDrafts: true, skipped: false };
+  const retainedIds = new Set<string>(protectedIds);
   await browserDb().transaction(
     'rw',
-    browserDb().events,
-    browserDb().eventRelays,
-    browserDb().eventTags,
-    browserDb().feedCursors,
+    [
+      browserDb().events,
+      browserDb().eventRelays,
+      browserDb().eventTags,
+      browserDb().eventPriority,
+      browserDb().feedCursors,
+    ],
     async () => {
       await browserDb().events.bulkDelete(pruneIds);
+      await browserDb().eventPriority.bulkDelete(pruneIds);
       await Promise.all(
         pruneIds.flatMap((id) => [
           browserDb().eventRelays.where('eventId').equals(id).delete(),
@@ -64,28 +50,35 @@ export async function compactOldEvents(
     },
   );
   await deleteStaleFeedCursors(retainedIds);
-  await compactFeedCoverage(resolved.maxAgeSeconds);
+  await compactFeedCoverage(30 * 24 * 60 * 60);
   return { prunedEvents: pruneIds.length, skippedDrafts: true, skipped: false };
 }
 
-async function recentEventIds(maxEvents: number): Promise<Set<string>> {
-  const ids = new Set<string>();
-  await browserDb()
-    .events.orderBy('created_at')
-    .reverse()
-    .limit(maxEvents)
-    .each((event) => ids.add(event.id));
-  return ids;
-}
-
-async function priorityEventIds(): Promise<Set<string>> {
+async function protectedEventIds(): Promise<Set<string>> {
   const ids = pinnedEventIds();
   await collectLatestByKindPubkey(0, ids);
   const accountPubkeys = await loadAccountPubkeys();
-  if (accountPubkeys.size > 0) {
+  if (accountPubkeys.size > 0)
     await collectLatestByKindPubkeyForSet(3, accountPubkeys, ids);
-  }
+  await browserDb()
+    .eventPriority.filter((row) => row.protected)
+    .each((row) => ids.add(row.id));
   return ids;
+}
+
+async function lowestScorePruneIds(
+  needed: number,
+  protectedIds: Set<string>,
+): Promise<string[]> {
+  const pruneIds: string[] = [];
+  await browserDb()
+    .eventPriority.orderBy('score')
+    .each((row: EventPriorityRecord) => {
+      if (pruneIds.length >= needed) return false;
+      if (protectedIds.has(row.id) || row.protected) return;
+      pruneIds.push(row.id);
+    });
+  return pruneIds;
 }
 
 async function loadAccountPubkeys(): Promise<Set<string>> {
@@ -140,40 +133,6 @@ async function collectLatestByKindPubkeyForSet(
       }
     });
   for (const item of latestByPubkey.values()) target.add(item.id);
-}
-
-async function collectPruneIds(
-  recentIds: Set<string>,
-  priorityIds: Set<string>,
-  nowSeconds: number,
-  maxAgeSeconds: number,
-): Promise<string[]> {
-  const pruneIds: string[] = [];
-  await browserDb()
-    .events.orderBy('created_at')
-    .reverse()
-    .each((event) => {
-      if (priorityIds.has(event.id)) return;
-      const isRecent = recentIds.has(event.id);
-      const shouldPrune =
-        !isRecent ||
-        eventRetention(event, nowSeconds, maxAgeSeconds) === 'prune';
-      if (shouldPrune) pruneIds.push(event.id);
-    });
-  return pruneIds;
-}
-
-export async function cacheCompactionOptions(): Promise<CacheCompactionOptions> {
-  const settings = await loadSettings();
-  const value = (key: string) =>
-    settings.find((item) => item.key === key)?.value;
-  const maxAgeDays = Number(value('cache.maxAgeDays') ?? 30);
-  const maxEvents = Number(value('cache.maxEvents') ?? 5000);
-  return {
-    enabled: Boolean(value('cache.compactionEnabled') ?? true),
-    maxAgeSeconds: maxAgeDays * 24 * 60 * 60,
-    maxEvents,
-  };
 }
 
 async function deleteStaleFeedCursors(retainedIds: Set<string>): Promise<void> {

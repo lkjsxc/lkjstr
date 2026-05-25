@@ -1,3 +1,30 @@
+.tab-strip-wrap {
+  flex: 1 1 auto;
+  min-width: 0;
+  position: relative;
+}
+
+.tab-strip-wrap.fade-left::before,
+.tab-strip-wrap.fade-right::after {
+  bottom: 0;
+  content: '';
+  pointer-events: none;
+  position: absolute;
+  top: 0;
+  width: 1.5rem;
+  z-index: 2;
+}
+
+.tab-strip-wrap.fade-left::before {
+  background: linear-gradient(to right, var(--color-surface), transparent);
+  left: 0;
+}
+
+.tab-strip-wrap.fade-right::after {
+  background: linear-gradient(to left, var(--color-surface), transparent);
+  right: 0;
+}
+
 .tab-strip {
   display: flex;
   flex-wrap: nowrap;
@@ -7,6 +34,7 @@
   overflow-x: auto;
   overflow-y: hidden;
   scrollbar-width: none;
+  touch-action: pan-x;
 }
 
 .tab-strip::-webkit-scrollbar {
@@ -32,10 +60,16 @@
 
 .tab-frame[draggable='true'] {
   cursor: grab;
+  touch-action: pan-x;
+}
+
+.tab-frame.tab-frame--dragging,
+body.dragging-tab .tab-frame[draggable='true'] {
   touch-action: none;
 }
 
-.tab-frame[draggable='true']:active {
+.tab-frame[draggable='true']:active,
+.tab-frame.tab-frame--dragging {
   cursor: grabbing;
 }
 
@@ -114,86 +148,4 @@
 
 .row small {
   color: var(--color-text-muted);
-}
-
-.resize {
-  background: transparent;
-  border: 0;
-  border-radius: 0;
-  flex: 0 0 0;
-  min-height: 0;
-  min-width: 0;
-  overflow: visible;
-  padding: 0;
-  position: relative;
-  touch-action: none;
-  z-index: 2;
-}
-
-.resize::before {
-  background: var(--color-border);
-  content: '';
-  position: absolute;
-}
-
-.resize::after {
-  content: '';
-  position: absolute;
-}
-
-.resize.horizontal::before {
-  bottom: 0;
-  left: calc(50% - 0.5px);
-  top: 0;
-  width: 1px;
-}
-
-.resize.horizontal::after {
-  bottom: 0;
-  left: -0.75rem;
-  top: 0;
-  width: 1.5rem;
-}
-
-.resize.vertical::before {
-  height: 1px;
-  left: 0;
-  right: 0;
-  top: calc(50% - 0.5px);
-}
-
-.resize.vertical::after {
-  height: 1.5rem;
-  left: 0;
-  right: 0;
-  top: -0.75rem;
-}
-
-.resize.active::before {
-  background: var(--color-text-faint);
-}
-
-.resize:focus-visible::before {
-  background: var(--color-focus);
-  box-shadow: 0 0 0 2px var(--color-focus);
-}
-
-.pane-drop-layer {
-  grid-area: 1 / 1;
-  pointer-events: none;
-  z-index: 3;
-}
-
-body.dragging-tab .pane-drop-layer {
-  pointer-events: auto;
-}
-
-.pane-drop-layer.active::after {
-  background: rgb(255 255 255 / 16%);
-  content: '';
-  height: var(--drop-height);
-  left: var(--drop-left);
-  position: absolute;
-  top: var(--drop-top);
-  width: var(--drop-width);
 }

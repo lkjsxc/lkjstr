@@ -16,6 +16,7 @@
     paneId: string;
     index: number;
     active: boolean;
+    dragging?: boolean;
     disabled: boolean;
     focus: () => void;
     close: () => void;
@@ -53,6 +54,7 @@
   tabindex="-1"
   data-tab-id={props.tab.id}
   class:active={props.active}
+  class:tab-frame--dragging={props.dragging}
   class="tab-frame"
   draggable="true"
   ondragstart={dragStart}

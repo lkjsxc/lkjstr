@@ -24,8 +24,18 @@ for detailed contracts.
   resource ownership table.
 - [architecture/data/event-tree.md](architecture/data/event-tree.md): event row
   tree model.
+- [architecture/data/event-surface-paging.md](architecture/data/event-surface-paging.md):
+  shared feed paging and status rows.
 - [architecture/data/feed-memory.md](architecture/data/feed-memory.md): feed
   cache and relay windows.
+- [architecture/data/retention/README.md](architecture/data/retention/README.md):
+  score-based event retention.
+- [architecture/data/retention/compaction.md](architecture/data/retention/compaction.md):
+  compaction queries.
+- [architecture/data/retention/index-shape.md](architecture/data/retention/index-shape.md):
+  priority index fields.
+- [architecture/data/retention/score-policy.md](architecture/data/retention/score-policy.md):
+  score update rules.
 - [architecture/data/heap-retention.md](architecture/data/heap-retention.md):
   observed heap symptoms and investigation strategy.
 - [architecture/data/local-secret-security.md](architecture/data/local-secret-security.md):
@@ -70,8 +80,12 @@ for detailed contracts.
 - [architecture/workspace/README.md](architecture/workspace/README.md):
   workspace modules.
 - [architecture/workspace/resize.md](architecture/workspace/resize.md): resizing.
+- [architecture/workspace/pane-drop-target.md](architecture/workspace/pane-drop-target.md):
+  pane-wide drop resolver.
 - [architecture/workspace/tab-dragging.md](architecture/workspace/tab-dragging.md):
   tab drag zones and feedback.
+- [architecture/workspace/tab-strip-gestures.md](architecture/workspace/tab-strip-gestures.md):
+  tab rail gestures.
 - [architecture/workspace/tab-runtime.md](architecture/workspace/tab-runtime.md):
   tab lifecycle.
 - [architecture/workspace/theme.md](architecture/workspace/theme.md): theme.

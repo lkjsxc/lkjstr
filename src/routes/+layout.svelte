@@ -6,6 +6,8 @@
   import '../styles/theme.css';
   import '../styles/app.css';
   import '../styles/workspace-tabs.css';
+  import '../styles/workspace-pane-drop.css';
+  import '../styles/workspace-resize.css';
   import '../styles/workspace-menu.css';
   import '../styles/timeline.css';
   import '../styles/notifications.css';

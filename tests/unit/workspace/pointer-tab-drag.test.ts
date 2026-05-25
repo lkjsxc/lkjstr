@@ -6,7 +6,7 @@ import {
 } from '../../../src/lib/workspace/pointer-tab-drag';
 import {
   tabDropEdge,
-  tabDropOverlayRect,
+  tabDropPreviewRect,
   tabDropZone,
 } from '../../../src/lib/workspace/tab-drop-zone';
 
@@ -29,10 +29,10 @@ describe('pointer tab drag', () => {
   it('maps zones to reducer edges and overlay geometry', () => {
     expect(tabDropEdge('center')).toBeUndefined();
     expect(tabDropEdge('left')).toBe('left');
-    expect(tabDropOverlayRect({ width: 300, height: 200 }, 'right')).toEqual({
-      left: 246,
+    expect(tabDropPreviewRect({ width: 300, height: 200 }, 'right')).toEqual({
+      left: 150,
       top: 0,
-      width: 54,
+      width: 150,
       height: 200,
     });
   });

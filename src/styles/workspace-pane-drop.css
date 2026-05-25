@@ -1,0 +1,29 @@
+.pane {
+  position: relative;
+}
+
+.pane-drop-layer {
+  inset: 0;
+  pointer-events: none;
+  position: absolute;
+  z-index: 4;
+}
+
+.pane-head {
+  position: relative;
+  z-index: 1;
+}
+
+body.dragging-tab .pane-drop-layer {
+  pointer-events: auto;
+}
+
+.pane-drop-layer.active::after {
+  background: rgb(255 255 255 / 16%);
+  content: '';
+  height: var(--drop-height);
+  left: var(--drop-left);
+  position: absolute;
+  top: var(--drop-top);
+  width: var(--drop-width);
+}

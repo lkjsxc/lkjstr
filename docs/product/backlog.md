@@ -21,14 +21,14 @@ by priority after memory stabilization passes.
 
 ## Workspace and Tabs
 
-| Item                                                                       | Destination doc                                                                                                | Test strategy                                                       |
-| -------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------- |
-| Touch/Android tab drag without snap-back                                   | implemented per [tab-strip-gestures.md](../architecture/workspace/tab-strip-gestures.md) | Playwright mobile viewport pan and long-press drag                  |
-| Drop-zone feedback: center insert vs edge split                            | implemented per [pane-drop-target.md](../architecture/workspace/pane-drop-target.md) | Playwright half-pane overlay geometry                               |
-| Zero-tile and zero-tab behavior without errors                             | [workspace/scope.md](workspace/scope.md)                                                                       | Playwright close-all-tabs e2e                                       |
-| Resizable pane polish (minimum sizes, snap)                                | [workspace/panes.md](workspace/panes.md), [resize.md](../architecture/workspace/resize.md)                     | Playwright resize handle interaction                                |
-| Welcome quick-start aligned with root README                               | [tools/welcome.md](tools/welcome.md)                                                                           | Playwright startup Welcome content                                  |
-| Clean startup: Welcome focused, Accounts lower, no premature relay connect | [workspace/workspace.md](workspace/workspace.md)                                                               | Playwright openCleanWorkspace; memory counter relay clients at zero |
+| Item                                                                       | Destination doc                                                                            | Test strategy                                                       |
+| -------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------ | ------------------------------------------------------------------- |
+| Touch/Android tab drag without snap-back                                   | implemented per [tab-strip-gestures.md](../architecture/workspace/tab-strip-gestures.md)   | Playwright mobile viewport pan and long-press drag                  |
+| Drop-zone feedback: center insert vs edge split                            | implemented per [pane-drop-target.md](../architecture/workspace/pane-drop-target.md)       | Playwright half-pane overlay geometry                               |
+| Zero-tile and zero-tab behavior without errors                             | [workspace/scope.md](workspace/scope.md)                                                   | Playwright close-all-tabs e2e                                       |
+| Resizable pane polish (minimum sizes, snap)                                | [workspace/panes.md](workspace/panes.md), [resize.md](../architecture/workspace/resize.md) | Playwright resize handle interaction                                |
+| Welcome quick-start aligned with root README                               | [tools/welcome.md](tools/welcome.md)                                                       | Playwright startup Welcome content                                  |
+| Clean startup: Welcome focused, Accounts lower, no premature relay connect | [workspace/workspace.md](workspace/workspace.md)                                           | Playwright openCleanWorkspace; memory counter relay clients at zero |
 
 ## Accounts and Signing
 

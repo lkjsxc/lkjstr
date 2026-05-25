@@ -31,10 +31,10 @@ user sees.
 
 ## Zones
 
-| Zone | Commit | Preview |
-| ---- | ------ | ------- |
-| `center` | Move or reorder in target group | Full pane |
-| `left` / `right` / `top` / `bottom` | Smart split at edge | Half pane on that edge |
+| Zone                                | Commit                          | Preview                |
+| ----------------------------------- | ------------------------------- | ---------------------- |
+| `center`                            | Move or reorder in target group | Full pane              |
+| `left` / `right` / `top` / `bottom` | Smart split at edge             | Half pane on that edge |
 
 ## Native Parity
 

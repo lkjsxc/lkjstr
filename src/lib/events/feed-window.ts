@@ -5,6 +5,10 @@ export const feedPageSize = 30;
 export const feedWindowSize = 180;
 export const threadWindowSize = 240;
 export const nearEndPixels = 900;
+
+export function nearEndThreshold(viewportHeight: number): number {
+  return Math.max(nearEndPixels, viewportHeight * 0.75);
+}
 export const metadataPageLimit = 30;
 
 export type WindowedFeed<T> = {
@@ -139,7 +143,7 @@ export function isNearEnd(
   scrollOffset: number,
   viewportSize: number,
   scrollSize: number,
-  threshold = nearEndPixels,
+  threshold = nearEndThreshold(viewportSize),
 ): boolean {
   return scrollOffset + viewportSize >= scrollSize - threshold;
 }

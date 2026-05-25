@@ -1,16 +1,17 @@
 <script lang="ts">
   import { getContext, onDestroy, tick } from 'svelte';
   import type { TabDropEdge } from '$lib/workspace/move-tab';
+  import { resolvePaneDrop } from '$lib/workspace/pane-drop-resolve';
   import {
     tabDropEdge,
     tabDropOverlayStyle,
-    tabDropZone,
-    type TabDropZone,
   } from '$lib/workspace/tab-drop-zone';
+  import type { TabDropZone } from '$lib/workspace/tab-drop-hit';
   import {
     dragHasTabPayload,
     readDraggedTab,
   } from '$lib/workspace/tab-drag-payload';
+  import type { TabInsertionFrame } from '$lib/workspace/pointer-tab-drag';
   import {
     tabDragStateKey,
     type TabDragState,
@@ -19,7 +20,6 @@
 
   type Props = {
     paneId: string;
-    targetIndex: number;
     disabled?: boolean;
     moveTab: (
       sourcePaneId: string,
@@ -33,8 +33,9 @@
   let props: Props = $props();
   const dragState = getContext<TabDragState | undefined>(tabDragStateKey);
   let nativeZone = $state<TabDropZone | null>(null);
+  let nativeIndex = $state(0);
   let pointerTarget = $state<TabDragTarget | undefined>();
-  let layer: HTMLElement | undefined;
+  let paneRoot: HTMLElement | undefined;
   let style = $state('');
   const unsubscribe = dragState?.target.subscribe(
     (target) => (pointerTarget = target),
@@ -44,14 +45,34 @@
       (pointerTarget?.paneId === props.paneId ? pointerTarget.zone : null),
   );
 
+  function paneElement(): HTMLElement | undefined {
+    return paneRoot?.closest<HTMLElement>('[data-pane-id]') ?? paneRoot;
+  }
+
   function dragOver(event: DragEvent): void {
     if (props.disabled || !dragHasTabPayload(event)) return;
     event.preventDefault();
-    nativeZone = tabDropZone(
-      (event.currentTarget as HTMLElement).getBoundingClientRect(),
-      event.clientX,
-      event.clientY,
-    );
+    const dragged = readDraggedTab(event);
+    const pane = paneElement();
+    if (!pane || !dragged) return;
+    const paneRect = pane.getBoundingClientRect();
+    const strip = pane.querySelector<HTMLElement>('.tab-strip');
+    const stripBottom = strip
+      ? strip.getBoundingClientRect().bottom
+      : paneRect.top;
+    const frames = tabFrames(pane);
+    const resolved = resolvePaneDrop({
+      paneRect,
+      stripBottom,
+      clientX: event.clientX,
+      clientY: event.clientY,
+      sourcePaneId: dragged.sourcePaneId,
+      targetPaneId: props.paneId,
+      draggedTabId: dragged.tabId,
+      frames,
+    });
+    nativeZone = resolved.zone;
+    nativeIndex = resolved.targetIndex;
     dragState?.setTarget({ paneId: props.paneId, zone: nativeZone });
   }
 
@@ -63,7 +84,7 @@
       dragged.sourcePaneId,
       props.paneId,
       dragged.tabId,
-      props.targetIndex,
+      nativeIndex,
       tabDropEdge(zone),
     );
     clearDrag();
@@ -71,6 +92,7 @@
 
   function clearDrag(): void {
     nativeZone = null;
+    nativeIndex = 0;
     dragState?.setTarget(undefined);
     document.body.classList.remove('dragging-tab');
   }
@@ -80,15 +102,29 @@
     if (pointerTarget?.paneId === props.paneId) dragState?.setTarget(undefined);
   }
 
+  function tabFrames(pane: HTMLElement): readonly TabInsertionFrame[] {
+    return [
+      ...pane.querySelectorAll<HTMLElement>('.tab-frame[data-tab-id]'),
+    ].map((element) => {
+      const rect = element.getBoundingClientRect();
+      return {
+        tabId: element.dataset.tabId ?? '',
+        left: rect.left,
+        width: rect.width,
+      };
+    });
+  }
+
   $effect(() => {
     const active = zone;
-    if (!active || !layer) {
+    const pane = paneElement();
+    if (!active || !pane) {
       style = '';
       return;
     }
     void tick().then(() => {
-      if (!layer || zone !== active) return;
-      style = tabDropOverlayStyle(layer.getBoundingClientRect(), active);
+      if (!pane || zone !== active) return;
+      style = tabDropOverlayStyle(pane.getBoundingClientRect(), active);
     });
   });
 
@@ -96,7 +132,7 @@
 </script>
 
 <div
-  bind:this={layer}
+  bind:this={paneRoot}
   role="presentation"
   class="pane-drop-layer"
   class:active={Boolean(zone)}

@@ -5,9 +5,10 @@ export type NewTabOption = {
   readonly label: string;
   readonly description: string;
   readonly group: 'primary' | 'secondary';
+  readonly config?: Record<string, unknown>;
 };
 
-export const newTabOptions: readonly NewTabOption[] = [
+const baseOptions: readonly NewTabOption[] = [
   {
     kind: 'timeline',
     label: 'Home',
@@ -99,3 +100,25 @@ export const newTabOptions: readonly NewTabOption[] = [
     group: 'secondary',
   },
 ];
+
+export function newTabOptionsForAccount(
+  activePubkey?: string,
+): readonly NewTabOption[] {
+  if (!activePubkey) return baseOptions;
+  const profile: NewTabOption = {
+    kind: 'profile',
+    label: 'My Profile',
+    description: 'Active account profile.',
+    group: 'primary',
+    config: { pubkey: activePubkey },
+  };
+  const globalIndex = baseOptions.findIndex((o) => o.kind === 'global');
+  return [
+    ...baseOptions.slice(0, globalIndex + 1),
+    profile,
+    ...baseOptions.slice(globalIndex + 1),
+  ];
+}
+
+/** @deprecated use newTabOptionsForAccount */
+export const newTabOptions = baseOptions;

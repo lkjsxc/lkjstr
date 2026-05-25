@@ -36,12 +36,12 @@ describe('settings store helpers', () => {
 
   it('enforces numeric bounds', () => {
     const setting = defaultSettings().find(
-      (item) => item.key === 'cache.maxEvents',
+      (item) => item.key === 'timeline.initialLimit',
     );
     if (!setting) throw new Error('expected setting');
-    expect(setting).toMatchObject({ min: 100, integer: true });
-    expect(coerceValue(setting, 50)).toEqual({ ok: false });
-    expect(coerceValue(setting, 5000)).toEqual({ ok: true, value: 5000 });
+    expect(setting).toMatchObject({ min: 10, integer: true });
+    expect(coerceValue(setting, 5)).toEqual({ ok: false });
+    expect(coerceValue(setting, 50)).toEqual({ ok: true, value: 50 });
   });
 
   it('coerces Tweet media upload provider settings', () => {
@@ -91,7 +91,7 @@ describe('settings store helpers', () => {
   it('rejects invalid imported values', async () => {
     await expect(
       importSettingsJson(
-        JSON.stringify([{ key: 'cache.maxAgeDays', value: 0 }]),
+        JSON.stringify([{ key: 'timeline.initialLimit', value: 0 }]),
       ),
     ).rejects.toThrow(/invalid setting value/);
   });

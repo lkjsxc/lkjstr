@@ -1,4 +1,5 @@
-import { tabDropZone, type TabDropZone } from './tab-drop-zone';
+import { resolvePaneDrop } from './pane-drop-resolve';
+import type { TabDropZone } from './tab-drop-hit';
 
 export type PointerDragSnapshot = {
   readonly sourcePaneId: string;
@@ -74,13 +75,26 @@ export function pointerDragTarget(
       targetIndex: undefined,
       zone: undefined,
     };
-  const zoneRect = pointerZoneRect(target) ?? target.getBoundingClientRect();
-  const zone = tabDropZone(zoneRect, snapshot.x, snapshot.y);
+  const paneRect = target.getBoundingClientRect();
+  const strip = target.querySelector<HTMLElement>('.tab-strip');
+  const stripBottom = strip
+    ? strip.getBoundingClientRect().bottom
+    : paneRect.top;
+  const resolved = resolvePaneDrop({
+    paneRect,
+    stripBottom,
+    clientX: snapshot.x,
+    clientY: snapshot.y,
+    sourcePaneId: snapshot.sourcePaneId,
+    targetPaneId,
+    draggedTabId: snapshot.tabId,
+    frames: tabFrames(doc, targetPaneId),
+  });
   return {
     ...snapshot,
     targetPaneId,
-    targetIndex: pointerInsertionIndex(doc, targetPaneId, snapshot),
-    zone,
+    targetIndex: resolved.targetIndex,
+    zone: resolved.zone,
   };
 }
 
@@ -96,18 +110,6 @@ export function tabInsertionIndex(
   return target === -1 ? candidates.length : target;
 }
 
-function pointerInsertionIndex(
-  doc: Document,
-  targetPaneId: string,
-  snapshot: PointerDragSnapshot,
-): number {
-  return tabInsertionIndex(
-    tabFrames(doc, targetPaneId),
-    snapshot.x,
-    snapshot.sourcePaneId === targetPaneId ? snapshot.tabId : undefined,
-  );
-}
-
 function tabFrames(doc: Document, targetPaneId: string): TabInsertionFrame[] {
   return [
     ...doc.querySelectorAll<HTMLElement>(
@@ -121,14 +123,6 @@ function tabFrames(doc: Document, targetPaneId: string): TabInsertionFrame[] {
       width: rect.width,
     };
   });
-}
-
-function pointerZoneRect(target: HTMLElement): DOMRect | undefined {
-  return (
-    target.matches('.pane-drop-layer')
-      ? target
-      : target.querySelector<HTMLElement>('.pane-drop-layer')
-  )?.getBoundingClientRect();
 }
 
 function cssEscape(value: string): string {

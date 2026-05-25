@@ -1,9 +1,5 @@
-import {
-  findPane,
-  removePane,
-  splitPane,
-  type SplitDirection,
-} from './layout-tree';
+import { findPane, removePane } from './layout-tree';
+import { insertPaneBySplitIntent } from './insert-pane-split';
 import { createPane } from './pane';
 import {
   insertMovedTab,
@@ -118,15 +114,7 @@ function moveWorkspaceTabToEdge(
     delete tabGroups[sourceGroup.id];
     layout = removePane(layout, input.sourcePaneId) ?? layout;
   } else tabGroups[sourceGroup.id] = nextSourceGroup;
-  const side =
-    input.edge === 'left' || input.edge === 'top' ? 'before' : 'after';
-  layout = splitPane(
-    layout,
-    targetPaneId,
-    directionFor(input.edge),
-    newPane,
-    side,
-  );
+  layout = insertPaneBySplitIntent(layout, targetPaneId, input.edge, newPane);
   return touch({
     ...workspace,
     layout,
@@ -134,10 +122,6 @@ function moveWorkspaceTabToEdge(
     focusedPaneId: newPane.id,
     focusedTabId: input.tabId,
   });
-}
-
-function directionFor(edge: TabDropEdge): SplitDirection {
-  return edge === 'left' || edge === 'right' ? 'horizontal' : 'vertical';
 }
 
 function touch(workspace: Workspace): Workspace {

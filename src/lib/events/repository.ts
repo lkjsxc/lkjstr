@@ -19,6 +19,7 @@ import {
   putMemory,
 } from './repository-memory';
 import { receipt, tagRows } from './repository-shared';
+import { upsertEventPriority } from '../cache/event-priority';
 import { normalizeStoredEvent } from './normalize';
 import { storeRelayListSuggestionsFromEvent } from '../relays/relay-list-suggestions';
 import { storeRoutesFromEvent } from '../relays/relay-route-store';
@@ -60,11 +61,13 @@ export async function upsertEvent(
       browserDb().events,
       browserDb().eventRelays,
       browserDb().eventTags,
+      browserDb().eventPriority,
       async () => {
         await browserDb().events.put(stored);
         await browserDb().eventRelays.bulkPut(receipts);
         await browserDb().eventTags.where('eventId').equals(event.id).delete();
         if (tags.length > 0) await browserDb().eventTags.bulkPut(tags);
+        await upsertEventPriority(event, tags);
       },
     );
   });

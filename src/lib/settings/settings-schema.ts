@@ -36,9 +36,6 @@ tweet.defaultPublishMode|Publish mode|enum|selected-relays|Tweet publish target.
 tweet.mediaUploadProvider|Media upload provider|enum|nostr-build|NIP-96 upload provider.|disabled,nostr-build,nostrcheck,void-cat,custom
 tweet.mediaUploadCustomServer|Custom upload server|string||Optional HTTPS NIP-96 upload server.
 tweet.mediaUploadNoTransform|No transform upload|boolean|true|Request original media upload.
-cache.maxEvents|Max events|number|5000|Cached event limit.
-cache.maxAgeDays|Max age days|number|30|Cached event age limit.
-cache.compactionEnabled|Compaction|boolean|true|Enable compaction.
 accounts.defaultMode|Account mode|enum|read-only|Default account mode.|read-only,nip07
 security.allowLocalNsecImport|Local nsec|boolean|false|Allow local nsec import.
 security.logSensitiveValues|Sensitive logs|boolean|false|Log sensitive values.
@@ -75,8 +72,6 @@ const numericConstraints: Record<
   },
   'timeline.initialLimit': { min: 10, max: 180, step: 1, integer: true },
   'relays.connectTimeoutMs': { min: 500, max: 30000, step: 100, integer: true },
-  'cache.maxEvents': { min: 100, max: 100000, step: 100, integer: true },
-  'cache.maxAgeDays': { min: 1, max: 3650, step: 1, integer: true },
 };
 
 export function defaultSettings(now = 0): SettingRecord[] {
