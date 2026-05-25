@@ -94,7 +94,8 @@
     nativeZone = null;
     nativeIndex = 0;
     dragState?.setTarget(undefined);
-    document.body.classList.remove('dragging-tab');
+    if (typeof document !== 'undefined')
+      document.body.classList.remove('dragging-tab');
   }
 
   function dragLeave(): void {

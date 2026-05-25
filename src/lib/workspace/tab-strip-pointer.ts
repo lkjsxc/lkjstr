@@ -23,7 +23,9 @@ export function startStripPointer(
   tabId: string,
   event: PointerEvent,
 ): StripPointerSession {
-  const kind = pointerKind(event.pointerType, navigator.maxTouchPoints);
+  const touchPoints =
+    typeof navigator !== 'undefined' ? navigator.maxTouchPoints : 0;
+  const kind = pointerKind(event.pointerType, touchPoints);
   const session: StripPointerSession = {
     snapshot: startPointerTabDrag(
       paneId,

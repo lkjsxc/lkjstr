@@ -108,18 +108,26 @@
   function clearPointerDrag(): void {
     if (session) {
       clearStripTimer(session);
-      window.removeEventListener('pointermove', pointerMove);
-      window.removeEventListener('pointerup', pointerUp);
-      window.removeEventListener('pointercancel', pointerCancel);
-      if (dragElement?.hasPointerCapture(session.snapshot.pointerId))
-        dragElement.releasePointerCapture(session.snapshot.pointerId);
+      if (typeof window !== 'undefined') {
+        window.removeEventListener('pointermove', pointerMove);
+        window.removeEventListener('pointerup', pointerUp);
+        window.removeEventListener('pointercancel', pointerCancel);
+        if (dragElement?.hasPointerCapture(session.snapshot.pointerId)) {
+          try {
+            dragElement.releasePointerCapture(session.snapshot.pointerId);
+          } catch {
+            /* synthetic pointer tests may not support capture release */
+          }
+        }
+      }
     }
     session = undefined;
     ghost = undefined;
     dragElement?.classList.remove('tab-frame--dragging');
     dragElement = undefined;
     dragState?.setTarget(undefined);
-    document.body.classList.remove('dragging-tab');
+    if (typeof document !== 'undefined')
+      document.body.classList.remove('dragging-tab');
   }
 
   function targetCount(targetPaneId: string): number {
