@@ -1,3 +1,9 @@
+import {
+  incMemoryCounter,
+  decMemoryCounter,
+  setMemoryCounter,
+} from '../app/memory-counters';
+
 export type SessionTabSnapshot = {
   readonly id: string;
 };
@@ -31,7 +37,10 @@ export function createSessionTabSnapshots<T extends SessionTabSnapshot>(
 
   const clearTimer = (tabId: string): void => {
     const timer = timers.get(tabId);
-    if (timer) clearTimeout(timer);
+    if (timer) {
+      clearTimeout(timer);
+      decMemoryCounter('active-timers');
+    }
     timers.delete(tabId);
   };
   const release = (
@@ -40,6 +49,7 @@ export function createSessionTabSnapshots<T extends SessionTabSnapshot>(
   ): void => {
     clearTimer(tabId);
     if (!items.delete(tabId)) return;
+    decMemoryCounter('closed-tab-snapshots');
     released(tabId, reason);
     changed();
   };
@@ -64,6 +74,8 @@ export function createSessionTabSnapshots<T extends SessionTabSnapshot>(
           seconds * 1000,
         ),
       );
+      incMemoryCounter('active-timers');
+      incMemoryCounter('closed-tab-snapshots');
       prune();
       changed();
     },
@@ -71,7 +83,10 @@ export function createSessionTabSnapshots<T extends SessionTabSnapshot>(
       const snapshot = items.get(tabId);
       clearTimer(tabId);
       items.delete(tabId);
-      if (snapshot) changed();
+      if (snapshot) {
+        decMemoryCounter('closed-tab-snapshots');
+        changed();
+      }
       return snapshot;
     },
     release,
@@ -79,6 +94,8 @@ export function createSessionTabSnapshots<T extends SessionTabSnapshot>(
       reason: SnapshotRetentionReason = 'retention-disabled',
     ): void => {
       for (const tabId of [...items.keys()]) release(tabId, reason);
+      setMemoryCounter('closed-tab-snapshots', 0);
+      setMemoryCounter('active-timers', 0);
     },
     releaseMissing: (validIds: ReadonlySet<string>): void => {
       for (const tabId of [...items.keys()]) {

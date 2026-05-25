@@ -1,5 +1,6 @@
 <script lang="ts">
   import { onMount } from 'svelte';
+  import { installMemoryDebugExport } from '$lib/app/memory-debug';
   import { logRuntimeError } from '$lib/app/runtime-log';
   import type { Account } from '$lib/accounts/account';
   import {
@@ -49,6 +50,7 @@
   let inactiveRetentionSeconds = $state(300);
 
   onMount(() => {
+    installMemoryDebugExport();
     let disposed = false;
     // prettier-ignore
     const refreshSettings = () => { if (!disposed) void refreshRuntimeSettings().catch(logRuntimeError('settings-load-failed')); };

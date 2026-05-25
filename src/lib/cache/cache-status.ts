@@ -32,12 +32,14 @@ export async function cacheStatus(): Promise<CacheMetadata> {
 async function profileCount(): Promise<number> {
   const fallback = uniqueProfilePubkeys(allMemoryEvents());
   return boundedStorageRead(
-    () =>
-      browserDb()
+    async () => {
+      const pubkeys = new Set<string>();
+      await browserDb()
         .events.where('kind')
         .equals(0)
-        .toArray()
-        .then(uniqueProfilePubkeys),
+        .each((event) => pubkeys.add(event.pubkey));
+      return pubkeys.size;
+    },
     fallback,
   );
 }

@@ -1,6 +1,5 @@
-import {
-  setRuntimeCounterActive,
-} from '../app/runtime-counters';
+import { incMemoryCounter, decMemoryCounter } from '../app/memory-counters';
+import { setRuntimeCounterActive } from '../app/runtime-counters';
 
 export const defaultStorageTimeoutMs = 150;
 
@@ -55,12 +54,14 @@ export async function boundedStorageRead<T>(
 ): Promise<T> {
   if (!indexedDbAvailable()) return fallback;
   setRuntimeCounterActive('active-indexeddb-ops', 1);
+  incMemoryCounter('active-indexeddb-ops');
   try {
     return await withTimeout(read(), fallback, timeoutMs);
   } catch {
     return fallback;
   } finally {
     setRuntimeCounterActive('active-indexeddb-ops', -1);
+    decMemoryCounter('active-indexeddb-ops');
   }
 }
 
@@ -70,12 +71,14 @@ export async function bestEffortStorageWrite(
 ): Promise<void> {
   if (!indexedDbAvailable()) return;
   setRuntimeCounterActive('active-indexeddb-ops', 1);
+  incMemoryCounter('active-indexeddb-ops');
   try {
     await withTimeout(write(), undefined, timeoutMs);
   } catch {
     return;
   } finally {
     setRuntimeCounterActive('active-indexeddb-ops', -1);
+    decMemoryCounter('active-indexeddb-ops');
   }
 }
 

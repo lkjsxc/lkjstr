@@ -1,3 +1,4 @@
+import { setMemoryCounter } from '../app/memory-counters';
 import type { NostrEvent } from '../protocol';
 import { customEmojis } from '../protocol';
 import { createBoundedMap } from '../fp/bounded-map';
@@ -13,11 +14,13 @@ export function setProfile(profile: ProfileSummary): ProfileSummary {
   const existing = profiles.get(profile.pubkey);
   if (existing && existing.updatedAt > profile.updatedAt) return existing;
   profiles.set(profile.pubkey, profile);
+  setMemoryCounter('profile-summary-cache-count', profiles.size());
   return profile;
 }
 
 export function clearProfileCacheForTests(): void {
   profiles.clear();
+  setMemoryCounter('profile-summary-cache-count', 0);
 }
 
 export function profileCacheSizeForTests(): number {

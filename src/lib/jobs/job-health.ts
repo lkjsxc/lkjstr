@@ -23,7 +23,10 @@ const emptyCounts: Record<JobStatus, number> = {
 export async function loadJobHealthSummary(
   now = Date.now(),
 ): Promise<JobHealthSummary> {
-  const jobs = await boundedStorageRead(() => browserDb().jobs.toArray(), []);
+  const jobs = await boundedStorageRead(
+    () => browserDb().jobs.orderBy('updatedAt').reverse().limit(5000).toArray(),
+    [],
+  );
   return jobHealthSummary(jobs, now);
 }
 

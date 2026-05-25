@@ -82,7 +82,12 @@ export async function listRelayInformation(): Promise<
   RelayInformationRecord[]
 > {
   const records = await boundedStorageRead(
-    () => browserDb().relayInformation.toArray(),
+    () =>
+      browserDb()
+        .relayInformation.orderBy('fetchedAt')
+        .reverse()
+        .limit(500)
+        .toArray(),
     [...memoryInfo.values()],
   );
   return records.sort((a, b) => b.fetchedAt - a.fetchedAt);

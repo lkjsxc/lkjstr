@@ -1,4 +1,9 @@
 import { normalizeRelayUrl } from '../protocol';
+import {
+  incMemoryCounter,
+  decMemoryCounter,
+  setMemoryCounter,
+} from '../app/memory-counters';
 import type { RelaySnapshot } from './types';
 
 export type PerRelayReadLimiter = ReturnType<typeof createPerRelayReadLimiter>;
@@ -26,6 +31,7 @@ export function createPerRelayReadLimiter(limit: number) {
         resolve: () => {
           signal?.removeEventListener('abort', waiter.abort);
           active.set(relay, (active.get(relay) ?? 0) + 1);
+          decMemoryCounter('queued-read-waiters');
           resolve();
         },
         reject,
@@ -37,6 +43,7 @@ export function createPerRelayReadLimiter(limit: number) {
       queue.push(waiter);
       signal?.addEventListener('abort', waiter.abort, { once: true });
       queues.set(relay, queue);
+      incMemoryCounter('queued-read-waiters');
     });
   };
 
@@ -44,8 +51,10 @@ export function createPerRelayReadLimiter(limit: number) {
     const queue = queues.get(relay);
     if (!queue) return;
     const next = queue.filter((item) => item !== waiter);
+    if (next.length === queue.length) return;
     if (next.length > 0) queues.set(relay, next);
     else queues.delete(relay);
+    decMemoryCounter('queued-read-waiters');
   };
 
   const activateNext = (relay: string): void => {
@@ -62,6 +71,7 @@ export function createPerRelayReadLimiter(limit: number) {
       }
     }
     queues.clear();
+    setMemoryCounter('queued-read-waiters', 0);
   };
 
   const releaseOne = (relay: string): void => {

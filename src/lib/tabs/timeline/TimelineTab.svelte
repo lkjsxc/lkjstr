@@ -1,6 +1,11 @@
 <script lang="ts">
   import { onDestroy } from 'svelte';
   import {
+    decMemoryCounter,
+    incMemoryCounter,
+  } from '$lib/app/memory-counters';
+  import { reportFeedRuntimeWindowSize } from '$lib/app/memory-debug';
+  import {
     countRuntime,
     setRuntimeCounterActive,
     type RuntimeCounterKey,
@@ -81,6 +86,7 @@
       ),
       activeAccountPubkey: props.activeAccountPubkey,
     };
+    incMemoryCounter('active-tab-runtimes');
     runtime =
       props.kind === 'global'
         ? createGlobalTimelineRuntime(options)
@@ -94,7 +100,10 @@
     });
     countRuntime(props.kind === 'global' ? 'timeline:global' : 'timeline:home', 'created');
     setRuntimeCounterActive(props.kind === 'global' ? 'timeline:global' : 'timeline:home', 1);
-    unsubscribe = runtime.subscribe((next) => (state = next));
+    unsubscribe = runtime.subscribe((next) => {
+      state = next;
+      reportFeedRuntimeWindowSize(next.items.length);
+    });
     runtime.start();
   });
 
@@ -104,6 +113,7 @@
     if (!runtime) return;
     unsubscribe?.();
     runtime.close();
+    decMemoryCounter('active-tab-runtimes');
     const reason =
       code === 'timeline-runtime-destroy'
         ? consumeTabCloseReason(props.tabId)

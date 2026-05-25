@@ -1,3 +1,5 @@
+import { incMemoryCounter, decMemoryCounter } from '../app/memory-counters';
+
 export type SharedAbortController = ReturnType<
   typeof createSharedAbortController
 >;
@@ -14,13 +16,16 @@ export function createSharedAbortController() {
     }
     signal.addEventListener('abort', abort, { once: true });
     cleanups.push(() => signal.removeEventListener('abort', abort));
+    incMemoryCounter('active-abort-listeners');
   };
   return {
     signal: controller.signal,
     abort: () => controller.abort(),
     attachSignal,
     detachSignals: (): void => {
+      const count = cleanups.length;
       for (const cleanup of cleanups.splice(0)) cleanup();
+      decMemoryCounter('active-abort-listeners', count);
     },
   };
 }

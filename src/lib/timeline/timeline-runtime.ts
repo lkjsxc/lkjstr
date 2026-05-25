@@ -16,7 +16,11 @@ import { accountHomeAuthors, authorFilters } from './follow-list';
 import { loadAccountHome, loadCachedAccountHome } from './timeline-load';
 import type { TimelineLoad } from './timeline-load';
 // prettier-ignore
-import { loadInitialTimelinePage, loadNewerTimelinePage, loadOlderTimelinePage } from './timeline-runtime-paging';
+import {
+  loadInitialTimelinePage,
+  loadNewerTimelinePage,
+  loadOlderTimelinePage,
+} from './timeline-runtime-paging';
 import { profileFilter, storeTimelineProfile } from './timeline-profiles';
 // prettier-ignore
 import { needsSelfFallback, relayStatePatch, selectedRelaySnapshots } from './timeline-relay-state';

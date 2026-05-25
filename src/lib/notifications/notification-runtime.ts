@@ -19,6 +19,7 @@ import {
   markAccountNotificationsRead,
   saveNotifications,
 } from './notification-store';
+import { trackNotificationRecords } from '../app/tab-runtime-counters';
 import { windowNotifications } from './notification-window';
 
 export const notificationEventKinds = [0, 1, 6, 7, 16, 9735] as const;
@@ -44,6 +45,7 @@ export function createNotificationRuntime(
   const emit = (next: NotificationState): void => {
     if (closed) return;
     state = { ...next, oldestCreatedAt: next.items.at(-1)?.event.created_at };
+    trackNotificationRecords(next.records.length);
     listeners.forEach((listener) => listener(state));
   };
   const reload = async (
@@ -114,7 +116,14 @@ export function createNotificationRuntime(
       } catch (error) { emit({ ...state, error: boundedErrorText(error) }); }
       finally { if (state.loadingOlder) emit({ ...state, loadingOlder: false }); }
     },
-    close: (): void => { closed = true; generation++; controller.abort(); for (const item of cleanup.splice(0)) item(); listeners.clear(); },
+    close: (): void => {
+      closed = true;
+      generation++;
+      controller.abort();
+      for (const item of cleanup.splice(0)) item();
+      listeners.clear();
+      trackNotificationRecords(0);
+    },
   };
   return runtime;
 }

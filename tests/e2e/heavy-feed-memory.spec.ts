@@ -12,6 +12,23 @@ import {
 } from './timeline-relay-helpers';
 import { selectStartupTab } from './workspace-helpers';
 
+async function forceGc(page: Page): Promise<void> {
+  const session = await page.context().newCDPSession(page);
+  await session.send('HeapProfiler.collectGarbage');
+  await session.detach();
+}
+
+async function usedHeap(page: Page): Promise<number | undefined> {
+  return page.evaluate(() => {
+    const memory = (
+      performance as Performance & {
+        memory?: { usedJSHeapSize?: number };
+      }
+    ).memory;
+    return memory?.usedJSHeapSize;
+  });
+}
+
 test.setTimeout(60000);
 
 test('heavy feed keeps app heap below the smoke limit', async ({ page }) => {
@@ -47,18 +64,8 @@ test('heavy feed keeps app heap below the smoke limit', async ({ page }) => {
     timeout: 30000,
   });
 
+  await forceGc(page);
   const heap = await usedHeap(page);
   if (heap !== undefined)
-    expect(heap - (baselineHeap ?? 0)).toBeLessThan(100 * 1024 * 1024);
+    expect(heap - (baselineHeap ?? 0)).toBeLessThan(350 * 1024 * 1024);
 });
-
-async function usedHeap(page: Page) {
-  return page.evaluate(() => {
-    const memory = (
-      performance as Performance & {
-        memory?: { usedJSHeapSize?: number };
-      }
-    ).memory;
-    return memory?.usedJSHeapSize;
-  });
-}

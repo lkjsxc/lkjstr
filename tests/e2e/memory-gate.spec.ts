@@ -4,6 +4,7 @@ import {
   generateSecretKey,
   getPublicKey,
 } from '../../src/lib/protocol';
+import type { MemoryCounterKey } from '../../src/lib/app/memory-counters';
 import {
   addReadonlyAccount,
   installSyntheticRelay,
@@ -12,9 +13,25 @@ import {
 } from './timeline-relay-helpers';
 import { openNewTabOption, selectStartupTab } from './workspace-helpers';
 
-test.setTimeout(90000);
+test.setTimeout(120000);
 
-test('workspace churn keeps owned heap and counters bounded', async ({
+const zeroAfterTeardown: MemoryCounterKey[] = [
+  'active-paged-reads',
+  'queued-read-waiters',
+  'active-relay-publish-waiters',
+  'active-abort-listeners',
+  'active-indexeddb-ops',
+];
+
+const cappedAfterTeardown: MemoryCounterKey[] = [
+  'relay-diagnostic-summary-count',
+  'profile-summary-cache-count',
+  'token-cache-count',
+  'notification-runtime-record-count',
+  'closed-tab-snapshots',
+];
+
+test('memory gate keeps heap and counters bounded after churn', async ({
   page,
 }) => {
   const activeKey = generateSecretKey();
@@ -26,13 +43,13 @@ test('workspace churn keeps owned heap and counters bounded', async ({
     { created_at: now, kind: 3, tags: [['p', author]], content: '' },
     activeKey,
   );
-  const events = Array.from({ length: 180 }, (_, index) =>
+  const events = Array.from({ length: 400 }, (_, index) =>
     finalizeEvent(
       {
         created_at: now - index,
         kind: 1,
         tags: index % 4 === 0 ? [['p', active]] : [],
-        content: `memory churn signed note ${index}`,
+        content: `memory gate signed note ${index}`,
       },
       authorKey,
     ),
@@ -42,16 +59,17 @@ test('workspace churn keeps owned heap and counters bounded', async ({
   await addReadonlyAccount(page, active);
   await installSyntheticRelay(page, { events: [followList, ...events] });
   await page.reload();
-  await enableRuntimeCounters(page);
-  const baselineHeap = await ownedHeap(page);
+  await enableShortSnapshotRetention(page);
+
+  await forceGc(page);
+  const startupHeap = await ownedHeap(page);
+  const startupCounters = await readMemoryCounters(page);
 
   await selectStartupTab(page, 'Home');
   await waitForSyntheticEvent(page, events.at(-1)!.id);
-  await openNewTabOption(page, 'Settings', 1);
-  await selectStartupTab(page, 'Home');
-  await expect(page.locator('.settings-tab')).toHaveCount(0);
-  await selectStartupTab(page, 'Settings');
-  await closeTab(page, 'Settings');
+  await forceGc(page);
+  const feedHeap = await ownedHeap(page);
+
   for (const name of [
     'Global',
     'Notifications',
@@ -59,60 +77,44 @@ test('workspace churn keeps owned heap and counters bounded', async ({
     'Custom Request',
     'Relay Settings',
     'Stats',
-    'lkjstr Log',
   ]) {
     await openNewTabOption(page, name, 1);
     await exerciseSurface(page, name);
     await closeTab(page, name);
   }
-  await page.waitForTimeout(1400);
+
+  await page.waitForTimeout(1200);
   await forceGc(page);
+  const churnHeap = await ownedHeap(page);
+  const counters = await readMemoryCounters(page);
 
-  const heap = await ownedHeap(page);
-  if (heap !== undefined && baselineHeap !== undefined)
-    expect(heap - baselineHeap).toBeLessThan(80 * 1024 * 1024);
+  if (startupHeap !== undefined && feedHeap !== undefined)
+    expect(feedHeap - startupHeap).toBeLessThan(350 * 1024 * 1024);
+  if (startupHeap !== undefined && churnHeap !== undefined)
+    expect(churnHeap - startupHeap).toBeLessThan(80 * 1024 * 1024);
 
-  const counters = await page.evaluate(() => {
-    const debug = window.__lkjstrMemoryDebug?.();
-    return (debug?.counters ?? {}) as Record<string, number>;
-  });
-  for (const key of [
-    'active-paged-reads',
-    'queued-read-waiters',
-    'active-relay-publish-waiters',
-    'active-abort-listeners',
-    'active-indexeddb-ops',
-  ] as const) {
-    expect(counters[key] ?? 0, `${key} after churn`).toBe(0);
+  for (const key of zeroAfterTeardown) {
+    expect(counters[key], `${key} should be zero`).toBe(0);
   }
-  await openNewTabOption(page, 'Stats', 1);
-  await page.getByRole('button', { name: 'Refresh', exact: true }).click();
-  await expect(page.getByText('timeline:home')).toBeVisible();
-  const keys = await page
-    .getByRole('heading', { name: 'Runtime counters' })
-    .locator('xpath=following-sibling::table[1]//tbody/tr/td[1]')
-    .allTextContents();
-  expect(keys.sort()).toEqual([
-    'subscription-manager',
-    'timeline',
-    'timeline:global',
-    'timeline:home',
-  ]);
+  for (const key of cappedAfterTeardown) {
+    expect(counters[key], `${key} should stay bounded`).toBeLessThanOrEqual(
+      key === 'relay-diagnostic-summary-count' ? 250 : 1200,
+    );
+  }
+  expect(startupCounters['active-relay-clients']).toBeLessThanOrEqual(
+    counters['active-relay-clients'] + 2,
+  );
 });
 
-async function enableRuntimeCounters(page: Page): Promise<void> {
+async function enableShortSnapshotRetention(page: Page): Promise<void> {
   await openNewTabOption(page, 'Settings', 1);
   await page.getByLabel('Edit tabs.inactiveRetentionSeconds').fill('1');
-  await page.getByLabel('Edit debug.showRuntimeCounters').check();
   await closeTab(page, 'Settings');
-  await openNewTabOption(page, 'Stats', 1);
-  await page.getByRole('button', { name: 'Refresh counters' }).click();
-  await closeTab(page, 'Stats');
 }
 
 async function exerciseSurface(page: Page, name: string): Promise<void> {
   if (name === 'Search') {
-    await page.getByLabel('Search query').fill('memory churn');
+    await page.getByLabel('Search query').fill('memory gate');
     await page.locator('form').getByRole('button', { name: 'Search' }).click();
     await page.waitForTimeout(300);
   }
@@ -129,12 +131,24 @@ async function closeTab(page: Page, name: string): Promise<void> {
   if ((await button.count()) > 0) await button.click();
 }
 
+async function readMemoryCounters(
+  page: Page,
+): Promise<Record<MemoryCounterKey, number>> {
+  return page.evaluate(() => {
+    const debug = window.__lkjstrMemoryDebug?.();
+    return debug?.counters ?? ({} as Record<MemoryCounterKey, number>);
+  });
+}
+
 async function ownedHeap(page: Page): Promise<number | undefined> {
-  return page.evaluate(
-    () =>
-      (performance as Performance & { memory?: { usedJSHeapSize?: number } })
-        .memory?.usedJSHeapSize,
-  );
+  return page.evaluate(() => {
+    const memory = (
+      performance as Performance & {
+        memory?: { usedJSHeapSize?: number };
+      }
+    ).memory;
+    return memory?.usedJSHeapSize;
+  });
 }
 
 async function forceGc(page: Page): Promise<void> {

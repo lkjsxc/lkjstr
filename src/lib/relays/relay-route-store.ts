@@ -26,16 +26,29 @@ const memoryBlocks = createBoundedMap<string, RelayRouteBlock>({
 export async function saveAuthorRelayRoute(
   input: Omit<RelayRoute, 'id' | 'updatedAt'>,
 ): Promise<void> {
-  const relayUrl = normalizeRelayUrl(input.relayUrl);
-  if (!relayUrl || !isPubkey(input.authorPubkey)) return;
-  const route = {
-    ...input,
-    relayUrl,
-    id: routeId(input.authorPubkey, relayUrl, input.source),
-    updatedAt: Date.now(),
-  };
-  memoryRoutes.set(route.id, route);
-  await bestEffortStorageWrite(() => browserDb().authorRelayRoutes.put(route));
+  await saveAuthorRelayRoutes([input]);
+}
+
+export async function saveAuthorRelayRoutes(
+  inputs: readonly Omit<RelayRoute, 'id' | 'updatedAt'>[],
+): Promise<void> {
+  const routes: RelayRoute[] = [];
+  for (const input of inputs) {
+    const relayUrl = normalizeRelayUrl(input.relayUrl);
+    if (!relayUrl || !isPubkey(input.authorPubkey)) continue;
+    const route = {
+      ...input,
+      relayUrl,
+      id: routeId(input.authorPubkey, relayUrl, input.source),
+      updatedAt: Date.now(),
+    };
+    memoryRoutes.set(route.id, route);
+    routes.push(route);
+  }
+  if (routes.length === 0) return;
+  await bestEffortStorageWrite(() =>
+    browserDb().authorRelayRoutes.bulkPut(routes),
+  );
 }
 
 export async function saveRouteBlock(
@@ -60,7 +73,8 @@ export async function clearRouteBlock(relayUrl: string): Promise<void> {
 
 export async function blockedRelayUrls(): Promise<Set<string>> {
   const rows = await boundedStorageRead(
-    () => browserDb().relayRouteBlocks.toArray(),
+    () =>
+      browserDb().relayRouteBlocks.orderBy('updatedAt').reverse().limit(500).toArray(),
     [...memoryBlocks.values()],
   );
   return new Set(rows.map((row) => row.relayUrl));
@@ -94,12 +108,12 @@ export async function storeRoutesFromEvent(
   event: NostrEvent,
   relayUrls: readonly string[],
 ): Promise<void> {
-  const writes: Promise<void>[] = [];
+  const inputs: Omit<RelayRoute, 'id' | 'updatedAt'>[] = [];
   if (event.kind === kinds.relayListMetadata)
-    writes.push(...nip65Routes(event));
-  if (event.kind === kinds.followList) writes.push(...nip02Routes(event));
-  writes.push(...receiptRoutes(event, relayUrls));
-  await Promise.all(writes);
+    inputs.push(...nip65RouteInputs(event));
+  if (event.kind === kinds.followList) inputs.push(...nip02RouteInputs(event));
+  inputs.push(...receiptRouteInputs(event, relayUrls));
+  await saveAuthorRelayRoutes(inputs);
 }
 
 export function clearRelayRoutesForTests(): void {
@@ -114,47 +128,45 @@ export function routeAllowed(
   return route.purpose === purpose || route.purpose === 'both';
 }
 
-function nip65Routes(event: NostrEvent): Promise<void>[] {
+function nip65RouteInputs(
+  event: NostrEvent,
+): Omit<RelayRoute, 'id' | 'updatedAt'>[] {
   return event.tags
     .filter((tag) => tag[0] === 'r' && tag[1])
-    .map((tag) =>
-      saveAuthorRelayRoute({
-        authorPubkey: event.pubkey,
-        relayUrl: tag[1],
-        source: 'nip65',
-        purpose: nip65Purpose(tag[2]),
-        eventId: event.id,
-      }),
-    );
+    .map((tag) => ({
+      authorPubkey: event.pubkey,
+      relayUrl: tag[1],
+      source: 'nip65' as const,
+      purpose: nip65Purpose(tag[2]),
+      eventId: event.id,
+    }));
 }
 
-function nip02Routes(event: NostrEvent): Promise<void>[] {
+function nip02RouteInputs(
+  event: NostrEvent,
+): Omit<RelayRoute, 'id' | 'updatedAt'>[] {
   return event.tags
     .filter((tag) => tag[0] === 'p' && tag[1] && tag[2])
-    .map((tag) =>
-      saveAuthorRelayRoute({
-        authorPubkey: tag[1],
-        relayUrl: tag[2],
-        source: 'nip02',
-        purpose: 'write',
-        eventId: event.id,
-      }),
-    );
+    .map((tag) => ({
+      authorPubkey: tag[1],
+      relayUrl: tag[2],
+      source: 'nip02' as const,
+      purpose: 'write' as const,
+      eventId: event.id,
+    }));
 }
 
-function receiptRoutes(
+function receiptRouteInputs(
   event: NostrEvent,
   relayUrls: readonly string[],
-): Promise<void>[] {
-  return relayUrls.map((relayUrl) =>
-    saveAuthorRelayRoute({
-      authorPubkey: event.pubkey,
-      relayUrl,
-      source: 'event-receipt',
-      purpose: 'write',
-      eventId: event.id,
-    }),
-  );
+): Omit<RelayRoute, 'id' | 'updatedAt'>[] {
+  return relayUrls.map((relayUrl) => ({
+    authorPubkey: event.pubkey,
+    relayUrl,
+    source: 'event-receipt' as const,
+    purpose: 'write' as const,
+    eventId: event.id,
+  }));
 }
 
 function nip65Purpose(marker: string | undefined): RelayRoutePurpose {

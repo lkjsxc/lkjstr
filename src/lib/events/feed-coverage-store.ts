@@ -36,14 +36,14 @@ export async function deleteFeedCoverageForFeeds(
   feedKeys: readonly string[],
 ): Promise<void> {
   const keys = new Set(feedKeys);
+  if (keys.size === 0) return;
   for (const [id, value] of memoryCoverage.entries())
     if (keys.has(value.feedKey)) memoryCoverage.delete(id);
   await bestEffortStorageWrite(async () => {
-    await Promise.all(
-      [...keys].map((key) =>
-        browserDb().feedCoverage.where('feedKey').equals(key).delete(),
-      ),
-    );
+    await browserDb()
+      .feedCoverage.where('feedKey')
+      .anyOf([...keys])
+      .delete();
   });
 }
 
@@ -59,8 +59,10 @@ export async function compactFeedCoverage(
   for (const [id, value] of memoryCoverage.entries())
     if (expired(value)) memoryCoverage.delete(id);
   await bestEffortStorageWrite(async () => {
-    const rows = await browserDb().feedCoverage.toArray();
-    const ids = rows.filter(expired).map((row) => row.id);
+    const ids: string[] = [];
+    await browserDb().feedCoverage.each((row) => {
+      if (expired(row)) ids.push(row.id);
+    });
     if (ids.length > 0) await browserDb().feedCoverage.bulkDelete(ids);
   });
 }

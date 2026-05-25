@@ -13,7 +13,10 @@ export function subscribeHideSensitiveEvents(
   startWindowListener();
   if (cache !== undefined) listener(cache);
   else void refreshHideSensitiveEvents();
-  return () => listeners.delete(listener);
+  return () => {
+    listeners.delete(listener);
+    if (listeners.size === 0) stopWindowListener();
+  };
 }
 
 export function notifyHideSensitiveSettingChanged(): void {
@@ -37,6 +40,15 @@ function startWindowListener(): void {
   if (listening || typeof window === 'undefined') return;
   listening = true;
   window.addEventListener(
+    settingsChangedEvent,
+    notifyHideSensitiveSettingChanged,
+  );
+}
+
+function stopWindowListener(): void {
+  if (!listening || typeof window === 'undefined') return;
+  listening = false;
+  window.removeEventListener(
     settingsChangedEvent,
     notifyHideSensitiveSettingChanged,
   );
