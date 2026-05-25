@@ -64,13 +64,25 @@ linked product, protocol, architecture, and operations pages.
   compact memory counters, and persisted job records.
 - RSS remains diagnostic-only for memory verification; app JavaScript heap is
   the owned browser memory assertion.
+- Memory retention investigation is active. See
+  [heap-retention.md](architecture/data/heap-retention.md) for symptoms and
+  strategy, [resource-ownership.md](architecture/data/resource-ownership.md)
+  for cleanup ownership, and
+  [memory-verification.md](operations/memory-verification.md) for the
+  verification workflow.
 
 ## Canonical Docs
 
 - [product/README.md](product/README.md): user-facing behavior.
 - [protocol/README.md](protocol/README.md): protocol contracts.
 - [architecture/README.md](architecture/README.md): runtime and data ownership.
+- [architecture/data/heap-retention.md](architecture/data/heap-retention.md):
+  memory retention symptoms and investigation.
+- [architecture/data/resource-ownership.md](architecture/data/resource-ownership.md):
+  resource ownership table.
 - [operations/verification.md](operations/verification.md): verification gate.
+- [operations/memory-verification.md](operations/memory-verification.md): memory
+  verification workflow.
 - [repository/documentation-standards.md](repository/documentation-standards.md):
   documentation and repository rules.
 
