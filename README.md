@@ -5,52 +5,88 @@ desktop-style app for reading timelines, composing notes, inspecting relay
 behavior, managing signing accounts, and following event threads without a
 server-side account system.
 
-## Purpose
+## What lkjstr Is
 
-This repository contains the lkjstr web app, its protocol/runtime
-documentation, verification scripts, static assets, and tests.
+- A **single-page workspace** that starts on `/` with no landing page.
+- A **tiled pane manager** where you open, drag, and arrange tabs side by side.
+- A **browser-native Nostr client** that stores workspace, account, settings,
+  drafts, notifications, and cached events locally.
+- A **relay-aware tool** that lets you inspect connections, run custom requests,
+  and manage your own relay list without automatic protocol overrides.
 
-## Current Contract
+## What It Does
 
-The implemented app state is summarized in
-[docs/current-state.md](docs/current-state.md). Product behavior, protocol
-support, architecture ownership, operations, and repository rules live under
-[docs/](docs/README.md).
+### Reading
+- **Home** — timeline of followed pubkeys.
+- **Global** — public firehose with optional filters.
+- **Profile** — a user's notes and metadata.
+- **Thread** — reply chains with context.
+- **Notifications** — mentions, reactions, reposts, zaps.
+- **Search** — cached matches plus NIP-50 relay filters when supported.
 
-## Product Contract
+### Writing
+- **Tweet** — compose and publish notes.
+- **Replies, reposts, reactions** — inline event actions.
+- **Zaps** — open or copy NIP-57 invoices (wallet custody is out of scope).
+- **Media upload** — NIP-96 upload with NIP-98 auth.
+- **Custom emoji** — NIP-30 emoji parsing and publishing.
+- **Profile Edit** — update active-account metadata.
 
-- The app starts on `/` as the workspace, not a landing page.
-- New Tab offers Home, Tweet, Notifications, Search, Custom Request, Global,
-  Profile Edit, Accounts, Relay Settings, Stats, Settings, Upload Settings,
-  lkjstr Log, Mine npub, and Welcome.
-- Clean startup focuses Welcome and also creates Accounts, Relay Settings,
-  Home, Notifications, and Tweet tabs.
-- Browser storage owns workspace, account, settings, draft, notification, cache,
-  relay, and job data with session-memory fallback.
-- Selected relays remain user-owned; protocol-derived relay hints require
-  explicit import before changing Relay Settings.
-- Final verification uses built Docker Compose images from
-  `docker-compose.yml`.
+### Tools
+- **Accounts** — manage local signing keys and NIP-07 browser extensions.
+- **Relay Settings** — user-owned relay list with explicit import for protocol hints.
+- **Custom Request** — send raw Nostr filters to selected relays.
+- **Stats** — relay diagnostics and connection metrics.
+- **lkjstr Log** — current-session diagnostics.
+- **Mine npub** — vanity local signing key generation.
+- **Welcome** — onboarding and quick-start reference.
 
-## Documentation
+## How to Run
 
-- [Docs index](docs/README.md)
-- [Current state](docs/current-state.md)
-- [Product contract](docs/product/README.md)
-- [Protocol support](docs/protocol/nip-support.md)
-- [Verification](docs/operations/verification.md)
-- [Repository rules](docs/repository/README.md)
-
-## Development
+Requirements: Node.js >= 24, pnpm 11.1.2.
 
 ```sh
+# Install dependencies
 pnpm install
+
+# Start the dev server
 pnpm dev
+
+# Build for production
+pnpm build
+
+# Preview the production build
+pnpm preview
+```
+
+## How to Verify
+
+```sh
+# Repository checks (class guard, AST rules)
 pnpm check:repo
+
+# Lint and format check
+pnpm lint
+
+# Type check
+pnpm check
+
+# Unit tests
 pnpm test
+
+# Full verification (checks + lint + type + unit tests + build)
 pnpm verify
-pnpm cloudflare:dry-run
+
+# End-to-end tests
 pnpm test:e2e
+
+# Memory-focused e2e test
+pnpm test:e2e:memory
+
+# Cloudflare Workers dry-run
+pnpm cloudflare:dry-run
+
+# Docker Compose final verification
 docker compose -f docker-compose.yml config
 docker compose -f docker-compose.yml build app verify e2e cloudflare
 docker compose -f docker-compose.yml run --rm verify
@@ -58,13 +94,26 @@ docker compose -f docker-compose.yml run --rm e2e
 docker compose -f docker-compose.yml run --rm cloudflare
 ```
 
+## Where Docs Live
+
+All contracts live under [`docs/`](docs/README.md):
+
+- **[docs/current-state.md](docs/current-state.md)** — implemented app state summary.
+- **[docs/product/](docs/product/README.md)** — user-facing workspace behavior.
+- **[docs/protocol/](docs/protocol/README.md)** — Nostr and relay protocol support.
+- **[docs/architecture/](docs/architecture/README.md)** — runtime and data ownership.
+- **[docs/operations/](docs/operations/README.md)** — verification, CI, and data safety.
+- **[docs/repository/](docs/repository/README.md)** — layout, workflow, and style rules.
+- **[docs/decisions/](docs/decisions/README.md)** — durable architectural decisions.
+- **[docs/research/](docs/research/README.md)** — background notes and open questions.
+- **[docs/vision/](docs/vision/README.md)** — long-term scope and principles.
+
 ## Repository Map
 
-- [.github/](.github/): GitHub Actions and repository automation notes.
-- [AGENTS.md](AGENTS.md): agent-facing repository rules.
-- [docs/](docs/): product, protocol, architecture, operations, and repository
-  contracts.
-- [scripts/](scripts/): repository checks and quiet verification wrappers.
-- [src/](src/): SvelteKit application source.
-- [static/](static/): static browser assets and manifest files.
-- [tests/](tests/): Vitest unit tests and Playwright browser tests.
+- [`.github/`](.github/) — GitHub Actions and repository automation.
+- [`AGENTS.md`](AGENTS.md) — agent-facing repository rules.
+- [`docs/`](docs/) — product, protocol, architecture, operations, and repository contracts.
+- [`scripts/`](scripts/) — repository checks and quiet verification wrappers.
+- [`src/`](src/) — SvelteKit application source.
+- [`static/`](static/) — static browser assets and manifest files.
+- [`tests/`](tests/) — Vitest unit tests and Playwright browser tests.
