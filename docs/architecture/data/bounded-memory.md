@@ -41,12 +41,25 @@ state after the user navigates, closes tabs, or leaves reads unfinished.
   expires after thirty minutes; IndexedDB remains the durable source.
 - Relay diagnostic suppression and diagnostic summaries keep bounded memory
   maps and never retain raw relay payloads.
+- Relay ingress enforces a bounded frame policy before expensive parsing:
+  `1048576` byte text frames, `262144` byte event content, `512` tags, `16`
+  fields per tag, and `4096` byte tag fields.
 - Feed coverage memory fallback keeps the most recent `500` rows; IndexedDB
   coverage rows are compacted by age and status.
 - Timeline, profile-support, notification, relay route, relay suggestion, and
   job fallback stores are bounded in memory. IndexedDB remains the durable
   source when available.
+- Local event matching plans from id, author/kind, kind, and tag indexes where
+  possible. Fallback reads are bounded and sorted after candidate selection.
+- Notification runtime state keeps at most `180` records and only the source or
+  target events referenced by those records. Missing source events remain as
+  unavailable notification rows.
 - Reference indexes use bounded maps or time-based expiration.
+- Event content token caches keep `1000` entries for five minutes and produce
+  profile-independent tokens. Rendering resolves display names from current
+  profile state.
+- Relay page scans retain bounded newest candidates by event id and merge relay
+  provenance for retained ids.
 - Workspace snapshots above the fixed local size cap are rejected before JSON
   parsing, and restored closed-tab history is capped.
 - Runtime factories ignore async results and relay events after close.
@@ -55,6 +68,9 @@ state after the user navigates, closes tabs, or leaves reads unfinished.
   include tab ids or request ids.
 - Runtime counter diagnostics are compact counters only and must not retain raw
   relay payloads, event arrays, or per-tab histories.
+- Runtime memory snapshots are compact counters only and must not include raw
+  events, relay payloads, subscription ids, tab ids, request ids, or log
+  messages.
 - Worker handles terminate on result, error, cancellation, and tab destroy.
 - UI timers are cleared when their owning row, menu, header, or tab is
   destroyed.

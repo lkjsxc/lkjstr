@@ -45,8 +45,10 @@ Relay docs define URL and relay-set behavior.
   rejected with diagnostics.
 - NIP-11 `max_subscriptions`, `max_limit`, `max_message_length`, and
   subscription-id limits bound local `REQ` sending when available.
-- Missing NIP-11 `max_message_length` does not create an app-defined inbound
-  text-frame limit.
+- Missing NIP-11 `max_message_length` does not remove the app ingress cap:
+  inbound relay text frames are rejected above `1048576` bytes before parsing.
+- Relay event parsing rejects event content above `262144` bytes, more than
+  `512` tags, more than `16` fields per tag, or tag fields above `4096` bytes.
 - Filters with `limit` above a relay's `max_limit` are clamped locally.
 - Oversized `REQ` messages are rejected locally instead of split.
 - Requests above the active subscription cap wait in a bounded queue. When the

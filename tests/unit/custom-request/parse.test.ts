@@ -31,4 +31,29 @@ describe('custom request parsing', () => {
       'Filter is invalid.',
     );
   });
+
+  it('rejects oversized JSON before parsing', () => {
+    expect(() => parseCustomRequest(' '.repeat(64 * 1024 + 1))).toThrow(
+      'Request JSON exceeds 65536 bytes.',
+    );
+  });
+
+  it('enforces request caps and clamps relay limits', () => {
+    expect(
+      parseCustomRequest(
+        JSON.stringify({ filters: [{ kinds: [1], limit: 999 }] }),
+      ).filters[0]?.limit,
+    ).toBe(500);
+    expect(() =>
+      parseCustomRequest(JSON.stringify(Array.from({ length: 9 }, () => ({})))),
+    ).toThrow('At most 8 filters are allowed.');
+    expect(() =>
+      parseCustomRequest(
+        JSON.stringify({
+          relays: Array.from({ length: 33 }, () => 'relay.example'),
+          filters: [{}],
+        }),
+      ),
+    ).toThrow('At most 32 relays are allowed.');
+  });
 });

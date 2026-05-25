@@ -14,7 +14,7 @@
   import EventReferences from './EventReferences.svelte';
   import EventMeta from './EventMeta.svelte';
   import MediaAttachment from './MediaAttachment.svelte';
-  import { loadSettings } from '$lib/settings/settings-store';
+  import { subscribeHideSensitiveEvents } from '$lib/settings/settings-store';
   import {
     isSensitiveEventRevealed,
     revealSensitiveEvent,
@@ -53,19 +53,9 @@
     contentAttachments(props.event).filter((item) => item.type !== 'link'),
   );
 
-  onMount(() => {
-    let alive = true;
-    void loadSettings().then((settings) => {
-      if (!alive) return;
-      const setting = settings.find(
-        (item) => item.key === 'content.hideSensitiveEvents',
-      );
-      hideSensitive = setting?.value !== false;
-    });
-    return () => {
-      alive = false;
-    };
-  });
+  onMount(() =>
+    subscribeHideSensitiveEvents((value) => (hideSensitive = value)),
+  );
 </script>
 
 {#if gated}

@@ -11,9 +11,16 @@
   } from '$lib/jobs/job-health';
   import { currentRelaySnapshots } from '$lib/relays/session-snapshots';
   import type { RelaySessionStats, RelaySnapshot } from '$lib/relays/types';
+  import {
+    runtimeMemorySnapshot,
+    type RuntimeMemorySnapshot,
+  } from '$lib/memory/runtime-memory';
+  import JobHealthPanel from './JobHealthPanel.svelte';
   import RuntimeCounters from './RuntimeCounters.svelte';
+  import RuntimeMemoryPanel from './RuntimeMemoryPanel.svelte';
 
   let snapshots = $state<RelaySnapshot[]>([]);
+  let memory = $state<RuntimeMemorySnapshot | null>(null);
   let summaries = $state<RelayDiagnosticSummary[]>([]);
   let jobHealth = $state<JobHealthSummary | null>(null);
   let cache = $state<CacheMetadata | null>(null);
@@ -29,6 +36,7 @@
     summaries = await listRelayDiagnosticSummaries();
     jobHealth = await loadJobHealthSummary();
     cache = await cacheStatus();
+    memory = runtimeMemorySnapshot();
   }
 
   function toggleAuto(): void {
@@ -71,17 +79,6 @@
         activeSubscriptionIds: [],
       }
     );
-  }
-
-  function formatAge(ms?: number): string {
-    if (ms === undefined) return 'none';
-    const minutes = Math.floor(ms / 60000);
-    if (minutes < 1) return `${Math.max(0, Math.floor(ms / 1000))}s`;
-    return `${minutes}m`;
-  }
-
-  function formatTime(timestamp?: number): string {
-    return timestamp ? new Date(timestamp).toLocaleString() : 'never';
   }
 </script>
 
@@ -166,28 +163,7 @@
       {/each}
     </tbody>
   </table>
-  {#if jobHealth}
-    <h3>Jobs</h3>
-    <div class="stats-cards">
-      <article>
-        <strong>{jobHealth.total}</strong><span>stored jobs</span>
-      </article>
-      <article>
-        <strong>{jobHealth.statusCounts.queued}</strong><span>queued</span>
-      </article>
-      <article>
-        <strong>{jobHealth.statusCounts.running}</strong><span>running</span>
-      </article>
-      <article>
-        <strong>{formatAge(jobHealth.oldestQueuedAgeMs)}</strong>
-        <span>oldest queued</span>
-      </article>
-    </div>
-    <p>
-      latest failure {jobHealth.latestFailure?.error ?? 'none'} · stale startup
-      {formatTime(jobHealth.latestStaleStartupMark?.staleStartedAt)}
-    </p>
-  {/if}
+  <JobHealthPanel {jobHealth} />
   <h3>Cache</h3>
   {#if cache}
     <p>
@@ -197,4 +173,5 @@
     </p>
   {/if}
   <RuntimeCounters />
+  <RuntimeMemoryPanel {memory} />
 </section>

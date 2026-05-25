@@ -13,6 +13,13 @@ export type NostrEvent = UnsignedNostrEvent & {
   readonly sig: string;
 };
 
+export type EventFramePolicy = {
+  readonly maxEventContentBytes: number;
+  readonly maxEventTags: number;
+  readonly maxTagFields: number;
+  readonly maxTagFieldBytes: number;
+};
+
 export type EventValidation =
   | { ok: true; event: NostrEvent }
   | {
@@ -24,9 +31,12 @@ export type EventValidation =
 const hex64 = /^[0-9a-f]{64}$/;
 const hex128 = /^[0-9a-f]{128}$/;
 
-export function parseNostrEvent(value: unknown): EventValidation {
+export function parseNostrEvent(
+  value: unknown,
+  policy?: EventFramePolicy,
+): EventValidation {
   if (!isRecord(value)) return fail('not_object', 'event must be an object');
-  const base = parseUnsignedEvent(value);
+  const base = parseUnsignedEvent(value, policy);
   if (!base.ok) return base;
   if (!isHex(value.id, hex64))
     return fail('bad_field', 'id must be 32-byte lowercase hex');
@@ -35,7 +45,10 @@ export function parseNostrEvent(value: unknown): EventValidation {
   return { ok: true, event: { ...base.event, id: value.id, sig: value.sig } };
 }
 
-export function parseUnsignedEvent(value: unknown):
+export function parseUnsignedEvent(
+  value: unknown,
+  policy?: EventFramePolicy,
+):
   | { ok: true; event: UnsignedNostrEvent }
   | {
       ok: false;
@@ -53,7 +66,15 @@ export function parseUnsignedEvent(value: unknown):
     return fail('bad_field', 'tags must be an array');
   if (typeof value.content !== 'string')
     return fail('bad_field', 'content must be a string');
-  const tags = parseTags(value.tags);
+  if (
+    policy &&
+    !utf8ByteLengthWithin(value.content, policy.maxEventContentBytes).within
+  )
+    return fail(
+      'bad_field',
+      `content exceeds ${policy.maxEventContentBytes} bytes`,
+    );
+  const tags = parseTags(value.tags, policy);
   if (!tags.ok) return tags;
   return {
     ok: true,
@@ -82,13 +103,26 @@ export function isPubkey(value: string): boolean {
 
 function parseTags(
   value: unknown[],
+  policy?: EventFramePolicy,
 ):
   | { ok: true; tags: readonly NostrTag[] }
   | { ok: false; code: 'bad_tag'; message: string } {
+  if (policy && value.length > policy.maxEventTags)
+    return {
+      ok: false,
+      code: 'bad_tag',
+      message: `tags exceed ${policy.maxEventTags} entries`,
+    };
   const tags: string[][] = [];
   for (const tag of value) {
     if (!Array.isArray(tag))
       return { ok: false, code: 'bad_tag', message: 'tag must be an array' };
+    if (policy && tag.length > policy.maxTagFields)
+      return {
+        ok: false,
+        code: 'bad_tag',
+        message: `tag exceeds ${policy.maxTagFields} fields`,
+      };
     if (!tag.every((part) => typeof part === 'string')) {
       return {
         ok: false,
@@ -96,6 +130,17 @@ function parseTags(
         message: 'tag entries must be strings',
       };
     }
+    if (
+      policy &&
+      tag.some(
+        (part) => !utf8ByteLengthWithin(part, policy.maxTagFieldBytes).within,
+      )
+    )
+      return {
+        ok: false,
+        code: 'bad_tag',
+        message: `tag field exceeds ${policy.maxTagFieldBytes} bytes`,
+      };
     tags.push([...tag]);
   }
   return { ok: true, tags };
@@ -122,4 +167,34 @@ function fail(
   message: string,
 ): EventValidation {
   return { ok: false, code, message };
+}
+
+function utf8ByteLengthWithin(
+  text: string,
+  limit: number,
+): {
+  readonly within: boolean;
+} {
+  let bytes = 0;
+  for (let index = 0; index < text.length; index++) {
+    const code = text.charCodeAt(index);
+    if (code <= 0x7f) bytes += 1;
+    else if (code <= 0x7ff) bytes += 2;
+    else if (
+      code >= 0xd800 &&
+      code <= 0xdbff &&
+      isLowSurrogate(text.charCodeAt(index + 1))
+    ) {
+      bytes += 4;
+      index++;
+    } else {
+      bytes += 3;
+    }
+    if (bytes > limit) return { within: false };
+  }
+  return { within: true };
+}
+
+function isLowSurrogate(code: number): boolean {
+  return code >= 0xdc00 && code <= 0xdfff;
 }

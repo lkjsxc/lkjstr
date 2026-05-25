@@ -21,8 +21,13 @@ backfill.
 - Fallback target/root rows keep the row-level actor chip because fallback
   authors can differ from the notification actor.
 - Derive notification records from stored events.
-- Keep Notifications source event and fallback target context state to the feed
-  memory window.
+- Keep Notifications source event and fallback target context state to a
+  `180` notification record window. Prune by record count, not resolved event
+  count.
+- Retain only source and target/root events referenced by retained
+  notification records.
+- Missing source notification events remain visible as compact unavailable rows
+  and may show labeled target/root fallback context.
 - Older pages load local records first, then one bounded relay page when a
   cursor exists.
 - The Notifications tab is a plain scroll flow. It prefetches near the bottom,

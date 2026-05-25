@@ -7,6 +7,8 @@ import type { SettingRecord } from './settings-key';
 import { defaultSettings, searchText } from './settings-schema';
 import { settingsChangedEvent } from './settings-events';
 import { validCustomUploadServer } from '../media/providers';
+import { notifyHideSensitiveSettingChanged } from './hide-sensitive-events';
+export { subscribeHideSensitiveEvents } from './hide-sensitive-events';
 
 export type SettingOverride = {
   readonly key: string;
@@ -163,6 +165,7 @@ export function coerceValue(
 }
 
 function notifySettingsChanged(): void {
+  notifyHideSensitiveSettingChanged();
   if (typeof window === 'undefined') return;
   window.dispatchEvent(new CustomEvent(settingsChangedEvent));
 }

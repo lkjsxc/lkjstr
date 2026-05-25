@@ -50,6 +50,10 @@ export function clearRelayDiagnosticLogForTests(): void {
 }
 
 export function relayDiagnosticSuppressionSizeForTests(): number {
+  return relayDiagnosticSuppressionCount();
+}
+
+export function relayDiagnosticSuppressionCount(): number {
   return suppressed.size();
 }
 

@@ -158,6 +158,14 @@ export function createRelaySubscriptionManager(
       for (const entry of entries.values()) entry.cleanup();
       entries.clear();
     },
+    counts: () => ({
+      liveSubscriptions: entries.size,
+      liveListeners: [...entries.values()].reduce(
+        (sum, entry) => sum + entry.listeners.size,
+        0,
+      ),
+      inFlightReads: inFlightReads.size,
+    }),
   };
   return manager;
 }

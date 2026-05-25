@@ -7,12 +7,13 @@ import {
 import { compareEventsDesc, matchesFilter, type NostrEvent } from '../protocol';
 import { cursorPoint } from './feed-window';
 import { indexedLatestByAuthorKind, indexedPage } from './repository-indexed';
+import { indexedEventsMatching } from './repository-matching-indexed';
 import {
-  allMemoryEvents,
   clearMemoryRepository,
   latestMemoryEventByAuthorKind,
   memoryCursors,
   memoryEvent,
+  memoryEventsMatching,
   memoryEventsByIds,
   memoryPage,
   putMemory,
@@ -121,10 +122,15 @@ export async function latestEventByAuthorKind(
 export async function eventsMatching(
   filters: readonly Parameters<typeof matchesFilter>[1][],
 ): Promise<FeedEvent[]> {
-  return (await allEvents())
-    .filter((event) => filters.some((filter) => matchesFilter(event, filter)))
-    .sort(compareEventsDesc)
-    .map(toFeedEvent);
+  const limit = Math.max(
+    1,
+    Math.min(500, Math.max(...filters.map((filter) => filter.limit ?? 500), 1)),
+  );
+  const events = await boundedStorageRead(
+    () => indexedEventsMatching(filters, limit),
+    memoryEventsMatching(filters, limit),
+  );
+  return events.sort(compareEventsDesc).map(toFeedEvent);
 }
 
 export function feedKey(query: FeedQuery): string {
@@ -134,14 +140,6 @@ export function feedKey(query: FeedQuery): string {
     authors: query.authors ? [...query.authors].sort() : undefined,
     eventId: query.eventId,
   });
-}
-
-async function allEvents(): Promise<StoredEvent[]> {
-  const records = await boundedStorageRead(
-    () => browserDb().events.toArray(),
-    allMemoryEvents(),
-  );
-  return records.map(normalizeStoredEvent);
 }
 
 async function existingEvent(id: string): Promise<StoredEvent | undefined> {

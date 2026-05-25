@@ -18,6 +18,8 @@ for detailed contracts.
   memory.
 - [architecture/data/bounded-memory.md](architecture/data/bounded-memory.md):
   bounded memory and leak cleanup.
+- [architecture/data/memory-prioritization.md](architecture/data/memory-prioritization.md):
+  durable data and runtime retention priority.
 - [architecture/data/event-tree.md](architecture/data/event-tree.md): event row
   tree model.
 - [architecture/data/feed-memory.md](architecture/data/feed-memory.md): feed

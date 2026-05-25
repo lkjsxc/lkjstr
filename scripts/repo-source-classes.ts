@@ -14,12 +14,15 @@ export async function checkSourceClasses(
   for (const file of files) {
     const rel = path.relative(root, file);
     if (!rel.startsWith(`src${path.sep}`)) continue;
-    if (!['.ts', '.js'].includes(path.extname(rel))) continue;
+    const ext = path.extname(rel);
+    if (!['.ts', '.js', '.svelte'].includes(ext)) continue;
+    const text = await fs.readFile(file, 'utf8');
     const source = ts.createSourceFile(
       rel,
-      await fs.readFile(file, 'utf8'),
+      ext === '.svelte' ? svelteScriptText(text) : text,
       ts.ScriptTarget.Latest,
       true,
+      ts.ScriptKind.TS,
     );
     source.forEachChild(function visit(node) {
       if (ts.isClassDeclaration(node) && !allowedDexieClass(rel, node))
@@ -31,6 +34,12 @@ export async function checkSourceClasses(
     });
   }
   return problems;
+}
+
+function svelteScriptText(source: string): string {
+  return [...source.matchAll(/<script(?:\s[^>]*)?>([\s\S]*?)<\/script>/giu)]
+    .map((match) => match[1] ?? '')
+    .join('\n');
 }
 
 function allowedDexieClass(rel: string, node: ts.ClassDeclaration): boolean {

@@ -11,6 +11,8 @@ Data docs define storage, feed windows, and shared event presentation models.
 - [feed-memory.md](feed-memory.md): bounded feed loading and cache pruning.
 - [local-secret-security.md](local-secret-security.md): passkey-protected
   secret design boundary.
+- [memory-prioritization.md](memory-prioritization.md): durable data and
+  runtime retention priority.
 - [relay-pages.md](relay-pages.md): relay page ordering and provenance.
 - [shared-storage.md](shared-storage.md): event and feed repository.
 - [storage.md](storage.md): browser persistence ownership.

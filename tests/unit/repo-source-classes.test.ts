@@ -26,4 +26,21 @@ describe('repo source class guard', () => {
       },
     ]);
   });
+
+  it('scans Svelte script blocks but ignores markup classes', async () => {
+    const root = await fs.mkdtemp(path.join(os.tmpdir(), 'lkjstr-svelte-'));
+    const source = path.join(root, 'src', 'lib', 'Widget.svelte');
+    await fs.mkdir(path.dirname(source), { recursive: true });
+    await fs.writeFile(
+      source,
+      '<script lang="ts">class ScriptClass {}</script><div class="visual"></div>',
+    );
+
+    await expect(checkSourceClasses(root, [source])).resolves.toEqual([
+      {
+        file: path.join('src', 'lib', 'Widget.svelte'),
+        message: expect.any(String),
+      },
+    ]);
+  });
 });

@@ -16,3 +16,10 @@ Stats shows current-session relay counters and persisted operational summaries.
   OK rejects, and sent plus received bytes.
 - Cache status includes event, profile, notification, and storage estimate
   counts.
+- Runtime memory shows compact app-owned counters: app log count, relay
+  suppression count, in-flight reads, fallback repository counts, reference
+  cache size, profile cache size, token cache size, relay snapshot totals, and
+  optional JavaScript heap.
+- Runtime memory output is redacted count data only. It must not expose raw
+  events, relay payloads, subscription ids, tab ids, request ids, or log
+  messages.

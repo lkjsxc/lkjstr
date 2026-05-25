@@ -18,7 +18,8 @@ notification context header and the source event as the primary body.
 - Notification events are written through the shared repository.
 - Notifications tab initial and older pages request `30` records.
 - Notification relay sync starts when the Notifications tab is opened.
-- Notification tabs keep a `180` item window.
+- Notification tabs keep a `180` record window. Windowing is based on
+  notification records, not the number of resolved source events.
 - Older notifications load only after scrolling near the bottom.
 - Historical relay pages use interval windows with `since` and `until` from
   the oldest loaded notification event.
@@ -38,6 +39,8 @@ notification context header and the source event as the primary body.
   the source notification event is unavailable. Fallback rows still show the
   outer actor because the target/root author can differ from the notification
   actor.
+- Windowed state keeps only source and target/root events referenced by
+  retained records. Missing source events remain visible as unavailable rows.
 - Notification rows do not force compact event display, disable event actions,
   or hide the event More menu.
 - Clicking the event row opens or focuses the correct Thread tab. Buttons and

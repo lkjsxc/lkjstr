@@ -45,6 +45,10 @@ export function appLogRecords(): readonly AppLogRecord[] {
   return records;
 }
 
+export function appLogCount(): number {
+  return records.length;
+}
+
 export function subscribeAppLog(listener: Listener): () => void {
   listeners.add(listener);
   listener(records);

@@ -4,7 +4,11 @@ import {
   getPublicKey,
 } from '../../../src/lib/protocol';
 import { describe, expect, it } from 'vitest';
-import { contentTokens } from '../../../src/lib/events/content-tokens';
+import {
+  clearContentTokenCacheForTests,
+  contentTokenCacheSizeForTests,
+  contentTokens,
+} from '../../../src/lib/events/content-tokens';
 import {
   encodeNote,
   encodeNprofile,
@@ -58,26 +62,29 @@ describe('content tokens', () => {
     ]);
   });
 
-  it('renders profile labels and hides expanded event mentions', () => {
+  it('keeps profile labels independent from profile state', () => {
     const pubkey = getPublicKey(generateSecretKey());
     const note = '2'.repeat(64);
     const npub = `nostr:${encodeNpub(pubkey)}`;
     const encodedNote = `nostr:${encodeNote(note)}`;
-    const tokens = contentTokens(
-      event(`${npub} ${encodedNote}`),
-      { [pubkey]: profile(pubkey, 'Ada') },
-      new Set([note]),
-    );
+    const tokens = contentTokens(event(`${npub} ${encodedNote}`));
 
     expect(tokens).toEqual([
       {
         type: 'profile',
         pubkey,
-        text: '@Ada',
+        text: npub,
         rawText: npub,
         relays: [],
       },
       { type: 'text', text: ' ' },
+      {
+        type: 'event',
+        eventId: note,
+        text: `event:${note.slice(0, 8)}`,
+        rawText: encodedNote,
+        relays: [],
+      },
     ]);
   });
 
@@ -86,7 +93,7 @@ describe('content tokens', () => {
       ...event('Hi :party-1: and :missing:'),
       tags: [['emoji', 'party-1', 'https://emoji.example/party.png']],
     };
-    expect(contentTokens(emojiEvent, {}, new Set())).toEqual([
+    expect(contentTokens(emojiEvent)).toEqual([
       { type: 'text', text: 'Hi ' },
       {
         type: 'custom-emoji',
@@ -120,16 +127,24 @@ describe('content tokens', () => {
       text: '.',
     });
   });
+
+  it('bounds the token cache', () => {
+    clearContentTokenCacheForTests();
+    for (let index = 0; index < 1005; index += 1)
+      contentTokens(rawEvent(String(index), String(index).padStart(64, '0')));
+    expect(contentTokenCacheSizeForTests()).toBe(1000);
+  });
 });
 
-function profile(pubkey: string, name: string) {
+function rawEvent(content: string, id: string) {
   return {
-    pubkey,
-    displayName: name,
-    name: null,
-    nip05: null,
-    avatarUrl: null,
-    updatedAt: 1,
+    id,
+    pubkey: 'a'.repeat(64),
+    created_at: 1,
+    kind: 1,
+    tags: [],
+    content,
+    sig: 'b'.repeat(128),
   };
 }
 

@@ -1,4 +1,8 @@
 import { parseRelayMessage, type RelayMessage } from '../protocol';
+import {
+  defaultRelayFramePolicy,
+  type RelayFramePolicy,
+} from './relay-frame-policy';
 import { utf8ByteLengthWithin } from './relay-message-size';
 
 export type RelayMessageDataResult =
@@ -7,13 +11,20 @@ export type RelayMessageDataResult =
 
 export function parseRelayMessageData(
   data: unknown,
+  policy: RelayFramePolicy = defaultRelayFramePolicy,
 ): RelayMessageDataResult | undefined {
   if (typeof data !== 'string')
     return {
       ok: false,
       message: unsupportedRelayFrameMessage(data),
     };
-  const parsed = parseRelayMessage(data);
+  const size = utf8ByteLengthWithin(data, policy.maxInboundTextBytes);
+  if (!size.within)
+    return {
+      ok: false,
+      message: `relay text frame exceeds ${policy.maxInboundTextBytes} bytes (${size.bytes})`,
+    };
+  const parsed = parseRelayMessage(data, policy);
   return parsed.ok
     ? { ok: true, message: parsed.message }
     : { ok: false, message: parsed.message };

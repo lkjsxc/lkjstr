@@ -4,6 +4,8 @@ import {
   coerceValue,
   importSettingsJson,
   mergeSettings,
+  saveSetting,
+  subscribeHideSensitiveEvents,
 } from '../../../src/lib/settings/settings-store';
 
 describe('settings store helpers', () => {
@@ -92,5 +94,23 @@ describe('settings store helpers', () => {
         JSON.stringify([{ key: 'cache.maxAgeDays', value: 0 }]),
       ),
     ).rejects.toThrow(/invalid setting value/);
+  });
+
+  it('fans out hide-sensitive setting updates', async () => {
+    const seen: boolean[] = [];
+    let resolveFalse!: () => void;
+    const falseSeen = new Promise<void>((resolve) => {
+      resolveFalse = resolve;
+    });
+    const unsubscribe = subscribeHideSensitiveEvents((value) => {
+      seen.push(value);
+      if (value === false) resolveFalse();
+    });
+    const settings = defaultSettings();
+    await saveSetting(settings, 'content.hideSensitiveEvents', false);
+    await falseSeen;
+    unsubscribe();
+
+    expect(seen).toContain(false);
   });
 });

@@ -1,4 +1,5 @@
 import { decodeEntity } from '../protocol/nip19';
+import { createBoundedMap } from '../fp/bounded-map';
 import {
   customEmojis,
   isEventId,
@@ -6,8 +7,6 @@ import {
   type CustomEmoji,
   type NostrEvent,
 } from '../protocol';
-import { bestDisplayName } from '../identity/display-name';
-import type { ProfileSummary } from '../identity/identity';
 import { contentAttachments, type ContentAttachment } from './content-media';
 
 export type ContentToken =
@@ -37,39 +36,48 @@ export type ContentToken =
 
 const tokenPattern =
   /(:[A-Za-z0-9_-]+:)|\b(?:nostr:([a-z0-9]+)|https:\/\/[^\s<>"']+)/gi;
+const tokenCache = createBoundedMap<string, ContentToken[]>({
+  maxSize: 1000,
+  ttlMs: 5 * 60 * 1000,
+});
+const maxTokens = 512;
+const maxEntities = 256;
+const maxUrls = 128;
+const maxEmojiLookup = 256;
 
-export function contentTokens(
-  event: NostrEvent,
-  profiles: Record<string, ProfileSummary> = {},
-  hiddenEventIds: ReadonlySet<string> = new Set(),
-): ContentToken[] {
+export function contentTokens(event: NostrEvent): ContentToken[] {
+  const key = contentTokenCacheKey(event);
+  const cached = tokenCache.get(key);
+  if (cached) return cached;
   const hiddenUrls = new Set(
     contentAttachments(event)
       .filter(isEmbeddedMedia)
+      .slice(0, maxUrls)
       .map((attachment) => attachment.url),
   );
-  return tokenizeText(
+  const tokens = tokenizeText(
     event.content,
     hiddenUrls,
-    customEmojis(event),
-    profiles,
-    hiddenEventIds,
+    customEmojis(event).slice(0, maxEmojiLookup),
   );
+  tokenCache.set(key, tokens);
+  return tokens;
 }
 
 export function tokenizeText(
   content: string,
   hiddenUrls: ReadonlySet<string> = new Set(),
   emoji: readonly CustomEmoji[] = [],
-  profiles: Record<string, ProfileSummary> = {},
-  hiddenEventIds: ReadonlySet<string> = new Set(),
 ): ContentToken[] {
   const tokens: ContentToken[] = [];
   const emojiByText = new Map(
-    emoji.map((item) => [`:${item.shortcode}:`, item]),
+    emoji.slice(0, maxEmojiLookup).map((item) => [`:${item.shortcode}:`, item]),
   );
   let index = 0;
+  let entities = 0;
+  let urls = 0;
   for (const match of content.matchAll(tokenPattern)) {
+    if (tokens.length >= maxTokens) break;
     const full = match[0] ?? '';
     const start = match.index ?? 0;
     if (start > index) pushText(tokens, content.slice(index, start));
@@ -88,38 +96,42 @@ export function tokenizeText(
     if (!raw) continue;
     const entity = match[2];
     if (entity) {
-      const token = entityToken(raw, entity, profiles);
-      if (token?.type === 'event' && hiddenEventIds.has(token.eventId)) {
-        pushText(tokens, suffix);
-        continue;
-      }
+      entities += 1;
+      const token =
+        entities <= maxEntities ? entityToken(raw, entity) : undefined;
       tokens.push(token ?? { type: 'text', text: raw });
       pushText(tokens, suffix);
       continue;
     }
-    if (!hiddenUrls.has(raw)) tokens.push({ type: 'url', url: raw, text: raw });
+    urls += 1;
+    if (!hiddenUrls.has(raw) && urls <= maxUrls)
+      tokens.push({ type: 'url', url: raw, text: raw });
+    else if (urls > maxUrls) pushText(tokens, raw);
     pushText(tokens, suffix);
   }
   if (index < content.length) pushText(tokens, content.slice(index));
-  return mergeText(tokens);
+  return mergeText(tokens).slice(0, maxTokens);
 }
 
-function entityToken(
-  raw: string,
-  value: string,
-  profiles: Record<string, ProfileSummary>,
-): ContentToken | undefined {
+export function contentTokenCacheSizeForTests(): number {
+  return contentTokenCacheSize();
+}
+
+export function contentTokenCacheSize(): number {
+  return tokenCache.size();
+}
+
+export function clearContentTokenCacheForTests(): void {
+  tokenCache.clear();
+}
+
+function entityToken(raw: string, value: string): ContentToken | undefined {
   const decoded = decodeEntity(value);
   if (!decoded) return undefined;
   if (decoded.type === 'npub' && isPubkey(decoded.data))
-    return profileToken(raw, decoded.data, [], profiles);
+    return profileToken(raw, decoded.data, []);
   if (decoded.type === 'nprofile' && isPubkey(decoded.data.pubkey))
-    return profileToken(
-      raw,
-      decoded.data.pubkey,
-      decoded.data.relays ?? [],
-      profiles,
-    );
+    return profileToken(raw, decoded.data.pubkey, decoded.data.relays ?? []);
   if (decoded.type === 'note' && isEventId(decoded.data))
     return eventToken(raw, decoded.data, []);
   if (decoded.type === 'nevent' && isEventId(decoded.data.id))
@@ -131,11 +143,8 @@ function profileToken(
   raw: string,
   pubkey: string,
   relays: readonly string[],
-  profiles: Record<string, ProfileSummary>,
 ): ContentToken {
-  const profile = profiles[pubkey];
-  const label = profile ? `@${bestDisplayName(profile)}` : raw;
-  return { type: 'profile', pubkey, text: label, rawText: raw, relays };
+  return { type: 'profile', pubkey, text: raw, rawText: raw, relays };
 }
 
 function eventToken(
@@ -177,4 +186,13 @@ function mergeText(tokens: readonly ContentToken[]): ContentToken[] {
     merged.push(token);
     return merged;
   }, []);
+}
+
+function contentTokenCacheKey(event: NostrEvent): string {
+  const emojiTags = event.tags
+    .filter((tag) => tag[0] === 'emoji')
+    .slice(0, maxEmojiLookup)
+    .map((tag) => tag.join('\u0000'))
+    .join('\u0001');
+  return `${event.id}\u0000${event.content}\u0000${emojiTags}`;
 }

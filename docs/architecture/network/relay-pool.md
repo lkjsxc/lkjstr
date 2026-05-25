@@ -13,8 +13,12 @@ events, publish acknowledgements, and relay snapshots.
 - Reject verified events that do not match the stored filters for their
   subscription id.
 - Reject events for unknown subscription ids.
-- Parse inbound text frames without an app-imposed byte ceiling.
-- Invalid inbound text frames fail by JSON or protocol parsing.
+- Reject inbound text frames above `1048576` bytes before JSON parsing.
+- Reject relay event payloads above the bounded event content and tag policy:
+  `262144` content bytes, `512` tags, `16` fields per tag, and `4096` bytes
+  per tag field.
+- Invalid inbound text frames within the byte cap fail by JSON or protocol
+  parsing.
 - Reject unsupported binary or non-text frames with parse diagnostics.
 - Send `CLOSE` when a subscription cleanup runs.
 - Delete per-subscription `EOSE`, `CLOSED`, and filter state when cleanup runs.
@@ -59,8 +63,8 @@ events, publish acknowledgements, and relay snapshots.
   are retained as current-session compatibility evidence.
 - Current-session compatibility evidence is bounded and expires; it must not
   grow with every historical subscription id.
-- Inbound parse diagnostics may include measured byte size when available, but
-  never store raw relay payloads.
+- Inbound parse diagnostics may include measured byte size and the configured
+  limit, but never store raw relay payloads.
 - Cleanup must close that subscription on every relay after the last listener.
 - Cleanup must not send `CLOSE` after a relay has already sent `CLOSED` for the
   subscription.

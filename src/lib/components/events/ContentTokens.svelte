@@ -1,5 +1,6 @@
 <script lang="ts">
   import { contentTokens } from '$lib/events/content-tokens';
+  import { bestDisplayName } from '$lib/identity/display-name';
   import type { ProfileSummary } from '$lib/identity/identity';
   import type { NostrEvent } from '$lib/protocol';
   import CustomEmojiImage from './CustomEmojiImage.svelte';
@@ -16,16 +17,15 @@
   };
 
   let props: Props = $props();
-  let tokens = $derived(
-    contentTokens(
-      props.event,
-      props.profiles ?? {},
-      props.hiddenEventIds ?? new Set(),
-    ),
-  );
+  let tokens = $derived(contentTokens(props.event));
 
   function stop(event: MouseEvent): void {
     event.stopPropagation();
+  }
+
+  function profileLabel(pubkey: string, rawText: string): string {
+    const profile = props.profiles?.[pubkey];
+    return profile ? `@${bestDisplayName(profile)}` : rawText;
   }
 </script>
 
@@ -47,12 +47,12 @@
     {:else if token.type === 'profile'}
       <ProfileMentionChip
         pubkey={token.pubkey}
-        text={token.text}
+        text={profileLabel(token.pubkey, token.rawText)}
         rawText={token.rawText}
         profile={props.profiles?.[token.pubkey]}
         openProfile={props.openProfile}
       />
-    {:else if token.type === 'event'}
+    {:else if token.type === 'event' && !props.hiddenEventIds?.has(token.eventId)}
       <EventMentionChip
         eventId={token.eventId}
         rawText={token.rawText}

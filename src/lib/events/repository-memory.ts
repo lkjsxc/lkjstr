@@ -1,4 +1,8 @@
-import { compareEventsDesc } from '../protocol';
+import {
+  compareEventsDesc,
+  matchesFilter,
+  type NostrFilter,
+} from '../protocol';
 import { createBoundedMap } from '../fp/bounded-map';
 import { feedDisplayKinds } from './feed-kinds';
 import type {
@@ -70,6 +74,23 @@ export function latestMemoryEventByAuthorKind(
     .sort(compareEventsDesc)[0];
 }
 
+export function memoryEventsMatching(
+  filters: readonly NostrFilter[],
+  limit = 500,
+): StoredEvent[] {
+  const cap = Math.max(
+    1,
+    Math.min(
+      limit,
+      Math.max(...filters.map((filter) => filter.limit ?? limit), 1),
+    ),
+  );
+  return allMemoryEvents()
+    .filter((event) => filters.some((filter) => matchesFilter(event, filter)))
+    .sort(compareEventsDesc)
+    .slice(0, cap);
+}
+
 export function memoryPage(query: FeedQuery, limit: number): StoredEvent[] {
   return allMemoryEvents()
     .filter((event) => matchesFeed(event, query))
@@ -119,4 +140,18 @@ export function clearMemoryRepository(): void {
   memoryReceipts.clear();
   memoryTags.clear();
   memoryCursors.clear();
+}
+
+export function fallbackRepositoryCounts(): {
+  readonly events: number;
+  readonly receipts: number;
+  readonly tags: number;
+  readonly cursors: number;
+} {
+  return {
+    events: memoryEvents.size(),
+    receipts: memoryReceipts.size(),
+    tags: memoryTags.size(),
+    cursors: memoryCursors.size(),
+  };
 }

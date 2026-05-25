@@ -10,7 +10,8 @@ browser APIs, sockets, timers, workers, and storage to be managed directly.
 - Source code in `src/` uses factory functions and plain handle objects for
   first-party runtime state.
 - First-party `class` declarations are not allowed in `src/`.
-- `pnpm check:repo` enforces the class guard with the TypeScript AST.
+- `pnpm check:repo` enforces the class guard with the TypeScript AST. Svelte
+  files are scanned only inside instance and module `<script>` blocks.
 - The sole exception is `src/lib/storage/browser-db.ts`, where `LkjstrDb` may
   extend `Dexie` because that external API requires subclass table fields.
 - Tests may use classes for local fakes such as synthetic WebSockets.

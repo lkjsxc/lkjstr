@@ -35,6 +35,10 @@ linked product, protocol, architecture, and operations pages.
   desktop drag uses the same pane drop zones and overlay contract.
 - Shared storage normalizes events, relay receipts, tag rows, cursors, and jobs
   before runtime use.
+- Relay ingress uses app-owned byte and structure caps before expensive JSON
+  and event parsing.
+- IndexedDB remains durable browser-owned data; memory relief prunes only
+  bounded app-owned runtime windows, caches, counters, and fallback stores.
 - Relay clients, relay pool, subscription manager, and tab runtimes own network
   reads and deterministic cleanup.
 - Inactive workspace tabs unmount immediately and restore from bounded
@@ -56,8 +60,8 @@ linked product, protocol, architecture, and operations pages.
 - Passkey-protected local secret storage is design-only.
 - Encrypted direct messages are not implemented.
 - Wallet custody is out of scope; zap support opens or copies invoices only.
-- Broad runtime instrumentation is limited to explicit runtime counters and
-  persisted job records.
+- Broad runtime instrumentation is limited to explicit runtime counters,
+  compact memory counters, and persisted job records.
 - RSS remains diagnostic-only for memory verification; app JavaScript heap is
   the owned browser memory assertion.
 

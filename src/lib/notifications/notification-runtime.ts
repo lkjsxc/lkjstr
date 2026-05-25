@@ -19,6 +19,7 @@ import {
   markAccountNotificationsRead,
   saveNotifications,
 } from './notification-store';
+import { windowNotifications } from './notification-window';
 
 export const notificationEventKinds = [0, 1, 6, 7, 16, 9735] as const;
 export type { NotificationState } from './notification-state';
@@ -62,15 +63,20 @@ export function createNotificationRuntime(
       ),
     ]);
     if (!active(run)) return;
-    const pruned = items.length > feedWindowSize;
+    const window = windowNotifications({
+      records,
+      items,
+      targetItems,
+      limit: Math.max(feedWindowSize, 180),
+    });
     emit({
       ...state,
-      records: pruned ? records.slice(-feedWindowSize) : records,
-      items: pruned ? items.slice(-feedWindowSize) : items,
-      targetItems: pruned ? targetItems.slice(-feedWindowSize) : targetItems,
+      records: window.records,
+      items: window.items,
+      targetItems: window.targetItems,
       loading,
       error: null,
-      newerPruned: state.newerPruned || pruned,
+      newerPruned: state.newerPruned || window.pruned,
     });
   };
   // prettier-ignore

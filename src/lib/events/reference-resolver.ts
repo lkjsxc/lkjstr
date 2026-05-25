@@ -23,6 +23,10 @@ const inFlight = createBoundedMap<string, Promise<readonly FeedEvent[]>>({
 const cacheTtlMs = 5 * 60 * 1000;
 
 export function referenceCacheSizeForTests(): number {
+  return referenceCacheSize();
+}
+
+export function referenceCacheSize(): number {
   return cache.size();
 }
 

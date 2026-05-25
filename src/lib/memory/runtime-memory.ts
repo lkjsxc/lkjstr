@@ -1,0 +1,79 @@
+import { runtimeCounterSnapshots } from '../app/runtime-counters';
+import { contentTokenCacheSize } from '../events/content-tokens';
+import { fallbackRepositoryCounts } from '../events/repository-memory';
+import { referenceCacheSize } from '../events/reference-resolver';
+import { profileCacheSize } from '../identity/profile-cache';
+import { appLogCount } from '../log/app-log';
+import { relayDiagnosticSuppressionCount } from '../relays/relay-diagnostic-log';
+import { currentRelaySnapshots } from '../relays/session-snapshots';
+import { sharedSubscriptionManager } from '../relays/subscription-manager';
+
+export type RuntimeMemorySnapshot = {
+  readonly runtimeCounters: ReturnType<typeof runtimeCounterSnapshots>;
+  readonly appLogCount: number;
+  readonly relaySuppressionCount: number;
+  readonly relaySnapshots: {
+    readonly count: number;
+    readonly open: number;
+    readonly activeSubscriptions: number;
+  };
+  readonly subscriptions: ReturnType<typeof sharedSubscriptionManager.counts>;
+  readonly fallbackRepository: ReturnType<typeof fallbackRepositoryCounts>;
+  readonly caches: {
+    readonly references: number;
+    readonly profiles: number;
+    readonly contentTokens: number;
+  };
+  readonly jsHeap?: {
+    readonly usedJSHeapSize: number;
+    readonly totalJSHeapSize: number;
+    readonly jsHeapSizeLimit: number;
+  };
+};
+
+export function runtimeMemorySnapshot(): RuntimeMemorySnapshot {
+  const snapshots = currentRelaySnapshots();
+  return {
+    runtimeCounters: runtimeCounterSnapshots(),
+    appLogCount: appLogCount(),
+    relaySuppressionCount: relayDiagnosticSuppressionCount(),
+    relaySnapshots: {
+      count: snapshots.length,
+      open: snapshots.filter((snapshot) => snapshot.state === 'open').length,
+      activeSubscriptions: snapshots.reduce(
+        (sum, snapshot) =>
+          sum + (snapshot.stats?.activeSubscriptionIds.length ?? 0),
+        0,
+      ),
+    },
+    subscriptions: sharedSubscriptionManager.counts(),
+    fallbackRepository: fallbackRepositoryCounts(),
+    caches: {
+      references: referenceCacheSize(),
+      profiles: profileCacheSize(),
+      contentTokens: contentTokenCacheSize(),
+    },
+    jsHeap: jsHeapSnapshot(),
+  };
+}
+
+function jsHeapSnapshot(): RuntimeMemorySnapshot['jsHeap'] {
+  const memory = (
+    globalThis.performance as
+      | (Performance & {
+          readonly memory?: {
+            readonly usedJSHeapSize: number;
+            readonly totalJSHeapSize: number;
+            readonly jsHeapSizeLimit: number;
+          };
+        })
+      | undefined
+  )?.memory;
+  return memory
+    ? {
+        usedJSHeapSize: memory.usedJSHeapSize,
+        totalJSHeapSize: memory.totalJSHeapSize,
+        jsHeapSizeLimit: memory.jsHeapSizeLimit,
+      }
+    : undefined;
+}

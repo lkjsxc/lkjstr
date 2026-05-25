@@ -73,9 +73,11 @@ docker compose -f docker-compose.yml run --rm cloudflare
 Functional memory changes should also cover:
 
 ```sh
-pnpm test -- tests/unit/relays/relay-client.test.ts tests/unit/relays/subscription-manager.test.ts tests/unit/relays/subscription-manager-read-limiter.test.ts
-pnpm test -- tests/unit/app/runtime-counters.test.ts tests/unit/accounts/npub-miner.test.ts tests/unit/repo-source-classes.test.ts
-pnpm test -- tests/unit/workspace/tab-retention.test.ts tests/unit/events/repository.test.ts tests/unit/jobs/job-manager.test.ts
+pnpm test -- tests/unit/relays/relay-message-data.test.ts tests/unit/protocol/messages.test.ts tests/unit/protocol/event.test.ts
+pnpm test -- tests/unit/events/repository.test.ts tests/unit/events/relay-page-scan-hardening.test.ts
+pnpm test -- tests/unit/notifications/notification-runtime.test.ts tests/unit/notifications/notification-window.test.ts
+pnpm test -- tests/unit/memory/scored-retention.test.ts tests/unit/repo-source-classes.test.ts
+pnpm test -- tests/unit/custom-request/parse.test.ts tests/unit/settings/settings-store.test.ts tests/unit/events/content-tokens.test.ts
 pnpm test:e2e -- tests/e2e/heavy-feed-memory.spec.ts tests/e2e/memory-churn.spec.ts --workers=1
 ```
 

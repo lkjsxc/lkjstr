@@ -1,4 +1,8 @@
-import { parseNostrEvent, type NostrEvent } from './event';
+import {
+  parseNostrEvent,
+  type EventFramePolicy,
+  type NostrEvent,
+} from './event';
 import { parseFilter, type NostrFilter } from './filter';
 
 export type ClientMessage =
@@ -28,7 +32,10 @@ export function encodeClientMessage(message: ClientMessage): string {
   return JSON.stringify(message);
 }
 
-export function parseRelayMessage(raw: string): MessageParseResult {
+export function parseRelayMessage(
+  raw: string,
+  policy?: EventFramePolicy,
+): MessageParseResult {
   let parsed: unknown;
   try {
     parsed = JSON.parse(raw);
@@ -37,7 +44,7 @@ export function parseRelayMessage(raw: string): MessageParseResult {
   }
   if (!Array.isArray(parsed) || typeof parsed[0] !== 'string')
     return fail('bad_shape', 'relay message must be an array');
-  if (parsed[0] === 'EVENT') return parseRelayEvent(parsed);
+  if (parsed[0] === 'EVENT') return parseRelayEvent(parsed, policy);
   if (parsed[0] === 'OK')
     return typed(parsed, 4, ['string', 'boolean', 'string']);
   if (parsed[0] === 'EOSE') return typed(parsed, 2, ['string']);
@@ -67,10 +74,13 @@ export function parseClientMessage(value: unknown): ClientMessage | undefined {
   return undefined;
 }
 
-function parseRelayEvent(value: unknown[]): MessageParseResult {
+function parseRelayEvent(
+  value: unknown[],
+  policy?: EventFramePolicy,
+): MessageParseResult {
   if (value.length !== 3 || typeof value[1] !== 'string')
     return fail('bad_shape', 'EVENT message shape is invalid');
-  const event = parseNostrEvent(value[2]);
+  const event = parseNostrEvent(value[2], policy);
   if (!event.ok) return fail('bad_event', event.message);
   return { ok: true, message: ['EVENT', value[1], event.event] };
 }

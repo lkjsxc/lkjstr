@@ -21,6 +21,10 @@ export function clearProfileCacheForTests(): void {
 }
 
 export function profileCacheSizeForTests(): number {
+  return profileCacheSize();
+}
+
+export function profileCacheSize(): number {
   return profiles.size();
 }
 
