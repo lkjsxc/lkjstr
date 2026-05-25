@@ -14,6 +14,8 @@ Feed surface docs define relay-backed read tabs and action-opened read tabs.
 
 ## Shared Contract
 
+- Event-backed tabs use shared near-end thresholds and bottom status rows. See
+  [event-surface-paging.md](../../architecture/data/event-surface-paging.md).
 - Event rows render avatar, display name, secondary identity fallback,
   timestamp, and wrapped content consistently.
 - Identity actions open Profile tabs in the same tile.

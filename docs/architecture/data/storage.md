@@ -19,9 +19,9 @@ Storage docs define browser persistence ownership.
   diagnostics for feed scans.
 - `jobs`: persisted in-app job records.
 - `cacheMeta`: cache status records.
-- `tabStates`: reserved durable tab state records. It is not used for inactive
-  tab retention snapshots unless a later docs change explicitly makes those
-  snapshots durable.
+- `tabStates`: durable tab snapshot payloads keyed by workspace, pane, and tab
+  id. Feed tabs store anchor event id and offset; tool tabs store minimal
+  restore fields.
 - `settings`: settings overrides.
 - `relaySets`: editable relay sets.
 - `relayDiagnosticSummaries`: persisted relay diagnostic summaries.

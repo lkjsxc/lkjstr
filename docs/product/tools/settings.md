@@ -41,3 +41,7 @@ Settings provide editable local preferences as one flat key-value list.
 - `tabs.inactiveRetentionSeconds` defaults to `300`, is an integer, and accepts
   values from `0` to `3600` seconds.
 - A value of `0` disables inactive tab retention.
+- Cache compaction keys `cache.maxEvents`, `cache.maxAgeDays`, and
+  `cache.compactionEnabled` are retired. Event retention is automatic. See
+  [cache.md](cache.md) and
+  [retention/compaction.md](../../architecture/data/retention/compaction.md).

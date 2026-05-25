@@ -7,9 +7,12 @@ visual rules.
 
 ## Documents
 
+- [pane-drop-target.md](pane-drop-target.md): pane-wide drop resolver and
+  overlays.
 - [resize.md](resize.md): split resize math.
-- [tab-dragging.md](tab-dragging.md): tab drag zones and feedback.
+- [tab-dragging.md](tab-dragging.md): tab drag overview.
 - [tab-runtime.md](tab-runtime.md): tab kinds and lifecycle.
+- [tab-strip-gestures.md](tab-strip-gestures.md): rail scroll and drag arming.
 - [theme.md](theme.md): visual constraints.
 - [tile-menu.md](tile-menu.md): anchored tile commands.
 - [ui-composition.md](ui-composition.md): component ownership.
@@ -21,3 +24,4 @@ visual rules.
 - Virtualized lists use the tab body height, not fixed minimum heights.
 - Wrapped content must not widen split children.
 - Tab movement feedback is shared by pointer and native drag paths.
+- Menu splits and drag edge splits use the same smart insertion primitive.

@@ -12,6 +12,7 @@ Tabs define the workspace surface area.
 - Search
 - Custom Request
 - Global
+- My Profile (only when a signing account is active; opens the active account profile)
 - Profile Edit
 - Accounts
 - Relay Settings
@@ -58,23 +59,36 @@ Tabs define the workspace surface area.
 - Tabs can be dragged to reorder within a tile with pointer dragging or native
   desktop drag-and-drop.
 - Tabs can be dragged into another tile, or to a tile edge to split there.
-- Pane drop feedback shows a translucent full-pane center region or a matching
-  left, right, top, or bottom edge region.
+- Pane drop feedback shows a translucent full-pane center region or a half-pane
+  edge preview that matches the resulting split geometry.
 - Moving a tab activates and focuses it in the target tile.
 - Moving the last tab out of a tile closes the source tile.
 - Invalid drops do nothing.
 
+## Tab Rail
+
+- Each tile header uses a single-row horizontally scrollable tab rail.
+- Left and right fade edges indicate hidden tabs when the rail overflows.
+- The focused tab scrolls into view when focus changes, a tab is inserted, or a
+  tab is moved into the rail.
+- Coarse pointers (touch) pan the rail horizontally by default. A long press
+  arms tab drag; until then the browser handles horizontal panning.
+- Fine pointers (mouse, pen) start drag after a small movement threshold.
+- While the pointer stays in the source tab-strip band, reorder intent takes
+  precedence over edge-split capture on the target tile.
+
 ## Fit
 
-- The tab strip wraps or compresses tab titles inside the tile width.
-- Tab text may truncate, but pane content must not create horizontal scrolling.
+- Tab titles truncate inside fixed tab frames; the rail scrolls instead of
+  wrapping to multiple rows.
+- Pane content must not create horizontal scrolling.
 - Tab bodies fill the pane body height and keep scroll ownership local.
 - Inactive tab bodies unmount when focus changes. Within
   `tabs.inactiveRetentionSeconds`, the workspace keeps a bounded session-memory
-  UI snapshot so scroll and local view state can restore when the tab is
-  selected again.
+  UI snapshot. Durable tab snapshots in IndexedDB restore richer state after
+  reload when available.
 
 ## Removed Surface
 
-There is no retired draft-planning workspace tab. Profile and Thread are opened
-from actions rather than free-form New Tab inputs.
+There is no retired draft-planning workspace tab. Thread and Author Context are
+opened from actions rather than free-form New Tab inputs.

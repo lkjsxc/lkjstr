@@ -14,7 +14,11 @@ Panes are workspace tiles that host tab groups.
 - Pane close removes the pane and recovers the workspace when needed.
 - Split actions open a focused New Tab chooser in the new pane.
 - Panes accept dragged tabs from their own tab strip or another pane.
-- Panes show the same drop overlay for pointer and native tab dragging.
+- Drop targeting covers the entire pane tile, including the tab header and body.
+- Pointer and native tab dragging share one drop resolver and one overlay
+  contract.
+- Edge drop previews render the resulting half-pane region, not only the narrow
+  activation corridor.
 - A pane closes when its last tab is moved to another pane.
 - Pane bodies have local vertical scroll and no default horizontal scroll.
 - Long child content wraps inside the pane instead of widening the workspace.

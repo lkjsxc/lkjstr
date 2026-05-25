@@ -67,9 +67,8 @@ or older-page loads from moving the visible row.
 - In-memory event maps are a bounded fallback for tests and non-browser
   execution, not the primary browser cache.
 - Event indexes support kind/time, author/kind/time, and `e` or `p` tag lookup.
-- Local event compaction prunes by age and count from Settings.
-- Default compaction limits are `30` days and `5000` events, with numeric
-  bounds enforced by the Settings schema.
+- Local event compaction prunes by retention score through the indexed
+  `eventPriority` store. See [retention/README.md](retention/README.md).
 - Accounts, settings, relay sets, workspace state, notifications, and Tweet
   drafts are protected from event cache pruning.
 - Feed cursors are removed when their page boundary no longer points to a

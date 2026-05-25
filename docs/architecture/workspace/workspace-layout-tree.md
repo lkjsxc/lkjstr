@@ -25,7 +25,7 @@ The normalized layout tree is one pane node or a split node.
 - Split nodes require at least two children.
 - Direct split-count UI is not exposed.
 - Moving the last tab out of a pane removes that pane from the layout.
-- Moving a tab into a pane does not create a new layout node.
+- Moving a tab into a pane center does not create a new layout node.
 
 ## Recovery
 
@@ -41,7 +41,16 @@ timeline pane while preserving workspace id and account id.
   pane beside the target and set equal sizes for that sibling group.
 - If the parent split direction differs, wrap only the target and new pane.
 - Repeated normal split actions create predictable N-way layouts without
-  explicit 3-way or 5-way controls.
+  explicit multi-split controls.
+
+## Split Insertion Primitive
+
+- Tile menu splits and tab edge-drop splits both call `smartSplitPane` through
+  `insertPaneBySplitIntent`.
+- Edge drops map zone to direction and side: left/top to `before`, right/bottom
+  to `after`; left/right to `horizontal`, top/bottom to `vertical`.
+- Drag-created N-way layouts must match menu-created layouts for the same
+  sequence of split directions on the same target pane.
 
 ## Move Commands
 

@@ -28,8 +28,11 @@ its NIP-02 follows.
 - The tab keeps a `180` item window and exposes jump to latest after newer
   items are pruned.
 - Live events are retained only inside the same `180` item window.
-- Older pages load after near-bottom scroll or when the loaded rows are shorter
-  than the viewport and `hasOlder` remains true.
+- Older pages load after near-bottom scroll using the viewport-aware near-end
+  threshold, or when the loaded rows are shorter than the viewport and
+  `hasOlder` remains true.
+- One speculative older page may prefetch when near end while `hasOlder` is
+  true.
 - Initial and historical relay pages use compound `{createdAt,id}` cursors and
   adaptive bounded windows with both `since` and `until`. Empty complete
   windows continue older; incomplete or dense windows keep `hasOlder`

@@ -14,7 +14,11 @@ Workspace docs define the first screen, tile mechanics, tab list, and flows.
 
 ## Shared Contract
 
-- Tile headers may wrap tabs and controls but must not force horizontal
-  document or pane scrolling.
+- Each tile uses a single-row horizontally scrollable tab rail with fade edges
+  for overflow and automatic focus reveal.
+- Tile headers must not force horizontal document or pane scrolling.
 - Active tab content uses the remaining tile height.
 - Virtual lists fill their tab body after split resizing.
+- Tab drag, drop overlays, and split insertion follow the architecture docs in
+  [tab-dragging.md](../architecture/workspace/tab-dragging.md) and
+  [workspace-layout-tree.md](../architecture/workspace/workspace-layout-tree.md).

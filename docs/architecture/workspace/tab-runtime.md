@@ -28,6 +28,10 @@ Tab runtime defines valid tab kinds and lifecycle ownership.
 - `tabs.inactiveRetentionSeconds` retains a bounded in-memory UI snapshot for
   an inactive tab. It does not retain mounted DOM, live runtimes, relay
   subscriptions, or one-shot relay reads.
+- Tab snapshots are tab-kind aware. Feed tabs store anchor event id and offset.
+  Tool tabs store the minimum fields needed to restore local view state.
+- IndexedDB `tabStates` stores durable snapshots for reload restore. Session
+  snapshots provide fast restore within the TTL window.
 - When retention is positive, a tab reselected within the window restores its
   session snapshot and creates fresh runtime/network work from the tab id.
 - Retention expiry drops the in-memory snapshot only; runtime and subscription
