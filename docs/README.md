@@ -20,10 +20,14 @@ for detailed contracts.
   bounded memory and leak cleanup.
 - [architecture/data/memory-prioritization.md](architecture/data/memory-prioritization.md):
   durable data and runtime retention priority.
+- [architecture/data/resource-ownership.md](architecture/data/resource-ownership.md):
+  resource ownership table.
 - [architecture/data/event-tree.md](architecture/data/event-tree.md): event row
   tree model.
 - [architecture/data/feed-memory.md](architecture/data/feed-memory.md): feed
   cache and relay windows.
+- [architecture/data/heap-retention.md](architecture/data/heap-retention.md):
+  observed heap symptoms and investigation strategy.
 - [architecture/data/local-secret-security.md](architecture/data/local-secret-security.md):
   local secret security boundary.
 - [architecture/data/relay-pages.md](architecture/data/relay-pages.md): relay
@@ -97,6 +101,8 @@ for detailed contracts.
 - [operations/data-safety.md](operations/data-safety.md): local data safety.
 - [operations/diagnostics.md](operations/diagnostics.md): logs and diagnostics.
 - [operations/docker.md](operations/docker.md): Docker checks.
+- [operations/memory-verification.md](operations/memory-verification.md):
+  memory verification workflow.
 - [operations/readiness.md](operations/readiness.md): handoff checks.
 - [operations/testing-ownership.md](operations/testing-ownership.md): test
   ownership.
