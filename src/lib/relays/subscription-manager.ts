@@ -2,6 +2,7 @@ import { sharedRelayPool, type PoolEvent, type RelayPool } from './relay-pool';
 import type { RelayReadRequest } from '../events/types';
 import { relaySafeFilters } from '../events/nostr-filter-sanitize';
 import { countRuntime } from '../app/runtime-counters';
+import { incMemoryCounter, decMemoryCounter } from '../app/memory-counters';
 import type { RelaySnapshot } from './types';
 import type { ReadPageResult } from './read-page-status';
 import { createPerRelayReadLimiter } from './read-limiter';
@@ -141,9 +142,11 @@ export function createRelaySubscriptionManager(
       ).finally(() => {
         aborts.detachSignals();
         inFlightReads.delete(dedupeKey);
+        decMemoryCounter('active-paged-reads');
       });
       inFlightReads.set(dedupeKey, { promise, aborts });
       countRuntime('subscription-manager', 'pageReads');
+      incMemoryCounter('active-paged-reads');
       return promise;
     },
     close: (): void => {
@@ -160,10 +163,7 @@ export function createRelaySubscriptionManager(
     },
     counts: () => ({
       liveSubscriptions: entries.size,
-      liveListeners: [...entries.values()].reduce(
-        (sum, entry) => sum + entry.listeners.size,
-        0,
-      ),
+      liveListeners: [...entries.values()].reduce((s, e) => s + e.listeners.size, 0),
       inFlightReads: inFlightReads.size,
     }),
   };
@@ -179,9 +179,8 @@ export function subscriptionKey(request: RelayReadRequest): string {
   });
 }
 
-export function relayFacingSubId(key: string): string {
-  return compactRelaySubscriptionId('read', 'sub', key);
-}
+export const relayFacingSubId = (key: string): string =>
+  compactRelaySubscriptionId('read', 'sub', key);
 
 export const sharedSubscriptionManager = createRelaySubscriptionManager();
 
