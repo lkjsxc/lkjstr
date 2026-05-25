@@ -56,18 +56,22 @@ linked product, protocol, architecture, and operations pages.
 
 ## Memory and Retention
 
-- Memory retention investigation is active. Observed symptoms include a retained
-  JavaScript heap approaching one gigabyte after heavy feed usage, with millions
-  of Function objects, roughly ninety thousand IDBRequest/IDBTransaction objects,
-  and hundreds of thousands of Svelte context and listener objects.
+- Memory retention work is active. Historical symptoms included a retained heap
+  approaching one gigabyte after heavy feed usage. Production-build Playwright
+  memory tests (`pnpm test:e2e:memory`) now enforce heap deltas and zero
+  teardown counters for paged reads, read waiters, publish waiters, abort
+  listeners, and IndexedDB operations.
+- Compact memory counters and `window.__lkjstrMemoryDebug()` expose redacted
+  snapshots for e2e and Stats.
+- Relay diagnostic summaries are bounded in memory and IDB list reads are
+  capped; batched `bulkPut` reduces per-relay transaction churn.
 - Cleanup ownership for every resource type is documented in
   [resource-ownership.md](architecture/data/resource-ownership.md).
 - Heap snapshot collection, memory budgets, and the verification workflow are
   documented in [heap-retention.md](architecture/data/heap-retention.md) and
   [memory-verification.md](operations/memory-verification.md).
-- Major leak areas under investigation: IndexedDB/Dexie churn, relay diagnostic
-  summaries, abort listener accumulation, Svelte context retention, relay pool and
-  subscription manager state, and unbounded feed caches.
+- Product polish tracked in [product/backlog.md](product/backlog.md) follows
+  memory gate stability.
 
 ## Known Gaps
 

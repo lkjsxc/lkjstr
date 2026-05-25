@@ -157,7 +157,8 @@ export function createJobManager() {
     },
     list: (): Promise<JobRecord[]> =>
       boundedStorageRead(
-        () => browserDb().jobs.orderBy('updatedAt').reverse().limit(5000).toArray(),
+        () =>
+          browserDb().jobs.orderBy('updatedAt').reverse().limit(5000).toArray(),
         [...memoryJobs.values()],
       ),
     listTree: async (rootId?: string): Promise<JobRecord[]> =>

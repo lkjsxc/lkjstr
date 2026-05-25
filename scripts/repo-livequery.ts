@@ -50,7 +50,8 @@ function checkLiveQueryCalls(
         );
         const context = precedingLines.join('\n');
 
-        const hasUnsubscribe = /subscribe|unsubscribe|dispose|capture|close/.test(context);
+        const hasUnsubscribe =
+          /subscribe|unsubscribe|dispose|capture|close/.test(context);
 
         if (!hasUnsubscribe) {
           problems.push({

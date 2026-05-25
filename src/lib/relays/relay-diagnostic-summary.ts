@@ -141,7 +141,9 @@ async function relayDiagnosticSummary(
 async function flushAllPendingWrites(): Promise<void> {
   const urls = [...pendingWrites.keys()];
   if (urls.length === 0) return;
-  const batch = urls.map((url) => pendingWrites.get(url)).filter(Boolean) as RelayDiagnosticSummary[];
+  const batch = urls
+    .map((url) => pendingWrites.get(url))
+    .filter(Boolean) as RelayDiagnosticSummary[];
   for (const url of urls) {
     writeTimers.delete(url);
     pendingWrites.delete(url);
@@ -150,4 +152,3 @@ async function flushAllPendingWrites(): Promise<void> {
     browserDb().relayDiagnosticSummaries.bulkPut(batch),
   );
 }
-

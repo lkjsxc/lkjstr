@@ -74,7 +74,11 @@ export async function clearRouteBlock(relayUrl: string): Promise<void> {
 export async function blockedRelayUrls(): Promise<Set<string>> {
   const rows = await boundedStorageRead(
     () =>
-      browserDb().relayRouteBlocks.orderBy('updatedAt').reverse().limit(500).toArray(),
+      browserDb()
+        .relayRouteBlocks.orderBy('updatedAt')
+        .reverse()
+        .limit(500)
+        .toArray(),
     [...memoryBlocks.values()],
   );
   return new Set(rows.map((row) => row.relayUrl));

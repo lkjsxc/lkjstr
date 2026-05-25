@@ -49,11 +49,12 @@ function checkTimerOwnership(
 
   for (const usage of usages) {
     if (usage.hasClearCall || usage.hasStoredRef) continue;
-    const clearName = usage.name === 'addEventListener'
-      ? 'removeEventListener'
-      : usage.name === 'setInterval'
-        ? 'clearInterval'
-        : 'clearTimeout';
+    const clearName =
+      usage.name === 'addEventListener'
+        ? 'removeEventListener'
+        : usage.name === 'setInterval'
+          ? 'clearInterval'
+          : 'clearTimeout';
     problems.push({
       file,
       message: `${usage.name} at line ${usage.line + 1} requires captured cleanup ownership (stored ref with ${clearName} called on dispose)`,
@@ -75,8 +76,6 @@ function findTimerUsages(
       if (timerNames.includes(fnName)) {
         const lineNum = ts.getLineAndCharacterOfPosition(source, node.pos).line;
         const lineText = lines[lineNum] ?? '';
-        const callText = node.getText(source);
-
         if (fnName === 'setTimeout' && lineText.includes('new Promise')) {
           return;
         }

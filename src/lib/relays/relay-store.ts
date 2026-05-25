@@ -40,7 +40,8 @@ let memoryRelaySets: RelaySet[] = [];
 
 export async function listRelaySets(): Promise<RelaySet[]> {
   const saved = await boundedStorageRead(
-    () => browserDb().relaySets.orderBy('updatedAt').reverse().limit(100).toArray(),
+    () =>
+      browserDb().relaySets.orderBy('updatedAt').reverse().limit(100).toArray(),
     memoryRelaySets,
   );
   if (saved.length > 0) {

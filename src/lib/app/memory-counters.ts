@@ -54,7 +54,10 @@ export function incMemoryCounter(key: MemoryCounterKey, delta = 1): void {
 }
 
 export function decMemoryCounter(key: MemoryCounterKey, delta = 1): void {
-  counters.set(key, Math.max(0, (counters.get(key) ?? 0) - Math.max(0, Math.floor(delta))));
+  counters.set(
+    key,
+    Math.max(0, (counters.get(key) ?? 0) - Math.max(0, Math.floor(delta))),
+  );
 }
 
 export function getMemoryCounter(key: MemoryCounterKey): number {

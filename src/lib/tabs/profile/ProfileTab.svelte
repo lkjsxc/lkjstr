@@ -101,7 +101,13 @@
   }
 
   function shouldLoadOlder(st: number, ch: number, sh: number): boolean {
-    return Boolean(runtime) && !state.loadingOlder && state.hasOlder && state.posts.length > 0 && isNearEnd(st, ch, sh);
+    return (
+      Boolean(runtime) &&
+      !state.loadingOlder &&
+      state.hasOlder &&
+      state.posts.length > 0 &&
+      isNearEnd(st, ch, sh)
+    );
   }
 
   $effect(() => {

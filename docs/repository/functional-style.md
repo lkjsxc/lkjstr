@@ -64,10 +64,7 @@ first-party code in `src/`.
 - Every variant must have a literal `kind` or `type` field.
 - Example:
   ```ts
-  type Tab =
-    | { kind: 'home'; feed: FeedHandle }
-    | { kind: 'profile'; pubkey: string; feed: FeedHandle }
-    | { kind: 'tweet'; draft: DraftHandle };
+  type Tab = { kind: 'home'; feed: FeedHandle } | { kind: 'profile'; pubkey: string; feed: FeedHandle } | { kind: 'tweet'; draft: DraftHandle };
   ```
 - Switch on the discriminant; the TypeScript compiler narrows the type
   automatically. Avoid `if ('feed' in tab)` style checks.

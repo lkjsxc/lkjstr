@@ -4,20 +4,7 @@ import ts from 'typescript';
 
 export type Problem = { file: string; message: string };
 
-const LARGE_TABLE_NAMES = new Set([
-  'events',
-  'feedCursors',
-]);
-
-const SAFE_METHODS = new Set([
-  'limit',
-  'offset',
-  'uniqueKeys',
-  'and',
-  'modify',
-  'delete',
-  'clear',
-]);
+const LARGE_TABLE_NAMES = new Set(['events', 'feedCursors']);
 
 export async function checkToArrayLimits(
   root: string,
@@ -66,7 +53,8 @@ function checkToArrayCalls(
         );
         const context = precedingLines.join('\n');
 
-        const hasLimitNearby = context.includes('.limit(') ||
+        const hasLimitNearby =
+          context.includes('.limit(') ||
           context.includes('.offset(') ||
           /\blimit\s*\(/.test(context);
 

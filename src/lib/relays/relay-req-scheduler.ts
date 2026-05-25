@@ -1,4 +1,8 @@
-import { incMemoryCounter, decMemoryCounter, setMemoryCounter } from '../app/memory-counters';
+import {
+  incMemoryCounter,
+  decMemoryCounter,
+  setMemoryCounter,
+} from '../app/memory-counters';
 
 export type ScheduledReq = {
   readonly id: string;
@@ -53,7 +57,8 @@ export function createRelayReqScheduler() {
     remove: (id: string): void => {
       const before = pending.length;
       pending = pending.filter((item) => item.id !== id);
-      if (pending.length < before) decMemoryCounter('pending-relay-request-queue');
+      if (pending.length < before)
+        decMemoryCounter('pending-relay-request-queue');
       active.delete(id);
     },
     clear: (): void => {

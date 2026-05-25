@@ -1,4 +1,8 @@
-import { incMemoryCounter, decMemoryCounter, setMemoryCounter } from '../app/memory-counters';
+import {
+  incMemoryCounter,
+  decMemoryCounter,
+  setMemoryCounter,
+} from '../app/memory-counters';
 
 export const maxRelayQueuedMessages = 64;
 

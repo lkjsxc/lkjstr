@@ -93,10 +93,22 @@ timers, and evict idle clients from the pool map.
 Profile summaries, token caches, and feed runtime windows can grow without
 bounds. The fix is to use bounded LRU or TTL caches with documented caps.
 
+## Measured Baselines
+
+Production-build Playwright memory tests (`pnpm test:e2e:memory`) currently
+pass with these gates:
+
+- Heavy feed (1200 notes): heap delta under `350 MiB` after forced GC.
+- Workspace churn (open/close surfaces): heap delta under `80 MiB` after forced
+  GC.
+- Memory gate: zero `active-paged-reads`, `queued-read-waiters`,
+  `active-relay-publish-waiters`, `active-abort-listeners`, and
+  `active-indexeddb-ops` after teardown.
+
 ## Confirmed Root Causes
 
 Status: under active investigation. Update this section only after heap
-snapshots and memory e2e runs confirm retaining paths.
+snapshots confirm retaining paths beyond the e2e gates above.
 
 | Symptom group | Suspected owner module | Cleanup owner | Verification test |
 |---------------|------------------------|---------------|-------------------|

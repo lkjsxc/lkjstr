@@ -1,13 +1,20 @@
-import { sharedRelayPool, type PoolEvent, type RelayPool } from './relay-pool';
 import type { RelayReadRequest } from '../events/types';
-import { relaySafeFilters } from '../events/nostr-filter-sanitize';
+import { sharedRelayPool, type PoolEvent, type RelayPool } from './relay-pool';
+import type { RelaySnapshot } from './types';
 import { countRuntime } from '../app/runtime-counters';
 import { incMemoryCounter, decMemoryCounter } from '../app/memory-counters';
-import type { RelaySnapshot } from './types';
 import type { ReadPageResult } from './read-page-status';
 import { createPerRelayReadLimiter } from './read-limiter';
 import { compactRelaySubscriptionId } from './subscription-id';
-import { normalizedRelayList } from './relay-url-list';
+import {
+  readDedupeKey,
+  relaySafeReadRequest,
+  subscriptionKey,
+} from './subscription-manager-keys';
+import type {
+  ReadPageOptions,
+  RelaySubscriptionManagerOptions,
+} from './subscription-manager-types';
 import { executeReadPage, type ReadPageState } from './subscription-read-page';
 import {
   normalizeSnapshots,
@@ -27,17 +34,12 @@ type InFlightRead = {
   readonly aborts: SharedAbortController;
 };
 
-export type ReadPageOptions = {
-  readonly timeoutMs?: number;
-  readonly maxEvents?: number;
-  readonly signal?: AbortSignal;
-};
-
-export const defaultReadPageMaxEvents = 1000;
-
-export type RelaySubscriptionManagerOptions = {
-  readonly maxConcurrentReadPagesPerRelay?: number;
-};
+export {
+  defaultReadPageMaxEvents,
+  type ReadPageOptions,
+  type RelaySubscriptionManagerOptions,
+} from './subscription-manager-types';
+export { subscriptionKey } from './subscription-manager-keys';
 
 export type RelaySubscriptionManager = ReturnType<
   typeof createRelaySubscriptionManager
@@ -163,37 +165,17 @@ export function createRelaySubscriptionManager(
     },
     counts: () => ({
       liveSubscriptions: entries.size,
-      liveListeners: [...entries.values()].reduce((s, e) => s + e.listeners.size, 0),
+      liveListeners: [...entries.values()].reduce(
+        (s, e) => s + e.listeners.size,
+        0,
+      ),
       inFlightReads: inFlightReads.size,
     }),
   };
   return manager;
 }
 
-export function subscriptionKey(request: RelayReadRequest): string {
-  return JSON.stringify({
-    key: request.key,
-    relays: normalizedRelayList(request.relays),
-    filters: relaySafeFilters(request.filters),
-    purpose: request.purpose,
-  });
-}
-
 export const relayFacingSubId = (key: string): string =>
   compactRelaySubscriptionId('read', 'sub', key);
 
 export const sharedSubscriptionManager = createRelaySubscriptionManager();
-
-function readDedupeKey(
-  request: RelayReadRequest,
-  options: ReadPageOptions,
-): string {
-  return JSON.stringify({
-    request: subscriptionKey(request),
-    timeoutMs: options.timeoutMs ?? 5000,
-    maxEvents: options.maxEvents ?? defaultReadPageMaxEvents,
-  });
-}
-
-// prettier-ignore
-function relaySafeReadRequest(request: RelayReadRequest): RelayReadRequest { return { ...request, filters: relaySafeFilters(request.filters) }; }

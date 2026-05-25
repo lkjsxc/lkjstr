@@ -13,8 +13,8 @@ describe('package scripts', () => {
   });
 
   it('exposes focused memory browser smoke coverage', () => {
-    expect(packageJson.scripts['test:e2e:memory']).toBe(
-      'playwright test tests/e2e/heavy-feed-memory.spec.ts',
+    expect(packageJson.scripts['test:e2e:memory']).toContain(
+      'playwright test tests/e2e/memory-gate.spec.ts',
     );
   });
 

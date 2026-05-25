@@ -1,7 +1,5 @@
 import fs from 'node:fs/promises';
 import path from 'node:path';
-import { execFile } from 'node:child_process';
-import { promisify } from 'node:util';
 import {
   isStrictDoc,
   rootDocLinkProblems,
@@ -17,7 +15,6 @@ import {
 } from './repo-doc-helpers';
 
 export type RepoProblem = { file: string; message: string };
-const run = promisify(execFile);
 const banned = /\b(legacy|v[0-9]+|version(?:s|ed|ing)?)\b/i;
 
 export async function checkDocs(
@@ -82,11 +79,7 @@ function checkProseLineLength(
   for (let i = 0; i < lines.length; i++) {
     const line = lines[i]!;
     if (line.startsWith('```')) inCodeBlock = !inCodeBlock;
-    if (
-      !inCodeBlock &&
-      line.length > PROSE_LINE_LIMIT &&
-      !isTableLine(line)
-    ) {
+    if (!inCodeBlock && line.length > PROSE_LINE_LIMIT && !isTableLine(line)) {
       problems.push({
         file,
         message: `line ${i + 1} exceeds ${PROSE_LINE_LIMIT} prose chars`,

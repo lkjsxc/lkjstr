@@ -11,10 +11,7 @@ import { relayLimits } from './relay-limits';
 import { createRelayReqScheduler } from './relay-req-scheduler';
 import { createRelaySubscriptionAliases } from './relay-subscription-alias';
 import { createRelayCloseTombstones } from './relay-close-tombstones';
-import {
-  incMemoryCounter,
-  decMemoryCounter,
-} from '../app/memory-counters';
+import { incMemoryCounter, decMemoryCounter } from '../app/memory-counters';
 import type { RelaySubscribeOptions } from './relay-subscription-strategy';
 // prettier-ignore
 import type { RelayClientEvents, RelayConnectionState, RelayDiagnostic, RelayDiagnosticKind, RelaySnapshot } from './types';

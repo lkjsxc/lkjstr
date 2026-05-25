@@ -25,10 +25,7 @@ export function createResourceScope(debugName?: string) {
     cleanups.push(cleanup);
   };
 
-  const timer = (
-    fn: () => void,
-    ms: number,
-  ): ReturnType<typeof setTimeout> => {
+  const timer = (fn: () => void, ms: number): ReturnType<typeof setTimeout> => {
     ensureOpen();
     const id = setTimeout(() => {
       timers.delete(id);
@@ -82,10 +79,7 @@ export function createResourceScope(debugName?: string) {
     });
   };
 
-  const abortListener = (
-    signal: AbortSignal,
-    fn: () => void,
-  ): void => {
+  const abortListener = (signal: AbortSignal, fn: () => void): void => {
     ensureOpen();
     signal.addEventListener('abort', fn, { once: true });
     add(() => signal.removeEventListener('abort', fn));

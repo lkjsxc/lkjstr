@@ -8,8 +8,6 @@ import {
   compactFeedCoverage,
   deleteFeedCoverageForFeeds,
 } from '../events/feed-coverage-store';
-import type { StoredEvent } from '../events/types';
-
 export type CacheCompactionOptions = {
   readonly enabled: boolean;
   readonly maxAgeSeconds: number;
@@ -41,7 +39,12 @@ export async function compactOldEvents(
   const now = Math.floor(Date.now() / 1000);
   const recentIds = await recentEventIds(resolved.maxEvents);
   const priorityIds = await priorityEventIds();
-  const pruneIds = await collectPruneIds(recentIds, priorityIds, now, resolved.maxAgeSeconds);
+  const pruneIds = await collectPruneIds(
+    recentIds,
+    priorityIds,
+    now,
+    resolved.maxAgeSeconds,
+  );
   const retainedIds = new Set(recentIds);
   for (const id of priorityIds) retainedIds.add(id);
   await browserDb().transaction(
@@ -87,8 +90,7 @@ async function priorityEventIds(): Promise<Set<string>> {
 
 async function loadAccountPubkeys(): Promise<Set<string>> {
   const pubkeys = new Set<string>();
-  await browserDb()
-    .accounts.each((account) => pubkeys.add(account.pubkey));
+  await browserDb().accounts.each((account) => pubkeys.add(account.pubkey));
   return pubkeys;
 }
 
@@ -106,7 +108,10 @@ async function collectLatestByKindPubkey(
     .each((event) => {
       const current = latestByPubkey.get(event.pubkey);
       if (!current || event.created_at > current.created_at) {
-        latestByPubkey.set(event.pubkey, { id: event.id, created_at: event.created_at });
+        latestByPubkey.set(event.pubkey, {
+          id: event.id,
+          created_at: event.created_at,
+        });
       }
     });
   for (const item of latestByPubkey.values()) target.add(item.id);
@@ -128,7 +133,10 @@ async function collectLatestByKindPubkeyForSet(
       if (!wantedPubkeys.has(event.pubkey)) return;
       const current = latestByPubkey.get(event.pubkey);
       if (!current || event.created_at > current.created_at) {
-        latestByPubkey.set(event.pubkey, { id: event.id, created_at: event.created_at });
+        latestByPubkey.set(event.pubkey, {
+          id: event.id,
+          created_at: event.created_at,
+        });
       }
     });
   for (const item of latestByPubkey.values()) target.add(item.id);
@@ -148,7 +156,8 @@ async function collectPruneIds(
       if (priorityIds.has(event.id)) return;
       const isRecent = recentIds.has(event.id);
       const shouldPrune =
-        !isRecent || eventRetention(event, nowSeconds, maxAgeSeconds) === 'prune';
+        !isRecent ||
+        eventRetention(event, nowSeconds, maxAgeSeconds) === 'prune';
       if (shouldPrune) pruneIds.push(event.id);
     });
   return pruneIds;

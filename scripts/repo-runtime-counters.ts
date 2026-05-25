@@ -85,7 +85,9 @@ function isStaticKey(node: ts.Node, source: ts.SourceFile): boolean {
   if (ts.isNumericLiteral(node)) return true;
   if (ts.isIdentifier(node)) return VALID_STATIC_KEYS.has(node.text);
   if (ts.isConditionalExpression(node)) {
-    return isStaticKey(node.whenTrue, source) && isStaticKey(node.whenFalse, source);
+    return (
+      isStaticKey(node.whenTrue, source) && isStaticKey(node.whenFalse, source)
+    );
   }
   return false;
 }

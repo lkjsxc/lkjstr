@@ -1,20 +1,9 @@
 <script lang="ts">
   import { onMount } from 'svelte';
   import type { Account } from '$lib/accounts/account';
-  import { uploadMediaFile } from '$lib/media/upload';
-  import { loadUploadSettings, type UploadSettings } from '$lib/media/settings';
   import { settingsChangedEvent } from '$lib/settings/settings-events';
-  import {
-    loadProfileMetadata,
-    publishProfileMetadata,
-  } from '$lib/profile/profile-actions';
-  import {
-    draftFromMetadata,
-    emptyProfileMetadataDraft,
-    validateProfileMetadataDraft,
-    type ProfileMetadataDraft,
-  } from '$lib/profile/profile-metadata-draft';
   import type { RelaySet } from '$lib/relays/relay-store';
+  import { createProfileEditController } from './profile-edit-controller';
   import ProfileImageUpload from './ProfileImageUpload.svelte';
   import ProfileTextField from './ProfileTextField.svelte';
 
@@ -25,25 +14,22 @@
   };
 
   let props: Props = $props();
-  let draft = $state<ProfileMetadataDraft>(emptyProfileMetadataDraft());
-  let original = $state<ProfileMetadataDraft>(emptyProfileMetadataDraft());
-  let loadedFor = $state('');
-  let status = $state('');
-  let loading = $state(false);
-  let saving = $state(false);
-  let uploading = $state<keyof ProfileMetadataDraft | ''>('');
-  let uploadSettings = $state<UploadSettings>({
-    provider: 'nostr-build', customServer: '', server: 'https://nostr.build', noTransform: true,
-  });
   let destroyed = false;
-  let error = $derived(validateProfileMetadataDraft(draft));
-  let dirty = $derived(JSON.stringify(draft) !== JSON.stringify(original));
-  let canEdit = $derived(Boolean(props.activeAccount?.capabilities.sign));
-  let canSave = $derived(canEdit && dirty && !error && !loading && !saving);
+  const controller = createProfileEditController({
+    getAccount: () => props.activeAccount,
+    getRelaySets: () => props.relaySets,
+    isDestroyed: () => destroyed,
+  });
+  let view = $state(controller.snapshot());
 
   onMount(() => {
-    void refreshUploadSettings();
-    const reload = () => void refreshUploadSettings();
+    void controller.refreshUploadSettings().then(() => {
+      if (!destroyed) view = controller.snapshot();
+    });
+    const reload = () =>
+      void controller.refreshUploadSettings().then(() => {
+        if (!destroyed) view = controller.snapshot();
+      });
     window.addEventListener(settingsChangedEvent, reload);
     return () => {
       destroyed = true;
@@ -52,147 +38,114 @@
   });
 
   $effect(() => {
-    const pubkey = props.activeAccount?.pubkey ?? '';
-    if (!pubkey || pubkey === loadedFor) return;
-    loadedFor = pubkey;
-    loading = true;
-    status = '';
-    void loadProfileMetadata(pubkey)
-      .then((metadata) => {
-        if (destroyed) return;
-        const loaded = draftFromMetadata(metadata);
-        draft = loaded;
-        original = loaded;
-      })
-      .catch((caught) => {
-        if (destroyed) return;
-        status = caught instanceof Error ? caught.message : 'Profile load failed.';
-      })
-      .finally(() => {
-        if (!destroyed) loading = false;
-      });
+    controller.loadForPubkey(props.activeAccount?.pubkey ?? '');
+    view = controller.snapshot();
   });
 
-  async function refreshUploadSettings(): Promise<void> {
-    const settings = await loadUploadSettings();
-    if (!destroyed) uploadSettings = settings;
-  }
-
-  async function save(): Promise<void> {
-    if (!canSave || !props.activeAccount) return;
-    saving = true;
-    status = '';
-    const result = await publishProfileMetadata(
-      draft,
-      props.relaySets,
-      props.activeAccount.pubkey,
-    );
-    if (destroyed) return;
-    saving = false;
-    status = result.ok ? 'Profile updated.' : result.message;
-    if (result.ok) original = draft;
-  }
-
-  async function upload(
-    key: Extract<keyof ProfileMetadataDraft, 'picture' | 'banner'>,
-    files: FileList | null,
-  ): Promise<void> {
-    const file = files?.[0];
-    if (!file) return;
-    if (!uploadSettings.server.trim())
-      return void (status = 'Configure a media upload server first.');
-    uploading = key;
-    status = '';
-    try {
-      const uploaded = await uploadMediaFile(file, uploadSettings);
-      if (destroyed) return;
-      update(key, uploaded.url);
-      status = `${key} uploaded.`;
-    } catch (caught) {
-      if (destroyed) return;
-      status = caught instanceof Error ? caught.message : 'Media upload failed.';
-    } finally {
-      if (!destroyed) uploading = '';
-    }
-  }
-
-  function update(key: keyof ProfileMetadataDraft, value: string): void {
-    draft = { ...draft, [key]: value };
-  }
-
-  function reset(): void {
-    draft = original;
-    status = 'Profile draft reset.';
-  }
+  const refresh = (): void => {
+    view = controller.snapshot();
+  };
 </script>
 
 <section class="data-tab profile-edit-tab" aria-label="Profile Edit">
-  {#if canEdit}
-    {#if loading}<p>Loading profile metadata...</p>{/if}
+  {#if view.canEdit}
+    {#if view.loading}<p>Loading profile metadata...</p>{/if}
     <ProfileTextField
       label="Banner"
-      value={draft.banner}
-      update={(value) => update('banner', value)}
+      value={view.draft.banner}
+      update={(value) => {
+        controller.update('banner', value);
+        refresh();
+      }}
     />
     <ProfileImageUpload
       id={`profile-banner-${props.tabId}`}
       label="Upload banner"
-      uploading={uploading === 'banner'}
-      upload={(files) => void upload('banner', files)}
+      uploading={view.uploading === 'banner'}
+      upload={(files) => void controller.upload('banner', files).then(refresh)}
     />
     <ProfileTextField
       label="Picture"
-      value={draft.picture}
-      update={(value) => update('picture', value)}
+      value={view.draft.picture}
+      update={(value) => {
+        controller.update('picture', value);
+        refresh();
+      }}
     />
     <ProfileImageUpload
       id={`profile-picture-${props.tabId}`}
       label="Upload picture"
-      uploading={uploading === 'picture'}
-      upload={(files) => void upload('picture', files)}
+      uploading={view.uploading === 'picture'}
+      upload={(files) => void controller.upload('picture', files).then(refresh)}
     />
     <ProfileTextField
       label="Display name"
-      value={draft.display_name}
-      update={(value) => update('display_name', value)}
+      value={view.draft.display_name}
+      update={(value) => {
+        controller.update('display_name', value);
+        refresh();
+      }}
     />
     <ProfileTextField
       label="Name"
-      value={draft.name}
-      update={(value) => update('name', value)}
+      value={view.draft.name}
+      update={(value) => {
+        controller.update('name', value);
+        refresh();
+      }}
     />
     <ProfileTextField
       label="NIP-05"
-      value={draft.nip05}
-      update={(value) => update('nip05', value)}
+      value={view.draft.nip05}
+      update={(value) => {
+        controller.update('nip05', value);
+        refresh();
+      }}
     />
     <ProfileTextField
       label="Website"
-      value={draft.website}
-      update={(value) => update('website', value)}
+      value={view.draft.website}
+      update={(value) => {
+        controller.update('website', value);
+        refresh();
+      }}
     />
     <ProfileTextField
       label="Lightning address"
-      value={draft.lud16}
-      update={(value) => update('lud16', value)}
+      value={view.draft.lud16}
+      update={(value) => {
+        controller.update('lud16', value);
+        refresh();
+      }}
     />
     <ProfileTextField
       label="About"
-      value={draft.about}
+      value={view.draft.about}
       multiline
-      update={(value) => update('about', value)}
+      update={(value) => {
+        controller.update('about', value);
+        refresh();
+      }}
     />
-    {#if error}<p role="alert">{error}</p>{/if}
+    {#if view.error}<p role="alert">{view.error}</p>{/if}
     <div class="toolbar">
-      <button type="button" disabled={!dirty || saving} onclick={reset}
-        >Reset</button
+      <button
+        type="button"
+        disabled={!view.dirty || view.saving}
+        onclick={() => {
+          controller.reset();
+          refresh();
+        }}>Reset</button
       >
-      <button type="button" disabled={!canSave} onclick={save}
+      <button
+        type="button"
+        disabled={!view.canSave}
+        onclick={() => void controller.save().then(refresh)}
         >Save profile</button
       >
     </div>
   {:else}
     <p>Select a signing account before editing a profile.</p>
   {/if}
-  {#if status}<p role="status">{status}</p>{/if}
+  {#if view.status}<p role="status">{view.status}</p>{/if}
 </section>

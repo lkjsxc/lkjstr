@@ -1,14 +1,10 @@
 <script lang="ts">
   import { onDestroy } from 'svelte';
-  import {
-    decMemoryCounter,
-    incMemoryCounter,
-  } from '$lib/app/memory-counters';
+  import { decMemoryCounter, incMemoryCounter } from '$lib/app/memory-counters';
   import { reportFeedRuntimeWindowSize } from '$lib/app/memory-debug';
   import {
     countRuntime,
     setRuntimeCounterActive,
-    type RuntimeCounterKey,
   } from '$lib/app/runtime-counters';
   import EventTreeList from '$lib/components/events/EventTreeList.svelte';
   import { appendAppLog } from '$lib/log/app-log';
@@ -98,8 +94,13 @@
       message: 'Timeline runtime created.',
       context: runtimeContext('create'),
     });
-    countRuntime(props.kind === 'global' ? 'timeline:global' : 'timeline:home', 'created');
-    setRuntimeCounterActive(props.kind === 'global' ? 'timeline:global' : 'timeline:home', 1);
+    if (props.kind === 'global') {
+      countRuntime('timeline:global', 'created');
+      setRuntimeCounterActive('timeline:global', 1);
+    } else {
+      countRuntime('timeline:home', 'created');
+      setRuntimeCounterActive('timeline:home', 1);
+    }
     unsubscribe = runtime.subscribe((next) => {
       state = next;
       reportFeedRuntimeWindowSize(next.items.length);
@@ -125,14 +126,15 @@
       message: 'Timeline runtime closed.',
       context: runtimeContext(reason),
     });
-    countRuntime(props.kind === 'global' ? 'timeline:global' : 'timeline:home', 'closed');
-    setRuntimeCounterActive(props.kind === 'global' ? 'timeline:global' : 'timeline:home', -1);
+    if (props.kind === 'global') {
+      countRuntime('timeline:global', 'closed');
+      setRuntimeCounterActive('timeline:global', -1);
+    } else {
+      countRuntime('timeline:home', 'closed');
+      setRuntimeCounterActive('timeline:home', -1);
+    }
     unsubscribe = undefined;
     runtime = undefined;
-  }
-
-  function runtimeMetricKey(): RuntimeCounterKey {
-    return props.kind === 'global' ? 'timeline:global' : 'timeline:home';
   }
 
   function runtimeContext(reason: string): Record<string, unknown> {

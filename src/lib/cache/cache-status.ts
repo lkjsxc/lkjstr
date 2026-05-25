@@ -31,17 +31,14 @@ export async function cacheStatus(): Promise<CacheMetadata> {
 
 async function profileCount(): Promise<number> {
   const fallback = uniqueProfilePubkeys(allMemoryEvents());
-  return boundedStorageRead(
-    async () => {
-      const pubkeys = new Set<string>();
-      await browserDb()
-        .events.where('kind')
-        .equals(0)
-        .each((event) => pubkeys.add(event.pubkey));
-      return pubkeys.size;
-    },
-    fallback,
-  );
+  return boundedStorageRead(async () => {
+    const pubkeys = new Set<string>();
+    await browserDb()
+      .events.where('kind')
+      .equals(0)
+      .each((event) => pubkeys.add(event.pubkey));
+    return pubkeys.size;
+  }, fallback);
 }
 
 function uniqueProfilePubkeys(

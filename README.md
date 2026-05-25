@@ -19,6 +19,7 @@ server-side account system.
 ## What It Does
 
 ### Reading
+
 - **Home** - timeline of followed pubkeys.
 - **Global** - public firehose with optional filters.
 - **Profile** - a user's notes and metadata.
@@ -27,6 +28,7 @@ server-side account system.
 - **Search** - cached matches plus NIP-50 relay filters when supported.
 
 ### Writing
+
 - **Tweet** - compose and publish notes.
 - **Replies, reposts, reactions** - inline event actions.
 - **Zaps** - open or copy NIP-57 invoices (wallet custody is out of scope).
@@ -35,6 +37,7 @@ server-side account system.
 - **Profile Edit** - update active-account metadata.
 
 ### Tools
+
 - **Accounts** - manage local signing keys and NIP-07 browser extensions.
 - **Relay Settings** - user-owned relay list with explicit import for protocol hints.
 - **Custom Request** - send raw Nostr filters to selected relays.

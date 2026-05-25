@@ -3,7 +3,10 @@ import { isEventId, isPubkey } from '../protocol';
 import type { ContentAttachment } from './content-media';
 import type { ContentToken } from './content-tokens';
 
-export function entityToken(raw: string, value: string): ContentToken | undefined {
+export function entityToken(
+  raw: string,
+  value: string,
+): ContentToken | undefined {
   const decoded = decodeEntity(value);
   if (!decoded) return undefined;
   if (decoded.type === 'npub' && isPubkey(decoded.data))
