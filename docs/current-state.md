@@ -54,6 +54,21 @@ linked product, protocol, architecture, and operations pages.
 - Cloudflare Workers Static Assets is a hosting target only; it does not add a
   backend account service, relay proxy, or Cloudflare storage dependency.
 
+## Memory and Retention
+
+- Memory retention investigation is active. Observed symptoms include a retained
+  JavaScript heap approaching one gigabyte after heavy feed usage, with millions
+  of Function objects, roughly ninety thousand IDBRequest/IDBTransaction objects,
+  and hundreds of thousands of Svelte context and listener objects.
+- Cleanup ownership for every resource type is documented in
+  [resource-ownership.md](architecture/data/resource-ownership.md).
+- Heap snapshot collection, memory budgets, and the verification workflow are
+  documented in [heap-retention.md](architecture/data/heap-retention.md) and
+  [memory-verification.md](operations/memory-verification.md).
+- Major leak areas under investigation: IndexedDB/Dexie churn, relay diagnostic
+  summaries, abort listener accumulation, Svelte context retention, relay pool and
+  subscription manager state, and unbounded feed caches.
+
 ## Known Gaps
 
 - Remote NIP-50 results depend on actual relay support.
@@ -64,12 +79,6 @@ linked product, protocol, architecture, and operations pages.
   compact memory counters, and persisted job records.
 - RSS remains diagnostic-only for memory verification; app JavaScript heap is
   the owned browser memory assertion.
-- Memory retention investigation is active. See
-  [heap-retention.md](architecture/data/heap-retention.md) for symptoms and
-  strategy, [resource-ownership.md](architecture/data/resource-ownership.md)
-  for cleanup ownership, and
-  [memory-verification.md](operations/memory-verification.md) for the
-  verification workflow.
 
 ## Canonical Docs
 
