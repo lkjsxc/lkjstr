@@ -4,12 +4,8 @@ export const mouseDragActivationPx = 6;
 
 export type PointerKind = 'coarse' | 'fine';
 
-export function pointerKind(
-  pointerType: string,
-  maxTouchPoints = 0,
-): PointerKind {
-  if (pointerType === 'touch' || maxTouchPoints > 0) return 'coarse';
-  return 'fine';
+export function pointerKind(pointerType: string): PointerKind {
+  return pointerType === 'touch' ? 'coarse' : 'fine';
 }
 
 export function shouldActivateDrag(
