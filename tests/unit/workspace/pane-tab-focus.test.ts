@@ -19,6 +19,7 @@ describe('syncPaneTabFocus', () => {
     const owner = paneBody.querySelector<HTMLElement>('.settings-tab')!;
     owner.scrollTop = 240;
     bodyScroll.track('settings', paneBody);
+    bodyScroll.remember('settings');
     snapshots.retain({ id: 'settings', kind: 'tool', scrollTop: 12 }, 60);
 
     const tabs: Record<string, WorkspaceTab> = {

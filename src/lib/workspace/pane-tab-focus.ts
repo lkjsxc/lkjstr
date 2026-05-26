@@ -16,6 +16,8 @@ type TabSnapshot = TabSnapshotPayload & { readonly id: string };
 export type PaneFocusSync = {
   readonly restorePayload: TabSnapshotPayload | undefined;
   readonly restoreAnchor: ReturnType<typeof feedAnchorFromPayload>;
+  readonly persistedTabId?: string;
+  readonly persistedPayload?: TabSnapshotPayload;
 };
 
 export async function syncPaneTabFocus(args: {
@@ -32,12 +34,12 @@ export async function syncPaneTabFocus(args: {
   const activeId = args.active?.id;
   let restorePayload: TabSnapshotPayload | undefined;
   if (activeId) {
-    const hadMountedBody = args.bodyScroll.hasTracked(activeId);
+    const hadLiveScroll = args.bodyScroll.hasRememberedScroll(activeId);
     const session = args.snapshots.take(activeId);
     if (session) {
       restorePayload = session;
       clearRuntimeSnapshot(activeId);
-      if (!hadMountedBody)
+      if (!hadLiveScroll)
         args.bodyScroll.restoreSnapshot(activeId, {
           scrollTop: session.scrollTop,
         });
@@ -50,14 +52,16 @@ export async function syncPaneTabFocus(args: {
       if (payload && args.active?.id === activeId) {
         restorePayload = payload;
         clearRuntimeSnapshot(activeId);
-        if (!hadMountedBody)
+        if (!hadLiveScroll)
           args.bodyScroll.restoreSnapshot(activeId, {
             scrollTop: payload.scrollTop,
           });
       }
     }
-    if (!hadMountedBody) args.bodyScroll.restore(activeId);
+    if (!hadLiveScroll) args.bodyScroll.restore(activeId);
   }
+  let persistedTabId: string | undefined;
+  let persistedPayload: TabSnapshotPayload | undefined;
   if (args.previousActiveId && args.previousActiveId !== activeId) {
     const previous = args.tabs[args.previousActiveId];
     if (previous && args.group?.tabIds.includes(previous.id)) {
@@ -65,12 +69,13 @@ export async function syncPaneTabFocus(args: {
       const scrollTop =
         args.bodyScroll.snapshot(args.previousActiveId).scrollTop ?? 0;
       const payload = snapshotPayloadForTab(previous, scrollTop);
-      void persistTabSnapshot(
+      persistedPayload = await persistTabSnapshot(
         args.workspaceId,
         args.paneId,
         previous,
         scrollTop,
       );
+      persistedTabId = previous.id;
       if (args.inactiveRetentionSeconds > 0)
         args.snapshots.retain(
           { id: previous.id, ...payload },
@@ -81,5 +86,7 @@ export async function syncPaneTabFocus(args: {
   return {
     restorePayload,
     restoreAnchor: feedAnchorFromPayload(restorePayload),
+    persistedTabId,
+    persistedPayload,
   };
 }

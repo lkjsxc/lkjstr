@@ -79,8 +79,10 @@ body.dragging-tab .tab-main {
   user-select: none;
 }
 
-body.tab-strip-drag-arming .tab-strip {
-  touch-action: none;
+@media (pointer: coarse) {
+  body.tab-strip-drag-arming .tab-strip {
+    touch-action: none;
+  }
 }
 
 .tab-frame[draggable='true']:active,

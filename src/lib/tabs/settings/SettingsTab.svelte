@@ -12,7 +12,11 @@
 
   const scrollPositions = new SvelteMap<string, number>();
 
-  type Props = { tabId?: string; restoreScrollTop?: number };
+  type Props = {
+    tabId?: string;
+    visible?: boolean;
+    restoreScrollTop?: number;
+  };
 
   let props: Props = $props();
   let settings = $state<SettingRecord[]>([]);
@@ -42,7 +46,15 @@
   });
 
   $effect(() => {
-    if (props.restoreScrollTop !== undefined) applyScrollTop();
+    props.restoreScrollTop;
+    props.tabId;
+    if (settings.length === 0) return;
+    void tick().then(() => applyScrollTop());
+  });
+
+  $effect(() => {
+    if (!props.visible || settings.length === 0) return;
+    void tick().then(() => applyScrollTop());
   });
 
   onDestroy(() => {

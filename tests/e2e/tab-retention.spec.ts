@@ -79,12 +79,53 @@ test('restores settings scroll after reload from persisted tab state', async ({
   const before = await setSettingsScroll(page);
   expect(before).toBeGreaterThan(0);
   await selectStartupTab(page, 'Home');
+  await expect
+    .poll(() =>
+      page
+        .locator('.pane-body .settings-tab')
+        .first()
+        .evaluate((node) => node.scrollTop),
+    )
+    .toBeGreaterThan(0);
+  await expect
+    .poll(async () => {
+      const states = await readTabStates(page);
+      return states.some(
+        (state) =>
+          state.kind === 'tool' &&
+          (state.scrollTop ?? 0) > 0,
+      );
+    })
+    .toBe(true);
+  await page.waitForTimeout(300);
   await page.reload();
+  await page.waitForLoadState('domcontentloaded');
   await selectStartupTab(page, 'Settings');
+  await expect(page.getByRole('region', { name: 'Settings' })).toBeVisible();
   await expect
     .poll(() => getSettingsScroll(page), { timeout: 15_000 })
     .toBeGreaterThan(0);
 });
+
+async function readTabStates(page: Page) {
+  return page.evaluate(async () => {
+    const open = indexedDB.open('lkjstr');
+    const db = await new Promise<IDBDatabase>((resolve, reject) => {
+      open.onerror = () => reject(open.error);
+      open.onsuccess = () => resolve(open.result);
+    });
+    const store = db.transaction('tabStates', 'readonly').objectStore('tabStates');
+    const records = await new Promise<Array<{ state?: { kind?: string; scrollTop?: number } }>>(
+      (resolve, reject) => {
+        const request = store.getAll();
+        request.onerror = () => reject(request.error);
+        request.onsuccess = () => resolve(request.result as Array<{ state?: { kind?: string; scrollTop?: number } }>);
+      },
+    );
+    db.close();
+    return records.map((record) => record.state ?? {});
+  });
+}
 
 async function setSettingsScroll(page: Page) {
   return page

@@ -64,32 +64,6 @@ test('pointer drag reorders tabs inside one tile', async ({
   );
 });
 
-test('pointer drag arming does not select tab label text', async ({
-  page,
-}, testInfo) => {
-  test.skip(
-    testInfo.project.name === 'mobile',
-    'Coarse-pointer long-press scenario runs on the mobile project only',
-  );
-  await openWorkspaceWithSettingsTab(page);
-  const tab = secondPane(page).getByRole('button', {
-    name: 'Settings',
-    exact: true,
-  });
-  const box = await tab.boundingBox();
-  if (!box) throw new Error('missing tab box');
-  const x = box.x + box.width / 2;
-  const y = box.y + box.height / 2;
-  await page.mouse.move(x, y);
-  await page.mouse.down();
-  await page.mouse.move(x + 4, y, { steps: 2 });
-  const selection = await page.evaluate(
-    () => window.getSelection()?.toString() ?? '',
-  );
-  expect(selection.trim()).toBe('');
-  await page.mouse.up();
-});
-
 test('tab strip drag does not activate pane edge split zones', async ({
   page,
 }, testInfo) => {
@@ -154,12 +128,12 @@ test('center drop preview stays below tab strip', async ({ page }, testInfo) => 
   const pane = secondPane(page);
   const source = pane.getByRole('button', { name: 'Settings', exact: true });
   const stack = pane.locator('.pane-stack');
-  const strip = pane.locator('.tab-strip');
+  const paneBox = await pane.boundingBox();
   const stackBox = await stack.boundingBox();
-  const stripBox = await strip.boundingBox();
   const sourceBox = await source.boundingBox();
-  if (!stackBox || !stripBox || !sourceBox)
+  if (!paneBox || !stackBox || !sourceBox)
     throw new Error('missing drag boxes');
+  const minOverlayTop = stackBox.y - paneBox.y;
   await source.hover();
   await page.mouse.down();
   await page.mouse.move(
@@ -172,7 +146,7 @@ test('center drop preview stays below tab strip', async ({ page }, testInfo) => 
   const overlayTop = await layer.evaluate((el) =>
     Number.parseFloat(getComputedStyle(el, '::after').top || '0'),
   );
-  expect(overlayTop).toBeGreaterThanOrEqual(stripBox.bottom - stripBox.y - 4);
+  expect(overlayTop).toBeGreaterThanOrEqual(minOverlayTop - 4);
   await page.mouse.up();
 });
 

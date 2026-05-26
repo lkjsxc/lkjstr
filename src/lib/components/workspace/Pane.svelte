@@ -8,6 +8,7 @@
   import type { TabGroup } from '$lib/workspace/tab-group';
   import { createSessionTabSnapshots } from '$lib/workspace/session-tab-snapshots';
   import type { TabSnapshotPayload } from '$lib/workspace/tab-snapshot';
+  import { loadPersistedTabSnapshots } from '$lib/workspace/tab-snapshot-persist';
   import { syncPaneTabFocus } from '$lib/workspace/pane-tab-focus';
   import NewTabButton from './NewTabButton.svelte';
   import PaneDropLayer from './PaneDropLayer.svelte';
@@ -60,7 +61,7 @@
 
   let props: Props = $props();
   type TabSnapshot = TabSnapshotPayload & { readonly id: string };
-  let restorePayload = $state<TabSnapshotPayload | undefined>();
+  let restoreByTabId = $state<Record<string, TabSnapshotPayload>>({});
   let active = $derived(
     props.group?.activeTabId ? props.tabs[props.group.activeTabId] : undefined,
   );
@@ -87,8 +88,15 @@
       inactiveRetentionSeconds: props.inactiveRetentionSeconds,
       bodyScroll,
       snapshots,
-    }).then((next: { restorePayload?: TabSnapshotPayload }) => {
-      restorePayload = next.restorePayload;
+    }).then((next) => {
+      const nextRestore: Record<string, TabSnapshotPayload> = {
+        ...restoreByTabId,
+      };
+      if (activeId && next.restorePayload)
+        nextRestore[activeId] = next.restorePayload;
+      if (next.persistedTabId && next.persistedPayload)
+        nextRestore[next.persistedTabId] = next.persistedPayload;
+      restoreByTabId = nextRestore;
     });
     previousActiveId = activeId;
   });
@@ -104,6 +112,22 @@
 
   $effect(() => {
     snapshots.releaseMissing(new Set(props.group?.tabIds ?? []));
+  });
+
+  $effect(() => {
+    const tabIds = props.group?.tabIds ?? [];
+    if (!props.ready || tabIds.length === 0) return;
+    void loadPersistedTabSnapshots(
+      props.workspaceId,
+      props.pane.id,
+      tabIds,
+    ).then((loaded) => {
+      for (const [tabId, payload] of Object.entries(loaded)) {
+        if (payload.scrollTop !== undefined)
+          bodyScroll.restoreSnapshot(tabId, { scrollTop: payload.scrollTop });
+      }
+      restoreByTabId = { ...restoreByTabId, ...loaded };
+    });
   });
 
   function trackBody(node: HTMLElement, tabId: string) {
@@ -155,7 +179,7 @@
         group={props.group}
         tabs={props.tabs}
         paneId={props.pane.id}
-        {restorePayload}
+        {restoreByTabId}
         accounts={props.accounts}
         activeAccount={props.activeAccount}
         relaySets={props.relaySets}

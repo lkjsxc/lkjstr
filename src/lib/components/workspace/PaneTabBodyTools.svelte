@@ -11,6 +11,7 @@
 
   type Props = {
     tab: WorkspaceTab;
+    visible?: boolean;
     restoreScrollTop?: number;
     accounts: Account[];
     activeAccount?: Account;
@@ -36,7 +37,11 @@
 {:else if props.tab.kind === 'network-stats'}
   <NetworkStatsTab />
 {:else if props.tab.kind === 'settings'}
-  <SettingsTab tabId={props.tab.id} restoreScrollTop={props.restoreScrollTop} />
+  <SettingsTab
+    tabId={props.tab.id}
+    visible={props.visible}
+    restoreScrollTop={props.restoreScrollTop}
+  />
 {:else if props.tab.kind === 'tweet'}
   <TweetTab
     tabId={props.tab.id}

@@ -58,6 +58,24 @@ export async function loadPersistedTabSnapshot(
   return loadTabState(workspaceId, paneId, tabId);
 }
 
+export async function loadPersistedTabSnapshots(
+  workspaceId: string,
+  paneId: string,
+  tabIds: readonly string[],
+): Promise<Record<string, TabSnapshotPayload>> {
+  const entries = await Promise.all(
+    tabIds.map(async (tabId) => {
+      const state = await loadTabState(workspaceId, paneId, tabId);
+      return state ? ([tabId, state] as const) : undefined;
+    }),
+  );
+  return Object.fromEntries(
+    entries.filter((entry): entry is readonly [string, TabSnapshotPayload] =>
+      Boolean(entry),
+    ),
+  );
+}
+
 export async function removePersistedTabSnapshot(
   workspaceId: string,
   paneId: string,

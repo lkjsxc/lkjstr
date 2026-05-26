@@ -53,6 +53,7 @@ export function createPaneScrollRetention() {
       if (owner) scroll.set(tabId, owner.scrollTop);
     },
     hasTracked: (tabId: string): boolean => bodies.has(tabId),
+    hasRememberedScroll: (tabId: string): boolean => scroll.has(tabId),
     restore: (tabId: string): void => {
       if (!scroll.has(tabId)) return;
       const top = scroll.get(tabId)!;

@@ -12,7 +12,7 @@
     group: TabGroup;
     tabs: Record<string, WorkspaceTab>;
     paneId: string;
-    restorePayload?: TabSnapshotPayload;
+    restoreByTabId: Record<string, TabSnapshotPayload>;
     accounts: Account[];
     activeAccount?: Account;
     relaySets: RelaySet[];
@@ -43,7 +43,7 @@
     group,
     tabs,
     paneId,
-    restorePayload,
+    restoreByTabId,
     accounts,
     activeAccount,
     relaySets,
@@ -64,6 +64,7 @@
 {#each group.tabIds as tabId (tabId)}
   {@const tab = tabs[tabId]}
   {@const isActive = group.activeTabId === tabId}
+  {@const tabRestore = restoreByTabId[tabId]}
   {#if tab}
     <div
       class="pane-body"
@@ -75,11 +76,9 @@
         {tab}
         visible={isActive}
         {paneId}
-        restoreAnchor={isActive
-          ? feedAnchorFromPayload(restorePayload)
-          : undefined}
-        restoreSnapshot={isActive ? restorePayload : undefined}
-        restoreScrollTop={isActive ? restorePayload?.scrollTop : undefined}
+        restoreAnchor={feedAnchorFromPayload(tabRestore)}
+        restoreSnapshot={tabRestore}
+        restoreScrollTop={tabRestore?.scrollTop}
         {accounts}
         {activeAccount}
         {relaySets}
