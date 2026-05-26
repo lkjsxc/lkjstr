@@ -1,12 +1,17 @@
 import Dexie from 'dexie';
 import { browserDb } from '../storage/browser-db';
 import { indexedDbAvailable } from '../storage/safe-storage';
-import { cacheEventBudget, type EventPriorityRecord } from './event-priority';
+import type { EventPriorityRecord } from './event-priority';
 import { pinnedEventIds } from './pins';
 import {
   compactFeedCoverage,
   deleteFeedCoverageForFeeds,
 } from '../events/feed-coverage-store';
+import {
+  isQuotaPressure,
+  quotaPruneBatchSize,
+  readStorageQuota,
+} from './storage-quota';
 
 export type CompactionResult = {
   readonly prunedEvents: number;
@@ -18,16 +23,26 @@ export type CompactionResult = {
 export async function compactOldEvents(): Promise<CompactionResult> {
   if (!indexedDbAvailable())
     return { prunedEvents: 0, skippedDrafts: true, skipped: true };
-  const count = await browserDb().events.count();
-  if (count <= cacheEventBudget)
-    return { prunedEvents: 0, skippedDrafts: true, skipped: false };
+  const quota = await readStorageQuota();
+  if (!isQuotaPressure(quota))
+    return {
+      prunedEvents: 0,
+      skippedDrafts: true,
+      skipped: false,
+      reason: 'below-quota-threshold',
+    };
   const protectedIds = await protectedEventIds();
   const pruneIds = await lowestScorePruneIds(
-    count - cacheEventBudget,
+    quotaPruneBatchSize,
     protectedIds,
   );
   if (pruneIds.length === 0)
-    return { prunedEvents: 0, skippedDrafts: true, skipped: false };
+    return {
+      prunedEvents: 0,
+      skippedDrafts: true,
+      skipped: false,
+      reason: 'nothing-to-prune',
+    };
   const retainedIds = new Set<string>(protectedIds);
   await browserDb().transaction(
     'rw',

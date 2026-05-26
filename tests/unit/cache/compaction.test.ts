@@ -22,4 +22,12 @@ describe('cache compaction', () => {
       prunedEvents: 0,
     });
   });
+
+  it('does not prune without quota pressure in tests', async () => {
+    const result = await compactOldEvents();
+    expect(result.prunedEvents).toBe(0);
+    expect(result.reason === 'below-quota-threshold' || result.skipped).toBe(
+      true,
+    );
+  });
 });

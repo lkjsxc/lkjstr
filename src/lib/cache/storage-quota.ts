@@ -1,0 +1,25 @@
+export type StorageQuotaSnapshot = {
+  readonly usage: number;
+  readonly quota: number;
+  readonly ratio: number;
+};
+
+export const quotaPressureRatio = 0.9;
+
+export const quotaPruneBatchSize = 500;
+
+export async function readStorageQuota(): Promise<StorageQuotaSnapshot | null> {
+  if (typeof navigator === 'undefined' || !navigator.storage?.estimate)
+    return null;
+  const estimate = await navigator.storage.estimate();
+  const usage = estimate.usage ?? 0;
+  const quota = estimate.quota ?? 0;
+  if (quota <= 0) return null;
+  return { usage, quota, ratio: usage / quota };
+}
+
+export function isQuotaPressure(
+  snapshot: StorageQuotaSnapshot | null,
+): boolean {
+  return snapshot !== null && snapshot.ratio >= quotaPressureRatio;
+}

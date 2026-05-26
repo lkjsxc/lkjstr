@@ -11,8 +11,6 @@ export type EventPriorityRecord = {
   readonly protected: boolean;
 };
 
-export const cacheEventBudget = 5000;
-
 export function scoreEvent(
   event: NostrEvent,
   tags: readonly EventTagRow[] = [],
