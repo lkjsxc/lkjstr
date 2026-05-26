@@ -130,10 +130,10 @@
       if (!pane || zone !== active) return;
       const { paneRect, bodyRect } = paneDropRects(pane);
       const bodyOffsetTop = paneBodyOffsetTop(paneRect, bodyRect);
-      const overlayRect =
-        active === 'center'
-          ? { width: paneRect.width, height: paneRect.height }
-          : { width: bodyRect.width, height: bodyRect.height };
+      const overlayRect = {
+        width: bodyRect.width,
+        height: bodyRect.height,
+      };
       style = tabDropOverlayStyle(overlayRect, active, bodyOffsetTop);
     });
   });

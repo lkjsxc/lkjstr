@@ -161,8 +161,8 @@ Run `pnpm check:repo` after documentation changes before code work continues.
 - Quote and reference previews are deduped by event id.
 - Tweet publish clears and focuses the composer after signing/local queueing
   without showing persistent `Sent to` or `Published` success text.
-- Inactive feed tabs unmount on focus change, close owned subscriptions and
-  page reads, then restore from a bounded session-memory snapshot when
+- Inactive feed tabs keep hidden mounted bodies, pause relay subscriptions and
+  page reads, and restore from DOM or bounded session-memory snapshots when
   reselected within `tabs.inactiveRetentionSeconds`.
 - Changing `tabs.inactiveRetentionSeconds`, closing a tab, pane destruction, or
   retention expiry removes retained snapshots.

@@ -7,7 +7,7 @@ export function tabDropOverlayStyle(
 ): string {
   if (!zone) return '';
   const size = tabDropPreviewRect(rect, zone);
-  const top = zone === 'center' ? size.top : size.top + bodyOffsetTop;
+  const top = size.top + bodyOffsetTop;
   return [
     `--drop-left: ${size.left}px`,
     `--drop-top: ${top}px`,

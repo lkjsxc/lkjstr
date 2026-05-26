@@ -3,7 +3,10 @@ import {
   tabDropHitSize,
   tabDropZone,
 } from '../../../src/lib/workspace/tab-drop-hit';
-import { tabDropPreviewRect } from '../../../src/lib/workspace/tab-drop-preview';
+import {
+  tabDropOverlayStyle,
+  tabDropPreviewRect,
+} from '../../../src/lib/workspace/tab-drop-preview';
 
 describe('tab drop zones', () => {
   const rect = { left: 0, top: 0, width: 200, height: 100 };
@@ -21,5 +24,12 @@ describe('tab drop zones', () => {
     const bottom = tabDropPreviewRect(rect, 'bottom');
     expect(bottom.height).toBe(50);
     expect(bottom.top).toBe(50);
+  });
+
+  it('offsets center overlay below pane chrome', () => {
+    const style = tabDropOverlayStyle(rect, 'center', 48);
+    expect(style).toContain('--drop-top: 48px');
+    expect(style).toContain('--drop-width: 200px');
+    expect(style).toContain('--drop-height: 100px');
   });
 });

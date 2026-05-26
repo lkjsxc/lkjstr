@@ -119,6 +119,37 @@ test('pane head chrome never activates edge split zones', async ({
   await page.mouse.up();
 });
 
+test('center drop preview stays below tab strip', async ({ page }, testInfo) => {
+  test.skip(
+    testInfo.project.name === 'mobile',
+    'Mobile tab-strip layout needs a dedicated long-press drag scenario',
+  );
+  await openWorkspaceWithSettingsTab(page);
+  const pane = secondPane(page);
+  const source = pane.getByRole('button', { name: 'Settings', exact: true });
+  const stack = pane.locator('.pane-stack');
+  const strip = pane.locator('.tab-strip');
+  const stackBox = await stack.boundingBox();
+  const stripBox = await strip.boundingBox();
+  const sourceBox = await source.boundingBox();
+  if (!stackBox || !stripBox || !sourceBox)
+    throw new Error('missing drag boxes');
+  await source.hover();
+  await page.mouse.down();
+  await page.mouse.move(
+    stackBox.x + stackBox.width * 0.5,
+    stackBox.y + stackBox.height * 0.5,
+    { steps: 10 },
+  );
+  const layer = pane.locator('.pane-drop-layer.active');
+  await expect(layer).toHaveAttribute('data-drop-zone', 'center');
+  const overlayTop = await layer.evaluate((el) =>
+    Number.parseFloat(getComputedStyle(el, '::after').top || '0'),
+  );
+  expect(overlayTop).toBeGreaterThanOrEqual(stripBox.bottom - stripBox.y - 4);
+  await page.mouse.up();
+});
+
 test('body top edge shows top split preview below pane head', async ({
   page,
 }, testInfo) => {
