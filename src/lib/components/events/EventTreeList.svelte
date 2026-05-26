@@ -16,7 +16,8 @@
   } from '$lib/thread/thread-reactions';
   import EventTreeListRows, { type ViewRow } from './EventTreeListRows.svelte';
   import { pinVisibleEvents } from '$lib/cache/pins';
-  import { actionStateForFeed } from '$lib/events/action-state';
+  import type { EventActionState } from '$lib/events/action-state';
+  import FeedActionStatesBridge from './FeedActionStatesBridge.svelte';
   import { setTabFeedAnchor } from '$lib/workspace/tab-anchor-registry';
   import {
     restoreFeedListAnchor,
@@ -53,9 +54,7 @@
   let destroyed = false;
   let cachedNodes: FlatEventTreeItem[] = [];
   let nodes = $derived(treeNodes(props.items));
-  let actionStates = $derived(
-    actionStateForFeed(props.items, props.activeAccountPubkey),
-  );
+  let actionStates = $state(new Map<string, EventActionState>());
   let rows = $derived<ViewRow[]>(
     props.loadingOlder && props.hasOlder
       ? [...nodes, { loadingOlder: true }]
@@ -144,6 +143,12 @@
     return row.event.id;
   }
 </script>
+
+<FeedActionStatesBridge
+  bind:states={actionStates}
+  items={props.items}
+  activeAccountPubkey={props.activeAccountPubkey}
+/>
 
 <div class="event-list">
   {#if nodes.length > 0}

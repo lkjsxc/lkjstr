@@ -126,7 +126,10 @@ export function createProfileRuntime(
       const [meta, posts, followList] = await Promise.all([cachedProfileEvent(pubkey), cachedProfileNotes(pubkey, pageSize), cachedProfileFollowList(pubkey)]);
       if (!active(run)) return; const profile = getProfile(pubkey) ?? (meta ? profileFromMetadataEvent(meta) : null);
       emit({ ...state, profile, posts, followList, loading: relays.length > 0, updatedAt: meta ? meta.created_at * 1000 : null, oldestCreatedAt: oldestCreatedAt(posts) });
-      if (relays.length === 0) return;
+      if (relays.length === 0) {
+        emit({ ...state, loading: false });
+        return;
+      }
       cleanup.push(manager.subscribeLive({ key: subId, relays, filters: profileLiveFilters(pubkey, startedAt, pageSize), purpose: 'feed' }, (event) => receive(event)));
       void loadInitialPage();
     },

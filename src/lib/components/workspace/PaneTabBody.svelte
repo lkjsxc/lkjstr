@@ -85,6 +85,7 @@
     tabId={props.tab.id}
     kind="global"
     restoreAnchor={props.restoreAnchor}
+    activeAccountPubkey={props.activeAccount?.pubkey}
     dataReady={props.pageDataReady}
     relaySets={props.relaySets}
     openProfile={(pubkey) => props.openProfile(props.paneId, pubkey)}

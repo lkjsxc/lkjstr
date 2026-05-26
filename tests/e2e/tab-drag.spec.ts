@@ -61,6 +61,36 @@ test('pointer drag reorders tabs inside one tile', async ({
   );
 });
 
+test('tab strip drag does not activate pane edge split zones', async ({
+  page,
+}, testInfo) => {
+  test.skip(
+    testInfo.project.name === 'mobile',
+    'Mobile tab-strip layout needs a dedicated long-press drag scenario',
+  );
+  await page.goto('/');
+  await page.evaluate(() => localStorage.clear());
+  await page.reload();
+  await openNewTabOption(page, 'Settings', 1);
+  const pane = secondPane(page);
+  const source = pane.getByRole('button', { name: 'Settings', exact: true });
+  const sourceBox = await source.boundingBox();
+  const paneBox = await pane.boundingBox();
+  if (!sourceBox || !paneBox) throw new Error('missing drag boxes');
+  await source.hover();
+  await page.mouse.down();
+  await page.mouse.move(
+    paneBox.x + paneBox.width * 0.02,
+    sourceBox.y + sourceBox.height * 0.5,
+    { steps: 8 },
+  );
+  await expect(pane.locator('.pane-drop-layer.active')).toHaveAttribute(
+    'data-drop-zone',
+    'center',
+  );
+  await page.mouse.up();
+});
+
 test('pointer drag moves a tab into another tile with overlay feedback', async ({
   page,
 }) => {

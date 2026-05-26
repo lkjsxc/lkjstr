@@ -14,8 +14,8 @@ test('opens the workspace and creates split panes', async ({ page }) => {
 
 test('opens account, notification, and tweet tabs', async ({ page }) => {
   await page.goto('/');
-  await expect(page.getByRole('region', { name: 'Accounts' })).toBeVisible();
-  await expect(page.getByRole('heading', { name: 'Accounts' })).toHaveCount(0);
+  await expect(page.getByRole('tab', { name: 'Accounts' })).toBeVisible();
+  await expect(page.getByRole('region', { name: 'Welcome' })).toBeVisible();
   await secondPane(page)
     .getByRole('button', { name: 'Notifications', exact: true })
     .click();

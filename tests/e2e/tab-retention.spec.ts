@@ -27,6 +27,20 @@ test('restores tab scroll from snapshot and keeps inactive body unmounted', asyn
   await expect(page.locator('.settings-tab')).toHaveCount(0);
 });
 
+test('restores settings scroll after reload from persisted tab state', async ({
+  page,
+}) => {
+  await page.goto('/');
+  await selectStartupTab(page, 'Home');
+  await openNewTabOption(page, 'Settings', 1);
+  const before = await setSettingsScroll(page);
+  expect(before).toBeGreaterThan(0);
+  await selectStartupTab(page, 'Home');
+  await page.reload();
+  await selectStartupTab(page, 'Settings');
+  await expect.poll(() => getSettingsScroll(page)).toBeGreaterThan(0);
+});
+
 async function setSettingsScroll(page: Page) {
   return page
     .locator('.pane-body[data-active-tab="true"] .settings-tab')

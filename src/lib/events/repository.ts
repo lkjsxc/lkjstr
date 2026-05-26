@@ -19,6 +19,7 @@ import {
   putMemory,
 } from './repository-memory';
 import { receipt, tagRows } from './repository-shared';
+import { notifyActionCacheChanged } from './action-cache-signal';
 import { upsertEventPriority } from '../cache/event-priority';
 import { normalizeStoredEvent } from './normalize';
 import { storeRelayListSuggestionsFromEvent } from '../relays/relay-list-suggestions';
@@ -73,6 +74,7 @@ export async function upsertEvent(
   });
   await storeRelayListSuggestionsFromEvent(event);
   await storeRoutesFromEvent(event, relays);
+  notifyActionCacheChanged(event);
   return stored;
 }
 

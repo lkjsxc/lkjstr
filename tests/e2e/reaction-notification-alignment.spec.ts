@@ -8,6 +8,7 @@ import {
   addReadonlyAccount,
   installSyntheticRelay,
 } from './timeline-relay-helpers';
+import { selectStartupTab } from './workspace-helpers';
 
 test('expanded reaction actor rows are left aligned', async ({ page }) => {
   await page.goto('/');
@@ -66,9 +67,7 @@ test('reaction notification dedupes actor around canonical source row', async ({
   });
   await page.goto('/');
   await addReadonlyAccount(page, getPublicKey(account));
-  await page
-    .getByRole('button', { name: 'Notifications', exact: true })
-    .click();
+  await selectStartupTab(page, 'Notifications');
   await expect(page.getByText('reacted to you')).toBeVisible();
   await expect(page.getByText('reacted with ❤️')).toBeVisible();
   await expect(page.getByText('liked')).toHaveCount(0);
@@ -111,9 +110,7 @@ test('fallback notification keeps outer actor with target context', async ({
     sourceEventId: 'f'.repeat(64),
     target,
   });
-  await page
-    .getByRole('button', { name: 'Notifications', exact: true })
-    .click();
+  await selectStartupTab(page, 'Notifications');
 
   const row = page.locator('.notification-row').first();
   await expect(

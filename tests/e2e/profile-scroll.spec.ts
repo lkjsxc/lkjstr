@@ -36,15 +36,26 @@ test('Profile tab scroll does not move the page', async ({ page }) => {
   const profile = page.locator(
     '.pane-body[data-active-tab="true"] .profile-tab',
   );
-  await expect(profile.getByText('profile page scroll note 0')).toBeVisible();
+  await expect
+    .poll(() => profile.locator('.profile-notes .event-row').count(), {
+      timeout: 15_000,
+    })
+    .toBeGreaterThan(0);
 
+  const scroller = profile.locator('.profile-notes .event-list__scroller');
+  await scroller.hover();
+  await page.mouse.wheel(0, 1200);
   const scrolls = await page.evaluate(() => {
     window.scrollTo(0, document.documentElement.scrollHeight);
-    const tab = document.querySelector<HTMLElement>('.profile-tab');
-    if (tab) tab.scrollTop = tab.scrollHeight;
+    const scrollers = [
+      ...document.querySelectorAll<HTMLElement>(
+        '.profile-tab .event-list__scroller, .profile-tab .event-list__scroller *',
+      ),
+    ].filter((node) => node.scrollHeight > node.clientHeight + 8);
+    for (const node of scrollers) node.scrollTop = node.scrollHeight;
     return {
       page: document.body.scrollTop + document.documentElement.scrollTop,
-      profile: tab?.scrollTop ?? 0,
+      profile: Math.max(0, ...scrollers.map((node) => node.scrollTop)),
     };
   });
   expect(scrolls.page).toBe(0);

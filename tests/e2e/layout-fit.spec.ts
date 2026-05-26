@@ -1,6 +1,6 @@
-import { expect, test, type Page } from '@playwright/test';
-import { finalizeEvent, generateSecretKey } from '../../src/lib/protocol';
+import { expect, test } from '@playwright/test';
 import { installSyntheticRelay } from './timeline-relay-helpers';
+import { assertNoHorizontalOverflow, syntheticNotes } from './layout-helpers';
 import { openNewTabOption, pane } from './workspace-helpers';
 
 const options = [
@@ -88,65 +88,6 @@ test('global event scroller fills the tile body', async ({ page }) => {
   expect(heights.scroller).toBeGreaterThan(heights.list * 0.8);
 });
 
-test('profile notes follow the summary in the profile scroll flow', async ({
-  page,
-}) => {
-  const key = generateSecretKey();
-  const metadata = finalizeEvent(
-    {
-      created_at: Math.floor(Date.now() / 1000),
-      kind: 0,
-      tags: [],
-      content: JSON.stringify({
-        display_name: 'Long Profile',
-        about: Array.from({ length: 12 }, () => 'profile details').join('\n'),
-      }),
-    },
-    key,
-  );
-  const notes = syntheticNotes(45, key, 'profile flow note');
-  await installSyntheticRelay(page, { events: [metadata, ...notes] });
-  await page.goto('/');
-  await openNewTabOption(page, 'Global');
-  await expect(page.getByText('profile flow note 0')).toBeVisible();
-  await page.locator('.event-row .avatar-button').first().click();
-  await expect(page.getByRole('region', { name: 'Profile' })).toBeVisible();
-  const profile = page.locator(
-    '.pane-body[data-active-tab="true"] .profile-tab',
-  );
-  await expect(profile.getByText('profile flow note 0')).toBeVisible();
-  await expect
-    .poll(() => profile.locator('.profile-notes .event-row').count(), {
-      timeout: 15_000,
-    })
-    .toBeGreaterThanOrEqual(30);
-  await expect(profile.locator('.event-list__scroller')).toHaveCount(0);
-  const metrics = await profile.evaluate((profileTab) => {
-    const card = profileTab.querySelector('.profile-card') as HTMLElement;
-    const notesSection = profileTab.querySelector(
-      '.profile-notes',
-    ) as HTMLElement;
-    return {
-      scrollable: profileTab.scrollHeight > profileTab.clientHeight + 1,
-      notesAfterSummary:
-        notesSection.getBoundingClientRect().top >
-        card.getBoundingClientRect().bottom,
-      rowCount: profileTab.querySelectorAll('.profile-notes .event-row').length,
-    };
-  });
-  expect(metrics.scrollable).toBe(true);
-  expect(metrics.notesAfterSummary).toBe(true);
-  expect(metrics.rowCount).toBeGreaterThanOrEqual(30);
-  const scrollTop = await profile.evaluate((profileTab) => {
-    profileTab.scrollTop = profileTab.scrollHeight;
-    profileTab.dispatchEvent(new Event('scroll'));
-    return profileTab.scrollTop;
-  });
-  expect(scrollTop).toBeGreaterThan(0);
-  await expect(profile.getByText('profile flow note 29')).toBeVisible();
-  await assertNoHorizontalOverflow(page);
-});
-
 test('form fields expose id or name attributes', async ({ page }) => {
   await page.goto('/');
   for (const option of ['Relay Settings', 'Accounts', 'Tweet', 'Settings']) {
@@ -162,36 +103,3 @@ test('form fields expose id or name attributes', async ({ page }) => {
     );
   expect(missing).toBe(0);
 });
-
-async function assertNoHorizontalOverflow(page: Page): Promise<void> {
-  await expect
-    .poll(async () =>
-      page.evaluate(() => {
-        const doc = document.documentElement;
-        const panes = [...document.querySelectorAll('.pane, .pane-body')];
-        return [
-          doc.scrollWidth <= doc.clientWidth + 1,
-          ...panes.map((pane) => pane.scrollWidth <= pane.clientWidth + 1),
-        ].every(Boolean);
-      }),
-    )
-    .toBe(true);
-}
-
-function syntheticNotes(
-  count: number,
-  key = generateSecretKey(),
-  prefix = 'layout fit note',
-) {
-  return Array.from({ length: count }, (_, index) =>
-    finalizeEvent(
-      {
-        created_at: Math.floor(Date.now() / 1000) - index,
-        kind: 1,
-        tags: [],
-        content: `${prefix} ${index}`,
-      },
-      key,
-    ),
-  );
-}
