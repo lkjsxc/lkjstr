@@ -27,7 +27,7 @@ land.
 
 | Item                                                                | Destination doc                                                                        | Test strategy                                                                   |
 | ------------------------------------------------------------------- | -------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------- |
-| Timeline loading indicators (loading, partial, stale, empty, error) | [feeds/home.md](feeds/home.md), [feeds/global.md](feeds/global.md)                     | Playwright Home/Global surface states; shared feed footer in place; refine copy |
+| Timeline loading indicators (partial, stale, empty copy polish)       | [feeds/home.md](feeds/home.md), [feeds/global.md](feeds/global.md)                     | Playwright Home/Global surface states; refine copy beyond shared footer          |
 | Profile feed loading indicators                                     | [feeds/profiles.md](feeds/profiles.md)                                                 | Playwright Profile tab states after synthetic relay load                        |
 | Notification feed loading indicators                                | [feeds/notifications.md](feeds/notifications.md)                                       | Playwright Notifications tab states                                             |
 | Thread loading indicators                                           | [feeds/threads.md](feeds/threads.md)                                                   | Playwright Thread tab open from event click                                     |
