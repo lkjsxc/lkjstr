@@ -22,14 +22,27 @@ scrolling, reordering, and cross-tile moves.
 - `pointerdown` on a tab frame starts a long-press timer. Movement beyond
   `touchLongPressCancelPx` before the timer fires cancels the pending drag and
   leaves panning enabled.
-- When the timer fires, the gesture arms drag, captures the pointer, and follows
-  the pointer drag path in [tab-dragging.md](tab-dragging.md).
+- When the timer fires, the gesture arms drag, calls `setPointerCapture` on the
+  tab main control, and follows the pointer drag path in
+  [tab-dragging.md](tab-dragging.md).
+- Tab frames use `draggable={false}` on coarse pointers to avoid conflicting
+  native HTML5 drag.
 
 ## Fine Pointer (Mouse, Pen)
 
 - `pointerdown` with the primary button starts tracking immediately.
 - Drag activates after movement exceeds `mouseDragActivationPx`.
-- Until activation, the rail does not capture the pointer.
+- `setPointerCapture` runs on activation.
+- Native HTML5 drag remains enabled for desktop reorder and cross-tile moves.
+
+## Selection Suppression
+
+While `body.dragging-tab` is set:
+
+- `user-select: none` applies to `body`, `.tab-strip`, and `.tab-frame`.
+- `selectstart` on `.tab-main` is prevented when a pointer drag session is armed
+  or active.
+- Long-press must not select tab label text before drag arms.
 
 ## Strip Priority
 
@@ -49,3 +62,8 @@ scrolling, reordering, and cross-tile moves.
 
 - When `scrollWidth > clientWidth`, left and/or right fade overlays indicate
   off-screen tabs.
+
+## Related
+
+- [pane-chrome-scope.md](pane-chrome-scope.md): header chrome exclusion.
+- [tab-dragging.md](tab-dragging.md): drop resolver.

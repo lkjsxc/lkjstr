@@ -39,10 +39,15 @@ documented-only. Update it when a vertical slice closes a gap.
 
 ## Workspace Polish
 
-| Clause                        | Contract              | Status      | Notes         |
-| ----------------------------- | --------------------- | ----------- | ------------- |
-| Tab strip excluded from split | tab-dragging.md       | implemented |               |
-| Scrollbar gutter              | scroll-layout.md      | implemented |               |
-| Tile-scoped emoji             | tile-overlays.md      | implemented |               |
-| No feed npub subtitle         | identity-rendering.md | implemented | feed-identity |
-| Welcome document links        | welcome.md            | implemented |               |
+| Clause                        | Contract                   | Status      | Notes                          |
+| ----------------------------- | -------------------------- | ----------- | ------------------------------ |
+| Pane chrome excluded from edge splits | pane-chrome-scope.md | partial     | `chromeBottom` from `.pane-head` |
+| Edge preview body offset      | pane-drop-target.md        | partial     | `bodyOffsetTop` on drop layer  |
+| Tab drag selection guard      | tab-strip-gestures.md      | partial     | capture + user-select          |
+| Scroll owner retention        | tab-retention-flow.md      | partial     | `data-scroll-owner`, scrollTop=0 |
+| Feed scroll gutter on viewport | scroll-layout.md          | partial     | Virtua viewport + token        |
+| Tab strip excluded from split | tab-dragging.md            | implemented | superseded by chrome scope     |
+| Scrollbar gutter              | scroll-layout.md           | implemented | per-surface audit in progress  |
+| Tile-scoped emoji             | tile-overlays.md           | implemented |                                |
+| No feed npub subtitle         | identity-rendering.md      | implemented | feed-identity                  |
+| Welcome document links        | welcome.md                 | implemented |                                |

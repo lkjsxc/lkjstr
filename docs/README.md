@@ -92,8 +92,12 @@ for detailed contracts.
 - [architecture/workspace/README.md](architecture/workspace/README.md):
   workspace modules.
 - [architecture/workspace/resize.md](architecture/workspace/resize.md): resizing.
+- [architecture/workspace/pane-chrome-scope.md](architecture/workspace/pane-chrome-scope.md):
+  pane header chrome for drag scope.
 - [architecture/workspace/pane-drop-target.md](architecture/workspace/pane-drop-target.md):
   pane-body drop resolver.
+- [architecture/workspace/tab-retention-flow.md](architecture/workspace/tab-retention-flow.md):
+  tab blur/focus snapshot pipeline.
 - [architecture/workspace/scroll-layout.md](architecture/workspace/scroll-layout.md):
   scrollbar-safe scrolling surfaces.
 - [architecture/workspace/tile-overlays.md](architecture/workspace/tile-overlays.md):

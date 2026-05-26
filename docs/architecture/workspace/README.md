@@ -7,8 +7,11 @@ visual rules.
 
 ## Documents
 
+- [pane-chrome-scope.md](pane-chrome-scope.md): header chrome vs body rects for
+  drag hit testing.
 - [pane-drop-target.md](pane-drop-target.md): pane-body edge resolver and
-  strip center insert.
+  center insert.
+- [tab-retention-flow.md](tab-retention-flow.md): blur/focus snapshot pipeline.
 - [scroll-layout.md](scroll-layout.md): scrollbar-safe scrolling surfaces.
 - [tile-overlays.md](tile-overlays.md): tile-scoped emoji picker placement.
 - [resize.md](resize.md): split resize math.

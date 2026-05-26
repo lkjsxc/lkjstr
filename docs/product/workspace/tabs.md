@@ -59,9 +59,12 @@ Tabs define the workspace surface area.
 - Tabs can be dragged to reorder within a tile with pointer dragging or native
   desktop drag-and-drop.
 - Tabs can be dragged into another tile, or to a tile edge to split there.
-- Pane drop feedback shows a center insert highlight over the tab strip and body,
-  or a half-pane-body edge preview that matches the resulting split geometry.
-  Edge split feedback does not cover the tab strip.
+- Pane drop feedback shows a center insert highlight over the full tile header
+  and body when reordering or moving into a group, or a half-pane-body edge
+  preview aligned with the content stack. Edge split feedback never covers the
+  tab strip or tile menu row.
+- Long-press and drag do not select tab label text. Touch uses long-press before
+  drag; the rail keeps horizontal pan until drag arms.
 - Moving a tab activates and focuses it in the target tile.
 - Moving the last tab out of a tile closes the source tile.
 - Invalid drops do nothing.
@@ -88,9 +91,11 @@ Tabs define the workspace surface area.
   IndexedDB snapshot and, within `tabs.inactiveRetentionSeconds`, a session
   snapshot (up to `32` warm tabs) with scroll anchors, feed cursors, `hasOlder`,
   `hasNewer`, and surface-local fields such as Search query.
-- Reselecting a tab restores scroll, list anchor, and feed cursors from session
-  when possible, otherwise from IndexedDB after reload. Live relay subscriptions
-  are always recreated; cached events repopulate the window before network.
+- Reselecting a tab restores scroll (including top-of-list), list anchor, and
+  feed cursors from session when possible, otherwise from IndexedDB after reload.
+  Live relay subscriptions are always recreated; cached events repopulate the
+  window before network. See
+  [tab-retention-flow.md](../../architecture/workspace/tab-retention-flow.md).
 
 ## Removed Surface
 

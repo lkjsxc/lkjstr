@@ -31,11 +31,12 @@ linked product, protocol, architecture, and operations pages.
 
 - Workspace layout, tabs, settings, accounts, drafts, notifications, relay
   information, relay summaries, jobs, and cached events are browser-owned data.
-- Pointer tab dragging is canonical. Native desktop drag uses pane-body edge
-  detection for splits and tab-strip center insert for reorder. Half-pane edge
-  previews cover the body only.
-- Tab rails scroll horizontally with long-press touch drag, strip-priority
-  reorder, and active-tab reveal.
+- Pointer tab dragging is canonical. Native desktop drag uses pane chrome
+  exclusion and pane-body edge detection for splits. Center insert covers the
+  full tile header when over chrome. Half-pane edge previews align with the
+  content stack only.
+- Tab rails scroll horizontally with long-press touch drag, pointer capture,
+  selection suppression, strip-priority reorder, and active-tab reveal.
 - Durable event cache has no application item-count ceiling. Optional
   quota-pressure compaction may run when browser storage is near its limit.
   Runtime feed windows remain bounded per tab.
