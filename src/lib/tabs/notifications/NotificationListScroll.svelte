@@ -75,7 +75,7 @@
       data={rows}
       getKey={(item: unknown) =>
         notificationViewRowKey(item as NotificationViewRow)}
-      scrollerClass="notification-list-scroller"
+      scrollerClass="event-list__scroller notification-list-scroller"
       viewportClass="notification-list-scroll"
       {nearEndEnabled}
       {onNearEnd}

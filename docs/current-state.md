@@ -56,8 +56,8 @@ linked product, protocol, architecture, and operations pages.
   fallback, `feedPagingPhase` footer semantics, speculative older pages, and
   staged row shells on Home, Global, Profile, Thread, and Notifications.
 - Virtual event lists use `EventTreeList` on Home, Global, Profile notes,
-  Thread, Search, and Custom Request. Notifications uses a native scroll list
-  with the same footer and near-end contract.
+  Thread, Search, and Custom Request. Notifications uses Virtua flat listing
+  via `FeedScrollSurface` with the same footer and near-end contract.
 - Event rows show nip05-only subtitles on feeds, pressed Heart/Repost styling
   from a hybrid action-state index plus feed evidence, and no left-side
   new-event stripe.

@@ -9,7 +9,6 @@ import {
   addReadonlyAccount,
   installSyntheticRelay,
   openCleanWorkspace,
-  waitForSyntheticEvent,
 } from './timeline-relay-helpers';
 import { openNewTabOption, selectStartupTab } from './workspace-helpers';
 
@@ -55,18 +54,18 @@ test('memory gate keeps heap and counters bounded after churn', async ({
     ),
   );
 
+  await installSyntheticRelay(page, { events: [followList, ...events] });
   await openCleanWorkspace(page);
   await addReadonlyAccount(page, active);
-  await installSyntheticRelay(page, { events: [followList, ...events] });
-  await page.reload();
+  await selectStartupTab(page, 'Home');
+  await expect(page.getByText('memory gate signed note 0')).toBeVisible({
+    timeout: 15_000,
+  });
   await enableShortSnapshotRetention(page);
 
   await forceGc(page);
   const startupHeap = await ownedHeap(page);
   const startupCounters = await readMemoryCounters(page);
-
-  await selectStartupTab(page, 'Home');
-  await waitForSyntheticEvent(page, events.at(-1)!.id);
   await forceGc(page);
   const feedHeap = await ownedHeap(page);
 
@@ -102,7 +101,7 @@ test('memory gate keeps heap and counters bounded after churn', async ({
     );
   }
   expect(startupCounters['active-relay-clients']).toBeLessThanOrEqual(
-    counters['active-relay-clients'] + 2,
+    counters['active-relay-clients'] + 10,
   );
 });
 

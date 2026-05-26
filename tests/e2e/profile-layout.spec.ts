@@ -45,15 +45,15 @@ test('profile notes follow the summary in the profile scroll flow', async ({
     const notesSection = profileTab.querySelector(
       '.profile-notes',
     ) as HTMLElement;
-    const listScroller = profileTab.querySelector(
-      '.profile-notes .event-list__scroller',
+    const listViewport = profileTab.querySelector(
+      '.profile-notes .event-list__viewport',
     ) as HTMLElement | null;
     return {
       notesAfterSummary:
         notesSection.getBoundingClientRect().top >
         card.getBoundingClientRect().bottom,
-      scrollbarGutter: listScroller
-        ? getComputedStyle(listScroller).scrollbarGutter
+      scrollbarGutter: listViewport
+        ? getComputedStyle(listViewport).scrollbarGutter
         : '',
     };
   });

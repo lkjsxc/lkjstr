@@ -28,8 +28,10 @@
   position: relative;
 }
 
-.event-list__viewport {
+.event-list__viewport,
+.notification-list-scroll {
   overflow-x: clip;
+  scrollbar-gutter: stable;
 }
 
 .event-list__near-end-sentinel {
@@ -48,10 +50,6 @@
   margin: 0;
 }
 
-.event-row--embedded {
-  border-bottom: none;
-}
-
 .event-row {
   align-items: flex-start;
   background: transparent;
@@ -63,6 +61,10 @@
   grid-template-columns: auto minmax(0, 1fr);
   margin-left: calc(var(--event-depth, 0) * var(--space-5));
   padding: var(--space-3) 0;
+}
+
+.event-row.event-row--embedded {
+  border-bottom: none;
 }
 
 .event-row--action-success {

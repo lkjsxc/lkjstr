@@ -16,7 +16,7 @@ documented-only. Update it when a vertical slice closes a gap.
 | `FeedSurfaceStatus` all feeds | footer-phase.md                                                            | implemented | Including Notifications native list            |
 | Speculative older             | feed-surface.md                                                            | implemented | Search uses coordinator                        |
 | Staged row pipeline           | [staged-pipeline.md](../architecture/data/feed-surface/staged-pipeline.md) | implemented | Home/Global/Profile/Thread                     |
-| Notifications list mode       | [surface-matrix.md](../architecture/data/feed-surface/surface-matrix.md)   | implemented | Native list, shared footer                     |
+| Notifications list mode       | [surface-matrix.md](../architecture/data/feed-surface/surface-matrix.md)   | implemented | Virtua flat list via `FeedScrollSurface`, shared footer |
 
 ## Tab Continuity
 
@@ -58,9 +58,9 @@ documented-only. Update it when a vertical slice closes a gap.
 
 | Clause                                | Contract              | Status | Notes |
 | ------------------------------------- | --------------------- | ------ | ----- |
-| Single notification separator         | feed-row-chrome.md    | open   | list-owned border |
-| Single Notifications scroll owner     | feed-scroll-surface.md | open  | `.feed-tab` + one `[data-scroll-owner]` |
-| Event More clears scrollbar track       | scroll-layout.md      | open   | inset on `.event-main` and `.event-more` |
-| No horizontal overflow on scroll owner  | scroll-surface-audit.md | open | e2e on `[data-scroll-owner]` |
-| Notifications on FeedScrollSurface      | feed-scroll-surface.md | open  | Virtua flat list |
-| Pane.svelte at or below 200 lines       | repository standards  | open   | extract PaneHead if needed |
+| Single notification separator         | feed-row-chrome.md    | implemented | list-owned separator on `.notification-row`; embedded `EventRow` suppresses its separator |
+| Single Notifications scroll owner     | feed-scroll-surface.md | implemented | `.feed-tab` uses `overflow: hidden` and exactly one `[data-scroll-owner]` owns vertical scroll |
+| Event More clears scrollbar track       | scroll-layout.md      | implemented | `.event-more` uses `right: var(--scroll-content-inset)` and `.event-main` reserves the same inline-end padding |
+| No horizontal overflow on scroll owner  | scroll-surface-audit.md | implemented | e2e `assertNoHorizontalOverflow` checks scroll owners and `.event-list__viewport` |
+| Notifications on FeedScrollSurface      | feed-scroll-surface.md | implemented | Notifications use Virtua via `FeedScrollSurface` and the shared footer/near-end semantics |
+| Pane.svelte at or below 200 lines       | repository standards  | implemented | Pane header moved to `PaneHead.svelte` to keep the file within the cap |
