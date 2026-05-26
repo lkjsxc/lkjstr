@@ -45,8 +45,10 @@ database binding.
   protocol data. Suggestions require explicit import and must not overwrite a
   disabled relay record.
 - Docker checks build images and do not mount the source tree.
-- Relay, cache, diagnostic, and tab memory must be bounded or cleaned up through
-  explicit close and destroy paths.
+- Relay, diagnostic, and tab runtime memory must be bounded or cleaned up through
+  explicit close and destroy paths. Durable cached events are not capped by a
+  fixed application item count; runtime feed windows and relay read caps remain
+  bounded.
 
 ## Source Map
 

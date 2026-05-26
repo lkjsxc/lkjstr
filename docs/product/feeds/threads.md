@@ -17,7 +17,11 @@ Thread tabs show a root event and replies opened from timeline event actions.
 - Initial and older thread pages request `30` items.
 - Thread tabs keep a `240` item window.
 - Live replies are retained only inside the same `240` item window.
-- Older replies load after near-bottom scroll or viewport auto-fill.
+- Older replies load after near-bottom scroll using
+  `max(1200px, 1.5×viewport)` or viewport auto-fill.
+- One speculative older page may prefetch when near end while `hasOlder` is
+  true.
+- Shared `FeedSurfaceStatus` footer shows loading, end of history, and errors.
 - Historical reply pages use the event tag index, compound `{createdAt,id}`
   cursors, interval windows, local relay boundary filtering, and merged relay
   provenance.

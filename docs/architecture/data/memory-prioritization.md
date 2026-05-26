@@ -17,8 +17,9 @@ runtime state that can be bounded, summarized, or rebuilt.
   fields per tag to `16`, and tag field text to `4096` bytes.
 - Local query helpers must plan from IndexedDB indexes where possible and must
   not scan the full event table for memory relief.
-- Event cache compaction uses the `eventPriority` score index. See
-  [retention/README.md](retention/README.md).
+- Optional quota-pressure event cache compaction uses the `eventPriority` score
+  index. See [retention/README.md](retention/README.md). Steady-state operation
+  does not enforce a fixed cached event count.
 - Notification state is windowed by notification record count. Missing source
   events remain visible as compact unavailable rows.
 - Event row tokenization is cached by event content and emoji tags with a
@@ -36,6 +37,8 @@ When memory must be reduced, prefer in this order:
 - Drop closed runtime handles, timers, queued reads, and stale abort listeners.
 - Prune bounded app-owned windows, token caches, reference caches, relay
   snapshots, diagnostic suppression maps, and fallback stores.
-- Evict lowest-scored cached events through indexed compaction.
+- Under browser quota pressure only, evict lowest-scored cached events through
+  indexed compaction.
 - Rebuild derived indexes from durable IndexedDB rows when needed.
-- Keep durable user/browser data intact.
+- Keep durable user/browser data intact unless quota-pressure compaction is
+  required.

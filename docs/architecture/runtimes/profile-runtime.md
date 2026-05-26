@@ -27,10 +27,9 @@ Profile runtime owns metadata and authored-note loading for one pubkey.
 - Runtime keeps a `180` item note window.
 - Runtime exposes `loadOlder()` with an explicit oldest cursor and
   `loadNewer()` with an explicit newest cursor after top pruning.
-- The Profile tab is a plain scroll flow. Near-bottom prefetch starts before
-  absolute bottom, duplicate older loads are guarded, loading status appears in
-  the flow while `loadingOlder && hasOlder`, and terminal history appears only
-  when `hasOlder === false`.
+- Profile notes use the shared virtual feed list below the header summary.
+  Near-end detection, speculative older prefetch, and `FeedSurfaceStatus` follow
+  [feed-surface.md](../data/feed-surface.md).
 - Display cursors remain visible post boundaries. Private scan cursors are used
   for older and newer relay reads when dense or incomplete relay windows need
   overlap.

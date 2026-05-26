@@ -3,22 +3,24 @@
 ## Purpose
 
 Event surface paging defines shared bottom loading, near-end prefetch, and
-status rows across feed tabs.
+status rows across feed tabs. Canonical behavior lives in
+[feed-surface.md](feed-surface.md).
 
 ## Surfaces
 
 | Surface | List mode | Paging |
 | ------- | --------- | ------ |
-| Home, Global | Virtual `EventTreeList` | Cursor window |
+| Home, Global | Virtual `FeedSurfaceList` | Cursor window |
 | Thread, Search, Custom Request, Author Context | Virtual | Cursor window |
-| Profile Notes | Plain scroll | Cursor window |
-| Notifications | Plain scroll | Older-only window |
+| Profile Notes | Virtual | Cursor window |
+| Notifications | Virtual | Older-only window |
 
 ## Near-End Threshold
 
-- Base constant `nearEndPixels = 900`.
-- Effective threshold: `max(nearEndPixels, viewportHeight * 0.75)`.
+- Base constant `nearEndPixels = 1200`.
+- Effective threshold: `max(nearEndPixels, viewportHeight * 1.5)`.
 - `isNearEnd` and `isNearStart` use the effective threshold for scroll handlers.
+- List sentinels use `IntersectionObserver` with matching `rootMargin`.
 
 ## Bottom Status
 
@@ -27,7 +29,6 @@ status rows across feed tabs.
   - end of known history
   - error text when the runtime exposes a terminal error
 - Virtual lists inject status rows through list data.
-- Plain-scroll tabs render the component after the scroll content.
 
 ## Speculative Prefetch
 

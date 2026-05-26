@@ -21,7 +21,9 @@ Profile tabs show identity metadata and authored text notes.
 - Initial and older note pages request `30` items.
 - Profile note lists keep a `180` item window.
 - Profile renders as one scroll flow: summary first, then Notes rows in normal
-  document order. The Profile tab is the only scroll container for this flow.
+  document order inside a virtual feed list below the header.
+- Older note pages use `max(1200px, 1.5×viewport)` near-end detection and
+  shared `FeedSurfaceStatus` footer semantics.
 - Profile metadata supports banner, picture, display name, name, NIP-05,
   website, Lightning address, and about text.
 - Profile header identity content starts below the banner. The avatar may

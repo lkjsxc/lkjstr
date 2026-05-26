@@ -68,6 +68,20 @@ preserving where each real event was seen.
 - Grouped scan results expose `receivedItems` for cache writes. Visible page
   semantics still use sliced `items`.
 
+## Staged Feed Page Pipeline
+
+Feed runtimes treat each older or initial page as three stages:
+
+1. **Acquire** — `readRelayFeedGroups()` or `readRelayFeedPage()` returns
+   events; the repository persists rows and provenance.
+2. **Window merge** — event ids merge into the resident feed window; UI emits
+   minimized `FeedEvent` rows from cached bodies without waiting for hydration.
+3. **Enrich** — profile metadata and reference previews load for visible and
+   near-visible rows only.
+
+Stage 2 must not block on stage 3. Relay latency and enrichment latency are
+independent on the critical path to first paint.
+
 ## Callers
 
 - Home, Global, and Profile feed pages use adaptive bounded scans for initial,

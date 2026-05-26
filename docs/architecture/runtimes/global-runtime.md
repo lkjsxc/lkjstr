@@ -12,6 +12,8 @@ Global runtime owns unauthenticated recent-note loading from readable relays.
 - Keep Global to a `180` item in-memory window.
 - Retain at most `180` live and cached Global rows even if relays stream more.
 - Load older pages through `loadOlder()` from the bottom cursor.
+- Shared feed surface footer and speculative older prefetch follow
+  [feed-surface.md](../data/feed-surface.md).
 - Load newer pages through `loadNewer()` from the top cursor when newer
   resident chunks were pruned. Newer pages read both cache and relays.
 - Initial and historical relay pages use compound `{createdAt,id}` cursors,

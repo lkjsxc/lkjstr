@@ -28,11 +28,13 @@ its NIP-02 follows.
 - The tab keeps a `180` item window and exposes jump to latest after newer
   items are pruned.
 - Live events are retained only inside the same `180` item window.
-- Older pages load after near-bottom scroll using the viewport-aware near-end
-  threshold, or when the loaded rows are shorter than the viewport and
-  `hasOlder` remains true.
+- Older pages load after near-bottom scroll using
+  `max(1200px, 1.5×viewport)` or an equivalent sentinel margin, or when the
+  loaded rows are shorter than the viewport and `hasOlder` remains true.
 - One speculative older page may prefetch when near end while `hasOlder` is
-  true.
+  true. See [feed-surface.md](../../architecture/data/feed-surface.md).
+- Older pages render event shells immediately; profile and reference enrichment
+  continue asynchronously.
 - Initial and historical relay pages use compound `{createdAt,id}` cursors and
   adaptive bounded windows with both `since` and `until`. Empty complete
   windows continue older; incomplete or dense windows keep `hasOlder`

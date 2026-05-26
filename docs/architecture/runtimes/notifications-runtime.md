@@ -24,6 +24,8 @@ backfill.
 - Keep Notifications source event and fallback target context state to a
   `180` notification record window. Prune by record count, not resolved event
   count.
+- Notifications use the shared virtual feed list, `FeedSurfaceStatus`, and
+  speculative older prefetch per [feed-surface.md](../data/feed-surface.md).
 - Retain only source and target/root events referenced by retained
   notification records.
 - Missing source notification events remain visible as compact unavailable rows

@@ -16,8 +16,12 @@ Global shows recent notes and reposts from the selected readable relay set.
   capped by the `180` item window.
 - Initial and older pages request `30` items.
 - The tab keeps a `180` item window.
-- Older pages load after near-bottom scroll or when the loaded rows are shorter
-  than the viewport and `hasOlder` remains true.
+- Older pages load after near-bottom scroll using
+  `max(1200px, 1.5×viewport)` or an equivalent sentinel margin, or when the
+  loaded rows are shorter than the viewport and `hasOlder` remains true.
+- One speculative older page may prefetch when near end while `hasOlder` is
+  true.
+- Shared `FeedSurfaceStatus` footer shows loading, end of history, and errors.
 - Initial and historical relay pages use compound `{createdAt,id}` cursors,
   adaptive bounded `since`/`until` windows, local boundary filtering, and
   merged relay provenance. Timeout or non-EOSE relay status does not prove

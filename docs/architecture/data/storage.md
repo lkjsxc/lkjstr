@@ -20,8 +20,7 @@ Storage docs define browser persistence ownership.
 - `jobs`: persisted in-app job records.
 - `cacheMeta`: cache status records.
 - `tabStates`: durable tab snapshot payloads keyed by workspace, pane, and tab
-  id. Feed tabs store anchor event id and offset; tool tabs store minimal
-  restore fields.
+  id. See [Tab Snapshots](#tab-snapshots).
 - `settings`: settings overrides.
 - `relaySets`: editable relay sets.
 - `relayDiagnosticSummaries`: persisted relay diagnostic summaries.
@@ -38,10 +37,28 @@ browser signer boundary.
 Passkey-protected local secret storage is not implemented. The security design
 is documented separately before any passkey secret table is restored.
 
+## Tab Snapshots
+
+`tabStates` rows store JSON payloads captured when a tab loses focus:
+
+| Field | Feed tabs | Tool tabs |
+| ----- | --------- | --------- |
+| `anchorEventId`, `anchorOffset` | Required when list had scroll | Optional |
+| `scrollTop` | Fallback for plain scroll | Optional |
+| `oldestCursor`, `newestCursor` | When runtime exposes cursors | — |
+| `filterState` | Search query, profile section | Surface-specific |
+| `composerText` | Tweet, inline reply drafts | When present |
+
+Session-memory snapshots mirror the same shape for fast restore within
+`tabs.inactiveRetentionSeconds`. IndexedDB snapshots survive reload and expired
+session TTL.
+
 ## Cleanup
 
-Event cache cleanup may prune cached events, event relay receipts, event tag
-rows, feed cursors, and feed coverage affected by the pruned feed keys. Complete
-coverage rows compact sooner than dense, incomplete, unresolved, or failed
-diagnostic rows. Cleanup must not prune accounts, settings, relay sets,
-workspace layout, notifications, or Tweet drafts.
+Optional quota-pressure event cache cleanup may prune cached events, event relay
+receipts, event tag rows, feed cursors, and feed coverage affected by pruned
+feed keys. Complete coverage rows compact sooner than dense, incomplete,
+unresolved, or failed diagnostic rows. Cleanup must not prune accounts,
+settings, relay sets, workspace layout, notifications, Tweet drafts, or
+`tabStates` unless the tab no longer exists in the workspace.
+

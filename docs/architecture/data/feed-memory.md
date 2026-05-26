@@ -61,14 +61,18 @@ that key after virtual or plain list updates. Virtual lists capture the real
 `getScrollOffset` value, skip restoration at offset `0`, and keep live prepends
 or older-page loads from moving the visible row.
 
-## Cache Bounds
+## Durable Cache vs Runtime Windows
 
-- IndexedDB is the durable event cache.
+- IndexedDB is the durable event cache. lkjstr does not cap durable cached event
+  count by application policy. Browser storage quotas may still limit growth.
+- Runtime feed windows (`180` for Home, Global, Profile, Notifications;
+  `240` for Thread) bound resident rows per tab, live inserts, and in-memory
+  maps. These are not durable cache ceilings.
 - In-memory event maps are a bounded fallback for tests and non-browser
   execution, not the primary browser cache.
 - Event indexes support kind/time, author/kind/time, and `e` or `p` tag lookup.
-- Local event compaction prunes by retention score through the indexed
-  `eventPriority` store. See [retention/README.md](retention/README.md).
+- Optional quota-pressure compaction may prune by retention score through the
+  indexed `eventPriority` store. See [retention/README.md](retention/README.md).
 - Accounts, settings, relay sets, workspace state, notifications, and Tweet
   drafts are protected from event cache pruning.
 - Feed cursors are removed when their page boundary no longer points to a

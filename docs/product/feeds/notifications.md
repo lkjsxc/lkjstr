@@ -20,7 +20,13 @@ notification context header and the source event as the primary body.
 - Notification relay sync starts when the Notifications tab is opened.
 - Notification tabs keep a `180` record window. Windowing is based on
   notification records, not the number of resolved source events.
-- Older notifications load only after scrolling near the bottom.
+- Older notifications load after near-bottom scroll using
+  `max(1200px, 1.5×viewport)` or an equivalent sentinel margin.
+- One speculative older page may prefetch when near end while `hasOlder` is
+  true.
+- Shared `FeedSurfaceStatus` footer shows loading, end of history, and errors.
+- Notifications use the shared virtual feed list with the same bottom status
+  semantics as Home and Global.
 - Historical relay pages use interval windows with `since` and `until` from
   the oldest loaded notification event.
 - Live relay reads set `since` when the notification runtime starts.
