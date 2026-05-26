@@ -127,7 +127,6 @@ body {
   position: relative;
 }
 
-.pane-body,
 .empty-pane,
 .empty-workspace {
   box-sizing: border-box;
@@ -136,7 +135,14 @@ body {
 }
 
 .pane-body {
+  box-sizing: border-box;
+  height: 100%;
   grid-area: 1 / 1;
+  min-height: 0;
+  min-width: 0;
+  overflow: hidden;
+  padding-block: 0.9rem;
+  padding-inline: 0;
   pointer-events: none;
   visibility: hidden;
 }
