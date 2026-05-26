@@ -79,7 +79,12 @@
   }
 </script>
 
-<div class="notification-list" bind:this={listElement} onscroll={handleScroll}>
+<div
+  class="notification-list"
+  data-scroll-owner=""
+  bind:this={listElement}
+  onscroll={handleScroll}
+>
   {#each records as record (record.id)}
     <NotificationRow
       {record}

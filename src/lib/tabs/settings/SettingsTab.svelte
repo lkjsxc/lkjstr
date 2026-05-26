@@ -31,7 +31,7 @@
     if (!root) return;
     const remembered = scrollPositions.get(scrollKey());
     const target = remembered ?? props.restoreScrollTop;
-    if (target && target > 0) root.scrollTop = target;
+    if (target !== undefined) root.scrollTop = target;
   }
 
   onMount(async () => {
@@ -88,7 +88,12 @@
   }
 </script>
 
-<section class="settings-tab" aria-label="Settings" bind:this={root}>
+<section
+  class="settings-tab"
+  aria-label="Settings"
+  data-scroll-owner=""
+  bind:this={root}
+>
   <header class="settings-header">
     <span>{changedCount} changed</span>
     <div class="settings-actions">

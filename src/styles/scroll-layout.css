@@ -1,14 +1,26 @@
-.event-list__scroller,
-.pane-body,
+:root {
+  --scroll-content-inset: var(--space-3);
+}
+
+.event-list__viewport,
+.settings-tab,
 .data-tab,
 .profile-tab,
-.timeline-tab {
+.timeline-tab,
+.notification-list,
+.new-tab,
+.relay-monitor {
   scrollbar-gutter: stable;
 }
 
-.event-list__scroller > *,
-.pane-body > *,
+.event-list__viewport > *,
+.settings-tab > *,
 .data-tab > *,
+.profile-tab > *,
+.timeline-tab > *,
+.notification-list > *,
+.new-tab > *,
+.relay-monitor > *,
 .profile-notes {
-  padding-inline-end: var(--space-2);
+  padding-inline-end: var(--scroll-content-inset);
 }
