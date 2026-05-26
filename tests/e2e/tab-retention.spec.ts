@@ -28,6 +28,17 @@ test('restores tab scroll from snapshot and keeps inactive body unmounted', asyn
   await expect(page.locator('.settings-tab')).toHaveCount(0);
 });
 
+test('restores Search query after tab switch within retention', async ({
+  page,
+}) => {
+  await openCleanWorkspace(page);
+  await openNewTabOption(page, 'Search', 1);
+  await page.getByLabel('Search query').fill('nostr workspace');
+  await openNewTabOption(page, 'Settings', 1);
+  await selectStartupTab(page, 'Search');
+  await expect(page.getByLabel('Search query')).toHaveValue('nostr workspace');
+});
+
 test('restores settings scroll after reload from persisted tab state', async ({
   page,
 }) => {
