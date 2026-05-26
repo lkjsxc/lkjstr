@@ -9,6 +9,10 @@ import {
 import type { WorkspaceTab } from './tab';
 import type { PaneScrollRetention } from './pane-scroll-retention';
 import type { SessionTabSnapshots } from './session-tab-snapshots';
+import {
+  captureRuntimeSnapshot,
+  clearRuntimeSnapshot,
+} from './tab-runtime-registry';
 
 type TabSnapshot = TabSnapshotPayload & { readonly id: string };
 
