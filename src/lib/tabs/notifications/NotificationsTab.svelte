@@ -16,6 +16,8 @@
   } from '$lib/timeline/timeline-subscription';
   import { loadTimelineProfiles } from '$lib/timeline/timeline-profiles';
   import NotificationListScroll from './NotificationListScroll.svelte';
+  import { registerTabRuntimeSnapshot } from '$lib/workspace/tab-runtime-registry';
+  import { feedRuntimeSnapshot } from '$lib/workspace/feed-runtime-snapshot';
 
   type ProfileMap = Record<string, ProfileSummary>;
   type NotificationViewState = NotificationState & { profiles: ProfileMap };
@@ -91,6 +93,13 @@
       runtime?.close();
       runtime = undefined;
     };
+  });
+
+  $effect(() => {
+    const tabId = props.tabId;
+    return registerTabRuntimeSnapshot(tabId, () =>
+      feedRuntimeSnapshot(viewState),
+    );
   });
 
   $effect(() => {

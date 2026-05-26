@@ -15,6 +15,8 @@
   } from '$lib/timeline/timeline-subscription';
   import { loadTimelineProfiles } from '$lib/timeline/timeline-profiles';
   import type { TabFeedAnchor } from '$lib/workspace/tab-anchor-registry';
+  import { registerTabRuntimeSnapshot } from '$lib/workspace/tab-runtime-registry';
+  import { feedRuntimeSnapshot } from '$lib/workspace/feed-runtime-snapshot';
 
   type ProfileMap = Record<string, ProfileSummary>;
   type ThreadViewState = ThreadState & { profiles: ProfileMap };
@@ -84,6 +86,11 @@
       runtime?.close();
       runtime = undefined;
     };
+  });
+
+  $effect(() => {
+    const tabId = props.tabId;
+    return registerTabRuntimeSnapshot(tabId, () => feedRuntimeSnapshot(state));
   });
 
   $effect(() => {

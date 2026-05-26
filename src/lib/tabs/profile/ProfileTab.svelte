@@ -20,6 +20,8 @@
     timelineRelays,
   } from '$lib/timeline/timeline-subscription';
   import type { TabFeedAnchor } from '$lib/workspace/tab-anchor-registry';
+  import { registerTabRuntimeSnapshot } from '$lib/workspace/tab-runtime-registry';
+  import { feedRuntimeSnapshot } from '$lib/workspace/feed-runtime-snapshot';
   import ProfileHeader from './ProfileHeader.svelte';
   import ProfileNewerButton from './ProfileNewerButton.svelte';
 
@@ -88,6 +90,13 @@
       return pubkey;
     }
   }
+
+  $effect(() => {
+    const tabId = props.tabId;
+    return registerTabRuntimeSnapshot(tabId, () =>
+      feedRuntimeSnapshot(state),
+    );
+  });
 
   function safeNprofile(pubkey: string, relays: readonly string[]): string {
     try {

@@ -41,6 +41,32 @@ test('restores Search query after tab switch within retention', async ({
     .toBe('nostr workspace');
 });
 
+test('restores top-of-list scroll after tab switch', async ({ page }) => {
+  await page.goto('/');
+  await selectStartupTab(page, 'Home');
+  await openNewTabOption(page, 'Settings', 1);
+  await page
+    .locator('.pane-body[data-active-tab="true"] .settings-tab')
+    .evaluate((node) => {
+      node.scrollTop = 400;
+      node.dispatchEvent(new Event('scroll', { bubbles: true }));
+    });
+  await selectStartupTab(page, 'Home');
+  await selectStartupTab(page, 'Settings');
+  await expect
+    .poll(() => getSettingsScroll(page))
+    .toBeGreaterThan(0);
+  await page
+    .locator('.pane-body[data-active-tab="true"] .settings-tab')
+    .evaluate((node) => {
+      node.scrollTop = 0;
+      node.dispatchEvent(new Event('scroll', { bubbles: true }));
+    });
+  await selectStartupTab(page, 'Home');
+  await selectStartupTab(page, 'Settings');
+  await expect.poll(() => getSettingsScroll(page)).toBe(0);
+});
+
 test('restores settings scroll after reload from persisted tab state', async ({
   page,
 }) => {
