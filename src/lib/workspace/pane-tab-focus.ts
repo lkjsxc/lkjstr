@@ -34,6 +34,7 @@ export async function syncPaneTabFocus(args: {
     const session = args.snapshots.take(activeId);
     if (session) {
       restorePayload = session;
+      clearRuntimeSnapshot(activeId);
       args.bodyScroll.restoreSnapshot(activeId, {
         scrollTop: session.scrollTop,
       });
@@ -45,6 +46,7 @@ export async function syncPaneTabFocus(args: {
       );
       if (payload && args.active?.id === activeId) {
         restorePayload = payload;
+        clearRuntimeSnapshot(activeId);
         args.bodyScroll.restoreSnapshot(activeId, {
           scrollTop: payload.scrollTop,
         });
