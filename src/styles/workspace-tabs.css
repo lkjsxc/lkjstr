@@ -68,12 +68,19 @@ body.dragging-tab .tab-frame[draggable='true'] {
   touch-action: none;
 }
 
+body.tab-strip-drag-arming .tab-strip,
+body.tab-strip-drag-arming .tab-frame,
+body.tab-strip-drag-arming .tab-main,
 body.dragging-tab,
 body.dragging-tab .tab-strip,
 body.dragging-tab .tab-frame,
 body.dragging-tab .tab-main {
   -webkit-user-select: none;
   user-select: none;
+}
+
+body.tab-strip-drag-arming .tab-strip {
+  touch-action: none;
 }
 
 .tab-frame[draggable='true']:active,

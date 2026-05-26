@@ -107,11 +107,7 @@
           active={group.activeTabId === tab.id}
           dragging={drag.session?.snapshot.active === true &&
             drag.session.snapshot.tabId === tab.id}
-          selectLocked={Boolean(
-            drag.session &&
-            (drag.session.longPressArmed || drag.session.snapshot.active) &&
-            drag.session.snapshot.tabId === tab.id,
-          )}
+          selectLocked={Boolean(drag.session)}
           nativeDraggable={drag.session
             ? drag.session.kind !== 'coarse'
             : !prefersCoarse}

@@ -51,7 +51,11 @@
   }
 
   function blockSelect(event: Event): void {
-    if (props.selectLocked || document.body.classList.contains('dragging-tab'))
+    if (
+      props.selectLocked ||
+      document.body.classList.contains('dragging-tab') ||
+      document.body.classList.contains('tab-strip-drag-arming')
+    )
       event.preventDefault();
   }
 </script>
@@ -64,6 +68,7 @@
   class:active={props.active}
   class:tab-frame--dragging={props.dragging}
   class="tab-frame"
+  onselectstart={blockSelect}
   draggable={html5Draggable}
   ondragstart={dragStart}
   ondragend={dragEnd}

@@ -14,6 +14,11 @@ export type StripDragCtx = {
   unbindWindow?: () => void;
 };
 
+export function setStripDragArming(active: boolean): void {
+  if (typeof document === 'undefined') return;
+  document.body.classList.toggle('tab-strip-drag-arming', active);
+}
+
 export type StripDragDeps = {
   readonly paneId: string;
   readonly tabCount: () => number;
@@ -37,6 +42,7 @@ export function stripDragPointerDown(
   if (event.button !== 0) return;
   ctx.dragElement = event.currentTarget as HTMLElement;
   ctx.session = startStripPointer(deps.paneId, tabId, event);
+  setStripDragArming(true);
   ctx.ghost = { x: event.clientX, y: event.clientY, title };
   if (typeof window === 'undefined') return;
   const move = (e: PointerEvent) => stripDragPointerMove(ctx, deps, e);
@@ -119,6 +125,7 @@ export function stripDragPointerCancel(
 }
 
 export function stripDragClear(ctx: StripDragCtx, deps: StripDragDeps): void {
+  setStripDragArming(false);
   if (ctx.session) clearStripTimer(ctx.session);
   ctx.unbindWindow?.();
   ctx.unbindWindow = undefined;
