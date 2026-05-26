@@ -25,8 +25,9 @@ See [pane-chrome-scope.md](pane-chrome-scope.md). Summary:
 ## Preview Overlays
 
 - Preview geometry is separate from hit corridors.
-- `center` preview covers the full pane (strip + body).
-- Edge previews cover exactly half the **pane body** along the chosen edge.
+- All previews use **pane body** dimensions and `bodyOffsetTop`.
+- `center` preview covers the full body (reorder or move into group).
+- Edge previews cover exactly half the pane body along the chosen edge.
   CSS variables include `bodyOffsetTop` so the highlight does not sit under the
   tab strip.
 - Overlay variables come from `tabDropPreviewRect` plus offset, not from hit
@@ -36,7 +37,7 @@ See [pane-chrome-scope.md](pane-chrome-scope.md). Summary:
 
 | Zone                                | Commit                          | Preview                |
 | ----------------------------------- | ------------------------------- | ---------------------- |
-| `center`                            | Move or reorder in target group | Full pane highlight    |
+| `center`                            | Move or reorder in target group | Full body highlight    |
 | `left` / `right` / `top` / `bottom` | Smart split at edge             | Half body on that edge |
 
 ## Native Parity

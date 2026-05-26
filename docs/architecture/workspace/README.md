@@ -11,8 +11,10 @@ visual rules.
   drag hit testing.
 - [pane-drop-target.md](pane-drop-target.md): pane-body edge resolver and
   center insert.
+- [tab-body-mount.md](tab-body-mount.md): hidden-mount tab bodies per pane.
 - [tab-retention-flow.md](tab-retention-flow.md): blur/focus snapshot pipeline.
 - [scroll-layout.md](scroll-layout.md): scrollbar-safe scrolling surfaces.
+- [scroll-surface-audit.md](scroll-surface-audit.md): per-surface scroll checklist.
 - [tile-overlays.md](tile-overlays.md): tile-scoped emoji picker placement.
 - [resize.md](resize.md): split resize math.
 - [tab-dragging.md](tab-dragging.md): tab drag overview.

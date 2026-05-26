@@ -23,12 +23,12 @@ Tab runtime defines valid tab kinds and lifecycle ownership.
 - Conversion preserves tab id and tab group.
 - Closing a tab must close any runtime subscription owned by that tab.
 - Closing a tab must abort one-shot reads owned by that tab.
-- Inactive tabs unmount when they lose focus. The active pane renders only one
-  tab body.
+- Inactive tabs keep mounted bodies in the pane stack but hide them and pause
+  feed runtimes. See [tab-body-mount.md](tab-body-mount.md).
 - `tabs.inactiveRetentionSeconds` retains a bounded in-memory UI snapshot for
-  an inactive tab. It does not retain mounted DOM, live runtimes, relay
-  subscriptions, or one-shot relay reads.
-- Tab snapshots are tab-kind aware. Capture runs on every blur before unmount.
+  reload and missing-mount restore. It does not keep live relay subscriptions
+  on hidden tabs.
+- Tab snapshots are tab-kind aware. Capture runs on every blur.
 - Feed tabs store virtual list anchor event id and offset, optional
   `scrollTop`, compound feed cursors (`oldestCursor`, `newestCursor`),
   `hasOlder`, `hasNewer`, and surface filter state when applicable.
@@ -38,15 +38,17 @@ Tab runtime defines valid tab kinds and lifecycle ownership.
   snapshots provide fast restore within the TTL window.
 - Session-memory retains at most `32` warm snapshots (LRU by tab id). TTL is
   `tabs.inactiveRetentionSeconds` (default `300`).
-- On focus, restore order: session `take`, then IndexedDB `load`, then runtime
-  recreate. Runtimes seed from restored cursors and cache-first reads before
-  relay scans where the feed contract requires it.
+- On focus, prefer live DOM state when the body stayed mounted. Otherwise
+  restore order is session `take`, then IndexedDB `load`, then runtime recreate.
+  Runtimes seed from restored cursors and cache-first reads before relay scans
+  where the feed contract requires it.
 - `tabRuntimeRegistry` captures runtime-owned snapshot fields on blur via
   `captureRuntimeSnapshot(tabId)` before `persistTabSnapshot`.
-- When retention is positive, a tab reselected within the window restores its
-  session snapshot and creates fresh runtime/network work from the tab id.
-- Retention expiry drops the in-memory snapshot only; runtime and subscription
-  teardown already happened when the tab body unmounted.
+- When retention is positive, a tab reselected within the window may use a
+  session snapshot when mount state is missing; mounted bodies restore from DOM
+  first.
+- Retention expiry drops the in-memory snapshot only. Hidden bodies remain
+  mounted; feed subscriptions stay paused until the tab is active again.
 - Closing a tab, changing runtime configuration, or retention expiry closes
   owned subscriptions immediately.
 - Moving a tab removes and inserts the existing tab id without recording closed

@@ -96,10 +96,14 @@ for detailed contracts.
   pane header chrome for drag scope.
 - [architecture/workspace/pane-drop-target.md](architecture/workspace/pane-drop-target.md):
   pane-body drop resolver.
+- [architecture/workspace/tab-body-mount.md](architecture/workspace/tab-body-mount.md):
+  hidden-mount tab bodies per pane.
 - [architecture/workspace/tab-retention-flow.md](architecture/workspace/tab-retention-flow.md):
   tab blur/focus snapshot pipeline.
 - [architecture/workspace/scroll-layout.md](architecture/workspace/scroll-layout.md):
   scrollbar-safe scrolling surfaces.
+- [architecture/workspace/scroll-surface-audit.md](architecture/workspace/scroll-surface-audit.md):
+  per-surface scroll checklist.
 - [architecture/workspace/tile-overlays.md](architecture/workspace/tile-overlays.md):
   tile-scoped overlays.
 - [architecture/workspace/tab-dragging.md](architecture/workspace/tab-dragging.md):

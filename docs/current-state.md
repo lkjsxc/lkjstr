@@ -32,9 +32,9 @@ linked product, protocol, architecture, and operations pages.
 - Workspace layout, tabs, settings, accounts, drafts, notifications, relay
   information, relay summaries, jobs, and cached events are browser-owned data.
 - Pointer tab dragging is canonical. Native desktop drag uses pane chrome
-  exclusion and pane-body edge detection for splits. Center insert covers the
-  full tile header when over chrome. Half-pane edge previews align with the
-  content stack only.
+  exclusion and pane-body edge detection for splits. Center and edge drop
+  previews align with the content stack only and never cover the tab strip or
+  tile menu row.
 - Tab rails scroll horizontally with long-press touch drag, pointer capture,
   selection suppression, strip-priority reorder, and active-tab reveal.
 - Durable event cache has no application item-count ceiling. Optional
@@ -48,9 +48,10 @@ linked product, protocol, architecture, and operations pages.
   bounded app-owned runtime windows, caches, counters, and fallback stores.
 - Relay clients, relay pool, subscription manager, and tab runtimes own network
   reads and deterministic cleanup.
-- Inactive workspace tabs unmount immediately. Session snapshots (up to `32`
-  warm tabs) and IndexedDB `tabStates` restore scroll anchors, feed cursors,
-  `hasOlder`/`hasNewer`, and tool fields when tabs return or after reload.
+- Inactive workspace tabs keep hidden mounted bodies; feed runtimes pause.
+  Session snapshots (up to `32` warm tabs) and IndexedDB `tabStates` backstop
+  reload and missing-mount restore for scroll anchors, feed cursors,
+  `hasOlder`/`hasNewer`, and tool fields.
 - Feed surfaces share `IntersectionObserver` near-end sentinels with scroll
   fallback, `feedPagingPhase` footer semantics, speculative older pages, and
   staged row shells on Home, Global, Profile, Thread, and Notifications.

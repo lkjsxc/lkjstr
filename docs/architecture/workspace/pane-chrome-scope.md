@@ -10,9 +10,9 @@ while the pointer is over tile header chrome.
 
 | Region       | DOM anchor    | Role in drag resolution                         |
 | ------------ | ------------- | ----------------------------------------------- |
-| `paneRect`   | `.pane`       | Full tile bounds; center preview extent         |
+| `paneRect`   | `.pane`       | Full tile bounds; drop layer extent             |
 | `chromeRect` | `.pane-head`  | Header chrome; always maps to `center` zone     |
-| `bodyRect`   | `.pane-stack` | Content stack; edge corridors and edge previews |
+| `bodyRect`   | `.pane-stack` | Content stack; all drop preview geometry        |
 | `stripRect`  | `.tab-strip`  | Tab rail; strip-priority reorder on source pane |
 
 `chromeBottom` is `chromeRect.bottom` in viewport coordinates. It is **not**
@@ -30,13 +30,13 @@ the same header row and must be treated as chrome together.
 
 ## Preview Offsets
 
-`PaneDropLayer` covers the full pane (`inset: 0`). Edge previews use body
+`PaneDropLayer` covers the full pane (`inset: 0`). All zone previews use body
 dimensions and a vertical offset:
 
 - `bodyOffsetTop = bodyRect.top - paneRect.top`
-- Edge overlay `top` for `top` / `bottom` zones starts at `bodyOffsetTop`, not `0`.
-
-Center preview still covers the full pane (strip + body).
+- Overlay `top` for every zone starts at `bodyOffsetTop`, not `0`.
+- Center, left, right, top, and bottom previews never cover the tab strip or tile
+  menu row.
 
 ## Measurement
 

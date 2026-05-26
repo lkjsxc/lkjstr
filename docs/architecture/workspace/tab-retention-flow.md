@@ -3,7 +3,8 @@
 ## Purpose
 
 Tab retention flow describes how inactive tabs preserve UI state across focus
-changes and page reloads without keeping mounted DOM or live relay work.
+changes and page reloads. Mounted DOM holds scroll and form state; snapshots
+backstop reload and missing-mount cases without live relay work on hidden tabs.
 
 ## Blur Path
 
@@ -17,18 +18,21 @@ When pane focus leaves tab `A` for tab `B`:
 4. If `tabs.inactiveRetentionSeconds > 0`, `session-tab-snapshots.retain` stores
    an in-memory copy (LRU cap `32`).
 
-Tab `A` body unmounts immediately after blur processing starts.
+Tab `A` body stays mounted but hidden. Feed runtimes pause.
 
 ## Focus Path
 
 When tab `B` becomes active:
 
-1. Session `take(B)` when present within TTL.
-2. Else `loadPersistedTabSnapshot` from IndexedDB.
-3. `bodyScroll.restoreSnapshot` and `restore(B)` apply tool `scrollTop`.
-4. Feed tabs restore virtua anchor + runtime snapshot via `restoreAnchor` and
-   `restoreSnapshot` props on `PaneTabBody`.
-5. Fresh runtime and relay subscriptions start from restored cursors; cache
+1. Show tab `B` body (visibility and pointer events).
+2. When `B` stayed mounted, use live DOM scroll and fields first.
+3. Else session `take(B)` when present within TTL.
+4. Else `loadPersistedTabSnapshot` from IndexedDB.
+5. `bodyScroll.restoreSnapshot` and `restore(B)` apply tool `scrollTop` when
+   mount state was missing.
+6. Feed tabs restore virtua anchor + runtime snapshot via `restoreAnchor` and
+   `restoreSnapshot` when mount state was missing.
+7. Active runtime and relay subscriptions resume from restored cursors; cache
    repopulates the window before network where the feed contract requires it.
 
 ## Per Tab Kind Fields
@@ -58,6 +62,7 @@ tab metadata restore from the `workspaces` store independently.
 
 ## Related
 
+- [tab-body-mount.md](tab-body-mount.md): mount and visibility contract.
 - [tab-runtime.md](tab-runtime.md): lifecycle contract.
 - [storage.md](../data/storage.md): `tabStates` schema.
 - [tabs.md](../../product/workspace/tabs.md): product-visible behavior.

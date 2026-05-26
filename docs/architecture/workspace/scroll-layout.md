@@ -2,23 +2,27 @@
 
 ## Purpose
 
-Scroll layout keeps long content readable when scrollbars consume width or
-overlay content.
+Scroll layout keeps long content readable when scrollbars sit at the tile edge
+without overlapping text or controls.
 
 ## Contract
 
 - The **scrolling element** for each surface owns `scrollbar-gutter: stable`.
-- Content-safe inline padding uses `--scroll-content-inset` (default
-  `var(--space-3)`) on the scrolling element or its direct content wrapper so
-  text and controls do not sit under the visible scrollbar thumb.
+- `--scroll-track-edge` is the distance from the tile inner border to the
+  scrollbar track (default `0`).
+- `--scroll-content-inset` (default `var(--space-3)`) pads direct content
+  children on the inline end so text does not sit under the thumb.
+- `.pane-body` does not add inline padding on the scroll axis. Block-axis
+  padding may remain for vertical rhythm.
 - Feed virtual lists keep status rows inside the scroll flow so the footer moves
   with content.
 - Horizontal overflow in pane bodies is forbidden except for intentional rails
   such as the tab strip.
 
-## Token
+## Tokens
 
 ```css
+--scroll-track-edge: 0px;
 --scroll-content-inset: var(--space-3);
 ```
 
@@ -27,23 +31,28 @@ wrappers listed in `scroll-layout.css`.
 
 ## Surfaces
 
-| Surface                                                   | Scrolling element                          |
-| --------------------------------------------------------- | ------------------------------------------ |
-| Home, Global, Thread, Search, Profile notes               | Virtua viewport in `.event-list__scroller` |
-| Notifications                                             | `.notification-list-scroll`                |
-| Settings, Relay Settings, Stats, Welcome, Upload Settings | `.settings-tab`                            |
-| Custom Request, Author Context, lkjstr Log                | Tab-specific scroll root (see tab CSS)     |
-| Pane tab shell                                            | `.pane-body` (non-scrolling container)     |
+| Surface                                                   | Scrolling element                          | Content wrapper              |
+| --------------------------------------------------------- | ------------------------------------------ | ---------------------------- |
+| Home, Global, Thread, Search, Profile notes               | Virtua viewport in `.event-list__scroller` | `.event-list__viewport > *`  |
+| Notifications                                             | `.notification-list-scroll`                | direct child padding         |
+| Settings, Relay Settings, Stats, Welcome, Upload Settings | `.settings-tab`                            | `.settings-tab > *`          |
+| Custom Request, Author Context, lkjstr Log                | Tab-specific scroll root (see tab CSS)     | tab CSS                      |
+| Pane tab shell                                            | `.pane-body` (non-scrolling container)     | tab root inside body         |
 
 `.pane-body` and `.event-list__scroller` wrappers may use `overflow: hidden`
 while the Virtua or tool child owns vertical scroll.
+
+Per-surface checklist: [scroll-surface-audit.md](scroll-surface-audit.md).
 
 ## Marking Scroll Owners
 
 Tab bodies set `data-scroll-owner` on the primary vertical scroller so tab
 retention can capture `scrollTop` without scanning arbitrary descendants.
 
+Virtua feed lists use the Virtua viewport element inside `.event-list__scroller`.
+
 ## Related
 
+- [scroll-surface-audit.md](scroll-surface-audit.md): per-surface checklist.
 - [tab-retention-flow.md](tab-retention-flow.md): scroll capture on blur.
 - [tab-runtime.md](tab-runtime.md): snapshot fields.

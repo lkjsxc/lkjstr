@@ -59,10 +59,9 @@ Tabs define the workspace surface area.
 - Tabs can be dragged to reorder within a tile with pointer dragging or native
   desktop drag-and-drop.
 - Tabs can be dragged into another tile, or to a tile edge to split there.
-- Pane drop feedback shows a center insert highlight over the full tile header
-  and body when reordering or moving into a group, or a half-pane-body edge
-  preview aligned with the content stack. Edge split feedback never covers the
-  tab strip or tile menu row.
+- Pane drop feedback shows a center insert highlight over the pane body when
+  reordering or moving into a group, or a half-pane-body edge preview on splits.
+  Drop feedback never covers the tab strip or tile menu row.
 - Long-press and drag do not select tab label text. Touch uses long-press before
   drag; the rail keeps horizontal pan until drag arms.
 - Moving a tab activates and focuses it in the target tile.
@@ -87,14 +86,14 @@ Tabs define the workspace surface area.
   wrapping to multiple rows.
 - Pane content must not create horizontal scrolling.
 - Tab bodies fill the pane body height and keep scroll ownership local.
-- Inactive tab bodies unmount when focus changes. Every blur writes a durable
-  IndexedDB snapshot and, within `tabs.inactiveRetentionSeconds`, a session
-  snapshot (up to `32` warm tabs) with scroll anchors, feed cursors, `hasOlder`,
-  `hasNewer`, and surface-local fields such as Search query.
-- Reselecting a tab restores scroll (including top-of-list), list anchor, and
-  feed cursors from session when possible, otherwise from IndexedDB after reload.
-  Live relay subscriptions are always recreated; cached events repopulate the
-  window before network. See
+- Inactive tab bodies stay mounted but hidden; feed runtimes pause. Every blur
+  writes a durable IndexedDB snapshot and, within `tabs.inactiveRetentionSeconds`,
+  a session snapshot (up to `32` warm tabs) for reload backstop.
+- Reselecting a tab keeps scroll, list anchor, and form fields from the hidden
+  DOM when possible; session and IndexedDB apply after reload or missing mount.
+  Active feed tabs resume relay work from restored cursors; cached events
+  repopulate the window before network. See
+  [tab-body-mount.md](../../architecture/workspace/tab-body-mount.md) and
   [tab-retention-flow.md](../../architecture/workspace/tab-retention-flow.md).
 
 ## Removed Surface

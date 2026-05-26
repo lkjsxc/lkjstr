@@ -37,12 +37,18 @@ scrolling, reordering, and cross-tile moves.
 
 ## Selection Suppression
 
-While `body.dragging-tab` is set:
+While `body.tab-strip-drag-arming` or `body.dragging-tab` is set:
 
-- `user-select: none` applies to `body`, `.tab-strip`, and `.tab-frame`.
-- `selectstart` on `.tab-main` is prevented when a pointer drag session is armed
-  or active.
+- `user-select: none` applies to `body`, `.tab-strip`, `.tab-frame`, and
+  `.tab-main`.
+- `selectstart` on `.tab-frame` and `.tab-main` is prevented.
+- `body.tab-strip-drag-arming` is set on primary `pointerdown` on `.tab-main` and
+  cleared on pointer up, cancel, or drag clear.
+- Coarse pointers use `touch-action: none` while the long-press timer is pending
+  or while drag is armed or active.
 - Long-press must not select tab label text before drag arms.
+
+Native HTML5 drag sets `body.dragging-tab` on `dragstart` immediately.
 
 ## Strip Priority
 
