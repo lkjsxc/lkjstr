@@ -1,8 +1,5 @@
 <script lang="ts">
   import { tick, untrack } from 'svelte';
-  import FeedSurfaceStatus from '$lib/components/events/FeedSurfaceStatus.svelte';
-  import NotificationRow from '$lib/components/notifications/NotificationRow.svelte';
-  import { isNearEnd } from '$lib/feed-surface/near-end';
   import { metadataPageLimit } from '$lib/events/feed-window';
   import { createOlderRequestCoordinator } from '$lib/feed-surface/speculative-older';
   import type { ProfileSummary } from '$lib/identity/identity';
@@ -18,6 +15,7 @@
     timelineRelays,
   } from '$lib/timeline/timeline-subscription';
   import { loadTimelineProfiles } from '$lib/timeline/timeline-profiles';
+  import NotificationListScroll from './NotificationListScroll.svelte';
 
   type ProfileMap = Record<string, ProfileSummary>;
   type NotificationViewState = NotificationState & { profiles: ProfileMap };
@@ -36,6 +34,9 @@
   let runtime: NotificationRuntime | undefined;
   let currentProfiles: ProfileMap = {};
   let profileRequest = 0;
+  let listElement: HTMLElement | undefined;
+  let autoFillPending = false;
+  let destroyed = false;
   let state = $state<NotificationViewState>({
     records: [],
     items: [],
@@ -55,9 +56,6 @@
     new Map(state.targetItems.map((item) => [item.event.id, item])),
   );
   let relays: string[] = [];
-  let listElement: HTMLElement | undefined;
-  let autoFillPending = false;
-  let destroyed = false;
   let runtimeKey = $derived(
     `${props.accountPubkey ?? ''}|${timelineRelays(props.relaySets).join('\u0000')}`,
   );
@@ -125,12 +123,6 @@
     if (!state.loading && state.records.length > 0) void maybeAutoFill();
   });
 
-  function handleScroll(event: Event): void {
-    const el = event.currentTarget as HTMLElement;
-    if (isNearEnd(el.scrollTop, el.clientHeight, el.scrollHeight))
-      void olderRequests.requestFromNearEnd();
-  }
-
   async function markVisibleRead(): Promise<void> {
     if (!props.visible || document.visibilityState !== 'visible') return;
     await runtime?.markVisibleRead();
@@ -152,34 +144,24 @@
 <section class="data-tab" aria-label="Notifications">
   {#if state.loading}<p>Loading notifications...</p>{/if}
   {#if state.error}<p role="alert">{state.error}</p>{/if}
-  <div
-    class="notification-list"
-    bind:this={listElement}
-    onscroll={handleScroll}
-  >
-    {#if state.records.length > 0}
-      {#each state.records as record (record.id)}
-        <NotificationRow
-          {record}
-          item={itemById.get(record.sourceEventId)}
-          targetItem={targetItemById.get(
-            record.targetEventId ?? record.rootEventId ?? '',
-          )}
-          profile={state.profiles[record.actorPubkey]}
-          profiles={state.profiles}
-          relaySets={props.relaySets}
-          activeAccountPubkey={props.accountPubkey ?? null}
-          openProfile={props.openProfile}
-          openThread={props.openThread}
-          openAuthorContext={props.openAuthorContext}
-        />
-      {/each}
-    {:else if !state.loading}
-      <p>No notifications for the active account.</p>
-    {/if}
-    <FeedSurfaceStatus
-      loadingOlder={state.loadingOlder && state.hasOlder}
-      endOfHistory={state.hasOlder === false && state.records.length > 0}
+  {#if state.records.length > 0}
+    <NotificationListScroll
+      records={state.records}
+      {itemById}
+      {targetItemById}
+      profiles={state.profiles}
+      relaySets={props.relaySets}
+      activeAccountPubkey={props.accountPubkey}
+      loadingOlder={state.loadingOlder}
+      hasOlder={state.hasOlder}
+      error={state.error}
+      onNearEnd={() => olderRequests.requestFromNearEnd()}
+      openProfile={props.openProfile}
+      openThread={props.openThread}
+      openAuthorContext={props.openAuthorContext}
+      bind:listElement
     />
-  </div>
+  {:else if !state.loading}
+    <p>No notifications for the active account.</p>
+  {/if}
 </section>

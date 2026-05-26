@@ -136,7 +136,14 @@ export function createProfileRuntime(
     close: (): void => { closed = true; generation++; aborts.abort(); for (const item of cleanup.splice(0)) item(); listeners.clear(); },
     loadOlder: async (): Promise<void> => {
       if (closed || state.loadingOlder || !state.hasOlder) return; const run = generation; const cursor = olderScanCursor ?? state.oldestCursor; if (!cursor) return; emit({ ...state, loadingOlder: true });
-      try { const page = await loadOlderProfilePage({ posts: state.posts, pubkey, relays, subId, cursor, pageSize, subscriptions: manager, signal: aborts.signal }); if (!active(run)) return; olderScanCursor = page.hasOlder ? page.nextOlderCursor : undefined; emit({ ...state, posts: page.posts, hasOlder: page.hasOlder, hasNewer: state.hasNewer || page.newerPruned, newerPruned: state.newerPruned || page.newerPruned }); }
+      try {
+        const page = await loadOlderProfilePage({ posts: state.posts, pubkey, relays, subId, cursor, pageSize, subscriptions: manager, signal: aborts.signal });
+        if (!active(run)) return;
+        const { feedRowShells } = await import('../feed-surface/row-shell');
+        emit({ ...state, posts: feedRowShells(page.posts), hasOlder: page.hasOlder, loadingOlder: true });
+        olderScanCursor = page.hasOlder ? page.nextOlderCursor : undefined;
+        emit({ ...state, posts: page.posts, hasOlder: page.hasOlder, hasNewer: state.hasNewer || page.newerPruned, newerPruned: state.newerPruned || page.newerPruned });
+      }
       catch (error) { emit({ ...state, error: boundedErrorText(error) }); }
       finally { if (state.loadingOlder) emit({ ...state, loadingOlder: false }); }
     },

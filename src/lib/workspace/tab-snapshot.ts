@@ -1,3 +1,4 @@
+import type { FeedCursorPoint } from '$lib/events/types';
 import type { TabKind } from './tab';
 
 export type FeedTabSnapshot = {
@@ -5,6 +6,11 @@ export type FeedTabSnapshot = {
   readonly scrollTop?: number;
   readonly anchorEventId?: string;
   readonly anchorOffset?: number;
+  readonly oldestCursor?: FeedCursorPoint;
+  readonly newestCursor?: FeedCursorPoint;
+  readonly hasOlder?: boolean;
+  readonly hasNewer?: boolean;
+  readonly filterState?: Record<string, string>;
 };
 
 export type ToolTabSnapshot = {
@@ -12,6 +18,11 @@ export type ToolTabSnapshot = {
   readonly scrollTop?: number;
   readonly fields?: Record<string, string>;
 };
+
+export type FeedTabSnapshotSeed = Pick<
+  FeedTabSnapshot,
+  'oldestCursor' | 'newestCursor' | 'hasOlder' | 'hasNewer'
+>;
 
 export type TabSnapshotPayload = FeedTabSnapshot | ToolTabSnapshot;
 

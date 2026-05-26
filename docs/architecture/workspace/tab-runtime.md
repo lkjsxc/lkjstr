@@ -38,7 +38,7 @@ Tab runtime defines valid tab kinds and lifecycle ownership.
   snapshots provide fast restore within the TTL window.
 - Session-memory retains at most `32` warm snapshots (LRU by tab id). TTL is
   `tabs.inactiveRetentionSeconds` (default `300`).
-- On focus, restore order: session `take` → IndexedDB `load` → runtime
+- On focus, restore order: session `take`, then IndexedDB `load`, then runtime
   recreate. Runtimes seed from restored cursors and cache-first reads before
   relay scans where the feed contract requires it.
 - `tabRuntimeRegistry` captures runtime-owned snapshot fields on blur via

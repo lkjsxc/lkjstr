@@ -9,7 +9,10 @@
   import EventTreeList from '$lib/components/events/EventTreeList.svelte';
   import { createOlderRequestCoordinator } from '$lib/feed-surface/speculative-older';
   import { appendAppLog } from '$lib/log/app-log';
-  import { consumeTabCloseReason } from '$lib/workspace/tab-lifecycle-reasons';
+  import { closeTimelineTabRuntime } from './timeline-tab-lifecycle';
+  import { registerTabRuntimeSnapshot } from '$lib/workspace/tab-runtime-registry';
+  import { feedSnapshotSeedFromPayload } from '$lib/workspace/tab-snapshot-persist';
+  import type { TabSnapshotPayload } from '$lib/workspace/tab-snapshot';
   import type { RelaySet } from '$lib/relays/relay-store';
   import {
     createGlobalTimelineRuntime,
@@ -31,6 +34,7 @@
     tabId: string;
     kind?: 'home' | 'global';
     restoreAnchor?: TabFeedAnchor;
+    restoreSnapshot?: TabSnapshotPayload;
     activeAccountPubkey?: string | null;
     dataReady?: boolean;
     relaySets: readonly RelaySet[];
@@ -91,6 +95,7 @@
         props.kind === 'global' ? 'global' : 'tl',
       ),
       activeAccountPubkey: props.activeAccountPubkey,
+      seed: feedSnapshotSeedFromPayload(props.restoreSnapshot),
     };
     incMemoryCounter('active-tab-runtimes');
     runtime =
@@ -102,7 +107,12 @@
       severity: 'info',
       code: 'timeline-runtime-create',
       message: 'Timeline runtime created.',
-      context: runtimeContext('create'),
+      context: {
+        tabId: props.tabId,
+        kind: props.kind ?? 'home',
+        relays: relays.length,
+        reason: 'create',
+      },
     });
     if (props.kind === 'global') {
       countRuntime('timeline:global', 'created');
@@ -118,47 +128,30 @@
     runtime.start();
   });
 
+  $effect(() => {
+    const tabId = props.tabId;
+    return registerTabRuntimeSnapshot(tabId, () => runtime?.snapshot() ?? {});
+  });
+
   onDestroy(() => closeRuntime('timeline-runtime-destroy'));
 
   function closeRuntime(code: string): void {
     if (!runtime) return;
-    unsubscribe?.();
-    runtime.close();
-    decMemoryCounter('active-tab-runtimes');
-    const reason =
-      code === 'timeline-runtime-destroy'
-        ? consumeTabCloseReason(props.tabId)
-        : code;
-    appendAppLog({
-      area: 'runtime',
-      severity: 'info',
+    closeTimelineTabRuntime({
+      tabId: props.tabId,
+      kind: props.kind,
       code,
-      message: 'Timeline runtime closed.',
-      context: runtimeContext(reason),
+      runtimeStartedAt,
+      state,
+      relays,
+      close: () => runtime?.close(),
+      clearUnsubscribe: () => {
+        unsubscribe = undefined;
+        runtime = undefined;
+      },
     });
-    if (props.kind === 'global') {
-      countRuntime('timeline:global', 'closed');
-      setRuntimeCounterActive('timeline:global', -1);
-    } else {
-      countRuntime('timeline:home', 'closed');
-      setRuntimeCounterActive('timeline:home', -1);
-    }
-    unsubscribe = undefined;
-    runtime = undefined;
   }
 
-  function runtimeContext(reason: string): Record<string, unknown> {
-    return {
-      tabId: props.tabId,
-      kind: props.kind ?? 'home',
-      relays: relays.length,
-      reason,
-      uptimeMs: runtimeStartedAt ? Date.now() - runtimeStartedAt : 0,
-      itemCount: state.items.length,
-      connectedRelays: state.connectedRelays,
-      eoseRelays: state.eoseRelays,
-    };
-  }
 </script>
 
 <section

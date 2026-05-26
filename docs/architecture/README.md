@@ -14,6 +14,16 @@ state lives, which modules own subscriptions, and how tabs close cleanly.
   paging and status rows.
 - [data/feed-surface.md](data/feed-surface.md): feed list, prefetch, and staged
   rows.
+- [data/feed-surface/README.md](data/feed-surface/README.md): feed surface
+  index.
+- [data/feed-surface/near-end.md](data/feed-surface/near-end.md): near-end
+  prefetch.
+- [data/feed-surface/footer-phase.md](data/feed-surface/footer-phase.md): footer
+  phase reducer.
+- [data/feed-surface/staged-pipeline.md](data/feed-surface/staged-pipeline.md):
+  staged row pipeline.
+- [data/feed-surface/surface-matrix.md](data/feed-surface/surface-matrix.md):
+  per-surface list matrix.
 - [data/feed-memory.md](data/feed-memory.md): feed windows and scroll anchors.
 - [data/retention/README.md](data/retention/README.md): score-based event
   retention.

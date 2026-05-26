@@ -47,14 +47,18 @@ linked product, protocol, architecture, and operations pages.
   bounded app-owned runtime windows, caches, counters, and fallback stores.
 - Relay clients, relay pool, subscription manager, and tab runtimes own network
   reads and deterministic cleanup.
-- Inactive workspace tabs unmount immediately. Session snapshots and IndexedDB
-  `tabStates` restore scroll anchors and feed cursors when tabs return or after
-  reload.
-- Feed surfaces share near-end prefetch, `FeedSurfaceStatus`, speculative older
-  pages, and virtual lists on Home, Global, Profile notes, Thread, Search, and
-  Custom Request.
+- Inactive workspace tabs unmount immediately. Session snapshots (up to `32`
+  warm tabs) and IndexedDB `tabStates` restore scroll anchors, feed cursors,
+  `hasOlder`/`hasNewer`, and tool fields when tabs return or after reload.
+- Feed surfaces share `IntersectionObserver` near-end sentinels with scroll
+  fallback, `feedPagingPhase` footer semantics, speculative older pages, and
+  staged row shells on Home, Global, Profile, Thread, and Notifications.
+- Virtual event lists use `EventTreeList` on Home, Global, Profile notes,
+  Thread, Search, and Custom Request. Notifications uses a native scroll list
+  with the same footer and near-end contract.
 - Event rows show nip05-only subtitles on feeds, pressed Heart/Repost styling
-  from real local action evidence, and no left-side new-event stripe.
+  from a hybrid action-state index plus feed evidence, and no left-side
+  new-event stripe.
 - Welcome is a document-like quick-start with working links into Accounts,
   Relay Settings, Tweet, and core tabs.
 - Relay publish waiters, paged read leases, deduped read abort listeners, relay
@@ -102,6 +106,8 @@ linked product, protocol, architecture, and operations pages.
 - [product/README.md](product/README.md): user-facing behavior.
 - [protocol/README.md](protocol/README.md): protocol contracts.
 - [architecture/README.md](architecture/README.md): runtime and data ownership.
+- [architecture/data/feed-surface/README.md](architecture/data/feed-surface/README.md):
+  shared feed list contracts.
 - [architecture/data/heap-retention.md](architecture/data/heap-retention.md):
   memory retention symptoms and investigation.
 - [architecture/data/resource-ownership.md](architecture/data/resource-ownership.md):

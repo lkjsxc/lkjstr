@@ -28,6 +28,16 @@ for detailed contracts.
   shared feed paging and status rows.
 - [architecture/data/feed-surface.md](architecture/data/feed-surface.md): feed
   list, prefetch, and staged rows.
+- [architecture/data/feed-surface/README.md](architecture/data/feed-surface/README.md):
+  feed surface index.
+- [architecture/data/feed-surface/near-end.md](architecture/data/feed-surface/near-end.md):
+  near-end prefetch.
+- [architecture/data/feed-surface/footer-phase.md](architecture/data/feed-surface/footer-phase.md):
+  footer phase reducer.
+- [architecture/data/feed-surface/staged-pipeline.md](architecture/data/feed-surface/staged-pipeline.md):
+  staged row pipeline.
+- [architecture/data/feed-surface/surface-matrix.md](architecture/data/feed-surface/surface-matrix.md):
+  per-surface list matrix.
 - [architecture/data/feed-memory.md](architecture/data/feed-memory.md): feed
   cache and relay windows.
 - [architecture/data/retention/README.md](architecture/data/retention/README.md):
@@ -132,6 +142,8 @@ for detailed contracts.
 ## Product
 
 - [product/README.md](product/README.md): user-facing workspace contract.
+- [product/doc-impl-audit.md](product/doc-impl-audit.md): documentation vs
+  implementation alignment matrix.
 - [product/backlog.md](product/backlog.md): practical backlog with test
   strategies.
 - [product/feeds/README.md](product/feeds/README.md): reading surfaces.

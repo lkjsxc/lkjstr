@@ -1,5 +1,6 @@
 <script lang="ts">
   import FeedSurfaceStatus from './FeedSurfaceStatus.svelte';
+  import type { FeedPagingPhase } from '$lib/feed-surface/paging-state';
   import EventRow from './EventRow.svelte';
   import type { ProfileSummary } from '$lib/identity/identity';
   import type { RelaySet } from '$lib/relays/relay-store';
@@ -17,6 +18,7 @@
 
   type Props = {
     node: ViewRow;
+    phase?: FeedPagingPhase;
     profiles?: Record<string, ProfileSummary>;
     relaySets?: readonly RelaySet[];
     activeAccountPubkey?: string | null;
@@ -33,9 +35,9 @@
 </script>
 
 {#if 'terminal' in props.node}
-  <FeedSurfaceStatus endOfHistory />
+  <FeedSurfaceStatus phase="end" />
 {:else if 'loadingOlder' in props.node}
-  <FeedSurfaceStatus loadingOlder />
+  <FeedSurfaceStatus phase="loadingOlder" />
 {:else if collapsed}
   <button
     type="button"

@@ -2,19 +2,23 @@
   import { VList } from 'virtua/svelte';
   import { onDestroy, tick } from 'svelte';
   import { isNearEnd, isNearStart } from '$lib/feed-surface/near-end';
+  import EventTreeListNearEnd from './EventTreeListNearEnd.svelte';
+  import { footerPhaseFromPaging } from '$lib/feed-surface/footer-phase';
   import type { ProfileSummary } from '$lib/identity/identity';
   import type { RelaySet } from '$lib/relays/relay-store';
-  import {
-    buildEventTree,
-    flattenEventTree,
-    type FlatEventTreeItem,
-  } from '$lib/events/tree';
+  import type { FlatEventTreeItem } from '$lib/events/tree';
   import type { FeedEvent } from '$lib/events/types';
   import type {
     ReactionSummaryMap,
     RepostSummaryMap,
   } from '$lib/thread/thread-reactions';
   import EventTreeListRows, { type ViewRow } from './EventTreeListRows.svelte';
+  import {
+    buildViewRows,
+    eventNodeKey,
+    treeNodesFromItems,
+    viewRowKey,
+  } from './event-tree-list-helpers';
   import { pinVisibleEvents } from '$lib/cache/pins';
   import type { EventActionState } from '$lib/events/action-state';
   import FeedActionStatesBridge from './FeedActionStatesBridge.svelte';
@@ -37,6 +41,7 @@
     loadingNewer?: boolean;
     hasOlder?: boolean;
     hasNewer?: boolean;
+    pagingError?: string | null;
     emptyText?: string;
     onNearEnd?: () => void | Promise<void>;
     onNearStart?: () => void | Promise<void>;
@@ -49,18 +54,28 @@
 
   let props: Props = $props();
   let list = $state<TreeListAnchorHandle>();
+  let scrollerElement: HTMLDivElement | undefined;
   let autoFillPending = false;
-  let treeKey = '';
   let destroyed = false;
-  let cachedNodes: FlatEventTreeItem[] = [];
-  let nodes = $derived(treeNodes(props.items));
+  const treeCache = { key: '', nodes: [] as FlatEventTreeItem[] };
+  let nodes = $derived(treeNodesFromItems(props.items, treeCache));
+  let footerPhase = $derived(
+    footerPhaseFromPaging({
+      loadingOlder: Boolean(props.loadingOlder),
+      hasOlder: props.hasOlder !== false,
+      rowCount: nodes.length,
+      error: props.pagingError,
+    }),
+  );
+  let nearEndEnabled = $derived(
+    nodes.length > 0 &&
+      Boolean(props.hasOlder) &&
+      !props.loadingOlder &&
+      Boolean(props.onNearEnd),
+  );
   let actionStates = $state(new Map<string, EventActionState>());
   let rows = $derived<ViewRow[]>(
-    props.loadingOlder && props.hasOlder
-      ? [...nodes, { loadingOlder: true }]
-      : props.hasOlder === false && nodes.length > 0
-        ? [...nodes, { terminal: true }]
-        : nodes,
+    buildViewRows(nodes, Boolean(props.loadingOlder), props.hasOlder),
   );
   let previousNodes: FlatEventTreeItem[] = [];
   let restoredAnchorKey = $state('');
@@ -125,23 +140,6 @@
     if (!destroyed) autoFillPending = false;
   }
 
-  function treeNodes(items: readonly FeedEvent[]): FlatEventTreeItem[] {
-    const key = items.map((item) => item.event.id).join('\u0000');
-    if (key === treeKey) return cachedNodes;
-    treeKey = key;
-    cachedNodes = flattenEventTree(buildEventTree(items));
-    return cachedNodes;
-  }
-
-  function eventNodeKey(node: FlatEventTreeItem): string {
-    return node.event.id;
-  }
-
-  function rowKey(row: ViewRow): string {
-    if ('terminal' in row) return 'event-list-terminal';
-    if ('loadingOlder' in row) return 'event-list-loading-older';
-    return row.event.id;
-  }
 </script>
 
 <FeedActionStatesBridge
@@ -152,17 +150,18 @@
 
 <div class="event-list">
   {#if nodes.length > 0}
-    <div class="event-list__scroller">
+    <div class="event-list__scroller" bind:this={scrollerElement}>
       <VList
         bind:this={list}
         data={rows}
         style="height: 100%; min-height: 0;"
-        getKey={rowKey}
+        getKey={viewRowKey}
         onscroll={handleScroll}
       >
         {#snippet children(node)}
           <EventTreeListRows
             {node}
+            phase={footerPhase}
             profiles={props.profiles}
             relaySets={props.relaySets}
             activeAccountPubkey={props.activeAccountPubkey}
@@ -175,6 +174,12 @@
           />
         {/snippet}
       </VList>
+      <EventTreeListNearEnd
+        enabled={nearEndEnabled}
+        viewportHeight={list?.getViewportSize?.() ?? scrollerElement?.clientHeight ?? 0}
+        onNearEnd={props.onNearEnd}
+        scroller={scrollerElement}
+      />
     </div>
   {:else if !props.loading}
     <p class="event-list__empty">{props.emptyText ?? 'No events found.'}</p>

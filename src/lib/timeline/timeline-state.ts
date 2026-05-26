@@ -1,6 +1,7 @@
 import { compareEventsDesc, type NostrEvent } from '../protocol';
 import { feedWindowSize } from '../events/feed-window';
 import type { FeedCursorPoint } from '../events/types';
+import type { FeedTabSnapshotSeed } from '../workspace/tab-snapshot';
 import type { RelayPool } from '../relays/relay-pool';
 import type { RelaySubscriptionManager } from '../relays/subscription-manager';
 import type { RelayDiagnostic, RelaySnapshot } from '../relays/types';
@@ -37,6 +38,7 @@ export type TimelineState = {
 };
 
 export type TimelineRuntimeOptions = {
+  readonly seed?: FeedTabSnapshotSeed;
   readonly relays: readonly string[];
   readonly subId: string;
   readonly kind?: 'home' | 'global';

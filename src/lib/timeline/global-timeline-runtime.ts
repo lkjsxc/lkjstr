@@ -32,6 +32,7 @@ import {
   loadOlderGlobalPage,
 } from './global-timeline-pages';
 import { createTimelineProfileCoordinator } from './timeline-profile-coordinator';
+import { feedRowShells } from '../feed-surface/row-shell';
 
 export type GlobalTimelineRuntime = ReturnType<
   typeof createGlobalTimelineRuntime
@@ -58,7 +59,7 @@ export function createGlobalTimelineRuntime(options: TimelineRuntimeOptions) {
     relays,
     `${options.subId}:profiles`,
   );
-  let olderScanCursor: FeedCursorPoint | undefined;
+  let olderScanCursor: FeedCursorPoint | undefined = options.seed?.oldestCursor;
   const startedAt = Math.floor(Date.now() / 1000);
   let closed = false;
   let generation = 0;
@@ -112,7 +113,15 @@ export function createGlobalTimelineRuntime(options: TimelineRuntimeOptions) {
     subscribe: (listener: (state: TimelineState) => void): (() => void) => { listeners.add(listener); listener(state); return () => listeners.delete(listener); },
     start: async (): Promise<void> => {
       if (closed) return; const run = ++generation; cached = [...(await queryFeed({ kind: 'global', limit: pageSize })).items]; if (!active(run)) return;
-      emit(cached.length > 0 ? nextState(readyWithEventsState(state, cached)) : nextState({ items: cached }));
+      const boot = cached.length > 0 ? readyWithEventsState(state, cached) : { ...state, items: cached };
+      const seeded = options.seed
+        ? {
+            ...boot,
+            hasOlder: options.seed.hasOlder ?? boot.hasOlder,
+            hasNewer: options.seed.hasNewer ?? boot.hasNewer,
+          }
+        : boot;
+      emit(nextState(seeded));
       if (relays.length === 0) return emit(noEnabledRelayState(state));
       cleanup.push(subscriptions.subscribeState(receiveState), subscriptions.subscribeLive({ key: subId, relays, filters: [{ kinds: feedDisplayKinds, since: startedAt, limit: pageSize }], purpose: 'feed' }, (event) => receive(event)));
       void loadInitialPage();
@@ -120,7 +129,17 @@ export function createGlobalTimelineRuntime(options: TimelineRuntimeOptions) {
     close: (): void => { closed = true; generation++; aborts.abort(); for (const item of cleanup.splice(0)) item(); listeners.clear(); },
     loadOlder: async (): Promise<void> => {
       if (closed || state.loadingOlder || !state.hasOlder) return; const run = generation; const cursor = olderScanCursor ?? state.oldestCursor; if (!cursor) return; emit({ ...state, loadingOlder: true });
-      try { const page = await loadOlderGlobalPage({ items: items(), relays, subId, cursor, pageSize, subscriptions, signal: aborts.signal }); if (!active(run)) return; cached = page.items; live = []; olderScanCursor = page.hasOlder ? page.nextOlderCursor : undefined; emit(nextState({ items: items(), hasOlder: page.hasOlder, hasNewer: state.hasNewer || page.hasNewer })); }
+      try {
+        const page = await loadOlderGlobalPage({ items: items(), relays, subId, cursor, pageSize, subscriptions, signal: aborts.signal });
+        if (!active(run)) return;
+        cached = mergeTimelineItems(feedRowShells(page.items), items(), limit);
+        live = [];
+        emit(nextState({ items: items(), hasOlder: page.hasOlder, loadingOlder: true }));
+        cached = page.items;
+        live = [];
+        olderScanCursor = page.hasOlder ? page.nextOlderCursor : undefined;
+        emit(nextState({ items: items(), hasOlder: page.hasOlder, hasNewer: state.hasNewer || page.hasNewer }));
+      }
       catch (error) { emit({ ...state, error: boundedErrorText(error) }); }
       finally { if (state.loadingOlder) emit({ ...state, loadingOlder: false }); }
     },
@@ -129,6 +148,14 @@ export function createGlobalTimelineRuntime(options: TimelineRuntimeOptions) {
       try { const page = await loadNewerGlobalPage({ items: items(), relays, subId, cursor, pageSize, subscriptions, signal: aborts.signal }); if (!active(run)) return; cached = page.items; live = []; emit(nextState({ items: items(), hasNewer: page.hasNewer, hasOlder: state.hasOlder || page.hasOlder })); }
       finally { if (state.loadingNewer) emit({ ...state, loadingNewer: false }); }
     },
+    snapshot: () =>
+      ({
+        kind: 'feed',
+        oldestCursor: olderScanCursor ?? state.oldestCursor,
+        newestCursor: state.newestCursor,
+        hasOlder: state.hasOlder,
+        hasNewer: state.hasNewer,
+      }) as const,
   };
   return runtime;
 }

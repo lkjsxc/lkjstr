@@ -7,7 +7,7 @@ export const threadWindowSize = 240;
 export const nearEndPixels = 1200;
 
 export function nearEndThreshold(viewportHeight: number): number {
-  return Math.max(nearEndPixels, viewportHeight * 1.5);
+  return Math.max(nearEndPixels, viewportHeight * 2);
 }
 export const metadataPageLimit = 30;
 

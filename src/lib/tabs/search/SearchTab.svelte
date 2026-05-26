@@ -1,5 +1,8 @@
 <script lang="ts">
-  import { onDestroy } from 'svelte';
+  import { onDestroy, onMount } from 'svelte';
+  import { createOlderRequestCoordinator } from '$lib/feed-surface/speculative-older';
+  import { registerTabRuntimeSnapshot } from '$lib/workspace/tab-runtime-registry';
+  import type { TabSnapshotPayload } from '$lib/workspace/tab-snapshot';
   import EventTreeList from '$lib/components/events/EventTreeList.svelte';
   import { cursorPoint, feedPageSize } from '$lib/events/feed-window';
   import type { ProfileSummary } from '$lib/identity/identity';
@@ -16,6 +19,7 @@
   type Props = {
     tabId: string;
     restoreAnchor?: { readonly eventId: string; readonly offset: number };
+    restoreSnapshot?: TabSnapshotPayload;
     relaySets: readonly RelaySet[];
     openProfile: (pubkey: string) => void;
     openThread: (eventId: string) => void;
@@ -34,6 +38,24 @@
   let requestId = 0;
   let destroyed = false;
   const subscriptions = createRelaySubscriptionManager();
+  const olderRequests = createOlderRequestCoordinator(
+    () => loadOlder(),
+    () => Boolean(hasOlder && !loadingOlder),
+  );
+
+  onMount(() => {
+    const saved = props.restoreSnapshot;
+    if (saved?.kind === 'tool' && saved.fields?.searchQuery)
+      query = saved.fields.searchQuery;
+  });
+
+  $effect(() => {
+    const tabId = props.tabId;
+    return registerTabRuntimeSnapshot(tabId, () => ({
+      kind: 'tool',
+      fields: { searchQuery: query },
+    }));
+  });
 
   onDestroy(() => {
     destroyed = true;
@@ -142,7 +164,8 @@
     loadingNewer={false}
     {hasOlder}
     hasNewer={false}
-    onNearEnd={loadOlder}
+    pagingError={error}
+    onNearEnd={() => olderRequests.requestFromNearEnd()}
     onNearStart={() => undefined}
     openProfile={props.openProfile}
     openThread={props.openThread}

@@ -29,7 +29,7 @@ export function createSessionTabSnapshots<T extends SessionTabSnapshot>(
     ) => void;
   } = {},
 ) {
-  const maxSnapshots = Math.max(1, Math.floor(options.maxSnapshots ?? 12));
+  const maxSnapshots = Math.max(1, Math.floor(options.maxSnapshots ?? 32));
   const items = new Map<string, T>();
   const timers = new Map<string, ReturnType<typeof setTimeout>>();
   const changed = options.changed ?? (() => undefined);

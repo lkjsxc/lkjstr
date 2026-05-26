@@ -159,6 +159,7 @@
             visible={true}
             paneId={props.pane.id}
             restoreAnchor={feedAnchorFromPayload(restorePayload)}
+            restoreSnapshot={restorePayload}
             restoreScrollTop={restorePayload?.scrollTop}
             accounts={props.accounts}
             activeAccount={props.activeAccount}

@@ -1,34 +1,33 @@
 import { normalizeRelayUrl, type NostrFilter } from '../protocol';
 // prettier-ignore
 import { boundaryCursors, feedPageSize, feedWindowSize, metadataPageLimit } from '../events/feed-window';
-import { upsertEvent } from '../events/repository';
-import { isFeedDisplayKind } from '../events/feed-kinds';
 import { boundedErrorText } from '../events/runtime-error';
 import type { FeedCursorPoint } from '../events/types';
-import type { PoolEvent } from '../relays/relay-pool';
 import { discoverAuthorRelayRoutes } from '../relays/relay-discovery';
 import { runtimeSubscriptions } from '../relays/runtime-subscriptions';
 import { routedAuthorRelays } from '../relays/relay-routing';
 import type { RelaySubscriptionManager } from '../relays/subscription-manager';
 import { childRelaySubscriptionId } from '../relays/subscription-id';
 import type { RelaySnapshot } from '../relays/types';
-import { accountHomeAuthors, authorFilters } from './follow-list';
-import { loadAccountHome, loadCachedAccountHome } from './timeline-load';
+import { authorFilters } from './follow-list';
+import { loadCachedAccountHome } from './timeline-load';
 import type { TimelineLoad } from './timeline-load';
 // prettier-ignore
 import {
   loadInitialTimelinePage,
   loadNewerTimelinePage,
-  loadOlderTimelinePage,
 } from './timeline-runtime-paging';
-import { profileFilter, storeTimelineProfile } from './timeline-profiles';
+import { profileFilter } from './timeline-profiles';
 // prettier-ignore
 import { needsSelfFallback, relayStatePatch, selectedRelaySnapshots } from './timeline-relay-state';
 // prettier-ignore
-import { emptyState, noActiveAccountState, noEnabledRelayState, noFollowListState, readyWithEventsState, upsertLive, type TimelineRuntimeOptions, type TimelineState } from './timeline-state';
+import { emptyState, noActiveAccountState, noEnabledRelayState, noFollowListState, readyWithEventsState, type TimelineRuntimeOptions, type TimelineState } from './timeline-state';
 import { loadCachedTimeline, mergeTimelineItems } from './timeline-store';
 import type { TimelineItem } from './timeline-store';
 import { createTimelineProfileCoordinator } from './timeline-profile-coordinator';
+import { timelineRuntimeSnapshot } from './timeline-runtime-snapshot';
+import { runTimelineLoadOlder } from './timeline-runtime-older';
+import { receiveTimelinePoolEvent } from './timeline-runtime-receivers';
 
 export type TimelineRuntime = ReturnType<typeof createTimelineRuntime>;
 
@@ -49,7 +48,7 @@ export function createTimelineRuntime(options: TimelineRuntimeOptions) {
     authors: string[] = [];
   const pageSize = options.limit ?? feedPageSize;
   let profiles: TimelineState['profiles'] = {};
-  let olderScanCursor: FeedCursorPoint | undefined;
+  let olderScanCursor: FeedCursorPoint | undefined = options.seed?.oldestCursor;
   let routeRefreshGeneration = 0,
     followListId = '',
     initialNotesKey = '';
@@ -79,11 +78,6 @@ export function createTimelineRuntime(options: TimelineRuntimeOptions) {
   const emit = (next: TimelineState): void => { if (closed) return; state = next; listeners.forEach((listener) => listener(state)); void hydrateVisibleProfiles(); };
   // prettier-ignore
   const applyLoaded = (loaded: TimelineLoad): void => { followList = loaded.followList; authors = loaded.authors; cached = loaded.cached; profiles = loaded.profiles; };
-  // prettier-ignore
-  const subscribe = (key: string, filters: readonly NostrFilter[], selectedRelays = relays): void => {
-    if (closed) return;
-    cleanup.push(subscriptions.subscribeLive({ key, relays: selectedRelays, filters, purpose: key === metaSubId ? 'metadata' : 'feed' }, (event) => receive(event)));
-  };
   // prettier-ignore
   const loadInitialNotes = async (): Promise<void> => {
     const key = [...authors].sort().join(','); if (initialNotesKey === key || authors.length === 0) return; initialNotesKey = key;
@@ -119,31 +113,34 @@ export function createTimelineRuntime(options: TimelineRuntimeOptions) {
     if (filters.length > 0) subscribe(metaSubId, filters);
     void initialPage.then(() => discoverRoutesAfterInitial());
   };
+  const receiverContext = () => ({
+    closed: () => closed,
+    followSubId,
+    metaSubId,
+    noteSubId,
+    pageSize,
+    getFollowList: () => followList,
+    setFollowList: (v: TimelineLoad['followList']) => (followList = v),
+    getFollowListId: () => followListId,
+    setFollowListId: (v: string) => (followListId = v),
+    getAuthors: () => authors,
+    setAuthors: (v: string[]) => (authors = v),
+    getProfiles: () => profiles,
+    setProfiles: (v: TimelineState['profiles']) => (profiles = v),
+    applyLoaded,
+    emit,
+    nextState,
+    items,
+    withCursors,
+    subscribeNotes,
+    getState: () => state,
+    setLive: (v: TimelineItem[]) => (live = v),
+    getLive: () => live,
+  });
   // prettier-ignore
-  const receiveFollowList = async (poolEvent: PoolEvent): Promise<void> => {
-    if (closed) return; const event = poolEvent.event; const current = followList;
-    if (followListId === event.id || (current && current.created_at > event.created_at)) { await upsertEvent(event, [poolEvent.relay]); return; }
-    followList = event; followListId = event.id; authors = accountHomeAuthors(event.pubkey, event);
-    await upsertEvent(event, [poolEvent.relay]);
-    if (closed || followListId !== event.id) return;
-    applyLoaded(await loadAccountHome(event.pubkey, event, pageSize));
-    if (closed) return; emit(nextState({ items: items() })); void subscribeNotes();
-  };
-  // prettier-ignore
-  const receiveMetadata = async (poolEvent: PoolEvent): Promise<void> => {
-    if (closed || !authors.includes(poolEvent.event.pubkey)) return;
-    await upsertEvent(poolEvent.event, [poolEvent.relay]); if (closed) return; const profile = await storeTimelineProfile(poolEvent.event); profiles = { ...profiles, [poolEvent.event.pubkey]: profile }; emit(nextState({ loading: false, error: null }));
-  };
-  // prettier-ignore
-  const receive = async (poolEvent: PoolEvent): Promise<void> => {
+  const subscribe = (key: string, filters: readonly NostrFilter[], selectedRelays = relays): void => {
     if (closed) return;
-    if (poolEvent.subId === followSubId && poolEvent.event.kind === 3) return receiveFollowList(poolEvent);
-    if (poolEvent.subId === metaSubId && poolEvent.event.kind === 0) return receiveMetadata(poolEvent);
-    if (poolEvent.subId !== noteSubId || !isFeedDisplayKind(poolEvent.event.kind)) return;
-    if (!authors.includes(poolEvent.event.pubkey)) return;
-    await upsertEvent(poolEvent.event, [poolEvent.relay]);
-    live = upsertLive(live, poolEvent.event, poolEvent.relay);
-    emit(withCursors(readyWithEventsState(state, items())));
+    cleanup.push(subscriptions.subscribeLive({ key, relays: selectedRelays, filters, purpose: key === metaSubId ? 'metadata' : 'feed' }, (event) => void receiveTimelinePoolEvent(receiverContext(), event)));
   };
   // prettier-ignore
   const handleMissingFollow = (): void => {
@@ -168,14 +165,25 @@ export function createTimelineRuntime(options: TimelineRuntimeOptions) {
       const loaded = await loadCachedAccountHome(pubkey, pageSize).catch(() => ({ authors: [pubkey], cached: [], profiles: {} }));
       if (!active(run)) return; applyLoaded(loaded);
       const next = cached.length > 0 ? readyWithEventsState(state, cached) : { ...state, items: cached };
-      emit(withCursors(next)); if (relays.length === 0) return emit(noEnabledRelayState(state));
+      const seeded = options.seed
+        ? {
+            ...next,
+            hasOlder: options.seed.hasOlder ?? next.hasOlder,
+            hasNewer: options.seed.hasNewer ?? next.hasNewer,
+          }
+        : next;
+      emit(withCursors(seeded));
+      if (relays.length === 0) return emit(noEnabledRelayState(state));
       cleanup.push(subscriptions.subscribeState(receiveState));
       if (followList) await subscribeNotes(); else subscribe(followSubId, [{ kinds: [3], authors: [pubkey], limit: 1 }]);
     },
     close: (): void => { closed = true; generation++; aborts.abort(); for (const item of cleanup.splice(0)) item(); listeners.clear(); },
     loadOlder: async (): Promise<void> => {
       if (closed || state.loadingOlder || !state.hasOlder) return; const run = generation; const cursor = olderScanCursor ?? state.oldestCursor; if (!cursor || authors.length === 0) return; emit({ ...state, loadingOlder: true });
-      try { const page = await loadOlderTimelinePage({ items: items(), authors, relays, subId: noteSubId, cursor, pageSize, subscriptions, signal: aborts.signal }); if (!active(run)) return; cached = page.items; live = []; olderScanCursor = page.hasOlder ? page.nextOlderCursor : undefined; emit(nextState({ items: items(), hasOlder: page.hasOlder, hasNewer: state.hasNewer || page.hasNewer })); }
+      try {
+        await runTimelineLoadOlder({ items, authors, relays, subId: noteSubId, cursor, pageSize, subscriptions, signal: aborts.signal, state, emit, nextState, setCached: (v) => (cached = v), clearLive: () => (live = []), setOlderScanCursor: (v) => (olderScanCursor = v) });
+        if (!active(run)) return;
+      }
       catch (error) { emit({ ...state, error: boundedErrorText(error) }); }
       finally { if (state.loadingOlder) emit({ ...state, loadingOlder: false }); }
     },
@@ -186,6 +194,7 @@ export function createTimelineRuntime(options: TimelineRuntimeOptions) {
       finally { if (state.loadingNewer) emit({ ...state, loadingNewer: false }); }
     },
     items,
+    snapshot: () => timelineRuntimeSnapshot(state, olderScanCursor),
   };
   return runtime;
 }

@@ -9,16 +9,11 @@
   import NotificationsTab from '$lib/tabs/notifications/NotificationsTab.svelte';
   import ProfileEditTab from '$lib/tabs/profile-edit/ProfileEditTab.svelte';
   import ProfileTab from '$lib/tabs/profile/ProfileTab.svelte';
-  import LkjstrLogTab from '$lib/tabs/log/LkjstrLogTab.svelte';
-  import RelaySettingsTab from '$lib/tabs/relays/RelaySettingsTab.svelte';
   import SearchTab from '$lib/tabs/search/SearchTab.svelte';
-  import SettingsTab from '$lib/tabs/settings/SettingsTab.svelte';
-  import NetworkStatsTab from '$lib/tabs/stats/NetworkStatsTab.svelte';
   import ThreadTab from '$lib/tabs/thread/ThreadTab.svelte';
   import TimelineTab from '$lib/tabs/timeline/TimelineTab.svelte';
-  import TweetTab from '$lib/tabs/tweet/TweetTab.svelte';
   import UploadSettingsTab from '$lib/tabs/upload-settings/UploadSettingsTab.svelte';
-  import WelcomeTab from '$lib/tabs/welcome/WelcomeTab.svelte';
+  import PaneTabBodyTools from './PaneTabBodyTools.svelte';
   import type { TabKind, WorkspaceTab } from '$lib/workspace/tab';
   import type { TabFeedAnchor } from '$lib/workspace/tab-anchor-registry';
 
@@ -27,6 +22,7 @@
     visible: boolean;
     paneId: string;
     restoreAnchor?: TabFeedAnchor;
+    restoreSnapshot?: import('$lib/workspace/tab-snapshot').TabSnapshotPayload;
     restoreScrollTop?: number;
     accounts: Account[];
     activeAccount?: Account;
@@ -55,14 +51,7 @@
   let props: Props = $props();
 </script>
 
-{#if props.tab.kind === 'welcome'}
-  <WelcomeTab
-    activeAccount={props.activeAccount}
-    accounts={props.accounts}
-    relaySets={props.relaySets}
-    openTool={(kind) => props.openTool(props.paneId, kind)}
-  />
-{:else if props.tab.kind === 'new-tab'}
+{#if props.tab.kind === 'new-tab'}
   <NewTab
     tabId={props.tab.id}
     activeAccountPubkey={props.activeAccount?.pubkey}
@@ -73,6 +62,7 @@
     tabId={props.tab.id}
     kind="home"
     restoreAnchor={props.restoreAnchor}
+    restoreSnapshot={props.restoreSnapshot}
     activeAccountPubkey={props.activeAccount?.pubkey}
     dataReady={props.pageDataReady}
     relaySets={props.relaySets}
@@ -86,6 +76,7 @@
     tabId={props.tab.id}
     kind="global"
     restoreAnchor={props.restoreAnchor}
+    restoreSnapshot={props.restoreSnapshot}
     activeAccountPubkey={props.activeAccount?.pubkey}
     dataReady={props.pageDataReady}
     relaySets={props.relaySets}
@@ -98,6 +89,7 @@
   <SearchTab
     tabId={props.tab.id}
     restoreAnchor={props.restoreAnchor}
+    restoreSnapshot={props.restoreSnapshot}
     relaySets={props.relaySets}
     openProfile={(pubkey) => props.openProfile(props.paneId, pubkey)}
     openThread={(eventId) => props.openThread(props.paneId, eventId)}
@@ -165,24 +157,17 @@
     openAuthorContext={(eventId, pubkey) =>
       props.openAuthorContext(props.paneId, eventId, pubkey)}
   />
-{:else if props.tab.kind === 'relay-monitor'}
-  <LkjstrLogTab />
-{:else if props.tab.kind === 'relay-settings'}
-  <RelaySettingsTab
-    relaySets={props.relaySets}
+{:else if props.tab.kind === 'relay-monitor' || props.tab.kind === 'relay-settings' || props.tab.kind === 'network-stats' || props.tab.kind === 'settings' || props.tab.kind === 'tweet' || props.tab.kind === 'welcome'}
+  <PaneTabBodyTools
+    tab={props.tab}
+    restoreScrollTop={props.restoreScrollTop}
+    accounts={props.accounts}
     activeAccount={props.activeAccount}
-    refresh={props.refreshData}
+    relaySets={props.relaySets}
+    refreshData={props.refreshData}
     removeRelay={props.removeRelay}
-  />
-{:else if props.tab.kind === 'network-stats'}
-  <NetworkStatsTab />
-{:else if props.tab.kind === 'settings'}
-  <SettingsTab tabId={props.tab.id} restoreScrollTop={props.restoreScrollTop} />
-{:else if props.tab.kind === 'tweet'}
-  <TweetTab
-    tabId={props.tab.id}
-    activeAccount={props.activeAccount}
-    relaySets={props.relaySets}
+    openTool={props.openTool}
+    paneId={props.paneId}
   />
 {:else if props.tab.kind === 'thread'}
   <ThreadTab

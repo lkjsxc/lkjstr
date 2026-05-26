@@ -131,7 +131,17 @@ export function createThreadRuntime(
     close: (): void => { closed = true; generation++; aborts.abort(); for (const item of cleanup.splice(0)) item(); listeners.clear(); },
     loadOlder: async (): Promise<void> => {
       if (closed || state.loadingOlder || !state.hasOlder) return; const run = generation; const cursor = state.oldestCursor; if (!cursor) return; emit({ ...state, loadingOlder: true });
-      try { const page = await loadOlderThreadPage({ eventId, rootId, items: items(), relays, subId, cursor, pageSize, subscriptions: manager, signal: aborts.signal }); if (!active(run)) return; cached = page.items; live = []; emit({ ...state, items: items(), hasOlder: page.hasOlder, hasNewer: state.hasNewer || page.pruned, newerPruned: state.newerPruned || page.pruned }); }
+      try {
+        const page = await loadOlderThreadPage({ eventId, rootId, items: items(), relays, subId, cursor, pageSize, subscriptions: manager, signal: aborts.signal });
+        if (!active(run)) return;
+        const { feedRowShells } = await import('../feed-surface/row-shell');
+        cached = mergeThreadItems(items(), feedRowShells(page.items));
+        live = [];
+        emit({ ...state, items: items(), hasOlder: page.hasOlder, loadingOlder: true });
+        cached = page.items;
+        live = [];
+        emit({ ...state, items: items(), hasOlder: page.hasOlder, hasNewer: state.hasNewer || page.pruned, newerPruned: state.newerPruned || page.pruned });
+      }
       catch (error) { emit({ ...state, error: boundedErrorText(error) }); }
       finally { if (state.loadingOlder) emit({ ...state, loadingOlder: false }); }
     },
