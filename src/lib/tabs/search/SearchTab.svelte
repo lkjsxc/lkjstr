@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { onDestroy, onMount } from 'svelte';
+  import { onDestroy } from 'svelte';
   import { createOlderRequestCoordinator } from '$lib/feed-surface/speculative-older';
   import { registerTabRuntimeSnapshot } from '$lib/workspace/tab-runtime-registry';
   import type { TabSnapshotPayload } from '$lib/workspace/tab-snapshot';
@@ -43,7 +43,7 @@
     () => Boolean(hasOlder && !loadingOlder),
   );
 
-  onMount(() => {
+  $effect(() => {
     const saved = props.restoreSnapshot;
     if (saved?.kind === 'tool' && saved.fields?.searchQuery)
       query = saved.fields.searchQuery;

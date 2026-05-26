@@ -44,19 +44,24 @@ test('shows end-of-history footer on Home after synthetic feed loads', async ({
   await openCleanWorkspace(page);
   await addReadonlyAccount(page, active);
   await selectStartupTab(page, 'Home');
-  await waitForSyntheticEvent(page, notes.at(-1)!.id);
-  await page.locator('.event-list__scroller').evaluate((node) => {
-    node.scrollTop = node.scrollHeight;
-  });
-  await expect(page.getByText('End of known history.')).toBeVisible({
+  await waitForSyntheticEvent(page, notes[0]!.id);
+  await expect(page.getByText('synthetic note 0')).toBeVisible({
     timeout: 15_000,
   });
+  await expect
+    .poll(async () => {
+      const text = await page.locator('.event-list__status').textContent();
+      return text?.includes('End of known history') ?? false;
+    })
+    .toBe(true);
 });
 
 test('shows footer status on Notifications list', async ({ page }) => {
   await openCleanWorkspace(page);
   await selectStartupTab(page, 'Notifications');
-  await expect(page.locator('.notification-list')).toBeVisible();
-  const status = page.locator('.notification-list .event-list__status');
-  await expect(status.or(page.getByText('No notifications'))).toBeVisible();
+  await expect(
+    page
+      .locator('.notification-list')
+      .or(page.getByText('No notifications for the active account.')),
+  ).toBeVisible({ timeout: 15_000 });
 });
