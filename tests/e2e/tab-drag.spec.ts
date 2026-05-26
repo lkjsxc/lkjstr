@@ -91,6 +91,71 @@ test('tab strip drag does not activate pane edge split zones', async ({
   await page.mouse.up();
 });
 
+test('pane head chrome never activates edge split zones', async ({
+  page,
+}, testInfo) => {
+  test.skip(
+    testInfo.project.name === 'mobile',
+    'Mobile tab-strip layout needs a dedicated long-press drag scenario',
+  );
+  await page.goto('/');
+  await page.evaluate(() => localStorage.clear());
+  await page.reload();
+  await openNewTabOption(page, 'Settings', 1);
+  const pane = secondPane(page);
+  const source = pane.getByRole('button', { name: 'Settings', exact: true });
+  const actions = pane.locator('.pane-actions');
+  const sourceBox = await source.boundingBox();
+  const actionsBox = await actions.boundingBox();
+  if (!sourceBox || !actionsBox) throw new Error('missing drag boxes');
+  await source.hover();
+  await page.mouse.down();
+  await page.mouse.move(
+    actionsBox.x + actionsBox.width * 0.5,
+    actionsBox.y + actionsBox.height * 0.5,
+    { steps: 8 },
+  );
+  await expect(pane.locator('.pane-drop-layer.active')).toHaveAttribute(
+    'data-drop-zone',
+    'center',
+  );
+  await page.mouse.up();
+});
+
+test('body top edge shows top split preview below pane head', async ({
+  page,
+}, testInfo) => {
+  test.skip(
+    testInfo.project.name === 'mobile',
+    'Mobile tab-strip layout needs a dedicated long-press drag scenario',
+  );
+  await page.goto('/');
+  await page.evaluate(() => localStorage.clear());
+  await page.reload();
+  await openNewTabOption(page, 'Settings', 1);
+  const pane = secondPane(page);
+  const source = pane.getByRole('button', { name: 'Settings', exact: true });
+  const stack = pane.locator('.pane-stack');
+  const sourceBox = await source.boundingBox();
+  const stackBox = await stack.boundingBox();
+  const headBox = await pane.locator('.pane-head').boundingBox();
+  if (!sourceBox || !stackBox || !headBox) throw new Error('missing drag boxes');
+  await source.hover();
+  await page.mouse.down();
+  await page.mouse.move(
+    stackBox.x + stackBox.width * 0.5,
+    stackBox.y + 12,
+    { steps: 10 },
+  );
+  const layer = pane.locator('.pane-drop-layer.active');
+  await expect(layer).toHaveAttribute('data-drop-zone', 'top');
+  const dropTop = await layer.evaluate((el) =>
+    Number.parseFloat(getComputedStyle(el, '::after').top || '0'),
+  );
+  expect(dropTop).toBeGreaterThanOrEqual(headBox.height - 4);
+  await page.mouse.up();
+});
+
 test('pointer drag moves a tab into another tile with overlay feedback', async ({
   page,
 }) => {

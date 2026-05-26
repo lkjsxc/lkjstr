@@ -3,12 +3,14 @@ import type { TabDropZone } from './tab-drop-hit';
 export function tabDropOverlayStyle(
   rect: Pick<DOMRect, 'width' | 'height'>,
   zone?: TabDropZone | null,
+  bodyOffsetTop = 0,
 ): string {
   if (!zone) return '';
   const size = tabDropPreviewRect(rect, zone);
+  const top = zone === 'center' ? size.top : size.top + bodyOffsetTop;
   return [
     `--drop-left: ${size.left}px`,
-    `--drop-top: ${size.top}px`,
+    `--drop-top: ${top}px`,
     `--drop-width: ${size.width}px`,
     `--drop-height: ${size.height}px`,
   ].join('; ');
@@ -39,4 +41,11 @@ export function tabDropPreviewRect(
       height: halfHeight,
     };
   return { left: 0, top: 0, width: rect.width, height: rect.height };
+}
+
+export function paneBodyOffsetTop(
+  paneRect: Pick<DOMRect, 'top'>,
+  bodyRect: Pick<DOMRect, 'top'>,
+): number {
+  return Math.max(0, bodyRect.top - paneRect.top);
 }

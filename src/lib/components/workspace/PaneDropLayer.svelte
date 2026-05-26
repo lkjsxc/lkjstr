@@ -9,6 +9,7 @@
     tabDropEdge,
     tabDropOverlayStyle,
   } from '$lib/workspace/tab-drop-zone';
+  import { paneBodyOffsetTop } from '$lib/workspace/tab-drop-preview';
   import type { TabDropZone } from '$lib/workspace/tab-drop-hit';
   import {
     dragHasTabPayload,
@@ -58,11 +59,13 @@
     const dragged = readDraggedTab(event);
     const pane = paneElement();
     if (!pane || !dragged) return;
-    const { paneRect, bodyRect, stripBottom } = paneDropRects(pane);
+    const { paneRect, bodyRect, chromeBottom, stripBottom } =
+      paneDropRects(pane);
     const frames = tabFrames(pane);
     const resolved = resolvePaneDrop({
       paneRect,
       bodyRect,
+      chromeBottom,
       stripBottom,
       clientX: event.clientX,
       clientY: event.clientY,
@@ -126,11 +129,12 @@
     void tick().then(() => {
       if (!pane || zone !== active) return;
       const { paneRect, bodyRect } = paneDropRects(pane);
+      const bodyOffsetTop = paneBodyOffsetTop(paneRect, bodyRect);
       const overlayRect =
         active === 'center'
           ? { width: paneRect.width, height: paneRect.height }
           : { width: bodyRect.width, height: bodyRect.height };
-      style = tabDropOverlayStyle(overlayRect, active);
+      style = tabDropOverlayStyle(overlayRect, active, bodyOffsetTop);
     });
   });
 

@@ -75,10 +75,12 @@ export function pointerDragTarget(
       targetIndex: undefined,
       zone: undefined,
     };
-  const { paneRect, bodyRect, stripBottom } = paneDropRects(target);
+  const { paneRect, bodyRect, chromeBottom, stripBottom } =
+    paneDropRects(target);
   const resolved = resolvePaneDrop({
     paneRect,
     bodyRect,
+    chromeBottom,
     stripBottom,
     clientX: snapshot.x,
     clientY: snapshot.y,
