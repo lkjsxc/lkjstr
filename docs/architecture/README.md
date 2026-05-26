@@ -64,11 +64,21 @@ state lives, which modules own subscriptions, and how tabs close cleanly.
 - [runtimes/thread-runtime.md](runtimes/thread-runtime.md): Thread loading.
 - [runtimes/tweet-runtime.md](runtimes/tweet-runtime.md): Tweet publishing.
 - [workspace/README.md](workspace/README.md): layout, tabs, and visual shell.
-- [workspace/resize.md](workspace/resize.md): resizing.
+- [workspace/pane-chrome-scope.md](workspace/pane-chrome-scope.md): header chrome
+  vs body rects for drag hit testing.
 - [workspace/pane-drop-target.md](workspace/pane-drop-target.md): pane-body
   drop resolver.
+- [workspace/tab-body-mount.md](workspace/tab-body-mount.md): hidden-mount tab
+  bodies per pane.
+- [workspace/tab-retention-flow.md](workspace/tab-retention-flow.md):
+  blur/focus snapshot pipeline.
 - [workspace/scroll-layout.md](workspace/scroll-layout.md): scrollbar-safe
   scrolling surfaces.
+- [workspace/scroll-surface-audit.md](workspace/scroll-surface-audit.md):
+  per-surface scroll checklist.
+- [workspace/tab-shell-layout.md](workspace/tab-shell-layout.md): feed-tab vs
+  form-tab scroll ownership.
+- [workspace/resize.md](workspace/resize.md): resizing.
 - [workspace/tile-overlays.md](workspace/tile-overlays.md): tile-scoped
   overlays.
 - [workspace/tab-dragging.md](workspace/tab-dragging.md): tab drag zones and

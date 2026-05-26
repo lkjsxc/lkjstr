@@ -48,7 +48,7 @@ documented-only. Update it when a vertical slice closes a gap.
 | Tab drag selection arming             | tab-strip-gestures.md | implemented | `tab-strip-drag-arming` class    |
 | Scroll owner retention                | tab-retention-flow.md | implemented | `data-scroll-owner`, scrollTop=0 |
 | Feed scroll gutter on viewport        | scroll-layout.md      | implemented | `.event-list__viewport` + token  |
-| Tab strip excluded from split         | tab-dragging.md       | implemented | superseded by chrome scope       |
+| Tab strip excluded from split         | pane-chrome-scope.md  | implemented | chromeBottom from `.pane-head`   |
 | Scrollbar at tile edge                | scroll-layout.md      | implemented | `--scroll-track-edge`, pane body |
 | Tile-scoped emoji                     | tile-overlays.md      | implemented |                                  |
 | No feed npub subtitle                 | identity-rendering.md | implemented | feed-identity                    |

@@ -14,6 +14,10 @@ Data docs define storage, feed windows, and shared event presentation models.
   constants; defers to feed-surface.
 - [feed-memory.md](feed-memory.md): runtime feed windows and durable cache
   policy.
+- [heap-retention.md](heap-retention.md): observed symptoms and investigation
+  strategy.
+- [resource-ownership.md](resource-ownership.md): who creates and who closes
+  each resource.
 - [retention/README.md](retention/README.md): score-based event retention.
 - [local-secret-security.md](local-secret-security.md): passkey-protected
   secret design boundary.
