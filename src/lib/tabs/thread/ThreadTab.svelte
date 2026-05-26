@@ -23,6 +23,7 @@
 
   type Props = {
     tabId: string;
+    visible?: boolean;
     restoreAnchor?: TabFeedAnchor;
     eventId?: string;
     activeAccountPubkey?: string | null;
@@ -65,6 +66,13 @@
   );
 
   $effect(() => {
+    if (!props.visible) {
+      return () => {
+        profileRequest += 1;
+        runtime?.close();
+        runtime = undefined;
+      };
+    }
     const key = runtimeKey;
     if (key === undefined) return;
     const { eventId, relaySets, tabId } = untrack(() => props);
@@ -122,6 +130,7 @@
     {#if state.error}<p role="alert">{state.error}</p>{/if}
     <EventTreeList
       tabId={props.tabId}
+      pagingEnabled={props.visible !== false}
       restoreAnchor={props.restoreAnchor}
       items={state.items}
       profiles={state.profiles}

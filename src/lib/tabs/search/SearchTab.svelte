@@ -18,6 +18,7 @@
 
   type Props = {
     tabId: string;
+    visible?: boolean;
     restoreAnchor?: { readonly eventId: string; readonly offset: number };
     restoreSnapshot?: TabSnapshotPayload;
     relaySets: readonly RelaySet[];
@@ -63,6 +64,7 @@
   });
 
   $effect(() => {
+    if (!props.visible) return;
     const pubkeys = [...new Set(items.map((item) => item.event.pubkey))].filter(
       (pubkey) => !profiles[pubkey],
     );
@@ -154,6 +156,7 @@
   {#if error}<p role="alert">{error}</p>{/if}
   <EventTreeList
     tabId={props.tabId}
+    pagingEnabled={props.visible !== false}
     restoreAnchor={props.restoreAnchor}
     {items}
     {profiles}

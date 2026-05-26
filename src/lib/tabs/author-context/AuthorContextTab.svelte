@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { onDestroy, onMount } from 'svelte';
+  import { onDestroy } from 'svelte';
   import { loadAuthorContext } from '$lib/author-context/author-context';
   import EventTreeList from '$lib/components/events/EventTreeList.svelte';
   import type { FeedEvent } from '$lib/events/types';
@@ -14,6 +14,7 @@
 
   type Props = {
     tabId: string;
+    visible?: boolean;
     eventId: string;
     pubkey: string;
     relaySets: readonly RelaySet[];
@@ -31,13 +32,18 @@
   let destroyed = false;
   const subscriptions = createRelaySubscriptionManager();
 
-  onMount(() => void load());
+  $effect(() => {
+    if (!props.visible) return;
+    void load();
+  });
+
   onDestroy(() => {
     destroyed = true;
     subscriptions.close();
   });
 
   $effect(() => {
+    if (!props.visible) return;
     const pubkeys = [...new Set(items.map((item) => item.event.pubkey))].filter(
       (pubkey) => !profiles[pubkey],
     );

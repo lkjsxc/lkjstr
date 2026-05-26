@@ -32,13 +32,15 @@ export async function syncPaneTabFocus(args: {
   const activeId = args.active?.id;
   let restorePayload: TabSnapshotPayload | undefined;
   if (activeId) {
+    const hadMountedBody = args.bodyScroll.hasTracked(activeId);
     const session = args.snapshots.take(activeId);
     if (session) {
       restorePayload = session;
       clearRuntimeSnapshot(activeId);
-      args.bodyScroll.restoreSnapshot(activeId, {
-        scrollTop: session.scrollTop,
-      });
+      if (!hadMountedBody)
+        args.bodyScroll.restoreSnapshot(activeId, {
+          scrollTop: session.scrollTop,
+        });
     } else {
       const payload = await loadPersistedTabSnapshot(
         args.workspaceId,
@@ -48,12 +50,13 @@ export async function syncPaneTabFocus(args: {
       if (payload && args.active?.id === activeId) {
         restorePayload = payload;
         clearRuntimeSnapshot(activeId);
-        args.bodyScroll.restoreSnapshot(activeId, {
-          scrollTop: payload.scrollTop,
-        });
+        if (!hadMountedBody)
+          args.bodyScroll.restoreSnapshot(activeId, {
+            scrollTop: payload.scrollTop,
+          });
       }
     }
-    args.bodyScroll.restore(activeId);
+    if (!hadMountedBody) args.bodyScroll.restore(activeId);
   }
   if (args.previousActiveId && args.previousActiveId !== activeId) {
     const previous = args.tabs[args.previousActiveId];

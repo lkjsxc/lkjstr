@@ -49,6 +49,7 @@
     openThread?: (eventId: string) => void;
     openAuthorContext?: (eventId: string, pubkey: string) => void;
     tabId?: string;
+    pagingEnabled?: boolean;
     restoreAnchor?: { readonly eventId: string; readonly offset: number };
   };
 
@@ -68,7 +69,8 @@
     }),
   );
   let nearEndEnabled = $derived(
-    nodes.length > 0 &&
+    props.pagingEnabled !== false &&
+      nodes.length > 0 &&
       Boolean(props.hasOlder) &&
       !props.loadingOlder &&
       Boolean(props.onNearEnd),
@@ -86,6 +88,7 @@
   });
 
   function handleScroll(offset: number): void {
+    if (props.pagingEnabled === false) return;
     const viewport = list?.getViewportSize?.() ?? 0;
     const total = list?.getScrollSize?.() ?? 0;
     if (isNearStart(offset) && !props.loadingNewer && props.hasNewer)
@@ -100,6 +103,7 @@
   }
 
   $effect(() => {
+    if (props.pagingEnabled === false) return;
     if (nodes.length > 0 && props.hasOlder && !props.loadingOlder)
       void maybeAutoFill();
   });

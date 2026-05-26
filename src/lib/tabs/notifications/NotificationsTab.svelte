@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { tick, untrack } from 'svelte';
+  import { onDestroy, tick, untrack } from 'svelte';
   import { metadataPageLimit } from '$lib/events/feed-window';
   import { createOlderRequestCoordinator } from '$lib/feed-surface/speculative-older';
   import type { ProfileSummary } from '$lib/identity/identity';
@@ -61,6 +61,12 @@
   let runtimeKey = $derived(
     `${props.accountPubkey ?? ''}|${timelineRelays(props.relaySets).join('\u0000')}`,
   );
+  onDestroy(() => {
+    destroyed = true;
+    runtime?.close();
+    runtime = undefined;
+  });
+
   let olderRequests = createOlderRequestCoordinator(
     async () => {
       await runtime?.loadOlder();
@@ -69,6 +75,13 @@
   );
 
   $effect(() => {
+    if (!props.visible) {
+      return () => {
+        profileRequest += 1;
+        runtime?.close();
+        runtime = undefined;
+      };
+    }
     const key = runtimeKey;
     if (key === undefined) return;
     const { accountPubkey, relaySets, tabId } = untrack(() => props);
@@ -86,7 +99,6 @@
     const onFocus = () => void markVisibleRead();
     window.addEventListener('focus', onFocus);
     return () => {
-      destroyed = true;
       profileRequest += 1;
       window.removeEventListener('focus', onFocus);
       unsubscribe();
@@ -107,6 +119,7 @@
   });
 
   $effect(() => {
+    if (!props.visible) return;
     const authors = [
       ...new Set([
         ...viewState.records.map((record) => record.actorPubkey),
@@ -129,6 +142,7 @@
   });
 
   $effect(() => {
+    if (!props.visible) return;
     if (!viewState.loading && viewState.records.length > 0)
       void maybeAutoFill();
   });

@@ -8,11 +8,10 @@
   import type { TabGroup } from '$lib/workspace/tab-group';
   import { createSessionTabSnapshots } from '$lib/workspace/session-tab-snapshots';
   import type { TabSnapshotPayload } from '$lib/workspace/tab-snapshot';
-  import { feedAnchorFromPayload } from '$lib/workspace/tab-snapshot-persist';
   import { syncPaneTabFocus } from '$lib/workspace/pane-tab-focus';
   import NewTabButton from './NewTabButton.svelte';
   import PaneDropLayer from './PaneDropLayer.svelte';
-  import PaneTabBody from './PaneTabBody.svelte';
+  import PaneTabStack from './PaneTabStack.svelte';
   import TabStrip from './TabStrip.svelte';
   import TileMenu from './TileMenu.svelte';
 
@@ -151,33 +150,28 @@
   </header>
 
   <div class="pane-stack">
-    {#if active}
-      {#key active.id}
-        <div class="pane-body" data-active-tab="true" use:trackBody={active.id}>
-          <PaneTabBody
-            tab={active}
-            visible={true}
-            paneId={props.pane.id}
-            restoreAnchor={feedAnchorFromPayload(restorePayload)}
-            restoreSnapshot={restorePayload}
-            restoreScrollTop={restorePayload?.scrollTop}
-            accounts={props.accounts}
-            activeAccount={props.activeAccount}
-            relaySets={props.relaySets}
-            pageDataReady={props.pageDataReady}
-            convertTab={props.convertTab}
-            addMinedSigning={props.addMinedSigning}
-            refreshData={props.refreshData}
-            toggleRelay={props.toggleRelay}
-            removeRelay={props.removeRelay}
-            openProfile={props.openProfile}
-            openProfileEdit={props.openProfileEdit}
-            openThread={props.openThread}
-            openAuthorContext={props.openAuthorContext}
-            openTool={props.openTool}
-          />
-        </div>
-      {/key}
+    {#if props.group}
+      <PaneTabStack
+        group={props.group}
+        tabs={props.tabs}
+        paneId={props.pane.id}
+        {restorePayload}
+        accounts={props.accounts}
+        activeAccount={props.activeAccount}
+        relaySets={props.relaySets}
+        pageDataReady={props.pageDataReady}
+        trackBody={trackBody}
+        convertTab={props.convertTab}
+        addMinedSigning={props.addMinedSigning}
+        refreshData={props.refreshData}
+        toggleRelay={props.toggleRelay}
+        removeRelay={props.removeRelay}
+        openProfile={props.openProfile}
+        openProfileEdit={props.openProfileEdit}
+        openThread={props.openThread}
+        openAuthorContext={props.openAuthorContext}
+        openTool={props.openTool}
+      />
     {/if}
   </div>
 </section>

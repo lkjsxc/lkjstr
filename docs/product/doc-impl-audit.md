@@ -27,7 +27,8 @@ documented-only. Update it when a vertical slice closes a gap.
 | `hasOlder` / `hasNewer` in snapshot | tab-runtime.md             | implemented | runtime snapshot        |
 | Search query in tool snapshot       | tabs.md                    | implemented | Search tab fields       |
 | Session cap 32                      | tab-runtime.md             | implemented | `session-tab-snapshots` |
-| Inactive tab unmount                | tab-runtime.md             | implemented |                         |
+| Hidden-mount inactive tab bodies    | tab-body-mount.md          | implemented | `PaneTabStack`, paused runtimes |
+| DOM-first scroll on tab return      | tab-retention-flow.md      | implemented | `hasTracked` in focus sync      |
 
 ## Event Actions
 
@@ -42,12 +43,13 @@ documented-only. Update it when a vertical slice closes a gap.
 | Clause                                | Contract              | Status      | Notes                            |
 | ------------------------------------- | --------------------- | ----------- | -------------------------------- |
 | Pane chrome excluded from edge splits | pane-chrome-scope.md  | implemented | `chromeBottom` from `.pane-head` |
+| Center preview body only              | pane-drop-target.md   | implemented | all zones use `bodyOffsetTop`    |
 | Edge preview body offset              | pane-drop-target.md   | implemented | `bodyOffsetTop` on drop layer    |
-| Tab drag selection guard              | tab-strip-gestures.md | implemented | capture + user-select            |
+| Tab drag selection arming             | tab-strip-gestures.md | implemented | `tab-strip-drag-arming` class    |
 | Scroll owner retention                | tab-retention-flow.md | implemented | `data-scroll-owner`, scrollTop=0 |
 | Feed scroll gutter on viewport        | scroll-layout.md      | implemented | `.event-list__viewport` + token  |
 | Tab strip excluded from split         | tab-dragging.md       | implemented | superseded by chrome scope       |
-| Scrollbar gutter                      | scroll-layout.md      | implemented | per-surface audit in progress    |
+| Scrollbar at tile edge                | scroll-layout.md      | implemented | `--scroll-track-edge`, pane body |
 | Tile-scoped emoji                     | tile-overlays.md      | implemented |                                  |
 | No feed npub subtitle                 | identity-rendering.md | implemented | feed-identity                    |
 | Welcome document links                | welcome.md            | implemented |                                  |

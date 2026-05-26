@@ -2,16 +2,20 @@ import { expect, test, type Page } from '@playwright/test';
 import { openCleanWorkspace } from './timeline-relay-helpers';
 import { openNewTabOption, selectStartupTab } from './workspace-helpers';
 
-test('unmounts inactive tab body after switching tabs', async ({ page }) => {
+test('keeps inactive tab bodies mounted but hidden after switching tabs', async ({
+  page,
+}) => {
   await page.goto('/');
   await selectStartupTab(page, 'Home');
   await expect(page.locator('.timeline-tab')).toHaveCount(1);
   await openNewTabOption(page, 'Settings', 1);
   await expect(page.getByRole('region', { name: 'Settings' })).toBeVisible();
-  await expect(page.locator('.timeline-tab')).toHaveCount(0);
+  await expect(
+    page.locator('.pane-body[aria-hidden="true"] .timeline-tab'),
+  ).toHaveCount(1);
 });
 
-test('restores tab scroll from snapshot and keeps inactive body unmounted', async ({
+test('restores tab scroll from mounted DOM when switching back', async ({
   page,
 }) => {
   await page.goto('/');
@@ -25,7 +29,9 @@ test('restores tab scroll from snapshot and keeps inactive body unmounted', asyn
   await selectStartupTab(page, 'Settings');
   await expect.poll(() => getSettingsScroll(page)).toBeGreaterThan(0);
   await selectStartupTab(page, 'Home');
-  await expect(page.locator('.settings-tab')).toHaveCount(0);
+  await expect(
+    page.locator('.pane-body[aria-hidden="true"] .settings-tab'),
+  ).toHaveCount(1);
 });
 
 test('restores Search query after tab switch within retention', async ({

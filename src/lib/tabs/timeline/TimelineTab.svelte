@@ -32,6 +32,7 @@
 
   type Props = {
     tabId: string;
+    visible?: boolean;
     kind?: 'home' | 'global';
     restoreAnchor?: TabFeedAnchor;
     restoreSnapshot?: TabSnapshotPayload;
@@ -74,7 +75,10 @@
   );
 
   $effect(() => {
-    if (!props.dataReady) return;
+    if (!props.visible || !props.dataReady) {
+      if (runtime) closeRuntime('timeline-runtime-pause');
+      return;
+    }
     const nextRelays = timelineRelays(props.relaySets);
     const nextKey = [
       props.kind ?? 'home',
@@ -168,6 +172,7 @@
   {/if}
   <EventTreeList
     tabId={props.tabId}
+    pagingEnabled={props.visible !== false}
     restoreAnchor={props.restoreAnchor}
     items={state.items}
     profiles={state.profiles}

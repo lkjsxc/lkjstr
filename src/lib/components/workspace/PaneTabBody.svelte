@@ -60,6 +60,7 @@
 {:else if props.tab.kind === 'timeline'}
   <TimelineTab
     tabId={props.tab.id}
+    visible={props.visible}
     kind="home"
     restoreAnchor={props.restoreAnchor}
     restoreSnapshot={props.restoreSnapshot}
@@ -74,6 +75,7 @@
 {:else if props.tab.kind === 'global'}
   <TimelineTab
     tabId={props.tab.id}
+    visible={props.visible}
     kind="global"
     restoreAnchor={props.restoreAnchor}
     restoreSnapshot={props.restoreSnapshot}
@@ -88,6 +90,7 @@
 {:else if props.tab.kind === 'search'}
   <SearchTab
     tabId={props.tab.id}
+    visible={props.visible}
     restoreAnchor={props.restoreAnchor}
     restoreSnapshot={props.restoreSnapshot}
     relaySets={props.relaySets}
@@ -128,6 +131,7 @@
 {:else if props.tab.kind === 'author-context'}
   <AuthorContextTab
     tabId={props.tab.id}
+    visible={props.visible}
     eventId={String(props.tab.config.eventId ?? '')}
     pubkey={String(props.tab.config.pubkey ?? '')}
     relaySets={props.relaySets}
@@ -147,6 +151,7 @@
 {:else if props.tab.kind === 'profile'}
   <ProfileTab
     tabId={props.tab.id}
+    visible={props.visible}
     restoreAnchor={props.restoreAnchor}
     pubkey={String(props.tab.config.pubkey ?? '')}
     activeAccount={props.activeAccount}
@@ -160,6 +165,7 @@
 {:else if props.tab.kind === 'relay-monitor' || props.tab.kind === 'relay-settings' || props.tab.kind === 'network-stats' || props.tab.kind === 'settings' || props.tab.kind === 'tweet' || props.tab.kind === 'welcome'}
   <PaneTabBodyTools
     tab={props.tab}
+    visible={props.visible}
     restoreScrollTop={props.restoreScrollTop}
     accounts={props.accounts}
     activeAccount={props.activeAccount}
@@ -172,6 +178,7 @@
 {:else if props.tab.kind === 'thread'}
   <ThreadTab
     tabId={props.tab.id}
+    visible={props.visible}
     restoreAnchor={props.restoreAnchor}
     eventId={String(props.tab.config.eventId ?? '')}
     activeAccountPubkey={props.activeAccount?.pubkey}
