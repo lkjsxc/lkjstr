@@ -49,6 +49,7 @@
       eventId: string,
       pubkey: string,
     ) => void;
+    openTool: (paneId: string, kind: TabKind) => void;
   };
 
   let props: Props = $props();
@@ -60,6 +61,7 @@
     <AppHeader />
     {#if props.workspace.layout}
       <SplitNode
+        workspaceId={props.workspace.id}
         node={props.workspace.layout}
         groups={props.workspace.tabGroups}
         tabs={props.workspace.tabs}
@@ -85,6 +87,7 @@
         openProfileEdit={props.openProfileEdit}
         openThread={props.openThread}
         openAuthorContext={props.openAuthorContext}
+        openTool={props.openTool}
       />
     {/if}
   </section>

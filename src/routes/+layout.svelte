@@ -9,6 +9,7 @@
   import '../styles/workspace-pane-drop.css';
   import '../styles/workspace-resize.css';
   import '../styles/workspace-menu.css';
+  import '../styles/scroll-layout.css';
   import '../styles/timeline.css';
   import '../styles/notifications.css';
   import '../styles/content-warning.css';
@@ -17,6 +18,7 @@
   import '../styles/event-actions.css';
   import '../styles/identity.css';
   import '../styles/tables.css';
+  import '../styles/welcome.css';
   import '../styles/stats.css';
   import '../styles/tweet.css';
 

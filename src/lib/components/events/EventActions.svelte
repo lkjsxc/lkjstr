@@ -19,6 +19,8 @@
     event: NostrEvent;
     profile?: ProfileSummary;
     activeAccountPubkey?: string | null;
+    liked?: boolean;
+    reposted?: boolean;
     relaySets: readonly RelaySet[];
     onSuccess?: () => void;
   };
@@ -89,8 +91,10 @@
     <button
       type="button"
       class="icon-button"
+      class:icon-button--pressed={props.liked}
       title="Heart"
       disabled={busy}
+      aria-pressed={props.liked}
       onclick={() => run(() => publishReaction(props.event, props.relaySets))}
     >
       <Heart size={16} />
@@ -99,8 +103,10 @@
     <button
       type="button"
       class="icon-button"
+      class:icon-button--pressed={props.reposted}
       title="Repost"
       disabled={busy}
+      aria-pressed={props.reposted}
       onclick={() => run(() => publishRepost(props.event, props.relaySets))}
     >
       <Repeat2 size={16} />

@@ -1,4 +1,4 @@
-import { resolvePaneDrop } from './pane-drop-resolve';
+import { paneDropRects, resolvePaneDrop } from './pane-drop-resolve';
 import type { TabDropZone } from './tab-drop-hit';
 
 export type PointerDragSnapshot = {
@@ -75,13 +75,10 @@ export function pointerDragTarget(
       targetIndex: undefined,
       zone: undefined,
     };
-  const paneRect = target.getBoundingClientRect();
-  const strip = target.querySelector<HTMLElement>('.tab-strip');
-  const stripBottom = strip
-    ? strip.getBoundingClientRect().bottom
-    : paneRect.top;
+  const { paneRect, bodyRect, stripBottom } = paneDropRects(target);
   const resolved = resolvePaneDrop({
     paneRect,
+    bodyRect,
     stripBottom,
     clientX: snapshot.x,
     clientY: snapshot.y,

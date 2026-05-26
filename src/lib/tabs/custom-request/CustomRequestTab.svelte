@@ -17,6 +17,7 @@
 
   type Props = {
     tabId: string;
+    restoreAnchor?: { readonly eventId: string; readonly offset: number };
     relaySets: readonly RelaySet[];
     openProfile: (pubkey: string) => void;
     openThread: (eventId: string) => void;
@@ -99,6 +100,8 @@
   </form>
   {#if error}<p role="alert">{error}</p>{/if}
   <EventTreeList
+    tabId={props.tabId}
+    restoreAnchor={props.restoreAnchor}
     {items}
     {profiles}
     relaySets={props.relaySets}

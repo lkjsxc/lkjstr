@@ -22,6 +22,8 @@
     reposts?: RepostGroup;
     profiles?: Record<string, ProfileSummary>;
     activeAccountPubkey?: string | null;
+    liked?: boolean;
+    reposted?: boolean;
     compact?: boolean;
     showActions?: boolean;
     showSummary?: boolean;
@@ -117,6 +119,8 @@
         event={props.item.event}
         {profile}
         activeAccountPubkey={props.activeAccountPubkey}
+        liked={props.liked}
+        reposted={props.reposted}
         relaySets={props.relaySets ?? []}
         onSuccess={highlightAction}
       />

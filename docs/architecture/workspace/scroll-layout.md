@@ -19,8 +19,8 @@ overlay content.
 
 ## Surfaces
 
-| Surface | Scrolling element |
-| ------- | ----------------- |
+| Surface                                                    | Scrolling element       |
+| ---------------------------------------------------------- | ----------------------- |
 | Home, Global, Thread, Search, Profile notes, Notifications | `.event-list__scroller` |
-| Settings, Relay Settings, Stats, Welcome | Pane tab body root |
-| lkjstr Log | Log list container |
+| Settings, Relay Settings, Stats, Welcome                   | Pane tab body root      |
+| lkjstr Log                                                 | Log list container      |

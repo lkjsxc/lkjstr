@@ -9,6 +9,7 @@
   import ResizeHandle from './ResizeHandle.svelte';
 
   type Props = {
+    workspaceId: string;
     node: WorkspaceLayoutNode;
     groups: Record<string, TabGroup>;
     tabs: Record<string, WorkspaceTab>;
@@ -48,6 +49,7 @@
       eventId: string,
       pubkey: string,
     ) => void;
+    openTool: (paneId: string, kind: TabKind) => void;
   };
 
   let props: Props = $props();
@@ -57,6 +59,7 @@
 {#if props.node.type === 'pane'}
   {@const group = props.groups[props.node.tabGroupId]}
   <Pane
+    workspaceId={props.workspaceId}
     pane={props.node}
     {group}
     tabs={props.tabs}
@@ -81,6 +84,7 @@
     openProfileEdit={props.openProfileEdit}
     openThread={props.openThread}
     openAuthorContext={props.openAuthorContext}
+    openTool={props.openTool}
   />
 {:else}
   <div class={`split ${props.node.direction}`} bind:this={splitElement}>
@@ -90,6 +94,7 @@
         style={`flex: ${props.node.sizes[index] ?? 1} 1 0`}
       >
         <RecursiveSplit
+          workspaceId={props.workspaceId}
           node={child}
           groups={props.groups}
           tabs={props.tabs}
@@ -115,6 +120,7 @@
           openProfileEdit={props.openProfileEdit}
           openThread={props.openThread}
           openAuthorContext={props.openAuthorContext}
+          openTool={props.openTool}
         />
       </div>
       {#if index < props.node.children.length - 1}

@@ -1,12 +1,7 @@
 <script lang="ts">
   import { VList } from 'virtua/svelte';
   import { onDestroy, tick } from 'svelte';
-  import { isNearEnd, isNearStart } from '$lib/events/feed-window';
-  import {
-    captureVirtualAnchor,
-    restoreVirtualAnchor,
-    type VirtualListHandle,
-  } from '$lib/events/scroll-anchor';
+  import { isNearEnd, isNearStart } from '$lib/feed-surface/near-end';
   import type { ProfileSummary } from '$lib/identity/identity';
   import type { RelaySet } from '$lib/relays/relay-store';
   import {
@@ -19,12 +14,15 @@
     ReactionSummaryMap,
     RepostSummaryMap,
   } from '$lib/thread/thread-reactions';
-  import EventRow from './EventRow.svelte';
+  import EventTreeListRows, { type ViewRow } from './EventTreeListRows.svelte';
   import { pinVisibleEvents } from '$lib/cache/pins';
-
-  type TerminalRow = { readonly terminal: true };
-  type LoadingRow = { readonly loadingOlder: true };
-  type ViewRow = FlatEventTreeItem | TerminalRow | LoadingRow;
+  import { actionStateForFeed } from '$lib/events/action-state';
+  import { setTabFeedAnchor } from '$lib/workspace/tab-anchor-registry';
+  import {
+    restoreFeedListAnchor,
+    syncFeedListAnchor,
+    type TreeListAnchorHandle,
+  } from './event-tree-list-anchors';
 
   type Props = {
     items: readonly FeedEvent[];
@@ -44,20 +42,20 @@
     openProfile?: (pubkey: string) => void;
     openThread?: (eventId: string) => void;
     openAuthorContext?: (eventId: string, pubkey: string) => void;
+    tabId?: string;
+    restoreAnchor?: { readonly eventId: string; readonly offset: number };
   };
 
   let props: Props = $props();
-  let list = $state<
-    VirtualListHandle & {
-      getViewportSize?: () => number;
-      getScrollSize?: () => number;
-    }
-  >();
+  let list = $state<TreeListAnchorHandle>();
   let autoFillPending = false;
   let treeKey = '';
   let destroyed = false;
   let cachedNodes: FlatEventTreeItem[] = [];
   let nodes = $derived(treeNodes(props.items));
+  let actionStates = $derived(
+    actionStateForFeed(props.items, props.activeAccountPubkey),
+  );
   let rows = $derived<ViewRow[]>(
     props.loadingOlder && props.hasOlder
       ? [...nodes, { loadingOlder: true }]
@@ -66,9 +64,11 @@
         : nodes,
   );
   let previousNodes: FlatEventTreeItem[] = [];
+  let restoredAnchorKey = $state('');
 
   onDestroy(() => {
     destroyed = true;
+    if (props.tabId) setTabFeedAnchor(props.tabId, undefined);
   });
 
   function handleScroll(offset: number): void {
@@ -91,11 +91,27 @@
   });
 
   $effect(() => {
-    const anchor = captureVirtualAnchor(previousNodes, eventNodeKey, list);
-    previousNodes = nodes;
+    previousNodes = syncFeedListAnchor({
+      tabId: props.tabId,
+      previous: previousNodes,
+      nodes,
+      list,
+      key: eventNodeKey,
+      destroyed: () => destroyed,
+    });
     pinVisibleEvents(nodes.map((node) => node.event.id));
-    void tick().then(() => {
-      if (!destroyed) restoreVirtualAnchor(anchor, nodes, eventNodeKey, list);
+  });
+
+  $effect(() => {
+    void restoreFeedListAnchor({
+      restore: props.restoreAnchor,
+      nodes,
+      list,
+      key: eventNodeKey,
+      destroyed: () => destroyed,
+      restoredKey: restoredAnchorKey,
+    }).then((key) => {
+      if (!destroyed) restoredAnchorKey = key;
     });
   });
 
@@ -140,34 +156,18 @@
         onscroll={handleScroll}
       >
         {#snippet children(node)}
-          {#if 'terminal' in node}
-            <p class="event-list__status">End of loaded history.</p>
-          {:else if 'loadingOlder' in node}
-            <p class="event-list__status">Loading older events...</p>
-          {:else if 'collapsed' in node}
-            <button
-              type="button"
-              class="thread-continuation"
-              style={`--event-depth: ${node.depth}`}
-              onclick={() => props.openThread?.(node.targetId)}
-            >
-              Continue thread ({node.hiddenCount})
-            </button>
-          {:else}
-            <EventRow
-              item={node}
-              depth={node.depth}
-              profile={props.profiles?.[node.event.pubkey]}
-              relaySets={props.relaySets}
-              activeAccountPubkey={props.activeAccountPubkey}
-              reactions={props.reactions?.[node.event.id]}
-              reposts={props.reposts?.[node.event.id]}
-              profiles={props.profiles}
-              openProfile={props.openProfile}
-              openThread={props.openThread}
-              openAuthorContext={props.openAuthorContext}
-            />
-          {/if}
+          <EventTreeListRows
+            {node}
+            profiles={props.profiles}
+            relaySets={props.relaySets}
+            activeAccountPubkey={props.activeAccountPubkey}
+            reactions={props.reactions}
+            reposts={props.reposts}
+            {actionStates}
+            openProfile={props.openProfile}
+            openThread={props.openThread}
+            openAuthorContext={props.openAuthorContext}
+          />
         {/snippet}
       </VList>
     </div>

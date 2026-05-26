@@ -1,7 +1,10 @@
 <script lang="ts">
   import { getContext, onDestroy, tick } from 'svelte';
   import type { TabDropEdge } from '$lib/workspace/move-tab';
-  import { resolvePaneDrop } from '$lib/workspace/pane-drop-resolve';
+  import {
+    paneDropRects,
+    resolvePaneDrop,
+  } from '$lib/workspace/pane-drop-resolve';
   import {
     tabDropEdge,
     tabDropOverlayStyle,
@@ -55,14 +58,11 @@
     const dragged = readDraggedTab(event);
     const pane = paneElement();
     if (!pane || !dragged) return;
-    const paneRect = pane.getBoundingClientRect();
-    const strip = pane.querySelector<HTMLElement>('.tab-strip');
-    const stripBottom = strip
-      ? strip.getBoundingClientRect().bottom
-      : paneRect.top;
+    const { paneRect, bodyRect, stripBottom } = paneDropRects(pane);
     const frames = tabFrames(pane);
     const resolved = resolvePaneDrop({
       paneRect,
+      bodyRect,
       stripBottom,
       clientX: event.clientX,
       clientY: event.clientY,
@@ -125,7 +125,12 @@
     }
     void tick().then(() => {
       if (!pane || zone !== active) return;
-      style = tabDropOverlayStyle(pane.getBoundingClientRect(), active);
+      const { paneRect, bodyRect } = paneDropRects(pane);
+      const overlayRect =
+        active === 'center'
+          ? { width: paneRect.width, height: paneRect.height }
+          : { width: bodyRect.width, height: bodyRect.height };
+      style = tabDropOverlayStyle(overlayRect, active);
     });
   });
 

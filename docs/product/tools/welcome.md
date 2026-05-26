@@ -28,9 +28,9 @@ first launch and from New Tab.
 
 ## Readiness
 
-| Check | Ready when | Action |
-| ----- | ---------- | ------ |
-| Account | Active signing account exists | Open Accounts |
+| Check       | Ready when                          | Action              |
+| ----------- | ----------------------------------- | ------------------- |
+| Account     | Active signing account exists       | Open Accounts       |
 | Read relays | Selected set has enabled read relay | Open Relay Settings |
-| Posting | Account and write relay ready | Open Tweet |
-| Home | Account ready | Open Home |
+| Posting     | Account and write relay ready       | Open Tweet          |
+| Home        | Account ready                       | Open Home           |

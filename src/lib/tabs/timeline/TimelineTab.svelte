@@ -7,6 +7,7 @@
     setRuntimeCounterActive,
   } from '$lib/app/runtime-counters';
   import EventTreeList from '$lib/components/events/EventTreeList.svelte';
+  import { createOlderRequestCoordinator } from '$lib/feed-surface/speculative-older';
   import { appendAppLog } from '$lib/log/app-log';
   import { consumeTabCloseReason } from '$lib/workspace/tab-lifecycle-reasons';
   import type { RelaySet } from '$lib/relays/relay-store';
@@ -24,10 +25,12 @@
     relayRuntimeKey,
     timelineRelays,
   } from '$lib/timeline/timeline-subscription';
+  import type { TabFeedAnchor } from '$lib/workspace/tab-anchor-registry';
 
   type Props = {
     tabId: string;
     kind?: 'home' | 'global';
+    restoreAnchor?: TabFeedAnchor;
     activeAccountPubkey?: string | null;
     dataReady?: boolean;
     relaySets: readonly RelaySet[];
@@ -59,6 +62,12 @@
   let relays: string[] = [];
   let runtimeKey = '';
   let runtimeStartedAt = 0;
+  let olderRequests = createOlderRequestCoordinator(
+    async () => {
+      await runtime?.loadOlder();
+    },
+    () => Boolean(state.hasOlder && !state.loadingOlder),
+  );
 
   $effect(() => {
     if (!props.dataReady) return;
@@ -71,6 +80,7 @@
     ].join('|');
     if (nextKey === runtimeKey) return;
     closeRuntime('timeline-runtime-recreate');
+    olderRequests.reset();
     runtimeKey = nextKey;
     relays = nextRelays;
     runtimeStartedAt = Date.now();
@@ -164,6 +174,8 @@
     <p role="alert">{state.error}</p>
   {/if}
   <EventTreeList
+    tabId={props.tabId}
+    restoreAnchor={props.restoreAnchor}
     items={state.items}
     profiles={state.profiles}
     relaySets={props.relaySets}
@@ -174,7 +186,7 @@
     loadingNewer={state.loadingNewer}
     hasOlder={state.hasOlder}
     hasNewer={state.hasNewer}
-    onNearEnd={() => runtime?.loadOlder()}
+    onNearEnd={() => olderRequests.requestFromNearEnd()}
     onNearStart={() => runtime?.loadNewer()}
     openProfile={props.openProfile}
     openThread={props.openThread}

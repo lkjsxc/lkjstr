@@ -37,3 +37,12 @@ export async function loadTabState(
   );
   return record?.state as TabSnapshotPayload | undefined;
 }
+
+export async function deleteTabState(
+  workspaceId: string,
+  paneId: string,
+  tabId: string,
+): Promise<void> {
+  if (!indexedDbAvailable()) return;
+  await browserDb().tabStates.delete(tabStateId(workspaceId, paneId, tabId));
+}

@@ -19,6 +19,9 @@
   import { closeWorkspacePane } from '$lib/workspace/pane-commands';
   import { resizeSplit } from '$lib/workspace/resize';
   import type { TabKind } from '$lib/workspace/tab';
+  import { openToolTab } from '$lib/workspace/open-tool-tab';
+  import { removePersistedTabSnapshot } from '$lib/workspace/tab-snapshot-persist';
+  import { clearTabFeedAnchor } from '$lib/workspace/tab-anchor-registry';
   import {
     closeWorkspaceTab,
     convertWorkspaceTab,
@@ -140,7 +143,18 @@
   function handleFocusTab(paneId: string, tabId: string): Promise<void> { return workspace ? update(focusTab(workspace, paneId, tabId)) : Promise.resolve(); }
 
   // prettier-ignore
-  function handleCloseTab(paneId: string, tabId: string): Promise<void> { return workspace ? update(closeWorkspaceTab(workspace, paneId, tabId)) : Promise.resolve(); }
+  function handleCloseTab(paneId: string, tabId: string): Promise<void> {
+    if (!workspace) return Promise.resolve();
+    clearTabFeedAnchor(tabId);
+    void removePersistedTabSnapshot(workspace.id, paneId, tabId);
+    return update(closeWorkspaceTab(workspace, paneId, tabId));
+  }
+
+  function handleOpenTool(paneId: string, kind: TabKind): Promise<void> {
+    return workspace
+      ? update(openToolTab(workspace, paneId, kind))
+      : Promise.resolve();
+  }
 
   // prettier-ignore
   function handleClosePane(paneId: string): Promise<void> { return workspace ? update(closeWorkspacePane(workspace, paneId)) : Promise.resolve(); }
@@ -160,4 +174,4 @@
 </svelte:head>
 
 <!-- prettier-ignore -->
-<WorkspaceRoot {workspace} {accounts} {activeAccount} {relaySets} {ready} {pageDataReady} {inactiveRetentionSeconds} focusTab={handleFocusTab} closeTab={handleCloseTab} moveTab={handleMoveTab} openNewTab={handleOpenNewTab} convertTab={handleConvertTab} split={handleSplit} closePane={handleClosePane} resize={handleResize} addMinedSigning={handleAddMinedSigning} {refreshData} toggleRelay={handleToggleRelay} removeRelay={handleRemoveRelay} openProfile={handleOpenProfile} openProfileEdit={handleOpenProfileEdit} openThread={handleOpenThread} openAuthorContext={handleOpenAuthorContext} />
+<WorkspaceRoot {workspace} {accounts} {activeAccount} {relaySets} {ready} {pageDataReady} {inactiveRetentionSeconds} focusTab={handleFocusTab} closeTab={handleCloseTab} moveTab={handleMoveTab} openNewTab={handleOpenNewTab} convertTab={handleConvertTab} split={handleSplit} closePane={handleClosePane} resize={handleResize} addMinedSigning={handleAddMinedSigning} {refreshData} toggleRelay={handleToggleRelay} removeRelay={handleRemoveRelay} openProfile={handleOpenProfile} openProfileEdit={handleOpenProfileEdit} openThread={handleOpenThread} openAuthorContext={handleOpenAuthorContext} openTool={handleOpenTool} />

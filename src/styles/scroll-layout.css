@@ -1,0 +1,14 @@
+.event-list__scroller,
+.pane-body,
+.data-tab,
+.profile-tab,
+.timeline-tab {
+  scrollbar-gutter: stable;
+}
+
+.event-list__scroller > *,
+.pane-body > *,
+.data-tab > *,
+.profile-notes {
+  padding-inline-end: var(--space-2);
+}

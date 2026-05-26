@@ -20,11 +20,13 @@
   import UploadSettingsTab from '$lib/tabs/upload-settings/UploadSettingsTab.svelte';
   import WelcomeTab from '$lib/tabs/welcome/WelcomeTab.svelte';
   import type { TabKind, WorkspaceTab } from '$lib/workspace/tab';
+  import type { TabFeedAnchor } from '$lib/workspace/tab-anchor-registry';
 
   type Props = {
     tab: WorkspaceTab;
     visible: boolean;
     paneId: string;
+    restoreAnchor?: TabFeedAnchor;
     accounts: Account[];
     activeAccount?: Account;
     relaySets: RelaySet[];
@@ -46,6 +48,7 @@
       eventId: string,
       pubkey: string,
     ) => void;
+    openTool: (paneId: string, kind: TabKind) => void;
   };
 
   let props: Props = $props();
@@ -56,6 +59,7 @@
     activeAccount={props.activeAccount}
     accounts={props.accounts}
     relaySets={props.relaySets}
+    openTool={(kind) => props.openTool(props.paneId, kind)}
   />
 {:else if props.tab.kind === 'new-tab'}
   <NewTab
@@ -67,6 +71,7 @@
   <TimelineTab
     tabId={props.tab.id}
     kind="home"
+    restoreAnchor={props.restoreAnchor}
     activeAccountPubkey={props.activeAccount?.pubkey}
     dataReady={props.pageDataReady}
     relaySets={props.relaySets}
@@ -79,6 +84,7 @@
   <TimelineTab
     tabId={props.tab.id}
     kind="global"
+    restoreAnchor={props.restoreAnchor}
     dataReady={props.pageDataReady}
     relaySets={props.relaySets}
     openProfile={(pubkey) => props.openProfile(props.paneId, pubkey)}
@@ -89,6 +95,7 @@
 {:else if props.tab.kind === 'search'}
   <SearchTab
     tabId={props.tab.id}
+    restoreAnchor={props.restoreAnchor}
     relaySets={props.relaySets}
     openProfile={(pubkey) => props.openProfile(props.paneId, pubkey)}
     openThread={(eventId) => props.openThread(props.paneId, eventId)}
@@ -98,6 +105,7 @@
 {:else if props.tab.kind === 'custom-request'}
   <CustomRequestTab
     tabId={props.tab.id}
+    restoreAnchor={props.restoreAnchor}
     relaySets={props.relaySets}
     openProfile={(pubkey) => props.openProfile(props.paneId, pubkey)}
     openThread={(eventId) => props.openThread(props.paneId, eventId)}
@@ -145,6 +153,7 @@
 {:else if props.tab.kind === 'profile'}
   <ProfileTab
     tabId={props.tab.id}
+    restoreAnchor={props.restoreAnchor}
     pubkey={String(props.tab.config.pubkey ?? '')}
     activeAccount={props.activeAccount}
     relaySets={props.relaySets}
@@ -176,6 +185,7 @@
 {:else if props.tab.kind === 'thread'}
   <ThreadTab
     tabId={props.tab.id}
+    restoreAnchor={props.restoreAnchor}
     eventId={String(props.tab.config.eventId ?? '')}
     activeAccountPubkey={props.activeAccount?.pubkey}
     relaySets={props.relaySets}

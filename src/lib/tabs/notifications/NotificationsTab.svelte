@@ -2,7 +2,9 @@
   import { tick, untrack } from 'svelte';
   import FeedSurfaceStatus from '$lib/components/events/FeedSurfaceStatus.svelte';
   import NotificationRow from '$lib/components/notifications/NotificationRow.svelte';
-  import { isNearEnd, metadataPageLimit } from '$lib/events/feed-window';
+  import { isNearEnd } from '$lib/feed-surface/near-end';
+  import { metadataPageLimit } from '$lib/events/feed-window';
+  import { createOlderRequestCoordinator } from '$lib/feed-surface/speculative-older';
   import type { ProfileSummary } from '$lib/identity/identity';
   import {
     createNotificationRuntime,
@@ -59,11 +61,18 @@
   let runtimeKey = $derived(
     `${props.accountPubkey ?? ''}|${timelineRelays(props.relaySets).join('\u0000')}`,
   );
+  let olderRequests = createOlderRequestCoordinator(
+    async () => {
+      await runtime?.loadOlder();
+    },
+    () => Boolean(state.hasOlder && !state.loadingOlder),
+  );
 
   $effect(() => {
     const key = runtimeKey;
     if (key === undefined) return;
     const { accountPubkey, relaySets, tabId } = untrack(() => props);
+    olderRequests.reset();
     relays = timelineRelays(relaySets);
     runtime = createNotificationRuntime(
       accountPubkey,
@@ -118,12 +127,8 @@
 
   function handleScroll(event: Event): void {
     const el = event.currentTarget as HTMLElement;
-    if (
-      isNearEnd(el.scrollTop, el.clientHeight, el.scrollHeight) &&
-      !state.loadingOlder &&
-      state.hasOlder
-    )
-      void runtime?.loadOlder();
+    if (isNearEnd(el.scrollTop, el.clientHeight, el.scrollHeight))
+      void olderRequests.requestFromNearEnd();
   }
 
   async function markVisibleRead(): Promise<void> {

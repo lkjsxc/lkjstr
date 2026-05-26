@@ -1,7 +1,8 @@
 <script lang="ts">
   import type { NostrEvent } from '$lib/protocol';
   import Avatar from '$lib/components/identity/Avatar.svelte';
-  import { identityDisplay, type ProfileSummary } from '$lib/identity/identity';
+  import { feedIdentityDisplay } from '$lib/identity/feed-identity';
+  import type { ProfileSummary } from '$lib/identity/identity';
   import EmojifiedText from './EmojifiedText.svelte';
 
   type Props = {
@@ -14,7 +15,9 @@
   };
 
   let props: Props = $props();
-  let display = $derived(identityDisplay(props.event.pubkey, props.profile));
+  let display = $derived(
+    feedIdentityDisplay(props.event.pubkey, props.profile),
+  );
   let time = $derived(new Date(props.event.created_at * 1000).toLocaleString());
 
   function openProfile(event: MouseEvent): void {
@@ -46,7 +49,7 @@
           emojis={props.profile?.customEmojis ?? []}
         />
       </strong>
-      <small>{display.subtitle}</small>
+      {#if display.subtitle}<small>{display.subtitle}</small>{/if}
     </button>
     <span>{time}</span>
   </div>

@@ -32,10 +32,7 @@ export async function compactOldEvents(): Promise<CompactionResult> {
       reason: 'below-quota-threshold',
     };
   const protectedIds = await protectedEventIds();
-  const pruneIds = await lowestScorePruneIds(
-    quotaPruneBatchSize,
-    protectedIds,
-  );
+  const pruneIds = await lowestScorePruneIds(quotaPruneBatchSize, protectedIds);
   if (pruneIds.length === 0)
     return {
       prunedEvents: 0,

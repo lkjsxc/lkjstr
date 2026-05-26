@@ -31,13 +31,14 @@ linked product, protocol, architecture, and operations pages.
 
 - Workspace layout, tabs, settings, accounts, drafts, notifications, relay
   information, relay summaries, jobs, and cached events are browser-owned data.
-- Pointer tab dragging is canonical. Native desktop drag shares pane-wide drop
-  resolution, half-pane edge previews, and smart split insertion with menu
-  splits.
+- Pointer tab dragging is canonical. Native desktop drag uses pane-body edge
+  detection for splits and tab-strip center insert for reorder. Half-pane edge
+  previews cover the body only.
 - Tab rails scroll horizontally with long-press touch drag, strip-priority
   reorder, and active-tab reveal.
-- Event cache retention is automatic and score-indexed. Settings no longer
-  exposes cache count or age controls.
+- Durable event cache has no application item-count ceiling. Optional
+  quota-pressure compaction may run when browser storage is near its limit.
+  Runtime feed windows remain bounded per tab.
 - Shared storage normalizes events, relay receipts, tag rows, cursors, and jobs
   before runtime use.
 - Relay ingress uses app-owned byte and structure caps before expensive JSON
@@ -46,9 +47,16 @@ linked product, protocol, architecture, and operations pages.
   bounded app-owned runtime windows, caches, counters, and fallback stores.
 - Relay clients, relay pool, subscription manager, and tab runtimes own network
   reads and deterministic cleanup.
-- Inactive workspace tabs unmount immediately and restore from bounded
-  session-memory snapshots when reselected within the configured retention
-  window.
+- Inactive workspace tabs unmount immediately. Session snapshots and IndexedDB
+  `tabStates` restore scroll anchors and feed cursors when tabs return or after
+  reload.
+- Feed surfaces share near-end prefetch, `FeedSurfaceStatus`, speculative older
+  pages, and virtual lists on Home, Global, Profile notes, Thread, Search, and
+  Custom Request.
+- Event rows show nip05-only subtitles on feeds, pressed Heart/Repost styling
+  from real local action evidence, and no left-side new-event stripe.
+- Welcome is a document-like quick-start with working links into Accounts,
+  Relay Settings, Tweet, and core tabs.
 - Relay publish waiters, paged read leases, deduped read abort listeners, relay
   client final close state, and idle pool eviction are covered by lifecycle
   cleanup tests.

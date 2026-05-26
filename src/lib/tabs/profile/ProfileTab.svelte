@@ -1,9 +1,7 @@
 <script lang="ts">
-  import { tick, untrack } from 'svelte';
+  import { untrack } from 'svelte';
   import type { Account } from '$lib/accounts/account';
-  import EventRow from '$lib/components/events/EventRow.svelte';
-  import FeedSurfaceStatus from '$lib/components/events/FeedSurfaceStatus.svelte';
-  import { isNearEnd, isNearStart } from '$lib/events/feed-window';
+  import EventTreeList from '$lib/components/events/EventTreeList.svelte';
   import type { ProfileSummary } from '$lib/identity/identity';
   import { getProfile } from '$lib/identity/profile-cache';
   import { profileUpdatedEvent } from '$lib/profile/profile-metadata-draft';
@@ -16,15 +14,18 @@
   import { emptyProfileState } from '$lib/profile/profile-state';
   import { followingCount } from '$lib/profile/profile-links';
   import type { RelaySet } from '$lib/relays/relay-store';
+  import { createOlderRequestCoordinator } from '$lib/feed-surface/speculative-older';
   import {
     createTimelineSubId,
     timelineRelays,
   } from '$lib/timeline/timeline-subscription';
+  import type { TabFeedAnchor } from '$lib/workspace/tab-anchor-registry';
   import ProfileHeader from './ProfileHeader.svelte';
   import ProfileNewerButton from './ProfileNewerButton.svelte';
 
   type Props = {
     tabId: string;
+    restoreAnchor?: TabFeedAnchor;
     pubkey: string;
     activeAccount?: Account;
     relaySets: readonly RelaySet[];
@@ -47,13 +48,17 @@
   let runtimeKey = $derived(
     `${props.pubkey}|${timelineRelays(props.relaySets).join('\u0000')}`,
   );
-  let profileTab: HTMLElement | undefined;
-  let autoFillPending = false;
-  let destroyed = false;
+  let olderRequests = createOlderRequestCoordinator(
+    async () => {
+      await runtime?.loadOlder();
+    },
+    () => Boolean(state.hasOlder && !state.loadingOlder),
+  );
 
   $effect(() => {
     if (!runtimeKey) return;
     const { pubkey, relaySets, tabId } = untrack(() => props);
+    olderRequests.reset();
     runtime = createProfileRuntime(
       pubkey,
       timelineRelays(relaySets),
@@ -70,7 +75,6 @@
     };
     window.addEventListener(profileUpdatedEvent, refreshProfile);
     return () => {
-      destroyed = true;
       window.removeEventListener(profileUpdatedEvent, refreshProfile);
       unsubscribe();
       runtime?.close();
@@ -92,61 +96,9 @@
       return '';
     }
   }
-
-  function handleScroll(event: Event): void {
-    const el = event.currentTarget as HTMLElement;
-    if (isNearStart(el.scrollTop) && state.hasNewer && !state.loadingNewer)
-      void runtime?.loadNewer();
-    if (shouldLoadOlder(el.scrollTop, el.clientHeight, el.scrollHeight))
-      void runtime?.loadOlder();
-  }
-
-  function shouldLoadOlder(st: number, ch: number, sh: number): boolean {
-    return (
-      Boolean(runtime) &&
-      !state.loadingOlder &&
-      state.hasOlder &&
-      state.posts.length > 0 &&
-      isNearEnd(st, ch, sh)
-    );
-  }
-
-  $effect(() => {
-    if (
-      !state.loading &&
-      !state.loadingOlder &&
-      state.hasOlder &&
-      state.posts.length > 0
-    )
-      void maybeAutoFill();
-  });
-
-  async function maybeAutoFill(): Promise<void> {
-    if (
-      autoFillPending ||
-      state.loading ||
-      !runtime ||
-      state.loadingOlder ||
-      !state.hasOlder ||
-      state.posts.length === 0
-    )
-      return;
-    autoFillPending = true;
-    await tick();
-    if (destroyed) return;
-    const el = profileTab;
-    if (el && el.clientHeight > 0 && el.scrollHeight <= el.clientHeight + 16)
-      await runtime.loadOlder();
-    if (!destroyed) autoFillPending = false;
-  }
 </script>
 
-<section
-  class="profile-tab"
-  aria-label="Profile"
-  bind:this={profileTab}
-  onscroll={handleScroll}
->
+<section class="profile-tab" aria-label="Profile">
   <ProfileHeader
     pubkey={props.pubkey}
     profile={state.profile}
@@ -171,29 +123,24 @@
         load={() => runtime?.loadNewer()}
       />
     {/if}
-    <div class="profile-notes__list">
-      {#if state.posts.length > 0}
-        {#each state.posts as item (item.event.id)}
-          <EventRow
-            {item}
-            profile={profiles[item.event.pubkey]}
-            relaySets={props.relaySets}
-            activeAccountPubkey={props.activeAccount?.pubkey}
-            openProfile={props.openProfile}
-            openThread={props.openThread}
-            openAuthorContext={props.openAuthorContext}
-          />
-        {/each}
-      {:else if !state.loading}
-        <p class="event-list__empty">
-          No notes have been received for this profile.
-        </p>
-      {/if}
-      {#if state.loadingOlder && state.hasOlder}
-        <FeedSurfaceStatus loadingOlder />
-      {:else if state.hasOlder === false && state.posts.length > 0}
-        <FeedSurfaceStatus endOfHistory />
-      {/if}
-    </div>
+    <EventTreeList
+      tabId={props.tabId}
+      restoreAnchor={props.restoreAnchor}
+      items={state.posts}
+      {profiles}
+      relaySets={props.relaySets}
+      activeAccountPubkey={props.activeAccount?.pubkey}
+      loading={state.loading}
+      emptyText="No notes have been received for this profile."
+      loadingOlder={state.loadingOlder}
+      loadingNewer={state.loadingNewer}
+      hasOlder={state.hasOlder}
+      hasNewer={state.hasNewer}
+      onNearEnd={() => olderRequests.requestFromNearEnd()}
+      onNearStart={() => runtime?.loadNewer()}
+      openProfile={props.openProfile}
+      openThread={props.openThread}
+      openAuthorContext={props.openAuthorContext}
+    />
   </section>
 </section>

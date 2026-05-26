@@ -2,11 +2,13 @@
   import type { Account } from '$lib/accounts/account';
   import type { RelaySet } from '$lib/relays/relay-store';
   import { selectedDefaultRelaySet } from '$lib/relays/relay-store';
+  import type { TabKind } from '$lib/workspace/tab';
 
   type Props = {
     accounts: readonly Account[];
     activeAccount?: Account;
     relaySets: readonly RelaySet[];
+    openTool: (kind: TabKind) => void;
   };
 
   let props: Props = $props();
@@ -17,62 +19,109 @@
   let writeRelays = $derived(
     defaultSet?.relays.filter((relay) => relay.enabled && relay.write) ?? [],
   );
-  let setupStatus = $derived(
-    !props.activeAccount
-      ? 'Choose or add a signing identity in Accounts.'
-      : readRelays.length === 0
-        ? 'Enable at least one read relay in Relay Settings.'
-        : 'Core reading and publishing surfaces are ready.',
-  );
-  let coreSurfaces = [
-    ['Accounts', 'Local signing identities and active-account selection.'],
-    ['Relay Settings', 'User-owned read and write relay configuration.'],
-    ['Home', 'Active-account follows and live notes.'],
-    ['Notifications', 'Mentions, reactions, reposts, and zap activity.'],
-    ['Search', 'Cached content matches and relay NIP-50 queries.'],
-    ['Tweet', 'Compose notes, replies, media, and event actions.'],
-    ['lkjstr Log', 'Current-session relay and runtime diagnostics.'],
-  ] as const;
+  let accountReady = $derived(Boolean(props.activeAccount));
+  let relayReady = $derived(readRelays.length > 0);
+  let postReady = $derived(accountReady && writeRelays.length > 0);
 </script>
 
 <section class="data-tab welcome-tab" aria-label="Welcome">
-  <section class="option-card">
-    <h2>Quick start</h2>
-    <p>{setupStatus}</p>
-  </section>
-
-  <dl class="metric-list">
-    <dt>Setup</dt>
-    <dd>
-      {readRelays.length > 0 && props.activeAccount ? 'ready' : 'needs setup'}
-    </dd>
-    <dt>Active account</dt>
-    <dd>{props.activeAccount?.label ?? 'none'}</dd>
-    <dt>Accounts</dt>
-    <dd>{props.accounts.length}</dd>
-    <dt>Relay set</dt>
-    <dd>{defaultSet?.name ?? 'none'}</dd>
-    <dt>Read relays</dt>
-    <dd>{readRelays.length}</dd>
-    <dt>Write relays</dt>
-    <dd>{writeRelays.length}</dd>
-  </dl>
-
-  <section class="option-card">
-    <h2>lkjstr</h2>
+  <article class="welcome-doc">
+    <h2>What this workspace is</h2>
     <p>
       lkjstr is a browser-first Nostr workspace for reading timelines, composing
       notes, inspecting relay behavior, managing signing accounts, and following
-      event threads without a server-side account system.
+      threads without a server-side account system.
     </p>
-  </section>
+  </article>
 
-  <section class="option-grid" aria-label="Core surfaces">
-    {#each coreSurfaces as [name, description] (name)}
-      <article class="option-card">
-        <strong>{name}</strong>
-        <span>{description}</span>
-      </article>
-    {/each}
-  </section>
+  <article class="welcome-doc">
+    <h2>How to configure accounts</h2>
+    <p>
+      {accountReady
+        ? `Active account: ${props.activeAccount?.label ?? 'selected'}.`
+        : 'No active signing account is selected yet.'}
+    </p>
+    <button type="button" onclick={() => props.openTool('account-manager')}>
+      Open Accounts
+    </button>
+  </article>
+
+  <article class="welcome-doc">
+    <h2>How to configure relays</h2>
+    <p>
+      {relayReady
+        ? `${readRelays.length} read relay(s) and ${writeRelays.length} write relay(s) are enabled in the selected set.`
+        : 'Enable at least one read relay in the selected relay set.'}
+    </p>
+    <button type="button" onclick={() => props.openTool('relay-settings')}>
+      Open Relay Settings
+    </button>
+  </article>
+
+  <article class="welcome-doc">
+    <h2>How to post</h2>
+    <p>
+      {postReady
+        ? 'Compose notes from Tweet after choosing an account and write relays.'
+        : 'Select an account and enable write relays before publishing.'}
+    </p>
+    <button type="button" onclick={() => props.openTool('tweet')}>
+      Open Tweet
+    </button>
+  </article>
+
+  <article class="welcome-doc">
+    <h2>Core surfaces</h2>
+    <ul class="welcome-links">
+      <li>
+        <button type="button" onclick={() => props.openTool('timeline')}>
+          Home
+        </button>
+      </li>
+      <li>
+        <button type="button" onclick={() => props.openTool('notifications')}>
+          Notifications
+        </button>
+      </li>
+      <li>
+        <button type="button" onclick={() => props.openTool('global')}>
+          Global
+        </button>
+      </li>
+      <li>
+        <button type="button" onclick={() => props.openTool('search')}>
+          Search
+        </button>
+      </li>
+      <li>
+        <button type="button" onclick={() => props.openTool('settings')}>
+          Settings
+        </button>
+      </li>
+      <li>
+        <button type="button" onclick={() => props.openTool('upload-settings')}>
+          Upload Settings
+        </button>
+      </li>
+      <li>
+        <button type="button" onclick={() => props.openTool('network-stats')}>
+          Stats
+        </button>
+      </li>
+      <li>
+        <button type="button" onclick={() => props.openTool('relay-monitor')}>
+          lkjstr Log
+        </button>
+      </li>
+    </ul>
+  </article>
+
+  <article class="welcome-doc">
+    <h2>What is still missing</h2>
+    <p>
+      Passkey-protected local secrets, encrypted direct messages, and wallet
+      custody for zaps remain out of scope. See product backlog and protocol
+      support docs for the current boundary.
+    </p>
+  </article>
 </section>

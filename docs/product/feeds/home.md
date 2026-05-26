@@ -29,7 +29,7 @@ its NIP-02 follows.
   items are pruned.
 - Live events are retained only inside the same `180` item window.
 - Older pages load after near-bottom scroll using
-  `max(1200px, 1.5×viewport)` or an equivalent sentinel margin, or when the
+  `max(1200px, 1.5 x viewport)` or an equivalent sentinel margin, or when the
   loaded rows are shorter than the viewport and `hasOlder` remains true.
 - One speculative older page may prefetch when near end while `hasOlder` is
   true. See [feed-surface.md](../../architecture/data/feed-surface.md).

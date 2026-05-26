@@ -14,28 +14,35 @@ export function computeAnchoredPosition(args: {
   readonly anchor: DOMRect;
   readonly popover: { width: number; height: number };
   readonly viewport: { width: number; height: number };
+  readonly bounds?: DOMRect;
   readonly preferred: PopoverPlacement;
   readonly gap: number;
 }): PopoverPosition {
   const margin = 8;
-  const placement = flip(args);
+  const bounds = args.bounds ?? {
+    top: 0,
+    left: 0,
+    width: args.viewport.width,
+    height: args.viewport.height,
+  };
+  const placement = flip({
+    anchor: args.anchor,
+    popover: args.popover,
+    viewport: { height: bounds.height },
+    preferred: args.preferred,
+    gap: args.gap,
+  });
   const top = placement.startsWith('top')
     ? args.anchor.top - args.popover.height - args.gap
     : args.anchor.bottom + args.gap;
   const left = placement.endsWith('end')
     ? args.anchor.right - args.popover.width
     : args.anchor.left;
+  const maxTop = bounds.top + bounds.height - args.popover.height - margin;
+  const maxLeft = bounds.left + bounds.width - args.popover.width - margin;
   return {
-    top: clamp(
-      top,
-      margin,
-      args.viewport.height - args.popover.height - margin,
-    ),
-    left: clamp(
-      left,
-      margin,
-      args.viewport.width - args.popover.width - margin,
-    ),
+    top: clamp(top, bounds.top + margin, maxTop),
+    left: clamp(left, bounds.left + margin, maxLeft),
     placement,
   };
 }

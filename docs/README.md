@@ -26,6 +26,8 @@ for detailed contracts.
   tree model.
 - [architecture/data/event-surface-paging.md](architecture/data/event-surface-paging.md):
   shared feed paging and status rows.
+- [architecture/data/feed-surface.md](architecture/data/feed-surface.md): feed
+  list, prefetch, and staged rows.
 - [architecture/data/feed-memory.md](architecture/data/feed-memory.md): feed
   cache and relay windows.
 - [architecture/data/retention/README.md](architecture/data/retention/README.md):
@@ -81,7 +83,11 @@ for detailed contracts.
   workspace modules.
 - [architecture/workspace/resize.md](architecture/workspace/resize.md): resizing.
 - [architecture/workspace/pane-drop-target.md](architecture/workspace/pane-drop-target.md):
-  pane-wide drop resolver.
+  pane-body drop resolver.
+- [architecture/workspace/scroll-layout.md](architecture/workspace/scroll-layout.md):
+  scrollbar-safe scrolling surfaces.
+- [architecture/workspace/tile-overlays.md](architecture/workspace/tile-overlays.md):
+  tile-scoped overlays.
 - [architecture/workspace/tab-dragging.md](architecture/workspace/tab-dragging.md):
   tab drag zones and feedback.
 - [architecture/workspace/tab-strip-gestures.md](architecture/workspace/tab-strip-gestures.md):

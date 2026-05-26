@@ -21,6 +21,6 @@ Runtime docs define how tab-owned loaders combine cache and relay data.
   materialization.
 - Older-page loaders clear `loadingOlder` in success and failure paths.
 - Bounded error text is exposed instead of unhandled promise failures.
-- Near-end loading uses `max(1200px, 1.5×viewport)` and optional sentinels.
+- Near-end loading uses `max(1200px, 1.5 x viewport)` and optional sentinels.
 - Hosted Worker code serves the SvelteKit shell only. Tab runtimes do not depend
   on Cloudflare storage, a server-side account service, or a relay proxy.

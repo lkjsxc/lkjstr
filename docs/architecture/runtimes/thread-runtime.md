@@ -15,7 +15,7 @@ Thread runtime owns event root and reply loading.
 - Retain at most `240` live and cached Thread rows even if relays stream more.
 - It exposes `loadOlder()` and `loadNewer()`.
 - Shared feed surface lists show `FeedSurfaceStatus` while `loadingOlder &&
-  hasOlder`, and terminal history only when `hasOlder === false`.
+hasOlder`, and terminal history only when `hasOlder === false`.
 - Speculative older prefetch may run once when near end while `hasOlder` is true.
 - State exposes `loadingOlder`, `hasOlder`, `loadingNewer`, `hasNewer`,
   `oldestCursor`, and `newestCursor`.

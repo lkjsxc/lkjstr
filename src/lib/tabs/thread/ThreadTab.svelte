@@ -1,6 +1,7 @@
 <script lang="ts">
   import { untrack } from 'svelte';
   import EventTreeList from '$lib/components/events/EventTreeList.svelte';
+  import { createOlderRequestCoordinator } from '$lib/feed-surface/speculative-older';
   import type { ProfileSummary } from '$lib/identity/identity';
   import type { RelaySet } from '$lib/relays/relay-store';
   import {
@@ -13,12 +14,14 @@
     timelineRelays,
   } from '$lib/timeline/timeline-subscription';
   import { loadTimelineProfiles } from '$lib/timeline/timeline-profiles';
+  import type { TabFeedAnchor } from '$lib/workspace/tab-anchor-registry';
 
   type ProfileMap = Record<string, ProfileSummary>;
   type ThreadViewState = ThreadState & { profiles: ProfileMap };
 
   type Props = {
     tabId: string;
+    restoreAnchor?: TabFeedAnchor;
     eventId?: string;
     activeAccountPubkey?: string | null;
     relaySets: readonly RelaySet[];
@@ -52,12 +55,19 @@
   );
   let profileRequest = 0;
   let relays: string[] = [];
+  let olderRequests = createOlderRequestCoordinator(
+    async () => {
+      await runtime?.loadOlder();
+    },
+    () => Boolean(state.hasOlder && !state.loadingOlder),
+  );
 
   $effect(() => {
     const key = runtimeKey;
     if (key === undefined) return;
     const { eventId, relaySets, tabId } = untrack(() => props);
     if (!eventId) return;
+    olderRequests.reset();
     relays = timelineRelays(relaySets);
     runtime = createThreadRuntime(
       eventId,
@@ -104,6 +114,8 @@
     {#if state.loading}<p>Loading thread...</p>{/if}
     {#if state.error}<p role="alert">{state.error}</p>{/if}
     <EventTreeList
+      tabId={props.tabId}
+      restoreAnchor={props.restoreAnchor}
       items={state.items}
       profiles={state.profiles}
       relaySets={props.relaySets}
@@ -115,7 +127,7 @@
       loadingNewer={state.loadingNewer}
       hasOlder={state.hasOlder}
       hasNewer={state.hasNewer}
-      onNearEnd={() => runtime?.loadOlder()}
+      onNearEnd={() => olderRequests.requestFromNearEnd()}
       onNearStart={() => runtime?.loadNewer()}
       openProfile={props.openProfile}
       openThread={props.openThread}

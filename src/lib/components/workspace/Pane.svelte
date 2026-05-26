@@ -7,6 +7,9 @@
   import type { TabKind, WorkspaceTab } from '$lib/workspace/tab';
   import type { TabGroup } from '$lib/workspace/tab-group';
   import { createSessionTabSnapshots } from '$lib/workspace/session-tab-snapshots';
+  import type { TabSnapshotPayload } from '$lib/workspace/tab-snapshot';
+  import { feedAnchorFromPayload } from '$lib/workspace/tab-snapshot-persist';
+  import { syncPaneTabFocus } from '$lib/workspace/pane-tab-focus';
   import NewTabButton from './NewTabButton.svelte';
   import PaneDropLayer from './PaneDropLayer.svelte';
   import PaneTabBody from './PaneTabBody.svelte';
@@ -14,6 +17,7 @@
   import TileMenu from './TileMenu.svelte';
 
   type Props = {
+    workspaceId: string;
     pane: WorkspacePaneNode;
     group?: TabGroup;
     tabs: Record<string, WorkspaceTab>;
@@ -52,13 +56,12 @@
       eventId: string,
       pubkey: string,
     ) => void;
+    openTool: (paneId: string, kind: TabKind) => void;
   };
 
   let props: Props = $props();
-  type TabSnapshot = {
-    readonly id: string;
-    readonly scrollTop?: number;
-  };
+  type TabSnapshot = TabSnapshotPayload & { readonly id: string };
+  let restorePayload = $state<TabSnapshotPayload | undefined>();
   let active = $derived(
     props.group?.activeTabId ? props.tabs[props.group.activeTabId] : undefined,
   );
@@ -75,22 +78,19 @@
 
   $effect(() => {
     const activeId = active?.id;
-    if (activeId) {
-      bodyScroll.restoreSnapshot(activeId, snapshots.take(activeId));
-      bodyScroll.restore(activeId);
-    }
-    if (
-      previousActiveId &&
-      previousActiveId !== activeId &&
-      props.inactiveRetentionSeconds > 0
-    ) {
-      const previous = props.tabs[previousActiveId];
-      if (previous && props.group?.tabIds.includes(previous.id))
-        snapshots.retain(
-          { id: previous.id, ...bodyScroll.snapshot(previous.id) },
-          props.inactiveRetentionSeconds,
-        );
-    }
+    void syncPaneTabFocus({
+      workspaceId: props.workspaceId,
+      paneId: props.pane.id,
+      active,
+      previousActiveId,
+      tabs: props.tabs,
+      group: props.group,
+      inactiveRetentionSeconds: props.inactiveRetentionSeconds,
+      bodyScroll,
+      snapshots,
+    }).then((next: { restorePayload?: TabSnapshotPayload }) => {
+      restorePayload = next.restorePayload;
+    });
     previousActiveId = activeId;
   });
 
@@ -158,6 +158,7 @@
             tab={active}
             visible={true}
             paneId={props.pane.id}
+            restoreAnchor={feedAnchorFromPayload(restorePayload)}
             accounts={props.accounts}
             activeAccount={props.activeAccount}
             relaySets={props.relaySets}
@@ -171,6 +172,7 @@
             openProfileEdit={props.openProfileEdit}
             openThread={props.openThread}
             openAuthorContext={props.openAuthorContext}
+            openTool={props.openTool}
           />
         </div>
       {/key}

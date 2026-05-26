@@ -14,7 +14,7 @@ Home runtime owns active-account follow discovery and followed-note loading.
 - Retain at most `180` live and cached Home rows even if relays stream more.
 - Load older pages through `loadOlder()` from the bottom cursor.
 - Shared feed surface lists show `FeedSurfaceStatus` while `loadingOlder &&
-  hasOlder`, and only show terminal history when `hasOlder === false`.
+hasOlder`, and only show terminal history when `hasOlder === false`.
 - Older pages emit window rows before profile and reference enrichment finish.
 - Speculative older prefetch may run once when near end while `hasOlder` is true.
 - Load newer pages through `loadNewer()` from the top cursor when newer

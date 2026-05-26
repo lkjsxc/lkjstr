@@ -27,10 +27,15 @@
     if (destroyed || !anchor || !popover) return;
     const rect = anchor.getBoundingClientRect();
     const box = popover.getBoundingClientRect();
+    const tile =
+      anchor.closest('[data-pane-id]')?.querySelector('.pane-stack') ??
+      anchor.closest('[data-pane-id]');
+    const bounds = tile?.getBoundingClientRect();
     const next = computeAnchoredPosition({
       anchor: rect,
       popover: { width: box.width, height: box.height },
       viewport: { width: window.innerWidth, height: window.innerHeight },
+      bounds,
       preferred,
       gap: 6,
     });

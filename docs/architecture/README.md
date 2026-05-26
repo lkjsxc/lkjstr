@@ -12,6 +12,8 @@ state lives, which modules own subscriptions, and how tabs close cleanly.
 - [data/event-tree.md](data/event-tree.md): event row tree model.
 - [data/event-surface-paging.md](data/event-surface-paging.md): shared feed
   paging and status rows.
+- [data/feed-surface.md](data/feed-surface.md): feed list, prefetch, and staged
+  rows.
 - [data/feed-memory.md](data/feed-memory.md): feed windows and scroll anchors.
 - [data/retention/README.md](data/retention/README.md): score-based event
   retention.
@@ -53,8 +55,12 @@ state lives, which modules own subscriptions, and how tabs close cleanly.
 - [runtimes/tweet-runtime.md](runtimes/tweet-runtime.md): Tweet publishing.
 - [workspace/README.md](workspace/README.md): layout, tabs, and visual shell.
 - [workspace/resize.md](workspace/resize.md): resizing.
-- [workspace/pane-drop-target.md](workspace/pane-drop-target.md): pane-wide
+- [workspace/pane-drop-target.md](workspace/pane-drop-target.md): pane-body
   drop resolver.
+- [workspace/scroll-layout.md](workspace/scroll-layout.md): scrollbar-safe
+  scrolling surfaces.
+- [workspace/tile-overlays.md](workspace/tile-overlays.md): tile-scoped
+  overlays.
 - [workspace/tab-dragging.md](workspace/tab-dragging.md): tab drag zones and
   feedback.
 - [workspace/tab-strip-gestures.md](workspace/tab-strip-gestures.md): tab rail
