@@ -1,6 +1,6 @@
 <script lang="ts">
   import { onDestroy } from 'svelte';
-  import { decMemoryCounter, incMemoryCounter } from '$lib/app/memory-counters';
+  import { incMemoryCounter } from '$lib/app/memory-counters';
   import { reportFeedRuntimeWindowSize } from '$lib/app/memory-debug';
   import {
     countRuntime,
@@ -137,6 +137,7 @@
 
   function closeRuntime(code: string): void {
     if (!runtime) return;
+    unsubscribe?.();
     closeTimelineTabRuntime({
       tabId: props.tabId,
       kind: props.kind,

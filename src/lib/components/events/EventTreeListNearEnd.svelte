@@ -20,8 +20,9 @@
   });
 
   $effect(() => {
-    props.enabled;
-    props.scroller;
+    const enabled = props.enabled;
+    const scroller = props.scroller;
+    if (!enabled && !scroller) return () => nearEndSentinel.disconnect();
     nearEndSentinel.observe();
     return () => nearEndSentinel.disconnect();
   });

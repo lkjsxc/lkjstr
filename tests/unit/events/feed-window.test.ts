@@ -8,7 +8,7 @@ import {
 describe('feed window thresholds', () => {
   it('uses the larger of base pixels and viewport fraction', () => {
     expect(nearEndThreshold(400)).toBe(nearEndPixels);
-    expect(nearEndThreshold(2000)).toBe(3000);
+    expect(nearEndThreshold(2000)).toBe(4000);
   });
 
   it('detects near end with viewport-aware threshold', () => {

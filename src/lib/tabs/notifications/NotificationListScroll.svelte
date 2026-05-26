@@ -50,9 +50,11 @@
   });
 
   $effect(() => {
-    props.records.length;
-    props.hasOlder;
-    props.loadingOlder;
+    const count = props.records.length;
+    const hasOlder = props.hasOlder;
+    const loadingOlder = props.loadingOlder;
+    if (count === 0 && !hasOlder && !loadingOlder)
+      return () => nearEndSentinel.disconnect();
     nearEndSentinel.observe();
     return () => nearEndSentinel.disconnect();
   });
