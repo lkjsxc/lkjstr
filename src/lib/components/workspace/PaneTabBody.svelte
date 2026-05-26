@@ -27,6 +27,7 @@
     visible: boolean;
     paneId: string;
     restoreAnchor?: TabFeedAnchor;
+    restoreScrollTop?: number;
     accounts: Account[];
     activeAccount?: Account;
     relaySets: RelaySet[];
@@ -176,7 +177,7 @@
 {:else if props.tab.kind === 'network-stats'}
   <NetworkStatsTab />
 {:else if props.tab.kind === 'settings'}
-  <SettingsTab tabId={props.tab.id} />
+  <SettingsTab tabId={props.tab.id} restoreScrollTop={props.restoreScrollTop} />
 {:else if props.tab.kind === 'tweet'}
   <TweetTab
     tabId={props.tab.id}

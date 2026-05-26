@@ -8,16 +8,16 @@ by priority after memory stabilization passes.
 
 ## Feeds and Loading
 
-| Item                                                                | Destination doc                                                                        | Test strategy                                                             |
-| ------------------------------------------------------------------- | -------------------------------------------------------------------------------------- | ------------------------------------------------------------------------- |
+| Item                                                                | Destination doc                                                                        | Test strategy                                                                   |
+| ------------------------------------------------------------------- | -------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------- |
 | Timeline loading indicators (loading, partial, stale, empty, error) | [feeds/home.md](feeds/home.md), [feeds/global.md](feeds/global.md)                     | Playwright Home/Global surface states; shared feed footer in place; refine copy |
-| Profile feed loading indicators                                     | [feeds/profiles.md](feeds/profiles.md)                                                 | Playwright Profile tab states after synthetic relay load                  |
-| Notification feed loading indicators                                | [feeds/notifications.md](feeds/notifications.md)                                       | Playwright Notifications tab states                                       |
-| Thread loading indicators                                           | [feeds/threads.md](feeds/threads.md)                                                   | Playwright Thread tab open from event click                               |
-| Relay read loading in Custom Request and Search                     | [tools/custom-request.md](tools/custom-request.md), [tools/search.md](tools/search.md) | Playwright run/search with synthetic relay                                |
-| Publish flow loading state in Tweet                                 | [tools/tweet.md](tools/tweet.md)                                                       | Playwright compose/publish against synthetic relay                        |
-| Prefetch profiles for visible and near-visible events               | [feed-memory.md](../architecture/data/feed-memory.md)                                  | Memory e2e hydration counter caps; unit prefetch dedupe                   |
-| Prefetch event references for visible rows                          | [event-tree.md](../architecture/data/event-tree.md)                                    | Unit reference index cap; Playwright reference preview                    |
+| Profile feed loading indicators                                     | [feeds/profiles.md](feeds/profiles.md)                                                 | Playwright Profile tab states after synthetic relay load                        |
+| Notification feed loading indicators                                | [feeds/notifications.md](feeds/notifications.md)                                       | Playwright Notifications tab states                                             |
+| Thread loading indicators                                           | [feeds/threads.md](feeds/threads.md)                                                   | Playwright Thread tab open from event click                                     |
+| Relay read loading in Custom Request and Search                     | [tools/custom-request.md](tools/custom-request.md), [tools/search.md](tools/search.md) | Playwright run/search with synthetic relay                                      |
+| Publish flow loading state in Tweet                                 | [tools/tweet.md](tools/tweet.md)                                                       | Playwright compose/publish against synthetic relay                              |
+| Prefetch profiles for visible and near-visible events               | [feed-memory.md](../architecture/data/feed-memory.md)                                  | Memory e2e hydration counter caps; unit prefetch dedupe                         |
+| Prefetch event references for visible rows                          | [event-tree.md](../architecture/data/event-tree.md)                                    | Unit reference index cap; Playwright reference preview                          |
 
 ## Workspace and Tabs
 

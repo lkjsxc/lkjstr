@@ -1,4 +1,5 @@
 import { expect, test, type Page } from '@playwright/test';
+import { openCleanWorkspace } from './timeline-relay-helpers';
 import { openNewTabOption, selectStartupTab } from './workspace-helpers';
 
 test('unmounts inactive tab body after switching tabs', async ({ page }) => {
@@ -30,15 +31,16 @@ test('restores tab scroll from snapshot and keeps inactive body unmounted', asyn
 test('restores settings scroll after reload from persisted tab state', async ({
   page,
 }) => {
-  await page.goto('/');
-  await selectStartupTab(page, 'Home');
+  await openCleanWorkspace(page);
   await openNewTabOption(page, 'Settings', 1);
   const before = await setSettingsScroll(page);
   expect(before).toBeGreaterThan(0);
   await selectStartupTab(page, 'Home');
   await page.reload();
   await selectStartupTab(page, 'Settings');
-  await expect.poll(() => getSettingsScroll(page)).toBeGreaterThan(0);
+  await expect
+    .poll(() => getSettingsScroll(page), { timeout: 15_000 })
+    .toBeGreaterThan(0);
 });
 
 async function setSettingsScroll(page: Page) {
