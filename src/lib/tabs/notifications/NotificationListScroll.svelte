@@ -13,7 +13,7 @@
   import type { NotificationRecord } from '$lib/notifications/notification';
 
   type Props = {
-    listElement?: HTMLElement;
+    listElement?: HTMLElement | undefined;
     records: readonly NotificationRecord[];
     itemById: Map<string, FeedEvent>;
     targetItemById: Map<string, FeedEvent>;
@@ -29,31 +29,44 @@
     openAuthorContext?: (eventId: string, pubkey: string) => void;
   };
 
-  let props: Props = $props();
-  let listElement = $bindable<HTMLElement | undefined>(props.listElement);
+  let {
+    listElement = $bindable(),
+    records,
+    itemById,
+    targetItemById,
+    profiles,
+    relaySets,
+    activeAccountPubkey,
+    loadingOlder,
+    hasOlder,
+    error,
+    onNearEnd,
+    openProfile,
+    openThread,
+    openAuthorContext,
+  }: Props = $props();
   let sentinelElement: HTMLDivElement | undefined;
   let footerPhase = $derived(
     footerPhaseFromPaging({
-      loadingOlder: props.loadingOlder,
-      hasOlder: props.hasOlder,
-      rowCount: props.records.length,
-      error: props.error,
+      loadingOlder,
+      hasOlder,
+      rowCount: records.length,
+      error,
     }),
   );
   const nearEndSentinel = createNearEndSentinel({
     root: () => listElement,
     sentinel: () => sentinelElement,
     rootMargin: () => nearEndRootMargin(listElement?.clientHeight ?? 0),
-    enabled: () =>
-      props.records.length > 0 && props.hasOlder && !props.loadingOlder,
-    onNearEnd: () => props.onNearEnd(),
+    enabled: () => records.length > 0 && hasOlder && !loadingOlder,
+    onNearEnd: () => onNearEnd(),
   });
 
   $effect(() => {
-    const count = props.records.length;
-    const hasOlder = props.hasOlder;
-    const loadingOlder = props.loadingOlder;
-    if (count === 0 && !hasOlder && !loadingOlder)
+    const count = records.length;
+    const older = hasOlder;
+    const loading = loadingOlder;
+    if (count === 0 && !older && !loading)
       return () => nearEndSentinel.disconnect();
     nearEndSentinel.observe();
     return () => nearEndSentinel.disconnect();
@@ -62,25 +75,25 @@
   function handleScroll(event: Event): void {
     const el = event.currentTarget as HTMLElement;
     if (isNearEnd(el.scrollTop, el.clientHeight, el.scrollHeight))
-      void props.onNearEnd();
+      void onNearEnd();
   }
 </script>
 
 <div class="notification-list" bind:this={listElement} onscroll={handleScroll}>
-  {#each props.records as record (record.id)}
+  {#each records as record (record.id)}
     <NotificationRow
       {record}
-      item={props.itemById.get(record.sourceEventId)}
-      targetItem={props.targetItemById.get(
+      item={itemById.get(record.sourceEventId)}
+      targetItem={targetItemById.get(
         record.targetEventId ?? record.rootEventId ?? '',
       )}
-      profile={props.profiles[record.actorPubkey]}
-      profiles={props.profiles}
-      relaySets={props.relaySets}
-      activeAccountPubkey={props.activeAccountPubkey ?? null}
-      openProfile={props.openProfile}
-      openThread={props.openThread}
-      openAuthorContext={props.openAuthorContext}
+      profile={profiles[record.actorPubkey]}
+      {profiles}
+      {relaySets}
+      activeAccountPubkey={activeAccountPubkey ?? null}
+      {openProfile}
+      {openThread}
+      {openAuthorContext}
     />
   {/each}
   <div
@@ -89,6 +102,6 @@
     aria-hidden="true"
   ></div>
   <FeedSurfaceStatus
-    {...feedSurfaceStatusProps(footerPhase, props.error ?? undefined)}
+    {...feedSurfaceStatusProps(footerPhase, error ?? undefined)}
   />
 </div>

@@ -1,4 +1,8 @@
-import type { TabSnapshotPayload } from './tab-snapshot';
+import type {
+  FeedTabSnapshot,
+  TabSnapshotPayload,
+  ToolTabSnapshot,
+} from './tab-snapshot';
 
 export function mergeTabSnapshotPayload(
   base: TabSnapshotPayload,
@@ -6,36 +10,25 @@ export function mergeTabSnapshotPayload(
 ): TabSnapshotPayload {
   if (!patch) return base;
   if (base.kind === 'feed') {
-    const feedPatch = patch.kind === 'feed' ? patch : patch;
+    const feedPatch = patch as Partial<FeedTabSnapshot>;
     return {
       ...base,
       scrollTop: feedPatch.scrollTop ?? base.scrollTop,
       anchorEventId: feedPatch.anchorEventId ?? base.anchorEventId,
       anchorOffset: feedPatch.anchorOffset ?? base.anchorOffset,
-      oldestCursor:
-        'oldestCursor' in feedPatch
-          ? feedPatch.oldestCursor
-          : base.oldestCursor,
-      newestCursor:
-        'newestCursor' in feedPatch
-          ? feedPatch.newestCursor
-          : base.newestCursor,
-      hasOlder: 'hasOlder' in feedPatch ? feedPatch.hasOlder : base.hasOlder,
-      hasNewer: 'hasNewer' in feedPatch ? feedPatch.hasNewer : base.hasNewer,
-      filterState: {
-        ...base.filterState,
-        ...('filterState' in feedPatch ? feedPatch.filterState : undefined),
-      },
+      oldestCursor: feedPatch.oldestCursor ?? base.oldestCursor,
+      newestCursor: feedPatch.newestCursor ?? base.newestCursor,
+      hasOlder: feedPatch.hasOlder ?? base.hasOlder,
+      hasNewer: feedPatch.hasNewer ?? base.hasNewer,
+      filterState: { ...base.filterState, ...feedPatch.filterState },
       kind: 'feed',
     };
   }
+  const toolPatch = patch as Partial<ToolTabSnapshot>;
   return {
     ...base,
-    scrollTop: patch.scrollTop ?? base.scrollTop,
-    fields: {
-      ...base.fields,
-      ...('fields' in patch ? patch.fields : undefined),
-    },
+    scrollTop: toolPatch.scrollTop ?? base.scrollTop,
+    fields: { ...base.fields, ...toolPatch.fields },
     kind: 'tool',
   };
 }

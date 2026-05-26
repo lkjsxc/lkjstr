@@ -34,10 +34,10 @@
   let runtime: NotificationRuntime | undefined;
   let currentProfiles: ProfileMap = {};
   let profileRequest = 0;
-  let listElement: HTMLElement | undefined;
+  let listElement = $state<HTMLElement | undefined>();
   let autoFillPending = false;
   let destroyed = false;
-  let state = $state<NotificationViewState>({
+  let viewState = $state<NotificationViewState>({
     records: [],
     items: [],
     targetItems: [],
@@ -50,10 +50,10 @@
     profiles: {},
   });
   let itemById: Map<string, FeedEvent> = $derived(
-    new Map(state.items.map((item) => [item.event.id, item])),
+    new Map(viewState.items.map((item) => [item.event.id, item])),
   );
   let targetItemById: Map<string, FeedEvent> = $derived(
-    new Map(state.targetItems.map((item) => [item.event.id, item])),
+    new Map(viewState.targetItems.map((item) => [item.event.id, item])),
   );
   let relays: string[] = [];
   let runtimeKey = $derived(
@@ -63,7 +63,7 @@
     async () => {
       await runtime?.loadOlder();
     },
-    () => Boolean(state.hasOlder && !state.loadingOlder),
+    () => Boolean(viewState.hasOlder && !viewState.loadingOlder),
   );
 
   $effect(() => {
@@ -78,7 +78,7 @@
       createTimelineSubId(tabId, 'notif'),
     );
     const unsubscribe = runtime.subscribe(
-      (next) => (state = { ...next, profiles: currentProfiles }),
+      (next) => (viewState = { ...next, profiles: currentProfiles }),
     );
     void runtime.start().then(() => markVisibleRead());
     const onFocus = () => void markVisibleRead();
@@ -100,13 +100,13 @@
   $effect(() => {
     const authors = [
       ...new Set([
-        ...state.records.map((record) => record.actorPubkey),
-        ...state.items.map((item) => item.event.pubkey),
-        ...state.targetItems.map((item) => item.event.pubkey),
+        ...viewState.records.map((record) => record.actorPubkey),
+        ...viewState.items.map((item) => item.event.pubkey),
+        ...viewState.targetItems.map((item) => item.event.pubkey),
       ]),
     ];
     const missing = authors
-      .filter((author) => !state.profiles[author])
+      .filter((author) => !viewState.profiles[author])
       .slice(0, metadataPageLimit);
     if (missing.length === 0) return;
     const request = ++profileRequest;
@@ -114,13 +114,13 @@
       (loaded) => {
         if (request !== profileRequest || !runtime) return;
         currentProfiles = { ...loaded, ...currentProfiles };
-        state = { ...state, profiles: currentProfiles };
+        viewState = { ...viewState, profiles: currentProfiles };
       },
     );
   });
 
   $effect(() => {
-    if (!state.loading && state.records.length > 0) void maybeAutoFill();
+    if (!viewState.loading && viewState.records.length > 0) void maybeAutoFill();
   });
 
   async function markVisibleRead(): Promise<void> {
@@ -129,7 +129,7 @@
   }
 
   async function maybeAutoFill(): Promise<void> {
-    if (autoFillPending || state.loadingOlder || !state.hasOlder || !runtime)
+    if (autoFillPending || viewState.loadingOlder || !viewState.hasOlder || !runtime)
       return;
     autoFillPending = true;
     await tick();
@@ -142,26 +142,26 @@
 </script>
 
 <section class="data-tab" aria-label="Notifications">
-  {#if state.loading}<p>Loading notifications...</p>{/if}
-  {#if state.error}<p role="alert">{state.error}</p>{/if}
-  {#if state.records.length > 0}
+  {#if viewState.loading}<p>Loading notifications...</p>{/if}
+  {#if viewState.error}<p role="alert">{viewState.error}</p>{/if}
+  {#if viewState.records.length > 0}
     <NotificationListScroll
-      records={state.records}
+      records={viewState.records}
       {itemById}
       {targetItemById}
-      profiles={state.profiles}
+      profiles={viewState.profiles}
       relaySets={props.relaySets}
       activeAccountPubkey={props.accountPubkey}
-      loadingOlder={state.loadingOlder}
-      hasOlder={state.hasOlder}
-      error={state.error}
+      loadingOlder={viewState.loadingOlder}
+      hasOlder={viewState.hasOlder}
+      error={viewState.error}
       onNearEnd={() => olderRequests.requestFromNearEnd()}
       openProfile={props.openProfile}
       openThread={props.openThread}
       openAuthorContext={props.openAuthorContext}
       bind:listElement
     />
-  {:else if !state.loading}
+  {:else if !viewState.loading}
     <p>No notifications for the active account.</p>
   {/if}
 </section>

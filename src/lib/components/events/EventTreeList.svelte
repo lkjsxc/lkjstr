@@ -54,7 +54,7 @@
 
   let props: Props = $props();
   let list = $state<TreeListAnchorHandle>();
-  let scrollerElement: HTMLDivElement | undefined;
+  let scrollerElement = $state<HTMLDivElement | undefined>();
   let autoFillPending = false;
   let destroyed = false;
   const treeCache = { key: '', nodes: [] as FlatEventTreeItem[] };
