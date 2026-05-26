@@ -6,6 +6,23 @@ This backlog lists practical product work that is not yet complete. Each item
 links to its destination contract and names how to verify it. Items are ordered
 by priority after memory stabilization passes.
 
+## In Progress
+
+Doc/implementation alignment for feed surface, tab snapshots, staged pipeline,
+and action-state index is tracked in
+[doc-impl-audit.md](doc-impl-audit.md). Close audit rows as vertical slices
+land.
+
+## Completed (workspace)
+
+| Item | Contract |
+| ---- | -------- |
+| Touch/Android tab drag without snap-back | [tab-strip-gestures.md](../architecture/workspace/tab-strip-gestures.md) |
+| No left-side new-event stripe on feed rows | [event-tree.md](../architecture/data/event-tree.md) |
+| nip05-only feed identity subtitles | [identity-rendering.md](../architecture/network/identity-rendering.md) |
+| Tile-scoped emoji picker | [tile-overlays.md](../architecture/workspace/tile-overlays.md) |
+| Welcome document with working tab links | [tools/welcome.md](tools/welcome.md) |
+
 ## Feeds and Loading
 
 | Item                                                                | Destination doc                                                                        | Test strategy                                                                   |

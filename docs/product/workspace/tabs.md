@@ -86,9 +86,11 @@ Tabs define the workspace surface area.
 - Tab bodies fill the pane body height and keep scroll ownership local.
 - Inactive tab bodies unmount when focus changes. Every blur writes a durable
   IndexedDB snapshot and, within `tabs.inactiveRetentionSeconds`, a session
-  snapshot with scroll anchors, feed cursors, and surface-local UI fields.
-- Reselecting a tab restores scroll and surface state from session when possible,
-  otherwise from IndexedDB after reload.
+  snapshot (up to `32` warm tabs) with scroll anchors, feed cursors, `hasOlder`,
+  `hasNewer`, and surface-local fields such as Search query.
+- Reselecting a tab restores scroll, list anchor, and feed cursors from session
+  when possible, otherwise from IndexedDB after reload. Live relay subscriptions
+  are always recreated; cached events repopulate the window before network.
 
 ## Removed Surface
 

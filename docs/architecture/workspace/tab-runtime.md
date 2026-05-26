@@ -30,13 +30,19 @@ Tab runtime defines valid tab kinds and lifecycle ownership.
   subscriptions, or one-shot relay reads.
 - Tab snapshots are tab-kind aware. Capture runs on every blur before unmount.
 - Feed tabs store virtual list anchor event id and offset, optional
-  `scrollTop`, feed cursors, and surface filter state when applicable.
-- Tool tabs store scroll position, composer text, and other cheap serializable
-  fields required to restore the visible UI.
+  `scrollTop`, compound feed cursors (`oldestCursor`, `newestCursor`),
+  `hasOlder`, `hasNewer`, and surface filter state when applicable.
+- Tool tabs store scroll position and `fields` key-value pairs for cheap UI
+  state (Search query, Tweet draft content hash, etc.).
 - IndexedDB `tabStates` stores durable snapshots for reload restore. Session
   snapshots provide fast restore within the TTL window.
-- On focus, restore from session when present; otherwise load durable snapshot
-  from IndexedDB. Runtimes are always recreated from the tab id after restore.
+- Session-memory retains at most `32` warm snapshots (LRU by tab id). TTL is
+  `tabs.inactiveRetentionSeconds` (default `300`).
+- On focus, restore order: session `take` → IndexedDB `load` → runtime
+  recreate. Runtimes seed from restored cursors and cache-first reads before
+  relay scans where the feed contract requires it.
+- `tabRuntimeRegistry` captures runtime-owned snapshot fields on blur via
+  `captureRuntimeSnapshot(tabId)` before `persistTabSnapshot`.
 - When retention is positive, a tab reselected within the window restores its
   session snapshot and creates fresh runtime/network work from the tab id.
 - Retention expiry drops the in-memory snapshot only; runtime and subscription

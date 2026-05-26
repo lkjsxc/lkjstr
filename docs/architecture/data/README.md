@@ -8,8 +8,8 @@ Data docs define storage, feed windows, and shared event presentation models.
 
 - [event-tree.md](event-tree.md): common event tree rendering model.
 - [bounded-memory.md](bounded-memory.md): bounded memory and cleanup rules.
-- [feed-surface.md](feed-surface.md): shared feed list, prefetch, and staged
-  row pipeline.
+- [feed-surface.md](feed-surface.md): index for shared feed list, prefetch, and
+  staged row pipeline ([feed-surface/](feed-surface/README.md)).
 - [event-surface-paging.md](event-surface-paging.md): near-end and footer
   constants; defers to feed-surface.
 - [feed-memory.md](feed-memory.md): runtime feed windows and durable cache

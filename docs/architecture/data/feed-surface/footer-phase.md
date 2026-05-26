@@ -1,0 +1,37 @@
+# Feed Surface Footer Phase
+
+## Purpose
+
+All feed-like tabs share one footer phase reducer and one status component.
+
+## Reducer
+
+`feedPagingPhase` in `src/lib/feed-surface/paging-state.ts`:
+
+| Phase | Condition |
+| ----- | --------- |
+| `idle` | Not loading older; `hasOlder` may be true |
+| `loadingOlder` | `loadingOlder` and `hasOlder` |
+| `end` | `!hasOlder` and `rowCount > 0` |
+| `error` | Terminal `error` string set |
+
+## Component
+
+`FeedSurfaceStatus` in `src/lib/components/events/FeedSurfaceStatus.svelte`
+accepts either legacy boolean props or a `phase` prop from
+`footerPhaseFromPaging` in `src/lib/feed-surface/footer-phase.ts`.
+
+| Phase | UI |
+| ----- | -- |
+| `loadingOlder` | Spinner row “Loading older…” |
+| `end` | “End of known history” |
+| `error` | Error text from runtime |
+| `idle` | Hidden when rows exist and `hasOlder` |
+
+Virtual lists inject terminal rows through `EventTreeListRows`. Native
+notification lists render `FeedSurfaceStatus` below the scroll container.
+
+## Surfaces
+
+Home, Global, Profile notes, Thread, Search, Notifications, Custom Request
+(when a read has completed), and Author Context use the same footer semantics.

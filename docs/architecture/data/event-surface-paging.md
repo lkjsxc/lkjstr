@@ -2,42 +2,25 @@
 
 ## Purpose
 
-Event surface paging defines shared bottom loading, near-end prefetch, and
-status rows across feed tabs. Canonical behavior lives in
-[feed-surface.md](feed-surface.md).
+Short index for near-end and footer constants. Canonical detail lives in
+[feed-surface/](feed-surface/README.md).
+
+## Constants
+
+- `nearEndPixels = 1200`
+- Effective threshold: `max(nearEndPixels, viewportHeight * 2)`
+- Default page size: `30` (see [feed-memory.md](feed-memory.md))
 
 ## Surfaces
 
-| Surface | List mode | Paging |
-| ------- | --------- | ------ |
-| Home, Global | Virtual `FeedSurfaceList` | Cursor window |
-| Thread, Search, Custom Request, Author Context | Virtual | Cursor window |
-| Profile Notes | Virtual | Cursor window |
-| Notifications | Virtual | Older-only window |
-
-## Near-End Threshold
-
-- Base constant `nearEndPixels = 1200`.
-- Effective threshold: `max(nearEndPixels, viewportHeight * 1.5)`.
-- `isNearEnd` and `isNearStart` use the effective threshold for scroll handlers.
-- List sentinels use `IntersectionObserver` with matching `rootMargin`.
+See [feed-surface/surface-matrix.md](feed-surface/surface-matrix.md).
 
 ## Bottom Status
 
-- Shared component `FeedSurfaceStatus` renders:
-  - loading older rows
-  - end of known history
-  - error text when the runtime exposes a terminal error
-- Virtual lists inject status rows through list data.
-
-## Speculative Prefetch
-
-- When near end and `hasOlder` is true, runtimes may request one additional
-  older page before the user reaches the list bottom.
-- Prefetch is deduped per tab runtime and aborted on tab close.
+See [feed-surface/footer-phase.md](feed-surface/footer-phase.md).
 
 ## Tab Restoration
 
-- Feed tabs capture anchor event id and offset on blur.
-- Session snapshots restore within `tabs.inactiveRetentionSeconds`.
-- IndexedDB `tabStates` restores anchors across reload when present.
+Feed tabs capture anchor event id, offset, and feed cursors on blur. Session
+snapshots restore within `tabs.inactiveRetentionSeconds`. IndexedDB `tabStates`
+restores across reload. See [../workspace/tab-runtime.md](../workspace/tab-runtime.md).
