@@ -16,9 +16,7 @@ export function paneChromeRects(pane: HTMLElement): PaneChromeRects {
     height: paneBox.height,
   };
   const head = pane.querySelector<HTMLElement>('.pane-head');
-  const chromeBottom = head
-    ? head.getBoundingClientRect().bottom
-    : paneBox.top;
+  const chromeBottom = head ? head.getBoundingClientRect().bottom : paneBox.top;
   const strip = pane.querySelector<HTMLElement>('.tab-strip');
   const stripBottom = strip
     ? strip.getBoundingClientRect().bottom

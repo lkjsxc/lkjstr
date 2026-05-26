@@ -53,9 +53,7 @@ test('restores top-of-list scroll after tab switch', async ({ page }) => {
     });
   await selectStartupTab(page, 'Home');
   await selectStartupTab(page, 'Settings');
-  await expect
-    .poll(() => getSettingsScroll(page))
-    .toBeGreaterThan(0);
+  await expect.poll(() => getSettingsScroll(page)).toBeGreaterThan(0);
   await page
     .locator('.pane-body[data-active-tab="true"] .settings-tab')
     .evaluate((node) => {

@@ -8,12 +8,12 @@ while the pointer is over tile header chrome.
 
 ## Regions
 
-| Region       | DOM anchor     | Role in drag resolution                          |
-| ------------ | -------------- | ------------------------------------------------ |
-| `paneRect`   | `.pane`        | Full tile bounds; center preview extent          |
-| `chromeRect` | `.pane-head`   | Header chrome; always maps to `center` zone      |
-| `bodyRect`   | `.pane-stack`  | Content stack; edge corridors and edge previews  |
-| `stripRect`  | `.tab-strip`   | Tab rail; strip-priority reorder on source pane  |
+| Region       | DOM anchor    | Role in drag resolution                         |
+| ------------ | ------------- | ----------------------------------------------- |
+| `paneRect`   | `.pane`       | Full tile bounds; center preview extent         |
+| `chromeRect` | `.pane-head`  | Header chrome; always maps to `center` zone     |
+| `bodyRect`   | `.pane-stack` | Content stack; edge corridors and edge previews |
+| `stripRect`  | `.tab-strip`  | Tab rail; strip-priority reorder on source pane |
 
 `chromeBottom` is `chromeRect.bottom` in viewport coordinates. It is **not**
 limited to the tab strip height. Tile menu, new-tab control, and tab rail share

@@ -153,7 +153,6 @@
       <VList
         bind:this={list}
         class="event-list__viewport"
-        data-scroll-owner=""
         data={rows}
         style="height: 100%; min-height: 0;"
         getKey={viewRowKey}

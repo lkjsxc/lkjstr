@@ -12,6 +12,7 @@ export function createPaneScrollRetention() {
     if (!body) return undefined;
     return (
       body.querySelector<HTMLElement>('[data-scroll-owner]') ??
+      body.querySelector<HTMLElement>('.event-list__viewport') ??
       [...body.querySelectorAll<HTMLElement>('*')].find(
         (node) => node.scrollHeight > node.clientHeight + 8,
       )
@@ -27,7 +28,11 @@ export function createPaneScrollRetention() {
     track: (tabId: string, node: HTMLElement) => {
       const remember = (event: Event) => {
         const target = event.target as HTMLElement;
-        if (!target.hasAttribute('data-scroll-owner')) return;
+        if (
+          !target.hasAttribute('data-scroll-owner') &&
+          !target.classList.contains('event-list__viewport')
+        )
+          return;
         scroll.set(tabId, target.scrollTop);
       };
       bodies.set(tabId, node);

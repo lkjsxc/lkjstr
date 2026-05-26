@@ -2,13 +2,12 @@
   import type { TabGroup } from '$lib/workspace/tab-group';
   import type { WorkspaceTab } from '$lib/workspace/tab';
   import { readDraggedTab } from '$lib/workspace/tab-drag-payload';
-  import { tabDropEdge } from '$lib/workspace/tab-drop-zone';
   import {
-    clearStripTimer,
-    moveStripPointer,
-    startStripPointer,
-    type StripPointerSession,
-  } from '$lib/workspace/tab-strip-pointer';
+    stripDragClear,
+    stripDragPointerDown,
+    type StripDragCtx,
+    type StripDragDeps,
+  } from '$lib/workspace/tab-strip-drag-handlers';
   import {
     revealTabInStrip,
     stripFadeState,
@@ -27,13 +26,7 @@
     focusTab: (tabId: string) => void;
     closeTab: (tabId: string) => void;
     disabled?: boolean;
-    moveTab: (
-      sourcePaneId: string,
-      targetPaneId: string,
-      tabId: string,
-      targetIndex: number,
-      edge?: 'left' | 'right' | 'top' | 'bottom',
-    ) => void;
+    moveTab: StripDragDeps['moveTab'];
   };
 
   let {
@@ -47,14 +40,17 @@
   }: Props = $props();
   const dragState = getContext<TabDragState | undefined>(tabDragStateKey);
   const prefersCoarse =
-    typeof matchMedia === 'function' &&
-    matchMedia('(pointer: coarse)').matches;
-  let session = $state<StripPointerSession | undefined>();
-  let ghost = $state<{ x: number; y: number; title: string } | undefined>();
-  let dragElement: HTMLElement | undefined;
+    typeof matchMedia === 'function' && matchMedia('(pointer: coarse)').matches;
+  let drag = $state<StripDragCtx>({});
   let stripElement: HTMLElement | undefined;
   let fadeLeft = $state(false);
   let fadeRight = $state(false);
+  const dragDeps: StripDragDeps = {
+    paneId,
+    tabCount: () => group.tabIds.length,
+    moveTab,
+    dragState,
+  };
 
   function dropTab(event: DragEvent, targetIndex: number): void {
     event.preventDefault();
@@ -64,91 +60,7 @@
   }
 
   function pointerDown(event: PointerEvent, tab: WorkspaceTab): void {
-    if (event.button !== 0) return;
-    dragElement = event.currentTarget as HTMLElement;
-    session = startStripPointer(paneId, tab.id, event);
-    ghost = { x: event.clientX, y: event.clientY, title: tab.title };
-    window.addEventListener('pointermove', pointerMove);
-    window.addEventListener('pointerup', pointerUp);
-    window.addEventListener('pointercancel', pointerCancel);
-  }
-
-  function pointerMove(event: PointerEvent): void {
-    if (!session || event.pointerId !== session.snapshot.pointerId) return;
-    const wasActive = session.snapshot.active;
-    session = moveStripPointer(session, event);
-    if (!session.snapshot.active) return;
-    if (!wasActive) {
-      try {
-        dragElement?.setPointerCapture(event.pointerId);
-      } catch {
-        /* jsdom and some test hosts omit capture */
-      }
-    }
-    event.preventDefault();
-    dragElement?.classList.add('tab-frame--dragging');
-    document.body.classList.add('dragging-tab');
-    dragState?.setTarget(
-      session.snapshot.targetPaneId && session.snapshot.zone
-        ? { paneId: session.snapshot.targetPaneId, zone: session.snapshot.zone }
-        : undefined,
-    );
-    ghost = { ...(ghost ?? { title: '' }), x: event.clientX, y: event.clientY };
-  }
-
-  function pointerUp(event: PointerEvent): void {
-    if (!session || event.pointerId !== session.snapshot.pointerId) return;
-    session = moveStripPointer(session, event);
-    const snap = session.snapshot;
-    if (snap.active && snap.targetPaneId && snap.zone)
-      moveTab(
-        snap.sourcePaneId,
-        snap.targetPaneId,
-        snap.tabId,
-        snap.targetIndex ?? targetCount(snap.targetPaneId),
-        tabDropEdge(snap.zone),
-      );
-    clearPointerDrag();
-  }
-
-  function pointerCancel(event: PointerEvent): void {
-    if (!session || event.pointerId !== session.snapshot.pointerId) return;
-    clearPointerDrag();
-  }
-
-  function clearPointerDrag(): void {
-    if (session) {
-      clearStripTimer(session);
-      if (typeof window !== 'undefined') {
-        window.removeEventListener('pointermove', pointerMove);
-        window.removeEventListener('pointerup', pointerUp);
-        window.removeEventListener('pointercancel', pointerCancel);
-        if (dragElement?.hasPointerCapture(session.snapshot.pointerId)) {
-          try {
-            dragElement.releasePointerCapture(session.snapshot.pointerId);
-          } catch {
-            /* synthetic pointer tests may not support capture release */
-          }
-        }
-      }
-    }
-    session = undefined;
-    ghost = undefined;
-    dragElement?.classList.remove('tab-frame--dragging');
-    dragElement = undefined;
-    dragState?.setTarget(undefined);
-    if (typeof document !== 'undefined')
-      document.body.classList.remove('dragging-tab');
-  }
-
-  function targetCount(targetPaneId: string): number {
-    return targetPaneId === paneId
-      ? group.tabIds.length
-      : Number(
-          document
-            .querySelector(`[data-pane-id="${targetPaneId}"]`)
-            ?.getAttribute('data-tab-count') ?? 0,
-        );
+    stripDragPointerDown(drag, dragDeps, event, tab.id, tab.title);
   }
 
   function updateFade(): void {
@@ -166,7 +78,7 @@
     });
   });
 
-  onDestroy(clearPointerDrag);
+  onDestroy(() => stripDragClear(drag, dragDeps));
 </script>
 
 <div
@@ -191,14 +103,16 @@
           {paneId}
           index={group.tabIds.indexOf(tab.id)}
           active={group.activeTabId === tab.id}
-          dragging={session?.snapshot.active === true &&
-            session.snapshot.tabId === tab.id}
+          dragging={drag.session?.snapshot.active === true &&
+            drag.session.snapshot.tabId === tab.id}
           selectLocked={Boolean(
-            session &&
-              (session.longPressArmed || session.snapshot.active) &&
-              session.snapshot.tabId === tab.id,
+            drag.session &&
+            (drag.session.longPressArmed || drag.session.snapshot.active) &&
+            drag.session.snapshot.tabId === tab.id,
           )}
-          nativeDraggable={session ? session.kind !== 'coarse' : !prefersCoarse}
+          nativeDraggable={drag.session
+            ? drag.session.kind !== 'coarse'
+            : !prefersCoarse}
           {disabled}
           focus={() => focusTab(tab.id)}
           close={() => closeTab(tab.id)}
@@ -208,9 +122,12 @@
       {/if}
     {/each}
   </div>
-  {#if session?.snapshot.active && ghost}
-    <div class="tab-drag-ghost" style={`left: ${ghost.x}px; top: ${ghost.y}px`}>
-      {ghost.title}
+  {#if drag.session?.snapshot.active && drag.ghost}
+    <div
+      class="tab-drag-ghost"
+      style={`left: ${drag.ghost.x}px; top: ${drag.ghost.y}px`}
+    >
+      {drag.ghost.title}
     </div>
   {/if}
 </div>

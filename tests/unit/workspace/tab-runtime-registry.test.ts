@@ -11,9 +11,11 @@ describe('tab runtime registry', () => {
       kind: 'tool',
       fields: { searchQuery: 'nostr' },
     }));
-    expect(captureRuntimeSnapshot('search')?.fields?.searchQuery).toBe('nostr');
+    const live = captureRuntimeSnapshot('search');
+    expect(live?.kind === 'tool' && live.fields?.searchQuery).toBe('nostr');
     release();
-    expect(captureRuntimeSnapshot('search')?.fields?.searchQuery).toBe('nostr');
+    const cached = captureRuntimeSnapshot('search');
+    expect(cached?.kind === 'tool' && cached.fields?.searchQuery).toBe('nostr');
     clearRuntimeSnapshot('search');
     expect(captureRuntimeSnapshot('search')).toBeUndefined();
   });

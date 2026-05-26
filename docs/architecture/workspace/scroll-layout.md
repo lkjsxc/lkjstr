@@ -27,13 +27,13 @@ wrappers listed in `scroll-layout.css`.
 
 ## Surfaces
 
-| Surface                                                    | Scrolling element                          |
-| ---------------------------------------------------------- | ------------------------------------------ |
-| Home, Global, Thread, Search, Profile notes                | Virtua viewport in `.event-list__scroller` |
-| Notifications                                              | `.notification-list-scroll`              |
-| Settings, Relay Settings, Stats, Welcome, Upload Settings  | `.settings-tab`                            |
-| Custom Request, Author Context, lkjstr Log                 | Tab-specific scroll root (see tab CSS)     |
-| Pane tab shell                                             | `.pane-body` (non-scrolling container)     |
+| Surface                                                   | Scrolling element                          |
+| --------------------------------------------------------- | ------------------------------------------ |
+| Home, Global, Thread, Search, Profile notes               | Virtua viewport in `.event-list__scroller` |
+| Notifications                                             | `.notification-list-scroll`                |
+| Settings, Relay Settings, Stats, Welcome, Upload Settings | `.settings-tab`                            |
+| Custom Request, Author Context, lkjstr Log                | Tab-specific scroll root (see tab CSS)     |
+| Pane tab shell                                            | `.pane-body` (non-scrolling container)     |
 
 `.pane-body` and `.event-list__scroller` wrappers may use `overflow: hidden`
 while the Virtua or tool child owns vertical scroll.

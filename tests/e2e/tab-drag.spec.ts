@@ -1,5 +1,11 @@
-import { expect, test, type Page } from '@playwright/test';
-import { openNewTabOption } from './workspace-helpers';
+import { expect, test } from '@playwright/test';
+import {
+  dragPointer,
+  firstPane,
+  moveSettingsTabToSecondTile,
+  openWorkspaceWithSettingsTab,
+  secondPane,
+} from './tab-drag-helpers';
 
 test('drags a tab from one tile to another', async ({ page }, testInfo) => {
   test.skip(
@@ -38,10 +44,7 @@ test('pointer drag reorders tabs inside one tile', async ({
     testInfo.project.name === 'mobile',
     'Mobile tab-strip layout needs a dedicated long-press drag scenario',
   );
-  await page.goto('/');
-  await page.evaluate(() => localStorage.clear());
-  await page.reload();
-  await openNewTabOption(page, 'Settings', 1);
+  await openWorkspaceWithSettingsTab(page);
   const pane = secondPane(page);
   const sourceFrame = pane.getByRole('tab', { name: 'Settings', exact: true });
   await sourceFrame.scrollIntoViewIfNeeded();
@@ -68,10 +71,7 @@ test('tab strip drag does not activate pane edge split zones', async ({
     testInfo.project.name === 'mobile',
     'Mobile tab-strip layout needs a dedicated long-press drag scenario',
   );
-  await page.goto('/');
-  await page.evaluate(() => localStorage.clear());
-  await page.reload();
-  await openNewTabOption(page, 'Settings', 1);
+  await openWorkspaceWithSettingsTab(page);
   const pane = secondPane(page);
   const source = pane.getByRole('button', { name: 'Settings', exact: true });
   const sourceBox = await source.boundingBox();
@@ -98,10 +98,7 @@ test('pane head chrome never activates edge split zones', async ({
     testInfo.project.name === 'mobile',
     'Mobile tab-strip layout needs a dedicated long-press drag scenario',
   );
-  await page.goto('/');
-  await page.evaluate(() => localStorage.clear());
-  await page.reload();
-  await openNewTabOption(page, 'Settings', 1);
+  await openWorkspaceWithSettingsTab(page);
   const pane = secondPane(page);
   const source = pane.getByRole('button', { name: 'Settings', exact: true });
   const actions = pane.locator('.pane-actions');
@@ -129,24 +126,18 @@ test('body top edge shows top split preview below pane head', async ({
     testInfo.project.name === 'mobile',
     'Mobile tab-strip layout needs a dedicated long-press drag scenario',
   );
-  await page.goto('/');
-  await page.evaluate(() => localStorage.clear());
-  await page.reload();
-  await openNewTabOption(page, 'Settings', 1);
+  await openWorkspaceWithSettingsTab(page);
   const pane = secondPane(page);
   const source = pane.getByRole('button', { name: 'Settings', exact: true });
   const stack = pane.locator('.pane-stack');
-  const sourceBox = await source.boundingBox();
   const stackBox = await stack.boundingBox();
   const headBox = await pane.locator('.pane-head').boundingBox();
-  if (!sourceBox || !stackBox || !headBox) throw new Error('missing drag boxes');
+  if (!stackBox || !headBox) throw new Error('missing drag boxes');
   await source.hover();
   await page.mouse.down();
-  await page.mouse.move(
-    stackBox.x + stackBox.width * 0.5,
-    stackBox.y + 12,
-    { steps: 10 },
-  );
+  await page.mouse.move(stackBox.x + stackBox.width * 0.5, stackBox.y + 12, {
+    steps: 10,
+  });
   const layer = pane.locator('.pane-drop-layer.active');
   await expect(layer).toHaveAttribute('data-drop-zone', 'top');
   const dropTop = await layer.evaluate((el) =>
@@ -159,10 +150,7 @@ test('body top edge shows top split preview below pane head', async ({
 test('pointer drag moves a tab into another tile with overlay feedback', async ({
   page,
 }) => {
-  await page.goto('/');
-  await page.evaluate(() => localStorage.clear());
-  await page.reload();
-  await openNewTabOption(page, 'Settings', 1);
+  await openWorkspaceWithSettingsTab(page);
   const source = secondPane(page).getByRole('button', {
     name: 'Settings',
     exact: true,
@@ -191,43 +179,3 @@ test('pointer drag moves a tab into another tile with overlay feedback', async (
     firstPane(page).getByRole('tab', { name: 'Settings', exact: true }),
   ).toHaveCount(1);
 });
-
-type DragPoint = { readonly x: number; readonly y: number };
-
-async function dragPointer(
-  page: Page,
-  from: { x: number; y: number; width: number; height: number },
-  to: { x: number; y: number; width: number; height: number },
-  fromRatio: DragPoint,
-  toRatio: DragPoint,
-): Promise<void> {
-  await page.mouse.move(
-    from.x + from.width * fromRatio.x,
-    from.y + from.height * fromRatio.y,
-  );
-  await page.mouse.down();
-  await page.mouse.move(
-    to.x + to.width * toRatio.x,
-    to.y + to.height * toRatio.y,
-    { steps: 12 },
-  );
-  await page.mouse.up();
-}
-
-async function moveSettingsTabToSecondTile(page: Page) {
-  await page.goto('/');
-  await page.evaluate(() => localStorage.clear());
-  await page.reload();
-  await openNewTabOption(page, 'Settings', 1);
-  await secondPane(page)
-    .getByRole('tab', { name: 'Settings', exact: true })
-    .dragTo(firstPane(page).locator('.tab-frame').first());
-}
-
-function firstPane(page: Page) {
-  return page.locator('.pane').nth(0);
-}
-
-function secondPane(page: Page) {
-  return page.locator('.pane').nth(1);
-}

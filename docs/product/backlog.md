@@ -25,24 +25,24 @@ land.
 
 ## Feeds and Loading
 
-| Item                                                                | Destination doc                                                                        | Test strategy                                                                   |
-| ------------------------------------------------------------------- | -------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------- |
-| Timeline loading indicators (partial, stale, empty copy polish)       | [feeds/home.md](feeds/home.md), [feeds/global.md](feeds/global.md)                     | Playwright Home/Global surface states; refine copy beyond shared footer          |
-| Profile feed loading indicators                                     | [feeds/profiles.md](feeds/profiles.md)                                                 | Playwright Profile tab states after synthetic relay load                        |
-| Notification feed loading indicators                                | [feeds/notifications.md](feeds/notifications.md)                                       | Playwright Notifications tab states                                             |
-| Thread loading indicators                                           | [feeds/threads.md](feeds/threads.md)                                                   | Playwright Thread tab open from event click                                     |
-| Relay read loading in Custom Request and Search                     | [tools/custom-request.md](tools/custom-request.md), [tools/search.md](tools/search.md) | Playwright run/search with synthetic relay                                      |
-| Publish flow loading state in Tweet                                 | [tools/tweet.md](tools/tweet.md)                                                       | Playwright compose/publish against synthetic relay                              |
-| Prefetch profiles for visible and near-visible events               | [feed-memory.md](../architecture/data/feed-memory.md)                                  | Memory e2e hydration counter caps; unit prefetch dedupe                         |
-| Prefetch event references for visible rows                          | [event-tree.md](../architecture/data/event-tree.md)                                    | Unit reference index cap; Playwright reference preview                          |
+| Item                                                            | Destination doc                                                                        | Test strategy                                                           |
+| --------------------------------------------------------------- | -------------------------------------------------------------------------------------- | ----------------------------------------------------------------------- |
+| Timeline loading indicators (partial, stale, empty copy polish) | [feeds/home.md](feeds/home.md), [feeds/global.md](feeds/global.md)                     | Playwright Home/Global surface states; refine copy beyond shared footer |
+| Profile feed loading indicators                                 | [feeds/profiles.md](feeds/profiles.md)                                                 | Playwright Profile tab states after synthetic relay load                |
+| Notification feed loading indicators                            | [feeds/notifications.md](feeds/notifications.md)                                       | Playwright Notifications tab states                                     |
+| Thread loading indicators                                       | [feeds/threads.md](feeds/threads.md)                                                   | Playwright Thread tab open from event click                             |
+| Relay read loading in Custom Request and Search                 | [tools/custom-request.md](tools/custom-request.md), [tools/search.md](tools/search.md) | Playwright run/search with synthetic relay                              |
+| Publish flow loading state in Tweet                             | [tools/tweet.md](tools/tweet.md)                                                       | Playwright compose/publish against synthetic relay                      |
+| Prefetch profiles for visible and near-visible events           | [feed-memory.md](../architecture/data/feed-memory.md)                                  | Memory e2e hydration counter caps; unit prefetch dedupe                 |
+| Prefetch event references for visible rows                      | [event-tree.md](../architecture/data/event-tree.md)                                    | Unit reference index cap; Playwright reference preview                  |
 
 ## Workspace and Tabs
 
 | Item                                                                       | Destination doc                                                                            | Test strategy                                                       |
 | -------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------ | ------------------------------------------------------------------- |
 | Touch/Android tab drag without snap-back                                   | implemented per [tab-strip-gestures.md](../architecture/workspace/tab-strip-gestures.md)   | Playwright mobile viewport pan and long-press drag                  |
-| Pane chrome scope for drag splits                                          | [pane-chrome-scope.md](../architecture/workspace/pane-chrome-scope.md)                       | Unit pane-drop-resolve; Playwright header vs body zones             |
-| Tab retention scroll + reload                                              | [tab-retention-flow.md](../architecture/workspace/tab-retention-flow.md)                     | Playwright tab-retention feed + settings scroll                     |
+| Pane chrome scope for drag splits                                          | [pane-chrome-scope.md](../architecture/workspace/pane-chrome-scope.md)                     | Unit pane-drop-resolve; Playwright header vs body zones             |
+| Tab retention scroll + reload                                              | [tab-retention-flow.md](../architecture/workspace/tab-retention-flow.md)                   | Playwright tab-retention feed + settings scroll                     |
 | Zero-tile and zero-tab behavior without errors                             | [workspace/scope.md](workspace/scope.md)                                                   | Playwright close-all-tabs e2e                                       |
 | Resizable pane polish (minimum sizes, snap)                                | [workspace/panes.md](workspace/panes.md), [resize.md](../architecture/workspace/resize.md) | Playwright resize handle interaction                                |
 | Clean startup: Welcome focused, Accounts lower, no premature relay connect | [workspace/workspace.md](workspace/workspace.md)                                           | Playwright openCleanWorkspace; memory counter relay clients at zero |

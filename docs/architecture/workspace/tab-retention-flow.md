@@ -33,12 +33,12 @@ When tab `B` becomes active:
 
 ## Per Tab Kind Fields
 
-| Kind family   | Session + IDB fields                                              |
-| ------------- | ----------------------------------------------------------------- |
-| Feed tabs     | anchor id/offset, `scrollTop`, cursors, `hasOlder`, `hasNewer`    |
-| Search        | query + feed fields via runtime registry                          |
-| Settings/tools| `scrollTop`, `fields` map                                         |
-| Tweet         | draft hash in `fields`                                            |
+| Kind family    | Session + IDB fields                                           |
+| -------------- | -------------------------------------------------------------- |
+| Feed tabs      | anchor id/offset, `scrollTop`, cursors, `hasOlder`, `hasNewer` |
+| Search         | query + feed fields via runtime registry                       |
+| Settings/tools | `scrollTop`, `fields` map                                      |
+| Tweet          | draft hash in `fields`                                         |
 
 Feed tabs register `registerTabRuntimeSnapshot` on mount so blur capture is
 complete even when the list scrolled after the last explicit scroll event.

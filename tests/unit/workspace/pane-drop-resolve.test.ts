@@ -14,12 +14,12 @@ const base = {
 
 describe('pane drop resolve', () => {
   it('uses center zone over the tab strip and pane head', () => {
-    expect(
-      resolvePaneDrop({ ...base, clientX: 200, clientY: 40 }).zone,
-    ).toBe('center');
-    expect(
-      resolvePaneDrop({ ...base, clientX: 20, clientY: 75 }).zone,
-    ).toBe('center');
+    expect(resolvePaneDrop({ ...base, clientX: 200, clientY: 40 }).zone).toBe(
+      'center',
+    );
+    expect(resolvePaneDrop({ ...base, clientX: 20, clientY: 75 }).zone).toBe(
+      'center',
+    );
   });
 
   it('uses center when pointer is above body but below chrome edge case', () => {
@@ -62,14 +62,9 @@ describe('pane drop resolve', () => {
 
 describe('tab drop overlay offset', () => {
   it('offsets edge preview top by body offset', async () => {
-    const { tabDropOverlayStyle } = await import(
-      '../../../src/lib/workspace/tab-drop-preview'
-    );
-    const style = tabDropOverlayStyle(
-      { width: 400, height: 320 },
-      'top',
-      80,
-    );
+    const { tabDropOverlayStyle } =
+      await import('../../../src/lib/workspace/tab-drop-preview');
+    const style = tabDropOverlayStyle({ width: 400, height: 320 }, 'top', 80);
     expect(style).toContain('--drop-top: 80px');
   });
 });
