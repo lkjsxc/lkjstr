@@ -124,7 +124,7 @@
   });
 </script>
 
-<section class="data-tab" aria-label="Thread">
+<section class="feed-tab" aria-label="Thread">
   {#if props.eventId}
     {#if state.loading}<p>Loading thread...</p>{/if}
     {#if state.error}<p role="alert">{state.error}</p>{/if}

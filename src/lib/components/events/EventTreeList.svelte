@@ -1,9 +1,9 @@
 <script lang="ts">
-  import { VList } from 'virtua/svelte';
   import { onDestroy, tick } from 'svelte';
   import { isNearEnd, isNearStart } from '$lib/feed-surface/near-end';
-  import EventTreeListNearEnd from './EventTreeListNearEnd.svelte';
   import { footerPhaseFromPaging } from '$lib/feed-surface/footer-phase';
+  import FeedScrollSurface from '$lib/components/feed/FeedScrollSurface.svelte';
+  import type { FeedScrollListHandle } from '$lib/components/feed/FeedScrollSurface.svelte';
   import type { ProfileSummary } from '$lib/identity/identity';
   import type { RelaySet } from '$lib/relays/relay-store';
   import type { FlatEventTreeItem } from '$lib/events/tree';
@@ -54,7 +54,7 @@
   };
 
   let props: Props = $props();
-  let list = $state<TreeListAnchorHandle>();
+  let list = $state<FeedScrollListHandle & TreeListAnchorHandle>();
   let scrollerElement = $state<HTMLDivElement | undefined>();
   let autoFillPending = false;
   let destroyed = false;
@@ -87,7 +87,7 @@
     if (props.tabId) setTabFeedAnchor(props.tabId, undefined);
   });
 
-  function handleScroll(offset: number): void {
+  function handleScrollOffset(offset: number): void {
     if (props.pagingEnabled === false) return;
     const viewport = list?.getViewportSize?.() ?? 0;
     const total = list?.getScrollSize?.() ?? 0;
@@ -153,40 +153,33 @@
 
 <div class="event-list">
   {#if nodes.length > 0}
-    <div class="event-list__scroller" bind:this={scrollerElement}>
-      <VList
-        bind:this={list}
-        class="event-list__viewport"
-        data={rows}
-        style="height: 100%; min-height: 0;"
-        getKey={viewRowKey}
-        onscroll={handleScroll}
-      >
-        {#snippet children(node)}
-          <EventTreeListRows
-            {node}
-            phase={footerPhase}
-            profiles={props.profiles}
-            relaySets={props.relaySets}
-            activeAccountPubkey={props.activeAccountPubkey}
-            reactions={props.reactions}
-            reposts={props.reposts}
-            {actionStates}
-            openProfile={props.openProfile}
-            openThread={props.openThread}
-            openAuthorContext={props.openAuthorContext}
-          />
-        {/snippet}
-      </VList>
-      <EventTreeListNearEnd
-        enabled={nearEndEnabled}
-        viewportHeight={list?.getViewportSize?.() ??
-          scrollerElement?.clientHeight ??
-          0}
-        onNearEnd={props.onNearEnd}
-        scroller={scrollerElement}
-      />
-    </div>
+    <FeedScrollSurface
+      data={rows}
+      getKey={(item: unknown) => viewRowKey(item as ViewRow)}
+      scrollerClass="event-list__scroller"
+      viewportClass="event-list__viewport"
+      {nearEndEnabled}
+      onNearEnd={props.onNearEnd}
+      onScrollOffset={handleScrollOffset}
+      bind:list
+      bind:scrollerElement
+    >
+      {#snippet row(node: unknown)}
+        <EventTreeListRows
+          node={node as ViewRow}
+          phase={footerPhase}
+          profiles={props.profiles}
+          relaySets={props.relaySets}
+          activeAccountPubkey={props.activeAccountPubkey}
+          reactions={props.reactions}
+          reposts={props.reposts}
+          {actionStates}
+          openProfile={props.openProfile}
+          openThread={props.openThread}
+          openAuthorContext={props.openAuthorContext}
+        />
+      {/snippet}
+    </FeedScrollSurface>
   {:else if !props.loading}
     <p class="event-list__empty">{props.emptyText ?? 'No events found.'}</p>
   {/if}

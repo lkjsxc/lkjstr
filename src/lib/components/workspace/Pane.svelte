@@ -10,11 +10,9 @@
   import type { TabSnapshotPayload } from '$lib/workspace/tab-snapshot';
   import { loadPersistedTabSnapshots } from '$lib/workspace/tab-snapshot-persist';
   import { syncPaneTabFocus } from '$lib/workspace/pane-tab-focus';
-  import NewTabButton from './NewTabButton.svelte';
   import PaneDropLayer from './PaneDropLayer.svelte';
+  import PaneHead from './PaneHead.svelte';
   import PaneTabStack from './PaneTabStack.svelte';
-  import TabStrip from './TabStrip.svelte';
-  import TileMenu from './TileMenu.svelte';
 
   type Props = {
     workspaceId: string;
@@ -148,30 +146,18 @@
     disabled={!props.ready}
     moveTab={props.moveTab}
   />
-  <header class="pane-head">
-    <div class="pane-actions">
-      <TileMenu
-        split={(direction) => props.split(props.pane.id, direction)}
-        closePane={() => props.closePane(props.pane.id)}
-        disabled={!props.ready}
-      />
-      <NewTabButton
-        open={() => props.openNewTab(props.pane.id)}
-        disabled={!props.ready}
-      />
-    </div>
-    {#if props.group}
-      <TabStrip
-        group={props.group}
-        paneId={props.pane.id}
-        tabs={props.tabs}
-        focusTab={(tabId) => props.focusTab(props.pane.id, tabId)}
-        closeTab={(tabId) => props.closeTab(props.pane.id, tabId)}
-        moveTab={props.moveTab}
-        disabled={!props.ready}
-      />
-    {/if}
-  </header>
+  <PaneHead
+    paneId={props.pane.id}
+    group={props.group}
+    tabs={props.tabs}
+    ready={props.ready}
+    focusTab={props.focusTab}
+    closeTab={props.closeTab}
+    moveTab={props.moveTab}
+    openNewTab={props.openNewTab}
+    split={props.split}
+    closePane={props.closePane}
+  />
 
   <div class="pane-stack">
     {#if props.group}

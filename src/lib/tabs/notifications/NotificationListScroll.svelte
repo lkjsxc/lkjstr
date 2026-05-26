@@ -1,12 +1,16 @@
 <script lang="ts">
   import FeedSurfaceStatus from '$lib/components/events/FeedSurfaceStatus.svelte';
   import NotificationRow from '$lib/components/notifications/NotificationRow.svelte';
-  import { isNearEnd, nearEndRootMargin } from '$lib/feed-surface/near-end';
-  import { createNearEndSentinel } from '$lib/feed-surface/near-end-observer';
+  import FeedScrollSurface from '$lib/components/feed/FeedScrollSurface.svelte';
   import {
     feedSurfaceStatusProps,
     footerPhaseFromPaging,
   } from '$lib/feed-surface/footer-phase';
+  import {
+    notificationViewRowKey,
+    notificationViewRows,
+    type NotificationViewRow,
+  } from '$lib/feed-surface/notification-view-rows';
   import type { ProfileSummary } from '$lib/identity/identity';
   import type { RelaySet } from '$lib/relays/relay-store';
   import type { FeedEvent } from '$lib/events/types';
@@ -45,7 +49,9 @@
     openThread,
     openAuthorContext,
   }: Props = $props();
-  let sentinelElement: HTMLDivElement | undefined;
+
+  let scrollElement = $state<HTMLElement | undefined>();
+  let rows = $derived(notificationViewRows(records));
   let footerPhase = $derived(
     footerPhaseFromPaging({
       loadingOlder,
@@ -54,59 +60,50 @@
       error,
     }),
   );
-  const nearEndSentinel = createNearEndSentinel({
-    root: () => listElement,
-    sentinel: () => sentinelElement,
-    rootMargin: () => nearEndRootMargin(listElement?.clientHeight ?? 0),
-    enabled: () => records.length > 0 && hasOlder && !loadingOlder,
-    onNearEnd: () => onNearEnd(),
-  });
+  let nearEndEnabled = $derived(
+    records.length > 0 && hasOlder && !loadingOlder,
+  );
 
   $effect(() => {
-    const count = records.length;
-    const older = hasOlder;
-    const loading = loadingOlder;
-    if (count === 0 && !older && !loading)
-      return () => nearEndSentinel.disconnect();
-    nearEndSentinel.observe();
-    return () => nearEndSentinel.disconnect();
+    listElement = scrollElement;
   });
-
-  function handleScroll(event: Event): void {
-    const el = event.currentTarget as HTMLElement;
-    if (isNearEnd(el.scrollTop, el.clientHeight, el.scrollHeight))
-      void onNearEnd();
-  }
 </script>
 
-<div
-  class="notification-list"
-  data-scroll-owner=""
-  bind:this={listElement}
-  onscroll={handleScroll}
->
-  {#each records as record (record.id)}
-    <NotificationRow
-      {record}
-      item={itemById.get(record.sourceEventId)}
-      targetItem={targetItemById.get(
-        record.targetEventId ?? record.rootEventId ?? '',
-      )}
-      profile={profiles[record.actorPubkey]}
-      {profiles}
-      {relaySets}
-      activeAccountPubkey={activeAccountPubkey ?? null}
-      {openProfile}
-      {openThread}
-      {openAuthorContext}
-    />
-  {/each}
-  <div
-    class="event-list__near-end-sentinel"
-    bind:this={sentinelElement}
-    aria-hidden="true"
-  ></div>
-  <FeedSurfaceStatus
-    {...feedSurfaceStatusProps(footerPhase, error ?? undefined)}
-  />
+<div class="event-list notification-list">
+  {#if records.length > 0}
+    <FeedScrollSurface
+      data={rows}
+      getKey={(item: unknown) =>
+        notificationViewRowKey(item as NotificationViewRow)}
+      scrollerClass="notification-list-scroller"
+      viewportClass="notification-list-scroll"
+      {nearEndEnabled}
+      {onNearEnd}
+      bind:scrollElement
+    >
+      {#snippet row(item: unknown)}
+        {@const view = item as NotificationViewRow}
+        {#if view.kind === 'footer'}
+          <FeedSurfaceStatus
+            {...feedSurfaceStatusProps(footerPhase, error ?? undefined)}
+          />
+        {:else}
+          <NotificationRow
+            record={view.record}
+            item={itemById.get(view.record.sourceEventId)}
+            targetItem={targetItemById.get(
+              view.record.targetEventId ?? view.record.rootEventId ?? '',
+            )}
+            profile={profiles[view.record.actorPubkey]}
+            {profiles}
+            {relaySets}
+            activeAccountPubkey={activeAccountPubkey ?? null}
+            {openProfile}
+            {openThread}
+            {openAuthorContext}
+          />
+        {/if}
+      {/snippet}
+    </FeedScrollSurface>
+  {/if}
 </div>

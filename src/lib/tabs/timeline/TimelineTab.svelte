@@ -159,7 +159,7 @@
 </script>
 
 <section
-  class="timeline-tab"
+  class="timeline-tab feed-tab"
   aria-label={props.kind === 'global' ? 'Global' : 'Home'}
 >
   {#if !props.dataReady}

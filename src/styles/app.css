@@ -109,7 +109,14 @@ body {
 
 .pane-head .pane-actions {
   flex: 0 0 auto;
+  isolation: isolate;
   padding-block: 0;
+  z-index: 1;
+}
+
+.pane-head .tab-strip-wrap {
+  flex: 1 1 auto;
+  min-width: 0;
 }
 
 .pane-stack,

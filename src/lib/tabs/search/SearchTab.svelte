@@ -142,7 +142,7 @@
   }
 </script>
 
-<section class="timeline-tab" aria-label="Search">
+<section class="timeline-tab feed-tab" aria-label="Search">
   <form
     class="toolbar"
     onsubmit={(event) => {

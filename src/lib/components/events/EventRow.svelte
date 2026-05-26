@@ -25,6 +25,7 @@
     liked?: boolean;
     reposted?: boolean;
     compact?: boolean;
+    showSeparator?: boolean;
     showActions?: boolean;
     showSummary?: boolean;
     showMore?: boolean;
@@ -78,6 +79,7 @@
 <div
   class="event-row"
   class:event-row--compact={props.compact}
+  class:event-row--embedded={props.showSeparator === false}
   class:event-row--action-success={highlighted}
   role="button"
   tabindex="0"

@@ -112,7 +112,7 @@
   }
 </script>
 
-<section class="profile-tab" aria-label="Profile">
+<section class="profile-tab feed-tab" aria-label="Profile">
   <ProfileHeader
     pubkey={props.pubkey}
     profile={state.profile}

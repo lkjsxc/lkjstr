@@ -2,16 +2,15 @@ import { describe, expect, it } from 'vitest';
 import { createPaneScrollRetention } from '../../../src/lib/workspace/pane-scroll-retention';
 import { createSessionTabSnapshots } from '../../../src/lib/workspace/session-tab-snapshots';
 import { syncPaneTabFocus } from '../../../src/lib/workspace/pane-tab-focus';
-import type { WorkspaceTab } from '../../../src/lib/workspace/tab';
+import { createTab } from '../../../src/lib/workspace/tab';
+import type { TabSnapshotPayload } from '../../../src/lib/workspace/tab-snapshot';
 
 describe('syncPaneTabFocus', () => {
   it('skips scroll restore when the tab body stayed mounted', async () => {
     const bodyScroll = createPaneScrollRetention();
-    const snapshots = createSessionTabSnapshots<{
-      id: string;
-      kind: 'tool';
-      scrollTop: number;
-    }>();
+    const snapshots = createSessionTabSnapshots<
+      TabSnapshotPayload & { readonly id: string }
+    >();
     const paneBody = document.createElement('div');
     paneBody.className = 'pane-body';
     paneBody.innerHTML =
@@ -22,22 +21,22 @@ describe('syncPaneTabFocus', () => {
     bodyScroll.remember('settings');
     snapshots.retain({ id: 'settings', kind: 'tool', scrollTop: 12 }, 60);
 
-    const tabs: Record<string, WorkspaceTab> = {
-      settings: {
-        id: 'settings',
-        title: 'Settings',
-        kind: 'settings',
-        config: {},
-      },
-    };
+    const settings = createTab('settings', 'Settings');
+    const tabs = { settings };
 
     await syncPaneTabFocus({
       workspaceId: 'ws',
       paneId: 'pane',
-      active: tabs.settings,
+      active: settings,
       previousActiveId: 'home',
       tabs,
-      group: { paneId: 'pane', tabIds: ['home', 'settings'], activeTabId: 'settings' },
+      group: {
+        id: 'group',
+        tabIds: ['home', 'settings'],
+        activeTabId: 'settings',
+        pinnedTabIds: [],
+        closedTabs: [],
+      },
       inactiveRetentionSeconds: 60,
       bodyScroll,
       snapshots,

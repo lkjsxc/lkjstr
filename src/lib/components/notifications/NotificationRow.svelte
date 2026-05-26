@@ -53,6 +53,7 @@
       <div class="notification-row__event">
         <EventRow
           item={props.item}
+          showSeparator={false}
           profile={props.profiles?.[props.item.event.pubkey]}
           profiles={props.profiles}
           relaySets={props.relaySets}
@@ -69,6 +70,7 @@
       <div class="notification-row__event">
         <EventRow
           item={props.targetItem}
+          showSeparator={false}
           profile={props.profiles?.[props.targetItem.event.pubkey]}
           profiles={props.profiles}
           relaySets={props.relaySets}

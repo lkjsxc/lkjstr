@@ -7,9 +7,16 @@ export async function assertNoHorizontalOverflow(page: Page): Promise<void> {
       page.evaluate(() => {
         const doc = document.documentElement;
         const panes = [...document.querySelectorAll('.pane, .pane-body')];
+        const scrollOwners = [
+          ...document.querySelectorAll<HTMLElement>('[data-scroll-owner]'),
+          ...document.querySelectorAll<HTMLElement>('.event-list__viewport'),
+        ];
         return [
           doc.scrollWidth <= doc.clientWidth + 1,
           ...panes.map((pane) => pane.scrollWidth <= pane.clientWidth + 1),
+          ...scrollOwners.map(
+            (owner) => owner.scrollWidth <= owner.clientWidth + 1,
+          ),
         ].every(Boolean);
       }),
     )

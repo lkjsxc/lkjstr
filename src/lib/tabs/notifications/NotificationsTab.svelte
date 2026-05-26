@@ -170,7 +170,7 @@
   }
 </script>
 
-<section class="data-tab" aria-label="Notifications">
+<section class="feed-tab" aria-label="Notifications">
   {#if viewState.loading}<p>Loading notifications...</p>{/if}
   {#if viewState.error}<p role="alert">{viewState.error}</p>{/if}
   {#if viewState.records.length > 0}
