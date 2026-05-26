@@ -78,7 +78,9 @@
     });
   });
 
-  onDestroy(() => stripDragClear(drag, dragDeps));
+  onDestroy(() => {
+    if (typeof document !== 'undefined') stripDragClear(drag, dragDeps);
+  });
 </script>
 
 <div

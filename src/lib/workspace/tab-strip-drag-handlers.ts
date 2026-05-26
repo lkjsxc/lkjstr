@@ -38,6 +38,7 @@ export function stripDragPointerDown(
   ctx.dragElement = event.currentTarget as HTMLElement;
   ctx.session = startStripPointer(deps.paneId, tabId, event);
   ctx.ghost = { x: event.clientX, y: event.clientY, title };
+  if (typeof window === 'undefined') return;
   const move = (e: PointerEvent) => stripDragPointerMove(ctx, deps, e);
   const up = (e: PointerEvent) => stripDragPointerUp(ctx, deps, e);
   const cancel = (e: PointerEvent) => stripDragPointerCancel(ctx, deps, e);
@@ -70,7 +71,8 @@ export function stripDragPointerMove(
   }
   event.preventDefault();
   ctx.dragElement?.classList.add('tab-frame--dragging');
-  document.body.classList.add('dragging-tab');
+  if (typeof document !== 'undefined')
+    document.body.classList.add('dragging-tab');
   deps.dragState?.setTarget(
     ctx.session.snapshot.targetPaneId && ctx.session.snapshot.zone
       ? {
@@ -125,18 +127,19 @@ export function stripDragClear(ctx: StripDragCtx, deps: StripDragDeps): void {
   ctx.dragElement?.classList.remove('tab-frame--dragging');
   ctx.dragElement = undefined;
   deps.dragState?.setTarget(undefined);
-  document.body.classList.remove('dragging-tab');
+  if (typeof document !== 'undefined')
+    document.body.classList.remove('dragging-tab');
 }
 
 function stripDragTargetCount(
   deps: StripDragDeps,
   targetPaneId: string,
 ): number {
-  return targetPaneId === deps.paneId
-    ? deps.tabCount()
-    : Number(
-        document
-          .querySelector(`[data-pane-id="${targetPaneId}"]`)
-          ?.getAttribute('data-tab-count') ?? 0,
-      );
+  if (targetPaneId === deps.paneId) return deps.tabCount();
+  if (typeof document === 'undefined') return 0;
+  return Number(
+    document
+      .querySelector(`[data-pane-id="${targetPaneId}"]`)
+      ?.getAttribute('data-tab-count') ?? 0,
+  );
 }
