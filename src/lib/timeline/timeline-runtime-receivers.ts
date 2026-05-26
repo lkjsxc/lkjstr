@@ -5,7 +5,11 @@ import { accountHomeAuthors } from './follow-list';
 import { loadAccountHome } from './timeline-load';
 import type { TimelineLoad } from './timeline-load';
 import { storeTimelineProfile } from './timeline-profiles';
-import { readyWithEventsState, upsertLive, type TimelineState } from './timeline-state';
+import {
+  readyWithEventsState,
+  upsertLive,
+  type TimelineState,
+} from './timeline-state';
 import type { TimelineItem } from './timeline-store';
 
 export type TimelineReceiverContext = {
@@ -42,7 +46,10 @@ export async function receiveTimelinePoolEvent(
     return receiveTimelineFollowList(ctx, poolEvent);
   if (poolEvent.subId === ctx.metaSubId && poolEvent.event.kind === 0)
     return receiveTimelineMetadata(ctx, poolEvent);
-  if (poolEvent.subId !== ctx.noteSubId || !isFeedDisplayKind(poolEvent.event.kind))
+  if (
+    poolEvent.subId !== ctx.noteSubId ||
+    !isFeedDisplayKind(poolEvent.event.kind)
+  )
     return;
   if (!ctx.getAuthors().includes(poolEvent.event.pubkey)) return;
   await upsertEvent(poolEvent.event, [poolEvent.relay]);
@@ -78,7 +85,8 @@ async function receiveTimelineMetadata(
   ctx: TimelineReceiverContext,
   poolEvent: PoolEvent,
 ): Promise<void> {
-  if (ctx.closed() || !ctx.getAuthors().includes(poolEvent.event.pubkey)) return;
+  if (ctx.closed() || !ctx.getAuthors().includes(poolEvent.event.pubkey))
+    return;
   await upsertEvent(poolEvent.event, [poolEvent.relay]);
   if (ctx.closed()) return;
   const profile = await storeTimelineProfile(poolEvent.event);

@@ -13,9 +13,13 @@ export function mergeTabSnapshotPayload(
       anchorEventId: feedPatch.anchorEventId ?? base.anchorEventId,
       anchorOffset: feedPatch.anchorOffset ?? base.anchorOffset,
       oldestCursor:
-        'oldestCursor' in feedPatch ? feedPatch.oldestCursor : base.oldestCursor,
+        'oldestCursor' in feedPatch
+          ? feedPatch.oldestCursor
+          : base.oldestCursor,
       newestCursor:
-        'newestCursor' in feedPatch ? feedPatch.newestCursor : base.newestCursor,
+        'newestCursor' in feedPatch
+          ? feedPatch.newestCursor
+          : base.newestCursor,
       hasOlder: 'hasOlder' in feedPatch ? feedPatch.hasOlder : base.hasOlder,
       hasNewer: 'hasNewer' in feedPatch ? feedPatch.hasNewer : base.hasNewer,
       filterState: {

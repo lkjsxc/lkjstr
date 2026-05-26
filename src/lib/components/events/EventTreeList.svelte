@@ -139,7 +139,6 @@
     if (viewport > 0 && total <= viewport + 16) await props.onNearEnd?.();
     if (!destroyed) autoFillPending = false;
   }
-
 </script>
 
 <FeedActionStatesBridge
@@ -176,7 +175,9 @@
       </VList>
       <EventTreeListNearEnd
         enabled={nearEndEnabled}
-        viewportHeight={list?.getViewportSize?.() ?? scrollerElement?.clientHeight ?? 0}
+        viewportHeight={list?.getViewportSize?.() ??
+          scrollerElement?.clientHeight ??
+          0}
         onNearEnd={props.onNearEnd}
         scroller={scrollerElement}
       />

@@ -6,9 +6,7 @@ import {
 
 export type { FeedPagingPhase };
 
-export function footerPhaseFromPaging(
-  input: FeedPagingInput,
-): FeedPagingPhase {
+export function footerPhaseFromPaging(input: FeedPagingInput): FeedPagingPhase {
   return feedPagingPhase(input);
 }
 

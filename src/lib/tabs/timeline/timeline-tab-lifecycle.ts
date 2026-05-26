@@ -1,5 +1,8 @@
 import { decMemoryCounter } from '$lib/app/memory-counters';
-import { countRuntime, setRuntimeCounterActive } from '$lib/app/runtime-counters';
+import {
+  countRuntime,
+  setRuntimeCounterActive,
+} from '$lib/app/runtime-counters';
 import { appendAppLog } from '$lib/log/app-log';
 import { consumeTabCloseReason } from '$lib/workspace/tab-lifecycle-reasons';
 import type { TimelineState } from '$lib/timeline/timeline-state';

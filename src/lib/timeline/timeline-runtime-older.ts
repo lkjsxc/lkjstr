@@ -11,7 +11,9 @@ export async function runTimelineLoadOlder(args: {
   readonly subId: string;
   readonly cursor: { createdAt: number; id: string };
   readonly pageSize: number;
-  readonly subscriptions: Parameters<typeof loadOlderTimelinePage>[0]['subscriptions'];
+  readonly subscriptions: Parameters<
+    typeof loadOlderTimelinePage
+  >[0]['subscriptions'];
   readonly signal: AbortSignal;
   readonly state: TimelineState;
   readonly emit: (next: TimelineState) => void;
