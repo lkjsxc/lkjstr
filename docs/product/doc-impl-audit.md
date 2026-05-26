@@ -41,11 +41,11 @@ documented-only. Update it when a vertical slice closes a gap.
 
 | Clause                        | Contract                   | Status      | Notes                          |
 | ----------------------------- | -------------------------- | ----------- | ------------------------------ |
-| Pane chrome excluded from edge splits | pane-chrome-scope.md | partial     | `chromeBottom` from `.pane-head` |
-| Edge preview body offset      | pane-drop-target.md        | partial     | `bodyOffsetTop` on drop layer  |
-| Tab drag selection guard      | tab-strip-gestures.md      | partial     | capture + user-select          |
-| Scroll owner retention        | tab-retention-flow.md      | partial     | `data-scroll-owner`, scrollTop=0 |
-| Feed scroll gutter on viewport | scroll-layout.md          | partial     | Virtua viewport + token        |
+| Pane chrome excluded from edge splits | pane-chrome-scope.md | implemented | `chromeBottom` from `.pane-head` |
+| Edge preview body offset      | pane-drop-target.md        | implemented | `bodyOffsetTop` on drop layer  |
+| Tab drag selection guard      | tab-strip-gestures.md      | implemented | capture + user-select          |
+| Scroll owner retention        | tab-retention-flow.md      | implemented | `data-scroll-owner`, scrollTop=0 |
+| Feed scroll gutter on viewport | scroll-layout.md          | implemented | `.event-list__viewport` + token |
 | Tab strip excluded from split | tab-dragging.md            | implemented | superseded by chrome scope     |
 | Scrollbar gutter              | scroll-layout.md           | implemented | per-surface audit in progress  |
 | Tile-scoped emoji             | tile-overlays.md           | implemented |                                |
