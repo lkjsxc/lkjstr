@@ -18,6 +18,11 @@ without overlapping text or controls.
   with content.
 - Horizontal overflow in pane bodies is forbidden except for intentional rails
   such as the tab strip.
+- Feed scroll roots use `overflow-x: clip`.
+- Event More menu uses `right: var(--scroll-content-inset)` and `.event-main`
+  reserves the same inline-end padding.
+- Feed tabs use `.feed-tab` with a single `[data-scroll-owner]` child per
+  [tab-shell-layout.md](tab-shell-layout.md).
 
 ## Tokens
 
@@ -33,8 +38,8 @@ wrappers listed in `scroll-layout.css`.
 
 | Surface                                                   | Scrolling element                          | Content wrapper              |
 | --------------------------------------------------------- | ------------------------------------------ | ---------------------------- |
-| Home, Global, Thread, Search, Profile notes               | Virtua viewport in `.event-list__scroller` | `.event-list__viewport > *`  |
-| Notifications                                             | `.notification-list-scroll`                | direct child padding         |
+| Home, Global, Thread, Search, Profile notes               | Virtua viewport in `.event-list__scroller` | `.feed-scroll-item`          |
+| Notifications                                             | `.notification-list-scroll`                | `.feed-scroll-item`          |
 | Settings, Relay Settings, Stats, Welcome, Upload Settings | `.settings-tab`                            | `.settings-tab > *`          |
 | Custom Request, Author Context, lkjstr Log                | Tab-specific scroll root (see tab CSS)     | tab CSS                      |
 | Pane tab shell                                            | `.pane-body` (non-scrolling container)     | tab root inside body         |
@@ -53,6 +58,11 @@ Virtua feed lists use the Virtua viewport element inside `.event-list__scroller`
 
 ## Related
 
+- [feed-scroll-surface.md](../data/feed-surface/feed-scroll-surface.md): shared
+  scroll component.
+- [feed-row-chrome.md](../data/feed-surface/feed-row-chrome.md): row separators
+  and control inset.
+- [tab-shell-layout.md](tab-shell-layout.md): feed-tab vs form-tab.
 - [scroll-surface-audit.md](scroll-surface-audit.md): per-surface checklist.
 - [tab-retention-flow.md](tab-retention-flow.md): scroll capture on blur.
 - [tab-runtime.md](tab-runtime.md): snapshot fields.

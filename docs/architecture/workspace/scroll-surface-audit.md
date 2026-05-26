@@ -24,13 +24,26 @@ surface. Each row must pass before the scroll-layout contract is complete.
 | lkjstr Log         | tab scroll root                 | required           | required               | required |
 | Pane shell         | no inline padding on `.pane-body` | n/a              | tab inner roots          | required |
 
+## Additional Checks
+
+| Check | Applies to |
+| ----- | ---------- |
+| No nested vertical `overflow: auto` between `.feed-tab` and scroll root | Feed tabs |
+| Event More menu clears scrollbar track | Home, Global, Search, Profile, Thread, Notifications |
+| One bottom border between adjacent notification items | Notifications |
+| No horizontal overflow on `[data-scroll-owner]` | All feed scroll roots |
+
 ## Verification
 
 - Scrolling element `getBoundingClientRect().right` aligns with pane body right
   edge within one device pixel.
 - Text in the rightmost column does not sit under the scrollbar thumb.
 - `scrollbar-gutter: stable` prevents layout shift when scrollbars appear.
+- Feed tabs use `.feed-tab` with exactly one `[data-scroll-owner]`.
 
 ## Related
 
+- [feed-scroll-surface.md](../data/feed-surface/feed-scroll-surface.md).
+- [feed-row-chrome.md](../data/feed-surface/feed-row-chrome.md).
+- [tab-shell-layout.md](tab-shell-layout.md).
 - [scroll-layout.md](scroll-layout.md): tokens and contract.

@@ -25,8 +25,14 @@ notification context header and the source event as the primary body.
 - One speculative older page may prefetch when near end while `hasOlder` is
   true.
 - Shared `FeedSurfaceStatus` footer shows loading, end of history, and errors.
-- Notifications use the shared virtual feed list with the same bottom status
-  semantics as Home and Global.
+- Notifications use `FeedScrollSurface` with Virtua on
+  `.notification-list-scroll`, the same near-end and footer semantics as Home
+  and Global. See [feed-scroll-surface.md](../../architecture/data/feed-surface/feed-scroll-surface.md).
+- The tab root uses `.feed-tab` with `overflow: hidden`. Only
+  `.notification-list-scroll` scrolls vertically (`data-scroll-owner`).
+- Exactly one bottom border separates notification items. Embedded `EventRow`
+  uses `showSeparator={false}`. See
+  [feed-row-chrome.md](../../architecture/data/feed-surface/feed-row-chrome.md).
 - Historical relay pages use interval windows with `since` and `until` from
   the oldest loaded notification event.
 - Live relay reads set `since` when the notification runtime starts.

@@ -53,3 +53,14 @@ documented-only. Update it when a vertical slice closes a gap.
 | Tile-scoped emoji                     | tile-overlays.md      | implemented |                                  |
 | No feed npub subtitle                 | identity-rendering.md | implemented | feed-identity                    |
 | Welcome document links                | welcome.md            | implemented |                                  |
+
+## Feed Scroll and Row Chrome
+
+| Clause                                | Contract              | Status | Notes |
+| ------------------------------------- | --------------------- | ------ | ----- |
+| Single notification separator         | feed-row-chrome.md    | open   | list-owned border |
+| Single Notifications scroll owner     | feed-scroll-surface.md | open  | `.feed-tab` + one `[data-scroll-owner]` |
+| Event More clears scrollbar track       | scroll-layout.md      | open   | inset on `.event-main` and `.event-more` |
+| No horizontal overflow on scroll owner  | scroll-surface-audit.md | open | e2e on `[data-scroll-owner]` |
+| Notifications on FeedScrollSurface      | feed-scroll-surface.md | open  | Virtua flat list |
+| Pane.svelte at or below 200 lines       | repository standards  | open   | extract PaneHead if needed |

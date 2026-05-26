@@ -13,6 +13,10 @@ integration.
 - [footer-phase.md](footer-phase.md): `feedPagingPhase` and `FeedSurfaceStatus`.
 - [staged-pipeline.md](staged-pipeline.md): relay page, row shell, enrichment.
 - [surface-matrix.md](surface-matrix.md): per-tab list mode and paging.
+- [feed-scroll-surface.md](feed-scroll-surface.md): shared scroll shell and
+  `data-scroll-owner`.
+- [feed-row-chrome.md](feed-row-chrome.md): list-owned separators and embedded
+  rows.
 
 ## Related
 

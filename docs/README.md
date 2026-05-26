@@ -38,6 +38,10 @@ for detailed contracts.
   staged row pipeline.
 - [architecture/data/feed-surface/surface-matrix.md](architecture/data/feed-surface/surface-matrix.md):
   per-surface list matrix.
+- [architecture/data/feed-surface/feed-scroll-surface.md](architecture/data/feed-surface/feed-scroll-surface.md):
+  shared feed scroll shell.
+- [architecture/data/feed-surface/feed-row-chrome.md](architecture/data/feed-surface/feed-row-chrome.md):
+  list-owned row separators.
 - [architecture/data/feed-memory.md](architecture/data/feed-memory.md): feed
   cache and relay windows.
 - [architecture/data/retention/README.md](architecture/data/retention/README.md):
@@ -104,6 +108,8 @@ for detailed contracts.
   scrollbar-safe scrolling surfaces.
 - [architecture/workspace/scroll-surface-audit.md](architecture/workspace/scroll-surface-audit.md):
   per-surface scroll checklist.
+- [architecture/workspace/tab-shell-layout.md](architecture/workspace/tab-shell-layout.md):
+  feed-tab vs form-tab scroll ownership.
 - [architecture/workspace/tile-overlays.md](architecture/workspace/tile-overlays.md):
   tile-scoped overlays.
 - [architecture/workspace/tab-dragging.md](architecture/workspace/tab-dragging.md):

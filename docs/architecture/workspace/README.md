@@ -15,6 +15,8 @@ visual rules.
 - [tab-retention-flow.md](tab-retention-flow.md): blur/focus snapshot pipeline.
 - [scroll-layout.md](scroll-layout.md): scrollbar-safe scrolling surfaces.
 - [scroll-surface-audit.md](scroll-surface-audit.md): per-surface scroll checklist.
+- [tab-shell-layout.md](tab-shell-layout.md): feed-tab vs form-tab scroll
+  ownership.
 - [tile-overlays.md](tile-overlays.md): tile-scoped emoji picker placement.
 - [resize.md](resize.md): split resize math.
 - [tab-dragging.md](tab-dragging.md): tab drag overview.
