@@ -59,8 +59,9 @@ Tabs define the workspace surface area.
 - Tabs can be dragged to reorder within a tile with pointer dragging or native
   desktop drag-and-drop.
 - Tabs can be dragged into another tile, or to a tile edge to split there.
-- Pane drop feedback shows a translucent full-pane center region or a half-pane
-  edge preview that matches the resulting split geometry.
+- Pane drop feedback shows a center insert highlight over the tab strip and body,
+  or a half-pane-body edge preview that matches the resulting split geometry.
+  Edge split feedback does not cover the tab strip.
 - Moving a tab activates and focuses it in the target tile.
 - Moving the last tab out of a tile closes the source tile.
 - Invalid drops do nothing.
@@ -83,10 +84,11 @@ Tabs define the workspace surface area.
   wrapping to multiple rows.
 - Pane content must not create horizontal scrolling.
 - Tab bodies fill the pane body height and keep scroll ownership local.
-- Inactive tab bodies unmount when focus changes. Within
-  `tabs.inactiveRetentionSeconds`, the workspace keeps a bounded session-memory
-  UI snapshot. Durable tab snapshots in IndexedDB restore richer state after
-  reload when available.
+- Inactive tab bodies unmount when focus changes. Every blur writes a durable
+  IndexedDB snapshot and, within `tabs.inactiveRetentionSeconds`, a session
+  snapshot with scroll anchors, feed cursors, and surface-local UI fields.
+- Reselecting a tab restores scroll and surface state from session when possible,
+  otherwise from IndexedDB after reload.
 
 ## Removed Surface
 

@@ -9,14 +9,22 @@ Event actions define the row-level write controls available on feed events.
 - Event rows expose Heart, Repost, Reply, Zap, and Emoji controls.
 - Clicking an action does not open the row thread.
 - Heart publishes a NIP-25 kind `7` reaction with content `+`.
-- Emoji opens the shared anchored picker without changing row height and
+- When the active account already published a qualifying like reaction for the
+  target event, the Heart button uses `aria-pressed="true"` and a strong visible
+  outline or frame. The label stays `Heart`.
+- When the active account already published a qualifying repost for the target
+  event, the Repost button uses `aria-pressed="true"` and the same pressed
+  styling. The label stays `Repost`.
+- Pressed styling must be clearly stronger than default icon buttons and match
+  the reply/zap active treatment in weight, not only color.
+- Emoji opens the shared tile-scoped picker without changing row height and
   publishes a NIP-25 kind `7` reaction with picker-provided Unicode content.
 - Custom emoji reactions publish exactly one `:shortcode:` content value and
   one matching NIP-30 `emoji` tag from the active account emoji source.
 - Reaction summaries render `+` and empty content as heart reactions, render
   `-` as dislikes, render custom emoji from matching tags, keep same-shortcode
   emoji distinct by URL and address, and mark rows containing the active
-  account's reaction with stronger visual treatment.
+  account's reaction with stronger visual treatment in the summary chips.
 - Expanded reaction and repost actor lists render as left-aligned rows with
   avatar before name.
 - Repost publishes NIP-18 kind `6` for kind `1` notes.

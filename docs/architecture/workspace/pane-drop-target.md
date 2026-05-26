@@ -7,25 +7,28 @@ user sees.
 
 ## Drop Surface
 
-- Drop resolution uses the full pane tile rectangle: tab header plus body.
-- The shared resolver returns zone, insertion index, and overlay style for both
-  pointer and native drag paths.
+- Edge split hit detection uses the **pane body** rectangle only. The tab strip
+  is excluded from edge-zone geometry.
+- Center insert hit detection uses tab frame positions within the tab strip when
+  the pointer is over the strip band.
 - `PaneDropLayer` renders feedback from resolver output; it is not the sole
   owner of zone math.
 
 ## Hit Detection
 
-- Edge activation uses `tabDropHitSize(dimension)`: about 22% of the pane width
-  or height, clamped between 44 and 96 pixels.
-- Values outside edge corridors map to `center`.
-- Center hit testing still uses tab frame positions for insertion index.
+- Edge activation uses `tabDropHitSize(dimension)`: about 22% of the pane body
+  width or height, clamped between 44 and 96 pixels.
+- Values outside body edge corridors map to `center` when over the tab strip, or
+  to the nearest edge when over the body.
+- Center hit testing uses tab frame positions for insertion index.
 
 ## Preview Overlays
 
 - Preview geometry is separate from hit corridors.
-- `center` preview covers the full pane tile.
-- Edge previews cover exactly half the pane along the chosen edge (left, right,
-  top, or bottom).
+- `center` preview covers the tab strip and body when inserting into the group.
+- Edge previews cover exactly half the **pane body** along the chosen edge
+  (left, right, top, or bottom). The tab strip is not included in edge preview
+  geometry.
 - Overlay CSS variables come from `tabDropPreviewRect`, not from hit corridor
   sizes.
 
@@ -33,8 +36,8 @@ user sees.
 
 | Zone                                | Commit                          | Preview                |
 | ----------------------------------- | ------------------------------- | ---------------------- |
-| `center`                            | Move or reorder in target group | Full pane              |
-| `left` / `right` / `top` / `bottom` | Smart split at edge             | Half pane on that edge |
+| `center`                            | Move or reorder in target group | Strip + body highlight |
+| `left` / `right` / `top` / `bottom` | Smart split at edge             | Half body on that edge |
 
 ## Native Parity
 

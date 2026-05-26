@@ -9,8 +9,10 @@ desktop drag input.
 
 - [tab-strip-gestures.md](tab-strip-gestures.md): touch pan, long-press, and
   strip-priority reorder rules.
-- [pane-drop-target.md](pane-drop-target.md): pane-wide resolver, hit corridors,
-  and half-pane preview overlays.
+- [pane-drop-target.md](pane-drop-target.md): pane-body edge resolver, strip
+  center insert, and half-body preview overlays.
+- [scroll-layout.md](scroll-layout.md): scrollbar-safe scrolling surfaces.
+- [tile-overlays.md](tile-overlays.md): tile-scoped emoji picker placement.
 
 ## Contract
 
@@ -28,7 +30,7 @@ desktop drag input.
   [pane-drop-target.md](pane-drop-target.md).
 - Center drops insert into the target pane tab group using target tab frames.
   Pointer and native pane drops share the same insertion index logic.
-- Edge drops create a split at the target pane edge using the same smart
-  insertion primitive as tile menu splits. See
-  [workspace-layout-tree.md](workspace-layout-tree.md).
+- Edge drops create a split at the target pane **body** edge using the same smart
+  insertion primitive as tile menu splits. The tab strip is not part of edge hit
+  or preview geometry. See [workspace-layout-tree.md](workspace-layout-tree.md).
 - Invalid drops and same-pane last-tab edge drops are no-ops.

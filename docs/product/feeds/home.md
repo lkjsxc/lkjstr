@@ -65,6 +65,8 @@ its NIP-02 follows.
 - Event rows, quotes, and references open or focus matching Thread tabs in the
   same tile. Empty event ids must never open a Thread tab.
 - Post rows do not show relay source text or full public-key text.
+- Post rows do not use a left-side new-event stripe. Live inserts change order
+  only; they do not add a freshness accent on the row edge.
 - Post rows do not show short event ids in row metadata.
 - Media URLs that successfully render as image, video, or audio embeds are
   hidden from the text body. Other HTTPS URLs remain visible links.

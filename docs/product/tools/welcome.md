@@ -2,20 +2,35 @@
 
 ## Purpose
 
-Welcome gives quick-start status for accounts, relays, and the core workspace
-tabs.
+Welcome is the in-workspace manual and quick-start surface. It opens on clean
+first launch and from New Tab.
 
 ## Contract
 
-- Welcome is the clean first-launch tab and can also open from New Tab.
+- Welcome renders as a document-like tab with sections, not a splash screen.
+- Sections include at minimum:
+  - What this workspace is
+  - How to post
+  - How to configure accounts
+  - How to configure relays
+  - Core surfaces and what is still missing
+- Each section uses real readiness checks from local stores. No mock status or
+  dead checklist items.
+- Action links open real workspace tabs in the current context: Accounts, Relay
+  Settings, Home, Notifications, Tweet, Profile Edit, Upload Settings, Stats,
+  and Settings.
 - Storage failure recovery falls back to a usable Welcome workspace.
-- The tab shows setup status, the active account, account count, selected relay
-  set, read relay count, and write relay count.
-- The first section is quick start. It points to Accounts when no active
-  account exists, Relay Settings when read relays are missing, and the main
-  workspace tabs once prerequisites are present.
 - Welcome explains that lkjstr is a browser-first Nostr workspace for reading
   timelines, composing notes, inspecting relay behavior, managing signing
   accounts, and following threads without a server-side account system.
-- Welcome lists core surfaces without adding controls that do not perform real
-  workspace actions.
+- Welcome does not start relay connections by itself. Readiness links may open
+  tabs that own relay work.
+
+## Readiness
+
+| Check | Ready when | Action |
+| ----- | ---------- | ------ |
+| Account | Active signing account exists | Open Accounts |
+| Read relays | Selected set has enabled read relay | Open Relay Settings |
+| Posting | Account and write relay ready | Open Tweet |
+| Home | Account ready | Open Home |
