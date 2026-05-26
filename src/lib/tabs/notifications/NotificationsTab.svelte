@@ -120,7 +120,8 @@
   });
 
   $effect(() => {
-    if (!viewState.loading && viewState.records.length > 0) void maybeAutoFill();
+    if (!viewState.loading && viewState.records.length > 0)
+      void maybeAutoFill();
   });
 
   async function markVisibleRead(): Promise<void> {
@@ -129,7 +130,12 @@
   }
 
   async function maybeAutoFill(): Promise<void> {
-    if (autoFillPending || viewState.loadingOlder || !viewState.hasOlder || !runtime)
+    if (
+      autoFillPending ||
+      viewState.loadingOlder ||
+      !viewState.hasOlder ||
+      !runtime
+    )
       return;
     autoFillPending = true;
     await tick();
