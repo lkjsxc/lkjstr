@@ -17,6 +17,8 @@
     index: number;
     active: boolean;
     dragging?: boolean;
+    selectLocked?: boolean;
+    nativeDraggable?: boolean;
     disabled: boolean;
     focus: () => void;
     close: () => void;
@@ -26,6 +28,7 @@
 
   let props: Props = $props();
   const dragState = getContext<TabDragState | undefined>(tabDragStateKey);
+  const html5Draggable = $derived(props.nativeDraggable !== false);
 
   function dragStart(event: DragEvent): void {
     document.body.classList.add('dragging-tab');
@@ -46,6 +49,11 @@
     if (!dragHasTabPayload(event)) return;
     event.preventDefault();
   }
+
+  function blockSelect(event: Event): void {
+    if (props.selectLocked || document.body.classList.contains('dragging-tab'))
+      event.preventDefault();
+  }
 </script>
 
 <div
@@ -56,7 +64,7 @@
   class:active={props.active}
   class:tab-frame--dragging={props.dragging}
   class="tab-frame"
-  draggable="true"
+  draggable={html5Draggable}
   ondragstart={dragStart}
   ondragend={dragEnd}
   ondragover={dragOver}
@@ -70,6 +78,7 @@
     class="tab-main"
     disabled={props.disabled}
     onpointerdown={(event) => props.pointerDown(event, props.tab)}
+    onselectstart={blockSelect}
     onclick={props.focus}
   >
     <span>{props.tab.title}</span>

@@ -46,6 +46,9 @@
     moveTab,
   }: Props = $props();
   const dragState = getContext<TabDragState | undefined>(tabDragStateKey);
+  const prefersCoarse =
+    typeof matchMedia === 'function' &&
+    matchMedia('(pointer: coarse)').matches;
   let session = $state<StripPointerSession | undefined>();
   let ghost = $state<{ x: number; y: number; title: string } | undefined>();
   let dragElement: HTMLElement | undefined;
@@ -72,8 +75,16 @@
 
   function pointerMove(event: PointerEvent): void {
     if (!session || event.pointerId !== session.snapshot.pointerId) return;
+    const wasActive = session.snapshot.active;
     session = moveStripPointer(session, event);
     if (!session.snapshot.active) return;
+    if (!wasActive) {
+      try {
+        dragElement?.setPointerCapture(event.pointerId);
+      } catch {
+        /* jsdom and some test hosts omit capture */
+      }
+    }
     event.preventDefault();
     dragElement?.classList.add('tab-frame--dragging');
     document.body.classList.add('dragging-tab');
@@ -182,6 +193,12 @@
           active={group.activeTabId === tab.id}
           dragging={session?.snapshot.active === true &&
             session.snapshot.tabId === tab.id}
+          selectLocked={Boolean(
+            session &&
+              (session.longPressArmed || session.snapshot.active) &&
+              session.snapshot.tabId === tab.id,
+          )}
+          nativeDraggable={session ? session.kind !== 'coarse' : !prefersCoarse}
           {disabled}
           focus={() => focusTab(tab.id)}
           close={() => closeTab(tab.id)}

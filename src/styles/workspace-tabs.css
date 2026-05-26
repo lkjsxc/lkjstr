@@ -68,6 +68,14 @@ body.dragging-tab .tab-frame[draggable='true'] {
   touch-action: none;
 }
 
+body.dragging-tab,
+body.dragging-tab .tab-strip,
+body.dragging-tab .tab-frame,
+body.dragging-tab .tab-main {
+  -webkit-user-select: none;
+  user-select: none;
+}
+
 .tab-frame[draggable='true']:active,
 .tab-frame.tab-frame--dragging {
   cursor: grabbing;
