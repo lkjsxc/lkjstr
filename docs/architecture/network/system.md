@@ -19,6 +19,8 @@ cache access, and workspace state run in browser-owned modules.
 - Relay pool: WebSocket connections, subscriptions, publish results, monitor events.
 - Cache service: IndexedDB repositories and query helpers.
 - Worker bridge: background verification, normalization, indexing, and query fan-out.
+- Subscription orchestrator: Demand registry, lease planner, and ingress classification
+  between runtimes and the subscription manager.
 
 ## Dependency Direction
 
@@ -27,6 +29,13 @@ and storage interfaces. Protocol kernel does not depend on UI, SvelteKit,
 IndexedDB, or WebSocket implementations.
 
 Relay pool depends on protocol message helpers but not on pane components. Pane ownership is passed as data.
+
+Tab and pane components submit **Demands** to the orchestrator. Only the
+orchestrator and subscription manager issue `REQ` and `CLOSE`. Runtimes consume
+materialized storage and selectors; they do not own raw relay subscription ids.
+
+In `lkjstr`, **backend** means this browser-local orchestration layer, not a
+remote server or relay proxy.
 
 ## State Classes
 

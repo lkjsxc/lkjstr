@@ -25,6 +25,11 @@ bounded as timelines grow.
   locally before page slicing.
 - Live relay subscriptions set `since` when the runtime starts so old relay
   history is not replayed into the live window.
+- Orchestration budgets: at most one live lease per compatible Demand fingerprint;
+  bootstrap Demands accept only feed-renderable kinds; non-render-critical events
+  increment dropped counters instead of expanding feed windows.
+- Maximum unresolved author identities for visible-row hydration: `30` per page.
+- Maximum unresolved references: bounded by visible-row prefetch coordinator.
 - Home, Global, and Profile initial or historical relay reads are adaptive
   bounded scans. Each contacted relay must complete a window with EOSE before
   that window can prove there are no matching events there.

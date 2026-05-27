@@ -75,6 +75,8 @@ for detailed contracts.
   settings storage.
 - [architecture/network/subscription-manager.md](architecture/network/subscription-manager.md):
   shared relay reads.
+- [architecture/network/subscription-orchestration/README.md](architecture/network/subscription-orchestration/README.md):
+  Demand, Lease, bootstrap/live orchestration.
 - [architecture/network/system.md](architecture/network/system.md): app
   boundaries.
 - [architecture/runtimes/README.md](architecture/runtimes/README.md): tab

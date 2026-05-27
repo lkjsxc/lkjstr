@@ -13,6 +13,8 @@ and app boundaries.
 - [relay-routing.md](relay-routing.md): protocol-derived read routing.
 - [settings-store.md](settings-store.md): flat settings storage.
 - [subscription-manager.md](subscription-manager.md): shared relay reads.
+- [subscription-orchestration/README.md](subscription-orchestration/README.md):
+  Demand, Lease, bootstrap/live, routing, observability.
 - [system.md](system.md): app boundaries.
 
 ## Shared Contract

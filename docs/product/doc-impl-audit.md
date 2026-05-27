@@ -54,6 +54,16 @@ documented-only. Update it when a vertical slice closes a gap.
 | No feed npub subtitle                 | identity-rendering.md | implemented | feed-identity                    |
 | Welcome document links                | welcome.md            | implemented |                                  |
 
+## Subscription Orchestration
+
+| Clause | Contract | Status | Notes |
+| ------ | -------- | ------ | ----- |
+| Demand / Lease docs | subscription-orchestration/ | documented | implementation in progress |
+| Bootstrap closes on EOSE | bootstrap-live.md | partial | relay client backward strategy |
+| Shared live lease across tabs | compatibility.md | partial | orchestrator merge |
+| Stats orchestration counters | observability.md | partial | metrics module |
+| Subscription E2E gate | verification.md | partial | lease-sharing, pane-churn specs |
+
 ## Feed Scroll and Row Chrome
 
 | Clause                                | Contract              | Status | Notes |

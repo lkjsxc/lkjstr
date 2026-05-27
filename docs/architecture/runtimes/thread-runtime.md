@@ -4,24 +4,29 @@
 
 Thread runtime owns event root and reply loading.
 
+## Render-Critical Kinds
+
+| Phase | Kinds |
+|-------|-------|
+| Bootstrap root | Kind for root event id lookup |
+| Bootstrap replies | Kinds the thread list renders (`1`, `6`, `16` as applicable) |
+| Live | Reply filter `#e` for root id |
+
+## Lazy Hydration
+
+- Reactions and repost counts: visible-row or expanded-row Demands only.
+- Root context from cache before relay root Demand.
+
+## Cursor Policy
+
+- **Bootstrap**: `ids` for root, then `#e` reply scan; window cap `240`.
+- **Live**: forward `since` from newest reply in window.
+- **Older / newer**: `page` phase via `e` tag index routes.
+- Route hints and receipts before selected-relay widening.
+
 ## Contract
 
-- `ThreadRuntime` receives an event id, selected fallback relay list, and
-  subscription id.
-- It loads cached root and referencing events first.
-- It subscribes with `ids` for the root and `#e` for replies.
-- It stores incoming events in the shared event cache.
-- It keeps a `240` item thread window.
-- Retain at most `240` live and cached Thread rows even if relays stream more.
-- It exposes `loadOlder()` and `loadNewer()`.
-- Shared feed surface lists show `FeedSurfaceStatus` while `loadingOlder &&
-hasOlder`, and terminal history only when `hasOlder === false`.
-- Speculative older prefetch may run once when near end while `hasOlder` is true.
-- State exposes `loadingOlder`, `hasOlder`, `loadingNewer`, `hasNewer`,
-  `oldestCursor`, and `newestCursor`.
-- Historical reads use the `e` tag index and one-shot routed relay pages sorted
-  by `{created_at,id}` with relay provenance merged across duplicate replies.
-- Older-window pruning sets `hasNewer`; `loadNewer()` restores newer cached or
-  relay replies from the top cursor.
-- It closes subscriptions on tab close and aborts in-flight or queued root,
-  older, newer, reaction, and repost relay page reads.
+- `ThreadRuntime` receives event id, fallback relays, and owner id.
+- Load cache first; orchestrator for relay phases.
+- Close Demands on tab close; abort queued page reads.
+- Hidden tabs release live reply Demand.

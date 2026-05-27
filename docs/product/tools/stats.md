@@ -18,8 +18,10 @@ Stats shows current-session relay counters and persisted operational summaries.
   counts.
 - Runtime memory shows compact app-owned counters: app log count, relay
   suppression count, in-flight reads, fallback repository counts, reference
-  cache size, profile cache size, token cache size, relay snapshot totals, and
-  optional JavaScript heap.
+  cache size, profile cache size, token cache size, relay snapshot totals,
+  orchestration demand and lease counts (active, live, bootstrap), relay REQ and
+  CLOSE totals, events received vs accepted vs dropped, and optional JavaScript
+  heap.
 - Runtime memory output is redacted count data only. It must not expose raw
   events, relay payloads, subscription ids, tab ids, request ids, or log
   messages.

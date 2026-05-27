@@ -85,6 +85,21 @@ Memory churn verification uses signed synthetic Nostr events and the synthetic
 relay helper. App JavaScript heap is the owned assertion; Chromium RSS is
 diagnostic only.
 
+Subscription orchestration changes must also run:
+
+```sh
+pnpm vitest run tests/unit/relays/orchestration
+pnpm test:e2e -- tests/e2e/subscription-lease-sharing.spec.ts tests/e2e/subscription-pane-churn.spec.ts
+```
+
+Acceptance criteria (synthetic relay):
+
+- Active WebSocket count stays at or below enabled relay count.
+- Bootstrap leases close on `EOSE` (`bootstrapLeases` returns to zero).
+- Two visible Home tabs with the same account and relays share one live lease.
+- After closing all feed tabs, `activeLeases`, `activeDemands`, and `liveLeases`
+  are zero in `__lkjstrMemoryDebug()`.
+
 Final release verification for this class of change is:
 
 ```sh

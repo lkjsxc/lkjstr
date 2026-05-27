@@ -5,6 +5,10 @@
 Relay routing lets browser runtimes find targeted events without importing
 relays into Relay Settings or relying on a backend proxy.
 
+Per-surface routing tables live in
+[subscription-orchestration/routing-by-surface.md](subscription-orchestration/routing-by-surface.md).
+The orchestrator applies those tables when building Demand relay lists.
+
 ## Sources
 
 - Selected read relays are always the base and fallback.

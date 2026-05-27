@@ -54,6 +54,8 @@ change cannot land:
   `performance.memory.usedJSHeapSize` in Chromium or CDP `Runtime.getHeapUsage`.
 - **Compact runtime counter cleanup**: After closing all test-created tabs and
   subscriptions, every app-owned counter must read zero.
+- **Orchestration lease cleanup**: `activeLeases`, `activeDemands`, and
+  `liveLeases` from orchestration metrics must read zero after pane churn tests.
 - **Heap delta after repeated open/close cycles**: The delta must stay under the
   documented threshold.
 

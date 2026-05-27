@@ -2,7 +2,26 @@
 
 ## Purpose
 
-Query runtime docs define how cache-first relay reads behave.
+Query runtime docs define how cache-first relay reads behave for Search and
+Custom Request tools.
+
+## Render-Critical Kinds
+
+| Tool | Bootstrap / page | Live |
+|------|------------------|------|
+| Search | User filter kinds (typically `1`) | Optional live tail when filter is open-ended |
+| Custom Request | User-defined filters | One-shot unless user starts live mode |
+
+## Lazy Hydration
+
+- Search hydrates profile snippets for visible result rows only.
+- Custom Request does not auto-hydrate metadata beyond result rows.
+
+## Cursor Policy
+
+- Cache-first; relay Demands through orchestrator with tool owner id.
+- Page size `30`; compound cursors for feed-like results.
+- Tools release Demands on tab close or filter change.
 
 ## Contract
 
@@ -28,7 +47,7 @@ Query runtime docs define how cache-first relay reads behave.
 - `loadNewer()` restores newer chunks from the current newest cursor.
 - Live reads set `since` at runtime start.
 - Empty enabled-relay lists produce a visible no-enabled-relay state.
-- Runtimes close their relay subscriptions when the owning tab unmounts.
+- Runtimes release orchestrator Demands when the owning tab unmounts.
 - Runtimes ignore events for other subscription ids.
 - Near-end detection uses scroll offset plus viewport size compared with total
   scroll size.

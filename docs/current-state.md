@@ -46,9 +46,12 @@ linked product, protocol, architecture, and operations pages.
   and event parsing.
 - IndexedDB remains durable browser-owned data; memory relief prunes only
   bounded app-owned runtime windows, caches, counters, and fallback stores.
-- Relay clients, relay pool, subscription manager, and tab runtimes own network
-  reads and deterministic cleanup.
-- Inactive workspace tabs keep hidden mounted bodies; feed runtimes pause.
+- Relay clients, relay pool, subscription orchestrator, subscription manager,
+  and tab runtimes own network reads and deterministic cleanup.
+- Surfaces submit Demands; the orchestrator plans shared Leases and issues reads
+  through the subscription manager.
+- Inactive workspace tabs keep hidden mounted bodies; feed runtimes release live
+  Demands while retaining bounded windows and session snapshots.
   Session snapshots (up to `32` warm tabs) and IndexedDB `tabStates` backstop
   reload and missing-mount restore for scroll anchors, feed cursors,
   `hasOlder`/`hasNewer`, and tool fields.
