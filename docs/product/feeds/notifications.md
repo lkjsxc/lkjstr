@@ -9,6 +9,9 @@ notification context header and the source event as the primary body.
 
 - The tab opens from New Tab.
 - Records are scoped to the active account pubkey.
+- Relay filters use `#p: [activePubkey]` for targeting events at the account.
+  Notification filters must not reuse Home `authors` semantics. See
+  [notifications source](../../architecture/feeds/sources/notifications.md).
 - Mentions, replies, reactions, reposts, quotes, profile references, and zap
   receipts are indexed.
 - Profile references are indexed when metadata points at the active account.

@@ -28,6 +28,8 @@ backfill.
 ## Contract
 
 - Load local notification records before relay Demands.
+- Build relay filters through `notification-filters` (`#p` targeting only).
+- Reject self-authored kind `1` without `#p` self tag as notification rows.
 - Use active account NIP-65 read relays plus selected read fallback.
 - Mark read only when tab is visible and window focused.
 - No relay Demands without active account or enabled read relays.

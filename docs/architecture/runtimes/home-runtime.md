@@ -38,7 +38,12 @@ Home runtime owns active-account follow discovery and followed-note loading.
 - Load older and newer through shared feed surface paging.
 - Apply one total request budget across Home author chunks.
 - Subscribe to notes through the orchestrator, not raw relay calls.
-- Use selected read relays as base and fallback, then bounded author routes.
+- Use selected read relays as base and NIP-65 author routes for paging.
+  Selected-author fallback route chunks apply only during bootstrap and route
+  discovery, not on every older or newer page. See
+  [feeds/orchestration-bridge.md](../feeds/orchestration-bridge.md).
+- `no-follow-list` emits empty feed with guidance; no self-only notes scan.
+- Merge pages through `timeline-reducer`; cache restore uses generation guard.
 - Expose runtime status strings including `ready-empty` and `ready-with-events`.
 - Close Demands when the primitive runtime key changes or the tab closes.
 - Hidden tabs release live Demands; cached window and cursors remain until close.

@@ -65,6 +65,18 @@ documented-only. Update it when a vertical slice closes a gap.
 | Subscription E2E gate         | verification.md             | implemented | lease-sharing, pane-churn specs |
 | Hidden tab demand pause       | demand.md                   | implemented | setVisibility on feed runtimes  |
 
+## Feed Correctness
+
+| Clause | Contract | Status | Notes |
+| ------ | -------- | ------ | ----- |
+| Canonical event ordering | feeds/invariants/event-ordering.md | implemented | `event-order.ts` |
+| Merge-by-id reducer | feeds/runtime/merge-reducer.md | implemented | `timeline-reducer.ts` |
+| Home no self-only fallback | feeds/sources/home.md | implemented | `no-follow-list` empty |
+| Notification `#p` filters | feeds/sources/notifications.md | implemented | `notification-filters.ts` |
+| Per-tab page cursors | feeds/runtime/per-runtime-cursors.md | implemented | runtime instance key |
+| Timeline regression e2e | verification.md | implemented | `timeline-regression.spec.ts` |
+| Multi-tab cursor e2e | feeds/runtime/multi-tab-ownership.md | implemented | `timeline-multi-tab.spec.ts` |
+
 ## Feed Scroll and Row Chrome
 
 | Clause                                 | Contract                | Status      | Notes                                                                                                          |

@@ -33,6 +33,17 @@ docker compose -f docker-compose.yml run --rm cloudflare
 
 Run all five Docker command groups before claiming image-backed verification.
 
+Feed regression and filter kernel changes should also run:
+
+```sh
+pnpm vitest run tests/unit/query/timeline-filters.test.ts
+pnpm vitest run tests/unit/events/event-order.test.ts
+pnpm vitest run tests/unit/timeline/timeline-reducer.test.ts
+pnpm vitest run tests/unit/notifications/notification-filters.test.ts
+pnpm vitest run tests/unit/timeline/timeline-follow-loading.test.ts
+pnpm test:e2e -- tests/e2e/timeline-regression.spec.ts tests/e2e/timeline-multi-tab.spec.ts
+```
+
 Focused relay paging changes should also run:
 
 ```sh

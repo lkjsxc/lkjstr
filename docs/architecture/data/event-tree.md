@@ -12,8 +12,10 @@ model.
 - Child branches sort newest first.
 - A reply whose parent is missing is shown as a root until the parent arrives.
 - The UI renders the flattened tree through the shared event tree list.
-- Home, Global, Thread, Search, Custom Request, Author Context, Profile Notes,
-  and Notifications use the shared virtual `FeedSurfaceList` / `EventTreeList`.
+- Home, Global, Thread, Search, Custom Request, Author Context, and Profile Notes
+  use the shared virtual `FeedSurfaceList` / `EventTreeList`.
+- Notifications use `FeedScrollSurface` with a flat Virtua list; embedded rows
+  use the canonical `EventRow` inside notification chrome.
 - Post rows hide relay source text and full public-key text.
 - Rows render avatar, display name, optional nip05 subtitle only, timestamp,
   and wrapped content. npub and hex pubkeys never appear beside the display name

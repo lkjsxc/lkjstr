@@ -53,7 +53,11 @@ its NIP-02 follows.
 - Deleted or disabled relays are not replaced by hidden public defaults.
 - No active account means no relay subscription. Home must not enter
   `no-active-account` while workspace account data is still loading.
-- No follow list means self notes are queried and the state remains visible.
+- No follow list after follow-discovery EOSE means an empty feed with explicit
+  guidance. Home must not start a self-only relay scan as a silent fallback.
+  See [home source](../../architecture/feeds/sources/home.md).
+- While follows are loading, Home must not issue notes filters with only the
+  active pubkey.
 - Loading ends when cached or initial relay data exists, contacted relays finish
   or fail, or a live relay produces matching events.
 - A failed relay remains diagnostic and must not block other relays.
@@ -84,7 +88,8 @@ its NIP-02 follows.
 
 - `no-active-account`: cache only; account action required.
 - `loading-follows`: active account exists and follow discovery or notes load.
-- `no-follow-list`: latest kind `3` is absent; self notes are queried.
+- `no-follow-list`: latest kind `3` is absent; empty feed with guidance; no
+  self-only relay scan.
 - `no-enabled-relay`: selected set has no enabled read relay.
 - `auth-required`: a relay sent `AUTH`.
 - `subscription-closed`: a relay sent `CLOSED`.

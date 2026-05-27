@@ -61,6 +61,10 @@ linked product, protocol, architecture, and operations pages.
 - Feed surfaces share `IntersectionObserver` near-end sentinels with scroll
   fallback, `feedPagingPhase` footer semantics, speculative older pages, and
   staged row shells on Home, Global, Profile, Thread, and Notifications.
+- Feed correctness contracts live under
+  [architecture/feeds](architecture/feeds/README.md): canonical ordering,
+  merge-by-id reducer, per-tab page cursors, and independent notification
+  filters.
 - Virtual event lists use `EventTreeList` on Home, Global, Profile notes,
   Thread, Search, and Custom Request. Notifications uses Virtua flat listing
   via `FeedScrollSurface` with the same footer and near-end contract.
