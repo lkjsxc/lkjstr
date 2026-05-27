@@ -37,29 +37,24 @@ test('closing one home tab does not stop the other live tail', async ({
   await openCleanWorkspace(page);
   await addReadonlyAccount(page, active);
   await selectStartupTab(page, 'Home');
-  await expect(page.getByText('multi tab home note')).toBeVisible({
+  const body = pane(page, 1).locator('.pane-body[data-active-tab="true"]');
+  await expect(body.getByText('multi tab home note')).toBeVisible({
     timeout: 15_000,
   });
 
   await openNewTabOption(page, 'Home', 1);
-  const secondTab = pane(page, 1)
-    .locator('.tab-strip')
-    .getByRole('button', { name: 'Home', exact: true })
-    .last();
+  const strip = pane(page, 1).locator('.tab-strip');
+  const secondTab = strip.getByRole('button', { name: 'Home', exact: true }).last();
   await secondTab.click();
-  await expect(page.getByText('multi tab home note')).toBeVisible();
+  await expect(body.getByText('multi tab home note')).toBeVisible();
 
-  await pane(page, 1)
-    .locator('.tab-strip')
-    .getByRole('button', { name: 'Home', exact: true })
-    .first()
-    .click();
-  await pane(page, 1)
-    .locator('.tab-strip button[aria-label="Close tab"]')
+  await strip.getByRole('button', { name: 'Home', exact: true }).first().click();
+  await strip
+    .getByRole('button', { name: /^Close Home\b/ })
     .first()
     .click();
   await page.waitForTimeout(500);
 
   await secondTab.click();
-  await expect(page.getByText('multi tab home note')).toBeVisible();
+  await expect(body.getByText('multi tab home note')).toBeVisible();
 });
