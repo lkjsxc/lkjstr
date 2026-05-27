@@ -3,7 +3,7 @@ import { createThreadRuntime } from '../../../src/lib/thread/thread-runtime';
 import { createRelayPool } from '../../../src/lib/relays/relay-pool';
 import { clearEventRepositoryForTests } from '../../../src/lib/events/repository';
 import { storeThreadEvent } from '../../../src/lib/thread/thread-store';
-import type { RelaySubscriptionManager } from '../../../src/lib/relays/subscription-manager';
+import type { SubscriptionOrchestrator } from '../../../src/lib/relays/orchestration/orchestrator';
 
 describe('thread runtime', () => {
   beforeEach(() => clearEventRepositoryForTests());
@@ -13,6 +13,7 @@ describe('thread runtime', () => {
     const runtime = createThreadRuntime(
       'a'.repeat(64),
       [],
+      'thread-test',
       'thread-test',
       createRelayPool(),
     );
@@ -31,6 +32,7 @@ describe('thread runtime', () => {
       root,
       ['wss://relay.example/'],
       'thread-test',
+      'thread-test',
       createRelayPool(),
       failingSubscriptions(),
     );
@@ -43,14 +45,45 @@ describe('thread runtime', () => {
   });
 });
 
-function failingSubscriptions(): RelaySubscriptionManager {
-  return {
+function failingSubscriptions(): SubscriptionOrchestrator {
+  const base = {
     subscribeState: () => () => undefined,
     subscribeLive: () => () => undefined,
     readPage: async () => {
       throw new Error('older failed');
     },
-  } as unknown as RelaySubscriptionManager;
+    readPageDetailed: async () => {
+      throw new Error('older failed');
+    },
+    close: () => undefined,
+    counts: () => ({
+      liveSubscriptions: 0,
+      liveListeners: 0,
+      inFlightReads: 0,
+    }),
+  };
+  return {
+    ...base,
+    subscribeDemand: () => () => undefined,
+    readDemandPage: async () => {
+      throw new Error('older failed');
+    },
+    pauseOwner: () => undefined,
+    resumeOwner: () => undefined,
+    releaseOwner: () => undefined,
+    metricsSnapshot: () => ({
+      activeDemands: 0,
+      activeLeases: 0,
+      liveLeases: 0,
+      bootstrapLeases: 0,
+      relayReqTotal: 0,
+      relayCloseTotal: 0,
+      eventsReceived: 0,
+      eventsAccepted: 0,
+      eventsDroppedDuplicate: 0,
+      eventsDroppedNonRenderCritical: 0,
+    }),
+  };
 }
 
 function event(id: string, created_at: number) {

@@ -6,7 +6,9 @@ import type { FeedCursorPoint } from '../events/types';
 import { discoverAuthorRelayRoutes } from '../relays/relay-discovery';
 import { runtimeSubscriptions } from '../relays/runtime-subscriptions';
 import { routedAuthorRelays } from '../relays/relay-routing';
-import type { RelaySubscriptionManager } from '../relays/subscription-manager';
+import type { DemandVisibility } from '../relays/orchestration/demand-types';
+import { liveFeedDemand } from '../relays/orchestration/runtime-demand';
+import type { SubscriptionOrchestrator } from '../relays/orchestration/orchestrator';
 import { childRelaySubscriptionId } from '../relays/subscription-id';
 import type { RelaySnapshot } from '../relays/types';
 import { authorFilters } from './follow-list';
@@ -33,7 +35,13 @@ export type TimelineRuntime = ReturnType<typeof createTimelineRuntime>;
 
 export function createTimelineRuntime(options: TimelineRuntimeOptions) {
   // prettier-ignore
-  const subscriptions: RelaySubscriptionManager = runtimeSubscriptions(options.pool, options.subscriptions);
+  const subscriptions: SubscriptionOrchestrator = runtimeSubscriptions(
+    options.pool,
+    options.subscriptions,
+  );
+  const owner = options.owner ?? options.subId;
+  const surface = options.kind === 'global' ? 'global' : 'home';
+  let visibility: DemandVisibility = 'visible';
   let cached: TimelineItem[] = [],
     live: TimelineItem[] = [];
   let state: TimelineState = emptyState();
@@ -107,10 +115,14 @@ export function createTimelineRuntime(options: TimelineRuntimeOptions) {
   const subscribeNotes = async (): Promise<void> => {
     const initialPage = loadInitialNotes();
     routeRelays = await routedAuthorRelays({ authors, selectedRelays: relays, purpose: 'write' });
-    subscribe(noteSubId, authorFilters(authors, pageSize, { since: startedAt }, 'per-filter'), routeRelays);
+    subscribe(
+      'notes',
+      authorFilters(authors, pageSize, { since: startedAt }, 'per-filter'),
+      routeRelays,
+    );
     const missing = authors.filter((pubkey) => !profiles[pubkey]).slice(0, metadataPageLimit);
     const filters = profileFilter(missing);
-    if (filters.length > 0) subscribe(metaSubId, filters);
+    if (filters.length > 0) subscribe('meta', filters, relays, 'metadata');
     void initialPage.then(() => discoverRoutesAfterInitial());
   };
   const receiverContext = () => ({
@@ -138,9 +150,28 @@ export function createTimelineRuntime(options: TimelineRuntimeOptions) {
     getLive: () => live,
   });
   // prettier-ignore
-  const subscribe = (key: string, filters: readonly NostrFilter[], selectedRelays = relays): void => {
+  const subscribe = (
+    channel: string,
+    filters: readonly NostrFilter[],
+    selectedRelays = relays,
+    purpose: 'feed' | 'metadata' | 'route-discovery' = 'feed',
+  ): void => {
     if (closed) return;
-    cleanup.push(subscriptions.subscribeLive({ key, relays: selectedRelays, filters, purpose: key === metaSubId ? 'metadata' : 'feed' }, (event) => void receiveTimelinePoolEvent(receiverContext(), event)));
+    cleanup.push(
+      subscriptions.subscribeDemand(
+        liveFeedDemand({
+          surface,
+          owner,
+          channel,
+          relays: selectedRelays,
+          filters,
+          purpose,
+          since: startedAt,
+          visibility,
+        }),
+        (event) => void receiveTimelinePoolEvent(receiverContext(), event),
+      ),
+    );
   };
   // prettier-ignore
   const handleMissingFollow = (): void => {
@@ -175,9 +206,22 @@ export function createTimelineRuntime(options: TimelineRuntimeOptions) {
       emit(withCursors(seeded));
       if (relays.length === 0) return emit(noEnabledRelayState(state));
       cleanup.push(subscriptions.subscribeState(receiveState));
-      if (followList) await subscribeNotes(); else subscribe(followSubId, [{ kinds: [3], authors: [pubkey], limit: 1 }]);
+      if (followList) await subscribeNotes();
+      else subscribe('follows', [{ kinds: [3], authors: [pubkey], limit: 1 }]);
     },
-    close: (): void => { closed = true; generation++; aborts.abort(); for (const item of cleanup.splice(0)) item(); listeners.clear(); },
+    setVisibility: (visible: boolean): void => {
+      visibility = visible ? 'visible' : 'hidden';
+      if (visible) subscriptions.resumeOwner(owner);
+      else subscriptions.pauseOwner(owner);
+    },
+    close: (): void => {
+      closed = true;
+      generation++;
+      aborts.abort();
+      subscriptions.releaseOwner(owner);
+      for (const item of cleanup.splice(0)) item();
+      listeners.clear();
+    },
     loadOlder: async (): Promise<void> => {
       if (closed || state.loadingOlder || !state.hasOlder) return; const run = generation; const cursor = olderScanCursor ?? state.oldestCursor; if (!cursor || authors.length === 0) return; emit({ ...state, loadingOlder: true });
       try {

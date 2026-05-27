@@ -10,7 +10,8 @@ import {
   clearRelayRoutesForTests,
   saveAuthorRelayRoute,
 } from '../../../src/lib/relays/relay-route-store';
-import type { RelaySubscriptionManager } from '../../../src/lib/relays/subscription-manager';
+import type { SubscriptionOrchestrator } from '../../../src/lib/relays/orchestration/orchestrator';
+import type { Demand } from '../../../src/lib/relays/orchestration/demand-types';
 import { createTimelineRuntime } from '../../../src/lib/timeline/timeline-runtime';
 import { storeTimelineEvent } from '../../../src/lib/timeline/timeline-store';
 
@@ -51,7 +52,7 @@ describe('timeline route discovery startup', () => {
     expect(
       calls.some((call) => call.key === 'timeline-test:notes:routes'),
     ).toBe(false);
-    const liveNotes = calls.find((call) => call.key === 'timeline-test:notes');
+    const liveNotes = calls.find((call) => call.type === 'live');
     expect(liveNotes?.relays).toEqual([
       'wss://route.example/',
       'wss://selected.example/',
@@ -66,9 +67,7 @@ describe('timeline route discovery startup', () => {
     const routeIndex = calls.findIndex(
       (call) => call.key === 'timeline-test:notes:routes',
     );
-    const liveIndex = calls.findIndex(
-      (call) => call.key === 'timeline-test:notes',
-    );
+    const liveIndex = calls.findIndex((call) => call.type === 'live');
     expect(routeIndex).toBeGreaterThan(liveIndex);
   });
 });
@@ -82,8 +81,8 @@ type Call = {
 function subscriptionsFor(
   calls: Call[],
   initialPage: ReturnType<typeof deferred<PoolEvent[]>>,
-): RelaySubscriptionManager {
-  return {
+): SubscriptionOrchestrator {
+  const base = {
     readPage: async (request: RelayReadRequest) => {
       calls.push({ type: 'read', key: request.key, relays: request.relays });
       if (request.key.includes(':notes:initial')) return initialPage.promise;
@@ -94,7 +93,50 @@ function subscriptionsFor(
       return () => undefined;
     },
     subscribeState: () => () => undefined,
-  } as unknown as RelaySubscriptionManager;
+    readPageDetailed: async (request: RelayReadRequest) => ({
+      events: await base.readPage(request),
+      statuses: [],
+    }),
+    close: () => undefined,
+    counts: () => ({
+      liveSubscriptions: 0,
+      liveListeners: 0,
+      inFlightReads: 0,
+    }),
+  };
+  return {
+    ...base,
+    subscribeDemand: (demand: Demand) => {
+      calls.push({
+        type: 'live',
+        key: demand.owner,
+        relays: demand.relays,
+      });
+      return () => undefined;
+    },
+    readDemandPage: async (demand: Demand) =>
+      base.readPageDetailed({
+        key: demand.owner,
+        relays: demand.relays,
+        filters: demand.filters,
+        purpose: demand.purpose,
+      }),
+    pauseOwner: () => undefined,
+    resumeOwner: () => undefined,
+    releaseOwner: () => undefined,
+    metricsSnapshot: () => ({
+      activeDemands: 0,
+      activeLeases: 0,
+      liveLeases: 0,
+      bootstrapLeases: 0,
+      relayReqTotal: 0,
+      relayCloseTotal: 0,
+      eventsReceived: 0,
+      eventsAccepted: 0,
+      eventsDroppedDuplicate: 0,
+      eventsDroppedNonRenderCritical: 0,
+    }),
+  };
 }
 
 function initialNotesRead(call: Call): boolean {

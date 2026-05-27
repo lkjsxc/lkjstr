@@ -1,10 +1,12 @@
 import { lookupEvents, upsertEvent } from '../events/repository';
 import { boundedErrorText } from '../events/runtime-error';
 import { feedPageSize, feedWindowSize } from '../events/feed-window';
+import { liveFeedDemand } from '../relays/orchestration/runtime-demand';
 import {
-  sharedSubscriptionManager,
-  type RelaySubscriptionManager as SubscriptionManager,
-} from '../relays/subscription-manager';
+  sharedSubscriptionOrchestrator,
+  type SubscriptionOrchestrator,
+} from '../relays/orchestration/orchestrator';
+import type { DemandVisibility } from '../relays/orchestration/demand-types';
 import { olderRelaySubscriptionId } from '../relays/subscription-id';
 import { deriveNotifications } from './notification-index';
 import type { NotificationRecord } from './notification';
@@ -30,8 +32,10 @@ export function createNotificationRuntime(
   accountPubkey: string | undefined,
   relays: readonly string[],
   subId: string,
-  subscriptions: SubscriptionManager = sharedSubscriptionManager,
+  owner = subId,
+  subscriptions: SubscriptionOrchestrator = sharedSubscriptionOrchestrator,
 ) {
+  let visibility: DemandVisibility = 'visible';
   const cleanup: (() => void)[] = [];
   const listeners = new Set<(state: NotificationState) => void>();
   const pageSize = feedPageSize;
@@ -101,9 +105,35 @@ export function createNotificationRuntime(
       if (!accountPubkey || relays.length === 0) return emit({ ...state, loading: false });
       await readInitialRelayPage(run); if (!active(run)) return;
       const selected = await notificationRelays(accountPubkey, relays);
-      cleanup.push(subscriptions.subscribeLive({ key: subId, relays: selected, filters: [{ kinds: notificationEventKinds, '#p': [accountPubkey], since: startedAt, limit: pageSize }], purpose: 'feed' }, async ({ event, relay }) => {
-        if (closed) return; await upsertEvent(event, [relay]); if (closed) return; await saveNotifications(deriveNotifications(accountPubkey, event, [relay])); await reload(false);
-      }));
+      cleanup.push(
+        subscriptions.subscribeDemand(
+          liveFeedDemand({
+            surface: 'notifications',
+            owner,
+            channel: 'notifications:live',
+            relays: selected,
+            filters: [
+              {
+                kinds: [...notificationEventKinds],
+                '#p': [accountPubkey],
+                since: startedAt,
+                limit: pageSize,
+              },
+            ],
+            since: startedAt,
+            visibility,
+          }),
+          async ({ event, relay }) => {
+            if (closed) return;
+            await upsertEvent(event, [relay]);
+            if (closed) return;
+            await saveNotifications(
+              deriveNotifications(accountPubkey, event, [relay]),
+            );
+            await reload(false);
+          },
+        ),
+      );
     },
     markVisibleRead: async (): Promise<void> => { if (closed || !accountPubkey) return; await markAccountNotificationsRead(accountPubkey); if (!closed) await reload(false); },
     loadOlder: async (): Promise<void> => {
@@ -116,10 +146,16 @@ export function createNotificationRuntime(
       } catch (error) { emit({ ...state, error: boundedErrorText(error) }); }
       finally { if (state.loadingOlder) emit({ ...state, loadingOlder: false }); }
     },
+    setVisibility: (visible: boolean): void => {
+      visibility = visible ? 'visible' : 'hidden';
+      if (visible) subscriptions.resumeOwner(owner);
+      else subscriptions.pauseOwner(owner);
+    },
     close: (): void => {
       closed = true;
       generation++;
       controller.abort();
+      subscriptions.releaseOwner(owner);
       for (const item of cleanup.splice(0)) item();
       listeners.clear();
       trackNotificationRecords(0);

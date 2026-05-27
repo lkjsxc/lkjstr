@@ -11,7 +11,9 @@ import { feedDisplayKinds, isFeedDisplayKind } from '../events/feed-kinds';
 import type { PoolEvent } from '../relays/relay-pool';
 import type { FeedCursorPoint } from '../events/types';
 import { runtimeSubscriptions } from '../relays/runtime-subscriptions';
-import type { RelaySubscriptionManager as SubscriptionManager } from '../relays/subscription-manager';
+import type { DemandVisibility } from '../relays/orchestration/demand-types';
+import { liveFeedDemand } from '../relays/orchestration/runtime-demand';
+import type { SubscriptionOrchestrator } from '../relays/orchestration/orchestrator';
 import { childRelaySubscriptionId } from '../relays/subscription-id';
 import type { RelaySnapshot } from '../relays/types';
 import {
@@ -51,10 +53,12 @@ export function createGlobalTimelineRuntime(options: TimelineRuntimeOptions) {
   const limit = feedWindowSize;
   const pageSize = options.limit ?? feedPageSize;
   const subId = childRelaySubscriptionId(options.subId, 'notes');
-  const subscriptions: SubscriptionManager = runtimeSubscriptions(
+  const subscriptions: SubscriptionOrchestrator = runtimeSubscriptions(
     options.pool,
     options.subscriptions,
   );
+  const owner = options.owner ?? options.subId;
+  let visibility: DemandVisibility = 'visible';
   const profileCoordinator = createTimelineProfileCoordinator(
     relays,
     `${options.subId}:profiles`,
@@ -123,10 +127,36 @@ export function createGlobalTimelineRuntime(options: TimelineRuntimeOptions) {
         : boot;
       emit(nextState(seeded));
       if (relays.length === 0) return emit(noEnabledRelayState(state));
-      cleanup.push(subscriptions.subscribeState(receiveState), subscriptions.subscribeLive({ key: subId, relays, filters: [{ kinds: feedDisplayKinds, since: startedAt, limit: pageSize }], purpose: 'feed' }, (event) => receive(event)));
+      cleanup.push(
+        subscriptions.subscribeState(receiveState),
+        subscriptions.subscribeDemand(
+          liveFeedDemand({
+            surface: 'global',
+            owner,
+            channel: 'global:notes',
+            relays,
+            filters: [{ kinds: feedDisplayKinds, since: startedAt, limit: pageSize }],
+            since: startedAt,
+            visibility,
+          }),
+          (event) => receive(event),
+        ),
+      );
       void loadInitialPage();
     },
-    close: (): void => { closed = true; generation++; aborts.abort(); for (const item of cleanup.splice(0)) item(); listeners.clear(); },
+    setVisibility: (visible: boolean): void => {
+      visibility = visible ? 'visible' : 'hidden';
+      if (visible) subscriptions.resumeOwner(owner);
+      else subscriptions.pauseOwner(owner);
+    },
+    close: (): void => {
+      closed = true;
+      generation++;
+      aborts.abort();
+      subscriptions.releaseOwner(owner);
+      for (const item of cleanup.splice(0)) item();
+      listeners.clear();
+    },
     loadOlder: async (): Promise<void> => {
       if (closed || state.loadingOlder || !state.hasOlder) return; const run = generation; const cursor = olderScanCursor ?? state.oldestCursor; if (!cursor) return; emit({ ...state, loadingOlder: true });
       try {

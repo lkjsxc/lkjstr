@@ -6,7 +6,8 @@ import { profileCacheSize } from '../identity/profile-cache';
 import { appLogCount } from '../log/app-log';
 import { relayDiagnosticSuppressionCount } from '../relays/relay-diagnostic-log';
 import { currentRelaySnapshots } from '../relays/session-snapshots';
-import { sharedSubscriptionManager } from '../relays/subscription-manager';
+import { orchestrationMetricsSnapshot } from '../relays/orchestration/metrics';
+import { sharedSubscriptionOrchestrator } from '../relays/orchestration/orchestrator';
 
 export type RuntimeMemorySnapshot = {
   readonly runtimeCounters: ReturnType<typeof runtimeCounterSnapshots>;
@@ -17,7 +18,10 @@ export type RuntimeMemorySnapshot = {
     readonly open: number;
     readonly activeSubscriptions: number;
   };
-  readonly subscriptions: ReturnType<typeof sharedSubscriptionManager.counts>;
+  readonly subscriptions: ReturnType<
+    typeof sharedSubscriptionOrchestrator.counts
+  >;
+  readonly orchestration: ReturnType<typeof orchestrationMetricsSnapshot>;
   readonly fallbackRepository: ReturnType<typeof fallbackRepositoryCounts>;
   readonly caches: {
     readonly references: number;
@@ -46,7 +50,8 @@ export function runtimeMemorySnapshot(): RuntimeMemorySnapshot {
         0,
       ),
     },
-    subscriptions: sharedSubscriptionManager.counts(),
+    subscriptions: sharedSubscriptionOrchestrator.counts(),
+    orchestration: orchestrationMetricsSnapshot(),
     fallbackRepository: fallbackRepositoryCounts(),
     caches: {
       references: referenceCacheSize(),

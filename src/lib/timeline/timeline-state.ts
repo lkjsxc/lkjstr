@@ -3,7 +3,7 @@ import { feedWindowSize } from '../events/feed-window';
 import type { FeedCursorPoint } from '../events/types';
 import type { FeedTabSnapshotSeed } from '../workspace/tab-snapshot';
 import type { RelayPool } from '../relays/relay-pool';
-import type { RelaySubscriptionManager } from '../relays/subscription-manager';
+import type { SubscriptionOrchestrator } from '../relays/orchestration/orchestrator';
 import type { RelayDiagnostic, RelaySnapshot } from '../relays/types';
 import type { TimelineProfiles } from './timeline-profiles';
 import type { TimelineItem } from './timeline-store';
@@ -41,11 +41,12 @@ export type TimelineRuntimeOptions = {
   readonly seed?: FeedTabSnapshotSeed;
   readonly relays: readonly string[];
   readonly subId: string;
+  readonly owner?: string;
   readonly kind?: 'home' | 'global';
   readonly activeAccountPubkey?: string | null;
   readonly limit?: number;
   readonly pool?: RelayPool;
-  readonly subscriptions?: RelaySubscriptionManager;
+  readonly subscriptions?: SubscriptionOrchestrator;
 };
 
 export function upsertLive(
@@ -78,6 +79,16 @@ export function errorFor(status: TimelineStatus): string | null {
   return errors[status] ?? null;
 }
 
+function subscriptionEose(
+  item: RelaySnapshot,
+  subId: string,
+): boolean {
+  if (item.eoseBySub[subId]) return true;
+  return Object.entries(item.eoseBySub).some(
+    ([id, done]) => done && id.includes(subId.split(':').at(-1) ?? subId),
+  );
+}
+
 export function statusFromRelayState(
   active: readonly RelaySnapshot[],
   diagnostics: readonly RelayDiagnostic[],
@@ -87,7 +98,15 @@ export function statusFromRelayState(
 ): TimelineStatus {
   if (hasItems) return 'ready-with-events';
   if (noFollowList) return 'no-follow-list';
-  if (active.some((item) => item.eoseBySub[noteSubId])) return 'ready-empty';
+  if (
+    active.some(
+      (item) =>
+        subscriptionEose(item, noteSubId) ||
+        Object.values(item.eoseBySub).some(Boolean),
+    )
+  ) {
+    return 'ready-empty';
+  }
   if (active.length === 0) return 'loading-follows';
   if (!active.every((item) => isTerminalSubscription(item, noteSubId)))
     return 'loading-follows';
@@ -103,7 +122,11 @@ export function relaySnapshotCounts(
 ): { connectedRelays: number; eoseRelays: number } {
   return {
     connectedRelays: active.filter((item) => item.state === 'open').length,
-    eoseRelays: active.filter((item) => item.eoseBySub[noteSubId]).length,
+    eoseRelays: active.filter(
+      (item) =>
+        subscriptionEose(item, noteSubId) ||
+        Object.values(item.eoseBySub).some(Boolean),
+    ).length,
   };
 }
 
@@ -118,7 +141,7 @@ export function missingFollowAfterEose(
     active.length > 0 &&
     active.every(
       (item) =>
-        item.eoseBySub[followSubId] ||
+        subscriptionEose(item, followSubId) ||
         item.closedBySub[followSubId] ||
         isTerminalRelay(item),
     );

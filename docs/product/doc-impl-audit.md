@@ -58,11 +58,12 @@ documented-only. Update it when a vertical slice closes a gap.
 
 | Clause | Contract | Status | Notes |
 | ------ | -------- | ------ | ----- |
-| Demand / Lease docs | subscription-orchestration/ | documented | implementation in progress |
-| Bootstrap closes on EOSE | bootstrap-live.md | partial | relay client backward strategy |
-| Shared live lease across tabs | compatibility.md | partial | orchestrator merge |
-| Stats orchestration counters | observability.md | partial | metrics module |
-| Subscription E2E gate | verification.md | partial | lease-sharing, pane-churn specs |
+| Demand / Lease docs | subscription-orchestration/ | implemented | `src/lib/relays/orchestration/` |
+| Bootstrap closes on EOSE | bootstrap-live.md | implemented | relay client backward strategy |
+| Shared live lease across tabs | compatibility.md | implemented | fingerprint + channel merge |
+| Stats orchestration counters | observability.md | implemented | metrics + RuntimeMemoryPanel |
+| Subscription E2E gate | verification.md | implemented | lease-sharing, pane-churn specs |
+| Hidden tab demand pause | demand.md | implemented | setVisibility on feed runtimes |
 
 ## Feed Scroll and Row Chrome
 

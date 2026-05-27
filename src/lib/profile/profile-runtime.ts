@@ -15,8 +15,10 @@ import {
 import type { NostrEvent } from '$lib/protocol';
 import type { FeedCursorPoint } from '$lib/events/types';
 import type { PoolEvent, RelayPool } from '$lib/relays/relay-pool';
+import type { DemandVisibility } from '$lib/relays/orchestration/demand-types';
+import { liveFeedDemand } from '$lib/relays/orchestration/runtime-demand';
+import type { SubscriptionOrchestrator } from '$lib/relays/orchestration/orchestrator';
 import { runtimeSubscriptions } from '$lib/relays/runtime-subscriptions';
-import { type RelaySubscriptionManager as SubscriptionManager } from '$lib/relays/subscription-manager';
 import {
   cachedProfileEvent,
   cachedProfileFollowList,
@@ -38,10 +40,12 @@ export function createProfileRuntime(
   pubkey: string,
   relays: readonly string[],
   subId = `profile:${crypto.randomUUID()}`,
+  owner = subId,
   pool?: RelayPool,
-  subscriptions?: SubscriptionManager,
+  subscriptions?: SubscriptionOrchestrator,
 ) {
   const manager = runtimeSubscriptions(pool, subscriptions);
+  let visibility: DemandVisibility = 'visible';
   const cleanup: (() => void)[] = [];
   const aborts = new AbortController();
   const listeners = new Set<(state: ProfileState) => void>();
@@ -99,7 +103,7 @@ export function createProfileRuntime(
   };
   // prettier-ignore
   const receive = async (poolEvent: PoolEvent): Promise<void> => {
-    if (closed || poolEvent.subId !== subId || poolEvent.event.pubkey !== pubkey) return;
+    if (closed || poolEvent.event.pubkey !== pubkey) return;
     await storeProfileEvent(poolEvent.event, [poolEvent.relay]);
     if (closed) return;
     if (poolEvent.event.kind === 0) receiveMeta(poolEvent);
@@ -130,10 +134,35 @@ export function createProfileRuntime(
         emit({ ...state, loading: false });
         return;
       }
-      cleanup.push(manager.subscribeLive({ key: subId, relays, filters: profileLiveFilters(pubkey, startedAt, pageSize), purpose: 'feed' }, (event) => receive(event)));
+      cleanup.push(
+        manager.subscribeDemand(
+          liveFeedDemand({
+            surface: 'profile',
+            owner,
+            channel: 'profile:posts',
+            relays,
+            filters: profileLiveFilters(pubkey, startedAt, pageSize),
+            since: startedAt,
+            visibility,
+          }),
+          (event) => receive(event),
+        ),
+      );
       void loadInitialPage();
     },
-    close: (): void => { closed = true; generation++; aborts.abort(); for (const item of cleanup.splice(0)) item(); listeners.clear(); },
+    setVisibility: (visible: boolean): void => {
+      visibility = visible ? 'visible' : 'hidden';
+      if (visible) manager.resumeOwner(owner);
+      else manager.pauseOwner(owner);
+    },
+    close: (): void => {
+      closed = true;
+      generation++;
+      aborts.abort();
+      manager.releaseOwner(owner);
+      for (const item of cleanup.splice(0)) item();
+      listeners.clear();
+    },
     loadOlder: async (): Promise<void> => {
       if (closed || state.loadingOlder || !state.hasOlder) return; const run = generation; const cursor = olderScanCursor ?? state.oldestCursor; if (!cursor) return; emit({ ...state, loadingOlder: true });
       try {

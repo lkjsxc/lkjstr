@@ -7,12 +7,14 @@ import {
   setMemoryCounter,
   type MemoryCounterKey,
 } from './memory-counters';
+import { orchestrationMetricsSnapshot } from '../relays/orchestration/metrics';
 import { runtimeMemorySnapshot } from '../memory/runtime-memory';
 
 export type MemoryDebugExport = {
   readonly counters: Record<MemoryCounterKey, number>;
   readonly counterTotal: number;
   readonly runtime: ReturnType<typeof runtimeMemorySnapshot>;
+  readonly orchestration: ReturnType<typeof orchestrationMetricsSnapshot>;
 };
 
 let feedWindowPeak = 0;
@@ -43,6 +45,7 @@ export function memoryDebugExport(): MemoryDebugExport {
     counters: getMemoryCounterSnapshot(),
     counterTotal: getMemoryCounterTotal(),
     runtime: runtimeMemorySnapshot(),
+    orchestration: orchestrationMetricsSnapshot(),
   };
 }
 

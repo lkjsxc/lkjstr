@@ -23,6 +23,22 @@
       <span>in-flight reads</span>
     </article>
     <article>
+      <strong>{props.memory.orchestration.activeDemands}</strong>
+      <span>active demands</span>
+    </article>
+    <article>
+      <strong>{props.memory.orchestration.liveLeases}</strong>
+      <span>live leases</span>
+    </article>
+    <article>
+      <strong>{props.memory.orchestration.eventsReceived}</strong>
+      <span>events received</span>
+    </article>
+    <article>
+      <strong>{props.memory.orchestration.eventsAccepted}</strong>
+      <span>events accepted</span>
+    </article>
+    <article>
       <strong>{props.memory.caches.contentTokens}</strong>
       <span>token cache</span>
     </article>

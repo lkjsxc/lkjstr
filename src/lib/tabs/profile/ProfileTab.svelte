@@ -60,11 +60,10 @@
 
   $effect(() => {
     if (!props.visible) {
-      return () => {
-        runtime?.close();
-        runtime = undefined;
-      };
+      runtime?.setVisibility?.(false);
+      return;
     }
+    runtime?.setVisibility?.(true);
     if (!runtimeKey) return;
     const { pubkey, relaySets, tabId } = untrack(() => props);
     olderRequests.reset();
@@ -72,6 +71,7 @@
       pubkey,
       timelineRelays(relaySets),
       createTimelineSubId(tabId, 'profile'),
+      tabId,
     );
     const unsubscribe = runtime.subscribe((next) => (state = next));
     runtime.start();

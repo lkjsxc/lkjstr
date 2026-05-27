@@ -48,8 +48,11 @@ linked product, protocol, architecture, and operations pages.
   bounded app-owned runtime windows, caches, counters, and fallback stores.
 - Relay clients, relay pool, subscription orchestrator, subscription manager,
   and tab runtimes own network reads and deterministic cleanup.
-- Surfaces submit Demands; the orchestrator plans shared Leases and issues reads
-  through the subscription manager.
+- Surfaces submit Demands; the orchestrator plans shared Leases (canonical
+  fingerprints with `channel` disambiguation) and issues reads through the
+  subscription manager.
+- Stats and `__lkjstrMemoryDebug()` expose orchestration demand, lease, and
+  event intake counters.
 - Inactive workspace tabs keep hidden mounted bodies; feed runtimes release live
   Demands while retaining bounded windows and session snapshots.
   Session snapshots (up to `32` warm tabs) and IndexedDB `tabStates` backstop

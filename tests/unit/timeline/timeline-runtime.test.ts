@@ -2,6 +2,8 @@
 import { finalizeEvent, generateSecretKey, getPublicKey } from '../../../src/lib/protocol';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { createRelayPool } from '../../../src/lib/relays/relay-pool';
+import { createRelaySubscriptionManager } from '../../../src/lib/relays/subscription-manager';
+import { managerAsOrchestrator } from '../../../src/lib/relays/orchestration/orchestrator';
 import { feedDisplayKinds } from '../../../src/lib/events/feed-kinds';
 import {
   createTimelineRuntime,
@@ -178,11 +180,16 @@ function runtimeFor(options: {
   activeAccountPubkey?: string | null;
   relays?: readonly string[];
 }): TimelineRuntime {
+  const pool = createRelayPool();
   return createTimelineRuntime({
     relays: options.relays ?? ['relay.example'],
     subId: 'timeline-test',
+    owner: 'timeline-test',
     activeAccountPubkey: options.activeAccountPubkey,
-    pool: createRelayPool(),
+    pool,
+    subscriptions: managerAsOrchestrator(createRelaySubscriptionManager(pool), {
+      keyPrefix: 'timeline-test',
+    }),
   });
 }
 

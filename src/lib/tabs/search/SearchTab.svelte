@@ -8,7 +8,7 @@
   import type { ProfileSummary } from '$lib/identity/identity';
   import type { FeedEvent } from '$lib/events/types';
   import type { RelaySet } from '$lib/relays/relay-store';
-  import { createRelaySubscriptionManager } from '$lib/relays/subscription-manager';
+  import { sharedSubscriptionOrchestrator } from '$lib/relays/orchestration/orchestrator';
   import { searchPage } from '$lib/search/search-query';
   import {
     createTimelineSubId,
@@ -38,7 +38,7 @@
   let searched = $state(false);
   let requestId = 0;
   let destroyed = false;
-  const subscriptions = createRelaySubscriptionManager();
+  const subscriptions = sharedSubscriptionOrchestrator;
   const olderRequests = createOlderRequestCoordinator(
     () => loadOlder(),
     () => Boolean(hasOlder && !loadingOlder),
@@ -60,7 +60,7 @@
 
   onDestroy(() => {
     destroyed = true;
-    subscriptions.close();
+    subscriptions.releaseOwner(props.tabId);
   });
 
   $effect(() => {

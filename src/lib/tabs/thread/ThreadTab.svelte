@@ -67,12 +67,10 @@
 
   $effect(() => {
     if (!props.visible) {
-      return () => {
-        profileRequest += 1;
-        runtime?.close();
-        runtime = undefined;
-      };
+      runtime?.setVisibility?.(false);
+      return;
     }
+    runtime?.setVisibility?.(true);
     const key = runtimeKey;
     if (key === undefined) return;
     const { eventId, relaySets, tabId } = untrack(() => props);
@@ -83,6 +81,7 @@
       eventId,
       relays,
       createTimelineSubId(tabId, 'thread'),
+      tabId,
     );
     const unsubscribe = runtime.subscribe(
       (next) => (state = { ...next, profiles: currentProfiles }),

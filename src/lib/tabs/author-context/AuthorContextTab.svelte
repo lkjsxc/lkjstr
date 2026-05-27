@@ -5,7 +5,7 @@
   import type { FeedEvent } from '$lib/events/types';
   import type { ProfileSummary } from '$lib/identity/identity';
   import type { RelaySet } from '$lib/relays/relay-store';
-  import { createRelaySubscriptionManager } from '$lib/relays/subscription-manager';
+  import { sharedSubscriptionOrchestrator } from '$lib/relays/orchestration/orchestrator';
   import {
     createTimelineSubId,
     timelineRelays,
@@ -30,7 +30,7 @@
   let error = $state('');
   let requestId = 0;
   let destroyed = false;
-  const subscriptions = createRelaySubscriptionManager();
+  const subscriptions = sharedSubscriptionOrchestrator;
 
   $effect(() => {
     if (!props.visible) return;
@@ -39,7 +39,7 @@
 
   onDestroy(() => {
     destroyed = true;
-    subscriptions.close();
+    subscriptions.releaseOwner(props.tabId);
   });
 
   $effect(() => {

@@ -4,8 +4,10 @@ import { afterCursor } from '../events/repository-shared';
 import { boundedErrorText } from '../events/runtime-error';
 import { replyRoot } from '../protocol';
 import type { PoolEvent, RelayPool } from '../relays/relay-pool';
+import type { DemandVisibility } from '../relays/orchestration/demand-types';
+import { liveFeedDemand } from '../relays/orchestration/runtime-demand';
+import type { SubscriptionOrchestrator } from '../relays/orchestration/orchestrator';
 import { runtimeSubscriptions } from '../relays/runtime-subscriptions';
-import { type RelaySubscriptionManager as SubscriptionManager } from '../relays/subscription-manager';
 import type { RelaySnapshot } from '../relays/types';
 import { threadRelayState } from './thread-relay-state';
 import {
@@ -45,10 +47,12 @@ export function createThreadRuntime(
   eventId: string,
   relays: readonly string[],
   subId = `thread:${crypto.randomUUID()}`,
+  owner = subId,
   pool?: RelayPool,
-  subscriptions?: SubscriptionManager,
+  subscriptions?: SubscriptionOrchestrator,
 ) {
   const manager = runtimeSubscriptions(pool, subscriptions);
+  let visibility: DemandVisibility = 'visible';
   let cached: ThreadItem[] = [];
   let live: ThreadItem[] = [];
   const cleanup: (() => void)[] = [];
@@ -80,7 +84,7 @@ export function createThreadRuntime(
   };
   // prettier-ignore
   const receive = async (poolEvent: PoolEvent): Promise<void> => {
-    if (closed || poolEvent.subId !== subId) return;
+    if (closed) return;
     if (isThreadReactionKind(poolEvent.event.kind)) return receiveReaction(poolEvent);
     if (isThreadRepostKind(poolEvent.event.kind)) {
       await storeThreadActivity(poolEvent.event, poolEvent.relay);
@@ -125,10 +129,36 @@ export function createThreadRuntime(
       cached = mergeThreadItems(await loadCachedThread(rootId), rootId === eventId ? [] : await loadCachedThread(eventId));
       if (!active(run)) return; emit({ ...state, items: cached });
       if (relays.length === 0) return emit({ ...state, loading: false, error: 'No enabled read relays.' });
-      cleanup.push(manager.subscribeState(receiveState), manager.subscribeLive({ key: subId, relays, filters: threadLiveFilters(eventId, rootId, startedAt, pageSize), purpose: 'feed' }, (event) => receive(event)));
+      cleanup.push(
+        manager.subscribeState(receiveState),
+        manager.subscribeDemand(
+          liveFeedDemand({
+            surface: 'thread',
+            owner,
+            channel: 'thread:replies',
+            relays,
+            filters: threadLiveFilters(eventId, rootId, startedAt, pageSize),
+            since: startedAt,
+            visibility,
+          }),
+          (event) => receive(event),
+        ),
+      );
       void loadInitialPage();
     },
-    close: (): void => { closed = true; generation++; aborts.abort(); for (const item of cleanup.splice(0)) item(); listeners.clear(); },
+    setVisibility: (visible: boolean): void => {
+      visibility = visible ? 'visible' : 'hidden';
+      if (visible) manager.resumeOwner(owner);
+      else manager.pauseOwner(owner);
+    },
+    close: (): void => {
+      closed = true;
+      generation++;
+      aborts.abort();
+      manager.releaseOwner(owner);
+      for (const item of cleanup.splice(0)) item();
+      listeners.clear();
+    },
     loadOlder: async (): Promise<void> => {
       if (closed || state.loadingOlder || !state.hasOlder) return; const run = generation; const cursor = state.oldestCursor; if (!cursor) return; emit({ ...state, loadingOlder: true });
       try {

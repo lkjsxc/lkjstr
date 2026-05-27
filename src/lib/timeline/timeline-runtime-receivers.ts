@@ -42,15 +42,9 @@ export async function receiveTimelinePoolEvent(
   poolEvent: PoolEvent,
 ): Promise<void> {
   if (ctx.closed()) return;
-  if (poolEvent.subId === ctx.followSubId && poolEvent.event.kind === 3)
-    return receiveTimelineFollowList(ctx, poolEvent);
-  if (poolEvent.subId === ctx.metaSubId && poolEvent.event.kind === 0)
-    return receiveTimelineMetadata(ctx, poolEvent);
-  if (
-    poolEvent.subId !== ctx.noteSubId ||
-    !isFeedDisplayKind(poolEvent.event.kind)
-  )
-    return;
+  if (poolEvent.event.kind === 3) return receiveTimelineFollowList(ctx, poolEvent);
+  if (poolEvent.event.kind === 0) return receiveTimelineMetadata(ctx, poolEvent);
+  if (!isFeedDisplayKind(poolEvent.event.kind)) return;
   if (!ctx.getAuthors().includes(poolEvent.event.pubkey)) return;
   await upsertEvent(poolEvent.event, [poolEvent.relay]);
   ctx.setLive(upsertLive(ctx.getLive(), poolEvent.event, poolEvent.relay));

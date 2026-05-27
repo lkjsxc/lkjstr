@@ -20,12 +20,24 @@ export function needsSelfFallback(
   fallbackStarted: boolean,
   followSubId: string,
 ): boolean {
+  if (followListFound || fallbackStarted) return false;
+  const allRelaysReported =
+    active.length > 0 &&
+    active.every(
+      (item) =>
+        Object.values(item.eoseBySub).some(Boolean) || isTerminalRelay(item),
+    );
+  if (allRelaysReported) return true;
   return missingFollowAfterEose(
     active,
     followListFound,
     fallbackStarted,
     followSubId,
   );
+}
+
+function isTerminalRelay(item: RelaySnapshot): boolean {
+  return item.state === 'error' || item.state === 'closed';
 }
 
 export function relayStatePatch(

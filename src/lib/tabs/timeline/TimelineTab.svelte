@@ -75,10 +75,12 @@
   );
 
   $effect(() => {
-    if (!props.visible || !props.dataReady) {
-      if (runtime) closeRuntime('timeline-runtime-pause');
+    if (!props.dataReady) return;
+    if (!props.visible) {
+      runtime?.setVisibility?.(false);
       return;
     }
+    runtime?.setVisibility?.(true);
     const nextRelays = timelineRelays(props.relaySets);
     const nextKey = [
       props.kind ?? 'home',
@@ -94,10 +96,12 @@
     runtimeStartedAt = Date.now();
     const options = {
       relays,
+      owner: props.tabId,
       subId: createTimelineSubId(
         props.tabId,
         props.kind === 'global' ? 'global' : 'tl',
       ),
+      kind: props.kind,
       activeAccountPubkey: props.activeAccountPubkey,
       seed: feedSnapshotSeedFromPayload(props.restoreSnapshot),
     };
