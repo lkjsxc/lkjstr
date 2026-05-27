@@ -6,6 +6,7 @@ export type OlderRequestCoordinator = {
 export function createOlderRequestCoordinator(
   loadOlder: () => Promise<void>,
   canLoadMore: () => boolean,
+  options: { readonly speculative: boolean } = { speculative: true },
 ): OlderRequestCoordinator {
   let busy = false;
   let speculativeUsed = false;
@@ -15,7 +16,7 @@ export function createOlderRequestCoordinator(
     busy = true;
     try {
       await loadOlder();
-      if (!speculativeUsed && canLoadMore()) {
+      if (options.speculative && !speculativeUsed && canLoadMore()) {
         speculativeUsed = true;
         await loadOlder();
       }

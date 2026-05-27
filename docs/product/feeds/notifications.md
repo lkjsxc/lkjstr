@@ -23,10 +23,27 @@ notification context header and the source event as the primary body.
 - Notification relay sync starts when the Notifications tab is opened.
 - Notification tabs keep a `180` record window. Windowing is based on
   notification records, not the number of resolved source events.
+- Notification relay window constants (seconds):
+  - `initialNotificationLookbackSeconds = 604800` (7 days)
+  - `notificationPageLookbackSeconds = 604800` (7 days)
+  - `notificationClockSkewSeconds = 120`
+- Initial relay read bounds:
+  - `since = max(0, runtimeStartedAt - initialNotificationLookbackSeconds)`
+  - `until = runtimeStartedAt + notificationClockSkewSeconds`
+  - The initial relay filter must include both `since` and `until`.
+- Older relay paging bounds (bounded segment scan):
+  - Let `oldest = oldestLoadedNotificationRecord.createdAt`
+  - `since = max(0, oldest - notificationPageLookbackSeconds)`
+  - `until = max(0, oldest - 1)`
+- No automatic deep backfill on tab open: older pages must not be requested
+  during initial settle or just because the viewport is not filled. Older
+  requests are allowed only after user scroll intent (or an explicit older
+  action), using the shared feed surface near-end semantics.
 - Older notifications load after near-bottom scroll using
   `max(1200px, 1.5 x viewport)` or an equivalent sentinel margin.
-- One speculative older page may prefetch when near end while `hasOlder` is
-  true.
+- Feed surface may issue speculative older prefetches in general, but
+  Notifications use an older-load guard and must not auto-fill history during
+  initial settle.
 - Shared `FeedSurfaceStatus` footer shows loading, end of history, and errors.
 - Notifications use `FeedScrollSurface` with Virtua on
   `.notification-list-scroll`, the same near-end and footer semantics as Home
@@ -37,7 +54,7 @@ notification context header and the source event as the primary body.
   uses `showSeparator={false}`. See
   [feed-row-chrome.md](../../architecture/data/feed-surface/feed-row-chrome.md).
 - Historical relay pages use interval windows with `since` and `until` from
-  the oldest loaded notification event.
+  the oldest loaded notification record (`created_at`).
 - Live relay reads set `since` when the notification runtime starts.
 - Visible notifications are marked read when the tab is visible and receives
   focus.

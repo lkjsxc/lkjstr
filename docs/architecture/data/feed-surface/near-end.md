@@ -33,6 +33,9 @@ bottom.
 - When near end and `hasOlder` is true, `createOlderRequestCoordinator` may
   request one additional older page after the first completes.
 - Prefetch aborts on tab close and resets when the runtime key changes.
+- Older paging may be gated by `olderLoadMode` (for example, blocking
+  `loadOlder` until the user has scrolled down). See
+  [older-load-mode.md](older-load-mode.md).
 
 ## Implementation
 

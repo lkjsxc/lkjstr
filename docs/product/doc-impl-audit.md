@@ -71,11 +71,14 @@ documented-only. Update it when a vertical slice closes a gap.
 | ------ | -------- | ------ | ----- |
 | Canonical event ordering | feeds/invariants/event-ordering.md | implemented | `event-order.ts` |
 | Merge-by-id reducer | feeds/runtime/merge-reducer.md | implemented | `timeline-reducer.ts` |
-| Home no self-only fallback | feeds/sources/home.md | implemented | `no-follow-list` empty |
+| Home no self-only fallback | feeds/sources/home.md | implemented | Follow-list absence is follow-sub/scoped and never triggered from unrelated `EOSE`. |
 | Notification `#p` filters | feeds/sources/notifications.md | implemented | `notification-filters.ts` |
+| Notifications bounded initial and older relay windows | feeds/sources/notifications.md | implemented | Initial read includes `(since, until)`; older pages are bounded and based on notification record `createdAt`, with older-load gated by user scroll intent. |
+| Home live note subscription includes startup `since` | feeds/runtime | implemented | Live `authorFilters` include startup-bounded `since` to keep initial live inserts protocol-bounded. |
+| Follow-list absence ownership is follow-sub only | feeds/sources/home.md | implemented | No-follow-list waits for follow-list kind `3` completion across intended relays (follow-sub EOSE ownership only). |
 | Per-tab page cursors | feeds/runtime/per-runtime-cursors.md | implemented | runtime instance key |
-| Timeline regression e2e | verification.md | implemented | `timeline-regression.spec.ts` |
-| Multi-tab cursor e2e | feeds/runtime/multi-tab-ownership.md | implemented | `timeline-multi-tab.spec.ts` |
+| Timeline regression e2e | verification.md | implemented | Includes Home follow-discovery EOSE ownership and Notifications bounded older paging / no auto-backfill scenarios. |
+| Multi-tab cursor e2e | feeds/runtime/multi-tab-ownership.md | partial | Will be re-verified after cursor-key and older-window changes. |
 
 ## Feed Scroll and Row Chrome
 

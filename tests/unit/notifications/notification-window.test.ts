@@ -10,8 +10,9 @@ describe('notification windowing', () => {
     const target = feed('2');
     const window = windowNotifications({
       records: [
-        record('old', '9'.repeat(64)),
+        // `windowNotifications` expects newest-first ordering.
         record('new', source.event.id, target.event.id),
+        record('old', '9'.repeat(64)),
       ],
       items: [source],
       targetItems: [target, feed('3')],

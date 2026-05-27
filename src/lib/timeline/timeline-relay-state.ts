@@ -8,6 +8,7 @@ import {
   relaySnapshotCounts,
   statusFromRelayState,
 } from './timeline-relay-eose';
+import { subscriptionEose } from './timeline-relay-eose';
 
 export function selectedRelaySnapshots(
   snapshots: readonly RelaySnapshot[],
@@ -16,30 +17,26 @@ export function selectedRelaySnapshots(
   return snapshots.filter((item) => relays.includes(item.url));
 }
 
-export function needsSelfFallback(
+export function followDiscoveryFinishedWithoutList(
   active: readonly RelaySnapshot[],
   followListFound: boolean,
   fallbackStarted: boolean,
   followSubId: string,
 ): boolean {
-  if (followListFound || fallbackStarted) return false;
-  const allRelaysReported =
-    active.length > 0 &&
+  // Missing follow-list state is finalized only when the follow-list
+  // subscription itself is complete (or terminal) on every selected relay.
+  // Unrelated EOSE markers must not trigger fallback.
+  return (
+    missingFollowAfterEose(active, followListFound, fallbackStarted, followSubId) &&
     active.every(
       (item) =>
-        Object.values(item.eoseBySub).some(Boolean) || isTerminalRelay(item),
-    );
-  if (allRelaysReported) return true;
-  return missingFollowAfterEose(
-    active,
-    followListFound,
-    fallbackStarted,
-    followSubId,
+        subscriptionEose(item, followSubId) ||
+        item.closedBySub[followSubId] ||
+        // Keep the intent explicit even if relay snapshot uses closed/error.
+        item.state === 'error' ||
+        item.state === 'closed',
+    )
   );
-}
-
-function isTerminalRelay(item: RelaySnapshot): boolean {
-  return item.state === 'error' || item.state === 'closed';
 }
 
 export function relayStatePatch(

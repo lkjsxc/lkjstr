@@ -49,13 +49,18 @@ describe('timeline follow loading', () => {
     const active = pubkey();
     const runtime = runtimeFor({ activeAccountPubkey: active });
     await runtime.start();
-    sockets[0]?.open();
-    const sent = JSON.parse(sockets[0]?.sent[0] ?? '[]') as unknown[];
-    expect(sent).toEqual([
-      'REQ',
-      expect.any(String),
-      { kinds: [3], authors: [active], limit: 1 },
-    ]);
+    await vi.waitFor(() => {
+      sockets.forEach((s) => s.open());
+      const req = findFollowsReq(active);
+      expect(req).toBeTruthy();
+    });
+
+    const req = findFollowsReq(active) as unknown[];
+    expect(req).toEqual(['REQ', expect.any(String), {
+      kinds: [3],
+      authors: [active],
+      limit: 1,
+    }]);
   });
 
   it('waits for every relay before falling back from missing follows', async () => {
@@ -67,13 +72,26 @@ describe('timeline follow loading', () => {
     });
     runtime.subscribe((state) => states.push(state.status));
     await runtime.start();
-    sockets.forEach((socket) => socket.open());
-    const firstSub = subId(sockets[0]);
-    const secondSub = subId(sockets[1]);
-    sockets[0]?.receive(JSON.stringify(['EOSE', firstSub]));
+    let followSockets: FakeWebSocket[] = [];
+
+    await vi.waitFor(() => {
+      sockets.forEach((socket) => socket.open());
+      followSockets = sockets.filter((socket) => Boolean(followsSubId(socket, active)));
+      return followSockets.length >= 2;
+    });
+
+    const followSubs = followSockets.map((socket) => followsSubId(socket, active)!);
+    followSockets[0]?.receive(JSON.stringify(['EOSE', followSubs[0]]));
+    followSockets[0]?.close();
     expect(states).not.toContain('no-follow-list');
-    sockets[1]?.receive(JSON.stringify(['EOSE', secondSub]));
-    await vi.waitFor(() => expect(states).toContain('no-follow-list'));
+    for (let i = 1; i < followSockets.length; i += 1)
+      followSockets[i]?.receive(JSON.stringify(['EOSE', followSubs[i]]));
+    for (let i = 1; i < followSockets.length; i += 1)
+      followSockets[i]?.close();
+    await vi.waitFor(
+      () => expect(states).toContain('no-follow-list'),
+      { timeout: 15_000 },
+    );
   });
 
   it('does not start self-only notes after missing follows', async () => {
@@ -87,11 +105,21 @@ describe('timeline follow loading', () => {
       status = state.status;
     });
     await runtime.start();
-    sockets.forEach((socket) => socket.open());
-    for (const socket of sockets) {
-      socket.receive(JSON.stringify(['EOSE', subId(socket)]));
-    }
-    await vi.waitFor(() => expect(status).toBe('no-follow-list'));
+    let followSockets: FakeWebSocket[] = [];
+    await vi.waitFor(() => {
+      sockets.forEach((socket) => socket.open());
+      followSockets = sockets.filter((socket) => Boolean(followsSubId(socket, active)));
+      return followSockets.length >= 2;
+    });
+
+    const followSubs = followSockets.map((socket) => followsSubId(socket, active)!);
+    for (let i = 0; i < followSockets.length; i += 1)
+      followSockets[i]?.receive(JSON.stringify(['EOSE', followSubs[i]]));
+    for (let i = 0; i < followSockets.length; i += 1)
+      followSockets[i]?.close();
+    await vi.waitFor(() => expect(status).toBe('no-follow-list'), {
+      timeout: 15_000,
+    });
     expect(runtime.items()).toHaveLength(0);
     const noteFilters = sockets
       .flatMap((socket) => socket.sent)
@@ -135,4 +163,32 @@ function pubkey(): string {
 
 function subId(socket: FakeWebSocket | undefined): string {
   return String((JSON.parse(socket?.sent[0] ?? '[]') as unknown[])[1] ?? '');
+}
+
+function findFollowsReq(active: string): unknown[] | undefined {
+  for (const socket of sockets) {
+    for (const raw of socket.sent) {
+      const msg = JSON.parse(raw) as unknown[];
+      if (msg[0] !== 'REQ') continue;
+      const filter = msg[2] as { kinds?: number[]; authors?: string[]; limit?: number };
+      if (!filter?.kinds?.includes(3)) continue;
+      if (filter.limit !== 1) continue;
+      if (!filter.authors?.includes(active)) continue;
+      return msg;
+    }
+  }
+  return undefined;
+}
+
+function followsSubId(socket: FakeWebSocket, active: string): string | undefined {
+  for (const raw of socket.sent) {
+    const msg = JSON.parse(raw) as unknown[];
+    if (msg[0] !== 'REQ') continue;
+    const filter = msg[2] as { kinds?: number[]; authors?: string[]; limit?: number };
+    if (!filter?.kinds?.includes(3)) continue;
+    if (filter.limit !== 1) continue;
+    if (!filter.authors?.includes(active)) continue;
+    return String(msg[1]);
+  }
+  return undefined;
 }

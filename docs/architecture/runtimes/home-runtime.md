@@ -16,14 +16,18 @@ Home runtime owns active-account follow discovery and followed-note loading.
 
 - Profile metadata: visible and near-visible rows only, cap `30` authors per page.
 - Event references: visible-row prefetch per [feed-surface](../data/feed-surface/README.md).
-- Follow-list discovery: `purpose: route-discovery` Demand before note bootstrap when cache is empty.
+- Follow-list discovery: when cache has no latest kind `3` follows, Home
+  performs a bounded follow-list kind `3` relay read across the intended
+  discovery relay set. Only after the follow-list read/subscription completes
+  is the author set derived and note bootstrap started.
 - Route refresh: at most one bounded current-window refresh after discovery.
 
 ## Cursor Policy
 
 - **Bootstrap**: adaptive bounded scan on selected + author routes; `limit` per segment;
   closes on `EOSE`; materialize up to `180` rows.
-- **Live**: `since` = newest accepted note `created_at` minus `30` s skew.
+- **Live**: `since` = `max(0, runtimeStartedAt - 30)` for the active account
+  read relays.
 - **Older**: `page` phase with private scan `until` overlap when needed.
 - **Newer**: `page` phase from `newestCursor` when top chunks were pruned.
 - Display cursors (`oldestCursor`, `newestCursor`) are UI boundaries; scan cursors may differ.

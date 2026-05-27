@@ -20,8 +20,7 @@ export function statusFromRelayState(
   if (
     active.some(
       (item) =>
-        subscriptionEose(item, noteSubId) ||
-        Object.values(item.eoseBySub).some(Boolean),
+        subscriptionEose(item, noteSubId),
     )
   ) {
     return 'ready-empty';
@@ -43,8 +42,7 @@ export function relaySnapshotCounts(
     connectedRelays: active.filter((item) => item.state === 'open').length,
     eoseRelays: active.filter(
       (item) =>
-        subscriptionEose(item, noteSubId) ||
-        Object.values(item.eoseBySub).some(Boolean),
+        subscriptionEose(item, noteSubId),
     ).length,
   };
 }

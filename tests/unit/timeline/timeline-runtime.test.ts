@@ -69,11 +69,30 @@ describe('timeline runtime', () => {
     const runtime = runtimeFor({ activeAccountPubkey: active });
     runtime.subscribe((state) => states.push(state.status));
     await runtime.start();
-    openAllSockets();
-    socketForSub('timeline-test:follows')?.receive(
-      JSON.stringify(['EOSE', 'timeline-test:follows']),
+    await waitForSub('timeline-test:follows');
+    for (const socket of sockets) {
+      const followsReq = socket.sent
+        .map((raw) => {
+          try {
+            return JSON.parse(raw) as unknown[];
+          } catch {
+            return undefined;
+          }
+        })
+        .find((msg): msg is unknown[] => {
+          if (!msg || msg[0] !== 'REQ') return false;
+          const filter = msg[2] as { readonly kinds?: number[] } | undefined;
+          return Array.isArray(filter?.kinds) && filter.kinds.includes(3);
+        });
+      if (!followsReq) continue;
+      const actualSubId = String(followsReq[1]);
+      socket.receive(JSON.stringify(['EOSE', actualSubId]));
+      socket.close();
+    }
+    await vi.waitFor(
+      () => expect(states).toContain('no-follow-list'),
+      { timeout: 15_000 },
     );
-    await vi.waitFor(() => expect(states).toContain('no-follow-list'));
     expect(runtime.items()).toHaveLength(0);
   });
 

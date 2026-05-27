@@ -30,6 +30,18 @@ authored by self without `#p` containing self is **not** a notification row.
 - Never built from Home `authorFilters`
 - `buildNotificationFilters` is separate module
 
+## Protocol-Safe Filter Checklist
+
+A notification relay filter is protocol-safe only when it includes:
+
+- `kinds: [0, 1, 6, 7, 16, 9735]`
+- `#p: [activeAccountPubkey]` (targeting, not authors)
+- `limit: pageSize`
+- Required cursor bounds by phase:
+  - Bootstrap + historical reads: include both `since` and `until`
+  - Live reads: include `since` (runtime start)
+- No `authors` field is present (never reuse Home filter semantics)
+
 ## Status
 
 | Rule | Status |

@@ -26,7 +26,8 @@ export function windowNotifications(
     Math.floor(input.limit ?? notificationRecordWindowSize),
   );
   const pruned = input.records.length > limit;
-  const records = pruned ? input.records.slice(-limit) : [...input.records];
+  // `records` are expected to be sorted newest-first. Keep the newest window.
+  const records = pruned ? input.records.slice(0, limit) : [...input.records];
   const sourceIds = new Set(records.map((record) => record.sourceEventId));
   const targetIds = new Set(
     records

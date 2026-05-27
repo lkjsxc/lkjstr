@@ -18,11 +18,15 @@ When follow list is **loading**:
 - No notes relay scan with self-only authors
 - Status: `loading-follows`
 
-When follow list is **absent** after all follow-discovery relays EOSE:
+When follow list is **absent** after the follow-list kind `3`
+read/subscription completes (EOSE/read result) across the intended relay
+set:
 
 - Status: `no-follow-list`
 - Empty visible feed with guidance
 - **No** automatic `authors = [activePubkey]` relay scan
+- Unrelated subscription EOSE markers must not be used to finalize missing
+  follows.
 
 ## Filters
 

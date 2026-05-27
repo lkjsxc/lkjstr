@@ -115,7 +115,12 @@ export function createTimelineNetworkSubs(ctx: TimelineNetworkCtx) {
     });
     subscribe(
       'notes',
-      authorFilters(ctx.getAuthors(), ctx.pageSize, {}, 'per-filter'),
+      authorFilters(
+        ctx.getAuthors(),
+        ctx.pageSize,
+        { since: Math.max(0, ctx.startedAt - 30) },
+        'per-filter',
+      ),
       routeRelays,
     );
     const missing = ctx

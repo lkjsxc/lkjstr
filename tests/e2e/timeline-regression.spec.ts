@@ -24,7 +24,7 @@ test('home stays empty when follow list is missing', async ({ page }) => {
   await openCleanWorkspace(page);
   await addReadonlyAccount(page, active);
   await selectStartupTab(page, 'Home');
-  await expect(page.getByText(/follow list/i)).toBeVisible({
+  await expect(page.getByText(/follow list/i).first()).toBeVisible({
     timeout: 15_000,
   });
   await expect(page.getByText('only self note')).not.toBeVisible();
@@ -57,6 +57,9 @@ test('home shows followed author notes when follow list exists', async ({
   await addReadonlyAccount(page, active);
   await selectStartupTab(page, 'Home');
   await expect(page.getByText('author note for home')).toBeVisible({
+    timeout: 15_000,
+  });
+  await expect(page.getByText(/follow list/i).first()).not.toBeVisible({
     timeout: 15_000,
   });
 });

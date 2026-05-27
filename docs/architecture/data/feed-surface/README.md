@@ -10,6 +10,8 @@ integration.
 
 - [near-end.md](near-end.md): IntersectionObserver sentinel, scroll fallback,
   threshold constants.
+- [older-load-mode.md](older-load-mode.md): when `loadOlder` is allowed
+  relative to user scroll intent.
 - [footer-phase.md](footer-phase.md): `feedPagingPhase` and `FeedSurfaceStatus`.
 - [staged-pipeline.md](staged-pipeline.md): relay page, row shell, enrichment.
 - [surface-matrix.md](surface-matrix.md): per-tab list mode and paging.

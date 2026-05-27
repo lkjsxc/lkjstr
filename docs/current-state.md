@@ -110,6 +110,9 @@ linked product, protocol, architecture, and operations pages.
 - Wallet custody is out of scope; zap support opens or copies invoices only.
 - Broad runtime instrumentation is limited to explicit runtime counters,
   compact memory counters, and persisted job records.
+- Home follow discovery and Notifications relay cursors are now bounded and
+  deterministic: missing-follow decisions use follow-sub EOSE ownership, and
+  Notifications older paging is gated by user scroll intent.
 - RSS remains diagnostic-only for memory verification; app JavaScript heap is
   the owned browser memory assertion.
 

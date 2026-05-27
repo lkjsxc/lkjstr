@@ -69,12 +69,26 @@ export async function startTimelineRuntime(args: {
   args
     .cleanup()
     .push(args.subscriptions.subscribeState(args.network.receiveState));
-  if (args.getFollowList()) await args.network.subscribeNotes();
-  else
+  if (args.getFollowList()) {
+    await args.network.subscribeNotes();
+    // Refresh follow-list in the background; follow-list absence decisions are
+    // handled by bootstrap/read, not by subscription EOSE ambiguity.
     args.network.subscribe(
       'follows',
       [{ kinds: [3], authors: [pubkey], limit: 1 }],
       args.relays,
       'metadata',
     );
+  } else {
+    // Keep a live follow-list subscription so missing-follow decisions are
+    // driven by follow-sub EOSE ownership, not by a best-effort read-page
+    // timing window.
+    args.network.subscribe(
+      'follows',
+      [{ kinds: [3], authors: [pubkey], limit: 1 }],
+      args.relays,
+      'metadata',
+    );
+    void args.network.bootstrapFollowList();
+  }
 }

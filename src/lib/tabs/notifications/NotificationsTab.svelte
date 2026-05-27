@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { onDestroy, tick, untrack } from 'svelte';
+  import { onDestroy, untrack } from 'svelte';
   import { metadataPageLimit } from '$lib/events/feed-window';
   import { createOlderRequestCoordinator } from '$lib/feed-surface/speculative-older';
   import type { ProfileSummary } from '$lib/identity/identity';
@@ -37,7 +37,7 @@
   let currentProfiles: ProfileMap = {};
   let profileRequest = 0;
   let listElement = $state<HTMLElement | undefined>();
-  let autoFillPending = false;
+  let hasUserScrolledDown = false;
   let destroyed = false;
   let viewState = $state<NotificationViewState>({
     records: [],
@@ -72,7 +72,20 @@
       await runtime?.loadOlder();
     },
     () => Boolean(viewState.hasOlder && !viewState.loadingOlder),
+    { speculative: false },
   );
+
+  $effect(() => {
+    if (!props.visible) return;
+    const el = listElement;
+    if (!el) return;
+    hasUserScrolledDown = el.scrollTop > 0;
+    const onScroll = () => {
+      if (el.scrollTop > 0) hasUserScrolledDown = true;
+    };
+    el.addEventListener('scroll', onScroll, { passive: true });
+    return () => el.removeEventListener('scroll', onScroll);
+  });
 
   $effect(() => {
     if (!props.visible) {
@@ -140,33 +153,11 @@
     );
   });
 
-  $effect(() => {
-    if (!props.visible) return;
-    if (!viewState.loading && viewState.records.length > 0)
-      void maybeAutoFill();
-  });
-
   async function markVisibleRead(): Promise<void> {
     if (!props.visible || document.visibilityState !== 'visible') return;
     await runtime?.markVisibleRead();
   }
 
-  async function maybeAutoFill(): Promise<void> {
-    if (
-      autoFillPending ||
-      viewState.loadingOlder ||
-      !viewState.hasOlder ||
-      !runtime
-    )
-      return;
-    autoFillPending = true;
-    await tick();
-    if (destroyed) return;
-    const el = listElement;
-    if (el && el.clientHeight > 0 && el.scrollHeight <= el.clientHeight + 16)
-      await runtime.loadOlder();
-    if (!destroyed) autoFillPending = false;
-  }
 </script>
 
 <section class="feed-tab" aria-label="Notifications">
@@ -183,7 +174,10 @@
       loadingOlder={viewState.loadingOlder}
       hasOlder={viewState.hasOlder}
       error={viewState.error}
-      onNearEnd={() => olderRequests.requestFromNearEnd()}
+      onNearEnd={() => {
+        if (!hasUserScrolledDown) return;
+        void olderRequests.requestFromNearEnd();
+      }}
       openProfile={props.openProfile}
       openThread={props.openThread}
       openAuthorContext={props.openAuthorContext}

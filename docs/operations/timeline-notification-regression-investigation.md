@@ -17,6 +17,19 @@ on 2026-05-27.
 | `43fcd08` | Adaptive relay scans | Window/cursor semantics |
 | `f7078c9` | Protocol-derived relay routing | Selected fallback groups on every page |
 
+## Root causes for this iteration
+
+- Notifications initial relay read used an empty cursor (`cursor: {}`),
+  which allows unbounded historical relay results.
+- Notifications older paging used a bounded interval derived from mixed
+  timestamps (record vs source event), plus a fixed magic interval.
+- Home follow-list absence could be finalized from unrelated subscription
+  `EOSE`/relay state, not strictly from the follow-list kind `3` discovery.
+- Home live note subscription used empty bounds instead of a startup `since`
+  window.
+- Notifications could trigger `loadOlder` during initial settle when the
+  viewport is not filled, effectively performing a deep backfill.
+
 ## Observed symptoms → mechanisms
 
 ### Home shows mostly own posts

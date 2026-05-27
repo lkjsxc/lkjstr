@@ -48,13 +48,16 @@ its NIP-02 follows.
   incomplete.
 - Relay results are deterministic event rows. Duplicate events from multiple
   relays render once with merged relay provenance.
-- Live relay reads set `since` when the runtime starts.
+- Live relay reads set `since = max(0, runtimeStartedAt - 30)` when the runtime starts.
 - Metadata fetches are limited to authors present in loaded items.
 - Deleted or disabled relays are not replaced by hidden public defaults.
 - No active account means no relay subscription. Home must not enter
   `no-active-account` while workspace account data is still loading.
-- No follow list after follow-discovery EOSE means an empty feed with explicit
-  guidance. Home must not start a self-only relay scan as a silent fallback.
+- No follow list after follow-discovery completion means an empty feed with
+  explicit guidance. Missing follows must be finalized only from the
+  follow-list kind `3` subscription/read result across the intended relay
+  set, not from unrelated subscription `EOSE` state. Home must not start a
+  self-only relay scan as a silent fallback.
   See [home source](../../architecture/feeds/sources/home.md).
 - While follows are loading, Home must not issue notes filters with only the
   active pubkey.
