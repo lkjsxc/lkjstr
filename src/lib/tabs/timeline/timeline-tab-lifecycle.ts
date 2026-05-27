@@ -7,6 +7,31 @@ import { appendAppLog } from '$lib/log/app-log';
 import { consumeTabCloseReason } from '$lib/workspace/tab-lifecycle-reasons';
 import type { TimelineState } from '$lib/timeline/timeline-state';
 
+export function shutdownTimelineTabView(args: {
+  readonly tabId: string;
+  readonly kind?: 'home' | 'global';
+  readonly code: string;
+  readonly runtimeStartedAt: number;
+  readonly state: TimelineState;
+  readonly relays: readonly string[];
+  readonly runtime: { close(): void } | undefined;
+  readonly unsubscribe: (() => void) | undefined;
+  readonly clearRuntime: () => void;
+}): void {
+  if (!args.runtime) return;
+  args.unsubscribe?.();
+  closeTimelineTabRuntime({
+    tabId: args.tabId,
+    kind: args.kind,
+    code: args.code,
+    runtimeStartedAt: args.runtimeStartedAt,
+    state: args.state,
+    relays: [...args.relays],
+    close: () => args.runtime?.close(),
+    clearUnsubscribe: args.clearRuntime,
+  });
+}
+
 export function closeTimelineTabRuntime(args: {
   readonly tabId: string;
   readonly kind?: 'home' | 'global';

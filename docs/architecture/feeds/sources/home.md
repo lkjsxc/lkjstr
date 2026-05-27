@@ -42,11 +42,11 @@ set:
 
 ## Status
 
-| Rule | Status |
-|------|--------|
-| No self-only fallback on missing kind 3 | implemented |
+| Rule                                      | Status      |
+| ----------------------------------------- | ----------- |
+| No self-only fallback on missing kind 3   | implemented |
 | Include active account when follows exist | implemented |
-| Independent from profile route selection | implemented |
+| Independent from profile route selection  | implemented |
 
 ## Related
 

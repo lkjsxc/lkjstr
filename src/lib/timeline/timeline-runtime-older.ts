@@ -33,9 +33,7 @@ export async function runTimelineLoadOlder(args: {
     subscriptions: args.subscriptions,
     signal: args.signal,
   });
-  args.setCached(
-    mergeTimelineItems(page.items, args.items(), feedWindowSize),
-  );
+  args.setCached(mergeTimelineItems(page.items, args.items(), feedWindowSize));
   args.clearLive();
   args.setOlderScanCursor(page.hasOlder ? page.nextOlderCursor : undefined);
   args.emit(

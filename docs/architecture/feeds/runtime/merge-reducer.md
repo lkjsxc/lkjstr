@@ -19,22 +19,22 @@ TimelineReducerState = {
 
 ## Operations
 
-- `createEmptyTimelineReducerState()` — empty map
-- `mergeTimelineReducerState(state, incoming)` — upsert, sort, window cap
-- `filterTimelineReducerByAuthors(state, authors)` — drop items outside authors
+- `createEmptyTimelineReducerState()` - empty map
+- `mergeTimelineReducerState(state, incoming)` - upsert, sort, window cap
+- `filterTimelineReducerByAuthors(state, authors)` - drop items outside authors
 
 ## Rules
 
-| Scenario | Behavior |
-|----------|----------|
-| Older page arrives | Merge below newer after sort |
-| Cache restore after live | Merge; generation guard discards stale apply |
-| Duplicate ids | Keep record with newer `created_at`, merge relay provenance |
-| Author set shrinks | Re-filter map; do not keep out-of-author rows |
+| Scenario                 | Behavior                                                    |
+| ------------------------ | ----------------------------------------------------------- |
+| Older page arrives       | Merge below newer after sort                                |
+| Cache restore after live | Merge; generation guard discards stale apply                |
+| Duplicate ids            | Keep record with newer `created_at`, merge relay provenance |
+| Author set shrinks       | Re-filter map; do not keep out-of-author rows               |
 
 ## Status
 
-implemented — `src/lib/timeline/timeline-reducer.ts`
+implemented - `src/lib/timeline/timeline-reducer.ts`
 
 ## Tests
 

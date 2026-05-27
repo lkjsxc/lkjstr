@@ -1,34 +1,21 @@
 <script lang="ts">
   import { onDestroy } from 'svelte';
-  import { incMemoryCounter } from '$lib/app/memory-counters';
-  import { reportFeedRuntimeWindowSize } from '$lib/app/memory-debug';
-  import {
-    countRuntime,
-    setRuntimeCounterActive,
-  } from '$lib/app/runtime-counters';
   import EventTreeList from '$lib/components/events/EventTreeList.svelte';
   import { createOlderRequestCoordinator } from '$lib/feed-surface/speculative-older';
-  import { appendAppLog } from '$lib/log/app-log';
-  import { closeTimelineTabRuntime } from './timeline-tab-lifecycle';
+  import { shutdownTimelineTabView } from './timeline-tab-lifecycle';
+  import { createBoundTimelineTabRuntime } from './timeline-tab-runtime-create';
   import { registerTabRuntimeSnapshot } from '$lib/workspace/tab-runtime-registry';
   import { feedSnapshotSeedFromPayload } from '$lib/workspace/tab-snapshot-persist';
   import type { TabSnapshotPayload } from '$lib/workspace/tab-snapshot';
   import type { RelaySet } from '$lib/relays/relay-store';
+  import type { GlobalTimelineRuntime } from '$lib/timeline/global-timeline-runtime';
+  import type { TimelineRuntime } from '$lib/timeline/timeline-runtime';
   import {
-    createGlobalTimelineRuntime,
-    type GlobalTimelineRuntime,
-  } from '$lib/timeline/global-timeline-runtime';
-  import {
-    createTimelineRuntime,
-    type TimelineRuntime,
-  } from '$lib/timeline/timeline-runtime';
-  import {
-    homeNoFollowGuidance,
     homeTimelineEmptyText,
     type TimelineState,
   } from '$lib/timeline/timeline-state';
+  import TimelineTabFollowMissing from './TimelineTabFollowMissing.svelte';
   import {
-    createTimelineSubId,
     relayRuntimeKey,
     timelineRelays,
   } from '$lib/timeline/timeline-subscription';
@@ -78,6 +65,22 @@
     () => Boolean(state.hasOlder && !state.loadingOlder),
   );
 
+  const shutdown = (code: string): void =>
+    shutdownTimelineTabView({
+      tabId: props.tabId,
+      kind: props.kind,
+      code,
+      runtimeStartedAt,
+      state,
+      relays,
+      runtime,
+      unsubscribe,
+      clearRuntime: () => {
+        unsubscribe = undefined;
+        runtime = undefined;
+      },
+    });
+
   $effect(() => {
     if (!props.dataReady) return;
     if (!props.visible) {
@@ -93,51 +96,23 @@
       props.tabId,
     ].join('|');
     if (nextKey === runtimeKey) return;
-    closeRuntime('timeline-runtime-recreate');
+    shutdown('timeline-runtime-recreate');
     olderRequests.reset();
     runtimeKey = nextKey;
     relays = nextRelays;
     runtimeStartedAt = Date.now();
-    const options = {
-      relays,
-      owner: props.tabId,
-      subId: createTimelineSubId(
-        props.tabId,
-        props.kind === 'global' ? 'global' : 'tl',
-      ),
+    const created = createBoundTimelineTabRuntime({
+      tabId: props.tabId,
       kind: props.kind,
+      relays,
       activeAccountPubkey: props.activeAccountPubkey,
       seed: feedSnapshotSeedFromPayload(props.restoreSnapshot),
-    };
-    incMemoryCounter('active-tab-runtimes');
-    runtime =
-      props.kind === 'global'
-        ? createGlobalTimelineRuntime(options)
-        : createTimelineRuntime(options);
-    appendAppLog({
-      area: 'runtime',
-      severity: 'info',
-      code: 'timeline-runtime-create',
-      message: 'Timeline runtime created.',
-      context: {
-        tabId: props.tabId,
-        kind: props.kind ?? 'home',
-        relays: relays.length,
-        reason: 'create',
+      onState: (next) => {
+        state = next;
       },
     });
-    if (props.kind === 'global') {
-      countRuntime('timeline:global', 'created');
-      setRuntimeCounterActive('timeline:global', 1);
-    } else {
-      countRuntime('timeline:home', 'created');
-      setRuntimeCounterActive('timeline:home', 1);
-    }
-    unsubscribe = runtime.subscribe((next) => {
-      state = next;
-      reportFeedRuntimeWindowSize(next.items.length);
-    });
-    runtime.start();
+    runtime = created.runtime;
+    unsubscribe = created.unsubscribe;
   });
 
   $effect(() => {
@@ -145,25 +120,7 @@
     return registerTabRuntimeSnapshot(tabId, () => runtime?.snapshot() ?? {});
   });
 
-  onDestroy(() => closeRuntime('timeline-runtime-destroy'));
-
-  function closeRuntime(code: string): void {
-    if (!runtime) return;
-    unsubscribe?.();
-    closeTimelineTabRuntime({
-      tabId: props.tabId,
-      kind: props.kind,
-      code,
-      runtimeStartedAt,
-      state,
-      relays,
-      close: () => runtime?.close(),
-      clearUnsubscribe: () => {
-        unsubscribe = undefined;
-        runtime = undefined;
-      },
-    });
-  }
+  onDestroy(() => shutdown('timeline-runtime-destroy'));
 </script>
 
 <section
@@ -176,16 +133,16 @@
     <p>Loading events...</p>
   {/if}
   {#if state.status === 'no-follow-list' && props.kind !== 'global'}
-    <div class="timeline-tab__guidance">
-      <p>{homeNoFollowGuidance}</p>
-      <button
-        type="button"
-        class="timeline-tab__retry"
-        onclick={() => runtime?.retryFollowDiscovery?.()}
-      >
-        Check relays again
-      </button>
-    </div>
+    <TimelineTabFollowMissing
+      retry={() => {
+        if (
+          runtime &&
+          'retryFollowDiscovery' in runtime &&
+          runtime.retryFollowDiscovery
+        )
+          runtime.retryFollowDiscovery();
+      }}
+    />
   {:else if state.error}
     <p role="alert">{state.error}</p>
   {/if}

@@ -23,11 +23,11 @@ each tab owns its page cursors and Demand owner identity.
 
 ## Status
 
-| Rule | Status |
-|------|--------|
-| Per-runtime demand owner | implemented |
-| Shared live lease | implemented (by design) |
-| Isolated page cursors | implemented |
+| Rule                     | Status                  |
+| ------------------------ | ----------------------- |
+| Per-runtime demand owner | implemented             |
+| Shared live lease        | implemented (by design) |
+| Isolated page cursors    | implemented             |
 
 ## Tests
 

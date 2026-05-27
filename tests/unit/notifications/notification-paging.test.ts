@@ -30,4 +30,3 @@ describe('notification paging cursors', () => {
     expect(isWithinNotificationCursor(21, cursor)).toBe(false);
   });
 });
-

@@ -16,6 +16,21 @@ for detailed contracts.
 - [architecture/README.md](architecture/README.md): source ownership.
 - [architecture/feeds/README.md](architecture/feeds/README.md): feed sources,
   invariants, merge, and cursor ownership.
+- [architecture/feeds/invariants/README.md](architecture/feeds/invariants/README.md): invariants index.
+- [architecture/feeds/invariants/event-ordering.md](architecture/feeds/invariants/event-ordering.md): sort keys.
+- [architecture/feeds/invariants/filter-safety.md](architecture/feeds/invariants/filter-safety.md): filter safety.
+- [architecture/feeds/invariants/paging-cursors.md](architecture/feeds/invariants/paging-cursors.md): paging cursors.
+- [architecture/feeds/sources/README.md](architecture/feeds/sources/README.md): source filters index.
+- [architecture/feeds/sources/home.md](architecture/feeds/sources/home.md): Home filters.
+- [architecture/feeds/sources/global.md](architecture/feeds/sources/global.md): Global filters.
+- [architecture/feeds/sources/notifications.md](architecture/feeds/sources/notifications.md): Notifications filters.
+- [architecture/feeds/sources/profile.md](architecture/feeds/sources/profile.md): Profile filters.
+- [architecture/feeds/runtime/README.md](architecture/feeds/runtime/README.md): runtime index.
+- [architecture/feeds/runtime/merge-reducer.md](architecture/feeds/runtime/merge-reducer.md): merge reducer.
+- [architecture/feeds/runtime/multi-tab-ownership.md](architecture/feeds/runtime/multi-tab-ownership.md): tab ownership.
+- [architecture/feeds/runtime/per-runtime-cursors.md](architecture/feeds/runtime/per-runtime-cursors.md): per-tab cursors.
+- [architecture/feeds/runtime/relay-incomplete-windows.md](architecture/feeds/runtime/relay-incomplete-windows.md): incomplete windows.
+- [architecture/feeds/orchestration-bridge.md](architecture/feeds/orchestration-bridge.md): orchestration bridge.
 - [architecture/data/README.md](architecture/data/README.md): storage and feed
   memory.
 - [architecture/data/bounded-memory.md](architecture/data/bounded-memory.md):
@@ -34,6 +49,7 @@ for detailed contracts.
   feed surface index.
 - [architecture/data/feed-surface/near-end.md](architecture/data/feed-surface/near-end.md):
   near-end prefetch.
+- [architecture/data/feed-surface/older-load-mode.md](architecture/data/feed-surface/older-load-mode.md): older load mode.
 - [architecture/data/feed-surface/footer-phase.md](architecture/data/feed-surface/footer-phase.md):
   footer phase reducer.
 - [architecture/data/feed-surface/staged-pipeline.md](architecture/data/feed-surface/staged-pipeline.md):
@@ -170,6 +186,7 @@ for detailed contracts.
 - [operations/readiness.md](operations/readiness.md): handoff checks.
 - [operations/testing-ownership.md](operations/testing-ownership.md): test
   ownership.
+- [operations/timeline-notification-regression-investigation.md](operations/timeline-notification-regression-investigation.md): feed regression notes.
 - [operations/verification.md](operations/verification.md): local
   verification.
 

@@ -24,10 +24,10 @@ other app-only field.
 
 ## Status
 
-| Rule | Status |
-|------|--------|
+| Rule                      | Status      |
+| ------------------------- | ----------- |
 | Strip app keys before REQ | implemented |
-| Unit assertion | implemented |
+| Unit assertion            | implemented |
 
 ## Tests
 

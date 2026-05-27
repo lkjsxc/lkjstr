@@ -1,8 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import type { RelaySnapshot } from '../../../src/lib/relays/types';
-import {
-  followDiscoveryFinishedWithoutList,
-} from '../../../src/lib/timeline/timeline-relay-state';
+import { followDiscoveryFinishedWithoutList } from '../../../src/lib/timeline/timeline-relay-state';
 import {
   relaySnapshotCounts,
   statusFromRelayState,
@@ -74,15 +72,8 @@ describe('timeline relay state ownership', () => {
       }),
     ];
 
-    const status = statusFromRelayState(
-      active,
-      [],
-      false,
-      false,
-      noteSubId,
-    );
+    const status = statusFromRelayState(active, [], false, false, noteSubId);
     expect(status).toBe('loading-follows');
     expect(relaySnapshotCounts(active, noteSubId).eoseRelays).toBe(0);
   });
 });
-

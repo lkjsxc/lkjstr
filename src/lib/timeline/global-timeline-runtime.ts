@@ -34,7 +34,6 @@ import {
   loadOlderGlobalPage,
 } from './global-timeline-pages';
 import { createTimelineProfileCoordinator } from './timeline-profile-coordinator';
-import { feedRowShells } from '../feed-surface/row-shell';
 
 export type GlobalTimelineRuntime = ReturnType<
   typeof createGlobalTimelineRuntime

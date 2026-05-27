@@ -1,5 +1,7 @@
 import { describe, expect, it, vi } from 'vitest';
+import type { SubscriptionOrchestrator } from '../../../src/lib/relays/orchestration/orchestrator';
 import { createTimelineNetworkSubs } from '../../../src/lib/timeline/timeline-runtime-network-subs';
+import type { TimelineNetworkCtx } from '../../../src/lib/timeline/timeline-runtime-network-types';
 
 vi.mock('../../../src/lib/relays/relay-routing', () => ({
   routedAuthorRelays: vi.fn(async () => ['relay-a.example']),
@@ -18,10 +20,12 @@ describe('timeline network subs', () => {
 
     let capturedNotesFilters: unknown[] | undefined;
     const subscriptions = {
-      subscribeDemand: vi.fn((demand: any) => {
-        if (demand.channel === 'notes') capturedNotesFilters = demand.filters;
-        return () => undefined;
-      }),
+      subscribeDemand: vi.fn(
+        (demand: { readonly channel: string; readonly filters: unknown[] }) => {
+          if (demand.channel === 'notes') capturedNotesFilters = demand.filters;
+          return () => undefined;
+        },
+      ),
     };
 
     const controller = new AbortController();
@@ -29,7 +33,7 @@ describe('timeline network subs', () => {
     const ctx = {
       surface: 'home',
       owner: 'test',
-      subscriptions: subscriptions as any,
+      subscriptions: subscriptions as unknown as SubscriptionOrchestrator,
       relays: ['wss://selected-relay.example'],
       pageSize: 30,
       noteSubId: 'notes:sub',
@@ -45,26 +49,25 @@ describe('timeline network subs', () => {
       isActive: () => false,
       getGeneration: () => 1,
       items: () => [],
-      getState: () =>
-        ({
-          items: [],
-          loading: true,
-          error: null,
-          status: 'loading-follows',
-          connectedRelays: 0,
-          eoseRelays: 0,
-          authors: [],
-          profiles: {},
-          diagnostics: [],
-          loadingOlder: false,
-          loadingNewer: false,
-          hasOlder: true,
-          hasNewer: false,
-          oldestCursor: undefined,
-          newestCursor: undefined,
-        }) as any,
+      getState: () => ({
+        items: [],
+        loading: true,
+        error: null,
+        status: 'loading-follows',
+        connectedRelays: 0,
+        eoseRelays: 0,
+        authors: [],
+        profiles: {},
+        diagnostics: [],
+        loadingOlder: false,
+        loadingNewer: false,
+        hasOlder: true,
+        hasNewer: false,
+        oldestCursor: undefined,
+        newestCursor: undefined,
+      }),
       emit: vi.fn(),
-      nextState: (patch: any) => patch as any,
+      nextState: (patch: Record<string, unknown>) => patch,
       getAuthors: () => authors,
       setAuthors: vi.fn(),
       getProfiles: () => ({}),
@@ -84,21 +87,22 @@ describe('timeline network subs', () => {
       getRouteRefreshGeneration: () => 0,
       setRouteRefreshGeneration: vi.fn(),
       applyLoaded: vi.fn(),
-      withCursors: (v: any) => v,
+      withCursors: <T>(v: T) => v,
       setLive: vi.fn(),
       getLive: () => [],
     };
 
-    const subs = createTimelineNetworkSubs(ctx as any);
+    const subs = createTimelineNetworkSubs(
+      ctx as unknown as TimelineNetworkCtx,
+    );
     await subs.subscribeNotes();
 
     expect(capturedNotesFilters).toBeDefined();
     expect(Array.isArray(capturedNotesFilters)).toBe(true);
     expect(
       (capturedNotesFilters ?? []).every(
-        (f) => (f as any).since === expectedSince,
+        (f) => (f as { since?: number }).since === expectedSince,
       ),
     ).toBe(true);
   });
 });
-

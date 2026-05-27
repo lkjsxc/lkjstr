@@ -19,7 +19,6 @@ import { createTimelineProfileCoordinator } from './timeline-profile-coordinator
 import { timelineRuntimePagingApi } from './timeline-runtime-api';
 import { bindTimelineRuntimeNetwork } from './timeline-runtime-bind';
 import { startTimelineRuntime } from './timeline-runtime-start';
-
 export type TimelineRuntime = ReturnType<typeof createTimelineRuntime>;
 
 export function createTimelineRuntime(options: TimelineRuntimeOptions) {
@@ -54,7 +53,6 @@ export function createTimelineRuntime(options: TimelineRuntimeOptions) {
     relays,
     metaSubId,
   );
-  const startedAt = Math.floor(Date.now() / 1000);
   let closed = false;
   let generation = 0;
   const items = (): TimelineItem[] =>
@@ -94,7 +92,6 @@ export function createTimelineRuntime(options: TimelineRuntimeOptions) {
     noteSubId,
     metaSubId,
     followSubId,
-    startedAt,
     activeAccountPubkey: options.activeAccountPubkey,
     cleanup: () => cleanup,
     signal: aborts.signal,

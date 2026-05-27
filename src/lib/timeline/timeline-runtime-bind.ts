@@ -6,6 +6,7 @@ import type { TimelineNetworkCtx } from './timeline-runtime-network-types';
 import type { TimelineLoad } from './timeline-load';
 import type { TimelineState } from './timeline-state';
 import type { TimelineItem } from './timeline-store';
+import { timelineSessionStartedAt } from './timeline-session-started-at';
 
 export type TimelineRuntimeBindInput = {
   surface: 'home' | 'global';
@@ -16,7 +17,6 @@ export type TimelineRuntimeBindInput = {
   noteSubId: string;
   metaSubId: string;
   followSubId: string;
-  startedAt: number;
   activeAccountPubkey?: string | null;
   cleanup: () => (() => void)[];
   signal: AbortSignal;
@@ -62,7 +62,11 @@ export function bindTimelineRuntimeNetwork(input: TimelineRuntimeBindInput) {
     metaSubId: input.metaSubId,
     followSubId: input.followSubId,
     setProfiles: input.setProfiles,
-    startedAt: input.startedAt,
+    startedAt: timelineSessionStartedAt(
+      input.surface,
+      input.activeAccountPubkey ?? undefined,
+      input.relays,
+    ),
     activeAccountPubkey: input.activeAccountPubkey,
     cleanup: input.cleanup,
     signal: input.signal,

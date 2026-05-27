@@ -29,9 +29,7 @@ export default class VitestQuietReporter implements Reporter {
   }
 }
 
-function allTestCases(
-  testModules: ReadonlyArray<TestModule>,
-): TestCase[] {
+function allTestCases(testModules: ReadonlyArray<TestModule>): TestCase[] {
   return testModules.flatMap((module) => [...module.children.allTests()]);
 }
 

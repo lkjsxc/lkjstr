@@ -7,4 +7,3 @@ export function selectLatestFollowList(
 ): NostrEvent | undefined {
   return latestFollowList(events, activePubkey);
 }
-

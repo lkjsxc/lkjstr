@@ -43,12 +43,12 @@ semantics: ordering, paging, filters, merge, cursors, and multi-tab ownership.
 
 ## Implementation map
 
-| Concern | Module |
-|---------|--------|
-| Event ordering | `src/lib/events/event-order.ts` |
-| Timeline filters | `src/lib/query/timeline-filters.ts` |
-| Notification filters | `src/lib/notifications/notification-filters.ts` |
-| Timeline merge | `src/lib/timeline/timeline-reducer.ts` |
-| Notification merge | `src/lib/notifications/notification-reducer.ts` |
-| Home runtime | `src/lib/timeline/timeline-runtime.ts` |
+| Concern               | Module                                          |
+| --------------------- | ----------------------------------------------- |
+| Event ordering        | `src/lib/events/event-order.ts`                 |
+| Timeline filters      | `src/lib/query/timeline-filters.ts`             |
+| Notification filters  | `src/lib/notifications/notification-filters.ts` |
+| Timeline merge        | `src/lib/timeline/timeline-reducer.ts`          |
+| Notification merge    | `src/lib/notifications/notification-reducer.ts` |
+| Home runtime          | `src/lib/timeline/timeline-runtime.ts`          |
 | Notifications runtime | `src/lib/notifications/notification-runtime.ts` |

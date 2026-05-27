@@ -14,8 +14,8 @@ orchestration.
 
 ## Modules
 
-| Surface | Runtime |
-|---------|---------|
-| Home | `src/lib/timeline/timeline-runtime.ts` |
-| Global | `src/lib/timeline/global-timeline-runtime.ts` |
+| Surface       | Runtime                                         |
+| ------------- | ----------------------------------------------- |
+| Home          | `src/lib/timeline/timeline-runtime.ts`          |
+| Global        | `src/lib/timeline/global-timeline-runtime.ts`   |
 | Notifications | `src/lib/notifications/notification-runtime.ts` |

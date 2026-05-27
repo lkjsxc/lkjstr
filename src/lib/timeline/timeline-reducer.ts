@@ -21,9 +21,7 @@ export function mergeTimelineReducerState(
     byId.set(item.event.id, existing ? mergeItem(existing, item) : item);
   }
   const items = [...byId.values()]
-    .sort((left, right) =>
-      compareEventsNewestFirst(left.event, right.event),
-    )
+    .sort((left, right) => compareEventsNewestFirst(left.event, right.event))
     .slice(0, limit);
   return { items };
 }
@@ -55,6 +53,7 @@ export function timelineReducerFromEvents(
 }
 
 function mergeItem(a: TimelineItem, b: TimelineItem): TimelineItem {
-  const event = compareEventsNewestFirst(a.event, b.event) <= 0 ? a.event : b.event;
+  const event =
+    compareEventsNewestFirst(a.event, b.event) <= 0 ? a.event : b.event;
   return { event, relays: [...new Set([...a.relays, ...b.relays])] };
 }

@@ -20,8 +20,7 @@ export function mergeNotificationReducerState(
   const recordsSorted = [...byId.values()]
     .sort(
       (left, right) =>
-        right.createdAt - left.createdAt ||
-        left.id.localeCompare(right.id),
+        right.createdAt - left.createdAt || left.id.localeCompare(right.id),
     )
     .slice(0, limit);
 

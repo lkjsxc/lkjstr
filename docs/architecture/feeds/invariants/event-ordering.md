@@ -8,8 +8,7 @@ arrival order and append/prepend direction must not affect UI order.
 ## Comparator
 
 ```ts
-compareEventsNewestFirst(a, b) =
-  b.created_at - a.created_at || a.id.localeCompare(b.id)
+compareEventsNewestFirst(a, b) = b.created_at - a.created_at || a.id.localeCompare(b.id);
 ```
 
 Implementation: `src/lib/events/event-order.ts` delegates to
@@ -17,11 +16,11 @@ Implementation: `src/lib/events/event-order.ts` delegates to
 
 ## Status
 
-| Rule | Status |
-|------|--------|
-| Single exported comparator | implemented |
-| Merge sorts after map-by-id | implemented via `timeline-reducer.ts` |
-| UI does not sort independently | implemented |
+| Rule                           | Status                                |
+| ------------------------------ | ------------------------------------- |
+| Single exported comparator     | implemented                           |
+| Merge sorts after map-by-id    | implemented via `timeline-reducer.ts` |
+| UI does not sort independently | implemented                           |
 
 ## Applies to
 

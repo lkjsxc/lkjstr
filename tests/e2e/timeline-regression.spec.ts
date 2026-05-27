@@ -68,7 +68,6 @@ test('notifications exclude self posts without p tag', async ({ page }) => {
   const activeKey = generateSecretKey();
   const authorKey = generateSecretKey();
   const active = getPublicKey(activeKey);
-  const author = getPublicKey(authorKey);
   const now = Math.floor(Date.now() / 1000);
   const mention = finalizeEvent(
     {
@@ -80,7 +79,12 @@ test('notifications exclude self posts without p tag', async ({ page }) => {
     authorKey,
   );
   const selfPost = finalizeEvent(
-    { created_at: now, kind: 1, tags: [], content: 'self post not notification' },
+    {
+      created_at: now,
+      kind: 1,
+      tags: [],
+      content: 'self post not notification',
+    },
     activeKey,
   );
 

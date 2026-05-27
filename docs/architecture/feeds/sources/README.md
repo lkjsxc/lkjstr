@@ -14,12 +14,12 @@ relay semantics; sources must not leak into one another.
 
 ## Source kinds
 
-| Kind | Authors | Tags | Notes |
-|------|---------|------|-------|
-| home | follow pubkeys + active account | — | never self-only fallback |
-| global | omitted | — | all display kinds on selected relays |
-| profile | single profile pubkey | — | |
-| notifications | omitted | `#p` = active account | not Home authors |
+| Kind          | Authors                         | Tags                  | Notes                                |
+| ------------- | ------------------------------- | --------------------- | ------------------------------------ |
+| home          | follow pubkeys + active account | -                     | never self-only fallback             |
+| global        | omitted                         | -                     | all display kinds on selected relays |
+| profile       | single profile pubkey           | -                     |                                      |
+| notifications | omitted                         | `#p` = active account | not Home authors                     |
 
 ## Implementation
 

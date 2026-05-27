@@ -26,5 +26,8 @@ export function notificationFilterTargetsAccount(
   accountPubkey: string,
 ): boolean {
   const tags = filter['#p'];
-  return Boolean(tags?.includes(accountPubkey) && !filter.authors?.length);
+  const pTags = Array.isArray(tags)
+    ? tags.filter((tag): tag is string => typeof tag === 'string')
+    : [];
+  return Boolean(pTags.includes(accountPubkey) && !filter.authors?.length);
 }

@@ -1,7 +1,10 @@
 import { discoveryRelays } from '../relays/relay-routing';
 import { lookupEvents } from '../events/repository';
 import { normalizeRelayUrl } from '../protocol';
-import { blockedRelayUrls, authorRelayRoutes } from '../relays/relay-route-store';
+import {
+  blockedRelayUrls,
+  authorRelayRoutes,
+} from '../relays/relay-route-store';
 
 function dedupePreserveOrder(values: readonly string[]): string[] {
   const seen = new Set<string>();
@@ -54,8 +57,10 @@ export async function buildPreferredRelayGroups(input: {
   const receiptEvents = await lookupEvents(receiptEventIds);
   const kind3ReceiptEventIds = new Set(
     receiptEvents
-      .filter((e) => e.kind === 3 && e.pubkey === input.activePubkey)
-      .map((e) => e.id),
+      .filter(
+        (e) => e.event.kind === 3 && e.event.pubkey === input.activePubkey,
+      )
+      .map((e) => e.event.id),
   );
   const receiptKind3 = dedupePreserveOrder(
     receiptRoutes
@@ -79,4 +84,3 @@ export async function buildPreferredRelayGroups(input: {
 
   return { selected, nip65, receiptKind3, discovery };
 }
-

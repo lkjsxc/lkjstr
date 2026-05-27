@@ -44,11 +44,11 @@ A notification relay filter is protocol-safe only when it includes:
 
 ## Status
 
-| Rule | Status |
-|------|--------|
-| `#p` targeting | implemented |
+| Rule                                   | Status      |
+| -------------------------------------- | ----------- |
+| `#p` targeting                         | implemented |
 | Reject self-authored non-target events | implemented |
-| Distinct from Home filters | implemented |
+| Distinct from Home filters             | implemented |
 
 ## Tests
 

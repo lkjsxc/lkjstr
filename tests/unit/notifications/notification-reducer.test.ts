@@ -54,7 +54,12 @@ describe('notification reducer', () => {
     expect(next.prunedNewer).toBe(false);
 
     const next2 = mergeNotificationReducerState(
-      { ...createEmptyNotificationReducerState(), records: [record('newer', 10)], prunedOlder: false, prunedNewer: false },
+      {
+        ...createEmptyNotificationReducerState(),
+        records: [record('newer', 10)],
+        prunedOlder: false,
+        prunedNewer: false,
+      },
       [record('older', 9)],
       1,
     );
@@ -65,7 +70,10 @@ describe('notification reducer', () => {
 
   it('prunes existing records when incoming contains newer events', () => {
     const next = mergeNotificationReducerState(
-      { ...createEmptyNotificationReducerState(), records: [record('existing', 9)] },
+      {
+        ...createEmptyNotificationReducerState(),
+        records: [record('existing', 9)],
+      },
       [record('incoming', 10)],
       1,
     );
@@ -74,4 +82,3 @@ describe('notification reducer', () => {
     expect(next.prunedNewer).toBe(true);
   });
 });
-

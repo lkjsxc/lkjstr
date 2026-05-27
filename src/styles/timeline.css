@@ -6,7 +6,6 @@
   min-height: 0;
   min-width: 0;
 }
-
 .timeline-tab__guidance {
   color: var(--color-text-muted);
   display: grid;

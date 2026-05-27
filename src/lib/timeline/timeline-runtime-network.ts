@@ -71,7 +71,9 @@ export function createTimelineRuntimeNetwork(ctx: TimelineNetworkCtx) {
       await upsertEvent(result.followList, result.relayUrls);
       ctx.setFollowList(result.followList);
       ctx.setFollowListId(result.followList.id);
-      ctx.applyLoaded(await loadAccountHome(pubkey, result.followList, ctx.pageSize));
+      ctx.applyLoaded(
+        await loadAccountHome(pubkey, result.followList, ctx.pageSize),
+      );
       ctx.emit(
         ctx.nextState({
           items: ctx.items(),

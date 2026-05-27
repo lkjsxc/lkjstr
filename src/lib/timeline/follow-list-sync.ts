@@ -12,7 +12,10 @@ export type FollowListReadResult =
       readonly relayUrls: readonly string[];
     }
   | { readonly type: 'notFound'; readonly attemptedRelays: readonly string[] }
-  | { readonly type: 'partialFailure'; readonly attemptedRelays: readonly string[] }
+  | {
+      readonly type: 'partialFailure';
+      readonly attemptedRelays: readonly string[];
+    }
   | { readonly type: 'allFailed'; readonly attemptedRelays: readonly string[] }
   | { readonly type: 'aborted' };
 
@@ -126,4 +129,3 @@ export async function readLatestFollowListFromRelays(
     attemptedRelays: dedupePreserveOrder(attemptedRelays),
   };
 }
-

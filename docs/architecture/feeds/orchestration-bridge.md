@@ -8,18 +8,18 @@ contracts.
 ## Flow
 
 ```txt
-Feed runtime → Demand (owner = runtimeInstanceKey)
-            → Planner → Lease (fingerprint excludes tab id)
-            → Relay pool REQ/CLOSE
+Feed runtime -> Demand (owner = runtimeInstanceKey)
+            -> Planner -> Lease (fingerprint excludes tab id)
+            -> Relay pool REQ/CLOSE
 ```
 
 ## Surface rules
 
-| Surface | Bootstrap | Live | Page |
-|---------|-----------|------|------|
-| Home | follow discovery + initial scan | `since` at runtime start | older/newer per tab |
-| Global | initial on selected | live tail | older per tab |
-| Notifications | local + `#p` read | live `#p` | older per tab |
+| Surface       | Bootstrap                       | Live                     | Page                |
+| ------------- | ------------------------------- | ------------------------ | ------------------- |
+| Home          | follow discovery + initial scan | `since` at runtime start | older/newer per tab |
+| Global        | initial on selected             | live tail                | older per tab       |
+| Notifications | local + `#p` read               | live `#p`                | older per tab       |
 
 ## Home-specific
 

@@ -15,7 +15,7 @@ FROM deps AS verify
 CMD ["pnpm", "verify:quiet"]
 
 FROM deps AS cloudflare
-CMD ["pnpm", "cloudflare:dry-run"]
+CMD ["pnpm", "cloudflare:quiet"]
 
 FROM deps AS e2e
 RUN pnpm exec playwright install --with-deps chromium

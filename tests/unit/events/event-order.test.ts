@@ -10,10 +10,9 @@ describe('event-order', () => {
     const older = event('a', 100);
     const newer = event('b', 200);
     expect(compareEventsNewestFirst(older, newer)).toBeGreaterThan(0);
-    expect(sortEventsNewestFirst([older, newer]).map((item) => item.id)).toEqual([
-      'b',
-      'a',
-    ]);
+    expect(
+      sortEventsNewestFirst([older, newer]).map((item) => item.id),
+    ).toEqual(['b', 'a']);
   });
 
   it('tie-breaks on event id', () => {

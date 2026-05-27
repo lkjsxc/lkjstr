@@ -1,16 +1,13 @@
-import { lookupEvents, upsertEvent } from '../events/repository';
+import { lookupEvents } from '../events/repository';
 import { boundedErrorText } from '../events/runtime-error';
 import { feedPageSize } from '../events/feed-window';
-import { liveFeedDemand } from '../relays/orchestration/runtime-demand';
 import {
   sharedSubscriptionOrchestrator,
   type SubscriptionOrchestrator,
 } from '../relays/orchestration/orchestrator';
 import type { DemandVisibility } from '../relays/orchestration/demand-types';
-import { deriveNotifications } from './notification-index';
 import type { NotificationRecord } from './notification';
 import { notificationContextEventId } from './notification-presentation';
-import { notificationRelays } from './notification-relays';
 import {
   emptyNotificationState,
   type NotificationState,
@@ -18,23 +15,19 @@ import {
 import {
   accountNotifications,
   markAccountNotificationsRead,
-  saveNotifications,
 } from './notification-store';
 import { trackNotificationRecords } from '../app/tab-runtime-counters';
 import {
   notificationRecordWindowSize,
   windowNotifications,
 } from './notification-window';
-import {
-  mergeNotificationReducerState,
-} from './notification-reducer';
 import { readInitialNotificationRelayPage } from './notification-runtime-initial';
 import { loadOlderNotificationRelayPage } from './notification-runtime-older';
-
 import {
-  buildNotificationFilters,
-  notificationEventKinds,
-} from './notification-filters';
+  attachNotificationLiveSubscription,
+  selectNotificationRelays,
+} from './notification-runtime-live';
+import { notificationEventKinds } from './notification-filters';
 export { notificationEventKinds };
 export type { NotificationState } from './notification-state';
 export type NotificationRuntime = ReturnType<typeof createNotificationRuntime>;
@@ -94,12 +87,23 @@ export function createNotificationRuntime(
       targetItems: window.targetItems,
       loading,
       error: null,
-      newerPruned:
-        state.newerPruned || prunedNewerUpdate || window.pruned,
+      newerPruned: state.newerPruned || prunedNewerUpdate || window.pruned,
     });
   };
   const readInitialRelayPage = async (run: number): Promise<void> => {
-    const initial = await readInitialNotificationRelayPage({ accountPubkey: accountPubkey!, relays, subId, pageSize, startedAt, subscriptions, signal: controller.signal, active, run, baseRecords: state.records, windowLimit: notificationRecordWindowSize });
+    const initial = await readInitialNotificationRelayPage({
+      accountPubkey: accountPubkey!,
+      relays,
+      subId,
+      pageSize,
+      startedAt,
+      subscriptions,
+      signal: controller.signal,
+      active,
+      run,
+      baseRecords: state.records,
+      windowLimit: notificationRecordWindowSize,
+    });
     if (!active(run)) return;
     await reload(false, initial.mergedRecords, initial.prunedNewer);
   };
@@ -111,43 +115,20 @@ export function createNotificationRuntime(
       if (closed) return; const run = ++generation; await reload(false); if (!active(run)) return;
       if (!accountPubkey || relays.length === 0) return emit({ ...state, loading: false });
       await readInitialRelayPage(run); if (!active(run)) return;
-      const selected = await notificationRelays(accountPubkey, relays);
+      const selected = await selectNotificationRelays(accountPubkey, relays);
       cleanup.push(
-        subscriptions.subscribeDemand(
-          liveFeedDemand({
-            surface: 'notifications',
-            owner,
-            channel: 'notifications:live',
-            relays: selected,
-            filters: buildNotificationFilters({
-              accountPubkey,
-              limit: pageSize,
-              cursor: { since: startedAt },
-            }),
-            since: startedAt,
-            visibility,
-          }),
-          async ({ event, relay }) => {
-            if (closed) return;
-            // Relay behavior can be imperfect: enforce startup since locally.
-            if (event.created_at < startedAt) return;
-            const incoming = deriveNotifications(
-              accountPubkey,
-              event,
-              [relay],
-            );
-            if (incoming.length === 0) return;
-            await upsertEvent(event, [relay]);
-            if (closed) return;
-            await saveNotifications(incoming);
-            const merged = mergeNotificationReducerState(
-              { records: state.records, prunedOlder: false, prunedNewer: false },
-              incoming,
-              notificationRecordWindowSize,
-            );
-            await reload(false, merged.records, merged.prunedNewer);
-          },
-        ),
+        attachNotificationLiveSubscription({
+          accountPubkey,
+          relays: selected,
+          owner,
+          pageSize,
+          startedAt,
+          subscriptions,
+          getVisibility: () => visibility,
+          isClosed: () => closed,
+          getState: () => state,
+          reload,
+        }),
       );
     },
     markVisibleRead: async (): Promise<void> => { if (closed || !accountPubkey) return; await markAccountNotificationsRead(accountPubkey); if (!closed) await reload(false); },

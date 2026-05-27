@@ -27,7 +27,12 @@ export function followDiscoveryFinishedWithoutList(
   // subscription itself is complete (or terminal) on every selected relay.
   // Unrelated EOSE markers must not trigger fallback.
   return (
-    missingFollowAfterEose(active, followListFound, fallbackStarted, followSubId) &&
+    missingFollowAfterEose(
+      active,
+      followListFound,
+      fallbackStarted,
+      followSubId,
+    ) &&
     active.every(
       (item) =>
         subscriptionEose(item, followSubId) ||

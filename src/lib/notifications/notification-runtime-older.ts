@@ -7,9 +7,7 @@ import {
 } from './notification-paging';
 import { notificationRelays } from './notification-relays';
 import { buildNotificationFilters } from './notification-filters';
-import {
-  accountNotifications,
-} from './notification-store';
+import { accountNotifications } from './notification-store';
 import { saveNotifications } from './notification-store';
 import { olderRelaySubscriptionId } from '../relays/subscription-id';
 import { mergeNotificationReducerState } from './notification-reducer';
@@ -34,7 +32,11 @@ export async function loadOlderNotificationRelayPage(args: {
 }> {
   const cursor = olderNotificationCursor(args.oldestCreatedAt);
   const [localOlderRecords, selected] = await Promise.all([
-    accountNotifications(args.accountPubkey, args.pageSize, args.oldestCreatedAt),
+    accountNotifications(
+      args.accountPubkey,
+      args.pageSize,
+      args.oldestCreatedAt,
+    ),
     notificationRelays(args.accountPubkey, args.relays),
   ]);
 
@@ -94,4 +96,3 @@ export async function loadOlderNotificationRelayPage(args: {
       incomingRecords.length >= args.pageSize,
   };
 }
-

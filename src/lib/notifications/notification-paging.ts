@@ -33,4 +33,3 @@ export function isWithinNotificationCursor(
 ): boolean {
   return createdAt >= cursor.since && createdAt <= cursor.until;
 }
-

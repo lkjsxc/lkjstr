@@ -10,10 +10,28 @@ state lives, which modules own subscriptions, and how tabs close cleanly.
 - [feeds/README.md](feeds/README.md): feed sources, invariants, merge, cursors.
 - [feeds/invariants/README.md](feeds/invariants/README.md): ordering, paging,
   filter safety.
+- [feeds/invariants/event-ordering.md](feeds/invariants/event-ordering.md):
+  canonical sort keys.
+- [feeds/invariants/filter-safety.md](feeds/invariants/filter-safety.md):
+  protocol-safe filters.
+- [feeds/invariants/paging-cursors.md](feeds/invariants/paging-cursors.md):
+  cursor fields and bounds.
 - [feeds/sources/README.md](feeds/sources/README.md): Home, Global, Profile,
   Notifications filter semantics.
+- [feeds/sources/home.md](feeds/sources/home.md): Home follow discovery.
+- [feeds/sources/global.md](feeds/sources/global.md): Global firehose filters.
+- [feeds/sources/notifications.md](feeds/sources/notifications.md):
+  notification `#p` filters.
+- [feeds/sources/profile.md](feeds/sources/profile.md): profile note filters.
 - [feeds/runtime/README.md](feeds/runtime/README.md): merge reducer, cursors,
   multi-tab ownership.
+- [feeds/runtime/merge-reducer.md](feeds/runtime/merge-reducer.md): merge-by-id.
+- [feeds/runtime/multi-tab-ownership.md](feeds/runtime/multi-tab-ownership.md):
+  per-tab runtime keys.
+- [feeds/runtime/per-runtime-cursors.md](feeds/runtime/per-runtime-cursors.md):
+  page cursors per tab.
+- [feeds/runtime/relay-incomplete-windows.md](feeds/runtime/relay-incomplete-windows.md):
+  incomplete relay windows.
 - [feeds/orchestration-bridge.md](feeds/orchestration-bridge.md): planner bridge.
 - [data/README.md](data/README.md): repository, cache, and event tree model.
 - [data/bounded-memory.md](data/bounded-memory.md): bounded memory cleanup.
@@ -26,6 +44,8 @@ state lives, which modules own subscriptions, and how tabs close cleanly.
   index.
 - [data/feed-surface/near-end.md](data/feed-surface/near-end.md): near-end
   prefetch.
+- [data/feed-surface/older-load-mode.md](data/feed-surface/older-load-mode.md):
+  older paging intent gating.
 - [data/feed-surface/footer-phase.md](data/feed-surface/footer-phase.md): footer
   phase reducer.
 - [data/feed-surface/staged-pipeline.md](data/feed-surface/staged-pipeline.md):

@@ -44,11 +44,16 @@ test('closing one home tab does not stop the other live tail', async ({
 
   await openNewTabOption(page, 'Home', 1);
   const strip = pane(page, 1).locator('.tab-strip');
-  const secondTab = strip.getByRole('button', { name: 'Home', exact: true }).last();
+  const secondTab = strip
+    .getByRole('button', { name: 'Home', exact: true })
+    .last();
   await secondTab.click();
   await expect(body.getByText('multi tab home note')).toBeVisible();
 
-  await strip.getByRole('button', { name: 'Home', exact: true }).first().click();
+  await strip
+    .getByRole('button', { name: 'Home', exact: true })
+    .first()
+    .click();
   await strip
     .getByRole('button', { name: /^Close Home\b/ })
     .first()

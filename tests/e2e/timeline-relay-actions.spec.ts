@@ -68,9 +68,16 @@ test('timeline hides relay details and exposes them in lkjstr Log', async ({
   page,
 }) => {
   const activeKey = generateSecretKey();
+  const authorKey = generateSecretKey();
   const active = getPublicKey(activeKey);
+  const author = getPublicKey(authorKey);
+  const now = Math.floor(Date.now() / 1000);
+  const followList = finalizeEvent(
+    { created_at: now, kind: 3, tags: [['p', author]], content: '' },
+    activeKey,
+  );
   await installSyntheticRelay(page, {
-    events: [],
+    events: [followList],
     closed: ['timeline', 'blocked: synthetic close'],
   });
   await openCleanWorkspace(page);

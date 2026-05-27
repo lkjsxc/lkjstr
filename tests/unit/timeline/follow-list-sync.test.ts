@@ -2,6 +2,7 @@ import {
   finalizeEvent,
   generateSecretKey,
   getPublicKey,
+  type NostrEvent,
 } from '../../../src/lib/protocol';
 import { describe, expect, it } from 'vitest';
 import { selectLatestFollowList } from '../../../src/lib/timeline/follow-list-sync';
@@ -25,15 +26,14 @@ describe('follow-list sync', () => {
       activeKey,
     );
 
-    const permutations: unknown[] = [
+    const permutations: NostrEvent[][] = [
       [eNew, eOld, irrelevant],
       [irrelevant, eOld, eNew],
       [eOld, eNew, irrelevant],
       [eOld, irrelevant, eNew],
     ];
 
-    for (const p of permutations) {
-      const events = p as typeof permutations[number] as any;
+    for (const events of permutations) {
       const selected = selectLatestFollowList(active, events);
       expect(selected?.id).toBe(eNew.id);
     }
@@ -43,7 +43,6 @@ describe('follow-list sync', () => {
     const activeKey = generateSecretKey();
     const active = getPublicKey(activeKey);
     const other = generateSecretKey();
-    const otherPub = getPublicKey(other);
 
     const notForActive = finalizeEvent(
       { created_at: 200, kind: 3, tags: [], content: 'other-follow' },
@@ -53,4 +52,3 @@ describe('follow-list sync', () => {
     expect(selected).toBeUndefined();
   });
 });
-

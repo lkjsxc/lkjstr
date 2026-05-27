@@ -1,18 +1,14 @@
 import type { SubscriptionOrchestrator } from '../relays/orchestration/orchestrator';
+import type { ReadPageRelayStatus } from '../relays/read-page-status';
 import type { NostrEvent } from '../protocol';
 
 export type ReadLatestFollowListFromRelaysWithGroupResult = {
-  readonly events: readonly { readonly event: NostrEvent; readonly relay: string }[];
+  readonly events: readonly {
+    readonly event: NostrEvent;
+    readonly relay: string;
+  }[];
   readonly attemptedRelays: readonly string[];
-  readonly statuses: readonly Array<{
-    readonly eose: boolean;
-    readonly timeout: boolean;
-    readonly socketError: boolean;
-    readonly auth: boolean;
-    readonly socketClosed: boolean;
-    readonly closed: boolean;
-    readonly aborted: boolean;
-  }>;
+  readonly statuses: readonly ReadPageRelayStatus[];
 };
 
 export async function readLatestFollowListFromRelaysWithGroup(input: {
@@ -28,9 +24,7 @@ export async function readLatestFollowListFromRelaysWithGroup(input: {
       key: `${input.key}:follow-sync:${input.groupIndex}`,
       relays: input.relays,
       purpose: 'metadata',
-      filters: [
-        { kinds: [3], authors: [input.activePubkey], limit: 1 },
-      ],
+      filters: [{ kinds: [3], authors: [input.activePubkey], limit: 1 }],
     },
     { signal: input.signal },
   );
@@ -41,4 +35,3 @@ export async function readLatestFollowListFromRelaysWithGroup(input: {
     statuses,
   };
 }
-

@@ -10,9 +10,9 @@ Shared query and relay filter construction for feed surfaces.
 
 ## Modules
 
-| Module | Role |
-|--------|------|
-| `timeline.ts` | Merge and filter matching helpers |
+| Module                | Role                                  |
+| --------------------- | ------------------------------------- |
+| `timeline.ts`         | Merge and filter matching helpers     |
 | `timeline-filters.ts` | Home, Global, Profile filter builders |
 
 ## Rules

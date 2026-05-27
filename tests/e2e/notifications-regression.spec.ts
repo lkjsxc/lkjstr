@@ -1,5 +1,9 @@
 import { expect, test } from '@playwright/test';
-import { finalizeEvent, generateSecretKey, getPublicKey } from '../../src/lib/protocol';
+import {
+  finalizeEvent,
+  generateSecretKey,
+  getPublicKey,
+} from '../../src/lib/protocol';
 import {
   addReadonlyAccount,
   installSyntheticRelay,
@@ -13,7 +17,6 @@ test('notifications do not auto-load older on initial settle', async ({
   const activeKey = generateSecretKey();
   const active = getPublicKey(activeKey);
   const authorKey = generateSecretKey();
-  const author = getPublicKey(authorKey);
 
   const now = Math.floor(Date.now() / 1000);
   // Old events are just outside the initial 7-day lookback, but inside the
@@ -56,46 +59,28 @@ test('notifications do not auto-load older on initial settle', async ({
 
   await expect(page.getByText('old-notification-4')).not.toBeVisible();
 
-  const initialReqCount = await page.evaluate((accountPubkey) => {
-    let count = 0;
-    for (const socket of (window.__syntheticSockets ?? []) as any[]) {
-      for (const raw of socket.sent ?? []) {
-        const msg = JSON.parse(raw);
-        if (msg?.[0] !== 'REQ') continue;
-        const filter = msg?.[2] ?? {};
-        const kinds: number[] = Array.isArray(filter.kinds)
-          ? filter.kinds
-          : [];
-        const p: string[] = Array.isArray(filter['#p'])
-          ? filter['#p']
-          : [];
-        if (kinds.includes(1) && p.includes(accountPubkey)) count += 1;
+  const countMentionReqs = (accountPubkey: string): number =>
+    (window.__syntheticSockets ?? []).reduce<number>((count, socket) => {
+      const record = socket as { sent?: string[] };
+      for (const raw of record.sent ?? []) {
+        const msg = JSON.parse(raw) as unknown[];
+        if (msg[0] !== 'REQ') continue;
+        const filter = (msg[2] ?? {}) as {
+          kinds?: number[];
+          '#p'?: string[];
+        };
+        if (filter.kinds?.includes(1) && filter['#p']?.includes(accountPubkey))
+          return count + 1;
       }
-    }
-    return count;
-  }, active);
+      return count;
+    }, 0);
+
+  const initialReqCount = await page.evaluate(countMentionReqs, active);
 
   // Give the runtime a moment to (incorrectly) auto-fill older pages.
   await page.waitForTimeout(1500);
 
-  const afterSettleReqCount = await page.evaluate((accountPubkey) => {
-    let count = 0;
-    for (const socket of (window.__syntheticSockets ?? []) as any[]) {
-      for (const raw of socket.sent ?? []) {
-        const msg = JSON.parse(raw);
-        if (msg?.[0] !== 'REQ') continue;
-        const filter = msg?.[2] ?? {};
-        const kinds: number[] = Array.isArray(filter.kinds)
-          ? filter.kinds
-          : [];
-        const p: string[] = Array.isArray(filter['#p'])
-          ? filter['#p']
-          : [];
-        if (kinds.includes(1) && p.includes(accountPubkey)) count += 1;
-      }
-    }
-    return count;
-  }, active);
+  const afterSettleReqCount = await page.evaluate(countMentionReqs, active);
 
   expect(afterSettleReqCount).toBe(initialReqCount);
 
@@ -121,4 +106,3 @@ test('notifications do not auto-load older on initial settle', async ({
     timeout: 15_000,
   });
 });
-

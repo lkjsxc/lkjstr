@@ -89,10 +89,9 @@ describe('timeline runtime', () => {
       socket.receive(JSON.stringify(['EOSE', actualSubId]));
       socket.close();
     }
-    await vi.waitFor(
-      () => expect(states).toContain('no-follow-list'),
-      { timeout: 15_000 },
-    );
+    await vi.waitFor(() => expect(states).toContain('no-follow-list'), {
+      timeout: 15_000,
+    });
     expect(runtime.items()).toHaveLength(0);
   });
 

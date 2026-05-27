@@ -11,16 +11,16 @@ Notifications tab.
 
 ## Modules
 
-| Module | Role |
-|--------|------|
-| `notification-runtime.ts` | Tab runtime and relay Demands |
-| `notification-filters.ts` | `#p` wire filters |
-| `notification-reducer.ts` | Record merge by id |
-| `notification-index.ts` | Derive records from events |
-| `notification-store.ts` | Local notification storage |
-| `notification-window.ts` | 180-record window |
-| `notification-relays.ts` | Relay selection for `#p` reads |
-| `notification-presentation.ts` | Row labels and context |
+| Module                         | Role                           |
+| ------------------------------ | ------------------------------ |
+| `notification-runtime.ts`      | Tab runtime and relay Demands  |
+| `notification-filters.ts`      | `#p` wire filters              |
+| `notification-reducer.ts`      | Record merge by id             |
+| `notification-index.ts`        | Derive records from events     |
+| `notification-store.ts`        | Local notification storage     |
+| `notification-window.ts`       | 180-record window              |
+| `notification-relays.ts`       | Relay selection for `#p` reads |
+| `notification-presentation.ts` | Row labels and context         |
 
 ## Rules
 

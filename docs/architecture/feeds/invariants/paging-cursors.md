@@ -30,11 +30,11 @@ duplicates, or inverted UI order.
 
 ## Status
 
-| Rule | Status |
-|------|--------|
-| Overlap + id dedupe for same-second events | implemented |
-| Older merge cannot float above newer | implemented via reducer |
-| Per-runtime scan cursors | implemented |
+| Rule                                       | Status                  |
+| ------------------------------------------ | ----------------------- |
+| Overlap + id dedupe for same-second events | implemented             |
+| Older merge cannot float above newer       | implemented via reducer |
+| Per-runtime scan cursors                   | implemented             |
 
 ## Tests
 

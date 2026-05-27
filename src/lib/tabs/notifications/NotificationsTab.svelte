@@ -38,7 +38,6 @@
   let profileRequest = 0;
   let listElement = $state<HTMLElement | undefined>();
   let hasUserScrolledDown = false;
-  let destroyed = false;
   let viewState = $state<NotificationViewState>({
     records: [],
     items: [],
@@ -62,7 +61,6 @@
     `${props.accountPubkey ?? ''}|${timelineRelays(props.relaySets).join('\u0000')}`,
   );
   onDestroy(() => {
-    destroyed = true;
     runtime?.close();
     runtime = undefined;
   });
@@ -157,7 +155,6 @@
     if (!props.visible || document.visibilityState !== 'visible') return;
     await runtime?.markVisibleRead();
   }
-
 </script>
 
 <section class="feed-tab" aria-label="Notifications">

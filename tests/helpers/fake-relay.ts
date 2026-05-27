@@ -20,7 +20,8 @@ export function fakeRelayMessages(batch: FakeRelayBatch): string[] {
     (event) => JSON.stringify(['EVENT', batch.subId, event]) as string,
   );
   if (batch.closeAfterEvents && !batch.eose) return messages;
-  if (batch.eose !== false) messages.push(JSON.stringify(['EOSE', batch.subId]));
+  if (batch.eose !== false)
+    messages.push(JSON.stringify(['EOSE', batch.subId]));
   return messages;
 }
 
