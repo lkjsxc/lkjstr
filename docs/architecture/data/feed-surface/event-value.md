@@ -19,6 +19,9 @@ they deserve short-term runtime or cache retention.
 - Profile live rows must also satisfy the runtime `since` bound. Old live
   replays and future events may be stored, but they do not move the profile top
   window.
+- Profile older reads preserve newer rows unless the request came from a real
+  downward bottom scroll. Newer rows pruned by that scroll are recovered when
+  the profile card returns to the top recovery target.
 
 ## Runtime Value
 

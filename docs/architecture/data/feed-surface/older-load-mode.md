@@ -19,6 +19,8 @@ before issuing `loadOlder` for a feed.
   - The near-end sentinel may continue to compute readiness, but `loadOlder`
     must remain blocked until a scroll-intent flag is set.
   - This prevents viewport-fill auto-backfill on initial settle.
+  - Surfaces that can prune newer rows should treat only scroll-handler bottom
+    triggers as older-preserving history intent.
 
 - `explicit`
   - Issue `loadOlder` only via explicit user actions (footer button, keyboard

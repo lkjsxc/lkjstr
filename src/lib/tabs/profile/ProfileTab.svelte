@@ -3,6 +3,8 @@
   import { captureStartupPromise } from '$lib/app/runtime-log';
   import type { Account } from '$lib/accounts/account';
   import EventTreeList from '$lib/components/events/EventTreeList.svelte';
+  import { createOlderRequestCoordinator } from '$lib/feed-surface/speculative-older';
+  import type { OlderLoadTrigger } from '$lib/feed-surface/older-load-mode';
   import type { ProfileSummary } from '$lib/identity/identity';
   import { getProfile } from '$lib/identity/profile-cache';
   import { profileUpdatedEvent } from '$lib/profile/profile-metadata-draft';
@@ -44,7 +46,7 @@
     state.profile ? { [props.pubkey]: state.profile } : {},
   );
   let leadingRows = $derived<EventTreeListLeadingRow[]>([
-    { key: 'profile-header' },
+    { key: 'profile-header', nearStart: true },
     ...(state.error ? [{ key: 'profile-error' }] : []),
   ]);
   let npub = $derived(safeNpub(props.pubkey));
@@ -52,6 +54,13 @@
     safeNprofile(props.pubkey, timelineRelays(props.relaySets)),
   );
   let runtime: ProfileRuntime | undefined;
+  let olderRequests = createOlderRequestCoordinator<OlderLoadTrigger>(
+    async (trigger) => {
+      if (trigger === 'scroll') await runtime?.loadOlder({ preserve: 'older' });
+      else await runtime?.loadOlder();
+    },
+    () => Boolean(state.hasOlder && !state.loadingOlder),
+  );
   let runtimeKey = $derived(
     `${props.pubkey}|${timelineRelays(props.relaySets).join('\u0000')}`,
   );
@@ -64,6 +73,7 @@
     runtime?.setVisibility?.(true);
     if (!runtimeKey) return;
     const { pubkey, relaySets, tabId } = untrack(() => props);
+    olderRequests.reset();
     runtime = createProfileRuntime(
       pubkey,
       timelineRelays(relaySets),
@@ -136,7 +146,7 @@
     hasOlder={state.hasOlder}
     hasNewer={state.hasNewer}
     olderLoadMode="after-user-scroll"
-    onNearEnd={() => runtime?.loadOlder({ preserve: 'older' })}
+    onNearEnd={(trigger) => olderRequests.requestFromNearEnd(trigger)}
     onNearStart={() => runtime?.loadNewer()}
     openProfile={props.openProfile}
     openThread={props.openThread}

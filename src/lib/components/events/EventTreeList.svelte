@@ -169,7 +169,7 @@
       })
     )
       return;
-    await props.onNearEnd?.();
+    await props.onNearEnd?.(trigger);
   }
 </script>
 

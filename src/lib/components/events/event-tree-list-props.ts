@@ -7,7 +7,10 @@ import type {
   RepostSummaryMap,
 } from '$lib/thread/thread-reactions';
 import type { EventTreeListLeadingRow } from './event-tree-list-helpers';
-import type { OlderLoadMode } from '$lib/feed-surface/older-load-mode';
+import type {
+  OlderLoadMode,
+  OlderLoadTrigger,
+} from '$lib/feed-surface/older-load-mode';
 
 export type EventTreeListProps = {
   items: readonly FeedEvent[];
@@ -23,7 +26,7 @@ export type EventTreeListProps = {
   hasNewer?: boolean;
   pagingError?: string | null;
   emptyText?: string;
-  onNearEnd?: () => void | Promise<void>;
+  onNearEnd?: (trigger: OlderLoadTrigger) => void | Promise<void>;
   onNearStart?: () => void | Promise<void>;
   openProfile?: (pubkey: string) => void;
   openThread?: (eventId: string) => void;

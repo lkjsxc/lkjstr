@@ -114,23 +114,23 @@
       <p>{display.subtitle}</p>
       <small>{props.npub}</small>
     </div>
-  </div>
-  {#if props.profile?.about}
-    <ProfileAbout
-      text={props.profile.about}
-      emojis={props.profile.customEmojis ?? []}
-    />
-  {/if}
-  <div class="profile-card__facts">
-    {#if website}
-      <!-- eslint-disable-next-line svelte/no-navigation-without-resolve -->
-      <a href={website} target="_blank" rel="noreferrer">
-        {props.profile?.website}
-      </a>
+    {#if props.profile?.about}
+      <ProfileAbout
+        text={props.profile.about}
+        emojis={props.profile.customEmojis ?? []}
+      />
     {/if}
-    {#if props.followingCount > 0}
-      <span>{props.followingCount} following</span>
-    {/if}
-    {#if copied}<span role="status">Copied {copied}</span>{/if}
+    <div class="profile-card__facts">
+      {#if website}
+        <!-- eslint-disable-next-line svelte/no-navigation-without-resolve -->
+        <a href={website} target="_blank" rel="noreferrer">
+          {props.profile?.website}
+        </a>
+      {/if}
+      {#if props.followingCount > 0}
+        <span>{props.followingCount} following</span>
+      {/if}
+      {#if copied}<span role="status">Copied {copied}</span>{/if}
+    </div>
   </div>
 </header>

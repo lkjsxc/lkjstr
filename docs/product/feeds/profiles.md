@@ -28,10 +28,10 @@ Profile tabs show identity metadata and authored text notes.
   shared `FeedSurfaceStatus` footer semantics.
 - Profile metadata supports banner, picture, display name, name, NIP-05,
   website, Lightning address, and about text.
-- Profile header identity content starts below the banner and uses the full card
-  width below the avatar/action row. The avatar may overlap banner media, but
-  display name, subtitle, full `npub`, actions, facts, about text, and notes
-  never overlap the banner.
+- Profile header identity content starts below the avatar/action row. Display
+  name, subtitle, full `npub`, facts, and about text share one content width.
+  The avatar may overlap banner media, but text and notes never overlap the
+  banner.
 - Website values and safe HTTP, HTTPS, or schemeless domain-like URLs inside
   about text render as clickable links after HTTP/HTTPS normalization.
   Unsafe schemes such as `javascript:` never render as links.
@@ -62,18 +62,19 @@ Profile tabs show identity metadata and authored text notes.
   section at desktop, mobile, or narrow split-pane widths.
 - Profile note rows start below the full profile header inside the same scroll
   owner.
-- Older profile notes load after near-bottom scroll or viewport auto-fill.
+- Older profile notes load only after downward user scroll reaches the bottom
+  threshold. Mount-time viewport fill must not prune newer profile rows.
 - Initial and historical note pages use compound `{createdAt,id}` cursors,
   adaptive bounded windows with `since` and `until`, local relay boundary
   filtering, and merged relay provenance. Sparse complete windows keep scanning
   older; dense or incomplete windows remain non-exhaustive.
 - Scanner-owned bounds are enforced at relay dispatch. A relay-effective limit
   smaller than the visible page size is dense when it fills.
+- Repeated stale bottom triggers must not queue unbounded older reads or keep
+  pruning newer rows after the first downward history request.
 - When older scrolling prunes newer notes, Profile stores newer notes out of
-  view and recovers them automatically near the first event row with a dedicated
-  newer relay read id.
-- The profile header alone is not a near-start trigger for newer-note loading.
-  The first event row is the near-start target when note rows exist.
+  view and recovers them automatically when the profile card returns to the top
+  of the scroll owner with a dedicated newer relay read id.
 - Live authored posts received while viewing an older pruned window are stored
   but not inserted visibly until newer notes are loaded.
 - Live relay reads set `since` when the profile runtime starts.

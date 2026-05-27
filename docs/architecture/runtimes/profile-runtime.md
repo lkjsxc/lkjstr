@@ -22,8 +22,8 @@ Profile runtime owns metadata and authored-note loading for one pubkey.
 - **Bootstrap posts**: author write routes first, then selected read fallback.
 - **Live posts**: `since` from newest visible post.
 - **Older / newer**: `page` phase with scan cursor overlap when needed.
-  Accidental older calls preserve newest rows. Gated downward history intent may
-  preserve older rows and expose `hasNewer`.
+  Accidental older calls preserve newest rows. Only downward scroll-bottom
+  intent may preserve older rows and expose `hasNewer`.
 - Note window cap `180` items.
 
 ## Contract
@@ -35,7 +35,9 @@ Profile runtime owns metadata and authored-note loading for one pubkey.
   profile rows.
 - Relay reads use [routing-by-surface](../network/subscription-orchestration/routing-by-surface.md).
 - `loadNewer` remains part of the runtime API. Profile UI invokes it through
-  automatic near-start feed behavior, not through a visible manual control.
+  automatic profile-card top recovery, not through a visible manual control.
+- Older calls are coordinated so repeated near-end callbacks cannot overlap or
+  keep pruning newer rows after a stale bottom signal.
 - Hidden tabs release live post Demands; metadata Demands may complete if already in flight.
 - Close all Demands and abort page reads on tab close.
 - Startup rejection paths log one bounded app-log runtime failure for the tab.
