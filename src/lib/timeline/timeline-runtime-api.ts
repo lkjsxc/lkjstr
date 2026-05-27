@@ -3,7 +3,8 @@ import type { FeedCursorPoint } from '../events/types';
 import { loadNewerTimelinePage } from './timeline-runtime-paging';
 import { runTimelineLoadOlder } from './timeline-runtime-older';
 import { timelineRuntimeSnapshot } from './timeline-runtime-snapshot';
-import type { TimelineItem } from './timeline-store';
+import { feedWindowSize } from '../events/feed-window';
+import { mergeTimelineItems, type TimelineItem } from './timeline-store';
 import type { TimelineState } from './timeline-state';
 
 type PagingApiDeps = {
@@ -79,7 +80,9 @@ export function timelineRuntimePagingApi(deps: PagingApiDeps) {
           signal: deps.signal,
         });
         if (!deps.isActive(run)) return;
-        deps.setCached(page.items);
+        deps.setCached(
+          mergeTimelineItems(page.items, deps.items(), feedWindowSize),
+        );
         deps.clearLive();
         deps.emit(
           deps.nextState({

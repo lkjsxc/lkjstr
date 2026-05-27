@@ -14,3 +14,4 @@ subscription management.
   suggestions, and relay set storage.
 - Relay route helpers own selected fallback preservation, targeted author route
   caps, discovery groups, route blocks, and indexed route evidence lookup.
+- `routeGroupsForPaging` omits selected-author fallback chunks for feed page reads.

@@ -1,4 +1,3 @@
-import { feedRowShells } from '../feed-surface/row-shell';
 import { feedWindowSize } from '../events/feed-window';
 import { loadOlderTimelinePage } from './timeline-runtime-paging';
 import { mergeTimelineItems, type TimelineItem } from './timeline-store';
@@ -34,17 +33,9 @@ export async function runTimelineLoadOlder(args: {
     subscriptions: args.subscriptions,
     signal: args.signal,
   });
-  const shells = feedRowShells(page.items);
-  args.setCached(mergeTimelineItems(shells, args.items(), feedWindowSize));
-  args.clearLive();
-  args.emit(
-    args.nextState({
-      items: args.items(),
-      hasOlder: page.hasOlder,
-      loadingOlder: true,
-    }),
+  args.setCached(
+    mergeTimelineItems(page.items, args.items(), feedWindowSize),
   );
-  args.setCached(page.items);
   args.clearLive();
   args.setOlderScanCursor(page.hasOlder ? page.nextOlderCursor : undefined);
   args.emit(

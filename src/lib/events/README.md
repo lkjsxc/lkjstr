@@ -7,6 +7,7 @@ write-action helpers.
 
 ## Contents
 
+- [event-order.ts](event-order.ts): canonical `compareEventsNewestFirst` for feeds.
 - Repository implementations and shared storage adapters.
 - Relay page scans, compound feed cursor ordering, and durable feed coverage
   records.

@@ -1,7 +1,7 @@
 import { feedWindowSize, mergeFeedWindow } from '../events/feed-window';
 import { queryFeed, upsertEvent } from '../events/repository';
 import { readRelayFeedGroups } from '../events/relay-page';
-import { routeGroups } from '../relays/relay-routing';
+import { routeGroupsForPaging } from '../relays/relay-routing';
 import type { FeedCursorPoint } from '../events/types';
 import type { RelaySubscriptionManager } from '../relays/subscription-manager';
 import {
@@ -51,7 +51,7 @@ export type TimelineInitialRequest = {
 export async function loadInitialTimelinePage(
   request: TimelineInitialRequest,
 ): Promise<TimelinePageResult> {
-  const groups = await routeGroups({
+  const groups = await routeGroupsForPaging({
     authors: request.authors,
     selectedRelays: request.relays,
     purpose: 'write',
@@ -92,7 +92,7 @@ export async function loadOlderTimelinePage(
     before: request.cursor,
     limit: request.pageSize,
   });
-  const groups = await routeGroups({
+  const groups = await routeGroupsForPaging({
     authors: request.authors,
     selectedRelays: request.relays,
     purpose: 'write',
@@ -141,7 +141,7 @@ export async function loadNewerTimelinePage(
     after: request.cursor,
     limit: request.pageSize,
   });
-  const groups = await routeGroups({
+  const groups = await routeGroupsForPaging({
     authors: request.authors,
     selectedRelays: request.relays,
     purpose: 'write',

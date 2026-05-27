@@ -74,7 +74,8 @@ export function errorFor(status: TimelineStatus): string | null {
     'auth-required': 'A relay requires authentication.',
     'subscription-closed': 'A relay closed the timeline subscription.',
     'relay-failed': 'No relay is reachable.',
-    'no-follow-list': 'No follow list found; showing account notes only.',
+    'no-follow-list':
+      'No follow list found. Publish a kind 3 follow list or follow accounts to see Home posts.',
   };
   return errors[status] ?? null;
 }
@@ -166,6 +167,17 @@ export function noFollowListState(
   state: TimelineState,
   authors: readonly string[],
   profiles: TimelineProfiles,
+  items: readonly TimelineItem[] = [],
 ): TimelineState {
-  return { ...state, authors, profiles, status: 'no-follow-list' };
+  return {
+    ...state,
+    authors,
+    profiles,
+    items,
+    loading: false,
+    error: errorFor('no-follow-list'),
+    status: 'no-follow-list',
+    hasOlder: false,
+    hasNewer: false,
+  };
 }

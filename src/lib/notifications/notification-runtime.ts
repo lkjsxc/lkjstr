@@ -24,7 +24,11 @@ import {
 import { trackNotificationRecords } from '../app/tab-runtime-counters';
 import { windowNotifications } from './notification-window';
 
-export const notificationEventKinds = [0, 1, 6, 7, 16, 9735] as const;
+import {
+  buildNotificationFilters,
+  notificationEventKinds,
+} from './notification-filters';
+export { notificationEventKinds };
 export type { NotificationState } from './notification-state';
 export type NotificationRuntime = ReturnType<typeof createNotificationRuntime>;
 
@@ -88,7 +92,7 @@ export function createNotificationRuntime(
   // prettier-ignore
   const readInitialRelayPage = async (run: number): Promise<void> => {
     const selected = await notificationRelays(accountPubkey!, relays);
-    const events = await subscriptions.readPage({ key: `${subId}:initial`, relays: selected, filters: [{ kinds: notificationEventKinds, '#p': [accountPubkey!], limit: pageSize }], purpose: 'feed' }, { signal: controller.signal });
+    const events = await subscriptions.readPage({ key: `${subId}:initial`, relays: selected, filters: buildNotificationFilters({ accountPubkey: accountPubkey!, limit: pageSize, cursor: {} }), purpose: 'feed' }, { signal: controller.signal });
     for (const { event, relay } of events) {
       if (!active(run)) return;
       await upsertEvent(event, [relay]);
@@ -112,14 +116,11 @@ export function createNotificationRuntime(
             owner,
             channel: 'notifications:live',
             relays: selected,
-            filters: [
-              {
-                kinds: [...notificationEventKinds],
-                '#p': [accountPubkey],
-                since: startedAt,
-                limit: pageSize,
-              },
-            ],
+            filters: buildNotificationFilters({
+              accountPubkey,
+              limit: pageSize,
+              cursor: { since: startedAt },
+            }),
             since: startedAt,
             visibility,
           }),
@@ -140,7 +141,25 @@ export function createNotificationRuntime(
       if (closed || !accountPubkey || state.loadingOlder || !state.hasOlder) return; const oldest = state.records.at(-1)?.createdAt; if (!oldest) return; const run = generation; emit({ ...state, loadingOlder: true });
       try {
         const records = await accountNotifications(accountPubkey, pageSize, oldest); const until = state.oldestCreatedAt; const selected = await notificationRelays(accountPubkey, relays);
-        const relayEvents = until && selected.length > 0 ? await subscriptions.readPage({ key: olderRelaySubscriptionId(subId, until), relays: selected, filters: [{ kinds: notificationEventKinds, '#p': [accountPubkey], since: Math.max(0, until - 2592000), until, limit: pageSize }], purpose: 'feed' }, { signal: controller.signal }) : [];
+        const relayEvents =
+          until && selected.length > 0
+            ? await subscriptions.readPage(
+                {
+                  key: olderRelaySubscriptionId(subId, until),
+                  relays: selected,
+                  filters: buildNotificationFilters({
+                    accountPubkey,
+                    limit: pageSize,
+                    cursor: {
+                      since: Math.max(0, until - 2_592_000),
+                      until,
+                    },
+                  }),
+                  purpose: 'feed',
+                },
+                { signal: controller.signal },
+              )
+            : [];
         for (const { event, relay } of relayEvents) { if (!active(run)) return; await upsertEvent(event, [relay]); await saveNotifications(deriveNotifications(accountPubkey, event, [relay])); }
         if (!active(run)) return; await reload(false, [...state.records, ...records]); emit({ ...state, hasOlder: records.length >= pageSize || relayEvents.length >= pageSize });
       } catch (error) { emit({ ...state, error: boundedErrorText(error) }); }

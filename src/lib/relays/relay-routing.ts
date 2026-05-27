@@ -70,6 +70,32 @@ export async function routeGroups(input: {
   ];
 }
 
+export async function routeGroupsForPaging(input: {
+  readonly authors: readonly string[];
+  readonly selectedRelays: readonly string[];
+  readonly purpose: RelayRoutePurpose;
+}): Promise<RelayRouteGroup[]> {
+  const blocked = await blockedRelayUrls();
+  const routes = await authorRelayRoutes(input.authors);
+  const groups = authorGroups(input.authors, routes, input.purpose).slice(
+    0,
+    maxRouteGroups,
+  );
+  for (let index = 0; index < groups.length; index += 1)
+    countRuntime('timeline', 'targetedGroups');
+  if (groups.length > 0) return groups;
+  const selected = normalizeRelays(input.selectedRelays, blocked);
+  if (selected.length === 0) return [];
+  for (let index = 0; index < 1; index += 1)
+    countRuntime('timeline', 'selectedFallbackGroups');
+  return fallbackGroups(
+    input.authors,
+    selected,
+    'fallback',
+    selectedFallbackAuthorLimit,
+  );
+}
+
 export async function routedEventRelays(input: {
   readonly selectedRelays: readonly string[];
   readonly hintedRelays?: readonly string[];

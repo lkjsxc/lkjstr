@@ -162,10 +162,7 @@ export function createGlobalTimelineRuntime(options: TimelineRuntimeOptions) {
       try {
         const page = await loadOlderGlobalPage({ items: items(), relays, subId, cursor, pageSize, subscriptions, signal: aborts.signal });
         if (!active(run)) return;
-        cached = mergeTimelineItems(feedRowShells(page.items), items(), limit);
-        live = [];
-        emit(nextState({ items: items(), hasOlder: page.hasOlder, loadingOlder: true }));
-        cached = page.items;
+        cached = mergeTimelineItems(page.items, items(), limit);
         live = [];
         olderScanCursor = page.hasOlder ? page.nextOlderCursor : undefined;
         emit(nextState({ items: items(), hasOlder: page.hasOlder, hasNewer: state.hasNewer || page.hasNewer }));

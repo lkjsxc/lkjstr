@@ -18,11 +18,12 @@ export function createTimelineRuntimeNetwork(ctx: TimelineNetworkCtx) {
     ctx.setFollowFallbackStarted(true);
     ctx.setFollowList(undefined);
     ctx.setFollowListId('');
-    ctx.setAuthors([ctx.activeAccountPubkey ?? ''].filter(Boolean));
+    ctx.setAuthors([]);
+    ctx.setCached([]);
+    ctx.clearLive();
     ctx.emit(
-      noFollowListState(ctx.getState(), ctx.getAuthors(), ctx.getProfiles()),
+      noFollowListState(ctx.getState(), [], ctx.getProfiles(), []),
     );
-    void subs.subscribeNotes();
   };
 
   const receiveState = (snapshots: RelaySnapshot[]): void => {

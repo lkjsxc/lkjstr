@@ -44,7 +44,7 @@ export async function startTimelineRuntime(args: {
   }
   const loaded = await loadCachedAccountHome(pubkey, args.pageSize).catch(
     () => ({
-      authors: [pubkey],
+      authors: [],
       cached: [],
       profiles: {},
     }),

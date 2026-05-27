@@ -26,6 +26,9 @@ export async function loadAccountHome(
   followList: NostrEvent | undefined,
   limit: number,
 ): Promise<TimelineLoad> {
+  if (!followList) {
+    return { authors: [], cached: [], followList, profiles: {} };
+  }
   const authors = accountHomeAuthors(pubkey, followList);
   return {
     authors,
