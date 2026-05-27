@@ -69,9 +69,10 @@ linked product, protocol, architecture, and operations pages.
   [architecture/feeds](architecture/feeds/README.md): canonical ordering,
   merge-by-id reducer, per-tab page cursors, and independent notification
   filters.
-- Virtual event lists use `EventTreeList` on Home, Global, Profile notes,
-  Thread, Search, and Custom Request. Notifications uses Virtua flat listing
-  via `FeedScrollSurface` with the same footer and near-end contract.
+- Virtual event lists use `EventTreeList` on Home, Global, Profile, Thread,
+  Search, and Custom Request. Profile summary rows and note rows share the same
+  `FeedScrollSurface` owner. Notifications uses Virtua flat listing with the
+  same footer and near-end contract.
 - Event rows show nip05-only subtitles on feeds, pressed Heart/Repost styling
   from a hybrid action-state index plus feed evidence, and no left-side
   new-event stripe.

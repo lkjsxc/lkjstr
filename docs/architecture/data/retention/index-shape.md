@@ -9,8 +9,8 @@ Retention index shape defines how event priority is stored and queried.
 - IndexedDB object store `eventPriority`.
 - Primary key: event id.
 - Indexes:
-  - `score` — ascending queries for lowest-ranked candidates.
-  - `createdAt` — tie-break and diagnostics.
+  - `score`: ascending queries for lowest-ranked candidates.
+  - `createdAt`: tie-break and diagnostics.
 
 ## Record Fields
 
@@ -30,7 +30,7 @@ Retention index shape defines how event priority is stored and queried.
 
 ## Migration
 
-- Opening a database at the new schema version backfills `eventPriority` from
+- Opening a database at the current schema revision backfills `eventPriority` from
   existing `events` and relationship tables in bounded batches.
-- Legacy settings keys `cache.maxEvents`, `cache.maxAgeDays`, and
-  `cache.compactionEnabled` are ignored after migration.
+- Removed settings keys `cache.maxEvents`, `cache.maxAgeDays`, and
+  `cache.compactionEnabled` are ignored after data migration.

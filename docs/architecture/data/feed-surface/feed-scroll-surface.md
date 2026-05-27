@@ -3,8 +3,8 @@
 ## Purpose
 
 `FeedScrollSurface` is the shared scroll shell for feed-like tabs. It owns one
-vertical scroller per tab, wires near-end paging, and appends `FeedSurfaceStatus`
-inside the scroll flow.
+vertical scroller per tab, wires near-end paging, and keeps list chrome inside
+the scroll flow.
 
 ## Contract
 
@@ -15,8 +15,11 @@ inside the scroll flow.
   scroll-layout tokens from [scroll-layout.md](../../workspace/scroll-layout.md).
 - Near-end detection uses `IntersectionObserver` with scroll fallback per
   [near-end.md](near-end.md).
-- `FeedSurfaceStatus` renders as the last row inside the scroll flow, not in a
-  fixed pane footer.
+- `FeedSurfaceStatus` renders as a row inside the scroll flow, not in a fixed
+  pane footer.
+- Profile leading rows, including the profile summary, loading/error text,
+  load-newer affordance, and empty state, belong to the same scroll owner as
+  note rows.
 - Virtualized lists use Virtua `VList` inside the scroll surface. Notifications
   use the same Virtua path with flat notification records.
 - Non-virtual tool tabs keep their existing scroll roots documented in
@@ -26,14 +29,15 @@ inside the scroll flow.
 
 | Surface | Scroll root class | Virtualized |
 | ------- | ----------------- | ----------- |
-| Home, Global, Thread, Search, Profile notes | `.event-list__viewport` inside `.event-list__scroller` | yes |
+| Home, Global, Thread, Search, Profile | `.event-list__viewport` inside `.event-list__scroller` | yes |
 | Notifications | `.notification-list-scroll` | yes |
 | Custom Request, Author Context | tab-specific (see surface matrix) | yes |
 
 ## Component Ownership
 
 - `src/lib/components/feed/FeedScrollSurface.svelte` owns the scroll shell.
-- `EventTreeList` builds tree rows and passes them to `FeedScrollSurface`.
+- `EventTreeList` builds leading rows, tree rows, empty rows, and footer rows,
+  then passes them to `FeedScrollSurface`.
 - `NotificationListScroll` maps notification records and passes them to
   `FeedScrollSurface`.
 - `pane-scroll-retention.ts` reads `scrollTop` only from `[data-scroll-owner]`.

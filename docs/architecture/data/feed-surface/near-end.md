@@ -40,5 +40,5 @@ bottom.
 ## Implementation
 
 - `src/lib/feed-surface/near-end-observer.ts`
-- `src/lib/events/feed-window.ts` — `isNearEnd`, `nearEndThreshold`
-- `src/lib/feed-surface/near-end.ts` — re-exports and `nearEndRootMargin`
+- `src/lib/events/feed-window.ts`: `isNearEnd`, `nearEndThreshold`
+- `src/lib/feed-surface/near-end.ts`: re-exports and `nearEndRootMargin`

@@ -13,6 +13,6 @@ Workflow docs define the change process.
 5. Run local verification with quiet commands (`pnpm verify:quiet`, or
    `pnpm ci:quiet` when browser tests are required). Use verbose
    `pnpm verify` / `pnpm test` / `pnpm test:e2e` only when debugging failures.
-6. Run Docker verification with `--progress quiet` when image or Compose
-   behavior changes.
-7. Keep CI behavior aligned with quiet local and Docker verification.
+6. Run Docker Compose as the final gate: config, image builds, then `verify`,
+   `e2e`, and `cloudflare` services with `--progress quiet`.
+7. Keep CI behavior aligned with quiet local and Docker Compose verification.

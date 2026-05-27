@@ -72,11 +72,11 @@ preserving where each real event was seen.
 
 Feed runtimes treat each older or initial page as three stages:
 
-1. **Acquire** — `readRelayFeedGroups()` or `readRelayFeedPage()` returns
+1. **Acquire**: `readRelayFeedGroups()` or `readRelayFeedPage()` returns
    events; the repository persists rows and provenance.
-2. **Window merge** — event ids merge into the resident feed window; UI emits
+2. **Window merge**: event ids merge into the resident feed window; UI emits
    minimized `FeedEvent` rows from cached bodies without waiting for hydration.
-3. **Enrich** — profile metadata and reference previews load for visible and
+3. **Enrich**: profile metadata and reference previews load for visible and
    near-visible rows only.
 
 Stage 2 must not block on stage 3. Relay latency and enrichment latency are

@@ -92,4 +92,5 @@ documented-only. Update it when a vertical slice closes a gap.
 | Event More clears scrollbar track      | scroll-layout.md        | implemented | `.event-more` uses `right: var(--scroll-content-inset)` and `.event-main` reserves the same inline-end padding |
 | No horizontal overflow on scroll owner | scroll-surface-audit.md | implemented | e2e `assertNoHorizontalOverflow` checks scroll owners and `.event-list__viewport`                              |
 | Notifications on FeedScrollSurface     | feed-scroll-surface.md  | implemented | Notifications use Virtua via `FeedScrollSurface` and the shared footer/near-end semantics                      |
+| Profile in-flow summary rows           | profiles.md             | implemented | `ProfileHeader`, status, load-newer, empty, note, and footer rows share one `EventTreeList` scroll owner       |
 | Pane.svelte at or below 200 lines      | repository standards    | implemented | Pane header moved to `PaneHead.svelte` to keep the file within the cap                                         |

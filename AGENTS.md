@@ -66,3 +66,9 @@ Run focused checks after edits. Docker Compose is the authoritative final gate:
 and `cloudflare`, then run the `verify`, `e2e`, and `cloudflare` services.
 Use synthetic relay tests for network behavior and Playwright for workspace
 flows.
+
+## Commit Protocol
+
+Every commit message follows [docs/repository/commit-protocol.md](docs/repository/commit-protocol.md).
+Start with an intent line, then use Lore trailers only when they record useful
+decision context. `Tested:` and `Not-tested:` must match actual verification.

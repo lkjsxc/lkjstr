@@ -16,6 +16,8 @@ without overlapping text or controls.
   padding may remain for vertical rhythm.
 - Feed virtual lists keep status rows inside the scroll flow so the footer moves
   with content.
+- Profile summary and note rows share the same feed scroll owner so the summary
+  scrolls away with the notes.
 - Horizontal overflow in pane bodies is forbidden except for intentional rails
   such as the tab strip.
 - Feed scroll roots use `overflow-x: clip`.
@@ -38,7 +40,7 @@ wrappers listed in `scroll-layout.css`.
 
 | Surface                                                   | Scrolling element                          | Content wrapper      |
 | --------------------------------------------------------- | ------------------------------------------ | -------------------- |
-| Home, Global, Thread, Search, Profile notes               | Virtua viewport in `.event-list__scroller` | `.feed-scroll-item`  |
+| Home, Global, Thread, Search, Profile                     | Virtua viewport in `.event-list__scroller` | `.feed-scroll-item`  |
 | Notifications                                             | `.notification-list-scroll`                | `.feed-scroll-item`  |
 | Settings, Relay Settings, Stats, Welcome, Upload Settings | `.settings-tab`                            | `.settings-tab > *`  |
 | Custom Request, Author Context, lkjstr Log                | Tab-specific scroll root (see tab CSS)     | tab CSS              |
@@ -55,6 +57,7 @@ Tab bodies set `data-scroll-owner` on the primary vertical scroller so tab
 retention can capture `scrollTop` without scanning arbitrary descendants.
 
 Virtua feed lists use the Virtua viewport element inside `.event-list__scroller`.
+Profile leading rows use the same viewport and content wrapper as note rows.
 
 ## Related
 

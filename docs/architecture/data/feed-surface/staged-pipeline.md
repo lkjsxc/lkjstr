@@ -7,10 +7,10 @@ reference enrichment finishes.
 
 ## Stages
 
-1. **Relay page** — acquire events; persist through the repository.
-2. **Row shell** — merge into the feed window; render from event bodies
+1. **Relay page**: acquire events; persist through the repository.
+2. **Row shell**: merge into the feed window; render from event bodies
    immediately via `feedRowShells` in `src/lib/feed-surface/row-shell.ts`.
-3. **Enrichment** — hydrate profiles and reference previews for visible and
+3. **Enrichment**: hydrate profiles and reference previews for visible and
    near-visible rows asynchronously.
 
 Stage 3 must not block stage 2. Runtimes call `onItems` with shells first, then

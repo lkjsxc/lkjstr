@@ -45,7 +45,7 @@ is documented separately before any passkey secret table is restored.
 | ----- | --------- | --------- |
 | `anchorEventId`, `anchorOffset` | Required when list had scroll | Optional |
 | `scrollTop` | Fallback for plain scroll | Optional |
-| `oldestCursor`, `newestCursor` | When runtime exposes cursors | — |
+| `oldestCursor`, `newestCursor` | When runtime exposes cursors | none |
 | `filterState` | Search query, profile section | Surface-specific |
 | `composerText` | Tweet, inline reply drafts | When present |
 
@@ -61,4 +61,3 @@ feed keys. Complete coverage rows compact sooner than dense, incomplete,
 unresolved, or failed diagnostic rows. Cleanup must not prune accounts,
 settings, relay sets, workspace layout, notifications, Tweet drafts, or
 `tabStates` unless the tab no longer exists in the workspace.
-

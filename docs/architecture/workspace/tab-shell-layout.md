@@ -14,6 +14,8 @@ readers and retention code.
 - Exactly one child owns vertical scroll via `FeedScrollSurface` or an
   equivalent documented scroll root with `data-scroll-owner`.
 - Used by: Home, Global, Search, Profile, Thread, Notifications.
+- Profile keeps summary rows and note rows in that single child. A nested Notes
+  scroller is not allowed.
 
 ### `.form-tab`
 

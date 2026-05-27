@@ -31,4 +31,4 @@ is not a routine item-count budget.
 
 - `cache.maxEvents`, `cache.maxAgeDays`, and `cache.compactionEnabled` are
   removed from the settings schema and UI.
-- Importing legacy settings ignores those keys.
+- Importing removed settings ignores those keys.

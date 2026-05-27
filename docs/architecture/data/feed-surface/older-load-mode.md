@@ -14,7 +14,7 @@ before issuing `loadOlder` for a feed.
   - This mode may trigger without explicit user scroll when the list is short.
 
 - `after-user-scroll`
-  - Issue `loadOlder` only after the user has scrolled down on the feed’s
+  - Issue `loadOlder` only after the user has scrolled down on the feed's
     scroll owner (wheel, touch, or keyboard navigation).
   - The near-end sentinel may continue to compute readiness, but `loadOlder`
     must remain blocked until a scroll-intent flag is set.
@@ -35,4 +35,3 @@ before issuing `loadOlder` for a feed.
 User-scroll intent is tracked via the actual scroll owner (the element with
 `data-scroll-owner`) using wheel/touch/keyboard handlers. Do not use the first
 IntersectionObserver callback alone as the gating signal.
-

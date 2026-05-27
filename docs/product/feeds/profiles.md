@@ -20,8 +20,9 @@ Profile tabs show identity metadata and authored text notes.
 - Only authored feed-display events consume visible note page slots.
 - Initial and older note pages request `30` items.
 - Profile note lists keep a `180` item window.
-- Profile renders as one scroll flow: summary first, then Notes rows in normal
-  document order inside a virtual feed list below the header.
+- Profile renders as one scroll flow. The summary, loading and error rows,
+  load-newer affordance, empty state, note rows, and footer rows are all rows
+  in the same virtual feed list.
 - Older note pages use `max(1200px, 1.5 x viewport)` near-end detection and
   shared `FeedSurfaceStatus` footer semantics.
 - Profile metadata supports banner, picture, display name, name, NIP-05,
@@ -57,7 +58,8 @@ Profile tabs show identity metadata and authored text notes.
 - Profile shows following count from the viewed profile's latest kind `3`.
 - Long `about`, `npub`, and website values wrap without overlapping the Notes
   section at desktop, mobile, or narrow split-pane widths.
-- Profile notes start below the full profile header.
+- Profile note rows start below the full profile header inside the same scroll
+  owner.
 - Older profile notes load after near-bottom scroll or viewport auto-fill.
 - Initial and historical note pages use compound `{createdAt,id}` cursors,
   adaptive bounded windows with `since` and `until`, local relay boundary
@@ -66,8 +68,11 @@ Profile tabs show identity metadata and authored text notes.
 - Scanner-owned bounds are enforced at relay dispatch. A relay-effective limit
   smaller than the visible page size is dense when it fills.
 - When older scrolling prunes newer notes, Profile shows a load-newer affordance
-  above Notes and recovers newer notes from cache and relays with a dedicated
-  newer relay read id.
+  above note rows and recovers newer notes from cache and relays with a
+  dedicated newer relay read id.
+- The profile header alone is not a near-start trigger for newer-note loading.
+  The load-newer affordance, when present, or the first event row is the
+  near-start target.
 - Live authored posts received while viewing an older pruned window are stored
   but not inserted visibly until newer notes are loaded.
 - Live relay reads set `since` when the profile runtime starts.

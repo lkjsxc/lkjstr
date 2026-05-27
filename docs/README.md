@@ -267,6 +267,7 @@ for detailed contracts.
 ## Repository
 
 - [repository/README.md](repository/README.md): layout and workflow rules.
+- [repository/commit-protocol.md](repository/commit-protocol.md): commit message rules.
 - [repository/documentation-standards.md](repository/documentation-standards.md):
   documentation standards.
 - [repository/functional-style.md](repository/functional-style.md): source

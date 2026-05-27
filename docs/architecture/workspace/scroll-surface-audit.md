@@ -12,7 +12,7 @@ surface. Each row must pass before the scroll-layout contract is complete.
 | Home / Global   | `.event-list__viewport`           | required           | required               | required |
 | Thread          | `.event-list__viewport`           | required           | required               | required |
 | Search          | `.event-list__viewport`           | required           | required               | required |
-| Profile notes   | `.event-list__viewport`           | required           | required               | required |
+| Profile         | `.event-list__viewport`           | required           | required               | required |
 | Notifications   | `.notification-list-scroll`       | required           | required               | required |
 | Settings        | `.settings-tab`                   | required           | required               | required |
 | Relay Settings  | `.settings-tab`                   | required           | required               | required |

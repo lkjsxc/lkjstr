@@ -192,9 +192,9 @@ build, and e2e. It does not include Cloudflare dry-run; run
 adapter or Wrangler changes.
 
 Use verbose `pnpm verify`, `pnpm test`, and `pnpm test:e2e` when debugging
-failures locally. Use Docker after Compose or Dockerfile changes and before
-claiming image-backed verification. CI must run the same quiet local,
-browser, and Docker-backed gates.
+failures locally. Docker Compose is the final gate before claiming verified
+agent changes. CI must run the same quiet local, browser, and Docker-backed
+gates.
 
 Run `pnpm check:repo` after documentation changes before code work continues.
 
@@ -208,8 +208,8 @@ Run `pnpm check:repo` after documentation changes before code work continues.
 - Home and Global lists fill the tile after split resizing.
 - Global, Notifications, Thread, and Profile note rows show avatar/name
   fallbacks, timestamps, and wrapped content.
-- Profile renders summary first, then Notes rows in the same Profile tab scroll
-  flow at desktop and mobile widths.
+- Profile renders summary first, then note rows in the same Profile tab scroll
+  owner at desktop and mobile widths.
 - Profile header display name, `npub`, actions, facts, and about text remain
   below the banner bottom at desktop, mobile, and split-pane widths.
 - Profile website and safe about-text URLs are clickable anchors with HTTP or
@@ -219,8 +219,8 @@ Run `pnpm check:repo` after documentation changes before code work continues.
   `Copy follow list JSON`, and `Copy relay sets JSON`.
 - Timeline scroll position remains nonzero after older loads and live prepends
   when the user was not at the top.
-- Profile notes render below the profile header without horizontal overflow on
-  narrow panes.
+- Profile summary scrolls away when note rows scroll, with no nested Notes
+  scroller and no horizontal overflow on narrow panes.
 - Profile note rows preserve real relay provenance and use `cache` only when
   older records have no relay evidence.
 - Home reloads with cached history visible before relay responses and before

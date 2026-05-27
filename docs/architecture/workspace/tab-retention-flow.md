@@ -54,6 +54,8 @@ element that owns vertical overflow. `pane-scroll-retention` reads that node
 first instead of scanning all descendants.
 
 Virtua feed lists use the Virtua viewport element inside `.event-list__scroller`.
+Profile uses that same owner for summary rows and note rows; retention must not
+capture a nested Notes scroller.
 
 ## Reload
 
