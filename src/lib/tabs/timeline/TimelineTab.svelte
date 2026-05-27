@@ -22,7 +22,11 @@
     createTimelineRuntime,
     type TimelineRuntime,
   } from '$lib/timeline/timeline-runtime';
-  import type { TimelineState } from '$lib/timeline/timeline-state';
+  import {
+    homeNoFollowGuidance,
+    homeTimelineEmptyText,
+    type TimelineState,
+  } from '$lib/timeline/timeline-state';
   import {
     createTimelineSubId,
     relayRuntimeKey,
@@ -171,7 +175,18 @@
   {:else if state.loading}
     <p>Loading events...</p>
   {/if}
-  {#if state.error}
+  {#if state.status === 'no-follow-list' && props.kind !== 'global'}
+    <div class="timeline-tab__guidance">
+      <p>{homeNoFollowGuidance}</p>
+      <button
+        type="button"
+        class="timeline-tab__retry"
+        onclick={() => runtime?.retryFollowDiscovery?.()}
+      >
+        Check relays again
+      </button>
+    </div>
+  {:else if state.error}
     <p role="alert">{state.error}</p>
   {/if}
   <EventTreeList
@@ -183,7 +198,7 @@
     relaySets={props.relaySets}
     activeAccountPubkey={props.activeAccountPubkey}
     loading={state.loading}
-    emptyText="No events yet."
+    emptyText={homeTimelineEmptyText(state.status)}
     loadingOlder={state.loadingOlder}
     loadingNewer={state.loadingNewer}
     hasOlder={state.hasOlder}

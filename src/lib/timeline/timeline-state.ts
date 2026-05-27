@@ -74,8 +74,6 @@ export function errorFor(status: TimelineStatus): string | null {
     'auth-required': 'A relay requires authentication.',
     'subscription-closed': 'A relay closed the timeline subscription.',
     'relay-failed': 'No relay is reachable.',
-    'no-follow-list':
-      'No follow list found. Publish a kind 3 follow list or follow accounts to see Home posts.',
   };
   return errors[status] ?? null;
 }
@@ -163,6 +161,14 @@ export function readyWithEventsState(
   };
 }
 
+export const homeNoFollowGuidance =
+  'Home needs a follow list for this account on your selected relays. Follow people in another Nostr client, then check again.';
+
+export function homeTimelineEmptyText(status: TimelineStatus): string {
+  if (status === 'no-follow-list') return homeNoFollowGuidance;
+  return 'No events yet.';
+}
+
 export function noFollowListState(
   state: TimelineState,
   authors: readonly string[],
@@ -175,7 +181,7 @@ export function noFollowListState(
     profiles,
     items,
     loading: false,
-    error: errorFor('no-follow-list'),
+    error: null,
     status: 'no-follow-list',
     hasOlder: false,
     hasNewer: false,

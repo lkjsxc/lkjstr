@@ -191,5 +191,7 @@ export function createTimelineRuntime(options: TimelineRuntimeOptions) {
       bumpGeneration: () => ++generation,
     }),
     items,
+    retryFollowDiscovery:
+      surface === 'home' ? network.retryFollowDiscovery : undefined,
   };
 }
