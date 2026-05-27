@@ -8,6 +8,8 @@ export const quotaPressureRatio = 0.9;
 
 export const quotaPruneBatchSize = 500;
 
+export const defaultCacheMaxBytes = 268_435_456;
+
 export async function readStorageQuota(): Promise<StorageQuotaSnapshot | null> {
   if (typeof navigator === 'undefined' || !navigator.storage?.estimate)
     return null;
@@ -22,4 +24,21 @@ export function isQuotaPressure(
   snapshot: StorageQuotaSnapshot | null,
 ): boolean {
   return snapshot !== null && snapshot.ratio >= quotaPressureRatio;
+}
+
+export function cacheBudgetPressureLimit(
+  snapshot: StorageQuotaSnapshot | null,
+  maxBytes = defaultCacheMaxBytes,
+): number | null {
+  if (!snapshot) return null;
+  const quotaLimit = snapshot.quota * quotaPressureRatio;
+  return Math.min(quotaLimit, maxBytes);
+}
+
+export function isCacheBudgetPressure(
+  snapshot: StorageQuotaSnapshot | null,
+  maxBytes = defaultCacheMaxBytes,
+): boolean {
+  const limit = cacheBudgetPressureLimit(snapshot, maxBytes);
+  return limit !== null && snapshot !== null && snapshot.usage >= limit;
 }

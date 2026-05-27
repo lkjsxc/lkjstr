@@ -25,6 +25,7 @@ tabs.inactiveRetentionSeconds|Inactive tab retention|number|300|Seconds to retai
 timeline.initialLimit|Timeline limit|number|50|Initial timeline event limit.
 timeline.defaultRelays|Timeline relays|json|["wss://relay.damus.io","wss://nos.lol","wss://relay.primal.net","wss://offchain.pub"]|Fallback relay URLs.
 timeline.showRelayProvenance|Relay provenance|boolean|true|Show event relay source.
+cache.maxBytes|Cache byte budget|number|268435456|Soft event cache byte budget.
 relays.defaultSet|Default relays|json|["wss://relay.damus.io","wss://nos.lol","wss://relay.primal.net","wss://offchain.pub"]|Default relay URLs.
 relays.connectTimeoutMs|Connect timeout|number|5000|Relay connect timeout.
 profiles.fetchMetadata|Fetch metadata|boolean|true|Fetch profile metadata from relays.
@@ -71,6 +72,12 @@ const numericConstraints: Record<
     integer: true,
   },
   'timeline.initialLimit': { min: 10, max: 180, step: 1, integer: true },
+  'cache.maxBytes': {
+    min: 1048576,
+    max: 10737418240,
+    step: 1048576,
+    integer: true,
+  },
   'relays.connectTimeoutMs': { min: 500, max: 30000, step: 100, integer: true },
 };
 

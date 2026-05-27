@@ -25,6 +25,7 @@ import { normalizeStoredEvent } from './normalize';
 import { storeRelayListSuggestionsFromEvent } from '../relays/relay-list-suggestions';
 import { storeRoutesFromEvent } from '../relays/relay-route-store';
 import { countRuntime } from '../app/runtime-counters';
+import { scheduleCacheCompactionAfterWrite } from '../cache/compaction-scheduler';
 import type {
   FeedCursor,
   FeedEvent,
@@ -75,6 +76,7 @@ export async function upsertEvent(
   await storeRelayListSuggestionsFromEvent(event);
   await storeRoutesFromEvent(event, relays);
   notifyActionCacheChanged(event);
+  scheduleCacheCompactionAfterWrite();
   return stored;
 }
 

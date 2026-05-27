@@ -8,7 +8,7 @@ import {
   deleteFeedCoverageForFeeds,
 } from '../events/feed-coverage-store';
 import {
-  isQuotaPressure,
+  isCacheBudgetPressure,
   quotaPruneBatchSize,
   readStorageQuota,
 } from './storage-quota';
@@ -20,16 +20,22 @@ export type CompactionResult = {
   readonly reason?: string;
 };
 
-export async function compactOldEvents(): Promise<CompactionResult> {
+export type CompactionOptions = {
+  readonly maxBytes?: number;
+};
+
+export async function compactOldEvents(
+  options: CompactionOptions = {},
+): Promise<CompactionResult> {
   if (!indexedDbAvailable())
     return { prunedEvents: 0, skippedDrafts: true, skipped: true };
   const quota = await readStorageQuota();
-  if (!isQuotaPressure(quota))
+  if (!isCacheBudgetPressure(quota, options.maxBytes))
     return {
       prunedEvents: 0,
       skippedDrafts: true,
       skipped: false,
-      reason: 'below-quota-threshold',
+      reason: 'below-budget-threshold',
     };
   const protectedIds = await protectedEventIds();
   const pruneIds = await lowestScorePruneIds(quotaPruneBatchSize, protectedIds);
