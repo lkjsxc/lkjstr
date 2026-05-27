@@ -114,6 +114,9 @@ linked product, protocol, architecture, and operations pages.
 - Wallet custody is out of scope; zap support opens or copies invoices only.
 - Broad runtime instrumentation is limited to explicit runtime counters,
   compact memory counters, and persisted job records.
+- Clean-browser SES lockdown console messages are external unless Playwright
+  reproduces them from the app origin; only app-origin startup failures become
+  lkjstr Log records.
 - Home follow discovery and Notifications relay cursors are now bounded and
   deterministic: missing-follow decisions use follow-sub EOSE ownership, and
   Notifications older paging is gated by user scroll intent.

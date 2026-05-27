@@ -19,3 +19,5 @@ Define shared Home query startup, paging, refresh, and cleanup.
   older, newer, and live startup paths.
 - Route discovery refresh reads run only when the resolved route-group
   fingerprint changes.
+- The shared startup promise is caught at the registry boundary and logs one
+  bounded runtime failure row instead of surfacing as an unhandled rejection.

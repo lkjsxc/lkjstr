@@ -53,6 +53,10 @@ counters still record the raw behavior.
 Runtime lifecycle diagnostics include tab id, runtime kind, relay count, close
 reason, uptime, item count, and subscription counters when the owner exposes
 them. These records are local app-log entries and do not persist across reloads.
+Startup fire-and-forget promises must catch rejections and emit one bounded
+`area: runtime`, `severity: error` row with surface, kind or owner, tab id when
+owned by a tab, and relay count when relevant. They must not depend on global
+`unhandledrejection` capture for first-party failures.
 
 Relay parse diagnostics include measured bytes when available for unsupported
 binary or non-text frames and include size plus limit for oversized text
@@ -65,7 +69,8 @@ request ids.
 
 Clean-browser Playwright is the source of truth for app-origin console
 diagnostics. Suppression is limited to the external `lockdown-install.js` plus
-`SES_UNCAUGHT_EXCEPTION` plus null payload case.
+`SES_UNCAUGHT_EXCEPTION` plus null payload case. App-origin null errors,
+non-null SES errors, and non-lockdown errors remain visible app-log records.
 
 ## Diagnostic Events
 

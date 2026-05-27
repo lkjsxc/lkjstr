@@ -32,3 +32,4 @@ Profile runtime owns metadata and authored-note loading for one pubkey.
 - Relay reads use [routing-by-surface](../network/subscription-orchestration/routing-by-surface.md).
 - Hidden tabs release live post Demands; metadata Demands may complete if already in flight.
 - Close all Demands and abort page reads on tab close.
+- Startup rejection paths log one bounded app-log runtime failure for the tab.

@@ -53,3 +53,5 @@ Home runtime owns active-account follow discovery and followed-note loading.
 - Close Demands when the primitive runtime key changes or the tab closes.
 - Hidden tabs release live Demands; cached window and cursors remain until close.
 - Reattach live within `120_000` ms staleness when relays and account unchanged.
+- Shared Home startup failures are logged once through app-log with owner,
+  surface, kind, tab id, and relay count context.

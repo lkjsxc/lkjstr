@@ -47,3 +47,5 @@ backfill.
 - No relay Demands without active account or enabled read relays.
 - Hidden tabs release live Demand.
 - Close Demands on relay settings change or tab close.
+- Startup rejection paths log one bounded app-log runtime failure before any
+  visible-read continuation.

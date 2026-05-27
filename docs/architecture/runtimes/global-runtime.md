@@ -31,3 +31,4 @@ Global runtime owns unauthenticated recent-note loading from readable relays.
 - Orchestrator Demands for bootstrap then live.
 - Hidden tabs release live Demands; retain window until runtime close.
 - Abort in-flight page reads on runtime close.
+- Startup rejection paths log one bounded app-log runtime failure for the tab.

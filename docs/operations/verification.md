@@ -150,6 +150,24 @@ Acceptance criteria (synthetic relay):
 - After closing all feed tabs, `activeLeases`, `activeDemands`, and `liveLeases`
   are zero in `__lkjstrMemoryDebug()`.
 
+Focused startup diagnostics changes must also run:
+
+```sh
+pnpm check:repo
+pnpm test -- tests/unit/log/app-log.test.ts tests/unit/backend/home/home-query-registry.test.ts
+pnpm test:e2e -- tests/e2e/root-workspace.spec.ts
+pnpm verify:quiet
+```
+
+Acceptance criteria:
+
+- Startup runtime `start()` rejections produce one bounded lkjstr Log row and
+  no unhandled promise noise.
+- Clean Playwright root startup has no page error, no unhandled rejection, and
+  no app-origin SES lockdown console signal.
+- The external `lockdown-install.js` plus `SES_UNCAUGHT_EXCEPTION` plus null
+  payload case is suppressed; app-origin null and non-null cases are logged.
+
 Final release verification for this class of change is:
 
 ```sh

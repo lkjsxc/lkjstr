@@ -30,3 +30,4 @@ Thread runtime owns event root and reply loading.
 - Load cache first; orchestrator for relay phases.
 - Close Demands on tab close; abort queued page reads.
 - Hidden tabs release live reply Demand.
+- Startup rejection paths log one bounded app-log runtime failure for the tab.
