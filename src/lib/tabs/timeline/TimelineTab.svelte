@@ -89,12 +89,13 @@
     }
     runtime?.setVisibility?.(true);
     const nextRelays = timelineRelays(props.relaySets);
-    const nextKey = [
+    const keyParts = [
       props.kind ?? 'home',
       props.activeAccountPubkey ?? '',
       relayRuntimeKey(nextRelays),
-      props.tabId,
-    ].join('|');
+    ];
+    if (props.kind === 'global') keyParts.push(props.tabId);
+    const nextKey = keyParts.join('|');
     if (nextKey === runtimeKey) return;
     shutdown('timeline-runtime-recreate');
     olderRequests.reset();

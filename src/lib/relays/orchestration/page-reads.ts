@@ -2,6 +2,7 @@ import { readRelayFeedGroups } from '../../events/relay-page';
 import type { RelayGroupPageResult } from '../../events/relay-page';
 import { planPagingRouteGroups } from './route-plan';
 import type { PageIntent } from './intent-types';
+import type { RelayRouteGroup } from '../relay-route-types';
 import type {
   PageReadExecutor,
   SubscriptionOrchestrator,
@@ -31,9 +32,26 @@ export function pageIntentSemanticKey(intent: PageIntent): string {
     String(intent.pageSize),
     cursor,
     relayKey,
+    intent.routeFingerprint ?? '',
     intent.purpose ?? 'feed',
   ].join('|');
   return `page:${hashSemanticKey(raw)}`;
+}
+
+export function routeGroupFingerprint(
+  groups: readonly RelayRouteGroup[],
+): string {
+  return groups
+    .map((group) =>
+      [
+        group.key,
+        [...group.relays].sort().join(','),
+        [...(group.authors ?? [])].sort().join(','),
+        group.source,
+      ].join(':'),
+    )
+    .sort()
+    .join('|');
 }
 
 export async function readTimelinePageByIntent(
@@ -45,7 +63,10 @@ export async function readTimelinePageByIntent(
     selectedRelays: intent.selectedRelays,
     purpose: 'write',
   });
-  const key = pageIntentSemanticKey(intent);
+  const key = pageIntentSemanticKey({
+    ...intent,
+    routeFingerprint: routeGroupFingerprint(groups),
+  });
   const filters = intent.filters;
   if (!filters) {
     throw new Error('PageIntent.filters required for timeline paging');

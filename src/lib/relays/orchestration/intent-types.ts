@@ -31,6 +31,7 @@ export type PageIntent = {
     | 'search'
     | 'event-lookup';
   readonly relayFilters?: readonly NostrFilter[];
+  readonly routeFingerprint?: string;
   readonly filters?: (
     group: { readonly authors?: readonly string[] },
     bounds: Pick<NostrFilter, 'since' | 'until'>,

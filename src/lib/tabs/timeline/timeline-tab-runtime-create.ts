@@ -5,14 +5,12 @@ import {
   setRuntimeCounterActive,
 } from '$lib/app/runtime-counters';
 import { appendAppLog } from '$lib/log/app-log';
+import { attachHomeQuery } from '$lib/backend/home/home-query';
 import {
   createGlobalTimelineRuntime,
   type GlobalTimelineRuntime,
 } from '$lib/timeline/global-timeline-runtime';
-import {
-  createTimelineRuntime,
-  type TimelineRuntime,
-} from '$lib/timeline/timeline-runtime';
+import { type TimelineRuntime } from '$lib/timeline/timeline-runtime';
 import type {
   TimelineRuntimeOptions,
   TimelineState,
@@ -45,7 +43,12 @@ export function createBoundTimelineTabRuntime(input: {
   const runtime =
     input.kind === 'global'
       ? createGlobalTimelineRuntime(options)
-      : createTimelineRuntime(options);
+      : attachHomeQuery({
+          tabId: input.tabId,
+          relays: input.relays,
+          activeAccountPubkey: input.activeAccountPubkey,
+          seed: input.seed,
+        });
   appendAppLog({
     area: 'runtime',
     severity: 'info',

@@ -3,7 +3,9 @@ import { boundedErrorText } from '../events/runtime-error';
 import {
   discoverRoutesForAuthors,
   planAuthorWriteRelays,
+  planPagingRouteGroups,
 } from '../relays/orchestration/route-plan';
+import { routeGroupFingerprint } from '../relays/orchestration/page-reads';
 import { authorFilters } from './follow-list';
 import { profileFilter } from './timeline-profiles';
 import { loadInitialTimelinePage } from './timeline-runtime-paging';
@@ -79,12 +81,9 @@ export async function attachTimelineNotesSubscriptions(
           accountPubkey: account,
           authors: ctx.getAuthors(),
           sessionStartedAt: ctx.startedAt,
-          filters: authorFilters(
-            ctx.getAuthors(),
-            ctx.pageSize,
-            { since: Math.max(0, ctx.startedAt - 30) },
-            'per-filter',
-          ),
+          filters: authorFilters(ctx.getAuthors(), ctx.pageSize, {
+            since: Math.max(0, ctx.startedAt - 30),
+          }),
         },
         onEvent,
       ),
@@ -142,6 +141,13 @@ export async function attachTimelineNotesSubscriptions(
   void initialPage.then(async () => {
     const run = ctx.getGeneration();
     if (ctx.isClosed()) return;
+    const before = routeGroupFingerprint(
+      await planPagingRouteGroups({
+        authors: ctx.getAuthors(),
+        selectedRelays: ctx.relays,
+        purpose: 'write',
+      }),
+    );
     await discoverRoutesForAuthors({
       authors: ctx.getAuthors(),
       selectedRelays: ctx.relays,
@@ -150,6 +156,14 @@ export async function attachTimelineNotesSubscriptions(
       signal: ctx.signal,
     }).catch(() => undefined);
     if (!ctx.isActive(run)) return;
+    const after = routeGroupFingerprint(
+      await planPagingRouteGroups({
+        authors: ctx.getAuthors(),
+        selectedRelays: ctx.relays,
+        purpose: 'write',
+      }),
+    );
+    if (before === after) return;
     const page = await loadInitialTimelinePage({
       surface: ctx.surface,
       owner: ctx.owner,

@@ -61,7 +61,7 @@ export async function loadInitialTimelinePage(
         group.authors ?? [],
         request.pageSize,
         bounds,
-        'per-filter',
+        homeBudgetMode(request.surface),
       ),
   });
   await Promise.all(
@@ -98,7 +98,7 @@ export async function loadOlderTimelinePage(
         group.authors ?? [],
         request.pageSize,
         bounds,
-        'per-filter',
+        homeBudgetMode(request.surface),
       ),
   });
   await Promise.all(
@@ -142,7 +142,7 @@ export async function loadNewerTimelinePage(
         group.authors ?? [],
         request.pageSize,
         bounds,
-        'per-filter',
+        homeBudgetMode(request.surface),
       ),
   });
   await Promise.all(
@@ -168,3 +168,7 @@ export type TimelinePageResult = {
   readonly nextOlderCursor?: FeedCursorPoint;
   readonly incomplete?: boolean;
 };
+
+function homeBudgetMode(surface: DemandSurface) {
+  return surface === 'home' ? 'shared-budget' : 'per-filter';
+}
