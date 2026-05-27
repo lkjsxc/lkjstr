@@ -168,6 +168,8 @@ export function createTimelineRuntime(options: TimelineRuntimeOptions) {
       listeners.clear();
     },
     ...timelineRuntimePagingApi({
+      surface,
+      owner,
       isClosed: () => closed,
       isActive: active,
       getState: () => state,

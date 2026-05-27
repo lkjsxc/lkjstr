@@ -22,7 +22,8 @@ its NIP-02 follows.
 - Selected read relays are the base and fallback. Home may also use NIP-65
   author write relays, NIP-02 follow hints, relay receipts, and discovery
   evidence. Disabled or removed relays remain excluded.
-- Relay reads go through the subscription manager.
+- Relay reads go through the subscription orchestrator (route plan, shared leases,
+  semantic page dedupe); the manager multiplexes wire traffic below the planner.
 - Events and relay provenance are written through the shared repository.
 - Initial and older pages request `30` items.
 - The tab keeps a `180` item window and exposes jump to latest after newer

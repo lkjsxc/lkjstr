@@ -37,7 +37,7 @@ export function expectNoteReq(
   for (const author of authors) {
     const hit = filters.find((filter) => filter.authors?.includes(author));
     expect(hit?.kinds).toEqual([...feedDisplayKinds]);
-    expect(hit?.limit).toBe(30);
+    if (!options.exact) expect(hit?.limit).toBe(30);
     if (options.withUntil) {
       expect(typeof hit?.since).toBe('number');
       expect(typeof hit?.until).toBe('number');

@@ -7,7 +7,7 @@ import type { RelayReadRequest } from '../../../src/lib/events/types';
 import type { NostrEvent, NostrFilter } from '../../../src/lib/protocol';
 import type { PoolEvent } from '../../../src/lib/relays/relay-pool';
 import type { ReadPageResult } from '../../../src/lib/relays/read-page-status';
-import type { RelaySubscriptionManager } from '../../../src/lib/relays/subscription-manager';
+import { orchestratorFromManager } from '../relays/orchestration/orchestrator-mock';
 import { loadNewerGlobalPage } from '../../../src/lib/timeline/global-timeline-pages';
 import { loadNewerTimelinePage } from '../../../src/lib/timeline/timeline-runtime-paging';
 
@@ -22,9 +22,10 @@ describe('timeline newer relay pages', () => {
     const newer = event('home-newer', now - 5, author);
     const page = await loadNewerTimelinePage({
       items: [],
+      surface: 'home',
+      owner: 'home',
       authors: [author],
       relays: [relay],
-      subId: 'home',
       cursor: { createdAt: now - 20, id: 'f'.repeat(64) },
       pageSize: 10,
       subscriptions: subscriptions([newer]),
@@ -42,8 +43,8 @@ describe('timeline newer relay pages', () => {
     const newer = event('global-newer', now - 5, author);
     const page = await loadNewerGlobalPage({
       items: [],
+      owner: 'global',
       relays: [relay],
-      subId: 'global',
       cursor: { createdAt: now - 20, id: 'f'.repeat(64) },
       pageSize: 10,
       subscriptions: subscriptions([newer]),
@@ -56,14 +57,22 @@ describe('timeline newer relay pages', () => {
   });
 });
 
-function subscriptions(
-  events: readonly NostrEvent[],
-): RelaySubscriptionManager {
-  return {
+function subscriptions(events: readonly NostrEvent[]) {
+  return orchestratorFromManager({
+    subscribeLive: () => () => undefined,
+    subscribeState: () => () => undefined,
+    readPage: async () => [],
+    close: () => undefined,
+    counts: () => ({
+      liveSubscriptions: 0,
+      liveListeners: 0,
+      inFlightReads: 0,
+    }),
     readPageDetailed: async (request: RelayReadRequest) => {
-      const filter = request.filters[0];
       const matching = events
-        .filter((item) => matches(item, filter))
+        .filter((item) =>
+          request.filters.some((filter) => matches(item, filter)),
+        )
         .map((item) => ({
           event: item,
           relay: request.relays[0] ?? relay,
@@ -71,7 +80,7 @@ function subscriptions(
         }));
       return detailed(matching, request);
     },
-  } as unknown as RelaySubscriptionManager;
+  } as import('../../../src/lib/relays/subscription-manager').RelaySubscriptionManager);
 }
 
 function detailed(
@@ -97,8 +106,12 @@ function detailed(
 
 function matches(event: NostrEvent, filter: NostrFilter | undefined): boolean {
   return (
-    (!filter?.authors || filter.authors.includes(event.pubkey)) &&
-    (!filter?.kinds || filter.kinds.includes(event.kind)) &&
+    (!filter?.authors ||
+      filter.authors.length === 0 ||
+      filter.authors.includes(event.pubkey)) &&
+    (!filter?.kinds ||
+      filter.kinds.length === 0 ||
+      filter.kinds.includes(event.kind)) &&
     (filter?.since === undefined || event.created_at >= filter.since) &&
     (filter?.until === undefined || event.created_at <= filter.until)
   );

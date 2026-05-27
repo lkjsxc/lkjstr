@@ -20,12 +20,14 @@ describe('timeline network subs', () => {
 
     let capturedNotesFilters: unknown[] | undefined;
     const subscriptions = {
-      subscribeDemand: vi.fn(
-        (demand: { readonly channel: string; readonly filters: unknown[] }) => {
-          if (demand.channel === 'notes') capturedNotesFilters = demand.filters;
+      submitHomeNotesLiveIntent: vi.fn(
+        async (intent: { readonly filters: unknown[] }) => {
+          capturedNotesFilters = intent.filters;
           return () => undefined;
         },
       ),
+      submitLiveIntent: vi.fn(() => () => undefined),
+      readPageByIntent: vi.fn(async () => ({ events: [], statuses: [] })),
     };
 
     const controller = new AbortController();

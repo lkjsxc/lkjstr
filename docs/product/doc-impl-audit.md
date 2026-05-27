@@ -56,14 +56,16 @@ documented-only. Update it when a vertical slice closes a gap.
 
 ## Subscription Orchestration
 
-| Clause                        | Contract                    | Status      | Notes                           |
-| ----------------------------- | --------------------------- | ----------- | ------------------------------- |
-| Demand / Lease docs           | subscription-orchestration/ | implemented | `src/lib/relays/orchestration/` |
-| Bootstrap closes on EOSE      | bootstrap-live.md           | implemented | relay client backward strategy  |
-| Shared live lease across tabs | compatibility.md            | implemented | fingerprint + channel merge     |
-| Stats orchestration counters  | observability.md            | implemented | metrics + RuntimeMemoryPanel    |
-| Subscription E2E gate         | verification.md             | implemented | lease-sharing, pane-churn specs |
-| Hidden tab demand pause       | demand.md                   | implemented | setVisibility on feed runtimes  |
+| Clause                         | Contract                    | Status      | Notes                                                                         |
+| ------------------------------ | --------------------------- | ----------- | ----------------------------------------------------------------------------- |
+| Intent-only orchestration docs | subscription-orchestration/ | implemented | demand-intent, lease-key, page-read-dedupe                                    |
+| Wire-equivalent lease keys     | lease-key.md                | implemented | `lease-key.ts`                                                                |
+| Semantic page read dedupe      | page-read-dedupe.md         | implemented | `readPageByIntent`, `pageIntentSemanticKey`                                   |
+| Shared live lease across tabs  | compatibility.md            | implemented | fingerprint + channel merge                                                   |
+| Stats orchestration counters   | metrics.md                  | implemented | metrics + RuntimeMemoryPanel                                                  |
+| Subscription E2E gate          | verification.md             | implemented | `subscription-three-home.spec.ts` + visibility churn                          |
+| Hidden tab demand pause        | owner-visibility.md         | implemented | setVisibility on feed runtimes                                                |
+| All surfaces on intent API     | orchestration-bridge.md     | implemented | Home/Notifications/Global/Profile/Thread/Search/Custom Request/Author Context |
 
 ## Feed Correctness
 

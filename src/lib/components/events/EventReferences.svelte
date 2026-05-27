@@ -44,7 +44,7 @@
       const hydrated = await hydrateProfiles({
         pubkeys: authors,
         relays: props.relays ?? [],
-        subId: 'event-references',
+        owner: 'event-references',
       });
       if (!alive) return;
       profiles = { ...(props.profiles ?? {}), ...hydrated };

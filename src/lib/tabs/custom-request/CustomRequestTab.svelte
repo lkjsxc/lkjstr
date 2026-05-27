@@ -9,10 +9,8 @@
   import type { ProfileSummary } from '$lib/identity/identity';
   import type { RelaySet } from '$lib/relays/relay-store';
   import { sharedSubscriptionOrchestrator } from '$lib/relays/orchestration/orchestrator';
-  import {
-    createTimelineSubId,
-    timelineRelays,
-  } from '$lib/timeline/timeline-subscription';
+  import { pageIntentSemanticKey } from '$lib/relays/orchestration/page-reads';
+  import { timelineRelays } from '$lib/timeline/timeline-subscription';
   import { loadTimelineProfiles } from '$lib/timeline/timeline-profiles';
 
   type Props = {
@@ -65,7 +63,16 @@
         ? request.relays
         : timelineRelays(props.relaySets);
       const events = await readRelayFeedPage({
-        key: request.subId ?? createTimelineSubId(props.tabId, 'custom'),
+        key: pageIntentSemanticKey({
+          surface: 'custom-request',
+          owner: props.tabId,
+          phase: 'bootstrap',
+          selectedRelays: relays,
+          authors: [],
+          pageSize: feedPageSize,
+          direction: 'initial',
+          purpose: 'feed',
+        }),
         relays,
         filters: request.filters,
         pageSize: feedPageSize,

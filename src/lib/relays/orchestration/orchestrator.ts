@@ -7,17 +7,23 @@ import {
   type RelaySubscriptionManager,
 } from '../subscription-manager';
 import type { ReadPageOptions } from '../subscription-manager-types';
-import { demandFingerprintInput } from './compatible';
+import type { ReadPageResult } from '../read-page-status';
 import { createDemandRegistry } from './demand-registry';
 import type { Demand } from './demand-types';
-import { leaseFingerprint, leaseWireKey } from './lease-fingerprint';
+import { buildHomeNotesLiveDemand, buildLiveDemand } from './demand-build';
+import type {
+  HomeNotesLiveIntent,
+  LiveIntent,
+  PageIntent,
+} from './intent-types';
+import { demandToWireRequest } from './lease-key';
 import {
   createLiveLeaseController,
   noopLiveRelease,
   releaseOwnerLeases,
   type LiveLease,
 } from './orchestrator-live';
-import { legacySubscribeLive } from './orchestrator-adapter';
+import { readPageByIntent as readPageByIntentExec } from './page-reads';
 import {
   incOrchestrationMetric,
   orchestrationMetricsSnapshot,
@@ -44,22 +50,8 @@ export function createSubscriptionOrchestrator(
     setOrchestrationGauge('bootstrapLeases', bootstrapInFlight);
   };
 
-  const demandFilters = (demand: Demand) => {
-    if (demand.phase !== 'live') return demand.filters;
-    const since = demand.since ?? Math.floor(Date.now() / 1000) - 30;
-    return demand.filters.map((filter) => ({
-      ...filter,
-      since,
-      limit: undefined,
-    }));
-  };
-
-  const toRequest = (demand: Demand): RelayReadRequest => ({
-    key: leaseWireKey(leaseFingerprint(demandFingerprintInput(demand))),
-    relays: demand.relays,
-    filters: demandFilters(demand),
-    purpose: demand.purpose,
-  });
+  const toRequest = (demand: Demand): RelayReadRequest =>
+    demandToWireRequest(demand);
 
   const { attachLive, detachLive, pauseOwner, resumeOwner } =
     createLiveLeaseController(
@@ -70,12 +62,33 @@ export function createSubscriptionOrchestrator(
       syncLiveGauge,
     );
 
-  return {
-    subscribeLive: (
-      request: RelayReadRequest,
-      listener: (event: PoolEvent) => void,
-    ) => legacySubscribeLive(request, listener, attachLive),
+  const submitLiveIntent = (
+    intent: LiveIntent,
+    relays: readonly string[],
+    listener: (event: PoolEvent) => void,
+  ): (() => void) => attachLive(buildLiveDemand(intent, relays), listener);
+
+  const submitHomeNotesLiveIntent = async (
+    intent: HomeNotesLiveIntent,
+    listener: (event: PoolEvent) => void,
+  ): Promise<() => void> =>
+    attachLive(await buildHomeNotesLiveDemand(intent), listener);
+
+  const api = {
     subscribeDemand: attachLive,
+    submitLiveIntent,
+    submitHomeNotesLiveIntent,
+    readPageByIntent: (
+      intent: PageIntent,
+      options?: ReadPageOptions,
+    ): Promise<ReadPageResult> =>
+      readPageByIntentExec(
+        {
+          readPageDetailed: manager.readPageDetailed.bind(manager),
+        },
+        intent,
+        options,
+      ),
     readDemandPage: (demand: Demand, options: ReadPageOptions = {}) => {
       const fingerprint = registry.register(demand);
       incOrchestrationMetric('relayReqTotal');
@@ -112,6 +125,8 @@ export function createSubscriptionOrchestrator(
     },
     metricsSnapshot: orchestrationMetricsSnapshot,
   };
+
+  return api;
 }
 
 export const sharedSubscriptionOrchestrator = createSubscriptionOrchestrator(

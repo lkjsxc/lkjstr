@@ -4,14 +4,15 @@ import { lookupEvent, queryFeed, upsertEvent } from '$lib/events/repository';
 import { readRelayFeedPage, readRelayPage } from '$lib/events/relay-page';
 import type { FeedEvent } from '$lib/events/types';
 import { compareEventsDesc, type NostrEvent } from '$lib/protocol';
-import type { RelaySubscriptionManager } from '$lib/relays/subscription-manager';
+import type { SubscriptionOrchestrator } from '$lib/relays/orchestration/orchestrator';
+import { pageIntentSemanticKey } from '$lib/relays/orchestration/page-reads';
 
 export type AuthorContextRequest = {
   readonly eventId: string;
   readonly pubkey: string;
   readonly relays: readonly string[];
-  readonly subId: string;
-  readonly subscriptions: RelaySubscriptionManager;
+  readonly owner: string;
+  readonly subscriptions: SubscriptionOrchestrator;
 };
 
 export async function loadAuthorContext(
@@ -34,7 +35,16 @@ export async function loadAuthorContext(
       limit: 10,
     }),
     readRelayFeedPage({
-      key: request.subId,
+      key: pageIntentSemanticKey({
+        surface: 'author-context',
+        owner: request.owner,
+        phase: 'bootstrap',
+        selectedRelays: request.relays,
+        authors: [request.pubkey],
+        pageSize: 22,
+        direction: 'initial',
+        purpose: 'feed',
+      }),
       relays: request.relays,
       filters: [
         {
@@ -72,7 +82,19 @@ async function loadAnchor(
   const cached = await lookupEvent(request.eventId);
   if (cached) return cached;
   const [relay] = await readRelayPage({
-    key: `${request.subId}:anchor`,
+    key: pageIntentSemanticKey({
+      surface: 'author-context',
+      owner: request.owner,
+      phase: 'bootstrap',
+      selectedRelays: request.relays,
+      authors: [request.pubkey],
+      pageSize: 1,
+      direction: 'initial',
+      purpose: 'event-lookup',
+      relayFilters: [
+        { ids: [request.eventId], authors: [request.pubkey], limit: 1 },
+      ],
+    }),
     relays: request.relays,
     filters: [{ ids: [request.eventId], authors: [request.pubkey], limit: 1 }],
     pageSize: 1,

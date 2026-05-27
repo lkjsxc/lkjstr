@@ -21,6 +21,7 @@ This directory contains Vitest unit tests grouped by source domain.
 - [notifications/](notifications/): notification index tests.
 - [popover/](popover/): popover positioning tests.
 - [profile/](profile/): profile store tests.
+- [query/](query/): query helper tests.
 - [protocol/](protocol/): protocol kernel tests.
 - [relays/](relays/): relay client and selection tests.
 - [search/](search/): search parsing and result tests.

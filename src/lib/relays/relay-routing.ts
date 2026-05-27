@@ -146,6 +146,17 @@ function fallbackGroups(
   source: RelayRouteGroup['source'],
   limit = maxAuthorsPerRouteGroup,
 ): RelayRouteGroup[] {
+  if (authors.length === 0) {
+    return relays.length
+      ? [
+          {
+            key: `${source}:0`,
+            relays,
+            source,
+          },
+        ]
+      : [];
+  }
   const groups: RelayRouteGroup[] = [];
   for (let index = 0; index < authors.length; index += limit)
     groups.push({

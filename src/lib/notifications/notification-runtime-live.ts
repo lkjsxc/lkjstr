@@ -1,5 +1,4 @@
 import { upsertEvent } from '../events/repository';
-import { liveFeedDemand } from '../relays/orchestration/runtime-demand';
 import type { SubscriptionOrchestrator } from '../relays/orchestration/orchestrator';
 import type { DemandVisibility } from '../relays/orchestration/demand-types';
 import { deriveNotifications } from './notification-index';
@@ -11,7 +10,7 @@ import { notificationRelays } from './notification-relays';
 import type { NotificationRecord } from './notification';
 import type { NotificationState } from './notification-state';
 
-export function attachNotificationLiveSubscription(args: {
+export async function attachNotificationLiveSubscription(args: {
   readonly accountPubkey: string;
   readonly relays: readonly string[];
   readonly owner: string;
@@ -26,21 +25,24 @@ export function attachNotificationLiveSubscription(args: {
     records?: readonly NotificationRecord[],
     prunedNewerUpdate?: boolean,
   ) => Promise<void>;
-}): () => void {
-  return args.subscriptions.subscribeDemand(
-    liveFeedDemand({
+}): Promise<() => void> {
+  const selected = await notificationRelays(args.accountPubkey, args.relays);
+  return args.subscriptions.submitLiveIntent(
+    {
       surface: 'notifications',
       owner: args.owner,
       channel: 'notifications:live',
-      relays: args.relays,
+      visibility: args.getVisibility(),
+      selectedRelays: selected,
       filters: buildNotificationFilters({
         accountPubkey: args.accountPubkey,
         limit: args.pageSize,
         cursor: { since: args.startedAt },
       }),
+      purpose: 'feed',
       since: args.startedAt,
-      visibility: args.getVisibility(),
-    }),
+    },
+    selected,
     async ({ event, relay }) => {
       if (args.isClosed()) return;
       if (event.created_at < args.startedAt) return;

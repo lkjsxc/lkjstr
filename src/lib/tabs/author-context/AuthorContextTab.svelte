@@ -6,10 +6,7 @@
   import type { ProfileSummary } from '$lib/identity/identity';
   import type { RelaySet } from '$lib/relays/relay-store';
   import { sharedSubscriptionOrchestrator } from '$lib/relays/orchestration/orchestrator';
-  import {
-    createTimelineSubId,
-    timelineRelays,
-  } from '$lib/timeline/timeline-subscription';
+  import { timelineRelays } from '$lib/timeline/timeline-subscription';
   import { loadTimelineProfiles } from '$lib/timeline/timeline-profiles';
 
   type Props = {
@@ -66,7 +63,7 @@
         eventId: props.eventId,
         pubkey: props.pubkey,
         relays: timelineRelays(props.relaySets),
-        subId: createTimelineSubId(props.tabId, 'author'),
+        owner: props.tabId,
         subscriptions,
       });
       if (destroyed) return;

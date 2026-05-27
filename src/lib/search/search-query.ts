@@ -5,14 +5,14 @@ import { eventsMatching, upsertEvent } from '$lib/events/repository';
 import type { FeedCursorPoint, FeedEvent } from '$lib/events/types';
 import { compareEventsDesc } from '$lib/protocol';
 import { relayMaySupportNip50 } from '$lib/relays/relay-info';
-import type { RelaySubscriptionManager } from '$lib/relays/subscription-manager';
-import { initialRelaySubscriptionId } from '$lib/relays/subscription-id';
+import type { SubscriptionOrchestrator } from '$lib/relays/orchestration/orchestrator';
+import { pageIntentSemanticKey } from '$lib/relays/orchestration/page-reads';
 
 export type SearchPageRequest = {
   readonly query: string;
   readonly relays: readonly string[];
-  readonly subId: string;
-  readonly subscriptions: RelaySubscriptionManager;
+  readonly owner: string;
+  readonly subscriptions: SubscriptionOrchestrator;
   readonly limit: number;
   readonly before?: FeedCursorPoint;
 };
@@ -37,12 +37,20 @@ async function relaySearch(
   request: SearchPageRequest,
   query: string,
 ): Promise<FeedEvent[]> {
+  const searchRelays = await nip50Relays(request.relays);
   const relayItems = await readRelayFeedPage({
-    key: initialRelaySubscriptionId(
-      request.subId,
-      `${query}:${request.before?.createdAt ?? 0}:${request.before?.id ?? ''}`,
-    ),
-    relays: await searchRelays(request.relays),
+    key: pageIntentSemanticKey({
+      surface: 'search',
+      owner: request.owner,
+      phase: request.before ? 'page' : 'bootstrap',
+      selectedRelays: searchRelays,
+      authors: [],
+      pageSize: request.limit,
+      direction: request.before ? 'older' : 'initial',
+      cursor: request.before,
+      purpose: 'search',
+    }),
+    relays: searchRelays,
     filters: [
       {
         kinds: feedDisplayKinds,
@@ -62,7 +70,7 @@ async function relaySearch(
   return relayItems;
 }
 
-async function searchRelays(relays: readonly string[]): Promise<string[]> {
+async function nip50Relays(relays: readonly string[]): Promise<string[]> {
   const support = await Promise.all(
     relays.map(async (relay) => ({
       relay,

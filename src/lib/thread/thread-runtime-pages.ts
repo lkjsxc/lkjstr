@@ -1,7 +1,6 @@
 import { threadWindowSize } from '../events/feed-window';
 import { lookupEvent, queryFeed } from '../events/repository';
 import {
-  boundarySince,
   boundaryUntil,
   readRelayFeedPage,
   readRelayPage,
@@ -9,29 +8,19 @@ import {
 import type { FeedCursorPoint } from '../events/types';
 import { replyRoot } from '../protocol';
 import { routedEventRelays } from '../relays/relay-routing';
-import type { RelaySubscriptionManager } from '../relays/subscription-manager';
+import { pageIntentSemanticKey } from '../relays/orchestration/page-reads';
 import {
-  compactRelaySubscriptionId,
-  initialRelaySubscriptionId,
-  olderRelaySubscriptionId,
-} from '../relays/subscription-id';
+  threadIntervalSince,
+  toThreadItems,
+  type ThreadPageRequest,
+} from './thread-page-helpers';
 import {
   mergeThreadItems,
   storeThreadEvent,
   type ThreadItem,
 } from './thread-store';
 
-type Request = {
-  readonly eventId: string;
-  readonly rootId: string;
-  readonly relays: readonly string[];
-  readonly subId: string;
-  readonly pageSize: number;
-  readonly subscriptions: RelaySubscriptionManager;
-  readonly signal?: AbortSignal;
-};
-
-export async function loadInitialThreadPage(request: Request) {
+export async function loadInitialThreadPage(request: ThreadPageRequest) {
   const cached = await lookupEvent(request.eventId);
   const relays = await routedEventRelays({
     selectedRelays: request.relays,
@@ -39,7 +28,17 @@ export async function loadInitialThreadPage(request: Request) {
     authorPubkey: cached?.event.pubkey,
   });
   const focused = await readRelayPage({
-    key: compactRelaySubscriptionId(request.subId, 'focus', request.eventId),
+    key: pageIntentSemanticKey({
+      surface: 'thread',
+      owner: request.owner,
+      phase: 'bootstrap',
+      selectedRelays: request.relays,
+      authors: [],
+      pageSize: 1,
+      direction: 'initial',
+      purpose: 'event-lookup',
+      relayFilters: [{ ids: [request.eventId] }],
+    }),
     relays,
     filters: [{ ids: [request.eventId] }],
     pageSize: 1,
@@ -51,9 +50,15 @@ export async function loadInitialThreadPage(request: Request) {
     ? (replyRoot(focused[0].event) ?? request.eventId)
     : request.rootId;
   const relayEvents = await readRelayFeedPage({
-    key: initialRelaySubscriptionId(request.subId, {
-      eventId: request.eventId,
-      rootId,
+    key: pageIntentSemanticKey({
+      surface: 'thread',
+      owner: request.owner,
+      phase: 'bootstrap',
+      selectedRelays: relays,
+      authors: [request.eventId, rootId],
+      pageSize: request.pageSize,
+      direction: 'initial',
+      purpose: 'event-lookup',
     }),
     relays,
     filters: [
@@ -65,7 +70,7 @@ export async function loadInitialThreadPage(request: Request) {
     signal: request.signal,
     purpose: 'event-lookup',
   });
-  const all = [...toItems(focused), ...relayEvents];
+  const all = [...toThreadItems(focused), ...relayEvents];
   await Promise.all(
     all.map((item) => storeThreadEvent(item.event, item.relays)),
   );
@@ -73,7 +78,7 @@ export async function loadInitialThreadPage(request: Request) {
 }
 
 export async function loadOlderThreadPage(
-  request: Request & {
+  request: ThreadPageRequest & {
     readonly items: readonly ThreadItem[];
     readonly cursor: FeedCursorPoint;
   },
@@ -86,13 +91,23 @@ export async function loadOlderThreadPage(
   });
   const relays = await routedEventRelays({ selectedRelays: request.relays });
   const relayEvents = await readRelayFeedPage({
-    key: olderRelaySubscriptionId(request.subId, request.cursor),
+    key: pageIntentSemanticKey({
+      surface: 'thread',
+      owner: request.owner,
+      phase: 'page',
+      selectedRelays: relays,
+      authors: [request.rootId, request.eventId],
+      pageSize: request.pageSize,
+      direction: 'older',
+      cursor: request.cursor,
+      purpose: 'feed',
+    }),
     relays,
     filters: [
       {
         kinds: [1],
         '#e': [request.rootId, request.eventId],
-        since: intervalSince(request.cursor),
+        since: threadIntervalSince(request.cursor),
         until: boundaryUntil(request.cursor),
         limit: request.pageSize,
       },
@@ -116,64 +131,4 @@ export async function loadOlderThreadPage(
     hasOlder: page.hasMore || relayEvents.length >= request.pageSize,
     pruned,
   };
-}
-
-export async function loadNewerThreadPage(
-  request: Request & {
-    readonly items: readonly ThreadItem[];
-    readonly cursor: FeedCursorPoint;
-  },
-) {
-  const page = await queryFeed({
-    kind: 'thread',
-    eventId: request.rootId,
-    after: request.cursor,
-    limit: request.pageSize,
-  });
-  const relays = await routedEventRelays({ selectedRelays: request.relays });
-  const relayEvents = await readRelayFeedPage({
-    key: olderRelaySubscriptionId(request.subId, request.cursor),
-    relays,
-    filters: [
-      {
-        kinds: [1],
-        '#e': [request.rootId, request.eventId],
-        since: boundarySince(request.cursor),
-        until: intervalUntil(request.cursor),
-        limit: request.pageSize,
-      },
-    ],
-    after: request.cursor,
-    pageSize: request.pageSize,
-    subscriptions: request.subscriptions,
-    signal: request.signal,
-    purpose: 'feed',
-  });
-  await Promise.all(
-    relayEvents.map((item) => storeThreadEvent(item.event, item.relays)),
-  );
-  const items = mergeThreadItems(request.items, [
-    ...page.items,
-    ...relayEvents,
-  ]);
-  const pruned = items.length > threadWindowSize;
-  return {
-    items: pruned ? items.slice(0, threadWindowSize) : items,
-    hasNewer: page.hasMore || relayEvents.length >= request.pageSize,
-    pruned,
-  };
-}
-
-function toItems(
-  events: readonly { event: ThreadItem['event']; relay: string }[],
-) {
-  return events.map((item) => ({ event: item.event, relays: [item.relay] }));
-}
-
-function intervalSince(cursor: FeedCursorPoint): number {
-  return Math.max(0, cursor.createdAt - 30 * 24 * 60 * 60);
-}
-
-function intervalUntil(cursor: FeedCursorPoint): number {
-  return cursor.createdAt + 30 * 24 * 60 * 60;
 }

@@ -2,11 +2,9 @@ import { beforeEach, describe, expect, it } from 'vitest';
 import { threadWindowSize } from '../../../src/lib/events/feed-window';
 import { clearEventRepositoryForTests } from '../../../src/lib/events/repository';
 import type { NostrEvent } from '../../../src/lib/protocol';
-import type { RelaySubscriptionManager } from '../../../src/lib/relays/subscription-manager';
-import {
-  loadNewerThreadPage,
-  loadOlderThreadPage,
-} from '../../../src/lib/thread/thread-runtime-pages';
+import { stubOrchestrator } from '../relays/orchestration/orchestrator-mock';
+import { loadOlderThreadPage } from '../../../src/lib/thread/thread-runtime-pages';
+import { loadNewerThreadPage } from '../../../src/lib/thread/thread-runtime-pages-newer';
 import { storeThreadEvent } from '../../../src/lib/thread/thread-store';
 
 describe('thread runtime pages', () => {
@@ -27,7 +25,7 @@ describe('thread runtime pages', () => {
       rootId: root,
       items,
       relays: [],
-      subId: 'thread-test',
+      owner: 'thread-test',
       cursor: {
         createdAt: items.at(-1)!.event.created_at,
         id: items.at(-1)!.event.id,
@@ -43,7 +41,7 @@ describe('thread runtime pages', () => {
       rootId: root,
       items: olderPage.items,
       relays: [],
-      subId: 'thread-test',
+      owner: 'thread-test',
       cursor: {
         createdAt: olderPage.items[0]!.event.created_at,
         id: olderPage.items[0]!.event.id,
@@ -56,8 +54,8 @@ describe('thread runtime pages', () => {
   });
 });
 
-function emptySubscriptions(): RelaySubscriptionManager {
-  return { readPage: async () => [] } as unknown as RelaySubscriptionManager;
+function emptySubscriptions() {
+  return stubOrchestrator();
 }
 
 function reply(seed: string, created_at: number, root: string): NostrEvent {

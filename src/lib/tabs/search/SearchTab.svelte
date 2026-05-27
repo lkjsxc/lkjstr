@@ -10,10 +10,7 @@
   import type { RelaySet } from '$lib/relays/relay-store';
   import { sharedSubscriptionOrchestrator } from '$lib/relays/orchestration/orchestrator';
   import { searchPage } from '$lib/search/search-query';
-  import {
-    createTimelineSubId,
-    timelineRelays,
-  } from '$lib/timeline/timeline-subscription';
+  import { timelineRelays } from '$lib/timeline/timeline-subscription';
   import { loadTimelineProfiles } from '$lib/timeline/timeline-profiles';
 
   type Props = {
@@ -89,7 +86,7 @@
       const page = await searchPage({
         query: term,
         relays: timelineRelays(props.relaySets),
-        subId: createTimelineSubId(props.tabId, 'search'),
+        owner: props.tabId,
         subscriptions,
         limit: feedPageSize,
       });
@@ -113,7 +110,7 @@
       const page = await searchPage({
         query,
         relays: timelineRelays(props.relaySets),
-        subId: createTimelineSubId(props.tabId, 'search-old'),
+        owner: props.tabId,
         subscriptions,
         limit: feedPageSize,
         before,

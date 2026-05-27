@@ -9,9 +9,9 @@ export type TimelineProfiles = Record<string, ProfileSummary>;
 export async function loadTimelineProfiles(
   pubkeys: readonly string[],
   relays: readonly string[] = [],
-  subId = 'profiles',
+  owner = 'profiles',
 ): Promise<TimelineProfiles> {
-  return hydrateProfiles({ pubkeys, relays, subId });
+  return hydrateProfiles({ pubkeys, relays, owner });
 }
 
 export async function storeTimelineProfile(

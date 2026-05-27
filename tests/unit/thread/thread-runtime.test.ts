@@ -4,6 +4,7 @@ import { createRelayPool } from '../../../src/lib/relays/relay-pool';
 import { clearEventRepositoryForTests } from '../../../src/lib/events/repository';
 import { storeThreadEvent } from '../../../src/lib/thread/thread-store';
 import type { SubscriptionOrchestrator } from '../../../src/lib/relays/orchestration/orchestrator';
+import { stubOrchestrator } from '../relays/orchestration/orchestrator-mock';
 
 describe('thread runtime', () => {
   beforeEach(() => clearEventRepositoryForTests());
@@ -46,44 +47,20 @@ describe('thread runtime', () => {
 });
 
 function failingSubscriptions(): SubscriptionOrchestrator {
-  const base = {
-    subscribeState: () => () => undefined,
-    subscribeLive: () => () => undefined,
+  return stubOrchestrator({
     readPage: async () => {
       throw new Error('older failed');
     },
     readPageDetailed: async () => {
       throw new Error('older failed');
     },
-    close: () => undefined,
-    counts: () => ({
-      liveSubscriptions: 0,
-      liveListeners: 0,
-      inFlightReads: 0,
-    }),
-  };
-  return {
-    ...base,
-    subscribeDemand: () => () => undefined,
+    readPageByIntent: async () => {
+      throw new Error('older failed');
+    },
     readDemandPage: async () => {
       throw new Error('older failed');
     },
-    pauseOwner: () => undefined,
-    resumeOwner: () => undefined,
-    releaseOwner: () => undefined,
-    metricsSnapshot: () => ({
-      activeDemands: 0,
-      activeLeases: 0,
-      liveLeases: 0,
-      bootstrapLeases: 0,
-      relayReqTotal: 0,
-      relayCloseTotal: 0,
-      eventsReceived: 0,
-      eventsAccepted: 0,
-      eventsDroppedDuplicate: 0,
-      eventsDroppedNonRenderCritical: 0,
-    }),
-  };
+  });
 }
 
 function event(id: string, created_at: number) {

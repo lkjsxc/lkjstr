@@ -1,6 +1,11 @@
 import type { NostrFilter } from '../protocol';
 import type { PoolEvent } from '../relays/relay-pool';
-import type { RelaySubscriptionManager } from '../relays/subscription-manager';
+import type { SubscriptionOrchestrator } from '../relays/orchestration/orchestrator';
+
+export type RelayReadSubscriptions = Pick<
+  SubscriptionOrchestrator,
+  'readPage' | 'readPageDetailed'
+>;
 import type { RelayRouteGroup } from '../relays/relay-route-types';
 import type { FeedCursorPoint, FeedEvent } from './types';
 import { afterCursor, beforeCursor } from './repository-shared';
@@ -21,7 +26,7 @@ export type RelayPageRequest = {
   readonly key: string;
   readonly relays: readonly string[];
   readonly filters: readonly NostrFilter[];
-  readonly subscriptions: RelaySubscriptionManager;
+  readonly subscriptions: RelayReadSubscriptions;
   readonly before?: FeedCursorPoint;
   readonly after?: FeedCursorPoint;
   readonly pageSize: number;

@@ -3,11 +3,11 @@ import type {
   ReadPageRelayStatus,
   ReadPageResult,
 } from '../relays/read-page-status';
-import type { RelaySubscriptionManager } from '../relays/subscription-manager';
-import type { ReadPageOptions } from '../relays/subscription-manager';
+import type { RelayReadSubscriptions } from './relay-page';
+import type { ReadPageOptions } from '../relays/subscription-manager-types';
 
 export async function readPageDetailedCompat(
-  subscriptions: RelaySubscriptionManager,
+  subscriptions: RelayReadSubscriptions,
   request: RelayReadRequest,
   options: ReadPageOptions = {},
 ): Promise<ReadPageResult> {

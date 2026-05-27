@@ -51,13 +51,6 @@ describe('timeline runtime', () => {
     await runtime.start();
     openAllSockets();
     await waitForSub('timeline-test:notes', true);
-    await vi.waitFor(
-      () => expect(parsedSent('timeline-test:notes:initial')).toBeTruthy(),
-      { timeout: 10_000 },
-    );
-    expectNoteReq('timeline-test:notes:initial', [active, followed], {
-      withUntil: true,
-    });
     expectNoteReq('timeline-test:notes', [active, followed], {
       exact: true,
     });

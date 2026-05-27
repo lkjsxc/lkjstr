@@ -1,12 +1,11 @@
-import { routedAuthorRelays } from '../relays/relay-routing';
+import { planAuthorReadRelays } from '../relays/orchestration/route-plan';
 
 export function notificationRelays(
   accountPubkey: string,
   selectedRelays: readonly string[],
 ): Promise<string[]> {
-  return routedAuthorRelays({
+  return planAuthorReadRelays({
     authors: [accountPubkey],
     selectedRelays,
-    purpose: 'read',
   });
 }

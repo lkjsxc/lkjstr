@@ -1,7 +1,7 @@
 import { upsertEvent } from '../events/repository';
 import { readRelayPage } from '../events/relay-page';
 import { kinds, normalizeRelayUrl } from '../protocol';
-import type { RelaySubscriptionManager } from './subscription-manager';
+import type { RelayReadSubscriptions } from '../events/relay-page';
 import { discoveryRelays } from './relay-routing';
 import { blockedRelayUrls } from './relay-route-store';
 
@@ -9,7 +9,7 @@ export async function discoverAuthorRelayRoutes(input: {
   readonly authors: readonly string[];
   readonly selectedRelays: readonly string[];
   readonly key: string;
-  readonly subscriptions: RelaySubscriptionManager;
+  readonly subscriptions: RelayReadSubscriptions;
   readonly signal?: AbortSignal;
 }): Promise<void> {
   const authors = [...new Set(input.authors)].slice(0, 50);

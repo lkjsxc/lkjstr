@@ -16,7 +16,6 @@ import type { NostrEvent } from '$lib/protocol';
 import type { FeedCursorPoint } from '$lib/events/types';
 import type { PoolEvent, RelayPool } from '$lib/relays/relay-pool';
 import type { DemandVisibility } from '$lib/relays/orchestration/demand-types';
-import { liveFeedDemand } from '$lib/relays/orchestration/runtime-demand';
 import type { SubscriptionOrchestrator } from '$lib/relays/orchestration/orchestrator';
 import { runtimeSubscriptions } from '$lib/relays/runtime-subscriptions';
 import {
@@ -115,7 +114,17 @@ export function createProfileRuntime(
   const loadInitialPage = async (): Promise<void> => {
     const run = generation;
     try {
-      const page = await loadInitialProfilePage({ posts: state.posts, profile: state.profile, followList: state.followList, relays, pubkey, subId, pageSize, subscriptions: manager, signal: aborts.signal });
+      const page = await loadInitialProfilePage({
+        posts: state.posts,
+        profile: state.profile,
+        followList: state.followList,
+        relays,
+        pubkey,
+        owner,
+        pageSize,
+        subscriptions: manager,
+        signal: aborts.signal,
+      });
       if (!active(run)) return;
       emit({ ...state, profile: page.profile, followList: page.followList, posts: page.posts, loading: false, relays: [...new Set([...state.relays, ...page.relays])] });
     } catch (error) {
@@ -135,17 +144,19 @@ export function createProfileRuntime(
         return;
       }
       cleanup.push(
-        manager.subscribeDemand(
-          liveFeedDemand({
+        manager.submitLiveIntent(
+          {
             surface: 'profile',
             owner,
             channel: 'profile:posts',
-            relays,
-            filters: profileLiveFilters(pubkey, startedAt, pageSize),
-            since: startedAt,
             visibility,
-          }),
-          (event) => receive(event),
+            selectedRelays: relays,
+            filters: profileLiveFilters(pubkey, startedAt, pageSize),
+            purpose: 'feed',
+            since: startedAt,
+          },
+          relays,
+          (event) => void receive(event),
         ),
       );
       void loadInitialPage();
@@ -166,7 +177,7 @@ export function createProfileRuntime(
     loadOlder: async (): Promise<void> => {
       if (closed || state.loadingOlder || !state.hasOlder) return; const run = generation; const cursor = olderScanCursor ?? state.oldestCursor; if (!cursor) return; emit({ ...state, loadingOlder: true });
       try {
-        const page = await loadOlderProfilePage({ posts: state.posts, pubkey, relays, subId, cursor, pageSize, subscriptions: manager, signal: aborts.signal });
+        const page = await loadOlderProfilePage({ posts: state.posts, pubkey, relays, owner, cursor, pageSize, subscriptions: manager, signal: aborts.signal });
         if (!active(run)) return;
         const { feedRowShells } = await import('../feed-surface/row-shell');
         emit({ ...state, posts: feedRowShells(page.posts), hasOlder: page.hasOlder, loadingOlder: true });
@@ -178,7 +189,7 @@ export function createProfileRuntime(
     },
     loadNewer: async (): Promise<void> => {
       if (closed || state.loadingNewer || !state.hasNewer) return; const run = generation; const cursor = newerScanCursor ?? state.newestCursor; if (!cursor) return; emit({ ...state, loadingNewer: true });
-      try { const page = await loadNewerProfilePage({ posts: state.posts, pubkey, relays, subId, cursor, pageSize, subscriptions: manager, signal: aborts.signal }); if (!active(run)) return; newerScanCursor = page.hasNewer ? page.nextNewerCursor : undefined; emit({ ...state, posts: page.posts, hasNewer: page.hasNewer, hasOlder: state.hasOlder || page.olderPruned, newerPruned: page.hasNewer }); }
+      try { const page = await loadNewerProfilePage({ posts: state.posts, pubkey, relays, owner, cursor, pageSize, subscriptions: manager, signal: aborts.signal }); if (!active(run)) return; newerScanCursor = page.hasNewer ? page.nextNewerCursor : undefined; emit({ ...state, posts: page.posts, hasNewer: page.hasNewer, hasOlder: state.hasOlder || page.olderPruned, newerPruned: page.hasNewer }); }
       catch (error) { emit({ ...state, error: boundedErrorText(error) }); }
       finally { if (state.loadingNewer) emit({ ...state, loadingNewer: false }); }
     },

@@ -8,9 +8,10 @@ contracts.
 ## Flow
 
 ```txt
-Feed runtime -> Demand (owner = runtimeInstanceKey)
-            -> Planner -> Lease (fingerprint excludes tab id)
-            -> Relay pool REQ/CLOSE
+Feed runtime -> Intent (owner = tab id)
+            -> Planner (route plan, demand build, wire key)
+            -> Lease (wire-equivalent fingerprint)
+            -> Subscription manager -> Relay pool REQ/CLOSE
 ```
 
 ## Surface rules
@@ -34,4 +35,5 @@ Feed runtime -> Demand (owner = runtimeInstanceKey)
 
 ## Status
 
-implemented
+partial until all feed runtimes use `submitLiveIntent` and `readPageByIntent`
+with semantic page dedupe (see doc-impl-audit Subscription Orchestration rows).

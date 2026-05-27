@@ -13,8 +13,8 @@ import {
 } from '../../../src/lib/profile/profile-metadata-draft';
 import type { RelayReadRequest } from '../../../src/lib/events/types';
 import type { PoolEvent } from '../../../src/lib/relays/relay-pool';
+import { stubOrchestrator } from '../relays/orchestration/orchestrator-mock';
 import type { ReadPageResult } from '../../../src/lib/relays/read-page-status';
-import type { RelaySubscriptionManager } from '../../../src/lib/relays/subscription-manager';
 
 describe('profile store', () => {
   it('preserves relay provenance for cached profile notes', async () => {
@@ -37,18 +37,18 @@ describe('profile store', () => {
       profile: null,
       relays: ['wss://relay.example/'],
       pubkey,
-      subId: 'profile-test',
+      owner: 'profile-test',
       pageSize: 10,
-      subscriptions: {
+      subscriptions: stubOrchestrator({
         readPage: async () => [],
         readPageDetailed: async (request: RelayReadRequest) =>
           detailed(
-            request.key.includes(':posts')
+            request.key.includes('page:')
               ? [{ event, relay: request.relays[0] ?? '', subId: request.key }]
               : [],
             request,
           ),
-      } as unknown as RelaySubscriptionManager,
+      }),
     });
 
     const [cached] = await cachedProfileNotes(pubkey);

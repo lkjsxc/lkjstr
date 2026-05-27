@@ -4,11 +4,8 @@ import { queryFeed } from '$lib/events/repository';
 import { readRelayFeedGroups } from '$lib/events/relay-page';
 import type { FeedCursorPoint, FeedEvent } from '$lib/events/types';
 import { routeGroups } from '$lib/relays/relay-routing';
-import type { RelaySubscriptionManager } from '$lib/relays/subscription-manager';
-import {
-  newerRelaySubscriptionId,
-  olderRelaySubscriptionId,
-} from '$lib/relays/subscription-id';
+import type { SubscriptionOrchestrator } from '$lib/relays/orchestration/orchestrator';
+import { pageIntentSemanticKey } from '$lib/relays/orchestration/page-reads';
 import { profileContentGroups } from './profile-relays';
 import { storeProfileEvent } from './profile-store';
 
@@ -16,10 +13,10 @@ export type ProfileOlderRequest = {
   readonly posts: readonly FeedEvent[];
   readonly pubkey: string;
   readonly relays: readonly string[];
-  readonly subId: string;
+  readonly owner: string;
   readonly cursor: FeedCursorPoint;
   readonly pageSize: number;
-  readonly subscriptions: RelaySubscriptionManager;
+  readonly subscriptions: SubscriptionOrchestrator;
   readonly signal?: AbortSignal;
 };
 
@@ -41,7 +38,17 @@ export async function loadOlderProfilePage(request: ProfileOlderRequest) {
     request.relays,
   );
   const relayPage = await readRelayFeedGroups({
-    key: olderRelaySubscriptionId(request.subId, request.cursor),
+    key: pageIntentSemanticKey({
+      surface: 'profile',
+      owner: request.owner,
+      phase: 'page',
+      selectedRelays: request.relays,
+      authors: [request.pubkey],
+      pageSize: request.pageSize,
+      direction: 'older',
+      cursor: request.cursor,
+      purpose: 'feed',
+    }),
     groups,
     filters: (_group, bounds) => [
       {
@@ -92,7 +99,17 @@ export async function loadNewerProfilePage(request: ProfileNewerRequest) {
     request.relays,
   );
   const relayPage = await readRelayFeedGroups({
-    key: newerRelaySubscriptionId(request.subId, request.cursor),
+    key: pageIntentSemanticKey({
+      surface: 'profile',
+      owner: request.owner,
+      phase: 'page',
+      selectedRelays: request.relays,
+      authors: [request.pubkey],
+      pageSize: request.pageSize,
+      direction: 'newer',
+      cursor: request.cursor,
+      purpose: 'feed',
+    }),
     groups,
     filters: (_group, bounds) => [
       {

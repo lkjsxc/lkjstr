@@ -1,38 +1,41 @@
-# Orchestration Source Map
+# Source Map
 
 ## Purpose
 
-Maps documentation contracts to `src/lib/relays/orchestration/` modules. Each
-file stays at or below `200` lines.
+Map documentation topics to implementation files. Each module stays at or below
+200 lines.
 
 ## Modules
 
-| Module                | Contract                                 |
-| --------------------- | ---------------------------------------- |
-| `demand-types.ts`     | Demand, Lease, Phase, OwnerId types      |
-| `normalize-filter.ts` | Canonical filters and fingerprint hash   |
-| `compatible.ts`       | Merge eligibility                        |
-| `demand-registry.ts`  | Register, release, visibility pause      |
-| `lease-planner.ts`    | Demand set -> Lease map, owner refcount  |
-| `lease-bridge.ts`     | Attach/detach subscription manager       |
-| `metrics.ts`          | Orchestration counters                   |
-| `ingress-classify.ts` | Render-critical vs lazy intake           |
-| `orchestrator.ts`     | `createSubscriptionOrchestrator` factory |
-| `surface-routing.ts`  | Per-surface relay list builders          |
-
-## Adjacent Code
-
-| Path                                          | Role                               |
-| --------------------------------------------- | ---------------------------------- |
-| `src/lib/relays/subscription-manager.ts`      | Listener-shared pool reads         |
-| `src/lib/relays/subscription-manager-keys.ts` | Fingerprints vs wire keys          |
-| `src/lib/relays/relay-pool.ts`                | One WebSocket per URL              |
-| `src/lib/relays/runtime-subscriptions.ts`     | Orchestrator accessor for runtimes |
+| Module                    | Role                                         |
+| ------------------------- | -------------------------------------------- |
+| `demand-types.ts`         | Demand phase, surface, visibility types      |
+| `intent-types.ts`         | LiveIntent and PageIntent unions             |
+| `route-plan.ts`           | relay routing and discovery wrappers         |
+| `demand-build.ts`         | intent plus route plan to Demand             |
+| `lease-fingerprint.ts`    | canonical filter normalization               |
+| `lease-key.ts`            | wire-equivalent fingerprint and wire request |
+| `compatible.ts`           | demand compatibility helpers                 |
+| `demand-registry.ts`      | owner refcount per fingerprint               |
+| `orchestrator-live.ts`    | live lease attach, detach, suspend           |
+| `orchestrator.ts`         | orchestrator factory and shared singleton    |
+| `orchestrator-types.ts`   | SubscriptionOrchestrator type                |
+| `orchestrator-adapter.ts` | test manager adapter                         |
+| `page-reads.ts`           | readPageByIntent and semantic keys           |
+| `runtime-demand.ts`       | internal demand builders                     |
+| `surface-routing.ts`      | per-surface relay widening                   |
+| `ingress-classify.ts`     | live event classification                    |
+| `metrics.ts`              | orchestration counters and gauges            |
 
 ## Tests
 
-| Path                                           | Role                                   |
-| ---------------------------------------------- | -------------------------------------- |
-| `tests/unit/relays/orchestration/`             | Normalization, compatibility, refcount |
-| `tests/e2e/subscription-lease-sharing.spec.ts` | Two tabs, one live lease               |
-| `tests/e2e/subscription-pane-churn.spec.ts`    | Lease baseline after close             |
+| Path                                           | Role               |
+| ---------------------------------------------- | ------------------ |
+| `tests/unit/relays/orchestration/`             | unit gates         |
+| `tests/e2e/subscription-lease-sharing.spec.ts` | live lease sharing |
+| `tests/e2e/subscription-three-home.spec.ts`    | three-tab dedupe   |
+| `tests/e2e/subscription-pane-churn.spec.ts`    | cleanup gauges     |
+
+## Related
+
+- [README.md](README.md)

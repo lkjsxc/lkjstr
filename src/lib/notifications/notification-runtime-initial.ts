@@ -14,7 +14,7 @@ import type { SubscriptionOrchestrator } from '../relays/orchestration/orchestra
 export async function readInitialNotificationRelayPage(args: {
   readonly accountPubkey: string;
   readonly relays: readonly string[];
-  readonly subId: string;
+  readonly owner: string;
   readonly pageSize: number;
   readonly startedAt: number;
   readonly subscriptions: SubscriptionOrchestrator;
@@ -29,19 +29,25 @@ export async function readInitialNotificationRelayPage(args: {
 }> {
   const cursor = initialNotificationCursor(args.startedAt);
   const selected = await notificationRelays(args.accountPubkey, args.relays);
-  const events = await args.subscriptions.readPage(
-    {
-      key: `${args.subId}:initial`,
-      relays: selected,
-      filters: buildNotificationFilters({
-        accountPubkey: args.accountPubkey,
-        limit: args.pageSize,
-        cursor,
-      }),
-      purpose: 'feed',
-    },
-    { signal: args.signal },
-  );
+  const filters = buildNotificationFilters({
+    accountPubkey: args.accountPubkey,
+    limit: args.pageSize,
+    cursor,
+  });
+  const pageIntent = {
+    surface: 'notifications' as const,
+    owner: args.owner,
+    phase: 'bootstrap' as const,
+    selectedRelays: selected,
+    authors: [args.accountPubkey],
+    pageSize: args.pageSize,
+    direction: 'initial' as const,
+    relayFilters: filters,
+    purpose: 'feed' as const,
+  };
+  const { events } = await args.subscriptions.readPageByIntent(pageIntent, {
+    signal: args.signal,
+  });
 
   const incomingRecords: NotificationRecord[] = [];
   for (const { event, relay } of events) {

@@ -43,7 +43,7 @@
         await hydrateProfiles({
           pubkeys: [event.pubkey],
           relays,
-          subId: 'event-mention',
+          owner: 'event-mention',
         })
       )[event.pubkey];
   });

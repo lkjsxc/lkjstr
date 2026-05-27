@@ -1,25 +1,24 @@
-import type { RelayReadRequest } from '../../events/types';
-import type { PoolEvent } from '../relay-pool';
 import { type RelaySubscriptionManager } from '../subscription-manager';
 import { childRelaySubscriptionId } from '../subscription-id';
-import { demandFingerprintInput } from './compatible';
+import { buildHomeNotesLiveDemand, buildLiveDemand } from './demand-build';
 import type { Demand } from './demand-types';
-import { leaseFingerprint, leaseWireKey } from './lease-fingerprint';
+import { demandToWireRequest } from './lease-key';
 import { orchestrationMetricsSnapshot } from './metrics';
 import type { SubscriptionOrchestrator } from './orchestrator-types';
+import { readPageByIntent } from './page-reads';
 
 export function demandWireKey(demand: Demand, keyPrefix?: string): string {
   if (demand.channel && keyPrefix) {
     return childRelaySubscriptionId(keyPrefix, demand.channel);
   }
-  return leaseWireKey(leaseFingerprint(demandFingerprintInput(demand)));
+  return demandToWireRequest(demand).key;
 }
 
 export function managerAsOrchestrator(
   manager: RelaySubscriptionManager,
   options: { readonly keyPrefix?: string } = {},
 ): SubscriptionOrchestrator {
-  return {
+  const api: SubscriptionOrchestrator = {
     ...manager,
     subscribeDemand: (demand, listener) =>
       manager.subscribeLive(
@@ -31,6 +30,22 @@ export function managerAsOrchestrator(
         },
         listener,
       ),
+    submitLiveIntent: (intent, relays, listener) =>
+      manager.subscribeLive(
+        {
+          key: demandToWireRequest(buildLiveDemand(intent, relays)).key,
+          relays,
+          filters: intent.filters,
+          purpose: intent.purpose,
+        },
+        listener,
+      ),
+    submitHomeNotesLiveIntent: async (intent, listener) => {
+      const demand = await buildHomeNotesLiveDemand(intent);
+      return manager.subscribeLive(demandToWireRequest(demand), listener);
+    },
+    readPageByIntent: (intent, pageOptions) =>
+      readPageByIntent(api, intent, pageOptions),
     readDemandPage: (demand, pageOptions) =>
       manager.readPageDetailed(
         {
@@ -46,23 +61,5 @@ export function managerAsOrchestrator(
     releaseOwner: () => undefined,
     metricsSnapshot: orchestrationMetricsSnapshot,
   };
-}
-
-export function legacySubscribeLive(
-  request: RelayReadRequest,
-  listener: (event: PoolEvent) => void,
-  attachLive: SubscriptionOrchestrator['subscribeDemand'],
-): () => void {
-  return attachLive(
-    {
-      surface: 'home',
-      phase: 'live',
-      relays: request.relays,
-      filters: request.filters,
-      purpose: request.purpose as Demand['purpose'],
-      owner: request.key,
-      visibility: 'visible',
-    },
-    listener,
-  );
+  return api;
 }

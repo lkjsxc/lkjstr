@@ -4,13 +4,16 @@ import {
   clearEventRepositoryForTests,
   upsertEvent,
 } from '../../../src/lib/events/repository';
-import type { NostrEvent } from '../../../src/lib/protocol';
-import type { PoolEvent } from '../../../src/lib/relays/relay-pool';
 import {
   clearRelayRoutesForTests,
   saveAuthorRelayRoute,
 } from '../../../src/lib/relays/relay-route-store';
-import type { RelaySubscriptionManager } from '../../../src/lib/relays/subscription-manager';
+import {
+  emptySubscriptions,
+  event,
+  initialSubscriptions,
+  type ReadRequest,
+} from './profile-runtime-paging-helpers';
 import { loadInitialProfilePage } from '../../../src/lib/profile/profile-runtime-initial';
 import {
   loadNewerProfilePage,
@@ -40,7 +43,7 @@ describe('profile runtime paging', () => {
       profile: null,
       relays: ['wss://relay-a/', 'wss://relay-b/'],
       pubkey,
-      subId: 'profile-test',
+      owner: 'profile-test',
       pageSize: 30,
       followList: undefined,
       subscriptions: initialSubscriptions(pubkey, posts, reads),
@@ -75,7 +78,7 @@ describe('profile runtime paging', () => {
       posts,
       pubkey,
       relays: [],
-      subId: 'profile-test',
+      owner: 'profile-test',
       cursor: {
         createdAt: posts.at(-1)!.event.created_at,
         id: posts.at(-1)!.event.id,
@@ -90,7 +93,7 @@ describe('profile runtime paging', () => {
       posts: olderPage.posts,
       pubkey,
       relays: [],
-      subId: 'profile-test',
+      owner: 'profile-test',
       cursor: {
         createdAt: olderPage.posts[0]!.event.created_at,
         id: olderPage.posts[0]!.event.id,
@@ -102,70 +105,3 @@ describe('profile runtime paging', () => {
     expect(newerPage.olderPruned).toBe(true);
   });
 });
-
-function initialSubscriptions(
-  pubkey: string,
-  posts: readonly NostrEvent[],
-  reads: ReadRequest[] = [],
-): RelaySubscriptionManager {
-  return {
-    readPage: async (request: {
-      relays: readonly string[];
-      filters: readonly { kinds?: number[]; since?: number; until?: number }[];
-    }) => {
-      const kinds = request.filters[0]?.kinds ?? [];
-      reads.push({
-        relays: [...request.relays],
-        kinds,
-        since: request.filters[0]?.since,
-        until: request.filters[0]?.until,
-      });
-      if (kinds.includes(0))
-        return [receipt(event('meta', 200, pubkey, 0), 'wss://relay-a/')];
-      if (kinds.includes(3))
-        return [receipt(event('follow', 190, pubkey, 3), 'wss://relay-a/')];
-      return posts.flatMap((post, index) =>
-        index === 0
-          ? [receipt(post, 'wss://relay-b/'), receipt(post, 'wss://relay-a/')]
-          : [receipt(post, 'wss://relay-a/')],
-      );
-    },
-  } as unknown as RelaySubscriptionManager;
-}
-
-type ReadRequest = {
-  readonly relays: readonly string[];
-  readonly kinds: readonly number[];
-  readonly since?: number;
-  readonly until?: number;
-};
-
-function emptySubscriptions(): RelaySubscriptionManager {
-  return { readPage: async () => [] } as unknown as RelaySubscriptionManager;
-}
-
-function receipt(event: NostrEvent, relay: string): PoolEvent {
-  return { event, relay, subId: 'sub' };
-}
-
-function event(
-  seed: string,
-  created_at: number,
-  pubkey: string,
-  kind: number,
-): NostrEvent {
-  const id = [...seed]
-    .map((char) => char.charCodeAt(0).toString(16).padStart(2, '0'))
-    .join('')
-    .padEnd(64, '0')
-    .slice(0, 64);
-  return {
-    id,
-    pubkey,
-    created_at,
-    kind,
-    tags: [],
-    content: '{}',
-    sig: 'c'.repeat(128),
-  };
-}

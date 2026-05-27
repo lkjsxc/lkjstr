@@ -1,6 +1,5 @@
 import type { Demand, DemandVisibility } from './demand-types';
-import { demandFingerprintInput } from './compatible';
-import { leaseFingerprint } from './lease-fingerprint';
+import { wireEquivalentFingerprint } from './lease-key';
 import { setOrchestrationGauge } from './metrics';
 
 type DemandRecord = {
@@ -27,7 +26,7 @@ export function createDemandRegistry() {
 
   return {
     register(demand: Demand): string {
-      const fingerprint = leaseFingerprint(demandFingerprintInput(demand));
+      const fingerprint = wireEquivalentFingerprint(demand);
       const owners =
         byFingerprint.get(fingerprint) ?? new Map<string, DemandRecord>();
       owners.set(demand.owner, { demand, fingerprint });

@@ -94,7 +94,7 @@ export function createNotificationRuntime(
     const initial = await readInitialNotificationRelayPage({
       accountPubkey: accountPubkey!,
       relays,
-      subId,
+      owner,
       pageSize,
       startedAt,
       subscriptions,
@@ -117,7 +117,7 @@ export function createNotificationRuntime(
       await readInitialRelayPage(run); if (!active(run)) return;
       const selected = await selectNotificationRelays(accountPubkey, relays);
       cleanup.push(
-        attachNotificationLiveSubscription({
+        await attachNotificationLiveSubscription({
           accountPubkey,
           relays: selected,
           owner,
@@ -143,7 +143,7 @@ export function createNotificationRuntime(
         const result = await loadOlderNotificationRelayPage({
           accountPubkey,
           relays,
-          subId,
+          owner,
           pageSize,
           oldestCreatedAt: oldest,
           subscriptions,

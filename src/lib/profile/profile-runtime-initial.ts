@@ -5,9 +5,9 @@ import type { ProfileSummary } from '$lib/identity/identity';
 import { getProfile } from '$lib/identity/profile-cache';
 import { kinds, type NostrEvent } from '$lib/protocol';
 import type { FeedEvent } from '$lib/events/types';
-import type { RelaySubscriptionManager } from '$lib/relays/subscription-manager';
-import { initialRelaySubscriptionId } from '$lib/relays/subscription-id';
-import { routedAuthorRelays } from '$lib/relays/relay-routing';
+import type { SubscriptionOrchestrator } from '$lib/relays/orchestration/orchestrator';
+import { pageIntentSemanticKey } from '$lib/relays/orchestration/page-reads';
+import { planAuthorWriteRelays } from '$lib/relays/orchestration/route-plan';
 import { profileContentRelays } from './profile-relays';
 import { storeProfileEvent } from './profile-store';
 
@@ -17,31 +17,39 @@ type Request = {
   readonly followList?: NostrEvent;
   readonly relays: readonly string[];
   readonly pubkey: string;
-  readonly subId: string;
+  readonly owner: string;
   readonly pageSize: number;
-  readonly subscriptions: RelaySubscriptionManager;
+  readonly subscriptions: SubscriptionOrchestrator;
   readonly signal?: AbortSignal;
 };
 
 export async function loadInitialProfilePage(request: Request) {
-  const key = initialRelaySubscriptionId(request.subId, request.pubkey);
-  const metadataRelays = await routedAuthorRelays({
+  const metadataRelays = await planAuthorWriteRelays({
+    surface: 'profile',
     authors: [request.pubkey],
     selectedRelays: request.relays,
-    purpose: 'write',
-    includeDiscovery: true,
   });
   const contentRelays = profileContentRelays(
-    await routedAuthorRelays({
+    await planAuthorWriteRelays({
+      surface: 'profile',
       authors: [request.pubkey],
       selectedRelays: request.relays,
-      purpose: 'write',
     }),
     request.relays,
   );
+  const postsKey = pageIntentSemanticKey({
+    surface: 'profile',
+    owner: request.owner,
+    phase: 'bootstrap',
+    selectedRelays: contentRelays,
+    authors: [request.pubkey],
+    pageSize: request.pageSize,
+    direction: 'initial',
+    purpose: 'feed',
+  });
   const [posts, metadata, follows] = await Promise.all([
     readRelayFeedGroups({
-      key: `${key}:posts`,
+      key: postsKey,
       groups: [
         {
           key: 'selected',
@@ -65,7 +73,23 @@ export async function loadInitialProfilePage(request: Request) {
       purpose: 'feed',
     }),
     readRelayPage({
-      key: `${key}:meta`,
+      key: pageIntentSemanticKey({
+        surface: 'profile',
+        owner: request.owner,
+        phase: 'bootstrap',
+        selectedRelays: metadataRelays,
+        authors: [request.pubkey],
+        pageSize: 2,
+        direction: 'initial',
+        purpose: 'metadata',
+        relayFilters: [
+          {
+            kinds: [kinds.metadata, kinds.relayListMetadata],
+            authors: [request.pubkey],
+            limit: 2,
+          },
+        ],
+      }),
       relays: metadataRelays,
       filters: [
         {
@@ -80,7 +104,19 @@ export async function loadInitialProfilePage(request: Request) {
       purpose: 'metadata',
     }),
     readRelayPage({
-      key: `${key}:follows`,
+      key: pageIntentSemanticKey({
+        surface: 'profile',
+        owner: request.owner,
+        phase: 'bootstrap',
+        selectedRelays: contentRelays,
+        authors: [request.pubkey],
+        pageSize: 1,
+        direction: 'initial',
+        purpose: 'metadata',
+        relayFilters: [
+          { kinds: [kinds.followList], authors: [request.pubkey], limit: 1 },
+        ],
+      }),
       relays: contentRelays,
       filters: [
         { kinds: [kinds.followList], authors: [request.pubkey], limit: 1 },

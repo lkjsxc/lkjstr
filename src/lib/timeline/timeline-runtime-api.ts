@@ -8,6 +8,8 @@ import { mergeTimelineItems, type TimelineItem } from './timeline-store';
 import type { TimelineState } from './timeline-state';
 
 type PagingApiDeps = {
+  readonly surface: import('../relays/orchestration/demand-types').DemandSurface;
+  readonly owner: string;
   readonly isClosed: () => boolean;
   readonly isActive: (run: number) => boolean;
   readonly getState: () => TimelineState;
@@ -38,10 +40,11 @@ export function timelineRuntimePagingApi(deps: PagingApiDeps) {
       deps.emit({ ...state, loadingOlder: true });
       try {
         await runTimelineLoadOlder({
+          surface: deps.surface,
+          owner: deps.owner,
           items: deps.items,
           authors: deps.authors(),
           relays: deps.relays,
-          subId: deps.noteSubId,
           cursor,
           pageSize: deps.pageSize,
           subscriptions: deps.subscriptions,
@@ -70,10 +73,11 @@ export function timelineRuntimePagingApi(deps: PagingApiDeps) {
       deps.emit({ ...state, loadingNewer: true });
       try {
         const page = await loadNewerTimelinePage({
+          surface: deps.surface,
+          owner: deps.owner,
           items: deps.items(),
           authors: deps.authors(),
           relays: deps.relays,
-          subId: deps.noteSubId,
           cursor,
           pageSize: deps.pageSize,
           subscriptions: deps.subscriptions,

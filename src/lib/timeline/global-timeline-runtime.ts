@@ -12,7 +12,6 @@ import type { PoolEvent } from '../relays/relay-pool';
 import type { FeedCursorPoint } from '../events/types';
 import { runtimeSubscriptions } from '../relays/runtime-subscriptions';
 import type { DemandVisibility } from '../relays/orchestration/demand-types';
-import { liveFeedDemand } from '../relays/orchestration/runtime-demand';
 import type { SubscriptionOrchestrator } from '../relays/orchestration/orchestrator';
 import { childRelaySubscriptionId } from '../relays/subscription-id';
 import type { RelaySnapshot } from '../relays/types';
@@ -28,11 +27,12 @@ import {
   relayStatePatch,
   selectedRelaySnapshots,
 } from './timeline-relay-state';
+import { loadInitialGlobalPage } from './global-timeline-pages';
 import {
-  loadInitialGlobalPage,
-  loadNewerGlobalPage,
-  loadOlderGlobalPage,
-} from './global-timeline-pages';
+  globalRuntimeLoadNewer,
+  globalRuntimeLoadOlder,
+  globalRuntimeSnapshot,
+} from './global-timeline-runtime-handlers';
 import { createTimelineProfileCoordinator } from './timeline-profile-coordinator';
 
 export type GlobalTimelineRuntime = ReturnType<
@@ -97,7 +97,13 @@ export function createGlobalTimelineRuntime(options: TimelineRuntimeOptions) {
   const loadInitialPage = async (): Promise<void> => {
     const run = generation;
     try {
-      const page = await loadInitialGlobalPage({ relays, subId, pageSize, subscriptions, signal: aborts.signal });
+      const page = await loadInitialGlobalPage({
+        owner,
+        relays,
+        pageSize,
+        subscriptions,
+        signal: aborts.signal,
+      });
       if (!active(run)) return;
       olderScanCursor = page.hasOlder ? page.nextOlderCursor : undefined;
       cached = mergeTimelineItems(page.items, items(), limit);
@@ -108,8 +114,34 @@ export function createGlobalTimelineRuntime(options: TimelineRuntimeOptions) {
   };
   const receiveState = (snapshots: RelaySnapshot[]): void => {
     if (closed) return;
-    const activeRelays = selectedRelaySnapshots(snapshots, relays);
-    emit({ ...state, ...relayStatePatch(state, activeRelays, subId) });
+    emit({
+      ...state,
+      ...relayStatePatch(
+        state,
+        selectedRelaySnapshots(snapshots, relays),
+        subId,
+      ),
+    });
+  };
+  const handlerCtx = {
+    owner,
+    relays,
+    pageSize,
+    limit,
+    subscriptions,
+    signal: aborts.signal,
+    isClosed: () => closed,
+    isActive: active,
+    getGeneration: () => generation,
+    items,
+    getState: () => state,
+    emit,
+    nextState,
+    setCached: (v: TimelineItem[]) => (cached = v),
+    clearLive: () => (live = []),
+    getOlderScanCursor: () => olderScanCursor,
+    setOlderScanCursor: (v: FeedCursorPoint | undefined) =>
+      (olderScanCursor = v),
   };
   // prettier-ignore
   const runtime = {
@@ -128,17 +160,19 @@ export function createGlobalTimelineRuntime(options: TimelineRuntimeOptions) {
       if (relays.length === 0) return emit(noEnabledRelayState(state));
       cleanup.push(
         subscriptions.subscribeState(receiveState),
-        subscriptions.subscribeDemand(
-          liveFeedDemand({
+        subscriptions.submitLiveIntent(
+          {
             surface: 'global',
             owner,
             channel: 'global:notes',
-            relays,
-            filters: [{ kinds: feedDisplayKinds, since: startedAt, limit: pageSize }],
-            since: startedAt,
             visibility,
-          }),
-          (event) => receive(event),
+            selectedRelays: relays,
+            filters: [{ kinds: feedDisplayKinds, since: startedAt, limit: pageSize }],
+            purpose: 'feed',
+            since: startedAt,
+          },
+          relays,
+          (event) => void receive(event),
         ),
       );
       void loadInitialPage();
@@ -156,32 +190,9 @@ export function createGlobalTimelineRuntime(options: TimelineRuntimeOptions) {
       for (const item of cleanup.splice(0)) item();
       listeners.clear();
     },
-    loadOlder: async (): Promise<void> => {
-      if (closed || state.loadingOlder || !state.hasOlder) return; const run = generation; const cursor = olderScanCursor ?? state.oldestCursor; if (!cursor) return; emit({ ...state, loadingOlder: true });
-      try {
-        const page = await loadOlderGlobalPage({ items: items(), relays, subId, cursor, pageSize, subscriptions, signal: aborts.signal });
-        if (!active(run)) return;
-        cached = mergeTimelineItems(page.items, items(), limit);
-        live = [];
-        olderScanCursor = page.hasOlder ? page.nextOlderCursor : undefined;
-        emit(nextState({ items: items(), hasOlder: page.hasOlder, hasNewer: state.hasNewer || page.hasNewer }));
-      }
-      catch (error) { emit({ ...state, error: boundedErrorText(error) }); }
-      finally { if (state.loadingOlder) emit({ ...state, loadingOlder: false }); }
-    },
-    loadNewer: async (): Promise<void> => {
-      if (closed || state.loadingNewer || !state.hasNewer) return; const run = generation; const cursor = state.newestCursor; if (!cursor) return; emit({ ...state, loadingNewer: true });
-      try { const page = await loadNewerGlobalPage({ items: items(), relays, subId, cursor, pageSize, subscriptions, signal: aborts.signal }); if (!active(run)) return; cached = page.items; live = []; emit(nextState({ items: items(), hasNewer: page.hasNewer, hasOlder: state.hasOlder || page.hasOlder })); }
-      finally { if (state.loadingNewer) emit({ ...state, loadingNewer: false }); }
-    },
-    snapshot: () =>
-      ({
-        kind: 'feed',
-        oldestCursor: olderScanCursor ?? state.oldestCursor,
-        newestCursor: state.newestCursor,
-        hasOlder: state.hasOlder,
-        hasNewer: state.hasNewer,
-      }) as const,
+    loadOlder: () => globalRuntimeLoadOlder(handlerCtx),
+    loadNewer: () => globalRuntimeLoadNewer(handlerCtx),
+    snapshot: () => globalRuntimeSnapshot(handlerCtx),
   };
   return runtime;
 }

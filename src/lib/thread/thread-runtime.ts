@@ -1,40 +1,22 @@
 import { feedPageSize, threadWindowSize } from '../events/feed-window';
 import { lookupEvent } from '../events/repository';
-import { afterCursor } from '../events/repository-shared';
-import { boundedErrorText } from '../events/runtime-error';
-import { replyRoot } from '../protocol';
 import type { PoolEvent, RelayPool } from '../relays/relay-pool';
 import type { DemandVisibility } from '../relays/orchestration/demand-types';
-import { liveFeedDemand } from '../relays/orchestration/runtime-demand';
 import type { SubscriptionOrchestrator } from '../relays/orchestration/orchestrator';
 import { runtimeSubscriptions } from '../relays/runtime-subscriptions';
-import type { RelaySnapshot } from '../relays/types';
-import { threadRelayState } from './thread-relay-state';
+import { replyRoot } from '../protocol';
+import { mergeThreadItems, type ThreadItem } from './thread-store';
 import {
-  loadCachedThread,
-  mergeThreadItems,
-  mergeThreadWindow,
-  storeThreadEvent,
-  type ThreadItem,
-} from './thread-store';
+  runThreadLoadNewer,
+  runThreadLoadOlder,
+  threadPagingError,
+} from './thread-runtime-run-paging';
 import {
-  loadInitialThreadPage,
-  loadNewerThreadPage,
-  loadOlderThreadPage,
-} from './thread-runtime-pages';
-import {
-  isThreadReactionKind,
-  isThreadRepostKind,
-  threadLiveFilters,
-} from './thread-subscription-filters';
-import {
-  cachedThreadReactions,
-  cachedThreadReposts,
-  mergeReactionEvent,
-  mergeRepostEvent,
-  storeReaction,
-  storeThreadActivity,
-} from './thread-reactions';
+  createThreadHandlers,
+  threadStartCache,
+  type ThreadHandlerCtx,
+} from './thread-runtime-handlers';
+import { threadLiveFilters } from './thread-subscription-filters';
 import {
   emptyThreadState,
   withThreadCursors,
@@ -65,8 +47,8 @@ export function createThreadRuntime(
   let closed = false;
   let generation = 0;
 
-  // prettier-ignore
-  const items = (): ThreadItem[] => mergeThreadItems(cached, live).slice(0, threadWindowSize);
+  const items = (): ThreadItem[] =>
+    mergeThreadItems(cached, live).slice(0, threadWindowSize);
   const active = (run: number): boolean => !closed && generation === run;
   const emit = (next: ThreadState): void => {
     if (closed) return;
@@ -77,74 +59,76 @@ export function createThreadRuntime(
     const selected = await lookupEvent(eventId).catch(() => undefined);
     rootId = selected ? (replyRoot(selected.event) ?? eventId) : eventId;
   };
-  // prettier-ignore
-  const receiveReaction = async (poolEvent: PoolEvent): Promise<void> => {
-    await storeReaction(poolEvent.event, poolEvent.relay);
-    if (!closed) emit({ ...state, reactions: mergeReactionEvent(state.reactions, poolEvent.event) });
+  const handlerCtx: ThreadHandlerCtx = {
+    eventId,
+    rootId: () => rootId,
+    setRootId: (id) => (rootId = id),
+    relays,
+    owner,
+    subId,
+    pageSize,
+    subscriptions: manager,
+    signal: aborts.signal,
+    threadWindowSize,
+    isClosed: () => closed,
+    isActive: active,
+    getGeneration: () => generation,
+    items,
+    getCached: () => cached,
+    setCached: (v) => (cached = v),
+    getLive: () => live,
+    setLive: (v) => (live = v),
+    getState: () => state,
+    emit,
   };
-  // prettier-ignore
-  const receive = async (poolEvent: PoolEvent): Promise<void> => {
-    if (closed) return;
-    if (isThreadReactionKind(poolEvent.event.kind)) return receiveReaction(poolEvent);
-    if (isThreadRepostKind(poolEvent.event.kind)) {
-      await storeThreadActivity(poolEvent.event, poolEvent.relay);
-      if (!closed) emit({ ...state, reposts: mergeRepostEvent(state.reposts, poolEvent.event) });
-      return;
-    }
-    await storeThreadEvent(poolEvent.event, [poolEvent.relay]);
-    if (closed) return;
-    if (state.newerPruned && afterCursor(poolEvent.event, state.newestCursor)) {
-      emit({ ...state, loading: false, hasNewer: true });
-      return;
-    }
-    live = mergeThreadWindow(live, [{ event: poolEvent.event, relays: [poolEvent.relay] }], threadWindowSize);
-    emit({ ...state, items: items(), loading: false });
+  const handlers = createThreadHandlers(handlerCtx);
+  const pagingCtx = {
+    eventId,
+    rootId: () => rootId,
+    owner,
+    items,
+    relays,
+    pageSize,
+    subscriptions: manager,
+    signal: aborts.signal,
+    setCached: (v: ThreadItem[]) => (cached = v),
+    clearLive: () => (live = []),
+    state,
+    emit,
   };
-  // prettier-ignore
-  const loadInitialPage = async (): Promise<void> => {
-    const run = generation;
-    try {
-      const page = await loadInitialThreadPage({ eventId, rootId, relays, subId, pageSize, subscriptions: manager, signal: aborts.signal });
-      if (!active(run)) return;
-      rootId = page.rootId;
-      cached = mergeThreadItems(items(), page.items);
-      const ids = items().map((item) => item.event.id);
-      const [reactions, reposts] = await Promise.all([cachedThreadReactions(ids), cachedThreadReposts(ids)]);
-      if (active(run)) emit({ ...state, items: items(), loading: false, reactions, reposts });
-    } catch (error) {
-      emit({ ...state, loading: false, error: boundedErrorText(error) });
-    }
-  };
-  // prettier-ignore
-  const receiveState = (snapshots: RelaySnapshot[]): void => {
-    if (closed) return;
-    const relayState = threadRelayState(snapshots, relays, subId);
-    emit({ ...state, eoseRelays: relayState.eoseRelays, loading: relayState.activeRelays > 0 && relayState.terminalRelays >= relayState.activeRelays ? false : state.loading });
-  };
-  // prettier-ignore
   const runtime = {
-    subscribe: (listener: (state: ThreadState) => void): (() => void) => { listeners.add(listener); listener(state); return () => listeners.delete(listener); },
+    subscribe: (listener: (state: ThreadState) => void): (() => void) => {
+      listeners.add(listener);
+      listener(state);
+      return () => listeners.delete(listener);
+    },
     start: async (): Promise<void> => {
-      if (closed) return; const run = ++generation; await discoverRoot(); if (!active(run)) return;
-      cached = mergeThreadItems(await loadCachedThread(rootId), rootId === eventId ? [] : await loadCachedThread(eventId));
-      if (!active(run)) return; emit({ ...state, items: cached });
-      if (relays.length === 0) return emit({ ...state, loading: false, error: 'No enabled read relays.' });
+      if (closed) return;
+      const run = ++generation;
+      await threadStartCache(handlerCtx, discoverRoot);
+      if (!active(run)) return;
+      if (relays.length === 0) {
+        emit({ ...state, loading: false, error: 'No enabled read relays.' });
+        return;
+      }
       cleanup.push(
-        manager.subscribeState(receiveState),
-        manager.subscribeDemand(
-          liveFeedDemand({
+        manager.subscribeState(handlers.receiveState),
+        manager.submitLiveIntent(
+          {
             surface: 'thread',
             owner,
             channel: 'thread:replies',
-            relays,
-            filters: threadLiveFilters(eventId, rootId, startedAt, pageSize),
-            since: startedAt,
             visibility,
-          }),
-          (event) => receive(event),
+            selectedRelays: relays,
+            filters: threadLiveFilters(eventId, rootId, startedAt, pageSize),
+            purpose: 'feed',
+            since: startedAt,
+          },
+          relays,
+          (event: PoolEvent) => void handlers.receive(event),
         ),
       );
-      void loadInitialPage();
+      void handlers.loadInitialPage();
     },
     setVisibility: (visible: boolean): void => {
       visibility = visible ? 'visible' : 'hidden';
@@ -160,26 +144,34 @@ export function createThreadRuntime(
       listeners.clear();
     },
     loadOlder: async (): Promise<void> => {
-      if (closed || state.loadingOlder || !state.hasOlder) return; const run = generation; const cursor = state.oldestCursor; if (!cursor) return; emit({ ...state, loadingOlder: true });
+      if (closed || state.loadingOlder || !state.hasOlder) return;
+      const run = generation;
+      const cursor = state.oldestCursor;
+      if (!cursor) return;
+      emit({ ...state, loadingOlder: true });
       try {
-        const page = await loadOlderThreadPage({ eventId, rootId, items: items(), relays, subId, cursor, pageSize, subscriptions: manager, signal: aborts.signal });
+        await runThreadLoadOlder({ ...pagingCtx, rootId, cursor, state });
         if (!active(run)) return;
-        const { feedRowShells } = await import('../feed-surface/row-shell');
-        cached = mergeThreadItems(items(), feedRowShells(page.items));
-        live = [];
-        emit({ ...state, items: items(), hasOlder: page.hasOlder, loadingOlder: true });
-        cached = page.items;
-        live = [];
-        emit({ ...state, items: items(), hasOlder: page.hasOlder, hasNewer: state.hasNewer || page.pruned, newerPruned: state.newerPruned || page.pruned });
+      } catch (error) {
+        emit(threadPagingError(error, state));
+      } finally {
+        if (state.loadingOlder) emit({ ...state, loadingOlder: false });
       }
-      catch (error) { emit({ ...state, error: boundedErrorText(error) }); }
-      finally { if (state.loadingOlder) emit({ ...state, loadingOlder: false }); }
     },
     loadNewer: async (): Promise<void> => {
-      if (closed || state.loadingNewer || !state.hasNewer) return; const run = generation; const cursor = state.newestCursor; if (!cursor) return; emit({ ...state, loadingNewer: true });
-      try { const page = await loadNewerThreadPage({ eventId, rootId, items: items(), relays, subId, cursor, pageSize, subscriptions: manager, signal: aborts.signal }); if (!active(run)) return; cached = page.items; live = []; emit({ ...state, items: items(), hasNewer: page.hasNewer, hasOlder: state.hasOlder || page.pruned, newerPruned: page.hasNewer }); }
-      catch (error) { emit({ ...state, error: boundedErrorText(error) }); }
-      finally { if (state.loadingNewer) emit({ ...state, loadingNewer: false }); }
+      if (closed || state.loadingNewer || !state.hasNewer) return;
+      const run = generation;
+      const cursor = state.newestCursor;
+      if (!cursor) return;
+      emit({ ...state, loadingNewer: true });
+      try {
+        await runThreadLoadNewer({ ...pagingCtx, rootId, cursor, state });
+        if (!active(run)) return;
+      } catch (error) {
+        emit(threadPagingError(error, state));
+      } finally {
+        if (state.loadingNewer) emit({ ...state, loadingNewer: false });
+      }
     },
     items,
   };

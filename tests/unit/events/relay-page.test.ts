@@ -8,7 +8,7 @@ import {
 import type { NostrEvent } from '../../../src/lib/protocol';
 import type { RelayReadRequest } from '../../../src/lib/events/types';
 import type { PoolEvent } from '../../../src/lib/relays/relay-pool';
-import type { RelaySubscriptionManager } from '../../../src/lib/relays/subscription-manager';
+import { orchestratorFromManager } from '../relays/orchestration/orchestrator-mock';
 
 describe('relay feed pages', () => {
   it('sorts by compound event cursor before slicing', async () => {
@@ -89,7 +89,11 @@ describe('relay feed pages', () => {
           limit = request.filters[0]?.limit ?? 0;
           return [];
         },
-      } as unknown as RelaySubscriptionManager,
+        readPageDetailed: async (request: RelayReadRequest) => {
+          limit = request.filters[0]?.limit ?? 0;
+          return { events: [], statuses: [] };
+        },
+      },
     });
     expect(limit).toBe(1);
   });
@@ -122,10 +126,19 @@ describe('relay feed pages', () => {
   });
 });
 
-function subscriptions(events: readonly PoolEvent[]): RelaySubscriptionManager {
-  return {
+function subscriptions(events: readonly PoolEvent[]) {
+  return orchestratorFromManager({
+    subscribeLive: () => () => undefined,
+    subscribeState: () => () => undefined,
+    close: () => undefined,
+    counts: () => ({
+      liveSubscriptions: 0,
+      liveListeners: 0,
+      inFlightReads: 0,
+    }),
+    readPageDetailed: async () => ({ events: [...events], statuses: [] }),
     readPage: async () => [...events],
-  } as unknown as RelaySubscriptionManager;
+  } as import('../../../src/lib/relays/subscription-manager').RelaySubscriptionManager);
 }
 
 function receipt(event: NostrEvent, relay: string): PoolEvent {

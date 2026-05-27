@@ -5,6 +5,8 @@ import {
   upsertEvent,
 } from '../../../src/lib/events/repository';
 import type { NostrEvent } from '../../../src/lib/protocol';
+import type { PoolEvent } from '../../../src/lib/relays/relay-pool';
+import { stubOrchestrator } from '../relays/orchestration/orchestrator-mock';
 
 describe('search query', () => {
   beforeEach(() => clearEventRepositoryForTests());
@@ -13,7 +15,7 @@ describe('search query', () => {
     const page = await searchPage({
       query: '   ',
       relays: [],
-      subId: 'search',
+      owner: 'search',
       subscriptions: fakeSubscriptions([]),
       limit: 10,
     });
@@ -28,14 +30,14 @@ describe('search query', () => {
     const first = await searchPage({
       query: 'nostr',
       relays: [],
-      subId: 'search',
+      owner: 'search',
       subscriptions: fakeSubscriptions([]),
       limit: 1,
     });
     const second = await searchPage({
       query: 'nostr',
       relays: [],
-      subId: 'search',
+      owner: 'search',
       subscriptions: fakeSubscriptions([]),
       limit: 1,
       before: {
@@ -60,7 +62,7 @@ describe('search query', () => {
     const page = await searchPage({
       query: 'nostr',
       relays: ['wss://relay.example/'],
-      subId: 'search',
+      owner: 'search',
       subscriptions: fakeSubscriptions([
         { relay: 'wss://relay.example/', subId: 'search', event: cached },
         { relay: 'wss://relay.example/', subId: 'search', event: relay },
@@ -78,10 +80,11 @@ describe('search query', () => {
   });
 });
 
-function fakeSubscriptions(events: unknown[]) {
-  return {
-    readPage: () => Promise.resolve(events),
-  } as never;
+function fakeSubscriptions(events: PoolEvent[]) {
+  return stubOrchestrator({
+    readPage: async () => events,
+    readPageDetailed: async () => ({ events, statuses: [] }),
+  });
 }
 
 function event(id: string, created_at: number, content: string): NostrEvent {

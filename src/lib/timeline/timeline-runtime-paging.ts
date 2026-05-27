@@ -1,25 +1,21 @@
 import { feedWindowSize, mergeFeedWindow } from '../events/feed-window';
 import { queryFeed, upsertEvent } from '../events/repository';
-import { readRelayFeedGroups } from '../events/relay-page';
-import { routeGroupsForPaging } from '../relays/relay-routing';
 import type { FeedCursorPoint } from '../events/types';
-import type { RelaySubscriptionManager } from '../relays/subscription-manager';
-import {
-  initialRelaySubscriptionId,
-  newerRelaySubscriptionId,
-  olderRelaySubscriptionId,
-} from '../relays/subscription-id';
+import type { DemandSurface } from '../relays/orchestration/demand-types';
+import type { SubscriptionOrchestrator } from '../relays/orchestration/orchestrator';
+import { readTimelinePageByIntent } from '../relays/orchestration/page-reads';
 import { authorFilters } from './follow-list';
 import type { TimelineItem } from './timeline-store';
 
 export type TimelineOlderRequest = {
+  readonly surface: DemandSurface;
+  readonly owner: string;
   readonly items: readonly TimelineItem[];
   readonly authors: readonly string[];
   readonly relays: readonly string[];
-  readonly subId: string;
   readonly cursor: FeedCursorPoint;
   readonly pageSize: number;
-  readonly subscriptions: RelaySubscriptionManager;
+  readonly subscriptions: SubscriptionOrchestrator;
   readonly signal?: AbortSignal;
 };
 
@@ -40,25 +36,26 @@ export type TimelineNewerResult = {
 };
 
 export type TimelineInitialRequest = {
+  readonly surface: DemandSurface;
+  readonly owner: string;
   readonly authors: readonly string[];
   readonly relays: readonly string[];
-  readonly subId: string;
   readonly pageSize: number;
-  readonly subscriptions: RelaySubscriptionManager;
+  readonly subscriptions: SubscriptionOrchestrator;
   readonly signal?: AbortSignal;
 };
 
 export async function loadInitialTimelinePage(
   request: TimelineInitialRequest,
 ): Promise<TimelinePageResult> {
-  const groups = await routeGroupsForPaging({
-    authors: request.authors,
+  const relayPage = await readTimelinePageByIntent(request.subscriptions, {
+    surface: request.surface,
+    owner: request.owner,
+    phase: 'bootstrap',
     selectedRelays: request.relays,
-    purpose: 'write',
-  });
-  const relayPage = await readRelayFeedGroups({
-    key: initialRelaySubscriptionId(request.subId, [...request.authors].sort()),
-    groups,
+    authors: [...request.authors],
+    pageSize: request.pageSize,
+    direction: 'initial',
     filters: (group, bounds) =>
       authorFilters(
         group.authors ?? [],
@@ -66,11 +63,6 @@ export async function loadInitialTimelinePage(
         bounds,
         'per-filter',
       ),
-    direction: 'initial',
-    pageSize: request.pageSize,
-    subscriptions: request.subscriptions,
-    signal: request.signal,
-    purpose: 'feed',
   });
   await Promise.all(
     relayPage.items.map((item) => upsertEvent(item.event, item.relays)),
@@ -92,14 +84,15 @@ export async function loadOlderTimelinePage(
     before: request.cursor,
     limit: request.pageSize,
   });
-  const groups = await routeGroupsForPaging({
-    authors: request.authors,
+  const relayPage = await readTimelinePageByIntent(request.subscriptions, {
+    surface: request.surface,
+    owner: request.owner,
+    phase: 'page',
     selectedRelays: request.relays,
-    purpose: 'write',
-  });
-  const relayPage = await readRelayFeedGroups({
-    key: olderRelaySubscriptionId(request.subId, request.cursor),
-    groups,
+    authors: [...request.authors],
+    pageSize: request.pageSize,
+    direction: 'older',
+    cursor: request.cursor,
     filters: (group, bounds) =>
       authorFilters(
         group.authors ?? [],
@@ -107,12 +100,6 @@ export async function loadOlderTimelinePage(
         bounds,
         'per-filter',
       ),
-    direction: 'older',
-    before: request.cursor,
-    pageSize: request.pageSize,
-    subscriptions: request.subscriptions,
-    signal: request.signal,
-    purpose: 'feed',
   });
   await Promise.all(
     relayPage.items.map((item) => upsertEvent(item.event, item.relays)),
@@ -141,14 +128,15 @@ export async function loadNewerTimelinePage(
     after: request.cursor,
     limit: request.pageSize,
   });
-  const groups = await routeGroupsForPaging({
-    authors: request.authors,
+  const relayPage = await readTimelinePageByIntent(request.subscriptions, {
+    surface: request.surface,
+    owner: request.owner,
+    phase: 'page',
     selectedRelays: request.relays,
-    purpose: 'write',
-  });
-  const relayPage = await readRelayFeedGroups({
-    key: newerRelaySubscriptionId(request.subId, request.cursor),
-    groups,
+    authors: [...request.authors],
+    pageSize: request.pageSize,
+    direction: 'newer',
+    cursor: request.cursor,
     filters: (group, bounds) =>
       authorFilters(
         group.authors ?? [],
@@ -156,12 +144,6 @@ export async function loadNewerTimelinePage(
         bounds,
         'per-filter',
       ),
-    direction: 'newer',
-    after: request.cursor,
-    pageSize: request.pageSize,
-    subscriptions: request.subscriptions,
-    signal: request.signal,
-    purpose: 'feed',
   });
   await Promise.all(
     relayPage.items.map((item) => upsertEvent(item.event, item.relays)),

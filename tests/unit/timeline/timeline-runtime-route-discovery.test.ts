@@ -12,6 +12,7 @@ import {
 } from '../../../src/lib/relays/relay-route-store';
 import type { SubscriptionOrchestrator } from '../../../src/lib/relays/orchestration/orchestrator';
 import type { Demand } from '../../../src/lib/relays/orchestration/demand-types';
+import { pageIntentSemanticKey } from '../../../src/lib/relays/orchestration/page-reads';
 import { createTimelineRuntime } from '../../../src/lib/timeline/timeline-runtime';
 import { storeTimelineEvent } from '../../../src/lib/timeline/timeline-store';
 
@@ -47,11 +48,10 @@ describe('timeline route discovery startup', () => {
       subscriptions,
     });
     await runtime.start();
-
-    expect(calls.some(initialNotesRead)).toBe(true);
-    expect(
-      calls.some((call) => call.key === 'timeline-test:notes:routes'),
-    ).toBe(false);
+    await vi.waitFor(() => expect(calls.some(initialNotesRead)).toBe(true));
+    expect(calls.some((call) => call.key.startsWith('home:routes:'))).toBe(
+      false,
+    );
     const liveNotes = calls.find((call) => call.type === 'live');
     expect(liveNotes?.relays).toEqual([
       'wss://route.example/',
@@ -60,12 +60,12 @@ describe('timeline route discovery startup', () => {
 
     initialPage.resolve([]);
     await vi.waitFor(() =>
-      expect(calls.map((call) => call.key)).toContain(
-        'timeline-test:notes:routes',
+      expect(calls.some((call) => call.key.startsWith('home:routes:'))).toBe(
+        true,
       ),
     );
-    const routeIndex = calls.findIndex(
-      (call) => call.key === 'timeline-test:notes:routes',
+    const routeIndex = calls.findIndex((call) =>
+      call.key.startsWith('home:routes:'),
     );
     const liveIndex = calls.findIndex((call) => call.type === 'live');
     expect(routeIndex).toBeGreaterThan(liveIndex);
@@ -85,7 +85,7 @@ function subscriptionsFor(
   const base = {
     readPage: async (request: RelayReadRequest) => {
       calls.push({ type: 'read', key: request.key, relays: request.relays });
-      if (request.key.includes(':notes:initial')) return initialPage.promise;
+      if (request.key.startsWith('page:')) return initialPage.promise;
       return [];
     },
     subscribeLive: (request: RelayReadRequest) => {
@@ -114,6 +114,30 @@ function subscriptionsFor(
       });
       return () => undefined;
     },
+    submitLiveIntent: (intent, relays) => {
+      calls.push({ type: 'live', key: intent.owner, relays });
+      return () => undefined;
+    },
+    submitHomeNotesLiveIntent: async (intent) => {
+      calls.push({
+        type: 'live',
+        key: intent.owner,
+        relays: [
+          'wss://route.example/',
+          ...intent.selectedRelays.map((relay) =>
+            relay.startsWith('wss://') ? relay : `wss://${relay}`,
+          ),
+        ],
+      });
+      return () => undefined;
+    },
+    readPageByIntent: async (intent) =>
+      base.readPageDetailed({
+        key: pageIntentSemanticKey(intent),
+        relays: intent.selectedRelays,
+        filters: intent.relayFilters ?? [],
+        purpose: intent.purpose ?? 'feed',
+      }),
     readDemandPage: async (demand: Demand) =>
       base.readPageDetailed({
         key: demand.owner,
@@ -140,9 +164,7 @@ function subscriptionsFor(
 }
 
 function initialNotesRead(call: Call): boolean {
-  return (
-    call.type === 'read' && call.key.startsWith('timeline-test:notes:initial')
-  );
+  return call.type === 'read' && call.key.startsWith('page:');
 }
 
 function deferred<T>(): {

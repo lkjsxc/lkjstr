@@ -1,7 +1,7 @@
 import { loadSettings } from '../settings/settings-store';
 import { createBoundedMap } from '../fp/bounded-map';
-import type { RelaySubscriptionManager } from '../relays/subscription-manager';
-import { sharedSubscriptionManager } from '../relays/subscription-manager';
+import type { SubscriptionOrchestrator } from '../relays/orchestration/orchestrator';
+import { sharedSubscriptionOrchestrator } from '../relays/orchestration/orchestrator';
 import type { ProfileSummary } from './identity';
 import { getProfile, profileFromMetadataEvent } from './profile-cache';
 import {
@@ -12,9 +12,9 @@ import {
 export type HydrateProfilesOptions = {
   readonly pubkeys: readonly string[];
   readonly relays: readonly string[];
-  readonly subId: string;
+  readonly owner: string;
   readonly timeoutMs?: number;
-  readonly subscriptions?: RelaySubscriptionManager;
+  readonly subscriptions?: SubscriptionOrchestrator;
 };
 
 type ProfileMap = Record<string, ProfileSummary>;
@@ -26,9 +26,9 @@ const inFlight = createBoundedMap<string, Promise<ProfileSummary | undefined>>({
 export async function hydrateProfiles({
   pubkeys,
   relays,
-  subId,
+  owner,
   timeoutMs = 3500,
-  subscriptions = sharedSubscriptionManager,
+  subscriptions = sharedSubscriptionOrchestrator,
 }: HydrateProfilesOptions): Promise<ProfileMap> {
   const unique = [...new Set(pubkeys)].filter(Boolean);
   const cached = await cachedProfiles(unique);
@@ -41,7 +41,7 @@ export async function hydrateProfiles({
     const batch = relayProfileBatch(
       pending,
       relays,
-      subId,
+      owner,
       timeoutMs,
       subscriptions,
     );
@@ -92,16 +92,21 @@ async function cachedProfile(
 async function relayProfileBatch(
   pubkeys: readonly string[],
   relays: readonly string[],
-  subId: string,
+  owner: string,
   timeoutMs: number,
-  subscriptions: RelaySubscriptionManager,
+  subscriptions: SubscriptionOrchestrator,
 ): Promise<ProfileMap> {
-  const events = await subscriptions.readPage(
+  const { events } = await subscriptions.readPageByIntent(
     {
-      key: `${subId}:profiles:${pubkeys.slice(0, 8).join(',')}`,
-      relays,
-      filters: [{ kinds: [0], authors: [...pubkeys] }],
+      surface: 'profile',
+      owner,
+      phase: 'bootstrap',
+      selectedRelays: relays,
+      authors: [...pubkeys],
+      pageSize: pubkeys.length,
+      direction: 'initial',
       purpose: 'metadata',
+      relayFilters: [{ kinds: [0], authors: [...pubkeys] }],
     },
     { timeoutMs },
   );

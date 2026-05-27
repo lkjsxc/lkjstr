@@ -4,10 +4,11 @@ import { mergeTimelineItems, type TimelineItem } from './timeline-store';
 import type { TimelineState } from './timeline-state';
 
 export async function runTimelineLoadOlder(args: {
+  readonly surface: import('../relays/orchestration/demand-types').DemandSurface;
+  readonly owner: string;
   readonly items: () => TimelineItem[];
   readonly authors: readonly string[];
   readonly relays: readonly string[];
-  readonly subId: string;
   readonly cursor: { createdAt: number; id: string };
   readonly pageSize: number;
   readonly subscriptions: Parameters<
@@ -24,10 +25,11 @@ export async function runTimelineLoadOlder(args: {
   ) => void;
 }): Promise<void> {
   const page = await loadOlderTimelinePage({
+    surface: args.surface,
+    owner: args.owner,
     items: args.items(),
     authors: args.authors,
     relays: args.relays,
-    subId: args.subId,
     cursor: args.cursor,
     pageSize: args.pageSize,
     subscriptions: args.subscriptions,

@@ -41,7 +41,7 @@ export function createTimelineProfileCoordinator(
       const loaded = await hydrateProfiles({
         pubkeys: missing,
         relays,
-        subId,
+        owner: subId,
       });
       const now = Date.now();
       missing
