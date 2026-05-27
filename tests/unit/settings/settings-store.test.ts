@@ -44,6 +44,23 @@ describe('settings store helpers', () => {
     expect(coerceValue(setting, 50)).toEqual({ ok: true, value: 50 });
   });
 
+  it('coerces cache byte budget within bounds', () => {
+    const setting = defaultSettings().find(
+      (item) => item.key === 'cache.maxBytes',
+    );
+    if (!setting) throw new Error('expected setting');
+    expect(setting).toMatchObject({
+      defaultValue: 268_435_456,
+      min: 1_048_576,
+      integer: true,
+    });
+    expect(coerceValue(setting, 1_048_576)).toEqual({
+      ok: true,
+      value: 1_048_576,
+    });
+    expect(coerceValue(setting, 1)).toEqual({ ok: false });
+  });
+
   it('coerces Tweet media upload provider settings', () => {
     const provider = defaultSettings().find(
       (item) => item.key === 'tweet.mediaUploadProvider',

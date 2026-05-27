@@ -5,6 +5,7 @@ import type { TimelineNetworkCtx } from '../../../src/lib/timeline/timeline-runt
 
 vi.mock('../../../src/lib/relays/relay-routing', () => ({
   routedAuthorRelays: vi.fn(async () => ['relay-a.example']),
+  routeGroupsForPaging: vi.fn(async () => []),
 }));
 
 vi.mock('../../../src/lib/relays/relay-discovery', () => ({

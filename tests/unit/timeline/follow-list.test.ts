@@ -63,6 +63,18 @@ describe('follow list helpers', () => {
     expect(filters[1]?.authors).toHaveLength(1);
   });
 
+  it('shares Home filter limits across author chunks', () => {
+    const authors = Array.from({ length: 201 }, (_, index) => pubkey(index));
+    const filters = authorFilters(authors, 51, {}, 'shared-budget');
+    expect(filters.map((filter) => filter.limit)).toEqual([26, 25]);
+  });
+
+  it('can preserve per-filter limits for non-Home surfaces', () => {
+    const authors = Array.from({ length: 201 }, (_, index) => pubkey(index));
+    const filters = authorFilters(authors, 51, {}, 'per-filter');
+    expect(filters.map((filter) => filter.limit)).toEqual([51, 51]);
+  });
+
   it('keeps chunked author request limits positive', () => {
     const authors = Array.from({ length: 7000 }, (_, index) => pubkey(index));
     const filters = authorFilters(authors, 30);

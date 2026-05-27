@@ -1,5 +1,8 @@
 import { describe, expect, it } from 'vitest';
-import { pageIntentSemanticKey } from '../../../../src/lib/relays/orchestration/page-reads';
+import {
+  pageIntentSemanticKey,
+  routeGroupFingerprint,
+} from '../../../../src/lib/relays/orchestration/page-reads';
 
 describe('pageIntentSemanticKey', () => {
   it('dedupes across owners with the same semantic page', () => {
@@ -16,5 +19,42 @@ describe('pageIntentSemanticKey', () => {
     const keyA = pageIntentSemanticKey({ ...base, owner: 'tab-a' });
     const keyB = pageIntentSemanticKey({ ...base, owner: 'tab-b' });
     expect(keyA).toBe(keyB);
+  });
+
+  it('changes when resolved route groups change', () => {
+    const base = {
+      surface: 'home' as const,
+      phase: 'bootstrap' as const,
+      selectedRelays: ['wss://selected'],
+      authors: ['c'.repeat(64)],
+      pageSize: 30,
+      direction: 'initial' as const,
+      purpose: 'feed' as const,
+    };
+    const selected = routeGroupFingerprint([
+      {
+        key: 'fallback:0',
+        relays: ['wss://selected/'],
+        authors: base.authors,
+        source: 'fallback',
+      },
+    ]);
+    const routed = routeGroupFingerprint([
+      {
+        key: `author:${base.authors[0]}`,
+        relays: ['wss://route/'],
+        authors: base.authors,
+        source: 'nip65',
+      },
+    ]);
+    expect(
+      pageIntentSemanticKey({
+        ...base,
+        owner: 'a',
+        routeFingerprint: selected,
+      }),
+    ).not.toBe(
+      pageIntentSemanticKey({ ...base, owner: 'a', routeFingerprint: routed }),
+    );
   });
 });

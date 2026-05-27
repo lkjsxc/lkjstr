@@ -1,6 +1,10 @@
 import { describe, expect, it } from 'vitest';
 import { scoreEvent } from '../../../src/lib/cache/event-priority';
 import { compactOldEvents } from '../../../src/lib/cache/compaction';
+import {
+  cacheCompactionWriteThreshold,
+  shouldScheduleCompaction,
+} from '../../../src/lib/cache/compaction-scheduler';
 
 describe('cache compaction', () => {
   it('scores structural relationships above baseline time', () => {
@@ -26,8 +30,15 @@ describe('cache compaction', () => {
   it('does not prune without quota pressure in tests', async () => {
     const result = await compactOldEvents();
     expect(result.prunedEvents).toBe(0);
-    expect(result.reason === 'below-quota-threshold' || result.skipped).toBe(
+    expect(result.reason === 'below-budget-threshold' || result.skipped).toBe(
       true,
     );
+  });
+
+  it('schedules compaction after the write threshold', () => {
+    expect(shouldScheduleCompaction(cacheCompactionWriteThreshold - 1)).toBe(
+      false,
+    );
+    expect(shouldScheduleCompaction(cacheCompactionWriteThreshold)).toBe(true);
   });
 });
