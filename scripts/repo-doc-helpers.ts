@@ -19,7 +19,7 @@ export async function trackedDirs(
     let current = '';
     for (let index = 0; index < parts.length - 1; index += 1) {
       current = current ? path.join(current, parts[index]!) : parts[index]!;
-      if (!isSkippedPath(current, skipDirs)) dirs.add(current);
+      if (!isSkippedGeneratedPath(current, skipDirs)) dirs.add(current);
     }
   }
   return [...dirs].sort();
@@ -59,14 +59,19 @@ export async function gitCheckIgnored(
 export async function walkDirs(
   dir: string,
   skipDirs: ReadonlySet<string>,
+  base = dir,
 ): Promise<string[]> {
   const entries = await fs
     .readdir(dir, { withFileTypes: true })
     .catch(() => []);
   const out = [dir];
   for (const entry of entries) {
-    if (entry.isDirectory() && !skipDirs.has(entry.name))
-      out.push(...(await walkDirs(path.join(dir, entry.name), skipDirs)));
+    const next = path.join(dir, entry.name);
+    if (
+      entry.isDirectory() &&
+      !isSkippedGeneratedPath(path.relative(base, next), skipDirs)
+    )
+      out.push(...(await walkDirs(next, skipDirs, base)));
   }
   return out;
 }
@@ -107,6 +112,13 @@ export function localChildren(
   return [...children].sort();
 }
 
-function isSkippedPath(rel: string, skipDirs: ReadonlySet<string>): boolean {
-  return rel.split(path.sep).some((part) => skipDirs.has(part));
+export function isSkippedGeneratedPath(
+  rel: string,
+  skipDirs: ReadonlySet<string>,
+): boolean {
+  return rel
+    .split(path.sep)
+    .some((part, index) =>
+      part === 'data' ? index === 0 && skipDirs.has(part) : skipDirs.has(part),
+    );
 }

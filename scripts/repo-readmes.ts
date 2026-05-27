@@ -2,6 +2,7 @@ import fs from 'node:fs/promises';
 import path from 'node:path';
 import { execFile } from 'node:child_process';
 import { promisify } from 'node:util';
+import { isSkippedGeneratedPath } from './repo-doc-helpers';
 
 const run = promisify(execFile);
 
@@ -19,7 +20,7 @@ export async function trackedDirs(
     let current = '';
     for (let index = 0; index < parts.length - 1; index += 1) {
       current = current ? path.join(current, parts[index]!) : parts[index]!;
-      if (!isSkippedPath(current, skipDirs)) dirs.add(current);
+      if (!isSkippedGeneratedPath(current, skipDirs)) dirs.add(current);
     }
   }
   return [...dirs].sort();
@@ -46,16 +47,13 @@ async function walk(
     .catch(() => []);
   let hasFiles = entries.some((entry) => entry.isFile());
   for (const entry of entries) {
-    if (!entry.isDirectory() || skipDirs.has(entry.name)) continue;
     const next = rel ? path.join(rel, entry.name) : entry.name;
+    if (!entry.isDirectory() || isSkippedGeneratedPath(next, skipDirs))
+      continue;
     if (await walk(root, next, skipDirs, out)) {
       out.add(next);
       hasFiles = true;
     }
   }
   return hasFiles;
-}
-
-function isSkippedPath(rel: string, skipDirs: ReadonlySet<string>): boolean {
-  return rel.split(path.sep).some((part) => skipDirs.has(part));
 }

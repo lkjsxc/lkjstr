@@ -4,6 +4,7 @@ import process from 'node:process';
 import { checkComposeGuardrails } from './repo-compose';
 import { isStrictDoc } from './repo-doc-rules';
 import { checkDocs } from './repo-docs';
+import { isSkippedGeneratedPath } from './repo-doc-helpers';
 import { trackedDirs } from './repo-readmes';
 import { checkSourceClasses } from './repo-source-classes';
 import { checkRuntimeCounters } from './repo-runtime-counters';
@@ -118,8 +119,12 @@ async function walk(dir: string): Promise<string[]> {
     .catch(() => []);
   const out: string[] = [];
   for (const entry of entries) {
-    if (entry.isDirectory() && skipDirs.has(entry.name)) continue;
     const next = path.join(dir, entry.name);
+    if (
+      entry.isDirectory() &&
+      isSkippedGeneratedPath(path.relative(root, next), skipDirs)
+    )
+      continue;
     if (entry.isDirectory()) out.push(...(await walk(next)));
     if (entry.isFile()) out.push(next);
   }
