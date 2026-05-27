@@ -91,11 +91,7 @@ function logicalMatch(
     if (logical.includes(':notes:initial'))
       return kinds.includes(1) && filter?.until !== undefined;
     if (logical.endsWith(':notes'))
-      return (
-        kinds.includes(1) &&
-        filter?.since !== undefined &&
-        filter?.until === undefined
-      );
+      return kinds.includes(1) && filter?.until === undefined;
     return false;
   });
   return hit?.[1] as string | undefined;

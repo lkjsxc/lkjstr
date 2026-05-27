@@ -9,13 +9,13 @@ anchor.
 
 ## Bootstrap Phase
 
-| Property | Value |
-|----------|-------|
-| Demand `phase` | `bootstrap` |
-| Pool strategy | `backward` |
-| `limit` | Surface page size (`30`) or adaptive segment cap |
+| Property       | Value                                                                        |
+| -------------- | ---------------------------------------------------------------------------- |
+| Demand `phase` | `bootstrap`                                                                  |
+| Pool strategy  | `backward`                                                                   |
+| `limit`        | Surface page size (`30`) or adaptive segment cap                             |
 | Close triggers | `EOSE` on all active relays, event cap, timeout, abort, terminal relay state |
-| Kinds | Feed-renderable notes only unless runtime doc names an exception |
+| Kinds          | Feed-renderable notes only unless runtime doc names an exception             |
 
 After bootstrap:
 
@@ -26,13 +26,13 @@ After bootstrap:
 
 ## Live Phase
 
-| Property | Value |
-|----------|-------|
-| Demand `phase` | `live` |
-| Pool strategy | `forward` |
-| `since` | Newest accepted event `created_at`, minus `30` s skew |
-| `limit` | Omitted on live filters |
-| Close triggers | Zero visible owners, runtime close, relay disable |
+| Property       | Value                                                 |
+| -------------- | ----------------------------------------------------- |
+| Demand `phase` | `live`                                                |
+| Pool strategy  | `forward`                                             |
+| `since`        | Newest accepted event `created_at`, minus `30` s skew |
+| `limit`        | Omitted on live filters                               |
+| Close triggers | Zero visible owners, runtime close, relay disable     |
 
 Live Demands open only after bootstrap completes or cached cursors prove a
 non-empty window. Empty bootstrap with confirmed exhaustion may skip live until

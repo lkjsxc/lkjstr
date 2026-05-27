@@ -77,6 +77,22 @@ for detailed contracts.
   shared relay reads.
 - [architecture/network/subscription-orchestration/README.md](architecture/network/subscription-orchestration/README.md):
   Demand, Lease, bootstrap/live orchestration.
+- [architecture/network/subscription-orchestration/bootstrap-live.md](architecture/network/subscription-orchestration/bootstrap-live.md):
+  bootstrap vs live-tail lifecycle.
+- [architecture/network/subscription-orchestration/compatibility.md](architecture/network/subscription-orchestration/compatibility.md):
+  Demand merge rules.
+- [architecture/network/subscription-orchestration/demand.md](architecture/network/subscription-orchestration/demand.md):
+  Demand shape.
+- [architecture/network/subscription-orchestration/lease.md](architecture/network/subscription-orchestration/lease.md):
+  Lease refcount.
+- [architecture/network/subscription-orchestration/normalization.md](architecture/network/subscription-orchestration/normalization.md):
+  canonical filters.
+- [architecture/network/subscription-orchestration/observability.md](architecture/network/subscription-orchestration/observability.md):
+  orchestration counters.
+- [architecture/network/subscription-orchestration/routing-by-surface.md](architecture/network/subscription-orchestration/routing-by-surface.md):
+  per-surface relay routes.
+- [architecture/network/subscription-orchestration/source-map.md](architecture/network/subscription-orchestration/source-map.md):
+  implementation modules.
 - [architecture/network/system.md](architecture/network/system.md): app
   boundaries.
 - [architecture/runtimes/README.md](architecture/runtimes/README.md): tab

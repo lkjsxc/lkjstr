@@ -2,10 +2,12 @@ import type { RelaySnapshot } from '../relays/types';
 import {
   errorFor,
   missingFollowAfterEose,
-  relaySnapshotCounts,
-  statusFromRelayState,
   type TimelineState,
 } from './timeline-state';
+import {
+  relaySnapshotCounts,
+  statusFromRelayState,
+} from './timeline-relay-eose';
 
 export function selectedRelaySnapshots(
   snapshots: readonly RelaySnapshot[],

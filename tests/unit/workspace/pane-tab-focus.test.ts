@@ -1,27 +1,50 @@
-import { describe, expect, it } from 'vitest';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { createPaneScrollRetention } from '../../../src/lib/workspace/pane-scroll-retention';
 import { createSessionTabSnapshots } from '../../../src/lib/workspace/session-tab-snapshots';
 import { syncPaneTabFocus } from '../../../src/lib/workspace/pane-tab-focus';
 import { createTab } from '../../../src/lib/workspace/tab';
 import type { TabSnapshotPayload } from '../../../src/lib/workspace/tab-snapshot';
 
+function fakeScrollOwner(scrollTop: number): HTMLElement {
+  return {
+    scrollTop,
+    scrollHeight: 400,
+    clientHeight: 100,
+    hasAttribute: (name: string) => name === 'data-scroll-owner',
+    classList: { contains: () => false },
+  } as unknown as HTMLElement;
+}
+
+function fakePaneBody(owner: HTMLElement): HTMLElement {
+  return {
+    className: 'pane-body',
+    innerHTML: '',
+    querySelector: () => owner,
+    querySelectorAll: () => [owner],
+    addEventListener: () => undefined,
+    removeEventListener: () => undefined,
+  } as unknown as HTMLElement;
+}
+
 describe('syncPaneTabFocus', () => {
+  beforeEach(() => {
+    vi.stubGlobal('requestAnimationFrame', (cb: FrameRequestCallback) => {
+      cb(0);
+      return 0;
+    });
+  });
+
   it('skips scroll restore when the tab body stayed mounted', async () => {
     const bodyScroll = createPaneScrollRetention();
     const snapshots = createSessionTabSnapshots<
       TabSnapshotPayload & { readonly id: string }
     >();
-    const paneBody = document.createElement('div');
-    paneBody.className = 'pane-body';
-    paneBody.innerHTML =
-      '<div class="settings-tab" data-scroll-owner style="height:100px;overflow:auto"><div style="height:400px"></div></div>';
-    const owner = paneBody.querySelector<HTMLElement>('.settings-tab')!;
-    owner.scrollTop = 240;
-    bodyScroll.track('settings', paneBody);
-    bodyScroll.remember('settings');
-    snapshots.retain({ id: 'settings', kind: 'tool', scrollTop: 12 }, 60);
-
+    const owner = fakeScrollOwner(240);
+    const paneBody = fakePaneBody(owner);
     const settings = createTab('settings', 'Settings');
+    bodyScroll.track(settings.id, paneBody);
+    bodyScroll.remember(settings.id);
+    snapshots.retain({ id: settings.id, kind: 'tool', scrollTop: 12 }, 60);
     const tabs = { settings };
 
     await syncPaneTabFocus({

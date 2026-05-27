@@ -7,26 +7,26 @@ documented-only. Update it when a vertical slice closes a gap.
 
 ## Feed Surface
 
-| Clause                        | Contract                                                                   | Status      | Notes                                          |
-| ----------------------------- | -------------------------------------------------------------------------- | ----------- | ---------------------------------------------- |
-| IO near-end sentinel          | [feed-surface/near-end.md](../architecture/data/feed-surface/near-end.md)  | implemented | `near-end-observer.ts`, `EventTreeListNearEnd` |
-| Scroll fallback               | near-end.md                                                                | implemented | `isNearEnd` in feed-window                     |
-| 2x viewport margin            | near-end.md                                                                | implemented | `nearEndThreshold` uses `viewport * 2`         |
-| `feedPagingPhase` footer      | [footer-phase.md](../architecture/data/feed-surface/footer-phase.md)       | implemented | `footer-phase.ts`, `FeedSurfaceStatus`         |
-| `FeedSurfaceStatus` all feeds | footer-phase.md                                                            | implemented | Including Notifications native list            |
-| Speculative older             | feed-surface.md                                                            | implemented | Search uses coordinator                        |
-| Staged row pipeline           | [staged-pipeline.md](../architecture/data/feed-surface/staged-pipeline.md) | implemented | Home/Global/Profile/Thread                     |
+| Clause                        | Contract                                                                   | Status      | Notes                                                   |
+| ----------------------------- | -------------------------------------------------------------------------- | ----------- | ------------------------------------------------------- |
+| IO near-end sentinel          | [feed-surface/near-end.md](../architecture/data/feed-surface/near-end.md)  | implemented | `near-end-observer.ts`, `EventTreeListNearEnd`          |
+| Scroll fallback               | near-end.md                                                                | implemented | `isNearEnd` in feed-window                              |
+| 2x viewport margin            | near-end.md                                                                | implemented | `nearEndThreshold` uses `viewport * 2`                  |
+| `feedPagingPhase` footer      | [footer-phase.md](../architecture/data/feed-surface/footer-phase.md)       | implemented | `footer-phase.ts`, `FeedSurfaceStatus`                  |
+| `FeedSurfaceStatus` all feeds | footer-phase.md                                                            | implemented | Including Notifications native list                     |
+| Speculative older             | feed-surface.md                                                            | implemented | Search uses coordinator                                 |
+| Staged row pipeline           | [staged-pipeline.md](../architecture/data/feed-surface/staged-pipeline.md) | implemented | Home/Global/Profile/Thread                              |
 | Notifications list mode       | [surface-matrix.md](../architecture/data/feed-surface/surface-matrix.md)   | implemented | Virtua flat list via `FeedScrollSurface`, shared footer |
 
 ## Tab Continuity
 
-| Clause                              | Contract                   | Status      | Notes                   |
-| ----------------------------------- | -------------------------- | ----------- | ----------------------- |
-| Scroll + virtua anchor              | tab-runtime.md             | implemented | session + IDB           |
-| Feed cursors in snapshot            | tab-runtime.md, storage.md | implemented | `tab-runtime-registry`  |
-| `hasOlder` / `hasNewer` in snapshot | tab-runtime.md             | implemented | runtime snapshot        |
-| Search query in tool snapshot       | tabs.md                    | implemented | Search tab fields       |
-| Session cap 32                      | tab-runtime.md             | implemented | `session-tab-snapshots` |
+| Clause                              | Contract                   | Status      | Notes                           |
+| ----------------------------------- | -------------------------- | ----------- | ------------------------------- |
+| Scroll + virtua anchor              | tab-runtime.md             | implemented | session + IDB                   |
+| Feed cursors in snapshot            | tab-runtime.md, storage.md | implemented | `tab-runtime-registry`          |
+| `hasOlder` / `hasNewer` in snapshot | tab-runtime.md             | implemented | runtime snapshot                |
+| Search query in tool snapshot       | tabs.md                    | implemented | Search tab fields               |
+| Session cap 32                      | tab-runtime.md             | implemented | `session-tab-snapshots`         |
 | Hidden-mount inactive tab bodies    | tab-body-mount.md          | implemented | `PaneTabStack`, paused runtimes |
 | DOM-first scroll on tab return      | tab-retention-flow.md      | implemented | `hasTracked` in focus sync      |
 
@@ -56,22 +56,22 @@ documented-only. Update it when a vertical slice closes a gap.
 
 ## Subscription Orchestration
 
-| Clause | Contract | Status | Notes |
-| ------ | -------- | ------ | ----- |
-| Demand / Lease docs | subscription-orchestration/ | implemented | `src/lib/relays/orchestration/` |
-| Bootstrap closes on EOSE | bootstrap-live.md | implemented | relay client backward strategy |
-| Shared live lease across tabs | compatibility.md | implemented | fingerprint + channel merge |
-| Stats orchestration counters | observability.md | implemented | metrics + RuntimeMemoryPanel |
-| Subscription E2E gate | verification.md | implemented | lease-sharing, pane-churn specs |
-| Hidden tab demand pause | demand.md | implemented | setVisibility on feed runtimes |
+| Clause                        | Contract                    | Status      | Notes                           |
+| ----------------------------- | --------------------------- | ----------- | ------------------------------- |
+| Demand / Lease docs           | subscription-orchestration/ | implemented | `src/lib/relays/orchestration/` |
+| Bootstrap closes on EOSE      | bootstrap-live.md           | implemented | relay client backward strategy  |
+| Shared live lease across tabs | compatibility.md            | implemented | fingerprint + channel merge     |
+| Stats orchestration counters  | observability.md            | implemented | metrics + RuntimeMemoryPanel    |
+| Subscription E2E gate         | verification.md             | implemented | lease-sharing, pane-churn specs |
+| Hidden tab demand pause       | demand.md                   | implemented | setVisibility on feed runtimes  |
 
 ## Feed Scroll and Row Chrome
 
-| Clause                                | Contract              | Status | Notes |
-| ------------------------------------- | --------------------- | ------ | ----- |
-| Single notification separator         | feed-row-chrome.md    | implemented | list-owned separator on `.notification-row`; embedded `EventRow` suppresses its separator |
-| Single Notifications scroll owner     | feed-scroll-surface.md | implemented | `.feed-tab` uses `overflow: hidden` and exactly one `[data-scroll-owner]` owns vertical scroll |
-| Event More clears scrollbar track       | scroll-layout.md      | implemented | `.event-more` uses `right: var(--scroll-content-inset)` and `.event-main` reserves the same inline-end padding |
-| No horizontal overflow on scroll owner  | scroll-surface-audit.md | implemented | e2e `assertNoHorizontalOverflow` checks scroll owners and `.event-list__viewport` |
-| Notifications on FeedScrollSurface      | feed-scroll-surface.md | implemented | Notifications use Virtua via `FeedScrollSurface` and the shared footer/near-end semantics |
-| Pane.svelte at or below 200 lines       | repository standards  | implemented | Pane header moved to `PaneHead.svelte` to keep the file within the cap |
+| Clause                                 | Contract                | Status      | Notes                                                                                                          |
+| -------------------------------------- | ----------------------- | ----------- | -------------------------------------------------------------------------------------------------------------- |
+| Single notification separator          | feed-row-chrome.md      | implemented | list-owned separator on `.notification-row`; embedded `EventRow` suppresses its separator                      |
+| Single Notifications scroll owner      | feed-scroll-surface.md  | implemented | `.feed-tab` uses `overflow: hidden` and exactly one `[data-scroll-owner]` owns vertical scroll                 |
+| Event More clears scrollbar track      | scroll-layout.md        | implemented | `.event-more` uses `right: var(--scroll-content-inset)` and `.event-main` reserves the same inline-end padding |
+| No horizontal overflow on scroll owner | scroll-surface-audit.md | implemented | e2e `assertNoHorizontalOverflow` checks scroll owners and `.event-list__viewport`                              |
+| Notifications on FeedScrollSurface     | feed-scroll-surface.md  | implemented | Notifications use Virtua via `FeedScrollSurface` and the shared footer/near-end semantics                      |
+| Pane.svelte at or below 200 lines      | repository standards    | implemented | Pane header moved to `PaneHead.svelte` to keep the file within the cap                                         |

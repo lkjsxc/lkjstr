@@ -6,11 +6,11 @@ Profile runtime owns metadata and authored-note loading for one pubkey.
 
 ## Render-Critical Kinds
 
-| Phase | Kinds |
-|-------|-------|
-| Bootstrap posts | Author kind `1` and rendered repost kinds |
-| Live posts | Same as bootstrap |
-| Separate Demands | Kind `0`, `3`, `10002` — never mixed into post page slots |
+| Phase            | Kinds                                                      |
+| ---------------- | ---------------------------------------------------------- |
+| Bootstrap posts  | Author kind `1` and rendered repost kinds                  |
+| Live posts       | Same as bootstrap                                          |
+| Separate Demands | Kind `0`, `3`, `10002` -- never mixed into post page slots |
 
 ## Lazy Hydration
 

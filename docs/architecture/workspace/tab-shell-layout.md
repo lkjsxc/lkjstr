@@ -23,7 +23,7 @@ readers and retention code.
   Tweet, Profile Edit, Mine npub, Custom Request (when not using feed shell),
   Author Context (when not using feed shell), lkjstr Log.
 
-### `.data-tab` (legacy alias)
+### `.data-tab` (compat alias)
 
 - Existing tabs may still include `data-tab` for shared form styling.
 - Feed tabs add `feed-tab` and must not rely on `.data-tab` for vertical scroll.

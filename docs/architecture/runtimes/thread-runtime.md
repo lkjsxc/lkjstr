@@ -6,11 +6,11 @@ Thread runtime owns event root and reply loading.
 
 ## Render-Critical Kinds
 
-| Phase | Kinds |
-|-------|-------|
-| Bootstrap root | Kind for root event id lookup |
+| Phase             | Kinds                                                        |
+| ----------------- | ------------------------------------------------------------ |
+| Bootstrap root    | Kind for root event id lookup                                |
 | Bootstrap replies | Kinds the thread list renders (`1`, `6`, `16` as applicable) |
-| Live | Reply filter `#e` for root id |
+| Live              | Reply filter `#e` for root id                                |
 
 ## Lazy Hydration
 

@@ -6,11 +6,11 @@ Home runtime owns active-account follow discovery and followed-note loading.
 
 ## Render-Critical Kinds
 
-| Phase | Kinds |
-|-------|-------|
-| Bootstrap | Kind `1` text notes and repost kinds the feed UI renders (`6`, `16` when shown) |
-| Live | Same as bootstrap |
-| Not in feed Demands | Kind `0`, `3`, `10002`, reactions, zaps — separate Demands or lazy jobs |
+| Phase               | Kinds                                                                           |
+| ------------------- | ------------------------------------------------------------------------------- |
+| Bootstrap           | Kind `1` text notes and repost kinds the feed UI renders (`6`, `16` when shown) |
+| Live                | Same as bootstrap                                                               |
+| Not in feed Demands | Kind `0`, `3`, `10002`, reactions, zaps -- separate Demands or lazy jobs        |
 
 ## Lazy Hydration
 

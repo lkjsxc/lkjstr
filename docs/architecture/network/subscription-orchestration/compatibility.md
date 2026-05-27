@@ -17,14 +17,14 @@ Otherwise the planner opens a separate Lease.
 
 ## Examples
 
-| Demand A | Demand B | Merge? |
-|----------|----------|--------|
-| Home live, same follows filter, same relays | Home live, same account, different tab | Yes |
-| Home bootstrap | Home live | No — different phase |
-| Home feed | Home metadata kind `0` | No — different filters/purpose |
-| Global live | Home live | Only if filters and relays identical |
-| Profile posts live | Profile metadata | No |
-| Thread root `ids` lookup | Thread reply `#e` live | No |
+| Demand A                                    | Demand B                               | Merge?                               |
+| ------------------------------------------- | -------------------------------------- | ------------------------------------ |
+| Home live, same follows filter, same relays | Home live, same account, different tab | Yes                                  |
+| Home bootstrap                              | Home live                              | No -- different phase                |
+| Home feed                                   | Home metadata kind `0`                 | No -- different filters/purpose      |
+| Global live                                 | Home live                              | Only if filters and relays identical |
+| Profile posts live                          | Profile metadata                       | No                                   |
+| Thread root `ids` lookup                    | Thread reply `#e` live                 | No                                   |
 
 ## Owner Attachment
 
@@ -37,7 +37,7 @@ Otherwise the planner opens a separate Lease.
 
 - If all owners are `hidden`, live Leases release even though Demand records
   may remain for fast reattach.
-- Bootstrap Leases ignore visibility for completion — they always terminate on
+- Bootstrap Leases ignore visibility for completion -- they always terminate on
   `EOSE` or cap.
 
 ## Escalation
@@ -47,7 +47,7 @@ When targeted routes miss:
 1. Planner records a miss reason in diagnostics.
 2. A new Demand may widen relays per [routing-by-surface.md](routing-by-surface.md).
 3. Widened Demands have different relay multisets and therefore different
-   fingerprints — they do not merge with the narrow Lease.
+   fingerprints -- they do not merge with the narrow Lease.
 
 ## Non-Goals
 

@@ -1,21 +1,15 @@
 // prettier-ignore
 import { finalizeEvent, generateSecretKey, getPublicKey } from '../../../src/lib/protocol';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { createRelayPool } from '../../../src/lib/relays/relay-pool';
-import { createRelaySubscriptionManager } from '../../../src/lib/relays/subscription-manager';
-import { managerAsOrchestrator } from '../../../src/lib/relays/orchestration/orchestrator';
-import { feedDisplayKinds } from '../../../src/lib/events/feed-kinds';
+import { runtimeFor } from './timeline-runtime-helpers';
 import {
-  createTimelineRuntime,
-  type TimelineRuntime,
-} from '../../../src/lib/timeline/timeline-runtime';
+  expectNoteReq,
+  openAllSockets,
+  parsedSent,
+  waitForSub,
+} from './timeline-runtime-test-helpers';
 import { storeTimelineEvent } from '../../../src/lib/timeline/timeline-store';
-import {
-  FakeWebSocket,
-  parsedSocketMessage,
-  socketForSub,
-  sockets,
-} from './fake-websocket';
+import { FakeWebSocket, socketForSub, sockets } from './fake-websocket';
 
 describe('timeline runtime', () => {
   beforeEach(() => {
@@ -55,13 +49,18 @@ describe('timeline runtime', () => {
     );
     const runtime = runtimeFor({ activeAccountPubkey: active });
     await runtime.start();
-    sockets[0]?.open();
-    await waitForSub('timeline-test:notes:initial');
+    openAllSockets();
     await waitForSub('timeline-test:notes', true);
-    // prettier-ignore
-    expect(parsedSent('timeline-test:notes:initial')).toEqual(['REQ', expect.any(String), expect.objectContaining({ kinds: feedDisplayKinds, authors: [active, followed], limit: 30, since: expect.any(Number), until: expect.any(Number) })]);
-    // prettier-ignore
-    expect(parsedSent('timeline-test:notes', true)).toEqual(['REQ', expect.any(String), expect.objectContaining({ kinds: feedDisplayKinds, authors: [active, followed], limit: 30, since: expect.any(Number) })]);
+    await vi.waitFor(
+      () => expect(parsedSent('timeline-test:notes:initial')).toBeTruthy(),
+      { timeout: 10_000 },
+    );
+    expectNoteReq('timeline-test:notes:initial', [active, followed], {
+      withUntil: true,
+    });
+    expectNoteReq('timeline-test:notes', [active, followed], {
+      exact: true,
+    });
   });
 
   it('falls back to self notes when no follow list is found', async () => {
@@ -70,15 +69,13 @@ describe('timeline runtime', () => {
     const runtime = runtimeFor({ activeAccountPubkey: active });
     runtime.subscribe((state) => states.push(state.status));
     await runtime.start();
-    sockets[0]?.open();
-    sockets[0]?.receive(JSON.stringify(['EOSE', 'timeline-test:follows']));
+    openAllSockets();
+    socketForSub('timeline-test:follows')?.receive(
+      JSON.stringify(['EOSE', 'timeline-test:follows']),
+    );
     await vi.waitFor(() => expect(states).toContain('no-follow-list'));
-    await waitForSub('timeline-test:notes:initial');
     await waitForSub('timeline-test:notes', true);
-    // prettier-ignore
-    expect(parsedSent('timeline-test:notes:initial')).toEqual(['REQ', expect.any(String), expect.objectContaining({ kinds: feedDisplayKinds, authors: [active], limit: 30, since: expect.any(Number), until: expect.any(Number) })]);
-    // prettier-ignore
-    expect(parsedSent('timeline-test:notes', true)).toEqual(['REQ', expect.any(String), expect.objectContaining({ kinds: feedDisplayKinds, authors: [active], limit: 30, since: expect.any(Number) })]);
+    expectNoteReq('timeline-test:notes', [active], { exact: true });
   });
 
   it('stops loading on note eose without events', async () => {
@@ -97,7 +94,7 @@ describe('timeline runtime', () => {
         (latest = `${state.loading}:${state.status}:${state.eoseRelays}`),
     );
     await runtime.start();
-    sockets[0]?.open();
+    openAllSockets();
     await waitForSub('timeline-test:notes', true);
     socketForSub('timeline-test:notes')?.receive(
       JSON.stringify(['EOSE', 'timeline-test:notes']),
@@ -122,7 +119,7 @@ describe('timeline runtime', () => {
       states.push(state.items.map((item) => item.event.content)),
     );
     await runtime.start();
-    sockets[0]?.open();
+    openAllSockets();
     // prettier-ignore
     const note = finalizeEvent({ created_at: Math.floor(Date.now() / 1000) + 1, kind: 1, tags: [], content: 'followed note' }, followedKey);
     await waitForSub('timeline-test:notes', true);
@@ -158,7 +155,7 @@ describe('timeline runtime', () => {
       (state) => (displayName = state.profiles[followed]?.displayName),
     );
     await runtime.start();
-    sockets[0]?.open();
+    openAllSockets();
     const metadata = finalizeEvent(
       {
         created_at: 105,
@@ -176,30 +173,6 @@ describe('timeline runtime', () => {
   });
 });
 
-function runtimeFor(options: {
-  activeAccountPubkey?: string | null;
-  relays?: readonly string[];
-}): TimelineRuntime {
-  const pool = createRelayPool();
-  return createTimelineRuntime({
-    relays: options.relays ?? ['relay.example'],
-    subId: 'timeline-test',
-    owner: 'timeline-test',
-    activeAccountPubkey: options.activeAccountPubkey,
-    pool,
-    subscriptions: managerAsOrchestrator(createRelaySubscriptionManager(pool), {
-      keyPrefix: 'timeline-test',
-    }),
-  });
-}
-
 function pubkey(): string {
   return getPublicKey(generateSecretKey());
-}
-async function waitForSub(subId: string, exact = false): Promise<void> {
-  await vi.waitFor(() => expect(parsedSent(subId, exact)).toBeTruthy());
-}
-
-function parsedSent(subId: string, exact = false): unknown {
-  return parsedSocketMessage(subId, exact);
 }

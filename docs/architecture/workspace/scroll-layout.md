@@ -36,13 +36,13 @@ wrappers listed in `scroll-layout.css`.
 
 ## Surfaces
 
-| Surface                                                   | Scrolling element                          | Content wrapper              |
-| --------------------------------------------------------- | ------------------------------------------ | ---------------------------- |
-| Home, Global, Thread, Search, Profile notes               | Virtua viewport in `.event-list__scroller` | `.feed-scroll-item`          |
-| Notifications                                             | `.notification-list-scroll`                | `.feed-scroll-item`          |
-| Settings, Relay Settings, Stats, Welcome, Upload Settings | `.settings-tab`                            | `.settings-tab > *`          |
-| Custom Request, Author Context, lkjstr Log                | Tab-specific scroll root (see tab CSS)     | tab CSS                      |
-| Pane tab shell                                            | `.pane-body` (non-scrolling container)     | tab root inside body         |
+| Surface                                                   | Scrolling element                          | Content wrapper      |
+| --------------------------------------------------------- | ------------------------------------------ | -------------------- |
+| Home, Global, Thread, Search, Profile notes               | Virtua viewport in `.event-list__scroller` | `.feed-scroll-item`  |
+| Notifications                                             | `.notification-list-scroll`                | `.feed-scroll-item`  |
+| Settings, Relay Settings, Stats, Welcome, Upload Settings | `.settings-tab`                            | `.settings-tab > *`  |
+| Custom Request, Author Context, lkjstr Log                | Tab-specific scroll root (see tab CSS)     | tab CSS              |
+| Pane tab shell                                            | `.pane-body` (non-scrolling container)     | tab root inside body |
 
 `.pane-body` and `.event-list__scroller` wrappers may use `overflow: hidden`
 while the Virtua or tool child owns vertical scroll.

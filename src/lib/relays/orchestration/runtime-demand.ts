@@ -5,6 +5,7 @@ import type { Demand, DemandSurface, DemandVisibility } from './demand-types';
 export function liveFeedDemand(input: {
   readonly surface: DemandSurface;
   readonly owner: string;
+  readonly channel?: string;
   readonly relays: readonly string[];
   readonly filters: readonly NostrFilter[];
   readonly purpose?: RelayRequestPurpose;
@@ -20,6 +21,7 @@ export function liveFeedDemand(input: {
     owner: input.owner,
     visibility: input.visibility ?? 'visible',
     since: input.since,
+    channel: input.channel,
   };
 }
 

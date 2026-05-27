@@ -8,15 +8,15 @@ relay connection set.
 
 ## Shape
 
-| Field | Meaning |
-|-------|---------|
+| Field         | Meaning                                                       |
+| ------------- | ------------------------------------------------------------- |
 | `fingerprint` | Stable hash of relays, normalized filters, phase, and purpose |
-| `relays` | Normalized relay URL multiset |
-| `wireSubId` | Opaque relay-safe id (max `48` characters on the wire) |
-| `phase` | `bootstrap`, `live`, or `page` |
-| `purpose` | Same vocabulary as Demand |
-| `owners` | Set of Demand owner ids currently attached |
-| `strategy` | `backward` for bootstrap and page; `forward` for live |
+| `relays`      | Normalized relay URL multiset                                 |
+| `wireSubId`   | Opaque relay-safe id (max `48` characters on the wire)        |
+| `phase`       | `bootstrap`, `live`, or `page`                                |
+| `purpose`     | Same vocabulary as Demand                                     |
+| `owners`      | Set of Demand owner ids currently attached                    |
+| `strategy`    | `backward` for bootstrap and page; `forward` for live         |
 
 ## Refcount
 
@@ -28,11 +28,11 @@ relay connection set.
 
 ## CLOSE Guarantees
 
-- Zero owners ⇒ `CLOSE` within the same synchronous turn when possible.
+- Zero owners imply `CLOSE` within the same synchronous turn when possible.
 - Tab close, runtime `close()`, orchestrator shutdown, and relay disable all
   release owners and close orphaned Leases.
 - Bootstrap Leases always close on `EOSE`, event cap, timeout, terminal relay
-  state, or abort — even if owners remain (bootstrap is not long-lived).
+  state, or abort -- even if owners remain (bootstrap is not long-lived).
 - Live Leases stay open while owners exist and the Lease is visible-backed.
 
 ## Wire ID Rules

@@ -46,8 +46,8 @@
   });
 
   $effect(() => {
-    props.restoreScrollTop;
-    props.tabId;
+    void props.restoreScrollTop;
+    void props.tabId;
     if (settings.length === 0) return;
     void tick().then(() => applyScrollTop());
   });

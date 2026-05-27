@@ -13,14 +13,14 @@ None right now. The feed UI unification closed related audit rows in
 
 ## Completed (workspace)
 
-| Item                                       | Contract                                                                 |
-| ------------------------------------------ | ------------------------------------------------------------------------ |
-| Touch/Android tab drag without snap-back   | [tab-strip-gestures.md](../architecture/workspace/tab-strip-gestures.md) |
-| No left-side new-event stripe on feed rows | [event-tree.md](../architecture/data/event-tree.md)                      |
-| nip05-only feed identity subtitles         | [identity-rendering.md](../architecture/network/identity-rendering.md)   |
-| Tile-scoped emoji picker                   | [tile-overlays.md](../architecture/workspace/tile-overlays.md)           |
+| Item                                                      | Contract                                                                                                                                                          |
+| --------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Touch/Android tab drag without snap-back                  | [tab-strip-gestures.md](../architecture/workspace/tab-strip-gestures.md)                                                                                          |
+| No left-side new-event stripe on feed rows                | [event-tree.md](../architecture/data/event-tree.md)                                                                                                               |
+| nip05-only feed identity subtitles                        | [identity-rendering.md](../architecture/network/identity-rendering.md)                                                                                            |
+| Tile-scoped emoji picker                                  | [tile-overlays.md](../architecture/workspace/tile-overlays.md)                                                                                                    |
 | Feed scroll surface + notification row chrome unification | [feed-scroll-surface.md](../architecture/data/feed-surface/feed-scroll-surface.md) and [feed-row-chrome.md](../architecture/data/feed-surface/feed-row-chrome.md) |
-| Welcome document with working tab links    | [tools/welcome.md](tools/welcome.md)                                     |
+| Welcome document with working tab links                   | [tools/welcome.md](tools/welcome.md)                                                                                                                              |
 
 ## Feeds and Loading
 

@@ -6,7 +6,10 @@ import { liveFeedDemand } from '../../../../src/lib/relays/orchestration/runtime
 describe('subscription orchestrator', () => {
   it('shares one live subscription for compatible demands', () => {
     const manager = createRelaySubscriptionManager();
-    const orchestrator = createSubscriptionOrchestrator(undefined as never, manager);
+    const orchestrator = createSubscriptionOrchestrator(
+      undefined as never,
+      manager,
+    );
     const filters = [{ kinds: [1], limit: 30 }];
     const relays = ['wss://relay.example'];
     const releaseA = orchestrator.subscribeDemand(

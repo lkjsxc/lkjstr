@@ -25,9 +25,7 @@ function canonicalFilters(
         next.authors = [...new Set(next.authors as string[])].sort();
       }
       if (Array.isArray(next.kinds)) {
-        next.kinds = [...new Set(next.kinds as number[])].sort(
-          (a, b) => a - b,
-        );
+        next.kinds = [...new Set(next.kinds as number[])].sort((a, b) => a - b);
       }
       for (const key of Object.keys(next)) {
         if (!key.startsWith('#')) continue;

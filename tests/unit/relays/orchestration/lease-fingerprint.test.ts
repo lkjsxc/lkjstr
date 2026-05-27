@@ -24,8 +24,8 @@ describe('leaseFingerprint', () => {
       filters: [{ kinds: [1], limit: 30 }],
       purpose: 'feed' as const,
     };
-    expect(
-      leaseFingerprint({ ...base, phase: 'live' }),
-    ).not.toBe(leaseFingerprint({ ...base, phase: 'bootstrap' }));
+    expect(leaseFingerprint({ ...base, phase: 'live' })).not.toBe(
+      leaseFingerprint({ ...base, phase: 'bootstrap' }),
+    );
   });
 });

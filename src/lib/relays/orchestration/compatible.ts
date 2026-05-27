@@ -1,8 +1,14 @@
 import type { Demand } from './demand-types';
-import { leaseFingerprint, type LeaseFingerprintInput } from './lease-fingerprint';
+import {
+  leaseFingerprint,
+  type LeaseFingerprintInput,
+} from './lease-fingerprint';
 
 export function demandsCompatible(a: Demand, b: Demand): boolean {
-  return leaseFingerprint(demandFingerprintInput(a)) === leaseFingerprint(demandFingerprintInput(b));
+  return (
+    leaseFingerprint(demandFingerprintInput(a)) ===
+    leaseFingerprint(demandFingerprintInput(b))
+  );
 }
 
 export function demandFingerprintInput(

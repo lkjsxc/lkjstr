@@ -6,10 +6,10 @@ Global runtime owns unauthenticated recent-note loading from readable relays.
 
 ## Render-Critical Kinds
 
-| Phase | Kinds |
-|-------|-------|
+| Phase     | Kinds         |
+| --------- | ------------- |
 | Bootstrap | Kind `1` only |
-| Live | Kind `1` only |
+| Live      | Kind `1` only |
 
 ## Lazy Hydration
 

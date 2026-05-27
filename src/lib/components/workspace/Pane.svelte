@@ -170,7 +170,7 @@
         activeAccount={props.activeAccount}
         relaySets={props.relaySets}
         pageDataReady={props.pageDataReady}
-        trackBody={trackBody}
+        {trackBody}
         convertTab={props.convertTab}
         addMinedSigning={props.addMinedSigning}
         refreshData={props.refreshData}

@@ -5,7 +5,6 @@
   import type { TabKind, WorkspaceTab } from '$lib/workspace/tab';
   import type { TabSnapshotPayload } from '$lib/workspace/tab-snapshot';
   import { feedAnchorFromPayload } from '$lib/workspace/tab-snapshot-persist';
-  import type { PaneScrollRetention } from '$lib/workspace/pane-scroll-retention';
   import PaneTabBody from './PaneTabBody.svelte';
 
   type Props = {

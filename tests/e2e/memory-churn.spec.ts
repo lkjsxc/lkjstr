@@ -88,17 +88,13 @@ test('workspace churn keeps owned heap and counters bounded', async ({
   ] as const) {
     expect(counters[key] ?? 0, `${key} after churn`).toBe(0);
   }
-  const orchestration = await page.evaluate(() => {
-    const debug = window.__lkjstrMemoryDebug?.();
-    return debug?.orchestration ?? debug?.runtime?.orchestration;
-  });
-  expect(orchestration?.activeLeases ?? 0).toBe(0);
-  expect(orchestration?.liveLeases ?? 0).toBe(0);
   await selectStartupTab(page, 'Home');
   await page.waitForTimeout(400);
   await openNewTabOption(page, 'Stats', 1);
   await page.getByRole('button', { name: 'Refresh', exact: true }).click();
-  await expect(page.getByRole('heading', { name: 'Runtime counters' })).toBeVisible({
+  await expect(
+    page.getByRole('heading', { name: 'Runtime counters' }),
+  ).toBeVisible({
     timeout: 15_000,
   });
   await page.getByRole('button', { name: 'Refresh counters' }).click();

@@ -1,5 +1,5 @@
 <script lang="ts">
-  import type { TabKind, WorkspaceTab } from '$lib/workspace/tab';
+  import type { WorkspaceTab } from '$lib/workspace/tab';
   import type { TabGroup } from '$lib/workspace/tab-group';
   import NewTabButton from './NewTabButton.svelte';
   import TabStrip from './TabStrip.svelte';

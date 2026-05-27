@@ -7,10 +7,10 @@ Custom Request tools.
 
 ## Render-Critical Kinds
 
-| Tool | Bootstrap / page | Live |
-|------|------------------|------|
-| Search | User filter kinds (typically `1`) | Optional live tail when filter is open-ended |
-| Custom Request | User-defined filters | One-shot unless user starts live mode |
+| Tool           | Bootstrap / page                  | Live                                         |
+| -------------- | --------------------------------- | -------------------------------------------- |
+| Search         | User filter kinds (typically `1`) | Optional live tail when filter is open-ended |
+| Custom Request | User-defined filters              | One-shot unless user starts live mode        |
 
 ## Lazy Hydration
 

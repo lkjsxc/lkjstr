@@ -7,20 +7,20 @@ interfaces and may include full detail in debug hooks for tests.
 
 ## Counters
 
-| Counter | Meaning |
-|---------|---------|
-| `activeDemands` | Demands registered (visible + hidden) |
-| `activeLeases` | Leases with owner count &gt; 0 or incomplete bootstrap |
-| `liveLeases` | Leases in `live` phase with owners |
-| `bootstrapLeases` | In-flight bootstrap Leases |
-| `relayReqTotal` | `REQ` messages sent (all relays) |
-| `relayCloseTotal` | `CLOSE` messages sent |
-| `eventsReceived` | Raw `EVENT` messages before classification |
-| `eventsAccepted` | Events written to shared storage |
-| `eventsDroppedDuplicate` | Deduped before storage |
-| `eventsDroppedNonRenderCritical` | Rejected for surface bootstrap/live intake |
-| `timeToFirstRowMs` | Per-surface bootstrap latency (histogram summary) |
-| `timeToEoseMs` | Bootstrap EOSE latency |
+| Counter                          | Meaning                                                |
+| -------------------------------- | ------------------------------------------------------ |
+| `activeDemands`                  | Demands registered (visible + hidden)                  |
+| `activeLeases`                   | Leases with owner count &gt; 0 or incomplete bootstrap |
+| `liveLeases`                     | Leases in `live` phase with owners                     |
+| `bootstrapLeases`                | In-flight bootstrap Leases                             |
+| `relayReqTotal`                  | `REQ` messages sent (all relays)                       |
+| `relayCloseTotal`                | `CLOSE` messages sent                                  |
+| `eventsReceived`                 | Raw `EVENT` messages before classification             |
+| `eventsAccepted`                 | Events written to shared storage                       |
+| `eventsDroppedDuplicate`         | Deduped before storage                                 |
+| `eventsDroppedNonRenderCritical` | Rejected for surface bootstrap/live intake             |
+| `timeToFirstRowMs`               | Per-surface bootstrap latency (histogram summary)      |
+| `timeToEoseMs`                   | Bootstrap EOSE latency                                 |
 
 Per-relay counters mirror REQ, CLOSE, received, and accepted where Stats already
 shows relay totals.
@@ -32,7 +32,7 @@ Session log may record (throttled):
 - Lease opened / closed with fingerprint prefix and phase.
 - Demand attach / release with surface and owner prefix (no full tab body).
 - Route escalation with miss reason.
-- Bootstrap → live transition per surface key.
+- Bootstrap -> live transition per surface key.
 
 ## Stats Tab
 

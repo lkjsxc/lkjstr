@@ -46,11 +46,7 @@
     onScrollOffset?.(offset);
     const viewport = list?.getViewportSize?.() ?? 0;
     const total = list?.getScrollSize?.() ?? 0;
-    if (
-      nearEndEnabled &&
-      data.length > 0 &&
-      isNearEnd(offset, viewport, total)
-    )
+    if (nearEndEnabled && data.length > 0 && isNearEnd(offset, viewport, total))
       void onNearEnd?.();
   }
 

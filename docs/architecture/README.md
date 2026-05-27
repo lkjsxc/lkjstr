@@ -24,6 +24,10 @@ state lives, which modules own subscriptions, and how tabs close cleanly.
   staged row pipeline.
 - [data/feed-surface/surface-matrix.md](data/feed-surface/surface-matrix.md):
   per-surface list matrix.
+- [data/feed-surface/feed-scroll-surface.md](data/feed-surface/feed-scroll-surface.md):
+  shared feed scroll shell.
+- [data/feed-surface/feed-row-chrome.md](data/feed-surface/feed-row-chrome.md):
+  list-owned row separators.
 - [data/feed-memory.md](data/feed-memory.md): feed windows and scroll anchors.
 - [data/retention/README.md](data/retention/README.md): score-based event
   retention.
@@ -53,6 +57,24 @@ state lives, which modules own subscriptions, and how tabs close cleanly.
 - [network/settings-store.md](network/settings-store.md): settings storage.
 - [network/subscription-manager.md](network/subscription-manager.md): shared
   relay reads.
+- [network/subscription-orchestration/README.md](network/subscription-orchestration/README.md):
+  Demand and Lease orchestration index.
+- [network/subscription-orchestration/bootstrap-live.md](network/subscription-orchestration/bootstrap-live.md):
+  bootstrap vs live-tail lifecycle.
+- [network/subscription-orchestration/compatibility.md](network/subscription-orchestration/compatibility.md):
+  Demand merge rules.
+- [network/subscription-orchestration/demand.md](network/subscription-orchestration/demand.md):
+  Demand shape.
+- [network/subscription-orchestration/lease.md](network/subscription-orchestration/lease.md):
+  Lease refcount.
+- [network/subscription-orchestration/normalization.md](network/subscription-orchestration/normalization.md):
+  canonical filters.
+- [network/subscription-orchestration/observability.md](network/subscription-orchestration/observability.md):
+  orchestration counters.
+- [network/subscription-orchestration/routing-by-surface.md](network/subscription-orchestration/routing-by-surface.md):
+  per-surface relay routes.
+- [network/subscription-orchestration/source-map.md](network/subscription-orchestration/source-map.md):
+  implementation modules.
 - [network/system.md](network/system.md): app boundaries.
 - [runtimes/README.md](runtimes/README.md): tab runtime data loading.
 - [runtimes/global-runtime.md](runtimes/global-runtime.md): Global loading.

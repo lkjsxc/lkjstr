@@ -7,10 +7,10 @@ backfill.
 
 ## Render-Critical Kinds
 
-| Phase | Kinds |
-|-------|-------|
+| Phase            | Kinds                                                     |
+| ---------------- | --------------------------------------------------------- |
 | Bootstrap / page | `0`, `1`, `6`, `7`, `16`, `9735` with active-account `#p` |
-| Live | Same set with `since` on start |
+| Live             | Same set with `since` on start                            |
 
 ## Lazy Hydration
 

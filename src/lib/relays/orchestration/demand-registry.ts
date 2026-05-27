@@ -57,12 +57,10 @@ export function createDemandRegistry() {
       for (const fingerprint of byOwner.get(owner) ?? []) {
         const record = byFingerprint.get(fingerprint)?.get(owner);
         if (!record) continue;
-        byFingerprint
-          .get(fingerprint)
-          ?.set(owner, {
-            demand: { ...record.demand, visibility },
-            fingerprint,
-          });
+        byFingerprint.get(fingerprint)?.set(owner, {
+          demand: { ...record.demand, visibility },
+          fingerprint,
+        });
       }
     },
     ownersFor(fingerprint: string): readonly Demand[] {
@@ -77,6 +75,12 @@ export function createDemandRegistry() {
     },
     hasOwners(fingerprint: string): boolean {
       return (byFingerprint.get(fingerprint)?.size ?? 0) > 0;
+    },
+    fingerprintsForOwner(owner: string): readonly string[] {
+      return [...(byOwner.get(owner) ?? [])];
+    },
+    demandForOwner(owner: string, fingerprint: string): Demand | undefined {
+      return byFingerprint.get(fingerprint)?.get(owner)?.demand;
     },
   };
 }

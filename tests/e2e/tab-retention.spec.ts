@@ -91,9 +91,7 @@ test('restores settings scroll after reload from persisted tab state', async ({
     .poll(async () => {
       const states = await readTabStates(page);
       return states.some(
-        (state) =>
-          state.kind === 'tool' &&
-          (state.scrollTop ?? 0) > 0,
+        (state) => state.kind === 'tool' && (state.scrollTop ?? 0) > 0,
       );
     })
     .toBe(true);
@@ -114,14 +112,21 @@ async function readTabStates(page: Page) {
       open.onerror = () => reject(open.error);
       open.onsuccess = () => resolve(open.result);
     });
-    const store = db.transaction('tabStates', 'readonly').objectStore('tabStates');
-    const records = await new Promise<Array<{ state?: { kind?: string; scrollTop?: number } }>>(
-      (resolve, reject) => {
-        const request = store.getAll();
-        request.onerror = () => reject(request.error);
-        request.onsuccess = () => resolve(request.result as Array<{ state?: { kind?: string; scrollTop?: number } }>);
-      },
-    );
+    const store = db
+      .transaction('tabStates', 'readonly')
+      .objectStore('tabStates');
+    const records = await new Promise<
+      Array<{ state?: { kind?: string; scrollTop?: number } }>
+    >((resolve, reject) => {
+      const request = store.getAll();
+      request.onerror = () => reject(request.error);
+      request.onsuccess = () =>
+        resolve(
+          request.result as Array<{
+            state?: { kind?: string; scrollTop?: number };
+          }>,
+        );
+    });
     db.close();
     return records.map((record) => record.state ?? {});
   });

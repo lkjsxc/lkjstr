@@ -7,16 +7,16 @@ pure data. They do not open sockets.
 
 ## Shape
 
-| Field | Meaning |
-|-------|---------|
-| `surface` | `home`, `global`, `profile`, `thread`, `notifications`, `search`, `custom-request`, `author-context` |
-| `phase` | `bootstrap`, `live`, or `page` |
-| `relays` | Normalized, sorted relay URL list for this Demand |
-| `filters` | Sanitized Nostr filters after canonical normalization |
-| `purpose` | `feed`, `metadata`, `event-lookup`, `route-discovery`, `search` |
-| `priority` | `high`, `normal`, or `low` — planner may defer low Demands under pressure |
-| `owner` | Stable owner id (`tabId` or tool session id) for refcount only |
-| `visibility` | `visible` or `hidden` — hidden Demands do not keep live Leases |
+| Field        | Meaning                                                                                              |
+| ------------ | ---------------------------------------------------------------------------------------------------- |
+| `surface`    | `home`, `global`, `profile`, `thread`, `notifications`, `search`, `custom-request`, `author-context` |
+| `phase`      | `bootstrap`, `live`, or `page`                                                                       |
+| `relays`     | Normalized, sorted relay URL list for this Demand                                                    |
+| `filters`    | Sanitized Nostr filters after canonical normalization                                                |
+| `purpose`    | `feed`, `metadata`, `event-lookup`, `route-discovery`, `search`                                      |
+| `priority`   | `high`, `normal`, or `low` -- planner may defer low Demands under pressure                           |
+| `owner`      | Stable owner id (`tabId` or tool session id) for refcount only                                       |
+| `visibility` | `visible` or `hidden` -- hidden Demands do not keep live Leases                                      |
 
 Optional fields:
 
