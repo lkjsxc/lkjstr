@@ -66,37 +66,36 @@ pnpm preview
 
 ## How to Verify
 
+Canonical quiet commands (one success line on pass; full output on failure):
+
 ```sh
-# Repository checks (class guard, AST rules)
 pnpm check:repo
+pnpm test:quiet
+pnpm test:e2e:quiet
+pnpm verify:quiet
+pnpm ci:quiet
+pnpm cloudflare:quiet
 
-# Lint and format check
-pnpm lint
-
-# Type check
-pnpm check
-
-# Unit tests
-pnpm test
-
-# Full verification (checks + lint + type + unit tests + build)
-pnpm verify
-
-# End-to-end tests
-pnpm test:e2e
-
-# Memory-focused e2e test
-pnpm test:e2e:memory
-
-# Cloudflare Workers dry-run
-pnpm cloudflare:dry-run
-
-# Docker Compose final verification
 docker compose -f docker-compose.yml config
-docker compose -f docker-compose.yml build app verify e2e cloudflare
-docker compose -f docker-compose.yml run --rm verify
-docker compose -f docker-compose.yml run --rm e2e
-docker compose -f docker-compose.yml run --rm cloudflare
+docker compose --progress quiet -f docker-compose.yml build app verify e2e cloudflare
+docker compose --progress quiet -f docker-compose.yml run --rm verify
+docker compose --progress quiet -f docker-compose.yml run --rm e2e
+docker compose --progress quiet -f docker-compose.yml run --rm cloudflare
+```
+
+See [docs/operations/verification.md](docs/operations/verification.md) for the
+quiet verification contract.
+
+### Debugging (verbose)
+
+```sh
+pnpm lint
+pnpm check
+pnpm test
+pnpm verify
+pnpm test:e2e
+pnpm test:e2e:memory
+pnpm cloudflare:dry-run
 ```
 
 ## Where Docs Live

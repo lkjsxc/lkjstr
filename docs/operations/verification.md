@@ -5,30 +5,69 @@
 Verification commands prove docs, source, unit behavior, build, and browser
 flows.
 
+## Quiet Verification Contract
+
+Quiet commands are canonical for LLM-agent and CI runs.
+
+A passing quiet command prints only one final success line:
+
+- `ok test`
+- `ok e2e`
+- `ok verify`
+- `ok ci`
+- `ok cloudflare`
+
+Quiet commands capture child stdout and stderr in memory. They print captured
+output only when the child exits with a nonzero status, is terminated by a
+signal, or fails to spawn.
+
+Quiet commands must not hide diagnostics. On failure they print the step name,
+exit status or signal, and the captured output tail (128 KiB byte budget).
+
+Normal verbose commands remain available for local debugging:
+
+- `pnpm test`
+- `pnpm test:e2e`
+- `pnpm verify`
+- `pnpm cloudflare:dry-run`
+
+CI must use quiet commands by default.
+
 ## Local
+
+Canonical agent and CI commands:
 
 ```sh
 pnpm check:repo
+pnpm test:quiet
+pnpm test:e2e:quiet
+pnpm verify:quiet
+pnpm ci:quiet
+pnpm cloudflare:quiet
+```
+
+Debugging commands (verbose child output):
+
+```sh
 pnpm kit:sync
 pnpm lint
 pnpm check
 pnpm test
 pnpm build
+pnpm verify
 pnpm cloudflare:dry-run
 pnpm test:e2e
 pnpm test:e2e:memory
-pnpm verify:quiet
-pnpm test:e2e:quiet
 ```
 
 ## Docker
 
 ```sh
 docker compose -f docker-compose.yml config
-docker compose -f docker-compose.yml build app verify e2e cloudflare
-docker compose -f docker-compose.yml run --rm verify
-docker compose -f docker-compose.yml run --rm e2e
-docker compose -f docker-compose.yml run --rm cloudflare
+docker compose --progress quiet -f docker-compose.yml build app verify e2e cloudflare
+docker compose --progress quiet -f docker-compose.yml run --rm verify
+docker compose --progress quiet -f docker-compose.yml run --rm e2e
+docker compose --progress quiet -f docker-compose.yml run --rm cloudflare
 ```
 
 Run all five Docker command groups before claiming image-backed verification.
@@ -127,13 +166,17 @@ docker compose -f docker-compose.yml run --rm cloudflare
 
 ## Gate
 
-Use `pnpm verify` for normal local verification. Use `pnpm cloudflare:dry-run`
-after Cloudflare adapter or Wrangler configuration changes. Use Docker after
-Compose or Dockerfile changes and before claiming image-backed verification. CI
-must run the same local, browser, and Docker-backed gates.
+Use `pnpm verify:quiet` for normal agent and CI verification. Use
+`pnpm ci:quiet` when the full local plus browser gate is required in one
+command. `ci:quiet` runs repository checks, lint, typecheck, unit tests,
+build, and e2e. It does not include Cloudflare dry-run; run
+`pnpm cloudflare:quiet` or the Compose `cloudflare` service separately after
+adapter or Wrangler changes.
 
-Quiet commands are preferred in agent runs. They print a short success line
-when commands pass and print buffered command output only when a command fails.
+Use verbose `pnpm verify`, `pnpm test`, and `pnpm test:e2e` when debugging
+failures locally. Use Docker after Compose or Dockerfile changes and before
+claiming image-backed verification. CI must run the same quiet local,
+browser, and Docker-backed gates.
 
 Run `pnpm check:repo` after documentation changes before code work continues.
 

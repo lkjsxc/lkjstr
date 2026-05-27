@@ -50,3 +50,6 @@ for that subtree.
 - Docker Compose services do not mount the source tree, use `develop`, or use
   watch-style sync.
 - Docker Compose is the authoritative final verification path.
+- Quiet verification is the canonical agent and CI path. See
+  [operations/verification.md](../operations/verification.md) for the contract
+  (`ok test`, `ok verify`, failure tails, and verbose debugging commands).
