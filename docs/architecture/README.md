@@ -64,6 +64,8 @@ state lives, which modules own subscriptions, and how tabs close cleanly.
   shared feed scroll shell.
 - [data/feed-surface/feed-row-chrome.md](data/feed-surface/feed-row-chrome.md):
   list-owned row separators.
+- [data/feed-surface/event-value.md](data/feed-surface/event-value.md):
+  visible event value and retention.
 - [data/feed-memory.md](data/feed-memory.md): feed windows and scroll anchors.
 - [data/retention/README.md](data/retention/README.md): score-based event
   retention.
