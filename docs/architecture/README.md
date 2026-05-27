@@ -7,6 +7,14 @@ state lives, which modules own subscriptions, and how tabs close cleanly.
 
 ## Tree
 
+- [backend/README.md](backend/README.md): browser-local backend services.
+- [backend/boundary.md](backend/boundary.md): local backend boundary.
+- [backend/cache-budget.md](backend/cache-budget.md): cache byte budget.
+- [backend/home-query-lifecycle.md](backend/home-query-lifecycle.md):
+  shared Home queries.
+- [backend/query-registry.md](backend/query-registry.md): query ownership.
+- [backend/transport-contract.md](backend/transport-contract.md):
+  local transport.
 - [feeds/README.md](feeds/README.md): feed sources, invariants, merge, cursors.
 - [feeds/invariants/README.md](feeds/invariants/README.md): ordering, paging,
   filter safety.
@@ -87,18 +95,30 @@ state lives, which modules own subscriptions, and how tabs close cleanly.
   relay reads.
 - [network/subscription-orchestration/README.md](network/subscription-orchestration/README.md):
   Demand and Lease orchestration index.
-- [network/subscription-orchestration/bootstrap-live.md](network/subscription-orchestration/bootstrap-live.md):
-  bootstrap vs live-tail lifecycle.
+- [network/subscription-orchestration/demand-intent.md](network/subscription-orchestration/demand-intent.md):
+  intent shapes and owner keys.
+- [network/subscription-orchestration/home-integration.md](network/subscription-orchestration/home-integration.md):
+  Home bootstrap, live, and paging.
+- [network/subscription-orchestration/ingress.md](network/subscription-orchestration/ingress.md):
+  live event classification.
+- [network/subscription-orchestration/lease-key.md](network/subscription-orchestration/lease-key.md):
+  wire-equivalent fingerprints.
+- [network/subscription-orchestration/live-lease.md](network/subscription-orchestration/live-lease.md):
+  lease refcount and visibility.
+- [network/subscription-orchestration/metrics.md](network/subscription-orchestration/metrics.md):
+  orchestration counters.
+- `network/subscription-orchestration/notifications-profile-thread-integration.md`:
+  other feed surfaces.
+- [network/subscription-orchestration/owner-visibility.md](network/subscription-orchestration/owner-visibility.md):
+  hidden tab behavior.
+- [network/subscription-orchestration/page-read-dedupe.md](network/subscription-orchestration/page-read-dedupe.md):
+  semantic page keys.
+- [network/subscription-orchestration/route-plan.md](network/subscription-orchestration/route-plan.md):
+  route planning.
+- [network/subscription-orchestration/tests.md](network/subscription-orchestration/tests.md):
+  verification gates.
 - [network/subscription-orchestration/compatibility.md](network/subscription-orchestration/compatibility.md):
   Demand merge rules.
-- [network/subscription-orchestration/demand.md](network/subscription-orchestration/demand.md):
-  Demand shape.
-- [network/subscription-orchestration/lease.md](network/subscription-orchestration/lease.md):
-  Lease refcount.
-- [network/subscription-orchestration/normalization.md](network/subscription-orchestration/normalization.md):
-  canonical filters.
-- [network/subscription-orchestration/observability.md](network/subscription-orchestration/observability.md):
-  orchestration counters.
 - [network/subscription-orchestration/routing-by-surface.md](network/subscription-orchestration/routing-by-surface.md):
   per-surface relay routes.
 - [network/subscription-orchestration/source-map.md](network/subscription-orchestration/source-map.md):

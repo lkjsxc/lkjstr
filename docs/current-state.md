@@ -37,20 +37,24 @@ linked product, protocol, architecture, and operations pages.
   tile menu row.
 - Tab rails scroll horizontally with long-press touch drag, pointer capture,
   selection suppression, strip-priority reorder, and active-tab reveal.
-- Durable event cache has no application item-count ceiling. Optional
-  quota-pressure compaction may run when browser storage is near its limit.
-  Runtime feed windows remain bounded per tab.
+- Durable event cache has no application item-count ceiling. `cache.maxBytes`
+  provides a soft byte budget; scheduled compaction may run when storage usage
+  exceeds the lower of quota pressure and that setting. Runtime feed windows
+  remain bounded.
 - Shared storage normalizes events, relay receipts, tag rows, cursors, and jobs
   before runtime use.
 - Relay ingress uses app-owned byte and structure caps before expensive JSON
   and event parsing.
 - IndexedDB remains durable browser-owned data; memory relief prunes only
   bounded app-owned runtime windows, caches, counters, and fallback stores.
-- Relay clients, relay pool, subscription orchestrator, subscription manager,
-  and tab runtimes own network reads and deterministic cleanup.
+- Browser-local backend services own shared Home queries above tab components.
+  Relay clients, relay pool, subscription orchestrator, subscription manager,
+  and runtimes own network reads and deterministic cleanup.
 - Surfaces submit Demands; the orchestrator plans shared Leases (canonical
   fingerprints with `channel` disambiguation) and issues reads through the
   subscription manager.
+- Matching Home tabs attach to one shared query keyed by account, selected
+  relays, page size, and feed policy. Tab ids own attachments only.
 - Stats and `__lkjstrMemoryDebug()` expose orchestration demand, lease, and
   event intake counters.
 - Inactive workspace tabs keep hidden mounted bodies; feed runtimes release live
@@ -121,6 +125,8 @@ linked product, protocol, architecture, and operations pages.
 - [product/README.md](product/README.md): user-facing behavior.
 - [protocol/README.md](protocol/README.md): protocol contracts.
 - [architecture/README.md](architecture/README.md): runtime and data ownership.
+- [architecture/backend/README.md](architecture/backend/README.md):
+  browser-local backend contract.
 - [architecture/data/feed-surface/README.md](architecture/data/feed-surface/README.md):
   shared feed list contracts.
 - [architecture/data/heap-retention.md](architecture/data/heap-retention.md):

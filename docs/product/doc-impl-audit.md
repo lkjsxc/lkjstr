@@ -56,16 +56,17 @@ documented-only. Update it when a vertical slice closes a gap.
 
 ## Subscription Orchestration
 
-| Clause                         | Contract                    | Status      | Notes                                                                         |
-| ------------------------------ | --------------------------- | ----------- | ----------------------------------------------------------------------------- |
-| Intent-only orchestration docs | subscription-orchestration/ | implemented | demand-intent, lease-key, page-read-dedupe                                    |
-| Wire-equivalent lease keys     | lease-key.md                | implemented | `lease-key.ts`                                                                |
-| Semantic page read dedupe      | page-read-dedupe.md         | implemented | `readPageByIntent`, `pageIntentSemanticKey`                                   |
-| Shared live lease across tabs  | compatibility.md            | implemented | fingerprint + channel merge                                                   |
-| Stats orchestration counters   | metrics.md                  | implemented | metrics + RuntimeMemoryPanel                                                  |
-| Subscription E2E gate          | verification.md             | implemented | `subscription-three-home.spec.ts` + visibility churn                          |
-| Hidden tab demand pause        | owner-visibility.md         | implemented | setVisibility on feed runtimes                                                |
-| All surfaces on intent API     | orchestration-bridge.md     | implemented | Home/Notifications/Global/Profile/Thread/Search/Custom Request/Author Context |
+| Clause                         | Contract                        | Status      | Notes                                                                         |
+| ------------------------------ | ------------------------------- | ----------- | ----------------------------------------------------------------------------- |
+| Intent-only orchestration docs | subscription-orchestration/     | implemented | demand-intent, lease-key, page-read-dedupe                                    |
+| Wire-equivalent lease keys     | lease-key.md                    | implemented | `lease-key.ts`                                                                |
+| Semantic page read dedupe      | page-read-dedupe.md             | implemented | `readPageByIntent`, `pageIntentSemanticKey`                                   |
+| Shared live lease across tabs  | compatibility.md                | implemented | fingerprint + channel merge                                                   |
+| Stats orchestration counters   | metrics.md                      | implemented | metrics + RuntimeMemoryPanel                                                  |
+| Subscription E2E gate          | verification.md                 | implemented | `subscription-three-home.spec.ts` + visibility churn                          |
+| Hidden tab demand pause        | owner-visibility.md             | implemented | setVisibility on feed runtimes                                                |
+| All surfaces on intent API     | orchestration-bridge.md         | implemented | Home/Notifications/Global/Profile/Thread/Search/Custom Request/Author Context |
+| Shared Home backend query      | backend/home-query-lifecycle.md | implemented | `attachHomeQuery`, shared key excludes tab id                                 |
 
 ## Feed Correctness
 
@@ -78,9 +79,9 @@ documented-only. Update it when a vertical slice closes a gap.
 | Notifications bounded initial and older relay windows | feeds/sources/notifications.md       | implemented | Initial read includes `(since, until)`; older pages are bounded and based on notification record `createdAt`, with older-load gated by user scroll intent. |
 | Home live note subscription includes startup `since`  | feeds/runtime                        | implemented | Live `authorFilters` include startup-bounded `since` to keep initial live inserts protocol-bounded.                                                        |
 | Follow-list absence ownership is follow-sub only      | feeds/sources/home.md                | implemented | No-follow-list waits for follow-list kind `3` completion across intended relays (follow-sub EOSE ownership only).                                          |
-| Per-tab page cursors                                  | feeds/runtime/per-runtime-cursors.md | implemented | runtime instance key                                                                                                                                       |
+| Home shared page cursors                              | backend/home-query-lifecycle.md      | implemented | Shared Home query owns cursors; non-Home runtime cursors remain per tab.                                                                                   |
 | Timeline regression e2e                               | verification.md                      | implemented | Includes Home follow-discovery EOSE ownership and Notifications bounded older paging / no auto-backfill scenarios.                                         |
-| Multi-tab cursor e2e                                  | feeds/runtime/multi-tab-ownership.md | partial     | Will be re-verified after cursor-key and older-window changes.                                                                                             |
+| Multi-tab Home ownership                              | feeds/runtime/multi-tab-ownership.md | implemented | Matching Home tabs attach to one backend query and share bootstrap, live leases, and cursors.                                                              |
 
 ## Feed Scroll and Row Chrome
 

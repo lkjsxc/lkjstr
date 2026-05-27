@@ -8,12 +8,17 @@ its NIP-02 follows.
 ## Contract
 
 - Home opens from New Tab and as one of the default work tabs at startup.
+- Matching Home tabs attach to one browser-local backend query. The shared
+  query owns cache warmup, follow discovery, bootstrap, live leases, route
+  discovery, paging, profile hydration, snapshots, and cleanup.
+- Tab ids are attachment owners only. They must not be part of the Home query
+  key and must not cause duplicate bootstrap or route-refresh reads.
 - Home is cache-first. It must render cached matching notes as soon as account
   and relay page data have loaded, before profile hydration and before relay
   results.
-- After authors are known, Home performs an immediate selected-relay initial
-  scan with bounded `since`/`until` windows, discovers routes in parallel, then
-  keeps live subscriptions bounded with startup `since`.
+- After authors are known, the shared query performs an immediate
+  selected-relay initial scan with bounded `since`/`until` windows, discovers
+  routes, then keeps live subscriptions bounded with startup `since`.
 - Account home authors are the active account plus `p` tags from the latest
   kind `3` follow list. Cache reads for the follow list use an indexed
   latest-only kind `3` lookup for the active pubkey.
@@ -25,7 +30,8 @@ its NIP-02 follows.
 - Relay reads go through the subscription orchestrator (route plan, shared leases,
   semantic page dedupe); the manager multiplexes wire traffic below the planner.
 - Events and relay provenance are written through the shared repository.
-- Initial and older pages request `30` items.
+- Initial, older, newer, and live startup filters share one `30` item budget
+  across author chunks.
 - The tab keeps a `180` item window and exposes jump to latest after newer
   items are pruned.
 - Live events are retained only inside the same `180` item window.
@@ -42,6 +48,8 @@ its NIP-02 follows.
   conservative.
 - Newer catch-up reads cache and relays from the newest bounded segment toward
   the top cursor.
+- Route discovery refreshes the initial page only when the resolved route-group
+  fingerprint changes.
 - Home does not start automatic session backfill on open. Older history loads
   after scroll or explicit page requests.
 - Adaptive feed requests remain bounded even if a route-specific filter omits

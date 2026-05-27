@@ -11,14 +11,14 @@ surface; status appears in Stats.
   item-count ceiling on cached events.
 - Browser storage quotas and eviction are browser-defined. lkjstr does not
   replace browser quota management with a fixed event count cap.
-- Users do not configure event count, age, or compaction enablement in
-  Settings.
+- `cache.maxBytes` defaults to `268435456` bytes and is a soft cache budget.
+- Users do not configure event count, age, or compaction enablement in Settings.
 - Runtime feed windows, relay read caps, and in-memory maps remain bounded.
   See [feed-memory.md](../../architecture/data/feed-memory.md) and
   [bounded-memory.md](../../architecture/data/bounded-memory.md).
-- Optional quota-pressure compaction may run only when durable storage is near
-  browser limits. It is not part of normal steady-state operation. See
-  [retention/compaction.md](../../architecture/data/retention/compaction.md).
+- Optional compaction may run when usage exceeds the lower of browser quota
+  pressure and `cache.maxBytes`. See
+  [cache-budget.md](../../architecture/backend/cache-budget.md).
 - Accounts, settings, relay sets, workspace state, notifications, and Tweet
   drafts are never pruned by event cache cleanup.
 

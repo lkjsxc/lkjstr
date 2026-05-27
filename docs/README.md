@@ -14,8 +14,13 @@ for detailed contracts.
 ## Architecture
 
 - [architecture/README.md](architecture/README.md): source ownership.
-- [architecture/feeds/README.md](architecture/feeds/README.md): feed sources,
-  invariants, merge, and cursor ownership.
+- [architecture/backend/README.md](architecture/backend/README.md): browser-local backend services.
+- [architecture/backend/boundary.md](architecture/backend/boundary.md): local backend boundary.
+- [architecture/backend/cache-budget.md](architecture/backend/cache-budget.md): cache byte budget.
+- [architecture/backend/home-query-lifecycle.md](architecture/backend/home-query-lifecycle.md): shared Home queries.
+- [architecture/backend/query-registry.md](architecture/backend/query-registry.md): query ownership.
+- [architecture/backend/transport-contract.md](architecture/backend/transport-contract.md): local transport.
+- [architecture/feeds/README.md](architecture/feeds/README.md): feed sources and runtime ownership.
 - [architecture/feeds/invariants/README.md](architecture/feeds/invariants/README.md): invariants index.
 - [architecture/feeds/invariants/event-ordering.md](architecture/feeds/invariants/event-ordering.md): sort keys.
 - [architecture/feeds/invariants/filter-safety.md](architecture/feeds/invariants/filter-safety.md): filter safety.
@@ -31,8 +36,7 @@ for detailed contracts.
 - [architecture/feeds/runtime/per-runtime-cursors.md](architecture/feeds/runtime/per-runtime-cursors.md): per-tab cursors.
 - [architecture/feeds/runtime/relay-incomplete-windows.md](architecture/feeds/runtime/relay-incomplete-windows.md): incomplete windows.
 - [architecture/feeds/orchestration-bridge.md](architecture/feeds/orchestration-bridge.md): orchestration bridge.
-- [architecture/data/README.md](architecture/data/README.md): storage and feed
-  memory.
+- [architecture/data/README.md](architecture/data/README.md): storage and feed memory.
 - [architecture/data/bounded-memory.md](architecture/data/bounded-memory.md):
   bounded memory and leak cleanup.
 - [architecture/data/memory-prioritization.md](architecture/data/memory-prioritization.md):
@@ -79,8 +83,7 @@ for detailed contracts.
 - [architecture/data/shared-storage.md](architecture/data/shared-storage.md):
   shared event storage.
 - [architecture/data/storage.md](architecture/data/storage.md): durable storage.
-- [architecture/network/README.md](architecture/network/README.md): network
-  ownership.
+- [architecture/network/README.md](architecture/network/README.md): network ownership.
 - [architecture/network/identity-rendering.md](architecture/network/identity-rendering.md):
   identity hydration.
 - [architecture/network/job-manager.md](architecture/network/job-manager.md):
@@ -95,26 +98,37 @@ for detailed contracts.
   shared relay reads.
 - [architecture/network/subscription-orchestration/README.md](architecture/network/subscription-orchestration/README.md):
   Demand, Lease, bootstrap/live orchestration.
-- [architecture/network/subscription-orchestration/bootstrap-live.md](architecture/network/subscription-orchestration/bootstrap-live.md):
-  bootstrap vs live-tail lifecycle.
+- [architecture/network/subscription-orchestration/demand-intent.md](architecture/network/subscription-orchestration/demand-intent.md):
+  intent shapes and owners.
+- [architecture/network/subscription-orchestration/home-integration.md](architecture/network/subscription-orchestration/home-integration.md):
+  Home integration.
+- [architecture/network/subscription-orchestration/ingress.md](architecture/network/subscription-orchestration/ingress.md):
+  ingress classification.
+- [architecture/network/subscription-orchestration/lease-key.md](architecture/network/subscription-orchestration/lease-key.md):
+  lease keys.
+- [architecture/network/subscription-orchestration/live-lease.md](architecture/network/subscription-orchestration/live-lease.md):
+  live leases.
+- [architecture/network/subscription-orchestration/metrics.md](architecture/network/subscription-orchestration/metrics.md):
+  orchestration counters.
+- `architecture/network/subscription-orchestration/notifications-profile-thread-integration.md`:
+  other feed surfaces.
+- [architecture/network/subscription-orchestration/owner-visibility.md](architecture/network/subscription-orchestration/owner-visibility.md):
+  owner visibility.
+- [architecture/network/subscription-orchestration/page-read-dedupe.md](architecture/network/subscription-orchestration/page-read-dedupe.md):
+  page read dedupe.
+- [architecture/network/subscription-orchestration/route-plan.md](architecture/network/subscription-orchestration/route-plan.md):
+  route planning.
+- [architecture/network/subscription-orchestration/tests.md](architecture/network/subscription-orchestration/tests.md):
+  verification gates.
 - [architecture/network/subscription-orchestration/compatibility.md](architecture/network/subscription-orchestration/compatibility.md):
   Demand merge rules.
-- [architecture/network/subscription-orchestration/demand.md](architecture/network/subscription-orchestration/demand.md):
-  Demand shape.
-- [architecture/network/subscription-orchestration/lease.md](architecture/network/subscription-orchestration/lease.md):
-  Lease refcount.
-- [architecture/network/subscription-orchestration/normalization.md](architecture/network/subscription-orchestration/normalization.md):
-  canonical filters.
-- [architecture/network/subscription-orchestration/observability.md](architecture/network/subscription-orchestration/observability.md):
-  orchestration counters.
 - [architecture/network/subscription-orchestration/routing-by-surface.md](architecture/network/subscription-orchestration/routing-by-surface.md):
   per-surface relay routes.
 - [architecture/network/subscription-orchestration/source-map.md](architecture/network/subscription-orchestration/source-map.md):
   implementation modules.
 - [architecture/network/system.md](architecture/network/system.md): app
   boundaries.
-- [architecture/runtimes/README.md](architecture/runtimes/README.md): tab
-  runtimes.
+- [architecture/runtimes/README.md](architecture/runtimes/README.md): tab runtimes.
 - [architecture/runtimes/global-runtime.md](architecture/runtimes/global-runtime.md):
   Global loading.
 - [architecture/runtimes/home-runtime.md](architecture/runtimes/home-runtime.md):

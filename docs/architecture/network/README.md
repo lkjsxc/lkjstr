@@ -15,16 +15,29 @@ and app boundaries.
 - [subscription-manager.md](subscription-manager.md): shared relay reads.
 - [subscription-orchestration/README.md](subscription-orchestration/README.md):
   Demand, Lease, bootstrap/live, routing, observability.
-- [subscription-orchestration/bootstrap-live.md](subscription-orchestration/bootstrap-live.md):
-  bootstrap vs live-tail lifecycle.
+- [subscription-orchestration/demand-intent.md](subscription-orchestration/demand-intent.md): intent shapes.
+- [subscription-orchestration/home-integration.md](subscription-orchestration/home-integration.md):
+  Home bootstrap, live, and paging.
+- [subscription-orchestration/ingress.md](subscription-orchestration/ingress.md):
+  live event classification.
+- [subscription-orchestration/lease-key.md](subscription-orchestration/lease-key.md):
+  wire-equivalent fingerprints.
+- [subscription-orchestration/live-lease.md](subscription-orchestration/live-lease.md):
+  lease refcount and visibility.
+- [subscription-orchestration/metrics.md](subscription-orchestration/metrics.md):
+  orchestration counters.
+- [subscription-orchestration/notifications-profile-thread-integration.md](subscription-orchestration/notifications-profile-thread-integration.md):
+  other feed surfaces.
+- [subscription-orchestration/owner-visibility.md](subscription-orchestration/owner-visibility.md):
+  hidden tab behavior.
+- [subscription-orchestration/page-read-dedupe.md](subscription-orchestration/page-read-dedupe.md):
+  semantic page keys.
+- [subscription-orchestration/route-plan.md](subscription-orchestration/route-plan.md):
+  relay route planning.
+- [subscription-orchestration/tests.md](subscription-orchestration/tests.md):
+  verification gates.
 - [subscription-orchestration/compatibility.md](subscription-orchestration/compatibility.md):
   Demand merge rules.
-- [subscription-orchestration/demand.md](subscription-orchestration/demand.md): Demand shape.
-- [subscription-orchestration/lease.md](subscription-orchestration/lease.md): Lease refcount.
-- [subscription-orchestration/normalization.md](subscription-orchestration/normalization.md):
-  canonical filters.
-- [subscription-orchestration/observability.md](subscription-orchestration/observability.md):
-  orchestration counters.
 - [subscription-orchestration/routing-by-surface.md](subscription-orchestration/routing-by-surface.md):
   per-surface relay routes.
 - [subscription-orchestration/source-map.md](subscription-orchestration/source-map.md):
