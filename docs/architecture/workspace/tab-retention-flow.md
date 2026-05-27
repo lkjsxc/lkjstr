@@ -10,13 +10,14 @@ backstop reload and missing-mount cases without live relay work on hidden tabs.
 
 When pane focus leaves tab `A` for tab `B`:
 
-1. `pane-scroll-retention.remember(A)` captures the primary scroll owner
+1. `tab-snapshot-coordinator.rememberScroll(A)` captures the primary scroll owner
    `scrollTop`, including `0`.
 2. `captureRuntimeSnapshot(A)` merges feed cursors, anchors, and tool fields
    from `tabRuntimeRegistry`.
-3. `persistTabSnapshot` writes IndexedDB `tabStates` for workspace reload.
-4. If `tabs.inactiveRetentionSeconds > 0`, `session-tab-snapshots.retain` stores
-   an in-memory copy (LRU cap `32`).
+3. The coordinator writes IndexedDB `tabStates` with key
+   `workspaceId + tabId`; `paneId` is stored only as `lastPaneId`.
+4. If `tabs.inactiveRetentionSeconds > 0`, the coordinator stores an in-memory
+   copy (LRU cap `32`).
 
 Tab `A` body stays mounted but hidden. Feed runtimes pause.
 
@@ -26,23 +27,25 @@ When tab `B` becomes active:
 
 1. Show tab `B` body (visibility and pointer events).
 2. When `B` stayed mounted, use live DOM scroll and fields first.
-3. Else session `take(B)` when present within TTL.
-4. Else `loadPersistedTabSnapshot` from IndexedDB.
-5. `bodyScroll.restoreSnapshot` and `restore(B)` apply tool `scrollTop` when
-   mount state was missing.
-6. Feed tabs restore virtua anchor + runtime snapshot via `restoreAnchor` and
+3. Else the workspace coordinator consumes the warm snapshot when present.
+4. Else it loads IndexedDB by `workspaceId + tabId`.
+5. The coordinator emits `TabSnapshotRestore { token, payload }`.
+6. Each mounted tab body receives that token once; after render, the parent calls
+   `consumeRestore` and stale tokens are ignored.
+7. Feed tabs restore virtua anchor + runtime snapshot via `restoreAnchor` and
    `restoreSnapshot` when mount state was missing.
-7. Active runtime and relay subscriptions resume from restored cursors; cache
+8. Active runtime and relay subscriptions resume from restored cursors; cache
    repopulates the window before network where the feed contract requires it.
 
 ## Per Tab Kind Fields
 
-| Kind family    | Session + IDB fields                                           |
-| -------------- | -------------------------------------------------------------- |
-| Feed tabs      | anchor id/offset, `scrollTop`, cursors, `hasOlder`, `hasNewer` |
-| Search         | query + feed fields via runtime registry                       |
-| Settings/tools | `scrollTop`, `fields` map                                      |
-| Tweet          | draft hash in `fields`                                         |
+| Kind family    | Session + IDB fields                                    |
+| -------------- | ------------------------------------------------------- |
+| Feed tabs      | anchor, `scrollTop`, cursors, flags, bounded event ids  |
+| Notifications  | feed fields plus bounded notification record ids        |
+| Search         | query + feed fields via runtime registry                |
+| Settings/tools | `scrollTop`, cheap `fields` map                         |
+| Tweet          | durable draft flush; no worker or diagnostics retention |
 
 Feed tabs register `registerTabRuntimeSnapshot` on mount so blur capture is
 complete even when the list scrolled after the last explicit scroll event.
@@ -60,11 +63,13 @@ capture a nested Notes scroller.
 ## Reload
 
 IndexedDB snapshots survive session TTL expiry and full page reload. Layout and
-tab metadata restore from the `workspaces` store independently.
+tab metadata restore from the `workspaces` store independently. Stale pane-keyed
+rows from older schemas are ignored and removed during workspace cleanup.
 
 ## Related
 
 - [tab-body-mount.md](tab-body-mount.md): mount and visibility contract.
+- [tab-snapshot-fields.md](tab-snapshot-fields.md): field and cleanup contract.
 - [tab-runtime.md](tab-runtime.md): lifecycle contract.
 - [storage.md](../data/storage.md): `tabStates` schema.
 - [tabs.md](../../product/workspace/tabs.md): product-visible behavior.

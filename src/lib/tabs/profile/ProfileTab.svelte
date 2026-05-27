@@ -114,7 +114,12 @@
 
   $effect(() => {
     const tabId = props.tabId;
-    return registerTabRuntimeSnapshot(tabId, () => feedRuntimeSnapshot(state));
+    return registerTabRuntimeSnapshot(tabId, () =>
+      feedRuntimeSnapshot({
+        ...state,
+        eventIds: state.posts.map((item) => item.event.id),
+      }),
+    );
   });
 
   function safeNprofile(pubkey: string, relays: readonly string[]): string {

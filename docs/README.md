@@ -2,299 +2,205 @@
 
 ## Purpose
 
-This tree is the implementation contract for lkjstr. Use
-[current-state.md](current-state.md) as the implemented-state summary, then
-follow the product, protocol, architecture, operations, and repository indexes
-for detailed contracts.
+This tree is the implementation contract for lkjstr. Start with
+[current-state.md](current-state.md), then follow directory READMEs for detailed
+contracts. Directory READMEs own detailed listings; this page is the recursive
+table of contents required by repository checks.
 
-## Current State
-
-- [current-state.md](current-state.md): implemented app state.
-
-## Architecture
-
-- [architecture/README.md](architecture/README.md): source ownership.
-- [architecture/backend/README.md](architecture/backend/README.md): browser-local backend services.
-- [architecture/backend/boundary.md](architecture/backend/boundary.md): local backend boundary.
-- [architecture/backend/cache-budget.md](architecture/backend/cache-budget.md): cache byte budget.
-- [architecture/backend/home-query-lifecycle.md](architecture/backend/home-query-lifecycle.md): shared Home queries.
-- [architecture/backend/query-registry.md](architecture/backend/query-registry.md): query ownership.
-- [architecture/backend/transport-contract.md](architecture/backend/transport-contract.md): local transport.
-- [architecture/feeds/README.md](architecture/feeds/README.md): feed sources and runtime ownership.
-- [architecture/feeds/invariants/README.md](architecture/feeds/invariants/README.md): invariants index.
-- [architecture/feeds/invariants/event-ordering.md](architecture/feeds/invariants/event-ordering.md): sort keys.
-- [architecture/feeds/invariants/filter-safety.md](architecture/feeds/invariants/filter-safety.md): filter safety.
-- [architecture/feeds/invariants/paging-cursors.md](architecture/feeds/invariants/paging-cursors.md): paging cursors.
-- [architecture/feeds/sources/README.md](architecture/feeds/sources/README.md): source filters index.
-- [architecture/feeds/sources/home.md](architecture/feeds/sources/home.md): Home filters.
-- [architecture/feeds/sources/global.md](architecture/feeds/sources/global.md): Global filters.
-- [architecture/feeds/sources/notifications.md](architecture/feeds/sources/notifications.md): Notifications filters.
-- [architecture/feeds/sources/profile.md](architecture/feeds/sources/profile.md): Profile filters.
-- [architecture/feeds/runtime/README.md](architecture/feeds/runtime/README.md): runtime index.
-- [architecture/feeds/runtime/merge-reducer.md](architecture/feeds/runtime/merge-reducer.md): merge reducer.
-- [architecture/feeds/runtime/multi-tab-ownership.md](architecture/feeds/runtime/multi-tab-ownership.md): tab ownership.
-- [architecture/feeds/runtime/per-runtime-cursors.md](architecture/feeds/runtime/per-runtime-cursors.md): per-tab cursors.
-- [architecture/feeds/runtime/relay-incomplete-windows.md](architecture/feeds/runtime/relay-incomplete-windows.md): incomplete windows.
-- [architecture/feeds/orchestration-bridge.md](architecture/feeds/orchestration-bridge.md): orchestration bridge.
-- [architecture/data/README.md](architecture/data/README.md): storage and feed memory.
-- [architecture/data/bounded-memory.md](architecture/data/bounded-memory.md):
-  bounded memory and leak cleanup.
-- [architecture/data/memory-prioritization.md](architecture/data/memory-prioritization.md):
-  durable data and runtime retention priority.
-- [architecture/data/resource-ownership.md](architecture/data/resource-ownership.md):
-  resource ownership table.
-- [architecture/data/event-tree.md](architecture/data/event-tree.md): event row
-  tree model.
-- [architecture/data/event-surface-paging.md](architecture/data/event-surface-paging.md):
-  shared feed paging and status rows.
-- [architecture/data/feed-surface.md](architecture/data/feed-surface.md): feed
-  list, prefetch, and staged rows.
-- [architecture/data/feed-surface/README.md](architecture/data/feed-surface/README.md):
-  feed surface index.
-- [architecture/data/feed-surface/near-end.md](architecture/data/feed-surface/near-end.md):
-  near-end prefetch.
-- [architecture/data/feed-surface/older-load-mode.md](architecture/data/feed-surface/older-load-mode.md): older load mode.
-- [architecture/data/feed-surface/footer-phase.md](architecture/data/feed-surface/footer-phase.md):
-  footer phase reducer.
-- [architecture/data/feed-surface/staged-pipeline.md](architecture/data/feed-surface/staged-pipeline.md):
-  staged row pipeline.
-- [architecture/data/feed-surface/surface-matrix.md](architecture/data/feed-surface/surface-matrix.md):
-  per-surface list matrix.
-- [architecture/data/feed-surface/feed-scroll-surface.md](architecture/data/feed-surface/feed-scroll-surface.md):
-  shared feed scroll shell.
-- [architecture/data/feed-surface/feed-row-chrome.md](architecture/data/feed-surface/feed-row-chrome.md):
-  list-owned row separators.
-- [architecture/data/feed-memory.md](architecture/data/feed-memory.md): feed
-  cache and relay windows.
-- [architecture/data/retention/README.md](architecture/data/retention/README.md):
-  score-based event retention.
-- [architecture/data/retention/compaction.md](architecture/data/retention/compaction.md):
-  compaction queries.
-- [architecture/data/retention/index-shape.md](architecture/data/retention/index-shape.md):
-  priority index fields.
-- [architecture/data/retention/score-policy.md](architecture/data/retention/score-policy.md):
-  score update rules.
-- [architecture/data/heap-retention.md](architecture/data/heap-retention.md):
-  observed heap symptoms and investigation strategy.
-- [architecture/data/local-secret-security.md](architecture/data/local-secret-security.md):
-  local secret security boundary.
-- [architecture/data/relay-pages.md](architecture/data/relay-pages.md): relay
-  page ordering and provenance.
-- [architecture/data/shared-storage.md](architecture/data/shared-storage.md):
-  shared event storage.
-- [architecture/data/storage.md](architecture/data/storage.md): durable storage.
-- [architecture/network/README.md](architecture/network/README.md): network ownership.
-- [architecture/network/identity-rendering.md](architecture/network/identity-rendering.md):
-  identity hydration.
-- [architecture/network/job-manager.md](architecture/network/job-manager.md):
-  background jobs.
-- [architecture/network/relay-pool.md](architecture/network/relay-pool.md):
-  WebSocket relay clients.
-- [architecture/network/relay-routing.md](architecture/network/relay-routing.md):
-  protocol-derived read routing.
-- [architecture/network/settings-store.md](architecture/network/settings-store.md):
-  settings storage.
-- [architecture/network/subscription-manager.md](architecture/network/subscription-manager.md):
-  shared relay reads.
-- [architecture/network/subscription-orchestration/README.md](architecture/network/subscription-orchestration/README.md):
-  Demand, Lease, bootstrap/live orchestration.
-- [architecture/network/subscription-orchestration/demand-intent.md](architecture/network/subscription-orchestration/demand-intent.md):
-  intent shapes and owners.
-- [architecture/network/subscription-orchestration/home-integration.md](architecture/network/subscription-orchestration/home-integration.md):
-  Home integration.
-- [architecture/network/subscription-orchestration/ingress.md](architecture/network/subscription-orchestration/ingress.md):
-  ingress classification.
-- [architecture/network/subscription-orchestration/lease-key.md](architecture/network/subscription-orchestration/lease-key.md):
-  lease keys.
-- [architecture/network/subscription-orchestration/live-lease.md](architecture/network/subscription-orchestration/live-lease.md):
-  live leases.
-- [architecture/network/subscription-orchestration/metrics.md](architecture/network/subscription-orchestration/metrics.md):
-  orchestration counters.
-- `architecture/network/subscription-orchestration/notifications-profile-thread-integration.md`:
-  other feed surfaces.
-- [architecture/network/subscription-orchestration/owner-visibility.md](architecture/network/subscription-orchestration/owner-visibility.md):
-  owner visibility.
-- [architecture/network/subscription-orchestration/page-read-dedupe.md](architecture/network/subscription-orchestration/page-read-dedupe.md):
-  page read dedupe.
-- [architecture/network/subscription-orchestration/route-plan.md](architecture/network/subscription-orchestration/route-plan.md):
-  route planning.
-- [architecture/network/subscription-orchestration/tests.md](architecture/network/subscription-orchestration/tests.md):
-  verification gates.
-- [architecture/network/subscription-orchestration/compatibility.md](architecture/network/subscription-orchestration/compatibility.md):
-  Demand merge rules.
-- [architecture/network/subscription-orchestration/routing-by-surface.md](architecture/network/subscription-orchestration/routing-by-surface.md):
-  per-surface relay routes.
-- [architecture/network/subscription-orchestration/source-map.md](architecture/network/subscription-orchestration/source-map.md):
-  implementation modules.
-- [architecture/network/system.md](architecture/network/system.md): app
-  boundaries.
-- [architecture/runtimes/README.md](architecture/runtimes/README.md): tab runtimes.
-- [architecture/runtimes/global-runtime.md](architecture/runtimes/global-runtime.md):
-  Global loading.
-- [architecture/runtimes/home-runtime.md](architecture/runtimes/home-runtime.md):
-  Home loading.
-- [architecture/runtimes/notifications-runtime.md](architecture/runtimes/notifications-runtime.md):
-  Notifications loading.
-- [architecture/runtimes/profile-runtime.md](architecture/runtimes/profile-runtime.md):
-  Profile loading.
-- [architecture/runtimes/query-runtime.md](architecture/runtimes/query-runtime.md):
-  query contracts.
-- [architecture/runtimes/thread-runtime.md](architecture/runtimes/thread-runtime.md):
-  Thread loading.
-- [architecture/runtimes/tweet-runtime.md](architecture/runtimes/tweet-runtime.md):
-  Tweet publishing.
-- [architecture/workspace/README.md](architecture/workspace/README.md):
-  workspace modules.
-- [architecture/workspace/resize.md](architecture/workspace/resize.md): resizing.
-- [architecture/workspace/pane-chrome-scope.md](architecture/workspace/pane-chrome-scope.md):
-  pane header chrome for drag scope.
-- [architecture/workspace/pane-drop-target.md](architecture/workspace/pane-drop-target.md):
-  pane-body drop resolver.
-- [architecture/workspace/tab-body-mount.md](architecture/workspace/tab-body-mount.md):
-  hidden-mount tab bodies per pane.
-- [architecture/workspace/tab-retention-flow.md](architecture/workspace/tab-retention-flow.md):
-  tab blur/focus snapshot pipeline.
-- [architecture/workspace/scroll-layout.md](architecture/workspace/scroll-layout.md):
-  scrollbar-safe scrolling surfaces.
-- [architecture/workspace/scroll-surface-audit.md](architecture/workspace/scroll-surface-audit.md):
-  per-surface scroll checklist.
-- [architecture/workspace/tab-shell-layout.md](architecture/workspace/tab-shell-layout.md):
-  feed-tab vs form-tab scroll ownership.
-- [architecture/workspace/tile-overlays.md](architecture/workspace/tile-overlays.md):
-  tile-scoped overlays.
-- [architecture/workspace/tab-dragging.md](architecture/workspace/tab-dragging.md):
-  tab drag zones and feedback.
-- [architecture/workspace/tab-strip-gestures.md](architecture/workspace/tab-strip-gestures.md):
-  tab rail gestures.
-- [architecture/workspace/tab-runtime.md](architecture/workspace/tab-runtime.md):
-  tab lifecycle.
-- [architecture/workspace/theme.md](architecture/workspace/theme.md): theme.
-- [architecture/workspace/tile-menu.md](architecture/workspace/tile-menu.md):
-  tile menus.
-- [architecture/workspace/ui-composition.md](architecture/workspace/ui-composition.md):
-  UI ownership.
-- [architecture/workspace/workspace-layout-tree.md](architecture/workspace/workspace-layout-tree.md):
-  layout tree.
-
-## Decisions
-
-- [decisions/README.md](decisions/README.md): durable decisions.
-- [decisions/browser-first.md](decisions/browser-first.md): browser-first
-  runtime.
-- [decisions/protocol-kernel.md](decisions/protocol-kernel.md): protocol
-  boundary.
-- [decisions/relay-ownership.md](decisions/relay-ownership.md): user-owned
-  relays.
-
-## Operations
-
-- [operations/README.md](operations/README.md): verification and safety.
-- [operations/ci.md](operations/ci.md): continuous integration.
-- [operations/cloudflare-workers.md](operations/cloudflare-workers.md):
-  Cloudflare Workers dry-run target.
-- [operations/data-safety.md](operations/data-safety.md): local data safety.
-- [operations/diagnostics.md](operations/diagnostics.md): logs and diagnostics.
-- [operations/docker.md](operations/docker.md): Docker checks.
-- [operations/memory-verification.md](operations/memory-verification.md):
-  memory verification workflow.
-- [operations/readiness.md](operations/readiness.md): handoff checks.
-- [operations/testing-ownership.md](operations/testing-ownership.md): test
-  ownership.
-- [operations/timeline-notification-regression-investigation.md](operations/timeline-notification-regression-investigation.md): feed regression notes.
-- [operations/verification.md](operations/verification.md): local
-  verification.
-
-## Product
-
-- [product/README.md](product/README.md): user-facing workspace contract.
-- [product/doc-impl-audit.md](product/doc-impl-audit.md): documentation vs
-  implementation alignment matrix.
-- [product/backlog.md](product/backlog.md): practical backlog with test
-  strategies.
-- [product/feeds/README.md](product/feeds/README.md): reading surfaces.
-- [product/feeds/global.md](product/feeds/global.md): Global feed.
-- [product/feeds/home.md](product/feeds/home.md): Home feed.
-- [product/feeds/notifications.md](product/feeds/notifications.md):
-  Notifications feed.
-- [product/feeds/profiles.md](product/feeds/profiles.md): Profile feed.
-- [product/feeds/threads.md](product/feeds/threads.md): Thread feed.
-- [product/tools/README.md](product/tools/README.md): tools.
-- [product/tools/accounts.md](product/tools/accounts.md): accounts.
-- [product/tools/author-context.md](product/tools/author-context.md): Author
-  Context.
-- [product/tools/cache.md](product/tools/cache.md): cache.
-- [product/tools/custom-request.md](product/tools/custom-request.md): Custom
-  Request.
-- [product/tools/event-actions.md](product/tools/event-actions.md): event
-  action writes.
-- [product/tools/log.md](product/tools/log.md): current-session diagnostics.
-- [product/tools/mine-npub.md](product/tools/mine-npub.md): vanity local
-  signing key generation.
-- [product/tools/profile-edit.md](product/tools/profile-edit.md): active-account
-  metadata writes.
-- [product/tools/relay-management.md](product/tools/relay-management.md):
-  relay management.
-- [product/tools/search.md](product/tools/search.md): Search.
-- [product/tools/settings.md](product/tools/settings.md): settings.
-- [product/tools/stats.md](product/tools/stats.md): Stats.
-- [product/tools/tweet.md](product/tools/tweet.md): Tweet tool.
-- [product/tools/upload-settings.md](product/tools/upload-settings.md): guided
-  media upload settings.
-- [product/tools/welcome.md](product/tools/welcome.md): Welcome.
-- [product/workspace/README.md](product/workspace/README.md): workspace
-  behavior.
-- [product/workspace/panes.md](product/workspace/panes.md): panes.
-- [product/workspace/scope.md](product/workspace/scope.md): workspace scope.
-- [product/workspace/tabs.md](product/workspace/tabs.md): tabs.
-- [product/workspace/workflows.md](product/workspace/workflows.md): workflows.
-- [product/workspace/workspace.md](product/workspace/workspace.md): workspace.
-
-## Protocol
-
-- [protocol/README.md](protocol/README.md): Nostr contracts.
-- [protocol/custom-emoji.md](protocol/custom-emoji.md): NIP-30 custom emoji
-  parsing, rendering, and publishing rules.
-- [protocol/default-relays.md](protocol/default-relays.md): seeded relays.
-- [protocol/event-actions.md](protocol/event-actions.md): event action writes.
-- [protocol/events.md](protocol/events.md): events.
-- [protocol/kernel.md](protocol/kernel.md): protocol kernel.
-- [protocol/media-upload.md](protocol/media-upload.md): NIP-96 upload and
-  NIP-98 auth.
-- [protocol/nip-support.md](protocol/nip-support.md): NIP support.
-- [protocol/relays.md](protocol/relays.md): relays.
-- [protocol/zaps.md](protocol/zaps.md): NIP-57 invoice handoff.
-
-## Repository
-
-- [repository/README.md](repository/README.md): layout and workflow rules.
-- [repository/commit-protocol.md](repository/commit-protocol.md): commit message rules.
-- [repository/documentation-standards.md](repository/documentation-standards.md):
-  documentation standards.
-- [repository/functional-style.md](repository/functional-style.md): source
-  functional style.
-- [repository/layout.md](repository/layout.md): repository layout.
-- [repository/workflow.md](repository/workflow.md): workflow.
-
-## Research
-
-- [research/README.md](research/README.md): background notes.
-- [research/browser-storage.md](research/browser-storage.md): browser storage.
-- [research/nostr-client-surfaces.md](research/nostr-client-surfaces.md):
-  client surfaces.
-- [research/open-questions.md](research/open-questions.md): open questions.
-
-## Vision
-
-- [vision/README.md](vision/README.md): long-term scope.
-- [vision/north-star.md](vision/north-star.md): north star.
-- [vision/principles.md](vision/principles.md): principles.
-- [vision/scope.md](vision/scope.md): scope.
-
-## Canonical Contracts
+## Root Contracts
 
 - [current-state.md](current-state.md): implemented-state summary.
-- [product/README.md](product/README.md): user-facing workspace behavior.
-- [protocol/README.md](protocol/README.md): Nostr and relay protocol behavior.
-- [architecture/README.md](architecture/README.md): runtime and data ownership.
+- [product/README.md](product/README.md): user-facing behavior.
+- [protocol/README.md](protocol/README.md): Nostr and relay behavior.
+- [architecture/README.md](architecture/README.md): source and runtime ownership.
 - [operations/README.md](operations/README.md): verification and data safety.
-- [repository/README.md](repository/README.md): repository rules.
+- [repository/README.md](repository/README.md): repository workflow rules.
+
+## Directory Indexes
+
+- [architecture/backend/README.md](architecture/backend/README.md): local backend.
+- [architecture/data/README.md](architecture/data/README.md): storage and memory.
+- [architecture/data/feed-surface/README.md](architecture/data/feed-surface/README.md): feed surfaces.
+- [architecture/data/retention/README.md](architecture/data/retention/README.md): event retention.
+- [architecture/feeds/README.md](architecture/feeds/README.md): feed contracts.
+- [architecture/network/README.md](architecture/network/README.md): relay ownership.
+- [architecture/network/subscription-orchestration/README.md](architecture/network/subscription-orchestration/README.md): orchestration.
+- [architecture/runtimes/README.md](architecture/runtimes/README.md): runtimes.
+- [architecture/workspace/README.md](architecture/workspace/README.md): workspace.
+- [product/feeds/README.md](product/feeds/README.md): reading surfaces.
+- [product/tools/README.md](product/tools/README.md): tools.
+- [product/workspace/README.md](product/workspace/README.md): workspace behavior.
+- [decisions/README.md](decisions/README.md): decisions.
+- [research/README.md](research/README.md): research.
+- [vision/README.md](vision/README.md): vision.
+
+## Complete File Index
+
+- [file](architecture/README.md)
+- [file](architecture/backend/README.md)
+- [file](architecture/backend/boundary.md)
+- [file](architecture/backend/cache-budget.md)
+- [file](architecture/backend/home-query-lifecycle.md)
+- [file](architecture/backend/query-registry.md)
+- [file](architecture/backend/transport-contract.md)
+- [file](architecture/data/README.md)
+- [file](architecture/data/bounded-memory.md)
+- [file](architecture/data/event-surface-paging.md)
+- [file](architecture/data/event-tree.md)
+- [file](architecture/data/feed-memory.md)
+- [file](architecture/data/feed-surface.md)
+- [file](architecture/data/feed-surface/README.md)
+- [file](architecture/data/feed-surface/feed-row-chrome.md)
+- [file](architecture/data/feed-surface/feed-scroll-surface.md)
+- [file](architecture/data/feed-surface/footer-phase.md)
+- [file](architecture/data/feed-surface/near-end.md)
+- [file](architecture/data/feed-surface/older-load-mode.md)
+- [file](architecture/data/feed-surface/staged-pipeline.md)
+- [file](architecture/data/feed-surface/surface-matrix.md)
+- [file](architecture/data/heap-retention.md)
+- [file](architecture/data/local-secret-security.md)
+- [file](architecture/data/memory-prioritization.md)
+- [file](architecture/data/relay-pages.md)
+- [file](architecture/data/resource-ownership.md)
+- [file](architecture/data/retention/README.md)
+- [file](architecture/data/retention/compaction.md)
+- [file](architecture/data/retention/index-shape.md)
+- [file](architecture/data/retention/score-policy.md)
+- [file](architecture/data/shared-storage.md)
+- [file](architecture/data/storage.md)
+- [file](architecture/feeds/README.md)
+- [file](architecture/feeds/invariants/README.md)
+- [file](architecture/feeds/invariants/event-ordering.md)
+- [file](architecture/feeds/invariants/filter-safety.md)
+- [file](architecture/feeds/invariants/paging-cursors.md)
+- [file](architecture/feeds/orchestration-bridge.md)
+- [file](architecture/feeds/runtime/README.md)
+- [file](architecture/feeds/runtime/merge-reducer.md)
+- [file](architecture/feeds/runtime/multi-tab-ownership.md)
+- [file](architecture/feeds/runtime/per-runtime-cursors.md)
+- [file](architecture/feeds/runtime/relay-incomplete-windows.md)
+- [file](architecture/feeds/sources/README.md)
+- [file](architecture/feeds/sources/global.md)
+- [file](architecture/feeds/sources/home.md)
+- [file](architecture/feeds/sources/notifications.md)
+- [file](architecture/feeds/sources/profile.md)
+- [file](architecture/network/README.md)
+- [file](architecture/network/identity-rendering.md)
+- [file](architecture/network/job-manager.md)
+- [file](architecture/network/relay-pool.md)
+- [file](architecture/network/relay-routing.md)
+- [file](architecture/network/settings-store.md)
+- [file](architecture/network/subscription-manager.md)
+- [file](architecture/network/subscription-orchestration/README.md)
+- [file](architecture/network/subscription-orchestration/compatibility.md)
+- [file](architecture/network/subscription-orchestration/demand-intent.md)
+- [file](architecture/network/subscription-orchestration/home-integration.md)
+- [file](architecture/network/subscription-orchestration/ingress.md)
+- [file](architecture/network/subscription-orchestration/lease-key.md)
+- [file](architecture/network/subscription-orchestration/live-lease.md)
+- [file](architecture/network/subscription-orchestration/metrics.md)
+- [file](architecture/network/subscription-orchestration/notifications-profile-thread-integration.md)
+- [file](architecture/network/subscription-orchestration/owner-visibility.md)
+- [file](architecture/network/subscription-orchestration/page-read-dedupe.md)
+- [file](architecture/network/subscription-orchestration/route-plan.md)
+- [file](architecture/network/subscription-orchestration/routing-by-surface.md)
+- [file](architecture/network/subscription-orchestration/source-map.md)
+- [file](architecture/network/subscription-orchestration/tests.md)
+- [file](architecture/network/system.md)
+- [file](architecture/runtimes/README.md)
+- [file](architecture/runtimes/global-runtime.md)
+- [file](architecture/runtimes/home-runtime.md)
+- [file](architecture/runtimes/notifications-runtime.md)
+- [file](architecture/runtimes/profile-runtime.md)
+- [file](architecture/runtimes/query-runtime.md)
+- [file](architecture/runtimes/thread-runtime.md)
+- [file](architecture/runtimes/tweet-runtime.md)
+- [file](architecture/workspace/README.md)
+- [file](architecture/workspace/pane-chrome-scope.md)
+- [file](architecture/workspace/pane-drop-target.md)
+- [file](architecture/workspace/resize.md)
+- [file](architecture/workspace/scroll-layout.md)
+- [file](architecture/workspace/scroll-surface-audit.md)
+- [file](architecture/workspace/tab-body-mount.md)
+- [file](architecture/workspace/tab-dragging.md)
+- [file](architecture/workspace/tab-retention-flow.md)
+- [file](architecture/workspace/tab-runtime.md)
+- [file](architecture/workspace/tab-shell-layout.md)
+- [file](architecture/workspace/tab-snapshot-fields.md)
+- [file](architecture/workspace/tab-strip-gestures.md)
+- [file](architecture/workspace/theme.md)
+- [file](architecture/workspace/tile-menu.md)
+- [file](architecture/workspace/tile-overlays.md)
+- [file](architecture/workspace/ui-composition.md)
+- [file](architecture/workspace/workspace-layout-tree.md)
+- [file](current-state.md)
+- [file](decisions/README.md)
+- [file](decisions/browser-first.md)
+- [file](decisions/protocol-kernel.md)
+- [file](decisions/relay-ownership.md)
+- [file](operations/README.md)
+- [file](operations/ci.md)
+- [file](operations/cloudflare-workers.md)
+- [file](operations/data-safety.md)
+- [file](operations/diagnostics.md)
+- [file](operations/docker.md)
+- [file](operations/memory-verification.md)
+- [file](operations/readiness.md)
+- [file](operations/testing-ownership.md)
+- [file](operations/timeline-notification-regression-investigation.md)
+- [file](operations/verification.md)
+- [file](product/README.md)
+- [file](product/backlog.md)
+- [file](product/doc-impl-audit.md)
+- [file](product/feeds/README.md)
+- [file](product/feeds/global.md)
+- [file](product/feeds/home.md)
+- [file](product/feeds/notifications.md)
+- [file](product/feeds/profiles.md)
+- [file](product/feeds/threads.md)
+- [file](product/tools/README.md)
+- [file](product/tools/accounts.md)
+- [file](product/tools/author-context.md)
+- [file](product/tools/cache.md)
+- [file](product/tools/custom-request.md)
+- [file](product/tools/event-actions.md)
+- [file](product/tools/log.md)
+- [file](product/tools/mine-npub.md)
+- [file](product/tools/profile-edit.md)
+- [file](product/tools/relay-management.md)
+- [file](product/tools/search.md)
+- [file](product/tools/settings.md)
+- [file](product/tools/stats.md)
+- [file](product/tools/tweet.md)
+- [file](product/tools/upload-settings.md)
+- [file](product/tools/welcome.md)
+- [file](product/workspace/README.md)
+- [file](product/workspace/panes.md)
+- [file](product/workspace/scope.md)
+- [file](product/workspace/tabs.md)
+- [file](product/workspace/workflows.md)
+- [file](product/workspace/workspace.md)
+- [file](protocol/README.md)
+- [file](protocol/custom-emoji.md)
+- [file](protocol/default-relays.md)
+- [file](protocol/event-actions.md)
+- [file](protocol/events.md)
+- [file](protocol/kernel.md)
+- [file](protocol/media-upload.md)
+- [file](protocol/nip-support.md)
+- [file](protocol/relays.md)
+- [file](protocol/zaps.md)
+- [file](repository/README.md)
+- [file](repository/commit-protocol.md)
+- [file](repository/documentation-standards.md)
+- [file](repository/functional-style.md)
+- [file](repository/layout.md)
+- [file](repository/workflow.md)
+- [file](research/README.md)
+- [file](research/browser-storage.md)
+- [file](research/nostr-client-surfaces.md)
+- [file](research/open-questions.md)
+- [file](vision/README.md)
+- [file](vision/north-star.md)
+- [file](vision/principles.md)
+- [file](vision/scope.md)

@@ -12,10 +12,13 @@
   import { pageIntentSemanticKey } from '$lib/relays/orchestration/page-reads';
   import { timelineRelays } from '$lib/timeline/timeline-subscription';
   import { loadTimelineProfiles } from '$lib/timeline/timeline-profiles';
+  import { registerTabRuntimeSnapshot } from '$lib/workspace/tab-runtime-registry';
+  import type { TabSnapshotPayload } from '$lib/workspace/tab-snapshot';
 
   type Props = {
     tabId: string;
     restoreAnchor?: { readonly eventId: string; readonly offset: number };
+    restoreSnapshot?: TabSnapshotPayload;
     relaySets: readonly RelaySet[];
     openProfile: (pubkey: string) => void;
     openThread: (eventId: string) => void;
@@ -32,6 +35,20 @@
   let requestId = 0;
   let destroyed = false;
   const subscriptions = sharedSubscriptionOrchestrator;
+
+  $effect(() => {
+    const saved = props.restoreSnapshot;
+    if (saved?.kind !== 'tool') return;
+    input = saved.fields?.customRequestInput ?? input;
+    ran = saved.fields?.customRequestRan === 'true';
+  });
+
+  $effect(() =>
+    registerTabRuntimeSnapshot(props.tabId, () => ({
+      kind: 'tool',
+      fields: { customRequestInput: input, customRequestRan: String(ran) },
+    })),
+  );
 
   onDestroy(() => {
     destroyed = true;

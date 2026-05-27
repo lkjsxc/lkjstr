@@ -6,6 +6,8 @@ export type FeedRuntimeSnapshotSource = {
   readonly newestCursor?: FeedCursorPoint;
   readonly hasOlder?: boolean;
   readonly hasNewer?: boolean;
+  readonly eventIds?: readonly string[];
+  readonly notificationRecordIds?: readonly string[];
 };
 
 export function feedRuntimeSnapshot(
@@ -17,5 +19,7 @@ export function feedRuntimeSnapshot(
     newestCursor: state.newestCursor,
     hasOlder: state.hasOlder,
     hasNewer: state.hasNewer,
+    eventIds: state.eventIds?.slice(0, 200),
+    notificationRecordIds: state.notificationRecordIds?.slice(0, 200),
   };
 }

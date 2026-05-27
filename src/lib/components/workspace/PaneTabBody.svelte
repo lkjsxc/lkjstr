@@ -103,6 +103,7 @@
   <CustomRequestTab
     tabId={props.tab.id}
     restoreAnchor={props.restoreAnchor}
+    restoreSnapshot={props.restoreSnapshot}
     relaySets={props.relaySets}
     openProfile={(pubkey) => props.openProfile(props.paneId, pubkey)}
     openThread={(eventId) => props.openThread(props.paneId, eventId)}
@@ -166,6 +167,7 @@
   <PaneTabBodyTools
     tab={props.tab}
     visible={props.visible}
+    restoreSnapshot={props.restoreSnapshot}
     restoreScrollTop={props.restoreScrollTop}
     accounts={props.accounts}
     activeAccount={props.activeAccount}

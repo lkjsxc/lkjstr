@@ -3,7 +3,7 @@
   import type { RelaySet } from '$lib/relays/relay-store';
   import type { TabGroup } from '$lib/workspace/tab-group';
   import type { TabKind, WorkspaceTab } from '$lib/workspace/tab';
-  import type { TabSnapshotPayload } from '$lib/workspace/tab-snapshot';
+  import type { TabSnapshotRestore } from '$lib/workspace/tab-snapshot';
   import { feedAnchorFromPayload } from '$lib/workspace/tab-snapshot-persist';
   import PaneTabBody from './PaneTabBody.svelte';
 
@@ -11,7 +11,7 @@
     group: TabGroup;
     tabs: Record<string, WorkspaceTab>;
     paneId: string;
-    restoreByTabId: Record<string, TabSnapshotPayload>;
+    restoreByTabId: Record<string, TabSnapshotRestore>;
     accounts: Account[];
     activeAccount?: Account;
     relaySets: RelaySet[];
@@ -35,6 +35,7 @@
       pubkey: string,
     ) => void;
     openTool: (paneId: string, kind: TabKind) => void;
+    consumeRestore: (tabId: string, restore?: TabSnapshotRestore) => void;
   };
 
   let {
@@ -57,7 +58,27 @@
     openThread,
     openAuthorContext,
     openTool,
+    consumeRestore,
   }: Props = $props();
+
+  function consumeOnMount(
+    _node: HTMLElement,
+    input: { tabId: string; restore?: TabSnapshotRestore },
+  ) {
+    let lastToken = '';
+    const consume = () => {
+      if (!input.restore || input.restore.token === lastToken) return;
+      lastToken = input.restore.token;
+      consumeRestore(input.tabId, input.restore);
+    };
+    queueMicrotask(consume);
+    return {
+      update: (next: typeof input) => {
+        input = next;
+        queueMicrotask(consume);
+      },
+    };
+  }
 </script>
 
 {#each group.tabIds as tabId (tabId)}
@@ -70,14 +91,15 @@
       data-active-tab={isActive}
       aria-hidden={!isActive}
       use:trackBody={tabId}
+      use:consumeOnMount={{ tabId, restore: tabRestore }}
     >
       <PaneTabBody
         {tab}
         visible={isActive}
         {paneId}
-        restoreAnchor={feedAnchorFromPayload(tabRestore)}
-        restoreSnapshot={tabRestore}
-        restoreScrollTop={tabRestore?.scrollTop}
+        restoreAnchor={feedAnchorFromPayload(tabRestore?.payload)}
+        restoreSnapshot={tabRestore?.payload}
+        restoreScrollTop={tabRestore?.payload.scrollTop}
         {accounts}
         {activeAccount}
         {relaySets}

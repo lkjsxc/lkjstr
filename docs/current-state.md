@@ -58,10 +58,15 @@ linked product, protocol, architecture, and operations pages.
 - Stats and `__lkjstrMemoryDebug()` expose orchestration demand, lease, and
   event intake counters.
 - Inactive workspace tabs keep hidden mounted bodies; feed runtimes release live
-  Demands while retaining bounded windows and session snapshots.
-  Session snapshots (up to `32` warm tabs) and IndexedDB `tabStates` backstop
-  reload and missing-mount restore for scroll anchors, feed cursors,
-  `hasOlder`/`hasNewer`, and tool fields.
+  Demands while retaining bounded windows.
+- Tab snapshots are owned by `workspaceId + tabId`; pane id is only last-placement
+  metadata for capture. The workspace snapshot coordinator owns scroll owners,
+  runtime snapshots, one-shot restore tokens, warm LRU snapshots (cap `32`), and
+  IndexedDB `tabStates` reload restore.
+- Durable snapshots store scroll anchors, feed cursors, `hasOlder`/`hasNewer`,
+  bounded event or notification ids, and recoverable tool fields. They never
+  store full events, profiles, relay diagnostics, active workers, or unbounded
+  arrays.
 - Feed surfaces share `IntersectionObserver` near-end sentinels with scroll
   fallback, `feedPagingPhase` footer semantics, speculative older pages, and
   staged row shells on Home, Global, Profile, Thread, and Notifications.

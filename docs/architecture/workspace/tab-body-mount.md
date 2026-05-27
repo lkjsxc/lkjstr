@@ -26,12 +26,13 @@ active tab receives input and live relay work.
 
 ## Blur and Focus
 
-- Blur still runs the retention pipeline: scroll remember, runtime snapshot,
-  IndexedDB `tabStates`, and optional session LRU.
+- Blur still runs the workspace snapshot coordinator: scroll remember, runtime
+  snapshot, IndexedDB `tabStates`, and optional warm LRU.
 - Focus shows the hidden body immediately. Live DOM scroll and form state win
   over snapshots when the body stayed mounted.
-- Session `take` and IndexedDB `load` apply when the body was not mounted (reload,
-  first open after recovery, or tab inserted after startup).
+- Warm snapshot and IndexedDB `load` apply when the body was not mounted (reload,
+  first open after recovery, or tab inserted after startup). Delivery is a
+  one-shot restore token owned by `workspaceId + tabId`.
 
 ## Session Retention
 

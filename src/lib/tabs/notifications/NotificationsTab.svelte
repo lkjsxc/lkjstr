@@ -130,7 +130,11 @@
   $effect(() => {
     const tabId = props.tabId;
     return registerTabRuntimeSnapshot(tabId, () =>
-      feedRuntimeSnapshot(viewState),
+      feedRuntimeSnapshot({
+        ...viewState,
+        eventIds: viewState.items.map((item) => item.event.id),
+        notificationRecordIds: viewState.records.map((record) => record.id),
+      }),
     );
   });
 

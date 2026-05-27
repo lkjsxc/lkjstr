@@ -46,7 +46,6 @@ export async function syncPaneTabFocus(args: {
     } else {
       const payload = await loadPersistedTabSnapshot(
         args.workspaceId,
-        args.paneId,
         activeId,
       );
       if (payload && args.active?.id === activeId) {

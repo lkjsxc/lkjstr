@@ -21,6 +21,9 @@ export function mergeTabSnapshotPayload(
       hasOlder: feedPatch.hasOlder ?? base.hasOlder,
       hasNewer: feedPatch.hasNewer ?? base.hasNewer,
       filterState: { ...base.filterState, ...feedPatch.filterState },
+      eventIds: feedPatch.eventIds ?? base.eventIds,
+      notificationRecordIds:
+        feedPatch.notificationRecordIds ?? base.notificationRecordIds,
       kind: 'feed',
     };
   }

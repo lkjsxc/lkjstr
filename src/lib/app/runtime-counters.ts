@@ -41,6 +41,11 @@ export type RuntimeCounterKey =
   | 'active-dexie-transactions'
   | 'active-tab-runtimes'
   | 'closed-tab-snapshots'
+  | 'tab-snapshot-durable-save'
+  | 'tab-snapshot-durable-load'
+  | 'tab-snapshot-restore-consume'
+  | 'tab-snapshot-stale-restore-ignore'
+  | 'tab-snapshot-cleanup'
   | 'feed-runtime-window-size'
   | 'relay-diagnostic-summary-count'
   | 'profile-summary-cache-count'
@@ -89,6 +94,11 @@ const runtimeCounterKeys = new Set<RuntimeCounterKey>([
   'active-dexie-transactions',
   'active-tab-runtimes',
   'closed-tab-snapshots',
+  'tab-snapshot-durable-save',
+  'tab-snapshot-durable-load',
+  'tab-snapshot-restore-consume',
+  'tab-snapshot-stale-restore-ignore',
+  'tab-snapshot-cleanup',
   'feed-runtime-window-size',
   'relay-diagnostic-summary-count',
   'profile-summary-cache-count',

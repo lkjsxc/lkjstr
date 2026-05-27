@@ -1,6 +1,7 @@
 <script lang="ts">
   import type { Account } from '$lib/accounts/account';
   import type { RelaySet } from '$lib/relays/relay-store';
+  import type { TabSnapshotPayload } from '$lib/workspace/tab-snapshot';
   import LkjstrLogTab from '$lib/tabs/log/LkjstrLogTab.svelte';
   import RelaySettingsTab from '$lib/tabs/relays/RelaySettingsTab.svelte';
   import SettingsTab from '$lib/tabs/settings/SettingsTab.svelte';
@@ -12,6 +13,7 @@
   type Props = {
     tab: WorkspaceTab;
     visible?: boolean;
+    restoreSnapshot?: TabSnapshotPayload;
     restoreScrollTop?: number;
     accounts: Account[];
     activeAccount?: Account;
@@ -40,6 +42,7 @@
   <SettingsTab
     tabId={props.tab.id}
     visible={props.visible}
+    restoreSnapshot={props.restoreSnapshot}
     restoreScrollTop={props.restoreScrollTop}
   />
 {:else if props.tab.kind === 'tweet'}

@@ -41,7 +41,7 @@ export function feedSnapshotSeedFromPayload(
 
 export async function persistTabSnapshot(
   workspaceId: string,
-  paneId: string,
+  paneId: string | undefined,
   tab: WorkspaceTab,
   scrollTop = 0,
 ): Promise<TabSnapshotPayload> {
@@ -52,20 +52,18 @@ export async function persistTabSnapshot(
 
 export async function loadPersistedTabSnapshot(
   workspaceId: string,
-  paneId: string,
   tabId: string,
 ): Promise<TabSnapshotPayload | undefined> {
-  return loadTabState(workspaceId, paneId, tabId);
+  return loadTabState(workspaceId, tabId);
 }
 
 export async function loadPersistedTabSnapshots(
   workspaceId: string,
-  paneId: string,
   tabIds: readonly string[],
 ): Promise<Record<string, TabSnapshotPayload>> {
   const entries = await Promise.all(
     tabIds.map(async (tabId) => {
-      const state = await loadTabState(workspaceId, paneId, tabId);
+      const state = await loadTabState(workspaceId, tabId);
       return state ? ([tabId, state] as const) : undefined;
     }),
   );
@@ -78,10 +76,9 @@ export async function loadPersistedTabSnapshots(
 
 export async function removePersistedTabSnapshot(
   workspaceId: string,
-  paneId: string,
   tabId: string,
 ): Promise<void> {
-  await deleteTabState(workspaceId, paneId, tabId);
+  await deleteTabState(workspaceId, tabId);
 }
 
 export function feedAnchorFromPayload(

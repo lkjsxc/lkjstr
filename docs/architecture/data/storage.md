@@ -19,8 +19,8 @@ Storage docs define browser persistence ownership.
   diagnostics for feed scans.
 - `jobs`: persisted in-app job records.
 - `cacheMeta`: cache status records.
-- `tabStates`: durable tab snapshot payloads keyed by workspace, pane, and tab
-  id. See [Tab Snapshots](#tab-snapshots).
+- `tabStates`: durable tab snapshot payloads keyed by `workspaceId + tabId`.
+  `lastPaneId` is placement metadata only. See [Tab Snapshots](#tab-snapshots).
 - `settings`: settings overrides.
 - `relaySets`: editable relay sets.
 - `relayDiagnosticSummaries`: persisted relay diagnostic summaries.
@@ -39,19 +39,25 @@ is documented separately before any passkey secret table is restored.
 
 ## Tab Snapshots
 
-`tabStates` rows store JSON payloads captured when a tab loses focus:
+`tabStates` rows store JSON payloads captured when a tab loses focus, moves,
+reloads, or closes:
 
-| Field | Feed tabs | Tool tabs |
-| ----- | --------- | --------- |
-| `anchorEventId`, `anchorOffset` | Required when list had scroll | Optional |
-| `scrollTop` | Fallback for plain scroll | Optional |
-| `oldestCursor`, `newestCursor` | When runtime exposes cursors | none |
-| `filterState` | Search query, profile section | Surface-specific |
-| `composerText` | Tweet, inline reply drafts | When present |
+| Row field | Meaning |
+| --- | --- |
+| `id` | `${workspaceId}:${tabId}` durable key |
+| `workspaceId`, `tabId` | Ownership identity |
+| `lastPaneId` | Last known placement, not identity |
+| `state` | Compact tab-kind payload |
+| `updatedAt` | Last capture timestamp |
 
 Session-memory snapshots mirror the same shape for fast restore within
 `tabs.inactiveRetentionSeconds`. IndexedDB snapshots survive reload and expired
-session TTL.
+session TTL. Older pane-keyed rows are ignored and deleted during workspace
+cleanup.
+
+Payloads may include scroll anchors, cursors, flags, cheap tool fields, and up to
+`200` event or notification ids. They must not include full events, profiles,
+relay diagnostics, active workers, subscriptions, or unbounded arrays.
 
 ## Cleanup
 
@@ -59,5 +65,7 @@ Optional quota-pressure event cache cleanup may prune cached events, event relay
 receipts, event tag rows, feed cursors, and feed coverage affected by pruned
 feed keys. Complete coverage rows compact sooner than dense, incomplete,
 unresolved, or failed diagnostic rows. Cleanup must not prune accounts,
-settings, relay sets, workspace layout, notifications, Tweet drafts, or
-`tabStates` unless the tab no longer exists in the workspace.
+settings, relay sets, workspace layout, notifications, Tweet drafts, or live
+tab snapshots. `tabStates` cleanup is owned by the workspace snapshot
+coordinator and removes rows only for tabs absent from the workspace or stale
+pre-tab-owned rows.

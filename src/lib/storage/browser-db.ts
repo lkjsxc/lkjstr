@@ -23,7 +23,9 @@ import type { Workspace } from '../workspace/workspace';
 
 export type TabStateRecord = {
   readonly id: string;
+  readonly workspaceId: string;
   readonly tabId: string;
+  readonly lastPaneId?: string;
   readonly state: unknown;
   readonly updatedAt: number;
 };
@@ -62,7 +64,7 @@ export class LkjstrDb extends Dexie {
         }
       >
     )[schemaMethod];
-    schema.call(this, 14).stores({
+    schema.call(this, 15).stores({
       workspaces: '&id, updatedAt, activeAccountId',
       accounts: '&id, pubkey, signerType, updatedAt, lastUsedAt',
       localAccountSecrets: '&accountId, pubkey, updatedAt',
@@ -81,7 +83,7 @@ export class LkjstrDb extends Dexie {
         '&id, feedKey, relayUrl, groupKey, status, updatedAt, [feedKey+status], [feedKey+relayUrl], [feedKey+groupKey], [feedKey+updatedAt]',
       jobs: '&id, rootId, parentId, kind, status, updatedAt, [rootId+updatedAt]',
       cacheMeta: '&id, updatedAt',
-      tabStates: '&id, tabId, updatedAt',
+      tabStates: '&id, workspaceId, tabId, lastPaneId, updatedAt',
       settings: '&key, namespace, updatedAt',
       relaySets: '&id, updatedAt, seeded',
       relayDiagnosticSummaries: '&relayUrl, updatedAt',

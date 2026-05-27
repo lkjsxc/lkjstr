@@ -103,7 +103,7 @@ test('workspace churn keeps owned heap and counters bounded', async ({
     .locator('xpath=following-sibling::table[1]//tbody/tr/td[1]')
     .allTextContents();
   expect(keys.length).toBeGreaterThan(0);
-  expect(keys.length).toBeLessThanOrEqual(6);
+  expect(keys.length).toBeLessThanOrEqual(11);
 });
 
 async function enableDebugCounters(page: Page): Promise<void> {

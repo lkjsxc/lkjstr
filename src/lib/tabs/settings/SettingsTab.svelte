@@ -9,12 +9,15 @@
     resetSetting,
     saveSetting,
   } from '$lib/settings/settings-store';
+  import { registerTabRuntimeSnapshot } from '$lib/workspace/tab-runtime-registry';
+  import type { TabSnapshotPayload } from '$lib/workspace/tab-snapshot';
 
   const scrollPositions = new SvelteMap<string, number>();
 
   type Props = {
     tabId?: string;
     visible?: boolean;
+    restoreSnapshot?: TabSnapshotPayload;
     restoreScrollTop?: number;
   };
 
@@ -24,6 +27,7 @@
   let importOpen = $state(false);
   let importDraft = $state('');
   let importStatus = $state('');
+  let restoredFields = false;
   let changedCount = $derived(
     settings.filter(
       (setting) =>
@@ -51,6 +55,26 @@
     if (settings.length === 0) return;
     void tick().then(() => applyScrollTop());
   });
+
+  $effect(() => {
+    if (restoredFields || props.restoreSnapshot?.kind !== 'tool') return;
+    const fields = props.restoreSnapshot.fields;
+    importOpen = fields?.settingsImportOpen === 'true';
+    importDraft = fields?.settingsImportDraft ?? importDraft;
+    importStatus = fields?.settingsImportStatus ?? importStatus;
+    restoredFields = true;
+  });
+
+  $effect(() =>
+    registerTabRuntimeSnapshot(props.tabId ?? 'settings', () => ({
+      kind: 'tool',
+      fields: {
+        settingsImportDraft: importDraft,
+        settingsImportOpen: String(importOpen),
+        settingsImportStatus: importStatus,
+      },
+    })),
+  );
 
   $effect(() => {
     if (!props.visible || settings.length === 0) return;

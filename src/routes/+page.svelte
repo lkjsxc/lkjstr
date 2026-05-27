@@ -3,66 +3,69 @@
   import { installMemoryDebugExport } from '$lib/app/memory-debug';
   import { logRuntimeError } from '$lib/app/runtime-log';
   import type { Account } from '$lib/accounts/account';
-  import {
-    removeRelay,
-    setRelayEnabled,
-    type RelaySet,
-  } from '$lib/relays/relay-store';
+  import type { RelaySet } from '$lib/relays/relay-store';
   import WorkspaceRoot from '$lib/components/workspace/WorkspaceRoot.svelte';
+  import { createTabSnapshotCoordinator } from '$lib/workspace/tab-snapshot-coordinator';
   import {
-    openAuthorContextTab,
-    openProfileEditTab,
-    openProfileTab,
-    openThreadTab,
-  } from '$lib/workspace/action-tabs';
-  import { moveWorkspaceTab } from '$lib/workspace/move-tab';
-  import { closeWorkspacePane } from '$lib/workspace/pane-commands';
-  import { resizeSplit } from '$lib/workspace/resize';
-  import type { TabKind } from '$lib/workspace/tab';
-  import { openToolTab } from '$lib/workspace/open-tool-tab';
-  import { removePersistedTabSnapshot } from '$lib/workspace/tab-snapshot-persist';
-  import { clearTabFeedAnchor } from '$lib/workspace/tab-anchor-registry';
-  import {
-    closeWorkspaceTab,
-    convertWorkspaceTab,
-    focusTab,
-    openNewTabChooser,
-    splitFocusedPane,
-    type Workspace,
-  } from '$lib/workspace/workspace';
+    captureWorkspaceSnapshots,
+    cleanupWorkspaceSnapshots,
+  } from '$lib/workspace/tab-snapshot-workspace';
+  import type { Workspace } from '$lib/workspace/workspace';
   import { bootstrapWorkspace } from '$lib/workspace/workspace-bootstrap';
-  import {
-    addMinedSigningAccount,
-    loadWorkspacePageData,
-  } from '$lib/workspace/workspace-page-data';
+  import { loadWorkspacePageData } from '$lib/workspace/workspace-page-data';
+  import { createWorkspacePageActions } from '$lib/workspace/workspace-page-actions';
   import {
     loadWorkspace,
     saveWorkspace,
   } from '$lib/workspace/workspace-persistence';
-  import {
-    loadInactiveRetentionSeconds,
-    settingsChangedEvent,
-  } from '$lib/workspace/runtime-settings';
+  import { loadInactiveRetentionSeconds } from '$lib/workspace/runtime-settings';
+  import { installWorkspaceSnapshotLifecycle } from '$lib/workspace/workspace-snapshot-lifecycle';
 
-  let workspace = $state<Workspace>(bootstrapWorkspace());
+  const bootWorkspace = bootstrapWorkspace();
+  let workspace = $state<Workspace>(bootWorkspace);
   let accounts = $state<Account[]>([]);
   let activeAccount = $state<Account>();
   let relaySets = $state<RelaySet[]>([]);
   let ready = $state(false);
+  let workspaceLoaded = $state(false);
   let pageDataReady = $state(false);
   let inactiveRetentionSeconds = $state(300);
+  let snapshotWorkspaceId = bootWorkspace.id;
+  let snapshotCoordinator = $state(newSnapshotCoordinator(snapshotWorkspaceId));
+  const actions = createWorkspacePageActions({
+    getWorkspace: () => workspace,
+    update,
+    captureAllTabs: () => void captureAllTabs(),
+    snapshotCoordinator: () => snapshotCoordinator,
+    refreshData,
+    setRelaySets: (sets) => (relaySets = sets),
+  });
 
   onMount(() => {
     installMemoryDebugExport();
     let disposed = false;
     // prettier-ignore
     const refreshSettings = () => { if (!disposed) void refreshRuntimeSettings().catch(logRuntimeError('settings-load-failed')); };
-    window.addEventListener(settingsChangedEvent, refreshSettings);
+    const disposeSnapshots = installWorkspaceSnapshotLifecycle({
+      refreshSettings,
+      flushSnapshots: () => void captureAllTabs(),
+    });
     void initializeWorkspace().catch(logRuntimeError('workspace-init-failed'));
     return () => {
       disposed = true;
-      window.removeEventListener(settingsChangedEvent, refreshSettings);
+      disposeSnapshots();
+      snapshotCoordinator.releaseAll();
     };
+  });
+
+  $effect(() => {
+    if (workspace.id !== snapshotWorkspaceId) {
+      snapshotCoordinator.releaseAll();
+      snapshotWorkspaceId = workspace.id;
+      snapshotCoordinator = newSnapshotCoordinator(workspace.id);
+    } else snapshotCoordinator.setRetentionSeconds(inactiveRetentionSeconds);
+    if (workspaceLoaded)
+      void cleanupWorkspaceSnapshots(snapshotCoordinator, workspace);
   });
 
   async function initializeWorkspace(): Promise<void> {
@@ -81,6 +84,7 @@
       await saveWorkspace(workspace).catch(
         logRuntimeError('workspace-save-failed'),
       );
+    workspaceLoaded = true;
     await refreshData().catch(logRuntimeError('workspace-refresh-failed'));
     await refreshRuntimeSettings().catch(
       logRuntimeError('settings-load-failed'),
@@ -90,6 +94,19 @@
   async function update(next: Workspace): Promise<void> {
     workspace = next;
     await saveWorkspace(next).catch(logRuntimeError('workspace-save-failed'));
+  }
+
+  function newSnapshotCoordinator(workspaceId: string) {
+    return createTabSnapshotCoordinator({
+      workspaceId,
+      inactiveRetentionSeconds,
+    });
+  }
+
+  async function captureAllTabs(): Promise<void> {
+    await captureWorkspaceSnapshots(snapshotCoordinator, workspace).catch(
+      logRuntimeError('tab-snapshot-flush-failed'),
+    );
   }
 
   async function refreshData(): Promise<void> {
@@ -102,76 +119,9 @@
       inactiveRetentionSeconds,
     );
   }
-
-  async function handleOpenNewTab(paneId: string): Promise<void> {
-    if (workspace) await update(openNewTabChooser(workspace, paneId));
-  }
-
-  // prettier-ignore
-  async function handleConvertTab(tabId: string, kind: TabKind, config: Record<string, unknown> = {}): Promise<void> {
-    if (workspace)
-      await update(convertWorkspaceTab(workspace, tabId, kind, config));
-  }
-
-  // prettier-ignore
-  async function handleOpenProfile(paneId: string, pubkey: string): Promise<void> {
-    if (workspace) await update(openProfileTab(workspace, paneId, pubkey));
-  }
-
-  // prettier-ignore
-  async function handleOpenThread(paneId: string, eventId: string): Promise<void> {
-    if (workspace) await update(openThreadTab(workspace, paneId, eventId));
-  }
-
-  // prettier-ignore
-  async function handleOpenAuthorContext(paneId: string, eventId: string, pubkey: string): Promise<void> { if (workspace) await update(openAuthorContextTab(workspace, paneId, eventId, pubkey)); }
-  // prettier-ignore
-  async function handleOpenProfileEdit(paneId: string): Promise<void> { if (workspace) await update(openProfileEditTab(workspace, paneId)); }
-
-  async function handleAddMinedSigning(nsec: string): Promise<void> {
-    await addMinedSigningAccount(nsec);
-    await refreshData();
-  }
-
-  // prettier-ignore
-  async function handleSplit(paneId: string, direction: 'horizontal' | 'vertical'): Promise<void> { if (workspace) await update(splitFocusedPane({ ...workspace, focusedPaneId: paneId }, direction)); }
-
-  // prettier-ignore
-  async function handleResize(splitId: string, handleIndex: number, deltaRatio: number): Promise<void> { if (workspace?.layout) await update({ ...workspace, layout: resizeSplit(workspace.layout, splitId, handleIndex, deltaRatio) }); }
-
-  // prettier-ignore
-  function handleFocusTab(paneId: string, tabId: string): Promise<void> { return workspace ? update(focusTab(workspace, paneId, tabId)) : Promise.resolve(); }
-
-  // prettier-ignore
-  function handleCloseTab(paneId: string, tabId: string): Promise<void> {
-    if (!workspace) return Promise.resolve();
-    clearTabFeedAnchor(tabId);
-    void removePersistedTabSnapshot(workspace.id, paneId, tabId);
-    return update(closeWorkspaceTab(workspace, paneId, tabId));
-  }
-
-  function handleOpenTool(paneId: string, kind: TabKind): Promise<void> {
-    return workspace
-      ? update(openToolTab(workspace, paneId, kind))
-      : Promise.resolve();
-  }
-
-  // prettier-ignore
-  function handleClosePane(paneId: string): Promise<void> { return workspace ? update(closeWorkspacePane(workspace, paneId)) : Promise.resolve(); }
-
-  // prettier-ignore
-  function handleMoveTab(sourcePaneId: string, targetPaneId: string, tabId: string, targetIndex: number, edge?: 'left' | 'right' | 'top' | 'bottom'): Promise<void> { return workspace ? update(moveWorkspaceTab(workspace, { sourcePaneId, targetPaneId, tabId, targetIndex, edge })) : Promise.resolve(); }
-
-  // prettier-ignore
-  async function handleToggleRelay(setId: string, url: string, enabled: boolean) { relaySets = await setRelayEnabled(setId, url, enabled); }
-
-  // prettier-ignore
-  async function handleRemoveRelay(setId: string, url: string) { relaySets = await removeRelay(setId, url); }
 </script>
 
-<svelte:head>
-  <title>lkjstr</title>
-</svelte:head>
+<svelte:head><title>lkjstr</title></svelte:head>
 
 <!-- prettier-ignore -->
-<WorkspaceRoot {workspace} {accounts} {activeAccount} {relaySets} {ready} {pageDataReady} {inactiveRetentionSeconds} focusTab={handleFocusTab} closeTab={handleCloseTab} moveTab={handleMoveTab} openNewTab={handleOpenNewTab} convertTab={handleConvertTab} split={handleSplit} closePane={handleClosePane} resize={handleResize} addMinedSigning={handleAddMinedSigning} {refreshData} toggleRelay={handleToggleRelay} removeRelay={handleRemoveRelay} openProfile={handleOpenProfile} openProfileEdit={handleOpenProfileEdit} openThread={handleOpenThread} openAuthorContext={handleOpenAuthorContext} openTool={handleOpenTool} />
+<WorkspaceRoot {workspace} {accounts} {activeAccount} {relaySets} {ready} {pageDataReady} {inactiveRetentionSeconds} {snapshotCoordinator} focusTab={actions.focusTab} closeTab={actions.closeTab} moveTab={actions.moveTab} openNewTab={actions.openNewTab} convertTab={actions.convertTab} split={actions.split} closePane={actions.closePane} resize={actions.resize} addMinedSigning={actions.addMinedSigning} {refreshData} toggleRelay={actions.toggleRelay} removeRelay={actions.removeRelay} openProfile={actions.openProfile} openProfileEdit={actions.openProfileEdit} openThread={actions.openThread} openAuthorContext={actions.openAuthorContext} openTool={actions.openTool} />

@@ -4,6 +4,7 @@
   import type { WorkspaceLayoutNode } from '$lib/workspace/layout-tree';
   import type { TabGroup } from '$lib/workspace/tab-group';
   import type { TabKind, WorkspaceTab } from '$lib/workspace/tab';
+  import type { TabSnapshotCoordinator } from '$lib/workspace/tab-snapshot-coordinator';
   import Pane from './Pane.svelte';
   import RecursiveSplit from './SplitNode.svelte';
   import ResizeHandle from './ResizeHandle.svelte';
@@ -19,6 +20,7 @@
     ready: boolean;
     pageDataReady: boolean;
     inactiveRetentionSeconds: number;
+    snapshotCoordinator: TabSnapshotCoordinator;
     focusTab: (paneId: string, tabId: string) => void;
     closeTab: (paneId: string, tabId: string) => void;
     moveTab: (
@@ -69,6 +71,7 @@
     ready={props.ready}
     pageDataReady={props.pageDataReady}
     inactiveRetentionSeconds={props.inactiveRetentionSeconds}
+    snapshotCoordinator={props.snapshotCoordinator}
     focusTab={props.focusTab}
     closeTab={props.closeTab}
     moveTab={props.moveTab}
@@ -104,6 +107,7 @@
           ready={props.ready}
           pageDataReady={props.pageDataReady}
           inactiveRetentionSeconds={props.inactiveRetentionSeconds}
+          snapshotCoordinator={props.snapshotCoordinator}
           focusTab={props.focusTab}
           closeTab={props.closeTab}
           moveTab={props.moveTab}

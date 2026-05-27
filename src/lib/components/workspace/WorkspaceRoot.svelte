@@ -2,13 +2,15 @@
   import type { Account } from '$lib/accounts/account';
   import AppHeader from '$lib/components/app/AppHeader.svelte';
   import type { RelaySet } from '$lib/relays/relay-store';
-  import { setContext } from 'svelte';
+  import { onDestroy, setContext } from 'svelte';
   import type { TabKind } from '$lib/workspace/tab';
   import {
     createTabDragState,
     tabDragStateKey,
   } from '$lib/workspace/tab-drag-state';
   import type { Workspace } from '$lib/workspace/workspace';
+  import { setTabSnapshotCoordinator } from '$lib/workspace/tab-snapshot-context';
+  import type { TabSnapshotCoordinator } from '$lib/workspace/tab-snapshot-coordinator';
   import SplitNode from './SplitNode.svelte';
 
   type Props = {
@@ -19,6 +21,7 @@
     ready: boolean;
     pageDataReady: boolean;
     inactiveRetentionSeconds: number;
+    snapshotCoordinator: TabSnapshotCoordinator;
     focusTab: (paneId: string, tabId: string) => void;
     closeTab: (paneId: string, tabId: string) => void;
     moveTab: (
@@ -54,6 +57,8 @@
 
   let props: Props = $props();
   setContext(tabDragStateKey, createTabDragState());
+  setTabSnapshotCoordinator(() => props.snapshotCoordinator);
+  onDestroy(() => props.snapshotCoordinator.releaseAll());
 </script>
 
 <main class="workspace-shell">
@@ -71,6 +76,7 @@
         ready={props.ready}
         pageDataReady={props.pageDataReady}
         inactiveRetentionSeconds={props.inactiveRetentionSeconds}
+        snapshotCoordinator={props.snapshotCoordinator}
         focusTab={props.focusTab}
         closeTab={props.closeTab}
         moveTab={props.moveTab}

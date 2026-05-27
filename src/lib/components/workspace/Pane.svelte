@@ -1,15 +1,11 @@
 <script lang="ts">
   import type { Account } from '$lib/accounts/account';
   import type { RelaySet } from '$lib/relays/relay-store';
-  import { onDestroy } from 'svelte';
   import type { WorkspacePaneNode } from '$lib/workspace/pane';
-  import { createPaneScrollRetention } from '$lib/workspace/pane-scroll-retention';
   import type { TabKind, WorkspaceTab } from '$lib/workspace/tab';
   import type { TabGroup } from '$lib/workspace/tab-group';
-  import { createSessionTabSnapshots } from '$lib/workspace/session-tab-snapshots';
-  import type { TabSnapshotPayload } from '$lib/workspace/tab-snapshot';
-  import { loadPersistedTabSnapshots } from '$lib/workspace/tab-snapshot-persist';
-  import { syncPaneTabFocus } from '$lib/workspace/pane-tab-focus';
+  import type { TabSnapshotRestore } from '$lib/workspace/tab-snapshot';
+  import type { TabSnapshotCoordinator } from '$lib/workspace/tab-snapshot-coordinator';
   import PaneDropLayer from './PaneDropLayer.svelte';
   import PaneHead from './PaneHead.svelte';
   import PaneTabStack from './PaneTabStack.svelte';
@@ -25,6 +21,7 @@
     ready: boolean;
     pageDataReady: boolean;
     inactiveRetentionSeconds: number;
+    snapshotCoordinator: TabSnapshotCoordinator;
     focusTab: (paneId: string, tabId: string) => void;
     closeTab: (paneId: string, tabId: string) => void;
     moveTab: (
@@ -58,81 +55,62 @@
   };
 
   let props: Props = $props();
-  type TabSnapshot = TabSnapshotPayload & { readonly id: string };
-  let restoreByTabId = $state<Record<string, TabSnapshotPayload>>({});
+  let restoreByTabId = $state<Record<string, TabSnapshotRestore>>({});
   let active = $derived(
     props.group?.activeTabId ? props.tabs[props.group.activeTabId] : undefined,
   );
   let previousActiveId = $state<string | undefined>();
   let previousRetentionSeconds = $state<number | undefined>();
-  const bodyScroll = createPaneScrollRetention();
-  const snapshots = createSessionTabSnapshots<TabSnapshot>();
+  let loadedSnapshotTabsKey = $state('');
 
   $effect.pre(() => {
     const activeId = active?.id;
     if (previousActiveId && previousActiveId !== activeId)
-      bodyScroll.remember(previousActiveId);
+      props.snapshotCoordinator.rememberScroll(previousActiveId);
   });
 
   $effect(() => {
     const activeId = active?.id;
-    void syncPaneTabFocus({
-      workspaceId: props.workspaceId,
-      paneId: props.pane.id,
-      active,
-      previousActiveId,
-      tabs: props.tabs,
-      group: props.group,
-      inactiveRetentionSeconds: props.inactiveRetentionSeconds,
-      bodyScroll,
-      snapshots,
-    }).then((next) => {
-      const nextRestore: Record<string, TabSnapshotPayload> = {
-        ...restoreByTabId,
-      };
-      if (activeId && next.restorePayload)
-        nextRestore[activeId] = next.restorePayload;
-      if (next.persistedTabId && next.persistedPayload)
-        nextRestore[next.persistedTabId] = next.persistedPayload;
-      restoreByTabId = nextRestore;
-    });
+    void props.snapshotCoordinator
+      .syncFocus({
+        paneId: props.pane.id,
+        active,
+        previousActiveId,
+        tabs: props.tabs,
+        group: props.group,
+      })
+      .then(() => {
+        if (activeId)
+          restoreByTabId = props.snapshotCoordinator.restoreRecords();
+      });
     previousActiveId = activeId;
   });
 
   $effect(() => {
     if (previousRetentionSeconds !== props.inactiveRetentionSeconds) {
-      snapshots.releaseAll('retention-disabled');
+      props.snapshotCoordinator.setRetentionSeconds(
+        props.inactiveRetentionSeconds,
+      );
       previousRetentionSeconds = props.inactiveRetentionSeconds;
     }
-    if (props.inactiveRetentionSeconds > 0) return;
-    snapshots.releaseAll('retention-disabled');
-  });
-
-  $effect(() => {
-    snapshots.releaseMissing(new Set(props.group?.tabIds ?? []));
   });
 
   $effect(() => {
     const tabIds = props.group?.tabIds ?? [];
     if (!props.ready || tabIds.length === 0) return;
-    void loadPersistedTabSnapshots(
-      props.workspaceId,
-      props.pane.id,
-      tabIds,
-    ).then((loaded) => {
-      for (const [tabId, payload] of Object.entries(loaded)) {
-        if (payload.scrollTop !== undefined)
-          bodyScroll.restoreSnapshot(tabId, { scrollTop: payload.scrollTop });
-      }
-      restoreByTabId = { ...restoreByTabId, ...loaded };
-    });
+    const loadKey = `${props.workspaceId}:${tabIds.join('|')}`;
+    if (loadKey === loadedSnapshotTabsKey) return;
+    loadedSnapshotTabsKey = loadKey;
+    void props.snapshotCoordinator
+      .loadTabs(tabIds)
+      .then(
+        () => (restoreByTabId = props.snapshotCoordinator.restoreRecords()),
+      );
   });
 
   function trackBody(node: HTMLElement, tabId: string) {
-    return bodyScroll.track(tabId, node);
+    return props.snapshotCoordinator.trackBody(tabId, node);
   }
-
-  onDestroy(() => snapshots.releaseAll('pane-destroyed'));
 </script>
 
 <section
@@ -171,6 +149,7 @@
         relaySets={props.relaySets}
         pageDataReady={props.pageDataReady}
         {trackBody}
+        consumeRestore={props.snapshotCoordinator.consumeRestore}
         convertTab={props.convertTab}
         addMinedSigning={props.addMinedSigning}
         refreshData={props.refreshData}

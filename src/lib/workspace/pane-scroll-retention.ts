@@ -63,8 +63,12 @@ export function createPaneScrollRetention() {
       scrollTop: scroll.get(tabId),
     }),
     restoreSnapshot: (tabId: string, snapshot?: PaneScrollSnapshot): void => {
-      if (snapshot?.scrollTop !== undefined)
-        scroll.set(tabId, snapshot.scrollTop);
+      if (snapshot?.scrollTop === undefined) return;
+      scroll.set(tabId, snapshot.scrollTop);
+      const apply = () => applyScrollTop(tabId, snapshot.scrollTop!);
+      if (typeof requestAnimationFrame === 'function')
+        requestAnimationFrame(apply);
+      else apply();
     },
   };
 }

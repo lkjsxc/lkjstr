@@ -13,6 +13,8 @@ visual rules.
   center insert.
 - [tab-body-mount.md](tab-body-mount.md): hidden-mount tab bodies per pane.
 - [tab-retention-flow.md](tab-retention-flow.md): blur/focus snapshot pipeline.
+- [tab-snapshot-fields.md](tab-snapshot-fields.md): tab-owned snapshot fields,
+  restore order, and cleanup.
 - [scroll-layout.md](scroll-layout.md): scrollbar-safe scrolling surfaces.
 - [scroll-surface-audit.md](scroll-surface-audit.md): per-surface scroll checklist.
 - [tab-shell-layout.md](tab-shell-layout.md): feed-tab vs form-tab scroll

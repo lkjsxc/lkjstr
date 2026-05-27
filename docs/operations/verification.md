@@ -249,10 +249,16 @@ Run `pnpm check:repo` after documentation changes before code work continues.
 - Tweet publish clears and focuses the composer after signing/local queueing
   without showing persistent `Sent to` or `Published` success text.
 - Inactive feed tabs keep hidden mounted bodies, pause relay subscriptions and
-  page reads, and restore from DOM or bounded session-memory snapshots when
-  reselected within `tabs.inactiveRetentionSeconds`.
-- Changing `tabs.inactiveRetentionSeconds`, closing a tab, pane destruction, or
-  retention expiry removes retained snapshots.
+  page reads, and restore from DOM, warm snapshots, or IndexedDB when reselected
+  or reloaded.
+- Focus changes, cross-pane moves, edge-split moves, reloads, active-tab reload,
+  Settings restore, and explicit close cleanup must have Playwright coverage
+  with protocol-shaped synthetic relay data.
+- Unit coverage must prove tab-owned durable keying, save/load after pane move,
+  delete-by-tab-id, stale-row cleanup, warm LRU cap, falsy snapshot merge,
+  one-shot restore consume, stale-token rejection, and absent-tab-only cleanup.
+- Memory checks cover warm snapshot caps, released scroll owners/providers/timers
+  after close, no old pane leaks after movement, and no hidden feed paging.
 - Queued relay page reads abort when the owning runtime or subscription manager
   closes and must not remain in per-relay limiter queues.
 - Browser memory checks cover inactive-tab churn after snapshot restore,

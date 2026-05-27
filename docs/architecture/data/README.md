@@ -41,6 +41,8 @@ Data docs define storage, feed windows, and shared event presentation models.
 - [relay-pages.md](relay-pages.md): relay page ordering and provenance.
 - [shared-storage.md](shared-storage.md): event and feed repository.
 - [storage.md](storage.md): browser persistence ownership.
+- Workspace tab snapshot fields live in
+  [../workspace/tab-snapshot-fields.md](../workspace/tab-snapshot-fields.md).
 
 ## Shared Contract
 

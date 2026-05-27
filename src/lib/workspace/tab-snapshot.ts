@@ -11,12 +11,19 @@ export type FeedTabSnapshot = {
   readonly hasOlder?: boolean;
   readonly hasNewer?: boolean;
   readonly filterState?: Record<string, string>;
+  readonly eventIds?: readonly string[];
+  readonly notificationRecordIds?: readonly string[];
 };
 
 export type ToolTabSnapshot = {
   readonly kind: 'tool';
   readonly scrollTop?: number;
   readonly fields?: Record<string, string>;
+};
+
+export type TabSnapshotRestore = {
+  readonly token: string;
+  readonly payload: TabSnapshotPayload;
 };
 
 export type FeedTabSnapshotSeed = Pick<

@@ -8,3 +8,6 @@ menus.
 ## Contents
 
 - Workspace root, pane rendering, tab strip, resize handles, and menu controls.
+- `WorkspaceRoot` exposes the tab snapshot coordinator through context.
+- `Pane` tracks scroll owners and restore tokens through the coordinator instead
+  of owning pane-local durable retention.

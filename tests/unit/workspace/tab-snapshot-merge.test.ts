@@ -17,4 +17,18 @@ describe('mergeTabSnapshotPayload', () => {
       expect(merged.scrollTop).toBe(10);
     }
   });
+
+  it('preserves falsy primitive values from snapshot patches', () => {
+    const merged = mergeTabSnapshotPayload(
+      { kind: 'feed', scrollTop: 25, hasOlder: true },
+      { scrollTop: 0, hasOlder: false, eventIds: [] },
+    );
+
+    expect(merged.scrollTop).toBe(0);
+    expect(merged.kind).toBe('feed');
+    if (merged.kind === 'feed') {
+      expect(merged.hasOlder).toBe(false);
+      expect(merged.eventIds).toEqual([]);
+    }
+  });
 });

@@ -12,5 +12,6 @@ export function timelineRuntimeSnapshot(
     newestCursor: state.newestCursor,
     hasOlder: state.hasOlder,
     hasNewer: state.hasNewer,
+    eventIds: state.items.map((item) => item.event.id),
   });
 }
