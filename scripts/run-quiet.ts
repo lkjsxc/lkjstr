@@ -11,13 +11,23 @@ type Step = {
 const unitStep: Step = {
   label: 'unit',
   command: 'pnpm',
-  args: ['exec', 'vitest', 'run', '--reporter=dot'],
+  args: [
+    'exec',
+    'vitest',
+    'run',
+    '--reporter=./scripts/vitest-quiet-reporter.ts',
+  ],
 };
 
 const e2eStep: Step = {
   label: 'e2e',
   command: 'pnpm',
-  args: ['exec', 'playwright', 'test', '--reporter=line'],
+  args: [
+    'exec',
+    'playwright',
+    'test',
+    '--reporter=./scripts/playwright-quiet-reporter.ts',
+  ],
 };
 
 const verifySteps: readonly Step[] = [
