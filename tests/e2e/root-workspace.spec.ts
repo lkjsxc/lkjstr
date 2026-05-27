@@ -1,6 +1,26 @@
 import { expect, test } from '@playwright/test';
 
 test('root opens the workspace', async ({ page }) => {
+  const pageErrors: Error[] = [];
+  const appOriginSesSignals: string[] = [];
+  page.on('pageerror', (error) => pageErrors.push(error));
+  page.on('console', (message) => {
+    const { url } = message.location();
+    if (!url.startsWith('http')) return;
+    const text = message.text();
+    if (
+      text.includes('SES_UNCAUGHT_EXCEPTION') ||
+      url.includes('lockdown-install.js')
+    )
+      appOriginSesSignals.push(`${url}: ${text}`);
+  });
+  await page.addInitScript(() => {
+    const state = window as Window & { __lkjstrUnhandledRejections?: string[] };
+    state.__lkjstrUnhandledRejections = [];
+    window.addEventListener('unhandledrejection', (event) => {
+      state.__lkjstrUnhandledRejections?.push(String(event.reason));
+    });
+  });
   await page.goto('/');
   await expect(page.getByRole('tab', { name: 'Welcome' })).toBeVisible();
   await expect(page.getByRole('tab', { name: 'Accounts' })).toBeVisible();
@@ -9,6 +29,14 @@ test('root opens the workspace', async ({ page }) => {
   ).toBeVisible();
   await expect(page.getByText('browser-first Nostr workspace')).toBeVisible();
   await expect(page).toHaveTitle('lkjstr');
+  const unhandled = await page.evaluate(
+    () =>
+      (window as Window & { __lkjstrUnhandledRejections?: string[] })
+        .__lkjstrUnhandledRejections ?? [],
+  );
+  expect(pageErrors).toHaveLength(0);
+  expect(unhandled).toEqual([]);
+  expect(appOriginSesSignals).toEqual([]);
 });
 
 test('startup places Welcome above main tabs', async ({ page }) => {

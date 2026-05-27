@@ -1,5 +1,6 @@
 <script lang="ts">
   import { onMount } from 'svelte';
+  import { captureStartupPromise } from '$lib/app/runtime-log';
   import { sharedJobManager } from '$lib/jobs/job-manager';
   import { startGlobalLogCapture } from '$lib/log/app-log';
   import '../styles/tokens.css';
@@ -26,9 +27,12 @@
 
   onMount(() => {
     const stopLogCapture = startGlobalLogCapture();
-    void sharedJobManager
-      .load()
-      .then(() => sharedJobManager.markStaleStartupJobs());
+    captureStartupPromise(
+      sharedJobManager
+        .load()
+        .then(() => sharedJobManager.markStaleStartupJobs()),
+      { code: 'job-manager-startup-failed', surface: 'layout', kind: 'jobs' },
+    );
     return stopLogCapture;
   });
 </script>

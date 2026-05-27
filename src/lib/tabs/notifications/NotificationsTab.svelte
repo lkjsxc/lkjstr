@@ -1,5 +1,6 @@
 <script lang="ts">
   import { onDestroy, untrack } from 'svelte';
+  import { captureStartupPromise } from '$lib/app/runtime-log';
   import { metadataPageLimit } from '$lib/events/feed-window';
   import { createOlderRequestCoordinator } from '$lib/feed-surface/speculative-older';
   import type { ProfileSummary } from '$lib/identity/identity';
@@ -105,7 +106,16 @@
     const unsubscribe = runtime.subscribe(
       (next) => (viewState = { ...next, profiles: currentProfiles }),
     );
-    void runtime.start().then(() => markVisibleRead());
+    captureStartupPromise(
+      runtime.start().then(() => markVisibleRead()),
+      {
+        code: 'notifications-runtime-start-failed',
+        surface: 'notifications',
+        kind: 'notifications',
+        tabId,
+        relayCount: relays.length,
+      },
+    );
     const onFocus = () => void markVisibleRead();
     window.addEventListener('focus', onFocus);
     return () => {

@@ -1,5 +1,6 @@
 <script lang="ts">
   import { untrack } from 'svelte';
+  import { captureStartupPromise } from '$lib/app/runtime-log';
   import EventTreeList from '$lib/components/events/EventTreeList.svelte';
   import { createOlderRequestCoordinator } from '$lib/feed-surface/speculative-older';
   import type { ProfileSummary } from '$lib/identity/identity';
@@ -86,7 +87,13 @@
     const unsubscribe = runtime.subscribe(
       (next) => (state = { ...next, profiles: currentProfiles }),
     );
-    runtime.start();
+    captureStartupPromise(runtime.start(), {
+      code: 'thread-runtime-start-failed',
+      surface: 'thread',
+      kind: 'thread',
+      tabId,
+      relayCount: relays.length,
+    });
     return () => {
       profileRequest += 1;
       unsubscribe();

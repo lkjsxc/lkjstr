@@ -1,5 +1,6 @@
 import { incMemoryCounter } from '$lib/app/memory-counters';
 import { reportFeedRuntimeWindowSize } from '$lib/app/memory-debug';
+import { captureStartupPromise } from '$lib/app/runtime-log';
 import {
   countRuntime,
   setRuntimeCounterActive,
@@ -72,6 +73,12 @@ export function createBoundTimelineTabRuntime(input: {
     input.onState(next);
     reportFeedRuntimeWindowSize(next.items.length);
   });
-  void runtime.start();
+  captureStartupPromise(runtime.start(), {
+    code: 'timeline-runtime-start-failed',
+    surface: 'timeline',
+    kind: input.kind ?? 'home',
+    tabId: input.tabId,
+    relayCount: input.relays.length,
+  });
   return { runtime, unsubscribe };
 }

@@ -1,5 +1,6 @@
 <script lang="ts">
   import { untrack } from 'svelte';
+  import { captureStartupPromise } from '$lib/app/runtime-log';
   import type { Account } from '$lib/accounts/account';
   import EventTreeList from '$lib/components/events/EventTreeList.svelte';
   import type { ProfileSummary } from '$lib/identity/identity';
@@ -74,7 +75,13 @@
       tabId,
     );
     const unsubscribe = runtime.subscribe((next) => (state = next));
-    runtime.start();
+    captureStartupPromise(runtime.start(), {
+      code: 'profile-runtime-start-failed',
+      surface: 'profile',
+      kind: 'profile',
+      tabId,
+      relayCount: timelineRelays(relaySets).length,
+    });
     const refreshProfile = (event: Event) => {
       if ((event as CustomEvent<string>).detail === props.pubkey)
         state = {

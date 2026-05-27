@@ -1,3 +1,4 @@
+import { captureStartupPromise } from '../../app/runtime-log';
 import { relaySubscriptionHash } from '../../relays/subscription-id';
 import {
   createTimelineRuntime,
@@ -21,6 +22,7 @@ export type HomeQueryAttachment = {
 
 type Entry = {
   readonly key: string;
+  readonly owner: string;
   readonly runtime: TimelineRuntime;
   readonly visibility: Map<string, boolean>;
   refs: number;
@@ -44,7 +46,14 @@ export function attachRegistryHomeQuery(input: {
   syncVisibility(entry);
   if (!entry.started) {
     entry.started = true;
-    void entry.runtime.start();
+    captureStartupPromise(entry.runtime.start(), {
+      code: 'home-query-start-failed',
+      surface: 'home',
+      kind: 'home',
+      tabId: input.tabId,
+      owner: entry.owner,
+      relayCount: input.query.relays.length,
+    });
   }
   let closed = false;
   return {
@@ -84,9 +93,10 @@ function createEntry(
   key: string,
   input: Parameters<typeof attachRegistryHomeQuery>[0],
 ): Entry {
+  const owner = `home-query:${relaySubscriptionHash(key, 10)}`;
   const runtime = createTimelineRuntime({
     relays: input.query.relays,
-    owner: `home-query:${relaySubscriptionHash(key, 10)}`,
+    owner,
     subId: `hq:${relaySubscriptionHash(key, 16)}`,
     kind: 'home',
     activeAccountPubkey: input.query.accountPubkey,
@@ -97,6 +107,7 @@ function createEntry(
   });
   return {
     key,
+    owner,
     runtime,
     visibility: new Map(),
     refs: 0,

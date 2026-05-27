@@ -19,16 +19,15 @@ export type AppLogRecord = {
 };
 
 type Listener = (records: readonly AppLogRecord[]) => void;
+type AppLogInput = Omit<AppLogRecord, 'id' | 'timestamp'> & {
+  readonly timestamp?: number;
+};
 
 const maxRecords = 300;
 let records: AppLogRecord[] = [];
 const listeners = new Set<Listener>();
 
-export function appendAppLog(
-  input: Omit<AppLogRecord, 'id' | 'timestamp'> & {
-    readonly timestamp?: number;
-  },
-): AppLogRecord | undefined {
+export function appendAppLog(input: AppLogInput): AppLogRecord | undefined {
   if (isSuppressedRuntimeNoise(input)) return undefined;
   const record: AppLogRecord = {
     ...input,
@@ -63,21 +62,10 @@ export function clearAppLogForTests(): void {
 export function startGlobalLogCapture(): () => void {
   if (typeof window === 'undefined') return () => undefined;
   const onError = (event: ErrorEvent) => {
-    appendAppLog({
-      area: 'runtime',
-      severity: 'error',
-      code: 'window-error',
-      message: boundedMessage(event.message || event.error),
-      context: { filename: event.filename, lineno: event.lineno },
-    });
+    appendAppLog(appLogInputFromErrorEvent(event));
   };
   const onRejection = (event: PromiseRejectionEvent) => {
-    appendAppLog({
-      area: 'runtime',
-      severity: 'error',
-      code: 'unhandled-rejection',
-      message: boundedMessage(event.reason),
-    });
+    appendAppLog(appLogInputFromPromiseRejection(event));
   };
   window.addEventListener('error', onError);
   window.addEventListener('unhandledrejection', onRejection);
@@ -87,10 +75,63 @@ export function startGlobalLogCapture(): () => void {
   };
 }
 
+export function appLogInputFromErrorEvent(event: ErrorEvent): AppLogInput {
+  const isSes = event.message === 'SES_UNCAUGHT_EXCEPTION';
+  const message = isSes
+    ? boundedRawMessage(event.error)
+    : boundedMessage(event.message || event.error);
+  return {
+    area: 'runtime',
+    severity: 'error',
+    code: isSes ? 'SES_UNCAUGHT_EXCEPTION' : 'window-error',
+    message,
+    context: compactContext({
+      filename: event.filename,
+      lineno: event.lineno,
+      colno: event.colno,
+      ...errorDetails(event.error),
+    }),
+  };
+}
+
+export function appLogInputFromPromiseRejection(
+  event: PromiseRejectionEvent,
+): AppLogInput {
+  return {
+    area: 'runtime',
+    severity: 'error',
+    code: 'unhandled-rejection',
+    message: boundedMessage(event.reason),
+    context: compactContext(errorDetails(event.reason)),
+  };
+}
+
 export function boundedMessage(value: unknown): string {
   const text =
     value instanceof Error ? value.message : String(value ?? 'unknown error');
   return text.length > 240 ? `${text.slice(0, 237)}...` : text;
+}
+
+function boundedRawMessage(value: unknown): string {
+  const text = value instanceof Error ? value.message : String(value);
+  return text.length > 240 ? `${text.slice(0, 237)}...` : text;
+}
+
+function compactContext(
+  context: Readonly<Record<string, unknown>>,
+): Readonly<Record<string, unknown>> | undefined {
+  const compacted = Object.fromEntries(
+    Object.entries(context).filter(
+      ([, value]) => value !== undefined && value !== '',
+    ),
+  );
+  return Object.keys(compacted).length > 0 ? compacted : undefined;
+}
+
+function errorDetails(value: unknown): Readonly<Record<string, unknown>> {
+  if (value instanceof Error)
+    return { errorName: value.name, errorMessage: boundedMessage(value) };
+  return {};
 }
 
 function emit(): void {
@@ -123,6 +164,22 @@ function isSuppressedRuntimeNoise(input: {
   return (
     input.code === 'SES_UNCAUGHT_EXCEPTION' &&
     input.message === 'null' &&
-    String(input.context?.filename ?? '').includes('lockdown-install.js')
+    isExternalLockdownInstall(String(input.context?.filename ?? ''))
   );
+}
+
+function isExternalLockdownInstall(filename: string): boolean {
+  if (!filename.includes('lockdown-install.js')) return false;
+  const location = typeof window === 'undefined' ? undefined : window.location;
+  try {
+    const url = new URL(filename, location?.href);
+    if (
+      location?.origin &&
+      (url.protocol === 'http:' || url.protocol === 'https:')
+    )
+      return url.origin !== location.origin;
+    return url.protocol !== 'http:' && url.protocol !== 'https:';
+  } catch {
+    return !filename.startsWith('/');
+  }
 }
