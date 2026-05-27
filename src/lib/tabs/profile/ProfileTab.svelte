@@ -25,7 +25,6 @@
   import { registerTabRuntimeSnapshot } from '$lib/workspace/tab-runtime-registry';
   import { feedRuntimeSnapshot } from '$lib/workspace/feed-runtime-snapshot';
   import ProfileHeader from './ProfileHeader.svelte';
-  import ProfileNewerButton from './ProfileNewerButton.svelte';
 
   type Props = {
     tabId: string;
@@ -47,9 +46,7 @@
   );
   let leadingRows = $derived<EventTreeListLeadingRow[]>([
     { key: 'profile-header' },
-    ...(state.loading ? [{ key: 'profile-loading' }] : []),
     ...(state.error ? [{ key: 'profile-error' }] : []),
-    ...(state.hasNewer ? [{ key: 'profile-newer', nearStart: true }] : []),
   ]);
   let npub = $derived(safeNpub(props.pubkey));
   let nprofile = $derived(
@@ -166,15 +163,8 @@
           followingCount={followingCount(state.followList)}
           openProfileEdit={props.openProfileEdit}
         />
-      {:else if row.key === 'profile-loading'}
-        <p>Loading profile data...</p>
       {:else if row.key === 'profile-error'}
         <p role="alert">{state.error}</p>
-      {:else if row.key === 'profile-newer'}
-        <ProfileNewerButton
-          loading={state.loadingNewer}
-          load={() => runtime?.loadNewer()}
-        />
       {/if}
     {/snippet}
   </EventTreeList>

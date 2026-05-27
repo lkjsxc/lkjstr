@@ -78,6 +78,10 @@ linked product, protocol, architecture, and operations pages.
   Search, and Custom Request. Profile summary rows and note rows share the same
   `FeedScrollSurface` owner. Notifications uses Virtua flat listing with the
   same footer and near-end contract.
+- Profile tabs hide visible initial-loading and manual newer-note controls while
+  keeping internal loading and newer state. Older-pruned newer notes recover
+  through automatic near-start behavior at the first event row, and the identity
+  block spans the profile card width below the avatar/action row.
 - Event rows show nip05-only subtitles on feeds, pressed Heart/Repost styling
   from a hybrid action-state index plus feed evidence, and no left-side
   new-event stripe.

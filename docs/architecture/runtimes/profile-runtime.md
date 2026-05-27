@@ -30,6 +30,8 @@ Profile runtime owns metadata and authored-note loading for one pubkey.
 - Runtime reads cache first, then orchestrator Demands.
 - Metadata and follow-list events never consume visible note page slots.
 - Relay reads use [routing-by-surface](../network/subscription-orchestration/routing-by-surface.md).
+- `loadNewer` remains part of the runtime API. Profile UI invokes it through
+  automatic near-start feed behavior, not through a visible manual control.
 - Hidden tabs release live post Demands; metadata Demands may complete if already in flight.
 - Close all Demands and abort page reads on tab close.
 - Startup rejection paths log one bounded app-log runtime failure for the tab.

@@ -2,11 +2,13 @@
 
 ## Purpose
 
-This directory owns the profile runtime view: header identity, copy actions,
-about rendering, following count, and authored note rows.
+This directory owns the timeline-like profile feed: header identity, copy
+actions, about rendering, following count, authored note rows, and automatic
+newer recovery.
 
 ## Contents
 
 - `ProfileTab.svelte`: runtime wiring, relay selection, paging, and notes.
-- `ProfileHeader.svelte`: banner-safe identity, copy menu, actions, and facts.
+- `ProfileHeader.svelte`: banner-safe full-width identity below avatar/actions,
+  copy menu, actions, and facts.
 - `ProfileAbout.svelte`: profile-only about text rendering with safe links.

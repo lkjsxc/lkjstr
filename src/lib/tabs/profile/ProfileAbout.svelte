@@ -13,7 +13,7 @@
 </script>
 
 <!-- eslint-disable svelte/no-navigation-without-resolve -->
-<p>
+<p class="profile-card__about">
   {#each tokens as token, index (`${index}:${token.type}`)}
     {#if token.type === 'url'}
       <a href={token.href} target="_blank" rel="noopener noreferrer">

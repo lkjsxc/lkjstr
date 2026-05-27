@@ -12,12 +12,20 @@
 }
 
 .profile-card__main {
-  align-items: start;
-  display: grid;
+  display: flex;
+  flex-direction: column;
   gap: var(--space-3);
-  grid-template-columns: auto minmax(0, 1fr) auto;
   margin-top: 0;
+  min-width: 0;
   padding: 0 var(--space-3);
+}
+
+.profile-card__top {
+  align-items: flex-start;
+  display: flex;
+  gap: var(--space-3);
+  justify-content: space-between;
+  min-width: 0;
 }
 
 .profile-card__avatar {
@@ -34,7 +42,7 @@
   display: grid;
   gap: var(--space-1);
   min-width: 0;
-  padding-top: var(--space-1);
+  overflow-wrap: anywhere;
 }
 
 .profile-card__identity h2,
@@ -48,14 +56,18 @@
 
 .profile-card__identity p,
 .profile-card__identity small,
-.profile-card__facts {
+.profile-card__facts,
+.profile-card__about {
   color: var(--color-text-muted);
 }
 
 .profile-card__actions {
   align-items: center;
   display: flex;
+  flex-wrap: wrap;
   gap: var(--space-2);
+  justify-content: flex-end;
+  min-width: 0;
   padding-top: var(--space-1);
 }
 
@@ -63,6 +75,17 @@
   display: flex;
   flex-wrap: wrap;
   gap: var(--space-2);
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.profile-card__facts a,
+.profile-card__about,
+.profile-card__about a,
+.profile-card__identity h2,
+.profile-card__identity p,
+.profile-card__identity small {
+  overflow-wrap: anywhere;
 }
 
 .profile-copy-menu {
@@ -114,13 +137,7 @@
 }
 
 @media (max-width: 520px) {
-  .profile-card__main {
-    grid-template-columns: auto minmax(0, 1fr);
-  }
-
   .profile-card__actions {
-    grid-column: 1 / -1;
     justify-content: flex-start;
-    padding-top: 0;
   }
 }

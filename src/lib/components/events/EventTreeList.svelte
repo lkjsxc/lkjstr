@@ -29,7 +29,9 @@
 
   let props: Props = $props();
   let list = $state<FeedScrollListHandle & TreeListAnchorHandle>();
+  let scrollElement = $state<HTMLElement>();
   let autoFillPending = false;
+  let newerLoadPending = false;
   let destroyed = false;
   const treeCache = { key: '', nodes: [] as FlatEventTreeItem[] };
   let nodes = $derived(treeNodesFromItems(props.items, treeCache));
@@ -98,6 +100,22 @@
   });
 
   $effect(() => {
+    if (
+      props.pagingEnabled === false ||
+      nodes.length === 0 ||
+      !props.hasNewer ||
+      props.loadingNewer ||
+      newerLoadPending
+    )
+      return;
+    newerLoadPending = true;
+    void tick().then(() => {
+      if (!destroyed) handleScrollOffset(scrollElement?.scrollTop ?? 0);
+      if (!destroyed) newerLoadPending = false;
+    });
+  });
+
+  $effect(() => {
     previousRows = syncFeedListAnchor({
       tabId: props.tabId,
       previous: previousRows,
@@ -151,6 +169,7 @@
       onNearEnd={props.onNearEnd}
       onScrollOffset={handleScrollOffset}
       bind:list
+      bind:scrollElement
     >
       {#snippet row(node: unknown)}
         <EventTreeListRows

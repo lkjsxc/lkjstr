@@ -142,6 +142,8 @@ state lives, which modules own subscriptions, and how tabs close cleanly.
   bodies per pane.
 - [workspace/tab-retention-flow.md](workspace/tab-retention-flow.md):
   blur/focus snapshot pipeline.
+- [workspace/tab-snapshot-fields.md](workspace/tab-snapshot-fields.md):
+  compact tab snapshot payloads.
 - [workspace/scroll-layout.md](workspace/scroll-layout.md): scrollbar-safe
   scrolling surfaces.
 - [workspace/scroll-surface-audit.md](workspace/scroll-surface-audit.md):

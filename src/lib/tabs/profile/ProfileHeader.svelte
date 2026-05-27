@@ -56,13 +56,53 @@
     {/if}
   </div>
   <div class="profile-card__main">
-    <div class="profile-card__avatar">
-      <Avatar
-        pubkey={props.pubkey}
-        name={display.title}
-        src={display.avatarUrl}
-        size="lg"
-      />
+    <div class="profile-card__top">
+      <div class="profile-card__avatar">
+        <Avatar
+          pubkey={props.pubkey}
+          name={display.title}
+          src={display.avatarUrl}
+          size="lg"
+        />
+      </div>
+      <div class="profile-card__actions">
+        <details class="profile-copy-menu">
+          <summary aria-label="Profile copy menu" title="Profile copy menu">
+            <MoreHorizontal size={18} aria-hidden="true" />
+          </summary>
+          <div class="profile-copy-menu__items">
+            <button type="button" onclick={() => copy('npub', props.npub)}>
+              Copy npub
+            </button>
+            <button
+              type="button"
+              disabled={!props.nprofile}
+              onclick={() => copy('nprofile', props.nprofile)}
+            >
+              Copy nprofile
+            </button>
+            <button
+              type="button"
+              onclick={() =>
+                copy('follow list', followListCopyJson(props.followList))}
+            >
+              Copy follow list JSON
+            </button>
+            <button
+              type="button"
+              onclick={() => copy('relays', relaySetsCopyJson(props.relaySets))}
+            >
+              Copy relay sets JSON
+            </button>
+          </div>
+        </details>
+        <ProfileActions
+          account={props.activeAccount}
+          pubkey={props.pubkey}
+          relaySets={props.relaySets}
+          openProfileEdit={props.openProfileEdit}
+        />
+      </div>
     </div>
     <div class="profile-card__identity">
       <h2>
@@ -73,44 +113,6 @@
       </h2>
       <p>{display.subtitle}</p>
       <small>{props.npub}</small>
-    </div>
-    <div class="profile-card__actions">
-      <details class="profile-copy-menu">
-        <summary aria-label="Profile copy menu" title="Profile copy menu">
-          <MoreHorizontal size={18} aria-hidden="true" />
-        </summary>
-        <div class="profile-copy-menu__items">
-          <button type="button" onclick={() => copy('npub', props.npub)}>
-            Copy npub
-          </button>
-          <button
-            type="button"
-            disabled={!props.nprofile}
-            onclick={() => copy('nprofile', props.nprofile)}
-          >
-            Copy nprofile
-          </button>
-          <button
-            type="button"
-            onclick={() =>
-              copy('follow list', followListCopyJson(props.followList))}
-          >
-            Copy follow list JSON
-          </button>
-          <button
-            type="button"
-            onclick={() => copy('relays', relaySetsCopyJson(props.relaySets))}
-          >
-            Copy relay sets JSON
-          </button>
-        </div>
-      </details>
-      <ProfileActions
-        account={props.activeAccount}
-        pubkey={props.pubkey}
-        relaySets={props.relaySets}
-        openProfileEdit={props.openProfileEdit}
-      />
     </div>
   </div>
   {#if props.profile?.about}
