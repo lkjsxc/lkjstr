@@ -14,6 +14,8 @@ for detailed contracts.
 ## Architecture
 
 - [architecture/README.md](architecture/README.md): source ownership.
+- [architecture/feeds/README.md](architecture/feeds/README.md): feed sources,
+  invariants, merge, and cursor ownership.
 - [architecture/data/README.md](architecture/data/README.md): storage and feed
   memory.
 - [architecture/data/bounded-memory.md](architecture/data/bounded-memory.md):

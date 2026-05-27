@@ -17,3 +17,5 @@ data safety, and test ownership.
 - [readiness.md](readiness.md): handoff checks.
 - [testing-ownership.md](testing-ownership.md): unit and e2e ownership.
 - [verification.md](verification.md): command gate.
+- [timeline-notification-regression-investigation.md](timeline-notification-regression-investigation.md):
+  Home and Notifications regression notes.

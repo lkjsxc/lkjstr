@@ -7,6 +7,14 @@ state lives, which modules own subscriptions, and how tabs close cleanly.
 
 ## Tree
 
+- [feeds/README.md](feeds/README.md): feed sources, invariants, merge, cursors.
+- [feeds/invariants/README.md](feeds/invariants/README.md): ordering, paging,
+  filter safety.
+- [feeds/sources/README.md](feeds/sources/README.md): Home, Global, Profile,
+  Notifications filter semantics.
+- [feeds/runtime/README.md](feeds/runtime/README.md): merge reducer, cursors,
+  multi-tab ownership.
+- [feeds/orchestration-bridge.md](feeds/orchestration-bridge.md): planner bridge.
 - [data/README.md](data/README.md): repository, cache, and event tree model.
 - [data/bounded-memory.md](data/bounded-memory.md): bounded memory cleanup.
 - [data/event-tree.md](data/event-tree.md): event row tree model.
