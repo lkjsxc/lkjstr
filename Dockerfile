@@ -11,6 +11,9 @@ RUN pnpm build
 EXPOSE 5173
 CMD ["pnpm", "preview", "--host", "0.0.0.0", "--port", "5173"]
 
+FROM app AS app-smoke
+CMD ["pnpm", "exec", "tsx", "scripts/app-smoke.ts"]
+
 FROM deps AS verify
 CMD ["pnpm", "verify:quiet"]
 

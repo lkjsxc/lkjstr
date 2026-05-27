@@ -64,13 +64,14 @@ pnpm test:e2e:memory
 
 ```sh
 docker compose -f docker-compose.yml config
-docker compose --progress quiet -f docker-compose.yml build app verify e2e cloudflare
+docker compose --progress quiet -f docker-compose.yml build app verify e2e cloudflare app-smoke
 docker compose --progress quiet -f docker-compose.yml run --rm verify
 docker compose --progress quiet -f docker-compose.yml run --rm e2e
 docker compose --progress quiet -f docker-compose.yml run --rm cloudflare
+docker compose --progress quiet -f docker-compose.yml run --rm app-smoke
 ```
 
-Run all five Docker command groups before claiming image-backed verification.
+Run all six Docker command groups before claiming image-backed verification.
 
 Feed regression and filter kernel changes should also run:
 
@@ -92,10 +93,11 @@ pnpm vitest run tests/unit/events/relay-page-scan.test.ts tests/unit/events/rela
 pnpm vitest run tests/unit/timeline/timeline-newer-relay-pages.test.ts tests/unit/profile/profile-store.test.ts tests/unit/profile/profile-runtime-paging.test.ts
 pnpm verify
 docker compose -f docker-compose.yml config
-docker compose -f docker-compose.yml build app verify e2e cloudflare
+docker compose -f docker-compose.yml build app verify e2e cloudflare app-smoke
 docker compose -f docker-compose.yml run --rm verify
 docker compose -f docker-compose.yml run --rm e2e
 docker compose -f docker-compose.yml run --rm cloudflare
+docker compose -f docker-compose.yml run --rm app-smoke
 ```
 
 Relay runtime hardening changes use these focused slices:
@@ -114,10 +116,11 @@ pnpm test:e2e -- tests/e2e/tab-retention.spec.ts tests/e2e/settings-tab.spec.ts 
 pnpm verify
 pnpm test:e2e
 docker compose -f docker-compose.yml config
-docker compose -f docker-compose.yml build app verify e2e cloudflare
+docker compose -f docker-compose.yml build app verify e2e cloudflare app-smoke
 docker compose -f docker-compose.yml run --rm verify
 docker compose -f docker-compose.yml run --rm e2e
 docker compose -f docker-compose.yml run --rm cloudflare
+docker compose -f docker-compose.yml run --rm app-smoke
 ```
 
 Functional memory changes should also cover:
@@ -176,10 +179,11 @@ pnpm verify
 pnpm test:e2e
 pnpm cloudflare:dry-run
 docker compose -f docker-compose.yml config
-docker compose -f docker-compose.yml build app verify e2e cloudflare
+docker compose -f docker-compose.yml build app verify e2e cloudflare app-smoke
 docker compose -f docker-compose.yml run --rm verify
 docker compose -f docker-compose.yml run --rm e2e
 docker compose -f docker-compose.yml run --rm cloudflare
+docker compose -f docker-compose.yml run --rm app-smoke
 ```
 
 ## Gate

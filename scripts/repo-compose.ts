@@ -18,7 +18,7 @@ export async function checkComposeGuardrails(
     .catch(() => '');
   if (!text) return [{ file: 'docker-compose.yml', message: 'missing' }];
   const services = serviceNames(text);
-  for (const service of ['app', 'verify', 'e2e', 'cloudflare']) {
+  for (const service of ['app', 'verify', 'e2e', 'cloudflare', 'app-smoke']) {
     if (!services.has(service))
       problems.push({
         file: 'docker-compose.yml',
@@ -47,6 +47,15 @@ export async function checkComposeGuardrails(
     problems.push({
       file: 'Dockerfile',
       message: 'app target must run preview',
+    });
+  if (
+    !/FROM app AS app-smoke[\s\S]*CMD \["pnpm", "exec", "tsx", "scripts\/app-smoke\.ts"\]/.test(
+      dockerfile,
+    )
+  )
+    problems.push({
+      file: 'Dockerfile',
+      message: 'app-smoke target must run app smoke',
     });
   const playwright = await fs
     .readFile(path.join(root, 'playwright.config.ts'), 'utf8')

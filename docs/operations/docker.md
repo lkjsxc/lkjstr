@@ -14,16 +14,19 @@ Docker docs define the Compose verification path.
 - `e2e` installs Playwright browser dependencies in its image.
 - `e2e` builds the app and runs Playwright against production preview.
 - `cloudflare` runs the Wrangler dry-run verification from the built image.
+- `app-smoke` starts production preview on port `5173`, fetches `/`, and fails
+  on non-OK or blank app HTML.
 - Docker Compose is the final verification gate for agent changes. Run config,
-  build `app`, `verify`, `e2e`, and `cloudflare`, then run the `verify`, `e2e`,
-  and `cloudflare` services from those images.
+  build `app`, `verify`, `e2e`, `cloudflare`, and `app-smoke`, then run the
+  `verify`, `e2e`, `cloudflare`, and `app-smoke` services from those images.
 
 ## Commands
 
 ```sh
 docker compose -f docker-compose.yml config
-docker compose --progress quiet -f docker-compose.yml build app verify e2e cloudflare
+docker compose --progress quiet -f docker-compose.yml build app verify e2e cloudflare app-smoke
 docker compose --progress quiet -f docker-compose.yml run --rm verify
 docker compose --progress quiet -f docker-compose.yml run --rm e2e
 docker compose --progress quiet -f docker-compose.yml run --rm cloudflare
+docker compose --progress quiet -f docker-compose.yml run --rm app-smoke
 ```
