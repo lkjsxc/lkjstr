@@ -15,6 +15,7 @@
   import { emptyProfileState } from '$lib/profile/profile-state';
   import { followingCount } from '$lib/profile/profile-links';
   import type { RelaySet } from '$lib/relays/relay-store';
+  import type { EventTreeListLeadingRow } from '$lib/components/events/event-tree-list-helpers';
   import { createOlderRequestCoordinator } from '$lib/feed-surface/speculative-older';
   import {
     createTimelineSubId,
@@ -44,6 +45,12 @@
   let profiles = $derived<Record<string, ProfileSummary>>(
     state.profile ? { [props.pubkey]: state.profile } : {},
   );
+  let leadingRows = $derived<EventTreeListLeadingRow[]>([
+    { key: 'profile-header' },
+    ...(state.loading ? [{ key: 'profile-loading' }] : []),
+    ...(state.error ? [{ key: 'profile-error' }] : []),
+    ...(state.hasNewer ? [{ key: 'profile-newer', nearStart: true }] : []),
+  ]);
   let npub = $derived(safeNpub(props.pubkey));
   let nprofile = $derived(
     safeNprofile(props.pubkey, timelineRelays(props.relaySets)),
@@ -120,49 +127,50 @@
 </script>
 
 <section class="profile-tab feed-tab" aria-label="Profile">
-  <ProfileHeader
-    pubkey={props.pubkey}
-    profile={state.profile}
-    activeAccount={props.activeAccount}
+  <EventTreeList
+    tabId={props.tabId}
+    pagingEnabled={props.visible !== false}
+    restoreAnchor={props.restoreAnchor}
+    items={state.posts}
+    {profiles}
     relaySets={props.relaySets}
-    {npub}
-    {nprofile}
-    followList={state.followList}
-    followingCount={followingCount(state.followList)}
-    openProfileEdit={props.openProfileEdit}
-  />
-  {#if state.loading}
-    <p>Loading profile data...</p>
-  {/if}
-  {#if state.error}
-    <p role="alert">{state.error}</p>
-  {/if}
-  <section class="profile-notes" aria-label="Notes">
-    {#if state.hasNewer}
-      <ProfileNewerButton
-        loading={state.loadingNewer}
-        load={() => runtime?.loadNewer()}
-      />
-    {/if}
-    <EventTreeList
-      tabId={props.tabId}
-      pagingEnabled={props.visible !== false}
-      restoreAnchor={props.restoreAnchor}
-      items={state.posts}
-      {profiles}
-      relaySets={props.relaySets}
-      activeAccountPubkey={props.activeAccount?.pubkey}
-      loading={state.loading}
-      emptyText="No notes have been received for this profile."
-      loadingOlder={state.loadingOlder}
-      loadingNewer={state.loadingNewer}
-      hasOlder={state.hasOlder}
-      hasNewer={state.hasNewer}
-      onNearEnd={() => olderRequests.requestFromNearEnd()}
-      onNearStart={() => runtime?.loadNewer()}
-      openProfile={props.openProfile}
-      openThread={props.openThread}
-      openAuthorContext={props.openAuthorContext}
-    />
-  </section>
+    activeAccountPubkey={props.activeAccount?.pubkey}
+    loading={state.loading}
+    emptyText="No notes have been received for this profile."
+    loadingOlder={state.loadingOlder}
+    loadingNewer={state.loadingNewer}
+    hasOlder={state.hasOlder}
+    hasNewer={state.hasNewer}
+    onNearEnd={() => olderRequests.requestFromNearEnd()}
+    onNearStart={() => runtime?.loadNewer()}
+    openProfile={props.openProfile}
+    openThread={props.openThread}
+    openAuthorContext={props.openAuthorContext}
+    {leadingRows}
+  >
+    {#snippet leadingRow(row)}
+      {#if row.key === 'profile-header'}
+        <ProfileHeader
+          pubkey={props.pubkey}
+          profile={state.profile}
+          activeAccount={props.activeAccount}
+          relaySets={props.relaySets}
+          {npub}
+          {nprofile}
+          followList={state.followList}
+          followingCount={followingCount(state.followList)}
+          openProfileEdit={props.openProfileEdit}
+        />
+      {:else if row.key === 'profile-loading'}
+        <p>Loading profile data...</p>
+      {:else if row.key === 'profile-error'}
+        <p role="alert">{state.error}</p>
+      {:else if row.key === 'profile-newer'}
+        <ProfileNewerButton
+          loading={state.loadingNewer}
+          load={() => runtime?.loadNewer()}
+        />
+      {/if}
+    {/snippet}
+  </EventTreeList>
 </section>

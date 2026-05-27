@@ -7,6 +7,11 @@ import {
 import type { FlatEventTreeItem } from '$lib/events/tree';
 import { setTabFeedAnchor } from '$lib/workspace/tab-anchor-registry';
 
+export type EventAnchorRow = {
+  readonly node: FlatEventTreeItem;
+  readonly visualIndex: number;
+};
+
 export type TreeListAnchorHandle = VirtualListHandle & {
   getViewportSize?: () => number;
   getScrollSize?: () => number;
@@ -14,7 +19,7 @@ export type TreeListAnchorHandle = VirtualListHandle & {
 
 export async function restoreFeedListAnchor(args: {
   readonly restore?: { readonly eventId: string; readonly offset: number };
-  readonly nodes: readonly FlatEventTreeItem[];
+  readonly rows: readonly EventAnchorRow[];
   readonly list?: TreeListAnchorHandle;
   readonly key: (node: FlatEventTreeItem) => string;
   readonly destroyed: () => boolean;
@@ -28,22 +33,26 @@ export async function restoreFeedListAnchor(args: {
   if (!args.destroyed())
     restoreVirtualAnchor(
       { key: restore.eventId, offset: restore.offset },
-      args.nodes,
-      args.key,
-      args.list,
+      args.rows,
+      (row) => args.key(row.node),
+      visualIndexList(args.rows, args.list),
     );
   return key;
 }
 
 export function syncFeedListAnchor(args: {
   readonly tabId?: string;
-  readonly previous: readonly FlatEventTreeItem[];
-  readonly nodes: readonly FlatEventTreeItem[];
+  readonly previous: readonly EventAnchorRow[];
+  readonly rows: readonly EventAnchorRow[];
   readonly list?: TreeListAnchorHandle;
   readonly key: (node: FlatEventTreeItem) => string;
   readonly destroyed: () => boolean;
-}): FlatEventTreeItem[] {
-  const anchor = captureVirtualAnchor(args.previous, args.key, args.list);
+}): EventAnchorRow[] {
+  const anchor = captureVirtualAnchor(
+    args.previous,
+    (row) => args.key(row.node),
+    visualIndexList(args.previous, args.list),
+  );
   if (args.tabId && anchor)
     setTabFeedAnchor(args.tabId, {
       eventId: anchor.key,
@@ -51,7 +60,24 @@ export function syncFeedListAnchor(args: {
     });
   void tick().then(() => {
     if (!args.destroyed())
-      restoreVirtualAnchor(anchor, args.nodes, args.key, args.list);
+      restoreVirtualAnchor(
+        anchor,
+        args.rows,
+        (row) => args.key(row.node),
+        visualIndexList(args.rows, args.list),
+      );
   });
-  return [...args.nodes];
+  return [...args.rows];
+}
+
+function visualIndexList(
+  rows: readonly EventAnchorRow[],
+  list?: TreeListAnchorHandle,
+): TreeListAnchorHandle | undefined {
+  if (!list) return undefined;
+  return {
+    ...list,
+    getItemOffset: (index) =>
+      list.getItemOffset?.(rows[index]?.visualIndex ?? index) ?? index,
+  };
 }

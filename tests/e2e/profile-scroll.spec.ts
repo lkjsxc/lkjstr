@@ -36,28 +36,32 @@ test('Profile tab scroll does not move the page', async ({ page }) => {
   const profile = page.locator(
     '.pane-body[data-active-tab="true"] .profile-tab',
   );
-  await expect
-    .poll(() => profile.locator('.profile-notes .event-row').count(), {
-      timeout: 15_000,
-    })
-    .toBeGreaterThan(0);
+  await expect(
+    profile.getByRole('heading', { name: 'Scroll Profile' }),
+  ).toBeVisible({ timeout: 15_000 });
+  await expect(profile.locator('[data-scroll-owner]')).toHaveCount(1);
 
-  const scroller = profile.locator('.profile-notes .event-list__scroller');
-  await scroller.hover();
-  await page.mouse.wheel(0, 1200);
-  const scrolls = await page.evaluate(() => {
+  const scroller = profile.locator('[data-scroll-owner]');
+  const before = await profile.locator('.profile-card').boundingBox();
+  await scroller.evaluate((node) => {
+    const card = node.querySelector<HTMLElement>('.profile-card');
+    node.scrollTop = (card?.offsetHeight ?? 600) + 20;
+    node.dispatchEvent(new Event('scroll', { bubbles: true }));
+  });
+  const scrolls = await profile.evaluate((profileTab) => {
     window.scrollTo(0, document.documentElement.scrollHeight);
-    const scrollers = [
-      ...document.querySelectorAll<HTMLElement>(
-        '.profile-tab .event-list__scroller, .profile-tab .event-list__scroller *',
-      ),
-    ].filter((node) => node.scrollHeight > node.clientHeight + 8);
-    for (const node of scrollers) node.scrollTop = node.scrollHeight;
+    const owner = profileTab.querySelector<HTMLElement>('[data-scroll-owner]');
+    const card = profileTab.querySelector<HTMLElement>('.profile-card');
     return {
       page: document.body.scrollTop + document.documentElement.scrollTop,
-      profile: Math.max(0, ...scrollers.map((node) => node.scrollTop)),
+      profile: owner?.scrollTop ?? 0,
+      headerTop: card?.getBoundingClientRect().top ?? null,
     };
   });
   expect(scrolls.page).toBe(0);
   expect(scrolls.profile).toBeGreaterThan(0);
+  expect(
+    scrolls.headerTop === null || scrolls.headerTop < (before?.y ?? 0),
+  ).toBe(true);
+  await expect(profile.getByText('profile page scroll note 0')).toBeVisible();
 });

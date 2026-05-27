@@ -7,6 +7,7 @@
   export type FeedScrollListHandle = {
     getViewportSize?: () => number;
     getScrollSize?: () => number;
+    getItemOffset?: (index: number) => number;
     scrollToIndex?: (index: number) => void;
   };
 

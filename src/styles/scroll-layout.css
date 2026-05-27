@@ -23,8 +23,7 @@
 .profile-tab > *,
 .timeline-tab > *,
 .new-tab > *,
-.relay-monitor > *,
-.profile-notes {
+.relay-monitor > * {
   padding-inline-end: var(--scroll-content-inset);
 }
 
