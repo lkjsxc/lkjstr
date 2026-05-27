@@ -21,6 +21,8 @@
     "cloudflare:dry-run": "pnpm build && wrangler deploy --dry-run",
     "verify": "pnpm check:repo && pnpm lint && pnpm check && pnpm test && pnpm build",
     "verify:quiet": "tsx scripts/run-quiet.ts verify",
+    "ci:quiet": "tsx scripts/run-quiet.ts ci",
+    "cloudflare:quiet": "tsx scripts/run-quiet.ts cloudflare",
     "verify:e2e": "pnpm verify && pnpm test:e2e"
   },
   "dependencies": {
