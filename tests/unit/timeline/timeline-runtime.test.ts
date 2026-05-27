@@ -63,7 +63,7 @@ describe('timeline runtime', () => {
     });
   });
 
-  it('falls back to self notes when no follow list is found', async () => {
+  it('stays empty when no follow list is found', async () => {
     const active = pubkey();
     const states: string[] = [];
     const runtime = runtimeFor({ activeAccountPubkey: active });
@@ -74,8 +74,7 @@ describe('timeline runtime', () => {
       JSON.stringify(['EOSE', 'timeline-test:follows']),
     );
     await vi.waitFor(() => expect(states).toContain('no-follow-list'));
-    await waitForSub('timeline-test:notes', true);
-    expectNoteReq('timeline-test:notes', [active], { exact: true });
+    expect(runtime.items()).toHaveLength(0);
   });
 
   it('stops loading on note eose without events', async () => {

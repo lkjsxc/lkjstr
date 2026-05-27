@@ -24,7 +24,7 @@ describe('timeline initial relay pages', () => {
     );
   });
 
-  it('uses per-filter Home author budgets across selected fallback chunks', async () => {
+  it('uses per-filter Home author budgets when no author routes exist', async () => {
     const reads: RelayReadRequest[] = [];
     await loadInitialTimelinePage({
       authors: Array.from({ length: 401 }, (_, index) => pubkey(index)),

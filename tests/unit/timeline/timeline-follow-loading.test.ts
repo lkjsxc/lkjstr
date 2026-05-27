@@ -75,6 +75,41 @@ describe('timeline follow loading', () => {
     sockets[1]?.receive(JSON.stringify(['EOSE', secondSub]));
     await vi.waitFor(() => expect(states).toContain('no-follow-list'));
   });
+
+  it('does not start self-only notes after missing follows', async () => {
+    const active = pubkey();
+    let status = '';
+    const runtime = runtimeFor({
+      activeAccountPubkey: active,
+      relays: ['relay-one.example', 'relay-two.example'],
+    });
+    runtime.subscribe((state) => {
+      status = state.status;
+    });
+    await runtime.start();
+    sockets.forEach((socket) => socket.open());
+    for (const socket of sockets) {
+      socket.receive(JSON.stringify(['EOSE', subId(socket)]));
+    }
+    await vi.waitFor(() => expect(status).toBe('no-follow-list'));
+    expect(runtime.items()).toHaveLength(0);
+    const noteFilters = sockets
+      .flatMap((socket) => socket.sent)
+      .map((raw) => JSON.parse(raw) as unknown[])
+      .filter((message) => message[0] === 'REQ')
+      .flatMap(
+        (message) =>
+          message.slice(2) as Array<{ authors?: string[]; kinds?: number[] }>,
+      );
+    expect(
+      noteFilters.some(
+        (filter) =>
+          filter.kinds?.includes(1) &&
+          filter.authors?.length === 1 &&
+          filter.authors[0] === active,
+      ),
+    ).toBe(false);
+  });
 });
 
 function runtimeFor(options: {
