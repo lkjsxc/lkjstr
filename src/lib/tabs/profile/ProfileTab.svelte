@@ -16,7 +16,6 @@
   import { followingCount } from '$lib/profile/profile-links';
   import type { RelaySet } from '$lib/relays/relay-store';
   import type { EventTreeListLeadingRow } from '$lib/components/events/event-tree-list-helpers';
-  import { createOlderRequestCoordinator } from '$lib/feed-surface/speculative-older';
   import {
     createTimelineSubId,
     timelineRelays,
@@ -56,12 +55,6 @@
   let runtimeKey = $derived(
     `${props.pubkey}|${timelineRelays(props.relaySets).join('\u0000')}`,
   );
-  let olderRequests = createOlderRequestCoordinator(
-    async () => {
-      await runtime?.loadOlder();
-    },
-    () => Boolean(state.hasOlder && !state.loadingOlder),
-  );
 
   $effect(() => {
     if (!props.visible) {
@@ -71,7 +64,6 @@
     runtime?.setVisibility?.(true);
     if (!runtimeKey) return;
     const { pubkey, relaySets, tabId } = untrack(() => props);
-    olderRequests.reset();
     runtime = createProfileRuntime(
       pubkey,
       timelineRelays(relaySets),
@@ -143,7 +135,8 @@
     loadingNewer={state.loadingNewer}
     hasOlder={state.hasOlder}
     hasNewer={state.hasNewer}
-    onNearEnd={() => olderRequests.requestFromNearEnd()}
+    olderLoadMode="after-user-scroll"
+    onNearEnd={() => runtime?.loadOlder({ preserve: 'older' })}
     onNearStart={() => runtime?.loadNewer()}
     openProfile={props.openProfile}
     openThread={props.openThread}

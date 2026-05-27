@@ -68,8 +68,11 @@ linked product, protocol, architecture, and operations pages.
   store full events, profiles, relay diagnostics, active workers, or unbounded
   arrays.
 - Feed surfaces share `IntersectionObserver` near-end sentinels with scroll
-  fallback, `feedPagingPhase` footer semantics, speculative older pages, and
+  fallback, `feedPagingPhase` footer semantics, older-load intent gating, and
   staged row shells on Home, Global, Profile, Thread, and Notifications.
+- Feed rows are display-bound before presentation: future events and rows
+  outside local `since`, exclusive `until`, `before`, or `after` bounds stay out
+  of visible feed results.
 - Feed correctness contracts live under
   [architecture/feeds](architecture/feeds/README.md): canonical ordering,
   merge-by-id reducer, per-tab page cursors, and independent notification
@@ -81,7 +84,8 @@ linked product, protocol, architecture, and operations pages.
 - Profile tabs hide visible initial-loading and manual newer-note controls while
   keeping internal loading and newer state. Older-pruned newer notes recover
   through automatic near-start behavior at the first event row, and the identity
-  block spans the profile card width below the avatar/action row.
+  block spans the profile card width below the avatar/action row. Profile older
+  history loads require downward user intent before preserving older rows.
 - Event rows show nip05-only subtitles on feeds, pressed Heart/Repost styling
   from a hybrid action-state index plus feed evidence, and no left-side
   new-event stripe.
@@ -108,6 +112,9 @@ linked product, protocol, architecture, and operations pages.
   snapshots for e2e and Stats.
 - Relay diagnostic summaries are bounded in memory and IDB list reads are
   capped; batched `bulkPut` reduces per-relay transaction churn.
+- Runtime-visible and open-reference cache pins are owner-scoped and cleaned up
+  on owner teardown. They protect compaction dynamically without becoming
+  durable hard-protected priority rows.
 - Cleanup ownership for every resource type is documented in
   [resource-ownership.md](architecture/data/resource-ownership.md).
 - Heap snapshot collection, memory budgets, and the verification workflow are

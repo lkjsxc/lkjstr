@@ -11,6 +11,7 @@ import {
 } from '$lib/identity/profile-cache';
 import type { ProfileSummary } from '$lib/identity/identity';
 import type { FeedEvent } from '$lib/events/types';
+import { feedEventsInDisplayBounds } from '$lib/events/feed-display-bounds';
 
 export async function cachedProfileEvent(
   pubkey: string,
@@ -26,9 +27,9 @@ export async function cachedProfileNotes(
   pubkey: string,
   limit = 30,
 ): Promise<FeedEvent[]> {
-  return [
+  return feedEventsInDisplayBounds([
     ...(await queryFeed({ kind: 'profile', authors: [pubkey], limit })).items,
-  ];
+  ]);
 }
 
 export async function cachedProfileFollowList(

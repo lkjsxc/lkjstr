@@ -24,6 +24,8 @@ export type PageIntent = {
   readonly pageSize: number;
   readonly direction: PageIntentDirection;
   readonly cursor?: FeedCursorPoint;
+  readonly before?: FeedCursorPoint;
+  readonly after?: FeedCursorPoint;
   readonly purpose?:
     | 'feed'
     | 'metadata'

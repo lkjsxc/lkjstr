@@ -1,6 +1,7 @@
 import { normalizeRelayUrl } from '../protocol';
 import { queryFeed, upsertEvent } from '../events/repository';
 import { boundedErrorText } from '../events/runtime-error';
+import { eventInDisplayBounds } from '../events/feed-display-bounds';
 import {
   boundaryCursors,
   feedPageSize,
@@ -90,6 +91,7 @@ export function createGlobalTimelineRuntime(options: TimelineRuntimeOptions) {
     if (closed || !isFeedDisplayKind(poolEvent.event.kind)) return;
     await upsertEvent(poolEvent.event, [poolEvent.relay]);
     if (closed) return;
+    if (!eventInDisplayBounds(poolEvent.event)) return;
     live = mergeFeedWindowItems(live, [{ event: poolEvent.event, relays: [poolEvent.relay] }], feedWindowSize);
     emit(readyWithEventsState(state, items()));
   };

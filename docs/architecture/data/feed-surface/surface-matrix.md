@@ -8,10 +8,10 @@ Per-tab list integration and paging mode.
 | ------- | ---- | ------ | -------- | ------------ |
 | Home | Virtual `EventTreeList` | Cursor window | IO + scroll | Yes |
 | Global | Virtual | Cursor window | IO + scroll | Yes |
-| Profile notes | Virtual | Cursor window | IO + scroll | Yes |
-| Thread | Virtual | Cursor + newer | IO + scroll | Yes |
+| Profile notes | Virtual | Cursor window | After user scroll | Yes |
+| Thread | Virtual | Cursor + newer | After user scroll | Yes |
 | Search | Virtual | Cursor window | IO + scroll | Yes |
-| Notifications | Virtua via `FeedScrollSurface` | Older-only | IO + scroll | Yes |
+| Notifications | Virtua via `FeedScrollSurface` | Older-only | After user scroll | Yes |
 | Custom Request | Virtual | Single read | IO + scroll | On run |
 | Author Context | Virtual | Cursor window | IO + scroll | Yes |
 
@@ -19,6 +19,10 @@ Notifications does not use `EventTreeList` because rows are notification
 records, not flattened event trees. Both paths share `FeedScrollSurface` for
 scroll ownership, near-end, and footer placement. See
 [feed-scroll-surface.md](feed-scroll-surface.md).
+
+Home and Global retain automatic near-end older paging. Profile,
+Notifications, and Thread wait for downward user scroll intent before automatic
+older paging can run.
 
 ## Shared Modules
 

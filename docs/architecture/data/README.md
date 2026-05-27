@@ -18,6 +18,8 @@ Data docs define storage, feed windows, and shared event presentation models.
 - [feed-surface/near-end.md](feed-surface/near-end.md): near-end paging.
 - [feed-surface/older-load-mode.md](feed-surface/older-load-mode.md): older
   load gating.
+- [feed-surface/event-value.md](feed-surface/event-value.md): visible row value
+  and display-bound feed insertion.
 - [feed-surface/staged-pipeline.md](feed-surface/staged-pipeline.md): staged
   row loading.
 - [feed-surface/surface-matrix.md](feed-surface/surface-matrix.md): surface

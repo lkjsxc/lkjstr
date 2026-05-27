@@ -1,5 +1,8 @@
 import { describe, expect, it } from 'vitest';
-import { scoreEvent } from '../../../src/lib/cache/event-priority';
+import {
+  priorityTargetBumps,
+  scoreEvent,
+} from '../../../src/lib/cache/event-priority';
 import { compactOldEvents } from '../../../src/lib/cache/compaction';
 import {
   cacheCompactionWriteThreshold,
@@ -17,7 +20,20 @@ describe('cache compaction', () => {
       content: '',
       sig: 'sig',
     });
-    expect(score).toBeGreaterThan(100);
+    expect(score).toBeGreaterThan(scoreEvent(baseEvent(100)));
+  });
+
+  it('assigns target bumps for direct event and quote references', () => {
+    const bumps = priorityTargetBumps({
+      ...baseEvent(100),
+      kind: 6,
+      tags: [
+        ['e', 'event-target'],
+        ['q', 'quote-target'],
+      ],
+    });
+    expect(bumps.get('event-target')).toBeGreaterThan(0);
+    expect(bumps.get('quote-target')).toBeGreaterThan(0);
   });
 
   it('no-ops when indexeddb is unavailable in tests', async () => {
@@ -42,3 +58,15 @@ describe('cache compaction', () => {
     expect(shouldScheduleCompaction(cacheCompactionWriteThreshold)).toBe(true);
   });
 });
+
+function baseEvent(created_at: number) {
+  return {
+    id: 'b',
+    pubkey: 'p',
+    created_at,
+    kind: 1,
+    tags: [],
+    content: '',
+    sig: 'sig',
+  };
+}

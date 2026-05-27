@@ -22,6 +22,8 @@ Profile runtime owns metadata and authored-note loading for one pubkey.
 - **Bootstrap posts**: author write routes first, then selected read fallback.
 - **Live posts**: `since` from newest visible post.
 - **Older / newer**: `page` phase with scan cursor overlap when needed.
+  Accidental older calls preserve newest rows. Gated downward history intent may
+  preserve older rows and expose `hasNewer`.
 - Note window cap `180` items.
 
 ## Contract
@@ -29,6 +31,8 @@ Profile runtime owns metadata and authored-note loading for one pubkey.
 - Profile tabs receive a pubkey from workspace actions.
 - Runtime reads cache first, then orchestrator Demands.
 - Metadata and follow-list events never consume visible note page slots.
+- Future notes and old live replay are stored but not inserted into visible
+  profile rows.
 - Relay reads use [routing-by-surface](../network/subscription-orchestration/routing-by-surface.md).
 - `loadNewer` remains part of the runtime API. Profile UI invokes it through
   automatic near-start feed behavior, not through a visible manual control.

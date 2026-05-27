@@ -24,7 +24,7 @@ is not a routine item-count budget.
 
 - When invoked, evict lowest scores until estimated durable usage is below the
   safe threshold or only protected rows remain.
-- Hard-protected kinds and pinned ids never score-evict. See
+- Hard-protected kinds and currently pinned runtime ids never score-evict. See
   [score-policy.md](score-policy.md).
 
 ## Settings Removal

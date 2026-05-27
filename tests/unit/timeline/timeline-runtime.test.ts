@@ -131,7 +131,7 @@ describe('timeline runtime', () => {
     await runtime.start();
     openAllSockets();
     // prettier-ignore
-    const note = finalizeEvent({ created_at: Math.floor(Date.now() / 1000) + 1, kind: 1, tags: [], content: 'followed note' }, followedKey);
+    const note = finalizeEvent({ created_at: Math.floor(Date.now() / 1000), kind: 1, tags: [], content: 'followed note' }, followedKey);
     await waitForSub('timeline-test:notes', true);
     socketForSub('timeline-test:notes')?.receive(
       JSON.stringify(['EVENT', 'timeline-test:notes', note]),

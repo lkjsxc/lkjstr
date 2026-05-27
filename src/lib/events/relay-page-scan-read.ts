@@ -1,11 +1,7 @@
-import type { NostrFilter } from '../protocol';
 import type { PoolEvent } from '../relays/relay-pool';
 import { mergeSafeCursor, scanCursor } from './relay-page-scan-cursors';
-import {
-  logIncompleteScan,
-  recordScanCoverage,
-} from './relay-page-scan-diagnostics';
 import { mergeBounds, positiveFilters } from './relay-page-filter';
+import { mergedDisplayBounds } from './feed-display-bounds';
 import {
   limitedRelayFilterGroups,
   relayReadEventCap,
@@ -13,7 +9,11 @@ import {
 import { mergeFeedEvents, mergePoolEvents } from './relay-page-merge';
 import { needsCursorSlack, pageScanItems } from './relay-page-scan-items';
 import { retainedRawCandidates, scaleFilters } from './relay-page-scan-raw';
-import { readScanBatch, type BatchReadResult } from './relay-page-scan-batch';
+import { readScanBatch } from './relay-page-scan-batch';
+import {
+  recordBatchCoverage,
+  recordUnresolved,
+} from './relay-page-scan-record';
 import {
   canSplitRelayPageSegment,
   segmentBounds,
@@ -51,7 +51,10 @@ export async function readSegment(
     safeCursor = mergeSafeCursor(request, safeCursor, read.safeCursor);
   }
   return {
-    items: pageScanItems(received, request),
+    items: pageScanItems(received, {
+      ...request,
+      displayBounds: mergedDisplayBounds(request, bounds),
+    }),
     receivedItems: mergeFeedEvents(received),
     complete,
     dense,
@@ -116,13 +119,19 @@ async function readGroup(
       eventLimitDense ||= read.reason === 'event-limit' && read.dense;
       contacted = true;
     }
-    const items = pageScanItems(mergePoolEvents(raw), request);
+    const items = pageScanItems(mergePoolEvents(raw), {
+      ...request,
+      displayBounds: mergedDisplayBounds(request, segment),
+    });
     if (eventLimitDense && items.length >= request.pageSize) break;
     if (dense && attempt < 4) continue;
     if (needsCursorSlack(raw, items.length, request) && attempt < 4) continue;
     break;
   }
-  const items = pageScanItems(mergePoolEvents(raw), request);
+  const items = pageScanItems(mergePoolEvents(raw), {
+    ...request,
+    displayBounds: mergedDisplayBounds(request, segment),
+  });
   const unresolved = !complete || dense;
   if (unresolved && (!complete || !canSplitRelayPageSegment(segment)))
     await recordUnresolved(
@@ -142,57 +151,4 @@ async function readGroup(
     contacted,
     safeCursor: unresolved ? scanCursor(request, items) : undefined,
   };
-}
-
-async function recordBatchCoverage(
-  request: RelayGroupPageRequest,
-  groupKey: string,
-  relays: readonly string[],
-  filters: readonly NostrFilter[],
-  read: BatchReadResult,
-  attempt: number,
-): Promise<void> {
-  await recordScanCoverage(
-    request,
-    groupKey,
-    relays,
-    filters,
-    read.complete ? (read.dense ? 'dense' : 'complete') : 'incomplete',
-    {
-      reason: read.reason,
-      limit: read.density.limit,
-      eventCount: read.density.eventCount,
-      uniqueCount: read.density.uniqueCount,
-      attempt,
-      durationMs: read.durationMs,
-    },
-  );
-  if (!read.complete && !(read.reason === 'event-limit' && read.dense))
-    logIncompleteScan(request, groupKey, filters[0] ?? {}, read.statuses);
-}
-
-async function recordUnresolved(
-  request: RelayGroupPageRequest,
-  groupKey: string,
-  relays: readonly string[],
-  filters: readonly NostrFilter[],
-  segment: RelayPageSegment,
-  dense: boolean,
-  raw: readonly PoolEvent[],
-): Promise<void> {
-  const bounds = segmentBounds(segment);
-  await recordScanCoverage(
-    request,
-    groupKey,
-    relays,
-    filters.map((filter) => mergeBounds(filter, bounds)),
-    'unresolved',
-    {
-      reason: dense ? 'dense-minimum-or-budget' : 'incomplete-minimum',
-      limit: request.pageSize,
-      eventCount: raw.length,
-      uniqueCount: new Set(raw.map((item) => item.event.id)).size,
-      attempt: 4,
-    },
-  );
 }

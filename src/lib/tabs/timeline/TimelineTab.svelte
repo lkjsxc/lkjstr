@@ -161,6 +161,7 @@
     loadingNewer={state.loadingNewer}
     hasOlder={state.hasOlder}
     hasNewer={state.hasNewer}
+    olderLoadMode="auto-near-end"
     onNearEnd={() => olderRequests.requestFromNearEnd()}
     onNearStart={() => runtime?.loadNewer()}
     openProfile={props.openProfile}

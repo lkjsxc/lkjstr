@@ -1,4 +1,5 @@
 import { feedWindowSize } from '$lib/events/feed-window';
+import { feedEventsInDisplayBounds } from '$lib/events/feed-display-bounds';
 import { feedDisplayKinds, isFeedDisplayKind } from '$lib/events/feed-kinds';
 import { readRelayFeedGroups, readRelayPage } from '$lib/events/relay-page';
 import type { ProfileSummary } from '$lib/identity/identity';
@@ -145,7 +146,9 @@ export async function loadInitialProfilePage(request: Request) {
     followList,
     posts: mergePosts(
       request.posts,
-      posts.items.filter((item) => isFeedDisplayKind(item.event.kind)),
+      feedEventsInDisplayBounds(
+        posts.items.filter((item) => isFeedDisplayKind(item.event.kind)),
+      ),
     ),
     relays: [
       ...new Set([

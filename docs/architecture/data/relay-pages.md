@@ -19,6 +19,8 @@ preserving where each real event was seen.
   of relay URLs.
 - Page slicing happens after collection, cursor filtering, sorting, and relay
   provenance merging.
+- Feed display bounds reject future events and locally enforce `since`,
+  exclusive `until`, `before`, and `after` before rows enter page results.
 - `before` cursor filtering is local. For the same second as the boundary it
   keeps events with ids greater than the cursor id.
 - `after` cursor filtering is local. For the same second as the boundary it

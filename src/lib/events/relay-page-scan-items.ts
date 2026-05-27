@@ -2,14 +2,23 @@ import type { NostrFilter } from '../protocol';
 import type { PoolEvent } from '../relays/relay-pool';
 import type { RelayGroupPageRequest } from './relay-page';
 import { afterCursor, beforeCursor } from './repository-shared';
+import {
+  feedEventsInDisplayBounds,
+  type FeedDisplayBounds,
+} from './feed-display-bounds';
 import { mergeFeedEvents, sortFeedEvents } from './relay-page-merge';
 import type { FeedEvent } from './types';
 
 export function pageScanItems(
   events: readonly FeedEvent[],
-  request: Pick<RelayGroupPageRequest, 'before' | 'after' | 'pageSize'>,
+  request: Pick<RelayGroupPageRequest, 'before' | 'after' | 'pageSize'> & {
+    readonly displayBounds?: FeedDisplayBounds;
+  },
 ): FeedEvent[] {
-  return scanCandidates(events, request.pageSize)
+  return scanCandidates(
+    feedEventsInDisplayBounds(events, request.displayBounds),
+    request.pageSize,
+  )
     .filter((item) => beforeCursor(item.event, request.before))
     .filter((item) => afterCursor(item.event, request.after))
     .slice(0, request.pageSize);

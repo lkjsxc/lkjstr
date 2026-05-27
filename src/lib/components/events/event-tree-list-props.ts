@@ -7,6 +7,7 @@ import type {
   RepostSummaryMap,
 } from '$lib/thread/thread-reactions';
 import type { EventTreeListLeadingRow } from './event-tree-list-helpers';
+import type { OlderLoadMode } from '$lib/feed-surface/older-load-mode';
 
 export type EventTreeListProps = {
   items: readonly FeedEvent[];
@@ -29,6 +30,7 @@ export type EventTreeListProps = {
   openAuthorContext?: (eventId: string, pubkey: string) => void;
   tabId?: string;
   pagingEnabled?: boolean;
+  olderLoadMode?: OlderLoadMode;
   restoreAnchor?: { readonly eventId: string; readonly offset: number };
   leadingRows?: readonly EventTreeListLeadingRow[];
   leadingRow?: Snippet<[EventTreeListLeadingRow]>;

@@ -52,6 +52,7 @@ table of contents required by repository checks.
 - [file](architecture/data/feed-surface/README.md)
 - [file](architecture/data/feed-surface/feed-row-chrome.md)
 - [file](architecture/data/feed-surface/feed-scroll-surface.md)
+- [file](architecture/data/feed-surface/event-value.md)
 - [file](architecture/data/feed-surface/footer-phase.md)
 - [file](architecture/data/feed-surface/near-end.md)
 - [file](architecture/data/feed-surface/older-load-mode.md)

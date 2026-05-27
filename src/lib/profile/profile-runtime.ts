@@ -1,11 +1,4 @@
-import {
-  feedPageSize,
-  feedWindowSize,
-  cursorPoint,
-  mergeFeedWindow,
-  oldestCreatedAt,
-} from '$lib/events/feed-window';
-import { afterCursor } from '$lib/events/repository-shared';
+import { feedPageSize, oldestCreatedAt } from '$lib/events/feed-window';
 import { boundedErrorText } from '$lib/events/runtime-error';
 import { isFeedDisplayKind } from '$lib/events/feed-kinds';
 import {
@@ -31,6 +24,12 @@ import {
 } from './profile-runtime-paging';
 import { emptyProfileState, type ProfileState } from './profile-state';
 import { profileLiveFilters } from './profile-subscription-filters';
+import {
+  mergeProfileLivePost,
+  shouldDisplayLiveProfilePost,
+  withProfileCursors,
+} from './profile-runtime-display';
+import type { ProfileOlderPreserveMode } from './profile-runtime-paging';
 
 export type { ProfileState } from './profile-state';
 export type ProfileRuntime = ReturnType<typeof createProfileRuntime>;
@@ -57,11 +56,9 @@ export function createProfileRuntime(
   let generation = 0;
 
   const active = (run: number): boolean => !closed && generation === run;
-  // prettier-ignore
-  const withCursors = (next: ProfileState): ProfileState => ({ ...next, newestCursor: cursorPoint(next.posts.at(0)), oldestCreatedAt: oldestCreatedAt(next.posts), oldestCursor: cursorPoint(next.posts.at(-1)) });
   const emit = (next: ProfileState): void => {
     if (closed) return;
-    state = withCursors(next);
+    state = withProfileCursors(next);
     listeners.forEach((listener) => listener(state));
   };
   const receiveFollowList = (event: NostrEvent): void => {
@@ -87,12 +84,14 @@ export function createProfileRuntime(
   };
   const receivePost = (event: NostrEvent, relay: string): void => {
     if (closed) return;
-    const item = { event, relays: [relay] };
-    if (state.newerPruned && afterCursor(event, state.newestCursor)) {
+    const display = shouldDisplayLiveProfilePost({ event, state, startedAt });
+    if (display === 'hidden') return;
+    if (display === 'has-newer') {
       emit({ ...state, loading: false, hasNewer: true });
       return;
     }
-    const window = mergeFeedWindow(state.posts, [item], feedWindowSize);
+    const item = { event, relays: [relay] };
+    const window = mergeProfileLivePost(state.posts, item);
     emit({
       ...state,
       posts: window.items,
@@ -174,10 +173,10 @@ export function createProfileRuntime(
       for (const item of cleanup.splice(0)) item();
       listeners.clear();
     },
-    loadOlder: async (): Promise<void> => {
+    loadOlder: async (options: { preserve?: ProfileOlderPreserveMode } = {}): Promise<void> => {
       if (closed || state.loadingOlder || !state.hasOlder) return; const run = generation; const cursor = olderScanCursor ?? state.oldestCursor; if (!cursor) return; emit({ ...state, loadingOlder: true });
       try {
-        const page = await loadOlderProfilePage({ posts: state.posts, pubkey, relays, owner, cursor, pageSize, subscriptions: manager, signal: aborts.signal });
+        const page = await loadOlderProfilePage({ posts: state.posts, pubkey, relays, owner, cursor, pageSize, subscriptions: manager, signal: aborts.signal, preserve: options.preserve });
         if (!active(run)) return;
         const { feedRowShells } = await import('../feed-surface/row-shell');
         emit({ ...state, posts: feedRowShells(page.posts), hasOlder: page.hasOlder, loadingOlder: true });

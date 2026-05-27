@@ -3,6 +3,7 @@
   import { VList } from 'virtua/svelte';
   import EventTreeListNearEnd from '$lib/components/events/EventTreeListNearEnd.svelte';
   import { isNearEnd } from '$lib/feed-surface/near-end';
+  import type { OlderLoadTrigger } from '$lib/feed-surface/older-load-mode';
 
   export type FeedScrollListHandle = {
     getViewportSize?: () => number;
@@ -17,8 +18,9 @@
     viewportClass: string;
     scrollerClass: string;
     nearEndEnabled?: boolean;
-    onNearEnd?: () => void | Promise<void>;
+    onNearEnd?: (trigger: OlderLoadTrigger) => void | Promise<void>;
     onScrollOffset?: (offset: number) => void;
+    onDownwardUserIntent?: () => void;
     list?: FeedScrollListHandle;
     scrollerElement?: HTMLDivElement;
     scrollElement?: HTMLElement;
@@ -33,6 +35,7 @@
     nearEndEnabled = false,
     onNearEnd,
     onScrollOffset,
+    onDownwardUserIntent,
     list = $bindable(),
     scrollerElement = $bindable(),
     scrollElement = $bindable(),
@@ -42,13 +45,30 @@
   let viewportHeight = $derived(
     list?.getViewportSize?.() ?? scrollerElement?.clientHeight ?? 0,
   );
+  let previousOffset = 0;
+  let userScrollInput = false;
 
   function handleScroll(offset: number): void {
     onScrollOffset?.(offset);
+    if (userScrollInput && offset > previousOffset) onDownwardUserIntent?.();
+    previousOffset = offset;
     const viewport = list?.getViewportSize?.() ?? 0;
     const total = list?.getScrollSize?.() ?? 0;
     if (nearEndEnabled && data.length > 0 && isNearEnd(offset, viewport, total))
-      void onNearEnd?.();
+      void onNearEnd?.('scroll');
+  }
+
+  function markWheelIntent(event: WheelEvent): void {
+    if (event.deltaY > 0) userScrollInput = true;
+  }
+
+  function markKeyIntent(event: KeyboardEvent): void {
+    if (['ArrowDown', 'PageDown', 'End', ' '].includes(event.key))
+      userScrollInput = true;
+  }
+
+  function markTouchIntent(): void {
+    userScrollInput = true;
   }
 
   $effect(() => {
@@ -56,6 +76,19 @@
     scrollElement =
       scrollerElement.querySelector<HTMLElement>('[data-scroll-owner]') ??
       scrollerElement;
+  });
+
+  $effect(() => {
+    if (!scrollElement) return;
+    const target = scrollElement;
+    target.addEventListener('wheel', markWheelIntent);
+    target.addEventListener('keydown', markKeyIntent);
+    target.addEventListener('touchmove', markTouchIntent);
+    return () => {
+      target.removeEventListener('wheel', markWheelIntent);
+      target.removeEventListener('keydown', markKeyIntent);
+      target.removeEventListener('touchmove', markTouchIntent);
+    };
   });
 </script>
 
@@ -78,7 +111,7 @@
   <EventTreeListNearEnd
     enabled={nearEndEnabled}
     {viewportHeight}
-    {onNearEnd}
+    onNearEnd={() => onNearEnd?.('near-end')}
     scroller={scrollerElement}
   />
 </div>

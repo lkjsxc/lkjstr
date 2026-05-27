@@ -40,6 +40,7 @@ describe('relay feed group pages', () => {
   });
 
   it('merges sequential relay group provenance and has-more state', async () => {
+    const now = Math.floor(Date.now() / 1000);
     const page = await readRelayFeedGroups({
       key: 'relay-page-group-merge',
       groups: [
@@ -50,7 +51,7 @@ describe('relay feed group pages', () => {
       pageSize: 1,
       subscriptions: {
         readPage: async (request: RelayReadRequest) => [
-          receipt(event('1', 10), request.relays[0] ?? ''),
+          receipt(event('1', now), request.relays[0] ?? ''),
         ],
       } as unknown as RelaySubscriptionManager,
     });

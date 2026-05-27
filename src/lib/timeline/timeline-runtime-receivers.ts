@@ -1,5 +1,6 @@
 import { upsertEvent } from '../events/repository';
 import { isFeedDisplayKind } from '../events/feed-kinds';
+import { eventInDisplayBounds } from '../events/feed-display-bounds';
 import type { PoolEvent } from '../relays/relay-pool';
 import { accountHomeAuthors } from './follow-list';
 import { loadAccountHome } from './timeline-load';
@@ -49,6 +50,7 @@ export async function receiveTimelinePoolEvent(
   if (!isFeedDisplayKind(poolEvent.event.kind)) return;
   if (!ctx.getAuthors().includes(poolEvent.event.pubkey)) return;
   await upsertEvent(poolEvent.event, [poolEvent.relay]);
+  if (!eventInDisplayBounds(poolEvent.event)) return;
   ctx.setLive(upsertLive(ctx.getLive(), poolEvent.event, poolEvent.relay));
   ctx.emit(ctx.withCursors(readyWithEventsState(ctx.getState(), ctx.items())));
 }

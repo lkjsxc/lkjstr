@@ -87,6 +87,7 @@ test('notifications do not auto-load older on initial settle', async ({
   const scroller = page.locator('.notification-list-scroller').first();
   await scroller.hover();
   await scroller.evaluate((el) => {
+    el.dispatchEvent(new WheelEvent('wheel', { deltaY: 2400, bubbles: true }));
     el.scrollTop = el.scrollHeight;
     el.dispatchEvent(new Event('scroll'));
   });
@@ -95,6 +96,7 @@ test('notifications do not auto-load older on initial settle', async ({
   // poke it too to ensure the runtime sees scroll intent.
   const viewport = page.locator('.notification-list-scroll').first();
   await viewport.evaluate((el) => {
+    el.dispatchEvent(new WheelEvent('wheel', { deltaY: 2400, bubbles: true }));
     el.scrollTop = el.scrollHeight;
     el.dispatchEvent(new Event('scroll'));
   });

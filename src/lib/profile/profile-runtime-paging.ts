@@ -1,4 +1,5 @@
 import { feedWindowSize, mergeFeedWindow } from '$lib/events/feed-window';
+import { feedEventsInDisplayBounds } from '$lib/events/feed-display-bounds';
 import { feedDisplayKinds } from '$lib/events/feed-kinds';
 import { queryFeed } from '$lib/events/repository';
 import { readRelayFeedGroups } from '$lib/events/relay-page';
@@ -18,9 +19,11 @@ export type ProfileOlderRequest = {
   readonly pageSize: number;
   readonly subscriptions: SubscriptionOrchestrator;
   readonly signal?: AbortSignal;
+  readonly preserve?: ProfileOlderPreserveMode;
 };
 
 export type ProfileNewerRequest = ProfileOlderRequest;
+export type ProfileOlderPreserveMode = 'newer' | 'older';
 
 export async function loadOlderProfilePage(request: ProfileOlderRequest) {
   const page = await queryFeed({
@@ -70,9 +73,11 @@ export async function loadOlderProfilePage(request: ProfileOlderRequest) {
   );
   const window = mergeFeedWindow(
     request.posts,
-    [...page.items, ...relayPage.items],
+    feedEventsInDisplayBounds([...page.items, ...relayPage.items], {
+      before: request.cursor,
+    }),
     feedWindowSize,
-    true,
+    request.preserve === 'older',
   );
   return {
     posts: window.items,
@@ -131,7 +136,9 @@ export async function loadNewerProfilePage(request: ProfileNewerRequest) {
   );
   const window = mergeFeedWindow(
     request.posts,
-    [...page.items, ...relayPage.items],
+    feedEventsInDisplayBounds([...page.items, ...relayPage.items], {
+      after: request.cursor,
+    }),
     feedWindowSize,
   );
   return {

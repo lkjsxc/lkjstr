@@ -23,6 +23,9 @@ bounded as timelines grow.
 - Relay feed pages merge duplicate event ids, preserve all relay provenance,
   sort by `{created_at,id}`, and apply `before` or `after` cursor filters
   locally before page slicing.
+- Feed pages reject future events and locally enforce display `since`,
+  exclusive `until`, `before`, and `after` bounds before rows enter page
+  results.
 - Live relay subscriptions set `since` when the runtime starts so old relay
   history is not replayed into the live window.
 - Orchestration budgets: at most one live lease per compatible Demand fingerprint;
@@ -88,6 +91,9 @@ or older-page loads from moving the visible row.
   failed diagnostics.
 - Home does not start hidden session backfill when opened. Older history loads
   through scroll-driven or explicit page requests.
+- Profile history loads preserve newest rows unless the request came from gated
+  downward user history intent. Intentional history loads may preserve older
+  rows and mark newer rows available for recovery.
 
 ## Verification
 

@@ -2,6 +2,7 @@ import { readRelayFeedGroups } from '../../events/relay-page';
 import type { RelayGroupPageResult } from '../../events/relay-page';
 import { planPagingRouteGroups } from './route-plan';
 import type { PageIntent } from './intent-types';
+import type { FeedCursorPoint } from '../../events/types';
 import type { RelayRouteGroup } from '../relay-route-types';
 import type {
   PageReadExecutor,
@@ -19,10 +20,10 @@ function hashSemanticKey(value: string): string {
 }
 
 export function pageIntentSemanticKey(intent: PageIntent): string {
+  const bounds = pageIntentBounds(intent);
   const authors = [...intent.authors].sort().join(',');
-  const cursor = intent.cursor
-    ? `${intent.cursor.createdAt}:${intent.cursor.id}`
-    : '';
+  const before = cursorKey(bounds.before);
+  const after = cursorKey(bounds.after);
   const relayKey = [...intent.selectedRelays].sort().join('\u0000');
   const raw = [
     intent.surface,
@@ -30,12 +31,24 @@ export function pageIntentSemanticKey(intent: PageIntent): string {
     intent.direction,
     authors,
     String(intent.pageSize),
-    cursor,
+    before,
+    after,
     relayKey,
     intent.routeFingerprint ?? '',
     intent.purpose ?? 'feed',
   ].join('|');
   return `page:${hashSemanticKey(raw)}`;
+}
+
+export function pageIntentBounds(intent: PageIntent): {
+  readonly before?: FeedCursorPoint;
+  readonly after?: FeedCursorPoint;
+} {
+  if (intent.before || intent.after)
+    return { before: intent.before, after: intent.after };
+  if (intent.direction === 'older') return { before: intent.cursor };
+  if (intent.direction === 'newer') return { after: intent.cursor };
+  return {};
 }
 
 export function routeGroupFingerprint(
@@ -76,10 +89,15 @@ export async function readTimelinePageByIntent(
     groups,
     filters,
     direction: intent.direction,
+    ...pageIntentBounds(intent),
     pageSize: intent.pageSize,
     subscriptions: orchestrator,
     purpose: intent.purpose ?? 'feed',
   });
+}
+
+function cursorKey(cursor: FeedCursorPoint | undefined): string {
+  return cursor ? `${cursor.createdAt}:${cursor.id}` : '';
 }
 
 export function readPageByIntent(

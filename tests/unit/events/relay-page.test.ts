@@ -98,6 +98,22 @@ describe('relay feed pages', () => {
     expect(limit).toBe(1);
   });
 
+  it('does not display relay rows outside current-time policy', async () => {
+    const now = Math.floor(Date.now() / 1000);
+    const page = await readRelayFeedPage({
+      key: 'relay-page-future',
+      relays: ['wss://relay.example/'],
+      filters: [{ kinds: [1] }],
+      pageSize: 10,
+      subscriptions: subscriptions([
+        receipt(event('future', now + 60), 'wss://relay.example/'),
+        receipt(event('current', now), 'wss://relay.example/'),
+      ]),
+    });
+
+    expect(page.map((item) => item.event.content)).toEqual(['current']);
+  });
+
   it('adds interval bounds to historical relay groups', async () => {
     let since: number | undefined;
     let until: number | undefined;

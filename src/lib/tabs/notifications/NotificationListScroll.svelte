@@ -11,6 +11,10 @@
     notificationViewRows,
     type NotificationViewRow,
   } from '$lib/feed-surface/notification-view-rows';
+  import {
+    canRequestOlder,
+    type OlderLoadTrigger,
+  } from '$lib/feed-surface/older-load-mode';
   import type { ProfileSummary } from '$lib/identity/identity';
   import type { RelaySet } from '$lib/relays/relay-store';
   import type { FeedEvent } from '$lib/events/types';
@@ -51,6 +55,7 @@
   }: Props = $props();
 
   let scrollElement = $state<HTMLElement | undefined>();
+  let userScrolledDown = false;
   let rows = $derived(notificationViewRows(records));
   let footerPhase = $derived(
     footerPhaseFromPaging({
@@ -67,6 +72,19 @@
   $effect(() => {
     listElement = scrollElement;
   });
+
+  function requestOlder(trigger: OlderLoadTrigger): void {
+    if (
+      !nearEndEnabled ||
+      !canRequestOlder({
+        mode: 'after-user-scroll',
+        trigger,
+        userScrolledDown,
+      })
+    )
+      return;
+    void onNearEnd();
+  }
 </script>
 
 <div class="event-list notification-list">
@@ -78,7 +96,8 @@
       scrollerClass="event-list__scroller notification-list-scroller"
       viewportClass="notification-list-scroll"
       {nearEndEnabled}
-      {onNearEnd}
+      onNearEnd={requestOlder}
+      onDownwardUserIntent={() => (userScrolledDown = true)}
       bind:scrollElement
     >
       {#snippet row(item: unknown)}

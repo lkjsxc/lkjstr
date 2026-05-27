@@ -28,7 +28,8 @@ before issuing `loadOlder` for a feed.
 ## Recommended defaults
 
 - Home and Global: `auto-near-end`
-- Notifications: `after-user-scroll`
+- Profile, Notifications, and Thread: `after-user-scroll`
+- Search and tools may keep their current surface-specific behavior.
 
 ## Implementation note
 

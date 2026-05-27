@@ -1,4 +1,5 @@
 import { boundedErrorText } from '../events/runtime-error';
+import { eventInDisplayBounds } from '../events/feed-display-bounds';
 import { afterCursor } from '../events/repository-shared';
 import type { PoolEvent } from '../relays/relay-pool';
 import type { RelaySnapshot } from '../relays/types';
@@ -78,6 +79,7 @@ export function createThreadHandlers(ctx: ThreadHandlerCtx) {
     }
     await storeThreadEvent(poolEvent.event, [poolEvent.relay]);
     if (ctx.isClosed()) return;
+    if (!eventInDisplayBounds(poolEvent.event)) return;
     const state = ctx.getState();
     if (state.newerPruned && afterCursor(poolEvent.event, state.newestCursor)) {
       ctx.emit({ ...state, loading: false, hasNewer: true });

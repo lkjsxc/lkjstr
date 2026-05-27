@@ -85,6 +85,7 @@ describe('profile runtime paging', () => {
       },
       pageSize: 30,
       subscriptions: emptySubscriptions(),
+      preserve: 'older',
     });
     expect(olderPage.newerPruned).toBe(true);
     expect(olderPage.posts[0]?.event.created_at).toBe(299);
@@ -103,5 +104,55 @@ describe('profile runtime paging', () => {
     });
     expect(newerPage.posts[0]?.event.created_at).toBe(300);
     expect(newerPage.olderPruned).toBe(true);
+  });
+
+  it('preserves newest profile rows by default for accidental older loads', async () => {
+    const pubkey = 'c'.repeat(64);
+    const posts = Array.from({ length: feedWindowSize }, (_, index) => ({
+      event: event(String(index + 1), 300 - index, pubkey, 1),
+      relays: ['cache'],
+    }));
+    for (const item of posts) await upsertEvent(item.event, item.relays);
+    const older = { event: event('older', 120, pubkey, 1), relays: ['cache'] };
+    await upsertEvent(older.event, older.relays);
+
+    const olderPage = await loadOlderProfilePage({
+      posts,
+      pubkey,
+      relays: [],
+      owner: 'profile-test',
+      cursor: {
+        createdAt: posts.at(-1)!.event.created_at,
+        id: posts.at(-1)!.event.id,
+      },
+      pageSize: 30,
+      subscriptions: emptySubscriptions(),
+    });
+
+    expect(olderPage.newerPruned).toBe(false);
+    expect(olderPage.posts[0]?.event.created_at).toBe(300);
+  });
+
+  it('does not display future profile relay notes', async () => {
+    const pubkey = 'd'.repeat(64);
+    const now = Math.floor(Date.now() / 1000);
+    const page = await loadInitialProfilePage({
+      posts: [],
+      profile: null,
+      relays: ['wss://relay-a/'],
+      pubkey,
+      owner: 'profile-test',
+      pageSize: 30,
+      followList: undefined,
+      subscriptions: initialSubscriptions(pubkey, [
+        event('future', now + 60, pubkey, 1),
+        event('current', now, pubkey, 1),
+      ]),
+    });
+
+    expect(page.posts.map((item) => item.event.content)).toEqual(['{}']);
+    expect(page.posts.map((item) => item.event.id)).toEqual([
+      event('current', now, pubkey, 1).id,
+    ]);
   });
 });

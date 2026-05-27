@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import {
+  pageIntentBounds,
   pageIntentSemanticKey,
   routeGroupFingerprint,
 } from '../../../../src/lib/relays/orchestration/page-reads';
@@ -56,5 +57,28 @@ describe('pageIntentSemanticKey', () => {
     ).not.toBe(
       pageIntentSemanticKey({ ...base, owner: 'a', routeFingerprint: routed }),
     );
+  });
+
+  it('derives scan bounds from direction and cursor', () => {
+    const cursor = { createdAt: 1_700_000_000, id: 'a'.repeat(64) };
+    const base = {
+      surface: 'profile' as const,
+      owner: 'tab',
+      phase: 'page' as const,
+      selectedRelays: ['wss://relay'],
+      authors: ['b'.repeat(64)],
+      pageSize: 30,
+      cursor,
+      purpose: 'feed' as const,
+    };
+
+    expect(pageIntentBounds({ ...base, direction: 'older' })).toEqual({
+      before: cursor,
+      after: undefined,
+    });
+    expect(pageIntentBounds({ ...base, direction: 'newer' })).toEqual({
+      before: undefined,
+      after: cursor,
+    });
   });
 });

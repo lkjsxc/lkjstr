@@ -1,11 +1,14 @@
 <script lang="ts">
   import { onDestroy, tick } from 'svelte';
-  import { isNearEnd, isNearStart } from '$lib/feed-surface/near-end';
+  import { isNearStart } from '$lib/feed-surface/near-end';
   import { footerPhaseFromPaging } from '$lib/feed-surface/footer-phase';
-  import FeedScrollSurface from '$lib/components/feed/FeedScrollSurface.svelte';
+  import {
+    canRequestOlder,
+    type OlderLoadTrigger,
+  } from '$lib/feed-surface/older-load-mode';
   import type { FeedScrollListHandle } from '$lib/components/feed/FeedScrollSurface.svelte';
   import type { FlatEventTreeItem } from '$lib/events/tree';
-  import EventTreeListRows from './EventTreeListRows.svelte';
+  import EventTreeListSurface from './EventTreeListSurface.svelte';
   import {
     buildViewRows,
     eventRows,
@@ -13,9 +16,8 @@
     eventNodeKey,
     isRowNearStart,
     treeNodesFromItems,
-    viewRowKey,
   } from './event-tree-list-helpers';
-  import { pinVisibleEvents } from '$lib/cache/pins';
+  import { clearVisibleEventPins, pinVisibleEvents } from '$lib/cache/pins';
   import type { EventActionState } from '$lib/events/action-state';
   import FeedActionStatesBridge from './FeedActionStatesBridge.svelte';
   import { setTabFeedAnchor } from '$lib/workspace/tab-anchor-registry';
@@ -26,13 +28,18 @@
     type TreeListAnchorHandle,
   } from './event-tree-list-anchors';
   import type { EventTreeListProps as Props } from './event-tree-list-props';
+  import { fallbackNodeIds, nearVisibleEventIds } from './event-tree-list-pins';
 
   let props: Props = $props();
   let list = $state<FeedScrollListHandle & TreeListAnchorHandle>();
   let scrollElement = $state<HTMLElement>();
   let autoFillPending = false;
   let newerLoadPending = false;
+  let userScrolledDown = false;
+  let scrollOffset = $state(0);
   let destroyed = false;
+  const fallbackPinOwner = `event-list:${crypto.randomUUID()}`;
+  let pinOwner = $derived(props.tabId ?? fallbackPinOwner);
   const treeCache = { key: '', nodes: [] as FlatEventTreeItem[] };
   let nodes = $derived(treeNodesFromItems(props.items, treeCache));
   let footerPhase = $derived(
@@ -67,12 +74,12 @@
   onDestroy(() => {
     destroyed = true;
     if (props.tabId) setTabFeedAnchor(props.tabId, undefined);
+    clearVisibleEventPins(pinOwner);
   });
 
   function handleScrollOffset(offset: number): void {
     if (props.pagingEnabled === false) return;
-    const viewport = list?.getViewportSize?.() ?? 0;
-    const total = list?.getScrollSize?.() ?? 0;
+    scrollOffset = offset;
     if (
       isRowNearStart(
         rows,
@@ -84,13 +91,6 @@
       props.hasNewer
     )
       void props.onNearStart?.();
-    if (
-      isNearEnd(offset, viewport, total) &&
-      !props.loadingOlder &&
-      props.hasOlder &&
-      nodes.length > 0
-    )
-      void props.onNearEnd?.();
   }
 
   $effect(() => {
@@ -124,7 +124,12 @@
       key: eventNodeKey,
       destroyed: () => destroyed,
     });
-    pinVisibleEvents(nodes.map((node) => node.event.id));
+    pinVisibleEvents(
+      pinOwner,
+      list
+        ? nearVisibleEventIds(rows, list, scrollOffset)
+        : fallbackNodeIds(nodes),
+    );
   });
 
   $effect(() => {
@@ -147,8 +152,24 @@
     if (destroyed) return;
     const viewport = list?.getViewportSize?.() ?? 0;
     const total = list?.getScrollSize?.() ?? 0;
-    if (viewport > 0 && total <= viewport + 16) await props.onNearEnd?.();
+    if (viewport > 0 && total <= viewport + 16)
+      await requestOlder('viewport-fill');
     if (!destroyed) autoFillPending = false;
+  }
+
+  async function requestOlder(trigger: OlderLoadTrigger): Promise<void> {
+    if (
+      props.loadingOlder ||
+      !props.hasOlder ||
+      nodes.length === 0 ||
+      !canRequestOlder({
+        mode: props.olderLoadMode,
+        trigger,
+        userScrolledDown,
+      })
+    )
+      return;
+    await props.onNearEnd?.();
   }
 </script>
 
@@ -160,33 +181,17 @@
 
 <div class="event-list">
   {#if rows.length > 0}
-    <FeedScrollSurface
-      data={rows}
-      getKey={(item: unknown) => viewRowKey(item as EventTreeListViewRow)}
-      scrollerClass="event-list__scroller"
-      viewportClass="event-list__viewport"
+    <EventTreeListSurface
+      {props}
+      {rows}
+      phase={footerPhase}
       {nearEndEnabled}
-      onNearEnd={props.onNearEnd}
-      onScrollOffset={handleScrollOffset}
+      {actionStates}
+      {requestOlder}
+      {handleScrollOffset}
+      onDownwardUserIntent={() => (userScrolledDown = true)}
       bind:list
       bind:scrollElement
-    >
-      {#snippet row(node: unknown)}
-        <EventTreeListRows
-          node={node as EventTreeListViewRow}
-          phase={footerPhase}
-          profiles={props.profiles}
-          relaySets={props.relaySets}
-          activeAccountPubkey={props.activeAccountPubkey}
-          reactions={props.reactions}
-          reposts={props.reposts}
-          {actionStates}
-          openProfile={props.openProfile}
-          openThread={props.openThread}
-          openAuthorContext={props.openAuthorContext}
-          leadingRow={props.leadingRow}
-        />
-      {/snippet}
-    </FeedScrollSurface>
+    />
   {/if}
 </div>

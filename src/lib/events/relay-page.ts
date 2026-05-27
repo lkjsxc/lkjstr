@@ -8,7 +8,6 @@ export type RelayReadSubscriptions = Pick<
 >;
 import type { RelayRouteGroup } from '../relays/relay-route-types';
 import type { FeedCursorPoint, FeedEvent } from './types';
-import { afterCursor, beforeCursor } from './repository-shared';
 import {
   limitedRelayFilterGroups,
   relayReadEventCap,
@@ -21,6 +20,7 @@ import {
   boundaryUntil,
   positiveFilters,
 } from './relay-page-filter';
+import { eventInDisplayBounds } from './feed-display-bounds';
 
 export type RelayPageRequest = {
   readonly key: string;
@@ -29,6 +29,8 @@ export type RelayPageRequest = {
   readonly subscriptions: RelayReadSubscriptions;
   readonly before?: FeedCursorPoint;
   readonly after?: FeedCursorPoint;
+  readonly since?: number;
+  readonly until?: number;
   readonly pageSize: number;
   readonly signal?: AbortSignal;
   readonly purpose?:
@@ -105,8 +107,14 @@ export async function readRelayFeedPage(
     signal: request.signal,
   });
   return sortFeedEvents(mergePoolEvents(events))
-    .filter((item) => beforeCursor(item.event, request.before))
-    .filter((item) => afterCursor(item.event, request.after))
+    .filter((item) =>
+      eventInDisplayBounds(item.event, {
+        before: request.before,
+        after: request.after,
+        since: request.since,
+        until: request.until,
+      }),
+    )
     .slice(0, request.pageSize);
 }
 

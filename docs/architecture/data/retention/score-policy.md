@@ -11,21 +11,22 @@ These never evict through score compaction:
 
 - Latest kind `0` metadata per pubkey present in cache.
 - Latest kind `3` follow list per active account pubkey.
-- Pinned event ids from the pin store.
+- Pinned event ids from the runtime pin store while their owner is open.
 - Notification-critical source events referenced by active notification rows
   when the notification store still depends on them.
 
 ## Score Updates
 
-Score increases only when structural relationships arrive:
+Score combines recency, kind, structural source, and direct target value:
 
-- Reply edges (`e` parent tags).
-- Quote and repost relationships.
-- Reaction and zap references to the event.
-- Notification records referencing the event.
-- New participation in visible graph context for loaded feeds.
+- Recency bucket from event `created_at`.
+- Kind weight for metadata, follows, notes, reposts, reactions, and zaps.
+- Structural source weight for `e`, `q`, and `p` tags on the event.
+- Target bumps for directly referenced `e` and `q` events from replies,
+  quotes, reposts, reactions, and zaps.
 
-Score does not decrease over time. There is no background decay loop.
+Runtime visible pins are consulted dynamically during compaction. They are not
+persisted as durable `protected` rows.
 
 ## Tie Break
 
