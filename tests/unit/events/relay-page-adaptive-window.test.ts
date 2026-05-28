@@ -62,7 +62,6 @@ describe('relay page adaptive windows', () => {
       pageSize: 2,
       limit: 1,
     });
-
     expect(page.items).toHaveLength(1);
     expect(page.dense).toBe(true);
     expect(page.hasMorePossible).toBe(true);
@@ -76,7 +75,6 @@ describe('relay page adaptive windows', () => {
       limit: 10,
       complete: false,
     });
-
     expect(page.incomplete).toBe(true);
     expect(page.hasMorePossible).toBe(true);
     expect(calls.every((call) => (call.since ?? 0) >= 9_281)).toBe(true);
@@ -95,7 +93,6 @@ describe('relay page adaptive windows', () => {
       pageSize: 5,
       limit: 10,
     });
-
     expect(calls[0]?.limit).toBe(1);
     expect(page.dense).toBe(true);
   });
@@ -114,7 +111,9 @@ function pageFor(
   return readRelayFeedGroups({
     key: `adaptive-${Math.random()}`,
     groups: [group()],
-    filters: (_group, bounds) => [{ kinds: [1], ...bounds, limit: options.limit }],
+    filters: (_group, bounds) => [
+      { kinds: [1], ...bounds, limit: options.limit },
+    ],
     direction: 'older',
     before: { createdAt: 10_000, id: 'f'.repeat(64) },
     pageSize: options.pageSize,

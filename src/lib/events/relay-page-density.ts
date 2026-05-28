@@ -44,7 +44,9 @@ export function relayPageDensity(
     dense: hitLimit,
     hitLimit,
     underHalfLimit: verdicts.every((verdict) => verdict.underHalfLimit),
-    observedCount: Math.max(...verdicts.map((verdict) => verdict.observedCount)),
+    observedCount: Math.max(
+      ...verdicts.map((verdict) => verdict.observedCount),
+    ),
     limit: Math.min(...verdicts.map((verdict) => verdict.limit)),
     eventCount: verdicts.reduce((sum, verdict) => sum + verdict.eventCount, 0),
     uniqueCount: new Set(result.events.map((item) => item.event.id)).size,

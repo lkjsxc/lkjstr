@@ -82,12 +82,17 @@ describe('relay window policy', () => {
     );
 
     expect(next.kind).toBe('advance');
-    if (next.kind === 'advance') expect(span(next.segment)).toBe(relaySegmentMaxSpan);
+    if (next.kind === 'advance')
+      expect(span(next.segment)).toBe(relaySegmentMaxSpan);
   });
 
   it('splits limit-hit older windows newer half first', () => {
     expect(
-      nextAdaptiveRelayWindow(segment(0, 100), { direction: 'older' }, 'limit-hit'),
+      nextAdaptiveRelayWindow(
+        segment(0, 100),
+        { direction: 'older' },
+        'limit-hit',
+      ),
     ).toEqual({
       kind: 'split',
       segments: [
@@ -116,7 +121,11 @@ describe('relay window policy', () => {
 
   it('orders newer limit-hit splits from older half toward the cursor', () => {
     expect(
-      nextAdaptiveRelayWindow(segment(0, 100), { direction: 'newer' }, 'limit-hit'),
+      nextAdaptiveRelayWindow(
+        segment(0, 100),
+        { direction: 'newer' },
+        'limit-hit',
+      ),
     ).toEqual({
       kind: 'split',
       segments: [

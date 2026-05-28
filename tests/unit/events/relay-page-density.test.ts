@@ -111,9 +111,11 @@ describe('relay page density', () => {
       }),
     );
     expect(
-      relayPageDensity(page([receipt('a', 'wss://one/')]), [
-        { kinds: [1], limit: 1 },
-      ], 4),
+      relayPageDensity(
+        page([receipt('a', 'wss://one/')]),
+        [{ kinds: [1], limit: 1 }],
+        4,
+      ),
     ).toEqual(
       expect.objectContaining({
         hitLimit: true,
