@@ -10,6 +10,7 @@ import { mergeFeedEvents, mergePoolEvents } from './relay-page-merge';
 import { needsCursorSlack, pageScanItems } from './relay-page-scan-items';
 import { retainedRawCandidates } from './relay-page-scan-raw';
 import { readScanBatch } from './relay-page-scan-batch';
+import { readCachedSegment } from './relay-page-scan-cache';
 import {
   recordBatchCoverage,
   recordUnresolved,
@@ -30,6 +31,7 @@ export type SegmentRead = {
   readonly hitLimit: boolean;
   readonly underHalfLimit: boolean;
   readonly contacted: boolean;
+  readonly source?: 'relay' | 'cache';
   readonly safeCursor?: FeedCursorPoint;
 };
 
@@ -88,6 +90,8 @@ async function readGroup(
     request.filters(group, bounds),
     request.pageSize,
   );
+  const cached = await readCachedSegment(request, group, segment, baseFilters);
+  if (cached) return cached;
   for (let attemptIndex = 0; attemptIndex < 2; attemptIndex += 1) {
     const batches = await limitedRelayFilterGroups(
       group.relays,
