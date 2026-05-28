@@ -14,6 +14,10 @@ subscriptions or mutate relay settings.
 | `liveLeases`      | open live wire subscriptions         |
 | `bootstrapLeases` | in-flight bootstrap/page reads       |
 
+Stats presents these orchestration gauges separately from raw relay wire
+subscription rows so shared demands and physical `REQ` messages are not
+conflated.
+
 ## Counters
 
 | Name                             | Meaning                              |

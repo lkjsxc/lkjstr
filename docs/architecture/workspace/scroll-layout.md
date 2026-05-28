@@ -9,7 +9,8 @@ without overlapping text or controls.
 
 - The **scrolling element** for each surface owns `scrollbar-gutter: stable`.
 - `--scroll-track-edge` is the distance from the tile inner border to the
-  scrollbar track (default `0`).
+  scrollbar track (default `0`). Feed tabs keep this gap tight so the scrollbar
+  sits close to split resize handles without covering row controls.
 - `--scroll-content-inset` (default `var(--space-3)`) pads direct content
   children on the inline end so text does not sit under the thumb.
 - `.pane-body` does not add inline padding on the scroll axis. Block-axis
@@ -34,7 +35,8 @@ without overlapping text or controls.
 ```
 
 Apply `padding-inline-end: var(--scroll-content-inset)` on inner content
-wrappers listed in `scroll-layout.css`.
+wrappers listed in `scroll-layout.css`; apply the track edge as the scroll
+owner's inline-end padding only when a surface needs extra clearance.
 
 ## Surfaces
 

@@ -17,6 +17,9 @@ Event actions define the row-level write controls available on feed events.
   styling. The label stays `Repost`.
 - Pressed styling must be clearly stronger than default icon buttons and match
   the reply/zap active treatment in weight, not only color.
+- Optimistic or published Heart/Repost pressed state must not reset to
+  unpressed while async action-state cache refresh is pending. Optimistic state
+  is scoped to the active pubkey and visible event ids.
 - Emoji opens the shared tile-scoped picker without changing row height and
   publishes a NIP-25 kind `7` reaction with picker-provided Unicode content.
 - Custom emoji reactions publish exactly one `:shortcode:` content value and

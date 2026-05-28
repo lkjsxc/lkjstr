@@ -36,10 +36,12 @@ its NIP-02 follows.
   items are pruned.
 - Live events are retained only inside the same `180` item window.
 - Older pages load after near-bottom scroll using
-  `max(1200px, 1.5 x viewport)` or an equivalent sentinel margin, or when the
+  `max(1200px, 2 x viewport)` or an equivalent sentinel margin, or when the
   loaded rows are shorter than the viewport and `hasOlder` remains true.
 - One speculative older page may prefetch when near end while `hasOlder` is
-  true. See [feed-surface.md](../../architecture/data/feed-surface.md).
+  true. Home may start that prefetch once rows and cursors exist and the feed is
+  already inside the near-end threshold. See
+  [feed-surface.md](../../architecture/data/feed-surface.md).
 - Older pages render event shells immediately; profile and reference enrichment
   continue asynchronously.
 - Initial and historical relay pages use compound `{createdAt,id}` cursors and

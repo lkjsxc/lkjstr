@@ -22,10 +22,12 @@ Accounts represent public identities and signing capability.
 - Removing the active account selects the newest remaining account or clears
   active state when none remain.
 - Accounts supports one inline input for `npub`, hex pubkey, or `nsec`.
-- Read-only account add, local `nsec` import, NIP-07 connect, local account
-  creation, active selection, disconnect, and local secret reveal report inline
-  status.
+- Read-only account add, local `nsec` import, NIP-07 login, active selection,
+  disconnect, and local secret reveal report inline status.
 - Generate nsec reports inline status and only fills the account input.
+- The Accounts tab does not expose a one-click local-account creation button.
+  Generated local signing accounts are created only when the filled `nsec` is
+  explicitly added.
 - Local signing accounts can reveal or copy their `nsec` only after an inline
   user action. Read-only and NIP-07 accounts never expose local secret controls.
 - Account flows must not use browser prompt or alert dialogs.

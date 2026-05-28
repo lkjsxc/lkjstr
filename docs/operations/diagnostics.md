@@ -63,9 +63,9 @@ binary or non-text frames and include size plus limit for oversized text
 frames. Diagnostics do not store raw relay payloads.
 
 Stats and Relay Settings show persisted relay and job summaries. Stats also
-shows compact runtime memory counters. They must not duplicate lkjstr Log rows
-or expose raw logs, relay payloads, event arrays, subscription ids, tab ids, or
-request ids.
+shows compact runtime memory counters and redacted subscription purpose labels.
+They must not duplicate lkjstr Log rows or expose raw logs, relay payloads,
+event arrays, tab ids, or request ids.
 
 Clean-browser Playwright is the source of truth for app-origin console
 diagnostics. Suppression is limited to the external `lockdown-install.js` plus

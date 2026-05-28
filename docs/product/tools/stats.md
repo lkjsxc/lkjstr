@@ -14,6 +14,12 @@ Stats shows current-session relay counters and persisted operational summaries.
 - Optional auto-refresh polls every two seconds while enabled.
 - Relay totals include open relays, active subscriptions, events, OK accepts,
   OK rejects, and sent plus received bytes.
+- Subscription rows use human-purpose labels such as Home live feed, Profile
+  page read, Notifications live, Metadata, or Route discovery. Redacted raw ids
+  are secondary only.
+- Stats distinguishes raw relay wire subscriptions from orchestration counters:
+  active demands, active leases, live leases, bootstrap/page reads, and
+  in-flight reads.
 - Cache status includes event, profile, notification, and storage estimate
   counts.
 - Runtime memory shows compact app-owned counters: app log count, relay
@@ -23,5 +29,4 @@ Stats shows current-session relay counters and persisted operational summaries.
   CLOSE totals, events received vs accepted vs dropped, and optional JavaScript
   heap.
 - Runtime memory output is redacted count data only. It must not expose raw
-  events, relay payloads, subscription ids, tab ids, request ids, or log
-  messages.
+  events, relay payloads, tab ids, request ids, or log messages.

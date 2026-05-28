@@ -24,7 +24,7 @@ Profile tabs show identity metadata and authored text notes.
   state, note rows, and footer rows share the same virtual feed list.
 - Profile does not show a visible initial loading row or manual load-newer
   control. Loading and newer state remain internal runtime state.
-- Older note pages use `max(1200px, 1.5 x viewport)` near-end detection and
+- Older note pages use `max(1200px, 2 x viewport)` near-end detection and
   shared `FeedSurfaceStatus` footer semantics.
 - Profile metadata supports banner, picture, display name, name, NIP-05,
   website, Lightning address, and about text.

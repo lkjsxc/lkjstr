@@ -24,7 +24,7 @@ Workflows describe common user paths through the app.
 
 ## Publish
 
-1. Add a NIP-07 account.
+1. Log in with a NIP-07 account.
 2. Enable at least one write relay in the selected default set.
 3. Open Tweet.
 4. Write content and publish through the browser signer.

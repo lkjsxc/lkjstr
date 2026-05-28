@@ -16,8 +16,9 @@ See [pane-chrome-scope.md](pane-chrome-scope.md). Summary:
 
 ## Hit Detection
 
-- Edge activation uses `tabDropHitSize(dimension)`: about 22% of the pane body
-  width or height, clamped between 44 and 96 pixels.
+- Edge activation uses `tabDropHitSize(dimension)`: about 28% of the pane body
+  width or height, clamped between 56 and 128 pixels when space allows, and
+  capped below half the dimension so the center corridor remains reachable.
 - Pointers above `bodyRect.top` outside chrome resolve `center`, not `top`.
 - Center hit testing uses tab frame positions for insertion index when over
   chrome or the body center corridor.

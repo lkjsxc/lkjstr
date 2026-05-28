@@ -32,6 +32,9 @@ bottom.
 
 - When near end and `hasOlder` is true, `createOlderRequestCoordinator` may
   request one additional older page after the first completes.
+- Home and Global may issue an earlier safe prefetch once rows and cursors
+  exist and the current scroll geometry is already inside the near-end
+  threshold.
 - Prefetch aborts on tab close and resets when the runtime key changes.
 - Coordinators pass the trigger source to callers that need to distinguish a
   scroll-bottom request from a sentinel callback.

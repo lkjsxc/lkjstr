@@ -42,7 +42,7 @@ notification context header and the source event as the primary body.
   semantics. Earlier scrolling must not unlock observer-only or viewport-fill
   triggers.
 - Older notifications load after near-bottom scroll using
-  `max(1200px, 1.5 x viewport)` or an equivalent sentinel margin.
+  `max(1200px, 2 x viewport)` or an equivalent sentinel margin.
 - Feed surface may issue speculative older prefetches in general, but
   Notifications use an older-load guard and must not auto-fill history during
   initial settle.

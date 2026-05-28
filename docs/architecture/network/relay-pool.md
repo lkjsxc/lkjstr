@@ -26,8 +26,9 @@ events, publish acknowledgements, and relay snapshots.
   last event id, last error, validation counters, and EOSE.
 - Keep only the most recent `100` relay snapshots for current-session
   diagnostics.
-- Keep snapshot counters for bytes, active subscription ids, relay message
-  totals, OK accepts, OK rejects, and last message timestamps.
+- Keep snapshot counters for bytes, active subscription ids, redacted
+  subscription descriptors, relay message totals, OK accepts, OK rejects, and
+  last message timestamps.
 - Stats reads snapshots only and must not create relay subscriptions.
 - Keep current-session diagnostics as a flat stream derivable from snapshots.
 - Throttle repeated app-log diagnostics while keeping snapshot diagnostics and

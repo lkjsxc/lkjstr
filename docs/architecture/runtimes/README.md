@@ -23,6 +23,6 @@ Runtime docs define how tab-owned loaders combine cache and relay data.
 - Bounded error text is exposed instead of unhandled promise failures.
 - Startup promises that are intentionally not awaited log one bounded runtime
   error row when rejected.
-- Near-end loading uses `max(1200px, 1.5 x viewport)` and optional sentinels.
+- Near-end loading uses `max(1200px, 2 x viewport)` and optional sentinels.
 - Hosted Worker code serves the SvelteKit shell only. Tab runtimes do not depend
   on Cloudflare storage, a server-side account service, or a relay proxy.

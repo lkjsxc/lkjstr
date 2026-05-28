@@ -20,7 +20,8 @@ records, not flattened event trees. Both paths share `FeedScrollSurface` for
 scroll ownership, near-end, and footer placement. See
 [feed-scroll-surface.md](feed-scroll-surface.md).
 
-Home and Global retain automatic near-end older paging. Profile,
+Home and Global retain automatic near-end older paging and may prefetch as soon
+as loaded rows with cursors are already inside the near-end threshold. Profile,
 Notifications, and Thread wait for downward user scroll intent before automatic
 older paging can run.
 
