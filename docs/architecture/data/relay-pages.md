@@ -34,9 +34,11 @@ preserving where each real event was seen.
 - Raw reads remain valid for exact id lookup, latest replaceable selection, and
   other cases where caller-specific ordering is required.
 - Home, Profile, and Global initial or historical relay reads use an adaptive
-  segment queue. The minimum span is `1` second, initial span is `6` hours,
+  segment queue. The minimum span is `1` second, initial span is `12` minutes,
   maximum grown span is `180` days, a page processes at most `96` segments, and
   split depth is capped at `32`.
+- Sparse or empty adaptive scans grow by doubling the previous span after the
+  initial `12` minute window.
 - Complete sparse or empty segments may grow the next span. A segment only
   advances relay history when every contacted relay proves EOSE completion
   below the relay-effective filter cap.

@@ -24,16 +24,16 @@ notification context header and the source event as the primary body.
 - Notification tabs keep a `180` record window. Windowing is based on
   notification records, not the number of resolved source events.
 - Notification relay window constants (seconds):
-  - `initialNotificationLookbackSeconds = 604800` (7 days)
-  - `notificationPageLookbackSeconds = 604800` (7 days)
+  - `notificationInitialLookbackSeconds = 720` (12 minutes)
+  - `notificationOlderPageLookbackSeconds = 720` (12 minutes)
   - `notificationClockSkewSeconds = 120`
 - Initial relay read bounds:
-  - `since = max(0, runtimeStartedAt - initialNotificationLookbackSeconds)`
+  - `since = max(0, runtimeStartedAt - notificationInitialLookbackSeconds)`
   - `until = runtimeStartedAt + notificationClockSkewSeconds`
   - The initial relay filter must include both `since` and `until`.
 - Older relay paging bounds (bounded segment scan):
   - Let `oldest = oldestLoadedNotificationRecord.createdAt`
-  - `since = max(0, oldest - notificationPageLookbackSeconds)`
+  - `since = max(0, oldest - notificationOlderPageLookbackSeconds)`
   - `until = max(0, oldest - 1)`
 - No automatic deep backfill on tab open: older pages must not be requested
   during initial settle or just because the viewport is not filled. Older

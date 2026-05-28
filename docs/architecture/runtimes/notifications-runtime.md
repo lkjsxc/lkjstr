@@ -21,8 +21,9 @@ backfill.
 ## Cursor Policy
 
 - **Initial**: local newest records first, then a bounded relay segment with an
-  explicit `(since, until)` interval computed from runtime start.
-  - `since = max(0, runtimeStartedAt - initialNotificationLookbackSeconds)`
+  explicit `(since, until)` interval computed from runtime start with a
+  `12` minute lookback.
+  - `since = max(0, runtimeStartedAt - notificationInitialLookbackSeconds)`
   - `until = runtimeStartedAt + notificationClockSkewSeconds`
   - The initial relay filter must include both `since` and `until`.
   - Relay behavior is not perfectly reliable: relay events outside the
@@ -31,7 +32,7 @@ backfill.
   read relays.
 - **Older**: older relay reads are allowed only via explicit older paging
   intent (near-end after user scroll, footer action, or programmatic page
-  request). Older relay filters must be bounded:
+  request). Older relay filters must use a bounded `12` minute lookback:
   - Let `oldest = oldestLoadedNotificationRecord.createdAt`
   - `since = max(0, oldest - notificationOlderPageLookbackSeconds)`
   - `until = max(0, oldest - 1)`
