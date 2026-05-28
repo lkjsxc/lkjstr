@@ -21,6 +21,8 @@ notification context header and the source event as the primary body.
 - Notification events are written through the shared repository.
 - Notifications tab initial and older pages request `30` records.
 - Notification relay sync starts when the Notifications tab is opened.
+- Bootstrap and historical relay pages use the shared adaptive grouped scanner
+  with a one-minute initial segment.
 - Notification tabs keep a `180` record window. Windowing is based on
   notification records, not the number of resolved source events.
 - The tab scans a bounded recent relay window on open. If the first window has
@@ -34,6 +36,8 @@ notification context header and the source event as the primary body.
 - Sparse empty relay windows advance `olderCursorCreatedAt` and must not render
   `End of known history.` unless the lower bound is reached with complete,
   unambiguous relay status and no local older records.
+- Dense, incomplete, unresolved, failed, missing, or compacted coverage cannot
+  suppress notification relay reads or prove that older notifications are absent.
 - Shared `FeedSurfaceStatus` footer shows loading, end of history, and errors.
   End of history appears only for proven exhaustion.
 - The empty notification message appears only after history exhaustion is

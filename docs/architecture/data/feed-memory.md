@@ -36,9 +36,10 @@ bounded as timelines grow.
   increment dropped counters instead of expanding feed windows.
 - Maximum unresolved author identities for visible-row hydration: `30` per page.
 - Maximum unresolved references: bounded by visible-row prefetch coordinator.
-- Home, Global, and Profile initial or historical relay reads are adaptive
-  bounded scans. Each contacted relay must complete a window with EOSE before
-  that window can prove there are no matching events there.
+- Home, Global, Profile, Notifications, and safe Custom Request initial or
+  historical relay reads are adaptive bounded scans. Each contacted relay must
+  complete a window with EOSE before that window can prove there are no matching
+  events there.
 - Scanner windows are applied at relay dispatch even when a caller's filter
   builder forgets to copy the provided `since` or `until` bounds.
 - Newer relay reads scan from the newest bounded window down toward the current
@@ -89,9 +90,10 @@ or older-page loads from moving the visible row.
 - Feed cursors are removed when their page boundary no longer points to a
   retained cached event.
 - Feed coverage rows store status, reason, limit, event count, unique count,
-  attempt, and duration metadata. The memory fallback keeps `500` recent rows.
-  Complete coverage compacts sooner than dense, incomplete, unresolved, or
-  failed diagnostics.
+  attempt, direction, span, feedback, and duration metadata. The memory fallback
+  keeps `500` recent rows. Complete coverage can prove cache eligibility only
+  while its cached events remain retained; dense, incomplete, unresolved, or
+  failed diagnostics cannot prove absence.
 - Home does not start hidden session backfill when opened. Older history loads
   through scroll-driven or explicit page requests.
 - Profile, Notifications, and Thread history loads reject observer-only

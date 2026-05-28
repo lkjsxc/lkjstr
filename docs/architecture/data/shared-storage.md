@@ -22,6 +22,8 @@ notifications, jobs, and relay provenance.
   status, reason, counts, limit, attempt, duration, and update time as durable
   scan evidence. Coverage records are evidence, not permission to move a scan
   cursor past an unproven dense, incomplete, or unresolved range.
+- Cache-first feed rendering may use coverage only when every required relay,
+  group, filter, and range row for the semantic feed key is complete.
 - Search, feed, and relay page callers use compound `{createdAt,id}` cursors
   when local ordering needs same-second precision.
 - Relay diagnostic summaries, relay information documents, route blocks,
@@ -33,9 +35,10 @@ notifications, jobs, and relay provenance.
   events.
 - Event compaction invalidates feed coverage for affected feed keys when cached
   events are pruned. Correctness wins over preserving coverage cache.
-- Home, Profile, Thread, and Notifications render cache-first, then read from
-  selected fallback relays plus bounded route evidence. Global remains selected
-  relay based.
+- Home, Global, Profile, Thread, Notifications, and safe Custom Request reads
+  render cache-first when complete coverage proves the visible range, then read
+  from their selected fallback relays plus bounded route evidence. Global
+  remains selected-relay based.
 - Existing local data may be rebuilt into this shape; no migration promise is
   required for stale browser cache.
 - Repository reads normalize stale IndexedDB rows before returning them.

@@ -12,7 +12,8 @@ preserving where each real event was seen.
 - `readRelayFeedGroups()` returns feed items, completeness flags, a safe scan
   cursor, density state, and conservative `hasMorePossible`.
 - Exact-request feed surfaces use `readRelayFeedPage()` for event rows. Home,
-  Profile, and Global initial or historical feeds use adaptive grouped scans.
+  Global, Profile posts, Notifications, and safe Custom Request event-list reads
+  use adaptive grouped scans.
 - Feed pages sort by descending `{created_at,id}` with lower ids first inside
   the same second.
 - Duplicate events from multiple relays merge into one feed row with the union
@@ -33,27 +34,29 @@ preserving where each real event was seen.
   unix time zero so newer relay pages can fetch every same-second candidate.
 - Raw reads remain valid for exact id lookup, latest replaceable selection, and
   other cases where caller-specific ordering is required.
-- Home, Profile, and Global initial, older, and newer relay reads use an
-  adaptive segment queue that starts with a `12` minute segment.
+- Home, Global, Profile posts, Notifications, and safe Custom Request initial,
+  older, and newer relay reads use an adaptive segment queue that starts with a
+  `1` minute segment.
 - Each segment produces one window feedback value:
   - `limit-hit`: at least one contacted relay-shaped request reached its
-    effective limit.
+    effective limit. This is dense evidence, not successful complete coverage.
   - `under-half`: every contacted relay-shaped request returned at most
-    `floor(effectiveLimit / 2)`.
-  - `balanced`: contacted complete request that is neither `limit-hit` nor
-    `under-half`.
+    `floor(effectiveLimit / 2)`, completed normally, and none hit the limit.
+    This is successful sparse coverage.
+  - `balanced`: contacted complete relay-shaped request that is neither
+    `limit-hit` nor `under-half`. This is successful coverage.
   - `incomplete`: relay status did not prove EOSE completion.
-- For complete contacted windows, `limit-hit` windows split the current segment
-  and scan the half closest to the visible edge first. Older scans process the
-  newer half first; newer scans process the older half first. Unsplittable
-  `limit-hit` windows become unresolved terminal frontiers.
+- `limit-hit` windows split the current segment and scan the half closest to the
+  visible edge first. Older scans process the newer half first; newer scans
+  process the older half first. Unsplittable `limit-hit` windows become
+  unresolved terminal frontiers.
 - For complete contacted windows, `under-half` advances to the next adjacent
   segment with doubled span, and `balanced` advances with unchanged span.
 - For incomplete windows, incomplete status never proves history exhaustion.
   Timeout, close, auth, socket close, socket error, and missing detailed status
   remain non-exhaustive. Incomplete large root windows may split
   conservatively, but they must not drive sparse doubling.
-- Bounds: minimum span is `1` second, initial span is `12` minutes, maximum
+- Bounds: minimum span is `1` second, initial span is `1` minute, maximum
   grown span is `180` days, a page processes at most `96` segments, and split
   depth is capped at `32`.
 - Grouped feed scans own their relay `since` and `until` bounds at dispatch
@@ -89,6 +92,31 @@ preserving where each real event was seen.
 - Grouped scan results expose `receivedItems` for cache writes. Visible page
   semantics still use sliced `items`.
 
+## Cache Eligibility
+
+A segment is cache-eligible only when all required relay, filter, and route
+group rows for that semantic feed key and segment are recorded as complete.
+Dense, unresolved, incomplete, failed, missing, expired, or compacted evidence
+cannot prove cache eligibility.
+
+Cache-first rendering applies the same display bounds as relay rendering:
+future events and rows outside local `since`, exclusive `until`, `before`, or
+`after` stay hidden. A cached result may satisfy the visible tab only when the
+local event repository returns rows inside the requested bounds and coverage
+evidence proves that absent rows are genuinely absent.
+
+## Surface Keys
+
+- Home keys include active account pubkey, selected read relays, page size, feed
+  policy, and route fingerprint.
+- Global keys include selected read relays, page size, and display kinds.
+- Profile keys include target pubkey, selected relays, page size, and profile
+  route fingerprint.
+- Notifications keys include active account pubkey, selected or notification
+  relay set, notification kinds, page size, and `#p` target.
+- Custom Request keys include normalized relays, normalized filters, page size,
+  and whether the request uses adaptive or exact mode.
+
 ## Staged Feed Page Pipeline
 
 Feed runtimes treat each older or initial page as three stages:
@@ -105,10 +133,11 @@ independent on the critical path to first paint.
 
 ## Callers
 
-- Home, Global, and Profile feed pages use adaptive bounded scans for initial,
-  older, and newer catch-up pages.
-- Search, Custom Request, Author Context, Thread reply pages, metadata lookup,
-  follow-list reads, and id-batch reference resolution keep exact request
-  semantics unless they already intentionally use grouped feed scans.
+- Home, Global, Profile posts, Notifications, and safe Custom Request event-list
+  pages use adaptive bounded scans for initial, older, and newer catch-up pages.
+- Search, exact id requests, Custom Request filters with `ids` or `search`,
+  Author Context, Thread reply pages, metadata lookup, follow-list reads, thread
+  root lookup, and id-batch reference resolution keep exact request semantics
+  unless they already intentionally use grouped feed scans.
 - Reference resolution may use raw relay pages when output order is driven by
   the requested ids.

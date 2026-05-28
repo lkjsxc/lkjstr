@@ -20,22 +20,21 @@ backfill.
 
 ## Cursor Policy
 
-- **Initial**: local newest records first, then a bounded relay segment with an
-  explicit `(since, until)` interval computed from runtime start with a
-  `12` minute lookback.
-  - `since = max(0, runtimeStartedAt - notificationInitialLookbackSeconds)`
+- **Initial**: local newest records first, then the adaptive grouped scanner
+  starts from a one-minute segment with an explicit `(since, until)` interval
+  computed from runtime start.
+  - `since = max(0, runtimeStartedAt - adaptiveSegmentSpan)`
   - `until = runtimeStartedAt + notificationClockSkewSeconds`
   - The initial relay filter must include both `since` and `until`.
   - Relay behavior is not perfectly reliable: relay events outside the
     requested `(since, until)` must be discarded before persisting.
 - **Live**: relay reads use `since = runtimeStartedAt` for the active account
   read relays.
-- **Older**: older relay reads keep an independent
-  `olderCursorCreatedAt`. The cursor starts at the oldest retained record and
-  moves earlier across sparse relay windows even when no visible record is
-  added.
+- **Older**: older relay reads keep an independent `olderCursorCreatedAt`. The
+  cursor starts at the oldest retained record and moves earlier across complete
+  sparse relay windows even when no visible record is added.
   - Let `cursor = olderCursorCreatedAt`
-  - `since = max(0, cursor - notificationOlderPageLookbackSeconds)`
+  - `since` comes from the active adaptive segment.
   - `until = max(0, cursor - 1)`
   - Empty complete windows move `olderCursorCreatedAt` to `since` and remain
     retryable until exhaustion is proven.
@@ -66,6 +65,8 @@ Incomplete relay reads keep exhaustion unknown so later scrolls can retry.
 - Build relay filters through `notification-filters` (`#p` targeting only).
 - Reject self-authored kind `1` without `#p` self tag as notification rows.
 - Use active account NIP-65 read relays plus selected read fallback.
+- Use the shared adaptive grouped scanner for bootstrap and historical relay
+  pages. Dense or incomplete windows must not prove history exhaustion.
 - Mark read only when tab is visible and window focused.
 - No relay Demands without active account or enabled read relays.
 - Hidden tabs release live Demand.

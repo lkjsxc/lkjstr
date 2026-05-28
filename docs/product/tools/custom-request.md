@@ -2,7 +2,7 @@
 
 ## Purpose
 
-Custom Request lets users run one-shot relay reads from validated JSON.
+Custom Request lets users run validated user-controlled relay reads.
 
 ## Accepted JSON
 
@@ -23,6 +23,16 @@ Custom Request lets users run one-shot relay reads from validated JSON.
 - Effective relay filter limits are clamped to `500`.
 - Results are sorted event rows with duplicate relay provenance merged. They do
   not render in relay arrival order.
+- Requests with `ids`, `search`, or exact lookup semantics use exact request
+  mode.
+- Requests whose filters are safely time-windowable event-list filters may use
+  adaptive grouped scan mode.
+- Adaptive mode preserves user `since` and `until` by intersecting them with the
+  scanner segment bounds.
+- Adaptive mode never displays rows outside user filter bounds or scanner
+  segment bounds.
+- Custom Request cache keys include normalized relay URLs, normalized filter
+  JSON, page size, and request mode.
 - Results render through the shared event row surface and automatic row-anchor
   restore.
 - Request JSON and whether the request has run are preserved in feed

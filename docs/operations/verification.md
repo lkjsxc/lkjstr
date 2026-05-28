@@ -99,10 +99,12 @@ docker compose --progress quiet -f docker-compose.yml run --rm cloudflare
 docker compose --progress quiet -f docker-compose.yml run --rm app-smoke
 ```
 
-Adaptive relay window checks must prove the initial `12` minute span, sparse
-non-empty span doubling, balanced unchanged spans, immediate limit-hit splitting,
-minimum-span unresolved dense frontiers, and incomplete windows that do not grow
-as sparse history.
+Adaptive relay window checks must prove the initial one-minute span, sparse
+complete doubling, balanced unchanged spans, limit-hit halving and retry,
+per-relay density and coverage rows, cache eligibility from complete coverage,
+notifications adaptive paging, Custom Request adaptive mode, display-bound
+filtering of cache-first rows, minimum-span unresolved dense frontiers, and
+incomplete windows that do not grow as sparse history.
 
 Relay runtime hardening changes use these focused slices:
 

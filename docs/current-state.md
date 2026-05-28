@@ -28,11 +28,11 @@ linked product, protocol, architecture, and operations pages.
   support them.
 - Home, Global, Search, and Custom Request consume progressive relay read
   snapshots so partial rows can render before final relay coverage.
-- Home, Global, and Profile grouped feed scans use an adaptive temporal window
-  controller. Scans start at `12` minutes, double adjacent windows when complete
-  relay-shaped reads return at most half of the effective limit, halve dense
-  windows when any relay-shaped read reaches the effective limit, and keep
-  balanced spans unchanged.
+- Home, Global, Profile posts, Notifications, and safe Custom Request event-list
+  reads use an adaptive temporal window controller. Grouped scans start at `1`
+  minute, double the next adjacent window after complete sparse relay-shaped
+  reads, keep balanced successful spans unchanged, and halve dense windows when
+  any contacted relay-shaped request reaches its effective limit.
 
 ## Ownership
 
@@ -85,9 +85,15 @@ linked product, protocol, architecture, and operations pages.
 - Feed rows are display-bound before presentation: future events and rows
   outside local `since`, exclusive `until`, `before`, or `after` bounds stay out
   of visible feed results.
-- Home, Global, and Profile initial, older, and newer feed pages use adaptive
-  grouped scans. Search, Custom Request, Author Context, Thread reply pages,
-  metadata, follow-list, and id-batch lookups keep their exact request shapes.
+- Complete feed coverage evidence can make cached display immediate only when
+  every required relay, route group, semantic feed key, filter shape, and segment
+  row proves completion. Dense, incomplete, unresolved, failed, compacted, or
+  missing evidence is not proof of absence and cannot suppress relay reads.
+- Home, Global, Profile posts, Notifications, and time-windowable Custom Request
+  feeds use adaptive grouped scans. Search, exact id requests, Custom Request
+  filters with `ids` or `search`, Author Context, Thread reply pages, metadata,
+  follow-list lookup, thread root lookup, and reference resolution keep exact
+  request semantics.
 - Feed correctness contracts live under
   [architecture/feeds](architecture/feeds/README.md): canonical ordering,
   merge-by-id reducer, per-tab page cursors, and independent notification

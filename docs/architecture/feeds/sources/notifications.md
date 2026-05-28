@@ -31,6 +31,13 @@ authored by self without `#p` containing self is **not** a notification row.
 - `buildNotificationFilters` is separate module
 - Paging readiness comes from the runtime cursor, not from whether records were
   produced by the initial relay page.
+- Bootstrap and historical reads use the shared adaptive grouped scanner with a
+  one-minute initial window. Complete sparse windows advance through adjacent
+  notification history with doubled spans, balanced complete windows keep the
+  span, and limit-hit windows shrink and retry before they can render as
+  complete coverage.
+- Notification runtimes derive records only from events inside the requested
+  cursor or scanner window.
 
 ## Protocol-Safe Filter Checklist
 

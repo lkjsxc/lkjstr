@@ -69,3 +69,7 @@ settings, relay sets, workspace layout, notifications, Tweet drafts, or live
 tab snapshots. `tabStates` cleanup is owned by the workspace snapshot
 coordinator and removes rows only for tabs absent from the workspace or stale
 pre-tab-owned rows.
+
+Compaction invalidates coverage for affected feed keys because complete coverage
+is useful only while the local event repository can still prove the visible
+range.

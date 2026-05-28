@@ -67,6 +67,8 @@ state lives, which modules own subscriptions, and how tabs close cleanly.
 - [data/feed-surface/event-value.md](data/feed-surface/event-value.md):
   visible event value and retention.
 - [data/feed-memory.md](data/feed-memory.md): feed windows and scroll anchors.
+- [data/feed-coverage.md](data/feed-coverage.md): durable feed range evidence
+  and cache eligibility.
 - [data/retention/README.md](data/retention/README.md): score-based event
   retention.
 - [data/retention/compaction.md](data/retention/compaction.md): compaction

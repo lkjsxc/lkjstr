@@ -47,6 +47,7 @@ table of contents required by repository checks.
 - [architecture/data/bounded-memory.md](architecture/data/bounded-memory.md)
 - [architecture/data/event-surface-paging.md](architecture/data/event-surface-paging.md)
 - [architecture/data/event-tree.md](architecture/data/event-tree.md)
+- [architecture/data/feed-coverage.md](architecture/data/feed-coverage.md)
 - [architecture/data/feed-memory.md](architecture/data/feed-memory.md)
 - [architecture/data/feed-surface.md](architecture/data/feed-surface.md)
 - [architecture/data/feed-surface/README.md](architecture/data/feed-surface/README.md)
