@@ -85,7 +85,9 @@ linked product, protocol, architecture, and operations pages.
   keeping internal loading and newer state. Older-pruned newer notes recover
   through automatic near-start behavior at the first event row, and the identity
   block spans the profile card width below the avatar/action row. Profile older
-  history loads require downward user intent before preserving older rows.
+  history loads require a current downward scroll-owner gesture before
+  preserving older rows; observer-only and viewport-fill triggers remain
+  blocked for Profile, Notifications, and Thread.
 - Event rows show nip05-only subtitles on feeds, pressed Heart/Repost styling
   from a hybrid action-state index plus feed evidence, and no left-side
   new-event stripe.
@@ -136,7 +138,7 @@ linked product, protocol, architecture, and operations pages.
   lkjstr Log records.
 - Home follow discovery and Notifications relay cursors are now bounded and
   deterministic: missing-follow decisions use follow-sub EOSE ownership, and
-  Notifications older paging is gated by user scroll intent.
+  Notifications older paging is gated by current scroll-owner user intent.
 - RSS remains diagnostic-only for memory verification; app JavaScript heap is
   the owned browser memory assertion.
 

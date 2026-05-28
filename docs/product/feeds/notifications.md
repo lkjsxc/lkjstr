@@ -37,8 +37,10 @@ notification context header and the source event as the primary body.
   - `until = max(0, oldest - 1)`
 - No automatic deep backfill on tab open: older pages must not be requested
   during initial settle or just because the viewport is not filled. Older
-  requests are allowed only after user scroll intent (or an explicit older
-  action), using the shared feed surface near-end semantics.
+  requests are allowed only from a current downward user scroll-owner gesture
+  (or an explicit older action), using the shared feed surface near-end
+  semantics. Earlier scrolling must not unlock observer-only or viewport-fill
+  triggers.
 - Older notifications load after near-bottom scroll using
   `max(1200px, 1.5 x viewport)` or an equivalent sentinel margin.
 - Feed surface may issue speculative older prefetches in general, but

@@ -62,8 +62,10 @@ Profile tabs show identity metadata and authored text notes.
   section at desktop, mobile, or narrow split-pane widths.
 - Profile note rows start below the full profile header inside the same scroll
   owner.
-- Older profile notes load only after downward user scroll reaches the bottom
-  threshold. Mount-time viewport fill must not prune newer profile rows.
+- Older profile notes load only when a current downward user gesture on the
+  scroll owner reaches the bottom threshold. Mount-time viewport fill and
+  observer-only near-end callbacks must not prune newer profile rows, even
+  after earlier scrolling.
 - Initial and historical note pages use compound `{createdAt,id}` cursors,
   adaptive bounded windows with `since` and `until`, local relay boundary
   filtering, and merged relay provenance. Sparse complete windows keep scanning

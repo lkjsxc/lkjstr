@@ -91,9 +91,11 @@ or older-page loads from moving the visible row.
   failed diagnostics.
 - Home does not start hidden session backfill when opened. Older history loads
   through scroll-driven or explicit page requests.
-- Profile history loads preserve newest rows unless the request came from gated
-  downward user history intent. Intentional history loads may preserve older
-  rows and mark newer rows available for recovery.
+- Profile, Notifications, and Thread history loads reject observer-only
+  `near-end` and layout `viewport-fill` triggers even after earlier scrolling.
+- Profile history loads preserve newest rows unless the request came from a
+  current gated downward scroll-owner gesture. Intentional scroll history loads
+  may preserve older rows and mark newer rows available for recovery.
 
 ## Verification
 
