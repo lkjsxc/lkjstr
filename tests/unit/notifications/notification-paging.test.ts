@@ -6,6 +6,7 @@ import {
   notificationOlderPageLookbackSeconds,
   olderNotificationCursor,
 } from '../../../src/lib/notifications/notification-paging';
+import { readInitialNotificationRelayPage } from '../../../src/lib/notifications/notification-runtime-initial';
 import { loadOlderNotificationRelayPage } from '../../../src/lib/notifications/notification-runtime-older';
 import type { ReadPageRelayStatus } from '../../../src/lib/relays/read-page-status';
 import { stubOrchestrator } from '../relays/orchestration/orchestrator-mock';
@@ -35,6 +36,28 @@ describe('notification paging cursors', () => {
     expect(isWithinNotificationCursor(20, cursor)).toBe(true);
     expect(isWithinNotificationCursor(9, cursor)).toBe(false);
     expect(isWithinNotificationCursor(21, cursor)).toBe(false);
+  });
+
+  it('seeds older cursor from empty initial windows', async () => {
+    const startedAt = 5_000;
+    const result = await readInitialNotificationRelayPage({
+      accountPubkey: 'd'.repeat(64),
+      relays: ['wss://relay.example/'],
+      owner: 'notif-test',
+      pageSize: 30,
+      startedAt,
+      subscriptions: stubOrchestrator({
+        readPageByIntent: async () => ({ events: [], statuses: [] }),
+      }),
+      signal: new AbortController().signal,
+      active: () => true,
+      run: 1,
+      baseRecords: [],
+      windowLimit: 180,
+    });
+
+    expect(result.mergedRecords).toEqual([]);
+    expect(result.olderCursorCreatedAt).toBe(startedAt - 720);
   });
 
   it('advances sparse complete older windows without ending history', async () => {

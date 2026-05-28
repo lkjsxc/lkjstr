@@ -115,8 +115,13 @@ export function createNotificationRuntime(
     });
     if (!active(run)) return;
     await reload(false, initial.mergedRecords, initial.prunedNewer);
+    if (!active(run)) return;
+    emit({
+      ...state,
+      olderCursorCreatedAt:
+        state.olderCursorCreatedAt ?? initial.olderCursorCreatedAt,
+    });
   };
-
   // prettier-ignore
   const runtime = {
     subscribe: (listener: (state: NotificationState) => void): (() => void) => { listeners.add(listener); listener(state); return () => listeners.delete(listener); },
@@ -145,7 +150,7 @@ export function createNotificationRuntime(
       if (closed || !accountPubkey || state.loadingOlder || !state.hasOlder)
         return;
       const cursor = state.olderCursorCreatedAt ?? state.records.at(-1)?.createdAt;
-      if (!cursor) return;
+      if (cursor === undefined) return;
       const run = generation;
       emit({ ...state, loadingOlder: true });
       try {

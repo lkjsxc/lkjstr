@@ -26,6 +26,7 @@ export async function readInitialNotificationRelayPage(args: {
 }): Promise<{
   readonly mergedRecords: readonly NotificationRecord[];
   readonly prunedNewer: boolean;
+  readonly olderCursorCreatedAt: number;
 }> {
   const cursor = initialNotificationCursor(args.startedAt);
   const selected = await notificationRelays(args.accountPubkey, args.relays);
@@ -55,6 +56,8 @@ export async function readInitialNotificationRelayPage(args: {
       return {
         mergedRecords: args.baseRecords,
         prunedNewer: false,
+        olderCursorCreatedAt:
+          args.baseRecords.at(-1)?.createdAt ?? cursor.since,
       };
     }
     if (!isWithinNotificationCursor(event.created_at, cursor)) continue;
@@ -78,5 +81,6 @@ export async function readInitialNotificationRelayPage(args: {
   return {
     mergedRecords: merged.records,
     prunedNewer: merged.prunedNewer,
+    olderCursorCreatedAt: merged.records.at(-1)?.createdAt ?? cursor.since,
   };
 }

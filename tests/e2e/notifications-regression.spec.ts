@@ -61,3 +61,36 @@ test('notifications viewport-fill older history when underfilled', async ({
   });
   await expect(page.getByText('End of known history.')).not.toBeVisible();
 });
+
+test('notifications scan older history after an empty initial window', async ({
+  page,
+}) => {
+  const activeKey = generateSecretKey();
+  const active = getPublicKey(activeKey);
+  const authorKey = generateSecretKey();
+  const now = Math.floor(Date.now() / 1000);
+  const oldCreatedAt = now - 14 * 60;
+  const oldEvents = Array.from({ length: 2 }, (_, i) =>
+    finalizeEvent(
+      {
+        created_at: oldCreatedAt + i,
+        kind: 1,
+        tags: [['p', active]],
+        content: `empty-initial-notification-${i}`,
+      },
+      authorKey,
+    ),
+  );
+
+  await installSyntheticRelay(page, { events: oldEvents });
+  await openCleanWorkspace(page);
+  await addReadonlyAccount(page, active);
+  await selectStartupTab(page, 'Notifications');
+
+  await expect(page.getByText('empty-initial-notification-1')).toBeVisible({
+    timeout: 15_000,
+  });
+  await expect(
+    page.getByText('No notifications for the active account.'),
+  ).not.toBeVisible();
+});

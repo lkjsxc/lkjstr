@@ -165,7 +165,7 @@
 <section class="feed-tab" aria-label="Notifications">
   {#if viewState.loading}<p>Loading notifications...</p>{/if}
   {#if viewState.error}<p role="alert">{viewState.error}</p>{/if}
-  {#if viewState.records.length > 0}
+  {#if !viewState.loading && (viewState.records.length > 0 || viewState.hasOlder)}
     <NotificationListScroll
       tabId={props.tabId}
       restoreAnchor={props.restoreAnchor}
@@ -186,7 +186,7 @@
       openAuthorContext={props.openAuthorContext}
       bind:listElement
     />
-  {:else if !viewState.loading}
+  {:else if !viewState.loading && viewState.historyExhaustion === 'proven'}
     <p>No notifications for the active account.</p>
   {/if}
 </section>

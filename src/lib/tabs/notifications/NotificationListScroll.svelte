@@ -69,7 +69,7 @@
   let pinOwner = $derived(tabId ? `notifications:${tabId}` : fallbackPinOwner);
   let rows = $derived(notificationViewRows(records));
   let footerPhase = $derived(footerPhaseFromPaging({ loadingOlder, hasOlder, historyExhaustion, rowCount: records.length, error }));
-  let nearEndEnabled = $derived(records.length > 0 && hasOlder && !loadingOlder);
+  let nearEndEnabled = $derived(hasOlder && !loadingOlder);
 
   $effect(() => {
     listElement = scrollElement;
@@ -102,7 +102,7 @@
   });
 
   $effect(() => {
-    if (records.length > 0 && hasOlder && !loadingOlder) void maybeAutoFill();
+    if (hasOlder && !loadingOlder) void maybeAutoFill();
   });
 
   function requestOlder(trigger: OlderLoadTrigger): void {

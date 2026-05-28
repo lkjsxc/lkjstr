@@ -35,6 +35,9 @@ notification context header and the source event as the primary body.
   oldest visible record:
   - `since = max(0, olderCursorCreatedAt - notificationOlderPageLookbackSeconds)`
   - `until = max(0, olderCursorCreatedAt - 1)`
+- When the initial window has zero notification records,
+  `olderCursorCreatedAt` starts at the initial window `since` bound so bounded
+  viewport-fill can still scan older history.
 - No automatic deep backfill on tab open: viewport-fill is bounded to short
   underfilled lists and stops once the list becomes scrollable, history is
   proven exhausted, or the shared attempt cap is reached. After that, older
@@ -47,6 +50,8 @@ notification context header and the source event as the primary body.
   unambiguous relay status and no local older records.
 - Shared `FeedSurfaceStatus` footer shows loading, end of history, and errors.
   End of history appears only for proven exhaustion.
+- The empty notification message appears only after history exhaustion is
+  proven, not merely because the initial window returned zero records.
 - Notifications use `FeedScrollSurface` with Virtua on
   `.notification-list-scroll`, the same near-end and footer semantics as Home
   and Global. See [feed-scroll-surface.md](../../architecture/data/feed-surface/feed-scroll-surface.md).
