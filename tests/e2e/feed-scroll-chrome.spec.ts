@@ -1,4 +1,4 @@
-import { expect, test } from '@playwright/test';
+import { expect, test, type Page } from '@playwright/test';
 import {
   finalizeEvent,
   generateSecretKey,
@@ -82,7 +82,7 @@ test('event more menu clears the feed scrollbar track', async ({ page }) => {
   expect(clearance!).toBeGreaterThanOrEqual(4);
 });
 
-test('chooser and timeline scrollbars keep notification-like edge spacing', async ({
+test('tab scroll roots keep notification-like edge spacing', async ({
   page,
 }, testInfo) => {
   test.skip(
@@ -91,22 +91,39 @@ test('chooser and timeline scrollbars keep notification-like edge spacing', asyn
   );
   await installSyntheticRelay(page, { events: syntheticNotes(24) });
   await page.goto('/');
-  await pane(page, 0).getByRole('button', { name: 'Open new tab' }).click();
-  const chooserGap = await rightEdgeGap(page, 'section.new-tab');
-  expect(chooserGap).toBeGreaterThanOrEqual(8);
-  expect(chooserGap).toBeLessThanOrEqual(22);
+  await expect(page.getByRole('region', { name: 'Welcome' })).toBeVisible();
+  await expectFrameGap(page, 'section[aria-label="Welcome"]');
 
+  await pane(page, 0).getByRole('button', { name: 'Open new tab' }).click();
+  await expectFrameGap(page, 'section.new-tab');
+
+  await page
+    .locator('section.new-tab')
+    .getByRole('button', { name: 'lkjstr Log', exact: true })
+    .click();
+  await expect(page.getByRole('region', { name: 'lkjstr Log' })).toBeVisible();
+  await expectFrameGap(page, 'section[aria-label="lkjstr Log"]');
+
+  await pane(page, 0).getByRole('button', { name: 'Open new tab' }).click();
+  await page
+    .locator('section.new-tab')
+    .getByRole('button', { name: 'Relay Settings', exact: true })
+    .click();
+  await expect(
+    page.getByRole('region', { name: 'Relay Settings' }),
+  ).toBeVisible();
+  await expectFrameGap(page, 'section[aria-label="Relay Settings"]');
+
+  await pane(page, 0).getByRole('button', { name: 'Open new tab' }).click();
   await page
     .locator('section.new-tab')
     .getByRole('button', { name: 'Global', exact: true })
     .click();
   await expect(page.getByText('layout fit note 0')).toBeVisible();
-  const timelineGap = await rightEdgeGap(
+  await expectFrameGap(
     page,
     'section[aria-label="Global"] .event-list__viewport',
   );
-  expect(timelineGap).toBeGreaterThanOrEqual(8);
-  expect(timelineGap).toBeLessThanOrEqual(22);
 });
 
 test('scroll owners avoid horizontal overflow', async ({ page }) => {
@@ -117,10 +134,13 @@ test('scroll owners avoid horizontal overflow', async ({ page }) => {
   await assertNoHorizontalOverflow(page);
 });
 
-async function rightEdgeGap(
-  page: import('@playwright/test').Page,
-  selector: string,
-) {
+async function expectFrameGap(page: Page, selector: string): Promise<void> {
+  const gap = await rightEdgeGap(page, selector);
+  expect(gap).toBeGreaterThanOrEqual(8);
+  expect(gap).toBeLessThanOrEqual(22);
+}
+
+async function rightEdgeGap(page: Page, selector: string): Promise<number> {
   return page
     .locator(selector)
     .first()

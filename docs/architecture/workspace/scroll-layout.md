@@ -16,8 +16,9 @@ without overlapping text or controls.
 - Home and Global reset the direct `.event-list` child inset so their Virtua
   scrollbar aligns with the Notifications scroll position instead of being
   pushed inward twice.
-- New Tab keeps the chooser scroll root inset from the pane edge with an
-  inline-end margin because the tab root itself owns vertical scrolling.
+- Tool-style tab scroll roots (`.data-tab`, `.settings-tab`, `.new-tab`,
+  `.relay-monitor`, and `.relay-settings`) share the same inline-end margin so
+  their scrollbar tracks sit at the same frame distance as Notifications.
 - `.pane-body` does not add inline padding on the scroll axis. Block-axis
   padding may remain for vertical rhythm.
 - Feed virtual lists keep status rows inside the scroll flow so the footer moves
@@ -49,8 +50,8 @@ owner's inline-end padding only when a surface needs extra clearance.
 | --------------------------------------------------------- | ------------------------------------------ | -------------------- |
 | Home, Global, Thread, Search, Profile                     | Virtua viewport in `.event-list__scroller` | `.feed-scroll-item`  |
 | Notifications                                             | `.notification-list-scroll`                | `.feed-scroll-item`  |
-| Settings, Relay Settings, Stats, Welcome, Upload Settings | `.settings-tab`                            | `.settings-tab > *`  |
-| Custom Request, Author Context, lkjstr Log                | Tab-specific scroll root (see tab CSS)     | tab CSS              |
+| Settings, Relay Settings, Stats, Welcome, Upload Settings | tool-style tab root                        | root direct children |
+| Custom Request, Author Context, lkjstr Log                | feed or tool-style tab root                | root direct children |
 | Pane tab shell                                            | `.pane-body` (non-scrolling container)     | tab root inside body |
 
 `.pane-body` and `.event-list__scroller` wrappers may use `overflow: hidden`

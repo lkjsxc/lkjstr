@@ -11,7 +11,8 @@
 .profile-tab,
 .timeline-tab,
 .new-tab,
-.relay-monitor {
+.relay-monitor,
+.relay-settings {
   box-sizing: border-box;
   padding-inline-end: var(--scroll-track-edge);
   padding-inline-start: var(--scroll-content-inset);
@@ -24,8 +25,17 @@
 .profile-tab > *,
 .timeline-tab > *,
 .new-tab > *,
-.relay-monitor > * {
+.relay-monitor > *,
+.relay-settings > * {
   padding-inline-end: var(--scroll-content-inset);
+}
+
+.settings-tab,
+.data-tab,
+.new-tab,
+.relay-monitor,
+.relay-settings {
+  margin-inline-end: var(--scroll-content-inset);
 }
 
 .feed-tab {
@@ -42,8 +52,4 @@
 
 .timeline-tab > .event-list {
   padding-inline-end: 0;
-}
-
-.new-tab {
-  margin-inline-end: var(--scroll-content-inset);
 }
