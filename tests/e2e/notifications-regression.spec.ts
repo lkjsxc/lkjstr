@@ -19,10 +19,10 @@ test('notifications do not auto-load older on initial settle', async ({
   const authorKey = generateSecretKey();
 
   const now = Math.floor(Date.now() / 1000);
-  // Old events are just outside the initial 7-day lookback, but inside the
-  // first older-page cursor (oldestLoaded - 7 days).
-  const oldCreatedAt = now - 8 * 24 * 60 * 60;
-  const newCreatedAt = now - 1 * 24 * 60 * 60;
+  // Old events are just outside the initial 12-minute lookback, but inside the
+  // first older-page cursor (oldestLoaded - 12 minutes).
+  const oldCreatedAt = now - 14 * 60;
+  const newCreatedAt = now - 4 * 60;
 
   const oldEvents = Array.from({ length: 5 }, (_, i) =>
     finalizeEvent(

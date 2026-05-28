@@ -1,6 +1,5 @@
-export const notificationInitialLookbackSeconds = 7 * 24 * 60 * 60;
-export const notificationOlderPageLookbackSeconds =
-  notificationInitialLookbackSeconds;
+export const notificationInitialLookbackSeconds = 12 * 60;
+export const notificationOlderPageLookbackSeconds = 12 * 60;
 export const notificationClockSkewSeconds = 120;
 
 export type NotificationRelayCursor = {

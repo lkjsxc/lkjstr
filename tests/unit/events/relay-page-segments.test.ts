@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import {
   initialRelayPageSegment,
   nextGrownRelayPageSegment,
+  relaySegmentInitialSpan,
   relaySegmentMaxSpan,
   splitRelayPageSegment,
 } from '../../../src/lib/events/relay-page-segments';
@@ -18,9 +19,10 @@ describe('relay page segments', () => {
       before: { createdAt: 1_000_000, id: 'f'.repeat(64) },
     });
 
-    expect(span(initial)).toBe(6 * 60 * 60);
+    expect(span(initial)).toBe(12 * 60);
+    expect(span(initial)).toBe(relaySegmentInitialSpan);
     expect(grown?.until).toBe((initial.since ?? 0) + 1);
-    expect(grown ? span(grown) : 0).toBe(12 * 60 * 60);
+    expect(grown ? span(grown) : 0).toBe(24 * 60);
   });
 
   it('splits older dense segments newer half first', () => {

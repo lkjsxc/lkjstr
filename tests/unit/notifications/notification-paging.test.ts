@@ -2,6 +2,8 @@ import { describe, expect, it } from 'vitest';
 import {
   initialNotificationCursor,
   isWithinNotificationCursor,
+  notificationInitialLookbackSeconds,
+  notificationOlderPageLookbackSeconds,
   olderNotificationCursor,
 } from '../../../src/lib/notifications/notification-paging';
 
@@ -11,7 +13,8 @@ describe('notification paging cursors', () => {
     const cursor = initialNotificationCursor(startedAt);
     expect(cursor.since).toBeGreaterThanOrEqual(0);
     expect(cursor.until).toBe(startedAt + 120);
-    expect(cursor.since).toBe(startedAt - 604800);
+    expect(notificationInitialLookbackSeconds).toBe(720);
+    expect(cursor.since).toBe(startedAt - 720);
   });
 
   it('olderNotificationCursor is bounded and ends before oldest', () => {
@@ -19,7 +22,8 @@ describe('notification paging cursors', () => {
     const cursor = olderNotificationCursor(oldest);
     expect(cursor.since).toBeGreaterThanOrEqual(0);
     expect(cursor.until).toBe(oldest - 1);
-    expect(cursor.since).toBe(oldest - 604800);
+    expect(notificationOlderPageLookbackSeconds).toBe(720);
+    expect(cursor.since).toBe(oldest - 720);
   });
 
   it('isWithinNotificationCursor matches inclusive window', () => {

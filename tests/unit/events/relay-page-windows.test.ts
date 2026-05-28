@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { relayPageWindows } from '../../../src/lib/events/relay-page-windows';
 
 const day = 24 * 60 * 60;
+const initialSpan = 12 * 60;
 
 describe('relay page windows', () => {
   it('builds continuous older windows with a terminal since zero window', () => {
@@ -12,7 +13,7 @@ describe('relay page windows', () => {
     });
 
     expect(windows[0]).toEqual({
-      since: 2_000_001 - 6 * 60 * 60,
+      since: 2_000_001 - initialSpan,
       until: 2_000_001,
     });
     expect(windows.at(-1)?.since).toBe(0);
@@ -29,14 +30,14 @@ describe('relay page windows', () => {
       now: 20_000_000 + 40 * day,
     });
 
-    expect(windows[0]?.since).toBe(20_000_001 - 6 * 60 * 60);
+    expect(windows[0]?.since).toBe(20_000_001 - initialSpan);
   });
 
   it('bounds initial windows with since and until', () => {
     const windows = relayPageWindows({ direction: 'initial', now: 2_000_000 });
 
     expect(windows[0]).toEqual({
-      since: 2_000_001 - 6 * 60 * 60,
+      since: 2_000_001 - initialSpan,
       until: 2_000_001,
     });
     expect(windows.at(-1)?.since).toBe(0);
@@ -50,7 +51,7 @@ describe('relay page windows', () => {
     });
 
     expect(windows[0]).toEqual({
-      since: 2_000_001 - 6 * 60 * 60,
+      since: 2_000_001 - initialSpan,
       until: 2_000_001,
     });
     expect(windows.at(-1)?.since).toBe(999_999);
