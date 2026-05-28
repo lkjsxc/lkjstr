@@ -10,12 +10,17 @@ describe('relay page density', () => {
       receipt('b', 'wss://two/'),
     ]);
 
-    expect(relayPageDensity(result, [{ kinds: [1], limit: 2 }], 4).dense).toBe(
-      false,
+    expect(relayPageDensity(result, [{ kinds: [1], limit: 2 }], 4)).toEqual(
+      expect.objectContaining({
+        dense: false,
+        hitLimit: false,
+        underHalfLimit: false,
+        observedCount: 1,
+      }),
     );
   });
 
-  it('detects relay budget saturation for one relay', () => {
+  it('detects relay-effective budget saturation for one relay', () => {
     const result = page([
       receipt('a', 'wss://one/'),
       receipt('b', 'wss://one/'),
@@ -24,6 +29,9 @@ describe('relay page density', () => {
     expect(relayPageDensity(result, [{ kinds: [1], limit: 2 }], 4)).toEqual(
       expect.objectContaining({
         dense: true,
+        hitLimit: true,
+        underHalfLimit: false,
+        observedCount: 2,
         eventCount: 2,
         uniqueCount: 2,
         limit: 2,
@@ -46,8 +54,74 @@ describe('relay page density', () => {
           { kinds: [6], limit: 2 },
         ],
         4,
-      ).dense,
-    ).toBe(false);
+      ),
+    ).toEqual(
+      expect.objectContaining({
+        dense: false,
+        hitLimit: false,
+        underHalfLimit: false,
+        limit: 4,
+        observedCount: 3,
+      }),
+    );
+  });
+
+  it('marks under-half only when every relay is below half its budget', () => {
+    const result = page([
+      receipt('a', 'wss://one/'),
+      receipt('b', 'wss://two/'),
+    ]);
+
+    expect(relayPageDensity(result, [{ kinds: [1], limit: 5 }], 4)).toEqual(
+      expect.objectContaining({
+        dense: false,
+        hitLimit: false,
+        underHalfLimit: true,
+        observedCount: 1,
+      }),
+    );
+  });
+
+  it('uses relay status counts when retained events are below the limit', () => {
+    const result = page([receipt('a', 'wss://one/')]);
+    result.statuses[0] = {
+      ...result.statuses[0]!,
+      candidateCount: 4,
+      finalCount: 4,
+    };
+
+    expect(relayPageDensity(result, [{ kinds: [1], limit: 4 }], 10)).toEqual(
+      expect.objectContaining({
+        dense: true,
+        hitLimit: true,
+        underHalfLimit: false,
+        observedCount: 4,
+        limit: 4,
+      }),
+    );
+  });
+
+  it('treats limit one as either empty under-half or one event limit-hit', () => {
+    expect(relayPageDensity(page([]), [{ kinds: [1], limit: 1 }], 4)).toEqual(
+      expect.objectContaining({
+        hitLimit: false,
+        underHalfLimit: true,
+        observedCount: 0,
+        limit: 1,
+      }),
+    );
+    expect(
+      relayPageDensity(page([receipt('a', 'wss://one/')]), [
+        { kinds: [1], limit: 1 },
+      ], 4),
+    ).toEqual(
+      expect.objectContaining({
+        hitLimit: true,
+        underHalfLimit: false,
+        observedCount: 1,
+        limit: 1,
+      }),
+    );
   });
 });
 

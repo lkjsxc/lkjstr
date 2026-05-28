@@ -7,6 +7,9 @@ import type {
 
 export type RelayDensityVerdict = {
   readonly dense: boolean;
+  readonly hitLimit: boolean;
+  readonly underHalfLimit: boolean;
+  readonly observedCount: number;
   readonly limit: number;
   readonly eventCount: number;
   readonly uniqueCount: number;
@@ -21,8 +24,13 @@ export function relayPageDensity(
     const limit = relayBudget(filters, pageSize);
     const uniqueCount = new Set(result.events.map((item) => item.event.id))
       .size;
+    const observedCount = Math.max(result.events.length, uniqueCount);
+    const hitLimit = reachedLimit(observedCount, uniqueCount, limit);
     return {
-      dense: result.events.length >= limit || uniqueCount >= limit,
+      dense: hitLimit,
+      hitLimit,
+      underHalfLimit: underHalf(observedCount, limit, hitLimit),
+      observedCount,
       limit,
       eventCount: result.events.length,
       uniqueCount,
@@ -31,9 +39,12 @@ export function relayPageDensity(
   const verdicts = result.statuses.map((status) =>
     relayDensity(status, result.events, filters, pageSize),
   );
-  const dense = verdicts.some((verdict) => verdict.dense);
+  const hitLimit = verdicts.some((verdict) => verdict.hitLimit);
   return {
-    dense,
+    dense: hitLimit,
+    hitLimit,
+    underHalfLimit: verdicts.every((verdict) => verdict.underHalfLimit),
+    observedCount: Math.max(...verdicts.map((verdict) => verdict.observedCount)),
     limit: Math.min(...verdicts.map((verdict) => verdict.limit)),
     eventCount: verdicts.reduce((sum, verdict) => sum + verdict.eventCount, 0),
     uniqueCount: new Set(result.events.map((item) => item.event.id)).size,
@@ -54,8 +65,13 @@ function relayDensity(
     status.candidateCount,
   );
   const limit = relayBudget(filters, pageSize);
+  const observedCount = Math.max(eventCount, uniqueCount);
+  const hitLimit = reachedLimit(observedCount, uniqueCount, limit);
   return {
-    dense: eventCount >= limit || uniqueCount >= limit,
+    dense: hitLimit,
+    hitLimit,
+    underHalfLimit: underHalf(observedCount, limit, hitLimit),
+    observedCount,
     limit,
     eventCount,
     uniqueCount,
@@ -70,4 +86,20 @@ function relayBudget(
     1,
     filters.reduce((sum, filter) => sum + (filter.limit ?? pageSize), 0),
   );
+}
+
+function reachedLimit(
+  observedCount: number,
+  uniqueCount: number,
+  limit: number,
+): boolean {
+  return observedCount >= limit || uniqueCount >= limit;
+}
+
+function underHalf(
+  observedCount: number,
+  limit: number,
+  hitLimit: boolean,
+): boolean {
+  return !hitLimit && observedCount < limit / 2;
 }
