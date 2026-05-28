@@ -75,6 +75,13 @@ test('workspace churn keeps owned heap and counters bounded', async ({
   if (heap !== undefined && baselineHeap !== undefined)
     expect(heap - baselineHeap).toBeLessThan(80 * 1024 * 1024);
 
+  await waitForZeroCounters(page, [
+    'active-paged-reads',
+    'queued-read-waiters',
+    'active-relay-publish-waiters',
+    'active-abort-listeners',
+    'active-indexeddb-ops',
+  ]);
   const counters = await page.evaluate(() => {
     const debug = window.__lkjstrMemoryDebug?.();
     return (debug?.counters ?? {}) as Record<string, number>;
@@ -149,4 +156,21 @@ async function forceGc(page: Page): Promise<void> {
   const session = await page.context().newCDPSession(page);
   await session.send('HeapProfiler.collectGarbage');
   await session.detach();
+}
+
+async function waitForZeroCounters(
+  page: Page,
+  keys: readonly string[],
+): Promise<void> {
+  await expect
+    .poll(
+      async () =>
+        page.evaluate((items) => {
+          const counters = (window.__lkjstrMemoryDebug?.().counters ??
+            {}) as Record<string, number>;
+          return Math.max(...items.map((key) => counters[key] ?? 0));
+        }, keys),
+      { timeout: 5000 },
+    )
+    .toBe(0);
 }
