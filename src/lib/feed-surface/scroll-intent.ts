@@ -3,9 +3,7 @@ export type FeedScrollIntent = {
   readonly pendingDownwardInput: boolean;
 };
 
-export function createFeedScrollIntent(
-  previousOffset = 0,
-): FeedScrollIntent {
+export function createFeedScrollIntent(previousOffset = 0): FeedScrollIntent {
   return { previousOffset, pendingDownwardInput: false };
 }
 

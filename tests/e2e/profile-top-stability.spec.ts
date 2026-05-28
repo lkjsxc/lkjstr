@@ -79,9 +79,7 @@ test('profile top stays newest and future notes stay hidden', async ({
     node.scrollTop = 0;
     node.dispatchEvent(new Event('scroll', { bubbles: true }));
   });
-  await expect
-    .poll(() => scroller.evaluate((node) => node.scrollTop))
-    .toBe(0);
+  await expect.poll(() => scroller.evaluate((node) => node.scrollTop)).toBe(0);
   await page.waitForTimeout(1_500);
 
   await expect(profile.getByText('profile stability note 0')).toBeVisible();

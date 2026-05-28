@@ -51,6 +51,9 @@
     list?.getViewportSize?.() ?? scrollerElement?.clientHeight ?? 0,
   );
   let scrollIntent = createFeedScrollIntent();
+  let previousIntentKey: string | undefined;
+  let previousIntentOwner: HTMLElement | undefined;
+  let hasIntentBaseline = false;
 
   function handleScroll(offset: number): void {
     onScrollOffset?.(offset);
@@ -68,8 +71,7 @@
   }
 
   function markWheelIntent(event: WheelEvent): void {
-    if (event.deltaY > 0)
-      scrollIntent = markDownwardScrollInput(scrollIntent);
+    if (event.deltaY > 0) scrollIntent = markDownwardScrollInput(scrollIntent);
   }
 
   function markKeyIntent(event: KeyboardEvent): void {
@@ -82,7 +84,15 @@
   }
 
   $effect(() => {
-    intentKey;
+    if (
+      hasIntentBaseline &&
+      previousIntentKey === intentKey &&
+      previousIntentOwner === scrollElement
+    )
+      return;
+    hasIntentBaseline = true;
+    previousIntentKey = intentKey;
+    previousIntentOwner = scrollElement;
     scrollIntent = createFeedScrollIntent(scrollElement?.scrollTop ?? 0);
   });
 
