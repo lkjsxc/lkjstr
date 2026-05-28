@@ -2,20 +2,16 @@
   import { onDestroy } from 'svelte';
   import EventTreeList from '$lib/components/events/EventTreeList.svelte';
   import { parseCustomRequest } from '$lib/custom-request/parse';
+  import { readCustomRequestEvents } from '$lib/custom-request/read';
   import { feedPageSize } from '$lib/events/feed-window';
-  import { readRelayFeedPage } from '$lib/events/relay-page';
   import { upsertEvent } from '$lib/events/repository';
   import type { FeedEvent } from '$lib/events/types';
   import type { ProfileSummary } from '$lib/identity/identity';
   import type { RelaySet } from '$lib/relays/relay-store';
   import { sharedSubscriptionOrchestrator } from '$lib/relays/orchestration/orchestrator';
-  import { pageIntentSemanticKey } from '$lib/relays/orchestration/page-reads';
   import { timelineRelays } from '$lib/timeline/timeline-subscription';
   import { loadTimelineProfiles } from '$lib/timeline/timeline-profiles';
-  import {
-    feedEventsFromProgressiveSnapshot,
-    progressiveStatusText,
-  } from '$lib/timeline/timeline-progressive';
+  import { progressiveStatusText } from '$lib/timeline/timeline-progressive';
   import { registerTabRuntimeSnapshot } from '$lib/workspace/tab-runtime-registry';
   import type { TabSnapshotPayload } from '$lib/workspace/tab-snapshot';
   import type { TabFeedAnchor } from '$lib/workspace/tab-anchor-registry';
@@ -89,26 +85,15 @@
       const relays = request.relays.length
         ? request.relays
         : timelineRelays(props.relaySets);
-      const events = await readRelayFeedPage({
-        key: pageIntentSemanticKey({
-          surface: 'custom-request',
-          owner: props.tabId,
-          phase: 'bootstrap',
-          selectedRelays: relays,
-          authors: [],
-          pageSize: feedPageSize,
-          direction: 'initial',
-          purpose: 'feed',
-        }),
+      const events = await readCustomRequestEvents({
+        request,
         relays,
-        filters: request.filters,
+        owner: props.tabId,
         pageSize: feedPageSize,
         subscriptions,
-        purpose: 'feed',
         onSnapshot: (snapshot) => {
           if (destroyed) return;
-          if (snapshot.events.length > 0)
-            items = feedEventsFromProgressiveSnapshot(snapshot);
+          if (snapshot.items.length > 0) items = [...snapshot.items];
           relayStatusText = progressiveStatusText(snapshot.status);
         },
       });
