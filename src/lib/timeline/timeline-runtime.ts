@@ -7,6 +7,7 @@ import {
 import { runtimeSubscriptions } from '../relays/runtime-subscriptions';
 import type { DemandVisibility } from '../relays/orchestration/demand-types';
 import type { SubscriptionOrchestrator } from '../relays/orchestration/orchestrator';
+import { createLiveDemandHandles } from '../relays/orchestration/live-demand-handles';
 import { childRelaySubscriptionId } from '../relays/subscription-id';
 import { type TimelineLoad } from './timeline-load';
 import {
@@ -46,13 +47,12 @@ export function createTimelineRuntime(options: TimelineRuntimeOptions) {
   let initialNotesKey = '';
   let followList: TimelineLoad['followList'];
   let followFallbackStarted = false;
+  const routeRefresh = { generation: 0, homeNotesFingerprint: '' };
   const followSubId = childRelaySubscriptionId(options.subId, 'follows');
   const metaSubId = childRelaySubscriptionId(options.subId, 'meta');
   const noteSubId = childRelaySubscriptionId(options.subId, 'notes');
-  const profileCoordinator = createTimelineProfileCoordinator(
-    relays,
-    metaSubId,
-  );
+  const profileApi = createTimelineProfileCoordinator(relays, metaSubId);
+  const liveHandles = createLiveDemandHandles();
   let closed = false;
   let generation = 0;
   const items = (): TimelineItem[] =>
@@ -65,8 +65,8 @@ export function createTimelineRuntime(options: TimelineRuntimeOptions) {
   const nextState = (patch: Partial<TimelineState>): TimelineState =>
     withCursors({ ...state, authors, profiles, ...patch });
   const hydrateVisibleProfiles = async (): Promise<void> => {
-    profileCoordinator.merge(profiles);
-    const loaded = await profileCoordinator.hydrate(state.items);
+    profileApi.merge(profiles);
+    const loaded = await profileApi.hydrate(state.items);
     if (closed || loaded === profiles) return;
     profiles = loaded;
     emit({ ...state, profiles: loaded });
@@ -120,6 +120,8 @@ export function createTimelineRuntime(options: TimelineRuntimeOptions) {
     setOlderScanCursor: (v) => (olderScanCursor = v),
     getInitialNotesKey: () => initialNotesKey,
     setInitialNotesKey: (v) => (initialNotesKey = v),
+    routeRefresh,
+    liveHandles,
     applyLoaded,
     withCursors,
     setLive: (v) => (live = v),
@@ -163,6 +165,7 @@ export function createTimelineRuntime(options: TimelineRuntimeOptions) {
       closed = true;
       generation++;
       aborts.abort();
+      liveHandles.releaseAll();
       subscriptions.releaseOwner(owner);
       for (const item of cleanup.splice(0)) item();
       listeners.clear();

@@ -37,10 +37,7 @@ export function wireEquivalentFingerprintInput(
   };
 }
 
-export function wireEquivalentFingerprint(
-  demand: Demand,
-  nowSec = Math.floor(Date.now() / 1000),
-): string {
+export function wireEquivalentFingerprint(demand: Demand, nowSec = 0): string {
   return leaseFingerprint(wireEquivalentFingerprintInput(demand, nowSec));
 }
 

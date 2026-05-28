@@ -1,5 +1,6 @@
 import type { DemandVisibility } from '../relays/orchestration/demand-types';
 import type { SubscriptionOrchestrator } from '../relays/orchestration/orchestrator';
+import type { LiveDemandHandles } from '../relays/orchestration/live-demand-handles';
 import type { FeedCursorPoint } from '../events/types';
 import { createTimelineRuntimeNetwork } from './timeline-runtime-network';
 import type { TimelineNetworkCtx } from './timeline-runtime-network-types';
@@ -45,6 +46,8 @@ export type TimelineRuntimeBindInput = {
   setOlderScanCursor: (v: FeedCursorPoint | undefined) => void;
   getInitialNotesKey: () => string;
   setInitialNotesKey: (v: string) => void;
+  routeRefresh: TimelineNetworkCtx['routeRefresh'];
+  liveHandles: LiveDemandHandles;
   applyLoaded: (loaded: TimelineLoad) => void;
   withCursors: (next: TimelineState) => TimelineState;
   setLive: (v: TimelineItem[]) => void;
@@ -94,8 +97,8 @@ export function bindTimelineRuntimeNetwork(input: TimelineRuntimeBindInput) {
     setOlderScanCursor: input.setOlderScanCursor,
     getInitialNotesKey: input.getInitialNotesKey,
     setInitialNotesKey: input.setInitialNotesKey,
-    getRouteRefreshGeneration: () => 0,
-    setRouteRefreshGeneration: () => undefined,
+    routeRefresh: input.routeRefresh,
+    liveHandles: input.liveHandles,
     applyLoaded: input.applyLoaded,
     withCursors: input.withCursors,
     setLive: input.setLive,

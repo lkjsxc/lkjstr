@@ -1,5 +1,6 @@
 import type { DemandVisibility } from '../relays/orchestration/demand-types';
 import type { SubscriptionOrchestrator } from '../relays/orchestration/orchestrator';
+import type { LiveDemandHandles } from '../relays/orchestration/live-demand-handles';
 import type { FeedCursorPoint } from '../events/types';
 import type { TimelineLoad } from './timeline-load';
 import type { TimelineState } from './timeline-state';
@@ -43,8 +44,11 @@ export type TimelineNetworkCtx = {
   readonly setOlderScanCursor: (v: FeedCursorPoint | undefined) => void;
   readonly getInitialNotesKey: () => string;
   readonly setInitialNotesKey: (v: string) => void;
-  readonly getRouteRefreshGeneration: () => number;
-  readonly setRouteRefreshGeneration: (v: number) => void;
+  readonly routeRefresh: {
+    generation: number;
+    homeNotesFingerprint: string;
+  };
+  readonly liveHandles: LiveDemandHandles;
   readonly applyLoaded: (loaded: TimelineLoad) => void;
   readonly withCursors: (next: TimelineState) => TimelineState;
   readonly setLive: (v: TimelineItem[]) => void;

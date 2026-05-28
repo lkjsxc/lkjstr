@@ -1,6 +1,7 @@
 import { feedWindowSize, metadataPageLimit } from '../events/feed-window';
 import { boundedErrorText } from '../events/runtime-error';
 import { planAuthorWriteRelays } from '../relays/orchestration/route-plan';
+import { routeFingerprint } from './timeline-runtime-route-refresh';
 import { authorFilters } from './follow-list';
 import { profileFilter } from './timeline-profiles';
 import { loadInitialTimelinePage } from './timeline-runtime-paging';
@@ -87,8 +88,13 @@ export async function attachTimelineNotesSubscriptions(
   const onEvent = (event: import('../relays/relay-pool').PoolEvent) =>
     void receiveTimelinePoolEvent(receiverContext(), event);
   if (account && ctx.surface === 'home') {
-    ctx.cleanup().push(
-      await ctx.subscriptions.submitHomeNotesLiveIntent(
+    const nextFingerprint = await routeFingerprint(ctx);
+    if (
+      !ctx.liveHandles.has('notes') ||
+      ctx.routeRefresh.homeNotesFingerprint !== nextFingerprint
+    ) {
+      ctx.liveHandles.release('notes');
+      const release = await ctx.subscriptions.submitHomeNotesLiveIntent(
         {
           surface: 'home',
           owner: ctx.owner,
@@ -103,8 +109,10 @@ export async function attachTimelineNotesSubscriptions(
           }),
         },
         onEvent,
-      ),
-    );
+      );
+      ctx.liveHandles.replace('notes', release);
+      ctx.routeRefresh.homeNotesFingerprint = nextFingerprint;
+    }
   } else if (ctx.getAuthors().length > 0) {
     const relays = await planAuthorWriteRelays({
       surface: ctx.surface,
@@ -155,5 +163,7 @@ export async function attachTimelineNotesSubscriptions(
       ),
     );
   }
-  void initialPage.then(() => refreshTimelineRoutesAfterInitialPage(ctx));
+  void initialPage.then(() =>
+    refreshTimelineRoutesAfterInitialPage(ctx, onEvent),
+  );
 }
