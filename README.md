@@ -9,6 +9,7 @@ server-side account system.
 
 ## Table of Contents
 
+- [Screenshot](#screenshot)
 - [What lkjstr Is](#what-lkjstr-is)
 - [What It Does](#what-it-does)
 - [How to Run](#how-to-run)
@@ -16,6 +17,10 @@ server-side account system.
 - [Where Docs Live](#where-docs-live)
 - [Repository Map](#repository-map)
 - [License](#license)
+
+## Screenshot
+
+![lkjstr showing Home, Notifications, Profile, Thread, Tweet, Stats, Accounts, and Log tabs](static/media/lkjstr-01.jpeg)
 
 ## What lkjstr Is
 

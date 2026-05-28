@@ -10,4 +10,4 @@ This directory is reserved for bundled static media used by the app.
 
 ## Files
 
-- No product media upload presets are bundled.
+- [lkjstr-01.jpeg](lkjstr-01.jpeg): current README screenshot.
