@@ -87,7 +87,7 @@ export function createRelayClient(
   // prettier-ignore
   const sendIfConnected = (message: ClientMessage) => { if (finallyClosed || !socket || state === 'closed' || state === 'idle') return; sendEncoded(encodeClientMessage(message)); };
   // prettier-ignore
-  const startSubscription = (id: string, filters: readonly NostrFilter[], options: RelaySubscribeOptions, restore = false) => { if (finallyClosed) return; const limits = relayLimits(url); const wireId = aliases.wireId(id, limits.maxSubscriptionIdLength); const message: ClientMessage = ['REQ', wireId, ...filters]; const encoded = encodeClientMessage(message); if (limits.maxMessageLength && !utf8ByteLengthWithin(encoded, limits.maxMessageLength).within) { addDiagnostic('request-too-large', 'REQ exceeds relay message limit', id); releaseReq(id); return; } if (!restore) { eoseBySub[id] = false; filtersBySub.set(id, filters); optionsBySub.set(id, options); if (options.idleCloseMs) deadlineBySub.set(id, Date.now() + options.idleCloseMs); delete closedBySub[id]; } stats.activeSubscriptionIds.add(id); incMemoryCounter('active-relay-subscriptions'); handle.connect(); sendEncoded(encoded); };
+  const startSubscription = (id: string, filters: readonly NostrFilter[], options: RelaySubscribeOptions, restore = false) => { if (finallyClosed) return; const limits = relayLimits(url); const wireId = aliases.wireId(id, limits.maxSubscriptionIdLength); const message: ClientMessage = ['REQ', wireId, ...filters]; const encoded = encodeClientMessage(message); if (limits.maxMessageLength && !utf8ByteLengthWithin(encoded, limits.maxMessageLength).within) { addDiagnostic('request-too-large', 'REQ exceeds relay message limit', id); releaseReq(id); return; } if (!restore) { eoseBySub[id] = false; filtersBySub.set(id, filters); optionsBySub.set(id, options); if (options.idleCloseMs) deadlineBySub.set(id, Date.now() + options.idleCloseMs); delete closedBySub[id]; } stats.addSubscription(id, options.descriptor); incMemoryCounter('active-relay-subscriptions'); handle.connect(); sendEncoded(encoded); };
   // prettier-ignore
   const restoreSubscriptions = () => { for (const id of reqs.activeIds) { if (restorableSubscription(id)) startSubscription(id, filtersBySub.get(id) ?? [], optionsBySub.get(id) ?? {}, true); else releaseReq(id); } };
   const handleEventMessage = (wireId: string, event: NostrEvent) => {
@@ -118,7 +118,7 @@ export function createRelayClient(
       filters = filtersBySub.get(subId) ?? [];
     closedBySub[subId] = reason;
     recordRelayClosedPolicy(url, reason, filters);
-    stats.activeSubscriptionIds.delete(subId);
+    stats.removeSubscription(subId);
     decMemoryCounter('active-relay-subscriptions');
     addDiagnostic('closed', reason, subId, filters);
     releaseReq(subId);
@@ -130,7 +130,7 @@ export function createRelayClient(
     if ((optionsBySub.get(subId)?.strategy ?? 'forward') === 'forward') return;
     closeSentBySub.add(subId);
     sendIfConnected(['CLOSE', wireId]);
-    stats.activeSubscriptionIds.delete(subId);
+    stats.removeSubscription(subId);
     decMemoryCounter('active-relay-subscriptions');
     releaseReq(subId);
   };
@@ -153,7 +153,7 @@ export function createRelayClient(
   // prettier-ignore
   const timeoutConnect = () => { if (state !== 'connecting') return; lastError = 'connect timeout'; addDiagnostic('timeout', 'connect timeout'); setState('error'); socket?.close(); };
   // prettier-ignore
-  const forgetSubscription = (id: string) => { delete eoseBySub[id]; delete closedBySub[id]; filtersBySub.delete(id); optionsBySub.delete(id); deadlineBySub.delete(id); closeSentBySub.delete(id); aliases.forget(id); reqs.remove(id); stats.activeSubscriptionIds.delete(id); decMemoryCounter('active-relay-subscriptions'); };
+  const forgetSubscription = (id: string) => { delete eoseBySub[id]; delete closedBySub[id]; filtersBySub.delete(id); optionsBySub.delete(id); deadlineBySub.delete(id); closeSentBySub.delete(id); aliases.forget(id); reqs.remove(id); stats.removeSubscription(id); decMemoryCounter('active-relay-subscriptions'); };
   // prettier-ignore
   const clearObject = (record: Record<string, unknown>): void => { for (const key of Object.keys(record)) delete record[key]; };
   // prettier-ignore

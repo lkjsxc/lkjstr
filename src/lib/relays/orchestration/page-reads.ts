@@ -10,6 +10,7 @@ import type {
 } from './orchestrator-types';
 import type { ReadPageOptions } from '../subscription-manager-types';
 import type { ReadPageResult } from '../read-page-status';
+import { pageIntentSubscriptionDescriptor } from '../subscription-descriptor';
 
 function hashSemanticKey(value: string): string {
   let hash = 0;
@@ -111,6 +112,7 @@ export function readPageByIntent(
       relays: intent.selectedRelays,
       filters: intent.relayFilters ?? [],
       purpose: intent.purpose ?? 'feed',
+      descriptor: pageIntentSubscriptionDescriptor(intent),
     },
     options,
   );

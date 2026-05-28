@@ -6,6 +6,7 @@ import {
   leaseWireKey,
   type LeaseFingerprintInput,
 } from './lease-fingerprint';
+import { demandSubscriptionDescriptor } from '../subscription-descriptor';
 
 export function normalizeLiveDemandFilters(
   demand: Demand,
@@ -52,5 +53,6 @@ export function demandToWireRequest(
     relays: demand.relays,
     filters: normalizeLiveDemandFilters(demand, nowSec),
     purpose: demand.purpose,
+    descriptor: demandSubscriptionDescriptor(demand),
   };
 }

@@ -18,6 +18,7 @@
   import JobHealthPanel from './JobHealthPanel.svelte';
   import RuntimeCounters from './RuntimeCounters.svelte';
   import RuntimeMemoryPanel from './RuntimeMemoryPanel.svelte';
+  import { relaySubscriptionRows } from './subscription-rows';
 
   let snapshots = $state<RelaySnapshot[]>([]);
   let memory = $state<RuntimeMemorySnapshot | null>(null);
@@ -27,6 +28,7 @@
   let autoRefresh = $state(false);
   let timer: ReturnType<typeof setInterval> | undefined;
   let totals = $derived(totalStats(snapshots));
+  let subscriptionRows = $derived(relaySubscriptionRows(snapshots));
 
   onMount(() => void refresh());
   onDestroy(() => stopAutoRefresh());
@@ -77,6 +79,7 @@
         okRejectedCount: 0,
         parseErrorCount: 0,
         activeSubscriptionIds: [],
+        activeSubscriptionDescriptors: [],
       }
     );
   }
@@ -128,13 +131,24 @@
     </tbody>
   </table>
   <h3>Subscriptions</h3>
-  <ul>
-    {#each snapshots as snapshot (snapshot.url)}
-      {#each stats(snapshot).activeSubscriptionIds as id (`${snapshot.url}:${id}`)}
-        <li><code>{id}</code> <span>{snapshot.url}</span></li>
+  <table class="stats-table">
+    <thead>
+      <tr>
+        <th>Purpose</th><th>Relay</th><th>Phase</th><th>Kind</th><th>Id</th>
+      </tr>
+    </thead>
+    <tbody>
+      {#each subscriptionRows as row (row.key)}
+        <tr>
+          <td>{row.label}</td>
+          <td>{row.relay}</td>
+          <td>{row.phase ?? '-'}</td>
+          <td>{row.purpose ?? '-'}</td>
+          <td><code>{row.shortId}</code></td>
+        </tr>
       {/each}
-    {/each}
-  </ul>
+    </tbody>
+  </table>
   <h3>Persisted relay summaries</h3>
   <table class="stats-table">
     <thead>

@@ -6,6 +6,7 @@ import { incMemoryCounter, decMemoryCounter } from '../app/memory-counters';
 import type { ReadPageResult } from './read-page-status';
 import { createPerRelayReadLimiter } from './read-limiter';
 import { compactRelaySubscriptionId } from './subscription-id';
+import { requestSubscriptionDescriptor } from './subscription-descriptor';
 import {
   readDedupeKey,
   relaySafeReadRequest,
@@ -94,7 +95,11 @@ export function createRelaySubscriptionManager(
         safeRequest.relays,
         subId,
         safeRequest.filters,
-        { purpose: safeRequest.purpose, strategy: 'forward' },
+        {
+          purpose: safeRequest.purpose,
+          strategy: 'forward',
+          descriptor: requestSubscriptionDescriptor(safeRequest),
+        },
       );
       entries.set(key, {
         subId,

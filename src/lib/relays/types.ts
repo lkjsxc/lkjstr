@@ -1,4 +1,5 @@
 import type { NostrEvent, RelayMessage } from '../protocol';
+import type { RelayRequestPurpose } from './relay-request-compat';
 
 export type RelayDiagnosticKind =
   | 'closed'
@@ -52,6 +53,19 @@ export type RelayValidationStats = {
   readonly invalidSubscriptionCount: number;
 };
 
+export type RelaySubscriptionDescriptor = {
+  readonly id: string;
+  readonly label: string;
+  readonly surface?: string;
+  readonly phase?: string;
+  readonly purpose?: RelayRequestPurpose;
+};
+
+export type RelaySubscriptionDescriptorInput = Omit<
+  RelaySubscriptionDescriptor,
+  'id'
+>;
+
 export type RelaySessionStats = {
   readonly receivedBytes: number;
   readonly sentBytes: number;
@@ -64,6 +78,7 @@ export type RelaySessionStats = {
   readonly okRejectedCount: number;
   readonly parseErrorCount: number;
   readonly activeSubscriptionIds: readonly string[];
+  readonly activeSubscriptionDescriptors: readonly RelaySubscriptionDescriptor[];
 };
 
 export type RelayClientEvents = {

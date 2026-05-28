@@ -1,5 +1,6 @@
 import type { NostrEvent, NostrFilter } from '../protocol';
 import type { RelayRequestPurpose } from '../relays/relay-request-compat';
+import type { RelaySubscriptionDescriptorInput } from '../relays/types';
 
 export type FeedKind = 'home' | 'global' | 'profile' | 'thread';
 
@@ -134,4 +135,5 @@ export type RelayReadRequest = {
   readonly relays: readonly string[];
   readonly filters: readonly NostrFilter[];
   readonly purpose?: RelayRequestPurpose;
+  readonly descriptor?: RelaySubscriptionDescriptorInput;
 };

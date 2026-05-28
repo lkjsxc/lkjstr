@@ -20,6 +20,7 @@ import {
   releaseRelayReadSubId,
   type RelayReadLeaseState,
 } from './relay-read-leases';
+import { requestSubscriptionDescriptor } from './subscription-descriptor';
 
 export type ReadPageState = RelayReadLeaseState;
 
@@ -118,6 +119,7 @@ export async function executeReadPage(
           purpose: effective.purpose,
           strategy: 'backward',
           idleCloseMs: options.timeoutMs ?? 5000,
+          descriptor: requestSubscriptionDescriptor(effective),
         });
       }
     });

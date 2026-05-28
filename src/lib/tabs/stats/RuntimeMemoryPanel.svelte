@@ -27,8 +27,16 @@
       <span>active demands</span>
     </article>
     <article>
+      <strong>{props.memory.orchestration.activeLeases}</strong>
+      <span>active leases</span>
+    </article>
+    <article>
       <strong>{props.memory.orchestration.liveLeases}</strong>
       <span>live leases</span>
+    </article>
+    <article>
+      <strong>{props.memory.orchestration.bootstrapLeases}</strong>
+      <span>bootstrap/page reads</span>
     </article>
     <article>
       <strong>{props.memory.orchestration.eventsReceived}</strong>

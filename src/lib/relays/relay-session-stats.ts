@@ -1,5 +1,8 @@
 import type { RelayMessage } from '../protocol';
-import type { RelaySessionStats } from './types';
+import type {
+  RelaySessionStats,
+  RelaySubscriptionDescriptorInput,
+} from './types';
 
 export type RelaySessionStatsCounter = ReturnType<
   typeof createRelaySessionStatsCounter
@@ -7,6 +10,7 @@ export type RelaySessionStatsCounter = ReturnType<
 
 export function createRelaySessionStatsCounter() {
   const activeSubscriptionIds = new Set<string>();
+  const descriptors = new Map<string, RelaySubscriptionDescriptorInput>();
   let receivedBytes = 0;
   let sentBytes = 0;
   let eventCount = 0;
@@ -23,6 +27,17 @@ export function createRelaySessionStatsCounter() {
     addReceivedBytes: (bytes: number) => (receivedBytes += bytes),
     addSentBytes: (bytes: number) => (sentBytes += bytes),
     addParseError: () => (parseErrorCount += 1),
+    addSubscription: (
+      id: string,
+      descriptor?: RelaySubscriptionDescriptorInput,
+    ): void => {
+      activeSubscriptionIds.add(id);
+      descriptors.set(id, descriptor ?? { label: 'Relay subscription' });
+    },
+    removeSubscription: (id: string): void => {
+      activeSubscriptionIds.delete(id);
+      descriptors.delete(id);
+    },
     snapshot: (): RelaySessionStats => ({
       receivedBytes,
       sentBytes,
@@ -35,6 +50,9 @@ export function createRelaySessionStatsCounter() {
       okRejectedCount,
       parseErrorCount,
       activeSubscriptionIds: [...activeSubscriptionIds].sort(),
+      activeSubscriptionDescriptors: [...activeSubscriptionIds]
+        .sort()
+        .map((id) => ({ id, ...(descriptors.get(id) ?? fallback(id)) })),
     }),
     receive: (message: RelayMessage): void => {
       if (message[0] === 'EVENT') eventCount++;
@@ -47,6 +65,7 @@ export function createRelaySessionStatsCounter() {
     },
     clear: (): void => {
       activeSubscriptionIds.clear();
+      descriptors.clear();
       receivedBytes = 0;
       sentBytes = 0;
       eventCount = 0;
@@ -59,4 +78,8 @@ export function createRelaySessionStatsCounter() {
       parseErrorCount = 0;
     },
   };
+}
+
+function fallback(id: string): RelaySubscriptionDescriptorInput {
+  return { label: id.startsWith('read-') ? 'Relay page read' : 'Relay live' };
 }

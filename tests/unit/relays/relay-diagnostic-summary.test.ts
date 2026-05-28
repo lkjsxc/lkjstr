@@ -90,6 +90,7 @@ function snapshot(): RelaySnapshot {
       okRejectedCount: 0,
       parseErrorCount: 0,
       activeSubscriptionIds: [],
+      activeSubscriptionDescriptors: [],
     },
     diagnostics: [],
     eoseBySub: {},
