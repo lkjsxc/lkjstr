@@ -90,7 +90,7 @@ export function incompleteReason(
   return 'no-eose';
 }
 
-function semanticFilterKey(filter: NostrFilter): string {
+export function semanticFilterKey(filter: NostrFilter): string {
   const tags = Object.entries(filter)
     .filter(([key]) => key.startsWith('#'))
     .sort(([a], [b]) => a.localeCompare(b))
