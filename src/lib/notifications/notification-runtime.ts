@@ -168,7 +168,7 @@ export function createNotificationRuntime(
           windowLimit: notificationRecordWindowSize,
         });
         if (!active(run)) return;
-        await reload(false, result.mergedRecords, result.prunedNewer);
+        await reload(false, undefined, result.prunedNewer);
         emit({
           ...state,
           hasOlder: result.hasOlder,
