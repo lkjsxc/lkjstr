@@ -17,6 +17,7 @@ type Problem = { file: string; message: string };
 const root = process.cwd();
 const skipDirs = new Set([
   '.git',
+  '.github',
   '.omx',
   '.pnpm-store',
   '.svelte-kit',
