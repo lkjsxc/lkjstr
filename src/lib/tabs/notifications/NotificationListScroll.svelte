@@ -2,11 +2,13 @@
   import FeedSurfaceStatus from '$lib/components/events/FeedSurfaceStatus.svelte';
   import NotificationRow from '$lib/components/notifications/NotificationRow.svelte';
   import FeedScrollSurface from '$lib/components/feed/FeedScrollSurface.svelte';
+  import { clearOpenReferencePins, pinOpenReferences } from '$lib/cache/pins';
   import {
     feedSurfaceStatusProps,
     footerPhaseFromPaging,
   } from '$lib/feed-surface/footer-phase';
   import {
+    notificationOpenReferenceIds,
     notificationViewRowKey,
     notificationViewRows,
     type NotificationViewRow,
@@ -21,6 +23,7 @@
   import type { NotificationRecord } from '$lib/notifications/notification';
 
   type Props = {
+    tabId: string;
     listElement?: HTMLElement | undefined;
     records: readonly NotificationRecord[];
     itemById: Map<string, FeedEvent>;
@@ -39,6 +42,7 @@
   };
 
   let {
+    tabId,
     listElement = $bindable(),
     records,
     itemById,
@@ -57,6 +61,8 @@
   }: Props = $props();
 
   let scrollElement = $state<HTMLElement | undefined>();
+  const fallbackPinOwner = `notifications:${crypto.randomUUID()}`;
+  let pinOwner = $derived(tabId ? `notifications:${tabId}` : fallbackPinOwner);
   let rows = $derived(notificationViewRows(records));
   let footerPhase = $derived(
     footerPhaseFromPaging({
@@ -72,6 +78,11 @@
 
   $effect(() => {
     listElement = scrollElement;
+  });
+
+  $effect(() => {
+    pinOpenReferences(pinOwner, notificationOpenReferenceIds(records));
+    return () => clearOpenReferencePins(pinOwner);
   });
 
   function requestOlder(trigger: OlderLoadTrigger): void {

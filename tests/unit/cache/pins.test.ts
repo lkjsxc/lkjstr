@@ -7,6 +7,8 @@ import {
   pinVisibleEvents,
   pinnedEventIds,
 } from '../../../src/lib/cache/pins';
+import { notificationOpenReferenceIds } from '../../../src/lib/feed-surface/notification-view-rows';
+import type { NotificationRecord } from '../../../src/lib/notifications/notification';
 
 describe('cache pins', () => {
   beforeEach(() => clearCachePinsForTests());
@@ -26,4 +28,49 @@ describe('cache pins', () => {
     clearOpenReferencePins('thread-a');
     expect([...pinnedEventIds()]).toEqual(['b']);
   });
+
+  it('replaces owner-scoped runtime pins without keeping empty ids', () => {
+    pinVisibleEvents('tab-a', ['a', '']);
+    pinVisibleEvents('tab-a', ['b']);
+    expect([...pinnedEventIds()]).toEqual(['b']);
+  });
+
+  it('pins visible notification source, target, and root references by owner', () => {
+    pinOpenReferences('notifications:tab-a', [
+      ...notificationOpenReferenceIds([
+        notification('source-a', 'target-a', 'root-a'),
+        notification('source-b', undefined, 'root-a'),
+      ]),
+    ]);
+    expect([...pinnedEventIds()].sort()).toEqual([
+      'root-a',
+      'source-a',
+      'source-b',
+      'target-a',
+    ]);
+    clearOpenReferencePins('notifications:tab-a');
+    expect([...pinnedEventIds()]).toEqual([]);
+  });
 });
+
+function notification(
+  sourceEventId: string,
+  targetEventId?: string,
+  rootEventId?: string,
+): NotificationRecord {
+  return {
+    id: sourceEventId,
+    accountPubkey: 'account',
+    sourceEventId,
+    actorPubkey: 'actor',
+    kind: 'mention',
+    createdAt: 1,
+    receivedAt: 1,
+    readAt: null,
+    muted: false,
+    hidden: false,
+    rootEventId,
+    targetEventId,
+    relayUrls: [],
+  };
+}

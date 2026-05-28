@@ -16,3 +16,14 @@ export function notificationViewRows(
 export function notificationViewRowKey(row: NotificationViewRow): string {
   return row.kind === 'footer' ? '__footer__' : row.record.id;
 }
+
+export function notificationOpenReferenceIds(
+  records: readonly NotificationRecord[],
+): string[] {
+  const ids = records.flatMap((record) => [
+    record.sourceEventId,
+    record.targetEventId,
+    record.rootEventId,
+  ]);
+  return [...new Set(ids.filter((id): id is string => Boolean(id)))];
+}

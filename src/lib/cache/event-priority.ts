@@ -64,19 +64,28 @@ export function isHardProtectedKind(event: NostrEvent): boolean {
   return event.kind === 0 || event.kind === 3;
 }
 
+export function eventPriorityRecord(
+  event: NostrEvent,
+  tags: readonly EventTagRow[] = [],
+  forceProtected = false,
+): EventPriorityRecord {
+  return {
+    id: event.id,
+    score: scoreEvent(event, tags),
+    createdAt: event.created_at,
+    protected: forceProtected || isHardProtectedKind(event),
+  };
+}
+
 export async function upsertEventPriority(
   event: NostrEvent,
   tags: readonly EventTagRow[] = [],
   forceProtected = false,
 ): Promise<void> {
   if (!indexedDbAvailable()) return;
-  const record: EventPriorityRecord = {
-    id: event.id,
-    score: scoreEvent(event, tags),
-    createdAt: event.created_at,
-    protected: forceProtected || isHardProtectedKind(event),
-  };
-  await browserDb().eventPriority.put(record);
+  await browserDb().eventPriority.put(
+    eventPriorityRecord(event, tags, forceProtected),
+  );
   await bumpEventTargets(event);
 }
 

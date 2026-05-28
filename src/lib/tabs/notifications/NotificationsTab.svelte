@@ -163,6 +163,7 @@
   {#if viewState.error}<p role="alert">{viewState.error}</p>{/if}
   {#if viewState.records.length > 0}
     <NotificationListScroll
+      tabId={props.tabId}
       records={viewState.records}
       {itemById}
       {targetItemById}

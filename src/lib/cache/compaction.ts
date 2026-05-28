@@ -24,6 +24,48 @@ export type CompactionOptions = {
   readonly maxBytes?: number;
 };
 
+export type CompactionEventCandidate = {
+  readonly id: string;
+  readonly pubkey: string;
+  readonly kind: number;
+  readonly created_at: number;
+};
+
+export function latestEventIdsByPubkey(
+  events: readonly CompactionEventCandidate[],
+  kind: number,
+  wantedPubkeys?: ReadonlySet<string>,
+): Set<string> {
+  const latestByPubkey = new Map<string, CompactionEventCandidate>();
+  for (const event of events) {
+    if (event.kind !== kind) continue;
+    if (wantedPubkeys && !wantedPubkeys.has(event.pubkey)) continue;
+    const current = latestByPubkey.get(event.pubkey);
+    if (!current || event.created_at > current.created_at)
+      latestByPubkey.set(event.pubkey, event);
+  }
+  return new Set([...latestByPubkey.values()].map((event) => event.id));
+}
+
+export function selectPruneIds(
+  rows: readonly EventPriorityRecord[],
+  protectedIds: ReadonlySet<string>,
+  needed: number,
+): string[] {
+  return rows
+    .filter((row) => isPrunablePriorityRow(row, protectedIds))
+    .sort((a, b) => a.score - b.score)
+    .slice(0, needed)
+    .map((row) => row.id);
+}
+
+export function isPrunablePriorityRow(
+  row: EventPriorityRecord,
+  protectedIds: ReadonlySet<string>,
+): boolean {
+  return !protectedIds.has(row.id) && !row.protected;
+}
+
 export async function compactOldEvents(
   options: CompactionOptions = {},
 ): Promise<CompactionResult> {
@@ -93,8 +135,7 @@ async function lowestScorePruneIds(
     .eventPriority.orderBy('score')
     .each((row: EventPriorityRecord) => {
       if (pruneIds.length >= needed) return false;
-      if (protectedIds.has(row.id) || row.protected) return;
-      pruneIds.push(row.id);
+      if (isPrunablePriorityRow(row, protectedIds)) pruneIds.push(row.id);
     });
   return pruneIds;
 }
@@ -109,7 +150,7 @@ async function collectLatestByKindPubkey(
   kind: number,
   target: Set<string>,
 ): Promise<void> {
-  const latestByPubkey = new Map<string, { id: string; created_at: number }>();
+  const events: CompactionEventCandidate[] = [];
   await browserDb()
     .events.where('[pubkey+kind+created_at]')
     .between(
@@ -117,15 +158,9 @@ async function collectLatestByKindPubkey(
       [Dexie.maxKey, kind, Dexie.maxKey],
     )
     .each((event) => {
-      const current = latestByPubkey.get(event.pubkey);
-      if (!current || event.created_at > current.created_at) {
-        latestByPubkey.set(event.pubkey, {
-          id: event.id,
-          created_at: event.created_at,
-        });
-      }
+      events.push(event);
     });
-  for (const item of latestByPubkey.values()) target.add(item.id);
+  for (const id of latestEventIdsByPubkey(events, kind)) target.add(id);
 }
 
 async function collectLatestByKindPubkeyForSet(
@@ -133,7 +168,7 @@ async function collectLatestByKindPubkeyForSet(
   wantedPubkeys: Set<string>,
   target: Set<string>,
 ): Promise<void> {
-  const latestByPubkey = new Map<string, { id: string; created_at: number }>();
+  const events: CompactionEventCandidate[] = [];
   await browserDb()
     .events.where('[pubkey+kind+created_at]')
     .between(
@@ -141,16 +176,10 @@ async function collectLatestByKindPubkeyForSet(
       [Dexie.maxKey, kind, Dexie.maxKey],
     )
     .each((event) => {
-      if (!wantedPubkeys.has(event.pubkey)) return;
-      const current = latestByPubkey.get(event.pubkey);
-      if (!current || event.created_at > current.created_at) {
-        latestByPubkey.set(event.pubkey, {
-          id: event.id,
-          created_at: event.created_at,
-        });
-      }
+      events.push(event);
     });
-  for (const item of latestByPubkey.values()) target.add(item.id);
+  for (const id of latestEventIdsByPubkey(events, kind, wantedPubkeys))
+    target.add(id);
 }
 
 async function deleteStaleFeedCursors(retainedIds: Set<string>): Promise<void> {
