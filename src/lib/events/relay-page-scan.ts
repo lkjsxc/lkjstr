@@ -5,15 +5,16 @@ import type { FeedCursorPoint, FeedEvent } from './types';
 import { mergeFeedEvents, sortFeedEvents } from './relay-page-merge';
 import { pageScanItems, scanCandidates } from './relay-page-scan-items';
 import {
-  canSplitRelayPageSegment,
   initialRelayPageSegment,
-  nextGrownRelayPageSegment,
   relayPageSegmentCursor,
   relaySegmentMaxSegmentsPerPage,
-  splitRelayPageSegment,
   type RelayPageSegment,
 } from './relay-page-segments';
 import { readSegment, type SegmentRead } from './relay-page-scan-read';
+import {
+  classifyWindowFeedback,
+  nextAdaptiveRelayWindow,
+} from './relay-window-policy';
 
 export async function scanRelayFeedGroups(
   request: RelayGroupPageRequest,
@@ -33,34 +34,32 @@ export async function scanRelayFeedGroups(
     collected = scanCandidates(collected, request.pageSize);
     const items = pageScanItems(collected, request);
     if (!read.contacted) continue;
-    if (read.complete && !read.dense) {
+    const feedback = classifyWindowFeedback(read);
+    if (read.complete && !read.hitLimit) {
       countRuntime('timeline', 'coverageCompleteSegments');
       countRuntime('timeline', 'completedCoverageWindows');
       if (items.length >= request.pageSize)
         return result(request, collected, items, true, read);
-      const grown = nextGrownRelayPageSegment(segment, {
-        ...request,
-        direction,
-      });
-      if (read.items.length > 0)
-        return result(request, collected, items, Boolean(grown), read);
-      if (!grown) return result(request, collected, items, false, read);
-      countRuntime('timeline', 'grownWindows');
-      queue.push(grown);
+      const next = nextAdaptiveRelayWindow(
+        segment,
+        { ...request, direction },
+        feedback,
+      );
+      if (next.kind !== 'advance')
+        return result(request, collected, items, false, read);
+      if (feedback === 'under-half') countRuntime('timeline', 'grownWindows');
+      queue.push(next.segment);
       continue;
     }
     countUnproven(read);
-    if (read.dense && items.length >= request.pageSize) {
-      safeCursor = mergeSafeCursor(
-        request,
-        safeCursor,
-        read.safeCursor ?? relayPageSegmentCursor(segment, direction),
-      );
-      return result(request, collected, items, true, { ...read, safeCursor });
-    }
-    if (shouldSplit(read, segment)) {
+    const next = nextAdaptiveRelayWindow(
+      segment,
+      { ...request, direction },
+      feedback,
+    );
+    if (next.kind === 'split') {
       countRuntime('timeline', 'splitWindows');
-      queue.unshift(...splitRelayPageSegment(segment, direction));
+      queue.unshift(...next.segments);
       continue;
     }
     countRuntime('timeline', 'unresolvedSegments');
@@ -69,6 +68,7 @@ export async function scanRelayFeedGroups(
       safeCursor,
       read.safeCursor ?? relayPageSegmentCursor(segment, direction),
     );
+    if (items.length === 0 && queue.length > 0) continue;
     return result(request, collected, items, true, { ...read, safeCursor });
   }
   const items = pageScanItems(collected, request);
@@ -78,15 +78,11 @@ export async function scanRelayFeedGroups(
     receivedItems: mergeFeedEvents(collected),
     complete: !safeCursor,
     dense: false,
+    hitLimit: false,
+    underHalfLimit: true,
     contacted: collected.length > 0,
     safeCursor,
   });
-}
-
-function shouldSplit(read: SegmentRead, segment: RelayPageSegment): boolean {
-  if (!canSplitRelayPageSegment(segment)) return false;
-  if (read.dense) return true;
-  return !read.complete && segment.depth === 0;
 }
 
 function countUnproven(read: SegmentRead): void {

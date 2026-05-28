@@ -89,14 +89,12 @@ describe('relay page scan', () => {
       events[0]!.id,
       events[1]!.id,
     ]);
-    expect(second.items.map((item) => item.event.id)).toEqual([
-      events[2]!.id,
-      events[3]!.id,
-    ]);
+    expect(second.items.map((item) => item.event.id)).toEqual([events[2]!.id]);
+    expect(second.hasMorePossible).toBe(true);
     expect(
       new Set([...first.items, ...second.items].map((item) => item.event.id))
         .size,
-    ).toBe(4);
+    ).toBe(3);
   });
 
   it('reads groups sequentially with deterministic keys', async () => {

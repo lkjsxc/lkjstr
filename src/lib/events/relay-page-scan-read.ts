@@ -8,7 +8,7 @@ import {
 } from './relay-page-limits';
 import { mergeFeedEvents, mergePoolEvents } from './relay-page-merge';
 import { needsCursorSlack, pageScanItems } from './relay-page-scan-items';
-import { retainedRawCandidates, scaleFilters } from './relay-page-scan-raw';
+import { retainedRawCandidates } from './relay-page-scan-raw';
 import { readScanBatch } from './relay-page-scan-batch';
 import {
   recordBatchCoverage,
@@ -27,6 +27,8 @@ export type SegmentRead = {
   readonly receivedItems: FeedEvent[];
   readonly complete: boolean;
   readonly dense: boolean;
+  readonly hitLimit: boolean;
+  readonly underHalfLimit: boolean;
   readonly contacted: boolean;
   readonly safeCursor?: FeedCursorPoint;
 };
@@ -39,6 +41,8 @@ export async function readSegment(
   const received: FeedEvent[] = [];
   let complete = true;
   let dense = false;
+  let hitLimit = false;
+  let underHalfLimit = true;
   let contacted = false;
   let safeCursor: FeedCursorPoint | undefined;
   for (const [groupIndex, group] of request.groups.entries()) {
@@ -47,6 +51,8 @@ export async function readSegment(
     received.push(...read.receivedItems);
     complete = complete && read.complete;
     dense = dense || read.dense;
+    hitLimit = hitLimit || read.hitLimit;
+    underHalfLimit = underHalfLimit && read.underHalfLimit;
     contacted = contacted || read.contacted;
     safeCursor = mergeSafeCursor(request, safeCursor, read.safeCursor);
   }
@@ -58,6 +64,8 @@ export async function readSegment(
     receivedItems: mergeFeedEvents(received),
     complete,
     dense,
+    hitLimit,
+    underHalfLimit,
     contacted,
     safeCursor,
   };
@@ -72,24 +80,25 @@ async function readGroup(
   const group = request.groups[groupIndex]!;
   let raw: PoolEvent[] = [];
   let complete = true;
-  let dense = false;
+  let hitLimit = false;
+  let underHalfLimit = true;
   let contacted = false;
   const bounds = segmentBounds(segment);
   const baseFilters = positiveFilters(
     request.filters(group, bounds),
     request.pageSize,
   );
-  for (const [attemptIndex, attempt] of [1, 2, 4].entries()) {
+  for (let attemptIndex = 0; attemptIndex < 2; attemptIndex += 1) {
     const batches = await limitedRelayFilterGroups(
       group.relays,
-      scaleFilters(baseFilters, attempt),
-      request.pageSize * attempt,
+      baseFilters,
+      request.pageSize,
     );
     raw.length = 0;
     complete = true;
-    dense = false;
+    hitLimit = false;
+    underHalfLimit = true;
     contacted = false;
-    let eventLimitDense = false;
     for (const [batchIndex, batch] of batches.entries()) {
       const filters = batch.filters.map((item) => mergeBounds(item, bounds));
       const read = await readScanBatch(request, group.key, {
@@ -115,24 +124,27 @@ async function readGroup(
         attemptIndex,
       );
       complete = complete && read.complete;
-      dense = dense || read.dense;
-      eventLimitDense ||= read.reason === 'event-limit' && read.dense;
+      hitLimit = hitLimit || read.density.hitLimit;
+      underHalfLimit = underHalfLimit && read.density.underHalfLimit;
       contacted = true;
     }
     const items = pageScanItems(mergePoolEvents(raw), {
       ...request,
       displayBounds: mergedDisplayBounds(request, segment),
     });
-    if (eventLimitDense && items.length >= request.pageSize) break;
-    if (dense && attempt < 4) continue;
-    if (needsCursorSlack(raw, items.length, request) && attempt < 4) continue;
+    if (
+      !hitLimit &&
+      needsCursorSlack(raw, items.length, request) &&
+      attemptIndex === 0
+    )
+      continue;
     break;
   }
   const items = pageScanItems(mergePoolEvents(raw), {
     ...request,
     displayBounds: mergedDisplayBounds(request, segment),
   });
-  const unresolved = !complete || dense;
+  const unresolved = !complete || hitLimit;
   if (unresolved && (!complete || !canSplitRelayPageSegment(segment)))
     await recordUnresolved(
       request,
@@ -140,14 +152,16 @@ async function readGroup(
       group.relays,
       baseFilters,
       segment,
-      dense,
+      hitLimit,
       raw,
     );
   return {
     items,
     receivedItems: mergePoolEvents(raw),
     complete,
-    dense,
+    dense: hitLimit,
+    hitLimit,
+    underHalfLimit,
     contacted,
     safeCursor: unresolved ? scanCursor(request, items) : undefined,
   };

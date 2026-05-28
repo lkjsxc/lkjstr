@@ -1,4 +1,3 @@
-import type { NostrFilter } from '../protocol';
 import type { PoolEvent } from '../relays/relay-pool';
 import { retainedCandidateLimit } from './relay-page-scan-items';
 import type { FeedEvent } from './types';
@@ -54,16 +53,6 @@ export function retainRelayCandidates(
     if (retained.includes(candidate)) byId.set(item.event.id, candidate);
   }
   return retained;
-}
-
-export function scaleFilters(
-  filters: readonly NostrFilter[],
-  multiplier: number,
-): NostrFilter[] {
-  return filters.map((filter) => ({
-    ...filter,
-    limit: (filter.limit ?? 1) * multiplier,
-  }));
 }
 
 function insertCandidate(
