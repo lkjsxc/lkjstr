@@ -37,7 +37,6 @@ export function relayPageDensity(
     const uniqueCount = new Set(result.events.map((item) => item.event.id))
       .size;
     const observedCount = Math.max(result.events.length, uniqueCount);
-    const hitLimit = reachedLimit(observedCount, uniqueCount, limit);
     const row = densityRow('statusless', {
       observedCount,
       limit,

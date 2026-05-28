@@ -22,7 +22,12 @@ export async function readCustomRequestEvents(input: {
   readonly onSnapshot?: (snapshot: CustomRequestSnapshot) => void;
 }): Promise<FeedEvent[]> {
   const mode = customRequestMode(input.request.filters);
-  const key = customRequestKey(input.request, input.relays, input.pageSize, mode);
+  const key = customRequestKey(
+    input.request,
+    input.relays,
+    input.pageSize,
+    mode,
+  );
   if (mode === 'exact') {
     const events = await readRelayFeedPage({
       key,
@@ -82,7 +87,9 @@ function filterEvents(
   pageSize: number,
 ): FeedEvent[] {
   return events
-    .filter((item) => filters.some((filter) => matchesFilter(item.event, filter)))
+    .filter((item) =>
+      filters.some((filter) => matchesFilter(item.event, filter)),
+    )
     .slice(0, pageSize);
 }
 
@@ -102,12 +109,10 @@ export function customRequestKey(
 }
 
 function normalizeFilter(filter: NostrFilter): Record<string, unknown> {
+  const entries: [string, unknown][] = Object.entries(filter).map(
+    ([key, value]) => [key, Array.isArray(value) ? [...value].sort() : value],
+  );
   return Object.fromEntries(
-    Object.entries(filter)
-      .map(([key, value]) => [
-        key,
-        Array.isArray(value) ? [...value].sort() : value,
-      ])
-      .sort(([left], [right]) => left.localeCompare(right)),
+    entries.sort(([left], [right]) => left.localeCompare(right)),
   );
 }

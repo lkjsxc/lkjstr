@@ -115,9 +115,7 @@ describe('notification paging cursors', () => {
       subscriptions: stubOrchestrator({
         readPageDetailed: async (request) => ({
           events: [],
-          statuses: [
-            { ...completeStatus(request.relays[0]!), timeout: true },
-          ],
+          statuses: [{ ...completeStatus(request.relays[0]!), timeout: true }],
         }),
       }),
       signal: new AbortController().signal,

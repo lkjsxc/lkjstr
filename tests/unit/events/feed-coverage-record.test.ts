@@ -11,7 +11,11 @@ describe('feed coverage relay-specific records', () => {
 
   it('stores relay-specific density counts and feedback metadata', async () => {
     await recordScanCoverage(
-      { key: 'feed', pageSize: 10, direction: 'older' } as RelayGroupPageRequest,
+      {
+        key: 'feed',
+        pageSize: 10,
+        direction: 'older',
+      } as RelayGroupPageRequest,
       'group',
       ['wss://dense/', 'wss://sparse/'],
       [{ kinds: [1], since: 10, until: 20 }],
@@ -20,10 +24,7 @@ describe('feed coverage relay-specific records', () => {
         feedback: 'limit-hit',
         direction: 'older',
         spanSeconds: 10,
-        relayRows: [
-          row('wss://dense/', 5, 5),
-          row('wss://sparse/', 1, 5),
-        ],
+        relayRows: [row('wss://dense/', 5, 5), row('wss://sparse/', 1, 5)],
       },
     );
 

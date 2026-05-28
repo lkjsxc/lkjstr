@@ -40,9 +40,7 @@ describe('relay page scan cache coverage', () => {
 
     const page = await pageFor('cache-hit', { calls, pageSize: 1, limit: 10 });
 
-    expect(page.items.map((item) => item.event.id)).toEqual([
-      'a'.repeat(64),
-    ]);
+    expect(page.items.map((item) => item.event.id)).toEqual(['a'.repeat(64)]);
     expect(calls).toEqual([]);
   });
 
@@ -73,9 +71,7 @@ describe('relay page scan cache coverage', () => {
       limit: 10,
     });
 
-    expect(page.items.map((item) => item.event.id)).toEqual([
-      'a'.repeat(64),
-    ]);
+    expect(page.items.map((item) => item.event.id)).toEqual(['a'.repeat(64)]);
     expect(calls).toEqual([]);
   });
 });
@@ -113,7 +109,9 @@ function pageFor(
         source: 'fallback' as const,
       },
     ],
-    filters: (_group, segment) => [{ kinds: [1], ...segment, limit: options.limit }],
+    filters: (_group, segment) => [
+      { kinds: [1], ...segment, limit: options.limit },
+    ],
     direction: 'older',
     before: { createdAt: 10_000, id: 'f'.repeat(64) },
     pageSize: options.pageSize,

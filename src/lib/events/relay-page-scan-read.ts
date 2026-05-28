@@ -111,27 +111,31 @@ async function readGroup(
     hitLimit = false;
     underHalfLimit = true;
     contacted = false;
-    const reads = await mapAsyncBounded(batches, 4, async (batch, batchIndex) => {
-      const filters = batch.filters.map((item) => mergeBounds(item, bounds));
-      const read = await readScanBatch(request, group.key, {
-        segmentIndex,
-        groupIndex,
-        attemptIndex,
-        batchIndex,
-        relays: batch.relays,
-        filters,
-      });
-      await recordBatchCoverage(
-        request,
-        group.key,
-        batch.relays,
-        filters,
-        read,
-        segment,
-        attemptIndex,
-      );
-      return { read, filters, relays: batch.relays };
-    });
+    const reads = await mapAsyncBounded(
+      batches,
+      4,
+      async (batch, batchIndex) => {
+        const filters = batch.filters.map((item) => mergeBounds(item, bounds));
+        const read = await readScanBatch(request, group.key, {
+          segmentIndex,
+          groupIndex,
+          attemptIndex,
+          batchIndex,
+          relays: batch.relays,
+          filters,
+        });
+        await recordBatchCoverage(
+          request,
+          group.key,
+          batch.relays,
+          filters,
+          read,
+          segment,
+          attemptIndex,
+        );
+        return { read, filters, relays: batch.relays };
+      },
+    );
     for (const { read, filters, relays } of reads) {
       raw.push(...read.events);
       raw = retainedRawCandidates(
