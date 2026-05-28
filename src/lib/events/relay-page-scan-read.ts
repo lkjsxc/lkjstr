@@ -1,4 +1,5 @@
 import type { PoolEvent } from '../relays/relay-pool';
+import { mapAsyncBounded } from '../fp/async';
 import { mergeSafeCursor, scanCursor } from './relay-page-scan-cursors';
 import { mergeBounds, positiveFilters } from './relay-page-filter';
 import { mergedDisplayBounds } from './feed-display-bounds';
@@ -47,9 +48,16 @@ export async function readSegment(
   let underHalfLimit = true;
   let contacted = false;
   let safeCursor: FeedCursorPoint | undefined;
-  for (const [groupIndex, group] of request.groups.entries()) {
-    if (group.relays.length === 0) continue;
-    const read = await readGroup(request, bounds, segmentIndex, groupIndex);
+  const reads = await mapAsyncBounded(
+    request.groups,
+    4,
+    async (group, groupIndex) => {
+      if (group.relays.length === 0 || request.signal?.aborted)
+        return emptySegmentRead();
+      return readGroup(request, bounds, segmentIndex, groupIndex);
+    },
+  );
+  for (const read of reads) {
     received.push(...read.receivedItems);
     complete = complete && read.complete;
     dense = dense || read.dense;
@@ -103,7 +111,7 @@ async function readGroup(
     hitLimit = false;
     underHalfLimit = true;
     contacted = false;
-    for (const [batchIndex, batch] of batches.entries()) {
+    const reads = await mapAsyncBounded(batches, 4, async (batch, batchIndex) => {
       const filters = batch.filters.map((item) => mergeBounds(item, bounds));
       const read = await readScanBatch(request, group.key, {
         segmentIndex,
@@ -113,12 +121,6 @@ async function readGroup(
         relays: batch.relays,
         filters,
       });
-      raw.push(...read.events);
-      raw = retainedRawCandidates(
-        raw,
-        request.pageSize,
-        relayReadEventCap(filters, batch.relays.length, request.pageSize),
-      );
       await recordBatchCoverage(
         request,
         group.key,
@@ -127,6 +129,15 @@ async function readGroup(
         read,
         segment,
         attemptIndex,
+      );
+      return { read, filters, relays: batch.relays };
+    });
+    for (const { read, filters, relays } of reads) {
+      raw.push(...read.events);
+      raw = retainedRawCandidates(
+        raw,
+        request.pageSize,
+        relayReadEventCap(filters, relays.length, request.pageSize),
       );
       complete = complete && read.complete;
       hitLimit = hitLimit || read.density.hitLimit;
@@ -169,5 +180,17 @@ async function readGroup(
     underHalfLimit,
     contacted,
     safeCursor: unresolved ? scanCursor(request, items) : undefined,
+  };
+}
+
+function emptySegmentRead(): SegmentRead {
+  return {
+    items: [],
+    receivedItems: [],
+    complete: true,
+    dense: false,
+    hitLimit: false,
+    underHalfLimit: true,
+    contacted: false,
   };
 }
