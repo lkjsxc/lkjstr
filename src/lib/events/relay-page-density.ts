@@ -13,6 +13,18 @@ export type RelayDensityVerdict = {
   readonly limit: number;
   readonly eventCount: number;
   readonly uniqueCount: number;
+  readonly perRelay: readonly RelayDensityRow[];
+};
+
+export type RelayDensityRow = {
+  readonly relay: string;
+  readonly dense: boolean;
+  readonly hitLimit: boolean;
+  readonly underHalfLimit: boolean;
+  readonly observedCount: number;
+  readonly limit: number;
+  readonly eventCount: number;
+  readonly uniqueCount: number;
 };
 
 export function relayPageDensity(
@@ -26,30 +38,38 @@ export function relayPageDensity(
       .size;
     const observedCount = Math.max(result.events.length, uniqueCount);
     const hitLimit = reachedLimit(observedCount, uniqueCount, limit);
-    return {
-      dense: hitLimit,
-      hitLimit,
-      underHalfLimit: underHalf(observedCount, limit, hitLimit),
+    const row = densityRow('statusless', {
       observedCount,
       limit,
       eventCount: result.events.length,
       uniqueCount,
+    });
+    return {
+      dense: row.dense,
+      hitLimit: row.hitLimit,
+      underHalfLimit: row.underHalfLimit,
+      observedCount,
+      limit,
+      eventCount: result.events.length,
+      uniqueCount,
+      perRelay: [row],
     };
   }
-  const verdicts = result.statuses.map((status) =>
+  const perRelay = result.statuses.map((status) =>
     relayDensity(status, result.events, filters, pageSize),
   );
-  const hitLimit = verdicts.some((verdict) => verdict.hitLimit);
+  const hitLimit = perRelay.some((verdict) => verdict.hitLimit);
   return {
     dense: hitLimit,
     hitLimit,
-    underHalfLimit: verdicts.every((verdict) => verdict.underHalfLimit),
+    underHalfLimit: perRelay.every((verdict) => verdict.underHalfLimit),
     observedCount: Math.max(
-      ...verdicts.map((verdict) => verdict.observedCount),
+      ...perRelay.map((verdict) => verdict.observedCount),
     ),
-    limit: Math.min(...verdicts.map((verdict) => verdict.limit)),
-    eventCount: verdicts.reduce((sum, verdict) => sum + verdict.eventCount, 0),
+    limit: Math.min(...perRelay.map((verdict) => verdict.limit)),
+    eventCount: perRelay.reduce((sum, verdict) => sum + verdict.eventCount, 0),
     uniqueCount: new Set(result.events.map((item) => item.event.id)).size,
+    perRelay,
   };
 }
 
@@ -58,7 +78,7 @@ function relayDensity(
   events: readonly PoolEvent[],
   filters: readonly NostrFilter[],
   pageSize: number,
-): RelayDensityVerdict {
+): RelayDensityRow {
   const relayEvents = events.filter((item) => item.relay === status.relay);
   const uniqueCount = new Set(relayEvents.map((item) => item.event.id)).size;
   const eventCount = Math.max(
@@ -68,16 +88,12 @@ function relayDensity(
   );
   const limit = relayBudget(filters, pageSize);
   const observedCount = Math.max(eventCount, uniqueCount);
-  const hitLimit = reachedLimit(observedCount, uniqueCount, limit);
-  return {
-    dense: hitLimit,
-    hitLimit,
-    underHalfLimit: underHalf(observedCount, limit, hitLimit),
+  return densityRow(status.relay, {
     observedCount,
     limit,
     eventCount,
     uniqueCount,
-  };
+  });
 }
 
 function relayBudget(
@@ -104,4 +120,25 @@ function underHalf(
   hitLimit: boolean,
 ): boolean {
   return !hitLimit && observedCount <= Math.floor(limit / 2);
+}
+
+function densityRow(
+  relay: string,
+  input: Pick<
+    RelayDensityRow,
+    'observedCount' | 'limit' | 'eventCount' | 'uniqueCount'
+  >,
+): RelayDensityRow {
+  const hitLimit = reachedLimit(
+    input.observedCount,
+    input.uniqueCount,
+    input.limit,
+  );
+  return {
+    relay,
+    dense: hitLimit,
+    hitLimit,
+    underHalfLimit: underHalf(input.observedCount, input.limit, hitLimit),
+    ...input,
+  };
 }

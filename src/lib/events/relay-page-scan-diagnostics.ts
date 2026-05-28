@@ -4,6 +4,7 @@ import { appendAppLog } from '../log/app-log';
 import { saveFeedCoverage } from './feed-coverage-store';
 import type { RelayGroupPageRequest } from './relay-page';
 import type { FeedCoverageStatus } from './types';
+import type { RelayDensityRow } from './relay-page-density';
 
 export type ScanCoverageMeta = {
   readonly reason?: string;
@@ -12,6 +13,11 @@ export type ScanCoverageMeta = {
   readonly uniqueCount?: number;
   readonly attempt?: number;
   readonly durationMs?: number;
+  readonly spanSeconds?: number;
+  readonly nextSpanSeconds?: number;
+  readonly feedback?: 'limit-hit' | 'under-half' | 'balanced' | 'incomplete';
+  readonly direction?: 'older' | 'newer' | 'initial';
+  readonly relayRows?: readonly RelayDensityRow[];
 };
 
 export async function recordScanCoverage(
@@ -23,8 +29,9 @@ export async function recordScanCoverage(
   meta: ScanCoverageMeta = {},
 ): Promise<void> {
   await Promise.all(
-    relays.flatMap((relayUrl) =>
-      filters.map((filter) =>
+    relays.flatMap((relayUrl) => {
+      const row = meta.relayRows?.find((item) => item.relay === relayUrl);
+      return filters.map((filter) =>
         saveFeedCoverage({
           feedKey: request.key,
           relayUrl,
@@ -34,14 +41,18 @@ export async function recordScanCoverage(
           since: filter.since,
           until: filter.until,
           reason: meta.reason,
-          limit: meta.limit,
-          eventCount: meta.eventCount,
-          uniqueCount: meta.uniqueCount,
+          limit: row?.limit ?? meta.limit,
+          eventCount: row?.eventCount ?? meta.eventCount,
+          uniqueCount: row?.uniqueCount ?? meta.uniqueCount,
           attempt: meta.attempt,
           durationMs: meta.durationMs,
+          spanSeconds: meta.spanSeconds,
+          nextSpanSeconds: meta.nextSpanSeconds,
+          feedback: meta.feedback,
+          direction: meta.direction,
         }),
-      ),
-    ),
+      );
+    }),
   );
 }
 

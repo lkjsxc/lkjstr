@@ -15,6 +15,7 @@ export async function recordBatchCoverage(
   relays: readonly string[],
   filters: readonly NostrFilter[],
   read: BatchReadResult,
+  segment: RelayPageSegment,
   attempt: number,
 ): Promise<void> {
   await recordScanCoverage(
@@ -30,6 +31,10 @@ export async function recordBatchCoverage(
       uniqueCount: read.density.uniqueCount,
       attempt,
       durationMs: read.durationMs,
+      relayRows: read.density.perRelay,
+      spanSeconds: segment.span,
+      feedback: feedback(read),
+      direction: request.direction,
     },
   );
   if (!read.complete && !(read.reason === 'event-limit' && read.dense))
@@ -58,6 +63,17 @@ export async function recordUnresolved(
       eventCount: raw.length,
       uniqueCount: new Set(raw.map((item) => item.event.id)).size,
       attempt: 4,
+      spanSeconds: segment.span,
+      feedback: dense ? 'limit-hit' : 'incomplete',
+      direction: request.direction,
     },
   );
+}
+
+function feedback(
+  read: BatchReadResult,
+): 'limit-hit' | 'under-half' | 'balanced' | 'incomplete' {
+  if (!read.complete) return 'incomplete';
+  if (read.density.hitLimit) return 'limit-hit';
+  return read.density.underHalfLimit ? 'under-half' : 'balanced';
 }

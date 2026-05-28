@@ -121,6 +121,7 @@ async function readGroup(
         batch.relays,
         filters,
         read,
+        segment,
         attemptIndex,
       );
       complete = complete && read.complete;

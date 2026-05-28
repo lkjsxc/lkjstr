@@ -60,6 +60,10 @@ export type FeedCoverage = {
   readonly uniqueCount?: number;
   readonly attempt?: number;
   readonly durationMs?: number;
+  readonly spanSeconds?: number;
+  readonly nextSpanSeconds?: number;
+  readonly feedback?: 'limit-hit' | 'under-half' | 'balanced' | 'incomplete';
+  readonly direction?: 'older' | 'newer' | 'initial';
   readonly updatedAt: number;
 };
 
