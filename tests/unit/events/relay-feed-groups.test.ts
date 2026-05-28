@@ -20,23 +20,23 @@ describe('relay feed group pages', () => {
       subscriptions: {
         readPage: async (request: RelayReadRequest) => {
           calls.push(request.key);
-          if (request.key.endsWith(':0')) return first.promise;
+          if (request.key.endsWith(':first:0:0')) return first.promise;
           return [];
         },
       } as unknown as RelaySubscriptionManager,
     });
 
     await Promise.resolve();
-    expect(calls).toEqual(['relay-page-sequential:0:0:0:0']);
+    expect(calls).toEqual(['relay-page-sequential:0:0:first:0:0']);
     first.resolve([]);
     await page;
     expect(calls.slice(0, 2)).toEqual([
-      'relay-page-sequential:0:0:0:0',
-      'relay-page-sequential:0:1:0:0',
+      'relay-page-sequential:0:0:first:0:0',
+      'relay-page-sequential:0:1:second:0:0',
     ]);
-    expect(calls.indexOf('relay-page-sequential:0:1:0:0')).toBeGreaterThan(
-      calls.indexOf('relay-page-sequential:0:0:0:0'),
-    );
+    expect(
+      calls.indexOf('relay-page-sequential:0:1:second:0:0'),
+    ).toBeGreaterThan(calls.indexOf('relay-page-sequential:0:0:first:0:0'));
   });
 
   it('merges sequential relay group provenance and has-more state', async () => {

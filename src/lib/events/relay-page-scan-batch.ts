@@ -39,7 +39,14 @@ export async function readScanBatch(
     const result = await readPageDetailedCompat(
       request.subscriptions,
       {
-        key: `${request.key}:${input.segmentIndex}:${input.groupIndex}:${input.attemptIndex}:${input.batchIndex}`,
+        key: [
+          request.key,
+          input.segmentIndex,
+          input.groupIndex,
+          scanKeyPart(groupKey),
+          input.attemptIndex,
+          input.batchIndex,
+        ].join(':'),
         relays: input.relays,
         filters: input.filters,
         purpose: request.purpose,
@@ -79,4 +86,8 @@ export async function readScanBatch(
     );
     throw error;
   }
+}
+
+function scanKeyPart(value: string): string {
+  return value.replace(/[^a-zA-Z0-9._-]/g, '_').slice(0, 80) || 'group';
 }

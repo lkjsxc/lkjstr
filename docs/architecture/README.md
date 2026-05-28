@@ -101,6 +101,8 @@ state lives, which modules own subscriptions, and how tabs close cleanly.
   Demand and Lease orchestration index.
 - [network/subscription-orchestration/demand-intent.md](network/subscription-orchestration/demand-intent.md):
   intent shapes and owner keys.
+- [network/subscription-orchestration/feed-route-isolation.md](network/subscription-orchestration/feed-route-isolation.md):
+  route fingerprints and cross-surface isolation.
 - [network/subscription-orchestration/home-integration.md](network/subscription-orchestration/home-integration.md):
   Home bootstrap, live, and paging.
 - [network/subscription-orchestration/ingress.md](network/subscription-orchestration/ingress.md):

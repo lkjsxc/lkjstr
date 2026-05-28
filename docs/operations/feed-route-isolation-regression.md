@@ -7,16 +7,16 @@ Notifications, and selected-relay tools.
 
 ## Matrix
 
-| Risk                         | Required evidence                                  |
-| ---------------------------- | -------------------------------------------------- |
-| Cross-surface cursor bleed   | Profile/Home page keys differ by route fingerprint |
-| Stale route refresh          | Old Home refresh cannot clear rows or replace live |
-| Hidden-tab interference      | Hidden owners pause without closing visible leases |
-| Duplicate live leases        | Home notes channel replaces instead of stacking    |
-| Missing refresh events       | Replacement live uses startup-bounded `since`      |
-| Discovery relay post bleed   | Profile posts exclude discovery unless selected    |
-| Notification route bleed     | `#p` reads are isolated from Profile/Home routing   |
-| Scan batch key collision     | Relay scan keys include group identity             |
+| Risk                       | Required evidence                                  |
+| -------------------------- | -------------------------------------------------- |
+| Cross-surface cursor bleed | Profile/Home page keys differ by route fingerprint |
+| Stale route refresh        | Old Home refresh cannot clear rows or replace live |
+| Hidden-tab interference    | Hidden owners pause without closing visible leases |
+| Duplicate live leases      | Home notes channel replaces instead of stacking    |
+| Missing refresh events     | Replacement live uses startup-bounded `since`      |
+| Discovery relay post bleed | Profile posts exclude discovery unless selected    |
+| Notification route bleed   | `#p` reads are isolated from Profile/Home routing  |
+| Scan batch key collision   | Relay scan keys include group identity             |
 
 ## Unit Gates
 

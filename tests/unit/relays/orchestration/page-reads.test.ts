@@ -81,4 +81,30 @@ describe('pageIntentSemanticKey', () => {
       after: cursor,
     });
   });
+
+  it('keeps notification, profile, and home page keys isolated', () => {
+    const base = {
+      owner: 'tab',
+      phase: 'page' as const,
+      selectedRelays: ['wss://relay'],
+      authors: ['b'.repeat(64)],
+      pageSize: 30,
+      direction: 'older' as const,
+      cursor: { createdAt: 1_700_000_000, id: 'a'.repeat(64) },
+      purpose: 'feed' as const,
+    };
+
+    const home = pageIntentSemanticKey({ ...base, surface: 'home' });
+    const profile = pageIntentSemanticKey({
+      ...base,
+      surface: 'profile',
+      routeFingerprint: 'profile-routes',
+    });
+    const notifications = pageIntentSemanticKey({
+      ...base,
+      surface: 'notifications',
+    });
+
+    expect(new Set([home, profile, notifications]).size).toBe(3);
+  });
 });

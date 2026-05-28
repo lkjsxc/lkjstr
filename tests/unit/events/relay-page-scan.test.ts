@@ -116,8 +116,8 @@ describe('relay page scan', () => {
     });
 
     expect(calls.slice(0, 2)).toEqual([
-      'scan-sequential:0:0:0:0',
-      'scan-sequential:0:1:0:0',
+      'scan-sequential:0:0:first:0:0',
+      'scan-sequential:0:1:second:0:0',
     ]);
   });
 });
