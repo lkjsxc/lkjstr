@@ -17,43 +17,44 @@ describe('relay page adaptive windows', () => {
     expect(page.items.map((item) => item.event.id)).toEqual(
       events.map((item) => item.id),
     );
-    expect([span(calls[0]!), span(calls[1]!)]).toEqual([720, 1_440]);
+    expect([span(calls[0]!), span(calls[1]!)]).toEqual([60, 120]);
   });
 
   it('doubles empty complete windows', async () => {
     const calls: NostrFilter[] = [];
     await pageFor([], { calls, pageSize: 2, limit: 10 });
-    expect(span(calls[0]!)).toBe(720);
-    expect(span(calls[1]!)).toBe(1_440);
+    expect(span(calls[0]!)).toBe(60);
+    expect(span(calls[1]!)).toBe(120);
   });
 
   it('keeps balanced complete window spans unchanged', async () => {
     const events = [
-      event('a', 9_900),
-      event('b', 9_800),
-      event('c', 9_700),
-      event('d', 9_200),
-      event('e', 9_100),
+      event('a', 9_999),
+      event('b', 9_998),
+      event('c', 9_997),
+      event('d', 9_900),
+      event('e', 9_890),
+      event('f', 9_885),
     ];
     const calls: NostrFilter[] = [];
     await pageFor(events, { calls, pageSize: 10, limit: 5 });
-    expect(span(calls[0]!)).toBe(720);
-    expect(span(calls[1]!)).toBe(720);
+    expect(span(calls[0]!)).toBe(60);
+    expect(span(calls[1]!)).toBe(60);
   });
 
   it('splits dense windows immediately', async () => {
-    const events = [event('a', 9_900), event('b', 9_800)];
+    const events = [event('a', 9_999), event('b', 9_998)];
     const calls: NostrFilter[] = [];
     await pageFor(events, {
       calls,
       pageSize: 10,
       limit: 2,
     });
-    expect(calls[1]).toEqual(expect.objectContaining({ since: 9_641 }));
+    expect(calls[1]).toEqual(expect.objectContaining({ since: 9_971 }));
   });
 
   it('splits dense full-page windows before returning', async () => {
-    const events = [event('a', 9_900), event('b', 9_800), event('c', 9_700)];
+    const events = [event('a', 9_999), event('b', 9_998), event('c', 9_997)];
     const calls: NostrFilter[] = [];
     const page = await pageFor(events, { calls, pageSize: 2, limit: 2 });
     expect(page.items).toHaveLength(2);
@@ -80,7 +81,7 @@ describe('relay page adaptive windows', () => {
     });
     expect(page.incomplete).toBe(true);
     expect(page.hasMorePossible).toBe(true);
-    expect(calls.every((call) => (call.since ?? 0) >= 9_281)).toBe(true);
+    expect(calls.every((call) => (call.since ?? 0) >= 9_941)).toBe(true);
   });
 
   it('uses relay-effective low limits for density feedback', async () => {
@@ -91,7 +92,7 @@ describe('relay page adaptive windows', () => {
       info: { limitation: { max_limit: 1 } },
     });
     const calls: NostrFilter[] = [];
-    const page = await pageFor([event('a', 9_900), event('b', 9_800)], {
+    const page = await pageFor([event('a', 9_999), event('b', 9_998)], {
       calls,
       pageSize: 5,
       limit: 10,

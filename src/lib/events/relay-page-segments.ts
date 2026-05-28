@@ -4,7 +4,7 @@ import { boundarySince, boundaryUntil } from './relay-page-filter';
 import type { RelayPageDirection } from './relay-page-windows';
 
 export const relaySegmentMinSpan = 1;
-export const relaySegmentInitialSpan = 12 * 60;
+export const relaySegmentInitialSpan = 60;
 export const relaySegmentMaxSpan = 180 * 24 * 60 * 60;
 export const relaySegmentMaxSegmentsPerPage = 96;
 export const relaySegmentMaxSplitDepth = 32;

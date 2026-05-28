@@ -10,14 +10,14 @@ import {
 } from '../../../src/lib/events/relay-page-segments';
 
 describe('relay window policy', () => {
-  it('starts older scans at twelve minutes', () => {
+  it('starts older scans at one minute', () => {
     const initial = initialRelayPageSegment({
       direction: 'older',
       before: { createdAt: 1_000, id: 'f'.repeat(64) },
       now: 1_000,
     });
 
-    expect(span(initial)).toBe(12 * 60);
+    expect(span(initial)).toBe(60);
   });
 
   it('classifies adaptive feedback from completion and limit state', () => {
