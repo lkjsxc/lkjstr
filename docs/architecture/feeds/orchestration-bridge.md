@@ -20,6 +20,7 @@ Feed runtime -> Intent (owner = tab id)
 | ------------- | ------------------------------- | ------------------------ | ------------------- |
 | Home          | follow discovery + initial scan | `since` at runtime start | older/newer per tab |
 | Global        | initial on selected             | live tail                | older per tab       |
+| Profile       | metadata + posts by author      | post route plan          | route fingerprinted |
 | Notifications | local + `#p` read               | live `#p`                | older per tab       |
 
 ## Home-specific
@@ -31,9 +32,10 @@ Feed runtime -> Intent (owner = tab id)
 ## Related
 
 - [../network/subscription-orchestration/README.md](../network/subscription-orchestration/README.md)
+- [feed-route-isolation.md](../network/subscription-orchestration/feed-route-isolation.md)
 - [routing-by-surface.md](../network/subscription-orchestration/routing-by-surface.md)
 
 ## Status
 
-partial until all feed runtimes use `submitLiveIntent` and `readPageByIntent`
-with semantic page dedupe (see doc-impl-audit Subscription Orchestration rows).
+partial until Home and Profile route-fingerprinted regression coverage proves
+route refresh, live lease replacement, and Profile paging isolation.

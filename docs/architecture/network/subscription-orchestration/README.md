@@ -21,6 +21,7 @@ to talk to relays (route plan, wire request, lease key, REQ/CLOSE).
 - [metrics.md](metrics.md): counters and gauges
 - [home-integration.md](home-integration.md): Home bootstrap, live, paging
 - [notifications-profile-thread-integration.md](notifications-profile-thread-integration.md): other surfaces
+- [feed-route-isolation.md](feed-route-isolation.md): route fingerprints and cross-surface isolation
 - [routing-by-surface.md](routing-by-surface.md): per-surface relay tables
 - [compatibility.md](compatibility.md): when intents merge
 - [source-map.md](source-map.md): code map

@@ -12,6 +12,8 @@ data safety, and test ownership.
 - [data-safety.md](data-safety.md): local data safety.
 - [diagnostics.md](diagnostics.md): debugging guidance.
 - [docker.md](docker.md): built-image Compose workflow.
+- [feed-route-isolation-regression.md](feed-route-isolation-regression.md):
+  Home, Profile, Notifications, and tool route isolation gates.
 - [memory-verification.md](memory-verification.md): heap snapshot collection
   and memory test commands.
 - [readiness.md](readiness.md): handoff checks.

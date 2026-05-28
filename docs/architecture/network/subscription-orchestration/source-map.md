@@ -22,6 +22,7 @@ Map documentation topics to implementation files. Each module stays at or below
 | `orchestrator-types.ts`   | SubscriptionOrchestrator type                |
 | `orchestrator-adapter.ts` | test manager adapter                         |
 | `page-reads.ts`           | readPageByIntent and semantic keys           |
+| `live-demand-handles.ts`  | replaceable channel release handles          |
 | `runtime-demand.ts`       | internal demand builders                     |
 | `surface-routing.ts`      | per-surface relay widening                   |
 | `ingress-classify.ts`     | live event classification                    |

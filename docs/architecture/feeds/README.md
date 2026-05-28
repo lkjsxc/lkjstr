@@ -33,6 +33,7 @@ semantics: ordering, paging, filters, merge, cursors, and multi-tab ownership.
 ### Bridge
 
 - [orchestration-bridge.md](orchestration-bridge.md)
+- [../network/subscription-orchestration/feed-route-isolation.md](../network/subscription-orchestration/feed-route-isolation.md)
 
 ## Related
 

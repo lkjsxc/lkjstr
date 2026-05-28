@@ -55,6 +55,9 @@ linked product, protocol, architecture, and operations pages.
 - Surfaces submit Demands; the orchestrator plans shared Leases (canonical
   fingerprints with `channel` disambiguation) and issues reads through the
   subscription manager.
+- Feed route isolation is being tightened so Home and Profile route-group reads
+  use resolved route fingerprints, while Notifications and selected-relay tools
+  keep independent semantic keys.
 - Matching Home tabs attach to one shared query keyed by account, selected
   relays, page size, and feed policy. Tab ids own attachments only.
 - Stats and `__lkjstrMemoryDebug()` expose orchestration demand, lease, and

@@ -30,6 +30,8 @@ and app boundaries.
   orchestration counters.
 - [subscription-orchestration/notifications-profile-thread-integration.md](subscription-orchestration/notifications-profile-thread-integration.md):
   other feed surfaces.
+- [subscription-orchestration/feed-route-isolation.md](subscription-orchestration/feed-route-isolation.md):
+  route fingerprints and cross-surface isolation.
 - [subscription-orchestration/owner-visibility.md](subscription-orchestration/owner-visibility.md):
   hidden tab behavior.
 - [subscription-orchestration/page-read-dedupe.md](subscription-orchestration/page-read-dedupe.md):
