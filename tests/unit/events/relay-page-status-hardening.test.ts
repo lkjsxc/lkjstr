@@ -99,7 +99,7 @@ describe('relay page status hardening', () => {
 
     expect(page.items).toHaveLength(2);
     expect(page.hasMorePossible).toBe(true);
-    expect(reads).toBe(1);
+    expect(reads).toBeGreaterThan(1);
     expect(appLogRecords()).not.toEqual(
       expect.arrayContaining([
         expect.objectContaining({ code: 'relay-feed-incomplete' }),

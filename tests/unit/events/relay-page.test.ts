@@ -115,8 +115,8 @@ describe('relay feed pages', () => {
   });
 
   it('adds interval bounds to historical relay groups', async () => {
-    let since: number | undefined;
-    let until: number | undefined;
+    const calls: { since: number | undefined; until: number | undefined }[] =
+      [];
     await readRelayFeedGroups({
       key: 'relay-page-groups',
       groups: [
@@ -128,8 +128,7 @@ describe('relay feed pages', () => {
         },
       ],
       filters: (_group, bounds) => {
-        since = bounds.since;
-        until = bounds.until;
+        calls.push({ since: bounds.since, until: bounds.until });
         return [{ kinds: [1], ...bounds, limit: 10 }];
       },
       direction: 'older',
@@ -137,8 +136,8 @@ describe('relay feed pages', () => {
       pageSize: 10,
       subscriptions: subscriptions([]),
     });
-    expect(since).toBeDefined();
-    expect(until).toBe(1001);
+    expect(calls[0]?.since).toBeDefined();
+    expect(calls[0]?.until).toBe(1001);
   });
 });
 
