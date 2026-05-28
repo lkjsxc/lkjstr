@@ -132,8 +132,6 @@
 >
   {#if !props.dataReady}
     <p>Loading workspace data...</p>
-  {:else if state.loading}
-    <p>Loading events...</p>
   {/if}
   {#if state.status === 'no-follow-list' && props.kind !== 'global'}
     <TimelineTabFollowMissing
