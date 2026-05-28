@@ -96,7 +96,9 @@ linked product, protocol, architecture, and operations pages.
   block spans the profile card width below the avatar/action row. Profile,
   Notifications, and Thread allow bounded viewport-fill only while the list is
   underfilled; after the list becomes scrollable, older history loads require a
-  current downward scroll-owner gesture.
+  current downward scroll-owner gesture. Notifications keeps the scroll surface
+  mounted for retryable zero-record windows and exposes an explicit older-scan
+  command after bounded auto-fill attempts are spent.
 - Event rows show nip05-only subtitles on feeds, pressed Heart/Repost styling
   from a hybrid action-state index plus feed evidence, keep optimistic
   published pressed state stable during cache refresh, and show no left-side
@@ -148,7 +150,7 @@ linked product, protocol, architecture, and operations pages.
   lkjstr Log records.
 - Home follow discovery and Notifications relay cursors are now bounded and
   deterministic: missing-follow decisions use follow-sub EOSE ownership, and
-  Notifications older paging is gated by current scroll-owner user intent.
+  Notifications older paging is gated by scroll-owner intent or explicit retry.
 - RSS remains diagnostic-only for memory verification; app JavaScript heap is
   the owned browser memory assertion.
 

@@ -39,6 +39,9 @@ backfill.
   - `until = max(0, cursor - 1)`
   - Empty complete windows move `olderCursorCreatedAt` to `since` and remain
     retryable until exhaustion is proven.
+  - When the initial relay page yields zero records, `olderCursorCreatedAt`
+    starts at the initial `since` bound. The UI treats
+    `olderCursorCreatedAt !== undefined` as the paging readiness signal.
 - Record window cap `180`; prune by record count.
 
 ## Exhaustion
@@ -47,6 +50,15 @@ Notifications mark `historyExhaustion: 'proven'` only when the scan reaches the
 lower bound, local cache has no older records, and every contacted relay read is
 complete without timeout, abort, auth, socket, close, or event-limit ambiguity.
 Incomplete relay reads keep exhaustion unknown so later scrolls can retry.
+
+## Viewport Fill
+
+- Empty retryable states still render the shared `FeedScrollSurface` and the
+  footer row from `notificationViewRows([])`.
+- Automatic viewport-fill may issue at most four zero-record older requests per
+  runtime intent while the list remains underfilled.
+- After the automatic cap, older scans continue only through a current downward
+  scroll-owner gesture or the explicit notification footer command.
 
 ## Contract
 

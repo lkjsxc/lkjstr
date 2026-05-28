@@ -3,12 +3,10 @@
   import { captureStartupPromise } from '$lib/app/runtime-log';
   import { metadataPageLimit } from '$lib/events/feed-window';
   import { createOlderRequestCoordinator } from '$lib/feed-surface/speculative-older';
-  import type { ProfileSummary } from '$lib/identity/identity';
   import {
     createNotificationRuntime,
     type NotificationRuntime,
   } from '$lib/notifications/notification-runtime';
-  import type { NotificationState } from '$lib/notifications/notification-runtime';
   import type { RelaySet } from '$lib/relays/relay-store';
   import type { FeedEvent } from '$lib/events/types';
   import {
@@ -20,9 +18,12 @@
   import { registerTabRuntimeSnapshot } from '$lib/workspace/tab-runtime-registry';
   import { feedRuntimeSnapshot } from '$lib/workspace/feed-runtime-snapshot';
   import type { TabFeedAnchor } from '$lib/workspace/tab-anchor-registry';
-
-  type ProfileMap = Record<string, ProfileSummary>;
-  type NotificationViewState = NotificationState & { profiles: ProfileMap };
+  import {
+    emptyNotificationViewState,
+    notificationPagingReady,
+    type ProfileMap,
+    shouldRenderNotificationScroll,
+  } from './notification-list-state';
 
   type Props = {
     tabId: string;
@@ -40,20 +41,7 @@
   let currentProfiles: ProfileMap = {};
   let profileRequest = 0;
   let listElement = $state<HTMLElement | undefined>();
-  let viewState = $state<NotificationViewState>({
-    records: [],
-    items: [],
-    targetItems: [],
-    loading: true,
-    error: null,
-    loadingOlder: false,
-    hasOlder: true,
-    historyExhaustion: 'unknown',
-    oldestCreatedAt: undefined,
-    olderCursorCreatedAt: undefined,
-    newerPruned: false,
-    profiles: {},
-  });
+  let viewState = $state(emptyNotificationViewState());
   let itemById: Map<string, FeedEvent> = $derived(
     new Map(viewState.items.map((item) => [item.event.id, item])),
   );
@@ -63,6 +51,16 @@
   let relays: string[] = [];
   let runtimeKey = $derived(
     `${props.accountPubkey ?? ''}|${timelineRelays(props.relaySets).join('\u0000')}`,
+  );
+  let olderPrefetchReady = $derived(
+    notificationPagingReady(viewState.olderCursorCreatedAt),
+  );
+  let renderList = $derived(
+    shouldRenderNotificationScroll({
+      recordCount: viewState.records.length,
+      hasOlder: viewState.hasOlder,
+      historyExhaustion: viewState.historyExhaustion,
+    }),
   );
   onDestroy(() => {
     runtime?.close();
@@ -165,7 +163,7 @@
 <section class="feed-tab" aria-label="Notifications">
   {#if viewState.loading}<p>Loading notifications...</p>{/if}
   {#if viewState.error}<p role="alert">{viewState.error}</p>{/if}
-  {#if !viewState.loading && (viewState.records.length > 0 || viewState.hasOlder)}
+  {#if !viewState.loading && renderList}
     <NotificationListScroll
       tabId={props.tabId}
       restoreAnchor={props.restoreAnchor}
@@ -177,6 +175,7 @@
       activeAccountPubkey={props.accountPubkey}
       loadingOlder={viewState.loadingOlder}
       hasOlder={viewState.hasOlder}
+      {olderPrefetchReady}
       historyExhaustion={viewState.historyExhaustion}
       error={viewState.error}
       intentKey={runtimeKey}

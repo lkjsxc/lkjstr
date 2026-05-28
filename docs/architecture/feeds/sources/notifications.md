@@ -29,6 +29,8 @@ authored by self without `#p` containing self is **not** a notification row.
 
 - Never built from Home `authorFilters`
 - `buildNotificationFilters` is separate module
+- Paging readiness comes from the runtime cursor, not from whether records were
+  produced by the initial relay page.
 
 ## Protocol-Safe Filter Checklist
 
@@ -53,4 +55,5 @@ A notification relay filter is protocol-safe only when it includes:
 ## Tests
 
 - `tests/unit/notifications/notification-filters.test.ts`
+- `tests/unit/notifications/notification-paging.test.ts`
 - `tests/e2e/timeline-regression.spec.ts` scenario F

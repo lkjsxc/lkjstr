@@ -7,9 +7,7 @@ test('Notifications list exposes shared footer status region', async ({
 }) => {
   await openCleanWorkspace(page);
   await selectStartupTab(page, 'Notifications');
-  await expect(
-    page
-      .locator('.notification-list')
-      .or(page.getByText('No notifications for the active account.')),
-  ).toBeVisible({ timeout: 15_000 });
+  await expect(page.locator('.notification-list-scroll')).toBeVisible({
+    timeout: 15_000,
+  });
 });

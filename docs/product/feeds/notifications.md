@@ -23,26 +23,12 @@ notification context header and the source event as the primary body.
 - Notification relay sync starts when the Notifications tab is opened.
 - Notification tabs keep a `180` record window. Windowing is based on
   notification records, not the number of resolved source events.
-- Notification relay window constants (seconds):
-  - `notificationInitialLookbackSeconds = 720` (12 minutes)
-  - `notificationOlderPageLookbackSeconds = 720` (12 minutes)
-  - `notificationClockSkewSeconds = 120`
-- Initial relay read bounds:
-  - `since = max(0, runtimeStartedAt - notificationInitialLookbackSeconds)`
-  - `until = runtimeStartedAt + notificationClockSkewSeconds`
-  - The initial relay filter must include both `since` and `until`.
-- Older relay paging bounds use an independent `olderCursorCreatedAt`, not the
-  oldest visible record:
-  - `since = max(0, olderCursorCreatedAt - notificationOlderPageLookbackSeconds)`
-  - `until = max(0, olderCursorCreatedAt - 1)`
-- When the initial window has zero notification records,
-  `olderCursorCreatedAt` starts at the initial window `since` bound so bounded
-  viewport-fill can still scan older history.
-- No automatic deep backfill on tab open: viewport-fill is bounded to short
-  underfilled lists and stops once the list becomes scrollable, history is
-  proven exhausted, or the shared attempt cap is reached. After that, older
-  requests require a current downward user scroll-owner gesture or explicit
-  action.
+- The tab scans a bounded recent relay window on open. If the first window has
+  zero records, the scroll surface remains mounted and can continue older scans.
+- No automatic deep backfill on tab open: viewport-fill stops once the list
+  becomes scrollable, history is proven exhausted, or the bounded attempt cap is
+  reached. After that, older requests require a downward scroll-owner gesture or
+  the explicit `Load older notifications` command.
 - Older notifications load after near-bottom scroll using
   `max(1200px, 2 x viewport)` or an equivalent sentinel margin.
 - Sparse empty relay windows advance `olderCursorCreatedAt` and must not render
@@ -61,16 +47,14 @@ notification context header and the source event as the primary body.
 - Exactly one bottom border separates notification items. Embedded `EventRow`
   uses `showSeparator={false}`. See
   [feed-row-chrome.md](../../architecture/data/feed-surface/feed-row-chrome.md).
-- Historical relay pages use interval windows with `since` and `until` from
-  the oldest loaded notification record (`created_at`).
-- Live relay reads set `since` when the notification runtime starts.
 - Visible notifications are marked read when the tab is visible and receives
   focus.
 - Initial loading settles after local records load and subscription setup
   finishes, even when no notification event arrives.
 - Partial relay failure stays visible in diagnostics but does not block cached
   or reachable notification records.
-- Empty state is explicit when no records exist.
+- Empty state is explicit only after no records exist and history exhaustion is
+  proven.
 - Rows use a left-aligned action context header followed by the source
   notification event rendered with the canonical Timeline `EventRow`.
 - The outer actor chip is hidden when the loaded source event already shows

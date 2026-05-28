@@ -1,5 +1,4 @@
 import { expect, type Page } from '@playwright/test';
-
 export async function addReadonlyAccount(page: Page, pubkey: string) {
   const tabStrip = page.locator('.pane').nth(1).locator('.tab-strip');
   await tabStrip.getByRole('button', { name: 'Accounts', exact: true }).click();
@@ -10,7 +9,6 @@ export async function addReadonlyAccount(page: Page, pubkey: string) {
   await expect(page.getByText('readonly')).toBeVisible();
   await tabStrip.getByRole('button', { name: 'Home', exact: true }).click();
 }
-
 export async function waitForSyntheticEvent(page: Page, eventId: string) {
   await page.waitForFunction(
     ({ eventId }) => {
@@ -26,7 +24,6 @@ export async function waitForSyntheticEvent(page: Page, eventId: string) {
     { eventId },
   );
 }
-
 export async function openCleanWorkspace(page: Page) {
   await page.goto('/');
   await page.evaluate(async () => {
@@ -59,7 +56,6 @@ export async function openCleanWorkspace(page: Page) {
   });
   await page.reload();
 }
-
 export async function installSyntheticRelay(
   page: Page,
   options: { events: unknown[]; closed?: [string, string] },
@@ -80,7 +76,6 @@ export async function installSyntheticRelay(
       delivered: string[] = [];
       published: unknown[] = [];
       listeners = new Map<string, Set<(event: Event) => void>>();
-
       constructor(readonly url: string) {
         window.__syntheticSockets.push(this);
         queueMicrotask(() => {
@@ -88,20 +83,17 @@ export async function installSyntheticRelay(
           this.dispatch('open', {} as Event);
         });
       }
-
       addEventListener(type: string, listener: (event: Event) => void): void {
         const listeners = this.listeners.get(type) ?? new Set();
         listeners.add(listener);
         this.listeners.set(type, listeners);
       }
-
       removeEventListener(
         type: string,
         listener: (event: Event) => void,
       ): void {
         this.listeners.get(type)?.delete(listener);
       }
-
       send(data: string): void {
         this.sent.push(data);
         const message = parseClientMessage(data);
@@ -115,7 +107,6 @@ export async function installSyntheticRelay(
         if (message[0] !== 'REQ') return;
         queueMicrotask(() => this.reply(String(message[1]), message.slice(2)));
       }
-
       reply(subId: string, filters: unknown[]): void {
         if (relayOptions.closed)
           this.message(['CLOSED', subId, relayOptions.closed[1]]);
@@ -127,18 +118,15 @@ export async function installSyntheticRelay(
         this.message(['EOSE', subId]);
         this.replies += 1;
       }
-
       message(value: unknown[]): void {
         this.dispatch('message', {
           data: JSON.stringify(value),
         } as MessageEvent);
       }
-
       close(): void {
         this.readyState = SyntheticWebSocket.CLOSED;
         this.dispatch('close', {} as CloseEvent);
       }
-
       dispatch(type: string, event: Event): void {
         if (type === 'open') this.onopen?.(event);
         if (type === 'message') this.onmessage?.(event as MessageEvent);
@@ -169,7 +157,8 @@ export async function installSyntheticRelay(
         ? filter.authors
         : undefined;
       const ids = Array.isArray(filter.ids) ? filter.ids : undefined;
-      const tags = Array.isArray(filter['#e']) ? filter['#e'] : undefined;
+      const tags = (name: string) =>
+        Array.isArray(filter[`#${name}`]) ? filter[`#${name}`] : undefined;
       const since = Number.isFinite(filter.since) ? Number(filter.since) : 0;
       const until = Number.isFinite(filter.until)
         ? Number(filter.until)
@@ -178,17 +167,28 @@ export async function installSyntheticRelay(
         (!ids || ids.includes(event.id)) &&
         (!kinds || kinds.includes(event.kind)) &&
         (!authors || authors.includes(event.pubkey)) &&
-        (!tags ||
-          (Array.isArray(event.tags) &&
-            event.tags.some(
-              (tag) => Array.isArray(tag) && tags.includes(tag[1]),
-            ))) &&
+        matchesTag(event, 'e', tags('e')) &&
+        matchesTag(event, 'p', tags('p')) &&
         Number(event.created_at) >= since &&
         Number(event.created_at) < until
       );
     }
     function record(value: unknown): value is Record<string, unknown> {
       return typeof value === 'object' && value !== null;
+    }
+    function matchesTag(
+      event: Record<string, unknown>,
+      name: string,
+      values: unknown,
+    ) {
+      return (
+        !Array.isArray(values) ||
+        (Array.isArray(event.tags) &&
+          event.tags.some(
+            (tag) =>
+              Array.isArray(tag) && tag[0] === name && values.includes(tag[1]),
+          ))
+      );
     }
   }, options);
 }

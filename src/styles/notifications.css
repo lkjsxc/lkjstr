@@ -12,6 +12,10 @@
   overflow-y: auto;
 }
 
+.notification-list__retry {
+  margin: var(--space-3) 0;
+}
+
 .notification-row {
   border-bottom: 1px solid var(--color-border);
   display: block;

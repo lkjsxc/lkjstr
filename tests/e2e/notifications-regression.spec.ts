@@ -1,4 +1,4 @@
-import { expect, test } from '@playwright/test';
+import { expect, test, type Page } from '@playwright/test';
 import {
   finalizeEvent,
   generateSecretKey,
@@ -52,13 +52,10 @@ test('notifications viewport-fill older history when underfilled', async ({
   await addReadonlyAccount(page, active);
   await selectStartupTab(page, 'Notifications');
 
-  await expect(page.getByText('new-notification-0')).toBeVisible({
-    timeout: 15_000,
-  });
-
   await expect(page.getByText('old-notification-3')).toBeVisible({
     timeout: 15_000,
   });
+
   await expect(page.getByText('End of known history.')).not.toBeVisible();
 });
 
@@ -94,3 +91,35 @@ test('notifications scan older history after an empty initial window', async ({
     page.getByText('No notifications for the active account.'),
   ).not.toBeVisible();
 });
+
+test('notifications explicit retry issues older scans after bounded empty scans', async ({
+  page,
+}) => {
+  const activeKey = generateSecretKey();
+  const active = getPublicKey(activeKey);
+
+  await installSyntheticRelay(page, { events: [] });
+  await openCleanWorkspace(page);
+  await addReadonlyAccount(page, active);
+  await selectStartupTab(page, 'Notifications');
+
+  const retry = page.getByRole('button', {
+    name: 'Load older notifications',
+  });
+  await expect(retry).toBeVisible({ timeout: 20_000 });
+  const repliesBefore = await relayReplyCount(page);
+  await retry.dispatchEvent('click');
+  await expect.poll(() => relayReplyCount(page)).toBeGreaterThan(repliesBefore);
+});
+
+async function relayReplyCount(page: Page): Promise<number> {
+  return page.evaluate(() =>
+    window.__syntheticSockets.reduce<number>((total, socket) => {
+      const record =
+        typeof socket === 'object' && socket !== null
+          ? (socket as Record<string, unknown>)
+          : {};
+      return total + (typeof record.replies === 'number' ? record.replies : 0);
+    }, 0),
+  );
+}

@@ -16,7 +16,7 @@
   import type { FeedEvent } from '$lib/events/types';
   import type { NotificationRecord } from '$lib/notifications/notification';
   import { setTabFeedAnchor, type TabFeedAnchor } from '$lib/workspace/tab-anchor-registry';
-
+  import { notificationAutoFillAttemptCap, notificationAutoFillAttemptCount, setNotificationAutoFillAttemptCount, shouldAttemptNotificationAutoFill, shouldShowNotificationRetry } from './notification-list-state';
   type Props = {
     tabId: string;
     restoreAnchor?: TabFeedAnchor;
@@ -29,6 +29,7 @@
     activeAccountPubkey?: string | null;
     loadingOlder: boolean;
     hasOlder: boolean;
+    olderPrefetchReady: boolean;
     historyExhaustion?: HistoryExhaustion;
     error: string | null;
     intentKey?: string;
@@ -37,7 +38,6 @@
     openThread: (eventId: string) => void;
     openAuthorContext?: (eventId: string, pubkey: string) => void;
   };
-
   let {
     tabId,
     restoreAnchor,
@@ -50,6 +50,7 @@
     activeAccountPubkey,
     loadingOlder,
     hasOlder,
+    olderPrefetchReady,
     historyExhaustion,
     error,
     intentKey,
@@ -58,38 +59,34 @@
     openThread,
     openAuthorContext,
   }: Props = $props();
-
   let scrollElement = $state<HTMLElement | undefined>();
   let list = $state<FeedScrollListHandle>();
   let restoredAnchorKey = $state('');
   let autoFillPending = false;
   let autoFillAttempts = 0;
-  let autoFillIntentKey: string | undefined;
+  let autoFillExhausted = $state(false);
   const fallbackPinOwner = `notifications:${crypto.randomUUID()}`;
   let pinOwner = $derived(tabId ? `notifications:${tabId}` : fallbackPinOwner);
   let rows = $derived(notificationViewRows(records));
   let footerPhase = $derived(footerPhaseFromPaging({ loadingOlder, hasOlder, historyExhaustion, rowCount: records.length, error }));
-  let nearEndEnabled = $derived(hasOlder && !loadingOlder);
-
+  let nearEndEnabled = $derived(hasOlder && !loadingOlder && olderPrefetchReady);
+  let retryVisible = $derived(autoFillExhausted && shouldShowNotificationRetry({ recordCount: records.length, hasOlder, loadingOlder, olderPrefetchReady, historyExhaustion, error, autoFillAttempts: notificationAutoFillAttemptCap }));
   $effect(() => {
     listElement = scrollElement;
   });
-
   onDestroy(() => {
     if (tabId) setTabFeedAnchor(tabId, undefined);
   });
-
   $effect(() => {
     pinOpenReferences(pinOwner, notificationOpenReferenceIds(records));
     return () => clearOpenReferencePins(pinOwner);
   });
-
   $effect(() => {
-    if (autoFillIntentKey === intentKey) return;
-    autoFillIntentKey = intentKey;
-    autoFillAttempts = 0;
+    const saved = notificationAutoFillAttemptCount(tabId);
+    if (saved === autoFillAttempts) return;
+    autoFillAttempts = saved;
+    autoFillExhausted = saved >= notificationAutoFillAttemptCap;
   });
-
   $effect(() => {
     const restore = restoreAnchor;
     if (!restore || !list?.scrollTo) return;
@@ -102,7 +99,7 @@
   });
 
   $effect(() => {
-    if (hasOlder && !loadingOlder) void maybeAutoFill();
+    if (!autoFillExhausted && shouldAttemptNotificationAutoFill({ hasOlder, loadingOlder, olderPrefetchReady, autoFillPending, autoFillAttempts })) void maybeAutoFill();
   });
 
   function requestOlder(trigger: OlderLoadTrigger): void {
@@ -120,8 +117,13 @@
     setTabFeedAnchor(tabId, { anchorKey: anchor.key, offset: anchor.offset });
   }
 
+  function requestExplicitOlder(): void {
+    if (!hasOlder || loadingOlder || !olderPrefetchReady) return;
+    void onNearEnd();
+  }
+
   async function maybeAutoFill(): Promise<void> {
-    if (autoFillPending || autoFillAttempts >= 4) return;
+    if (autoFillExhausted || !shouldAttemptNotificationAutoFill({ hasOlder, loadingOlder, olderPrefetchReady, autoFillPending, autoFillAttempts })) return;
     autoFillPending = true;
     await tick();
     const scrollable = (list?.getScrollSize?.() ?? 0) > (list?.getViewportSize?.() ?? 0);
@@ -130,51 +132,69 @@
       canRequestOlder({ mode: 'fill-then-user-scroll', trigger: 'viewport-fill', userScrolledDown: false, scrollable })
     ) {
       autoFillAttempts += 1;
-      void onNearEnd();
-    } else if (scrollable) autoFillAttempts = 0;
+      setNotificationAutoFillAttemptCount(tabId, autoFillAttempts);
+      if (autoFillAttempts >= notificationAutoFillAttemptCap)
+        autoFillExhausted = true;
+      void Promise.resolve(onNearEnd()).finally(() => {
+        autoFillPending = false;
+      });
+      return;
+    } else if (scrollable) {
+      autoFillAttempts = 0;
+      setNotificationAutoFillAttemptCount(tabId, autoFillAttempts);
+      autoFillExhausted = false;
+    }
     autoFillPending = false;
   }
 
 </script>
 
 <div class="event-list notification-list">
-  {#if records.length > 0}
-    <FeedScrollSurface
-      data={rows}
-      getKey={(item: unknown) =>
-        notificationViewRowKey(item as NotificationViewRow)}
-      scrollerClass="event-list__scroller notification-list-scroller"
-      viewportClass="notification-list-scroll"
-      {nearEndEnabled}
-      {intentKey}
-      onNearEnd={requestOlder}
-      onScrollOffset={captureCurrentAnchor}
-      bind:list
-      bind:scrollElement
-    >
-      {#snippet row(item: unknown)}
-        {@const view = item as NotificationViewRow}
-        {#if view.kind === 'footer'}
+  <FeedScrollSurface
+    data={rows}
+    getKey={(item: unknown) =>
+      notificationViewRowKey(item as NotificationViewRow)}
+    scrollerClass="event-list__scroller notification-list-scroller"
+    viewportClass="notification-list-scroll"
+    {nearEndEnabled}
+    {intentKey}
+    onNearEnd={requestOlder}
+    onScrollOffset={captureCurrentAnchor}
+    bind:list
+    bind:scrollElement
+  >
+    {#snippet row(item: unknown)}
+      {@const view = item as NotificationViewRow}
+      {#if view.kind === 'footer'}
+        {#if retryVisible}
+          <button
+            class="notification-list__retry"
+            type="button"
+            onclick={requestExplicitOlder}
+          >
+            Load older notifications
+          </button>
+        {:else}
           <FeedSurfaceStatus
             {...feedSurfaceStatusProps(footerPhase, error ?? undefined)}
           />
-        {:else}
-          <NotificationRow
-            record={view.record}
-            item={itemById.get(view.record.sourceEventId)}
-            targetItem={targetItemById.get(
-              view.record.targetEventId ?? view.record.rootEventId ?? '',
-            )}
-            profile={profiles[view.record.actorPubkey]}
-            {profiles}
-            {relaySets}
-            activeAccountPubkey={activeAccountPubkey ?? null}
-            {openProfile}
-            {openThread}
-            {openAuthorContext}
-          />
         {/if}
-      {/snippet}
-    </FeedScrollSurface>
-  {/if}
+      {:else}
+        <NotificationRow
+          record={view.record}
+          item={itemById.get(view.record.sourceEventId)}
+          targetItem={targetItemById.get(
+            view.record.targetEventId ?? view.record.rootEventId ?? '',
+          )}
+          profile={profiles[view.record.actorPubkey]}
+          {profiles}
+          {relaySets}
+          activeAccountPubkey={activeAccountPubkey ?? null}
+          {openProfile}
+          {openThread}
+          {openAuthorContext}
+        />
+      {/if}
+    {/snippet}
+  </FeedScrollSurface>
 </div>
