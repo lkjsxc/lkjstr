@@ -16,7 +16,7 @@ export function markdownLinks(text: string): MarkdownLink[] {
     }
     if (inFence) continue;
     const pattern =
-      /!?\[[^\]\n]*(?:\][^\[\]\n]*)*\]\(([^)\s]+)(?:\s+['"][^)]*['"])?\)/g;
+      /!?\[[^\]\n]*(?:\][^][\n]*)*\]\(([^)\s]+)(?:\s+['"][^)]*['"])?\)/g;
     let match: RegExpExecArray | null;
     while ((match = pattern.exec(line))) {
       const href = stripAngleBrackets(match[1]!);
