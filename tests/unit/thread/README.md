@@ -4,6 +4,6 @@
 
 This directory contains unit tests for thread runtime behavior.
 
-## Contents
+## Table of Contents
 
 - Thread loading and paging coverage.

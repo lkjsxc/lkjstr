@@ -4,7 +4,7 @@
 
 This directory contains global style sheets grouped by UI surface.
 
-## Contents
+## Table of Contents
 
-- App, event action, identity, mention, notification, timeline, table, theme,
-  token, Tweet, and workspace styles.
+- App, event action, feed scroll restore, identity, mention, notification,
+  timeline, table, theme, token, Tweet, and workspace styles.

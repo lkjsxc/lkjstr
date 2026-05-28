@@ -5,7 +5,7 @@
 Operations docs define local verification, Docker verification, diagnostics,
 data safety, and test ownership.
 
-## Documents
+## Table of Contents
 
 - [ci.md](ci.md): hosted gates and GHCR images.
 - [cloudflare-workers.md](cloudflare-workers.md): Workers dry-run target.

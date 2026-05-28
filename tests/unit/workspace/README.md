@@ -4,6 +4,6 @@
 
 This directory contains unit tests for workspace layout and tab behavior.
 
-## Contents
+## Table of Contents
 
 - Action tabs, movement, splits, resizing, startup, retention, and recovery.

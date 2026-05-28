@@ -4,6 +4,6 @@
 
 This directory contains shell-level Svelte components.
 
-## Contents
+## Table of Contents
 
 - Header and global application chrome.

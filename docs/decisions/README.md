@@ -5,7 +5,7 @@
 Decision docs record durable product and architecture choices that constrain
 implementation.
 
-## Documents
+## Table of Contents
 
 - [browser-first.md](browser-first.md): browser runtime boundary.
 - [protocol-kernel.md](protocol-kernel.md): protocol isolation.

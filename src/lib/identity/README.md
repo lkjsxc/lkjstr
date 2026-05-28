@@ -5,6 +5,6 @@
 This directory contains profile parsing, display naming, and profile cache
 helpers.
 
-## Contents
+## Table of Contents
 
 - Avatar, display-name, profile-cache, and npub utilities.

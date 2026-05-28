@@ -4,6 +4,10 @@
 
 Stats shows current-session network and cache counters.
 
+## Table of Contents
+
+- [Contract](#contract)
+
 ## Contract
 
 - Stats opens from New Tab as `network-stats`.

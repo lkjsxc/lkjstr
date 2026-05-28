@@ -27,11 +27,13 @@ token once after render; repeated or stale tokens are ignored and counted.
 
 Feed payloads may store:
 
-- `scrollTop`, `anchorEventId`, and `anchorOffset`.
-- `oldestCursor`, `newestCursor`, `hasOlder`, and `hasNewer`.
+- `scrollTop`, `anchorKey`, and `anchorOffset`.
+- `oldestCursor`, `newestCursor`, `hasOlder`, `hasNewer`, and
+  `historyExhaustion`.
 - `filterState` when the surface has cheap primitive filters.
 - `eventIds`, capped at `200`.
-- `notificationRecordIds`, capped at `200`, for Notifications only.
+- `notificationRecordIds`, capped at `200`, and `olderCursorCreatedAt` for
+  Notifications only.
 
 Tool payloads may store:
 

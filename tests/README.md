@@ -4,7 +4,7 @@
 
 This directory owns Vitest and Playwright coverage for repository contracts.
 
-## Contents
+## Table of Contents
 
 - `helpers/`: shared fixtures and browser test helpers.
 - `unit/`: Vitest unit coverage.

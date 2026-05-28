@@ -5,7 +5,7 @@
 Canonical architecture for Home, Global, Profile, Thread, and Notifications feed
 semantics: ordering, paging, filters, merge, cursors, and multi-tab ownership.
 
-## Documents
+## Table of Contents
 
 ### Invariants
 

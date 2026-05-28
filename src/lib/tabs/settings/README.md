@@ -4,6 +4,6 @@
 
 This directory contains the Settings tab body.
 
-## Contents
+## Table of Contents
 
 - Flat settings table wiring.

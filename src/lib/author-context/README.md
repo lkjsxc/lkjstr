@@ -4,6 +4,10 @@
 
 Author Context loads nearby real events from one author around an anchor event.
 
+## Table of Contents
+
+- [Contract](#contract)
+
 ## Contract
 
 - The anchor event is loaded from cache or selected relays.

@@ -9,7 +9,7 @@ Document the browser-local planner between feed runtimes and relay pool traffic.
 Runtimes state **what** they need (intent). The orchestrator alone decides **how**
 to talk to relays (route plan, wire request, lease key, REQ/CLOSE).
 
-## Documents
+## Table of Contents
 
 - [demand-intent.md](demand-intent.md): intent shapes; owner vs dedupe key
 - [route-plan.md](route-plan.md): relay planning ownership

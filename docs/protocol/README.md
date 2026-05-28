@@ -4,7 +4,7 @@
 
 Protocol docs define Nostr event, filter, relay, and NIP contracts.
 
-## Documents
+## Table of Contents
 
 - [default-relays.md](default-relays.md): seeded relay set.
 - [custom-emoji.md](custom-emoji.md): NIP-30 custom emoji rules.

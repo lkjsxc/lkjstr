@@ -4,6 +4,6 @@
 
 This directory contains runtime health and telemetry helpers.
 
-## Contents
+## Table of Contents
 
 - Runtime health status helpers.

@@ -4,6 +4,6 @@
 
 Repository automation lives under `.github/`.
 
-## Contents
+## Table of Contents
 
 - [workflows/README.md](workflows/README.md): GitHub Actions workflow index.

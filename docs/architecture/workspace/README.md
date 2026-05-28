@@ -5,7 +5,7 @@
 Workspace architecture docs define layout, tab lifecycle, composition, and
 visual rules.
 
-## Documents
+## Table of Contents
 
 - [pane-chrome-scope.md](pane-chrome-scope.md): header chrome vs body rects for
   drag hit testing.

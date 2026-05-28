@@ -11,9 +11,13 @@ All feed-like tabs share one footer phase reducer and one status component.
 | Phase | Condition |
 | ----- | --------- |
 | `idle` | Not loading older; `hasOlder` may be true |
-| `loadingOlder` | `loadingOlder` and `hasOlder` |
-| `end` | `!hasOlder` and `rowCount > 0` |
+| `loadingOlder` | `loadingOlder`, `hasOlder`, and exhaustion is not proven |
+| `end` | `historyExhaustion === 'proven'` and `rowCount > 0` |
 | `error` | Terminal `error` string set |
+
+`hasOlder` means another older request is allowed. It is not a proof that no
+older history exists when false. Only `historyExhaustion: 'proven'` may render
+the terminal `End of known history.` row.
 
 ## Component
 
@@ -24,7 +28,7 @@ accepts either boolean props or a `phase` prop from `footerPhaseFromPaging` in
 | Phase | UI |
 | ----- | -- |
 | `loadingOlder` | Spinner row `Loading older...` |
-| `end` | `End of known history` |
+| `end` | `End of known history.` |
 | `error` | Error text from runtime |
 | `idle` | Hidden when rows exist and `hasOlder` |
 

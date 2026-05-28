@@ -5,7 +5,7 @@
 Product docs define the visible workspace contract. The first screen is the app
 itself: split tiles, tabs, relay-backed data, and local state.
 
-## Tree
+## Table of Contents
 
 - [backlog.md](backlog.md): practical product work with destination docs and
   test strategies.

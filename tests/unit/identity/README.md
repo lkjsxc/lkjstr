@@ -4,6 +4,6 @@
 
 This directory contains unit tests for identity helpers.
 
-## Contents
+## Table of Contents
 
 - Display names, npub helpers, and profile cache coverage.

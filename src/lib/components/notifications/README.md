@@ -5,7 +5,7 @@
 This directory owns notification row presentation around the source event body
 and fallback target/root context.
 
-## Contents
+## Table of Contents
 
 - Lightweight action context headers, unread styling hooks, canonical source
   `EventRow` composition, actor-chip deduplication when the source event

@@ -5,7 +5,7 @@
 Notification indexing, relay sync, presentation, and runtime for the
 Notifications tab.
 
-## Documents
+## Table of Contents
 
 [docs/architecture/feeds/sources/notifications.md](../../../docs/architecture/feeds/sources/notifications.md)
 

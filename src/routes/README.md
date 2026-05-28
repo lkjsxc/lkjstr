@@ -4,6 +4,6 @@
 
 This directory contains SvelteKit route entry points.
 
-## Contents
+## Table of Contents
 
 - Root layout and workspace page route.

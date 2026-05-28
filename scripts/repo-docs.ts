@@ -2,6 +2,7 @@ import fs from 'node:fs/promises';
 import path from 'node:path';
 import {
   isStrictDoc,
+  readmeTocHeadingProblems,
   rootDocLinkProblems,
   tocMentions,
 } from './repo-doc-rules';
@@ -149,5 +150,6 @@ async function checkReadmeTocs(
       if (!tocMentions(text, target))
         problems.push({ file: readme, message: `TOC missing ${target}` });
     }
+    problems.push(...readmeTocHeadingProblems(readme, text));
   }
 }

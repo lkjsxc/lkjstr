@@ -4,6 +4,6 @@
 
 This directory contains unit tests for cache policies.
 
-## Contents
+## Table of Contents
 
 - Compaction and retention coverage.

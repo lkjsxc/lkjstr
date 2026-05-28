@@ -5,7 +5,7 @@
 This directory contains event repository, feed window, rendering support, and
 write-action helpers.
 
-## Contents
+## Table of Contents
 
 - [event-order.ts](event-order.ts): canonical `compareEventsNewestFirst` for feeds.
 - Repository implementations and shared storage adapters.

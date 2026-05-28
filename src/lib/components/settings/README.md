@@ -4,6 +4,6 @@
 
 This directory contains reusable settings editor components.
 
-## Contents
+## Table of Contents
 
 - Settings row and value editor controls.

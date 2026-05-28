@@ -31,27 +31,29 @@ notification context header and the source event as the primary body.
   - `since = max(0, runtimeStartedAt - notificationInitialLookbackSeconds)`
   - `until = runtimeStartedAt + notificationClockSkewSeconds`
   - The initial relay filter must include both `since` and `until`.
-- Older relay paging bounds (bounded segment scan):
-  - Let `oldest = oldestLoadedNotificationRecord.createdAt`
-  - `since = max(0, oldest - notificationOlderPageLookbackSeconds)`
-  - `until = max(0, oldest - 1)`
-- No automatic deep backfill on tab open: older pages must not be requested
-  during initial settle or just because the viewport is not filled. Older
-  requests are allowed only from a current downward user scroll-owner gesture
-  (or an explicit older action), using the shared feed surface near-end
-  semantics. Earlier scrolling must not unlock observer-only or viewport-fill
-  triggers.
+- Older relay paging bounds use an independent `olderCursorCreatedAt`, not the
+  oldest visible record:
+  - `since = max(0, olderCursorCreatedAt - notificationOlderPageLookbackSeconds)`
+  - `until = max(0, olderCursorCreatedAt - 1)`
+- No automatic deep backfill on tab open: viewport-fill is bounded to short
+  underfilled lists and stops once the list becomes scrollable, history is
+  proven exhausted, or the shared attempt cap is reached. After that, older
+  requests require a current downward user scroll-owner gesture or explicit
+  action.
 - Older notifications load after near-bottom scroll using
   `max(1200px, 2 x viewport)` or an equivalent sentinel margin.
-- Feed surface may issue speculative older prefetches in general, but
-  Notifications use an older-load guard and must not auto-fill history during
-  initial settle.
+- Sparse empty relay windows advance `olderCursorCreatedAt` and must not render
+  `End of known history.` unless the lower bound is reached with complete,
+  unambiguous relay status and no local older records.
 - Shared `FeedSurfaceStatus` footer shows loading, end of history, and errors.
+  End of history appears only for proven exhaustion.
 - Notifications use `FeedScrollSurface` with Virtua on
   `.notification-list-scroll`, the same near-end and footer semantics as Home
   and Global. See [feed-scroll-surface.md](../../architecture/data/feed-surface/feed-scroll-surface.md).
 - The tab root uses `.feed-tab` with `overflow: hidden`. Only
   `.notification-list-scroll` scrolls vertically (`data-scroll-owner`).
+- Scroll position restores per tab after tab switching and reload. The visible
+  icon-only restore control returns to the latest saved notification row anchor.
 - Exactly one bottom border separates notification items. Embedded `EventRow`
   uses `showSeparator={false}`. See
   [feed-row-chrome.md](../../architecture/data/feed-surface/feed-row-chrome.md).

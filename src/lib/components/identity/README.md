@@ -4,6 +4,6 @@
 
 This directory contains Svelte components for profile identity display.
 
-## Contents
+## Table of Contents
 
 - Avatars, identity chips, and hover cards.

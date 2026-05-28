@@ -4,6 +4,6 @@
 
 This directory contains anchored popover UI helpers.
 
-## Contents
+## Table of Contents
 
 - Svelte popover shell and placement math.

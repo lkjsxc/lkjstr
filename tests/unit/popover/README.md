@@ -4,6 +4,6 @@
 
 This directory contains unit tests for popover positioning.
 
-## Contents
+## Table of Contents
 
 - Anchored placement math coverage.

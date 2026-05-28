@@ -4,6 +4,6 @@
 
 This directory contains unit tests for profile stores.
 
-## Contents
+## Table of Contents
 
 - Profile runtime and store behavior coverage.

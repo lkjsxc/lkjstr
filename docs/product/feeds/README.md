@@ -4,7 +4,7 @@
 
 Feed surface docs define relay-backed read tabs and action-opened read tabs.
 
-## Documents
+## Table of Contents
 
 - [global.md](global.md): relay-wide note feed behavior.
 - [home.md](home.md): account-follow feed behavior.
@@ -25,3 +25,6 @@ Feed surface docs define relay-backed read tabs and action-opened read tabs.
   absent.
 - Feed tabs may show partial relay rows while slower relays continue. Empty
   states mean terminal coverage, not merely "no fast relay answered yet."
+- Event-rendering tabs preserve per-tab row anchors. The shared icon-only
+  restore control is visible on Home, Global, Profile, Notifications, Thread,
+  Search, Custom Request, and Author Context.

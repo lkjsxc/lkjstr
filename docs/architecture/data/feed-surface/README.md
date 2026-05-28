@@ -6,7 +6,7 @@ Feed surface is the shared contract for feed-like tabs: near-end detection,
 bottom status, speculative older prefetch, staged row materialization, and list
 integration.
 
-## Documents
+## Table of Contents
 
 - [near-end.md](near-end.md): IntersectionObserver sentinel, scroll fallback,
   threshold constants.

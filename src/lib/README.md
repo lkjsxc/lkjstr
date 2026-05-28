@@ -4,7 +4,7 @@
 
 This directory contains reusable application code shared by routes and tabs.
 
-## Contents
+## Table of Contents
 
 - [accounts/](accounts/): account records, signers, and local secrets.
 - [app/](app/): app metadata and runtime logging.

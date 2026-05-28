@@ -4,6 +4,6 @@
 
 This directory contains account management tab components.
 
-## Contents
+## Table of Contents
 
 - Account manager and public key miner panels.

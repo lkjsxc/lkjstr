@@ -4,7 +4,7 @@
 
 This directory contains shared Svelte components grouped by product surface.
 
-## Contents
+## Table of Contents
 
 - `app/`: shell components.
 - `feed/`: feed list shells and row chrome.

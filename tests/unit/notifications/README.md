@@ -4,6 +4,6 @@
 
 This directory contains unit tests for notification indexing and presentation.
 
-## Contents
+## Table of Contents
 
 - Notification derivation, labels, and context behavior.

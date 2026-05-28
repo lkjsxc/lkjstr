@@ -4,7 +4,7 @@
 
 This directory contains profile tab runtime and state management.
 
-## Contents
+## Table of Contents
 
 - Profile loading, paging, metadata draft, and store helpers.
 - `profile-runtime-paging.ts` owns post paging and private safe relay scan

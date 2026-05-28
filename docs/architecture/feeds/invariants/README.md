@@ -5,7 +5,7 @@
 Cross-surface rules that every feed runtime must obey. Violations cause user-visible
 regressions (wrong order, missing posts, self-only Home).
 
-## Documents
+## Table of Contents
 
 - [event-ordering.md](event-ordering.md): canonical newest-first comparator
 - [paging-cursors.md](paging-cursors.md): since, until, overlap, display vs scan

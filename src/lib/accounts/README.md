@@ -5,7 +5,7 @@
 This directory contains account records, signer access, and account management
 helpers.
 
-## Contents
+## Table of Contents
 
 - Account storage and active account helpers.
 - NIP-07 signer integration.

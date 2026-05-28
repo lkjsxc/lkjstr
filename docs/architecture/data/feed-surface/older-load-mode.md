@@ -24,6 +24,14 @@ before issuing `loadOlder` for a feed.
   - Surfaces that can prune newer rows should treat only scroll-handler bottom
     triggers as older-preserving history intent.
 
+- `fill-then-user-scroll`
+  - Issue `loadOlder` from bounded `viewport-fill` triggers only while the
+    scroll area is underfilled.
+  - Once content is scrollable, block observer-only `near-end` triggers and
+    allow only real downward `scroll` triggers from the scroll owner.
+  - This mode gives short feeds enough history to become scrollable without
+    starting an unbounded background scan.
+
 - `explicit`
   - Issue `loadOlder` only via explicit user actions (footer button, keyboard
     shortcut, or a programmatic paging call used by tests).
@@ -32,7 +40,7 @@ before issuing `loadOlder` for a feed.
 ## Recommended defaults
 
 - Home and Global: `auto-near-end`
-- Profile, Notifications, and Thread: `after-user-scroll`
+- Profile, Notifications, and Thread: `fill-then-user-scroll`
 - Search and tools may keep their current surface-specific behavior.
 
 ## Implementation note
@@ -41,4 +49,4 @@ User-scroll intent is tracked via the actual scroll owner (the element with
 `data-scroll-owner`) using wheel/touch/keyboard handlers. The intent is
 short-lived and consumed by the next downward scroll event on that owner. Do not
 use a prior scroll, a viewport-fill measurement, or the first
-IntersectionObserver callback as the gating signal.
+IntersectionObserver callback as the gating signal after the list is scrollable.

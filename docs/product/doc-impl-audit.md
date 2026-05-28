@@ -80,7 +80,7 @@ documented-only. Update it when a vertical slice closes a gap.
 | Home live note subscription includes startup `since`  | feeds/runtime                        | implemented | Live `authorFilters` include startup-bounded `since` to keep initial live inserts protocol-bounded.                                                        |
 | Follow-list absence ownership is follow-sub only      | feeds/sources/home.md                | implemented | No-follow-list waits for follow-list kind `3` completion across intended relays (follow-sub EOSE ownership only).                                          |
 | Home shared page cursors                              | backend/home-query-lifecycle.md      | implemented | Shared Home query owns cursors; non-Home runtime cursors remain per tab.                                                                                   |
-| Timeline regression e2e                               | verification.md                      | implemented | Includes Home follow-discovery EOSE ownership and Notifications bounded older paging / no auto-backfill scenarios.                                         |
+| Timeline regression e2e                               | verification.md                      | implemented | Includes Home follow-discovery EOSE ownership and Notifications bounded viewport-fill older paging.                                                        |
 | Multi-tab Home ownership                              | feeds/runtime/multi-tab-ownership.md | implemented | Matching Home tabs attach to one backend query and share bootstrap, live leases, and cursors.                                                              |
 
 ## Feed Scroll and Row Chrome

@@ -5,7 +5,7 @@
 This directory contains Svelte components for panes, tabs, splits, and tile
 menus.
 
-## Contents
+## Table of Contents
 
 - Workspace root, pane rendering, tab strip, resize handles, and menu controls.
 - `WorkspaceRoot` exposes the tab snapshot coordinator through context.

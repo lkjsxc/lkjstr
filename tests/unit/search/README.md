@@ -5,7 +5,7 @@
 This directory contains unit tests for cache-backed and relay-backed search
 helpers.
 
-## Contents
+## Table of Contents
 
 - [search-query.test.ts](search-query.test.ts): search pagination, merge, and
   empty-query coverage.

@@ -4,6 +4,10 @@
 
 This directory contains relay-backed and cache-backed search helpers.
 
+## Table of Contents
+
+- [Contract](#contract)
+
 ## Contract
 
 - Search reads local cached events before or alongside relay results.

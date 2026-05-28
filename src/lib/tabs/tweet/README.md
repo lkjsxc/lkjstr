@@ -4,7 +4,7 @@
 
 This directory contains the Tweet composer tab body.
 
-## Contents
+## Table of Contents
 
 - Composer UI and attachment controls.
 - Draft persistence for media, sensitive-content state, and custom emoji

@@ -4,7 +4,7 @@
 
 Media owns shared upload settings, NIP-96 discovery, and upload transport.
 
-## Contents
+## Table of Contents
 
 - `settings.ts` loads and saves the `tweet.*` upload settings records.
 - `endpoint.ts` resolves HTTPS NIP-96 upload endpoints.

@@ -5,7 +5,7 @@
 This directory contains real custom emoji discovery and parsing for composer and
 reactions.
 
-## Contents
+## Table of Contents
 
 | File        | Purpose                                                                                                      |
 | ----------- | ------------------------------------------------------------------------------------------------------------ |

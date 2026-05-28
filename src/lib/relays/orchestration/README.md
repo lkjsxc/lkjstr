@@ -2,6 +2,12 @@
 
 Browser-local planner between feed runtimes and the relay pool.
 
+## Table of Contents
+
+- [Modules](#modules)
+- [Public API](#public-api)
+- [Related](#related)
+
 ## Modules
 
 - [demand-types.ts](demand-types.ts): Demand phase, surface, visibility

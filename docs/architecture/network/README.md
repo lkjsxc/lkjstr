@@ -5,7 +5,7 @@
 Network docs define relay behavior, jobs, settings state, identity hydration,
 and app boundaries.
 
-## Documents
+## Table of Contents
 
 - [identity-rendering.md](identity-rendering.md): names and avatars.
 - [job-manager.md](job-manager.md): persisted job state and cancellation.

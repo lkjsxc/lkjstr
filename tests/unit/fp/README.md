@@ -4,6 +4,6 @@
 
 This directory covers shared functional primitives.
 
-## Contents
+## Table of Contents
 
 - `bounded-map.test.ts`: bounded map eviction and TTL behavior.

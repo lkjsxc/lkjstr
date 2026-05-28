@@ -5,7 +5,7 @@
 Discriminated feed sources drive filter construction. Each source has distinct
 relay semantics; sources must not leak into one another.
 
-## Documents
+## Table of Contents
 
 - [home.md](home.md)
 - [global.md](global.md)

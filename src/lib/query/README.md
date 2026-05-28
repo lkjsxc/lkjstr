@@ -4,7 +4,7 @@
 
 Shared query and relay filter construction for feed surfaces.
 
-## Documents
+## Table of Contents
 
 [docs/architecture/feeds/invariants/filter-safety.md](../../../docs/architecture/feeds/invariants/filter-safety.md)
 

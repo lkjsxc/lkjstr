@@ -7,7 +7,7 @@ This tree is the implementation contract for lkjstr. Start with
 contracts. Directory READMEs own detailed listings; this page is the recursive
 table of contents required by repository checks.
 
-## Root Contracts
+## Table of Contents
 
 - [current-state.md](current-state.md): implemented-state summary.
 - [product/README.md](product/README.md): user-facing behavior.
@@ -88,6 +88,7 @@ table of contents required by repository checks.
 - [architecture/network/README.md](architecture/network/README.md)
 - [architecture/network/identity-rendering.md](architecture/network/identity-rendering.md)
 - [architecture/network/job-manager.md](architecture/network/job-manager.md)
+- [architecture/network/progressive-relay-rendering.md](architecture/network/progressive-relay-rendering.md)
 - [architecture/network/relay-pool.md](architecture/network/relay-pool.md)
 - [architecture/network/relay-routing.md](architecture/network/relay-routing.md)
 - [architecture/network/settings-store.md](architecture/network/settings-store.md)

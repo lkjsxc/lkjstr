@@ -4,7 +4,7 @@
 
 Tool surfaces cover local state, writing, relay management, and diagnostics.
 
-## Tree
+## Table of Contents
 
 - [accounts.md](accounts.md): account records and signers.
 - [author-context.md](author-context.md): nearby posts by an event author.

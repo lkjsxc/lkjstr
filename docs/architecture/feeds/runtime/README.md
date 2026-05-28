@@ -5,7 +5,7 @@
 How runtimes hold state, merge pages, track cursors, and coordinate with
 orchestration.
 
-## Documents
+## Table of Contents
 
 - [merge-reducer.md](merge-reducer.md)
 - [per-runtime-cursors.md](per-runtime-cursors.md)

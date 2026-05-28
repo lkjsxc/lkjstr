@@ -4,6 +4,6 @@
 
 This directory contains unit tests for settings storage.
 
-## Contents
+## Table of Contents
 
 - Settings store coverage.

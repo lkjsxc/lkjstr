@@ -66,13 +66,14 @@ linked product, protocol, architecture, and operations pages.
   metadata for capture. The workspace snapshot coordinator owns scroll owners,
   runtime snapshots, one-shot restore tokens, warm LRU snapshots (cap `32`), and
   IndexedDB `tabStates` reload restore.
-- Durable snapshots store scroll anchors, feed cursors, `hasOlder`/`hasNewer`,
-  bounded event or notification ids, and recoverable tool fields. They never
-  store full events, profiles, relay diagnostics, active workers, or unbounded
-  arrays.
+- Durable snapshots store generic row scroll anchors, feed cursors,
+  `hasOlder`/`hasNewer`, history exhaustion state, bounded event or
+  notification ids, and recoverable filter fields. They never store full events,
+  profiles, relay diagnostics, active workers, or unbounded arrays.
 - Feed surfaces share `IntersectionObserver` near-end sentinels with scroll
-  fallback, `feedPagingPhase` footer semantics, older-load intent gating, and
-  staged row shells on Home, Global, Profile, Thread, and Notifications.
+  fallback, `feedPagingPhase` footer semantics, bounded viewport-fill for
+  underfilled lists, older-load intent gating, and staged row shells on Home,
+  Global, Profile, Thread, and Notifications.
 - Feed rows are display-bound before presentation: future events and rows
   outside local `since`, exclusive `until`, `before`, or `after` bounds stay out
   of visible feed results.
@@ -89,10 +90,10 @@ linked product, protocol, architecture, and operations pages.
 - Profile tabs hide visible initial-loading and manual newer-note controls while
   keeping internal loading and newer state. Older-pruned newer notes recover
   through automatic near-start behavior at the first event row, and the identity
-  block spans the profile card width below the avatar/action row. Profile older
-  history loads require a current downward scroll-owner gesture before
-  preserving older rows; observer-only and viewport-fill triggers remain
-  blocked for Profile, Notifications, and Thread.
+  block spans the profile card width below the avatar/action row. Profile,
+  Notifications, and Thread allow bounded viewport-fill only while the list is
+  underfilled; after the list becomes scrollable, older history loads require a
+  current downward scroll-owner gesture.
 - Event rows show nip05-only subtitles on feeds, pressed Heart/Repost styling
   from a hybrid action-state index plus feed evidence, keep optimistic
   published pressed state stable during cache refresh, and show no left-side

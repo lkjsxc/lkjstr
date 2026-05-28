@@ -4,7 +4,7 @@
 
 Unit tests for shared feed paging helpers.
 
-## Contents
+## Table of Contents
 
 - [paging-state.test.ts](paging-state.test.ts): footer phase reducer.
 - [older-prefetch.test.ts](older-prefetch.test.ts): safe prefetch gates.

@@ -4,6 +4,6 @@
 
 This directory contains unit tests for Nostr protocol helpers.
 
-## Contents
+## Table of Contents
 
 - Event builders, parsing, filters, messages, relay URLs, tags, and NIP helpers.

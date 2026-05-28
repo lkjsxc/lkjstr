@@ -4,6 +4,6 @@
 
 This directory contains background job orchestration.
 
-## Contents
+## Table of Contents
 
 - Job manager types and queue behavior.

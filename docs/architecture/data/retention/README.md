@@ -5,7 +5,7 @@
 Event retention defines optional quota-pressure eviction for stored Nostr
 events. Durable cache growth is not capped by a fixed application event count.
 
-## Documents
+## Table of Contents
 
 - [index-shape.md](index-shape.md): IndexedDB priority store fields.
 - [score-policy.md](score-policy.md): score updates and protected classes.

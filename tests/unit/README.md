@@ -4,7 +4,7 @@
 
 This directory contains Vitest unit tests grouped by source domain.
 
-## Contents
+## Table of Contents
 
 - [accounts/](accounts/): account and signer tests.
 - [app/](app/): runtime counters and app-level helpers.

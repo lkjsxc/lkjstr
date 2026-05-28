@@ -41,14 +41,17 @@ When tab `B` becomes active:
 
 | Kind family    | Session + IDB fields                                    |
 | -------------- | ------------------------------------------------------- |
-| Feed tabs      | anchor, `scrollTop`, cursors, flags, bounded event ids  |
-| Notifications  | feed fields plus bounded notification record ids        |
-| Search         | query + feed fields via runtime registry                |
+| Feed tabs      | row anchor, `scrollTop`, cursors, flags, bounded ids    |
+| Notifications  | feed fields plus notification ids and scan cursor       |
+| Search         | query filter state plus feed fields                     |
 | Settings/tools | `scrollTop`, cheap `fields` map                         |
 | Tweet          | durable draft flush; no worker or diagnostics retention |
 
 Feed tabs register `registerTabRuntimeSnapshot` on mount so blur capture is
 complete even when the list scrolled after the last explicit scroll event.
+Event-feed tabs expose one icon-only restore control. It is enabled when the
+current tab has a saved row anchor and restores the latest anchor without
+changing row layout or scrollbar width.
 
 ## Scroll Owner
 

@@ -4,7 +4,7 @@
 
 Runtime docs define how tab-owned loaders combine cache and relay data.
 
-## Documents
+## Table of Contents
 
 - [global-runtime.md](global-runtime.md): global recent notes.
 - [home-runtime.md](home-runtime.md): home follow and note loading.

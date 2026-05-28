@@ -4,7 +4,7 @@
 
 This directory contains the SvelteKit application source.
 
-## Contents
+## Table of Contents
 
 - `app.html`: SvelteKit HTML shell.
 - `lib/`: shared application modules and components.

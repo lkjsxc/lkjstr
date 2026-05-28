@@ -4,7 +4,7 @@
 
 This directory contains GitHub Actions workflows for repository checks.
 
-## Contents
+## Table of Contents
 
 - `ci.yml`: verify, e2e, Compose, and publish jobs.
 - Workflow commands use quiet verification (`pnpm verify:quiet`,

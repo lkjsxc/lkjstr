@@ -5,7 +5,7 @@
 This directory contains relay configuration, clients, pools, diagnostics, and
 subscription management.
 
-## Contents
+## Table of Contents
 
 - [orchestration/](orchestration/): Demand, Lease, and shared live subscription
   planning (see [orchestration/README.md](orchestration/README.md)).

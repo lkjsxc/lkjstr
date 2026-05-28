@@ -4,6 +4,6 @@
 
 This directory contains unit tests for background job helpers.
 
-## Contents
+## Table of Contents
 
 - Job manager coverage.

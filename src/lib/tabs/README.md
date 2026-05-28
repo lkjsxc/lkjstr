@@ -6,7 +6,7 @@ This directory contains tab body implementations grouped by tab kind.
 Tabs expose only compact, recoverable snapshot fields through runtime providers.
 The workspace snapshot coordinator owns durable identity and restore tokens.
 
-## Contents
+## Table of Contents
 
 - [accounts/](accounts/): account management tab.
 - [author-context/](author-context/): nearby authored posts tab.

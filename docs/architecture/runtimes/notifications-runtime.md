@@ -30,13 +30,23 @@ backfill.
     requested `(since, until)` must be discarded before persisting.
 - **Live**: relay reads use `since = runtimeStartedAt` for the active account
   read relays.
-- **Older**: older relay reads are allowed only via explicit older paging
-  intent (near-end after user scroll, footer action, or programmatic page
-  request). Older relay filters must use a bounded `12` minute lookback:
-  - Let `oldest = oldestLoadedNotificationRecord.createdAt`
-  - `since = max(0, oldest - notificationOlderPageLookbackSeconds)`
-  - `until = max(0, oldest - 1)`
+- **Older**: older relay reads keep an independent
+  `olderCursorCreatedAt`. The cursor starts at the oldest retained record and
+  moves earlier across sparse relay windows even when no visible record is
+  added.
+  - Let `cursor = olderCursorCreatedAt`
+  - `since = max(0, cursor - notificationOlderPageLookbackSeconds)`
+  - `until = max(0, cursor - 1)`
+  - Empty complete windows move `olderCursorCreatedAt` to `since` and remain
+    retryable until exhaustion is proven.
 - Record window cap `180`; prune by record count.
+
+## Exhaustion
+
+Notifications mark `historyExhaustion: 'proven'` only when the scan reaches the
+lower bound, local cache has no older records, and every contacted relay read is
+complete without timeout, abort, auth, socket, close, or event-limit ambiguity.
+Incomplete relay reads keep exhaustion unknown so later scrolls can retry.
 
 ## Contract
 

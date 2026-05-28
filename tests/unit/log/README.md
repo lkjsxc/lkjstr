@@ -4,6 +4,6 @@
 
 This directory contains unit tests for app logging.
 
-## Contents
+## Table of Contents
 
 - Record retention, redaction, and runtime noise suppression coverage.

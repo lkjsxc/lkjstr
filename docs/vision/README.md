@@ -4,7 +4,7 @@
 
 Vision docs describe the long-term direction for the app.
 
-## Documents
+## Table of Contents
 
 - [north-star.md](north-star.md): target product shape.
 - [principles.md](principles.md): design principles.

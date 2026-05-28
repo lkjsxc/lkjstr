@@ -4,7 +4,7 @@
 
 This directory contains Playwright tests for browser workflows.
 
-## Contents
+## Table of Contents
 
 - Workspace, timeline, relay, Stats, settings, theme, tab, and media action
   specs.

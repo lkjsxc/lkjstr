@@ -4,6 +4,10 @@
 
 Media tests cover shared upload settings, endpoint discovery, and upload forms.
 
+## Table of Contents
+
+- [Coverage](#coverage)
+
 ## Coverage
 
 - Provider default and fallback behavior.

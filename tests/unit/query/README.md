@@ -5,7 +5,7 @@
 Unit tests for timeline and notification relay filter construction and safety
 checks under `src/lib/query/`.
 
-## Contents
+## Table of Contents
 
 - `timeline-filters.test.ts`: protocol-safe filter validation and author filter
   helpers.

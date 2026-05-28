@@ -4,7 +4,7 @@
 
 Home and Global timeline runtimes, paging, follow-list loading, and merge helpers.
 
-## Documents
+## Table of Contents
 
 Architecture contracts:
 [docs/architecture/feeds/](../../../docs/architecture/feeds/README.md)

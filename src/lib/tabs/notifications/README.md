@@ -4,6 +4,6 @@
 
 This directory contains the Notifications tab body.
 
-## Contents
+## Table of Contents
 
 - Notification feed layout and runtime wiring.

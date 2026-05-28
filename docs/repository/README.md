@@ -5,7 +5,7 @@
 Repository docs describe layout, workflow, and documentation standards for
 maintaining the app.
 
-## Documents
+## Table of Contents
 
 - [documentation-standards.md](documentation-standards.md): docs rules.
 - [commit-protocol.md](commit-protocol.md): commit message rules.

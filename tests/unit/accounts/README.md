@@ -4,6 +4,6 @@
 
 This directory contains unit tests for account and signer helpers.
 
-## Contents
+## Table of Contents
 
 - Account labels, storage fallback, and public key mining coverage.

@@ -5,7 +5,7 @@
 This directory contains shared UI for Unicode and NIP-30 custom emoji
 selection.
 
-## Contents
+## Table of Contents
 
 | File                        | Purpose                                                |
 | --------------------------- | ------------------------------------------------------ |

@@ -4,6 +4,10 @@
 
 This directory contains the Search workspace tab body.
 
+## Table of Contents
+
+- [Contract](#contract)
+
 ## Contract
 
 - Search exposes a real query input.

@@ -7,6 +7,16 @@ desktop-style app for reading timelines, composing notes, inspecting relay
 behavior, managing signing accounts, and following event threads without a
 server-side account system.
 
+## Table of Contents
+
+- [What lkjstr Is](#what-lkjstr-is)
+- [What It Does](#what-it-does)
+- [How to Run](#how-to-run)
+- [How to Verify](#how-to-verify)
+- [Where Docs Live](#where-docs-live)
+- [Repository Map](#repository-map)
+- [License](#license)
+
 ## What lkjstr Is
 
 - A **single-page workspace** that starts on `/` with no landing page.

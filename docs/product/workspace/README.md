@@ -4,7 +4,7 @@
 
 Workspace docs define the first screen, tile mechanics, tab list, and flows.
 
-## Tree
+## Table of Contents
 
 - [panes.md](panes.md): pane surface rules.
 - [scope.md](scope.md): included and excluded product surface.

@@ -5,7 +5,7 @@
 Backend docs define browser-local service boundaries that coordinate shared work
 for tab surfaces without adding a remote app server.
 
-## Documents
+## Table of Contents
 
 - [boundary.md](boundary.md): browser-local backend boundary.
 - [query-registry.md](query-registry.md): shared query ownership.

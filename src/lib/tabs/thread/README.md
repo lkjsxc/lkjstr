@@ -4,6 +4,6 @@
 
 This directory contains the Thread tab body.
 
-## Contents
+## Table of Contents
 
 - Thread runtime wiring and event tree display.

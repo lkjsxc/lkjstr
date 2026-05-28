@@ -34,6 +34,8 @@ its NIP-02 follows.
   across author chunks.
 - The tab keeps a `180` item window and exposes jump to latest after newer
   items are pruned.
+- Scroll position restores per Home tab after tab switching and reload. The
+  visible icon-only restore control returns to the latest saved row anchor.
 - Live events are retained only inside the same `180` item window.
 - Older pages load after near-bottom scroll using
   `max(1200px, 2 x viewport)` or an equivalent sentinel margin, or when the
@@ -52,8 +54,8 @@ its NIP-02 follows.
   the top cursor.
 - Route discovery refreshes the initial page only when the resolved route-group
   fingerprint changes.
-- Home does not start automatic session backfill on open. Older history loads
-  after scroll or explicit page requests.
+- Home does not start unbounded session backfill on open. Older history loads
+  after scroll, explicit page requests, or bounded short-feed viewport-fill.
 - Adaptive feed requests remain bounded even if a route-specific filter omits
   the provided scan bounds. Missing detailed relay status is treated as
   incomplete.

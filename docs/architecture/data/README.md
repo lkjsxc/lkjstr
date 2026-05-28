@@ -4,7 +4,7 @@
 
 Data docs define storage, feed windows, and shared event presentation models.
 
-## Documents
+## Table of Contents
 
 - [event-tree.md](event-tree.md): common event tree rendering model.
 - [bounded-memory.md](bounded-memory.md): bounded memory and cleanup rules.

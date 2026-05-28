@@ -5,7 +5,7 @@
 Architecture docs assign source ownership for app behavior. They define where
 state lives, which modules own subscriptions, and how tabs close cleanly.
 
-## Tree
+## Table of Contents
 
 - [backend/README.md](backend/README.md): browser-local backend services.
 - [backend/boundary.md](backend/boundary.md): local backend boundary.
@@ -90,6 +90,8 @@ state lives, which modules own subscriptions, and how tabs close cleanly.
   hydration.
 - [network/job-manager.md](network/job-manager.md): background jobs.
 - [network/relay-pool.md](network/relay-pool.md): WebSocket relay clients.
+- [network/progressive-relay-rendering.md](network/progressive-relay-rendering.md):
+  progressive relay rendering.
 - [network/relay-routing.md](network/relay-routing.md): protocol-derived read
   routing.
 - [network/settings-store.md](network/settings-store.md): settings storage.

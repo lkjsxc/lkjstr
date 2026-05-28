@@ -5,7 +5,7 @@
 This directory contains Node scripts used by development and verification
 commands.
 
-## Contents
+## Table of Contents
 
 - `check-repo.ts`: repository contract checker.
 - `generate-icons.ts`: static icon generation.

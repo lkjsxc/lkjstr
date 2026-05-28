@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import {
   canonicalRootDocLinks,
   isStrictDoc,
+  readmeTocHeadingProblems,
   rootDocLinkProblems,
 } from '../../scripts/repo-doc-rules';
 
@@ -30,5 +31,30 @@ describe('repository documentation rules', () => {
       },
     ]);
     expect(rootDocLinkProblems('tests/README.md', '')).toEqual([]);
+  });
+
+  it('requires the canonical README TOC heading', () => {
+    expect(
+      readmeTocHeadingProblems(
+        'src/README.md',
+        '# Source\n\n## Purpose\n\nx\n\n## Table of Contents\n\n- a\n',
+      ),
+    ).toEqual([]);
+    expect(
+      readmeTocHeadingProblems(
+        'src/README.md',
+        '# Source\n\n## Purpose\n\nx\n\n## Contents\n\n- a\n',
+      ),
+    ).toEqual([
+      {
+        file: 'src/README.md',
+        message: 'README TOC heading must be Table of Contents',
+      },
+      {
+        file: 'src/README.md',
+        message: 'README uses nonstandard TOC heading ## Contents',
+      },
+    ]);
+    expect(readmeTocHeadingProblems('docs/page.md', '')).toEqual([]);
   });
 });

@@ -20,5 +20,9 @@ matches.
   cached events are not skipped.
 - Cached matches and relay matches are sorted by `{created_at,id}` and merged
   by real event id with all relay provenance preserved.
-- Results render through the shared event row surface.
+- Results render through the shared event row surface, footer phase, bounded
+  short-feed viewport-fill, and visible icon-only scroll restore control.
+- Search query text is preserved in feed `filterState` for tab switch and
+  reload restore.
+- Scroll position restores per Search tab after tab switching and reload.
 - Search does not require an active signing account.

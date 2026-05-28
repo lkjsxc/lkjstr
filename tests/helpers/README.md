@@ -4,3 +4,7 @@
 
 Shared test helpers provide deterministic protocol fixtures without production
 dependencies outside the app protocol kernel.
+
+## Table of Contents
+
+- [Purpose](#purpose)
