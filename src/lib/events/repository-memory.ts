@@ -12,7 +12,12 @@ import type {
   FeedQuery,
   StoredEvent,
 } from './types';
-import { afterCursor, before, beforeCursor } from './repository-shared';
+import {
+  afterCursor,
+  afterSince,
+  before,
+  beforeCursor,
+} from './repository-shared';
 
 const fallbackLimit = 5000;
 const fallbackIndexLimit = fallbackLimit * 8;
@@ -113,6 +118,7 @@ export function putMemory(
 
 function matchesFeed(event: StoredEvent, query: FeedQuery): boolean {
   const displayKinds = query.kinds ?? feedDisplayKinds;
+  if (!afterSince(event, query.since)) return false;
   if (!before(event, query.until)) return false;
   if (!beforeCursor(event, query.before)) return false;
   if (!afterCursor(event, query.after)) return false;

@@ -72,6 +72,7 @@ export type FeedQuery = {
   readonly kinds?: readonly number[];
   readonly authors?: readonly string[];
   readonly eventId?: string;
+  readonly since?: number;
   readonly until?: number;
   readonly before?: FeedCursorPoint;
   readonly after?: FeedCursorPoint;

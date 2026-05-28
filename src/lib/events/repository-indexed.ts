@@ -3,6 +3,7 @@ import { browserDb } from '../storage/browser-db';
 import type { FeedQuery, StoredEvent } from './types';
 import {
   afterCursor,
+  afterSince,
   before,
   beforeCursor,
   maxUntil,
@@ -136,7 +137,7 @@ async function indexedThreadPage(
   return [...(root && before(root, query.until) ? [root] : []), ...replies]
     .filter((event): event is StoredEvent => Boolean(event))
     .map(normalizeStoredEvent)
-    .filter((event) => withinCursors(event, query))
+    .filter((event) => withinBounds(event, query))
     .sort(compareEventsDesc)
     .slice(0, limit);
 }
@@ -159,7 +160,7 @@ async function byKindsPage(
   return pages
     .flat()
     .map(normalizeStoredEvent)
-    .filter((event) => withinCursors(event, query))
+    .filter((event) => withinBounds(event, query))
     .sort(compareEventsDesc)
     .slice(0, limit);
 }
@@ -179,13 +180,18 @@ function byAuthorPage(
     .then((events) =>
       events
         .map(normalizeStoredEvent)
-        .filter((event) => withinCursors(event, query))
+        .filter((event) => withinBounds(event, query))
         .slice(0, limit),
     );
 }
 
-function withinCursors(event: StoredEvent, query: FeedQuery): boolean {
-  return beforeCursor(event, query.before) && afterCursor(event, query.after);
+function withinBounds(event: StoredEvent, query: FeedQuery): boolean {
+  return (
+    afterSince(event, query.since) &&
+    before(event, query.until) &&
+    beforeCursor(event, query.before) &&
+    afterCursor(event, query.after)
+  );
 }
 
 // prettier-ignore

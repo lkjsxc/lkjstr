@@ -33,6 +33,13 @@ export function before(event: StoredEvent, until: number | undefined): boolean {
   return until === undefined || event.created_at < until;
 }
 
+export function afterSince(
+  event: Pick<StoredEvent, 'created_at'>,
+  since: number | undefined,
+): boolean {
+  return since === undefined || event.created_at >= since;
+}
+
 export function beforeCursor(
   event: Pick<NostrEvent, 'created_at' | 'id'>,
   cursor: FeedCursorPoint | undefined,
