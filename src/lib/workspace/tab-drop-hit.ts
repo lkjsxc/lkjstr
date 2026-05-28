@@ -4,7 +4,11 @@ export type TabDropZone = TabDropEdge | 'center';
 export type TabDropRect = Pick<DOMRect, 'left' | 'top' | 'width' | 'height'>;
 
 export function tabDropHitSize(size: number): number {
-  return Math.min(96, Math.max(44, size * 0.22));
+  return Math.min(
+    128,
+    Math.max(56, Math.round(size * 0.28)),
+    Math.max(1, Math.floor(size / 2) - 1),
+  );
 }
 
 export function tabDropZone(

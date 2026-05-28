@@ -11,10 +11,12 @@ import {
 describe('tab drop zones', () => {
   const rect = { left: 0, top: 0, width: 200, height: 100 };
 
-  it('uses about 22 percent edge hit corridors', () => {
-    expect(tabDropHitSize(200)).toBe(44);
+  it('uses larger edge hit corridors', () => {
+    expect(tabDropHitSize(200)).toBe(56);
+    expect(tabDropHitSize(800)).toBe(128);
     expect(tabDropZone(rect, 10, 50)).toBe('left');
     expect(tabDropZone(rect, 190, 50)).toBe('right');
+    expect(tabDropZone(rect, 100, 50)).toBe('center');
   });
 
   it('renders half-pane edge previews', () => {

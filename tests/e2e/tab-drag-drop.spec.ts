@@ -98,3 +98,33 @@ test('pointer drag moves a tab into another tile with overlay feedback', async (
     firstPane(page).getByRole('tab', { name: 'Settings', exact: true }),
   ).toHaveCount(1);
 });
+
+test('edge drop creates a persisted split', async ({ page }, testInfo) => {
+  test.skip(
+    testInfo.project.name === 'mobile',
+    'Mobile tab-strip layout needs a dedicated long-press drag scenario',
+  );
+  await openWorkspaceWithSettingsTab(page);
+  const source = secondPane(page).getByRole('button', {
+    name: 'Settings',
+    exact: true,
+  });
+  const target = firstPane(page).locator('.pane-stack');
+  const targetBox = await target.boundingBox();
+  if (!targetBox) throw new Error('missing target box');
+  await source.hover();
+  await page.mouse.down();
+  await page.mouse.move(targetBox.x + 8, targetBox.y + targetBox.height * 0.5, {
+    steps: 12,
+  });
+  await expect(
+    firstPane(page).locator('.pane-drop-layer.active'),
+  ).toHaveAttribute('data-drop-zone', 'left');
+  await page.mouse.up();
+  await expect(page.locator('.pane')).toHaveCount(3);
+  await page.reload();
+  await expect(page.locator('.pane')).toHaveCount(3);
+  await expect(
+    page.getByRole('tab', { name: 'Settings', exact: true }),
+  ).toBeVisible();
+});

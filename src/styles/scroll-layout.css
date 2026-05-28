@@ -13,6 +13,7 @@
 .new-tab,
 .relay-monitor {
   box-sizing: border-box;
+  padding-inline-end: var(--scroll-track-edge);
   padding-inline-start: var(--scroll-content-inset);
   scrollbar-gutter: stable;
 }
@@ -28,6 +29,7 @@
 }
 
 .feed-tab {
+  --scroll-track-edge: 0px;
   display: flex;
   flex-direction: column;
   gap: var(--space-3);
