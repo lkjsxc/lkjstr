@@ -28,4 +28,4 @@ implemented - relay page scan returns `incomplete` flag; runtimes preserve
 
 ## Related
 
-- [../../network/subscription-orchestration/bootstrap-live.md](../../network/subscription-orchestration/bootstrap-live.md)
+- [../../network/subscription-orchestration/live-lease.md](../../network/subscription-orchestration/live-lease.md)

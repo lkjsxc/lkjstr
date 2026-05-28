@@ -30,5 +30,5 @@ conflated.
 
 ## Related
 
-- [observability.md](observability.md)
+- [../progressive-relay-rendering.md](../progressive-relay-rendering.md)
 - `src/lib/relays/orchestration/metrics.ts`

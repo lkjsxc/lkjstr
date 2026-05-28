@@ -19,4 +19,4 @@ Tile overlays define anchored UI that must stay inside a pane tile.
 ## Related
 
 - [../product/tools/event-actions.md](../../product/tools/event-actions.md)
-- Custom emoji protocol: [../protocol/custom-emoji.md](../protocol/custom-emoji.md)
+- Custom emoji protocol: [../../protocol/custom-emoji.md](../../protocol/custom-emoji.md)

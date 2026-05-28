@@ -34,5 +34,5 @@ subscription manager.
 ## Related
 
 - [demand-intent.md](demand-intent.md)
-- [bootstrap-live.md](bootstrap-live.md) (historical name; see live-lease.md)
+- [live-lease.md](live-lease.md)
 - `src/lib/relays/orchestration/page-reads.ts`

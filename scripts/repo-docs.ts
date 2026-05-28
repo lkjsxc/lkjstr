@@ -1,5 +1,6 @@
 import fs from 'node:fs/promises';
 import path from 'node:path';
+import { localMarkdownLinkProblems } from './repo-doc-links';
 import {
   isStrictDoc,
   readmeTocHeadingProblems,
@@ -34,6 +35,7 @@ export async function checkDocs(
     checkAscii(problems, rel, text);
     if (!rel.endsWith('LICENSE')) checkBanned(problems, rel, text);
     checkProseLineLength(problems, rel, text);
+    problems.push(...(await localMarkdownLinkProblems(root, rel, text)));
   }
   await checkDocsTopology(problems, root, files, skipDirs);
   await checkIgnoredDocs(problems, root, docs);

@@ -137,3 +137,7 @@ All contracts live under [`docs/`](docs/README.md):
 - [`src/`](src/) - SvelteKit application source.
 - [`static/`](static/) - static browser assets and manifest files.
 - [`tests/`](tests/) - Vitest unit tests and Playwright browser tests.
+
+## License
+
+See [`LICENSE`](LICENSE).
