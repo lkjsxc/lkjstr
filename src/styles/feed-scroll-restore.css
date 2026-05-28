@@ -1,9 +1,0 @@
-.feed-scroll-restore {
-  height: 2rem;
-  inset-block-start: var(--space-2);
-  inset-inline-end: calc(var(--scroll-content-inset) + var(--space-2));
-  opacity: 0.86;
-  position: absolute;
-  width: 2rem;
-  z-index: 4;
-}

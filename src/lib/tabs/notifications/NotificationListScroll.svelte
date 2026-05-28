@@ -135,11 +135,6 @@
     autoFillPending = false;
   }
 
-  function restoreSavedAnchor(): void {
-    const anchor = restoreAnchor;
-    if (!anchor) return;
-    restoreVirtualAnchor({ key: anchor.anchorKey, offset: anchor.offset }, rows, notificationViewRowKey, list);
-  }
 </script>
 
 <div class="event-list notification-list">
@@ -154,8 +149,6 @@
       {intentKey}
       onNearEnd={requestOlder}
       onScrollOffset={captureCurrentAnchor}
-      restoreEnabled={Boolean(restoreAnchor)}
-      onRestore={restoreSavedAnchor}
       bind:list
       bind:scrollElement
     >

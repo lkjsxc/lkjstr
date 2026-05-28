@@ -23,8 +23,8 @@ Custom Request lets users run one-shot relay reads from validated JSON.
 - Effective relay filter limits are clamped to `500`.
 - Results are sorted event rows with duplicate relay provenance merged. They do
   not render in relay arrival order.
-- Results render through the shared event row surface and visible icon-only
-  scroll restore control.
+- Results render through the shared event row surface and automatic row-anchor
+  restore.
 - Request JSON and whether the request has run are preserved in feed
   `filterState` for tab switch and reload restore.
 - Scroll position restores per Custom Request tab after tab switching and

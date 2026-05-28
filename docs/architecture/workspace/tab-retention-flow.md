@@ -49,8 +49,7 @@ When tab `B` becomes active:
 
 Feed tabs register `registerTabRuntimeSnapshot` on mount so blur capture is
 complete even when the list scrolled after the last explicit scroll event.
-Event-feed tabs expose one icon-only restore control. It is enabled when the
-current tab has a saved row anchor and restores the latest anchor without
+Event-feed tabs automatically restore the latest saved row anchor without
 changing row layout or scrollbar width.
 
 ## Scroll Owner

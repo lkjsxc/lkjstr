@@ -52,8 +52,7 @@ notification context header and the source event as the primary body.
   and Global. See [feed-scroll-surface.md](../../architecture/data/feed-surface/feed-scroll-surface.md).
 - The tab root uses `.feed-tab` with `overflow: hidden`. Only
   `.notification-list-scroll` scrolls vertically (`data-scroll-owner`).
-- Scroll position restores per tab after tab switching and reload. The visible
-  icon-only restore control returns to the latest saved notification row anchor.
+- Scroll position automatically restores per tab after tab switching and reload.
 - Exactly one bottom border separates notification items. Embedded `EventRow`
   uses `showSeparator={false}`. See
   [feed-row-chrome.md](../../architecture/data/feed-surface/feed-row-chrome.md).

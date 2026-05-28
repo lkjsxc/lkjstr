@@ -34,8 +34,8 @@ its NIP-02 follows.
   across author chunks.
 - The tab keeps a `180` item window and exposes jump to latest after newer
   items are pruned.
-- Scroll position restores per Home tab after tab switching and reload. The
-  visible icon-only restore control returns to the latest saved row anchor.
+- Scroll position automatically restores per Home tab after tab switching and
+  reload.
 - Live events are retained only inside the same `180` item window.
 - Older pages load after near-bottom scroll using
   `max(1200px, 2 x viewport)` or an equivalent sentinel margin, or when the

@@ -1,6 +1,5 @@
 <script lang="ts">
   import type { Snippet } from 'svelte';
-  import { RotateCcw } from '@lucide/svelte';
   import { VList } from 'virtua/svelte';
   import EventTreeListNearEnd from '$lib/components/events/EventTreeListNearEnd.svelte';
   import { isNearEnd } from '$lib/feed-surface/near-end';
@@ -28,8 +27,6 @@
     nearEndEnabled?: boolean;
     onNearEnd?: (trigger: OlderLoadTrigger) => void | Promise<void>;
     onScrollOffset?: (offset: number) => void;
-    restoreEnabled?: boolean;
-    onRestore?: () => void;
     list?: FeedScrollListHandle;
     scrollerElement?: HTMLDivElement;
     scrollElement?: HTMLElement;
@@ -45,8 +42,6 @@
     nearEndEnabled = false,
     onNearEnd,
     onScrollOffset,
-    restoreEnabled = false,
-    onRestore,
     list = $bindable(),
     scrollerElement = $bindable(),
     scrollElement = $bindable(),
@@ -146,15 +141,4 @@
     onNearEnd={() => onNearEnd?.('near-end')}
     scroller={scrollerElement}
   />
-  <button
-    type="button"
-    class="icon-button feed-scroll-restore"
-    aria-label="Restore scroll position"
-    title="Restore scroll position"
-    disabled={!restoreEnabled}
-    onclick={() => onRestore?.()}
-  >
-    <RotateCcw size={16} aria-hidden="true" />
-    <span class="sr-only">Restore scroll position</span>
-  </button>
 </div>

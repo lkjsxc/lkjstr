@@ -12,7 +12,6 @@
   import '../styles/workspace-menu.css';
   import '../styles/scroll-layout.css';
   import '../styles/timeline.css';
-  import '../styles/feed-scroll-restore.css';
   import '../styles/notifications.css';
   import '../styles/content-warning.css';
   import '../styles/mentions.css';

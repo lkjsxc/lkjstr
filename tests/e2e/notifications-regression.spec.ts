@@ -55,9 +55,6 @@ test('notifications viewport-fill older history when underfilled', async ({
   await expect(page.getByText('new-notification-0')).toBeVisible({
     timeout: 15_000,
   });
-  await expect(
-    page.getByRole('button', { name: 'Restore scroll position' }).first(),
-  ).toBeVisible();
 
   await expect(page.getByText('old-notification-3')).toBeVisible({
     timeout: 15_000,

@@ -130,9 +130,6 @@
       return;
     await props.onNearEnd?.(trigger);
   }
-  function restoreSavedAnchor(): void {
-    void restoreFeedListAnchor({ restore: props.restoreAnchor, rows: eventRows(rows), list, key: eventNodeKey, destroyed: () => destroyed, restoredKey: '' });
-  }
 </script>
 
 <FeedActionStatesBridge
@@ -153,8 +150,6 @@
       {actionStates}
       {requestOlder}
       {handleScrollOffset}
-      restoreEnabled={Boolean(props.restoreAnchor)}
-      onRestore={restoreSavedAnchor}
       bind:list
       bind:scrollElement
     />

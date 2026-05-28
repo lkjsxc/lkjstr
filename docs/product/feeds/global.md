@@ -16,8 +16,8 @@ Global shows recent notes and reposts from the selected readable relay set.
   capped by the `180` item window.
 - Initial and older pages request `30` items.
 - The tab keeps a `180` item window.
-- Scroll position restores per Global tab after tab switching and reload. The
-  visible icon-only restore control returns to the latest saved row anchor.
+- Scroll position automatically restores per Global tab after tab switching and
+  reload.
 - Older pages load after near-bottom scroll using
   `max(1200px, 2 x viewport)` or an equivalent sentinel margin, or when the
   loaded rows are shorter than the viewport and `hasOlder` remains true.
