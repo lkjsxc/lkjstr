@@ -18,10 +18,11 @@
   } from '$lib/timeline/timeline-progressive';
   import { registerTabRuntimeSnapshot } from '$lib/workspace/tab-runtime-registry';
   import type { TabSnapshotPayload } from '$lib/workspace/tab-snapshot';
+  import type { TabFeedAnchor } from '$lib/workspace/tab-anchor-registry';
 
   type Props = {
     tabId: string;
-    restoreAnchor?: { readonly eventId: string; readonly offset: number };
+    restoreAnchor?: TabFeedAnchor;
     restoreSnapshot?: TabSnapshotPayload;
     relaySets: readonly RelaySet[];
     openProfile: (pubkey: string) => void;
@@ -43,15 +44,18 @@
 
   $effect(() => {
     const saved = props.restoreSnapshot;
-    if (saved?.kind !== 'tool') return;
-    input = saved.fields?.customRequestInput ?? input;
-    ran = saved.fields?.customRequestRan === 'true';
+    if (saved?.kind !== 'feed') return;
+    input = saved.filterState?.customRequestInput ?? input;
+    ran = saved.filterState?.customRequestRan === 'true';
   });
 
   $effect(() =>
     registerTabRuntimeSnapshot(props.tabId, () => ({
-      kind: 'tool',
-      fields: { customRequestInput: input, customRequestRan: String(ran) },
+      kind: 'feed',
+      filterState: {
+        customRequestInput: input,
+        customRequestRan: String(ran),
+      },
     })),
   );
 

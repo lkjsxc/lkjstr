@@ -1,4 +1,8 @@
-export type OlderLoadMode = 'auto-near-end' | 'after-user-scroll' | 'explicit';
+export type OlderLoadMode =
+  | 'auto-near-end'
+  | 'after-user-scroll'
+  | 'fill-then-user-scroll'
+  | 'explicit';
 
 export type OlderLoadTrigger =
   | 'scroll'
@@ -10,9 +14,15 @@ export function canRequestOlder(input: {
   readonly mode?: OlderLoadMode;
   readonly trigger: OlderLoadTrigger;
   readonly userScrolledDown: boolean;
+  readonly scrollable?: boolean;
 }): boolean {
   if (input.trigger === 'explicit') return true;
   if (input.mode === 'explicit') return false;
+  if (input.mode === 'fill-then-user-scroll') {
+    if (input.trigger === 'viewport-fill') return !input.scrollable;
+    if (input.trigger === 'scroll') return input.userScrolledDown;
+    return !input.scrollable;
+  }
   if (input.mode === 'after-user-scroll')
     return input.trigger === 'scroll' && input.userScrolledDown;
   return true;

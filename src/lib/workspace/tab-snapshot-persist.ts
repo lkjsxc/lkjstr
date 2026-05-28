@@ -22,7 +22,7 @@ export function snapshotPayloadForTab(
   const base = captureTabSnapshot(
     tab.kind,
     scrollTop,
-    anchor ? { eventId: anchor.eventId, offset: anchor.offset } : undefined,
+    anchor ? { anchorKey: anchor.anchorKey, offset: anchor.offset } : undefined,
   );
   return mergeTabSnapshotPayload(base, captureRuntimeSnapshot(tab.id));
 }
@@ -36,6 +36,8 @@ export function feedSnapshotSeedFromPayload(
     newestCursor: payload.newestCursor,
     hasOlder: payload.hasOlder,
     hasNewer: payload.hasNewer,
+    historyExhaustion: payload.historyExhaustion,
+    olderCursorCreatedAt: payload.olderCursorCreatedAt,
   };
 }
 
@@ -85,9 +87,9 @@ export function feedAnchorFromPayload(
   payload: TabSnapshotPayload | undefined,
 ): TabFeedAnchor | undefined {
   if (!payload || payload.kind !== 'feed') return undefined;
-  if (!payload.anchorEventId) return undefined;
+  if (!payload.anchorKey) return undefined;
   return {
-    eventId: payload.anchorEventId,
+    anchorKey: payload.anchorKey,
     offset: payload.anchorOffset ?? 0,
   };
 }

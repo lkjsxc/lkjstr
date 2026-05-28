@@ -1,5 +1,5 @@
 export type TabFeedAnchor = {
-  readonly eventId: string;
+  readonly anchorKey: string;
   readonly offset: number;
 };
 

@@ -8,10 +8,12 @@
   import { sharedSubscriptionOrchestrator } from '$lib/relays/orchestration/orchestrator';
   import { timelineRelays } from '$lib/timeline/timeline-subscription';
   import { loadTimelineProfiles } from '$lib/timeline/timeline-profiles';
+  import type { TabFeedAnchor } from '$lib/workspace/tab-anchor-registry';
 
   type Props = {
     tabId: string;
     visible?: boolean;
+    restoreAnchor?: TabFeedAnchor;
     eventId: string;
     pubkey: string;
     relaySets: readonly RelaySet[];
@@ -80,6 +82,8 @@
 <section class="timeline-tab" aria-label="Author Context">
   {#if error}<p role="alert">{error}</p>{/if}
   <EventTreeList
+    tabId={props.tabId}
+    restoreAnchor={props.restoreAnchor}
     {items}
     {profiles}
     relaySets={props.relaySets}

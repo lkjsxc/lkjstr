@@ -4,6 +4,7 @@ import {
   type FlatEventTreeItem,
 } from '$lib/events/tree';
 import type { FeedEvent } from '$lib/events/types';
+import type { HistoryExhaustion } from '$lib/feed-surface/paging-state';
 
 export type EventTreeListLeadingRow = {
   readonly key: string;
@@ -26,6 +27,7 @@ export function buildViewRows(
   nodes: readonly FlatEventTreeItem[],
   loadingOlder: boolean,
   hasOlder: boolean | undefined,
+  historyExhaustion: HistoryExhaustion | undefined,
   loading: boolean | undefined,
   emptyText: string,
 ): EventTreeListViewRow[] {
@@ -43,7 +45,7 @@ export function buildViewRows(
   if (nodes.length === 0 && !loading)
     rows.push({ kind: 'empty', text: emptyText });
   if (loadingOlder && hasOlder) return [...rows, { kind: 'loadingOlder' }];
-  if (hasOlder === false && nodes.length > 0)
+  if (historyExhaustion === 'proven' && nodes.length > 0)
     return [...rows, { kind: 'terminal' }];
   return rows;
 }

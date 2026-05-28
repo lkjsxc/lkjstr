@@ -19,6 +19,7 @@
   import NotificationListScroll from './NotificationListScroll.svelte';
   import { registerTabRuntimeSnapshot } from '$lib/workspace/tab-runtime-registry';
   import { feedRuntimeSnapshot } from '$lib/workspace/feed-runtime-snapshot';
+  import type { TabFeedAnchor } from '$lib/workspace/tab-anchor-registry';
 
   type ProfileMap = Record<string, ProfileSummary>;
   type NotificationViewState = NotificationState & { profiles: ProfileMap };
@@ -27,6 +28,7 @@
     tabId: string;
     accountPubkey?: string;
     visible: boolean;
+    restoreAnchor?: TabFeedAnchor;
     relaySets: readonly RelaySet[];
     openProfile: (pubkey: string) => void;
     openThread: (eventId: string) => void;
@@ -46,7 +48,9 @@
     error: null,
     loadingOlder: false,
     hasOlder: true,
+    historyExhaustion: 'unknown',
     oldestCreatedAt: undefined,
+    olderCursorCreatedAt: undefined,
     newerPruned: false,
     profiles: {},
   });
@@ -164,6 +168,7 @@
   {#if viewState.records.length > 0}
     <NotificationListScroll
       tabId={props.tabId}
+      restoreAnchor={props.restoreAnchor}
       records={viewState.records}
       {itemById}
       {targetItemById}
@@ -172,6 +177,7 @@
       activeAccountPubkey={props.accountPubkey}
       loadingOlder={viewState.loadingOlder}
       hasOlder={viewState.hasOlder}
+      historyExhaustion={viewState.historyExhaustion}
       error={viewState.error}
       intentKey={runtimeKey}
       onNearEnd={() => olderRequests.requestFromNearEnd()}

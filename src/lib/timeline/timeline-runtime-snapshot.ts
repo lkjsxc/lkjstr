@@ -12,6 +12,7 @@ export function timelineRuntimeSnapshot(
     newestCursor: state.newestCursor,
     hasOlder: state.hasOlder,
     hasNewer: state.hasNewer,
+    historyExhaustion: state.hasOlder ? 'unknown' : 'proven',
     eventIds: state.items.map((item) => item.event.id),
   });
 }

@@ -52,7 +52,16 @@ export function createNotificationRuntime(
   const active = (run: number): boolean => !closed && generation === run;
   const emit = (next: NotificationState): void => {
     if (closed) return;
-    state = { ...next, oldestCreatedAt: next.records.at(-1)?.createdAt };
+    const oldestCreatedAt = next.records.at(-1)?.createdAt;
+    state = {
+      ...next,
+      oldestCreatedAt,
+      olderCursorCreatedAt:
+        next.olderCursorCreatedAt ??
+        state.olderCursorCreatedAt ??
+        oldestCreatedAt,
+      historyExhaustion: next.historyExhaustion ?? state.historyExhaustion,
+    };
     trackNotificationRecords(next.records.length);
     listeners.forEach((listener) => listener(state));
   };
@@ -135,8 +144,8 @@ export function createNotificationRuntime(
     loadOlder: async (): Promise<void> => {
       if (closed || !accountPubkey || state.loadingOlder || !state.hasOlder)
         return;
-      const oldest = state.records.at(-1)?.createdAt;
-      if (!oldest) return;
+      const cursor = state.olderCursorCreatedAt ?? state.records.at(-1)?.createdAt;
+      if (!cursor) return;
       const run = generation;
       emit({ ...state, loadingOlder: true });
       try {
@@ -145,7 +154,7 @@ export function createNotificationRuntime(
           relays,
           owner,
           pageSize,
-          oldestCreatedAt: oldest,
+          olderCursorCreatedAt: cursor,
           subscriptions,
           signal: controller.signal,
           active,
@@ -155,7 +164,12 @@ export function createNotificationRuntime(
         });
         if (!active(run)) return;
         await reload(false, result.mergedRecords, result.prunedNewer);
-        emit({ ...state, hasOlder: result.hasOlder });
+        emit({
+          ...state,
+          hasOlder: result.hasOlder,
+          historyExhaustion: result.historyExhaustion,
+          olderCursorCreatedAt: result.olderCursorCreatedAt,
+        });
       } catch (error) {
         emit({ ...state, error: boundedErrorText(error) });
       } finally {

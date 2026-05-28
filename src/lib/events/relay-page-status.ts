@@ -35,7 +35,8 @@ export function statusesComplete(
         !status.auth &&
         !status.socketClosed &&
         !status.socketError &&
-        !status.eventLimitReached,
+        !status.eventLimitReached &&
+        !status.aborted,
     )
   );
 }

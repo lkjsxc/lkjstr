@@ -5,7 +5,10 @@ import {
   type VirtualListHandle,
 } from '$lib/events/scroll-anchor';
 import type { FlatEventTreeItem } from '$lib/events/tree';
-import { setTabFeedAnchor } from '$lib/workspace/tab-anchor-registry';
+import {
+  setTabFeedAnchor,
+  type TabFeedAnchor,
+} from '$lib/workspace/tab-anchor-registry';
 
 export type EventAnchorRow = {
   readonly node: FlatEventTreeItem;
@@ -18,7 +21,7 @@ export type TreeListAnchorHandle = VirtualListHandle & {
 };
 
 export async function restoreFeedListAnchor(args: {
-  readonly restore?: { readonly eventId: string; readonly offset: number };
+  readonly restore?: { readonly anchorKey: string; readonly offset: number };
   readonly rows: readonly EventAnchorRow[];
   readonly list?: TreeListAnchorHandle;
   readonly key: (node: FlatEventTreeItem) => string;
@@ -27,12 +30,12 @@ export async function restoreFeedListAnchor(args: {
 }): Promise<string> {
   const restore = args.restore;
   if (!restore || !args.list?.scrollTo) return args.restoredKey;
-  const key = `${restore.eventId}:${restore.offset}`;
+  const key = `${restore.anchorKey}:${restore.offset}`;
   if (args.restoredKey === key) return key;
   await tick();
   if (!args.destroyed())
     restoreVirtualAnchor(
-      { key: restore.eventId, offset: restore.offset },
+      { key: restore.anchorKey, offset: restore.offset },
       args.rows,
       (row) => args.key(row.node),
       visualIndexList(args.rows, args.list),
@@ -47,27 +50,43 @@ export function syncFeedListAnchor(args: {
   readonly list?: TreeListAnchorHandle;
   readonly key: (node: FlatEventTreeItem) => string;
   readonly destroyed: () => boolean;
-}): EventAnchorRow[] {
-  const anchor = captureVirtualAnchor(
-    args.previous,
-    (row) => args.key(row.node),
-    visualIndexList(args.previous, args.list),
-  );
-  if (args.tabId && anchor)
-    setTabFeedAnchor(args.tabId, {
-      eventId: anchor.key,
-      offset: anchor.offset,
-    });
+}): { readonly rows: EventAnchorRow[]; readonly anchor?: TabFeedAnchor } {
+  const anchor = captureFeedListAnchor(args.previous, args.list, args.key);
+  if (args.tabId && anchor) setTabFeedAnchor(args.tabId, anchor);
   void tick().then(() => {
     if (!args.destroyed())
       restoreVirtualAnchor(
-        anchor,
+        anchor ? { key: anchor.anchorKey, offset: anchor.offset } : undefined,
         args.rows,
         (row) => args.key(row.node),
         visualIndexList(args.rows, args.list),
       );
   });
-  return [...args.rows];
+  return { rows: [...args.rows], anchor };
+}
+
+export function captureFeedListAnchor(
+  rows: readonly EventAnchorRow[],
+  list: TreeListAnchorHandle | undefined,
+  key: (node: FlatEventTreeItem) => string,
+): TabFeedAnchor | undefined {
+  const anchor = captureVirtualAnchor(
+    rows,
+    (row) => key(row.node),
+    visualIndexList(rows, list),
+  );
+  return anchor ? { anchorKey: anchor.key, offset: anchor.offset } : undefined;
+}
+
+export function captureAndStoreFeedListAnchor(args: {
+  readonly tabId?: string;
+  readonly rows: readonly EventAnchorRow[];
+  readonly list?: TreeListAnchorHandle;
+  readonly key: (node: FlatEventTreeItem) => string;
+}): void {
+  if (!args.tabId) return;
+  const anchor = captureFeedListAnchor(args.rows, args.list, args.key);
+  if (anchor) setTabFeedAnchor(args.tabId, anchor);
 }
 
 function visualIndexList(

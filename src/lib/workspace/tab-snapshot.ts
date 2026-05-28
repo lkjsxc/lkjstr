@@ -1,15 +1,18 @@
 import type { FeedCursorPoint } from '$lib/events/types';
+import type { HistoryExhaustion } from '$lib/feed-surface/paging-state';
 import type { TabKind } from './tab';
 
 export type FeedTabSnapshot = {
   readonly kind: 'feed';
   readonly scrollTop?: number;
-  readonly anchorEventId?: string;
+  readonly anchorKey?: string;
   readonly anchorOffset?: number;
   readonly oldestCursor?: FeedCursorPoint;
   readonly newestCursor?: FeedCursorPoint;
   readonly hasOlder?: boolean;
   readonly hasNewer?: boolean;
+  readonly historyExhaustion?: HistoryExhaustion;
+  readonly olderCursorCreatedAt?: number;
   readonly filterState?: Record<string, string>;
   readonly eventIds?: readonly string[];
   readonly notificationRecordIds?: readonly string[];
@@ -28,7 +31,12 @@ export type TabSnapshotRestore = {
 
 export type FeedTabSnapshotSeed = Pick<
   FeedTabSnapshot,
-  'oldestCursor' | 'newestCursor' | 'hasOlder' | 'hasNewer'
+  | 'oldestCursor'
+  | 'newestCursor'
+  | 'hasOlder'
+  | 'hasNewer'
+  | 'historyExhaustion'
+  | 'olderCursorCreatedAt'
 >;
 
 export type TabSnapshotPayload = FeedTabSnapshot | ToolTabSnapshot;
@@ -36,19 +44,22 @@ export type TabSnapshotPayload = FeedTabSnapshot | ToolTabSnapshot;
 export function captureTabSnapshot(
   tabKind: TabKind,
   scrollTop: number,
-  anchor?: { eventId: string; offset: number },
+  anchor?: { anchorKey: string; offset: number },
 ): TabSnapshotPayload {
   if (
     tabKind === 'timeline' ||
     tabKind === 'global' ||
     tabKind === 'profile' ||
     tabKind === 'notifications' ||
-    tabKind === 'thread'
+    tabKind === 'thread' ||
+    tabKind === 'search' ||
+    tabKind === 'custom-request' ||
+    tabKind === 'author-context'
   ) {
     return {
       kind: 'feed',
       scrollTop,
-      anchorEventId: anchor?.eventId,
+      anchorKey: anchor?.anchorKey,
       anchorOffset: anchor?.offset,
     };
   }

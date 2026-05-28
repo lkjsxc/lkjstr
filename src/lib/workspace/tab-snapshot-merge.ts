@@ -14,12 +14,15 @@ export function mergeTabSnapshotPayload(
     return {
       ...base,
       scrollTop: feedPatch.scrollTop ?? base.scrollTop,
-      anchorEventId: feedPatch.anchorEventId ?? base.anchorEventId,
+      anchorKey: feedPatch.anchorKey ?? base.anchorKey,
       anchorOffset: feedPatch.anchorOffset ?? base.anchorOffset,
       oldestCursor: feedPatch.oldestCursor ?? base.oldestCursor,
       newestCursor: feedPatch.newestCursor ?? base.newestCursor,
       hasOlder: feedPatch.hasOlder ?? base.hasOlder,
       hasNewer: feedPatch.hasNewer ?? base.hasNewer,
+      historyExhaustion: feedPatch.historyExhaustion ?? base.historyExhaustion,
+      olderCursorCreatedAt:
+        feedPatch.olderCursorCreatedAt ?? base.olderCursorCreatedAt,
       filterState: { ...base.filterState, ...feedPatch.filterState },
       eventIds: feedPatch.eventIds ?? base.eventIds,
       notificationRecordIds:

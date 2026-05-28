@@ -164,6 +164,7 @@
     loadingNewer={state.loadingNewer}
     hasOlder={state.hasOlder}
     hasNewer={state.hasNewer}
+    historyExhaustion={state.hasOlder ? 'unknown' : 'proven'}
     olderLoadMode="auto-near-end"
     olderPrefetchReady={Boolean(state.oldestCursor || state.newestCursor)}
     onNearEnd={() => olderRequests.requestFromNearEnd()}

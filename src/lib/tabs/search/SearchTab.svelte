@@ -16,11 +16,12 @@
     feedEventsFromProgressiveSnapshot,
     progressiveStatusText,
   } from '$lib/timeline/timeline-progressive';
+  import type { TabFeedAnchor } from '$lib/workspace/tab-anchor-registry';
 
   type Props = {
     tabId: string;
     visible?: boolean;
-    restoreAnchor?: { readonly eventId: string; readonly offset: number };
+    restoreAnchor?: TabFeedAnchor;
     restoreSnapshot?: TabSnapshotPayload;
     relaySets: readonly RelaySet[];
     openProfile: (pubkey: string) => void;
@@ -48,15 +49,15 @@
 
   $effect(() => {
     const saved = props.restoreSnapshot;
-    if (saved?.kind === 'tool' && saved.fields?.searchQuery)
-      query = saved.fields.searchQuery;
+    if (saved?.kind === 'feed' && saved.filterState?.searchQuery)
+      query = saved.filterState.searchQuery;
   });
 
   $effect(() => {
     const tabId = props.tabId;
     return registerTabRuntimeSnapshot(tabId, () => ({
-      kind: 'tool',
-      fields: { searchQuery: query },
+      kind: 'feed',
+      filterState: { searchQuery: query },
     }));
   });
 
@@ -185,8 +186,11 @@
     {loadingOlder}
     loadingNewer={false}
     {hasOlder}
+    historyExhaustion={hasOlder ? 'unknown' : 'proven'}
     hasNewer={false}
     pagingError={error}
+    olderLoadMode="auto-near-end"
+    olderPrefetchReady={items.length > 0}
     onNearEnd={() => olderRequests.requestFromNearEnd()}
     onNearStart={() => undefined}
     openProfile={props.openProfile}

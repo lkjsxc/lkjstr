@@ -116,6 +116,7 @@
     return registerTabRuntimeSnapshot(tabId, () =>
       feedRuntimeSnapshot({
         ...state,
+        historyExhaustion: state.hasOlder ? 'unknown' : 'proven',
         eventIds: state.posts.map((item) => item.event.id),
       }),
     );
@@ -145,8 +146,10 @@
     loadingNewer={state.loadingNewer}
     hasOlder={state.hasOlder}
     hasNewer={state.hasNewer}
+    historyExhaustion={state.hasOlder ? 'unknown' : 'proven'}
     intentKey={runtimeKey}
-    olderLoadMode="after-user-scroll"
+    olderLoadMode="fill-then-user-scroll"
+    olderPrefetchReady={Boolean(state.oldestCursor || state.newestCursor)}
     onNearEnd={(trigger) => olderRequests.requestFromNearEnd(trigger)}
     onNearStart={() => runtime?.loadNewer()}
     openProfile={props.openProfile}

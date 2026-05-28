@@ -17,6 +17,8 @@
     actionStates: Map<string, EventActionState>;
     requestOlder: (trigger: OlderLoadTrigger) => void | Promise<void>;
     handleScrollOffset: (offset: number) => void;
+    restoreEnabled?: boolean;
+    onRestore?: () => void;
     list?: FeedScrollListHandle;
     scrollElement?: HTMLElement;
   };
@@ -29,6 +31,8 @@
     actionStates,
     requestOlder,
     handleScrollOffset,
+    restoreEnabled = false,
+    onRestore,
     list = $bindable(),
     scrollElement = $bindable(),
   }: Props = $props();
@@ -42,6 +46,8 @@
   {nearEndEnabled}
   onNearEnd={requestOlder}
   onScrollOffset={handleScrollOffset}
+  {restoreEnabled}
+  {onRestore}
   intentKey={props.intentKey}
   bind:list
   bind:scrollElement

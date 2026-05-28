@@ -123,6 +123,7 @@
     tabId={props.tab.id}
     accountPubkey={props.activeAccount?.pubkey}
     visible={props.visible}
+    restoreAnchor={props.restoreAnchor}
     relaySets={props.relaySets}
     openProfile={(pubkey) => props.openProfile(props.paneId, pubkey)}
     openThread={(eventId) => props.openThread(props.paneId, eventId)}
@@ -135,6 +136,7 @@
     visible={props.visible}
     eventId={String(props.tab.config.eventId ?? '')}
     pubkey={String(props.tab.config.pubkey ?? '')}
+    restoreAnchor={props.restoreAnchor}
     relaySets={props.relaySets}
     openProfile={(pubkey) => props.openProfile(props.paneId, pubkey)}
     openThread={(eventId) => props.openThread(props.paneId, eventId)}

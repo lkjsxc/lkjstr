@@ -11,6 +11,8 @@ import type {
   OlderLoadMode,
   OlderLoadTrigger,
 } from '$lib/feed-surface/older-load-mode';
+import type { HistoryExhaustion } from '$lib/feed-surface/paging-state';
+import type { TabFeedAnchor } from '$lib/workspace/tab-anchor-registry';
 
 export type EventTreeListProps = {
   items: readonly FeedEvent[];
@@ -24,6 +26,7 @@ export type EventTreeListProps = {
   loadingNewer?: boolean;
   hasOlder?: boolean;
   hasNewer?: boolean;
+  historyExhaustion?: HistoryExhaustion;
   pagingError?: string | null;
   relayStatusText?: string;
   emptyText?: string;
@@ -37,7 +40,7 @@ export type EventTreeListProps = {
   pagingEnabled?: boolean;
   olderLoadMode?: OlderLoadMode;
   olderPrefetchReady?: boolean;
-  restoreAnchor?: { readonly eventId: string; readonly offset: number };
+  restoreAnchor?: TabFeedAnchor;
   leadingRows?: readonly EventTreeListLeadingRow[];
   leadingRow?: Snippet<[EventTreeListLeadingRow]>;
 };

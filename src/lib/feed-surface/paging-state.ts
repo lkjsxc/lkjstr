@@ -1,8 +1,10 @@
 export type FeedPagingPhase = 'idle' | 'loadingOlder' | 'end' | 'error';
+export type HistoryExhaustion = 'unknown' | 'probing' | 'proven';
 
 export type FeedPagingInput = {
   readonly loadingOlder: boolean;
   readonly hasOlder: boolean;
+  readonly historyExhaustion?: HistoryExhaustion;
   readonly rowCount: number;
   readonly error?: string | null;
 };
@@ -10,6 +12,6 @@ export type FeedPagingInput = {
 export function feedPagingPhase(input: FeedPagingInput): FeedPagingPhase {
   if (input.error) return 'error';
   if (input.loadingOlder && input.hasOlder) return 'loadingOlder';
-  if (!input.hasOlder && input.rowCount > 0) return 'end';
+  if (input.historyExhaustion === 'proven' && input.rowCount > 0) return 'end';
   return 'idle';
 }
