@@ -28,9 +28,11 @@ linked product, protocol, architecture, and operations pages.
   support them.
 - Home, Global, Search, and Custom Request consume progressive relay read
   snapshots so partial rows can render before final relay coverage.
-- Home, Global, and Profile feed scans use adaptive grouped relay windows:
-  complete under-half windows grow, balanced windows keep span, limit-hit
-  windows split, and incomplete windows keep conservative history frontiers.
+- Home, Global, and Profile grouped feed scans use an adaptive temporal window
+  controller. Scans start at `12` minutes, double adjacent windows when complete
+  relay-shaped reads return at most half of the effective limit, halve dense
+  windows when any relay-shaped read reaches the effective limit, and keep
+  balanced spans unchanged.
 
 ## Ownership
 

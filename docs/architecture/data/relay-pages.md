@@ -34,24 +34,28 @@ preserving where each real event was seen.
 - Raw reads remain valid for exact id lookup, latest replaceable selection, and
   other cases where caller-specific ordering is required.
 - Home, Profile, and Global initial, older, and newer relay reads use an
-  adaptive segment queue. The minimum span is `1` second, initial span is `12`
-  minutes, maximum grown span is `180` days, a page processes at most `96`
-  segments, and split depth is capped at `32`.
-- Adaptive scans classify every contacted complete window as `limit-hit`,
-  `under-half`, or `balanced`. Incomplete windows are separate and never prove
-  sparse history.
-- `limit-hit` means at least one relay reached its relay-effective filter cap.
-  Splittable windows split immediately, with older scans processing the newer
-  half first and newer scans processing the older half first. Unsplittable
-  limit-hit windows become unresolved terminal frontiers.
-- `under-half` means every contacted relay completed below half of its
-  relay-effective cap. The next adjacent window doubles the current span up to
-  `180` days.
-- `balanced` means every contacted relay completed without hitting a cap, but
-  at least one relay returned half or more of its relay-effective cap. The next
-  adjacent window keeps the current span.
-- A segment only advances relay history when every contacted relay proves EOSE
-  completion below the relay-effective filter cap.
+  adaptive segment queue that starts with a `12` minute segment.
+- Each segment produces one window feedback value:
+  - `limit-hit`: at least one contacted relay-shaped request reached its
+    effective limit.
+  - `under-half`: every contacted relay-shaped request returned at most
+    `floor(effectiveLimit / 2)`.
+  - `balanced`: contacted complete request that is neither `limit-hit` nor
+    `under-half`.
+  - `incomplete`: relay status did not prove EOSE completion.
+- For complete contacted windows, `limit-hit` windows split the current segment
+  and scan the half closest to the visible edge first. Older scans process the
+  newer half first; newer scans process the older half first. Unsplittable
+  `limit-hit` windows become unresolved terminal frontiers.
+- For complete contacted windows, `under-half` advances to the next adjacent
+  segment with doubled span, and `balanced` advances with unchanged span.
+- For incomplete windows, incomplete status never proves history exhaustion.
+  Timeout, close, auth, socket close, socket error, and missing detailed status
+  remain non-exhaustive. Incomplete large root windows may split
+  conservatively, but they must not drive sparse doubling.
+- Bounds: minimum span is `1` second, initial span is `12` minutes, maximum
+  grown span is `180` days, a page processes at most `96` segments, and split
+  depth is capped at `32`.
 - Grouped feed scans own their relay `since` and `until` bounds at dispatch
   time. A caller filter builder may add tighter bounds, but omitting scan bounds
   must not produce an unbounded feed request.
@@ -102,9 +106,9 @@ independent on the critical path to first paint.
 ## Callers
 
 - Home, Global, and Profile feed pages use adaptive bounded scans for initial,
-  older, and newer catch-up pages. Search, Custom Request, Author Context, and
-  Thread reply pages keep exact requested filter semantics with sorted
-  provenance-preserving feed pages.
-- Reference resolution and other id-batch lookups may use raw relay pages when
-  output order is driven by the requested ids.
-- Metadata and follow-list reads remain separate from visible post pages.
+  older, and newer catch-up pages.
+- Search, Custom Request, Author Context, Thread reply pages, metadata lookup,
+  follow-list reads, and id-batch reference resolution keep exact request
+  semantics unless they already intentionally use grouped feed scans.
+- Reference resolution may use raw relay pages when output order is driven by
+  the requested ids.
