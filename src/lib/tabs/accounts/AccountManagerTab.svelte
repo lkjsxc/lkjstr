@@ -3,7 +3,6 @@
   import {
     addAccountFromInput,
     addNip07Account,
-    createLocalAccount,
     generateNsec,
     removeStoredAccount,
     setActiveAccount,
@@ -50,10 +49,6 @@
 
   function connectNip07(): Promise<void> {
     return run(() => addNip07Account(), 'NIP-07 account added.');
-  }
-
-  function createLocal(): Promise<void> {
-    return run(() => createLocalAccount(), 'Local account created.');
   }
 
   function fillGeneratedNsec(): void {
@@ -103,17 +98,14 @@
       name="account-input"
       placeholder="npub, hex pubkey, or nsec"
     />
+    <button type="button" disabled={busy} onclick={fillGeneratedNsec}
+      >Generate nsec</button
+    >
     <button type="submit" disabled={busy || !input.trim()}>Add</button>
   </form>
   <div class="toolbar">
     <button type="button" disabled={busy} onclick={connectNip07}
-      >Add NIP-07</button
-    >
-    <button type="button" disabled={busy} onclick={createLocal}
-      >Create local</button
-    >
-    <button type="button" disabled={busy} onclick={fillGeneratedNsec}
-      >Generate nsec</button
+      >Log in with NIP-07</button
     >
   </div>
   {#if status}<p role="status">{status}</p>{/if}

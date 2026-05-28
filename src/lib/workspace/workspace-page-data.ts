@@ -1,7 +1,6 @@
 import {
   addMinedLocalAccount,
   addNip07Account,
-  createLocalAccount,
   importLocalNsec,
   addReadonlyAccount,
   addReadonlyPubkey,
@@ -31,11 +30,6 @@ export async function addReadonlyFromInput(input: string): Promise<string> {
 export async function addNip07FromProvider(): Promise<string> {
   await addNip07Account();
   return 'NIP-07 account added.';
-}
-
-export async function createLocalSigningAccount(): Promise<string> {
-  await createLocalAccount();
-  return 'Local account created.';
 }
 
 export async function importNsecAccount(input: string): Promise<string> {

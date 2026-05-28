@@ -20,12 +20,12 @@ test('imports nsec and publishes Tweet without NIP-07', async ({ page }) => {
   });
 });
 
-test('creates local account and publishes Tweet without NIP-07', async ({
+test('generates and imports local account for Tweet publish', async ({
   page,
 }) => {
   await installSyntheticRelay(page, { events: [] });
   await openCleanWorkspace(page);
-  await createLocalAccount(page);
+  await generateLocalAccount(page);
   await openTweet(page);
   await page.getByLabel('Tweet content').fill('created local publish');
   await page.getByRole('button', { name: 'Publish' }).click();
@@ -40,7 +40,7 @@ test('uploads selected media file and publishes imeta', async ({ page }) => {
   await installSyntheticRelay(page, { events: [] });
   await mockUploadServer(page);
   await openCleanWorkspace(page);
-  await createLocalAccount(page);
+  await generateLocalAccount(page);
   await setMediaServer(page);
   await openTweet(page);
   await tweetTab(page)
@@ -62,9 +62,16 @@ test('uploads selected media file and publishes imeta', async ({ page }) => {
   ]);
 });
 
-async function createLocalAccount(page: Page) {
+async function generateLocalAccount(page: Page) {
   await openAccounts(page);
-  await page.getByRole('button', { name: 'Create local' }).click();
+  await expect(
+    page.getByRole('button', { name: 'Log in with NIP-07' }),
+  ).toBeVisible();
+  await expect(page.getByRole('button', { name: 'Create local' })).toHaveCount(
+    0,
+  );
+  await page.getByRole('button', { name: 'Generate nsec' }).click();
+  await page.getByRole('button', { name: 'Add', exact: true }).click();
   await expect(page.getByText('local', { exact: true })).toBeVisible();
 }
 

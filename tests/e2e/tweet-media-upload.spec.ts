@@ -41,7 +41,7 @@ test('Tweet media upload publishes content and imeta tags', async ({
 
 async function addBrowserSigner(page: Page) {
   await selectStartupTab(page, 'Accounts');
-  await page.getByRole('button', { name: 'Add NIP-07' }).click();
+  await page.getByRole('button', { name: 'Log in with NIP-07' }).click();
 }
 
 async function openTweet(page: Page) {

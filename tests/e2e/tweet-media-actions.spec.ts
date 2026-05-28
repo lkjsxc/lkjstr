@@ -92,7 +92,7 @@ test('event row actions publish without opening the row thread', async ({
 
 async function addBrowserSigner(page: import('@playwright/test').Page) {
   await selectStartupTab(page, 'Accounts');
-  await page.getByRole('button', { name: 'Add NIP-07' }).click();
+  await page.getByRole('button', { name: 'Log in with NIP-07' }).click();
   await expect(page.getByText('nip07')).toBeVisible();
   await selectStartupTab(page, 'Home');
 }
