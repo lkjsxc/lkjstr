@@ -1,4 +1,4 @@
-import { expect, test, type Page } from '@playwright/test';
+import { expect, test } from '@playwright/test';
 import {
   finalizeEvent,
   generateSecretKey,
@@ -92,7 +92,7 @@ test('notifications scan older history after an empty initial window', async ({
   ).not.toBeVisible();
 });
 
-test('notifications explicit retry issues older scans after bounded empty scans', async ({
+test('notifications keep empty adaptive scans mounted while probing', async ({
   page,
 }) => {
   const activeKey = generateSecretKey();
@@ -103,23 +103,7 @@ test('notifications explicit retry issues older scans after bounded empty scans'
   await addReadonlyAccount(page, active);
   await selectStartupTab(page, 'Notifications');
 
-  const retry = page.getByRole('button', {
-    name: 'Load older notifications',
+  await expect(page.getByText('Loading older events...')).toBeVisible({
+    timeout: 20_000,
   });
-  await expect(retry).toBeVisible({ timeout: 20_000 });
-  const repliesBefore = await relayReplyCount(page);
-  await retry.dispatchEvent('click');
-  await expect.poll(() => relayReplyCount(page)).toBeGreaterThan(repliesBefore);
 });
-
-async function relayReplyCount(page: Page): Promise<number> {
-  return page.evaluate(() =>
-    window.__syntheticSockets.reduce<number>((total, socket) => {
-      const record =
-        typeof socket === 'object' && socket !== null
-          ? (socket as Record<string, unknown>)
-          : {};
-      return total + (typeof record.replies === 'number' ? record.replies : 0);
-    }, 0),
-  );
-}

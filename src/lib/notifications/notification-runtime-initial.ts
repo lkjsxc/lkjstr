@@ -40,7 +40,7 @@ export async function readInitialNotificationRelayPage(args: {
               cursor: bounds,
             }),
           direction: 'initial',
-          before: { createdAt: cursor.until - 1, id: 'f'.repeat(64) },
+          before: { createdAt: args.startedAt + 1, id: 'f'.repeat(64) },
           pageSize: args.pageSize,
           subscriptions: args.subscriptions,
           signal: args.signal,
