@@ -27,7 +27,7 @@ test('heart and repost show pressed state for the active account', async ({
   await installSyntheticRelay(page, { events: [note] });
   await openCleanWorkspace(page);
   await selectStartupTab(page, 'Accounts');
-  await page.getByRole('button', { name: 'Add NIP-07' }).click();
+  await page.getByRole('button', { name: 'Log in with NIP-07' }).click();
   await expect(page.getByText('nip07')).toBeVisible();
   await openNewTabOption(page, 'Global');
   await waitForSyntheticEvent(page, note.id);
@@ -46,6 +46,7 @@ test('heart and repost show pressed state for the active account', async ({
       { timeout: 15_000 },
     )
     .toBe('true');
+  await expectPressedStable(page, row, 'Heart');
   await row.getByRole('button', { name: 'Repost', exact: true }).click();
   await waitForPublishedCount(page, 2);
   await expect
@@ -55,7 +56,20 @@ test('heart and repost show pressed state for the active account', async ({
         .getAttribute('aria-pressed'),
     )
     .toBe('true');
+  await expectPressedStable(page, row, 'Repost');
 });
+
+async function expectPressedStable(
+  page: import('@playwright/test').Page,
+  row: import('@playwright/test').Locator,
+  name: string,
+): Promise<void> {
+  const button = row.getByRole('button', { name, exact: true });
+  for (let index = 0; index < 5; index += 1) {
+    await expect(button).toHaveAttribute('aria-pressed', 'true');
+    await page.waitForTimeout(100);
+  }
+}
 
 async function waitForPublishedCount(
   page: import('@playwright/test').Page,

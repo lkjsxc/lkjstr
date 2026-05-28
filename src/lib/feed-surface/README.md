@@ -9,6 +9,7 @@ row helpers for timeline-like tabs.
 
 - [near-end.ts](near-end.ts): threshold helpers and observer margins.
 - [paging-state.ts](paging-state.ts): footer phase reducer.
+- [older-prefetch.ts](older-prefetch.ts): safe Home/Global prefetch predicate.
 - [speculative-older.ts](speculative-older.ts): deduped older-page coordinator.
 - [staged-rows.ts](staged-rows.ts): immediate row shell projection.
 

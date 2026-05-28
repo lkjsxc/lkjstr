@@ -21,19 +21,29 @@
     activeAccountPubkey,
     states = $bindable(new Map<string, EventActionState>()),
   }: Props = $props();
+  let optimistic = new Map<string, EventActionState>();
+  let optimisticPubkey: string | undefined;
 
   $effect(() => {
     const pubkey = activeAccountPubkey;
     if (!pubkey) {
+      optimistic = new Map();
+      optimisticPubkey = undefined;
       states = actionStateForFeed(items, pubkey);
       return;
     }
     let cancelled = false;
+    optimistic = scopedOptimistic(pubkey, items);
     const refresh = (): void => {
       const base = actionStateForFeed(items, pubkey);
-      states = base;
+      const pending = scopedOptimistic(pubkey, items);
+      states = mergeActionStateMaps(base, pending);
       void loadAuthorActionStateFromCache(pubkey).then((cached) => {
-        if (!cancelled) states = mergeActionStateMaps(base, cached);
+        if (!cancelled)
+          states = mergeActionStateMaps(
+            mergeActionStateMaps(base, cached),
+            pending,
+          );
       });
     };
     refresh();
@@ -44,7 +54,13 @@
     const onCache = (event: Event): void => {
       const published = (event as CustomEvent<NostrEvent>).detail;
       if (!published || published.pubkey !== pubkey) return;
-      states = applyPublishedActionState(items, pubkey, published, states);
+      optimistic = applyPublishedActionState(
+        items,
+        pubkey,
+        published,
+        scopedOptimistic(pubkey, items),
+      );
+      states = mergeActionStateMaps(states, optimistic);
       refresh();
     };
     window.addEventListener(actionCacheChangedEvent, onCache);
@@ -53,4 +69,20 @@
       window.removeEventListener(actionCacheChangedEvent, onCache);
     };
   });
+
+  function scopedOptimistic(
+    pubkey: string,
+    visibleItems: readonly FeedEvent[],
+  ): Map<string, EventActionState> {
+    if (optimisticPubkey !== pubkey) {
+      optimisticPubkey = pubkey;
+      optimistic = new Map();
+      return optimistic;
+    }
+    const visible = new Set(visibleItems.map((item) => item.event.id));
+    optimistic = new Map(
+      [...optimistic].filter(([eventId]) => visible.has(eventId)),
+    );
+    return optimistic;
+  }
 </script>

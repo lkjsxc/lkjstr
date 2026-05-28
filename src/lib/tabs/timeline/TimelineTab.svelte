@@ -162,6 +162,7 @@
     hasOlder={state.hasOlder}
     hasNewer={state.hasNewer}
     olderLoadMode="auto-near-end"
+    olderPrefetchReady={Boolean(state.oldestCursor || state.newestCursor)}
     onNearEnd={() => olderRequests.requestFromNearEnd()}
     onNearStart={() => runtime?.loadNewer()}
     openProfile={props.openProfile}

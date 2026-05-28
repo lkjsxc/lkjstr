@@ -6,6 +6,7 @@
     canRequestOlder,
     type OlderLoadTrigger,
   } from '$lib/feed-surface/older-load-mode';
+  import { shouldStartOlderPrefetch } from '$lib/feed-surface/older-prefetch';
   import type { FeedScrollListHandle } from '$lib/components/feed/FeedScrollSurface.svelte';
   import type { FlatEventTreeItem } from '$lib/events/tree';
   import EventTreeListSurface from './EventTreeListSurface.svelte';
@@ -29,7 +30,6 @@
   } from './event-tree-list-anchors';
   import type { EventTreeListProps as Props } from './event-tree-list-props';
   import { fallbackNodeIds, nearVisibleEventIds } from './event-tree-list-pins';
-
   let props: Props = $props();
   let list = $state<FeedScrollListHandle & TreeListAnchorHandle>();
   let scrollElement = $state<HTMLElement>();
@@ -69,7 +69,6 @@
   );
   let previousRows: EventAnchorRow[] = [];
   let restoredAnchorKey = $state('');
-
   onDestroy(() => {
     destroyed = true;
     if (props.tabId) setTabFeedAnchor(props.tabId, undefined);
@@ -91,13 +90,11 @@
     )
       void props.onNearStart?.();
   }
-
   $effect(() => {
     if (props.pagingEnabled === false) return;
     if (nodes.length > 0 && props.hasOlder && !props.loadingOlder)
       void maybeAutoFill();
   });
-
   $effect(() => {
     if (
       props.pagingEnabled === false ||
@@ -113,7 +110,6 @@
       if (!destroyed) newerLoadPending = false;
     });
   });
-
   $effect(() => {
     previousRows = syncFeedListAnchor({
       tabId: props.tabId,
@@ -130,7 +126,6 @@
         : fallbackNodeIds(nodes),
     );
   });
-
   $effect(() => {
     void restoreFeedListAnchor({
       restore: props.restoreAnchor,
@@ -143,7 +138,6 @@
       if (!destroyed) restoredAnchorKey = key;
     });
   });
-
   async function maybeAutoFill(): Promise<void> {
     if (autoFillPending || props.loadingOlder || !props.hasOlder) return;
     autoFillPending = true;
@@ -151,11 +145,21 @@
     if (destroyed) return;
     const viewport = list?.getViewportSize?.() ?? 0;
     const total = list?.getScrollSize?.() ?? 0;
-    if (viewport > 0 && total <= viewport + 16)
+    if (
+      shouldStartOlderPrefetch({
+        mode: props.olderLoadMode,
+        itemCount: nodes.length,
+        hasOlder: Boolean(props.hasOlder),
+        loadingOlder: Boolean(props.loadingOlder),
+        cursorsReady: Boolean(props.olderPrefetchReady),
+        scrollOffset,
+        viewportSize: viewport,
+        scrollSize: total,
+      })
+    )
       await requestOlder('viewport-fill');
     if (!destroyed) autoFillPending = false;
   }
-
   async function requestOlder(trigger: OlderLoadTrigger): Promise<void> {
     if (
       props.loadingOlder ||
@@ -177,7 +181,6 @@
   items={props.items}
   activeAccountPubkey={props.activeAccountPubkey}
 />
-
 <div class="event-list">
   {#if rows.length > 0}
     <EventTreeListSurface

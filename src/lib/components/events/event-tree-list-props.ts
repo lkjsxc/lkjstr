@@ -35,6 +35,7 @@ export type EventTreeListProps = {
   intentKey?: string;
   pagingEnabled?: boolean;
   olderLoadMode?: OlderLoadMode;
+  olderPrefetchReady?: boolean;
   restoreAnchor?: { readonly eventId: string; readonly offset: number };
   leadingRows?: readonly EventTreeListLeadingRow[];
   leadingRow?: Snippet<[EventTreeListLeadingRow]>;
