@@ -13,6 +13,7 @@ export function canRequestOlder(input: {
 }): boolean {
   if (input.trigger === 'explicit') return true;
   if (input.mode === 'explicit') return false;
-  if (input.mode === 'after-user-scroll') return input.userScrolledDown;
+  if (input.mode === 'after-user-scroll')
+    return input.trigger === 'scroll' && input.userScrolledDown;
   return true;
 }

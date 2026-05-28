@@ -32,6 +32,7 @@ export type EventTreeListProps = {
   openThread?: (eventId: string) => void;
   openAuthorContext?: (eventId: string, pubkey: string) => void;
   tabId?: string;
+  intentKey?: string;
   pagingEnabled?: boolean;
   olderLoadMode?: OlderLoadMode;
   restoreAnchor?: { readonly eventId: string; readonly offset: number };

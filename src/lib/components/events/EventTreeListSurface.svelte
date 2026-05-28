@@ -17,7 +17,6 @@
     actionStates: Map<string, EventActionState>;
     requestOlder: (trigger: OlderLoadTrigger) => void | Promise<void>;
     handleScrollOffset: (offset: number) => void;
-    onDownwardUserIntent: () => void;
     list?: FeedScrollListHandle;
     scrollElement?: HTMLElement;
   };
@@ -30,7 +29,6 @@
     actionStates,
     requestOlder,
     handleScrollOffset,
-    onDownwardUserIntent,
     list = $bindable(),
     scrollElement = $bindable(),
   }: Props = $props();
@@ -44,7 +42,7 @@
   {nearEndEnabled}
   onNearEnd={requestOlder}
   onScrollOffset={handleScrollOffset}
-  {onDownwardUserIntent}
+  intentKey={props.intentKey}
   bind:list
   bind:scrollElement
 >

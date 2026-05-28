@@ -154,6 +154,7 @@
       loadingNewer={state.loadingNewer}
       hasOlder={state.hasOlder}
       hasNewer={state.hasNewer}
+      intentKey={runtimeKey}
       olderLoadMode="after-user-scroll"
       onNearEnd={() => olderRequests.requestFromNearEnd()}
       onNearStart={() => runtime?.loadNewer()}

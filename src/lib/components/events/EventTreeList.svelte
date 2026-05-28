@@ -35,7 +35,6 @@
   let scrollElement = $state<HTMLElement>();
   let autoFillPending = false;
   let newerLoadPending = false;
-  let userScrolledDown = false;
   let scrollOffset = $state(0);
   let destroyed = false;
   const fallbackPinOwner = `event-list:${crypto.randomUUID()}`;
@@ -165,7 +164,7 @@
       !canRequestOlder({
         mode: props.olderLoadMode,
         trigger,
-        userScrolledDown,
+        userScrolledDown: trigger === 'scroll',
       })
     )
       return;
@@ -189,7 +188,6 @@
       {actionStates}
       {requestOlder}
       {handleScrollOffset}
-      onDownwardUserIntent={() => (userScrolledDown = true)}
       bind:list
       bind:scrollElement
     />

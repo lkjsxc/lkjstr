@@ -38,7 +38,6 @@
   let currentProfiles: ProfileMap = {};
   let profileRequest = 0;
   let listElement = $state<HTMLElement | undefined>();
-  let hasUserScrolledDown = false;
   let viewState = $state<NotificationViewState>({
     records: [],
     items: [],
@@ -73,18 +72,6 @@
     () => Boolean(viewState.hasOlder && !viewState.loadingOlder),
     { speculative: false },
   );
-
-  $effect(() => {
-    if (!props.visible) return;
-    const el = listElement;
-    if (!el) return;
-    hasUserScrolledDown = el.scrollTop > 0;
-    const onScroll = () => {
-      if (el.scrollTop > 0) hasUserScrolledDown = true;
-    };
-    el.addEventListener('scroll', onScroll, { passive: true });
-    return () => el.removeEventListener('scroll', onScroll);
-  });
 
   $effect(() => {
     if (!props.visible) {
@@ -185,10 +172,8 @@
       loadingOlder={viewState.loadingOlder}
       hasOlder={viewState.hasOlder}
       error={viewState.error}
-      onNearEnd={() => {
-        if (!hasUserScrolledDown) return;
-        void olderRequests.requestFromNearEnd();
-      }}
+      intentKey={runtimeKey}
+      onNearEnd={() => olderRequests.requestFromNearEnd()}
       openProfile={props.openProfile}
       openThread={props.openThread}
       openAuthorContext={props.openAuthorContext}

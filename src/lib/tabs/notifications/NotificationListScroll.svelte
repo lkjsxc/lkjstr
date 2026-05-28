@@ -31,6 +31,7 @@
     loadingOlder: boolean;
     hasOlder: boolean;
     error: string | null;
+    intentKey?: string;
     onNearEnd: () => void | Promise<void>;
     openProfile: (pubkey: string) => void;
     openThread: (eventId: string) => void;
@@ -48,6 +49,7 @@
     loadingOlder,
     hasOlder,
     error,
+    intentKey,
     onNearEnd,
     openProfile,
     openThread,
@@ -55,7 +57,6 @@
   }: Props = $props();
 
   let scrollElement = $state<HTMLElement | undefined>();
-  let userScrolledDown = false;
   let rows = $derived(notificationViewRows(records));
   let footerPhase = $derived(
     footerPhaseFromPaging({
@@ -79,7 +80,7 @@
       !canRequestOlder({
         mode: 'after-user-scroll',
         trigger,
-        userScrolledDown,
+        userScrolledDown: trigger === 'scroll',
       })
     )
       return;
@@ -96,8 +97,8 @@
       scrollerClass="event-list__scroller notification-list-scroller"
       viewportClass="notification-list-scroll"
       {nearEndEnabled}
+      {intentKey}
       onNearEnd={requestOlder}
-      onDownwardUserIntent={() => (userScrolledDown = true)}
       bind:scrollElement
     >
       {#snippet row(item: unknown)}

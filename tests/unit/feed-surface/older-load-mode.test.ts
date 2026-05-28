@@ -23,6 +23,20 @@ describe('older load mode', () => {
     expect(
       canRequestOlder({
         mode: 'after-user-scroll',
+        trigger: 'near-end',
+        userScrolledDown: true,
+      }),
+    ).toBe(false);
+    expect(
+      canRequestOlder({
+        mode: 'after-user-scroll',
+        trigger: 'viewport-fill',
+        userScrolledDown: true,
+      }),
+    ).toBe(false);
+    expect(
+      canRequestOlder({
+        mode: 'after-user-scroll',
         trigger: 'scroll',
         userScrolledDown: true,
       }),
