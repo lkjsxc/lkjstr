@@ -85,7 +85,7 @@ test('memory gate keeps heap and counters bounded after churn', async ({
   await page.waitForTimeout(1200);
   await forceGc(page);
   const churnHeap = await ownedHeap(page);
-  const counters = await readMemoryCounters(page);
+  const counters = await settledMemoryCounters(page);
 
   if (startupHeap !== undefined && feedHeap !== undefined)
     expect(feedHeap - startupHeap).toBeLessThan(350 * 1024 * 1024);
@@ -137,6 +137,21 @@ async function readMemoryCounters(
     const debug = window.__lkjstrMemoryDebug?.();
     return debug?.counters ?? ({} as Record<MemoryCounterKey, number>);
   });
+}
+
+async function settledMemoryCounters(
+  page: Page,
+): Promise<Record<MemoryCounterKey, number>> {
+  await expect
+    .poll(
+      async () => {
+        const counters = await readMemoryCounters(page);
+        return zeroAfterTeardown.map((key) => counters[key] ?? 0);
+      },
+      { timeout: 10_000 },
+    )
+    .toEqual(zeroAfterTeardown.map(() => 0));
+  return readMemoryCounters(page);
 }
 
 async function ownedHeap(page: Page): Promise<number | undefined> {

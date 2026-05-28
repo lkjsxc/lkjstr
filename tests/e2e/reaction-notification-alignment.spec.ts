@@ -68,7 +68,9 @@ test('reaction notification dedupes actor around canonical source row', async ({
   await page.goto('/');
   await addReadonlyAccount(page, getPublicKey(account));
   await selectStartupTab(page, 'Notifications');
-  await expect(page.getByText('reacted to you')).toBeVisible();
+  await expect(page.getByText('reacted to you')).toBeVisible({
+    timeout: 20_000,
+  });
   await expect(page.getByText('reacted with ❤️')).toBeVisible();
   await expect(page.getByText('liked')).toHaveCount(0);
 

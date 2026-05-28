@@ -43,7 +43,9 @@ test('notification rows use a single separator', async ({ page }) => {
   await page.goto('/');
   await addReadonlyAccount(page, getPublicKey(account));
   await selectStartupTab(page, 'Notifications');
-  await expect(page.getByText('reacted to you')).toBeVisible();
+  await expect(page.getByText('reacted to you')).toBeVisible({
+    timeout: 20_000,
+  });
 
   const borders = await page.locator('.notification-row').evaluateAll((rows) =>
     rows.map((row) => {

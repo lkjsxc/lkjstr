@@ -8,7 +8,6 @@ import {
   addReadonlyAccount,
   installSyntheticRelay,
   openCleanWorkspace,
-  waitForSyntheticEvent,
 } from './timeline-relay-helpers';
 import { selectStartupTab } from './workspace-helpers';
 
@@ -59,7 +58,6 @@ test('heavy feed keeps app heap below the smoke limit', async ({ page }) => {
   await page.reload();
   const baselineHeap = await usedHeap(page);
   await selectStartupTab(page, 'Home');
-  await waitForSyntheticEvent(page, events.at(-1)!.id);
   await expect(page.getByText('heavy-feed signed note 0')).toBeVisible({
     timeout: 30000,
   });
