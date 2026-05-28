@@ -16,6 +16,7 @@ export type RelayWindowFeedback =
 
 export type RelayWindowFeedbackInput = {
   readonly complete: boolean;
+  readonly contacted?: boolean;
   readonly hitLimit: boolean;
   readonly underHalfLimit: boolean;
 };
@@ -35,7 +36,8 @@ export type AdaptiveRelayWindow =
 
 export function classifyWindowFeedback(
   input: RelayWindowFeedbackInput,
-): RelayWindowFeedback {
+): RelayWindowFeedback | undefined {
+  if (input.contacted === false) return undefined;
   if (!input.complete) return 'incomplete';
   if (input.hitLimit) return 'limit-hit';
   if (input.underHalfLimit) return 'under-half';

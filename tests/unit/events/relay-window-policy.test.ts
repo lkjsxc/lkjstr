@@ -23,6 +23,14 @@ describe('relay window policy', () => {
   it('classifies adaptive feedback from completion and limit state', () => {
     expect(
       classifyWindowFeedback({
+        contacted: false,
+        complete: true,
+        hitLimit: false,
+        underHalfLimit: true,
+      }),
+    ).toBeUndefined();
+    expect(
+      classifyWindowFeedback({
         complete: false,
         hitLimit: true,
         underHalfLimit: false,

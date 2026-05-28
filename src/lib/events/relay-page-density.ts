@@ -103,5 +103,5 @@ function underHalf(
   limit: number,
   hitLimit: boolean,
 ): boolean {
-  return !hitLimit && observedCount < limit / 2;
+  return !hitLimit && observedCount <= Math.floor(limit / 2);
 }

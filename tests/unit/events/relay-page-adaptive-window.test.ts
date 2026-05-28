@@ -11,15 +11,17 @@ const relay = 'wss://adaptive.example/';
 
 describe('relay page adaptive windows', () => {
   it('continues after sparse non-empty windows until the page fills', async () => {
-    const events = [event('new', 9_000), event('old', 6_000)];
-    const page = await pageFor(events, { pageSize: 2, limit: 10 });
+    const calls: NostrFilter[] = [];
+    const events = [event('new', 9_900), event('old', 8_300)];
+    const page = await pageFor(events, { calls, pageSize: 2, limit: 10 });
     expect(page.items.map((item) => item.event.id)).toEqual(
       events.map((item) => item.id),
     );
+    expect([span(calls[0]!), span(calls[1]!)]).toEqual([720, 1_440]);
   });
 
   it('doubles empty complete windows', async () => {
-    const calls = callsFor();
+    const calls: NostrFilter[] = [];
     await pageFor([], { calls, pageSize: 2, limit: 10 });
     expect(span(calls[0]!)).toBe(720);
     expect(span(calls[1]!)).toBe(1_440);
@@ -29,18 +31,19 @@ describe('relay page adaptive windows', () => {
     const events = [
       event('a', 9_900),
       event('b', 9_800),
-      event('c', 9_200),
-      event('d', 9_100),
+      event('c', 9_700),
+      event('d', 9_200),
+      event('e', 9_100),
     ];
-    const calls = callsFor();
-    await pageFor(events, { calls, pageSize: 10, limit: 4 });
+    const calls: NostrFilter[] = [];
+    await pageFor(events, { calls, pageSize: 10, limit: 5 });
     expect(span(calls[0]!)).toBe(720);
     expect(span(calls[1]!)).toBe(720);
   });
 
   it('splits dense windows immediately', async () => {
     const events = [event('a', 9_900), event('b', 9_800)];
-    const calls = callsFor();
+    const calls: NostrFilter[] = [];
     await pageFor(events, {
       calls,
       pageSize: 10,
@@ -51,7 +54,7 @@ describe('relay page adaptive windows', () => {
 
   it('splits dense full-page windows before returning', async () => {
     const events = [event('a', 9_900), event('b', 9_800), event('c', 9_700)];
-    const calls = callsFor();
+    const calls: NostrFilter[] = [];
     const page = await pageFor(events, { calls, pageSize: 2, limit: 2 });
     expect(page.items).toHaveLength(2);
     expect(calls.length).toBeGreaterThan(1);
@@ -68,7 +71,7 @@ describe('relay page adaptive windows', () => {
   });
 
   it('does not grow incomplete windows', async () => {
-    const calls = callsFor();
+    const calls: NostrFilter[] = [];
     const page = await pageFor([], {
       calls,
       pageSize: 2,
@@ -87,7 +90,7 @@ describe('relay page adaptive windows', () => {
       status: 'available',
       info: { limitation: { max_limit: 1 } },
     });
-    const calls = callsFor();
+    const calls: NostrFilter[] = [];
     const page = await pageFor([event('a', 9_900), event('b', 9_800)], {
       calls,
       pageSize: 5,
@@ -107,7 +110,7 @@ function pageFor(
     readonly complete?: boolean;
   },
 ) {
-  const calls = options.calls ?? callsFor();
+  const calls = options.calls ?? [];
   return readRelayFeedGroups({
     key: `adaptive-${Math.random()}`,
     groups: [group()],
@@ -137,10 +140,6 @@ function subscriptions(
       return detailed(matching, request, complete);
     },
   } as unknown as RelaySubscriptionManager;
-}
-
-function callsFor(): NostrFilter[] {
-  return [];
 }
 
 function detailed(

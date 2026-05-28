@@ -35,6 +35,7 @@ export async function scanRelayFeedGroups(
     const items = pageScanItems(collected, request);
     if (!read.contacted) continue;
     const feedback = classifyWindowFeedback(read);
+    if (!feedback) continue;
     if (read.complete && !read.hitLimit) {
       countRuntime('timeline', 'coverageCompleteSegments');
       countRuntime('timeline', 'completedCoverageWindows');

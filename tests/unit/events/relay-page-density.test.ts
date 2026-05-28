@@ -14,7 +14,7 @@ describe('relay page density', () => {
       expect.objectContaining({
         dense: false,
         hitLimit: false,
-        underHalfLimit: false,
+        underHalfLimit: true,
         observedCount: 1,
       }),
     );
@@ -78,6 +78,37 @@ describe('relay page density', () => {
         hitLimit: false,
         underHalfLimit: true,
         observedCount: 1,
+      }),
+    );
+  });
+
+  it('separates exact-half and above-half feedback', () => {
+    const result = page([
+      receipt('a', 'wss://one/'),
+      receipt('b', 'wss://one/'),
+    ]);
+
+    expect(relayPageDensity(result, [{ kinds: [1], limit: 4 }], 10)).toEqual(
+      expect.objectContaining({
+        underHalfLimit: true,
+        observedCount: 2,
+      }),
+    );
+    expect(
+      relayPageDensity(
+        page([
+          receipt('a', 'wss://one/'),
+          receipt('b', 'wss://one/'),
+          receipt('c', 'wss://one/'),
+        ]),
+        [{ kinds: [1], limit: 5 }],
+        10,
+      ),
+    ).toEqual(
+      expect.objectContaining({
+        hitLimit: false,
+        underHalfLimit: false,
+        observedCount: 3,
       }),
     );
   });
