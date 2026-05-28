@@ -59,11 +59,30 @@ test('profile top stays newest and future notes stay hidden', async ({
   ).toBeVisible({ timeout: 15_000 });
   const scroller = profile.locator('[data-scroll-owner]');
   await expect(scroller).toHaveCount(1);
+
+  const midScroll = await scroller.evaluate((node) => {
+    const target = Math.min(
+      600,
+      Math.max(0, node.scrollHeight - node.clientHeight - 80),
+    );
+    node.scrollTop = target;
+    node.dispatchEvent(new Event('scroll', { bubbles: true }));
+    return {
+      scrollTop: node.scrollTop,
+      maxScrollTop: node.scrollHeight - node.clientHeight,
+    };
+  });
+  expect(midScroll.scrollTop).toBeGreaterThan(0);
+  expect(midScroll.scrollTop).toBeLessThan(midScroll.maxScrollTop);
+
   await scroller.evaluate((node) => {
     node.scrollTop = 0;
     node.dispatchEvent(new Event('scroll', { bubbles: true }));
   });
-  await page.waitForTimeout(500);
+  await expect
+    .poll(() => scroller.evaluate((node) => node.scrollTop))
+    .toBe(0);
+  await page.waitForTimeout(1_500);
 
   await expect(profile.getByText('profile stability note 0')).toBeVisible();
   await expect(profile.getByText('profile stability note 239')).toHaveCount(0);
