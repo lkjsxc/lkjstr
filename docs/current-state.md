@@ -28,6 +28,9 @@ linked product, protocol, architecture, and operations pages.
   support them.
 - Home, Global, Search, and Custom Request consume progressive relay read
   snapshots so partial rows can render before final relay coverage.
+- Home, Global, and Profile feed scans use adaptive grouped relay windows:
+  complete under-half windows grow, balanced windows keep span, limit-hit
+  windows split, and incomplete windows keep conservative history frontiers.
 
 ## Ownership
 
@@ -80,6 +83,9 @@ linked product, protocol, architecture, and operations pages.
 - Feed rows are display-bound before presentation: future events and rows
   outside local `since`, exclusive `until`, `before`, or `after` bounds stay out
   of visible feed results.
+- Home, Global, and Profile initial, older, and newer feed pages use adaptive
+  grouped scans. Search, Custom Request, Author Context, Thread reply pages,
+  metadata, follow-list, and id-batch lookups keep their exact request shapes.
 - Feed correctness contracts live under
   [architecture/feeds](architecture/feeds/README.md): canonical ordering,
   merge-by-id reducer, per-tab page cursors, and independent notification

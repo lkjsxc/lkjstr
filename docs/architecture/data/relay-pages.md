@@ -33,23 +33,35 @@ preserving where each real event was seen.
   unix time zero so newer relay pages can fetch every same-second candidate.
 - Raw reads remain valid for exact id lookup, latest replaceable selection, and
   other cases where caller-specific ordering is required.
-- Home, Profile, and Global initial or historical relay reads use an adaptive
-  segment queue. The minimum span is `1` second, initial span is `12` minutes,
-  maximum grown span is `180` days, a page processes at most `96` segments, and
-  split depth is capped at `32`.
-- Sparse or empty adaptive scans grow by doubling the previous span after the
-  initial `12` minute window.
-- Complete sparse or empty segments may grow the next span. A segment only
-  advances relay history when every contacted relay proves EOSE completion
-  below the relay-effective filter cap.
+- Home, Profile, and Global initial, older, and newer relay reads use an
+  adaptive segment queue. The minimum span is `1` second, initial span is `12`
+  minutes, maximum grown span is `180` days, a page processes at most `96`
+  segments, and split depth is capped at `32`.
+- Adaptive scans classify every contacted complete window as `limit-hit`,
+  `under-half`, or `balanced`. Incomplete windows are separate and never prove
+  sparse history.
+- `limit-hit` means at least one relay reached its relay-effective filter cap.
+  Splittable windows split immediately, with older scans processing the newer
+  half first and newer scans processing the older half first. Unsplittable
+  limit-hit windows become unresolved terminal frontiers.
+- `under-half` means every contacted relay completed below half of its
+  relay-effective cap. The next adjacent window doubles the current span up to
+  `180` days.
+- `balanced` means every contacted relay completed without hitting a cap, but
+  at least one relay returned half or more of its relay-effective cap. The next
+  adjacent window keeps the current span.
+- A segment only advances relay history when every contacted relay proves EOSE
+  completion below the relay-effective filter cap.
 - Grouped feed scans own their relay `since` and `until` bounds at dispatch
   time. A caller filter builder may add tighter bounds, but omitting scan bounds
   must not produce an unbounded feed request.
 - Newer catch-up scans also start at the newest bounded window and move
   downward toward the `after` cursor so the newest matching relay events return
   first.
-- Dense segments retry with higher limits up to `4x`, then split. Older scans
-  split the newer half first. Dense minimum-span segments become unresolved.
+- Complete limit-hit segments split instead of inflating the requested filter
+  limits. Cursor-slack retries are still bounded and only apply when the read
+  did not hit the relay-effective limit. Minimum-span limit-hit segments become
+  unresolved.
 - Relay reads use a bounded event cap computed from the sum of relay-effective
   filter limits, contacted relay count, and visible page size, then capped by
   the subscription manager safety ceiling.
@@ -65,10 +77,11 @@ preserving where each real event was seen.
   event.
 - Only detailed relay statuses with EOSE and no terminal failure prove a grouped
   feed scan window complete. Missing detailed status is incomplete.
-- Density is decided per relay and per relay-shaped request budget. Aggregate
-  counts across relays do not make a segment dense by themselves.
-- `limit` is always a positive safety cap. A relay-effective limit or
-  per-relay budget saturation marks more relay history possible.
+- Density feedback is decided per relay and per relay-shaped request budget.
+  Aggregate counts across relays do not create density by themselves.
+- `limit` is always a positive safety cap. Relay-effective limit saturation
+  marks more relay history possible; under-half and balanced complete windows
+  may continue adjacent scans without splitting.
 - Grouped scan results expose `receivedItems` for cache writes. Visible page
   semantics still use sliced `items`.
 

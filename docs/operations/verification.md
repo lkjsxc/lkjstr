@@ -88,16 +88,15 @@ Focused relay paging changes should also run:
 
 ```sh
 pnpm check:repo
-pnpm vitest run tests/unit/events/relay-page-segments.test.ts tests/unit/events/relay-page-density.test.ts
-pnpm vitest run tests/unit/events/relay-page-scan.test.ts tests/unit/events/relay-page-scan-hardening.test.ts tests/unit/events/relay-page-scan-cursors.test.ts
+pnpm vitest run tests/unit/events/relay-page-segments.test.ts tests/unit/events/relay-window-policy.test.ts tests/unit/events/relay-page-density.test.ts tests/unit/events/relay-page-scan.test.ts tests/unit/events/relay-page-scan-hardening.test.ts tests/unit/events/relay-page-scan-cursors.test.ts tests/unit/events/relay-page-adaptive-window.test.ts
 pnpm vitest run tests/unit/timeline/timeline-newer-relay-pages.test.ts tests/unit/profile/profile-store.test.ts tests/unit/profile/profile-runtime-paging.test.ts
-pnpm verify
+pnpm verify:quiet
 docker compose -f docker-compose.yml config
-docker compose -f docker-compose.yml build app verify e2e cloudflare app-smoke
-docker compose -f docker-compose.yml run --rm verify
-docker compose -f docker-compose.yml run --rm e2e
-docker compose -f docker-compose.yml run --rm cloudflare
-docker compose -f docker-compose.yml run --rm app-smoke
+docker compose --progress quiet -f docker-compose.yml build app verify e2e cloudflare app-smoke
+docker compose --progress quiet -f docker-compose.yml run --rm verify
+docker compose --progress quiet -f docker-compose.yml run --rm e2e
+docker compose --progress quiet -f docker-compose.yml run --rm cloudflare
+docker compose --progress quiet -f docker-compose.yml run --rm app-smoke
 ```
 
 Relay runtime hardening changes use these focused slices:
