@@ -6,6 +6,9 @@ import {
   notificationOlderPageLookbackSeconds,
   olderNotificationCursor,
 } from '../../../src/lib/notifications/notification-paging';
+import { loadOlderNotificationRelayPage } from '../../../src/lib/notifications/notification-runtime-older';
+import type { ReadPageRelayStatus } from '../../../src/lib/relays/read-page-status';
+import { stubOrchestrator } from '../relays/orchestration/orchestrator-mock';
 
 describe('notification paging cursors', () => {
   it('initialNotificationCursor includes since and until', () => {
@@ -33,4 +36,96 @@ describe('notification paging cursors', () => {
     expect(isWithinNotificationCursor(9, cursor)).toBe(false);
     expect(isWithinNotificationCursor(21, cursor)).toBe(false);
   });
+
+  it('advances sparse complete older windows without ending history', async () => {
+    const result = await loadOlderNotificationRelayPage({
+      accountPubkey: 'a'.repeat(64),
+      relays: ['wss://relay.example/'],
+      owner: 'notif-test',
+      pageSize: 30,
+      olderCursorCreatedAt: 2_000,
+      subscriptions: stubOrchestrator({
+        readPageByIntent: async () => ({
+          events: [],
+          statuses: [completeStatus('wss://relay.example/')],
+        }),
+      }),
+      signal: new AbortController().signal,
+      active: () => true,
+      run: 1,
+      baseRecords: [],
+      windowLimit: 180,
+    });
+
+    expect(result.olderCursorCreatedAt).toBe(1_280);
+    expect(result.hasOlder).toBe(true);
+    expect(result.historyExhaustion).toBe('probing');
+  });
+
+  it('proves exhaustion only at lower bound with complete reads', async () => {
+    const result = await loadOlderNotificationRelayPage({
+      accountPubkey: 'b'.repeat(64),
+      relays: ['wss://relay.example/'],
+      owner: 'notif-test',
+      pageSize: 30,
+      olderCursorCreatedAt: 100,
+      subscriptions: stubOrchestrator({
+        readPageByIntent: async () => ({
+          events: [],
+          statuses: [completeStatus('wss://relay.example/')],
+        }),
+      }),
+      signal: new AbortController().signal,
+      active: () => true,
+      run: 1,
+      baseRecords: [],
+      windowLimit: 180,
+    });
+
+    expect(result.olderCursorCreatedAt).toBe(0);
+    expect(result.hasOlder).toBe(false);
+    expect(result.historyExhaustion).toBe('proven');
+  });
+
+  it('keeps incomplete lower-bound reads retryable', async () => {
+    const result = await loadOlderNotificationRelayPage({
+      accountPubkey: 'c'.repeat(64),
+      relays: ['wss://relay.example/'],
+      owner: 'notif-test',
+      pageSize: 30,
+      olderCursorCreatedAt: 100,
+      subscriptions: stubOrchestrator({
+        readPageByIntent: async () => ({
+          events: [],
+          statuses: [
+            { ...completeStatus('wss://relay.example/'), timeout: true },
+          ],
+        }),
+      }),
+      signal: new AbortController().signal,
+      active: () => true,
+      run: 1,
+      baseRecords: [],
+      windowLimit: 180,
+    });
+
+    expect(result.olderCursorCreatedAt).toBe(100);
+    expect(result.hasOlder).toBe(true);
+    expect(result.historyExhaustion).toBe('unknown');
+  });
 });
+
+function completeStatus(relay: string): ReadPageRelayStatus {
+  return {
+    relay,
+    eose: true,
+    timeout: false,
+    closed: false,
+    auth: false,
+    socketClosed: false,
+    socketError: false,
+    durationMs: 1,
+    candidateCount: 0,
+    finalCount: 0,
+  };
+}

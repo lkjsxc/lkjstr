@@ -59,4 +59,31 @@ describe('older load mode', () => {
       }),
     ).toBe(true);
   });
+
+  it('fills short feeds before requiring user scroll', () => {
+    expect(
+      canRequestOlder({
+        mode: 'fill-then-user-scroll',
+        trigger: 'viewport-fill',
+        userScrolledDown: false,
+        scrollable: false,
+      }),
+    ).toBe(true);
+    expect(
+      canRequestOlder({
+        mode: 'fill-then-user-scroll',
+        trigger: 'near-end',
+        userScrolledDown: false,
+        scrollable: true,
+      }),
+    ).toBe(false);
+    expect(
+      canRequestOlder({
+        mode: 'fill-then-user-scroll',
+        trigger: 'scroll',
+        userScrolledDown: true,
+        scrollable: true,
+      }),
+    ).toBe(true);
+  });
 });

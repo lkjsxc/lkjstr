@@ -29,6 +29,7 @@ describe('footerPhaseFromPaging', () => {
       footerPhaseFromPaging({
         loadingOlder: false,
         hasOlder: false,
+        historyExhaustion: 'proven',
         rowCount: 2,
       }),
     ).toBe('end');

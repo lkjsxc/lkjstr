@@ -16,6 +16,7 @@ describe('event tree list rows', () => {
       [item('a'), item('b')],
       false,
       true,
+      'unknown',
       false,
       '',
     );
@@ -29,6 +30,7 @@ describe('event tree list rows', () => {
       [item('a')],
       false,
       false,
+      'proven',
       false,
       '',
     );
@@ -47,6 +49,7 @@ describe('event tree list rows', () => {
       [item('a')],
       false,
       false,
+      'proven',
       false,
       '',
     );
@@ -60,6 +63,7 @@ describe('event tree list rows', () => {
       [item('a'), item('b')],
       false,
       false,
+      'proven',
       false,
       '',
     );
@@ -73,6 +77,7 @@ describe('event tree list rows', () => {
       [],
       false,
       true,
+      'unknown',
       true,
       'Nothing here.',
     );
@@ -86,6 +91,7 @@ describe('event tree list rows', () => {
       [],
       false,
       true,
+      'unknown',
       false,
       'Nothing here.',
     );
@@ -94,7 +100,15 @@ describe('event tree list rows', () => {
   });
 
   it('uses stable loading older row keys', () => {
-    const rows = buildViewRows([], [item('a')], true, true, false, '');
+    const rows = buildViewRows(
+      [],
+      [item('a')],
+      true,
+      true,
+      'unknown',
+      false,
+      '',
+    );
     expect(rows.map(viewRowKey)).toEqual(['a', 'event-list-loading-older']);
   });
 });

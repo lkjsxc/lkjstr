@@ -8,12 +8,16 @@ describe('mergeTabSnapshotPayload', () => {
       {
         oldestCursor: { createdAt: 5, id: 'x' },
         hasOlder: false,
+        historyExhaustion: 'proven',
+        anchorKey: 'row:x',
       },
     );
     expect(merged.kind).toBe('feed');
     if (merged.kind === 'feed') {
       expect(merged.oldestCursor?.id).toBe('x');
       expect(merged.hasOlder).toBe(false);
+      expect(merged.historyExhaustion).toBe('proven');
+      expect(merged.anchorKey).toBe('row:x');
       expect(merged.scrollTop).toBe(10);
     }
   });

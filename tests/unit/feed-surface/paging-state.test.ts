@@ -17,8 +17,20 @@ describe('feed paging phase', () => {
       feedPagingPhase({
         loadingOlder: false,
         hasOlder: false,
+        historyExhaustion: 'proven',
         rowCount: 2,
       }),
     ).toBe('end');
+  });
+
+  it('does not report terminal history without proof', () => {
+    expect(
+      feedPagingPhase({
+        loadingOlder: false,
+        hasOlder: false,
+        historyExhaustion: 'unknown',
+        rowCount: 2,
+      }),
+    ).toBe('idle');
   });
 });

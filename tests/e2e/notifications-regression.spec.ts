@@ -11,7 +11,7 @@ import {
 } from './timeline-relay-helpers';
 import { selectStartupTab } from './workspace-helpers';
 
-test('notifications do not auto-load older on initial settle', async ({
+test('notifications viewport-fill older history when underfilled', async ({
   page,
 }) => {
   const activeKey = generateSecretKey();
@@ -24,7 +24,7 @@ test('notifications do not auto-load older on initial settle', async ({
   const oldCreatedAt = now - 14 * 60;
   const newCreatedAt = now - 4 * 60;
 
-  const oldEvents = Array.from({ length: 5 }, (_, i) =>
+  const oldEvents = Array.from({ length: 4 }, (_, i) =>
     finalizeEvent(
       {
         created_at: oldCreatedAt + i,
@@ -35,7 +35,7 @@ test('notifications do not auto-load older on initial settle', async ({
       authorKey,
     ),
   );
-  const newEvents = Array.from({ length: 5 }, (_, i) =>
+  const newEvents = Array.from({ length: 1 }, (_, i) =>
     finalizeEvent(
       {
         created_at: newCreatedAt + i,
@@ -52,59 +52,15 @@ test('notifications do not auto-load older on initial settle', async ({
   await addReadonlyAccount(page, active);
   await selectStartupTab(page, 'Notifications');
 
-  // The list is newest-first, so the highest index is near the top initially.
-  await expect(page.getByText('new-notification-4')).toBeVisible({
+  await expect(page.getByText('new-notification-0')).toBeVisible({
     timeout: 15_000,
   });
+  await expect(
+    page.getByRole('button', { name: 'Restore scroll position' }).first(),
+  ).toBeVisible();
 
-  await expect(page.getByText('old-notification-4')).not.toBeVisible();
-
-  const countMentionReqs = (accountPubkey: string): number =>
-    (window.__syntheticSockets ?? []).reduce<number>((count, socket) => {
-      const record = socket as { sent?: string[] };
-      for (const raw of record.sent ?? []) {
-        const msg = JSON.parse(raw) as unknown[];
-        if (msg[0] !== 'REQ') continue;
-        const filter = (msg[2] ?? {}) as {
-          kinds?: number[];
-          '#p'?: string[];
-        };
-        if (filter.kinds?.includes(1) && filter['#p']?.includes(accountPubkey))
-          return count + 1;
-      }
-      return count;
-    }, 0);
-
-  const initialReqCount = await page.evaluate(countMentionReqs, active);
-
-  // Give the runtime a moment to (incorrectly) auto-fill older pages.
-  await page.waitForTimeout(1500);
-
-  const afterSettleReqCount = await page.evaluate(countMentionReqs, active);
-
-  expect(afterSettleReqCount).toBe(initialReqCount);
-
-  const scroller = page.locator('.notification-list-scroller').first();
-  await scroller.hover();
-  await scroller.evaluate((el) => {
-    el.dispatchEvent(new WheelEvent('wheel', { deltaY: 2400, bubbles: true }));
-    el.scrollTop = el.scrollHeight;
-    el.dispatchEvent(new Event('scroll'));
-  });
-
-  // Some browsers/UI layouts also attach scroll ownership to the viewport;
-  // poke it too to ensure the runtime sees scroll intent.
-  const viewport = page.locator('.notification-list-scroll').first();
-  await viewport.evaluate((el) => {
-    el.dispatchEvent(new WheelEvent('wheel', { deltaY: 2400, bubbles: true }));
-    el.scrollTop = el.scrollHeight;
-    el.dispatchEvent(new Event('scroll'));
-  });
-
-  // Also trigger with wheel to ensure near-end observers update.
-  await page.mouse.wheel(0, 2400);
-
-  await expect(page.getByText('old-notification-4')).toBeVisible({
+  await expect(page.getByText('old-notification-3')).toBeVisible({
     timeout: 15_000,
   });
+  await expect(page.getByText('End of known history.')).not.toBeVisible();
 });
