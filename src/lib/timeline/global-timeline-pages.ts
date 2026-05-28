@@ -4,6 +4,7 @@ import { queryFeed, upsertEvent } from '../events/repository';
 import { readTimelinePageByIntent } from '../relays/orchestration/page-reads';
 import type { FeedCursorPoint } from '../events/types';
 import type { SubscriptionOrchestrator } from '../relays/orchestration/orchestrator';
+import type { OnProgressiveReadSnapshot } from '../relays/progressive-read-types';
 import type { TimelineItem } from './timeline-store';
 
 type Request = {
@@ -13,23 +14,28 @@ type Request = {
   readonly pageSize: number;
   readonly subscriptions: SubscriptionOrchestrator;
   readonly signal?: AbortSignal;
+  readonly onSnapshot?: OnProgressiveReadSnapshot;
 };
 
 export async function loadInitialGlobalPage(
   request: Omit<Request, 'items'>,
 ): Promise<GlobalPageResult> {
-  const relayPage = await readTimelinePageByIntent(request.subscriptions, {
-    surface: 'global',
-    owner: request.owner,
-    phase: 'bootstrap',
-    selectedRelays: request.relays,
-    authors: [],
-    pageSize: request.pageSize,
-    direction: 'initial',
-    filters: (_group, bounds) => [
-      { kinds: feedDisplayKinds, ...bounds, limit: request.pageSize },
-    ],
-  });
+  const relayPage = await readTimelinePageByIntent(
+    request.subscriptions,
+    {
+      surface: 'global',
+      owner: request.owner,
+      phase: 'bootstrap',
+      selectedRelays: request.relays,
+      authors: [],
+      pageSize: request.pageSize,
+      direction: 'initial',
+      filters: (_group, bounds) => [
+        { kinds: feedDisplayKinds, ...bounds, limit: request.pageSize },
+      ],
+    },
+    { signal: request.signal, onSnapshot: request.onSnapshot },
+  );
   await Promise.all(
     relayPage.items.map((item) => upsertEvent(item.event, item.relays)),
   );
@@ -49,19 +55,23 @@ export async function loadOlderGlobalPage(
     before: request.cursor,
     limit: request.pageSize,
   });
-  const relayPage = await readTimelinePageByIntent(request.subscriptions, {
-    surface: 'global',
-    owner: request.owner,
-    phase: 'page',
-    selectedRelays: request.relays,
-    authors: [],
-    pageSize: request.pageSize,
-    direction: 'older',
-    cursor: request.cursor,
-    filters: (_group, bounds) => [
-      { kinds: feedDisplayKinds, ...bounds, limit: request.pageSize },
-    ],
-  });
+  const relayPage = await readTimelinePageByIntent(
+    request.subscriptions,
+    {
+      surface: 'global',
+      owner: request.owner,
+      phase: 'page',
+      selectedRelays: request.relays,
+      authors: [],
+      pageSize: request.pageSize,
+      direction: 'older',
+      cursor: request.cursor,
+      filters: (_group, bounds) => [
+        { kinds: feedDisplayKinds, ...bounds, limit: request.pageSize },
+      ],
+    },
+    { signal: request.signal, onSnapshot: request.onSnapshot },
+  );
   await Promise.all(
     relayPage.items.map((item) => upsertEvent(item.event, item.relays)),
   );
@@ -84,19 +94,23 @@ export async function loadNewerGlobalPage(
     after: request.cursor,
     limit: request.pageSize,
   });
-  const relayPage = await readTimelinePageByIntent(request.subscriptions, {
-    surface: 'global',
-    owner: request.owner,
-    phase: 'page',
-    selectedRelays: request.relays,
-    authors: [],
-    pageSize: request.pageSize,
-    direction: 'newer',
-    cursor: request.cursor,
-    filters: (_group, bounds) => [
-      { kinds: feedDisplayKinds, ...bounds, limit: request.pageSize },
-    ],
-  });
+  const relayPage = await readTimelinePageByIntent(
+    request.subscriptions,
+    {
+      surface: 'global',
+      owner: request.owner,
+      phase: 'page',
+      selectedRelays: request.relays,
+      authors: [],
+      pageSize: request.pageSize,
+      direction: 'newer',
+      cursor: request.cursor,
+      filters: (_group, bounds) => [
+        { kinds: feedDisplayKinds, ...bounds, limit: request.pageSize },
+      ],
+    },
+    { signal: request.signal, onSnapshot: request.onSnapshot },
+  );
   await Promise.all(
     relayPage.items.map((item) => upsertEvent(item.event, item.relays)),
   );

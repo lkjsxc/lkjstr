@@ -3,6 +3,7 @@ import { feedWindowSize } from '../events/feed-window';
 import type { FeedCursorPoint } from '../events/types';
 import type { FeedTabSnapshotSeed } from '../workspace/tab-snapshot';
 import type { RelayPool } from '../relays/relay-pool';
+import type { ProgressiveReadStatus } from '../relays/progressive-read-types';
 import type { SubscriptionOrchestrator } from '../relays/orchestration/orchestrator';
 import type { RelayDiagnostic, RelaySnapshot } from '../relays/types';
 import type { TimelineProfiles } from './timeline-profiles';
@@ -35,6 +36,8 @@ export type TimelineState = {
   readonly hasNewer: boolean;
   readonly oldestCursor?: FeedCursorPoint;
   readonly newestCursor?: FeedCursorPoint;
+  readonly relayReadStatus?: ProgressiveReadStatus;
+  readonly relayReadStatusText?: string;
 };
 
 export type TimelineRuntimeOptions = {
@@ -123,6 +126,8 @@ export function emptyState(): TimelineState {
     hasNewer: false,
     oldestCursor: undefined,
     newestCursor: undefined,
+    relayReadStatus: 'idle',
+    relayReadStatusText: '',
   };
 }
 

@@ -1,5 +1,6 @@
 import type { NostrFilter } from '../protocol';
 import type { PoolEvent } from '../relays/relay-pool';
+import type { OnProgressiveReadSnapshot } from '../relays/progressive-read-types';
 import type { SubscriptionOrchestrator } from '../relays/orchestration/orchestrator';
 
 export type RelayReadSubscriptions = Pick<
@@ -33,6 +34,7 @@ export type RelayPageRequest = {
   readonly until?: number;
   readonly pageSize: number;
   readonly signal?: AbortSignal;
+  readonly onSnapshot?: OnProgressiveReadSnapshot;
   readonly purpose?:
     | 'feed'
     | 'metadata'
@@ -88,6 +90,7 @@ export async function readRelayPage(
             request.pageSize,
           ),
           signal: request.signal,
+          onSnapshot: request.onSnapshot,
         },
       ),
     ),
@@ -105,6 +108,7 @@ export async function readRelayFeedPage(
       boundaryFilter(filter, request.before, request.after),
     ),
     signal: request.signal,
+    onSnapshot: request.onSnapshot,
   });
   return sortFeedEvents(mergePoolEvents(events))
     .filter((item) =>

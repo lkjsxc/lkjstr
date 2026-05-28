@@ -26,6 +26,8 @@ linked product, protocol, architecture, and operations pages.
 - Relay AUTH is diagnostic-only.
 - Search uses cached matches plus NIP-50 relay filters when selected relays
   support them.
+- Home, Global, Search, and Custom Request consume progressive relay read
+  snapshots so partial rows can render before final relay coverage.
 
 ## Ownership
 
@@ -78,6 +80,8 @@ linked product, protocol, architecture, and operations pages.
   [architecture/feeds](architecture/feeds/README.md): canonical ordering,
   merge-by-id reducer, per-tab page cursors, and independent notification
   filters.
+- Progressive relay rendering is documented in
+  [architecture/network/progressive-relay-rendering.md](architecture/network/progressive-relay-rendering.md).
 - Virtual event lists use `EventTreeList` on Home, Global, Profile, Thread,
   Search, and Custom Request. Profile summary rows and note rows share the same
   `FeedScrollSurface` owner. Notifications uses Virtua flat listing with the

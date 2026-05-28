@@ -7,6 +7,7 @@ import { compareEventsDesc } from '$lib/protocol';
 import { relayMaySupportNip50 } from '$lib/relays/relay-info';
 import type { SubscriptionOrchestrator } from '$lib/relays/orchestration/orchestrator';
 import { pageIntentSemanticKey } from '$lib/relays/orchestration/page-reads';
+import type { OnProgressiveReadSnapshot } from '$lib/relays/progressive-read-types';
 
 export type SearchPageRequest = {
   readonly query: string;
@@ -15,6 +16,7 @@ export type SearchPageRequest = {
   readonly subscriptions: SubscriptionOrchestrator;
   readonly limit: number;
   readonly before?: FeedCursorPoint;
+  readonly onSnapshot?: OnProgressiveReadSnapshot;
 };
 
 export async function searchPage(
@@ -63,6 +65,7 @@ async function relaySearch(
     pageSize: request.limit + 1,
     subscriptions: request.subscriptions,
     purpose: 'search',
+    onSnapshot: request.onSnapshot,
   });
   await Promise.all(
     relayItems.map((item) => upsertEvent(item.event, item.relays)),

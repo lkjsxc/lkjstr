@@ -12,6 +12,10 @@
   import { pageIntentSemanticKey } from '$lib/relays/orchestration/page-reads';
   import { timelineRelays } from '$lib/timeline/timeline-subscription';
   import { loadTimelineProfiles } from '$lib/timeline/timeline-profiles';
+  import {
+    feedEventsFromProgressiveSnapshot,
+    progressiveStatusText,
+  } from '$lib/timeline/timeline-progressive';
   import { registerTabRuntimeSnapshot } from '$lib/workspace/tab-runtime-registry';
   import type { TabSnapshotPayload } from '$lib/workspace/tab-snapshot';
 
@@ -31,6 +35,7 @@
   let profiles = $state<Record<string, ProfileSummary>>({});
   let loading = $state(false);
   let error = $state('');
+  let relayStatusText = $state('');
   let ran = $state(false);
   let requestId = 0;
   let destroyed = false;
@@ -72,6 +77,7 @@
 
   async function run(): Promise<void> {
     loading = true;
+    relayStatusText = '';
     error = '';
     ran = true;
     try {
@@ -95,12 +101,19 @@
         pageSize: feedPageSize,
         subscriptions,
         purpose: 'feed',
+        onSnapshot: (snapshot) => {
+          if (destroyed) return;
+          if (snapshot.events.length > 0)
+            items = feedEventsFromProgressiveSnapshot(snapshot);
+          relayStatusText = progressiveStatusText(snapshot.status);
+        },
       });
       await Promise.all(
         events.map((item) => upsertEvent(item.event, item.relays)),
       );
       if (destroyed) return;
       items = events;
+      relayStatusText = '';
     } catch (err) {
       if (destroyed) return;
       error = err instanceof Error ? err.message : 'Request failed.';
@@ -130,6 +143,7 @@
     {profiles}
     relaySets={props.relaySets}
     {loading}
+    {relayStatusText}
     emptyText={ran ? 'No events matched this request.' : 'Enter request JSON.'}
     openProfile={props.openProfile}
     openThread={props.openThread}

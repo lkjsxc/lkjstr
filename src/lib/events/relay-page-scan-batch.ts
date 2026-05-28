@@ -51,6 +51,7 @@ export async function readScanBatch(
           request.pageSize,
         ),
         signal: request.signal,
+        onSnapshot: request.onSnapshot,
       },
     );
     const complete = statusesComplete(result.statuses);

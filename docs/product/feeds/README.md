@@ -23,3 +23,5 @@ Feed surface docs define relay-backed read tabs and action-opened read tabs.
   tile.
 - Cached rows are safe to render when persisted arrays or optional fields are
   absent.
+- Feed tabs may show partial relay rows while slower relays continue. Empty
+  states mean terminal coverage, not merely "no fast relay answered yet."

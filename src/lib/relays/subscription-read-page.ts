@@ -21,6 +21,8 @@ import {
   type RelayReadLeaseState,
 } from './relay-read-leases';
 import { requestSubscriptionDescriptor } from './subscription-descriptor';
+import { createProgressiveReadPublisher } from './progressive-read-publisher';
+import { readPageResult } from './subscription-read-result';
 
 export type ReadPageState = RelayReadLeaseState;
 
@@ -52,6 +54,24 @@ export async function executeReadPage(
   const requestKey = subscriptionKey(effective);
   const baseSubId = relayFacingSubId(effective.key);
   const subId = leaseRelayReadSubId(state, baseSubId, requestKey);
+  const progressive = createProgressiveReadPublisher({
+    readId: requestKey,
+    surface: effective.purpose,
+    relays,
+    startedAt,
+    onSnapshot: options.onSnapshot,
+  });
+  const statuses = () =>
+    readStatuses({
+      relays: effective.relays,
+      subId,
+      events,
+      snapshots: lastSnapshots,
+      timedOut,
+      aborted,
+      eventLimitReached,
+      durationMs: Date.now() - startedAt,
+    });
   let release: () => void = () => undefined;
   let offEvent: () => void = () => undefined;
   let offState: () => void = () => undefined;
@@ -64,6 +84,7 @@ export async function executeReadPage(
     close();
   };
   try {
+    progressive.emit('start');
     try {
       release = await readLimiter.acquire(
         limitedReadRelays(relays),
@@ -72,20 +93,27 @@ export async function executeReadPage(
     } catch (error) {
       if ((error as Error).name !== 'AbortError') throw error;
       aborted = true;
-      return readResult(
-        effective,
+      progressive.apply({ type: 'cancel' }, 'cancel');
+      return readPageResult({
+        request: effective,
         subId,
         events,
-        lastSnapshots,
+        snapshots: lastSnapshots,
         timedOut,
         aborted,
         eventLimitReached,
         startedAt,
-      );
+        snapshot: progressive.snapshot('final'),
+      });
     }
     offEvent = pool.onEvent((event) => {
       if (event.subId !== subId || eventLimitReached) return;
-      events.push({ ...event, subId: effective.key });
+      const received = { ...event, subId: effective.key };
+      events.push(received);
+      progressive.apply(
+        { type: 'relay-events', events: [received] },
+        'relay-events',
+      );
       if (events.length < maxEvents) return;
       eventLimitReached = true;
       finishRead?.();
@@ -113,6 +141,10 @@ export async function executeReadPage(
       if (!done) {
         offState = pool.onState((snapshots) => {
           lastSnapshots = snapshots;
+          progressive.apply(
+            { type: 'relay-statuses', statuses: statuses() },
+            'relay-state',
+          );
           if (readPageComplete(snapshots, relays, subId)) finish();
         });
         close = pool.subscribe(relays, subId, effective.filters, {
@@ -124,16 +156,21 @@ export async function executeReadPage(
       }
     });
     finishRead = undefined;
-    return readResult(
-      effective,
+    progressive.apply(
+      aborted ? { type: 'cancel' } : { type: 'finalize', statuses: statuses() },
+      aborted ? 'cancel' : 'final',
+    );
+    return readPageResult({
+      request: effective,
       subId,
       events,
-      lastSnapshots,
+      snapshots: lastSnapshots,
       timedOut,
       aborted,
       eventLimitReached,
       startedAt,
-    );
+      snapshot: progressive.snapshot('final'),
+    });
   } finally {
     finishRead = undefined;
     offEvent();
@@ -141,29 +178,4 @@ export async function executeReadPage(
     releaseRelayReadSubId(state, subId);
     release();
   }
-}
-
-function readResult(
-  request: RelayReadRequest,
-  subId: string,
-  events: readonly PoolEvent[],
-  snapshots: readonly RelaySnapshot[],
-  timedOut: boolean,
-  aborted: boolean,
-  eventLimitReached: boolean,
-  startedAt: number,
-): ReadPageResult {
-  return {
-    events: [...events],
-    statuses: readStatuses({
-      relays: request.relays,
-      subId,
-      events,
-      snapshots,
-      timedOut,
-      aborted,
-      eventLimitReached,
-      durationMs: Date.now() - startedAt,
-    }),
-  };
 }

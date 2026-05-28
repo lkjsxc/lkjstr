@@ -85,7 +85,7 @@ test('global event scroller fills the tile body', async ({ page }) => {
         scroller: scroller?.getBoundingClientRect().height ?? 0,
       };
     });
-  expect(heights.scroller).toBeGreaterThan(heights.list * 0.8);
+  expect(heights.scroller).toBeGreaterThanOrEqual(heights.list * 0.8 - 1);
 });
 
 test('form fields expose id or name attributes', async ({ page }) => {

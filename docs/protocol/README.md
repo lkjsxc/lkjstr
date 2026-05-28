@@ -15,3 +15,10 @@ Protocol docs define Nostr event, filter, relay, and NIP contracts.
 - [nip-support.md](nip-support.md): supported NIP surface.
 - [relays.md](relays.md): relay URL and set behavior.
 - [zaps.md](zaps.md): NIP-57 invoice handoff.
+
+## Progressive Reads
+
+Relay reads follow NIP-01 `EVENT`, `EOSE`, and `CLOSED` evidence. NIP-50 search
+results are merged by event time with local cache results; relay relevance order
+is not preserved in the combined feed. NIP-65 relay-list metadata can expand
+targeted routes while selected read relays remain the fallback.

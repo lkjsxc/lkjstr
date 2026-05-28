@@ -45,12 +45,15 @@
   let stripElement: HTMLElement | undefined;
   let fadeLeft = $state(false);
   let fadeRight = $state(false);
-  const dragDeps: StripDragDeps = {
-    paneId,
-    tabCount: () => group.tabIds.length,
-    moveTab,
-    dragState,
-  };
+
+  function currentDragDeps(): StripDragDeps {
+    return {
+      paneId,
+      tabCount: () => group.tabIds.length,
+      moveTab,
+      dragState,
+    };
+  }
 
   function dropTab(event: DragEvent, targetIndex: number): void {
     event.preventDefault();
@@ -60,7 +63,7 @@
   }
 
   function pointerDown(event: PointerEvent, tab: WorkspaceTab): void {
-    stripDragPointerDown(drag, dragDeps, event, tab.id, tab.title);
+    stripDragPointerDown(drag, currentDragDeps(), event, tab.id, tab.title);
   }
 
   function updateFade(): void {
@@ -79,7 +82,8 @@
   });
 
   onDestroy(() => {
-    if (typeof document !== 'undefined') stripDragClear(drag, dragDeps);
+    if (typeof document !== 'undefined')
+      stripDragClear(drag, currentDragDeps());
   });
 </script>
 

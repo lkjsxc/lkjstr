@@ -33,6 +33,7 @@ type Entry = SubscriptionEntry;
 type InFlightRead = {
   readonly promise: Promise<ReadPageResult>;
   readonly aborts: SharedAbortController;
+  readonly listeners: Set<NonNullable<ReadPageOptions['onSnapshot']>>;
 };
 
 export {
@@ -133,9 +134,12 @@ export function createRelaySubscriptionManager(
       const existing = inFlightReads.get(dedupeKey);
       if (existing) {
         existing.aborts.attachSignal(options.signal);
+        if (options.onSnapshot) existing.listeners.add(options.onSnapshot);
         return existing.promise;
       }
       const aborts = createSharedAbortController();
+      const listeners = new Set<NonNullable<ReadPageOptions['onSnapshot']>>();
+      if (options.onSnapshot) listeners.add(options.onSnapshot);
       aborts.attachSignal(options.signal);
       const promise = executeReadPage(
         pool,
@@ -145,13 +149,16 @@ export function createRelaySubscriptionManager(
         {
           ...options,
           signal: aborts.signal,
+          onSnapshot: (snapshot) => {
+            for (const listener of listeners) listener(snapshot);
+          },
         },
       ).finally(() => {
         aborts.detachSignals();
         inFlightReads.delete(dedupeKey);
         decMemoryCounter('active-paged-reads');
       });
-      inFlightReads.set(dedupeKey, { promise, aborts });
+      inFlightReads.set(dedupeKey, { promise, aborts, listeners });
       countRuntime('subscription-manager', 'pageReads');
       incMemoryCounter('active-paged-reads');
       return promise;

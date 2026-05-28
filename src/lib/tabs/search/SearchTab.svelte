@@ -12,6 +12,10 @@
   import { searchPage } from '$lib/search/search-query';
   import { timelineRelays } from '$lib/timeline/timeline-subscription';
   import { loadTimelineProfiles } from '$lib/timeline/timeline-profiles';
+  import {
+    feedEventsFromProgressiveSnapshot,
+    progressiveStatusText,
+  } from '$lib/timeline/timeline-progressive';
 
   type Props = {
     tabId: string;
@@ -32,6 +36,7 @@
   let loadingOlder = $state(false);
   let hasOlder = $state(false);
   let error = $state<string | null>(null);
+  let relayStatusText = $state('');
   let searched = $state(false);
   let requestId = 0;
   let destroyed = false;
@@ -81,6 +86,7 @@
     if (!term) return;
     searched = true;
     loading = true;
+    relayStatusText = '';
     error = null;
     try {
       const page = await searchPage({
@@ -89,10 +95,17 @@
         owner: props.tabId,
         subscriptions,
         limit: feedPageSize,
+        onSnapshot: (snapshot) => {
+          if (destroyed) return;
+          if (snapshot.events.length > 0)
+            items = merge(items, feedEventsFromProgressiveSnapshot(snapshot));
+          relayStatusText = progressiveStatusText(snapshot.status);
+        },
       });
       if (destroyed) return;
       items = page.items;
       hasOlder = page.hasOlder;
+      relayStatusText = '';
     } catch (err) {
       if (destroyed) return;
       error = err instanceof Error ? err.message : 'Search failed.';
@@ -106,6 +119,7 @@
     const before = cursorPoint(items.at(-1));
     if (!before) return;
     loadingOlder = true;
+    relayStatusText = '';
     try {
       const page = await searchPage({
         query,
@@ -114,10 +128,17 @@
         subscriptions,
         limit: feedPageSize,
         before,
+        onSnapshot: (snapshot) => {
+          if (destroyed) return;
+          if (snapshot.events.length > 0)
+            items = merge(items, feedEventsFromProgressiveSnapshot(snapshot));
+          relayStatusText = progressiveStatusText(snapshot.status);
+        },
       });
       if (destroyed) return;
       items = merge(items, page.items);
       hasOlder = page.hasOlder;
+      relayStatusText = '';
     } finally {
       if (!destroyed) loadingOlder = false;
     }
@@ -159,6 +180,7 @@
     {profiles}
     relaySets={props.relaySets}
     {loading}
+    {relayStatusText}
     emptyText={searched ? 'No matching events.' : 'Enter a search query.'}
     {loadingOlder}
     loadingNewer={false}

@@ -52,6 +52,8 @@
     hasNewer: false,
     oldestCursor: undefined,
     newestCursor: undefined,
+    relayReadStatus: 'idle',
+    relayReadStatusText: '',
   });
   let runtime: TimelineRuntime | GlobalTimelineRuntime | undefined;
   let unsubscribe: (() => void) | undefined;
@@ -156,6 +158,7 @@
     relaySets={props.relaySets}
     activeAccountPubkey={props.activeAccountPubkey}
     loading={state.loading}
+    relayStatusText={state.relayReadStatusText}
     emptyText={homeTimelineEmptyText(state.status)}
     loadingOlder={state.loadingOlder}
     loadingNewer={state.loadingNewer}

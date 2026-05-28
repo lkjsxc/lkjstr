@@ -25,6 +25,7 @@ export type EventTreeListProps = {
   hasOlder?: boolean;
   hasNewer?: boolean;
   pagingError?: string | null;
+  relayStatusText?: string;
   emptyText?: string;
   onNearEnd?: (trigger: OlderLoadTrigger) => void | Promise<void>;
   onNearStart?: () => void | Promise<void>;

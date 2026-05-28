@@ -71,6 +71,7 @@ export function routeGroupFingerprint(
 export async function readTimelinePageByIntent(
   orchestrator: SubscriptionOrchestrator,
   intent: PageIntent,
+  options: ReadPageOptions = {},
 ): Promise<RelayGroupPageResult> {
   const groups = await planPagingRouteGroups({
     authors: intent.authors,
@@ -94,6 +95,8 @@ export async function readTimelinePageByIntent(
     pageSize: intent.pageSize,
     subscriptions: orchestrator,
     purpose: intent.purpose ?? 'feed',
+    signal: options.signal,
+    onSnapshot: options.onSnapshot,
   });
 }
 

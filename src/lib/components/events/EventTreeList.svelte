@@ -2,10 +2,8 @@
   import { onDestroy, tick } from 'svelte';
   import { isNearStart } from '$lib/feed-surface/near-end';
   import { footerPhaseFromPaging } from '$lib/feed-surface/footer-phase';
-  import {
-    canRequestOlder,
-    type OlderLoadTrigger,
-  } from '$lib/feed-surface/older-load-mode';
+  import { canRequestOlder } from '$lib/feed-surface/older-load-mode';
+  import type { OlderLoadTrigger } from '$lib/feed-surface/older-load-mode';
   import { shouldStartOlderPrefetch } from '$lib/feed-surface/older-prefetch';
   import type { FeedScrollListHandle } from '$lib/components/feed/FeedScrollSurface.svelte';
   import type { FlatEventTreeItem } from '$lib/events/tree';
@@ -182,6 +180,9 @@
   activeAccountPubkey={props.activeAccountPubkey}
 />
 <div class="event-list">
+  {#if props.relayStatusText}<p class="event-list__status">
+      {props.relayStatusText}
+    </p>{/if}
   {#if rows.length > 0}
     <EventTreeListSurface
       {props}

@@ -1,6 +1,5 @@
 import { normalizeRelayUrl } from '../protocol';
 import { queryFeed, upsertEvent } from '../events/repository';
-import { boundedErrorText } from '../events/runtime-error';
 import { eventInDisplayBounds } from '../events/feed-display-bounds';
 import {
   boundaryCursors,
@@ -28,7 +27,7 @@ import {
   relayStatePatch,
   selectedRelaySnapshots,
 } from './timeline-relay-state';
-import { loadInitialGlobalPage } from './global-timeline-pages';
+import { runInitialGlobalPage } from './global-timeline-runtime-initial';
 import {
   globalRuntimeLoadNewer,
   globalRuntimeLoadOlder,
@@ -95,24 +94,25 @@ export function createGlobalTimelineRuntime(options: TimelineRuntimeOptions) {
     live = mergeFeedWindowItems(live, [{ event: poolEvent.event, relays: [poolEvent.relay] }], feedWindowSize);
     emit(readyWithEventsState(state, items()));
   };
-  // prettier-ignore
   const loadInitialPage = async (): Promise<void> => {
     const run = generation;
-    try {
-      const page = await loadInitialGlobalPage({
-        owner,
-        relays,
-        pageSize,
-        subscriptions,
-        signal: aborts.signal,
-      });
-      if (!active(run)) return;
-      olderScanCursor = page.hasOlder ? page.nextOlderCursor : undefined;
-      cached = mergeTimelineItems(page.items, items(), limit);
-      emit(page.items.length > 0 ? nextState(readyWithEventsState(state, items())) : nextState({ loading: false, hasOlder: page.hasOlder }));
-    } catch (error) {
-      emit({ ...state, loading: false, error: boundedErrorText(error) });
-    }
+    await runInitialGlobalPage({
+      owner,
+      relays,
+      pageSize,
+      subscriptions,
+      limit,
+      run,
+      signal: aborts.signal,
+      isActive: active,
+      items,
+      getState: () => state,
+      getCached: () => cached,
+      setCached: (v) => (cached = v),
+      emit,
+      nextState,
+      setOlderScanCursor: (v) => (olderScanCursor = v),
+    });
   };
   const receiveState = (snapshots: RelaySnapshot[]): void => {
     if (closed) return;

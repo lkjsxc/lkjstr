@@ -1,4 +1,5 @@
 import type { PoolEvent } from './relay-pool';
+import type { ProgressiveReadSnapshot } from './progressive-read-types';
 import type { RelaySnapshot } from './types';
 
 export type ReadPageRelayStatus = {
@@ -19,6 +20,7 @@ export type ReadPageRelayStatus = {
 export type ReadPageResult = {
   readonly events: PoolEvent[];
   readonly statuses: ReadPageRelayStatus[];
+  readonly snapshot?: ProgressiveReadSnapshot;
 };
 
 export function readStatuses(input: {

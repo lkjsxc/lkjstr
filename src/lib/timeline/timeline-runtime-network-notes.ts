@@ -1,11 +1,6 @@
 import { feedWindowSize, metadataPageLimit } from '../events/feed-window';
 import { boundedErrorText } from '../events/runtime-error';
-import {
-  discoverRoutesForAuthors,
-  planAuthorWriteRelays,
-  planPagingRouteGroups,
-} from '../relays/orchestration/route-plan';
-import { routeGroupFingerprint } from '../relays/orchestration/page-reads';
+import { planAuthorWriteRelays } from '../relays/orchestration/route-plan';
 import { authorFilters } from './follow-list';
 import { profileFilter } from './timeline-profiles';
 import { loadInitialTimelinePage } from './timeline-runtime-paging';
@@ -15,6 +10,11 @@ import {
 } from './timeline-runtime-receivers';
 import { readyWithEventsState } from './timeline-state';
 import { mergeTimelineItems } from './timeline-store';
+import {
+  mergeProgressiveTimelineItems,
+  progressiveTimelinePatch,
+} from './timeline-progressive';
+import { refreshTimelineRoutesAfterInitialPage } from './timeline-runtime-route-refresh';
 import type { TimelineNetworkCtx } from './timeline-runtime-network-types';
 
 export function createTimelineInitialNotesLoader(ctx: TimelineNetworkCtx) {
@@ -23,6 +23,7 @@ export function createTimelineInitialNotesLoader(ctx: TimelineNetworkCtx) {
     if (ctx.getInitialNotesKey() === key || ctx.getAuthors().length === 0)
       return;
     ctx.setInitialNotesKey(key);
+    const run = ctx.getGeneration();
     try {
       const page = await loadInitialTimelinePage({
         surface: ctx.surface,
@@ -32,6 +33,21 @@ export function createTimelineInitialNotesLoader(ctx: TimelineNetworkCtx) {
         pageSize: ctx.pageSize,
         subscriptions: ctx.subscriptions,
         signal: ctx.signal,
+        onSnapshot: (snapshot) => {
+          if (!ctx.isActive(run)) return;
+          ctx.setCached(
+            mergeProgressiveTimelineItems(
+              ctx.getCached(),
+              snapshot,
+              feedWindowSize,
+            ),
+          );
+          ctx.emit(
+            ctx.nextState(
+              progressiveTimelinePatch(ctx.getState(), ctx.items(), snapshot),
+            ),
+          );
+        },
       });
       ctx.setOlderScanCursor(page.hasOlder ? page.nextOlderCursor : undefined);
       if (page.items.length > 0) {
@@ -47,6 +63,7 @@ export function createTimelineInitialNotesLoader(ctx: TimelineNetworkCtx) {
             loading: false,
             status: 'ready-empty',
             hasOlder: page.hasOlder,
+            relayReadStatusText: '',
           }),
         );
       }
@@ -138,44 +155,5 @@ export async function attachTimelineNotesSubscriptions(
       ),
     );
   }
-  void initialPage.then(async () => {
-    const run = ctx.getGeneration();
-    if (ctx.isClosed()) return;
-    const before = routeGroupFingerprint(
-      await planPagingRouteGroups({
-        authors: ctx.getAuthors(),
-        selectedRelays: ctx.relays,
-        purpose: 'write',
-      }),
-    );
-    await discoverRoutesForAuthors({
-      authors: ctx.getAuthors(),
-      selectedRelays: ctx.relays,
-      key: `home:routes:${[...ctx.getAuthors()].sort().join(',')}`,
-      subscriptions: ctx.subscriptions,
-      signal: ctx.signal,
-    }).catch(() => undefined);
-    if (!ctx.isActive(run)) return;
-    const after = routeGroupFingerprint(
-      await planPagingRouteGroups({
-        authors: ctx.getAuthors(),
-        selectedRelays: ctx.relays,
-        purpose: 'write',
-      }),
-    );
-    if (before === after) return;
-    const page = await loadInitialTimelinePage({
-      surface: ctx.surface,
-      owner: ctx.owner,
-      authors: ctx.getAuthors(),
-      relays: ctx.relays,
-      pageSize: ctx.pageSize,
-      subscriptions: ctx.subscriptions,
-      signal: ctx.signal,
-    }).catch(() => undefined);
-    if (!page || !ctx.isActive(run) || page.items.length === 0) return;
-    ctx.setCached(mergeTimelineItems(page.items, ctx.items(), feedWindowSize));
-    ctx.clearLive();
-    ctx.emit(ctx.nextState(readyWithEventsState(ctx.getState(), ctx.items())));
-  });
+  void initialPage.then(() => refreshTimelineRoutesAfterInitialPage(ctx));
 }

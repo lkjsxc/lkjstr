@@ -44,6 +44,8 @@ events, publish acknowledgements, and relay snapshots.
 - Do not require relay connections during workspace shell render.
 - Do not overwrite user relay settings from runtime health data.
 - Failed relays must not stop other relays in the same subscription.
+- Paged reads may emit progressive snapshots for relay events and state changes;
+  snapshot listeners are observational and cannot fail the underlying read.
 
 ## Runtime Use
 

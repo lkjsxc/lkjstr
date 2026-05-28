@@ -23,6 +23,9 @@ bounded as timelines grow.
 - Relay feed pages merge duplicate event ids, preserve all relay provenance,
   sort by `{created_at,id}`, and apply `before` or `after` cursor filters
   locally before page slicing.
+- Progressive relay snapshots are bounded runtime evidence. They may update
+  visible rows before final coverage, but durable cache writes still use the
+  final deduped page.
 - Feed pages reject future events and locally enforce display `since`,
   exclusive `until`, `before`, and `after` bounds before rows enter page
   results.
