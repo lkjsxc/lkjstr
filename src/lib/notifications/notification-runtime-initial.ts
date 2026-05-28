@@ -1,10 +1,8 @@
+import { readRelayFeedGroups } from '../events/relay-page';
 import { upsertEvent } from '../events/repository';
 import { deriveNotifications } from './notification-index';
 import type { NotificationRecord } from './notification';
-import {
-  initialNotificationCursor,
-  isWithinNotificationCursor,
-} from './notification-paging';
+import { initialNotificationCursor } from './notification-paging';
 import { notificationRelays } from './notification-relays';
 import { buildNotificationFilters } from './notification-filters';
 import { saveNotifications } from './notification-store';
@@ -30,28 +28,28 @@ export async function readInitialNotificationRelayPage(args: {
 }> {
   const cursor = initialNotificationCursor(args.startedAt);
   const selected = await notificationRelays(args.accountPubkey, args.relays);
-  const filters = buildNotificationFilters({
-    accountPubkey: args.accountPubkey,
-    limit: args.pageSize,
-    cursor,
-  });
-  const pageIntent = {
-    surface: 'notifications' as const,
-    owner: args.owner,
-    phase: 'bootstrap' as const,
-    selectedRelays: selected,
-    authors: [args.accountPubkey],
-    pageSize: args.pageSize,
-    direction: 'initial' as const,
-    relayFilters: filters,
-    purpose: 'feed' as const,
-  };
-  const { events } = await args.subscriptions.readPageByIntent(pageIntent, {
-    signal: args.signal,
-  });
+  const page =
+    selected.length > 0
+      ? await readRelayFeedGroups({
+          key: notificationFeedKey(args.accountPubkey, selected, args.pageSize),
+          groups: [notificationGroup(args.accountPubkey, selected)],
+          filters: (_group, bounds) =>
+            buildNotificationFilters({
+              accountPubkey: args.accountPubkey,
+              limit: args.pageSize,
+              cursor: bounds,
+            }),
+          direction: 'initial',
+          before: { createdAt: cursor.until - 1, id: 'f'.repeat(64) },
+          pageSize: args.pageSize,
+          subscriptions: args.subscriptions,
+          signal: args.signal,
+          purpose: 'feed',
+        })
+      : { items: [], hasMorePossible: false };
 
   const incomingRecords: NotificationRecord[] = [];
-  for (const { event, relay } of events) {
+  for (const { event, relays } of page.items) {
     if (!args.active(args.run)) {
       return {
         mergedRecords: args.baseRecords,
@@ -60,10 +58,9 @@ export async function readInitialNotificationRelayPage(args: {
           args.baseRecords.at(-1)?.createdAt ?? cursor.since,
       };
     }
-    if (!isWithinNotificationCursor(event.created_at, cursor)) continue;
-    const derived = deriveNotifications(args.accountPubkey, event, [relay]);
+    const derived = deriveNotifications(args.accountPubkey, event, relays);
     if (derived.length === 0) continue;
-    await upsertEvent(event, [relay]);
+    await upsertEvent(event, relays);
     incomingRecords.push(...derived);
     await saveNotifications(derived);
   }
@@ -82,5 +79,22 @@ export async function readInitialNotificationRelayPage(args: {
     mergedRecords: merged.records,
     prunedNewer: merged.prunedNewer,
     olderCursorCreatedAt: merged.records.at(-1)?.createdAt ?? cursor.since,
+  };
+}
+
+function notificationFeedKey(
+  accountPubkey: string,
+  relays: readonly string[],
+  pageSize: number,
+): string {
+  return `notifications:${accountPubkey}:${pageSize}:${[...relays].sort().join(',')}`;
+}
+
+function notificationGroup(accountPubkey: string, relays: readonly string[]) {
+  return {
+    key: `notifications:${accountPubkey}`,
+    relays,
+    authors: [],
+    source: 'selected' as const,
   };
 }

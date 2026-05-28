@@ -1,10 +1,8 @@
+import { readRelayFeedGroups } from '../events/relay-page';
 import { upsertEvent } from '../events/repository';
 import { deriveNotifications } from './notification-index';
 import type { NotificationRecord } from './notification';
-import {
-  isWithinNotificationCursor,
-  olderNotificationCursor,
-} from './notification-paging';
+import { olderNotificationCursor } from './notification-paging';
 import type { HistoryExhaustion } from '../feed-surface/paging-state';
 import { notificationRelays } from './notification-relays';
 import { buildNotificationFilters } from './notification-filters';
@@ -12,7 +10,6 @@ import { accountNotifications } from './notification-store';
 import { saveNotifications } from './notification-store';
 import { mergeNotificationReducerState } from './notification-reducer';
 import type { SubscriptionOrchestrator } from '../relays/orchestration/orchestrator';
-import { statusesComplete } from '../events/relay-page-status';
 
 export async function loadOlderNotificationRelayPage(args: {
   readonly accountPubkey: string;
@@ -49,30 +46,34 @@ export async function loadOlderNotificationRelayPage(args: {
 
   const relayPage =
     selected.length > 0
-      ? await args.subscriptions.readPageByIntent(
-          {
-            surface: 'notifications',
-            owner: args.owner,
-            phase: 'page',
-            selectedRelays: selected,
-            authors: [args.accountPubkey],
-            pageSize: args.pageSize,
-            direction: 'older',
-            cursor: { createdAt: cursor.until, id: '' },
-            relayFilters: buildNotificationFilters({
+      ? await readRelayFeedGroups({
+          key: notificationFeedKey(args.accountPubkey, selected, args.pageSize),
+          groups: [notificationGroup(args.accountPubkey, selected)],
+          filters: (_group, bounds) =>
+            buildNotificationFilters({
               accountPubkey: args.accountPubkey,
               limit: args.pageSize,
-              cursor,
+              cursor: bounds,
             }),
-            purpose: 'feed',
+          direction: 'older',
+          before: {
+            createdAt: args.olderCursorCreatedAt,
+            id: 'f'.repeat(64),
           },
-          { signal: args.signal },
-        )
-      : { events: [], statuses: [] };
-  const relayEvents = relayPage.events;
+          pageSize: args.pageSize,
+          subscriptions: args.subscriptions,
+          signal: args.signal,
+          purpose: 'feed',
+        })
+      : {
+          items: [],
+          hasMorePossible: false,
+          incomplete: false,
+          dense: false,
+        };
 
   const incomingRecords: NotificationRecord[] = [];
-  for (const { event, relay } of relayEvents) {
+  for (const { event, relays } of relayPage.items) {
     if (!args.active(args.run)) {
       return {
         mergedRecords: args.baseRecords,
@@ -82,10 +83,9 @@ export async function loadOlderNotificationRelayPage(args: {
         olderCursorCreatedAt: args.olderCursorCreatedAt,
       };
     }
-    if (!isWithinNotificationCursor(event.created_at, cursor)) continue;
-    const derived = deriveNotifications(args.accountPubkey, event, [relay]);
+    const derived = deriveNotifications(args.accountPubkey, event, relays);
     if (derived.length === 0) continue;
-    await upsertEvent(event, [relay]);
+    await upsertEvent(event, relays);
     incomingRecords.push(...derived);
     await saveNotifications(derived);
   }
@@ -111,7 +111,10 @@ export async function loadOlderNotificationRelayPage(args: {
   };
 
   function relayReadComplete(): boolean {
-    return selected.length === 0 || statusesComplete(relayPage.statuses);
+    return (
+      selected.length === 0 ||
+      (!relayPage.incomplete && !relayPage.dense && !relayPage.hasMorePossible)
+    );
   }
 
   function nextScanCursor(): number {
@@ -135,4 +138,21 @@ export async function loadOlderNotificationRelayPage(args: {
       ? 'unknown'
       : 'probing';
   }
+}
+
+function notificationFeedKey(
+  accountPubkey: string,
+  relays: readonly string[],
+  pageSize: number,
+): string {
+  return `notifications:${accountPubkey}:${pageSize}:${[...relays].sort().join(',')}`;
+}
+
+function notificationGroup(accountPubkey: string, relays: readonly string[]) {
+  return {
+    key: `notifications:${accountPubkey}`,
+    relays,
+    authors: [],
+    source: 'selected' as const,
+  };
 }

@@ -10,6 +10,7 @@ import { readInitialNotificationRelayPage } from '../../../src/lib/notifications
 import { loadOlderNotificationRelayPage } from '../../../src/lib/notifications/notification-runtime-older';
 import type { ReadPageRelayStatus } from '../../../src/lib/relays/read-page-status';
 import { stubOrchestrator } from '../relays/orchestration/orchestrator-mock';
+import type { RelayReadRequest } from '../../../src/lib/events/types';
 
 describe('notification paging cursors', () => {
   it('initialNotificationCursor includes since and until', () => {
@@ -17,8 +18,8 @@ describe('notification paging cursors', () => {
     const cursor = initialNotificationCursor(startedAt);
     expect(cursor.since).toBeGreaterThanOrEqual(0);
     expect(cursor.until).toBe(startedAt + 120);
-    expect(notificationInitialLookbackSeconds).toBe(720);
-    expect(cursor.since).toBe(startedAt - 720);
+    expect(notificationInitialLookbackSeconds).toBe(60);
+    expect(cursor.since).toBe(startedAt - 60);
   });
 
   it('olderNotificationCursor is bounded and ends before oldest', () => {
@@ -26,8 +27,8 @@ describe('notification paging cursors', () => {
     const cursor = olderNotificationCursor(oldest);
     expect(cursor.since).toBeGreaterThanOrEqual(0);
     expect(cursor.until).toBe(oldest - 1);
-    expect(notificationOlderPageLookbackSeconds).toBe(720);
-    expect(cursor.since).toBe(oldest - 720);
+    expect(notificationOlderPageLookbackSeconds).toBe(60);
+    expect(cursor.since).toBe(oldest - 60);
   });
 
   it('isWithinNotificationCursor matches inclusive window', () => {
@@ -47,7 +48,7 @@ describe('notification paging cursors', () => {
       pageSize: 30,
       startedAt,
       subscriptions: stubOrchestrator({
-        readPageByIntent: async () => ({ events: [], statuses: [] }),
+        readPageDetailed: async (request) => emptyPage(request),
       }),
       signal: new AbortController().signal,
       active: () => true,
@@ -57,7 +58,7 @@ describe('notification paging cursors', () => {
     });
 
     expect(result.mergedRecords).toEqual([]);
-    expect(result.olderCursorCreatedAt).toBe(startedAt - 720);
+    expect(result.olderCursorCreatedAt).toBe(startedAt - 60);
   });
 
   it('advances sparse complete older windows without ending history', async () => {
@@ -68,10 +69,7 @@ describe('notification paging cursors', () => {
       pageSize: 30,
       olderCursorCreatedAt: 2_000,
       subscriptions: stubOrchestrator({
-        readPageByIntent: async () => ({
-          events: [],
-          statuses: [completeStatus('wss://relay.example/')],
-        }),
+        readPageDetailed: async (request) => emptyPage(request),
       }),
       signal: new AbortController().signal,
       active: () => true,
@@ -80,7 +78,7 @@ describe('notification paging cursors', () => {
       windowLimit: 180,
     });
 
-    expect(result.olderCursorCreatedAt).toBe(1_280);
+    expect(result.olderCursorCreatedAt).toBe(1_940);
     expect(result.hasOlder).toBe(true);
     expect(result.historyExhaustion).toBe('probing');
   });
@@ -91,12 +89,9 @@ describe('notification paging cursors', () => {
       relays: ['wss://relay.example/'],
       owner: 'notif-test',
       pageSize: 30,
-      olderCursorCreatedAt: 100,
+      olderCursorCreatedAt: 50,
       subscriptions: stubOrchestrator({
-        readPageByIntent: async () => ({
-          events: [],
-          statuses: [completeStatus('wss://relay.example/')],
-        }),
+        readPageDetailed: async (request) => emptyPage(request),
       }),
       signal: new AbortController().signal,
       active: () => true,
@@ -118,10 +113,10 @@ describe('notification paging cursors', () => {
       pageSize: 30,
       olderCursorCreatedAt: 100,
       subscriptions: stubOrchestrator({
-        readPageByIntent: async () => ({
+        readPageDetailed: async (request) => ({
           events: [],
           statuses: [
-            { ...completeStatus('wss://relay.example/'), timeout: true },
+            { ...completeStatus(request.relays[0]!), timeout: true },
           ],
         }),
       }),
@@ -137,6 +132,13 @@ describe('notification paging cursors', () => {
     expect(result.historyExhaustion).toBe('unknown');
   });
 });
+
+function emptyPage(request: RelayReadRequest) {
+  return {
+    events: [],
+    statuses: request.relays.map(completeStatus),
+  };
+}
 
 function completeStatus(relay: string): ReadPageRelayStatus {
   return {

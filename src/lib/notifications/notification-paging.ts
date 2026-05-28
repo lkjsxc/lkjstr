@@ -1,5 +1,7 @@
-export const notificationInitialLookbackSeconds = 12 * 60;
-export const notificationOlderPageLookbackSeconds = 12 * 60;
+import { relaySegmentInitialSpan } from '../events/relay-page-segments';
+
+export const notificationInitialLookbackSeconds = relaySegmentInitialSpan;
+export const notificationOlderPageLookbackSeconds = relaySegmentInitialSpan;
 export const notificationClockSkewSeconds = 120;
 
 export type NotificationRelayCursor = {

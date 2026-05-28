@@ -7,5 +7,8 @@ export function notificationRelays(
   return planAuthorReadRelays({
     authors: [accountPubkey],
     selectedRelays,
+  }).then((planned) => {
+    const relays = planned.length > 0 ? planned : selectedRelays;
+    return [...new Set(relays)];
   });
 }
