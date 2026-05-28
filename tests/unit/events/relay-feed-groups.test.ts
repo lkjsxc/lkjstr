@@ -6,7 +6,7 @@ import type { PoolEvent } from '../../../src/lib/relays/relay-pool';
 import type { RelaySubscriptionManager } from '../../../src/lib/relays/subscription-manager';
 
 describe('relay feed group pages', () => {
-  it('reads relay groups sequentially', async () => {
+  it('reads relay groups with bounded concurrency', async () => {
     const first = deferred<PoolEvent[]>();
     const calls: string[] = [];
     const page = readRelayFeedGroups({
@@ -26,17 +26,13 @@ describe('relay feed group pages', () => {
       } as unknown as RelaySubscriptionManager,
     });
 
-    await Promise.resolve();
-    expect(calls).toEqual(['relay-page-sequential:0:0:first:0:0']);
-    first.resolve([]);
-    await page;
+    await new Promise((resolve) => setTimeout(resolve, 0));
     expect(calls.slice(0, 2)).toEqual([
       'relay-page-sequential:0:0:first:0:0',
       'relay-page-sequential:0:1:second:0:0',
     ]);
-    expect(
-      calls.indexOf('relay-page-sequential:0:1:second:0:0'),
-    ).toBeGreaterThan(calls.indexOf('relay-page-sequential:0:0:first:0:0'));
+    first.resolve([]);
+    await page;
   });
 
   it('merges sequential relay group provenance and has-more state', async () => {

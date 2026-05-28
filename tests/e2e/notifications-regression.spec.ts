@@ -19,10 +19,10 @@ test('notifications viewport-fill older history when underfilled', async ({
   const authorKey = generateSecretKey();
 
   const now = Math.floor(Date.now() / 1000);
-  // Old events are just outside the initial 12-minute lookback, but inside the
-  // first older-page cursor (oldestLoaded - 12 minutes).
-  const oldCreatedAt = now - 14 * 60;
-  const newCreatedAt = now - 4 * 60;
+  // Old events are outside the initial one-minute window but close enough for
+  // adaptive older viewport-fill to find them quickly.
+  const oldCreatedAt = now - 3 * 60;
+  const newCreatedAt = now - 30;
 
   const oldEvents = Array.from({ length: 4 }, (_, i) =>
     finalizeEvent(
@@ -66,7 +66,7 @@ test('notifications scan older history after an empty initial window', async ({
   const active = getPublicKey(activeKey);
   const authorKey = generateSecretKey();
   const now = Math.floor(Date.now() / 1000);
-  const oldCreatedAt = now - 14 * 60;
+  const oldCreatedAt = now - 3 * 60;
   const oldEvents = Array.from({ length: 2 }, (_, i) =>
     finalizeEvent(
       {

@@ -1,8 +1,9 @@
 import { describe, expect, it } from 'vitest';
 import { relayPageWindows } from '../../../src/lib/events/relay-page-windows';
+import { relaySegmentInitialSpan } from '../../../src/lib/events/relay-page-segments';
 
 const day = 24 * 60 * 60;
-const initialSpan = 12 * 60;
+const initialSpan = relaySegmentInitialSpan;
 
 describe('relay page windows', () => {
   it('builds continuous older windows with a terminal since zero window', () => {

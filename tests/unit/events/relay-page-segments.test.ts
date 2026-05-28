@@ -19,10 +19,9 @@ describe('relay page segments', () => {
       before: { createdAt: 1_000_000, id: 'f'.repeat(64) },
     });
 
-    expect(span(initial)).toBe(12 * 60);
     expect(span(initial)).toBe(relaySegmentInitialSpan);
     expect(grown?.until).toBe((initial.since ?? 0) + 1);
-    expect(grown ? span(grown) : 0).toBe(24 * 60);
+    expect(grown ? span(grown) : 0).toBe(relaySegmentInitialSpan * 2);
   });
 
   it('splits older dense segments newer half first', () => {
