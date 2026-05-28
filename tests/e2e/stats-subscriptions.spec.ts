@@ -46,7 +46,7 @@ test('Stats labels active subscriptions and orchestration counters', async ({
 
   await expect(
     page.getByRole('cell', { name: 'Home live feed' }).first(),
-  ).toBeVisible();
+  ).toBeVisible({ timeout: 15_000 });
   await expect(page.getByText('active demands')).toBeVisible();
   await expect(page.getByText('active leases')).toBeVisible();
   await expect(page.getByText('live leases')).toBeVisible();

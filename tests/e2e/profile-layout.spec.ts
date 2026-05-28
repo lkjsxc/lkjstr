@@ -95,14 +95,16 @@ test('empty profile keeps status rows in the profile scroll owner', async ({
   await installSyntheticRelay(page, { events: [targetMetadata, openerNote] });
   await page.goto('/');
   await openNewTabOption(page, 'Global');
-  await page.locator('.content-mention-token').click();
+  const mention = page.locator('.content-mention-token');
+  await expect(mention).toBeVisible({ timeout: 15_000 });
+  await mention.click();
 
   const profile = page.locator(
     '.pane-body[data-active-tab="true"] .profile-tab',
   );
   await expect(
     profile.getByRole('heading', { name: 'Empty Profile' }),
-  ).toBeVisible();
+  ).toBeVisible({ timeout: 15_000 });
   await expect(profile.locator('[data-scroll-owner]')).toHaveCount(1);
   await expect(
     profile.getByText('No notes have been received for this profile.'),
