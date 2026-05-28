@@ -13,6 +13,11 @@ without overlapping text or controls.
   sits close to split resize handles without covering row controls.
 - `--scroll-content-inset` (default `var(--space-3)`) pads direct content
   children on the inline end so text does not sit under the thumb.
+- Home and Global reset the direct `.event-list` child inset so their Virtua
+  scrollbar aligns with the Notifications scroll position instead of being
+  pushed inward twice.
+- New Tab keeps the chooser scroll root inset from the pane edge with an
+  inline-end margin because the tab root itself owns vertical scrolling.
 - `.pane-body` does not add inline padding on the scroll axis. Block-axis
   padding may remain for vertical rhythm.
 - Feed virtual lists keep status rows inside the scroll flow so the footer moves

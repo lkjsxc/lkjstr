@@ -9,7 +9,7 @@ import {
   installSyntheticRelay,
 } from './timeline-relay-helpers';
 import { assertNoHorizontalOverflow, syntheticNotes } from './layout-helpers';
-import { openNewTabOption, selectStartupTab } from './workspace-helpers';
+import { openNewTabOption, pane, selectStartupTab } from './workspace-helpers';
 
 function now(): number {
   return Math.floor(Date.now() / 1000);
@@ -82,6 +82,33 @@ test('event more menu clears the feed scrollbar track', async ({ page }) => {
   expect(clearance!).toBeGreaterThanOrEqual(4);
 });
 
+test('chooser and timeline scrollbars keep notification-like edge spacing', async ({
+  page,
+}, testInfo) => {
+  test.skip(
+    testInfo.project.name === 'mobile',
+    'Mobile overlay scrollbars do not expose the same frame spacing',
+  );
+  await installSyntheticRelay(page, { events: syntheticNotes(24) });
+  await page.goto('/');
+  await pane(page, 0).getByRole('button', { name: 'Open new tab' }).click();
+  const chooserGap = await rightEdgeGap(page, 'section.new-tab');
+  expect(chooserGap).toBeGreaterThanOrEqual(8);
+  expect(chooserGap).toBeLessThanOrEqual(22);
+
+  await page
+    .locator('section.new-tab')
+    .getByRole('button', { name: 'Global', exact: true })
+    .click();
+  await expect(page.getByText('layout fit note 0')).toBeVisible();
+  const timelineGap = await rightEdgeGap(
+    page,
+    'section[aria-label="Global"] .event-list__viewport',
+  );
+  expect(timelineGap).toBeGreaterThanOrEqual(8);
+  expect(timelineGap).toBeLessThanOrEqual(22);
+});
+
 test('scroll owners avoid horizontal overflow', async ({ page }) => {
   await installSyntheticRelay(page, { events: syntheticNotes(20) });
   await page.goto('/');
@@ -89,3 +116,19 @@ test('scroll owners avoid horizontal overflow', async ({ page }) => {
   await openNewTabOption(page, 'Notifications');
   await assertNoHorizontalOverflow(page);
 });
+
+async function rightEdgeGap(
+  page: import('@playwright/test').Page,
+  selector: string,
+) {
+  return page
+    .locator(selector)
+    .first()
+    .evaluate((element) => {
+      const paneElement = element.closest('.pane');
+      if (!paneElement) throw new Error('missing pane');
+      const paneBox = paneElement.getBoundingClientRect();
+      const elementBox = element.getBoundingClientRect();
+      return paneBox.right - elementBox.right;
+    });
+}

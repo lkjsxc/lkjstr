@@ -39,3 +39,11 @@
   overflow: hidden;
   overscroll-behavior: contain;
 }
+
+.timeline-tab > .event-list {
+  padding-inline-end: 0;
+}
+
+.new-tab {
+  margin-inline-end: var(--scroll-content-inset);
+}
