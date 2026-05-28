@@ -1,7 +1,7 @@
 import { feedWindowSize } from '$lib/events/feed-window';
 import { feedEventsInDisplayBounds } from '$lib/events/feed-display-bounds';
-import { feedDisplayKinds, isFeedDisplayKind } from '$lib/events/feed-kinds';
-import { readRelayFeedGroups, readRelayPage } from '$lib/events/relay-page';
+import { isFeedDisplayKind } from '$lib/events/feed-kinds';
+import { readRelayPage } from '$lib/events/relay-page';
 import type { ProfileSummary } from '$lib/identity/identity';
 import { getProfile } from '$lib/identity/profile-cache';
 import { kinds, type NostrEvent } from '$lib/protocol';
@@ -9,7 +9,7 @@ import type { FeedEvent } from '$lib/events/types';
 import type { SubscriptionOrchestrator } from '$lib/relays/orchestration/orchestrator';
 import { pageIntentSemanticKey } from '$lib/relays/orchestration/page-reads';
 import { planAuthorWriteRelays } from '$lib/relays/orchestration/route-plan';
-import { profileContentRelays } from './profile-relays';
+import { readProfilePostsPageByIntent } from './profile-route-plans';
 import { storeProfileEvent } from './profile-store';
 
 type Request = {
@@ -30,48 +30,15 @@ export async function loadInitialProfilePage(request: Request) {
     authors: [request.pubkey],
     selectedRelays: request.relays,
   });
-  const contentRelays = profileContentRelays(
-    await planAuthorWriteRelays({
-      surface: 'profile',
-      authors: [request.pubkey],
-      selectedRelays: request.relays,
-    }),
-    request.relays,
-  );
-  const postsKey = pageIntentSemanticKey({
-    surface: 'profile',
-    owner: request.owner,
-    phase: 'bootstrap',
-    selectedRelays: contentRelays,
-    authors: [request.pubkey],
-    pageSize: request.pageSize,
-    direction: 'initial',
-    purpose: 'feed',
-  });
   const [posts, metadata, follows] = await Promise.all([
-    readRelayFeedGroups({
-      key: postsKey,
-      groups: [
-        {
-          key: 'selected',
-          relays: contentRelays,
-          authors: [request.pubkey],
-          source: 'selected',
-        },
-      ],
-      filters: (group, bounds) => [
-        {
-          kinds: feedDisplayKinds,
-          authors: group.authors,
-          ...bounds,
-          limit: request.pageSize,
-        },
-      ],
-      direction: 'initial',
+    readProfilePostsPageByIntent({
+      pubkey: request.pubkey,
+      relays: request.relays,
+      owner: request.owner,
       pageSize: request.pageSize,
       subscriptions: request.subscriptions,
+      direction: 'initial',
       signal: request.signal,
-      purpose: 'feed',
     }),
     readRelayPage({
       key: pageIntentSemanticKey({
@@ -109,7 +76,7 @@ export async function loadInitialProfilePage(request: Request) {
         surface: 'profile',
         owner: request.owner,
         phase: 'bootstrap',
-        selectedRelays: contentRelays,
+        selectedRelays: request.relays,
         authors: [request.pubkey],
         pageSize: 1,
         direction: 'initial',
@@ -118,7 +85,7 @@ export async function loadInitialProfilePage(request: Request) {
           { kinds: [kinds.followList], authors: [request.pubkey], limit: 1 },
         ],
       }),
-      relays: contentRelays,
+      relays: request.relays,
       filters: [
         { kinds: [kinds.followList], authors: [request.pubkey], limit: 1 },
       ],

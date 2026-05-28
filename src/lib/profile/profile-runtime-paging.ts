@@ -1,13 +1,9 @@
 import { feedWindowSize, mergeFeedWindow } from '$lib/events/feed-window';
 import { feedEventsInDisplayBounds } from '$lib/events/feed-display-bounds';
-import { feedDisplayKinds } from '$lib/events/feed-kinds';
 import { queryFeed } from '$lib/events/repository';
-import { readRelayFeedGroups } from '$lib/events/relay-page';
 import type { FeedCursorPoint, FeedEvent } from '$lib/events/types';
-import { routeGroups } from '$lib/relays/relay-routing';
 import type { SubscriptionOrchestrator } from '$lib/relays/orchestration/orchestrator';
-import { pageIntentSemanticKey } from '$lib/relays/orchestration/page-reads';
-import { profileContentGroups } from './profile-relays';
+import { readProfilePostsPageByIntent } from './profile-route-plans';
 import { storeProfileEvent } from './profile-store';
 
 export type ProfileOlderRequest = {
@@ -32,41 +28,15 @@ export async function loadOlderProfilePage(request: ProfileOlderRequest) {
     before: request.cursor,
     limit: request.pageSize,
   });
-  const groups = profileContentGroups(
-    await routeGroups({
-      authors: [request.pubkey],
-      selectedRelays: request.relays,
-      purpose: 'write',
-    }),
-    request.relays,
-  );
-  const relayPage = await readRelayFeedGroups({
-    key: pageIntentSemanticKey({
-      surface: 'profile',
-      owner: request.owner,
-      phase: 'page',
-      selectedRelays: request.relays,
-      authors: [request.pubkey],
-      pageSize: request.pageSize,
-      direction: 'older',
-      cursor: request.cursor,
-      purpose: 'feed',
-    }),
-    groups,
-    filters: (_group, bounds) => [
-      {
-        kinds: feedDisplayKinds,
-        authors: [request.pubkey],
-        ...bounds,
-        limit: request.pageSize,
-      },
-    ],
-    direction: 'older',
-    before: request.cursor,
+  const relayPage = await readProfilePostsPageByIntent({
+    pubkey: request.pubkey,
+    relays: request.relays,
+    owner: request.owner,
     pageSize: request.pageSize,
     subscriptions: request.subscriptions,
+    direction: 'older',
+    cursor: request.cursor,
     signal: request.signal,
-    purpose: 'feed',
   });
   await Promise.all(
     relayPage.items.map((item) => storeProfileEvent(item.event, item.relays)),
@@ -95,41 +65,15 @@ export async function loadNewerProfilePage(request: ProfileNewerRequest) {
     after: request.cursor,
     limit: request.pageSize,
   });
-  const groups = profileContentGroups(
-    await routeGroups({
-      authors: [request.pubkey],
-      selectedRelays: request.relays,
-      purpose: 'write',
-    }),
-    request.relays,
-  );
-  const relayPage = await readRelayFeedGroups({
-    key: pageIntentSemanticKey({
-      surface: 'profile',
-      owner: request.owner,
-      phase: 'page',
-      selectedRelays: request.relays,
-      authors: [request.pubkey],
-      pageSize: request.pageSize,
-      direction: 'newer',
-      cursor: request.cursor,
-      purpose: 'feed',
-    }),
-    groups,
-    filters: (_group, bounds) => [
-      {
-        kinds: feedDisplayKinds,
-        authors: [request.pubkey],
-        ...bounds,
-        limit: request.pageSize,
-      },
-    ],
-    direction: 'newer',
-    after: request.cursor,
+  const relayPage = await readProfilePostsPageByIntent({
+    pubkey: request.pubkey,
+    relays: request.relays,
+    owner: request.owner,
     pageSize: request.pageSize,
     subscriptions: request.subscriptions,
+    direction: 'newer',
+    cursor: request.cursor,
     signal: request.signal,
-    purpose: 'feed',
   });
   await Promise.all(
     relayPage.items.map((item) => storeProfileEvent(item.event, item.relays)),

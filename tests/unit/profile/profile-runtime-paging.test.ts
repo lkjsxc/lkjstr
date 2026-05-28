@@ -64,6 +64,35 @@ describe('profile runtime paging', () => {
     expect(page.posts.every((item) => item.event.kind === 1)).toBe(true);
   });
 
+  it('does not append selected fallback when profile author routes exist', async () => {
+    const pubkey = 'e'.repeat(64);
+    const reads: ReadRequest[] = [];
+    await saveAuthorRelayRoute({
+      authorPubkey: pubkey,
+      relayUrl: 'route.example',
+      source: 'nip65',
+      purpose: 'write',
+    });
+
+    await loadInitialProfilePage({
+      posts: [],
+      profile: null,
+      relays: ['wss://relay-a/', 'wss://relay-b/'],
+      pubkey,
+      owner: 'profile-test',
+      pageSize: 30,
+      followList: undefined,
+      subscriptions: initialSubscriptions(
+        pubkey,
+        [event('route-post', 100, pubkey, 1)],
+        reads,
+      ),
+    });
+
+    const postRead = reads.find((item) => item.kinds.includes(1));
+    expect(postRead?.relays).toEqual(['wss://route.example/']);
+  });
+
   it('recovers newer notes after older paging prunes the top window', async () => {
     const pubkey = 'b'.repeat(64);
     const posts = Array.from({ length: feedWindowSize }, (_, index) => ({

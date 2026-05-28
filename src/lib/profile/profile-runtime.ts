@@ -1,13 +1,10 @@
 import { feedPageSize, oldestCreatedAt } from '$lib/events/feed-window';
 import { boundedErrorText } from '$lib/events/runtime-error';
-import { isFeedDisplayKind } from '$lib/events/feed-kinds';
 import {
   getProfile,
   profileFromMetadataEvent,
 } from '$lib/identity/profile-cache';
-import type { NostrEvent } from '$lib/protocol';
-import type { FeedCursorPoint } from '$lib/events/types';
-import type { PoolEvent, RelayPool } from '$lib/relays/relay-pool';
+import type { RelayPool } from '$lib/relays/relay-pool';
 import type { DemandVisibility } from '$lib/relays/orchestration/demand-types';
 import type { SubscriptionOrchestrator } from '$lib/relays/orchestration/orchestrator';
 import { runtimeSubscriptions } from '$lib/relays/runtime-subscriptions';
@@ -15,21 +12,15 @@ import {
   cachedProfileEvent,
   cachedProfileFollowList,
   cachedProfileNotes,
-  storeProfileEvent,
 } from './profile-store';
+import { submitProfilePostsLiveIntent } from './profile-route-plans';
+import { createProfileRuntimeHandlers } from './profile-runtime-handlers';
 import { loadInitialProfilePage } from './profile-runtime-initial';
-import {
-  loadNewerProfilePage,
-  loadOlderProfilePage,
-} from './profile-runtime-paging';
+import { createProfilePageLoaders } from './profile-runtime-loaders';
 import { emptyProfileState, type ProfileState } from './profile-state';
-import { profileLiveFilters } from './profile-subscription-filters';
-import {
-  mergeProfileLivePost,
-  shouldDisplayLiveProfilePost,
-  withProfileCursors,
-} from './profile-runtime-display';
+import { withProfileCursors } from './profile-runtime-display';
 import type { ProfileOlderPreserveMode } from './profile-runtime-paging';
+import type { FeedCursorPoint } from '$lib/events/types';
 
 export type { ProfileState } from './profile-state';
 export type ProfileRuntime = ReturnType<typeof createProfileRuntime>;
@@ -61,55 +52,31 @@ export function createProfileRuntime(
     state = withProfileCursors(next);
     listeners.forEach((listener) => listener(state));
   };
-  const receiveFollowList = (event: NostrEvent): void => {
-    const current = state.followList;
-    if (current && current.created_at > event.created_at) return;
-    if (current?.id === event.id) return;
-    emit({ ...state, followList: event, loading: false });
-  };
-  const receiveMeta = (poolEvent: PoolEvent): void => {
-    if (poolEvent.event.pubkey !== pubkey) return;
-    const updatedAt = poolEvent.event.created_at * 1000;
-    if (state.updatedAt && state.updatedAt > updatedAt) return;
-    const profile =
-      getProfile(pubkey) ?? profileFromMetadataEvent(poolEvent.event);
-    if (profile.updatedAt > updatedAt) return;
-    emit({
-      ...state,
-      profile,
-      loading: false,
-      relays: [...new Set([...state.relays, poolEvent.relay])],
-      updatedAt: profile.updatedAt,
-    });
-  };
-  const receivePost = (event: NostrEvent, relay: string): void => {
-    if (closed) return;
-    const display = shouldDisplayLiveProfilePost({ event, state, startedAt });
-    if (display === 'hidden') return;
-    if (display === 'has-newer') {
-      emit({ ...state, loading: false, hasNewer: true });
-      return;
-    }
-    const item = { event, relays: [relay] };
-    const window = mergeProfileLivePost(state.posts, item);
-    emit({
-      ...state,
-      posts: window.items,
-      loading: false,
-      hasOlder: state.hasOlder || window.prunedOlder,
-    });
-  };
-  // prettier-ignore
-  const receive = async (poolEvent: PoolEvent): Promise<void> => {
-    if (closed || poolEvent.event.pubkey !== pubkey) return;
-    await storeProfileEvent(poolEvent.event, [poolEvent.relay]);
-    if (closed) return;
-    if (poolEvent.event.kind === 0) receiveMeta(poolEvent);
-    if (poolEvent.event.kind === 3) receiveFollowList(poolEvent.event);
-    if (isFeedDisplayKind(poolEvent.event.kind))
-      receivePost(poolEvent.event, poolEvent.relay);
-  };
-  // prettier-ignore
+  const handlers = createProfileRuntimeHandlers({
+    pubkey,
+    startedAt,
+    isClosed: () => closed,
+    getState: () => state,
+    emit,
+  });
+  const loaders = createProfilePageLoaders({
+    pubkey,
+    relays,
+    owner,
+    pageSize,
+    subscriptions: manager,
+    signal: aborts.signal,
+    isClosed: () => closed,
+    active,
+    generation: () => generation,
+    getState: () => state,
+    emit,
+    getOlderCursor: () => olderScanCursor,
+    setOlderCursor: (cursor) => (olderScanCursor = cursor),
+    getNewerCursor: () => newerScanCursor,
+    setNewerCursor: (cursor) => (newerScanCursor = cursor),
+  });
+
   const loadInitialPage = async (): Promise<void> => {
     const run = generation;
     try {
@@ -125,38 +92,59 @@ export function createProfileRuntime(
         signal: aborts.signal,
       });
       if (!active(run)) return;
-      emit({ ...state, profile: page.profile, followList: page.followList, posts: page.posts, loading: false, relays: [...new Set([...state.relays, ...page.relays])] });
+      emit({
+        ...state,
+        profile: page.profile,
+        followList: page.followList,
+        posts: page.posts,
+        loading: false,
+        relays: [...new Set([...state.relays, ...page.relays])],
+      });
     } catch (error) {
       emit({ ...state, loading: false, error: boundedErrorText(error) });
     }
   };
-  // prettier-ignore
   const runtime = {
-    subscribe: (listener: (state: ProfileState) => void): (() => void) => { listeners.add(listener); listener(state); return () => listeners.delete(listener); },
+    subscribe: (listener: (state: ProfileState) => void): (() => void) => {
+      listeners.add(listener);
+      listener(state);
+      return () => listeners.delete(listener);
+    },
     start: async (): Promise<void> => {
-      if (closed) return; const run = ++generation;
-      const [meta, posts, followList] = await Promise.all([cachedProfileEvent(pubkey), cachedProfileNotes(pubkey, pageSize), cachedProfileFollowList(pubkey)]);
-      if (!active(run)) return; const profile = getProfile(pubkey) ?? (meta ? profileFromMetadataEvent(meta) : null);
-      emit({ ...state, profile, posts, followList, loading: relays.length > 0, updatedAt: meta ? meta.created_at * 1000 : null, oldestCreatedAt: oldestCreatedAt(posts) });
+      if (closed) return;
+      const run = ++generation;
+      const [meta, posts, followList] = await Promise.all([
+        cachedProfileEvent(pubkey),
+        cachedProfileNotes(pubkey, pageSize),
+        cachedProfileFollowList(pubkey),
+      ]);
+      if (!active(run)) return;
+      const profile =
+        getProfile(pubkey) ?? (meta ? profileFromMetadataEvent(meta) : null);
+      emit({
+        ...state,
+        profile,
+        posts,
+        followList,
+        loading: relays.length > 0,
+        updatedAt: meta ? meta.created_at * 1000 : null,
+        oldestCreatedAt: oldestCreatedAt(posts),
+      });
       if (relays.length === 0) {
         emit({ ...state, loading: false });
         return;
       }
       cleanup.push(
-        manager.submitLiveIntent(
-          {
-            surface: 'profile',
-            owner,
-            channel: 'profile:posts',
-            visibility,
-            selectedRelays: relays,
-            filters: profileLiveFilters(pubkey, startedAt, pageSize),
-            purpose: 'feed',
-            since: startedAt,
-          },
+        await submitProfilePostsLiveIntent({
+          pubkey,
           relays,
-          (event) => void receive(event),
-        ),
+          owner,
+          pageSize,
+          startedAt,
+          visibility,
+          subscriptions: manager,
+          onEvent: (event) => void handlers.receive(event),
+        }),
       );
       void loadInitialPage();
     },
@@ -173,24 +161,13 @@ export function createProfileRuntime(
       for (const item of cleanup.splice(0)) item();
       listeners.clear();
     },
-    loadOlder: async (options: { preserve?: ProfileOlderPreserveMode } = {}): Promise<void> => {
-      if (closed || state.loadingOlder || !state.hasOlder) return; const run = generation; const cursor = olderScanCursor ?? state.oldestCursor; if (!cursor) return; emit({ ...state, loadingOlder: true });
-      try {
-        const page = await loadOlderProfilePage({ posts: state.posts, pubkey, relays, owner, cursor, pageSize, subscriptions: manager, signal: aborts.signal, preserve: options.preserve });
-        if (!active(run)) return;
-        const { feedRowShells } = await import('../feed-surface/row-shell');
-        emit({ ...state, posts: feedRowShells(page.posts), hasOlder: page.hasOlder, loadingOlder: true });
-        olderScanCursor = page.hasOlder ? page.nextOlderCursor : undefined;
-        emit({ ...state, posts: page.posts, hasOlder: page.hasOlder, hasNewer: state.hasNewer || page.newerPruned, newerPruned: state.newerPruned || page.newerPruned });
-      }
-      catch (error) { emit({ ...state, error: boundedErrorText(error) }); }
-      finally { if (state.loadingOlder) emit({ ...state, loadingOlder: false }); }
+    loadOlder: async (
+      options: { preserve?: ProfileOlderPreserveMode } = {},
+    ): Promise<void> => {
+      await loaders.loadOlder(options);
     },
     loadNewer: async (): Promise<void> => {
-      if (closed || state.loadingNewer || !state.hasNewer) return; const run = generation; const cursor = newerScanCursor ?? state.newestCursor; if (!cursor) return; emit({ ...state, loadingNewer: true });
-      try { const page = await loadNewerProfilePage({ posts: state.posts, pubkey, relays, owner, cursor, pageSize, subscriptions: manager, signal: aborts.signal }); if (!active(run)) return; newerScanCursor = page.hasNewer ? page.nextNewerCursor : undefined; emit({ ...state, posts: page.posts, hasNewer: page.hasNewer, hasOlder: state.hasOlder || page.olderPruned, newerPruned: page.hasNewer }); }
-      catch (error) { emit({ ...state, error: boundedErrorText(error) }); }
-      finally { if (state.loadingNewer) emit({ ...state, loadingNewer: false }); }
+      await loaders.loadNewer();
     },
   };
   return runtime;
