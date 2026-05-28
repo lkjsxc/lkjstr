@@ -56,7 +56,8 @@ linked product, protocol, architecture, and operations pages.
 - Matching Home tabs attach to one shared query keyed by account, selected
   relays, page size, and feed policy. Tab ids own attachments only.
 - Stats and `__lkjstrMemoryDebug()` expose orchestration demand, lease, and
-  event intake counters.
+  event intake counters. Stats labels active relay subscriptions by redacted
+  human purpose and keeps raw ids secondary.
 - Inactive workspace tabs keep hidden mounted bodies; feed runtimes release live
   Demands while retaining bounded windows.
 - Tab snapshots are owned by `workspaceId + tabId`; pane id is only last-placement
@@ -89,7 +90,8 @@ linked product, protocol, architecture, and operations pages.
   preserving older rows; observer-only and viewport-fill triggers remain
   blocked for Profile, Notifications, and Thread.
 - Event rows show nip05-only subtitles on feeds, pressed Heart/Repost styling
-  from a hybrid action-state index plus feed evidence, and no left-side
+  from a hybrid action-state index plus feed evidence, keep optimistic
+  published pressed state stable during cache refresh, and show no left-side
   new-event stripe.
 - Welcome is a document-like quick-start with working links into Accounts,
   Relay Settings, Tweet, and core tabs.
