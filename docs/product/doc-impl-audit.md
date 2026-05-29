@@ -65,9 +65,9 @@ documented-only. Update it when a vertical slice closes a gap.
 | Stats orchestration counters   | metrics.md                      | implemented | metrics + RuntimeMemoryPanel                                                  |
 | Subscription E2E gate          | verification.md                 | implemented | `subscription-three-home.spec.ts` + visibility churn                          |
 | Hidden tab demand pause        | owner-visibility.md             | implemented | setVisibility on feed runtimes                                                |
-| All surfaces on intent API     | orchestration-bridge.md         | partial     | Profile/Home route-fingerprinted reads and live replacement are being aligned |
+| All surfaces on intent API     | orchestration-bridge.md         | implemented | Home/Profile route-fingerprinted reads, selected tools, and direct exact-read exceptions documented |
 | Shared Home backend query      | backend/home-query-lifecycle.md | implemented | `attachHomeQuery`, shared key excludes tab id                                 |
-| Feed route isolation           | feed-route-isolation.md         | partial     | Contract documented; implementation closes Home/Profile route refresh gaps    |
+| Feed route isolation           | feed-route-isolation.md         | implemented | Unit and browser gates cover Home/Profile route keys, live replacement, Notifications isolation |
 
 ## Feed Correctness
 

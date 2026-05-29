@@ -9,14 +9,14 @@ Notifications, and selected-relay tools.
 
 | Risk                       | Unit evidence                                      | Browser evidence                       | Status        |
 | -------------------------- | -------------------------------------------------- | -------------------------------------- | ------------- |
-| Cross-surface cursor bleed | Profile/Home page keys differ by route fingerprint | Home/Profile/Notifications together    | open question |
-| Stale route refresh        | Old Home refresh cannot clear rows or replace live | Home receives after route refresh      | open question |
-| Hidden-tab interference    | Hidden owners pause without closing visible leases | Hidden tab keeps visible live intact   | open question |
-| Duplicate live leases      | Home notes channel replaces instead of stacking    | Multiple Home tabs avoid duplicates    | open question |
-| Missing refresh events     | Replacement live uses startup-bounded `since`      | Home receives discovered-route events  | open question |
-| Discovery relay post bleed | Profile posts exclude discovery unless selected    | Profile route-isolation scenario       | open question |
-| Notification route bleed   | `#p` reads are isolated from Profile/Home routing  | Notifications cursor stays independent | open question |
-| Scan batch key collision   | Relay scan keys include group identity             | Covered by grouped feed scenarios      | open question |
+| Cross-surface cursor bleed | Profile/Home page keys differ by route fingerprint | Home/Profile/Notifications together    | implemented |
+| Stale route refresh        | Old Home refresh cannot clear rows or replace live | Home receives after route refresh      | implemented |
+| Hidden-tab interference    | Hidden owners pause without closing visible leases | Hidden tab keeps visible live intact   | implemented |
+| Duplicate live leases      | Home notes channel replaces instead of stacking    | Multiple Home tabs avoid duplicates    | implemented |
+| Missing refresh events     | Replacement live uses startup-bounded `since`      | Home receives discovered-route events  | implemented |
+| Discovery relay post bleed | Profile posts exclude discovery unless selected    | Profile route-isolation scenario       | implemented |
+| Notification route bleed   | `#p` reads are isolated from Profile/Home routing  | Notifications cursor stays independent | implemented |
+| Scan batch key collision   | Relay scan keys include group identity             | Covered by grouped feed scenarios      | implemented |
 
 ## Unit Gates
 
@@ -49,9 +49,11 @@ Notifications, and selected-relay tools.
 - `pnpm test -- tests/unit/relays/orchestration/page-reads.test.ts`
 - `pnpm test -- tests/unit/profile/profile-runtime-paging.test.ts`
 - `pnpm test -- tests/unit/timeline/timeline-runtime-route-discovery.test.ts`
+- Browser gate commands listed above.
 
-The browser gate remains the required evidence before changing the audit rows
-from `partial` to `implemented`.
+These checks prove the current route-isolation contract at unit and browser
+level. Docker Compose remains the final repository gate after broader source
+changes.
 
 ## Related
 

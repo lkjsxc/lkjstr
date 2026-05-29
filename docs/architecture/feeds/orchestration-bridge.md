@@ -51,5 +51,6 @@ Feed runtime -> Intent (owner = tab id)
 
 ## Status
 
-partial until Home and Profile route-fingerprinted regression coverage proves
-route refresh, live lease replacement, and Profile paging isolation.
+implemented. Home and Profile route-fingerprinted page coverage, Home live
+lease sharing, hidden-tab retention, and notification isolation are covered by
+unit and browser regression gates.
