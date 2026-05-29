@@ -15,6 +15,7 @@ import {
 import type { RelayReadRequest } from '../../../src/lib/events/types';
 import type { NostrEvent } from '../../../src/lib/protocol';
 import type { SubscriptionOrchestrator } from '../../../src/lib/relays/orchestration/orchestrator';
+import type { ReadPageOptions } from '../../../src/lib/relays/subscription-manager';
 
 const relay = 'wss://custom.example/';
 
@@ -89,6 +90,22 @@ describe('custom request reads', () => {
     expect(calls).toEqual([]);
     expect(events.map((item) => item.event.id)).toEqual(['a'.repeat(64)]);
   });
+
+  it('forwards adaptive progressive snapshots through user filters', async () => {
+    const snapshots: string[] = [];
+    await readCustomRequestEvents({
+      request: { relays: [relay], filters: [{ kinds: [1], since: 10 }] },
+      relays: [relay],
+      owner: 'tab',
+      pageSize: 30,
+      subscriptions: detailedReads([], [event('a', 15), event('b', 5)]),
+      onSnapshot: (snapshot) => {
+        snapshots.push(snapshot.items.map((item) => item.event.id).join(','));
+      },
+    });
+
+    expect(snapshots).toContain('a'.repeat(64));
+  });
 });
 
 function detailedReads(
@@ -96,8 +113,22 @@ function detailedReads(
   events: readonly NostrEvent[],
 ): SubscriptionOrchestrator {
   return {
-    readPageDetailed: async (request: RelayReadRequest) => {
+    readPageDetailed: async (
+      request: RelayReadRequest,
+      options?: ReadPageOptions,
+    ) => {
       calls.push(request);
+      options?.onSnapshot?.({
+        readId: request.key,
+        status: 'partial',
+        reason: 'relay-events',
+        events: events.map((event) => ({ event, relay, subId: 'sub' })),
+        relays: [],
+        startedAt: 1,
+        updatedAt: 1,
+        durationMs: 1,
+        final: false,
+      });
       return {
         events: events.map((event) => ({ event, relay, subId: 'sub' })),
         statuses: request.relays.map((url) => ({

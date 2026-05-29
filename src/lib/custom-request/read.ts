@@ -36,17 +36,7 @@ export async function readCustomRequestEvents(input: {
       pageSize: input.pageSize,
       subscriptions: input.subscriptions,
       purpose: 'feed',
-      onSnapshot: input.onSnapshot
-        ? (snapshot) =>
-            input.onSnapshot?.({
-              status: snapshot.status,
-              items: filterEvents(
-                feedEventsFromProgressiveSnapshot(snapshot),
-                input.request.filters,
-                input.pageSize,
-              ),
-            })
-        : undefined,
+      onSnapshot: customSnapshot(input),
     });
     return filterEvents(events, input.request.filters, input.pageSize);
   }
@@ -67,8 +57,27 @@ export async function readCustomRequestEvents(input: {
     pageSize: input.pageSize,
     subscriptions: input.subscriptions,
     purpose: 'feed',
+    onSnapshot: customSnapshot(input),
   });
   return filterEvents(page.items, input.request.filters, input.pageSize);
+}
+
+function customSnapshot(input: {
+  readonly request: CustomRequest;
+  readonly pageSize: number;
+  readonly onSnapshot?: (snapshot: CustomRequestSnapshot) => void;
+}): OnProgressiveReadSnapshot | undefined {
+  return input.onSnapshot
+    ? (snapshot) =>
+        input.onSnapshot?.({
+          status: snapshot.status,
+          items: filterEvents(
+            feedEventsFromProgressiveSnapshot(snapshot),
+            input.request.filters,
+            input.pageSize,
+          ),
+        })
+    : undefined;
 }
 
 function adaptiveBefore(filters: readonly NostrFilter[]) {
