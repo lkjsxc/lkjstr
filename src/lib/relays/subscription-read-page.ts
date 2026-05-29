@@ -23,6 +23,11 @@ import {
 import { requestSubscriptionDescriptor } from './subscription-descriptor';
 import { createProgressiveReadPublisher } from './progressive-read-publisher';
 import { readPageResult } from './subscription-read-result';
+import {
+  recordRelayReadStatuses,
+  relayReadScoreContext,
+  scoreRelayCandidates,
+} from './relay-read-score';
 
 export type ReadPageState = RelayReadLeaseState;
 
@@ -43,6 +48,9 @@ export async function executeReadPage(
     safeRequest.purpose,
   );
   if (relays.length === 0) return { events: [], statuses: [] };
+  const descriptor = requestSubscriptionDescriptor(safeRequest);
+  const scoreContext = relayReadScoreContext(safeRequest, descriptor);
+  const scoredRelays = scoreRelayCandidates(relays, scoreContext);
   const effective = { ...safeRequest, relays };
   const events: PoolEvent[] = [];
   const maxEvents = Math.max(1, options.maxEvents ?? defaultReadPageMaxEvents);
@@ -57,7 +65,7 @@ export async function executeReadPage(
   const progressive = createProgressiveReadPublisher({
     readId: requestKey,
     surface: effective.purpose,
-    relays,
+    relays: effective.relays,
     startedAt,
     onSnapshot: options.onSnapshot,
   });
@@ -87,7 +95,7 @@ export async function executeReadPage(
     progressive.emit('start');
     try {
       release = await readLimiter.acquire(
-        limitedReadRelays(relays),
+        limitedReadRelays(scoredRelays),
         options.signal,
       );
     } catch (error) {
@@ -145,17 +153,18 @@ export async function executeReadPage(
             { type: 'relay-statuses', statuses: statuses() },
             'relay-state',
           );
-          if (readPageComplete(snapshots, relays, subId)) finish();
+          if (readPageComplete(snapshots, effective.relays, subId)) finish();
         });
-        close = pool.subscribe(relays, subId, effective.filters, {
+        close = pool.subscribe(effective.relays, subId, effective.filters, {
           purpose: effective.purpose,
           strategy: 'backward',
           idleCloseMs: options.timeoutMs ?? 5000,
-          descriptor: requestSubscriptionDescriptor(effective),
+          descriptor,
         });
       }
     });
     finishRead = undefined;
+    recordRelayReadStatuses(scoreContext, statuses());
     progressive.apply(
       aborted ? { type: 'cancel' } : { type: 'finalize', statuses: statuses() },
       aborted ? 'cancel' : 'final',
