@@ -1,5 +1,6 @@
 import type { NostrFilter } from '../protocol';
 import type { RelayRouteGroup } from '../relays/relay-route-types';
+import { countRuntime } from '../app/runtime-counters';
 import { coverageCoversRequirements } from './feed-coverage-query';
 import { coverageForFeed } from './feed-coverage-store';
 import { mergedDisplayBounds } from './feed-display-bounds';
@@ -80,12 +81,18 @@ export async function buildSegmentCachePlan(
   );
   const covered = plans.filter((plan) => plan.covered);
   const uncovered = uncoveredBatches(plans);
-  if (covered.length === 0)
+  if (covered.length === 0) {
+    countRuntime('timeline', 'cacheCoverageMisses');
     return { kind: 'miss', uncovered, reason: 'no complete coverage' };
+  }
   const cached = await cachedRead(request, segment, covered);
   const skippedRelays = [...new Set(covered.map((plan) => plan.relayUrl))].sort();
-  if (uncovered.length === 0)
+  for (const _relay of skippedRelays) countRuntime('timeline', 'cacheSkippedRelayReads');
+  if (uncovered.length === 0) {
+    countRuntime('timeline', 'cacheCoverageHits');
     return { kind: 'covered', read: cached, skippedRelays };
+  }
+  countRuntime('timeline', 'cacheCoveragePartialHits');
   return {
     kind: 'partial',
     cached,

@@ -24,14 +24,25 @@ export type RelaySegmentRequest = {
 export function initialRelayPageSegment(
   request: RelaySegmentRequest,
 ): RelayPageSegment {
+  return initialRelayPageSegmentWithSpan(request, relaySegmentInitialSpan);
+}
+
+export function initialRelayPageSegmentWithSpan(
+  request: RelaySegmentRequest,
+  spanSeconds: number,
+): RelayPageSegment {
   const now = request.now ?? Math.floor(Date.now() / 1000);
+  const span = Math.min(
+    relaySegmentMaxSpan,
+    Math.max(relaySegmentMinSpan, spanSeconds),
+  );
   if (request.direction === 'newer') {
     const until = now + 1;
     const lower = lowerBound(request);
-    return segment(Math.max(lower, until - relaySegmentInitialSpan), until);
+    return segment(Math.max(lower, until - span), until);
   }
   const until = request.before ? boundaryUntil(request.before)! : now + 1;
-  return segment(Math.max(0, until - relaySegmentInitialSpan), until);
+  return segment(Math.max(0, until - span), until);
 }
 
 export function nextGrownRelayPageSegment(

@@ -8,15 +8,15 @@ by priority after memory stabilization passes.
 
 ## In Progress
 
-| Item | Destination doc | Test strategy |
-| --- | --- | --- |
-| Warm grouped scan hints separated from proof | [storage.md](../architecture/data/storage.md) | Unit hint policy tests and adaptive-window warm-start tests |
+None right now. Cache-first grouped feed pages and warm scan hints are
+implemented and tracked in [doc-impl-audit.md](doc-impl-audit.md).
 
 ## Completed (feeds)
 
 | Item | Contract |
 | --- | --- |
 | Cache-first grouped feed pages with partial relay pruning | [cache-first-feed-pages.md](../architecture/data/cache-first-feed-pages.md) |
+| Warm grouped scan hints separated from proof | [storage.md](../architecture/data/storage.md) |
 
 ## Completed (workspace)
 

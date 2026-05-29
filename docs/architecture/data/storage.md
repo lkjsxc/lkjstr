@@ -55,10 +55,10 @@ is documented separately before any passkey secret table is restored.
 | `lastFeedback` | last sparse, balanced, dense, or incomplete signal |
 | `updatedAt` | last write timestamp |
 
-Hints are performance records, not absence proof. They are clamped to safe scan
-bounds, ignored when stale, and compacted by age and count. Hint cleanup must
-not delete events, accounts, workspace state, settings, relays, drafts, or
-notifications.
+Hints are performance records, not absence proof. They are clamped to `1`
+second through `180` days, ignored after `30` days, and compacted to the newest
+`2000` rows. Hint cleanup must not delete events, accounts, workspace state,
+settings, relays, drafts, or notifications.
 
 ## Tab Snapshots
 

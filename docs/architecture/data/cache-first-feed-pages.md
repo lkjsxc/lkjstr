@@ -50,5 +50,5 @@ performance input. Coverage proof remains separate.
 ## Status
 
 Interval-union proof and partial relay pruning are implemented for grouped feed
-page scans. Durable warm hints remain in progress and are not required for cache
-proof.
+page scans. Durable warm hints are implemented as performance input and are not
+required for cache proof.

@@ -6,6 +6,7 @@ import {
   recordScanCoverage,
 } from './relay-page-scan-diagnostics';
 import type { BatchReadResult } from './relay-page-scan-batch';
+import { recordBatchHints } from './relay-page-scan-hints';
 import { segmentBounds, type RelayPageSegment } from './relay-page-segments';
 import type { RelayGroupPageRequest } from './relay-page';
 
@@ -18,6 +19,7 @@ export async function recordBatchCoverage(
   segment: RelayPageSegment,
   attempt: number,
 ): Promise<void> {
+  const windowFeedback = feedback(read);
   await recordScanCoverage(
     request,
     groupKey,
@@ -33,10 +35,19 @@ export async function recordBatchCoverage(
       durationMs: read.durationMs,
       relayRows: read.density.perRelay,
       spanSeconds: segment.span,
-      feedback: feedback(read),
+      feedback: windowFeedback,
       direction: request.direction,
     },
   );
+  recordBatchHints({
+    request,
+    groupKey,
+    relays,
+    filters,
+    read,
+    spanSeconds: segment.span,
+    feedback: windowFeedback,
+  });
   if (!read.complete && !(read.reason === 'event-limit' && read.dense))
     logIncompleteScan(request, groupKey, filters[0] ?? {}, read.statuses);
 }

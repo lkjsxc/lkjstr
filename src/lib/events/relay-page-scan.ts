@@ -5,12 +5,13 @@ import type { FeedCursorPoint, FeedEvent } from './types';
 import { mergeFeedEvents, sortFeedEvents } from './relay-page-merge';
 import { pageScanItems, scanCandidates } from './relay-page-scan-items';
 import {
-  initialRelayPageSegment,
+  initialRelayPageSegmentWithSpan,
   relayPageSegmentCursor,
   relaySegmentMaxSegmentsPerPage,
   type RelayPageSegment,
 } from './relay-page-segments';
 import { readSegment, type SegmentRead } from './relay-page-scan-read';
+import { warmInitialSpan } from './relay-page-scan-hints';
 import {
   classifyWindowFeedback,
   nextAdaptiveRelayWindow,
@@ -23,7 +24,11 @@ export async function scanRelayFeedGroups(
   const direction = request.direction ?? 'older';
   let collected: FeedEvent[] = [];
   let safeCursor: FeedCursorPoint | undefined;
-  let segment = initialRelayPageSegment({ ...request, direction });
+  const initialSpan = await warmInitialSpan(request, direction);
+  let segment = initialRelayPageSegmentWithSpan(
+    { ...request, direction },
+    initialSpan,
+  );
   const queue: RelayPageSegment[] = [segment];
   let processed = 0;
   while (queue.length > 0 && processed < relaySegmentMaxSegmentsPerPage) {

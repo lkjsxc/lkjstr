@@ -84,7 +84,7 @@ documented-only. Update it when a vertical slice closes a gap.
 | Timeline regression e2e                               | verification.md                      | implemented | Includes Home follow-discovery EOSE ownership and Notifications bounded viewport-fill older paging.                                                        |
 | Multi-tab Home ownership                              | feeds/runtime/multi-tab-ownership.md | implemented | Matching Home tabs attach to one backend query and share bootstrap, live leases, and cursors.                                                              |
 | Cache-first interval proof                            | data/cache-first-feed-pages.md       | implemented | Interval-union proof and partial relay pruning are covered by unit cache scan tests.                                                                       |
-| Warm grouped scan hints                               | data/storage.md                      | in progress | Docs define a separate hint store. Runtime integration and tests are in progress.                                                                          |
+| Warm grouped scan hints                               | data/storage.md                      | implemented | Hint policy and warm-start scan tests prove conservative relay-span tuning without suppressing reads.                                                     |
 
 ## Feed Scroll and Row Chrome
 

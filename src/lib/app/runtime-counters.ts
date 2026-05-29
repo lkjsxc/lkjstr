@@ -18,6 +18,13 @@ export type RuntimeCounterSnapshot = {
   readonly selectedFallbackGroups: number;
   readonly targetedGroups: number;
   readonly completedCoverageWindows: number;
+  readonly cacheCoverageHits: number;
+  readonly cacheCoveragePartialHits: number;
+  readonly cacheCoverageMisses: number;
+  readonly cacheSkippedRelayReads: number;
+  readonly warmHintReads: number;
+  readonly warmHintWrites: number;
+  readonly warmHintFallbacks: number;
   readonly lastUpdatedAt: number;
 };
 
@@ -71,6 +78,13 @@ type MutableCounter = {
   selectedFallbackGroups: number;
   targetedGroups: number;
   completedCoverageWindows: number;
+  cacheCoverageHits: number;
+  cacheCoveragePartialHits: number;
+  cacheCoverageMisses: number;
+  cacheSkippedRelayReads: number;
+  warmHintReads: number;
+  warmHintWrites: number;
+  warmHintFallbacks: number;
   lastUpdatedAt: number;
 };
 
@@ -105,7 +119,6 @@ const runtimeCounterKeys = new Set<RuntimeCounterKey>([
   'token-cache-count',
   'notification-runtime-record-count',
 ]);
-
 let enabled = false;
 const counters = new Map<RuntimeCounterKey, MutableCounter>();
 
@@ -175,6 +188,13 @@ function emptyCounter(): MutableCounter {
     selectedFallbackGroups: 0,
     targetedGroups: 0,
     completedCoverageWindows: 0,
+    cacheCoverageHits: 0,
+    cacheCoveragePartialHits: 0,
+    cacheCoverageMisses: 0,
+    cacheSkippedRelayReads: 0,
+    warmHintReads: 0,
+    warmHintWrites: 0,
+    warmHintFallbacks: 0,
     lastUpdatedAt: Date.now(),
   };
 }

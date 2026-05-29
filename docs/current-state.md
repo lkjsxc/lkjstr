@@ -96,6 +96,9 @@ linked product, protocol, architecture, and operations pages.
   may prove a bounded segment. If only some relays are proven, only uncovered
   relays are queried. Dense, incomplete, unresolved, failed, compacted, or
   missing evidence is not proof of absence and cannot suppress relay reads.
+- Durable warm scan hints tune grouped feed scan initial spans only when every
+  required relay/filter has fresh evidence. Hints are bounded, stale after `30`
+  days, and never prove absence or suppress relay reads.
 - Home, Global, Profile posts, Notifications, and time-windowable Custom Request
   feeds use adaptive grouped scans. Search, exact id requests, Custom Request
   filters with `ids` or `search`, Author Context, Thread reply pages, metadata,
@@ -174,8 +177,6 @@ linked product, protocol, architecture, and operations pages.
   Notifications older paging is gated by scroll-owner intent or explicit retry.
 - RSS remains diagnostic-only for memory verification; app JavaScript heap is
   the owned browser memory assertion.
-- Warm scan hints are in implementation. They are tracked in
-  [product/backlog.md](product/backlog.md) until tests prove the behavior.
 
 ## Canonical Docs
 

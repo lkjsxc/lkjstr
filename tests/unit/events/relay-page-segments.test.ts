@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import {
   initialRelayPageSegment,
+  initialRelayPageSegmentWithSpan,
   nextGrownRelayPageSegment,
   relaySegmentInitialSpan,
   relaySegmentMaxSpan,
@@ -46,6 +47,19 @@ describe('relay page segments', () => {
     );
 
     expect(grown ? span(grown) : 0).toBe(relaySegmentMaxSpan);
+  });
+
+  it('starts scans with a supplied initial span', () => {
+    const initial = initialRelayPageSegmentWithSpan(
+      {
+        direction: 'older',
+        before: { createdAt: 1_000, id: 'f'.repeat(64) },
+        now: 1_000,
+      },
+      120,
+    );
+
+    expect(span(initial)).toBe(120);
   });
 });
 

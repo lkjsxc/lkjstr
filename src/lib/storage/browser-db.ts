@@ -10,6 +10,7 @@ import type {
   JobRecord,
   StoredEvent,
 } from '../events/types';
+import type { FeedScanHint } from '../events/feed-scan-hints';
 import type { NotificationRecord } from '../notifications/notification';
 import type { RelayDiagnosticSummary } from '../relays/relay-diagnostic-summary';
 import type { RelayInformationRecord } from '../relays/relay-info';
@@ -42,6 +43,7 @@ export class LkjstrDb extends Dexie {
   eventTags!: Table<EventTagRow, string>;
   feedCursors!: Table<FeedCursor, string>;
   feedCoverage!: Table<FeedCoverage, string>;
+  feedScanHints!: Table<FeedScanHint, string>;
   jobs!: Table<JobRecord, string>;
   cacheMeta!: Table<CacheMetadata, string>;
   tabStates!: Table<TabStateRecord, string>;
@@ -64,7 +66,7 @@ export class LkjstrDb extends Dexie {
         }
       >
     )[schemaMethod];
-    schema.call(this, 15).stores({
+    schema.call(this, 16).stores({
       workspaces: '&id, updatedAt, activeAccountId',
       accounts: '&id, pubkey, signerType, updatedAt, lastUsedAt',
       localAccountSecrets: '&accountId, pubkey, updatedAt',
@@ -81,6 +83,8 @@ export class LkjstrDb extends Dexie {
       feedCursors: '&id, feedKey, updatedAt',
       feedCoverage:
         '&id, feedKey, relayUrl, groupKey, status, updatedAt, [feedKey+status], [feedKey+relayUrl], [feedKey+groupKey], [feedKey+updatedAt]',
+      feedScanHints:
+        '&id, scanKey, relayUrl, groupKey, filterKey, direction, updatedAt, [scanKey+direction], [scanKey+relayUrl]',
       jobs: '&id, rootId, parentId, kind, status, updatedAt, [rootId+updatedAt]',
       cacheMeta: '&id, updatedAt',
       tabStates: '&id, workspaceId, tabId, lastPaneId, updatedAt',
