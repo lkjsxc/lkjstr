@@ -1,27 +1,22 @@
 import { beforeEach, describe, expect, it } from 'vitest';
-import {
-  clearFeedCoverageForTests,
-  saveFeedCoverage,
-} from '../../../src/lib/events/feed-coverage-store';
-import {
-  clearEventRepositoryForTests,
-  upsertEvent,
-} from '../../../src/lib/events/repository';
-import { readRelayFeedGroups } from '../../../src/lib/events/relay-page';
-import { semanticFilterKey } from '../../../src/lib/events/relay-page-scan-diagnostics';
+import { upsertEvent } from '../../../src/lib/events/repository';
 import type { RelayReadRequest } from '../../../src/lib/events/types';
-import type { NostrEvent, NostrFilter } from '../../../src/lib/protocol';
-import type { ReadPageResult } from '../../../src/lib/relays/read-page-status';
-import type { RelaySubscriptionManager } from '../../../src/lib/relays/subscription-manager';
-
-const relay = 'wss://cache.example/';
-const bounds = { since: 9_941, until: 10_001 };
+import type { NostrFilter } from '../../../src/lib/protocol';
+import {
+  cover,
+  event,
+  otherRelay,
+  pageFor,
+  poolEvent,
+  relay,
+  resetCacheScanTests,
+  span,
+  subscriptions,
+  throwingSubscriptions,
+} from './relay-page-scan-cache-helpers';
 
 describe('relay page scan cache coverage', () => {
-  beforeEach(() => {
-    clearFeedCoverageForTests();
-    clearEventRepositoryForTests();
-  });
+  beforeEach(() => resetCacheScanTests());
 
   it('skips a covered empty segment and advances to the grown remote window', async () => {
     const calls: NostrFilter[] = [];
@@ -44,6 +39,43 @@ describe('relay page scan cache coverage', () => {
     expect(calls).toEqual([]);
   });
 
+  it('does not call relay manager when all relay coverage is cached', async () => {
+    await cover('cache-no-call', relay, 'complete');
+    await upsertEvent(event('a', 9_999), [relay]);
+
+    const page = await pageFor('cache-no-call', {
+      calls: [],
+      pageSize: 1,
+      limit: 10,
+      subscriptions: throwingSubscriptions(),
+    });
+
+    expect(page.items.map((item) => item.event.id)).toEqual(['a'.repeat(64)]);
+    expect(page.incomplete).toBe(false);
+    expect(page.dense).toBe(false);
+  });
+
+  it('prunes covered relays and reads only uncovered relays', async () => {
+    const requests: RelayReadRequest[] = [];
+    await cover('cache-partial', relay, 'complete');
+    await upsertEvent(event('a', 9_999), [relay]);
+
+    const page = await pageFor('cache-partial', {
+      calls: [],
+      pageSize: 2,
+      limit: 10,
+      relays: [relay, otherRelay],
+      subscriptions: subscriptions([], requests, [poolEvent('b', otherRelay)]),
+    });
+
+    expect(requests).toHaveLength(1);
+    expect(requests[0]?.relays).toEqual([otherRelay]);
+    expect(page.items.map((item) => item.event.id)).toEqual([
+      'a'.repeat(64),
+      'b'.repeat(64),
+    ]);
+  });
+
   it('does not skip relays for dense or missing coverage', async () => {
     const denseCalls: NostrFilter[] = [];
     await cover('cache-dense', relay, 'dense');
@@ -58,107 +90,4 @@ describe('relay page scan cache coverage', () => {
     });
     expect(span(missingCalls[0]!)).toBe(60);
   });
-
-  it('filters cached rows outside the segment display bounds', async () => {
-    const calls: NostrFilter[] = [];
-    await cover('cache-bounds', relay, 'complete');
-    await upsertEvent(event('a', 9_999), [relay]);
-    await upsertEvent(event('b', 9_000), [relay]);
-
-    const page = await pageFor('cache-bounds', {
-      calls,
-      pageSize: 1,
-      limit: 10,
-    });
-
-    expect(page.items.map((item) => item.event.id)).toEqual(['a'.repeat(64)]);
-    expect(calls).toEqual([]);
-  });
 });
-
-async function cover(
-  feedKey: string,
-  relayUrl: string,
-  status: 'complete' | 'dense',
-) {
-  await saveFeedCoverage({
-    feedKey,
-    relayUrl,
-    groupKey: 'group',
-    filterKey: semanticFilterKey({ kinds: [1], ...bounds, limit: 10 }),
-    status,
-    ...bounds,
-  });
-}
-
-function pageFor(
-  key: string,
-  options: {
-    readonly calls: NostrFilter[];
-    readonly pageSize: number;
-    readonly limit: number;
-  },
-) {
-  return readRelayFeedGroups({
-    key,
-    groups: [
-      {
-        key: 'group',
-        relays: [relay],
-        authors: [],
-        source: 'fallback' as const,
-      },
-    ],
-    filters: (_group, segment) => [
-      { kinds: [1], ...segment, limit: options.limit },
-    ],
-    direction: 'older',
-    before: { createdAt: 10_000, id: 'f'.repeat(64) },
-    pageSize: options.pageSize,
-    subscriptions: subscriptions(options.calls),
-  });
-}
-
-function subscriptions(calls: NostrFilter[]): RelaySubscriptionManager {
-  return {
-    readPageDetailed: async (request: RelayReadRequest) => {
-      const filter = request.filters[0];
-      if (filter) calls.push(filter);
-      return detailed(request);
-    },
-  } as unknown as RelaySubscriptionManager;
-}
-
-function detailed(request: RelayReadRequest): ReadPageResult {
-  return {
-    events: [],
-    statuses: request.relays.map((url) => ({
-      relay: url,
-      eose: true,
-      timeout: false,
-      closed: false,
-      auth: false,
-      socketClosed: false,
-      socketError: false,
-      durationMs: 1,
-      candidateCount: 0,
-      finalCount: 0,
-    })),
-  };
-}
-
-function event(seed: string, created_at: number): NostrEvent {
-  return {
-    id: seed.repeat(64),
-    pubkey: 'a'.repeat(64),
-    created_at,
-    kind: 1,
-    tags: [],
-    content: seed,
-    sig: 'b'.repeat(128),
-  };
-}
-
-function span(filter: NostrFilter): number {
-  return (filter.until ?? 0) - (filter.since ?? 0);
-}

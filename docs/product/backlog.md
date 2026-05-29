@@ -10,8 +10,13 @@ by priority after memory stabilization passes.
 
 | Item | Destination doc | Test strategy |
 | --- | --- | --- |
-| Cache-first grouped feed pages with partial relay pruning | [cache-first-feed-pages.md](../architecture/data/cache-first-feed-pages.md) | Unit coverage proof, cache scan no-call tests, browser regression |
 | Warm grouped scan hints separated from proof | [storage.md](../architecture/data/storage.md) | Unit hint policy tests and adaptive-window warm-start tests |
+
+## Completed (feeds)
+
+| Item | Contract |
+| --- | --- |
+| Cache-first grouped feed pages with partial relay pruning | [cache-first-feed-pages.md](../architecture/data/cache-first-feed-pages.md) |
 
 ## Completed (workspace)
 

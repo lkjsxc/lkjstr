@@ -49,6 +49,6 @@ performance input. Coverage proof remains separate.
 
 ## Status
 
-Implementation work is in progress. Interval-union proof, partial relay
-pruning, and durable warm hints become implemented only when tests prove the
-runtime behavior.
+Interval-union proof and partial relay pruning are implemented for grouped feed
+page scans. Durable warm hints remain in progress and are not required for cache
+proof.

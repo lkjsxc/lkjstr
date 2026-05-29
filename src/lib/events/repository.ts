@@ -128,10 +128,15 @@ export async function latestEventByAuthorKind(
 
 export async function eventsMatching(
   filters: readonly Parameters<typeof matchesFilter>[1][],
+  options: { readonly limit?: number } = {},
 ): Promise<FeedEvent[]> {
   const limit = Math.max(
     1,
-    Math.min(500, Math.max(...filters.map((filter) => filter.limit ?? 500), 1)),
+    Math.min(
+      1000,
+      options.limit ??
+        Math.max(...filters.map((filter) => filter.limit ?? 500), 1),
+    ),
   );
   const events = await boundedStorageRead(
     () => indexedEventsMatching(filters, limit),
