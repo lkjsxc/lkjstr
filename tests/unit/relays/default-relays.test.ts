@@ -16,7 +16,6 @@ describe('default relays', () => {
       'wss://r.kojira.io',
       'wss://x.kojira.io',
       'wss://yabu.me',
-      'wss://user.kindpag.es',
     ]);
     const custom = [{ ...defaultRelaySet, id: 'custom', relays: [] }];
     expect(seedDefaultRelays(custom)).toEqual(custom);

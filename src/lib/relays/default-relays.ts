@@ -8,7 +8,6 @@ export const DEFAULT_RELAYS = [
   'wss://r.kojira.io',
   'wss://x.kojira.io',
   'wss://yabu.me',
-  'wss://user.kindpag.es',
 ] as const;
 
 export const defaultRelaySet: RelaySet = {
@@ -29,7 +28,6 @@ function labelFor(url: string): string {
     'wss://r.kojira.io': 'Kojira',
     'wss://x.kojira.io': 'Kojira X',
     'wss://yabu.me': 'Yabumi',
-    'wss://user.kindpag.es': 'kindpag.es Users',
   };
   return labels[url] ?? new URL(url).hostname.replace(/^relay\./, '');
 }
