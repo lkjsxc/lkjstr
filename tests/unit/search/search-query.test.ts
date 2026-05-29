@@ -78,6 +78,34 @@ describe('search query', () => {
       page.items.find((item) => item.event.id === cached.id)?.relays,
     ).toEqual(['wss://cache.example/', 'wss://relay.example/']);
   });
+
+  it('uses different relay read keys for different queries', async () => {
+    const keys: string[] = [];
+    const subscriptions = stubOrchestrator({
+      readPage: async (request) => {
+        keys.push(request.key);
+        return [];
+      },
+      readPageDetailed: async () => ({ events: [], statuses: [] }),
+    });
+
+    await searchPage({
+      query: 'alpha',
+      relays: ['wss://relay.example/'],
+      owner: 'search',
+      subscriptions,
+      limit: 10,
+    });
+    await searchPage({
+      query: 'beta',
+      relays: ['wss://relay.example/'],
+      owner: 'search',
+      subscriptions,
+      limit: 10,
+    });
+
+    expect(new Set(keys).size).toBe(2);
+  });
 });
 
 function fakeSubscriptions(events: PoolEvent[]) {

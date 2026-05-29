@@ -53,6 +53,31 @@ describe('page route planning keys', () => {
     );
   });
 
+  it('separates selected-tool filter shapes in page keys', () => {
+    const base = {
+      surface: 'search' as const,
+      owner: 'tool',
+      phase: 'bootstrap' as const,
+      selectedRelays: ['wss://relay'],
+      authors: [],
+      pageSize: 30,
+      direction: 'initial' as const,
+      purpose: 'search' as const,
+    };
+
+    expect(
+      pageIntentSemanticKey({
+        ...base,
+        relayFilters: [{ kinds: [1], search: 'alpha', limit: 30 }],
+      }),
+    ).not.toBe(
+      pageIntentSemanticKey({
+        ...base,
+        relayFilters: [{ kinds: [1], search: 'beta', limit: 30 }],
+      }),
+    );
+  });
+
   it('keeps route fingerprints stable across group, relay, and author order', () => {
     const left = routeGroupFingerprint([
       fallbackGroup(['wss://b/', 'wss://a/'], [pubkey('b'), pubkey('a')]),

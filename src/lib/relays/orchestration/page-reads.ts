@@ -27,6 +27,7 @@ export function pageIntentSemanticKey(intent: PageIntent): string {
   const before = cursorKey(bounds.before);
   const after = cursorKey(bounds.after);
   const relayKey = [...intent.selectedRelays].sort().join('\u0000');
+  const filters = relayFilterKey(intent.relayFilters ?? []);
   const raw = [
     intent.surface,
     intent.phase,
@@ -38,6 +39,7 @@ export function pageIntentSemanticKey(intent: PageIntent): string {
     relayKey,
     intent.routeFingerprint ?? '',
     intent.purpose ?? 'feed',
+    filters,
   ].join('|');
   return `page:${hashSemanticKey(raw)}`;
 }
@@ -120,6 +122,25 @@ export async function readTimelinePageByIntent(
 
 function cursorKey(cursor: FeedCursorPoint | undefined): string {
   return cursor ? `${cursor.createdAt}:${cursor.id}` : '';
+}
+
+function relayFilterKey(filters: NonNullable<PageIntent['relayFilters']>): string {
+  return JSON.stringify(filters.map(normalizeFilter));
+}
+
+function normalizeFilter(
+  filter: NonNullable<PageIntent['relayFilters']>[number],
+): Record<string, unknown> {
+  const entries: [string, unknown][] = Object.entries(filter).map(
+    ([key, value]) => [key, normalizeFilterValue(value)],
+  );
+  return Object.fromEntries(
+    entries.sort(([left], [right]) => left.localeCompare(right)),
+  );
+}
+
+function normalizeFilterValue(value: unknown): unknown {
+  return Array.isArray(value) ? [...value].sort() : value;
 }
 
 export function readPageByIntent(

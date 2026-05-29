@@ -40,6 +40,14 @@ async function relaySearch(
   query: string,
 ): Promise<FeedEvent[]> {
   const searchRelays = await nip50Relays(request.relays);
+  const filters = [
+    {
+      kinds: feedDisplayKinds,
+      search: query,
+      limit: request.limit,
+      until: boundaryUntil(request.before),
+    },
+  ];
   const relayItems = await readRelayFeedPage({
     key: pageIntentSemanticKey({
       surface: 'search',
@@ -51,16 +59,10 @@ async function relaySearch(
       direction: request.before ? 'older' : 'initial',
       cursor: request.before,
       purpose: 'search',
+      relayFilters: filters,
     }),
     relays: searchRelays,
-    filters: [
-      {
-        kinds: feedDisplayKinds,
-        search: query,
-        limit: request.limit,
-        until: boundaryUntil(request.before),
-      },
-    ],
+    filters,
     before: request.before,
     pageSize: request.limit + 1,
     subscriptions: request.subscriptions,
