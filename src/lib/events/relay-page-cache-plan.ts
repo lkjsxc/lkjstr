@@ -86,8 +86,11 @@ export async function buildSegmentCachePlan(
     return { kind: 'miss', uncovered, reason: 'no complete coverage' };
   }
   const cached = await cachedRead(request, segment, covered);
-  const skippedRelays = [...new Set(covered.map((plan) => plan.relayUrl))].sort();
-  for (const _relay of skippedRelays) countRuntime('timeline', 'cacheSkippedRelayReads');
+  const skippedRelays = [
+    ...new Set(covered.map((plan) => plan.relayUrl)),
+  ].sort();
+  for (let index = 0; index < skippedRelays.length; index += 1)
+    countRuntime('timeline', 'cacheSkippedRelayReads');
   if (uncovered.length === 0) {
     countRuntime('timeline', 'cacheCoverageHits');
     return { kind: 'covered', read: cached, skippedRelays };
@@ -138,7 +141,9 @@ async function cachedRead(
   const cached = await eventsMatching(filters, {
     limit: localMatchLimit(request.pageSize, filters.length),
   });
-  const receivedItems = mergeFeedEvents(cached.filter((item) => fromRelays(item, relays)));
+  const receivedItems = mergeFeedEvents(
+    cached.filter((item) => fromRelays(item, relays)),
+  );
   const items = pageScanItems(receivedItems, {
     ...request,
     displayBounds: mergedDisplayBounds(request, segment),
@@ -156,7 +161,11 @@ async function cachedRead(
 }
 
 function uniqueFilters(filters: readonly NostrFilter[]): NostrFilter[] {
-  return [...new Map(filters.map((filter) => [JSON.stringify(filter), filter])).values()];
+  return [
+    ...new Map(
+      filters.map((filter) => [JSON.stringify(filter), filter]),
+    ).values(),
+  ];
 }
 
 function fromRelays(item: FeedEvent, relays: ReadonlySet<string>): boolean {

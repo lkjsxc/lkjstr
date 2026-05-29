@@ -131,14 +131,19 @@ function requirementKey(requirement: CoverageRequirement): string {
 function identityKey(
   requirement: Pick<CoverageRequirement, 'groupKey' | 'relayUrl' | 'filterKey'>,
 ): string {
-  return [requirement.groupKey, requirement.relayUrl, requirement.filterKey].join(
-    '|',
-  );
+  return [
+    requirement.groupKey,
+    requirement.relayUrl,
+    requirement.filterKey,
+  ].join('|');
 }
 
 function completeCoverageByIdentity(
   coverage: readonly FeedCoverage[],
-): ReadonlyMap<string, readonly { readonly since: number; readonly until: number }[]> {
+): ReadonlyMap<
+  string,
+  readonly { readonly since: number; readonly until: number }[]
+> {
   const byIdentity = new Map<
     string,
     { readonly since: number; readonly until: number }[]
@@ -164,7 +169,9 @@ function missingDecision(
 ): Extract<CoverageDecision, { readonly kind: 'missing' }> {
   const first = missing[0];
   const identity = first
-    ? [first.groupKey, first.relayUrl, first.filterKey].filter(Boolean).join('|')
+    ? [first.groupKey, first.relayUrl, first.filterKey]
+        .filter(Boolean)
+        .join('|')
     : '';
   return {
     kind: 'missing',

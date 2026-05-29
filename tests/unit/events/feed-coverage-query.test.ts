@@ -68,9 +68,9 @@ describe('feed coverage query', () => {
       ],
     );
     expect(decision.kind).toBe('missing');
-    expect(decision.kind === 'missing' ? decision.missing[0]?.gaps : []).toEqual(
-      [{ since: 160, until: 161 }],
-    );
+    expect(
+      decision.kind === 'missing' ? decision.missing[0]?.gaps : [],
+    ).toEqual([{ since: 160, until: 161 }]);
   });
 
   it('rejects a missing relay requirement', () => {
@@ -100,22 +100,24 @@ describe('feed coverage query', () => {
   it.each(['dense', 'incomplete', 'unresolved', 'failed'] as const)(
     'rejects %s rows',
     (status) => {
-      expect(coverageCoversRequirements([requirement], [row(status)]).kind).toBe(
-        'missing',
-      );
+      expect(
+        coverageCoversRequirements([requirement], [row(status)]).kind,
+      ).toBe('missing');
     },
   );
 
   it('rejects missing since and until bounds', () => {
     expect(
-      coverageCoversRequirements([{ ...requirement, since: undefined }], [
-        row('complete'),
-      ]).kind,
+      coverageCoversRequirements(
+        [{ ...requirement, since: undefined }],
+        [row('complete')],
+      ).kind,
     ).toBe('missing');
     expect(
-      coverageCoversRequirements([{ ...requirement, until: undefined }], [
-        row('complete'),
-      ]).kind,
+      coverageCoversRequirements(
+        [{ ...requirement, until: undefined }],
+        [row('complete')],
+      ).kind,
     ).toBe('missing');
   });
 

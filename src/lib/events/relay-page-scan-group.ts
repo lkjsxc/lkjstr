@@ -3,13 +3,19 @@ import { mapAsyncBounded } from '../fp/async';
 import { scanCursor } from './relay-page-scan-cursors';
 import { mergeBounds, positiveFilters } from './relay-page-filter';
 import { mergedDisplayBounds } from './feed-display-bounds';
-import { relayReadEventCap, type LimitedRelayFilters } from './relay-page-limits';
+import {
+  relayReadEventCap,
+  type LimitedRelayFilters,
+} from './relay-page-limits';
 import { mergeFeedEvents, mergePoolEvents } from './relay-page-merge';
 import { needsCursorSlack, pageScanItems } from './relay-page-scan-items';
 import { retainedRawCandidates } from './relay-page-scan-raw';
 import { readScanBatch } from './relay-page-scan-batch';
 import { buildSegmentCachePlan } from './relay-page-cache-plan';
-import { recordBatchCoverage, recordUnresolved } from './relay-page-scan-record';
+import {
+  recordBatchCoverage,
+  recordUnresolved,
+} from './relay-page-scan-record';
 import {
   canSplitRelayPageSegment,
   segmentBounds,
@@ -33,7 +39,12 @@ export async function readGroup(
     request.filters(group, bounds),
     request.pageSize,
   );
-  const plan = await buildSegmentCachePlan(request, group, segment, baseFilters);
+  const plan = await buildSegmentCachePlan(
+    request,
+    group,
+    segment,
+    baseFilters,
+  );
   if (plan.kind === 'covered') return plan.read;
   const batches = plan.uncovered;
   const cachedItems = plan.kind === 'partial' ? plan.cached.receivedItems : [];
@@ -96,7 +107,10 @@ export async function readGroup(
         ),
       ),
     );
-  const receivedItems = mergeFeedEvents([...cachedItems, ...mergePoolEvents(raw)]);
+  const receivedItems = mergeFeedEvents([
+    ...cachedItems,
+    ...mergePoolEvents(raw),
+  ]);
   return {
     items,
     receivedItems,

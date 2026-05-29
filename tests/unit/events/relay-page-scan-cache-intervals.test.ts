@@ -50,7 +50,10 @@ describe('relay page scan cache interval proof', () => {
   it('queries relays when complete coverage has a one-second gap', async () => {
     const calls: NostrFilter[] = [];
     await cover('cache-gap', relay, 'complete', { since: 9_941, until: 9_970 });
-    await cover('cache-gap', relay, 'complete', { since: 9_971, until: 10_001 });
+    await cover('cache-gap', relay, 'complete', {
+      since: 9_971,
+      until: 10_001,
+    });
 
     await pageFor('cache-gap', { calls, pageSize: 1, limit: 10 });
 

@@ -21,7 +21,10 @@ export async function warmInitialSpan(
 ): Promise<number> {
   const spans: number[] = [];
   for (const group of request.groups) {
-    const filters = positiveFilters(request.filters(group, {}), request.pageSize);
+    const filters = positiveFilters(
+      request.filters(group, {}),
+      request.pageSize,
+    );
     const batches = await limitedRelayFilterGroups(
       group.relays,
       filters,
@@ -40,7 +43,12 @@ export async function warmInitialSpan(
           countRuntime('timeline', 'warmHintFallbacks');
           return relaySegmentInitialSpan;
         }
-        spans.push(chooseWarmSpan({ defaultSpanSeconds: relaySegmentInitialSpan, hints }));
+        spans.push(
+          chooseWarmSpan({
+            defaultSpanSeconds: relaySegmentInitialSpan,
+            hints,
+          }),
+        );
       }
     }
   }

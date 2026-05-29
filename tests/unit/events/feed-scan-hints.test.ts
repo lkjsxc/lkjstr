@@ -21,13 +21,22 @@ describe('feed scan hints', () => {
       }),
     ).toBe(120);
     expect(
-      recommendedSpanForFeedback({ currentSpanSeconds: 60, feedback: 'balanced' }),
+      recommendedSpanForFeedback({
+        currentSpanSeconds: 60,
+        feedback: 'balanced',
+      }),
     ).toBe(60);
     expect(
-      recommendedSpanForFeedback({ currentSpanSeconds: 60, feedback: 'limit-hit' }),
+      recommendedSpanForFeedback({
+        currentSpanSeconds: 60,
+        feedback: 'limit-hit',
+      }),
     ).toBe(30);
     expect(
-      recommendedSpanForFeedback({ currentSpanSeconds: 60, feedback: 'incomplete' }),
+      recommendedSpanForFeedback({
+        currentSpanSeconds: 60,
+        feedback: 'incomplete',
+      }),
     ).toBe(60);
   });
 

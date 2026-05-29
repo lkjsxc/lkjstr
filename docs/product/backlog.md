@@ -13,10 +13,10 @@ implemented and tracked in [doc-impl-audit.md](doc-impl-audit.md).
 
 ## Completed (feeds)
 
-| Item | Contract |
-| --- | --- |
+| Item                                                      | Contract                                                                    |
+| --------------------------------------------------------- | --------------------------------------------------------------------------- |
 | Cache-first grouped feed pages with partial relay pruning | [cache-first-feed-pages.md](../architecture/data/cache-first-feed-pages.md) |
-| Warm grouped scan hints separated from proof | [storage.md](../architecture/data/storage.md) |
+| Warm grouped scan hints separated from proof              | [storage.md](../architecture/data/storage.md)                               |
 
 ## Completed (workspace)
 

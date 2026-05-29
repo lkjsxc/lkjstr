@@ -47,7 +47,10 @@ export function intervalUnionCovers(
     if (interval.until <= cursor) continue;
     if (interval.since >= target.until) break;
     if (interval.since > cursor)
-      gaps.push({ since: cursor, until: Math.min(interval.since, target.until) });
+      gaps.push({
+        since: cursor,
+        until: Math.min(interval.since, target.until),
+      });
     cursor = Math.max(cursor, Math.min(interval.until, target.until));
     if (cursor >= target.until) break;
   }

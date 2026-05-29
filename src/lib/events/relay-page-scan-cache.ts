@@ -11,6 +11,11 @@ export async function readCachedSegment(
   segment: RelayPageSegment,
   baseFilters: readonly NostrFilter[],
 ): Promise<SegmentRead | undefined> {
-  const plan = await buildSegmentCachePlan(request, group, segment, baseFilters);
+  const plan = await buildSegmentCachePlan(
+    request,
+    group,
+    segment,
+    baseFilters,
+  );
   return plan.kind === 'covered' ? plan.read : undefined;
 }

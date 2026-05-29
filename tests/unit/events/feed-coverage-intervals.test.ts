@@ -47,14 +47,11 @@ describe('feed coverage intervals', () => {
 
   it('reports exact gaps', () => {
     expect(
-      intervalUnionCovers(
-        { since: 100, until: 260 },
-        [
-          { since: 100, until: 160 },
-          { since: 180, until: 220 },
-          { since: 240, until: 260 },
-        ],
-      ),
+      intervalUnionCovers({ since: 100, until: 260 }, [
+        { since: 100, until: 160 },
+        { since: 180, until: 220 },
+        { since: 240, until: 260 },
+      ]),
     ).toEqual({
       kind: 'missing',
       gaps: [
@@ -66,31 +63,26 @@ describe('feed coverage intervals', () => {
 
   it('covers a target contained by a larger row', () => {
     expect(
-      intervalUnionCovers(
-        { since: 120, until: 180 },
-        [{ since: 100, until: 220 }],
-      ),
+      intervalUnionCovers({ since: 120, until: 180 }, [
+        { since: 100, until: 220 },
+      ]),
     ).toEqual({ kind: 'covered' });
   });
 
   it('covers a target spanning multiple rows', () => {
     expect(
-      intervalUnionCovers(
-        { since: 100, until: 220 },
-        [
-          { since: 100, until: 160 },
-          { since: 160, until: 220 },
-        ],
-      ),
+      intervalUnionCovers({ since: 100, until: 220 }, [
+        { since: 100, until: 160 },
+        { since: 160, until: 220 },
+      ]),
     ).toEqual({ kind: 'covered' });
   });
 
   it('fails a target extending below the first row', () => {
     expect(
-      intervalUnionCovers(
-        { since: 90, until: 160 },
-        [{ since: 100, until: 160 }],
-      ),
+      intervalUnionCovers({ since: 90, until: 160 }, [
+        { since: 100, until: 160 },
+      ]),
     ).toEqual({
       kind: 'missing',
       gaps: [{ since: 90, until: 100 }],
@@ -99,10 +91,9 @@ describe('feed coverage intervals', () => {
 
   it('fails a target extending above the last row', () => {
     expect(
-      intervalUnionCovers(
-        { since: 100, until: 180 },
-        [{ since: 100, until: 160 }],
-      ),
+      intervalUnionCovers({ since: 100, until: 180 }, [
+        { since: 100, until: 160 },
+      ]),
     ).toEqual({
       kind: 'missing',
       gaps: [{ since: 160, until: 180 }],

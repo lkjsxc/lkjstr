@@ -1,5 +1,8 @@
 import { beforeEach, describe, expect, it } from 'vitest';
-import { clearFeedScanHintsForTests, saveFeedScanHint } from '../../../src/lib/events/feed-scan-hints';
+import {
+  clearFeedScanHintsForTests,
+  saveFeedScanHint,
+} from '../../../src/lib/events/feed-scan-hints';
 import { readRelayFeedGroups } from '../../../src/lib/events/relay-page';
 import { semanticFilterKey } from '../../../src/lib/events/relay-page-scan-diagnostics';
 import type { RelayReadRequest } from '../../../src/lib/events/types';
@@ -19,7 +22,11 @@ describe('relay page adaptive warm starts', () => {
     const calls: NostrFilter[] = [];
     await saveHint('warm-all', relay, 120, 'under-half');
 
-    await pageFor('warm-all', { calls, relays: [relay], events: [event('a', 9_950)] });
+    await pageFor('warm-all', {
+      calls,
+      relays: [relay],
+      events: [event('a', 9_950)],
+    });
 
     expect(span(calls[0]!)).toBe(120);
   });
@@ -41,7 +48,11 @@ describe('relay page adaptive warm starts', () => {
     const calls: NostrFilter[] = [];
     await saveHint('warm-dense', relay, 30, 'limit-hit');
 
-    await pageFor('warm-dense', { calls, relays: [relay], events: [event('a', 9_990)] });
+    await pageFor('warm-dense', {
+      calls,
+      relays: [relay],
+      events: [event('a', 9_990)],
+    });
 
     expect(span(calls[0]!)).toBe(30);
   });
@@ -89,7 +100,9 @@ function pageFor(
 ) {
   return readRelayFeedGroups({
     key,
-    groups: [{ key: 'group', relays: input.relays, authors: [], source: 'fallback' }],
+    groups: [
+      { key: 'group', relays: input.relays, authors: [], source: 'fallback' },
+    ],
     filters: (_group, bounds) => [{ kinds: [1], ...bounds, limit: 10 }],
     direction: 'older',
     before: { createdAt: 10_000, id: 'f'.repeat(64) },
@@ -108,7 +121,11 @@ function subscriptions(
       if (filter) calls.push(filter);
       const matching = events
         .filter((item) => matches(item, filter))
-        .map((item) => ({ event: item, relay: request.relays[0]!, subId: 'sub' }));
+        .map((item) => ({
+          event: item,
+          relay: request.relays[0]!,
+          subId: 'sub',
+        }));
       return detailed(matching, request);
     },
   } as unknown as RelaySubscriptionManager;
