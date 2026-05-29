@@ -8,6 +8,8 @@ export type EventPriorityRecord = {
   readonly score: number;
   readonly createdAt: number;
   readonly protected: boolean;
+  readonly cacheBytes: number;
+  readonly updatedAt: number;
 };
 
 export function scoreEvent(
@@ -60,20 +62,20 @@ export function priorityTargetBumps(event: NostrEvent): Map<string, number> {
   return bumps;
 }
 
-export function isHardProtectedKind(event: NostrEvent): boolean {
-  return event.kind === 0 || event.kind === 3;
-}
-
 export function eventPriorityRecord(
   event: NostrEvent,
   tags: readonly EventTagRow[] = [],
   forceProtected = false,
+  cacheBytes = 0,
+  updatedAt = Date.now(),
 ): EventPriorityRecord {
   return {
     id: event.id,
     score: scoreEvent(event, tags),
     createdAt: event.created_at,
-    protected: forceProtected || isHardProtectedKind(event),
+    protected: forceProtected,
+    cacheBytes,
+    updatedAt,
   };
 }
 
@@ -81,10 +83,12 @@ export async function upsertEventPriority(
   event: NostrEvent,
   tags: readonly EventTagRow[] = [],
   forceProtected = false,
+  cacheBytes = 0,
+  updatedAt = Date.now(),
 ): Promise<void> {
   if (!indexedDbAvailable()) return;
   await browserDb().eventPriority.put(
-    eventPriorityRecord(event, tags, forceProtected),
+    eventPriorityRecord(event, tags, forceProtected, cacheBytes, updatedAt),
   );
   await bumpEventTargets(event);
 }
@@ -99,6 +103,7 @@ export async function bumpEventPriority(
   await browserDb().eventPriority.put({
     ...existing,
     score: existing.score + delta,
+    updatedAt: Date.now(),
   });
 }
 

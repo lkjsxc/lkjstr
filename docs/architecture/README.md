@@ -131,6 +131,8 @@ state lives, which modules own subscriptions, and how tabs close cleanly.
   hidden tab behavior.
 - [network/subscription-orchestration/page-read-dedupe.md](network/subscription-orchestration/page-read-dedupe.md):
   semantic page keys.
+- [network/subscription-orchestration/relay-read-scoring.md](network/subscription-orchestration/relay-read-scoring.md):
+  relay plus request-context scheduling scores.
 - [network/subscription-orchestration/route-plan.md](network/subscription-orchestration/route-plan.md):
   route planning.
 - [network/subscription-orchestration/tests.md](network/subscription-orchestration/tests.md):

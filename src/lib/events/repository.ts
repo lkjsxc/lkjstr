@@ -19,8 +19,8 @@ import {
   putMemory,
 } from './repository-memory';
 import { receipt, tagRows } from './repository-shared';
+import { writeStoredEvent } from './repository-write';
 import { notifyActionCacheChanged } from './action-cache-signal';
-import { upsertEventPriority } from '../cache/event-priority';
 import { normalizeStoredEvent } from './normalize';
 import { storeRelayListSuggestionsFromEvent } from '../relays/relay-list-suggestions';
 import { storeRoutesFromEvent } from '../relays/relay-route-events';
@@ -57,22 +57,7 @@ export async function upsertEvent(
     await storeRoutesFromEvent(event, relays);
     return stored;
   }
-  await bestEffortStorageWrite(async () => {
-    await browserDb().transaction(
-      'rw',
-      browserDb().events,
-      browserDb().eventRelays,
-      browserDb().eventTags,
-      browserDb().eventPriority,
-      async () => {
-        await browserDb().events.put(stored);
-        await browserDb().eventRelays.bulkPut(receipts);
-        await browserDb().eventTags.where('eventId').equals(event.id).delete();
-        if (tags.length > 0) await browserDb().eventTags.bulkPut(tags);
-        await upsertEventPriority(event, tags);
-      },
-    );
-  });
+  await writeStoredEvent({ event, stored, receipts, tags, receivedAt });
   await storeRelayListSuggestionsFromEvent(event);
   await storeRoutesFromEvent(event, relays);
   notifyActionCacheChanged(event);

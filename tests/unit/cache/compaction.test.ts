@@ -114,9 +114,10 @@ describe('cache compaction', () => {
     expect(eventPriorityRecord(baseEvent(100))).toMatchObject({
       id: 'b',
       protected: false,
+      cacheBytes: 0,
     });
     expect(eventPriorityRecord({ ...baseEvent(100), kind: 0 })).toMatchObject({
-      protected: true,
+      protected: false,
     });
   });
 
@@ -144,7 +145,14 @@ describe('cache compaction', () => {
 });
 
 function priorityRecord(id: string, score: number, protectedRow: boolean) {
-  return { id, score, createdAt: 1, protected: protectedRow };
+  return {
+    id,
+    score,
+    createdAt: 1,
+    protected: protectedRow,
+    cacheBytes: 1,
+    updatedAt: 1,
+  };
 }
 
 function candidate(
