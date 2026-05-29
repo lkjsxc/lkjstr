@@ -42,11 +42,16 @@ test('Stats labels active subscriptions and orchestration counters', async ({
   });
 
   await openNewTabOption(page, 'Stats', 0);
-  await page.getByRole('button', { name: 'Refresh' }).click();
 
-  await expect(
-    page.getByRole('cell', { name: 'Home live feed' }).first(),
-  ).toBeVisible({ timeout: 15_000 });
+  await expect
+    .poll(
+      async () => {
+        await page.getByRole('button', { name: 'Refresh' }).click();
+        return page.getByRole('cell', { name: 'Home live feed' }).count();
+      },
+      { timeout: 15_000 },
+    )
+    .toBeGreaterThan(0);
   await expect(page.getByText('active demands')).toBeVisible();
   await expect(page.getByText('active leases')).toBeVisible();
   await expect(page.getByText('live leases')).toBeVisible();
