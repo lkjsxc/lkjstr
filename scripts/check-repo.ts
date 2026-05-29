@@ -11,6 +11,7 @@ import { checkRuntimeCounters } from './repo-runtime-counters';
 import { checkUnboundedTimers } from './repo-timers';
 import { checkToArrayLimits } from './repo-toarray';
 import { checkLiveQueryOwnership } from './repo-livequery';
+import { checkGithubMetadataReadme } from './repo-github-metadata';
 
 type Problem = { file: string; message: string };
 
@@ -43,6 +44,7 @@ problems.push(...(await checkRuntimeCounters(root, files)));
 problems.push(...(await checkUnboundedTimers(root, files)));
 problems.push(...(await checkToArrayLimits(root, files)));
 problems.push(...(await checkLiveQueryOwnership(root, files)));
+problems.push(...(await checkGithubMetadataReadme(root)));
 
 for (const problem of problems.sort((a, b) => a.file.localeCompare(b.file))) {
   console.error(`${problem.file}: ${problem.message}`);
