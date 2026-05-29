@@ -91,9 +91,14 @@ linked product, protocol, architecture, and operations pages.
   outside local `since`, exclusive `until`, `before`, or `after` bounds stay out
   of visible feed results.
 - Complete feed coverage evidence can make cached display immediate only when
-  every required relay, route group, semantic feed key, filter shape, and segment
-  row proves completion. Dense, incomplete, unresolved, failed, compacted, or
-  missing evidence is not proof of absence and cannot suppress relay reads.
+  every required relay, route group, semantic feed key, filter shape, and
+  bounded interval proves completion. Interval-union proof and partial relay
+  pruning are being implemented. Dense, incomplete, unresolved, failed,
+  compacted, or missing evidence is not proof of absence and cannot suppress
+  relay reads.
+- Warm feed scan hints are being separated from coverage proof. They may tune a
+  future grouped relay span, but they cannot prove absence or suppress relay
+  reads.
 - Home, Global, Profile posts, Notifications, and time-windowable Custom Request
   feeds use adaptive grouped scans. Search, exact id requests, Custom Request
   filters with `ids` or `search`, Author Context, Thread reply pages, metadata,
@@ -182,6 +187,8 @@ linked product, protocol, architecture, and operations pages.
   browser-local backend contract.
 - [architecture/data/feed-surface/README.md](architecture/data/feed-surface/README.md):
   shared feed list contracts.
+- [architecture/data/cache-first-feed-pages.md](architecture/data/cache-first-feed-pages.md):
+  cache-first feed page proof rules.
 - [architecture/data/heap-retention.md](architecture/data/heap-retention.md):
   memory retention symptoms and investigation.
 - [architecture/data/resource-ownership.md](architecture/data/resource-ownership.md):

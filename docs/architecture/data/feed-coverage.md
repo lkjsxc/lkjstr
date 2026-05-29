@@ -27,6 +27,14 @@ Only complete coverage can prove a range. Complete coverage means the relevant
 relay-shaped request contacted a meaningful source, completed normally, did not
 hit the effective limit, and returned only events inside the requested segment.
 
+Coverage rows use half-open Unix-second intervals: `[since, until)`. A
+requirement with a missing `since` or `until` is unproven.
+
+Complete rows with the same semantic feed key, route group, relay URL, and
+semantic filter key may merge when they are adjacent or overlapping. A single
+gap makes the requirement unproven. A larger complete row may prove a smaller
+requested segment inside it.
+
 Dense coverage records a limit-hit range and is useful for future shrinking. It
 does not prove completeness and cannot suppress a relay read.
 
@@ -43,13 +51,19 @@ Relay-specific coverage records the effective limit, observed count, unique
 count, event count, feedback, direction, current span, and optional next-span
 hint when those values are known.
 
+## Partial Relay Proof
+
+Coverage proof remains relay-specific. If relay A has complete interval-union
+proof for a segment and relay B does not, only relay B should be queried for
+that segment. Cached rows from covered relays and relay rows from uncovered
+relays merge through the normal feed reducer.
+
 ## Cache Use
 
 Cache-first rendering is allowed only when coverage proves every required
-feed-key, route-group, relay, filter, and range row complete. The local event
+feed-key, route-group, relay, filter, and interval complete. The local event
 repository then serves the rows inside the same display bounds that relay
-rendering would apply.
+rendering would apply. Event count is not proof.
 
-Compaction invalidates affected coverage. Coverage can store next-span hints,
-but the scanner must still validate direction and segment bounds before using
-them.
+Compaction invalidates affected coverage. Warm scan hints are performance input
+only. Dense rows may inform future shrinking, but they do not prove absence.

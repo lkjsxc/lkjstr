@@ -83,6 +83,7 @@ documented-only. Update it when a vertical slice closes a gap.
 | Home shared page cursors                              | backend/home-query-lifecycle.md      | implemented | Shared Home query owns cursors; non-Home runtime cursors remain per tab.                                                                                   |
 | Timeline regression e2e                               | verification.md                      | implemented | Includes Home follow-discovery EOSE ownership and Notifications bounded viewport-fill older paging.                                                        |
 | Multi-tab Home ownership                              | feeds/runtime/multi-tab-ownership.md | implemented | Matching Home tabs attach to one backend query and share bootstrap, live leases, and cursors.                                                              |
+| Cache-first interval proof                            | data/cache-first-feed-pages.md       | in progress | Docs define interval-union proof, partial relay pruning, and warm hints. Runtime and tests are in progress.                                                |
 
 ## Feed Scroll and Row Chrome
 

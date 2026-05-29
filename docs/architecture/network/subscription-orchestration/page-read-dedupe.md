@@ -31,6 +31,14 @@ subscription manager.
 - Feed runtimes call `readPageByIntent` only for relay page scans.
 - Per-tab cursors remain in runtime state; dedupe keys do not embed tab ids.
 
+## Cache Short-Circuit
+
+Page dedupe occurs only when a relay read is needed. A fully cache-proven
+bounded segment returns before `readPageDetailed`.
+
+Partial cache proof still creates read keys only for uncovered relay
+requirements. Semantic page keys must not include tab ids.
+
 ## Related
 
 - [demand-intent.md](demand-intent.md)

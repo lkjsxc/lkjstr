@@ -45,6 +45,7 @@ table of contents required by repository checks.
 - [architecture/backend/transport-contract.md](architecture/backend/transport-contract.md)
 - [architecture/data/README.md](architecture/data/README.md)
 - [architecture/data/bounded-memory.md](architecture/data/bounded-memory.md)
+- [architecture/data/cache-first-feed-pages.md](architecture/data/cache-first-feed-pages.md)
 - [architecture/data/event-surface-paging.md](architecture/data/event-surface-paging.md)
 - [architecture/data/event-tree.md](architecture/data/event-tree.md)
 - [architecture/data/feed-coverage.md](architecture/data/feed-coverage.md)

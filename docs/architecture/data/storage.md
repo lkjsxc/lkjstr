@@ -17,6 +17,8 @@ Storage docs define browser persistence ownership.
 - `feedCursors`: feed paging cursors.
 - `feedCoverage`: durable relay/filter/range coverage evidence and unresolved
   diagnostics for feed scans.
+- `feedScanHints`: bounded performance hints for future grouped feed scan
+  window sizes. Hints are separate from coverage proof.
 - `jobs`: persisted in-app job records.
 - `cacheMeta`: cache status records.
 - `tabStates`: durable tab snapshot payloads keyed by `workspaceId + tabId`.
@@ -36,6 +38,27 @@ browser signer boundary.
 
 Passkey-protected local secret storage is not implemented. The security design
 is documented separately before any passkey secret table is restored.
+
+## Feed Scan Hints
+
+`feedScanHints` rows tune future relay windows without proving cache coverage:
+
+| Row field | Meaning |
+| --- | --- |
+| `id` | durable key for the scan, relay, group, filter, and direction |
+| `scanKey` | semantic feed scan key |
+| `relayUrl` | relay the feedback came from |
+| `groupKey` | route group identity |
+| `filterKey` | semantic filter identity |
+| `direction` | older, newer, or initial scan direction |
+| `recommendedSpanSeconds` | next bounded span recommendation |
+| `lastFeedback` | last sparse, balanced, dense, or incomplete signal |
+| `updatedAt` | last write timestamp |
+
+Hints are performance records, not absence proof. They are clamped to safe scan
+bounds, ignored when stale, and compacted by age and count. Hint cleanup must
+not delete events, accounts, workspace state, settings, relays, drafts, or
+notifications.
 
 ## Tab Snapshots
 
@@ -69,6 +92,10 @@ settings, relay sets, workspace layout, notifications, Tweet drafts, or live
 tab snapshots. `tabStates` cleanup is owned by the workspace snapshot
 coordinator and removes rows only for tabs absent from the workspace or stale
 pre-tab-owned rows.
+
+`feedScanHints` cleanup keeps newest useful hints, deletes stale rows, and
+enforces the documented row cap. Hint compaction never invalidates coverage
+because hints are not proof.
 
 Compaction invalidates coverage for affected feed keys because complete coverage
 is useful only while the local event repository can still prove the visible

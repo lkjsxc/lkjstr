@@ -95,15 +95,29 @@ preserving where each real event was seen.
 ## Cache Eligibility
 
 A segment is cache-eligible only when all required relay, filter, and route
-group rows for that semantic feed key and segment are recorded as complete.
-Dense, unresolved, incomplete, failed, missing, expired, or compacted evidence
-cannot prove cache eligibility.
+group rows for that semantic feed key and segment have complete interval-union
+proof. Dense, unresolved, incomplete, failed, missing, expired, or compacted
+evidence cannot prove cache eligibility.
 
 Cache-first rendering applies the same display bounds as relay rendering:
 future events and rows outside local `since`, exclusive `until`, `before`, or
 `after` stay hidden. A cached result may satisfy the visible tab only when the
 local event repository returns rows inside the requested bounds and coverage
 evidence proves that absent rows are genuinely absent.
+
+## Grouped Segment Runtime Flow
+
+1. Build segment filters with strict scan bounds.
+2. Build per-relay and per-filter coverage requirements.
+3. Use interval-union proof for every requirement.
+4. Read cached events for covered requirements.
+5. Query only uncovered relay requirements.
+6. Merge cached and relay results through the normal feed reducer.
+7. Record new coverage evidence and warm scan hints.
+8. Keep display bounds local and strict.
+
+Warm hints may change the initial relay span for a future scan. They never prove
+absence, suppress relay reads, or change page correctness.
 
 ## Surface Keys
 
