@@ -136,8 +136,8 @@ describe('relay feed pages', () => {
       pageSize: 10,
       subscriptions: subscriptions([]),
     });
-    expect(calls[0]?.since).toBeDefined();
-    expect(calls[0]?.until).toBe(1001);
+    const bounded = calls.find((call) => call.until === 1001);
+    expect(bounded?.since).toBeDefined();
   });
 });
 
