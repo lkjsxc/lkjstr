@@ -15,4 +15,5 @@ test('shows seeded default relays', async ({ page }) => {
   await expect(page.getByText('wss://r.kojira.io')).toBeVisible();
   await expect(page.getByText('wss://x.kojira.io')).toBeVisible();
   await expect(page.getByText('wss://yabu.me')).toBeVisible();
+  await expect(page.getByText('wss://user.kindpag.es')).toBeVisible();
 });
