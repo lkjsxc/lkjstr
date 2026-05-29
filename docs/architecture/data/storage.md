@@ -14,6 +14,8 @@ Storage docs define browser persistence ownership.
 - `events`: cached Nostr events.
 - `eventRelays`: event relay receipts.
 - `eventTags`: searchable `e`, `p`, `q`, and `a` tag rows.
+- `eventPriority`: compaction score and byte-accounting rows for cached
+  events.
 - `feedCursors`: feed paging cursors.
 - `feedCoverage`: durable relay/filter/range coverage evidence and unresolved
   diagnostics for feed scans.
@@ -84,14 +86,14 @@ relay diagnostics, active workers, subscriptions, or unbounded arrays.
 
 ## Cleanup
 
-Optional quota-pressure event cache cleanup may prune cached events, event relay
-receipts, event tag rows, feed cursors, and feed coverage affected by pruned
-feed keys. Complete coverage rows compact sooner than dense, incomplete,
-unresolved, or failed diagnostic rows. Cleanup must not prune accounts,
-settings, relay sets, workspace layout, notifications, Tweet drafts, or live
-tab snapshots. `tabStates` cleanup is owned by the workspace snapshot
-coordinator and removes rows only for tabs absent from the workspace or stale
-pre-tab-owned rows.
+Event-cache budget cleanup may prune cached events, event relay receipts, event
+tag rows, feed cursors, and feed coverage affected by pruned feed keys.
+Complete coverage rows compact sooner than dense, incomplete, unresolved, or
+failed diagnostic rows. Cleanup must not prune accounts, local signing secrets,
+settings, relay sets, workspace layout, notifications, Tweet drafts, relay
+configuration, or tab snapshots. `tabStates` cleanup is owned by the workspace
+snapshot coordinator and removes rows only for tabs absent from the workspace or
+stale pre-tab-owned rows.
 
 `feedScanHints` cleanup keeps newest useful hints, deletes stale rows, and
 enforces the documented row cap. Hint compaction never invalidates coverage
@@ -100,3 +102,22 @@ because hints are not proof.
 Compaction invalidates coverage for affected feed keys because complete coverage
 is useful only while the local event repository can still prove the visible
 range.
+
+## Event Cache Byte Accounting
+
+`eventPriority` stores enough accounting for budget enforcement to avoid a full
+`events` table scan on every pass:
+
+| Row field | Meaning |
+| --- | --- |
+| `id` | event id |
+| `score` | durable eviction score |
+| `createdAt` | event time for score ties |
+| `protected` | explicit product-owned protection flag |
+| `cacheBytes` | deterministic estimate for event-cache rows owned by the event |
+| `updatedAt` | last score or byte-accounting update |
+
+`cacheBytes` counts the normalized event row, relay receipt rows, searchable tag
+rows, and priority row for the same event. Feed cursors and coverage are pruned
+when affected events disappear, but they are not included in the first
+event-owned byte estimate unless directly attributable.

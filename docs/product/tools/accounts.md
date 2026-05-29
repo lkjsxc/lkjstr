@@ -11,6 +11,12 @@ Accounts represent public identities and signing capability.
 - Local signing accounts are created from a generated secret key or an imported
   `nsec` after explicit user action.
 - Local account secret keys are stored separately from public account records.
+- Local account records and local signing secrets are browser-owned IndexedDB
+  data. Event-cache cleanup never deletes them.
+- Accounts may show browser persistent-storage support and request it through
+  `navigator.storage.persisted()` and `navigator.storage.persist()` when
+  supported. The UI reports only actual states: already persisted, granted,
+  denied, unsupported, or failed.
 - Account lists, workspace data, and UI props must never expose local key
   material.
 - Local and NIP-07 accounts are signing accounts. Read-only accounts cannot

@@ -41,8 +41,14 @@ Settings provide editable local preferences as one flat key-value list.
 - `tabs.inactiveRetentionSeconds` defaults to `300`, is an integer, and accepts
   values from `0` to `3600` seconds.
 - A value of `0` disables inactive tab retention.
-- `cache.maxBytes` defaults to `268435456` bytes, is an integer, and accepts
-  values from `1048576` to `10737418240` bytes.
+- `cache.maxBytes` defaults to `67108864` bytes, is stored as integer bytes,
+  and accepts values from `1048576` to `10737418240` bytes.
+- The flat Settings row may show practical byte help such as MiB or GiB and
+  may step by MiB-sized increments. It must still save the raw byte number.
+- Setting `cache.maxBytes` to `1073741824` bytes is a supported heavy-user
+  one GiB budget.
+- Saving a smaller `cache.maxBytes` value triggers immediate event-cache budget
+  enforcement instead of waiting for routine write-count scheduling.
 - Cache compaction keys `cache.maxEvents`, `cache.maxAgeDays`, and
   `cache.compactionEnabled` are retired. Event retention is automatic. See
   [cache.md](cache.md) and

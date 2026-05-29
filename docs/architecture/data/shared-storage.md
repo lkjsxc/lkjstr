@@ -31,8 +31,9 @@ notifications, jobs, and relay provenance.
   relay URL or account pubkey keys.
 - The browser repository reads indexed pages instead of scanning all events.
 - Memory fallback keeps a bounded map only for tests and non-browser execution.
-- Event compaction is quota-pressure and score based. It prefers lower-priority
-  rows while preserving owner-pinned and high-value cached events.
+- Event compaction is byte-budget and score based. Browser quota pressure is an
+  additional signal. It prefers lower-priority rows while preserving
+  owner-pinned and account-critical cached events.
 - Event compaction invalidates feed coverage for affected feed keys when cached
   events are pruned. Correctness wins over preserving coverage cache.
 - Home, Global, Profile, Thread, Notifications, and safe Custom Request reads

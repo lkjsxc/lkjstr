@@ -14,6 +14,10 @@ These never evict through score compaction:
 - Pinned event ids from the runtime pin store while their owner is open.
 - Notification-critical source events referenced by active notification rows
   when the notification store still depends on them.
+- Events with a real product-owned `forceProtected` priority row.
+
+Older kind `0` metadata and older kind `3` follow-list events may receive high
+scores, but they are not permanently protected only because of their kind.
 
 ## Score Updates
 

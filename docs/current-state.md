@@ -36,6 +36,9 @@ Read next: [protocol/README.md](protocol/README.md),
   support them.
 - Home, Global, Search, and Custom Request consume progressive relay read
   snapshots so partial rows can render before final relay coverage.
+- Relay reads use relay plus request-context scoring for scheduling diagnostics.
+  Scoring never becomes a correctness filter and never permanently suppresses
+  enabled relays.
 - Home, Global, Profile posts, Notifications, and safe Custom Request event-list
   reads use an adaptive temporal window controller. Grouped scans start at `1`
   minute, double the next adjacent window after complete sparse relay-shaped
@@ -49,19 +52,24 @@ Read next: [architecture/README.md](architecture/README.md),
 [architecture/feeds/README.md](architecture/feeds/README.md), and
 [architecture/workspace/README.md](architecture/workspace/README.md).
 
-- Workspace layout, tabs, settings, accounts, drafts, notifications, relay
-  purpose lists, relay information, relay summaries, jobs, and cached events are
-  browser-owned data.
+- Workspace layout, tabs, settings, accounts, local signing secrets, drafts,
+  notifications, relay purpose lists, relay information, relay summaries, jobs,
+  and cached events are browser-owned data.
 - Pointer tab dragging is canonical. Native desktop drag uses pane chrome
   exclusion and pane-body edge detection for splits. Center and edge drop
   previews align with the content stack only and never cover the tab strip or
   tile menu row.
 - Tab rails scroll horizontally with long-press touch drag, pointer capture,
   selection suppression, strip-priority reorder, and active-tab reveal.
-- Durable event cache has no application item-count ceiling. `cache.maxBytes`
-  provides a soft byte budget; scheduled compaction may run when storage usage
-  exceeds the lower of quota pressure and that setting. Runtime feed windows
-  remain bounded.
+- Protected user records and prunable event-cache records are separate
+  ownership classes. Accounts, local signing secrets, settings, relay sets,
+  workspace state, notifications, Tweet drafts, tab snapshots, and relay
+  configuration are never deleted by event-cache cleanup.
+- Durable event cache has no application item-count ceiling, but it has an
+  enforced configurable byte budget. `cache.maxBytes` defaults to `67108864`
+  bytes. Compaction uses event-cache byte accounting plus browser storage
+  estimates when available and prunes only cached event rows and their derived
+  event-cache records. Runtime feed windows remain bounded.
 - Shared storage normalizes events, relay receipts, tag rows, cursors, and jobs
   before runtime use.
 - Relay ingress uses app-owned byte and structure caps before expensive JSON

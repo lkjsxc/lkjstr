@@ -177,20 +177,32 @@ Acceptance criteria:
 - The external `lockdown-install.js` plus `SES_UNCAUGHT_EXCEPTION` plus null
   payload case is suppressed; app-origin null and non-null cases are logged.
 
-Final release verification for this class of change is:
+Cache-budget changes must also run:
 
 ```sh
 pnpm check:repo
-pnpm verify
-pnpm test:e2e
-pnpm cloudflare:dry-run
-docker compose -f docker-compose.yml config
-docker compose -f docker-compose.yml build app verify e2e cloudflare app-smoke
-docker compose -f docker-compose.yml run --rm verify
-docker compose -f docker-compose.yml run --rm e2e
-docker compose -f docker-compose.yml run --rm cloudflare
-docker compose -f docker-compose.yml run --rm app-smoke
+pnpm test -- tests/unit/cache/storage-quota.test.ts tests/unit/cache/compaction.test.ts tests/unit/cache/cache-status.test.ts
+pnpm test -- tests/unit/settings/settings-store.test.ts tests/unit/events/repository.test.ts
 ```
+
+Acceptance: default budget is `67108864`, internal byte accounting works
+without browser estimates, lowering the setting enforces immediately, protected
+tables survive, and Stats reports the last enforcement result.
+
+Storage-persistence changes must test mocked `navigator.storage` support,
+already-persisted, granted, denied, unsupported, and failure states. Playwright
+coverage must prove Accounts or Stats renders those states without page errors
+and without exposing local secret material.
+
+Root canonical response changes must build and serve the app, then verify `/`
+returns `200` without redirect and renders the Svelte shell. If deployment
+access exists, also `curl -I` the actual configured production host; do not
+invent a host.
+
+Relay-read scoring changes must cover pure score updates, scheduling order with
+fairness, progressive partial-page emission before slow relay EOSE, incomplete
+coverage while relays are pending, cancellation ignoring late events, and the
+synthetic relay e2e fast-row then late-newer-row merge.
 
 ## Gate
 

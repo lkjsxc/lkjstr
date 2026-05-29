@@ -83,10 +83,12 @@ or older-page loads from moving the visible row.
 - In-memory event maps are a bounded fallback for tests and non-browser
   execution, not the primary browser cache.
 - Event indexes support kind/time, author/kind/time, and `e` or `p` tag lookup.
-- Optional quota-pressure compaction may prune by retention score through the
-  indexed `eventPriority` store. See [retention/README.md](retention/README.md).
-- Accounts, settings, relay sets, workspace state, notifications, and Tweet
-  drafts are protected from event cache pruning.
+- Budget compaction may prune by retention score and byte accounting through
+  the indexed `eventPriority` store. Browser quota pressure is an additional
+  signal. See [retention/README.md](retention/README.md).
+- Accounts, local signing secrets, settings, relay sets, workspace state,
+  notifications, Tweet drafts, and tab snapshots are protected from event cache
+  pruning.
 - Feed cursors are removed when their page boundary no longer points to a
   retained cached event.
 - Feed coverage rows store status, reason, limit, event count, unique count,

@@ -36,6 +36,8 @@ and app boundaries.
   hidden tab behavior.
 - [subscription-orchestration/page-read-dedupe.md](subscription-orchestration/page-read-dedupe.md):
   semantic page keys.
+- [subscription-orchestration/relay-read-scoring.md](subscription-orchestration/relay-read-scoring.md):
+  relay plus request-context scheduling scores.
 - [subscription-orchestration/route-plan.md](subscription-orchestration/route-plan.md):
   relay route planning.
 - [subscription-orchestration/tests.md](subscription-orchestration/tests.md):

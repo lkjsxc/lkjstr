@@ -16,6 +16,8 @@ to talk to relays (route plan, wire request, lease key, REQ/CLOSE).
 - [lease-key.md](lease-key.md): wire-equivalent fingerprints
 - [live-lease.md](live-lease.md): refcount and suspend/resume
 - [page-read-dedupe.md](page-read-dedupe.md): semantic page keys
+- [relay-read-scoring.md](relay-read-scoring.md): relay plus request-context
+  scheduling scores
 - [owner-visibility.md](owner-visibility.md): hidden tabs and pane churn
 - [ingress.md](ingress.md): live event classification
 - [metrics.md](metrics.md): counters and gauges

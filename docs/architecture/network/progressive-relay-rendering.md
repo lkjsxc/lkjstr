@@ -80,6 +80,22 @@ Empty UI states are terminal-only. A surface may show cached or partial rows
 while relays are pending, and should show compact non-blocking status text for
 partial or incomplete coverage.
 
+## Relay Read Scoring
+
+Relay reads may be scheduled by relay plus request-context score. The score key
+uses relay URL, surface, phase, direction, route group key, filter shape, and
+purpose. Runtime owner or tab ids may appear in diagnostics only; they must not
+fork wire dedupe or durable score keys.
+
+Scoring is advisory for ordering and diagnostics. It is not a correctness
+filter: enabled relays still receive bounded attempts unless disabled by the
+user or cancelled by the owning generation.
+
+Fast relays must not wait for slow relay EOSE before first visible rows render.
+Pending slow relays keep aggregate state incomplete instead of empty. Late
+events merge by canonical ordering without duplicate ids or false complete
+coverage.
+
 ## Cancellation
 
 Each feed runtime owns a generation. Snapshot handlers must check the current

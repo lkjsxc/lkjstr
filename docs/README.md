@@ -122,6 +122,7 @@ table of contents required by repository checks.
 - [notifications-profile-thread-integration.md](architecture/network/subscription-orchestration/notifications-profile-thread-integration.md)
 - [architecture/network/subscription-orchestration/owner-visibility.md](architecture/network/subscription-orchestration/owner-visibility.md)
 - [architecture/network/subscription-orchestration/page-read-dedupe.md](architecture/network/subscription-orchestration/page-read-dedupe.md)
+- [architecture/network/subscription-orchestration/relay-read-scoring.md](architecture/network/subscription-orchestration/relay-read-scoring.md)
 - [architecture/network/subscription-orchestration/route-plan.md](architecture/network/subscription-orchestration/route-plan.md)
 - [architecture/network/subscription-orchestration/routing-by-surface.md](architecture/network/subscription-orchestration/routing-by-surface.md)
 - [architecture/network/subscription-orchestration/source-map.md](architecture/network/subscription-orchestration/source-map.md)
