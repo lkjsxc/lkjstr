@@ -14,8 +14,8 @@ Tab runtime defines valid tab kinds and lifecycle ownership.
 ## Contract
 
 - New Tab can convert only to direct New Tab choices.
-- Profile, Profile Edit, and Thread remain valid tab kinds but open from
-  actions.
+- Profile, Profile Edit, and Thread remain valid tab kinds. Profile and Thread
+  open from actions; Profile Edit opens from New Tab and own-profile actions.
 - Mine npub is a valid New Tab choice and owns the worker-backed vanity miner.
 - lkjstr Log uses the existing `relay-monitor` tab kind, opens from New Tab,
   and owns read-only current-session relay diagnostics.

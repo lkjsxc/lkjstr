@@ -11,8 +11,8 @@ CI keeps repository gates reproducible outside a developer machine.
 - Playwright runs browser workflows with the checked-in app.
 - Docker Compose validates `docker-compose.yml` and builds `app`, `verify`,
   `e2e`, `cloudflare`, and `app-smoke` targets.
-- Docker Compose runs the `verify`, `e2e`, and `cloudflare` targets from built
-  images.
+- Docker Compose runs the `verify`, `e2e`, `cloudflare`, and `app-smoke`
+  targets from built images.
 - Docker Compose runs `app-smoke`, which starts production preview on port
   `5173`, fetches `/`, and fails on non-OK or blank app HTML.
 

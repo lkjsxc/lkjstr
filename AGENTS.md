@@ -63,7 +63,8 @@ database binding.
 
 Run focused checks after edits. Docker Compose is the authoritative final gate:
 `docker compose -f docker-compose.yml config`, build `app`, `verify`, `e2e`,
-and `cloudflare`, then run the `verify`, `e2e`, and `cloudflare` services.
+`cloudflare`, and `app-smoke`, then run the `verify`, `e2e`, `cloudflare`,
+and `app-smoke` services.
 Use synthetic relay tests for network behavior and Playwright for workspace
 flows.
 

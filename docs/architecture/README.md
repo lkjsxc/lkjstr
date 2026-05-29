@@ -5,6 +5,14 @@
 Architecture docs assign source ownership for app behavior. They define where
 state lives, which modules own subscriptions, and how tabs close cleanly.
 
+## Task Routing
+
+- Shared browser services: [backend/README.md](backend/README.md).
+- Feed source semantics and invariants: [feeds/README.md](feeds/README.md).
+- Storage, cache, and memory ownership: [data/README.md](data/README.md).
+- Relay clients and orchestration: [network/README.md](network/README.md).
+- Tab lifecycle and pane behavior: [workspace/README.md](workspace/README.md).
+
 ## Table of Contents
 
 - [backend/README.md](backend/README.md): browser-local backend services.

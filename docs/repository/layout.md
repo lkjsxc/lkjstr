@@ -22,17 +22,19 @@ Layout docs map repository paths to ownership.
   and mining.
 - `src/lib/app`: app metadata, runtime counters, and runtime log helpers.
 - `src/lib/author-context`: nearby-author query helpers.
+- `src/lib/backend`: browser-local shared query services.
 - `src/lib/cache`: cache status, retention, and compaction.
 - `src/lib/components`: shared Svelte UI components.
 - `src/lib/custom-request`: validated custom relay request parsing.
-- `src/lib/deck`: deck route state helpers.
 - `src/lib/emoji`: emoji picker source data.
 - `src/lib/events`: stored event repository, feed windows, and event trees.
+- `src/lib/feed-surface`: shared feed paging and footer helpers.
 - `src/lib/fp`: small functional helpers, bounded maps, emitters, and scopes.
 - `src/lib/identity`: display names, avatars, profiles, and npub helpers.
 - `src/lib/jobs`: persisted background job records and health.
 - `src/lib/log`: current-session app log storage.
 - `src/lib/media`: media endpoint, provider, settings, and upload helpers.
+- `src/lib/memory`: scored retention and runtime memory helpers.
 - `src/lib/notifications`: notification records, index, and runtime.
 - `src/lib/profile`: profile cache and runtime.
 - `src/lib/protocol`: Nostr events, filters, NIP-19, tags, and verification.

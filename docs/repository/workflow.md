@@ -15,5 +15,5 @@ Workflow docs define the change process.
    `pnpm ci:quiet` when browser tests are required). Use verbose
    `pnpm verify` / `pnpm test` / `pnpm test:e2e` only when debugging failures.
 6. Run Docker Compose as the final gate: config, image builds, then `verify`,
-   `e2e`, and `cloudflare` services with `--progress quiet`.
+   `e2e`, `cloudflare`, and `app-smoke` services with `--progress quiet`.
 7. Keep CI behavior aligned with quiet local and Docker Compose verification.

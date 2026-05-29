@@ -5,16 +5,22 @@
 This matrix tracks contract clauses that are implemented, partial, or
 documented-only. Update it when a vertical slice closes a gap.
 
+## Evidence Rule
+
+Each implemented row should name the owning contract and the source or test
+surface that proves it. Bare filenames below are source anchors; contract
+references should stay as relative Markdown links.
+
 ## Feed Surface
 
 | Clause                        | Contract                                                                   | Status      | Notes                                                   |
 | ----------------------------- | -------------------------------------------------------------------------- | ----------- | ------------------------------------------------------- |
 | IO near-end sentinel          | [feed-surface/near-end.md](../architecture/data/feed-surface/near-end.md)  | implemented | `near-end-observer.ts`, `EventTreeListNearEnd`          |
-| Scroll fallback               | near-end.md                                                                | implemented | `isNearEnd` in feed-window                              |
+| Scroll fallback               | [near-end.md](../architecture/data/feed-surface/near-end.md)               | implemented | `isNearEnd` in feed-window                              |
 | 2x viewport margin            | near-end.md                                                                | implemented | `nearEndThreshold` uses `viewport * 2`                  |
 | `feedPagingPhase` footer      | [footer-phase.md](../architecture/data/feed-surface/footer-phase.md)       | implemented | `footer-phase.ts`, `FeedSurfaceStatus`                  |
 | `FeedSurfaceStatus` all feeds | footer-phase.md                                                            | implemented | Including Notifications native list                     |
-| Speculative older             | feed-surface.md                                                            | implemented | Search uses coordinator                                 |
+| Speculative older             | [feed-surface.md](../architecture/data/feed-surface.md)                    | implemented | Search uses coordinator                                 |
 | Staged row pipeline           | [staged-pipeline.md](../architecture/data/feed-surface/staged-pipeline.md) | implemented | Home/Global/Profile/Thread                              |
 | Notifications list mode       | [surface-matrix.md](../architecture/data/feed-surface/surface-matrix.md)   | implemented | Virtua flat list via `FeedScrollSurface`, shared footer |
 
@@ -22,13 +28,13 @@ documented-only. Update it when a vertical slice closes a gap.
 
 | Clause                              | Contract                   | Status      | Notes                           |
 | ----------------------------------- | -------------------------- | ----------- | ------------------------------- |
-| Scroll + virtua anchor              | tab-runtime.md             | implemented | session + IDB                   |
-| Feed cursors in snapshot            | tab-runtime.md, storage.md | implemented | `tab-runtime-registry`          |
-| `hasOlder` / `hasNewer` in snapshot | tab-runtime.md             | implemented | runtime snapshot                |
-| Search query in tool snapshot       | tabs.md                    | implemented | Search tab fields               |
-| Session cap 32                      | tab-runtime.md             | implemented | `session-tab-snapshots`         |
-| Hidden-mount inactive tab bodies    | tab-body-mount.md          | implemented | `PaneTabStack`, paused runtimes |
-| DOM-first scroll on tab return      | tab-retention-flow.md      | implemented | `hasTracked` in focus sync      |
+| Scroll + virtua anchor              | [tab-runtime.md](../architecture/workspace/tab-runtime.md)             | implemented | session + IDB                   |
+| Feed cursors in snapshot            | [tab-runtime.md](../architecture/workspace/tab-runtime.md), [storage.md](../architecture/data/storage.md) | implemented | `tab-runtime-registry`          |
+| `hasOlder` / `hasNewer` in snapshot | [tab-runtime.md](../architecture/workspace/tab-runtime.md)             | implemented | runtime snapshot                |
+| Search query in tool snapshot       | [tabs.md](workspace/tabs.md)                    | implemented | Search tab fields               |
+| Session cap 32                      | [tab-runtime.md](../architecture/workspace/tab-runtime.md)             | implemented | `session-tab-snapshots`         |
+| Hidden-mount inactive tab bodies    | [tab-body-mount.md](../architecture/workspace/tab-body-mount.md)          | implemented | `PaneTabStack`, paused runtimes |
+| DOM-first scroll on tab return      | [tab-retention-flow.md](../architecture/workspace/tab-retention-flow.md)      | implemented | `hasTracked` in focus sync      |
 
 ## Event Actions
 

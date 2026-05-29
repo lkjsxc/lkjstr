@@ -20,7 +20,9 @@ other app-only field.
 
 - `buildTimelineFilters` / `buildNotificationFilters` produce protocol filters
 - `assertRelayFilterIsProtocolSafe` throws in development and test builds
-- Orchestration `normalization.md` canonicalizes before hash
+- Orchestration
+  [lease-key.md](../../network/subscription-orchestration/lease-key.md)
+  canonicalizes wire-equivalent filters before hashing
 
 ## Status
 

@@ -7,6 +7,10 @@ linked product, protocol, architecture, and operations pages.
 
 ## Product Surfaces
 
+Read next: [product/README.md](product/README.md),
+[product/workspace/README.md](product/workspace/README.md), and
+[product/tools/README.md](product/tools/README.md).
+
 - The root route opens the tiled workspace app.
 - Clean launch uses a vertical root split: Welcome is focused in the top pane,
   and Accounts is active in the lower pane with Relay Settings, Home,
@@ -18,6 +22,10 @@ linked product, protocol, architecture, and operations pages.
   sensitive content reveal, and event reference previews are implemented.
 
 ## Protocol Support
+
+Read next: [protocol/README.md](protocol/README.md),
+[protocol/nip-support.md](protocol/nip-support.md), and
+[architecture/network/README.md](architecture/network/README.md).
 
 - Implemented Nostr support includes NIP-01, NIP-02, NIP-05, NIP-07, NIP-10,
   NIP-11, NIP-18, NIP-19, NIP-25, NIP-30, NIP-36, NIP-50, NIP-51, NIP-57,
@@ -35,6 +43,11 @@ linked product, protocol, architecture, and operations pages.
   any contacted relay-shaped request reaches its effective limit.
 
 ## Ownership
+
+Read next: [architecture/README.md](architecture/README.md),
+[architecture/data/README.md](architecture/data/README.md),
+[architecture/feeds/README.md](architecture/feeds/README.md), and
+[architecture/workspace/README.md](architecture/workspace/README.md).
 
 - Workspace layout, tabs, settings, accounts, drafts, notifications, relay
   purpose lists, relay information, relay summaries, jobs, and cached events are
@@ -141,6 +154,10 @@ linked product, protocol, architecture, and operations pages.
 
 ## Memory and Retention
 
+Read next: [architecture/data/heap-retention.md](architecture/data/heap-retention.md),
+[architecture/data/resource-ownership.md](architecture/data/resource-ownership.md),
+and [operations/memory-verification.md](operations/memory-verification.md).
+
 - Memory retention work is active. Historical symptoms included a retained heap
   approaching one gigabyte after heavy feed usage. Production-build Playwright
   memory tests (`pnpm test:e2e:memory`) now enforce heap deltas and zero
@@ -202,5 +219,5 @@ linked product, protocol, architecture, and operations pages.
 ## Verification Gate
 
 Docker Compose is the final verification path: validate Compose config, build
-`app`, `verify`, `e2e`, and `cloudflare`, then run `verify`, `e2e`, and
-`cloudflare` services from those images.
+`app`, `verify`, `e2e`, `cloudflare`, and `app-smoke`, then run `verify`,
+`e2e`, `cloudflare`, and `app-smoke` services from those images.

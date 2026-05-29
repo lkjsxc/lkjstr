@@ -16,6 +16,21 @@ table of contents required by repository checks.
 - [operations/README.md](operations/README.md): verification and data safety.
 - [repository/README.md](repository/README.md): repository workflow rules.
 
+## Task Routing
+
+- Change user-visible tabs or tools: start in [product/README.md](product/README.md).
+- Change relay reads or Nostr behavior: start in [protocol/README.md](protocol/README.md)
+  and [architecture/network/README.md](architecture/network/README.md).
+- Change feed ordering, paging, or rendering: start in
+  [architecture/feeds/README.md](architecture/feeds/README.md) and
+  [architecture/data/feed-surface/README.md](architecture/data/feed-surface/README.md).
+- Change storage, cache, or memory ownership: start in
+  [architecture/data/README.md](architecture/data/README.md).
+- Change verification, CI, or Docker: start in
+  [operations/README.md](operations/README.md).
+- Change repository rules or source style: start in
+  [repository/README.md](repository/README.md).
+
 ## Directory Indexes
 
 - [architecture/backend/README.md](architecture/backend/README.md): local backend.
