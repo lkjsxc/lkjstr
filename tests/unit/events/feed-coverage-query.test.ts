@@ -26,6 +26,53 @@ describe('feed coverage query', () => {
     ).toEqual({ kind: 'covered' });
   });
 
+  it('covers with two adjacent complete rows', () => {
+    expect(
+      coverageCoversRequirements(
+        [{ ...requirement, since: 100, until: 220 }],
+        [
+          row('complete', { since: 100, until: 160 }),
+          row('complete', { since: 160, until: 220 }),
+        ],
+      ),
+    ).toEqual({ kind: 'covered' });
+  });
+
+  it('covers with overlapping complete rows', () => {
+    expect(
+      coverageCoversRequirements(
+        [{ ...requirement, since: 100, until: 220 }],
+        [
+          row('complete', { since: 100, until: 180 }),
+          row('complete', { since: 160, until: 220 }),
+        ],
+      ),
+    ).toEqual({ kind: 'covered' });
+  });
+
+  it('covers when one row contains the requirement', () => {
+    expect(
+      coverageCoversRequirements(
+        [{ ...requirement, since: 120, until: 180 }],
+        [row('complete', { since: 100, until: 220 })],
+      ),
+    ).toEqual({ kind: 'covered' });
+  });
+
+  it('rejects a one-second gap', () => {
+    const decision = coverageCoversRequirements(
+      [{ ...requirement, since: 100, until: 260 }],
+      [
+        row('complete', { since: 100, until: 160 }),
+        row('complete', { since: 161, until: 260 }),
+      ],
+    );
+    expect(decision.kind).toBe('missing');
+    expect(decision.kind === 'missing' ? decision.missing[0]?.gaps : []).toEqual(
+      [{ since: 160, until: 161 }],
+    );
+  });
+
   it('rejects a missing relay requirement', () => {
     expect(
       coverageCoversRequirements(
@@ -35,19 +82,12 @@ describe('feed coverage query', () => {
     ).toBe('missing');
   });
 
-  it('rejects dense and incomplete rows', () => {
-    expect(coverageCoversRequirements([requirement], [row('dense')]).kind).toBe(
-      'missing',
-    );
+  it('rejects wrong group and semantic filter', () => {
     expect(
-      coverageCoversRequirements([requirement], [row('incomplete')]).kind,
-    ).toBe('missing');
-  });
-
-  it('rejects different ranges and semantic filters', () => {
-    expect(
-      coverageCoversRequirements([requirement], [row('complete', { since: 9 })])
-        .kind,
+      coverageCoversRequirements(
+        [requirement],
+        [row('complete', { groupKey: 'other-group' })],
+      ).kind,
     ).toBe('missing');
     expect(
       coverageCoversRequirements(
@@ -55,6 +95,39 @@ describe('feed coverage query', () => {
         [row('complete', { filterKey: 'kind-6' })],
       ).kind,
     ).toBe('missing');
+  });
+
+  it.each(['dense', 'incomplete', 'unresolved', 'failed'] as const)(
+    'rejects %s rows',
+    (status) => {
+      expect(coverageCoversRequirements([requirement], [row(status)]).kind).toBe(
+        'missing',
+      );
+    },
+  );
+
+  it('rejects missing since and until bounds', () => {
+    expect(
+      coverageCoversRequirements([{ ...requirement, since: undefined }], [
+        row('complete'),
+      ]).kind,
+    ).toBe('missing');
+    expect(
+      coverageCoversRequirements([{ ...requirement, until: undefined }], [
+        row('complete'),
+      ]).kind,
+    ).toBe('missing');
+  });
+
+  it('requires every relay in multi-relay requirements', () => {
+    const decision = coverageCoversRequirements(
+      [requirement, { ...requirement, relayUrl: 'wss://relay-b/' }],
+      [row('complete')],
+    );
+    expect(decision.kind).toBe('missing');
+    expect(decision.kind === 'missing' ? decision.missing : []).toMatchObject([
+      { relayUrl: 'wss://relay-b/' },
+    ]);
   });
 
   it('reads stored coverage for a feed decision', async () => {
@@ -74,7 +147,7 @@ describe('feed coverage query', () => {
 });
 
 function row(
-  status: 'complete' | 'dense' | 'incomplete',
+  status: 'complete' | 'dense' | 'incomplete' | 'unresolved' | 'failed',
   overrides: Partial<CoverageRequirement> = {},
 ) {
   return {

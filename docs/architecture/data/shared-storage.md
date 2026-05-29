@@ -23,7 +23,7 @@ notifications, jobs, and relay provenance.
   scan evidence. Coverage records are evidence, not permission to move a scan
   cursor past an unproven dense, incomplete, or unresolved range.
 - Cache-first feed rendering may use coverage only when every required relay,
-  group, filter, and range row for the semantic feed key is complete.
+  group, filter, and interval for the semantic feed key has complete proof.
 - Search, feed, and relay page callers use compound `{createdAt,id}` cursors
   when local ordering needs same-second precision.
 - Relay diagnostic summaries, relay information documents, route blocks,
@@ -31,8 +31,8 @@ notifications, jobs, and relay provenance.
   relay URL or account pubkey keys.
 - The browser repository reads indexed pages instead of scanning all events.
 - Memory fallback keeps a bounded map only for tests and non-browser execution.
-- Event compaction prunes by default after `30` days or above `5000` newest
-  events.
+- Event compaction is quota-pressure and score based. It prefers lower-priority
+  rows while preserving owner-pinned and high-value cached events.
 - Event compaction invalidates feed coverage for affected feed keys when cached
   events are pruned. Correctness wins over preserving coverage cache.
 - Home, Global, Profile, Thread, Notifications, and safe Custom Request reads
@@ -56,6 +56,7 @@ notifications, jobs, and relay provenance.
 - `feedCursors`: the newest known paging cursor for a feed key.
 - `feedCoverage`: durable relay/filter/range scan evidence with complete,
   dense, incomplete, unresolved, or failed status.
+- `feedScanHints`: bounded performance hints for grouped feed scan spans.
 - `jobs`: persisted in-app job records.
 - `notifications`: derived account-scoped activity records.
 - `relayDiagnosticSummaries`: per-relay counters, timing, validation, and

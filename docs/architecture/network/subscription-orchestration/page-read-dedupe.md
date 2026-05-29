@@ -26,6 +26,10 @@ Bootstrap and page reads dedupe by semantic intent, not by runtime `subId`.
 Owners may differ; identical semantic keys share one in-flight read via the
 subscription manager.
 
+Semantic page keys dedupe in-flight relay work only. Durable cache proof is
+owned by [cache-first-feed-pages.md](../../data/cache-first-feed-pages.md) and
+[feed-coverage.md](../../data/feed-coverage.md).
+
 ## Producer rules
 
 - Feed runtimes call `readPageByIntent` only for relay page scans.

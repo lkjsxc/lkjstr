@@ -66,6 +66,8 @@ state lives, which modules own subscriptions, and how tabs close cleanly.
   list-owned row separators.
 - [data/feed-surface/event-value.md](data/feed-surface/event-value.md):
   visible event value and retention.
+- [data/cache-first-feed-pages.md](data/cache-first-feed-pages.md):
+  cache-first proof for bounded grouped feed pages.
 - [data/feed-memory.md](data/feed-memory.md): feed windows and scroll anchors.
 - [data/feed-coverage.md](data/feed-coverage.md): durable feed range evidence
   and cache eligibility.

@@ -23,6 +23,16 @@ contacting relays.
   relay diagnostics.
 - Live subscriptions are not replaced by cache-first reads.
 
+## Scope
+
+Included callers are Home, Global, Profile posts, Notifications, and safe Custom
+Request event-list reads when they use grouped bounded scans.
+
+Excluded callers keep exact relay semantics unless another contract says
+otherwise: Search, exact id requests, Custom Request filters with `ids` or
+`search`, Author Context, Thread reply pages, metadata lookup, follow-list
+reads, thread root lookup, and id-batch reference resolution.
+
 ## Interval Semantics
 
 Use half-open Unix-second intervals: `[since, until)`.
