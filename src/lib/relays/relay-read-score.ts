@@ -102,7 +102,9 @@ function observation(
 function normalizedRelays(relays: readonly string[]): string[] {
   return [
     ...new Set(
-      relays.map(normalizeRelayUrl).filter((url): url is string => Boolean(url)),
+      relays
+        .map(normalizeRelayUrl)
+        .filter((url): url is string => Boolean(url)),
     ),
   ].sort();
 }

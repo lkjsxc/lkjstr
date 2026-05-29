@@ -53,9 +53,9 @@
     <span>Storage persistence: {label()}</span>
     <button
       type="button"
-      disabled={
-        busy || !persistenceState.supported || persistenceState.persisted === true
-      }
+      disabled={busy ||
+        !persistenceState.supported ||
+        persistenceState.persisted === true}
       onclick={() => void requestPersistence()}
     >
       Request persistence

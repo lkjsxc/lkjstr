@@ -179,8 +179,6 @@ function cacheBudgetDecrease(
   next: unknown,
 ): number | undefined {
   const decreased =
-    typeof current === 'number' &&
-    typeof next === 'number' &&
-    next < current;
+    typeof current === 'number' && typeof next === 'number' && next < current;
   return decreased ? next : undefined;
 }

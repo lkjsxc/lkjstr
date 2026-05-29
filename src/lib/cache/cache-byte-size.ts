@@ -1,4 +1,8 @@
-import type { EventRelayReceipt, EventTagRow, StoredEvent } from '../events/types';
+import type {
+  EventRelayReceipt,
+  EventTagRow,
+  StoredEvent,
+} from '../events/types';
 import type { EventPriorityRecord } from './event-priority';
 
 const encoder = new TextEncoder();

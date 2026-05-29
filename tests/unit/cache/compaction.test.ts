@@ -146,9 +146,9 @@ describe('cache compaction', () => {
     expect(
       shouldCompact(10, 64, { usage: 65, quota: 1000, ratio: 0.065 }),
     ).toBe(true);
-    expect(
-      shouldCompact(10, 64, { usage: 10, quota: 100, ratio: 0.9 }),
-    ).toBe(true);
+    expect(shouldCompact(10, 64, { usage: 10, quota: 100, ratio: 0.9 })).toBe(
+      true,
+    );
   });
 
   it('schedules compaction after the write threshold', () => {

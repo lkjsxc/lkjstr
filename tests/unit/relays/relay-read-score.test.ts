@@ -48,11 +48,7 @@ describe('relay read scoring', () => {
     store.set({ ...slow, score: 0.1, reliability: 0.1 });
 
     expect(
-      scoreRelayCandidates(
-        ['slow.example', 'fast.example'],
-        context(),
-        store,
-      ),
+      scoreRelayCandidates(['slow.example', 'fast.example'], context(), store),
     ).toEqual(['wss://fast.example/', 'wss://slow.example/']);
   });
 });

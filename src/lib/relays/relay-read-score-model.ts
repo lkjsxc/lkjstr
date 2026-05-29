@@ -4,9 +4,7 @@ import type {
   RelayReadScoreKey,
 } from './relay-read-score-types';
 
-export function initialRelayReadScore(
-  key: RelayReadScoreKey,
-): RelayReadScore {
+export function initialRelayReadScore(key: RelayReadScoreKey): RelayReadScore {
   return finalizeScore({
     key,
     reliability: 0.5,
@@ -47,9 +45,7 @@ export function compareRelayReadScores(
   );
 }
 
-function finalizeScore(
-  input: Omit<RelayReadScore, 'score'>,
-): RelayReadScore {
+function finalizeScore(input: Omit<RelayReadScore, 'score'>): RelayReadScore {
   const reliabilityValue = clamp(input.reliability);
   const speedValue = clamp(input.speed);
   const yieldValue = clamp(input.yield);
@@ -80,7 +76,9 @@ function speed(latency: number | undefined): number {
 
 function yieldScore(input: RelayReadScoreInput): number {
   const value =
-    input.finalCount > 0 ? input.eventCount / input.finalCount : input.eventCount / 10;
+    input.finalCount > 0
+      ? input.eventCount / input.finalCount
+      : input.eventCount / 10;
   return clamp(value);
 }
 

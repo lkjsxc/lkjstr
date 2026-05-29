@@ -114,7 +114,9 @@ export function shouldCompact(
   );
 }
 
-async function writeCacheBudgetResult(result: CacheBudgetResult): Promise<void> {
+async function writeCacheBudgetResult(
+  result: CacheBudgetResult,
+): Promise<void> {
   const meta: CacheMetadata = {
     id: 'main',
     rawEventCount: await browserDb().events.count(),
