@@ -9,9 +9,12 @@ export default tseslint.config(
     ignores: [
       '.pnpm-store/**',
       '.svelte-kit/**',
+      '.wrangler/**',
       'build/**',
       'coverage/**',
       'node_modules/**',
+      'test-results/**',
+      'tmp/**',
     ],
   },
   js.configs.recommended,

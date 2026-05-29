@@ -2,6 +2,7 @@ node_modules/
 .omx/
 .pnpm-store/
 .svelte-kit/
+.wrangler/
 build/
 coverage/
 data/

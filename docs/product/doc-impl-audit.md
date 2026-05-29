@@ -26,15 +26,15 @@ references should stay as relative Markdown links.
 
 ## Tab Continuity
 
-| Clause                              | Contract                   | Status      | Notes                           |
-| ----------------------------------- | -------------------------- | ----------- | ------------------------------- |
-| Scroll + virtua anchor              | [tab-runtime.md](../architecture/workspace/tab-runtime.md)             | implemented | session + IDB                   |
+| Clause                              | Contract                                                                                                  | Status      | Notes                           |
+| ----------------------------------- | --------------------------------------------------------------------------------------------------------- | ----------- | ------------------------------- |
+| Scroll + virtua anchor              | [tab-runtime.md](../architecture/workspace/tab-runtime.md)                                                | implemented | session + IDB                   |
 | Feed cursors in snapshot            | [tab-runtime.md](../architecture/workspace/tab-runtime.md), [storage.md](../architecture/data/storage.md) | implemented | `tab-runtime-registry`          |
-| `hasOlder` / `hasNewer` in snapshot | [tab-runtime.md](../architecture/workspace/tab-runtime.md)             | implemented | runtime snapshot                |
-| Search query in tool snapshot       | [tabs.md](workspace/tabs.md)                    | implemented | Search tab fields               |
-| Session cap 32                      | [tab-runtime.md](../architecture/workspace/tab-runtime.md)             | implemented | `session-tab-snapshots`         |
-| Hidden-mount inactive tab bodies    | [tab-body-mount.md](../architecture/workspace/tab-body-mount.md)          | implemented | `PaneTabStack`, paused runtimes |
-| DOM-first scroll on tab return      | [tab-retention-flow.md](../architecture/workspace/tab-retention-flow.md)      | implemented | `hasTracked` in focus sync      |
+| `hasOlder` / `hasNewer` in snapshot | [tab-runtime.md](../architecture/workspace/tab-runtime.md)                                                | implemented | runtime snapshot                |
+| Search query in tool snapshot       | [tabs.md](workspace/tabs.md)                                                                              | implemented | Search tab fields               |
+| Session cap 32                      | [tab-runtime.md](../architecture/workspace/tab-runtime.md)                                                | implemented | `session-tab-snapshots`         |
+| Hidden-mount inactive tab bodies    | [tab-body-mount.md](../architecture/workspace/tab-body-mount.md)                                          | implemented | `PaneTabStack`, paused runtimes |
+| DOM-first scroll on tab return      | [tab-retention-flow.md](../architecture/workspace/tab-retention-flow.md)                                  | implemented | `hasTracked` in focus sync      |
 
 ## Event Actions
 
