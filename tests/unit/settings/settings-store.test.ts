@@ -50,13 +50,19 @@ describe('settings store helpers', () => {
     );
     if (!setting) throw new Error('expected setting');
     expect(setting).toMatchObject({
-      defaultValue: 268_435_456,
+      defaultValue: 67_108_864,
       min: 1_048_576,
+      max: 10_737_418_240,
+      step: 1_048_576,
       integer: true,
     });
     expect(coerceValue(setting, 1_048_576)).toEqual({
       ok: true,
       value: 1_048_576,
+    });
+    expect(coerceValue(setting, 1_073_741_824)).toEqual({
+      ok: true,
+      value: 1_073_741_824,
     });
     expect(coerceValue(setting, 1)).toEqual({ ok: false });
   });

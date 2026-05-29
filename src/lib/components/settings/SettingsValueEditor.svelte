@@ -60,6 +60,21 @@
       value
     );
   }
+
+  function numberHelp(): string {
+    if (props.setting.key !== 'cache.maxBytes') return '';
+    const bytes = Number(props.setting.value);
+    if (!Number.isFinite(bytes)) return '';
+    return `Current budget: ${formatBytes(bytes)}`;
+  }
+
+  function formatBytes(bytes: number): string {
+    const gib = 1024 * 1024 * 1024;
+    const mib = 1024 * 1024;
+    if (bytes >= gib && bytes % gib === 0) return `${bytes / gib} GiB`;
+    if (bytes >= mib) return `${Math.round(bytes / mib)} MiB`;
+    return `${bytes} bytes`;
+  }
 </script>
 
 {#if props.setting.valueType === 'boolean'}
@@ -86,18 +101,21 @@
     {/each}
   </select>
 {:else if props.setting.valueType === 'number'}
-  <input
-    aria-label={`Edit ${props.setting.key}`}
-    id={`setting-${props.setting.key}`}
-    name={`setting-${props.setting.key}`}
-    type="number"
-    min={props.setting.min}
-    max={props.setting.max}
-    step={props.setting.step}
-    value={String(props.setting.value)}
-    oninput={(event) =>
-      props.save(props.setting.key, event.currentTarget.value)}
-  />
+  <label>
+    <input
+      aria-label={`Edit ${props.setting.key}`}
+      id={`setting-${props.setting.key}`}
+      name={`setting-${props.setting.key}`}
+      type="number"
+      min={props.setting.min}
+      max={props.setting.max}
+      step={props.setting.step}
+      value={String(props.setting.value)}
+      oninput={(event) =>
+        props.save(props.setting.key, event.currentTarget.value)}
+    />
+    {#if numberHelp()}<small>{numberHelp()}</small>{/if}
+  </label>
 {:else if props.setting.valueType === 'json'}
   <textarea
     aria-label={`Edit ${props.setting.key}`}

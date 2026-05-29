@@ -23,6 +23,6 @@ describe('storage quota', () => {
     expect(cacheBudgetPressureLimit(snapshot, 256)).toBe(256);
     expect(isCacheBudgetPressure(snapshot, 256)).toBe(true);
     expect(isCacheBudgetPressure(snapshot, 300)).toBe(false);
-    expect(defaultCacheMaxBytes).toBe(268_435_456);
+    expect(defaultCacheMaxBytes).toBe(67_108_864);
   });
 });

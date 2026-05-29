@@ -8,7 +8,7 @@ export const quotaPressureRatio = 0.9;
 
 export const quotaPruneBatchSize = 500;
 
-export const defaultCacheMaxBytes = 268_435_456;
+export const defaultCacheMaxBytes = 67_108_864;
 
 export async function readStorageQuota(): Promise<StorageQuotaSnapshot | null> {
   if (typeof navigator === 'undefined' || !navigator.storage?.estimate)
