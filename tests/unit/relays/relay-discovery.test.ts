@@ -1,9 +1,14 @@
 import { describe, expect, it } from 'vitest';
 import { discoverAuthorRelayRoutes } from '../../../src/lib/relays/relay-discovery';
 import type { RelaySubscriptionManager } from '../../../src/lib/relays/subscription-manager';
+import {
+  saveRelaySets,
+  seedDefaultRelays,
+} from '../../../src/lib/relays/relay-store';
 
 describe('relay discovery', () => {
   it('requests only relay-list metadata for bulk author route discovery', async () => {
+    await saveRelaySets(seedDefaultRelays([]));
     const requests: unknown[] = [];
     const subscriptions = {
       readPage: async (request: unknown) => {
@@ -21,6 +26,11 @@ describe('relay discovery', () => {
 
     expect(requests).toHaveLength(1);
     expect(requests[0]).toMatchObject({
+      relays: [
+        'wss://relay.example/',
+        'wss://directory.yabu.me/',
+        'wss://purplepag.es/',
+      ],
       filters: [{ kinds: [10002], limit: 2 }],
     });
   });

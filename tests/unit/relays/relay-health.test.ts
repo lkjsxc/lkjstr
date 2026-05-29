@@ -74,6 +74,7 @@ function relaySet(id: string, enabled: boolean): RelaySet {
   return {
     id,
     name: id,
+    purpose: 'user',
     seeded: false,
     updatedAt: 1,
     relays: [

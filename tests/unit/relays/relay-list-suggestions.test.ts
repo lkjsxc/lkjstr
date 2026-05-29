@@ -104,6 +104,7 @@ function relaySet(relays: RelaySet['relays']): RelaySet {
   return {
     id: 'set',
     name: 'Set',
+    purpose: 'user',
     seeded: false,
     relays,
     updatedAt: Date.now(),

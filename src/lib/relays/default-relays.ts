@@ -10,13 +10,28 @@ export const DEFAULT_RELAYS = [
   'wss://yabu.me',
 ] as const;
 
+export const DEFAULT_DISCOVERY_RELAYS = [
+  'wss://purplepag.es/',
+  'wss://directory.yabu.me/',
+] as const;
+
 export const defaultRelaySet: RelaySet = {
   id: 'public-default',
   name: 'Public Default',
+  purpose: 'user',
   isDefault: true,
   seeded: true,
   updatedAt: 0,
   relays: DEFAULT_RELAYS.map((url) => relay(url, labelFor(url))),
+};
+
+export const defaultDiscoveryRelaySet: RelaySet = {
+  id: 'discovery-default',
+  name: 'Discovery Default',
+  purpose: 'discovery',
+  seeded: true,
+  updatedAt: 0,
+  relays: DEFAULT_DISCOVERY_RELAYS.map((url) => relay(url, labelFor(url))),
 };
 
 function labelFor(url: string): string {
@@ -28,6 +43,8 @@ function labelFor(url: string): string {
     'wss://r.kojira.io': 'Kojira',
     'wss://x.kojira.io': 'Kojira X',
     'wss://yabu.me': 'Yabumi',
+    'wss://purplepag.es/': 'purplepag.es',
+    'wss://directory.yabu.me/': 'Yabumi Directory',
   };
   return labels[url] ?? new URL(url).hostname.replace(/^relay\./, '');
 }

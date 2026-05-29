@@ -1,4 +1,4 @@
-import { defaultRelaySet } from './default-relays';
+import { defaultDiscoveryRelaySet, defaultRelaySet } from './default-relays';
 import type { RelaySet } from './relay-store';
 
 export function normalizeSeededRelaySets(
@@ -6,13 +6,20 @@ export function normalizeSeededRelaySets(
 ): RelaySet[] {
   let changed = false;
   const next = relaySets.map((set) => {
-    if (set.id !== defaultRelaySet.id || !set.seeded) return set;
-    const relays = set.relays.filter(
+    const purpose = set.purpose ?? 'user';
+    const normalizedSet = set.purpose ? set : { ...set, purpose };
+    const defaults =
+      purpose === 'discovery' ? defaultDiscoveryRelaySet : defaultRelaySet;
+    if (normalizedSet.id !== defaults.id || !normalizedSet.seeded) {
+      if (normalizedSet !== set) changed = true;
+      return normalizedSet;
+    }
+    const relays = normalizedSet.relays.filter(
       (relay) => relay.url !== 'wss://relay.nostr.band',
     );
-    if (relays.length === set.relays.length) return set;
+    if (relays.length === normalizedSet.relays.length) return normalizedSet;
     changed = true;
-    return { ...set, relays, updatedAt: Date.now() };
+    return { ...normalizedSet, relays, updatedAt: Date.now() };
   });
   return changed ? next : [...relaySets];
 }

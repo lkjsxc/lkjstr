@@ -23,7 +23,7 @@ import { notifyActionCacheChanged } from './action-cache-signal';
 import { upsertEventPriority } from '../cache/event-priority';
 import { normalizeStoredEvent } from './normalize';
 import { storeRelayListSuggestionsFromEvent } from '../relays/relay-list-suggestions';
-import { storeRoutesFromEvent } from '../relays/relay-route-store';
+import { storeRoutesFromEvent } from '../relays/relay-route-events';
 import { countRuntime } from '../app/runtime-counters';
 import { scheduleCacheCompactionAfterWrite } from '../cache/compaction-scheduler';
 import type {

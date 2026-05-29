@@ -2,7 +2,7 @@ import { upsertEvent } from '../events/repository';
 import { readRelayPage } from '../events/relay-page';
 import { kinds, normalizeRelayUrl } from '../protocol';
 import type { RelayReadSubscriptions } from '../events/relay-page';
-import { discoveryRelays } from './relay-routing';
+import { configuredDiscoveryRelays } from './relay-routing';
 import { blockedRelayUrls } from './relay-route-store';
 
 export async function discoverAuthorRelayRoutes(input: {
@@ -14,13 +14,20 @@ export async function discoverAuthorRelayRoutes(input: {
 }): Promise<void> {
   const authors = [...new Set(input.authors)].slice(0, 50);
   if (authors.length === 0) return;
-  const blocked = await blockedRelayUrls();
+  const userBlocked = await blockedRelayUrls('user');
+  const discoveryBlocked = await blockedRelayUrls('discovery');
+  const discoveryRelays = await configuredDiscoveryRelays();
   const relays = [
     ...new Set(
-      [...input.selectedRelays, ...discoveryRelays]
+      [
+        ...input.selectedRelays
+          .map(normalizeRelayUrl)
+          .filter((relay): relay is string => Boolean(relay))
+          .filter((relay) => !userBlocked.has(relay)),
+        ...discoveryRelays.filter((relay) => !discoveryBlocked.has(relay)),
+      ]
         .map(normalizeRelayUrl)
-        .filter((relay): relay is string => Boolean(relay))
-        .filter((relay) => !blocked.has(relay)),
+        .filter((relay): relay is string => Boolean(relay)),
     ),
   ];
   const events = await readRelayPage({

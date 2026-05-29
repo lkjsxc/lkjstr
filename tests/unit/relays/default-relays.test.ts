@@ -1,11 +1,21 @@
 import { describe, expect, it } from 'vitest';
-import { defaultRelaySet } from '../../../src/lib/relays/default-relays';
+import {
+  defaultDiscoveryRelaySet,
+  defaultRelaySet,
+} from '../../../src/lib/relays/default-relays';
 import { seedDefaultRelays } from '../../../src/lib/relays/relay-store';
 
 describe('default relays', () => {
-  it('seeds only when no relay set exists', () => {
-    expect(seedDefaultRelays([])[0]).toMatchObject({
+  it('seeds user and discovery defaults only when no relay set exists', () => {
+    const seeded = seedDefaultRelays([]);
+    expect(seeded[0]).toMatchObject({
       id: 'public-default',
+      purpose: 'user',
+      seeded: true,
+    });
+    expect(seeded[1]).toMatchObject({
+      id: 'discovery-default',
+      purpose: 'discovery',
       seeded: true,
     });
     expect(defaultRelaySet.relays.map((relay) => relay.url)).toEqual([
@@ -16,6 +26,10 @@ describe('default relays', () => {
       'wss://r.kojira.io',
       'wss://x.kojira.io',
       'wss://yabu.me',
+    ]);
+    expect(defaultDiscoveryRelaySet.relays.map((relay) => relay.url)).toEqual([
+      'wss://purplepag.es/',
+      'wss://directory.yabu.me/',
     ]);
     const custom = [{ ...defaultRelaySet, id: 'custom', relays: [] }];
     expect(seedDefaultRelays(custom)).toEqual(custom);

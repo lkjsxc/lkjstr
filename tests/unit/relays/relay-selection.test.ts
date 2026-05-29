@@ -1,5 +1,13 @@
 import { describe, expect, it, vi } from 'vitest';
-import { defaultRelaySet } from '../../../src/lib/relays/default-relays';
+import {
+  defaultDiscoveryRelaySet,
+  defaultRelaySet,
+} from '../../../src/lib/relays/default-relays';
+import {
+  enabledDiscoveryRelays,
+  selectedUserReadRelays,
+  selectedUserWriteRelays,
+} from '../../../src/lib/relays/relay-selection';
 import {
   selectedDefaultRelaySet,
   setDefaultRelaySetId,
@@ -39,6 +47,36 @@ describe('relay selection', () => {
       'wss://read.example/',
     ]);
     vi.unstubAllGlobals();
+  });
+
+  it('keeps user and discovery relay selectors purpose-scoped', () => {
+    const selectedUser = {
+      ...defaultRelaySet,
+      id: 'selected',
+      relays: [
+        { ...defaultRelaySet.relays[0]!, enabled: false },
+        { ...defaultRelaySet.relays[1]!, write: false },
+        { ...defaultRelaySet.relays[2]!, read: false },
+      ],
+    };
+    const discovery = {
+      ...defaultDiscoveryRelaySet,
+      relays: [
+        defaultDiscoveryRelaySet.relays[0]!,
+        { ...defaultDiscoveryRelaySet.relays[1]!, enabled: false },
+      ],
+    };
+    setDefaultRelaySetId('selected');
+
+    expect(selectedUserReadRelays([selectedUser, discovery])).toEqual([
+      'wss://nos.lol/',
+    ]);
+    expect(selectedUserWriteRelays([selectedUser, discovery])).toEqual([
+      'wss://relay.primal.net/',
+    ]);
+    expect(enabledDiscoveryRelays([selectedUser, discovery])).toEqual([
+      'wss://purplepag.es/',
+    ]);
   });
 
   it('builds stable sorted relay runtime keys', () => {

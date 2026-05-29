@@ -1,3 +1,5 @@
+import type { RelayPurpose } from './relay-purpose';
+
 export type RelayRouteSource =
   | 'selected'
   | 'nip65'
@@ -26,7 +28,9 @@ export type RelayRouteGroup = {
 };
 
 export type RelayRouteBlock = {
+  readonly id: string;
   readonly relayUrl: string;
+  readonly purpose: RelayPurpose;
   readonly reason: 'user-removed' | 'user-disabled';
   readonly updatedAt: number;
 };

@@ -1,16 +1,18 @@
-import { normalizeRelayUrl } from '../protocol';
 import { countRuntime } from '../app/runtime-counters';
 import {
   authorRelayRoutes,
   blockedRelayUrls,
   routeAllowed,
 } from './relay-route-store';
+import { listRelaySets } from './relay-store';
+import { enabledDiscoveryRelays } from './relay-selection';
 import type { RelayRouteGroup, RelayRoutePurpose } from './relay-route-types';
-
-export const discoveryRelays = [
-  'wss://purplepag.es/',
-  'wss://directory.yabu.me/',
-] as const;
+import {
+  dedupe,
+  fallbackGroups,
+  mergeRelays,
+  normalizeRelays,
+} from './relay-routing-groups';
 
 const maxRouteRelaysPerAuthor = 4;
 const maxRouteGroups = 12;
@@ -32,15 +34,20 @@ export async function routeGroups(input: {
   readonly purpose: RelayRoutePurpose;
   readonly includeDiscovery?: boolean;
 }): Promise<RelayRouteGroup[]> {
-  const blocked = await blockedRelayUrls();
-  const selected = normalizeRelays(input.selectedRelays, blocked);
-  const routes = await authorRelayRoutes(input.authors);
-  const groups = authorGroups(input.authors, routes, input.purpose).slice(
-    0,
-    maxRouteGroups,
-  );
+  const userBlocked = await blockedRelayUrls('user');
+  const selected = normalizeRelays(input.selectedRelays, userBlocked);
+  const routes = await authorRelayRoutes(input.authors, 'user');
+  const discoveryOnly = await discoveryOnlyRelays(selected);
+  const groups = authorGroups(
+    input.authors,
+    routes.filter((route) => !discoveryOnly.has(route.relayUrl)),
+    input.purpose,
+  ).slice(0, maxRouteGroups);
   const discovery = input.includeDiscovery
-    ? normalizeRelays(discoveryRelays, blocked)
+    ? normalizeRelays(
+        await configuredDiscoveryRelays(),
+        await blockedRelayUrls('discovery'),
+      )
     : [];
   const selectedGroups =
     selected.length > 0
@@ -74,8 +81,12 @@ export async function routeGroupsForPaging(input: {
   readonly selectedRelays: readonly string[];
   readonly purpose: RelayRoutePurpose;
 }): Promise<RelayRouteGroup[]> {
-  const blocked = await blockedRelayUrls();
-  const routes = await authorRelayRoutes(input.authors);
+  const blocked = await blockedRelayUrls('user');
+  const selected = normalizeRelays(input.selectedRelays, blocked);
+  const discoveryOnly = await discoveryOnlyRelays(selected);
+  const routes = (await authorRelayRoutes(input.authors, 'user')).filter(
+    (route) => !discoveryOnly.has(route.relayUrl),
+  );
   const groups = authorGroups(input.authors, routes, input.purpose).slice(
     0,
     maxRouteGroups,
@@ -83,7 +94,6 @@ export async function routeGroupsForPaging(input: {
   for (let index = 0; index < groups.length; index += 1)
     countRuntime('timeline', 'targetedGroups');
   if (groups.length > 0) return groups;
-  const selected = normalizeRelays(input.selectedRelays, blocked);
   if (selected.length === 0) return [];
   for (let index = 0; index < 1; index += 1)
     countRuntime('timeline', 'selectedFallbackGroups');
@@ -100,19 +110,25 @@ export async function routedEventRelays(input: {
   readonly hintedRelays?: readonly string[];
   readonly authorPubkey?: string;
 }): Promise<string[]> {
-  const blocked = await blockedRelayUrls();
+  const blocked = await blockedRelayUrls('user');
   const hints = normalizeRelays(input.hintedRelays ?? [], blocked);
   const selected = normalizeRelays(input.selectedRelays, blocked);
+  const discoveryOnly = await discoveryOnlyRelays(selected);
   const authors = input.authorPubkey ? [input.authorPubkey] : [];
-  const routes = await authorRelayRoutes(authors);
+  const routes = await authorRelayRoutes(authors, 'user');
   return dedupe([
-    ...hints,
+    ...hints.filter((relay) => !discoveryOnly.has(relay)),
     ...routes
       .filter((route) => routeAllowed(route, 'write'))
+      .filter((route) => !discoveryOnly.has(route.relayUrl))
       .map((route) => route.relayUrl)
       .slice(0, maxRouteRelaysPerAuthor),
     ...selected,
   ]);
+}
+
+export async function configuredDiscoveryRelays(): Promise<string[]> {
+  return enabledDiscoveryRelays(await listRelaySets());
 }
 
 function authorGroups(
@@ -139,50 +155,11 @@ function authorGroups(
   });
 }
 
-function fallbackGroups(
-  authors: readonly string[],
-  relays: readonly string[],
-  source: RelayRouteGroup['source'],
-  limit = maxAuthorsPerRouteGroup,
-): RelayRouteGroup[] {
-  if (authors.length === 0) {
-    return relays.length
-      ? [
-          {
-            key: `${source}:0`,
-            relays,
-            source,
-          },
-        ]
-      : [];
-  }
-  const groups: RelayRouteGroup[] = [];
-  for (let index = 0; index < authors.length; index += limit)
-    groups.push({
-      key: `${source}:${index}`,
-      relays,
-      authors: authors.slice(index, index + limit),
-      source,
-    });
-  return groups;
-}
-
-function mergeRelays(groups: readonly RelayRouteGroup[]): string[] {
-  return dedupe(groups.flatMap((group) => group.relays));
-}
-
-function normalizeRelays(
-  relays: readonly string[],
-  blocked: ReadonlySet<string>,
-): string[] {
-  return dedupe(
-    relays
-      .map(normalizeRelayUrl)
-      .filter((url): url is string => Boolean(url))
-      .filter((url) => !blocked.has(url)),
+async function discoveryOnlyRelays(
+  selectedRelays: readonly string[],
+): Promise<Set<string>> {
+  const selected = new Set(selectedRelays);
+  return new Set(
+    (await configuredDiscoveryRelays()).filter((relay) => !selected.has(relay)),
   );
-}
-
-function dedupe(values: readonly string[]): string[] {
-  return [...new Set(values)];
 }

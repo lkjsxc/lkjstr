@@ -1,4 +1,4 @@
-import { discoveryRelays } from '../relays/relay-routing';
+import { configuredDiscoveryRelays } from '../relays/relay-routing';
 import { lookupEvents } from '../events/repository';
 import { normalizeRelayUrl } from '../protocol';
 import {
@@ -28,12 +28,13 @@ export async function buildPreferredRelayGroups(input: {
   readonly activePubkey: string;
   readonly selectedRelays: readonly string[];
 }): Promise<PreferredFollowRelayGroups> {
-  const blocked = await blockedRelayUrls();
+  const userBlocked = await blockedRelayUrls('user');
+  const discoveryBlocked = await blockedRelayUrls('discovery');
   const selected = dedupePreserveOrder(
     input.selectedRelays
       .map(normalizeRelayUrl)
       .filter((url): url is string => Boolean(url))
-      .filter((url) => !blocked.has(url)),
+      .filter((url) => !userBlocked.has(url)),
   );
 
   const routes = await authorRelayRoutes([input.activePubkey]);
@@ -43,7 +44,7 @@ export async function buildPreferredRelayGroups(input: {
       .filter((r) => r.source === 'nip65')
       .filter((r) => r.purpose === 'read' || r.purpose === 'both')
       .map((r) => r.relayUrl)
-      .filter((relay) => !blocked.has(relay)),
+      .filter((relay) => !userBlocked.has(relay)),
   );
 
   // Receipt routes contain `eventId`, so we can confirm the event is the
@@ -66,7 +67,7 @@ export async function buildPreferredRelayGroups(input: {
     receiptRoutes
       .filter((r) => kind3ReceiptEventIds.has(r.eventId!))
       .map((r) => r.relayUrl)
-      .filter((relay) => !blocked.has(relay)),
+      .filter((relay) => !userBlocked.has(relay)),
   );
 
   // Bootstrap determinism: only add discovery relays when the caller did not
@@ -76,10 +77,9 @@ export async function buildPreferredRelayGroups(input: {
     selected.length > 0
       ? []
       : dedupePreserveOrder(
-          discoveryRelays
-            .map(normalizeRelayUrl)
-            .filter((url): url is string => Boolean(url))
-            .filter((url) => !blocked.has(url)),
+          (await configuredDiscoveryRelays()).filter(
+            (url) => !discoveryBlocked.has(url),
+          ),
         );
 
   return { selected, nip65, receiptKind3, discovery };

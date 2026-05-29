@@ -105,6 +105,12 @@ describe('settings store helpers', () => {
     expect(coerceValue(setting, 1.5)).toEqual({ ok: false });
   });
 
+  it('does not expose relay-list JSON ownership settings', () => {
+    const keys = defaultSettings().map((setting) => setting.key);
+    expect(keys).not.toContain('timeline.defaultRelays');
+    expect(keys).not.toContain('relays.defaultSet');
+  });
+
   it('rejects invalid imported values', async () => {
     await expect(
       importSettingsJson(

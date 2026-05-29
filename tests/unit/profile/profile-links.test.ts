@@ -78,6 +78,7 @@ describe('profile links and copy helpers', () => {
         {
           id: 'default',
           name: 'Default',
+          purpose: 'user',
           isDefault: true,
           seeded: true,
           updatedAt: 1,
@@ -141,6 +142,7 @@ function relaySet(id: string, urls: string[]) {
   return {
     id,
     name: id,
+    purpose: 'user' as const,
     isDefault: id === 'selected',
     seeded: false,
     updatedAt: 1,

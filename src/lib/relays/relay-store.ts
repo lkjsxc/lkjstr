@@ -5,36 +5,16 @@ import {
   safeGetItem,
   safeSetItem,
 } from '../storage/safe-storage';
-import type { RelayConnectionState } from './types';
-import { defaultRelaySet } from './default-relays';
+import { defaultDiscoveryRelaySet, defaultRelaySet } from './default-relays';
 import { normalizeRelayUrl } from '../protocol';
 import { normalizeSeededRelaySets } from './relay-normalize';
 import { clearRouteBlock, saveRouteBlock } from './relay-route-store';
 import { createRelay, resetRelayLiveState } from './relay-store-helpers';
+import type { RelayPurpose } from './relay-purpose';
+import type { RelayRecord, RelaySet } from './relay-types';
+export type { RelayRecord, RelaySet } from './relay-types';
 const selectedDefaultKey = 'lkjstr.defaultRelaySetId';
 let memorySelectedDefaultRelaySetId = defaultRelaySet.id;
-
-export type RelayRecord = {
-  readonly url: string;
-  readonly label: string;
-  readonly enabled: boolean;
-  readonly read: boolean;
-  readonly write: boolean;
-  readonly state: RelayConnectionState;
-  readonly lastError?: string;
-  readonly lastConnectedAt?: number;
-  readonly updatedAt: number;
-  readonly health: { attempts: number; successes: number; failures: number };
-};
-
-export type RelaySet = {
-  readonly id: string;
-  readonly name: string;
-  readonly isDefault?: boolean;
-  readonly seeded: boolean;
-  readonly relays: readonly RelayRecord[];
-  readonly updatedAt: number;
-};
 
 let memoryRelaySets: RelaySet[] = [];
 
@@ -69,14 +49,19 @@ export function selectedDefaultRelaySet(
   relaySets: readonly RelaySet[],
 ): RelaySet | undefined {
   return (
-    relaySets.find((set) => set.id === selectedDefaultRelaySetId()) ??
-    relaySets[0]
+    userRelaySets(relaySets).find(
+      (set) => set.id === selectedDefaultRelaySetId(),
+    ) ?? userRelaySets(relaySets)[0]
   );
 }
 
 export function seedDefaultRelays(existing: readonly RelaySet[]): RelaySet[] {
   if (existing.length > 0) return normalizeSeededRelaySets(existing);
-  return [{ ...defaultRelaySet, updatedAt: Date.now() }];
+  const updatedAt = Date.now();
+  return [
+    { ...defaultRelaySet, updatedAt },
+    { ...defaultDiscoveryRelaySet, updatedAt },
+  ];
 }
 
 export async function saveRelaySets(
@@ -94,7 +79,7 @@ export async function addRelay(
 ): Promise<RelaySet[]> {
   const url = normalizeRelayUrl(input);
   if (!url) throw new Error('Relay URL is invalid.');
-  await clearRouteBlock(url);
+  await clearRouteBlock(url, setPurpose(await listRelaySets(), setId));
   return updateSet(setId, (set) =>
     set.relays.some((relay) => relay.url === url)
       ? set
@@ -107,24 +92,33 @@ export async function updateRelay(
   url: string,
   patch: Partial<Pick<RelayRecord, 'label' | 'enabled' | 'read' | 'write'>>,
 ): Promise<RelaySet[]> {
-  if (patch.enabled === true) await clearRouteBlock(url);
-  if (patch.enabled === false) await saveRouteBlock(url, 'user-disabled');
-  return updateSet(setId, (set) => ({
-    ...set,
-    relays: set.relays.map((relay) =>
-      relay.url === url ? { ...relay, ...patch, updatedAt: Date.now() } : relay,
-    ),
-  }));
+  return updateSet(setId, async (set) => {
+    if (patch.enabled === true) await clearRouteBlock(url, set.purpose);
+    if (patch.enabled === false)
+      await saveRouteBlock(url, 'user-disabled', set.purpose);
+    return {
+      ...set,
+      relays: set.relays.map((relay) =>
+        relay.url === url
+          ? { ...relay, ...patch, updatedAt: Date.now() }
+          : relay,
+      ),
+    };
+  });
 }
 
-export async function restoreDefaultRelaySet(): Promise<RelaySet[]> {
+export async function restoreDefaultRelaySet(
+  purpose: RelayPurpose = 'user',
+): Promise<RelaySet[]> {
   const sets = await listRelaySets();
+  const defaults =
+    purpose === 'user' ? defaultRelaySet : defaultDiscoveryRelaySet;
   await Promise.all(
-    defaultRelaySet.relays.map((relay) => clearRouteBlock(relay.url)),
+    defaults.relays.map((relay) => clearRouteBlock(relay.url, purpose)),
   );
   const next = [
-    ...sets.filter((set) => set.id !== defaultRelaySet.id),
-    { ...defaultRelaySet, updatedAt: Date.now() },
+    ...sets.filter((set) => set.id !== defaults.id),
+    { ...defaults, updatedAt: Date.now() },
   ];
   await saveRelaySets(next);
   return next;
@@ -134,8 +128,8 @@ export async function removeRelay(
   setId: string,
   url: string,
 ): Promise<RelaySet[]> {
-  await saveRouteBlock(url, 'user-removed');
   const relaySets = await listRelaySets();
+  await saveRouteBlock(url, 'user-removed', setPurpose(relaySets, setId));
   const next = relaySets.map((set) =>
     set.id !== setId
       ? set
@@ -154,9 +148,10 @@ export async function setRelayEnabled(
   url: string,
   enabled: boolean,
 ): Promise<RelaySet[]> {
-  if (enabled) await clearRouteBlock(url);
-  else await saveRouteBlock(url, 'user-disabled');
   const relaySets = await listRelaySets();
+  const purpose = setPurpose(relaySets, setId);
+  if (enabled) await clearRouteBlock(url, purpose);
+  else await saveRouteBlock(url, 'user-disabled', purpose);
   const next = relaySets.map((set) =>
     set.id !== setId
       ? set
@@ -175,11 +170,26 @@ export async function setRelayEnabled(
 
 async function updateSet(
   setId: string,
-  update: (set: RelaySet) => RelaySet,
+  update: (set: RelaySet) => RelaySet | Promise<RelaySet>,
 ): Promise<RelaySet[]> {
-  const next = (await listRelaySets()).map((set) =>
-    set.id === setId ? { ...update(set), updatedAt: Date.now() } : set,
-  );
+  const next: RelaySet[] = [];
+  for (const set of await listRelaySets())
+    next.push(
+      set.id === setId
+        ? { ...(await update(set)), updatedAt: Date.now() }
+        : set,
+    );
   await saveRelaySets(next);
   return next;
+}
+
+function setPurpose(
+  relaySets: readonly RelaySet[],
+  setId: string,
+): RelayPurpose {
+  return relaySets.find((set) => set.id === setId)?.purpose ?? 'user';
+}
+
+function userRelaySets(relaySets: readonly RelaySet[]): RelaySet[] {
+  return relaySets.filter((set) => set.purpose === 'user');
 }
