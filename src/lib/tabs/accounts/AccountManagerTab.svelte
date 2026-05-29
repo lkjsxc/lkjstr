@@ -10,6 +10,7 @@
   import { getLocalSecret } from '$lib/accounts/local-secret-store';
   import { encodeNsec } from '$lib/protocol';
   import AccountRow from './AccountRow.svelte';
+  import AccountStorageSafety from './AccountStorageSafety.svelte';
 
   type Props = {
     accounts: Account[];
@@ -108,6 +109,7 @@
       >Log in with NIP-07</button
     >
   </div>
+  <AccountStorageSafety />
   {#if status}<p role="status">{status}</p>{/if}
   {#if props.accounts.length > 0}
     <fieldset>
