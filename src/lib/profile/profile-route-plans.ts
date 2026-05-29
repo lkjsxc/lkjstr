@@ -6,6 +6,7 @@ import type { PoolEvent } from '$lib/relays/relay-pool';
 import type { SubscriptionOrchestrator } from '$lib/relays/orchestration/orchestrator';
 import {
   pageIntentSemanticKey,
+  resolvePagingRoutePurpose,
   routeGroupFingerprint,
 } from '$lib/relays/orchestration/page-reads';
 import { planPagingRouteGroups } from '$lib/relays/orchestration/route-plan';
@@ -100,7 +101,7 @@ async function profilePostRouteGroups(
   const planned = await planPagingRouteGroups({
     authors: [pubkey],
     selectedRelays: relays,
-    purpose: 'write',
+    purpose: resolvePagingRoutePurpose({ surface: 'profile' }),
   });
   const contentGroups = profileContentGroups(planned, relays);
   return contentGroups.length > 0

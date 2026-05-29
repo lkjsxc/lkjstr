@@ -4,7 +4,10 @@ import {
   planPagingRouteGroups,
 } from '../relays/orchestration/route-plan';
 import type { PoolEvent } from '../relays/relay-pool';
-import { routeGroupFingerprint } from '../relays/orchestration/page-reads';
+import {
+  resolvePagingRoutePurpose,
+  routeGroupFingerprint,
+} from '../relays/orchestration/page-reads';
 import { authorFilters } from './follow-list';
 import { readyWithEventsState } from './timeline-state';
 import { mergeTimelineItems } from './timeline-store';
@@ -61,7 +64,7 @@ export async function routeFingerprint(
     await planPagingRouteGroups({
       authors: ctx.getAuthors(),
       selectedRelays: ctx.relays,
-      purpose: 'write',
+      purpose: resolvePagingRoutePurpose({ surface: ctx.surface }),
     }),
   );
 }

@@ -29,6 +29,20 @@ Feed runtime -> Intent (owner = tab id)
 - Bootstrap selected fallback: allowed during route discovery only
 - Paging: `routeGroupsForPaging` without selected-author fallback chunks
 
+## Intent Boundary
+
+- Home, Global, Profile posts, Notifications, Search, Custom Request, and
+  metadata hydration submit page or live intent to the orchestrator surface.
+- Route-group-backed Home and Profile post pages resolve route fingerprints
+  before relay scanning.
+- Notifications keep account-scoped `#p` intent and do not consume Home or
+  Profile route fingerprints.
+- Search and Custom Request keep selected-relay intent. They are not
+  route-planned exceptions.
+- Direct relay reads remain only where the filter is exact or non-feed-shaped:
+  event id lookup, metadata/follow-list hydration, thread roots, reply pages,
+  and reference resolution.
+
 ## Related
 
 - [../network/subscription-orchestration/README.md](../network/subscription-orchestration/README.md)

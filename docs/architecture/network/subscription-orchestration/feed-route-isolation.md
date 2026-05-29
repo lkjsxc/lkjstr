@@ -22,6 +22,59 @@ channel lifecycle.
 - Fingerprints are not owner ids. Owner ids affect lifecycle; fingerprints
   affect compatibility.
 
+## Semantic-Key Inputs
+
+Home initial scan:
+
+- account pubkey
+- selected relay set
+- feed policy
+- page size
+- route generation when resolved
+- route fingerprint when route-group-backed
+- cursor bounds
+
+Home live notes:
+
+- account pubkey
+- channel `notes`
+- route fingerprint
+- startup-bounded `since`
+- owner visibility
+- route generation
+
+Profile posts:
+
+- target pubkey
+- route fingerprint
+- cursor bounds
+- page size
+- explicit selected-relay fallback state
+
+Notifications:
+
+- active account pubkey
+- filter kind and purpose
+- selected or notification relay set
+- cursor bounds
+- no Home or Profile route fingerprint
+
+Selected-relay tools:
+
+- selected relay set
+- validated filters
+- purpose
+- no route fingerprint unless explicitly route-planned
+
+## Route Purpose
+
+- Home and Profile post reads use author `write` routes because authored notes
+  are expected on relays the author publishes to.
+- Notifications use the active account's author `read` routes because `#p`
+  activity is expected on relays the account reads from.
+- Global, Search, and Custom Request stay selected-relay based unless a future
+  contract explicitly gives them route-planned groups.
+
 ## Home
 
 - Initial Home reads may use selected fallback while route evidence is still

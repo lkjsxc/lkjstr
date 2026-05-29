@@ -4,6 +4,7 @@ import { planPagingRouteGroups } from './route-plan';
 import type { PageIntent } from './intent-types';
 import type { FeedCursorPoint } from '../../events/types';
 import type { RelayRouteGroup } from '../relay-route-types';
+import type { RelayRoutePurpose } from '../relay-route-types';
 import type {
   PageReadExecutor,
   SubscriptionOrchestrator,
@@ -55,17 +56,36 @@ export function pageIntentBounds(intent: PageIntent): {
 export function routeGroupFingerprint(
   groups: readonly RelayRouteGroup[],
 ): string {
-  return groups
-    .map((group) =>
-      [
-        group.key,
-        [...group.relays].sort().join(','),
-        [...(group.authors ?? [])].sort().join(','),
-        group.source,
-      ].join(':'),
-    )
-    .sort()
-    .join('|');
+  const records = groups
+    .map((group) => [
+      group.key,
+      [...group.relays].sort(),
+      [...(group.authors ?? [])].sort(),
+      group.source,
+    ])
+    .sort((left, right) =>
+      JSON.stringify(left).localeCompare(JSON.stringify(right)),
+    );
+  return JSON.stringify(records);
+}
+
+export function resolvePagingRoutePurpose(
+  intent: Pick<PageIntent, 'surface'>,
+): RelayRoutePurpose {
+  if (intent.surface === 'home' || intent.surface === 'profile') {
+    return 'write';
+  }
+  return 'both';
+}
+
+export function plannedPageIntent(
+  intent: PageIntent,
+  groups: readonly RelayRouteGroup[],
+): PageIntent {
+  return {
+    ...intent,
+    routeFingerprint: routeGroupFingerprint(groups),
+  };
 }
 
 export async function readTimelinePageByIntent(
@@ -76,12 +96,10 @@ export async function readTimelinePageByIntent(
   const groups = await planPagingRouteGroups({
     authors: intent.authors,
     selectedRelays: intent.selectedRelays,
-    purpose: 'write',
+    purpose: resolvePagingRoutePurpose(intent),
   });
-  const key = pageIntentSemanticKey({
-    ...intent,
-    routeFingerprint: routeGroupFingerprint(groups),
-  });
+  const planned = plannedPageIntent(intent, groups);
+  const key = pageIntentSemanticKey(planned);
   const filters = intent.filters;
   if (!filters) {
     throw new Error('PageIntent.filters required for timeline paging');
