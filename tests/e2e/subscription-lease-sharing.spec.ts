@@ -16,7 +16,7 @@ test('two Home tabs share one live lease', async ({ page }) => {
   const authorKey = generateSecretKey();
   const active = getPublicKey(activeKey);
   const author = getPublicKey(authorKey);
-  const now = Math.floor(Date.now() / 1000);
+  const now = Math.floor(Date.now() / 1000) - 5;
   const followList = finalizeEvent(
     { created_at: now, kind: 3, tags: [['p', author]], content: '' },
     activeKey,

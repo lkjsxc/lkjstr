@@ -39,7 +39,7 @@ test('timeline displays followed-author notes from a synthetic relay', async ({
   const followed = getPublicKey(followedKey);
   const followList = finalizeEvent(
     {
-      created_at: Math.floor(Date.now() / 1000),
+      created_at: Math.floor(Date.now() / 1000) - 5,
       kind: 3,
       tags: [['p', followed]],
       content: '',
@@ -48,7 +48,7 @@ test('timeline displays followed-author notes from a synthetic relay', async ({
   );
   const note = finalizeEvent(
     {
-      created_at: Math.floor(Date.now() / 1000),
+      created_at: Math.floor(Date.now() / 1000) - 5,
       kind: 1,
       tags: [],
       content: 'synthetic account-home note',
@@ -57,7 +57,7 @@ test('timeline displays followed-author notes from a synthetic relay', async ({
   );
   const metadata = finalizeEvent(
     {
-      created_at: Math.floor(Date.now() / 1000),
+      created_at: Math.floor(Date.now() / 1000) - 5,
       kind: 0,
       tags: [],
       content: JSON.stringify({ display_name: 'Followed Writer' }),
@@ -90,7 +90,7 @@ test('content entity tokens open profile and thread tabs', async ({ page }) => {
   const mentioned = getPublicKey(mentionedKey);
   const target = finalizeEvent(
     {
-      created_at: Math.floor(Date.now() / 1000),
+      created_at: Math.floor(Date.now() / 1000) - 5,
       kind: 1,
       tags: [],
       content: 'linked event body',
@@ -99,7 +99,7 @@ test('content entity tokens open profile and thread tabs', async ({ page }) => {
   );
   const followList = finalizeEvent(
     {
-      created_at: Math.floor(Date.now() / 1000),
+      created_at: Math.floor(Date.now() / 1000) - 5,
       kind: 3,
       tags: [['p', followed]],
       content: '',
@@ -108,7 +108,7 @@ test('content entity tokens open profile and thread tabs', async ({ page }) => {
   );
   const note = finalizeEvent(
     {
-      created_at: Math.floor(Date.now() / 1000),
+      created_at: Math.floor(Date.now() / 1000) - 5,
       kind: 1,
       tags: [],
       content: `token note nostr:${encodeNpub(mentioned)} nostr:${encodeNote(target.id)}`,

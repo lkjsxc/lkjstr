@@ -14,7 +14,7 @@ import {
 test('home stays empty when follow list is missing', async ({ page }) => {
   const activeKey = generateSecretKey();
   const active = getPublicKey(activeKey);
-  const now = Math.floor(Date.now() / 1000);
+  const now = Math.floor(Date.now() / 1000) - 5;
   const selfNote = finalizeEvent(
     { created_at: now, kind: 1, tags: [], content: 'only self note' },
     activeKey,
@@ -37,7 +37,7 @@ test('home shows followed author notes when follow list exists', async ({
   const authorKey = generateSecretKey();
   const active = getPublicKey(activeKey);
   const author = getPublicKey(authorKey);
-  const now = Math.floor(Date.now() / 1000);
+  const now = Math.floor(Date.now() / 1000) - 5;
   const followList = finalizeEvent(
     { created_at: now, kind: 3, tags: [['p', author]], content: '' },
     activeKey,
@@ -68,7 +68,7 @@ test('notifications exclude self posts without p tag', async ({ page }) => {
   const activeKey = generateSecretKey();
   const authorKey = generateSecretKey();
   const active = getPublicKey(activeKey);
-  const now = Math.floor(Date.now() / 1000);
+  const now = Math.floor(Date.now() / 1000) - 5;
   const mention = finalizeEvent(
     {
       created_at: now,
