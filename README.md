@@ -130,7 +130,8 @@ All contracts live under [`docs/`](docs/README.md):
 
 ## Repository Map
 
-- [`.github/`](.github/) - GitHub Actions and repository automation.
+- [`.github/_README.md`](.github/_README.md) - GitHub Actions and repository
+  automation notes.
 - [`AGENTS.md`](AGENTS.md) - agent-facing repository rules.
 - [`docs/`](docs/) - product, protocol, architecture, operations, and repository contracts.
 - [`scripts/`](scripts/) - repository checks and quiet verification wrappers.

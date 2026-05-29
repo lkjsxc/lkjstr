@@ -13,4 +13,4 @@ This directory contains GitHub Actions workflows for repository checks.
 - Docker Compose build and run steps use `--progress quiet`.
 
 Keep workflow commands aligned with
-[docs/operations/verification.md](../docs/operations/verification.md).
+[docs/operations/verification.md](../../docs/operations/verification.md).

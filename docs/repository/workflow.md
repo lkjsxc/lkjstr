@@ -7,7 +7,8 @@ Workflow docs define the change process.
 ## Steps
 
 1. Read the relevant docs.
-2. Update docs to describe the intended behavior.
+2. Update docs to describe the intended behavior and the verification evidence
+   that would prove it.
 3. Implement the narrowest matching source change.
 4. Add or update focused tests.
 5. Run local verification with quiet commands (`pnpm verify:quiet`, or

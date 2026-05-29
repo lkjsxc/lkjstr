@@ -12,6 +12,8 @@ Layout docs map repository paths to ownership.
 - `tests/e2e/`: Playwright browser tests.
 - `Dockerfile`: app, verify, and e2e image targets.
 - `docker-compose.yml`: built-image services.
+- `.github/_README.md`: repository automation notes that do not replace the
+  root project overview on GitHub.
 - `.github/workflows/ci.yml`: hosted gates and GHCR publishing.
 
 ## Source

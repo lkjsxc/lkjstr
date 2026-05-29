@@ -24,6 +24,8 @@ for that subtree.
 - Update docs before implementation when behavior, contracts, or workflows
   change.
 - Keep docs and implementation in the same change when they define one behavior.
+- Optimize for LLM agents first: put contracts in short files, state ownership
+  before detail, and prefer explicit links over implicit context.
 - Avoid milestone labels in filenames and headings.
 - Avoid numeric release shorthand and named release phases.
 - Avoid backward-compatibility framing. State the current contract directly.
@@ -44,6 +46,8 @@ for that subtree.
 - Supporting files hold the detail so the `README.md` remains scannable.
 - Root documentation links to canonical `docs/` pages instead of repeating
   long product or protocol contracts.
+- GitHub metadata uses `.github/_README.md` rather than `.github/README.md` so
+  GitHub renders the project root `README.md` as the repository overview.
 
 ## Product Rules
 

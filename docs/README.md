@@ -200,6 +200,7 @@ table of contents required by repository checks.
 - [repository/commit-protocol.md](repository/commit-protocol.md)
 - [repository/documentation-standards.md](repository/documentation-standards.md)
 - [repository/functional-style.md](repository/functional-style.md)
+- [repository/llm-maintenance.md](repository/llm-maintenance.md)
 - [repository/layout.md](repository/layout.md)
 - [repository/workflow.md](repository/workflow.md)
 - [research/README.md](research/README.md)
