@@ -105,7 +105,8 @@ describe('relay routing', () => {
       'discovery',
     ]);
     expect(groups.at(1)?.relays).not.toContain('wss://purplepag.es/');
-    expect(groups.at(1)?.relays).toContain('wss://user.kindpag.es/');
+    expect(groups.at(1)?.relays).not.toContain('wss://user.kindpag.es/');
+    expect(groups.at(1)?.relays).toContain('wss://directory.yabu.me/');
   });
 });
 

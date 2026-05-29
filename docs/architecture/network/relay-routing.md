@@ -67,11 +67,14 @@ Blocks do not delete cached events or relay receipts.
 The default discovery relays are:
 
 - `wss://purplepag.es/`
-- `wss://user.kindpag.es/`
 - `wss://directory.yabu.me/`
 
 Discovery results are runtime route evidence. They do not silently change Relay
 Settings and do not overwrite disabled relay records.
+
+`wss://user.kindpag.es/` is not a built-in discovery relay. Home, Profile, and
+route discovery may contact it only when the user explicitly selects, imports,
+and enables that relay.
 
 Bulk author route discovery requests only kind `10002` relay-list metadata.
 Kind `3` relay hints are stored from observed follow-list events, not broad

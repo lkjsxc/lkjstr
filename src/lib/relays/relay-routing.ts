@@ -9,7 +9,6 @@ import type { RelayRouteGroup, RelayRoutePurpose } from './relay-route-types';
 
 export const discoveryRelays = [
   'wss://purplepag.es/',
-  'wss://user.kindpag.es/',
   'wss://directory.yabu.me/',
 ] as const;
 
