@@ -26,7 +26,7 @@ Tool surfaces cover local state, writing, relay management, and diagnostics.
 ## Shared Contract
 
 - Tool rows wrap long labels, values, URLs, keys, and status text.
-- Relay Settings is the only editable relay surface.
+- Relay Settings is the only editable user and discovery relay surface.
 - lkjstr Log is read-only, current-session only, and does not start relay
   reads.
 - Stats is read-only and may refresh current-session snapshots.

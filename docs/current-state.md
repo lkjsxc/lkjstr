@@ -37,7 +37,8 @@ linked product, protocol, architecture, and operations pages.
 ## Ownership
 
 - Workspace layout, tabs, settings, accounts, drafts, notifications, relay
-  information, relay summaries, jobs, and cached events are browser-owned data.
+  purpose lists, relay information, relay summaries, jobs, and cached events are
+  browser-owned data.
 - Pointer tab dragging is canonical. Native desktop drag uses pane chrome
   exclusion and pane-body edge detection for splits. Center and edge drop
   previews align with the content stack only and never cover the tab strip or
@@ -63,6 +64,10 @@ linked product, protocol, architecture, and operations pages.
 - Feed route isolation keeps Home and Profile route-group reads on resolved
   route fingerprints, while Notifications and selected-relay tools keep
   independent semantic keys.
+- Relay Settings owns stacked user and discovery relay sections in one tab.
+  User relays drive selected read/write runtime behavior. Discovery relays are
+  editable but limited to metadata and kind `10002` relay-list discovery, and
+  discovery-only URLs do not widen feed or content reads.
 - Matching Home tabs attach to one shared query keyed by account, selected
   relays, page size, and feed policy. Tab ids own attachments only.
 - Stats and `__lkjstrMemoryDebug()` expose orchestration demand, lease, and

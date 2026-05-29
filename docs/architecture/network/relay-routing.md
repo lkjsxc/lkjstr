@@ -11,12 +11,12 @@ The orchestrator applies those tables when building Demand relay lists.
 
 ## Sources
 
-- Selected read relays are always the base and fallback.
+- Selected user read relays are always the base and fallback.
 - NIP-65 kind `10002` `r` tags add author read or write routes.
 - NIP-02 kind `3` `p` tag relay hints add followed-author routes.
 - `nevent`, `naddr`, `e`, and `q` tag relay hints add event lookup routes.
 - Event relay receipts add local evidence for exact event and author routes.
-- Discovery relays are only used for metadata and relay-list metadata
+- Enabled discovery relays are only used for metadata and relay-list metadata
   discovery.
 
 ## Priority
@@ -38,8 +38,8 @@ The orchestrator applies those tables when building Demand relay lists.
   targeted author groups and are not counted against the targeted group cap.
 - Use at most `200` authors in a selected fallback filter. Large follow lists
   are chunked into as many selected fallback groups as needed.
-- Discovery groups are appended after selected fallback groups when discovery
-  is requested, and blocked discovery relays are excluded.
+- Discovery groups are appended after selected fallback groups only when
+  discovery is requested, and discovery-purpose blocks are excluded.
 - Home, Profile, and Global historical pages use adaptive bounded windows with
   both `since` and `until`; sparse complete windows continue scanning older.
 - Grouped feed routing cannot widen adaptive scanner windows. Dispatch applies
@@ -58,28 +58,32 @@ The orchestrator applies those tables when building Demand relay lists.
 
 ## Blocks
 
-Disabled or removed relay URLs are globally blocked after normalization. Route
-planning excludes blocked URLs until the user re-adds or enables the same URL.
-Blocks do not delete cached events or relay receipts.
+Disabled or removed relay URLs are blocked for the affected relay purpose after
+normalization. User-purpose blocks exclude URLs from feed, content, write, and
+selected-relay planning. Discovery-purpose blocks exclude URLs from discovery
+planning only. Blocks do not delete cached events or relay receipts.
 
 ## Discovery Relays
 
-The default discovery relays are:
+The editable default discovery relays are seeded into Relay Settings as the
+`discovery-default` purpose set on clean storage:
 
 - `wss://purplepag.es/`
 - `wss://directory.yabu.me/`
 
 Discovery results are runtime route evidence. They do not silently change Relay
-Settings and do not overwrite disabled relay records.
+Settings and do not overwrite disabled relay records. Editing discovery relays
+does not edit the selected user read or write relay lists.
 
 `wss://user.kindpag.es/` is not a built-in discovery relay. Home, Profile, and
 route discovery may contact it only when the user explicitly selects, imports,
 and enables that relay.
 
-Bulk author route discovery requests only kind `10002` relay-list metadata.
-Kind `3` relay hints are stored from observed follow-list events, not broad
-discovery sweeps. Profile post and content reads exclude discovery relays unless
-the user explicitly selected or imported the same relay.
+Bulk author route discovery requests only kind `10002` relay-list metadata and
+uses selected user read relays plus enabled discovery relays. Kind `3` relay
+hints are stored from observed follow-list events, not broad discovery sweeps.
+Feed and content reads exclude discovery-only relays unless the user explicitly
+selected or imported and enabled the same relay as a user read relay.
 
 ## Non-Goals
 

@@ -2,16 +2,21 @@
 
 ## Purpose
 
-Relay Settings owns editable relay sets and the selected default set. lkjstr
-Log owns session-only diagnostics.
+Relay Settings owns editable relay purpose lists and the selected user set.
+lkjstr Log owns session-only diagnostics.
 
 ## Contract
 
-- First boot seeds one editable public default set only when no set exists.
-- Users can add, remove, enable, and disable relay records.
-- Users can toggle read and write capability per relay.
-- The selected default set drives timeline, profile, thread, and Tweet runtime.
-- Restore defaults replaces the public default set by explicit user action.
+- First boot seeds one editable user default set and one editable discovery
+  default set only when no relay set exists.
+- Users can add, remove, enable, and disable relay records in each purpose.
+- Users can toggle read and write capability per user relay.
+- Discovery relay rows expose enabled state, label editing, remove, restore,
+  NIP-11 fetch, and diagnostics. They do not expose read or write toggles.
+- The selected user set drives timeline, profile, thread, selected-relay tools,
+  and Tweet runtime.
+- Discovery relays drive only metadata and kind `10002` relay-list discovery.
+- Restore defaults replaces one purpose default set by explicit user action.
 - Runtime relay state, persisted attempts, successes, failures, last connected
   time, and last error are shown beside each Relay Settings record.
 - Relay Settings can fetch NIP-11 information from the relay HTTP endpoint with

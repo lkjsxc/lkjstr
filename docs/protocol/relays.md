@@ -7,13 +7,21 @@ Relay docs define URL and relay-set behavior.
 ## Contract
 
 - Relay URLs normalize to secure websocket URLs where possible.
-- Relay sets contain relay records with enabled, read, and write flags.
-- The selected default set drives Global reads, fallback reads, and Tweet
+- Relay sets have a purpose: `user` or `discovery`.
+- User relay records contain enabled, read, and write flags.
+- Discovery relay records contain enabled state and diagnostics, but their read
+  and write flags are ignored by runtime routing.
+- The selected user set drives Global reads, fallback reads, and Tweet
   publishing.
 - Targeted read runtimes use enabled selected read relays plus bounded
   protocol-derived routes when available.
-- Tweet publishing uses enabled write relays only.
-- No runtime should connect to a disabled relay.
+- Tweet publishing uses enabled user write relays only.
+- Enabled discovery relays are used only for kind `10002` relay-list metadata
+  discovery and metadata discovery.
+- Discovery-only relays must not widen feed, content, Search, Global, Custom
+  Request, Profile post, Thread content, or Home content reads unless the same
+  URL is also enabled as a selected user read relay.
+- No runtime should connect to a disabled relay for that relay's purpose.
 - NIP-11 relay information is fetched from the HTTP endpoint corresponding to
   the normalized relay URL.
 - NIP-65 relay list metadata suggestions are stored separately from configured
