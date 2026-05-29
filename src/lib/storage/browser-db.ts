@@ -94,9 +94,6 @@ export class LkjstrDb extends Dexie {
         '&id, authorPubkey, relayUrl, source, updatedAt, [authorPubkey+relayUrl]',
       relayRouteBlocks: '&relayUrl, reason, updatedAt',
     });
-    schema.call(this, 16).stores({
-      relayRouteBlocks: '&id, relayUrl, purpose, reason, updatedAt',
-    });
   }
 }
 

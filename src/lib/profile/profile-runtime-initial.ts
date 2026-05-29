@@ -8,7 +8,7 @@ import { kinds, type NostrEvent } from '$lib/protocol';
 import type { FeedEvent } from '$lib/events/types';
 import type { SubscriptionOrchestrator } from '$lib/relays/orchestration/orchestrator';
 import { pageIntentSemanticKey } from '$lib/relays/orchestration/page-reads';
-import { planAuthorWriteRelays } from '$lib/relays/orchestration/route-plan';
+import { planAuthorMetadataRelays } from '$lib/relays/orchestration/route-plan';
 import { readProfilePostsPageByIntent } from './profile-route-plans';
 import { storeProfileEvent } from './profile-store';
 
@@ -25,7 +25,7 @@ type Request = {
 };
 
 export async function loadInitialProfilePage(request: Request) {
-  const metadataRelays = await planAuthorWriteRelays({
+  const metadataRelays = await planAuthorMetadataRelays({
     surface: 'profile',
     authors: [request.pubkey],
     selectedRelays: request.relays,

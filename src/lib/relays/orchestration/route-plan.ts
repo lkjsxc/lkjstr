@@ -32,6 +32,24 @@ export async function planAuthorWriteRelays(input: {
   });
 }
 
+export async function planAuthorMetadataRelays(input: {
+  readonly surface: DemandSurface;
+  readonly authors: readonly string[];
+  readonly selectedRelays: readonly string[];
+}): Promise<string[]> {
+  const routed = await routedAuthorRelays({
+    authors: input.authors,
+    selectedRelays: input.selectedRelays,
+    purpose: 'write',
+    includeDiscovery: true,
+    allowDiscoveryOnly: true,
+  });
+  return relaysForSurfaceDemand({
+    surface: input.surface,
+    selectedReadRelays: routed.length > 0 ? routed : input.selectedRelays,
+  });
+}
+
 export async function planPagingRouteGroups(input: {
   readonly authors: readonly string[];
   readonly selectedRelays: readonly string[];

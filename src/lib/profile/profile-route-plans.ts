@@ -103,7 +103,7 @@ async function profilePostRouteGroups(
     selectedRelays: relays,
     purpose: resolvePagingRoutePurpose({ surface: 'profile' }),
   });
-  const contentGroups = profileContentGroups(planned, relays);
+  const contentGroups = profileContentGroups(planned);
   return contentGroups.length > 0
     ? contentGroups
     : selectedProfilePostGroups(pubkey, relays);

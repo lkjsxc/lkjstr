@@ -28,8 +28,8 @@ export type RelayRouteGroup = {
 };
 
 export type RelayRouteBlock = {
-  readonly id: string;
   readonly relayUrl: string;
+  readonly url?: string;
   readonly purpose: RelayPurpose;
   readonly reason: 'user-removed' | 'user-disabled';
   readonly updatedAt: number;

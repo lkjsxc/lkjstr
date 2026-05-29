@@ -56,8 +56,8 @@ export async function saveRouteBlock(
   if (!normalized) return;
   const id = routeBlockId(normalized, purpose);
   const block = {
-    id,
-    relayUrl: normalized,
+    relayUrl: id,
+    url: normalized,
     purpose,
     reason,
     updatedAt: Date.now(),
@@ -92,7 +92,7 @@ export async function blockedRelayUrls(
   return new Set(
     rows
       .filter((row) => (row.purpose ?? 'user') === purpose)
-      .map((row) => row.relayUrl),
+      .map((row) => row.url ?? row.relayUrl),
   );
 }
 

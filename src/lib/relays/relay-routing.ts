@@ -16,7 +16,6 @@ import {
 
 const maxRouteRelaysPerAuthor = 4;
 const maxRouteGroups = 12;
-const maxAuthorsPerRouteGroup = 50;
 export const selectedFallbackAuthorLimit = 200;
 
 export async function routedAuthorRelays(input: {
@@ -24,6 +23,7 @@ export async function routedAuthorRelays(input: {
   readonly selectedRelays: readonly string[];
   readonly purpose: RelayRoutePurpose;
   readonly includeDiscovery?: boolean;
+  readonly allowDiscoveryOnly?: boolean;
 }): Promise<string[]> {
   return routeGroups(input).then((groups) => mergeRelays(groups));
 }
@@ -33,11 +33,14 @@ export async function routeGroups(input: {
   readonly selectedRelays: readonly string[];
   readonly purpose: RelayRoutePurpose;
   readonly includeDiscovery?: boolean;
+  readonly allowDiscoveryOnly?: boolean;
 }): Promise<RelayRouteGroup[]> {
   const userBlocked = await blockedRelayUrls('user');
   const selected = normalizeRelays(input.selectedRelays, userBlocked);
   const routes = await authorRelayRoutes(input.authors, 'user');
-  const discoveryOnly = await discoveryOnlyRelays(selected);
+  const discoveryOnly = input.allowDiscoveryOnly
+    ? new Set<string>()
+    : await discoveryOnlyRelays(selected);
   const groups = authorGroups(
     input.authors,
     routes.filter((route) => !discoveryOnly.has(route.relayUrl)),
