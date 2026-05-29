@@ -1,6 +1,8 @@
 import { browserDb } from '../storage/browser-db';
 import { boundedStorageRead } from '../storage/safe-storage';
 import { allMemoryEvents } from '../events/repository-memory';
+import { defaultCacheMaxBytes } from './storage-quota';
+import { estimatedEventCacheBytes } from './event-cache-bytes';
 
 export type CacheMetadata = {
   readonly id: string;
@@ -8,11 +10,22 @@ export type CacheMetadata = {
   readonly profileCount: number;
   readonly notificationCount: number;
   readonly storageEstimateBytes: number | null;
+  readonly budgetBytes: number;
+  readonly eventCacheBytes: number;
+  readonly browserUsageBytes: number | null;
+  readonly lastCompactionReason?: string;
+  readonly prunedEventCount: number;
+  readonly prunedByteEstimate: number;
+  readonly protectedOnly: boolean;
   readonly updatedAt: number;
 };
 
 export async function cacheStatus(): Promise<CacheMetadata> {
   const storageEstimateBytes = await estimateStorageBytes();
+  const meta = await boundedStorageRead(
+    () => browserDb().cacheMeta.get('main'),
+    undefined,
+  );
   return {
     id: 'main',
     rawEventCount: await boundedStorageRead(
@@ -25,6 +38,13 @@ export async function cacheStatus(): Promise<CacheMetadata> {
       0,
     ),
     storageEstimateBytes,
+    budgetBytes: meta?.budgetBytes ?? defaultCacheMaxBytes,
+    eventCacheBytes: await estimatedEventCacheBytes(),
+    browserUsageBytes: storageEstimateBytes,
+    lastCompactionReason: meta?.lastCompactionReason,
+    prunedEventCount: meta?.prunedEventCount ?? 0,
+    prunedByteEstimate: meta?.prunedByteEstimate ?? 0,
+    protectedOnly: meta?.protectedOnly ?? false,
     updatedAt: Date.now(),
   };
 }

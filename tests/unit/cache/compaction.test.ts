@@ -5,6 +5,7 @@ import {
   priorityTargetBumps,
   scoreEvent,
 } from '../../../src/lib/cache/event-priority';
+import { shouldCompact } from '../../../src/lib/cache/cache-budget-enforcement';
 import {
   compactOldEvents,
   latestEventIdsByPubkey,
@@ -134,6 +135,20 @@ describe('cache compaction', () => {
     expect(result.reason === 'below-budget-threshold' || result.skipped).toBe(
       true,
     );
+  });
+
+  it('compacts from internal bytes without browser estimates', () => {
+    expect(shouldCompact(65, 64, null)).toBe(true);
+    expect(shouldCompact(63, 64, null)).toBe(false);
+  });
+
+  it('uses browser estimates as additional pressure', () => {
+    expect(
+      shouldCompact(10, 64, { usage: 65, quota: 1000, ratio: 0.065 }),
+    ).toBe(true);
+    expect(
+      shouldCompact(10, 64, { usage: 10, quota: 100, ratio: 0.9 }),
+    ).toBe(true);
   });
 
   it('schedules compaction after the write threshold', () => {

@@ -8,6 +8,7 @@ import { defaultSettings, searchText } from './settings-schema';
 import { settingsChangedEvent } from './settings-events';
 import { validCustomUploadServer } from '../media/providers';
 import { notifyHideSensitiveSettingChanged } from './hide-sensitive-events';
+import { enforceCacheBudget } from '../cache/cache-budget-enforcement';
 export { subscribeHideSensitiveEvents } from './hide-sensitive-events';
 
 export type SettingOverride = {
@@ -34,6 +35,7 @@ export async function saveSetting(
   if (!current) return [...settings];
   const clean = coerceValue(current, value);
   if (!clean.ok) return [...settings];
+  const budgetMaxBytes = cacheBudgetDecrease(current.value, clean.value);
   const override = {
     key,
     namespace: current.namespace,
@@ -47,6 +49,8 @@ export async function saveSetting(
   await bestEffortStorageWrite(() => browserDb().settings.put(override));
   settingsCache = undefined;
   notifySettingsChanged();
+  if (budgetMaxBytes !== undefined)
+    void enforceCacheBudget('settings-change', { maxBytes: budgetMaxBytes });
   return mergeSettings(memoryOverrides);
 }
 
@@ -168,4 +172,15 @@ function notifySettingsChanged(): void {
   notifyHideSensitiveSettingChanged();
   if (typeof window === 'undefined') return;
   window.dispatchEvent(new CustomEvent(settingsChangedEvent));
+}
+
+function cacheBudgetDecrease(
+  current: unknown,
+  next: unknown,
+): number | undefined {
+  const decreased =
+    typeof current === 'number' &&
+    typeof next === 'number' &&
+    next < current;
+  return decreased ? next : undefined;
 }

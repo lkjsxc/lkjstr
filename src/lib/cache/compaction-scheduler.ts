@@ -1,4 +1,4 @@
-import { compactOldEvents } from './compaction';
+import { enforceCacheBudget } from './cache-budget-enforcement';
 import { defaultCacheMaxBytes } from './storage-quota';
 import { loadSettings } from '../settings/settings-store';
 
@@ -19,7 +19,10 @@ export function shouldScheduleCompaction(
 export function scheduleCacheCompactionAfterWrite(): void {
   writesSinceSchedule += 1;
   if (running || scheduled) return;
-  if (!shouldScheduleCompaction(writesSinceSchedule)) return;
+  if (!shouldScheduleCompaction(writesSinceSchedule)) {
+    scheduleNow();
+    return;
+  }
   writesSinceSchedule = 0;
   scheduleNow();
 }
@@ -31,7 +34,7 @@ async function runScheduledCompaction(): Promise<void> {
   try {
     const maxBytes = await configuredCacheMaxBytes();
     for (let round = 0; round < maxCompactionRounds; round += 1) {
-      const result = await compactOldEvents({ maxBytes });
+      const result = await enforceCacheBudget('write', { maxBytes });
       if (result.prunedEvents === 0) break;
     }
   } finally {

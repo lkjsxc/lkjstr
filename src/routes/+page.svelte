@@ -2,6 +2,9 @@
   import { onMount } from 'svelte';
   import { installMemoryDebugExport } from '$lib/app/memory-debug';
   import { logRuntimeError } from '$lib/app/runtime-log';
+  import { enforceCacheBudget } from '$lib/cache/cache-budget-enforcement';
+  import { defaultCacheMaxBytes } from '$lib/cache/storage-quota';
+  import { loadSettings } from '$lib/settings/settings-store';
   import type { Account } from '$lib/accounts/account';
   import type { RelaySet } from '$lib/relays/relay-store';
   import WorkspaceRoot from '$lib/components/workspace/WorkspaceRoot.svelte';
@@ -89,6 +92,9 @@
     await refreshRuntimeSettings().catch(
       logRuntimeError('settings-load-failed'),
     );
+    await enforceCacheBudget('startup', {
+      maxBytes: await configuredCacheMaxBytes(),
+    }).catch(logRuntimeError('cache-budget-startup-failed'));
   }
 
   async function update(next: Workspace): Promise<void> {
@@ -118,6 +124,15 @@
     inactiveRetentionSeconds = await loadInactiveRetentionSeconds(
       inactiveRetentionSeconds,
     );
+  }
+
+  async function configuredCacheMaxBytes(): Promise<number> {
+    const setting = (await loadSettings()).find(
+      (item) => item.key === 'cache.maxBytes',
+    );
+    return typeof setting?.value === 'number'
+      ? setting.value
+      : defaultCacheMaxBytes;
   }
 </script>
 

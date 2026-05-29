@@ -18,6 +18,7 @@
   import JobHealthPanel from './JobHealthPanel.svelte';
   import RuntimeCounters from './RuntimeCounters.svelte';
   import RuntimeMemoryPanel from './RuntimeMemoryPanel.svelte';
+  import CacheStatusPanel from './CacheStatusPanel.svelte';
   import { relaySubscriptionRows } from './subscription-rows';
 
   let snapshots = $state<RelaySnapshot[]>([]);
@@ -178,14 +179,7 @@
     </tbody>
   </table>
   <JobHealthPanel {jobHealth} />
-  <h3>Cache</h3>
-  {#if cache}
-    <p>
-      {cache.rawEventCount} events, {cache.profileCount} profiles,
-      {cache.notificationCount} notifications, {cache.storageEstimateBytes ?? 0}
-      bytes
-    </p>
-  {/if}
+  <CacheStatusPanel {cache} />
   <RuntimeCounters />
   <RuntimeMemoryPanel {memory} />
 </section>
