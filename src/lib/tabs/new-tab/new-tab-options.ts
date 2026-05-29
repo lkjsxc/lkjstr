@@ -119,6 +119,3 @@ export function newTabOptionsForAccount(
     ...baseOptions.slice(globalIndex + 1),
   ];
 }
-
-/** @deprecated use newTabOptionsForAccount */
-export const newTabOptions = baseOptions;

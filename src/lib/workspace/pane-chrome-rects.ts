@@ -38,6 +38,3 @@ export function paneChromeRects(pane: HTMLElement): PaneChromeRects {
     stripBottom,
   };
 }
-
-/** @deprecated Use paneChromeRects */
-export const paneDropRects = paneChromeRects;

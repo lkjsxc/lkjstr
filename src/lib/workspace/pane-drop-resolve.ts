@@ -47,4 +47,4 @@ export function resolvePaneDrop(input: PaneDropInput): PaneDropResult {
   };
 }
 
-export { paneChromeRects, paneDropRects } from './pane-chrome-rects';
+export { paneChromeRects } from './pane-chrome-rects';

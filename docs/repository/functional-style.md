@@ -15,7 +15,7 @@ first-party code in `src/`.
 - The **sole exception** is `src/lib/storage/browser-db.ts`, where `LkjstrDb`
   may extend `Dexie` because that external API requires subclass table fields.
 - Tests may use classes for local fakes such as synthetic WebSockets.
-- Source modules must not keep compatibility aliases for removed class names.
+- Source modules must not keep compatibility aliases or `@deprecated` exports.
 
 ## Pure Domain Rules
 

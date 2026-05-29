@@ -17,6 +17,11 @@ export async function checkSourceClasses(
     const ext = path.extname(rel);
     if (!['.ts', '.js', '.svelte'].includes(ext)) continue;
     const text = await fs.readFile(file, 'utf8');
+    if (text.includes('@deprecated'))
+      problems.push({
+        file: rel,
+        message: 'first-party src must not expose deprecated aliases',
+      });
     const source = ts.createSourceFile(
       rel,
       ext === '.svelte' ? svelteScriptText(text) : text,

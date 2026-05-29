@@ -43,4 +43,21 @@ describe('repo source class guard', () => {
       },
     ]);
   });
+
+  it('rejects deprecated source aliases', async () => {
+    const root = await fs.mkdtemp(path.join(os.tmpdir(), 'lkjstr-deprecated-'));
+    const source = path.join(root, 'src', 'lib', 'feature.ts');
+    await fs.mkdir(path.dirname(source), { recursive: true });
+    await fs.writeFile(
+      source,
+      '/** @deprecated use direct export */\nexport const oldName = 1;',
+    );
+
+    await expect(checkSourceClasses(root, [source])).resolves.toEqual([
+      {
+        file: path.join('src', 'lib', 'feature.ts'),
+        message: 'first-party src must not expose deprecated aliases',
+      },
+    ]);
+  });
 });

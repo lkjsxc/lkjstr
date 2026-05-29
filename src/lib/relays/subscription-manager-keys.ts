@@ -15,11 +15,6 @@ export function subscriptionKey(request: RelayReadRequest): string {
   });
 }
 
-/** @deprecated Use lease fingerprints via the subscription orchestrator. */
-export function legacySubscriptionKey(request: RelayReadRequest): string {
-  return subscriptionKey(request);
-}
-
 export function readDedupeKey(
   request: RelayReadRequest,
   options: ReadPageOptions,
