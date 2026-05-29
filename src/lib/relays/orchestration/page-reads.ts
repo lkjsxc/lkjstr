@@ -124,7 +124,9 @@ function cursorKey(cursor: FeedCursorPoint | undefined): string {
   return cursor ? `${cursor.createdAt}:${cursor.id}` : '';
 }
 
-function relayFilterKey(filters: NonNullable<PageIntent['relayFilters']>): string {
+function relayFilterKey(
+  filters: NonNullable<PageIntent['relayFilters']>,
+): string {
   return JSON.stringify(filters.map(normalizeFilter));
 }
 

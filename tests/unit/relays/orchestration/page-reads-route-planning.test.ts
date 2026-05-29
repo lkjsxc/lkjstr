@@ -116,7 +116,9 @@ describe('page route planning keys', () => {
     expect(resolvePagingRoutePurpose({ surface: 'home' })).toBe('write');
     expect(resolvePagingRoutePurpose({ surface: 'profile' })).toBe('write');
     expect(resolvePagingRoutePurpose({ surface: 'global' })).toBe('both');
-    expect(resolvePagingRoutePurpose({ surface: 'notifications' })).toBe('both');
+    expect(resolvePagingRoutePurpose({ surface: 'notifications' })).toBe(
+      'both',
+    );
   });
 });
 

@@ -56,18 +56,18 @@ documented-only. Update it when a vertical slice closes a gap.
 
 ## Subscription Orchestration
 
-| Clause                         | Contract                        | Status      | Notes                                                                         |
-| ------------------------------ | ------------------------------- | ----------- | ----------------------------------------------------------------------------- |
-| Intent-only orchestration docs | subscription-orchestration/     | implemented | demand-intent, lease-key, page-read-dedupe                                    |
-| Wire-equivalent lease keys     | lease-key.md                    | implemented | `lease-key.ts`                                                                |
-| Semantic page read dedupe      | page-read-dedupe.md             | implemented | `readPageByIntent`, `pageIntentSemanticKey`                                   |
-| Shared live lease across tabs  | compatibility.md                | implemented | fingerprint + channel merge                                                   |
-| Stats orchestration counters   | metrics.md                      | implemented | metrics + RuntimeMemoryPanel                                                  |
-| Subscription E2E gate          | verification.md                 | implemented | `subscription-three-home.spec.ts` + visibility churn                          |
-| Hidden tab demand pause        | owner-visibility.md             | implemented | setVisibility on feed runtimes                                                |
+| Clause                         | Contract                        | Status      | Notes                                                                                               |
+| ------------------------------ | ------------------------------- | ----------- | --------------------------------------------------------------------------------------------------- |
+| Intent-only orchestration docs | subscription-orchestration/     | implemented | demand-intent, lease-key, page-read-dedupe                                                          |
+| Wire-equivalent lease keys     | lease-key.md                    | implemented | `lease-key.ts`                                                                                      |
+| Semantic page read dedupe      | page-read-dedupe.md             | implemented | `readPageByIntent`, `pageIntentSemanticKey`                                                         |
+| Shared live lease across tabs  | compatibility.md                | implemented | fingerprint + channel merge                                                                         |
+| Stats orchestration counters   | metrics.md                      | implemented | metrics + RuntimeMemoryPanel                                                                        |
+| Subscription E2E gate          | verification.md                 | implemented | `subscription-three-home.spec.ts` + visibility churn                                                |
+| Hidden tab demand pause        | owner-visibility.md             | implemented | setVisibility on feed runtimes                                                                      |
 | All surfaces on intent API     | orchestration-bridge.md         | implemented | Home/Profile route-fingerprinted reads, selected tools, and direct exact-read exceptions documented |
-| Shared Home backend query      | backend/home-query-lifecycle.md | implemented | `attachHomeQuery`, shared key excludes tab id                                 |
-| Feed route isolation           | feed-route-isolation.md         | implemented | Unit and browser gates cover Home/Profile route keys, live replacement, Notifications isolation |
+| Shared Home backend query      | backend/home-query-lifecycle.md | implemented | `attachHomeQuery`, shared key excludes tab id                                                       |
+| Feed route isolation           | feed-route-isolation.md         | implemented | Unit and browser gates cover Home/Profile route keys, live replacement, Notifications isolation     |
 
 ## Feed Correctness
 

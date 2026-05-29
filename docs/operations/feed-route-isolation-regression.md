@@ -7,8 +7,8 @@ Notifications, and selected-relay tools.
 
 ## Matrix
 
-| Risk                       | Unit evidence                                      | Browser evidence                       | Status        |
-| -------------------------- | -------------------------------------------------- | -------------------------------------- | ------------- |
+| Risk                       | Unit evidence                                      | Browser evidence                       | Status      |
+| -------------------------- | -------------------------------------------------- | -------------------------------------- | ----------- |
 | Cross-surface cursor bleed | Profile/Home page keys differ by route fingerprint | Home/Profile/Notifications together    | implemented |
 | Stale route refresh        | Old Home refresh cannot clear rows or replace live | Home receives after route refresh      | implemented |
 | Hidden-tab interference    | Hidden owners pause without closing visible leases | Hidden tab keeps visible live intact   | implemented |
