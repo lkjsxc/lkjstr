@@ -13,6 +13,7 @@ import type {
   RelayRouteSource,
 } from './relay-route-types';
 import type { RelayPurpose } from './relay-purpose';
+import { relayRouteLedgerRecord } from './relay-cache-ledger';
 
 const memoryRoutes = createBoundedMap<string, RelayRoute>({ maxSize: 2000 });
 const memoryBlocks = createBoundedMap<string, RelayRouteBlock>({
@@ -43,7 +44,15 @@ export async function saveAuthorRelayRoutes(
   }
   if (routes.length === 0) return;
   await bestEffortStorageWrite(() =>
-    browserDb().authorRelayRoutes.bulkPut(routes),
+    browserDb().transaction(
+      'rw',
+      browserDb().authorRelayRoutes,
+      browserDb().cacheLedger,
+      async () => {
+        await browserDb().authorRelayRoutes.bulkPut(routes);
+        await browserDb().cacheLedger.bulkPut(routes.map(relayRouteLedgerRecord));
+      },
+    ),
   );
 }
 

@@ -1,9 +1,18 @@
 import { browserDb } from '../storage/browser-db';
 import { indexedDbAvailable } from '../storage/safe-storage';
-import { deletePrunedEvents } from './compaction-delete';
+import type { CacheMetadata } from './cache-status';
+import {
+  cacheBudgetResult,
+  type CacheBudgetResult,
+} from './cache-budget-result';
+import { deleteCacheLedgerResources } from './compaction-delete';
 import { protectedEventIds } from './compaction-protection';
 import { lowestScorePruneRows } from './compaction-select';
-import { estimatedEventCacheBytes } from './event-cache-bytes';
+import {
+  estimatedEventCacheBytes,
+  estimatedLedgerBytes,
+  estimatedPrunableCacheBytes,
+} from './event-cache-bytes';
 import {
   defaultCacheMaxBytes,
   quotaPruneBatchSize,
@@ -14,7 +23,8 @@ import {
   deriveSiteStorageBudget,
   shouldCompactForSiteBudget,
 } from './site-storage-budget';
-import type { CacheMetadata } from './cache-status';
+
+export type { CacheBudgetResult } from './cache-budget-result';
 
 export type CacheBudgetReason =
   | 'startup'
@@ -22,19 +32,6 @@ export type CacheBudgetReason =
   | 'settings-change'
   | 'manual'
   | 'quota-pressure';
-
-export type CacheBudgetResult = {
-  readonly prunedEvents: number;
-  readonly prunedBytes: number;
-  readonly skippedDrafts: true;
-  readonly skipped: boolean;
-  readonly reason?: string;
-  readonly budgetBytes: number;
-  readonly eventCacheTargetBytes: number;
-  readonly eventCacheBytes: number;
-  readonly browserUsageBytes: number | null;
-  readonly protectedOnly: boolean;
-};
 
 export type CacheBudgetOptions = {
   readonly maxBytes?: number;
@@ -46,75 +43,100 @@ export async function enforceCacheBudget(
 ): Promise<CacheBudgetResult> {
   const budgetBytes = options.maxBytes ?? defaultCacheMaxBytes;
   if (!indexedDbAvailable())
-    return result(reason, budgetBytes, budgetBytes, 0, null, 0, 0, true, true);
-  const quota = await readStorageQuota();
-  let eventCacheBytes = await estimatedEventCacheBytes();
-  const budget = deriveSiteStorageBudget(eventCacheBytes, budgetBytes, quota);
-  if (!shouldCompactForSiteBudget(eventCacheBytes, budget)) {
-    const done = result(
-      'below-budget-threshold',
-      budget.siteBudgetBytes,
-      budget.eventCacheTargetBytes,
-      eventCacheBytes,
-      budget.browserUsageBytes,
-      0,
-      0,
-      false,
-      false,
-    );
+    return cacheBudgetResult({
+      reason,
+      budgetBytes,
+      ledgerBytes: 0,
+      prunableCacheBytes: 0,
+      protectedUserBytes: 0,
+      unknownOrOverheadBytes: 0,
+      browserUsageBytes: null,
+      prunedEvents: 0,
+      prunedResources: 0,
+      prunedBytes: 0,
+      eventCacheBytes: 0,
+      skipped: true,
+      protectedOnly: true,
+    });
+  let quota = await readStorageQuota();
+  let stats = await ledgerStats(quota);
+  const budget = deriveSiteStorageBudget(budgetBytes, quota);
+  if (!shouldCompactForSiteBudget(stats.prunableCacheBytes, budget)) {
+    const done = cacheBudgetResult({
+      reason: 'below-budget-threshold',
+      budgetBytes: budget.siteBudgetBytes,
+      ledgerBytes: stats.ledgerBytes,
+      prunableCacheBytes: stats.prunableCacheBytes,
+      protectedUserBytes: 0,
+      unknownOrOverheadBytes: stats.unknownOrOverheadBytes,
+      browserUsageBytes: budget.browserUsageBytes,
+      prunedEvents: 0,
+      prunedResources: 0,
+      prunedBytes: 0,
+      eventCacheBytes: stats.eventCacheBytes,
+      skipped: false,
+      protectedOnly: false,
+    });
     await writeCacheBudgetResult(done);
     return done;
   }
   let prunedEvents = 0;
+  let prunedResources = 0;
   let prunedBytes = 0;
   let protectedOnly = false;
-  while (eventCacheBytes > budget.eventCacheTargetBytes) {
+  while (
+    shouldCompactForSiteBudget(
+      stats.prunableCacheBytes,
+      deriveSiteStorageBudget(budgetBytes, quota),
+    )
+  ) {
     const protectedIds = await protectedEventIds();
     const rows = await lowestScorePruneRows(quotaPruneBatchSize, protectedIds);
     if (rows.length === 0) {
       protectedOnly = true;
       break;
     }
-    const deleted = await deletePrunedEvents(rows);
+    const deleted = await deleteCacheLedgerResources(rows);
     prunedEvents += deleted.prunedEvents;
+    prunedResources += deleted.prunedResources;
     prunedBytes += deleted.prunedBytes;
-    eventCacheBytes = await estimatedEventCacheBytes();
+    quota = adjustedQuota(quota, deleted.prunedBytes);
+    stats = await ledgerStats(quota);
   }
-  const finalBudget = deriveSiteStorageBudget(
-    eventCacheBytes,
-    budgetBytes,
-    adjustedQuota(quota, prunedBytes),
-  );
-  const protectedUsageOverBudget =
-    finalBudget.protectedOrNonEventBytes >= finalBudget.siteBudgetBytes &&
-    finalBudget.browserUsageBytes !== null;
-  const done = result(
-    protectedUsageOverBudget
-      ? 'protected-or-non-cache-usage'
+  const finalBudget = deriveSiteStorageBudget(budgetBytes, quota);
+  const protectedPressure =
+    finalBudget.overSiteBudget && stats.prunableCacheBytes === 0;
+  const done = cacheBudgetResult({
+    reason: protectedPressure
+      ? 'protected-or-unknown-usage'
       : protectedOnly
         ? 'protected-only'
         : reason,
-    finalBudget.siteBudgetBytes,
-    finalBudget.eventCacheTargetBytes,
-    eventCacheBytes,
-    finalBudget.browserUsageBytes,
+    budgetBytes: finalBudget.siteBudgetBytes,
+    ledgerBytes: stats.ledgerBytes,
+    prunableCacheBytes: stats.prunableCacheBytes,
+    protectedUserBytes: 0,
+    unknownOrOverheadBytes: stats.unknownOrOverheadBytes,
+    browserUsageBytes: finalBudget.browserUsageBytes,
     prunedEvents,
+    prunedResources,
     prunedBytes,
-    false,
-    protectedOnly || protectedUsageOverBudget,
-  );
+    eventCacheBytes: stats.eventCacheBytes,
+    skipped: false,
+    protectedOnly: protectedOnly || protectedPressure,
+  });
   await writeCacheBudgetResult(done);
   return done;
 }
 
 export function shouldCompact(
-  eventCacheBytes: number,
+  prunableCacheBytes: number,
   maxBytes: number,
   quota: StorageQuotaSnapshot | null,
 ): boolean {
   return shouldCompactForSiteBudget(
-    eventCacheBytes,
-    deriveSiteStorageBudget(eventCacheBytes, maxBytes, quota),
+    prunableCacheBytes,
+    deriveSiteStorageBudget(maxBytes, quota),
   );
 }
 
@@ -128,41 +150,33 @@ async function writeCacheBudgetResult(
     notificationCount: await browserDb().notifications.count(),
     storageEstimateBytes: result.browserUsageBytes,
     budgetBytes: result.budgetBytes,
-    eventCacheTargetBytes: result.eventCacheTargetBytes,
+    ledgerBytes: result.ledgerBytes,
+    prunableCacheBytes: result.prunableCacheBytes,
+    protectedUserBytes: result.protectedUserBytes,
+    unknownOrOverheadBytes: result.unknownOrOverheadBytes,
     eventCacheBytes: result.eventCacheBytes,
     browserUsageBytes: result.browserUsageBytes,
     lastCompactionReason: result.reason,
     prunedEventCount: result.prunedEvents,
+    prunedResourceCount: result.prunedResources,
     prunedByteEstimate: result.prunedBytes,
     protectedOnly: result.protectedOnly,
+    protectedOrUnknownOnly: result.protectedOnly,
+    ledgerInventory: [],
     storageInventory: [],
     updatedAt: Date.now(),
   };
   await browserDb().cacheMeta.put(meta);
 }
 
-function result(
-  reason: string,
-  budgetBytes: number,
-  eventCacheTargetBytes: number,
-  eventCacheBytes: number,
-  browserUsageBytes: number | null,
-  prunedEvents: number,
-  prunedBytes: number,
-  skipped: boolean,
-  protectedOnly: boolean,
-): CacheBudgetResult {
+async function ledgerStats(quota: StorageQuotaSnapshot | null) {
+  const ledgerBytes = await estimatedLedgerBytes();
   return {
-    prunedEvents,
-    prunedBytes,
-    skippedDrafts: true,
-    skipped,
-    reason,
-    budgetBytes,
-    eventCacheTargetBytes,
-    eventCacheBytes,
-    browserUsageBytes,
-    protectedOnly,
+    ledgerBytes,
+    prunableCacheBytes: await estimatedPrunableCacheBytes(),
+    eventCacheBytes: await estimatedEventCacheBytes(),
+    unknownOrOverheadBytes:
+      quota === null ? 0 : Math.max(0, quota.usage - ledgerBytes),
   };
 }
 

@@ -27,7 +27,11 @@ export function isPrunablePriorityRow(
   row: CacheLedgerRecord,
   protectedIds: ReadonlySet<string>,
 ): boolean {
-  return !protectedIds.has(row.resourceId) && !row.protected;
+  return (
+    !protectedIds.has(row.id) &&
+    !protectedIds.has(row.resourceId) &&
+    !row.protected
+  );
 }
 
 export async function lowestScorePruneRows(

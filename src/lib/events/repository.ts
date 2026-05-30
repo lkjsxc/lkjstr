@@ -26,6 +26,7 @@ import { storeRelayListSuggestionsFromEvent } from '../relays/relay-list-suggest
 import { storeRoutesFromEvent } from '../relays/relay-route-events';
 import { countRuntime } from '../app/runtime-counters';
 import { scheduleCacheCompactionAfterWrite } from '../cache/compaction-scheduler';
+import { feedCursorLedgerRecord } from './feed-cache-ledger';
 import type {
   FeedCursor,
   FeedEvent,
@@ -174,7 +175,17 @@ function cursorFor(
 
 async function saveCursor(cursor: FeedCursor): Promise<void> {
   memoryCursors.set(cursor.id, cursor);
-  await bestEffortStorageWrite(() => browserDb().feedCursors.put(cursor));
+  await bestEffortStorageWrite(() =>
+    browserDb().transaction(
+      'rw',
+      browserDb().feedCursors,
+      browserDb().cacheLedger,
+      async () => {
+        await browserDb().feedCursors.put(cursor);
+        await browserDb().cacheLedger.put(feedCursorLedgerRecord(cursor));
+      },
+    ),
+  );
 }
 
 export function clearEventRepositoryForTests(): void {

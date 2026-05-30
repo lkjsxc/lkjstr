@@ -27,8 +27,20 @@
     <tbody>
       <tr><th>Budget</th><td>{formatBytes(props.cache.budgetBytes)}</td></tr>
       <tr>
-        <th>Event allowance</th>
-        <td>{formatBytes(props.cache.eventCacheTargetBytes)}</td>
+        <th>Prunable cache</th>
+        <td>{formatBytes(props.cache.prunableCacheBytes)}</td>
+      </tr>
+      <tr>
+        <th>Ledger bytes</th>
+        <td>{formatBytes(props.cache.ledgerBytes)}</td>
+      </tr>
+      <tr>
+        <th>Protected user data</th>
+        <td>{formatBytes(props.cache.protectedUserBytes)}</td>
+      </tr>
+      <tr>
+        <th>Unknown/browser overhead</th>
+        <td>{formatBytes(props.cache.unknownOrOverheadBytes)}</td>
       </tr>
       <tr>
         <th>Event cache</th><td>{formatBytes(props.cache.eventCacheBytes)}</td>
@@ -41,6 +53,7 @@
         <th>Last enforcement</th>
         <td>{props.cache.lastCompactionReason ?? 'none'}</td>
       </tr>
+      <tr><th>Pruned resources</th><td>{props.cache.prunedResourceCount}</td></tr>
       <tr><th>Pruned events</th><td>{props.cache.prunedEventCount}</td></tr>
       <tr>
         <th>Pruned bytes</th>
@@ -50,6 +63,22 @@
         <th>Protected only</th>
         <td>{props.cache.protectedOnly ? 'yes' : 'no'}</td>
       </tr>
+    </tbody>
+  </table>
+  <h4>Largest cache resource kinds</h4>
+  <table class="stats-table">
+    <thead>
+      <tr><th>Owner</th><th>Resource</th><th>Rows</th><th>Estimate</th></tr>
+    </thead>
+    <tbody>
+      {#each props.cache.ledgerInventory as row (`${row.ownerKind}:${row.resourceKind}`)}
+        <tr>
+          <td>{row.ownerKind}</td>
+          <td>{row.resourceKind}</td>
+          <td>{row.rowCount}</td>
+          <td>{formatBytes(row.estimatedBytes)}</td>
+        </tr>
+      {/each}
     </tbody>
   </table>
   <h4>Storage inventory</h4>

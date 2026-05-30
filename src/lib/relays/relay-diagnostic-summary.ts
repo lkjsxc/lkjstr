@@ -5,6 +5,7 @@ import {
   bestEffortStorageWrite,
   boundedStorageRead,
 } from '../storage/safe-storage';
+import { relaySummaryLedgerRecord } from './relay-cache-ledger';
 import { mergeRelayDiagnosticSummary } from './relay-diagnostic-merge';
 import type { RelayDiagnostic, RelaySnapshot } from './types';
 
@@ -90,7 +91,15 @@ async function flushWrite(relayUrl: string): Promise<void> {
   if (!summary) return;
   pendingWrites.delete(relayUrl);
   await bestEffortStorageWrite(() =>
-    browserDb().relayDiagnosticSummaries.put(summary),
+    browserDb().transaction(
+      'rw',
+      browserDb().relayDiagnosticSummaries,
+      browserDb().cacheLedger,
+      async () => {
+        await browserDb().relayDiagnosticSummaries.put(summary);
+        await browserDb().cacheLedger.put(relaySummaryLedgerRecord(summary));
+      },
+    ),
   );
 }
 
@@ -149,6 +158,16 @@ async function flushAllPendingWrites(): Promise<void> {
     pendingWrites.delete(url);
   }
   await bestEffortStorageWrite(() =>
-    browserDb().relayDiagnosticSummaries.bulkPut(batch),
+    browserDb().transaction(
+      'rw',
+      browserDb().relayDiagnosticSummaries,
+      browserDb().cacheLedger,
+      async () => {
+        await browserDb().relayDiagnosticSummaries.bulkPut(batch);
+        await browserDb().cacheLedger.bulkPut(
+          batch.map(relaySummaryLedgerRecord),
+        );
+      },
+    ),
   );
 }

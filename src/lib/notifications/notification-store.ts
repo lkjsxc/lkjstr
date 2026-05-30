@@ -4,6 +4,7 @@ import {
   boundedStorageRead,
 } from '../storage/safe-storage';
 import { createBoundedMap } from '../fp/bounded-map';
+import { putNotificationLedgerRows } from './notification-ledger';
 import type { NotificationRecord } from './notification';
 
 const memoryNotifications = createBoundedMap<string, NotificationRecord>({
@@ -15,7 +16,15 @@ export async function saveNotifications(
 ): Promise<void> {
   records.forEach((record) => memoryNotifications.set(record.id, record));
   await bestEffortStorageWrite(() =>
-    browserDb().notifications.bulkPut([...records]),
+    browserDb().transaction(
+      'rw',
+      browserDb().notifications,
+      browserDb().cacheLedger,
+      async () => {
+        await browserDb().notifications.bulkPut([...records]);
+        await putNotificationLedgerRows(records);
+      },
+    ),
   );
 }
 

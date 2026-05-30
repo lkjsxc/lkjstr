@@ -3,18 +3,37 @@ import {
   compactFeedCoverage,
   deleteFeedCoverageForFeeds,
 } from '../events/feed-coverage-store';
+import { cacheLedgerId } from './cache-ledger-id';
 import type { CacheLedgerRecord } from './cache-ledger-record';
 
 export type PruneDeleteResult = {
   readonly prunedEvents: number;
+  readonly prunedResources: number;
   readonly prunedBytes: number;
 };
+
+export async function deleteCacheLedgerResources(
+  rows: readonly CacheLedgerRecord[],
+): Promise<PruneDeleteResult> {
+  const events = rows.filter((row) => row.resourceKind === 'nostr-event');
+  const direct = rows.filter((row) => row.resourceKind !== 'nostr-event');
+  const eventResult = await deletePrunedEvents(events);
+  await deleteDirectCacheRows(direct);
+  return {
+    prunedEvents: eventResult.prunedEvents,
+    prunedResources: eventResult.prunedResources + direct.length,
+    prunedBytes:
+      eventResult.prunedBytes +
+      direct.reduce((sum, row) => sum + (row.cacheBytes ?? 0), 0),
+  };
+}
 
 export async function deletePrunedEvents(
   rows: readonly CacheLedgerRecord[],
 ): Promise<PruneDeleteResult> {
   const ids = rows.map((row) => row.resourceId);
-  if (ids.length === 0) return { prunedEvents: 0, prunedBytes: 0 };
+  if (ids.length === 0)
+    return { prunedEvents: 0, prunedResources: 0, prunedBytes: 0 };
   await browserDb().transaction(
     'rw',
     [
@@ -39,8 +58,65 @@ export async function deletePrunedEvents(
   await compactFeedCoverage(30 * 24 * 60 * 60);
   return {
     prunedEvents: ids.length,
+    prunedResources: ids.length,
     prunedBytes: rows.reduce((sum, row) => sum + (row.cacheBytes ?? 0), 0),
   };
+}
+
+async function deleteDirectCacheRows(
+  rows: readonly CacheLedgerRecord[],
+): Promise<void> {
+  if (rows.length === 0) return;
+  await browserDb().transaction(
+    'rw',
+    [
+      browserDb().notifications,
+      browserDb().feedCursors,
+      browserDb().feedCoverage,
+      browserDb().feedScanHints,
+      browserDb().relayDiagnosticSummaries,
+      browserDb().relayInformation,
+      browserDb().relayListSuggestions,
+      browserDb().authorRelayRoutes,
+      browserDb().jobs,
+      browserDb().cacheLedger,
+    ],
+    async () => {
+      await deleteByKind(rows, 'notification-record', browserDb().notifications);
+      await deleteByKind(rows, 'feed-cursor', browserDb().feedCursors);
+      await deleteByKind(rows, 'coverage-row', browserDb().feedCoverage);
+      await deleteByKind(rows, 'scan-hint', browserDb().feedScanHints);
+      await deleteByKind(
+        rows,
+        'relay-summary',
+        browserDb().relayDiagnosticSummaries,
+      );
+      await deleteByKind(rows, 'relay-info', browserDb().relayInformation);
+      await deleteByKind(
+        rows,
+        'relay-list-suggestion',
+        browserDb().relayListSuggestions,
+      );
+      await deleteByKind(
+        rows,
+        'author-relay-route',
+        browserDb().authorRelayRoutes,
+      );
+      await deleteByKind(rows, 'job-record', browserDb().jobs);
+      await browserDb().cacheLedger.bulkDelete(rows.map((row) => row.id));
+    },
+  );
+}
+
+async function deleteByKind(
+  rows: readonly CacheLedgerRecord[],
+  kind: CacheLedgerRecord['resourceKind'],
+  table: { bulkDelete: (ids: string[]) => Promise<unknown> },
+): Promise<void> {
+  const ids = rows
+    .filter((row) => row.resourceKind === kind)
+    .map((row) => row.resourceId);
+  if (ids.length > 0) await table.bulkDelete(ids);
 }
 
 async function deleteStaleFeedCursors(prunedIds: Set<string>): Promise<void> {
@@ -55,5 +131,8 @@ async function deleteStaleFeedCursors(prunedIds: Set<string>): Promise<void> {
   });
   if (stale.length === 0) return;
   await browserDb().feedCursors.bulkDelete(stale.map((cursor) => cursor.id));
+  await browserDb().cacheLedger.bulkDelete(
+    stale.map((cursor) => cacheLedgerId('feed-page', cursor.id)),
+  );
   await deleteFeedCoverageForFeeds(stale.map((cursor) => cursor.feedKey));
 }

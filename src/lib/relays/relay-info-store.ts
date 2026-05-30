@@ -5,6 +5,7 @@ import {
   bestEffortStorageWrite,
   boundedStorageRead,
 } from '../storage/safe-storage';
+import { relayInfoLedgerRecord } from './relay-cache-ledger';
 import type { RelayInformationRecord } from './relay-info-types';
 
 const memoryInfo = createBoundedMap<string, RelayInformationRecord>({
@@ -16,7 +17,17 @@ export async function saveRelayInformation(
   record: RelayInformationRecord,
 ): Promise<void> {
   memoryInfo.set(record.relayUrl, record);
-  await bestEffortStorageWrite(() => browserDb().relayInformation.put(record));
+  await bestEffortStorageWrite(() =>
+    browserDb().transaction(
+      'rw',
+      browserDb().relayInformation,
+      browserDb().cacheLedger,
+      async () => {
+        await browserDb().relayInformation.put(record);
+        await browserDb().cacheLedger.put(relayInfoLedgerRecord(record));
+      },
+    ),
+  );
 }
 
 export async function listRelayInformation(): Promise<

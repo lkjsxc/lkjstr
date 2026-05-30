@@ -2,7 +2,13 @@ import { browserDb } from '../storage/browser-db';
 import { boundedStorageRead } from '../storage/safe-storage';
 import { allMemoryEvents } from '../events/repository-memory';
 import { defaultCacheMaxBytes, readStorageQuota } from './storage-quota';
-import { estimatedEventCacheBytes } from './event-cache-bytes';
+import {
+  estimatedEventCacheBytes,
+  estimatedLedgerBytes,
+  estimatedLedgerBytesByOwner,
+  estimatedPrunableCacheBytes,
+  type LedgerInventoryRow,
+} from './event-cache-bytes';
 import { deriveSiteStorageBudget } from './site-storage-budget';
 import {
   storageInventory,
@@ -16,13 +22,19 @@ export type CacheMetadata = {
   readonly notificationCount: number;
   readonly storageEstimateBytes: number | null;
   readonly budgetBytes: number;
-  readonly eventCacheTargetBytes: number;
+  readonly ledgerBytes: number;
+  readonly prunableCacheBytes: number;
+  readonly protectedUserBytes: number;
+  readonly unknownOrOverheadBytes: number;
   readonly eventCacheBytes: number;
   readonly browserUsageBytes: number | null;
   readonly lastCompactionReason?: string;
   readonly prunedEventCount: number;
+  readonly prunedResourceCount: number;
   readonly prunedByteEstimate: number;
   readonly protectedOnly: boolean;
+  readonly protectedOrUnknownOnly: boolean;
+  readonly ledgerInventory: readonly LedgerInventoryRow[];
   readonly storageInventory: readonly StorageInventoryRow[];
   readonly updatedAt: number;
 };
@@ -33,12 +45,20 @@ export async function cacheStatus(): Promise<CacheMetadata> {
     () => browserDb().cacheMeta.get('main'),
     undefined,
   );
+  const ledgerBytes = await estimatedLedgerBytes();
+  const prunableCacheBytes = await estimatedPrunableCacheBytes();
   const eventCacheBytes = await estimatedEventCacheBytes();
   const currentBudget = deriveSiteStorageBudget(
-    eventCacheBytes,
     meta?.budgetBytes ?? defaultCacheMaxBytes,
     quota,
   );
+  const inventory = await storageInventory(currentBudget.browserUsageBytes);
+  const protectedUserBytes = inventory
+    .filter((row) => row.group === 'protected')
+    .reduce((sum, row) => sum + row.estimatedBytes, 0);
+  const tableBytes = inventory
+    .filter((row) => row.group !== 'overhead')
+    .reduce((sum, row) => sum + row.estimatedBytes, 0);
   return {
     id: 'main',
     rawEventCount: await boundedStorageRead(
@@ -52,14 +72,23 @@ export async function cacheStatus(): Promise<CacheMetadata> {
     ),
     storageEstimateBytes: currentBudget.browserUsageBytes,
     budgetBytes: currentBudget.siteBudgetBytes,
-    eventCacheTargetBytes: currentBudget.eventCacheTargetBytes,
+    ledgerBytes,
+    prunableCacheBytes,
+    protectedUserBytes,
+    unknownOrOverheadBytes:
+      currentBudget.browserUsageBytes === null
+        ? 0
+        : Math.max(0, currentBudget.browserUsageBytes - tableBytes),
     eventCacheBytes,
     browserUsageBytes: currentBudget.browserUsageBytes,
     lastCompactionReason: meta?.lastCompactionReason,
     prunedEventCount: meta?.prunedEventCount ?? 0,
+    prunedResourceCount: meta?.prunedResourceCount ?? 0,
     prunedByteEstimate: meta?.prunedByteEstimate ?? 0,
     protectedOnly: meta?.protectedOnly ?? false,
-    storageInventory: await storageInventory(currentBudget.browserUsageBytes),
+    protectedOrUnknownOnly: meta?.protectedOrUnknownOnly ?? false,
+    ledgerInventory: await estimatedLedgerBytesByOwner(),
+    storageInventory: inventory,
     updatedAt: Date.now(),
   };
 }

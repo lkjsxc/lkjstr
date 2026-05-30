@@ -4,6 +4,8 @@ import {
   bestEffortStorageWrite,
   boundedStorageRead,
 } from '../storage/safe-storage';
+import { cacheLedgerId } from '../cache/cache-ledger-id';
+import { feedCoverageLedgerRecord } from './feed-cache-ledger';
 import type { FeedCoverage } from './types';
 
 const memoryCoverage = createBoundedMap<string, FeedCoverage>({
@@ -19,7 +21,17 @@ export async function saveFeedCoverage(
     updatedAt: Date.now(),
   };
   memoryCoverage.set(coverage.id, coverage);
-  await bestEffortStorageWrite(() => browserDb().feedCoverage.put(coverage));
+  await bestEffortStorageWrite(() =>
+    browserDb().transaction(
+      'rw',
+      browserDb().feedCoverage,
+      browserDb().cacheLedger,
+      async () => {
+        await browserDb().feedCoverage.put(coverage);
+        await browserDb().cacheLedger.put(feedCoverageLedgerRecord(coverage));
+      },
+    ),
+  );
   return coverage;
 }
 
@@ -40,10 +52,14 @@ export async function deleteFeedCoverageForFeeds(
   for (const [id, value] of memoryCoverage.entries())
     if (keys.has(value.feedKey)) memoryCoverage.delete(id);
   await bestEffortStorageWrite(async () => {
-    await browserDb()
+    const rows = await browserDb()
       .feedCoverage.where('feedKey')
       .anyOf([...keys])
-      .delete();
+      .toArray();
+    await browserDb().feedCoverage.bulkDelete(rows.map((row) => row.id));
+    await browserDb().cacheLedger.bulkDelete(
+      rows.map((row) => cacheLedgerId('feed-coverage', row.id)),
+    );
   });
 }
 
@@ -63,7 +79,12 @@ export async function compactFeedCoverage(
     await browserDb().feedCoverage.each((row) => {
       if (expired(row)) ids.push(row.id);
     });
-    if (ids.length > 0) await browserDb().feedCoverage.bulkDelete(ids);
+    if (ids.length > 0) {
+      await browserDb().feedCoverage.bulkDelete(ids);
+      await browserDb().cacheLedger.bulkDelete(
+        ids.map((id) => cacheLedgerId('feed-coverage', id)),
+      );
+    }
   });
 }
 

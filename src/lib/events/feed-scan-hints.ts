@@ -9,6 +9,8 @@ import {
   relaySegmentMaxSpan,
   relaySegmentMinSpan,
 } from './relay-page-segments';
+import { cacheLedgerId } from '../cache/cache-ledger-id';
+import { feedScanHintLedgerRecord } from './feed-cache-ledger';
 
 export type FeedScanHintFeedback =
   | 'limit-hit'
@@ -62,7 +64,17 @@ export async function saveFeedScanHint(
   };
   memoryHints.set(hint.id, hint);
   countRuntime('timeline', 'warmHintWrites');
-  await bestEffortStorageWrite(() => browserDb().feedScanHints.put(hint));
+  await bestEffortStorageWrite(() =>
+    browserDb().transaction(
+      'rw',
+      browserDb().feedScanHints,
+      browserDb().cacheLedger,
+      async () => {
+        await browserDb().feedScanHints.put(hint);
+        await browserDb().cacheLedger.put(feedScanHintLedgerRecord(hint));
+      },
+    ),
+  );
 }
 
 export async function hintsForScan(input: {
@@ -126,7 +138,12 @@ export async function compactFeedScanHints(): Promise<void> {
     const remove = rows
       .filter((hint) => !keep.has(hint.id))
       .map((hint) => hint.id);
-    if (remove.length > 0) await browserDb().feedScanHints.bulkDelete(remove);
+    if (remove.length > 0) {
+      await browserDb().feedScanHints.bulkDelete(remove);
+      await browserDb().cacheLedger.bulkDelete(
+        remove.map((id) => cacheLedgerId('feed-scan-hint', id)),
+      );
+    }
   });
 }
 

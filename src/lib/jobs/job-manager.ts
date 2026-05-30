@@ -10,6 +10,7 @@ import type {
   JobStatus,
 } from '../events/types';
 import { createBoundedMap } from '../fp/bounded-map';
+import { jobLedgerRecord } from './job-ledger';
 import { baseJob, terminalJobStatus } from './job-record';
 
 const memoryJobs = createBoundedMap<string, JobRecord>({ maxSize: 500 });
@@ -33,7 +34,17 @@ export function createJobManager() {
       .catch(() => undefined));
   const save = async (job: JobRecord): Promise<JobRecord> => {
     memoryJobs.set(job.id, job);
-    await bestEffortStorageWrite(() => browserDb().jobs.put(job));
+    await bestEffortStorageWrite(() =>
+      browserDb().transaction(
+        'rw',
+        browserDb().jobs,
+        browserDb().cacheLedger,
+        async () => {
+          await browserDb().jobs.put(job);
+          await browserDb().cacheLedger.put(jobLedgerRecord(job));
+        },
+      ),
+    );
     emit();
     return job;
   };

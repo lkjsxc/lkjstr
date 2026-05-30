@@ -5,6 +5,7 @@ import {
   boundedStorageRead,
 } from '../storage/safe-storage';
 import { createBoundedMap } from '../fp/bounded-map';
+import { relaySuggestionLedgerRecord } from './relay-cache-ledger';
 import { listRelaySets, saveRelaySets, type RelayRecord } from './relay-store';
 
 export type RelayListSuggestionRecord = {
@@ -45,7 +46,17 @@ export async function storeRelayListSuggestionsFromEvent(
   }));
   for (const record of records) memorySuggestions.set(record.id, record);
   await bestEffortStorageWrite(() =>
-    browserDb().relayListSuggestions.bulkPut(records),
+    browserDb().transaction(
+      'rw',
+      browserDb().relayListSuggestions,
+      browserDb().cacheLedger,
+      async () => {
+        await browserDb().relayListSuggestions.bulkPut(records);
+        await browserDb().cacheLedger.bulkPut(
+          records.map(relaySuggestionLedgerRecord),
+        );
+      },
+    ),
   );
   return records;
 }

@@ -35,7 +35,7 @@ async function runScheduledCompaction(): Promise<void> {
     const maxBytes = await configuredCacheMaxBytes();
     for (let round = 0; round < maxCompactionRounds; round += 1) {
       const result = await enforceCacheBudget('write', { maxBytes });
-      if (result.prunedEvents === 0) break;
+      if (result.prunedResources === 0) break;
     }
   } finally {
     running = false;

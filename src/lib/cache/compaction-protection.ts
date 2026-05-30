@@ -1,5 +1,6 @@
 import Dexie from 'dexie';
 import { browserDb } from '../storage/browser-db';
+import { cacheLedgerId } from './cache-ledger-id';
 import { pinnedEventIds } from './pins';
 
 export type CompactionEventCandidate = {
@@ -31,6 +32,7 @@ export async function protectedEventIds(): Promise<Set<string>> {
   const accountPubkeys = await loadAccountPubkeys();
   if (accountPubkeys.size > 0)
     await collectLatestByKindPubkeyForSet(3, accountPubkeys, ids);
+  await collectProtectedNotifications(ids);
   await browserDb()
     .cacheLedger.where('ownerKind')
     .equals('event')
@@ -73,4 +75,22 @@ async function eventsByKind(kind: number): Promise<CompactionEventCandidate[]> {
     )
     .each((event) => events.push(event));
   return events;
+}
+
+async function collectProtectedNotifications(target: Set<string>): Promise<void> {
+  const latestByAccount = new Map<string, string[]>();
+  const unreadRecentCutoff = Date.now() - 30 * 24 * 60 * 60 * 1000;
+  await browserDb()
+    .notifications.orderBy('createdAt')
+    .reverse()
+    .each((row) => {
+      const retained = latestByAccount.get(row.accountPubkey) ?? [];
+      if (retained.length < 200) {
+        retained.push(row.id);
+        latestByAccount.set(row.accountPubkey, retained);
+        target.add(cacheLedgerId('notification', row.id));
+      }
+      if (row.readAt === null && row.createdAt * 1000 >= unreadRecentCutoff)
+        target.add(cacheLedgerId('notification', row.id));
+    });
 }
