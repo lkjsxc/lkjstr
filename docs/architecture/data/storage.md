@@ -9,20 +9,21 @@ Storage docs define browser persistence ownership.
 - `workspaces`: workspace layout and tab state.
 - `accounts`: account metadata.
 - `localAccountSecrets`: raw local signing account secret keys.
-- `notifications`: local activity records.
+- `notifications`: local activity cache records with dynamic protection for
+  recent, unread, visible, or account-window subsets.
 - `tweetDrafts`: durable Tweet drafts.
 - `events`: cached Nostr events.
 - `eventRelays`: event relay receipts.
 - `eventTags`: searchable `e`, `p`, `q`, and `a` tag rows.
-- `eventPriority`: compaction score and byte-accounting rows for cached
-  events. This is the current cache ledger pattern and should become the shared
-  ledger for future local blobs such as image cache rows.
-- `feedCursors`: feed paging cursors.
+- `cacheLedger`: shared compaction score and byte-accounting rows for every
+  prunable local cache resource.
+- `feedCursors`: derived feed paging cursors.
 - `feedCoverage`: durable relay/filter/range coverage evidence and unresolved
   diagnostics for feed scans.
 - `feedScanHints`: bounded performance hints for future grouped feed scan
   window sizes. Hints are separate from coverage proof.
-- `jobs`: persisted in-app job records.
+- `jobs`: persisted in-app job records. Active jobs are protected; finished jobs
+  are cache-ledger resources.
 - `cacheMeta`: cache status records.
 - `tabStates`: durable tab snapshot payloads keyed by `workspaceId + tabId`.
   `lastPaneId` is placement metadata only. See [Tab Snapshots](#tab-snapshots).
@@ -87,14 +88,19 @@ relay diagnostics, active workers, subscriptions, or unbounded arrays.
 
 ## Cleanup
 
-Event-cache budget cleanup may prune cached events, event relay receipts, event
-tag rows, feed cursors, and feed coverage affected by pruned feed keys.
-Complete coverage rows compact sooner than dense, incomplete, unresolved, or
-failed diagnostic rows. Cleanup must not prune accounts, local signing secrets,
-settings, relay sets, workspace layout, notifications, Tweet drafts, relay
-configuration, or tab snapshots. `tabStates` cleanup is owned by the workspace
-snapshot coordinator and removes rows only for tabs absent from the workspace or
-stale pre-tab-owned rows.
+Local-cache budget cleanup may prune any `cacheLedger` resource that is not
+durably or dynamically protected. Event cleanup removes cached events, relay
+receipts, tag rows, and coverage affected by deleted event data. Notification
+cleanup removes only notification rows. Feed/page cleanup removes cursors,
+coverage rows, and scan hints without deleting events. Diagnostics cleanup
+removes recoverable relay summaries, relay information, suggestions, route
+evidence, and finished jobs without deleting user relay configuration.
+
+Cleanup must not prune accounts, local signing secrets, settings, relay sets,
+workspace layout, Tweet drafts, active tab snapshots, active jobs, or user-owned
+relay configuration. `tabStates` cleanup is owned by the workspace snapshot
+coordinator and removes rows only for tabs absent from the workspace or stale
+pre-tab-owned rows.
 
 `feedScanHints` cleanup keeps newest useful hints, deletes stale rows, and
 enforces the documented row cap. Hint compaction never invalidates coverage
@@ -114,9 +120,10 @@ difference between browser usage and table estimates is reported as storage
 overhead or unknown usage. That gap can include IndexedDB indexes, browser
 record overhead, localStorage, Cache Storage, and other origin-managed bytes.
 
-Inventory rows are grouped as protected user data, prunable event cache,
-derived cache, diagnostics, and storage overhead. This explains why the event
-allowance can shrink while the visible event-cache byte estimate looks small.
+Inventory rows are grouped as protected user data, prunable cache, derived page
+cache, diagnostics, ledger, and storage overhead. This explains whether pressure
+comes from events, notifications, page rows, diagnostics, protected rows, or
+unknown browser overhead.
 
 Future local image or media caches must not create an independent quota system.
 They should store their bytes in IndexedDB and register a row in the shared
@@ -124,23 +131,30 @@ cache ledger with a numeric score, byte estimate, protection flag, owner kind,
 and updated timestamp so one compaction policy can evict the least important
 local cached resource first.
 
-## Event Cache Byte Accounting
+## Cache Ledger Byte Accounting
 
-`eventPriority` stores enough accounting for budget enforcement to avoid a full
-`events` table scan on every pass:
+`cacheLedger` stores enough accounting for budget enforcement to avoid full
+resource table scans on every pass:
 
 | Row field | Meaning |
 | --- | --- |
-| `id` | event id |
-| `ownerKind` | current owner category, initially `event` |
-| `resourceKind` | cache resource category, initially `nostr-event` |
+| `id` | stable ledger id |
+| `ownerKind` | owning cache category |
+| `resourceKind` | deletion category |
+| `resourceId` | primary key in the owning resource store |
 | `score` | durable eviction score |
-| `createdAt` | event time for score ties |
+| `createdAt` | resource time for score ties |
 | `protected` | explicit product-owned protection flag |
-| `cacheBytes` | deterministic estimate for event-cache rows owned by the event |
+| `cacheBytes` | deterministic estimate for resource-owned rows |
 | `updatedAt` | last score or byte-accounting update |
+| `accountPubkey` | optional account owner |
+| `feedKey` | optional feed owner |
+| `relayUrl` | optional relay owner |
+| `reason` | optional diagnostic score or protection reason |
 
-`cacheBytes` counts the normalized event row, relay receipt rows, searchable tag
-rows, and priority row for the same event. Feed cursors and coverage are pruned
-when affected events disappear, but they are not included in the first
-event-owned byte estimate unless directly attributable.
+`cacheBytes` counts the directly owned row set. For cached Nostr events it
+counts the normalized event row, relay receipt rows, searchable tag rows, and
+ledger row for the same event. For notification and page resources it counts
+the resource row and ledger row. Shared overhead is reported separately as
+unknown or browser overhead when the browser estimate is larger than table
+estimates.

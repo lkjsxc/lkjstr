@@ -36,7 +36,8 @@ table of contents required by repository checks.
 - [architecture/backend/README.md](architecture/backend/README.md): local backend.
 - [architecture/data/README.md](architecture/data/README.md): storage and memory.
 - [architecture/data/feed-surface/README.md](architecture/data/feed-surface/README.md): feed surfaces.
-- [architecture/data/retention/README.md](architecture/data/retention/README.md): event retention.
+- [architecture/data/local-cache-ledger.md](architecture/data/local-cache-ledger.md): shared cache ledger.
+- [architecture/data/retention/README.md](architecture/data/retention/README.md): local-cache retention.
 - [architecture/feeds/README.md](architecture/feeds/README.md): feed contracts.
 - [architecture/network/README.md](architecture/network/README.md): relay ownership.
 - [architecture/network/subscription-orchestration/README.md](architecture/network/subscription-orchestration/README.md): orchestration.
@@ -76,6 +77,7 @@ table of contents required by repository checks.
 - [architecture/data/feed-surface/staged-pipeline.md](architecture/data/feed-surface/staged-pipeline.md)
 - [architecture/data/feed-surface/surface-matrix.md](architecture/data/feed-surface/surface-matrix.md)
 - [architecture/data/heap-retention.md](architecture/data/heap-retention.md)
+- [architecture/data/local-cache-ledger.md](architecture/data/local-cache-ledger.md)
 - [architecture/data/local-secret-security.md](architecture/data/local-secret-security.md)
 - [architecture/data/memory-prioritization.md](architecture/data/memory-prioritization.md)
 - [architecture/data/relay-pages.md](architecture/data/relay-pages.md)

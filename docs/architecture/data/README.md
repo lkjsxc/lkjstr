@@ -36,9 +36,10 @@ Data docs define storage, feed windows, and shared event presentation models.
   strategy.
 - [resource-ownership.md](resource-ownership.md): who creates and who closes
   each resource.
-- [retention/README.md](retention/README.md): score-based event retention.
+- [local-cache-ledger.md](local-cache-ledger.md): shared byte-accounting ledger.
+- [retention/README.md](retention/README.md): score-based local-cache retention.
 - [retention/compaction.md](retention/compaction.md): compaction workflow.
-- [retention/index-shape.md](retention/index-shape.md): priority indexes.
+- [retention/index-shape.md](retention/index-shape.md): ledger indexes.
 - [retention/score-policy.md](retention/score-policy.md): scoring policy.
 - [local-secret-security.md](local-secret-security.md): passkey-protected
   secret design boundary.
@@ -58,3 +59,5 @@ Data docs define storage, feed windows, and shared event presentation models.
 - Optional persisted fields receive safe defaults during reads.
 - Derived indexes are normalized or rebuilt without clearing user-owned records.
 - Long-lived memory maps declare a size, time bound, or deterministic owner.
+- Prunable browser-local cache records register in `cacheLedger` with score,
+  byte estimate, owner kind, resource kind, and deletion identity.

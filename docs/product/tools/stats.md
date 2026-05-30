@@ -23,9 +23,11 @@ Stats shows current-session relay counters and persisted operational summaries.
 - Stats distinguishes raw relay wire subscriptions from orchestration counters:
   active demands, active leases, live leases, bootstrap/page reads, and
   in-flight reads.
-- Cache status includes event, profile, notification, budget bytes,
-  event-cache byte estimate, browser storage estimate, last enforcement
-  reason, pruned event count, pruned byte estimate, and protected-only status.
+- Cache status includes event, profile, notification, site budget bytes,
+  browser usage, ledger bytes, prunable cache bytes, protected user estimate,
+  unknown/browser overhead, ledger inventory by resource kind, last enforcement
+  reason, pruned resource count, pruned byte estimate, and protected-only or
+  unknown-only status.
 - Runtime memory shows compact app-owned counters: app log count, relay
   suppression count, in-flight reads, fallback repository counts, reference
   cache size, profile cache size, token cache size, relay snapshot totals,

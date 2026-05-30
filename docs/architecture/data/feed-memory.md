@@ -75,7 +75,7 @@ or older-page loads from moving the visible row.
 
 ## Durable Cache vs Runtime Windows
 
-- IndexedDB is the durable event cache. lkjstr does not cap durable cached event
+- IndexedDB is the durable cache. lkjstr does not cap durable cached event
   count by application policy. Browser storage quotas may still limit growth.
 - Runtime feed windows (`180` for Home, Global, Profile, Notifications;
   `240` for Thread) bound resident rows per tab, live inserts, and in-memory
@@ -84,11 +84,11 @@ or older-page loads from moving the visible row.
   execution, not the primary browser cache.
 - Event indexes support kind/time, author/kind/time, and `e` or `p` tag lookup.
 - Budget compaction may prune by retention score and byte accounting through
-  the indexed `eventPriority` store. Browser quota pressure is an additional
+  the indexed `cacheLedger` store. Browser quota pressure is an additional
   signal. See [retention/README.md](retention/README.md).
-- Accounts, local signing secrets, settings, relay sets, workspace state,
-  notifications, Tweet drafts, and tab snapshots are protected from event cache
-  pruning.
+- Accounts, local signing secrets, settings, relay sets, workspace state, Tweet
+  drafts, active tab snapshots, and user-owned relay configuration are protected
+  from local-cache pruning.
 - Feed cursors are removed when their page boundary no longer points to a
   retained cached event.
 - Feed coverage rows store status, reason, limit, event count, unique count,

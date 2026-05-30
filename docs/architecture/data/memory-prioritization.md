@@ -8,10 +8,11 @@ runtime state that can be bounded, summarized, or rebuilt.
 ## Contract
 
 - IndexedDB data is durable user/browser data. Memory pressure handling must
-  not evict accounts, local secrets, settings, relay sets, notifications,
-  drafts, workspace state, tab snapshots, or cache metadata.
-- Cached Nostr events are durable cache data, but they are prunable under the
-  user's configured event-cache byte budget.
+  not evict accounts, local secrets, settings, relay sets, drafts, workspace
+  state, active tab snapshots, active jobs, or user-owned relay configuration.
+- Cached Nostr events, notification rows, feed/page rows, recoverable relay
+  diagnostics, protocol cache, route evidence, finished jobs, and stale tab
+  snapshots are durable cache data when registered in `cacheLedger`.
 - App-owned runtime state is bounded by count, byte size, TTL, owner lifetime,
   or a scored ephemeral retention rule.
 - Relay ingress is bounded before expensive parsing: inbound text frames are
@@ -19,9 +20,10 @@ runtime state that can be bounded, summarized, or rebuilt.
   fields per tag to `16`, and tag field text to `4096` bytes.
 - Local query helpers must plan from IndexedDB indexes where possible and must
   not scan the full event table for memory relief.
-- Event cache compaction uses the `eventPriority` score and byte-accounting
-  rows. See [retention/README.md](retention/README.md). Steady-state operation
-  enforces a byte budget, not a fixed cached event count.
+- Local-cache compaction uses `cacheLedger` score and byte-accounting rows. See
+  [local-cache-ledger.md](local-cache-ledger.md) and
+  [retention/README.md](retention/README.md). Steady-state operation enforces a
+  byte budget, not a fixed cached row count.
 - Notification state is windowed by notification record count. Missing source
   events remain visible as compact unavailable rows.
 - Event row tokenization is cached by event content and emoji tags with a
@@ -39,8 +41,8 @@ When memory must be reduced, prefer in this order:
 - Drop closed runtime handles, timers, queued reads, and stale abort listeners.
 - Prune bounded app-owned windows, token caches, reference caches, relay
   snapshots, diagnostic suppression maps, and fallback stores.
-- Under event-cache budget pressure or browser quota pressure, evict
-  lowest-scored cached events through indexed compaction.
+- Under local-cache budget pressure or browser quota pressure, evict
+  lowest-scored prunable cache resources through indexed ledger compaction.
 - Rebuild derived indexes from durable IndexedDB rows when needed.
 - Keep protected user/browser records intact even when cache compaction is
   required.

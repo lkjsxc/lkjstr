@@ -29,7 +29,7 @@ they deserve short-term runtime or cache retention.
   the list exists.
 - Open-reference pins are owned by the consumer that needs those references.
 - Runtime pins are unioned during compaction and cleared by owner teardown.
-- Runtime pins are not persisted into `eventPriority.protected`.
+- Runtime pins are not persisted into `cacheLedger.protected`.
 
 ## Retention Value
 

@@ -58,24 +58,27 @@ Read next: [architecture/README.md](architecture/README.md),
 
 - Workspace layout, tabs, settings, accounts, local signing secrets, drafts,
   notifications, relay purpose lists, relay information, relay summaries, jobs,
-  and cached events are browser-owned data.
+  feed/page records, diagnostics, and cached events are browser-owned data.
 - Pointer tab dragging is canonical. Native desktop drag uses pane chrome
   exclusion and pane-body edge detection for splits. Center and edge drop
   previews align with the content stack only and never cover the tab strip or
   tile menu row.
 - Tab rails scroll horizontally with long-press touch drag, pointer capture,
   selection suppression, strip-priority reorder, and active-tab reveal.
-- Protected user records and prunable event-cache records are separate
+- Protected user records and prunable local-cache records are separate
   ownership classes. Accounts, local signing secrets, settings, relay sets,
-  workspace state, notifications, Tweet drafts, tab snapshots, and relay
-  configuration are never deleted by event-cache cleanup.
-- Durable event cache has no application item-count ceiling. `cache.maxBytes`
+  workspace state, Tweet drafts, active tab snapshots, active jobs, and
+  user-owned relay configuration are never deleted by cache cleanup.
+- Durable local cache has no application item-count ceiling. `cache.maxBytes`
   defaults to `67108864` bytes and acts as the site storage target when browser
-  estimates are available. Protected records reduce the event-cache allowance;
-  compaction prunes only cached event rows and their derived event-cache
-  records. Stats reports table-level storage inventory plus unexplained browser
-  overhead so shrinking event allowance can be diagnosed. Runtime feed windows
-  remain bounded.
+  estimates are available. `cacheLedger` is the target contract for shared
+  byte-accounting across events, notifications, feed/page rows, recoverable
+  relay diagnostics, protocol cache, route evidence, finished jobs, and stale
+  snapshots. Compaction should prune the lowest-value recoverable resource
+  class, not only cached events. Stats reports table-level storage inventory,
+  ledger inventory, protected estimates, prunable estimates, and unexplained
+  browser overhead so notification-heavy and page-heavy pressure can be
+  diagnosed. Runtime feed windows remain bounded.
 - Shared storage normalizes events, relay receipts, tag rows, cursors, and jobs
   before runtime use.
 - Relay ingress uses app-owned byte and structure caps before expensive JSON

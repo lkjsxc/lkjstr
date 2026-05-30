@@ -44,7 +44,7 @@ Settings provide editable local preferences as one flat key-value list.
 - `cache.maxBytes` defaults to `67108864` bytes, is stored as integer bytes,
   and accepts values from `1048576` to `10737418240` bytes.
 - `cache.maxBytes` is the site storage target when browser estimates are
-  available. Protected records reduce the event-cache allowance instead of
+  available. Protected records are reported as protected pressure instead of
   being deleted.
 - The flat Settings row may show practical byte help such as MiB or GiB and
   may step by MiB-sized increments. It must still save the raw byte number.
@@ -54,6 +54,6 @@ Settings provide editable local preferences as one flat key-value list.
   `cache.maxBytes` value triggers immediate site budget enforcement instead of
   waiting for routine write-count scheduling.
 - Cache compaction keys `cache.maxEvents`, `cache.maxAgeDays`, and
-  `cache.compactionEnabled` are retired. Event retention is automatic. See
+  `cache.compactionEnabled` are retired. Local-cache retention is automatic. See
   [cache.md](cache.md) and
   [retention/compaction.md](../../architecture/data/retention/compaction.md).

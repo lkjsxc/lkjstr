@@ -111,6 +111,22 @@ The e2e memory test must:
 - Fail if heap growth is unbounded.
 - Fail if cleanup counters remain nonzero after teardown.
 
+## Storage Pressure Checks
+
+Storage-pressure verification must cover the same browser-local cache policy
+used by production compaction:
+
+- Notification-heavy pressure prunes old or low-value notification rows while
+  retaining recent, unread, and visible notifications.
+- Feed/page-heavy pressure prunes scan hints, coverage rows, and cursors without
+  deleting source events or suppressing future relay reads.
+- Event-heavy pressure still prunes cached Nostr events plus owned receipts and
+  tags.
+- Protected-only pressure reports protected or unknown usage instead of deleting
+  user-owned records.
+- Stats shows browser usage, site budget, prunable cache, protected user data,
+  unknown overhead, ledger inventory, and last compaction evidence.
+
 ## Reference
 
 - [heap-retention.md](../architecture/data/heap-retention.md): symptoms,

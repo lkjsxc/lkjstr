@@ -3,37 +3,61 @@
 ## Purpose
 
 Retention compaction keeps estimated site storage within the configured byte
-target by pruning cached events. It is not an event-count budget.
+target by pruning recoverable local cache resources. It is not a row-count
+budget.
 
 ## Contract
 
-- lkjstr does not keep cached events near a fixed internal event count.
-- Compaction runs when event-cache bytes exceed their effective allowance,
-  total browser usage exceeds the site target, browser quota estimates report
-  pressure, or after an explicit diagnostic recovery action.
-- Selection uses the `eventPriority` score index ascending. No
-  `events.orderBy('created_at').each` full scan.
-- Each batch removes event rows, relay receipts, tag rows, and feed cursors that
-  reference pruned ids.
-- Accounts, local signing secrets, settings, relay sets, workspace layout,
-  notifications, Tweet drafts, tab snapshots, relay configuration, and other
-  protected non-cache records are never pruned by event compaction.
-- `cacheMeta` records site budget bytes, effective event-cache target bytes,
-  estimated event-cache bytes, browser usage bytes, pruned event count, pruned
-  byte estimate, skipped reason, timestamps, and protected-only status.
+- lkjstr does not keep cached resources near a fixed internal row count.
+- Compaction runs when ledger bytes exceed the site target, total browser usage
+  exceeds the site target, browser quota estimates report pressure, or after an
+  explicit diagnostic recovery action.
+- Selection uses the `cacheLedger` score index ascending. Normal compaction does
+  not scan resource tables such as `events`, `notifications`, or `feedCoverage`.
+- Each batch dispatches deletion by `resourceKind`.
+- Event deletion removes event rows, relay receipts, tag rows, affected ledger
+  rows, stale feed cursors, and coverage rows that depended on deleted events.
+- Notification deletion removes only notification rows and their ledger rows.
+- Feed/page deletion removes cursors, coverage rows, or scan hints without
+  deleting events.
+- Diagnostics deletion removes recoverable relay summaries, relay information,
+  suggestions, route evidence, or finished job rows without touching user relay
+  configuration.
+- `cacheMeta` records site budget bytes, browser usage bytes, ledger bytes,
+  prunable bytes, protected estimate, unknown or overhead bytes, pruned resource
+  count, pruned byte estimate, skipped reason, timestamps, and protected-only or
+  unknown-only status.
 
 ## Budget Pressure
 
-- When invoked, estimate protected and non-event usage, subtract it from the
-  site target, and evict lowest scores until event-cache bytes are below that
-  effective event-cache target or only protected rows remain.
-- Browser storage usage above `cache.maxBytes` or quota ratio above `0.9`
-  reduces the event-cache target, but compaction still deletes only prunable
-  event-cache rows.
-- If browser usage remains high while event-cache bytes are already under
-  budget, report protected or non-cache usage instead of deleting user records.
-- Account-critical protected records and currently pinned runtime ids never
-  score-evict. See [score-policy.md](score-policy.md).
+- Browser `navigator.storage.estimate()` remains authoritative for origin usage
+  when available. IndexedDB table estimates are diagnostics, not quota truth.
+- When invoked, estimate protected user bytes, prunable ledger bytes, and
+  unknown or overhead bytes.
+- Evict the lowest-score prunable ledger rows until browser usage is under
+  target, ledger bytes are under target and browser usage is unavailable, no
+  prunable candidates remain, or only dynamically protected rows remain.
+- Do not stop only because event bytes are low. Notification-heavy and
+  page-heavy pressure must continue selecting those resource classes.
+- If browser usage remains above target after all prunable cache rows are gone,
+  report protected or unknown usage instead of silently succeeding.
+- Account-critical protected records, active tab snapshots, active jobs, open
+  feed keys, newest retained notifications, and currently pinned runtime ids
+  never score-evict. See [score-policy.md](score-policy.md).
+
+## Stats Contract
+
+Stats must show:
+
+- Browser usage.
+- Site budget.
+- Prunable cache bytes.
+- Protected user data estimate.
+- Unknown/browser overhead.
+- Ledger rows and byte estimates by owner kind and resource kind.
+- Last compaction reason, deleted resource count, and deleted byte estimate.
+- Whether remaining pressure is protected-only, unknown-only, or candidate
+  limited.
 
 ## Settings Removal
 

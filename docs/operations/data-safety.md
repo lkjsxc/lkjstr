@@ -30,8 +30,10 @@ The app must support:
 
 - clearing relay health without deleting relay configuration.
 - deleting cached events without deleting workspace layout.
-- compacting cached events without deleting accounts, settings, relay sets,
-  notifications, composer recovery data, or workspace state.
+- compacting local cache without deleting accounts, settings, relay sets,
+  composer recovery data, active tab state, or workspace state.
+- pruning old notification and feed/page cache rows without deleting source
+  events or user-owned workspace records.
 - deleting an account without deleting public cached events.
 - exporting workspace and relay configuration.
 - importing configuration into an empty profile.
