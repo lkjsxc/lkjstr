@@ -69,11 +69,11 @@ Read next: [architecture/README.md](architecture/README.md),
   ownership classes. Accounts, local signing secrets, settings, relay sets,
   workspace state, notifications, Tweet drafts, tab snapshots, and relay
   configuration are never deleted by event-cache cleanup.
-- Durable event cache has no application item-count ceiling, but it has an
-  enforced configurable byte budget. `cache.maxBytes` defaults to `67108864`
-  bytes. Compaction uses event-cache byte accounting plus browser storage
-  estimates when available and prunes only cached event rows and their derived
-  event-cache records. Runtime feed windows remain bounded.
+- Durable event cache has no application item-count ceiling. `cache.maxBytes`
+  defaults to `67108864` bytes and acts as the site storage target when browser
+  estimates are available. Protected records reduce the event-cache allowance;
+  compaction prunes only cached event rows and their derived event-cache
+  records. Runtime feed windows remain bounded.
 - Shared storage normalizes events, relay receipts, tag rows, cursors, and jobs
   before runtime use.
 - Relay ingress uses app-owned byte and structure caps before expensive JSON
