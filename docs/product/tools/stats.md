@@ -14,6 +14,9 @@ Stats shows current-session relay counters and persisted operational summaries.
 - Optional auto-refresh polls every two seconds while enabled.
 - Relay totals include open relays, active subscriptions, events, OK accepts,
   OK rejects, and sent plus received bytes.
+- Relay diagnostics include local request caps, clamp reasons, NIP-11 stale or
+  unavailable state, auth/payment/restriction warnings, timeouts, and
+  event-limit reached state when known.
 - Subscription rows use human-purpose labels such as Home live feed, Profile
   page read, Notifications live, Metadata, or Route discovery. Redacted raw ids
   are secondary only.

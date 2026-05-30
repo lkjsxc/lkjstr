@@ -8,8 +8,9 @@ by priority after memory stabilization passes.
 
 ## In Progress
 
-None right now. Cache-first grouped feed pages and warm scan hints are
-implemented and tracked in [doc-impl-audit.md](doc-impl-audit.md).
+| Item | Destination doc | Test strategy |
+| --- | --- | --- |
+| NIP-11-driven request budgeting and diagnostics | [request-budget/README.md](../architecture/network/request-budget/README.md) | Unit NIP-11 and request-budget gates, subscription dedupe tests, Playwright Relay Settings and Stats diagnostics |
 
 ## Completed (feeds)
 
@@ -65,7 +66,7 @@ implemented and tracked in [doc-impl-audit.md](doc-impl-audit.md).
 
 | Item                                                    | Destination doc                                      | Test strategy                                                         |
 | ------------------------------------------------------- | ---------------------------------------------------- | --------------------------------------------------------------------- |
-| Relay diagnostics clarity (connection, EOSE, OK counts) | [tools/stats.md](tools/stats.md)                     | Playwright Stats tab rows; unit bounded diagnostic summary            |
+| Relay diagnostics polish beyond current counters        | [tools/stats.md](tools/stats.md)                     | Playwright Stats tab rows; unit bounded diagnostic summary            |
 | Notification feed reliability under relay churn         | [feeds/notifications.md](feeds/notifications.md)     | Playwright notifications with synthetic events                        |
 | Profile feed reliability under relay churn              | [feeds/profiles.md](feeds/profiles.md)               | Playwright profile hydration                                          |
 | Event reference rendering hardening                     | [event-tree.md](../architecture/data/event-tree.md)  | Unit NIP-10/NIP-18 derivation; Playwright reference unavailable state |

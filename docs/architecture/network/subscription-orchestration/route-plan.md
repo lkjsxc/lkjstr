@@ -24,8 +24,9 @@ per-surface widening.
 ## Paging
 
 - `routeGroupsForPaging` produces author relay groups for initial/older/newer.
-- Selected-author fallback chunks follow home-runtime rules (no fallback during
-  normal paging except route-discovery bootstrap).
+- Selected read relays remain the base and fallback for paging. Author route
+  groups may narrow or widen targeted attempts, but they must not remove the
+  selected-relay correctness fallback unless the URL is disabled or removed.
 
 ## Route refresh
 

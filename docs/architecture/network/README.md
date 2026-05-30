@@ -13,6 +13,8 @@ and app boundaries.
 - [progressive-relay-rendering.md](progressive-relay-rendering.md):
   progressive read snapshots, coverage, and UI merge contract.
 - [relay-routing.md](relay-routing.md): protocol-derived read routing.
+- [request-budget/README.md](request-budget/README.md): request limits,
+  NIP-11 bounds, and diagnostics.
 - [settings-store.md](settings-store.md): flat settings storage.
 - [subscription-manager.md](subscription-manager.md): shared relay reads.
 - [subscription-orchestration/README.md](subscription-orchestration/README.md):

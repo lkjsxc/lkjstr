@@ -24,6 +24,9 @@ Relay docs define URL and relay-set behavior.
 - No runtime should connect to a disabled relay for that relay's purpose.
 - NIP-11 relay information is fetched from the HTTP endpoint corresponding to
   the normalized relay URL.
+- NIP-11 fetches send an `application/nostr+json` accept header and store
+  available or unavailable records for Relay Settings, Stats, and request
+  budgeting.
 - NIP-65 relay list metadata suggestions are stored separately from configured
   relay sets and require explicit import.
 - Runtime route evidence is stored separately from relay-list suggestions and
@@ -51,13 +54,21 @@ Relay docs define URL and relay-set behavior.
   against the stored filters for the subscription id before delivery.
 - Events for unknown subscription ids or valid events outside their filters are
   rejected with diagnostics.
-- NIP-11 `max_subscriptions`, `max_limit`, `max_message_length`, and
-  subscription-id limits bound local `REQ` sending when available.
+- NIP-11 `max_subscriptions`, `max_limit`, `default_limit`,
+  `max_message_length`, and subscription-id limits bound local `REQ` sending
+  when available.
+- NIP-11 `auth_required`, `payment_required`, `restricted_writes`,
+  `min_pow_difficulty`, and created-at bounds are displayed as policy
+  diagnostics. They do not silently suppress enabled read relays.
 - Missing NIP-11 `max_message_length` does not remove the app ingress cap:
   inbound relay text frames are rejected above `1048576` bytes before parsing.
 - Relay event parsing rejects event content above `262144` bytes, more than
   `512` tags, more than `16` fields per tag, or tag fields above `4096` bytes.
 - Filters with `limit` above a relay's `max_limit` are clamped locally.
+- When a requested result count exceeds NIP-11 `default_limit`, the client sends
+  an explicit `limit`.
+- Outbound `REQ` byte size is estimated before send and compared with the app
+  cap and any relay `max_message_length`.
 - Oversized `REQ` messages are rejected locally instead of split.
 - Requests above the active subscription cap wait in a bounded queue. When the
   queue is full, the oldest non-critical pending request is dropped and

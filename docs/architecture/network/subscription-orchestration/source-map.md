@@ -27,6 +27,7 @@ Map documentation topics to implementation files. Each module stays at or below
 | `surface-routing.ts`      | per-surface relay widening                   |
 | `ingress-classify.ts`     | live event classification                    |
 | `metrics.ts`              | orchestration counters and gauges            |
+| `../request-budget/*`     | budget derivation and NIP-11 limit helpers   |
 
 ## Tests
 

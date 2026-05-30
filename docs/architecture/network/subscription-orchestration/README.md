@@ -18,6 +18,8 @@ to talk to relays (route plan, wire request, lease key, REQ/CLOSE).
 - [page-read-dedupe.md](page-read-dedupe.md): semantic page keys
 - [relay-read-scoring.md](relay-read-scoring.md): relay plus request-context
   scheduling scores
+- [../request-budget/README.md](../request-budget/README.md): NIP-11 and
+  intent-derived request budgets
 - [owner-visibility.md](owner-visibility.md): hidden tabs and pane churn
 - [ingress.md](ingress.md): live event classification
 - [metrics.md](metrics.md): counters and gauges
@@ -44,4 +46,6 @@ Older topic files were folded into the documents listed above.
 - Tab and pane components never call `REQ` or `CLOSE` directly.
 - Lease fingerprints exclude tab ids and owner handles.
 - Bootstrap and page reads use semantic dedupe keys.
+- Page read dedupe uses effective budgeted filter shape and effective read
+  options.
 - Hidden feed tabs release live intents; cached windows remain until close.

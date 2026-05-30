@@ -22,8 +22,13 @@ lkjstr Log owns session-only diagnostics.
 - Relay Settings can fetch NIP-11 information from the relay HTTP endpoint with
   an `application/nostr+json` accept header.
 - Relay Settings displays real relay name, description, supported NIPs,
-  software, limitations, contact, icon URL, banner URL, and unavailable states
-  when those fields exist.
+  software, limitations, contact, icon URL, banner URL, terms of service,
+  payment URL, stale state, and unavailable states when those fields exist.
+- Relay Settings displays NIP-11 policy warnings for auth-required,
+  payment-required, restricted-write, proof-of-work, and created-at-bound
+  metadata.
+- Relay Settings displays effective request limits and clamp reasons when a
+  selected relay participates in budgeted reads.
 - Relay Settings shows persisted relay diagnostic summaries including attempts,
   opens, errors, last event id, timing, validation counters, and recent bounded
   diagnostic messages.

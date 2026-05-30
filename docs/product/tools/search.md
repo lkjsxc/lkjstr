@@ -16,6 +16,8 @@ matches.
   selected default relay set.
 - Remote results are relay-support-dependent. Relays should advertise NIP-50 in
   NIP-11 `supported_nips`; relays that ignore `search` do not produce matches.
+- Search shows relay support and request-budget diagnostics when NIP-11
+  metadata is available or a relay request is clamped.
 - Older search pages use compound `{createdAt,id}` cursors so same-second
   cached events are not skipped.
 - Cached matches and relay matches are sorted by `{created_at,id}` and merged

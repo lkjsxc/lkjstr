@@ -9,8 +9,8 @@ Nostr protocol surfaces without claiming unavailable behavior.
 
 - NIP-01 event shape, first-party IDs, signatures, filters, and relay
   messages.
-- NIP-11 relay information documents and limitation fields used for local
-  request bounds.
+- NIP-11 relay information documents, typed limitation parsing, local request
+  bounds, policy diagnostics, and stale or failed metadata states.
 - NIP-07 browser extension signing.
 - NIP-19 `npub`, `nsec`, `note`, `nprofile`, `nevent`, and `naddr` entities.
 
@@ -45,7 +45,8 @@ Nostr protocol surfaces without claiming unavailable behavior.
 - NIP-96 media upload discovery and response parsing.
 - NIP-98 HTTP auth events for media upload.
 - NIP-11 relay information documents from relay HTTP endpoints with
-  `application/nostr+json` accept headers.
+  `application/nostr+json` accept headers, including local request-budget
+  inputs from limitation fields.
 
 ## Status
 
