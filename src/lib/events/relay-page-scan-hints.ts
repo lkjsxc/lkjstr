@@ -64,6 +64,7 @@ export function recordBatchHints(input: {
   readonly spanSeconds: number;
   readonly feedback: FeedScanHintFeedback;
 }): void {
+  if (input.request.purpose && input.request.purpose !== 'feed') return;
   if (input.feedback === 'incomplete') return;
   const direction = input.request.direction ?? 'older';
   for (const relayUrl of input.relays)

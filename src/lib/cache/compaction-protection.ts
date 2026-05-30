@@ -30,8 +30,10 @@ export async function protectedEventIds(): Promise<Set<string>> {
   const ids = pinnedEventIds();
   await collectLatestByKindPubkey(0, ids);
   const accountPubkeys = await loadAccountPubkeys();
-  if (accountPubkeys.size > 0)
+  if (accountPubkeys.size > 0) {
     await collectLatestByKindPubkeyForSet(3, accountPubkeys, ids);
+    await collectPotentialNotificationSources(accountPubkeys, ids);
+  }
   await collectProtectedNotifications(ids);
   await browserDb()
     .cacheLedger.where('ownerKind')
@@ -88,9 +90,36 @@ async function collectProtectedNotifications(target: Set<string>): Promise<void>
       if (retained.length < 200) {
         retained.push(row.id);
         latestByAccount.set(row.accountPubkey, retained);
-        target.add(cacheLedgerId('notification', row.id));
+        protectNotification(target, row);
       }
       if (row.readAt === null && row.createdAt * 1000 >= unreadRecentCutoff)
-        target.add(cacheLedgerId('notification', row.id));
+        protectNotification(target, row);
     });
+}
+
+async function collectPotentialNotificationSources(
+  accountPubkeys: Set<string>,
+  target: Set<string>,
+): Promise<void> {
+  for (const pubkey of accountPubkeys) {
+    await browserDb()
+      .eventTags.where('[tagName+tagValue]')
+      .equals(['p', pubkey])
+      .each((row) => target.add(row.eventId));
+  }
+}
+
+function protectNotification(
+  target: Set<string>,
+  row: {
+    readonly id: string;
+    readonly sourceEventId: string;
+    readonly rootEventId?: string;
+    readonly targetEventId?: string;
+  },
+): void {
+  target.add(cacheLedgerId('notification', row.id));
+  target.add(row.sourceEventId);
+  if (row.rootEventId) target.add(row.rootEventId);
+  if (row.targetEventId) target.add(row.targetEventId);
 }

@@ -143,13 +143,14 @@ describe('cache compaction', () => {
     expect(shouldCompact(63, 64, null)).toBe(false);
   });
 
-  it('uses browser estimates as additional pressure', () => {
+  it('uses browser estimates without pruning small ledger caches', () => {
     expect(
       shouldCompact(10, 64, { usage: 65, quota: 1000, ratio: 0.065 }),
-    ).toBe(true);
-    expect(shouldCompact(10, 64, { usage: 10, quota: 100, ratio: 0.9 })).toBe(
-      true,
-    );
+    ).toBe(false);
+    expect(shouldCompact(65, 64, { usage: 65, quota: 1000, ratio: 0.065 }))
+      .toBe(true);
+    expect(shouldCompact(10, 64, { usage: 96, quota: 100, ratio: 0.96 }))
+      .toBe(true);
   });
 
   it('schedules compaction after the write threshold', () => {

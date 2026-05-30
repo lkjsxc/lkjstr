@@ -1,7 +1,7 @@
 import type { NostrFilter } from '../protocol';
 import type { ReadPageRelayStatus } from '../relays/read-page-status';
 import { appendAppLog } from '../log/app-log';
-import { saveFeedCoverage } from './feed-coverage-store';
+import { saveFeedCoverageRows } from './feed-coverage-store';
 import type { RelayGroupPageRequest } from './relay-page';
 import type { FeedCoverageStatus } from './types';
 import type { RelayDensityRow } from './relay-page-density';
@@ -28,11 +28,12 @@ export async function recordScanCoverage(
   status: FeedCoverageStatus,
   meta: ScanCoverageMeta = {},
 ): Promise<void> {
-  await Promise.all(
+  if (request.purpose && request.purpose !== 'feed') return;
+  await saveFeedCoverageRows(
     relays.flatMap((relayUrl) => {
       const row = meta.relayRows?.find((item) => item.relay === relayUrl);
       return filters.map((filter) =>
-        saveFeedCoverage({
+        ({
           feedKey: request.key,
           relayUrl,
           groupKey,

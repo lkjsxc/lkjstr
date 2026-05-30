@@ -28,13 +28,14 @@ export async function scanRelayFeedGroups(
   let collected: FeedEvent[] = [];
   let safeCursor: FeedCursorPoint | undefined;
   const initialSpan = await warmInitialSpan(request, direction);
+  const maxSegments = request.maxSegments ?? relaySegmentMaxSegmentsPerPage;
   let segment = initialRelayPageSegmentWithSpan(
     { ...request, direction },
     initialSpan,
   );
   const queue: RelayPageSegment[] = [segment];
   let processed = 0;
-  while (queue.length > 0 && processed < relaySegmentMaxSegmentsPerPage) {
+  while (queue.length > 0 && processed < maxSegments) {
     segment = queue.shift()!;
     processed += 1;
     const read = await readSegment(readRequest, segment, processed - 1);

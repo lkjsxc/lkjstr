@@ -15,23 +15,42 @@ const memoryCoverage = createBoundedMap<string, FeedCoverage>({
 export async function saveFeedCoverage(
   input: Omit<FeedCoverage, 'id' | 'updatedAt'>,
 ): Promise<FeedCoverage> {
-  const coverage = {
-    ...input,
-    id: coverageId(input),
-    updatedAt: Date.now(),
-  };
-  memoryCoverage.set(coverage.id, coverage);
+  const [coverage] = await saveFeedCoverageRows([input]);
+  return coverage!;
+}
+
+export async function saveFeedCoverageRows(
+  inputs: readonly Omit<FeedCoverage, 'id' | 'updatedAt'>[],
+): Promise<FeedCoverage[]> {
+  const updatedAt = Date.now();
+  const rows = inputs.map((input) => feedCoverageRow(input, updatedAt));
+  for (const row of rows) memoryCoverage.set(row.id, row);
+  if (rows.length === 0) return [];
   await bestEffortStorageWrite(() =>
     browserDb().transaction(
       'rw',
       browserDb().feedCoverage,
       browserDb().cacheLedger,
       async () => {
-        await browserDb().feedCoverage.put(coverage);
-        await browserDb().cacheLedger.put(feedCoverageLedgerRecord(coverage));
+        await browserDb().feedCoverage.bulkPut([...rows]);
+        await browserDb().cacheLedger.bulkPut(
+          rows.map(feedCoverageLedgerRecord),
+        );
       },
     ),
   );
+  return rows;
+}
+
+function feedCoverageRow(
+  input: Omit<FeedCoverage, 'id' | 'updatedAt'>,
+  updatedAt: number,
+): FeedCoverage {
+  const coverage = {
+    ...input,
+    id: coverageId(input),
+    updatedAt,
+  };
   return coverage;
 }
 
