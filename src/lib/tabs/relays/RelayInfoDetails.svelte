@@ -49,9 +49,13 @@
 </script>
 
 {#if props.record?.status === 'available'}
-  <small>{info?.name ?? 'NIP-11'} {stale ? 'stale' : 'available'}</small>
-  {#if info?.software || info?.version}
-    <small>{info.software ?? ''} {info.version ?? ''}</small>
+  <small>
+    {info?.name ?? 'NIP-11'}
+    {info?.software ?? ''}
+    {stale ? 'stale' : 'available'}
+  </small>
+  {#if info?.version}
+    <small>{info.version}</small>
   {/if}
   <small>NIPs {(info?.supported_nips ?? []).join(', ') || 'unknown'}</small>
   {#if info?.description}<small>{info.description}</small>{/if}
