@@ -3,7 +3,7 @@ import {
   cacheByteSizeForEvent,
   encodedJsonBytes,
 } from '../../../src/lib/cache/cache-byte-size';
-import { eventPriorityRecord } from '../../../src/lib/cache/event-priority';
+import { eventLedgerRecord } from '../../../src/lib/cache/event-ledger';
 
 describe('cache byte size', () => {
   it('counts event-owned cache rows deterministically', () => {
@@ -35,7 +35,7 @@ describe('cache byte size', () => {
         created_at: 10,
       },
     ];
-    const priority = eventPriorityRecord(stored, tags, false, 0, 12);
+    const priority = eventLedgerRecord(stored, tags, false, 0, 12);
     const expected =
       encodedJsonBytes(stored) +
       encodedJsonBytes(receipts[0]) +

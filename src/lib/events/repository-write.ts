@@ -1,8 +1,8 @@
 import { cacheByteSizeForEvent } from '../cache/cache-byte-size';
 import {
-  eventPriorityRecord,
-  upsertEventPriority,
-} from '../cache/event-priority';
+  eventLedgerRecord,
+  upsertEventLedger,
+} from '../cache/event-ledger';
 import { browserDb } from '../storage/browser-db';
 import { bestEffortStorageWrite } from '../storage/safe-storage';
 import type { NostrEvent } from '../protocol';
@@ -17,7 +17,7 @@ export type StoredEventWrite = {
 };
 
 export async function writeStoredEvent(input: StoredEventWrite): Promise<void> {
-  const priority = eventPriorityRecord(
+  const priority = eventLedgerRecord(
     input.event,
     input.tags,
     false,
@@ -46,7 +46,7 @@ export async function writeStoredEvent(input: StoredEventWrite): Promise<void> {
           .delete();
         if (input.tags.length > 0)
           await browserDb().eventTags.bulkPut([...input.tags]);
-        await upsertEventPriority(
+        await upsertEventLedger(
           input.event,
           input.tags,
           false,

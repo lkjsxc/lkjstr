@@ -5,7 +5,7 @@ import { indexedDbAvailable } from '../storage/safe-storage';
 import { cacheLedgerId } from './cache-ledger-id';
 import type { CacheLedgerRecord } from './cache-ledger-record';
 
-export type EventPriorityRecord = CacheLedgerRecord & {
+export type EventLedgerRecord = CacheLedgerRecord & {
   readonly ownerKind: 'event';
   readonly resourceKind: 'nostr-event';
 };
@@ -49,7 +49,7 @@ export function structuralSourceWeight(
   }, 0);
 }
 
-export function priorityTargetBumps(event: NostrEvent): Map<string, number> {
+export function eventTargetBumps(event: NostrEvent): Map<string, number> {
   const bumps = new Map<string, number>();
   for (const tag of event.tags) {
     const target = tag[1];
@@ -60,13 +60,13 @@ export function priorityTargetBumps(event: NostrEvent): Map<string, number> {
   return bumps;
 }
 
-export function eventPriorityRecord(
+export function eventLedgerRecord(
   event: NostrEvent,
   tags: readonly EventTagRow[] = [],
   forceProtected = false,
   cacheBytes = 0,
   updatedAt = Date.now(),
-): EventPriorityRecord {
+): EventLedgerRecord {
   return {
     id: cacheLedgerId('event', event.id),
     ownerKind: 'event',
@@ -80,7 +80,7 @@ export function eventPriorityRecord(
   };
 }
 
-export async function upsertEventPriority(
+export async function upsertEventLedger(
   event: NostrEvent,
   tags: readonly EventTagRow[] = [],
   forceProtected = false,
@@ -89,15 +89,12 @@ export async function upsertEventPriority(
 ): Promise<void> {
   if (!indexedDbAvailable()) return;
   await browserDb().cacheLedger.put(
-    eventPriorityRecord(event, tags, forceProtected, cacheBytes, updatedAt),
+    eventLedgerRecord(event, tags, forceProtected, cacheBytes, updatedAt),
   );
   await bumpEventTargets(event);
 }
 
-export async function bumpEventPriority(
-  eventId: string,
-  delta: number,
-): Promise<void> {
+async function bumpEventLedger(eventId: string, delta: number): Promise<void> {
   if (!indexedDbAvailable()) return;
   const existing = await browserDb().cacheLedger.get(
     cacheLedgerId('event', eventId),
@@ -112,8 +109,8 @@ export async function bumpEventPriority(
 
 async function bumpEventTargets(event: NostrEvent): Promise<void> {
   await Promise.all(
-    [...priorityTargetBumps(event)].map(([eventId, delta]) =>
-      bumpEventPriority(eventId, delta),
+    [...eventTargetBumps(event)].map(([eventId, delta]) =>
+      bumpEventLedger(eventId, delta),
     ),
   );
 }

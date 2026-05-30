@@ -76,7 +76,6 @@ export class LkjstrDb extends Dexie {
       tweetDrafts: '&id, accountId, updatedAt',
       events:
         '&id, pubkey, kind, created_at, [kind+created_at], [pubkey+kind+created_at]',
-      eventPriority: null,
       cacheLedger:
         '&id, ownerKind, resourceKind, resourceId, score, createdAt, updatedAt, protected, accountPubkey, feedKey, relayUrl, [protected+score], [ownerKind+score], [resourceKind+score]',
       eventRelays: '&id, eventId, relayUrl, receivedAt',

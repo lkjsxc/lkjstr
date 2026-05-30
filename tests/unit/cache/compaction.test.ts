@@ -1,10 +1,10 @@
 import { describe, expect, it } from 'vitest';
 import {
-  eventPriorityRecord,
+  eventLedgerRecord,
+  eventTargetBumps,
   kindWeight,
-  priorityTargetBumps,
   scoreEvent,
-} from '../../../src/lib/cache/event-priority';
+} from '../../../src/lib/cache/event-ledger';
 import { shouldCompact } from '../../../src/lib/cache/cache-budget-enforcement';
 import {
   compactOldEvents,
@@ -44,7 +44,7 @@ describe('cache compaction', () => {
   });
 
   it('assigns max target bumps for direct event and quote references', () => {
-    const bumps = priorityTargetBumps({
+    const bumps = eventTargetBumps({
       ...baseEvent(100),
       kind: 9735,
       tags: [
@@ -58,14 +58,14 @@ describe('cache compaction', () => {
     expect(bumps.get('quote-target')).toBe(700);
     expect(bumps.has('pubkey-target')).toBe(false);
     expect(
-      priorityTargetBumps({
+      eventTargetBumps({
         ...baseEvent(100),
         kind: 7,
         tags: [['e', 'x']],
       }).get('x'),
     ).toBe(300);
     expect(
-      priorityTargetBumps({
+      eventTargetBumps({
         ...baseEvent(100),
         kind: 6,
         tags: [['q', 'x']],
@@ -112,13 +112,13 @@ describe('cache compaction', () => {
     clearCachePinsForTests();
     pinVisibleEvents('tab-a', ['runtime-pin']);
     expect([...pinnedEventIds()]).toEqual(['runtime-pin']);
-    expect(eventPriorityRecord(baseEvent(100))).toMatchObject({
+    expect(eventLedgerRecord(baseEvent(100))).toMatchObject({
       id: 'event:b',
       resourceId: 'b',
       protected: false,
       cacheBytes: 0,
     });
-    expect(eventPriorityRecord({ ...baseEvent(100), kind: 0 })).toMatchObject({
+    expect(eventLedgerRecord({ ...baseEvent(100), kind: 0 })).toMatchObject({
       protected: false,
     });
   });
