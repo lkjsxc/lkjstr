@@ -113,7 +113,8 @@
   <table class="stats-table">
     <thead>
       <tr
-        ><th>Relay</th><th>State</th><th>Events</th><th>OK</th><th>Bytes</th
+        ><th>Relay</th><th>State</th><th>Events</th><th>OK</th><th>Bytes</th><th
+          >Diagnostics</th
         ></tr
       >
     </thead>
@@ -127,6 +128,7 @@
             {stats(snapshot).okAcceptedCount}/{stats(snapshot).okRejectedCount}
           </td>
           <td>{stats(snapshot).receivedBytes + stats(snapshot).sentBytes}</td>
+          <td>{snapshot.diagnostics.at(-1)?.kind ?? 'none'}</td>
         </tr>
       {/each}
     </tbody>
