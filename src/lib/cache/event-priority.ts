@@ -5,6 +5,8 @@ import { indexedDbAvailable } from '../storage/safe-storage';
 
 export type EventPriorityRecord = {
   readonly id: string;
+  readonly ownerKind: 'event';
+  readonly resourceKind: 'nostr-event';
   readonly score: number;
   readonly createdAt: number;
   readonly protected: boolean;
@@ -71,6 +73,8 @@ export function eventPriorityRecord(
 ): EventPriorityRecord {
   return {
     id: event.id,
+    ownerKind: 'event',
+    resourceKind: 'nostr-event',
     score: scoreEvent(event, tags),
     createdAt: event.created_at,
     protected: forceProtected,

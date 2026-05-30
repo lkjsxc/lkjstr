@@ -162,6 +162,8 @@ describe('cache compaction', () => {
 function priorityRecord(id: string, score: number, protectedRow: boolean) {
   return {
     id,
+    ownerKind: 'event' as const,
+    resourceKind: 'nostr-event' as const,
     score,
     createdAt: 1,
     protected: protectedRow,

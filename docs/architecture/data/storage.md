@@ -132,6 +132,8 @@ local cached resource first.
 | Row field | Meaning |
 | --- | --- |
 | `id` | event id |
+| `ownerKind` | current owner category, initially `event` |
+| `resourceKind` | cache resource category, initially `nostr-event` |
 | `score` | durable eviction score |
 | `createdAt` | event time for score ties |
 | `protected` | explicit product-owned protection flag |
