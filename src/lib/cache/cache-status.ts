@@ -4,6 +4,10 @@ import { allMemoryEvents } from '../events/repository-memory';
 import { defaultCacheMaxBytes, readStorageQuota } from './storage-quota';
 import { estimatedEventCacheBytes } from './event-cache-bytes';
 import { deriveSiteStorageBudget } from './site-storage-budget';
+import {
+  storageInventory,
+  type StorageInventoryRow,
+} from '../storage/storage-inventory';
 
 export type CacheMetadata = {
   readonly id: string;
@@ -19,6 +23,7 @@ export type CacheMetadata = {
   readonly prunedEventCount: number;
   readonly prunedByteEstimate: number;
   readonly protectedOnly: boolean;
+  readonly storageInventory: readonly StorageInventoryRow[];
   readonly updatedAt: number;
 };
 
@@ -54,6 +59,7 @@ export async function cacheStatus(): Promise<CacheMetadata> {
     prunedEventCount: meta?.prunedEventCount ?? 0,
     prunedByteEstimate: meta?.prunedByteEstimate ?? 0,
     protectedOnly: meta?.protectedOnly ?? false,
+    storageInventory: await storageInventory(currentBudget.browserUsageBytes),
     updatedAt: Date.now(),
   };
 }

@@ -135,6 +135,7 @@ async function writeCacheBudgetResult(
     prunedEventCount: result.prunedEvents,
     prunedByteEstimate: result.prunedBytes,
     protectedOnly: result.protectedOnly,
+    storageInventory: [],
     updatedAt: Date.now(),
   };
   await browserDb().cacheMeta.put(meta);

@@ -52,4 +52,20 @@
       </tr>
     </tbody>
   </table>
+  <h4>Storage inventory</h4>
+  <table class="stats-table">
+    <thead>
+      <tr><th>Store</th><th>Group</th><th>Rows</th><th>Estimate</th></tr>
+    </thead>
+    <tbody>
+      {#each props.cache.storageInventory as row (row.table)}
+        <tr>
+          <td>{row.table}</td>
+          <td>{row.group}</td>
+          <td>{row.rowCount ?? 'n/a'}</td>
+          <td>{formatBytes(row.estimatedBytes)}</td>
+        </tr>
+      {/each}
+    </tbody>
+  </table>
 {/if}
