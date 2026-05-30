@@ -24,6 +24,8 @@ absorb storage pressure.
   event-cache target or no prunable event candidates remain.
 - If protected or non-event usage alone exceeds the target, report
   `protected-or-non-cache-usage` and do not delete protected records.
+- Stats must show a storage inventory so the user can see which IndexedDB
+  tables and which browser-overhead gap reduce the event-cache allowance.
 
 ## Algorithm
 
@@ -42,6 +44,8 @@ absorb storage pressure.
    target bytes, estimated event-cache bytes, browser usage bytes, pruned rows,
    pruned byte estimate, skipped reason, and whether only protected rows
    remain.
+9. Diagnostics estimate per-table bytes and report browser usage not explained
+   by table JSON estimates as overhead or unknown usage.
 
 ## Triggers
 

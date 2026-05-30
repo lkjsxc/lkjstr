@@ -15,7 +15,8 @@ Storage docs define browser persistence ownership.
 - `eventRelays`: event relay receipts.
 - `eventTags`: searchable `e`, `p`, `q`, and `a` tag rows.
 - `eventPriority`: compaction score and byte-accounting rows for cached
-  events.
+  events. This is the current cache ledger pattern and should become the shared
+  ledger for future local blobs such as image cache rows.
 - `feedCursors`: feed paging cursors.
 - `feedCoverage`: durable relay/filter/range coverage evidence and unresolved
   diagnostics for feed scans.
@@ -102,6 +103,26 @@ because hints are not proof.
 Compaction invalidates coverage for affected feed keys because complete coverage
 is useful only while the local event repository can still prove the visible
 range.
+
+## Storage Inventory
+
+Stats estimates IndexedDB table bytes by reading each table and encoding rows
+as JSON. These values are diagnostic estimates, not browser quota truth.
+
+The browser storage estimate remains authoritative for total site usage. The
+difference between browser usage and table estimates is reported as storage
+overhead or unknown usage. That gap can include IndexedDB indexes, browser
+record overhead, localStorage, Cache Storage, and other origin-managed bytes.
+
+Inventory rows are grouped as protected user data, prunable event cache,
+derived cache, diagnostics, and storage overhead. This explains why the event
+allowance can shrink while the visible event-cache byte estimate looks small.
+
+Future local image or media caches must not create an independent quota system.
+They should store their bytes in IndexedDB and register a row in the shared
+cache ledger with a numeric score, byte estimate, protection flag, owner kind,
+and updated timestamp so one compaction policy can evict the least important
+local cached resource first.
 
 ## Event Cache Byte Accounting
 

@@ -34,5 +34,8 @@ surface; status appears in Stats.
   event-cache target bytes, estimated event-cache bytes, browser storage
   estimate when available, last enforcement reason, pruned event count, pruned
   byte estimate, and protected-only status.
+- Stats shows a storage inventory table with each IndexedDB table's row count,
+  estimated bytes, ownership group, and the browser-overhead or unknown gap
+  when the browser storage estimate is larger than table estimates.
 - Event pruning removes relay receipts, tag rows, and feed cursors only when
   they reference pruned event data.

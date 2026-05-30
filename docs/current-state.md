@@ -73,7 +73,9 @@ Read next: [architecture/README.md](architecture/README.md),
   defaults to `67108864` bytes and acts as the site storage target when browser
   estimates are available. Protected records reduce the event-cache allowance;
   compaction prunes only cached event rows and their derived event-cache
-  records. Runtime feed windows remain bounded.
+  records. Stats reports table-level storage inventory plus unexplained browser
+  overhead so shrinking event allowance can be diagnosed. Runtime feed windows
+  remain bounded.
 - Shared storage normalizes events, relay receipts, tag rows, cursors, and jobs
   before runtime use.
 - Relay ingress uses app-owned byte and structure caps before expensive JSON
