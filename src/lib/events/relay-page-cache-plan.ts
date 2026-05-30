@@ -42,6 +42,7 @@ export type SegmentCachePlan =
 type RequirementPlan = {
   readonly relayUrl: string;
   readonly filter: NostrFilter;
+  readonly maxEvents: number;
   readonly covered: boolean;
 };
 
@@ -63,6 +64,7 @@ export async function buildSegmentCachePlan(
       batch.filters.map((filter) => ({
         relayUrl,
         filter,
+        maxEvents: batch.maxEvents,
         covered:
           coverageCoversRequirements(
             [
@@ -113,6 +115,7 @@ function boundedBatchFilters(
   return batches.map((batch) => ({
     relays: batch.relays,
     filters: batch.filters.map((filter) => mergeBounds(filter, bounds)),
+    maxEvents: batch.maxEvents,
   }));
 }
 
@@ -126,6 +129,7 @@ function uncoveredBatches(
     groups.set(key, {
       relays: [...(current?.relays ?? []), plan.relayUrl],
       filters: current?.filters ?? [plan.filter],
+      maxEvents: Math.max(current?.maxEvents ?? 0, plan.maxEvents),
     });
   }
   return [...groups.values()];

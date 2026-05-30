@@ -86,6 +86,17 @@ describe('relay client send queue', () => {
       kind: 'request-too-large',
     });
   });
+
+  it('rejects oversized REQ messages with the app cap when metadata is missing', () => {
+    const client = createRelayClient('wss://large.example/');
+
+    client.subscribe('sub', [{ search: 'x'.repeat(70_000) }]);
+
+    expect(sockets).toHaveLength(0);
+    expect(client.snapshot().diagnostics.at(-1)).toMatchObject({
+      kind: 'request-too-large',
+    });
+  });
 });
 
 async function relayInfo(url: string, limitation: Record<string, unknown>) {

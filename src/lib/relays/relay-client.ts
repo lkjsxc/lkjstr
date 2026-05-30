@@ -13,6 +13,7 @@ import { createRelaySubscriptionAliases } from './relay-subscription-alias';
 import { createRelayCloseTombstones } from './relay-close-tombstones';
 import { incMemoryCounter, decMemoryCounter } from '../app/memory-counters';
 import type { RelaySubscribeOptions } from './relay-subscription-strategy';
+import { appRequestBudgetCaps } from './request-budget/policy';
 // prettier-ignore
 import type { RelayClientEvents, RelayConnectionState, RelayDiagnostic, RelayDiagnosticKind, RelaySnapshot } from './types';
 // prettier-ignore
@@ -87,7 +88,7 @@ export function createRelayClient(
   // prettier-ignore
   const sendIfConnected = (message: ClientMessage) => { if (finallyClosed || !socket || state === 'closed' || state === 'idle') return; sendEncoded(encodeClientMessage(message)); };
   // prettier-ignore
-  const startSubscription = (id: string, filters: readonly NostrFilter[], options: RelaySubscribeOptions, restore = false) => { if (finallyClosed) return; const limits = relayLimits(url); const wireId = aliases.wireId(id, limits.maxSubscriptionIdLength); const message: ClientMessage = ['REQ', wireId, ...filters]; const encoded = encodeClientMessage(message); if (limits.maxMessageLength && !utf8ByteLengthWithin(encoded, limits.maxMessageLength).within) { addDiagnostic('request-too-large', 'REQ exceeds relay message limit', id); releaseReq(id); return; } if (!restore) { eoseBySub[id] = false; filtersBySub.set(id, filters); optionsBySub.set(id, options); if (options.idleCloseMs) deadlineBySub.set(id, Date.now() + options.idleCloseMs); delete closedBySub[id]; } stats.addSubscription(id, options.descriptor); incMemoryCounter('active-relay-subscriptions'); handle.connect(); sendEncoded(encoded); };
+  const startSubscription = (id: string, filters: readonly NostrFilter[], options: RelaySubscribeOptions, restore = false) => { if (finallyClosed) return; const limits = relayLimits(url); const wireId = aliases.wireId(id, limits.maxSubscriptionIdLength); const message: ClientMessage = ['REQ', wireId, ...filters]; const encoded = encodeClientMessage(message); const maxBytes = Math.min(limits.maxMessageLength ?? appRequestBudgetCaps.maxReqMessageBytes, appRequestBudgetCaps.maxReqMessageBytes); if (!utf8ByteLengthWithin(encoded, maxBytes).within) { addDiagnostic('request-too-large', 'REQ exceeds relay message limit', id); releaseReq(id); return; } if (!restore) { eoseBySub[id] = false; filtersBySub.set(id, filters); optionsBySub.set(id, options); if (options.idleCloseMs) deadlineBySub.set(id, Date.now() + options.idleCloseMs); delete closedBySub[id]; } stats.addSubscription(id, options.descriptor); incMemoryCounter('active-relay-subscriptions'); handle.connect(); sendEncoded(encoded); };
   // prettier-ignore
   const restoreSubscriptions = () => { for (const id of reqs.activeIds) { if (restorableSubscription(id)) startSubscription(id, filtersBySub.get(id) ?? [], optionsBySub.get(id) ?? {}, true); else releaseReq(id); } };
   const handleEventMessage = (wireId: string, event: NostrEvent) => {

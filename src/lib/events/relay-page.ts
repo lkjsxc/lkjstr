@@ -9,10 +9,7 @@ export type RelayReadSubscriptions = Pick<
 >;
 import type { RelayRouteGroup } from '../relays/relay-route-types';
 import type { FeedCursorPoint, FeedEvent } from './types';
-import {
-  limitedRelayFilterGroups,
-  relayReadEventCap,
-} from './relay-page-limits';
+import { limitedRelayFilterGroups } from './relay-page-limits';
 import { mergePoolEvents, sortFeedEvents } from './relay-page-merge';
 import { scanRelayFeedGroups } from './relay-page-scan';
 import {
@@ -84,11 +81,7 @@ export async function readRelayPage(
           purpose: request.purpose,
         },
         {
-          maxEvents: relayReadEventCap(
-            group.filters,
-            group.relays.length,
-            request.pageSize,
-          ),
+          maxEvents: group.maxEvents,
           signal: request.signal,
           onSnapshot: request.onSnapshot,
         },

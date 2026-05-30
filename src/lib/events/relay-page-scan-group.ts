@@ -3,10 +3,7 @@ import { mapAsyncBounded } from '../fp/async';
 import { scanCursor } from './relay-page-scan-cursors';
 import { mergeBounds, positiveFilters } from './relay-page-filter';
 import { mergedDisplayBounds } from './feed-display-bounds';
-import {
-  relayReadEventCap,
-  type LimitedRelayFilters,
-} from './relay-page-limits';
+import type { LimitedRelayFilters } from './relay-page-limits';
 import { mergeFeedEvents, mergePoolEvents } from './relay-page-merge';
 import { needsCursorSlack, pageScanItems } from './relay-page-scan-items';
 import { retainedRawCandidates } from './relay-page-scan-raw';
@@ -70,13 +67,9 @@ export async function readGroup(
       batches,
       attemptIndex,
     );
-    for (const { read, filters, relays } of reads) {
+    for (const { read, maxEvents } of reads) {
       raw.push(...read.events);
-      raw = retainedRawCandidates(
-        raw,
-        request.pageSize,
-        relayReadEventCap(filters, relays.length, request.pageSize),
-      );
+      raw = retainedRawCandidates(raw, request.pageSize, maxEvents);
       complete = complete && read.complete;
       hitLimit = hitLimit || read.density.hitLimit;
       underHalfLimit = underHalfLimit && read.density.underHalfLimit;
@@ -142,6 +135,7 @@ async function readBatches(
       batchIndex,
       relays: batch.relays,
       filters,
+      maxEvents: batch.maxEvents,
     });
     await recordBatchCoverage(
       request,
@@ -152,7 +146,7 @@ async function readBatches(
       segment,
       attemptIndex,
     );
-    return { read, filters, relays: batch.relays };
+    return { read, filters, relays: batch.relays, maxEvents: batch.maxEvents };
   });
 }
 

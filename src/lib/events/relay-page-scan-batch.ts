@@ -8,7 +8,6 @@ import {
   incompleteReason,
   recordScanCoverage,
 } from './relay-page-scan-diagnostics';
-import { relayReadEventCap } from './relay-page-limits';
 import { readPageDetailedCompat, statusesComplete } from './relay-page-status';
 import type { ReadPageRelayStatus } from '../relays/read-page-status';
 import type { RelayGroupPageRequest } from './relay-page';
@@ -33,6 +32,7 @@ export async function readScanBatch(
     readonly batchIndex: number;
     readonly relays: readonly string[];
     readonly filters: readonly NostrFilter[];
+    readonly maxEvents: number;
   },
 ): Promise<BatchReadResult> {
   try {
@@ -52,11 +52,7 @@ export async function readScanBatch(
         purpose: request.purpose,
       },
       {
-        maxEvents: relayReadEventCap(
-          input.filters,
-          input.relays.length,
-          request.pageSize,
-        ),
+        maxEvents: input.maxEvents,
         signal: request.signal,
         onSnapshot: request.onSnapshot,
       },
