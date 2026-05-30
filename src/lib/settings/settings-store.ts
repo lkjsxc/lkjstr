@@ -8,7 +8,7 @@ import { defaultSettings, searchText } from './settings-schema';
 import { settingsChangedEvent } from './settings-events';
 import { validCustomUploadServer } from '../media/providers';
 import { notifyHideSensitiveSettingChanged } from './hide-sensitive-events';
-import { enforceCacheBudget } from '../cache/cache-budget-enforcement';
+import { enforceBudgetIfDecreased } from './cache-budget-setting';
 export { subscribeHideSensitiveEvents } from './hide-sensitive-events';
 
 export type SettingOverride = {
@@ -35,7 +35,6 @@ export async function saveSetting(
   if (!current) return [...settings];
   const clean = coerceValue(current, value);
   if (!clean.ok) return [...settings];
-  const budgetMaxBytes = cacheBudgetDecrease(current.value, clean.value);
   const override = {
     key,
     namespace: current.namespace,
@@ -49,22 +48,26 @@ export async function saveSetting(
   await bestEffortStorageWrite(() => browserDb().settings.put(override));
   settingsCache = undefined;
   notifySettingsChanged();
-  if (budgetMaxBytes !== undefined)
-    void enforceCacheBudget('settings-change', { maxBytes: budgetMaxBytes });
-  return mergeSettings(memoryOverrides);
+  const next = mergeSettings(memoryOverrides);
+  enforceBudgetIfDecreased(settings, next);
+  return next;
 }
 
 export async function resetSetting(key: string): Promise<SettingRecord[]> {
+  const before = mergeSettings(memoryOverrides);
   memoryOverrides = memoryOverrides.filter((item) => item.key !== key);
   await bestEffortStorageWrite(() => browserDb().settings.delete(key));
   settingsCache = undefined;
   notifySettingsChanged();
-  return mergeSettings(memoryOverrides);
+  const next = mergeSettings(memoryOverrides);
+  enforceBudgetIfDecreased(before, next);
+  return next;
 }
 
 export async function resetNamespace(
   namespace: string,
 ): Promise<SettingRecord[]> {
+  const before = mergeSettings(memoryOverrides);
   memoryOverrides = memoryOverrides.filter(
     (item) => item.namespace !== namespace,
   );
@@ -74,12 +77,15 @@ export async function resetNamespace(
   await bestEffortStorageWrite(() => browserDb().settings.bulkDelete(keys));
   settingsCache = undefined;
   notifySettingsChanged();
-  return mergeSettings(memoryOverrides);
+  const next = mergeSettings(memoryOverrides);
+  enforceBudgetIfDecreased(before, next);
+  return next;
 }
 
 export async function importSettingsJson(
   raw: string,
 ): Promise<SettingRecord[]> {
+  const before = mergeSettings(memoryOverrides);
   const parsed = JSON.parse(raw) as SettingRecord[];
   const byKey = new Map(
     defaultSettings().map((setting) => [setting.key, setting]),
@@ -107,7 +113,9 @@ export async function importSettingsJson(
   });
   settingsCache = undefined;
   notifySettingsChanged();
-  return mergeSettings(overrides);
+  const next = mergeSettings(overrides);
+  enforceBudgetIfDecreased(before, next);
+  return next;
 }
 
 async function loadSettingsUncached(): Promise<SettingRecord[]> {
@@ -172,13 +180,4 @@ function notifySettingsChanged(): void {
   notifyHideSensitiveSettingChanged();
   if (typeof window === 'undefined') return;
   window.dispatchEvent(new CustomEvent(settingsChangedEvent));
-}
-
-function cacheBudgetDecrease(
-  current: unknown,
-  next: unknown,
-): number | undefined {
-  const decreased =
-    typeof current === 'number' && typeof next === 'number' && next < current;
-  return decreased ? next : undefined;
 }

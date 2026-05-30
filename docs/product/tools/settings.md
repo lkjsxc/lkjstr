@@ -50,8 +50,9 @@ Settings provide editable local preferences as one flat key-value list.
   may step by MiB-sized increments. It must still save the raw byte number.
 - Setting `cache.maxBytes` to `1073741824` bytes is a supported heavy-user
   one GiB budget.
-- Saving a smaller `cache.maxBytes` value triggers immediate site budget
-  enforcement instead of waiting for routine write-count scheduling.
+- Saving, importing, resetting, or namespace-resetting to a smaller effective
+  `cache.maxBytes` value triggers immediate site budget enforcement instead of
+  waiting for routine write-count scheduling.
 - Cache compaction keys `cache.maxEvents`, `cache.maxAgeDays`, and
   `cache.compactionEnabled` are retired. Event retention is automatic. See
   [cache.md](cache.md) and

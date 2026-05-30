@@ -67,6 +67,16 @@ describe('settings store helpers', () => {
     expect(coerceValue(setting, 1)).toEqual({ ok: false });
   });
 
+  it('describes cache max bytes as a site storage target', () => {
+    const setting = defaultSettings().find(
+      (item) => item.key === 'cache.maxBytes',
+    );
+    expect(setting).toMatchObject({
+      label: 'Site storage budget',
+      description: 'Target site storage bytes.',
+    });
+  });
+
   it('coerces Tweet media upload provider settings', () => {
     const provider = defaultSettings().find(
       (item) => item.key === 'tweet.mediaUploadProvider',

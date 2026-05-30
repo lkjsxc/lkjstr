@@ -6,11 +6,14 @@ import { lowestScorePruneRows } from './compaction-select';
 import { estimatedEventCacheBytes } from './event-cache-bytes';
 import {
   defaultCacheMaxBytes,
-  isQuotaPressure,
   quotaPruneBatchSize,
   readStorageQuota,
   type StorageQuotaSnapshot,
 } from './storage-quota';
+import {
+  deriveSiteStorageBudget,
+  shouldCompactForSiteBudget,
+} from './site-storage-budget';
 import type { CacheMetadata } from './cache-status';
 
 export type CacheBudgetReason =
@@ -27,6 +30,7 @@ export type CacheBudgetResult = {
   readonly skipped: boolean;
   readonly reason?: string;
   readonly budgetBytes: number;
+  readonly eventCacheTargetBytes: number;
   readonly eventCacheBytes: number;
   readonly browserUsageBytes: number | null;
   readonly protectedOnly: boolean;
@@ -42,33 +46,21 @@ export async function enforceCacheBudget(
 ): Promise<CacheBudgetResult> {
   const budgetBytes = options.maxBytes ?? defaultCacheMaxBytes;
   if (!indexedDbAvailable())
-    return result(reason, budgetBytes, 0, null, 0, 0, true, true);
+    return result(reason, budgetBytes, budgetBytes, 0, null, 0, 0, true, true);
   const quota = await readStorageQuota();
   let eventCacheBytes = await estimatedEventCacheBytes();
-  if (!shouldCompact(eventCacheBytes, budgetBytes, quota)) {
+  const budget = deriveSiteStorageBudget(eventCacheBytes, budgetBytes, quota);
+  if (!shouldCompactForSiteBudget(eventCacheBytes, budget)) {
     const done = result(
       'below-budget-threshold',
-      budgetBytes,
+      budget.siteBudgetBytes,
+      budget.eventCacheTargetBytes,
       eventCacheBytes,
-      quota?.usage ?? null,
+      budget.browserUsageBytes,
       0,
       0,
       false,
       false,
-    );
-    await writeCacheBudgetResult(done);
-    return done;
-  }
-  if (eventCacheBytes <= budgetBytes && quota && quota.usage > budgetBytes) {
-    const done = result(
-      'protected-or-non-cache-usage',
-      budgetBytes,
-      eventCacheBytes,
-      quota.usage,
-      0,
-      0,
-      false,
-      true,
     );
     await writeCacheBudgetResult(done);
     return done;
@@ -76,7 +68,7 @@ export async function enforceCacheBudget(
   let prunedEvents = 0;
   let prunedBytes = 0;
   let protectedOnly = false;
-  while (eventCacheBytes > budgetBytes) {
+  while (eventCacheBytes > budget.eventCacheTargetBytes) {
     const protectedIds = await protectedEventIds();
     const rows = await lowestScorePruneRows(quotaPruneBatchSize, protectedIds);
     if (rows.length === 0) {
@@ -88,15 +80,28 @@ export async function enforceCacheBudget(
     prunedBytes += deleted.prunedBytes;
     eventCacheBytes = await estimatedEventCacheBytes();
   }
-  const done = result(
-    protectedOnly ? 'protected-only' : reason,
-    budgetBytes,
+  const finalBudget = deriveSiteStorageBudget(
     eventCacheBytes,
-    quota?.usage ?? null,
+    budgetBytes,
+    adjustedQuota(quota, prunedBytes),
+  );
+  const protectedUsageOverBudget =
+    finalBudget.protectedOrNonEventBytes >= finalBudget.siteBudgetBytes &&
+    finalBudget.browserUsageBytes !== null;
+  const done = result(
+    protectedUsageOverBudget
+      ? 'protected-or-non-cache-usage'
+      : protectedOnly
+        ? 'protected-only'
+        : reason,
+    finalBudget.siteBudgetBytes,
+    finalBudget.eventCacheTargetBytes,
+    eventCacheBytes,
+    finalBudget.browserUsageBytes,
     prunedEvents,
     prunedBytes,
     false,
-    protectedOnly,
+    protectedOnly || protectedUsageOverBudget,
   );
   await writeCacheBudgetResult(done);
   return done;
@@ -107,10 +112,9 @@ export function shouldCompact(
   maxBytes: number,
   quota: StorageQuotaSnapshot | null,
 ): boolean {
-  return (
-    eventCacheBytes > maxBytes ||
-    (quota?.usage ?? 0) > maxBytes ||
-    isQuotaPressure(quota)
+  return shouldCompactForSiteBudget(
+    eventCacheBytes,
+    deriveSiteStorageBudget(eventCacheBytes, maxBytes, quota),
   );
 }
 
@@ -124,6 +128,7 @@ async function writeCacheBudgetResult(
     notificationCount: await browserDb().notifications.count(),
     storageEstimateBytes: result.browserUsageBytes,
     budgetBytes: result.budgetBytes,
+    eventCacheTargetBytes: result.eventCacheTargetBytes,
     eventCacheBytes: result.eventCacheBytes,
     browserUsageBytes: result.browserUsageBytes,
     lastCompactionReason: result.reason,
@@ -138,6 +143,7 @@ async function writeCacheBudgetResult(
 function result(
   reason: string,
   budgetBytes: number,
+  eventCacheTargetBytes: number,
   eventCacheBytes: number,
   browserUsageBytes: number | null,
   prunedEvents: number,
@@ -152,8 +158,18 @@ function result(
     skipped,
     reason,
     budgetBytes,
+    eventCacheTargetBytes,
     eventCacheBytes,
     browserUsageBytes,
     protectedOnly,
   };
+}
+
+function adjustedQuota(
+  quota: StorageQuotaSnapshot | null,
+  prunedBytes: number,
+): StorageQuotaSnapshot | null {
+  if (!quota || prunedBytes <= 0) return quota;
+  const usage = Math.max(0, quota.usage - prunedBytes);
+  return { ...quota, usage, ratio: usage / quota.quota };
 }

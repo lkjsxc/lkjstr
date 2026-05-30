@@ -24,7 +24,7 @@ tabs.newTabChooserEnabled|New Tab chooser|boolean|true|Use per-tile tab chooser.
 tabs.inactiveRetentionSeconds|Inactive tab retention|number|300|Seconds to retain inactive tab runtimes.
 timeline.initialLimit|Timeline limit|number|50|Initial timeline event limit.
 timeline.showRelayProvenance|Relay provenance|boolean|true|Show event relay source.
-cache.maxBytes|Cache byte budget|number|67108864|Enforced event cache byte budget.
+cache.maxBytes|Site storage budget|number|67108864|Target site storage bytes.
 relays.connectTimeoutMs|Connect timeout|number|5000|Relay connect timeout.
 profiles.fetchMetadata|Fetch metadata|boolean|true|Fetch profile metadata from relays.
 profiles.showNip05|Show NIP-05|boolean|true|Show NIP-05 identifiers.

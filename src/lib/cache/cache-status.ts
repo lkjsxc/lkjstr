@@ -1,8 +1,9 @@
 import { browserDb } from '../storage/browser-db';
 import { boundedStorageRead } from '../storage/safe-storage';
 import { allMemoryEvents } from '../events/repository-memory';
-import { defaultCacheMaxBytes } from './storage-quota';
+import { defaultCacheMaxBytes, readStorageQuota } from './storage-quota';
 import { estimatedEventCacheBytes } from './event-cache-bytes';
+import { deriveSiteStorageBudget } from './site-storage-budget';
 
 export type CacheMetadata = {
   readonly id: string;
@@ -11,6 +12,7 @@ export type CacheMetadata = {
   readonly notificationCount: number;
   readonly storageEstimateBytes: number | null;
   readonly budgetBytes: number;
+  readonly eventCacheTargetBytes: number;
   readonly eventCacheBytes: number;
   readonly browserUsageBytes: number | null;
   readonly lastCompactionReason?: string;
@@ -21,10 +23,16 @@ export type CacheMetadata = {
 };
 
 export async function cacheStatus(): Promise<CacheMetadata> {
-  const storageEstimateBytes = await estimateStorageBytes();
+  const quota = await readStorageQuota();
   const meta = await boundedStorageRead(
     () => browserDb().cacheMeta.get('main'),
     undefined,
+  );
+  const eventCacheBytes = await estimatedEventCacheBytes();
+  const currentBudget = deriveSiteStorageBudget(
+    eventCacheBytes,
+    meta?.budgetBytes ?? defaultCacheMaxBytes,
+    quota,
   );
   return {
     id: 'main',
@@ -37,10 +45,11 @@ export async function cacheStatus(): Promise<CacheMetadata> {
       () => browserDb().notifications.count(),
       0,
     ),
-    storageEstimateBytes,
-    budgetBytes: meta?.budgetBytes ?? defaultCacheMaxBytes,
-    eventCacheBytes: await estimatedEventCacheBytes(),
-    browserUsageBytes: storageEstimateBytes,
+    storageEstimateBytes: currentBudget.browserUsageBytes,
+    budgetBytes: currentBudget.siteBudgetBytes,
+    eventCacheTargetBytes: currentBudget.eventCacheTargetBytes,
+    eventCacheBytes,
+    browserUsageBytes: currentBudget.browserUsageBytes,
     lastCompactionReason: meta?.lastCompactionReason,
     prunedEventCount: meta?.prunedEventCount ?? 0,
     prunedByteEstimate: meta?.prunedByteEstimate ?? 0,
@@ -69,11 +78,4 @@ function uniqueProfilePubkeys(
       .filter((event) => 'kind' in event && event.kind === 0)
       .map((event) => event.pubkey),
   ).size;
-}
-
-async function estimateStorageBytes(): Promise<number | null> {
-  if (typeof navigator === 'undefined' || !navigator.storage?.estimate)
-    return null;
-  const estimate = await navigator.storage.estimate();
-  return estimate.usage ?? null;
 }

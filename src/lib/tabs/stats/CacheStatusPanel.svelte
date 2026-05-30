@@ -27,6 +27,10 @@
     <tbody>
       <tr><th>Budget</th><td>{formatBytes(props.cache.budgetBytes)}</td></tr>
       <tr>
+        <th>Event allowance</th>
+        <td>{formatBytes(props.cache.eventCacheTargetBytes)}</td>
+      </tr>
+      <tr>
         <th>Event cache</th><td>{formatBytes(props.cache.eventCacheBytes)}</td>
       </tr>
       <tr>
