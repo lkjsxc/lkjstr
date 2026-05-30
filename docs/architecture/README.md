@@ -106,6 +106,22 @@ state lives, which modules own subscriptions, and how tabs close cleanly.
   progressive relay rendering.
 - [network/relay-routing.md](network/relay-routing.md): protocol-derived read
   routing.
+- [network/request-budget/README.md](network/request-budget/README.md):
+  request budgets and relay metadata.
+- [network/request-budget/effective-limits.md](network/request-budget/effective-limits.md):
+  limit derivation.
+- [network/request-budget/intent.md](network/request-budget/intent.md):
+  budget intent fields.
+- [network/request-budget/message-size.md](network/request-budget/message-size.md):
+  outbound request bytes.
+- [network/request-budget/nip11.md](network/request-budget/nip11.md):
+  relay information budget data.
+- [network/request-budget/scoring.md](network/request-budget/scoring.md):
+  score boundary.
+- [network/request-budget/source-map.md](network/request-budget/source-map.md):
+  code map.
+- [network/request-budget/tests.md](network/request-budget/tests.md):
+  verification gates.
 - [network/settings-store.md](network/settings-store.md): settings storage.
 - [network/subscription-manager.md](network/subscription-manager.md): shared
   relay reads.

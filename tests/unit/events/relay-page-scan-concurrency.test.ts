@@ -22,7 +22,7 @@ describe('relay page scan bounded concurrency', () => {
       relayUrl: 'wss://two/',
       fetchedAt: Date.now(),
       status: 'available',
-      info: { limitation: { max_limit: 1 } },
+      info: { limitation: { maxLimit: 1 } },
     });
     const tracker = concurrencyTracker();
 

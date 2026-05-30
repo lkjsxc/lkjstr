@@ -11,20 +11,12 @@ export type RelayLimits = {
 export function relayLimits(relayUrl: string): RelayLimits {
   const limit = cachedRelayInformation(relayUrl)?.info?.limitation ?? {};
   return {
-    maxSubscriptions: positiveInt(limit.max_subscriptions) ?? Infinity,
-    maxLimit: positiveInt(limit.max_limit),
-    maxMessageLength: positiveInt(limit.max_message_length),
+    maxSubscriptions: limit.maxSubscriptions ?? Infinity,
+    maxLimit: limit.maxLimit,
+    maxMessageLength: limit.maxMessageLength,
     maxSubscriptionIdLength: Math.min(
-      positiveInt(limit.max_subid_length) ??
-        positiveInt(limit.max_subscription_id_length) ??
-        maxRelaySubscriptionIdLength,
+      limit.maxSubIdLength ?? maxRelaySubscriptionIdLength,
       maxRelaySubscriptionIdLength,
     ),
   };
-}
-
-function positiveInt(value: unknown): number | undefined {
-  return Number.isInteger(value) && (value as number) > 0
-    ? (value as number)
-    : undefined;
 }

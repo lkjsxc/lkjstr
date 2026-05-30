@@ -89,7 +89,7 @@ describe('relay page adaptive windows', () => {
       relayUrl: relay,
       fetchedAt: Date.now(),
       status: 'available',
-      info: { limitation: { max_limit: 1 } },
+      info: { limitation: { maxLimit: 1 } },
     });
     const calls: NostrFilter[] = [];
     const page = await pageFor([event('a', 9_999), event('b', 9_998)], {

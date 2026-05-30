@@ -23,7 +23,7 @@ describe('relay page scan cursors', () => {
       relayUrl: relay,
       fetchedAt: Date.now(),
       status: 'available',
-      info: { limitation: { max_limit: 2 } },
+      info: { limitation: { maxLimit: 2 } },
     });
     const dense = [event('a', 100), event('b', 100), event('c', 100)];
     const sparse = event('old', 90);

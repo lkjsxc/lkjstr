@@ -15,6 +15,16 @@ and app boundaries.
 - [relay-routing.md](relay-routing.md): protocol-derived read routing.
 - [request-budget/README.md](request-budget/README.md): request limits,
   NIP-11 bounds, and diagnostics.
+- [request-budget/effective-limits.md](request-budget/effective-limits.md):
+  limit derivation.
+- [request-budget/intent.md](request-budget/intent.md): budget intent fields.
+- [request-budget/message-size.md](request-budget/message-size.md): outbound
+  request bytes.
+- [request-budget/nip11.md](request-budget/nip11.md): relay information budget
+  data.
+- [request-budget/scoring.md](request-budget/scoring.md): score boundary.
+- [request-budget/source-map.md](request-budget/source-map.md): code map.
+- [request-budget/tests.md](request-budget/tests.md): verification gates.
 - [settings-store.md](settings-store.md): flat settings storage.
 - [subscription-manager.md](subscription-manager.md): shared relay reads.
 - [subscription-orchestration/README.md](subscription-orchestration/README.md):

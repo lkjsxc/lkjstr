@@ -58,7 +58,7 @@ describe('relay page scan hardening', () => {
       relayUrl: relay,
       fetchedAt: Date.now(),
       status: 'available',
-      info: { limitation: { max_limit: 2 } },
+      info: { limitation: { maxLimit: 2 } },
     });
     const events = [event('one', 100), event('two', 99)];
     const page = await readRelayFeedGroups({
