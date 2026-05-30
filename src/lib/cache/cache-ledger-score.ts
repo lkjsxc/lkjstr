@@ -5,8 +5,6 @@ export function compareCacheLedgerRows(
   b: CacheLedgerRecord,
 ): number {
   return (
-    a.score - b.score ||
-    a.createdAt - b.createdAt ||
-    a.id.localeCompare(b.id)
+    a.score - b.score || a.createdAt - b.createdAt || a.id.localeCompare(b.id)
   );
 }

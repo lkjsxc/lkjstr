@@ -53,7 +53,9 @@
         <th>Last enforcement</th>
         <td>{props.cache.lastCompactionReason ?? 'none'}</td>
       </tr>
-      <tr><th>Pruned resources</th><td>{props.cache.prunedResourceCount}</td></tr>
+      <tr
+        ><th>Pruned resources</th><td>{props.cache.prunedResourceCount}</td></tr
+      >
       <tr><th>Pruned events</th><td>{props.cache.prunedEventCount}</td></tr>
       <tr>
         <th>Pruned bytes</th>

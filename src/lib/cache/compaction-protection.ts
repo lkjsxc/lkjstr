@@ -79,7 +79,9 @@ async function eventsByKind(kind: number): Promise<CompactionEventCandidate[]> {
   return events;
 }
 
-async function collectProtectedNotifications(target: Set<string>): Promise<void> {
+async function collectProtectedNotifications(
+  target: Set<string>,
+): Promise<void> {
   const latestByAccount = new Map<string, string[]>();
   const unreadRecentCutoff = Date.now() - 30 * 24 * 60 * 60 * 1000;
   await browserDb()

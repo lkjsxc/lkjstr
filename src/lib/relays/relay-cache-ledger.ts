@@ -11,7 +11,14 @@ export function relaySummaryLedgerRecord(
   row: RelayDiagnosticSummary,
 ): CacheLedgerRecord {
   return withBytes(
-    relayDraft('relay-diagnostic', 'relay-summary', row.relayUrl, row.updatedAt, 80, row.relayUrl),
+    relayDraft(
+      'relay-diagnostic',
+      'relay-summary',
+      row.relayUrl,
+      row.updatedAt,
+      80,
+      row.relayUrl,
+    ),
     row,
   );
 }
@@ -20,7 +27,14 @@ export function relayInfoLedgerRecord(
   row: RelayInformationRecord,
 ): CacheLedgerRecord {
   return withBytes(
-    relayDraft('relay-information', 'relay-info', row.relayUrl, row.fetchedAt, 350, row.relayUrl),
+    relayDraft(
+      'relay-information',
+      'relay-info',
+      row.relayUrl,
+      row.fetchedAt,
+      350,
+      row.relayUrl,
+    ),
     row,
   );
 }
@@ -29,14 +43,28 @@ export function relaySuggestionLedgerRecord(
   row: RelayListSuggestionRecord,
 ): CacheLedgerRecord {
   return withBytes(
-    relayDraft('relay-suggestion', 'relay-list-suggestion', row.id, row.updatedAt, 300, row.relayUrl),
+    relayDraft(
+      'relay-suggestion',
+      'relay-list-suggestion',
+      row.id,
+      row.updatedAt,
+      300,
+      row.relayUrl,
+    ),
     row,
   );
 }
 
 export function relayRouteLedgerRecord(row: RelayRoute): CacheLedgerRecord {
   return withBytes(
-    relayDraft('route-evidence', 'author-relay-route', row.id, row.updatedAt, 300, row.relayUrl),
+    relayDraft(
+      'route-evidence',
+      'author-relay-route',
+      row.id,
+      row.updatedAt,
+      300,
+      row.relayUrl,
+    ),
     row,
   );
 }
@@ -64,10 +92,7 @@ function relayDraft(
   };
 }
 
-function withBytes(
-  draft: CacheLedgerRecord,
-  row: unknown,
-): CacheLedgerRecord {
+function withBytes(draft: CacheLedgerRecord, row: unknown): CacheLedgerRecord {
   return {
     ...draft,
     cacheBytes: encodedJsonBytes(row) + cacheLedgerBytes(draft),

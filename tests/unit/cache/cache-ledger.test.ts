@@ -57,7 +57,10 @@ describe('cache ledger policy', () => {
   it('skips durable and dynamic protected ledger rows', () => {
     const rows = [
       notificationLedgerRecord(notification('reaction', 10, 20)),
-      { ...notificationLedgerRecord(notification('mention', 20, null)), protected: true },
+      {
+        ...notificationLedgerRecord(notification('mention', 20, null)),
+        protected: true,
+      },
       notificationLedgerRecord(notification('reply', 30, null)),
     ];
     expect(selectPruneIds(rows, new Set([rows[2].id]), 3)).toEqual([

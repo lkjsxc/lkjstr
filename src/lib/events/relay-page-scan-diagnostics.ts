@@ -32,27 +32,25 @@ export async function recordScanCoverage(
   await saveFeedCoverageRows(
     relays.flatMap((relayUrl) => {
       const row = meta.relayRows?.find((item) => item.relay === relayUrl);
-      return filters.map((filter) =>
-        ({
-          feedKey: request.key,
-          relayUrl,
-          groupKey,
-          filterKey: semanticFilterKey(filter),
-          status,
-          since: filter.since,
-          until: filter.until,
-          reason: meta.reason,
-          limit: row?.limit ?? meta.limit,
-          eventCount: row?.eventCount ?? meta.eventCount,
-          uniqueCount: row?.uniqueCount ?? meta.uniqueCount,
-          attempt: meta.attempt,
-          durationMs: meta.durationMs,
-          spanSeconds: meta.spanSeconds,
-          nextSpanSeconds: meta.nextSpanSeconds,
-          feedback: meta.feedback,
-          direction: meta.direction,
-        }),
-      );
+      return filters.map((filter) => ({
+        feedKey: request.key,
+        relayUrl,
+        groupKey,
+        filterKey: semanticFilterKey(filter),
+        status,
+        since: filter.since,
+        until: filter.until,
+        reason: meta.reason,
+        limit: row?.limit ?? meta.limit,
+        eventCount: row?.eventCount ?? meta.eventCount,
+        uniqueCount: row?.uniqueCount ?? meta.uniqueCount,
+        attempt: meta.attempt,
+        durationMs: meta.durationMs,
+        spanSeconds: meta.spanSeconds,
+        nextSpanSeconds: meta.nextSpanSeconds,
+        feedback: meta.feedback,
+        direction: meta.direction,
+      }));
     }),
   );
 }

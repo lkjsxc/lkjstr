@@ -1,8 +1,5 @@
 import { cacheByteSizeForEvent } from '../cache/cache-byte-size';
-import {
-  eventLedgerRecord,
-  upsertEventLedger,
-} from '../cache/event-ledger';
+import { eventLedgerRecord, upsertEventLedger } from '../cache/event-ledger';
 import { browserDb } from '../storage/browser-db';
 import { bestEffortStorageWrite } from '../storage/safe-storage';
 import type { NostrEvent } from '../protocol';

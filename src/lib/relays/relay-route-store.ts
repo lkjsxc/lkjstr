@@ -50,7 +50,9 @@ export async function saveAuthorRelayRoutes(
       browserDb().cacheLedger,
       async () => {
         await browserDb().authorRelayRoutes.bulkPut(routes);
-        await browserDb().cacheLedger.bulkPut(routes.map(relayRouteLedgerRecord));
+        await browserDb().cacheLedger.bulkPut(
+          routes.map(relayRouteLedgerRecord),
+        );
       },
     ),
   );

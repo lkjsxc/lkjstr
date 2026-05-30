@@ -47,9 +47,7 @@ export async function estimatedLedgerBytesByOwner(): Promise<
   if (!indexedDbAvailable()) return [];
   const rows = new Map<string, LedgerInventoryRow>();
   await browserDb().cacheLedger.each((row) => mergeLedgerRow(rows, row));
-  return [...rows.values()].sort(
-    (a, b) => b.estimatedBytes - a.estimatedBytes,
-  );
+  return [...rows.values()].sort((a, b) => b.estimatedBytes - a.estimatedBytes);
 }
 
 function mergeLedgerRow(

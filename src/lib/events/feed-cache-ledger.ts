@@ -5,9 +5,7 @@ import type { CacheLedgerRecord } from '../cache/cache-ledger-record';
 import type { FeedScanHint } from './feed-scan-hints';
 import type { FeedCoverage, FeedCursor } from './types';
 
-export function feedCursorLedgerRecord(
-  cursor: FeedCursor,
-): CacheLedgerRecord {
+export function feedCursorLedgerRecord(cursor: FeedCursor): CacheLedgerRecord {
   const draft = feedLedgerDraft('feed-page', 'feed-cursor', cursor);
   return withBytes(draft, cursor);
 }
@@ -46,7 +44,11 @@ export function feedScanHintLedgerRecord(
 function feedLedgerDraft(
   ownerKind: CacheLedgerRecord['ownerKind'],
   resourceKind: CacheLedgerRecord['resourceKind'],
-  row: { readonly id: string; readonly feedKey: string; readonly updatedAt: number },
+  row: {
+    readonly id: string;
+    readonly feedKey: string;
+    readonly updatedAt: number;
+  },
   baseScore = 300,
   relayUrl?: string,
 ): CacheLedgerRecord {
@@ -66,10 +68,7 @@ function feedLedgerDraft(
   };
 }
 
-function withBytes(
-  draft: CacheLedgerRecord,
-  row: unknown,
-): CacheLedgerRecord {
+function withBytes(draft: CacheLedgerRecord, row: unknown): CacheLedgerRecord {
   return {
     ...draft,
     cacheBytes: encodedJsonBytes(row) + cacheLedgerBytes(draft),

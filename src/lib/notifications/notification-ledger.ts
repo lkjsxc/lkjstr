@@ -59,6 +59,7 @@ function notificationLedgerDraft(
     cacheBytes: 0,
     protected: false,
     accountPubkey: record.accountPubkey,
-    reason: record.readAt === null ? 'unread-notification' : 'read-notification',
+    reason:
+      record.readAt === null ? 'unread-notification' : 'read-notification',
   };
 }

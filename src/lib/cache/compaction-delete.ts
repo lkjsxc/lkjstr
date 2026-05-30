@@ -82,7 +82,11 @@ async function deleteDirectCacheRows(
       browserDb().cacheLedger,
     ],
     async () => {
-      await deleteByKind(rows, 'notification-record', browserDb().notifications);
+      await deleteByKind(
+        rows,
+        'notification-record',
+        browserDb().notifications,
+      );
       await deleteByKind(rows, 'feed-cursor', browserDb().feedCursors);
       await deleteByKind(rows, 'coverage-row', browserDb().feedCoverage);
       await deleteByKind(rows, 'scan-hint', browserDb().feedScanHints);
