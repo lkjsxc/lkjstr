@@ -54,6 +54,7 @@ export async function readProfilePostsPageByIntent(
       },
     ],
     direction: request.direction,
+    maxSegments: request.direction === 'initial' ? 3 : undefined,
     before: request.direction === 'older' ? request.cursor : undefined,
     after: request.direction === 'newer' ? request.cursor : undefined,
     pageSize: request.pageSize,

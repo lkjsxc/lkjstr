@@ -2,6 +2,7 @@ import { countRuntime } from '../app/runtime-counters';
 import { createBoundedMap } from '../fp/bounded-map';
 import { browserDb } from '../storage/browser-db';
 import {
+  bestEffortDiagnosticStorageWrite,
   bestEffortStorageWrite,
   boundedStorageRead,
 } from '../storage/safe-storage';
@@ -64,7 +65,7 @@ export async function saveFeedScanHint(
   };
   memoryHints.set(hint.id, hint);
   countRuntime('timeline', 'warmHintWrites');
-  await bestEffortStorageWrite(() =>
+  await bestEffortDiagnosticStorageWrite(() =>
     browserDb().transaction(
       'rw',
       browserDb().feedScanHints,

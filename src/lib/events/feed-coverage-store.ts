@@ -1,6 +1,7 @@
 import { browserDb } from '../storage/browser-db';
 import { createBoundedMap } from '../fp/bounded-map';
 import {
+  bestEffortDiagnosticStorageWrite,
   bestEffortStorageWrite,
   boundedStorageRead,
 } from '../storage/safe-storage';
@@ -26,7 +27,7 @@ export async function saveFeedCoverageRows(
   const rows = inputs.map((input) => feedCoverageRow(input, updatedAt));
   for (const row of rows) memoryCoverage.set(row.id, row);
   if (rows.length === 0) return [];
-  await bestEffortStorageWrite(() =>
+  await bestEffortDiagnosticStorageWrite(() =>
     browserDb().transaction(
       'rw',
       browserDb().feedCoverage,

@@ -87,7 +87,7 @@ export async function readGroup(
   const items = readItems(request, segment, cachedItems, raw);
   const unresolved = !complete || hitLimit;
   if (unresolved && (!complete || !canSplitRelayPageSegment(segment)))
-    void Promise.all(
+    await Promise.all(
       batches.map((batch) =>
         recordUnresolved(
           request,
@@ -137,7 +137,7 @@ async function readBatches(
       filters,
       maxEvents: batch.maxEvents,
     });
-    void recordBatchCoverage(
+    await recordBatchCoverage(
       request,
       groupKey,
       batch.relays,

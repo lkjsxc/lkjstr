@@ -19,10 +19,7 @@ export function shouldScheduleCompaction(
 export function scheduleCacheCompactionAfterWrite(): void {
   writesSinceSchedule += 1;
   if (running || scheduled) return;
-  if (!shouldScheduleCompaction(writesSinceSchedule)) {
-    scheduleNow();
-    return;
-  }
+  if (!shouldScheduleCompaction(writesSinceSchedule)) return;
   writesSinceSchedule = 0;
   scheduleNow();
 }

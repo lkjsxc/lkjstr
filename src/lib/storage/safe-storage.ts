@@ -82,6 +82,18 @@ export async function bestEffortStorageWrite(
   }
 }
 
+export async function bestEffortDiagnosticStorageWrite(
+  write: () => Promise<unknown>,
+  timeoutMs = defaultStorageTimeoutMs,
+): Promise<void> {
+  if (!indexedDbAvailable()) return;
+  try {
+    await withTimeout(write(), undefined, timeoutMs);
+  } catch {
+    return;
+  }
+}
+
 function withTimeout<T>(
   promise: Promise<T>,
   fallback: T,
