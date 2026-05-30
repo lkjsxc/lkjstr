@@ -12,7 +12,7 @@ import {
   estimatedEventCacheBytes,
   estimatedLedgerBytes,
   estimatedPrunableCacheBytes,
-} from './event-cache-bytes';
+} from './cache-ledger-stats';
 import {
   defaultCacheMaxBytes,
   quotaPruneBatchSize,

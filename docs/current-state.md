@@ -71,14 +71,14 @@ Read next: [architecture/README.md](architecture/README.md),
   user-owned relay configuration are never deleted by cache cleanup.
 - Durable local cache has no application item-count ceiling. `cache.maxBytes`
   defaults to `67108864` bytes and acts as the site storage target when browser
-  estimates are available. `cacheLedger` is the target contract for shared
-  byte-accounting across events, notifications, feed/page rows, recoverable
-  relay diagnostics, protocol cache, route evidence, finished jobs, and stale
-  snapshots. Compaction should prune the lowest-value recoverable resource
-  class, not only cached events. Stats reports table-level storage inventory,
-  ledger inventory, protected estimates, prunable estimates, and unexplained
-  browser overhead so notification-heavy and page-heavy pressure can be
-  diagnosed. Runtime feed windows remain bounded.
+  estimates are available. `cacheLedger` implements shared byte-accounting
+  across events, notifications, feed/page rows, recoverable relay diagnostics,
+  protocol cache, route evidence, finished jobs, and stale snapshots. Compaction
+  prunes the lowest-value recoverable resource class, not only cached events.
+  Stats reports table-level storage inventory, ledger inventory, protected
+  estimates, prunable estimates, and unexplained browser overhead so
+  notification-heavy and page-heavy pressure can be diagnosed. Runtime feed
+  windows remain bounded.
 - Shared storage normalizes events, relay receipts, tag rows, cursors, and jobs
   before runtime use.
 - Relay ingress uses app-owned byte and structure caps before expensive JSON

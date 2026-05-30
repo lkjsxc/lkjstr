@@ -8,7 +8,7 @@ import {
   estimatedLedgerBytesByOwner,
   estimatedPrunableCacheBytes,
   type LedgerInventoryRow,
-} from './event-cache-bytes';
+} from './cache-ledger-stats';
 import { deriveSiteStorageBudget } from './site-storage-budget';
 import {
   storageInventory,
