@@ -8,9 +8,8 @@ by priority after memory stabilization passes.
 
 ## In Progress
 
-| Item | Destination doc | Test strategy |
-| --- | --- | --- |
-| NIP-11-driven request budgeting and diagnostics | [request-budget/README.md](../architecture/network/request-budget/README.md) | Unit NIP-11 and request-budget gates, subscription dedupe tests, Playwright Relay Settings and Stats diagnostics |
+None right now. NIP-11-driven request budgeting and diagnostics are implemented
+and tracked in [doc-impl-audit.md](doc-impl-audit.md).
 
 ## Completed (feeds)
 
@@ -18,6 +17,12 @@ by priority after memory stabilization passes.
 | --------------------------------------------------------- | --------------------------------------------------------------------------- |
 | Cache-first grouped feed pages with partial relay pruning | [cache-first-feed-pages.md](../architecture/data/cache-first-feed-pages.md) |
 | Warm grouped scan hints separated from proof              | [storage.md](../architecture/data/storage.md)                               |
+
+## Completed (network)
+
+| Item | Contract |
+| --- | --- |
+| NIP-11-driven request budgeting and diagnostics | [request-budget/README.md](../architecture/network/request-budget/README.md) |
 
 ## Completed (workspace)
 

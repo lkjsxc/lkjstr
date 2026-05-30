@@ -79,11 +79,11 @@ references should stay as relative Markdown links.
 
 | Clause | Contract | Status | Notes |
 | --- | --- | --- | --- |
-| Budget contract subtree | [request-budget/README.md](../architecture/network/request-budget/README.md) | design-only | Docs define target behavior before source changes |
-| Typed NIP-11 limitations | [request-budget/nip11.md](../architecture/network/request-budget/nip11.md) | design-only | Source split and tests pending |
-| Effective per-relay limits | [request-budget/effective-limits.md](../architecture/network/request-budget/effective-limits.md) | design-only | Orchestration integration pending |
-| Request-size rejection | [request-budget/message-size.md](../architecture/network/request-budget/message-size.md) | design-only | Unit and relay-pool gates pending |
-| UI diagnostics | [tools/relay-management.md](tools/relay-management.md), [tools/stats.md](tools/stats.md) | design-only | Playwright gates pending |
+| Budget contract subtree | [request-budget/README.md](../architecture/network/request-budget/README.md) | implemented | request-budget source modules and unit tests |
+| Typed NIP-11 limitations | [request-budget/nip11.md](../architecture/network/request-budget/nip11.md) | implemented | `relay-info-parse.ts`, `relay-info.test.ts` |
+| Effective per-relay limits | [request-budget/effective-limits.md](../architecture/network/request-budget/effective-limits.md) | implemented | `relay-page-limits.ts`, `relay-page-limits.test.ts` |
+| Request-size rejection | [request-budget/message-size.md](../architecture/network/request-budget/message-size.md) | implemented | `relay-client.ts`, request-budget message-size tests |
+| UI diagnostics | [tools/relay-management.md](tools/relay-management.md), [tools/stats.md](tools/stats.md) | implemented | `RelayInfoDetails.svelte`, `NetworkStatsTab.svelte` |
 
 ## Feed Correctness
 

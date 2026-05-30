@@ -39,6 +39,10 @@ Read next: [protocol/README.md](protocol/README.md),
 - Relay reads use relay plus request-context scoring for scheduling diagnostics.
   Scoring never becomes a correctness filter and never permanently suppresses
   enabled relays.
+- NIP-11 relay information is parsed into typed top-level and limitation fields.
+  Request budgets use app caps plus typed relay limits to clamp per-relay
+  filters, compute read event caps, reject oversized `REQ` messages locally, and
+  expose policy diagnostics without suppressing enabled read relays.
 - Home, Global, Profile posts, Notifications, and safe Custom Request event-list
   reads use an adaptive temporal window controller. Grouped scans start at `1`
   minute, double the next adjacent window after complete sparse relay-shaped
