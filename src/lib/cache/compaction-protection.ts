@@ -32,8 +32,10 @@ export async function protectedEventIds(): Promise<Set<string>> {
   if (accountPubkeys.size > 0)
     await collectLatestByKindPubkeyForSet(3, accountPubkeys, ids);
   await browserDb()
-    .eventPriority.filter((row) => row.protected)
-    .each((row) => ids.add(row.id));
+    .cacheLedger.where('ownerKind')
+    .equals('event')
+    .filter((row) => row.protected)
+    .each((row) => ids.add(row.resourceId));
   return ids;
 }
 

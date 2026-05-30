@@ -3,7 +3,7 @@ import {
   compactFeedCoverage,
   deleteFeedCoverageForFeeds,
 } from '../events/feed-coverage-store';
-import type { EventPriorityRecord } from './event-priority';
+import type { CacheLedgerRecord } from './cache-ledger-record';
 
 export type PruneDeleteResult = {
   readonly prunedEvents: number;
@@ -11,9 +11,9 @@ export type PruneDeleteResult = {
 };
 
 export async function deletePrunedEvents(
-  rows: readonly EventPriorityRecord[],
+  rows: readonly CacheLedgerRecord[],
 ): Promise<PruneDeleteResult> {
-  const ids = rows.map((row) => row.id);
+  const ids = rows.map((row) => row.resourceId);
   if (ids.length === 0) return { prunedEvents: 0, prunedBytes: 0 };
   await browserDb().transaction(
     'rw',
@@ -21,12 +21,12 @@ export async function deletePrunedEvents(
       browserDb().events,
       browserDb().eventRelays,
       browserDb().eventTags,
-      browserDb().eventPriority,
+      browserDb().cacheLedger,
       browserDb().feedCursors,
     ],
     async () => {
       await browserDb().events.bulkDelete(ids);
-      await browserDb().eventPriority.bulkDelete(ids);
+      await browserDb().cacheLedger.bulkDelete(rows.map((row) => row.id));
       await Promise.all(
         ids.flatMap((id) => [
           browserDb().eventRelays.where('eventId').equals(id).delete(),

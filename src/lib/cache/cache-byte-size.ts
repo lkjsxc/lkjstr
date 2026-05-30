@@ -3,7 +3,7 @@ import type {
   EventTagRow,
   StoredEvent,
 } from '../events/types';
-import type { EventPriorityRecord } from './event-priority';
+import type { CacheLedgerRecord } from './cache-ledger-record';
 
 const encoder = new TextEncoder();
 
@@ -15,7 +15,7 @@ export function cacheByteSizeForEvent(
   stored: StoredEvent,
   receipts: readonly EventRelayReceipt[],
   tags: readonly EventTagRow[],
-  priority: EventPriorityRecord,
+  priority: CacheLedgerRecord,
 ): number {
   return (
     encodedJsonBytes(stored) +

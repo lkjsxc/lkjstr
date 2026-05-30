@@ -79,11 +79,13 @@ state lives, which modules own subscriptions, and how tabs close cleanly.
 - [data/feed-memory.md](data/feed-memory.md): feed windows and scroll anchors.
 - [data/feed-coverage.md](data/feed-coverage.md): durable feed range evidence
   and cache eligibility.
-- [data/retention/README.md](data/retention/README.md): score-based event
-  retention.
+- [data/local-cache-ledger.md](data/local-cache-ledger.md): shared local-cache
+  ledger.
+- [data/retention/README.md](data/retention/README.md): score-based
+  local-cache retention.
 - [data/retention/compaction.md](data/retention/compaction.md): compaction
   queries.
-- [data/retention/index-shape.md](data/retention/index-shape.md): priority index.
+- [data/retention/index-shape.md](data/retention/index-shape.md): ledger index.
 - [data/retention/score-policy.md](data/retention/score-policy.md): score rules.
 - [data/heap-retention.md](data/heap-retention.md): observed symptoms and
   investigation strategy.

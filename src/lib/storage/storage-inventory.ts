@@ -4,9 +4,10 @@ import { boundedStorageRead, indexedDbAvailable } from './safe-storage';
 
 export type StorageGroup =
   | 'protected'
-  | 'event-cache'
-  | 'derived-cache'
+  | 'prunable-cache'
+  | 'derived-page-cache'
   | 'diagnostics'
+  | 'ledger'
   | 'overhead'
   | 'unknown';
 
@@ -25,15 +26,15 @@ const tableGroups: Record<string, StorageGroup> = {
   tweetDrafts: 'protected',
   workspaces: 'protected',
   tabStates: 'protected',
-  notifications: 'protected',
-  events: 'event-cache',
-  eventPriority: 'event-cache',
-  eventRelays: 'event-cache',
-  eventTags: 'event-cache',
-  feedCursors: 'derived-cache',
-  feedCoverage: 'derived-cache',
-  feedScanHints: 'derived-cache',
-  jobs: 'derived-cache',
+  notifications: 'prunable-cache',
+  events: 'prunable-cache',
+  eventRelays: 'prunable-cache',
+  eventTags: 'prunable-cache',
+  cacheLedger: 'ledger',
+  feedCursors: 'derived-page-cache',
+  feedCoverage: 'derived-page-cache',
+  feedScanHints: 'derived-page-cache',
+  jobs: 'prunable-cache',
   relayInformation: 'diagnostics',
   relayDiagnosticSummaries: 'diagnostics',
   relayListSuggestions: 'diagnostics',

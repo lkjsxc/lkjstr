@@ -113,7 +113,8 @@ describe('cache compaction', () => {
     pinVisibleEvents('tab-a', ['runtime-pin']);
     expect([...pinnedEventIds()]).toEqual(['runtime-pin']);
     expect(eventPriorityRecord(baseEvent(100))).toMatchObject({
-      id: 'b',
+      id: 'event:b',
+      resourceId: 'b',
       protected: false,
       cacheBytes: 0,
     });
@@ -161,9 +162,10 @@ describe('cache compaction', () => {
 
 function priorityRecord(id: string, score: number, protectedRow: boolean) {
   return {
-    id,
+    id: `event:${id}`,
     ownerKind: 'event' as const,
     resourceKind: 'nostr-event' as const,
+    resourceId: id,
     score,
     createdAt: 1,
     protected: protectedRow,

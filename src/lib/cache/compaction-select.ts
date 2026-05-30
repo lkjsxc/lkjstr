@@ -1,40 +1,43 @@
-import type { EventPriorityRecord } from './event-priority';
 import { browserDb } from '../storage/browser-db';
+import type { CacheLedgerRecord } from './cache-ledger-record';
+import { compareCacheLedgerRows } from './cache-ledger-score';
 
 export function selectPruneIds(
-  rows: readonly EventPriorityRecord[],
+  rows: readonly CacheLedgerRecord[],
   protectedIds: ReadonlySet<string>,
   needed: number,
 ): string[] {
-  return selectPruneRows(rows, protectedIds, needed).map((row) => row.id);
+  return selectPruneRows(rows, protectedIds, needed).map(
+    (row) => row.resourceId,
+  );
 }
 
 export function selectPruneRows(
-  rows: readonly EventPriorityRecord[],
+  rows: readonly CacheLedgerRecord[],
   protectedIds: ReadonlySet<string>,
   needed: number,
-): EventPriorityRecord[] {
+): CacheLedgerRecord[] {
   return rows
     .filter((row) => isPrunablePriorityRow(row, protectedIds))
-    .sort((a, b) => a.score - b.score)
+    .sort(compareCacheLedgerRows)
     .slice(0, needed);
 }
 
 export function isPrunablePriorityRow(
-  row: EventPriorityRecord,
+  row: CacheLedgerRecord,
   protectedIds: ReadonlySet<string>,
 ): boolean {
-  return !protectedIds.has(row.id) && !row.protected;
+  return !protectedIds.has(row.resourceId) && !row.protected;
 }
 
 export async function lowestScorePruneRows(
   needed: number,
   protectedIds: Set<string>,
-): Promise<EventPriorityRecord[]> {
-  const rows: EventPriorityRecord[] = [];
+): Promise<CacheLedgerRecord[]> {
+  const rows: CacheLedgerRecord[] = [];
   await browserDb()
-    .eventPriority.orderBy('score')
-    .each((row: EventPriorityRecord) => {
+    .cacheLedger.orderBy('score')
+    .each((row: CacheLedgerRecord) => {
       if (rows.length >= needed) return false;
       if (isPrunablePriorityRow(row, protectedIds)) rows.push(row);
     });

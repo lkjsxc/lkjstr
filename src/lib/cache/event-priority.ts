@@ -2,16 +2,12 @@ import type { NostrEvent } from '../protocol';
 import type { EventTagRow } from '../events/types';
 import { browserDb } from '../storage/browser-db';
 import { indexedDbAvailable } from '../storage/safe-storage';
+import { cacheLedgerId } from './cache-ledger-id';
+import type { CacheLedgerRecord } from './cache-ledger-record';
 
-export type EventPriorityRecord = {
-  readonly id: string;
+export type EventPriorityRecord = CacheLedgerRecord & {
   readonly ownerKind: 'event';
   readonly resourceKind: 'nostr-event';
-  readonly score: number;
-  readonly createdAt: number;
-  readonly protected: boolean;
-  readonly cacheBytes: number;
-  readonly updatedAt: number;
 };
 
 export function scoreEvent(
@@ -72,9 +68,10 @@ export function eventPriorityRecord(
   updatedAt = Date.now(),
 ): EventPriorityRecord {
   return {
-    id: event.id,
+    id: cacheLedgerId('event', event.id),
     ownerKind: 'event',
     resourceKind: 'nostr-event',
+    resourceId: event.id,
     score: scoreEvent(event, tags),
     createdAt: event.created_at,
     protected: forceProtected,
@@ -91,7 +88,7 @@ export async function upsertEventPriority(
   updatedAt = Date.now(),
 ): Promise<void> {
   if (!indexedDbAvailable()) return;
-  await browserDb().eventPriority.put(
+  await browserDb().cacheLedger.put(
     eventPriorityRecord(event, tags, forceProtected, cacheBytes, updatedAt),
   );
   await bumpEventTargets(event);
@@ -102,9 +99,11 @@ export async function bumpEventPriority(
   delta: number,
 ): Promise<void> {
   if (!indexedDbAvailable()) return;
-  const existing = await browserDb().eventPriority.get(eventId);
+  const existing = await browserDb().cacheLedger.get(
+    cacheLedgerId('event', eventId),
+  );
   if (!existing || existing.protected) return;
-  await browserDb().eventPriority.put({
+  await browserDb().cacheLedger.put({
     ...existing,
     score: existing.score + delta,
     updatedAt: Date.now(),

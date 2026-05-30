@@ -36,7 +36,7 @@ export async function writeStoredEvent(input: StoredEventWrite): Promise<void> {
       browserDb().events,
       browserDb().eventRelays,
       browserDb().eventTags,
-      browserDb().eventPriority,
+      browserDb().cacheLedger,
       async () => {
         await browserDb().events.put(input.stored);
         await browserDb().eventRelays.bulkPut([...input.receipts]);

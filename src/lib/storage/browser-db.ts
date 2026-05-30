@@ -19,7 +19,7 @@ import type { RelayRoute, RelayRouteBlock } from '../relays/relay-route-types';
 import type { RelaySet } from '../relays/relay-store';
 import type { SettingOverride } from '../settings/settings-store';
 import type { TweetDraft } from '../tweet/draft-store';
-import type { EventPriorityRecord } from '../cache/event-priority';
+import type { CacheLedgerRecord } from '../cache/cache-ledger-record';
 import type { Workspace } from '../workspace/workspace';
 
 export type TabStateRecord = {
@@ -38,7 +38,7 @@ export class LkjstrDb extends Dexie {
   notifications!: Table<NotificationRecord, string>;
   tweetDrafts!: Table<TweetDraft, string>;
   events!: Table<StoredEvent, string>;
-  eventPriority!: Table<EventPriorityRecord, string>;
+  cacheLedger!: Table<CacheLedgerRecord, string>;
   eventRelays!: Table<EventRelayReceipt, string>;
   eventTags!: Table<EventTagRow, string>;
   feedCursors!: Table<FeedCursor, string>;
@@ -66,7 +66,7 @@ export class LkjstrDb extends Dexie {
         }
       >
     )[schemaMethod];
-    schema.call(this, 16).stores({
+    schema.call(this, 17).stores({
       workspaces: '&id, updatedAt, activeAccountId',
       accounts: '&id, pubkey, signerType, updatedAt, lastUsedAt',
       localAccountSecrets: '&accountId, pubkey, updatedAt',
@@ -76,7 +76,9 @@ export class LkjstrDb extends Dexie {
       tweetDrafts: '&id, accountId, updatedAt',
       events:
         '&id, pubkey, kind, created_at, [kind+created_at], [pubkey+kind+created_at]',
-      eventPriority: '&id, score, createdAt, protected',
+      eventPriority: null,
+      cacheLedger:
+        '&id, ownerKind, resourceKind, resourceId, score, createdAt, updatedAt, protected, accountPubkey, feedKey, relayUrl, [protected+score], [ownerKind+score], [resourceKind+score]',
       eventRelays: '&id, eventId, relayUrl, receivedAt',
       eventTags:
         '&id, eventId, tagName, tagValue, created_at, [tagName+tagValue], [tagName+tagValue+created_at]',

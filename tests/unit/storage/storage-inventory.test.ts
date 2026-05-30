@@ -6,9 +6,11 @@ import {
 
 describe('storage inventory', () => {
   it('classifies storage tables by ownership group', () => {
-    expect(storageGroup('events')).toBe('event-cache');
-    expect(storageGroup('eventRelays')).toBe('event-cache');
-    expect(storageGroup('feedCoverage')).toBe('derived-cache');
+    expect(storageGroup('events')).toBe('prunable-cache');
+    expect(storageGroup('eventRelays')).toBe('prunable-cache');
+    expect(storageGroup('notifications')).toBe('prunable-cache');
+    expect(storageGroup('cacheLedger')).toBe('ledger');
+    expect(storageGroup('feedCoverage')).toBe('derived-page-cache');
     expect(storageGroup('relayInformation')).toBe('diagnostics');
     expect(storageGroup('localAccountSecrets')).toBe('protected');
     expect(storageGroup('futureTable')).toBe('unknown');
