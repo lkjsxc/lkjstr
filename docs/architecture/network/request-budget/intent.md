@@ -10,19 +10,19 @@ does not define relay routing or user-facing rows.
 The orchestrator derives budgets from these fields after route planning and
 before sending reads:
 
-| Field | Role |
-| --- | --- |
-| `surface` | home, global, notifications, profile, thread, search, custom-request, or author-context. |
-| `phase` | bootstrap, page, or live. |
-| `direction` | initial, older, or newer when paging. |
-| `purpose` | feed, metadata, event-lookup, route-discovery, or search. |
-| `pageSize` | visible result target supplied by the runtime. |
-| `selectedRelays` | user-selected read relay base set. |
-| `routeGroupKey` | resolved relay group identity for targeted reads. |
-| `filterShape` | normalized filter structure before budget clamping. |
-| `authors` | sorted author set for feed or metadata reads. |
-| `cursor` | paging boundary when present. |
-| `exactEventLookup` | true for `ids`, direct event reference, and exact lookup requests. |
+| Field              | Role                                                                                     |
+| ------------------ | ---------------------------------------------------------------------------------------- |
+| `surface`          | home, global, notifications, profile, thread, search, custom-request, or author-context. |
+| `phase`            | bootstrap, page, or live.                                                                |
+| `direction`        | initial, older, or newer when paging.                                                    |
+| `purpose`          | feed, metadata, event-lookup, route-discovery, or search.                                |
+| `pageSize`         | visible result target supplied by the runtime.                                           |
+| `selectedRelays`   | user-selected read relay base set.                                                       |
+| `routeGroupKey`    | resolved relay group identity for targeted reads.                                        |
+| `filterShape`      | normalized filter structure before budget clamping.                                      |
+| `authors`          | sorted author set for feed or metadata reads.                                            |
+| `cursor`           | paging boundary when present.                                                            |
+| `exactEventLookup` | true for `ids`, direct event reference, and exact lookup requests.                       |
 
 ## Semantics
 

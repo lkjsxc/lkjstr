@@ -31,22 +31,22 @@ without rejecting the whole document. Non-object documents are rejected.
 
 `limitation` is stored internally with camelCase names:
 
-| NIP-11 field | Internal field | Use |
-| --- | --- | --- |
-| `max_message_length` | `maxMessageLength` | outbound `REQ` byte bound |
-| `max_subscriptions` | `maxSubscriptions` | active per-relay read slot bound |
-| `max_limit` | `maxLimit` | per-filter `limit` clamp |
-| `max_subid_length` | `maxSubIdLength` | relay-facing subscription id bound |
-| `max_subscription_id_length` | `maxSubIdLength` | accepted alias |
-| `max_event_tags` | `maxEventTags` | diagnostic and write safety input |
-| `max_content_length` | `maxContentLength` | diagnostic and write safety input |
-| `min_pow_difficulty` | `minPowDifficulty` | policy diagnostic |
-| `auth_required` | `authRequired` | policy diagnostic |
-| `payment_required` | `paymentRequired` | policy diagnostic |
-| `restricted_writes` | `restrictedWrites` | policy diagnostic |
-| `created_at_lower_limit` | `createdAtLowerLimit` | read-bound diagnostic |
-| `created_at_upper_limit` | `createdAtUpperLimit` | read-bound diagnostic |
-| `default_limit` | `defaultLimit` | explicit-limit decision input |
+| NIP-11 field                 | Internal field        | Use                                |
+| ---------------------------- | --------------------- | ---------------------------------- |
+| `max_message_length`         | `maxMessageLength`    | outbound `REQ` byte bound          |
+| `max_subscriptions`          | `maxSubscriptions`    | active per-relay read slot bound   |
+| `max_limit`                  | `maxLimit`            | per-filter `limit` clamp           |
+| `max_subid_length`           | `maxSubIdLength`      | relay-facing subscription id bound |
+| `max_subscription_id_length` | `maxSubIdLength`      | accepted alias                     |
+| `max_event_tags`             | `maxEventTags`        | diagnostic and write safety input  |
+| `max_content_length`         | `maxContentLength`    | diagnostic and write safety input  |
+| `min_pow_difficulty`         | `minPowDifficulty`    | policy diagnostic                  |
+| `auth_required`              | `authRequired`        | policy diagnostic                  |
+| `payment_required`           | `paymentRequired`     | policy diagnostic                  |
+| `restricted_writes`          | `restrictedWrites`    | policy diagnostic                  |
+| `created_at_lower_limit`     | `createdAtLowerLimit` | read-bound diagnostic              |
+| `created_at_upper_limit`     | `createdAtUpperLimit` | read-bound diagnostic              |
+| `default_limit`              | `defaultLimit`        | explicit-limit decision input      |
 
 Integer fields accept positive integers only except `supported_nips`, which
 accepts non-negative integers. Boolean fields accept booleans only.

@@ -20,8 +20,8 @@ and tracked in [doc-impl-audit.md](doc-impl-audit.md).
 
 ## Completed (network)
 
-| Item | Contract |
-| --- | --- |
+| Item                                            | Contract                                                                     |
+| ----------------------------------------------- | ---------------------------------------------------------------------------- |
 | NIP-11-driven request budgeting and diagnostics | [request-budget/README.md](../architecture/network/request-budget/README.md) |
 
 ## Completed (workspace)
@@ -69,14 +69,14 @@ and tracked in [doc-impl-audit.md](doc-impl-audit.md).
 
 ## Diagnostics and Settings
 
-| Item                                                    | Destination doc                                      | Test strategy                                                         |
-| ------------------------------------------------------- | ---------------------------------------------------- | --------------------------------------------------------------------- |
-| Relay diagnostics polish beyond current counters        | [tools/stats.md](tools/stats.md)                     | Playwright Stats tab rows; unit bounded diagnostic summary            |
-| Notification feed reliability under relay churn         | [feeds/notifications.md](feeds/notifications.md)     | Playwright notifications with synthetic events                        |
-| Profile feed reliability under relay churn              | [feeds/profiles.md](feeds/profiles.md)               | Playwright profile hydration                                          |
-| Event reference rendering hardening                     | [event-tree.md](../architecture/data/event-tree.md)  | Unit NIP-10/NIP-18 derivation; Playwright reference unavailable state |
-| Custom emoji rendering hardening                        | [custom-emoji.md](../protocol/custom-emoji.md)       | Unit NIP-30 parse; Playwright emoji in note                           |
-| Upload settings clarity                                 | [tools/upload-settings.md](tools/upload-settings.md) | Playwright Upload Settings tab fields                                 |
+| Item                                             | Destination doc                                      | Test strategy                                                         |
+| ------------------------------------------------ | ---------------------------------------------------- | --------------------------------------------------------------------- |
+| Relay diagnostics polish beyond current counters | [tools/stats.md](tools/stats.md)                     | Playwright Stats tab rows; unit bounded diagnostic summary            |
+| Notification feed reliability under relay churn  | [feeds/notifications.md](feeds/notifications.md)     | Playwright notifications with synthetic events                        |
+| Profile feed reliability under relay churn       | [feeds/profiles.md](feeds/profiles.md)               | Playwright profile hydration                                          |
+| Event reference rendering hardening              | [event-tree.md](../architecture/data/event-tree.md)  | Unit NIP-10/NIP-18 derivation; Playwright reference unavailable state |
+| Custom emoji rendering hardening                 | [custom-emoji.md](../protocol/custom-emoji.md)       | Unit NIP-30 parse; Playwright emoji in note                           |
+| Upload settings clarity                          | [tools/upload-settings.md](tools/upload-settings.md) | Playwright Upload Settings tab fields                                 |
 
 ## Deferred (design-only or out of scope)
 

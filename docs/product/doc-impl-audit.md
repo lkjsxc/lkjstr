@@ -62,28 +62,28 @@ references should stay as relative Markdown links.
 
 ## Subscription Orchestration
 
-| Clause                         | Contract                        | Status      | Notes                                                                                               |
-| ------------------------------ | ------------------------------- | ----------- | --------------------------------------------------------------------------------------------------- |
-| Intent-only orchestration docs | [subscription-orchestration/README.md](../architecture/network/subscription-orchestration/README.md) | implemented | demand-intent, lease-key, page-read-dedupe |
-| Wire-equivalent lease keys     | [lease-key.md](../architecture/network/subscription-orchestration/lease-key.md) | implemented | `lease-key.ts` |
-| Semantic page read dedupe      | [page-read-dedupe.md](../architecture/network/subscription-orchestration/page-read-dedupe.md) | implemented | `readPageByIntent`, `pageIntentSemanticKey`, page-read tests |
-| Shared live lease across tabs  | [compatibility.md](../architecture/network/subscription-orchestration/compatibility.md) | implemented | fingerprint + channel merge |
-| Stats orchestration counters   | [metrics.md](../architecture/network/subscription-orchestration/metrics.md) | implemented | metrics + RuntimeMemoryPanel |
-| Subscription E2E gate          | [tests.md](../architecture/network/subscription-orchestration/tests.md) | implemented | `subscription-three-home.spec.ts` + visibility churn |
-| Hidden tab demand pause        | [owner-visibility.md](../architecture/network/subscription-orchestration/owner-visibility.md) | implemented | setVisibility on feed runtimes |
-| All surfaces on intent API     | [orchestration-bridge.md](../architecture/feeds/orchestration-bridge.md) | implemented | Home/Profile route-fingerprinted reads, selected tools, and direct exact-read exceptions documented |
-| Shared Home backend query      | [home-query-lifecycle.md](../architecture/backend/home-query-lifecycle.md) | implemented | `attachHomeQuery`, shared key excludes tab id |
-| Feed route isolation           | [feed-route-isolation.md](../architecture/network/subscription-orchestration/feed-route-isolation.md) | implemented | Unit and browser gates cover Home/Profile route keys, live replacement, Notifications isolation |
+| Clause                         | Contract                                                                                              | Status      | Notes                                                                                               |
+| ------------------------------ | ----------------------------------------------------------------------------------------------------- | ----------- | --------------------------------------------------------------------------------------------------- |
+| Intent-only orchestration docs | [subscription-orchestration/README.md](../architecture/network/subscription-orchestration/README.md)  | implemented | demand-intent, lease-key, page-read-dedupe                                                          |
+| Wire-equivalent lease keys     | [lease-key.md](../architecture/network/subscription-orchestration/lease-key.md)                       | implemented | `lease-key.ts`                                                                                      |
+| Semantic page read dedupe      | [page-read-dedupe.md](../architecture/network/subscription-orchestration/page-read-dedupe.md)         | implemented | `readPageByIntent`, `pageIntentSemanticKey`, page-read tests                                        |
+| Shared live lease across tabs  | [compatibility.md](../architecture/network/subscription-orchestration/compatibility.md)               | implemented | fingerprint + channel merge                                                                         |
+| Stats orchestration counters   | [metrics.md](../architecture/network/subscription-orchestration/metrics.md)                           | implemented | metrics + RuntimeMemoryPanel                                                                        |
+| Subscription E2E gate          | [tests.md](../architecture/network/subscription-orchestration/tests.md)                               | implemented | `subscription-three-home.spec.ts` + visibility churn                                                |
+| Hidden tab demand pause        | [owner-visibility.md](../architecture/network/subscription-orchestration/owner-visibility.md)         | implemented | setVisibility on feed runtimes                                                                      |
+| All surfaces on intent API     | [orchestration-bridge.md](../architecture/feeds/orchestration-bridge.md)                              | implemented | Home/Profile route-fingerprinted reads, selected tools, and direct exact-read exceptions documented |
+| Shared Home backend query      | [home-query-lifecycle.md](../architecture/backend/home-query-lifecycle.md)                            | implemented | `attachHomeQuery`, shared key excludes tab id                                                       |
+| Feed route isolation           | [feed-route-isolation.md](../architecture/network/subscription-orchestration/feed-route-isolation.md) | implemented | Unit and browser gates cover Home/Profile route keys, live replacement, Notifications isolation     |
 
 ## Request Budgeting
 
-| Clause | Contract | Status | Notes |
-| --- | --- | --- | --- |
-| Budget contract subtree | [request-budget/README.md](../architecture/network/request-budget/README.md) | implemented | request-budget source modules and unit tests |
-| Typed NIP-11 limitations | [request-budget/nip11.md](../architecture/network/request-budget/nip11.md) | implemented | `relay-info-parse.ts`, `relay-info.test.ts` |
-| Effective per-relay limits | [request-budget/effective-limits.md](../architecture/network/request-budget/effective-limits.md) | implemented | `relay-page-limits.ts`, `relay-page-limits.test.ts` |
-| Request-size rejection | [request-budget/message-size.md](../architecture/network/request-budget/message-size.md) | implemented | `relay-client.ts`, request-budget message-size tests |
-| UI diagnostics | [tools/relay-management.md](tools/relay-management.md), [tools/stats.md](tools/stats.md) | implemented | `RelayInfoDetails.svelte`, `NetworkStatsTab.svelte` |
+| Clause                     | Contract                                                                                         | Status      | Notes                                                |
+| -------------------------- | ------------------------------------------------------------------------------------------------ | ----------- | ---------------------------------------------------- |
+| Budget contract subtree    | [request-budget/README.md](../architecture/network/request-budget/README.md)                     | implemented | request-budget source modules and unit tests         |
+| Typed NIP-11 limitations   | [request-budget/nip11.md](../architecture/network/request-budget/nip11.md)                       | implemented | `relay-info-parse.ts`, `relay-info.test.ts`          |
+| Effective per-relay limits | [request-budget/effective-limits.md](../architecture/network/request-budget/effective-limits.md) | implemented | `relay-page-limits.ts`, `relay-page-limits.test.ts`  |
+| Request-size rejection     | [request-budget/message-size.md](../architecture/network/request-budget/message-size.md)         | implemented | `relay-client.ts`, request-budget message-size tests |
+| UI diagnostics             | [tools/relay-management.md](tools/relay-management.md), [tools/stats.md](tools/stats.md)         | implemented | `RelayInfoDetails.svelte`, `NetworkStatsTab.svelte`  |
 
 ## Feed Correctness
 

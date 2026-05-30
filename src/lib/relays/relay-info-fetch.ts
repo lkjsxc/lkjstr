@@ -24,7 +24,12 @@ export async function fetchRelayInformation(
     return record;
   } catch (cause) {
     const error = cause instanceof Error ? cause.message : 'fetch failed';
-    const record = { relayUrl, fetchedAt, status: 'unavailable' as const, error };
+    const record = {
+      relayUrl,
+      fetchedAt,
+      status: 'unavailable' as const,
+      error,
+    };
     await saveRelayInformation(record);
     return record;
   } finally {

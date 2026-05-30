@@ -31,19 +31,19 @@ Runtime `subId` values must not appear in dedupe keys.
 
 ## Page intent fields
 
-| Field            | Role                                     |
-| ---------------- | ---------------------------------------- |
-| `surface`        | same enum as live                        |
-| `owner`          | refcount for bootstrap tracking          |
-| `phase`          | bootstrap or page                        |
-| `authors`        | sorted author pubkeys                    |
-| `selectedRelays` | selected relay set                       |
-| `pageSize`       | page limit                               |
-| `direction`      | initial, older, newer                    |
-| `cursor`         | optional compound cursor for older/newer |
-| `purpose`        | feed, metadata, event-lookup, route-discovery, search |
-| `relayFilters`   | exact user or runtime filter shape       |
-| `routeFingerprint` | resolved route group identity          |
+| Field              | Role                                                  |
+| ------------------ | ----------------------------------------------------- |
+| `surface`          | same enum as live                                     |
+| `owner`            | refcount for bootstrap tracking                       |
+| `phase`            | bootstrap or page                                     |
+| `authors`          | sorted author pubkeys                                 |
+| `selectedRelays`   | selected relay set                                    |
+| `pageSize`         | page limit                                            |
+| `direction`        | initial, older, newer                                 |
+| `cursor`           | optional compound cursor for older/newer              |
+| `purpose`          | feed, metadata, event-lookup, route-discovery, search |
+| `relayFilters`     | exact user or runtime filter shape                    |
+| `routeFingerprint` | resolved route group identity                         |
 
 ## Budget-relevant rules
 
