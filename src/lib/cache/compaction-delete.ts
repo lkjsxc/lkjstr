@@ -4,6 +4,7 @@ import {
   deleteAllFeedCoverageAfterEventCompaction,
   deleteFeedCoverageForFeeds,
 } from '../events/feed-coverage-store';
+import { directLedgerResourceSpecs } from '../storage/ledger/ledger-manifest';
 import { cacheLedgerId } from './cache-ledger-id';
 import type { CacheLedgerRecord } from './cache-ledger-record';
 
@@ -85,32 +86,13 @@ async function deleteDirectCacheRows(
       browserDb().cacheLedger,
     ],
     async () => {
-      await deleteByKind(
-        rows,
-        'notification-record',
-        browserDb().notifications,
-      );
-      await deleteByKind(rows, 'feed-cursor', browserDb().feedCursors);
-      await deleteByKind(rows, 'coverage-row', browserDb().feedCoverage);
-      await deleteByKind(rows, 'scan-hint', browserDb().feedScanHints);
-      await deleteByKind(
-        rows,
-        'relay-summary',
-        browserDb().relayDiagnosticSummaries,
-      );
-      await deleteByKind(rows, 'relay-info', browserDb().relayInformation);
-      await deleteByKind(
-        rows,
-        'relay-list-suggestion',
-        browserDb().relayListSuggestions,
-      );
-      await deleteByKind(
-        rows,
-        'author-relay-route',
-        browserDb().authorRelayRoutes,
-      );
-      await deleteByKind(rows, 'job-record', browserDb().jobs);
-      await deleteByKind(rows, 'tab-state', browserDb().tabStates);
+      for (const spec of directLedgerResourceSpecs()) {
+        await deleteByKind(
+          rows,
+          spec.resourceKind,
+          browserDb()[spec.owningTable],
+        );
+      }
       await browserDb().cacheLedger.bulkDelete(rows.map((row) => row.id));
     },
   );
