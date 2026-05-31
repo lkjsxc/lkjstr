@@ -8,6 +8,7 @@ import {
   addReadonlyAccount,
   installSyntheticRelay,
   openCleanWorkspace,
+  waitForSyntheticEvent,
 } from './timeline-relay-helpers';
 import { openNewTabOption, selectStartupTab } from './workspace-helpers';
 
@@ -18,7 +19,7 @@ test('Stats labels active subscriptions and orchestration counters', async ({
   const authorKey = generateSecretKey();
   const active = getPublicKey(activeKey);
   const author = getPublicKey(authorKey);
-  const now = Math.floor(Date.now() / 1000);
+  const now = Math.floor(Date.now() / 1000) - 5;
   const followList = finalizeEvent(
     { created_at: now, kind: 3, tags: [['p', author]], content: '' },
     activeKey,
@@ -37,6 +38,7 @@ test('Stats labels active subscriptions and orchestration counters', async ({
   await openCleanWorkspace(page);
   await addReadonlyAccount(page, active);
   await selectStartupTab(page, 'Home');
+  await waitForSyntheticEvent(page, note.id);
   await expect(page.getByText('stats labeled subscription note')).toBeVisible({
     timeout: 15_000,
   });
