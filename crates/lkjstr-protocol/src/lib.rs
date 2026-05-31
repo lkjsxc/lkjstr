@@ -5,6 +5,9 @@ pub mod error;
 pub mod event;
 pub mod event_id;
 mod event_tags;
+pub mod filter;
+mod message_parts;
+pub mod messages;
 
 pub use bytes::{
     ascii_to_bytes, bytes_to_ascii, bytes_to_hex, bytes_to_utf8, hex_to_bytes, is_lower_hex,
@@ -17,3 +20,8 @@ pub use event::{
     parse_nostr_event_json, parse_nostr_event_value, parse_unsigned_event_value,
 };
 pub use event_id::{compute_event_id, serialize_event};
+pub use filter::{NostrFilter, matches_any_filter, matches_filter, parse_filter_value};
+pub use messages::{
+    ClientMessage, MessageErrorCode, MessageParseError, RelayMessage, encode_client_message,
+    parse_client_message_value, parse_relay_message,
+};

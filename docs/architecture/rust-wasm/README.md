@@ -21,7 +21,7 @@ This subtree defines the Rust/WASM client target.
 
 - Implemented today: browser-first SvelteKit and TypeScript runtime documented
   in [../README.md](../README.md), plus Rust workspace checks and Rust protocol
-  byte, event, and event-ID behavior.
+  byte, event, event-ID, filter, and relay-message behavior.
 - Design-only target: remaining Rust relay, storage, app, UI, and WASM browser
   surfaces.
 - Not allowed: remote app backend, relay proxy requirement, server account
