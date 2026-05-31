@@ -94,6 +94,12 @@ Session-memory snapshots mirror the same shape for fast restore within
 session TTL. Older pane-keyed rows are ignored and deleted during workspace
 cleanup.
 
+Each `tabStates` write registers a `tab-state` ledger row. Normal workspace
+cleanup deletes absent snapshots and their ledger rows immediately. If an
+absent snapshot survives because cleanup did not run, cache compaction may
+delete it through the `tab-state` dispatcher. Ledger repair backfills missing
+tab-state rows from the current table and removes orphan tab-state ledger rows.
+
 Payloads may include scroll anchors, cursors, flags, cheap tool fields, and up to
 `200` event or notification ids. They must not include full events, profiles,
 relay diagnostics, active workers, subscriptions, or unbounded arrays.
