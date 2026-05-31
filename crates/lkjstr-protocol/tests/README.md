@@ -12,4 +12,6 @@ Protocol tests port current TypeScript protocol behavior to Rust.
 - `filter_test.rs`: relay filter parsing and matching.
 - `messages_test.rs`: client and relay message codecs.
 - `nip19_test.rs`: NIP-19 scalar and TLV entity round trips.
+- `nip30_test.rs`: NIP-30 custom emoji validation.
+- `nip36_test.rs`: NIP-36 content-warning tags.
 - `relay_url_test.rs`: relay URL normalization.

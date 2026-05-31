@@ -43,6 +43,11 @@ Read next: [protocol/README.md](protocol/README.md),
   Request budgets use app caps plus typed relay limits to clamp per-relay
   filters, compute read event caps, reject oversized `REQ` messages locally, and
   expose policy diagnostics without suppressing enabled read relays.
+- Rust protocol support now implements byte codecs, event parsing, frame policy
+  checks, event ordering, canonical event serialization, event ID hashing,
+  filter matching, relay message basics, Schnorr verification, local signing,
+  relay URL normalization, NIP-19 scalar plus TLV entity encoding and decoding,
+  NIP-30 custom emoji helpers, and NIP-36 content-warning helpers.
 - Home, Global, Profile posts, Notifications, and safe Custom Request event-list
   reads use an adaptive temporal window controller. Grouped scans start at `1`
   minute, double the next adjacent window after complete sparse relay-shaped

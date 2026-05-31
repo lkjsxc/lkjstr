@@ -14,6 +14,8 @@ pub mod messages;
 pub mod nip19;
 mod nip19_encode;
 mod nip19_tlv;
+pub mod nip30;
+pub mod nip36;
 pub mod relay_url;
 
 pub use bytes::{
@@ -46,4 +48,10 @@ pub use nip19_encode::{
     encode_naddr, encode_nevent, encode_nip19, encode_note, encode_nprofile, encode_npub,
     encode_nsec,
 };
+pub use nip30::{
+    CustomEmoji, custom_emoji_tag, custom_emoji_tag_parts, custom_emoji_token_text, custom_emojis,
+    parse_custom_emoji_input, valid_custom_emoji_address, valid_custom_emoji_shortcode,
+    valid_custom_emoji_url, valid_incoming_custom_emoji_shortcode,
+};
+pub use nip36::{content_warning_reason, content_warning_tag, has_content_warning};
 pub use relay_url::normalize_relay_url;
