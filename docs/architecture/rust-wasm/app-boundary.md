@@ -3,8 +3,8 @@
 ## Purpose
 
 This file defines the Rust application composition boundary. Status:
-implemented for pure account-domain records and local signing helpers;
-design-only for browser service composition.
+implemented for pure account-domain records, local signing helpers, and
+workspace layout reducers; design-only for browser service composition.
 
 ## Owner
 
@@ -26,6 +26,9 @@ does not introduce remote account state.
 ## Boundaries
 
 - Pure product state lives in `lkjstr-domain`.
+- Workspace layout, tab groups, tab records, focus, startup layout, tab opening,
+  pane splitting, tab close recovery, and zero-layout recovery are pure
+  `lkjstr-domain` reducers.
 - Protocol validation and signing live in `lkjstr-protocol`.
 - Relay scheduling and subscription state live in `lkjstr-relays`.
 - Durable storage repositories live in `lkjstr-storage`.

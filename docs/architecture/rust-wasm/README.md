@@ -26,15 +26,16 @@ This subtree defines the Rust/WASM client target.
   reaction parsing, action tag builder, content-derived tag, NIP-51 emoji
   source, NIP-57 zap, NIP-65 relay-list metadata, NIP-96 upload metadata, and
   NIP-98 HTTP auth behavior. `lkjstr-web` exposes the implemented protocol
-  bridge through browser-tested WASM exports.
-  `lkjstr-domain` owns pure account records, local secret row shape, local
-  signing helpers, and npub mining prefix rules. `lkjstr-storage` owns the
-  executable storage table manifest, ledger resource map, and typed storage
-  operation outcomes. `lkjstr-relays` owns pure send queue, request scheduler,
-  subscription id, alias, and close tombstone state machines.
-- Design-only target: remaining Rust app, UI, full relay client reducer,
-  WebSocket adapter, storage repositories, IndexedDB adapter, and non-protocol
-  browser host surfaces.
+  bridge through browser-tested WASM exports. `lkjstr-domain` owns pure account
+  records, local secret row shape, local signing helpers, npub mining prefix
+  rules, and workspace layout, tab, focus, startup, split, close, and recovery
+  reducers. `lkjstr-storage` owns the executable storage table manifest, ledger
+  resource map, and typed storage operation outcomes. `lkjstr-relays` owns pure
+  send queue, request scheduler, subscription id, alias, and close tombstone
+  state machines.
+- Design-only target: remaining Rust app, UI, workspace snapshot runtime, full
+  relay client reducer, WebSocket adapter, storage repositories, IndexedDB
+  adapter, and non-protocol browser host surfaces.
 - Not allowed: remote app backend, relay proxy requirement, server account
   system, fake relay data, fake protocol results, or placeholder UI.
 

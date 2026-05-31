@@ -3,6 +3,7 @@
 pub mod accounts;
 pub mod local_account;
 pub mod npub_miner;
+pub mod workspace;
 
 pub use accounts::{
     Account, AccountCapabilities, SignerType, capabilities_for, create_account,
@@ -15,6 +16,11 @@ pub use local_account::{
 };
 pub use npub_miner::{
     NpubPrefix, NpubPrefixError, estimated_attempts, npub_matches_prefix, parse_npub_prefix,
+};
+pub use workspace::{
+    BootstrapIds, LayoutNode, NewPaneIds, NewTabIds, PaneNode, SplitDirection, TabGroup, TabKind,
+    Workspace, WorkspaceIds, WorkspaceTab, bootstrap_workspace, close_workspace_tab,
+    create_workspace, ensure_usable_workspace, focus_tab, open_tab, split_focused_pane, title_for,
 };
 
 /// Crate ownership marker used by repository checks and docs.

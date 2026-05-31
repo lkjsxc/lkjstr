@@ -107,6 +107,10 @@ Read next: [architecture/README.md](architecture/README.md),
   subscription id, subscription alias, and close tombstone state machines.
   WebSocket adapters and the full Rust relay client reducer are not yet
   implemented.
+- Rust workspace support now implements pure layout, pane, tab, tab-group,
+  clean startup, focus, open-tab, split-pane, close-tab, and usable-workspace
+  recovery reducers. Browser persistence, tab snapshots, and UI adapters remain
+  in the current TypeScript runtime.
 - Relay ingress uses app-owned byte and structure caps before expensive JSON
   and event parsing.
 - IndexedDB remains durable browser-owned data; memory relief prunes only
