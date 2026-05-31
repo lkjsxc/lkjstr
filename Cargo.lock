@@ -209,6 +209,10 @@ checksum = "b6d2cec3eae94f9f509c767b45932f1ada8350c4bdb85af2fcab4a3c14807981"
 [[package]]
 name = "lkjstr-domain"
 version = "0.0.0"
+dependencies = [
+ "lkjstr-protocol",
+ "serde",
+]
 
 [[package]]
 name = "lkjstr-protocol"

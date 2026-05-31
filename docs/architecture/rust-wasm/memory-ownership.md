@@ -2,7 +2,9 @@
 
 ## Purpose
 
-This file defines Rust/WASM resource cleanup rules. Status: design-only.
+This file defines Rust/WASM resource cleanup rules. Status: implemented for
+secret debug redaction in the pure account-domain slice; design-only for live
+browser resources.
 
 ## Resource Owners
 

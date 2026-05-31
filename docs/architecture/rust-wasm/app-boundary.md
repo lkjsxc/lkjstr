@@ -3,7 +3,8 @@
 ## Purpose
 
 This file defines the Rust application composition boundary. Status:
-design-only.
+implemented for pure account-domain records and local signing helpers;
+design-only for browser service composition.
 
 ## Owner
 
@@ -16,6 +17,8 @@ does not introduce remote account state.
 - Own shared Home query state above tab components.
 - Own timeline, profile, thread, notification, search, and tool runtimes.
 - Coordinate Tweet signing, queueing, drafts, and publish jobs.
+- Own account selection and secret repository wiring above the pure
+  `lkjstr-domain` account helpers.
 - Route UI commands to protocol, relay, storage, and host services.
 - Expose compact view models and command results to `lkjstr-ui`.
 - Own startup recovery, job recovery, account selection, and settings loading.

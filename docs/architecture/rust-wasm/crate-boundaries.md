@@ -3,8 +3,9 @@
 ## Purpose
 
 This file assigns Rust crate ownership. Status: implemented for
-`lkjstr-protocol`, `lkjstr-web` protocol exports, and `lkjstr-xtask`; other
-product crates remain design-only.
+`lkjstr-protocol`, pure account-domain helpers in `lkjstr-domain`,
+`lkjstr-web` protocol exports, and `lkjstr-xtask`; other product crates remain
+design-only.
 
 ## Crates
 
