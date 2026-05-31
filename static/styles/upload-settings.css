@@ -19,7 +19,7 @@
   gap: 8px;
 }
 
-.upload-settings-tab input[type="text"],
+.upload-settings-tab input[type='text'],
 .upload-settings-tab input:not([type]) {
   width: min(100%, 420px);
 }
@@ -36,7 +36,7 @@
   overflow-wrap: anywhere;
 }
 
-.upload-settings-tab [role="alert"] {
+.upload-settings-tab [role='alert'] {
   margin: 0;
   color: var(--lkjstr-danger, #8a1f11);
 }

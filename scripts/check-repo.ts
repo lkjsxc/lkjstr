@@ -28,7 +28,10 @@ const skipDirs = new Set([
   'build',
   'coverage',
   'data',
+  'dist',
   'node_modules',
+  'playwright-report',
+  'target',
   'test-results',
   'tmp',
 ]);

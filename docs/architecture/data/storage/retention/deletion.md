@@ -21,9 +21,9 @@ touching protected data.
 - Stale tab-state deletion does not delete active workspace snapshots.
 - Deleting any ledger-managed resource must not leave orphan ledger rows.
 
-## Legacy Cleanup Rule
+## Old Storage Cleanup Rule
 
-Manual repair may delete legacy stores or databases only when a cleanup
+Manual repair may delete old stores or databases only when a cleanup
 classifier marks them obsolete and recoverable. Unknown stores and unknown
 databases are visible in Stats but are not auto-deleted. Protected stores,
 local signing secrets, settings, relay sets, workspace state, drafts, safety

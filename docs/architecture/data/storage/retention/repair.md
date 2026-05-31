@@ -16,14 +16,14 @@ deleting protected records or trusting unavailable stores.
 7. Skip orphan deletion when target state is unavailable.
 8. Delete unowned cache rows only when a classifier proves they are
    recoverable and not protected.
-9. Delete obsolete legacy stores or databases only when the cleanup allowlist
+9. Delete obsolete old stores or databases only when the cleanup allowlist
    classifies them as recoverable.
 10. Write repair metadata.
 
 ## Metadata
 
 Repair metadata records rows scanned, chunks processed, missing rows inserted,
-stale rows updated, orphan rows deleted, unowned rows deleted, legacy stores or
+stale rows updated, orphan rows deleted, unowned rows deleted, old stores or
 databases deleted, unavailable targets skipped, and elapsed time.
 
 ## Rule

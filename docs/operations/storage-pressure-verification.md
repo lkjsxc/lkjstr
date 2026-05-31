@@ -29,7 +29,7 @@ not treat unknown origin usage as success.
   ledger row count, orphan rows, missing rows, pressure state, and final stop
   reason.
 - Stats separates table-estimated bytes, localStorage bytes, Cache Storage
-  bytes, unknown legacy or unowned storage, and residual browser overhead.
+  bytes, unknown old or unowned storage, and residual browser overhead.
 - `Repair storage` deletes orphan ledger rows, backfills missing rows, removes
   safe unowned cache rows, and never adds ledger rows for protected route
   blocks.

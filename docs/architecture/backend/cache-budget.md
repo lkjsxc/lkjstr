@@ -27,7 +27,7 @@ absorb storage pressure.
   exceeds the target, report that condition and do not delete protected records.
 - Stats must show a storage inventory so the user can see which IndexedDB
   databases, object stores, ledger resource kinds, non-indexed stores,
-  unknown or legacy stores, and residual browser overhead consume the budget.
+  unknown or old stores, and residual browser overhead consume the budget.
 
 ## Algorithm
 

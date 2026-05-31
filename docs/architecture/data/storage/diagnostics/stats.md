@@ -19,7 +19,7 @@ Stats groups bytes as:
 - cache metadata
 - metadata
 - non-IndexedDB storage
-- unknown legacy or unowned storage
+- unknown old or unowned storage
 - residual browser overhead
 
 ## Required Fields
@@ -37,7 +37,7 @@ timeout, quota failure, blocked storage, corrupt rows, and late-settled work.
 
 Stats exposes manual refresh, compact, and repair actions. Repair fixes missing
 or stale ledger rows, deletes orphan ledger rows, removes safe unowned cache
-rows, and deletes only legacy stores or databases classified as obsolete and
+rows, and deletes only old stores or databases classified as obsolete and
 recoverable. Compact uses browser origin usage when available and keeps
 deleting bounded batches of prunable ledger resources until the site budget is
 met or a stop reason explains why it cannot continue.

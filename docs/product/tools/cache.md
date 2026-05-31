@@ -34,12 +34,12 @@ surface; status appears in Stats.
 
 - Stats shows cache row counts, configured site budget bytes, browser origin
   usage, physical object-store bytes, ledger-accounted resource bytes,
-  prunable ledger bytes, protected user data estimate, unknown legacy or
+  prunable ledger bytes, protected user data estimate, unknown old or
   unowned bytes, residual browser overhead, last enforcement reason, pruned
   resource count, pruned byte estimate, and remaining pressure cause.
 - Stats shows a storage inventory table with each IndexedDB database and object
   store, row count, estimated bytes, ownership group, and scan status. Unknown
-  or legacy stores are visible rows, not hidden in residual browser overhead
+  or old stores are visible rows, not hidden in residual browser overhead
   when database enumeration is available.
 - Stats shows ledger inventory by owner kind and resource kind so
   notification-heavy and page-heavy pressure is visible.

@@ -83,7 +83,7 @@ Read next: [architecture/README.md](architecture/README.md),
   events, notifications, feed/page rows, recoverable relay diagnostics,
   protocol cache, route evidence, finished jobs, and stale snapshots. Stats
   separates physical object-store estimates, ledger-accounted bytes, protected
-  data, prunable cache, unknown legacy or unowned storage, and residual browser
+  data, prunable cache, unknown old or unowned storage, and residual browser
   overhead. Compaction prunes bounded score-ordered recoverable resources until
   browser usage is below target or a stop reason explains what remains. Runtime
   feed windows remain bounded. The live durable table contract is maintained in

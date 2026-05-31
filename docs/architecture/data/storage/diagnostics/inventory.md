@@ -21,7 +21,7 @@ harmless overhead.
   route-block, active job, active snapshot, and safety configuration data.
 - **Prunable cache** is recoverable app-managed data with a ledger row, delete
   dispatcher, byte estimate, and no durable or dynamic protection.
-- **Unknown legacy or unowned storage** is an IndexedDB database or object store
+- **Unknown old or unowned storage** is an IndexedDB database or object store
   lkjstr can enumerate but cannot classify as a current protected or
   ledger-managed store.
 - **Residual browser overhead** is the remaining browser origin usage after all
@@ -44,12 +44,12 @@ Each table inventory row includes:
 
 The inventory enumerates every IndexedDB database through
 `indexedDB.databases()` when supported. For the `lkjstr` database it opens the
-database and scans every object store in `objectStoreNames`, including legacy
+database and scans every object store in `objectStoreNames`, including old
 or unexpected stores not present in the current Dexie manifest. Other
 enumerated databases are reported as recoverable, protected, or unknown at the
 database level unless a cleanup allowlist classifies them more precisely.
 
-Known stores come from the Storage Manifest. Legacy and unknown stores are
+Known stores come from the Storage Manifest. Old and unknown stores are
 visible rows; they are never folded into residual overhead while enumeration
 was possible.
 
@@ -86,7 +86,7 @@ non-indexed rows with status and reason.
 
 ## Gap Rule
 
-Inventory first subtracts enumerated current stores, legacy or unknown stores,
+Inventory first subtracts enumerated current stores, old or unknown stores,
 localStorage, and Cache Storage from browser origin usage. Only the remaining
 positive gap is `residual-browser-overhead`. If IndexedDB database enumeration
 is unsupported or incomplete, Stats says that explicitly and does not label the

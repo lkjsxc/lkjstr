@@ -27,7 +27,7 @@ Stats shows current-session relay counters and persisted operational summaries.
   browser origin usage, physical object-store bytes, ledger-accounted resource
   bytes, prunable cache bytes, protected ledger bytes, protected user estimate,
   derived page/feed cache bytes, diagnostics and metadata bytes, localStorage
-  bytes, Cache Storage bytes, unknown legacy or unowned storage bytes, residual
+  bytes, Cache Storage bytes, unknown old or unowned storage bytes, residual
   browser overhead, inventory scan status, ledger inventory by resource kind,
   ledger row count, orphan ledger rows, missing ledger rows, last repair result,
   last enforcement reason, pruned resource count, pruned byte estimate, skipped
@@ -42,7 +42,7 @@ Stats shows current-session relay counters and persisted operational summaries.
 - Manual cache actions are `Refresh storage inventory`, `Compact now`, and
   `Repair storage`. They use real storage paths and are never placeholders.
   Repair fixes missing or stale ledger rows, deletes orphan ledger rows, removes
-  safe unowned cache rows, and deletes only obsolete recoverable legacy stores
+  safe unowned cache rows, and deletes only obsolete recoverable old stores
   or databases. If a browser profile has blocked, unavailable, or
   schema-incomplete storage, the actions report through the normal cache status
   path and keep the tab usable. `Compact now` may fall back to the displayed

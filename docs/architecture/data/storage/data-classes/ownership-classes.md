@@ -18,7 +18,7 @@ manifest, docs, retention, and Stats.
 - `ledger`: accounting rows for recoverable cache resources.
 - `metadata`: status or repair metadata owned by storage diagnostics.
 - `non-indexed-browser-storage`: measured browser storage outside IndexedDB.
-- `unknown-legacy-or-unowned-storage`: enumerated storage not owned by the
+- `unknown-old-or-unowned-storage`: enumerated storage not owned by the
   current manifest or cleanup classifier.
 - `residual-browser-overhead`: browser usage not explained by enumerated
   storage estimates.
@@ -35,7 +35,7 @@ manifest, docs, retention, and Stats.
 | `ledger` | `ledger` |
 | `metadata` | `metadata` |
 | `non-indexed-browser-storage` | `non-indexed` |
-| `unknown-legacy-or-unowned-storage` | `unknown` |
+| `unknown-old-or-unowned-storage` | `unknown` |
 | `residual-browser-overhead` | `overhead` |
 
 ## Rule

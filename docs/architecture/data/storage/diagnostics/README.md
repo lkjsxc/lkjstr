@@ -16,6 +16,6 @@ and which verification proves storage behavior.
 
 Diagnostics may be partial, but they must be explicit. A timeout, unavailable
 store, unsupported API, or incomplete inventory is reported as such. Partial
-byte counts are useful only when paired with status and reason. Unknown legacy
+byte counts are useful only when paired with status and reason. Unknown old
 or unowned storage is a visible inventory class. Only the remaining positive
 gap after enumeration is residual browser overhead.

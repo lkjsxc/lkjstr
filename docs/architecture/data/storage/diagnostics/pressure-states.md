@@ -13,7 +13,7 @@ browser usage, site budget, ledger estimates, and inventory status.
 | `compacted-under-budget` | compaction brought usage under target |
 | `no-prunable-candidates` | pressure remains and no safe candidate is available |
 | `protected-only` | pressure remains because remaining known data is protected |
-| `unknown-unowned-usage` | pressure remains in legacy, unknown, unowned, or residual storage |
+| `unknown-unowned-usage` | pressure remains in old, unknown, unowned, or residual storage |
 | `inventory-incomplete` | inventory timed out or could not account for usage |
 | `quota-pressure` | browser quota pressure remains after app compaction |
 | `compaction-error` | deletion or re-read failed during enforcement |
