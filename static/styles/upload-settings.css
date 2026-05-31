@@ -1,0 +1,42 @@
+.upload-settings-tab {
+  display: grid;
+  align-content: start;
+  gap: 14px;
+  max-width: 760px;
+}
+
+.upload-settings-tab fieldset {
+  display: grid;
+  gap: 8px;
+  margin: 0;
+  padding: 12px;
+  border: 1px solid var(--lkjstr-border, #b9b8b1);
+}
+
+.upload-settings-tab label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.upload-settings-tab input[type="text"],
+.upload-settings-tab input:not([type]) {
+  width: min(100%, 420px);
+}
+
+.upload-settings-summary {
+  display: grid;
+  grid-template-columns: minmax(120px, max-content) minmax(0, 1fr);
+  gap: 6px 12px;
+  margin: 0;
+}
+
+.upload-settings-summary dd {
+  margin: 0;
+  overflow-wrap: anywhere;
+}
+
+.upload-settings-tab [role="alert"] {
+  margin: 0;
+  color: var(--lkjstr-danger, #8a1f11);
+}

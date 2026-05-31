@@ -13,6 +13,8 @@ use crate::workspace::settings_provider::SettingsProvider;
 use crate::workspace::state::TabSequence;
 use crate::workspace::stats::StatsTab;
 use crate::workspace::stats_provider::StatsProvider;
+use crate::workspace::upload_settings::UploadSettingsTab;
+use crate::workspace::upload_settings_provider::UploadSettingsProvider;
 use crate::workspace::welcome::WelcomeTab;
 
 #[component]
@@ -26,6 +28,7 @@ pub fn TabBody(
     relay_settings_provider: Option<RelaySettingsProvider>,
     stats_provider: Option<StatsProvider>,
     settings_provider: Option<SettingsProvider>,
+    upload_settings_provider: Option<UploadSettingsProvider>,
 ) -> impl IntoView {
     let kind = tab.kind;
     let tab_id = tab.id;
@@ -41,6 +44,7 @@ pub fn TabBody(
         relay_settings_provider,
         stats_provider,
         settings_provider,
+        upload_settings_provider,
     };
     view! {
         <div class="lkjstr-tab-body" data-tab-kind=tab_kind_attr(kind)>
@@ -61,6 +65,7 @@ struct TabContentInput {
     relay_settings_provider: Option<RelaySettingsProvider>,
     stats_provider: Option<StatsProvider>,
     settings_provider: Option<SettingsProvider>,
+    upload_settings_provider: Option<UploadSettingsProvider>,
 }
 
 fn tab_content(input: TabContentInput) -> impl IntoView {
@@ -100,6 +105,10 @@ fn tab_content(input: TabContentInput) -> impl IntoView {
             <SettingsTab provider=input.settings_provider />
         }
         .into_any(),
+        TabKind::UploadSettings => view! {
+            <UploadSettingsTab provider=input.upload_settings_provider />
+        }
+        .into_any(),
         _ => view! {
             <div class="lkjstr-pending-surface">
                 <p>{pending_message(input.kind)}</p>
@@ -116,7 +125,7 @@ fn pending_message(kind: TabKind) -> &'static str {
         TabKind::Notifications => "The Rust Notifications body is not converted yet.",
         TabKind::Profile => "The Rust Profile body is not converted yet.",
         TabKind::ProfileEdit => "The Rust Profile Edit body is not converted yet.",
-        TabKind::UploadSettings => "The Rust Upload Settings body is not converted yet.",
+        TabKind::UploadSettings => "",
         TabKind::AccountManager => "",
         TabKind::NpubMiner => "The Rust Mine npub body is not converted yet.",
         TabKind::Thread => "The Rust Thread body is not converted yet.",

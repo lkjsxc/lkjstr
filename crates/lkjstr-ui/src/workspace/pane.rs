@@ -9,6 +9,7 @@ use crate::workspace::settings_provider::SettingsProvider;
 use crate::workspace::state::{self, TabSequence};
 use crate::workspace::stats_provider::StatsProvider;
 use crate::workspace::tab_body::TabBody;
+use crate::workspace::upload_settings_provider::UploadSettingsProvider;
 
 #[component]
 pub fn PaneView(
@@ -20,6 +21,7 @@ pub fn PaneView(
     relay_settings_provider: Option<RelaySettingsProvider>,
     stats_provider: Option<StatsProvider>,
     settings_provider: Option<SettingsProvider>,
+    upload_settings_provider: Option<UploadSettingsProvider>,
 ) -> impl IntoView {
     let pane_id = pane.id.clone();
     let pane_attr = pane.id.clone();
@@ -31,6 +33,7 @@ pub fn PaneView(
     let body_relay_settings_provider = relay_settings_provider.clone();
     let body_stats_provider = stats_provider.clone();
     let body_settings_provider = settings_provider.clone();
+    let body_upload_settings_provider = upload_settings_provider.clone();
     let title = move || state::active_title(runtime, &pane_id);
 
     view! {
@@ -74,6 +77,7 @@ pub fn PaneView(
                     let relay_settings_provider = body_relay_settings_provider.clone();
                     let stats_provider = body_stats_provider.clone();
                     let settings_provider = body_settings_provider.clone();
+                    let upload_settings_provider = body_upload_settings_provider.clone();
                     state::active_tab(runtime, &pane_id).into_iter().map(move |tab| {
                         view! {
                             <TabBody
@@ -86,6 +90,7 @@ pub fn PaneView(
                                 relay_settings_provider=relay_settings_provider.clone()
                                 stats_provider=stats_provider.clone()
                                 settings_provider=settings_provider.clone()
+                                upload_settings_provider=upload_settings_provider.clone()
                             />
                         }
                     }).collect_view()

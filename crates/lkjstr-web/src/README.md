@@ -14,6 +14,8 @@ Source files expose Rust application behavior to the browser through
 - `relay_settings_host.rs`: browser-backed Relay Settings command provider.
 - `response.rs`: structured JavaScript response helpers.
 - `settings_host.rs`: browser-backed Settings command provider.
+- `upload_discovery.rs`: browser `fetch` NIP-96 endpoint resolution.
+- `upload_settings_host.rs`: browser-backed Upload Settings command provider.
 
 `lib.rs` also owns the WASM start hook that loads workspace startup state from
 IndexedDB before mounting the Rust UI shell.

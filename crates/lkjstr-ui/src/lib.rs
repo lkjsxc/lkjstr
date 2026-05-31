@@ -8,6 +8,7 @@ pub use workspace::{
     AccountsCommand, AccountsComplete, AccountsProvider, AccountsResult, RelaySettingsCommand,
     RelaySettingsComplete, RelaySettingsProvider, RelaySettingsResult, SettingsCommand,
     SettingsComplete, SettingsProvider, SettingsResult, StatsComplete, StatsProvider,
+    UploadSettingsCommand, UploadSettingsComplete, UploadSettingsProvider, UploadSettingsResult,
     WorkspacePersistence,
 };
 pub use workspace::{AccountsIdCommand, AccountsInputCommand};
@@ -15,6 +16,9 @@ pub use workspace::{
     RelayIdCommand, RelayInputCommand, RelayPatchCommand, RelayPurposeCommand, RelaySetIdCommand,
 };
 pub use workspace::{SettingsImportCommand, SettingsKeyCommand, SettingsValueCommand};
+pub use workspace::{
+    UploadBoolCommand, UploadDiscoverCommand, UploadProviderCommand, UploadTextCommand,
+};
 
 #[cfg(target_arch = "wasm32")]
 pub fn mount_app() {
@@ -48,6 +52,7 @@ pub fn mount_app_with_host(
     relay_settings_provider: RelaySettingsProvider,
     stats_provider: StatsProvider,
     settings_provider: SettingsProvider,
+    upload_settings_provider: UploadSettingsProvider,
 ) {
     leptos::mount::mount_to_body(move || {
         leptos::view! {
@@ -58,6 +63,7 @@ pub fn mount_app_with_host(
                 relay_settings_provider=relay_settings_provider.clone()
                 stats_provider=stats_provider.clone()
                 settings_provider=settings_provider.clone()
+                upload_settings_provider=upload_settings_provider.clone()
             />
         }
     });

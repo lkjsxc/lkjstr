@@ -8,6 +8,10 @@ mod relay_settings_host;
 mod response;
 #[cfg(target_arch = "wasm32")]
 mod settings_host;
+#[cfg(target_arch = "wasm32")]
+mod upload_discovery;
+#[cfg(target_arch = "wasm32")]
+mod upload_settings_host;
 
 #[cfg(target_arch = "wasm32")]
 pub mod indexed_db;
@@ -36,7 +40,8 @@ pub fn mount_rust_workspace_shell_from_db(db_name: String) {
         let accounts_provider = accounts_host::accounts_provider(db_name.clone());
         let relay_settings_provider = relay_settings_host::relay_settings_provider(db_name.clone());
         let stats_provider = stats_provider(db_name.clone());
-        let settings_provider = settings_host::settings_provider(db_name);
+        let settings_provider = settings_host::settings_provider(db_name.clone());
+        let upload_settings_provider = upload_settings_host::upload_settings_provider(db_name);
         lkjstr_ui::mount_app_with_host(
             startup,
             persistence,
@@ -44,6 +49,7 @@ pub fn mount_rust_workspace_shell_from_db(db_name: String) {
             relay_settings_provider,
             stats_provider,
             settings_provider,
+            upload_settings_provider,
         );
     });
 }

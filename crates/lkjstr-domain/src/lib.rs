@@ -4,6 +4,7 @@ pub mod accounts;
 pub mod local_account;
 pub mod npub_miner;
 pub mod relay_sets;
+pub mod upload_settings;
 pub mod workspace;
 
 pub use accounts::{
@@ -23,6 +24,11 @@ pub use relay_sets::{
     RelaySetError, add_relay, default_discovery_relay_set, default_user_relay_set, ensure_user_set,
     patch_relay, remove_relay, reset_relay_live_state, restore_default_relay_set, seed_relay_sets,
     sorted_relay_sets,
+};
+pub use upload_settings::{
+    UploadProvider, UploadProviderConfig, UploadSettings, default_upload_settings,
+    upload_provider_configs, upload_provider_from_key, upload_provider_key, upload_provider_label,
+    upload_settings, valid_custom_upload_server,
 };
 pub use workspace::{
     BootstrapIds, EdgePaneIds, FeedCursorPoint, FeedRuntimeSnapshotSource, FeedSnapshotSeed,

@@ -45,11 +45,14 @@ command.
 The Rust Relay Settings body renders protected relay-set rows, seeds default
 user/discovery sets, edits relay enablement and user read/write flags, and
 restores default sets through Rust storage commands.
+The Rust Upload Settings body renders shared Tweet media upload settings,
+persists provider/custom-server/no-transform changes, and performs real NIP-96
+discovery through the Rust browser host.
 
 Not implemented yet: feed surfaces, most tool surfaces, relay-backed content,
 Stats relay/job/compaction diagnostics, Settings appearance side effects,
-Accounts NIP-07 login, Relay Settings NIP-11/suggestions/diagnostics, and full
-responsive/a11y QA.
+Accounts NIP-07 login, Relay Settings NIP-11/suggestions/diagnostics, Upload
+Settings file upload/NIP-98 transport, and full responsive/a11y QA.
 
 ## Component Split
 

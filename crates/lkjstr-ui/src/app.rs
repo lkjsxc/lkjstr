@@ -2,8 +2,8 @@ use leptos::prelude::*;
 use lkjstr_app::{StartupInput, WorkspaceRuntimeState, default_recovery_ids, start_workspace};
 
 use crate::workspace::{
-    AccountsProvider, RelaySettingsProvider, SettingsProvider, StatsProvider, WorkspacePersistence,
-    WorkspaceShell,
+    AccountsProvider, RelaySettingsProvider, SettingsProvider, StatsProvider,
+    UploadSettingsProvider, WorkspacePersistence, WorkspaceShell,
 };
 
 #[component]
@@ -19,6 +19,7 @@ pub fn AppWithStartup(
     #[prop(optional)] relay_settings_provider: Option<RelaySettingsProvider>,
     #[prop(optional)] stats_provider: Option<StatsProvider>,
     #[prop(optional)] settings_provider: Option<SettingsProvider>,
+    #[prop(optional)] upload_settings_provider: Option<UploadSettingsProvider>,
 ) -> impl IntoView {
     let startup = start_workspace(startup);
     let runtime = RwSignal::new(startup.state);
@@ -31,6 +32,7 @@ pub fn AppWithStartup(
             relay_settings_provider=relay_settings_provider
             stats_provider=stats_provider
             settings_provider=settings_provider
+            upload_settings_provider=upload_settings_provider
         />
     }
 }
