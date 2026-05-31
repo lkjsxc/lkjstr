@@ -47,6 +47,7 @@ The ledger must not delete these records:
 - Workspace layout.
 - Current workspace tab snapshots needed for recovery.
 - Pending or running jobs.
+- Relay route blocks that suppress unsafe or user-blocked routes.
 - Latest active-account follow lists and latest metadata rows that the product
   marks as critical.
 - Any explicit product-owned safety or configuration row.

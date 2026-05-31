@@ -14,7 +14,8 @@ not treat unknown origin usage as success.
    database: events, event relay receipts, tag rows, notifications, feed/page
    rows, diagnostics, and matching `cacheLedger` rows.
 4. Keep protected rows present: settings, workspace, account metadata, relay
-   sets, drafts, active jobs, and active tab snapshots when the test owns them.
+   sets, drafts, active jobs, active tab snapshots, and route-block safety rows
+   when the test owns them.
 5. Trigger the real manual `Compact now` action or call the public app storage
    path used by that action.
 6. Refresh Stats through the real cache status path.
@@ -26,6 +27,10 @@ not treat unknown origin usage as success.
 - Deleted resources do not leave orphan ledger rows.
 - Stats shows last compaction reason, pruned resource count, pruned bytes,
   ledger row count, orphan rows, missing rows, and pressure state.
+- Stats separates table-estimated bytes, localStorage bytes, Cache Storage
+  bytes, and browser-overhead-or-unknown bytes.
+- `Repair cache ledger` deletes orphan ledger rows and backfills missing rows
+  without adding ledger rows for protected route blocks.
 - If browser usage remains over target, Stats reports `candidate-limited`,
   `protected-only`, `unknown-only`, `inventory-incomplete`,
   `quota-unavailable`, or `storage-api-unavailable`; it must not report silent

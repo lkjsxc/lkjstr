@@ -34,6 +34,17 @@ Storage docs define browser persistence ownership.
 No current store may classify as `unknown`. A new store that is not documented
 with a classification is a repository invariant failure.
 
+## Route Blocks
+
+`relayRouteBlocks` rows suppress relay routes for a purpose after user,
+runtime, or safety decisions. They are protected safety/configuration rows, not
+recoverable route evidence. They stay outside `cacheLedger`, diagnostics
+cleanup, and route-evidence pruning.
+
+The in-memory route-block map is bounded, but durable rows stay until their
+owner clears the block. Cache pressure reports their bytes as protected safety
+pressure instead of deleting them.
+
 ## Contract
 
 Local signing secrets are stored in dedicated IndexedDB tables separate from
@@ -94,8 +105,9 @@ durably or dynamically protected. Event cleanup removes cached events, relay
 receipts, tag rows, and coverage affected by deleted event data. Notification
 cleanup removes only notification rows. Feed/page cleanup removes cursors,
 coverage rows, and scan hints without deleting events. Diagnostics cleanup
-removes recoverable relay summaries, relay information, suggestions, route
-evidence, and finished jobs without deleting user relay configuration.
+removes recoverable relay summaries, relay information, suggestions, author
+route evidence, and finished jobs without deleting user relay configuration or
+route-block safety rows.
 
 Cleanup must not prune accounts, local signing secrets, settings, relay sets,
 workspace layout, Tweet drafts, active tab snapshots, active jobs, or user-owned
