@@ -79,15 +79,15 @@ Read next: [architecture/README.md](architecture/README.md),
   user-owned relay configuration are never deleted by cache cleanup.
 - Durable local cache has no application item-count ceiling. `cache.maxBytes`
   defaults to `67108864` bytes and acts as the site storage target when browser
-  estimates are available. `cacheLedger` implements shared byte-accounting
-  across events, notifications, feed/page rows, recoverable relay diagnostics,
-  protocol cache, route evidence, finished jobs, and stale snapshots. Compaction
-  prunes the lowest-value recoverable resource class, not only cached events.
-  Stats reports table-level storage inventory, ledger inventory, protected
-  estimates, prunable estimates, and unexplained browser overhead so
-  notification-heavy and page-heavy pressure can be diagnosed. Runtime feed
-  windows remain bounded. The live durable table contract is maintained in the
-  [Storage Manifest](architecture/data/storage/data-classes/table-manifest.md).
+  origin estimates are available. `cacheLedger` records resource bytes for
+  events, notifications, feed/page rows, recoverable relay diagnostics,
+  protocol cache, route evidence, finished jobs, and stale snapshots. Stats
+  separates physical object-store estimates, ledger-accounted bytes, protected
+  data, prunable cache, unknown legacy or unowned storage, and residual browser
+  overhead. Compaction prunes bounded score-ordered recoverable resources until
+  browser usage is below target or a stop reason explains what remains. Runtime
+  feed windows remain bounded. The live durable table contract is maintained in
+  the [Storage Manifest](architecture/data/storage/data-classes/table-manifest.md).
 - Storage is browser-owned and manifest-driven. The table manifest defines every
   live IndexedDB table, its data class, inventory group, Dexie schema string,
   and retention flags. Ledger resource ownership and storage repository modules

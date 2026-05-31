@@ -11,23 +11,36 @@ Stats groups bytes as:
 
 - protected user data
 - protected safety data
-- recoverable cache
+- physical object-store bytes
+- ledger-accounted resource bytes
+- prunable cache
 - derived feed cache
 - diagnostics
-- ledger
+- cache metadata
 - metadata
 - non-IndexedDB storage
-- browser overhead or unknown usage
+- unknown legacy or unowned storage
+- residual browser overhead
 
 ## Required Fields
 
 Stats shows browser usage, site budget, total ledger bytes, prunable ledger
 bytes, protected estimates, localStorage bytes, Cache Storage bytes, overhead,
-inventory status, ledger rows by owner and resource kind, last compaction
+unknown or unowned bytes, inventory status, ledger rows by owner and resource
+kind, physical rows by IndexedDB database and object store, last compaction
 reason, deleted resource count, and deleted byte estimate.
 
 Operation diagnostics distinguish durable success, unavailable storage,
 timeout, quota failure, blocked storage, corrupt rows, and late-settled work.
+
+## Action Contract
+
+Stats exposes manual refresh, compact, and repair actions. Repair fixes missing
+or stale ledger rows, deletes orphan ledger rows, removes safe unowned cache
+rows, and deletes only legacy stores or databases classified as obsolete and
+recoverable. Compact uses browser origin usage when available and keeps
+deleting bounded batches of prunable ledger resources until the site budget is
+met or a stop reason explains why it cannot continue.
 
 ## Rule
 

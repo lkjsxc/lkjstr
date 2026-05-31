@@ -19,13 +19,15 @@ absorb storage pressure.
   relay configuration, latest metadata needed by cached pubkeys, active-account
   follow lists, runtime pins, newest retained notifications, open feed keys,
   and explicit `forceProtected` rows.
-- Compaction stops cleanly when browser usage is under target, ledger bytes are
-  under target and browser usage is unavailable, no prunable candidates remain,
-  or only dynamically protected candidates remain.
-- If protected or unknown usage alone exceeds the target, report
-  `protected-or-unknown-usage` and do not delete protected records.
+- Compaction stops cleanly only with an explicit stop reason: `below-budget`,
+  `no-prunable-candidates`, `protected-only`, `unknown-unowned-usage`,
+  `inventory-incomplete`, `storage-api-unavailable`, `quota-pressure`, or
+  `compaction-error`.
+- If protected, unknown, unowned, incomplete, or residual browser usage alone
+  exceeds the target, report that condition and do not delete protected records.
 - Stats must show a storage inventory so the user can see which IndexedDB
-  tables, ledger resource kinds, and browser-overhead gap consume the budget.
+  databases, object stores, ledger resource kinds, non-indexed stores,
+  unknown or legacy stores, and residual browser overhead consume the budget.
 
 ## Algorithm
 
@@ -34,17 +36,19 @@ absorb storage pressure.
 3. Read `navigator.storage.estimate()` when supported.
 4. Compute the site target as `cache.maxBytes`, clamped by quota pressure when
    a browser quota estimate exists.
-5. Estimate protected user bytes, prunable ledger bytes, and unknown or
-   overhead bytes from table inventory plus browser usage.
-6. Compact score-ordered prunable ledger rows until the target is met or no
-   eligible candidate remains.
-7. Re-read ledger bytes and browser usage after each batch when possible.
+5. Estimate protected user bytes, prunable ledger bytes, unknown or unowned
+   bytes, and residual browser overhead from inventory plus browser usage.
+6. Compact score-ordered prunable ledger rows in bounded batches until browser
+   usage is below target or no safe candidate remains.
+7. Re-read ledger bytes, inventory, and browser usage after each batch when
+   possible.
 8. Record the result in `cacheMeta`: site budget bytes, ledger bytes, prunable
-   bytes, protected estimate, unknown or overhead bytes, browser usage bytes,
-   pruned resource count, pruned byte estimate, skipped reason, and remaining
-   pressure state.
-9. Diagnostics estimate per-table bytes and report browser usage not explained
-   by table JSON estimates as overhead or unknown usage.
+   bytes, protected estimate, unknown or unowned bytes, residual overhead
+   bytes, browser usage bytes, pruned resource count, pruned byte estimate,
+   skipped reason, and remaining pressure state.
+9. Diagnostics estimate per-store bytes and report browser usage not explained
+   by inventory estimates as residual overhead, never as unscanned IndexedDB
+   data when database enumeration was available.
 
 ## Triggers
 

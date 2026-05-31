@@ -26,14 +26,17 @@ not treat unknown origin usage as success.
 - Protected rows remain.
 - Deleted resources do not leave orphan ledger rows.
 - Stats shows last compaction reason, pruned resource count, pruned bytes,
-  ledger row count, orphan rows, missing rows, and pressure state.
+  ledger row count, orphan rows, missing rows, pressure state, and final stop
+  reason.
 - Stats separates table-estimated bytes, localStorage bytes, Cache Storage
-  bytes, and browser-overhead-or-unknown bytes.
-- `Repair cache ledger` deletes orphan ledger rows and backfills missing rows
-  without adding ledger rows for protected route blocks.
+  bytes, unknown legacy or unowned storage, and residual browser overhead.
+- `Repair storage` deletes orphan ledger rows, backfills missing rows, removes
+  safe unowned cache rows, and never adds ledger rows for protected route
+  blocks.
 - If browser usage remains over target, Stats reports `candidate-limited`,
-  `protected-only`, `unknown-only`, `inventory-incomplete`,
-  `quota-unavailable`, or `storage-api-unavailable`; it must not report silent
+  `no-prunable-candidates`, `protected-only`, `unknown-unowned-usage`,
+  `inventory-incomplete`, `quota-pressure`, `quota-unavailable`,
+  `storage-api-unavailable`, or `compaction-error`; it must not report silent
   success.
 
 ## Commands

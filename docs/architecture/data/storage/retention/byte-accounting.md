@@ -9,8 +9,13 @@ pretending to replace browser quota measurements.
 
 - Browser `navigator.storage.estimate()` is the source for total origin usage.
 - Table estimates are diagnostic JSON-encoding estimates.
-- Ledger `cacheBytes` counts directly owned resource rows.
-- Unknown browser overhead is reported separately.
+- Physical object-store bytes and ledger-accounted resource bytes are separate
+  numbers. The `cacheLedger` store has its own physical store estimate, while
+  `cacheLedger.cacheBytes` counts owned resources selected by retention.
+- Ledger `cacheBytes` counts directly owned recoverable resource rows and
+  associated owned rows when a resource spans stores.
+- Unknown legacy or unowned storage and residual browser overhead are separate
+  inventory groups.
 - Zero or missing `cacheBytes` is a repair target.
 
 ## Resource Estimates
@@ -32,5 +37,6 @@ is ledger-backed.
 ## Stats Rule
 
 Stats compares browser usage with known IndexedDB table estimates, ledger
-estimates, localStorage bytes, Cache Storage bytes, and overhead. It must not
-hide pressure only because ledger-estimated bytes are below the target.
+estimates, localStorage bytes, Cache Storage bytes, unknown legacy or unowned
+bytes, and residual browser overhead. It must not hide pressure only because
+ledger-estimated bytes are below the target.

@@ -24,24 +24,29 @@ Stats shows current-session relay counters and persisted operational summaries.
   active demands, active leases, live leases, bootstrap/page reads, and
   in-flight reads.
 - Cache status includes event, profile, notification, site budget bytes,
-  browser usage, ledger bytes, prunable cache bytes, protected ledger bytes,
-  protected user estimate, table-estimated bytes, localStorage bytes, Cache
-  Storage bytes, unknown/browser overhead, inventory scan status, ledger
-  inventory by resource kind, ledger row count, orphan ledger rows, missing
-  ledger rows, last repair result, last enforcement reason, pruned resource
-  count, pruned byte estimate, skipped candidate counts, and pressure state.
+  browser origin usage, physical object-store bytes, ledger-accounted resource
+  bytes, prunable cache bytes, protected ledger bytes, protected user estimate,
+  derived page/feed cache bytes, diagnostics and metadata bytes, localStorage
+  bytes, Cache Storage bytes, unknown legacy or unowned storage bytes, residual
+  browser overhead, inventory scan status, ledger inventory by resource kind,
+  ledger row count, orphan ledger rows, missing ledger rows, last repair result,
+  last enforcement reason, pruned resource count, pruned byte estimate, skipped
+  candidate counts, and pressure state.
 - Cache status must show exact rows for browser usage, site target, remaining
-  over-target bytes, ledger bytes, prunable ledger bytes, protected estimate,
-  table-estimated bytes, localStorage bytes, Cache Storage bytes,
-  browser-overhead-or-unknown bytes, inventory scan status, ledger row count,
-  orphan ledger rows, missing ledger rows, last repair result, last compaction
-  result, pruned resources, pruned bytes, and pressure state.
+  over-target bytes, physical IndexedDB bytes, ledger-accounted bytes,
+  prunable ledger bytes, protected estimate, derived feed cache bytes,
+  diagnostics bytes, localStorage bytes, Cache Storage bytes, unknown or
+  unowned bytes, residual overhead bytes, inventory scan status, ledger row
+  count, orphan ledger rows, missing ledger rows, last repair result, last
+  compaction result, pruned resources, pruned bytes, and pressure state.
 - Manual cache actions are `Refresh storage inventory`, `Compact now`, and
-  `Repair cache ledger`. They use real storage paths and are never placeholders.
-  If a browser profile has blocked, unavailable, or schema-incomplete storage,
-  the actions must report through the normal cache status path and keep the tab
-  usable. `Compact now` may fall back to the currently displayed site target
-  when the settings store cannot be read.
+  `Repair storage`. They use real storage paths and are never placeholders.
+  Repair fixes missing or stale ledger rows, deletes orphan ledger rows, removes
+  safe unowned cache rows, and deletes only obsolete recoverable legacy stores
+  or databases. If a browser profile has blocked, unavailable, or
+  schema-incomplete storage, the actions report through the normal cache status
+  path and keep the tab usable. `Compact now` may fall back to the displayed
+  site target when the settings store cannot be read.
 - Cache diagnostic reads must treat missing IndexedDB object stores as
   unavailable inventory or ledger status. They must not reject the Stats refresh
   promise or repeat uncaught `NotFoundError` entries in the console.
@@ -57,7 +62,7 @@ Stats shows current-session relay counters and persisted operational summaries.
 - Runtime memory output is redacted count data only. It must not expose raw
   events, relay payloads, tab ids, request ids, or log messages.
 
-## Rust Conversion Status
+## Rust Migration Status
 
 - The Rust/WASM shell renders a partial Stats body with real workspace counters
   and manifest-backed IndexedDB table counts.

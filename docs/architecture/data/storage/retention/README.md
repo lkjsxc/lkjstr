@@ -23,4 +23,6 @@ byte target without deleting protected records.
 - Selection uses score, then recency, then id.
 - Durable and dynamic protection skip candidates.
 - Every deletion uses a resource-kind dispatcher.
+- Every stop records a concrete reason instead of reporting success from
+  ledger bytes alone.
 - Every repair path is chunked or bounded before it is allowed on large stores.

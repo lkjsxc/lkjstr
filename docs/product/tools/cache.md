@@ -19,8 +19,9 @@ surface; status appears in Stats.
 - Runtime feed windows, relay read caps, and in-memory maps remain bounded.
   See [feed-memory.md](../../architecture/data/feed-memory.md) and
   [bounded-memory.md](../../architecture/data/bounded-memory.md).
-- Budget compaction runs when shared ledger byte accounting or total browser
-  usage exceeds the effective site target. See
+- Budget compaction runs when ledger-accounted resource bytes or browser origin
+  usage exceeds the effective site target. Browser origin usage is authoritative
+  when available. See
   [cache-budget.md](../../architecture/backend/cache-budget.md).
 - Accounts, local signing secrets, settings, relay sets, workspace state, Tweet
   drafts, active tab snapshots, active jobs, and relay configuration are
@@ -31,13 +32,15 @@ surface; status appears in Stats.
 
 ## Diagnostics
 
-- Stats shows cache row counts, configured site budget bytes, browser usage,
-  total ledger bytes, prunable ledger bytes, protected user data estimate,
-  unknown/browser overhead, last enforcement reason, pruned resource count,
-  pruned byte estimate, and protected-only or unknown-only status.
-- Stats shows a storage inventory table with each IndexedDB table's row count,
-  estimated bytes, ownership group, and the browser-overhead or unknown gap
-  when the browser storage estimate is larger than table estimates.
+- Stats shows cache row counts, configured site budget bytes, browser origin
+  usage, physical object-store bytes, ledger-accounted resource bytes,
+  prunable ledger bytes, protected user data estimate, unknown legacy or
+  unowned bytes, residual browser overhead, last enforcement reason, pruned
+  resource count, pruned byte estimate, and remaining pressure cause.
+- Stats shows a storage inventory table with each IndexedDB database and object
+  store, row count, estimated bytes, ownership group, and scan status. Unknown
+  or legacy stores are visible rows, not hidden in residual browser overhead
+  when database enumeration is available.
 - Stats shows ledger inventory by owner kind and resource kind so
   notification-heavy and page-heavy pressure is visible.
 - Event pruning removes relay receipts, tag rows, and affected feed evidence.
