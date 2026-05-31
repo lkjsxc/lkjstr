@@ -38,10 +38,10 @@ unavailable until their Rust providers are implemented.
 The Rust Settings body renders the flat schema from Rust, merges real
 IndexedDB setting overrides, and saves raw key-value edits through a host
 provider.
-The Rust Accounts body renders protected account rows, saves read-only and
-local `nsec` imports through Rust IndexedDB repositories, stores local secrets
-separately, and exposes local `nsec` values only after an explicit reveal
-command.
+The Rust Accounts body renders protected account rows, saves read-only,
+NIP-07, and local `nsec` imports through Rust IndexedDB repositories, stores
+local secrets separately, and exposes local `nsec` values only after an
+explicit reveal command.
 The Rust Relay Settings body renders protected relay-set rows, seeds default
 user/discovery sets, edits relay enablement and user read/write flags, and
 restores default sets through Rust storage commands.
@@ -54,10 +54,10 @@ draft when needed, and persists text plus sensitive-warning fields
 without pretending that publish transport is converted.
 
 Not implemented yet: feed surfaces, most tool surfaces, relay-backed content,
-Stats relay/job/compaction diagnostics, Settings appearance side effects,
-Accounts NIP-07 login, Relay Settings NIP-11/suggestions/diagnostics, Upload
-Settings file upload/NIP-98 transport, Tweet signing/publish/media/custom emoji
-transport, and full responsive/a11y QA.
+Stats relay/job/compaction diagnostics, Settings appearance side effects, Relay
+Settings NIP-11/suggestions/diagnostics, Upload Settings file upload/NIP-98
+transport, Tweet signing/publish/media/custom emoji transport, and full
+responsive/a11y QA.
 
 ## Component Split
 

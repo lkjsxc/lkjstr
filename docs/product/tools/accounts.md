@@ -52,5 +52,8 @@ Accounts represent public identities and signing capability.
   `accounts` and `localAccountSecrets` rows.
 - Rust Accounts supports read-only account add, local `nsec` import, generated
   `nsec` fill, active selection, disconnect, and explicit local secret reveal.
-- Rust Accounts does not yet connect NIP-07 or request persistent browser
-  storage; the TypeScript surface remains the parity source for those flows.
+- Rust Accounts connects NIP-07 by calling the browser `window.nostr`
+  `getPublicKey` method, validates the returned public key, stores a signing
+  account, and makes it active.
+- Rust Accounts does not yet request persistent browser storage; the
+  TypeScript surface remains the parity source for that flow.

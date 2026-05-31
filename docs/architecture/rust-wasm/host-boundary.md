@@ -3,8 +3,9 @@
 ## Purpose
 
 This file defines how Rust code talks to browser APIs. Status: implemented for
-the protocol WASM bridge and partial Leptos shell mount; design-only for
-browser storage, relay, and extension adapters.
+the protocol WASM bridge, partial Leptos shell mount, IndexedDB adapters, and
+NIP-07 public-key connection; design-only for relay, worker, and remaining
+extension adapters.
 
 ## Browser APIs
 
@@ -22,7 +23,9 @@ mount `lkjstr-ui` into the browser document. Future adapters cover:
 - DOM event listeners.
 - Browser storage estimates.
 - Local storage and session storage.
-- NIP-07 extension access.
+- NIP-07 extension access. Current Rust support calls `window.nostr`
+  `getPublicKey`, validates the pubkey, and stores a signing account; event
+  signing is still pending the Rust publish path.
 - Workers.
 
 ## JavaScript Boundary

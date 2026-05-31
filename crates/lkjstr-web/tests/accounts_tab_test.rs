@@ -25,9 +25,15 @@ async fn rust_accounts_tab_adds_readonly_and_local_accounts() -> Result<(), JsVa
     click_button_with_text("Generate nsec")?;
     next_task().await?;
     click(".accounts-toolbar button[type='submit']")?;
-    wait_for_local_account(&db_name).await?;
+    let local_id = wait_for_signer_type(&db_name, SignerType::Local).await?;
+    wait_for_local_secret(&db_name, &local_id).await?;
     click_button_with_text("Reveal nsec")?;
     wait_for_text("nsec1").await?;
+    install_nip07_mock(&"bb".repeat(32))?;
+    click_button_with_text("Connect NIP-07")?;
+    wait_for_signer_type(&db_name, SignerType::Nip07).await?;
+    wait_for_text("NIP-07 account connected.").await?;
+    wait_for_text("NIP-07").await?;
     Ok(())
 }
 
@@ -46,22 +52,30 @@ async fn wait_for_account_count(db_name: &str, count: usize) -> Result<(), JsVal
     )))
 }
 
-async fn wait_for_local_account(db_name: &str) -> Result<(), JsValue> {
+async fn wait_for_signer_type(db_name: &str, signer_type: SignerType) -> Result<String, JsValue> {
     for _ in 0..70 {
         next_task().await?;
         let rows = match indexed_db::account_store::accounts_all(db_name).await {
             StorageOutcome::Ok(rows) => rows,
             outcome => return Err(outcome_error(outcome.problem())),
         };
-        if let Some(account) = rows.iter().find(|row| row.signer_type == SignerType::Local) {
-            match indexed_db::local_secret_store::local_secret_get(db_name, &account.id).await {
-                StorageOutcome::Ok(Some(_)) => return Ok(()),
-                StorageOutcome::Ok(None) => {}
-                outcome => return Err(outcome_error(outcome.problem())),
-            }
+        if let Some(account) = rows.iter().find(|row| row.signer_type == signer_type) {
+            return Ok(account.id.clone());
         }
     }
-    Err(js_error("timed out waiting for local account"))
+    Err(js_error("timed out waiting for account signer type"))
+}
+
+async fn wait_for_local_secret(db_name: &str, account_id: &str) -> Result<(), JsValue> {
+    for _ in 0..70 {
+        next_task().await?;
+        match indexed_db::local_secret_store::local_secret_get(db_name, account_id).await {
+            StorageOutcome::Ok(Some(_)) => return Ok(()),
+            StorageOutcome::Ok(None) => {}
+            outcome => return Err(outcome_error(outcome.problem())),
+        }
+    }
+    Err(js_error("timed out waiting for local secret"))
 }
 
 fn set_account_input(value: &str) -> Result<(), JsValue> {
@@ -88,6 +102,13 @@ fn click_button_with_text(text: &str) -> Result<(), JsValue> {
         }
     }
     Err(js_error("missing text button"))
+}
+
+fn install_nip07_mock(pubkey: &str) -> Result<(), JsValue> {
+    js_sys::eval(&format!(
+        "window.nostr = {{ getPublicKey: async () => '{pubkey}' }};"
+    ))
+    .map(|_| ())
 }
 
 fn click(selector: &str) -> Result<(), JsValue> {

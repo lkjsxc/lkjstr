@@ -1,13 +1,16 @@
-use lkjstr_domain::{create_local_account_record, parse_nsec, parse_readonly_account};
+use lkjstr_domain::{
+    SignerType, create_account, create_local_account_record, parse_nsec, parse_readonly_account,
+};
 use lkjstr_protocol::encode_nsec;
 use lkjstr_storage::{AccountRecord, StorageOutcome};
 use lkjstr_ui::{
-    AccountsCommand, AccountsIdCommand, AccountsInputCommand, AccountsProvider, AccountsResult,
+    AccountsCommand, AccountsComplete, AccountsIdCommand, AccountsInputCommand, AccountsProvider,
+    AccountsResult,
 };
 
+use crate::accounts_active::{active_account_id, set_active_account_id};
 use crate::indexed_db::{account_store, local_secret_store};
-
-const ACTIVE_ACCOUNT_KEY: &str = "lkjstr.activeAccountId";
+use crate::nip07_host::nip07_public_key;
 
 pub fn accounts_provider(db_name: String) -> AccountsProvider {
     AccountsProvider::new(move |command| {
@@ -22,10 +25,24 @@ async fn run_command(db_name: &str, command: AccountsCommand) {
     match command {
         AccountsCommand::Load(complete) => complete.complete(load_result(db_name, "").await),
         AccountsCommand::AddInput(command) => add_input(db_name, command).await,
+        AccountsCommand::ConnectNip07(complete) => connect_nip07(db_name, complete).await,
         AccountsCommand::Activate(command) => activate(db_name, command).await,
         AccountsCommand::Remove(command) => remove_account(db_name, command).await,
         AccountsCommand::Reveal(command) => reveal_secret(db_name, command).await,
     }
+}
+
+async fn connect_nip07(db_name: &str, complete: AccountsComplete) {
+    let status = match nip07_public_key().await {
+        Ok(pubkey) => match create_account(&pubkey, SignerType::Nip07, browser_now_ms()) {
+            Some(account) => {
+                save_public_account(db_name, &account, "NIP-07 account connected.").await
+            }
+            None => "NIP-07 signer returned an invalid public key.".to_owned(),
+        },
+        Err(message) => message,
+    };
+    complete.complete(load_result(db_name, &status).await);
 }
 
 async fn add_input(db_name: &str, command: AccountsInputCommand) {
@@ -147,28 +164,6 @@ fn resolve_active_id(accounts: &[AccountRecord]) -> Option<String> {
     let fallback = accounts.first().map(|account| account.id.clone());
     set_active_account_id(fallback.as_deref());
     fallback
-}
-
-fn active_account_id() -> Option<String> {
-    local_storage()?.get_item(ACTIVE_ACCOUNT_KEY).ok().flatten()
-}
-
-fn set_active_account_id(id: Option<&str>) {
-    let Some(storage) = local_storage() else {
-        return;
-    };
-    match id {
-        Some(id) => {
-            let _result = storage.set_item(ACTIVE_ACCOUNT_KEY, id);
-        }
-        None => {
-            let _result = storage.remove_item(ACTIVE_ACCOUNT_KEY);
-        }
-    }
-}
-
-fn local_storage() -> Option<web_sys::Storage> {
-    web_sys::window()?.local_storage().ok().flatten()
 }
 
 fn problem_status<T>(prefix: &str, outcome: StorageOutcome<T>) -> String {

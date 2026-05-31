@@ -1,7 +1,11 @@
 #![doc = "Rust/WASM browser bridge for lkjstr."]
 
 #[cfg(target_arch = "wasm32")]
+mod accounts_active;
+#[cfg(target_arch = "wasm32")]
 mod accounts_host;
+#[cfg(target_arch = "wasm32")]
+mod nip07_host;
 mod protocol_bridge;
 #[cfg(target_arch = "wasm32")]
 mod relay_settings_host;

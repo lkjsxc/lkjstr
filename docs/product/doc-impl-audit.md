@@ -43,7 +43,7 @@ references should stay as relative Markdown links.
 | Rust relay client and browser adapters       | [relay-runtime.md](../architecture/rust-wasm/relay-runtime.md)           | not implemented | current runtime remains TS    |
 | Rust Leptos workspace shell                  | [ui-runtime.md](../architecture/rust-wasm/ui-runtime.md)                 | partial       | Welcome, New Tab, persistence, Stats inventory |
 | Rust Settings surface                        | [settings.md](tools/settings.md)                                         | partial       | flat schema and IndexedDB overrides |
-| Rust Accounts surface                        | [accounts.md](tools/accounts.md)                                         | partial       | stored rows, local `nsec`, active selection |
+| Rust Accounts surface                        | [accounts.md](tools/accounts.md)                                         | partial       | stored rows, local `nsec`, NIP-07 connect |
 | Rust Relay Settings surface                  | [relay-management.md](tools/relay-management.md)                         | partial       | relay sets and default selection |
 | Rust Upload Settings surface                 | [upload-settings.md](tools/upload-settings.md)                           | partial       | media upload settings and NIP-96 discovery |
 | Rust Tweet draft surface                     | [tweet.md](tools/tweet.md)                                                | partial       | protected draft rows and editor |

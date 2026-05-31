@@ -7,9 +7,11 @@ Source files expose Rust application behavior to the browser through
 
 ## Table of Contents
 
+- `accounts_active.rs`: local-storage active account helper.
 - `accounts_host.rs`: browser-backed Accounts command provider.
 - `lib.rs`: public WASM exports.
 - `indexed_db/`: browser IndexedDB host adapter.
+- `nip07_host.rs`: browser NIP-07 public-key adapter.
 - `protocol_bridge.rs`: protocol bridge operations.
 - `relay_settings_host.rs`: browser-backed Relay Settings command provider.
 - `response.rs`: structured JavaScript response helpers.

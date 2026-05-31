@@ -39,6 +39,15 @@ pub fn AccountsTab(provider: Option<AccountsProvider>) -> impl IntoView {
         input.set(generate_nsec());
         status.set("Generated nsec. Add it as a local account when ready.".to_owned());
     };
+    let connect_nip07 = {
+        let provider = provider.clone();
+        move |_| {
+            run_accounts_result(accounts, active_id, status, revealed, {
+                let provider = provider.clone();
+                move |complete| provider.connect_nip07(complete)
+            });
+        }
+    };
     let input_change = move |event| input.set(event_target_value(&event));
     let input_commit = move |event| input.set(event_target_value(&event));
 
@@ -53,6 +62,7 @@ pub fn AccountsTab(provider: Option<AccountsProvider>) -> impl IntoView {
                     on:change=input_commit
                 />
                 <button type="button" on:click=fill_nsec>"Generate nsec"</button>
+                <button type="button" on:click=connect_nip07>"Connect NIP-07"</button>
                 <button type="submit" disabled=move || input.get().trim().is_empty()>"Add"</button>
             </form>
             <p role="status">{move || status.get()}</p>
