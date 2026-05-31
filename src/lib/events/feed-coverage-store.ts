@@ -83,6 +83,28 @@ export async function deleteFeedCoverageForFeeds(
   });
 }
 
+export async function deleteAllFeedCoverageAfterEventCompaction(): Promise<void> {
+  memoryCoverage.clear();
+  await bestEffortStorageWrite(async () => {
+    const ids: string[] = [];
+    await browserDb().feedCoverage.each((row) => {
+      ids.push(row.id);
+    });
+    if (ids.length === 0) return;
+    await browserDb().transaction(
+      'rw',
+      browserDb().feedCoverage,
+      browserDb().cacheLedger,
+      async () => {
+        await browserDb().feedCoverage.bulkDelete(ids);
+        await browserDb().cacheLedger.bulkDelete(
+          ids.map((id) => cacheLedgerId('feed-coverage', id)),
+        );
+      },
+    );
+  });
+}
+
 export async function compactFeedCoverage(
   maxAgeSeconds: number,
 ): Promise<void> {

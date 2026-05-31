@@ -25,16 +25,15 @@ not proof of absence and cannot suppress relay reads.
 Event compaction must invalidate coverage that could depend on deleted event
 evidence. Correctness beats retaining coverage cache.
 
-If precise dependency tracking is unavailable, use conservative invalidation.
-Deleting all coverage after event compaction is acceptable because coverage is
-recoverable derived cache.
+Current implementation uses conservative invalidation: event compaction deletes
+all feed coverage rows. Coverage is recoverable derived cache, and relay reads
+can rebuild proof.
 
 ## Implementation Target
 
-The event delete path should collect enough deleted-event shape to remove
-matching coverage rows. Until that shape is complete, delete all affected feed
-coverage rows after event compaction so cache-first rendering schedules relay
-reads for uncovered intervals.
+Future precision may collect deleted-event shape to remove fewer matching rows.
+Until that exists, deleting all coverage after event compaction keeps
+cache-first rendering from trusting stale proof.
 
 ## Verification
 

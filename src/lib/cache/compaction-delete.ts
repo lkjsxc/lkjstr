@@ -1,6 +1,7 @@
 import { browserDb } from '../storage/browser-db';
 import {
   compactFeedCoverage,
+  deleteAllFeedCoverageAfterEventCompaction,
   deleteFeedCoverageForFeeds,
 } from '../events/feed-coverage-store';
 import { cacheLedgerId } from './cache-ledger-id';
@@ -55,6 +56,7 @@ export async function deletePrunedEvents(
     },
   );
   await deleteStaleFeedCursors(new Set(ids));
+  await deleteAllFeedCoverageAfterEventCompaction();
   await compactFeedCoverage(30 * 24 * 60 * 60);
   return {
     prunedEvents: ids.length,

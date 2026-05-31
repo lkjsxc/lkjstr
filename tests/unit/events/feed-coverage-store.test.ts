@@ -2,6 +2,7 @@ import { beforeEach, describe, expect, it } from 'vitest';
 import {
   clearFeedCoverageForTests,
   coverageForFeed,
+  deleteAllFeedCoverageAfterEventCompaction,
   deleteFeedCoverageForFeeds,
   feedCoverageMemorySizeForTests,
   saveFeedCoverage,
@@ -41,6 +42,22 @@ describe('feed coverage store', () => {
     });
 
     await deleteFeedCoverageForFeeds(['home']);
+
+    expect(await coverageForFeed('home')).toEqual([]);
+  });
+
+  it('clears complete coverage after event compaction', async () => {
+    await saveFeedCoverage({
+      feedKey: 'home',
+      relayUrl: 'wss://relay.example/',
+      groupKey: 'fallback:0',
+      filterKey: 'kind-1',
+      status: 'complete',
+      since: 1,
+      until: 2,
+    });
+
+    await deleteAllFeedCoverageAfterEventCompaction();
 
     expect(await coverageForFeed('home')).toEqual([]);
   });
