@@ -35,6 +35,7 @@ export async function protectedEventIds(): Promise<Set<string>> {
       await collectLatestByKindPubkeyForSet(3, accountPubkeys, ids);
       await collectPotentialNotificationSources(accountPubkeys, ids);
     }
+    await collectActiveTabStates(ids);
     await collectProtectedNotifications(ids);
     await browserDb()
       .cacheLedger.where('ownerKind')
@@ -51,6 +52,16 @@ async function loadAccountPubkeys(): Promise<Set<string>> {
   const pubkeys = new Set<string>();
   await browserDb().accounts.each((account) => pubkeys.add(account.pubkey));
   return pubkeys;
+}
+
+async function collectActiveTabStates(target: Set<string>): Promise<void> {
+  await browserDb().workspaces.each((workspace) => {
+    for (const tabId of Object.keys(workspace.tabs)) {
+      const resourceId = `${workspace.id}:${tabId}`;
+      target.add(resourceId);
+      target.add(cacheLedgerId('tab-snapshot', resourceId));
+    }
+  });
 }
 
 async function collectLatestByKindPubkey(

@@ -1,6 +1,8 @@
 import { browserDb } from '../storage/browser-db';
 import { indexedDbAvailable } from '../storage/safe-storage';
 import type { TabSnapshotPayload } from './tab-snapshot';
+import { cacheLedgerId } from '../cache/cache-ledger-id';
+import { tabStateLedgerRecord } from './tab-state-ledger';
 
 export function tabStateId(workspaceId: string, tabId: string): string {
   return `${workspaceId}:${tabId}`;
@@ -14,14 +16,23 @@ export async function saveTabState(
 ): Promise<void> {
   if (!indexedDbAvailable()) return;
   const id = tabStateId(workspaceId, tabId);
-  await browserDb().tabStates.put({
+  const row = {
     id,
     workspaceId,
     tabId,
     lastPaneId,
     state,
     updatedAt: Date.now(),
-  });
+  };
+  await browserDb().transaction(
+    'rw',
+    browserDb().tabStates,
+    browserDb().cacheLedger,
+    async () => {
+      await browserDb().tabStates.put(row);
+      await browserDb().cacheLedger.put(tabStateLedgerRecord(row));
+    },
+  );
 }
 
 export async function loadTabState(
@@ -42,7 +53,16 @@ export async function deleteTabState(
   tabId: string,
 ): Promise<void> {
   if (!indexedDbAvailable()) return;
-  await browserDb().tabStates.delete(tabStateId(workspaceId, tabId));
+  const id = tabStateId(workspaceId, tabId);
+  await browserDb().transaction(
+    'rw',
+    browserDb().tabStates,
+    browserDb().cacheLedger,
+    async () => {
+      await browserDb().tabStates.delete(id);
+      await browserDb().cacheLedger.delete(cacheLedgerId('tab-snapshot', id));
+    },
+  );
 }
 
 export async function deleteMissingTabStates(
@@ -59,5 +79,16 @@ export async function deleteMissingTabStates(
       stale.push(record.id);
     else if (isWorkspaceRow && !tabIds.has(record.tabId)) stale.push(record.id);
   });
-  if (stale.length > 0) await browserDb().tabStates.bulkDelete(stale);
+  if (stale.length === 0) return;
+  await browserDb().transaction(
+    'rw',
+    browserDb().tabStates,
+    browserDb().cacheLedger,
+    async () => {
+      await browserDb().tabStates.bulkDelete(stale);
+      await browserDb().cacheLedger.bulkDelete(
+        stale.map((id) => cacheLedgerId('tab-snapshot', id)),
+      );
+    },
+  );
 }

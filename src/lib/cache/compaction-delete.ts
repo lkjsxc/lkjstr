@@ -79,6 +79,7 @@ async function deleteDirectCacheRows(
       browserDb().relayListSuggestions,
       browserDb().authorRelayRoutes,
       browserDb().jobs,
+      browserDb().tabStates,
       browserDb().cacheLedger,
     ],
     async () => {
@@ -107,6 +108,7 @@ async function deleteDirectCacheRows(
         browserDb().authorRelayRoutes,
       );
       await deleteByKind(rows, 'job-record', browserDb().jobs);
+      await deleteByKind(rows, 'tab-state', browserDb().tabStates);
       await browserDb().cacheLedger.bulkDelete(rows.map((row) => row.id));
     },
   );
