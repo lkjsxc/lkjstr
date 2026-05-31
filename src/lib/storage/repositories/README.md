@@ -12,6 +12,9 @@ Feature modules call these functions instead of reaching into Dexie directly.
 - `workspace-store.ts`: durable workspace layout.
 - `relay-sets-store.ts`: relay set configuration.
 - `route-blocks-store.ts`: protected relay route blocks.
+- `action-state-store.ts`: cached reaction/repost action lookup.
+- `event-matching-store.ts`: filter matching over stored events.
+- `event-query-store.ts`: indexed feed and tag reads over stored events.
 - `events-store.ts`: event rows, relay receipts, tag rows, event ledger rows,
   and feed cursor ledger writes.
 
