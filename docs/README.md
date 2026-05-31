@@ -87,6 +87,7 @@ table of contents required by repository checks.
 - [architecture/data/retention/index-shape.md](architecture/data/retention/index-shape.md)
 - [architecture/data/retention/score-policy.md](architecture/data/retention/score-policy.md)
 - [architecture/data/shared-storage.md](architecture/data/shared-storage.md)
+- [architecture/data/storage-table-contract.md](architecture/data/storage-table-contract.md)
 - [architecture/data/storage.md](architecture/data/storage.md)
 - [architecture/feeds/README.md](architecture/feeds/README.md)
 - [architecture/feeds/invariants/README.md](architecture/feeds/invariants/README.md)

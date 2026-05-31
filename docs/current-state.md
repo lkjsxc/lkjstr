@@ -78,7 +78,8 @@ Read next: [architecture/README.md](architecture/README.md),
   Stats reports table-level storage inventory, ledger inventory, protected
   estimates, prunable estimates, and unexplained browser overhead so
   notification-heavy and page-heavy pressure can be diagnosed. Runtime feed
-  windows remain bounded.
+  windows remain bounded. The live durable table contract is maintained in
+  [storage-table-contract.md](architecture/data/storage-table-contract.md).
 - Shared storage normalizes events, relay receipts, tag rows, cursors, and jobs
   before runtime use.
 - Relay ingress uses app-owned byte and structure caps before expensive JSON

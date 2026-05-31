@@ -37,6 +37,8 @@ Data docs define storage, feed windows, and shared event presentation models.
 - [resource-ownership.md](resource-ownership.md): who creates and who closes
   each resource.
 - [local-cache-ledger.md](local-cache-ledger.md): shared byte-accounting ledger.
+- [storage-table-contract.md](storage-table-contract.md): live table map for
+  retention, Stats, deletion, and repair behavior.
 - [retention/README.md](retention/README.md): score-based local-cache retention.
 - [retention/compaction.md](retention/compaction.md): compaction workflow.
 - [retention/index-shape.md](retention/index-shape.md): ledger indexes.

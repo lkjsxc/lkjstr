@@ -98,6 +98,8 @@ state lives, which modules own subscriptions, and how tabs close cleanly.
 - [data/resource-ownership.md](data/resource-ownership.md): who creates and
   who closes each resource.
 - [data/shared-storage.md](data/shared-storage.md): shared event storage.
+- [data/storage-table-contract.md](data/storage-table-contract.md): table
+  retention, Stats, deletion, and repair matrix.
 - [data/storage.md](data/storage.md): IndexedDB storage boundaries.
 - [network/README.md](network/README.md): relay, identity, jobs, and settings.
 - [network/identity-rendering.md](network/identity-rendering.md): identity

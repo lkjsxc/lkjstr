@@ -4,6 +4,10 @@
 
 Storage docs define browser persistence ownership.
 
+The compact table-to-retention matrix for agent work lives in
+[storage-table-contract.md](storage-table-contract.md). Keep that file, this
+file, the Dexie schema, and `knownStorageTables` aligned.
+
 ## Stores
 
 | Store | Classification | Retention |
