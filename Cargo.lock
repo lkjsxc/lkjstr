@@ -342,6 +342,14 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "92daf443525c4cce67b150400bc2316076100ce0b3686209eb8cf3c31612e6f0"
 
 [[package]]
+name = "lkjstr-app"
+version = "0.0.0"
+dependencies = [
+ "lkjstr-domain",
+ "lkjstr-storage",
+]
+
+[[package]]
 name = "lkjstr-domain"
 version = "0.0.0"
 dependencies = [

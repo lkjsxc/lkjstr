@@ -5,7 +5,7 @@ use serde::{Deserialize, Serialize};
 
 use crate::resource::{CacheOwnerKind, CacheResourceKind};
 
-#[derive(Clone, Debug, Deserialize, PartialEq, Serialize)]
+#[derive(Clone, Debug, Deserialize, Eq, PartialEq, Serialize)]
 #[serde(rename_all = "camelCase")]
 pub struct TabStateRecord {
     pub id: String,
@@ -17,7 +17,7 @@ pub struct TabStateRecord {
     pub updated_at: u64,
 }
 
-#[derive(Clone, Debug, Deserialize, PartialEq, Serialize)]
+#[derive(Clone, Debug, Deserialize, Eq, PartialEq, Serialize)]
 #[serde(rename_all = "camelCase")]
 pub struct CacheLedgerRecord {
     pub id: String,

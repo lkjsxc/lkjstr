@@ -5,8 +5,8 @@
 This file assigns Rust crate ownership. Status: implemented for
 `lkjstr-protocol`, pure account and workspace helpers in `lkjstr-domain`,
 `lkjstr-relays` state-machine basics, `lkjstr-storage` manifest contracts,
-`lkjstr-web` protocol exports, and `lkjstr-xtask`; app and UI crates remain
-design-only.
+`lkjstr-app` workspace runtime composition, `lkjstr-web` protocol exports, and
+`lkjstr-xtask`; UI crates remain design-only.
 
 ## Crates
 

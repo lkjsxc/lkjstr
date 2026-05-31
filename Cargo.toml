@@ -1,5 +1,6 @@
 [workspace]
 members = [
+  "crates/lkjstr-app",
   "crates/lkjstr-domain",
   "crates/lkjstr-protocol",
   "crates/lkjstr-relays",

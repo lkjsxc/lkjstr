@@ -1,0 +1,13 @@
+[package]
+name = "lkjstr-app"
+edition.workspace = true
+license.workspace = true
+publish.workspace = true
+version.workspace = true
+
+[lints]
+workspace = true
+
+[dependencies]
+lkjstr-domain = { path = "../lkjstr-domain" }
+lkjstr-storage = { path = "../lkjstr-storage" }
