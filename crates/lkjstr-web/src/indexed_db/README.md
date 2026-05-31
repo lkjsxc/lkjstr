@@ -18,6 +18,7 @@ This directory contains the Rust browser host adapter for IndexedDB.
 - `schema.rs`: manifest-driven object store and index creation.
 - `settings_requests.rs`: settings request execution and decoding.
 - `settings_store.rs`: settings override row `put`, `get`, `delete`, and list.
+- `tweet_draft_store.rs`: protected Tweet draft table repository.
 - `workspace_store.rs`: workspace `put`, `get`, and startup input loading.
 
 The code here may call `web_sys` directly. Pure storage rules and row shapes

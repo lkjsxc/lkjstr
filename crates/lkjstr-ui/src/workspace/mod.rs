@@ -18,6 +18,8 @@ mod state;
 mod stats;
 mod stats_provider;
 mod tab_body;
+mod tweet;
+mod tweet_provider;
 mod upload_settings;
 mod upload_settings_provider;
 mod welcome;
@@ -33,6 +35,9 @@ pub use settings_provider::{SettingsCommand, SettingsComplete, SettingsProvider,
 pub use settings_provider::{SettingsImportCommand, SettingsKeyCommand, SettingsValueCommand};
 pub use shell::WorkspaceShell;
 pub use stats_provider::{StatsComplete, StatsProvider};
+pub use tweet_provider::{
+    TweetCommand, TweetComplete, TweetDraftCommand, TweetIdCommand, TweetProvider, TweetResult,
+};
 pub use upload_settings_provider::{
     UploadBoolCommand, UploadDiscoverCommand, UploadProviderCommand, UploadSettingsCommand,
     UploadSettingsComplete, UploadSettingsProvider, UploadSettingsResult, UploadTextCommand,

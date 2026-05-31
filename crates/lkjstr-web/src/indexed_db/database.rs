@@ -13,6 +13,7 @@ pub const ACCOUNTS_TABLE: &str = "accounts";
 pub const LOCAL_ACCOUNT_SECRETS_TABLE: &str = "localAccountSecrets";
 pub const RELAY_SETS_TABLE: &str = "relaySets";
 pub const SETTINGS_TABLE: &str = "settings";
+pub const TWEET_DRAFTS_TABLE: &str = "tweetDrafts";
 pub const WORKSPACES_TABLE: &str = "workspaces";
 
 pub async fn open_database(

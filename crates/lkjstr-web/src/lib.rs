@@ -9,6 +9,8 @@ mod response;
 #[cfg(target_arch = "wasm32")]
 mod settings_host;
 #[cfg(target_arch = "wasm32")]
+mod tweet_host;
+#[cfg(target_arch = "wasm32")]
 mod upload_discovery;
 #[cfg(target_arch = "wasm32")]
 mod upload_settings_host;
@@ -41,15 +43,20 @@ pub fn mount_rust_workspace_shell_from_db(db_name: String) {
         let relay_settings_provider = relay_settings_host::relay_settings_provider(db_name.clone());
         let stats_provider = stats_provider(db_name.clone());
         let settings_provider = settings_host::settings_provider(db_name.clone());
-        let upload_settings_provider = upload_settings_host::upload_settings_provider(db_name);
+        let upload_settings_provider =
+            upload_settings_host::upload_settings_provider(db_name.clone());
+        let tweet_provider = tweet_host::tweet_provider(db_name);
         lkjstr_ui::mount_app_with_host(
             startup,
-            persistence,
-            accounts_provider,
-            relay_settings_provider,
-            stats_provider,
-            settings_provider,
-            upload_settings_provider,
+            lkjstr_ui::HostProviders {
+                persistence,
+                accounts: accounts_provider,
+                relay_settings: relay_settings_provider,
+                stats: stats_provider,
+                settings: settings_provider,
+                upload_settings: upload_settings_provider,
+                tweet: tweet_provider,
+            },
         );
     });
 }
@@ -124,6 +131,18 @@ pub async fn put_setting_record_json(json: &str) -> JsValue {
 #[wasm_bindgen]
 pub async fn get_setting_record_json(key: &str) -> JsValue {
     indexed_db::setting_get_json_response(key).await
+}
+
+#[cfg(target_arch = "wasm32")]
+#[wasm_bindgen]
+pub async fn put_tweet_draft_record_json(json: &str) -> JsValue {
+    indexed_db::tweet_draft_put_json_response(json).await
+}
+
+#[cfg(target_arch = "wasm32")]
+#[wasm_bindgen]
+pub async fn get_tweet_draft_record_json(id: &str) -> JsValue {
+    indexed_db::tweet_draft_get_json_response(id).await
 }
 
 #[cfg(target_arch = "wasm32")]

@@ -48,11 +48,16 @@ restores default sets through Rust storage commands.
 The Rust Upload Settings body renders shared Tweet media upload settings,
 persists provider/custom-server/no-transform changes, and performs real NIP-96
 discovery through the Rust browser host.
+The Rust Tweet body renders a real draft editor backed by protected
+`tweetDrafts` rows. It loads `tab:{tabId}` drafts, falls back to the `main`
+draft when needed, and persists text plus sensitive-warning fields
+without pretending that publish transport is converted.
 
 Not implemented yet: feed surfaces, most tool surfaces, relay-backed content,
 Stats relay/job/compaction diagnostics, Settings appearance side effects,
 Accounts NIP-07 login, Relay Settings NIP-11/suggestions/diagnostics, Upload
-Settings file upload/NIP-98 transport, and full responsive/a11y QA.
+Settings file upload/NIP-98 transport, Tweet signing/publish/media/custom emoji
+transport, and full responsive/a11y QA.
 
 ## Component Split
 

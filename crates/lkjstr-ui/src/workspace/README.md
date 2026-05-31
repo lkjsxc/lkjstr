@@ -26,6 +26,8 @@ New Tab chooser, and converted Rust tool bodies.
 - `stats.rs`: Rust Stats body for host-provided diagnostics.
 - `stats_provider.rs`: async Stats snapshot provider wrapper.
 - `tab_body.rs`: tab body routing and honest pending states.
+- `tweet.rs`: protected Tweet draft editor.
+- `tweet_provider.rs`: Tweet draft command provider wrapper.
 - `upload_settings.rs`: guided Rust Upload Settings body.
 - `upload_settings_provider.rs`: upload settings command provider wrapper.
 - `welcome.rs`: document-like Welcome surface.

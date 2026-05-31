@@ -14,6 +14,7 @@ Source files expose Rust application behavior to the browser through
 - `relay_settings_host.rs`: browser-backed Relay Settings command provider.
 - `response.rs`: structured JavaScript response helpers.
 - `settings_host.rs`: browser-backed Settings command provider.
+- `tweet_host.rs`: browser-backed Tweet draft command provider.
 - `upload_discovery.rs`: browser `fetch` NIP-96 endpoint resolution.
 - `upload_settings_host.rs`: browser-backed Upload Settings command provider.
 

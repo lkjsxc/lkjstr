@@ -12,4 +12,5 @@ browser storage manifest.
 - `outcome_test.rs`: storage problem and outcome constructors.
 - `relay_sets_test.rs`: protected relay-set row serialization.
 - `tab_state_test.rs`: tab-state key and ledger record behavior.
+- `tweet_drafts_test.rs`: protected Tweet draft row serialization.
 - `workspace_test.rs`: workspace row JSON and identity behavior.

@@ -4,6 +4,21 @@
 
 Tweet is the single note authoring surface.
 
+## Rust Conversion Status
+
+Status: partial.
+
+The Rust/WASM shell renders a real Tweet draft editor backed by the protected
+`tweetDrafts` IndexedDB table. The editor loads `tab:{tabId}` drafts, falls back
+to the `main` draft when a tab draft is absent, saves content immediately,
+saves the sensitive flag plus warning reason, and reports storage failures as
+unavailable state.
+
+Rust publishing, media upload, custom emoji source lookup, active-account
+selection, signing, relay queueing, and post-publish clearing are not
+implemented yet. The Rust editor must not display fake relay success, fake media
+uploads, or fake custom emoji metadata.
+
 ## Contract
 
 - Tweet opens from New Tab.

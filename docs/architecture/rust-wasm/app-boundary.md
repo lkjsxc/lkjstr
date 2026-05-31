@@ -19,7 +19,9 @@ does not introduce remote account state.
 - Start the workspace root and recover to Welcome when storage is unavailable.
 - Own shared Home query state above tab components.
 - Own timeline, profile, thread, notification, search, and tool runtimes.
-- Coordinate Tweet signing, queueing, drafts, and publish jobs.
+- Coordinate Tweet signing, queueing, drafts, and publish jobs. Current Rust
+  implementation owns protected Tweet draft load/save commands; signing,
+  queueing, and publish jobs remain open until their Rust runtimes exist.
 - Own account selection and secret repository wiring above the pure
   `lkjstr-domain` account helpers. The Rust host keeps account rows and local
   signing secrets in separate protected stores.

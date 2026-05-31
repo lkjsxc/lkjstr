@@ -13,6 +13,8 @@ use crate::workspace::settings_provider::SettingsProvider;
 use crate::workspace::state::TabSequence;
 use crate::workspace::stats::StatsTab;
 use crate::workspace::stats_provider::StatsProvider;
+use crate::workspace::tweet::TweetTab;
+use crate::workspace::tweet_provider::TweetProvider;
 use crate::workspace::upload_settings::UploadSettingsTab;
 use crate::workspace::upload_settings_provider::UploadSettingsProvider;
 use crate::workspace::welcome::WelcomeTab;
@@ -29,6 +31,7 @@ pub fn TabBody(
     stats_provider: Option<StatsProvider>,
     settings_provider: Option<SettingsProvider>,
     upload_settings_provider: Option<UploadSettingsProvider>,
+    tweet_provider: Option<TweetProvider>,
 ) -> impl IntoView {
     let kind = tab.kind;
     let tab_id = tab.id;
@@ -45,6 +48,7 @@ pub fn TabBody(
         stats_provider,
         settings_provider,
         upload_settings_provider,
+        tweet_provider,
     };
     view! {
         <div class="lkjstr-tab-body" data-tab-kind=tab_kind_attr(kind)>
@@ -66,6 +70,7 @@ struct TabContentInput {
     stats_provider: Option<StatsProvider>,
     settings_provider: Option<SettingsProvider>,
     upload_settings_provider: Option<UploadSettingsProvider>,
+    tweet_provider: Option<TweetProvider>,
 }
 
 fn tab_content(input: TabContentInput) -> impl IntoView {
@@ -109,6 +114,10 @@ fn tab_content(input: TabContentInput) -> impl IntoView {
             <UploadSettingsTab provider=input.upload_settings_provider />
         }
         .into_any(),
+        TabKind::Tweet => view! {
+            <TweetTab tab_id=input.tab_id provider=input.tweet_provider />
+        }
+        .into_any(),
         _ => view! {
             <div class="lkjstr-pending-surface">
                 <p>{pending_message(input.kind)}</p>
@@ -135,7 +144,7 @@ fn pending_message(kind: TabKind) -> &'static str {
         TabKind::Search => "The Rust Search body is not converted yet.",
         TabKind::CustomRequest => "The Rust Custom Request body is not converted yet.",
         TabKind::AuthorContext => "The Rust Author Context body is not converted yet.",
-        TabKind::Tweet => "The Rust Tweet body is not converted yet.",
+        TabKind::Tweet => "",
         TabKind::Settings => "",
         TabKind::Welcome | TabKind::NewTab => "",
     }

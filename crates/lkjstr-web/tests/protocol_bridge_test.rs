@@ -78,7 +78,7 @@ async fn welcome_and_new_tab_actions_use_rust_reducers() -> Result<(), JsValue> 
     reset_and_mount().await?;
     click("[data-testid='welcome-open-tweet']")?;
     next_task().await?;
-    assert!(document_text()?.contains("The Rust Tweet body is not converted yet."));
+    assert!(document_text()?.contains("Publishing waits for Rust signing"));
 
     click(".lkjstr-activity-bar button")?;
     next_task().await?;

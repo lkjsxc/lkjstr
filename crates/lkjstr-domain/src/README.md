@@ -11,5 +11,6 @@ Domain source files define pure reducers and shared browser-independent models.
 - `local_account.rs`: local secret records, nsec parsing, and signing.
 - `npub_miner.rs`: npub prefix parsing and search-size helpers.
 - `relay_sets/`: pure relay-set records and edit reducers.
+- `tweet_draft/`: pure Tweet draft row model and draft helpers.
 - `upload_settings/`: pure media upload provider resolution.
 - `workspace/`: pure workspace layout, tab, and recovery model.

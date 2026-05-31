@@ -14,6 +14,7 @@ pub mod settings_schema;
 pub mod stats;
 pub mod tab_state;
 mod table_specs;
+pub mod tweet_drafts;
 pub mod workspace;
 
 pub use accounts::{AccountRecord, account_record_id, account_record_json_bytes};
@@ -42,6 +43,7 @@ pub use tab_state::{
     CacheLedgerRecord, TabStateRecord, cache_ledger_id, encoded_json_bytes, tab_state_id,
     tab_state_ledger_record,
 };
+pub use tweet_drafts::{TweetDraftRecord, tweet_draft_record_id, tweet_draft_record_json_bytes};
 pub use workspace::{WorkspaceRecord, workspace_record_id, workspace_record_json_bytes};
 
 /// Crate ownership marker used by repository checks and docs.

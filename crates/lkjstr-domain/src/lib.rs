@@ -4,6 +4,7 @@ pub mod accounts;
 pub mod local_account;
 pub mod npub_miner;
 pub mod relay_sets;
+pub mod tweet_draft;
 pub mod upload_settings;
 pub mod workspace;
 
@@ -24,6 +25,10 @@ pub use relay_sets::{
     RelaySetError, add_relay, default_discovery_relay_set, default_user_relay_set, ensure_user_set,
     patch_relay, remove_relay, reset_relay_live_state, restore_default_relay_set, seed_relay_sets,
     sorted_relay_sets,
+};
+pub use tweet_draft::{
+    TweetAttachment, TweetDraft, create_tweet_draft, empty_tweet_draft, tweet_draft_has_body,
+    tweet_draft_id_for_tab,
 };
 pub use upload_settings::{
     UploadProvider, UploadProviderConfig, UploadSettings, default_upload_settings,

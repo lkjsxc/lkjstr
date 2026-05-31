@@ -9,6 +9,7 @@ use crate::workspace::relay_settings_provider::RelaySettingsProvider;
 use crate::workspace::settings_provider::SettingsProvider;
 use crate::workspace::state::{self, TabSequence};
 use crate::workspace::stats_provider::StatsProvider;
+use crate::workspace::tweet_provider::TweetProvider;
 use crate::workspace::upload_settings_provider::UploadSettingsProvider;
 
 #[component]
@@ -20,6 +21,7 @@ pub fn WorkspaceShell(
     stats_provider: Option<StatsProvider>,
     settings_provider: Option<SettingsProvider>,
     upload_settings_provider: Option<UploadSettingsProvider>,
+    tweet_provider: Option<TweetProvider>,
 ) -> impl IntoView {
     let sequence: TabSequence = RwSignal::new(0_u64);
     let persistence_for_open = persistence.clone();
@@ -53,6 +55,7 @@ pub fn WorkspaceShell(
                             stats_provider=stats_provider.clone()
                             settings_provider=settings_provider.clone()
                             upload_settings_provider=upload_settings_provider.clone()
+                            tweet_provider=tweet_provider.clone()
                         />
                     }
                 }).collect_view()}
