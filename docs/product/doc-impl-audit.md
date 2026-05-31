@@ -38,7 +38,7 @@ references should stay as relative Markdown links.
 | Rust storage manifest and outcomes          | [storage-kernel.md](../architecture/rust-wasm/storage-kernel.md)         | implemented   | storage crate tests            |
 | Rust tab-state storage contract             | [storage-kernel.md](../architecture/rust-wasm/storage-kernel.md)         | implemented   | tab-state storage tests        |
 | Rust workspace storage record               | [storage-kernel.md](../architecture/rust-wasm/storage-kernel.md)         | implemented   | workspace storage tests        |
-| Rust workspace IndexedDB adapter             | [storage-kernel.md](../architecture/rust-wasm/storage-kernel.md)         | partial       | browser workspace tests        |
+| Rust workspace/settings IndexedDB adapter    | [storage-kernel.md](../architecture/rust-wasm/storage-kernel.md)         | partial       | browser storage tests          |
 | Rust relay state machine basics             | [relay-runtime.md](../architecture/rust-wasm/relay-runtime.md)           | implemented   | relay crate tests              |
 | Rust relay client and browser adapters       | [relay-runtime.md](../architecture/rust-wasm/relay-runtime.md)           | not implemented | current runtime remains TS    |
 | Rust Leptos workspace shell                  | [ui-runtime.md](../architecture/rust-wasm/ui-runtime.md)                 | partial       | Welcome and New Tab actions    |

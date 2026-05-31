@@ -91,6 +91,18 @@ pub async fn get_workspace_record_json(id: &str) -> JsValue {
 }
 
 #[cfg(target_arch = "wasm32")]
+#[wasm_bindgen]
+pub async fn put_setting_record_json(json: &str) -> JsValue {
+    indexed_db::setting_put_json_response(json).await
+}
+
+#[cfg(target_arch = "wasm32")]
+#[wasm_bindgen]
+pub async fn get_setting_record_json(key: &str) -> JsValue {
+    indexed_db::setting_get_json_response(key).await
+}
+
+#[cfg(target_arch = "wasm32")]
 fn browser_now_ms() -> u64 {
     let now = js_sys::Date::now();
     if now.is_sign_negative() {

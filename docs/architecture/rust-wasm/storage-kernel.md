@@ -10,7 +10,7 @@ Implemented now: `lkjstr-storage` owns the executable storage table manifest,
 cache ledger resource map, typed operation outcomes, the tab-state key plus
 ledger-row contract for workspace snapshots, and the Rust workspace record
 shape. `lkjstr-web` owns a narrow real IndexedDB adapter for workspace startup,
-workspace `put`, and workspace `get`.
+workspace rows, and settings override rows.
 
 Not implemented yet: full repository families, deadline guards, retention
 dispatchers, ledger repair, diagnostics inventory, and transaction-backed
@@ -57,7 +57,7 @@ use the TypeScript operation result until their repositories are ported.
 ## Repository Rule
 
 Feature code will call repositories, not raw IndexedDB stores. The first Rust
-repository boundary is workspace-only and uses the manifest `workspaces` table.
+repository boundaries use the manifest `workspaces` and `settings` tables.
 Ledger-backed writes must store resource rows and ledger rows atomically where
 IndexedDB transaction support allows it.
 
@@ -68,8 +68,8 @@ is removed only through cache-ledger dispatchers.
 
 The first host adapter uses `web_sys` IndexedDB directly. It opens the `lkjstr`
 database at the documented schema step, creates manifest stores and indexes on
-upgrade, stores workspace rows as structured browser objects, and reads them
-back into Rust `WorkspaceRecord` values.
+upgrade, stores protected rows as structured browser objects, and reads them
+back into Rust workspace and settings record values.
 
 Each request callback is stored in an owner slot and cleared when the request
 settles. The current adapter does not yet own deadline timers, late-settlement

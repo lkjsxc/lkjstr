@@ -80,4 +80,17 @@ impl<T> StorageOutcome<T> {
             | Self::LateRejected(problem) => Some(problem),
         }
     }
+
+    pub fn map<U>(self, value: impl FnOnce(T) -> U) -> StorageOutcome<U> {
+        match self {
+            Self::Ok(inner) => StorageOutcome::Ok(value(inner)),
+            Self::Unavailable(problem) => StorageOutcome::Unavailable(problem),
+            Self::Timeout(problem) => StorageOutcome::Timeout(problem),
+            Self::Blocked(problem) => StorageOutcome::Blocked(problem),
+            Self::Quota(problem) => StorageOutcome::Quota(problem),
+            Self::Corrupt(problem) => StorageOutcome::Corrupt(problem),
+            Self::LateSettled(problem) => StorageOutcome::LateSettled(problem),
+            Self::LateRejected(problem) => StorageOutcome::LateRejected(problem),
+        }
+    }
 }

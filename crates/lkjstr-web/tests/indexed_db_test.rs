@@ -1,7 +1,8 @@
 #![cfg(target_arch = "wasm32")]
 
 use lkjstr_domain::bootstrap_workspace;
-use lkjstr_storage::{StorageOutcome, WorkspaceRecord};
+use lkjstr_storage::{SettingOverrideRecord, StorageOutcome, WorkspaceRecord};
+use serde_json::json;
 use wasm_bindgen::{JsCast, closure::Closure, prelude::JsValue};
 use wasm_bindgen_futures::JsFuture;
 use wasm_bindgen_test::{wasm_bindgen_test, wasm_bindgen_test_configure};
@@ -35,12 +36,43 @@ async fn rust_shell_reads_workspace_startup_from_indexed_db() -> Result<(), JsVa
     Ok(())
 }
 
+#[wasm_bindgen_test(async)]
+async fn indexed_db_settings_store_round_trips_and_deletes() -> Result<(), JsValue> {
+    let db_name = test_db_name("settings-round-trip");
+    let row = setting("cache.maxBytes", "cache", json!(8192));
+    assert_ok(indexed_db::settings_store::setting_put(&db_name, &row).await)?;
+    let loaded = match indexed_db::settings_store::setting_get(&db_name, &row.key).await {
+        StorageOutcome::Ok(Some(row)) => row,
+        outcome => return Err(outcome_error("setting get failed", outcome.problem())),
+    };
+    assert_eq!(loaded, row);
+    let rows = match indexed_db::settings_store::settings_all(&db_name).await {
+        StorageOutcome::Ok(rows) => rows,
+        outcome => return Err(outcome_error("settings all failed", outcome.problem())),
+    };
+    assert_eq!(rows, vec![row.clone()]);
+    assert_ok(indexed_db::settings_store::setting_delete(&db_name, &row.key).await)?;
+    match indexed_db::settings_store::setting_get(&db_name, &row.key).await {
+        StorageOutcome::Ok(None) => Ok(()),
+        outcome => Err(outcome_error("setting delete failed", outcome.problem())),
+    }
+}
+
 fn stored_workspace(title: &str) -> WorkspaceRecord {
     let mut workspace = bootstrap_workspace();
     if let Some(tab) = workspace.tabs.get_mut("bootstrap-welcome-tab") {
         tab.title = title.to_owned();
     }
     workspace
+}
+
+fn setting(key: &str, namespace: &str, value: serde_json::Value) -> SettingOverrideRecord {
+    SettingOverrideRecord {
+        key: key.to_owned(),
+        namespace: namespace.to_owned(),
+        value,
+        updated_at: 11,
+    }
 }
 
 fn assert_ok(outcome: StorageOutcome<()>) -> Result<(), JsValue> {

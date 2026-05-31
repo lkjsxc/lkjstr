@@ -5,6 +5,7 @@ pub mod ledger;
 pub mod manifest;
 pub mod outcome;
 pub mod resource;
+pub mod settings;
 pub mod tab_state;
 mod table_specs;
 pub mod workspace;
@@ -20,6 +21,7 @@ pub use manifest::{
 };
 pub use outcome::{StorageOperation, StorageOutcome, StorageProblem};
 pub use resource::{CacheOwnerKind, CacheResourceKind};
+pub use settings::{SettingOverrideRecord, setting_record_json_bytes, setting_record_key};
 pub use tab_state::{
     CacheLedgerRecord, TabStateRecord, cache_ledger_id, encoded_json_bytes, tab_state_id,
     tab_state_ledger_record,

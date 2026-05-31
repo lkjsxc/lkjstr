@@ -30,8 +30,13 @@ pub async fn workspace_startup_input(db_name: &str, now: u64) -> StartupInput {
 
 pub async fn workspace_put(db_name: &str, row: &WorkspaceRecord) -> StorageOutcome<()> {
     let operation_id = format!("workspace-put-{}", workspace_record_id(row));
-    let db = match database::open_database(db_name, StorageOperation::Write, operation_id.clone())
-        .await
+    let db = match database::open_database(
+        db_name,
+        StorageOperation::Write,
+        WORKSPACES_TABLE,
+        operation_id.clone(),
+    )
+    .await
     {
         StorageOutcome::Ok(db) => db,
         outcome => return outcome.map(|_| ()),
@@ -41,7 +46,7 @@ pub async fn workspace_put(db_name: &str, row: &WorkspaceRecord) -> StorageOutco
         Ok(value) => value,
         Err(_) => {
             db.close();
-            return database::corrupt(StorageOperation::Write, operation_id);
+            return database::corrupt(StorageOperation::Write, WORKSPACES_TABLE, operation_id);
         }
     };
     let result = match put_value(&db, value, operation_id).await {
@@ -54,8 +59,13 @@ pub async fn workspace_put(db_name: &str, row: &WorkspaceRecord) -> StorageOutco
 
 pub async fn workspace_get(db_name: &str, id: &str) -> StorageOutcome<Option<WorkspaceRecord>> {
     let operation_id = format!("workspace-get-{id}");
-    let db = match database::open_database(db_name, StorageOperation::Read, operation_id.clone())
-        .await
+    let db = match database::open_database(
+        db_name,
+        StorageOperation::Read,
+        WORKSPACES_TABLE,
+        operation_id.clone(),
+    )
+    .await
     {
         StorageOutcome::Ok(db) => db,
         outcome => return outcome.map(|_| None),
@@ -72,15 +82,34 @@ async fn put_value(
 ) -> StorageOutcome<()> {
     let store = match database::object_store(db, WORKSPACES_TABLE, IdbTransactionMode::Readwrite) {
         Ok(store) => store,
-        Err(error) => return database::map_js_error(StorageOperation::Write, operation_id, error),
+        Err(error) => {
+            return database::map_js_error(
+                StorageOperation::Write,
+                WORKSPACES_TABLE,
+                operation_id,
+                error,
+            );
+        }
     };
     let request = match store.put(&value) {
         Ok(request) => request,
-        Err(error) => return database::map_js_error(StorageOperation::Write, operation_id, error),
+        Err(error) => {
+            return database::map_js_error(
+                StorageOperation::Write,
+                WORKSPACES_TABLE,
+                operation_id,
+                error,
+            );
+        }
     };
     match callbacks::request_value(request).await {
         Ok(_) => StorageOutcome::Ok(()),
-        Err(error) => database::map_js_error(StorageOperation::Write, operation_id, error),
+        Err(error) => database::map_js_error(
+            StorageOperation::Write,
+            WORKSPACES_TABLE,
+            operation_id,
+            error,
+        ),
     }
 }
 
@@ -91,16 +120,35 @@ async fn get_value(
 ) -> StorageOutcome<Option<WorkspaceRecord>> {
     let store = match database::object_store(db, WORKSPACES_TABLE, IdbTransactionMode::Readonly) {
         Ok(store) => store,
-        Err(error) => return database::map_js_error(StorageOperation::Read, operation_id, error),
+        Err(error) => {
+            return database::map_js_error(
+                StorageOperation::Read,
+                WORKSPACES_TABLE,
+                operation_id,
+                error,
+            );
+        }
     };
     let request = match store.get(&JsValue::from_str(id)) {
         Ok(request) => request,
-        Err(error) => return database::map_js_error(StorageOperation::Read, operation_id, error),
+        Err(error) => {
+            return database::map_js_error(
+                StorageOperation::Read,
+                WORKSPACES_TABLE,
+                operation_id,
+                error,
+            );
+        }
     };
     match callbacks::request_value(request).await {
         Ok(value) if value.is_undefined() => StorageOutcome::Ok(None),
         Ok(value) => deserialize_workspace(value, operation_id),
-        Err(error) => database::map_js_error(StorageOperation::Read, operation_id, error),
+        Err(error) => database::map_js_error(
+            StorageOperation::Read,
+            WORKSPACES_TABLE,
+            operation_id,
+            error,
+        ),
     }
 }
 
@@ -110,25 +158,6 @@ fn deserialize_workspace(
 ) -> StorageOutcome<Option<WorkspaceRecord>> {
     match serde_wasm_bindgen::from_value(value) {
         Ok(row) => StorageOutcome::Ok(Some(row)),
-        Err(_) => database::corrupt(StorageOperation::Read, operation_id),
-    }
-}
-
-trait OutcomeMap<T> {
-    fn map<U>(self, value: impl FnOnce(T) -> U) -> StorageOutcome<U>;
-}
-
-impl<T> OutcomeMap<T> for StorageOutcome<T> {
-    fn map<U>(self, value: impl FnOnce(T) -> U) -> StorageOutcome<U> {
-        match self {
-            StorageOutcome::Ok(inner) => StorageOutcome::Ok(value(inner)),
-            StorageOutcome::Unavailable(problem) => StorageOutcome::Unavailable(problem),
-            StorageOutcome::Timeout(problem) => StorageOutcome::Timeout(problem),
-            StorageOutcome::Blocked(problem) => StorageOutcome::Blocked(problem),
-            StorageOutcome::Quota(problem) => StorageOutcome::Quota(problem),
-            StorageOutcome::Corrupt(problem) => StorageOutcome::Corrupt(problem),
-            StorageOutcome::LateSettled(problem) => StorageOutcome::LateSettled(problem),
-            StorageOutcome::LateRejected(problem) => StorageOutcome::LateRejected(problem),
-        }
+        Err(_) => database::corrupt(StorageOperation::Read, WORKSPACES_TABLE, operation_id),
     }
 }

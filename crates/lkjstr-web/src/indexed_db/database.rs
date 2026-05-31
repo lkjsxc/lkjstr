@@ -9,26 +9,28 @@ use web_sys::{
 use crate::indexed_db::{callbacks, schema};
 
 pub const DEFAULT_DB_NAME: &str = "lkjstr";
+pub const SETTINGS_TABLE: &str = "settings";
 pub const WORKSPACES_TABLE: &str = "workspaces";
 
 pub async fn open_database(
     db_name: &str,
     operation: StorageOperation,
+    table: &'static str,
     operation_id: impl Into<String>,
 ) -> StorageOutcome<IdbDatabase> {
     let operation_id = operation_id.into();
-    let factory = match indexed_db_factory(operation, &operation_id) {
+    let factory = match indexed_db_factory(operation, table, &operation_id) {
         Ok(factory) => factory,
         Err(problem) => return StorageOutcome::Unavailable(problem),
     };
     let request = match factory.open_with_u32(db_name, CURRENT_STORAGE_SCHEMA_STEP) {
         Ok(request) => request,
-        Err(error) => return map_js_error(operation, operation_id, error),
+        Err(error) => return map_js_error(operation, table, operation_id, error),
     };
     let upgrade = upgrade_callback(request.clone());
     match callbacks::open_request_value(request, upgrade).await {
-        Ok(value) => database_from_value(operation, operation_id, value),
-        Err(error) => map_js_error(operation, operation_id, error),
+        Ok(value) => database_from_value(operation, table, operation_id, value),
+        Err(error) => map_js_error(operation, table, operation_id, error),
     }
 }
 
@@ -43,11 +45,12 @@ pub fn object_store(
 
 pub fn map_js_error<T>(
     operation: StorageOperation,
+    table: &'static str,
     operation_id: String,
     error: JsValue,
 ) -> StorageOutcome<T> {
     let reason = classify_error(&error);
-    let problem = StorageProblem::new(operation, WORKSPACES_TABLE, reason, operation_id);
+    let problem = StorageProblem::new(operation, table, reason, operation_id);
     match reason {
         "blocked" => StorageOutcome::Blocked(problem),
         "quota" => StorageOutcome::Quota(problem),
@@ -59,11 +62,12 @@ pub fn map_js_error<T>(
 
 pub fn corrupt<T>(
     operation: StorageOperation,
+    table: &'static str,
     operation_id: impl Into<String>,
 ) -> StorageOutcome<T> {
     StorageOutcome::Corrupt(StorageProblem::new(
         operation,
-        WORKSPACES_TABLE,
+        table,
         "corrupt",
         operation_id,
     ))
@@ -71,19 +75,24 @@ pub fn corrupt<T>(
 
 fn indexed_db_factory(
     operation: StorageOperation,
+    table: &'static str,
     operation_id: &str,
 ) -> Result<IdbFactory, StorageProblem> {
     let Some(window) = web_sys::window() else {
-        return Err(unavailable_problem(operation, operation_id));
+        return Err(unavailable_problem(operation, table, operation_id));
     };
     match window.indexed_db() {
         Ok(Some(factory)) => Ok(factory),
-        Ok(None) | Err(_) => Err(unavailable_problem(operation, operation_id)),
+        Ok(None) | Err(_) => Err(unavailable_problem(operation, table, operation_id)),
     }
 }
 
-fn unavailable_problem(operation: StorageOperation, operation_id: &str) -> StorageProblem {
-    StorageProblem::new(operation, WORKSPACES_TABLE, "unavailable", operation_id)
+fn unavailable_problem(
+    operation: StorageOperation,
+    table: &'static str,
+    operation_id: &str,
+) -> StorageProblem {
+    StorageProblem::new(operation, table, "unavailable", operation_id)
 }
 
 fn upgrade_callback(request: IdbOpenDbRequest) -> callbacks::EventSlot {
@@ -98,14 +107,15 @@ fn upgrade_callback(request: IdbOpenDbRequest) -> callbacks::EventSlot {
 
 fn database_from_value(
     operation: StorageOperation,
+    table: &'static str,
     operation_id: String,
     value: JsValue,
 ) -> StorageOutcome<IdbDatabase> {
     let Ok(db) = value.dyn_into::<IdbDatabase>() else {
-        return corrupt(operation, operation_id);
+        return corrupt(operation, table, operation_id);
     };
-    if !db.object_store_names().contains(WORKSPACES_TABLE) {
-        return corrupt(operation, operation_id);
+    if !db.object_store_names().contains(table) {
+        return corrupt(operation, table, operation_id);
     }
     StorageOutcome::Ok(db)
 }
