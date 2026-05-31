@@ -40,7 +40,7 @@ export function pressureState(input: PressureInput): CachePressureState {
     return 'protected-only';
   if (input.unknownOrOverheadBytes > 0) return 'unknown-only';
   return input.inventoryStatus === 'exact'
-    ? 'candidate-limited'
+    ? 'protected-only'
     : 'inventory-incomplete';
 }
 

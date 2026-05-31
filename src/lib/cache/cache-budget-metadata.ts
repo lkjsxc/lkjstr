@@ -40,7 +40,9 @@ export async function writeCacheBudgetMetadata(
     skippedDurablyProtected: result.skippedDurablyProtected,
     skippedDynamicallyProtected: result.skippedDynamicallyProtected,
     protectedOnly: result.protectedOnly,
-    protectedOrUnknownOnly: result.protectedOnly,
+    protectedOrUnknownOnly:
+      result.pressureState === 'protected-only' ||
+      result.pressureState === 'unknown-only',
     ledgerInventory: snapshot.ledgerInventory,
     storageInventory: snapshot.storageInventory,
     updatedAt: Date.now(),

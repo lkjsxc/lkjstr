@@ -17,6 +17,10 @@ describe('cache budget decision', () => {
     expect(state({ eligibleRows: 1 })).toBe('candidate-limited');
   });
 
+  it('stops as protected-only when exact pressure has no candidates', () => {
+    expect(state({ eligibleRows: 0 })).toBe('protected-only');
+  });
+
   it('distinguishes protected, unknown, and incomplete pressure', () => {
     expect(state({ protectedRows: 4 })).toBe('protected-only');
     expect(state({ unknownOrOverheadBytes: 512 })).toBe('unknown-only');

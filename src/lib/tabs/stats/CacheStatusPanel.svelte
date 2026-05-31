@@ -116,6 +116,10 @@
         <td>{props.cache.protectedOnly ? 'yes' : 'no'}</td>
       </tr>
       <tr>
+        <th>Protected or unknown only</th>
+        <td>{props.cache.protectedOrUnknownOnly ? 'yes' : 'no'}</td>
+      </tr>
+      <tr>
         <th>Skipped protected rows</th>
         <td>
           {props.cache.skippedDurablyProtected} durable /

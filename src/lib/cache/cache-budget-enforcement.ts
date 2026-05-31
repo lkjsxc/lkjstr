@@ -149,8 +149,7 @@ export async function enforceCacheBudget(
     prunedBytes,
     eventCacheBytes: snapshot.eventCacheBytes,
     skipped: false,
-    protectedOnly:
-      finalState === 'protected-only' || finalState === 'unknown-only',
+    protectedOnly: finalState === 'protected-only',
     pressureState: finalState,
     skippedDurablyProtected:
       skippedDurablyProtected + finalSelection.skippedDurablyProtected,
