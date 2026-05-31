@@ -102,8 +102,9 @@ Read next: [architecture/README.md](architecture/README.md),
   late-rejected IndexedDB operations.
 - Rust storage support now implements the executable table manifest, cache
   ledger resource ownership map, typed storage operation outcome contract, and
-  tab-state key plus ledger-row contract. IndexedDB repositories and the Rust
-  browser adapter are not yet implemented.
+  tab-state key plus ledger-row contract. Rust workspace records now have a
+  tested JSON storage shape. IndexedDB repositories and the Rust browser adapter
+  are not yet implemented.
 - Rust relay support now implements pure send queue, request scheduler,
   subscription id, subscription alias, and close tombstone state machines.
   WebSocket adapters and the full Rust relay client reducer are not yet

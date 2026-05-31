@@ -1,6 +1,9 @@
 #![doc = "Workspace tabs."]
 
-#[derive(Clone, Copy, Debug, Eq, PartialEq)]
+use serde::{Deserialize, Serialize};
+
+#[derive(Clone, Copy, Debug, Deserialize, Eq, PartialEq, Serialize)]
+#[serde(rename_all = "kebab-case")]
 pub enum TabKind {
     Welcome,
     NewTab,
@@ -23,7 +26,8 @@ pub enum TabKind {
     Settings,
 }
 
-#[derive(Clone, Debug, Eq, PartialEq)]
+#[derive(Clone, Debug, Deserialize, Eq, PartialEq, Serialize)]
+#[serde(rename_all = "camelCase")]
 pub struct WorkspaceTab {
     pub id: String,
     pub kind: TabKind,

@@ -7,6 +7,7 @@ pub mod outcome;
 pub mod resource;
 pub mod tab_state;
 mod table_specs;
+pub mod workspace;
 
 pub use data_class::{StorageDataClass, StorageInventoryGroup};
 pub use ledger::{
@@ -23,6 +24,7 @@ pub use tab_state::{
     CacheLedgerRecord, TabStateRecord, cache_ledger_id, encoded_json_bytes, tab_state_id,
     tab_state_ledger_record,
 };
+pub use workspace::{WorkspaceRecord, workspace_record_id, workspace_record_json_bytes};
 
 /// Crate ownership marker used by repository checks and docs.
 pub const CRATE_OWNER: &str = "storage";

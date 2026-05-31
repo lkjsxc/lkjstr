@@ -1,21 +1,26 @@
 #![doc = "Workspace pane and split layout."]
 
-#[derive(Clone, Copy, Debug, Eq, PartialEq)]
+use serde::{Deserialize, Serialize};
+
+#[derive(Clone, Copy, Debug, Deserialize, Eq, PartialEq, Serialize)]
+#[serde(rename_all = "kebab-case")]
 pub enum SplitDirection {
     Horizontal,
     Vertical,
 }
 
-#[derive(Clone, Debug, Eq, PartialEq)]
+#[derive(Clone, Debug, Deserialize, Eq, PartialEq, Serialize)]
+#[serde(rename_all = "camelCase")]
 pub struct PaneNode {
     pub id: String,
     pub tab_group_id: String,
     pub min_width: u16,
     pub min_height: u16,
+    #[serde(default, skip_serializing_if = "is_false")]
     pub collapsed: bool,
 }
 
-#[derive(Clone, Debug, Eq, PartialEq)]
+#[derive(Clone, Debug, Deserialize, Eq, PartialEq, Serialize)]
 pub struct SplitNode {
     pub id: String,
     pub direction: SplitDirection,
@@ -23,7 +28,8 @@ pub struct SplitNode {
     pub sizes: Vec<u16>,
 }
 
-#[derive(Clone, Debug, Eq, PartialEq)]
+#[derive(Clone, Debug, Deserialize, Eq, PartialEq, Serialize)]
+#[serde(rename_all = "kebab-case", tag = "type")]
 pub enum LayoutNode {
     Pane(PaneNode),
     Split(SplitNode),
@@ -130,4 +136,8 @@ fn compact_split(split: &SplitNode, pane_id: &str) -> Option<LayoutNode> {
             ..split.clone()
         })),
     }
+}
+
+fn is_false(value: &bool) -> bool {
+    !value
 }

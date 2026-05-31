@@ -8,7 +8,8 @@ This file defines Rust ownership for durable browser storage. Status: partial.
 
 Implemented now: `lkjstr-storage` owns the executable storage table manifest,
 cache ledger resource map, typed operation outcomes, and the tab-state key plus
-ledger-row contract for workspace snapshots.
+ledger-row contract for workspace snapshots. Rust workspace records now have a
+tested JSON storage shape for future repository adapters.
 
 Not implemented yet: repositories, retention dispatchers, ledger repair,
 diagnostics inventory, and the IndexedDB host adapter. `lkjstr-web` will own the

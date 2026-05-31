@@ -5,8 +5,10 @@ use std::collections::BTreeMap;
 use crate::workspace::group::TabGroup;
 use crate::workspace::layout::{LayoutNode, PaneNode};
 use crate::workspace::tab::{TabKind, WorkspaceTab};
+use serde::{Deserialize, Serialize};
 
-#[derive(Clone, Debug, Eq, PartialEq)]
+#[derive(Clone, Debug, Deserialize, Eq, PartialEq, Serialize)]
+#[serde(rename_all = "camelCase")]
 pub struct Workspace {
     pub id: String,
     pub name: String,

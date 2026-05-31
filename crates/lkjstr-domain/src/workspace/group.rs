@@ -1,8 +1,10 @@
 #![doc = "Workspace tab groups."]
 
 use crate::workspace::tab::WorkspaceTab;
+use serde::{Deserialize, Serialize};
 
-#[derive(Clone, Debug, Eq, PartialEq)]
+#[derive(Clone, Debug, Deserialize, Eq, PartialEq, Serialize)]
+#[serde(rename_all = "camelCase")]
 pub struct TabGroup {
     pub id: String,
     pub tab_ids: Vec<String>,

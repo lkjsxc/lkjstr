@@ -15,3 +15,4 @@ resource map, and typed operation outcomes.
 - `resource.rs`: cache owner and resource kind strings.
 - `tab_state.rs`: tab-state keys, rows, and ledger rows.
 - `table_specs.rs`: table manifest row data.
+- `workspace.rs`: workspace row identity and JSON size helpers.
