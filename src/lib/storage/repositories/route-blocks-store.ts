@@ -1,9 +1,6 @@
 import type { RelayRouteBlock } from '../../relays/relay-route-types';
 import { browserDb } from '../browser-db';
-import {
-  bestEffortStorageWrite,
-  boundedStorageRead,
-} from '../safe-storage';
+import { bestEffortStorageWrite, boundedStorageRead } from '../safe-storage';
 
 export async function putRelayRouteBlockRow(
   block: RelayRouteBlock,

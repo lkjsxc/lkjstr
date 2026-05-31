@@ -1,9 +1,6 @@
 import type { RelaySet } from '../../relays/relay-types';
 import { browserDb } from '../browser-db';
-import {
-  bestEffortStorageWrite,
-  boundedStorageRead,
-} from '../safe-storage';
+import { bestEffortStorageWrite, boundedStorageRead } from '../safe-storage';
 
 export async function readRelaySetRows(
   fallback: RelaySet[],

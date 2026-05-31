@@ -46,7 +46,9 @@ test('Stats labels active subscriptions and orchestration counters', async ({
   await openNewTabOption(page, 'Stats', 0);
 
   await page.getByRole('button', { name: 'Refresh' }).click();
-  await expect(page.getByRole('heading', { name: 'Subscriptions' })).toBeVisible();
+  await expect(
+    page.getByRole('heading', { name: 'Subscriptions' }),
+  ).toBeVisible();
   await expect(page.getByText('active demands')).toBeVisible();
   await expect(page.getByText('active leases')).toBeVisible();
   await expect(page.getByText('live leases')).toBeVisible();

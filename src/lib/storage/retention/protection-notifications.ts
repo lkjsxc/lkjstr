@@ -1,9 +1,6 @@
 import { cacheLedgerId } from '../../cache/cache-ledger-id';
 import { browserDb } from '../browser-db';
-import {
-  scanRows,
-  type MutableProtectionSnapshot,
-} from './protection-scan';
+import { scanRows, type MutableProtectionSnapshot } from './protection-scan';
 
 export async function collectProtectedNotifications(
   snapshot: MutableProtectionSnapshot,

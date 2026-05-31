@@ -47,9 +47,8 @@ describe('event repository durable deduplication', () => {
   });
 
   it('skips durable rewrites for duplicate relay evidence', async () => {
-    const { clearEventRepositoryForTests, upsertEvent } = await import(
-      '../../../src/lib/events/repository'
-    );
+    const { clearEventRepositoryForTests, upsertEvent } =
+      await import('../../../src/lib/events/repository');
     const duplicate = event('d', 12, 'duplicate');
 
     clearEventRepositoryForTests();

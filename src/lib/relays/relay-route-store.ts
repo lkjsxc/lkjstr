@@ -157,7 +157,6 @@ function shouldPersistRoute(
   next: RelayRoute,
 ): boolean {
   if (!existing) return true;
-  if (next.updatedAt - existing.updatedAt >= durableRouteRefreshMs)
-    return true;
+  if (next.updatedAt - existing.updatedAt >= durableRouteRefreshMs) return true;
   return existing.purpose !== next.purpose;
 }

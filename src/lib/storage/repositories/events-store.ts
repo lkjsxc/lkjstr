@@ -1,9 +1,6 @@
 import { cacheByteSizeForEvent } from '../../cache/cache-byte-size';
 import { cacheLedgerId } from '../../cache/cache-ledger-id';
-import {
-  eventLedgerRecord,
-  eventTargetBumps,
-} from '../../cache/event-ledger';
+import { eventLedgerRecord, eventTargetBumps } from '../../cache/event-ledger';
 import { feedCursorLedgerRecord } from '../../events/feed-cache-ledger';
 import type {
   EventRelayReceipt,
@@ -35,9 +32,10 @@ export async function readStoredEventRows(
   ids: readonly string[],
   fallback: readonly StoredEvent[],
 ): Promise<(StoredEvent | undefined)[]> {
-  return boundedStorageRead(() => browserDb().events.bulkGet([...ids]), [
-    ...fallback,
-  ]);
+  return boundedStorageRead(
+    () => browserDb().events.bulkGet([...ids]),
+    [...fallback],
+  );
 }
 
 export async function putStoredEventWithLedger(

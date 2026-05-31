@@ -89,8 +89,7 @@ export function storageOperationSnapshots(): readonly TrackedStorageOperation[] 
 export function activeStorageOperationCount(): number {
   return [...operations.values()].filter(
     (operation) =>
-      operation.status === 'active' ||
-      operation.status === 'returned-timeout',
+      operation.status === 'active' || operation.status === 'returned-timeout',
   ).length;
 }
 

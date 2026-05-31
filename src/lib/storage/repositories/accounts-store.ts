@@ -1,13 +1,8 @@
 import type { Account } from '../../accounts/account';
 import { browserDb } from '../browser-db';
-import {
-  bestEffortStorageWrite,
-  boundedStorageRead,
-} from '../safe-storage';
+import { bestEffortStorageWrite, boundedStorageRead } from '../safe-storage';
 
-export async function readAccountRows(
-  fallback: Account[],
-): Promise<Account[]> {
+export async function readAccountRows(fallback: Account[]): Promise<Account[]> {
   return boundedStorageRead(
     () => browserDb().accounts.orderBy('updatedAt').reverse().toArray(),
     fallback,

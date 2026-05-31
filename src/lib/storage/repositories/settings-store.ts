@@ -1,9 +1,6 @@
 import type { SettingOverride } from '../../settings/settings-store';
 import { browserDb } from '../browser-db';
-import {
-  bestEffortStorageWrite,
-  boundedStorageRead,
-} from '../safe-storage';
+import { bestEffortStorageWrite, boundedStorageRead } from '../safe-storage';
 
 export async function readSettingOverrideRows(
   fallback: SettingOverride[],

@@ -1,9 +1,6 @@
 import type { Workspace } from '../../workspace/workspace';
 import { browserDb } from '../browser-db';
-import {
-  bestEffortStorageWrite,
-  boundedStorageRead,
-} from '../safe-storage';
+import { bestEffortStorageWrite, boundedStorageRead } from '../safe-storage';
 
 export async function readWorkspaceRow(
   id: string,

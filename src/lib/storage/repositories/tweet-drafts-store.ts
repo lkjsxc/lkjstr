@@ -1,9 +1,6 @@
 import type { TweetDraft } from '../../tweet/draft-store';
 import { browserDb } from '../browser-db';
-import {
-  bestEffortStorageWrite,
-  boundedStorageRead,
-} from '../safe-storage';
+import { bestEffortStorageWrite, boundedStorageRead } from '../safe-storage';
 
 export async function readTweetDraftRow(
   id: string,

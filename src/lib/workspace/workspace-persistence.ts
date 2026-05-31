@@ -1,7 +1,4 @@
-import {
-  safeGetItem,
-  safeSetItem,
-} from '../storage/safe-storage';
+import { safeGetItem, safeSetItem } from '../storage/safe-storage';
 import {
   putWorkspaceRow,
   readWorkspaceRow,
