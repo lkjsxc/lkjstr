@@ -12,3 +12,4 @@ Protocol tests port current TypeScript protocol behavior to Rust.
 - `filter_test.rs`: relay filter parsing and matching.
 - `messages_test.rs`: client and relay message codecs.
 - `nip19_test.rs`: NIP-19 scalar and TLV entity round trips.
+- `relay_url_test.rs`: relay URL normalization.

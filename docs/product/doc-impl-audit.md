@@ -22,6 +22,7 @@ references should stay as relative Markdown links.
 | Rust protocol filters and relay messages    | [protocol-kernel.md](../architecture/rust-wasm/protocol-kernel.md)       | implemented   | filter and message tests      |
 | Rust protocol signing and verification      | [protocol-kernel.md](../architecture/rust-wasm/protocol-kernel.md)       | implemented   | crypto and verify tests       |
 | Rust protocol NIP-19 entities               | [protocol-kernel.md](../architecture/rust-wasm/protocol-kernel.md)       | implemented   | NIP-19 Rust tests             |
+| Rust protocol relay URL normalization        | [protocol-kernel.md](../architecture/rust-wasm/protocol-kernel.md)       | implemented   | relay URL Rust tests          |
 | Rust protocol WASM bridge                   | [host-boundary.md](../architecture/rust-wasm/host-boundary.md)           | implemented   | browser WASM tests            |
 | Rust pure account domain                    | [app-boundary.md](../architecture/rust-wasm/app-boundary.md)             | implemented   | domain account tests          |
 | Rust storage, relay, app, and UI            | [crate-boundaries.md](../architecture/rust-wasm/crate-boundaries.md)     | not implemented | current runtime remains TS    |

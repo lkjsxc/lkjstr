@@ -14,6 +14,7 @@ pub mod messages;
 pub mod nip19;
 mod nip19_encode;
 mod nip19_tlv;
+pub mod relay_url;
 
 pub use bytes::{
     ascii_to_bytes, bytes_to_ascii, bytes_to_hex, bytes_to_utf8, hex_to_bytes, is_lower_hex,
@@ -45,3 +46,4 @@ pub use nip19_encode::{
     encode_naddr, encode_nevent, encode_nip19, encode_note, encode_nprofile, encode_npub,
     encode_nsec,
 };
+pub use relay_url::normalize_relay_url;

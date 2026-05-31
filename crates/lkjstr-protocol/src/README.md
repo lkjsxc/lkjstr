@@ -20,3 +20,4 @@ Protocol source files define event, filter, message, signing, and NIP behavior.
 - `nip19.rs`: public NIP-19 entity types and decoding.
 - `nip19_encode.rs`: NIP-19 entity encoding.
 - `nip19_tlv.rs`: NIP-19 TLV helpers.
+- `relay_url.rs`: relay URL normalization.
