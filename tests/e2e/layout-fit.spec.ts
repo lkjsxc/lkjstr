@@ -1,5 +1,8 @@
 import { expect, test } from '@playwright/test';
-import { installSyntheticRelay } from './timeline-relay-helpers';
+import {
+  installSyntheticRelay,
+  waitForSyntheticEvent,
+} from './timeline-relay-helpers';
 import { assertNoHorizontalOverflow, syntheticNotes } from './layout-helpers';
 import { openNewTabOption, pane } from './workspace-helpers';
 
@@ -72,10 +75,14 @@ test('tab drag area does not extend past the close button', async ({
 });
 
 test('global event scroller fills the tile body', async ({ page }) => {
-  await installSyntheticRelay(page, { events: syntheticNotes(40) });
+  const notes = syntheticNotes(40);
+  await installSyntheticRelay(page, { events: notes });
   await page.goto('/');
   await openNewTabOption(page, 'Global');
-  await expect(page.getByText('layout fit note 0')).toBeVisible();
+  await waitForSyntheticEvent(page, notes[0]!.id);
+  await expect(page.getByText('layout fit note 0')).toBeVisible({
+    timeout: 15_000,
+  });
   const heights = await page
     .locator('.pane-body[data-active-tab="true"] .event-list')
     .evaluate((list) => {
