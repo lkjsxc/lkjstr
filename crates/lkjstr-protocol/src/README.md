@@ -21,6 +21,7 @@ Protocol source files define event, filter, message, signing, and NIP behavior.
 - `message_parts.rs`: relay message parsing helpers.
 - `messages.rs`: client and relay message codecs.
 - `nip30.rs`: NIP-30 custom emoji helpers.
+- `nip51.rs`: NIP-51 emoji list and set helpers.
 - `nip36.rs`: NIP-36 content-warning helpers.
 - `nip57.rs`: NIP-57 zap target and receipt helpers.
 - `nip65.rs`: NIP-65 relay-list metadata parser.

@@ -19,6 +19,7 @@ mod nip19_encode;
 mod nip19_tlv;
 pub mod nip30;
 pub mod nip36;
+pub mod nip51;
 pub mod nip57;
 pub mod nip65;
 pub mod nip96;
@@ -52,10 +53,10 @@ pub use event_sign::{EventTemplate, SignError, finalize_event, sign_event_with_s
 pub use event_verify::{VerificationCode, VerificationResult, verify_event};
 pub use filter::{NostrFilter, matches_any_filter, matches_filter, parse_filter_value};
 pub use kinds::{
-    KIND_DELETION, KIND_FOLLOW_LIST, KIND_GENERIC_REPOST, KIND_HTTP_AUTH, KIND_METADATA,
-    KIND_REACTION, KIND_RECOMMEND_RELAY, KIND_RELAY_AUTH, KIND_RELAY_LIST_METADATA, KIND_REPOST,
-    KIND_TEXT_NOTE, KIND_ZAP_RECEIPT, KIND_ZAP_REQUEST, is_addressable_kind, is_ephemeral_kind,
-    is_replaceable_kind,
+    KIND_DELETION, KIND_EMOJI_LIST, KIND_EMOJI_SET, KIND_FOLLOW_LIST, KIND_GENERIC_REPOST,
+    KIND_HTTP_AUTH, KIND_METADATA, KIND_REACTION, KIND_RECOMMEND_RELAY, KIND_RELAY_AUTH,
+    KIND_RELAY_LIST_METADATA, KIND_REPOST, KIND_TEXT_NOTE, KIND_ZAP_RECEIPT, KIND_ZAP_REQUEST,
+    is_addressable_kind, is_ephemeral_kind, is_replaceable_kind,
 };
 pub use messages::{
     ClientMessage, MessageErrorCode, MessageParseError, RelayMessage, encode_client_message,
@@ -74,6 +75,10 @@ pub use nip30::{
     valid_custom_emoji_url, valid_incoming_custom_emoji_shortcode,
 };
 pub use nip36::{content_warning_reason, content_warning_tag, has_content_warning};
+pub use nip51::{
+    EmojiAddress, account_emoji_source, custom_emojis_from_event, dedupe_custom_emoji_by_shortcode,
+    emoji_addresses_from_lists, emoji_set_address, newest_event, newest_events_by_address,
+};
 pub use nip57::{
     ZapReceiptGroup, ZapTarget, group_zap_receipts, split_zap_amounts, zap_receipt_amount_msats,
     zap_target_event_id, zap_targets,

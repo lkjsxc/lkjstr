@@ -25,6 +25,7 @@ references should stay as relative Markdown links.
 | Rust protocol relay URL normalization        | [protocol-kernel.md](../architecture/rust-wasm/protocol-kernel.md)       | implemented   | relay URL Rust tests          |
 | Rust protocol emoji and warnings            | [protocol-kernel.md](../architecture/rust-wasm/protocol-kernel.md)       | implemented   | NIP-30 and NIP-36 Rust tests  |
 | Rust protocol tag and action helpers         | [protocol-kernel.md](../architecture/rust-wasm/protocol-kernel.md)       | implemented   | tag, reaction, builder tests  |
+| Rust protocol emoji source helpers           | [protocol-kernel.md](../architecture/rust-wasm/protocol-kernel.md)       | implemented   | NIP-51 Rust tests             |
 | Rust protocol zaps and upload auth          | [protocol-kernel.md](../architecture/rust-wasm/protocol-kernel.md)       | implemented   | NIP-57, NIP-96, NIP-98 tests  |
 | Rust protocol relay list metadata            | [protocol-kernel.md](../architecture/rust-wasm/protocol-kernel.md)       | implemented   | NIP-65 Rust tests             |
 | Rust protocol WASM bridge                   | [host-boundary.md](../architecture/rust-wasm/host-boundary.md)           | implemented   | browser WASM tests            |

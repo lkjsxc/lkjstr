@@ -48,9 +48,9 @@ Read next: [protocol/README.md](protocol/README.md),
   filter matching, relay message basics, Schnorr verification, local signing,
   relay URL normalization, NIP-19 scalar plus TLV entity encoding and decoding,
   NIP-30 custom emoji helpers, NIP-36 content-warning helpers, tag indexing,
-  reaction parsing, action tag builders, content-derived tag helpers, NIP-57
-  zap helpers, NIP-65 relay-list metadata parsing, NIP-96 upload metadata
-  parsers, and NIP-98 HTTP auth helpers.
+  reaction parsing, action tag builders, content-derived tag helpers, NIP-51
+  emoji source helpers, NIP-57 zap helpers, NIP-65 relay-list metadata parsing,
+  NIP-96 upload metadata parsers, and NIP-98 HTTP auth helpers.
 - Home, Global, Profile posts, Notifications, and safe Custom Request event-list
   reads use an adaptive temporal window controller. Grouped scans start at `1`
   minute, double the next adjacent window after complete sparse relay-shaped
