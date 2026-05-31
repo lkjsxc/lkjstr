@@ -292,7 +292,6 @@ Run `pnpm check:repo` after documentation changes before code work continues.
   before it is treated as app-origin.
 
 ## Memory
-
 The heavy-feed browser smoke test reports app JavaScript heap, runtime item
 counters, and total Chromium RSS when available. The app heap assertion runs
 only when Chromium exposes `performance.memory`; otherwise the heap value is

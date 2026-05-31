@@ -29,7 +29,7 @@ references should stay as relative Markdown links.
 | Clause                              | Contract                                                                                                  | Status      | Notes                           |
 | ----------------------------------- | --------------------------------------------------------------------------------------------------------- | ----------- | ------------------------------- |
 | Scroll + virtua anchor              | [tab-runtime.md](../architecture/workspace/tab-runtime.md)                                                | implemented | session + IDB                   |
-| Feed cursors in snapshot            | [tab-runtime.md](../architecture/workspace/tab-runtime.md), [storage.md](../architecture/data/storage.md) | implemented | `tab-runtime-registry`          |
+| Feed cursors in snapshot            | [tab-runtime.md](../architecture/workspace/tab-runtime.md), [tab-snapshots.md](../architecture/data/storage/data-classes/tab-snapshots.md) | implemented | `tab-runtime-registry`          |
 | `hasOlder` / `hasNewer` in snapshot | [tab-runtime.md](../architecture/workspace/tab-runtime.md)                                                | implemented | runtime snapshot                |
 | Search query in tool snapshot       | [tabs.md](workspace/tabs.md)                                                                              | implemented | Search tab fields               |
 | Session cap 32                      | [tab-runtime.md](../architecture/workspace/tab-runtime.md)                                                | implemented | `session-tab-snapshots`         |
@@ -42,7 +42,7 @@ references should stay as relative Markdown links.
 | --------------------------- | ---------------- | ----------- | ----------------------- |
 | `aria-pressed` Heart/Repost | event-actions.md | implemented |                         |
 | Pressed off visible window  | event-actions.md | implemented | `action-state-index.ts` |
-| Persistent action index     | storage.md       | implemented | hybrid with feed merge  |
+| Persistent action index     | storage/README.md | implemented | hybrid with feed merge  |
 
 ## Workspace Polish
 
@@ -100,7 +100,7 @@ references should stay as relative Markdown links.
 | Timeline regression e2e                               | verification.md                      | implemented | Includes Home follow-discovery EOSE ownership and Notifications bounded viewport-fill older paging.                                                        |
 | Multi-tab Home ownership                              | feeds/runtime/multi-tab-ownership.md | implemented | Matching Home tabs attach to one backend query and share bootstrap, live leases, and cursors.                                                              |
 | Cache-first interval proof                            | data/cache-first-feed-pages.md       | implemented | Interval-union proof and partial relay pruning are covered by unit cache scan tests.                                                                       |
-| Warm grouped scan hints                               | data/storage.md                      | implemented | Hint policy and warm-start scan tests prove conservative relay-span tuning without suppressing reads.                                                      |
+| Warm grouped scan hints                               | data/storage/README.md              | implemented | Hint policy and warm-start scan tests prove conservative relay-span tuning without suppressing reads.                                                      |
 
 ## Feed Scroll and Row Chrome
 

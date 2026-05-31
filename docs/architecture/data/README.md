@@ -3,6 +3,7 @@
 ## Purpose
 
 Data docs define storage, feed windows, and shared event presentation models.
+Start storage work in [storage/README.md](storage/README.md).
 
 ## Table of Contents
 
@@ -36,20 +37,60 @@ Data docs define storage, feed windows, and shared event presentation models.
   strategy.
 - [resource-ownership.md](resource-ownership.md): who creates and who closes
   each resource.
-- [local-cache-ledger.md](local-cache-ledger.md): shared byte-accounting ledger.
-- [storage-table-contract.md](storage-table-contract.md): live table map for
-  retention, Stats, deletion, and repair behavior.
-- [retention/README.md](retention/README.md): score-based local-cache retention.
-- [retention/compaction.md](retention/compaction.md): compaction workflow.
-- [retention/index-shape.md](retention/index-shape.md): ledger indexes.
-- [retention/score-policy.md](retention/score-policy.md): scoring policy.
+- [storage/README.md](storage/README.md): storage kernel entry point.
+- [storage/kernel/README.md](storage/kernel/README.md): manifest, operations,
+  transactions, and repositories.
+- [storage/kernel/manifest.md](storage/kernel/manifest.md): executable table
+  manifest contract.
+- [storage/kernel/schema-steps.md](storage/kernel/schema-steps.md): Dexie
+  schema step rules.
+- [storage/kernel/operation-results.md](storage/kernel/operation-results.md):
+  typed storage outcomes.
+- [storage/kernel/transactions.md](storage/kernel/transactions.md):
+  transactional write families.
+- [storage/kernel/repositories.md](storage/kernel/repositories.md):
+  repository boundary.
+- [storage/kernel/failure-recovery.md](storage/kernel/failure-recovery.md):
+  degraded startup and session fallback.
+- [storage/kernel/local-secrets.md](storage/kernel/local-secrets.md): local
+  signing secret boundary.
+- [storage/data-classes/README.md](storage/data-classes/README.md): durable
+  data classes.
+- [storage/data-classes/ownership-classes.md](storage/data-classes/ownership-classes.md):
+  exact ownership classes.
+- [storage/data-classes/table-manifest.md](storage/data-classes/table-manifest.md):
+  live table matrix.
+- [storage/data-classes/feed-coverage-correctness.md](storage/data-classes/feed-coverage-correctness.md):
+  feed proof validity.
+- [storage/data-classes/tab-snapshots.md](storage/data-classes/tab-snapshots.md):
+  tab-state persistence.
+- [storage/retention/README.md](storage/retention/README.md): storage
+  retention contract.
+- [storage/retention/ledger.md](storage/retention/ledger.md): shared cache
+  ledger.
+- [storage/retention/byte-accounting.md](storage/retention/byte-accounting.md):
+  deterministic estimates.
+- [storage/retention/scoring.md](storage/retention/scoring.md): scoring policy.
+- [storage/retention/dynamic-protection.md](storage/retention/dynamic-protection.md):
+  runtime protection.
+- [storage/retention/deletion.md](storage/retention/deletion.md): delete
+  dispatchers.
+- [storage/retention/repair.md](storage/retention/repair.md): ledger repair.
+- [storage/diagnostics/README.md](storage/diagnostics/README.md): diagnostics
+  index.
+- [storage/diagnostics/inventory.md](storage/diagnostics/inventory.md):
+  storage inventory.
+- [storage/diagnostics/pressure-states.md](storage/diagnostics/pressure-states.md):
+  pressure labels.
+- [storage/diagnostics/stats.md](storage/diagnostics/stats.md): Stats
+  projection.
+- [storage/diagnostics/verification.md](storage/diagnostics/verification.md):
+  storage checks.
 - [local-secret-security.md](local-secret-security.md): passkey-protected
   secret design boundary.
 - [memory-prioritization.md](memory-prioritization.md): durable data and
   runtime retention priority.
 - [relay-pages.md](relay-pages.md): relay page ordering and provenance.
-- [shared-storage.md](shared-storage.md): event and feed repository.
-- [storage.md](storage.md): browser persistence ownership.
 - [../../operations/storage-pressure-verification.md](../../operations/storage-pressure-verification.md):
   cache-budget storage pressure verification scenario.
 - Workspace tab snapshot fields live in

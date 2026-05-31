@@ -36,8 +36,9 @@ Readiness checks whether the app contract is shippable.
 - Quote and reference previews are deduped by event id.
 - Inactive tab retention keeps switched-away tabs alive for the configured
   grace period and closes subscriptions after expiry.
-- Event cache compaction protects accounts, settings, relay sets, workspace
-  state, notifications, and composer recovery data.
+- Cache compaction protects accounts, settings, relay sets, workspace state,
+  Tweet drafts, active jobs, active tab snapshots, recent or unread
+  notifications, and relay route blocks.
 - App heap stays below `100 MB` in the heavy-feed smoke test; Chromium RSS is
   reported separately.
 - Tweet publishes only with a signing account and enabled write relays.

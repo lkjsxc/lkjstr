@@ -56,4 +56,4 @@ Settings provide editable local preferences as one flat key-value list.
 - Cache compaction keys `cache.maxEvents`, `cache.maxAgeDays`, and
   `cache.compactionEnabled` are retired. Local-cache retention is automatic. See
   [cache.md](cache.md) and
-  [retention/compaction.md](../../architecture/data/retention/compaction.md).
+  [storage retention](../../architecture/data/storage/retention/README.md).

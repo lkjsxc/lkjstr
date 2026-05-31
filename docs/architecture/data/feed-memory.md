@@ -57,9 +57,9 @@ bounded as timelines grow.
   the affected coverage as incomplete.
 - Metadata lookup is scoped to authors currently present in loaded items and is
   capped to `30` missing profiles per loaded page.
-- Relay text frames are parsed without an app-imposed byte ceiling. Parse
-  failures and unsupported non-text frames are surfaced through relay
-  diagnostics before storage or rendering.
+- Relay text frames are rejected above the app-owned inbound byte cap before
+  expensive parsing. Parse failures and unsupported non-text frames are surfaced
+  through relay diagnostics before storage or rendering.
 - Loading near the bottom adds older chunks. Loading near the top adds newer
   chunks. Rendering flattens chunks only for display.
 - Live prepends and chunk changes preserve the visible scroll anchor.
@@ -85,7 +85,7 @@ or older-page loads from moving the visible row.
 - Event indexes support kind/time, author/kind/time, and `e` or `p` tag lookup.
 - Budget compaction may prune by retention score and byte accounting through
   the indexed `cacheLedger` store. Browser quota pressure is an additional
-  signal. See [retention/README.md](retention/README.md).
+  signal. See [storage/retention/README.md](storage/retention/README.md).
 - Accounts, local signing secrets, settings, relay sets, workspace state, Tweet
   drafts, active tab snapshots, and user-owned relay configuration are protected
   from local-cache pruning.

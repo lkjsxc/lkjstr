@@ -25,7 +25,7 @@ table of contents required by repository checks.
   [architecture/feeds/README.md](architecture/feeds/README.md) and
   [architecture/data/feed-surface/README.md](architecture/data/feed-surface/README.md).
 - Change storage, cache, or memory ownership: start in
-  [architecture/data/README.md](architecture/data/README.md).
+  [architecture/data/storage/README.md](architecture/data/storage/README.md).
 - Change verification, CI, or Docker: start in
   [operations/README.md](operations/README.md).
 - Change repository rules or source style: start in
@@ -36,8 +36,8 @@ table of contents required by repository checks.
 - [architecture/backend/README.md](architecture/backend/README.md): local backend.
 - [architecture/data/README.md](architecture/data/README.md): storage and memory.
 - [architecture/data/feed-surface/README.md](architecture/data/feed-surface/README.md): feed surfaces.
-- [architecture/data/local-cache-ledger.md](architecture/data/local-cache-ledger.md): shared cache ledger.
-- [architecture/data/retention/README.md](architecture/data/retention/README.md): local-cache retention.
+- [architecture/data/storage/README.md](architecture/data/storage/README.md): storage kernel.
+- [architecture/data/storage/retention/README.md](architecture/data/storage/retention/README.md): local-cache retention.
 - [architecture/feeds/README.md](architecture/feeds/README.md): feed contracts.
 - [architecture/network/README.md](architecture/network/README.md): relay ownership.
 - [architecture/network/subscription-orchestration/README.md](architecture/network/subscription-orchestration/README.md): orchestration.
@@ -77,18 +77,36 @@ table of contents required by repository checks.
 - [architecture/data/feed-surface/staged-pipeline.md](architecture/data/feed-surface/staged-pipeline.md)
 - [architecture/data/feed-surface/surface-matrix.md](architecture/data/feed-surface/surface-matrix.md)
 - [architecture/data/heap-retention.md](architecture/data/heap-retention.md)
-- [architecture/data/local-cache-ledger.md](architecture/data/local-cache-ledger.md)
 - [architecture/data/local-secret-security.md](architecture/data/local-secret-security.md)
 - [architecture/data/memory-prioritization.md](architecture/data/memory-prioritization.md)
 - [architecture/data/relay-pages.md](architecture/data/relay-pages.md)
 - [architecture/data/resource-ownership.md](architecture/data/resource-ownership.md)
-- [architecture/data/retention/README.md](architecture/data/retention/README.md)
-- [architecture/data/retention/compaction.md](architecture/data/retention/compaction.md)
-- [architecture/data/retention/index-shape.md](architecture/data/retention/index-shape.md)
-- [architecture/data/retention/score-policy.md](architecture/data/retention/score-policy.md)
-- [architecture/data/shared-storage.md](architecture/data/shared-storage.md)
-- [architecture/data/storage-table-contract.md](architecture/data/storage-table-contract.md)
-- [architecture/data/storage.md](architecture/data/storage.md)
+- [architecture/data/storage/README.md](architecture/data/storage/README.md)
+- [architecture/data/storage/kernel/README.md](architecture/data/storage/kernel/README.md)
+- [architecture/data/storage/kernel/manifest.md](architecture/data/storage/kernel/manifest.md)
+- [architecture/data/storage/kernel/schema-steps.md](architecture/data/storage/kernel/schema-steps.md)
+- [architecture/data/storage/kernel/operation-results.md](architecture/data/storage/kernel/operation-results.md)
+- [architecture/data/storage/kernel/transactions.md](architecture/data/storage/kernel/transactions.md)
+- [architecture/data/storage/kernel/repositories.md](architecture/data/storage/kernel/repositories.md)
+- [architecture/data/storage/kernel/failure-recovery.md](architecture/data/storage/kernel/failure-recovery.md)
+- [architecture/data/storage/kernel/local-secrets.md](architecture/data/storage/kernel/local-secrets.md)
+- [architecture/data/storage/data-classes/README.md](architecture/data/storage/data-classes/README.md)
+- [architecture/data/storage/data-classes/ownership-classes.md](architecture/data/storage/data-classes/ownership-classes.md)
+- [architecture/data/storage/data-classes/table-manifest.md](architecture/data/storage/data-classes/table-manifest.md)
+- [architecture/data/storage/data-classes/feed-coverage-correctness.md](architecture/data/storage/data-classes/feed-coverage-correctness.md)
+- [architecture/data/storage/data-classes/tab-snapshots.md](architecture/data/storage/data-classes/tab-snapshots.md)
+- [architecture/data/storage/retention/README.md](architecture/data/storage/retention/README.md)
+- [architecture/data/storage/retention/ledger.md](architecture/data/storage/retention/ledger.md)
+- [architecture/data/storage/retention/byte-accounting.md](architecture/data/storage/retention/byte-accounting.md)
+- [architecture/data/storage/retention/scoring.md](architecture/data/storage/retention/scoring.md)
+- [architecture/data/storage/retention/dynamic-protection.md](architecture/data/storage/retention/dynamic-protection.md)
+- [architecture/data/storage/retention/deletion.md](architecture/data/storage/retention/deletion.md)
+- [architecture/data/storage/retention/repair.md](architecture/data/storage/retention/repair.md)
+- [architecture/data/storage/diagnostics/README.md](architecture/data/storage/diagnostics/README.md)
+- [architecture/data/storage/diagnostics/inventory.md](architecture/data/storage/diagnostics/inventory.md)
+- [architecture/data/storage/diagnostics/pressure-states.md](architecture/data/storage/diagnostics/pressure-states.md)
+- [architecture/data/storage/diagnostics/stats.md](architecture/data/storage/diagnostics/stats.md)
+- [architecture/data/storage/diagnostics/verification.md](architecture/data/storage/diagnostics/verification.md)
 - [architecture/feeds/README.md](architecture/feeds/README.md)
 - [architecture/feeds/invariants/README.md](architecture/feeds/invariants/README.md)
 - [architecture/feeds/invariants/event-ordering.md](architecture/feeds/invariants/event-ordering.md)

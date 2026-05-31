@@ -79,14 +79,57 @@ state lives, which modules own subscriptions, and how tabs close cleanly.
 - [data/feed-memory.md](data/feed-memory.md): feed windows and scroll anchors.
 - [data/feed-coverage.md](data/feed-coverage.md): durable feed range evidence
   and cache eligibility.
-- [data/local-cache-ledger.md](data/local-cache-ledger.md): shared local-cache
-  ledger.
-- [data/retention/README.md](data/retention/README.md): score-based
-  local-cache retention.
-- [data/retention/compaction.md](data/retention/compaction.md): compaction
-  queries.
-- [data/retention/index-shape.md](data/retention/index-shape.md): ledger index.
-- [data/retention/score-policy.md](data/retention/score-policy.md): score rules.
+- [data/storage/README.md](data/storage/README.md): storage kernel entry point.
+- [data/storage/kernel/README.md](data/storage/kernel/README.md): manifest,
+  operations, transactions, and repositories.
+- [data/storage/kernel/manifest.md](data/storage/kernel/manifest.md): manifest
+  fields and consumers.
+- [data/storage/kernel/schema-steps.md](data/storage/kernel/schema-steps.md):
+  Dexie schema step rules.
+- [data/storage/kernel/operation-results.md](data/storage/kernel/operation-results.md):
+  typed storage outcomes.
+- [data/storage/kernel/transactions.md](data/storage/kernel/transactions.md):
+  write transaction families.
+- [data/storage/kernel/repositories.md](data/storage/kernel/repositories.md):
+  repository boundary.
+- [data/storage/kernel/failure-recovery.md](data/storage/kernel/failure-recovery.md):
+  degraded startup recovery.
+- [data/storage/kernel/local-secrets.md](data/storage/kernel/local-secrets.md):
+  signing secret boundary.
+- [data/storage/data-classes/README.md](data/storage/data-classes/README.md):
+  durable data classes.
+- [data/storage/data-classes/ownership-classes.md](data/storage/data-classes/ownership-classes.md):
+  ownership classes.
+- [data/storage/data-classes/table-manifest.md](data/storage/data-classes/table-manifest.md):
+  live table matrix.
+- [data/storage/data-classes/feed-coverage-correctness.md](data/storage/data-classes/feed-coverage-correctness.md):
+  coverage proof validity.
+- [data/storage/data-classes/tab-snapshots.md](data/storage/data-classes/tab-snapshots.md):
+  tab-state persistence.
+- [data/storage/retention/README.md](data/storage/retention/README.md):
+  storage retention.
+- [data/storage/retention/ledger.md](data/storage/retention/ledger.md):
+  shared cache ledger.
+- [data/storage/retention/byte-accounting.md](data/storage/retention/byte-accounting.md):
+  deterministic byte estimates.
+- [data/storage/retention/scoring.md](data/storage/retention/scoring.md):
+  retention scoring.
+- [data/storage/retention/dynamic-protection.md](data/storage/retention/dynamic-protection.md):
+  runtime protection.
+- [data/storage/retention/deletion.md](data/storage/retention/deletion.md):
+  delete dispatchers.
+- [data/storage/retention/repair.md](data/storage/retention/repair.md):
+  ledger repair.
+- [data/storage/diagnostics/README.md](data/storage/diagnostics/README.md):
+  storage diagnostics.
+- [data/storage/diagnostics/inventory.md](data/storage/diagnostics/inventory.md):
+  storage inventory.
+- [data/storage/diagnostics/pressure-states.md](data/storage/diagnostics/pressure-states.md):
+  pressure states.
+- [data/storage/diagnostics/stats.md](data/storage/diagnostics/stats.md):
+  Stats projection.
+- [data/storage/diagnostics/verification.md](data/storage/diagnostics/verification.md):
+  storage verification.
 - [data/heap-retention.md](data/heap-retention.md): observed symptoms and
   investigation strategy.
 - [data/local-secret-security.md](data/local-secret-security.md):
@@ -97,10 +140,6 @@ state lives, which modules own subscriptions, and how tabs close cleanly.
   provenance.
 - [data/resource-ownership.md](data/resource-ownership.md): who creates and
   who closes each resource.
-- [data/shared-storage.md](data/shared-storage.md): shared event storage.
-- [data/storage-table-contract.md](data/storage-table-contract.md): table
-  retention, Stats, deletion, and repair matrix.
-- [data/storage.md](data/storage.md): IndexedDB storage boundaries.
 - [network/README.md](network/README.md): relay, identity, jobs, and settings.
 - [network/identity-rendering.md](network/identity-rendering.md): identity
   hydration.

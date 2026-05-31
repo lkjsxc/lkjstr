@@ -21,8 +21,8 @@ runtime state that can be bounded, summarized, or rebuilt.
 - Local query helpers must plan from IndexedDB indexes where possible and must
   not scan the full event table for memory relief.
 - Local-cache compaction uses `cacheLedger` score and byte-accounting rows. See
-  [local-cache-ledger.md](local-cache-ledger.md) and
-  [retention/README.md](retention/README.md). Steady-state operation enforces a
+  [storage/retention/ledger.md](storage/retention/ledger.md) and
+  [storage/retention/README.md](storage/retention/README.md). Steady-state operation enforces a
   byte budget, not a fixed cached row count.
 - Notification state is windowed by notification record count. Missing source
   events remain visible as compact unavailable rows.

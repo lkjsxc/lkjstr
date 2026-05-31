@@ -78,10 +78,13 @@ Read next: [architecture/README.md](architecture/README.md),
   Stats reports table-level storage inventory, ledger inventory, protected
   estimates, prunable estimates, and unexplained browser overhead so
   notification-heavy and page-heavy pressure can be diagnosed. Runtime feed
-  windows remain bounded. The live durable table contract is maintained in
-  [storage-table-contract.md](architecture/data/storage-table-contract.md).
-- Shared storage normalizes events, relay receipts, tag rows, cursors, and jobs
-  before runtime use.
+  windows remain bounded. The live durable table contract is maintained in the
+  [Storage Manifest](architecture/data/storage/data-classes/table-manifest.md).
+- Storage is browser-owned and manifest-driven. The manifest defines every live
+  IndexedDB table, its data class, inventory group, Dexie schema string,
+  retention behavior, ledger resource, delete dispatcher, and repair path.
+- Shared storage repositories normalize events, relay receipts, tag rows,
+  cursors, and jobs before runtime use.
 - Relay ingress uses app-owned byte and structure caps before expensive JSON
   and event parsing.
 - IndexedDB remains durable browser-owned data; memory relief prunes only
@@ -125,11 +128,12 @@ Read next: [architecture/README.md](architecture/README.md),
   outside local `since`, exclusive `until`, `before`, or `after` bounds stay out
   of visible feed results.
 - Complete feed coverage evidence can make cached display immediate only when
-  every required relay, route group, semantic feed key, filter shape, and
-  bounded interval proves completion. Adjacent and overlapping complete rows
-  may prove a bounded segment. If only some relays are proven, only uncovered
-  relays are queried. Dense, incomplete, unresolved, failed, compacted, or
-  missing evidence is not proof of absence and cannot suppress relay reads.
+  every required relay, route group, semantic feed key, filter shape, bounded
+  interval, and backing event row proves completion. Adjacent and overlapping
+  complete rows may prove a bounded segment. If only some relays are proven,
+  only uncovered relays are queried. Dense, incomplete, unresolved, failed,
+  compacted, or missing evidence is not proof of absence and cannot suppress
+  relay reads.
 - Durable warm scan hints tune grouped feed scan initial spans only when every
   required relay/filter has fresh evidence. Hints are bounded, stale after `30`
   days, and never prove absence or suppress relay reads.
@@ -231,6 +235,8 @@ and [operations/memory-verification.md](operations/memory-verification.md).
   memory retention symptoms and investigation.
 - [architecture/data/resource-ownership.md](architecture/data/resource-ownership.md):
   resource ownership table.
+- [architecture/data/storage/README.md](architecture/data/storage/README.md):
+  browser storage kernel and retention contract.
 - [operations/verification.md](operations/verification.md): verification gate.
 - [operations/memory-verification.md](operations/memory-verification.md): memory
   verification workflow.

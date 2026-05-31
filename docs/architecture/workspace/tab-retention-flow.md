@@ -73,5 +73,5 @@ rows from older schemas are ignored and removed during workspace cleanup.
 - [tab-body-mount.md](tab-body-mount.md): mount and visibility contract.
 - [tab-snapshot-fields.md](tab-snapshot-fields.md): field and cleanup contract.
 - [tab-runtime.md](tab-runtime.md): lifecycle contract.
-- [storage.md](../data/storage.md): `tabStates` schema.
+- [tab-snapshots.md](../data/storage/data-classes/tab-snapshots.md): `tabStates` schema.
 - [tabs.md](../../product/workspace/tabs.md): product-visible behavior.
