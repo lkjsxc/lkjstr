@@ -4,6 +4,8 @@ use lkjstr_domain::{TabKind, WorkspaceTab};
 use crate::app::RuntimeSignal;
 use crate::workspace::menu::NewTabMenu;
 use crate::workspace::persistence::WorkspacePersistence;
+use crate::workspace::settings::SettingsTab;
+use crate::workspace::settings_provider::SettingsProvider;
 use crate::workspace::state::TabSequence;
 use crate::workspace::stats::StatsTab;
 use crate::workspace::stats_provider::StatsProvider;
@@ -17,19 +19,30 @@ pub fn TabBody(
     tab: WorkspaceTab,
     persistence: Option<WorkspacePersistence>,
     stats_provider: Option<StatsProvider>,
+    settings_provider: Option<SettingsProvider>,
 ) -> impl IntoView {
     let kind = tab.kind;
     let tab_id = tab.id;
     let title = tab.title;
+    let input = TabContentInput {
+        runtime,
+        sequence,
+        pane_id,
+        tab_id,
+        kind,
+        persistence,
+        stats_provider,
+        settings_provider,
+    };
     view! {
         <div class="lkjstr-tab-body" data-tab-kind=tab_kind_attr(kind)>
             <h1>{title}</h1>
-            {tab_content(runtime, sequence, pane_id, tab_id, kind, persistence, stats_provider)}
+            {tab_content(input)}
         </div>
     }
 }
 
-fn tab_content(
+struct TabContentInput {
     runtime: RuntimeSignal,
     sequence: TabSequence,
     pane_id: String,
@@ -37,34 +50,41 @@ fn tab_content(
     kind: TabKind,
     persistence: Option<WorkspacePersistence>,
     stats_provider: Option<StatsProvider>,
-) -> impl IntoView {
-    match kind {
+    settings_provider: Option<SettingsProvider>,
+}
+
+fn tab_content(input: TabContentInput) -> impl IntoView {
+    match input.kind {
         TabKind::Welcome => view! {
             <WelcomeTab
-                runtime=runtime
-                sequence=sequence
-                pane_id=pane_id
-                persistence=persistence
+                runtime=input.runtime
+                sequence=input.sequence
+                pane_id=input.pane_id
+                persistence=input.persistence
             />
         }
         .into_any(),
         TabKind::NewTab => view! {
             <NewTabMenu
-                runtime=runtime
-                sequence=sequence
-                pane_id=pane_id
-                tab_id=Some(tab_id)
-                persistence=persistence
+                runtime=input.runtime
+                sequence=input.sequence
+                pane_id=input.pane_id
+                tab_id=Some(input.tab_id)
+                persistence=input.persistence
             />
         }
         .into_any(),
         TabKind::NetworkStats => view! {
-            <StatsTab runtime=runtime provider=stats_provider />
+            <StatsTab runtime=input.runtime provider=input.stats_provider />
+        }
+        .into_any(),
+        TabKind::Settings => view! {
+            <SettingsTab provider=input.settings_provider />
         }
         .into_any(),
         _ => view! {
             <div class="lkjstr-pending-surface">
-                <p>{pending_message(kind)}</p>
+                <p>{pending_message(input.kind)}</p>
             </div>
         }
         .into_any(),
@@ -89,7 +109,7 @@ fn pending_message(kind: TabKind) -> &'static str {
         TabKind::CustomRequest => "The Rust Custom Request body is not converted yet.",
         TabKind::AuthorContext => "The Rust Author Context body is not converted yet.",
         TabKind::Tweet => "The Rust Tweet body is not converted yet.",
-        TabKind::Settings => "The Rust Settings body is not converted yet.",
+        TabKind::Settings => "",
         TabKind::Welcome | TabKind::NewTab => "",
     }
 }

@@ -13,7 +13,9 @@ resource map, and typed operation outcomes.
 - `manifest.rs`: table specs and table lookup helpers.
 - `outcome.rs`: typed storage operation outcomes.
 - `resource.rs`: cache owner and resource kind strings.
+- `settings_defs.rs`: flat settings definition rows.
 - `settings.rs`: settings override row identity and JSON helpers.
+- `settings_schema.rs`: flat settings schema and override merging.
 - `stats.rs`: storage inventory view models for Stats.
 - `tab_state.rs`: tab-state keys, rows, and ledger rows.
 - `table_specs.rs`: table manifest row data.

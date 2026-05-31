@@ -92,3 +92,58 @@
   text-align: left;
   overflow-wrap: anywhere;
 }
+
+.settings-header,
+.settings-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.settings-import {
+  display: grid;
+  gap: 8px;
+  margin: 12px 0;
+}
+
+.settings-import textarea,
+.settings-row textarea,
+.settings-row input,
+.settings-row select {
+  width: 100%;
+  max-width: 420px;
+}
+
+.settings-layout {
+  display: grid;
+  gap: 10px;
+}
+
+.settings-row {
+  display: grid;
+  grid-template-columns: minmax(180px, 1fr) minmax(180px, 0.8fr);
+  gap: 12px;
+  padding: 10px;
+  border: 1px solid #dddbd2;
+  background: #fbfaf5;
+}
+
+.settings-row code {
+  display: block;
+  margin-top: 3px;
+  overflow-wrap: anywhere;
+}
+
+.settings-editor {
+  display: grid;
+  gap: 6px;
+  align-content: start;
+}
+
+@media (max-width: 760px) {
+  .settings-row {
+    grid-template-columns: 1fr;
+  }
+}

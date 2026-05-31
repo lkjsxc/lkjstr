@@ -1043,6 +1043,7 @@ dependencies = [
  "lkjstr-app",
  "lkjstr-domain",
  "lkjstr-storage",
+ "serde_json",
 ]
 
 [[package]]

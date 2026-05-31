@@ -42,4 +42,4 @@ web-sys = { version = "0.3.82", features = [
 [dev-dependencies]
 lkjstr-domain = { path = "../lkjstr-domain" }
 wasm-bindgen-test = "0.3.72"
-web-sys = { version = "0.3.82", features = ["Document", "Element", "HtmlElement", "Window"] }
+web-sys = { version = "0.3.82", features = ["Document", "Element", "EventInit", "HtmlElement", "HtmlInputElement", "NodeList", "Window"] }

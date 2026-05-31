@@ -57,3 +57,11 @@ Settings provide editable local preferences as one flat key-value list.
   `cache.compactionEnabled` are retired. Local-cache retention is automatic. See
   [cache.md](cache.md) and
   [storage retention](../../architecture/data/storage/retention/README.md).
+
+## Rust Conversion Status
+
+- The Rust/WASM shell renders the flat settings schema and stored overrides
+  from Rust.
+- Raw value edits save to the Rust IndexedDB settings adapter.
+- Rust Settings does not yet apply all side effects such as CSS appearance
+  updates or cache budget enforcement after a save.

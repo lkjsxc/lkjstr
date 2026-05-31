@@ -4,7 +4,11 @@ mod app;
 mod workspace;
 
 pub use app::{App, AppWithStartup, default_startup_input};
-pub use workspace::{StatsComplete, StatsProvider, WorkspacePersistence};
+pub use workspace::{
+    SettingsCommand, SettingsComplete, SettingsProvider, SettingsResult, StatsComplete,
+    StatsProvider, WorkspacePersistence,
+};
+pub use workspace::{SettingsImportCommand, SettingsKeyCommand, SettingsValueCommand};
 
 #[cfg(target_arch = "wasm32")]
 pub fn mount_app() {
@@ -35,6 +39,7 @@ pub fn mount_app_with_host(
     startup: lkjstr_app::StartupInput,
     persistence: WorkspacePersistence,
     stats_provider: StatsProvider,
+    settings_provider: SettingsProvider,
 ) {
     leptos::mount::mount_to_body(move || {
         leptos::view! {
@@ -42,6 +47,7 @@ pub fn mount_app_with_host(
                 startup=startup.clone()
                 persistence=persistence.clone()
                 stats_provider=stats_provider.clone()
+                settings_provider=settings_provider.clone()
             />
         }
     });

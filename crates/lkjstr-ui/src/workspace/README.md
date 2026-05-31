@@ -11,6 +11,9 @@ and New Tab chooser.
 - `mod.rs`: module exports.
 - `pane.rs`: pane chrome and tab rail.
 - `persistence.rs`: host persistence callback wrapper.
+- `settings.rs`: Rust Settings body.
+- `settings_provider.rs`: settings command provider wrapper.
+- `settings_row.rs`: row editor rendering for Settings.
 - `shell.rs`: top-level workspace shell.
 - `state.rs`: view selectors and command helpers.
 - `stats.rs`: Rust Stats body for host-provided diagnostics.

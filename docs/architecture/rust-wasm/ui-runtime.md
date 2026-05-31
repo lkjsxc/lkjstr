@@ -35,9 +35,13 @@ workspace tab actions write the updated workspace through the same Rust adapter.
 The Rust Stats body renders host-collected IndexedDB table counts plus compact
 workspace counters; relay, job, compaction, and memory diagnostics stay marked
 unavailable until their Rust providers are implemented.
+The Rust Settings body renders the flat schema from Rust, merges real
+IndexedDB setting overrides, and saves raw key-value edits through a host
+provider.
 
 Not implemented yet: feed surfaces, most tool surfaces, relay-backed content,
-Stats relay/job/compaction diagnostics, and full responsive/a11y QA.
+Stats relay/job/compaction diagnostics, Settings appearance side effects, and
+full responsive/a11y QA.
 
 ## Component Split
 

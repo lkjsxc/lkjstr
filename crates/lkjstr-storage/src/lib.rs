@@ -6,6 +6,8 @@ pub mod manifest;
 pub mod outcome;
 pub mod resource;
 pub mod settings;
+mod settings_defs;
+pub mod settings_schema;
 pub mod stats;
 pub mod tab_state;
 mod table_specs;
@@ -23,6 +25,10 @@ pub use manifest::{
 pub use outcome::{StorageOperation, StorageOutcome, StorageProblem};
 pub use resource::{CacheOwnerKind, CacheResourceKind};
 pub use settings::{SettingOverrideRecord, setting_record_json_bytes, setting_record_key};
+pub use settings_schema::{
+    SettingRecord, SettingValueType, default_setting_records, merge_setting_overrides,
+    setting_override_for_value,
+};
 pub use stats::{StorageInventoryRow, StorageStatsSnapshot, StorageTableCount};
 pub use tab_state::{
     CacheLedgerRecord, TabStateRecord, cache_ledger_id, encoded_json_bytes, tab_state_id,
