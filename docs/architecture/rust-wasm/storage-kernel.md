@@ -7,7 +7,8 @@ This file defines Rust ownership for durable browser storage. Status: partial.
 ## Owner
 
 Implemented now: `lkjstr-storage` owns the executable storage table manifest,
-cache ledger resource map, and typed operation outcomes.
+cache ledger resource map, typed operation outcomes, and the tab-state key plus
+ledger-row contract for workspace snapshots.
 
 Not implemented yet: repositories, retention dispatchers, ledger repair,
 diagnostics inventory, and the IndexedDB host adapter. `lkjstr-web` will own the
@@ -17,9 +18,10 @@ IndexedDB adapter when that browser effect boundary is ported.
 
 The Rust manifest matches
 [../data/storage/data-classes/table-manifest.md](../data/storage/data-classes/table-manifest.md).
-Rust tests prove table names, retention flags, classes, groups, and resource
-links. Repository checks will compare executable records with the Markdown table
-when the xtask manifest-doc comparison is expanded.
+Rust tests prove table names, retention flags, classes, groups, resource links,
+tab-state keys, and tab-state ledger rows. Repository checks will compare
+executable records with the Markdown table when the xtask manifest-doc
+comparison is expanded.
 
 Each table declares:
 

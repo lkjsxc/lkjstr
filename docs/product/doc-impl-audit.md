@@ -33,6 +33,7 @@ references should stay as relative Markdown links.
 | Rust workspace model basics                 | [app-boundary.md](../architecture/rust-wasm/app-boundary.md)             | implemented   | domain workspace tests        |
 | Rust workspace snapshot payloads            | [app-boundary.md](../architecture/rust-wasm/app-boundary.md)             | implemented   | domain snapshot tests         |
 | Rust storage manifest and outcomes          | [storage-kernel.md](../architecture/rust-wasm/storage-kernel.md)         | implemented   | storage crate tests            |
+| Rust tab-state storage contract             | [storage-kernel.md](../architecture/rust-wasm/storage-kernel.md)         | implemented   | tab-state storage tests        |
 | Rust storage repositories and IndexedDB      | [storage-kernel.md](../architecture/rust-wasm/storage-kernel.md)         | not implemented | current runtime remains TS    |
 | Rust relay state machine basics             | [relay-runtime.md](../architecture/rust-wasm/relay-runtime.md)           | implemented   | relay crate tests              |
 | Rust relay client and browser adapters       | [relay-runtime.md](../architecture/rust-wasm/relay-runtime.md)           | not implemented | current runtime remains TS    |

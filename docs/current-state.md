@@ -101,8 +101,9 @@ Read next: [architecture/README.md](architecture/README.md),
   fallback, while Stats can distinguish active, timed-out, late-settled, and
   late-rejected IndexedDB operations.
 - Rust storage support now implements the executable table manifest, cache
-  ledger resource ownership map, and typed storage operation outcome contract.
-  IndexedDB repositories and the Rust browser adapter are not yet implemented.
+  ledger resource ownership map, typed storage operation outcome contract, and
+  tab-state key plus ledger-row contract. IndexedDB repositories and the Rust
+  browser adapter are not yet implemented.
 - Rust relay support now implements pure send queue, request scheduler,
   subscription id, subscription alias, and close tombstone state machines.
   WebSocket adapters and the full Rust relay client reducer are not yet
