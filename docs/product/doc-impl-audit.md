@@ -26,6 +26,7 @@ references should stay as relative Markdown links.
 | Rust protocol emoji and warnings            | [protocol-kernel.md](../architecture/rust-wasm/protocol-kernel.md)       | implemented   | NIP-30 and NIP-36 Rust tests  |
 | Rust protocol tag and action helpers         | [protocol-kernel.md](../architecture/rust-wasm/protocol-kernel.md)       | implemented   | tag, reaction, builder tests  |
 | Rust protocol zaps and upload auth          | [protocol-kernel.md](../architecture/rust-wasm/protocol-kernel.md)       | implemented   | NIP-57, NIP-96, NIP-98 tests  |
+| Rust protocol relay list metadata            | [protocol-kernel.md](../architecture/rust-wasm/protocol-kernel.md)       | implemented   | NIP-65 Rust tests             |
 | Rust protocol WASM bridge                   | [host-boundary.md](../architecture/rust-wasm/host-boundary.md)           | implemented   | browser WASM tests            |
 | Rust pure account domain                    | [app-boundary.md](../architecture/rust-wasm/app-boundary.md)             | implemented   | domain account tests          |
 | Rust storage, relay, app, and UI            | [crate-boundaries.md](../architecture/rust-wasm/crate-boundaries.md)     | not implemented | current runtime remains TS    |

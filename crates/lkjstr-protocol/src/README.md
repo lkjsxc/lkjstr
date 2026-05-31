@@ -23,6 +23,7 @@ Protocol source files define event, filter, message, signing, and NIP behavior.
 - `nip30.rs`: NIP-30 custom emoji helpers.
 - `nip36.rs`: NIP-36 content-warning helpers.
 - `nip57.rs`: NIP-57 zap target and receipt helpers.
+- `nip65.rs`: NIP-65 relay-list metadata parser.
 - `nip96.rs`: NIP-96 upload discovery and response parsers.
 - `nip98.rs`: NIP-98 HTTP auth event and header helpers.
 - `nip19.rs`: public NIP-19 entity types and decoding.

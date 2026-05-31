@@ -18,6 +18,7 @@ Protocol tests port current TypeScript protocol behavior to Rust.
 - `nip30_test.rs`: NIP-30 custom emoji validation.
 - `nip36_test.rs`: NIP-36 content-warning tags.
 - `nip57_test.rs`: NIP-57 zap target and receipt helpers.
+- `nip65_test.rs`: NIP-65 relay-list metadata parser.
 - `nip96_test.rs`: NIP-96 upload metadata parsers.
 - `nip98_test.rs`: NIP-98 HTTP auth helpers.
 - `relay_url_test.rs`: relay URL normalization.

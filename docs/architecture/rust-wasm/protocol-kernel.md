@@ -8,8 +8,9 @@ serialization, event ID hashing, filter matching, relay message basics,
 Schnorr verification, local signing, relay URL normalization, NIP-19 scalar
 plus TLV entities, NIP-30 custom emoji helpers, NIP-36 content-warning helpers,
 tag indexing, reaction parsing, action tag builders, and content-derived tags.
-NIP-57 zap helpers, NIP-96 upload metadata parsers, and NIP-98 HTTP auth
-helpers. Remaining protocol surfaces are design-only.
+NIP-57 zap helpers, NIP-65 relay-list metadata parsing, NIP-96 upload metadata
+parsers, and NIP-98 HTTP auth helpers. Remaining protocol surfaces are
+design-only.
 
 ## Owner
 
@@ -38,7 +39,7 @@ serialization.
 - NIP-57 zap parsing. Status: implemented for zap target distribution,
   request tags, and receipt summaries.
 - NIP-51 list helpers used by the app.
-- NIP-65 relay-list parsing.
+- NIP-65 relay-list parsing. Status: implemented.
 - NIP-96 upload response parsing. Status: implemented.
 - NIP-98 HTTP auth event construction. Status: implemented.
 
