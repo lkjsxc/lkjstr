@@ -4,8 +4,8 @@
 
 This file defines the Rust application composition boundary. Status:
 implemented for pure account-domain records, local signing helpers, workspace
-layout reducers, workspace startup recovery, and bounded tab snapshot staging;
-design-only for browser service composition.
+layout reducers, tab movement reducers, workspace startup recovery, and bounded
+tab snapshot staging; design-only for browser service composition.
 
 ## Owner
 
@@ -28,8 +28,8 @@ does not introduce remote account state.
 
 - Pure product state lives in `lkjstr-domain`.
 - Workspace layout, tab groups, tab records, focus, startup layout, tab opening,
-  pane splitting, tab close recovery, and zero-layout recovery are pure
-  `lkjstr-domain` reducers.
+  pane splitting, tab movement, edge-drop pane insertion, tab close recovery,
+  and zero-layout recovery are pure `lkjstr-domain` reducers.
 - Tab snapshot payloads, feed/tool snapshot merge semantics, feed restore seeds,
   anchors, and bounded runtime snapshot ID lists are pure `lkjstr-domain`
   models.

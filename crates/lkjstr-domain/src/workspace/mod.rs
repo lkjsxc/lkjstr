@@ -4,7 +4,9 @@ mod bootstrap;
 mod commands;
 mod group;
 mod layout;
+mod layout_insert;
 mod model;
+mod move_tab;
 mod recovery;
 mod snapshot;
 mod snapshot_ops;
@@ -15,6 +17,9 @@ pub use commands::{NewTabIds, close_workspace_tab, focus_tab, open_tab, split_fo
 pub use group::TabGroup;
 pub use layout::{LayoutNode, NewPaneIds, PaneNode, SplitDirection, SplitNode};
 pub use model::{Workspace, WorkspaceIds, create_workspace};
+pub use move_tab::{
+    EdgePaneIds, MoveTabInput, TabDropEdge, move_workspace_tab, move_workspace_tab_to_edge,
+};
 pub use recovery::ensure_usable_workspace;
 pub use snapshot::{
     FeedCursorPoint, FeedRuntimeSnapshotSource, FeedSnapshotSeed, FeedTabSnapshot,

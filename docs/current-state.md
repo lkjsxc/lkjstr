@@ -110,10 +110,11 @@ Read next: [architecture/README.md](architecture/README.md),
   WebSocket adapters and the full Rust relay client reducer are not yet
   implemented.
 - Rust workspace support now implements pure layout, pane, tab, tab-group,
-  clean startup, focus, open-tab, split-pane, close-tab, and usable-workspace
-  recovery reducers, plus feed/tool tab snapshot payload and merge semantics.
-  Rust app support now composes startup recovery and bounded tab snapshot
-  staging. Browser persistence and UI adapters remain in the current
+  clean startup, focus, open-tab, split-pane, move-tab, edge-drop split,
+  close-tab, and usable-workspace recovery reducers, plus feed/tool tab
+  snapshot payload and merge semantics. Rust app support now composes startup
+  recovery and bounded tab snapshot staging. Browser persistence and UI adapters
+  remain in the current
   TypeScript runtime.
 - Relay ingress uses app-owned byte and structure caps before expensive JSON
   and event parsing.

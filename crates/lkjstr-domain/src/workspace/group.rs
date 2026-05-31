@@ -78,4 +78,50 @@ impl TabGroup {
             ..self.clone()
         }
     }
+
+    #[must_use]
+    pub fn remove_for_move(&self, tab_id: &str) -> Self {
+        let tab_ids: Vec<String> = self
+            .tab_ids
+            .iter()
+            .filter(|id| id.as_str() != tab_id)
+            .cloned()
+            .collect();
+        if tab_ids.len() == self.tab_ids.len() {
+            return self.clone();
+        }
+        let active_tab_id = if self.active_tab_id.as_deref() == Some(tab_id) {
+            tab_ids.last().cloned()
+        } else {
+            self.active_tab_id.clone()
+        };
+        Self {
+            tab_ids,
+            active_tab_id,
+            pinned_tab_ids: self
+                .pinned_tab_ids
+                .iter()
+                .filter(|id| id.as_str() != tab_id)
+                .cloned()
+                .collect(),
+            ..self.clone()
+        }
+    }
+
+    #[must_use]
+    pub fn insert_moved(&self, tab_id: &str, target_index: usize) -> Self {
+        let mut tab_ids: Vec<String> = self
+            .tab_ids
+            .iter()
+            .filter(|id| id.as_str() != tab_id)
+            .cloned()
+            .collect();
+        let next_index = target_index.min(tab_ids.len());
+        tab_ids.insert(next_index, tab_id.to_owned());
+        Self {
+            tab_ids,
+            active_tab_id: Some(tab_id.to_owned()),
+            ..self.clone()
+        }
+    }
 }
