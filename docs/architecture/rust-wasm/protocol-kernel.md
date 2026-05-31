@@ -6,8 +6,9 @@ This file defines Rust protocol ownership. Status: implemented for byte
 codecs, event parsing, frame policy checks, event ordering, canonical event
 serialization, event ID hashing, filter matching, relay message basics,
 Schnorr verification, local signing, relay URL normalization, NIP-19 scalar
-plus TLV entities, NIP-30 custom emoji helpers, and NIP-36 content-warning
-helpers. Remaining protocol surfaces are design-only.
+plus TLV entities, NIP-30 custom emoji helpers, NIP-36 content-warning helpers,
+tag indexing, reaction parsing, action tag builders, and content-derived tags.
+Remaining protocol surfaces are design-only.
 
 ## Owner
 
@@ -26,10 +27,14 @@ serialization.
 - Filter parsing and matching. Status: implemented.
 - Filter send clamping.
 - Relay URL normalization. Status: implemented.
+- Tag indexing, reply markers, and event action tag builders. Status:
+  implemented.
 - NIP-05 profile lookup data.
 - NIP-19 scalar and pointer entities. Status: implemented.
 - NIP-30 custom emoji parsing. Status: implemented.
 - NIP-36 content-warning helpers. Status: implemented.
+- NIP-25 reaction parsing. Status: implemented.
+- NIP-57 zap request tag building. Status: implemented for request tags only.
 - NIP-51 list helpers used by the app.
 - NIP-57 zap parsing.
 - NIP-65 relay-list parsing.

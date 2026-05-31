@@ -7,14 +7,17 @@ Protocol source files define event, filter, message, signing, and NIP behavior.
 ## Table of Contents
 
 - `bytes.rs`: byte, hex, ASCII, and UTF-8 helpers.
+- `content_tags.rs`: content-derived mention and emoji tags.
 - `crypto.rs`: Schnorr key, signature, and public-key helpers.
 - `error.rs`: shared protocol error cases.
 - `event.rs`: signed and unsigned event parsing.
+- `event_builders.rs`: reply, reaction, repost, and zap request tag builders.
 - `event_id.rs`: NIP-01 canonical serialization and event IDs.
 - `event_sign.rs`: local event finalization from secret keys.
 - `event_tags.rs`: tag parsing and frame policy checks.
 - `event_verify.rs`: event ID and signature verification.
 - `filter.rs`: relay filter parsing and event matching.
+- `kinds.rs`: event kind constants and range classifiers.
 - `message_parts.rs`: relay message parsing helpers.
 - `messages.rs`: client and relay message codecs.
 - `nip30.rs`: NIP-30 custom emoji helpers.
@@ -22,4 +25,6 @@ Protocol source files define event, filter, message, signing, and NIP behavior.
 - `nip19.rs`: public NIP-19 entity types and decoding.
 - `nip19_encode.rs`: NIP-19 entity encoding.
 - `nip19_tlv.rs`: NIP-19 TLV helpers.
+- `reactions.rs`: NIP-25 reaction parsing helpers.
 - `relay_url.rs`: relay URL normalization.
+- `tags.rs`: tag value indexing and reply marker helpers.
