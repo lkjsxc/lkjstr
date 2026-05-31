@@ -3,6 +3,7 @@
 pub mod accounts;
 pub mod local_account;
 pub mod npub_miner;
+pub mod relay_sets;
 pub mod workspace;
 
 pub use accounts::{
@@ -16,6 +17,12 @@ pub use local_account::{
 };
 pub use npub_miner::{
     NpubPrefix, NpubPrefixError, estimated_attempts, npub_matches_prefix, parse_npub_prefix,
+};
+pub use relay_sets::{
+    RelayConnectionState, RelayHealth, RelayPatch, RelayPurpose, RelayRecord, RelaySet,
+    RelaySetError, add_relay, default_discovery_relay_set, default_user_relay_set, ensure_user_set,
+    patch_relay, remove_relay, reset_relay_live_state, restore_default_relay_set, seed_relay_sets,
+    sorted_relay_sets,
 };
 pub use workspace::{
     BootstrapIds, EdgePaneIds, FeedCursorPoint, FeedRuntimeSnapshotSource, FeedSnapshotSeed,

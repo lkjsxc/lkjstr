@@ -14,6 +14,7 @@ This directory contains the Rust browser host adapter for IndexedDB.
 - `mod.rs`: public IndexedDB module surface.
 - `record_requests.rs`: shared request helpers for keyed records.
 - `record_write.rs`: shared write helpers for keyed records.
+- `relay_set_store.rs`: relay-set table repository.
 - `schema.rs`: manifest-driven object store and index creation.
 - `settings_requests.rs`: settings request execution and decoding.
 - `settings_store.rs`: settings override row `put`, `get`, `delete`, and list.

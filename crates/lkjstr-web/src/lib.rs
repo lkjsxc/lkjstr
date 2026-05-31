@@ -3,6 +3,8 @@
 #[cfg(target_arch = "wasm32")]
 mod accounts_host;
 mod protocol_bridge;
+#[cfg(target_arch = "wasm32")]
+mod relay_settings_host;
 mod response;
 #[cfg(target_arch = "wasm32")]
 mod settings_host;
@@ -32,12 +34,14 @@ pub fn mount_rust_workspace_shell_from_db(db_name: String) {
             indexed_db::workspace_store::workspace_startup_input(&db_name, browser_now_ms()).await;
         let persistence = workspace_persistence(db_name.clone());
         let accounts_provider = accounts_host::accounts_provider(db_name.clone());
+        let relay_settings_provider = relay_settings_host::relay_settings_provider(db_name.clone());
         let stats_provider = stats_provider(db_name.clone());
         let settings_provider = settings_host::settings_provider(db_name);
         lkjstr_ui::mount_app_with_host(
             startup,
             persistence,
             accounts_provider,
+            relay_settings_provider,
             stats_provider,
             settings_provider,
         );

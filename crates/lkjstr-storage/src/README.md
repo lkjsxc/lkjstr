@@ -14,6 +14,7 @@ resource map, and typed operation outcomes.
 - `local_secrets.rs`: local signing secret row helpers.
 - `manifest.rs`: table specs and table lookup helpers.
 - `outcome.rs`: typed storage operation outcomes.
+- `relay_sets.rs`: protected relay-set row identity and JSON helpers.
 - `resource.rs`: cache owner and resource kind strings.
 - `settings_defs.rs`: flat settings definition rows.
 - `settings.rs`: settings override row identity and JSON helpers.

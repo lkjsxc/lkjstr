@@ -13,7 +13,7 @@ pub struct StatsComplete {
 
 impl StatsComplete {
     pub fn complete(&self, snapshot: StorageStatsSnapshot) {
-        self.complete.run(snapshot);
+        let _unused = self.complete.try_run(snapshot);
     }
 }
 

@@ -153,8 +153,8 @@ pub fn run_result(
     run: impl FnOnce(Callback<SettingsResult>) + 'static,
 ) {
     let complete = Callback::new(move |result: SettingsResult| {
-        records.set(result.records);
-        status.set(result.status);
+        let _unused = records.try_set(result.records);
+        let _unused = status.try_set(result.status);
     });
     run(complete);
 }

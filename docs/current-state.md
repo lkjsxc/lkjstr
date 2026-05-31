@@ -118,8 +118,8 @@ Read next: [architecture/README.md](architecture/README.md),
   staging. The Rust Leptos UI mounts a partial shell from `lkjstr-web`, renders
   startup panes and tabs from Rust reducers, opens Welcome action tabs, and
   converts New Tab choices while preserving the chooser tab id, persists tab
-  actions through Rust IndexedDB, and renders real Rust Stats, Settings, and
-  partial Accounts storage views. Feeds, most tools, relay content, and full parity remain in TS.
+  actions through Rust IndexedDB, and renders real Rust Stats, Settings, Relay
+  Settings, and partial Accounts storage views. Feeds, most tools, relay content, and full parity remain in TS.
 - Relay ingress uses app-owned byte and structure caps before expensive JSON
   and event parsing.
 - IndexedDB remains durable browser-owned data; memory relief prunes only

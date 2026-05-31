@@ -42,10 +42,14 @@ The Rust Accounts body renders protected account rows, saves read-only and
 local `nsec` imports through Rust IndexedDB repositories, stores local secrets
 separately, and exposes local `nsec` values only after an explicit reveal
 command.
+The Rust Relay Settings body renders protected relay-set rows, seeds default
+user/discovery sets, edits relay enablement and user read/write flags, and
+restores default sets through Rust storage commands.
 
 Not implemented yet: feed surfaces, most tool surfaces, relay-backed content,
-Stats relay/job/compaction diagnostics, Settings appearance side effects, and
-Accounts NIP-07 login, persistent-storage requests, and full responsive/a11y QA.
+Stats relay/job/compaction diagnostics, Settings appearance side effects,
+Accounts NIP-07 login, Relay Settings NIP-11/suggestions/diagnostics, and full
+responsive/a11y QA.
 
 ## Component Split
 

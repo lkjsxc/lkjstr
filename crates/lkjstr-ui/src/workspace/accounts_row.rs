@@ -68,11 +68,11 @@ pub fn run_accounts_result(
     run: impl FnOnce(Callback<AccountsResult>) + 'static,
 ) {
     let complete = Callback::new(move |result: AccountsResult| {
-        accounts.set(result.accounts);
-        active_id.set(result.active_id);
-        status.set(result.status);
+        let _unused = accounts.try_set(result.accounts);
+        let _unused = active_id.try_set(result.active_id);
+        let _unused = status.try_set(result.status);
         if let Some((account_id, nsec)) = result.revealed_nsec {
-            revealed.update(|items| {
+            let _unused = revealed.try_update(|items| {
                 items.insert(account_id, nsec);
             });
         }

@@ -14,6 +14,10 @@ New Tab chooser, and converted Rust tool bodies.
 - `mod.rs`: module exports.
 - `pane.rs`: pane chrome and tab rail.
 - `persistence.rs`: host persistence callback wrapper.
+- `relay_row.rs`: relay row rendering and edit commands.
+- `relay_settings.rs`: Rust Relay Settings body.
+- `relay_settings_provider.rs`: relay settings command provider wrapper.
+- `relay_settings_section.rs`: user/discovery relay-set sections.
 - `settings.rs`: Rust Settings body.
 - `settings_provider.rs`: settings command provider wrapper.
 - `settings_row.rs`: row editor rendering for Settings.

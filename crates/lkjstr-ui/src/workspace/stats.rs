@@ -81,8 +81,8 @@ fn refresh_stats(
 ) {
     refreshing.set(true);
     let complete = Callback::new(move |next| {
-        snapshot.set(Some(next));
-        refreshing.set(false);
+        let _unused = snapshot.try_set(Some(next));
+        let _unused = refreshing.try_set(false);
     });
     provider.read(complete);
 }

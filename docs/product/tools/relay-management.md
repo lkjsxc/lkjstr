@@ -51,3 +51,14 @@ lkjstr Log owns session-only diagnostics.
   lkjstr Log rows.
 - Relay URLs are visible in Relay Settings and lkjstr Log, not inside post rows.
 - Relay messages, context, and URLs wrap without horizontal scrolling.
+
+## Rust Conversion Status
+
+- The Rust/WASM shell renders a partial Relay Settings surface from real
+  IndexedDB `relaySets` rows.
+- Rust Relay Settings supports default user/discovery seeding, add, remove,
+  enable, label edit, read/write toggles for user relays, selected default user
+  set, and explicit restore defaults per purpose.
+- Rust Relay Settings does not yet write relay route-block rows, fetch NIP-11
+  records, import NIP-65 suggestions, or show live relay diagnostics; the
+  TypeScript surface remains the parity source for those flows.

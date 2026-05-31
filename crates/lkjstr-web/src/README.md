@@ -11,6 +11,7 @@ Source files expose Rust application behavior to the browser through
 - `lib.rs`: public WASM exports.
 - `indexed_db/`: browser IndexedDB host adapter.
 - `protocol_bridge.rs`: protocol bridge operations.
+- `relay_settings_host.rs`: browser-backed Relay Settings command provider.
 - `response.rs`: structured JavaScript response helpers.
 - `settings_host.rs`: browser-backed Settings command provider.
 

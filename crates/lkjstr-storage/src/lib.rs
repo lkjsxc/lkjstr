@@ -6,6 +6,7 @@ pub mod ledger;
 pub mod local_secrets;
 pub mod manifest;
 pub mod outcome;
+pub mod relay_sets;
 pub mod resource;
 pub mod settings;
 mod settings_defs;
@@ -29,6 +30,7 @@ pub use manifest::{
     storage_table_spec, storage_table_specs,
 };
 pub use outcome::{StorageOperation, StorageOutcome, StorageProblem};
+pub use relay_sets::{RelaySetRecord, relay_set_record_id, relay_set_record_json_bytes};
 pub use resource::{CacheOwnerKind, CacheResourceKind};
 pub use settings::{SettingOverrideRecord, setting_record_json_bytes, setting_record_key};
 pub use settings_schema::{

@@ -6,6 +6,8 @@ use crate::workspace::accounts::AccountsTab;
 use crate::workspace::accounts_provider::AccountsProvider;
 use crate::workspace::menu::NewTabMenu;
 use crate::workspace::persistence::WorkspacePersistence;
+use crate::workspace::relay_settings::RelaySettingsTab;
+use crate::workspace::relay_settings_provider::RelaySettingsProvider;
 use crate::workspace::settings::SettingsTab;
 use crate::workspace::settings_provider::SettingsProvider;
 use crate::workspace::state::TabSequence;
@@ -21,6 +23,7 @@ pub fn TabBody(
     tab: WorkspaceTab,
     persistence: Option<WorkspacePersistence>,
     accounts_provider: Option<AccountsProvider>,
+    relay_settings_provider: Option<RelaySettingsProvider>,
     stats_provider: Option<StatsProvider>,
     settings_provider: Option<SettingsProvider>,
 ) -> impl IntoView {
@@ -35,6 +38,7 @@ pub fn TabBody(
         kind,
         persistence,
         accounts_provider,
+        relay_settings_provider,
         stats_provider,
         settings_provider,
     };
@@ -54,6 +58,7 @@ struct TabContentInput {
     kind: TabKind,
     persistence: Option<WorkspacePersistence>,
     accounts_provider: Option<AccountsProvider>,
+    relay_settings_provider: Option<RelaySettingsProvider>,
     stats_provider: Option<StatsProvider>,
     settings_provider: Option<SettingsProvider>,
 }
@@ -87,6 +92,10 @@ fn tab_content(input: TabContentInput) -> impl IntoView {
             <AccountsTab provider=input.accounts_provider />
         }
         .into_any(),
+        TabKind::RelaySettings => view! {
+            <RelaySettingsTab provider=input.relay_settings_provider />
+        }
+        .into_any(),
         TabKind::Settings => view! {
             <SettingsTab provider=input.settings_provider />
         }
@@ -112,7 +121,7 @@ fn pending_message(kind: TabKind) -> &'static str {
         TabKind::NpubMiner => "The Rust Mine npub body is not converted yet.",
         TabKind::Thread => "The Rust Thread body is not converted yet.",
         TabKind::RelayMonitor => "The Rust lkjstr Log body is not converted yet.",
-        TabKind::RelaySettings => "The Rust Relay Settings body is not converted yet.",
+        TabKind::RelaySettings => "",
         TabKind::NetworkStats => "",
         TabKind::Search => "The Rust Search body is not converted yet.",
         TabKind::CustomRequest => "The Rust Custom Request body is not converted yet.",

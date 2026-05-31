@@ -47,7 +47,7 @@ pub struct SettingsProvider {
 
 impl SettingsComplete {
     pub fn complete(&self, result: SettingsResult) {
-        self.complete.run(result);
+        let _unused = self.complete.try_run(result);
     }
 }
 

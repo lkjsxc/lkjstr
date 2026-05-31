@@ -42,7 +42,7 @@ pub struct AccountsProvider {
 
 impl AccountsComplete {
     pub fn complete(&self, result: AccountsResult) {
-        self.complete.run(result);
+        let _unused = self.complete.try_run(result);
     }
 }
 

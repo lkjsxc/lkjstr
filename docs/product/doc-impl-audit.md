@@ -44,6 +44,7 @@ references should stay as relative Markdown links.
 | Rust Leptos workspace shell                  | [ui-runtime.md](../architecture/rust-wasm/ui-runtime.md)                 | partial       | Welcome, New Tab, persistence, Stats inventory |
 | Rust Settings surface                        | [settings.md](tools/settings.md)                                         | partial       | flat schema and IndexedDB overrides |
 | Rust Accounts surface                        | [accounts.md](tools/accounts.md)                                         | partial       | stored rows, local `nsec`, active selection |
+| Rust Relay Settings surface                  | [relay-management.md](tools/relay-management.md)                         | partial       | relay sets and default selection |
 | Rust UI parity and snapshot persistence      | [crate-boundaries.md](../architecture/rust-wasm/crate-boundaries.md)     | not implemented | current runtime remains TS     |
 | Docker Rust/WASM verification               | [verification.md](../architecture/rust-wasm/verification.md)             | design-only   | commands documented target    |
 
