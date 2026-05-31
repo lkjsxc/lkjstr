@@ -364,6 +364,13 @@ dependencies = [
 ]
 
 [[package]]
+name = "lkjstr-relays"
+version = "0.0.0"
+dependencies = [
+ "sha2",
+]
+
+[[package]]
 name = "lkjstr-storage"
 version = "0.0.0"
 

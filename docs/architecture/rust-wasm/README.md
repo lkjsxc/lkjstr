@@ -30,9 +30,11 @@ This subtree defines the Rust/WASM client target.
   `lkjstr-domain` owns pure account records, local secret row shape, local
   signing helpers, and npub mining prefix rules. `lkjstr-storage` owns the
   executable storage table manifest, ledger resource map, and typed storage
-  operation outcomes.
-- Design-only target: remaining Rust relay, app, UI, storage repositories,
-  IndexedDB adapter, and non-protocol browser host surfaces.
+  operation outcomes. `lkjstr-relays` owns pure send queue, request scheduler,
+  subscription id, alias, and close tombstone state machines.
+- Design-only target: remaining Rust app, UI, full relay client reducer,
+  WebSocket adapter, storage repositories, IndexedDB adapter, and non-protocol
+  browser host surfaces.
 - Not allowed: remote app backend, relay proxy requirement, server account
   system, fake relay data, fake protocol results, or placeholder UI.
 

@@ -103,6 +103,10 @@ Read next: [architecture/README.md](architecture/README.md),
 - Rust storage support now implements the executable table manifest, cache
   ledger resource ownership map, and typed storage operation outcome contract.
   IndexedDB repositories and the Rust browser adapter are not yet implemented.
+- Rust relay support now implements pure send queue, request scheduler,
+  subscription id, subscription alias, and close tombstone state machines.
+  WebSocket adapters and the full Rust relay client reducer are not yet
+  implemented.
 - Relay ingress uses app-owned byte and structure caps before expensive JSON
   and event parsing.
 - IndexedDB remains durable browser-owned data; memory relief prunes only
