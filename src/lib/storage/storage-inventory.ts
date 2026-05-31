@@ -2,15 +2,13 @@ import { encodedJsonBytes } from '../cache/cache-byte-size';
 import { browserDb } from './browser-db';
 import { indexedDbAvailable } from './safe-storage';
 import { nonIndexedStorageInventory } from './non-indexed-storage-inventory';
+import { storageTableSpecs } from './schema/table-manifest';
+import { isStorageTableName, storageTableNames } from './schema/table-names';
+import { storageManifestGroup } from './schema/table-groups';
+import type { StorageDataClass } from './schema/table-spec';
 
 export type StorageGroup =
-  | 'protected'
-  | 'protected-safety'
-  | 'prunable-cache'
-  | 'derived-page-cache'
-  | 'diagnostics'
-  | 'ledger'
-  | 'metadata'
+  | ReturnType<typeof storageManifestGroup>
   | 'non-indexed'
   | 'overhead'
   | 'unknown';
@@ -23,70 +21,22 @@ export type StorageInventoryStatus =
 
 export type StorageInventoryRow = {
   readonly table: string;
+  readonly dataClass?: StorageDataClass | 'non-indexed-browser-storage';
   readonly group: StorageGroup;
   readonly rowCount: number | null;
   readonly estimatedBytes: number;
   readonly status: StorageInventoryStatus;
+  readonly scanDurationMs?: number;
   readonly reason?: string;
 };
 
-export const knownStorageTables = [
-  'workspaces',
-  'accounts',
-  'localAccountSecrets',
-  'notifications',
-  'tweetDrafts',
-  'events',
-  'cacheLedger',
-  'eventRelays',
-  'eventTags',
-  'feedCursors',
-  'feedCoverage',
-  'feedScanHints',
-  'jobs',
-  'cacheMeta',
-  'tabStates',
-  'settings',
-  'relaySets',
-  'relayDiagnosticSummaries',
-  'relayInformation',
-  'relayListSuggestions',
-  'authorRelayRoutes',
-  'relayRouteBlocks',
-] as const;
-
-const tableGroups: Record<(typeof knownStorageTables)[number], StorageGroup> = {
-  accounts: 'protected',
-  localAccountSecrets: 'protected',
-  settings: 'protected',
-  relaySets: 'protected',
-  tweetDrafts: 'protected',
-  workspaces: 'protected',
-  tabStates: 'protected',
-  notifications: 'prunable-cache',
-  events: 'prunable-cache',
-  eventRelays: 'prunable-cache',
-  eventTags: 'prunable-cache',
-  cacheLedger: 'ledger',
-  feedCursors: 'derived-page-cache',
-  feedCoverage: 'derived-page-cache',
-  feedScanHints: 'derived-page-cache',
-  jobs: 'prunable-cache',
-  relayInformation: 'diagnostics',
-  relayDiagnosticSummaries: 'diagnostics',
-  relayListSuggestions: 'diagnostics',
-  authorRelayRoutes: 'diagnostics',
-  relayRouteBlocks: 'protected-safety',
-  cacheMeta: 'metadata',
-};
+export const knownStorageTables = storageTableNames;
 
 export async function storageInventory(
   browserUsageBytes: number | null,
 ): Promise<StorageInventoryRow[]> {
   const indexedRows = indexedDbAvailable()
-    ? await Promise.all(
-        browserDb().tables.map((table) => storageTableRow(table)),
-      )
+    ? await indexedDbRows()
     : [indexedDbUnavailableRow()];
   const nonIndexedRows = await nonIndexedStorageInventory();
   const rows = [...indexedRows, ...nonIndexedRows];
@@ -95,13 +45,17 @@ export async function storageInventory(
 }
 
 export function storageGroup(tableName: string): StorageGroup {
-  return isKnownStorageTable(tableName) ? tableGroups[tableName] : 'unknown';
+  return isStorageTableName(tableName)
+    ? storageManifestGroup(tableName)
+    : 'unknown';
 }
 
-function isKnownStorageTable(
-  tableName: string,
-): tableName is (typeof knownStorageTables)[number] {
-  return (knownStorageTables as readonly string[]).includes(tableName);
+async function indexedDbRows(): Promise<StorageInventoryRow[]> {
+  const rows: StorageInventoryRow[] = [];
+  for (const table of browserDb().tables) {
+    rows.push(await storageTableRow(table));
+  }
+  return rows;
 }
 
 async function storageTableRow(table: {
@@ -123,22 +77,30 @@ async function storageTableRow(table: {
     });
     return {
       table: table.name,
+      dataClass: storageDataClass(table.name),
       group: storageGroup(table.name),
       rowCount: timedOut ? null : rowCount,
       estimatedBytes,
       status: timedOut ? 'timeout' : 'exact',
+      scanDurationMs: Date.now() - startedAt,
       reason: timedOut ? 'table scan deadline reached' : undefined,
     };
   } catch (error) {
     return {
       table: table.name,
+      dataClass: storageDataClass(table.name),
       group: storageGroup(table.name),
       rowCount: null,
       estimatedBytes,
       status: 'unavailable',
+      scanDurationMs: Date.now() - startedAt,
       reason: error instanceof Error ? error.message : 'table scan failed',
     };
   }
+}
+
+function storageDataClass(tableName: string): StorageDataClass | undefined {
+  return storageTableSpecs.find((table) => table.name === tableName)?.dataClass;
 }
 
 function overheadRows(

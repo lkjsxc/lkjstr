@@ -2,12 +2,19 @@
 
 ## Purpose
 
-This directory contains browser database and safe storage adapters.
+This directory contains browser database, schema, inventory, and safe storage
+adapters.
 
 ## Table of Contents
 
-- IndexedDB schema and storage fallback wrappers.
+- `schema/`: executable storage table manifest and generated Dexie schema.
+- IndexedDB binding and storage fallback wrappers.
 - Storage inventory estimates for Stats diagnostics.
-- `cacheLedger` is the shared retention ledger for prunable local-cache rows.
-- `tabStates` rows are keyed by `workspaceId + tabId`; old pane-keyed rows are
-  ignored by load and cleaned during workspace snapshot cleanup.
+- `cacheLedger` shared retention ledger integration.
+- `tabStates` snapshot persistence.
+
+## Contract
+
+The manifest in `schema/` is the source for live table names, Dexie schema
+strings, and inventory groups. Feature code should move toward repository
+functions instead of direct table access.

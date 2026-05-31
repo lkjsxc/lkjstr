@@ -21,6 +21,10 @@ import type { SettingOverride } from '../settings/settings-store';
 import type { TweetDraft } from '../tweet/draft-store';
 import type { CacheLedgerRecord } from '../cache/cache-ledger-record';
 import type { Workspace } from '../workspace/workspace';
+import {
+  currentStorageSchemaStep,
+  dexieStoreShape,
+} from './schema/dexie-schema';
 
 export type TabStateRecord = {
   readonly id: string;
@@ -57,48 +61,7 @@ export class LkjstrDb extends Dexie {
 
   constructor() {
     super('lkjstr');
-    const schemaMethod = 'ver' + 'sion';
-    const schema = (
-      this as unknown as Record<
-        string,
-        (step: number) => {
-          stores: (shape: Record<string, string | null>) => void;
-        }
-      >
-    )[schemaMethod];
-    schema.call(this, 18).stores({
-      workspaces: '&id, updatedAt, activeAccountId',
-      accounts: '&id, pubkey, signerType, updatedAt, lastUsedAt',
-      localAccountSecrets: '&accountId, pubkey, updatedAt',
-      ['pass' + 'keyAccountSecrets']: null,
-      notifications:
-        '&id, accountPubkey, sourceEventId, actorPubkey, kind, readAt, createdAt, [accountPubkey+createdAt]',
-      tweetDrafts: '&id, accountId, updatedAt',
-      events:
-        '&id, pubkey, kind, created_at, [kind+created_at], [pubkey+kind+created_at]',
-      cacheLedger:
-        '&id, ownerKind, resourceKind, resourceId, score, createdAt, updatedAt, protected, accountPubkey, feedKey, relayUrl, [protected+score], [ownerKind+score], [resourceKind+score]',
-      eventRelays: '&id, eventId, relayUrl, receivedAt',
-      eventTags:
-        '&id, eventId, tagName, tagValue, created_at, [tagName+tagValue], [tagName+tagValue+created_at]',
-      feedCursors: '&id, feedKey, updatedAt',
-      feedCoverage:
-        '&id, feedKey, relayUrl, groupKey, status, updatedAt, [feedKey+status], [feedKey+relayUrl], [feedKey+groupKey], [feedKey+updatedAt]',
-      feedScanHints:
-        '&id, scanKey, relayUrl, groupKey, filterKey, direction, updatedAt, [scanKey+direction], [scanKey+relayUrl]',
-      jobs: '&id, rootId, parentId, kind, status, updatedAt, [rootId+updatedAt]',
-      cacheMeta: '&id, updatedAt',
-      tabStates: '&id, workspaceId, tabId, lastPaneId, updatedAt',
-      settings: '&key, namespace, updatedAt',
-      relaySets: '&id, updatedAt, seeded',
-      relayDiagnosticSummaries: '&relayUrl, updatedAt',
-      relayInformation: '&relayUrl, fetchedAt, status',
-      relayListSuggestions:
-        '&id, accountPubkey, relayUrl, updatedAt, [accountPubkey+relayUrl]',
-      authorRelayRoutes:
-        '&id, authorPubkey, relayUrl, source, updatedAt, [authorPubkey+relayUrl]',
-      relayRouteBlocks: '&relayUrl, reason, updatedAt',
-    });
+    this.version(currentStorageSchemaStep).stores(dexieStoreShape());
   }
 }
 
