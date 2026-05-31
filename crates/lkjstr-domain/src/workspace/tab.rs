@@ -1,5 +1,7 @@
 #![doc = "Workspace tabs."]
 
+use std::collections::BTreeMap;
+
 use serde::{Deserialize, Serialize};
 
 #[derive(Clone, Copy, Debug, Deserialize, Eq, PartialEq, Serialize)]
@@ -33,6 +35,10 @@ pub struct WorkspaceTab {
     pub kind: TabKind,
     pub title: String,
     pub icon: String,
+    #[serde(default, skip_serializing_if = "BTreeMap::is_empty")]
+    pub config: BTreeMap<String, String>,
+    #[serde(default, skip_serializing_if = "BTreeMap::is_empty")]
+    pub state: BTreeMap<String, String>,
     pub created_at: u64,
     pub updated_at: u64,
 }
@@ -47,9 +53,18 @@ impl WorkspaceTab {
             kind,
             title,
             icon,
+            config: BTreeMap::new(),
+            state: BTreeMap::new(),
             created_at: now,
             updated_at: now,
         }
+    }
+
+    #[must_use]
+    pub fn with_config(mut self, config: BTreeMap<String, String>, now: u64) -> Self {
+        self.config = config;
+        self.updated_at = now;
+        self
     }
 }
 

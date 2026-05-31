@@ -11,6 +11,7 @@ mod recovery;
 mod snapshot;
 mod snapshot_ops;
 mod tab;
+mod tab_catalog;
 
 pub use bootstrap::{BootstrapIds, bootstrap_workspace};
 pub use commands::{NewTabIds, close_workspace_tab, focus_tab, open_tab, split_focused_pane};
@@ -31,3 +32,4 @@ pub use snapshot_ops::{
     feed_snapshot_seed_from_payload, merge_tab_snapshot, merge_tab_snapshot_payload,
 };
 pub use tab::{TabKind, WorkspaceTab, title_for};
+pub use tab_catalog::{NewTabOption, NewTabOptionGroup, new_tab_options_for_account};

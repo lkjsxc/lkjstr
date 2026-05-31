@@ -32,6 +32,7 @@ references should stay as relative Markdown links.
 | Rust pure account domain                    | [app-boundary.md](../architecture/rust-wasm/app-boundary.md)             | implemented   | domain account tests          |
 | Rust workspace model basics                 | [app-boundary.md](../architecture/rust-wasm/app-boundary.md)             | implemented   | domain workspace tests        |
 | Rust workspace tab movement                 | [app-boundary.md](../architecture/rust-wasm/app-boundary.md)             | implemented   | domain move tests             |
+| Rust New Tab catalog                        | [app-boundary.md](../architecture/rust-wasm/app-boundary.md)             | implemented   | domain catalog tests          |
 | Rust workspace snapshot payloads            | [app-boundary.md](../architecture/rust-wasm/app-boundary.md)             | implemented   | domain snapshot tests         |
 | Rust workspace runtime composition          | [app-boundary.md](../architecture/rust-wasm/app-boundary.md)             | implemented   | app workspace tests           |
 | Rust storage manifest and outcomes          | [storage-kernel.md](../architecture/rust-wasm/storage-kernel.md)         | implemented   | storage crate tests            |

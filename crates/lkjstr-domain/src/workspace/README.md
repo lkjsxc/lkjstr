@@ -19,3 +19,4 @@ tabs, startup layout, focus, opening, splitting, and recovery.
 - `snapshot.rs`: tab snapshot payloads and merge behavior.
 - `snapshot_ops.rs`: snapshot capture, merge, seed, and anchor helpers.
 - `tab.rs`: tab kinds, titles, icons, and tab records.
+- `tab_catalog.rs`: New Tab option catalog.
