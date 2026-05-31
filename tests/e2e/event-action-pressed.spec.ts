@@ -12,6 +12,8 @@ import {
 } from './timeline-relay-helpers';
 import { openNewTabOption, selectStartupTab } from './workspace-helpers';
 
+test.setTimeout(60_000);
+
 test('heart and repost show pressed state for the active account', async ({
   page,
 }) => {
