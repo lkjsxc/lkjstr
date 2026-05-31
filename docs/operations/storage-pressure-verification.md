@@ -33,11 +33,10 @@ not treat unknown origin usage as success.
 - `Repair storage` deletes orphan ledger rows, backfills missing rows, removes
   safe unowned cache rows, and never adds ledger rows for protected route
   blocks.
-- If browser usage remains over target, Stats reports `candidate-limited`,
+- If browser usage remains over target, Stats reports
   `no-prunable-candidates`, `protected-only`, `unknown-unowned-usage`,
-  `inventory-incomplete`, `quota-pressure`, `quota-unavailable`,
-  `storage-api-unavailable`, or `compaction-error`; it must not report silent
-  success.
+  `inventory-incomplete`, `quota-pressure`, `storage-api-unavailable`, or
+  `compaction-error`; it must not report silent success.
 
 ## Commands
 

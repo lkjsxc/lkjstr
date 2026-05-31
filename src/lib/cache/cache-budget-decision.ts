@@ -3,15 +3,18 @@ import type { SiteStorageBudget } from './site-storage-budget';
 export type CachePressureState =
   | 'below-budget'
   | 'compacted-under-budget'
-  | 'candidate-limited'
+  | 'no-prunable-candidates'
   | 'protected-only'
-  | 'unknown-only'
+  | 'unknown-unowned-usage'
   | 'inventory-incomplete'
+  | 'quota-pressure'
+  | 'compaction-error'
   | 'quota-unavailable'
   | 'storage-api-unavailable';
 
 export type InventoryScanStatus =
   | 'exact'
+  | 'partial'
   | 'timeout'
   | 'unavailable'
   | 'unsupported';
@@ -29,29 +32,54 @@ export type PressureInput = {
 
 export function pressureState(input: PressureInput): CachePressureState {
   if (!input.storageApiAvailable) return 'storage-api-unavailable';
-  if (input.inventoryStatus === 'timeout') return 'inventory-incomplete';
-  if (input.budget.browserUsageBytes === null) return quotaFallbackState(input);
-  if (!input.budget.overSiteBudget)
+  if (
+    input.budget.browserUsageBytes !== null &&
+    !input.budget.overSiteBudget &&
+    !input.budget.quotaPressure
+  )
     return input.prunedResources > 0
       ? 'compacted-under-budget'
       : 'below-budget';
-  if (input.eligibleRows > 0) return 'candidate-limited';
+  if (
+    input.budget.browserUsageBytes === null &&
+    input.prunableCacheBytes <= input.budget.siteBudgetBytes
+  )
+    return input.prunedResources > 0
+      ? 'compacted-under-budget'
+      : 'below-budget';
+  if (input.inventoryStatus !== 'exact') return 'inventory-incomplete';
+  if (input.budget.browserUsageBytes === null) return quotaFallbackState(input);
+  if (input.eligibleRows > 0) return 'quota-pressure';
+  if (input.unknownOrOverheadBytes > 0) return 'unknown-unowned-usage';
   if (input.protectedRows > 0 || input.prunableCacheBytes > 0)
     return 'protected-only';
-  if (input.unknownOrOverheadBytes > 0) return 'unknown-only';
+  if (input.budget.quotaPressure) return 'quota-pressure';
   return input.inventoryStatus === 'exact'
-    ? 'protected-only'
+    ? 'no-prunable-candidates'
     : 'inventory-incomplete';
 }
 
 export function shouldStopCompaction(input: PressureInput): boolean {
+  if (
+    input.storageApiAvailable &&
+    input.inventoryStatus === 'exact' &&
+    input.eligibleRows > 0 &&
+    (input.budget.overSiteBudget ||
+      input.budget.quotaPressure ||
+      (input.budget.browserUsageBytes === null &&
+        input.prunableCacheBytes > input.budget.siteBudgetBytes))
+  )
+    return false;
   const state = pressureState(input);
   return (
     state === 'below-budget' ||
     state === 'compacted-under-budget' ||
+    state === 'no-prunable-candidates' ||
     state === 'protected-only' ||
-    state === 'unknown-only' ||
+    state === 'unknown-unowned-usage' ||
     state === 'inventory-incomplete' ||
+    state === 'quota-pressure' ||
+    state === 'compaction-error' ||
     state === 'quota-unavailable' ||
     state === 'storage-api-unavailable'
   );
@@ -63,7 +91,7 @@ function quotaFallbackState(input: PressureInput): CachePressureState {
       ? 'compacted-under-budget'
       : 'below-budget';
   }
-  if (input.eligibleRows > 0) return 'candidate-limited';
+  if (input.eligibleRows > 0) return 'quota-pressure';
   if (input.protectedRows > 0 || input.prunableCacheBytes > 0)
     return 'protected-only';
   return 'quota-unavailable';

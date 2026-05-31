@@ -4,9 +4,15 @@ import {
   type CacheBudgetResult,
 } from './cache-budget-result';
 import { pressureState, shouldStopCompaction } from './cache-budget-decision';
+import {
+  adjustedQuota,
+  pressureInput,
+  safeDeleteCacheLedgerResources,
+  shouldContinueCompaction,
+  stopReason,
+} from './cache-budget-enforcement-helpers';
 import { writeCacheBudgetMetadata } from './cache-budget-metadata';
 import { cacheBudgetSnapshot } from './cache-budget-snapshot';
-import { deleteCacheLedgerResources } from './compaction-delete';
 import { protectionSnapshot } from './compaction-protection';
 import {
   emptyPruneSelection,
@@ -60,23 +66,32 @@ export async function enforceCacheBudget(
     });
   let quota = await readStorageQuota();
   let snapshot = await cacheBudgetSnapshot(budgetBytes, quota);
-  const budget = deriveSiteStorageBudget(budgetBytes, quota);
-  if (!shouldCompactForSiteBudget(snapshot.prunableCacheBytes, budget)) {
+  const initialState = pressureState(
+    pressureInput({
+      snapshot,
+      quota,
+      budgetBytes,
+      eligibleRows: 0,
+      protectedRows: snapshot.protectedLedgerRows,
+      prunedResources: 0,
+    }),
+  );
+  if (!shouldContinueCompaction(snapshot, quota, budgetBytes)) {
     const done = cacheBudgetResult({
-      reason: 'below-budget-threshold',
+      reason: stopReason(initialState),
       budgetBytes: snapshot.siteBudgetBytes,
       ledgerBytes: snapshot.ledgerBytes,
       prunableCacheBytes: snapshot.prunableCacheBytes,
       protectedUserBytes: snapshot.protectedUserBytes,
       unknownOrOverheadBytes: snapshot.unknownOrOverheadBytes,
-      browserUsageBytes: budget.browserUsageBytes,
+      browserUsageBytes: snapshot.browserUsageBytes,
       prunedEvents: 0,
       prunedResources: 0,
       prunedBytes: 0,
       eventCacheBytes: snapshot.eventCacheBytes,
       skipped: false,
-      protectedOnly: false,
-      pressureState: 'below-budget',
+      protectedOnly: initialState === 'protected-only',
+      pressureState: initialState,
     });
     await writeCacheBudgetMetadata(done, snapshot);
     return done;
@@ -86,12 +101,8 @@ export async function enforceCacheBudget(
   let prunedBytes = 0;
   let skippedDurablyProtected = 0;
   let skippedDynamicallyProtected = 0;
-  while (
-    shouldCompactForSiteBudget(
-      snapshot.prunableCacheBytes,
-      deriveSiteStorageBudget(budgetBytes, quota),
-    )
-  ) {
+  let compactionError = false;
+  while (shouldContinueCompaction(snapshot, quota, budgetBytes)) {
     const protection = await protectionSnapshot();
     if (!protection.complete) break;
     const selection = await lowestScorePruneSelection(
@@ -103,20 +114,26 @@ export async function enforceCacheBudget(
     if (
       selection.selectedRows.length === 0 ||
       shouldStopCompaction({
-        budget: deriveSiteStorageBudget(budgetBytes, quota),
-        prunableCacheBytes: snapshot.prunableCacheBytes,
-        eligibleRows: selection.selectedRows.length,
-        protectedRows:
-          selection.skippedDurablyProtected +
-          selection.skippedDynamicallyProtected,
-        unknownOrOverheadBytes: snapshot.unknownOrOverheadBytes,
-        inventoryStatus: snapshot.inventoryStatus,
-        prunedResources,
-        storageApiAvailable: snapshot.storageApiAvailable,
+        ...pressureInput({
+          snapshot,
+          quota,
+          budgetBytes,
+          eligibleRows: selection.selectedRows.length,
+          prunedResources,
+          protectedRows:
+            selection.skippedDurablyProtected +
+            selection.skippedDynamicallyProtected,
+        }),
       })
     )
       break;
-    const deleted = await deleteCacheLedgerResources(selection.selectedRows);
+    const deleted = await safeDeleteCacheLedgerResources(
+      selection.selectedRows,
+    );
+    if (!deleted) {
+      compactionError = true;
+      break;
+    }
     prunedEvents += deleted.prunedEvents;
     prunedResources += deleted.prunedResources;
     prunedBytes += deleted.prunedBytes;
@@ -129,21 +146,22 @@ export async function enforceCacheBudget(
     ? await lowestScorePruneSelection(1, finalProtection.ids)
     : emptyPruneSelection();
   const finalState = finalProtection.complete
-    ? pressureState({
-        budget: deriveSiteStorageBudget(budgetBytes, quota),
-        prunableCacheBytes: snapshot.prunableCacheBytes,
-        eligibleRows: finalSelection.selectedRows.length,
-        protectedRows:
-          finalSelection.skippedDurablyProtected +
-          finalSelection.skippedDynamicallyProtected,
-        unknownOrOverheadBytes: snapshot.unknownOrOverheadBytes,
-        inventoryStatus: snapshot.inventoryStatus,
-        prunedResources,
-        storageApiAvailable: snapshot.storageApiAvailable,
-      })
+    ? pressureState(
+        pressureInput({
+          snapshot,
+          quota,
+          budgetBytes,
+          eligibleRows: finalSelection.selectedRows.length,
+          prunedResources,
+          protectedRows:
+            finalSelection.skippedDurablyProtected +
+            finalSelection.skippedDynamicallyProtected,
+        }),
+      )
     : 'inventory-incomplete';
+  const pressure = compactionError ? 'compaction-error' : finalState;
   const done = cacheBudgetResult({
-    reason: finalReason(reason, finalState),
+    reason: stopReason(pressure),
     budgetBytes: snapshot.siteBudgetBytes,
     ledgerBytes: snapshot.ledgerBytes,
     prunableCacheBytes: snapshot.prunableCacheBytes,
@@ -155,8 +173,8 @@ export async function enforceCacheBudget(
     prunedBytes,
     eventCacheBytes: snapshot.eventCacheBytes,
     skipped: false,
-    protectedOnly: finalState === 'protected-only',
-    pressureState: finalState,
+    protectedOnly: pressure === 'protected-only',
+    pressureState: pressure,
     skippedDurablyProtected:
       skippedDurablyProtected + finalSelection.skippedDurablyProtected,
     skippedDynamicallyProtected:
@@ -175,24 +193,4 @@ export function shouldCompact(
     prunableCacheBytes,
     deriveSiteStorageBudget(maxBytes, quota),
   );
-}
-
-function adjustedQuota(
-  quota: StorageQuotaSnapshot | null,
-  prunedBytes: number,
-): StorageQuotaSnapshot | null {
-  if (!quota || prunedBytes <= 0) return quota;
-  const usage = Math.max(0, quota.usage - prunedBytes);
-  return { ...quota, usage, ratio: usage / quota.quota };
-}
-
-function finalReason(
-  requested: CacheBudgetReason,
-  state: CacheBudgetResult['pressureState'],
-): string {
-  if (state === 'protected-only') return 'protected-only';
-  if (state === 'unknown-only') return 'protected-or-unknown-usage';
-  if (state === 'inventory-incomplete') return 'inventory-incomplete';
-  if (state === 'below-budget') return 'below-budget-threshold';
-  return requested;
 }

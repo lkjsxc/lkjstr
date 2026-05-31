@@ -37,9 +37,9 @@ The app must support:
 - enforcing whole-origin cache pressure by deleting only eligible ledger-backed
   cache rows while protected accounts, settings, relay sets, drafts, workspace
   rows, active jobs, active snapshots, and safety/configuration rows remain.
-- reporting protected-only, unknown-only, inventory-incomplete, unsupported, or
-  quota-unavailable pressure instead of treating unexplained browser usage as
-  successful recovery.
+- reporting protected-only, unknown-unowned-usage, inventory-incomplete,
+  storage-api-unavailable, quota-pressure, or compaction-error instead of
+  treating unexplained browser usage as successful recovery.
 - keeping Stats cache recovery actions usable when IndexedDB is blocked,
   corrupt, or missing an expected object store; failed reads fall back to
   already known safe values rather than surfacing uncaught storage exceptions.

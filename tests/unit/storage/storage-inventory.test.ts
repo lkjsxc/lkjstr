@@ -1,4 +1,6 @@
 import { describe, expect, it } from 'vitest';
+import { deadlineResult } from '../../../src/lib/storage/indexed-db-inventory-rows';
+import { classifyIndexedDbStore } from '../../../src/lib/storage/storage-inventory-classify';
 import {
   knownStorageTables,
   storageGroup,
@@ -28,25 +30,60 @@ describe('storage inventory', () => {
     }
   });
 
-  it('reports browser overhead when indexeddb is unavailable', async () => {
+  it('reports residual browser overhead when indexeddb is unavailable', async () => {
     const rows = await storageInventory(128);
-    expect(rows).toContainEqual({
-      table: 'IndexedDB',
-      group: 'unknown',
-      rowCount: null,
-      estimatedBytes: 0,
-      status: 'unavailable',
+    expect(rows).toContainEqual(
+      expect.objectContaining({
+        table: 'IndexedDB',
+        group: 'unknown',
+        rowCount: null,
+        estimatedBytes: 0,
+        status: 'unavailable',
+      }),
+    );
+    expect(rows).toContainEqual(
+      expect.objectContaining({
+        table: 'residual-browser-overhead',
+        group: 'overhead',
+        rowCount: null,
+        estimatedBytes: 128,
+        status: 'exact',
+      }),
+    );
+  });
+
+  it('detects current, legacy, and unknown stores', () => {
+    expect(classifyIndexedDbStore('lkjstr', 'events')).toMatchObject({
+      group: 'prunable-cache',
+      ownership: 'current-known-store',
     });
-    expect(rows).toContainEqual({
-      table: 'browser-overhead-or-unknown',
-      group: 'overhead',
-      rowCount: null,
-      estimatedBytes: 128,
-      status: 'exact',
+    expect(
+      classifyIndexedDbStore('lkjstr', 'passkeyAccountSecrets'),
+    ).toMatchObject({
+      group: 'unknown',
+      ownership: 'legacy-protected',
+      recoverable: false,
+    });
+    expect(classifyIndexedDbStore('lkjstr', 'futureTable')).toMatchObject({
+      group: 'unknown',
+      ownership: 'unknown-unowned',
     });
   });
 
-  it('omits overhead when browser usage is unknown', async () => {
+  it('marks deadline scans as partial instead of exact', () => {
+    expect(deadlineResult(3, 42)).toMatchObject({
+      rowCount: 3,
+      status: 'partial',
+      estimatedBytes: 42,
+    });
+    expect(deadlineResult(0, 0)).toMatchObject({
+      rowCount: null,
+      status: 'timeout',
+      estimatedBytes: 0,
+    });
+  });
+
+  it('keeps overhead out when browser usage is unknown', async () => {
     const rows = await storageInventory(null);
     expect(rows.some((row) => row.group === 'overhead')).toBe(false);
   });

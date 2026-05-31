@@ -53,3 +53,19 @@ export async function compactFeedScanHintRowsWithLedger(
     },
   });
 }
+
+export async function deleteAllFeedScanHintsWithLedger(): Promise<void> {
+  await withStorageTransaction({
+    mode: 'rw',
+    tables: ['feedScanHints', 'cacheLedger'],
+    purpose: 'feed-scan-hint-write',
+    run: async (db) => {
+      const ids = (await db.feedScanHints.toArray()).map((row) => row.id);
+      if (ids.length === 0) return;
+      await db.feedScanHints.bulkDelete(ids);
+      await db.cacheLedger.bulkDelete(
+        ids.map((id) => cacheLedgerId('feed-scan-hint', id)),
+      );
+    },
+  });
+}

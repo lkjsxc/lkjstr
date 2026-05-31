@@ -25,6 +25,14 @@ export async function writeCacheBudgetMetadata(
     eventCacheBytes: snapshot.eventCacheBytes,
     browserUsageBytes: snapshot.browserUsageBytes,
     overTargetBytes: snapshot.overTargetBytes,
+    indexedDbEstimatedBytes: snapshot.indexedDbEstimatedBytes,
+    knownAppManagedCacheBytes: snapshot.knownAppManagedCacheBytes,
+    derivedFeedCacheBytes: snapshot.derivedFeedCacheBytes,
+    diagnosticsCacheBytes: snapshot.diagnosticsCacheBytes,
+    ledgerStoreBytes: snapshot.ledgerStoreBytes,
+    metadataBytes: snapshot.metadataBytes,
+    unknownLegacyOrUnownedBytes: snapshot.unknownLegacyOrUnownedBytes,
+    residualBrowserOverheadBytes: snapshot.residualBrowserOverheadBytes,
     inventoryStatus: snapshot.inventoryStatus,
     pressureState: result.pressureState,
     totalLedgerRows: snapshot.totalLedgerRows,
@@ -42,7 +50,7 @@ export async function writeCacheBudgetMetadata(
     protectedOnly: result.protectedOnly,
     protectedOrUnknownOnly:
       result.pressureState === 'protected-only' ||
-      result.pressureState === 'unknown-only',
+      result.pressureState === 'unknown-unowned-usage',
     ledgerInventory: snapshot.ledgerInventory,
     storageInventory: snapshot.storageInventory,
     storageOperations: {

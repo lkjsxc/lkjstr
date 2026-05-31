@@ -29,5 +29,5 @@
 </button>
 <button type="button" onclick={() => void compactNow()}>Compact now</button>
 <button type="button" onclick={() => void repairLedger()}>
-  Repair cache ledger
+  Repair storage
 </button>

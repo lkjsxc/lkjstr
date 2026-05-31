@@ -58,7 +58,7 @@ pub fn StatsTab(runtime: RuntimeSignal, provider: Option<StatsProvider>) -> impl
                     <tr><th>"Available stores"</th><td>{move || available_text(snapshot.get())}</td></tr>
                     <tr><th>"Unavailable stores"</th><td>{move || unavailable_text(snapshot.get())}</td></tr>
                     <tr><th>"Pressure state"</th><td>"unavailable in Rust Stats"</td></tr>
-                    <tr><th>"Unknown/browser overhead"</th><td>"unavailable in Rust Stats"</td></tr>
+                    <tr><th>"Residual browser overhead"</th><td>"unavailable in Rust Stats"</td></tr>
                 </tbody>
             </table>
             <h3>"Storage inventory"</h3>

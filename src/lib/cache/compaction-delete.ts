@@ -4,6 +4,7 @@ import {
   deleteAllFeedCoverageAfterEventCompaction,
   deleteFeedCoverageForFeeds,
 } from '../events/feed-coverage-store';
+import { deleteAllFeedScanHintsWithLedger } from '../storage/repositories/feed-scan-hints-store';
 import { directLedgerResourceSpecs } from '../storage/ledger/ledger-manifest';
 import { cacheLedgerId } from './cache-ledger-id';
 import type { CacheLedgerRecord } from './cache-ledger-record';
@@ -58,6 +59,7 @@ export async function deletePrunedEvents(
   );
   await deleteStaleFeedCursors(new Set(ids));
   await deleteAllFeedCoverageAfterEventCompaction();
+  await deleteAllFeedScanHintsWithLedger();
   await compactFeedCoverage(30 * 24 * 60 * 60);
   return {
     prunedEvents: ids.length,

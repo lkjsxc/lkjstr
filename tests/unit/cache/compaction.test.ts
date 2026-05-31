@@ -133,9 +133,7 @@ describe('cache compaction', () => {
   it('does not prune without quota pressure in tests', async () => {
     const result = await compactOldEvents();
     expect(result.prunedEvents).toBe(0);
-    expect(result.reason === 'below-budget-threshold' || result.skipped).toBe(
-      true,
-    );
+    expect(result.reason === 'below-budget' || result.skipped).toBe(true);
   });
 
   it('compacts from internal bytes without browser estimates', () => {

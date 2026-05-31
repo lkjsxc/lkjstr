@@ -25,8 +25,16 @@ export type CacheBudgetSnapshot = {
   readonly protectedLedgerBytes: number;
   readonly eventCacheBytes: number;
   readonly tableEstimatedBytes: number;
+  readonly indexedDbEstimatedBytes: number;
+  readonly knownAppManagedCacheBytes: number;
+  readonly derivedFeedCacheBytes: number;
+  readonly diagnosticsCacheBytes: number;
+  readonly ledgerStoreBytes: number;
+  readonly metadataBytes: number;
   readonly localStorageBytes: number;
   readonly cacheStorageBytes: number;
+  readonly unknownLegacyOrUnownedBytes: number;
+  readonly residualBrowserOverheadBytes: number;
   readonly protectedUserBytes: number;
   readonly unknownOrOverheadBytes: number;
   readonly inventoryStatus: InventoryScanStatus;
@@ -54,6 +62,8 @@ export async function cacheBudgetSnapshot(
     'ledger',
     'metadata',
   ]);
+  const unknownLegacyOrUnownedBytes = inventoryBytes(inventory, ['unknown']);
+  const residualBrowserOverheadBytes = inventoryBytes(inventory, ['overhead']);
   return {
     quota,
     budgetBytes,
@@ -68,13 +78,35 @@ export async function cacheBudgetSnapshot(
     protectedLedgerBytes: sumLedger(ledgerInventory, 'protectedBytes'),
     eventCacheBytes: await estimatedEventCacheBytes(),
     tableEstimatedBytes,
+    indexedDbEstimatedBytes: inventoryBytes(inventory, [
+      'protected',
+      'protected-safety',
+      'prunable-cache',
+      'derived-page-cache',
+      'diagnostics',
+      'ledger',
+      'metadata',
+      'unknown',
+    ]),
+    knownAppManagedCacheBytes: inventoryBytes(inventory, [
+      'prunable-cache',
+      'derived-page-cache',
+      'diagnostics',
+    ]),
+    derivedFeedCacheBytes: inventoryBytes(inventory, ['derived-page-cache']),
+    diagnosticsCacheBytes: inventoryBytes(inventory, ['diagnostics']),
+    ledgerStoreBytes: inventoryBytes(inventory, ['ledger']),
+    metadataBytes: inventoryBytes(inventory, ['metadata']),
     localStorageBytes: inventoryBytesByTable(inventory, 'localStorage'),
     cacheStorageBytes: inventoryBytesByTable(inventory, 'Cache Storage'),
     protectedUserBytes: inventoryBytes(inventory, [
       'protected',
       'protected-safety',
     ]),
-    unknownOrOverheadBytes: unknownBytes(budget.browserUsageBytes, inventory),
+    unknownLegacyOrUnownedBytes,
+    residualBrowserOverheadBytes,
+    unknownOrOverheadBytes:
+      unknownLegacyOrUnownedBytes + residualBrowserOverheadBytes,
     inventoryStatus: aggregateInventoryStatus(inventory),
     totalLedgerRows: sumLedger(ledgerInventory, 'rowCount'),
     prunableLedgerRows: ledgerInventory.reduce(
@@ -91,20 +123,10 @@ export async function cacheBudgetSnapshot(
   };
 }
 
-function unknownBytes(
-  browserUsageBytes: number | null,
-  inventory: readonly StorageInventoryRow[],
-): number {
-  if (browserUsageBytes === null) return 0;
-  const known = inventory
-    .filter((row) => row.group !== 'overhead' && row.group !== 'unknown')
-    .reduce((sum, row) => sum + row.estimatedBytes, 0);
-  return Math.max(0, browserUsageBytes - known);
-}
-
 function aggregateInventoryStatus(
   inventory: readonly StorageInventoryRow[],
 ): InventoryScanStatus {
+  if (inventory.some((row) => row.status === 'partial')) return 'partial';
   if (inventory.some((row) => row.status === 'timeout')) return 'timeout';
   if (inventory.some((row) => row.status === 'unavailable'))
     return 'unavailable';

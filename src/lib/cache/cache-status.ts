@@ -9,6 +9,8 @@ import type {
   CachePressureState,
   InventoryScanStatus,
 } from './cache-budget-decision';
+import { pressureState } from './cache-budget-decision';
+import { pressureInput } from './cache-budget-enforcement-helpers';
 import {
   cacheLedgerHealth,
   type CacheLedgerRepairResult,
@@ -40,6 +42,14 @@ export type CacheMetadata = {
   readonly eventCacheBytes: number;
   readonly browserUsageBytes: number | null;
   readonly overTargetBytes: number;
+  readonly indexedDbEstimatedBytes: number;
+  readonly knownAppManagedCacheBytes: number;
+  readonly derivedFeedCacheBytes: number;
+  readonly diagnosticsCacheBytes: number;
+  readonly ledgerStoreBytes: number;
+  readonly metadataBytes: number;
+  readonly unknownLegacyOrUnownedBytes: number;
+  readonly residualBrowserOverheadBytes: number;
   readonly inventoryStatus: InventoryScanStatus;
   readonly pressureState: CachePressureState;
   readonly totalLedgerRows: number;
@@ -73,6 +83,16 @@ export async function cacheStatus(): Promise<CacheMetadata> {
     quota,
   );
   const health = await cacheLedgerHealth();
+  const currentPressureState = pressureState(
+    pressureInput({
+      snapshot,
+      quota,
+      budgetBytes: snapshot.budgetBytes,
+      eligibleRows: snapshot.prunableLedgerRows > 0 ? 1 : 0,
+      protectedRows: snapshot.protectedLedgerRows,
+      prunedResources: 0,
+    }),
+  );
   return {
     id: 'main',
     rawEventCount: await boundedStorageRead(
@@ -97,8 +117,16 @@ export async function cacheStatus(): Promise<CacheMetadata> {
     eventCacheBytes: snapshot.eventCacheBytes,
     browserUsageBytes: snapshot.browserUsageBytes,
     overTargetBytes: snapshot.overTargetBytes,
+    indexedDbEstimatedBytes: snapshot.indexedDbEstimatedBytes,
+    knownAppManagedCacheBytes: snapshot.knownAppManagedCacheBytes,
+    derivedFeedCacheBytes: snapshot.derivedFeedCacheBytes,
+    diagnosticsCacheBytes: snapshot.diagnosticsCacheBytes,
+    ledgerStoreBytes: snapshot.ledgerStoreBytes,
+    metadataBytes: snapshot.metadataBytes,
+    unknownLegacyOrUnownedBytes: snapshot.unknownLegacyOrUnownedBytes,
+    residualBrowserOverheadBytes: snapshot.residualBrowserOverheadBytes,
     inventoryStatus: snapshot.inventoryStatus,
-    pressureState: meta?.pressureState ?? 'below-budget',
+    pressureState: currentPressureState,
     totalLedgerRows: snapshot.totalLedgerRows,
     prunableLedgerRows: snapshot.prunableLedgerRows,
     protectedLedgerRows: snapshot.protectedLedgerRows,

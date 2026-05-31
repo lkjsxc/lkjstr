@@ -13,7 +13,8 @@ export const defaultCacheMaxBytes = 67_108_864;
 export async function readStorageQuota(): Promise<StorageQuotaSnapshot | null> {
   if (typeof navigator === 'undefined' || !navigator.storage?.estimate)
     return null;
-  const estimate = await navigator.storage.estimate();
+  const estimate = await navigator.storage.estimate().catch(() => null);
+  if (!estimate) return null;
   const usage = estimate.usage ?? 0;
   const quota = estimate.quota ?? 0;
   if (quota <= 0) return null;

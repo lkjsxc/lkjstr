@@ -13,18 +13,27 @@ describe('cache budget decision', () => {
     );
   });
 
-  it('keeps over-target eligible rows candidate-limited', () => {
-    expect(state({ eligibleRows: 1 })).toBe('candidate-limited');
+  it('keeps over-target eligible rows as quota pressure', () => {
+    expect(state({ eligibleRows: 1 })).toBe('quota-pressure');
   });
 
-  it('stops as protected-only when exact pressure has no candidates', () => {
-    expect(state({ eligibleRows: 0 })).toBe('protected-only');
+  it('stops as no-prunable-candidates when exact pressure has no candidates', () => {
+    expect(state({ eligibleRows: 0 })).toBe('no-prunable-candidates');
+  });
+
+  it('does not report below-budget when unknown origin usage remains', () => {
+    expect(state({ usage: 500, unknownOrOverheadBytes: 400 })).toBe(
+      'unknown-unowned-usage',
+    );
   });
 
   it('distinguishes protected, unknown, and incomplete pressure', () => {
     expect(state({ protectedRows: 4 })).toBe('protected-only');
-    expect(state({ unknownOrOverheadBytes: 512 })).toBe('unknown-only');
+    expect(state({ unknownOrOverheadBytes: 512 })).toBe(
+      'unknown-unowned-usage',
+    );
     expect(state({ inventoryStatus: 'timeout' })).toBe('inventory-incomplete');
+    expect(state({ inventoryStatus: 'partial' })).toBe('inventory-incomplete');
   });
 });
 

@@ -4,6 +4,7 @@ import { indexedDbAvailable } from '../storage/safe-storage';
 import type { CacheLedgerRecord } from './cache-ledger-record';
 import { cacheLedgerTargetState } from './cache-ledger-target';
 import { collectRepairRows } from './cache-ledger-repair-rows';
+import { deleteUnownedCacheRows } from './unowned-cache-cleanup';
 
 const DELETE_BATCH_SIZE = 100;
 
@@ -12,6 +13,8 @@ export type CacheLedgerRepairResult = {
   readonly missingLedgerRowsInserted: number;
   readonly staleLedgerRowsUpdated: number;
   readonly skippedProtectedRows: number;
+  readonly unownedCacheRowsDeleted: number;
+  readonly legacyStorageDeleted: number;
   readonly startedAt: number;
   readonly finishedAt: number;
 };
@@ -22,9 +25,12 @@ export async function repairCacheLedger(): Promise<CacheLedgerRepairResult> {
   try {
     const orphanLedgerRowsDeleted = await deleteOrphans();
     const result = await backfillAndUpdate();
+    const unownedCacheRowsDeleted = await deleteUnownedCacheRows();
     const done = {
       ...result,
       orphanLedgerRowsDeleted,
+      unownedCacheRowsDeleted,
+      legacyStorageDeleted: 0,
       startedAt,
       finishedAt: Date.now(),
     };
@@ -131,6 +137,8 @@ function emptyRepair(startedAt: number): CacheLedgerRepairResult {
     missingLedgerRowsInserted: 0,
     staleLedgerRowsUpdated: 0,
     skippedProtectedRows: 0,
+    unownedCacheRowsDeleted: 0,
+    legacyStorageDeleted: 0,
     startedAt,
     finishedAt: Date.now(),
   };
