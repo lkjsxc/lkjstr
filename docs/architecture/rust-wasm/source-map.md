@@ -3,12 +3,13 @@
 ## Purpose
 
 This file maps the intended Rust/WASM repository layout. Status: partially
-implemented for the Rust workspace, protocol crate, web bridge crate, and
-repository checks.
+implemented for the Rust workspace, protocol crate, web bridge crate, partial
+UI shell, and repository checks.
 
 ## Root Paths
 
-- `Cargo.toml`: Rust workspace.
+- `Cargo.toml`: Rust workspace plus the thin Trunk build package that points at
+  the `lkjstr-web` entry source.
 - `Cargo.lock`: locked Rust dependency graph.
 - `rust-toolchain.toml`: Rust toolchain channel and WASM target.
 - `.cargo/`: cargo configuration and linker flags.

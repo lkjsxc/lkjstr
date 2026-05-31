@@ -115,8 +115,11 @@ Read next: [architecture/README.md](architecture/README.md),
   snapshot payload and merge semantics. Rust domain support also owns the New
   Tab catalog labels, groups, descriptions, and active-account profile config.
   Rust app support now composes startup recovery and bounded tab snapshot
-  staging. Browser persistence and UI adapters remain in the current
-  TypeScript runtime.
+  staging. The Rust Leptos UI now mounts a partial real workspace shell from
+  `lkjstr-web`, renders startup panes and tabs from the Rust reducers, and opens
+  New Tab chooser tabs through the Rust command layer. Browser persistence,
+  feed surfaces, tool surfaces, relay-backed content, and complete UI parity
+  remain in the current TypeScript runtime.
 - Relay ingress uses app-owned byte and structure caps before expensive JSON
   and event parsing.
 - IndexedDB remains durable browser-owned data; memory relief prunes only
@@ -246,9 +249,10 @@ and [operations/memory-verification.md](operations/memory-verification.md).
   and relay URL normalization are implemented in Rust. `lkjstr-web` exposes
   those implemented protocol surfaces through browser-tested WASM bindings.
   `lkjstr-domain` implements pure account records, local secret row shape, local
-  signing helpers, and npub mining prefix rules. The product runtime remains
-  the browser-first SvelteKit and TypeScript app until Leptos UI surfaces and
-  matching tests exist.
+  signing helpers, npub mining prefix rules, workspace reducers, tab snapshots,
+  and the New Tab catalog. A partial Leptos workspace shell exists, but the
+  product runtime remains the browser-first SvelteKit and TypeScript app until
+  each Rust feed, tool, storage, relay, and UI surface reaches matching tests.
 - Remote NIP-50 results depend on actual relay support.
 - Passkey-protected local secret storage is design-only.
 - Encrypted direct messages are not implemented.

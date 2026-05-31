@@ -5,6 +5,17 @@ mod response;
 
 use wasm_bindgen::prelude::{JsValue, wasm_bindgen};
 
+#[cfg(target_arch = "wasm32")]
+#[wasm_bindgen(start)]
+pub fn start() {
+    mount_rust_workspace_shell();
+}
+
+#[cfg(target_arch = "wasm32")]
+pub fn mount_rust_workspace_shell() {
+    lkjstr_ui::mount_app();
+}
+
 #[wasm_bindgen]
 pub fn validate_event_json(json: &str) -> JsValue {
     protocol_bridge::validate_event_json(json)

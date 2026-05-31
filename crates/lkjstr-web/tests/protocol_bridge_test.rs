@@ -7,7 +7,7 @@ use wasm_bindgen_test::{wasm_bindgen_test, wasm_bindgen_test_configure};
 
 use lkjstr_web::{
     decode_nip19, decode_relay_message_json, encode_client_message_json, encode_nip19,
-    validate_event_json, verify_event_json,
+    mount_rust_workspace_shell, validate_event_json, verify_event_json,
 };
 
 wasm_bindgen_test_configure!(run_in_browser);
@@ -59,6 +59,19 @@ fn encodes_and_decodes_nip19_entities() -> Result<(), JsValue> {
     Ok(())
 }
 
+#[wasm_bindgen_test]
+fn mounts_rust_workspace_shell() -> Result<(), JsValue> {
+    mount_rust_workspace_shell();
+    let document = document()?;
+    let shell = document
+        .query_selector("[data-testid='rust-workspace-shell']")?
+        .ok_or_else(|| js_error("missing rust workspace shell"))?;
+    let text = shell.text_content().unwrap_or_default();
+    assert!(text.contains("Welcome"));
+    assert!(text.contains("Accounts"));
+    Ok(())
+}
+
 fn signed_event() -> Result<NostrEvent, JsValue> {
     let secret_hex = "01".repeat(32);
     let secret = parse_secret_key_hex(&secret_hex).ok_or_else(|| js_error("bad secret"))?;
@@ -85,4 +98,10 @@ fn value(value: JsValue) -> Result<Value, JsValue> {
 
 fn js_error(message: &str) -> JsValue {
     JsValue::from_str(message)
+}
+
+fn document() -> Result<web_sys::Document, JsValue> {
+    web_sys::window()
+        .and_then(|window| window.document())
+        .ok_or_else(|| js_error("missing browser document"))
 }

@@ -58,14 +58,15 @@ and verified.
 
 ## Source Map
 
-- `crates/lkjstr-protocol`: target Nostr protocol kernel.
-- `crates/lkjstr-domain`: target pure reducers and shared models.
-- `crates/lkjstr-relays`: target relay state machines and schedulers.
-- `crates/lkjstr-storage`: target storage manifest, repositories, and ledger.
-- `crates/lkjstr-app`: target browser-local app composition.
-- `crates/lkjstr-ui`: target Leptos UI surfaces.
-- `crates/lkjstr-web`: target WASM entrypoint and browser host adapters.
-- `crates/lkjstr-xtask`: target repository checks and quiet gates.
+- `Cargo.toml`: Rust workspace plus the Trunk build package.
+- `crates/lkjstr-protocol`: Nostr protocol kernel.
+- `crates/lkjstr-domain`: pure reducers and shared models.
+- `crates/lkjstr-relays`: relay state machines and schedulers.
+- `crates/lkjstr-storage`: storage manifest, repositories, and ledger.
+- `crates/lkjstr-app`: browser-local app composition.
+- `crates/lkjstr-ui`: Leptos UI surfaces.
+- `crates/lkjstr-web`: WASM entrypoint and browser host adapters.
+- `crates/lkjstr-xtask`: repository checks and quiet gates.
 - `src/lib/protocol`: Nostr event, filter, tag, and relay URL contracts.
 - `src/lib/workspace`: layout, tab, split, recovery, and persistence commands.
 - `src/lib/relays`: relay set storage, clients, and pool behavior.

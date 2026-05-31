@@ -6,13 +6,14 @@ Layout docs map repository paths to ownership.
 
 ## Root
 
-- `Cargo.toml`: target Rust workspace root.
-- `Cargo.lock`: target Rust dependency lockfile.
-- `rust-toolchain.toml`: target Rust toolchain and WASM target contract.
-- `.cargo/`: target cargo configuration.
-- `crates/`: target Rust protocol, domain, relay, storage, app, UI, web, and
+- `Cargo.toml`: Rust workspace root plus the thin Trunk build package that
+  points at the `lkjstr-web` entry source.
+- `Cargo.lock`: Rust dependency lockfile.
+- `rust-toolchain.toml`: Rust toolchain and WASM target contract.
+- `.cargo/`: Cargo configuration.
+- `crates/`: Rust protocol, domain, relay, storage, app, UI, web, and
   repository-check crates.
-- `index.html`: target Trunk browser entry document.
+- `index.html`: Trunk browser entry document for the Rust/WASM shell.
 - `src/`: current SvelteKit app and TypeScript modules until replaced.
 - `docs/`: product and engineering contract.
 - `tests/unit/`: Vitest unit tests.

@@ -1,0 +1,171 @@
+:root {
+  color-scheme: light dark;
+  font-family:
+    Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI",
+    sans-serif;
+  background: #f5f5f2;
+  color: #1d1d1b;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  min-height: 100%;
+  margin: 0;
+}
+
+button {
+  font: inherit;
+}
+
+.lkjstr-shell {
+  min-height: 100vh;
+  display: grid;
+  grid-template-rows: auto 1fr;
+}
+
+.lkjstr-activity-bar {
+  min-height: 48px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 8px 12px;
+  border-bottom: 1px solid #c9c8c2;
+  background: #111111;
+  color: #f8f7f2;
+}
+
+.lkjstr-activity-bar button,
+.lkjstr-pane-head button,
+.lkjstr-tab-strip button,
+.lkjstr-new-tab-menu button {
+  border: 1px solid #b9b8b1;
+  background: #ffffff;
+  color: #1d1d1b;
+  cursor: pointer;
+}
+
+.lkjstr-activity-bar button {
+  width: 32px;
+  height: 32px;
+  border-radius: 6px;
+}
+
+.lkjstr-pane-grid {
+  min-height: 0;
+  display: grid;
+  grid-template-rows: 1fr 1fr;
+  gap: 8px;
+  padding: 8px;
+}
+
+.lkjstr-pane {
+  min-width: 0;
+  min-height: 0;
+  display: grid;
+  grid-template-rows: auto auto 1fr;
+  border: 1px solid #c9c8c2;
+  background: #ffffff;
+}
+
+.lkjstr-pane-head {
+  min-height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 6px 8px;
+  border-bottom: 1px solid #dddbd2;
+}
+
+.lkjstr-pane-title {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-weight: 700;
+}
+
+.lkjstr-tab-strip {
+  min-width: 0;
+  display: flex;
+  gap: 4px;
+  overflow-x: auto;
+  padding: 6px;
+  border-bottom: 1px solid #dddbd2;
+}
+
+.lkjstr-tab-strip button {
+  flex: 0 0 auto;
+  max-width: 180px;
+  padding: 6px 10px;
+  border-radius: 6px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.lkjstr-tab-strip button.active {
+  border-color: #1d5f8a;
+  background: #e4f2f8;
+}
+
+.lkjstr-pane-body {
+  min-height: 0;
+  overflow: auto;
+}
+
+.lkjstr-tab-body {
+  max-width: 720px;
+  padding: 20px;
+}
+
+.lkjstr-tab-body h1 {
+  margin: 0 0 8px;
+  font-size: 24px;
+  line-height: 1.2;
+}
+
+.lkjstr-tab-body p {
+  margin: 0 0 16px;
+  color: #55544f;
+}
+
+.lkjstr-new-tab-menu {
+  display: grid;
+  gap: 8px;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+}
+
+.lkjstr-new-tab-menu.hidden {
+  display: none;
+}
+
+.lkjstr-new-tab-menu button {
+  min-height: 72px;
+  display: grid;
+  gap: 4px;
+  align-content: center;
+  padding: 10px;
+  border-radius: 6px;
+  text-align: left;
+}
+
+.lkjstr-new-tab-menu span {
+  font-weight: 700;
+}
+
+.lkjstr-new-tab-menu small {
+  color: #55544f;
+}
+
+@media (min-width: 820px) {
+  .lkjstr-pane-grid {
+    grid-template-columns: 1fr 1fr;
+    grid-template-rows: 1fr;
+  }
+}

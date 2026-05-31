@@ -41,7 +41,8 @@ references should stay as relative Markdown links.
 | Rust storage repositories and IndexedDB      | [storage-kernel.md](../architecture/rust-wasm/storage-kernel.md)         | not implemented | current runtime remains TS    |
 | Rust relay state machine basics             | [relay-runtime.md](../architecture/rust-wasm/relay-runtime.md)           | implemented   | relay crate tests              |
 | Rust relay client and browser adapters       | [relay-runtime.md](../architecture/rust-wasm/relay-runtime.md)           | not implemented | current runtime remains TS    |
-| Rust app, UI, and snapshot persistence       | [crate-boundaries.md](../architecture/rust-wasm/crate-boundaries.md)     | not implemented | current runtime remains TS    |
+| Rust Leptos workspace shell                  | [ui-runtime.md](../architecture/rust-wasm/ui-runtime.md)                 | partial       | mounts startup panes and tabs  |
+| Rust UI parity and snapshot persistence      | [crate-boundaries.md](../architecture/rust-wasm/crate-boundaries.md)     | not implemented | current runtime remains TS     |
 | Docker Rust/WASM verification               | [verification.md](../architecture/rust-wasm/verification.md)             | design-only   | commands documented target    |
 
 ## Feed Surface
