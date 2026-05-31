@@ -80,11 +80,18 @@ Read next: [architecture/README.md](architecture/README.md),
   notification-heavy and page-heavy pressure can be diagnosed. Runtime feed
   windows remain bounded. The live durable table contract is maintained in the
   [Storage Manifest](architecture/data/storage/data-classes/table-manifest.md).
-- Storage is browser-owned and manifest-driven. The manifest defines every live
-  IndexedDB table, its data class, inventory group, Dexie schema string,
-  retention behavior, ledger resource, delete dispatcher, and repair path.
-- Shared storage repositories normalize events, relay receipts, tag rows,
-  cursors, and jobs before runtime use.
+- Storage is browser-owned and manifest-driven. The table manifest defines every
+  live IndexedDB table, its data class, inventory group, Dexie schema string,
+  and retention flags. Ledger resource ownership and storage repository modules
+  own resource-plus-ledger write boundaries for events, feed cache, jobs,
+  notifications, relay diagnostics, relay information, route evidence, and tab
+  snapshots.
+- Feature modules call storage repositories instead of Dexie tables. The
+  repository checker rejects direct `browserDb()` calls outside storage-owned
+  modules and the temporary `src/lib/cache` compatibility area.
+- Storage operations return typed results. UI paths may continue from memory
+  fallback, while Stats can distinguish active, timed-out, late-settled, and
+  late-rejected IndexedDB operations.
 - Relay ingress uses app-owned byte and structure caps before expensive JSON
   and event parsing.
 - IndexedDB remains durable browser-owned data; memory relief prunes only
@@ -133,7 +140,8 @@ Read next: [architecture/README.md](architecture/README.md),
   complete rows may prove a bounded segment. If only some relays are proven,
   only uncovered relays are queried. Dense, incomplete, unresolved, failed,
   compacted, or missing evidence is not proof of absence and cannot suppress
-  relay reads.
+  relay reads. Event compaction currently deletes all feed coverage rows
+  conservatively so stale complete coverage cannot prove absence.
 - Durable warm scan hints tune grouped feed scan initial spans only when every
   required relay/filter has fresh evidence. Hints are bounded, stale after `30`
   days, and never prove absence or suppress relay reads.
@@ -194,7 +202,9 @@ and [operations/memory-verification.md](operations/memory-verification.md).
   capped; batched `bulkPut` reduces per-relay transaction churn.
 - Runtime-visible and open-reference cache pins are owner-scoped and cleaned up
   on owner teardown. They protect compaction dynamically without becoming
-  durable hard-protected priority rows.
+  durable hard-protected priority rows. Dynamic protection scans are bounded;
+  incomplete scans stop compaction rather than treating missing evidence as
+  permission to delete.
 - Cleanup ownership for every resource type is documented in
   [resource-ownership.md](architecture/data/resource-ownership.md).
 - Heap snapshot collection, memory budgets, and the verification workflow are
