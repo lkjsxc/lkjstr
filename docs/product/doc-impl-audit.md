@@ -20,6 +20,7 @@ references should stay as relative Markdown links.
 | Rust workspace checks                       | [crate-boundaries.md](../architecture/rust-wasm/crate-boundaries.md)     | implemented   | `lkjstr-xtask` commands       |
 | Rust protocol event validation              | [protocol-kernel.md](../architecture/rust-wasm/protocol-kernel.md)       | implemented   | byte, event, policy, ID tests |
 | Rust protocol filters and relay messages    | [protocol-kernel.md](../architecture/rust-wasm/protocol-kernel.md)       | implemented   | filter and message tests      |
+| Rust protocol signing and verification      | [protocol-kernel.md](../architecture/rust-wasm/protocol-kernel.md)       | implemented   | crypto and verify tests       |
 | Rust storage, relay, app, UI, and WASM      | [crate-boundaries.md](../architecture/rust-wasm/crate-boundaries.md)     | not implemented | current runtime remains TS    |
 | Docker Rust/WASM verification               | [verification.md](../architecture/rust-wasm/verification.md)             | design-only   | commands documented target    |
 
