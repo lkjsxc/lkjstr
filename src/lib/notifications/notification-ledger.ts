@@ -2,7 +2,7 @@ import { encodedJsonBytes } from '../cache/cache-byte-size';
 import { cacheLedgerId } from '../cache/cache-ledger-id';
 import type { CacheLedgerRecord } from '../cache/cache-ledger-record';
 import { cacheLedgerBytes } from '../cache/cache-ledger-bytes';
-import { browserDb } from '../storage/browser-db';
+import { putNotificationCacheLedgerRows } from '../storage/repositories/notifications-store';
 import type { NotificationRecord } from './notification';
 
 const importantKinds = new Set([
@@ -41,7 +41,7 @@ export async function putNotificationLedgerRows(
   records: readonly NotificationRecord[],
 ): Promise<void> {
   if (records.length === 0) return;
-  await browserDb().cacheLedger.bulkPut(records.map(notificationLedgerRecord));
+  await putNotificationCacheLedgerRows(records.map(notificationLedgerRecord));
 }
 
 function notificationLedgerDraft(

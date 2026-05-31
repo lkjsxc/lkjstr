@@ -1,9 +1,8 @@
 import { kinds, normalizeRelayUrl, type NostrEvent } from '../protocol';
-import { browserDb } from '../storage/browser-db';
 import {
-  bestEffortStorageWrite,
-  boundedStorageRead,
-} from '../storage/safe-storage';
+  putRelayListSuggestionRowsWithLedger,
+  readRelayListSuggestionRowsForAccount,
+} from '../storage/repositories/relay-list-suggestions-store';
 import { createBoundedMap } from '../fp/bounded-map';
 import { relaySuggestionLedgerRecord } from './relay-cache-ledger';
 import { listRelaySets, saveRelaySets, type RelayRecord } from './relay-store';
@@ -45,18 +44,9 @@ export async function storeRelayListSuggestionsFromEvent(
     updatedAt: now,
   }));
   for (const record of records) memorySuggestions.set(record.id, record);
-  await bestEffortStorageWrite(() =>
-    browserDb().transaction(
-      'rw',
-      browserDb().relayListSuggestions,
-      browserDb().cacheLedger,
-      async () => {
-        await browserDb().relayListSuggestions.bulkPut(records);
-        await browserDb().cacheLedger.bulkPut(
-          records.map(relaySuggestionLedgerRecord),
-        );
-      },
-    ),
+  await putRelayListSuggestionRowsWithLedger(
+    records,
+    records.map(relaySuggestionLedgerRecord),
   );
   return records;
 }
@@ -91,12 +81,8 @@ export async function relayListSuggestionsForAccount(
   const fallback = [...memorySuggestions.values()].filter(
     (item) => item.accountPubkey === accountPubkey,
   );
-  const records = await boundedStorageRead(
-    () =>
-      browserDb()
-        .relayListSuggestions.where('accountPubkey')
-        .equals(accountPubkey)
-        .toArray(),
+  const records = await readRelayListSuggestionRowsForAccount(
+    accountPubkey,
     fallback,
   );
   return records.sort((a, b) => a.relayUrl.localeCompare(b.relayUrl));

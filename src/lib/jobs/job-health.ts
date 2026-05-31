@@ -1,6 +1,5 @@
-import { browserDb } from '../storage/browser-db';
-import { boundedStorageRead } from '../storage/safe-storage';
 import type { JobRecord, JobStatus } from '../events/types';
+import { readRecentJobRows } from '../storage/repositories/jobs-store';
 
 export type JobHealthSummary = {
   readonly updatedAt: number;
@@ -23,10 +22,7 @@ const emptyCounts: Record<JobStatus, number> = {
 export async function loadJobHealthSummary(
   now = Date.now(),
 ): Promise<JobHealthSummary> {
-  const jobs = await boundedStorageRead(
-    () => browserDb().jobs.orderBy('updatedAt').reverse().limit(5000).toArray(),
-    [],
-  );
+  const jobs = await readRecentJobRows([]);
   return jobHealthSummary(jobs, now);
 }
 

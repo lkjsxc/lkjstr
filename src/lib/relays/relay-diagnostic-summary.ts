@@ -1,10 +1,11 @@
 import { setMemoryCounter } from '../app/memory-counters';
-import { browserDb } from '../storage/browser-db';
 import { createBoundedMap } from '../fp/bounded-map';
 import {
-  bestEffortStorageWrite,
-  boundedStorageRead,
-} from '../storage/safe-storage';
+  putRelayDiagnosticSummariesWithLedger,
+  putRelayDiagnosticSummaryWithLedger,
+  readRecentRelayDiagnosticSummaryRows,
+  readRelayDiagnosticSummaryRow,
+} from '../storage/repositories/relay-diagnostics-store';
 import { relaySummaryLedgerRecord } from './relay-cache-ledger';
 import { mergeRelayDiagnosticSummary } from './relay-diagnostic-merge';
 import type { RelayDiagnostic, RelaySnapshot } from './types';
@@ -90,16 +91,9 @@ async function flushWrite(relayUrl: string): Promise<void> {
   const summary = pendingWrites.get(relayUrl);
   if (!summary) return;
   pendingWrites.delete(relayUrl);
-  await bestEffortStorageWrite(() =>
-    browserDb().transaction(
-      'rw',
-      browserDb().relayDiagnosticSummaries,
-      browserDb().cacheLedger,
-      async () => {
-        await browserDb().relayDiagnosticSummaries.put(summary);
-        await browserDb().cacheLedger.put(relaySummaryLedgerRecord(summary));
-      },
-    ),
+  await putRelayDiagnosticSummaryWithLedger(
+    summary,
+    relaySummaryLedgerRecord(summary),
   );
 }
 
@@ -107,15 +101,9 @@ export async function listRelayDiagnosticSummaries(): Promise<
   RelayDiagnosticSummary[]
 > {
   await flushAllPendingWrites();
-  const records = await boundedStorageRead(
-    () =>
-      browserDb()
-        .relayDiagnosticSummaries.orderBy('updatedAt')
-        .reverse()
-        .limit(idbListLimit)
-        .toArray(),
-    [...memorySummaries.values()],
-  );
+  const records = await readRecentRelayDiagnosticSummaryRows(idbListLimit, [
+    ...memorySummaries.values(),
+  ]);
   return records.sort((a, b) => b.updatedAt - a.updatedAt);
 }
 
@@ -140,10 +128,7 @@ async function relayDiagnosticSummary(
 ): Promise<RelayDiagnosticSummary | undefined> {
   return (
     memorySummaries.get(relayUrl) ??
-    (await boundedStorageRead(
-      () => browserDb().relayDiagnosticSummaries.get(relayUrl),
-      undefined,
-    ))
+    (await readRelayDiagnosticSummaryRow(relayUrl))
   );
 }
 
@@ -157,17 +142,8 @@ async function flushAllPendingWrites(): Promise<void> {
     writeTimers.delete(url);
     pendingWrites.delete(url);
   }
-  await bestEffortStorageWrite(() =>
-    browserDb().transaction(
-      'rw',
-      browserDb().relayDiagnosticSummaries,
-      browserDb().cacheLedger,
-      async () => {
-        await browserDb().relayDiagnosticSummaries.bulkPut(batch);
-        await browserDb().cacheLedger.bulkPut(
-          batch.map(relaySummaryLedgerRecord),
-        );
-      },
-    ),
+  await putRelayDiagnosticSummariesWithLedger(
+    batch,
+    batch.map(relaySummaryLedgerRecord),
   );
 }

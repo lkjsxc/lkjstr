@@ -1,17 +1,14 @@
 import { countRuntime } from '../app/runtime-counters';
 import { createBoundedMap } from '../fp/bounded-map';
-import { browserDb } from '../storage/browser-db';
-import {
-  bestEffortDiagnosticStorageWrite,
-  bestEffortStorageWrite,
-  boundedStorageRead,
-} from '../storage/safe-storage';
 import {
   relaySegmentMaxSpan,
   relaySegmentMinSpan,
 } from './relay-page-segments';
-import { cacheLedgerId } from '../cache/cache-ledger-id';
-import { feedScanHintLedgerRecord } from './feed-cache-ledger';
+import {
+  compactFeedScanHintRowsWithLedger,
+  putFeedScanHintWithLedger,
+  readFeedScanHintRowsForScan,
+} from '../storage/repositories/feed-scan-hints-store';
 
 export type FeedScanHintFeedback =
   | 'limit-hit'
@@ -65,17 +62,7 @@ export async function saveFeedScanHint(
   };
   memoryHints.set(hint.id, hint);
   countRuntime('timeline', 'warmHintWrites');
-  await bestEffortDiagnosticStorageWrite(() =>
-    browserDb().transaction(
-      'rw',
-      browserDb().feedScanHints,
-      browserDb().cacheLedger,
-      async () => {
-        await browserDb().feedScanHints.put(hint);
-        await browserDb().cacheLedger.put(feedScanHintLedgerRecord(hint));
-      },
-    ),
-  );
+  await putFeedScanHintWithLedger(hint);
 }
 
 export async function hintsForScan(input: {
@@ -86,12 +73,8 @@ export async function hintsForScan(input: {
   readonly direction: FeedScanHint['direction'];
 }): Promise<FeedScanHint[]> {
   const relays = new Set(input.relays);
-  const rows = await boundedStorageRead(
-    () =>
-      browserDb()
-        .feedScanHints.where('[scanKey+direction]')
-        .equals([input.scanKey, input.direction])
-        .toArray(),
+  const rows = await readFeedScanHintRowsForScan(
+    { scanKey: input.scanKey, direction: input.direction },
     [...memoryHints.values()].filter((hint) => hint.scanKey === input.scanKey),
   );
   countRuntime('timeline', 'warmHintReads');
@@ -133,18 +116,9 @@ export async function compactFeedScanHints(): Promise<void> {
   const fresh = newestFresh([...memoryHints.values()]);
   memoryHints.clear();
   for (const hint of fresh) memoryHints.set(hint.id, hint);
-  await bestEffortStorageWrite(async () => {
-    const rows = await browserDb().feedScanHints.toArray();
+  await compactFeedScanHintRowsWithLedger((rows) => {
     const keep = new Set(newestFresh(rows).map((hint) => hint.id));
-    const remove = rows
-      .filter((hint) => !keep.has(hint.id))
-      .map((hint) => hint.id);
-    if (remove.length > 0) {
-      await browserDb().feedScanHints.bulkDelete(remove);
-      await browserDb().cacheLedger.bulkDelete(
-        remove.map((id) => cacheLedgerId('feed-scan-hint', id)),
-      );
-    }
+    return rows.filter((hint) => !keep.has(hint.id)).map((hint) => hint.id);
   });
 }
 

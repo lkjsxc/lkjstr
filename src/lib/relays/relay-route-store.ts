@@ -1,9 +1,7 @@
-import { browserDb } from '../storage/browser-db';
 import {
-  bestEffortStorageWrite,
-  boundedStorageRead,
-  indexedDbAvailable,
-} from '../storage/safe-storage';
+  putAuthorRelayRoutesWithLedger,
+  readAuthorRelayRoutesByAuthors,
+} from '../storage/repositories/author-relay-routes-store';
 import {
   deleteRelayRouteBlockRow,
   putRelayRouteBlockRow,
@@ -48,18 +46,9 @@ export async function saveAuthorRelayRoutes(
     routes.push(route);
   }
   if (routes.length === 0) return;
-  await bestEffortStorageWrite(() =>
-    browserDb().transaction(
-      'rw',
-      browserDb().authorRelayRoutes,
-      browserDb().cacheLedger,
-      async () => {
-        await browserDb().authorRelayRoutes.bulkPut(routes);
-        await browserDb().cacheLedger.bulkPut(
-          routes.map(relayRouteLedgerRecord),
-        );
-      },
-    ),
+  await putAuthorRelayRoutesWithLedger(
+    routes,
+    routes.map(relayRouteLedgerRecord),
   );
 }
 
@@ -110,8 +99,8 @@ export async function authorRelayRoutes(
 ): Promise<RelayRoute[]> {
   const wanted = new Set(authors.filter(isPubkey));
   if (wanted.size === 0) return [];
-  const rows = await boundedStorageRead(
-    () => indexedAuthorRoutes([...wanted]),
+  const rows = await readAuthorRelayRoutesByAuthors(
+    [...wanted],
     [...memoryRoutes.values()],
   );
   const blocked = await blockedRelayUrls(blockPurpose);
@@ -119,14 +108,6 @@ export async function authorRelayRoutes(
     .filter((row) => wanted.has(row.authorPubkey))
     .filter((row) => !blocked.has(row.relayUrl))
     .sort((a, b) => routeScore(b) - routeScore(a) || b.updatedAt - a.updatedAt);
-}
-
-async function indexedAuthorRoutes(authors: readonly string[]) {
-  if (!indexedDbAvailable()) return [...memoryRoutes.values()];
-  return browserDb()
-    .authorRelayRoutes.where('authorPubkey')
-    .anyOf(authors)
-    .toArray();
 }
 
 export function clearRelayRoutesForTests(): void {

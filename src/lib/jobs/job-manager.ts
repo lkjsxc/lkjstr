@@ -1,8 +1,3 @@
-import { browserDb } from '../storage/browser-db';
-import {
-  bestEffortStorageWrite,
-  boundedStorageRead,
-} from '../storage/safe-storage';
 import type {
   JobKind,
   JobProgress,
@@ -10,6 +5,11 @@ import type {
   JobStatus,
 } from '../events/types';
 import { createBoundedMap } from '../fp/bounded-map';
+import {
+  putJobRowWithLedger,
+  readJobRow,
+  readRecentJobRows,
+} from '../storage/repositories/jobs-store';
 import { jobLedgerRecord } from './job-ledger';
 import { baseJob, terminalJobStatus } from './job-record';
 
@@ -28,23 +28,10 @@ export function createJobManager() {
     listeners.forEach((listener) => listener(jobs));
   };
   const get = async (id: string): Promise<JobRecord | undefined> =>
-    memoryJobs.get(id) ??
-    (await browserDb()
-      .jobs.get(id)
-      .catch(() => undefined));
+    memoryJobs.get(id) ?? (await readJobRow(id));
   const save = async (job: JobRecord): Promise<JobRecord> => {
     memoryJobs.set(job.id, job);
-    await bestEffortStorageWrite(() =>
-      browserDb().transaction(
-        'rw',
-        browserDb().jobs,
-        browserDb().cacheLedger,
-        async () => {
-          await browserDb().jobs.put(job);
-          await browserDb().cacheLedger.put(jobLedgerRecord(job));
-        },
-      ),
-    );
+    await putJobRowWithLedger(job, jobLedgerRecord(job));
     emit();
     return job;
   };
@@ -167,11 +154,7 @@ export function createJobManager() {
       return next;
     },
     list: (): Promise<JobRecord[]> =>
-      boundedStorageRead(
-        () =>
-          browserDb().jobs.orderBy('updatedAt').reverse().limit(5000).toArray(),
-        [...memoryJobs.values()],
-      ),
+      readRecentJobRows([...memoryJobs.values()]),
     listTree: async (rootId?: string): Promise<JobRecord[]> =>
       (await manager.list())
         .filter((job) => !rootId || job.rootId === rootId)

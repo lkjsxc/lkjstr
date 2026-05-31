@@ -1,10 +1,10 @@
 import { normalizeRelayUrl } from '../protocol';
 import { createBoundedMap } from '../fp/bounded-map';
-import { browserDb } from '../storage/browser-db';
 import {
-  bestEffortStorageWrite,
-  boundedStorageRead,
-} from '../storage/safe-storage';
+  putRelayInformationWithLedger,
+  readRecentRelayInformationRows,
+  readRelayInformationRow,
+} from '../storage/repositories/relay-information-store';
 import { relayInfoLedgerRecord } from './relay-cache-ledger';
 import type { RelayInformationRecord } from './relay-info-types';
 
@@ -17,31 +17,15 @@ export async function saveRelayInformation(
   record: RelayInformationRecord,
 ): Promise<void> {
   memoryInfo.set(record.relayUrl, record);
-  await bestEffortStorageWrite(() =>
-    browserDb().transaction(
-      'rw',
-      browserDb().relayInformation,
-      browserDb().cacheLedger,
-      async () => {
-        await browserDb().relayInformation.put(record);
-        await browserDb().cacheLedger.put(relayInfoLedgerRecord(record));
-      },
-    ),
-  );
+  await putRelayInformationWithLedger(record, relayInfoLedgerRecord(record));
 }
 
 export async function listRelayInformation(): Promise<
   RelayInformationRecord[]
 > {
-  const records = await boundedStorageRead(
-    () =>
-      browserDb()
-        .relayInformation.orderBy('fetchedAt')
-        .reverse()
-        .limit(500)
-        .toArray(),
-    [...memoryInfo.values()],
-  );
+  const records = await readRecentRelayInformationRows([
+    ...memoryInfo.values(),
+  ]);
   return records.sort((a, b) => b.fetchedAt - a.fetchedAt);
 }
 
@@ -50,13 +34,7 @@ export async function relayInformation(
 ): Promise<RelayInformationRecord | undefined> {
   const relayUrl = normalizeRelayUrl(inputUrl);
   if (!relayUrl) return undefined;
-  return (
-    memoryInfo.get(relayUrl) ??
-    (await boundedStorageRead(
-      () => browserDb().relayInformation.get(relayUrl),
-      undefined,
-    ))
-  );
+  return memoryInfo.get(relayUrl) ?? (await readRelayInformationRow(relayUrl));
 }
 
 export function cachedRelayInformation(

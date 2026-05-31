@@ -1,10 +1,9 @@
-import { browserDb } from '../storage/browser-db';
-import {
-  bestEffortStorageWrite,
-  boundedStorageRead,
-} from '../storage/safe-storage';
 import { createBoundedMap } from '../fp/bounded-map';
-import { putNotificationLedgerRows } from './notification-ledger';
+import {
+  putNotificationRowsWithLedger,
+  readAccountNotificationRows,
+} from '../storage/repositories/notifications-store';
+import { notificationLedgerRecord } from './notification-ledger';
 import type { NotificationRecord } from './notification';
 
 const memoryNotifications = createBoundedMap<string, NotificationRecord>({
@@ -15,16 +14,9 @@ export async function saveNotifications(
   records: readonly NotificationRecord[],
 ): Promise<void> {
   records.forEach((record) => memoryNotifications.set(record.id, record));
-  await bestEffortStorageWrite(() =>
-    browserDb().transaction(
-      'rw',
-      browserDb().notifications,
-      browserDb().cacheLedger,
-      async () => {
-        await browserDb().notifications.bulkPut([...records]);
-        await putNotificationLedgerRows(records);
-      },
-    ),
+  await putNotificationRowsWithLedger(
+    records,
+    records.map(notificationLedgerRecord),
   );
 }
 
@@ -39,17 +31,13 @@ export async function accountNotifications(
     .filter((record) => record.createdAt < beforeCreatedAt)
     .sort((a, b) => b.createdAt - a.createdAt)
     .slice(0, limit);
-  return boundedStorageRead(
-    () =>
-      browserDb()
-        .notifications.where('[accountPubkey+createdAt]')
-        .between([accountPubkey, 0], [accountPubkey, beforeCreatedAt - 1])
-        .reverse()
-        .limit(limit)
-        .toArray()
-        .then((records) => records.filter(isSupportedNotification)),
+  const records = await readAccountNotificationRows(
+    accountPubkey,
+    limit,
+    beforeCreatedAt,
     fallback,
   );
+  return records.filter(isSupportedNotification);
 }
 
 function isSupportedNotification(record: NotificationRecord): boolean {
