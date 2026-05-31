@@ -13,6 +13,14 @@ import {
   cacheLedgerHealth,
   type CacheLedgerRepairResult,
 } from './cache-ledger-repair';
+import { storageOperationSnapshots } from '../storage/operation/tracked-operation';
+
+export type StorageOperationSummary = {
+  readonly active: number;
+  readonly returnedTimeout: number;
+  readonly lateSettled: number;
+  readonly lateRejected: number;
+};
 
 export type CacheMetadata = {
   readonly id: string;
@@ -50,6 +58,7 @@ export type CacheMetadata = {
   readonly protectedOrUnknownOnly: boolean;
   readonly ledgerInventory: readonly LedgerInventoryRow[];
   readonly storageInventory: readonly StorageInventoryRow[];
+  readonly storageOperations: StorageOperationSummary;
   readonly updatedAt: number;
 };
 
@@ -106,7 +115,26 @@ export async function cacheStatus(): Promise<CacheMetadata> {
     protectedOrUnknownOnly: meta?.protectedOrUnknownOnly ?? false,
     ledgerInventory: snapshot.ledgerInventory,
     storageInventory: snapshot.storageInventory,
+    storageOperations: storageOperationSummary(),
     updatedAt: Date.now(),
+  };
+}
+
+function storageOperationSummary(): StorageOperationSummary {
+  const snapshots = storageOperationSnapshots();
+  return {
+    active: snapshots.filter((row) => row.status === 'active').length,
+    returnedTimeout: snapshots.filter(
+      (row) => row.status === 'returned-timeout',
+    ).length,
+    lateSettled: snapshots.filter(
+      (row) =>
+        row.status === 'settled-ok' && row.lateSettlementMs !== undefined,
+    ).length,
+    lateRejected: snapshots.filter(
+      (row) =>
+        row.status === 'settled-error' && row.lateSettlementMs !== undefined,
+    ).length,
   };
 }
 

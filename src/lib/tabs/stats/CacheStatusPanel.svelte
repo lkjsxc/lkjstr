@@ -85,6 +85,21 @@
       </tr>
       <tr><th>Inventory status</th><td>{props.cache.inventoryStatus}</td></tr>
       <tr><th>Pressure state</th><td>{props.cache.pressureState}</td></tr>
+      <tr>
+        <th>Active storage ops</th>
+        <td>{props.cache.storageOperations.active}</td>
+      </tr>
+      <tr>
+        <th>Timed-out storage ops</th>
+        <td>{props.cache.storageOperations.returnedTimeout}</td>
+      </tr>
+      <tr>
+        <th>Late-settled storage ops</th>
+        <td>
+          {props.cache.storageOperations.lateSettled} ok /
+          {props.cache.storageOperations.lateRejected} failed
+        </td>
+      </tr>
       <tr><th>Orphan ledger rows</th><td>{props.cache.orphanLedgerRows}</td></tr
       >
       <tr

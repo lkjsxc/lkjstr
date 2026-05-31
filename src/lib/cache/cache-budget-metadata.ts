@@ -45,6 +45,12 @@ export async function writeCacheBudgetMetadata(
       result.pressureState === 'unknown-only',
     ledgerInventory: snapshot.ledgerInventory,
     storageInventory: snapshot.storageInventory,
+    storageOperations: {
+      active: 0,
+      returnedTimeout: 0,
+      lateSettled: 0,
+      lateRejected: 0,
+    },
     updatedAt: Date.now(),
   };
   await browserDb().cacheMeta.put(meta);
