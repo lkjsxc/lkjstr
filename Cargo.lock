@@ -976,12 +976,16 @@ checksum = "92daf443525c4cce67b150400bc2316076100ce0b3686209eb8cf3c31612e6f0"
 name = "lkjstr"
 version = "0.0.0"
 dependencies = [
+ "js-sys",
+ "lkjstr-app",
  "lkjstr-protocol",
+ "lkjstr-storage",
  "lkjstr-ui",
  "serde",
  "serde-wasm-bindgen",
  "serde_json",
  "wasm-bindgen",
+ "wasm-bindgen-futures",
  "web-sys",
 ]
 
@@ -1045,7 +1049,10 @@ name = "lkjstr-web"
 version = "0.0.0"
 dependencies = [
  "js-sys",
+ "lkjstr-app",
+ "lkjstr-domain",
  "lkjstr-protocol",
+ "lkjstr-storage",
  "lkjstr-ui",
  "serde",
  "serde-wasm-bindgen",

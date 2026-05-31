@@ -7,13 +7,14 @@ This file defines Rust ownership for durable browser storage. Status: partial.
 ## Owner
 
 Implemented now: `lkjstr-storage` owns the executable storage table manifest,
-cache ledger resource map, typed operation outcomes, and the tab-state key plus
-ledger-row contract for workspace snapshots. Rust workspace records now have a
-tested JSON storage shape for future repository adapters.
+cache ledger resource map, typed operation outcomes, the tab-state key plus
+ledger-row contract for workspace snapshots, and the Rust workspace record
+shape. `lkjstr-web` owns a narrow real IndexedDB adapter for workspace startup,
+workspace `put`, and workspace `get`.
 
-Not implemented yet: repositories, retention dispatchers, ledger repair,
-diagnostics inventory, and the IndexedDB host adapter. `lkjstr-web` will own the
-IndexedDB adapter when that browser effect boundary is ported.
+Not implemented yet: full repository families, deadline guards, retention
+dispatchers, ledger repair, diagnostics inventory, and transaction-backed
+resource plus ledger writes.
 
 ## Manifest Contract
 
@@ -48,20 +49,28 @@ Storage operations return a typed outcome:
 
 UI and Stats paths continue from these states without uncaught runtime errors.
 
-The current Rust outcome type is a pure contract. Browser storage callers still
-use the TypeScript operation result until repositories and adapters are ported.
+The Rust workspace adapter maps browser IndexedDB availability, blocked opens,
+quota failures, corrupt stored rows, and request failures into this outcome
+contract. Browser storage callers outside the Rust workspace startup path still
+use the TypeScript operation result until their repositories are ported.
 
 ## Repository Rule
 
-Feature code will call repositories, not raw IndexedDB stores. Ledger-backed
-writes must store resource rows and ledger rows atomically where IndexedDB
-transaction support allows it.
+Feature code will call repositories, not raw IndexedDB stores. The first Rust
+repository boundary is workspace-only and uses the manifest `workspaces` table.
+Ledger-backed writes must store resource rows and ledger rows atomically where
+IndexedDB transaction support allows it.
 
 Protected user data is never removed by cache pressure. Recoverable cache data
 is removed only through cache-ledger dispatchers.
 
 ## IndexedDB Adapter
 
-The host adapter owns requests, transactions, event listeners, timeout guards,
-and late settlement tracking. Every pending operation has an owner and cleanup
-path visible to memory counters.
+The first host adapter uses `web_sys` IndexedDB directly. It opens the `lkjstr`
+database at the documented schema step, creates manifest stores and indexes on
+upgrade, stores workspace rows as structured browser objects, and reads them
+back into Rust `WorkspaceRecord` values.
+
+Each request callback is stored in an owner slot and cleared when the request
+settles. The current adapter does not yet own deadline timers, late-settlement
+counters, or multi-store transactions.

@@ -28,3 +28,6 @@ pub use workspace::{WorkspaceRecord, workspace_record_id, workspace_record_json_
 
 /// Crate ownership marker used by repository checks and docs.
 pub const CRATE_OWNER: &str = "storage";
+
+/// IndexedDB schema step shared with the current browser storage manifest.
+pub const CURRENT_STORAGE_SCHEMA_STEP: u32 = 18;

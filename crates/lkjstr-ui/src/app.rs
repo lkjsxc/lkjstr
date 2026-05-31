@@ -5,12 +5,12 @@ use crate::workspace::WorkspaceShell;
 
 #[component]
 pub fn App() -> impl IntoView {
-    let startup = start_workspace(StartupInput {
-        stored_workspace: None,
-        storage_available: true,
-        recovery_ids: default_recovery_ids("main"),
-        now: 0,
-    });
+    view! { <AppWithStartup startup=default_startup_input() /> }
+}
+
+#[component]
+pub fn AppWithStartup(startup: StartupInput) -> impl IntoView {
+    let startup = start_workspace(startup);
     let runtime = RwSignal::new(startup.state);
 
     view! {
@@ -19,3 +19,13 @@ pub fn App() -> impl IntoView {
 }
 
 pub type RuntimeSignal = RwSignal<WorkspaceRuntimeState>;
+
+#[must_use]
+pub fn default_startup_input() -> StartupInput {
+    StartupInput {
+        stored_workspace: None,
+        storage_available: true,
+        recovery_ids: default_recovery_ids("main"),
+        now: 0,
+    }
+}

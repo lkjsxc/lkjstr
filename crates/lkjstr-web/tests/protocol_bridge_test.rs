@@ -2,7 +2,7 @@
 
 use lkjstr_protocol::{EventTemplate, NostrEvent, finalize_event, parse_secret_key_hex};
 use serde_json::Value;
-use wasm_bindgen::{JsCast, prelude::JsValue};
+use wasm_bindgen::{JsCast, closure::Closure, prelude::JsValue};
 use wasm_bindgen_futures::JsFuture;
 use wasm_bindgen_test::{wasm_bindgen_test, wasm_bindgen_test_configure};
 
@@ -60,9 +60,9 @@ fn encodes_and_decodes_nip19_entities() -> Result<(), JsValue> {
     Ok(())
 }
 
-#[wasm_bindgen_test]
-fn mounts_rust_workspace_shell() -> Result<(), JsValue> {
-    reset_and_mount()?;
+#[wasm_bindgen_test(async)]
+async fn mounts_rust_workspace_shell() -> Result<(), JsValue> {
+    reset_and_mount().await?;
     let document = document()?;
     let shell = document
         .query_selector("[data-testid='rust-workspace-shell']")?
@@ -75,15 +75,15 @@ fn mounts_rust_workspace_shell() -> Result<(), JsValue> {
 
 #[wasm_bindgen_test(async)]
 async fn welcome_and_new_tab_actions_use_rust_reducers() -> Result<(), JsValue> {
-    reset_and_mount()?;
+    reset_and_mount().await?;
     click("[data-testid='welcome-open-tweet']")?;
-    next_tick().await?;
+    next_task().await?;
     assert!(document_text()?.contains("The Rust Tweet body is not converted yet."));
 
     click(".lkjstr-activity-bar button")?;
-    next_tick().await?;
+    next_task().await?;
     click("[data-testid='new-tab-open-search']")?;
-    next_tick().await?;
+    next_task().await?;
     let text = document_text()?;
     assert!(text.contains("Search"));
     assert!(text.contains("The Rust Search body is not converted yet."));
@@ -118,11 +118,16 @@ fn js_error(message: &str) -> JsValue {
     JsValue::from_str(message)
 }
 
-fn reset_and_mount() -> Result<(), JsValue> {
+async fn reset_and_mount() -> Result<(), JsValue> {
+    reset_shells()?;
+    mount_rust_workspace_shell();
+    wait_for_shell().await
+}
+
+fn reset_shells() -> Result<(), JsValue> {
     while let Some(shell) = document()?.query_selector("[data-testid='rust-workspace-shell']")? {
         shell.remove();
     }
-    mount_rust_workspace_shell();
     Ok(())
 }
 
@@ -144,10 +149,35 @@ fn document_text() -> Result<String, JsValue> {
     Ok(body.text_content().unwrap_or_default())
 }
 
-async fn next_tick() -> Result<(), JsValue> {
-    JsFuture::from(js_sys::Promise::resolve(&JsValue::NULL))
-        .await
-        .map(|_| ())
+async fn wait_for_shell() -> Result<(), JsValue> {
+    for _ in 0..50 {
+        next_task().await?;
+        if document()?
+            .query_selector("[data-testid='rust-workspace-shell']")?
+            .is_some()
+        {
+            return Ok(());
+        }
+    }
+    Err(js_error("timed out waiting for rust workspace shell"))
+}
+
+async fn next_task() -> Result<(), JsValue> {
+    let promise = js_sys::Promise::new(&mut |resolve, reject| {
+        let Some(window) = web_sys::window() else {
+            let _result = reject.call1(&JsValue::NULL, &js_error("missing window"));
+            return;
+        };
+        let callback = Closure::once_into_js(move || {
+            let _result = resolve.call0(&JsValue::NULL);
+        });
+        if let Err(error) = window
+            .set_timeout_with_callback_and_timeout_and_arguments_0(callback.unchecked_ref(), 0)
+        {
+            let _result = reject.call1(&JsValue::NULL, &error);
+        }
+    });
+    JsFuture::from(promise).await.map(|_| ())
 }
 
 fn document() -> Result<web_sys::Document, JsValue> {

@@ -12,16 +12,34 @@ crate-type = ["cdylib", "rlib"]
 workspace = true
 
 [dependencies]
+js-sys = "0.3.82"
+lkjstr-app = { path = "../lkjstr-app" }
+lkjstr-storage = { path = "../lkjstr-storage" }
 lkjstr-ui = { path = "../lkjstr-ui" }
 lkjstr-protocol = { path = "../lkjstr-protocol" }
 serde = { version = "1.0.228", features = ["derive"] }
 serde-wasm-bindgen = "0.6.5"
 serde_json = "1.0.145"
 wasm-bindgen = "0.2.122"
-web-sys = { version = "0.3.82", features = ["Location", "Window"] }
+wasm-bindgen-futures = "0.4.52"
+web-sys = { version = "0.3.82", features = [
+  "DomException",
+  "DomStringList",
+  "Event",
+  "IdbDatabase",
+  "IdbFactory",
+  "IdbIndex",
+  "IdbObjectStore",
+  "IdbObjectStoreParameters",
+  "IdbOpenDbRequest",
+  "IdbRequest",
+  "IdbTransaction",
+  "IdbTransactionMode",
+  "Location",
+  "Window",
+] }
 
 [dev-dependencies]
-js-sys = "0.3.82"
-wasm-bindgen-futures = "0.4.52"
+lkjstr-domain = { path = "../lkjstr-domain" }
 wasm-bindgen-test = "0.3.72"
 web-sys = { version = "0.3.82", features = ["Document", "Element", "HtmlElement", "Window"] }
