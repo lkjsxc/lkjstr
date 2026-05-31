@@ -22,9 +22,10 @@ This subtree defines the Rust/WASM client target.
 - Implemented today: browser-first SvelteKit and TypeScript runtime documented
   in [../README.md](../README.md), plus Rust workspace checks and Rust protocol
   byte, event, event-ID, filter, relay-message, signing, verification, and
-  NIP-19 behavior.
-- Design-only target: remaining Rust relay, storage, app, UI, and WASM browser
-  surfaces.
+  NIP-19 behavior. `lkjstr-web` exposes the implemented protocol bridge through
+  browser-tested WASM exports.
+- Design-only target: remaining Rust relay, storage, app, UI, and non-protocol
+  browser host surfaces.
 - Not allowed: remote app backend, relay proxy requirement, server account
   system, fake relay data, fake protocol results, or placeholder UI.
 

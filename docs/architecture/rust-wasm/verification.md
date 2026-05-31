@@ -3,7 +3,8 @@
 ## Purpose
 
 This file defines verification for the Rust/WASM client target. Status:
-design-only until the commands exist and pass in this repository.
+implemented for Rust checks and the protocol WASM bridge; design-only for
+Trunk, Docker Rust/WASM, and full product e2e gates.
 
 ## Local Matrix
 

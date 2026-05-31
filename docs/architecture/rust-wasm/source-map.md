@@ -2,7 +2,9 @@
 
 ## Purpose
 
-This file maps the intended Rust/WASM repository layout. Status: design-only.
+This file maps the intended Rust/WASM repository layout. Status: partially
+implemented for the Rust workspace, protocol crate, web bridge crate, and
+repository checks.
 
 ## Root Paths
 

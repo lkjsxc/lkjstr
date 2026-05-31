@@ -2,12 +2,15 @@
 
 ## Purpose
 
-This file defines how Rust code talks to browser APIs. Status: design-only.
+This file defines how Rust code talks to browser APIs. Status: implemented for
+the protocol WASM bridge; design-only for browser storage, relay, UI, and
+extension adapters.
 
 ## Browser APIs
 
 `lkjstr-web` owns direct use of `wasm-bindgen`, `web-sys`, and `js-sys`.
-Adapters cover:
+The implemented protocol bridge uses `wasm-bindgen` and structured
+`JsValue` responses. Future adapters cover:
 
 - WebSocket.
 - IndexedDB.

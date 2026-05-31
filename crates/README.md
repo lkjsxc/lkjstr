@@ -8,4 +8,5 @@ Rust crates own the Rust/WASM application target.
 
 - [lkjstr-domain/](lkjstr-domain/): pure domain reducers and models.
 - [lkjstr-protocol/](lkjstr-protocol/): Nostr protocol kernel.
+- [lkjstr-web/](lkjstr-web/): WASM browser entry and host adapters.
 - [lkjstr-xtask/](lkjstr-xtask/): repository checks and command orchestration.

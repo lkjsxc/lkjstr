@@ -218,8 +218,9 @@ and [operations/memory-verification.md](operations/memory-verification.md).
 - Rust/WASM client architecture is partly started. Rust workspace checks and
   Rust protocol byte, event, event-ID, filter, relay-message, signing, and
   verification behavior are implemented. NIP-19 scalar and TLV entity behavior
-  is implemented in Rust. The product runtime remains the browser-first
-  SvelteKit and TypeScript app until WASM bindings, Leptos UI surfaces, and
+  is implemented in Rust. `lkjstr-web` exposes those implemented protocol
+  surfaces through browser-tested WASM bindings. The product runtime remains the
+  browser-first SvelteKit and TypeScript app until Leptos UI surfaces and
   matching tests exist.
 - Remote NIP-50 results depend on actual relay support.
 - Passkey-protected local secret storage is design-only.

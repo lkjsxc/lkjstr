@@ -2,6 +2,7 @@
 members = [
   "crates/lkjstr-domain",
   "crates/lkjstr-protocol",
+  "crates/lkjstr-web",
   "crates/lkjstr-xtask",
 ]
 resolver = "3"
