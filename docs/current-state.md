@@ -109,8 +109,9 @@ Read next: [architecture/README.md](architecture/README.md),
   implemented.
 - Rust workspace support now implements pure layout, pane, tab, tab-group,
   clean startup, focus, open-tab, split-pane, close-tab, and usable-workspace
-  recovery reducers. Browser persistence, tab snapshots, and UI adapters remain
-  in the current TypeScript runtime.
+  recovery reducers, plus feed/tool tab snapshot payload and merge semantics.
+  Browser persistence, snapshot coordination, and UI adapters remain in the
+  current TypeScript runtime.
 - Relay ingress uses app-owned byte and structure caps before expensive JSON
   and event parsing.
 - IndexedDB remains durable browser-owned data; memory relief prunes only

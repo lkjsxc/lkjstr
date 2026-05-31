@@ -18,9 +18,14 @@ pub use npub_miner::{
     NpubPrefix, NpubPrefixError, estimated_attempts, npub_matches_prefix, parse_npub_prefix,
 };
 pub use workspace::{
-    BootstrapIds, LayoutNode, NewPaneIds, NewTabIds, PaneNode, SplitDirection, TabGroup, TabKind,
-    Workspace, WorkspaceIds, WorkspaceTab, bootstrap_workspace, close_workspace_tab,
-    create_workspace, ensure_usable_workspace, focus_tab, open_tab, split_focused_pane, title_for,
+    BootstrapIds, FeedCursorPoint, FeedRuntimeSnapshotSource, FeedSnapshotSeed, FeedTabSnapshot,
+    FeedTabSnapshotPatch, HistoryExhaustion, LayoutNode, NewPaneIds, NewTabIds, PaneNode,
+    SplitDirection, TabAnchor, TabGroup, TabKind, TabSnapshotPatch, TabSnapshotPayload,
+    TabSnapshotRestore, ToolTabSnapshot, ToolTabSnapshotPatch, Workspace, WorkspaceIds,
+    WorkspaceTab, bootstrap_workspace, capture_tab_snapshot, close_workspace_tab, create_workspace,
+    ensure_usable_workspace, feed_anchor_from_payload, feed_runtime_snapshot,
+    feed_snapshot_seed_from_payload, focus_tab, merge_tab_snapshot, merge_tab_snapshot_payload,
+    open_tab, split_focused_pane, title_for,
 };
 
 /// Crate ownership marker used by repository checks and docs.

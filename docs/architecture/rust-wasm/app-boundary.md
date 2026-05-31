@@ -29,6 +29,9 @@ does not introduce remote account state.
 - Workspace layout, tab groups, tab records, focus, startup layout, tab opening,
   pane splitting, tab close recovery, and zero-layout recovery are pure
   `lkjstr-domain` reducers.
+- Tab snapshot payloads, feed/tool snapshot merge semantics, feed restore seeds,
+  anchors, and bounded runtime snapshot ID lists are pure `lkjstr-domain`
+  models.
 - Protocol validation and signing live in `lkjstr-protocol`.
 - Relay scheduling and subscription state live in `lkjstr-relays`.
 - Durable storage repositories live in `lkjstr-storage`.

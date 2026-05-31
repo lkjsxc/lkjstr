@@ -14,4 +14,6 @@ tabs, startup layout, focus, opening, splitting, and recovery.
 - `mod.rs`: workspace module exports.
 - `model.rs`: workspace root and deterministic ID inputs.
 - `recovery.rs`: usable workspace recovery rules.
+- `snapshot.rs`: tab snapshot payloads and merge behavior.
+- `snapshot_ops.rs`: snapshot capture, merge, seed, and anchor helpers.
 - `tab.rs`: tab kinds, titles, icons, and tab records.
