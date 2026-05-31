@@ -1,8 +1,11 @@
 import { browserDb } from '../storage/browser-db';
+import { visitStorageRows } from '../storage/ledger/table-scan';
 import { indexedDbAvailable } from '../storage/safe-storage';
 import type { CacheLedgerRecord } from './cache-ledger-record';
 import { cacheLedgerTargetState } from './cache-ledger-target';
 import { collectRepairRows } from './cache-ledger-repair-rows';
+
+const DELETE_BATCH_SIZE = 100;
 
 export type CacheLedgerRepairResult = {
   readonly orphanLedgerRowsDeleted: number;
@@ -81,29 +84,38 @@ async function backfillAndUpdate() {
 }
 
 async function deleteOrphans(): Promise<number> {
+  let deleted = 0;
   const orphanIds: string[] = [];
-  const rows = await ledgerRows();
-  for (const row of rows)
-    if ((await cacheLedgerTargetState(row)) === 'missing')
+  await visitLedgerRows(async (row) => {
+    if ((await cacheLedgerTargetState(row)) === 'missing') {
       orphanIds.push(row.id);
-  if (orphanIds.length > 0) await browserDb().cacheLedger.bulkDelete(orphanIds);
-  return orphanIds.length;
+      deleted += 1;
+      if (orphanIds.length >= DELETE_BATCH_SIZE)
+        await flushLedgerDeletes(orphanIds);
+    }
+  });
+  await flushLedgerDeletes(orphanIds);
+  return deleted;
 }
 
 async function countOrphans(): Promise<number> {
   let count = 0;
-  const rows = await ledgerRows();
-  for (const row of rows)
+  await visitLedgerRows(async (row) => {
     if ((await cacheLedgerTargetState(row)) === 'missing') count += 1;
+  });
   return count;
 }
 
-async function ledgerRows(): Promise<CacheLedgerRecord[]> {
-  try {
-    return await browserDb().cacheLedger.toArray();
-  } catch {
-    return [];
-  }
+async function visitLedgerRows(
+  visit: (row: CacheLedgerRecord) => Promise<void>,
+): Promise<void> {
+  await visitStorageRows(browserDb().cacheLedger, visit);
+}
+
+async function flushLedgerDeletes(ids: string[]): Promise<void> {
+  if (ids.length === 0) return;
+  const batch = ids.splice(0, ids.length);
+  await browserDb().cacheLedger.bulkDelete(batch);
 }
 
 function staleLedgerRecord(

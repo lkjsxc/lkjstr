@@ -1,4 +1,5 @@
 import { browserDb } from '../storage/browser-db';
+import { visitStorageRows } from '../storage/ledger/table-scan';
 import { cacheByteSizeForEvent } from './cache-byte-size';
 import type { CacheLedgerRecord } from './cache-ledger-record';
 import { eventLedgerRecord } from './event-ledger';
@@ -20,54 +21,55 @@ import { tabStateLedgerRecord } from '../workspace/tab-state-ledger';
 export async function collectRepairRows(
   visit: (record: CacheLedgerRecord) => Promise<void>,
 ): Promise<void> {
+  const db = browserDb();
   await collectEventRows(visit);
-  for (const row of await readRows(() => browserDb().notifications.toArray()))
-    await visit(notificationLedgerRecord(row));
-  for (const row of await readRows(() => browserDb().feedCursors.toArray()))
-    await visit(feedCursorLedgerRecord(row));
-  for (const row of await readRows(() => browserDb().feedCoverage.toArray()))
-    await visit(feedCoverageLedgerRecord(row));
-  for (const row of await readRows(() => browserDb().feedScanHints.toArray()))
-    await visit(feedScanHintLedgerRecord(row));
-  for (const row of await readRows(() => browserDb().jobs.toArray()))
-    await visit(jobLedgerRecord(row));
-  for (const row of await readRows(() =>
-    browserDb().relayDiagnosticSummaries.toArray(),
-  ))
-    await visit(relaySummaryLedgerRecord(row));
-  for (const row of await readRows(() =>
-    browserDb().relayInformation.toArray(),
-  ))
-    await visit(relayInfoLedgerRecord(row));
-  for (const row of await readRows(() =>
-    browserDb().relayListSuggestions.toArray(),
-  ))
-    await visit(relaySuggestionLedgerRecord(row));
-  for (const row of await readRows(() =>
-    browserDb().authorRelayRoutes.toArray(),
-  ))
-    await visit(relayRouteLedgerRecord(row));
-  for (const row of await readRows(() => browserDb().tabStates.toArray()))
-    await visit(tabStateLedgerRecord(row));
+  await visitStorageRows(db.notifications, async (row) =>
+    visit(notificationLedgerRecord(row)),
+  );
+  await visitStorageRows(db.feedCursors, async (row) =>
+    visit(feedCursorLedgerRecord(row)),
+  );
+  await visitStorageRows(db.feedCoverage, async (row) =>
+    visit(feedCoverageLedgerRecord(row)),
+  );
+  await visitStorageRows(db.feedScanHints, async (row) =>
+    visit(feedScanHintLedgerRecord(row)),
+  );
+  await visitStorageRows(db.jobs, async (row) => visit(jobLedgerRecord(row)));
+  await visitStorageRows(db.relayDiagnosticSummaries, async (row) =>
+    visit(relaySummaryLedgerRecord(row)),
+  );
+  await visitStorageRows(db.relayInformation, async (row) =>
+    visit(relayInfoLedgerRecord(row)),
+  );
+  await visitStorageRows(db.relayListSuggestions, async (row) =>
+    visit(relaySuggestionLedgerRecord(row)),
+  );
+  await visitStorageRows(db.authorRelayRoutes, async (row) =>
+    visit(relayRouteLedgerRecord(row)),
+  );
+  await visitStorageRows(db.tabStates, async (row) =>
+    visit(tabStateLedgerRecord(row)),
+  );
 }
 
 async function collectEventRows(
   visit: (record: CacheLedgerRecord) => Promise<void>,
 ): Promise<void> {
-  const events = await readRows(() => browserDb().events.toArray());
-  for (const event of events) {
+  const db = browserDb();
+  await visitStorageRows(db.events, async (event) => {
     const receipts = await readRows(() =>
-      browserDb().eventRelays.where('eventId').equals(event.id).toArray(),
+      db.eventRelays.where('eventId').equals(event.id).toArray(),
     );
     const tags = await readRows(() =>
-      browserDb().eventTags.where('eventId').equals(event.id).toArray(),
+      db.eventTags.where('eventId').equals(event.id).toArray(),
     );
     const draft = eventLedgerRecord(event, tags);
     await visit({
       ...draft,
       cacheBytes: cacheByteSizeForEvent(event, receipts, tags, draft),
     });
-  }
+  });
 }
 
 async function readRows<T>(read: () => Promise<T[]>): Promise<T[]> {

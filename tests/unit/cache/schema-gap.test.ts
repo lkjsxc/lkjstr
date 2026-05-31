@@ -50,7 +50,7 @@ describe('cache schema gaps', () => {
     const bulkDelete = vi.fn();
     mockStorage({
       cacheLedger: {
-        toArray: async () => [
+        each: rowEach([
           {
             id: 'event:missing-target',
             ownerKind: 'event',
@@ -62,7 +62,7 @@ describe('cache schema gaps', () => {
             cacheBytes: 1,
             protected: false,
           },
-        ],
+        ]),
         bulkDelete,
       },
       events: {
@@ -84,28 +84,22 @@ describe('cache schema gaps', () => {
 
   it('awaits repair visitors and skips unavailable source tables', async () => {
     mockStorage({
-      events: {
-        toArray: async () => [
-          {
-            id: 'a'.repeat(64),
-            pubkey: 'b'.repeat(64),
-            created_at: 1,
-            kind: 1,
-            tags: [],
-            content: 'hello',
-            sig: 'c'.repeat(128),
-            receivedAt: 1,
-            relayUrls: [],
-          },
-        ],
-      },
+      events: rowTable([
+        {
+          id: 'a'.repeat(64),
+          pubkey: 'b'.repeat(64),
+          created_at: 1,
+          kind: 1,
+          tags: [],
+          content: 'hello',
+          sig: 'c'.repeat(128),
+          receivedAt: 1,
+          relayUrls: [],
+        },
+      ]),
       eventRelays: queryRows([]),
       eventTags: queryRows([]),
-      notifications: {
-        toArray: async () => {
-          throw notFoundError();
-        },
-      },
+      notifications: unavailableRowTable(),
     });
     const rows: string[] = [];
     const repairRows =
@@ -171,5 +165,23 @@ function queryRows(rows: unknown[]) {
         toArray: async () => rows,
       }),
     }),
+  };
+}
+
+function rowTable(rows: unknown[]) {
+  return { each: rowEach(rows) };
+}
+
+function rowEach(rows: unknown[]) {
+  return async (visit: (row: unknown) => void) => {
+    for (const row of rows) visit(row);
+  };
+}
+
+function unavailableRowTable() {
+  return {
+    each: async () => {
+      throw notFoundError();
+    },
   };
 }
