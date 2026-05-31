@@ -15,7 +15,7 @@ describe('site storage budget', () => {
     expect(shouldCompactForSiteBudget(60, budget)).toBe(false);
   });
 
-  it('reports browser usage without pruning small real caches', () => {
+  it('compacts any prunable cache under whole-origin pressure', () => {
     const budget = deriveSiteStorageBudget(64, {
       usage: 80,
       quota: 1000,
@@ -25,7 +25,8 @@ describe('site storage budget', () => {
       siteBudgetBytes: 64,
       overSiteBudget: true,
     });
-    expect(shouldCompactForSiteBudget(50, budget)).toBe(false);
+    expect(shouldCompactForSiteBudget(0, budget)).toBe(false);
+    expect(shouldCompactForSiteBudget(50, budget)).toBe(true);
     expect(shouldCompactForSiteBudget(65, budget)).toBe(true);
   });
 
@@ -47,6 +48,49 @@ describe('site storage budget', () => {
     });
     expect(budget.siteBudgetBytes).toBe(90);
     expect(shouldCompactForSiteBudget(50, budget)).toBe(false);
+  });
+
+  it('matches the documented pressure trigger cases', () => {
+    expect(
+      shouldCompactForSiteBudget(
+        0,
+        deriveSiteStorageBudget(64, {
+          usage: 128,
+          quota: 1000,
+          ratio: 0.128,
+        }),
+      ),
+    ).toBe(false);
+    expect(
+      shouldCompactForSiteBudget(
+        1,
+        deriveSiteStorageBudget(64, {
+          usage: 128,
+          quota: 1000,
+          ratio: 0.128,
+        }),
+      ),
+    ).toBe(true);
+    expect(
+      shouldCompactForSiteBudget(
+        63,
+        deriveSiteStorageBudget(64, {
+          usage: 63,
+          quota: 1000,
+          ratio: 0.063,
+        }),
+      ),
+    ).toBe(false);
+    expect(
+      shouldCompactForSiteBudget(
+        65,
+        deriveSiteStorageBudget(64, {
+          usage: 63,
+          quota: 1000,
+          ratio: 0.063,
+        }),
+      ),
+    ).toBe(true);
   });
 
   it('compacts any prunable cache during quota pressure', () => {

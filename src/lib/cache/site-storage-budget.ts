@@ -32,8 +32,10 @@ export function shouldCompactForSiteBudget(
   prunableCacheBytes: number,
   budget: SiteStorageBudget,
 ): boolean {
+  if (prunableCacheBytes <= 0) return false;
   return (
     prunableCacheBytes > budget.siteBudgetBytes ||
-    (budget.quotaPressure && prunableCacheBytes > 0)
+    budget.overSiteBudget ||
+    budget.quotaPressure
   );
 }

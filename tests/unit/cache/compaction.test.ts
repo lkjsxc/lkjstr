@@ -143,10 +143,10 @@ describe('cache compaction', () => {
     expect(shouldCompact(63, 64, null)).toBe(false);
   });
 
-  it('uses browser estimates without pruning small ledger caches', () => {
+  it('uses browser estimates to prune eligible cache under whole-origin pressure', () => {
     expect(
       shouldCompact(10, 64, { usage: 65, quota: 1000, ratio: 0.065 }),
-    ).toBe(false);
+    ).toBe(true);
     expect(
       shouldCompact(65, 64, { usage: 65, quota: 1000, ratio: 0.065 }),
     ).toBe(true);
