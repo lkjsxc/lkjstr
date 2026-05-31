@@ -1,10 +1,11 @@
-import { browserDb } from '../storage/browser-db';
 import {
-  bestEffortStorageWrite,
-  boundedStorageRead,
   safeGetItem,
   safeSetItem,
 } from '../storage/safe-storage';
+import {
+  putRelaySetRows,
+  readRelaySetRows,
+} from '../storage/repositories/relay-sets-store';
 import { defaultDiscoveryRelaySet, defaultRelaySet } from './default-relays';
 import { normalizeRelayUrl } from '../protocol';
 import { normalizeSeededRelaySets } from './relay-normalize';
@@ -19,11 +20,7 @@ let memorySelectedDefaultRelaySetId = defaultRelaySet.id;
 let memoryRelaySets: RelaySet[] = [];
 
 export async function listRelaySets(): Promise<RelaySet[]> {
-  const saved = await boundedStorageRead(
-    () =>
-      browserDb().relaySets.orderBy('updatedAt').reverse().limit(100).toArray(),
-    memoryRelaySets,
-  );
+  const saved = await readRelaySetRows(memoryRelaySets);
   if (saved.length > 0) {
     const normalized = normalizeSeededRelaySets(saved);
     const reset = resetRelayLiveState(normalized);
@@ -68,9 +65,7 @@ export async function saveRelaySets(
   relaySets: readonly RelaySet[],
 ): Promise<void> {
   memoryRelaySets = [...relaySets];
-  await bestEffortStorageWrite(() =>
-    browserDb().relaySets.bulkPut([...relaySets]),
-  );
+  await putRelaySetRows(relaySets);
 }
 
 export async function addRelay(

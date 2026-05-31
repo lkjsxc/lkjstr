@@ -10,6 +10,8 @@ adapters.
 - `schema/`: executable storage table manifest and generated Dexie schema.
 - `ledger/`: cache ledger resource manifest and dispatch helpers.
 - `operation/`: typed storage results, deadlines, tracking, and transactions.
+- `repositories/`: feature-facing storage access wrappers.
+- `retention/`: cache-pressure protection and retention policy helpers.
 - IndexedDB binding and storage fallback wrappers.
 - Storage inventory estimates for Stats diagnostics.
 - `cacheLedger` shared retention ledger integration.

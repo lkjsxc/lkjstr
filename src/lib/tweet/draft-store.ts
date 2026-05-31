@@ -1,8 +1,8 @@
-import { browserDb } from '../storage/browser-db';
 import {
-  bestEffortStorageWrite,
-  boundedStorageRead,
-} from '../storage/safe-storage';
+  deleteTweetDraftRow,
+  putTweetDraftRow,
+  readTweetDraftRow,
+} from '../storage/repositories/tweet-drafts-store';
 import type { CustomEmoji } from '../protocol';
 
 export type TweetDraft = {
@@ -29,10 +29,7 @@ const fallback = new Map<string, TweetDraft>();
 export async function loadTweetDraft(
   id = 'main',
 ): Promise<TweetDraft | undefined> {
-  return boundedStorageRead(
-    () => browserDb().tweetDrafts.get(id),
-    fallback.get(id),
-  );
+  return readTweetDraftRow(id, fallback.get(id));
 }
 
 export async function loadTweetDraftWithLegacy(
@@ -85,7 +82,7 @@ export async function saveTweetDraft(
     contentWarningReason,
   );
   fallback.set(id, draft);
-  await bestEffortStorageWrite(() => browserDb().tweetDrafts.put(draft));
+  await putTweetDraftRow(draft);
   return draft;
 }
 
@@ -112,5 +109,5 @@ function createDraft(
 
 export async function clearTweetDraft(id = 'main'): Promise<void> {
   fallback.delete(id);
-  await bestEffortStorageWrite(() => browserDb().tweetDrafts.delete(id));
+  await deleteTweetDraftRow(id);
 }

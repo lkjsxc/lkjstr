@@ -1,11 +1,13 @@
-import { browserDb } from '../storage/browser-db';
 import {
-  bestEffortStorageWrite,
-  boundedStorageRead,
   safeGetItem,
   safeRemoveItem,
   safeSetItem,
 } from '../storage/safe-storage';
+import {
+  deleteAccountRow,
+  putAccountRow,
+  readAccountRows,
+} from '../storage/repositories/accounts-store';
 import {
   normalizeAccount,
   normalizeStoredAccount,
@@ -18,10 +20,7 @@ let memoryAccounts: Account[] = [];
 let memoryActiveAccountId: string | null = null;
 
 export async function listAccounts(): Promise<Account[]> {
-  const accounts = await boundedStorageRead(
-    () => browserDb().accounts.orderBy('updatedAt').reverse().toArray(),
-    memoryAccounts,
-  );
+  const accounts = await readAccountRows(memoryAccounts);
   memoryAccounts = accounts.flatMap((account) => {
     const normalized = normalizeStoredAccount(account);
     return normalized ? [normalized] : [];
@@ -35,13 +34,13 @@ export async function saveAccount(account: Account): Promise<void> {
     saved,
     ...memoryAccounts.filter((item) => item.id !== account.id),
   ];
-  await bestEffortStorageWrite(() => browserDb().accounts.put(saved));
+  await putAccountRow(saved);
 }
 
 export async function removeAccount(id: string): Promise<void> {
   const wasActive = getActiveAccountId() === id;
   memoryAccounts = memoryAccounts.filter((account) => account.id !== id);
-  await bestEffortStorageWrite(() => browserDb().accounts.delete(id));
+  await deleteAccountRow(id);
   await removeLocalSecret(id);
   if (wasActive) await selectFallbackActiveAccount();
 }

@@ -4,6 +4,11 @@ import {
   boundedStorageRead,
   indexedDbAvailable,
 } from '../storage/safe-storage';
+import {
+  deleteRelayRouteBlockRow,
+  putRelayRouteBlockRow,
+  readRecentRelayRouteBlockRows,
+} from '../storage/repositories/route-blocks-store';
 import { createBoundedMap } from '../fp/bounded-map';
 import { isPubkey, normalizeRelayUrl } from '../protocol';
 import type {
@@ -74,7 +79,7 @@ export async function saveRouteBlock(
     updatedAt: Date.now(),
   };
   memoryBlocks.set(id, block);
-  await bestEffortStorageWrite(() => browserDb().relayRouteBlocks.put(block));
+  await putRelayRouteBlockRow(block);
 }
 
 export async function clearRouteBlock(
@@ -85,21 +90,13 @@ export async function clearRouteBlock(
   if (!normalized) return;
   const id = routeBlockId(normalized, purpose);
   memoryBlocks.delete(id);
-  await bestEffortStorageWrite(() => browserDb().relayRouteBlocks.delete(id));
+  await deleteRelayRouteBlockRow(id);
 }
 
 export async function blockedRelayUrls(
   purpose: RelayPurpose = 'user',
 ): Promise<Set<string>> {
-  const rows = await boundedStorageRead(
-    () =>
-      browserDb()
-        .relayRouteBlocks.orderBy('updatedAt')
-        .reverse()
-        .limit(500)
-        .toArray(),
-    [...memoryBlocks.values()],
-  );
+  const rows = await readRecentRelayRouteBlockRows([...memoryBlocks.values()]);
   return new Set(
     rows
       .filter((row) => (row.purpose ?? 'user') === purpose)

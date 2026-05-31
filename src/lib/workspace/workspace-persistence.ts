@@ -1,10 +1,11 @@
-import { browserDb } from '../storage/browser-db';
 import {
-  bestEffortStorageWrite,
-  boundedStorageRead,
   safeGetItem,
   safeSetItem,
 } from '../storage/safe-storage';
+import {
+  putWorkspaceRow,
+  readWorkspaceRow,
+} from '../storage/repositories/workspace-store';
 import type { Workspace } from './workspace';
 import {
   bootstrapWorkspace,
@@ -18,10 +19,7 @@ let memoryWorkspace: Workspace | undefined;
 
 export async function loadWorkspace(): Promise<Workspace> {
   const snapshot = loadSnapshot() ?? memoryWorkspace;
-  const saved = await boundedStorageRead(
-    () => browserDb().workspaces.get(bootstrapWorkspaceId),
-    undefined,
-  );
+  const saved = await readWorkspaceRow(bootstrapWorkspaceId);
   const loaded =
     saved && (!snapshot || saved.updatedAt >= snapshot.updatedAt)
       ? normalizeWorkspace(saved)
@@ -38,7 +36,7 @@ export async function saveWorkspace(workspace: Workspace): Promise<void> {
   ) as Workspace;
   memoryWorkspace = saved;
   saveSnapshot(saved);
-  await bestEffortStorageWrite(() => browserDb().workspaces.put(saved));
+  await putWorkspaceRow(saved);
 }
 
 export async function resetWorkspace(): Promise<Workspace> {

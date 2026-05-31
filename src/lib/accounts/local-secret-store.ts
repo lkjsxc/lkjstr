@@ -1,8 +1,8 @@
-import { browserDb } from '../storage/browser-db';
 import {
-  bestEffortStorageWrite,
-  boundedStorageRead,
-} from '../storage/safe-storage';
+  deleteLocalAccountSecretRow,
+  putLocalAccountSecretRow,
+  readLocalAccountSecretRow,
+} from '../storage/repositories/secrets-store';
 
 export type LocalAccountSecret = {
   readonly accountId: string;
@@ -19,16 +19,14 @@ export async function saveLocalSecret(
 ): Promise<void> {
   const saved = { ...secret, updatedAt: Date.now() };
   memorySecrets.set(saved.accountId, saved);
-  await bestEffortStorageWrite(() =>
-    browserDb().localAccountSecrets.put(saved),
-  );
+  await putLocalAccountSecretRow(saved);
 }
 
 export async function getLocalSecret(
   accountId: string,
 ): Promise<LocalAccountSecret | undefined> {
-  const secret = await boundedStorageRead(
-    () => browserDb().localAccountSecrets.get(accountId),
+  const secret = await readLocalAccountSecretRow(
+    accountId,
     memorySecrets.get(accountId),
   );
   if (secret) memorySecrets.set(accountId, secret);
@@ -37,7 +35,5 @@ export async function getLocalSecret(
 
 export async function removeLocalSecret(accountId: string): Promise<void> {
   memorySecrets.delete(accountId);
-  await bestEffortStorageWrite(() =>
-    browserDb().localAccountSecrets.delete(accountId),
-  );
+  await deleteLocalAccountSecretRow(accountId);
 }
