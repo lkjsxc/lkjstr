@@ -215,8 +215,9 @@ and [operations/memory-verification.md](operations/memory-verification.md).
 
 ## Known Gaps
 
-- Rust/WASM client architecture is design-only. The implemented product runtime
-  is still the browser-first SvelteKit and TypeScript app until crates, WASM
+- Rust/WASM client architecture is partly started. Rust workspace checks and
+  Rust protocol byte, event, and event-ID behavior are implemented. The product
+  runtime remains the browser-first SvelteKit and TypeScript app until WASM
   bindings, Leptos UI surfaces, and matching tests exist.
 - Remote NIP-50 results depend on actual relay support.
 - Passkey-protected local secret storage is design-only.

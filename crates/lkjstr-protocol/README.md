@@ -8,3 +8,4 @@ browser runtime.
 ## Table of Contents
 
 - [src/](src/): protocol source.
+- [tests/](tests/): protocol tests.

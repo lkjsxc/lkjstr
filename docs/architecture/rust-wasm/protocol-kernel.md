@@ -2,7 +2,10 @@
 
 ## Purpose
 
-This file defines Rust protocol ownership. Status: design-only.
+This file defines Rust protocol ownership. Status: implemented for byte
+codecs, event parsing, frame policy checks, event ordering, canonical event
+serialization, and event ID hashing. Remaining protocol surfaces are
+design-only.
 
 ## Owner
 
@@ -11,10 +14,10 @@ serialization.
 
 ## Required Surfaces
 
-- Signed and unsigned event parsing.
+- Signed and unsigned event parsing. Status: implemented.
 - Lowercase 32-byte hex event IDs and pubkeys.
 - Lowercase 64-byte hex signatures.
-- Canonical event ID calculation.
+- Canonical event ID calculation. Status: implemented.
 - Schnorr signature verification and local signing.
 - Relay message encoding and decoding.
 - Filter parsing, matching, and send clamping.
@@ -30,8 +33,9 @@ serialization.
 
 ## Frame Policy
 
-Inbound relay frames are rejected before expensive work when they exceed byte,
-tag count, tag field count, or tag field byte limits.
+Inbound event frames are rejected before expensive work when they exceed byte,
+tag count, tag field count, or tag field byte limits. Status: implemented for
+event parsing.
 
 Event verification recomputes the event ID first. Signature verification runs
 only after event shape, byte policy, ID, and public key validation pass.

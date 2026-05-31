@@ -2,8 +2,7 @@
 
 ## Purpose
 
-This subtree defines the Rust/WASM client target. Status: design-only until the
-matching crates, WASM entrypoint, tests, and browser surfaces exist.
+This subtree defines the Rust/WASM client target.
 
 ## Table of Contents
 
@@ -21,9 +20,10 @@ matching crates, WASM entrypoint, tests, and browser surfaces exist.
 ## Status
 
 - Implemented today: browser-first SvelteKit and TypeScript runtime documented
-  in [../README.md](../README.md) and [../../current-state.md](../../current-state.md).
-- Design-only target: Rust protocol, relay, storage, app, and UI crates compiled
-  to WebAssembly.
+  in [../README.md](../README.md), plus Rust workspace checks and Rust protocol
+  byte, event, and event-ID behavior.
+- Design-only target: remaining Rust relay, storage, app, UI, and WASM browser
+  surfaces.
 - Not allowed: remote app backend, relay proxy requirement, server account
   system, fake relay data, fake protocol results, or placeholder UI.
 
