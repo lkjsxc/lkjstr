@@ -84,7 +84,9 @@ export async function storageInventory(
   browserUsageBytes: number | null,
 ): Promise<StorageInventoryRow[]> {
   const indexedRows = indexedDbAvailable()
-    ? await Promise.all(browserDb().tables.map((table) => storageTableRow(table)))
+    ? await Promise.all(
+        browserDb().tables.map((table) => storageTableRow(table)),
+      )
     : [indexedDbUnavailableRow()];
   const nonIndexedRows = await nonIndexedStorageInventory();
   const rows = [...indexedRows, ...nonIndexedRows];
@@ -93,7 +95,13 @@ export async function storageInventory(
 }
 
 export function storageGroup(tableName: string): StorageGroup {
-  return tableGroups[tableName] ?? 'unknown';
+  return isKnownStorageTable(tableName) ? tableGroups[tableName] : 'unknown';
+}
+
+function isKnownStorageTable(
+  tableName: string,
+): tableName is (typeof knownStorageTables)[number] {
+  return (knownStorageTables as readonly string[]).includes(tableName);
 }
 
 async function storageTableRow(table: {

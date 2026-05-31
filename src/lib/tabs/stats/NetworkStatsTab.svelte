@@ -18,6 +18,7 @@
   import JobHealthPanel from './JobHealthPanel.svelte';
   import RuntimeCounters from './RuntimeCounters.svelte';
   import RuntimeMemoryPanel from './RuntimeMemoryPanel.svelte';
+  import CacheActions from './CacheActions.svelte';
   import CacheStatusPanel from './CacheStatusPanel.svelte';
   import { relaySubscriptionRows } from './subscription-rows';
 
@@ -89,7 +90,7 @@
 <section class="data-tab stats-tab" aria-label="Stats">
   <header class="settings-header">
     <div class="settings-actions">
-      <button type="button" onclick={() => void refresh()}>Refresh</button>
+      <CacheActions {cache} {refresh} />
       <label class="stats-auto">
         <input
           type="checkbox"

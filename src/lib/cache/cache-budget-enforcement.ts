@@ -1,18 +1,14 @@
-import { browserDb } from '../storage/browser-db';
 import { indexedDbAvailable } from '../storage/safe-storage';
-import type { CacheMetadata } from './cache-status';
 import {
   cacheBudgetResult,
   type CacheBudgetResult,
 } from './cache-budget-result';
+import { pressureState, shouldStopCompaction } from './cache-budget-decision';
+import { writeCacheBudgetMetadata } from './cache-budget-metadata';
+import { cacheBudgetSnapshot } from './cache-budget-snapshot';
 import { deleteCacheLedgerResources } from './compaction-delete';
 import { protectedEventIds } from './compaction-protection';
-import { lowestScorePruneRows } from './compaction-select';
-import {
-  estimatedEventCacheBytes,
-  estimatedLedgerBytes,
-  estimatedPrunableCacheBytes,
-} from './cache-ledger-stats';
+import { lowestScorePruneSelection } from './compaction-select';
 import {
   defaultCacheMaxBytes,
   quotaPruneBatchSize,
@@ -57,75 +53,111 @@ export async function enforceCacheBudget(
       eventCacheBytes: 0,
       skipped: true,
       protectedOnly: true,
+      pressureState: 'storage-api-unavailable',
     });
   let quota = await readStorageQuota();
-  let stats = await ledgerStats(quota);
+  let snapshot = await cacheBudgetSnapshot(budgetBytes, quota);
   const budget = deriveSiteStorageBudget(budgetBytes, quota);
-  if (!shouldCompactForSiteBudget(stats.prunableCacheBytes, budget)) {
+  if (!shouldCompactForSiteBudget(snapshot.prunableCacheBytes, budget)) {
     const done = cacheBudgetResult({
       reason: 'below-budget-threshold',
-      budgetBytes: budget.siteBudgetBytes,
-      ledgerBytes: stats.ledgerBytes,
-      prunableCacheBytes: stats.prunableCacheBytes,
-      protectedUserBytes: 0,
-      unknownOrOverheadBytes: stats.unknownOrOverheadBytes,
+      budgetBytes: snapshot.siteBudgetBytes,
+      ledgerBytes: snapshot.ledgerBytes,
+      prunableCacheBytes: snapshot.prunableCacheBytes,
+      protectedUserBytes: snapshot.protectedUserBytes,
+      unknownOrOverheadBytes: snapshot.unknownOrOverheadBytes,
       browserUsageBytes: budget.browserUsageBytes,
       prunedEvents: 0,
       prunedResources: 0,
       prunedBytes: 0,
-      eventCacheBytes: stats.eventCacheBytes,
+      eventCacheBytes: snapshot.eventCacheBytes,
       skipped: false,
       protectedOnly: false,
+      pressureState: 'below-budget',
     });
-    await writeCacheBudgetResult(done);
+    await writeCacheBudgetMetadata(done, snapshot);
     return done;
   }
   let prunedEvents = 0;
   let prunedResources = 0;
   let prunedBytes = 0;
-  let protectedOnly = false;
+  let skippedDurablyProtected = 0;
+  let skippedDynamicallyProtected = 0;
   while (
     shouldCompactForSiteBudget(
-      stats.prunableCacheBytes,
+      snapshot.prunableCacheBytes,
       deriveSiteStorageBudget(budgetBytes, quota),
     )
   ) {
     const protectedIds = await protectedEventIds();
-    const rows = await lowestScorePruneRows(quotaPruneBatchSize, protectedIds);
-    if (rows.length === 0) {
-      protectedOnly = true;
+    const selection = await lowestScorePruneSelection(
+      quotaPruneBatchSize,
+      protectedIds,
+    );
+    skippedDurablyProtected += selection.skippedDurablyProtected;
+    skippedDynamicallyProtected += selection.skippedDynamicallyProtected;
+    if (
+      selection.selectedRows.length === 0 ||
+      shouldStopCompaction({
+        budget: deriveSiteStorageBudget(budgetBytes, quota),
+        prunableCacheBytes: snapshot.prunableCacheBytes,
+        eligibleRows: selection.selectedRows.length,
+        protectedRows:
+          selection.skippedDurablyProtected +
+          selection.skippedDynamicallyProtected,
+        unknownOrOverheadBytes: snapshot.unknownOrOverheadBytes,
+        inventoryStatus: snapshot.inventoryStatus,
+        prunedResources,
+        storageApiAvailable: snapshot.storageApiAvailable,
+      })
+    )
       break;
-    }
-    const deleted = await deleteCacheLedgerResources(rows);
+    const deleted = await deleteCacheLedgerResources(selection.selectedRows);
     prunedEvents += deleted.prunedEvents;
     prunedResources += deleted.prunedResources;
     prunedBytes += deleted.prunedBytes;
-    quota = adjustedQuota(quota, deleted.prunedBytes);
-    stats = await ledgerStats(quota);
+    quota =
+      (await readStorageQuota()) ?? adjustedQuota(quota, deleted.prunedBytes);
+    snapshot = await cacheBudgetSnapshot(budgetBytes, quota);
   }
-  const finalBudget = deriveSiteStorageBudget(budgetBytes, quota);
-  const protectedPressure =
-    finalBudget.overSiteBudget && stats.prunableCacheBytes === 0;
+  const finalSelection = await lowestScorePruneSelection(
+    1,
+    await protectedEventIds(),
+  );
+  const finalState = pressureState({
+    budget: deriveSiteStorageBudget(budgetBytes, quota),
+    prunableCacheBytes: snapshot.prunableCacheBytes,
+    eligibleRows: finalSelection.selectedRows.length,
+    protectedRows:
+      finalSelection.skippedDurablyProtected +
+      finalSelection.skippedDynamicallyProtected,
+    unknownOrOverheadBytes: snapshot.unknownOrOverheadBytes,
+    inventoryStatus: snapshot.inventoryStatus,
+    prunedResources,
+    storageApiAvailable: snapshot.storageApiAvailable,
+  });
   const done = cacheBudgetResult({
-    reason: protectedPressure
-      ? 'protected-or-unknown-usage'
-      : protectedOnly
-        ? 'protected-only'
-        : reason,
-    budgetBytes: finalBudget.siteBudgetBytes,
-    ledgerBytes: stats.ledgerBytes,
-    prunableCacheBytes: stats.prunableCacheBytes,
-    protectedUserBytes: 0,
-    unknownOrOverheadBytes: stats.unknownOrOverheadBytes,
-    browserUsageBytes: finalBudget.browserUsageBytes,
+    reason: finalReason(reason, finalState),
+    budgetBytes: snapshot.siteBudgetBytes,
+    ledgerBytes: snapshot.ledgerBytes,
+    prunableCacheBytes: snapshot.prunableCacheBytes,
+    protectedUserBytes: snapshot.protectedUserBytes,
+    unknownOrOverheadBytes: snapshot.unknownOrOverheadBytes,
+    browserUsageBytes: snapshot.browserUsageBytes,
     prunedEvents,
     prunedResources,
     prunedBytes,
-    eventCacheBytes: stats.eventCacheBytes,
+    eventCacheBytes: snapshot.eventCacheBytes,
     skipped: false,
-    protectedOnly: protectedOnly || protectedPressure,
+    protectedOnly:
+      finalState === 'protected-only' || finalState === 'unknown-only',
+    pressureState: finalState,
+    skippedDurablyProtected:
+      skippedDurablyProtected + finalSelection.skippedDurablyProtected,
+    skippedDynamicallyProtected:
+      skippedDynamicallyProtected + finalSelection.skippedDynamicallyProtected,
   });
-  await writeCacheBudgetResult(done);
+  await writeCacheBudgetMetadata(done, snapshot);
   return done;
 }
 
@@ -140,46 +172,6 @@ export function shouldCompact(
   );
 }
 
-async function writeCacheBudgetResult(
-  result: CacheBudgetResult,
-): Promise<void> {
-  const meta: CacheMetadata = {
-    id: 'main',
-    rawEventCount: await browserDb().events.count(),
-    profileCount: 0,
-    notificationCount: await browserDb().notifications.count(),
-    storageEstimateBytes: result.browserUsageBytes,
-    budgetBytes: result.budgetBytes,
-    ledgerBytes: result.ledgerBytes,
-    prunableCacheBytes: result.prunableCacheBytes,
-    protectedUserBytes: result.protectedUserBytes,
-    unknownOrOverheadBytes: result.unknownOrOverheadBytes,
-    eventCacheBytes: result.eventCacheBytes,
-    browserUsageBytes: result.browserUsageBytes,
-    lastCompactionReason: result.reason,
-    prunedEventCount: result.prunedEvents,
-    prunedResourceCount: result.prunedResources,
-    prunedByteEstimate: result.prunedBytes,
-    protectedOnly: result.protectedOnly,
-    protectedOrUnknownOnly: result.protectedOnly,
-    ledgerInventory: [],
-    storageInventory: [],
-    updatedAt: Date.now(),
-  };
-  await browserDb().cacheMeta.put(meta);
-}
-
-async function ledgerStats(quota: StorageQuotaSnapshot | null) {
-  const ledgerBytes = await estimatedLedgerBytes();
-  return {
-    ledgerBytes,
-    prunableCacheBytes: await estimatedPrunableCacheBytes(),
-    eventCacheBytes: await estimatedEventCacheBytes(),
-    unknownOrOverheadBytes:
-      quota === null ? 0 : Math.max(0, quota.usage - ledgerBytes),
-  };
-}
-
 function adjustedQuota(
   quota: StorageQuotaSnapshot | null,
   prunedBytes: number,
@@ -187,4 +179,15 @@ function adjustedQuota(
   if (!quota || prunedBytes <= 0) return quota;
   const usage = Math.max(0, quota.usage - prunedBytes);
   return { ...quota, usage, ratio: usage / quota.quota };
+}
+
+function finalReason(
+  requested: CacheBudgetReason,
+  state: CacheBudgetResult['pressureState'],
+): string {
+  if (state === 'protected-only') return 'protected-only';
+  if (state === 'unknown-only') return 'protected-or-unknown-usage';
+  if (state === 'inventory-incomplete') return 'inventory-incomplete';
+  if (state === 'below-budget') return 'below-budget-threshold';
+  return requested;
 }

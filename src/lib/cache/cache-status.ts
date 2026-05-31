@@ -2,18 +2,17 @@ import { browserDb } from '../storage/browser-db';
 import { boundedStorageRead } from '../storage/safe-storage';
 import { allMemoryEvents } from '../events/repository-memory';
 import { defaultCacheMaxBytes, readStorageQuota } from './storage-quota';
+import type { LedgerInventoryRow } from './cache-ledger-stats';
+import { cacheBudgetSnapshot } from './cache-budget-snapshot';
+import type { StorageInventoryRow } from '../storage/storage-inventory';
+import type {
+  CachePressureState,
+  InventoryScanStatus,
+} from './cache-budget-decision';
 import {
-  estimatedEventCacheBytes,
-  estimatedLedgerBytes,
-  estimatedLedgerBytesByOwner,
-  estimatedPrunableCacheBytes,
-  type LedgerInventoryRow,
-} from './cache-ledger-stats';
-import { deriveSiteStorageBudget } from './site-storage-budget';
-import {
-  storageInventory,
-  type StorageInventoryRow,
-} from '../storage/storage-inventory';
+  cacheLedgerHealth,
+  type CacheLedgerRepairResult,
+} from './cache-ledger-repair';
 
 export type CacheMetadata = {
   readonly id: string;
@@ -24,14 +23,29 @@ export type CacheMetadata = {
   readonly budgetBytes: number;
   readonly ledgerBytes: number;
   readonly prunableCacheBytes: number;
+  readonly protectedLedgerBytes: number;
   readonly protectedUserBytes: number;
+  readonly tableEstimatedBytes: number;
+  readonly localStorageBytes: number;
+  readonly cacheStorageBytes: number;
   readonly unknownOrOverheadBytes: number;
   readonly eventCacheBytes: number;
   readonly browserUsageBytes: number | null;
+  readonly overTargetBytes: number;
+  readonly inventoryStatus: InventoryScanStatus;
+  readonly pressureState: CachePressureState;
+  readonly totalLedgerRows: number;
+  readonly prunableLedgerRows: number;
+  readonly protectedLedgerRows: number;
+  readonly orphanLedgerRows: number;
+  readonly missingLedgerRows: number;
+  readonly lastRepairResult?: CacheLedgerRepairResult;
   readonly lastCompactionReason?: string;
   readonly prunedEventCount: number;
   readonly prunedResourceCount: number;
   readonly prunedByteEstimate: number;
+  readonly skippedDurablyProtected: number;
+  readonly skippedDynamicallyProtected: number;
   readonly protectedOnly: boolean;
   readonly protectedOrUnknownOnly: boolean;
   readonly ledgerInventory: readonly LedgerInventoryRow[];
@@ -45,20 +59,11 @@ export async function cacheStatus(): Promise<CacheMetadata> {
     () => browserDb().cacheMeta.get('main'),
     undefined,
   );
-  const ledgerBytes = await estimatedLedgerBytes();
-  const prunableCacheBytes = await estimatedPrunableCacheBytes();
-  const eventCacheBytes = await estimatedEventCacheBytes();
-  const currentBudget = deriveSiteStorageBudget(
+  const snapshot = await cacheBudgetSnapshot(
     meta?.budgetBytes ?? defaultCacheMaxBytes,
     quota,
   );
-  const inventory = await storageInventory(currentBudget.browserUsageBytes);
-  const protectedUserBytes = inventory
-    .filter((row) => row.group === 'protected')
-    .reduce((sum, row) => sum + row.estimatedBytes, 0);
-  const tableBytes = inventory
-    .filter((row) => row.group !== 'overhead')
-    .reduce((sum, row) => sum + row.estimatedBytes, 0);
+  const health = await cacheLedgerHealth();
   return {
     id: 'main',
     rawEventCount: await boundedStorageRead(
@@ -70,25 +75,37 @@ export async function cacheStatus(): Promise<CacheMetadata> {
       () => browserDb().notifications.count(),
       0,
     ),
-    storageEstimateBytes: currentBudget.browserUsageBytes,
-    budgetBytes: currentBudget.siteBudgetBytes,
-    ledgerBytes,
-    prunableCacheBytes,
-    protectedUserBytes,
-    unknownOrOverheadBytes:
-      currentBudget.browserUsageBytes === null
-        ? 0
-        : Math.max(0, currentBudget.browserUsageBytes - tableBytes),
-    eventCacheBytes,
-    browserUsageBytes: currentBudget.browserUsageBytes,
+    storageEstimateBytes: snapshot.browserUsageBytes,
+    budgetBytes: snapshot.siteBudgetBytes,
+    ledgerBytes: snapshot.ledgerBytes,
+    prunableCacheBytes: snapshot.prunableCacheBytes,
+    protectedLedgerBytes: snapshot.protectedLedgerBytes,
+    protectedUserBytes: snapshot.protectedUserBytes,
+    tableEstimatedBytes: snapshot.tableEstimatedBytes,
+    localStorageBytes: snapshot.localStorageBytes,
+    cacheStorageBytes: snapshot.cacheStorageBytes,
+    unknownOrOverheadBytes: snapshot.unknownOrOverheadBytes,
+    eventCacheBytes: snapshot.eventCacheBytes,
+    browserUsageBytes: snapshot.browserUsageBytes,
+    overTargetBytes: snapshot.overTargetBytes,
+    inventoryStatus: snapshot.inventoryStatus,
+    pressureState: meta?.pressureState ?? 'below-budget',
+    totalLedgerRows: snapshot.totalLedgerRows,
+    prunableLedgerRows: snapshot.prunableLedgerRows,
+    protectedLedgerRows: snapshot.protectedLedgerRows,
+    orphanLedgerRows: health.orphanLedgerRows,
+    missingLedgerRows: health.missingLedgerRows,
+    lastRepairResult: meta?.lastRepairResult,
     lastCompactionReason: meta?.lastCompactionReason,
     prunedEventCount: meta?.prunedEventCount ?? 0,
     prunedResourceCount: meta?.prunedResourceCount ?? 0,
     prunedByteEstimate: meta?.prunedByteEstimate ?? 0,
+    skippedDurablyProtected: meta?.skippedDurablyProtected ?? 0,
+    skippedDynamicallyProtected: meta?.skippedDynamicallyProtected ?? 0,
     protectedOnly: meta?.protectedOnly ?? false,
     protectedOrUnknownOnly: meta?.protectedOrUnknownOnly ?? false,
-    ledgerInventory: await estimatedLedgerBytesByOwner(),
-    storageInventory: inventory,
+    ledgerInventory: snapshot.ledgerInventory,
+    storageInventory: snapshot.storageInventory,
     updatedAt: Date.now(),
   };
 }

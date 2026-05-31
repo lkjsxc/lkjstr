@@ -16,7 +16,8 @@ function localStorageInventory(): StorageInventoryRow {
   for (let index = 0; index < local.length; index += 1) {
     const key = local.key(index);
     if (!key) continue;
-    estimatedBytes += encodedJsonBytes(key) + encodedJsonBytes(local.getItem(key));
+    estimatedBytes +=
+      encodedJsonBytes(key) + encodedJsonBytes(local.getItem(key));
   }
   return {
     table: 'localStorage',

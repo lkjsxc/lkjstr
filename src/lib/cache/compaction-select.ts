@@ -23,6 +23,14 @@ export function selectPruneRows(
     .slice(0, needed);
 }
 
+export type PruneSelectionSummary = {
+  readonly selectedRows: readonly CacheLedgerRecord[];
+  readonly scannedRows: number;
+  readonly skippedDurablyProtected: number;
+  readonly skippedDynamicallyProtected: number;
+  readonly selectedBytes: number;
+};
+
 export function isPrunablePriorityRow(
   row: CacheLedgerRecord,
   protectedIds: ReadonlySet<string>,
@@ -38,12 +46,42 @@ export async function lowestScorePruneRows(
   needed: number,
   protectedIds: Set<string>,
 ): Promise<CacheLedgerRecord[]> {
-  const rows: CacheLedgerRecord[] = [];
+  return [
+    ...(await lowestScorePruneSelection(needed, protectedIds)).selectedRows,
+  ];
+}
+
+export async function lowestScorePruneSelection(
+  needed: number,
+  protectedIds: Set<string>,
+): Promise<PruneSelectionSummary> {
+  const selectedRows: CacheLedgerRecord[] = [];
+  let scannedRows = 0;
+  let skippedDurablyProtected = 0;
+  let skippedDynamicallyProtected = 0;
   await browserDb()
     .cacheLedger.orderBy('score')
     .each((row: CacheLedgerRecord) => {
-      if (rows.length >= needed) return false;
-      if (isPrunablePriorityRow(row, protectedIds)) rows.push(row);
+      scannedRows += 1;
+      if (selectedRows.length >= needed) return false;
+      if (row.protected) {
+        skippedDurablyProtected += 1;
+        return;
+      }
+      if (protectedIds.has(row.id) || protectedIds.has(row.resourceId)) {
+        skippedDynamicallyProtected += 1;
+        return;
+      }
+      selectedRows.push(row);
     });
-  return rows;
+  return {
+    selectedRows,
+    scannedRows,
+    skippedDurablyProtected,
+    skippedDynamicallyProtected,
+    selectedBytes: selectedRows.reduce(
+      (sum, row) => sum + (row.cacheBytes ?? 0),
+      0,
+    ),
+  };
 }

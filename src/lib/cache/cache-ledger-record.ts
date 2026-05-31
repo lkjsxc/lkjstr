@@ -22,7 +22,6 @@ export type CacheResourceKind =
   | 'relay-info'
   | 'relay-list-suggestion'
   | 'author-relay-route'
-  | 'relay-route-block'
   | 'job-record';
 
 export type CacheLedgerRecord = {

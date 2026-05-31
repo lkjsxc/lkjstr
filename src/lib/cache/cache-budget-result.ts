@@ -1,3 +1,6 @@
+import type { CachePressureState } from './cache-budget-decision';
+import type { CacheLedgerRepairResult } from './cache-ledger-repair';
+
 export type CacheBudgetResult = {
   readonly prunedEvents: number;
   readonly prunedResources: number;
@@ -13,6 +16,12 @@ export type CacheBudgetResult = {
   readonly eventCacheBytes: number;
   readonly browserUsageBytes: number | null;
   readonly protectedOnly: boolean;
+  readonly pressureState: CachePressureState;
+  readonly skippedDurablyProtected: number;
+  readonly skippedDynamicallyProtected: number;
+  readonly orphanLedgerRows: number;
+  readonly missingLedgerRows: number;
+  readonly lastRepairResult?: CacheLedgerRepairResult;
 };
 
 export function cacheBudgetResult(input: {
@@ -29,9 +38,19 @@ export function cacheBudgetResult(input: {
   readonly eventCacheBytes: number;
   readonly skipped: boolean;
   readonly protectedOnly: boolean;
+  readonly pressureState: CachePressureState;
+  readonly skippedDurablyProtected?: number;
+  readonly skippedDynamicallyProtected?: number;
+  readonly orphanLedgerRows?: number;
+  readonly missingLedgerRows?: number;
+  readonly lastRepairResult?: CacheLedgerRepairResult;
 }): CacheBudgetResult {
   return {
     ...input,
+    skippedDurablyProtected: input.skippedDurablyProtected ?? 0,
+    skippedDynamicallyProtected: input.skippedDynamicallyProtected ?? 0,
+    orphanLedgerRows: input.orphanLedgerRows ?? 0,
+    missingLedgerRows: input.missingLedgerRows ?? 0,
     skippedDrafts: true,
   };
 }
