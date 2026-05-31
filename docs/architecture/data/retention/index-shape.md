@@ -65,7 +65,6 @@ and queried.
 - `relay-info`
 - `relay-list-suggestion`
 - `author-relay-route`
-- `relay-route-block`
 - `job-record`
 
 ## Update Path
@@ -75,7 +74,8 @@ and queried.
 - Event ingest and relationship index writers upsert event ledger rows and
   target bumps.
 - Notification, feed page, diagnostics, relay protocol cache, route evidence,
-  job, and stale tab snapshot writers upsert their own ledger rows.
+  finished job, and tab snapshot writers upsert their own ledger rows. Active
+  tab-state rows are dynamically protected; absent stale rows may be compacted.
 - Compaction reads ascending `score` in batches until the site storage target is
   met or no prunable candidates remain.
 - Durable protected rows and dynamically protected ids are skipped during
