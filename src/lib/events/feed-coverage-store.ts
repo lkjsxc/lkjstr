@@ -11,6 +11,7 @@ import type { FeedCoverage } from './types';
 const memoryCoverage = createBoundedMap<string, FeedCoverage>({
   maxSize: 500,
 });
+const durableRefreshMs = 10_000;
 
 export async function saveFeedCoverage(
   input: Omit<FeedCoverage, 'id' | 'updatedAt'>,
@@ -24,9 +25,12 @@ export async function saveFeedCoverageRows(
 ): Promise<FeedCoverage[]> {
   const updatedAt = Date.now();
   const rows = inputs.map((input) => feedCoverageRow(input, updatedAt));
+  const durableRows = rows.filter((row) =>
+    shouldPersistCoverage(memoryCoverage.get(row.id), row),
+  );
   for (const row of rows) memoryCoverage.set(row.id, row);
   if (rows.length === 0) return [];
-  await putFeedCoverageRowsWithLedger(rows);
+  await putFeedCoverageRowsWithLedger(durableRows);
   return rows;
 }
 
@@ -97,4 +101,28 @@ function coverageId(input: Omit<FeedCoverage, 'id' | 'updatedAt'>): string {
     input.since ?? '',
     input.until ?? '',
   ].join('|');
+}
+
+function shouldPersistCoverage(
+  existing: FeedCoverage | undefined,
+  next: FeedCoverage,
+): boolean {
+  if (!existing) return true;
+  if (next.updatedAt - existing.updatedAt >= durableRefreshMs) return true;
+  return !sameCoverageProof(existing, next);
+}
+
+function sameCoverageProof(left: FeedCoverage, right: FeedCoverage): boolean {
+  return (
+    left.status === right.status &&
+    left.reason === right.reason &&
+    left.limit === right.limit &&
+    left.eventCount === right.eventCount &&
+    left.uniqueCount === right.uniqueCount &&
+    left.attempt === right.attempt &&
+    left.spanSeconds === right.spanSeconds &&
+    left.nextSpanSeconds === right.nextSpanSeconds &&
+    left.feedback === right.feedback &&
+    left.direction === right.direction
+  );
 }

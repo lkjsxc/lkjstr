@@ -18,6 +18,8 @@ export type StorageTransactionPurpose =
   | 'tab-snapshot-write'
   | 'protected-write';
 
+const storageTransactionTimeoutMs = 5_000;
+
 export async function withStorageTransaction<T>(input: {
   readonly mode: 'r' | 'rw';
   readonly tables: readonly StorageTableName[];
@@ -34,7 +36,7 @@ export async function withStorageTransaction<T>(input: {
       );
     },
     undefined as T,
-    undefined,
+    storageTransactionTimeoutMs,
     { kind: 'transaction', tables: input.tables },
   );
 }

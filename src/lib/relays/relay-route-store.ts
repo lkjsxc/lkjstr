@@ -22,6 +22,7 @@ const memoryRoutes = createBoundedMap<string, RelayRoute>({ maxSize: 2000 });
 const memoryBlocks = createBoundedMap<string, RelayRouteBlock>({
   maxSize: 250,
 });
+const durableRouteRefreshMs = 10_000;
 
 export async function saveAuthorRelayRoute(
   input: Omit<RelayRoute, 'id' | 'updatedAt'>,
@@ -33,22 +34,27 @@ export async function saveAuthorRelayRoutes(
   inputs: readonly Omit<RelayRoute, 'id' | 'updatedAt'>[],
 ): Promise<void> {
   const routes: RelayRoute[] = [];
+  const durableRoutes: RelayRoute[] = [];
+  const now = Date.now();
   for (const input of inputs) {
     const relayUrl = normalizeRelayUrl(input.relayUrl);
     if (!relayUrl || !isPubkey(input.authorPubkey)) continue;
+    const id = routeId(input.authorPubkey, relayUrl, input.source);
     const route = {
       ...input,
       relayUrl,
-      id: routeId(input.authorPubkey, relayUrl, input.source),
-      updatedAt: Date.now(),
+      id,
+      updatedAt: now,
     };
+    if (shouldPersistRoute(memoryRoutes.get(id), route))
+      durableRoutes.push(route);
     memoryRoutes.set(route.id, route);
     routes.push(route);
   }
   if (routes.length === 0) return;
   await putAuthorRelayRoutesWithLedger(
-    routes,
-    routes.map(relayRouteLedgerRecord),
+    durableRoutes,
+    durableRoutes.map(relayRouteLedgerRecord),
   );
 }
 
@@ -144,4 +150,14 @@ function routeId(
 
 function routeBlockId(relayUrl: string, purpose: RelayPurpose): string {
   return `${purpose}:${relayUrl}`;
+}
+
+function shouldPersistRoute(
+  existing: RelayRoute | undefined,
+  next: RelayRoute,
+): boolean {
+  if (!existing) return true;
+  if (next.updatedAt - existing.updatedAt >= durableRouteRefreshMs)
+    return true;
+  return existing.purpose !== next.purpose;
 }

@@ -31,6 +31,7 @@ export type FeedScanHint = {
 
 export const feedScanHintMaxAgeMs = 30 * 24 * 60 * 60 * 1000;
 export const feedScanHintMaxRows = 2000;
+const durableRefreshMs = 10_000;
 
 const memoryHints = createBoundedMap<string, FeedScanHint>({
   maxSize: feedScanHintMaxRows,
@@ -53,15 +54,18 @@ export function scanHintKey(input: {
 export async function saveFeedScanHint(
   input: Omit<FeedScanHint, 'id' | 'updatedAt'>,
 ): Promise<void> {
+  const id = hintId(input);
+  const existing = memoryHints.get(id);
   const hint = {
     ...input,
-    id: hintId(input),
+    id,
     recommendedSpanSeconds: clampSpan(input.recommendedSpanSeconds),
     lastSpanSeconds: clampSpan(input.lastSpanSeconds),
     updatedAt: Date.now(),
   };
   memoryHints.set(hint.id, hint);
   countRuntime('timeline', 'warmHintWrites');
+  if (existing && sameDurableHint(existing, hint)) return;
   await putFeedScanHintWithLedger(hint);
 }
 
@@ -151,6 +155,20 @@ function hintId(input: Omit<FeedScanHint, 'id' | 'updatedAt'>): string {
 
 function stale(hint: FeedScanHint): boolean {
   return Date.now() - hint.updatedAt > feedScanHintMaxAgeMs;
+}
+
+function sameDurableHint(left: FeedScanHint, right: FeedScanHint): boolean {
+  return (
+    right.updatedAt - left.updatedAt < durableRefreshMs &&
+    left.scanKey === right.scanKey &&
+    left.relayUrl === right.relayUrl &&
+    left.groupKey === right.groupKey &&
+    left.filterKey === right.filterKey &&
+    left.direction === right.direction &&
+    left.recommendedSpanSeconds === right.recommendedSpanSeconds &&
+    left.lastSpanSeconds === right.lastSpanSeconds &&
+    left.lastFeedback === right.lastFeedback
+  );
 }
 
 function clampSpan(value: number): number {

@@ -54,6 +54,7 @@ export async function upsertEvent(
   );
   const tags = tagRows(event);
   putMemory(stored, receipts, tags);
+  if (existing && sameRelays(existing.relayUrls, relays)) return stored;
   countRuntime('timeline', 'storedEvents');
   if (!indexedDbAvailable()) {
     await storeRelayListSuggestionsFromEvent(event);
@@ -137,7 +138,9 @@ export function feedKey(query: FeedQuery): string {
 }
 
 async function existingEvent(id: string): Promise<StoredEvent | undefined> {
-  const event = await readStoredEventRow(id, memoryEvent(id));
+  const cached = memoryEvent(id);
+  if (cached) return normalizeStoredEvent(cached);
+  const event = await readStoredEventRow(id, undefined);
   return event ? normalizeStoredEvent(event) : undefined;
 }
 
@@ -147,6 +150,15 @@ function toFeedEvent(event: StoredEvent): FeedEvent {
     event: normalized,
     relays: normalized.relayUrls,
   };
+}
+
+function sameRelays(
+  left: readonly string[],
+  right: readonly string[],
+): boolean {
+  if (left.length !== right.length) return false;
+  const seen = new Set(left);
+  return right.every((relayUrl) => seen.has(relayUrl));
 }
 
 function cursorFor(

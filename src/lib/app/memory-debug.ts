@@ -9,12 +9,17 @@ import {
 } from './memory-counters';
 import { orchestrationMetricsSnapshot } from '../relays/orchestration/metrics';
 import { runtimeMemorySnapshot } from '../memory/runtime-memory';
+import {
+  activeStorageOperationCount,
+  activeStorageOperationGroups,
+} from '../storage/operation/tracked-operation';
 
 export type MemoryDebugExport = {
   readonly counters: Record<MemoryCounterKey, number>;
   readonly counterTotal: number;
   readonly runtime: ReturnType<typeof runtimeMemorySnapshot>;
   readonly orchestration: ReturnType<typeof orchestrationMetricsSnapshot>;
+  readonly storageOperations: ReturnType<typeof activeStorageOperationGroups>;
 };
 
 let feedWindowPeak = 0;
@@ -31,6 +36,7 @@ export function clearFeedRuntimeWindowPeak(): void {
 }
 
 export function syncDerivedMemoryCounters(): void {
+  setMemoryCounter('active-indexeddb-ops', activeStorageOperationCount());
   setMemoryCounter(
     'relay-diagnostic-summary-count',
     relayDiagnosticSummaryMemorySize(),
@@ -46,6 +52,7 @@ export function memoryDebugExport(): MemoryDebugExport {
     counterTotal: getMemoryCounterTotal(),
     runtime: runtimeMemorySnapshot(),
     orchestration: orchestrationMetricsSnapshot(),
+    storageOperations: activeStorageOperationGroups(),
   };
 }
 
