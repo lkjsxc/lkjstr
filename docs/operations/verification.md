@@ -187,7 +187,8 @@ pnpm test -- tests/unit/settings/settings-store.test.ts tests/unit/events/reposi
 
 Acceptance: default budget is `67108864`, internal byte accounting works
 without browser estimates, lowering the setting enforces immediately, protected
-tables survive, and Stats reports the last enforcement result.
+tables survive, Stats reports the last enforcement result, and
+[storage-pressure-verification.md](storage-pressure-verification.md) passes.
 
 Storage-persistence changes must test mocked `navigator.storage` support,
 already-persisted, granted, denied, unsupported, and failure states. Playwright

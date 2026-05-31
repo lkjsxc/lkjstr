@@ -178,6 +178,7 @@ table of contents required by repository checks.
 - [operations/feed-route-isolation-regression.md](operations/feed-route-isolation-regression.md)
 - [operations/memory-verification.md](operations/memory-verification.md)
 - [operations/readiness.md](operations/readiness.md)
+- [operations/storage-pressure-verification.md](operations/storage-pressure-verification.md)
 - [operations/testing-ownership.md](operations/testing-ownership.md)
 - [operations/timeline-notification-regression-investigation.md](operations/timeline-notification-regression-investigation.md)
 - [operations/verification.md](operations/verification.md)

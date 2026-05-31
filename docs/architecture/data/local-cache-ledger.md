@@ -20,6 +20,22 @@ recoverable browser-local data.
 - Compaction uses one selector and one deletion dispatcher for all ledger rows.
 - Manual and automatic compaction must use the same policy.
 
+## Whole-Origin Pressure Contract
+
+`cache.maxBytes` is the target for whole browser origin usage when
+`navigator.storage.estimate()` is available. It is not an event-row budget, a
+ledger-row budget, a byte target for only ledger rows, or a row-count cap.
+
+When browser usage is above the target, compaction may delete any eligible
+prunable cache resource even when ledger-estimated bytes are below the target.
+Compaction stops only when browser usage is under target, no eligible prunable
+rows remain, or every remaining candidate is durably or dynamically protected.
+
+`unknown` is not a success state. Unknown or browser-overhead bytes can mean
+exact browser overhead, inventory timeout, unregistered table bytes, Cache
+Storage bytes, localStorage bytes, IndexedDB internal or index overhead, or an
+unsupported measurement path. Stats must make that state visible.
+
 ## Protected User Data
 
 The ledger must not delete these records:
@@ -50,6 +66,28 @@ These rows must register in `cacheLedger` when persisted:
 - Relay list suggestions.
 - Recoverable author relay route evidence.
 - Stale tab snapshots for tabs absent from the current workspace.
+
+## Ledger Health
+
+Stats and repair checks use these ledger health fields:
+
+| Field | Meaning |
+| --- | --- |
+| `totalLedgerRows` | all rows in `cacheLedger` |
+| `prunableLedgerRows` | rows without durable protection |
+| `protectedLedgerRows` | rows with durable protection |
+| `orphanLedgerRows` | ledger rows whose target resource is absent |
+| `missingLedgerRows` | prunable resource rows without a ledger row |
+| `eligiblePruneRows` | candidates after durable and dynamic protection |
+| `dynamicallyProtectedRows` | rows skipped because runtime state protects them |
+| `ledgerBytes` | total ledger byte estimate |
+| `prunableLedgerBytes` | byte estimate for non-durable-protected rows |
+| `protectedLedgerBytes` | byte estimate for durable-protected rows |
+| `averageLedgerBytesPerRow` | `ledgerBytes / totalLedgerRows` when rows exist |
+
+Every new prunable table must land with a docs entry, ledger writer, byte
+estimator, delete dispatcher, inventory group, repair/backfill behavior, and
+unit coverage in the same change.
 
 ## Accounting
 

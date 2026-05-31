@@ -6,32 +6,33 @@ Storage docs define browser persistence ownership.
 
 ## Stores
 
-- `workspaces`: workspace layout and tab state.
-- `accounts`: account metadata.
-- `localAccountSecrets`: raw local signing account secret keys.
-- `notifications`: local activity cache records with dynamic protection for
-  recent, unread, visible, or account-window subsets.
-- `tweetDrafts`: durable Tweet drafts.
-- `events`: cached Nostr events.
-- `eventRelays`: event relay receipts.
-- `eventTags`: searchable `e`, `p`, `q`, and `a` tag rows.
-- `cacheLedger`: shared compaction score and byte-accounting rows for every
-  prunable local cache resource.
-- `feedCursors`: derived feed paging cursors.
-- `feedCoverage`: durable relay/filter/range coverage evidence and unresolved
-  diagnostics for feed scans.
-- `feedScanHints`: bounded performance hints for future grouped feed scan
-  window sizes. Hints are separate from coverage proof.
-- `jobs`: persisted in-app job records. Active jobs are protected; finished jobs
-  are cache-ledger resources.
-- `cacheMeta`: cache status records.
-- `tabStates`: durable tab snapshot payloads keyed by `workspaceId + tabId`.
-  `lastPaneId` is placement metadata only. See [Tab Snapshots](#tab-snapshots).
-- `settings`: settings overrides.
-- `relaySets`: editable relay sets.
-- `relayDiagnosticSummaries`: persisted relay diagnostic summaries.
-- `relayInformation`: fetched NIP-11 relay information documents.
-- `relayListSuggestions`: per-account NIP-65 relay list suggestions.
+| Store | Classification | Retention |
+| --- | --- | --- |
+| `workspaces` | protected user data | never cache-compacted |
+| `accounts` | protected user data | never cache-compacted |
+| `localAccountSecrets` | protected user data | never cache-compacted |
+| `notifications` | prunable cache | ledger-backed; recent, unread, visible, and account-window rows are dynamically protected |
+| `tweetDrafts` | protected user data | never cache-compacted |
+| `events` | prunable cache | ledger-backed cached Nostr event resource |
+| `cacheLedger` | ledger | ledger rows are removed with their target resource or by repair |
+| `eventRelays` | prunable cache | owned by the event ledger resource |
+| `eventTags` | prunable cache | owned by the event ledger resource |
+| `feedCursors` | derived page cache | ledger-backed feed cursor resource |
+| `feedCoverage` | derived page cache | ledger-backed coverage row resource |
+| `feedScanHints` | derived page cache | ledger-backed scan hint resource |
+| `jobs` | prunable cache | active jobs are protected; finished jobs are ledger-backed |
+| `cacheMeta` | metadata | diagnostic metadata, replaced by status writes |
+| `tabStates` | protected user data | active workspace snapshots are protected; absent stale tabs may become ledger-backed cache |
+| `settings` | protected user data | never cache-compacted |
+| `relaySets` | protected user data | never cache-compacted |
+| `relayDiagnosticSummaries` | diagnostics cache | ledger-backed relay summary resource |
+| `relayInformation` | diagnostics cache | ledger-backed NIP-11 resource |
+| `relayListSuggestions` | diagnostics cache | ledger-backed relay suggestion resource |
+| `authorRelayRoutes` | diagnostics cache | ledger-backed author route evidence |
+| `relayRouteBlocks` | protected safety/configuration | bounded route suppression records; never cache-compacted |
+
+No current store may classify as `unknown`. A new store that is not documented
+with a classification is a repository invariant failure.
 
 ## Contract
 
@@ -114,16 +115,21 @@ range.
 
 Stats estimates IndexedDB table bytes by reading each table and encoding rows
 as JSON. These values are diagnostic estimates, not browser quota truth.
+Inventory status must be explicit: `exact`, `timeout`, `unavailable`, or
+`unsupported`. Timed-out scans keep their partial byte count and must not be
+reported as zero-byte success.
 
 The browser storage estimate remains authoritative for total site usage. The
-difference between browser usage and table estimates is reported as storage
-overhead or unknown usage. That gap can include IndexedDB indexes, browser
-record overhead, localStorage, Cache Storage, and other origin-managed bytes.
+difference between browser usage, known IndexedDB table estimates,
+localStorage bytes, and Cache Storage bytes is reported as storage overhead or
+unknown usage. That gap can include IndexedDB indexes, browser record overhead,
+unregistered origin data, and unsupported measurement paths.
 
-Inventory rows are grouped as protected user data, prunable cache, derived page
-cache, diagnostics, ledger, and storage overhead. This explains whether pressure
-comes from events, notifications, page rows, diagnostics, protected rows, or
-unknown browser overhead.
+Inventory rows are grouped as protected user data, protected safety/config,
+prunable cache, derived page cache, diagnostics, ledger, metadata, non-IndexedDB
+storage, storage overhead, and unknown. This explains whether pressure comes
+from events, notifications, page rows, diagnostics, protected rows, Cache
+Storage, localStorage, or unknown browser overhead.
 
 Future local image or media caches must not create an independent quota system.
 They should store their bytes in IndexedDB and register a row in the shared

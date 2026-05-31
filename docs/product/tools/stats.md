@@ -24,10 +24,20 @@ Stats shows current-session relay counters and persisted operational summaries.
   active demands, active leases, live leases, bootstrap/page reads, and
   in-flight reads.
 - Cache status includes event, profile, notification, site budget bytes,
-  browser usage, ledger bytes, prunable cache bytes, protected user estimate,
-  unknown/browser overhead, ledger inventory by resource kind, last enforcement
-  reason, pruned resource count, pruned byte estimate, and protected-only or
-  unknown-only status.
+  browser usage, ledger bytes, prunable cache bytes, protected ledger bytes,
+  protected user estimate, table-estimated bytes, localStorage bytes, Cache
+  Storage bytes, unknown/browser overhead, inventory scan status, ledger
+  inventory by resource kind, ledger row count, orphan ledger rows, missing
+  ledger rows, last repair result, last enforcement reason, pruned resource
+  count, pruned byte estimate, skipped candidate counts, and pressure state.
+- Cache status must show exact rows for browser usage, site target, remaining
+  over-target bytes, ledger bytes, prunable ledger bytes, protected estimate,
+  table-estimated bytes, localStorage bytes, Cache Storage bytes,
+  browser-overhead-or-unknown bytes, inventory scan status, ledger row count,
+  orphan ledger rows, missing ledger rows, last repair result, last compaction
+  result, pruned resources, pruned bytes, and pressure state.
+- Manual cache actions are `Refresh storage inventory`, `Compact now`, and
+  `Repair cache ledger`. They use real storage paths and are never placeholders.
 - Runtime memory shows compact app-owned counters: app log count, relay
   suppression count, in-flight reads, fallback repository counts, reference
   cache size, profile cache size, token cache size, relay snapshot totals,

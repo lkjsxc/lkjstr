@@ -34,6 +34,12 @@ The app must support:
   composer recovery data, active tab state, or workspace state.
 - pruning old notification and feed/page cache rows without deleting source
   events or user-owned workspace records.
+- enforcing whole-origin cache pressure by deleting only eligible ledger-backed
+  cache rows while protected accounts, settings, relay sets, drafts, workspace
+  rows, active jobs, active snapshots, and safety/configuration rows remain.
+- reporting protected-only, unknown-only, inventory-incomplete, unsupported, or
+  quota-unavailable pressure instead of treating unexplained browser usage as
+  successful recovery.
 - deleting an account without deleting public cached events.
 - exporting workspace and relay configuration.
 - importing configuration into an empty profile.

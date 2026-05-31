@@ -34,9 +34,6 @@ budget.
   when available. IndexedDB table estimates are diagnostics, not quota truth.
 - When invoked, estimate protected user bytes, prunable ledger bytes, and
   unknown or overhead bytes.
-- Evict the lowest-score prunable ledger rows until browser usage is under
-  target, ledger bytes are under target and browser usage is unavailable, no
-  prunable candidates remain, or only dynamically protected rows remain.
 - Do not stop only because event bytes are low. Notification-heavy and
   page-heavy pressure must continue selecting those resource classes.
 - If browser usage remains above target after all prunable cache rows are gone,
@@ -44,6 +41,35 @@ budget.
 - Account-critical protected records, active tab snapshots, active jobs, open
   feed keys, newest retained notifications, and currently pinned runtime ids
   never score-evict. See [score-policy.md](score-policy.md).
+
+## Algorithm
+
+1. Read settings and derive the site budget.
+2. Read `navigator.storage.estimate()` when available.
+3. Read the ledger summary.
+4. If browser usage is above the site budget and any eligible prunable ledger
+   rows exist, compact.
+5. If browser usage is unavailable, compact when prunable ledger bytes exceed
+   the site budget.
+6. If quota pressure exists, compact any eligible prunable ledger rows.
+7. Delete by `resourceKind` through the shared dispatcher.
+8. Re-read real browser quota after each batch when available.
+9. Stop only when usage is under budget, no eligible candidates remain, or only
+   protected candidates remain.
+10. Persist the exact pressure state.
+
+## Pressure States
+
+| State | Meaning |
+| --- | --- |
+| `below-budget` | browser usage or ledger fallback is under target |
+| `compacted-under-budget` | compaction brought usage under target |
+| `candidate-limited` | eligible rows were deleted but pressure remains |
+| `protected-only` | only durable or dynamic protected rows remain |
+| `unknown-only` | pressure remains without known prunable bytes |
+| `inventory-incomplete` | inventory timed out or could not account for usage |
+| `quota-unavailable` | browser quota estimate is unavailable |
+| `storage-api-unavailable` | browser storage APIs are unsupported |
 
 ## Stats Contract
 

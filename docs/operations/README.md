@@ -17,6 +17,8 @@ data safety, and test ownership.
 - [memory-verification.md](memory-verification.md): heap snapshot collection
   and memory test commands.
 - [readiness.md](readiness.md): handoff checks.
+- [storage-pressure-verification.md](storage-pressure-verification.md):
+  whole-origin cache pressure scenario.
 - [testing-ownership.md](testing-ownership.md): unit and e2e ownership.
 - [verification.md](verification.md): command gate.
 - [timeline-notification-regression-investigation.md](timeline-notification-regression-investigation.md):
