@@ -9,8 +9,7 @@ import type {
   CachePressureState,
   InventoryScanStatus,
 } from './cache-budget-decision';
-import { pressureState } from './cache-budget-decision';
-import { pressureInput } from './cache-budget-enforcement-helpers';
+import { cacheStatusPressureState } from './cache-status-pressure';
 import {
   cacheLedgerHealth,
   type CacheLedgerRepairResult,
@@ -83,16 +82,7 @@ export async function cacheStatus(): Promise<CacheMetadata> {
     quota,
   );
   const health = await cacheLedgerHealth();
-  const currentPressureState = pressureState(
-    pressureInput({
-      snapshot,
-      quota,
-      budgetBytes: snapshot.budgetBytes,
-      eligibleRows: snapshot.prunableLedgerRows > 0 ? 1 : 0,
-      protectedRows: snapshot.protectedLedgerRows,
-      prunedResources: 0,
-    }),
-  );
+  const currentPressureState = await cacheStatusPressureState(snapshot, quota);
   return {
     id: 'main',
     rawEventCount: await boundedStorageRead(
