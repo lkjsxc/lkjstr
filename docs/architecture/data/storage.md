@@ -34,6 +34,12 @@ Storage docs define browser persistence ownership.
 No current store may classify as `unknown`. A new store that is not documented
 with a classification is a repository invariant failure.
 
+When the IndexedDB store shape changes, the Dexie schema step must advance in
+the same change. Reusing a previous schema step can leave existing browser
+profiles without newly documented object stores, so diagnostics must still
+treat missing stores as unavailable and never use that failure as proof that
+protected data is safe to delete.
+
 ## Route Blocks
 
 `relayRouteBlocks` rows suppress relay routes for a purpose after user,

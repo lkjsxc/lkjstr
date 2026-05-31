@@ -45,6 +45,9 @@ Stats shows current-session relay counters and persisted operational summaries.
 - Cache diagnostic reads must treat missing IndexedDB object stores as
   unavailable inventory or ledger status. They must not reject the Stats refresh
   promise or repeat uncaught `NotFoundError` entries in the console.
+- Cache diagnostic loops must await every asynchronous store read directly.
+  Async callbacks passed to IndexedDB cursor helpers are not allowed because
+  their rejections can escape the diagnostic fallback path.
 - Runtime memory shows compact app-owned counters: app log count, relay
   suppression count, in-flight reads, fallback repository counts, reference
   cache size, profile cache size, token cache size, relay snapshot totals,
