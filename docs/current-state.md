@@ -103,6 +103,9 @@ Read next: [architecture/README.md](architecture/README.md),
 - Stats and `__lkjstrMemoryDebug()` expose orchestration demand, lease, and
   event intake counters. Stats labels active relay subscriptions by redacted
   human purpose and keeps raw ids secondary.
+- Stats cache diagnostics tolerate blocked, corrupt, or schema-incomplete
+  IndexedDB stores. Missing object stores are reported as unavailable or
+  incomplete diagnostics rather than uncaught runtime exceptions.
 - Inactive workspace tabs keep hidden mounted bodies; feed runtimes release live
   Demands while retaining bounded windows.
 - Tab snapshots are owned by `workspaceId + tabId`; pane id is only last-placement

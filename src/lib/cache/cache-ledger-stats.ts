@@ -1,5 +1,5 @@
 import { browserDb } from '../storage/browser-db';
-import { indexedDbAvailable } from '../storage/safe-storage';
+import { boundedStorageRead } from '../storage/safe-storage';
 import type { CacheLedgerRecord } from './cache-ledger-record';
 
 export type LedgerInventoryRow = {
@@ -14,42 +14,48 @@ export type LedgerInventoryRow = {
 };
 
 export async function estimatedPrunableCacheBytes(): Promise<number> {
-  if (!indexedDbAvailable()) return 0;
-  let total = 0;
-  await browserDb().cacheLedger.each((row) => {
-    if (!row.protected) total += row.cacheBytes ?? 0;
-  });
-  return total;
+  return boundedStorageRead(async () => {
+    let total = 0;
+    await browserDb().cacheLedger.each((row) => {
+      if (!row.protected) total += row.cacheBytes ?? 0;
+    });
+    return total;
+  }, 0);
 }
 
 export async function estimatedLedgerBytes(): Promise<number> {
-  if (!indexedDbAvailable()) return 0;
-  let total = 0;
-  await browserDb().cacheLedger.each((row) => {
-    total += row.cacheBytes ?? 0;
-  });
-  return total;
+  return boundedStorageRead(async () => {
+    let total = 0;
+    await browserDb().cacheLedger.each((row) => {
+      total += row.cacheBytes ?? 0;
+    });
+    return total;
+  }, 0);
 }
 
 export async function estimatedEventCacheBytes(): Promise<number> {
-  if (!indexedDbAvailable()) return 0;
-  let total = 0;
-  await browserDb()
-    .cacheLedger.where('ownerKind')
-    .equals('event')
-    .each((row) => {
-      total += row.cacheBytes ?? 0;
-    });
-  return total;
+  return boundedStorageRead(async () => {
+    let total = 0;
+    await browserDb()
+      .cacheLedger.where('ownerKind')
+      .equals('event')
+      .each((row) => {
+        total += row.cacheBytes ?? 0;
+      });
+    return total;
+  }, 0);
 }
 
 export async function estimatedLedgerBytesByOwner(): Promise<
   LedgerInventoryRow[]
 > {
-  if (!indexedDbAvailable()) return [];
-  const rows = new Map<string, LedgerInventoryRow>();
-  await browserDb().cacheLedger.each((row) => mergeLedgerRow(rows, row));
-  return [...rows.values()].sort((a, b) => b.estimatedBytes - a.estimatedBytes);
+  return boundedStorageRead(async () => {
+    const rows = new Map<string, LedgerInventoryRow>();
+    await browserDb().cacheLedger.each((row) => mergeLedgerRow(rows, row));
+    return [...rows.values()].sort(
+      (a, b) => b.estimatedBytes - a.estimatedBytes,
+    );
+  }, []);
 }
 
 function mergeLedgerRow(

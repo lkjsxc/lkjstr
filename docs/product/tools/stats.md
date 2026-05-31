@@ -42,6 +42,9 @@ Stats shows current-session relay counters and persisted operational summaries.
   the actions must report through the normal cache status path and keep the tab
   usable. `Compact now` may fall back to the currently displayed site target
   when the settings store cannot be read.
+- Cache diagnostic reads must treat missing IndexedDB object stores as
+  unavailable inventory or ledger status. They must not reject the Stats refresh
+  promise or repeat uncaught `NotFoundError` entries in the console.
 - Runtime memory shows compact app-owned counters: app log count, relay
   suppression count, in-flight reads, fallback repository counts, reference
   cache size, profile cache size, token cache size, relay snapshot totals,

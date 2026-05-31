@@ -30,16 +30,20 @@ export type CacheLedgerRepairResult = {
 export async function repairCacheLedger(): Promise<CacheLedgerRepairResult> {
   const startedAt = Date.now();
   if (!indexedDbAvailable()) return emptyRepair(startedAt);
-  const orphanLedgerRowsDeleted = await deleteOrphans();
-  const result = await backfillAndUpdate();
-  const done = {
-    ...result,
-    orphanLedgerRowsDeleted,
-    startedAt,
-    finishedAt: Date.now(),
-  };
-  await writeRepairMetadata(done);
-  return done;
+  try {
+    const orphanLedgerRowsDeleted = await deleteOrphans();
+    const result = await backfillAndUpdate();
+    const done = {
+      ...result,
+      orphanLedgerRowsDeleted,
+      startedAt,
+      finishedAt: Date.now(),
+    };
+    await writeRepairMetadata(done);
+    return done;
+  } catch {
+    return emptyRepair(startedAt);
+  }
 }
 
 export async function cacheLedgerHealth(): Promise<{
@@ -48,12 +52,17 @@ export async function cacheLedgerHealth(): Promise<{
 }> {
   if (!indexedDbAvailable())
     return { orphanLedgerRows: 0, missingLedgerRows: 0 };
-  const orphanLedgerRows = await countOrphans();
-  let missingLedgerRows = 0;
-  await collectRepairRows(async (record) => {
-    if (!(await browserDb().cacheLedger.get(record.id))) missingLedgerRows += 1;
-  });
-  return { orphanLedgerRows, missingLedgerRows };
+  try {
+    const orphanLedgerRows = await countOrphans();
+    let missingLedgerRows = 0;
+    await collectRepairRows(async (record) => {
+      if (!(await browserDb().cacheLedger.get(record.id)))
+        missingLedgerRows += 1;
+    });
+    return { orphanLedgerRows, missingLedgerRows };
+  } catch {
+    return { orphanLedgerRows: 0, missingLedgerRows: 0 };
+  }
 }
 
 async function backfillAndUpdate() {
@@ -168,13 +177,17 @@ function emptyRepair(startedAt: number): CacheLedgerRepairResult {
 async function writeRepairMetadata(
   result: CacheLedgerRepairResult,
 ): Promise<void> {
-  const existing = await browserDb().cacheMeta.get('main');
-  if (!existing) return;
-  await browserDb().cacheMeta.put({
-    ...existing,
-    lastRepairResult: result,
-    orphanLedgerRows: result.orphanLedgerRowsDeleted,
-    missingLedgerRows: result.missingLedgerRowsInserted,
-    updatedAt: Date.now(),
-  });
+  try {
+    const existing = await browserDb().cacheMeta.get('main');
+    if (!existing) return;
+    await browserDb().cacheMeta.put({
+      ...existing,
+      lastRepairResult: result,
+      orphanLedgerRows: result.orphanLedgerRowsDeleted,
+      missingLedgerRows: result.missingLedgerRowsInserted,
+      updatedAt: Date.now(),
+    });
+  } catch {
+    return;
+  }
 }

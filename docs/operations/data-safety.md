@@ -43,6 +43,9 @@ The app must support:
 - keeping Stats cache recovery actions usable when IndexedDB is blocked,
   corrupt, or missing an expected object store; failed reads fall back to
   already known safe values rather than surfacing uncaught storage exceptions.
+- treating cache ledger and storage inventory scans as diagnostics: if an
+  expected object store is missing, the app reports unavailable or incomplete
+  status and keeps protected user data untouched.
 - deleting an account without deleting public cached events.
 - exporting workspace and relay configuration.
 - importing configuration into an empty profile.

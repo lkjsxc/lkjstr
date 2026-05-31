@@ -28,18 +28,22 @@ export function latestEventIdsByPubkey(
 
 export async function protectedEventIds(): Promise<Set<string>> {
   const ids = pinnedEventIds();
-  await collectLatestByKindPubkey(0, ids);
-  const accountPubkeys = await loadAccountPubkeys();
-  if (accountPubkeys.size > 0) {
-    await collectLatestByKindPubkeyForSet(3, accountPubkeys, ids);
-    await collectPotentialNotificationSources(accountPubkeys, ids);
+  try {
+    await collectLatestByKindPubkey(0, ids);
+    const accountPubkeys = await loadAccountPubkeys();
+    if (accountPubkeys.size > 0) {
+      await collectLatestByKindPubkeyForSet(3, accountPubkeys, ids);
+      await collectPotentialNotificationSources(accountPubkeys, ids);
+    }
+    await collectProtectedNotifications(ids);
+    await browserDb()
+      .cacheLedger.where('ownerKind')
+      .equals('event')
+      .filter((row) => row.protected)
+      .each((row) => ids.add(row.resourceId));
+  } catch {
+    return ids;
   }
-  await collectProtectedNotifications(ids);
-  await browserDb()
-    .cacheLedger.where('ownerKind')
-    .equals('event')
-    .filter((row) => row.protected)
-    .each((row) => ids.add(row.resourceId));
   return ids;
 }
 

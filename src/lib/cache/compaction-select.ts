@@ -1,4 +1,5 @@
 import { browserDb } from '../storage/browser-db';
+import { boundedStorageRead } from '../storage/safe-storage';
 import type { CacheLedgerRecord } from './cache-ledger-record';
 import { compareCacheLedgerRows } from './cache-ledger-score';
 
@@ -55,33 +56,45 @@ export async function lowestScorePruneSelection(
   needed: number,
   protectedIds: Set<string>,
 ): Promise<PruneSelectionSummary> {
-  const selectedRows: CacheLedgerRecord[] = [];
-  let scannedRows = 0;
-  let skippedDurablyProtected = 0;
-  let skippedDynamicallyProtected = 0;
-  await browserDb()
-    .cacheLedger.orderBy('score')
-    .each((row: CacheLedgerRecord) => {
-      scannedRows += 1;
-      if (selectedRows.length >= needed) return false;
-      if (row.protected) {
-        skippedDurablyProtected += 1;
-        return;
-      }
-      if (protectedIds.has(row.id) || protectedIds.has(row.resourceId)) {
-        skippedDynamicallyProtected += 1;
-        return;
-      }
-      selectedRows.push(row);
-    });
+  return boundedStorageRead(async () => {
+    const selectedRows: CacheLedgerRecord[] = [];
+    let scannedRows = 0;
+    let skippedDurablyProtected = 0;
+    let skippedDynamicallyProtected = 0;
+    await browserDb()
+      .cacheLedger.orderBy('score')
+      .each((row: CacheLedgerRecord) => {
+        scannedRows += 1;
+        if (selectedRows.length >= needed) return false;
+        if (row.protected) {
+          skippedDurablyProtected += 1;
+          return;
+        }
+        if (protectedIds.has(row.id) || protectedIds.has(row.resourceId)) {
+          skippedDynamicallyProtected += 1;
+          return;
+        }
+        selectedRows.push(row);
+      });
+    return {
+      selectedRows,
+      scannedRows,
+      skippedDurablyProtected,
+      skippedDynamicallyProtected,
+      selectedBytes: selectedRows.reduce(
+        (sum, row) => sum + (row.cacheBytes ?? 0),
+        0,
+      ),
+    };
+  }, emptySelection());
+}
+
+function emptySelection(): PruneSelectionSummary {
   return {
-    selectedRows,
-    scannedRows,
-    skippedDurablyProtected,
-    skippedDynamicallyProtected,
-    selectedBytes: selectedRows.reduce(
-      (sum, row) => sum + (row.cacheBytes ?? 0),
-      0,
-    ),
+    selectedRows: [],
+    scannedRows: 0,
+    skippedDurablyProtected: 0,
+    skippedDynamicallyProtected: 0,
+    selectedBytes: 0,
   };
 }
