@@ -7,8 +7,11 @@ import { pressureState, shouldStopCompaction } from './cache-budget-decision';
 import { writeCacheBudgetMetadata } from './cache-budget-metadata';
 import { cacheBudgetSnapshot } from './cache-budget-snapshot';
 import { deleteCacheLedgerResources } from './compaction-delete';
-import { protectedEventIds } from './compaction-protection';
-import { lowestScorePruneSelection } from './compaction-select';
+import { protectionSnapshot } from './compaction-protection';
+import {
+  emptyPruneSelection,
+  lowestScorePruneSelection,
+} from './compaction-select';
 import {
   defaultCacheMaxBytes,
   quotaPruneBatchSize,
@@ -89,10 +92,11 @@ export async function enforceCacheBudget(
       deriveSiteStorageBudget(budgetBytes, quota),
     )
   ) {
-    const protectedIds = await protectedEventIds();
+    const protection = await protectionSnapshot();
+    if (!protection.complete) break;
     const selection = await lowestScorePruneSelection(
       quotaPruneBatchSize,
-      protectedIds,
+      protection.ids,
     );
     skippedDurablyProtected += selection.skippedDurablyProtected;
     skippedDynamicallyProtected += selection.skippedDynamicallyProtected;
@@ -120,22 +124,24 @@ export async function enforceCacheBudget(
       (await readStorageQuota()) ?? adjustedQuota(quota, deleted.prunedBytes);
     snapshot = await cacheBudgetSnapshot(budgetBytes, quota);
   }
-  const finalSelection = await lowestScorePruneSelection(
-    1,
-    await protectedEventIds(),
-  );
-  const finalState = pressureState({
-    budget: deriveSiteStorageBudget(budgetBytes, quota),
-    prunableCacheBytes: snapshot.prunableCacheBytes,
-    eligibleRows: finalSelection.selectedRows.length,
-    protectedRows:
-      finalSelection.skippedDurablyProtected +
-      finalSelection.skippedDynamicallyProtected,
-    unknownOrOverheadBytes: snapshot.unknownOrOverheadBytes,
-    inventoryStatus: snapshot.inventoryStatus,
-    prunedResources,
-    storageApiAvailable: snapshot.storageApiAvailable,
-  });
+  const finalProtection = await protectionSnapshot();
+  const finalSelection = finalProtection.complete
+    ? await lowestScorePruneSelection(1, finalProtection.ids)
+    : emptyPruneSelection();
+  const finalState = finalProtection.complete
+    ? pressureState({
+        budget: deriveSiteStorageBudget(budgetBytes, quota),
+        prunableCacheBytes: snapshot.prunableCacheBytes,
+        eligibleRows: finalSelection.selectedRows.length,
+        protectedRows:
+          finalSelection.skippedDurablyProtected +
+          finalSelection.skippedDynamicallyProtected,
+        unknownOrOverheadBytes: snapshot.unknownOrOverheadBytes,
+        inventoryStatus: snapshot.inventoryStatus,
+        prunedResources,
+        storageApiAvailable: snapshot.storageApiAvailable,
+      })
+    : 'inventory-incomplete';
   const done = cacheBudgetResult({
     reason: finalReason(reason, finalState),
     budgetBytes: snapshot.siteBudgetBytes,

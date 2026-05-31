@@ -86,10 +86,10 @@ export async function lowestScorePruneSelection(
         0,
       ),
     };
-  }, emptySelection());
+  }, emptyPruneSelection());
 }
 
-function emptySelection(): PruneSelectionSummary {
+export function emptyPruneSelection(): PruneSelectionSummary {
   return {
     selectedRows: [],
     scannedRows: 0,
