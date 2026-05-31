@@ -11,6 +11,9 @@ import type { FeedCoverage } from './types';
 const memoryCoverage = createBoundedMap<string, FeedCoverage>({
   maxSize: 500,
 });
+const durableCoverageKeys = createBoundedMap<string, number>({
+  maxSize: 1000,
+});
 const durableRefreshMs = 10_000;
 
 export async function saveFeedCoverage(
@@ -29,6 +32,8 @@ export async function saveFeedCoverageRows(
     shouldPersistCoverage(memoryCoverage.get(row.id), row),
   );
   for (const row of rows) memoryCoverage.set(row.id, row);
+  for (const row of durableRows)
+    durableCoverageKeys.set(durableCoverageKey(row), row.updatedAt);
   if (rows.length === 0) return [];
   await putFeedCoverageRowsWithLedger(durableRows);
   return rows;
@@ -62,11 +67,13 @@ export async function deleteFeedCoverageForFeeds(
   if (keys.size === 0) return;
   for (const [id, value] of memoryCoverage.entries())
     if (keys.has(value.feedKey)) memoryCoverage.delete(id);
+  durableCoverageKeys.clear();
   await deleteFeedCoverageRowsForFeeds([...keys]);
 }
 
 export async function deleteAllFeedCoverageAfterEventCompaction(): Promise<void> {
   memoryCoverage.clear();
+  durableCoverageKeys.clear();
   await deleteAllFeedCoverageRowsWithLedger();
 }
 
@@ -86,6 +93,7 @@ export async function compactFeedCoverage(
 
 export function clearFeedCoverageForTests(): void {
   memoryCoverage.clear();
+  durableCoverageKeys.clear();
 }
 
 export function feedCoverageMemorySizeForTests(): number {
@@ -107,9 +115,24 @@ function shouldPersistCoverage(
   existing: FeedCoverage | undefined,
   next: FeedCoverage,
 ): boolean {
+  if (existing && !sameCoverageProof(existing, next)) return true;
+  const lastPersistedAt = durableCoverageKeys.get(durableCoverageKey(next));
+  if (lastPersistedAt && next.updatedAt - lastPersistedAt < durableRefreshMs)
+    return false;
   if (!existing) return true;
   if (next.updatedAt - existing.updatedAt >= durableRefreshMs) return true;
-  return !sameCoverageProof(existing, next);
+  return false;
+}
+
+function durableCoverageKey(row: FeedCoverage): string {
+  return [
+    row.feedKey,
+    row.groupKey,
+    row.relayUrl,
+    row.filterKey,
+    row.status,
+    row.direction ?? '',
+  ].join('|');
 }
 
 function sameCoverageProof(left: FeedCoverage, right: FeedCoverage): boolean {
