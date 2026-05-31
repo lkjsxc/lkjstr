@@ -122,7 +122,9 @@ async function exerciseSurface(page: Page, name: string): Promise<void> {
     await page.waitForTimeout(300);
   }
   if (name === 'Stats')
-    await page.getByRole('button', { name: 'Refresh', exact: true }).click();
+    await page
+      .getByRole('button', { name: 'Refresh storage inventory' })
+      .click();
 }
 
 async function closeTab(page: Page, name: string): Promise<void> {

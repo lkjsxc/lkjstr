@@ -98,7 +98,7 @@ test('workspace churn keeps owned heap and counters bounded', async ({
   await selectStartupTab(page, 'Home');
   await page.waitForTimeout(400);
   await openNewTabOption(page, 'Stats', 1);
-  await page.getByRole('button', { name: 'Refresh', exact: true }).click();
+  await page.getByRole('button', { name: 'Refresh storage inventory' }).click();
   await expect(
     page.getByRole('heading', { name: 'Runtime counters' }),
   ).toBeVisible({
@@ -136,7 +136,9 @@ async function exerciseSurface(page: Page, name: string): Promise<void> {
     await page.waitForTimeout(300);
   }
   if (name === 'Stats')
-    await page.getByRole('button', { name: 'Refresh', exact: true }).click();
+    await page
+      .getByRole('button', { name: 'Refresh storage inventory' })
+      .click();
 }
 
 async function closeTab(page: Page, name: string): Promise<void> {
