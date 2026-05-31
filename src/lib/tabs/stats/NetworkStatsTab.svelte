@@ -23,7 +23,7 @@
   import { relaySubscriptionRows } from './subscription-rows';
 
   let snapshots = $state<RelaySnapshot[]>([]);
-  let memory = $state<RuntimeMemorySnapshot | null>(null);
+  let memory = $state<RuntimeMemorySnapshot>(runtimeMemorySnapshot());
   let summaries = $state<RelayDiagnosticSummary[]>([]);
   let jobHealth = $state<JobHealthSummary | null>(null);
   let cache = $state<CacheMetadata | null>(null);
@@ -37,12 +37,12 @@
 
   async function refresh(): Promise<void> {
     snapshots = currentRelaySnapshots();
+    memory = runtimeMemorySnapshot();
     [summaries, jobHealth, cache] = await Promise.all([
       safeRead(() => listRelayDiagnosticSummaries(), summaries),
       safeRead(() => loadJobHealthSummary(), jobHealth),
       safeRead(() => cacheStatus(), cache),
     ]);
-    memory = runtimeMemorySnapshot();
   }
 
   async function safeRead<T>(read: () => Promise<T>, fallback: T): Promise<T> {
