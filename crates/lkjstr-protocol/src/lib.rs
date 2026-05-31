@@ -19,6 +19,9 @@ mod nip19_encode;
 mod nip19_tlv;
 pub mod nip30;
 pub mod nip36;
+pub mod nip57;
+pub mod nip96;
+pub mod nip98;
 pub mod reactions;
 pub mod relay_url;
 pub mod tags;
@@ -70,6 +73,15 @@ pub use nip30::{
     valid_custom_emoji_url, valid_incoming_custom_emoji_shortcode,
 };
 pub use nip36::{content_warning_reason, content_warning_tag, has_content_warning};
+pub use nip57::{
+    ZapReceiptGroup, ZapTarget, group_zap_receipts, split_zap_amounts, zap_receipt_amount_msats,
+    zap_target_event_id, zap_targets,
+};
+pub use nip96::{
+    Nip96Server, Nip96UploadResult, nip96_discovery_url, parse_nip96_server_value,
+    parse_nip96_upload_result_value, valid_https_url,
+};
+pub use nip98::{HttpAuthInput, http_auth_event, nostr_authorization_header};
 pub use reactions::{
     ParsedReaction, ReactionKind, custom_emoji_reaction, custom_emoji_reaction_content,
     custom_emoji_reaction_shortcode, parse_reaction, reaction_content, reaction_target_event_id,

@@ -23,9 +23,9 @@ This subtree defines the Rust/WASM client target.
   in [../README.md](../README.md), plus Rust workspace checks and Rust protocol
   byte, event, event-ID, filter, relay-message, signing, verification, NIP-19,
   relay URL, NIP-30 custom emoji, NIP-36 content-warning, tag indexing,
-  reaction parsing, action tag builder, and content-derived tag behavior.
-  `lkjstr-web` exposes the implemented protocol bridge through browser-tested
-  WASM exports.
+  reaction parsing, action tag builder, content-derived tag, NIP-57 zap,
+  NIP-96 upload metadata, and NIP-98 HTTP auth behavior. `lkjstr-web` exposes
+  the implemented protocol bridge through browser-tested WASM exports.
   `lkjstr-domain` owns pure account records, local secret row shape, local
   signing helpers, and npub mining prefix rules.
 - Design-only target: remaining Rust relay, storage, app, UI, and non-protocol
