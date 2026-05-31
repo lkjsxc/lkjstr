@@ -37,6 +37,21 @@ async fn rust_shell_reads_workspace_startup_from_indexed_db() -> Result<(), JsVa
 }
 
 #[wasm_bindgen_test(async)]
+async fn rust_shell_persists_workspace_actions_to_indexed_db() -> Result<(), JsValue> {
+    reset_shells()?;
+    let db_name = test_db_name("workspace-write-through");
+    mount_rust_workspace_shell_from_db(db_name.clone());
+    wait_for_shell().await?;
+    click("[data-testid='welcome-open-network-stats']")?;
+    wait_for_saved_tab(&db_name, "Stats").await?;
+    reset_shells()?;
+    mount_rust_workspace_shell_from_db(db_name);
+    wait_for_shell().await?;
+    assert!(document_text()?.contains("The Rust Stats body is not converted yet."));
+    Ok(())
+}
+
+#[wasm_bindgen_test(async)]
 async fn indexed_db_settings_store_round_trips_and_deletes() -> Result<(), JsValue> {
     let db_name = test_db_name("settings-round-trip");
     let row = setting("cache.maxBytes", "cache", json!(8192));
@@ -58,6 +73,26 @@ async fn indexed_db_settings_store_round_trips_and_deletes() -> Result<(), JsVal
     }
 }
 
+async fn wait_for_saved_tab(db_name: &str, title: &str) -> Result<(), JsValue> {
+    for _ in 0..50 {
+        next_task().await?;
+        if workspace_has_tab(db_name, title).await? {
+            return Ok(());
+        }
+    }
+    Err(js_error("timed out waiting for saved workspace tab"))
+}
+
+async fn workspace_has_tab(db_name: &str, title: &str) -> Result<bool, JsValue> {
+    match indexed_db::workspace_store::workspace_get(db_name, "main").await {
+        StorageOutcome::Ok(Some(workspace)) => {
+            Ok(workspace.tabs.values().any(|tab| tab.title == title))
+        }
+        StorageOutcome::Ok(None) => Ok(false),
+        outcome => Err(outcome_error("workspace poll failed", outcome.problem())),
+    }
+}
+
 fn stored_workspace(title: &str) -> WorkspaceRecord {
     let mut workspace = bootstrap_workspace();
     if let Some(tab) = workspace.tabs.get_mut("bootstrap-welcome-tab") {
@@ -73,6 +108,17 @@ fn setting(key: &str, namespace: &str, value: serde_json::Value) -> SettingOverr
         value,
         updated_at: 11,
     }
+}
+
+fn click(selector: &str) -> Result<(), JsValue> {
+    let element = document()?
+        .query_selector(selector)?
+        .ok_or_else(|| js_error(&format!("missing clickable element: {selector}")))?;
+    let button = element
+        .dyn_into::<web_sys::HtmlElement>()
+        .map_err(|_| js_error("click target is not an html element"))?;
+    button.click();
+    Ok(())
 }
 
 fn assert_ok(outcome: StorageOutcome<()>) -> Result<(), JsValue> {

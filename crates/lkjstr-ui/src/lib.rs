@@ -4,6 +4,7 @@ mod app;
 mod workspace;
 
 pub use app::{App, AppWithStartup, default_startup_input};
+pub use workspace::WorkspacePersistence;
 
 #[cfg(target_arch = "wasm32")]
 pub fn mount_app() {
@@ -14,6 +15,18 @@ pub fn mount_app() {
 pub fn mount_app_with_startup(startup: lkjstr_app::StartupInput) {
     leptos::mount::mount_to_body(move || {
         leptos::view! { <AppWithStartup startup=startup.clone() /> }
+    });
+}
+
+#[cfg(target_arch = "wasm32")]
+pub fn mount_app_with_persistence(
+    startup: lkjstr_app::StartupInput,
+    persistence: WorkspacePersistence,
+) {
+    leptos::mount::mount_to_body(move || {
+        leptos::view! {
+            <AppWithStartup startup=startup.clone() persistence=persistence.clone() />
+        }
     });
 }
 

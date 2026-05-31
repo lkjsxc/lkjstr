@@ -23,15 +23,18 @@ The first Rust UI must implement real startup behavior:
   preserving its tab id.
 - Welcome action links open real workspace tabs in the same pane without
   starting relay work by themselves.
+- Workspace reducer changes persist through a host-owned callback when the
+  browser IndexedDB workspace adapter is available.
 
 Implemented now: the Leptos shell mounts from `lkjstr-web`, renders the Rust
 bootstrap workspace, pane chrome, tab strips, Welcome/New Tab bodies, and New
 Tab catalog, routes tab focus plus New Tab opening through Rust reducers,
 opens Welcome action tabs, and converts New Tab choices while preserving the
-chooser tab id.
+chooser tab id. Startup reads a stored Rust workspace row from IndexedDB, and
+workspace tab actions write the updated workspace through the same Rust adapter.
 
-Not implemented yet: durable browser storage loading, feed surfaces, tool
-surfaces, relay-backed content, and full responsive/a11y QA.
+Not implemented yet: feed surfaces, tool surfaces, relay-backed content, and
+full responsive/a11y QA.
 
 ## Component Split
 

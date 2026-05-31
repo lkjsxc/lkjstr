@@ -3,13 +3,25 @@ use lkjstr_domain::TabKind;
 
 use crate::app::RuntimeSignal;
 use crate::workspace::pane::PaneView;
+use crate::workspace::persistence::WorkspacePersistence;
 use crate::workspace::state::{self, TabSequence};
 
 #[component]
-pub fn WorkspaceShell(runtime: RuntimeSignal) -> impl IntoView {
+pub fn WorkspaceShell(
+    runtime: RuntimeSignal,
+    persistence: Option<WorkspacePersistence>,
+) -> impl IntoView {
     let sequence: TabSequence = RwSignal::new(0_u64);
+    let persistence_for_open = persistence.clone();
     let open_new_tab = move |_| {
-        state::open_kind(runtime, sequence, None, TabKind::NewTab, 1);
+        state::open_kind(
+            runtime,
+            sequence,
+            None,
+            TabKind::NewTab,
+            persistence_for_open.clone(),
+            1,
+        );
     };
 
     view! {
@@ -20,7 +32,14 @@ pub fn WorkspaceShell(runtime: RuntimeSignal) -> impl IntoView {
             </header>
             <section class="lkjstr-pane-grid">
                 {move || state::pane_ids(runtime).into_iter().map(|pane| {
-                    view! { <PaneView runtime=runtime sequence=sequence pane=pane /> }
+                    view! {
+                        <PaneView
+                            runtime=runtime
+                            sequence=sequence
+                            pane=pane
+                            persistence=persistence.clone()
+                        />
+                    }
                 }).collect_view()}
             </section>
         </main>

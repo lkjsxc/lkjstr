@@ -2,6 +2,7 @@ use leptos::prelude::*;
 use lkjstr_domain::new_tab_options_for_account;
 
 use crate::app::RuntimeSignal;
+use crate::workspace::persistence::WorkspacePersistence;
 use crate::workspace::state::{self, TabSequence};
 
 #[component]
@@ -10,6 +11,7 @@ pub fn NewTabMenu(
     sequence: TabSequence,
     pane_id: String,
     tab_id: Option<String>,
+    persistence: Option<WorkspacePersistence>,
 ) -> impl IntoView {
     let options = new_tab_options_for_account(None);
     view! {
@@ -22,6 +24,7 @@ pub fn NewTabMenu(
                 let option_for_click = option.clone();
                 let pane_for_click = pane_id.clone();
                 let tab_for_click = tab_id.clone();
+                let persistence_for_click = persistence.clone();
                 let open = move |_| {
                     if let Some(current_tab_id) = tab_for_click.clone() {
                         state::convert_option(
@@ -29,6 +32,7 @@ pub fn NewTabMenu(
                             pane_for_click.clone(),
                             current_tab_id,
                             option_for_click.clone(),
+                            persistence_for_click.clone(),
                             1,
                         );
                     } else {
@@ -37,6 +41,7 @@ pub fn NewTabMenu(
                             sequence,
                             Some(pane_for_click.clone()),
                             option_for_click.clone(),
+                            persistence_for_click.clone(),
                             1,
                         );
                     }

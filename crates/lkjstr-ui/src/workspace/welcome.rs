@@ -2,6 +2,7 @@ use leptos::prelude::*;
 use lkjstr_domain::TabKind;
 
 use crate::app::RuntimeSignal;
+use crate::workspace::persistence::WorkspacePersistence;
 use crate::workspace::state::{self, TabSequence};
 
 const ACTIONS: &[(TabKind, &str, &str)] = &[
@@ -38,7 +39,12 @@ const ACTIONS: &[(TabKind, &str, &str)] = &[
 ];
 
 #[component]
-pub fn WelcomeTab(runtime: RuntimeSignal, sequence: TabSequence, pane_id: String) -> impl IntoView {
+pub fn WelcomeTab(
+    runtime: RuntimeSignal,
+    sequence: TabSequence,
+    pane_id: String,
+    persistence: Option<WorkspacePersistence>,
+) -> impl IntoView {
     view! {
         <div class="lkjstr-welcome">
             <section>
@@ -55,12 +61,14 @@ pub fn WelcomeTab(runtime: RuntimeSignal, sequence: TabSequence, pane_id: String
                         let key = state::tab_kind_key(action_kind);
                         let test_id = format!("welcome-open-{key}");
                         let pane_for_click = pane_id.clone();
+                        let persistence_for_click = persistence.clone();
                         let open = move |_| {
                             state::open_kind(
                                 runtime,
                                 sequence,
                                 Some(pane_for_click.clone()),
                                 action_kind,
+                                persistence_for_click.clone(),
                                 1,
                             );
                         };

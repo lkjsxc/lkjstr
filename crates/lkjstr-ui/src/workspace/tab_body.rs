@@ -3,6 +3,7 @@ use lkjstr_domain::{TabKind, WorkspaceTab};
 
 use crate::app::RuntimeSignal;
 use crate::workspace::menu::NewTabMenu;
+use crate::workspace::persistence::WorkspacePersistence;
 use crate::workspace::state::TabSequence;
 use crate::workspace::welcome::WelcomeTab;
 
@@ -12,6 +13,7 @@ pub fn TabBody(
     sequence: TabSequence,
     pane_id: String,
     tab: WorkspaceTab,
+    persistence: Option<WorkspacePersistence>,
 ) -> impl IntoView {
     let kind = tab.kind;
     let tab_id = tab.id;
@@ -19,7 +21,7 @@ pub fn TabBody(
     view! {
         <div class="lkjstr-tab-body" data-tab-kind=tab_kind_attr(kind)>
             <h1>{title}</h1>
-            {tab_content(runtime, sequence, pane_id, tab_id, kind)}
+            {tab_content(runtime, sequence, pane_id, tab_id, kind, persistence)}
         </div>
     }
 }
@@ -30,10 +32,16 @@ fn tab_content(
     pane_id: String,
     tab_id: String,
     kind: TabKind,
+    persistence: Option<WorkspacePersistence>,
 ) -> impl IntoView {
     match kind {
         TabKind::Welcome => view! {
-            <WelcomeTab runtime=runtime sequence=sequence pane_id=pane_id />
+            <WelcomeTab
+                runtime=runtime
+                sequence=sequence
+                pane_id=pane_id
+                persistence=persistence
+            />
         }
         .into_any(),
         TabKind::NewTab => view! {
@@ -42,6 +50,7 @@ fn tab_content(
                 sequence=sequence
                 pane_id=pane_id
                 tab_id=Some(tab_id)
+                persistence=persistence
             />
         }
         .into_any(),

@@ -5,6 +5,7 @@ use lkjstr_app::{
 use lkjstr_domain::{NewTabIds, NewTabOption, PaneNode, TabKind, WorkspaceTab};
 
 use crate::app::RuntimeSignal;
+use crate::workspace::WorkspacePersistence;
 
 pub type TabSequence = RwSignal<u64>;
 
@@ -13,12 +14,14 @@ pub fn open_kind(
     sequence: TabSequence,
     pane_id: Option<String>,
     kind: TabKind,
+    persistence: Option<WorkspacePersistence>,
     now: u64,
 ) {
     let ids = next_ids(sequence, kind);
     runtime.update(|state| {
         *state = open_runtime_tab(state.clone(), pane_id.as_deref(), kind, ids, now);
     });
+    persist(runtime, persistence);
 }
 
 pub fn open_option(
@@ -26,6 +29,7 @@ pub fn open_option(
     sequence: TabSequence,
     pane_id: Option<String>,
     option: NewTabOption,
+    persistence: Option<WorkspacePersistence>,
     now: u64,
 ) {
     let ids = next_ids(sequence, option.kind);
@@ -39,6 +43,7 @@ pub fn open_option(
             now,
         );
     });
+    persist(runtime, persistence);
 }
 
 pub fn convert_option(
@@ -46,6 +51,7 @@ pub fn convert_option(
     pane_id: String,
     tab_id: String,
     option: NewTabOption,
+    persistence: Option<WorkspacePersistence>,
     now: u64,
 ) {
     runtime.update(|state| {
@@ -58,12 +64,20 @@ pub fn convert_option(
             now,
         );
     });
+    persist(runtime, persistence);
 }
 
-pub fn focus(runtime: RuntimeSignal, pane_id: String, tab_id: String, now: u64) {
+pub fn focus(
+    runtime: RuntimeSignal,
+    pane_id: String,
+    tab_id: String,
+    persistence: Option<WorkspacePersistence>,
+    now: u64,
+) {
     runtime.update(|state| {
         *state = focus_runtime_tab(state.clone(), &pane_id, &tab_id, now);
     });
+    persist(runtime, persistence);
 }
 
 pub fn pane_ids(runtime: RuntimeSignal) -> Vec<PaneNode> {
@@ -148,5 +162,11 @@ fn next_ids(sequence: TabSequence, kind: TabKind) -> NewTabIds {
     sequence.set(index);
     NewTabIds {
         tab_id: format!("rust-{}-{index}", tab_kind_key(kind)),
+    }
+}
+
+fn persist(runtime: RuntimeSignal, persistence: Option<WorkspacePersistence>) {
+    if let Some(persistence) = persistence {
+        persistence.save(runtime.get_untracked().workspace);
     }
 }
