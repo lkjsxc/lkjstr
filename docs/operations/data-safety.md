@@ -40,6 +40,9 @@ The app must support:
 - reporting protected-only, unknown-only, inventory-incomplete, unsupported, or
   quota-unavailable pressure instead of treating unexplained browser usage as
   successful recovery.
+- keeping Stats cache recovery actions usable when IndexedDB is blocked,
+  corrupt, or missing an expected object store; failed reads fall back to
+  already known safe values rather than surfacing uncaught storage exceptions.
 - deleting an account without deleting public cached events.
 - exporting workspace and relay configuration.
 - importing configuration into an empty profile.

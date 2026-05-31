@@ -38,6 +38,10 @@ Stats shows current-session relay counters and persisted operational summaries.
   result, pruned resources, pruned bytes, and pressure state.
 - Manual cache actions are `Refresh storage inventory`, `Compact now`, and
   `Repair cache ledger`. They use real storage paths and are never placeholders.
+  If a browser profile has blocked, unavailable, or schema-incomplete storage,
+  the actions must report through the normal cache status path and keep the tab
+  usable. `Compact now` may fall back to the currently displayed site target
+  when the settings store cannot be read.
 - Runtime memory shows compact app-owned counters: app log count, relay
   suppression count, in-flight reads, fallback repository counts, reference
   cache size, profile cache size, token cache size, relay snapshot totals,
