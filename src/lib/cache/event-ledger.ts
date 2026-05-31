@@ -1,7 +1,5 @@
 import type { NostrEvent } from '../protocol';
 import type { EventTagRow } from '../events/types';
-import { browserDb } from '../storage/browser-db';
-import { indexedDbAvailable } from '../storage/safe-storage';
 import { cacheLedgerId } from './cache-ledger-id';
 import type { CacheLedgerRecord } from './cache-ledger-record';
 
@@ -78,39 +76,4 @@ export function eventLedgerRecord(
     cacheBytes,
     updatedAt,
   };
-}
-
-export async function upsertEventLedger(
-  event: NostrEvent,
-  tags: readonly EventTagRow[] = [],
-  forceProtected = false,
-  cacheBytes = 0,
-  updatedAt = Date.now(),
-): Promise<void> {
-  if (!indexedDbAvailable()) return;
-  await browserDb().cacheLedger.put(
-    eventLedgerRecord(event, tags, forceProtected, cacheBytes, updatedAt),
-  );
-  await bumpEventTargets(event);
-}
-
-async function bumpEventLedger(eventId: string, delta: number): Promise<void> {
-  if (!indexedDbAvailable()) return;
-  const existing = await browserDb().cacheLedger.get(
-    cacheLedgerId('event', eventId),
-  );
-  if (!existing || existing.protected) return;
-  await browserDb().cacheLedger.put({
-    ...existing,
-    score: existing.score + delta,
-    updatedAt: Date.now(),
-  });
-}
-
-async function bumpEventTargets(event: NostrEvent): Promise<void> {
-  await Promise.all(
-    [...eventTargetBumps(event)].map(([eventId, delta]) =>
-      bumpEventLedger(eventId, delta),
-    ),
-  );
 }

@@ -1,9 +1,13 @@
-import { browserDb } from '../storage/browser-db';
 import {
-  bestEffortStorageWrite,
   boundedStorageRead,
   indexedDbAvailable,
 } from '../storage/safe-storage';
+import {
+  putFeedCursorWithLedger,
+  putStoredEventWithLedger,
+  readStoredEventRow,
+  readStoredEventRows,
+} from '../storage/repositories/events-store';
 import { compareEventsDesc, matchesFilter, type NostrEvent } from '../protocol';
 import { cursorPoint } from './feed-window';
 import { indexedLatestByAuthorKind, indexedPage } from './repository-indexed';
@@ -19,14 +23,12 @@ import {
   putMemory,
 } from './repository-memory';
 import { receipt, tagRows } from './repository-shared';
-import { writeStoredEvent } from './repository-write';
 import { notifyActionCacheChanged } from './action-cache-signal';
 import { normalizeStoredEvent } from './normalize';
 import { storeRelayListSuggestionsFromEvent } from '../relays/relay-list-suggestions';
 import { storeRoutesFromEvent } from '../relays/relay-route-events';
 import { countRuntime } from '../app/runtime-counters';
 import { scheduleCacheCompactionAfterWrite } from '../cache/compaction-scheduler';
-import { feedCursorLedgerRecord } from './feed-cache-ledger';
 import type {
   FeedCursor,
   FeedEvent,
@@ -58,7 +60,7 @@ export async function upsertEvent(
     await storeRoutesFromEvent(event, relays);
     return stored;
   }
-  await writeStoredEvent({ event, stored, receipts, tags, receivedAt });
+  await putStoredEventWithLedger({ event, stored, receipts, tags, receivedAt });
   await storeRelayListSuggestionsFromEvent(event);
   await storeRoutesFromEvent(event, relays);
   notifyActionCacheChanged(event);
@@ -79,10 +81,7 @@ export async function queryFeed(query: FeedQuery): Promise<FeedPage> {
 }
 
 export async function lookupEvent(id: string): Promise<FeedEvent | undefined> {
-  const event = await boundedStorageRead(
-    () => browserDb().events.get(id),
-    memoryEvent(id),
-  );
+  const event = await readStoredEventRow(id, memoryEvent(id));
   return event ? toFeedEvent(event) : undefined;
 }
 
@@ -90,10 +89,7 @@ export async function lookupEvents(
   ids: readonly string[],
 ): Promise<FeedEvent[]> {
   const unique = [...new Set(ids)];
-  const events = await boundedStorageRead(
-    () => browserDb().events.bulkGet(unique),
-    memoryEventsByIds(unique),
-  );
+  const events = await readStoredEventRows(unique, memoryEventsByIds(unique));
   return events
     .filter((event): event is StoredEvent => Boolean(event))
     .map((event) => toFeedEvent(event));
@@ -141,10 +137,7 @@ export function feedKey(query: FeedQuery): string {
 }
 
 async function existingEvent(id: string): Promise<StoredEvent | undefined> {
-  const event = await boundedStorageRead(
-    () => browserDb().events.get(id),
-    memoryEvent(id),
-  );
+  const event = await readStoredEventRow(id, memoryEvent(id));
   return event ? normalizeStoredEvent(event) : undefined;
 }
 
@@ -175,17 +168,7 @@ function cursorFor(
 
 async function saveCursor(cursor: FeedCursor): Promise<void> {
   memoryCursors.set(cursor.id, cursor);
-  await bestEffortStorageWrite(() =>
-    browserDb().transaction(
-      'rw',
-      browserDb().feedCursors,
-      browserDb().cacheLedger,
-      async () => {
-        await browserDb().feedCursors.put(cursor);
-        await browserDb().cacheLedger.put(feedCursorLedgerRecord(cursor));
-      },
-    ),
-  );
+  await putFeedCursorWithLedger(cursor);
 }
 
 export function clearEventRepositoryForTests(): void {
