@@ -2,6 +2,7 @@ use leptos::prelude::*;
 use lkjstr_domain::TabKind;
 
 use crate::app::RuntimeSignal;
+use crate::workspace::accounts_provider::AccountsProvider;
 use crate::workspace::pane::PaneView;
 use crate::workspace::persistence::WorkspacePersistence;
 use crate::workspace::settings_provider::SettingsProvider;
@@ -12,6 +13,7 @@ use crate::workspace::stats_provider::StatsProvider;
 pub fn WorkspaceShell(
     runtime: RuntimeSignal,
     persistence: Option<WorkspacePersistence>,
+    accounts_provider: Option<AccountsProvider>,
     stats_provider: Option<StatsProvider>,
     settings_provider: Option<SettingsProvider>,
 ) -> impl IntoView {
@@ -42,6 +44,7 @@ pub fn WorkspaceShell(
                             sequence=sequence
                             pane=pane
                             persistence=persistence.clone()
+                            accounts_provider=accounts_provider.clone()
                             stats_provider=stats_provider.clone()
                             settings_provider=settings_provider.clone()
                         />

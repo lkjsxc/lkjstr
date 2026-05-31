@@ -38,10 +38,14 @@ unavailable until their Rust providers are implemented.
 The Rust Settings body renders the flat schema from Rust, merges real
 IndexedDB setting overrides, and saves raw key-value edits through a host
 provider.
+The Rust Accounts body renders protected account rows, saves read-only and
+local `nsec` imports through Rust IndexedDB repositories, stores local secrets
+separately, and exposes local `nsec` values only after an explicit reveal
+command.
 
 Not implemented yet: feed surfaces, most tool surfaces, relay-backed content,
 Stats relay/job/compaction diagnostics, Settings appearance side effects, and
-full responsive/a11y QA.
+Accounts NIP-07 login, persistent-storage requests, and full responsive/a11y QA.
 
 ## Component Split
 

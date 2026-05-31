@@ -7,9 +7,11 @@ resource map, and typed operation outcomes.
 
 ## Table of Contents
 
+- `accounts.rs`: account row identity and JSON helpers.
 - `data_class.rs`: table data classes and inventory groups.
 - `ledger.rs`: cache ledger resource ownership manifest.
 - `lib.rs`: public storage crate exports.
+- `local_secrets.rs`: local signing secret row helpers.
 - `manifest.rs`: table specs and table lookup helpers.
 - `outcome.rs`: typed storage operation outcomes.
 - `resource.rs`: cache owner and resource kind strings.

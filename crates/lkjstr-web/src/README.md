@@ -7,6 +7,7 @@ Source files expose Rust application behavior to the browser through
 
 ## Table of Contents
 
+- `accounts_host.rs`: browser-backed Accounts command provider.
 - `lib.rs`: public WASM exports.
 - `indexed_db/`: browser IndexedDB host adapter.
 - `protocol_bridge.rs`: protocol bridge operations.

@@ -45,3 +45,12 @@ Accounts represent public identities and signing capability.
   explicitly chooses that action.
 - Mining progress includes attempts, attempts per second, elapsed time, and
   cancel state.
+
+## Rust Conversion Status
+
+- The Rust/WASM shell renders a partial Accounts surface from real IndexedDB
+  `accounts` and `localAccountSecrets` rows.
+- Rust Accounts supports read-only account add, local `nsec` import, generated
+  `nsec` fill, active selection, disconnect, and explicit local secret reveal.
+- Rust Accounts does not yet connect NIP-07 or request persistent browser
+  storage; the TypeScript surface remains the parity source for those flows.

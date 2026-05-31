@@ -3,10 +3,10 @@
 ## Purpose
 
 This file defines the Rust application composition boundary. Status:
-implemented for pure account-domain records, local signing helpers, workspace
-layout reducers, tab movement reducers, workspace startup recovery, and bounded
-tab snapshot staging, and New Tab catalog options; design-only for browser
-service composition.
+implemented for pure account-domain records, local signing helpers, account
+storage command wiring, workspace layout reducers, tab movement reducers,
+workspace startup recovery, bounded tab snapshot staging, and New Tab catalog
+options; design-only for remaining browser service composition.
 
 ## Owner
 
@@ -20,7 +20,8 @@ does not introduce remote account state.
 - Own timeline, profile, thread, notification, search, and tool runtimes.
 - Coordinate Tweet signing, queueing, drafts, and publish jobs.
 - Own account selection and secret repository wiring above the pure
-  `lkjstr-domain` account helpers.
+  `lkjstr-domain` account helpers. The Rust host keeps account rows and local
+  signing secrets in separate protected stores.
 - Route UI commands to protocol, relay, storage, and host services.
 - Expose compact view models and command results to `lkjstr-ui`.
 - Own startup recovery, job recovery, account selection, and settings loading.

@@ -1,6 +1,10 @@
+pub mod account_store;
 mod callbacks;
 pub mod database;
 pub mod inventory_store;
+pub mod local_secret_store;
+mod record_requests;
+mod record_write;
 mod schema;
 mod settings_requests;
 pub mod settings_store;

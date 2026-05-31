@@ -3,10 +3,13 @@
 ## Purpose
 
 Workspace UI modules render the Rust pane shell, tab strip, Welcome document,
-and New Tab chooser.
+New Tab chooser, and converted Rust tool bodies.
 
 ## Table of Contents
 
+- `accounts.rs`: Rust Accounts body.
+- `accounts_provider.rs`: accounts command provider wrapper.
+- `accounts_row.rs`: row rendering for stored account records.
 - `menu.rs`: New Tab menu actions.
 - `mod.rs`: module exports.
 - `pane.rs`: pane chrome and tab rail.

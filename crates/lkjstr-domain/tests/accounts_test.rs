@@ -47,6 +47,17 @@ fn normalizes_account_records() -> Result<(), String> {
 }
 
 #[test]
+fn serializes_account_rows_for_storage_manifest() -> Result<(), String> {
+    let pubkey = "aa".repeat(32);
+    let account = create_account(&pubkey, SignerType::Nip07, 10).ok_or("account")?;
+    let json = serde_json::to_value(&account).map_err(|error| error.to_string())?;
+    assert_eq!(json["signerType"], "nip07");
+    assert_eq!(json["updatedAt"], 10);
+    assert!(json.get("signer_type").is_none());
+    Ok(())
+}
+
+#[test]
 fn creates_local_records_and_signs_events() -> Result<(), String> {
     let secret = parse_secret_key_hex(&"01".repeat(32)).ok_or("secret")?;
     let (account, secret_row) =
@@ -56,6 +67,9 @@ fn creates_local_records_and_signs_events() -> Result<(), String> {
         public_key_from_secret(&secret).map_err(|error| format!("{error:?}"))?
     );
     assert_eq!(secret_row.secret_key, bytes_to_hex(secret.as_bytes()));
+    let json = serde_json::to_value(&secret_row).map_err(|error| error.to_string())?;
+    assert_eq!(json["accountId"], account.id);
+    assert!(json.get("secret_key").is_none());
     assert!(!format!("{secret_row:?}").contains(&secret_row.secret_key));
     let event = sign_local_event(
         &UnsignedNostrEvent {

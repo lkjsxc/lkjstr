@@ -14,6 +14,7 @@ workspace = true
 [dependencies]
 js-sys = "0.3.82"
 lkjstr-app = { path = "../lkjstr-app" }
+lkjstr-domain = { path = "../lkjstr-domain" }
 lkjstr-storage = { path = "../lkjstr-storage" }
 lkjstr-ui = { path = "../lkjstr-ui" }
 lkjstr-protocol = { path = "../lkjstr-protocol" }
@@ -36,10 +37,10 @@ web-sys = { version = "0.3.82", features = [
   "IdbTransaction",
   "IdbTransactionMode",
   "Location",
+  "Storage",
   "Window",
 ] }
 
 [dev-dependencies]
-lkjstr-domain = { path = "../lkjstr-domain" }
 wasm-bindgen-test = "0.3.72"
-web-sys = { version = "0.3.82", features = ["Document", "Element", "EventInit", "HtmlElement", "HtmlInputElement", "NodeList", "Window"] }
+web-sys = { version = "0.3.82", features = ["Document", "Element", "EventInit", "HtmlElement", "HtmlInputElement", "NodeList", "Storage", "Window"] }

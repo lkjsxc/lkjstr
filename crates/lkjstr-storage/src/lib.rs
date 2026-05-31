@@ -1,7 +1,9 @@
 #![doc = "Rust storage contracts for lkjstr."]
 
+pub mod accounts;
 pub mod data_class;
 pub mod ledger;
+pub mod local_secrets;
 pub mod manifest;
 pub mod outcome;
 pub mod resource;
@@ -13,10 +15,14 @@ pub mod tab_state;
 mod table_specs;
 pub mod workspace;
 
+pub use accounts::{AccountRecord, account_record_id, account_record_json_bytes};
 pub use data_class::{StorageDataClass, StorageInventoryGroup};
 pub use ledger::{
     LedgerResourceSpec, direct_ledger_resource_specs, ledger_resource_kinds, ledger_resource_spec,
     ledger_resource_specs,
+};
+pub use local_secrets::{
+    LocalAccountSecretRecord, local_secret_record_json_bytes, local_secret_record_key,
 };
 pub use manifest::{
     StorageTableSpec, is_storage_table_name, storage_manifest_group, storage_table_names,

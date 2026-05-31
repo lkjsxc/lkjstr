@@ -978,6 +978,7 @@ version = "0.0.0"
 dependencies = [
  "js-sys",
  "lkjstr-app",
+ "lkjstr-domain",
  "lkjstr-protocol",
  "lkjstr-storage",
  "lkjstr-ui",
@@ -1003,6 +1004,7 @@ version = "0.0.0"
 dependencies = [
  "lkjstr-protocol",
  "serde",
+ "serde_json",
 ]
 
 [[package]]

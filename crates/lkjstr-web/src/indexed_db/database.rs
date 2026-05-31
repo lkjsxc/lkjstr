@@ -9,6 +9,8 @@ use web_sys::{
 use crate::indexed_db::{callbacks, schema};
 
 pub const DEFAULT_DB_NAME: &str = "lkjstr";
+pub const ACCOUNTS_TABLE: &str = "accounts";
+pub const LOCAL_ACCOUNT_SECRETS_TABLE: &str = "localAccountSecrets";
 pub const SETTINGS_TABLE: &str = "settings";
 pub const WORKSPACES_TABLE: &str = "workspaces";
 

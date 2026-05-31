@@ -2,6 +2,8 @@ use leptos::prelude::*;
 use lkjstr_domain::{TabKind, WorkspaceTab};
 
 use crate::app::RuntimeSignal;
+use crate::workspace::accounts::AccountsTab;
+use crate::workspace::accounts_provider::AccountsProvider;
 use crate::workspace::menu::NewTabMenu;
 use crate::workspace::persistence::WorkspacePersistence;
 use crate::workspace::settings::SettingsTab;
@@ -18,6 +20,7 @@ pub fn TabBody(
     pane_id: String,
     tab: WorkspaceTab,
     persistence: Option<WorkspacePersistence>,
+    accounts_provider: Option<AccountsProvider>,
     stats_provider: Option<StatsProvider>,
     settings_provider: Option<SettingsProvider>,
 ) -> impl IntoView {
@@ -31,6 +34,7 @@ pub fn TabBody(
         tab_id,
         kind,
         persistence,
+        accounts_provider,
         stats_provider,
         settings_provider,
     };
@@ -49,6 +53,7 @@ struct TabContentInput {
     tab_id: String,
     kind: TabKind,
     persistence: Option<WorkspacePersistence>,
+    accounts_provider: Option<AccountsProvider>,
     stats_provider: Option<StatsProvider>,
     settings_provider: Option<SettingsProvider>,
 }
@@ -78,6 +83,10 @@ fn tab_content(input: TabContentInput) -> impl IntoView {
             <StatsTab runtime=input.runtime provider=input.stats_provider />
         }
         .into_any(),
+        TabKind::AccountManager => view! {
+            <AccountsTab provider=input.accounts_provider />
+        }
+        .into_any(),
         TabKind::Settings => view! {
             <SettingsTab provider=input.settings_provider />
         }
@@ -99,7 +108,7 @@ fn pending_message(kind: TabKind) -> &'static str {
         TabKind::Profile => "The Rust Profile body is not converted yet.",
         TabKind::ProfileEdit => "The Rust Profile Edit body is not converted yet.",
         TabKind::UploadSettings => "The Rust Upload Settings body is not converted yet.",
-        TabKind::AccountManager => "The Rust Accounts body is not converted yet.",
+        TabKind::AccountManager => "",
         TabKind::NpubMiner => "The Rust Mine npub body is not converted yet.",
         TabKind::Thread => "The Rust Thread body is not converted yet.",
         TabKind::RelayMonitor => "The Rust lkjstr Log body is not converted yet.",

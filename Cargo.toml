@@ -48,6 +48,7 @@ workspace = true
 [dependencies]
 js-sys = "0.3.82"
 lkjstr-app = { path = "crates/lkjstr-app" }
+lkjstr-domain = { path = "crates/lkjstr-domain" }
 lkjstr-storage = { path = "crates/lkjstr-storage" }
 lkjstr-ui = { path = "crates/lkjstr-ui" }
 lkjstr-protocol = { path = "crates/lkjstr-protocol" }
@@ -70,5 +71,6 @@ web-sys = { version = "0.3.82", features = [
   "IdbTransaction",
   "IdbTransactionMode",
   "Location",
+  "Storage",
   "Window",
 ] }

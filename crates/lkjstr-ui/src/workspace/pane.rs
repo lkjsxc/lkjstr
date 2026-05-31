@@ -2,6 +2,7 @@ use leptos::prelude::*;
 use lkjstr_domain::PaneNode;
 
 use crate::app::RuntimeSignal;
+use crate::workspace::accounts_provider::AccountsProvider;
 use crate::workspace::persistence::WorkspacePersistence;
 use crate::workspace::settings_provider::SettingsProvider;
 use crate::workspace::state::{self, TabSequence};
@@ -14,6 +15,7 @@ pub fn PaneView(
     sequence: TabSequence,
     pane: PaneNode,
     persistence: Option<WorkspacePersistence>,
+    accounts_provider: Option<AccountsProvider>,
     stats_provider: Option<StatsProvider>,
     settings_provider: Option<SettingsProvider>,
 ) -> impl IntoView {
@@ -23,6 +25,7 @@ pub fn PaneView(
     let body_pane_id = pane.id;
     let tabs_persistence = persistence.clone();
     let body_persistence = persistence.clone();
+    let body_accounts_provider = accounts_provider.clone();
     let body_stats_provider = stats_provider.clone();
     let body_settings_provider = settings_provider.clone();
     let title = move || state::active_title(runtime, &pane_id);
@@ -64,6 +67,7 @@ pub fn PaneView(
                 {move || {
                     let pane_id = body_pane_id.clone();
                     let persistence = body_persistence.clone();
+                    let accounts_provider = body_accounts_provider.clone();
                     let stats_provider = body_stats_provider.clone();
                     let settings_provider = body_settings_provider.clone();
                     state::active_tab(runtime, &pane_id).into_iter().map(move |tab| {
@@ -74,6 +78,7 @@ pub fn PaneView(
                                 pane_id=pane_id.clone()
                                 tab=tab
                                 persistence=persistence.clone()
+                                accounts_provider=accounts_provider.clone()
                                 stats_provider=stats_provider.clone()
                                 settings_provider=settings_provider.clone()
                             />

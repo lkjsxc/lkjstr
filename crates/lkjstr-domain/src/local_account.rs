@@ -9,6 +9,7 @@ use lkjstr_protocol::{
 use crate::accounts::{Account, SignerType, create_labeled_account};
 
 #[derive(Clone, Eq, PartialEq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
 pub struct LocalAccountSecret {
     pub account_id: String,
     pub pubkey: String,

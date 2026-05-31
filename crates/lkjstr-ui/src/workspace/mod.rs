@@ -1,5 +1,8 @@
 #![doc = "Workspace shell components."]
 
+mod accounts;
+mod accounts_provider;
+mod accounts_row;
 mod menu;
 mod pane;
 mod persistence;
@@ -13,6 +16,8 @@ mod stats_provider;
 mod tab_body;
 mod welcome;
 
+pub use accounts_provider::{AccountsCommand, AccountsComplete, AccountsProvider, AccountsResult};
+pub use accounts_provider::{AccountsIdCommand, AccountsInputCommand};
 pub use persistence::WorkspacePersistence;
 pub use settings_provider::{SettingsCommand, SettingsComplete, SettingsProvider, SettingsResult};
 pub use settings_provider::{SettingsImportCommand, SettingsKeyCommand, SettingsValueCommand};

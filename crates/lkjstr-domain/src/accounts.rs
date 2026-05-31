@@ -3,6 +3,7 @@ use serde::{Deserialize, Serialize};
 use lkjstr_protocol::{NostrEntity, decode_nip19, encode_npub, is_pubkey};
 
 #[derive(Debug, Clone, Copy, Eq, PartialEq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
 pub enum SignerType {
     Readonly,
     Nip07,
@@ -19,6 +20,7 @@ pub struct AccountCapabilities {
 }
 
 #[derive(Debug, Clone, Eq, PartialEq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
 pub struct Account {
     pub id: String,
     pub pubkey: String,
