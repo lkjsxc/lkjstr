@@ -6,4 +6,6 @@ This directory contains static CSS loaded by the Rust/WASM browser entrypoint.
 
 ## Table of Contents
 
-- `ui.css`: workspace shell, pane, tab strip, and New Tab menu styles.
+- `tabs.css`: tab body, Welcome, and New Tab menu styles.
+- `ui.css`: base browser app styling.
+- `workspace.css`: workspace shell, pane, and tab strip styles.

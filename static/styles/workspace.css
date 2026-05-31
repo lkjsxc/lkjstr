@@ -1,0 +1,94 @@
+.lkjstr-shell {
+  min-height: 100vh;
+  display: grid;
+  grid-template-rows: auto 1fr;
+}
+
+.lkjstr-activity-bar {
+  min-height: 48px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 8px 12px;
+  border-bottom: 1px solid #c9c8c2;
+  background: #111111;
+  color: #f8f7f2;
+}
+
+.lkjstr-activity-bar button {
+  width: 32px;
+  height: 32px;
+  border-radius: 6px;
+}
+
+.lkjstr-pane-grid {
+  min-height: 0;
+  display: grid;
+  grid-template-rows: 1fr 1fr;
+  gap: 8px;
+  padding: 8px;
+}
+
+.lkjstr-pane {
+  min-width: 0;
+  min-height: 0;
+  display: grid;
+  grid-template-rows: auto auto 1fr;
+  border: 1px solid #c9c8c2;
+  background: #ffffff;
+}
+
+.lkjstr-pane-head {
+  min-height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 6px 8px;
+  border-bottom: 1px solid #dddbd2;
+}
+
+.lkjstr-pane-title {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-weight: 700;
+}
+
+.lkjstr-tab-strip {
+  min-width: 0;
+  display: flex;
+  gap: 4px;
+  overflow-x: auto;
+  padding: 6px;
+  border-bottom: 1px solid #dddbd2;
+}
+
+.lkjstr-tab-strip button {
+  flex: 0 0 auto;
+  max-width: 180px;
+  padding: 6px 10px;
+  border-radius: 6px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.lkjstr-tab-strip button.active {
+  border-color: #1d5f8a;
+  background: #e4f2f8;
+}
+
+.lkjstr-pane-body {
+  min-height: 0;
+  overflow: auto;
+}
+
+@media (min-width: 820px) {
+  .lkjstr-pane-grid {
+    grid-template-columns: 1fr 1fr;
+    grid-template-rows: 1fr;
+  }
+}

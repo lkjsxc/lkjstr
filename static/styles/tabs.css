@@ -1,0 +1,47 @@
+.lkjstr-tab-body {
+  max-width: 760px;
+  padding: 20px;
+}
+
+.lkjstr-new-tab-menu,
+.lkjstr-action-list {
+  display: grid;
+  gap: 8px;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+}
+
+.lkjstr-new-tab-menu button,
+.lkjstr-action-list button {
+  min-height: 72px;
+  display: grid;
+  gap: 4px;
+  align-content: center;
+  padding: 10px;
+  border-radius: 6px;
+  text-align: left;
+}
+
+.lkjstr-new-tab-menu span,
+.lkjstr-action-list span {
+  font-weight: 700;
+}
+
+.lkjstr-new-tab-menu small,
+.lkjstr-action-list small {
+  color: #55544f;
+}
+
+.lkjstr-welcome {
+  display: grid;
+  gap: 10px;
+}
+
+.lkjstr-welcome section {
+  max-width: 720px;
+}
+
+.lkjstr-pending-surface {
+  padding: 12px;
+  border: 1px solid #dddbd2;
+  background: #f7f7f3;
+}

@@ -14,7 +14,10 @@ mod tab;
 mod tab_catalog;
 
 pub use bootstrap::{BootstrapIds, bootstrap_workspace};
-pub use commands::{NewTabIds, close_workspace_tab, focus_tab, open_tab, split_focused_pane};
+pub use commands::{
+    NewTabIds, close_workspace_tab, convert_tab, focus_tab, open_configured_tab, open_tab,
+    split_focused_pane,
+};
 pub use group::TabGroup;
 pub use layout::{LayoutNode, NewPaneIds, PaneNode, SplitDirection, SplitNode};
 pub use model::{Workspace, WorkspaceIds, create_workspace};

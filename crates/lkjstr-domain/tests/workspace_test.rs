@@ -1,7 +1,9 @@
+use std::collections::BTreeMap;
+
 use lkjstr_domain::{
     LayoutNode, NewPaneIds, NewTabIds, SplitDirection, TabKind, WorkspaceIds, bootstrap_workspace,
-    close_workspace_tab, create_workspace, ensure_usable_workspace, focus_tab, open_tab,
-    split_focused_pane,
+    close_workspace_tab, convert_tab, create_workspace, ensure_usable_workspace, focus_tab,
+    open_tab, split_focused_pane,
 };
 
 #[test]
@@ -71,6 +73,30 @@ fn opens_focuses_and_splits_tabs() {
     );
     assert_eq!(split.focused_pane_id.as_deref(), Some("split-pane"));
     assert!(matches!(split.layout, Some(LayoutNode::Split(_))));
+}
+
+#[test]
+fn converts_new_tab_choices_without_replacing_the_tab_id() -> Result<(), &'static str> {
+    let workspace = create_workspace(ids("ws"), 10);
+    let converted = convert_tab(
+        workspace,
+        "ws-pane",
+        "ws-tab",
+        TabKind::Profile,
+        BTreeMap::from([("pubkey".to_owned(), "abc".to_owned())]),
+        11,
+    );
+    let tab = converted
+        .tabs
+        .get("ws-tab")
+        .ok_or("missing converted tab")?;
+
+    assert_eq!(converted.focused_tab_id.as_deref(), Some("ws-tab"));
+    assert_eq!(tab.kind, TabKind::Profile);
+    assert_eq!(tab.title, "Profile");
+    assert_eq!(tab.config.get("pubkey").map(String::as_str), Some("abc"));
+    assert_eq!(tab.created_at, 10);
+    Ok(())
 }
 
 #[test]

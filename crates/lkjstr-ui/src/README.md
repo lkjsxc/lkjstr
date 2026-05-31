@@ -8,4 +8,5 @@ UI source files render the Rust workspace shell with Leptos.
 
 - `app.rs`: top-level mounted application.
 - `lib.rs`: public UI exports.
-- `workspace.rs`: workspace panes, tab strip, New Tab menu, and tab bodies.
+- [workspace/](workspace/): workspace panes, tab strip, Welcome, and New Tab
+  modules.

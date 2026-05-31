@@ -1,6 +1,8 @@
+use std::collections::BTreeMap;
+
 use lkjstr_app::{
-    StartupInput, StartupSource, default_recovery_ids, open_runtime_tab, record_tab_snapshot,
-    start_workspace,
+    StartupInput, StartupSource, convert_runtime_tab, default_recovery_ids,
+    open_configured_runtime_tab, open_runtime_tab, record_tab_snapshot, start_workspace,
 };
 use lkjstr_domain::{
     NewTabIds, TabKind, TabSnapshotPayload, ToolTabSnapshot, WorkspaceTab, bootstrap_workspace,
@@ -88,6 +90,48 @@ fn opens_tabs_through_runtime_reducer() {
         state.workspace.tabs.get("search-tab"),
         Some(&WorkspaceTab::new("search-tab", TabKind::Search, 9))
     );
+}
+
+#[test]
+fn opens_and_converts_configured_tabs_through_runtime_reducer() -> Result<(), &'static str> {
+    let state = start_workspace(StartupInput {
+        stored_workspace: None,
+        storage_available: true,
+        recovery_ids: default_recovery_ids("main"),
+        now: 0,
+    })
+    .state;
+    let state = open_configured_runtime_tab(
+        state,
+        Some("bootstrap-welcome-pane"),
+        TabKind::Profile,
+        NewTabIds {
+            tab_id: "profile-tab".to_owned(),
+        },
+        BTreeMap::from([("pubkey".to_owned(), "abc".to_owned())]),
+        9,
+    );
+    let state = convert_runtime_tab(
+        state,
+        "bootstrap-welcome-pane",
+        "profile-tab",
+        TabKind::Tweet,
+        BTreeMap::new(),
+        10,
+    );
+    let tab = state
+        .workspace
+        .tabs
+        .get("profile-tab")
+        .ok_or("missing converted runtime tab")?;
+
+    assert_eq!(tab.kind, TabKind::Tweet);
+    assert!(tab.config.is_empty());
+    assert_eq!(
+        state.workspace.focused_tab_id.as_deref(),
+        Some("profile-tab")
+    );
+    Ok(())
 }
 
 #[test]

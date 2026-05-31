@@ -115,11 +115,11 @@ Read next: [architecture/README.md](architecture/README.md),
   snapshot payload and merge semantics. Rust domain support also owns the New
   Tab catalog labels, groups, descriptions, and active-account profile config.
   Rust app support now composes startup recovery and bounded tab snapshot
-  staging. The Rust Leptos UI now mounts a partial real workspace shell from
-  `lkjstr-web`, renders startup panes and tabs from the Rust reducers, and opens
-  New Tab chooser tabs through the Rust command layer. Browser persistence,
-  feed surfaces, tool surfaces, relay-backed content, and complete UI parity
-  remain in the current TypeScript runtime.
+  staging. The Rust Leptos UI mounts a partial shell from `lkjstr-web`, renders
+  startup panes and tabs from Rust reducers, opens Welcome action tabs, and
+  converts New Tab choices while preserving the chooser tab id. Browser
+  persistence, feeds, tools, relay-backed content, and full UI parity remain in
+  the current TypeScript runtime.
 - Relay ingress uses app-owned byte and structure caps before expensive JSON
   and event parsing.
 - IndexedDB remains durable browser-owned data; memory relief prunes only

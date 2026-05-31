@@ -1,5 +1,7 @@
 #![doc = "Workspace commands."]
 
+use std::collections::BTreeMap;
+
 use crate::workspace::group::TabGroup;
 use crate::workspace::layout::{NewPaneIds, PaneNode, SplitDirection};
 use crate::workspace::model::{Workspace, WorkspaceIds, touch};
@@ -13,10 +15,22 @@ pub struct NewTabIds {
 
 #[must_use]
 pub fn open_tab(
+    workspace: Workspace,
+    pane_id: Option<&str>,
+    kind: TabKind,
+    ids: NewTabIds,
+    now: u64,
+) -> Workspace {
+    open_configured_tab(workspace, pane_id, kind, ids, BTreeMap::new(), now)
+}
+
+#[must_use]
+pub fn open_configured_tab(
     mut workspace: Workspace,
     pane_id: Option<&str>,
     kind: TabKind,
     ids: NewTabIds,
+    config: BTreeMap<String, String>,
     now: u64,
 ) -> Workspace {
     let Some(layout) = &workspace.layout else {
@@ -32,7 +46,7 @@ pub fn open_tab(
     let Some(pane) = layout.find_pane(&target_pane_id) else {
         return workspace;
     };
-    let tab = WorkspaceTab::new(ids.tab_id, kind, now);
+    let tab = WorkspaceTab::new(ids.tab_id, kind, now).with_config(config, now);
     let mut group = workspace
         .tab_groups
         .get(&pane.tab_group_id)
@@ -49,6 +63,41 @@ pub fn open_tab(
     workspace.tab_groups.insert(group.id.clone(), group);
     workspace.focused_pane_id = Some(pane.id.clone());
     workspace.focused_tab_id = Some(tab.id);
+    touch(workspace, now)
+}
+
+#[must_use]
+pub fn convert_tab(
+    mut workspace: Workspace,
+    pane_id: &str,
+    tab_id: &str,
+    kind: TabKind,
+    config: BTreeMap<String, String>,
+    now: u64,
+) -> Workspace {
+    let Some(layout) = &workspace.layout else {
+        return workspace;
+    };
+    let Some(pane) = layout.find_pane(pane_id) else {
+        return workspace;
+    };
+    let Some(group) = workspace.tab_groups.get(&pane.tab_group_id) else {
+        return workspace;
+    };
+    if !group.tab_ids.iter().any(|id| id == tab_id) {
+        return workspace;
+    }
+    let Some(existing) = workspace.tabs.get(tab_id) else {
+        return workspace;
+    };
+    let mut next_tab = WorkspaceTab::new(existing.id.clone(), kind, now).with_config(config, now);
+    next_tab.created_at = existing.created_at;
+    workspace.tabs.insert(tab_id.to_owned(), next_tab);
+    workspace
+        .tab_groups
+        .insert(group.id.clone(), group.activate(tab_id));
+    workspace.focused_pane_id = Some(pane_id.to_owned());
+    workspace.focused_tab_id = Some(tab_id.to_owned());
     touch(workspace, now)
 }
 

@@ -2,7 +2,8 @@
 
 use lkjstr_protocol::{EventTemplate, NostrEvent, finalize_event, parse_secret_key_hex};
 use serde_json::Value;
-use wasm_bindgen::prelude::JsValue;
+use wasm_bindgen::{JsCast, prelude::JsValue};
+use wasm_bindgen_futures::JsFuture;
 use wasm_bindgen_test::{wasm_bindgen_test, wasm_bindgen_test_configure};
 
 use lkjstr_web::{
@@ -61,7 +62,7 @@ fn encodes_and_decodes_nip19_entities() -> Result<(), JsValue> {
 
 #[wasm_bindgen_test]
 fn mounts_rust_workspace_shell() -> Result<(), JsValue> {
-    mount_rust_workspace_shell();
+    reset_and_mount()?;
     let document = document()?;
     let shell = document
         .query_selector("[data-testid='rust-workspace-shell']")?
@@ -69,6 +70,23 @@ fn mounts_rust_workspace_shell() -> Result<(), JsValue> {
     let text = shell.text_content().unwrap_or_default();
     assert!(text.contains("Welcome"));
     assert!(text.contains("Accounts"));
+    Ok(())
+}
+
+#[wasm_bindgen_test(async)]
+async fn welcome_and_new_tab_actions_use_rust_reducers() -> Result<(), JsValue> {
+    reset_and_mount()?;
+    click("[data-testid='welcome-open-tweet']")?;
+    next_tick().await?;
+    assert!(document_text()?.contains("The Rust Tweet body is not converted yet."));
+
+    click(".lkjstr-activity-bar button")?;
+    next_tick().await?;
+    click("[data-testid='new-tab-open-search']")?;
+    next_tick().await?;
+    let text = document_text()?;
+    assert!(text.contains("Search"));
+    assert!(text.contains("The Rust Search body is not converted yet."));
     Ok(())
 }
 
@@ -98,6 +116,38 @@ fn value(value: JsValue) -> Result<Value, JsValue> {
 
 fn js_error(message: &str) -> JsValue {
     JsValue::from_str(message)
+}
+
+fn reset_and_mount() -> Result<(), JsValue> {
+    while let Some(shell) = document()?.query_selector("[data-testid='rust-workspace-shell']")? {
+        shell.remove();
+    }
+    mount_rust_workspace_shell();
+    Ok(())
+}
+
+fn click(selector: &str) -> Result<(), JsValue> {
+    let element = document()?
+        .query_selector(selector)?
+        .ok_or_else(|| js_error(&format!("missing clickable element: {selector}")))?;
+    let button = element
+        .dyn_into::<web_sys::HtmlElement>()
+        .map_err(|_| js_error("click target is not an html element"))?;
+    button.click();
+    Ok(())
+}
+
+fn document_text() -> Result<String, JsValue> {
+    let body = document()?
+        .body()
+        .ok_or_else(|| js_error("missing document body"))?;
+    Ok(body.text_content().unwrap_or_default())
+}
+
+async fn next_tick() -> Result<(), JsValue> {
+    JsFuture::from(js_sys::Promise::resolve(&JsValue::NULL))
+        .await
+        .map(|_| ())
 }
 
 fn document() -> Result<web_sys::Document, JsValue> {

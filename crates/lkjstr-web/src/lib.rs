@@ -8,12 +8,21 @@ use wasm_bindgen::prelude::{JsValue, wasm_bindgen};
 #[cfg(target_arch = "wasm32")]
 #[wasm_bindgen(start)]
 pub fn start() {
-    mount_rust_workspace_shell();
+    if !is_wasm_bindgen_test_runner() {
+        mount_rust_workspace_shell();
+    }
 }
 
 #[cfg(target_arch = "wasm32")]
 pub fn mount_rust_workspace_shell() {
     lkjstr_ui::mount_app();
+}
+
+#[cfg(target_arch = "wasm32")]
+fn is_wasm_bindgen_test_runner() -> bool {
+    web_sys::window()
+        .and_then(|window| window.location().pathname().ok())
+        .is_some_and(|path| path.contains("wasm-bindgen-test"))
 }
 
 #[wasm_bindgen]

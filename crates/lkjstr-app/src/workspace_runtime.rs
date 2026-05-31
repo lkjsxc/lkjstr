@@ -4,11 +4,14 @@ use std::collections::BTreeMap;
 
 use lkjstr_domain::{
     NewTabIds, TabKind, TabSnapshotPayload, Workspace, WorkspaceIds, bootstrap_workspace,
-    close_workspace_tab, ensure_usable_workspace, focus_tab, open_tab,
+    close_workspace_tab, convert_tab, ensure_usable_workspace, focus_tab, open_configured_tab,
+    open_tab,
 };
 use lkjstr_storage::{TabStateRecord, tab_state_id};
 
-pub const DEFAULT_WARM_SNAPSHOT_CAP: usize = 32;
+pub use crate::workspace_defaults::{DEFAULT_WARM_SNAPSHOT_CAP, default_recovery_ids};
+
+use crate::workspace_defaults::empty_workspace;
 
 #[derive(Clone, Debug, Eq, PartialEq)]
 pub enum StartupSource {
@@ -73,6 +76,32 @@ pub fn open_runtime_tab(
 }
 
 #[must_use]
+pub fn open_configured_runtime_tab(
+    mut state: WorkspaceRuntimeState,
+    pane_id: Option<&str>,
+    kind: TabKind,
+    ids: NewTabIds,
+    config: BTreeMap<String, String>,
+    now: u64,
+) -> WorkspaceRuntimeState {
+    state.workspace = open_configured_tab(state.workspace, pane_id, kind, ids, config, now);
+    state
+}
+
+#[must_use]
+pub fn convert_runtime_tab(
+    mut state: WorkspaceRuntimeState,
+    pane_id: &str,
+    tab_id: &str,
+    kind: TabKind,
+    config: BTreeMap<String, String>,
+    now: u64,
+) -> WorkspaceRuntimeState {
+    state.workspace = convert_tab(state.workspace, pane_id, tab_id, kind, config, now);
+    state
+}
+
+#[must_use]
 pub fn focus_runtime_tab(
     mut state: WorkspaceRuntimeState,
     pane_id: &str,
@@ -122,16 +151,6 @@ pub fn record_tab_snapshot(
     mark_warm_tab(state, tab_id)
 }
 
-#[must_use]
-pub fn default_recovery_ids(workspace_id: &str) -> WorkspaceIds {
-    WorkspaceIds {
-        workspace_id: workspace_id.to_owned(),
-        pane_id: "recovered-pane".to_owned(),
-        group_id: "recovered-group".to_owned(),
-        tab_id: "recovered-welcome-tab".to_owned(),
-    }
-}
-
 fn startup_result(workspace: Workspace, source: StartupSource) -> StartupResult {
     StartupResult {
         state: WorkspaceRuntimeState {
@@ -141,22 +160,6 @@ fn startup_result(workspace: Workspace, source: StartupSource) -> StartupResult 
             warm_snapshot_cap: DEFAULT_WARM_SNAPSHOT_CAP,
         },
         source,
-    }
-}
-
-fn empty_workspace() -> Workspace {
-    Workspace {
-        id: "main".to_owned(),
-        name: "Main workspace".to_owned(),
-        layout: None,
-        tab_groups: BTreeMap::new(),
-        tabs: BTreeMap::new(),
-        focused_pane_id: None,
-        focused_tab_id: None,
-        active_account_id: None,
-        sidebar_visible: false,
-        activity_bar_visible: false,
-        updated_at: 0,
     }
 }
 
