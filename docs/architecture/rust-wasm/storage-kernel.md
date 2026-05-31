@@ -2,20 +2,24 @@
 
 ## Purpose
 
-This file defines Rust ownership for durable browser storage. Status:
-design-only.
+This file defines Rust ownership for durable browser storage. Status: partial.
 
 ## Owner
 
-`lkjstr-storage` owns the executable storage manifest, repositories, typed
-outcomes, retention, cache ledger, repair, diagnostics, and table inventory.
-`lkjstr-web` owns the IndexedDB host adapter.
+Implemented now: `lkjstr-storage` owns the executable storage table manifest,
+cache ledger resource map, and typed operation outcomes.
+
+Not implemented yet: repositories, retention dispatchers, ledger repair,
+diagnostics inventory, and the IndexedDB host adapter. `lkjstr-web` will own the
+IndexedDB adapter when that browser effect boundary is ported.
 
 ## Manifest Contract
 
-The Rust manifest must match
+The Rust manifest matches
 [../data/storage/data-classes/table-manifest.md](../data/storage/data-classes/table-manifest.md).
-Repository checks compare executable manifest records with the Markdown table.
+Rust tests prove table names, retention flags, classes, groups, and resource
+links. Repository checks will compare executable records with the Markdown table
+when the xtask manifest-doc comparison is expanded.
 
 Each table declares:
 
@@ -41,11 +45,14 @@ Storage operations return a typed outcome:
 
 UI and Stats paths continue from these states without uncaught runtime errors.
 
+The current Rust outcome type is a pure contract. Browser storage callers still
+use the TypeScript operation result until repositories and adapters are ported.
+
 ## Repository Rule
 
-Feature code calls repositories, not raw IndexedDB stores. Ledger-backed writes
-store resource rows and ledger rows atomically where IndexedDB transaction
-support allows it.
+Feature code will call repositories, not raw IndexedDB stores. Ledger-backed
+writes must store resource rows and ledger rows atomically where IndexedDB
+transaction support allows it.
 
 Protected user data is never removed by cache pressure. Recoverable cache data
 is removed only through cache-ledger dispatchers.

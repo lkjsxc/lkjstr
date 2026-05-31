@@ -30,7 +30,9 @@ references should stay as relative Markdown links.
 | Rust protocol relay list metadata            | [protocol-kernel.md](../architecture/rust-wasm/protocol-kernel.md)       | implemented   | NIP-65 Rust tests             |
 | Rust protocol WASM bridge                   | [host-boundary.md](../architecture/rust-wasm/host-boundary.md)           | implemented   | browser WASM tests            |
 | Rust pure account domain                    | [app-boundary.md](../architecture/rust-wasm/app-boundary.md)             | implemented   | domain account tests          |
-| Rust storage, relay, app, and UI            | [crate-boundaries.md](../architecture/rust-wasm/crate-boundaries.md)     | not implemented | current runtime remains TS    |
+| Rust storage manifest and outcomes          | [storage-kernel.md](../architecture/rust-wasm/storage-kernel.md)         | implemented   | storage crate tests            |
+| Rust storage repositories and IndexedDB      | [storage-kernel.md](../architecture/rust-wasm/storage-kernel.md)         | not implemented | current runtime remains TS    |
+| Rust relay, app, and UI                     | [crate-boundaries.md](../architecture/rust-wasm/crate-boundaries.md)     | not implemented | current runtime remains TS    |
 | Docker Rust/WASM verification               | [verification.md](../architecture/rust-wasm/verification.md)             | design-only   | commands documented target    |
 
 ## Feed Surface

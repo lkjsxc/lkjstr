@@ -2,6 +2,7 @@
 members = [
   "crates/lkjstr-domain",
   "crates/lkjstr-protocol",
+  "crates/lkjstr-storage",
   "crates/lkjstr-web",
   "crates/lkjstr-xtask",
 ]
