@@ -1,5 +1,4 @@
-import { browserDb } from '../../storage/browser-db';
-import { boundedStorageRead } from '../../storage/safe-storage';
+import { readSettingOverrideRow } from '../../storage/repositories/settings-store';
 
 type CacheBudgetSetting = {
   readonly value: unknown;
@@ -8,9 +7,8 @@ type CacheBudgetSetting = {
 export async function cacheActionBudgetBytes(
   fallback?: number,
 ): Promise<number | undefined> {
-  const row = await boundedStorageRead<CacheBudgetSetting | undefined>(
-    () => browserDb().settings.get('cache.maxBytes'),
-    undefined,
-  );
+  const row = (await readSettingOverrideRow(
+    'cache.maxBytes',
+  )) as CacheBudgetSetting | undefined;
   return typeof row?.value === 'number' ? row.value : fallback;
 }

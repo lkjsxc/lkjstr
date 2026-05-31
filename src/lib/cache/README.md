@@ -3,6 +3,8 @@
 ## Purpose
 
 This directory contains cache status, ledger retention, and compaction helpers.
+It is treated as a storage-internal compatibility area while ledger and
+retention modules move under `src/lib/storage/`.
 
 ## Table of Contents
 

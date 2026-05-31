@@ -11,6 +11,12 @@ export async function readSettingOverrideRows(
   return boundedStorageRead(() => browserDb().settings.toArray(), fallback);
 }
 
+export async function readSettingOverrideRow(
+  key: string,
+): Promise<SettingOverride | undefined> {
+  return boundedStorageRead(() => browserDb().settings.get(key), undefined);
+}
+
 export async function putSettingOverrideRow(
   override: SettingOverride,
 ): Promise<void> {
