@@ -5,7 +5,8 @@
 Scope docs define what is included and excluded from the project direction.
 
 The repository has selected a browser-first Nostr workspace product surface,
-SvelteKit runtime, local verification, and Compose development model.
+local verification, and Compose development model. The target implementation
+surface is Rust/WASM where browser APIs allow it.
 
 ## Included Scope
 
@@ -13,6 +14,8 @@ SvelteKit runtime, local verification, and Compose development model.
 - Vision notes.
 - Current-state documentation.
 - Constraints for source, documentation, collaboration, and verification.
+- Rust/WASM architecture contracts for protocol, storage, relay, app, and UI
+  ownership.
 
 ## Excluded Scope
 

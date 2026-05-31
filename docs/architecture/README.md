@@ -11,6 +11,7 @@ state lives, which modules own subscriptions, and how tabs close cleanly.
 - Feed source semantics and invariants: [feeds/README.md](feeds/README.md).
 - Storage, cache, and memory ownership: [data/README.md](data/README.md).
 - Relay clients and orchestration: [network/README.md](network/README.md).
+- Rust/WASM target ownership: [rust-wasm/README.md](rust-wasm/README.md).
 - Tab lifecycle and pane behavior: [workspace/README.md](workspace/README.md).
 
 ## Table of Contents
@@ -23,6 +24,17 @@ state lives, which modules own subscriptions, and how tabs close cleanly.
 - [backend/query-registry.md](backend/query-registry.md): query ownership.
 - [backend/transport-contract.md](backend/transport-contract.md):
   local transport.
+- [rust-wasm/README.md](rust-wasm/README.md): Rust/WASM target ownership.
+- [rust-wasm/app-boundary.md](rust-wasm/app-boundary.md): app composition.
+- [rust-wasm/crate-boundaries.md](rust-wasm/crate-boundaries.md): crate map.
+- [rust-wasm/host-boundary.md](rust-wasm/host-boundary.md): browser API boundary.
+- [rust-wasm/memory-ownership.md](rust-wasm/memory-ownership.md): resource cleanup.
+- [rust-wasm/protocol-kernel.md](rust-wasm/protocol-kernel.md): protocol owner.
+- [rust-wasm/relay-runtime.md](rust-wasm/relay-runtime.md): relay owner.
+- [rust-wasm/source-map.md](rust-wasm/source-map.md): target paths.
+- [rust-wasm/storage-kernel.md](rust-wasm/storage-kernel.md): storage owner.
+- [rust-wasm/ui-runtime.md](rust-wasm/ui-runtime.md): Leptos UI owner.
+- [rust-wasm/verification.md](rust-wasm/verification.md): Rust/WASM checks.
 - [feeds/README.md](feeds/README.md): feed sources, invariants, merge, cursors.
 - [feeds/invariants/README.md](feeds/invariants/README.md): ordering, paging,
   filter safety.

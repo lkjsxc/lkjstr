@@ -6,8 +6,10 @@ CI keeps repository gates reproducible outside a developer machine.
 
 ## Gates
 
-- `pnpm verify` runs repository checks, lint, Svelte checks, unit tests, and
-  build.
+- `pnpm verify` runs current repository checks, lint, Svelte checks, unit tests,
+  and build.
+- Rust/WASM gates add cargo format, clippy, Rust tests, WASM browser tests, and
+  Trunk build as soon as those commands exist in the workspace.
 - Playwright runs browser workflows with the checked-in app.
 - Docker Compose validates `docker-compose.yml` and builds `app`, `verify`,
   `e2e`, `cloudflare`, and `app-smoke` targets.

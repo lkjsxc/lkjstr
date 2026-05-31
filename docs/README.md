@@ -40,6 +40,7 @@ table of contents required by repository checks.
 - [architecture/data/storage/retention/README.md](architecture/data/storage/retention/README.md): local-cache retention.
 - [architecture/feeds/README.md](architecture/feeds/README.md): feed contracts.
 - [architecture/network/README.md](architecture/network/README.md): relay ownership.
+- [architecture/rust-wasm/README.md](architecture/rust-wasm/README.md): Rust/WASM target.
 - [architecture/network/subscription-orchestration/README.md](architecture/network/subscription-orchestration/README.md): orchestration.
 - [architecture/runtimes/README.md](architecture/runtimes/README.md): runtimes.
 - [architecture/workspace/README.md](architecture/workspace/README.md): workspace.
@@ -53,6 +54,17 @@ table of contents required by repository checks.
 ## Complete File Index
 
 - [architecture/README.md](architecture/README.md)
+- [architecture/rust-wasm/README.md](architecture/rust-wasm/README.md)
+- [architecture/rust-wasm/app-boundary.md](architecture/rust-wasm/app-boundary.md)
+- [architecture/rust-wasm/crate-boundaries.md](architecture/rust-wasm/crate-boundaries.md)
+- [architecture/rust-wasm/host-boundary.md](architecture/rust-wasm/host-boundary.md)
+- [architecture/rust-wasm/memory-ownership.md](architecture/rust-wasm/memory-ownership.md)
+- [architecture/rust-wasm/protocol-kernel.md](architecture/rust-wasm/protocol-kernel.md)
+- [architecture/rust-wasm/relay-runtime.md](architecture/rust-wasm/relay-runtime.md)
+- [architecture/rust-wasm/source-map.md](architecture/rust-wasm/source-map.md)
+- [architecture/rust-wasm/storage-kernel.md](architecture/rust-wasm/storage-kernel.md)
+- [architecture/rust-wasm/ui-runtime.md](architecture/rust-wasm/ui-runtime.md)
+- [architecture/rust-wasm/verification.md](architecture/rust-wasm/verification.md)
 - [architecture/backend/README.md](architecture/backend/README.md)
 - [architecture/backend/boundary.md](architecture/backend/boundary.md)
 - [architecture/backend/cache-budget.md](architecture/backend/cache-budget.md)
@@ -188,6 +200,7 @@ table of contents required by repository checks.
 - [decisions/browser-first.md](decisions/browser-first.md)
 - [decisions/protocol-kernel.md](decisions/protocol-kernel.md)
 - [decisions/relay-ownership.md](decisions/relay-ownership.md)
+- [decisions/rust-wasm-client.md](decisions/rust-wasm-client.md)
 - [operations/README.md](operations/README.md)
 - [operations/ci.md](operations/ci.md)
 - [operations/cloudflare-workers.md](operations/cloudflare-workers.md)

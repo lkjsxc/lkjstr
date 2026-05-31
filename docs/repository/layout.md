@@ -6,17 +6,43 @@ Layout docs map repository paths to ownership.
 
 ## Root
 
-- `src/`: SvelteKit app and TypeScript modules.
+- `Cargo.toml`: target Rust workspace root.
+- `Cargo.lock`: target Rust dependency lockfile.
+- `rust-toolchain.toml`: target Rust toolchain and WASM target contract.
+- `.cargo/`: target cargo configuration.
+- `crates/`: target Rust protocol, domain, relay, storage, app, UI, web, and
+  repository-check crates.
+- `index.html`: target Trunk browser entry document.
+- `src/`: current SvelteKit app and TypeScript modules until replaced.
 - `docs/`: product and engineering contract.
 - `tests/unit/`: Vitest unit tests.
 - `tests/e2e/`: Playwright browser tests.
+- `tools/`: target non-product tooling home.
 - `Dockerfile`: app, verify, and e2e image targets.
 - `docker-compose.yml`: built-image services.
+- `package.json`: current Node app tooling; target minimal Playwright,
+  Wrangler, and wrapper tooling.
 - `.github/_README.md`: repository automation notes that do not replace the
   root project overview on GitHub.
 - `.github/workflows/ci.yml`: hosted gates and GHCR publishing.
 
-## Source
+## Target Crates
+
+- `crates/lkjstr-protocol`: Nostr events, filters, tags, messages, signatures,
+  relay URLs, and NIP parsing.
+- `crates/lkjstr-domain`: pure reducers, workspace state, feed models,
+  settings, diagnostics, and memory labels.
+- `crates/lkjstr-relays`: relay state machines, request budgets,
+  subscriptions, and orchestration.
+- `crates/lkjstr-storage`: storage manifest, repositories, cache ledger,
+  retention, repair, and inventory.
+- `crates/lkjstr-app`: browser-local services, runtimes, jobs, startup
+  recovery, account selection, and commands.
+- `crates/lkjstr-ui`: Leptos components and CSS-class rendering contracts.
+- `crates/lkjstr-web`: WASM entrypoint and browser host adapters.
+- `crates/lkjstr-xtask`: repository checks and quiet gate orchestration.
+
+## Current Source
 
 - `src/lib/accounts`: account records, local secret handling, NIP-07 access,
   and mining.

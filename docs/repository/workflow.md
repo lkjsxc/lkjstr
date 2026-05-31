@@ -11,9 +11,10 @@ Workflow docs define the change process.
    that would prove it.
 3. Implement the narrowest matching source change.
 4. Add or update focused tests.
-5. Run local verification with quiet commands (`pnpm verify:quiet`, or
-   `pnpm ci:quiet` when browser tests are required). Use verbose
-   `pnpm verify` / `pnpm test` / `pnpm test:e2e` only when debugging failures.
+5. Run local verification with quiet commands. Current product code uses
+   `pnpm verify:quiet` or `pnpm ci:quiet`; Rust/WASM slices also run cargo,
+   WASM, Trunk, and `lkjstr-xtask` checks documented in
+   [verification.md](../operations/verification.md).
 6. Run Docker Compose as the final gate: config, image builds, then `verify`,
    `e2e`, `cloudflare`, and `app-smoke` services with `--progress quiet`.
 7. Keep CI behavior aligned with quiet local and Docker Compose verification.

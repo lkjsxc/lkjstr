@@ -11,6 +11,15 @@ Each implemented row should name the owning contract and the source or test
 surface that proves it. Bare filenames below are source anchors; contract
 references should stay as relative Markdown links.
 
+## Rust WASM Target
+
+| Clause                                      | Contract                                                                 | Status        | Notes                         |
+| ------------------------------------------- | ------------------------------------------------------------------------ | ------------- | ----------------------------- |
+| Rust/WASM client ownership                  | [rust-wasm-client.md](../decisions/rust-wasm-client.md)                  | design-only   | crates and WASM app not added |
+| Rust/WASM architecture subtree              | [rust-wasm/README.md](../architecture/rust-wasm/README.md)               | design-only   | source contracts only         |
+| Rust protocol, storage, relay, app, and UI  | [crate-boundaries.md](../architecture/rust-wasm/crate-boundaries.md)     | not implemented | current runtime remains TS    |
+| Docker Rust/WASM verification               | [verification.md](../architecture/rust-wasm/verification.md)             | design-only   | commands documented target    |
+
 ## Feed Surface
 
 | Clause                        | Contract                                                                   | Status      | Notes                                                   |

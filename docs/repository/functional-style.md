@@ -4,8 +4,9 @@
 
 This contract keeps source modules simple to reason about while still allowing
 browser APIs, sockets, timers, workers, and storage to be managed directly.
-The rules below are enforced by `pnpm check:repo` and must hold for all
-first-party code in `src/`.
+The rules below are enforced by repository checks and must hold for all
+first-party product code. Current TypeScript checks run through
+`pnpm check:repo`; Rust-aware checks belong in `lkjstr-xtask`.
 
 ## No Classes Policy
 
@@ -82,6 +83,19 @@ first-party code in `src/`.
 - Cross-imports between sibling modules in `src/lib/` are allowed when the
   dependency direction is clear.
 
+## Rust Rules
+
+- Pure domain functions live in protocol or domain crates.
+- Browser effects live behind traits or explicit host adapter functions.
+- Production paths return `Result` or `Option`; they do not panic.
+- `unwrap`, `expect`, `todo`, `unimplemented`, and placeholder functions are
+  rejected outside tests.
+- Every browser listener, timer, WebSocket, pending read, worker, and storage
+  operation has an explicit owner and cleanup path.
+- Any `Rc<RefCell<_>>`, `Arc<Mutex<_>>`, static state, or interior mutability
+  must be local to a documented effect boundary.
+- Source files stay under 200 lines.
+
 ## Review Checklist
 
 When changing runtime code, verify:
@@ -94,6 +108,7 @@ When changing runtime code, verify:
 6. In-memory caches declare a bound or eviction rule.
 7. Pure reducers do not mutate external state.
 8. Discriminated unions use a literal `kind`/`type` field.
+9. Rust production paths avoid panic helpers and hidden global mutation.
 
 ## Reference
 

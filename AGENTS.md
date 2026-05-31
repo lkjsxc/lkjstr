@@ -6,13 +6,19 @@ This file defines repository instructions for automated coding agents.
 
 ## Contract
 
-lkjstr is a docs-first SvelteKit Nostr workspace. Use
-[docs/README.md](docs/README.md) as the docs tree index. Keep
+lkjstr is a docs-first browser Nostr workspace moving to a Rust/WASM-first
+client. Use [docs/README.md](docs/README.md) as the docs tree index. Keep
 [docs/current-state.md](docs/current-state.md), the relevant `docs/` contract,
 and implementation aligned in the same change. Keep source files under 200
 lines, docs under 300 lines, avoid release shorthand wording in docs, and use
 factory functions instead of first-party classes in `src/` except for the Dexie
 database binding.
+
+Prefer Rust/WASM for new product implementation. Keep TypeScript and Svelte
+runtime code only where it is still the implemented surface or where browser
+host glue, Playwright, Wrangler, or migration tests require it. Remove
+TypeScript or Svelte product code after equivalent Rust/WASM behavior is real
+and verified.
 
 ## Product Rules
 
@@ -52,6 +58,14 @@ database binding.
 
 ## Source Map
 
+- `crates/lkjstr-protocol`: target Nostr protocol kernel.
+- `crates/lkjstr-domain`: target pure reducers and shared models.
+- `crates/lkjstr-relays`: target relay state machines and schedulers.
+- `crates/lkjstr-storage`: target storage manifest, repositories, and ledger.
+- `crates/lkjstr-app`: target browser-local app composition.
+- `crates/lkjstr-ui`: target Leptos UI surfaces.
+- `crates/lkjstr-web`: target WASM entrypoint and browser host adapters.
+- `crates/lkjstr-xtask`: target repository checks and quiet gates.
 - `src/lib/protocol`: Nostr event, filter, tag, and relay URL contracts.
 - `src/lib/workspace`: layout, tab, split, recovery, and persistence commands.
 - `src/lib/relays`: relay set storage, clients, and pool behavior.

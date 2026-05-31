@@ -35,7 +35,7 @@ CI must use quiet commands by default.
 
 ## Local
 
-Canonical agent and CI commands:
+Current product runtime commands:
 
 ```sh
 pnpm check:repo
@@ -46,19 +46,20 @@ pnpm ci:quiet
 pnpm cloudflare:quiet
 ```
 
-Debugging commands (verbose child output):
+Rust/WASM target commands:
 
 ```sh
-pnpm kit:sync
-pnpm lint
-pnpm check
-pnpm test
-pnpm build
-pnpm verify
-pnpm cloudflare:dry-run
-pnpm test:e2e
-pnpm test:e2e:memory
+cargo fmt --check
+cargo clippy --workspace --all-targets -- -D warnings
+cargo test --workspace
+wasm-pack test --headless --firefox crates/lkjstr-web
+wasm-pack test --headless --chrome crates/lkjstr-web
+trunk build --release
+pnpm test:e2e:quiet
+pnpm cloudflare:quiet
 ```
+
+Use verbose commands only when debugging.
 
 ## Docker
 
@@ -70,8 +71,6 @@ docker compose --progress quiet -f docker-compose.yml run --rm e2e
 docker compose --progress quiet -f docker-compose.yml run --rm cloudflare
 docker compose --progress quiet -f docker-compose.yml run --rm app-smoke
 ```
-
-Run all six Docker command groups before claiming image-backed verification.
 
 Feed regression and filter kernel changes should also run:
 

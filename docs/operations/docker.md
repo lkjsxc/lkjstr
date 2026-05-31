@@ -9,8 +9,8 @@ Docker docs define the Compose verification path.
 - Compose services build images from `Dockerfile`.
 - Services do not mount the source tree.
 - Services do not require Compose environment blocks.
-- `app` builds the app and runs `pnpm preview` from the built image.
-- `verify` runs `pnpm verify` from the built image.
+- `app` builds the implemented app and serves the built static output.
+- `verify` runs repository verification from the built image.
 - `e2e` installs Playwright browser dependencies in its image.
 - `e2e` builds the app and runs Playwright against production preview.
 - `cloudflare` runs the Wrangler dry-run verification from the built image.
@@ -19,6 +19,8 @@ Docker docs define the Compose verification path.
 - Docker Compose is the final verification gate for agent changes. Run config,
   build `app`, `verify`, `e2e`, `cloudflare`, and `app-smoke`, then run the
   `verify`, `e2e`, `cloudflare`, and `app-smoke` services from those images.
+- The Rust/WASM target keeps the same service names while replacing product
+  build internals with cargo, WASM, Trunk, and repository-check gates.
 
 ## Commands
 
