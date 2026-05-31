@@ -117,9 +117,9 @@ Read next: [architecture/README.md](architecture/README.md),
   Rust app support now composes startup recovery and bounded tab snapshot
   staging. The Rust Leptos UI mounts a partial shell from `lkjstr-web`, renders
   startup panes and tabs from Rust reducers, opens Welcome action tabs, and
-  converts New Tab choices while preserving the chooser tab id. It persists
-  workspace tab actions through Rust IndexedDB. Feeds, tools, relay-backed
-  content, and full UI parity remain in the current TypeScript runtime.
+  converts New Tab choices while preserving the chooser tab id, persists tab
+  actions through Rust IndexedDB, and renders real Rust Stats storage inventory.
+  Feeds, most tools, relay content, and full UI parity remain in TypeScript.
 - Relay ingress uses app-owned byte and structure caps before expensive JSON
   and event parsing.
 - IndexedDB remains durable browser-owned data; memory relief prunes only

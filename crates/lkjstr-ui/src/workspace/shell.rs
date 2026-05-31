@@ -5,11 +5,13 @@ use crate::app::RuntimeSignal;
 use crate::workspace::pane::PaneView;
 use crate::workspace::persistence::WorkspacePersistence;
 use crate::workspace::state::{self, TabSequence};
+use crate::workspace::stats_provider::StatsProvider;
 
 #[component]
 pub fn WorkspaceShell(
     runtime: RuntimeSignal,
     persistence: Option<WorkspacePersistence>,
+    stats_provider: Option<StatsProvider>,
 ) -> impl IntoView {
     let sequence: TabSequence = RwSignal::new(0_u64);
     let persistence_for_open = persistence.clone();
@@ -38,6 +40,7 @@ pub fn WorkspaceShell(
                             sequence=sequence
                             pane=pane
                             persistence=persistence.clone()
+                            stats_provider=stats_provider.clone()
                         />
                     }
                 }).collect_view()}

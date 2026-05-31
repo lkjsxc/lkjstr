@@ -41,7 +41,7 @@ references should stay as relative Markdown links.
 | Rust workspace/settings IndexedDB adapter    | [storage-kernel.md](../architecture/rust-wasm/storage-kernel.md)         | partial       | browser storage tests          |
 | Rust relay state machine basics             | [relay-runtime.md](../architecture/rust-wasm/relay-runtime.md)           | implemented   | relay crate tests              |
 | Rust relay client and browser adapters       | [relay-runtime.md](../architecture/rust-wasm/relay-runtime.md)           | not implemented | current runtime remains TS    |
-| Rust Leptos workspace shell                  | [ui-runtime.md](../architecture/rust-wasm/ui-runtime.md)                 | partial       | Welcome, New Tab, persistence  |
+| Rust Leptos workspace shell                  | [ui-runtime.md](../architecture/rust-wasm/ui-runtime.md)                 | partial       | Welcome, New Tab, persistence, Stats inventory |
 | Rust UI parity and snapshot persistence      | [crate-boundaries.md](../architecture/rust-wasm/crate-boundaries.md)     | not implemented | current runtime remains TS     |
 | Docker Rust/WASM verification               | [verification.md](../architecture/rust-wasm/verification.md)             | design-only   | commands documented target    |
 

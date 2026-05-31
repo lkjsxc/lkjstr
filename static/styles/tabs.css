@@ -45,3 +45,50 @@
   border: 1px solid #dddbd2;
   background: #f7f7f3;
 }
+
+.lkjstr-stats {
+  max-width: 960px;
+}
+
+.lkjstr-stats-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  align-items: center;
+}
+
+.stats-auto {
+  display: inline-flex;
+  gap: 6px;
+  align-items: center;
+}
+
+.stats-cards {
+  display: grid;
+  gap: 8px;
+  grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+  margin: 14px 0;
+}
+
+.stats-cards article {
+  display: grid;
+  gap: 2px;
+  padding: 10px;
+  border: 1px solid #dddbd2;
+  background: #fbfaf5;
+}
+
+.stats-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 8px 0 18px;
+  font-size: 0.92rem;
+}
+
+.stats-table th,
+.stats-table td {
+  padding: 7px;
+  border: 1px solid #dddbd2;
+  text-align: left;
+  overflow-wrap: anywhere;
+}

@@ -1,7 +1,7 @@
 use leptos::prelude::*;
 use lkjstr_app::{StartupInput, WorkspaceRuntimeState, default_recovery_ids, start_workspace};
 
-use crate::workspace::{WorkspacePersistence, WorkspaceShell};
+use crate::workspace::{StatsProvider, WorkspacePersistence, WorkspaceShell};
 
 #[component]
 pub fn App() -> impl IntoView {
@@ -12,12 +12,17 @@ pub fn App() -> impl IntoView {
 pub fn AppWithStartup(
     startup: StartupInput,
     #[prop(optional)] persistence: Option<WorkspacePersistence>,
+    #[prop(optional)] stats_provider: Option<StatsProvider>,
 ) -> impl IntoView {
     let startup = start_workspace(startup);
     let runtime = RwSignal::new(startup.state);
 
     view! {
-        <WorkspaceShell runtime=runtime persistence=persistence />
+        <WorkspaceShell
+            runtime=runtime
+            persistence=persistence
+            stats_provider=stats_provider
+        />
     }
 }
 

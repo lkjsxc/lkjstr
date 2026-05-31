@@ -56,3 +56,12 @@ Stats shows current-session relay counters and persisted operational summaries.
   heap.
 - Runtime memory output is redacted count data only. It must not expose raw
   events, relay payloads, tab ids, request ids, or log messages.
+
+## Rust Conversion Status
+
+- The Rust/WASM shell renders a partial Stats body with real workspace counters
+  and manifest-backed IndexedDB table counts.
+- Rust Stats may show unavailable rows for relay snapshots, job health,
+  compaction, repair, browser quota, or memory data until each provider exists.
+- Unavailable rows must be explicit; they must not use fake counters or
+  synthetic relay/cache records.

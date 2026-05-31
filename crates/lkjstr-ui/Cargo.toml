@@ -12,3 +12,4 @@ workspace = true
 leptos = { version = "0.8.12", features = ["csr"] }
 lkjstr-app = { path = "../lkjstr-app" }
 lkjstr-domain = { path = "../lkjstr-domain" }
+lkjstr-storage = { path = "../lkjstr-storage" }

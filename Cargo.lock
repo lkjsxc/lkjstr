@@ -1042,6 +1042,7 @@ dependencies = [
  "leptos",
  "lkjstr-app",
  "lkjstr-domain",
+ "lkjstr-storage",
 ]
 
 [[package]]

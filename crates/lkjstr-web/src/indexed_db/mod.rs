@@ -1,5 +1,6 @@
 mod callbacks;
 pub mod database;
+pub mod inventory_store;
 mod schema;
 mod settings_requests;
 pub mod settings_store;

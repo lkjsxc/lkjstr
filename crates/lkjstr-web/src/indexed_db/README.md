@@ -8,6 +8,7 @@ This directory contains the Rust browser host adapter for IndexedDB.
 
 - `callbacks.rs`: owned request callback slots.
 - `database.rs`: database open and object store helpers.
+- `inventory_store.rs`: table-count inventory snapshot reads for Stats.
 - `mod.rs`: public IndexedDB module surface.
 - `schema.rs`: manifest-driven object store and index creation.
 - `settings_requests.rs`: settings request execution and decoding.

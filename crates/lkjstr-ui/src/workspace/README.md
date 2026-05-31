@@ -13,5 +13,7 @@ and New Tab chooser.
 - `persistence.rs`: host persistence callback wrapper.
 - `shell.rs`: top-level workspace shell.
 - `state.rs`: view selectors and command helpers.
+- `stats.rs`: Rust Stats body for host-provided diagnostics.
+- `stats_provider.rs`: async Stats snapshot provider wrapper.
 - `tab_body.rs`: tab body routing and honest pending states.
 - `welcome.rs`: document-like Welcome surface.

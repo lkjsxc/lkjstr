@@ -26,8 +26,9 @@ pub fn mount_rust_workspace_shell_from_db(db_name: String) {
     wasm_bindgen_futures::spawn_local(async move {
         let startup =
             indexed_db::workspace_store::workspace_startup_input(&db_name, browser_now_ms()).await;
-        let persistence = workspace_persistence(db_name);
-        lkjstr_ui::mount_app_with_persistence(startup, persistence);
+        let persistence = workspace_persistence(db_name.clone());
+        let stats_provider = stats_provider(db_name);
+        lkjstr_ui::mount_app_with_host(startup, persistence, stats_provider);
     });
 }
 
@@ -119,6 +120,16 @@ fn workspace_persistence(db_name: String) -> lkjstr_ui::WorkspacePersistence {
         let db_name = db_name.clone();
         wasm_bindgen_futures::spawn_local(async move {
             let _outcome = indexed_db::workspace_store::workspace_put(&db_name, &workspace).await;
+        });
+    })
+}
+
+#[cfg(target_arch = "wasm32")]
+fn stats_provider(db_name: String) -> lkjstr_ui::StatsProvider {
+    lkjstr_ui::StatsProvider::new(move |complete| {
+        let db_name = db_name.clone();
+        wasm_bindgen_futures::spawn_local(async move {
+            complete.complete(indexed_db::inventory_store::storage_stats_snapshot(&db_name).await);
         });
     })
 }

@@ -5,6 +5,8 @@ use crate::app::RuntimeSignal;
 use crate::workspace::menu::NewTabMenu;
 use crate::workspace::persistence::WorkspacePersistence;
 use crate::workspace::state::TabSequence;
+use crate::workspace::stats::StatsTab;
+use crate::workspace::stats_provider::StatsProvider;
 use crate::workspace::welcome::WelcomeTab;
 
 #[component]
@@ -14,6 +16,7 @@ pub fn TabBody(
     pane_id: String,
     tab: WorkspaceTab,
     persistence: Option<WorkspacePersistence>,
+    stats_provider: Option<StatsProvider>,
 ) -> impl IntoView {
     let kind = tab.kind;
     let tab_id = tab.id;
@@ -21,7 +24,7 @@ pub fn TabBody(
     view! {
         <div class="lkjstr-tab-body" data-tab-kind=tab_kind_attr(kind)>
             <h1>{title}</h1>
-            {tab_content(runtime, sequence, pane_id, tab_id, kind, persistence)}
+            {tab_content(runtime, sequence, pane_id, tab_id, kind, persistence, stats_provider)}
         </div>
     }
 }
@@ -33,6 +36,7 @@ fn tab_content(
     tab_id: String,
     kind: TabKind,
     persistence: Option<WorkspacePersistence>,
+    stats_provider: Option<StatsProvider>,
 ) -> impl IntoView {
     match kind {
         TabKind::Welcome => view! {
@@ -52,6 +56,10 @@ fn tab_content(
                 tab_id=Some(tab_id)
                 persistence=persistence
             />
+        }
+        .into_any(),
+        TabKind::NetworkStats => view! {
+            <StatsTab runtime=runtime provider=stats_provider />
         }
         .into_any(),
         _ => view! {
@@ -76,7 +84,7 @@ fn pending_message(kind: TabKind) -> &'static str {
         TabKind::Thread => "The Rust Thread body is not converted yet.",
         TabKind::RelayMonitor => "The Rust lkjstr Log body is not converted yet.",
         TabKind::RelaySettings => "The Rust Relay Settings body is not converted yet.",
-        TabKind::NetworkStats => "The Rust Stats body is not converted yet.",
+        TabKind::NetworkStats => "",
         TabKind::Search => "The Rust Search body is not converted yet.",
         TabKind::CustomRequest => "The Rust Custom Request body is not converted yet.",
         TabKind::AuthorContext => "The Rust Author Context body is not converted yet.",

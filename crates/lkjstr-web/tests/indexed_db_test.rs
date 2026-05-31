@@ -47,7 +47,7 @@ async fn rust_shell_persists_workspace_actions_to_indexed_db() -> Result<(), JsV
     reset_shells()?;
     mount_rust_workspace_shell_from_db(db_name);
     wait_for_shell().await?;
-    assert!(document_text()?.contains("The Rust Stats body is not converted yet."));
+    assert!(document_text()?.contains("Storage inventory"));
     Ok(())
 }
 

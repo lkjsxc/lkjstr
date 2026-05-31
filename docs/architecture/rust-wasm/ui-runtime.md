@@ -32,9 +32,12 @@ Tab catalog, routes tab focus plus New Tab opening through Rust reducers,
 opens Welcome action tabs, and converts New Tab choices while preserving the
 chooser tab id. Startup reads a stored Rust workspace row from IndexedDB, and
 workspace tab actions write the updated workspace through the same Rust adapter.
+The Rust Stats body renders host-collected IndexedDB table counts plus compact
+workspace counters; relay, job, compaction, and memory diagnostics stay marked
+unavailable until their Rust providers are implemented.
 
-Not implemented yet: feed surfaces, tool surfaces, relay-backed content, and
-full responsive/a11y QA.
+Not implemented yet: feed surfaces, most tool surfaces, relay-backed content,
+Stats relay/job/compaction diagnostics, and full responsive/a11y QA.
 
 ## Component Split
 
