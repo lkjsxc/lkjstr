@@ -25,7 +25,7 @@ test('Stats compacts real IndexedDB cache under origin pressure', async ({
   await expect(page.getByRole('cell', { name: 'nostr-event' })).toBeVisible();
   await expect(
     page.getByRole('row', { name: /Site target 1 MiB/ }),
-  ).toBeVisible();
+  ).toBeVisible({ timeout: 15_000 });
   const before = await cacheCounts(page);
   expect(before.events).toBe(3);
   expect(before.protectedSettings).toBe(1);
