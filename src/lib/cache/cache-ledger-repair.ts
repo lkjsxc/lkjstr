@@ -1,7 +1,7 @@
 import { browserDb } from '../storage/browser-db';
 import { indexedDbAvailable } from '../storage/safe-storage';
 import type { CacheLedgerRecord } from './cache-ledger-record';
-import { cacheLedgerTargetExists } from './cache-ledger-target';
+import { cacheLedgerTargetState } from './cache-ledger-target';
 import { collectRepairRows } from './cache-ledger-repair-rows';
 
 export type CacheLedgerRepairResult = {
@@ -82,19 +82,28 @@ async function backfillAndUpdate() {
 
 async function deleteOrphans(): Promise<number> {
   const orphanIds: string[] = [];
-  await browserDb().cacheLedger.each(async (row) => {
-    if (!(await cacheLedgerTargetExists(row))) orphanIds.push(row.id);
-  });
+  const rows = await ledgerRows();
+  for (const row of rows)
+    if ((await cacheLedgerTargetState(row)) === 'missing')
+      orphanIds.push(row.id);
   if (orphanIds.length > 0) await browserDb().cacheLedger.bulkDelete(orphanIds);
   return orphanIds.length;
 }
 
 async function countOrphans(): Promise<number> {
   let count = 0;
-  await browserDb().cacheLedger.each(async (row) => {
-    if (!(await cacheLedgerTargetExists(row))) count += 1;
-  });
+  const rows = await ledgerRows();
+  for (const row of rows)
+    if ((await cacheLedgerTargetState(row)) === 'missing') count += 1;
   return count;
+}
+
+async function ledgerRows(): Promise<CacheLedgerRecord[]> {
+  try {
+    return await browserDb().cacheLedger.toArray();
+  } catch {
+    return [];
+  }
 }
 
 function staleLedgerRecord(

@@ -66,7 +66,7 @@ export class LkjstrDb extends Dexie {
         }
       >
     )[schemaMethod];
-    schema.call(this, 17).stores({
+    schema.call(this, 18).stores({
       workspaces: '&id, updatedAt, activeAccountId',
       accounts: '&id, pubkey, signerType, updatedAt, lastUsedAt',
       localAccountSecrets: '&accountId, pubkey, updatedAt',

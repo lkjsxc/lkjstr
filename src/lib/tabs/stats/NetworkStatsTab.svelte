@@ -37,10 +37,20 @@
 
   async function refresh(): Promise<void> {
     snapshots = currentRelaySnapshots();
-    summaries = await listRelayDiagnosticSummaries();
-    jobHealth = await loadJobHealthSummary();
-    cache = await cacheStatus();
+    [summaries, jobHealth, cache] = await Promise.all([
+      safeRead(() => listRelayDiagnosticSummaries(), summaries),
+      safeRead(() => loadJobHealthSummary(), jobHealth),
+      safeRead(() => cacheStatus(), cache),
+    ]);
     memory = runtimeMemorySnapshot();
+  }
+
+  async function safeRead<T>(read: () => Promise<T>, fallback: T): Promise<T> {
+    try {
+      return await read();
+    } catch {
+      return fallback;
+    }
   }
 
   function toggleAuto(): void {
