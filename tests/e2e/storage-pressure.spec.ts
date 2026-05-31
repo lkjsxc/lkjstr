@@ -36,9 +36,11 @@ test('Stats compacts real IndexedDB cache under origin pressure', async ({
   expect(after.protectedSettings).toBe(1);
   expect(after.orphanLedgerRows).toBe(0);
   await expect(
-    page.getByRole('cell', { name: 'protected-or-unknown-usage' }),
+    page.getByRole('row', { name: 'Pressure state protected-only' }),
   ).toBeVisible();
-  await expect(page.getByRole('cell', { name: 'unknown-only' })).toBeVisible();
+  await expect(
+    page.getByRole('row', { name: /Unknown\/browser overhead/ }),
+  ).toBeVisible();
 });
 
 async function seedPressureRows(page: Parameters<typeof cacheCounts>[0]) {
