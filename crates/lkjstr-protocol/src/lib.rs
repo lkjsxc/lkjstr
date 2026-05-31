@@ -11,6 +11,9 @@ pub mod event_verify;
 pub mod filter;
 mod message_parts;
 pub mod messages;
+pub mod nip19;
+mod nip19_encode;
+mod nip19_tlv;
 
 pub use bytes::{
     ascii_to_bytes, bytes_to_ascii, bytes_to_hex, bytes_to_utf8, hex_to_bytes, is_lower_hex,
@@ -34,4 +37,11 @@ pub use filter::{NostrFilter, matches_any_filter, matches_filter, parse_filter_v
 pub use messages::{
     ClientMessage, MessageErrorCode, MessageParseError, RelayMessage, encode_client_message,
     parse_client_message_value, parse_relay_message,
+};
+pub use nip19::{
+    AddressPointer, EventPointer, Nip19Error, NostrEntity, ProfilePointer, decode_nip19,
+};
+pub use nip19_encode::{
+    encode_naddr, encode_nevent, encode_nip19, encode_note, encode_nprofile, encode_npub,
+    encode_nsec,
 };
