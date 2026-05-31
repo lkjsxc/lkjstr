@@ -64,6 +64,7 @@ server-side account system.
 ## How to Run
 
 Requirements: Node.js >= 24, pnpm 11.1.2.
+Rust/WASM work also requires the Rust toolchain in `rust-toolchain.toml`.
 
 ```sh
 # Install dependencies
@@ -90,6 +91,14 @@ pnpm test:e2e:quiet
 pnpm verify:quiet
 pnpm ci:quiet
 pnpm cloudflare:quiet
+
+cargo fmt --check
+cargo clippy --workspace --all-targets -- -D warnings
+cargo test --workspace
+cargo run -p lkjstr-xtask -- check-docs
+cargo run -p lkjstr-xtask -- check-lines
+cargo run -p lkjstr-xtask -- check-rust-style
+cargo run -p lkjstr-xtask -- check-storage-manifest-docs
 
 docker compose -f docker-compose.yml config
 docker compose --progress quiet -f docker-compose.yml build app verify e2e cloudflare app-smoke
@@ -132,7 +141,9 @@ All contracts live under [`docs/`](docs/README.md):
 
 - [`.github/_README.md`](.github/_README.md) - GitHub Actions and repository
   automation notes.
+- [`.cargo/`](.cargo/) - Rust workspace command configuration.
 - [`AGENTS.md`](AGENTS.md) - agent-facing repository rules.
+- [`crates/`](crates/) - Rust/WASM target crates and repository checks.
 - [`docs/`](docs/) - product, protocol, architecture, operations, and repository contracts.
 - [`scripts/`](scripts/) - repository checks and quiet verification wrappers.
 - [`src/`](src/) - SvelteKit application source.
