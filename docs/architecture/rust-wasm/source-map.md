@@ -40,6 +40,8 @@ UI shell, and repository checks.
 - `crates/lkjstr-relays/src/page_read/`: semantic page-read key derivation,
   in-flight read registry state, progressive read snapshot reduction, and event
   provenance merge policy.
+- `crates/lkjstr-relays/src/demand/`: pure demand records, lease fingerprint
+  derivation, and owner visibility registry state.
 - `crates/lkjstr-storage/`: manifest, repositories, ledger, and retention.
 - `crates/lkjstr-app/`: product runtime composition.
 - `crates/lkjstr-ui/`: Leptos components and UI CSS contracts.

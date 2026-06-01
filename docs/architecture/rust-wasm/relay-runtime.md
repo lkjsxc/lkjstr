@@ -10,9 +10,10 @@ Implemented now: `lkjstr-relays` owns pure send queue, request scheduler,
 subscription id, subscription alias, close tombstone state machines, and
 request budgets for filter limits, read caps, subscription limits, outbound
 `REQ` byte caps, semantic page-read keys, in-flight page-read registry state,
-and progressive read snapshots. It also owns the first pure relay client
-lifecycle reducer for connect, open, send, error, close, reconnect-timer,
-connect-deadline, owner-close, and typed relay-message decisions.
+progressive read snapshots, and demand/lease fingerprint plus owner-registry
+state. It also owns the first pure relay client lifecycle reducer for connect,
+open, send, error, close, reconnect-timer, connect-deadline, owner-close, and
+typed relay-message decisions.
 
 `lkjstr-web` owns the first browser WebSocket and timer adapter foundation:
 socket handles store event callbacks, detach listeners during close, map send
@@ -20,8 +21,8 @@ and open failures into typed host problems, and expose idempotent close. Timer
 handles own one browser timeout and clear it on owner cleanup.
 
 Not implemented yet: product wiring for request budgets, page-read dedupe,
-progressive snapshots, diagnostics merge, demand and lease planning, and
-product wiring from relay reducers to browser adapters.
+progressive snapshots, diagnostics merge, route-plan integration, and product
+wiring from relay reducers to browser adapters.
 
 ## Pure Runtime
 

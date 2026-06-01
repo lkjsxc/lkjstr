@@ -5,6 +5,10 @@
 Define what feed runtimes may submit to the orchestrator. Intent describes **what**
 to read, not **how** to open relays.
 
+Status: Rust now owns pure Demand records, live filter normalization, canonical
+fingerprints, and owner/visibility registry state. TypeScript still wires these
+plans to the live browser subscription manager.
+
 ## Invariant
 
 ```txt

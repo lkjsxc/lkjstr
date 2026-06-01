@@ -4,6 +4,9 @@
 
 Define how compatible live Demands merge into one shared lease.
 
+Status: Rust owns canonical fingerprint and lease key derivation for pure
+Demand records. TypeScript still owns browser subscription side effects.
+
 ## Wire-equivalent rule
 
 Lease identity is derived from the **normalized wire request**, not from the
@@ -11,7 +14,7 @@ pre-normalization Demand shape.
 
 Steps:
 
-1. Build Demand from intent and route plan (`demand-build.ts`).
+1. Build Demand from intent and route plan.
 2. Apply live filter normalization (`since` injection, clear `limit` for live).
 3. Fingerprint relays + normalized filters + phase + purpose + channel.
 4. Map fingerprint to wire key `lease:<hash>`.
@@ -38,4 +41,5 @@ so live leases remain stable across tabs.
 
 - [live-lease.md](live-lease.md)
 - [compatibility.md](compatibility.md)
+- `crates/lkjstr-relays/src/demand/`
 - `src/lib/relays/orchestration/lease-key.ts`

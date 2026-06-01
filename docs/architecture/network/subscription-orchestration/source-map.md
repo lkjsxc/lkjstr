@@ -28,6 +28,7 @@ Map documentation topics to implementation files. Each module stays at or below
 | `ingress-classify.ts`     | live event classification                    |
 | `metrics.ts`              | orchestration counters and gauges            |
 | `../request-budget/*`     | budget derivation and NIP-11 limit helpers   |
+| `crates/lkjstr-relays/src/demand/` | Rust pure demand fingerprint and registry state |
 
 ## Tests
 

@@ -2,6 +2,7 @@
 
 pub mod client;
 pub mod close_tombstones;
+pub mod demand;
 pub mod page_read;
 pub mod request_budget;
 pub mod request_message_size;
@@ -16,6 +17,14 @@ pub use client::{
     max_relay_message_records, reconnect_delay_ms, reduce_relay_client,
 };
 pub use close_tombstones::{RelayCloseTombstones, default_close_tombstone_ttl_ms};
+pub use demand::{
+    Demand, DemandAttachAction, DemandAttachOutcome, DemandDetachAction, DemandDetachOutcome,
+    DemandLeaseRegistry, DemandLeaseSnapshot, DemandPhase, DemandPriority, DemandPurpose,
+    DemandRegistryCounts, DemandSurface, DemandVisibility, DemandVisibilityAction,
+    DemandVisibilityOutcome, DemandWireRequest, canonical_filters_key, canonical_relays,
+    canonical_relays_key, default_demand_staleness_ms, demand_lease_key, demand_to_wire_request,
+    lease_key_from_fingerprint, normalized_demand_filters, wire_equivalent_fingerprint,
+};
 pub use page_read::{
     FeedCursorPoint, InFlightPageReadCounts, InFlightPageReadRegistry, InitialProgressiveRead,
     PageReadAbortOutcome, PageReadAttachAction, PageReadAttachOutcome, PageReadAttachment,

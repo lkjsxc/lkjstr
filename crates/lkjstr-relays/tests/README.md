@@ -10,6 +10,7 @@ TypeScript relay modules.
 - `close_tombstones_test.rs`: TTL, membership, and max-size pruning.
 - `client_message_test.rs`: typed relay-message reducer behavior.
 - `client_reducer_test.rs`: pure relay client lifecycle reducer behavior.
+- `demand_lease_test.rs`: demand fingerprint and lease registry behavior.
 - `page_read_dedupe_test.rs`: semantic page-read and read-option keys.
 - `page_read_inflight_test.rs`: shared page-read registry cleanup behavior.
 - `progressive_read_test.rs`: progressive read snapshot reducer behavior.
