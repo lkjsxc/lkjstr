@@ -37,6 +37,8 @@ UI shell, and repository checks.
   events, effects, and state.
 - `crates/lkjstr-relays/src/request_budget/`: pure request-budget derivation,
   filter clamping, relay-limit diagnostics, and read-cap merge policy.
+- `crates/lkjstr-relays/src/page_read/`: semantic page-read key derivation,
+  progressive read snapshot reduction, and event provenance merge policy.
 - `crates/lkjstr-storage/`: manifest, repositories, ledger, and retention.
 - `crates/lkjstr-app/`: product runtime composition.
 - `crates/lkjstr-ui/`: Leptos components and UI CSS contracts.

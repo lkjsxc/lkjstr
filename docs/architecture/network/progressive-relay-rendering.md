@@ -6,6 +6,10 @@ Progressive relay rendering lets feed surfaces render cached rows first, then
 merge relay evidence as each read produces valid events, relay state, timeout,
 or terminal coverage.
 
+Status: Rust owns the pure snapshot reducer and event provenance merge. The
+TypeScript read manager still emits product snapshots until Rust feed runtimes
+consume this reducer directly.
+
 ## Protocol Basis
 
 - [NIP-01](https://github.com/nostr-protocol/nips/blob/master/01.md) defines

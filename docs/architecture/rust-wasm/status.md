@@ -30,8 +30,9 @@ This file is the concise status map for the active Rust/WASM migration.
   relay frames, and early host calls needed by the partial Leptos shell.
 - `lkjstr-relays` owns pure send queue, request scheduler, subscription id,
   subscription alias, close tombstone, request budget derivation, outbound
-  `REQ` message-size budget, and relay client lifecycle plus typed
-  relay-message reducer state machines.
+  `REQ` message-size budget, semantic page-read keys, progressive read
+  snapshots, and relay client lifecycle plus typed relay-message reducer state
+  machines.
 - `lkjstr-app` owns startup recovery, stored tab snapshot filtering, and bounded
   warm tab snapshot staging.
 - `lkjstr-ui` renders the partial Leptos workspace shell, Welcome, New Tab,
@@ -40,8 +41,8 @@ This file is the concise status map for the active Rust/WASM migration.
 
 ## Open Foundations
 
-- Request-budget product wiring, progressive snapshots, diagnostics merge,
-  page read dedupe, demand planning, and lease planning.
+- Product wiring for request budgets, page-read in-flight dedupe, progressive
+  snapshot consumption, diagnostics merge, demand planning, and lease planning.
 - Relay adapter product wiring from pure reducers to browser WebSocket and
   timer handles.
 - Product SQLite wiring, cache delete and repair paths, retention dispatchers,

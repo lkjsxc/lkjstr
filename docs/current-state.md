@@ -111,8 +111,8 @@ Read next: [architecture/README.md](architecture/README.md),
   fallback, while Stats can distinguish active, timed-out, busy, canceled,
   late-settled, and late-rejected storage operations.
 - Rust/WASM support is partial and active. Rust owns substantial protocol,
-  domain, storage-contract, relay-state-machine, request-budget, relay
-  host-adapter, startup, IndexedDB, and Leptos-shell slices. The live Rust
+  domain, storage-contract, relay-state-machine, request-budget, page-read,
+  relay host-adapter, startup, IndexedDB, and Leptos-shell slices. The live Rust
   slice map and open foundations live in
   [architecture/rust-wasm/status.md](architecture/rust-wasm/status.md).
 - Relay ingress uses app-owned byte and structure caps before expensive JSON
@@ -244,8 +244,8 @@ and [operations/memory-verification.md](operations/memory-verification.md).
 
 - Rust/WASM architecture is partial and active, not design-only. Rust owns
   protocol, pure domain models, storage contracts, narrow IndexedDB adapters,
-  relay state-machine and request-budget basics, startup composition, and a
-  partial Leptos shell.
+  relay state-machine, request-budget, and page-read basics, startup
+  composition, and a partial Leptos shell.
   The SvelteKit product runtime remains until each Rust surface reaches real
   behavior and matching tests. Cutover and deletion rules live in
   [architecture/rust-wasm/cutover/README.md](architecture/rust-wasm/cutover/README.md).

@@ -2,6 +2,7 @@
 
 pub mod client;
 pub mod close_tombstones;
+pub mod page_read;
 pub mod request_budget;
 pub mod request_message_size;
 pub mod request_scheduler;
@@ -15,6 +16,15 @@ pub use client::{
     max_relay_message_records, reconnect_delay_ms, reduce_relay_client,
 };
 pub use close_tombstones::{RelayCloseTombstones, default_close_tombstone_ttl_ms};
+pub use page_read::{
+    FeedCursorPoint, InitialProgressiveRead, PageReadBounds, PageReadDirection, PageReadIntent,
+    PageReadPhase, PageReadPurpose, PageReadSurface, ProgressiveEvent, ProgressiveReadEvidence,
+    ProgressiveReadSnapshot, ProgressiveReadState, ProgressiveReadStatus, ProgressiveRelaySnapshot,
+    ProgressiveRelayState, ReadDedupeOptions, ReadPageRelayStatus, RelayReadRequest,
+    RelayRouteGroup, event_relays, initial_progressive_read, page_read_bounds,
+    page_read_semantic_key, progressive_read_snapshot, progressive_status, read_dedupe_key,
+    reduce_progressive_read, relay_snapshot_from_status, route_group_fingerprint, subscription_key,
+};
 pub use request_budget::{
     BudgetedFilters, MergedReadBudget, RequestBudget, RequestBudgetDirection, RequestBudgetInput,
     RequestBudgetPhase, RequestBudgetPurpose, RequestBudgetSurface, RequestBudgetWarning,

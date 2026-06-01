@@ -4,6 +4,9 @@
 
 Bootstrap and page reads dedupe by semantic intent, not by runtime `subId`.
 
+Status: Rust now owns pure semantic key derivation. The TypeScript
+subscription manager still owns the live in-flight read map and abort fan-out.
+
 ## Phases
 
 | Phase     | Closes on EOSE | Typical use                        |
@@ -48,3 +51,4 @@ requirements. Semantic page keys must not include tab ids.
 - [demand-intent.md](demand-intent.md)
 - [live-lease.md](live-lease.md)
 - `src/lib/relays/orchestration/page-reads.ts`
+- `crates/lkjstr-relays/src/page_read/`
