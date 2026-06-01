@@ -42,6 +42,7 @@ Current product runtime commands:
 pnpm check:repo
 pnpm test:quiet
 pnpm test:e2e:quiet
+pnpm rust-wasm:quiet
 pnpm verify:quiet
 pnpm ci:quiet
 pnpm cloudflare:quiet
@@ -51,6 +52,7 @@ Rust/WASM target commands:
 
 ```sh
 cargo run -p lkjstr-xtask -- quiet rust-wasm
+pnpm rust-wasm:quiet
 cargo fmt --check
 cargo clippy --workspace --all-targets -- -D warnings
 cargo clippy -p lkjstr-web --target wasm32-unknown-unknown --all-targets -- -D warnings

@@ -12,9 +12,14 @@ Run the full Rust/WASM local gate through `lkjstr-xtask`:
 
 ```sh
 cargo run -p lkjstr-xtask -- quiet rust-wasm
+pnpm rust-wasm:quiet
 ```
 
-That command runs:
+Both commands run the same matrix and print `ok rust-wasm` on success. The
+package script is a discoverable wrapper for agents already using pnpm quiet
+commands.
+
+The matrix runs:
 
 ```sh
 cargo fmt --check

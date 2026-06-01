@@ -39,6 +39,13 @@ const verifySteps: readonly Step[] = [
 ];
 
 const plans: Record<string, readonly Step[]> = {
+  'rust-wasm': [
+    {
+      label: 'rust-wasm',
+      command: 'cargo',
+      args: ['run', '-p', 'lkjstr-xtask', '--', 'quiet', 'rust-wasm'],
+    },
+  ],
   test: [unitStep],
   e2e: [e2eStep],
   verify: verifySteps,

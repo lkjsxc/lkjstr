@@ -40,6 +40,7 @@ state lives, which modules own subscriptions, and how tabs close cleanly.
 - [rust-wasm/protocol-kernel.md](rust-wasm/protocol-kernel.md): protocol owner.
 - [rust-wasm/relay-runtime.md](rust-wasm/relay-runtime.md): relay owner.
 - [rust-wasm/source-map.md](rust-wasm/source-map.md): target paths.
+- [rust-wasm/status.md](rust-wasm/status.md): active migration status.
 - [rust-wasm/storage-kernel.md](rust-wasm/storage-kernel.md): storage owner.
 - [rust-wasm/ui-runtime.md](rust-wasm/ui-runtime.md): Leptos UI owner.
 - [rust-wasm/verification.md](rust-wasm/verification.md): Rust/WASM checks.
