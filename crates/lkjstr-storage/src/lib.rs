@@ -11,6 +11,7 @@ pub mod resource;
 pub mod settings;
 mod settings_defs;
 pub mod settings_schema;
+pub mod sql;
 pub mod stats;
 pub mod tab_state;
 mod table_specs;
@@ -37,6 +38,11 @@ pub use settings::{SettingOverrideRecord, setting_record_json_bytes, setting_rec
 pub use settings_schema::{
     SettingRecord, SettingValueType, default_setting_records, merge_setting_overrides,
     setting_override_for_value,
+};
+pub use sql::{
+    FOREIGN_KEYS_PRAGMA, SqliteIndexSpec, SqliteRetentionClass, SqliteSchemaStatement,
+    SqliteStatementKind, SqliteTableSpec, sqlite_schema_index_names, sqlite_schema_indexes,
+    sqlite_schema_statements, sqlite_schema_table, sqlite_schema_table_names, sqlite_schema_tables,
 };
 pub use stats::{StorageInventoryRow, StorageStatsSnapshot, StorageTableCount};
 pub use tab_state::{

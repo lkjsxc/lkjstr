@@ -1071,6 +1071,9 @@ dependencies = [
 [[package]]
 name = "lkjstr-xtask"
 version = "0.0.0"
+dependencies = [
+ "lkjstr-storage",
+]
 
 [[package]]
 name = "log"

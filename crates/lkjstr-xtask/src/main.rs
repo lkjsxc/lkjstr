@@ -3,6 +3,7 @@ mod doc_check;
 mod line_check;
 mod paths;
 mod rust_style;
+mod sqlite_schema_doc;
 mod storage_manifest;
 
 use std::{env, process};
@@ -25,7 +26,10 @@ fn run() -> Result<(), String> {
         "check-docs" => doc_check::check(&root),
         "check-lines" => line_check::check(&root),
         "check-rust-style" => rust_style::check(&root),
-        "check-storage-manifest-docs" => storage_manifest::check(&root),
+        "check-storage-manifest-docs" => {
+            storage_manifest::check(&root)?;
+            sqlite_schema_doc::check(&root)
+        }
         "quiet" => {
             let Some(target) = args.next() else {
                 return Err("quiet requires rust-wasm, verify, or ci".to_owned());

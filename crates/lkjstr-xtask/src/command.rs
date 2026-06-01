@@ -33,7 +33,8 @@ fn run_xtask_checks(root: &Path) -> Result<(), String> {
     crate::doc_check::check(root)?;
     crate::line_check::check(root)?;
     crate::rust_style::check(root)?;
-    crate::storage_manifest::check(root)
+    crate::storage_manifest::check(root)?;
+    crate::sqlite_schema_doc::check(root)
 }
 
 fn rust_wasm(root: &Path) -> Result<(), String> {
