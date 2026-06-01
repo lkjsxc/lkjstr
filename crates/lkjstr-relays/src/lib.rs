@@ -3,6 +3,7 @@
 pub mod client;
 pub mod close_tombstones;
 pub mod demand;
+pub mod ingress;
 pub mod page_read;
 pub mod request_budget;
 pub mod request_message_size;
@@ -25,6 +26,10 @@ pub use demand::{
     DemandVisibilityOutcome, DemandWireRequest, canonical_filters_key, canonical_relays,
     canonical_relays_key, default_demand_staleness_ms, demand_lease_key, demand_to_wire_request,
     lease_key_from_fingerprint, normalized_demand_filters, wire_equivalent_fingerprint,
+};
+pub use ingress::{
+    IngressDecision, ingress_decision, is_feed_display_kind, is_notification_kind,
+    is_render_critical_for_surface,
 };
 pub use page_read::{
     FeedCursorPoint, InFlightPageReadCounts, InFlightPageReadRegistry, InitialProgressiveRead,

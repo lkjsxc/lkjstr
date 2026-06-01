@@ -10,6 +10,7 @@ aliasing, and close-tombstone behavior.
 - `close_tombstones.rs`: late-frame suppression after local close.
 - `client/`: pure relay client lifecycle reducer.
 - `demand/`: pure demand fingerprinting and lease owner registry state.
+- `ingress.rs`: render-critical event-kind policy for live ingress.
 - `lib.rs`: public relay crate exports.
 - `page_read/`: semantic page-read keys and progressive snapshot reducers.
 - `request_budget/`: pure relay request-budget derivation and filter clamping.

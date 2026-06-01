@@ -30,6 +30,7 @@ Map documentation topics to implementation files. Each module stays at or below
 | `../request-budget/*`     | budget derivation and NIP-11 limit helpers   |
 | `crates/lkjstr-relays/src/demand/` | Rust pure demand fingerprint and registry state |
 | `crates/lkjstr-relays/src/route_plan/` | Rust pure route group and score-order state |
+| `crates/lkjstr-relays/src/ingress.rs` | Rust pure render-critical ingress policy |
 
 ## Tests
 
