@@ -28,7 +28,7 @@ fn run() -> Result<(), String> {
         "check-storage-manifest-docs" => storage_manifest::check(&root),
         "quiet" => {
             let Some(target) = args.next() else {
-                return Err("quiet requires verify or ci".to_owned());
+                return Err("quiet requires rust-wasm, verify, or ci".to_owned());
             };
             command::quiet(&root, &target)
         }
@@ -43,6 +43,7 @@ fn usage() -> String {
         "  cargo run -p lkjstr-xtask -- check-lines",
         "  cargo run -p lkjstr-xtask -- check-rust-style",
         "  cargo run -p lkjstr-xtask -- check-storage-manifest-docs",
+        "  cargo run -p lkjstr-xtask -- quiet rust-wasm",
         "  cargo run -p lkjstr-xtask -- quiet verify",
         "  cargo run -p lkjstr-xtask -- quiet ci",
     ]

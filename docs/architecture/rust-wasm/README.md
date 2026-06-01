@@ -9,6 +9,9 @@ This subtree defines the Rust/WASM client target.
 - [app-boundary.md](app-boundary.md): app composition and command ownership.
 - [crate-boundaries.md](crate-boundaries.md): crate responsibilities.
 - [cutover/README.md](cutover/README.md): build cutover, parity, and deletion ledgers.
+- [cutover/build-contract.md](cutover/build-contract.md): app build cutover.
+- [cutover/parity-ledger.md](cutover/parity-ledger.md): product surface parity.
+- [cutover/deletion-ledger.md](cutover/deletion-ledger.md): removal guard.
 - [host-boundary.md](host-boundary.md): browser API and JavaScript boundary.
 - [memory-ownership.md](memory-ownership.md): resources and cleanup.
 - [protocol-kernel.md](protocol-kernel.md): Nostr protocol ownership.

@@ -8,23 +8,26 @@ adapters, and the partial Leptos shell; partial for Trunk and Docker gates.
 
 ## Local Matrix
 
+Run the full Rust/WASM local gate through `lkjstr-xtask`:
+
+```sh
+cargo run -p lkjstr-xtask -- quiet rust-wasm
+```
+
+That command runs:
+
 ```sh
 cargo fmt --check
 cargo clippy --workspace --all-targets -- -D warnings
+cargo clippy -p lkjstr-web --target wasm32-unknown-unknown --all-targets -- -D warnings
 cargo test --workspace
-wasm-pack test --headless --firefox crates/lkjstr-web
 wasm-pack test --headless --chrome crates/lkjstr-web
+wasm-pack test --headless --firefox crates/lkjstr-web
 trunk build --release
-pnpm test:e2e:quiet
-pnpm cloudflare:quiet
 ```
 
-If the shell exports `NO_COLOR=1`, run Trunk with that variable unset until the
-quiet Rust/WASM gate owns the workaround:
-
-```sh
-env -u NO_COLOR trunk build --release
-```
+The quiet gate unsets `NO_COLOR` for Trunk because Trunk `0.21.14` rejects
+`NO_COLOR=1`.
 
 ## Docker Matrix
 

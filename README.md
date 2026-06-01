@@ -95,6 +95,7 @@ pnpm cloudflare:quiet
 cargo fmt --check
 cargo clippy --workspace --all-targets -- -D warnings
 cargo test --workspace
+cargo run -p lkjstr-xtask -- quiet rust-wasm
 cargo run -p lkjstr-xtask -- check-docs
 cargo run -p lkjstr-xtask -- check-lines
 cargo run -p lkjstr-xtask -- check-rust-style

@@ -49,17 +49,17 @@ pnpm cloudflare:quiet
 Rust/WASM target commands:
 
 ```sh
+cargo run -p lkjstr-xtask -- quiet rust-wasm
 cargo fmt --check
 cargo clippy --workspace --all-targets -- -D warnings
+cargo clippy -p lkjstr-web --target wasm32-unknown-unknown --all-targets -- -D warnings
 cargo test --workspace
-wasm-pack test --headless --firefox crates/lkjstr-web
 wasm-pack test --headless --chrome crates/lkjstr-web
+wasm-pack test --headless --firefox crates/lkjstr-web
 trunk build --release
 pnpm test:e2e:quiet
 pnpm cloudflare:quiet
 ```
-
-Use verbose commands only when debugging.
 
 ## Docker
 

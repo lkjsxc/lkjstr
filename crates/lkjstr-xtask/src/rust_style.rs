@@ -21,12 +21,16 @@ pub fn check(root: &Path) -> Result<(), String> {
 }
 
 fn check_file(problems: &mut Vec<String>, rel: &str, text: &str) {
+    let production = !is_test_path(rel);
     for (index, line) in text.lines().enumerate() {
         let scrubbed = scrub_line(line);
         for (pattern, label) in forbidden_patterns() {
             if scrubbed.contains(&pattern) {
                 problems.push(format!("{rel}: line {} forbids {label}", index + 1));
             }
+        }
+        if production {
+            check_production_line(problems, rel, index + 1, &scrubbed);
         }
     }
 }
@@ -43,6 +47,36 @@ fn forbidden_patterns() -> Vec<(String, String)> {
     .into_iter()
     .map(|(pattern, label)| (pattern.to_owned(), label.to_owned()))
     .collect()
+}
+
+fn check_production_line(problems: &mut Vec<String>, rel: &str, line_number: usize, line: &str) {
+    let trimmed = line.trim_start();
+    if trimmed.starts_with("static mut ") || line.contains("thread_local!") {
+        problems.push(format!(
+            "{rel}: line {line_number} forbids global mutable state"
+        ));
+    }
+    if trimmed.starts_with("static ")
+        && ["Mutex<", "RwLock<", "OnceLock<", "LazyLock<"]
+            .iter()
+            .any(|pattern| line.contains(pattern))
+    {
+        problems.push(format!(
+            "{rel}: line {line_number} forbids global mutable state"
+        ));
+    }
+    if ["fn placeholder", "fn stub", "fn mock"]
+        .iter()
+        .any(|pattern| line.contains(pattern))
+    {
+        problems.push(format!(
+            "{rel}: line {line_number} forbids placeholder functions"
+        ));
+    }
+}
+
+fn is_test_path(rel: &str) -> bool {
+    rel.contains("/tests/") || rel.ends_with("_test.rs")
 }
 
 fn scrub_line(line: &str) -> String {
