@@ -133,7 +133,11 @@ pub fn sqlite_cache_ledger_row_for_table(
         byte_count: ledger.cache_bytes as u64,
         protected: i64::from(ledger.protected),
         score: ledger.score,
-        owner_key: ledger.account_pubkey.clone(),
+        owner_key: ledger
+            .account_pubkey
+            .clone()
+            .or_else(|| ledger.feed_key.clone())
+            .or_else(|| ledger.relay_url.clone()),
         created_at_ms: ledger.created_at,
         updated_at_ms: ledger.updated_at,
     }

@@ -37,8 +37,8 @@ UI shell, and repository checks.
 - `crates/lkjstr-app/`: product runtime composition.
 - `crates/lkjstr-ui/`: Leptos components and UI CSS contracts.
 - `crates/lkjstr-web/`: WASM entrypoint and browser host adapters.
-- `crates/lkjstr-web/src/sqlite_store/`: protected and cache SQLite repository
-  calls.
+- `crates/lkjstr-web/src/sqlite_store/`: protected, cache, diagnostics, jobs,
+  route-block, and app-log SQLite repository calls.
 - `crates/lkjstr-web/src/storage_worker/`: typed SQLite worker host adapter.
 - `crates/lkjstr-xtask/`: repository checks and quiet gates.
 

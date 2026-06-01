@@ -2,6 +2,7 @@
 
 mod cache;
 mod cache_statements;
+mod diagnostic_statements;
 mod diagnostics;
 mod indexes;
 mod metadata;
@@ -167,10 +168,16 @@ pub const fn cache_sqlite_statements() -> &'static [SqliteStatementSpec] {
 }
 
 #[must_use]
+pub const fn diagnostic_sqlite_statements() -> &'static [SqliteStatementSpec] {
+    diagnostic_statements::DIAGNOSTIC_STATEMENTS
+}
+
+#[must_use]
 pub fn sqlite_repository_statements() -> Vec<&'static SqliteStatementSpec> {
     statements::PROTECTED_STATEMENTS
         .iter()
         .chain(cache_statements::CACHE_STATEMENTS.iter())
+        .chain(diagnostic_statements::DIAGNOSTIC_STATEMENTS.iter())
         .collect()
 }
 

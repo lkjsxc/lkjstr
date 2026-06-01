@@ -8,10 +8,13 @@ codecs, ledger resource map, and typed operation outcomes.
 ## Table of Contents
 
 - `accounts.rs`: account row identity, JSON helpers, and SQLite row codec.
+- `app_log.rs`: app log row codec.
 - `data_class.rs`: table data classes and inventory groups.
+- `diagnostics.rs`: relay diagnostic row codecs and ledger row helpers.
 - `events.rs`: cached event, event tag, relay provenance, and ledger row helpers.
 - `feed_cache.rs`: feed cursor, coverage, and scan hint row codecs.
 - `feed_cache_ledger.rs`: feed cache ledger row helpers.
+- `jobs.rs`: job row codec and ledger row helpers.
 - `ledger.rs`: cache ledger resource ownership manifest.
 - `lib.rs`: public storage crate exports.
 - `local_secrets.rs`: local signing secret row helpers and SQLite row codec.
@@ -20,6 +23,7 @@ codecs, ledger resource map, and typed operation outcomes.
 - `outcome.rs`: typed storage operation outcomes.
 - `relay_sets.rs`: protected relay-set row identity, JSON helpers, and SQLite row codec.
 - `resource.rs`: cache owner and resource kind strings.
+- `route_blocks.rs`: protected relay route-block row codec.
 - `settings_defs.rs`: flat settings definition rows.
 - `settings.rs`: settings override row identity, JSON helpers, and SQLite row codec.
 - `settings_schema.rs`: flat settings schema and override merging.

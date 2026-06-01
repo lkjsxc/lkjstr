@@ -16,7 +16,7 @@ Protected data:
 - workspace layout.
 - Tweet drafts.
 - active tab snapshots.
-- active or running jobs.
+- queued or running jobs.
 - user relay route blocks.
 
 Recoverable data:
@@ -28,7 +28,7 @@ Recoverable data:
 - route evidence and relay suggestions.
 - finished jobs.
 - stale absent tab snapshots.
-- app log rows outside the protected diagnostic window.
+- app log rows outside the bounded diagnostic window.
 
 ## Cache Ledger
 
@@ -66,4 +66,3 @@ Quota errors return `Quota` and are visible in Stats. If compaction cannot free
 space, Stats reports protected data, recoverable data, incomplete inventory,
 unknown browser overhead, or unavailable storage APIs. It must not report fake
 success.
-

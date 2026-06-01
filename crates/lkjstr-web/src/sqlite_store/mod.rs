@@ -1,14 +1,19 @@
 #![doc = "Worker-backed SQLite repository calls."]
 
 mod accounts;
+mod app_log;
 mod cache_ledger;
 mod database;
+mod diagnostic_params;
 mod event_params;
 mod events;
 mod feed_cache;
 mod feed_params;
+mod jobs;
 mod notifications;
 mod params;
+mod relay_diagnostics;
+mod relay_routes;
 mod relay_sets;
 mod rows;
 mod settings;
@@ -21,6 +26,7 @@ pub use accounts::{
     sqlite_local_account_put, sqlite_local_secret_delete, sqlite_local_secret_get,
     sqlite_local_secret_put,
 };
+pub use app_log::{sqlite_app_log_insert, sqlite_app_log_recent};
 pub use database::SqliteStore;
 pub use events::{
     sqlite_event_get, sqlite_event_put, sqlite_event_relays, sqlite_events_by_author_kind,
@@ -30,8 +36,18 @@ pub use feed_cache::{
     sqlite_feed_coverage_for_feed, sqlite_feed_coverage_put, sqlite_feed_cursor_get,
     sqlite_feed_cursor_put, sqlite_feed_scan_hint_put, sqlite_feed_scan_hints_for_feed,
 };
+pub use jobs::{sqlite_job_get, sqlite_job_put, sqlite_jobs_recent};
 pub use notifications::{
     sqlite_notifications_for_owner, sqlite_notifications_mark_owner_read, sqlite_notifications_put,
+};
+pub use relay_diagnostics::{
+    sqlite_relay_information_get, sqlite_relay_information_put, sqlite_relay_information_recent,
+    sqlite_relay_summaries_recent, sqlite_relay_summary_get, sqlite_relay_summary_put,
+};
+pub use relay_routes::{
+    sqlite_author_routes_for_pubkey, sqlite_author_routes_put, sqlite_relay_suggestions_for_pubkey,
+    sqlite_relay_suggestions_put, sqlite_route_block_delete, sqlite_route_block_put,
+    sqlite_route_blocks_recent,
 };
 pub use relay_sets::{sqlite_relay_set_get, sqlite_relay_set_put, sqlite_relay_sets_all};
 pub use settings::{

@@ -27,12 +27,14 @@ is wired and tested as the durable product path.
 ## Repository Families
 
 - protected data: settings, workspaces, tab states, accounts, secrets, relay
-  sets, and Tweet drafts are partially implemented. Route blocks remain open.
+  sets, Tweet drafts, and route blocks are partially implemented.
 - event cache: events, tags, relay provenance, notifications, feed cursors,
   feed coverage, and scan hints are partially implemented for core put/read
   paths. Delete, repair, and compaction dispatch remain open.
 - relay diagnostics: relay information, summaries, suggestions, author routes,
-  jobs, and app log records.
+  jobs, and app log records are partially implemented for core put/read paths.
+  Relay diagnostics, suggestions, routes, and finished jobs are ledger-backed.
+  Route blocks are protected safety rows and are not ledger-backed.
 - retention: cache ledger, dynamic protection, compaction, repair, and
   inventory snapshots.
 

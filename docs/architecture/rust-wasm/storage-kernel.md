@@ -8,9 +8,9 @@ This file defines Rust ownership for durable browser storage. Status: partial.
 
 Implemented now: `lkjstr-storage` owns the executable storage table manifest,
 cache ledger resource map, typed operation outcomes, executable SQLite schema
-records, protected and event-cache SQL statement records, schema hash, the
-tab-state key plus ledger-row contract for workspace snapshots, and SQLite row
-codecs for protected startup data, events, tags, relay provenance,
+records, protected, event-cache, and diagnostics SQL statement records, schema
+hash, the tab-state key plus ledger-row contract for workspace snapshots, and
+SQLite row codecs for protected startup data, events, tags, relay provenance,
 notifications, feed cursors, feed coverage, and scan hints. `lkjstr-web` owns a
 narrow real IndexedDB adapter for
 workspace startup, workspace rows, settings override rows, protected account
@@ -38,16 +38,16 @@ It also has protected SQLite repository calls for settings, workspaces, tab
 states plus ledger, accounts, local secrets, relay sets, and Tweet drafts. Core
 event-cache repository calls now cover atomic event/tag/relay writes, event
 lookups, notification owner reads and marks, feed cursor reads, feed coverage
-reads, and fresh scan-hint reads. These calls are not wired into product startup
-or feed runtimes yet.
+reads, fresh scan-hint reads, relay diagnostic summaries, relay information,
+relay suggestions, author routes, route blocks, jobs, and app log rows. These
+calls are not wired into product startup or feed runtimes yet.
 
 Target now: OPFS-backed SQLite WASM in a dedicated worker. The detailed target
 lives in [../data/sqlite-opfs/README.md](../data/sqlite-opfs/README.md).
 
-Not implemented yet: remaining diagnostics repository families, product wiring
-to SQLite, route-block repositories, cache delete/repair paths, retention
-dispatchers, ledger repair, diagnostics inventory, full browser OPFS matrix
-tests, multi-tab lock handling, and Stats inventory over SQLite.
+Not implemented yet: product wiring to SQLite, cache delete/repair paths,
+retention dispatchers, ledger repair, diagnostics inventory, full browser OPFS
+matrix tests, multi-tab lock handling, and Stats inventory over SQLite.
 
 ## Manifest Contract
 
@@ -95,8 +95,9 @@ their repositories are ported.
 ## Repository Rule
 
 Feature code will call repositories, not raw IndexedDB stores or raw worker SQL.
-The first Rust SQLite repository calls cover protected data and core event-cache
-data. Ledger-backed writes must store resource rows and ledger rows atomically.
+The first Rust SQLite repository calls cover protected data, core event-cache
+data, and core diagnostics data. Ledger-backed writes must store resource rows
+and ledger rows atomically.
 
 Protected user data is never removed by cache pressure. Recoverable cache data
 is removed only through cache-ledger dispatchers.
@@ -113,6 +114,6 @@ closes idempotently, and exposes diagnostics. Each callback is stored in an
 owner slot and cleared on settle, cancel, timeout, or close. Late worker
 responses become typed late outcomes rather than reaching product logic.
 
-The Rust adapter exposes the same boundary through `lkjstr-web`. Protected and
-core event-cache Rust repository calls now use it, but product paths still need
-wiring before they can leave IndexedDB or Dexie.
+The Rust adapter exposes the same boundary through `lkjstr-web`. Protected,
+core event-cache, and diagnostics Rust repository calls now use it, but product
+paths still need wiring before they can leave IndexedDB or Dexie.

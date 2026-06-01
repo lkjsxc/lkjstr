@@ -26,7 +26,7 @@ the Rust executable schema records are committed.
 | `accounts` | `pubkey` | account label, signer kind, metadata |
 | `local_account_secrets` | `pubkey` | raw local signing secret payload under the current raw-secret contract |
 | `relay_sets` | `set_id` | named relay set and selected read/write flags |
-| `relay_route_blocks` | `relay_url`, `pubkey` | user blocks for route suggestions |
+| `relay_route_blocks` | `relay_url`, `pubkey` | protected safety blocks for route suggestions |
 | `tweet_drafts` | `draft_id` | durable compose body, attachments, and tags |
 
 Protected rows are never removed by cache compaction.
@@ -69,7 +69,7 @@ compacted, failed, dense, unresolved, or missing.
 | `relay_diagnostic_summaries` | `relay_url` | bounded relay diagnostics |
 | `relay_list_suggestions` | `pubkey`, `relay_url`, `purpose` | explicit NIP-65 suggestions |
 | `author_relay_routes` | `pubkey`, `relay_url`, `route_kind` | route evidence with optional expiry |
-| `app_log` | `log_id` | redacted chronological app log |
+| `app_log` | `log_id` | redacted chronological app log; this intentionally adds durable SQLite history beyond the current in-memory TypeScript ring |
 
 Required indexes:
 
@@ -92,4 +92,3 @@ Required index:
 Local Search must not be an unbounded in-memory scan. If the bundled SQLite
 build includes FTS, add an FTS table linked to `events(event_id)`. If FTS is
 unavailable, use deterministic lowercase token rows owned by `lkjstr-storage`.
-
