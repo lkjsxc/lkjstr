@@ -11,6 +11,7 @@ use lkjstr_storage::{TabStateRecord, tab_state_id};
 
 pub use crate::workspace_defaults::{DEFAULT_WARM_SNAPSHOT_CAP, default_recovery_ids};
 
+use crate::startup_snapshots::startup_snapshot_state;
 use crate::workspace_defaults::empty_workspace;
 
 #[derive(Clone, Debug, Eq, PartialEq)]
@@ -25,6 +26,7 @@ pub enum StartupSource {
 pub struct StartupInput {
     pub stored_workspace: Option<Workspace>,
     pub storage_available: bool,
+    pub tab_snapshots: Vec<TabStateRecord>,
     pub recovery_ids: WorkspaceIds,
     pub now: u64,
 }
@@ -49,10 +51,11 @@ pub fn start_workspace(input: StartupInput) -> StartupResult {
         return startup_result(
             ensure_usable_workspace(empty_workspace(), input.recovery_ids, input.now),
             StartupSource::StorageUnavailable,
+            Vec::new(),
         );
     }
     let Some(stored) = input.stored_workspace else {
-        return startup_result(bootstrap_workspace(), StartupSource::Bootstrap);
+        return startup_result(bootstrap_workspace(), StartupSource::Bootstrap, Vec::new());
     };
     let recovered = ensure_usable_workspace(stored.clone(), input.recovery_ids, input.now);
     let source = if recovered == stored {
@@ -60,7 +63,7 @@ pub fn start_workspace(input: StartupInput) -> StartupResult {
     } else {
         StartupSource::Recovered
     };
-    startup_result(recovered, source)
+    startup_result(recovered, source, input.tab_snapshots)
 }
 
 #[must_use]
@@ -151,12 +154,18 @@ pub fn record_tab_snapshot(
     mark_warm_tab(state, tab_id)
 }
 
-fn startup_result(workspace: Workspace, source: StartupSource) -> StartupResult {
+fn startup_result(
+    workspace: Workspace,
+    source: StartupSource,
+    snapshots: Vec<TabStateRecord>,
+) -> StartupResult {
+    let (tab_snapshots, warm_tab_order) =
+        startup_snapshot_state(&workspace, snapshots, DEFAULT_WARM_SNAPSHOT_CAP);
     StartupResult {
         state: WorkspaceRuntimeState {
             workspace,
-            tab_snapshots: BTreeMap::new(),
-            warm_tab_order: Vec::new(),
+            tab_snapshots,
+            warm_tab_order,
             warm_snapshot_cap: DEFAULT_WARM_SNAPSHOT_CAP,
         },
         source,

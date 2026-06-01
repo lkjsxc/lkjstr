@@ -1,11 +1,14 @@
 use lkjstr_app::{StartupInput, default_recovery_ids};
-use lkjstr_storage::{StorageOperation, StorageOutcome, WorkspaceRecord, workspace_record_id};
+use lkjstr_storage::{
+    StorageOperation, StorageOutcome, TabStateRecord, WorkspaceRecord, workspace_record_id,
+};
 use serde::Serialize;
 use wasm_bindgen::prelude::JsValue;
 use web_sys::IdbTransactionMode;
 
 use crate::indexed_db::callbacks;
 use crate::indexed_db::database::{self, DEFAULT_DB_NAME, WORKSPACES_TABLE};
+use crate::indexed_db::tab_state_store;
 
 pub async fn default_workspace_startup_input(now: u64) -> StartupInput {
     workspace_startup_input(DEFAULT_DB_NAME, now).await
@@ -13,18 +16,36 @@ pub async fn default_workspace_startup_input(now: u64) -> StartupInput {
 
 pub async fn workspace_startup_input(db_name: &str, now: u64) -> StartupInput {
     match workspace_get(db_name, "main").await {
-        StorageOutcome::Ok(stored_workspace) => StartupInput {
-            stored_workspace,
-            storage_available: true,
-            recovery_ids: default_recovery_ids("main"),
-            now,
-        },
+        StorageOutcome::Ok(stored_workspace) => {
+            let tab_snapshots = startup_tab_snapshots(db_name, stored_workspace.as_ref()).await;
+            StartupInput {
+                stored_workspace,
+                storage_available: true,
+                tab_snapshots,
+                recovery_ids: default_recovery_ids("main"),
+                now,
+            }
+        }
         _ => StartupInput {
             stored_workspace: None,
             storage_available: false,
+            tab_snapshots: Vec::new(),
             recovery_ids: default_recovery_ids("main"),
             now,
         },
+    }
+}
+
+async fn startup_tab_snapshots(
+    db_name: &str,
+    workspace: Option<&WorkspaceRecord>,
+) -> Vec<TabStateRecord> {
+    let Some(workspace) = workspace else {
+        return Vec::new();
+    };
+    match tab_state_store::tab_states_for_workspace(db_name, &workspace.id).await {
+        StorageOutcome::Ok(rows) => rows,
+        _ => Vec::new(),
     }
 }
 

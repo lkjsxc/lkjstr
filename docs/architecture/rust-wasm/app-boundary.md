@@ -6,8 +6,8 @@ This file defines the Rust application composition boundary. Status:
 implemented for pure account-domain records, local signing helpers, account
 storage command wiring, relay-set storage command wiring, workspace layout
 reducers, tab movement reducers, workspace startup recovery, bounded tab
-snapshot staging, and New Tab catalog options; design-only for remaining
-browser service composition.
+snapshot staging, startup filtering of stored tab snapshots, and New Tab
+catalog options; design-only for remaining browser service composition.
 
 ## Owner
 
@@ -44,8 +44,8 @@ does not introduce remote account state.
 - Tab snapshot payloads, feed/tool snapshot merge semantics, feed restore seeds,
   anchors, and bounded runtime snapshot ID lists are pure `lkjstr-domain`
   models.
-- Workspace startup recovery and warm tab snapshot staging are pure
-  `lkjstr-app` composition reducers.
+- Workspace startup recovery, stored tab snapshot filtering, and warm tab
+  snapshot staging are pure `lkjstr-app` composition reducers.
 - Protocol validation and signing live in `lkjstr-protocol`.
 - Relay scheduling and subscription state live in `lkjstr-relays`.
 - Durable storage repositories live in `lkjstr-storage`.

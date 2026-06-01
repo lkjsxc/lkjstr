@@ -21,11 +21,13 @@ This file is the concise status map for the active Rust/WASM migration.
 - `lkjstr-web` owns narrow IndexedDB adapters for workspace startup, workspace
   rows, settings rows, account rows, local secrets, relay sets, Tweet drafts,
   the first multi-store transaction helper, ledger-backed tab-state snapshot
-  writes, and early host calls needed by the partial Leptos shell.
+  writes, startup tab-state loading, and early host calls needed by the partial
+  Leptos shell.
 - `lkjstr-relays` owns pure send queue, request scheduler, subscription id,
   subscription alias, close tombstone, and outbound `REQ` message-size budget
   state machines.
-- `lkjstr-app` owns startup recovery and bounded warm tab snapshot staging.
+- `lkjstr-app` owns startup recovery, stored tab snapshot filtering, and bounded
+  warm tab snapshot staging.
 - `lkjstr-ui` renders the partial Leptos workspace shell, Welcome, New Tab,
   Stats inventory, Settings, Accounts, Relay Settings, Upload Settings, and
   Tweet draft surfaces.

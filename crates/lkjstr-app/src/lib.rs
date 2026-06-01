@@ -1,5 +1,6 @@
 #![doc = "Pure application composition reducers for lkjstr."]
 
+mod startup_snapshots;
 mod workspace_defaults;
 pub mod workspace_runtime;
 

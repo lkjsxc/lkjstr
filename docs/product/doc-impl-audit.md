@@ -35,6 +35,7 @@ references should stay as relative Markdown links.
 | Rust New Tab catalog                      | [app-boundary.md](../architecture/rust-wasm/app-boundary.md)         | implemented     | domain catalog tests                           |
 | Rust workspace snapshot payloads          | [app-boundary.md](../architecture/rust-wasm/app-boundary.md)         | implemented     | domain snapshot tests                          |
 | Rust workspace runtime composition        | [app-boundary.md](../architecture/rust-wasm/app-boundary.md)         | implemented     | app workspace tests                            |
+| Rust startup tab snapshot recovery        | [app-boundary.md](../architecture/rust-wasm/app-boundary.md)         | implemented     | app and browser storage tests                  |
 | Rust storage manifest and outcomes        | [storage-kernel.md](../architecture/rust-wasm/storage-kernel.md)     | implemented     | storage crate tests                            |
 | Rust tab-state storage contract           | [storage-kernel.md](../architecture/rust-wasm/storage-kernel.md)     | implemented     | tab-state storage tests                        |
 | Rust workspace storage record             | [storage-kernel.md](../architecture/rust-wasm/storage-kernel.md)     | implemented     | workspace storage tests                        |

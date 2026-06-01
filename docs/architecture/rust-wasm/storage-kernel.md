@@ -14,6 +14,8 @@ workspace rows, settings override rows, protected account rows, local secrets,
 relay sets, Tweet drafts, and the first multi-store transaction helper.
 Rust tab-state snapshot writes now use that helper to store the `tabStates` row
 and matching `cacheLedger` row in one IndexedDB transaction.
+Workspace startup loads stored tab snapshots for the stored workspace and lets
+`lkjstr-app` filter them against the recovered workspace shape.
 
 Not implemented yet: full repository families, single-request deadline guards,
 retention dispatchers, ledger repair, diagnostics inventory, and most
@@ -54,8 +56,10 @@ UI and Stats paths continue from these states without uncaught runtime errors.
 
 The Rust workspace adapter maps browser IndexedDB availability, blocked opens,
 quota failures, corrupt stored rows, and request failures into this outcome
-contract. Browser storage callers outside the Rust workspace startup path still
-use the TypeScript operation result until their repositories are ported.
+contract. Tab-state startup loading is best-effort: unavailable or corrupt
+snapshot rows do not prevent workspace recovery. Browser storage callers outside
+the Rust workspace startup path still use the TypeScript operation result until
+their repositories are ported.
 
 ## Repository Rule
 

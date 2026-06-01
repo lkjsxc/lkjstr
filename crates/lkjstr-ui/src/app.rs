@@ -46,6 +46,7 @@ pub fn default_startup_input() -> StartupInput {
     StartupInput {
         stored_workspace: None,
         storage_available: true,
+        tab_snapshots: Vec::new(),
         recovery_ids: default_recovery_ids("main"),
         now: 0,
     }

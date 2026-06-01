@@ -48,6 +48,34 @@ pub async fn tab_state_ledger_get(
     record_requests::get(db_name, CACHE_LEDGER_TABLE, id).await
 }
 
+pub async fn tab_states_for_workspace(
+    db_name: &str,
+    workspace_id: &str,
+) -> StorageOutcome<Vec<TabStateRecord>> {
+    let operation_id = format!("tab-states-for-workspace-{workspace_id}");
+    let values =
+        match record_requests::all_values(db_name, TAB_STATES_TABLE, operation_id.clone()).await {
+            StorageOutcome::Ok(values) => values,
+            outcome => return outcome.map(|_| Vec::new()),
+        };
+    let mut rows = Vec::new();
+    for value in values {
+        match serde_wasm_bindgen::from_value::<TabStateRecord>(value) {
+            Ok(row) if row.workspace_id == workspace_id => rows.push(row),
+            Ok(_) => {}
+            Err(_) => {
+                return database::corrupt(StorageOperation::Read, TAB_STATES_TABLE, operation_id);
+            }
+        }
+    }
+    rows.sort_by(|left, right| {
+        left.updated_at
+            .cmp(&right.updated_at)
+            .then_with(|| left.tab_id.cmp(&right.tab_id))
+    });
+    StorageOutcome::Ok(rows)
+}
+
 fn map_transaction<T>(
     operation_id: String,
     error: wasm_bindgen::prelude::JsValue,
