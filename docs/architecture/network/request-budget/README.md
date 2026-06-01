@@ -8,9 +8,10 @@ for NIP-11-driven local limits, diagnostics, and dedupe-relevant request shape.
 
 ## Status
 
-Design target for the current implementation work. Move implemented behavior to
-[../../../current-state.md](../../../current-state.md) only after tests prove the
-source contract.
+Partially implemented in Rust for pure request-budget derivation, filter
+clamping, warning creation, read-cap merge, and outbound `REQ` byte caps.
+TypeScript still owns product read wiring until Rust feed runtimes use these
+state machines directly.
 
 ## Table of Contents
 

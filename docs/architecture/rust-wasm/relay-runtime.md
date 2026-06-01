@@ -8,19 +8,19 @@ This file defines Rust relay ownership. Status: partial.
 
 Implemented now: `lkjstr-relays` owns pure send queue, request scheduler,
 subscription id, subscription alias, close tombstone state machines, and
-request message-size budgeting for outbound `REQ` frames. It also owns the
-first pure relay client lifecycle reducer for connect, open, send, error,
-close, reconnect-timer, connect-deadline, owner-close, and typed relay-message
-decisions.
+request budgets for filter limits, read caps, subscription limits, and outbound
+`REQ` byte caps. It also owns the first pure relay client lifecycle reducer for
+connect, open, send, error, close, reconnect-timer, connect-deadline,
+owner-close, and typed relay-message decisions.
 
 `lkjstr-web` owns the first browser WebSocket and timer adapter foundation:
 socket handles store event callbacks, detach listeners during close, map send
 and open failures into typed host problems, and expose idempotent close. Timer
 handles own one browser timeout and clear it on owner cleanup.
 
-Not implemented yet: full request budgets, page read dedupe, progressive
-snapshots, diagnostics merge, demand and lease planning, and product wiring
-from relay reducers to browser adapters.
+Not implemented yet: request-budget product wiring, page read dedupe,
+progressive snapshots, diagnostics merge, demand and lease planning, and
+product wiring from relay reducers to browser adapters.
 
 ## Pure Runtime
 
@@ -46,9 +46,11 @@ callbacks or mutate global state.
 
 The implemented Rust state machines mirror current TypeScript queue limits:
 send queue capacity `64`, pending request capacity `64`, subscription id length
-cap `48`, close tombstone default TTL `10` seconds, and tombstone max size
-`256`. Request message-size budgeting uses the actual Rust protocol encoder for
-`["REQ", subId, ...filters]`, applies the app hard cap `65536` bytes, and
+cap `48`, close tombstone default TTL `10` seconds, tombstone max size `256`,
+default page cap `1000`, general filter cap `500`, search cap `100`, metadata
+and route-discovery caps `50`, exact lookup cap `500`, and request timeout
+`5000` ms. Request message-size budgeting uses the actual Rust protocol encoder
+for `["REQ", subId, ...filters]`, applies the app hard cap `65536` bytes, and
 honors a smaller relay `max_message_length` cap.
 
 ## Host Adapter

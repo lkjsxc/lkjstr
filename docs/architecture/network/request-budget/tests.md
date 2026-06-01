@@ -22,6 +22,8 @@ without changing result correctness.
 - Auth, payment, and restricted-write flags create diagnostics.
 - Exact lookup, Search, Custom Request, and live semantics are preserved.
 - Dedupe uses effective options and effective filter shape.
+- Rust `lkjstr-relays` tests cover pure budget derivation, warning kinds,
+  filter clamping, read-cap merge, and serialized `REQ` byte caps.
 
 ## Browser Gates
 

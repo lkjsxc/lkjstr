@@ -35,6 +35,8 @@ UI shell, and repository checks.
 - `crates/lkjstr-relays/`: relay state machines and schedulers.
 - `crates/lkjstr-relays/src/client/`: pure relay client lifecycle reducer,
   events, effects, and state.
+- `crates/lkjstr-relays/src/request_budget/`: pure request-budget derivation,
+  filter clamping, relay-limit diagnostics, and read-cap merge policy.
 - `crates/lkjstr-storage/`: manifest, repositories, ledger, and retention.
 - `crates/lkjstr-app/`: product runtime composition.
 - `crates/lkjstr-ui/`: Leptos components and UI CSS contracts.

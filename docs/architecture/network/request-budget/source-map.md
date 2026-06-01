@@ -21,6 +21,10 @@ below 200 lines.
 | `src/lib/relays/request-budget/message-size.ts`    | `REQ` byte estimation                |
 | `src/lib/relays/request-budget/derive.ts`          | pure budget derivation               |
 | `src/lib/relays/request-budget/apply.ts`           | filter and read-option application   |
+| `crates/lkjstr-relays/src/request_budget/types.rs` | Rust request-budget contract types   |
+| `crates/lkjstr-relays/src/request_budget/policy.rs` | Rust app caps and intent policy     |
+| `crates/lkjstr-relays/src/request_budget/derive.rs` | Rust pure budget derivation         |
+| `crates/lkjstr-relays/src/request_budget/apply.rs` | Rust filter and read-cap helpers     |
 | `crates/lkjstr-relays/src/request_message_size.rs` | Rust `REQ` byte cap decision         |
 | `src/lib/events/relay-page-limits.ts`              | thin compatibility wrapper only      |
 | `src/lib/relays/orchestration/page-reads.ts`       | budgeted page-read entry point       |
@@ -33,6 +37,8 @@ below 200 lines.
 | -------------------------------------------------- | ---------------------------------------------------- |
 | `tests/unit/relays/relay-info.test.ts`             | NIP-11 parse, fetch, and store gates                 |
 | `tests/unit/relays/request-budget/`                | pure budget derivation gates                         |
+| `crates/lkjstr-relays/tests/request_budget_test.rs` | Rust request-budget derivation gates                 |
+| `crates/lkjstr-relays/tests/request_message_size_test.rs` | Rust `REQ` byte cap gates                  |
 | `tests/unit/relays/subscription-manager-*.test.ts` | dedupe and cap behavior                              |
 | `tests/unit/events/relay-page-*.test.ts`           | grouped page limit behavior                          |
 | `tests/e2e/`                                       | Relay Settings, Stats, Search, and Custom Request UX |

@@ -2,6 +2,7 @@
 
 pub mod client;
 pub mod close_tombstones;
+pub mod request_budget;
 pub mod request_message_size;
 pub mod request_scheduler;
 pub mod send_queue;
@@ -14,6 +15,15 @@ pub use client::{
     max_relay_message_records, reconnect_delay_ms, reduce_relay_client,
 };
 pub use close_tombstones::{RelayCloseTombstones, default_close_tombstone_ttl_ms};
+pub use request_budget::{
+    BudgetedFilters, MergedReadBudget, RequestBudget, RequestBudgetDirection, RequestBudgetInput,
+    RequestBudgetPhase, RequestBudgetPurpose, RequestBudgetSurface, RequestBudgetWarning,
+    RequestBudgetWarningKind, RequestBudgetWarningValue, RequestRelayLimits, app_filter_cap,
+    apply_budget_to_filters, default_read_page_max_events, derive_request_budget,
+    intended_filter_limit, max_exact_lookup_limit, max_filter_limit, max_metadata_limit,
+    max_route_discovery_limit, max_search_limit, merge_budgets_for_read, positive_limit,
+    request_timeout_ms,
+};
 pub use request_message_size::{
     RequestMessageSizeCapSource, RequestMessageSizeDecision, RequestMessageSizeWarning,
     app_max_req_message_bytes, estimate_req_message_bytes, request_message_size_decision,
