@@ -7,8 +7,9 @@ use lkjstr_storage::{
 };
 
 use crate::sqlite_store::{
+    cache_ledger::ledger_params,
     database::SqliteStore,
-    params::{integer, opt_text, params, raw_integer, text},
+    params::{integer, opt_text, params, text},
     rows::{all_rows, first_row},
 };
 
@@ -140,20 +141,6 @@ fn tab_params(row: SqliteTabStateRow) -> Option<crate::storage_worker::SqlParams
         integer(row.updated_at_ms),
         row.stale_after_ms
             .map_or(crate::storage_worker::SqlScalar::Null, integer),
-    ])
-}
-
-fn ledger_params(row: SqliteCacheLedgerRow) -> Option<crate::storage_worker::SqlParams> {
-    params(vec![
-        text(row.resource_id),
-        text(row.resource_kind),
-        text(row.table_name),
-        integer(row.byte_count),
-        raw_integer(row.protected),
-        raw_integer(row.score),
-        opt_text(row.owner_key),
-        integer(row.created_at_ms),
-        integer(row.updated_at_ms),
     ])
 }
 

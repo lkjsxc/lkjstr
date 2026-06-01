@@ -1,8 +1,9 @@
 use lkjstr_storage::{
     CacheResourceKind, SqliteRetentionClass, SqliteStatementKind, StorageDataClass,
-    StorageInventoryGroup, protected_sqlite_statements, sqlite_schema_hash,
-    sqlite_schema_index_names, sqlite_schema_indexes, sqlite_schema_statements,
-    sqlite_schema_table, sqlite_schema_table_names, sqlite_schema_tables,
+    StorageInventoryGroup, cache_sqlite_statements, protected_sqlite_statements,
+    sqlite_repository_statements, sqlite_schema_hash, sqlite_schema_index_names,
+    sqlite_schema_indexes, sqlite_schema_statements, sqlite_schema_table,
+    sqlite_schema_table_names, sqlite_schema_tables, sqlite_statement,
 };
 
 #[test]
@@ -164,5 +165,35 @@ fn protected_sqlite_statements_are_owned_by_documented_tables() {
     for statement in statements {
         assert!(sqlite_schema_table(statement.table_name).is_some());
         assert!(statement.sql.contains(statement.table_name));
+    }
+}
+
+#[test]
+fn cache_sqlite_statements_are_owned_by_documented_tables() {
+    let statements = cache_sqlite_statements();
+    assert!(statements.iter().any(|item| item.id == "events.upsert"));
+    assert!(statements.iter().any(|item| item.id == "event_tags.upsert"));
+    assert!(
+        statements
+            .iter()
+            .any(|item| item.id == "event_relays.upsert")
+    );
+    assert!(
+        statements
+            .iter()
+            .any(|item| item.id == "notifications.upsert")
+    );
+    assert!(
+        statements
+            .iter()
+            .any(|item| item.id == "feed_scan_hints.upsert")
+    );
+    assert!(sqlite_repository_statements().len() > protected_sqlite_statements().len());
+    assert!(matches!(
+        sqlite_statement("events.upsert"),
+        Some(statement) if statement.table_name == "events"
+    ));
+    for statement in statements {
+        assert!(sqlite_schema_table(statement.table_name).is_some());
     }
 }

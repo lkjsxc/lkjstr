@@ -1,6 +1,7 @@
 #![doc = "Executable SQLite schema records."]
 
 mod cache;
+mod cache_statements;
 mod diagnostics;
 mod indexes;
 mod metadata;
@@ -158,6 +159,26 @@ pub fn sqlite_schema_hash() -> String {
 #[must_use]
 pub const fn protected_sqlite_statements() -> &'static [SqliteStatementSpec] {
     statements::PROTECTED_STATEMENTS
+}
+
+#[must_use]
+pub const fn cache_sqlite_statements() -> &'static [SqliteStatementSpec] {
+    cache_statements::CACHE_STATEMENTS
+}
+
+#[must_use]
+pub fn sqlite_repository_statements() -> Vec<&'static SqliteStatementSpec> {
+    statements::PROTECTED_STATEMENTS
+        .iter()
+        .chain(cache_statements::CACHE_STATEMENTS.iter())
+        .collect()
+}
+
+#[must_use]
+pub fn sqlite_statement(id: &str) -> Option<&'static SqliteStatementSpec> {
+    sqlite_repository_statements()
+        .into_iter()
+        .find(|statement| statement.id == id)
 }
 
 #[must_use]

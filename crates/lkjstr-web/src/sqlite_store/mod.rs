@@ -1,7 +1,13 @@
 #![doc = "Worker-backed SQLite repository calls."]
 
 mod accounts;
+mod cache_ledger;
 mod database;
+mod event_params;
+mod events;
+mod feed_cache;
+mod feed_params;
+mod notifications;
 mod params;
 mod relay_sets;
 mod rows;
@@ -16,6 +22,17 @@ pub use accounts::{
     sqlite_local_secret_put,
 };
 pub use database::SqliteStore;
+pub use events::{
+    sqlite_event_get, sqlite_event_put, sqlite_event_relays, sqlite_events_by_author_kind,
+    sqlite_events_by_kind, sqlite_events_by_tag_value,
+};
+pub use feed_cache::{
+    sqlite_feed_coverage_for_feed, sqlite_feed_coverage_put, sqlite_feed_cursor_get,
+    sqlite_feed_cursor_put, sqlite_feed_scan_hint_put, sqlite_feed_scan_hints_for_feed,
+};
+pub use notifications::{
+    sqlite_notifications_for_owner, sqlite_notifications_mark_owner_read, sqlite_notifications_put,
+};
 pub use relay_sets::{sqlite_relay_set_get, sqlite_relay_set_put, sqlite_relay_sets_all};
 pub use settings::{
     sqlite_setting_delete, sqlite_setting_get, sqlite_setting_put, sqlite_settings_all,

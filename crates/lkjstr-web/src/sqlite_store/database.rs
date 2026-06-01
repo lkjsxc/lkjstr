@@ -1,8 +1,8 @@
 #![doc = "SQLite worker-backed database handle."]
 
 use lkjstr_storage::{
-    StorageOperation, StorageOutcome, StorageProblem, protected_sqlite_statement,
-    sqlite_schema_hash, sqlite_schema_statements,
+    StorageOperation, StorageOutcome, StorageProblem, sqlite_schema_hash, sqlite_schema_statements,
+    sqlite_statement,
 };
 
 use crate::storage_worker::{
@@ -123,7 +123,7 @@ impl SqliteStore {
 }
 
 fn statement(id: &'static str) -> StorageOutcome<&'static lkjstr_storage::SqliteStatementSpec> {
-    protected_sqlite_statement(id).map_or_else(
+    sqlite_statement(id).map_or_else(
         || {
             StorageOutcome::Corrupt(StorageProblem::new(
                 StorageOperation::Transaction,

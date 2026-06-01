@@ -96,7 +96,7 @@ pub fn tab_state_ledger_record(
     Ok(draft)
 }
 
-pub fn encoded_json_bytes(value: &impl Serialize) -> Result<usize, serde_json::Error> {
+pub fn encoded_json_bytes<T: Serialize + ?Sized>(value: &T) -> Result<usize, serde_json::Error> {
     serde_json::to_vec(value).map(|bytes| bytes.len())
 }
 
@@ -119,10 +119,17 @@ pub fn tab_state_from_sqlite_row(
 }
 
 pub fn sqlite_cache_ledger_row(ledger: &CacheLedgerRecord) -> SqliteCacheLedgerRow {
+    sqlite_cache_ledger_row_for_table(ledger, "tab_states")
+}
+
+pub fn sqlite_cache_ledger_row_for_table(
+    ledger: &CacheLedgerRecord,
+    table_name: &str,
+) -> SqliteCacheLedgerRow {
     SqliteCacheLedgerRow {
         resource_id: ledger.resource_id.clone(),
         resource_kind: ledger.resource_kind.as_str().to_owned(),
-        table_name: "tab_states".to_owned(),
+        table_name: table_name.to_owned(),
         byte_count: ledger.cache_bytes as u64,
         protected: i64::from(ledger.protected),
         score: ledger.score,

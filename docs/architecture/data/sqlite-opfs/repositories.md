@@ -16,18 +16,21 @@ and retention flows. Product crates and UI components do not call raw SQL.
 `lkjstr-web` transports storage requests to the worker and maps browser failures
 into storage outcomes. It does not contain product query rules.
 
-Implemented now: protected row codecs and protected SQL statement records live
-in `lkjstr-storage`; `lkjstr-web` has worker-backed repository calls for
-settings, workspaces, tab states with ledger rows, accounts, local secrets,
-relay sets, and Tweet drafts. Product startup and UI paths still use IndexedDB
-or Dexie until the SQLite path is wired and tested as the durable product path.
+Implemented now: protected and core event-cache row codecs plus SQL statement
+records live in `lkjstr-storage`; `lkjstr-web` has worker-backed repository
+calls for settings, workspaces, tab states with ledger rows, accounts, local
+secrets, relay sets, Tweet drafts, events, tags, relay provenance,
+notifications, feed cursors, feed coverage, and scan hints. Product startup,
+feed runtimes, and UI paths still use IndexedDB or Dexie until the SQLite path
+is wired and tested as the durable product path.
 
 ## Repository Families
 
 - protected data: settings, workspaces, tab states, accounts, secrets, relay
   sets, and Tweet drafts are partially implemented. Route blocks remain open.
 - event cache: events, tags, relay provenance, notifications, feed cursors,
-  feed coverage, and scan hints.
+  feed coverage, and scan hints are partially implemented for core put/read
+  paths. Delete, repair, and compaction dispatch remain open.
 - relay diagnostics: relay information, summaries, suggestions, author routes,
   jobs, and app log records.
 - retention: cache ledger, dynamic protection, compaction, repair, and

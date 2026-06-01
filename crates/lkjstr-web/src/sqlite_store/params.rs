@@ -18,6 +18,11 @@ pub fn integer(value: u64) -> SqlScalar {
 }
 
 #[must_use]
+pub fn opt_integer(value: Option<u64>) -> SqlScalar {
+    value.map_or(SqlScalar::Null, integer)
+}
+
+#[must_use]
 pub fn raw_integer(value: i64) -> SqlScalar {
     SqlScalar::Integer(value)
 }

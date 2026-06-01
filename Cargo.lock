@@ -1034,6 +1034,7 @@ name = "lkjstr-storage"
 version = "0.0.0"
 dependencies = [
  "lkjstr-domain",
+ "lkjstr-protocol",
  "serde",
  "serde_json",
 ]
