@@ -2,6 +2,7 @@ use crate::client::effect::{
     RelayClientDiagnosticKind, RelayClientEffect, RelayTimerKind, clear_timer, diagnostic,
 };
 use crate::client::event::RelayClientEvent;
+use crate::client::message::relay_message;
 use crate::client::state::{RelayClientState, RelayConnectionState};
 use crate::client::transition::{final_close, schedule_reconnect_if_needed, start_connect};
 
@@ -13,6 +14,7 @@ pub fn reduce_relay_client(
         RelayClientEvent::ConnectRequested => connect_requested(state),
         RelayClientEvent::SocketOpened => socket_opened(state),
         RelayClientEvent::SocketMessage { frame } => socket_message(state, frame),
+        RelayClientEvent::RelayMessage { message } => relay_message(state, message),
         RelayClientEvent::SocketError { reason } => socket_error(state, reason),
         RelayClientEvent::SocketClosed { reason } => socket_closed(state, reason),
         RelayClientEvent::SendRequested { frame } => send_requested(state, frame),

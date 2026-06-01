@@ -8,6 +8,8 @@ This directory owns pure relay client lifecycle state.
 
 - `effect.rs`: effect commands emitted by the reducer.
 - `event.rs`: lifecycle events consumed by the reducer.
+- `message.rs`: typed relay-message state transitions.
+- `message_state.rs`: bounded relay-message evidence.
 - `mod.rs`: public reducer module exports.
 - `reducer.rs`: lifecycle transition function.
 - `state.rs`: reducer state and accessors.

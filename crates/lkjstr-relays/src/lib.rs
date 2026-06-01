@@ -10,8 +10,8 @@ pub mod subscription_id;
 
 pub use client::{
     RelayClientDiagnosticKind, RelayClientEffect, RelayClientEvent, RelayClientState,
-    RelayConnectionState, RelayTimerKind, connect_deadline_ms, reconnect_delay_ms,
-    reduce_relay_client,
+    RelayConnectionState, RelayMessageState, RelayTimerKind, connect_deadline_ms,
+    max_relay_message_records, reconnect_delay_ms, reduce_relay_client,
 };
 pub use close_tombstones::{RelayCloseTombstones, default_close_tombstone_ttl_ms};
 pub use request_message_size::{

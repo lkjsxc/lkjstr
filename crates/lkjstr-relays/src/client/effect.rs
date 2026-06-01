@@ -13,6 +13,10 @@ pub enum RelayClientDiagnosticKind {
     SocketClosed,
     ConnectTimeout,
     IgnoredAfterClose,
+    RelayClosed,
+    RelayNotice,
+    RelayAuth,
+    RelayOkRejected,
 }
 
 #[derive(Clone, Debug, Eq, PartialEq)]
@@ -21,6 +25,10 @@ pub enum RelayClientEffect {
     CloseSocket,
     SendFrame(String),
     InboundFrame(String),
+    RelayEvent {
+        subscription_id: String,
+        event_id: String,
+    },
     ScheduleTimer {
         kind: RelayTimerKind,
         delay_ms: u32,
