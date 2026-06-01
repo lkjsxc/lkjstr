@@ -140,6 +140,8 @@ table of contents required by repository checks.
 - [architecture/feeds/invariants/paging-cursors.md](architecture/feeds/invariants/paging-cursors.md)
 - [architecture/feeds/orchestration-bridge.md](architecture/feeds/orchestration-bridge.md)
 - [architecture/feeds/runtime/README.md](architecture/feeds/runtime/README.md)
+- [architecture/feeds/runtime/feed-runtime-core.md](architecture/feeds/runtime/feed-runtime-core.md)
+- [architecture/feeds/runtime/feed-window-reducer.md](architecture/feeds/runtime/feed-window-reducer.md)
 - [architecture/feeds/runtime/merge-reducer.md](architecture/feeds/runtime/merge-reducer.md)
 - [architecture/feeds/runtime/multi-tab-ownership.md](architecture/feeds/runtime/multi-tab-ownership.md)
 - [architecture/feeds/runtime/per-runtime-cursors.md](architecture/feeds/runtime/per-runtime-cursors.md)

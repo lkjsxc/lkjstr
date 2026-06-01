@@ -25,6 +25,8 @@ semantics: ordering, paging, filters, merge, cursors, and multi-tab ownership.
 ### Runtime
 
 - [runtime/README.md](runtime/README.md)
+- [runtime/feed-runtime-core.md](runtime/feed-runtime-core.md)
+- [runtime/feed-window-reducer.md](runtime/feed-window-reducer.md)
 - [runtime/merge-reducer.md](runtime/merge-reducer.md)
 - [runtime/per-runtime-cursors.md](runtime/per-runtime-cursors.md)
 - [runtime/relay-incomplete-windows.md](runtime/relay-incomplete-windows.md)

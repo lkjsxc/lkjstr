@@ -63,6 +63,10 @@ state lives, which modules own subscriptions, and how tabs close cleanly.
 - [feeds/sources/profile.md](feeds/sources/profile.md): profile note filters.
 - [feeds/runtime/README.md](feeds/runtime/README.md): merge reducer, cursors,
   multi-tab ownership.
+- [feeds/runtime/feed-runtime-core.md](feeds/runtime/feed-runtime-core.md):
+  Rust feed runtime core.
+- [feeds/runtime/feed-window-reducer.md](feeds/runtime/feed-window-reducer.md):
+  Rust feed-window reducer.
 - [feeds/runtime/merge-reducer.md](feeds/runtime/merge-reducer.md): merge-by-id.
 - [feeds/runtime/multi-tab-ownership.md](feeds/runtime/multi-tab-ownership.md):
   per-tab runtime keys.
