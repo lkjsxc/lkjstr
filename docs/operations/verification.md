@@ -70,6 +70,7 @@ SQLite OPFS focused commands:
 cargo test -p lkjstr-storage
 wasm-pack test --headless --chrome crates/lkjstr-web -- storage
 wasm-pack test --headless --firefox crates/lkjstr-web -- storage
+pnpm exec playwright test tests/e2e/sqlite-opfs-worker.spec.ts --project chromium
 pnpm test:e2e:quiet -- sqlite-opfs
 ```
 
@@ -115,6 +116,8 @@ Run `pnpm check:repo` after documentation changes before code work continues.
   app recovers to a usable Welcome workspace with visible storage diagnostics.
 - Verify COOP and COEP headers on static hosting when the primary SQLite OPFS
   path is enabled.
+- Verify `/sqlite-opfs-worker.js` and `/sqlite/` official SQLite WASM assets are
+  present in Trunk and SvelteKit build output until the old runtime is removed.
 - Verify multi-tab SQLite ownership produces shared safe operation or a visible
   lock/unavailable state, never database corruption.
 - Verify cache compaction keeps protected SQLite rows and reports quota or stop

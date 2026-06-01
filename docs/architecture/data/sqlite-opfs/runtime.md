@@ -21,6 +21,16 @@ deadlines, cancellation, close cleanup, and late diagnostics. Product
 repositories still need SQLite implementations before this becomes the durable
 product path.
 
+## Static Assets
+
+The Rust/Trunk app serves `/sqlite-opfs-worker.js` as the storage worker entry.
+Trunk copies the pinned official SQLite WASM package output to `/sqlite/` so
+the worker can import `/sqlite/index.mjs` and load `sqlite3.wasm` plus the OPFS
+proxy script from same-origin static assets.
+
+The current SvelteKit build also emits the same `/sqlite/` assets so the worker
+path can be tested before the Rust app is the only shipped runtime.
+
 ## VFS Selection
 
 Primary path: use SQLite WASM `opfs` in a worker when it is available.

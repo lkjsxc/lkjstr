@@ -23,6 +23,11 @@ query rows, run atomic batches, estimate storage, close idempotently, enforce
 request deadlines, issue cancellation messages, and report late diagnostics.
 This is browser host glue, not product storage ownership.
 
+The Rust/Trunk build now has a static `/sqlite-opfs-worker.js` worker entry.
+Trunk copies the pinned official SQLite WASM output to `/sqlite/`, and the
+SvelteKit build emits the same assets so the worker path has browser smoke
+coverage before product cutover.
+
 `lkjstr-web` now also owns a typed Rust storage-worker adapter. It creates and
 terminates a browser `Worker`, sends typed envelopes, enforces request
 deadlines, supports explicit cancellation, drops callbacks on close, maps worker
@@ -36,8 +41,8 @@ lives in [../data/sqlite-opfs/README.md](../data/sqlite-opfs/README.md).
 
 Not implemented yet: cache and diagnostics repository families, product wiring
 to SQLite, route-block repositories, retention dispatchers, ledger repair,
-diagnostics inventory, browser OPFS matrix tests, multi-tab lock handling, and
-most cache ledger-backed resource writes.
+diagnostics inventory, full browser OPFS matrix tests, multi-tab lock handling,
+and most cache ledger-backed resource writes.
 
 ## Manifest Contract
 

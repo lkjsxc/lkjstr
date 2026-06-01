@@ -16,9 +16,10 @@ mount `lkjstr-ui` into the browser document. Future adapters cover:
 
 - WebSocket.
 - IndexedDB while current storage paths remain.
-- SQLite storage worker. A temporary TypeScript worker/client exists, and the
-  Rust `lkjstr-web` adapter owns typed requests, deadlines, cancellation, close,
-  and late diagnostics. Product repository wiring is still pending.
+- SQLite storage worker. A static `/sqlite-opfs-worker.js` entry loads official
+  SQLite WASM assets from `/sqlite/`. A temporary TypeScript worker/client
+  exists, and the Rust `lkjstr-web` adapter owns typed requests, deadlines,
+  cancellation, close, and late diagnostics. Product wiring is still pending.
 - BroadcastChannel and Web Locks for storage ownership.
 - Fetch.
 - Clipboard.

@@ -16,7 +16,11 @@ UI shell, and repository checks.
 - `_headers`: Cloudflare COOP/COEP headers for SQLite WASM OPFS support.
 - `crates/`: Rust application crates.
 - `index.html`: Trunk browser entry document.
-- `static/`: images, manifest files, and split CSS assets.
+- `static/`: images, manifest files, split CSS assets, and
+  `sqlite-opfs-worker.js`.
+- `node_modules/@sqlite.org/sqlite-wasm/dist/`: pinned official SQLite WASM
+  assets copied to `/sqlite/` by Trunk and emitted by the SvelteKit build while
+  both runtimes exist.
 - `src/lib/storage/sqlite-opfs/`: temporary TypeScript host worker and client
   for official SQLite WASM while the Rust adapter lands.
 - `tests/`: Playwright and WASM browser tests.
