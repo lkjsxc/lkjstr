@@ -48,7 +48,8 @@ references should stay as relative Markdown links.
 | Rust Upload Settings surface              | [upload-settings.md](tools/upload-settings.md)                       | partial         | media upload settings and NIP-96 discovery     |
 | Rust Tweet draft surface                  | [tweet.md](tools/tweet.md)                                           | partial         | protected draft rows and editor                |
 | Rust UI parity and snapshot persistence   | [crate-boundaries.md](../architecture/rust-wasm/crate-boundaries.md) | not implemented | current runtime remains TS                     |
-| Docker Rust/WASM verification             | [verification.md](../architecture/rust-wasm/verification.md)         | design-only     | commands documented target                     |
+| Rust cutover ledger                       | [cutover/README.md](../architecture/rust-wasm/cutover/README.md)     | implemented     | parity and deletion guard                      |
+| Docker Rust/WASM verification             | [verification.md](../architecture/rust-wasm/verification.md)         | partial         | local matrix active; Compose upgrade open      |
 
 ## Feed Surface
 

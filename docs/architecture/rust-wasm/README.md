@@ -8,6 +8,7 @@ This subtree defines the Rust/WASM client target.
 
 - [app-boundary.md](app-boundary.md): app composition and command ownership.
 - [crate-boundaries.md](crate-boundaries.md): crate responsibilities.
+- [cutover/README.md](cutover/README.md): build cutover, parity, and deletion ledgers.
 - [host-boundary.md](host-boundary.md): browser API and JavaScript boundary.
 - [memory-ownership.md](memory-ownership.md): resources and cleanup.
 - [protocol-kernel.md](protocol-kernel.md): Nostr protocol ownership.
@@ -19,23 +20,18 @@ This subtree defines the Rust/WASM client target.
 
 ## Status
 
-- Implemented today: browser-first SvelteKit and TypeScript runtime documented
-  in [../README.md](../README.md), plus Rust workspace checks and Rust protocol
-  byte, event, event-ID, filter, relay-message, signing, verification, NIP-19,
-  relay URL, NIP-30 custom emoji, NIP-36 content-warning, tag indexing,
-  reaction parsing, action tag builder, content-derived tag, NIP-51 emoji
-  source, NIP-57 zap, NIP-65 relay-list metadata, NIP-96 upload metadata, and
-  NIP-98 HTTP auth behavior. `lkjstr-web` exposes the implemented protocol
-  bridge through browser-tested WASM exports. `lkjstr-domain` owns pure account
-  records, local secret row shape, local signing helpers, npub mining prefix
-  rules, and workspace layout, tab, focus, startup, split, close, and recovery
-  reducers, plus tab snapshot payload and merge semantics. `lkjstr-storage`
-  owns the executable storage table manifest, ledger resource map, and typed
-  storage operation outcomes. `lkjstr-relays` owns pure send queue, request
-  scheduler, subscription id, alias, and close tombstone state machines.
-- Design-only target: remaining Rust app, UI, workspace snapshot persistence
-  coordinator, full relay client reducer, WebSocket adapter, storage
-  repositories, IndexedDB adapter, and non-protocol browser host surfaces.
+- Current product runtime: browser-first SvelteKit and TypeScript documented in
+  [../README.md](../README.md). It remains the reference surface until each
+  Rust replacement is real, tested, and recorded in
+  [cutover/parity-ledger.md](cutover/parity-ledger.md).
+- Current Rust/WASM state: partial and actively implemented. Rust owns protocol
+  parsing, event identity, signing helpers, NIP entity codecs, relay URL
+  normalization, pure workspace/account/relay-set/draft models, storage
+  manifest and outcome contracts, narrow IndexedDB adapters, relay state
+  machine basics, startup composition, and a partial Leptos shell.
+- Open Rust/WASM work: full relay client reducer, WebSocket and timer adapters,
+  complete storage repositories and transactions, feed/tool runtimes, publish
+  jobs, media upload transport, full Stats diagnostics, and UI parity.
 - Not allowed: remote app backend, relay proxy requirement, server account
   system, fake relay data, fake protocol results, or placeholder UI.
 
@@ -49,3 +45,6 @@ The first implementation slices must be pure and testable: protocol parsing,
 event identity, filter matching, relay message encoding, storage manifest
 records, and workspace reducers. Browser effects are added only behind explicit
 host adapters with cleanup handles.
+
+The build cutover rule, surface ledger, and deletion ledger live under
+[cutover/README.md](cutover/README.md).

@@ -3,8 +3,8 @@
 ## Purpose
 
 This file defines verification for the Rust/WASM client target. Status:
-implemented for Rust checks and the protocol WASM bridge; design-only for
-Trunk, Docker Rust/WASM, and full product e2e gates.
+implemented for Rust checks, browser WASM tests, the protocol bridge, storage
+adapters, and the partial Leptos shell; partial for Trunk and Docker gates.
 
 ## Local Matrix
 
@@ -17,6 +17,13 @@ wasm-pack test --headless --chrome crates/lkjstr-web
 trunk build --release
 pnpm test:e2e:quiet
 pnpm cloudflare:quiet
+```
+
+If the shell exports `NO_COLOR=1`, run Trunk with that variable unset until the
+quiet Rust/WASM gate owns the workaround:
+
+```sh
+env -u NO_COLOR trunk build --release
 ```
 
 ## Docker Matrix
@@ -41,5 +48,5 @@ docker compose --progress quiet -f docker-compose.yml run --rm app-smoke
 - storage manifest doc comparison.
 - quiet command orchestration.
 
-`pnpm check:repo` remains active until `lkjstr-xtask` provides the same checks
-and the Node tooling is no longer required for product runtime verification.
+`pnpm check:repo` remains active while TypeScript, Svelte, Playwright, Wrangler,
+or repository scripts are still part of product verification.

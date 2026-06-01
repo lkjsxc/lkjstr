@@ -195,9 +195,9 @@ coverage must prove Accounts or Stats renders those states without page errors
 and without exposing local secret material.
 
 Root canonical response changes must build and serve the app, then verify `/`
-returns `200` without redirect and renders the Svelte shell. If deployment
-access exists, also `curl -I` the actual configured production host; do not
-invent a host.
+returns `200` without redirect and renders the implemented workspace shell. If
+deployment access exists, also `curl -I` the actual configured production host;
+do not invent a host.
 
 Relay-read scoring changes must cover pure score updates, scheduling order with
 fairness, progressive partial-page emission before slow relay EOSE, incomplete

@@ -27,6 +27,14 @@ state lives, which modules own subscriptions, and how tabs close cleanly.
 - [rust-wasm/README.md](rust-wasm/README.md): Rust/WASM target ownership.
 - [rust-wasm/app-boundary.md](rust-wasm/app-boundary.md): app composition.
 - [rust-wasm/crate-boundaries.md](rust-wasm/crate-boundaries.md): crate map.
+- [rust-wasm/cutover/README.md](rust-wasm/cutover/README.md): build cutover
+  and deletion ledgers.
+- [rust-wasm/cutover/build-contract.md](rust-wasm/cutover/build-contract.md):
+  Rust/WASM app build contract.
+- [rust-wasm/cutover/parity-ledger.md](rust-wasm/cutover/parity-ledger.md):
+  product surface parity.
+- [rust-wasm/cutover/deletion-ledger.md](rust-wasm/cutover/deletion-ledger.md):
+  TypeScript and Svelte removal guard.
 - [rust-wasm/host-boundary.md](rust-wasm/host-boundary.md): browser API boundary.
 - [rust-wasm/memory-ownership.md](rust-wasm/memory-ownership.md): resource cleanup.
 - [rust-wasm/protocol-kernel.md](rust-wasm/protocol-kernel.md): protocol owner.

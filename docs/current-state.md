@@ -243,16 +243,12 @@ and [operations/memory-verification.md](operations/memory-verification.md).
 
 ## Known Gaps
 
-- Rust/WASM client architecture is partly started. Rust workspace checks and
-  Rust protocol byte, event, event-ID, filter, relay-message, signing, and
-  verification behavior are implemented. NIP-19 scalar and TLV entity behavior
-  and relay URL normalization are implemented in Rust. `lkjstr-web` exposes
-  those implemented protocol surfaces through browser-tested WASM bindings.
-  `lkjstr-domain` implements pure account records, local secret row shape, local
-  signing helpers, npub mining prefix rules, workspace reducers, tab snapshots,
-  and the New Tab catalog. A partial Leptos workspace shell exists, but the
-  product runtime remains the browser-first SvelteKit and TypeScript app until
-  each Rust feed, tool, storage, relay, and UI surface reaches matching tests.
+- Rust/WASM architecture is partial and active, not design-only. Rust owns
+  protocol, pure domain models, storage contracts, narrow IndexedDB adapters,
+  relay state-machine basics, startup composition, and a partial Leptos shell.
+  The SvelteKit product runtime remains until each Rust surface reaches real
+  behavior and matching tests. Cutover and deletion rules live in
+  [architecture/rust-wasm/cutover/README.md](architecture/rust-wasm/cutover/README.md).
 - Remote NIP-50 results depend on actual relay support.
 - Passkey-protected local secret storage is design-only.
 - Encrypted direct messages are not implemented.

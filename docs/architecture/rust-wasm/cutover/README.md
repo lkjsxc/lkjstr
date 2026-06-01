@@ -1,0 +1,32 @@
+# Rust WASM Cutover
+
+## Purpose
+
+This subtree defines when Rust/WASM becomes the product build and when
+TypeScript or Svelte product modules may be removed.
+
+## Table of Contents
+
+- [build-contract.md](build-contract.md): app build and verification cutover.
+- [parity-ledger.md](parity-ledger.md): Rust parity for each product surface.
+- [deletion-ledger.md](deletion-ledger.md): TypeScript and Svelte removal guard.
+
+## Current Contract
+
+Rust/WASM is partial and active, not design-only. The SvelteKit app remains the
+implemented product runtime until the Rust shell satisfies the root workspace
+contract with real behavior and matching tests.
+
+No product mock is allowed. Synthetic relays are test-only fixtures.
+
+## Deletion Rule
+
+Delete a TypeScript or Svelte product module only after the Rust equivalent has:
+
+- updated docs.
+- real behavior.
+- focused unit tests.
+- browser tests for user-visible behavior.
+- local or Docker verification evidence.
+- no placeholder UI or fake protocol result.
+- a row in [deletion-ledger.md](deletion-ledger.md).

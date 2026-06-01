@@ -12,9 +12,11 @@ and no server account system.
 
 ## Status
 
-Design-only. The implemented state remains documented in
-[../current-state.md](../current-state.md) until Rust crates, WASM bindings,
-browser UI, and tests exist.
+Partial and active. Rust crates, WASM bindings, IndexedDB adapters, and a
+partial Leptos shell exist. The implemented product runtime remains documented
+in [../current-state.md](../current-state.md) until Rust surfaces satisfy the
+cutover contract in
+[../architecture/rust-wasm/cutover/build-contract.md](../architecture/rust-wasm/cutover/build-contract.md).
 
 ## Consequences
 
