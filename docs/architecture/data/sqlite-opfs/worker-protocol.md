@@ -3,7 +3,7 @@
 ## Purpose
 
 This file defines the typed protocol between Rust/WASM and the SQLite worker.
-Status: design target.
+Status: partial host implementation.
 
 ## Request Envelope
 
@@ -26,6 +26,10 @@ Operations:
 - `ExportJson`: explicit user-selected data classes.
 - `ImportJson`: explicit user-provided payload.
 - `Cancel`: request id to cancel.
+
+The Rust `lkjstr-web` adapter implements the host envelope, request deadlines,
+explicit cancellation, close cleanup, and late response diagnostics. Repository
+SQL and official SQLite worker wiring remain separate implementation work.
 
 ## Response Envelope
 
@@ -70,4 +74,3 @@ for cleanup. Deadline expiration returns `Timeout` and drops the callback owner.
 Rows cross the worker boundary as typed scalar values and JSON text payloads.
 The worker does not infer product types from JSON. Rust repositories decode row
 fields into domain records.
-

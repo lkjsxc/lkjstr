@@ -49,3 +49,17 @@ fn timeout_and_late_outcomes_keep_problem_context() {
     assert!(!timeout_outcome.is_ok());
     assert!(!late_outcome.is_ok());
 }
+
+#[test]
+fn busy_and_canceled_outcomes_keep_problem_context() {
+    let busy = StorageProblem::new(StorageOperation::Write, "events", "busy", "write-1");
+    let canceled = StorageProblem::new(StorageOperation::Read, "events", "canceled", "read-1");
+
+    let busy_outcome: StorageOutcome<()> = StorageOutcome::Busy(busy.clone());
+    let canceled_outcome: StorageOutcome<()> = StorageOutcome::Canceled(canceled.clone());
+
+    assert_eq!(busy_outcome.problem(), Some(&busy));
+    assert_eq!(canceled_outcome.problem(), Some(&canceled));
+    assert!(!busy_outcome.is_ok());
+    assert!(!canceled_outcome.is_ok());
+}

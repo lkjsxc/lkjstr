@@ -37,11 +37,15 @@ web-sys = { version = "0.3.82", features = [
   "IdbTransaction",
   "IdbTransactionMode",
   "Location",
+  "MessageEvent",
   "Response",
   "Storage",
   "Window",
+  "Worker",
+  "WorkerOptions",
+  "WorkerType",
 ] }
 
 [dev-dependencies]
 wasm-bindgen-test = "0.3.72"
-web-sys = { version = "0.3.82", features = ["Document", "Element", "EventInit", "HtmlElement", "HtmlInputElement", "HtmlTextAreaElement", "NodeList", "Storage", "Window"] }
+web-sys = { version = "0.3.82", features = ["Blob", "Document", "Element", "EventInit", "HtmlElement", "HtmlInputElement", "HtmlTextAreaElement", "NodeList", "Storage", "Url", "Window"] }

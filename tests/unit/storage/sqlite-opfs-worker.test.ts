@@ -53,6 +53,7 @@ describe('SQLite OPFS worker core', () => {
     await core.handle(
       request('2', {
         kind: 'apply-schema',
+        schemaHash: 'schema-test',
         statements: ['PRAGMA foreign_keys = ON;'],
       }),
     );

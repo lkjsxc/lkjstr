@@ -31,7 +31,11 @@ export type SqlStep = {
 export type StorageOp =
   | { readonly kind: 'open'; readonly database: OpenDatabase }
   | { readonly kind: 'close' }
-  | { readonly kind: 'apply-schema'; readonly statements: readonly string[] }
+  | {
+      readonly kind: 'apply-schema';
+      readonly schemaHash: string;
+      readonly statements: readonly string[];
+    }
   | {
       readonly kind: 'execute';
       readonly statement: string;

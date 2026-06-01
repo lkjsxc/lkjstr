@@ -40,7 +40,7 @@ references should stay as relative Markdown links.
 | Rust tab-state storage contract           | [storage-kernel.md](../architecture/rust-wasm/storage-kernel.md)     | implemented     | tab-state storage tests                        |
 | Rust workspace storage record             | [storage-kernel.md](../architecture/rust-wasm/storage-kernel.md)     | implemented     | workspace storage tests                        |
 | Rust workspace/settings IndexedDB adapter | [storage-kernel.md](../architecture/rust-wasm/storage-kernel.md)     | partial         | temporary browser storage tests                |
-| Rust SQLite OPFS storage target           | [sqlite-opfs/README.md](../architecture/data/sqlite-opfs/README.md)  | partial         | schema records and TS worker/client landed     |
+| Rust SQLite OPFS storage target           | [sqlite-opfs/README.md](../architecture/data/sqlite-opfs/README.md)  | partial         | schema, TS worker, Rust adapter tests          |
 | Rust tab-state IndexedDB transaction      | [storage-kernel.md](../architecture/rust-wasm/storage-kernel.md)     | implemented     | snapshot and ledger browser test               |
 | Rust relay state machine basics           | [relay-runtime.md](../architecture/rust-wasm/relay-runtime.md)       | implemented     | relay crate tests                              |
 | Rust relay client and browser adapters    | [relay-runtime.md](../architecture/rust-wasm/relay-runtime.md)       | not implemented | current runtime remains TS                     |

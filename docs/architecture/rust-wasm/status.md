@@ -21,8 +21,9 @@ This file is the concise status map for the active Rust/WASM migration.
 - `lkjstr-web` owns narrow IndexedDB adapters for workspace startup, workspace
   rows, settings rows, account rows, local secrets, relay sets, Tweet drafts,
   the first multi-store transaction helper, ledger-backed tab-state snapshot
-  writes, startup tab-state loading, and early host calls needed by the partial
-  Leptos shell.
+  writes, startup tab-state loading, a typed SQLite storage-worker adapter with
+  deadlines, cancellation, close cleanup, and late diagnostics, and early host
+  calls needed by the partial Leptos shell.
 - `lkjstr-relays` owns pure send queue, request scheduler, subscription id,
   subscription alias, close tombstone, and outbound `REQ` message-size budget
   state machines.
@@ -37,9 +38,8 @@ This file is the concise status map for the active Rust/WASM migration.
 - Full relay client reducer, request budget reducer, progressive snapshots,
   diagnostics merge, page read dedupe, demand planning, and lease planning.
 - Browser WebSocket and timer adapters with owned callbacks and cleanup.
-- Rust SQLite worker adapter, full storage repository family, product SQLite
-  wiring, most ledger-backed multi-store writes, retention dispatchers, repair,
-  and inventory diagnostics.
+- Full storage repository family, product SQLite wiring, most ledger-backed
+  multi-store writes, retention dispatchers, repair, and inventory diagnostics.
 - Feed runtimes for Home, Global, Profile, Thread, Notifications, Search,
   Custom Request, and Author Context.
 - Publish jobs, local signing flow integration, NIP-07 `signEvent`, media

@@ -3,7 +3,7 @@
 ## Purpose
 
 This file defines how the browser opens and owns the SQLite WASM database.
-Status: design target.
+Status: partial host implementation.
 
 ## Runtime Owner
 
@@ -15,6 +15,11 @@ rows and diagnostics, and closes cleanly.
 `lkjstr-storage` owns all SQL text and statement meaning. The worker does not
 choose tables, data classes, compaction policy, feed coverage semantics, or
 product recovery behavior.
+
+The Rust `lkjstr-web` adapter can own the browser `Worker`, typed envelopes,
+deadlines, cancellation, close cleanup, and late diagnostics. Product
+repositories still need SQLite implementations before this becomes the durable
+product path.
 
 ## VFS Selection
 
@@ -62,4 +67,3 @@ and small write groups.
 - malformed database or schema mismatch: `Corrupt`.
 - explicit cancellation: `Canceled`.
 - response after owner cleanup: `LateSettled` or `LateRejected`.
-

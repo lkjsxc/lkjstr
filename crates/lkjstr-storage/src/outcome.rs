@@ -54,9 +54,11 @@ pub enum StorageOutcome<T> {
     Ok(T),
     Unavailable(StorageProblem),
     Timeout(StorageProblem),
+    Busy(StorageProblem),
     Blocked(StorageProblem),
     Quota(StorageProblem),
     Corrupt(StorageProblem),
+    Canceled(StorageProblem),
     LateSettled(StorageProblem),
     LateRejected(StorageProblem),
 }
@@ -73,9 +75,11 @@ impl<T> StorageOutcome<T> {
             Self::Ok(_) => None,
             Self::Unavailable(problem)
             | Self::Timeout(problem)
+            | Self::Busy(problem)
             | Self::Blocked(problem)
             | Self::Quota(problem)
             | Self::Corrupt(problem)
+            | Self::Canceled(problem)
             | Self::LateSettled(problem)
             | Self::LateRejected(problem) => Some(problem),
         }
@@ -86,9 +90,11 @@ impl<T> StorageOutcome<T> {
             Self::Ok(inner) => StorageOutcome::Ok(value(inner)),
             Self::Unavailable(problem) => StorageOutcome::Unavailable(problem),
             Self::Timeout(problem) => StorageOutcome::Timeout(problem),
+            Self::Busy(problem) => StorageOutcome::Busy(problem),
             Self::Blocked(problem) => StorageOutcome::Blocked(problem),
             Self::Quota(problem) => StorageOutcome::Quota(problem),
             Self::Corrupt(problem) => StorageOutcome::Corrupt(problem),
+            Self::Canceled(problem) => StorageOutcome::Canceled(problem),
             Self::LateSettled(problem) => StorageOutcome::LateSettled(problem),
             Self::LateRejected(problem) => StorageOutcome::LateRejected(problem),
         }

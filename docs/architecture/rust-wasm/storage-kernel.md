@@ -22,13 +22,17 @@ query rows, run atomic batches, estimate storage, close idempotently, enforce
 request deadlines, issue cancellation messages, and report late diagnostics.
 This is browser host glue, not product storage ownership.
 
+`lkjstr-web` now also owns a typed Rust storage-worker adapter. It creates and
+terminates a browser `Worker`, sends typed envelopes, enforces request
+deadlines, supports explicit cancellation, drops callbacks on close, maps worker
+outcomes into the storage outcome contract, and records late response counters.
+
 Target now: OPFS-backed SQLite WASM in a dedicated worker. The detailed target
 lives in [../data/sqlite-opfs/README.md](../data/sqlite-opfs/README.md).
 
-Not implemented yet: Rust `lkjstr-web` storage-worker adapter, full repository
-families, product wiring to SQLite, retention dispatchers, ledger repair,
-diagnostics inventory, browser OPFS matrix tests, multi-tab lock handling, and
-most ledger-backed resource writes.
+Not implemented yet: full repository families, product wiring to SQLite,
+retention dispatchers, ledger repair, diagnostics inventory, browser OPFS matrix
+tests, multi-tab lock handling, and most ledger-backed resource writes.
 
 ## Manifest Contract
 
@@ -56,9 +60,11 @@ Storage operations return a typed outcome:
 - `Ok`.
 - `Unavailable`.
 - `Timeout`.
+- `Busy`.
 - `Blocked`.
 - `Quota`.
 - `Corrupt`.
+- `Canceled`.
 - `LateSettled`.
 - `LateRejected`.
 
@@ -93,5 +99,6 @@ closes idempotently, and exposes diagnostics. Each callback is stored in an
 owner slot and cleared on settle, cancel, timeout, or close. Late worker
 responses become typed late outcomes rather than reaching product logic.
 
-The Rust adapter must expose the same behavior through `lkjstr-web` before
-Rust repositories can use SQLite in production paths.
+The Rust adapter exposes the same boundary through `lkjstr-web`. Rust
+repositories still need concrete SQLite implementations before product paths can
+leave IndexedDB or Dexie.
