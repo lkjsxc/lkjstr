@@ -3,8 +3,10 @@
 ## Purpose
 
 Storage is the LLM-first contract for all browser-owned durable data. Read this
-directory before changing IndexedDB tables, cache retention, feed evidence,
-Stats inventory, settings persistence, or storage failure recovery.
+directory before changing current IndexedDB tables, cache retention, feed
+evidence, Stats inventory, settings persistence, or storage failure recovery.
+New Rust/WASM durable storage work targets
+[../sqlite-opfs/README.md](../sqlite-opfs/README.md).
 
 ## First Screen Contract
 
@@ -23,10 +25,13 @@ tab snapshots are recoverable when a ledger row, delete path, repair path, and
 byte estimate exist.
 
 All writes use storage repositories. Feature modules should not choose Dexie
-tables directly after a repository exists for that data family.
+tables directly after a repository exists for that data family. New Rust
+repositories should target OPFS SQLite instead of extending Dexie.
 
-The contract is proved by the manifest docs, Dexie schema, repository checks,
-storage unit tests, storage pressure e2e tests, and Docker Compose verification.
+The current live contract is proved by the manifest docs, Dexie schema,
+repository checks, storage unit tests, storage pressure e2e tests, and Docker
+Compose verification. The target contract adds executable SQLite schema checks
+from [../sqlite-opfs/schema.md](../sqlite-opfs/schema.md).
 
 ## Table of Contents
 
@@ -55,13 +60,14 @@ storage unit tests, storage pressure e2e tests, and Docker Compose verification.
 - [diagnostics/pressure-states.md](diagnostics/pressure-states.md): pressure labels.
 - [diagnostics/stats.md](diagnostics/stats.md): Stats projection.
 - [diagnostics/verification.md](diagnostics/verification.md): required checks.
+- [../sqlite-opfs/README.md](../sqlite-opfs/README.md): OPFS SQLite target.
 
 ## Kernel Rule
 
-The Storage Manifest is the source for live table names, Dexie schema strings,
-data classes, inventory groups, ledger resource ownership, compaction flags,
-and repair flags. Markdown tables explain that manifest and repository checks
-compare them.
+The Storage Manifest is the source for current live table names, Dexie schema
+strings, data classes, inventory groups, ledger resource ownership, compaction
+flags, and repair flags. SQLite schema records become the Rust storage source of
+truth as each repository family moves to OPFS.
 
 Removed stores are not live manifest entries. Cleanup for removed object stores
 belongs in a separate removed-store helper with tests, so live table checks stay

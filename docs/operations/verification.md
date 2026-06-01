@@ -64,6 +64,15 @@ pnpm test:e2e:quiet
 pnpm cloudflare:quiet
 ```
 
+SQLite OPFS focused commands:
+
+```sh
+cargo test -p lkjstr-storage
+wasm-pack test --headless --chrome crates/lkjstr-web -- storage
+wasm-pack test --headless --firefox crates/lkjstr-web -- storage
+pnpm test:e2e:quiet -- sqlite-opfs
+```
+
 ## Docker
 
 ```sh
@@ -102,6 +111,14 @@ Run `pnpm check:repo` after documentation changes before code work continues.
 - Reload the root route with local storage and IndexedDB unavailable. Confirm
   `.workspace-shell`, the Welcome tab, and nonzero body height stay visible with
   no page error.
+- Reload the root route with OPFS unavailable after SQLite cutover. Confirm the
+  app recovers to a usable Welcome workspace with visible storage diagnostics.
+- Verify COOP and COEP headers on static hosting when the primary SQLite OPFS
+  path is enabled.
+- Verify multi-tab SQLite ownership produces shared safe operation or a visible
+  lock/unavailable state, never database corruption.
+- Verify cache compaction keeps protected SQLite rows and reports quota or stop
+  reasons when it cannot reach the target.
 - Home and Global lists fill the tile after split resizing.
 - Global, Notifications, Thread, and Profile note rows show avatar/name
   fallbacks, timestamps, and wrapped content.

@@ -10,6 +10,7 @@ state lives, which modules own subscriptions, and how tabs close cleanly.
 - Shared browser services: [backend/README.md](backend/README.md).
 - Feed source semantics and invariants: [feeds/README.md](feeds/README.md).
 - Storage, cache, and memory ownership: [data/README.md](data/README.md).
+- OPFS SQLite storage target: [data/sqlite-opfs/README.md](data/sqlite-opfs/README.md).
 - Relay clients and orchestration: [network/README.md](network/README.md).
 - Rust/WASM target ownership: [rust-wasm/README.md](rust-wasm/README.md).
 - Tab lifecycle and pane behavior: [workspace/README.md](workspace/README.md).
@@ -101,6 +102,16 @@ state lives, which modules own subscriptions, and how tabs close cleanly.
 - [data/feed-coverage.md](data/feed-coverage.md): durable feed range evidence
   and cache eligibility.
 - [data/storage/README.md](data/storage/README.md): storage kernel entry point.
+- [data/sqlite-opfs/README.md](data/sqlite-opfs/README.md): OPFS SQLite target.
+- [data/sqlite-opfs/runtime.md](data/sqlite-opfs/runtime.md): worker runtime.
+- [data/sqlite-opfs/schema.md](data/sqlite-opfs/schema.md): SQLite schema.
+- [data/sqlite-opfs/repositories.md](data/sqlite-opfs/repositories.md):
+  repository boundary.
+- [data/sqlite-opfs/retention.md](data/sqlite-opfs/retention.md): retention.
+- [data/sqlite-opfs/worker-protocol.md](data/sqlite-opfs/worker-protocol.md):
+  worker protocol.
+- [data/sqlite-opfs/import-export.md](data/sqlite-opfs/import-export.md):
+  import and export.
 - [data/storage/kernel/README.md](data/storage/kernel/README.md): manifest,
   operations, transactions, and repositories.
 - [data/storage/kernel/manifest.md](data/storage/kernel/manifest.md): manifest

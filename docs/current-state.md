@@ -88,26 +88,31 @@ Read next: [architecture/README.md](architecture/README.md),
   browser usage is below target or a stop reason explains what remains. Runtime
   feed windows remain bounded. The live durable table contract is maintained in
   the [Storage Manifest](architecture/data/storage/data-classes/table-manifest.md).
-- Storage is browser-owned and manifest-driven. The table manifest defines every
-  live IndexedDB table, its data class, inventory group, Dexie schema string,
-  and retention flags. Ledger resource ownership and storage repository modules
-  own resource-plus-ledger write boundaries for events, feed cache, jobs,
+- Storage is browser-owned and manifest-driven. The current live table manifest
+  defines every IndexedDB table, its data class, inventory group, Dexie schema
+  string, and retention flags. The Rust/WASM storage target is OPFS-backed
+  SQLite in a dedicated worker, documented in
+  [architecture/data/sqlite-opfs/README.md](architecture/data/sqlite-opfs/README.md).
+  Ledger resource ownership and storage repository modules own
+  resource-plus-ledger write boundaries for events, feed cache, jobs,
   notifications, relay diagnostics, relay information, route evidence, and tab
   snapshots.
 - Feature modules call storage repositories instead of Dexie tables. The
   repository checker rejects direct `browserDb()` calls outside storage-owned
   modules and the temporary `src/lib/cache` compatibility area.
 - Storage operations return typed results. UI paths may continue from memory
-  fallback, while Stats can distinguish active, timed-out, late-settled, and
-  late-rejected IndexedDB operations.
+  fallback, while Stats can distinguish active, timed-out, busy, canceled,
+  late-settled, and late-rejected storage operations.
 - Rust/WASM support is partial and active. Rust owns substantial protocol,
   domain, storage-contract, relay-state-machine, startup, IndexedDB, and
   Leptos-shell slices. The live Rust slice map and open foundations live in
   [architecture/rust-wasm/status.md](architecture/rust-wasm/status.md).
 - Relay ingress uses app-owned byte and structure caps before expensive JSON
   and event parsing.
-- IndexedDB remains durable browser-owned data; memory relief prunes only
-  bounded app-owned runtime windows, caches, counters, and fallback stores.
+- IndexedDB remains the current durable browser-owned store while SvelteKit and
+  Dexie paths are live. It is not the target for new Rust storage families.
+  Memory relief prunes only bounded app-owned runtime windows, caches, counters,
+  and fallback stores.
 - Browser-local backend services own shared Home queries above tab components.
   Relay clients, relay pool, subscription orchestrator, subscription manager,
   and runtimes own network reads and deterministic cleanup.

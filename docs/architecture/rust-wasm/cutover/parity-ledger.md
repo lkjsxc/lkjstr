@@ -34,6 +34,15 @@ before the SvelteKit product runtime can be removed.
 | Tweet           | partial         | `protocol`, `storage`, `relays`, `app`, `ui` publish path | local and NIP-07 signing, publish queue, media, emoji               |
 | Welcome         | partial         | `domain`, `app`, `storage`, `ui` startup path             | full links, startup fallback, browser tests                         |
 
+## Storage Ledger
+
+| Storage family      | Rust status     | Required Rust modules             | Proof before cutover                                      |
+| ------------------- | --------------- | --------------------------------- | --------------------------------------------------------- |
+| Protected records   | partial         | `storage`, `web`, `app`, `ui`     | SQLite repos, worker tests, startup recovery tests        |
+| Event cache         | not implemented | `storage`, `web`, `app`, `relays` | event/tag/provenance tests and cache-first browser tests  |
+| Feed evidence       | not implemented | `storage`, `app`, `relays`        | coverage, cursor, scan-hint, compaction invalidation      |
+| Diagnostics and log | not implemented | `storage`, `web`, `app`, `ui`     | Stats inventory, lkjstr Log, pressure and failure tests   |
+
 ## Product Rule
 
 A partial row never allows TypeScript or Svelte deletion by itself. Deletion

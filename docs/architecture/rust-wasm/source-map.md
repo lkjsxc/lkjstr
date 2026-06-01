@@ -16,6 +16,7 @@ UI shell, and repository checks.
 - `crates/`: Rust application crates.
 - `index.html`: Trunk browser entry document.
 - `static/`: images, manifest files, and split CSS assets.
+- `static/sqlite/`: official SQLite WASM worker assets when vendored.
 - `tests/`: Playwright and WASM browser tests.
 - `tools/`: repository tooling that is not part of product runtime.
 - `package.json`: minimal Node tooling for Playwright, Wrangler, and wrappers.
@@ -29,6 +30,7 @@ UI shell, and repository checks.
 - `crates/lkjstr-app/`: product runtime composition.
 - `crates/lkjstr-ui/`: Leptos components and UI CSS contracts.
 - `crates/lkjstr-web/`: WASM entrypoint and browser host adapters.
+- `crates/lkjstr-web/src/storage_worker/`: SQLite worker host adapter target.
 - `crates/lkjstr-xtask/`: repository checks and quiet gates.
 
 ## Transition Rule

@@ -45,6 +45,10 @@ first-party product modules.
 | `src/lib/tweet`          | blocked | Rust draft, signing, upload, queue, publish jobs     | publish and draft tests                |
 | `src/lib/workspace`      | blocked | Leptos workspace parity and snapshot persistence     | workspace browser tests                |
 | `src/routes`             | blocked | root route is served by the Rust/WASM app build      | app build and root smoke tests         |
+| Dexie dependency         | blocked | all live storage families use SQLite repositories    | storage, pressure, Stats, Docker gates |
+| TypeScript storage repos | blocked | Rust repositories cover every live table family      | repository and browser storage tests   |
+| Svelte tab surfaces      | blocked | Leptos surface parity by tab                         | surface browser tests and ledgers      |
+| old test helpers         | blocked | Rust/WASM tests cover the same behavior              | no-import proof and passing gates      |
 
 ## Evidence
 

@@ -25,7 +25,8 @@ table of contents required by repository checks.
   [architecture/feeds/README.md](architecture/feeds/README.md) and
   [architecture/data/feed-surface/README.md](architecture/data/feed-surface/README.md).
 - Change storage, cache, or memory ownership: start in
-  [architecture/data/storage/README.md](architecture/data/storage/README.md).
+  [architecture/data/sqlite-opfs/README.md](architecture/data/sqlite-opfs/README.md)
+  and [architecture/data/storage/README.md](architecture/data/storage/README.md).
 - Change verification, CI, or Docker: start in
   [operations/README.md](operations/README.md).
 - Change repository rules or source style: start in
@@ -37,6 +38,7 @@ table of contents required by repository checks.
 - [architecture/data/README.md](architecture/data/README.md): storage and memory.
 - [architecture/data/feed-surface/README.md](architecture/data/feed-surface/README.md): feed surfaces.
 - [architecture/data/storage/README.md](architecture/data/storage/README.md): storage kernel.
+- [architecture/data/sqlite-opfs/README.md](architecture/data/sqlite-opfs/README.md): OPFS SQLite target.
 - [architecture/data/storage/retention/README.md](architecture/data/storage/retention/README.md): local-cache retention.
 - [architecture/feeds/README.md](architecture/feeds/README.md): feed contracts.
 - [architecture/network/README.md](architecture/network/README.md): relay ownership.
@@ -99,6 +101,13 @@ table of contents required by repository checks.
 - [architecture/data/relay-pages.md](architecture/data/relay-pages.md)
 - [architecture/data/resource-ownership.md](architecture/data/resource-ownership.md)
 - [architecture/data/storage/README.md](architecture/data/storage/README.md)
+- [architecture/data/sqlite-opfs/README.md](architecture/data/sqlite-opfs/README.md)
+- [architecture/data/sqlite-opfs/runtime.md](architecture/data/sqlite-opfs/runtime.md)
+- [architecture/data/sqlite-opfs/schema.md](architecture/data/sqlite-opfs/schema.md)
+- [architecture/data/sqlite-opfs/repositories.md](architecture/data/sqlite-opfs/repositories.md)
+- [architecture/data/sqlite-opfs/retention.md](architecture/data/sqlite-opfs/retention.md)
+- [architecture/data/sqlite-opfs/worker-protocol.md](architecture/data/sqlite-opfs/worker-protocol.md)
+- [architecture/data/sqlite-opfs/import-export.md](architecture/data/sqlite-opfs/import-export.md)
 - [architecture/data/storage/kernel/README.md](architecture/data/storage/kernel/README.md)
 - [architecture/data/storage/kernel/manifest.md](architecture/data/storage/kernel/manifest.md)
 - [architecture/data/storage/kernel/schema-steps.md](architecture/data/storage/kernel/schema-steps.md)

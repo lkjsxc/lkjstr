@@ -3,7 +3,8 @@
 ## Purpose
 
 Data docs define storage, feed windows, and shared event presentation models.
-Start storage work in [storage/README.md](storage/README.md).
+Start new storage work in [sqlite-opfs/README.md](sqlite-opfs/README.md) and
+read the current live storage state in [storage/README.md](storage/README.md).
 
 ## Table of Contents
 
@@ -38,6 +39,13 @@ Start storage work in [storage/README.md](storage/README.md).
 - [resource-ownership.md](resource-ownership.md): who creates and who closes
   each resource.
 - [storage/README.md](storage/README.md): storage kernel entry point.
+- [sqlite-opfs/README.md](sqlite-opfs/README.md): OPFS SQLite storage target.
+- [sqlite-opfs/runtime.md](sqlite-opfs/runtime.md): worker runtime and VFS behavior.
+- [sqlite-opfs/schema.md](sqlite-opfs/schema.md): SQLite table groups.
+- [sqlite-opfs/repositories.md](sqlite-opfs/repositories.md): repository rules.
+- [sqlite-opfs/retention.md](sqlite-opfs/retention.md): cache retention.
+- [sqlite-opfs/worker-protocol.md](sqlite-opfs/worker-protocol.md): worker messages.
+- [sqlite-opfs/import-export.md](sqlite-opfs/import-export.md): import/export.
 - [storage/kernel/README.md](storage/kernel/README.md): manifest, operations,
   transactions, and repositories.
 - [storage/kernel/manifest.md](storage/kernel/manifest.md): executable table

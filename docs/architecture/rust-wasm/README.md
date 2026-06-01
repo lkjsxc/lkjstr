@@ -18,7 +18,7 @@ This subtree defines the Rust/WASM client target.
 - [relay-runtime.md](relay-runtime.md): relay state machines and adapters.
 - [source-map.md](source-map.md): intended repository paths.
 - [status.md](status.md): current implemented Rust slices and open foundations.
-- [storage-kernel.md](storage-kernel.md): manifest, repositories, and IDB.
+- [storage-kernel.md](storage-kernel.md): manifest, repositories, and OPFS SQLite.
 - [ui-runtime.md](ui-runtime.md): Leptos UI ownership.
 - [verification.md](verification.md): Rust/WASM verification matrix.
 
@@ -30,9 +30,9 @@ This subtree defines the Rust/WASM client target.
   [cutover/parity-ledger.md](cutover/parity-ledger.md).
 - Current Rust/WASM state: partial and actively implemented. The detailed slice
   map lives in [status.md](status.md).
-- Open Rust/WASM work: full relay client reducer, WebSocket and timer adapters,
-  complete storage repositories and transactions, feed/tool runtimes, publish
-  jobs, media upload transport, full Stats diagnostics, and UI parity.
+- Open Rust/WASM work: SQLite worker bootstrap, full storage repositories,
+  relay client reducer, WebSocket and timer adapters, feed/tool runtimes,
+  publish jobs, media upload transport, full Stats diagnostics, and UI parity.
 - Not allowed: remote app backend, relay proxy requirement, server account
   system, fake relay data, fake protocol results, or placeholder UI.
 
