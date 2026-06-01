@@ -39,6 +39,30 @@ pub struct CacheLedgerRecord {
     pub reason: Option<String>,
 }
 
+#[derive(Clone, Debug, Deserialize, Eq, PartialEq, Serialize)]
+pub struct SqliteTabStateRow {
+    pub workspace_id: String,
+    pub tab_id: String,
+    pub tab_kind: String,
+    pub snapshot_json: String,
+    pub scroll_anchor_json: Option<String>,
+    pub updated_at_ms: u64,
+    pub stale_after_ms: Option<u64>,
+}
+
+#[derive(Clone, Debug, Deserialize, Eq, PartialEq, Serialize)]
+pub struct SqliteCacheLedgerRow {
+    pub resource_id: String,
+    pub resource_kind: String,
+    pub table_name: String,
+    pub byte_count: u64,
+    pub protected: i64,
+    pub score: i64,
+    pub owner_key: Option<String>,
+    pub created_at_ms: u64,
+    pub updated_at_ms: u64,
+}
+
 #[must_use]
 pub fn tab_state_id(workspace_id: &str, tab_id: &str) -> String {
     format!("{workspace_id}:{tab_id}")
@@ -74,4 +98,43 @@ pub fn tab_state_ledger_record(
 
 pub fn encoded_json_bytes(value: &impl Serialize) -> Result<usize, serde_json::Error> {
     serde_json::to_vec(value).map(|bytes| bytes.len())
+}
+
+pub fn sqlite_tab_state_row(row: &TabStateRecord) -> Result<SqliteTabStateRow, serde_json::Error> {
+    Ok(SqliteTabStateRow {
+        workspace_id: row.workspace_id.clone(),
+        tab_id: row.tab_id.clone(),
+        tab_kind: tab_state_kind(&row.state).to_owned(),
+        snapshot_json: serde_json::to_string(row)?,
+        scroll_anchor_json: None,
+        updated_at_ms: row.updated_at,
+        stale_after_ms: None,
+    })
+}
+
+pub fn tab_state_from_sqlite_row(
+    row: &SqliteTabStateRow,
+) -> Result<TabStateRecord, serde_json::Error> {
+    serde_json::from_str(&row.snapshot_json)
+}
+
+pub fn sqlite_cache_ledger_row(ledger: &CacheLedgerRecord) -> SqliteCacheLedgerRow {
+    SqliteCacheLedgerRow {
+        resource_id: ledger.resource_id.clone(),
+        resource_kind: ledger.resource_kind.as_str().to_owned(),
+        table_name: "tab_states".to_owned(),
+        byte_count: ledger.cache_bytes as u64,
+        protected: i64::from(ledger.protected),
+        score: ledger.score,
+        owner_key: ledger.account_pubkey.clone(),
+        created_at_ms: ledger.created_at,
+        updated_at_ms: ledger.updated_at,
+    }
+}
+
+fn tab_state_kind(payload: &TabSnapshotPayload) -> &'static str {
+    match payload {
+        TabSnapshotPayload::Feed(_) => "feed",
+        TabSnapshotPayload::Tool(_) => "tool",
+    }
 }

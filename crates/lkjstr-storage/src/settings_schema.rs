@@ -3,7 +3,7 @@
 use serde::{Deserialize, Serialize};
 use serde_json::{Number, Value};
 
-use crate::settings::SettingOverrideRecord;
+use crate::settings::{SettingOverrideRecord, setting_namespace};
 use crate::settings_defs::{SETTINGS, SettingDefinition};
 
 #[derive(Clone, Copy, Debug, Deserialize, Eq, PartialEq, Serialize)]
@@ -160,7 +160,5 @@ fn coerce_string(item: &SettingDefinition, value: Value) -> Option<Value> {
 }
 
 fn namespace(key: &str) -> String {
-    key.split_once('.')
-        .map_or("debug", |(prefix, _)| prefix)
-        .to_owned()
+    setting_namespace(key)
 }

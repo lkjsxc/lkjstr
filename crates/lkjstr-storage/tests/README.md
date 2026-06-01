@@ -10,6 +10,7 @@ browser storage manifest.
 - `ledger_test.rs`: cache resource ownership manifest behavior.
 - `manifest_test.rs`: table manifest names, retention, and grouping.
 - `outcome_test.rs`: storage problem and outcome constructors.
+- `protected_sqlite_rows_test.rs`: SQLite protected row codecs.
 - `relay_sets_test.rs`: protected relay-set row serialization.
 - `tab_state_test.rs`: tab-state key and ledger record behavior.
 - `tweet_drafts_test.rs`: protected Tweet draft row serialization.

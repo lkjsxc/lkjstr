@@ -2,7 +2,8 @@
 
 ## Purpose
 
-This file defines how Rust code may access SQLite. Status: design target.
+This file defines how Rust code may access SQLite. Status: partial
+implementation.
 
 ## Ownership
 
@@ -15,10 +16,16 @@ and retention flows. Product crates and UI components do not call raw SQL.
 `lkjstr-web` transports storage requests to the worker and maps browser failures
 into storage outcomes. It does not contain product query rules.
 
+Implemented now: protected row codecs and protected SQL statement records live
+in `lkjstr-storage`; `lkjstr-web` has worker-backed repository calls for
+settings, workspaces, tab states with ledger rows, accounts, local secrets,
+relay sets, and Tweet drafts. Product startup and UI paths still use IndexedDB
+or Dexie until the SQLite path is wired and tested as the durable product path.
+
 ## Repository Families
 
 - protected data: settings, workspaces, tab states, accounts, secrets, relay
-  sets, route blocks, and Tweet drafts.
+  sets, and Tweet drafts are partially implemented. Route blocks remain open.
 - event cache: events, tags, relay provenance, notifications, feed cursors,
   feed coverage, and scan hints.
 - relay diagnostics: relay information, summaries, suggestions, author routes,
@@ -53,4 +60,3 @@ returns the mapped storage outcome.
 Repositories return typed records and a `StorageOutcome`. Corrupt or missing
 recoverable cache rows may degrade the product path; protected data failures
 must remain visible to startup, Settings, Accounts, Stats, and lkjstr Log.
-

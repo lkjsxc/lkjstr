@@ -16,14 +16,16 @@ This file is the concise status map for the active Rust/WASM migration.
   workspace layout reducers, tab movement, edge splits, clean startup,
   recovery, New Tab catalog data, and tab snapshot payload contracts.
 - `lkjstr-storage` owns the executable table manifest, cache-ledger resource
-  map, typed operation outcomes, executable SQLite schema records, tab-state
-  keys, ledger rows, and Rust workspace records.
+  map, typed operation outcomes, executable SQLite schema records, protected SQL
+  statements, schema hash, tab-state keys, ledger rows, and protected SQLite row
+  codecs.
 - `lkjstr-web` owns narrow IndexedDB adapters for workspace startup, workspace
   rows, settings rows, account rows, local secrets, relay sets, Tweet drafts,
   the first multi-store transaction helper, ledger-backed tab-state snapshot
   writes, startup tab-state loading, a typed SQLite storage-worker adapter with
-  deadlines, cancellation, close cleanup, and late diagnostics, and early host
-  calls needed by the partial Leptos shell.
+  deadlines, cancellation, close cleanup, late diagnostics, protected SQLite
+  repository calls over the worker, and early host calls needed by the partial
+  Leptos shell.
 - `lkjstr-relays` owns pure send queue, request scheduler, subscription id,
   subscription alias, close tombstone, and outbound `REQ` message-size budget
   state machines.
@@ -38,8 +40,9 @@ This file is the concise status map for the active Rust/WASM migration.
 - Full relay client reducer, request budget reducer, progressive snapshots,
   diagnostics merge, page read dedupe, demand planning, and lease planning.
 - Browser WebSocket and timer adapters with owned callbacks and cleanup.
-- Full storage repository family, product SQLite wiring, most ledger-backed
-  multi-store writes, retention dispatchers, repair, and inventory diagnostics.
+- Cache and diagnostics storage repository families, product SQLite wiring, most
+  cache ledger-backed writes, retention dispatchers, repair, and inventory
+  diagnostics.
 - Feed runtimes for Home, Global, Profile, Thread, Notifications, Search,
   Custom Request, and Author Context.
 - Publish jobs, local signing flow integration, NIP-07 `signEvent`, media

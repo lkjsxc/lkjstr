@@ -1,7 +1,8 @@
 use lkjstr_storage::{
     CacheResourceKind, SqliteRetentionClass, SqliteStatementKind, StorageDataClass,
-    StorageInventoryGroup, sqlite_schema_index_names, sqlite_schema_indexes,
-    sqlite_schema_statements, sqlite_schema_table, sqlite_schema_table_names, sqlite_schema_tables,
+    StorageInventoryGroup, protected_sqlite_statements, sqlite_schema_hash,
+    sqlite_schema_index_names, sqlite_schema_indexes, sqlite_schema_statements,
+    sqlite_schema_table, sqlite_schema_table_names, sqlite_schema_tables,
 };
 
 #[test]
@@ -133,4 +134,35 @@ fn sqlite_schema_statements_start_with_foreign_keys() {
         statements.len(),
         1 + sqlite_schema_tables().len() + sqlite_schema_indexes().len()
     );
+}
+
+#[test]
+fn sqlite_schema_hash_is_stable_shape() {
+    let hash = sqlite_schema_hash();
+    assert_eq!(hash.len(), 16);
+    assert!(hash.chars().all(|value| value.is_ascii_hexdigit()));
+}
+
+#[test]
+fn protected_sqlite_statements_are_owned_by_documented_tables() {
+    let statements = protected_sqlite_statements();
+    assert!(statements.iter().any(|item| item.id == "settings.upsert"));
+    assert!(statements.iter().any(|item| item.id == "workspaces.upsert"));
+    assert!(statements.iter().any(|item| item.id == "tab_states.upsert"));
+    assert!(
+        statements
+            .iter()
+            .any(|item| item.id == "cache_ledger.upsert")
+    );
+    assert!(statements.iter().any(|item| item.id == "accounts.upsert"));
+    assert!(statements.iter().any(|item| item.id == "relay_sets.upsert"));
+    assert!(
+        statements
+            .iter()
+            .any(|item| item.id == "tweet_drafts.upsert")
+    );
+    for statement in statements {
+        assert!(sqlite_schema_table(statement.table_name).is_some());
+        assert!(statement.sql.contains(statement.table_name));
+    }
 }

@@ -5,9 +5,11 @@ mod diagnostics;
 mod indexes;
 mod metadata;
 mod protected;
+mod statements;
 
 use crate::{
     data_class::{StorageDataClass, StorageInventoryGroup},
+    outcome::StorageOperation,
     resource::CacheResourceKind,
 };
 
@@ -63,6 +65,14 @@ pub struct SqliteSchemaStatement {
     pub id: &'static str,
     pub sql: &'static str,
     pub kind: SqliteStatementKind,
+}
+
+#[derive(Clone, Copy, Debug, Eq, PartialEq)]
+pub struct SqliteStatementSpec {
+    pub id: &'static str,
+    pub sql: &'static str,
+    pub table_name: &'static str,
+    pub operation: StorageOperation,
 }
 
 pub const FOREIGN_KEYS_PRAGMA: SqliteSchemaStatement = SqliteSchemaStatement {
@@ -131,4 +141,28 @@ pub fn sqlite_schema_statements() -> Vec<SqliteSchemaStatement> {
                 }),
         )
         .collect()
+}
+
+#[must_use]
+pub fn sqlite_schema_hash() -> String {
+    let mut hash = 0xcbf29ce484222325_u64;
+    for statement in sqlite_schema_statements() {
+        for byte in statement.sql.bytes().chain(std::iter::once(0)) {
+            hash ^= u64::from(byte);
+            hash = hash.wrapping_mul(0x100000001b3);
+        }
+    }
+    format!("{hash:016x}")
+}
+
+#[must_use]
+pub const fn protected_sqlite_statements() -> &'static [SqliteStatementSpec] {
+    statements::PROTECTED_STATEMENTS
+}
+
+#[must_use]
+pub fn protected_sqlite_statement(id: &str) -> Option<&'static SqliteStatementSpec> {
+    statements::PROTECTED_STATEMENTS
+        .iter()
+        .find(|statement| statement.id == id)
 }

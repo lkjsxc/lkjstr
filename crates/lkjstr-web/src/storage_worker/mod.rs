@@ -9,7 +9,7 @@ mod types;
 pub use client::{StorageWorkerClient, StorageWorkerDiagnostics, StorageWorkerRequest};
 pub use outcome::STORAGE_WORKER_TABLE;
 pub use types::{
-    BatchMode, OpenDatabase, SqlParams, SqlScalar, SqlStep, StorageDiagnostics, StorageOp,
+    BatchMode, OpenDatabase, SqlParams, SqlRow, SqlScalar, SqlStep, StorageDiagnostics, StorageOp,
     StorageRequest, StorageResponse, WorkerOutcome,
 };
 
