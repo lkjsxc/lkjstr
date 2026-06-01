@@ -26,8 +26,8 @@ This file is the concise status map for the active Rust/WASM migration.
   deadlines, cancellation, close cleanup, late diagnostics, protected, core
   event-cache, diagnostics SQLite repository calls, SQLite table-count
   inventory over the worker, relay WebSocket and browser timeout adapter
-  foundations with owned callback cleanup, and early host calls needed by the
-  partial Leptos shell.
+  foundations with owned callback cleanup and Rust protocol parsing for text
+  relay frames, and early host calls needed by the partial Leptos shell.
 - `lkjstr-relays` owns pure send queue, request scheduler, subscription id,
   subscription alias, close tombstone, outbound `REQ` message-size budget, and
   relay client lifecycle plus typed relay-message reducer state machines.
@@ -39,9 +39,8 @@ This file is the concise status map for the active Rust/WASM migration.
 
 ## Open Foundations
 
-- Raw relay socket-frame parsing host wiring, request budget reducer,
-  progressive snapshots, diagnostics merge, page read dedupe, demand planning,
-  and lease planning.
+- Request budget reducer, progressive snapshots, diagnostics merge, page read
+  dedupe, demand planning, and lease planning.
 - Relay adapter product wiring from pure reducers to browser WebSocket and
   timer handles.
 - Product SQLite wiring, cache delete and repair paths, retention dispatchers,

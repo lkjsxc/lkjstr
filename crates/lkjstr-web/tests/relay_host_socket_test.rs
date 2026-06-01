@@ -1,7 +1,9 @@
 #![cfg(target_arch = "wasm32")]
 
+use lkjstr_protocol::{MessageErrorCode, RelayMessage};
 use lkjstr_web::relay_host::{
     RelayHostProblem, RelayHostProblemKind, RelaySocketCallbacks, RelaySocketHandle,
+    RelaySocketMessage, parse_socket_text,
 };
 use wasm_bindgen::prelude::JsValue;
 use wasm_bindgen_test::{wasm_bindgen_test, wasm_bindgen_test_configure};
@@ -32,6 +34,29 @@ fn relay_socket_close_is_idempotent() -> Result<(), JsValue> {
     relay_result(handle.close())?;
     assert_eq!(handle.ready_state(), None);
     Ok(())
+}
+
+#[wasm_bindgen_test]
+fn relay_socket_text_parser_returns_typed_messages() {
+    let parsed = parse_socket_text(r#"["EOSE","sub"]"#, None);
+
+    assert_eq!(
+        parsed,
+        RelaySocketMessage::Relay(RelayMessage::Eose("sub".to_owned()))
+    );
+}
+
+#[wasm_bindgen_test]
+fn relay_socket_text_parser_returns_typed_errors() {
+    let parsed = parse_socket_text("not-json", None);
+
+    assert_eq!(
+        parsed,
+        RelaySocketMessage::ParseError {
+            code: MessageErrorCode::BadJson,
+            message: "relay message is not valid JSON".to_owned()
+        }
+    );
 }
 
 fn callbacks() -> RelaySocketCallbacks {

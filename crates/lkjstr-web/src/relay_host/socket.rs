@@ -1,13 +1,16 @@
 use std::cell::RefCell;
 use std::rc::Rc;
 
+use lkjstr_protocol::EventFramePolicy;
 use wasm_bindgen::{JsCast, closure::Closure};
 use web_sys::{Event, MessageEvent, WebSocket};
 
-use crate::relay_host::{RelayHostProblem, RelayHostProblemKind, RelayHostResult};
+use crate::relay_host::{
+    RelayHostProblem, RelayHostProblemKind, RelayHostResult, RelaySocketMessage, parse_socket_text,
+};
 
 type UnitCallback = Rc<RefCell<Box<dyn FnMut()>>>;
-type MessageCallback = Rc<RefCell<Box<dyn FnMut(String)>>>;
+type MessageCallback = Rc<RefCell<Box<dyn FnMut(RelaySocketMessage)>>>;
 type EventCallback = Rc<RefCell<Box<dyn FnMut(RelaySocketEvent)>>>;
 type EventClosure = Closure<dyn FnMut(Event)>;
 type MessageClosure = Closure<dyn FnMut(MessageEvent)>;
@@ -17,6 +20,7 @@ pub struct RelaySocketCallbacks {
     on_message: MessageCallback,
     on_error: EventCallback,
     on_close: EventCallback,
+    policy: Option<EventFramePolicy>,
 }
 
 #[derive(Clone, Debug, Eq, PartialEq)]
@@ -36,7 +40,27 @@ pub struct RelaySocketHandle {
 impl RelaySocketCallbacks {
     pub fn new(
         on_open: impl FnMut() + 'static,
-        on_message: impl FnMut(String) + 'static,
+        on_message: impl FnMut(RelaySocketMessage) + 'static,
+        on_error: impl FnMut(RelaySocketEvent) + 'static,
+        on_close: impl FnMut(RelaySocketEvent) + 'static,
+    ) -> Self {
+        Self::with_optional_policy(None, on_open, on_message, on_error, on_close)
+    }
+
+    pub fn with_policy(
+        policy: EventFramePolicy,
+        on_open: impl FnMut() + 'static,
+        on_message: impl FnMut(RelaySocketMessage) + 'static,
+        on_error: impl FnMut(RelaySocketEvent) + 'static,
+        on_close: impl FnMut(RelaySocketEvent) + 'static,
+    ) -> Self {
+        Self::with_optional_policy(Some(policy), on_open, on_message, on_error, on_close)
+    }
+
+    fn with_optional_policy(
+        policy: Option<EventFramePolicy>,
+        on_open: impl FnMut() + 'static,
+        on_message: impl FnMut(RelaySocketMessage) + 'static,
         on_error: impl FnMut(RelaySocketEvent) + 'static,
         on_close: impl FnMut(RelaySocketEvent) + 'static,
     ) -> Self {
@@ -45,6 +69,7 @@ impl RelaySocketCallbacks {
             on_message: Rc::new(RefCell::new(Box::new(on_message))),
             on_error: Rc::new(RefCell::new(Box::new(on_error))),
             on_close: Rc::new(RefCell::new(Box::new(on_close))),
+            policy,
         }
     }
 }
@@ -109,7 +134,11 @@ impl RelaySocketHandle {
         socket.set_onopen(Some(on_open.as_ref().unchecked_ref()));
         self.on_open = Some(on_open);
 
-        let on_message = message_closure(callbacks.on_message.clone(), callbacks.on_error.clone());
+        let on_message = message_closure(
+            callbacks.on_message.clone(),
+            callbacks.on_error.clone(),
+            callbacks.policy,
+        );
         socket.set_onmessage(Some(on_message.as_ref().unchecked_ref()));
         self.on_message = Some(on_message);
 
@@ -154,10 +183,14 @@ fn event_closure(kind: &'static str, callback: EventCallback) -> EventClosure {
     }) as Box<dyn FnMut(_)>)
 }
 
-fn message_closure(message: MessageCallback, error: EventCallback) -> MessageClosure {
+fn message_closure(
+    message: MessageCallback,
+    error: EventCallback,
+    policy: Option<EventFramePolicy>,
+) -> MessageClosure {
     Closure::wrap(Box::new(move |event: MessageEvent| {
         if let Some(text) = event.data().as_string() {
-            message.borrow_mut().as_mut()(text);
+            message.borrow_mut().as_mut()(parse_socket_text(&text, policy.as_ref()));
         } else {
             error.borrow_mut().as_mut()(RelaySocketEvent::new("unsupported-message", "non-text"));
         }

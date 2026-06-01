@@ -18,10 +18,9 @@ socket handles store event callbacks, detach listeners during close, map send
 and open failures into typed host problems, and expose idempotent close. Timer
 handles own one browser timeout and clear it on owner cleanup.
 
-Not implemented yet: raw socket-frame parsing inside the client host path, full
-request budgets, page read dedupe, progressive snapshots, diagnostics merge,
-demand and lease planning, and product wiring from relay reducers to browser
-adapters.
+Not implemented yet: full request budgets, page read dedupe, progressive
+snapshots, diagnostics merge, demand and lease planning, and product wiring
+from relay reducers to browser adapters.
 
 ## Pure Runtime
 

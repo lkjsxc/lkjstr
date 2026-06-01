@@ -17,7 +17,8 @@ mount `lkjstr-ui` into the browser document. Browser adapters cover:
 
 - WebSocket. The relay host adapter owns `web_sys::WebSocket`, stores open,
   message, error, and close closures in the socket handle, detaches them during
-  close, and maps constructor or send failures into typed host problems.
+  close, parses text frames through `lkjstr-protocol`, and maps constructor,
+  send, or parse failures into typed host results.
 - IndexedDB while current storage paths remain.
 - SQLite storage worker. A static `/sqlite-opfs-worker.js` entry loads official
   SQLite WASM assets from `/sqlite/`. A temporary TypeScript worker/client
