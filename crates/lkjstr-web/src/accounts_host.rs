@@ -125,18 +125,12 @@ async fn save_local_account(
     account: &AccountRecord,
     secret_row: &lkjstr_domain::LocalAccountSecret,
 ) -> String {
-    match local_secret_store::local_secret_put(db_name, secret_row).await {
-        StorageOutcome::Ok(()) => match account_store::account_put(db_name, account).await {
-            StorageOutcome::Ok(()) => {
-                set_active_account_id(Some(&account.id));
-                "Local account added.".to_owned()
-            }
-            outcome => {
-                let _cleanup = local_secret_store::local_secret_delete(db_name, &account.id).await;
-                problem_status("Account save failed", outcome)
-            }
-        },
-        outcome => problem_status("Local secret save failed", outcome),
+    match account_store::local_account_put(db_name, account, secret_row).await {
+        StorageOutcome::Ok(()) => {
+            set_active_account_id(Some(&account.id));
+            "Local account added.".to_owned()
+        }
+        outcome => problem_status("Local account save failed", outcome),
     }
 }
 

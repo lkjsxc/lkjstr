@@ -1,8 +1,8 @@
 use lkjstr_domain::normalize_account;
-use lkjstr_storage::{AccountRecord, StorageOutcome, account_record_id};
+use lkjstr_storage::{AccountRecord, LocalAccountSecretRecord, StorageOutcome, account_record_id};
 
-use crate::indexed_db::database::{ACCOUNTS_TABLE, DEFAULT_DB_NAME};
-use crate::indexed_db::{record_requests, record_write};
+use crate::indexed_db::database::{ACCOUNTS_TABLE, DEFAULT_DB_NAME, LOCAL_ACCOUNT_SECRETS_TABLE};
+use crate::indexed_db::{record_requests, record_write, transaction};
 
 pub async fn default_accounts_all() -> StorageOutcome<Vec<AccountRecord>> {
     accounts_all(DEFAULT_DB_NAME).await
@@ -10,6 +10,29 @@ pub async fn default_accounts_all() -> StorageOutcome<Vec<AccountRecord>> {
 
 pub async fn account_put(db_name: &str, row: &AccountRecord) -> StorageOutcome<()> {
     record_write::put(db_name, ACCOUNTS_TABLE, account_record_id(row), row).await
+}
+
+pub async fn local_account_put(
+    db_name: &str,
+    account: &AccountRecord,
+    secret: &LocalAccountSecretRecord,
+) -> StorageOutcome<()> {
+    let operation_id = format!("accounts-local-put-{}", account_record_id(account));
+    let account_record = match transaction::put_record(ACCOUNTS_TABLE, account) {
+        Ok(record) => record,
+        Err(error) => return map_transaction(operation_id, error),
+    };
+    let secret_record = match transaction::put_record(LOCAL_ACCOUNT_SECRETS_TABLE, secret) {
+        Ok(record) => record,
+        Err(error) => return map_transaction(operation_id, error),
+    };
+    transaction::put_records(
+        db_name,
+        ACCOUNTS_TABLE,
+        operation_id,
+        vec![secret_record, account_record],
+    )
+    .await
 }
 
 pub async fn account_delete(db_name: &str, id: &str) -> StorageOutcome<()> {
@@ -39,4 +62,13 @@ pub async fn accounts_all(db_name: &str) -> StorageOutcome<Vec<AccountRecord>> {
             .then_with(|| right.id.cmp(&left.id))
     });
     StorageOutcome::Ok(rows)
+}
+
+fn map_transaction<T>(operation_id: String, error: wasm_bindgen::JsValue) -> StorageOutcome<T> {
+    crate::indexed_db::database::map_js_error(
+        lkjstr_storage::StorageOperation::Transaction,
+        ACCOUNTS_TABLE,
+        operation_id,
+        error,
+    )
 }

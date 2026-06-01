@@ -58,6 +58,7 @@ pub fn map_js_error<T>(
     match reason {
         "blocked" => StorageOutcome::Blocked(problem),
         "quota" => StorageOutcome::Quota(problem),
+        "timeout" => StorageOutcome::Timeout(problem),
         "corrupt" => StorageOutcome::Corrupt(problem),
         "unavailable" => StorageOutcome::Unavailable(problem),
         _ => StorageOutcome::Corrupt(problem),
@@ -128,6 +129,9 @@ fn classify_error(error: &JsValue) -> &'static str {
     let text = error.as_string().unwrap_or_default();
     if text.contains("blocked") {
         return "blocked";
+    }
+    if text.contains("timeout") {
+        return "timeout";
     }
     if text.contains("Quota") {
         return "quota";

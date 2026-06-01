@@ -10,11 +10,12 @@ Implemented now: `lkjstr-storage` owns the executable storage table manifest,
 cache ledger resource map, typed operation outcomes, the tab-state key plus
 ledger-row contract for workspace snapshots, and the Rust workspace record
 shape. `lkjstr-web` owns a narrow real IndexedDB adapter for workspace startup,
-workspace rows, and settings override rows.
+workspace rows, settings override rows, protected account rows, local secrets,
+relay sets, Tweet drafts, and the first multi-store transaction helper.
 
-Not implemented yet: full repository families, deadline guards, retention
-dispatchers, ledger repair, diagnostics inventory, and transaction-backed
-resource plus ledger writes.
+Not implemented yet: full repository families, single-request deadline guards,
+retention dispatchers, ledger repair, diagnostics inventory, and
+transaction-backed resource plus ledger writes.
 
 ## Manifest Contract
 
@@ -72,5 +73,8 @@ upgrade, stores protected rows as structured browser objects, and reads them
 back into Rust workspace and settings record values.
 
 Each request callback is stored in an owner slot and cleared when the request
-settles. The current adapter does not yet own deadline timers, late-settlement
-counters, or multi-store transactions.
+settles. The multi-store transaction helper stores completion, error, abort, and
+timer callbacks in owned slots, clears them when the transaction settles or
+times out, and maps timeout to the typed outcome contract. Single-request
+deadline timers, late-settlement counters, and ledger-backed transactions remain
+open.

@@ -34,6 +34,24 @@ async fn indexed_db_account_stores_round_trip_and_delete() -> Result<(), JsValue
     Ok(())
 }
 
+#[wasm_bindgen_test(async)]
+async fn indexed_db_local_account_transaction_persists_account_and_secret() -> Result<(), JsValue> {
+    let db_name = test_db_name("local-account-transaction");
+    let (account, secret) = create_local_account_record(None, 22)
+        .map_err(|_| js_error("local account create failed"))?;
+
+    assert_ok(indexed_db::account_store::local_account_put(&db_name, &account, &secret).await)?;
+
+    match indexed_db::account_store::account_get(&db_name, &account.id).await {
+        StorageOutcome::Ok(Some(row)) if row == account => {}
+        outcome => return Err(outcome_error("account get failed", outcome.problem())),
+    }
+    match indexed_db::local_secret_store::local_secret_get(&db_name, &account.id).await {
+        StorageOutcome::Ok(Some(row)) if row == secret => Ok(()),
+        outcome => Err(outcome_error("secret get failed", outcome.problem())),
+    }
+}
+
 fn assert_ok(outcome: StorageOutcome<()>) -> Result<(), JsValue> {
     match outcome {
         StorageOutcome::Ok(()) => Ok(()),

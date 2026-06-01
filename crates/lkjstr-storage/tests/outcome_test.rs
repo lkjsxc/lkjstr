@@ -25,3 +25,27 @@ fn outcome_exposes_problem_for_non_ok_states() {
     assert!(StorageOutcome::Ok(1).is_ok());
     assert_eq!(StorageOutcome::Ok(1).problem(), None);
 }
+
+#[test]
+fn timeout_and_late_outcomes_keep_problem_context() {
+    let timeout = StorageProblem::new(
+        StorageOperation::Transaction,
+        "accounts",
+        "timeout",
+        "local-account",
+    );
+    let late = StorageProblem::new(
+        StorageOperation::Transaction,
+        "accounts",
+        "late-settled",
+        "local-account",
+    );
+
+    let timeout_outcome: StorageOutcome<()> = StorageOutcome::Timeout(timeout.clone());
+    let late_outcome: StorageOutcome<()> = StorageOutcome::LateSettled(late.clone());
+
+    assert_eq!(timeout_outcome.problem(), Some(&timeout));
+    assert_eq!(late_outcome.problem(), Some(&late));
+    assert!(!timeout_outcome.is_ok());
+    assert!(!late_outcome.is_ok());
+}
