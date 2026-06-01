@@ -12,10 +12,12 @@ ledger-row contract for workspace snapshots, and the Rust workspace record
 shape. `lkjstr-web` owns a narrow real IndexedDB adapter for workspace startup,
 workspace rows, settings override rows, protected account rows, local secrets,
 relay sets, Tweet drafts, and the first multi-store transaction helper.
+Rust tab-state snapshot writes now use that helper to store the `tabStates` row
+and matching `cacheLedger` row in one IndexedDB transaction.
 
 Not implemented yet: full repository families, single-request deadline guards,
-retention dispatchers, ledger repair, diagnostics inventory, and
-transaction-backed resource plus ledger writes.
+retention dispatchers, ledger repair, diagnostics inventory, and most
+ledger-backed resource writes.
 
 ## Manifest Contract
 
@@ -58,9 +60,9 @@ use the TypeScript operation result until their repositories are ported.
 ## Repository Rule
 
 Feature code will call repositories, not raw IndexedDB stores. The first Rust
-repository boundaries use the manifest `workspaces` and `settings` tables.
-Ledger-backed writes must store resource rows and ledger rows atomically where
-IndexedDB transaction support allows it.
+repository boundaries use the manifest `workspaces`, `settings`, and
+`tabStates` tables. Ledger-backed writes must store resource rows and ledger
+rows atomically where IndexedDB transaction support allows it.
 
 Protected user data is never removed by cache pressure. Recoverable cache data
 is removed only through cache-ledger dispatchers.
@@ -76,5 +78,5 @@ Each request callback is stored in an owner slot and cleared when the request
 settles. The multi-store transaction helper stores completion, error, abort, and
 timer callbacks in owned slots, clears them when the transaction settles or
 times out, and maps timeout to the typed outcome contract. Single-request
-deadline timers, late-settlement counters, and ledger-backed transactions remain
-open.
+deadline timers, late-settlement counters, and most ledger-backed transactions
+remain open.

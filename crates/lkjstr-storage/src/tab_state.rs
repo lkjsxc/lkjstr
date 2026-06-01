@@ -52,7 +52,7 @@ pub fn cache_ledger_id(owner_kind: CacheOwnerKind, resource_id: &str) -> String 
 pub fn tab_state_ledger_record(
     row: &TabStateRecord,
 ) -> Result<CacheLedgerRecord, serde_json::Error> {
-    let score_hours = i64::try_from(row.updated_at / 3_600_000).unwrap_or(i64::MAX - 50);
+    let score_hours = (row.updated_at / 3_600_000).min((i64::MAX - 50) as u64) as i64;
     let mut draft = CacheLedgerRecord {
         id: cache_ledger_id(CacheOwnerKind::TabSnapshot, &row.id),
         owner_kind: CacheOwnerKind::TabSnapshot,

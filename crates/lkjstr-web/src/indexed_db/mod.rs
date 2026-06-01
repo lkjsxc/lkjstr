@@ -9,6 +9,7 @@ pub mod relay_set_store;
 mod schema;
 mod settings_requests;
 pub mod settings_store;
+pub mod tab_state_store;
 mod transaction;
 mod transaction_events;
 pub mod tweet_draft_store;
