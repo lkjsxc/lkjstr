@@ -12,6 +12,7 @@ adapters.
 - `operation/`: typed storage results, deadlines, tracking, and transactions.
 - `repositories/`: feature-facing storage access wrappers.
 - `retention/`: cache-pressure protection and retention policy helpers.
+- `sqlite-opfs/`: OPFS SQLite worker host glue for the Rust/WASM target.
 - IndexedDB binding and storage fallback wrappers.
 - Storage inventory estimates for Stats diagnostics.
 - `cacheLedger` shared retention ledger integration.

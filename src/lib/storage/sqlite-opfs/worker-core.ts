@@ -1,0 +1,140 @@
+import {
+  errorText,
+  executeSql,
+  openSqliteDatabase,
+  querySql,
+  runBatch,
+  sqliteOutcomeFromError,
+  type OpenedSqliteDatabase,
+  type SqliteModule,
+} from './database';
+import type {
+  OpenDatabase,
+  StorageDiagnostics,
+  StorageOp,
+  StorageRequest,
+  StorageResponse,
+} from './types';
+
+export type SqliteWorkerCore = ReturnType<typeof createSqliteWorkerCore>;
+
+export type SqliteWorkerCoreOptions = {
+  readonly initSqlite: () => Promise<SqliteModule>;
+  readonly estimateStorage: () => Promise<StorageDiagnostics>;
+  readonly post: (response: StorageResponse) => void;
+};
+
+export function createSqliteWorkerCore(options: SqliteWorkerCoreOptions) {
+  let sqlitePromise: Promise<SqliteModule> | undefined;
+  let opened: OpenedSqliteDatabase | undefined;
+  const canceled = new Set<string>();
+
+  const handle = async (message: unknown): Promise<void> => {
+    const request = parseRequest(message);
+    if (!request) return;
+    if (request.op.kind === 'cancel') {
+      canceled.add(request.op.targetRequestId);
+      options.post(response(request, 'ok'));
+      return;
+    }
+    options.post(await run(request));
+  };
+
+  const run = async (request: StorageRequest): Promise<StorageResponse> => {
+    if (canceled.delete(request.requestId))
+      return response(request, 'canceled');
+    const start = Date.now();
+    try {
+      const result = await runOp(request.op, request);
+      if (Date.now() - start > request.deadlineMs)
+        return response(request, 'timeout', undefined, 0, result.diagnostics);
+      return result;
+    } catch (error) {
+      return response(request, sqliteOutcomeFromError(error), undefined, 0, {
+        ...opened?.diagnostics,
+        message: errorText(error),
+      });
+    }
+  };
+
+  const runOp = async (
+    op: StorageOp,
+    request: StorageRequest,
+  ): Promise<StorageResponse> => {
+    if (op.kind === 'open') return open(request, op.database);
+    if (!opened && op.kind !== 'estimate-storage' && op.kind !== 'close')
+      throw new Error('SQLite database is not open');
+    if (op.kind === 'close') return close(request);
+    if (op.kind === 'estimate-storage') return estimate(request);
+    const current = opened;
+    if (!current) throw new Error('SQLite database is not open');
+    const { db, diagnostics } = current;
+    if (op.kind === 'apply-schema') {
+      for (const statement of op.statements) db.exec(statement);
+      return response(request, 'ok', undefined, 0, diagnostics);
+    }
+    if (op.kind === 'execute') {
+      const rowsAffected = executeSql(db, op.statement, op.params);
+      return response(request, 'ok', undefined, rowsAffected, diagnostics);
+    }
+    if (op.kind === 'query') {
+      const rows = querySql(db, op.statement, op.params, op.rowLimit);
+      return response(request, 'ok', rows, 0, diagnostics);
+    }
+    if (op.kind === 'batch') {
+      const rowsAffected = runBatch(db, op.steps);
+      return response(request, 'ok', undefined, rowsAffected, diagnostics);
+    }
+    return response(request, 'corrupt', undefined, 0, diagnostics);
+  };
+
+  const open = async (
+    request: StorageRequest,
+    database: OpenDatabase,
+  ): Promise<StorageResponse> => {
+    if (opened) opened.db.close();
+    sqlitePromise ??= options.initSqlite();
+    opened = await openSqliteDatabase(await sqlitePromise, database);
+    return response(request, 'ok', undefined, 0, opened.diagnostics);
+  };
+
+  const close = (request: StorageRequest): StorageResponse => {
+    opened?.db.close();
+    opened = undefined;
+    canceled.clear();
+    return response(request, 'ok');
+  };
+
+  const estimate = async (request: StorageRequest): Promise<StorageResponse> =>
+    response(request, 'ok', undefined, 0, await options.estimateStorage());
+
+  return { handle };
+}
+
+function response(
+  request: StorageRequest,
+  outcome: StorageResponse['outcome'],
+  rows: StorageResponse['rows'] = [],
+  rowsAffected = 0,
+  diagnostics: StorageDiagnostics = {},
+): StorageResponse {
+  return {
+    requestId: request.requestId,
+    outcome,
+    rows,
+    rowsAffected,
+    diagnostics,
+  };
+}
+
+function parseRequest(value: unknown): StorageRequest | undefined {
+  if (!record(value)) return undefined;
+  if (typeof value.requestId !== 'string') return undefined;
+  if (typeof value.deadlineMs !== 'number') return undefined;
+  if (!record(value.op) || typeof value.op.kind !== 'string') return undefined;
+  return value as StorageRequest;
+}
+
+function record(value: unknown): value is Record<string, unknown> {
+  return typeof value === 'object' && value !== null;
+}

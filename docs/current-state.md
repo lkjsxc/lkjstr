@@ -93,10 +93,12 @@ Read next: [architecture/README.md](architecture/README.md),
   string, and retention flags. The Rust/WASM storage target is OPFS-backed
   SQLite in a dedicated worker, documented in
   [architecture/data/sqlite-opfs/README.md](architecture/data/sqlite-opfs/README.md).
-  Ledger resource ownership and storage repository modules own
-  resource-plus-ledger write boundaries for events, feed cache, jobs,
-  notifications, relay diagnostics, relay information, route evidence, and tab
-  snapshots.
+  Executable SQLite schema records and a temporary TypeScript host
+  worker/client now exist for open, schema apply, execute, query, batch,
+  estimate, cancellation, deadline, late-response, and close behavior. Ledger
+  resource ownership and storage repository modules own resource-plus-ledger
+  write boundaries for events, feed cache, jobs, notifications, relay
+  diagnostics, relay information, route evidence, and tab snapshots.
 - Feature modules call storage repositories instead of Dexie tables. The
   repository checker rejects direct `browserDb()` calls outside storage-owned
   modules and the temporary `src/lib/cache` compatibility area.

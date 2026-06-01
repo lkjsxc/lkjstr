@@ -19,7 +19,7 @@ resource map, and typed operation outcomes.
 - `settings_defs.rs`: flat settings definition rows.
 - `settings.rs`: settings override row identity and JSON helpers.
 - `settings_schema.rs`: flat settings schema and override merging.
-- `sql/README.md`: executable SQLite schema records for OPFS storage.
+- `sql/`: executable SQLite schema records for OPFS storage.
 - `stats.rs`: storage inventory view models for Stats.
 - `tab_state.rs`: tab-state keys, rows, and ledger rows.
 - `table_specs.rs`: table manifest row data.

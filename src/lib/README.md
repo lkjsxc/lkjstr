@@ -29,7 +29,7 @@ This directory contains reusable application code shared by routes and tabs.
 - [relays/](relays/): relay clients, pools, and settings.
 - [search/](search/): search query parsing.
 - [settings/](settings/): flat settings schema and store.
-- [storage/](storage/): IndexedDB and safe storage wrappers.
+- [storage/](storage/): storage wrappers and OPFS SQLite worker host glue.
 - [tabs/](tabs/): tab body implementations.
 - [telemetry/](telemetry/): runtime health helpers.
 - [thread/](thread/): thread runtime and state.

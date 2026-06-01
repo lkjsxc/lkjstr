@@ -16,8 +16,8 @@ This file is the concise status map for the active Rust/WASM migration.
   workspace layout reducers, tab movement, edge splits, clean startup,
   recovery, New Tab catalog data, and tab snapshot payload contracts.
 - `lkjstr-storage` owns the executable table manifest, cache-ledger resource
-  map, typed operation outcomes, tab-state keys, ledger rows, and Rust
-  workspace records.
+  map, typed operation outcomes, executable SQLite schema records, tab-state
+  keys, ledger rows, and Rust workspace records.
 - `lkjstr-web` owns narrow IndexedDB adapters for workspace startup, workspace
   rows, settings rows, account rows, local secrets, relay sets, Tweet drafts,
   the first multi-store transaction helper, ledger-backed tab-state snapshot
@@ -37,8 +37,9 @@ This file is the concise status map for the active Rust/WASM migration.
 - Full relay client reducer, request budget reducer, progressive snapshots,
   diagnostics merge, page read dedupe, demand planning, and lease planning.
 - Browser WebSocket and timer adapters with owned callbacks and cleanup.
-- Full storage repository family, single-request deadlines, most ledger-backed
-  multi-store writes, retention dispatchers, repair, and inventory diagnostics.
+- Rust SQLite worker adapter, full storage repository family, product SQLite
+  wiring, most ledger-backed multi-store writes, retention dispatchers, repair,
+  and inventory diagnostics.
 - Feed runtimes for Home, Global, Profile, Thread, Notifications, Search,
   Custom Request, and Author Context.
 - Publish jobs, local signing flow integration, NIP-07 `signEvent`, media

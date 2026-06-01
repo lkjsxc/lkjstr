@@ -143,6 +143,7 @@ All contracts live under [`docs/`](docs/README.md):
 - [`.github/_README.md`](.github/_README.md) - GitHub Actions and repository
   automation notes.
 - [`.cargo/`](.cargo/) - Rust workspace command configuration.
+- [`_headers`](_headers) - Cloudflare headers for worker-backed OPFS storage.
 - [`AGENTS.md`](AGENTS.md) - agent-facing repository rules.
 - [`crates/`](crates/) - Rust/WASM target crates and repository checks.
 - [`docs/`](docs/) - product, protocol, architecture, operations, and repository contracts.
