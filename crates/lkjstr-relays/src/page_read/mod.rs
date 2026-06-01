@@ -2,6 +2,8 @@
 
 mod dedupe;
 mod events;
+mod inflight;
+mod inflight_read;
 mod intent;
 mod progressive;
 mod progressive_tail;
@@ -12,6 +14,10 @@ pub use dedupe::{
     subscription_key,
 };
 pub use events::{ProgressiveEvent, event_relays, merge_progressive_events};
+pub use inflight::{
+    InFlightPageReadCounts, InFlightPageReadRegistry, PageReadAbortOutcome, PageReadAttachAction,
+    PageReadAttachOutcome, PageReadAttachment, PageReadCleanup, PageReadSettleOutcome,
+};
 pub use intent::{
     FeedCursorPoint, PageReadBounds, PageReadDirection, PageReadIntent, PageReadPhase,
     PageReadPurpose, PageReadSurface, ReadDedupeOptions, RelayReadRequest, RelayRouteGroup,

@@ -11,6 +11,7 @@ TypeScript relay modules.
 - `client_message_test.rs`: typed relay-message reducer behavior.
 - `client_reducer_test.rs`: pure relay client lifecycle reducer behavior.
 - `page_read_dedupe_test.rs`: semantic page-read and read-option keys.
+- `page_read_inflight_test.rs`: shared page-read registry cleanup behavior.
 - `progressive_read_test.rs`: progressive read snapshot reducer behavior.
 - `request_budget_test.rs`: request limit, warning, and read-cap derivation.
 - `request_message_size_test.rs`: outbound `REQ` byte cap decisions.

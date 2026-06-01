@@ -4,8 +4,9 @@
 
 Bootstrap and page reads dedupe by semantic intent, not by runtime `subId`.
 
-Status: Rust now owns pure semantic key derivation. The TypeScript
-subscription manager still owns the live in-flight read map and abort fan-out.
+Status: Rust now owns pure semantic key derivation and the in-flight read
+registry reducer. The TypeScript subscription manager still owns the live
+browser abort signals and product read execution.
 
 ## Phases
 
