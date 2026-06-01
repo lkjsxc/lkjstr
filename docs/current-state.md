@@ -244,7 +244,7 @@ and [operations/memory-verification.md](operations/memory-verification.md).
 
 - Rust/WASM architecture is partial and active, not design-only. Rust owns
   protocol, pure domain models, storage contracts, narrow IndexedDB adapters,
-  relay state-machine, request-budget, page-read, route-plan, ingress, live-lease, query-demand, and feed-runtime basics, startup
+  relay state-machine, request-budget, page-read, route-plan, ingress, live-lease, query-demand, and Home/Global feed-runtime basics, startup
   composition, and a partial Leptos shell.
   The SvelteKit product runtime remains until each Rust surface reaches real
   behavior and matching tests. Cutover and deletion rules live in

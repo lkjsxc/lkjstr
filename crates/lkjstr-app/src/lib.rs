@@ -7,11 +7,11 @@ mod workspace_defaults;
 pub mod workspace_runtime;
 
 pub use feed::{
-    FeedRuntimeInput, FeedRuntimeLeaseOutcome, FeedRuntimeLiveOutcome, FeedRuntimeState,
-    FeedWindowCursor, FeedWindowEvidence, FeedWindowFlags, FeedWindowState, FeedWindowStatus,
-    attach_feed_runtime_live, empty_feed_window, feed_window_empty_ready,
-    reduce_feed_runtime_window, reduce_feed_window, release_feed_runtime_live,
-    set_feed_runtime_visibility, start_feed_runtime,
+    FeedLiveQueryInput, FeedRuntimeInput, FeedRuntimeLeaseOutcome, FeedRuntimeLiveOutcome,
+    FeedRuntimeState, FeedWindowCursor, FeedWindowEvidence, FeedWindowFlags, FeedWindowState,
+    FeedWindowStatus, attach_feed_runtime_live, empty_feed_window, feed_window_empty_ready,
+    global_live_query_input, home_live_query_input, reduce_feed_runtime_window, reduce_feed_window,
+    release_feed_runtime_live, set_feed_runtime_visibility, start_feed_runtime,
 };
 pub use query::{QueryDemandInput, QueryDemandPlan, QuerySurface, plan_query_demand};
 pub use workspace_runtime::{

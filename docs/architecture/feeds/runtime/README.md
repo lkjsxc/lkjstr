@@ -9,6 +9,7 @@ orchestration.
 
 - [feed-window-reducer.md](feed-window-reducer.md)
 - [feed-runtime-core.md](feed-runtime-core.md)
+- [feed-surface-inputs.md](feed-surface-inputs.md)
 - [merge-reducer.md](merge-reducer.md)
 - [per-runtime-cursors.md](per-runtime-cursors.md)
 - [relay-incomplete-windows.md](relay-incomplete-windows.md)

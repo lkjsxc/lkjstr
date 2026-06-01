@@ -65,6 +65,8 @@ state lives, which modules own subscriptions, and how tabs close cleanly.
   multi-tab ownership.
 - [feeds/runtime/feed-runtime-core.md](feeds/runtime/feed-runtime-core.md):
   Rust feed runtime core.
+- [feeds/runtime/feed-surface-inputs.md](feeds/runtime/feed-surface-inputs.md):
+  Rust Home and Global input builders.
 - [feeds/runtime/feed-window-reducer.md](feeds/runtime/feed-window-reducer.md):
   Rust feed-window reducer.
 - [feeds/runtime/merge-reducer.md](feeds/runtime/merge-reducer.md): merge-by-id.

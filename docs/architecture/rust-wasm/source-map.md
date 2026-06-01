@@ -51,8 +51,8 @@ UI shell, and repository checks.
 - `crates/lkjstr-storage/`: manifest, repositories, ledger, and retention.
 - `crates/lkjstr-app/`: product runtime composition.
 - `crates/lkjstr-app/src/feed/`: pure feed runtime identity, live lease
-  composition, feed-window reduction, cursor derivation, generation guards, and
-  terminal empty-state readiness.
+  composition, Home and Global feed input builders, feed-window reduction,
+  cursor derivation, generation guards, and terminal empty-state readiness.
 - `crates/lkjstr-app/src/query/`: pure app-level query demand planning.
 - `crates/lkjstr-ui/`: Leptos components and UI CSS contracts.
 - `crates/lkjstr-web/`: WASM entrypoint and browser host adapters.
