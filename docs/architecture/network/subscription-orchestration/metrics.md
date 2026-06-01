@@ -5,6 +5,9 @@
 Counters and gauges for Stats and memory verification. Metrics must not open
 subscriptions or mutate relay settings.
 
+Status: Rust live-lease state now exposes pure orchestration counters for future
+Stats wiring. The shipped Stats path still reads TypeScript counters.
+
 ## Gauges
 
 | Name              | Meaning                              |

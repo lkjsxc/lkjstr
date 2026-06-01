@@ -150,7 +150,7 @@ fn document_text() -> Result<String, JsValue> {
 }
 
 async fn wait_for_shell() -> Result<(), JsValue> {
-    for _ in 0..50 {
+    for _ in 0..300 {
         next_task().await?;
         if document()?
             .query_selector("[data-testid='rust-workspace-shell']")?

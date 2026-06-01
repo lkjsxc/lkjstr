@@ -5,8 +5,9 @@
 A live lease is one refcounted wire subscription shared by all compatible live
 intents.
 
-Status: Rust owns the pure owner registry, visibility counts, and detach
-decisions. TypeScript still owns `REQ`/`CLOSE` side effects.
+Status: Rust owns the pure owner registry, visibility counts, attach/detach
+reducer, and host-effect decisions. TypeScript still owns shipped `REQ`/`CLOSE`
+side effects.
 
 ## Lifecycle
 
@@ -19,6 +20,7 @@ decisions. TypeScript still owns `REQ`/`CLOSE` side effects.
 ## Modules
 
 - `crates/lkjstr-relays/src/demand/registry.rs`: owner refcount per fingerprint
+- `crates/lkjstr-relays/src/live_lease/`: pure host-effect reducer
 - `demand-registry.ts`: current product registry
 - `orchestrator-live.ts`: current product attach, detach, suspend, resume
 

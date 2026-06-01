@@ -31,6 +31,7 @@ Map documentation topics to implementation files. Each module stays at or below
 | `crates/lkjstr-relays/src/demand/` | Rust pure demand fingerprint and registry state |
 | `crates/lkjstr-relays/src/route_plan/` | Rust pure route group and score-order state |
 | `crates/lkjstr-relays/src/ingress.rs` | Rust pure render-critical ingress policy |
+| `crates/lkjstr-relays/src/live_lease/` | Rust pure live lease host-effect reducer |
 
 ## Tests
 

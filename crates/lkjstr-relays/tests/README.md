@@ -12,6 +12,7 @@ TypeScript relay modules.
 - `client_reducer_test.rs`: pure relay client lifecycle reducer behavior.
 - `demand_lease_test.rs`: demand fingerprint and lease registry behavior.
 - `ingress_test.rs`: render-critical ingress classification.
+- `live_lease_test.rs`: live lease host-effect reducer behavior.
 - `page_read_dedupe_test.rs`: semantic page-read and read-option keys.
 - `page_read_inflight_test.rs`: shared page-read registry cleanup behavior.
 - `progressive_read_test.rs`: progressive read snapshot reducer behavior.

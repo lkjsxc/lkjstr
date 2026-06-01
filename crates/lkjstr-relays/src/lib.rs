@@ -4,6 +4,7 @@ pub mod client;
 pub mod close_tombstones;
 pub mod demand;
 pub mod ingress;
+pub mod live_lease;
 pub mod page_read;
 pub mod request_budget;
 pub mod request_message_size;
@@ -30,6 +31,10 @@ pub use demand::{
 pub use ingress::{
     IngressDecision, ingress_decision, is_feed_display_kind, is_notification_kind,
     is_render_critical_for_surface,
+};
+pub use live_lease::{
+    LiveIngressOutcome, LiveLeaseCounts, LiveLeaseEffect, LiveLeaseEffectKind, LiveLeaseOutcome,
+    LiveLeaseState,
 };
 pub use page_read::{
     FeedCursorPoint, InFlightPageReadCounts, InFlightPageReadRegistry, InitialProgressiveRead,

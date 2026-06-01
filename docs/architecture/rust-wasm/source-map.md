@@ -46,6 +46,8 @@ UI shell, and repository checks.
   grouping, disabled-relay filtering, and score ordering.
 - `crates/lkjstr-relays/src/ingress.rs`: pure render-critical event-kind
   ingress policy.
+- `crates/lkjstr-relays/src/live_lease/`: pure live lease attach, detach,
+  visibility, ingress counters, and host-effect decisions.
 - `crates/lkjstr-storage/`: manifest, repositories, ledger, and retention.
 - `crates/lkjstr-app/`: product runtime composition.
 - `crates/lkjstr-app/src/query/`: pure app-level query demand planning.

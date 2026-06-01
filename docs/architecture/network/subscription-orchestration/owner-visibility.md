@@ -5,6 +5,9 @@
 Describe how tab visibility affects live leases without breaking cached feed
 windows.
 
+Status: Rust owns pure visibility transitions from owner state to host effects.
+TypeScript still calls the current product visibility handlers.
+
 ## Rules
 
 - `visibility: visible` keeps live leases attached when the owner is the last
