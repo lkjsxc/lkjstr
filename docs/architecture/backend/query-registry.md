@@ -4,6 +4,9 @@
 
 Define how shared browser-local queries are keyed and attached.
 
+Status: Rust owns pure demand-plan construction for future shared queries.
+TypeScript still owns the live query registry used by the shipped product.
+
 ## Contract
 
 - Query keys use semantic inputs only: account, selected relays, page size, and

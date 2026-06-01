@@ -995,6 +995,8 @@ name = "lkjstr-app"
 version = "0.0.0"
 dependencies = [
  "lkjstr-domain",
+ "lkjstr-protocol",
+ "lkjstr-relays",
  "lkjstr-storage",
 ]
 

@@ -10,4 +10,6 @@ workspace = true
 
 [dependencies]
 lkjstr-domain = { path = "../lkjstr-domain" }
+lkjstr-protocol = { path = "../lkjstr-protocol" }
+lkjstr-relays = { path = "../lkjstr-relays" }
 lkjstr-storage = { path = "../lkjstr-storage" }

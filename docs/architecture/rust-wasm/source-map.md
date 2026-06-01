@@ -46,6 +46,7 @@ UI shell, and repository checks.
   grouping, disabled-relay filtering, and score ordering.
 - `crates/lkjstr-storage/`: manifest, repositories, ledger, and retention.
 - `crates/lkjstr-app/`: product runtime composition.
+- `crates/lkjstr-app/src/query/`: pure app-level query demand planning.
 - `crates/lkjstr-ui/`: Leptos components and UI CSS contracts.
 - `crates/lkjstr-web/`: WASM entrypoint and browser host adapters.
 - `crates/lkjstr-web/src/relay_host/`: relay WebSocket and browser timeout

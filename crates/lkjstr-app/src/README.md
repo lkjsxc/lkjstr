@@ -8,6 +8,7 @@ reducers.
 ## Table of Contents
 
 - `lib.rs`: public app crate exports.
+- `query/`: pure query-demand planning from product inputs to relay contracts.
 - `startup_snapshots.rs`: startup filtering for durable tab snapshot rows.
 - `workspace_defaults.rs`: workspace runtime defaults and recovery IDs.
 - `workspace_runtime.rs`: workspace startup and tab snapshot staging.

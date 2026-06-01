@@ -1,9 +1,11 @@
 #![doc = "Pure application composition reducers for lkjstr."]
 
+pub mod query;
 mod startup_snapshots;
 mod workspace_defaults;
 pub mod workspace_runtime;
 
+pub use query::{QueryDemandInput, QueryDemandPlan, QuerySurface, plan_query_demand};
 pub use workspace_runtime::{
     DEFAULT_WARM_SNAPSHOT_CAP, StartupInput, StartupResult, StartupSource, WorkspaceRuntimeState,
     close_runtime_tab, convert_runtime_tab, default_recovery_ids, focus_runtime_tab,

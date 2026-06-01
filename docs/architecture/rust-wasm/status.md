@@ -34,16 +34,17 @@ This file is the concise status map for the active Rust/WASM migration.
   registry state, progressive read snapshots, demand lease fingerprints,
   owner-registry state, route-plan grouping, and relay client lifecycle plus
   typed relay-message reducer state machines.
-- `lkjstr-app` owns startup recovery, stored tab snapshot filtering, and bounded
-  warm tab snapshot staging.
+- `lkjstr-app` owns startup recovery, stored tab snapshot filtering, bounded
+  warm tab snapshot staging, and pure query-demand planning.
 - `lkjstr-ui` renders the partial Leptos workspace shell, Welcome, New Tab,
   Stats inventory, Settings, Accounts, Relay Settings, Upload Settings, and
   Tweet draft surfaces.
 
 ## Open Foundations
 
-- Product wiring for request budgets, page-read dedupe, progressive snapshot
-  consumption, diagnostics merge, and route-plan discovery integration.
+- Product wiring for app query-demand plans, request budgets, page-read dedupe,
+  progressive snapshot consumption, diagnostics merge, and route-plan discovery
+  integration.
 - Relay adapter product wiring from pure reducers to browser WebSocket and
   timer handles.
 - Product SQLite wiring, cache delete and repair paths, retention dispatchers,

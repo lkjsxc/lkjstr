@@ -5,6 +5,10 @@
 Query runtime docs define how cache-first relay reads behave for Search and
 Custom Request tools.
 
+Status: Rust `lkjstr-app` owns a pure query-demand planner that composes
+selected relays, route evidence, demand fingerprints, and wire requests.
+TypeScript still owns product query execution.
+
 ## Render-Critical Kinds
 
 | Tool           | Bootstrap / page                  | Live                                         |
