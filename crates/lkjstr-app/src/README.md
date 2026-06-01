@@ -7,6 +7,7 @@ reducers.
 
 ## Table of Contents
 
+- `feed/`: pure feed-window reduction and cursor derivation.
 - `lib.rs`: public app crate exports.
 - `query/`: pure query-demand planning from product inputs to relay contracts.
 - `startup_snapshots.rs`: startup filtering for durable tab snapshot rows.

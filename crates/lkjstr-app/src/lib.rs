@@ -1,10 +1,15 @@
 #![doc = "Pure application composition reducers for lkjstr."]
 
+pub mod feed;
 pub mod query;
 mod startup_snapshots;
 mod workspace_defaults;
 pub mod workspace_runtime;
 
+pub use feed::{
+    FeedWindowCursor, FeedWindowEvidence, FeedWindowFlags, FeedWindowState, FeedWindowStatus,
+    empty_feed_window, feed_window_empty_ready, reduce_feed_window,
+};
 pub use query::{QueryDemandInput, QueryDemandPlan, QuerySurface, plan_query_demand};
 pub use workspace_runtime::{
     DEFAULT_WARM_SNAPSHOT_CAP, StartupInput, StartupResult, StartupSource, WorkspaceRuntimeState,

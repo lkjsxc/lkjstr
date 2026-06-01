@@ -7,6 +7,7 @@ orchestration.
 
 ## Table of Contents
 
+- [feed-window-reducer.md](feed-window-reducer.md)
 - [merge-reducer.md](merge-reducer.md)
 - [per-runtime-cursors.md](per-runtime-cursors.md)
 - [relay-incomplete-windows.md](relay-incomplete-windows.md)
@@ -20,6 +21,7 @@ orchestration.
 | Home          | `src/lib/timeline/timeline-runtime.ts`          |
 | Global        | `src/lib/timeline/global-timeline-runtime.ts`   |
 | Notifications | `src/lib/notifications/notification-runtime.ts` |
+| Rust reducer  | `crates/lkjstr-app/src/feed/`                  |
 
 ## Progressive Reads
 

@@ -34,8 +34,12 @@ TimelineReducerState = {
 
 ## Status
 
-implemented - `src/lib/timeline/timeline-reducer.ts`
+implemented in the shipped product - `src/lib/timeline/timeline-reducer.ts`
+
+Rust partial - `crates/lkjstr-app/src/feed/` owns browser-independent event-id
+window merging for future feed runtimes.
 
 ## Tests
 
-`tests/unit/timeline/timeline-reducer.test.ts`
+- `tests/unit/timeline/timeline-reducer.test.ts`
+- `crates/lkjstr-app/tests/feed_window_test.rs`

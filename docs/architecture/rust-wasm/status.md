@@ -36,7 +36,8 @@ This file is the concise status map for the active Rust/WASM migration.
   live-lease host-effect reducer state, plus relay client lifecycle and typed
   relay-message reducer state machines.
 - `lkjstr-app` owns startup recovery, stored tab snapshot filtering, bounded
-  warm tab snapshot staging, and pure query-demand planning.
+  warm tab snapshot staging, pure query-demand planning, and feed-window
+  reduction.
 - `lkjstr-ui` renders the partial Leptos workspace shell, Welcome, New Tab,
   Stats inventory, Settings, Accounts, Relay Settings, Upload Settings, and
   Tweet draft surfaces.
