@@ -7,12 +7,13 @@ This file defines Rust relay ownership. Status: partial.
 ## Owners
 
 Implemented now: `lkjstr-relays` owns pure send queue, request scheduler,
-subscription id, subscription alias, and close tombstone state machines.
+subscription id, subscription alias, close tombstone state machines, and
+request message-size budgeting for outbound `REQ` frames.
 
-Not implemented yet: full relay client reducer, request budgets, page read
-dedupe, progressive snapshots, diagnostics merge, demand and lease planning, and
-browser WebSocket or timer adapters. `lkjstr-web` will own browser WebSocket and
-timer adapters.
+Not implemented yet: full relay client reducer, full request budgets, page read
+dedupe, progressive snapshots, diagnostics merge, demand and lease planning,
+and browser WebSocket or timer adapters. `lkjstr-web` will own browser
+WebSocket and timer adapters.
 
 ## Pure Runtime
 
@@ -38,7 +39,9 @@ callbacks or mutate global state.
 The implemented Rust state machines mirror current TypeScript queue limits:
 send queue capacity `64`, pending request capacity `64`, subscription id length
 cap `48`, close tombstone default TTL `10` seconds, and tombstone max size
-`256`.
+`256`. Request message-size budgeting uses the actual Rust protocol encoder for
+`["REQ", subId, ...filters]`, applies the app hard cap `65536` bytes, and
+honors a smaller relay `max_message_length` cap.
 
 ## Host Adapter
 

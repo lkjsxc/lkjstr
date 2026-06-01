@@ -1,12 +1,17 @@
 #![doc = "Pure relay runtime state machines for lkjstr."]
 
 pub mod close_tombstones;
+pub mod request_message_size;
 pub mod request_scheduler;
 pub mod send_queue;
 pub mod subscription_alias;
 pub mod subscription_id;
 
 pub use close_tombstones::{RelayCloseTombstones, default_close_tombstone_ttl_ms};
+pub use request_message_size::{
+    RequestMessageSizeCapSource, RequestMessageSizeDecision, RequestMessageSizeWarning,
+    app_max_req_message_bytes, estimate_req_message_bytes, request_message_size_decision,
+};
 pub use request_scheduler::{
     PendingReq, RelayReqScheduler, ReleaseOutcome, ScheduleOutcome, max_pending_relay_reqs,
 };

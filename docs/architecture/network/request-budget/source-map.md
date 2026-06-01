@@ -21,6 +21,7 @@ below 200 lines.
 | `src/lib/relays/request-budget/message-size.ts` | `REQ` byte estimation                |
 | `src/lib/relays/request-budget/derive.ts`       | pure budget derivation               |
 | `src/lib/relays/request-budget/apply.ts`        | filter and read-option application   |
+| `crates/lkjstr-relays/src/request_message_size.rs` | Rust `REQ` byte cap decision      |
 | `src/lib/events/relay-page-limits.ts`           | thin compatibility wrapper only      |
 | `src/lib/relays/orchestration/page-reads.ts`    | budgeted page-read entry point       |
 | `src/lib/relays/subscription-manager-keys.ts`   | effective dedupe keys                |

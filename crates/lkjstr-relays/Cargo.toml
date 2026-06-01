@@ -9,4 +9,5 @@ version.workspace = true
 workspace = true
 
 [dependencies]
+lkjstr-protocol = { path = "../lkjstr-protocol" }
 sha2 = "0.10.9"
