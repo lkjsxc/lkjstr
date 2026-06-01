@@ -15,8 +15,8 @@ references should stay as relative Markdown links.
 
 | Clause                                    | Contract                                                             | Status          | Notes                                          |
 | ----------------------------------------- | -------------------------------------------------------------------- | --------------- | ---------------------------------------------- |
-| Rust/WASM client ownership                | [rust-wasm-client.md](../decisions/rust-wasm-client.md)              | partial         | protocol bridge exists                         |
-| Rust/WASM architecture subtree            | [rust-wasm/README.md](../architecture/rust-wasm/README.md)           | partial         | protocol bridge implemented                    |
+| Rust/WASM client ownership                | [rust-wasm-client.md](../decisions/rust-wasm-client.md)              | partial         | active slices tracked in Rust/WASM status      |
+| Rust/WASM architecture subtree            | [rust-wasm/README.md](../architecture/rust-wasm/README.md)           | partial         | status, cutover, and verification docs active  |
 | Rust workspace checks                     | [crate-boundaries.md](../architecture/rust-wasm/crate-boundaries.md) | implemented     | `lkjstr-xtask` commands                        |
 | Rust protocol event validation            | [protocol-kernel.md](../architecture/rust-wasm/protocol-kernel.md)   | implemented     | byte, event, policy, ID tests                  |
 | Rust protocol filters and relay messages  | [protocol-kernel.md](../architecture/rust-wasm/protocol-kernel.md)   | implemented     | filter and message tests                       |
@@ -48,8 +48,8 @@ references should stay as relative Markdown links.
 | Rust Upload Settings surface              | [upload-settings.md](tools/upload-settings.md)                       | partial         | media upload settings and NIP-96 discovery     |
 | Rust Tweet draft surface                  | [tweet.md](tools/tweet.md)                                           | partial         | protected draft rows and editor                |
 | Rust UI parity and snapshot persistence   | [crate-boundaries.md](../architecture/rust-wasm/crate-boundaries.md) | not implemented | current runtime remains TS                     |
-| Rust cutover ledger                       | [cutover/README.md](../architecture/rust-wasm/cutover/README.md)     | implemented     | parity and deletion guard                      |
-| Docker Rust/WASM verification             | [verification.md](../architecture/rust-wasm/verification.md)         | partial         | local matrix active; Compose upgrade open      |
+| Rust cutover ledger                       | [cutover/README.md](../architecture/rust-wasm/cutover/README.md)     | implemented     | status, parity, and deletion guard             |
+| Docker Rust/WASM verification             | [verification.md](../architecture/rust-wasm/verification.md)         | partial         | verify target active; app build cutover open   |
 
 ## Feed Surface
 

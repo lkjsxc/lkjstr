@@ -17,6 +17,7 @@ This subtree defines the Rust/WASM client target.
 - [protocol-kernel.md](protocol-kernel.md): Nostr protocol ownership.
 - [relay-runtime.md](relay-runtime.md): relay state machines and adapters.
 - [source-map.md](source-map.md): intended repository paths.
+- [status.md](status.md): current implemented Rust slices and open foundations.
 - [storage-kernel.md](storage-kernel.md): manifest, repositories, and IDB.
 - [ui-runtime.md](ui-runtime.md): Leptos UI ownership.
 - [verification.md](verification.md): Rust/WASM verification matrix.
@@ -27,11 +28,8 @@ This subtree defines the Rust/WASM client target.
   [../README.md](../README.md). It remains the reference surface until each
   Rust replacement is real, tested, and recorded in
   [cutover/parity-ledger.md](cutover/parity-ledger.md).
-- Current Rust/WASM state: partial and actively implemented. Rust owns protocol
-  parsing, event identity, signing helpers, NIP entity codecs, relay URL
-  normalization, pure workspace/account/relay-set/draft models, storage
-  manifest and outcome contracts, narrow IndexedDB adapters, relay state
-  machine basics, startup composition, and a partial Leptos shell.
+- Current Rust/WASM state: partial and actively implemented. The detailed slice
+  map lives in [status.md](status.md).
 - Open Rust/WASM work: full relay client reducer, WebSocket and timer adapters,
   complete storage repositories and transactions, feed/tool runtimes, publish
   jobs, media upload transport, full Stats diagnostics, and UI parity.

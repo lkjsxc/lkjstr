@@ -19,12 +19,15 @@ current root workspace contract:
 - `/` opens the tiled workspace app directly.
 - clean startup focuses Welcome and opens Accounts, Relay Settings, Home,
   Notifications, and Tweet.
-- every New Tab choice opens a real Rust surface or an honest unavailable state
-  backed by a documented open implementation gap.
+- every New Tab choice opens a real Rust surface.
 - storage failure recovers to a usable Welcome workspace.
 - workspace mutations persist when IndexedDB is available.
 - no product surface uses fake relay data, fake protocol results, or placeholder
   success states.
+
+Unavailable states are allowed only for real runtime failures such as relay,
+storage, extension, or upload-service failure. They cannot stand in for an
+unimplemented Rust product surface at cutover.
 
 ## Verification
 

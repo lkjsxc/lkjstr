@@ -14,6 +14,7 @@ data safety, and test ownership.
 - [docker.md](docker.md): built-image Compose workflow.
 - [feed-route-isolation-regression.md](feed-route-isolation-regression.md):
   Home, Profile, Notifications, and tool route isolation gates.
+- [focused-gates.md](focused-gates.md): extra checks by change area.
 - [memory-verification.md](memory-verification.md): heap snapshot collection
   and memory test commands.
 - [readiness.md](readiness.md): handoff checks.

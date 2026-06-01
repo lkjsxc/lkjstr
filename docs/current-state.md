@@ -100,26 +100,10 @@ Read next: [architecture/README.md](architecture/README.md),
 - Storage operations return typed results. UI paths may continue from memory
   fallback, while Stats can distinguish active, timed-out, late-settled, and
   late-rejected IndexedDB operations.
-- Rust storage support now implements the executable table manifest, cache
-  ledger resource ownership map, typed storage operation outcome contract, and
-  tab-state key plus ledger-row contract. Rust workspace records round-trip
-  through real `web_sys` IndexedDB workspace and settings adapters. Full
-  repository, deadline, retention, and ledger transaction work remains open.
-- Rust relay support now implements pure send queue, request scheduler,
-  subscription id, subscription alias, and close tombstone state machines.
-  WebSocket adapters and the full Rust relay client reducer are not yet
-  implemented.
-- Rust workspace support now implements pure layout, pane, tab, tab-group,
-  clean startup, focus, open-tab, split-pane, move-tab, edge-drop split,
-  close-tab, and usable-workspace recovery reducers, plus feed/tool tab
-  snapshot payload and merge semantics. Rust domain support also owns the New
-  Tab catalog labels, groups, descriptions, and active-account profile config.
-  Rust app support now composes startup recovery and bounded tab snapshot
-  staging. The Rust Leptos UI mounts a partial shell from `lkjstr-web`, renders
-  startup panes and tabs from Rust reducers, opens Welcome action tabs, and
-  converts New Tab choices while preserving the chooser tab id, persists tab
-  actions through Rust IndexedDB, and renders real Rust Stats, Settings, Relay
-  Settings, Upload Settings, Tweet drafts, and partial Accounts views with NIP-07 connection. Feeds, most tools, relay content, and full parity remain in TS.
+- Rust/WASM support is partial and active. Rust owns substantial protocol,
+  domain, storage-contract, relay-state-machine, startup, IndexedDB, and
+  Leptos-shell slices. The live Rust slice map and open foundations live in
+  [architecture/rust-wasm/status.md](architecture/rust-wasm/status.md).
 - Relay ingress uses app-owned byte and structure caps before expensive JSON
   and event parsing.
 - IndexedDB remains durable browser-owned data; memory relief prunes only

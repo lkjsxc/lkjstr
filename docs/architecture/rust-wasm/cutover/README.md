@@ -19,6 +19,15 @@ contract with real behavior and matching tests.
 
 No product mock is allowed. Synthetic relays are test-only fixtures.
 
+## Migration Board
+
+- Blocked: the TypeScript or Svelte module remains because Rust parity is not
+  proven.
+- Ready: Rust owns real behavior, docs, unit tests, browser tests when visible,
+  and verification evidence.
+- Removed: the old module was deleted in the same coherent change that recorded
+  parity evidence.
+
 ## Deletion Rule
 
 Delete a TypeScript or Svelte product module only after the Rust equivalent has:
