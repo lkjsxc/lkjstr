@@ -33,6 +33,8 @@ UI shell, and repository checks.
 - `crates/lkjstr-protocol/`: protocol kernel.
 - `crates/lkjstr-domain/`: pure domain reducers and models.
 - `crates/lkjstr-relays/`: relay state machines and schedulers.
+- `crates/lkjstr-relays/src/client/`: pure relay client lifecycle reducer,
+  events, effects, and state.
 - `crates/lkjstr-storage/`: manifest, repositories, ledger, and retention.
 - `crates/lkjstr-app/`: product runtime composition.
 - `crates/lkjstr-ui/`: Leptos components and UI CSS contracts.

@@ -2,8 +2,9 @@
 
 ## Purpose
 
-This crate owns pure relay runtime state machines before browser WebSocket
-adapters are ported.
+This crate owns pure relay runtime state machines. Browser WebSocket and timer
+handles live in `lkjstr-web`; this crate emits effect commands for those host
+adapters to execute.
 
 ## Table of Contents
 

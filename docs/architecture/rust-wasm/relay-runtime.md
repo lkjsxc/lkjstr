@@ -8,22 +8,26 @@ This file defines Rust relay ownership. Status: partial.
 
 Implemented now: `lkjstr-relays` owns pure send queue, request scheduler,
 subscription id, subscription alias, close tombstone state machines, and
-request message-size budgeting for outbound `REQ` frames.
+request message-size budgeting for outbound `REQ` frames. It also owns the
+first pure relay client lifecycle reducer for connect, open, send, error,
+close, reconnect-timer, connect-deadline, and owner-close decisions.
 
 `lkjstr-web` owns the first browser WebSocket and timer adapter foundation:
 socket handles store event callbacks, detach listeners during close, map send
 and open failures into typed host problems, and expose idempotent close. Timer
 handles own one browser timeout and clear it on owner cleanup.
 
-Not implemented yet: full relay client reducer, full request budgets, page read
-dedupe, progressive snapshots, diagnostics merge, demand and lease planning,
-and product wiring from relay reducers to browser adapters.
+Not implemented yet: relay protocol message handling inside the client reducer,
+full request budgets, page read dedupe, progressive snapshots, diagnostics
+merge, demand and lease planning, and product wiring from relay reducers to
+browser adapters.
 
 ## Pure Runtime
 
 The pure runtime owns:
 
 - outbound send queue decisions.
+- connection lifecycle decisions.
 - request scheduling.
 - subscription ids and aliases.
 - local close tombstones.

@@ -111,8 +111,8 @@ Read next: [architecture/README.md](architecture/README.md),
   fallback, while Stats can distinguish active, timed-out, busy, canceled,
   late-settled, and late-rejected storage operations.
 - Rust/WASM support is partial and active. Rust owns substantial protocol,
-  domain, storage-contract, relay-state-machine, startup, IndexedDB, and
-  Leptos-shell slices. The live Rust slice map and open foundations live in
+  domain, storage-contract, relay-state-machine, relay host-adapter, startup,
+  IndexedDB, and Leptos-shell slices. The live Rust slice map and open foundations live in
   [architecture/rust-wasm/status.md](architecture/rust-wasm/status.md).
 - Relay ingress uses app-owned byte and structure caps before expensive JSON
   and event parsing.
