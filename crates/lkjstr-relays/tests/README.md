@@ -17,5 +17,6 @@ TypeScript relay modules.
 - `request_budget_test.rs`: request limit, warning, and read-cap derivation.
 - `request_message_size_test.rs`: outbound `REQ` byte cap decisions.
 - `request_scheduler_test.rs`: pending queue and release behavior.
+- `route_plan_test.rs`: selected fallback and route-group planning behavior.
 - `send_queue_test.rs`: bounded FIFO send queue behavior.
 - `subscription_alias_test.rs`: subscription id hashing and alias lookup.

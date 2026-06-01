@@ -6,6 +6,10 @@ The orchestrator owns relay route planning. Runtimes supply selected relays and
 author sets; the planner resolves NIP-65 routes, receipts, discovery, and
 per-surface widening.
 
+Status: Rust owns a pure route-plan reducer for selected fallback, targeted
+author groups, disabled-relay exclusion, and score ordering. TypeScript still
+wires discovery evidence and product reads.
+
 ## Modules
 
 | Code                                              | Role                                    |
@@ -14,6 +18,7 @@ per-surface widening.
 | `src/lib/relays/relay-discovery.ts`               | kind 10002 route evidence refresh       |
 | `src/lib/relays/orchestration/surface-routing.ts` | per-surface relay widening              |
 | `src/lib/relays/orchestration/route-plan.ts`      | public planner entrypoints              |
+| `crates/lkjstr-relays/src/route_plan/`            | Rust pure route-group planning          |
 
 ## Home notes live
 

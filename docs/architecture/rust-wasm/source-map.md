@@ -42,6 +42,8 @@ UI shell, and repository checks.
   provenance merge policy.
 - `crates/lkjstr-relays/src/demand/`: pure demand records, lease fingerprint
   derivation, and owner visibility registry state.
+- `crates/lkjstr-relays/src/route_plan/`: pure selected fallback, targeted route
+  grouping, disabled-relay filtering, and score ordering.
 - `crates/lkjstr-storage/`: manifest, repositories, ledger, and retention.
 - `crates/lkjstr-app/`: product runtime composition.
 - `crates/lkjstr-ui/`: Leptos components and UI CSS contracts.

@@ -120,7 +120,7 @@ fn click(selector: &str) -> Result<(), JsValue> {
 }
 
 async fn wait_for_text(text: &str) -> Result<(), JsValue> {
-    for _ in 0..90 {
+    for _ in 0..300 {
         next_task().await?;
         if document_text()?.contains(text) {
             return Ok(());

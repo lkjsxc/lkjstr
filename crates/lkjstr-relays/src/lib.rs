@@ -7,6 +7,7 @@ pub mod page_read;
 pub mod request_budget;
 pub mod request_message_size;
 pub mod request_scheduler;
+pub mod route_plan;
 pub mod send_queue;
 pub mod subscription_alias;
 pub mod subscription_id;
@@ -51,6 +52,12 @@ pub use request_message_size::{
 };
 pub use request_scheduler::{
     PendingReq, RelayReqScheduler, ReleaseOutcome, ScheduleOutcome, max_pending_relay_reqs,
+};
+pub use route_plan::{
+    AuthorRelayRoute, RelayRoutePlan, RouteEvidenceSource, RoutePlanDiagnostic,
+    RoutePlanDiagnosticKind, RoutePlanGroup, RoutePlanGroupSource, RoutePlanInput,
+    RoutePlanSurface, default_max_authors_per_route_group, default_max_route_relays_per_author,
+    default_max_targeted_route_groups, plan_relay_routes,
 };
 pub use send_queue::{RelaySendQueue, max_relay_queued_messages};
 pub use subscription_alias::RelaySubscriptionAliases;

@@ -5,6 +5,9 @@
 Per-surface routing tables tell the planner which relays to put on a Demand
 before any widening step.
 
+Status: Rust owns pure per-surface route grouping for selected fallback and
+targeted author routes. TypeScript still supplies live NIP-65/discovery input.
+
 ## Home
 
 | Step      | Relays                                                                  |

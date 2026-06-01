@@ -5,6 +5,10 @@
 Relay read scoring orders bounded relay attempts and explains diagnostics
 without changing correctness.
 
+Status: Rust route planning accepts score hints only for ordering. Scores never
+remove a relay that is otherwise allowed by selection, route evidence, and
+disabled-relay rules.
+
 ## Score Key
 
 Durable or in-memory scores use:

@@ -29,6 +29,7 @@ Map documentation topics to implementation files. Each module stays at or below
 | `metrics.ts`              | orchestration counters and gauges            |
 | `../request-budget/*`     | budget derivation and NIP-11 limit helpers   |
 | `crates/lkjstr-relays/src/demand/` | Rust pure demand fingerprint and registry state |
+| `crates/lkjstr-relays/src/route_plan/` | Rust pure route group and score-order state |
 
 ## Tests
 
