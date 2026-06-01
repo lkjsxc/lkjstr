@@ -29,6 +29,9 @@ trunk build --release
 The quiet gate unsets `NO_COLOR` for Trunk because Trunk `0.21.14` rejects
 `NO_COLOR=1`.
 
+`crates/lkjstr-web/webdriver.json` owns browser capabilities for wasm-pack
+tests. Chrome uses container-safe flags for Docker.
+
 ## Docker Matrix
 
 ```sh

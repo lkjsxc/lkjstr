@@ -1,7 +1,27 @@
 FROM node:24-bookworm-slim AS deps
 
 WORKDIR /app
+RUN apt-get update \
+  && apt-get install -y --no-install-recommends \
+    build-essential \
+    ca-certificates \
+    chromium \
+    chromium-driver \
+    clang \
+    curl \
+    firefox-esr \
+    libssl-dev \
+    lld \
+    pkg-config \
+  && rm -rf /var/lib/apt/lists/*
 RUN npm install --global pnpm@11.1.2
+ENV PATH="/root/.cargo/bin:${PATH}"
+COPY rust-toolchain.toml ./
+RUN curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs \
+  | sh -s -- -y --profile minimal --default-toolchain none
+RUN rustup show
+RUN cargo install trunk --locked --version 0.21.14 \
+  && cargo install wasm-pack --locked --version 0.15.0
 COPY package.json pnpm-lock.yaml pnpm-workspace.yaml .npmrc ./
 RUN pnpm install --frozen-lockfile
 COPY . .
@@ -15,7 +35,7 @@ FROM app AS app-smoke
 CMD ["pnpm", "exec", "tsx", "scripts/app-smoke.ts"]
 
 FROM deps AS verify
-CMD ["pnpm", "verify:quiet"]
+CMD ["cargo", "run", "-p", "lkjstr-xtask", "--", "quiet", "verify"]
 
 FROM deps AS cloudflare
 CMD ["pnpm", "cloudflare:quiet"]

@@ -10,8 +10,8 @@ Docker docs define the Compose verification path.
 - Services do not mount the source tree.
 - Services do not require Compose environment blocks.
 - `app` builds the implemented product app and serves the built static output.
-- `verify` runs repository, TypeScript/Svelte, Rust, WASM, and Trunk checks
-  from the built image as each gate becomes active.
+- `verify` runs `cargo run -p lkjstr-xtask -- quiet verify` from the built
+  image, covering repository, TypeScript/Svelte, Rust, WASM, and Trunk checks.
 - `e2e` installs Playwright browser dependencies in its image.
 - `e2e` builds the app and runs Playwright against production preview.
 - `cloudflare` runs the Wrangler dry-run verification from the built image.

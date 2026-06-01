@@ -57,6 +57,26 @@ export async function checkComposeGuardrails(
       file: 'Dockerfile',
       message: 'app-smoke target must run app smoke',
     });
+  if (
+    !/FROM deps AS verify[\s\S]*CMD \["cargo", "run", "-p", "lkjstr-xtask", "--", "quiet", "verify"\]/.test(
+      dockerfile,
+    )
+  )
+    problems.push({
+      file: 'Dockerfile',
+      message: 'verify target must run xtask quiet verify',
+    });
+  for (const token of [
+    'rustup show',
+    'cargo install trunk',
+    'cargo install wasm-pack',
+  ]) {
+    if (!dockerfile.includes(token))
+      problems.push({
+        file: 'Dockerfile',
+        message: `missing Docker Rust/WASM tool ${token}`,
+      });
+  }
   const playwright = await fs
     .readFile(path.join(root, 'playwright.config.ts'), 'utf8')
     .catch(() => '');
