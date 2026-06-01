@@ -11,6 +11,8 @@ Browser-bound WASM tests prove exported functions call real Rust code.
 - `protocol_bridge_test.rs`: protocol bridge browser tests.
 - `indexed_db_test.rs`: IndexedDB workspace and settings tests.
 - `relay_sets_indexed_db_test.rs`: IndexedDB relay-set tests.
+- `relay_host_socket_test.rs`: relay WebSocket host adapter lifecycle tests.
+- `relay_host_timer_test.rs`: relay timer host adapter cleanup tests.
 - `relay_settings_tab_test.rs`: Rust Relay Settings browser persistence tests.
 - `settings_tab_test.rs`: Rust Settings browser rendering and persistence tests.
 - `sqlite_store_test.rs`: SQLite protected repository calls over the worker adapter.

@@ -61,6 +61,17 @@ docker compose -f docker-compose.yml run --rm cloudflare
 docker compose -f docker-compose.yml run --rm app-smoke
 ```
 
+## Rust Relay Host
+
+```sh
+cargo clippy -p lkjstr-web --target wasm32-unknown-unknown --all-targets -- -D warnings
+wasm-pack test --headless --chrome crates/lkjstr-web -- relay_socket
+wasm-pack test --headless --chrome crates/lkjstr-web -- browser_timeout
+wasm-pack test --headless --firefox crates/lkjstr-web -- relay_socket
+wasm-pack test --headless --firefox crates/lkjstr-web -- browser_timeout
+pnpm rust-wasm:quiet
+```
+
 ## Memory
 
 ```sh

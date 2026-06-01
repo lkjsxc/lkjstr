@@ -121,8 +121,10 @@ Read next: [architecture/README.md](architecture/README.md),
   Memory relief prunes only bounded app-owned runtime windows, caches, counters,
   and fallback stores.
 - Browser-local backend services own shared Home queries above tab components.
-  Relay clients, relay pool, subscription orchestrator, subscription manager,
-  and runtimes own network reads and deterministic cleanup.
+  Rust now has owned WebSocket and browser-timeout adapter foundations for relay
+  host work; the live TypeScript relay client, relay pool, subscription
+  orchestrator, subscription manager, and runtimes still own network reads and
+  deterministic cleanup until Rust product wiring is complete.
 - Surfaces submit Demands; the orchestrator plans shared Leases (canonical
   fingerprints with `channel` disambiguation) and issues reads through the
   subscription manager.

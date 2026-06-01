@@ -8,6 +8,8 @@ mod accounts_host;
 mod nip07_host;
 mod protocol_bridge;
 #[cfg(target_arch = "wasm32")]
+pub mod relay_host;
+#[cfg(target_arch = "wasm32")]
 mod relay_settings_host;
 mod response;
 #[cfg(target_arch = "wasm32")]

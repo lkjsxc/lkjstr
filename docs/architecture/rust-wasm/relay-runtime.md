@@ -10,10 +10,14 @@ Implemented now: `lkjstr-relays` owns pure send queue, request scheduler,
 subscription id, subscription alias, close tombstone state machines, and
 request message-size budgeting for outbound `REQ` frames.
 
+`lkjstr-web` owns the first browser WebSocket and timer adapter foundation:
+socket handles store event callbacks, detach listeners during close, map send
+and open failures into typed host problems, and expose idempotent close. Timer
+handles own one browser timeout and clear it on owner cleanup.
+
 Not implemented yet: full relay client reducer, full request budgets, page read
 dedupe, progressive snapshots, diagnostics merge, demand and lease planning,
-and browser WebSocket or timer adapters. `lkjstr-web` will own browser
-WebSocket and timer adapters.
+and product wiring from relay reducers to browser adapters.
 
 ## Pure Runtime
 
@@ -51,6 +55,10 @@ stored in a handle and cleared on close.
 
 The timer adapter owns reconnect timers, connect timeouts, read deadlines, and
 idle eviction timers. Timers are cleared on owner cleanup.
+
+Adapter handles do not decide relay correctness. They report browser facts to
+the relay runtime and leave reconnect, queue replay, tombstone, snapshot, and
+diagnostic policy to pure Rust state machines.
 
 ## Correctness Rules
 

@@ -13,6 +13,7 @@ Source files expose Rust application behavior to the browser through
 - `indexed_db/`: browser IndexedDB host adapter.
 - `nip07_host.rs`: browser NIP-07 public-key adapter.
 - `protocol_bridge.rs`: protocol bridge operations.
+- `relay_host/`: relay WebSocket and browser timeout host adapters.
 - `relay_settings_host.rs`: browser-backed Relay Settings command provider.
 - `response.rs`: structured JavaScript response helpers.
 - `settings_host.rs`: browser-backed Settings command provider.

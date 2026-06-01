@@ -3,18 +3,21 @@
 ## Purpose
 
 This file defines how Rust code talks to browser APIs. Status: implemented for
-the protocol WASM bridge, partial Leptos shell mount, IndexedDB adapters, and
-NIP-07 public-key connection; partial host glue and Rust adapter coverage for
-the SQLite worker; design-only for relay and remaining extension adapters.
+the protocol WASM bridge, partial Leptos shell mount, IndexedDB adapters,
+NIP-07 public-key connection, typed SQLite worker host glue, and the first
+relay WebSocket plus timer adapter foundation; design-only for remaining
+extension adapters.
 
 ## Browser APIs
 
 `lkjstr-web` owns direct use of `wasm-bindgen`, `web-sys`, and `js-sys`.
 The implemented protocol bridge uses `wasm-bindgen` and structured
 `JsValue` responses. The implemented UI host path uses a WASM start hook to
-mount `lkjstr-ui` into the browser document. Future adapters cover:
+mount `lkjstr-ui` into the browser document. Browser adapters cover:
 
-- WebSocket.
+- WebSocket. The relay host adapter owns `web_sys::WebSocket`, stores open,
+  message, error, and close closures in the socket handle, detaches them during
+  close, and maps constructor or send failures into typed host problems.
 - IndexedDB while current storage paths remain.
 - SQLite storage worker. A static `/sqlite-opfs-worker.js` entry loads official
   SQLite WASM assets from `/sqlite/`. A temporary TypeScript worker/client
@@ -24,7 +27,8 @@ mount `lkjstr-ui` into the browser document. Future adapters cover:
 - Fetch.
 - Clipboard.
 - File and Blob APIs.
-- Timers.
+- Timers. The relay host timer owns one browser timeout, clears it on explicit
+  cleanup or drop, and keeps callback ownership inside the handle.
 - DOM event listeners.
 - Browser storage estimates.
 - Local storage and session storage.

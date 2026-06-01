@@ -74,6 +74,16 @@ pnpm exec playwright test tests/e2e/sqlite-opfs-worker.spec.ts --project chromiu
 pnpm test:e2e:quiet -- sqlite-opfs
 ```
 
+Rust relay host focused commands:
+
+```sh
+cargo clippy -p lkjstr-web --target wasm32-unknown-unknown --all-targets -- -D warnings
+wasm-pack test --headless --chrome crates/lkjstr-web -- relay_socket
+wasm-pack test --headless --chrome crates/lkjstr-web -- browser_timeout
+wasm-pack test --headless --firefox crates/lkjstr-web -- relay_socket
+wasm-pack test --headless --firefox crates/lkjstr-web -- browser_timeout
+```
+
 ## Docker
 
 ```sh
