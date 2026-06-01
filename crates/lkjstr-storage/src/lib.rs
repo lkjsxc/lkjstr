@@ -86,12 +86,12 @@ pub use settings_schema::{
 pub use sql::{
     FOREIGN_KEYS_PRAGMA, SqliteIndexSpec, SqliteRetentionClass, SqliteSchemaStatement,
     SqliteStatementKind, SqliteStatementSpec, SqliteTableSpec, cache_sqlite_statements,
-    diagnostic_sqlite_statements, protected_sqlite_statement, protected_sqlite_statements,
-    sqlite_repository_statements, sqlite_schema_hash, sqlite_schema_index_names,
-    sqlite_schema_indexes, sqlite_schema_statements, sqlite_schema_table,
-    sqlite_schema_table_names, sqlite_schema_tables, sqlite_statement,
+    diagnostic_sqlite_statements, protected_sqlite_statements, sqlite_repository_statements,
+    sqlite_schema_hash, sqlite_schema_index_names, sqlite_schema_indexes, sqlite_schema_statements,
+    sqlite_schema_table, sqlite_schema_table_names, sqlite_schema_tables, sqlite_statement,
+    sqlite_table_count_sql,
 };
-pub use stats::{StorageInventoryRow, StorageStatsSnapshot, StorageTableCount};
+pub use stats::{SqliteRowCount, StorageInventoryRow, StorageStatsSnapshot, StorageTableCount};
 pub use tab_state::{
     CacheLedgerRecord, SqliteCacheLedgerRow, SqliteTabStateRow, TabStateRecord, cache_ledger_id,
     encoded_json_bytes, sqlite_cache_ledger_row, sqlite_cache_ledger_row_for_table,

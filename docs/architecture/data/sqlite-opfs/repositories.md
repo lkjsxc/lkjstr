@@ -36,7 +36,8 @@ is wired and tested as the durable product path.
   Relay diagnostics, suggestions, routes, and finished jobs are ledger-backed.
   Route blocks are protected safety rows and are not ledger-backed.
 - retention: cache ledger, dynamic protection, compaction, repair, and
-  inventory snapshots.
+  inventory snapshots. SQLite inventory uses storage-owned count statements for
+  known schema tables; host code must not format table names itself.
 
 ## Statement Shape
 

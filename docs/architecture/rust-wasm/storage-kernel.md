@@ -40,14 +40,15 @@ event-cache repository calls now cover atomic event/tag/relay writes, event
 lookups, notification owner reads and marks, feed cursor reads, feed coverage
 reads, fresh scan-hint reads, relay diagnostic summaries, relay information,
 relay suggestions, author routes, route blocks, jobs, and app log rows. These
-calls are not wired into product startup or feed runtimes yet.
+calls plus SQLite table-count inventory are not wired into product startup or
+feed runtimes yet.
 
 Target now: OPFS-backed SQLite WASM in a dedicated worker. The detailed target
 lives in [../data/sqlite-opfs/README.md](../data/sqlite-opfs/README.md).
 
 Not implemented yet: product wiring to SQLite, cache delete/repair paths,
-retention dispatchers, ledger repair, diagnostics inventory, full browser OPFS
-matrix tests, multi-tab lock handling, and Stats inventory over SQLite.
+retention dispatchers, ledger repair, full ledger and byte inventory
+diagnostics, full browser OPFS matrix tests, and multi-tab lock handling.
 
 ## Manifest Contract
 

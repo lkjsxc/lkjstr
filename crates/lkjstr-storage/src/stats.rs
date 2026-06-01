@@ -5,6 +5,7 @@ use std::collections::BTreeMap;
 use serde::{Deserialize, Serialize};
 
 use crate::manifest::storage_table_specs;
+use crate::sql::sqlite_schema_tables;
 
 #[derive(Clone, Debug, Deserialize, Eq, PartialEq, Serialize)]
 pub struct StorageTableCount {
@@ -41,6 +42,11 @@ pub struct StorageInventoryRow {
     pub status: String,
     pub row_count: Option<u64>,
     pub problem_reason: Option<String>,
+}
+
+#[derive(Clone, Debug, Deserialize, Eq, PartialEq, Serialize)]
+pub struct SqliteRowCount {
+    pub row_count: u64,
 }
 
 #[derive(Clone, Debug, Deserialize, Eq, PartialEq, Serialize)]
@@ -86,6 +92,31 @@ impl StorageStatsSnapshot {
             .map(|spec| StorageTableCount::unavailable(spec.name, reason))
             .collect();
         Self::from_counts(counts)
+    }
+
+    #[must_use]
+    pub fn from_sqlite_counts(counts: Vec<StorageTableCount>) -> Self {
+        let counts_by_table = counts
+            .into_iter()
+            .map(|count| (count.table.clone(), count))
+            .collect::<BTreeMap<_, _>>();
+        let rows = sqlite_schema_tables()
+            .into_iter()
+            .map(|spec| {
+                let count = counts_by_table.get(spec.name);
+                let row_count = count.and_then(|item| item.row_count);
+                let problem_reason = count.and_then(|item| item.problem_reason.clone());
+                StorageInventoryRow {
+                    table: spec.name.to_string(),
+                    data_class: spec.data_class.as_str().to_string(),
+                    group: spec.inventory_group.as_str().to_string(),
+                    status: row_status(row_count, problem_reason.as_deref()).to_string(),
+                    row_count,
+                    problem_reason,
+                }
+            })
+            .collect::<Vec<_>>();
+        Self::from_rows(rows)
     }
 
     #[must_use]

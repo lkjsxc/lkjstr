@@ -9,6 +9,7 @@ mod event_params;
 mod events;
 mod feed_cache;
 mod feed_params;
+mod inventory;
 mod jobs;
 mod notifications;
 mod params;
@@ -36,6 +37,7 @@ pub use feed_cache::{
     sqlite_feed_coverage_for_feed, sqlite_feed_coverage_put, sqlite_feed_cursor_get,
     sqlite_feed_cursor_put, sqlite_feed_scan_hint_put, sqlite_feed_scan_hints_for_feed,
 };
+pub use inventory::sqlite_storage_stats_snapshot;
 pub use jobs::{sqlite_job_get, sqlite_job_put, sqlite_jobs_recent};
 pub use notifications::{
     sqlite_notifications_for_owner, sqlite_notifications_mark_owner_read, sqlite_notifications_put,

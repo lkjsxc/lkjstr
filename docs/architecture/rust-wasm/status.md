@@ -16,7 +16,7 @@ This file is the concise status map for the active Rust/WASM migration.
   workspace layout reducers, tab movement, edge splits, clean startup,
   recovery, New Tab catalog data, and tab snapshot payload contracts.
 - `lkjstr-storage` owns the executable table manifest, cache-ledger resource
-  map, typed operation outcomes, executable SQLite schema records, protected SQL
+  map, typed operation outcomes, executable SQLite schema records, protected,
   event-cache, and diagnostics statements, schema hash, tab-state keys, ledger
   rows, and protected plus cache SQLite row codecs.
 - `lkjstr-web` owns narrow IndexedDB adapters for workspace startup, workspace
@@ -24,8 +24,9 @@ This file is the concise status map for the active Rust/WASM migration.
   the first multi-store transaction helper, ledger-backed tab-state snapshot
   writes, startup tab-state loading, a typed SQLite storage-worker adapter with
   deadlines, cancellation, close cleanup, late diagnostics, protected, core
-  event-cache, and diagnostics SQLite repository calls over the worker, and
-  early host calls needed by the partial Leptos shell.
+  event-cache, diagnostics SQLite repository calls, SQLite table-count
+  inventory over the worker, and early host calls needed by the partial Leptos
+  shell.
 - `lkjstr-relays` owns pure send queue, request scheduler, subscription id,
   subscription alias, close tombstone, and outbound `REQ` message-size budget
   state machines.
@@ -41,7 +42,7 @@ This file is the concise status map for the active Rust/WASM migration.
   diagnostics merge, page read dedupe, demand planning, and lease planning.
 - Browser WebSocket and timer adapters with owned callbacks and cleanup.
 - Product SQLite wiring, cache delete and repair paths, retention dispatchers,
-  and inventory diagnostics.
+  and full ledger and byte inventory diagnostics.
 - Feed runtimes for Home, Global, Profile, Thread, Notifications, Search,
   Custom Request, and Author Context.
 - Publish jobs, local signing flow integration, NIP-07 `signEvent`, media

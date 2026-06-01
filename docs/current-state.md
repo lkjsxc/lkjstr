@@ -97,11 +97,10 @@ Read next: [architecture/README.md](architecture/README.md),
   statements and row codecs, static and temporary TypeScript host workers, a
   typed Rust storage-worker adapter, and protected, event-cache, and diagnostics
   Rust SQLite repository calls now exist for open, schema apply, execute, query,
-  batch, estimate,
-  cancellation, deadline, late-response, close, diagnostics, jobs, route-block,
-  and app-log behavior. Product paths still use IndexedDB/Dexie until SQLite
-  startup wiring is complete. Ledger resource ownership and
-  storage repository modules
+  batch, estimate, cancellation, deadline, late-response, close, diagnostics,
+  jobs, route-block, app-log, and table-count inventory behavior. Product paths
+  still use IndexedDB/Dexie until SQLite startup wiring is complete. Ledger
+  resource ownership and storage repository modules
   own resource-plus-ledger write boundaries for events, feed cache, jobs,
   notifications, relay diagnostics, relay information, route evidence, and tab
   snapshots.

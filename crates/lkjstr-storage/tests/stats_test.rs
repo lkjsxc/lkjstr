@@ -1,4 +1,7 @@
-use lkjstr_storage::{StorageStatsSnapshot, StorageTableCount, storage_table_specs};
+use lkjstr_storage::{
+    SqliteRowCount, StorageStatsSnapshot, StorageTableCount, sqlite_schema_table_names,
+    sqlite_table_count_sql, storage_table_specs,
+};
 
 #[test]
 fn stats_snapshot_marks_complete_inventory() {
@@ -37,4 +40,37 @@ fn stats_snapshot_can_report_manifest_unavailable() {
     assert_eq!(snapshot.inventory_status, "unavailable");
     assert_eq!(snapshot.available_table_count, 0);
     assert!(snapshot.rows.iter().all(|row| row.status == "unavailable"));
+}
+
+#[test]
+fn stats_snapshot_can_use_sqlite_schema_tables() {
+    let counts = sqlite_schema_table_names()
+        .into_iter()
+        .map(|table| StorageTableCount::available(table, 3))
+        .collect();
+    let snapshot = StorageStatsSnapshot::from_sqlite_counts(counts);
+
+    assert_eq!(snapshot.inventory_status, "complete");
+    assert!(
+        snapshot
+            .rows
+            .iter()
+            .any(|row| row.table == "relay_information"
+                && row.group == "diagnostics"
+                && row.row_count == Some(3))
+    );
+}
+
+#[test]
+fn sqlite_table_count_sql_is_limited_to_known_tables() -> Result<(), serde_json::Error> {
+    assert_eq!(
+        sqlite_table_count_sql("events").as_deref(),
+        Some("SELECT COUNT(*) AS row_count FROM events;")
+    );
+    assert!(sqlite_table_count_sql("events; DROP TABLE events").is_none());
+    assert_eq!(
+        serde_json::from_value::<SqliteRowCount>(serde_json::json!({ "row_count": 4 }))?.row_count,
+        4
+    );
+    Ok(())
 }

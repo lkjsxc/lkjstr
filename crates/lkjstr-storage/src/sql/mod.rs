@@ -189,8 +189,7 @@ pub fn sqlite_statement(id: &str) -> Option<&'static SqliteStatementSpec> {
 }
 
 #[must_use]
-pub fn protected_sqlite_statement(id: &str) -> Option<&'static SqliteStatementSpec> {
-    statements::PROTECTED_STATEMENTS
-        .iter()
-        .find(|statement| statement.id == id)
+pub fn sqlite_table_count_sql(table_name: &str) -> Option<String> {
+    sqlite_schema_table(table_name)
+        .map(|table| format!("SELECT COUNT(*) AS row_count FROM {};", table.name))
 }

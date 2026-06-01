@@ -84,6 +84,25 @@ impl SqliteStore {
             .map(|response| response.rows)
     }
 
+    pub(crate) async fn query_sql(
+        &self,
+        statement: String,
+        params: Option<SqlParams>,
+        row_limit: u32,
+    ) -> StorageOutcome<Vec<crate::storage_worker::SqlRow>> {
+        self.client
+            .send(
+                StorageOp::Query {
+                    statement,
+                    params,
+                    row_limit,
+                },
+                self.deadline_ms,
+            )
+            .await
+            .map(|response| response.rows)
+    }
+
     pub async fn execute(&self, id: &'static str, params: Option<SqlParams>) -> StorageOutcome<()> {
         let statement = match statement(id) {
             StorageOutcome::Ok(statement) => statement,
