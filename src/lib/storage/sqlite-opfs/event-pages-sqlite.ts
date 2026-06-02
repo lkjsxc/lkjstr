@@ -69,7 +69,7 @@ async function sqliteKindsPage(
   limit: number,
 ): Promise<StoredEvent[] | undefined> {
   if (query.relays && query.relays.length === 0) return [];
-  const sql = `SELECT DISTINCT ${storedEventColumns} FROM events e ${relayJoin(query)} WHERE ${kindSql(feedKinds(query), 1)} ${boundsSql(query, feedKinds(query).length + 1)} ${relayWhere(query, feedKinds(query).length + boundParamCount(query) + 1)} ORDER BY e.created_at DESC, e.id ASC;`;
+  const sql = `SELECT ${storedEventColumns} FROM events e WHERE ${kindSql(feedKinds(query), 1)} ${boundsSql(query, feedKinds(query).length + 1)} ${relayWhere(query, feedKinds(query).length + boundParamCount(query) + 1)} ORDER BY e.created_at DESC, e.id ASC;`;
   const params = [
     ...feedKinds(query),
     ...boundsParams(query),
@@ -101,7 +101,7 @@ function queryAuthorChunk(
   const kindStart = authors.length + 1;
   const boundStart = kindStart + kinds.length;
   const relayStart = boundStart + boundParamCount(query);
-  const sql = `WITH author_input(pubkey) AS (VALUES ${authorValues}) SELECT DISTINCT ${storedEventColumns} FROM events e JOIN author_input a ON a.pubkey = e.pubkey ${relayJoin(query)} WHERE ${kindSql(kinds, kindStart)} ${boundsSql(query, boundStart)} ${relayWhere(query, relayStart)} ORDER BY e.created_at DESC, e.id ASC;`;
+  const sql = `WITH author_input(pubkey) AS (VALUES ${authorValues}) SELECT ${storedEventColumns} FROM events e JOIN author_input a ON a.pubkey = e.pubkey WHERE ${kindSql(kinds, kindStart)} ${boundsSql(query, boundStart)} ${relayWhere(query, relayStart)} ORDER BY e.created_at DESC, e.id ASC;`;
   return queryEvents(sql, [...authors, ...kinds, ...boundsParams(query), ...(query.relays ?? [])], limit);
 }
 
@@ -161,12 +161,10 @@ function boundParamCount(query: FeedQuery): number {
   return boundsParams(query).length;
 }
 
-function relayJoin(query: FeedQuery): string {
-  return query.relays ? 'JOIN event_relays r ON r.event_id = e.id' : '';
-}
-
 function relayWhere(query: FeedQuery, start: number): string {
-  return query.relays ? `AND r.relay_url IN (${placeholders(query.relays, start)})` : '';
+  return query.relays
+    ? `AND EXISTS (SELECT 1 FROM event_relays r WHERE r.event_id = e.id AND r.relay_url IN (${placeholders(query.relays, start)}))`
+    : '';
 }
 
 function sortedBounded(events: readonly StoredEvent[], query: FeedQuery, limit: number): StoredEvent[] {

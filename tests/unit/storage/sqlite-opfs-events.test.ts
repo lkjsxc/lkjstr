@@ -89,7 +89,7 @@ describe('SQLite event graph repositories', () => {
     ).resolves.toHaveLength(1);
     const query = state.sent.find((op) => op.kind === 'query');
     expect(query?.kind === 'query' ? query.statement : '').toContain(
-      'JOIN event_relays r ON r.event_id = e.id',
+      'EXISTS (SELECT 1 FROM event_relays r',
     );
     expect(query?.kind === 'query' ? query.statement : '').toContain(
       'ORDER BY e.created_at DESC, e.id ASC',
