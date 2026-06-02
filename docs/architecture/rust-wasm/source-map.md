@@ -51,9 +51,8 @@ UI shell, and repository checks.
 - `crates/lkjstr-storage/`: manifest, repositories, ledger, and retention.
 - `crates/lkjstr-app/`: product runtime composition.
 - `crates/lkjstr-app/src/feed/`: pure feed runtime identity, live lease
-  composition, Home, Global, Profile, Notifications, Thread, Search, and
-  Custom Request feed input builders, feed-window reduction, cursor derivation,
-  generation guards, and terminal empty-state readiness.
+  composition, surface query input builders, feed-window reduction, cursor
+  derivation, generation guards, and terminal empty-state readiness.
 - `crates/lkjstr-app/src/custom_request/`: Custom Request parser, policy
   clamps, and exact/adaptive mode classification.
 - `crates/lkjstr-app/src/query/`: pure app-level query demand planning.

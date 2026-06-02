@@ -6,6 +6,7 @@ Pure feed reducers for browser-independent runtime state.
 
 ## Table of Contents
 
+- `author_context_inputs.rs`: Author Context anchor and nearby builders.
 - `mod.rs`: public feed module exports.
 - `reducer.rs`: feed-window merge, cap, cursor, and guard logic.
 - `runtime.rs`: query/live/window runtime composition.

@@ -94,3 +94,30 @@ pub struct ThreadRepliesQueryInput {
     pub now_sec: u64,
     pub page_size: u64,
 }
+
+#[derive(Clone, Debug, Eq, PartialEq)]
+pub struct AuthorContextAnchorInput {
+    pub owner: String,
+    pub visibility: DemandVisibility,
+    pub selected_relays: Vec<String>,
+    pub disabled_relays: Vec<String>,
+    pub event_id: String,
+    pub author_pubkey: String,
+    pub author_routes: Vec<AuthorRelayRoute>,
+    pub now_sec: u64,
+}
+
+#[derive(Clone, Debug, Eq, PartialEq)]
+pub struct AuthorContextNearbyInput {
+    pub owner: String,
+    pub visibility: DemandVisibility,
+    pub selected_relays: Vec<String>,
+    pub disabled_relays: Vec<String>,
+    pub author_pubkey: String,
+    pub author_routes: Vec<AuthorRelayRoute>,
+    pub phase: DemandPhase,
+    pub since: Option<u64>,
+    pub until: Option<u64>,
+    pub now_sec: u64,
+    pub page_size: u64,
+}

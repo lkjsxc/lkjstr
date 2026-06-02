@@ -4,10 +4,10 @@
 
 Define canonical Rust builders for surface-specific feed query inputs.
 
-Status: Rust owns Home, Global, Profile, Notifications, Thread, Search, and
-Custom Request query input builders. The next pure builder slice covers Author
-Context anchor and nearby-author queries. These builders are app runtime
-composition only; shipped feed UI wiring still uses TypeScript runtime code.
+Status: Rust owns Home, Global, Profile, Notifications, Thread, Search, Custom
+Request, and Author Context query input builders. These builders are app
+runtime composition only; shipped feed UI wiring still uses TypeScript runtime
+code.
 
 ## Home
 
@@ -132,4 +132,5 @@ composition only; shipped feed UI wiring still uses TypeScript runtime code.
   classifier.
 - `crates/lkjstr-app/tests/feed_surface_input_test.rs`: feed builder tests.
 - `crates/lkjstr-app/tests/thread_input_test.rs`: Thread builder tests.
+- `crates/lkjstr-app/tests/author_context_input_test.rs`: Author Context tests.
 - `crates/lkjstr-app/tests/custom_request_test.rs`: parser and mode tests.
