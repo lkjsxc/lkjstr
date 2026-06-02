@@ -1,8 +1,12 @@
 use lkjstr_app::{
-    FeedLiveQueryInput, QuerySurface, global_live_query_input, home_live_query_input,
-    plan_query_demand,
+    FeedLiveQueryInput, NotificationsLiveQueryInput, ProfileLiveQueryInput, QuerySurface,
+    global_live_query_input, home_live_query_input, notifications_live_query_input,
+    plan_query_demand, profile_live_query_input,
 };
-use lkjstr_protocol::{KIND_GENERIC_REPOST, KIND_REPOST, KIND_TEXT_NOTE};
+use lkjstr_protocol::{
+    KIND_GENERIC_REPOST, KIND_METADATA, KIND_REACTION, KIND_REPOST, KIND_TEXT_NOTE,
+    KIND_ZAP_RECEIPT,
+};
 use lkjstr_relays::{
     AuthorRelayRoute, DemandPhase, DemandPurpose, DemandVisibility, RouteEvidenceSource,
     RoutePlanGroupSource,
@@ -59,6 +63,70 @@ fn global_live_input_uses_selected_relays_without_authors_or_routes() -> Result<
     Ok(())
 }
 
+#[test]
+fn profile_live_input_targets_profile_author_and_routes() -> Result<(), String> {
+    let profile = pubkey("b");
+    let query = profile_live_query_input(profile_input(profile.clone()));
+    let plan = plan_query_demand(query.clone());
+    let [filter] = query.filters.as_slice() else {
+        return Err("wanted one filter".to_owned());
+    };
+    let author = plan
+        .route_plan
+        .groups
+        .iter()
+        .find(|group| group.source == RoutePlanGroupSource::AuthorRoute)
+        .ok_or_else(|| "wanted author route group".to_owned())?;
+
+    assert_eq!(query.surface, QuerySurface::Profile);
+    assert_eq!(query.authors, vec![profile.clone()]);
+    assert_eq!(filter.authors, Some(vec![profile.clone()]));
+    assert_eq!(author.authors, vec![profile]);
+    assert_eq!(
+        author.relays,
+        vec!["wss://profile-route.example/".to_owned()]
+    );
+    Ok(())
+}
+
+#[test]
+fn notifications_live_input_targets_p_tag_without_author_filter() -> Result<(), String> {
+    let account = pubkey("c");
+    let query = notifications_live_query_input(notifications_input(account.clone()));
+    let plan = plan_query_demand(query.clone());
+    let [filter] = query.filters.as_slice() else {
+        return Err("wanted one filter".to_owned());
+    };
+    let author = plan
+        .route_plan
+        .groups
+        .iter()
+        .find(|group| group.source == RoutePlanGroupSource::AuthorRoute)
+        .ok_or_else(|| "wanted author route group".to_owned())?;
+
+    assert_eq!(query.surface, QuerySurface::Notifications);
+    assert_eq!(query.channel.as_deref(), Some("notifications"));
+    assert_eq!(filter.authors, None);
+    assert_eq!(filter.tags.get("p"), Some(&vec![account.clone()]));
+    assert_eq!(
+        filter.kinds,
+        Some(vec![
+            KIND_METADATA,
+            KIND_TEXT_NOTE,
+            KIND_REPOST,
+            KIND_REACTION,
+            KIND_GENERIC_REPOST,
+            KIND_ZAP_RECEIPT
+        ])
+    );
+    assert_eq!(author.authors, vec![account]);
+    assert_eq!(
+        author.relays,
+        vec!["wss://notify-route.example/".to_owned()]
+    );
+    Ok(())
+}
+
 fn input(authors: Vec<String>) -> FeedLiveQueryInput {
     FeedLiveQueryInput {
         owner: "tab-a".to_owned(),
@@ -75,6 +143,49 @@ fn input(authors: Vec<String>) -> FeedLiveQueryInput {
         since: Some(now_sec()),
         now_sec: now_sec(),
         page_size: 30,
+    }
+}
+
+fn profile_input(profile_pubkey: String) -> ProfileLiveQueryInput {
+    ProfileLiveQueryInput {
+        owner: "profile-tab".to_owned(),
+        visibility: DemandVisibility::Visible,
+        selected_relays: vec!["https://selected.example".to_owned()],
+        profile_pubkey: profile_pubkey.clone(),
+        author_routes: vec![
+            route(profile_pubkey, "https://profile-route.example"),
+            route(pubkey("a"), "https://wrong-route.example"),
+        ],
+        disabled_relays: Vec::new(),
+        since: Some(now_sec()),
+        now_sec: now_sec(),
+        page_size: 30,
+    }
+}
+
+fn notifications_input(account_pubkey: String) -> NotificationsLiveQueryInput {
+    NotificationsLiveQueryInput {
+        owner: "notifications-tab".to_owned(),
+        visibility: DemandVisibility::Visible,
+        selected_relays: vec!["https://selected.example".to_owned()],
+        account_pubkey: account_pubkey.clone(),
+        author_routes: vec![
+            route(account_pubkey, "https://notify-route.example"),
+            route(pubkey("a"), "https://wrong-route.example"),
+        ],
+        disabled_relays: Vec::new(),
+        since: Some(now_sec()),
+        now_sec: now_sec(),
+        page_size: 30,
+    }
+}
+
+fn route(author: String, relay_url: &str) -> AuthorRelayRoute {
+    AuthorRelayRoute {
+        author,
+        relay_url: relay_url.to_owned(),
+        source: RouteEvidenceSource::Nip65,
+        score: 10,
     }
 }
 

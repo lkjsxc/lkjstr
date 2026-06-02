@@ -6,8 +6,10 @@ This file defines the Rust application composition boundary. Status:
 implemented for pure account-domain records, local signing helpers, account
 storage command wiring, relay-set storage command wiring, workspace layout
 reducers, tab movement reducers, workspace startup recovery, bounded tab
-snapshot staging, startup filtering of stored tab snapshots, and New Tab
-catalog options; design-only for remaining browser service composition.
+snapshot staging, startup filtering of stored tab snapshots, feed-window
+reducers, live feed composition, Home, Global, Profile, and Notifications feed
+input builders, and New Tab catalog options; design-only for remaining browser
+service composition.
 
 ## Owner
 

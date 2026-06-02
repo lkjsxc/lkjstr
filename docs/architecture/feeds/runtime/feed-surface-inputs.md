@@ -4,11 +4,9 @@
 
 Define canonical Rust builders for surface-specific feed query inputs.
 
-Status: Rust owns Home and Global live query input builders. The next pure
-builder slice covers Profile and Notifications so route isolation and
-notification `#p` targeting are fixed before UI wiring. These builders are app
-runtime composition only; shipped feed UI wiring still uses TypeScript runtime
-code.
+Status: Rust owns Home, Global, Profile, and Notifications live query input
+builders. These builders are app runtime composition only; shipped feed UI
+wiring still uses TypeScript runtime code.
 
 ## Home
 

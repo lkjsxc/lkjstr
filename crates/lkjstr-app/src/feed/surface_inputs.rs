@@ -1,22 +1,15 @@
 #![doc = "Feed surface query input builders."]
 
-use lkjstr_protocol::{KIND_GENERIC_REPOST, KIND_REPOST, KIND_TEXT_NOTE, NostrFilter};
+use std::collections::BTreeMap;
+
+use lkjstr_protocol::{
+    KIND_GENERIC_REPOST, KIND_METADATA, KIND_REACTION, KIND_REPOST, KIND_TEXT_NOTE,
+    KIND_ZAP_RECEIPT, NostrFilter,
+};
 use lkjstr_relays::{AuthorRelayRoute, DemandPhase, DemandPurpose, DemandVisibility};
 
+use super::{FeedLiveQueryInput, NotificationsLiveQueryInput, ProfileLiveQueryInput};
 use crate::{QueryDemandInput, QuerySurface};
-
-#[derive(Clone, Debug, Eq, PartialEq)]
-pub struct FeedLiveQueryInput {
-    pub owner: String,
-    pub visibility: DemandVisibility,
-    pub selected_relays: Vec<String>,
-    pub authors: Vec<String>,
-    pub author_routes: Vec<AuthorRelayRoute>,
-    pub disabled_relays: Vec<String>,
-    pub since: Option<u64>,
-    pub now_sec: u64,
-    pub page_size: u64,
-}
 
 struct LiveQueryParts {
     surface: QuerySurface,
@@ -67,6 +60,52 @@ pub fn global_live_query_input(input: FeedLiveQueryInput) -> QueryDemandInput {
     })
 }
 
+#[must_use]
+pub fn profile_live_query_input(input: ProfileLiveQueryInput) -> QueryDemandInput {
+    let profile_pubkey = input.profile_pubkey;
+    live_query_input(LiveQueryParts {
+        surface: QuerySurface::Profile,
+        owner: input.owner,
+        visibility: input.visibility,
+        selected_relays: input.selected_relays,
+        authors: vec![profile_pubkey.clone()],
+        author_routes: routes_for_author(input.author_routes, &profile_pubkey),
+        disabled_relays: input.disabled_relays,
+        filter_authors: Some(vec![profile_pubkey]),
+        since: input.since,
+        now_sec: input.now_sec,
+        page_size: input.page_size,
+    })
+}
+
+#[must_use]
+pub fn notifications_live_query_input(input: NotificationsLiveQueryInput) -> QueryDemandInput {
+    let account_pubkey = input.account_pubkey;
+    QueryDemandInput {
+        surface: QuerySurface::Notifications,
+        owner: input.owner,
+        channel: Some("notifications".to_owned()),
+        visibility: input.visibility,
+        phase: DemandPhase::Live,
+        selected_relays: input.selected_relays,
+        authors: vec![account_pubkey.clone()],
+        author_routes: routes_for_author(input.author_routes, &account_pubkey),
+        disabled_relays: input.disabled_relays,
+        filters: vec![NostrFilter {
+            kinds: Some(notification_kinds()),
+            tags: notification_tags(account_pubkey),
+            since: input.since,
+            limit: Some(input.page_size),
+            ..NostrFilter::default()
+        }],
+        purpose: DemandPurpose::Feed,
+        since: input.since,
+        until: None,
+        limit: Some(input.page_size),
+        now_sec: input.now_sec,
+    }
+}
+
 fn live_query_input(parts: LiveQueryParts) -> QueryDemandInput {
     QueryDemandInput {
         surface: parts.surface,
@@ -95,6 +134,28 @@ fn live_query_input(parts: LiveQueryParts) -> QueryDemandInput {
 
 fn display_kinds() -> Vec<u64> {
     vec![KIND_TEXT_NOTE, KIND_REPOST, KIND_GENERIC_REPOST]
+}
+
+fn notification_kinds() -> Vec<u64> {
+    vec![
+        KIND_METADATA,
+        KIND_TEXT_NOTE,
+        KIND_REPOST,
+        KIND_REACTION,
+        KIND_GENERIC_REPOST,
+        KIND_ZAP_RECEIPT,
+    ]
+}
+
+fn notification_tags(account_pubkey: String) -> BTreeMap<String, Vec<String>> {
+    BTreeMap::from([("p".to_owned(), vec![account_pubkey])])
+}
+
+fn routes_for_author(routes: Vec<AuthorRelayRoute>, author: &str) -> Vec<AuthorRelayRoute> {
+    routes
+        .into_iter()
+        .filter(|route| route.author == author)
+        .collect()
 }
 
 fn unique_sorted(values: Vec<String>) -> Vec<String> {
