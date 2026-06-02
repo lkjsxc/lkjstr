@@ -1,13 +1,13 @@
 import {
   errorText,
   executeSql,
-  openSqliteDatabase,
   querySql,
   runBatch,
   sqliteOutcomeFromError,
-  type OpenedSqliteDatabase,
   type SqliteModule,
 } from './database';
+import { createStorageHealth } from './worker-health';
+import { openSqliteDatabase, type OpenedSqliteDatabase } from './open-database';
 import type {
   OpenDatabase,
   StorageDiagnostics,
@@ -26,7 +26,10 @@ export type SqliteWorkerCoreOptions = {
 
 export function createSqliteWorkerCore(options: SqliteWorkerCoreOptions) {
   let sqlitePromise: Promise<SqliteModule> | undefined;
+  let sqliteModule: SqliteModule | undefined;
   let opened: OpenedSqliteDatabase | undefined;
+  const lastIntegrityCheckAt: number | null = null;
+  const appliedSchemaChanges = new Set<string>();
   const canceled = new Set<string>();
 
   const handle = async (message: unknown): Promise<void> => {
@@ -68,24 +71,33 @@ export function createSqliteWorkerCore(options: SqliteWorkerCoreOptions) {
     if (op.kind === 'estimate-storage') return estimate(request);
     const current = opened;
     if (!current) throw new Error('SQLite database is not open');
-    const { db, diagnostics } = current;
-    if (op.kind === 'apply-schema') {
-      for (const statement of op.statements) db.exec(statement);
-      return response(request, 'ok', undefined, 0, diagnostics);
-    }
+    if (op.kind === 'get-storage-health') return health(request, current);
+    if (op.kind === 'apply-schema') return applySchema(request, current, op);
     if (op.kind === 'execute') {
-      const rowsAffected = executeSql(db, op.statement, op.params);
-      return response(request, 'ok', undefined, rowsAffected, diagnostics);
+      const rowsAffected = executeSql(current.db, op.statement, op.params);
+      return response(
+        request,
+        'ok',
+        undefined,
+        rowsAffected,
+        current.diagnostics,
+      );
     }
     if (op.kind === 'query') {
-      const rows = querySql(db, op.statement, op.params, op.rowLimit);
-      return response(request, 'ok', rows, 0, diagnostics);
+      const rows = querySql(current.db, op.statement, op.params, op.rowLimit);
+      return response(request, 'ok', rows, 0, current.diagnostics);
     }
     if (op.kind === 'batch') {
-      const rowsAffected = runBatch(db, op.steps);
-      return response(request, 'ok', undefined, rowsAffected, diagnostics);
+      const rowsAffected = runBatch(current.db, op.steps);
+      return response(
+        request,
+        'ok',
+        undefined,
+        rowsAffected,
+        current.diagnostics,
+      );
     }
-    return response(request, 'corrupt', undefined, 0, diagnostics);
+    return response(request, 'corrupt', undefined, 0, current.diagnostics);
   };
 
   const open = async (
@@ -94,8 +106,35 @@ export function createSqliteWorkerCore(options: SqliteWorkerCoreOptions) {
   ): Promise<StorageResponse> => {
     if (opened) opened.db.close();
     sqlitePromise ??= options.initSqlite();
-    opened = await openSqliteDatabase(await sqlitePromise, database);
+    sqliteModule = await sqlitePromise;
+    opened = await openSqliteDatabase(sqliteModule, database);
     return response(request, 'ok', undefined, 0, opened.diagnostics);
+  };
+
+  const applySchema = (
+    request: StorageRequest,
+    current: OpenedSqliteDatabase,
+    op: Extract<StorageOp, { kind: 'apply-schema' }>,
+  ): StorageResponse => {
+    for (const statement of op.statements) current.db.exec(statement);
+    appliedSchemaChanges.add(op.schemaHash);
+    return response(request, 'ok', undefined, 0, current.diagnostics);
+  };
+
+  const health = (
+    request: StorageRequest,
+    current: OpenedSqliteDatabase,
+  ): StorageResponse => {
+    const health = createStorageHealth({
+      current,
+      sqliteModule,
+      appliedSchemaChanges,
+      lastIntegrityCheckAt,
+    });
+    return response(request, 'ok', undefined, 0, {
+      ...current.diagnostics,
+      health,
+    });
   };
 
   const close = (request: StorageRequest): StorageResponse => {

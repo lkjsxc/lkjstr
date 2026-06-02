@@ -12,7 +12,7 @@ import type {
 } from '../../../src/lib/storage/sqlite-opfs/database';
 
 describe('SQLite OPFS worker core', () => {
-  test('opens, applies schema, executes, queries, estimates, and closes', async () => {
+  test('opens, applies schema, executes, queries, reports health, and closes', async () => {
     const responses: StorageResponse[] = [];
     const rows: SqlRow[] = [];
     let closed = false;
@@ -21,6 +21,11 @@ describe('SQLite OPFS worker core', () => {
       exec: (input) => {
         if (typeof input === 'string') return undefined;
         if (input.sql.startsWith('INSERT')) rows.push(rowFrom(input.bind));
+        if (input.sql.includes('page_count')) return [{ page_count: 2 }];
+        if (input.sql.includes('page_size')) return [{ page_size: 4096 }];
+        if (input.sql.includes('freelist_count'))
+          return [{ freelist_count: 0 }];
+        if (input.sql.includes('COUNT')) return [{ row_count: rows.length }];
         if (input.returnValue === 'resultRows') return rows;
         return undefined;
       },
@@ -34,6 +39,7 @@ describe('SQLite OPFS worker core', () => {
         DB: sqliteCtor(db),
         OpfsDb: sqliteCtor(db),
       },
+      version: { libVersion: '3.test' },
     };
     const core = createSqliteWorkerCore({
       initSqlite: async () => sqlite,
@@ -67,11 +73,13 @@ describe('SQLite OPFS worker core', () => {
     await core.handle(
       request('4', { kind: 'query', statement: 'SELECT', rowLimit: 10 }),
     );
-    await core.handle(request('5', { kind: 'estimate-storage' }));
-    await core.handle(request('6', { kind: 'close' }));
+    await core.handle(request('5', { kind: 'get-storage-health' }));
+    await core.handle(request('6', { kind: 'estimate-storage' }));
     await core.handle(request('7', { kind: 'close' }));
+    await core.handle(request('8', { kind: 'close' }));
 
     expect(responses.map((response) => response.outcome)).toEqual([
+      'ok',
       'ok',
       'ok',
       'ok',
@@ -82,7 +90,13 @@ describe('SQLite OPFS worker core', () => {
     ]);
     expect(responses[0]?.diagnostics.vfs).toBe('opfs');
     expect(responses[3]?.rows).toEqual([{ id: 7, label: 'seven' }]);
-    expect(responses[4]?.diagnostics.storageQuotaBytes).toBe(34);
+    expect(responses[4]?.diagnostics.health).toMatchObject({
+      mode: 'persistent-opfs',
+      sqliteVersion: '3.test',
+      pageCount: 2,
+      eventCount: 1,
+    });
+    expect(responses[5]?.diagnostics.storageQuotaBytes).toBe(34);
     expect(closed).toBe(true);
   });
 });

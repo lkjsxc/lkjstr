@@ -15,12 +15,35 @@ export type StorageOutcome =
   | 'late-rejected';
 
 export type BatchMode = 'readwrite' | 'readonly';
+export type StorageMode = 'persistent-opfs' | 'temporary-memory';
+export type WorkerKind = 'dedicated' | 'shared' | 'unknown';
+export type VfsName = 'opfs-sahpool' | 'opfs-wl' | 'opfs' | 'memory';
 
 export type OpenDatabase = {
   readonly databaseName: string;
-  readonly preferredVfs?: 'opfs' | 'opfs-sahpool';
+  readonly preferredVfs?: VfsName;
   readonly allowSahpool?: boolean;
+  readonly allowOpfs?: boolean;
   readonly allowTransient?: boolean;
+  readonly forceMemory?: boolean;
+  readonly workerKind?: WorkerKind;
+};
+
+export type StorageHealth = {
+  readonly mode: StorageMode;
+  readonly vfsName: VfsName;
+  readonly workerKind: WorkerKind;
+  readonly sqliteVersion: string;
+  readonly databaseName: string;
+  readonly appliedSchemaChanges: readonly string[];
+  readonly pageCount: number;
+  readonly pageSize: number;
+  readonly freelistCount: number;
+  readonly eventCount: number;
+  readonly relayReceiptCount: number;
+  readonly tagRowCount: number;
+  readonly lastIntegrityCheckAt: number | null;
+  readonly warnings: readonly string[];
 };
 
 export type SqlStep = {
@@ -47,6 +70,7 @@ export type StorageOp =
       readonly params?: SqlParams;
       readonly rowLimit: number;
     }
+  | { readonly kind: 'get-storage-health' }
   | {
       readonly kind: 'batch';
       readonly mode: BatchMode;
@@ -64,6 +88,12 @@ export type StorageRequest = {
 export type StorageDiagnostics = {
   readonly databaseName?: string;
   readonly vfs?: string;
+  readonly vfsName?: VfsName;
+  readonly mode?: StorageMode;
+  readonly workerKind?: WorkerKind;
+  readonly sqliteVersion?: string;
+  readonly warnings?: readonly string[];
+  readonly health?: StorageHealth;
   readonly message?: string;
   readonly storageUsageBytes?: number;
   readonly storageQuotaBytes?: number;

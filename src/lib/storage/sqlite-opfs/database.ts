@@ -1,11 +1,4 @@
-import type {
-  OpenDatabase,
-  SqlParams,
-  SqlRow,
-  SqlStep,
-  StorageDiagnostics,
-  StorageOutcome,
-} from './types';
+import type { SqlParams, SqlRow, SqlStep, StorageOutcome } from './types';
 
 export type SqliteDatabase = {
   readonly filename?: string;
@@ -14,15 +7,14 @@ export type SqliteDatabase = {
   close: () => void;
 };
 
-type DbOptions = {
+export type DbOptions = {
   readonly filename?: string;
   readonly flags?: string;
   readonly vfs?: string;
 };
 
-type SqliteDbConstructor = new (options?: DbOptions) => SqliteDatabase;
-
-type SqliteOpfsConstructor = new (
+export type SqliteDbConstructor = new (options?: DbOptions) => SqliteDatabase;
+export type SqliteOpfsConstructor = new (
   filename: string,
   flags?: string,
 ) => SqliteDatabase;
@@ -32,11 +24,12 @@ export type SqliteModule = {
     readonly DB: SqliteDbConstructor;
     readonly OpfsDb?: SqliteOpfsConstructor;
   };
+  readonly capi?: { readonly sqlite3_libversion?: () => string };
+  readonly version?: { readonly libVersion?: string };
   readonly installOpfsSAHPoolVfs?: (options: {
     readonly name?: string;
-  }) => Promise<{
-    readonly OpfsSAHPoolDb: SqliteOpfsConstructor;
-  }>;
+    readonly initialCapacity?: number;
+  }) => Promise<{ readonly OpfsSAHPoolDb: SqliteOpfsConstructor }>;
 };
 
 type ExecOptions = {
@@ -45,35 +38,6 @@ type ExecOptions = {
   readonly rowMode?: 'object';
   readonly returnValue?: 'resultRows';
 };
-
-export type OpenedSqliteDatabase = {
-  readonly db: SqliteDatabase;
-  readonly diagnostics: StorageDiagnostics;
-};
-
-export async function openSqliteDatabase(
-  sqlite3: SqliteModule,
-  request: OpenDatabase,
-): Promise<OpenedSqliteDatabase> {
-  const filename = normalizeFilename(request.databaseName);
-  if (request.preferredVfs !== 'opfs-sahpool' && sqlite3.oo1.OpfsDb) {
-    const db = new sqlite3.oo1.OpfsDb(filename, 'c');
-    return { db, diagnostics: diagnostics(request.databaseName, 'opfs') };
-  }
-  if (request.allowSahpool && sqlite3.installOpfsSAHPoolVfs) {
-    const pool = await sqlite3.installOpfsSAHPoolVfs({ name: 'lkjstr' });
-    const db = new pool.OpfsSAHPoolDb(filename, 'c');
-    return {
-      db,
-      diagnostics: diagnostics(request.databaseName, 'opfs-sahpool'),
-    };
-  }
-  if (request.allowTransient) {
-    const db = new sqlite3.oo1.DB({ filename: ':memory:', flags: 'c' });
-    return { db, diagnostics: diagnostics(request.databaseName, 'memory') };
-  }
-  throw new Error('OPFS SQLite storage is unavailable');
-}
 
 export function executeSql(
   db: SqliteDatabase,
@@ -129,14 +93,6 @@ export function sqliteOutcomeFromError(error: unknown): StorageOutcome {
 export function errorText(error: unknown): string {
   if (error instanceof Error) return `${error.name}: ${error.message}`;
   return String(error);
-}
-
-function normalizeFilename(name: string): string {
-  return name.startsWith('/') ? name : `/${name}`;
-}
-
-function diagnostics(databaseName: string, vfs: string): StorageDiagnostics {
-  return { databaseName, vfs };
 }
 
 function isSqlRow(value: unknown): value is SqlRow {

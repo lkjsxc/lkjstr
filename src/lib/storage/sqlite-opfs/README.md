@@ -8,8 +8,10 @@ storage target.
 ## Table of Contents
 
 - `types.ts`: worker protocol value types.
-- `database.ts`: official SQLite WASM database opening and SQL helpers.
+- `database.ts`: SQL execution helpers and SQLite module types.
+- `open-database.ts`: VFS selection and database opening.
 - `worker-core.ts`: request handling independent of worker globals.
+- `worker-health.ts`: storage health projection.
 - `worker.ts`: dedicated module worker entry point.
 - `client.ts`: browser client with deadlines, cancellation, and cleanup.
 
