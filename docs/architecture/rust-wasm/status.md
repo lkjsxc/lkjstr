@@ -52,8 +52,9 @@ This file is the concise status map for the active Rust/WASM migration.
   timer handles.
 - Product SQLite wiring, cache delete and repair paths, retention dispatchers,
   and full ledger and byte inventory diagnostics.
-- Feed runtimes for Home, Global, Profile, Thread, Notifications, Search,
-  Custom Request, and Author Context.
+- Product feed runtime wiring for Home, Global, Profile, Thread,
+  Notifications, Search, Custom Request, and Author Context. Pure query inputs
+  and feed-window reducers exist; shipped surfaces still use TypeScript.
 - Publish jobs, local signing flow integration, NIP-07 `signEvent`, media
   upload transport, custom emoji publish support, and Profile Edit publish.
 - Full Leptos parity for every product surface and responsive browser QA.
@@ -70,6 +71,7 @@ ledgers.
 
 1. Keep docs and ledgers current before code changes.
 2. Keep the Rust/WASM quiet gate passing before expanding implementation.
-3. Finish storage transaction and deadline foundations.
-4. Finish relay reducer, browser adapters, and subscription orchestration.
+3. Wire SQLite repositories into startup, Stats, and feed cache paths.
+4. Wire relay reducers, request budgets, page-read dedupe, and browser adapters
+   into product query services.
 5. Wire feed runtimes and then delete replaced TypeScript or Svelte modules.
