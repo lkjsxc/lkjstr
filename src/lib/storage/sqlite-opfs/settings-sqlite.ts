@@ -6,11 +6,10 @@ const settingsSchemaHash = 'settings-sqlite-cutover';
 const settingsSchema = [
   `CREATE TABLE IF NOT EXISTS settings (
   key TEXT PRIMARY KEY,
-  namespace TEXT NOT NULL,
   value_json TEXT NOT NULL,
-  updated_at INTEGER NOT NULL
+  updated_at_ms INTEGER NOT NULL
 ) STRICT;`,
-  'CREATE INDEX IF NOT EXISTS settings_namespace_idx ON settings(namespace);',
+  'CREATE INDEX IF NOT EXISTS settings_updated_at_idx ON settings(updated_at_ms DESC);',
 ];
 
 export async function sqliteReadSettingOverrides(): Promise<
@@ -21,7 +20,7 @@ export async function sqliteReadSettingOverrides(): Promise<
     {
       kind: 'query',
       statement:
-        'SELECT key, namespace, value_json, updated_at FROM settings ORDER BY key ASC;',
+        'SELECT key, value_json, updated_at_ms FROM settings ORDER BY key ASC;',
       rowLimit: 10_000,
     },
     { deadlineMs: 3_000 },
@@ -38,7 +37,7 @@ export async function sqliteReadSettingOverride(
     {
       kind: 'query',
       statement:
-        'SELECT key, namespace, value_json, updated_at FROM settings WHERE key = ?1;',
+        'SELECT key, value_json, updated_at_ms FROM settings WHERE key = ?1;',
       params: [key],
       rowLimit: 1,
     },
@@ -56,7 +55,7 @@ export async function sqlitePutSettingOverride(
     {
       kind: 'execute',
       statement:
-        'INSERT INTO settings (key, namespace, value_json, updated_at) VALUES (?1, ?2, ?3, ?4) ON CONFLICT(key) DO UPDATE SET namespace = excluded.namespace, value_json = excluded.value_json, updated_at = excluded.updated_at;',
+        'INSERT INTO settings (key, value_json, updated_at_ms) VALUES (?1, ?2, ?3) ON CONFLICT(key) DO UPDATE SET value_json = excluded.value_json, updated_at_ms = excluded.updated_at_ms;',
       params: encodeSettingOverride(override),
     },
     { deadlineMs: 3_000 },
@@ -110,7 +109,7 @@ export async function sqliteReplaceSettingOverrides(
         { statement: 'DELETE FROM settings;' },
         ...overrides.map((override) => ({
           statement:
-            'INSERT INTO settings (key, namespace, value_json, updated_at) VALUES (?1, ?2, ?3, ?4);',
+            'INSERT INTO settings (key, value_json, updated_at_ms) VALUES (?1, ?2, ?3);',
           params: encodeSettingOverride(override),
         })),
       ],
@@ -128,7 +127,6 @@ async function ensureSettingsSchema(): Promise<boolean> {
 function encodeSettingOverride(override: SettingOverride) {
   return [
     override.key,
-    override.namespace,
     JSON.stringify(override.value),
     override.updatedAt,
   ] as const;
@@ -137,10 +135,14 @@ function encodeSettingOverride(override: SettingOverride) {
 function decodeSettingOverride(row: SqlRow): SettingOverride {
   return {
     key: stringField(row, 'key'),
-    namespace: stringField(row, 'namespace'),
+    namespace: settingNamespace(stringField(row, 'key')),
     value: JSON.parse(stringField(row, 'value_json')),
-    updatedAt: numberField(row, 'updated_at'),
+    updatedAt: numberField(row, 'updated_at_ms'),
   };
+}
+
+function settingNamespace(key: string): string {
+  return key.includes('.') ? (key.split('.')[0] ?? 'debug') : 'debug';
 }
 
 function stringField(row: SqlRow, key: string): string {
