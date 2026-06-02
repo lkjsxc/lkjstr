@@ -32,10 +32,8 @@ test('SQLite OPFS worker loads official assets and executes SQL', async ({
         worker.addEventListener('message', message);
         worker.addEventListener(
           'error',
-          () => reject(new Error('worker error')),
-          {
-            once: true,
-          },
+          (error) => reject(new Error(`worker error: ${error.message}`)),
+          { once: true },
         );
         worker.postMessage({ requestId, deadlineMs: 8_000, op });
       });
@@ -46,8 +44,9 @@ test('SQLite OPFS worker loads official assets and executes SQL', async ({
         kind: 'open',
         database: {
           databaseName,
-          preferredVfs: 'opfs',
-          allowSahpool: false,
+          preferredVfs: 'opfs-sahpool',
+          allowSahpool: true,
+          allowOpfs: false,
           allowTransient: false,
         },
       });
@@ -85,9 +84,9 @@ test('SQLite OPFS worker loads official assets and executes SQL', async ({
   });
 
   expect(result.secure).toBe(true);
-  expect(result.crossOriginIsolated).toBe(true);
+  expect(result.crossOriginIsolated).toBe(false);
   expect(result.open.outcome).toBe('ok');
-  expect(result.open.diagnostics.vfs).toBe('opfs');
+  expect(result.open.diagnostics.vfs).toBe('opfs-sahpool');
   expect(result.schema.outcome).toBe('ok');
   expect(result.insert.rowsAffected).toBe(1);
   expect(result.query.rows).toEqual([{ value: 'stored' }]);
