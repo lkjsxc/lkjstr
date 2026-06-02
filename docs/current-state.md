@@ -77,8 +77,8 @@ Read next: [architecture/data/README.md](architecture/data/README.md),
   feed page, tag lookup, local filter-search, relay diagnostics, relay
   information, relay suggestions, author routes, route blocks, notifications,
   and job paths now use the SQLite worker with memory fallback when Workers are
-  unavailable. Feed coverage, scan hints, retention, repair, and inventory still
-  need cutover wiring before Dexie can be removed.
+  unavailable. Retention, repair, inventory, cache metadata, and cache tool
+  actions still need cutover wiring before Dexie can be removed.
 - Protected records are never removed by cache cleanup: accounts, local signing
   secrets, settings, relay sets, workspace state, Tweet drafts, active tab
   snapshots, active jobs, and route blocks.

@@ -1,6 +1,6 @@
 import { applySqliteSchema } from './kernel-client';
 
-const eventSchemaHash = 'event-graph-notifications-sqlite-cutover';
+const eventSchemaHash = 'event-graph-feed-cache-sqlite-cutover';
 
 const eventSchema = [
   'PRAGMA foreign_keys = ON;',
@@ -46,6 +46,27 @@ const eventSchema = [
   updated_at_ms INTEGER NOT NULL
 ) STRICT;`,
   'CREATE INDEX IF NOT EXISTS feed_cursors_feed_key_idx ON feed_cursors(feed_key);',
+  `CREATE TABLE IF NOT EXISTS feed_coverage (
+  id TEXT PRIMARY KEY,
+  feed_key TEXT NOT NULL,
+  relay_url TEXT NOT NULL,
+  group_key TEXT NOT NULL,
+  status TEXT NOT NULL,
+  record_json TEXT NOT NULL,
+  updated_at_ms INTEGER NOT NULL
+) STRICT;`,
+  'CREATE INDEX IF NOT EXISTS feed_coverage_feed_key_idx ON feed_coverage(feed_key, updated_at_ms DESC);',
+  `CREATE TABLE IF NOT EXISTS feed_scan_hints (
+  id TEXT PRIMARY KEY,
+  scan_key TEXT NOT NULL,
+  relay_url TEXT NOT NULL,
+  group_key TEXT NOT NULL,
+  filter_key TEXT NOT NULL,
+  direction TEXT NOT NULL,
+  record_json TEXT NOT NULL,
+  updated_at_ms INTEGER NOT NULL
+) STRICT;`,
+  'CREATE INDEX IF NOT EXISTS feed_scan_hints_scan_direction_idx ON feed_scan_hints(scan_key, direction);',
   `CREATE TABLE IF NOT EXISTS notifications (
   id TEXT PRIMARY KEY,
   account_pubkey TEXT NOT NULL,

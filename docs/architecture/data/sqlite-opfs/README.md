@@ -36,5 +36,5 @@ statement records, row codecs, worker envelopes, and repository foundations.
 Product startup, settings, accounts, relay sets, drafts, event graph writes,
 cached feed reads, tag lookups, local filter search, relay diagnostics, relay
 information, relay suggestions, author routes, route blocks, notifications,
-and jobs use the SQLite path. Feed coverage, scan hints, retention, inventory,
-and cache tools must move before Dexie is deleted.
+feed coverage, scan hints, and jobs use the SQLite path. Retention, inventory,
+cache metadata, and cache tools must move before Dexie is deleted.

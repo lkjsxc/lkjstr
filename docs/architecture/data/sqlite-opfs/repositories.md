@@ -23,19 +23,19 @@ secrets, relay sets, Tweet drafts, events, tags, relay provenance,
 notifications, feed cursors, feed coverage, and scan hints. The Svelte Settings,
 workspace, Accounts, local secret, relay set, Tweet draft, event graph, cached
 feed, tag lookup, local filter-search, relay diagnostics, relay information,
-relay suggestion, author route, route block, notification, and job repositories
-now use the TypeScript SQLite worker path. Other Svelte product paths still use
-IndexedDB or Dexie until their SQLite paths are wired and tested as durable
-product paths.
+relay suggestion, author route, route block, notification, feed coverage, scan
+hint, and job repositories now use the TypeScript SQLite worker path. Other
+Svelte product paths still use IndexedDB or Dexie until their SQLite paths are
+wired and tested as durable product paths.
 
 ## Repository Families
 
 - protected data: settings, workspaces, tab states, accounts, secrets, relay
   sets, Tweet drafts, and route blocks are partially implemented.
 - event cache: events, tags, relay provenance, feed cursors, cached feed pages,
-  tag lookups, local filter search, and notifications are implemented in the
-  Svelte SQLite path. Feed coverage, scan hints, delete, repair, and compaction
-  dispatch remain open.
+  tag lookups, local filter search, notifications, feed coverage, and scan hints
+  are implemented in the Svelte SQLite path. Repair and compaction dispatch
+  remain open.
 - relay diagnostics: relay information, summaries, suggestions, author routes,
   route blocks, and jobs are implemented in the Svelte SQLite path. App log rows
   remain open. Relay diagnostics, suggestions, routes, and finished jobs are

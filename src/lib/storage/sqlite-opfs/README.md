@@ -16,6 +16,8 @@ storage target.
 - `event-row-codec.ts`: stored-event row decoding helpers.
 - `events-sqlite.ts`: event and feed cursor writes plus direct event lookups.
 - `notifications-sqlite.ts`: notification rows and notification ledger writes.
+- `feed-cache-steps.ts`: feed coverage and scan hint SQL write/delete steps.
+- `feed-cache-sqlite.ts`: feed coverage and scan hint repositories.
 - `event-pages-sqlite.ts`: timeline, profile, thread, and tag cache reads.
 - `event-matching-sqlite.ts`: Nostr filter candidate reads for local cache search.
 - `sqlite-record-helpers.ts`: JSON record table helpers shared by SQLite repositories.
