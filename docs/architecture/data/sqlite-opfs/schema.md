@@ -2,94 +2,95 @@
 
 ## Purpose
 
-This file defines the canonical SQLite table set. Status: executable Rust
-schema records are implemented; product cutover to SQLite remains open.
+This file mirrors the executable SQLite table set and explains table ownership.
+Executable records live in `crates/lkjstr-storage/src/sql/`.
 
-## Schema Rules
+## Rules
 
 - Rust schema records are the executable source of truth.
-- Markdown mirrors table names and contracts; `lkjstr-xtask` checks table-name
-  parity with executable records while fuller SQL doc generation remains open.
+- This Markdown file lists every table so repository checks can compare docs and
+  source.
 - Use `STRICT` tables where the bundled SQLite build accepts them.
-- Store flexible payloads as JSON text only at clear boundaries.
-- Normalize high-volume paths for events, tags, relay provenance, coverage,
-  scan hints, notifications, route evidence, diagnostics, and ledger rows.
+- Store exact flexible records as JSON text only at explicit boundaries.
+- Extract every field needed for sorting, filtering, joining, retention,
+  inventory, or diagnostics into indexed columns.
 - Enable `PRAGMA foreign_keys = ON` for every connection.
 
-## Protected User Data
+## Protected And Metadata Tables
 
-| Table | Primary key | Contract |
+| Table | Owner | Purpose |
 | --- | --- | --- |
-| `schema_meta` | `key` | schema hash, migration metadata, and app storage flags |
-| `workspaces` | `workspace_id` | layout, active pane, active tab |
-| `tab_states` | `workspace_id`, `tab_id` | compact tab snapshots and scroll anchors |
-| `settings` | `key` | flat user settings |
-| `accounts` | `pubkey` | account label, signer kind, metadata |
-| `local_account_secrets` | `pubkey` | raw local signing secret payload under the current raw-secret contract |
-| `relay_sets` | `set_id` | named relay set and selected read/write flags |
-| `relay_route_blocks` | `relay_url`, `pubkey` | protected safety blocks for route suggestions |
-| `tweet_drafts` | `draft_id` | durable compose body, attachments, and tags |
+| `schema_meta` | storage | schema hash, schema change metadata, and storage flags. |
+| `workspaces` | workspace | layout tree, active pane, active tab, and timestamps. |
+| `tab_states` | workspace | compact tab snapshots and scroll anchors. |
+| `settings` | settings | flat setting overrides by key. |
+| `accounts` | accounts | account label, signer kind, and safe metadata. |
+| `local_account_secrets` | signer | local secret payload under the current raw-secret contract. |
+| `relay_sets` | relays | named relay sets and selected read/write flags. |
+| `relay_route_blocks` | relays | protected blocks for unsafe route suggestions. |
+| `tweet_drafts` | tweet | durable compose body, attachments, and tags. |
 
-Protected rows are never removed by cache compaction.
+Protected rows are never deleted by cache compaction.
 
-## Event Cache
+## Event Cache Tables
 
-| Table | Primary key | Contract |
+| Table | Owner | Purpose |
 | --- | --- | --- |
-| `events` | `event_id` | canonical raw event JSON plus normalized identity fields |
-| `event_tags` | `event_id`, `tag_index` | ordered tags with lookup columns |
-| `event_relays` | `event_id`, `relay_url` | relay provenance and source kind |
-| `notifications` | `notification_id` | owner-indexed notification rows |
+| `events` | events | canonical event JSON plus pubkey, kind, time, signature, and content columns. |
+| `event_tags` | events | ordered tag rows with lookup columns for references and routing. |
+| `event_relays` | events | relay provenance and latest-seen evidence. |
+| `notifications` | notifications | materialized account notification rows derived from stored events. |
 
-Required indexes:
+Indexes:
 
-- `events_by_kind_time` on kind, descending created time, event id.
-- `events_by_pubkey_kind_time` on pubkey, kind, descending created time, event id.
-- `event_tags_lookup` on tag name, first value, event id.
-- `event_relays_by_relay` on relay URL and latest seen time.
-- `notifications_by_owner_time` on owner, descending created time, id.
+- `events_by_kind_time`: timeline and kind queries.
+- `events_by_pubkey_kind_time`: profile and author queries.
+- `event_tags_lookup`: thread, mention, emoji, and route tag lookups.
+- `event_relays_by_relay`: relay diagnostics and relay-specific cache reads.
+- `notifications_by_owner_time`: notification paging.
 
-## Feed Evidence
+## Feed Evidence Tables
 
-| Table | Primary key | Contract |
+| Table | Owner | Purpose |
 | --- | --- | --- |
-| `feed_cursors` | `cursor_id` | semantic feed cursor by direction |
-| `feed_coverage` | `coverage_id` | complete bounded relay/filter evidence |
-| `feed_scan_hints` | `hint_id` | warm scan span hints that never prove absence |
+| `feed_cursors` | feeds | semantic cursor rows for older and newer reads. |
+| `feed_coverage` | feeds | complete bounded relay/filter evidence for cache-first reads. |
+| `feed_scan_hints` | feeds | warm scan span hints that never prove absence. |
 
-Coverage rows can prove cache-first absence only when every required relay,
-filter fingerprint, semantic feed key, and bounded interval is complete and not
-compacted, failed, dense, unresolved, or missing.
+Coverage can prove cache-first absence only when every required relay, route
+fingerprint, semantic key, filter shape, and bounded interval is complete and
+not dense, failed, compacted, unresolved, or stale.
 
-## Diagnostics And Jobs
+## Jobs And Diagnostics Tables
 
-| Table | Primary key | Contract |
+| Table | Owner | Purpose |
 | --- | --- | --- |
-| `jobs` | `job_id` | protected active jobs and compactable finished jobs |
-| `relay_information` | `relay_url` | NIP-11 metadata payloads |
-| `relay_diagnostic_summaries` | `relay_url` | bounded relay diagnostics |
-| `relay_list_suggestions` | `pubkey`, `relay_url`, `purpose` | explicit NIP-65 suggestions |
-| `author_relay_routes` | `pubkey`, `relay_url`, `route_kind` | route evidence with optional expiry |
-| `app_log` | `log_id` | redacted chronological app log; this intentionally adds durable SQLite history beyond the current in-memory TypeScript ring |
+| `jobs` | jobs | active and finished publish, upload, and maintenance jobs. |
+| `relay_information` | relays | NIP-11 metadata payloads and fetch times. |
+| `relay_diagnostic_summaries` | relays | bounded relay diagnostic summaries. |
+| `relay_list_suggestions` | relays | explicit NIP-65 suggestions awaiting user import. |
+| `author_relay_routes` | relays | route evidence with optional expiry. |
+| `app_log` | app | redacted durable app log for storage-backed diagnostics. |
 
-Required indexes:
+Indexes:
 
-- `jobs_by_state_updated` on state and descending update time.
-- `app_log_by_time` on descending creation time and id.
+- `feed_coverage_lookup`: cache-first coverage proof.
+- `jobs_by_state_updated`: bounded job diagnostics.
+- `app_log_by_time`: newest diagnostic rows.
 
-## Ledger And Metadata
+## Ledger Tables
 
-| Table | Primary key | Contract |
+| Table | Owner | Purpose |
 | --- | --- | --- |
-| `cache_ledger` | `resource_id` | byte estimate, protection bit, score, owner key |
-| `cache_meta` | `key` | retention metadata and pressure bookkeeping |
+| `cache_ledger` | storage | byte estimate, protection bit, score, owner, and delete identity. |
+| `cache_meta` | storage | pressure, compaction, repair, and inventory bookkeeping. |
 
-Required index:
+Index:
 
-- `cache_ledger_prune` on protection, score, and update time.
+- `cache_ledger_prune`: compaction candidate ordering.
 
 ## Search
 
-Local Search must not be an unbounded in-memory scan. If the bundled SQLite
-build includes FTS, add an FTS table linked to `events(event_id)`. If FTS is
-unavailable, use deterministic lowercase token rows owned by `lkjstr-storage`.
+Local Search is SQL-owned. Use FTS when the bundled SQLite build exposes it. If
+FTS is absent, use deterministic indexed SQL filters and `LIKE`; do not fall
+back to unbounded JavaScript scans.

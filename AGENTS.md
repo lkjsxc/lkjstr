@@ -7,12 +7,12 @@ This file defines repository instructions for automated coding agents.
 ## Contract
 
 lkjstr is a docs-first browser Nostr workspace moving to a Rust/WASM-first
-client. Use [docs/README.md](docs/README.md) as the docs tree index. Keep
+client and a worker-owned SQLite OPFS storage kernel. Use
+[docs/README.md](docs/README.md) as the docs tree index. Keep
 [docs/current-state.md](docs/current-state.md), the relevant `docs/` contract,
 and implementation aligned in the same change. Keep source files under 200
 lines, docs under 300 lines, avoid release shorthand wording in docs, and use
-factory functions instead of first-party classes in `src/` except for the Dexie
-database binding.
+factory functions instead of first-party classes in `src`.
 
 Prefer Rust/WASM for new product implementation. Keep TypeScript and Svelte
 runtime code only where it is still the implemented surface or where browser
@@ -51,6 +51,11 @@ and verified.
   protocol data. Suggestions require explicit import and must not overwrite a
   disabled relay record.
 - Docker checks build images and do not mount the source tree.
+- New source may not import Dexie. The current Dexie binding is deletion-only
+  until the SQLite cutover removes it.
+- `src/lib/storage/sqlite-opfs/` owns current SQLite worker host glue;
+  `src/lib/storage/sqlite/` owns new database access modules when added.
+- First-party storage workers use factory functions and plain data, not classes.
 - Relay, diagnostic, and tab runtime memory must be bounded or cleaned up through
   explicit close and destroy paths. Durable cached events are not capped by a
   fixed application item count; runtime feed windows and relay read caps remain
@@ -72,6 +77,7 @@ and verified.
 - `src/lib/relays`: relay set storage, clients, and pool behavior.
 - `src/lib/timeline`, `src/lib/profile`, `src/lib/thread`: read runtimes.
 - `src/lib/tweet`: durable drafts and NIP-07 publish helpers.
+- `src/lib/storage`: storage repositories, inventory, retention, and worker glue.
 - `src/lib/tabs`: tab-owned Svelte surfaces.
 
 ## Verification

@@ -110,12 +110,18 @@ state lives, which modules own subscriptions, and how tabs close cleanly.
 - [data/storage/README.md](data/storage/README.md): storage kernel entry point.
 - [data/sqlite-opfs/README.md](data/sqlite-opfs/README.md): OPFS SQLite target.
 - [data/sqlite-opfs/runtime.md](data/sqlite-opfs/runtime.md): worker runtime.
+- [data/sqlite-opfs/storage-modes.md](data/sqlite-opfs/storage-modes.md):
+  persistent and temporary modes.
 - [data/sqlite-opfs/schema.md](data/sqlite-opfs/schema.md): SQLite schema.
+- [data/sqlite-opfs/worker-protocol.md](data/sqlite-opfs/worker-protocol.md):
+  worker protocol.
+- [data/sqlite-opfs/query-ownership.md](data/sqlite-opfs/query-ownership.md):
+  SQL-owned reads and memory-only state.
 - [data/sqlite-opfs/repositories.md](data/sqlite-opfs/repositories.md):
   repository boundary.
 - [data/sqlite-opfs/retention.md](data/sqlite-opfs/retention.md): retention.
-- [data/sqlite-opfs/worker-protocol.md](data/sqlite-opfs/worker-protocol.md):
-  worker protocol.
+- [data/sqlite-opfs/failure-recovery.md](data/sqlite-opfs/failure-recovery.md):
+  startup and reset recovery.
 - [data/sqlite-opfs/import-export.md](data/sqlite-opfs/import-export.md):
   import and export.
 - [data/storage/kernel/README.md](data/storage/kernel/README.md): manifest,

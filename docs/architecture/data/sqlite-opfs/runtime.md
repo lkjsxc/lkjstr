@@ -3,78 +3,68 @@
 ## Purpose
 
 This file defines how the browser opens and owns the SQLite WASM database.
-Status: partial host implementation.
+Status: partial host implementation with product cutover still in progress.
 
 ## Runtime Owner
 
-`lkjstr-web` starts one dedicated storage worker for the active app instance.
-The worker loads the official SQLite WASM assets, opens the configured database,
-applies Rust-provided schema statements, executes bounded requests, returns typed
-rows and diagnostics, and closes cleanly.
+The storage worker owns official SQLite WASM initialization, database open,
+schema changes, prepared statement execution, transactions, health diagnostics,
+integrity checks, reset, cancellation, and close.
 
-`lkjstr-storage` owns all SQL text and statement meaning. The worker does not
-choose tables, data classes, compaction policy, feed coverage semantics, or
-product recovery behavior.
+The main thread owns only the storage client, request ids, cancellation, UI
+status, and recovery when storage cannot open.
 
-The Rust `lkjstr-web` adapter owns the browser `Worker`, typed envelopes,
-deadlines, cancellation, close cleanup, late diagnostics, and SQLite-backed
-repository calls for protected, event-cache, and diagnostics families. Product
-startup and feed runtimes still need wiring before this becomes the durable
-product path.
+`lkjstr-storage` owns SQL text and statement meaning. Product modules and UI
+components do not send raw SQL.
 
 ## Static Assets
 
-The Rust/Trunk app serves `/sqlite-opfs-worker.js` as the storage worker entry.
-Trunk copies the pinned official SQLite WASM package output to `/sqlite/` so
-the worker can import `/sqlite/index.mjs` and load `sqlite3.wasm` plus the OPFS
-proxy script from same-origin static assets.
-
-The current SvelteKit build also emits the same `/sqlite/` assets so the worker
-path can be tested before the Rust app is the only shipped runtime.
+The browser build emits the official SQLite WASM package assets under
+`/sqlite/`. The worker loads the same-origin module and `sqlite3.wasm` asset.
+The app database name is `/lkjstr/main.sqlite3`.
 
 ## VFS Selection
 
-Primary path: use SQLite WASM `opfs` in a worker when it is available.
+Preferred order:
 
-Required hosting headers for that path:
+1. `opfs-sahpool`: normal browser mode because it is worker-only, fast, and does
+   not require cross-origin isolation headers.
+2. `opfs-wl`: allowed after browser support and media rendering are verified.
+3. `opfs`: allowed only when cross-origin isolation is safe for the deployment.
+4. `:memory:`: explicit temporary mode when persistent storage cannot open.
 
-```text
-Cross-Origin-Embedder-Policy: require-corp
-Cross-Origin-Opener-Policy: same-origin
-```
+The standard `opfs` VFS requires SharedArrayBuffer and therefore COOP/COEP
+headers. Do not enable those headers only for storage if they break arbitrary
+Nostr media rendering.
 
-If those headers or browser APIs are unavailable, the worker may try the
-explicit `opfs-sahpool` path. That path is allowed only with a single storage
-owner coordinated by Web Locks or BroadcastChannel and visible diagnostics when
-another tab owns storage.
+## Worker Kind
 
-Never silently downgrade to `localStorage`, `sessionStorage`, or in-memory
-storage for product data.
+Preferred ownership is SharedWorker so multiple tabs share one storage owner.
+Dedicated Worker is allowed as a fallback only with explicit ownership and busy
+state handling.
 
-## Concurrency
+The worker reports `workerKind`, `mode`, `vfsName`, `databaseName`, warnings,
+and capability flags through storage health.
 
-The app treats OPFS SQLite as a short-transaction store. Request batches are
-bounded, prepared statements are reset or finalized promptly, and long scans are
-split into resumable pages. A busy database returns `Busy`; callers may retry
-only through bounded policy in `lkjstr-app`.
+## Transactions
 
-Multi-tab behavior must be explicit. The preferred state is a visible shared or
-locked owner model, never two uncoordinated workers writing the same database.
+Use short transactions. Relay event batches commit as one bounded transaction:
+validate caps, validate events, upsert events, upsert relay receipts, insert tag
+rows, update feed evidence, and return inserted, duplicate, and rejected counts.
 
-## Journal Mode
-
-Do not enable WAL by default. OPFS SQLite does not gain useful browser
-concurrency from WAL, and the primary `opfs` path loses concurrency when
-exclusive locking is required. Use rollback-journal transactions, short batches,
-and small write groups.
+Do not enable WAL by default. Browser OPFS concurrency is governed by the VFS
+and the worker ownership model, not by multiple UI-owned database handles.
 
 ## Failure Mapping
 
-- missing worker support: `Unavailable`.
-- startup failure: `Unavailable`.
-- database lock or SQLite busy state: `Busy`.
-- deadline expiration: `Timeout`.
-- quota failure: `Quota`.
-- malformed database or schema mismatch: `Corrupt`.
-- explicit cancellation: `Canceled`.
-- response after owner cleanup: `LateSettled` or `LateRejected`.
+- missing worker support: `open-failed`.
+- OPFS API or VFS missing: `opfs-unavailable`.
+- SQLite busy or locked state: `busy`.
+- deadline expiration or caller abort: `cancelled`.
+- quota failure: `sql-error` with a quota warning.
+- malformed rows: `decode-failed`.
+- schema constraint failure: `constraint-failed`.
+- unknown failure: `unknown`.
+
+Persistent open failure may fall back to temporary memory only when the caller
+allows it, and the UI must show that mode.

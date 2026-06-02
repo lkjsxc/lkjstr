@@ -13,8 +13,9 @@ first-party product code. Current TypeScript checks run through
 - **First-party `class` declarations are not allowed in `src/`.**
 - `pnpm check:repo` enforces this with a TypeScript AST scan. Svelte files are
   scanned only inside instance and module `<script>` blocks.
-- The **sole exception** is `src/lib/storage/browser-db.ts`, where `LkjstrDb`
-  may extend `Dexie` because that external API requires subclass table fields.
+- Storage workers and clients use factory functions and plain data.
+- The current Dexie binding is deletion-only during the SQLite cutover and must
+  not be copied into new modules.
 - Tests may use classes for local fakes such as synthetic WebSockets.
 - Source modules must not keep compatibility aliases or `@deprecated` exports.
 

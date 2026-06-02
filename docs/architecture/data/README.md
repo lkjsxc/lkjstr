@@ -41,10 +41,13 @@ read the current live storage state in [storage/README.md](storage/README.md).
 - [storage/README.md](storage/README.md): storage kernel entry point.
 - [sqlite-opfs/README.md](sqlite-opfs/README.md): OPFS SQLite storage target.
 - [sqlite-opfs/runtime.md](sqlite-opfs/runtime.md): worker runtime and VFS behavior.
+- [sqlite-opfs/storage-modes.md](sqlite-opfs/storage-modes.md): persistent and temporary modes.
 - [sqlite-opfs/schema.md](sqlite-opfs/schema.md): SQLite table groups.
+- [sqlite-opfs/worker-protocol.md](sqlite-opfs/worker-protocol.md): worker messages.
+- [sqlite-opfs/query-ownership.md](sqlite-opfs/query-ownership.md): SQL-owned reads and memory state.
 - [sqlite-opfs/repositories.md](sqlite-opfs/repositories.md): repository rules.
 - [sqlite-opfs/retention.md](sqlite-opfs/retention.md): cache retention.
-- [sqlite-opfs/worker-protocol.md](sqlite-opfs/worker-protocol.md): worker messages.
+- [sqlite-opfs/failure-recovery.md](sqlite-opfs/failure-recovery.md): startup and reset recovery.
 - [sqlite-opfs/import-export.md](sqlite-opfs/import-export.md): import/export.
 - [storage/kernel/README.md](storage/kernel/README.md): manifest, operations,
   transactions, and repositories.

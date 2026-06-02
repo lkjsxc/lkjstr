@@ -53,6 +53,12 @@ table of contents required by repository checks.
 - [research/README.md](research/README.md): research.
 - [vision/README.md](vision/README.md): vision.
 
+## Storage Cutover Files
+
+| Area | Files |
+| --- | --- |
+| SQLite OPFS | [architecture/data/sqlite-opfs/storage-modes.md](architecture/data/sqlite-opfs/storage-modes.md), [architecture/data/sqlite-opfs/query-ownership.md](architecture/data/sqlite-opfs/query-ownership.md), [architecture/data/sqlite-opfs/failure-recovery.md](architecture/data/sqlite-opfs/failure-recovery.md), [decisions/sqlite-opfs-storage.md](decisions/sqlite-opfs-storage.md), [decisions/worker-owned-storage.md](decisions/worker-owned-storage.md), [operations/sqlite-opfs-testing.md](operations/sqlite-opfs-testing.md) |
+
 ## Complete File Index
 
 - [architecture/README.md](architecture/README.md)

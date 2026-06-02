@@ -2,8 +2,9 @@
 
 ## Purpose
 
-This document summarizes the implemented state. Detailed contracts live in the
-linked product, protocol, architecture, and operations pages.
+This document summarizes the implemented product state and the active storage
+cutover contract. Detailed behavior lives in the linked product, protocol,
+architecture, and operations pages.
 
 ## Product Surfaces
 
@@ -12,14 +13,16 @@ Read next: [product/README.md](product/README.md),
 [product/tools/README.md](product/tools/README.md).
 
 - The root route opens the tiled workspace app.
-- Clean launch uses a vertical root split: Welcome is focused in the top pane,
-  and Accounts is active in the lower pane with Relay Settings, Home,
-  Notifications, and Tweet already open.
+- Clean launch focuses Welcome and also opens Accounts, Relay Settings, Home,
+  Notifications, and Tweet.
 - Home, Global, Profile, Thread, Notifications, Search, Custom Request, Author
   Context, Accounts, Relay Settings, Stats, Settings, Upload Settings, lkjstr
-  Log, Mine npub, Profile Edit, and Welcome are implemented product surfaces.
-- Tweet, replies, reposts, reactions, zaps, media upload settings, custom emoji,
-  sensitive content reveal, and event reference previews are implemented.
+  Log, Mine npub, Profile Edit, and Welcome are implemented.
+- Tweet, replies, reposts, reactions, zaps, NIP-96 upload settings, NIP-98
+  auth, NIP-30 custom emoji, sensitive-content reveal, and event reference
+  previews are implemented.
+- Cloudflare Workers Static Assets is only a hosting target. It is not an app
+  backend, account service, relay proxy, or storage service.
 
 ## Protocol Support
 
@@ -27,242 +30,141 @@ Read next: [protocol/README.md](protocol/README.md),
 [protocol/nip-support.md](protocol/nip-support.md), and
 [architecture/network/README.md](architecture/network/README.md).
 
-- Implemented Nostr support includes NIP-01, NIP-02, NIP-05, NIP-07, NIP-10,
+- Implemented Nostr surfaces include NIP-01, NIP-02, NIP-05, NIP-07, NIP-10,
   NIP-11, NIP-18, NIP-19, NIP-25, NIP-30, NIP-36, NIP-50, NIP-51, NIP-57,
-  NIP-65, NIP-96, and NIP-98 surfaces documented in
-  [protocol](protocol/README.md).
+  NIP-65, NIP-96, and NIP-98.
 - Relay AUTH is diagnostic-only.
-- Search uses cached matches plus NIP-50 relay filters when selected relays
+- Search combines cached matches with relay NIP-50 filters when selected relays
   support them.
-- Home, Global, Search, and Custom Request consume progressive relay read
-  snapshots so partial rows can render before final relay coverage.
-- Relay reads use relay plus request-context scoring for scheduling diagnostics.
-  Scoring never becomes a correctness filter and never permanently suppresses
-  enabled relays.
-- NIP-11 relay information is parsed into typed top-level and limitation fields.
-  Request budgets use app caps plus typed relay limits to clamp per-relay
-  filters, compute read event caps, reject oversized `REQ` messages locally, and
-  expose policy diagnostics without suppressing enabled read relays.
-- Rust protocol support now implements byte codecs, event parsing, frame policy
-  checks, event ordering, canonical event serialization, event ID hashing,
-  filter matching, relay message basics, Schnorr verification, local signing,
-  relay URL normalization, NIP-19 scalar plus TLV entity encoding and decoding,
-  NIP-30 custom emoji helpers, NIP-36 content-warning helpers, tag indexing,
-  reaction parsing, action tag builders, content-derived tag helpers, NIP-51
-  emoji source helpers, NIP-57 zap helpers, NIP-65 relay-list metadata parsing,
-  NIP-96 upload metadata parsers, and NIP-98 HTTP auth helpers.
-- Home, Global, Profile posts, Notifications, and safe Custom Request event-list
-  reads use an adaptive temporal window controller. Grouped scans start at `1`
-  minute, double the next adjacent window after complete sparse relay-shaped
-  reads, keep balanced successful spans unchanged, and halve dense windows when
-  any contacted relay-shaped request reaches its effective limit.
+- Relay reads render progressive snapshots. Partial relay failure is diagnostic
+  and must not block reachable relays.
+- Selected read relays remain the base and fallback for Home, Global,
+  Notifications, Profile, and Thread. Targeted reads may add bounded
+  protocol-derived routes, but Global remains selected-relay based.
+- Disabled or removed relays stay excluded until the user restores them.
+- NIP-11 relay metadata and NIP-65 suggestions come only from real protocol
+  data. Suggestions require explicit import.
+- Relay ingress uses app-owned byte and structure caps before expensive JSON or
+  event parsing.
+- Rust protocol support owns byte codecs, event parsing, frame policy checks,
+  canonical event serialization, event ID hashing, Schnorr verification, local
+  signing, relay URL normalization, NIP-19 entities, custom emoji helpers,
+  content-warning helpers, tag indexing, reaction parsing, action tag builders,
+  relay-list parsing, upload metadata parsers, and NIP-98 helpers.
 
-## Ownership
+## Storage State
 
-Read next: [architecture/README.md](architecture/README.md),
-[architecture/data/README.md](architecture/data/README.md),
+Read next: [architecture/data/README.md](architecture/data/README.md),
+[architecture/data/storage/README.md](architecture/data/storage/README.md), and
+[architecture/data/sqlite-opfs/README.md](architecture/data/sqlite-opfs/README.md).
+
+- Browser-owned data includes workspace layout, tabs, settings, accounts, local
+  signing secrets, drafts, notifications, relay purpose lists, relay
+  information, relay summaries, jobs, feed/page records, diagnostics, route
+  evidence, and cached events.
+- IndexedDB through Dexie is the current product durable path only until the
+  storage cutover lands. It is deletion-only: new storage behavior targets the
+  SQLite worker contract.
+- The target durable path is official SQLite WASM in a worker, backed by OPFS
+  when available and by explicit temporary memory mode when OPFS cannot open.
+- Main-thread app code must not open SQLite or OPFS directly. Product code must
+  call typed repositories; repositories talk to the worker-owned storage
+  kernel.
+- The SQLite schema, statement records, row codecs, retention classes, and
+  worker adapter foundations already exist in Rust and TypeScript host code.
+  Product startup and Svelte feed/tool paths still need cutover wiring before
+  Dexie can be removed.
+- Protected records are never removed by cache cleanup: accounts, local signing
+  secrets, settings, relay sets, workspace state, Tweet drafts, active tab
+  snapshots, active jobs, and route blocks.
+- Recoverable cache rows are removed only through cache ledger policy. Runtime
+  feed windows remain bounded; durable cached events are governed by explicit
+  retention and diagnostics rather than a fixed small row count.
+- Storage failure must recover to a usable Welcome workspace. Persistent OPFS
+  mode and temporary memory mode must be visible in Stats or Settings.
+
+## Workspace And Feeds
+
+Read next: [architecture/workspace/README.md](architecture/workspace/README.md),
 [architecture/feeds/README.md](architecture/feeds/README.md), and
-[architecture/workspace/README.md](architecture/workspace/README.md).
+[architecture/data/feed-surface/README.md](architecture/data/feed-surface/README.md).
 
-- Workspace layout, tabs, settings, accounts, local signing secrets, drafts,
-  notifications, relay purpose lists, relay information, relay summaries, jobs,
-  feed/page records, diagnostics, and cached events are browser-owned data.
 - Pointer tab dragging is canonical. Native desktop drag uses pane chrome
-  exclusion and pane-body edge detection for splits. Center and edge drop
-  previews align with the content stack only and never cover the tab strip or
-  tile menu row.
+  exclusion and pane-body edge detection for splits.
 - Tab rails scroll horizontally with long-press touch drag, pointer capture,
   selection suppression, strip-priority reorder, and active-tab reveal.
-- Protected user records and prunable local-cache records are separate
-  ownership classes. Accounts, local signing secrets, settings, relay sets,
-  workspace state, Tweet drafts, active tab snapshots, active jobs, and
-  user-owned relay configuration are never deleted by cache cleanup.
-- Durable local cache has no application item-count ceiling. `cache.maxBytes`
-  defaults to `67108864` bytes and acts as the site storage target when browser
-  origin estimates are available. `cacheLedger` records resource bytes for
-  events, notifications, feed/page rows, recoverable relay diagnostics,
-  protocol cache, route evidence, finished jobs, and stale snapshots. Stats
-  separates physical object-store estimates, ledger-accounted bytes, protected
-  data, prunable cache, unknown old or unowned storage, and residual browser
-  overhead. Compaction prunes bounded score-ordered recoverable resources until
-  browser usage is below target or a stop reason explains what remains. Runtime
-  feed windows remain bounded. The live durable table contract is maintained in
-  the [Storage Manifest](architecture/data/storage/data-classes/table-manifest.md).
-- Storage is browser-owned and manifest-driven. The current live table manifest
-  defines every IndexedDB table, its data class, inventory group, Dexie schema
-  string, and retention flags. The Rust/WASM storage target is OPFS-backed
-  SQLite in a dedicated worker, documented in
-  [architecture/data/sqlite-opfs/README.md](architecture/data/sqlite-opfs/README.md).
-  Executable SQLite schema records, protected, event-cache, and diagnostics SQL
-  statements and row codecs, static and temporary TypeScript host workers, a
-  typed Rust storage-worker adapter, and protected, event-cache, and diagnostics
-  Rust SQLite repository calls now exist for open, schema apply, execute, query,
-  batch, estimate, cancellation, deadline, late-response, close, diagnostics,
-  jobs, route-block, app-log, and table-count inventory behavior. Product paths
-  still use IndexedDB/Dexie until SQLite startup wiring is complete. Ledger
-  resource ownership and storage repository modules
-  own resource-plus-ledger write boundaries for events, feed cache, jobs,
-  notifications, relay diagnostics, relay information, route evidence, and tab
-  snapshots.
-- Feature modules call storage repositories instead of Dexie tables. The
-  repository checker rejects direct `browserDb()` calls outside storage-owned
-  modules and the temporary `src/lib/cache` compatibility area.
-- Storage operations return typed results. UI paths may continue from memory
-  fallback, while Stats can distinguish active, timed-out, busy, canceled,
-  late-settled, and late-rejected storage operations.
-- Rust/WASM support is partial and active. Rust owns substantial protocol,
-  domain, storage-contract, relay-state-machine, request-budget, page-read,
-  relay host-adapter, startup, IndexedDB, and Leptos-shell slices. The live Rust
-  slice map and open foundations live in
-  [architecture/rust-wasm/status.md](architecture/rust-wasm/status.md).
-- Relay ingress uses app-owned byte and structure caps before expensive JSON
-  and event parsing.
-- IndexedDB remains the current durable browser-owned store while SvelteKit and
-  Dexie paths are live. It is not the target for new Rust storage families.
-  Memory relief prunes only bounded app-owned runtime windows, caches, counters,
-  and fallback stores.
-- Browser-local backend services own shared Home queries above tab components.
-  Rust now has owned WebSocket and browser-timeout adapter foundations for relay
-  host work; the live TypeScript relay client, relay pool, subscription
-  orchestrator, subscription manager, and runtimes still own network reads and
-  deterministic cleanup until Rust product wiring is complete.
-- Surfaces submit Demands; the orchestrator plans shared Leases (canonical
-  fingerprints with `channel` disambiguation) and issues reads through the
-  subscription manager.
+- Inactive workspace tabs keep hidden mounted bodies; feed runtimes release live
+  Demands while retaining bounded windows.
+- Tab snapshots are owned by `workspaceId + tabId`. They store compact scroll
+  anchors, feed cursors, bounded row ids, and recoverable filter fields. They do
+  not store full events, profiles, diagnostics, active workers, or unbounded
+  arrays.
+- Feed surfaces share near-end sentinels, footer phase semantics, bounded
+  viewport-fill, older-load intent gating, and staged row shells on Home,
+  Global, Profile, Thread, and Notifications.
+- Visible feed rows obey canonical newest-first ordering, merge by event id, and
+  stay inside local display bounds.
+- Cache-first feed display requires complete coverage evidence for every
+  required relay, route group, semantic key, filter shape, and bounded interval.
+  Incomplete, failed, compacted, dense, stale, or missing evidence cannot prove
+  absence.
+- Home, Global, Profile posts, Notifications, and time-windowable Custom Request
+  feeds use adaptive grouped scans. Exact id reads, search reads, Author
+  Context, Thread context, metadata, follow-list lookup, and reference
+  resolution keep exact request semantics.
+
+## Network And Runtimes
+
+Read next: [architecture/network/README.md](architecture/network/README.md) and
+[architecture/runtimes/README.md](architecture/runtimes/README.md).
+
+- Surfaces submit Demands. The subscription orchestrator plans shared Leases and
+  issues reads through the subscription manager.
 - Feed route isolation keeps Home and Profile route-group reads on resolved
   route fingerprints, while Notifications and selected-relay tools keep
   independent semantic keys.
-- Relay Settings owns stacked user and discovery relay sections in one tab.
-  User relays drive selected read/write runtime behavior. Discovery relays are
-  editable but limited to metadata and kind `10002` relay-list discovery, and
-  discovery-only URLs do not widen feed or content reads.
+- Relay Settings owns user and discovery relay sections. User relays drive
+  runtime reads and writes. Discovery relays are limited to metadata and kind
+  `10002` discovery.
 - Matching Home tabs attach to one shared query keyed by account, selected
-  relays, page size, and feed policy. Tab ids own attachments only.
-- Stats and `__lkjstrMemoryDebug()` expose orchestration demand, lease, and
-  event intake counters. Stats labels active relay subscriptions by redacted
-  human purpose and keeps raw ids secondary.
-- Stats cache diagnostics tolerate blocked, corrupt, or schema-incomplete
-  IndexedDB stores. Missing object stores are reported as unavailable or
-  incomplete diagnostics rather than uncaught runtime exceptions.
-- Inactive workspace tabs keep hidden mounted bodies; feed runtimes release live
-  Demands while retaining bounded windows.
-- Tab snapshots are owned by `workspaceId + tabId`; pane id is only last-placement
-  metadata for capture. The workspace snapshot coordinator owns scroll owners,
-  runtime snapshots, one-shot restore tokens, warm LRU snapshots (cap `32`), and
-  IndexedDB `tabStates` reload restore.
-- Durable snapshots store generic row scroll anchors, feed cursors,
-  `hasOlder`/`hasNewer`, history exhaustion state, bounded event or
-  notification ids, and recoverable filter fields. They never store full events,
-  profiles, relay diagnostics, active workers, or unbounded arrays.
-- Feed surfaces share `IntersectionObserver` near-end sentinels with scroll
-  fallback, `feedPagingPhase` footer semantics, bounded viewport-fill for
-  underfilled lists, older-load intent gating, and staged row shells on Home,
-  Global, Profile, Thread, and Notifications.
-- Feed rows are display-bound before presentation: future events and rows
-  outside local `since`, exclusive `until`, `before`, or `after` bounds stay out
-  of visible feed results.
-- Complete feed coverage evidence can make cached display immediate only when
-  every required relay, route group, semantic feed key, filter shape, bounded
-  interval, and backing event row proves completion. Adjacent and overlapping
-  complete rows may prove a bounded segment. If only some relays are proven,
-  only uncovered relays are queried. Dense, incomplete, unresolved, failed,
-  compacted, or missing evidence is not proof of absence and cannot suppress
-  relay reads. Event compaction currently deletes all feed coverage rows
-  conservatively so stale complete coverage cannot prove absence.
-- Durable warm scan hints tune grouped feed scan initial spans only when every
-  required relay/filter has fresh evidence. Hints are bounded, stale after `30`
-  days, and never prove absence or suppress relay reads.
-- Home, Global, Profile posts, Notifications, and time-windowable Custom Request
-  feeds use adaptive grouped scans. Search, exact id requests, Custom Request
-  filters with `ids` or `search`, Author Context, Thread reply pages, metadata,
-  follow-list lookup, thread root lookup, and reference resolution keep exact
-  request semantics.
-- Feed correctness contracts live under
-  [architecture/feeds](architecture/feeds/README.md): canonical ordering,
-  merge-by-id reducer, per-tab page cursors, and independent notification
-  filters.
-- Progressive relay rendering is documented in
-  [architecture/network/progressive-relay-rendering.md](architecture/network/progressive-relay-rendering.md).
-- Virtual event lists use `EventTreeList` on Home, Global, Profile, Thread,
-  Search, and Custom Request. Profile summary rows and note rows share the same
-  `FeedScrollSurface` owner. Notifications uses Virtua flat listing with the
-  same footer and near-end contract.
-- Profile tabs hide visible initial-loading and manual newer-note controls while
-  keeping internal loading and newer state. Older-pruned newer notes recover
-  through automatic near-start behavior at the first event row, and the identity
-  block spans the profile card width below the avatar/action row. Profile,
-  Notifications, and Thread allow bounded viewport-fill only while the list is
-  underfilled; after the list becomes scrollable, older history loads require a
-  current downward scroll-owner gesture. Notifications keeps the scroll surface
-  mounted for retryable zero-record windows and exposes an explicit older-scan
-  command after bounded auto-fill attempts are spent.
-- Event rows show nip05-only subtitles on feeds, pressed Heart/Repost styling
-  from a hybrid action-state index plus feed evidence, keep optimistic
-  published pressed state stable during cache refresh, and show no left-side
-  new-event stripe.
-- Welcome is a document-like quick-start with working links into Accounts,
-  Relay Settings, Tweet, and core tabs.
+  relays, page size, and feed policy.
+- Stats and `__lkjstrMemoryDebug()` expose orchestration demand, lease, event
+  intake, storage operation, and memory counters.
 - Relay publish waiters, paged read leases, deduped read abort listeners, relay
-  client final close state, and idle pool eviction are covered by lifecycle
-  cleanup tests.
-- Runtime counters use static aggregate keys only, and `check:repo` rejects
-  first-party source classes outside the Dexie database binding.
-- Search, Custom Request, Author Context, Tweet, event rows, references, event
-  lists, and anchored popovers guard async UI continuations after teardown.
-- Cloudflare Workers Static Assets is a hosting target only; it does not add a
-  backend account service, relay proxy, or Cloudflare storage dependency.
+  final-close state, and idle pool eviction have cleanup tests.
+- Runtime counters use static aggregate keys only.
 
-## Memory and Retention
+## Memory And Retention
 
 Read next: [architecture/data/heap-retention.md](architecture/data/heap-retention.md),
 [architecture/data/resource-ownership.md](architecture/data/resource-ownership.md),
 and [operations/memory-verification.md](operations/memory-verification.md).
 
-- Memory retention work is active. Historical symptoms included a retained heap
-  approaching one gigabyte after heavy feed usage. Production-build Playwright
-  memory tests (`pnpm test:e2e:memory`) now enforce heap deltas and zero
-  teardown counters for paged reads, read waiters, publish waiters, abort
-  listeners, and IndexedDB operations.
-- Compact memory counters and `window.__lkjstrMemoryDebug()` expose redacted
-  snapshots for e2e and Stats.
-- Relay diagnostic summaries are bounded in memory and IDB list reads are
-  capped; batched `bulkPut` reduces per-relay transaction churn.
-- Runtime-visible and open-reference cache pins are owner-scoped and cleaned up
-  on owner teardown. They protect compaction dynamically without becoming
-  durable hard-protected priority rows. Dynamic protection scans are bounded;
-  incomplete scans stop compaction rather than treating missing evidence as
-  permission to delete.
-- Cleanup ownership for every resource type is documented in
-  [resource-ownership.md](architecture/data/resource-ownership.md).
-- Heap snapshot collection, memory budgets, and the verification workflow are
-  documented in [heap-retention.md](architecture/data/heap-retention.md) and
-  [memory-verification.md](operations/memory-verification.md).
-- Product polish tracked in [product/backlog.md](product/backlog.md) follows
-  memory gate stability.
+- Production-build Playwright memory tests enforce heap deltas and zero teardown
+  counters for paged reads, read waiters, publish waiters, abort listeners, and
+  storage operations.
+- Relay diagnostic summaries are bounded in memory. Current IndexedDB list reads
+  are capped while the SQLite cutover is in progress.
+- Runtime-visible and open-reference cache pins are owner-scoped, bounded, and
+  cleaned up on owner teardown.
+- Cache pressure records protected data, prunable cache, unknown storage, and
+  residual browser overhead separately.
 
-## Known Gaps
+## Open Contracts
 
-- Rust/WASM architecture is partial and active, not design-only. Rust owns
-  protocol, pure domain models, storage contracts, narrow IndexedDB adapters,
-  relay state-machine, request-budget, page-read, route-plan, ingress,
-  live-lease, query-demand, feed-window reducers, live feed composition,
-  surface query input builders, a Custom Request parser, startup composition,
-  and a partial Leptos shell.
-  The SvelteKit product runtime remains until each Rust surface reaches real
-  behavior and matching tests. Cutover and deletion rules live in
-  [architecture/rust-wasm/cutover/README.md](architecture/rust-wasm/cutover/README.md).
-- Remote NIP-50 results depend on actual relay support.
-- Passkey-protected local secret storage is design-only.
-- Encrypted direct messages are not implemented.
+- SQLite worker storage is the active durable-storage contract. Product paths
+  that still read or write Dexie must move to typed SQLite repositories, then the
+  Dexie dependency and binding must be deleted.
+- Passkey-protected local secret storage is a follow-up product contract: it
+  must actually encrypt local signer secrets with Web Crypto and WebAuthn PRF
+  when supported, and show an unsupported state when the browser cannot do so.
+- Encrypted direct messages are a follow-up product contract. The forward path
+  is NIP-17 with NIP-44 and NIP-59; do not add fake message previews or make
+  NIP-04 the primary new feature.
 - Wallet custody is out of scope; zap support opens or copies invoices only.
-- Broad runtime instrumentation is limited to explicit runtime counters,
-  compact memory counters, and persisted job records.
-- Clean-browser SES lockdown console messages are external unless Playwright
-  reproduces them from the app origin; only app-origin startup failures become
-  lkjstr Log records.
-- Home follow discovery and Notifications relay cursors are now bounded and
-  deterministic: missing-follow decisions use follow-sub EOSE ownership, and
-  Notifications older paging is gated by scroll-owner intent or explicit retry.
+- Broad runtime instrumentation remains limited to explicit runtime counters,
+  compact memory counters, storage diagnostics, and persisted job records.
+- Remote NIP-50 results depend on actual relay support.
 - RSS remains diagnostic-only for memory verification; app JavaScript heap is
   the owned browser memory assertion.
 
@@ -271,23 +173,19 @@ and [operations/memory-verification.md](operations/memory-verification.md).
 - [product/README.md](product/README.md): user-facing behavior.
 - [protocol/README.md](protocol/README.md): protocol contracts.
 - [architecture/README.md](architecture/README.md): runtime and data ownership.
+- [architecture/data/sqlite-opfs/README.md](architecture/data/sqlite-opfs/README.md):
+  SQLite OPFS storage target.
+- [architecture/data/storage/README.md](architecture/data/storage/README.md):
+  current storage kernel and retention contract.
 - [architecture/rust-wasm/README.md](architecture/rust-wasm/README.md):
   Rust/WASM target ownership.
 - [architecture/backend/README.md](architecture/backend/README.md):
   browser-local backend contract.
 - [architecture/data/feed-surface/README.md](architecture/data/feed-surface/README.md):
   shared feed list contracts.
-- [architecture/data/cache-first-feed-pages.md](architecture/data/cache-first-feed-pages.md):
-  cache-first feed page proof rules.
-- [architecture/data/heap-retention.md](architecture/data/heap-retention.md):
-  memory retention symptoms and investigation.
-- [architecture/data/resource-ownership.md](architecture/data/resource-ownership.md):
-  resource ownership table.
-- [architecture/data/storage/README.md](architecture/data/storage/README.md):
-  browser storage kernel and retention contract.
 - [operations/verification.md](operations/verification.md): verification gate.
-- [operations/memory-verification.md](operations/memory-verification.md): memory
-  verification workflow.
+- [operations/sqlite-opfs-testing.md](operations/sqlite-opfs-testing.md):
+  SQLite OPFS verification.
 - [repository/documentation-standards.md](repository/documentation-standards.md):
   documentation and repository rules.
 

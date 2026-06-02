@@ -10,7 +10,7 @@ commands.
 - `check-repo.ts`: repository contract checker.
 - `generate-icons.ts`: static icon generation.
 - `repo-source-classes.ts`: TypeScript AST guard that rejects first-party
-  classes under `src/` except the Dexie database binding.
+  classes under `src/`.
 - `run-quiet.ts`: quiet verification runner for agents and CI.
 - `vitest-quiet-reporter.ts`: minimal Vitest reporter for quiet unit runs.
 - `playwright-quiet-reporter.ts`: minimal Playwright reporter for quiet e2e runs.
