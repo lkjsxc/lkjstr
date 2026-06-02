@@ -5,7 +5,8 @@
 Define canonical Rust builders for surface-specific feed query inputs.
 
 Status: Rust owns Home, Global, Profile, Notifications, Search, and Custom
-Request query input builders. These builders are app runtime composition only;
+Request query input builders. The next pure builder slice covers Thread root
+lookup and reply queries. These builders are app runtime composition only;
 shipped feed UI wiring still uses TypeScript runtime code.
 
 ## Home
@@ -59,6 +60,21 @@ shipped feed UI wiring still uses TypeScript runtime code.
 - Disabled relays pass through to route planning.
 - The builder must not reuse Home author-list semantics.
 
+## Thread
+
+- Surface is `Thread`.
+- Root lookup channel is `thread-root`.
+- Reply query channel is `thread-replies`.
+- Root lookup phase is `Bootstrap` and purpose is `EventLookup`.
+- Reply query phase is supplied by the runtime as `Bootstrap`, `Page`, or
+  `Live`.
+- Root lookup filters include exact `ids: [eventId]` and limit `1`.
+- Reply filters include tag `#e: [eventId]` and kinds `1`, `6`, and `16`.
+- Reply filters must not include `authors`.
+- Selected relays remain the base and fallback.
+- Optional root-author route evidence can target known root routes, but relay
+  scoring never suppresses selected fallback relays.
+
 ## Search
 
 - Surface is `Search`.
@@ -93,6 +109,8 @@ shipped feed UI wiring still uses TypeScript runtime code.
 
 - `crates/lkjstr-app/src/feed/surface_inputs.rs`: Home, Global, Profile, and
   Notifications query input builders.
+- `crates/lkjstr-app/src/feed/thread_inputs.rs`: Thread root and reply query
+  input builders.
 - `crates/lkjstr-app/src/feed/tool_inputs.rs`: Search and Custom Request query
   input builders.
 - `crates/lkjstr-app/src/custom_request/`: Custom Request parser and mode
