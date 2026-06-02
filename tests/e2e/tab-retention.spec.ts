@@ -101,6 +101,8 @@ test('restores settings scroll after reload from persisted tab state', async ({
   await page.waitForLoadState('domcontentloaded');
   await selectStartupTab(page, 'Settings');
   await expect(page.getByRole('region', { name: 'Settings' })).toBeVisible();
+  await selectStartupTab(page, 'Home');
+  await selectStartupTab(page, 'Settings');
   await expect
     .poll(() => getSettingsScroll(page), { timeout: 15_000 })
     .toBeGreaterThan(0);
