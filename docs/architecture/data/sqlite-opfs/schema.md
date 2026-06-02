@@ -2,13 +2,14 @@
 
 ## Purpose
 
-This file defines the canonical SQLite table set. Status: design target until
-the Rust executable schema records are committed.
+This file defines the canonical SQLite table set. Status: executable Rust
+schema records are implemented; product cutover to SQLite remains open.
 
 ## Schema Rules
 
 - Rust schema records are the executable source of truth.
-- Markdown mirrors generated records and must be checked by `lkjstr-xtask`.
+- Markdown mirrors table names and contracts; `lkjstr-xtask` checks table-name
+  parity with executable records while fuller SQL doc generation remains open.
 - Use `STRICT` tables where the bundled SQLite build accepts them.
 - Store flexible payloads as JSON text only at clear boundaries.
 - Normalize high-volume paths for events, tags, relay provenance, coverage,

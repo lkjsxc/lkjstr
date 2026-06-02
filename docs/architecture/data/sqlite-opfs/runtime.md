@@ -16,9 +16,10 @@ rows and diagnostics, and closes cleanly.
 choose tables, data classes, compaction policy, feed coverage semantics, or
 product recovery behavior.
 
-The Rust `lkjstr-web` adapter can own the browser `Worker`, typed envelopes,
-deadlines, cancellation, close cleanup, and late diagnostics. Product
-repositories still need SQLite implementations before this becomes the durable
+The Rust `lkjstr-web` adapter owns the browser `Worker`, typed envelopes,
+deadlines, cancellation, close cleanup, late diagnostics, and SQLite-backed
+repository calls for protected, event-cache, and diagnostics families. Product
+startup and feed runtimes still need wiring before this becomes the durable
 product path.
 
 ## Static Assets

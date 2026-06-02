@@ -3,7 +3,8 @@
 ## Purpose
 
 This subtree defines the OPFS-backed SQLite WASM storage target for browser
-owned data. Status: design target with executable Rust schema work next.
+owned data. Status: partial implementation with executable Rust schema,
+worker protocol, host adapter, and repository foundations.
 
 ## Table of Contents
 
@@ -30,7 +31,9 @@ relay orchestration, and storage rules do not live in the worker script.
 ## Current Transition State
 
 IndexedDB and Dexie remain only because the shipped SvelteKit runtime still
-uses them. New storage architecture and Rust/WASM implementation work should
-target this subtree. Delete Dexie paths only after matching Rust/SQLite
-repositories, browser behavior, tests, and cutover ledger evidence exist.
+uses them. Rust now owns SQLite schema records, statement records, row codecs,
+worker envelopes, and protected, event-cache, and diagnostics repository calls.
+Product startup and feed surfaces are not yet wired to SQLite as the durable
+path. Delete Dexie paths only after matching Rust/SQLite browser behavior,
+tests, and cutover ledger evidence exist.
 

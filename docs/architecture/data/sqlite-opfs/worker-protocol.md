@@ -13,23 +13,25 @@ Each request carries:
 - `deadline_ms`: caller deadline relative to request dispatch.
 - `op`: one storage operation.
 
-Operations:
+Implemented operations:
 
 - `Open`: database name, VFS preference, and startup flags.
 - `Close`: close the database and release callbacks.
 - `ApplySchema`: schema hash and ordered statements.
-- `Execute`: statement id, SQL text, and parameters.
-- `Query`: statement id, SQL text, parameters, and row limit.
+- `Execute`: SQL text and parameters.
+- `Query`: SQL text, parameters, and row limit.
 - `Batch`: transaction mode and ordered SQL steps.
 - `EstimateStorage`: browser usage and quota diagnostics.
-- `Compact`: target bytes and protected owner keys.
-- `ExportJson`: explicit user-selected data classes.
-- `ImportJson`: explicit user-provided payload.
 - `Cancel`: request id to cancel.
 
+Not implemented in the worker envelope yet: compaction, repair, JSON import,
+and JSON export. Those remain repository and product commands until their
+protocol messages, tests, and user flows are committed.
+
 The Rust `lkjstr-web` adapter implements the host envelope, request deadlines,
-explicit cancellation, close cleanup, and late response diagnostics. Repository
-SQL and official SQLite worker wiring remain separate implementation work.
+explicit cancellation, close cleanup, late response diagnostics, and
+worker-backed repository calls. Repository SQL records still live in
+`lkjstr-storage`.
 
 ## Response Envelope
 

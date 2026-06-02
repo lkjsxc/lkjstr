@@ -2,8 +2,8 @@
 
 ## Purpose
 
-This file defines explicit user-driven import and export. Status: design
-target.
+This file defines explicit user-driven import and export. Status: design-only;
+the current worker envelope does not expose import or export operations.
 
 ## Boundary
 
@@ -17,7 +17,7 @@ protected storage is not implemented.
 
 ## Export
 
-Export uses a typed `ExportJson` request with user-selected data classes:
+Export will use a typed request with user-selected data classes:
 
 - protected user data.
 - recoverable cache.
@@ -29,9 +29,9 @@ off unless the user selects it explicitly.
 
 ## Import
 
-Import uses a typed `ImportJson` request. The importer validates schema metadata,
-data classes, row shapes, event identities, relay URLs, signer kinds, and
-ledger records before writing.
+Import will use a typed request. The importer validates schema metadata, data
+classes, row shapes, event identities, relay URLs, signer kinds, and ledger
+records before writing.
 
 Protected data conflicts require a visible user choice. Recoverable cache can be
 merged by canonical ids and updated timestamps.

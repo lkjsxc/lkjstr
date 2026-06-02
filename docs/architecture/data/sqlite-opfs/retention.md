@@ -2,8 +2,9 @@
 
 ## Purpose
 
-This file defines cache retention for SQLite OPFS storage. Status: design
-target.
+This file defines cache retention for SQLite OPFS storage. Status: partial:
+ledger schema, resource mapping, row codecs, and ledger-backed write helpers
+exist; SQLite compaction, repair, and pressure dispatch are open.
 
 ## Data Classes
 
@@ -34,7 +35,9 @@ Recoverable data:
 
 `cache_ledger` is the only eviction queue. Every compactable resource has a
 resource id, resource kind, owning table, byte count, protection flag, score,
-owner key, creation time, and update time.
+owner key, creation time, and update time. Implemented repository helpers write
+ledger rows atomically with events, feed cache, notifications, diagnostics,
+jobs, route evidence, and tab snapshots.
 
 Protected rows may appear in the ledger for inventory, but compaction skips
 them. Missing or incomplete ledger evidence stops compaction for that resource
