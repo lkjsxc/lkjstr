@@ -5,8 +5,9 @@
 Define canonical Rust builders for surface-specific feed query inputs.
 
 Status: Rust owns Home, Global, Profile, Notifications, Thread, Search, and
-Custom Request query input builders. These builders are app runtime composition
-only; shipped feed UI wiring still uses TypeScript runtime code.
+Custom Request query input builders. The next pure builder slice covers Author
+Context anchor and nearby-author queries. These builders are app runtime
+composition only; shipped feed UI wiring still uses TypeScript runtime code.
 
 ## Home
 
@@ -74,6 +75,19 @@ only; shipped feed UI wiring still uses TypeScript runtime code.
 - Optional root-author route evidence can target known root routes, but relay
   scoring never suppresses selected fallback relays.
 
+## Author Context
+
+- Surface is `AuthorContext`.
+- Anchor lookup channel is `author-context-anchor`.
+- Nearby query channel is `author-context-nearby`.
+- Anchor lookup phase is `Bootstrap` and purpose is `EventLookup`.
+- Nearby query phase is supplied by the runtime as `Bootstrap` or `Page`.
+- Anchor lookup filters include exact `ids: [eventId]` and limit `1`.
+- Nearby filters include exactly the anchor author as `authors` and display
+  kinds `1`, `6`, and `16`.
+- Selected relays remain the base and fallback.
+- Anchor-author route evidence can target known author routes.
+
 ## Search
 
 - Surface is `Search`.
@@ -110,6 +124,8 @@ only; shipped feed UI wiring still uses TypeScript runtime code.
   Notifications query input builders.
 - `crates/lkjstr-app/src/feed/thread_inputs.rs`: Thread root and reply query
   input builders.
+- `crates/lkjstr-app/src/feed/author_context_inputs.rs`: Author Context anchor
+  and nearby-author builders.
 - `crates/lkjstr-app/src/feed/tool_inputs.rs`: Search and Custom Request query
   input builders.
 - `crates/lkjstr-app/src/custom_request/`: Custom Request parser and mode
