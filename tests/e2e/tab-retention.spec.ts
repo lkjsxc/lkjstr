@@ -139,6 +139,9 @@ const tabStateSchema = [
 ];
 
 async function setSettingsScroll(page: Page) {
+  await expect(
+    page.locator('.pane-body[data-active-tab="true"] .setting-row').first(),
+  ).toBeVisible();
   return page
     .locator('.pane-body[data-active-tab="true"] .settings-tab')
     .evaluate((node) => {
