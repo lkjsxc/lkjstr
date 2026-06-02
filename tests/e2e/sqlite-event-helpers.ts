@@ -6,13 +6,13 @@ import {
   type SqlStep,
 } from './sqlite-storage-helpers';
 
-const eventGraphSchemaHash = 'event-graph-feed-cache-sqlite-cutover';
+const eventGraphSchemaHash = 'event-graph-feed-cache-coverage-lookup';
 const eventGraphSchema = [
   'PRAGMA foreign_keys = ON;',
   'CREATE TABLE IF NOT EXISTS events (id TEXT PRIMARY KEY, pubkey TEXT NOT NULL, kind INTEGER NOT NULL, created_at INTEGER NOT NULL, content TEXT NOT NULL, tags_json TEXT NOT NULL, sig TEXT NOT NULL, event_json TEXT NOT NULL, received_at_ms INTEGER NOT NULL, relay_urls_json TEXT NOT NULL) STRICT;',
   'CREATE TABLE IF NOT EXISTS event_relays (id TEXT PRIMARY KEY, event_id TEXT NOT NULL REFERENCES events(id) ON DELETE CASCADE, relay_url TEXT NOT NULL, received_at_ms INTEGER NOT NULL, last_seen_at_ms INTEGER NOT NULL, seen_count INTEGER NOT NULL) STRICT;',
   'CREATE TABLE IF NOT EXISTS event_tags (id TEXT PRIMARY KEY, event_id TEXT NOT NULL REFERENCES events(id) ON DELETE CASCADE, tag_index INTEGER NOT NULL, tag_name TEXT NOT NULL, tag_value TEXT NOT NULL, created_at INTEGER NOT NULL) STRICT;',
-  'CREATE TABLE IF NOT EXISTS feed_coverage (id TEXT PRIMARY KEY, feed_key TEXT NOT NULL, relay_url TEXT NOT NULL, group_key TEXT NOT NULL, status TEXT NOT NULL, record_json TEXT NOT NULL, updated_at_ms INTEGER NOT NULL) STRICT;',
+  'CREATE TABLE IF NOT EXISTS feed_coverage (id TEXT PRIMARY KEY, feed_key TEXT NOT NULL, relay_url TEXT NOT NULL, group_key TEXT NOT NULL, status TEXT NOT NULL, filter_key TEXT NOT NULL, since INTEGER, until INTEGER, record_json TEXT NOT NULL, updated_at_ms INTEGER NOT NULL) STRICT;',
   'CREATE TABLE IF NOT EXISTS notifications (id TEXT PRIMARY KEY, account_pubkey TEXT NOT NULL, source_event_id TEXT NOT NULL, actor_pubkey TEXT NOT NULL, kind TEXT NOT NULL, created_at INTEGER NOT NULL, read_at INTEGER, record_json TEXT NOT NULL, updated_at_ms INTEGER NOT NULL) STRICT;',
   'CREATE TABLE IF NOT EXISTS cache_ledger (id TEXT PRIMARY KEY, owner_kind TEXT NOT NULL, resource_kind TEXT NOT NULL, resource_id TEXT NOT NULL, score INTEGER NOT NULL, protected INTEGER NOT NULL CHECK (protected IN (0, 1)), record_json TEXT NOT NULL, created_at_ms INTEGER NOT NULL, updated_at_ms INTEGER NOT NULL) STRICT;',
 ];
@@ -51,13 +51,16 @@ export function eventSteps(
 export function feedCoverageStep(row: Record<string, unknown>): SqlStep {
   return {
     statement:
-      'INSERT INTO feed_coverage (id, feed_key, relay_url, group_key, status, record_json, updated_at_ms) VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7) ON CONFLICT(id) DO UPDATE SET status = excluded.status, record_json = excluded.record_json, updated_at_ms = excluded.updated_at_ms;',
+      'INSERT INTO feed_coverage (id, feed_key, relay_url, group_key, status, filter_key, since, until, record_json, updated_at_ms) VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10) ON CONFLICT(id) DO UPDATE SET status = excluded.status, filter_key = excluded.filter_key, since = excluded.since, until = excluded.until, record_json = excluded.record_json, updated_at_ms = excluded.updated_at_ms;',
     params: [
       row.id,
       row.feedKey,
       row.relayUrl,
       row.groupKey,
       row.status,
+      row.filterKey,
+      row.since ?? null,
+      row.until ?? null,
       JSON.stringify(row),
       row.updatedAt,
     ],
