@@ -30,8 +30,8 @@ This subtree defines the Rust/WASM client target.
   [cutover/parity-ledger.md](cutover/parity-ledger.md).
 - Current Rust/WASM state: partial and actively implemented. The detailed slice
   map lives in [status.md](status.md).
-- Open Rust/WASM work: SQLite product repository wiring, full storage
-  repositories, relay client reducer, WebSocket and timer adapters, feed/tool
+- Open Rust/WASM work: SQLite product repository wiring, retention and repair,
+  product wiring from relay reducers to WebSocket and timer adapters, feed/tool
   runtimes, publish jobs, media upload transport, full Stats diagnostics, and
   UI parity.
 - Not allowed: remote app backend, relay proxy requirement, server account

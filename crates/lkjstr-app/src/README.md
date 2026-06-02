@@ -7,6 +7,7 @@ reducers.
 
 ## Table of Contents
 
+- `custom_request/`: pure Custom Request parsing, clamps, and mode selection.
 - `feed/`: pure feed-window reduction and cursor derivation.
 - `lib.rs`: public app crate exports.
 - `query/`: pure query-demand planning from product inputs to relay contracts.

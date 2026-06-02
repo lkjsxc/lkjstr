@@ -45,7 +45,7 @@ references should stay as relative Markdown links.
 | Rust SQLite OPFS storage target           | [sqlite-opfs/README.md](../architecture/data/sqlite-opfs/README.md)  | partial         | schema, static worker, Rust adapter, protected repos |
 | Rust tab-state IndexedDB transaction      | [storage-kernel.md](../architecture/rust-wasm/storage-kernel.md)     | implemented     | snapshot and ledger browser test                     |
 | Rust relay state machine basics           | [relay-runtime.md](../architecture/rust-wasm/relay-runtime.md)       | implemented     | relay crate tests                                    |
-| Rust relay client and browser adapters    | [relay-runtime.md](../architecture/rust-wasm/relay-runtime.md)       | not implemented | current runtime remains TS                           |
+| Rust relay client and browser adapters    | [relay-runtime.md](../architecture/rust-wasm/relay-runtime.md)       | partial         | pure reducer plus WebSocket/timer adapters; product wiring open |
 | Rust Leptos workspace shell               | [ui-runtime.md](../architecture/rust-wasm/ui-runtime.md)             | partial         | Welcome, New Tab, persistence, Stats inventory       |
 | Rust Settings surface                     | [settings.md](tools/settings.md)                                     | partial         | flat schema and IndexedDB overrides                  |
 | Rust Accounts surface                     | [accounts.md](tools/accounts.md)                                     | partial         | rows, local secret transaction, NIP-07 connect       |
