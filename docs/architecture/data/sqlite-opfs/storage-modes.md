@@ -19,7 +19,8 @@ Preferred VFS order:
 
 The worker should reserve enough SAH pool capacity for the main database,
 journal files, metadata, and temporary query work. The initial target is 64 MiB,
-with diagnostics when usage approaches the pool limit.
+with diagnostics when usage approaches the pool limit. App hosting should not
+set COOP/COEP only for storage while `opfs-sahpool` is the normal path.
 
 ## Temporary Memory
 

@@ -17,6 +17,8 @@ Cloudflare Workers docs define the hosted build target for lkjstr.
 - The Wrangler entry point is `.svelte-kit/cloudflare/_worker.js`.
 - Static assets are served from `.svelte-kit/cloudflare` through the `ASSETS`
   binding.
+- Storage uses `opfs-sahpool` by default, so the Cloudflare target does not add
+  COOP/COEP headers solely for SQLite.
 - The compatibility date is `2026-05-23`.
 - The only compatibility flag is `nodejs_als`.
 - Repository scripts provide a dry-run verification command only; publishing is

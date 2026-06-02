@@ -46,6 +46,7 @@ read the current live storage state in [storage/README.md](storage/README.md).
 - [sqlite-opfs/worker-protocol.md](sqlite-opfs/worker-protocol.md): worker messages.
 - [sqlite-opfs/query-ownership.md](sqlite-opfs/query-ownership.md): SQL-owned reads and memory state.
 - [sqlite-opfs/repositories.md](sqlite-opfs/repositories.md): repository rules.
+- [sqlite-opfs/migration-map.md](sqlite-opfs/migration-map.md): cutover table map.
 - [sqlite-opfs/retention.md](sqlite-opfs/retention.md): cache retention.
 - [sqlite-opfs/failure-recovery.md](sqlite-opfs/failure-recovery.md): startup and reset recovery.
 - [sqlite-opfs/import-export.md](sqlite-opfs/import-export.md): import/export.

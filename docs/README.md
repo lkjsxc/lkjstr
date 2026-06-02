@@ -57,7 +57,7 @@ table of contents required by repository checks.
 
 | Area        | Files                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                |
 | ----------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| SQLite OPFS | [architecture/data/sqlite-opfs/storage-modes.md](architecture/data/sqlite-opfs/storage-modes.md), [architecture/data/sqlite-opfs/query-ownership.md](architecture/data/sqlite-opfs/query-ownership.md), [architecture/data/sqlite-opfs/failure-recovery.md](architecture/data/sqlite-opfs/failure-recovery.md), [decisions/sqlite-opfs-storage.md](decisions/sqlite-opfs-storage.md), [decisions/worker-owned-storage.md](decisions/worker-owned-storage.md), [operations/sqlite-opfs-testing.md](operations/sqlite-opfs-testing.md) |
+| SQLite OPFS | [architecture/data/sqlite-opfs/storage-modes.md](architecture/data/sqlite-opfs/storage-modes.md), [architecture/data/sqlite-opfs/query-ownership.md](architecture/data/sqlite-opfs/query-ownership.md), [architecture/data/sqlite-opfs/migration-map.md](architecture/data/sqlite-opfs/migration-map.md), [architecture/data/sqlite-opfs/failure-recovery.md](architecture/data/sqlite-opfs/failure-recovery.md), [decisions/sqlite-opfs-storage.md](decisions/sqlite-opfs-storage.md), [decisions/worker-owned-storage.md](decisions/worker-owned-storage.md), [operations/sqlite-opfs-testing.md](operations/sqlite-opfs-testing.md) |
 
 ## Complete File Index
 
@@ -111,6 +111,7 @@ table of contents required by repository checks.
 - [architecture/data/sqlite-opfs/runtime.md](architecture/data/sqlite-opfs/runtime.md)
 - [architecture/data/sqlite-opfs/schema.md](architecture/data/sqlite-opfs/schema.md)
 - [architecture/data/sqlite-opfs/repositories.md](architecture/data/sqlite-opfs/repositories.md)
+- [architecture/data/sqlite-opfs/migration-map.md](architecture/data/sqlite-opfs/migration-map.md)
 - [architecture/data/sqlite-opfs/retention.md](architecture/data/sqlite-opfs/retention.md)
 - [architecture/data/sqlite-opfs/worker-protocol.md](architecture/data/sqlite-opfs/worker-protocol.md)
 - [architecture/data/sqlite-opfs/import-export.md](architecture/data/sqlite-opfs/import-export.md)

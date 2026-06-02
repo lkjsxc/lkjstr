@@ -119,6 +119,8 @@ state lives, which modules own subscriptions, and how tabs close cleanly.
   SQL-owned reads and memory-only state.
 - [data/sqlite-opfs/repositories.md](data/sqlite-opfs/repositories.md):
   repository boundary.
+- [data/sqlite-opfs/migration-map.md](data/sqlite-opfs/migration-map.md):
+  current storage family to SQLite table map.
 - [data/sqlite-opfs/retention.md](data/sqlite-opfs/retention.md): retention.
 - [data/sqlite-opfs/failure-recovery.md](data/sqlite-opfs/failure-recovery.md):
   startup and reset recovery.

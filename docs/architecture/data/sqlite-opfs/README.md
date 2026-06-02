@@ -13,6 +13,7 @@ browser-owned data.
 - [worker-protocol.md](worker-protocol.md): typed request and response protocol.
 - [query-ownership.md](query-ownership.md): SQL-owned reads and memory-only state.
 - [repositories.md](repositories.md): repository boundary and SQL access rules.
+- [migration-map.md](migration-map.md): current storage family to SQLite table map.
 - [retention.md](retention.md): cache ledger, compaction, and quota behavior.
 - [failure-recovery.md](failure-recovery.md): startup, busy, corrupt, and reset recovery.
 - [import-export.md](import-export.md): explicit user-driven import and export.
@@ -24,7 +25,8 @@ is the normal path, and temporary memory mode is explicit when persistence is
 unavailable.
 
 Product code calls typed repositories. The worker owns SQLite and OPFS access.
-Main-thread code does not open SQLite, OPFS, or raw SQL.
+Main-thread code does not open SQLite, OPFS, or raw SQL. The normal host path
+uses `opfs-sahpool` so storage does not require app-wide cross-origin isolation.
 
 ## Current Transition State
 

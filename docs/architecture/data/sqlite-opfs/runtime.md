@@ -35,7 +35,8 @@ Preferred order:
 
 The standard `opfs` VFS requires SharedArrayBuffer and therefore COOP/COEP
 headers. Do not enable those headers only for storage if they break arbitrary
-Nostr media rendering.
+Nostr media rendering. Normal hosting should rely on `opfs-sahpool` and avoid
+app-wide cross-origin isolation unless media rendering has been verified.
 
 ## Worker Kind
 
