@@ -1,6 +1,5 @@
 import { cacheByteSizeForEvent } from '../../cache/cache-byte-size';
-import { cacheLedgerId } from '../../cache/cache-ledger-id';
-import { eventLedgerRecord, eventTargetBumps } from '../../cache/event-ledger';
+import { eventLedgerRecord } from '../../cache/event-ledger';
 import { feedCursorLedgerRecord } from '../../events/feed-cache-ledger';
 import type {
   EventRelayReceipt,
@@ -9,9 +8,12 @@ import type {
   StoredEvent,
 } from '../../events/types';
 import type { NostrEvent } from '../../protocol';
-import { boundedStorageRead } from '../safe-storage';
-import { browserDb, type LkjstrDb } from '../browser-db';
-import { withStorageTransaction } from '../operation/transaction';
+import {
+  sqlitePutFeedCursorWithLedger,
+  sqlitePutStoredEventWithLedger,
+  sqliteReadStoredEvent,
+  sqliteReadStoredEvents,
+} from '../sqlite-opfs/events-sqlite';
 
 export type StoredEventWrite = {
   readonly event: NostrEvent;
@@ -25,17 +27,15 @@ export async function readStoredEventRow(
   id: string,
   fallback: StoredEvent | undefined,
 ): Promise<StoredEvent | undefined> {
-  return boundedStorageRead(() => browserDb().events.get(id), fallback);
+  return (await sqliteReadStoredEvent(id).catch(() => undefined)) ?? fallback;
 }
 
 export async function readStoredEventRows(
   ids: readonly string[],
   fallback: readonly StoredEvent[],
 ): Promise<(StoredEvent | undefined)[]> {
-  return boundedStorageRead(
-    () => browserDb().events.bulkGet([...ids]),
-    [...fallback],
-  );
+  const rows = await sqliteReadStoredEvents(ids).catch(() => undefined);
+  return rows ?? [...fallback];
 }
 
 export async function putStoredEventWithLedger(
@@ -54,40 +54,8 @@ export async function putStoredEventWithLedger(
     input.tags,
     draft,
   );
-  await withStorageTransaction({
-    mode: 'rw',
-    tables: ['events', 'eventRelays', 'eventTags', 'cacheLedger'],
-    purpose: 'event-write',
-    run: async (db) => {
-      await db.events.put(input.stored);
-      await db.eventRelays.bulkPut([...input.receipts]);
-      await db.eventTags.where('eventId').equals(input.event.id).delete();
-      if (input.tags.length > 0) await db.eventTags.bulkPut([...input.tags]);
-      await putEventLedger(db, input, cacheBytes);
-    },
-  });
-}
-
-export async function putFeedCursorWithLedger(
-  cursor: FeedCursor,
-): Promise<void> {
-  await withStorageTransaction({
-    mode: 'rw',
-    tables: ['feedCursors', 'cacheLedger'],
-    purpose: 'feed-cursor-write',
-    run: async (db) => {
-      await db.feedCursors.put(cursor);
-      await db.cacheLedger.put(feedCursorLedgerRecord(cursor));
-    },
-  });
-}
-
-async function putEventLedger(
-  db: LkjstrDb,
-  input: StoredEventWrite,
-  cacheBytes: number,
-): Promise<void> {
-  await db.cacheLedger.put(
+  await sqlitePutStoredEventWithLedger(
+    input,
     eventLedgerRecord(
       input.event,
       input.tags,
@@ -95,21 +63,14 @@ async function putEventLedger(
       cacheBytes,
       input.receivedAt,
     ),
-  );
-  for (const [eventId, delta] of eventTargetBumps(input.event))
-    await bumpEventLedger(db, eventId, delta);
+  ).catch(() => false);
 }
 
-async function bumpEventLedger(
-  db: LkjstrDb,
-  eventId: string,
-  delta: number,
+export async function putFeedCursorWithLedger(
+  cursor: FeedCursor,
 ): Promise<void> {
-  const existing = await db.cacheLedger.get(cacheLedgerId('event', eventId));
-  if (!existing || existing.protected) return;
-  await db.cacheLedger.put({
-    ...existing,
-    score: existing.score + delta,
-    updatedAt: Date.now(),
-  });
+  await sqlitePutFeedCursorWithLedger(
+    cursor,
+    feedCursorLedgerRecord(cursor),
+  ).catch(() => false);
 }

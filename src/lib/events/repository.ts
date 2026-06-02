@@ -1,8 +1,4 @@
 import {
-  boundedStorageRead,
-  indexedDbAvailable,
-} from '../storage/safe-storage';
-import {
   putFeedCursorWithLedger,
   putStoredEventWithLedger,
   readStoredEventRow,
@@ -56,11 +52,6 @@ export async function upsertEvent(
   putMemory(stored, receipts, tags);
   if (existing && sameRelays(existing.relayUrls, relays)) return stored;
   countRuntime('timeline', 'storedEvents');
-  if (!indexedDbAvailable()) {
-    await storeRelayListSuggestionsFromEvent(event);
-    await storeRoutesFromEvent(event, relays);
-    return stored;
-  }
   await putStoredEventWithLedger({ event, stored, receipts, tags, receivedAt });
   await storeRelayListSuggestionsFromEvent(event);
   await storeRoutesFromEvent(event, relays);
@@ -71,10 +62,9 @@ export async function upsertEvent(
 
 export async function queryFeed(query: FeedQuery): Promise<FeedPage> {
   const limit = query.limit ?? 50;
-  const records = await boundedStorageRead(
-    () => indexedPage(query, limit + 1),
-    memoryPage(query, limit + 1),
-  );
+  const records =
+    (await indexedPage(query, limit + 1).catch(() => undefined)) ??
+    memoryPage(query, limit + 1);
   const items = records.slice(0, limit).map(toFeedEvent);
   const cursor = cursorFor(query, items);
   if (cursor) await saveCursor(cursor);
@@ -102,10 +92,9 @@ export async function latestEventByAuthorKind(
   pubkey: string,
   kind: number,
 ): Promise<FeedEvent | undefined> {
-  const event = await boundedStorageRead(
-    () => indexedLatestByAuthorKind(pubkey, kind),
-    latestMemoryEventByAuthorKind(pubkey, kind),
-  );
+  const event =
+    (await indexedLatestByAuthorKind(pubkey, kind).catch(() => undefined)) ??
+    latestMemoryEventByAuthorKind(pubkey, kind);
   return event ? toFeedEvent(event) : undefined;
 }
 
@@ -121,10 +110,9 @@ export async function eventsMatching(
         Math.max(...filters.map((filter) => filter.limit ?? 500), 1),
     ),
   );
-  const events = await boundedStorageRead(
-    () => indexedEventsMatching(filters, limit),
-    memoryEventsMatching(filters, limit),
-  );
+  const events =
+    (await indexedEventsMatching(filters, limit).catch(() => undefined)) ??
+    memoryEventsMatching(filters, limit);
   return events.sort(compareEventsDesc).map(toFeedEvent);
 }
 

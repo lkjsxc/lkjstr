@@ -73,8 +73,10 @@ Read next: [architecture/data/README.md](architecture/data/README.md),
 - The SQLite schema, statement records, row codecs, retention classes, and
   worker adapter foundations already exist in Rust and TypeScript host code.
   The Svelte Settings, workspace layout, Accounts, local signing secret, relay
-  set, and Tweet draft stores now write through the SQLite worker with memory
-  fallback when Workers are unavailable. Other product data families still need
+  set, Tweet draft, event graph, tag, relay provenance, feed cursor, cached
+  feed page, tag lookup, and local filter-search paths now use the SQLite
+  worker with memory fallback when Workers are unavailable. Notifications,
+  feed coverage, diagnostics, jobs, retention, repair, and inventory still need
   cutover wiring before Dexie can be removed.
 - Protected records are never removed by cache cleanup: accounts, local signing
   secrets, settings, relay sets, workspace state, Tweet drafts, active tab

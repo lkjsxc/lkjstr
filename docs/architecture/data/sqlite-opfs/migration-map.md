@@ -33,11 +33,11 @@ ownership context.
 
 | Current family | SQLite table group | Status | Notes |
 | --- | --- | --- | --- |
-| `events` | `events` | partial | Host schema exists; product feed reads still need durable SQLite queries. |
-| `eventRelays` | `event_relays` | partial | Relay provenance must upsert in the same event transaction. |
-| `eventTags` | `event_tags` | partial | Thread, mention, and route lookups must be SQL-owned. |
+| `events` | `events` | implemented | Product event writes and cached feed reads use the worker. |
+| `eventRelays` | `event_relays` | implemented | Relay provenance upserts with the event transaction. |
+| `eventTags` | `event_tags` | implemented | Thread, mention, and route lookups use SQL tag rows. |
 | `notifications` | `notifications` | partial | Materialized rows must be derived from real stored events. |
-| `feedCursors` | `feed_cursors` | partial | Cursor writes must follow successful SQL page reads. |
+| `feedCursors` | `feed_cursors` | implemented | Cursor writes follow successful SQLite cache page reads. |
 | `feedCoverage` | `feed_coverage` | partial | Coverage proves cache-first reads only when complete. |
 | `feedScanHints` | `feed_scan_hints` | partial | Hints never prove absence. |
 

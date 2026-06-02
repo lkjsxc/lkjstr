@@ -12,6 +12,11 @@ storage target.
 - `open-database.ts`: VFS selection and database opening.
 - `worker-core.ts`: request handling independent of worker globals.
 - `worker-health.ts`: storage health projection.
+- `event-schema.ts`: SQLite event graph, relay receipt, tag, cursor, and ledger schema.
+- `event-row-codec.ts`: stored-event row decoding helpers.
+- `events-sqlite.ts`: event and feed cursor writes plus direct event lookups.
+- `event-pages-sqlite.ts`: timeline, profile, thread, and tag cache reads.
+- `event-matching-sqlite.ts`: Nostr filter candidate reads for local cache search.
 - `worker.ts`: dedicated module worker entry point.
 - `client.ts`: browser client with deadlines, cancellation, and cleanup.
 - `kernel-client.ts`: shared open/apply/send helper for product repositories.

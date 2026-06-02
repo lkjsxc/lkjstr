@@ -1,4 +1,3 @@
-import { boundedStorageRead } from '../storage/safe-storage';
 import {
   indexedEventsByTagValue,
   indexedEventsByTagValues,
@@ -17,10 +16,10 @@ export async function eventsByTagValue(
   tagValue: string,
   limit = 500,
 ): Promise<FeedEvent[]> {
-  const events = await boundedStorageRead(
-    () => indexedEventsByTagValue(tagName, tagValue, limit),
-    memoryEventsByTagValue(tagName, tagValue).slice(0, limit),
-  );
+  const events =
+    (await indexedEventsByTagValue(tagName, tagValue, limit).catch(
+      () => undefined,
+    )) ?? memoryEventsByTagValue(tagName, tagValue).slice(0, limit);
   return events.map(toFeedEvent);
 }
 
@@ -31,10 +30,10 @@ export async function eventsByTagValues(
 ): Promise<FeedEvent[]> {
   const values = [...new Set(tagValues)];
   if (values.length === 0) return [];
-  const events = await boundedStorageRead(
-    () => indexedEventsByTagValues(tagName, values, limit),
-    memoryEventsByTagValues(tagName, values).slice(0, limit),
-  );
+  const events =
+    (await indexedEventsByTagValues(tagName, values, limit).catch(
+      () => undefined,
+    )) ?? memoryEventsByTagValues(tagName, values).slice(0, limit);
   return events.map(toFeedEvent);
 }
 
