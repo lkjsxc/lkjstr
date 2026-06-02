@@ -23,7 +23,7 @@ orchestration.
 | Home          | `src/lib/timeline/timeline-runtime.ts`          |
 | Global        | `src/lib/timeline/global-timeline-runtime.ts`   |
 | Notifications | `src/lib/notifications/notification-runtime.ts` |
-| Rust core     | `crates/lkjstr-app/src/feed/`                  |
+| Rust core     | `crates/lkjstr-app/src/feed/`                   |
 
 ## Progressive Reads
 

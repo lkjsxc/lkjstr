@@ -13,48 +13,48 @@ references should stay as relative Markdown links.
 
 ## Rust WASM Target
 
-| Clause                                    | Contract                                                             | Status          | Notes                                                |
-| ----------------------------------------- | -------------------------------------------------------------------- | --------------- | ---------------------------------------------------- |
-| Rust/WASM client ownership                | [rust-wasm-client.md](../decisions/rust-wasm-client.md)              | partial         | active slices tracked in Rust/WASM status            |
-| Rust/WASM architecture subtree            | [rust-wasm/README.md](../architecture/rust-wasm/README.md)           | partial         | status, cutover, and verification docs active        |
-| Rust workspace checks                     | [crate-boundaries.md](../architecture/rust-wasm/crate-boundaries.md) | implemented     | `lkjstr-xtask` commands                              |
-| Rust protocol event validation            | [protocol-kernel.md](../architecture/rust-wasm/protocol-kernel.md)   | implemented     | byte, event, policy, ID tests                        |
-| Rust protocol filters and relay messages  | [protocol-kernel.md](../architecture/rust-wasm/protocol-kernel.md)   | implemented     | filter and message tests                             |
-| Rust protocol signing and verification    | [protocol-kernel.md](../architecture/rust-wasm/protocol-kernel.md)   | implemented     | crypto and verify tests                              |
-| Rust protocol NIP-19 entities             | [protocol-kernel.md](../architecture/rust-wasm/protocol-kernel.md)   | implemented     | NIP-19 Rust tests                                    |
-| Rust protocol relay URL normalization     | [protocol-kernel.md](../architecture/rust-wasm/protocol-kernel.md)   | implemented     | relay URL Rust tests                                 |
-| Rust protocol emoji and warnings          | [protocol-kernel.md](../architecture/rust-wasm/protocol-kernel.md)   | implemented     | NIP-30 and NIP-36 Rust tests                         |
-| Rust protocol tag and action helpers      | [protocol-kernel.md](../architecture/rust-wasm/protocol-kernel.md)   | implemented     | tag, reaction, builder tests                         |
-| Rust protocol emoji source helpers        | [protocol-kernel.md](../architecture/rust-wasm/protocol-kernel.md)   | implemented     | NIP-51 Rust tests                                    |
-| Rust protocol zaps and upload auth        | [protocol-kernel.md](../architecture/rust-wasm/protocol-kernel.md)   | implemented     | NIP-57, NIP-96, NIP-98 tests                         |
-| Rust protocol relay list metadata         | [protocol-kernel.md](../architecture/rust-wasm/protocol-kernel.md)   | implemented     | NIP-65 Rust tests                                    |
-| Rust protocol WASM bridge                 | [host-boundary.md](../architecture/rust-wasm/host-boundary.md)       | implemented     | browser WASM tests                                   |
-| Rust pure account domain                  | [app-boundary.md](../architecture/rust-wasm/app-boundary.md)         | implemented     | domain account tests                                 |
-| Rust workspace model basics               | [app-boundary.md](../architecture/rust-wasm/app-boundary.md)         | implemented     | domain workspace tests                               |
-| Rust workspace tab movement               | [app-boundary.md](../architecture/rust-wasm/app-boundary.md)         | implemented     | domain move tests                                    |
-| Rust New Tab catalog                      | [app-boundary.md](../architecture/rust-wasm/app-boundary.md)         | implemented     | domain catalog tests                                 |
-| Rust workspace snapshot payloads          | [app-boundary.md](../architecture/rust-wasm/app-boundary.md)         | implemented     | domain snapshot tests                                |
-| Rust workspace runtime composition        | [app-boundary.md](../architecture/rust-wasm/app-boundary.md)         | implemented     | app workspace tests                                  |
-| Rust startup tab snapshot recovery        | [app-boundary.md](../architecture/rust-wasm/app-boundary.md)         | implemented     | app and browser storage tests                        |
-| Rust feed query input builders            | [feed-surface-inputs.md](../architecture/feeds/runtime/feed-surface-inputs.md) | partial         | feed, thread, author-context, search, custom-request app tests |
-| Rust Custom Request parser                | [custom-request.md](tools/custom-request.md)                         | partial         | parser, clamp, and mode app tests                    |
-| Rust storage manifest and outcomes        | [storage-kernel.md](../architecture/rust-wasm/storage-kernel.md)     | implemented     | storage crate tests                                  |
-| Rust tab-state storage contract           | [storage-kernel.md](../architecture/rust-wasm/storage-kernel.md)     | implemented     | tab-state storage tests                              |
-| Rust workspace storage record             | [storage-kernel.md](../architecture/rust-wasm/storage-kernel.md)     | implemented     | workspace storage tests                              |
-| Rust workspace/settings IndexedDB adapter | [storage-kernel.md](../architecture/rust-wasm/storage-kernel.md)     | partial         | temporary browser storage tests                      |
-| Rust SQLite OPFS storage target           | [sqlite-opfs/README.md](../architecture/data/sqlite-opfs/README.md)  | partial         | schema, static worker, Rust adapter, protected repos |
-| Rust tab-state IndexedDB transaction      | [storage-kernel.md](../architecture/rust-wasm/storage-kernel.md)     | implemented     | snapshot and ledger browser test                     |
-| Rust relay state machine basics           | [relay-runtime.md](../architecture/rust-wasm/relay-runtime.md)       | implemented     | relay crate tests                                    |
-| Rust relay client and browser adapters    | [relay-runtime.md](../architecture/rust-wasm/relay-runtime.md)       | partial         | pure reducer plus WebSocket/timer adapters; product wiring open |
-| Rust Leptos workspace shell               | [ui-runtime.md](../architecture/rust-wasm/ui-runtime.md)             | partial         | Welcome, New Tab, persistence, Stats inventory       |
-| Rust Settings surface                     | [settings.md](tools/settings.md)                                     | partial         | flat schema and IndexedDB overrides                  |
-| Rust Accounts surface                     | [accounts.md](tools/accounts.md)                                     | partial         | rows, local secret transaction, NIP-07 connect       |
-| Rust Relay Settings surface               | [relay-management.md](tools/relay-management.md)                     | partial         | relay sets and default selection                     |
-| Rust Upload Settings surface              | [upload-settings.md](tools/upload-settings.md)                       | partial         | media upload settings and NIP-96 discovery           |
-| Rust Tweet draft surface                  | [tweet.md](tools/tweet.md)                                           | partial         | protected draft rows and editor                      |
-| Rust UI parity and snapshot persistence   | [crate-boundaries.md](../architecture/rust-wasm/crate-boundaries.md) | not implemented | current runtime remains TS                           |
-| Rust cutover ledger                       | [cutover/README.md](../architecture/rust-wasm/cutover/README.md)     | implemented     | status, parity, and deletion guard                   |
-| Docker Rust/WASM verification             | [verification.md](../architecture/rust-wasm/verification.md)         | partial         | verify target active; app build cutover open         |
+| Clause                                    | Contract                                                                       | Status          | Notes                                                           |
+| ----------------------------------------- | ------------------------------------------------------------------------------ | --------------- | --------------------------------------------------------------- |
+| Rust/WASM client ownership                | [rust-wasm-client.md](../decisions/rust-wasm-client.md)                        | partial         | active slices tracked in Rust/WASM status                       |
+| Rust/WASM architecture subtree            | [rust-wasm/README.md](../architecture/rust-wasm/README.md)                     | partial         | status, cutover, and verification docs active                   |
+| Rust workspace checks                     | [crate-boundaries.md](../architecture/rust-wasm/crate-boundaries.md)           | implemented     | `lkjstr-xtask` commands                                         |
+| Rust protocol event validation            | [protocol-kernel.md](../architecture/rust-wasm/protocol-kernel.md)             | implemented     | byte, event, policy, ID tests                                   |
+| Rust protocol filters and relay messages  | [protocol-kernel.md](../architecture/rust-wasm/protocol-kernel.md)             | implemented     | filter and message tests                                        |
+| Rust protocol signing and verification    | [protocol-kernel.md](../architecture/rust-wasm/protocol-kernel.md)             | implemented     | crypto and verify tests                                         |
+| Rust protocol NIP-19 entities             | [protocol-kernel.md](../architecture/rust-wasm/protocol-kernel.md)             | implemented     | NIP-19 Rust tests                                               |
+| Rust protocol relay URL normalization     | [protocol-kernel.md](../architecture/rust-wasm/protocol-kernel.md)             | implemented     | relay URL Rust tests                                            |
+| Rust protocol emoji and warnings          | [protocol-kernel.md](../architecture/rust-wasm/protocol-kernel.md)             | implemented     | NIP-30 and NIP-36 Rust tests                                    |
+| Rust protocol tag and action helpers      | [protocol-kernel.md](../architecture/rust-wasm/protocol-kernel.md)             | implemented     | tag, reaction, builder tests                                    |
+| Rust protocol emoji source helpers        | [protocol-kernel.md](../architecture/rust-wasm/protocol-kernel.md)             | implemented     | NIP-51 Rust tests                                               |
+| Rust protocol zaps and upload auth        | [protocol-kernel.md](../architecture/rust-wasm/protocol-kernel.md)             | implemented     | NIP-57, NIP-96, NIP-98 tests                                    |
+| Rust protocol relay list metadata         | [protocol-kernel.md](../architecture/rust-wasm/protocol-kernel.md)             | implemented     | NIP-65 Rust tests                                               |
+| Rust protocol WASM bridge                 | [host-boundary.md](../architecture/rust-wasm/host-boundary.md)                 | implemented     | browser WASM tests                                              |
+| Rust pure account domain                  | [app-boundary.md](../architecture/rust-wasm/app-boundary.md)                   | implemented     | domain account tests                                            |
+| Rust workspace model basics               | [app-boundary.md](../architecture/rust-wasm/app-boundary.md)                   | implemented     | domain workspace tests                                          |
+| Rust workspace tab movement               | [app-boundary.md](../architecture/rust-wasm/app-boundary.md)                   | implemented     | domain move tests                                               |
+| Rust New Tab catalog                      | [app-boundary.md](../architecture/rust-wasm/app-boundary.md)                   | implemented     | domain catalog tests                                            |
+| Rust workspace snapshot payloads          | [app-boundary.md](../architecture/rust-wasm/app-boundary.md)                   | implemented     | domain snapshot tests                                           |
+| Rust workspace runtime composition        | [app-boundary.md](../architecture/rust-wasm/app-boundary.md)                   | implemented     | app workspace tests                                             |
+| Rust startup tab snapshot recovery        | [app-boundary.md](../architecture/rust-wasm/app-boundary.md)                   | implemented     | app and browser storage tests                                   |
+| Rust feed query input builders            | [feed-surface-inputs.md](../architecture/feeds/runtime/feed-surface-inputs.md) | partial         | feed, thread, author-context, search, custom-request app tests  |
+| Rust Custom Request parser                | [custom-request.md](tools/custom-request.md)                                   | partial         | parser, clamp, and mode app tests                               |
+| Rust storage manifest and outcomes        | [storage-kernel.md](../architecture/rust-wasm/storage-kernel.md)               | implemented     | storage crate tests                                             |
+| Rust tab-state storage contract           | [storage-kernel.md](../architecture/rust-wasm/storage-kernel.md)               | implemented     | tab-state storage tests                                         |
+| Rust workspace storage record             | [storage-kernel.md](../architecture/rust-wasm/storage-kernel.md)               | implemented     | workspace storage tests                                         |
+| Rust workspace/settings IndexedDB adapter | [storage-kernel.md](../architecture/rust-wasm/storage-kernel.md)               | partial         | temporary browser storage tests                                 |
+| Rust SQLite OPFS storage target           | [sqlite-opfs/README.md](../architecture/data/sqlite-opfs/README.md)            | partial         | schema, static worker, Rust adapter, protected repos            |
+| Rust tab-state IndexedDB transaction      | [storage-kernel.md](../architecture/rust-wasm/storage-kernel.md)               | implemented     | snapshot and ledger browser test                                |
+| Rust relay state machine basics           | [relay-runtime.md](../architecture/rust-wasm/relay-runtime.md)                 | implemented     | relay crate tests                                               |
+| Rust relay client and browser adapters    | [relay-runtime.md](../architecture/rust-wasm/relay-runtime.md)                 | partial         | pure reducer plus WebSocket/timer adapters; product wiring open |
+| Rust Leptos workspace shell               | [ui-runtime.md](../architecture/rust-wasm/ui-runtime.md)                       | partial         | Welcome, New Tab, persistence, Stats inventory                  |
+| Rust Settings surface                     | [settings.md](tools/settings.md)                                               | partial         | flat schema and IndexedDB overrides                             |
+| Rust Accounts surface                     | [accounts.md](tools/accounts.md)                                               | partial         | rows, local secret transaction, NIP-07 connect                  |
+| Rust Relay Settings surface               | [relay-management.md](tools/relay-management.md)                               | partial         | relay sets and default selection                                |
+| Rust Upload Settings surface              | [upload-settings.md](tools/upload-settings.md)                                 | partial         | media upload settings and NIP-96 discovery                      |
+| Rust Tweet draft surface                  | [tweet.md](tools/tweet.md)                                                     | partial         | protected draft rows and editor                                 |
+| Rust UI parity and snapshot persistence   | [crate-boundaries.md](../architecture/rust-wasm/crate-boundaries.md)           | not implemented | current runtime remains TS                                      |
+| Rust cutover ledger                       | [cutover/README.md](../architecture/rust-wasm/cutover/README.md)               | implemented     | status, parity, and deletion guard                              |
+| Docker Rust/WASM verification             | [verification.md](../architecture/rust-wasm/verification.md)                   | partial         | verify target active; app build cutover open                    |
 
 ## Feed Surface
 

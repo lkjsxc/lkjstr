@@ -7,31 +7,31 @@ Map documentation topics to implementation files. Each module stays at or below
 
 ## Modules
 
-| Module                    | Role                                         |
-| ------------------------- | -------------------------------------------- |
-| `demand-types.ts`         | Demand phase, surface, visibility types      |
-| `intent-types.ts`         | LiveIntent and PageIntent unions             |
-| `route-plan.ts`           | relay routing and discovery wrappers         |
-| `demand-build.ts`         | intent plus route plan to Demand             |
-| `lease-fingerprint.ts`    | canonical filter normalization               |
-| `lease-key.ts`            | wire-equivalent fingerprint and wire request |
-| `compatible.ts`           | demand compatibility helpers                 |
-| `demand-registry.ts`      | owner refcount per fingerprint               |
-| `orchestrator-live.ts`    | live lease attach, detach, suspend           |
-| `orchestrator.ts`         | orchestrator factory and shared singleton    |
-| `orchestrator-types.ts`   | SubscriptionOrchestrator type                |
-| `orchestrator-adapter.ts` | test manager adapter                         |
-| `page-reads.ts`           | readPageByIntent and semantic keys           |
-| `live-demand-handles.ts`  | replaceable channel release handles          |
-| `runtime-demand.ts`       | internal demand builders                     |
-| `surface-routing.ts`      | per-surface relay widening                   |
-| `ingress-classify.ts`     | live event classification                    |
-| `metrics.ts`              | orchestration counters and gauges            |
-| `../request-budget/*`     | budget derivation and NIP-11 limit helpers   |
-| `crates/lkjstr-relays/src/demand/` | Rust pure demand fingerprint and registry state |
-| `crates/lkjstr-relays/src/route_plan/` | Rust pure route group and score-order state |
-| `crates/lkjstr-relays/src/ingress.rs` | Rust pure render-critical ingress policy |
-| `crates/lkjstr-relays/src/live_lease/` | Rust pure live lease host-effect reducer |
+| Module                                 | Role                                            |
+| -------------------------------------- | ----------------------------------------------- |
+| `demand-types.ts`                      | Demand phase, surface, visibility types         |
+| `intent-types.ts`                      | LiveIntent and PageIntent unions                |
+| `route-plan.ts`                        | relay routing and discovery wrappers            |
+| `demand-build.ts`                      | intent plus route plan to Demand                |
+| `lease-fingerprint.ts`                 | canonical filter normalization                  |
+| `lease-key.ts`                         | wire-equivalent fingerprint and wire request    |
+| `compatible.ts`                        | demand compatibility helpers                    |
+| `demand-registry.ts`                   | owner refcount per fingerprint                  |
+| `orchestrator-live.ts`                 | live lease attach, detach, suspend              |
+| `orchestrator.ts`                      | orchestrator factory and shared singleton       |
+| `orchestrator-types.ts`                | SubscriptionOrchestrator type                   |
+| `orchestrator-adapter.ts`              | test manager adapter                            |
+| `page-reads.ts`                        | readPageByIntent and semantic keys              |
+| `live-demand-handles.ts`               | replaceable channel release handles             |
+| `runtime-demand.ts`                    | internal demand builders                        |
+| `surface-routing.ts`                   | per-surface relay widening                      |
+| `ingress-classify.ts`                  | live event classification                       |
+| `metrics.ts`                           | orchestration counters and gauges               |
+| `../request-budget/*`                  | budget derivation and NIP-11 limit helpers      |
+| `crates/lkjstr-relays/src/demand/`     | Rust pure demand fingerprint and registry state |
+| `crates/lkjstr-relays/src/route_plan/` | Rust pure route group and score-order state     |
+| `crates/lkjstr-relays/src/ingress.rs`  | Rust pure render-critical ingress policy        |
+| `crates/lkjstr-relays/src/live_lease/` | Rust pure live lease host-effect reducer        |
 
 ## Tests
 

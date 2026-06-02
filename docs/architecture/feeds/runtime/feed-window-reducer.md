@@ -12,16 +12,16 @@ runtimes still use TypeScript until each surface is wired through Rust.
 
 ## State
 
-| Field              | Meaning                                             |
-| ------------------ | --------------------------------------------------- |
-| `generation`       | Runtime generation; stale snapshots are ignored     |
-| `events_by_id`     | Canonical map of visible candidate events           |
-| `sorted_ids`       | Newest-first ids after dedupe and cap enforcement   |
-| `newest_cursor`    | Compound cursor for top visible row                 |
-| `oldest_cursor`    | Compound cursor for bottom visible row              |
-| `terminal`         | True only after terminal cache or relay evidence    |
-| `has_older`        | Older paging remains possible                       |
-| `has_newer`        | Newer paging remains possible after top pruning     |
+| Field           | Meaning                                           |
+| --------------- | ------------------------------------------------- |
+| `generation`    | Runtime generation; stale snapshots are ignored   |
+| `events_by_id`  | Canonical map of visible candidate events         |
+| `sorted_ids`    | Newest-first ids after dedupe and cap enforcement |
+| `newest_cursor` | Compound cursor for top visible row               |
+| `oldest_cursor` | Compound cursor for bottom visible row            |
+| `terminal`      | True only after terminal cache or relay evidence  |
+| `has_older`     | Older paging remains possible                     |
+| `has_newer`     | Newer paging remains possible after top pruning   |
 
 ## Rules
 

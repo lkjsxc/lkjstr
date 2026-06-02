@@ -12,13 +12,13 @@ TypeScript runtime wiring.
 
 ## Ownership
 
-| Concern            | Owner                                      |
-| ------------------ | ------------------------------------------ |
-| Runtime id         | app feed runtime                           |
-| Demand owner       | normalized to runtime id                   |
-| Wire lease sharing | global `lkjstr-relays::LiveLeaseState`     |
-| Visible rows       | `FeedWindowState`                          |
-| Browser effects    | returned as typed live-lease effects only  |
+| Concern            | Owner                                     |
+| ------------------ | ----------------------------------------- |
+| Runtime id         | app feed runtime                          |
+| Demand owner       | normalized to runtime id                  |
+| Wire lease sharing | global `lkjstr-relays::LiveLeaseState`    |
+| Visible rows       | `FeedWindowState`                         |
+| Browser effects    | returned as typed live-lease effects only |
 
 ## Rules
 
