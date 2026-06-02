@@ -27,7 +27,8 @@ export async function readCacheFirstFeedPage(
   if (!request) return { kind: 'miss', reason: 'missing page filters' };
   const direction = request.direction ?? 'older';
   const initialSpan = await warmInitialSpan(request, direction);
-  const queue = [initialRelayPageSegmentWithSpan(request, initialSpan)];
+  const segmentRequest = { ...request, direction };
+  const queue = [initialRelayPageSegmentWithSpan(segmentRequest, initialSpan)];
   const maxSegments = intent.maxSegments ?? relaySegmentMaxSegmentsPerPage;
   let collected: FeedEvent[] = [];
   let processed = 0;

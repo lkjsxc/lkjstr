@@ -53,7 +53,11 @@ export function nextCoveredSegment(
 ): RelayPageSegment | undefined {
   const feedback = classifyWindowFeedback(read);
   const next = feedback
-    ? nextAdaptiveRelayWindow(segment, request, feedback)
+    ? nextAdaptiveRelayWindow(
+        segment,
+        { ...request, direction: request.direction ?? 'older' },
+        feedback,
+      )
     : undefined;
   return next?.kind === 'advance' ? next.segment : undefined;
 }
@@ -77,7 +81,9 @@ function combineSegmentDecisions(
   return {
     kind,
     read,
-    uncovered: reads.flatMap((item) => item.uncovered ?? []),
+    uncovered: reads.flatMap((item) =>
+      'uncovered' in item ? item.uncovered : [],
+    ),
     reason: incomplete?.reason ?? 'complete coverage',
   };
 }
