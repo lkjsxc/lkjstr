@@ -1,18 +1,24 @@
 import type { Account } from '../../accounts/account';
-import { browserDb } from '../browser-db';
-import { bestEffortStorageWrite, boundedStorageRead } from '../safe-storage';
+import {
+  sqliteDeleteAccount,
+  sqlitePutAccount,
+  sqliteReadAccounts,
+} from '../sqlite-opfs/accounts-sqlite';
+
+let memoryRows: Account[] = [];
 
 export async function readAccountRows(fallback: Account[]): Promise<Account[]> {
-  return boundedStorageRead(
-    () => browserDb().accounts.orderBy('updatedAt').reverse().toArray(),
-    fallback,
-  );
+  const rows = await sqliteReadAccounts().catch(() => undefined);
+  memoryRows = rows ?? fallback;
+  return memoryRows;
 }
 
 export async function putAccountRow(account: Account): Promise<void> {
-  await bestEffortStorageWrite(() => browserDb().accounts.put(account));
+  memoryRows = [account, ...memoryRows.filter((row) => row.id !== account.id)];
+  await sqlitePutAccount(account).catch(() => false);
 }
 
 export async function deleteAccountRow(id: string): Promise<void> {
-  await bestEffortStorageWrite(() => browserDb().accounts.delete(id));
+  memoryRows = memoryRows.filter((row) => row.id !== id);
+  await sqliteDeleteAccount(id).catch(() => false);
 }

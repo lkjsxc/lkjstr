@@ -1,29 +1,32 @@
 import type { LocalAccountSecret } from '../../accounts/local-secret-store';
-import { browserDb } from '../browser-db';
-import { bestEffortStorageWrite, boundedStorageRead } from '../safe-storage';
+import {
+  sqliteDeleteLocalSecret,
+  sqlitePutLocalSecret,
+  sqliteReadLocalSecret,
+} from '../sqlite-opfs/accounts-sqlite';
+
+const memorySecrets = new Map<string, LocalAccountSecret>();
 
 export async function putLocalAccountSecretRow(
   secret: LocalAccountSecret,
 ): Promise<void> {
-  await bestEffortStorageWrite(() =>
-    browserDb().localAccountSecrets.put(secret),
-  );
+  memorySecrets.set(secret.accountId, secret);
+  await sqlitePutLocalSecret(secret).catch(() => false);
 }
 
 export async function readLocalAccountSecretRow(
   accountId: string,
   fallback: LocalAccountSecret | undefined,
 ): Promise<LocalAccountSecret | undefined> {
-  return boundedStorageRead(
-    () => browserDb().localAccountSecrets.get(accountId),
-    fallback,
-  );
+  const row = await sqliteReadLocalSecret(accountId).catch(() => undefined);
+  const secret = row ?? memorySecrets.get(accountId) ?? fallback;
+  if (secret) memorySecrets.set(accountId, secret);
+  return secret;
 }
 
 export async function deleteLocalAccountSecretRow(
   accountId: string,
 ): Promise<void> {
-  await bestEffortStorageWrite(() =>
-    browserDb().localAccountSecrets.delete(accountId),
-  );
+  memorySecrets.delete(accountId);
+  await sqliteDeleteLocalSecret(accountId).catch(() => false);
 }

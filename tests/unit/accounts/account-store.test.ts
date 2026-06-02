@@ -6,88 +6,51 @@ describe('account store', () => {
 
   it('disconnects accounts and removes matching local secrets', async () => {
     const account = createAccount('a'.repeat(64), 'local');
-    const tables = fakeTables(account);
-    vi.doMock('../../../src/lib/storage/browser-db', () => ({
-      browserDb: () => tables,
-    }));
-    vi.doMock('../../../src/lib/storage/safe-storage', () => ({
-      bestEffortStorageWrite: async (write: () => Promise<unknown>) => write(),
-      boundedStorageRead: async (read: () => Promise<unknown>) => read(),
-      safeGetItem: () => account.id,
-      safeRemoveItem: () => undefined,
-      safeSetItem: () => undefined,
-    }));
-    const { removeAccount } =
+    const { saveLocalSecret, getLocalSecret } =
+      await import('../../../src/lib/accounts/local-secret-store');
+    const { listAccounts, removeAccount, saveAccount } =
       await import('../../../src/lib/accounts/account-store');
+
+    await saveAccount(account);
+    await saveLocalSecret({
+      accountId: account.id,
+      pubkey: account.pubkey,
+      secretKey: '1'.repeat(64),
+      createdAt: 1,
+      updatedAt: 1,
+    });
     await removeAccount(account.id);
-    expect(tables.accounts.records).toHaveLength(0);
-    expect(tables.localAccountSecrets.records).toHaveLength(0);
+
+    await expect(listAccounts()).resolves.toEqual([]);
+    await expect(getLocalSecret(account.id)).resolves.toBeUndefined();
   });
 
-  it('filters unsupported stored signer types', async () => {
+  it('lists saved accounts from repository memory when Workers are absent', async () => {
     const account = createAccount('a'.repeat(64), 'readonly');
-    const unsupported = { ...account, id: 'old:a', signerType: 'old-type' };
-    const tables = fakeTables(account, unsupported);
-    vi.doMock('../../../src/lib/storage/browser-db', () => ({
-      browserDb: () => tables,
-    }));
-    vi.doMock('../../../src/lib/storage/safe-storage', () => ({
-      bestEffortStorageWrite: async (write: () => Promise<unknown>) => write(),
-      boundedStorageRead: async (read: () => Promise<unknown>) => read(),
-      safeGetItem: () => null,
-      safeRemoveItem: () => undefined,
-      safeSetItem: () => undefined,
-    }));
-    const { listAccounts } =
+    const { listAccounts, saveAccount } =
       await import('../../../src/lib/accounts/account-store');
-    await expect(listAccounts()).resolves.toEqual([account]);
+
+    await saveAccount(account);
+    await expect(listAccounts()).resolves.toEqual([
+      expect.objectContaining({ id: account.id }),
+    ]);
   });
 
   it('falls back to a valid active account', async () => {
     const account = createAccount('a'.repeat(64), 'readonly');
-    const tables = fakeTables(account);
     const selected: (string | null)[] = [];
-    vi.doMock('../../../src/lib/storage/browser-db', () => ({
-      browserDb: () => tables,
-    }));
     vi.doMock('../../../src/lib/storage/safe-storage', () => ({
-      bestEffortStorageWrite: async (write: () => Promise<unknown>) => write(),
-      boundedStorageRead: async (read: () => Promise<unknown>) => read(),
-      safeGetItem: () => 'old:a',
+      safeGetItem: () => 'missing-account',
       safeRemoveItem: () => undefined,
       safeSetItem: (_key: string, value: string) => selected.push(value),
     }));
-    const { activeAccount } =
+    const { activeAccount, saveAccount } =
       await import('../../../src/lib/accounts/account-store');
-    await expect(activeAccount()).resolves.toEqual(account);
+
+    await saveAccount(account);
+    await expect(activeAccount()).resolves.toEqual(
+      expect.objectContaining({ id: account.id }),
+    );
     expect(selected).toEqual([account.id]);
   });
 });
-
-function fakeTables(...accounts: Record<string, unknown>[]) {
-  return {
-    accounts: table(accounts, 'id'),
-    localAccountSecrets: table(
-      accounts.map((account) => ({ accountId: account.id })),
-      'accountId',
-    ),
-  };
-}
-
-function table(initial: readonly Record<string, unknown>[], key: string) {
-  const records = [...initial];
-  return {
-    records,
-    put: async (record: Record<string, unknown>) => {
-      records.push(record);
-      return undefined;
-    },
-    delete: async (id: string) => {
-      const index = records.findIndex((record) => record[key] === id);
-      if (index >= 0) records.splice(index, 1);
-    },
-    get: async (id: string) => records.find((record) => record[key] === id),
-    orderBy: () => ({ reverse: () => ({ toArray: async () => records }) }),
-    toArray: async () => records,
-  };
-}

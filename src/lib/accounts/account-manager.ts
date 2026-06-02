@@ -43,8 +43,8 @@ export async function addReadonlyPubkey(pubkey: string): Promise<Account> {
 
 export async function createLocalAccount(): Promise<Account> {
   const { account, secretKey } = createLocalAccountRecord();
-  await persistLocalAccount(account, secretKey);
   await saveAccount(account);
+  await persistLocalAccount(account, secretKey);
   setActiveAccountId(account.id);
   return account;
 }
@@ -53,8 +53,8 @@ export async function importLocalNsec(input: string): Promise<Account> {
   const secret = parseNsec(input);
   if (!secret) throw new Error('nsec input is invalid.');
   const { account, secretKey } = createLocalAccountRecord(secret);
-  await persistLocalAccount(account, secretKey);
   await saveAccount(account);
+  await persistLocalAccount(account, secretKey);
   setActiveAccountId(account.id);
   return account;
 }

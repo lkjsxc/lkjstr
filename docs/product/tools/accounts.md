@@ -11,8 +11,9 @@ Accounts represent public identities and signing capability.
 - Local signing accounts are created from a generated secret key or an imported
   `nsec` after explicit user action.
 - Local account secret keys are stored separately from public account records.
-- Local account records and local signing secrets are browser-owned IndexedDB
-  data. Event-cache cleanup never deletes them.
+- Local account records and local signing secrets are browser-owned SQLite
+  worker data when Workers are available. Event-cache cleanup never deletes
+  them.
 - Accounts may show browser persistent-storage support and request it through
   `navigator.storage.persisted()` and `navigator.storage.persist()` when
   supported. The UI reports only actual states: already persisted, granted,
@@ -48,8 +49,8 @@ Accounts represent public identities and signing capability.
 
 ## Rust Conversion Status
 
-- The Rust/WASM shell renders a partial Accounts surface from real IndexedDB
-  `accounts` and `localAccountSecrets` rows.
+- The Rust/WASM shell renders a partial Accounts surface from real account and
+  local secret rows.
 - Rust Accounts supports read-only account add, local `nsec` import, generated
   `nsec` fill, active selection, disconnect, and explicit local secret reveal.
 - Rust Accounts connects NIP-07 by calling the browser `window.nostr`

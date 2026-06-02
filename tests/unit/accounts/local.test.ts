@@ -41,26 +41,20 @@ describe('local account signing', () => {
   });
 
   it('stores secrets separately from listed account records', async () => {
-    const tables = fakeTables();
-    vi.doMock('../../../src/lib/storage/browser-db', () => ({
-      browserDb: () => tables,
-    }));
-    vi.doMock('../../../src/lib/storage/safe-storage', () => ({
-      bestEffortStorageWrite: async (write: () => Promise<unknown>) => write(),
-      boundedStorageRead: async (read: () => Promise<unknown>) => read(),
-      safeGetItem: () => null,
-      safeRemoveItem: () => undefined,
-      safeSetItem: () => undefined,
-    }));
     const { createLocalAccount } =
       await import('../../../src/lib/accounts/account-manager');
     const { listAccounts } =
       await import('../../../src/lib/accounts/account-store');
+    const { getLocalSecret } =
+      await import('../../../src/lib/accounts/local-secret-store');
+
     const account = await createLocalAccount();
     const listed = await listAccounts();
+    const secret = await getLocalSecret(account.id);
+
     expect(listed).toEqual([expect.objectContaining({ id: account.id })]);
     expect(JSON.stringify(listed)).not.toContain('secretKey');
-    expect(tables.localAccountSecrets.records).toHaveLength(1);
+    expect(secret).toEqual(expect.objectContaining({ accountId: account.id }));
   });
 
   it('generates valid nsec strings', async () => {
@@ -69,29 +63,3 @@ describe('local account signing', () => {
     expect(parseNsec(generateNsec())).toBeInstanceOf(Uint8Array);
   });
 });
-
-function fakeTables() {
-  const accounts = new Map<string, unknown>();
-  const secrets = new Map<string, unknown>();
-  const fake = {
-    accounts: {
-      put: async (account: { id: string }) => accounts.set(account.id, account),
-      delete: async (id: string) => accounts.delete(id),
-      get: async (id: string) => accounts.get(id),
-      orderBy: () => ({
-        reverse: () => ({ toArray: async () => [...accounts.values()] }),
-      }),
-    },
-    localAccountSecrets: {
-      records: [] as unknown[],
-      put: async (secret: { accountId: string }) => {
-        secrets.set(secret.accountId, secret);
-        fake.localAccountSecrets.records = [...secrets.values()];
-        return undefined;
-      },
-      delete: async (id: string) => secrets.delete(id),
-      get: async (id: string) => secrets.get(id),
-    },
-  };
-  return fake;
-}
