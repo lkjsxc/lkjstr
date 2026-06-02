@@ -15,11 +15,12 @@ pub use feed::{
     CustomRequestQueryInput, FeedLiveQueryInput, FeedRuntimeInput, FeedRuntimeLeaseOutcome,
     FeedRuntimeLiveOutcome, FeedRuntimeState, FeedWindowCursor, FeedWindowEvidence,
     FeedWindowFlags, FeedWindowState, FeedWindowStatus, NotificationsLiveQueryInput,
-    ProfileLiveQueryInput, SearchQueryInput, attach_feed_runtime_live, custom_request_query_input,
-    empty_feed_window, feed_window_empty_ready, global_live_query_input, home_live_query_input,
+    ProfileLiveQueryInput, SearchQueryInput, ThreadRepliesQueryInput, ThreadRootLookupInput,
+    attach_feed_runtime_live, custom_request_query_input, empty_feed_window,
+    feed_window_empty_ready, global_live_query_input, home_live_query_input,
     notifications_live_query_input, profile_live_query_input, reduce_feed_runtime_window,
     reduce_feed_window, release_feed_runtime_live, search_query_input, set_feed_runtime_visibility,
-    start_feed_runtime,
+    start_feed_runtime, thread_replies_query_input, thread_root_lookup_input,
 };
 pub use query::{QueryDemandInput, QueryDemandPlan, QuerySurface, plan_query_demand};
 pub use workspace_runtime::{

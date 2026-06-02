@@ -5,6 +5,7 @@ mod runtime;
 mod runtime_types;
 mod surface_input_types;
 mod surface_inputs;
+mod thread_inputs;
 mod tool_inputs;
 mod types;
 
@@ -18,12 +19,13 @@ pub use runtime_types::{
 };
 pub use surface_input_types::{
     CustomRequestQueryInput, FeedLiveQueryInput, NotificationsLiveQueryInput,
-    ProfileLiveQueryInput, SearchQueryInput,
+    ProfileLiveQueryInput, SearchQueryInput, ThreadRepliesQueryInput, ThreadRootLookupInput,
 };
 pub use surface_inputs::{
     global_live_query_input, home_live_query_input, notifications_live_query_input,
     profile_live_query_input,
 };
+pub use thread_inputs::{thread_replies_query_input, thread_root_lookup_input};
 pub use tool_inputs::{custom_request_query_input, search_query_input};
 pub use types::{
     FeedWindowCursor, FeedWindowEvidence, FeedWindowFlags, FeedWindowState, FeedWindowStatus,

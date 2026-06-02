@@ -246,8 +246,9 @@ and [operations/memory-verification.md](operations/memory-verification.md).
   protocol, pure domain models, storage contracts, narrow IndexedDB adapters,
   relay state-machine, request-budget, page-read, route-plan, ingress,
   live-lease, query-demand, feed-window reducers, live feed composition, Home,
-  Global, Profile, Notifications, Search, and Custom Request input builders,
-  a Custom Request parser, startup composition, and a partial Leptos shell.
+  Global, Profile, Notifications, Thread, Search, and Custom Request input
+  builders, a Custom Request parser, startup composition, and a partial Leptos
+  shell.
   The SvelteKit product runtime remains until each Rust surface reaches real
   behavior and matching tests. Cutover and deletion rules live in
   [architecture/rust-wasm/cutover/README.md](architecture/rust-wasm/cutover/README.md).

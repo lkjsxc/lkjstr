@@ -36,7 +36,7 @@ references should stay as relative Markdown links.
 | Rust workspace snapshot payloads          | [app-boundary.md](../architecture/rust-wasm/app-boundary.md)         | implemented     | domain snapshot tests                                |
 | Rust workspace runtime composition        | [app-boundary.md](../architecture/rust-wasm/app-boundary.md)         | implemented     | app workspace tests                                  |
 | Rust startup tab snapshot recovery        | [app-boundary.md](../architecture/rust-wasm/app-boundary.md)         | implemented     | app and browser storage tests                        |
-| Rust feed query input builders            | [feed-surface-inputs.md](../architecture/feeds/runtime/feed-surface-inputs.md) | partial         | Home, Global, Profile, Notifications, Search, Custom Request app tests |
+| Rust feed query input builders            | [feed-surface-inputs.md](../architecture/feeds/runtime/feed-surface-inputs.md) | partial         | Home, Global, Profile, Notifications, Thread, Search, Custom Request app tests |
 | Rust Custom Request parser                | [custom-request.md](tools/custom-request.md)                         | partial         | parser, clamp, and mode app tests                    |
 | Rust storage manifest and outcomes        | [storage-kernel.md](../architecture/rust-wasm/storage-kernel.md)     | implemented     | storage crate tests                                  |
 | Rust tab-state storage contract           | [storage-kernel.md](../architecture/rust-wasm/storage-kernel.md)     | implemented     | tab-state storage tests                              |

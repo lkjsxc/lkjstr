@@ -7,9 +7,9 @@ implemented for pure account-domain records, local signing helpers, account
 storage command wiring, relay-set storage command wiring, workspace layout
 reducers, tab movement reducers, workspace startup recovery, bounded tab
 snapshot staging, startup filtering of stored tab snapshots, feed-window
-reducers, live feed composition, Home, Global, Profile, Notifications, Search,
-and Custom Request feed input builders, the Custom Request parser, and New Tab
-catalog options; design-only for remaining browser service composition.
+reducers, live feed composition, Home, Global, Profile, Notifications, Thread,
+Search, and Custom Request feed input builders, the Custom Request parser, and
+New Tab catalog options; design-only for remaining browser service composition.
 
 ## Owner
 
