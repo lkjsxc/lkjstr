@@ -21,7 +21,7 @@ ownership context.
 | Current family | SQLite table group | Status | Notes |
 | --- | --- | --- | --- |
 | `workspaces` | `workspaces` | implemented | Startup recovery keeps memory fallback. |
-| `tabStates` | `tab_states` | partial | Rust adapter has rows; Svelte retention still needs full SQLite wiring. |
+| `tabStates` | `tab_states` | implemented | Svelte tab snapshots and cleanup use the worker. |
 | `settings` | `settings` | implemented | Flat key-value overrides use the worker. |
 | `accounts` | `accounts` | implemented | Account rows use the worker; passkey protection is a follow-up. |
 | `localAccountSecrets` | `local_account_secrets` | implemented | Current local secret contract only; no passkey claim. |

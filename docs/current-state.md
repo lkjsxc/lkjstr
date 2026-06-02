@@ -72,8 +72,8 @@ Read next: [architecture/data/README.md](architecture/data/README.md),
   kernel.
 - The SQLite schema, statement records, row codecs, retention classes, and
   worker adapter foundations already exist in Rust and TypeScript host code.
-  The Svelte Settings, workspace layout, Accounts, local signing secret, relay
-  set, Tweet draft, event graph, tag, relay provenance, feed cursor, cached
+  The Svelte Settings, workspace layout, tab snapshot, Accounts, local signing
+  secret, relay set, Tweet draft, event graph, tag, relay provenance, feed cursor, cached
   feed page, tag lookup, local filter-search, relay diagnostics, relay
   information, relay suggestions, author routes, route blocks, notifications,
   and job paths now use the SQLite worker with memory fallback when Workers are

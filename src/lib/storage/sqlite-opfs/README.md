@@ -34,6 +34,7 @@ storage target.
 - `workspace-sqlite.ts`: SQLite-backed workspace layout repository.
 - `relay-sets-sqlite.ts`: SQLite-backed relay set repository.
 - `tweet-drafts-sqlite.ts`: SQLite-backed Tweet draft repository.
+- `tab-states-sqlite.ts`: SQLite-backed tab snapshot repository.
 
 ## Contract
 

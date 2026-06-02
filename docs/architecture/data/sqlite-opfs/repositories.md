@@ -21,7 +21,7 @@ records live in `lkjstr-storage`; `lkjstr-web` has worker-backed repository
 calls for settings, workspaces, tab states with ledger rows, accounts, local
 secrets, relay sets, Tweet drafts, events, tags, relay provenance,
 notifications, feed cursors, feed coverage, and scan hints. The Svelte Settings,
-workspace, Accounts, local secret, relay set, Tweet draft, event graph, cached
+workspace, tab snapshot, Accounts, local secret, relay set, Tweet draft, event graph, cached
 feed, tag lookup, local filter-search, relay diagnostics, relay information,
 relay suggestion, author route, route block, notification, feed coverage, scan
 hint, and job repositories now use the TypeScript SQLite worker path. Other
@@ -31,7 +31,8 @@ wired and tested as durable product paths.
 ## Repository Families
 
 - protected data: settings, workspaces, tab states, accounts, secrets, relay
-  sets, Tweet drafts, and route blocks are partially implemented.
+  sets, Tweet drafts, and route blocks are implemented in the Svelte SQLite
+  path.
 - event cache: events, tags, relay provenance, feed cursors, cached feed pages,
   tag lookups, local filter search, notifications, feed coverage, and scan hints
   are implemented in the Svelte SQLite path. Repair and compaction dispatch

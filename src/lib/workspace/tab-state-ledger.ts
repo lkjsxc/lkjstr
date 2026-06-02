@@ -2,7 +2,7 @@ import { encodedJsonBytes } from '../cache/cache-byte-size';
 import { cacheLedgerBytes } from '../cache/cache-ledger-bytes';
 import { cacheLedgerId } from '../cache/cache-ledger-id';
 import type { CacheLedgerRecord } from '../cache/cache-ledger-record';
-import type { TabStateRecord } from '../storage/browser-db';
+import type { TabStateRecord } from '../storage/tab-state-record';
 
 export function tabStateLedgerRecord(row: TabStateRecord): CacheLedgerRecord {
   const draft: CacheLedgerRecord = {

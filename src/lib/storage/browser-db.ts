@@ -19,21 +19,13 @@ import type { RelayListSuggestionRecord } from '../relays/relay-list-suggestions
 import type { RelayRoute, RelayRouteBlock } from '../relays/relay-route-types';
 import type { RelaySet } from '../relays/relay-store';
 import type { SettingOverride } from '../settings/settings-store';
+import type { TabStateRecord } from './tab-state-record';
 import type { TweetDraft } from '../tweet/draft-store';
 import type { Workspace } from '../workspace/workspace';
 import {
   currentStorageSchemaStep,
   dexieStoreShape,
 } from './schema/dexie-schema';
-
-export type TabStateRecord = {
-  readonly id: string;
-  readonly workspaceId: string;
-  readonly tabId: string;
-  readonly lastPaneId?: string;
-  readonly state: unknown;
-  readonly updatedAt: number;
-};
 
 export type LkjstrDb = Dexie & {
   readonly workspaces: Table<Workspace, string>;
