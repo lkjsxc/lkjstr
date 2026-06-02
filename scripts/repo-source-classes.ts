@@ -4,8 +4,6 @@ import ts from 'typescript';
 
 type Problem = { file: string; message: string };
 
-const dexieException = path.join('src', 'lib', 'storage', 'browser-db.ts');
-
 export async function checkSourceClasses(
   root: string,
   files: readonly string[],
@@ -30,7 +28,7 @@ export async function checkSourceClasses(
       ts.ScriptKind.TS,
     );
     source.forEachChild(function visit(node) {
-      if (ts.isClassDeclaration(node) && !allowedDexieClass(rel, node))
+      if (ts.isClassDeclaration(node))
         problems.push({
           file: rel,
           message: 'first-party src must not declare classes',
@@ -45,14 +43,4 @@ function svelteScriptText(source: string): string {
   return [...source.matchAll(/<script(?:\s[^>]*)?>([\s\S]*?)<\/script>/giu)]
     .map((match) => match[1] ?? '')
     .join('\n');
-}
-
-function allowedDexieClass(rel: string, node: ts.ClassDeclaration): boolean {
-  if (rel !== dexieException) return false;
-  if (node.name?.text !== 'LkjstrDb') return false;
-  return (
-    node.heritageClauses?.some((clause) =>
-      clause.types.some((type) => type.expression.getText() === 'Dexie'),
-    ) ?? false
-  );
 }
