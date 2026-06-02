@@ -13,8 +13,8 @@ The workspace is the first screen and owns split tiles.
 - Closing the last tile recovers a Welcome tile.
 - Tabs move across tiles by drag-and-drop.
 - Moving the last tab out of a tile removes the source tile.
-- Split actions create recursive layout nodes and persist through the workspace
-  store.
+- Split actions create recursive layout nodes and persist through the SQLite
+  workspace store when browser Workers are available.
 - Resize uses a `1.8` pointer sensitivity multiplier and persists in layout.
 - Startup focuses Welcome and also creates Accounts, Relay Settings, Home,
   Notifications, and Tweet before async storage finishes. Invalid, blocked, or

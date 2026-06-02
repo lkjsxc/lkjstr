@@ -1,13 +1,20 @@
 import type { Workspace } from '../../workspace/workspace';
-import { browserDb } from '../browser-db';
-import { bestEffortStorageWrite, boundedStorageRead } from '../safe-storage';
+import {
+  sqlitePutWorkspace,
+  sqliteReadWorkspace,
+} from '../sqlite-opfs/workspace-sqlite';
+
+let memoryWorkspace: Workspace | undefined;
 
 export async function readWorkspaceRow(
   id: string,
 ): Promise<Workspace | undefined> {
-  return boundedStorageRead(() => browserDb().workspaces.get(id), undefined);
+  const row = await sqliteReadWorkspace(id).catch(() => undefined);
+  memoryWorkspace = row ?? memoryWorkspace;
+  return row ?? memoryWorkspace;
 }
 
 export async function putWorkspaceRow(workspace: Workspace): Promise<void> {
-  await bestEffortStorageWrite(() => browserDb().workspaces.put(workspace));
+  memoryWorkspace = workspace;
+  await sqlitePutWorkspace(workspace).catch(() => false);
 }
