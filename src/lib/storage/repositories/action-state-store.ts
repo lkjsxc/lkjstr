@@ -1,11 +1,10 @@
-import { browserDb } from '../browser-db';
-import { kinds, type NostrEvent } from '../../protocol';
-import { normalizeStoredEvent } from '../../events/normalize';
+import { kinds } from '../../protocol';
 import {
   actionStateForFeed,
   type EventActionState,
 } from '../../events/action-state';
 import { isActionKind } from '../../events/action-cache-signal';
+import { sqliteIndexedPage } from '../sqlite-opfs/event-pages-sqlite';
 
 const actionKinds = [
   kinds.reaction,
@@ -18,21 +17,14 @@ const indexLimit = 2000;
 export async function loadActionStateIndex(
   pubkey: string,
 ): Promise<Map<string, EventActionState>> {
-  const byId = new Map<string, NostrEvent>();
-  for (const kind of actionKinds) {
-    const rows = await browserDb()
-      .events.where('[pubkey+kind+created_at]')
-      .between([pubkey, kind, 0], [pubkey, kind, Number.MAX_SAFE_INTEGER])
-      .reverse()
-      .limit(indexLimit)
-      .toArray();
-    for (const row of rows) {
-      const event = normalizeStoredEvent(row);
-      if (isActionKind(event.kind)) byId.set(event.id, event);
-    }
-  }
+  const rows =
+    (await sqliteIndexedPage(
+      { kind: 'profile', authors: [pubkey], kinds: actionKinds },
+      indexLimit,
+    ).catch(() => undefined)) ?? [];
+  const events = rows.filter((event) => isActionKind(event.kind));
   return actionStateForFeed(
-    [...byId.values()].map((event) => ({ event })),
+    events.map((event) => ({ event })),
     pubkey,
   );
 }
