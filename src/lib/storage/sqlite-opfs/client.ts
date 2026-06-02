@@ -121,9 +121,7 @@ export function createSqliteOpfsClient(options: SqliteOpfsClientOptions = {}) {
 }
 
 function defaultWorkerFactory(): Worker {
-  return new Worker(new URL('./worker.ts', import.meta.url), {
-    type: 'module',
-  });
+  return new Worker('/sqlite-opfs-worker.js', { type: 'module' });
 }
 
 function localResponse(

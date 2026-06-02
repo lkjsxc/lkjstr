@@ -30,7 +30,16 @@ export async function applySqliteSchema(
   if (existing) return existing;
   const next = sendSqliteStorage(
     { kind: 'apply-schema', schemaHash, statements },
-    { deadlineMs: 5_000 },
+    { deadlineMs: 10_000 },
+  ).then(
+    (response) => {
+      if (response.outcome !== 'ok') schemaPromises.delete(schemaHash);
+      return response;
+    },
+    (error) => {
+      schemaPromises.delete(schemaHash);
+      throw error;
+    },
   );
   schemaPromises.set(schemaHash, next);
   return next;
@@ -39,6 +48,15 @@ export async function applySqliteSchema(
 export function sqliteStorageClient(): SqliteOpfsClient {
   client ??= createSqliteOpfsClient({ requestPrefix: 'sqlite-storage' });
   return client;
+}
+
+export async function closeSqliteStorage(deadlineMs = 1_000): Promise<void> {
+  const storage = client;
+  if (!storage) return;
+  await storage.close(deadlineMs).catch(() => undefined);
+  client = undefined;
+  openPromise = undefined;
+  schemaPromises.clear();
 }
 
 export function sqliteStorageUnavailable(): StorageResponse {
@@ -56,19 +74,30 @@ function openSqliteStorage(
 ): Promise<StorageResponse> {
   if (typeof Worker === 'undefined')
     return Promise.resolve(sqliteStorageUnavailable());
-  openPromise ??= storage.send(
-    {
-      kind: 'open',
-      database: {
-        databaseName,
-        preferredVfs: 'opfs-sahpool',
-        allowSahpool: true,
-        allowOpfs: true,
-        allowTransient: true,
-        workerKind: 'dedicated',
+  openPromise ??= storage
+    .send(
+      {
+        kind: 'open',
+        database: {
+          databaseName,
+          preferredVfs: 'opfs-sahpool',
+          allowSahpool: true,
+          allowOpfs: true,
+          allowTransient: true,
+          workerKind: 'dedicated',
+        },
       },
-    },
-    { deadlineMs: 5_000 },
-  );
+      { deadlineMs: 10_000 },
+    )
+    .then(
+      (response) => {
+        if (response.outcome !== 'ok') openPromise = undefined;
+        return response;
+      },
+      (error) => {
+        openPromise = undefined;
+        throw error;
+      },
+    );
   return openPromise;
 }

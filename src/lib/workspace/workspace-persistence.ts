@@ -23,7 +23,6 @@ export async function loadWorkspace(): Promise<Workspace> {
       : snapshot;
   const workspace = loaded ?? bootstrapWorkspace();
   memoryWorkspace = workspace;
-  await saveWorkspace(workspace);
   return workspace;
 }
 

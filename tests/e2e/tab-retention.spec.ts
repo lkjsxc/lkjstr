@@ -1,4 +1,5 @@
 import { expect, test, type Page } from '@playwright/test';
+import { querySqliteRows } from './sqlite-storage-helpers';
 import { openCleanWorkspace } from './timeline-relay-helpers';
 import { openNewTabOption, selectStartupTab } from './workspace-helpers';
 
@@ -106,31 +107,36 @@ test('restores settings scroll after reload from persisted tab state', async ({
 });
 
 async function readTabStates(page: Page) {
-  return page.evaluate(async () => {
-    const open = indexedDB.open('lkjstr');
-    const db = await new Promise<IDBDatabase>((resolve, reject) => {
-      open.onerror = () => reject(open.error);
-      open.onsuccess = () => resolve(open.result);
-    });
-    const store = db
-      .transaction('tabStates', 'readonly')
-      .objectStore('tabStates');
-    const records = await new Promise<
-      Array<{ state?: { kind?: string; scrollTop?: number } }>
-    >((resolve, reject) => {
-      const request = store.getAll();
-      request.onerror = () => reject(request.error);
-      request.onsuccess = () =>
-        resolve(
-          request.result as Array<{
-            state?: { kind?: string; scrollTop?: number };
-          }>,
-        );
-    });
-    db.close();
-    return records.map((record) => record.state ?? {});
+  const rows = await querySqliteRows<{ record_json: string }>(
+    page,
+    'tab-states-sqlite-cutover',
+    tabStateSchema,
+    'SELECT record_json FROM tab_states;',
+    [],
+    1000,
+  );
+  return rows.flatMap((row) => {
+    try {
+      const record = JSON.parse(row.record_json) as {
+        state?: { kind?: string; scrollTop?: number };
+      };
+      return [record.state ?? {}];
+    } catch {
+      return [];
+    }
   });
 }
+
+const tabStateSchema = [
+  `CREATE TABLE IF NOT EXISTS tab_states (
+  id TEXT PRIMARY KEY,
+  workspace_id TEXT NOT NULL,
+  tab_id TEXT NOT NULL,
+  last_pane_id TEXT,
+  record_json TEXT NOT NULL,
+  updated_at_ms INTEGER NOT NULL
+) STRICT;`,
+];
 
 async function setSettingsScroll(page: Page) {
   return page

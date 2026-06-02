@@ -12,7 +12,7 @@ export async function sqliteRecordBatch(
   if (!(await ensureSchema())) return false;
   const response = await sendSqliteStorage(
     { kind: 'batch', mode: 'readwrite', steps },
-    { deadlineMs: 5_000 },
+    { deadlineMs: 10_000 },
   );
   return response.outcome === 'ok';
 }
@@ -43,7 +43,7 @@ export async function sqliteRecordReadMany<T>(
       params,
       rowLimit: limit,
     },
-    { deadlineMs: 3_000 },
+    { deadlineMs: 10_000 },
   );
   if (response.outcome !== 'ok') return undefined;
   return response.rows.flatMap((row) => decodeJson<T>(row.record_json));

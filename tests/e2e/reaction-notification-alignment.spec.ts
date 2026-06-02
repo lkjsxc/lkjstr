@@ -5,6 +5,11 @@ import {
   getPublicKey,
 } from '../../src/lib/protocol';
 import {
+  eventSteps,
+  notificationStep,
+  runEventGraphBatch,
+} from './sqlite-event-helpers';
+import {
   addReadonlyAccount,
   installSyntheticRelay,
 } from './timeline-relay-helpers';
@@ -137,51 +142,25 @@ async function seedFallbackNotification(
     target: ReturnType<typeof finalizeEvent>;
   },
 ): Promise<void> {
-  await page.evaluate(
-    async ({ accountPubkey, actorPubkey, sourceEventId, target }) => {
-      await new Promise<void>((resolve, reject) => {
-        const request = indexedDB.open('lkjstr');
-        request.onerror = () => reject(request.error);
-        request.onsuccess = () => {
-          const db = request.result;
-          const transaction = db.transaction(
-            ['notifications', 'events'],
-            'readwrite',
-          );
-          const createdAt = Number(target.created_at) + 1;
-          transaction.objectStore('events').put({
-            ...target,
-            receivedAt: Date.now(),
-            relayUrls: ['wss://synthetic.test'],
-          });
-          transaction.objectStore('notifications').put({
-            id: `${accountPubkey}:${sourceEventId}:reaction`,
-            accountPubkey,
-            sourceEventId,
-            actorPubkey,
-            kind: 'reaction',
-            createdAt,
-            receivedAt: Date.now(),
-            readAt: null,
-            muted: false,
-            hidden: false,
-            targetEventId: target.id,
-            relayUrls: ['wss://synthetic.test'],
-          });
-          transaction.oncomplete = () => {
-            db.close();
-            resolve();
-          };
-          transaction.onerror = () => {
-            const error = transaction.error;
-            db.close();
-            reject(error);
-          };
-        };
-      });
-    },
-    input,
-  );
+  const receivedAt = Date.now();
+  await runEventGraphBatch(page, [
+    ...eventSteps([input.target], ['wss://synthetic.test']),
+    notificationStep({
+      id: `${input.accountPubkey}:${input.sourceEventId}:reaction`,
+      accountPubkey: input.accountPubkey,
+      sourceEventId: input.sourceEventId,
+      actorPubkey: input.actorPubkey,
+      kind: 'reaction',
+      createdAt: Number(input.target.created_at) + 1,
+      receivedAt,
+      readAt: null,
+      muted: false,
+      hidden: false,
+      targetEventId: input.target.id,
+      relayUrls: ['wss://synthetic.test'],
+      updatedAt: receivedAt,
+    }),
+  ]);
 }
 
 async function leftAligned(locator: Locator): Promise<boolean> {

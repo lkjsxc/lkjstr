@@ -31,10 +31,9 @@ export async function readSettingOverrideRows(
 export async function readSettingOverrideRow(
   key: string,
 ): Promise<SettingOverride | undefined> {
-  return (
-    (await sqliteReadSettingOverride(key).catch(() => undefined)) ??
-    memoryRows.find((row) => row.key === key)
-  );
+  const memory = memoryRows.find((row) => row.key === key);
+  if (memory) return memory;
+  return sqliteReadSettingOverride(key).catch(() => undefined);
 }
 
 export async function putSettingOverrideRow(

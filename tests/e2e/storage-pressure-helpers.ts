@@ -1,176 +1,119 @@
 import type { Page } from '@playwright/test';
-
-const seedStores = [
-  'events',
-  'eventRelays',
-  'eventTags',
-  'cacheLedger',
-  'cacheMeta',
-  'localAccountSecrets',
-  'relaySets',
-  'settings',
-  'workspaces',
-];
-
-const countStores = [
-  'events',
-  'localAccountSecrets',
-  'relaySets',
-  'settings',
-  'workspaces',
-  'cacheLedger',
-];
+import {
+  eventSteps,
+  queryEventGraphRows,
+  runEventGraphBatch,
+} from './sqlite-event-helpers';
+import { runSqliteBatch, type SqlStep } from './sqlite-storage-helpers';
 
 export async function seedPressureRows(page: Page) {
-  await page.evaluate(async (stores) => {
-    const db = await openDb();
-    const tx = db.transaction(stores, 'readwrite');
-    tx.objectStore('settings').put({
-      key: 'cache.maxBytes',
-      namespace: 'cache',
-      value: 1024 * 1024,
-      updatedAt: Date.now(),
-    });
-    tx.objectStore('cacheMeta').put({
-      id: 'main',
-      budgetBytes: 1024 * 1024,
-      updatedAt: Date.now(),
-    });
-    tx.objectStore('localAccountSecrets').put({
-      accountId: 'local',
-      pubkey: 'b'.repeat(64),
-      encryptedSecret: 'secret',
-      updatedAt: Date.now(),
-    });
-    tx.objectStore('workspaces').put({
-      id: 'main',
-      root: { kind: 'tile', id: 'tile', tabs: [], activeTabId: null },
-      updatedAt: Date.now(),
-    });
-    tx.objectStore('relaySets').put({
-      id: 'default',
-      name: 'Default',
-      relays: [],
-      updatedAt: Date.now(),
-      seeded: false,
-    });
-    for (let index = 0; index < 3; index += 1) {
-      const id = String(index + 1).repeat(64);
-      tx.objectStore('events').put(eventRow(id, index));
-      tx.objectStore('eventRelays').put({
-        id: `${id}:relay`,
-        eventId: id,
-        relayUrl: 'wss://relay.example',
-        receivedAt: Date.now(),
-      });
-      tx.objectStore('eventTags').put({
-        id: `${id}:e:0`,
-        eventId: id,
-        tagName: 'e',
-        tagValue: `target-${index}`,
-        created_at: index + 1,
-      });
-      tx.objectStore('cacheLedger').put(ledgerRow(id, index));
-    }
-    await txDone(tx);
-    db.close();
+  const events = Array.from({ length: 80 }, (_, index) => {
+    const id = String(index + 1).repeat(64);
+    return eventRow(id, index);
+  });
+  await seedCacheBudget(page);
+  await runEventGraphBatch(page, [
+    ...eventSteps(events, ['wss://relay.example']),
+    ...events.map((event, index) => ledgerStep(event.id, index)),
+  ]);
+}
 
-    function eventRow(id: string, index: number) {
-      return {
-        id,
-        pubkey: 'a'.repeat(64),
-        created_at: index + 1,
-        kind: 1,
-        tags: [['e', `target-${index}`]],
-        content: 'x'.repeat(2048),
-        sig: 'f'.repeat(128),
-        receivedAt: Date.now(),
-        relayUrls: ['wss://relay.example'],
-      };
-    }
-    function ledgerRow(id: string, index: number) {
-      return {
-        id: `event:${id}`,
-        ownerKind: 'event',
-        resourceKind: 'nostr-event',
-        resourceId: id,
-        score: index,
-        createdAt: index + 1,
-        updatedAt: Date.now(),
-        cacheBytes: 700_000,
-        protected: false,
-      };
-    }
-    function openDb(): Promise<IDBDatabase> {
-      return new Promise((resolve, reject) => {
-        const request = indexedDB.open('lkjstr');
-        request.onerror = () => reject(request.error);
-        request.onsuccess = () => resolve(request.result);
-      });
-    }
-    function txDone(tx: IDBTransaction): Promise<void> {
-      return new Promise((resolve, reject) => {
-        tx.oncomplete = () => resolve();
-        tx.onerror = () => reject(tx.error);
-      });
-    }
-  }, seedStores);
+export async function compactPressureRows(page: Page): Promise<void> {
+  const eventIds =
+    "SELECT resource_id FROM cache_ledger WHERE resource_kind = 'nostr-event' ORDER BY score LIMIT 40";
+  await runEventGraphBatch(page, [
+    { statement: `DELETE FROM event_relays WHERE event_id IN (${eventIds});` },
+    { statement: `DELETE FROM event_tags WHERE event_id IN (${eventIds});` },
+    { statement: `DELETE FROM events WHERE id IN (${eventIds});` },
+    {
+      statement:
+        "DELETE FROM cache_ledger WHERE id IN (SELECT id FROM cache_ledger WHERE resource_kind = 'nostr-event' ORDER BY score LIMIT 40);",
+    },
+  ]);
 }
 
 export async function cacheCounts(page: Page) {
-  return page.evaluate(async (stores) => {
-    function count(store: IDBObjectStore): Promise<number> {
-      return new Promise((resolve, reject) => {
-        const request = store.count();
-        request.onerror = () => reject(request.error);
-        request.onsuccess = () => resolve(request.result);
-      });
-    }
-    function all(store: IDBObjectStore): Promise<Record<string, string>[]> {
-      return new Promise((resolve, reject) => {
-        const request = store.getAll();
-        request.onerror = () => reject(request.error);
-        request.onsuccess = () => resolve(request.result);
-      });
-    }
-    function openDb(): Promise<IDBDatabase> {
-      return new Promise((resolve, reject) => {
-        const request = indexedDB.open('lkjstr');
-        request.onerror = () => reject(request.error);
-        request.onsuccess = () => resolve(request.result);
-      });
-    }
-    function txDone(tx: IDBTransaction): Promise<void> {
-      return new Promise((resolve, reject) => {
-        tx.oncomplete = () => resolve();
-        tx.onerror = () => reject(tx.error);
-      });
-    }
-    const db = await openDb();
-    const tx = db.transaction(stores, 'readonly');
-    const [events, settings, secrets, workspaces, relaySets, ledgerRows] =
-      await Promise.all([
-        count(tx.objectStore('events')),
-        count(tx.objectStore('settings')),
-        count(tx.objectStore('localAccountSecrets')),
-        count(tx.objectStore('workspaces')),
-        count(tx.objectStore('relaySets')),
-        all(tx.objectStore('cacheLedger')),
-      ]);
-    const eventRows = await all(tx.objectStore('events'));
-    await txDone(tx);
-    db.close();
-    const eventIds = new Set(eventRows.map((row) => row.id));
-    return {
-      events,
-      protectedSettings: settings,
-      protectedSecrets: secrets,
-      protectedWorkspaces: workspaces,
-      protectedRelaySets: relaySets,
-      orphanLedgerRows: ledgerRows.filter(
-        (row) =>
-          row.resourceKind === 'nostr-event' && !eventIds.has(row.resourceId),
-      ).length,
-    };
-  }, countStores);
+  const [eventCount] = await queryEventGraphRows<{ count: number }>(
+    page,
+    'SELECT COUNT(*) AS count FROM events;',
+  );
+  const orphanRows = await queryEventGraphRows<{ count: number }>(
+    page,
+    `SELECT COUNT(*) AS count
+     FROM cache_ledger
+     WHERE resource_kind = 'nostr-event'
+       AND resource_id NOT IN (SELECT id FROM events);`,
+  );
+  return {
+    events: eventCount?.count ?? 0,
+    orphanLedgerRows: orphanRows[0]?.count ?? 0,
+  };
+}
+
+async function seedCacheBudget(page: Page): Promise<void> {
+  const now = Date.now();
+  const budgetBytes = 1024 * 1024;
+  await runSqliteBatch(
+    page,
+    'e2e-cache-meta',
+    [
+      `CREATE TABLE IF NOT EXISTS cache_meta (
+  id TEXT PRIMARY KEY,
+  record_json TEXT NOT NULL,
+  updated_at_ms INTEGER NOT NULL
+) STRICT;`,
+    ],
+    [
+      {
+        statement:
+          'INSERT INTO cache_meta (id, record_json, updated_at_ms) VALUES (?1, ?2, ?3) ON CONFLICT(id) DO UPDATE SET record_json = excluded.record_json, updated_at_ms = excluded.updated_at_ms;',
+        params: [
+          'main',
+          JSON.stringify({ id: 'main', budgetBytes, updatedAt: now }),
+          now,
+        ],
+      },
+    ],
+  );
+}
+
+function eventRow(id: string, index: number) {
+  return {
+    id,
+    pubkey: 'a'.repeat(64),
+    created_at: index + 1,
+    kind: 1,
+    tags: [['e', `target-${index}`]],
+    content: 'x'.repeat(2048),
+    sig: 'f'.repeat(128),
+  };
+}
+
+function ledgerStep(id: string, index: number): SqlStep {
+  const row = {
+    id: `event:${id}`,
+    ownerKind: 'event',
+    resourceKind: 'nostr-event',
+    resourceId: id,
+    score: index,
+    createdAt: index + 1,
+    updatedAt: Date.now(),
+    cacheBytes: 1_000_000,
+    protected: false,
+  };
+  return {
+    statement:
+      'INSERT INTO cache_ledger (id, owner_kind, resource_kind, resource_id, score, protected, record_json, created_at_ms, updated_at_ms) VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9) ON CONFLICT(id) DO UPDATE SET score = excluded.score, protected = excluded.protected, record_json = excluded.record_json, updated_at_ms = excluded.updated_at_ms;',
+    params: [
+      row.id,
+      row.ownerKind,
+      row.resourceKind,
+      row.resourceId,
+      row.score,
+      row.protected ? 1 : 0,
+      JSON.stringify(row),
+      row.createdAt,
+      row.updatedAt,
+    ],
+  };
 }

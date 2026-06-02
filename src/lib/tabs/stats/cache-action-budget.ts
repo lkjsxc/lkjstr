@@ -7,8 +7,13 @@ type CacheBudgetSetting = {
 export async function cacheActionBudgetBytes(
   fallback?: number,
 ): Promise<number | undefined> {
-  const row = (await readSettingOverrideRow('cache.maxBytes')) as
-    | CacheBudgetSetting
-    | undefined;
+  const row = (await Promise.race([
+    readSettingOverrideRow('cache.maxBytes'),
+    fallbackAfter(100, undefined),
+  ])) as CacheBudgetSetting | undefined;
   return typeof row?.value === 'number' ? row.value : fallback;
+}
+
+function fallbackAfter<T>(ms: number, value: T): Promise<T> {
+  return new Promise((resolve) => setTimeout(() => resolve(value), ms));
 }

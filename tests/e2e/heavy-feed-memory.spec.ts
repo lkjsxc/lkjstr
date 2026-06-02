@@ -52,10 +52,9 @@ test('heavy feed keeps app heap below the smoke limit', async ({ page }) => {
     ),
   );
 
+  await installSyntheticRelay(page, { events: [followList, ...events] });
   await openCleanWorkspace(page);
   await addReadonlyAccount(page, active);
-  await installSyntheticRelay(page, { events: [followList, ...events] });
-  await page.reload();
   const baselineHeap = await usedHeap(page);
   await selectStartupTab(page, 'Home');
   await expect(page.getByText('heavy-feed signed note 0')).toBeVisible({

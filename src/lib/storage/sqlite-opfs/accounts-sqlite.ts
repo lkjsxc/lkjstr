@@ -30,7 +30,7 @@ export async function sqliteReadAccounts(): Promise<Account[] | undefined> {
         'SELECT metadata_json FROM accounts ORDER BY updated_at_ms DESC, pubkey ASC;',
       rowLimit: 1000,
     },
-    { deadlineMs: 3_000 },
+    { deadlineMs: 10_000 },
   );
   if (response.outcome !== 'ok') return undefined;
   return response.rows.flatMap((row) => decodeJson<Account>(row.metadata_json));
@@ -52,7 +52,7 @@ export async function sqlitePutAccount(account: Account): Promise<boolean> {
         JSON.stringify(account),
       ],
     },
-    { deadlineMs: 3_000 },
+    { deadlineMs: 10_000 },
   );
   return response.outcome === 'ok';
 }
@@ -65,7 +65,7 @@ export async function sqliteDeleteAccount(id: string): Promise<boolean> {
       statement: 'DELETE FROM accounts WHERE pubkey = ?1;',
       params: [accountIdPubkey(id)],
     },
-    { deadlineMs: 3_000 },
+    { deadlineMs: 10_000 },
   );
   return response.outcome === 'ok';
 }
@@ -86,7 +86,7 @@ export async function sqlitePutLocalSecret(
         secret.updatedAt,
       ],
     },
-    { deadlineMs: 3_000 },
+    { deadlineMs: 10_000 },
   );
   return response.outcome === 'ok';
 }
@@ -103,7 +103,7 @@ export async function sqliteReadLocalSecret(
       params: [accountIdPubkey(accountId)],
       rowLimit: 1,
     },
-    { deadlineMs: 3_000 },
+    { deadlineMs: 10_000 },
   );
   if (response.outcome !== 'ok') return undefined;
   return decodeJson<LocalAccountSecret>(response.rows[0]?.secret_payload)[0];
@@ -117,7 +117,7 @@ export async function sqliteDeleteLocalSecret(id: string): Promise<boolean> {
       statement: 'DELETE FROM local_account_secrets WHERE pubkey = ?1;',
       params: [accountIdPubkey(id)],
     },
-    { deadlineMs: 3_000 },
+    { deadlineMs: 10_000 },
   );
   return response.outcome === 'ok';
 }

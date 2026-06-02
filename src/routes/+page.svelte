@@ -5,6 +5,8 @@
   import { enforceCacheBudget } from '$lib/cache/cache-budget-enforcement';
   import { defaultCacheMaxBytes } from '$lib/cache/storage-quota';
   import { loadSettings } from '$lib/settings/settings-store';
+  import { closeSqliteStorage } from '$lib/storage/sqlite-opfs/kernel-client';
+  import { installSqliteStorageTestApi } from '$lib/storage/sqlite-opfs/test-api';
   import type { Account } from '$lib/accounts/account';
   import type { RelaySet } from '$lib/relays/relay-store';
   import WorkspaceRoot from '$lib/components/workspace/WorkspaceRoot.svelte';
@@ -46,9 +48,12 @@
 
   onMount(() => {
     installMemoryDebugExport();
+    installSqliteStorageTestApi();
     let disposed = false;
     // prettier-ignore
     const refreshSettings = () => { if (!disposed) void refreshRuntimeSettings().catch(logRuntimeError('settings-load-failed')); };
+    const closeStorage = () => void closeSqliteStorage();
+    window.addEventListener('pagehide', closeStorage);
     const disposeSnapshots = installWorkspaceSnapshotLifecycle({
       refreshSettings,
       flushSnapshots: () => void captureAllTabs(),
@@ -56,6 +61,7 @@
     void initializeWorkspace().catch(logRuntimeError('workspace-init-failed'));
     return () => {
       disposed = true;
+      window.removeEventListener('pagehide', closeStorage);
       disposeSnapshots();
       snapshotCoordinator.releaseAll();
     };

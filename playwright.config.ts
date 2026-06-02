@@ -1,10 +1,10 @@
 import { defineConfig, devices } from '@playwright/test';
 
-const workerCount = Number.parseInt(process.env.PLAYWRIGHT_WORKERS ?? '2', 10);
+const workerCount = Number.parseInt(process.env.PLAYWRIGHT_WORKERS ?? '1', 10);
 
 export default defineConfig({
   testDir: './tests/e2e',
-  workers: Number.isFinite(workerCount) && workerCount > 0 ? workerCount : 2,
+  workers: Number.isFinite(workerCount) && workerCount > 0 ? workerCount : 1,
   webServer: {
     command: 'pnpm build && pnpm preview --host 0.0.0.0 --port 5174',
     port: 5174,

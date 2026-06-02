@@ -6,6 +6,11 @@ import {
   pageIntentSemanticKey,
   routeGroupFingerprint,
 } from '../../src/lib/relays/orchestration/page-reads';
+import {
+  eventSteps,
+  feedCoverageStep,
+  runEventGraphBatch,
+} from './sqlite-event-helpers';
 
 export async function seedProfileCoverage(
   page: Page,
@@ -25,48 +30,22 @@ export async function seedProfileCoverage(
     limit: feedPageSize,
   });
   const feedKey = profileFeedKey(input, groupKey);
-  await page.evaluate(
-    async (input) => {
-      const db = await new Promise<IDBDatabase>((resolve, reject) => {
-        const request = indexedDB.open('lkjstr');
-        request.onerror = () => reject(request.error);
-        request.onsuccess = () => resolve(request.result);
-      });
-      const tx = db.transaction(['events', 'feedCoverage'], 'readwrite');
-      const receivedAt = Date.now();
-      for (const event of input.events)
-        tx.objectStore('events').put({
-          ...event,
-          receivedAt,
-          relayUrls: [input.coveredRelays[0] ?? 'cache'],
-        });
-      for (const relayUrl of input.coveredRelays)
-        tx.objectStore('feedCoverage').put({
-          id: [
-            input.feedKey,
-            input.groupKey,
-            relayUrl,
-            input.filterKey,
-            input.since,
-            input.until,
-          ].join('|'),
-          feedKey: input.feedKey,
-          relayUrl,
-          groupKey: input.groupKey,
-          filterKey: input.filterKey,
-          status: 'complete',
-          since: input.since,
-          until: input.until,
-          updatedAt: receivedAt,
-        });
-      await new Promise<void>((resolve, reject) => {
-        tx.oncomplete = () => resolve();
-        tx.onerror = () => reject(tx.error);
-      });
-      db.close();
-    },
-    { ...input, feedKey, filterKey, groupKey, since, until },
-  );
+  const updatedAt = Date.now();
+  const coverageRows = input.coveredRelays.map((relayUrl) => ({
+    id: [feedKey, groupKey, relayUrl, filterKey, since, until].join('|'),
+    feedKey,
+    relayUrl,
+    groupKey,
+    filterKey,
+    status: 'complete',
+    since,
+    until,
+    updatedAt,
+  }));
+  await runEventGraphBatch(page, [
+    ...eventSteps(input.events, [input.coveredRelays[0] ?? 'cache']),
+    ...coverageRows.map(feedCoverageStep),
+  ]);
 }
 
 export async function clearSyntheticRelayTraffic(page: Page) {

@@ -50,7 +50,7 @@ ownership context.
 | `relayInformation` | `relay_information` | implemented | NIP-11 records use SQLite product wiring. |
 | `relayListSuggestions` | `relay_list_suggestions` | implemented | Suggestions remain explicit-import only. |
 | `authorRelayRoutes` | `author_relay_routes` | implemented | Disabled relays and route blocks still dominate. |
-| `cacheLedger` | `cache_ledger` | partial | SQLite resource writes, summaries, and prune selection use ledger rows; retention deletion still needs cutover. |
+| `cacheLedger` | `cache_ledger` | partial | SQLite resource writes, summaries, prune selection, and event/direct retention deletion use ledger rows; repair still needs cutover. |
 | `cacheMeta` | `cache_meta` | partial | Cache status metadata uses SQLite; repair and integrity state still need cutover. |
 | app log | `app_log` | open | Durable redacted app log is a diagnostics target. |
 

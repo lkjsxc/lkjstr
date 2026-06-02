@@ -1,4 +1,5 @@
 import { expect, type Page } from '@playwright/test';
+import { clearSqliteStorage } from './sqlite-storage-helpers';
 export async function addReadonlyAccount(page: Page, pubkey: string) {
   const tabStrip = page.locator('.pane').nth(1).locator('.tab-strip');
   await tabStrip.getByRole('button', { name: 'Accounts', exact: true }).click();
@@ -31,29 +32,13 @@ export async function openCleanWorkspace(page: Page) {
     window.__syntheticSockets ??= [];
     window.__syntheticSockets.length = 0;
     await new Promise<void>((resolve) => {
-      const request = indexedDB.open('lkjstr');
+      const request = indexedDB.deleteDatabase('lkjstr');
       request.onerror = () => resolve();
-      request.onsuccess = () => {
-        const db = request.result;
-        const stores = Array.from(db.objectStoreNames);
-        if (stores.length === 0) {
-          db.close();
-          resolve();
-          return;
-        }
-        const transaction = db.transaction(stores, 'readwrite');
-        for (const store of stores) transaction.objectStore(store).clear();
-        transaction.oncomplete = () => {
-          db.close();
-          resolve();
-        };
-        transaction.onerror = () => {
-          db.close();
-          resolve();
-        };
-      };
+      request.onsuccess = () => resolve();
+      request.onblocked = () => resolve();
     });
   });
+  await clearSqliteStorage(page);
   await page.reload();
 }
 export async function installSyntheticRelay(

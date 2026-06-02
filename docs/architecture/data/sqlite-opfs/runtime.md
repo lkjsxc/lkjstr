@@ -20,8 +20,9 @@ components do not send raw SQL.
 ## Static Assets
 
 The browser build emits the official SQLite WASM package assets under
-`/sqlite/`. The worker loads the same-origin module and `sqlite3.wasm` asset.
-The app database name is `/lkjstr/main.sqlite3`.
+`/sqlite/`. The product storage client uses the same-origin static worker at
+`/sqlite-opfs-worker.js`, which loads the same-origin module and `sqlite3.wasm`
+asset. The app database name is `/lkjstr/main.sqlite3`.
 
 ## VFS Selection
 

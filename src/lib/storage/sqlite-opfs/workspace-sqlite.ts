@@ -26,7 +26,7 @@ export async function sqliteReadWorkspace(
       params: [id],
       rowLimit: 1,
     },
-    { deadlineMs: 3_000 },
+    { deadlineMs: 10_000 },
   );
   if (response.outcome !== 'ok') return undefined;
   const raw = response.rows[0]?.layout_json;
@@ -51,7 +51,7 @@ export async function sqlitePutWorkspace(
         workspace.updatedAt,
       ],
     },
-    { deadlineMs: 3_000 },
+    { deadlineMs: 10_000 },
   );
   return response.outcome === 'ok';
 }
