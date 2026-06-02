@@ -128,6 +128,8 @@ Run `pnpm check:repo` after documentation changes before code work continues.
   path is enabled.
 - Verify `/sqlite-opfs-worker.js` and `/sqlite/` official SQLite WASM assets are
   present in Trunk and SvelteKit build output until the old runtime is removed.
+- Verify Vite preview serves the worker and SQLite assets with COOP, COEP, and
+  same-origin resource policy headers so module workers can import SQLite WASM.
 - Verify multi-tab SQLite ownership produces shared safe operation or a visible
   lock/unavailable state, never database corruption.
 - Verify cache compaction keeps protected SQLite rows and reports quota or stop
