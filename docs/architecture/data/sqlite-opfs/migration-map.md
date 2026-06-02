@@ -27,7 +27,7 @@ ownership context.
 | `localAccountSecrets` | `local_account_secrets` | implemented | Current local secret contract only; no passkey claim. |
 | `relaySets` | `relay_sets` | implemented | User and discovery relay sets use the worker. |
 | `tweetDrafts` | `tweet_drafts` | implemented | Compose drafts use the worker. |
-| `relayRouteBlocks` | `relay_route_blocks` | partial | Protected safety rows need Svelte cutover. |
+| `relayRouteBlocks` | `relay_route_blocks` | implemented | Protected safety rows use the worker. |
 
 ## Event And Feed Cache
 
@@ -45,12 +45,12 @@ ownership context.
 
 | Current family | SQLite table group | Status | Notes |
 | --- | --- | --- | --- |
-| `jobs` | `jobs` | partial | Publish and maintenance jobs need Svelte cutover. |
-| `relayDiagnosticSummaries` | `relay_diagnostic_summaries` | partial | Stats should read durable summaries through SQLite. |
-| `relayInformation` | `relay_information` | partial | NIP-11 records need SQLite product wiring. |
-| `relayListSuggestions` | `relay_list_suggestions` | partial | Suggestions remain explicit-import only. |
-| `authorRelayRoutes` | `author_relay_routes` | partial | Disabled relays and route blocks still dominate. |
-| `cacheLedger` | `cache_ledger` | partial | Ledger writes must be atomic with resource writes. |
+| `jobs` | `jobs` | implemented | Publish and maintenance job records use the worker. |
+| `relayDiagnosticSummaries` | `relay_diagnostic_summaries` | implemented | Stats reads durable summaries through SQLite. |
+| `relayInformation` | `relay_information` | implemented | NIP-11 records use SQLite product wiring. |
+| `relayListSuggestions` | `relay_list_suggestions` | implemented | Suggestions remain explicit-import only. |
+| `authorRelayRoutes` | `author_relay_routes` | implemented | Disabled relays and route blocks still dominate. |
+| `cacheLedger` | `cache_ledger` | partial | SQLite resource writes add ledger rows atomically; retention still needs cutover. |
 | `cacheMeta` | `cache_meta` | partial | Pressure, repair, and integrity state move with retention. |
 | app log | `app_log` | open | Durable redacted app log is a diagnostics target. |
 

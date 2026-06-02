@@ -34,6 +34,7 @@ IndexedDB and Dexie remain only because the shipped SvelteKit runtime still uses
 some repositories. Rust and TypeScript host code already include schema records,
 statement records, row codecs, worker envelopes, and repository foundations.
 Product startup, settings, accounts, relay sets, drafts, event graph writes,
-cached feed reads, tag lookups, and local filter search use the SQLite path.
-Notifications, feed coverage, diagnostics, jobs, retention, inventory, and cache
-tools must move before Dexie is deleted.
+cached feed reads, tag lookups, local filter search, relay diagnostics, relay
+information, relay suggestions, author routes, route blocks, and jobs use the
+SQLite path. Notifications, feed coverage, scan hints, retention, inventory,
+and cache tools must move before Dexie is deleted.

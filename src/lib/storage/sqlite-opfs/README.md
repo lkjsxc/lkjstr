@@ -17,6 +17,11 @@ storage target.
 - `events-sqlite.ts`: event and feed cursor writes plus direct event lookups.
 - `event-pages-sqlite.ts`: timeline, profile, thread, and tag cache reads.
 - `event-matching-sqlite.ts`: Nostr filter candidate reads for local cache search.
+- `sqlite-record-helpers.ts`: JSON record table helpers shared by SQLite repositories.
+- `relay-cache-schema.ts`: relay diagnostics, route, job, and ledger schema.
+- `relay-cache-steps.ts`: relay cache SQL write steps.
+- `relay-cache-sqlite.ts`: relay diagnostics, NIP-11, suggestions, routes, and blocks.
+- `jobs-sqlite.ts`: durable job repository calls.
 - `worker.ts`: dedicated module worker entry point.
 - `client.ts`: browser client with deadlines, cancellation, and cleanup.
 - `kernel-client.ts`: shared open/apply/send helper for product repositories.
