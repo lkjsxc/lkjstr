@@ -56,7 +56,12 @@ export async function loadOlderGlobalPage(
   if (cache.kind !== 'miss') {
     if (cache.kind === 'partial-cache')
       void readAndStore(request, plan).catch(() => undefined);
-    const window = mergeFeedWindow(request.items, cache.page.items, feedWindowSize, true);
+    const window = mergeFeedWindow(
+      request.items,
+      cache.page.items,
+      feedWindowSize,
+      true,
+    );
     return {
       items: window.items,
       hasOlder: cache.page.hasOlder,
@@ -93,7 +98,11 @@ export async function loadNewerGlobalPage(
   if (cache.kind !== 'miss') {
     if (cache.kind === 'partial-cache')
       void readAndStore(request, plan).catch(() => undefined);
-    const window = mergeFeedWindow(request.items, cache.page.items, feedWindowSize);
+    const window = mergeFeedWindow(
+      request.items,
+      cache.page.items,
+      feedWindowSize,
+    );
     return {
       items: window.items,
       hasNewer: cache.page.hasNewer,
@@ -125,7 +134,9 @@ export type GlobalPageResult = {
 };
 
 function globalIntent(
-  request: Omit<Request, 'items'> | (Request & { readonly cursor: FeedCursorPoint }),
+  request:
+    | Omit<Request, 'items'>
+    | (Request & { readonly cursor: FeedCursorPoint }),
   direction: PageIntent['direction'],
 ): PageIntent {
   return {
@@ -151,11 +162,15 @@ async function readAndStore(
     signal: request.signal,
     onSnapshot: request.onSnapshot,
   });
-  await Promise.all(page.items.map((item) => upsertEvent(item.event, item.relays)));
+  await Promise.all(
+    page.items.map((item) => upsertEvent(item.event, item.relays)),
+  );
   return page;
 }
 
-function pageFromRelay(page: Awaited<ReturnType<typeof readAndStore>>): GlobalPageResult {
+function pageFromRelay(
+  page: Awaited<ReturnType<typeof readAndStore>>,
+): GlobalPageResult {
   return {
     items: page.items,
     hasOlder: page.hasMorePossible,
@@ -169,5 +184,9 @@ function pageFromCache(page: {
   readonly hasOlder: boolean;
   readonly nextCursor?: FeedCursorPoint;
 }): GlobalPageResult {
-  return { items: page.items, hasOlder: page.hasOlder, nextOlderCursor: page.nextCursor };
+  return {
+    items: page.items,
+    hasOlder: page.hasOlder,
+    nextOlderCursor: page.nextCursor,
+  };
 }

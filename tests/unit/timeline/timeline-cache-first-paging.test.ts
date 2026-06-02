@@ -4,7 +4,10 @@ import {
   generateSecretKey,
   getPublicKey,
 } from '../../../src/lib/protocol';
-import { clearEventRepositoryForTests, upsertEvent } from '../../../src/lib/events/repository';
+import {
+  clearEventRepositoryForTests,
+  upsertEvent,
+} from '../../../src/lib/events/repository';
 import {
   clearFeedCoverageForTests,
   saveFeedCoverage,
@@ -41,7 +44,8 @@ describe('timeline cache-first paging', () => {
       pageSize: 10,
       direction: 'older',
       cursor: { createdAt: now, id: 'f'.repeat(64) },
-      filters: (group, bounds) => authorFilters(group.authors ?? [], 10, bounds),
+      filters: (group, bounds) =>
+        authorFilters(group.authors ?? [], 10, bounds),
     });
     for (const group of plan.groups)
       for (const relayUrl of group.relays)
@@ -49,7 +53,9 @@ describe('timeline cache-first paging', () => {
           feedKey: plan.key,
           groupKey: group.key,
           relayUrl,
-          filterKey: semanticFilterKey(authorFilters(group.authors ?? [], 10, {})[0]!),
+          filterKey: semanticFilterKey(
+            authorFilters(group.authors ?? [], 10, {})[0]!,
+          ),
           status: 'complete',
           since: 0,
           until: now + 2,

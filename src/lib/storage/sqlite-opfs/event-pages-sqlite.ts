@@ -7,11 +7,21 @@ import {
   beforeCursor,
   maxUntil,
 } from '../../events/repository-shared';
-import { feedDisplayKinds } from '../../events/feed-kinds';
 import { ensureEventGraphSchema } from './event-schema';
 import { decodeStoredEventRow, storedEventColumns } from './event-row-codec';
 import { sendSqliteStorage } from './kernel-client';
-import type { SqlParams, SqlScalar } from './types';
+import {
+  authorChunkSize,
+  boundParamCount,
+  boundsParams,
+  boundsSql,
+  chunks,
+  feedKinds,
+  kindSql,
+  relayWhere,
+  valueRows,
+} from './event-pages-sql';
+import type { SqlParams } from './types';
 
 export async function sqliteIndexedPage(
   query: FeedQuery,
@@ -28,7 +38,13 @@ export async function sqliteLatestByAuthorKind(
   kind: number,
 ): Promise<StoredEvent | undefined> {
   if (!(await ensureEventGraphSchema())) return undefined;
-  return (await queryEvents(whereSelect('e.pubkey = ?1 AND e.kind = ?2'), [pubkey, kind], 1))?.[0];
+  return (
+    await queryEvents(
+      whereSelect('e.pubkey = ?1 AND e.kind = ?2'),
+      [pubkey, kind],
+      1,
+    )
+  )?.[0];
 }
 
 export async function sqliteEventsByTagValue(
@@ -61,7 +77,11 @@ async function sqliteAuthorPage(
     ),
   );
   if (pages.some((page) => !page)) return undefined;
-  return sortedBounded(pages.flatMap((page) => page ?? []), query, limit);
+  return sortedBounded(
+    pages.flatMap((page) => page ?? []),
+    query,
+    limit,
+  );
 }
 
 async function sqliteKindsPage(
@@ -88,7 +108,11 @@ async function sqliteThreadPage(
     queryTagValues('e', [query.eventId], limit * 3, maxUntil(query.until)),
   ]);
   if (!root || !replies) return undefined;
-  return sortedBounded([...root.filter((event) => before(event, query.until)), ...replies], query, limit);
+  return sortedBounded(
+    [...root.filter((event) => before(event, query.until)), ...replies],
+    query,
+    limit,
+  );
 }
 
 function queryAuthorChunk(
@@ -102,7 +126,11 @@ function queryAuthorChunk(
   const boundStart = kindStart + kinds.length;
   const relayStart = boundStart + boundParamCount(query);
   const sql = `WITH author_input(pubkey) AS (VALUES ${authorValues}) SELECT ${storedEventColumns} FROM events e JOIN author_input a ON a.pubkey = e.pubkey WHERE ${kindSql(kinds, kindStart)} ${boundsSql(query, boundStart)} ${relayWhere(query, relayStart)} ORDER BY e.created_at DESC, e.id ASC;`;
-  return queryEvents(sql, [...authors, ...kinds, ...boundsParams(query), ...(query.relays ?? [])], limit);
+  return queryEvents(
+    sql,
+    [...authors, ...kinds, ...boundsParams(query), ...(query.relays ?? [])],
+    limit,
+  );
 }
 
 async function queryTagValues(
@@ -134,65 +162,22 @@ function whereSelect(whereSql: string): string {
   return `SELECT ${storedEventColumns} FROM events e WHERE ${whereSql} ORDER BY e.created_at DESC, e.id ASC;`;
 }
 
-function kindSql(kinds: readonly number[], start: number): string {
-  return `e.kind IN (${placeholders(kinds, start)})`;
-}
-
-function boundsSql(query: FeedQuery, start: number): string {
-  const parts = ['e.created_at <= ?' + start];
-  let next = start + 1;
-  if (query.since !== undefined) parts.push('e.created_at >= ?' + next++);
-  if (query.before) parts.push(`(e.created_at < ?${next} OR (e.created_at = ?${next + 1} AND e.id > ?${next + 2}))`);
-  if (query.before) next += 3;
-  if (query.after) parts.push(`(e.created_at > ?${next} OR (e.created_at = ?${next + 1} AND e.id < ?${next + 2}))`);
-  return parts.map((part) => `AND ${part}`).join(' ');
-}
-
-function boundsParams(query: FeedQuery): SqlScalar[] {
-  return [
-    maxUntil(query.until),
-    ...(query.since !== undefined ? [query.since] : []),
-    ...(query.before ? [query.before.createdAt, query.before.createdAt, query.before.id] : []),
-    ...(query.after ? [query.after.createdAt, query.after.createdAt, query.after.id] : []),
-  ];
-}
-
-function boundParamCount(query: FeedQuery): number {
-  return boundsParams(query).length;
-}
-
-function relayWhere(query: FeedQuery, start: number): string {
-  return query.relays
-    ? `AND EXISTS (SELECT 1 FROM event_relays r WHERE r.event_id = e.id AND r.relay_url IN (${placeholders(query.relays, start)}))`
-    : '';
-}
-
-function sortedBounded(events: readonly StoredEvent[], query: FeedQuery, limit: number): StoredEvent[] {
-  return events.filter((event) => withinBounds(event, query)).sort(compareEventsDesc).slice(0, limit);
+function sortedBounded(
+  events: readonly StoredEvent[],
+  query: FeedQuery,
+  limit: number,
+): StoredEvent[] {
+  return events
+    .filter((event) => withinBounds(event, query))
+    .sort(compareEventsDesc)
+    .slice(0, limit);
 }
 
 function withinBounds(event: StoredEvent, query: FeedQuery): boolean {
-  return afterSince(event, query.since) && before(event, query.until) && beforeCursor(event, query.before) && afterCursor(event, query.after);
-}
-
-function feedKinds(query: FeedQuery): readonly number[] {
-  return query.kinds ?? feedDisplayKinds;
-}
-
-function valueRows(values: readonly unknown[], start: number): string {
-  return values.map((_, index) => `(?${start + index})`).join(', ');
-}
-
-function placeholders(values: readonly unknown[], start = 1): string {
-  return values.map((_, index) => `?${start + index}`).join(', ');
-}
-
-function chunks<T>(values: readonly T[], size: number): T[][] {
-  const out: T[][] = [];
-  for (let index = 0; index < values.length; index += size) out.push(values.slice(index, index + size));
-  return out;
-}
-
-function authorChunkSize(query: FeedQuery): number {
-  return Math.max(1, Math.floor((900 - feedKinds(query).length - boundParamCount(query) - (query.relays?.length ?? 0)) / 2));
+  return (
+    afterSince(event, query.since) &&
+    before(event, query.until) &&
+    beforeCursor(event, query.before) &&
+    afterCursor(event, query.after)
+  );
 }

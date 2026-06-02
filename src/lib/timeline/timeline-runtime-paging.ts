@@ -1,64 +1,35 @@
 import { feedWindowSize, mergeFeedWindow } from '../events/feed-window';
 import { readCacheFirstFeedPage } from '../events/feed-page-cache-first';
 import { queryFeed, upsertEvent } from '../events/repository';
-import type { FeedCursorPoint } from '../events/types';
 import type { DemandSurface } from '../relays/orchestration/demand-types';
 import type { PageIntent } from '../relays/orchestration/intent-types';
-import type { SubscriptionOrchestrator } from '../relays/orchestration/orchestrator';
 import {
   planTimelinePageIntent,
   readPlannedTimelinePage,
 } from '../relays/orchestration/page-reads';
 import type { PlannedTimelinePageIntent } from '../relays/orchestration/page-reads';
 import type { RelayGroupPageResult } from '../events/relay-page';
-import type { OnProgressiveReadSnapshot } from '../relays/progressive-read-types';
 import { authorFilters } from './follow-list';
 import {
   initialTimelineFromCache,
   newerTimelineFromCache,
   olderTimelineFromCache,
 } from './timeline-cache-results';
-import type { TimelineItem } from './timeline-store';
+import type {
+  TimelineInitialRequest,
+  TimelineNewerResult,
+  TimelineOlderRequest,
+  TimelineOlderResult,
+  TimelinePageResult,
+} from './timeline-runtime-paging-types';
 
-export type TimelineOlderRequest = {
-  readonly surface: DemandSurface;
-  readonly owner: string;
-  readonly items: readonly TimelineItem[];
-  readonly authors: readonly string[];
-  readonly relays: readonly string[];
-  readonly cursor: FeedCursorPoint;
-  readonly pageSize: number;
-  readonly subscriptions: SubscriptionOrchestrator;
-  readonly signal?: AbortSignal;
-  readonly onSnapshot?: OnProgressiveReadSnapshot;
-};
-
-export type TimelineOlderResult = {
-  readonly items: TimelineItem[];
-  readonly hasOlder: boolean;
-  readonly hasNewer: boolean;
-  readonly nextOlderCursor?: FeedCursorPoint;
-  readonly incomplete?: boolean;
-};
-
-export type TimelineNewerResult = {
-  readonly items: TimelineItem[];
-  readonly hasNewer: boolean;
-  readonly hasOlder: boolean;
-  readonly nextNewerCursor?: FeedCursorPoint;
-  readonly incomplete?: boolean;
-};
-
-export type TimelineInitialRequest = {
-  readonly surface: DemandSurface;
-  readonly owner: string;
-  readonly authors: readonly string[];
-  readonly relays: readonly string[];
-  readonly pageSize: number;
-  readonly subscriptions: SubscriptionOrchestrator;
-  readonly signal?: AbortSignal;
-  readonly onSnapshot?: OnProgressiveReadSnapshot;
-};
+export type {
+  TimelineInitialRequest,
+  TimelineNewerResult,
+  TimelineOlderRequest,
+  TimelineOlderResult,
+  TimelinePageResult,
+} from './timeline-runtime-paging-types';
 
 export async function loadInitialTimelinePage(
   request: TimelineInitialRequest,
@@ -68,7 +39,8 @@ export async function loadInitialTimelinePage(
     plan,
     subscriptions: request.subscriptions,
   });
-  if (cache.kind === 'complete-cache') return initialTimelineFromCache(cache.page);
+  if (cache.kind === 'complete-cache')
+    return initialTimelineFromCache(cache.page);
   if (cache.kind === 'partial-cache') {
     void readAndStoreRelayPage(request, plan).catch(() => undefined);
     return initialTimelineFromCache(cache.page);
@@ -139,13 +111,6 @@ export async function loadNewerTimelinePage(
   };
 }
 
-export type TimelinePageResult = {
-  readonly items: TimelineItem[];
-  readonly hasOlder: boolean;
-  readonly nextOlderCursor?: FeedCursorPoint;
-  readonly incomplete?: boolean;
-};
-
 function timelineIntent(
   request: TimelineInitialRequest | TimelineOlderRequest,
   direction: PageIntent['direction'],
@@ -160,7 +125,12 @@ function timelineIntent(
     direction,
     cursor: 'cursor' in request ? request.cursor : undefined,
     filters: (group, bounds) =>
-      authorFilters(group.authors ?? [], request.pageSize, bounds, homeBudgetMode(request.surface)),
+      authorFilters(
+        group.authors ?? [],
+        request.pageSize,
+        bounds,
+        homeBudgetMode(request.surface),
+      ),
   };
 }
 
@@ -172,11 +142,16 @@ async function readAndStoreRelayPage(
     signal: request.signal,
     onSnapshot: request.onSnapshot,
   });
-  await Promise.all(page.items.map((item) => upsertEvent(item.event, item.relays)));
+  await Promise.all(
+    page.items.map((item) => upsertEvent(item.event, item.relays)),
+  );
   return page;
 }
 
-function localTimelinePage(request: TimelineOlderRequest, direction: 'older' | 'newer') {
+function localTimelinePage(
+  request: TimelineOlderRequest,
+  direction: 'older' | 'newer',
+) {
   return queryFeed({
     kind: 'home',
     authors: request.authors,

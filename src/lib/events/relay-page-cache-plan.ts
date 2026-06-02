@@ -66,7 +66,8 @@ export async function buildSegmentCachePlan(
   const coverage = await coverageForRequirements(request.key, requirements);
   const plans = requirements.map((requirement) => ({
     ...requirement,
-    covered: coverageCoversRequirements([requirement], coverage).kind === 'covered',
+    covered:
+      coverageCoversRequirements([requirement], coverage).kind === 'covered',
   }));
   const covered = plans.filter((plan) => plan.covered);
   const uncovered = uncoveredBatches(plans);
@@ -167,7 +168,6 @@ async function cachedRead(
     hitLimit: false,
     underHalfLimit: underHalf(filters, request.pageSize, items),
     contacted: true,
-    source: 'cache',
   };
 }
 

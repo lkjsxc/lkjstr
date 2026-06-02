@@ -47,7 +47,11 @@ export async function loadOlderProfilePage(request: ProfileOlderRequest) {
     }),
     readAndStoreProfile(planRequest),
   ]);
-  const window = profileWindow(request, [...page.items, ...relayPage.items], 'older');
+  const window = profileWindow(
+    request,
+    [...page.items, ...relayPage.items],
+    'older',
+  );
   return {
     posts: window.items,
     hasOlder: page.hasMore || relayPage.hasMorePossible,
@@ -78,7 +82,11 @@ export async function loadNewerProfilePage(request: ProfileNewerRequest) {
     }),
     readAndStoreProfile(planRequest),
   ]);
-  const window = profileWindow(request, [...page.items, ...relayPage.items], 'newer');
+  const window = profileWindow(
+    request,
+    [...page.items, ...relayPage.items],
+    'newer',
+  );
   return {
     posts: window.items,
     hasNewer: page.hasMore || relayPage.hasMorePossible,
@@ -130,7 +138,11 @@ function profileWindow(
 
 function olderProfileFromCache(
   request: ProfileOlderRequest,
-  page: { readonly items: FeedEvent[]; readonly hasOlder: boolean; readonly nextCursor?: FeedCursorPoint },
+  page: {
+    readonly items: FeedEvent[];
+    readonly hasOlder: boolean;
+    readonly nextCursor?: FeedCursorPoint;
+  },
 ) {
   const window = profileWindow(request, page.items, 'older');
   return {
@@ -143,7 +155,11 @@ function olderProfileFromCache(
 
 function newerProfileFromCache(
   request: ProfileOlderRequest,
-  page: { readonly items: FeedEvent[]; readonly hasNewer: boolean; readonly nextCursor?: FeedCursorPoint },
+  page: {
+    readonly items: FeedEvent[];
+    readonly hasNewer: boolean;
+    readonly nextCursor?: FeedCursorPoint;
+  },
 ) {
   const window = profileWindow(request, page.items, 'newer');
   return {

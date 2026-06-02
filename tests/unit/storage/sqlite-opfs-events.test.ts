@@ -1,6 +1,14 @@
 import { describe, expect, test, vi } from 'vitest';
-import type { StorageOp, StorageResponse } from '../../../src/lib/storage/sqlite-opfs/types';
-import type { StoredEvent } from '../../../src/lib/events/types';
+import type {
+  StorageOp,
+  StorageResponse,
+} from '../../../src/lib/storage/sqlite-opfs/types';
+import {
+  eventRow,
+  ledger,
+  response,
+  storedEvent,
+} from './sqlite-opfs-test-helpers';
 
 const state = vi.hoisted(() => ({
   sent: [] as StorageOp[],
@@ -83,7 +91,12 @@ describe('SQLite event graph repositories', () => {
 
     await expect(
       sqliteIndexedPage(
-        { kind: 'global', kinds: [1], relays: ['wss://relay.example'], limit: 10 },
+        {
+          kind: 'global',
+          kinds: [1],
+          relays: ['wss://relay.example'],
+          limit: 10,
+        },
         10,
       ),
     ).resolves.toHaveLength(1);
@@ -155,42 +168,3 @@ describe('SQLite event graph repositories', () => {
     ).resolves.toEqual([record]);
   });
 });
-
-function response(outcome: StorageResponse['outcome'], rows: StorageResponse['rows'] = []): StorageResponse {
-  return { requestId: 'test', outcome, rows, rowsAffected: 0, diagnostics: {} };
-}
-
-function eventRow(event: StoredEvent): StorageResponse['rows'][number] {
-  return {
-    event_json: JSON.stringify(event),
-    relay_urls_json: JSON.stringify(event.relayUrls),
-  };
-}
-
-function ledger(id: string) {
-  return {
-    id,
-    ownerKind: 'notification' as const,
-    resourceKind: 'notification-record' as const,
-    resourceId: id,
-    score: 1,
-    createdAt: 1,
-    updatedAt: 1,
-    cacheBytes: 1,
-    protected: false,
-  };
-}
-
-function storedEvent(id: string, createdAt: number, relayUrls: readonly string[]): StoredEvent {
-  return {
-    id,
-    pubkey: 'p'.repeat(64),
-    created_at: createdAt,
-    kind: 1,
-    tags: [],
-    content: 'hello',
-    sig: 's'.repeat(128),
-    receivedAt: createdAt * 1000,
-    relayUrls,
-  };
-}

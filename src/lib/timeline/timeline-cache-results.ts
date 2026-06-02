@@ -29,7 +29,12 @@ export function olderTimelineFromCache(
   request: TimelineOlderRequest,
   page: CachedTimelinePage,
 ): TimelineOlderResult {
-  const window = mergeFeedWindow(request.items, page.items, feedWindowSize, true);
+  const window = mergeFeedWindow(
+    request.items,
+    page.items,
+    feedWindowSize,
+    true,
+  );
   return {
     items: window.items,
     hasOlder: page.hasOlder,

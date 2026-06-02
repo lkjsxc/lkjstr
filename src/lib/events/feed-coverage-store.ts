@@ -118,7 +118,9 @@ export function feedCoverageMemorySizeForTests(): number {
 }
 
 function memoryCoverageForFeed(feedKey: string): FeedCoverage[] {
-  return [...memoryCoverage.values()].filter((item) => item.feedKey === feedKey);
+  return [...memoryCoverage.values()].filter(
+    (item) => item.feedKey === feedKey,
+  );
 }
 
 function coverageId(input: Omit<FeedCoverage, 'id' | 'updatedAt'>): string {

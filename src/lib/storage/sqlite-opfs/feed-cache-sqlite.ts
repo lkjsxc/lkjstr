@@ -42,7 +42,9 @@ export async function sqliteReadFeedCoverageRowsForRequirements(
   requirements: readonly CoverageRequirementRow[],
 ): Promise<FeedCoverage[] | undefined> {
   const rows = await Promise.all(
-    requirements.map((requirement) => readCoverageRequirement(feedKey, requirement)),
+    requirements.map((requirement) =>
+      readCoverageRequirement(feedKey, requirement),
+    ),
   );
   if (rows.some((row) => !row)) return undefined;
   return uniqueRows(rows.flatMap((row) => row ?? []));

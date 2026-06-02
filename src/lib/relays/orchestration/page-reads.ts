@@ -126,7 +126,8 @@ export function readPlannedTimelinePage(
   options: ReadPageOptions = {},
 ): Promise<RelayGroupPageResult> {
   const filters = plan.intent.filters;
-  if (!filters) throw new Error('PageIntent.filters required for timeline paging');
+  if (!filters)
+    throw new Error('PageIntent.filters required for timeline paging');
   return readRelayFeedGroups({
     key: plan.key,
     groups: plan.groups,

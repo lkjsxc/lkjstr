@@ -11,7 +11,10 @@ import {
   type PlannedTimelinePageIntent,
 } from '$lib/relays/orchestration/page-reads';
 import { planPagingRouteGroups } from '$lib/relays/orchestration/route-plan';
-import type { PageIntent, PageIntentDirection } from '$lib/relays/orchestration/intent-types';
+import type {
+  PageIntent,
+  PageIntentDirection,
+} from '$lib/relays/orchestration/intent-types';
 import type { RelayRouteGroup } from '$lib/relays/relay-route-types';
 import { profileLiveFilters } from './profile-subscription-filters';
 import { profileContentGroups } from './profile-relays';
