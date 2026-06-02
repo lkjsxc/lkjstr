@@ -15,11 +15,16 @@
     runtimeMemorySnapshot,
     type RuntimeMemorySnapshot,
   } from '$lib/memory/runtime-memory';
+  import {
+    readSqliteStorageHealth,
+    type SqliteStorageHealthStatus,
+  } from '$lib/storage/sqlite-opfs/storage-health';
   import JobHealthPanel from './JobHealthPanel.svelte';
   import RuntimeCounters from './RuntimeCounters.svelte';
   import RuntimeMemoryPanel from './RuntimeMemoryPanel.svelte';
   import CacheActions from './CacheActions.svelte';
   import CacheStatusPanel from './CacheStatusPanel.svelte';
+  import StorageHealthPanel from './StorageHealthPanel.svelte';
   import { stats, totalStats } from './relay-totals';
   import { relaySubscriptionRows } from './subscription-rows';
 
@@ -28,6 +33,7 @@
   let summaries = $state<RelayDiagnosticSummary[]>([]);
   let jobHealth = $state<JobHealthSummary | null>(null);
   let cache = $state<CacheMetadata | null>(null);
+  let storageHealth = $state<SqliteStorageHealthStatus | null>(null);
   let autoRefresh = $state(false);
   let timer: ReturnType<typeof setInterval> | undefined;
   let disposed = false;
@@ -45,10 +51,11 @@
     memory = runtimeMemorySnapshot();
     await new Promise((resolve) => setTimeout(resolve, 100));
     if (disposed) return;
-    [summaries, jobHealth, cache] = await Promise.all([
+    [summaries, jobHealth, cache, storageHealth] = await Promise.all([
       safeRead(() => listRelayDiagnosticSummaries(), summaries),
       safeRead(() => loadJobHealthSummary(), jobHealth),
       safeRead(() => cacheStatus(), cache),
+      safeRead(() => readSqliteStorageHealth(), storageHealth),
     ]);
   }
 
@@ -168,6 +175,7 @@
   </table>
   <JobHealthPanel {jobHealth} />
   <CacheStatusPanel {cache} />
+  <StorageHealthPanel status={storageHealth} />
   <RuntimeCounters />
   <RuntimeMemoryPanel {memory} />
 </section>

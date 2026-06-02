@@ -7,8 +7,8 @@ Stats shows current-session relay counters and persisted operational summaries.
 ## Contract
 
 - Stats opens from New Tab as the `network-stats` tab kind.
-- It reads relay snapshots, cache status, persisted relay summaries, persisted
-  job health, and runtime counters.
+- It reads relay snapshots, cache status, SQLite worker health, persisted relay
+  summaries, persisted job health, and runtime counters.
 - It never creates relay subscriptions or changes relay settings.
 - Manual refresh is always available.
 - Optional auto-refresh polls every two seconds while enabled.
@@ -47,6 +47,11 @@ Stats shows current-session relay counters and persisted operational summaries.
   schema-incomplete storage, the actions report through the normal cache status
   path and keep the tab usable. `Compact now` may fall back to the displayed
   site target when the settings store cannot be read.
+- SQLite storage health shows persistent OPFS or temporary memory mode, VFS,
+  worker kind, SQLite library text, database name, page counts, event count,
+  relay receipt count, tag row count, schema change count, and warnings.
+- Temporary memory mode shows the exact warning that changes may disappear when
+  the browser session ends.
 - Cache diagnostic reads must treat missing IndexedDB object stores as
   unavailable inventory or ledger status. They must not reject the Stats refresh
   promise or repeat uncaught `NotFoundError` entries in the console.
