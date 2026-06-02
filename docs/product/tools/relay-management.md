@@ -54,8 +54,8 @@ lkjstr Log owns session-only diagnostics.
 
 ## Rust Conversion Status
 
-- The Rust/WASM shell renders a partial Relay Settings surface from real
-  IndexedDB `relaySets` rows.
+- The Rust/WASM shell renders a partial Relay Settings surface from real relay
+  set rows.
 - Rust Relay Settings supports default user/discovery seeding, add, remove,
   enable, label edit, read/write toggles for user relays, selected default user
   set, and explicit restore defaults per purpose.

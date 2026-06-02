@@ -12,7 +12,7 @@ Feature modules call these functions instead of reaching into database bindings.
 - `settings-store.ts`: flat setting overrides through SQLite worker storage.
 - `tweet-drafts-store.ts`: protected Tweet drafts through SQLite worker storage.
 - `workspace-store.ts`: durable workspace layout through SQLite worker storage.
-- `relay-sets-store.ts`: relay set configuration.
+- `relay-sets-store.ts`: relay set configuration through SQLite worker storage.
 - `route-blocks-store.ts`: protected relay route blocks.
 - `tab-states-store.ts`: tab snapshot rows and ledger records.
 - `action-state-store.ts`: cached reaction/repost action lookup.
