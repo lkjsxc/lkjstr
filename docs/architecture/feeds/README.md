@@ -40,12 +40,13 @@ semantics: ordering, paging, filters, merge, cursors, and multi-tab ownership.
 
 ## Cache-First Page Pipeline
 
-Home, Global, Profile posts, and Notifications all resolve a page intent before
-network reads. The intent identifies the semantic feed key, route groups, relay
-filter batches, display bounds, storage bounds, and cursor direction. SQLite
-coverage proof then decides the return path: complete proof renders local rows
-and skips relay reads, partial proof renders local rows and reads uncovered
-requirements, and missing proof runs the normal bounded relay scan.
+Home, Global, and Profile posts resolve a page intent before network reads.
+The intent identifies the semantic feed key, route groups, relay filter batches,
+display bounds, storage bounds, and cursor direction. SQLite coverage proof then
+decides the return path: complete proof renders local rows and skips relay
+reads, partial proof renders local rows and reads uncovered requirements, and
+missing proof runs the normal bounded relay scan. Notifications keep this as the
+next top-level runtime cutover while grouped scans still prune covered relays.
 
 ## Related
 
