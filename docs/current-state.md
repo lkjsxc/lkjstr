@@ -72,8 +72,9 @@ Read next: [architecture/data/README.md](architecture/data/README.md),
   kernel.
 - The SQLite schema, statement records, row codecs, retention classes, and
   worker adapter foundations already exist in Rust and TypeScript host code.
-  Product startup and Svelte feed/tool paths still need cutover wiring before
-  Dexie can be removed.
+  The Svelte Settings store now writes flat overrides through the SQLite worker
+  with memory fallback when Workers are unavailable. Other product data families
+  still need cutover wiring before Dexie can be removed.
 - Protected records are never removed by cache cleanup: accounts, local signing
   secrets, settings, relay sets, workspace state, Tweet drafts, active tab
   snapshots, active jobs, and route blocks.

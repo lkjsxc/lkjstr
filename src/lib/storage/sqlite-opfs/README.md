@@ -14,7 +14,9 @@ storage target.
 - `worker-health.ts`: storage health projection.
 - `worker.ts`: dedicated module worker entry point.
 - `client.ts`: browser client with deadlines, cancellation, and cleanup.
+- `kernel-client.ts`: shared open/apply/send helper for product repositories.
 - `storage-health.ts`: Stats-facing health reader for the SQLite worker.
+- `settings-sqlite.ts`: SQLite-backed flat setting override repository.
 
 ## Contract
 

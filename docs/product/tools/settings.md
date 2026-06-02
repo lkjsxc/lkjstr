@@ -7,6 +7,8 @@ Settings provide editable local preferences as one flat key-value list.
 ## Contract
 
 - Settings opens from New Tab.
+- Flat setting overrides are persisted through the SQLite worker when browser
+  Workers are available, with in-memory fallback for unavailable storage.
 - Every record shows label, key, description, editor, type, and changed state.
 - There are no category columns, inspectors, search panes, or sectioned lists.
 - Keys use namespaces only for persistence and scanning.
@@ -62,6 +64,5 @@ Settings provide editable local preferences as one flat key-value list.
 
 - The Rust/WASM shell renders the flat settings schema and stored overrides
   from Rust.
-- Raw value edits save to the Rust IndexedDB settings adapter.
-- Rust Settings does not yet apply all side effects such as CSS appearance
-  updates or cache budget enforcement after a save.
+- Rust Settings side effects such as CSS appearance updates and cache budget
+  enforcement remain incomplete until the Rust UI owns the full surface.

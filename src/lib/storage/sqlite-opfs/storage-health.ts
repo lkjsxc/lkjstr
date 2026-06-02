@@ -1,4 +1,5 @@
-import { createSqliteOpfsClient, type SqliteOpfsClient } from './client';
+import type { SqliteOpfsClient } from './client';
+import { sendSqliteStorage } from './kernel-client';
 import type { StorageHealth, StorageResponse } from './types';
 
 export type SqliteStorageHealthStatus =
@@ -14,42 +15,25 @@ export type ReadSqliteStorageHealthOptions = {
 };
 
 const databaseName = '/lkjstr/main.sqlite3';
-let client: SqliteOpfsClient | undefined;
-let openPromise: Promise<StorageResponse> | undefined;
 
 export async function readSqliteStorageHealth(
   options: ReadSqliteStorageHealthOptions = {},
 ): Promise<SqliteStorageHealthStatus> {
-  if (typeof Worker === 'undefined' && !options.createClient)
-    return { status: 'unavailable', message: 'Worker support unavailable' };
-  const storage = options.createClient?.() ?? storageClient();
-  const opened = await openStorage(storage, Boolean(options.createClient));
-  if (opened.outcome !== 'ok') return unavailable(opened);
-  const response = await storage.send(
-    { kind: 'get-storage-health' },
-    { deadlineMs: 3_000 },
-  );
+  const response = options.createClient
+    ? await readWithFreshClient(options.createClient())
+    : await sendSqliteStorage(
+        { kind: 'get-storage-health' },
+        { deadlineMs: 3_000 },
+      );
   const health = response.diagnostics.health;
   if (response.outcome !== 'ok' || !health) return unavailable(response);
   return { status: 'available', health, diagnostics: response.diagnostics };
 }
 
-function storageClient(): SqliteOpfsClient {
-  client ??= createSqliteOpfsClient({ requestPrefix: 'sqlite-health' });
-  return client;
-}
-
-function openStorage(
+async function readWithFreshClient(
   storage: SqliteOpfsClient,
-  freshClient: boolean,
 ): Promise<StorageResponse> {
-  if (freshClient) return sendOpen(storage);
-  openPromise ??= sendOpen(storage);
-  return openPromise;
-}
-
-function sendOpen(storage: SqliteOpfsClient): Promise<StorageResponse> {
-  return storage.send(
+  const opened = await storage.send(
     {
       kind: 'open',
       database: {
@@ -62,6 +46,8 @@ function sendOpen(storage: SqliteOpfsClient): Promise<StorageResponse> {
     },
     { deadlineMs: 5_000 },
   );
+  if (opened.outcome !== 'ok') return opened;
+  return storage.send({ kind: 'get-storage-health' }, { deadlineMs: 3_000 });
 }
 
 function unavailable(response: StorageResponse): SqliteStorageHealthStatus {
