@@ -134,6 +134,7 @@ export function readPlannedTimelinePage(
     direction: plan.intent.direction,
     ...pageIntentBounds(plan.intent),
     pageSize: plan.intent.pageSize,
+    maxSegments: plan.intent.maxSegments,
     subscriptions: orchestrator,
     purpose: plan.intent.purpose ?? 'feed',
     signal: options.signal,

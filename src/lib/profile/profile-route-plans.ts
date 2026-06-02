@@ -1,16 +1,17 @@
 import { feedDisplayKinds } from '$lib/events/feed-kinds';
 import type { RelayGroupPageResult } from '$lib/events/relay-page';
-import { readRelayFeedGroups } from '$lib/events/relay-page';
 import type { FeedCursorPoint } from '$lib/events/types';
 import type { PoolEvent } from '$lib/relays/relay-pool';
 import type { SubscriptionOrchestrator } from '$lib/relays/orchestration/orchestrator';
 import {
   pageIntentSemanticKey,
+  readPlannedTimelinePage,
   resolvePagingRoutePurpose,
   routeGroupFingerprint,
+  type PlannedTimelinePageIntent,
 } from '$lib/relays/orchestration/page-reads';
 import { planPagingRouteGroups } from '$lib/relays/orchestration/route-plan';
-import type { PageIntentDirection } from '$lib/relays/orchestration/intent-types';
+import type { PageIntent, PageIntentDirection } from '$lib/relays/orchestration/intent-types';
 import type { RelayRouteGroup } from '$lib/relays/relay-route-types';
 import { profileLiveFilters } from './profile-subscription-filters';
 import { profileContentGroups } from './profile-relays';
@@ -26,42 +27,22 @@ export type ProfilePostsPageRequest = {
   readonly signal?: AbortSignal;
 };
 
+export async function planProfilePostsPageByIntent(
+  request: ProfilePostsPageRequest,
+): Promise<PlannedTimelinePageIntent> {
+  const groups = await profilePostRouteGroups(request.pubkey, request.relays);
+  const intent = profilePageIntent(request, routeGroupFingerprint(groups));
+  return { intent, groups, key: pageIntentSemanticKey(intent) };
+}
+
 export async function readProfilePostsPageByIntent(
   request: ProfilePostsPageRequest,
 ): Promise<RelayGroupPageResult> {
-  const groups = await profilePostRouteGroups(request.pubkey, request.relays);
-  const routeFingerprint = routeGroupFingerprint(groups);
-  return readRelayFeedGroups({
-    key: pageIntentSemanticKey({
-      surface: 'profile',
-      owner: request.owner,
-      phase: request.direction === 'initial' ? 'bootstrap' : 'page',
-      selectedRelays: request.relays,
-      authors: [request.pubkey],
-      pageSize: request.pageSize,
-      direction: request.direction,
-      cursor: request.cursor,
-      purpose: 'feed',
-      routeFingerprint,
-    }),
-    groups,
-    filters: (group, bounds) => [
-      {
-        kinds: feedDisplayKinds,
-        authors: group.authors ?? [request.pubkey],
-        ...bounds,
-        limit: request.pageSize,
-      },
-    ],
-    direction: request.direction,
-    maxSegments: request.direction === 'initial' ? 3 : undefined,
-    before: request.direction === 'older' ? request.cursor : undefined,
-    after: request.direction === 'newer' ? request.cursor : undefined,
-    pageSize: request.pageSize,
-    subscriptions: request.subscriptions,
-    signal: request.signal,
-    purpose: 'feed',
-  });
+  return readPlannedTimelinePage(
+    request.subscriptions,
+    await planProfilePostsPageByIntent(request),
+    { signal: request.signal },
+  );
 }
 
 export async function submitProfilePostsLiveIntent(input: {
@@ -93,6 +74,35 @@ export async function submitProfilePostsLiveIntent(input: {
     [...new Set(groups.flatMap((group) => group.relays))],
     input.onEvent,
   );
+}
+
+function profilePageIntent(
+  request: ProfilePostsPageRequest,
+  routeFingerprint: string,
+): PageIntent {
+  return {
+    surface: 'profile',
+    owner: request.owner,
+    phase: request.direction === 'initial' ? 'bootstrap' : 'page',
+    selectedRelays: request.relays,
+    authors: [request.pubkey],
+    pageSize: request.pageSize,
+    direction: request.direction,
+    cursor: request.cursor,
+    before: request.direction === 'older' ? request.cursor : undefined,
+    after: request.direction === 'newer' ? request.cursor : undefined,
+    purpose: 'feed',
+    routeFingerprint,
+    maxSegments: request.direction === 'initial' ? 3 : undefined,
+    filters: (group, bounds) => [
+      {
+        kinds: feedDisplayKinds,
+        authors: group.authors ?? [request.pubkey],
+        ...bounds,
+        limit: request.pageSize,
+      },
+    ],
+  };
 }
 
 async function profilePostRouteGroups(
