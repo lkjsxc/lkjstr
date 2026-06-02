@@ -2,33 +2,28 @@
 
 ## Purpose
 
-Storage repositories isolate feature modules from Dexie. They keep table access,
-transactions, normalization, operation results, and ledger writes in one
-storage-owned subsystem.
+Storage repositories isolate feature modules from database bindings. They keep
+storage commands, transactions, normalization, operation results, and ledger
+writes in one storage-owned subsystem.
 
 ## Boundary
 
-Direct `browserDb()` access is allowed only in:
-
-- `src/lib/storage/browser-db.ts`
-- `src/lib/storage/schema/`
-- `src/lib/storage/operation/`
-- `src/lib/storage/repositories/`
-- `src/lib/storage/ledger/`
-- `src/lib/storage/retention/`
-- `src/lib/storage/inventory/`
-- storage-internal tests
-
-Feature modules call repository functions for accounts, secrets, settings,
-relay sets, workspaces, events, notifications, feed pages, jobs, relay
+Feature modules call repository functions for accounts, secrets, settings, relay
+sets, workspaces, drafts, events, notifications, feed pages, jobs, relay
 diagnostics, and tab states.
+
+Direct `browserDb()` access is deletion-only and allowed only inside storage or
+cache-maintenance modules that have not yet moved to SQLite.
+
+SQLite repositories live under `src/lib/storage/sqlite-opfs/` during the
+TypeScript cutover. Product UI code must not format SQL or open OPFS.
 
 ## Repository Rules
 
 - Reads normalize optional persisted fields before returning rows.
-- Writes return typed storage results.
+- Writes return typed storage results or keep explicit memory fallback.
 - Ledger-backed writes include the resource and ledger row in one transaction.
-- Protected writes do not silently downgrade durability.
+- Protected writes do not silently hide failed durability.
 - Cache writes may continue the UI on failure while recording diagnostics.
 - Repository tests cover storage-unavailable behavior.
 

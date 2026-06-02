@@ -25,13 +25,13 @@ tab snapshots are recoverable when a ledger row, delete path, repair path, and
 byte estimate exist.
 
 All writes use storage repositories. Feature modules should not choose Dexie
-tables directly after a repository exists for that data family. New Rust
-repositories should target OPFS SQLite instead of extending Dexie.
+tables directly after a repository exists for that data family. New repositories
+target OPFS SQLite instead of extending Dexie.
 
-The current live contract is proved by the manifest docs, Dexie schema,
-repository checks, storage unit tests, storage pressure e2e tests, and Docker
-Compose verification. The target contract adds executable SQLite schema checks
-from [../sqlite-opfs/schema.md](../sqlite-opfs/schema.md).
+The current live contract is proved by the manifest docs, current IndexedDB
+schema, SQLite worker tests, repository checks, storage unit tests, storage
+pressure e2e tests, and Docker Compose verification. The target contract adds
+executable SQLite schema checks from [../sqlite-opfs/schema.md](../sqlite-opfs/schema.md).
 
 ## Table of Contents
 
@@ -64,10 +64,10 @@ from [../sqlite-opfs/schema.md](../sqlite-opfs/schema.md).
 
 ## Kernel Rule
 
-The Storage Manifest is the source for current live table names, Dexie schema
-strings, data classes, inventory groups, ledger resource ownership, compaction
-flags, and repair flags. SQLite schema records become the Rust storage source of
-truth as each repository family moves to OPFS.
+The Storage Manifest is the source for current live IndexedDB table names,
+schema strings, data classes, inventory groups, ledger resource ownership,
+compaction flags, and repair flags. SQLite schema records become the storage
+source of truth as each repository family moves to OPFS.
 
 Removed stores are not live manifest entries. Cleanup for removed object stores
 belongs in a separate removed-store helper with tests, so live table checks stay
