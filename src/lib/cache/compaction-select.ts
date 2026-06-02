@@ -1,5 +1,4 @@
-import { browserDb } from '../storage/browser-db';
-import { boundedStorageRead } from '../storage/safe-storage';
+import { sqliteReadCacheLedgerRows } from '../storage/sqlite-opfs/cache-ledger-sqlite';
 import type { CacheLedgerRecord } from './cache-ledger-record';
 import { compareCacheLedgerRows } from './cache-ledger-score';
 
@@ -56,37 +55,33 @@ export async function lowestScorePruneSelection(
   needed: number,
   protectedIds: Set<string>,
 ): Promise<PruneSelectionSummary> {
-  return boundedStorageRead(async () => {
-    const selectedRows: CacheLedgerRecord[] = [];
-    let scannedRows = 0;
-    let skippedDurablyProtected = 0;
-    let skippedDynamicallyProtected = 0;
-    await browserDb()
-      .cacheLedger.orderBy('score')
-      .each((row: CacheLedgerRecord) => {
-        scannedRows += 1;
-        if (selectedRows.length >= needed) return false;
-        if (row.protected) {
-          skippedDurablyProtected += 1;
-          return;
-        }
-        if (protectedIds.has(row.id) || protectedIds.has(row.resourceId)) {
-          skippedDynamicallyProtected += 1;
-          return;
-        }
-        selectedRows.push(row);
-      });
-    return {
-      selectedRows,
-      scannedRows,
-      skippedDurablyProtected,
-      skippedDynamicallyProtected,
-      selectedBytes: selectedRows.reduce(
-        (sum, row) => sum + (row.cacheBytes ?? 0),
-        0,
-      ),
-    };
-  }, emptyPruneSelection());
+  const rows = await sqliteReadCacheLedgerRows().catch(() => undefined);
+  if (!rows) return emptyPruneSelection();
+  const selectedRows: CacheLedgerRecord[] = [];
+  let skippedDurablyProtected = 0;
+  let skippedDynamicallyProtected = 0;
+  for (const row of rows.sort(compareCacheLedgerRows)) {
+    if (selectedRows.length >= needed) break;
+    if (row.protected) {
+      skippedDurablyProtected += 1;
+      continue;
+    }
+    if (protectedIds.has(row.id) || protectedIds.has(row.resourceId)) {
+      skippedDynamicallyProtected += 1;
+      continue;
+    }
+    selectedRows.push(row);
+  }
+  return {
+    selectedRows,
+    scannedRows: rows.length,
+    skippedDurablyProtected,
+    skippedDynamicallyProtected,
+    selectedBytes: selectedRows.reduce(
+      (sum, row) => sum + (row.cacheBytes ?? 0),
+      0,
+    ),
+  };
 }
 
 export function emptyPruneSelection(): PruneSelectionSummary {

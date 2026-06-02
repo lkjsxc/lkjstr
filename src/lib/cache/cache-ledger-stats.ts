@@ -1,5 +1,4 @@
-import { browserDb } from '../storage/browser-db';
-import { boundedStorageRead } from '../storage/safe-storage';
+import { sqliteReadCacheLedgerRows } from '../storage/sqlite-opfs/cache-ledger-sqlite';
 import type { CacheLedgerRecord } from './cache-ledger-record';
 
 export type LedgerInventoryRow = {
@@ -14,48 +13,37 @@ export type LedgerInventoryRow = {
 };
 
 export async function estimatedPrunableCacheBytes(): Promise<number> {
-  return boundedStorageRead(async () => {
-    let total = 0;
-    await browserDb().cacheLedger.each((row) => {
-      if (!row.protected) total += row.cacheBytes ?? 0;
-    });
-    return total;
-  }, 0);
+  return ledgerRows().then((rows) =>
+    rows.reduce((sum, row) => sum + (row.protected ? 0 : row.cacheBytes), 0),
+  );
 }
 
 export async function estimatedLedgerBytes(): Promise<number> {
-  return boundedStorageRead(async () => {
-    let total = 0;
-    await browserDb().cacheLedger.each((row) => {
-      total += row.cacheBytes ?? 0;
-    });
-    return total;
-  }, 0);
+  return ledgerRows().then((rows) =>
+    rows.reduce((sum, row) => sum + row.cacheBytes, 0),
+  );
 }
 
 export async function estimatedEventCacheBytes(): Promise<number> {
-  return boundedStorageRead(async () => {
-    let total = 0;
-    await browserDb()
-      .cacheLedger.where('ownerKind')
-      .equals('event')
-      .each((row) => {
-        total += row.cacheBytes ?? 0;
-      });
-    return total;
-  }, 0);
+  return ledgerRows().then((rows) =>
+    rows
+      .filter((row) => row.ownerKind === 'event')
+      .reduce((sum, row) => sum + row.cacheBytes, 0),
+  );
 }
 
 export async function estimatedLedgerBytesByOwner(): Promise<
   LedgerInventoryRow[]
 > {
-  return boundedStorageRead(async () => {
-    const rows = new Map<string, LedgerInventoryRow>();
-    await browserDb().cacheLedger.each((row) => mergeLedgerRow(rows, row));
-    return [...rows.values()].sort(
-      (a, b) => b.estimatedBytes - a.estimatedBytes,
-    );
-  }, []);
+  const rows = new Map<string, LedgerInventoryRow>();
+  for (const row of await ledgerRows()) mergeLedgerRow(rows, row);
+  return [...rows.values()].sort(
+    (left, right) => right.estimatedBytes - left.estimatedBytes,
+  );
+}
+
+async function ledgerRows(): Promise<CacheLedgerRecord[]> {
+  return (await sqliteReadCacheLedgerRows().catch(() => undefined)) ?? [];
 }
 
 function mergeLedgerRow(

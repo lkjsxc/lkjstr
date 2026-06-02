@@ -1,5 +1,5 @@
-import { browserDb } from '../storage/browser-db';
-import { boundedStorageRead } from '../storage/safe-storage';
+import { readSqliteStorageHealth } from '../storage/sqlite-opfs/storage-health';
+import { sqliteReadCacheMeta } from '../storage/sqlite-opfs/cache-ledger-sqlite';
 import { allMemoryEvents } from '../events/repository-memory';
 import { defaultCacheMaxBytes, readStorageQuota } from './storage-quota';
 import type { LedgerInventoryRow } from './cache-ledger-stats';
@@ -73,10 +73,10 @@ export type CacheMetadata = {
 
 export async function cacheStatus(): Promise<CacheMetadata> {
   const quota = await readStorageQuota();
-  const meta = await boundedStorageRead(
-    () => browserDb().cacheMeta.get('main'),
-    undefined,
-  );
+  const [meta, sqliteHealth] = await Promise.all([
+    sqliteReadCacheMeta('main').catch(() => undefined),
+    readSqliteStorageHealth().catch(() => undefined),
+  ]);
   const snapshot = await cacheBudgetSnapshot(
     meta?.budgetBytes ?? defaultCacheMaxBytes,
     quota,
@@ -85,15 +85,10 @@ export async function cacheStatus(): Promise<CacheMetadata> {
   const currentPressureState = await cacheStatusPressureState(snapshot, quota);
   return {
     id: 'main',
-    rawEventCount: await boundedStorageRead(
-      () => browserDb().events.count(),
-      0,
-    ),
-    profileCount: await profileCount(),
-    notificationCount: await boundedStorageRead(
-      () => browserDb().notifications.count(),
-      0,
-    ),
+    rawEventCount:
+      sqliteHealth?.status === 'available' ? sqliteHealth.health.eventCount : 0,
+    profileCount: profileCount(),
+    notificationCount: notificationCount(snapshot.ledgerInventory),
     storageEstimateBytes: snapshot.browserUsageBytes,
     budgetBytes: snapshot.siteBudgetBytes,
     ledgerBytes: snapshot.ledgerBytes,
@@ -156,16 +151,14 @@ function storageOperationSummary(): StorageOperationSummary {
   };
 }
 
-async function profileCount(): Promise<number> {
-  const fallback = uniqueProfilePubkeys(allMemoryEvents());
-  return boundedStorageRead(async () => {
-    const pubkeys = new Set<string>();
-    await browserDb()
-      .events.where('kind')
-      .equals(0)
-      .each((event) => pubkeys.add(event.pubkey));
-    return pubkeys.size;
-  }, fallback);
+function profileCount(): number {
+  return uniqueProfilePubkeys(allMemoryEvents());
+}
+
+function notificationCount(rows: readonly LedgerInventoryRow[]): number {
+  return rows
+    .filter((row) => row.ownerKind === 'notification')
+    .reduce((sum, row) => sum + row.rowCount, 0);
 }
 
 function uniqueProfilePubkeys(

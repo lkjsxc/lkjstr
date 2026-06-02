@@ -24,8 +24,9 @@ notifications, feed cursors, feed coverage, and scan hints. The Svelte Settings,
 workspace, tab snapshot, Accounts, local secret, relay set, Tweet draft, event graph, cached
 feed, tag lookup, local filter-search, relay diagnostics, relay information,
 relay suggestion, author route, route block, notification, feed coverage, scan
-hint, and job repositories now use the TypeScript SQLite worker path. Other
-Svelte product paths still use IndexedDB or Dexie until their SQLite paths are
+hint, cache ledger summary, cache metadata, and job repositories now use the
+TypeScript SQLite worker path. Other Svelte product paths still use IndexedDB or
+Dexie until their SQLite paths are
 wired and tested as durable product paths.
 
 ## Repository Families
@@ -41,9 +42,10 @@ wired and tested as durable product paths.
   route blocks, and jobs are implemented in the Svelte SQLite path. App log rows
   remain open. Relay diagnostics, suggestions, routes, and finished jobs are
   ledger-backed. Route blocks are protected safety rows and are not ledger-backed.
-- retention: cache ledger, dynamic protection, compaction, repair, and
-  inventory snapshots. SQLite inventory uses storage-owned count statements for
-  known schema tables; host code must not format table names itself.
+- retention: cache ledger rows and prune selection are SQLite-backed. Dynamic
+  protection, deletion dispatch, repair, and inventory snapshots remain open.
+  SQLite inventory uses storage-owned count statements for known schema tables;
+  host code must not format table names itself.
 
 ## Statement Shape
 

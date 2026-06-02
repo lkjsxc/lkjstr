@@ -1,4 +1,5 @@
-import { browserDb } from '../storage/browser-db';
+import { readSqliteStorageHealth } from '../storage/sqlite-opfs/storage-health';
+import { sqlitePutCacheMeta } from '../storage/sqlite-opfs/cache-ledger-sqlite';
 import type { CacheMetadata } from './cache-status';
 import type { CacheBudgetResult } from './cache-budget-result';
 import type { CacheBudgetSnapshot } from './cache-budget-snapshot';
@@ -9,9 +10,9 @@ export async function writeCacheBudgetMetadata(
 ): Promise<void> {
   const meta: CacheMetadata = {
     id: 'main',
-    rawEventCount: await browserDb().events.count(),
+    rawEventCount: await sqliteEventCount(),
     profileCount: 0,
-    notificationCount: await browserDb().notifications.count(),
+    notificationCount: 0,
     storageEstimateBytes: snapshot.browserUsageBytes,
     budgetBytes: snapshot.siteBudgetBytes,
     ledgerBytes: snapshot.ledgerBytes,
@@ -61,5 +62,10 @@ export async function writeCacheBudgetMetadata(
     },
     updatedAt: Date.now(),
   };
-  await browserDb().cacheMeta.put(meta);
+  await sqlitePutCacheMeta(meta).catch(() => false);
+}
+
+async function sqliteEventCount(): Promise<number> {
+  const status = await readSqliteStorageHealth().catch(() => undefined);
+  return status?.status === 'available' ? status.health.eventCount : 0;
 }

@@ -21,6 +21,7 @@ storage target.
 - `event-pages-sqlite.ts`: timeline, profile, thread, and tag cache reads.
 - `event-matching-sqlite.ts`: Nostr filter candidate reads for local cache search.
 - `sqlite-record-helpers.ts`: JSON record table helpers shared by SQLite repositories.
+- `cache-ledger-sqlite.ts`: cache ledger reads and cache metadata writes.
 - `relay-cache-schema.ts`: relay diagnostics, route, job, and ledger schema.
 - `relay-cache-steps.ts`: relay cache SQL write steps.
 - `relay-cache-sqlite.ts`: relay diagnostics, NIP-11, suggestions, routes, and blocks.
