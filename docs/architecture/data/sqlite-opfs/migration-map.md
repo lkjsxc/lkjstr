@@ -36,7 +36,7 @@ ownership context.
 | `events` | `events` | implemented | Product event writes and cached feed reads use the worker. |
 | `eventRelays` | `event_relays` | implemented | Relay provenance upserts with the event transaction. |
 | `eventTags` | `event_tags` | implemented | Thread, mention, and route lookups use SQL tag rows. |
-| `notifications` | `notifications` | partial | Materialized rows must be derived from real stored events. |
+| `notifications` | `notifications` | implemented | Materialized rows persist through SQLite and are derived from real stored events. |
 | `feedCursors` | `feed_cursors` | implemented | Cursor writes follow successful SQLite cache page reads. |
 | `feedCoverage` | `feed_coverage` | partial | Coverage proves cache-first reads only when complete. |
 | `feedScanHints` | `feed_scan_hints` | partial | Hints never prove absence. |

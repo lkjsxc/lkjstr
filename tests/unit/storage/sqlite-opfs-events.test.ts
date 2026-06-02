@@ -23,6 +23,8 @@ const { sqliteReadStoredEvent, sqlitePutStoredEventWithLedger } =
   await import('../../../src/lib/storage/sqlite-opfs/events-sqlite');
 const { sqliteIndexedPage } =
   await import('../../../src/lib/storage/sqlite-opfs/event-pages-sqlite');
+const { sqlitePutNotificationsWithLedger, sqliteReadAccountNotifications } =
+  await import('../../../src/lib/storage/sqlite-opfs/notifications-sqlite');
 
 describe('SQLite event graph repositories', () => {
   test('decodes stored events from SQLite rows', async () => {
@@ -90,6 +92,32 @@ describe('SQLite event graph repositories', () => {
       'ORDER BY e.created_at DESC, e.id DESC',
     );
   });
+
+  test('writes and reads notification rows through JSON records', async () => {
+    state.sent = [];
+    const record = {
+      id: 'acct:e:mention',
+      accountPubkey: 'acct',
+      sourceEventId: 'e',
+      actorPubkey: 'actor',
+      kind: 'mention' as const,
+      createdAt: 50,
+      receivedAt: 60,
+      readAt: null,
+      muted: false,
+      hidden: false,
+      relayUrls: ['cache'],
+    };
+    await sqlitePutNotificationsWithLedger(
+      [record],
+      [ledger('notification:e')],
+    );
+    expect(state.sent.find((op) => op.kind === 'batch')).toBeTruthy();
+    state.rows = [{ record_json: JSON.stringify(record) }];
+    await expect(
+      sqliteReadAccountNotifications('acct', 10, 100),
+    ).resolves.toEqual([record]);
+  });
 });
 
 function response(
@@ -103,6 +131,20 @@ function eventRow(event: StoredEvent): StorageResponse['rows'][number] {
   return {
     event_json: JSON.stringify(event),
     relay_urls_json: JSON.stringify(event.relayUrls),
+  };
+}
+
+function ledger(id: string) {
+  return {
+    id,
+    ownerKind: 'notification' as const,
+    resourceKind: 'notification-record' as const,
+    resourceId: id,
+    score: 1,
+    createdAt: 1,
+    updatedAt: 1,
+    cacheBytes: 1,
+    protected: false,
   };
 }
 

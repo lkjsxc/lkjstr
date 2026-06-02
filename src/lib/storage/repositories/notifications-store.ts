@@ -1,37 +1,24 @@
 import type { CacheLedgerRecord } from '../../cache/cache-ledger-record';
 import type { NotificationRecord } from '../../notifications/notification';
-import { browserDb } from '../browser-db';
-import { withStorageTransaction } from '../operation/transaction';
-import { boundedStorageRead } from '../safe-storage';
+import {
+  sqlitePutNotificationLedgerRows,
+  sqlitePutNotificationsWithLedger,
+  sqliteReadAccountNotifications,
+} from '../sqlite-opfs/notifications-sqlite';
 
 export async function putNotificationRowsWithLedger(
   records: readonly NotificationRecord[],
   ledgerRows: readonly CacheLedgerRecord[],
 ): Promise<void> {
-  if (records.length === 0) return;
-  await withStorageTransaction({
-    mode: 'rw',
-    tables: ['notifications', 'cacheLedger'],
-    purpose: 'notification-write',
-    run: async (db) => {
-      await db.notifications.bulkPut([...records]);
-      await db.cacheLedger.bulkPut([...ledgerRows]);
-    },
-  });
+  await sqlitePutNotificationsWithLedger(records, ledgerRows).catch(
+    () => false,
+  );
 }
 
 export async function putNotificationCacheLedgerRows(
   ledgerRows: readonly CacheLedgerRecord[],
 ): Promise<void> {
-  if (ledgerRows.length === 0) return;
-  await withStorageTransaction({
-    mode: 'rw',
-    tables: ['cacheLedger'],
-    purpose: 'notification-write',
-    run: async (db) => {
-      await db.cacheLedger.bulkPut([...ledgerRows]);
-    },
-  });
+  await sqlitePutNotificationLedgerRows(ledgerRows).catch(() => false);
 }
 
 export async function readAccountNotificationRows(
@@ -40,14 +27,11 @@ export async function readAccountNotificationRows(
   beforeCreatedAt: number,
   fallback: readonly NotificationRecord[],
 ): Promise<NotificationRecord[]> {
-  return boundedStorageRead(
-    () =>
-      browserDb()
-        .notifications.where('[accountPubkey+createdAt]')
-        .between([accountPubkey, 0], [accountPubkey, beforeCreatedAt - 1])
-        .reverse()
-        .limit(limit)
-        .toArray(),
-    [...fallback],
+  return (
+    (await sqliteReadAccountNotifications(
+      accountPubkey,
+      limit,
+      beforeCreatedAt,
+    ).catch(() => undefined)) ?? [...fallback]
   );
 }
