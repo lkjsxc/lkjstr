@@ -13,3 +13,4 @@ lkjstr-domain = { path = "../lkjstr-domain" }
 lkjstr-protocol = { path = "../lkjstr-protocol" }
 lkjstr-relays = { path = "../lkjstr-relays" }
 lkjstr-storage = { path = "../lkjstr-storage" }
+serde_json = "1.0.145"

@@ -1,18 +1,25 @@
 #![doc = "Pure application composition reducers for lkjstr."]
 
+pub mod custom_request;
 pub mod feed;
 pub mod query;
 mod startup_snapshots;
 mod workspace_defaults;
 pub mod workspace_runtime;
 
+pub use custom_request::{
+    CustomRequest, CustomRequestError, CustomRequestErrorKind, CustomRequestMode,
+    custom_request_mode, parse_custom_request,
+};
 pub use feed::{
-    FeedLiveQueryInput, FeedRuntimeInput, FeedRuntimeLeaseOutcome, FeedRuntimeLiveOutcome,
-    FeedRuntimeState, FeedWindowCursor, FeedWindowEvidence, FeedWindowFlags, FeedWindowState,
-    FeedWindowStatus, NotificationsLiveQueryInput, ProfileLiveQueryInput, attach_feed_runtime_live,
+    CustomRequestQueryInput, FeedLiveQueryInput, FeedRuntimeInput, FeedRuntimeLeaseOutcome,
+    FeedRuntimeLiveOutcome, FeedRuntimeState, FeedWindowCursor, FeedWindowEvidence,
+    FeedWindowFlags, FeedWindowState, FeedWindowStatus, NotificationsLiveQueryInput,
+    ProfileLiveQueryInput, SearchQueryInput, attach_feed_runtime_live, custom_request_query_input,
     empty_feed_window, feed_window_empty_ready, global_live_query_input, home_live_query_input,
     notifications_live_query_input, profile_live_query_input, reduce_feed_runtime_window,
-    reduce_feed_window, release_feed_runtime_live, set_feed_runtime_visibility, start_feed_runtime,
+    reduce_feed_window, release_feed_runtime_live, search_query_input, set_feed_runtime_visibility,
+    start_feed_runtime,
 };
 pub use query::{QueryDemandInput, QueryDemandPlan, QuerySurface, plan_query_demand};
 pub use workspace_runtime::{

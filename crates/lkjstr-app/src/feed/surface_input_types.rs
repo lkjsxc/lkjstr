@@ -2,6 +2,8 @@
 
 use lkjstr_relays::{AuthorRelayRoute, DemandVisibility};
 
+use crate::custom_request::CustomRequest;
+
 #[derive(Clone, Debug, Eq, PartialEq)]
 pub struct FeedLiveQueryInput {
     pub owner: String,
@@ -37,6 +39,30 @@ pub struct NotificationsLiveQueryInput {
     pub author_routes: Vec<AuthorRelayRoute>,
     pub disabled_relays: Vec<String>,
     pub since: Option<u64>,
+    pub now_sec: u64,
+    pub page_size: u64,
+}
+
+#[derive(Clone, Debug, Eq, PartialEq)]
+pub struct SearchQueryInput {
+    pub owner: String,
+    pub visibility: DemandVisibility,
+    pub selected_relays: Vec<String>,
+    pub disabled_relays: Vec<String>,
+    pub query: String,
+    pub since: Option<u64>,
+    pub until: Option<u64>,
+    pub now_sec: u64,
+    pub page_size: u64,
+}
+
+#[derive(Clone, Debug, Eq, PartialEq)]
+pub struct CustomRequestQueryInput {
+    pub owner: String,
+    pub visibility: DemandVisibility,
+    pub selected_relays: Vec<String>,
+    pub disabled_relays: Vec<String>,
+    pub request: CustomRequest,
     pub now_sec: u64,
     pub page_size: u64,
 }

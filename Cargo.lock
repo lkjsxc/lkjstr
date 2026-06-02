@@ -998,6 +998,7 @@ dependencies = [
  "lkjstr-protocol",
  "lkjstr-relays",
  "lkjstr-storage",
+ "serde_json",
 ]
 
 [[package]]

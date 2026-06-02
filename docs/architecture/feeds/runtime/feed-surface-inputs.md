@@ -4,10 +4,9 @@
 
 Define canonical Rust builders for surface-specific feed query inputs.
 
-Status: Rust owns Home, Global, Profile, and Notifications live query input
-builders. The next pure builder slice covers Search and Custom Request query
-inputs. These builders are app runtime composition only; shipped feed UI wiring
-still uses TypeScript runtime code.
+Status: Rust owns Home, Global, Profile, Notifications, Search, and Custom
+Request query input builders. These builders are app runtime composition only;
+shipped feed UI wiring still uses TypeScript runtime code.
 
 ## Home
 
@@ -92,8 +91,10 @@ still uses TypeScript runtime code.
 
 ## Source
 
-- `crates/lkjstr-app/src/feed/surface_inputs.rs`: Home, Global, Profile,
-  Notifications, Search, and Custom Request query input builders.
+- `crates/lkjstr-app/src/feed/surface_inputs.rs`: Home, Global, Profile, and
+  Notifications query input builders.
+- `crates/lkjstr-app/src/feed/tool_inputs.rs`: Search and Custom Request query
+  input builders.
 - `crates/lkjstr-app/src/custom_request/`: Custom Request parser and mode
   classifier.
 - `crates/lkjstr-app/tests/feed_surface_input_test.rs`: builder contract tests.
