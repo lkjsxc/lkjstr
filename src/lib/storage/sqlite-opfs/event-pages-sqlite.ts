@@ -11,7 +11,7 @@ import { feedDisplayKinds } from '../../events/feed-kinds';
 import { ensureEventGraphSchema } from './event-schema';
 import { decodeStoredEventRow, storedEventColumns } from './event-row-codec';
 import { sendSqliteStorage } from './kernel-client';
-import type { SqlParams } from './types';
+import type { SqlParams, SqlScalar } from './types';
 
 export async function sqliteIndexedPage(
   query: FeedQuery,
@@ -19,8 +19,7 @@ export async function sqliteIndexedPage(
 ): Promise<StoredEvent[] | undefined> {
   if (!(await ensureEventGraphSchema())) return undefined;
   if (query.kind === 'thread') return sqliteThreadPage(query, limit);
-  if (query.kind === 'global')
-    return sqliteKindsPage(feedKinds(query), query, limit);
+  if (query.kind === 'global') return sqliteKindsPage(query, limit);
   return sqliteAuthorPage(query, limit);
 }
 
@@ -29,9 +28,7 @@ export async function sqliteLatestByAuthorKind(
   kind: number,
 ): Promise<StoredEvent | undefined> {
   if (!(await ensureEventGraphSchema())) return undefined;
-  return (
-    await queryEvents('e.pubkey = ?1 AND e.kind = ?2', [pubkey, kind], 1)
-  )?.[0];
+  return (await queryEvents(whereSelect('e.pubkey = ?1 AND e.kind = ?2'), [pubkey, kind], 1))?.[0];
 }
 
 export async function sqliteEventsByTagValue(
@@ -40,7 +37,7 @@ export async function sqliteEventsByTagValue(
   limit = 500,
 ): Promise<StoredEvent[] | undefined> {
   if (!(await ensureEventGraphSchema())) return undefined;
-  return queryTagEvents(tagName, tagValue, limit);
+  return queryTagValues(tagName, [tagValue], limit);
 }
 
 export async function sqliteEventsByTagValues(
@@ -48,16 +45,8 @@ export async function sqliteEventsByTagValues(
   tagValues: readonly string[],
   limit = 500,
 ): Promise<StoredEvent[] | undefined> {
-  const pages = await Promise.all(
-    [...new Set(tagValues)].map((value) =>
-      sqliteEventsByTagValue(tagName, value, limit),
-    ),
-  );
-  if (pages.some((page) => !page)) return undefined;
-  return pages
-    .flatMap((page) => page ?? [])
-    .sort(compareEventsDesc)
-    .slice(0, limit);
+  if (!(await ensureEventGraphSchema())) return undefined;
+  return queryTagValues(tagName, [...new Set(tagValues)], limit);
 }
 
 async function sqliteAuthorPage(
@@ -66,40 +55,27 @@ async function sqliteAuthorPage(
 ): Promise<StoredEvent[] | undefined> {
   const authors = [...new Set(query.authors ?? [])];
   if (authors.length === 0) return [];
-  const per = Math.max(1, Math.ceil((limit * 3) / authors.length));
   const pages = await Promise.all(
-    authors.flatMap((author) =>
-      feedKinds(query).map((kind) => authorKindPage(author, kind, query, per)),
+    chunks(authors, authorChunkSize(query)).map((chunk) =>
+      queryAuthorChunk(chunk, feedKinds(query), query, limit + 1),
     ),
   );
   if (pages.some((page) => !page)) return undefined;
-  return sortedBounded(
-    pages.flatMap((page) => page ?? []),
-    query,
-    limit,
-  );
+  return sortedBounded(pages.flatMap((page) => page ?? []), query, limit);
 }
 
 async function sqliteKindsPage(
-  kinds: readonly number[],
   query: FeedQuery,
   limit: number,
 ): Promise<StoredEvent[] | undefined> {
-  const pages = await Promise.all(
-    kinds.map((kind) =>
-      queryEvents(
-        'e.kind = ?1 AND e.created_at <= ?2',
-        [kind, maxUntil(query.until)],
-        limit * 3,
-      ),
-    ),
-  );
-  if (pages.some((page) => !page)) return undefined;
-  return sortedBounded(
-    pages.flatMap((page) => page ?? []),
-    query,
-    limit,
-  );
+  if (query.relays && query.relays.length === 0) return [];
+  const sql = `SELECT DISTINCT ${storedEventColumns} FROM events e ${relayJoin(query)} WHERE ${kindSql(feedKinds(query), 1)} ${boundsSql(query, feedKinds(query).length + 1)} ${relayWhere(query, feedKinds(query).length + boundParamCount(query) + 1)} ORDER BY e.created_at DESC, e.id ASC;`;
+  const params = [
+    ...feedKinds(query),
+    ...boundsParams(query),
+    ...(query.relays ?? []),
+  ];
+  return queryEvents(sql, params, limit + 1);
 }
 
 async function sqliteThreadPage(
@@ -108,89 +84,117 @@ async function sqliteThreadPage(
 ): Promise<StoredEvent[] | undefined> {
   if (!query.eventId) return [];
   const [root, replies] = await Promise.all([
-    queryEvents('e.id = ?1', [query.eventId], 1),
-    queryTagEvents('e', query.eventId, limit * 3, maxUntil(query.until)),
+    queryEvents(whereSelect('e.id = ?1'), [query.eventId], 1),
+    queryTagValues('e', [query.eventId], limit * 3, maxUntil(query.until)),
   ]);
   if (!root || !replies) return undefined;
-  return sortedBounded(
-    [...root.filter((event) => before(event, query.until)), ...replies],
-    query,
-    limit,
-  );
+  return sortedBounded([...root.filter((event) => before(event, query.until)), ...replies], query, limit);
 }
 
-function authorKindPage(
-  author: string,
-  kind: number,
+function queryAuthorChunk(
+  authors: readonly string[],
+  kinds: readonly number[],
   query: FeedQuery,
   limit: number,
 ): Promise<StoredEvent[] | undefined> {
-  return queryEvents(
-    'e.pubkey = ?1 AND e.kind = ?2 AND e.created_at <= ?3',
-    [author, kind, maxUntil(query.until)],
-    limit * 3,
-  ).then((rows) =>
-    rows?.filter((event) => withinBounds(event, query)).slice(0, limit),
-  );
+  const authorValues = valueRows(authors, 1);
+  const kindStart = authors.length + 1;
+  const boundStart = kindStart + kinds.length;
+  const relayStart = boundStart + boundParamCount(query);
+  const sql = `WITH author_input(pubkey) AS (VALUES ${authorValues}) SELECT DISTINCT ${storedEventColumns} FROM events e JOIN author_input a ON a.pubkey = e.pubkey ${relayJoin(query)} WHERE ${kindSql(kinds, kindStart)} ${boundsSql(query, boundStart)} ${relayWhere(query, relayStart)} ORDER BY e.created_at DESC, e.id ASC;`;
+  return queryEvents(sql, [...authors, ...kinds, ...boundsParams(query), ...(query.relays ?? [])], limit);
+}
+
+async function queryTagValues(
+  tagName: 'e' | 'p' | 'q' | 'a',
+  tagValues: readonly string[],
+  limit: number,
+  until = Number.MAX_SAFE_INTEGER,
+): Promise<StoredEvent[] | undefined> {
+  if (tagValues.length === 0) return [];
+  const values = valueRows(tagValues, 3);
+  const sql = `WITH tag_input(tag_value) AS (VALUES ${values}) SELECT ${storedEventColumns} FROM event_tags t JOIN tag_input i ON i.tag_value = t.tag_value JOIN events e ON e.id = t.event_id WHERE t.tag_name = ?1 AND t.created_at <= ?2 ORDER BY e.created_at DESC, e.id ASC;`;
+  return queryEvents(sql, [tagName, until, ...tagValues], limit);
 }
 
 async function queryEvents(
-  whereSql: string,
+  statement: string,
   params: SqlParams,
   limit: number,
 ): Promise<StoredEvent[] | undefined> {
   const response = await sendSqliteStorage(
-    {
-      kind: 'query',
-      statement: `SELECT ${storedEventColumns} FROM events e WHERE ${whereSql} ORDER BY e.created_at DESC, e.id DESC;`,
-      params,
-      rowLimit: limit,
-    },
+    { kind: 'query', statement, params, rowLimit: limit },
     { deadlineMs: 3_000 },
   );
   if (response.outcome !== 'ok') return undefined;
   return response.rows.flatMap((row) => decodeStoredEventRow(row) ?? []);
 }
 
-async function queryTagEvents(
-  tagName: 'e' | 'p' | 'q' | 'a',
-  tagValue: string,
-  limit: number,
-  until = Number.MAX_SAFE_INTEGER,
-): Promise<StoredEvent[] | undefined> {
-  const response = await sendSqliteStorage(
-    {
-      kind: 'query',
-      statement: `SELECT ${storedEventColumns} FROM event_tags t JOIN events e ON e.id = t.event_id WHERE t.tag_name = ?1 AND t.tag_value = ?2 AND t.created_at <= ?3 ORDER BY t.created_at DESC, t.event_id DESC;`,
-      params: [tagName, tagValue, until],
-      rowLimit: limit,
-    },
-    { deadlineMs: 3_000 },
-  );
-  if (response.outcome !== 'ok') return undefined;
-  return response.rows.flatMap((row) => decodeStoredEventRow(row) ?? []);
+function whereSelect(whereSql: string): string {
+  return `SELECT ${storedEventColumns} FROM events e WHERE ${whereSql} ORDER BY e.created_at DESC, e.id ASC;`;
 }
 
-function sortedBounded(
-  events: readonly StoredEvent[],
-  query: FeedQuery,
-  limit: number,
-): StoredEvent[] {
-  return events
-    .filter((event) => withinBounds(event, query))
-    .sort(compareEventsDesc)
-    .slice(0, limit);
+function kindSql(kinds: readonly number[], start: number): string {
+  return `e.kind IN (${placeholders(kinds, start)})`;
+}
+
+function boundsSql(query: FeedQuery, start: number): string {
+  const parts = ['e.created_at <= ?' + start];
+  let next = start + 1;
+  if (query.since !== undefined) parts.push('e.created_at >= ?' + next++);
+  if (query.before) parts.push(`(e.created_at < ?${next} OR (e.created_at = ?${next + 1} AND e.id > ?${next + 2}))`);
+  if (query.before) next += 3;
+  if (query.after) parts.push(`(e.created_at > ?${next} OR (e.created_at = ?${next + 1} AND e.id < ?${next + 2}))`);
+  return parts.map((part) => `AND ${part}`).join(' ');
+}
+
+function boundsParams(query: FeedQuery): SqlScalar[] {
+  return [
+    maxUntil(query.until),
+    ...(query.since !== undefined ? [query.since] : []),
+    ...(query.before ? [query.before.createdAt, query.before.createdAt, query.before.id] : []),
+    ...(query.after ? [query.after.createdAt, query.after.createdAt, query.after.id] : []),
+  ];
+}
+
+function boundParamCount(query: FeedQuery): number {
+  return boundsParams(query).length;
+}
+
+function relayJoin(query: FeedQuery): string {
+  return query.relays ? 'JOIN event_relays r ON r.event_id = e.id' : '';
+}
+
+function relayWhere(query: FeedQuery, start: number): string {
+  return query.relays ? `AND r.relay_url IN (${placeholders(query.relays, start)})` : '';
+}
+
+function sortedBounded(events: readonly StoredEvent[], query: FeedQuery, limit: number): StoredEvent[] {
+  return events.filter((event) => withinBounds(event, query)).sort(compareEventsDesc).slice(0, limit);
 }
 
 function withinBounds(event: StoredEvent, query: FeedQuery): boolean {
-  return (
-    afterSince(event, query.since) &&
-    before(event, query.until) &&
-    beforeCursor(event, query.before) &&
-    afterCursor(event, query.after)
-  );
+  return afterSince(event, query.since) && before(event, query.until) && beforeCursor(event, query.before) && afterCursor(event, query.after);
 }
 
 function feedKinds(query: FeedQuery): readonly number[] {
   return query.kinds ?? feedDisplayKinds;
+}
+
+function valueRows(values: readonly unknown[], start: number): string {
+  return values.map((_, index) => `(?${start + index})`).join(', ');
+}
+
+function placeholders(values: readonly unknown[], start = 1): string {
+  return values.map((_, index) => `?${start + index}`).join(', ');
+}
+
+function chunks<T>(values: readonly T[], size: number): T[][] {
+  const out: T[][] = [];
+  for (let index = 0; index < values.length; index += size) out.push(values.slice(index, index + size));
+  return out;
+}
+
+function authorChunkSize(query: FeedQuery): number {
+  return Math.max(1, Math.floor((900 - feedKinds(query).length - boundParamCount(query) - (query.relays?.length ?? 0)) / 2));
 }

@@ -122,7 +122,8 @@ function matchesFeed(event: StoredEvent, query: FeedQuery): boolean {
   if (!before(event, query.until)) return false;
   if (!beforeCursor(event, query.before)) return false;
   if (!afterCursor(event, query.after)) return false;
-  if (query.kind === 'global') return displayKinds.includes(event.kind);
+  if (query.kind === 'global')
+    return displayKinds.includes(event.kind) && matchesRelays(event, query);
   if (query.kind === 'home')
     return (
       displayKinds.includes(event.kind) &&
@@ -139,6 +140,13 @@ function matchesFeed(event: StoredEvent, query: FeedQuery): boolean {
       event.tags.some((tag) => tag[0] === 'e' && tag[1] === query.eventId)
     );
   return false;
+}
+
+function matchesRelays(event: StoredEvent, query: FeedQuery): boolean {
+  if (!query.relays) return true;
+  if (query.relays.length === 0) return false;
+  const selected = new Set(query.relays);
+  return event.relayUrls.some((relayUrl) => selected.has(relayUrl));
 }
 
 export function clearMemoryRepository(): void {

@@ -1,9 +1,15 @@
 import { feedWindowSize, mergeFeedWindow } from '../events/feed-window';
 import { feedDisplayKinds } from '../events/feed-kinds';
+import { readCacheFirstFeedPage } from '../events/feed-page-cache-first';
 import { queryFeed, upsertEvent } from '../events/repository';
-import { readTimelinePageByIntent } from '../relays/orchestration/page-reads';
+import {
+  planTimelinePageIntent,
+  readPlannedTimelinePage,
+} from '../relays/orchestration/page-reads';
 import type { FeedCursorPoint } from '../events/types';
 import type { SubscriptionOrchestrator } from '../relays/orchestration/orchestrator';
+import type { PageIntent } from '../relays/orchestration/intent-types';
+import type { PlannedTimelinePageIntent } from '../relays/orchestration/page-reads';
 import type { OnProgressiveReadSnapshot } from '../relays/progressive-read-types';
 import type { TimelineItem } from './timeline-store';
 
@@ -20,31 +26,17 @@ type Request = {
 export async function loadInitialGlobalPage(
   request: Omit<Request, 'items'>,
 ): Promise<GlobalPageResult> {
-  const relayPage = await readTimelinePageByIntent(
-    request.subscriptions,
-    {
-      surface: 'global',
-      owner: request.owner,
-      phase: 'bootstrap',
-      selectedRelays: request.relays,
-      authors: [],
-      pageSize: request.pageSize,
-      direction: 'initial',
-      filters: (_group, bounds) => [
-        { kinds: feedDisplayKinds, ...bounds, limit: request.pageSize },
-      ],
-    },
-    { signal: request.signal, onSnapshot: request.onSnapshot },
-  );
-  await Promise.all(
-    relayPage.items.map((item) => upsertEvent(item.event, item.relays)),
-  );
-  return {
-    items: relayPage.items,
-    hasOlder: relayPage.hasMorePossible,
-    nextOlderCursor: relayPage.nextCursor,
-    incomplete: relayPage.incomplete,
-  };
+  const plan = await planTimelinePageIntent(globalIntent(request, 'initial'));
+  const cache = await readCacheFirstFeedPage({
+    plan,
+    subscriptions: request.subscriptions,
+  });
+  if (cache.kind === 'complete-cache') return pageFromCache(cache.page);
+  if (cache.kind === 'partial-cache') {
+    void readAndStore(request, plan).catch(() => undefined);
+    return pageFromCache(cache.page);
+  }
+  return pageFromRelay(await readAndStore(request, plan));
 }
 
 export async function loadOlderGlobalPage(
@@ -52,29 +44,27 @@ export async function loadOlderGlobalPage(
 ) {
   const page = await queryFeed({
     kind: 'global',
+    relays: request.relays,
     before: request.cursor,
     limit: request.pageSize,
   });
-  const relayPage = await readTimelinePageByIntent(
-    request.subscriptions,
-    {
-      surface: 'global',
-      owner: request.owner,
-      phase: 'page',
-      selectedRelays: request.relays,
-      authors: [],
-      pageSize: request.pageSize,
-      direction: 'older',
-      cursor: request.cursor,
-      filters: (_group, bounds) => [
-        { kinds: feedDisplayKinds, ...bounds, limit: request.pageSize },
-      ],
-    },
-    { signal: request.signal, onSnapshot: request.onSnapshot },
-  );
-  await Promise.all(
-    relayPage.items.map((item) => upsertEvent(item.event, item.relays)),
-  );
+  const plan = await planTimelinePageIntent(globalIntent(request, 'older'));
+  const cache = await readCacheFirstFeedPage({
+    plan,
+    subscriptions: request.subscriptions,
+  });
+  if (cache.kind !== 'miss') {
+    if (cache.kind === 'partial-cache')
+      void readAndStore(request, plan).catch(() => undefined);
+    const window = mergeFeedWindow(request.items, cache.page.items, feedWindowSize, true);
+    return {
+      items: window.items,
+      hasOlder: cache.page.hasOlder,
+      hasNewer: window.prunedNewer,
+      nextOlderCursor: cache.page.nextCursor,
+    };
+  }
+  const relayPage = await readAndStore(request, plan);
   const older = [...page.items, ...relayPage.items];
   const window = mergeFeedWindow(request.items, older, feedWindowSize, true);
   return {
@@ -91,29 +81,27 @@ export async function loadNewerGlobalPage(
 ) {
   const page = await queryFeed({
     kind: 'global',
+    relays: request.relays,
     after: request.cursor,
     limit: request.pageSize,
   });
-  const relayPage = await readTimelinePageByIntent(
-    request.subscriptions,
-    {
-      surface: 'global',
-      owner: request.owner,
-      phase: 'page',
-      selectedRelays: request.relays,
-      authors: [],
-      pageSize: request.pageSize,
-      direction: 'newer',
-      cursor: request.cursor,
-      filters: (_group, bounds) => [
-        { kinds: feedDisplayKinds, ...bounds, limit: request.pageSize },
-      ],
-    },
-    { signal: request.signal, onSnapshot: request.onSnapshot },
-  );
-  await Promise.all(
-    relayPage.items.map((item) => upsertEvent(item.event, item.relays)),
-  );
+  const plan = await planTimelinePageIntent(globalIntent(request, 'newer'));
+  const cache = await readCacheFirstFeedPage({
+    plan,
+    subscriptions: request.subscriptions,
+  });
+  if (cache.kind !== 'miss') {
+    if (cache.kind === 'partial-cache')
+      void readAndStore(request, plan).catch(() => undefined);
+    const window = mergeFeedWindow(request.items, cache.page.items, feedWindowSize);
+    return {
+      items: window.items,
+      hasNewer: cache.page.hasNewer,
+      hasOlder: window.prunedOlder,
+      nextNewerCursor: cache.page.nextCursor,
+    };
+  }
+  const relayPage = await readAndStore(request, plan);
   const window = mergeFeedWindow(
     request.items,
     [...page.items, ...relayPage.items],
@@ -135,3 +123,51 @@ export type GlobalPageResult = {
   readonly nextOlderCursor?: FeedCursorPoint;
   readonly incomplete?: boolean;
 };
+
+function globalIntent(
+  request: Omit<Request, 'items'> | (Request & { readonly cursor: FeedCursorPoint }),
+  direction: PageIntent['direction'],
+): PageIntent {
+  return {
+    surface: 'global',
+    owner: request.owner,
+    phase: direction === 'initial' ? 'bootstrap' : 'page',
+    selectedRelays: request.relays,
+    authors: [],
+    pageSize: request.pageSize,
+    direction,
+    cursor: 'cursor' in request ? request.cursor : undefined,
+    filters: (_group, bounds) => [
+      { kinds: feedDisplayKinds, ...bounds, limit: request.pageSize },
+    ],
+  };
+}
+
+async function readAndStore(
+  request: Omit<Request, 'items'>,
+  plan: PlannedTimelinePageIntent,
+) {
+  const page = await readPlannedTimelinePage(request.subscriptions, plan, {
+    signal: request.signal,
+    onSnapshot: request.onSnapshot,
+  });
+  await Promise.all(page.items.map((item) => upsertEvent(item.event, item.relays)));
+  return page;
+}
+
+function pageFromRelay(page: Awaited<ReturnType<typeof readAndStore>>): GlobalPageResult {
+  return {
+    items: page.items,
+    hasOlder: page.hasMorePossible,
+    nextOlderCursor: page.nextCursor,
+    incomplete: page.incomplete,
+  };
+}
+
+function pageFromCache(page: {
+  readonly items: TimelineItem[];
+  readonly hasOlder: boolean;
+  readonly nextCursor?: FeedCursorPoint;
+}): GlobalPageResult {
+  return { items: page.items, hasOlder: page.hasOlder, nextOlderCursor: page.nextCursor };
+}

@@ -149,7 +149,7 @@ export function createGlobalTimelineRuntime(options: TimelineRuntimeOptions) {
   const runtime = {
     subscribe: (listener: (state: TimelineState) => void): (() => void) => { listeners.add(listener); listener(state); return () => listeners.delete(listener); },
     start: async (): Promise<void> => {
-      if (closed) return; const run = ++generation; cached = [...(await queryFeed({ kind: 'global', limit: pageSize })).items]; if (!active(run)) return;
+      if (closed) return; const run = ++generation; cached = [...(await queryFeed({ kind: 'global', relays, limit: pageSize })).items]; if (!active(run)) return;
       const boot = cached.length > 0 ? readyWithEventsState(state, cached) : { ...state, items: cached };
       const seeded = options.seed
         ? {

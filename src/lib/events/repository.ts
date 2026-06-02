@@ -121,6 +121,7 @@ export function feedKey(query: FeedQuery): string {
     kind: query.kind,
     kinds: query.kinds ? [...query.kinds].sort((a, b) => a - b) : undefined,
     authors: query.authors ? [...query.authors].sort() : undefined,
+    relays: query.relays ? [...query.relays].sort() : undefined,
     eventId: query.eventId,
   });
 }

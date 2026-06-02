@@ -21,6 +21,7 @@ vi.mock('../../../src/lib/storage/sqlite-opfs/kernel-client', () => ({
 const {
   sqlitePutFeedCoverageRows,
   sqliteReadFeedCoverageRows,
+  sqliteReadFeedCoverageRowsForRequirements,
   sqlitePutFeedScanHint,
   sqliteReadFeedScanHints,
   sqliteDeleteAllFeedScanHints,
@@ -43,6 +44,37 @@ describe('SQLite feed cache repositories', () => {
     await expect(sqliteReadFeedCoverageRows('home')).resolves.toEqual([
       coverage,
     ]);
+  });
+
+  test('reads exact coverage rows for proof requirements', async () => {
+    state.sent = [];
+    const coverage = {
+      id: 'coverage:2',
+      feedKey: 'home',
+      relayUrl: 'wss://relay.example',
+      groupKey: 'selected',
+      filterKey: 'kind1',
+      status: 'complete' as const,
+      since: 10,
+      until: 20,
+      updatedAt: 2,
+    };
+    state.rows = [{ record_json: JSON.stringify(coverage) }];
+    await expect(
+      sqliteReadFeedCoverageRowsForRequirements('home', [
+        {
+          groupKey: 'selected',
+          relayUrl: 'wss://relay.example',
+          filterKey: 'kind1',
+          since: 12,
+          until: 18,
+        },
+      ]),
+    ).resolves.toEqual([coverage]);
+    const query = state.sent.find((op) => op.kind === 'query');
+    expect(query?.kind === 'query' ? query.statement : '').toContain(
+      'feed_key = ?1 AND group_key = ?2 AND relay_url = ?3',
+    );
   });
 
   test('writes, reads, and deletes scan hints', async () => {

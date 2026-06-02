@@ -1,11 +1,23 @@
 import { feedWindowSize, mergeFeedWindow } from '../events/feed-window';
+import { readCacheFirstFeedPage } from '../events/feed-page-cache-first';
 import { queryFeed, upsertEvent } from '../events/repository';
 import type { FeedCursorPoint } from '../events/types';
 import type { DemandSurface } from '../relays/orchestration/demand-types';
+import type { PageIntent } from '../relays/orchestration/intent-types';
 import type { SubscriptionOrchestrator } from '../relays/orchestration/orchestrator';
-import { readTimelinePageByIntent } from '../relays/orchestration/page-reads';
+import {
+  planTimelinePageIntent,
+  readPlannedTimelinePage,
+} from '../relays/orchestration/page-reads';
+import type { PlannedTimelinePageIntent } from '../relays/orchestration/page-reads';
+import type { RelayGroupPageResult } from '../events/relay-page';
 import type { OnProgressiveReadSnapshot } from '../relays/progressive-read-types';
 import { authorFilters } from './follow-list';
+import {
+  initialTimelineFromCache,
+  newerTimelineFromCache,
+  olderTimelineFromCache,
+} from './timeline-cache-results';
 import type { TimelineItem } from './timeline-store';
 
 export type TimelineOlderRequest = {
@@ -51,70 +63,36 @@ export type TimelineInitialRequest = {
 export async function loadInitialTimelinePage(
   request: TimelineInitialRequest,
 ): Promise<TimelinePageResult> {
-  const relayPage = await readTimelinePageByIntent(
-    request.subscriptions,
-    {
-      surface: request.surface,
-      owner: request.owner,
-      phase: 'bootstrap',
-      selectedRelays: request.relays,
-      authors: [...request.authors],
-      pageSize: request.pageSize,
-      direction: 'initial',
-      filters: (group, bounds) =>
-        authorFilters(
-          group.authors ?? [],
-          request.pageSize,
-          bounds,
-          homeBudgetMode(request.surface),
-        ),
-    },
-    { signal: request.signal, onSnapshot: request.onSnapshot },
-  );
-  await Promise.all(
-    relayPage.items.map((item) => upsertEvent(item.event, item.relays)),
-  );
-  return {
-    items: relayPage.items,
-    hasOlder: relayPage.hasMorePossible,
-    nextOlderCursor: relayPage.nextCursor,
-    incomplete: relayPage.incomplete,
-  };
+  const plan = await planTimelinePageIntent(timelineIntent(request, 'initial'));
+  const cache = await readCacheFirstFeedPage({
+    plan,
+    subscriptions: request.subscriptions,
+  });
+  if (cache.kind === 'complete-cache') return initialTimelineFromCache(cache.page);
+  if (cache.kind === 'partial-cache') {
+    void readAndStoreRelayPage(request, plan).catch(() => undefined);
+    return initialTimelineFromCache(cache.page);
+  }
+  return initialFromRelay(await readAndStoreRelayPage(request, plan));
 }
 
 export async function loadOlderTimelinePage(
   request: TimelineOlderRequest,
 ): Promise<TimelineOlderResult> {
-  const page = await queryFeed({
-    kind: 'home',
-    authors: request.authors,
-    before: request.cursor,
-    limit: request.pageSize,
+  const plan = await planTimelinePageIntent(timelineIntent(request, 'older'));
+  const cache = await readCacheFirstFeedPage({
+    plan,
+    subscriptions: request.subscriptions,
   });
-  const relayPage = await readTimelinePageByIntent(
-    request.subscriptions,
-    {
-      surface: request.surface,
-      owner: request.owner,
-      phase: 'page',
-      selectedRelays: request.relays,
-      authors: [...request.authors],
-      pageSize: request.pageSize,
-      direction: 'older',
-      cursor: request.cursor,
-      filters: (group, bounds) =>
-        authorFilters(
-          group.authors ?? [],
-          request.pageSize,
-          bounds,
-          homeBudgetMode(request.surface),
-        ),
-    },
-    { signal: request.signal, onSnapshot: request.onSnapshot },
-  );
-  await Promise.all(
-    relayPage.items.map((item) => upsertEvent(item.event, item.relays)),
-  );
+  if (cache.kind !== 'miss') {
+    if (cache.kind === 'partial-cache')
+      void readAndStoreRelayPage(request, plan).catch(() => undefined);
+    return olderTimelineFromCache(request, cache.page);
+  }
+  const [page, relayPage] = await Promise.all([
+    localTimelinePage(request, 'older'),
+    readAndStoreRelayPage(request, plan),
+  ]);
   const window = mergeFeedWindow(
     request.items,
     [...page.items, ...relayPage.items],
@@ -133,36 +111,20 @@ export async function loadOlderTimelinePage(
 export async function loadNewerTimelinePage(
   request: TimelineOlderRequest,
 ): Promise<TimelineNewerResult> {
-  const page = await queryFeed({
-    kind: 'home',
-    authors: request.authors,
-    after: request.cursor,
-    limit: request.pageSize,
+  const plan = await planTimelinePageIntent(timelineIntent(request, 'newer'));
+  const cache = await readCacheFirstFeedPage({
+    plan,
+    subscriptions: request.subscriptions,
   });
-  const relayPage = await readTimelinePageByIntent(
-    request.subscriptions,
-    {
-      surface: request.surface,
-      owner: request.owner,
-      phase: 'page',
-      selectedRelays: request.relays,
-      authors: [...request.authors],
-      pageSize: request.pageSize,
-      direction: 'newer',
-      cursor: request.cursor,
-      filters: (group, bounds) =>
-        authorFilters(
-          group.authors ?? [],
-          request.pageSize,
-          bounds,
-          homeBudgetMode(request.surface),
-        ),
-    },
-    { signal: request.signal, onSnapshot: request.onSnapshot },
-  );
-  await Promise.all(
-    relayPage.items.map((item) => upsertEvent(item.event, item.relays)),
-  );
+  if (cache.kind !== 'miss') {
+    if (cache.kind === 'partial-cache')
+      void readAndStoreRelayPage(request, plan).catch(() => undefined);
+    return newerTimelineFromCache(request, cache.page);
+  }
+  const [page, relayPage] = await Promise.all([
+    localTimelinePage(request, 'newer'),
+    readAndStoreRelayPage(request, plan),
+  ]);
   const window = mergeFeedWindow(
     request.items,
     [...page.items, ...relayPage.items],
@@ -183,6 +145,55 @@ export type TimelinePageResult = {
   readonly nextOlderCursor?: FeedCursorPoint;
   readonly incomplete?: boolean;
 };
+
+function timelineIntent(
+  request: TimelineInitialRequest | TimelineOlderRequest,
+  direction: PageIntent['direction'],
+): PageIntent {
+  return {
+    surface: request.surface,
+    owner: request.owner,
+    phase: direction === 'initial' ? 'bootstrap' : 'page',
+    selectedRelays: request.relays,
+    authors: [...request.authors],
+    pageSize: request.pageSize,
+    direction,
+    cursor: 'cursor' in request ? request.cursor : undefined,
+    filters: (group, bounds) =>
+      authorFilters(group.authors ?? [], request.pageSize, bounds, homeBudgetMode(request.surface)),
+  };
+}
+
+async function readAndStoreRelayPage(
+  request: TimelineInitialRequest | TimelineOlderRequest,
+  plan: PlannedTimelinePageIntent,
+): Promise<RelayGroupPageResult> {
+  const page = await readPlannedTimelinePage(request.subscriptions, plan, {
+    signal: request.signal,
+    onSnapshot: request.onSnapshot,
+  });
+  await Promise.all(page.items.map((item) => upsertEvent(item.event, item.relays)));
+  return page;
+}
+
+function localTimelinePage(request: TimelineOlderRequest, direction: 'older' | 'newer') {
+  return queryFeed({
+    kind: 'home',
+    authors: request.authors,
+    before: direction === 'older' ? request.cursor : undefined,
+    after: direction === 'newer' ? request.cursor : undefined,
+    limit: request.pageSize,
+  });
+}
+
+function initialFromRelay(relayPage: RelayGroupPageResult): TimelinePageResult {
+  return {
+    items: relayPage.items,
+    hasOlder: relayPage.hasMorePossible,
+    nextOlderCursor: relayPage.nextCursor,
+    incomplete: relayPage.incomplete,
+  };
+}
 
 function homeBudgetMode(surface: DemandSurface) {
   return surface === 'home' ? 'shared-budget' : 'per-filter';

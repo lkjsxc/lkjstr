@@ -2,7 +2,7 @@ import type { NostrFilter } from '../protocol';
 import type { RelayRouteGroup } from '../relays/relay-route-types';
 import { countRuntime } from '../app/runtime-counters';
 import { coverageCoversRequirements } from './feed-coverage-query';
-import { coverageForFeed } from './feed-coverage-store';
+import { coverageForRequirements } from './feed-coverage-store';
 import { mergedDisplayBounds } from './feed-display-bounds';
 import { eventsMatching } from './repository';
 import { mergeBounds } from './relay-page-filter';
@@ -40,7 +40,11 @@ export type SegmentCachePlan =
     };
 
 type RequirementPlan = {
+  readonly groupKey: string;
   readonly relayUrl: string;
+  readonly filterKey: string;
+  readonly since?: number;
+  readonly until?: number;
   readonly filter: NostrFilter;
   readonly maxEvents: number;
   readonly covered: boolean;
@@ -58,29 +62,12 @@ export async function buildSegmentCachePlan(
     request.pageSize,
   );
   const batchFilters = boundedBatchFilters(batches, segment);
-  const coverage = await coverageForFeed(request.key);
-  const plans = batchFilters.flatMap((batch) =>
-    batch.relays.flatMap((relayUrl) =>
-      batch.filters.map((filter) => ({
-        relayUrl,
-        filter,
-        maxEvents: batch.maxEvents,
-        covered:
-          coverageCoversRequirements(
-            [
-              {
-                groupKey: group.key,
-                relayUrl,
-                filterKey: semanticFilterKey(filter),
-                since: filter.since,
-                until: filter.until,
-              },
-            ],
-            coverage,
-          ).kind === 'covered',
-      })),
-    ),
-  );
+  const requirements = requirementPlans(group.key, batchFilters);
+  const coverage = await coverageForRequirements(request.key, requirements);
+  const plans = requirements.map((requirement) => ({
+    ...requirement,
+    covered: coverageCoversRequirements([requirement], coverage).kind === 'covered',
+  }));
   const covered = plans.filter((plan) => plan.covered);
   const uncovered = uncoveredBatches(plans);
   if (covered.length === 0) {
@@ -105,6 +92,26 @@ export async function buildSegmentCachePlan(
     skippedRelays,
     reason: 'partial complete coverage',
   };
+}
+
+function requirementPlans(
+  groupKey: string,
+  batches: readonly RelayFilterBatch[],
+): RequirementPlan[] {
+  return batches.flatMap((batch) =>
+    batch.relays.flatMap((relayUrl) =>
+      batch.filters.map((filter) => ({
+        groupKey,
+        relayUrl,
+        filter,
+        filterKey: semanticFilterKey(filter),
+        since: filter.since,
+        until: filter.until,
+        maxEvents: batch.maxEvents,
+        covered: false,
+      })),
+    ),
+  );
 }
 
 function boundedBatchFilters(

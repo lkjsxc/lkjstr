@@ -30,13 +30,16 @@ export function feedDeleteAllSteps(
 export function coverageStep(row: FeedCoverage): SqlStep {
   return {
     statement:
-      'INSERT INTO feed_coverage (id, feed_key, relay_url, group_key, status, record_json, updated_at_ms) VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7) ON CONFLICT(id) DO UPDATE SET status = excluded.status, record_json = excluded.record_json, updated_at_ms = excluded.updated_at_ms;',
+      'INSERT INTO feed_coverage (id, feed_key, relay_url, group_key, status, filter_key, since, until, record_json, updated_at_ms) VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10) ON CONFLICT(id) DO UPDATE SET status = excluded.status, filter_key = excluded.filter_key, since = excluded.since, until = excluded.until, record_json = excluded.record_json, updated_at_ms = excluded.updated_at_ms;',
     params: [
       row.id,
       row.feedKey,
       row.relayUrl,
       row.groupKey,
       row.status,
+      row.filterKey,
+      row.since ?? null,
+      row.until ?? null,
       JSON.stringify(row),
       row.updatedAt,
     ],

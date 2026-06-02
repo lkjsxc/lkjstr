@@ -13,7 +13,7 @@ import {
   sqliteRecordBatch,
   sqliteRecordReadMany,
 } from './sqlite-record-helpers';
-import type { SqlStep } from './types';
+import type { SqlScalar, SqlStep } from './types';
 
 export function sqlitePutFeedCoverageRows(
   rows: readonly FeedCoverage[],
@@ -36,6 +36,25 @@ export function sqliteReadFeedCoverageRows(
     5000,
   );
 }
+
+export async function sqliteReadFeedCoverageRowsForRequirements(
+  feedKey: string,
+  requirements: readonly CoverageRequirementRow[],
+): Promise<FeedCoverage[] | undefined> {
+  const rows = await Promise.all(
+    requirements.map((requirement) => readCoverageRequirement(feedKey, requirement)),
+  );
+  if (rows.some((row) => !row)) return undefined;
+  return uniqueRows(rows.flatMap((row) => row ?? []));
+}
+
+export type CoverageRequirementRow = {
+  readonly groupKey: string;
+  readonly relayUrl: string;
+  readonly filterKey: string;
+  readonly since?: number;
+  readonly until?: number;
+};
 
 export async function sqliteDeleteFeedCoverageByFeedKeys(
   feedKeys: readonly string[],
@@ -95,6 +114,40 @@ export async function sqliteCompactFeedScanHints(
 
 export function sqliteDeleteAllFeedScanHints(): Promise<boolean> {
   return deleteAll('feed_scan_hints', 'feed-scan-hint');
+}
+
+function readCoverageRequirement(
+  feedKey: string,
+  requirement: CoverageRequirementRow,
+): Promise<FeedCoverage[] | undefined> {
+  if (requirement.since === undefined || requirement.until === undefined)
+    return Promise.resolve([]);
+  return sqliteRecordReadMany<FeedCoverage>(
+    ensureEventGraphSchema,
+    'feed_coverage',
+    'feed_key = ?1 AND group_key = ?2 AND relay_url = ?3 AND filter_key = ?4 AND status = ?5 AND since < ?6 AND until > ?7 ORDER BY since ASC, until ASC',
+    coverageRequirementParams(feedKey, requirement),
+    500,
+  );
+}
+
+function coverageRequirementParams(
+  feedKey: string,
+  requirement: CoverageRequirementRow,
+): readonly SqlScalar[] {
+  return [
+    feedKey,
+    requirement.groupKey,
+    requirement.relayUrl,
+    requirement.filterKey,
+    'complete',
+    requirement.until ?? 0,
+    requirement.since ?? 0,
+  ];
+}
+
+function uniqueRows(rows: readonly FeedCoverage[]): FeedCoverage[] {
+  return [...new Map(rows.map((row) => [row.id, row])).values()];
 }
 
 function batch(steps: readonly SqlStep[]): Promise<boolean> {

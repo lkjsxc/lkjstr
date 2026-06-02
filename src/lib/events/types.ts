@@ -71,6 +71,7 @@ export type FeedQuery = {
   readonly kind: FeedKind;
   readonly kinds?: readonly number[];
   readonly authors?: readonly string[];
+  readonly relays?: readonly string[];
   readonly eventId?: string;
   readonly since?: number;
   readonly until?: number;

@@ -1,8 +1,5 @@
 import { describe, expect, test, vi } from 'vitest';
-import type {
-  StorageOp,
-  StorageResponse,
-} from '../../../src/lib/storage/sqlite-opfs/types';
+import type { StorageOp, StorageResponse } from '../../../src/lib/storage/sqlite-opfs/types';
 import type { StoredEvent } from '../../../src/lib/events/types';
 
 const state = vi.hoisted(() => ({
@@ -85,11 +82,50 @@ describe('SQLite event graph repositories', () => {
     state.rows = [eventRow(storedEvent('c', 30, ['cache']))];
 
     await expect(
-      sqliteIndexedPage({ kind: 'global', kinds: [1], limit: 10 }, 10),
+      sqliteIndexedPage(
+        { kind: 'global', kinds: [1], relays: ['wss://relay.example'], limit: 10 },
+        10,
+      ),
     ).resolves.toHaveLength(1);
     const query = state.sent.find((op) => op.kind === 'query');
     expect(query?.kind === 'query' ? query.statement : '').toContain(
-      'ORDER BY e.created_at DESC, e.id DESC',
+      'JOIN event_relays r ON r.event_id = e.id',
+    );
+    expect(query?.kind === 'query' ? query.statement : '').toContain(
+      'ORDER BY e.created_at DESC, e.id ASC',
+    );
+  });
+
+  test('filters global pages to selected relay provenance', async () => {
+    state.sent = [];
+    state.rows = [eventRow(storedEvent('d', 31, ['wss://selected.example']))];
+
+    await sqliteIndexedPage(
+      {
+        kind: 'global',
+        kinds: [1],
+        relays: ['wss://selected.example'],
+        limit: 10,
+      },
+      10,
+    );
+    const query = state.sent.find((op) => op.kind === 'query');
+    expect(query?.kind === 'query' ? query.params : []).toContain(
+      'wss://selected.example',
+    );
+  });
+
+  test('uses a set query for many author pages', async () => {
+    state.sent = [];
+    state.rows = [eventRow(storedEvent('e', 32, ['wss://relay.example']))];
+
+    await sqliteIndexedPage(
+      { kind: 'home', authors: ['a', 'b'], kinds: [1], limit: 10 },
+      10,
+    );
+    const query = state.sent.find((op) => op.kind === 'query');
+    expect(query?.kind === 'query' ? query.statement : '').toContain(
+      'WITH author_input(pubkey) AS (VALUES (?1), (?2))',
     );
   });
 
@@ -120,10 +156,7 @@ describe('SQLite event graph repositories', () => {
   });
 });
 
-function response(
-  outcome: StorageResponse['outcome'],
-  rows: StorageResponse['rows'] = [],
-): StorageResponse {
+function response(outcome: StorageResponse['outcome'], rows: StorageResponse['rows'] = []): StorageResponse {
   return { requestId: 'test', outcome, rows, rowsAffected: 0, diagnostics: {} };
 }
 
@@ -148,11 +181,7 @@ function ledger(id: string) {
   };
 }
 
-function storedEvent(
-  id: string,
-  createdAt: number,
-  relayUrls: readonly string[],
-): StoredEvent {
+function storedEvent(id: string, createdAt: number, relayUrls: readonly string[]): StoredEvent {
   return {
     id,
     pubkey: 'p'.repeat(64),

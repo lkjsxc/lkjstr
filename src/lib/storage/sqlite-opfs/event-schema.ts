@@ -1,6 +1,6 @@
 import { applySqliteSchema } from './kernel-client';
 
-const eventSchemaHash = 'event-graph-feed-cache-sqlite-cutover';
+const eventSchemaHash = 'event-graph-feed-cache-coverage-lookup';
 
 const eventSchema = [
   'PRAGMA foreign_keys = ON;',
@@ -55,7 +55,11 @@ const eventSchema = [
   record_json TEXT NOT NULL,
   updated_at_ms INTEGER NOT NULL
 ) STRICT;`,
+  'ALTER TABLE feed_coverage ADD COLUMN filter_key TEXT NOT NULL DEFAULT \'\';',
+  'ALTER TABLE feed_coverage ADD COLUMN since INTEGER;',
+  'ALTER TABLE feed_coverage ADD COLUMN until INTEGER;',
   'CREATE INDEX IF NOT EXISTS feed_coverage_feed_key_idx ON feed_coverage(feed_key, updated_at_ms DESC);',
+  'CREATE INDEX IF NOT EXISTS feed_coverage_lookup_idx ON feed_coverage(feed_key, group_key, relay_url, filter_key, status, since, until);',
   `CREATE TABLE IF NOT EXISTS feed_scan_hints (
   id TEXT PRIMARY KEY,
   scan_key TEXT NOT NULL,

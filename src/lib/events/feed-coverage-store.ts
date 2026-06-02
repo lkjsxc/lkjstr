@@ -5,6 +5,7 @@ import {
   deleteFeedCoverageRowsForFeeds,
   putFeedCoverageRowsWithLedger,
   readFeedCoverageRowsForFeed,
+  readFeedCoverageRowsForRequirements,
 } from '../storage/repositories/feed-coverage-store';
 import type { FeedCoverage } from './types';
 
@@ -54,11 +55,27 @@ function feedCoverageRow(
 export async function coverageForFeed(
   feedKey: string,
 ): Promise<FeedCoverage[]> {
-  return readFeedCoverageRowsForFeed(
+  return readFeedCoverageRowsForFeed(feedKey, memoryCoverageForFeed(feedKey));
+}
+
+export async function coverageForRequirements(
+  feedKey: string,
+  requirements: readonly CoverageRequirementIdentity[],
+): Promise<FeedCoverage[]> {
+  return readFeedCoverageRowsForRequirements(
     feedKey,
-    [...memoryCoverage.values()].filter((item) => item.feedKey === feedKey),
+    requirements,
+    memoryCoverageForFeed(feedKey),
   );
 }
+
+export type CoverageRequirementIdentity = {
+  readonly groupKey: string;
+  readonly relayUrl: string;
+  readonly filterKey: string;
+  readonly since?: number;
+  readonly until?: number;
+};
 
 export async function deleteFeedCoverageForFeeds(
   feedKeys: readonly string[],
@@ -98,6 +115,10 @@ export function clearFeedCoverageForTests(): void {
 
 export function feedCoverageMemorySizeForTests(): number {
   return memoryCoverage.size();
+}
+
+function memoryCoverageForFeed(feedKey: string): FeedCoverage[] {
+  return [...memoryCoverage.values()].filter((item) => item.feedKey === feedKey);
 }
 
 function coverageId(input: Omit<FeedCoverage, 'id' | 'updatedAt'>): string {

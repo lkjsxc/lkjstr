@@ -90,31 +90,52 @@ export function plannedPageIntent(
   };
 }
 
-export async function readTimelinePageByIntent(
-  orchestrator: SubscriptionOrchestrator,
+export type PlannedTimelinePageIntent = {
+  readonly intent: PageIntent;
+  readonly groups: readonly RelayRouteGroup[];
+  readonly key: string;
+};
+
+export async function planTimelinePageIntent(
   intent: PageIntent,
-  options: ReadPageOptions = {},
-): Promise<RelayGroupPageResult> {
+): Promise<PlannedTimelinePageIntent> {
   const groups = await planPagingRouteGroups({
     authors: intent.authors,
     selectedRelays: intent.selectedRelays,
     purpose: resolvePagingRoutePurpose(intent),
   });
   const planned = plannedPageIntent(intent, groups);
-  const key = pageIntentSemanticKey(planned);
-  const filters = intent.filters;
-  if (!filters) {
-    throw new Error('PageIntent.filters required for timeline paging');
-  }
+  return { intent: planned, groups, key: pageIntentSemanticKey(planned) };
+}
+
+export async function readTimelinePageByIntent(
+  orchestrator: SubscriptionOrchestrator,
+  intent: PageIntent,
+  options: ReadPageOptions = {},
+): Promise<RelayGroupPageResult> {
+  return readPlannedTimelinePage(
+    orchestrator,
+    await planTimelinePageIntent(intent),
+    options,
+  );
+}
+
+export function readPlannedTimelinePage(
+  orchestrator: SubscriptionOrchestrator,
+  plan: PlannedTimelinePageIntent,
+  options: ReadPageOptions = {},
+): Promise<RelayGroupPageResult> {
+  const filters = plan.intent.filters;
+  if (!filters) throw new Error('PageIntent.filters required for timeline paging');
   return readRelayFeedGroups({
-    key,
-    groups,
+    key: plan.key,
+    groups: plan.groups,
     filters,
-    direction: intent.direction,
-    ...pageIntentBounds(intent),
-    pageSize: intent.pageSize,
+    direction: plan.intent.direction,
+    ...pageIntentBounds(plan.intent),
+    pageSize: plan.intent.pageSize,
     subscriptions: orchestrator,
-    purpose: intent.purpose ?? 'feed',
+    purpose: plan.intent.purpose ?? 'feed',
     signal: options.signal,
     onSnapshot: options.onSnapshot,
   });
