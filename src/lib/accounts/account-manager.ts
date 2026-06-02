@@ -22,8 +22,8 @@ export { generateNsec };
 export async function addReadonlyAccount(input: string): Promise<Account> {
   const account = parseReadonlyAccount(input);
   if (!account) throw new Error('Read-only account input is invalid.');
-  await saveAccount(account);
   setActiveAccountId(account.id);
+  await saveAccount(account);
   return account;
 }
 
@@ -36,16 +36,16 @@ export async function addReadonlyPubkey(pubkey: string): Promise<Account> {
   const parsed = parsePubkey(pubkey);
   if (!parsed) throw new Error('Mined public key is invalid.');
   const account = createAccount(parsed, 'readonly');
-  await saveAccount(account);
   setActiveAccountId(account.id);
+  await saveAccount(account);
   return account;
 }
 
 export async function createLocalAccount(): Promise<Account> {
   const { account, secretKey } = createLocalAccountRecord();
+  setActiveAccountId(account.id);
   await saveAccount(account);
   await persistLocalAccount(account, secretKey);
-  setActiveAccountId(account.id);
   return account;
 }
 
@@ -53,9 +53,9 @@ export async function importLocalNsec(input: string): Promise<Account> {
   const secret = parseNsec(input);
   if (!secret) throw new Error('nsec input is invalid.');
   const { account, secretKey } = createLocalAccountRecord(secret);
+  setActiveAccountId(account.id);
   await saveAccount(account);
   await persistLocalAccount(account, secretKey);
-  setActiveAccountId(account.id);
   return account;
 }
 
@@ -68,15 +68,15 @@ export async function addNip07Account(
 ): Promise<Account> {
   const account = await connectNip07(provider);
   if (!account) throw new Error('NIP-07 signer is unavailable.');
-  await saveAccount(account);
   setActiveAccountId(account.id);
+  await saveAccount(account);
   return account;
 }
 
 export async function touchAccountUse(account: Account): Promise<Account> {
   const updated = { ...account, lastUsedAt: Date.now(), updatedAt: Date.now() };
-  await saveAccount(updated);
   setActiveAccountId(updated.id);
+  await saveAccount(updated);
   return updated;
 }
 

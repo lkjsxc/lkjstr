@@ -6,6 +6,7 @@
   import {
     importSettingsJson,
     loadSettings,
+    mergeSettings,
     resetSetting,
     saveSetting,
   } from '$lib/settings/settings-store';
@@ -22,7 +23,7 @@
   };
 
   let props: Props = $props();
-  let settings = $state<SettingRecord[]>([]);
+  let settings = $state<SettingRecord[]>(mergeSettings([]));
   let root: HTMLElement | undefined;
   let importOpen = $state(false);
   let importDraft = $state('');

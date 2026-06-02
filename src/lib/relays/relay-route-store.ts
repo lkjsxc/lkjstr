@@ -74,7 +74,7 @@ export async function saveRouteBlock(
     updatedAt: Date.now(),
   };
   memoryBlocks.set(id, block);
-  await putRelayRouteBlockRow(block);
+  void putRelayRouteBlockRow(block).catch(() => undefined);
 }
 
 export async function clearRouteBlock(
@@ -85,7 +85,7 @@ export async function clearRouteBlock(
   if (!normalized) return;
   const id = routeBlockId(normalized, purpose);
   memoryBlocks.delete(id);
-  await deleteRelayRouteBlockRow(id);
+  void deleteRelayRouteBlockRow(id).catch(() => undefined);
 }
 
 export async function blockedRelayUrls(

@@ -9,11 +9,21 @@ import {
 } from '../sqlite-opfs/settings-sqlite';
 
 let memoryRows: SettingOverride[] = [];
+const startupReadDeadlineMs = 120;
 
 export async function readSettingOverrideRows(
   fallback: SettingOverride[],
 ): Promise<SettingOverride[]> {
-  const rows = await sqliteReadSettingOverrides().catch(() => undefined);
+  const read = sqliteReadSettingOverrides()
+    .then((rows) => {
+      if (rows) memoryRows = rows;
+      return rows;
+    })
+    .catch(() => undefined);
+  const rows = await Promise.race([
+    read,
+    fallbackAfter(startupReadDeadlineMs, fallback),
+  ]);
   memoryRows = rows ?? fallback;
   return memoryRows;
 }
@@ -55,4 +65,10 @@ export async function replaceSettingOverrideRows(
 ): Promise<void> {
   memoryRows = [...overrides];
   await sqliteReplaceSettingOverrides(overrides).catch(() => false);
+}
+
+function fallbackAfter<T>(ms: number, value: T): Promise<T> {
+  return new Promise((resolve) => {
+    setTimeout(() => resolve(value), ms);
+  });
 }

@@ -32,22 +32,26 @@ export type PressureInput = {
 
 export function pressureState(input: PressureInput): CachePressureState {
   if (!input.storageApiAvailable) return 'storage-api-unavailable';
+  if (input.inventoryStatus !== 'exact') return 'inventory-incomplete';
   if (
     input.budget.browserUsageBytes !== null &&
     !input.budget.overSiteBudget &&
     !input.budget.quotaPressure
-  )
+  ) {
+    if (input.unknownOrOverheadBytes > 0) return 'unknown-unowned-usage';
     return input.prunedResources > 0
       ? 'compacted-under-budget'
       : 'below-budget';
+  }
   if (
     input.budget.browserUsageBytes === null &&
     input.prunableCacheBytes <= input.budget.siteBudgetBytes
-  )
+  ) {
+    if (input.unknownOrOverheadBytes > 0) return 'unknown-unowned-usage';
     return input.prunedResources > 0
       ? 'compacted-under-budget'
       : 'below-budget';
-  if (input.inventoryStatus !== 'exact') return 'inventory-incomplete';
+  }
   if (input.budget.browserUsageBytes === null) return quotaFallbackState(input);
   if (input.eligibleRows > 0) return 'quota-pressure';
   if (input.unknownOrOverheadBytes > 0) return 'unknown-unowned-usage';

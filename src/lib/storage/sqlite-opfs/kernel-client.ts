@@ -61,7 +61,8 @@ function openSqliteStorage(
       kind: 'open',
       database: {
         databaseName,
-        allowSahpool: true,
+        preferredVfs: 'opfs',
+        allowSahpool: false,
         allowOpfs: true,
         allowTransient: true,
         workerKind: 'dedicated',
