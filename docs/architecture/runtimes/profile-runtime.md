@@ -30,6 +30,10 @@ Profile runtime owns metadata and authored-note loading for one pubkey.
 
 - Profile tabs receive a pubkey from workspace actions.
 - Runtime reads cache first, then orchestrator Demands.
+- Profile post pages run the cache-first page planner with the profile route
+  fingerprint before relay reads. Complete route coverage returns the SQLite
+  page without relay reads; partial coverage renders cached posts and reads only
+  uncovered profile route requirements.
 - Metadata and follow-list events never consume visible note page slots.
 - Future notes and old live replay are stored but not inserted into visible
   profile rows.

@@ -31,6 +31,9 @@ authored by self without `#p` containing self is **not** a notification row.
 - `buildNotificationFilters` is separate module
 - Paging readiness comes from the runtime cursor, not from whether records were
   produced by the initial relay page.
+- Cache-first proof uses the notification feed key, account `#p` filter, relay,
+  route group, and bounded interval. Complete proof skips relay I/O; partial
+  proof reads only uncovered notification relay requirements.
 - Bootstrap and historical reads use the shared adaptive grouped scanner with a
   one-minute initial window. Complete sparse windows advance through adjacent
   notification history with doubled spans, balanced complete windows keep the

@@ -33,9 +33,10 @@ uses `opfs-sahpool` so storage does not require app-wide cross-origin isolation.
 IndexedDB and Dexie remain only because the shipped SvelteKit runtime still uses
 some repositories. Rust and TypeScript host code already include schema records,
 statement records, row codecs, worker envelopes, and repository foundations.
-Product startup, settings, tab snapshots, accounts, relay sets, drafts, event graph writes,
-cached feed reads, tag lookups, local filter search, relay diagnostics, relay
-information, relay suggestions, author routes, route blocks, notifications,
-feed coverage, scan hints, cache ledger summaries, cache metadata, retention
-protection, retention deletion, and jobs use the SQLite path. Repair, physical
-inventory, and cache tools must move before Dexie is deleted.
+Product startup, settings, tab snapshots, accounts, relay sets, drafts, event
+graph writes, cached feed reads, tag lookups, local filter search, relay
+diagnostics, relay information, relay suggestions, author routes, route blocks,
+notifications, feed coverage, scan hints, cache ledger summaries, cache
+metadata, retention protection, retention deletion, and jobs use the SQLite
+path. Repair, physical inventory, cache tools, open app-log rows, and any
+remaining Dexie product callers must move before Dexie is deleted.

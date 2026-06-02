@@ -62,6 +62,11 @@ Incomplete relay reads keep exhaustion unknown so later scrolls can retry.
 ## Contract
 
 - Load local notification records before relay Demands.
+- Initial and historical notification pages prove exact coverage for the
+  account `#p` filter, selected notification relays, route group, and bounded
+  interval before relay reads. Complete coverage returns local rows without
+  relay reads; partial coverage renders local rows and reads only uncovered
+  notification relay requirements.
 - Build relay filters through `notification-filters` (`#p` targeting only).
 - Reject self-authored kind `1` without `#p` self tag as notification rows.
 - Use active account NIP-65 read relays plus selected read fallback.

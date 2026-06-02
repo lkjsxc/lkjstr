@@ -21,6 +21,17 @@ when relevant, selected relay set, page size, feed policy, route fingerprint,
 and request mode. Two surfaces may share cached events, but they may not share
 coverage unless those identity fields match.
 
+## Proof Query Contract
+
+Steady-state proof queries are exact. They filter by feed key, route group,
+relay URL, semantic filter key, `status = 'complete'`, and interval overlap with
+`[since, until)`. A feed-key-only read is allowed only as a bounded diagnostic
+or migration path; it must not decide cache-first correctness.
+
+The proof reader may merge the exact complete rows in pure code or SQL. It must
+return the uncovered relay, filter, route group, and interval requirements so the
+runtime can query only those gaps.
+
 ## Status
 
 Only complete coverage can prove a range. Complete coverage means the relevant
@@ -60,8 +71,8 @@ relays merge through the normal feed reducer.
 
 ## Cache Use
 
-Cache-first rendering is allowed only when coverage proves every required
-feed-key, route-group, relay, filter, and interval complete. The local event
+Cache-first rendering is allowed only when exact coverage proof covers every
+required feed-key, route-group, relay, filter, and interval. The local event
 repository then serves the rows inside the same display bounds that relay
 rendering would apply. Event count is not proof.
 

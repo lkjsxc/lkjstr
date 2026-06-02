@@ -73,13 +73,22 @@ Read next: [architecture/data/README.md](architecture/data/README.md),
 - The SQLite schema, statement records, row codecs, retention classes, and
   worker adapter foundations already exist in Rust and TypeScript host code.
   The Svelte Settings, workspace layout, tab snapshot, Accounts, local signing
-  secret, relay set, Tweet draft, event graph, tag, relay provenance, feed cursor, cached
-  feed page, tag lookup, local filter-search, relay diagnostics, relay
+  secret, relay set, Tweet draft, event graph, tag, relay provenance, feed cursor,
+  cached feed page, tag lookup, local filter-search, relay diagnostics, relay
   information, relay suggestions, author routes, route blocks, notifications,
   and job paths now use the SQLite worker with memory fallback when Workers are
   unavailable. Cache ledger summaries, cache metadata, protection snapshots,
-  and retention deletion also use SQLite. Repair, physical inventory, and some
-  cache tool actions still need cutover wiring before Dexie can be removed.
+  and retention deletion also use SQLite.
+- Cache-first traversal is incomplete at the top-level timeline runtime:
+  SQLite-backed cached feed rows and coverage rows exist, but older, newer, and
+  some initial page loaders still start relay reads before returning warm local
+  pages. Complete coverage must return the SQLite page without relay I/O, and
+  partial coverage must render cached rows before querying only uncovered relay
+  requirements.
+- Remaining Dexie cutover work is limited to repair, physical inventory, cache
+  tool actions, app log rows when still open, any residual product readers or
+  writers, and deletion of `src/lib/storage/browser-db.ts` plus Dexie metadata
+  once no caller remains.
 - Protected records are never removed by cache cleanup: accounts, local signing
   secrets, settings, relay sets, workspace state, Tweet drafts, active tab
   snapshots, active jobs, and route blocks.
@@ -113,7 +122,8 @@ Read next: [architecture/workspace/README.md](architecture/workspace/README.md),
 - Cache-first feed display requires complete coverage evidence for every
   required relay, route group, semantic key, filter shape, and bounded interval.
   Incomplete, failed, compacted, dense, stale, or missing evidence cannot prove
-  absence.
+  absence. A proven warm page should render from SQLite before profile
+  hydration, reference hydration, diagnostics, or relay bootstrap.
 - Home, Global, Profile posts, Notifications, and time-windowable Custom Request
   feeds use adaptive grouped scans. Exact id reads, search reads, Author
   Context, Thread context, metadata, follow-list lookup, and reference

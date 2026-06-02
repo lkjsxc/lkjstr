@@ -21,13 +21,13 @@ records live in `lkjstr-storage`; `lkjstr-web` has worker-backed repository
 calls for settings, workspaces, tab states with ledger rows, accounts, local
 secrets, relay sets, Tweet drafts, events, tags, relay provenance,
 notifications, feed cursors, feed coverage, and scan hints. The Svelte Settings,
-workspace, tab snapshot, Accounts, local secret, relay set, Tweet draft, event graph, cached
-feed, tag lookup, local filter-search, relay diagnostics, relay information,
-relay suggestion, author route, route block, notification, feed coverage, scan
-hint, cache ledger summary, cache metadata, retention, and job repositories now
-use the TypeScript SQLite worker path. Other Svelte product paths still use
-IndexedDB or Dexie until their SQLite paths are
-wired and tested as durable product paths.
+workspace, tab snapshot, Accounts, local secret, relay set, Tweet draft, event
+graph, cached feed, tag lookup, local filter-search, relay diagnostics, relay
+information, relay suggestion, author route, route block, notification, feed
+coverage, scan hint, cache ledger summary, cache metadata, retention, and job
+repositories now use the TypeScript SQLite worker path. Other Svelte product
+paths still use IndexedDB or Dexie until their SQLite paths are wired and tested
+as durable product paths.
 
 ## Repository Families
 
@@ -46,6 +46,20 @@ wired and tested as durable product paths.
   deletion dispatch are SQLite-backed. Repair and physical inventory snapshots
   remain open. SQLite inventory uses storage-owned count statements for known
   schema tables; host code must not format table names itself.
+
+## Remaining Cutover Tasks
+
+- Repair: ledger repair, orphan cleanup, and consistency checks run through
+  typed SQLite repositories.
+- Physical inventory: table counts, byte estimates, and unknown storage reports
+  use storage-owned SQL statements.
+- Cache tools: manual cleanup, compaction, and reset actions dispatch through
+  SQLite repositories and report typed outcomes.
+- App log rows: durable log persistence moves to SQLite when still open.
+- Product readers and writers: any remaining `browserDb`, Dexie, or legacy
+  IndexedDB product caller moves to typed SQLite access.
+- Deletion: after no caller remains, delete `src/lib/storage/browser-db.ts`, old
+  Dexie schema helpers, and Dexie package metadata.
 
 ## Statement Shape
 

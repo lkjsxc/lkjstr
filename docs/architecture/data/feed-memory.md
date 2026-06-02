@@ -75,8 +75,9 @@ or older-page loads from moving the visible row.
 
 ## Durable Cache vs Runtime Windows
 
-- IndexedDB is the durable cache. lkjstr does not cap durable cached event
-  count by application policy. Browser storage quotas may still limit growth.
+- SQLite OPFS is the durable cache target. lkjstr does not cap durable cached
+  event count by application policy. Browser storage quotas may still limit
+  growth.
 - Runtime feed windows (`180` for Home, Global, Profile, Notifications;
   `240` for Thread) bound resident rows per tab, live inserts, and in-memory
   maps. These are not durable cache ceilings.

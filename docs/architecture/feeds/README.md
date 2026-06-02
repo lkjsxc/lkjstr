@@ -38,6 +38,15 @@ semantics: ordering, paging, filters, merge, cursors, and multi-tab ownership.
 - [orchestration-bridge.md](orchestration-bridge.md)
 - [../network/subscription-orchestration/feed-route-isolation.md](../network/subscription-orchestration/feed-route-isolation.md)
 
+## Cache-First Page Pipeline
+
+Home, Global, Profile posts, and Notifications all resolve a page intent before
+network reads. The intent identifies the semantic feed key, route groups, relay
+filter batches, display bounds, storage bounds, and cursor direction. SQLite
+coverage proof then decides the return path: complete proof renders local rows
+and skips relay reads, partial proof renders local rows and reads uncovered
+requirements, and missing proof runs the normal bounded relay scan.
+
 ## Related
 
 - [../data/feed-surface/README.md](../data/feed-surface/README.md): scroll, footer, near-end

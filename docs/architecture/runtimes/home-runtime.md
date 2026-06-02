@@ -34,8 +34,12 @@ Home runtime owns active-account follow discovery and followed-note loading.
 
 ## Contract
 
-- Load cached kind `3` follows and matching cached kind `1` notes first.
+- Load cached kind `3` follows and matching cached display-kind notes first.
 - Read cached pages through the shared repository.
+- For initial, older, and newer note pages, run the cache-first page planner
+  before relay reads. Complete coverage returns the SQLite page without relay
+  reads; partial coverage renders cached rows and reads only uncovered route
+  requirements.
 - Build authors from active account plus latest follow-list `p` tags.
 - Deduplicate authors and chunk author filters when needed.
 - Keep Home to a `180` item in-memory window.

@@ -39,6 +39,9 @@ set:
 - Bootstrap and route-discovery may use selected-relay fallback groups
 - Older and newer **page** reads use NIP-65 author route groups plus selected
   base relays only (`routeGroupsForPaging`)
+- Warm initial, older, and newer reads prove coverage per route group, relay,
+  filter key, and interval before network reads. Complete proof skips relay I/O;
+  partial proof queries only uncovered route requirements.
 
 ## Status
 

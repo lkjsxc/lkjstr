@@ -29,7 +29,10 @@ TypeScript still owns product query execution.
 
 ## Contract
 
-- Cache is read before relay subscriptions start.
+- Cache is read before relay subscriptions start. Feed-shaped Custom Request
+  pages follow the cache-first return contract: complete proof returns local
+  rows and skips relay reads, partial proof renders local rows and reads only
+  uncovered requirements.
 - Selected read relays are the base and fallback. Targeted query runtimes may
   add bounded protocol-derived routes.
 - Feed-like tabs read cache pages through the shared repository.

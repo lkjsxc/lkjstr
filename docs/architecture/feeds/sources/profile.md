@@ -15,6 +15,9 @@ kinds = 1, 6, 16 (display kinds)
 
 - Must not use Home follow list
 - Route selection follows profile tab context only
+- Cache-first proof uses the profile route fingerprint, target pubkey, selected
+  relays, filter key, and bounded interval. Complete proof skips relay I/O;
+  partial proof reads only uncovered profile route requirements.
 
 ## Implementation
 

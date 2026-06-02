@@ -19,6 +19,10 @@ Runtime docs define how tab-owned loaders combine cache and relay data.
 - Feed runtimes follow [feed-surface.md](../data/feed-surface.md) for near-end
   thresholds, speculative older prefetch, `FeedSurfaceStatus`, and staged row
   materialization.
+- Home, Global, Profile posts, and Notifications use the same cache-first page
+  pipeline: plan route groups and bounded filters, prove exact SQLite coverage,
+  render covered cached rows before relay I/O, and query only uncovered relay
+  requirements.
 - Older-page loaders clear `loadingOlder` in success and failure paths.
 - Bounded error text is exposed instead of unhandled promise failures.
 - Startup promises that are intentionally not awaited log one bounded runtime

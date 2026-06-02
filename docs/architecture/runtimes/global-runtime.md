@@ -25,8 +25,12 @@ Global runtime owns unauthenticated recent-note loading from readable relays.
 
 ## Contract
 
-- Load cached kind `1` notes from the shared repository first.
+- Load cached display-kind notes from the shared repository first.
 - Global remains selected-relay based only.
+- Cache-first proof and cached page reads must include selected relay provenance;
+  events cached only from unselected relays do not render in Global.
+- Complete selected-relay coverage returns the SQLite page without relay reads;
+  partial coverage reads only uncovered selected relays.
 - Do not require an active account.
 - Orchestrator Demands for bootstrap then live.
 - Hidden tabs release live Demands; retain window until runtime close.

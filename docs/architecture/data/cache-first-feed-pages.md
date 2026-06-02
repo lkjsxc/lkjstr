@@ -23,6 +23,20 @@ contacting relays.
   relay diagnostics.
 - Live subscriptions are not replaced by cache-first reads.
 
+## Runtime Return Contract
+
+- Complete proof returns the SQLite page immediately and does not start a relay
+  scan for the proven relay, filter, route group, and interval requirements.
+- Partial proof returns available cached rows immediately, then starts a relay
+  scan only for uncovered requirements. Covered relays stay silent for the
+  covered interval.
+- Missing proof uses the normal bounded relay scan and records new coverage
+  evidence before the segment is treated as durable cache evidence.
+- Initial feed load attempts local cached display before relay bootstrap when
+  cached rows exist. Relay bootstrap may still refresh or fill uncovered gaps.
+- Relay updates may replace or extend a staged page after uncovered reads finish;
+  the first visible cached rows must not wait for that network work.
+
 ## Scope
 
 Included callers are Home, Global, Profile posts, Notifications, and safe Custom
@@ -49,6 +63,10 @@ performance input. Coverage proof remains separate.
 
 ## Status
 
-Interval-union proof and partial relay pruning are implemented for grouped feed
-page scans. Durable warm hints are implemented as performance input and are not
-required for cache proof.
+Interval-union proof and partial relay pruning are implemented inside grouped
+feed page scans. The top-level runtime return path is being lifted so warm
+older, newer, and initial feed pages can render from SQLite before relay work
+starts.
+
+Durable warm hints are implemented as performance input and are not required for
+cache proof.
