@@ -21,9 +21,9 @@ records live in `lkjstr-storage`; `lkjstr-web` has worker-backed repository
 calls for settings, workspaces, tab states with ledger rows, accounts, local
 secrets, relay sets, Tweet drafts, events, tags, relay provenance,
 notifications, feed cursors, feed coverage, and scan hints. The Svelte Settings
-and workspace repositories now use the TypeScript SQLite worker path. Other
-Svelte product paths still use IndexedDB or Dexie until their SQLite paths are
-wired and tested as durable product paths.
+workspace, and Tweet draft repositories now use the TypeScript SQLite worker
+path. Other Svelte product paths still use IndexedDB or Dexie until their
+SQLite paths are wired and tested as durable product paths.
 
 ## Repository Families
 

@@ -1,18 +1,28 @@
 import type { TweetDraft } from '../../tweet/draft-store';
-import { browserDb } from '../browser-db';
-import { bestEffortStorageWrite, boundedStorageRead } from '../safe-storage';
+import {
+  sqliteDeleteTweetDraft,
+  sqlitePutTweetDraft,
+  sqliteReadTweetDraft,
+} from '../sqlite-opfs/tweet-drafts-sqlite';
+
+const memoryDrafts = new Map<string, TweetDraft>();
 
 export async function readTweetDraftRow(
   id: string,
   fallback: TweetDraft | undefined,
 ): Promise<TweetDraft | undefined> {
-  return boundedStorageRead(() => browserDb().tweetDrafts.get(id), fallback);
+  const row = await sqliteReadTweetDraft(id).catch(() => undefined);
+  const draft = row ?? memoryDrafts.get(id) ?? fallback;
+  if (draft) memoryDrafts.set(id, draft);
+  return draft;
 }
 
 export async function putTweetDraftRow(draft: TweetDraft): Promise<void> {
-  await bestEffortStorageWrite(() => browserDb().tweetDrafts.put(draft));
+  memoryDrafts.set(draft.id, draft);
+  await sqlitePutTweetDraft(draft).catch(() => false);
 }
 
 export async function deleteTweetDraftRow(id: string): Promise<void> {
-  await bestEffortStorageWrite(() => browserDb().tweetDrafts.delete(id));
+  memoryDrafts.delete(id);
+  await sqliteDeleteTweetDraft(id).catch(() => false);
 }

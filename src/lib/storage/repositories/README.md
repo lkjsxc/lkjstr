@@ -10,7 +10,7 @@ Feature modules call these functions instead of reaching into database bindings.
 - `accounts-store.ts`: account records.
 - `secrets-store.ts`: local account signing secrets.
 - `settings-store.ts`: flat setting overrides through SQLite worker storage.
-- `tweet-drafts-store.ts`: protected Tweet drafts.
+- `tweet-drafts-store.ts`: protected Tweet drafts through SQLite worker storage.
 - `workspace-store.ts`: durable workspace layout through SQLite worker storage.
 - `relay-sets-store.ts`: relay set configuration.
 - `route-blocks-store.ts`: protected relay route blocks.

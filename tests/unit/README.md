@@ -30,4 +30,5 @@ This directory contains Vitest unit tests grouped by source domain.
 - [storage/](storage/): safe storage tests.
 - [thread/](thread/): thread runtime tests.
 - [timeline/](timeline/): timeline runtime tests.
+- [tweet/](tweet/): Tweet draft and publish helper tests.
 - [workspace/](workspace/): workspace layout tests.

@@ -8,8 +8,8 @@ Tweet is the single note authoring surface.
 
 Status: partial.
 
-The Rust/WASM shell renders a real Tweet draft editor backed by the protected
-`tweetDrafts` IndexedDB table. The editor loads `tab:{tabId}` drafts, falls back
+The Rust/WASM shell renders a real Tweet draft editor. The Svelte product path
+stores drafts through the SQLite worker. The editor loads `tab:{tabId}` drafts, falls back
 to the `main` draft when a tab draft is absent, saves content immediately,
 saves the sensitive flag plus warning reason, and reports storage failures as
 unavailable state.
@@ -22,7 +22,8 @@ uploads, or fake custom emoji metadata.
 ## Contract
 
 - Tweet opens from New Tab.
-- Draft content is durable in IndexedDB.
+- Draft content is durable through the SQLite worker when browser Workers are
+  available, with in-memory fallback when storage is unavailable.
 - Publishing, draft `accountId`, and upload authentication use the active
   signing account.
 - Publishing targets enabled write relays in the selected default relay set.

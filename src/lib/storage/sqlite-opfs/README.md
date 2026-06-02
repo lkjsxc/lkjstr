@@ -18,6 +18,7 @@ storage target.
 - `storage-health.ts`: Stats-facing health reader for the SQLite worker.
 - `settings-sqlite.ts`: SQLite-backed flat setting override repository.
 - `workspace-sqlite.ts`: SQLite-backed workspace layout repository.
+- `tweet-drafts-sqlite.ts`: SQLite-backed Tweet draft repository.
 
 ## Contract
 
