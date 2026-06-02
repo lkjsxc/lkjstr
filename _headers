@@ -1,3 +1,2 @@
-/*
-  Cross-Origin-Opener-Policy: same-origin
-  Cross-Origin-Embedder-Policy: require-corp
+# lkjstr intentionally does not set app-wide COOP/COEP headers.
+# SQLite storage uses opfs-sahpool so arbitrary Nostr media remains usable.

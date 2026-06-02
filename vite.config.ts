@@ -1,4 +1,3 @@
-import type { ServerResponse } from 'node:http';
 import { readdir, readFile } from 'node:fs/promises';
 import { sveltekit } from '@sveltejs/kit/vite';
 import type { Plugin } from 'vite';
@@ -12,19 +11,7 @@ let sqliteAssetNamesPromise: Promise<ReadonlySet<string>> | undefined;
 
 export default defineConfig({
   plugins: [sqliteWasmAssets(), sveltekit()],
-  server: {
-    allowedHosts: true,
-    headers: {
-      'Cross-Origin-Opener-Policy': 'same-origin',
-      'Cross-Origin-Embedder-Policy': 'require-corp',
-    },
-  },
-  preview: {
-    headers: {
-      'Cross-Origin-Opener-Policy': 'same-origin',
-      'Cross-Origin-Embedder-Policy': 'require-corp',
-    },
-  },
+  server: { allowedHosts: true },
   optimizeDeps: {
     exclude: ['@sqlite.org/sqlite-wasm'],
   },
@@ -43,18 +30,12 @@ function sqliteWasmAssets(): Plugin {
           const path = new URL(request.url ?? '/', 'http://localhost').pathname;
           const name = path.replace(/^\/+/, '');
           if (!(await sqliteAssetNames()).has(name)) return next();
-          setIsolationHeaders(response);
+          response.setHeader('Cross-Origin-Resource-Policy', 'same-origin');
           response.setHeader('Content-Type', contentType(name));
           response.end(await readFile(new URL(name, sqliteDistUrl)));
         } catch (error) {
           next(error as Error);
         }
-      });
-    },
-    configurePreviewServer(server) {
-      server.middlewares.use((_request, response, next) => {
-        setIsolationHeaders(response);
-        next();
       });
     },
     async generateBundle() {
@@ -79,12 +60,6 @@ async function readSqliteAssetNames(): Promise<ReadonlySet<string>> {
   return new Set(
     entries.filter((entry) => entry.isFile()).map((entry) => entry.name),
   );
-}
-
-function setIsolationHeaders(response: ServerResponse): void {
-  response.setHeader('Cross-Origin-Opener-Policy', 'same-origin');
-  response.setHeader('Cross-Origin-Embedder-Policy', 'require-corp');
-  response.setHeader('Cross-Origin-Resource-Policy', 'same-origin');
 }
 
 function contentType(name: string): string {
