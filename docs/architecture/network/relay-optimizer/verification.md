@@ -2,8 +2,8 @@
 
 ## Purpose
 
-This file lists the checks that prove optimizer documentation, reducers,
-storage, bridges, Stats rows, and relay scenarios.
+This file lists the checks that prove optimizer docs, reducers, storage,
+bridges, Stats rows, and synthetic relay scenarios.
 
 ## Documentation Gates
 
@@ -13,15 +13,15 @@ cargo run -p lkjstr-xtask -- check-docs
 cargo run -p lkjstr-xtask -- check-lines
 ```
 
-If a gate fails because a referenced infrastructure file is missing, record the
+If a gate fails because a local tool shim points at a missing file, record the
 failure exactly and do not claim it passed.
 
 ## Rust Unit Gates
 
 ```sh
 cargo test -p lkjstr-relays
-cargo test -p lkjstr-app
-cargo test -p lkjstr-storage
+cargo test -p lkjstr-app -- feed_scan
+cargo test -p lkjstr-storage -- optimizer
 cargo clippy --workspace --all-targets -- -D warnings
 ```
 
@@ -30,49 +30,42 @@ cargo clippy --workspace --all-targets -- -D warnings
 ```sh
 pnpm test:quiet
 pnpm rust-wasm:quiet
-pnpm test:e2e:quiet -- relay
+pnpm test:e2e:quiet -- scan
 pnpm test:e2e:quiet -- stats
 ```
 
-## Required Scenarios
+## Scan Learning Scenarios
 
-Relay scoring:
+- dense limit-hit scan converges toward two thirds occupancy, not simple halves
+- sparse complete scan grows from density and may grow beyond two times, capped
+  by the configured change factor
+- one-count sparse scan with prior span `600` caps at `2400` under defaults
+- missing exact model with parent evidence uses the parent, not neutral
+- stale exact model blends with or loses to fresh parent evidence
+- incomplete windows raise failure and incomplete rates without proving absence
+- closing and reopening keeps learned span when SQLite storage is available
+- disabled relays are excluded before optimizer scoring and scan planning
+- scan hints never prove cache absence or suppress uncovered relays
 
-- initial score is neutral
-- EOSE success raises reliability
-- timeout penalizes without erasing history
-- event-limit is density, not transport failure
-- first event improves first-event speed
-- unique yield rewards non-duplicate events
-- stale entries decay toward neutral
-- ordering preserves fairness retry
-- score keys exclude tab and pane ids
-- filter shape normalization is deterministic
+## Storage Scenarios
 
-Scan learning:
+- exact scan density model round-trips
+- parent scan density model round-trips
+- model keys reject tab and pane identifiers
+- retention deletes optimizer rows only
+- repair reports orphan optimizer ledger rows
+- selecting models returns exact and parent scopes in deterministic order
+- stale rows are returned with decayed confidence instead of being omitted when
+  no better parent exists
 
-- no hint uses sixty-second span
-- compatible hint is used
-- incompatible route fingerprint is rejected
-- sparse complete window doubles next span
-- balanced complete window keeps span
-- dense window splits near visible edge
-- incomplete window does not double
-- minimum dense segment becomes unresolved
-- hint never proves cache absence
-- hint never suppresses an uncovered relay
-- trace reports hint and feedback counts
-
-Synthetic relay e2e:
+## Synthetic Relay Scenarios
 
 - fast relay paints first
 - slow relay inserts later in canonical order
-- failed relay does not block
-- dense scan shrinks or splits the next compatible scan
-- sparse scan grows the next compatible scan
+- failed relay does not block reachable relays
 - NIP-65-only route does not suppress selected fallback
-- measured route outranks stale NIP-65
-- Stats shows optimizer evidence
+- measured route outranks stale weak route evidence
+- Stats shows optimizer evidence or explicit unavailable state
 
 ## Final Gate
 

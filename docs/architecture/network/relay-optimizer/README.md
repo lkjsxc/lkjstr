@@ -2,32 +2,39 @@
 
 ## Purpose
 
-The relay optimizer turns real relay observations into safer scheduling,
-route-trust, scan-width, and diagnostics decisions. It is a performance and
-observability layer only; it never changes the correctness rules for selected
-relays, coverage proof, or disabled-relay exclusion.
+The relay optimizer turns real relay, cache, and scan observations into safer
+scheduling, route-trust, span, wait, and diagnostic decisions. It is a
+performance and observability layer only.
 
 ## Table of Contents
 
-- [measurement-ledger.md](measurement-ledger.md): durable observation and score rows.
-- [route-evidence-trust.md](route-evidence-trust.md): measured route trust and NIP-65 limits.
+- [measurement-ledger.md](measurement-ledger.md): durable observation, density,
+  score, and trace rows.
+- [route-evidence-trust.md](route-evidence-trust.md): measured route trust and
+  NIP-65 limits.
 - [relay-read-scoring.md](relay-read-scoring.md): Rust score model and fairness.
-- [scan-width-adaptation.md](scan-width-adaptation.md): grouped scan hints and feedback.
-- [relay-wait-policy.md](relay-wait-policy.md): first paint, incomplete state, and late merge.
-- [stats-projection.md](stats-projection.md): Stats sections backed by real providers.
-- [verification.md](verification.md): required checks and synthetic relay scenarios.
+- [scan-width-adaptation.md](scan-width-adaptation.md): density-based scan span
+  selection.
+- [relay-wait-policy.md](relay-wait-policy.md): first paint, incomplete state,
+  and late merge.
+- [stats-projection.md](stats-projection.md): Stats sections backed by real
+  providers.
+- [verification.md](verification.md): required checks and synthetic relay
+  scenarios.
 
 ## Product Contract
 
 - Observations come only from real relay reads and local cache evidence.
 - Relay scores are computed in Rust from bounded observations.
+- Scan spans are computed from per-request density models plus last-span hints.
 - Selected user read relays remain the correctness fallback unless the user
   disables or removes them.
-- Disabled relays are excluded before scoring, routing, and fairness.
+- Disabled relays are excluded before scoring, routing, scan planning, and
+  fairness.
 - NIP-65 relay lists are weak prior evidence. They can seed bounded targeted
   attempts, but they cannot suppress selected fallback, prove absence, or
   override measured reads.
-- Adaptive scan hints are performance input only. They never prove cache
+- Adaptive scan models are performance input only. They never prove cache
   absence, suppress an uncovered relay, or mark incomplete history exhausted.
 - Cache-first absence requires complete interval-union coverage for every
   required semantic feed key, route group, relay URL, filter key, and interval.
@@ -40,10 +47,9 @@ relays, coverage proof, or disabled-relay exclusion.
 
 - `lkjstr-relays` owns relay read scoring, route evidence trust, ordering, and
   fairness reducers.
-- `lkjstr-app` owns scan planning, feedback reduction, wait policy, late merge,
-  and feed-visible traces.
-- `lkjstr-storage` owns optimizer row codecs, bounded retention, repair, and
-  inventory accounting.
+- `lkjstr-app` owns scan density planning, wait policy, late merge, and
+  feed-visible traces.
+- `lkjstr-storage` owns optimizer row codecs, retention, repair, and inventory.
 - `lkjstr-web` owns serializable WASM bridges and browser provider adapters.
 - `lkjstr-ui` renders Stats rows from real providers and unavailable states.
 

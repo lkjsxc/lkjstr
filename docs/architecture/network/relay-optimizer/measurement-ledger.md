@@ -2,134 +2,127 @@
 
 ## Purpose
 
-Optimizer data is recoverable diagnostic cache. It helps future relay reads get
-faster and clearer, but it is not protected user data and it is not proof that a
-relay lacks events.
+Optimizer rows are recoverable diagnostic cache. They help future reads become
+faster and clearer, but they are not protected user data and never prove relay
+absence.
 
 ## Tables
 
-Status: Rust storage now owns row codecs, schema records, retention helpers,
-and repair-planning helpers for these optimizer records. Browser product wiring
-is still open.
+SQLite worker target tables:
 
-The SQLite worker target owns these optimizer records:
+| Table | Purpose | Retention |
+| ----- | ------- | --------- |
+| `relay_read_observations` | per-relay read diagnostics | age and count |
+| `relay_read_scores` | latest aggregate score per stable context | age and key count |
+| `feed_scan_observations` | append-only scan segment measurements | age, key count, pressure |
+| `feed_scan_density_models` | weighted scan-density model by scope | age, key count, pressure |
+| `feed_scan_hints` | last proposed span only | age and semantic key count |
+| `feed_scan_decision_traces` | Stats-ready span decisions | short age and count |
+| `route_evidence_scores` | measured author route trust | author plus relay age and count |
 
-| Table                     | Purpose                                      | Retention                                  |
-| ------------------------- | -------------------------------------------- | ------------------------------------------ |
-| `relay_read_observations` | recent per-relay read diagnostics            | bounded by age and count                   |
-| `relay_read_scores`       | latest aggregate score per stable score key  | bounded by age and key count               |
-| `feed_scan_hints`         | next-span hints for compatible grouped scans | bounded by age and semantic key count      |
-| `route_evidence_scores`   | measurement-informed author route trust      | bounded by author plus relay age and count |
+All optimizer rows must be counted by storage inventory before product code
+depends on them.
 
-Existing `feed_scan_hints` rows stay recoverable page-cache data. New optimizer
-rows must be ledger-backed or otherwise counted by the storage inventory before
-product code depends on them.
+## Scan Observation Columns
 
-## Observation Columns
-
-`relay_read_observations` records:
+`feed_scan_observations` records:
 
 ```text
 id
-relay_url
-surface
-phase
-direction
-route_group_key
-semantic_feed_key
-semantic_filter_key
-purpose
-started_at_ms
-first_event_ms
-eose_ms
-duration_ms
-event_count
-unique_event_count
-final_count
-timeout
-closed
-auth
-socket_error
-event_limit_reached
-bytes_sent
-bytes_received
-route_evidence_sources
-created_at_ms
-```
-
-## Score Columns
-
-`relay_read_scores` records the latest aggregate for:
-
-```text
-relay_url
-surface
-phase
-direction
-route_group_key
-filter_shape
-purpose
-reliability
-first_event_speed
-eose_speed
-useful_yield
-unique_yield
-penalty
-fairness_credit
-sample_count
-updated_at_ms
-```
-
-## Scan Hint Columns
-
-`feed_scan_hints` records:
-
-```text
 semantic_feed_key
 route_group_key
 relay_url
 semantic_filter_key
 direction
 route_fingerprint
-current_span_seconds
-next_span_seconds
-min_span_seconds
-max_span_seconds
-last_feedback
-density_ewma
-complete_window_count
-dense_window_count
-incomplete_window_count
-last_since
-last_until
-updated_at_ms
-expires_at_ms
+since_seconds
+until_seconds
+requested_limit
+effective_limit
+event_count
+unique_event_count
+final_visible_count
+event_limit_reached
+eose
+timeout
+closed
+auth
+socket_error
+bytes_sent
+bytes_received
+started_at_ms
+completed_at_ms
+created_at_ms
 ```
 
-## Route Evidence Columns
+## Scan Model Columns
 
-`route_evidence_scores` records:
+`feed_scan_density_models` records:
 
 ```text
-author_pubkey
+model_key
+scope
+semantic_feed_key
+route_group_key
 relay_url
-surface
-source
-source_confidence
-measured_success
-measured_failure
-last_success_at_ms
-last_failure_at_ms
+semantic_filter_key
+direction
+route_fingerprint
+target_limit_fraction
+density_events_per_second
+log_density_mean
+log_density_variance
+sample_weight
+complete_window_count
+dense_window_count
+sparse_window_count
+incomplete_window_count
+failure_window_count
+limit_hit_rate
+incomplete_rate
+last_good_span_seconds
+last_proposed_span_seconds
+last_observed_since_seconds
+last_observed_until_seconds
 updated_at_ms
+decays_after_ms
 ```
 
-## Rules
+Required scopes are Exact, RouteGroup, RelayFilter, SurfaceFilter, Surface,
+Global, and Neutral.
 
-- Observation rows are append-only diagnostics until retention deletes them.
-- Score rows are replaceable aggregates keyed by stable request context.
-- Scan hints are compatible only when semantic feed key, route group, relay URL,
-  semantic filter key, direction, and route fingerprint still match.
-- Tab ids, pane ids, owner handles, request ids, and subscription ids are never
-  part of durable keys.
-- Retention deletes optimizer records through documented cache or diagnostic
-  paths and reports counts in Stats.
+## Decision Trace Columns
+
+`feed_scan_decision_traces` records:
+
+```text
+trace_id
+model_key
+semantic_feed_key
+route_group_key
+relay_url
+semantic_filter_key
+direction
+route_fingerprint
+source_scope
+confidence
+target_count
+effective_limit
+density_events_per_second
+previous_span_seconds
+proposed_span_seconds
+cap_reason
+diagnostics_json
+created_at_ms
+```
+
+## Repository Rules
+
+- Append observations; upsert density models.
+- Select exact and parent models in deterministic scope order.
+- Return stale rows with decayed confidence when no better evidence exists.
+- Repair reports orphan optimizer ledger rows.
+- Retention deletes optimizer rows only.
+- Optimizer cleanup never deletes accounts, local signing secrets, settings,
+  relay sets, workspace state, Tweet drafts, active tab snapshots, jobs, or
+  route blocks.

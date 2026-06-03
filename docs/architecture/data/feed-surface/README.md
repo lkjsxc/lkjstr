@@ -2,9 +2,9 @@
 
 ## Purpose
 
-Feed surface is the shared contract for feed-like tabs: near-end detection,
-bottom status, speculative older prefetch, staged row materialization, and list
-integration.
+Feed surface is the shared contract for feed-like tabs: scroll ownership,
+near-end detection, footer status, speculative older prefetch, staged row
+materialization, row geometry, and real-data level of detail.
 
 ## Table of Contents
 
@@ -16,6 +16,9 @@ integration.
   value for feed events.
 - [footer-phase.md](footer-phase.md): `feedPagingPhase` and `FeedSurfaceStatus`.
 - [staged-pipeline.md](staged-pipeline.md): relay page, row shell, enrichment.
+- [height-reservation.md](height-reservation.md): measured row height models and
+  anchor compensation.
+- [lod-tree.md](lod-tree.md): real-data level-of-detail tree for heavy feeds.
 - [surface-matrix.md](surface-matrix.md): per-tab list mode and paging.
 - [feed-scroll-surface.md](feed-scroll-surface.md): shared scroll shell and
   `data-scroll-owner`.
@@ -28,3 +31,5 @@ integration.
   tree.
 - [../feed-memory.md](../feed-memory.md): window sizes and durable cache.
 - [../../workspace/tab-runtime.md](../../workspace/tab-runtime.md): tab restore.
+- [../../orchestration/README.md](../../orchestration/README.md): app decision
+  memory.

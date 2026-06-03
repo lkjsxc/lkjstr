@@ -38,12 +38,12 @@ Read next: [protocol/README.md](protocol/README.md),
   support them.
 - Relay reads render progressive snapshots. Partial relay failure is diagnostic
   and must not block reachable relays.
-- Relay optimizer work is now documented as a Rust/WASM target for measured
-  scoring, route trust, adaptive scan hints, wait policy, and Stats projection.
-  Rust now owns pure relay read scoring, route-evidence trust, scan planning,
-  and feed-wait reducers, storage row codecs, and the relay-score WASM bridge.
-  Current product reads still rely on
-  TypeScript wrappers until product storage and read-path wiring are complete.
+- Relay optimizer work is documented as a Rust/WASM target for measured scoring,
+  route trust, scan density models, wait policy, and Stats projection. Rust owns
+  pure relay read scoring, route-evidence trust, scan planning, and feed-wait
+  reducers, storage row codecs, and the relay-score WASM bridge. Current product
+  reads still rely on TypeScript wrappers until product storage and read-path
+  wiring are complete.
 - Selected read relays remain the base and fallback for Home, Global,
   Notifications, Profile, and Thread. Targeted reads may add bounded
   protocol-derived routes, but Global remains selected-relay based.
@@ -81,10 +81,12 @@ Read next: [architecture/data/README.md](architecture/data/README.md),
   kernel.
 - The SQLite schema, statement records, row codecs, retention classes, and
   worker adapter foundations already exist in Rust and TypeScript host code.
-  Rust storage now includes optimizer tables for relay observations, relay
-  scores, expanded scan hints, and route evidence scores.
-  The Svelte Settings, workspace layout, tab snapshot, Accounts, local signing
-  secret, relay set, Tweet draft, event graph, tag, relay provenance, feed cursor,
+  Rust storage includes optimizer tables for relay observations, relay scores,
+  expanded scan hints, and route evidence scores. The active contract adds scan
+  observations, scan density models, and decision traces as recoverable
+  optimizer rows. The Svelte Settings, workspace layout, tab snapshot, Accounts,
+  local signing secret, relay set, Tweet draft, event graph, tag, relay
+  provenance, feed cursor,
   cached feed page, tag lookup, local filter-search, relay diagnostics, relay
   information, relay suggestions, author routes, route blocks, notifications,
   and job paths now use the SQLite worker with memory fallback when Workers are
@@ -135,11 +137,14 @@ Read next: [architecture/workspace/README.md](architecture/workspace/README.md),
   absence. A proven warm page should render from SQLite before profile
   hydration, reference hydration, diagnostics, or relay bootstrap.
 - Home, Global, Profile posts, Notifications, and time-windowable Custom Request
-  feeds use adaptive grouped scans. Durable scan hints are performance input
-  only and must never prove absence, suppress uncovered relays, or replace
-  interval-union coverage. Exact id reads, search reads, Author Context, Thread
-  context, metadata, follow-list lookup, and reference resolution keep exact
-  request semantics.
+  feeds use adaptive grouped scans. The target contract is durable scan density
+  models plus last-span hints; both are performance input only and must never
+  prove absence, suppress uncovered relays, or replace interval-union coverage.
+  Exact id reads, search reads, Author Context, Thread context, metadata,
+  follow-list lookup, and reference resolution keep exact request semantics.
+- Feed-surface docs now require row height reservation from measured geometry,
+  anchor compensation for height deltas above the viewport, and real-data LOD
+  trees for heavy feeds. Product wiring remains incremental.
 
 ## Network And Runtimes
 
@@ -157,9 +162,9 @@ Read next: [architecture/network/README.md](architecture/network/README.md) and
 - Matching Home tabs attach to one shared query keyed by account, selected
   relays, page size, and feed policy.
 - Stats and `__lkjstrMemoryDebug()` expose orchestration demand, lease, event
-  intake, storage operation, and memory counters. Stats now shows real
-  in-memory relay score and scan hint snapshots; durable optimizer and route
-  evidence providers remain open.
+  intake, storage operation, and memory counters. Stats shows real in-memory
+  relay score and scan hint snapshots; durable scan density, route evidence,
+  orchestration, row geometry, and LOD providers remain open.
 - Relay publish waiters, paged read leases, deduped read abort listeners, relay
   final-close state, and idle pool eviction have cleanup tests.
 - Runtime counters use static aggregate keys only.
@@ -193,7 +198,8 @@ and [operations/memory-verification.md](operations/memory-verification.md).
   NIP-04 the primary new feature.
 - Wallet custody is out of scope; zap support opens or copies invoices only.
 - Broad runtime instrumentation remains limited to explicit runtime counters,
-  compact memory counters, storage diagnostics, and persisted job records.
+  compact memory counters, storage diagnostics, recoverable optimizer and
+  orchestration traces, and persisted job records.
 - Remote NIP-50 results depend on actual relay support.
 - RSS remains diagnostic-only for memory verification; app JavaScript heap is
   the owned browser memory assertion.

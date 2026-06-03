@@ -5,9 +5,9 @@
 Stats is the user-visible observability console for optimizer behavior. It must
 show real provider data or explicit unavailable rows.
 
-Status: the TypeScript Stats surface now shows real in-memory relay scores and
-scan hints. Durable optimizer inventory, route evidence, and Rust Stats provider
-rows remain open.
+Status: the TypeScript Stats surface shows real in-memory relay scores and scan
+hints. Durable density models, decision traces, route evidence, and storage mode
+rows must come from SQLite-backed providers as product wiring lands.
 
 ## Sections
 
@@ -23,37 +23,31 @@ rows remain open.
 10. Rust/WASM Cutover
 11. Redacted Diagnostics Export
 
-## Overview Rows
+## Scan Optimizer Rows
 
-- storage mode
-- relay state
-- active demands and leases
-- in-flight reads
-- queue pressure
-- cache pressure
-- last scan hint used
-- last repair and compaction result
+Scan Optimizer rows are backed by real scan density models and decision traces.
+They include:
+
+- surface and semantic feed key hash
+- route group, relay URL, filter key, direction, and route fingerprint
+- scan model source: exact, parent scope, or neutral
+- fallback level and neutral reason when neutral was used
+- target count, effective limit, and target fraction
+- estimated density and confidence
+- previous span, proposed span, and change cap factor
+- cap reason when a cap was applied
+- latest observation event count and final visible count
+- limit-hit rate and incomplete rate
+- last update time and staleness state
+- storage mode: OPFS, memory fallback, or unavailable
 
 ## Relay Health Rows
 
 Relay Health includes URL, enabled read/write flags, discovery-only flag,
-connection state, active subscriptions, REQ and CLOSE counts, events received,
-events accepted, events dropped, OK accepted/rejected, bytes sent/received,
-first-event timing, EOSE timing, timeout/auth/close/error counts,
-event-limit count, score, fairness credit, and last observation time.
-
-## Scan Optimizer Rows
-
-Scan Optimizer includes surface, semantic feed key hash, route group, relay URL,
-direction, initial span, current span, next span, last feedback, density EWMA,
-complete/dense/incomplete counts, hint source, segments processed, and unresolved
-frontier.
-
-## Route Evidence Rows
-
-Route Evidence includes author key prefix, relay URL, source, trust score,
-measured success, measured failure, last success, last failure, and whether the
-row was used in the current route plan.
+connection state, active subscriptions, REQ and CLOSE counts, accepted and
+dropped events, bytes sent and received, first-event timing, EOSE timing,
+timeout/auth/close/error counts, event-limit count, score, fairness credit, and
+last observation time.
 
 ## Cache And Coverage Rows
 
@@ -61,15 +55,11 @@ Cache and Coverage includes coverage proof status, complete intervals, gaps,
 dense intervals, incomplete intervals, cache rows returned, uncovered relays
 queried, and compaction invalidation count.
 
-## Actions
+## Orchestration Rows
 
-- Refresh
-- Enable auto-refresh
-- Refresh storage inventory
-- Compact now
-- Repair storage
-- Export redacted diagnostics JSON
-- Copy redacted summary
+Database-backed orchestration rows include route choice, relay ordering, scan
+span, wait policy, cache-first decision, hydration priority, prefetch decision,
+retention hint, and the evidence classes that influenced each decision.
 
 ## Action Rules
 
@@ -77,6 +67,7 @@ queried, and compaction invalidation count.
 - Stats never changes relay settings.
 - Stats actions use real storage paths.
 - Unavailable providers show explicit unavailable rows.
-- No fake counters, fake route evidence, or placeholder scan rows.
+- No fake counters, fake route evidence, fake Stats rows, or placeholder scan
+  rows are allowed.
 - Exports redact raw events, relay payloads, full filters, tab ids, request ids,
-  and log messages.
+  owner handles, subscription ids, and log messages.
