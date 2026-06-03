@@ -122,10 +122,10 @@ references should stay as relative Markdown links.
 
 ## Relay Defaults
 
-| Clause                       | Contract                                                       | Status      | Notes                                |
-| ---------------------------- | -------------------------------------------------------------- | ----------- | ------------------------------------ |
-| Kiri user default relay pair | [default-relays.md](../protocol/default-relays.md)             | implemented | TypeScript and Rust seed tests       |
-| User/discovery purpose split | [relay-routing.md](../architecture/network/relay-routing.md)   | implemented | Discovery relays excluded from feeds |
+| Clause                       | Contract                                                     | Status      | Notes                                |
+| ---------------------------- | ------------------------------------------------------------ | ----------- | ------------------------------------ |
+| Kiri user default relay pair | [default-relays.md](../protocol/default-relays.md)           | implemented | TypeScript and Rust seed tests       |
+| User/discovery purpose split | [relay-routing.md](../architecture/network/relay-routing.md) | implemented | Discovery relays excluded from feeds |
 
 ## Request Budgeting
 

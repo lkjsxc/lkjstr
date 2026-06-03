@@ -39,6 +39,12 @@ describe('default relays', () => {
       'wss://purplepag.es/',
       'wss://directory.yabu.me/',
     ]);
+    expect(seeded[0]?.relays.map((relay) => relay.updatedAt)).toEqual(
+      seeded[0]?.relays.map(() => seeded[0]?.updatedAt),
+    );
+    expect(seeded[1]?.relays.map((relay) => relay.updatedAt)).toEqual(
+      seeded[1]?.relays.map(() => seeded[1]?.updatedAt),
+    );
     const custom = [{ ...defaultRelaySet, id: 'custom', relays: [] }];
     expect(seedDefaultRelays(custom)).toEqual(custom);
   });

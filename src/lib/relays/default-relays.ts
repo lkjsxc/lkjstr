@@ -17,24 +17,34 @@ export const DEFAULT_DISCOVERY_RELAYS = [
   'wss://directory.yabu.me/',
 ] as const;
 
-export const defaultRelaySet: RelaySet = {
-  id: 'public-default',
-  name: 'Public Default',
-  purpose: 'user',
-  isDefault: true,
-  seeded: true,
-  updatedAt: 0,
-  relays: DEFAULT_RELAYS.map((url) => relay(url, labelFor(url))),
-};
+export const defaultRelaySet: RelaySet = createDefaultRelaySet(0);
+export const defaultDiscoveryRelaySet: RelaySet =
+  createDefaultDiscoveryRelaySet(0);
 
-export const defaultDiscoveryRelaySet: RelaySet = {
-  id: 'discovery-default',
-  name: 'Discovery Default',
-  purpose: 'discovery',
-  seeded: true,
-  updatedAt: 0,
-  relays: DEFAULT_DISCOVERY_RELAYS.map((url) => relay(url, labelFor(url))),
-};
+export function createDefaultRelaySet(updatedAt: number): RelaySet {
+  return {
+    id: 'public-default',
+    name: 'Public Default',
+    purpose: 'user',
+    isDefault: true,
+    seeded: true,
+    updatedAt,
+    relays: DEFAULT_RELAYS.map((url) => relay(url, labelFor(url), updatedAt)),
+  };
+}
+
+export function createDefaultDiscoveryRelaySet(updatedAt: number): RelaySet {
+  return {
+    id: 'discovery-default',
+    name: 'Discovery Default',
+    purpose: 'discovery',
+    seeded: true,
+    updatedAt,
+    relays: DEFAULT_DISCOVERY_RELAYS.map((url) =>
+      relay(url, labelFor(url), updatedAt),
+    ),
+  };
+}
 
 function labelFor(url: string): string {
   const labels: Record<string, string> = {
@@ -53,7 +63,7 @@ function labelFor(url: string): string {
   return labels[url] ?? new URL(url).hostname.replace(/^relay\./, '');
 }
 
-function relay(url: string, label: string) {
+function relay(url: string, label: string, updatedAt: number) {
   return {
     url,
     label,
@@ -62,6 +72,6 @@ function relay(url: string, label: string) {
     write: true,
     state: 'idle' as const,
     health: { attempts: 0, successes: 0, failures: 0 },
-    updatedAt: 0,
+    updatedAt,
   };
 }

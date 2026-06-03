@@ -3,7 +3,11 @@ import {
   putRelaySetRows,
   readRelaySetRows,
 } from '../storage/repositories/relay-sets-store';
-import { defaultDiscoveryRelaySet, defaultRelaySet } from './default-relays';
+import {
+  createDefaultDiscoveryRelaySet,
+  createDefaultRelaySet,
+  defaultRelaySet,
+} from './default-relays';
 import { normalizeRelayUrl } from '../protocol';
 import { normalizeSeededRelaySets } from './relay-normalize';
 import { clearRouteBlock, saveRouteBlock } from './relay-route-store';
@@ -53,8 +57,8 @@ export function seedDefaultRelays(existing: readonly RelaySet[]): RelaySet[] {
   if (existing.length > 0) return normalizeSeededRelaySets(existing);
   const updatedAt = Date.now();
   return [
-    { ...defaultRelaySet, updatedAt },
-    { ...defaultDiscoveryRelaySet, updatedAt },
+    createDefaultRelaySet(updatedAt),
+    createDefaultDiscoveryRelaySet(updatedAt),
   ];
 }
 
@@ -103,15 +107,15 @@ export async function restoreDefaultRelaySet(
   purpose: RelayPurpose = 'user',
 ): Promise<RelaySet[]> {
   const sets = await listRelaySets();
+  const updatedAt = Date.now();
   const defaults =
-    purpose === 'user' ? defaultRelaySet : defaultDiscoveryRelaySet;
+    purpose === 'user'
+      ? createDefaultRelaySet(updatedAt)
+      : createDefaultDiscoveryRelaySet(updatedAt);
   await Promise.all(
     defaults.relays.map((relay) => clearRouteBlock(relay.url, purpose)),
   );
-  const next = [
-    ...sets.filter((set) => set.id !== defaults.id),
-    { ...defaults, updatedAt: Date.now() },
-  ];
+  const next = [...sets.filter((set) => set.id !== defaults.id), defaults];
   await saveRelaySets(next);
   return next;
 }
