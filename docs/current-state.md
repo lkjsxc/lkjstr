@@ -163,9 +163,11 @@ Read next: [architecture/network/README.md](architecture/network/README.md) and
 - Matching Home tabs attach to one shared query keyed by account, selected
   relays, page size, and feed policy.
 - Stats and `__lkjstrMemoryDebug()` expose orchestration demand, lease, event
-  intake, storage operation, and memory counters. Stats shows real in-memory
-  relay score and scan hint snapshots; durable scan density, route evidence,
-  orchestration, row geometry, and LOD providers remain open.
+  intake, storage operation, and memory counters. Rust now owns initial pure
+  orchestration decisions for cache mode, selected relay reads, prefetch,
+  hydration, and retention hints. Stats shows real in-memory relay score and
+  scan hint snapshots; durable orchestration, row geometry, and LOD providers
+  remain open.
 - Relay publish waiters, paged read leases, deduped read abort listeners, relay
   final-close state, and idle pool eviction have cleanup tests.
 - Runtime counters use static aggregate keys only.

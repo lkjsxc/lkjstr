@@ -4,6 +4,7 @@ pub mod custom_request;
 pub mod feed;
 pub mod feed_scan;
 pub mod feed_wait;
+pub mod orchestration;
 pub mod query;
 mod startup_snapshots;
 mod workspace_defaults;
@@ -46,6 +47,12 @@ pub use feed_wait::{
     FeedWaitDecision, FeedWaitEventRow, FeedWaitInput, FeedWaitState, LateMergeResult,
     ScrollAnchor, ScrollAnchorDecision, decide_feed_wait, feed_empty_is_terminal,
     merge_late_event_rows, scroll_anchor_for_late_insert, within_foreground_merge_window,
+};
+pub use orchestration::{
+    CacheReadMode, CoverageEvidenceState, FeedPrefetchPlan, HydrationPlan, OptimizerEvidenceState,
+    OrchestrationContext, OrchestrationDecisionTrace, OrchestrationPolicy, RetentionHintPlan,
+    SurfaceKind, SurfaceReadPlan, plan_cache_retention, plan_feed_prefetch, plan_hydration,
+    plan_surface_read,
 };
 pub use query::{QueryDemandInput, QueryDemandPlan, QuerySurface, plan_query_demand};
 pub use workspace_runtime::{
