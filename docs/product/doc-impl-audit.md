@@ -120,6 +120,13 @@ references should stay as relative Markdown links.
 | Shared Home backend query      | [home-query-lifecycle.md](../architecture/backend/home-query-lifecycle.md)                            | implemented | `attachHomeQuery`, shared key excludes tab id                                                       |
 | Feed route isolation           | [feed-route-isolation.md](../architecture/network/subscription-orchestration/feed-route-isolation.md) | implemented | Unit and browser gates cover Home/Profile route keys, live replacement, Notifications isolation     |
 
+## Relay Defaults
+
+| Clause                       | Contract                                                       | Status      | Notes                                |
+| ---------------------------- | -------------------------------------------------------------- | ----------- | ------------------------------------ |
+| Kiri user default relay pair | [default-relays.md](../protocol/default-relays.md)             | implemented | TypeScript and Rust seed tests       |
+| User/discovery purpose split | [relay-routing.md](../architecture/network/relay-routing.md)   | implemented | Discovery relays excluded from feeds |
+
 ## Request Budgeting
 
 | Clause                     | Contract                                                                                         | Status      | Notes                                                |

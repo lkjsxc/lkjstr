@@ -52,6 +52,18 @@ lkjstr Log owns session-only diagnostics.
 - Relay URLs are visible in Relay Settings and lkjstr Log, not inside post rows.
 - Relay messages, context, and URLs wrap without horizontal scrolling.
 
+## Default Sets
+
+- The default user set is `public-default`; see
+  [default-relays.md](../../protocol/default-relays.md) for the exact seed
+  table.
+- Kiri Japan and Kiri World are seeded as user-purpose defaults, not discovery
+  relays.
+- The default discovery set is `discovery-default` and remains limited to
+  metadata and kind `10002` discovery.
+- Existing user edits survive normal load. Restore defaults is the explicit path
+  that replaces a purpose set with the current seed table.
+
 ## Rust Conversion Status
 
 - The Rust/WASM shell renders a partial Relay Settings surface from real relay

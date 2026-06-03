@@ -8,6 +8,8 @@ export const DEFAULT_RELAYS = [
   'wss://r.kojira.io',
   'wss://x.kojira.io',
   'wss://yabu.me',
+  'wss://relay-jp.nostr.wirednet.jp',
+  'wss://relay.nostr.wirednet.jp',
 ] as const;
 
 export const DEFAULT_DISCOVERY_RELAYS = [
@@ -43,6 +45,8 @@ function labelFor(url: string): string {
     'wss://r.kojira.io': 'Kojira',
     'wss://x.kojira.io': 'Kojira X',
     'wss://yabu.me': 'Yabumi',
+    'wss://relay-jp.nostr.wirednet.jp': 'Kiri Japan',
+    'wss://relay.nostr.wirednet.jp': 'Kiri World',
     'wss://purplepag.es/': 'purplepag.es',
     'wss://directory.yabu.me/': 'Yabumi Directory',
   };

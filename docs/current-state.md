@@ -41,6 +41,9 @@ Read next: [protocol/README.md](protocol/README.md),
 - Selected read relays remain the base and fallback for Home, Global,
   Notifications, Profile, and Thread. Targeted reads may add bounded
   protocol-derived routes, but Global remains selected-relay based.
+- Clean storage seeds the `public-default` user set with public defaults plus
+  Japanese and global Kiri relays. Existing user edits stay intact unless the
+  user runs an explicit Relay Settings restore action.
 - Disabled or removed relays stay excluded until the user restores them.
 - NIP-11 relay metadata and NIP-65 suggestions come only from real protocol
   data. Suggestions require explicit import.

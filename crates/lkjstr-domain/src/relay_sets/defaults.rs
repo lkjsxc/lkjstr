@@ -8,6 +8,8 @@ const DEFAULT_RELAYS: &[(&str, &str)] = &[
     ("wss://r.kojira.io", "Kojira"),
     ("wss://x.kojira.io", "Kojira X"),
     ("wss://yabu.me", "Yabumi"),
+    ("wss://relay-jp.nostr.wirednet.jp", "Kiri Japan"),
+    ("wss://relay.nostr.wirednet.jp", "Kiri World"),
 ];
 
 const DEFAULT_DISCOVERY_RELAYS: &[(&str, &str)] = &[

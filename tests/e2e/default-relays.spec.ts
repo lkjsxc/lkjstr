@@ -22,6 +22,16 @@ test('shows seeded default relays', async ({ page }) => {
   await expect(userRelays.getByText('wss://r.kojira.io')).toBeVisible();
   await expect(userRelays.getByText('wss://x.kojira.io')).toBeVisible();
   await expect(userRelays.getByText('wss://yabu.me')).toBeVisible();
+  await expect(
+    userRelays.getByRole('textbox', {
+      name: 'Label wss://relay-jp.nostr.wirednet.jp',
+    }),
+  ).toHaveValue('Kiri Japan');
+  await expect(
+    userRelays.getByRole('textbox', {
+      name: 'Label wss://relay.nostr.wirednet.jp',
+    }),
+  ).toHaveValue('Kiri World');
   await expect(discoveryRelays.getByText('wss://purplepag.es/')).toBeVisible();
   await expect(
     discoveryRelays.getByText('wss://directory.yabu.me/'),

@@ -26,7 +26,15 @@ describe('default relays', () => {
       'wss://r.kojira.io',
       'wss://x.kojira.io',
       'wss://yabu.me',
+      'wss://relay-jp.nostr.wirednet.jp',
+      'wss://relay.nostr.wirednet.jp',
     ]);
+    expect(defaultRelaySet.relays.map((relay) => relay.label)).toContain(
+      'Kiri Japan',
+    );
+    expect(defaultRelaySet.relays.map((relay) => relay.label)).toContain(
+      'Kiri World',
+    );
     expect(defaultDiscoveryRelaySet.relays.map((relay) => relay.url)).toEqual([
       'wss://purplepag.es/',
       'wss://directory.yabu.me/',

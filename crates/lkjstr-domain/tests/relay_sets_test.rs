@@ -9,6 +9,18 @@ fn seeds_default_user_and_discovery_sets_once() {
     assert_eq!(seeded[0].id, "public-default");
     assert_eq!(seeded[0].purpose, RelayPurpose::User);
     assert_eq!(seeded[0].relays[0].url, "wss://relay.damus.io");
+    assert!(
+        seeded[0]
+            .relays
+            .iter()
+            .any(|relay| relay.url == "wss://relay-jp.nostr.wirednet.jp")
+    );
+    assert!(
+        seeded[0]
+            .relays
+            .iter()
+            .any(|relay| relay.url == "wss://relay.nostr.wirednet.jp")
+    );
     assert_eq!(seeded[1].id, "discovery-default");
     assert_eq!(seeded[1].purpose, RelayPurpose::Discovery);
     assert_eq!(seed_relay_sets(&seeded, 20), seeded);

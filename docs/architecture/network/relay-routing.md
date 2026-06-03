@@ -63,6 +63,19 @@ normalization. User-purpose blocks exclude URLs from feed, content, write, and
 selected-relay planning. Discovery-purpose blocks exclude URLs from discovery
 planning only. Blocks do not delete cached events or relay receipts.
 
+## Default User Relays
+
+Clean storage seeds the editable `public-default` user set from
+[default-relays.md](../../protocol/default-relays.md). Kiri Japan
+(`wss://relay-jp.nostr.wirednet.jp`) and Kiri World
+(`wss://relay.nostr.wirednet.jp`) are user-purpose defaults, so they may drive
+Home, Global, Profile, Thread, Notifications, selected-relay tools, and Tweet
+writes when the default set remains selected and the rows stay enabled.
+
+Existing user edits are not widened during normalization. Explicit restore is
+the only automatic way to replace the user default set with the current default
+relay table.
+
 ## Discovery Relays
 
 The editable default discovery relays are seeded into Relay Settings as the
