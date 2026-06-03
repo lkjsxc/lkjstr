@@ -17,6 +17,8 @@ and app boundaries.
   scoring, route trust, scan hints, wait policy, and Stats projection.
 - [relay-optimizer/measurement-ledger.md](relay-optimizer/measurement-ledger.md):
   optimizer storage rows.
+- [relay-optimizer/product-wiring-ledger.md](relay-optimizer/product-wiring-ledger.md):
+  shipped surface wiring.
 - [relay-optimizer/relay-read-scoring.md](relay-optimizer/relay-read-scoring.md):
   Rust score model.
 - [relay-optimizer/relay-wait-policy.md](relay-optimizer/relay-wait-policy.md):

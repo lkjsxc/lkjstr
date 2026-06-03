@@ -17,6 +17,13 @@ export async function selectScanModelsForContext(
     "SELECT record_json FROM feed_scan_density_models WHERE direction = ?1 AND (semantic_feed_key = ?2 OR semantic_feed_key = '') ORDER BY updated_at_ms DESC LIMIT 64;",
     [context.direction, context.semanticFeedKey],
   );
+  return selectMatchingScanModelsForContext(rows, context);
+}
+
+export function selectMatchingScanModelsForContext(
+  rows: readonly ScanDensityModelRecord[],
+  context: ScanModelContext,
+): ScanDensityModelRecord[] {
   return rows.filter((row) => modelMatches(row, context)).toSorted(scopeSort);
 }
 
@@ -143,6 +150,11 @@ function modelMatches(
       scopeUsesFilter(row.scope),
       row.semanticFilterKey,
       context.semanticFilterKey,
+    ) &&
+    matches(
+      scopeUsesRouteFingerprint(row.scope),
+      row.routeFingerprint,
+      context.routeFingerprint,
     )
   );
 }
@@ -178,3 +190,4 @@ const scopeUsesRelay = (scope: ScanModelScope) =>
   ['Exact', 'RelayFilter'].includes(scope);
 const scopeUsesFilter = (scope: ScanModelScope) =>
   ['Exact', 'RelayFilter', 'SurfaceFilter'].includes(scope);
+const scopeUsesRouteFingerprint = (scope: ScanModelScope) => scope === 'Exact';
