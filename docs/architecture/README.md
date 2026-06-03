@@ -5,16 +5,6 @@
 Architecture docs assign source ownership for app behavior. They define where
 state lives, which modules own subscriptions, and how tabs close cleanly.
 
-## Task Routing
-
-- Shared browser services: [backend/README.md](backend/README.md).
-- Feed source semantics and invariants: [feeds/README.md](feeds/README.md).
-- Storage, cache, and memory ownership: [data/README.md](data/README.md).
-- OPFS SQLite storage target: [data/sqlite-opfs/README.md](data/sqlite-opfs/README.md).
-- Relay clients and orchestration: [network/README.md](network/README.md).
-- Rust/WASM target ownership: [rust-wasm/README.md](rust-wasm/README.md).
-- Tab lifecycle and pane behavior: [workspace/README.md](workspace/README.md).
-
 ## Table of Contents
 
 - [backend/README.md](backend/README.md): browser-local backend services.
@@ -195,6 +185,14 @@ state lives, which modules own subscriptions, and how tabs close cleanly.
   progressive relay rendering.
 - [network/relay-routing.md](network/relay-routing.md): protocol-derived read
   routing.
+- [network/relay-optimizer/README.md](network/relay-optimizer/README.md): relay optimizer index.
+- [network/relay-optimizer/measurement-ledger.md](network/relay-optimizer/measurement-ledger.md): optimizer storage rows.
+- [network/relay-optimizer/relay-read-scoring.md](network/relay-optimizer/relay-read-scoring.md): scoring reducer.
+- [network/relay-optimizer/relay-wait-policy.md](network/relay-optimizer/relay-wait-policy.md): progressive wait policy.
+- [network/relay-optimizer/route-evidence-trust.md](network/relay-optimizer/route-evidence-trust.md): route trust.
+- [network/relay-optimizer/scan-width-adaptation.md](network/relay-optimizer/scan-width-adaptation.md): scan hints.
+- [network/relay-optimizer/stats-projection.md](network/relay-optimizer/stats-projection.md): Stats rows.
+- [network/relay-optimizer/verification.md](network/relay-optimizer/verification.md): optimizer checks.
 - [network/request-budget/README.md](network/request-budget/README.md):
   request budgets and relay metadata.
 - [network/request-budget/effective-limits.md](network/request-budget/effective-limits.md):

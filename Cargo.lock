@@ -1029,6 +1029,7 @@ name = "lkjstr-relays"
 version = "0.0.0"
 dependencies = [
  "lkjstr-protocol",
+ "serde_json",
  "sha2",
 ]
 

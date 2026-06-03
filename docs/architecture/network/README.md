@@ -15,6 +15,19 @@ and app boundaries.
 - [relay-routing.md](relay-routing.md): protocol-derived read routing.
 - [relay-optimizer/README.md](relay-optimizer/README.md): measured relay
   scoring, route trust, scan hints, wait policy, and Stats projection.
+- [relay-optimizer/measurement-ledger.md](relay-optimizer/measurement-ledger.md):
+  optimizer storage rows.
+- [relay-optimizer/relay-read-scoring.md](relay-optimizer/relay-read-scoring.md):
+  Rust score model.
+- [relay-optimizer/relay-wait-policy.md](relay-optimizer/relay-wait-policy.md):
+  first paint and late merge.
+- [relay-optimizer/route-evidence-trust.md](relay-optimizer/route-evidence-trust.md):
+  source trust.
+- [relay-optimizer/scan-width-adaptation.md](relay-optimizer/scan-width-adaptation.md):
+  scan learning.
+- [relay-optimizer/stats-projection.md](relay-optimizer/stats-projection.md):
+  Stats rows.
+- [relay-optimizer/verification.md](relay-optimizer/verification.md): checks.
 - [request-budget/README.md](request-budget/README.md): request limits,
   NIP-11 bounds, and diagnostics.
 - [request-budget/effective-limits.md](request-budget/effective-limits.md):

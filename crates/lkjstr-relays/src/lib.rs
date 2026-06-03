@@ -6,6 +6,7 @@ pub mod demand;
 pub mod ingress;
 pub mod live_lease;
 pub mod page_read;
+pub mod read_score;
 pub mod request_budget;
 pub mod request_message_size;
 pub mod request_scheduler;
@@ -46,6 +47,14 @@ pub use page_read::{
     RelayReadRequest, RelayRouteGroup, event_relays, initial_progressive_read, page_read_bounds,
     page_read_semantic_key, progressive_read_snapshot, progressive_status, read_dedupe_key,
     reduce_progressive_read, relay_snapshot_from_status, route_group_fingerprint, subscription_key,
+};
+pub use read_score::{
+    EVENT_LIMIT_PENALTY, FAIRNESS_FULL_CREDIT_MS, FAIRNESS_RETRY_DELAY_MS, NEUTRAL_COMPONENT,
+    NEUTRAL_PENALTY, RELAY_RELIABILITY_HALF_LIFE_MS, RelayReadObservation, RelayReadScore,
+    RelayReadScoreCandidate, RelayReadScoreKey, RelayReadScoreKeyInput, SCAN_DENSITY_HALF_LIFE_MS,
+    SCORE_SAMPLE_CAP, SPEED_CEILING_MS, apply_fairness_credit, compare_relay_read_scores,
+    decay_relay_read_score, fairness_credit, normalize_filter_shape, order_relay_read_candidates,
+    order_relay_read_scores, score_key_id, update_relay_read_score,
 };
 pub use request_budget::{
     BudgetedFilters, MergedReadBudget, RequestBudget, RequestBudgetDirection, RequestBudgetInput,
