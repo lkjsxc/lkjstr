@@ -76,14 +76,23 @@ pub use optimizer::{
     OptimizerKeyProblem, OptimizerLedgerProbe, OptimizerRepositoryStatement,
     OptimizerRetentionPlan, OptimizerRetentionPolicy, OptimizerScanHintRecord,
     RelayReadObservationRecord, RelayReadScoreRecord, RouteEvidenceScoreRecord,
+    SCAN_MODEL_REPOSITORY_STATEMENTS, SCAN_MODEL_TABLES, ScanDecisionTraceRecord,
+    ScanDensityModelRecord, ScanModelContextRecord, ScanModelKeyRecord, ScanObservationRecord,
     SqliteOptimizerScanHintRow, SqliteRelayReadObservationRow, SqliteRelayReadScoreRow,
-    SqliteRouteEvidenceScoreRow, optimizer_repository_statements, optimizer_resource_kind,
+    SqliteRouteEvidenceScoreRow, SqliteScanDecisionTraceRow, SqliteScanDensityModelRow,
+    SqliteScanObservationRow, StoredScanModelScope, decayed_scan_model_confidence,
+    optimizer_inventory_tables, optimizer_repository_statements, optimizer_resource_kind,
     optimizer_scan_hint_from_sqlite_row, optimizer_scan_hint_key, optimizer_tables,
     orphan_optimizer_ledger_ids, plan_optimizer_observation_retention,
     relay_read_observation_from_sqlite_row, relay_read_score_from_sqlite_row, relay_read_score_key,
-    route_evidence_score_from_sqlite_row, route_evidence_score_key, sqlite_optimizer_scan_hint_row,
-    sqlite_relay_read_observation_row, sqlite_relay_read_score_row,
-    sqlite_route_evidence_score_row,
+    route_evidence_score_from_sqlite_row, route_evidence_score_key,
+    scan_decision_trace_from_sqlite_row, scan_density_model_from_sqlite_row,
+    scan_density_model_storage_key, scan_model_key_for_scope, scan_model_keys_for_context,
+    scan_model_scope_order, scan_model_scope_rank, scan_model_storage_key,
+    scan_observation_from_sqlite_row, select_scan_models_for_context,
+    sqlite_optimizer_scan_hint_row, sqlite_relay_read_observation_row, sqlite_relay_read_score_row,
+    sqlite_route_evidence_score_row, sqlite_scan_decision_trace_row, sqlite_scan_density_model_row,
+    sqlite_scan_observation_row,
 };
 pub use outcome::{StorageOperation, StorageOutcome, StorageProblem};
 pub use relay_sets::{
@@ -103,10 +112,10 @@ pub use settings_schema::{
 pub use sql::{
     FOREIGN_KEYS_PRAGMA, SqliteIndexSpec, SqliteRetentionClass, SqliteSchemaStatement,
     SqliteStatementKind, SqliteStatementSpec, SqliteTableSpec, cache_sqlite_statements,
-    diagnostic_sqlite_statements, protected_sqlite_statements, sqlite_repository_statements,
-    sqlite_schema_hash, sqlite_schema_index_names, sqlite_schema_indexes, sqlite_schema_statements,
-    sqlite_schema_table, sqlite_schema_table_names, sqlite_schema_tables, sqlite_statement,
-    sqlite_table_count_sql,
+    diagnostic_sqlite_statements, optimizer_sqlite_statements, protected_sqlite_statements,
+    sqlite_repository_statements, sqlite_schema_hash, sqlite_schema_index_names,
+    sqlite_schema_indexes, sqlite_schema_statements, sqlite_schema_table,
+    sqlite_schema_table_names, sqlite_schema_tables, sqlite_statement, sqlite_table_count_sql,
 };
 pub use stats::{SqliteRowCount, StorageInventoryRow, StorageStatsSnapshot, StorageTableCount};
 pub use tab_state::{

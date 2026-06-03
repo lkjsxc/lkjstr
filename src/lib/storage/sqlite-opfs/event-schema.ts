@@ -1,6 +1,6 @@
 import { applySqliteSchema } from './kernel-client';
 
-const eventSchemaHash = 'event-graph-feed-cache-coverage-lookup';
+const eventSchemaHash = 'event-graph-feed-cache-scan-density';
 
 const eventSchema = [
   'PRAGMA foreign_keys = ON;',
@@ -71,6 +71,40 @@ const eventSchema = [
   updated_at_ms INTEGER NOT NULL
 ) STRICT;`,
   'CREATE INDEX IF NOT EXISTS feed_scan_hints_scan_direction_idx ON feed_scan_hints(scan_key, direction);',
+  `CREATE TABLE IF NOT EXISTS feed_scan_observations (
+  id TEXT PRIMARY KEY,
+  semantic_feed_key TEXT NOT NULL,
+  route_group_key TEXT NOT NULL,
+  relay_url TEXT NOT NULL,
+  semantic_filter_key TEXT NOT NULL,
+  direction TEXT NOT NULL,
+  route_fingerprint TEXT NOT NULL,
+  record_json TEXT NOT NULL,
+  created_at_ms INTEGER NOT NULL
+) STRICT;`,
+  'CREATE INDEX IF NOT EXISTS feed_scan_observations_recent_idx ON feed_scan_observations(created_at_ms DESC, relay_url);',
+  `CREATE TABLE IF NOT EXISTS feed_scan_density_models (
+  model_key TEXT PRIMARY KEY,
+  scope TEXT NOT NULL,
+  semantic_feed_key TEXT NOT NULL,
+  route_group_key TEXT NOT NULL,
+  relay_url TEXT NOT NULL,
+  semantic_filter_key TEXT NOT NULL,
+  direction TEXT NOT NULL,
+  route_fingerprint TEXT NOT NULL,
+  record_json TEXT NOT NULL,
+  updated_at_ms INTEGER NOT NULL,
+  decays_after_ms INTEGER NOT NULL
+) STRICT;`,
+  'CREATE INDEX IF NOT EXISTS feed_scan_density_models_context_idx ON feed_scan_density_models(direction, semantic_feed_key, route_group_key, relay_url, semantic_filter_key, updated_at_ms DESC);',
+  `CREATE TABLE IF NOT EXISTS feed_scan_decision_traces (
+  trace_id TEXT PRIMARY KEY,
+  model_key TEXT NOT NULL,
+  semantic_feed_key TEXT NOT NULL,
+  direction TEXT NOT NULL,
+  record_json TEXT NOT NULL,
+  created_at_ms INTEGER NOT NULL
+) STRICT;`,
   `CREATE TABLE IF NOT EXISTS notifications (
   id TEXT PRIMARY KEY,
   account_pubkey TEXT NOT NULL,

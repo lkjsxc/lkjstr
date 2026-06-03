@@ -55,7 +55,10 @@ Indexes:
 | --- | --- | --- |
 | `feed_cursors` | feeds | semantic cursor rows for older and newer reads. |
 | `feed_coverage` | feeds | complete bounded relay/filter evidence for cache-first reads. |
-| `feed_scan_hints` | feeds | warm scan span hints that never prove absence. |
+| `feed_scan_hints` | feeds | last proposed scan span hints that never prove absence. |
+| `feed_scan_observations` | optimizer | append-only scan segment measurements. |
+| `feed_scan_density_models` | optimizer | weighted scan-density models by fallback scope. |
+| `feed_scan_decision_traces` | optimizer | Stats-ready scan span decisions. |
 | `relay_read_scores` | relays | latest relay read score per stable score key. |
 
 Coverage can prove cache-first absence only when every required relay, route

@@ -44,6 +44,16 @@ pub const SQLITE_INDEXES: &[SqliteIndexSpec] = &[
         "CREATE INDEX IF NOT EXISTS feed_scan_hints_lookup ON feed_scan_hints (semantic_feed_key, route_group_key, relay_url, semantic_filter_key, direction, expires_at_ms);",
     ),
     index(
+        "feed_scan_observations_recent",
+        "feed_scan_observations",
+        "CREATE INDEX IF NOT EXISTS feed_scan_observations_recent ON feed_scan_observations (created_at_ms DESC, relay_url);",
+    ),
+    index(
+        "feed_scan_density_models_context",
+        "feed_scan_density_models",
+        "CREATE INDEX IF NOT EXISTS feed_scan_density_models_context ON feed_scan_density_models (direction, semantic_feed_key, route_group_key, relay_url, semantic_filter_key, updated_at_ms DESC);",
+    ),
+    index(
         "relay_read_observations_recent",
         "relay_read_observations",
         "CREATE INDEX IF NOT EXISTS relay_read_observations_recent ON relay_read_observations (created_at_ms DESC, relay_url);",

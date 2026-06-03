@@ -7,7 +7,10 @@ pub struct OptimizerRepositoryStatement {
 pub const OPTIMIZER_TABLES: &[&str] = &[
     "relay_read_observations",
     "relay_read_scores",
+    "feed_scan_observations",
+    "feed_scan_density_models",
     "feed_scan_hints",
+    "feed_scan_decision_traces",
     "route_evidence_scores",
 ];
 
@@ -19,8 +22,21 @@ pub const OPTIMIZER_REPOSITORY_STATEMENTS: &[OptimizerRepositoryStatement] = &[
     ),
     statement("relay_read_scores.upsert", "relay_read_scores"),
     statement("relay_read_scores.select", "relay_read_scores"),
+    statement("feed_scan_observations.insert", "feed_scan_observations"),
+    statement(
+        "feed_scan_density_models.upsert",
+        "feed_scan_density_models",
+    ),
+    statement(
+        "feed_scan_density_models.select_context",
+        "feed_scan_density_models",
+    ),
     statement("feed_scan_hints.upsert", "feed_scan_hints"),
     statement("feed_scan_hints.compatible", "feed_scan_hints"),
+    statement(
+        "feed_scan_decision_traces.insert",
+        "feed_scan_decision_traces",
+    ),
     statement("route_evidence_scores.upsert", "route_evidence_scores"),
     statement("route_evidence_scores.by_author", "route_evidence_scores"),
 ];

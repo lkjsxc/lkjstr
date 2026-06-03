@@ -86,6 +86,9 @@ pub const fn optimizer_resource_kind(kind: CacheResourceKind) -> bool {
         CacheResourceKind::RelayReadObservation
             | CacheResourceKind::RelayReadScore
             | CacheResourceKind::ScanHint
+            | CacheResourceKind::ScanObservation
+            | CacheResourceKind::ScanDensityModel
+            | CacheResourceKind::ScanDecisionTrace
             | CacheResourceKind::RouteEvidenceScore
     )
 }

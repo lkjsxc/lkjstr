@@ -4,8 +4,11 @@ mod cache;
 mod cache_statements;
 mod diagnostic_statements;
 mod diagnostics;
+mod hash;
 mod indexes;
 mod metadata;
+mod optimizer;
+mod optimizer_statements;
 mod protected;
 mod statements;
 
@@ -88,6 +91,7 @@ pub fn sqlite_schema_tables() -> Vec<&'static SqliteTableSpec> {
     protected::SQLITE_PROTECTED_TABLES
         .iter()
         .chain(cache::SQLITE_CACHE_TABLES.iter())
+        .chain(optimizer::SQLITE_OPTIMIZER_TABLES.iter())
         .chain(diagnostics::SQLITE_DIAGNOSTIC_TABLES.iter())
         .chain(metadata::SQLITE_METADATA_TABLES.iter())
         .collect()
@@ -145,17 +149,7 @@ pub fn sqlite_schema_statements() -> Vec<SqliteSchemaStatement> {
         .collect()
 }
 
-#[must_use]
-pub fn sqlite_schema_hash() -> String {
-    let mut hash = 0xcbf29ce484222325_u64;
-    for statement in sqlite_schema_statements() {
-        for byte in statement.sql.bytes().chain(std::iter::once(0)) {
-            hash ^= u64::from(byte);
-            hash = hash.wrapping_mul(0x100000001b3);
-        }
-    }
-    format!("{hash:016x}")
-}
+pub use hash::sqlite_schema_hash;
 
 #[must_use]
 pub const fn protected_sqlite_statements() -> &'static [SqliteStatementSpec] {
@@ -173,10 +167,16 @@ pub const fn diagnostic_sqlite_statements() -> &'static [SqliteStatementSpec] {
 }
 
 #[must_use]
+pub const fn optimizer_sqlite_statements() -> &'static [SqliteStatementSpec] {
+    optimizer_statements::OPTIMIZER_STATEMENTS
+}
+
+#[must_use]
 pub fn sqlite_repository_statements() -> Vec<&'static SqliteStatementSpec> {
     statements::PROTECTED_STATEMENTS
         .iter()
         .chain(cache_statements::CACHE_STATEMENTS.iter())
+        .chain(optimizer_statements::OPTIMIZER_STATEMENTS.iter())
         .chain(diagnostic_statements::DIAGNOSTIC_STATEMENTS.iter())
         .collect()
 }

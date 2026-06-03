@@ -1,9 +1,6 @@
 use serde::{Deserialize, Serialize};
 
-#[derive(Clone, Debug, Eq, PartialEq)]
-pub enum OptimizerKeyProblem {
-    TransientOwnerKey,
-}
+use super::scan_model_key::{OptimizerKeyProblem, contains_transient_owner_key};
 
 #[derive(Clone, Debug, Deserialize, PartialEq, Serialize)]
 pub struct OptimizerScanHintRecord {
@@ -60,14 +57,4 @@ pub fn optimizer_scan_hint_key(
     } else {
         Ok(parts.join("\u{1f}"))
     }
-}
-
-fn contains_transient_owner_key(value: &str) -> bool {
-    let lower = value.to_ascii_lowercase();
-    lower.contains("tab_id=")
-        || lower.contains("tabid=")
-        || lower.contains("tab:")
-        || lower.contains("pane_id=")
-        || lower.contains("paneid=")
-        || lower.contains("pane:")
 }

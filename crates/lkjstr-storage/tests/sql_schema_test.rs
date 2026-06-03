@@ -1,9 +1,9 @@
 use lkjstr_storage::{
     CacheResourceKind, SqliteRetentionClass, SqliteStatementKind, StorageDataClass,
-    StorageInventoryGroup, cache_sqlite_statements, protected_sqlite_statements,
-    sqlite_repository_statements, sqlite_schema_hash, sqlite_schema_index_names,
-    sqlite_schema_indexes, sqlite_schema_statements, sqlite_schema_table,
-    sqlite_schema_table_names, sqlite_schema_tables, sqlite_statement,
+    StorageInventoryGroup, cache_sqlite_statements, optimizer_sqlite_statements,
+    protected_sqlite_statements, sqlite_repository_statements, sqlite_schema_hash,
+    sqlite_schema_index_names, sqlite_schema_indexes, sqlite_schema_statements,
+    sqlite_schema_table, sqlite_schema_table_names, sqlite_schema_tables, sqlite_statement,
 };
 
 #[test]
@@ -12,7 +12,8 @@ fn sqlite_schema_contains_target_tables() {
     assert_eq!(sqlite_schema_table_names(), vec![
         "schema_meta", "workspaces", "tab_states", "settings", "accounts", "local_account_secrets",
         "relay_sets", "relay_route_blocks", "tweet_drafts", "events", "event_tags", "event_relays",
-        "notifications", "feed_cursors", "feed_coverage", "feed_scan_hints", "jobs", "relay_information",
+        "notifications", "feed_cursors", "feed_coverage", "feed_scan_hints", "jobs", "feed_scan_observations",
+        "feed_scan_density_models", "feed_scan_decision_traces", "relay_information",
         "relay_diagnostic_summaries", "relay_read_observations", "relay_read_scores", "relay_list_suggestions",
         "author_relay_routes", "route_evidence_scores", "app_log", "cache_ledger", "cache_meta",
     ]);
@@ -24,7 +25,8 @@ fn sqlite_schema_contains_target_indexes() {
     assert_eq!(sqlite_schema_index_names(), vec![
         "tab_states_by_workspace_updated", "events_by_kind_time", "events_by_pubkey_kind_time",
         "event_tags_lookup", "event_relays_by_relay", "notifications_by_owner_time", "feed_coverage_lookup",
-        "feed_scan_hints_lookup", "relay_read_observations_recent", "relay_read_scores_recent",
+        "feed_scan_hints_lookup", "feed_scan_observations_recent", "feed_scan_density_models_context",
+        "relay_read_observations_recent", "relay_read_scores_recent",
         "route_evidence_scores_author", "jobs_by_state_updated", "cache_ledger_prune", "app_log_by_time",
     ]);
 
@@ -91,6 +93,10 @@ fn sqlite_schema_maps_ledger_resources() {
     assert!(matches!(
         sqlite_schema_table("relay_read_scores"),
         Some(table) if table.ledger_resource_kind == Some(CacheResourceKind::RelayReadScore)
+    ));
+    assert!(matches!(
+        sqlite_schema_table("feed_scan_density_models"),
+        Some(table) if table.ledger_resource_kind == Some(CacheResourceKind::ScanDensityModel)
     ));
     assert!(matches!(
         sqlite_schema_table("route_evidence_scores"),
@@ -172,6 +178,19 @@ fn cache_sqlite_statements_are_owned_by_documented_tables() {
         sqlite_statement("events.upsert"),
         Some(statement) if statement.table_name == "events"
     ));
+    for statement in statements {
+        assert!(sqlite_schema_table(statement.table_name).is_some());
+    }
+}
+
+#[test]
+fn optimizer_sqlite_statements_are_owned_by_documented_tables() {
+    let statements = optimizer_sqlite_statements();
+    assert!(
+        statements
+            .iter()
+            .any(|item| item.id == "feed_scan_density_models.upsert")
+    );
     for statement in statements {
         assert!(sqlite_schema_table(statement.table_name).is_some());
     }
