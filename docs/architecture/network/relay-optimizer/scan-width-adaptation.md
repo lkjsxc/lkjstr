@@ -6,6 +6,10 @@ Adaptive grouped scans use previous real segment feedback to choose a better
 starting span for the next compatible scan. Hints improve speed only; coverage
 proof remains separate.
 
+Status: Rust owns the pure planner, feedback reducer, and Stats-ready trace in
+`crates/lkjstr-app/src/feed_scan/`. Product wiring, SQLite persistence, and the
+WASM bridge are still open.
+
 ## Compatibility
 
 A hint may be used only when all fields match the next scan:

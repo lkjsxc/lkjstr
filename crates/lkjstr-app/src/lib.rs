@@ -2,6 +2,7 @@
 
 pub mod custom_request;
 pub mod feed;
+pub mod feed_scan;
 pub mod query;
 mod startup_snapshots;
 mod workspace_defaults;
@@ -22,6 +23,15 @@ pub use feed::{
     notifications_live_query_input, profile_live_query_input, reduce_feed_runtime_window,
     reduce_feed_window, release_feed_runtime_live, search_query_input, set_feed_runtime_visibility,
     start_feed_runtime, thread_replies_query_input, thread_root_lookup_input,
+};
+pub use feed_scan::{
+    CoverageGap, CursorPoint, DEFAULT_HINT_TTL_SECONDS, DEFAULT_INITIAL_SPAN_SECONDS,
+    DEFAULT_MAX_SPAN_SECONDS, DEFAULT_MIN_SPAN_SECONDS, FeedScanHint, FeedScanPlan,
+    FeedScanPlanInput, FeedScanTrace, FeedbackCounts, HintCompatibility, HintContext,
+    MAX_SEGMENTS_PER_PLAN, ScanDirection, ScanFeedbackUpdate, ScanPlanDiagnostic, ScanPlanSource,
+    ScanSegment, ScanWindowFeedback, SegmentSplitOutcome, feed_scan_trace, hint_context,
+    next_span_for_feedback, plan_feed_scan, reduce_scan_feedback, scan_hint_proves_cache_absence,
+    segment_from_edge, should_query_uncovered_relay, split_limit_hit_segment,
 };
 pub use query::{QueryDemandInput, QueryDemandPlan, QuerySurface, plan_query_demand};
 pub use workspace_runtime::{

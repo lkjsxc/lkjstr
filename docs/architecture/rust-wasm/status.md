@@ -35,12 +35,14 @@ This file is the concise status map for the active Rust/WASM migration.
   owner-registry state, route-plan grouping, ingress classification, and relay
   live-lease host-effect reducer state, plus relay client lifecycle and typed
   relay-message reducer state machines.
-- Relay optimizer docs now define the target Rust ownership for relay read
-  scoring, route evidence trust, scan hints, wait policy, and Stats projection.
+- `lkjstr-relays` now owns the pure relay read score reducer: stable score keys,
+  real read observations, bounded score updates, stale decay, fairness credit,
+  and deterministic ordering.
 - `lkjstr-app` owns startup recovery, stored tab snapshot filtering, bounded
   warm tab snapshot staging, pure query-demand planning, feed-window reduction,
-  feed live-runtime composition, surface query input builders, and a pure
-  Custom Request parser and mode classifier.
+  adaptive feed-scan planning, feed-scan feedback traces, feed live-runtime
+  composition, surface query input builders, and a pure Custom Request parser
+  and mode classifier.
 - `lkjstr-ui` renders the partial Leptos workspace shell, Welcome, New Tab,
   Stats inventory, Settings, Accounts, Relay Settings, Upload Settings, and
   Tweet draft surfaces.

@@ -42,7 +42,7 @@ before the SvelteKit product runtime can be removed.
 | Event cache         | not implemented | `storage`, `web`, `app`, `relays` | event/tag/provenance tests and cache-first browser tests |
 | Feed evidence       | not implemented | `storage`, `app`, `relays`        | coverage, cursor, scan-hint, compaction invalidation     |
 | Diagnostics and log | not implemented | `storage`, `web`, `app`, `ui`     | Stats inventory, lkjstr Log, pressure and failure tests  |
-| Relay optimizer     | not implemented | `relays`, `app`, `storage`, `web` | score, scan hint, route trust, Stats, and synthetic relay tests |
+| Relay optimizer     | partial         | `relays`, `app`, `storage`, `web` | score, scan hint, route trust, Stats, and synthetic relay tests |
 
 ## Product Rule
 

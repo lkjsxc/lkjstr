@@ -7,10 +7,10 @@ without changing correctness. See
 [../relay-optimizer/relay-read-scoring.md](../relay-optimizer/relay-read-scoring.md)
 for the target Rust-owned scoring model.
 
-Status: TypeScript still records product read statuses. Rust route planning
-accepts score hints only for ordering. The target is Rust-owned score reduction,
-durable optimizer rows, and a narrow WASM bridge while the current product
-runtime remains SvelteKit.
+Status: Rust owns the pure score reducer in
+`crates/lkjstr-relays/src/read_score/`. TypeScript still records product read
+statuses and needs the WASM bridge plus durable optimizer rows before the
+current wrapper can be deleted.
 
 ## Score Key
 

@@ -14,6 +14,7 @@ aliasing, and close-tombstone behavior.
 - `lib.rs`: public relay crate exports.
 - `live_lease/`: pure live lease host-effect reducer.
 - `page_read/`: semantic page-read keys and progressive snapshot reducers.
+- `read_score/`: Rust-owned relay read scoring and fairness reducers.
 - `request_budget/`: pure relay request-budget derivation and filter clamping.
 - `request_message_size.rs`: serialized outbound `REQ` byte budgeting.
 - `request_scheduler.rs`: active and pending relay request scheduling.

@@ -40,8 +40,9 @@ Read next: [protocol/README.md](protocol/README.md),
   and must not block reachable relays.
 - Relay optimizer work is now documented as a Rust/WASM target for measured
   scoring, route trust, adaptive scan hints, wait policy, and Stats projection.
-  Current product reads still rely on TypeScript wrappers until the bridge and
-  storage repositories are wired.
+  Rust now owns pure relay read scoring and scan planning reducers. Current
+  product reads still rely on TypeScript wrappers until the bridge and storage
+  repositories are wired.
 - Selected read relays remain the base and fallback for Home, Global,
   Notifications, Profile, and Thread. Targeted reads may add bounded
   protocol-derived routes, but Global remains selected-relay based.

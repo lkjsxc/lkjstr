@@ -6,7 +6,7 @@ This module owns pure relay read scoring for real observations. It contains no
 browser objects, no storage effects, and no relay I/O. Product runtimes pass
 serializable observations in and receive bounded scores and ordering output.
 
-## Files
+## Table of Contents
 
 - `key.rs`: stable request-context keys and filter-shape normalization.
 - `observation.rs`: real read observation input.
