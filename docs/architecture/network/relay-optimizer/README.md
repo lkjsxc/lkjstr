@@ -10,6 +10,8 @@ performance and observability layer only.
 
 - [measurement-ledger.md](measurement-ledger.md): durable observation, density,
   score, and trace rows.
+- [product-wiring-ledger.md](product-wiring-ledger.md): shipped surface wiring
+  and open read-path gaps.
 - [route-evidence-trust.md](route-evidence-trust.md): measured route trust and
   NIP-65 limits.
 - [relay-read-scoring.md](relay-read-scoring.md): Rust score model and fairness.

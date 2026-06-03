@@ -30,6 +30,7 @@ relays cannot decide dense or sparse state.
 Scopes are consulted in deterministic order:
 
 1. Exact: surface, route group, relay, filter, direction, route fingerprint.
+   Exact rows are rejected when the route fingerprint differs.
 2. RouteGroup: surface plus route group and direction.
 3. RelayFilter: relay plus filter and direction.
 4. SurfaceFilter: surface plus filter and direction.
@@ -37,9 +38,9 @@ Scopes are consulted in deterministic order:
 6. Global: direction only.
 7. Neutral: configured prior.
 
-Parent keys deliberately omit fields. Durable keys must never contain tab ids,
-pane ids, owner handles, request ids, subscription ids, or transient runtime
-identifiers.
+Parent keys deliberately omit fields and ignore omitted fields during matching.
+Durable keys must never contain tab ids, pane ids, owner handles, request ids,
+subscription ids, or transient runtime identifiers.
 
 ## Span Formula
 

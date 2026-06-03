@@ -6,8 +6,8 @@ Stats is the user-visible observability console for optimizer behavior. It must
 show real provider data or explicit unavailable rows.
 
 Status: the TypeScript Stats surface shows real in-memory relay scores and scan
-hints. Durable density models, decision traces, route evidence, and storage mode
-rows must come from SQLite-backed providers as product wiring lands.
+hints. It must also read durable scan density models and decision traces from
+SQLite when those rows exist. Route evidence projection remains open.
 
 ## Sections
 
@@ -40,6 +40,10 @@ They include:
 - limit-hit rate and incomplete rate
 - last update time and staleness state
 - storage mode: OPFS, memory fallback, or unavailable
+
+The browser debug surface may expose redacted scan model and trace rows for
+Playwright. It must not expose local signing secrets, raw relay payloads, full
+event bodies, tab ids, request ids, owner handles, or subscription ids.
 
 ## Relay Health Rows
 

@@ -64,7 +64,7 @@ changed. Each docs directory has one README that acts as a table of contents.
 `architecture/feeds/sources/home.md` `architecture/feeds/sources/notifications.md` `architecture/feeds/sources/profile.md`
 `architecture/network/README.md` `architecture/network/identity-rendering.md` `architecture/network/job-manager.md`
 `architecture/network/progressive-relay-rendering.md` `architecture/network/relay-optimizer/README.md` `architecture/network/relay-optimizer/measurement-ledger.md`
-`architecture/network/relay-optimizer/relay-read-scoring.md` `architecture/network/relay-optimizer/relay-wait-policy.md` `architecture/network/relay-optimizer/route-evidence-trust.md`
+`architecture/network/relay-optimizer/product-wiring-ledger.md` `architecture/network/relay-optimizer/relay-read-scoring.md` `architecture/network/relay-optimizer/relay-wait-policy.md` `architecture/network/relay-optimizer/route-evidence-trust.md`
 `architecture/network/relay-optimizer/scan-width-adaptation.md` `architecture/network/relay-optimizer/stats-projection.md` `architecture/network/relay-optimizer/verification.md`
 `architecture/network/relay-pool.md` `architecture/network/relay-routing.md` `architecture/network/request-budget/README.md`
 `architecture/network/request-budget/effective-limits.md` `architecture/network/request-budget/intent.md` `architecture/network/request-budget/message-size.md`

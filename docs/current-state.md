@@ -43,7 +43,7 @@ Read next: [protocol/README.md](protocol/README.md),
   pure relay read scoring, route-evidence trust, scan planning, and feed-wait
   reducers, storage row codecs, the relay-score WASM bridge, and the scan-model
   WASM bridge. Current product reads still rely on TypeScript wrappers until
-  read-path wiring is complete.
+  read-path wiring is complete; the product wiring ledger records each surface.
 - Selected read relays remain the base and fallback for Home, Global,
   Notifications, Profile, and Thread. Targeted reads may add bounded
   protocol-derived routes, but Global remains selected-relay based.
@@ -167,8 +167,9 @@ Read next: [architecture/network/README.md](architecture/network/README.md) and
   intake, storage operation, and memory counters. Rust now owns initial pure
   orchestration decisions for cache mode, selected relay reads, prefetch,
   hydration, and retention hints. Stats shows real in-memory relay score and
-  scan hint snapshots; durable orchestration, row geometry, and LOD providers
-  remain open.
+  scan hint snapshots. Durable scan density rows and traces are the next Stats
+  provider, while durable orchestration, row geometry, and LOD providers remain
+  open.
 - Relay publish waiters, paged read leases, deduped read abort listeners, relay
   final-close state, and idle pool eviction have cleanup tests.
 - Runtime counters use static aggregate keys only.
