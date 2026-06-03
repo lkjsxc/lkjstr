@@ -134,6 +134,10 @@ export function putFeedScanHintForTests(hint: FeedScanHint): void {
   memoryHints.set(hint.id, hint);
 }
 
+export function feedScanHintSnapshot(): FeedScanHint[] {
+  return newestFresh([...memoryHints.values()]);
+}
+
 function newestFresh(hints: readonly FeedScanHint[]): FeedScanHint[] {
   return hints
     .filter((hint) => !stale(hint))

@@ -25,6 +25,9 @@
   import CacheActions from './CacheActions.svelte';
   import CacheStatusPanel from './CacheStatusPanel.svelte';
   import StorageHealthPanel from './StorageHealthPanel.svelte';
+  import OptimizerPanel from './OptimizerPanel.svelte';
+  import { feedScanHintSnapshot } from '$lib/events/feed-scan-hints';
+  import { relayReadScoreSnapshot } from '$lib/relays/relay-read-score';
   import { stats, totalStats } from './relay-totals';
   import { relaySubscriptionRows } from './subscription-rows';
 
@@ -34,6 +37,8 @@
   let jobHealth = $state<JobHealthSummary | null>(null);
   let cache = $state<CacheMetadata | null>(null);
   let storageHealth = $state<SqliteStorageHealthStatus | null>(null);
+  let optimizerScores = $state(relayReadScoreSnapshot());
+  let scanHints = $state(feedScanHintSnapshot());
   let autoRefresh = $state(false);
   let timer: ReturnType<typeof setInterval> | undefined;
   let disposed = false;
@@ -49,6 +54,8 @@
   async function refresh(): Promise<void> {
     snapshots = currentRelaySnapshots();
     memory = runtimeMemorySnapshot();
+    optimizerScores = relayReadScoreSnapshot();
+    scanHints = feedScanHintSnapshot();
     await new Promise((resolve) => setTimeout(resolve, 100));
     if (disposed) return;
     [summaries, jobHealth, cache, storageHealth] = await Promise.all([
@@ -176,6 +183,7 @@
   <JobHealthPanel {jobHealth} />
   <CacheStatusPanel {cache} />
   <StorageHealthPanel status={storageHealth} />
+  <OptimizerPanel scores={optimizerScores} hints={scanHints} />
   <RuntimeCounters />
   <RuntimeMemoryPanel {memory} />
 </section>

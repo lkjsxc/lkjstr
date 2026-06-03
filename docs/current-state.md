@@ -157,8 +157,9 @@ Read next: [architecture/network/README.md](architecture/network/README.md) and
 - Matching Home tabs attach to one shared query keyed by account, selected
   relays, page size, and feed policy.
 - Stats and `__lkjstrMemoryDebug()` expose orchestration demand, lease, event
-  intake, storage operation, and memory counters. Stats must also expose real
-  relay optimizer state or explicit unavailable rows as providers land.
+  intake, storage operation, and memory counters. Stats now shows real
+  in-memory relay score and scan hint snapshots; durable optimizer and route
+  evidence providers remain open.
 - Relay publish waiters, paged read leases, deduped read abort listeners, relay
   final-close state, and idle pool eviction have cleanup tests.
 - Runtime counters use static aggregate keys only.

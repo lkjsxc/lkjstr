@@ -38,6 +38,10 @@ export const defaultRelayReadScoreStore: RelayReadScoreStore = {
   set: (score) => scores.set(scoreKeyId(score.key), score),
 };
 
+export function relayReadScoreSnapshot(): RelayReadScore[] {
+  return scores.values().toSorted(compareRelayReadScores).slice(0, 50);
+}
+
 export function relayReadScoreContext(
   request: RelayReadRequest,
   descriptor: RelaySubscriptionDescriptorInput,

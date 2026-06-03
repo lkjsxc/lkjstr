@@ -66,9 +66,10 @@ Stats shows current-session relay counters and persisted operational summaries.
   heap.
 - Runtime memory output is redacted count data only. It must not expose raw
   events, relay payloads, tab ids, request ids, or log messages.
-- Relay optimizer rows show scan hint source, initial span, next span, feedback
-  counts, relay scores, fairness credit, and route evidence source mix from real
-  providers. Missing providers render explicit unavailable rows.
+- Relay optimizer rows show in-memory relay scores and scan hints from real
+  runtime stores. Durable hint source, feedback counts, and route evidence source
+  mix remain open provider work. Missing providers render explicit unavailable
+  rows.
 
 ## Target Sections
 

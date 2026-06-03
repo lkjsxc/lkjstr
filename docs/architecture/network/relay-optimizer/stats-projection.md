@@ -5,6 +5,10 @@
 Stats is the user-visible observability console for optimizer behavior. It must
 show real provider data or explicit unavailable rows.
 
+Status: the TypeScript Stats surface now shows real in-memory relay scores and
+scan hints. Durable optimizer inventory, route evidence, and Rust Stats provider
+rows remain open.
+
 ## Sections
 
 1. Overview
