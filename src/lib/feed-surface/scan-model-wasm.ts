@@ -1,6 +1,10 @@
 export type ScanModelWasmResult<T> =
   | { readonly ok: true; readonly value: T }
-  | { readonly ok: false; readonly reason: 'unavailable' | 'error'; readonly message: string };
+  | {
+      readonly ok: false;
+      readonly reason: 'unavailable' | 'error';
+      readonly message: string;
+    };
 
 export type ScanModelWasmExports = {
   readonly plan_feed_scan_from_js?: (input: unknown) => unknown;
@@ -21,17 +25,9 @@ export function createScanModelWasmPlanner(
     plan: <T>(input: unknown) =>
       call<T>('plan', exports?.plan_feed_scan_from_js, input),
     reduce: <T>(input: unknown) =>
-      call<T>(
-        'reduce',
-        exports?.reduce_feed_scan_observation_from_js,
-        input,
-      ),
+      call<T>('reduce', exports?.reduce_feed_scan_observation_from_js, input),
     selectKeys: <T>(input: unknown) =>
-      call<T>(
-        'select-keys',
-        exports?.select_scan_model_keys_from_js,
-        input,
-      ),
+      call<T>('select-keys', exports?.select_scan_model_keys_from_js, input),
   };
 }
 

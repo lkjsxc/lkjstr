@@ -12,6 +12,9 @@ row helpers for timeline-like tabs.
 - [older-prefetch.ts](older-prefetch.ts): safe Home/Global prefetch predicate.
 - [speculative-older.ts](speculative-older.ts): deduped older-page coordinator.
 - [staged-rows.ts](staged-rows.ts): immediate row shell projection.
+- [scan-model-records.ts](scan-model-records.ts): scan density repository types.
+- [scan-model-repository.ts](scan-model-repository.ts): SQLite scan model rows.
+- [scan-model-wasm.ts](scan-model-wasm.ts): narrow WASM bridge wrapper.
 
 ## Contract
 

@@ -10,15 +10,15 @@ absence.
 
 SQLite worker target tables:
 
-| Table | Purpose | Retention |
-| ----- | ------- | --------- |
-| `relay_read_observations` | per-relay read diagnostics | age and count |
-| `relay_read_scores` | latest aggregate score per stable context | age and key count |
-| `feed_scan_observations` | append-only scan segment measurements | age, key count, pressure |
-| `feed_scan_density_models` | weighted scan-density model by scope | age, key count, pressure |
-| `feed_scan_hints` | last proposed span only | age and semantic key count |
-| `feed_scan_decision_traces` | Stats-ready span decisions | short age and count |
-| `route_evidence_scores` | measured author route trust | author plus relay age and count |
+| Table                       | Purpose                                   | Retention                       |
+| --------------------------- | ----------------------------------------- | ------------------------------- |
+| `relay_read_observations`   | per-relay read diagnostics                | age and count                   |
+| `relay_read_scores`         | latest aggregate score per stable context | age and key count               |
+| `feed_scan_observations`    | append-only scan segment measurements     | age, key count, pressure        |
+| `feed_scan_density_models`  | weighted scan-density model by scope      | age, key count, pressure        |
+| `feed_scan_hints`           | last proposed span only                   | age and semantic key count      |
+| `feed_scan_decision_traces` | Stats-ready span decisions                | short age and count             |
+| `route_evidence_scores`     | measured author route trust               | author plus relay age and count |
 
 All optimizer rows must be counted by storage inventory before product code
 depends on them.

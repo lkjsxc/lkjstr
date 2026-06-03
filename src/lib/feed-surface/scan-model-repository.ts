@@ -1,57 +1,20 @@
 import { ensureEventGraphSchema } from '$lib/storage/sqlite-opfs/event-schema';
 import { sendSqliteStorage } from '$lib/storage/sqlite-opfs/kernel-client';
 import type { SqlScalar, SqlStep } from '$lib/storage/sqlite-opfs/types';
-
-export type ScanModelScope =
-  | 'Exact'
-  | 'RouteGroup'
-  | 'RelayFilter'
-  | 'SurfaceFilter'
-  | 'Surface'
-  | 'Global'
-  | 'Neutral';
-
-export type ScanModelContext = {
-  readonly semanticFeedKey: string;
-  readonly routeGroupKey: string;
-  readonly relayUrl: string;
-  readonly semanticFilterKey: string;
-  readonly direction: 'older' | 'newer';
-  readonly routeFingerprint: string;
-};
-
-export type ScanDensityModelRecord = ScanModelContext & {
-  readonly modelKey: string;
-  readonly scope: ScanModelScope;
-  readonly targetLimitFraction: string;
-  readonly densityEventsPerSecond: number;
-  readonly sampleWeight: number;
-  readonly updatedAtMs: number;
-  readonly decaysAfterMs: number;
-  readonly recordJson?: unknown;
-};
-
-export type ScanObservationRecord = ScanModelContext & {
-  readonly id: string;
-  readonly createdAtMs: number;
-  readonly recordJson: unknown;
-};
-
-export type ScanDecisionTraceRecord = {
-  readonly traceId: string;
-  readonly modelKey: string;
-  readonly semanticFeedKey: string;
-  readonly direction: 'older' | 'newer';
-  readonly createdAtMs: number;
-  readonly recordJson: unknown;
-};
+import type {
+  ScanDecisionTraceRecord,
+  ScanDensityModelRecord,
+  ScanModelContext,
+  ScanModelScope,
+  ScanObservationRecord,
+} from './scan-model-records';
 
 export async function selectScanModelsForContext(
   context: ScanModelContext,
 ): Promise<ScanDensityModelRecord[] | undefined> {
   if (!(await ensureEventGraphSchema())) return undefined;
   const rows = await queryRecords<ScanDensityModelRecord>(
-    'SELECT record_json FROM feed_scan_density_models WHERE direction = ?1 AND (semantic_feed_key = ?2 OR semantic_feed_key = \'\') ORDER BY updated_at_ms DESC LIMIT 64;',
+    "SELECT record_json FROM feed_scan_density_models WHERE direction = ?1 AND (semantic_feed_key = ?2 OR semantic_feed_key = '') ORDER BY updated_at_ms DESC LIMIT 64;",
     [context.direction, context.semanticFeedKey],
   );
   return rows.filter((row) => modelMatches(row, context)).toSorted(scopeSort);
@@ -165,10 +128,22 @@ function modelMatches(
 ): boolean {
   return (
     row.direction === context.direction &&
-    matches(scopeUsesSurface(row.scope), row.semanticFeedKey, context.semanticFeedKey) &&
-    matches(scopeUsesRoute(row.scope), row.routeGroupKey, context.routeGroupKey) &&
+    matches(
+      scopeUsesSurface(row.scope),
+      row.semanticFeedKey,
+      context.semanticFeedKey,
+    ) &&
+    matches(
+      scopeUsesRoute(row.scope),
+      row.routeGroupKey,
+      context.routeGroupKey,
+    ) &&
     matches(scopeUsesRelay(row.scope), row.relayUrl, context.relayUrl) &&
-    matches(scopeUsesFilter(row.scope), row.semanticFilterKey, context.semanticFilterKey)
+    matches(
+      scopeUsesFilter(row.scope),
+      row.semanticFilterKey,
+      context.semanticFilterKey,
+    )
   );
 }
 
@@ -177,15 +152,29 @@ function matches(used: boolean, left: string, right: string): boolean {
 }
 
 function scopeSort(a: ScanDensityModelRecord, b: ScanDensityModelRecord) {
-  return scopeRank(a.scope) - scopeRank(b.scope) || a.modelKey.localeCompare(b.modelKey);
+  return (
+    scopeRank(a.scope) - scopeRank(b.scope) ||
+    a.modelKey.localeCompare(b.modelKey)
+  );
 }
 
 function scopeRank(scope: ScanModelScope): number {
-  return ['Exact', 'RouteGroup', 'RelayFilter', 'SurfaceFilter', 'Surface', 'Global', 'Neutral'].indexOf(scope);
+  return [
+    'Exact',
+    'RouteGroup',
+    'RelayFilter',
+    'SurfaceFilter',
+    'Surface',
+    'Global',
+    'Neutral',
+  ].indexOf(scope);
 }
 
 const scopeUsesSurface = (scope: ScanModelScope) =>
   ['Exact', 'RouteGroup', 'SurfaceFilter', 'Surface'].includes(scope);
-const scopeUsesRoute = (scope: ScanModelScope) => ['Exact', 'RouteGroup'].includes(scope);
-const scopeUsesRelay = (scope: ScanModelScope) => ['Exact', 'RelayFilter'].includes(scope);
-const scopeUsesFilter = (scope: ScanModelScope) => ['Exact', 'RelayFilter', 'SurfaceFilter'].includes(scope);
+const scopeUsesRoute = (scope: ScanModelScope) =>
+  ['Exact', 'RouteGroup'].includes(scope);
+const scopeUsesRelay = (scope: ScanModelScope) =>
+  ['Exact', 'RelayFilter'].includes(scope);
+const scopeUsesFilter = (scope: ScanModelScope) =>
+  ['Exact', 'RelayFilter', 'SurfaceFilter'].includes(scope);
