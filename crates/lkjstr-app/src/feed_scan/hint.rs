@@ -1,11 +1,6 @@
 use super::cursor::ScanDirection;
 use super::feedback::ScanWindowFeedback;
 
-pub const DEFAULT_INITIAL_SPAN_SECONDS: u64 = 60;
-pub const DEFAULT_MIN_SPAN_SECONDS: u64 = 1;
-pub const DEFAULT_MAX_SPAN_SECONDS: u64 = 180 * 24 * 60 * 60;
-pub const DEFAULT_HINT_TTL_SECONDS: u64 = 7 * 24 * 60 * 60;
-
 #[derive(Clone, Debug, PartialEq)]
 pub struct FeedScanHint {
     pub semantic_feed_key: String,

@@ -27,12 +27,19 @@ pub use feed::{
 };
 pub use feed_scan::{
     CoverageGap, CursorPoint, DEFAULT_HINT_TTL_SECONDS, DEFAULT_INITIAL_SPAN_SECONDS,
-    DEFAULT_MAX_SPAN_SECONDS, DEFAULT_MIN_SPAN_SECONDS, FeedScanHint, FeedScanPlan,
+    DEFAULT_MAX_SINGLE_CHANGE_FACTOR, DEFAULT_MAX_SPAN_SECONDS, DEFAULT_MIN_SPAN_SECONDS,
+    DEFAULT_MINIMUM_DENSITY_PER_SECOND, DEFAULT_STALE_HALF_LIFE_SECONDS,
+    DEFAULT_TARGET_LIMIT_DENOMINATOR, DEFAULT_TARGET_LIMIT_NUMERATOR, FeedScanHint, FeedScanPlan,
     FeedScanPlanInput, FeedScanTrace, FeedbackCounts, HintCompatibility, HintContext,
-    MAX_SEGMENTS_PER_PLAN, ScanDirection, ScanFeedbackUpdate, ScanPlanDiagnostic, ScanPlanSource,
-    ScanSegment, ScanWindowFeedback, SegmentSplitOutcome, feed_scan_trace, hint_context,
-    next_span_for_feedback, plan_feed_scan, reduce_scan_feedback, scan_hint_proves_cache_absence,
-    segment_from_edge, should_query_uncovered_relay, split_limit_hit_segment,
+    MAX_SEGMENTS_PER_PLAN, ScanDensityModel, ScanDirection, ScanFeedbackUpdate, ScanModelContext,
+    ScanModelKey, ScanModelScope, ScanPlanDiagnostic, ScanPlanSource, ScanSegment,
+    ScanSegmentObservation, ScanSpanConfig, ScanWindowFeedback, SegmentSplitOutcome, SpanCapReason,
+    SpanProposal, decayed_sample_weight, feed_scan_trace, hint_context, model_matches_context,
+    next_span_for_feedback, plan_feed_scan, propose_scan_span, reduce_scan_feedback,
+    reduce_scan_observation, scan_hint_proves_cache_absence, scan_model_context,
+    scan_model_from_observation, scan_model_key_for_scope, scan_model_keys_for_context,
+    scan_model_scope_order, segment_from_edge, select_models_for_context,
+    should_query_uncovered_relay, split_limit_hit_segment, update_scan_density_model,
 };
 pub use feed_wait::{
     CONTEXT_UNAVAILABLE_WAIT_MS, EmptyProofInput, FIRST_PAINT_DELAY_MS, FOREGROUND_MERGE_WINDOW_MS,

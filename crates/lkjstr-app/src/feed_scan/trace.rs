@@ -1,6 +1,7 @@
 use super::cursor::ScanDirection;
 use super::feedback::{FeedbackCounts, ScanWindowFeedback};
 use super::hint::FeedScanHint;
+use super::model::ScanModelScope;
 use super::planner::{FeedScanPlan, FeedScanPlanInput, ScanPlanSource};
 
 #[derive(Clone, Debug, PartialEq)]
@@ -12,6 +13,8 @@ pub struct FeedScanTrace {
     pub segments_processed: u16,
     pub feedback_counts: FeedbackCounts,
     pub next_hint: Option<FeedScanHint>,
+    pub source_scope: ScanModelScope,
+    pub confidence: f64,
 }
 
 pub fn feed_scan_trace(
@@ -23,7 +26,7 @@ pub fn feed_scan_trace(
     FeedScanTrace {
         semantic_feed_key: input.semantic_feed_key.clone(),
         direction: input.direction.clone(),
-        hint_used: plan.source == ScanPlanSource::DurableHint,
+        hint_used: !matches!(plan.source, ScanPlanSource::Neutral),
         initial_span_seconds: plan.initial_span_seconds,
         segments_processed: feedbacks.len().min(u16::MAX as usize) as u16,
         feedback_counts: feedbacks
@@ -32,5 +35,7 @@ pub fn feed_scan_trace(
                 counts.record(feedback)
             }),
         next_hint,
+        source_scope: plan.proposal.source_scope.clone(),
+        confidence: plan.proposal.confidence,
     }
 }

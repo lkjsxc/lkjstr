@@ -1,4 +1,6 @@
 import { spawn } from 'node:child_process';
+import { existsSync } from 'node:fs';
+import path from 'node:path';
 import process from 'node:process';
 import { appendBounded, OUTPUT_MAX_BYTES } from './run-quiet-buffer';
 
@@ -42,7 +44,7 @@ const plans: Record<string, readonly Step[]> = {
   'rust-wasm': [
     {
       label: 'rust-wasm',
-      command: 'cargo',
+      command: cargoCommand(),
       args: ['run', '-p', 'lkjstr-xtask', '--', 'quiet', 'rust-wasm'],
     },
   ],
@@ -99,6 +101,13 @@ async function runStep(step: Step): Promise<void> {
 
   if (result.ok) return;
   reportFailure(step.label, output, result);
+}
+
+function cargoCommand(): string {
+  const home = process.env.HOME;
+  if (!home) return 'cargo';
+  const candidate = path.join(home, '.cargo', 'bin', 'cargo');
+  return existsSync(candidate) ? candidate : 'cargo';
 }
 
 function reportFailure(

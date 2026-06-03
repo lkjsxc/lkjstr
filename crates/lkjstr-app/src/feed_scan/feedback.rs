@@ -1,3 +1,5 @@
+use super::config::{DEFAULT_INITIAL_SPAN_SECONDS, ScanSpanConfig};
+
 #[derive(Clone, Debug, Eq, PartialEq)]
 pub enum ScanWindowFeedback {
     LimitHit,
@@ -34,27 +36,39 @@ pub fn next_span_for_feedback(
     max_span_seconds: u64,
     conservative_large_span_seconds: u64,
 ) -> u64 {
-    let bounded_current = current_span_seconds.clamp(min_span_seconds, max_span_seconds);
-    match feedback {
-        ScanWindowFeedback::UnderHalf => bounded_current.saturating_mul(2).min(max_span_seconds),
-        ScanWindowFeedback::Balanced => bounded_current,
-        ScanWindowFeedback::LimitHit => (bounded_current / 2).max(min_span_seconds),
-        ScanWindowFeedback::Incomplete => incomplete_next_span(
-            bounded_current,
-            min_span_seconds,
-            conservative_large_span_seconds,
-        ),
-    }
+    let config = ScanSpanConfig {
+        min_span_seconds,
+        max_span_seconds,
+        ..ScanSpanConfig::default()
+    };
+    let current = config.bounded_span(current_span_seconds);
+    let proposed = match feedback {
+        ScanWindowFeedback::LimitHit => density_like_limit_span(current, &config),
+        ScanWindowFeedback::UnderHalf => grow_to_change_cap(current, &config),
+        ScanWindowFeedback::Balanced => current,
+        ScanWindowFeedback::Incomplete => incomplete_span(current, conservative_large_span_seconds),
+    };
+    config.bounded_span(proposed)
 }
 
-fn incomplete_next_span(
-    current_span_seconds: u64,
-    min_span_seconds: u64,
-    conservative_large_span_seconds: u64,
-) -> u64 {
-    if current_span_seconds > conservative_large_span_seconds {
-        (current_span_seconds / 2).max(min_span_seconds)
+fn density_like_limit_span(current: u64, config: &ScanSpanConfig) -> u64 {
+    let numerator = u64::from(config.target_limit_numerator.max(1));
+    let denominator = u64::from(config.target_limit_denominator.max(1));
+    current
+        .saturating_mul(numerator)
+        .div_ceil(denominator)
+        .max(1)
+}
+
+fn grow_to_change_cap(current: u64, config: &ScanSpanConfig) -> u64 {
+    ((current as f64) * config.safe_change_factor()).round() as u64
+}
+
+fn incomplete_span(current: u64, conservative_large_span_seconds: u64) -> u64 {
+    let large = conservative_large_span_seconds.max(DEFAULT_INITIAL_SPAN_SECONDS);
+    if current > large {
+        current.div_ceil(2)
     } else {
-        current_span_seconds.max(min_span_seconds)
+        current
     }
 }

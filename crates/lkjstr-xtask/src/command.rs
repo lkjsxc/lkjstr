@@ -1,9 +1,10 @@
 use std::{
-    env,
     ffi::OsString,
-    path::{Path, PathBuf},
+    path::Path,
     process::{Command, Output},
 };
+
+use crate::tool_path::{cargo_bin, prefer_rustup_cargo};
 
 const TAIL_BYTES: usize = 128 * 1024;
 
@@ -53,11 +54,12 @@ struct Step {
 }
 
 fn rust_wasm_steps() -> Vec<Step> {
+    let cargo = cargo_bin();
     vec![
-        step("cargo fmt", cargo_bin(), vec!["fmt", "--check"]),
+        step("cargo fmt", cargo.clone(), vec!["fmt", "--check"]),
         step(
             "cargo clippy workspace",
-            cargo_bin(),
+            cargo.clone(),
             vec![
                 "clippy",
                 "--workspace",
@@ -69,7 +71,7 @@ fn rust_wasm_steps() -> Vec<Step> {
         ),
         step(
             "cargo clippy wasm",
-            cargo_bin(),
+            cargo.clone(),
             vec![
                 "clippy",
                 "-p",
@@ -82,16 +84,12 @@ fn rust_wasm_steps() -> Vec<Step> {
                 "warnings",
             ],
         ),
-        step("cargo test", cargo_bin(), vec!["test", "--workspace"]),
-        step(
-            "wasm-pack chrome",
-            "wasm-pack",
-            vec!["test", "--headless", "--chrome", "crates/lkjstr-web"],
-        ),
+        step("cargo test", cargo, vec!["test", "--workspace"]),
+        step("wasm-pack chrome", "wasm-pack", wasm_pack_args("--chrome")),
         step(
             "wasm-pack firefox",
             "wasm-pack",
-            vec!["test", "--headless", "--firefox", "crates/lkjstr-web"],
+            wasm_pack_args("--firefox"),
         ),
         Step {
             name: "trunk build",
@@ -100,6 +98,10 @@ fn rust_wasm_steps() -> Vec<Step> {
             clear_no_color: true,
         },
     ]
+}
+
+fn wasm_pack_args(browser: &'static str) -> Vec<&'static str> {
+    vec!["test", "--headless", browser, "crates/lkjstr-web"]
 }
 
 fn step<I>(name: &'static str, program: I, args: Vec<&'static str>) -> Step
@@ -117,6 +119,7 @@ where
 fn run_quiet_step(root: &Path, step: &Step) -> Result<(), String> {
     let mut command = Command::new(&step.program);
     command.args(&step.args).current_dir(root);
+    prefer_rustup_cargo(&mut command);
     if step.clear_no_color {
         command.env_remove("NO_COLOR");
     }
@@ -172,28 +175,17 @@ where
     S: AsRef<str>,
 {
     let program = program.into();
-    let status = Command::new(&program)
+    let mut command = Command::new(&program);
+    command
         .args(args.iter().map(AsRef::as_ref))
-        .current_dir(root)
+        .current_dir(root);
+    prefer_rustup_cargo(&mut command);
+    let status = command
         .status()
         .map_err(|error| format!("failed to run {:?}: {error}", program))?;
     if status.success() {
         Ok(())
     } else {
         Err(format!("{:?} exited with {status}", program))
-    }
-}
-
-fn cargo_bin() -> OsString {
-    match env::var_os("HOME") {
-        Some(home) => {
-            let candidate = PathBuf::from(home).join(".cargo/bin/cargo");
-            if candidate.is_file() {
-                candidate.into_os_string()
-            } else {
-                OsString::from("cargo")
-            }
-        }
-        None => OsString::from("cargo"),
     }
 }

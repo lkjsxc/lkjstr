@@ -1,6 +1,11 @@
+use super::config::ScanSpanConfig;
 use super::coverage::{CoverageGap, should_query_uncovered_relay};
 use super::cursor::{CursorPoint, ScanDirection};
-use super::hint::{DEFAULT_INITIAL_SPAN_SECONDS, FeedScanHint, HintCompatibility, HintContext};
+use super::diagnostic::ScanPlanDiagnostic;
+use super::hierarchy::ScanModelContext;
+use super::hint::{FeedScanHint, HintContext};
+use super::model::{ScanDensityModel, ScanModelScope};
+use super::proposal::{SpanProposal, propose_scan_span};
 use super::segment::{ScanSegment, segment_from_edge};
 
 pub const MAX_SEGMENTS_PER_PLAN: usize = 96;
@@ -17,21 +22,17 @@ pub struct FeedScanPlanInput {
     pub now_seconds: u64,
     pub page_size: u16,
     pub requested_limit: u16,
+    pub effective_limit: u16,
     pub previous_hint: Option<FeedScanHint>,
+    pub scan_models: Vec<ScanDensityModel>,
+    pub span_config: ScanSpanConfig,
     pub coverage_gaps: Vec<CoverageGap>,
 }
 
 #[derive(Clone, Debug, Eq, PartialEq)]
 pub enum ScanPlanSource {
     Neutral,
-    DurableHint,
-    ExpiredHint,
-    IncompatibleHint,
-}
-
-#[derive(Clone, Debug, Eq, PartialEq)]
-pub struct ScanPlanDiagnostic {
-    pub message: String,
+    DensityModel(ScanModelScope),
 }
 
 #[derive(Clone, Debug, PartialEq)]
@@ -40,16 +41,25 @@ pub struct FeedScanPlan {
     pub initial_span_seconds: u64,
     pub source: ScanPlanSource,
     pub diagnostics: Vec<ScanPlanDiagnostic>,
+    pub proposal: SpanProposal,
 }
 
 pub fn plan_feed_scan(input: &FeedScanPlanInput) -> FeedScanPlan {
-    let (source, initial_span_seconds, diagnostics) = initial_span(input);
-    let root = segment_from_edge(&input.direction, &input.visible_edge, initial_span_seconds);
+    let proposal = propose_scan_span(
+        &scan_model_context(input),
+        &input.scan_models,
+        input.previous_hint.as_ref(),
+        input.effective_limit,
+        input.now_seconds.saturating_mul(1000),
+        &input.span_config,
+    );
+    let root = segment_from_edge(&input.direction, &input.visible_edge, proposal.span_seconds);
     FeedScanPlan {
         segments: matching_gap_segments(input).unwrap_or_else(|| vec![root]),
-        initial_span_seconds,
-        source,
-        diagnostics,
+        initial_span_seconds: proposal.span_seconds,
+        source: source_from_proposal(&proposal),
+        diagnostics: proposal.diagnostics.clone(),
+        proposal,
     }
 }
 
@@ -65,40 +75,23 @@ pub fn hint_context(input: &FeedScanPlanInput) -> HintContext {
     }
 }
 
-fn initial_span(input: &FeedScanPlanInput) -> (ScanPlanSource, u64, Vec<ScanPlanDiagnostic>) {
-    let Some(hint) = &input.previous_hint else {
-        return (
-            ScanPlanSource::Neutral,
-            DEFAULT_INITIAL_SPAN_SECONDS,
-            Vec::new(),
-        );
-    };
-    match hint.compatibility(&hint_context(input)) {
-        HintCompatibility::Compatible => (
-            ScanPlanSource::DurableHint,
-            hint.bounded_next_span(),
-            Vec::new(),
-        ),
-        HintCompatibility::Expired => {
-            diagnostic_source(ScanPlanSource::ExpiredHint, "scan hint expired")
-        }
-        HintCompatibility::Incompatible => {
-            diagnostic_source(ScanPlanSource::IncompatibleHint, "scan hint incompatible")
-        }
+pub fn scan_model_context(input: &FeedScanPlanInput) -> ScanModelContext {
+    ScanModelContext {
+        semantic_feed_key: input.semantic_feed_key.clone(),
+        route_group_key: input.route_group_key.clone(),
+        relay_url: input.relay_url.clone(),
+        semantic_filter_key: input.semantic_filter_key.clone(),
+        direction: input.direction.clone(),
+        route_fingerprint: input.route_fingerprint.clone(),
     }
 }
 
-fn diagnostic_source(
-    source: ScanPlanSource,
-    message: &str,
-) -> (ScanPlanSource, u64, Vec<ScanPlanDiagnostic>) {
-    (
-        source,
-        DEFAULT_INITIAL_SPAN_SECONDS,
-        vec![ScanPlanDiagnostic {
-            message: message.to_owned(),
-        }],
-    )
+fn source_from_proposal(proposal: &SpanProposal) -> ScanPlanSource {
+    if proposal.source_scope == ScanModelScope::Neutral {
+        ScanPlanSource::Neutral
+    } else {
+        ScanPlanSource::DensityModel(proposal.source_scope.clone())
+    }
 }
 
 fn matching_gap_segments(input: &FeedScanPlanInput) -> Option<Vec<ScanSegment>> {

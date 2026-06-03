@@ -22,6 +22,9 @@ read the current live storage state in [storage/README.md](storage/README.md).
   load gating.
 - [feed-surface/event-value.md](feed-surface/event-value.md): visible row value
   and display-bound feed insertion.
+- [feed-surface/height-reservation.md](feed-surface/height-reservation.md): row
+  geometry and scroll-anchor compensation.
+- [feed-surface/lod-tree.md](feed-surface/lod-tree.md): real-data feed LOD tree.
 - [feed-surface/staged-pipeline.md](feed-surface/staged-pipeline.md): staged
   row loading.
 - [feed-surface/surface-matrix.md](feed-surface/surface-matrix.md): surface
