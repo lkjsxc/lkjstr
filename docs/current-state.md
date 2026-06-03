@@ -80,6 +80,8 @@ Read next: [architecture/data/README.md](architecture/data/README.md),
   kernel.
 - The SQLite schema, statement records, row codecs, retention classes, and
   worker adapter foundations already exist in Rust and TypeScript host code.
+  Rust storage now includes optimizer tables for relay observations, relay
+  scores, expanded scan hints, and route evidence scores.
   The Svelte Settings, workspace layout, tab snapshot, Accounts, local signing
   secret, relay set, Tweet draft, event graph, tag, relay provenance, feed cursor,
   cached feed page, tag lookup, local filter-search, relay diagnostics, relay

@@ -34,11 +34,23 @@ pub fn coverage_params(row: SqliteFeedCoverageRow) -> Option<SqlParams> {
 
 pub fn scan_hint_params(row: FeedScanHintRecord) -> Option<SqlParams> {
     params(vec![
-        text(row.hint_id),
-        text(row.feed_key),
+        text(row.semantic_feed_key),
+        text(row.route_group_key),
         text(row.relay_url),
-        text(row.filter_fingerprint),
-        integer(row.span_seconds),
+        text(row.semantic_filter_key),
+        text(row.direction),
+        text(row.route_fingerprint),
+        integer(row.current_span_seconds),
+        integer(row.next_span_seconds),
+        integer(row.min_span_seconds),
+        integer(row.max_span_seconds),
+        text(row.last_feedback),
+        crate::sqlite_store::params::real(row.density_ewma),
+        integer(row.complete_window_count),
+        integer(row.dense_window_count),
+        integer(row.incomplete_window_count),
+        integer(row.last_since),
+        integer(row.last_until),
         integer(row.updated_at_ms),
         integer(row.expires_at_ms),
     ])

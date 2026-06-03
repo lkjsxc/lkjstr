@@ -40,7 +40,8 @@ dynamicProtectionKeys(activeRuntimeState)
 
 `nostr-event`, `notification-record`, `feed-cursor`, `coverage-row`,
 `scan-hint`, `tab-state`, `relay-summary`, `relay-info`,
-`relay-list-suggestion`, `author-relay-route`, and `job-record` each appear
+`relay-read-observation`, `relay-read-score`, `relay-list-suggestion`,
+`author-relay-route`, `route-evidence-score`, and `job-record` each appear
 exactly once in the ledger manifest.
 
 ## Rule

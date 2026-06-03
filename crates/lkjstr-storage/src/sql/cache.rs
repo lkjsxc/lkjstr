@@ -127,13 +127,26 @@ pub const SQLITE_CACHE_TABLES: &[SqliteTableSpec] = &[
         "feed_scan_hints",
         Some(Resource::ScanHint),
         r#"CREATE TABLE IF NOT EXISTS feed_scan_hints (
-  hint_id TEXT PRIMARY KEY,
-  feed_key TEXT NOT NULL,
+  semantic_feed_key TEXT NOT NULL,
+  route_group_key TEXT NOT NULL,
   relay_url TEXT NOT NULL,
-  filter_fingerprint TEXT NOT NULL,
-  span_seconds INTEGER NOT NULL,
+  semantic_filter_key TEXT NOT NULL,
+  direction TEXT NOT NULL,
+  route_fingerprint TEXT NOT NULL,
+  current_span_seconds INTEGER NOT NULL,
+  next_span_seconds INTEGER NOT NULL,
+  min_span_seconds INTEGER NOT NULL,
+  max_span_seconds INTEGER NOT NULL,
+  last_feedback TEXT NOT NULL,
+  density_ewma REAL NOT NULL,
+  complete_window_count INTEGER NOT NULL,
+  dense_window_count INTEGER NOT NULL,
+  incomplete_window_count INTEGER NOT NULL,
+  last_since INTEGER NOT NULL,
+  last_until INTEGER NOT NULL,
   updated_at_ms INTEGER NOT NULL,
-  expires_at_ms INTEGER NOT NULL
+  expires_at_ms INTEGER NOT NULL,
+  PRIMARY KEY (semantic_feed_key, route_group_key, relay_url, semantic_filter_key, direction, route_fingerprint)
 ) STRICT;"#
     ),
     recoverable!(

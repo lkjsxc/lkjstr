@@ -74,6 +74,18 @@ pub const LEDGER_RESOURCE_SPECS: &[LedgerResourceSpec] = &[
         false,
     ),
     resource(
+        CacheResourceKind::RelayReadObservation,
+        CacheOwnerKind::RelayReadObservation,
+        "relay_read_observations",
+        false,
+    ),
+    resource(
+        CacheResourceKind::RelayReadScore,
+        CacheOwnerKind::RelayReadScore,
+        "relay_read_scores",
+        false,
+    ),
+    resource(
         CacheResourceKind::RelayListSuggestion,
         CacheOwnerKind::RelaySuggestion,
         "relayListSuggestions",
@@ -83,6 +95,12 @@ pub const LEDGER_RESOURCE_SPECS: &[LedgerResourceSpec] = &[
         CacheResourceKind::AuthorRelayRoute,
         CacheOwnerKind::RouteEvidence,
         "authorRelayRoutes",
+        false,
+    ),
+    resource(
+        CacheResourceKind::RouteEvidenceScore,
+        CacheOwnerKind::RouteEvidenceScore,
+        "route_evidence_scores",
         false,
     ),
     resource(

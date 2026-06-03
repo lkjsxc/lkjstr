@@ -12,6 +12,7 @@ pub mod ledger;
 pub mod local_secrets;
 pub mod manifest;
 pub mod notifications;
+pub mod optimizer;
 pub mod outcome;
 pub mod relay_sets;
 pub mod resource;
@@ -67,6 +68,22 @@ pub use manifest::{
 };
 pub use notifications::{
     NotificationRecord, SqliteNotificationRow, notification_ledger_record, sqlite_notification_row,
+};
+pub use optimizer::{
+    DEFAULT_OBSERVATION_MAX_AGE_MS, DEFAULT_OBSERVATION_MAX_ROWS,
+    DEFAULT_OPTIMIZER_SCORE_MAX_AGE_MS, DEFAULT_ROUTE_EVIDENCE_MAX_AGE_MS,
+    DEFAULT_SCAN_HINT_MAX_AGE_MS, OPTIMIZER_REPOSITORY_STATEMENTS, OPTIMIZER_TABLES,
+    OptimizerKeyProblem, OptimizerLedgerProbe, OptimizerRepositoryStatement,
+    OptimizerRetentionPlan, OptimizerRetentionPolicy, OptimizerScanHintRecord,
+    RelayReadObservationRecord, RelayReadScoreRecord, RouteEvidenceScoreRecord,
+    SqliteOptimizerScanHintRow, SqliteRelayReadObservationRow, SqliteRelayReadScoreRow,
+    SqliteRouteEvidenceScoreRow, optimizer_repository_statements, optimizer_resource_kind,
+    optimizer_scan_hint_from_sqlite_row, optimizer_scan_hint_key, optimizer_tables,
+    orphan_optimizer_ledger_ids, plan_optimizer_observation_retention,
+    relay_read_observation_from_sqlite_row, relay_read_score_from_sqlite_row, relay_read_score_key,
+    route_evidence_score_from_sqlite_row, route_evidence_score_key, sqlite_optimizer_scan_hint_row,
+    sqlite_relay_read_observation_row, sqlite_relay_read_score_row,
+    sqlite_route_evidence_score_row,
 };
 pub use outcome::{StorageOperation, StorageOutcome, StorageProblem};
 pub use relay_sets::{

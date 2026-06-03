@@ -17,8 +17,8 @@ This file is the concise status map for the active Rust/WASM migration.
   recovery, New Tab catalog data, and tab snapshot payload contracts.
 - `lkjstr-storage` owns the executable table manifest, cache-ledger resource
   map, typed operation outcomes, executable SQLite schema records, protected,
-  event-cache, and diagnostics statements, schema hash, tab-state keys, ledger
-  rows, and protected plus cache SQLite row codecs.
+  event-cache, diagnostics, and optimizer statements, schema hash, tab-state
+  keys, ledger rows, and protected plus cache SQLite row codecs.
 - `lkjstr-web` owns narrow IndexedDB adapters for workspace startup, workspace
   rows, settings rows, account rows, local secrets, relay sets, Tweet drafts,
   the first multi-store transaction helper, ledger-backed tab-state snapshot

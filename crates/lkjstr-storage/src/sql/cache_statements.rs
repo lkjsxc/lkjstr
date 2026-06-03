@@ -101,12 +101,12 @@ pub const CACHE_STATEMENTS: &[SqliteStatementSpec] = &[
     read(
         "feed_scan_hints.by_feed",
         "feed_scan_hints",
-        "SELECT hint_id, feed_key, relay_url, filter_fingerprint, span_seconds, updated_at_ms, expires_at_ms FROM feed_scan_hints WHERE feed_key = ?1 AND expires_at_ms > ?2 ORDER BY updated_at_ms DESC, hint_id ASC LIMIT ?3;",
+        "SELECT semantic_feed_key, route_group_key, relay_url, semantic_filter_key, direction, route_fingerprint, current_span_seconds, next_span_seconds, min_span_seconds, max_span_seconds, last_feedback, density_ewma, complete_window_count, dense_window_count, incomplete_window_count, last_since, last_until, updated_at_ms, expires_at_ms FROM feed_scan_hints WHERE semantic_feed_key = ?1 AND expires_at_ms > ?2 ORDER BY updated_at_ms DESC, relay_url ASC LIMIT ?3;",
     ),
     write(
         "feed_scan_hints.upsert",
         "feed_scan_hints",
-        "INSERT INTO feed_scan_hints (hint_id, feed_key, relay_url, filter_fingerprint, span_seconds, updated_at_ms, expires_at_ms) VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7) ON CONFLICT(hint_id) DO UPDATE SET feed_key = excluded.feed_key, relay_url = excluded.relay_url, filter_fingerprint = excluded.filter_fingerprint, span_seconds = excluded.span_seconds, updated_at_ms = excluded.updated_at_ms, expires_at_ms = excluded.expires_at_ms;",
+        "INSERT INTO feed_scan_hints (semantic_feed_key, route_group_key, relay_url, semantic_filter_key, direction, route_fingerprint, current_span_seconds, next_span_seconds, min_span_seconds, max_span_seconds, last_feedback, density_ewma, complete_window_count, dense_window_count, incomplete_window_count, last_since, last_until, updated_at_ms, expires_at_ms) VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11, ?12, ?13, ?14, ?15, ?16, ?17, ?18, ?19) ON CONFLICT(semantic_feed_key, route_group_key, relay_url, semantic_filter_key, direction, route_fingerprint) DO UPDATE SET current_span_seconds = excluded.current_span_seconds, next_span_seconds = excluded.next_span_seconds, min_span_seconds = excluded.min_span_seconds, max_span_seconds = excluded.max_span_seconds, last_feedback = excluded.last_feedback, density_ewma = excluded.density_ewma, complete_window_count = excluded.complete_window_count, dense_window_count = excluded.dense_window_count, incomplete_window_count = excluded.incomplete_window_count, last_since = excluded.last_since, last_until = excluded.last_until, updated_at_ms = excluded.updated_at_ms, expires_at_ms = excluded.expires_at_ms;",
     ),
     write(
         "feed_scan_hints.delete_expired",

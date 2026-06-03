@@ -28,6 +28,11 @@ pub fn raw_integer(value: i64) -> SqlScalar {
 }
 
 #[must_use]
+pub fn real(value: f64) -> SqlScalar {
+    SqlScalar::Float(value)
+}
+
+#[must_use]
 pub fn no_params() -> Option<SqlParams> {
     None
 }

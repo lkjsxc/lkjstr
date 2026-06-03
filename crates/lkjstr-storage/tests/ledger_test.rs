@@ -1,6 +1,6 @@
 use lkjstr_storage::{
     CacheResourceKind, direct_ledger_resource_specs, is_storage_table_name, ledger_resource_kinds,
-    ledger_resource_spec, ledger_resource_specs,
+    ledger_resource_spec, ledger_resource_specs, sqlite_schema_table,
 };
 
 #[test]
@@ -17,8 +17,11 @@ fn ledger_manifest_covers_each_resource_once() {
             CacheResourceKind::TabState,
             CacheResourceKind::RelaySummary,
             CacheResourceKind::RelayInfo,
+            CacheResourceKind::RelayReadObservation,
+            CacheResourceKind::RelayReadScore,
             CacheResourceKind::RelayListSuggestion,
             CacheResourceKind::AuthorRelayRoute,
+            CacheResourceKind::RouteEvidenceScore,
             CacheResourceKind::JobRecord,
         ]
     );
@@ -31,7 +34,10 @@ fn ledger_manifest_covers_each_resource_once() {
 #[test]
 fn ledger_resources_map_to_live_tables() {
     for spec in ledger_resource_specs() {
-        assert!(is_storage_table_name(spec.owning_table));
+        assert!(
+            is_storage_table_name(spec.owning_table)
+                || sqlite_schema_table(spec.owning_table).is_some()
+        );
         assert_eq!(ledger_resource_spec(spec.resource_kind), Some(spec));
     }
 }

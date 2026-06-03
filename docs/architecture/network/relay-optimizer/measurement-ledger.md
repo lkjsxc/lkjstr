@@ -8,6 +8,10 @@ relay lacks events.
 
 ## Tables
 
+Status: Rust storage now owns row codecs, schema records, retention helpers,
+and repair-planning helpers for these optimizer records. Browser product wiring
+is still open.
+
 The SQLite worker target owns these optimizer records:
 
 | Table | Purpose | Retention |

@@ -39,6 +39,26 @@ pub const SQLITE_INDEXES: &[SqliteIndexSpec] = &[
         "CREATE INDEX IF NOT EXISTS feed_coverage_lookup ON feed_coverage (feed_key, relay_url, filter_fingerprint, since_exclusive, until_exclusive);",
     ),
     index(
+        "feed_scan_hints_lookup",
+        "feed_scan_hints",
+        "CREATE INDEX IF NOT EXISTS feed_scan_hints_lookup ON feed_scan_hints (semantic_feed_key, route_group_key, relay_url, semantic_filter_key, direction, expires_at_ms);",
+    ),
+    index(
+        "relay_read_observations_recent",
+        "relay_read_observations",
+        "CREATE INDEX IF NOT EXISTS relay_read_observations_recent ON relay_read_observations (created_at_ms DESC, relay_url);",
+    ),
+    index(
+        "relay_read_scores_recent",
+        "relay_read_scores",
+        "CREATE INDEX IF NOT EXISTS relay_read_scores_recent ON relay_read_scores (relay_url, surface, updated_at_ms DESC);",
+    ),
+    index(
+        "route_evidence_scores_author",
+        "route_evidence_scores",
+        "CREATE INDEX IF NOT EXISTS route_evidence_scores_author ON route_evidence_scores (author_pubkey, surface, updated_at_ms DESC);",
+    ),
+    index(
         "jobs_by_state_updated",
         "jobs",
         "CREATE INDEX IF NOT EXISTS jobs_by_state_updated ON jobs (state, updated_at_ms DESC);",

@@ -7,55 +7,26 @@ use lkjstr_storage::{
 };
 
 #[test]
+#[rustfmt::skip]
 fn sqlite_schema_contains_target_tables() {
-    assert_eq!(
-        sqlite_schema_table_names(),
-        vec![
-            "schema_meta",
-            "workspaces",
-            "tab_states",
-            "settings",
-            "accounts",
-            "local_account_secrets",
-            "relay_sets",
-            "relay_route_blocks",
-            "tweet_drafts",
-            "events",
-            "event_tags",
-            "event_relays",
-            "notifications",
-            "feed_cursors",
-            "feed_coverage",
-            "feed_scan_hints",
-            "jobs",
-            "relay_information",
-            "relay_diagnostic_summaries",
-            "relay_list_suggestions",
-            "author_relay_routes",
-            "app_log",
-            "cache_ledger",
-            "cache_meta",
-        ]
-    );
+    assert_eq!(sqlite_schema_table_names(), vec![
+        "schema_meta", "workspaces", "tab_states", "settings", "accounts", "local_account_secrets",
+        "relay_sets", "relay_route_blocks", "tweet_drafts", "events", "event_tags", "event_relays",
+        "notifications", "feed_cursors", "feed_coverage", "feed_scan_hints", "jobs", "relay_information",
+        "relay_diagnostic_summaries", "relay_read_observations", "relay_read_scores", "relay_list_suggestions",
+        "author_relay_routes", "route_evidence_scores", "app_log", "cache_ledger", "cache_meta",
+    ]);
 }
 
 #[test]
+#[rustfmt::skip]
 fn sqlite_schema_contains_target_indexes() {
-    assert_eq!(
-        sqlite_schema_index_names(),
-        vec![
-            "tab_states_by_workspace_updated",
-            "events_by_kind_time",
-            "events_by_pubkey_kind_time",
-            "event_tags_lookup",
-            "event_relays_by_relay",
-            "notifications_by_owner_time",
-            "feed_coverage_lookup",
-            "jobs_by_state_updated",
-            "cache_ledger_prune",
-            "app_log_by_time",
-        ]
-    );
+    assert_eq!(sqlite_schema_index_names(), vec![
+        "tab_states_by_workspace_updated", "events_by_kind_time", "events_by_pubkey_kind_time",
+        "event_tags_lookup", "event_relays_by_relay", "notifications_by_owner_time", "feed_coverage_lookup",
+        "feed_scan_hints_lookup", "relay_read_observations_recent", "relay_read_scores_recent",
+        "route_evidence_scores_author", "jobs_by_state_updated", "cache_ledger_prune", "app_log_by_time",
+    ]);
 
     for index in sqlite_schema_indexes() {
         assert!(sqlite_schema_table(index.table_name).is_some());
@@ -116,6 +87,14 @@ fn sqlite_schema_maps_ledger_resources() {
     assert!(matches!(
         sqlite_schema_table("feed_coverage"),
         Some(table) if table.ledger_resource_kind == Some(CacheResourceKind::CoverageRow)
+    ));
+    assert!(matches!(
+        sqlite_schema_table("relay_read_scores"),
+        Some(table) if table.ledger_resource_kind == Some(CacheResourceKind::RelayReadScore)
+    ));
+    assert!(matches!(
+        sqlite_schema_table("route_evidence_scores"),
+        Some(table) if table.ledger_resource_kind == Some(CacheResourceKind::RouteEvidenceScore)
     ));
     assert!(matches!(
         sqlite_schema_table("jobs"),

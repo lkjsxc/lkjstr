@@ -13,8 +13,11 @@ pub enum CacheOwnerKind {
     TabSnapshot,
     RelayDiagnostic,
     RelayInformation,
+    RelayReadObservation,
+    RelayReadScore,
     RelaySuggestion,
     RouteEvidence,
+    RouteEvidenceScore,
     Job,
 }
 
@@ -30,8 +33,11 @@ impl CacheOwnerKind {
             Self::TabSnapshot => "tab-snapshot",
             Self::RelayDiagnostic => "relay-diagnostic",
             Self::RelayInformation => "relay-information",
+            Self::RelayReadObservation => "relay-read-observation",
+            Self::RelayReadScore => "relay-read-score",
             Self::RelaySuggestion => "relay-suggestion",
             Self::RouteEvidence => "route-evidence",
+            Self::RouteEvidenceScore => "route-evidence-score",
             Self::Job => "job",
         }
     }
@@ -48,8 +54,11 @@ pub enum CacheResourceKind {
     TabState,
     RelaySummary,
     RelayInfo,
+    RelayReadObservation,
+    RelayReadScore,
     RelayListSuggestion,
     AuthorRelayRoute,
+    RouteEvidenceScore,
     JobRecord,
 }
 
@@ -65,8 +74,11 @@ impl CacheResourceKind {
             Self::TabState => "tab-state",
             Self::RelaySummary => "relay-summary",
             Self::RelayInfo => "relay-info",
+            Self::RelayReadObservation => "relay-read-observation",
+            Self::RelayReadScore => "relay-read-score",
             Self::RelayListSuggestion => "relay-list-suggestion",
             Self::AuthorRelayRoute => "author-relay-route",
+            Self::RouteEvidenceScore => "route-evidence-score",
             Self::JobRecord => "job-record",
         }
     }

@@ -17,12 +17,27 @@ fn diagnostic_sqlite_statements_are_owned_by_documented_tables() {
     assert!(
         statements
             .iter()
+            .any(|item| item.id == "relay_read_observations.insert")
+    );
+    assert!(
+        statements
+            .iter()
+            .any(|item| item.id == "relay_read_scores.upsert")
+    );
+    assert!(
+        statements
+            .iter()
             .any(|item| item.id == "relay_list_suggestions.upsert")
     );
     assert!(
         statements
             .iter()
             .any(|item| item.id == "author_relay_routes.upsert")
+    );
+    assert!(
+        statements
+            .iter()
+            .any(|item| item.id == "route_evidence_scores.upsert")
     );
     assert!(
         statements

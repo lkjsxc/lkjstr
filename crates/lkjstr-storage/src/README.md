@@ -20,6 +20,7 @@ codecs, ledger resource map, and typed operation outcomes.
 - `local_secrets.rs`: local signing secret row helpers and SQLite row codec.
 - `manifest.rs`: table specs and table lookup helpers.
 - `notifications.rs`: notification row and ledger helpers.
+- `optimizer/`: relay optimizer row codecs, retention, and repair helpers.
 - `outcome.rs`: typed storage operation outcomes.
 - `relay_sets.rs`: protected relay-set row identity, JSON helpers, and SQLite row codec.
 - `resource.rs`: cache owner and resource kind strings.

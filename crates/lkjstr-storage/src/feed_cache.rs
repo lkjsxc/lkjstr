@@ -38,13 +38,25 @@ pub struct SqliteFeedCoverageRow {
     pub dense: i64,
 }
 
-#[derive(Clone, Debug, Deserialize, Eq, PartialEq, Serialize)]
+#[derive(Clone, Debug, Deserialize, PartialEq, Serialize)]
 pub struct FeedScanHintRecord {
-    pub hint_id: String,
-    pub feed_key: String,
+    pub semantic_feed_key: String,
+    pub route_group_key: String,
     pub relay_url: String,
-    pub filter_fingerprint: String,
-    pub span_seconds: u64,
+    pub semantic_filter_key: String,
+    pub direction: String,
+    pub route_fingerprint: String,
+    pub current_span_seconds: u64,
+    pub next_span_seconds: u64,
+    pub min_span_seconds: u64,
+    pub max_span_seconds: u64,
+    pub last_feedback: String,
+    pub density_ewma: f64,
+    pub complete_window_count: u64,
+    pub dense_window_count: u64,
+    pub incomplete_window_count: u64,
+    pub last_since: u64,
+    pub last_until: u64,
     pub updated_at_ms: u64,
     pub expires_at_ms: u64,
 }

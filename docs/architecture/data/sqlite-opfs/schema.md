@@ -56,6 +56,7 @@ Indexes:
 | `feed_cursors` | feeds | semantic cursor rows for older and newer reads. |
 | `feed_coverage` | feeds | complete bounded relay/filter evidence for cache-first reads. |
 | `feed_scan_hints` | feeds | warm scan span hints that never prove absence. |
+| `relay_read_scores` | relays | latest relay read score per stable score key. |
 
 Coverage can prove cache-first absence only when every required relay, route
 fingerprint, semantic key, filter shape, and bounded interval is complete and
@@ -68,8 +69,10 @@ not dense, failed, compacted, unresolved, or stale.
 | `jobs` | jobs | active and finished publish, upload, and maintenance jobs. |
 | `relay_information` | relays | NIP-11 metadata payloads and fetch times. |
 | `relay_diagnostic_summaries` | relays | bounded relay diagnostic summaries. |
+| `relay_read_observations` | relays | recent real relay read observations. |
 | `relay_list_suggestions` | relays | explicit NIP-65 suggestions awaiting user import. |
 | `author_relay_routes` | relays | route evidence with optional expiry. |
+| `route_evidence_scores` | relays | measurement-informed route trust. |
 | `app_log` | app | redacted durable app log for storage-backed diagnostics. |
 
 Indexes:

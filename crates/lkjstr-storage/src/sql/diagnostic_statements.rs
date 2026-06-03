@@ -33,6 +33,26 @@ pub const DIAGNOSTIC_STATEMENTS: &[SqliteStatementSpec] = &[
         "relay_diagnostic_summaries",
         "INSERT INTO relay_diagnostic_summaries (relay_url, summary_json, updated_at_ms) VALUES (?1, ?2, ?3) ON CONFLICT(relay_url) DO UPDATE SET summary_json = excluded.summary_json, updated_at_ms = excluded.updated_at_ms;",
     ),
+    write(
+        "relay_read_observations.insert",
+        "relay_read_observations",
+        "INSERT INTO relay_read_observations (id, relay_url, surface, phase, direction, route_group_key, semantic_feed_key, semantic_filter_key, purpose, started_at_ms, first_event_ms, eose_ms, duration_ms, event_count, unique_event_count, final_count, timeout, closed, auth, socket_error, event_limit_reached, bytes_sent, bytes_received, route_evidence_sources_json, created_at_ms) VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11, ?12, ?13, ?14, ?15, ?16, ?17, ?18, ?19, ?20, ?21, ?22, ?23, ?24, ?25);",
+    ),
+    write(
+        "relay_read_observations.delete_old",
+        "relay_read_observations",
+        "DELETE FROM relay_read_observations WHERE created_at_ms < ?1 OR id IN (SELECT id FROM relay_read_observations ORDER BY created_at_ms DESC LIMIT -1 OFFSET ?2);",
+    ),
+    read(
+        "relay_read_scores.select",
+        "relay_read_scores",
+        "SELECT relay_url, surface, phase, direction, route_group_key, filter_shape, purpose, reliability, first_event_speed, eose_speed, useful_yield, unique_yield, penalty, fairness_credit, sample_count, updated_at_ms FROM relay_read_scores WHERE relay_url = ?1 AND surface = ?2 AND phase = ?3 AND direction = ?4 AND route_group_key = ?5 AND filter_shape = ?6 AND purpose = ?7;",
+    ),
+    write(
+        "relay_read_scores.upsert",
+        "relay_read_scores",
+        "INSERT INTO relay_read_scores (relay_url, surface, phase, direction, route_group_key, filter_shape, purpose, reliability, first_event_speed, eose_speed, useful_yield, unique_yield, penalty, fairness_credit, sample_count, updated_at_ms) VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11, ?12, ?13, ?14, ?15, ?16) ON CONFLICT(relay_url, surface, phase, direction, route_group_key, filter_shape, purpose) DO UPDATE SET reliability = excluded.reliability, first_event_speed = excluded.first_event_speed, eose_speed = excluded.eose_speed, useful_yield = excluded.useful_yield, unique_yield = excluded.unique_yield, penalty = excluded.penalty, fairness_credit = excluded.fairness_credit, sample_count = excluded.sample_count, updated_at_ms = excluded.updated_at_ms;",
+    ),
     read(
         "relay_list_suggestions.by_pubkey",
         "relay_list_suggestions",
@@ -52,6 +72,16 @@ pub const DIAGNOSTIC_STATEMENTS: &[SqliteStatementSpec] = &[
         "author_relay_routes.upsert",
         "author_relay_routes",
         "INSERT INTO author_relay_routes (pubkey, relay_url, route_kind, evidence_json, updated_at_ms, expires_at_ms) VALUES (?1, ?2, ?3, ?4, ?5, ?6) ON CONFLICT(pubkey, relay_url, route_kind) DO UPDATE SET evidence_json = excluded.evidence_json, updated_at_ms = excluded.updated_at_ms, expires_at_ms = excluded.expires_at_ms;",
+    ),
+    read(
+        "route_evidence_scores.by_author",
+        "route_evidence_scores",
+        "SELECT author_pubkey, relay_url, surface, source, source_confidence, measured_success, measured_failure, last_success_at_ms, last_failure_at_ms, updated_at_ms FROM route_evidence_scores WHERE author_pubkey = ?1 AND surface = ?2 ORDER BY updated_at_ms DESC, relay_url ASC;",
+    ),
+    write(
+        "route_evidence_scores.upsert",
+        "route_evidence_scores",
+        "INSERT INTO route_evidence_scores (author_pubkey, relay_url, surface, source, source_confidence, measured_success, measured_failure, last_success_at_ms, last_failure_at_ms, updated_at_ms) VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10) ON CONFLICT(author_pubkey, relay_url, surface, source) DO UPDATE SET source_confidence = excluded.source_confidence, measured_success = excluded.measured_success, measured_failure = excluded.measured_failure, last_success_at_ms = excluded.last_success_at_ms, last_failure_at_ms = excluded.last_failure_at_ms, updated_at_ms = excluded.updated_at_ms;",
     ),
     read(
         "relay_route_blocks.recent",

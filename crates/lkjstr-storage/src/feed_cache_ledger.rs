@@ -40,10 +40,10 @@ fn ledger(
     resource_kind: CacheResourceKind,
 ) -> Result<CacheLedgerRecord, serde_json::Error> {
     Ok(CacheLedgerRecord {
-        id: cache_ledger_id(owner_kind, row.resource_id()),
+        id: cache_ledger_id(owner_kind, &row.resource_id()),
         owner_kind,
         resource_kind,
-        resource_id: row.resource_id().to_owned(),
+        resource_id: row.resource_id(),
         score: row.score(),
         created_at: row.updated_at_ms(),
         updated_at: row.updated_at_ms(),
@@ -57,7 +57,7 @@ fn ledger(
 }
 
 trait FeedLedgerRow: Serialize {
-    fn resource_id(&self) -> &str;
+    fn resource_id(&self) -> String;
     fn feed_key(&self) -> &str;
     fn updated_at_ms(&self) -> u64;
     fn score(&self) -> i64;
@@ -66,8 +66,8 @@ trait FeedLedgerRow: Serialize {
 }
 
 impl FeedLedgerRow for FeedCursorRecord {
-    fn resource_id(&self) -> &str {
-        &self.cursor_id
+    fn resource_id(&self) -> String {
+        self.cursor_id.clone()
     }
     fn feed_key(&self) -> &str {
         &self.feed_key
@@ -87,8 +87,8 @@ impl FeedLedgerRow for FeedCursorRecord {
 }
 
 impl FeedLedgerRow for FeedCoverageRecord {
-    fn resource_id(&self) -> &str {
-        &self.coverage_id
+    fn resource_id(&self) -> String {
+        self.coverage_id.clone()
     }
     fn feed_key(&self) -> &str {
         &self.feed_key
@@ -108,11 +108,19 @@ impl FeedLedgerRow for FeedCoverageRecord {
 }
 
 impl FeedLedgerRow for FeedScanHintRecord {
-    fn resource_id(&self) -> &str {
-        &self.hint_id
+    fn resource_id(&self) -> String {
+        [
+            self.semantic_feed_key.as_str(),
+            self.route_group_key.as_str(),
+            self.relay_url.as_str(),
+            self.semantic_filter_key.as_str(),
+            self.direction.as_str(),
+            self.route_fingerprint.as_str(),
+        ]
+        .join("\u{1f}")
     }
     fn feed_key(&self) -> &str {
-        &self.feed_key
+        &self.semantic_feed_key
     }
     fn updated_at_ms(&self) -> u64 {
         self.updated_at_ms
