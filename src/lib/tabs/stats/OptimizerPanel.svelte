@@ -1,10 +1,12 @@
 <script lang="ts">
   import type { FeedScanHint } from '$lib/events/feed-scan-hints';
   import type { RelayReadScore } from '$lib/relays/relay-read-score';
+  import type { ScanOptimizerDebugSnapshot } from '$lib/feed-surface/scan-model-debug';
 
   type Props = {
     scores: readonly RelayReadScore[];
     hints: readonly FeedScanHint[];
+    scanDebug: ScanOptimizerDebugSnapshot | null;
   };
 
   let props: Props = $props();
@@ -14,9 +16,20 @@
   let hintRows = $derived(
     props.hints.toSorted((a, b) => b.updatedAt - a.updatedAt).slice(0, 8),
   );
+  let modelRows = $derived((props.scanDebug?.models ?? []).slice(0, 8));
+  let traceRows = $derived((props.scanDebug?.decisionTraces ?? []).slice(0, 8));
 
   function percent(value: number): string {
     return `${Math.round(value * 100)}%`;
+  }
+
+  function short(value: string | undefined): string {
+    if (!value) return '-';
+    return value.length > 24 ? `${value.slice(0, 24)}…` : value;
+  }
+
+  function time(value: number | undefined): string {
+    return value ? new Date(value).toLocaleTimeString() : '-';
   }
 </script>
 
@@ -27,6 +40,12 @@
   </article>
   <article>
     <strong>{props.hints.length}</strong><span>scan hints</span>
+  </article>
+  <article>
+    <strong>{props.scanDebug?.models.length ?? 0}</strong><span>density models</span>
+  </article>
+  <article>
+    <strong>{props.scanDebug?.storageMode ?? 'loading'}</strong><span>scan storage</span>
   </article>
 </div>
 <h4>Relay read scores</h4>
@@ -72,6 +91,63 @@
         <td>{hint.direction}</td>
         <td>{hint.lastSpanSeconds}s → {hint.recommendedSpanSeconds}s</td>
         <td>{hint.lastFeedback}</td>
+      </tr>
+    {/each}
+  </tbody>
+</table>
+<h4>Scan density models</h4>
+<table class="stats-table">
+  <thead>
+    <tr
+      ><th>Scope</th><th>Feed</th><th>Relay</th><th>Direction</th><th
+        >Density</th
+      ><th>Samples</th><th>Updated</th></tr
+    >
+  </thead>
+  <tbody>
+    {#if !props.scanDebug}
+      <tr><td colspan="7">Loading scan model provider state</td></tr>
+    {:else if props.scanDebug.storageMode === 'unavailable'}
+      <tr
+        ><td colspan="7"
+          >SQLite scan models unavailable: {props.scanDebug.unavailableMessage ??
+            'unavailable'}</td
+        ></tr
+      >
+    {:else if modelRows.length === 0}
+      <tr><td colspan="7">No durable scan density models recorded yet</td></tr>
+    {/if}
+    {#each modelRows as model (model.modelKey)}
+      <tr>
+        <td>{model.scope}</td>
+        <td>{short(model.semanticFeedKey)}</td>
+        <td>{short(model.relayUrl)}</td>
+        <td>{model.direction}</td>
+        <td>{model.densityEventsPerSecond.toFixed(4)}</td>
+        <td>{model.sampleWeight.toFixed(1)}</td>
+        <td>{time(model.updatedAtMs)}</td>
+      </tr>
+    {/each}
+  </tbody>
+</table>
+<h4>Scan decision traces</h4>
+<table class="stats-table">
+  <thead>
+    <tr><th>Trace</th><th>Model</th><th>Feed</th><th>Direction</th><th>Created</th></tr>
+  </thead>
+  <tbody>
+    {#if !props.scanDebug}
+      <tr><td colspan="5">Loading scan decision provider state</td></tr>
+    {:else if traceRows.length === 0}
+      <tr><td colspan="5">No durable scan decision traces recorded yet</td></tr>
+    {/if}
+    {#each traceRows as trace (trace.traceId)}
+      <tr>
+        <td>{short(trace.traceId)}</td>
+        <td>{short(trace.modelKey)}</td>
+        <td>{short(trace.semanticFeedKey)}</td>
+        <td>{trace.direction}</td>
+        <td>{time(trace.createdAtMs)}</td>
       </tr>
     {/each}
   </tbody>

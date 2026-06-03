@@ -13,6 +13,11 @@ import {
   activeStorageOperationCount,
   activeStorageOperationGroups,
 } from '../storage/operation/tracked-operation';
+import {
+  listRecentScanDecisionTraces,
+  listRecentScanDensityModels,
+  readScanOptimizerDebugSnapshot,
+} from '../feed-surface/scan-model-debug';
 
 export type MemoryDebugExport = {
   readonly counters: Record<MemoryCounterKey, number>;
@@ -20,6 +25,12 @@ export type MemoryDebugExport = {
   readonly runtime: ReturnType<typeof runtimeMemorySnapshot>;
   readonly orchestration: ReturnType<typeof orchestrationMetricsSnapshot>;
   readonly storageOperations: ReturnType<typeof activeStorageOperationGroups>;
+};
+
+export type LkjstrDebugExport = {
+  readonly scanModels: typeof listRecentScanDensityModels;
+  readonly scanDecisionTraces: typeof listRecentScanDecisionTraces;
+  readonly storageMode: () => Promise<string>;
 };
 
 let feedWindowPeak = 0;
@@ -59,10 +70,16 @@ export function memoryDebugExport(): MemoryDebugExport {
 declare global {
   interface Window {
     __lkjstrMemoryDebug?: () => MemoryDebugExport;
+    __lkjstrDebug?: LkjstrDebugExport;
   }
 }
 
 export function installMemoryDebugExport(): void {
   if (typeof window === 'undefined') return;
   window.__lkjstrMemoryDebug = memoryDebugExport;
+  window.__lkjstrDebug = {
+    scanModels: listRecentScanDensityModels,
+    scanDecisionTraces: listRecentScanDecisionTraces,
+    storageMode: async () => (await readScanOptimizerDebugSnapshot()).storageMode,
+  };
 }

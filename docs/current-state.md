@@ -167,9 +167,9 @@ Read next: [architecture/network/README.md](architecture/network/README.md) and
   intake, storage operation, and memory counters. Rust now owns initial pure
   orchestration decisions for cache mode, selected relay reads, prefetch,
   hydration, and retention hints. Stats shows real in-memory relay score and
-  scan hint snapshots. Durable scan density rows and traces are the next Stats
-  provider, while durable orchestration, row geometry, and LOD providers remain
-  open.
+  scan hint snapshots, plus durable scan density rows and decision traces when
+  SQLite storage is available. Durable orchestration, row geometry, and LOD
+  providers remain open.
 - Relay publish waiters, paged read leases, deduped read abort listeners, relay
   final-close state, and idle pool eviction have cleanup tests.
 - Runtime counters use static aggregate keys only.

@@ -28,6 +28,10 @@
   import OptimizerPanel from './OptimizerPanel.svelte';
   import { feedScanHintSnapshot } from '$lib/events/feed-scan-hints';
   import { relayReadScoreSnapshot } from '$lib/relays/relay-read-score';
+  import {
+    readScanOptimizerDebugSnapshot,
+    type ScanOptimizerDebugSnapshot,
+  } from '$lib/feed-surface/scan-model-debug';
   import { stats, totalStats } from './relay-totals';
   import { relaySubscriptionRows } from './subscription-rows';
 
@@ -39,6 +43,7 @@
   let storageHealth = $state<SqliteStorageHealthStatus | null>(null);
   let optimizerScores = $state(relayReadScoreSnapshot());
   let scanHints = $state(feedScanHintSnapshot());
+  let scanDebug = $state<ScanOptimizerDebugSnapshot | null>(null);
   let autoRefresh = $state(false);
   let timer: ReturnType<typeof setInterval> | undefined;
   let disposed = false;
@@ -58,11 +63,12 @@
     scanHints = feedScanHintSnapshot();
     await new Promise((resolve) => setTimeout(resolve, 100));
     if (disposed) return;
-    [summaries, jobHealth, cache, storageHealth] = await Promise.all([
+    [summaries, jobHealth, cache, storageHealth, scanDebug] = await Promise.all([
       safeRead(() => listRelayDiagnosticSummaries(), summaries),
       safeRead(() => loadJobHealthSummary(), jobHealth),
       safeRead(() => cacheStatus(), cache),
       safeRead(() => readSqliteStorageHealth(), storageHealth),
+      safeRead(() => readScanOptimizerDebugSnapshot(), scanDebug),
     ]);
   }
 
@@ -183,7 +189,7 @@
   <JobHealthPanel {jobHealth} />
   <CacheStatusPanel {cache} />
   <StorageHealthPanel status={storageHealth} />
-  <OptimizerPanel scores={optimizerScores} hints={scanHints} />
+  <OptimizerPanel scores={optimizerScores} hints={scanHints} scanDebug={scanDebug} />
   <RuntimeCounters />
   <RuntimeMemoryPanel {memory} />
 </section>
