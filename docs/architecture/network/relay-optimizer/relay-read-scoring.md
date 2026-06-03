@@ -6,8 +6,9 @@ Relay read scoring orders enabled relay attempts for a specific request context.
 It is advisory. It cannot delete a route, bypass selected fallback, override
 user blocks, or make cache absence claims.
 
-Status: Rust owns the pure reducer in `crates/lkjstr-relays/src/read_score/`.
-Product wiring, durable score rows, and the WASM bridge are still open.
+Status: Rust owns the pure reducer in `crates/lkjstr-relays/src/read_score/`,
+`lkjstr-storage` owns durable score rows, and `lkjstr-web` exposes a relay-score
+WASM bridge. Product read-path wiring and Stats projection are still open.
 
 ## Stable Key
 

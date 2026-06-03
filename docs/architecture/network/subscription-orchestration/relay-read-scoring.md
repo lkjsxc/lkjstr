@@ -8,9 +8,10 @@ without changing correctness. See
 for the target Rust-owned scoring model.
 
 Status: Rust owns the pure score reducer in
-`crates/lkjstr-relays/src/read_score/`. TypeScript still records product read
-statuses and needs the WASM bridge plus durable optimizer rows before the
-current wrapper can be deleted.
+`crates/lkjstr-relays/src/read_score/`. `lkjstr-web` exposes the WASM bridge and
+`lkjstr-storage` owns durable optimizer rows. TypeScript still records product
+read statuses, so the compatibility wrapper remains until Rust product reads own
+the path.
 
 ## Score Key
 

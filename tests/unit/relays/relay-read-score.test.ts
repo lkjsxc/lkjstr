@@ -1,4 +1,4 @@
-import { describe, expect, it } from 'vitest';
+import { afterEach, describe, expect, it } from 'vitest';
 import {
   initialRelayReadScore,
   scoreRelayCandidates,
@@ -9,6 +9,10 @@ import {
 } from '../../../src/lib/relays/relay-read-score';
 
 describe('relay read scoring', () => {
+  afterEach(() => {
+    Reflect.deleteProperty(globalThis, 'window');
+  });
+
   it('rewards fast successful reads and penalizes failures', () => {
     const key = scoreKey('wss://relay.example/');
     const initial = initialRelayReadScore(key);
@@ -40,6 +44,42 @@ describe('relay read scoring', () => {
     expect(auth.score).toBeLessThan(initial.score);
   });
 
+  it('uses the Rust bridge when it is available', () => {
+    const key = scoreKey('wss://relay.example/');
+    Object.defineProperty(globalThis, 'window', {
+      configurable: true,
+      value: {
+        __lkjstrRelayReadScoreBridge: {
+          initial: (keyJson: string, updatedAtMs: number) => ({
+            ok: true,
+            data: bridgeScore(JSON.parse(keyJson), 0.99, updatedAtMs),
+          }),
+          update: (_scoreJson: string, observationJson: string) => {
+            const observation = JSON.parse(observationJson) as {
+              readonly updatedAtMs: number;
+            };
+            return {
+              ok: true,
+              data: bridgeScore(key, 0.77, observation.updatedAtMs),
+            };
+          },
+        },
+      },
+    });
+
+    const initial = initialRelayReadScore(key);
+    const updated = updateRelayReadScore(initial, {
+      durationMs: 1,
+      eventCount: 1,
+      finalCount: 1,
+      updatedAt: 123,
+    });
+
+    expect(initial.score).toBe(0.99);
+    expect(updated.score).toBe(0.77);
+    expect(updated.updatedAt).toBe(123);
+  });
+
   it('orders candidates by score without starving low-score relays', () => {
     const store = memoryStore();
     const fast = initialRelayReadScore(scoreKey('wss://fast.example/'));
@@ -63,6 +103,26 @@ function memoryStore(): RelayReadScoreStore {
 
 function scoreKey(relayUrl: string): RelayReadScoreKey {
   return { relayUrl, ...context() };
+}
+
+function bridgeScore(
+  key: RelayReadScoreKey,
+  score: number,
+  updatedAtMs: number,
+) {
+  return {
+    key,
+    reliability: score,
+    firstEventSpeed: score,
+    eoseSpeed: score,
+    usefulYield: score,
+    uniqueYield: score,
+    penalty: 0,
+    fairnessCredit: 0,
+    sampleCount: 1,
+    updatedAtMs,
+    score,
+  };
 }
 
 function context() {

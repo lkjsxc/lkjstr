@@ -9,6 +9,7 @@ mod nip07_host;
 mod protocol_bridge;
 #[cfg(target_arch = "wasm32")]
 pub mod relay_host;
+mod relay_score;
 #[cfg(target_arch = "wasm32")]
 mod relay_settings_host;
 mod response;
@@ -106,6 +107,26 @@ pub fn decode_relay_message_json(json: &str) -> JsValue {
 #[wasm_bindgen]
 pub fn decode_nip19(text: &str) -> JsValue {
     protocol_bridge::decode_nip19_json(text)
+}
+
+#[wasm_bindgen]
+pub fn relay_read_score_initial_json(key_json: &str, updated_at_ms: u64) -> JsValue {
+    relay_score::initial_score_json(key_json, updated_at_ms)
+}
+
+#[wasm_bindgen]
+pub fn relay_read_score_update_json(score_json: &str, observation_json: &str) -> JsValue {
+    relay_score::update_score_json(score_json, observation_json)
+}
+
+#[wasm_bindgen]
+pub fn relay_read_score_order_json(scores_json: &str, now_ms: u64) -> JsValue {
+    relay_score::order_scores_json(scores_json, now_ms)
+}
+
+#[wasm_bindgen]
+pub fn relay_read_score_normalize_filter_shape(raw: &str) -> JsValue {
+    relay_score::normalize_filter_shape_json(raw)
 }
 
 #[wasm_bindgen]

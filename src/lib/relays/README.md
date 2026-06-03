@@ -18,5 +18,7 @@ subscription management.
   subscriptions shown in Stats.
 - Relay route helpers own selected fallback preservation, targeted author route
   caps, discovery groups, route blocks, and indexed route evidence lookup.
+- `relay-read-score-bridge.ts` uses the Rust/WASM score bridge when available
+  and keeps a deterministic TypeScript fallback while product reads remain here.
 - `routeGroupsForPaging` preserves selected read relays as the fallback
   correctness set while targeted route groups guide scheduling.

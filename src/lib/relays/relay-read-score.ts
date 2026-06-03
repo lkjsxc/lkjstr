@@ -85,16 +85,23 @@ function observation(
   status: ReadPageRelayStatus,
   updatedAt: number,
 ): RelayReadScoreInput {
+  const startedAtMs = Math.max(0, updatedAt - status.durationMs);
   return {
-    eoseMs: status.eose ? status.durationMs : undefined,
+    startedAtMs,
+    firstEventMs:
+      status.candidateCount > 0 ? startedAtMs + status.durationMs : undefined,
+    eoseMs: status.eose ? startedAtMs + status.durationMs : undefined,
     durationMs: status.durationMs,
     eventCount: status.candidateCount,
+    uniqueEventCount: status.candidateCount,
     finalCount: status.finalCount,
     timeout: status.timeout,
     closed: status.closed || status.socketClosed,
     auth: status.auth,
     socketError: status.socketError,
     eventLimitReached: status.eventLimitReached,
+    bytesSent: 0,
+    bytesReceived: 0,
     updatedAt,
   };
 }

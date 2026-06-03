@@ -9,25 +9,32 @@ export type RelayReadScoreKey = {
 };
 
 export type RelayReadScoreInput = {
+  readonly startedAtMs?: number;
   readonly firstEventMs?: number;
   readonly eoseMs?: number;
   readonly durationMs?: number;
   readonly eventCount: number;
+  readonly uniqueEventCount?: number;
   readonly finalCount: number;
   readonly timeout?: boolean;
   readonly closed?: boolean;
   readonly auth?: boolean;
   readonly socketError?: boolean;
   readonly eventLimitReached?: boolean;
+  readonly bytesSent?: number;
+  readonly bytesReceived?: number;
   readonly updatedAt: number;
 };
 
 export type RelayReadScore = {
   readonly key: RelayReadScoreKey;
   readonly reliability: number;
-  readonly speed: number;
-  readonly yield: number;
+  readonly firstEventSpeed: number;
+  readonly eoseSpeed: number;
+  readonly usefulYield: number;
+  readonly uniqueYield: number;
   readonly penalty: number;
+  readonly fairnessCredit: number;
   readonly score: number;
   readonly sampleCount: number;
   readonly updatedAt: number;
