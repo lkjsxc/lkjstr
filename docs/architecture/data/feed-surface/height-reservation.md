@@ -7,6 +7,10 @@ reference previews, and media dimensions do not visibly move the user's anchor.
 
 ## Contract
 
+Status: the shipped Svelte scroll surface applies session-measured min-height
+reservation and compensates height changes above the viewport. Rust/WASM
+feature estimates and SQLite persistence remain the target durable path.
+
 - Every row has a stable geometry key derived from real row identity and stable
   content features.
 - Rows reserve a predicted height before profile, reference, media, and action
@@ -46,7 +50,8 @@ Tab ids, pane ids, owner handles, and request ids are not geometry keys.
 3. Apply a reserved min-height or virtualizer estimate.
 4. Measure materialized rows with `ResizeObserver`.
 5. If the row is above the viewport, compensate scroll by the height delta.
-6. Persist observations through the SQLite worker.
+6. Persist observations through the SQLite worker when the durable geometry
+   repository is wired.
 7. Update the model and expose counts in Stats.
 
 ## Media And Previews

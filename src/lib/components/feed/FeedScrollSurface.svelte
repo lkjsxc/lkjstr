@@ -2,6 +2,7 @@
   import type { Snippet } from 'svelte';
   import { VList } from 'virtua/svelte';
   import EventTreeListNearEnd from '$lib/components/events/EventTreeListNearEnd.svelte';
+  import FeedMeasuredRow from './FeedMeasuredRow.svelte';
   import { isNearEnd } from '$lib/feed-surface/near-end';
   import type { OlderLoadTrigger } from '$lib/feed-surface/older-load-mode';
   import {
@@ -130,9 +131,7 @@
     onscroll={handleScroll}
   >
     {#snippet children(item)}
-      <div class="feed-scroll-item">
-        {@render row(item)}
-      </div>
+      <FeedMeasuredRow {item} {getKey} {scrollElement} {row} />
     {/snippet}
   </VList>
   <EventTreeListNearEnd
