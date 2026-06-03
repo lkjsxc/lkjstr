@@ -39,7 +39,9 @@
     scroll: HTMLElement | undefined,
   ): boolean {
     if (!scroll) return false;
-    return node.getBoundingClientRect().bottom < scroll.getBoundingClientRect().top;
+    return (
+      node.getBoundingClientRect().bottom < scroll.getBoundingClientRect().top
+    );
   }
 </script>
 

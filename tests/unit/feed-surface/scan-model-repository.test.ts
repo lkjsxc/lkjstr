@@ -30,11 +30,11 @@ describe('scan model repository matching', () => {
 
   it('orders matching rows by fallback scope', () => {
     const rows = [model('Surface'), model('RelayFilter'), model('Exact')];
-    expect(selectMatchingScanModelsForContext(rows, context()).map((row) => row.scope)).toEqual([
-      'Exact',
-      'RelayFilter',
-      'Surface',
-    ]);
+    expect(
+      selectMatchingScanModelsForContext(rows, context()).map(
+        (row) => row.scope,
+      ),
+    ).toEqual(['Exact', 'RelayFilter', 'Surface']);
   });
 });
 
@@ -90,7 +90,9 @@ function scopeFields(
 
 const usesSurface = (scope: ScanModelScope) =>
   ['Exact', 'RouteGroup', 'SurfaceFilter', 'Surface'].includes(scope);
-const usesRoute = (scope: ScanModelScope) => ['Exact', 'RouteGroup'].includes(scope);
-const usesRelay = (scope: ScanModelScope) => ['Exact', 'RelayFilter'].includes(scope);
+const usesRoute = (scope: ScanModelScope) =>
+  ['Exact', 'RouteGroup'].includes(scope);
+const usesRelay = (scope: ScanModelScope) =>
+  ['Exact', 'RelayFilter'].includes(scope);
 const usesFilter = (scope: ScanModelScope) =>
   ['Exact', 'RelayFilter', 'SurfaceFilter'].includes(scope);

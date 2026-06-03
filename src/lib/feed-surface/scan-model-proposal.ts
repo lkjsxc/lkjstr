@@ -1,4 +1,8 @@
-import type { ScanDensityModelRecord, ScanModelContext, ScanModelScope } from './scan-model-records';
+import type {
+  ScanDensityModelRecord,
+  ScanModelContext,
+  ScanModelScope,
+} from './scan-model-records';
 import {
   clampSpan,
   confidence,

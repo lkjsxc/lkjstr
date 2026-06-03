@@ -63,13 +63,15 @@
     scanHints = feedScanHintSnapshot();
     await new Promise((resolve) => setTimeout(resolve, 100));
     if (disposed) return;
-    [summaries, jobHealth, cache, storageHealth, scanDebug] = await Promise.all([
-      safeRead(() => listRelayDiagnosticSummaries(), summaries),
-      safeRead(() => loadJobHealthSummary(), jobHealth),
-      safeRead(() => cacheStatus(), cache),
-      safeRead(() => readSqliteStorageHealth(), storageHealth),
-      safeRead(() => readScanOptimizerDebugSnapshot(), scanDebug),
-    ]);
+    [summaries, jobHealth, cache, storageHealth, scanDebug] = await Promise.all(
+      [
+        safeRead(() => listRelayDiagnosticSummaries(), summaries),
+        safeRead(() => loadJobHealthSummary(), jobHealth),
+        safeRead(() => cacheStatus(), cache),
+        safeRead(() => readSqliteStorageHealth(), storageHealth),
+        safeRead(() => readScanOptimizerDebugSnapshot(), scanDebug),
+      ],
+    );
   }
 
   async function safeRead<T>(read: () => Promise<T>, fallback: T): Promise<T> {
@@ -189,7 +191,7 @@
   <JobHealthPanel {jobHealth} />
   <CacheStatusPanel {cache} />
   <StorageHealthPanel status={storageHealth} />
-  <OptimizerPanel scores={optimizerScores} hints={scanHints} scanDebug={scanDebug} />
+  <OptimizerPanel scores={optimizerScores} hints={scanHints} {scanDebug} />
   <RuntimeCounters />
   <RuntimeMemoryPanel {memory} />
 </section>

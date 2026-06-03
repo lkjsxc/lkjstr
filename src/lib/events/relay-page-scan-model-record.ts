@@ -62,19 +62,23 @@ function scanObservation(
   context: ScanModelContext,
 ): ScanModelObservation {
   const completedAtMs = Date.now();
-  const status = input.read.statuses.find((item) => item.relay === input.relayUrl);
+  const status = input.read.statuses.find(
+    (item) => item.relay === input.relayUrl,
+  );
   const density = input.read.density.perRelay.find(
     (item) => item.relay === input.relayUrl,
   );
   const eventCount = density?.eventCount ?? status?.candidateCount ?? 0;
   const uniqueEventCount = density?.uniqueCount ?? eventCount;
-  const finalVisibleCount = density?.observedCount ?? status?.finalCount ?? eventCount;
+  const finalVisibleCount =
+    density?.observedCount ?? status?.finalCount ?? eventCount;
   return {
     ...context,
     sinceSeconds: input.segment.since ?? 0,
     untilSeconds: input.segment.until ?? input.segment.since ?? 0,
     requestedLimit: input.filter.limit ?? input.request.pageSize,
-    effectiveLimit: density?.limit ?? input.filter.limit ?? input.request.pageSize,
+    effectiveLimit:
+      density?.limit ?? input.filter.limit ?? input.request.pageSize,
     eventCount,
     uniqueEventCount,
     finalVisibleCount,

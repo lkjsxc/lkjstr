@@ -57,14 +57,24 @@ export async function warmInitialSpan(
             filterKey,
             direction,
             effectiveLimit: filter.limit ?? request.pageSize,
-            previousSpanSeconds: hints.find((hint) => hint.relayUrl === relayUrl)
-              ?.recommendedSpanSeconds,
+            previousSpanSeconds: hints.find(
+              (hint) => hint.relayUrl === relayUrl,
+            )?.recommendedSpanSeconds,
           });
-          if (span === undefined && !hints.some((hint) => hint.relayUrl === relayUrl)) {
+          if (
+            span === undefined &&
+            !hints.some((hint) => hint.relayUrl === relayUrl)
+          ) {
             countRuntime('timeline', 'warmHintFallbacks');
             return relaySegmentInitialSpan;
           }
-          spans.push(span ?? chooseWarmSpan({ defaultSpanSeconds: relaySegmentInitialSpan, hints }));
+          spans.push(
+            span ??
+              chooseWarmSpan({
+                defaultSpanSeconds: relaySegmentInitialSpan,
+                hints,
+              }),
+          );
         }
       }
     }
@@ -161,4 +171,3 @@ async function recordDecisionTrace(
     recordJson: { context, proposal },
   });
 }
-

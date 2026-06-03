@@ -10,7 +10,10 @@ import type { ScanModelContext } from '../../../src/lib/feed-surface/scan-model-
 describe('scan model learning', () => {
   it('treats limit hits as density evidence instead of simple halves', () => {
     const models = updateScanModelsFromObservation({
-      observation: observation({ eventLimitReached: true, finalVisibleCount: 100 }),
+      observation: observation({
+        eventLimitReached: true,
+        finalVisibleCount: 100,
+      }),
       previousModels: [],
     });
     const proposal = proposeScanSpanFromModels({

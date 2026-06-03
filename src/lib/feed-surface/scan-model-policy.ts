@@ -3,7 +3,10 @@ import {
   relaySegmentMaxSpan,
   relaySegmentMinSpan,
 } from '$lib/events/relay-page-segments';
-import type { ScanDensityModelRecord, ScanModelScope } from './scan-model-records';
+import type {
+  ScanDensityModelRecord,
+  ScanModelScope,
+} from './scan-model-records';
 
 export const targetNumerator = 2;
 export const targetDenominator = 3;
@@ -50,6 +53,7 @@ export function confidence(
   weight: number,
   model: ScanDensityModelRecord,
 ): number {
-  const value = (weight / (weight + 1)) * scopeWeight(model.scope) * quality(model);
+  const value =
+    (weight / (weight + 1)) * scopeWeight(model.scope) * quality(model);
   return Math.max(0, Math.min(1, value));
 }

@@ -61,7 +61,9 @@ export async function loadOlderNotificationRelayPage(args: {
               cursor: bounds,
             }),
           direction: 'older',
-          routeFingerprint: JSON.stringify([notificationGroup(args.accountPubkey, selected)]),
+          routeFingerprint: JSON.stringify([
+            notificationGroup(args.accountPubkey, selected),
+          ]),
           before: {
             createdAt: args.olderCursorCreatedAt,
             id: 'f'.repeat(64),

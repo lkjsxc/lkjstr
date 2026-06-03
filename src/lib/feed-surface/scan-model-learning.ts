@@ -1,4 +1,8 @@
-export { scanModelKey, scanModelScopes, scopedContext } from './scan-model-keys';
+export {
+  scanModelKey,
+  scanModelScopes,
+  scopedContext,
+} from './scan-model-keys';
 export {
   observedDensity,
   spanSeconds,

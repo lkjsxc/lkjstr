@@ -55,7 +55,10 @@ export function syncDerivedMemoryCounters(): void {
   );
   setMemoryCounter('profile-summary-cache-count', profileCacheSize());
   setMemoryCounter('token-cache-count', contentTokenCacheSize());
-  setMemoryCounter('feed-row-height-model-count', feedRowHeightReservationCount());
+  setMemoryCounter(
+    'feed-row-height-model-count',
+    feedRowHeightReservationCount(),
+  );
 }
 
 export function memoryDebugExport(): MemoryDebugExport {
@@ -82,6 +85,7 @@ export function installMemoryDebugExport(): void {
   window.__lkjstrDebug = {
     scanModels: listRecentScanDensityModels,
     scanDecisionTraces: listRecentScanDecisionTraces,
-    storageMode: async () => (await readScanOptimizerDebugSnapshot()).storageMode,
+    storageMode: async () =>
+      (await readScanOptimizerDebugSnapshot()).storageMode,
   };
 }

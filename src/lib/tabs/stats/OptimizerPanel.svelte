@@ -42,10 +42,14 @@
     <strong>{props.hints.length}</strong><span>scan hints</span>
   </article>
   <article>
-    <strong>{props.scanDebug?.models.length ?? 0}</strong><span>density models</span>
+    <strong>{props.scanDebug?.models.length ?? 0}</strong><span
+      >density models</span
+    >
   </article>
   <article>
-    <strong>{props.scanDebug?.storageMode ?? 'loading'}</strong><span>scan storage</span>
+    <strong>{props.scanDebug?.storageMode ?? 'loading'}</strong><span
+      >scan storage</span
+    >
   </article>
 </div>
 <h4>Relay read scores</h4>
@@ -110,8 +114,8 @@
     {:else if props.scanDebug.storageMode === 'unavailable'}
       <tr
         ><td colspan="7"
-          >SQLite scan models unavailable: {props.scanDebug.unavailableMessage ??
-            'unavailable'}</td
+          >SQLite scan models unavailable: {props.scanDebug
+            .unavailableMessage ?? 'unavailable'}</td
         ></tr
       >
     {:else if modelRows.length === 0}
@@ -133,7 +137,11 @@
 <h4>Scan decision traces</h4>
 <table class="stats-table">
   <thead>
-    <tr><th>Trace</th><th>Model</th><th>Feed</th><th>Direction</th><th>Created</th></tr>
+    <tr
+      ><th>Trace</th><th>Model</th><th>Feed</th><th>Direction</th><th
+        >Created</th
+      ></tr
+    >
   </thead>
   <tbody>
     {#if !props.scanDebug}

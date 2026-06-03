@@ -1,5 +1,13 @@
-import type { ScanDensityModelRecord, ScanModelContext, ScanModelScope } from './scan-model-records';
-import { scanModelKey, scanModelScopes, scopedContext } from './scan-model-keys';
+import type {
+  ScanDensityModelRecord,
+  ScanModelContext,
+  ScanModelScope,
+} from './scan-model-records';
+import {
+  scanModelKey,
+  scanModelScopes,
+  scopedContext,
+} from './scan-model-keys';
 import {
   minimumDensity,
   staleHalfLifeMs,
@@ -49,11 +57,17 @@ function updateModel(
   const weight = observationWeight(observation);
   const priorWeight = previous?.sampleWeight ?? 0;
   const sampleWeight = priorWeight + weight;
-  const priorDensity = previous?.densityEventsPerSecond ?? density ?? minimumDensity;
+  const priorDensity =
+    previous?.densityEventsPerSecond ?? density ?? minimumDensity;
   const nextDensity = blendDensity(priorDensity, priorWeight, density, weight);
-  const complete = (previous?.completeWindowCount ?? 0) + count(completeObservation(observation));
-  const dense = (previous?.denseWindowCount ?? 0) + count(observation.eventLimitReached);
-  const incomplete = (previous?.incompleteWindowCount ?? 0) + count(!completeObservation(observation));
+  const complete =
+    (previous?.completeWindowCount ?? 0) +
+    count(completeObservation(observation));
+  const dense =
+    (previous?.denseWindowCount ?? 0) + count(observation.eventLimitReached);
+  const incomplete =
+    (previous?.incompleteWindowCount ?? 0) +
+    count(!completeObservation(observation));
   return {
     ...scoped,
     modelKey: scanModelKey(observation, scope),
@@ -65,9 +79,12 @@ function updateModel(
     decaysAfterMs: observation.completedAtMs + staleHalfLifeMs,
     completeWindowCount: complete,
     denseWindowCount: dense,
-    sparseWindowCount: (previous?.sparseWindowCount ?? 0) + count(sparseObservation(observation)),
+    sparseWindowCount:
+      (previous?.sparseWindowCount ?? 0) +
+      count(sparseObservation(observation)),
     incompleteWindowCount: incomplete,
-    failureWindowCount: (previous?.failureWindowCount ?? 0) + count(failure(observation)),
+    failureWindowCount:
+      (previous?.failureWindowCount ?? 0) + count(failure(observation)),
     limitHitRate: rate(dense, complete + dense + incomplete),
     incompleteRate: rate(incomplete, complete + dense + incomplete),
     lastGoodSpanSeconds: completeObservation(observation)
@@ -84,7 +101,9 @@ function blendDensity(
   weight: number,
 ): number {
   if (density === undefined || priorWeight + weight <= 0) return priorDensity;
-  return ((priorDensity * priorWeight) + density * weight) / (priorWeight + weight);
+  return (
+    (priorDensity * priorWeight + density * weight) / (priorWeight + weight)
+  );
 }
 
 export function observedDensity(
@@ -92,7 +111,8 @@ export function observedDensity(
 ): number | undefined {
   const span = spanSeconds(observation);
   if (observation.eventLimitReached) return observation.effectiveLimit / span;
-  if (completeObservation(observation)) return observation.finalVisibleCount / span;
+  if (completeObservation(observation))
+    return observation.finalVisibleCount / span;
   const weak = Math.max(
     observation.finalVisibleCount,
     observation.uniqueEventCount,
@@ -106,7 +126,8 @@ export function spanSeconds(observation: ScanModelObservation): number {
 }
 
 function observationWeight(observation: ScanModelObservation): number {
-  if (observation.eventLimitReached || completeObservation(observation)) return 1;
+  if (observation.eventLimitReached || completeObservation(observation))
+    return 1;
   return observedDensity(observation) === undefined ? 0 : 0.25;
 }
 
@@ -122,7 +143,12 @@ function sparseObservation(observation: ScanModelObservation): boolean {
 }
 
 function failure(observation: ScanModelObservation): boolean {
-  return observation.timeout || observation.closed || observation.auth || observation.socketError;
+  return (
+    observation.timeout ||
+    observation.closed ||
+    observation.auth ||
+    observation.socketError
+  );
 }
 
 function rate(countValue: number, total: number): number {

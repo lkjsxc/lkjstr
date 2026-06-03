@@ -8,17 +8,17 @@ runtime honest while the feed runtime cutover continues.
 
 ## Surface Ledger
 
-| Surface | Adaptive grouped scan | Rust/WASM planner | SQLite density read | Observation and model write | Trace and Stats | Fallback |
-| ------- | --------------------- | ----------------- | ------------------- | --------------------------- | --------------- | -------- |
-| Home | implemented through timeline page reads | open as primary product path | implemented for warm span choice | implemented for older and newer scans | Stats and debug read durable rows | selected relays and current span policy |
-| Global | implemented through timeline page reads | open as primary product path | implemented for warm span choice | implemented for older and newer scans | Stats and debug read durable rows | selected relays and current span policy |
-| Profile posts | implemented through profile route plans | open as primary product path | implemented for warm span choice | implemented for older and newer scans | Stats and debug read durable rows | selected relays plus route groups |
-| Notifications | implemented for older notification feed pages | open as primary product path | implemented for warm span choice | implemented for older scans | Stats and debug read durable rows | selected notification relays |
-| Custom Request event-list | implemented only for safe time-windowable filters | open as primary product path | open for product span choice | current hints and coverage now; density rows open | durable rows visible when present | selected relays and exact mode when unsafe |
-| Thread | exact read semantics | not used | not used | not used | not used | exact id and bounded thread filters |
-| Search | exact search semantics | not used | not used | not used | not used | cached search plus relay NIP-50 |
-| Author Context | exact author context semantics | not used | not used | not used | not used | exact author reads |
-| Metadata and references | exact lookup semantics | not used | not used | not used | not used | exact ids, profiles, and references |
+| Surface                   | Adaptive grouped scan                             | Rust/WASM planner            | SQLite density read              | Observation and model write                       | Trace and Stats                   | Fallback                                   |
+| ------------------------- | ------------------------------------------------- | ---------------------------- | -------------------------------- | ------------------------------------------------- | --------------------------------- | ------------------------------------------ |
+| Home                      | implemented through timeline page reads           | open as primary product path | implemented for warm span choice | implemented for older and newer scans             | Stats and debug read durable rows | selected relays and current span policy    |
+| Global                    | implemented through timeline page reads           | open as primary product path | implemented for warm span choice | implemented for older and newer scans             | Stats and debug read durable rows | selected relays and current span policy    |
+| Profile posts             | implemented through profile route plans           | open as primary product path | implemented for warm span choice | implemented for older and newer scans             | Stats and debug read durable rows | selected relays plus route groups          |
+| Notifications             | implemented for older notification feed pages     | open as primary product path | implemented for warm span choice | implemented for older scans                       | Stats and debug read durable rows | selected notification relays               |
+| Custom Request event-list | implemented only for safe time-windowable filters | open as primary product path | open for product span choice     | current hints and coverage now; density rows open | durable rows visible when present | selected relays and exact mode when unsafe |
+| Thread                    | exact read semantics                              | not used                     | not used                         | not used                                          | not used                          | exact id and bounded thread filters        |
+| Search                    | exact search semantics                            | not used                     | not used                         | not used                                          | not used                          | cached search plus relay NIP-50            |
+| Author Context            | exact author context semantics                    | not used                     | not used                         | not used                                          | not used                          | exact author reads                         |
+| Metadata and references   | exact lookup semantics                            | not used                     | not used                         | not used                                          | not used                          | exact ids, profiles, and references        |
 
 ## Matching Rules
 
