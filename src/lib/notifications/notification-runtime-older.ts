@@ -48,6 +48,11 @@ export async function loadOlderNotificationRelayPage(args: {
     selected.length > 0
       ? await readRelayFeedGroups({
           key: notificationFeedKey(args.accountPubkey, selected, args.pageSize),
+          semanticFeedKey: notificationFeedKey(
+            args.accountPubkey,
+            selected,
+            args.pageSize,
+          ),
           groups: [notificationGroup(args.accountPubkey, selected)],
           filters: (_group, bounds) =>
             buildNotificationFilters({
@@ -56,6 +61,7 @@ export async function loadOlderNotificationRelayPage(args: {
               cursor: bounds,
             }),
           direction: 'older',
+          routeFingerprint: JSON.stringify([notificationGroup(args.accountPubkey, selected)]),
           before: {
             createdAt: args.olderCursorCreatedAt,
             id: 'f'.repeat(64),

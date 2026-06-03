@@ -12,6 +12,7 @@ import type {
 export async function selectScanModelsForContext(
   context: ScanModelContext,
 ): Promise<ScanDensityModelRecord[] | undefined> {
+  if (typeof Worker === 'undefined') return undefined;
   if (!(await ensureEventGraphSchema())) return undefined;
   const rows = await queryRecords<ScanDensityModelRecord>(
     "SELECT record_json FROM feed_scan_density_models WHERE direction = ?1 AND (semantic_feed_key = ?2 OR semantic_feed_key = '') ORDER BY updated_at_ms DESC LIMIT 64;",
@@ -100,6 +101,7 @@ function traceStep(row: ScanDecisionTraceRecord): SqlStep {
 
 async function batch(steps: readonly SqlStep[]): Promise<boolean> {
   if (steps.length === 0) return true;
+  if (typeof Worker === 'undefined') return false;
   if (!(await ensureEventGraphSchema())) return false;
   const response = await sendSqliteStorage(
     { kind: 'batch', mode: 'readwrite', steps },
@@ -112,6 +114,7 @@ async function queryRecords<T>(
   statement: string,
   params: readonly SqlScalar[],
 ): Promise<T[]> {
+  if (typeof Worker === 'undefined') return [];
   const response = await sendSqliteStorage(
     { kind: 'query', statement, params, rowLimit: 64 },
     { deadlineMs: 10_000 },

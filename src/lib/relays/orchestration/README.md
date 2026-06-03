@@ -23,6 +23,7 @@ Browser-local planner between feed runtimes and the relay pool.
 - [orchestrator-types.ts](orchestrator-types.ts): SubscriptionOrchestrator
 - [orchestrator-adapter.ts](orchestrator-adapter.ts): test manager adapter
 - [page-reads.ts](page-reads.ts): readPageByIntent
+- [page-read-keys.ts](page-read-keys.ts): page read and stable scan keys
 - [live-demand-handles.ts](live-demand-handles.ts): replaceable channel
   releases for route refresh
 - [runtime-demand.ts](runtime-demand.ts): demand builders

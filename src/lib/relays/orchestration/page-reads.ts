@@ -2,8 +2,6 @@ import { readRelayFeedGroups } from '../../events/relay-page';
 import type { RelayGroupPageResult } from '../../events/relay-page';
 import { planPagingRouteGroups } from './route-plan';
 import type { PageIntent } from './intent-types';
-import type { FeedCursorPoint } from '../../events/types';
-import type { RelayRouteGroup } from '../relay-route-types';
 import type { RelayRoutePurpose } from '../relay-route-types';
 import type {
   PageReadExecutor,
@@ -12,64 +10,19 @@ import type {
 import type { ReadPageOptions } from '../subscription-manager-types';
 import type { ReadPageResult } from '../read-page-status';
 import { pageIntentSubscriptionDescriptor } from '../subscription-descriptor';
+import {
+  pageIntentBounds,
+  pageIntentScanKey,
+  pageIntentSemanticKey,
+  routeGroupFingerprint,
+} from './page-read-keys';
 
-function hashSemanticKey(value: string): string {
-  let hash = 0;
-  for (let index = 0; index < value.length; index += 1) {
-    hash = (hash * 31 + value.charCodeAt(index)) >>> 0;
-  }
-  return hash.toString(36).padStart(8, '0').slice(0, 8);
-}
-
-export function pageIntentSemanticKey(intent: PageIntent): string {
-  const bounds = pageIntentBounds(intent);
-  const authors = [...intent.authors].sort().join(',');
-  const before = cursorKey(bounds.before);
-  const after = cursorKey(bounds.after);
-  const relayKey = [...intent.selectedRelays].sort().join('\u0000');
-  const filters = relayFilterKey(intent.relayFilters ?? []);
-  const raw = [
-    intent.surface,
-    intent.phase,
-    intent.direction,
-    authors,
-    String(intent.pageSize),
-    before,
-    after,
-    relayKey,
-    intent.routeFingerprint ?? '',
-    intent.purpose ?? 'feed',
-    filters,
-  ].join('|');
-  return `page:${hashSemanticKey(raw)}`;
-}
-
-export function pageIntentBounds(intent: PageIntent): {
-  readonly before?: FeedCursorPoint;
-  readonly after?: FeedCursorPoint;
-} {
-  if (intent.before || intent.after)
-    return { before: intent.before, after: intent.after };
-  if (intent.direction === 'older') return { before: intent.cursor };
-  if (intent.direction === 'newer') return { after: intent.cursor };
-  return {};
-}
-
-export function routeGroupFingerprint(
-  groups: readonly RelayRouteGroup[],
-): string {
-  const records = groups
-    .map((group) => [
-      group.key,
-      [...group.relays].sort(),
-      [...(group.authors ?? [])].sort(),
-      group.source,
-    ])
-    .sort((left, right) =>
-      JSON.stringify(left).localeCompare(JSON.stringify(right)),
-    );
-  return JSON.stringify(records);
-}
+export {
+  pageIntentBounds,
+  pageIntentScanKey,
+  pageIntentSemanticKey,
+  routeGroupFingerprint,
+} from './page-read-keys';
 
 export function resolvePagingRoutePurpose(
   intent: Pick<PageIntent, 'surface'>,
@@ -82,7 +35,7 @@ export function resolvePagingRoutePurpose(
 
 export function plannedPageIntent(
   intent: PageIntent,
-  groups: readonly RelayRouteGroup[],
+  groups: Parameters<typeof routeGroupFingerprint>[0],
 ): PageIntent {
   return {
     ...intent,
@@ -92,7 +45,7 @@ export function plannedPageIntent(
 
 export type PlannedTimelinePageIntent = {
   readonly intent: PageIntent;
-  readonly groups: readonly RelayRouteGroup[];
+  readonly groups: Parameters<typeof routeGroupFingerprint>[0];
   readonly key: string;
 };
 
@@ -130,9 +83,11 @@ export function readPlannedTimelinePage(
     throw new Error('PageIntent.filters required for timeline paging');
   return readRelayFeedGroups({
     key: plan.key,
+    semanticFeedKey: pageIntentScanKey(plan.intent),
     groups: plan.groups,
     filters,
     direction: plan.intent.direction,
+    routeFingerprint: plan.intent.routeFingerprint,
     ...pageIntentBounds(plan.intent),
     pageSize: plan.intent.pageSize,
     maxSegments: plan.intent.maxSegments,
@@ -141,31 +96,6 @@ export function readPlannedTimelinePage(
     signal: options.signal,
     onSnapshot: options.onSnapshot,
   });
-}
-
-function cursorKey(cursor: FeedCursorPoint | undefined): string {
-  return cursor ? `${cursor.createdAt}:${cursor.id}` : '';
-}
-
-function relayFilterKey(
-  filters: NonNullable<PageIntent['relayFilters']>,
-): string {
-  return JSON.stringify(filters.map(normalizeFilter));
-}
-
-function normalizeFilter(
-  filter: NonNullable<PageIntent['relayFilters']>[number],
-): Record<string, unknown> {
-  const entries: [string, unknown][] = Object.entries(filter).map(
-    ([key, value]) => [key, normalizeFilterValue(value)],
-  );
-  return Object.fromEntries(
-    entries.sort(([left], [right]) => left.localeCompare(right)),
-  );
-}
-
-function normalizeFilterValue(value: unknown): unknown {
-  return Array.isArray(value) ? [...value].sort() : value;
 }
 
 export function readPageByIntent(

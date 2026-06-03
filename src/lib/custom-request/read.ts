@@ -73,9 +73,11 @@ function readCustomRelayGroups(
 ) {
   return readRelayFeedGroups({
     key,
+    semanticFeedKey: key,
     groups,
     filters: (_group, bounds) => customRequestBoundedFilters(input, bounds),
     direction: 'initial',
+    routeFingerprint: JSON.stringify(groups),
     before: adaptiveBefore(input.request.filters),
     pageSize: input.pageSize,
     subscriptions: input.subscriptions,

@@ -24,6 +24,15 @@ export type ScanDensityModelRecord = ScanModelContext & {
   readonly sampleWeight: number;
   readonly updatedAtMs: number;
   readonly decaysAfterMs: number;
+  readonly completeWindowCount?: number;
+  readonly denseWindowCount?: number;
+  readonly sparseWindowCount?: number;
+  readonly incompleteWindowCount?: number;
+  readonly failureWindowCount?: number;
+  readonly limitHitRate?: number;
+  readonly incompleteRate?: number;
+  readonly lastGoodSpanSeconds?: number;
+  readonly lastProposedSpanSeconds?: number;
   readonly recordJson?: unknown;
 };
 

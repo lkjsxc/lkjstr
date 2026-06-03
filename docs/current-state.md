@@ -138,11 +138,13 @@ Read next: [architecture/workspace/README.md](architecture/workspace/README.md),
   absence. A proven warm page should render from SQLite before profile
   hydration, reference hydration, diagnostics, or relay bootstrap.
 - Home, Global, Profile posts, Notifications, and time-windowable Custom Request
-  feeds use adaptive grouped scans. The target contract is durable scan density
-  models plus last-span hints; both are performance input only and must never
-  prove absence, suppress uncovered relays, or replace interval-union coverage.
-  Exact id reads, search reads, Author Context, Thread context, metadata,
-  follow-list lookup, and reference resolution keep exact request semantics.
+  feeds use adaptive grouped scans. Older and newer product scans persist scan
+  observations and density models, and use available density models to warm the
+  next span. Rust/WASM remains the target primary planner for product reads.
+  Scan models and last-span hints are performance input only and must never prove
+  absence, suppress uncovered relays, or replace interval-union coverage. Exact
+  id reads, search reads, Author Context, Thread context, metadata, follow-list
+  lookup, and reference resolution keep exact request semantics.
 - Rust now owns pure feed row geometry estimates, measured-height model updates,
   anchor compensation, and a pure real-data feed LOD tree. Feed-surface docs
   require row height reservation from measured geometry and LOD blocks for heavy

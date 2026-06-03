@@ -40,7 +40,9 @@ Scopes are consulted in deterministic order:
 
 Parent keys deliberately omit fields and ignore omitted fields during matching.
 Durable keys must never contain tab ids, pane ids, owner handles, request ids,
-subscription ids, or transient runtime identifiers.
+subscription ids, cursors, or transient runtime identifiers. Page read keys may
+include cursors for request dedupe; scan model semantic keys must stay stable
+across older and newer cursor movement.
 
 ## Span Formula
 

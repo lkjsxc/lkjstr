@@ -52,6 +52,7 @@ async function queryRecords<T>(
   statement: string,
   params: readonly SqlScalar[],
 ): Promise<T[]> {
+  if (typeof Worker === 'undefined') return [];
   if (!(await ensureEventGraphSchema())) return [];
   const limit = boundedLimit(Number(params[0] ?? debugRowLimit));
   const response = await sendSqliteStorage(
@@ -66,9 +67,15 @@ async function readScanStorageMode(): Promise<{
   readonly mode: ScanOptimizerDebugSnapshot['storageMode'];
   readonly message?: string;
 }> {
-  const health = await readSqliteStorageHealth();
-  if (health.status === 'available') return { mode: health.health.mode };
-  return { mode: 'unavailable', message: health.message };
+  if (typeof Worker === 'undefined')
+    return { mode: 'unavailable', message: 'Worker support unavailable' };
+  try {
+    const health = await readSqliteStorageHealth();
+    if (health.status === 'available') return { mode: health.health.mode };
+    return { mode: 'unavailable', message: health.message };
+  } catch (error) {
+    return { mode: 'unavailable', message: errorText(error) };
+  }
 }
 
 function decode<T>(raw: unknown): T[] {
@@ -78,6 +85,10 @@ function decode<T>(raw: unknown): T[] {
   } catch {
     return [];
   }
+}
+
+function errorText(error: unknown): string {
+  return error instanceof Error ? error.message : String(error);
 }
 
 function boundedLimit(value: number): number {

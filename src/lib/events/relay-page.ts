@@ -50,6 +50,8 @@ export type RelayGroupPageRequest = Omit<
     bounds: Pick<NostrFilter, 'since' | 'until'>,
   ) => readonly NostrFilter[];
   readonly direction?: 'older' | 'newer' | 'initial';
+  readonly routeFingerprint?: string;
+  readonly semanticFeedKey?: string;
   readonly maxSegments?: number;
 };
 

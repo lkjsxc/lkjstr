@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import {
   pageIntentBounds,
+  pageIntentScanKey,
   pageIntentSemanticKey,
   routeGroupFingerprint,
 } from '../../../../src/lib/relays/orchestration/page-reads';
@@ -80,6 +81,31 @@ describe('pageIntentSemanticKey', () => {
       before: undefined,
       after: cursor,
     });
+  });
+
+  it('keeps scan keys stable across cursor movement', () => {
+    const base = {
+      surface: 'home' as const,
+      owner: 'tab',
+      phase: 'page' as const,
+      selectedRelays: ['wss://relay'],
+      authors: ['b'.repeat(64)],
+      pageSize: 30,
+      direction: 'older' as const,
+      purpose: 'feed' as const,
+    };
+
+    expect(
+      pageIntentScanKey({
+        ...base,
+        cursor: { createdAt: 1_700_000_000, id: 'a'.repeat(64) },
+      }),
+    ).toBe(
+      pageIntentScanKey({
+        ...base,
+        cursor: { createdAt: 1_699_999_000, id: 'b'.repeat(64) },
+      }),
+    );
   });
 
   it('keeps notification, profile, and home page keys isolated', () => {
