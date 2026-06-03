@@ -21,7 +21,8 @@ This file is the concise status map for the active Rust/WASM migration.
   keys, ledger rows, and protected plus cache SQLite row codecs.
 - `lkjstr-web` owns typed browser adapters for IndexedDB, SQLite worker calls,
   relay WebSocket and timeout foundations, protocol parsing bridges, relay-score
-  bridge calls, and early host calls needed by the partial Leptos shell.
+  bridge calls, scan-model planning bridge calls, and early host calls needed by
+  the partial Leptos shell.
 - `lkjstr-relays` owns pure send queue, request scheduler, subscription id,
   subscription alias, close tombstone, request budget derivation, outbound `REQ`
   message-size budget, semantic page-read keys, in-flight page-read registry,
@@ -39,8 +40,9 @@ This file is the concise status map for the active Rust/WASM migration.
 
 ## Active Target Slices
 
-- Scan-width adaptation moves from hint feedback to durable density models,
-  last-span hints, SQLite observations, WASM planning bridges, and Stats traces.
+- Scan-width adaptation now has pure density planning, optimizer storage rows,
+  host SQLite wrappers, and WASM bridge functions. Product feed read-path wiring
+  and Stats projection remain open.
 - Orchestration moves toward SQLite-backed decision memory for route, scan,
   cache, wait, hydration, prefetch, retention, and diagnostics.
 - Feed surfaces move toward measured row height reservation and real-data LOD

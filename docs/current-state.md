@@ -41,9 +41,9 @@ Read next: [protocol/README.md](protocol/README.md),
 - Relay optimizer work is documented as a Rust/WASM target for measured scoring,
   route trust, scan density models, wait policy, and Stats projection. Rust owns
   pure relay read scoring, route-evidence trust, scan planning, and feed-wait
-  reducers, storage row codecs, and the relay-score WASM bridge. Current product
-  reads still rely on TypeScript wrappers until product storage and read-path
-  wiring are complete.
+  reducers, storage row codecs, the relay-score WASM bridge, and the scan-model
+  WASM bridge. Current product reads still rely on TypeScript wrappers until
+  read-path wiring is complete.
 - Selected read relays remain the base and fallback for Home, Global,
   Notifications, Profile, and Thread. Targeted reads may add bounded
   protocol-derived routes, but Global remains selected-relay based.
@@ -84,7 +84,8 @@ Read next: [architecture/data/README.md](architecture/data/README.md),
   Rust storage includes optimizer tables for relay observations, relay scores,
   expanded scan hints, and route evidence scores. The active contract adds scan
   observations, scan density models, and decision traces as recoverable
-  optimizer rows. The Svelte Settings, workspace layout, tab snapshot, Accounts,
+  optimizer rows, with SQLite worker host wrappers for scan model rows. The
+  Svelte Settings, workspace layout, tab snapshot, Accounts,
   local signing secret, relay set, Tweet draft, event graph, tag, relay
   provenance, feed cursor,
   cached feed page, tag lookup, local filter-search, relay diagnostics, relay

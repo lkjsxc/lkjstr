@@ -13,6 +13,7 @@ pub mod relay_score;
 #[cfg(target_arch = "wasm32")]
 mod relay_settings_host;
 mod response;
+pub mod scan_model;
 #[cfg(target_arch = "wasm32")]
 mod settings_host;
 #[cfg(target_arch = "wasm32")]
