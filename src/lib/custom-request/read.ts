@@ -2,6 +2,7 @@ import { matchesFilter, type NostrFilter } from '$lib/protocol';
 import type { OnProgressiveReadSnapshot } from '$lib/relays/progressive-read-types';
 import type { SubscriptionOrchestrator } from '$lib/relays/orchestration/orchestrator';
 import { feedEventsFromProgressiveSnapshot } from '$lib/timeline/timeline-progressive';
+import { readCacheFirstFeedPage } from '$lib/events/feed-page-cache-first';
 import { mergeBounds } from '$lib/events/relay-page-filter';
 import { readRelayFeedGroups, readRelayFeedPage } from '$lib/events/relay-page';
 import type { FeedEvent } from '$lib/events/types';
@@ -40,18 +41,31 @@ export async function readCustomRequestEvents(input: {
     });
     return filterEvents(events, input.request.filters, input.pageSize);
   }
-  const page = await readRelayFeedGroups({
+  const groups = [customRequestGroup(input.relays)];
+  const plan = customRequestPlan(input, key, groups);
+  const cache = await readCacheFirstFeedPage({
+    plan,
+    subscriptions: input.subscriptions,
+  });
+  if (cache.kind === 'complete-cache')
+    return filterEvents(cache.page.items, input.request.filters, input.pageSize);
+  if (cache.kind === 'partial-cache') {
+    void readCustomRelayGroups(input, key, groups).catch(() => undefined);
+    return filterEvents(cache.page.items, input.request.filters, input.pageSize);
+  }
+  const page = await readCustomRelayGroups(input, key, groups);
+  return filterEvents(page.items, input.request.filters, input.pageSize);
+}
+
+function readCustomRelayGroups(
+  input: Parameters<typeof readCustomRequestEvents>[0],
+  key: string,
+  groups: ReturnType<typeof customRequestGroup>[],
+) {
+  return readRelayFeedGroups({
     key,
-    groups: [
-      {
-        key: 'custom-request:selected',
-        relays: input.relays,
-        authors: [],
-        source: 'selected',
-      },
-    ],
-    filters: (_group, bounds) =>
-      input.request.filters.map((filter) => mergeBounds(filter, bounds)),
+    groups,
+    filters: (_group, bounds) => customRequestBoundedFilters(input, bounds),
     direction: 'initial',
     before: adaptiveBefore(input.request.filters),
     pageSize: input.pageSize,
@@ -59,7 +73,46 @@ export async function readCustomRequestEvents(input: {
     purpose: 'feed',
     onSnapshot: customSnapshot(input),
   });
-  return filterEvents(page.items, input.request.filters, input.pageSize);
+}
+
+function customRequestPlan(
+  input: Parameters<typeof readCustomRequestEvents>[0],
+  key: string,
+  groups: ReturnType<typeof customRequestGroup>[],
+) {
+  return {
+    key,
+    groups,
+    intent: {
+      surface: 'custom-request' as const,
+      owner: input.owner,
+      phase: 'page' as const,
+      selectedRelays: input.relays,
+      authors: [],
+      pageSize: input.pageSize,
+      direction: 'initial' as const,
+      before: adaptiveBefore(input.request.filters),
+      purpose: 'feed' as const,
+      routeFingerprint: JSON.stringify(groups),
+      filters: (_group, bounds) => customRequestBoundedFilters(input, bounds),
+    },
+  };
+}
+
+function customRequestBoundedFilters(
+  input: Parameters<typeof readCustomRequestEvents>[0],
+  bounds: Pick<NostrFilter, 'since' | 'until'>,
+) {
+  return input.request.filters.map((filter) => mergeBounds(filter, bounds));
+}
+
+function customRequestGroup(relays: readonly string[]) {
+  return {
+    key: 'custom-request:selected',
+    relays,
+    authors: [],
+    source: 'selected' as const,
+  };
 }
 
 function customSnapshot(input: {

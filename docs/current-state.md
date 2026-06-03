@@ -90,11 +90,11 @@ Read next: [architecture/data/README.md](architecture/data/README.md),
   and job paths now use the SQLite worker with memory fallback when Workers are
   unavailable. Cache ledger summaries, cache metadata, protection snapshots,
   and retention deletion also use SQLite.
-- Cache-first traversal now runs above relay reads for Home, Global, and
-  Profile post pages. Complete coverage returns SQLite rows without relay I/O;
-  partial coverage renders cached rows and starts uncovered relay work in the
-  background. Notifications and safe Custom Request pages still need the same
-  top-level return path.
+- Cache-first traversal now runs above relay reads for Home, Global, Profile
+  post pages, and safe Custom Request event-list reads. Complete coverage
+  returns SQLite rows without relay I/O; partial coverage renders cached rows
+  and starts uncovered relay work in the background. Notifications still need
+  the same top-level return path.
 - Remaining Dexie cutover work is limited to repair, physical inventory, cache
   tool actions, app log rows when still open, any residual product readers or
   writers, and deletion of `src/lib/storage/browser-db.ts` plus Dexie metadata

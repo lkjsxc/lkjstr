@@ -66,9 +66,9 @@ Coverage proof remains separate. Detailed hint rules live in
 ## Status
 
 Interval-union proof and partial relay pruning are implemented inside grouped
-feed page scans. Home, Global, and Profile post pages also run a top-level
-cache-first return path before relay reads. Notifications and safe Custom
-Request pages still need this lifted return path.
+feed page scans. Home, Global, Profile post pages, and safe Custom Request event-list reads run
+a top-level cache-first return path before relay reads. Notifications still need
+this lifted return path.
 
 Durable warm hints are performance input and are not required for cache proof.
 The next implementation target is making hint use, rejection, expiry, and
