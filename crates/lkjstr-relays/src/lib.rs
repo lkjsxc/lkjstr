@@ -10,6 +10,7 @@ pub mod read_score;
 pub mod request_budget;
 pub mod request_message_size;
 pub mod request_scheduler;
+pub mod route_evidence;
 pub mod route_plan;
 pub mod send_queue;
 pub mod subscription_alias;
@@ -71,6 +72,14 @@ pub use request_message_size::{
 };
 pub use request_scheduler::{
     PendingReq, RelayReqScheduler, ReleaseOutcome, ScheduleOutcome, max_pending_relay_reqs,
+};
+pub use route_evidence::{
+    ERROR_PENALTY, EVENT_HINT_TRUST, FAILURE_REPEAT_CAP, FRESH_NIP65_TRUST,
+    LOCAL_DISCOVERY_SUCCESS_TRUST, MEASURED_AUTHOR_SUCCESS_TRUST, MeasuredRouteEvidence,
+    MergedRouteEvidence, NIP65_STALE_AFTER_MS, NO_YIELD_PENALTY, RECEIPT_TRUST,
+    RouteEvidenceTrustInput, STALE_NIP65_TRUST, SUCCESS_BONUS, TIMEOUT_PENALTY,
+    base_trust_for_source, merge_route_evidence_scores, nip65_trust_for_age,
+    route_evidence_trust_score,
 };
 pub use route_plan::{
     AuthorRelayRoute, RelayRoutePlan, RouteEvidenceSource, RoutePlanDiagnostic,

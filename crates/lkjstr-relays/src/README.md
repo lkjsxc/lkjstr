@@ -18,6 +18,7 @@ aliasing, and close-tombstone behavior.
 - `request_budget/`: pure relay request-budget derivation and filter clamping.
 - `request_message_size.rs`: serialized outbound `REQ` byte budgeting.
 - `request_scheduler.rs`: active and pending relay request scheduling.
+- `route_evidence/`: measured route trust and NIP-65 weak-prior reducers.
 - `route_plan/`: pure relay route grouping and fallback planning.
 - `send_queue.rs`: bounded outbound message queue.
 - `subscription_alias.rs`: logical-to-wire subscription id mapping.

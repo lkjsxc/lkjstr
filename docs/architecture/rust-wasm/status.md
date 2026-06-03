@@ -39,6 +39,8 @@ This file is the concise status map for the active Rust/WASM migration.
 - `lkjstr-relays` now owns the pure relay read score reducer: stable score keys,
   real read observations, bounded score updates, stale decay, fairness credit,
   and deterministic ordering.
+- `lkjstr-relays` now owns pure route evidence trust reducers and route planning
+  sorts measured receipt/read evidence above NIP-65 weak prior evidence.
 - `lkjstr-app` owns startup recovery, stored tab snapshot filtering, bounded
   warm tab snapshot staging, pure query-demand planning, feed-window reduction,
   adaptive feed-scan planning, feed-scan feedback traces, feed live-runtime

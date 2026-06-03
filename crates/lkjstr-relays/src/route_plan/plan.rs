@@ -4,6 +4,8 @@ use std::collections::{BTreeMap, BTreeSet};
 
 use lkjstr_protocol::normalize_relay_url;
 
+use crate::base_trust_for_source;
+
 use super::plan_tail::{capped_authors, diagnostic, normalized_set, surface_allows_author_routes};
 use super::{
     AuthorRelayRoute, RelayRoutePlan, RoutePlanDiagnostic, RoutePlanDiagnosticKind, RoutePlanGroup,
@@ -74,9 +76,8 @@ fn author_group(
         None => Vec::new(),
     };
     candidates.sort_by(|left, right| {
-        right
-            .score
-            .cmp(&left.score)
+        route_order_score(right)
+            .cmp(&route_order_score(left))
             .then_with(|| left.relay_url.cmp(&right.relay_url))
     });
     let mut seen = BTreeSet::new();
@@ -95,6 +96,10 @@ fn author_group(
         authors: vec![author.to_owned()],
         source: RoutePlanGroupSource::AuthorRoute,
     })
+}
+
+fn route_order_score(route: &AuthorRelayRoute) -> i64 {
+    base_trust_for_source(route.source) + route.score
 }
 
 fn normalize_candidate(

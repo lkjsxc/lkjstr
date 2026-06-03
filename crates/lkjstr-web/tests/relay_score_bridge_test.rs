@@ -4,7 +4,7 @@ use serde_json::Value;
 use wasm_bindgen::prelude::JsValue;
 use wasm_bindgen_test::{wasm_bindgen_test, wasm_bindgen_test_configure};
 
-use lkjstr_web::{relay_read_score_initial_json, relay_read_score_update_json};
+use lkjstr_web::relay_score::{relay_read_score_initial_json, relay_read_score_update_json};
 
 wasm_bindgen_test_configure!(run_in_browser);
 

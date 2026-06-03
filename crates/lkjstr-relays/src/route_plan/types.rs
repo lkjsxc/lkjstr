@@ -18,6 +18,8 @@ pub enum RouteEvidenceSource {
     Receipt,
     Hint,
     Discovery,
+    MeasuredAuthorSuccess,
+    LocalDiscoverySuccess,
 }
 
 impl RouteEvidenceSource {
@@ -28,6 +30,8 @@ impl RouteEvidenceSource {
             Self::Receipt => "receipt",
             Self::Hint => "hint",
             Self::Discovery => "discovery",
+            Self::MeasuredAuthorSuccess => "measured-author-success",
+            Self::LocalDiscoverySuccess => "local-discovery-success",
         }
     }
 }

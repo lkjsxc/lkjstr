@@ -6,6 +6,11 @@ Route evidence ranks targeted relay attempts for author and event-specific
 reads. It never removes the selected-relay fallback and never changes Global,
 which remains selected-relay based.
 
+Status: Rust owns the pure trust reducer in
+`crates/lkjstr-relays/src/route_evidence/` and route planning now sorts by
+source trust before per-route score. Product discovery wiring and Stats rows are
+still open.
+
 ## Trust Sources
 
 | Source | Trust | Rules |
