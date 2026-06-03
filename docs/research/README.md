@@ -10,3 +10,4 @@ and decision docs take precedence.
 - [browser-storage.md](browser-storage.md): local storage assumptions.
 - [nostr-client-surfaces.md](nostr-client-surfaces.md): client surface notes.
 - [open-questions.md](open-questions.md): unresolved questions.
+- [relay-optimizer-audit.md](relay-optimizer-audit.md): relay optimizer audit.
