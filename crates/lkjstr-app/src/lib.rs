@@ -3,6 +3,7 @@
 pub mod custom_request;
 pub mod feed;
 pub mod feed_geometry;
+pub mod feed_lod;
 pub mod feed_scan;
 pub mod feed_wait;
 pub mod orchestration;
@@ -31,6 +32,11 @@ pub use feed_geometry::{
     AnchorCompensation, GeometryEstimateSource, RowGeometryEstimate, RowGeometryFeatures,
     RowGeometryModel, RowHeightObservation, RowKind, anchor_compensation_for_height_delta,
     estimate_row_geometry, geometry_bucket_key, update_row_geometry_model,
+};
+pub use feed_lod::{
+    CoverageProjection, FeedLodBlock, FeedLodRow, FeedLodRowKind, FeedLodTree, MaterializationPlan,
+    RowCoverageState, RowLocation, RowRange, TreeUpdate, build_lod_tree, coverage_gap_projection,
+    height_delta_update, materialization_plan, offset_to_row, visible_range,
 };
 pub use feed_scan::{
     CoverageGap, CursorPoint, DEFAULT_HINT_TTL_SECONDS, DEFAULT_INITIAL_SPAN_SECONDS,

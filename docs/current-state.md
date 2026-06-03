@@ -144,9 +144,9 @@ Read next: [architecture/workspace/README.md](architecture/workspace/README.md),
   Exact id reads, search reads, Author Context, Thread context, metadata,
   follow-list lookup, and reference resolution keep exact request semantics.
 - Rust now owns pure feed row geometry estimates, measured-height model updates,
-  and anchor compensation. Feed-surface docs require row height reservation from
-  measured geometry and real-data LOD trees for heavy feeds. Product wiring
-  remains incremental.
+  anchor compensation, and a pure real-data feed LOD tree. Feed-surface docs
+  require row height reservation from measured geometry and LOD blocks for heavy
+  feeds. Product wiring remains incremental.
 
 ## Network And Runtimes
 

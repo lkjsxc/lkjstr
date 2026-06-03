@@ -10,6 +10,7 @@ reducers.
 - `custom_request/`: pure Custom Request parsing, clamps, and mode selection.
 - `feed/`: pure feed-window reduction and cursor derivation.
 - `feed_geometry/`: row height estimates, measured models, and anchors.
+- `feed_lod/`: real-data feed level-of-detail tree.
 - `feed_scan/`: adaptive grouped scan planning and trace reducers.
 - `feed_wait/`: first-paint, empty-state, and late-merge reducers.
 - `lib.rs`: public app crate exports.
