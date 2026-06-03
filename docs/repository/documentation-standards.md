@@ -44,6 +44,8 @@ for that subtree.
 - Child `README.md` files recursively list descendant documentation for that
   subtree.
 - Supporting files hold the detail so the `README.md` remains scannable.
+- Keep README entries terse when a subtree is large; move rationale into child
+  documents rather than growing the index.
 - Root documentation links to canonical `docs/` pages instead of repeating
   long product or protocol contracts.
 - GitHub metadata uses `.github/_README.md` rather than `.github/README.md` so

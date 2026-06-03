@@ -53,12 +53,6 @@ table of contents required by repository checks.
 - [research/README.md](research/README.md): research.
 - [vision/README.md](vision/README.md): vision.
 
-## Storage Cutover Files
-
-| Area        | Files                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  |
-| ----------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| SQLite OPFS | [architecture/data/sqlite-opfs/storage-modes.md](architecture/data/sqlite-opfs/storage-modes.md), [architecture/data/sqlite-opfs/query-ownership.md](architecture/data/sqlite-opfs/query-ownership.md), [architecture/data/sqlite-opfs/migration-map.md](architecture/data/sqlite-opfs/migration-map.md), [architecture/data/sqlite-opfs/failure-recovery.md](architecture/data/sqlite-opfs/failure-recovery.md), [decisions/sqlite-opfs-storage.md](decisions/sqlite-opfs-storage.md), [decisions/worker-owned-storage.md](decisions/worker-owned-storage.md), [operations/sqlite-opfs-testing.md](operations/sqlite-opfs-testing.md) |
-
 ## Complete File Index
 
 - [architecture/README.md](architecture/README.md)
@@ -109,11 +103,14 @@ table of contents required by repository checks.
 - [architecture/data/storage/README.md](architecture/data/storage/README.md)
 - [architecture/data/sqlite-opfs/README.md](architecture/data/sqlite-opfs/README.md)
 - [architecture/data/sqlite-opfs/runtime.md](architecture/data/sqlite-opfs/runtime.md)
+- [architecture/data/sqlite-opfs/storage-modes.md](architecture/data/sqlite-opfs/storage-modes.md)
 - [architecture/data/sqlite-opfs/schema.md](architecture/data/sqlite-opfs/schema.md)
+- [architecture/data/sqlite-opfs/worker-protocol.md](architecture/data/sqlite-opfs/worker-protocol.md)
+- [architecture/data/sqlite-opfs/query-ownership.md](architecture/data/sqlite-opfs/query-ownership.md)
 - [architecture/data/sqlite-opfs/repositories.md](architecture/data/sqlite-opfs/repositories.md)
 - [architecture/data/sqlite-opfs/migration-map.md](architecture/data/sqlite-opfs/migration-map.md)
 - [architecture/data/sqlite-opfs/retention.md](architecture/data/sqlite-opfs/retention.md)
-- [architecture/data/sqlite-opfs/worker-protocol.md](architecture/data/sqlite-opfs/worker-protocol.md)
+- [architecture/data/sqlite-opfs/failure-recovery.md](architecture/data/sqlite-opfs/failure-recovery.md)
 - [architecture/data/sqlite-opfs/import-export.md](architecture/data/sqlite-opfs/import-export.md)
 - [architecture/data/storage/kernel/README.md](architecture/data/storage/kernel/README.md)
 - [architecture/data/storage/kernel/manifest.md](architecture/data/storage/kernel/manifest.md)
@@ -184,7 +181,7 @@ table of contents required by repository checks.
 - [architecture/network/subscription-orchestration/lease-key.md](architecture/network/subscription-orchestration/lease-key.md)
 - [architecture/network/subscription-orchestration/live-lease.md](architecture/network/subscription-orchestration/live-lease.md)
 - [architecture/network/subscription-orchestration/metrics.md](architecture/network/subscription-orchestration/metrics.md)
-- [notifications-profile-thread-integration.md](architecture/network/subscription-orchestration/notifications-profile-thread-integration.md)
+- `architecture/network/subscription-orchestration/notifications-profile-thread-integration.md`
 - [architecture/network/subscription-orchestration/owner-visibility.md](architecture/network/subscription-orchestration/owner-visibility.md)
 - [architecture/network/subscription-orchestration/page-read-dedupe.md](architecture/network/subscription-orchestration/page-read-dedupe.md)
 - [architecture/network/subscription-orchestration/relay-read-scoring.md](architecture/network/subscription-orchestration/relay-read-scoring.md)
@@ -225,6 +222,8 @@ table of contents required by repository checks.
 - [decisions/protocol-kernel.md](decisions/protocol-kernel.md)
 - [decisions/relay-ownership.md](decisions/relay-ownership.md)
 - [decisions/rust-wasm-client.md](decisions/rust-wasm-client.md)
+- [decisions/sqlite-opfs-storage.md](decisions/sqlite-opfs-storage.md)
+- [decisions/worker-owned-storage.md](decisions/worker-owned-storage.md)
 - [operations/README.md](operations/README.md)
 - [operations/ci.md](operations/ci.md)
 - [operations/cloudflare-workers.md](operations/cloudflare-workers.md)
@@ -235,6 +234,7 @@ table of contents required by repository checks.
 - [operations/focused-gates.md](operations/focused-gates.md)
 - [operations/memory-verification.md](operations/memory-verification.md)
 - [operations/readiness.md](operations/readiness.md)
+- [operations/sqlite-opfs-testing.md](operations/sqlite-opfs-testing.md)
 - [operations/storage-pressure-verification.md](operations/storage-pressure-verification.md)
 - [operations/testing-ownership.md](operations/testing-ownership.md)
 - [operations/timeline-notification-regression-investigation.md](operations/timeline-notification-regression-investigation.md)

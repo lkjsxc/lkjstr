@@ -291,8 +291,6 @@ state lives, which modules own subscriptions, and how tabs close cleanly.
 
 ## Shared Contract
 
-- Browser runtimes normalize optional persisted fields before UI use.
-- Relay diagnostics are session state and are rendered independently from feed
-  rows.
-- Clean-browser Playwright output is authoritative for app-origin browser
-  diagnostics.
+Browser runtimes normalize persisted fields before UI use. Relay diagnostics are
+session state, separate from feed rows. Clean-browser Playwright output remains
+authoritative for app-origin browser diagnostics.

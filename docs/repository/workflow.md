@@ -18,3 +18,11 @@ Workflow docs define the change process.
 6. Run Docker Compose as the final gate: config, image builds, then `verify`,
    `e2e`, `cloudflare`, and `app-smoke` services with `--progress quiet`.
 7. Keep CI behavior aligned with quiet local and Docker Compose verification.
+
+## Commit Slices
+
+- Prefer small commits around one contract and its matching implementation.
+- If a navigation or standards cleanup is independent, commit it before product
+  behavior changes.
+- Do not commit a product behavior doc that knowingly disagrees with source at
+  the end of the slice.
