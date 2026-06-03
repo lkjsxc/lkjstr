@@ -34,7 +34,7 @@ first-party product modules.
 | `src/lib/profile`        | blocked | Rust Profile runtime and UI                          | profile route and render tests         |
 | `src/lib/protocol`       | blocked | Rust protocol parity plus WASM bridge tests          | protocol Rust and WASM tests           |
 | `src/lib/query`          | blocked | Rust query planning and filter reducers              | feed query unit tests                  |
-| `src/lib/relays`         | blocked | Rust relay client, subscriptions, budgets, adapters  | synthetic relay browser tests          |
+| `src/lib/relays`         | blocked | Rust relay client, subscriptions, budgets, adapters, optimizer | synthetic relay browser tests          |
 | `src/lib/search`         | blocked | Rust local and remote search surface                 | cache and NIP-50 tests                 |
 | `src/lib/settings`       | blocked | Rust settings store and runtime side effects         | settings unit and browser tests        |
 | `src/lib/storage`        | blocked | typed repositories, transactions, retention, repair  | storage and pressure tests             |
@@ -46,7 +46,7 @@ first-party product modules.
 | `src/lib/workspace`      | blocked | Leptos workspace parity and snapshot persistence     | workspace browser tests                |
 | `src/routes`             | blocked | root route is served by the Rust/WASM app build      | app build and root smoke tests         |
 | Dexie dependency         | blocked | all live storage families use SQLite repositories    | storage, pressure, Stats, Docker gates |
-| TypeScript storage repos | blocked | Rust repositories cover every live table family      | repository and browser storage tests   |
+| TypeScript storage repos | blocked | Rust repositories cover every live table family, including optimizer rows | repository and browser storage tests   |
 | Svelte tab surfaces      | blocked | Leptos surface parity by tab                         | surface browser tests and ledgers      |
 | old test helpers         | blocked | Rust/WASM tests cover the same behavior              | no-import proof and passing gates      |
 

@@ -78,3 +78,6 @@ rendering would apply. Event count is not proof.
 
 Compaction invalidates affected coverage. Warm scan hints are performance input
 only. Dense rows may inform future shrinking, but they do not prove absence.
+The optimizer contract in
+[../network/relay-optimizer/README.md](../network/relay-optimizer/README.md)
+keeps scan hints, relay scores, and route trust separate from coverage proof.

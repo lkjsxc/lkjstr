@@ -13,6 +13,8 @@ and app boundaries.
 - [progressive-relay-rendering.md](progressive-relay-rendering.md):
   progressive read snapshots, coverage, and UI merge contract.
 - [relay-routing.md](relay-routing.md): protocol-derived read routing.
+- [relay-optimizer/README.md](relay-optimizer/README.md): measured relay
+  scoring, route trust, scan hints, wait policy, and Stats projection.
 - [request-budget/README.md](request-budget/README.md): request limits,
   NIP-11 bounds, and diagnostics.
 - [request-budget/effective-limits.md](request-budget/effective-limits.md):
@@ -67,6 +69,9 @@ and app boundaries.
 - Failed relays remain diagnostic and do not block reachable relay reads.
 - Relay reads expose cache-first and partial snapshots without changing final
   result compatibility.
+- Relay optimizer state is advisory and measurement-first. It orders enabled
+  attempts, records bounded diagnostics, and exposes Stats rows, but it never
+  proves cache absence.
 - Selected read relays are the base and fallback; targeted reads may add
   bounded protocol-derived routes unless the URL is disabled or removed.
 - Session diagnostics retain relay URL, optional subscription id, kind,

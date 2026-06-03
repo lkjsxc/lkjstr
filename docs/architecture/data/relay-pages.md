@@ -116,8 +116,9 @@ evidence proves that absent rows are genuinely absent.
 7. Record new coverage evidence and warm scan hints.
 8. Keep display bounds local and strict.
 
-Warm hints may change the initial relay span for a future scan. They never prove
-absence, suppress relay reads, or change page correctness.
+Warm hints may change the initial relay span for a future compatible scan. They
+never prove absence, suppress relay reads, or change page correctness. Stats
+must show whether a durable hint was used, rejected, expired, or unavailable.
 
 ## Surface Keys
 
@@ -149,6 +150,8 @@ independent on the critical path to first paint.
 
 - Home, Global, Profile posts, Notifications, and safe Custom Request event-list
   pages use adaptive bounded scans for initial, older, and newer catch-up pages.
+  Detailed scan learning rules live in
+  [../network/relay-optimizer/scan-width-adaptation.md](../network/relay-optimizer/scan-width-adaptation.md).
 - Search, exact id requests, Custom Request filters with `ids` or `search`,
   Author Context, Thread reply pages, metadata lookup, follow-list reads, thread
   root lookup, and id-batch reference resolution keep exact request semantics

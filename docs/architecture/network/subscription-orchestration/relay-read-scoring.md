@@ -3,11 +3,14 @@
 ## Purpose
 
 Relay read scoring orders bounded relay attempts and explains diagnostics
-without changing correctness.
+without changing correctness. See
+[../relay-optimizer/relay-read-scoring.md](../relay-optimizer/relay-read-scoring.md)
+for the target Rust-owned scoring model.
 
-Status: Rust route planning accepts score hints only for ordering. Scores never
-remove a relay that is otherwise allowed by selection, route evidence, and
-disabled-relay rules.
+Status: TypeScript still records product read statuses. Rust route planning
+accepts score hints only for ordering. The target is Rust-owned score reduction,
+durable optimizer rows, and a narrow WASM bridge while the current product
+runtime remains SvelteKit.
 
 ## Score Key
 
@@ -15,46 +18,47 @@ Durable or in-memory scores use:
 
 `relayUrl + surface + phase + direction + routeGroupKey + filterShape + purpose`
 
-Do not use raw tab ids, pane ids, runtime owners, or transient subscription ids
-in score keys. Those values are diagnostics only. Identical wire-equivalent
-requests must still share page-read and lease dedupe.
+Do not use raw tab ids, pane ids, runtime owners, request ids, or transient
+subscription ids in score keys. Those values are diagnostics only. Identical
+wire-equivalent requests must still share page-read and lease dedupe.
 
 ## Inputs
 
 Each observation may include:
 
-- `firstEventMs`
-- `eoseMs`
-- `durationMs`
-- `eventCount`
-- `finalCount`
-- `timeout`
-- `closed`
-- `auth`
-- `socketError`
-- `eventLimitReached`
-- `updatedAt`
+- first event time
+- EOSE time
+- duration
+- event count
+- unique event count
+- final visible count
+- timeout, close, auth, socket error, and event-limit flags
+- bytes sent and received
+- update time
 
 ## Outputs
 
 Scores are bounded numeric fields:
 
-- `reliability`: completion without transport or relay failure.
-- `speed`: time to first useful event and EOSE.
-- `yield`: useful result density for the request shape.
-- `penalty`: timeout, auth, close, socket error, or event-limit cost.
-- `score`: final scheduling value.
-- `sampleCount` and `updatedAt`: bounded history metadata.
+- `reliability`
+- `first_event_speed`
+- `eose_speed`
+- `useful_yield`
+- `unique_yield`
+- `penalty`
+- `fairness_credit`
+- `score`
+- `sample_count` and `updated_at_ms`
 
 ## Update Rules
 
 - Initial scores are neutral so new relays receive attempts.
 - EOSE without error raises reliability.
-- Timeout, socket error, closed, auth, and event-limit outcomes lower
-  reliability or add penalty.
-- Lower first-event latency raises speed.
-- Higher useful event yield raises yield.
-- Updates use a bounded weighted average and clamp every field.
+- EVENT before timeout without EOSE raises usefulness but not completeness.
+- Timeout, socket error, closed, and auth lower reliability and add penalty.
+- Event-limit lowers scan density confidence but is not transport failure.
+- Updates use bounded smoothing and clamp every field.
+- Stale scores decay toward neutral.
 
 ## Scheduling Rules
 
@@ -67,6 +71,7 @@ Scores are bounded numeric fields:
 
 ## Ownership
 
-`src/lib/relays/relay-read-score.ts` owns pure scoring functions. The first
-store is bounded in memory. Durable persistence is optional only if capped by
-row count and age.
+The current TypeScript store is temporary product runtime code. New scoring
+logic belongs in `crates/lkjstr-relays/src/read_score/`, and product bridges
+must call Rust/WASM when available. Durable rows belong to the SQLite worker
+optimizer repositories.

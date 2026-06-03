@@ -8,7 +8,8 @@ per-surface widening.
 
 Status: Rust owns a pure route-plan reducer for selected fallback, targeted
 author groups, disabled-relay exclusion, and score ordering. TypeScript still
-wires discovery evidence and product reads.
+wires discovery evidence and product reads. The target route-trust contract is
+[../relay-optimizer/route-evidence-trust.md](../relay-optimizer/route-evidence-trust.md).
 
 ## Modules
 
@@ -32,6 +33,9 @@ wires discovery evidence and product reads.
 - Selected read relays remain the base and fallback for paging. Author route
   groups may narrow or widen targeted attempts, but they must not remove the
   selected-relay correctness fallback unless the URL is disabled or removed.
+- Measured receipts and successful reads outrank stale NIP-65 evidence. NIP-65
+  can add bounded targeted attempts only; it never suppresses selected fallback
+  and never proves absence.
 
 ## Route refresh
 

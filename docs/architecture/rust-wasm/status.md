@@ -35,6 +35,8 @@ This file is the concise status map for the active Rust/WASM migration.
   owner-registry state, route-plan grouping, ingress classification, and relay
   live-lease host-effect reducer state, plus relay client lifecycle and typed
   relay-message reducer state machines.
+- Relay optimizer docs now define the target Rust ownership for relay read
+  scoring, route evidence trust, scan hints, wait policy, and Stats projection.
 - `lkjstr-app` owns startup recovery, stored tab snapshot filtering, bounded
   warm tab snapshot staging, pure query-demand planning, feed-window reduction,
   feed live-runtime composition, surface query input builders, and a pure
@@ -46,8 +48,8 @@ This file is the concise status map for the active Rust/WASM migration.
 ## Open Foundations
 
 - Product wiring for app query-demand plans, request budgets, page-read dedupe,
-  progressive snapshot consumption, diagnostics merge, and route-plan discovery
-  integration.
+  progressive snapshot consumption, diagnostics merge, route-plan discovery
+  integration, relay optimizer measurement, and Stats projection.
 - Relay adapter product wiring from pure reducers to browser WebSocket and
   timer handles.
 - Product SQLite wiring, cache delete and repair paths, retention dispatchers,

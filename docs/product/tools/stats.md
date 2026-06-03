@@ -7,8 +7,8 @@ Stats shows current-session relay counters and persisted operational summaries.
 ## Contract
 
 - Stats opens from New Tab as the `network-stats` tab kind.
-- It reads relay snapshots, cache status, SQLite worker health, persisted relay
-  summaries, persisted job health, and runtime counters.
+- It reads relay snapshots, optimizer state, cache status, SQLite worker health,
+  persisted relay summaries, persisted job health, and runtime counters.
 - It never creates relay subscriptions or changes relay settings.
 - Manual refresh is always available.
 - Optional auto-refresh polls every two seconds while enabled.
@@ -66,6 +66,26 @@ Stats shows current-session relay counters and persisted operational summaries.
   heap.
 - Runtime memory output is redacted count data only. It must not expose raw
   events, relay payloads, tab ids, request ids, or log messages.
+- Relay optimizer rows show scan hint source, initial span, next span, feedback
+  counts, relay scores, fairness credit, and route evidence source mix from real
+  providers. Missing providers render explicit unavailable rows.
+
+## Target Sections
+
+1. Overview
+2. Relay Health
+3. Active Work
+4. Scan Optimizer
+5. Route Evidence
+6. Cache and Coverage
+7. Storage Health
+8. Jobs and Publish Queue
+9. Runtime Memory
+10. Rust/WASM Cutover
+11. Redacted Diagnostics Export
+
+Detailed optimizer projection rules live in
+[../../architecture/network/relay-optimizer/stats-projection.md](../../architecture/network/relay-optimizer/stats-projection.md).
 
 ## Rust Migration Status
 

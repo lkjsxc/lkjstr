@@ -8,8 +8,12 @@ by priority after memory stabilization passes.
 
 ## In Progress
 
-None right now. NIP-11-driven request budgeting and diagnostics are implemented
-and tracked in [doc-impl-audit.md](doc-impl-audit.md).
+| Item | Destination doc | Test strategy |
+| --- | --- | --- |
+| Rust relay optimizer foundation | [relay-optimizer/README.md](../architecture/network/relay-optimizer/README.md) | Rust relay score, scan planner, storage, WASM bridge, Stats, and synthetic relay tests |
+
+NIP-11-driven request budgeting and diagnostics are implemented and tracked in
+[doc-impl-audit.md](doc-impl-audit.md).
 
 ## Completed (feeds)
 
@@ -72,6 +76,7 @@ and tracked in [doc-impl-audit.md](doc-impl-audit.md).
 | Item                                             | Destination doc                                      | Test strategy                                                         |
 | ------------------------------------------------ | ---------------------------------------------------- | --------------------------------------------------------------------- |
 | Relay diagnostics polish beyond current counters | [tools/stats.md](tools/stats.md)                     | Playwright Stats tab rows; unit bounded diagnostic summary            |
+| Relay optimizer Stats projection                 | [relay-optimizer/stats-projection.md](../architecture/network/relay-optimizer/stats-projection.md) | Unit providers and Playwright Stats rows without relay subscriptions  |
 | Notification feed reliability under relay churn  | [feeds/notifications.md](feeds/notifications.md)     | Playwright notifications with synthetic events                        |
 | Profile feed reliability under relay churn       | [feeds/profiles.md](feeds/profiles.md)               | Playwright profile hydration                                          |
 | Event reference rendering hardening              | [event-tree.md](../architecture/data/event-tree.md)  | Unit NIP-10/NIP-18 derivation; Playwright reference unavailable state |

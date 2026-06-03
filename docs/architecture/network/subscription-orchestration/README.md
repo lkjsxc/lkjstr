@@ -18,6 +18,8 @@ to talk to relays (route plan, wire request, lease key, REQ/CLOSE).
 - [page-read-dedupe.md](page-read-dedupe.md): semantic page keys
 - [relay-read-scoring.md](relay-read-scoring.md): relay plus request-context
   scheduling scores
+- [../relay-optimizer/README.md](../relay-optimizer/README.md): durable
+  optimizer contract, route trust, scan hints, wait policy, and Stats rows
 - [../request-budget/README.md](../request-budget/README.md): NIP-11 and
   intent-derived request budgets
 - [owner-visibility.md](owner-visibility.md): hidden tabs and pane churn
@@ -48,4 +50,5 @@ Older topic files were folded into the documents listed above.
 - Bootstrap and page reads use semantic dedupe keys.
 - Page read dedupe uses effective budgeted filter shape and effective read
   options.
+- Relay read scores and optimizer hints exclude tab ids and owner handles.
 - Hidden feed tabs release live intents; cached windows remain until close.

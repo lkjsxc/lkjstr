@@ -58,8 +58,10 @@ only the interval they record. Adjacent rows such as `[100, 160)` and
 ## Warm Hints
 
 Warm scan hints tune future relay window size. They do not prove absence.
-Hints may be reused across adjacent windows and relay groups only as bounded
-performance input. Coverage proof remains separate.
+Hints may be reused only when the semantic feed key, route group, relay URL,
+semantic filter key, direction, route fingerprint, and expiry checks match.
+Coverage proof remains separate. Detailed hint rules live in
+[../network/relay-optimizer/scan-width-adaptation.md](../network/relay-optimizer/scan-width-adaptation.md).
 
 ## Status
 
@@ -68,5 +70,6 @@ feed page scans. Home, Global, and Profile post pages also run a top-level
 cache-first return path before relay reads. Notifications and safe Custom
 Request pages still need this lifted return path.
 
-Durable warm hints are implemented as performance input and are not required for
-cache proof.
+Durable warm hints are performance input and are not required for cache proof.
+The next implementation target is making hint use, rejection, expiry, and
+unavailability visible in Stats for every grouped scan.

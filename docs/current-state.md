@@ -38,6 +38,10 @@ Read next: [protocol/README.md](protocol/README.md),
   support them.
 - Relay reads render progressive snapshots. Partial relay failure is diagnostic
   and must not block reachable relays.
+- Relay optimizer work is now documented as a Rust/WASM target for measured
+  scoring, route trust, adaptive scan hints, wait policy, and Stats projection.
+  Current product reads still rely on TypeScript wrappers until the bridge and
+  storage repositories are wired.
 - Selected read relays remain the base and fallback for Home, Global,
   Notifications, Profile, and Thread. Targeted reads may add bounded
   protocol-derived routes, but Global remains selected-relay based.
@@ -127,9 +131,11 @@ Read next: [architecture/workspace/README.md](architecture/workspace/README.md),
   absence. A proven warm page should render from SQLite before profile
   hydration, reference hydration, diagnostics, or relay bootstrap.
 - Home, Global, Profile posts, Notifications, and time-windowable Custom Request
-  feeds use adaptive grouped scans. Exact id reads, search reads, Author
-  Context, Thread context, metadata, follow-list lookup, and reference
-  resolution keep exact request semantics.
+  feeds use adaptive grouped scans. Durable scan hints are performance input
+  only and must never prove absence, suppress uncovered relays, or replace
+  interval-union coverage. Exact id reads, search reads, Author Context, Thread
+  context, metadata, follow-list lookup, and reference resolution keep exact
+  request semantics.
 
 ## Network And Runtimes
 
@@ -147,7 +153,8 @@ Read next: [architecture/network/README.md](architecture/network/README.md) and
 - Matching Home tabs attach to one shared query keyed by account, selected
   relays, page size, and feed policy.
 - Stats and `__lkjstrMemoryDebug()` expose orchestration demand, lease, event
-  intake, storage operation, and memory counters.
+  intake, storage operation, and memory counters. Stats must also expose real
+  relay optimizer state or explicit unavailable rows as providers land.
 - Relay publish waiters, paged read leases, deduped read abort listeners, relay
   final-close state, and idle pool eviction have cleanup tests.
 - Runtime counters use static aggregate keys only.

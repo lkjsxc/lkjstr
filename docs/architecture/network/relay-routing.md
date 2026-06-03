@@ -12,7 +12,7 @@ The orchestrator applies those tables when building Demand relay lists.
 ## Sources
 
 - Selected user read relays are always the base and fallback.
-- NIP-65 kind `10002` `r` tags add author read or write routes.
+- NIP-65 kind `10002` `r` tags add weak prior author read or write routes.
 - NIP-02 kind `3` `p` tag relay hints add followed-author routes.
 - `nevent`, `naddr`, `e`, and `q` tag relay hints add event lookup routes.
 - Event relay receipts add local evidence for exact event and author routes.
@@ -21,12 +21,13 @@ The orchestrator applies those tables when building Demand relay lists.
 
 ## Priority
 
-1. Entity and tag relay hints.
-2. Event relay receipts.
-3. NIP-65 author routes for the requested purpose.
-4. NIP-02 follow hints.
-5. Selected read relays.
-6. Discovery relays for metadata and relay-list metadata discovery only.
+1. Selected read relays are mandatory correctness fallback.
+2. Measured event receipts and successful author reads provide strongest
+   targeted evidence.
+3. Entity and tag relay hints provide medium targeted evidence.
+4. Local discovery successes provide medium targeted evidence.
+5. NIP-65 author routes are weak prior evidence for bounded targeted attempts.
+6. Discovery relays are only for metadata and relay-list metadata discovery.
 
 ## Bounds
 

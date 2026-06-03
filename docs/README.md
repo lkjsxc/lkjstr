@@ -34,24 +34,15 @@ table of contents required by repository checks.
 
 ## Directory Indexes
 
-- [architecture/backend/README.md](architecture/backend/README.md): local backend.
-- [architecture/data/README.md](architecture/data/README.md): storage and memory.
-- [architecture/data/feed-surface/README.md](architecture/data/feed-surface/README.md): feed surfaces.
-- [architecture/data/storage/README.md](architecture/data/storage/README.md): storage kernel.
-- [architecture/data/sqlite-opfs/README.md](architecture/data/sqlite-opfs/README.md): OPFS SQLite target.
-- [architecture/data/storage/retention/README.md](architecture/data/storage/retention/README.md): local-cache retention.
-- [architecture/feeds/README.md](architecture/feeds/README.md): feed contracts.
-- [architecture/network/README.md](architecture/network/README.md): relay ownership.
-- [architecture/rust-wasm/README.md](architecture/rust-wasm/README.md): Rust/WASM target.
-- [architecture/network/subscription-orchestration/README.md](architecture/network/subscription-orchestration/README.md): orchestration.
-- [architecture/runtimes/README.md](architecture/runtimes/README.md): runtimes.
-- [architecture/workspace/README.md](architecture/workspace/README.md): workspace.
-- [product/feeds/README.md](product/feeds/README.md): reading surfaces.
-- [product/tools/README.md](product/tools/README.md): tools.
-- [product/workspace/README.md](product/workspace/README.md): workspace behavior.
-- [decisions/README.md](decisions/README.md): decisions.
-- [research/README.md](research/README.md): research.
-- [vision/README.md](vision/README.md): vision.
+Primary directory READMEs own detailed listings:
+
+- [architecture/README.md](architecture/README.md)
+- [product/README.md](product/README.md)
+- [protocol/README.md](protocol/README.md)
+- [operations/README.md](operations/README.md)
+- [repository/README.md](repository/README.md)
+- [research/README.md](research/README.md)
+- [vision/README.md](vision/README.md)
 
 ## Complete File Index
 
@@ -162,6 +153,14 @@ table of contents required by repository checks.
 - [architecture/network/progressive-relay-rendering.md](architecture/network/progressive-relay-rendering.md)
 - [architecture/network/relay-pool.md](architecture/network/relay-pool.md)
 - [architecture/network/relay-routing.md](architecture/network/relay-routing.md)
+- [architecture/network/relay-optimizer/README.md](architecture/network/relay-optimizer/README.md)
+- [architecture/network/relay-optimizer/measurement-ledger.md](architecture/network/relay-optimizer/measurement-ledger.md)
+- [architecture/network/relay-optimizer/route-evidence-trust.md](architecture/network/relay-optimizer/route-evidence-trust.md)
+- [architecture/network/relay-optimizer/relay-read-scoring.md](architecture/network/relay-optimizer/relay-read-scoring.md)
+- [architecture/network/relay-optimizer/scan-width-adaptation.md](architecture/network/relay-optimizer/scan-width-adaptation.md)
+- [architecture/network/relay-optimizer/relay-wait-policy.md](architecture/network/relay-optimizer/relay-wait-policy.md)
+- [architecture/network/relay-optimizer/stats-projection.md](architecture/network/relay-optimizer/stats-projection.md)
+- [architecture/network/relay-optimizer/verification.md](architecture/network/relay-optimizer/verification.md)
 - [architecture/network/request-budget/README.md](architecture/network/request-budget/README.md)
 - [architecture/network/request-budget/effective-limits.md](architecture/network/request-budget/effective-limits.md)
 - [architecture/network/request-budget/intent.md](architecture/network/request-budget/intent.md)
@@ -291,6 +290,7 @@ table of contents required by repository checks.
 - [research/browser-storage.md](research/browser-storage.md)
 - [research/nostr-client-surfaces.md](research/nostr-client-surfaces.md)
 - [research/open-questions.md](research/open-questions.md)
+- [research/relay-optimizer-audit.md](research/relay-optimizer-audit.md)
 - [vision/README.md](vision/README.md)
 - [vision/north-star.md](vision/north-star.md)
 - [vision/principles.md](vision/principles.md)

@@ -25,7 +25,7 @@ before the SvelteKit product runtime can be removed.
 | Author Context  | not implemented | `app`, `relays`, `storage`, `ui` context runtime          | nearby author posts, exact reads, unavailable states                |
 | Accounts        | partial         | `domain`, `storage`, `web`, `ui` accounts path            | local, read-only, NIP-07 signing, secret safety tests               |
 | Relay Settings  | partial         | `domain`, `storage`, `web`, `ui` relay settings path      | NIP-11, discovery, NIP-65 suggestions, diagnostics                  |
-| Stats           | partial         | `storage`, `relays`, `app`, `web`, `ui` diagnostics       | storage, relay, job, compaction, memory diagnostics                 |
+| Stats           | partial         | `storage`, `relays`, `app`, `web`, `ui` diagnostics       | storage, relay, optimizer, job, compaction, memory diagnostics      |
 | Settings        | partial         | `domain`, `storage`, `app`, `web`, `ui` settings path     | flat edits, appearance, retention, cache budget side effects        |
 | Upload Settings | partial         | `domain`, `protocol`, `storage`, `web`, `ui` upload path  | NIP-96 discovery, NIP-98 auth, file upload                          |
 | lkjstr Log      | not implemented | `app`, `storage`, `ui` bounded log path                   | redacted chronological session diagnostics                          |
@@ -42,6 +42,7 @@ before the SvelteKit product runtime can be removed.
 | Event cache         | not implemented | `storage`, `web`, `app`, `relays` | event/tag/provenance tests and cache-first browser tests |
 | Feed evidence       | not implemented | `storage`, `app`, `relays`        | coverage, cursor, scan-hint, compaction invalidation     |
 | Diagnostics and log | not implemented | `storage`, `web`, `app`, `ui`     | Stats inventory, lkjstr Log, pressure and failure tests  |
+| Relay optimizer     | not implemented | `relays`, `app`, `storage`, `web` | score, scan hint, route trust, Stats, and synthetic relay tests |
 
 ## Product Rule
 
