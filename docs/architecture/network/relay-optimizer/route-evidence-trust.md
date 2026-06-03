@@ -13,16 +13,16 @@ still open.
 
 ## Trust Sources
 
-| Source | Trust | Rules |
-| --- | --- | --- |
-| selected user relay | correctness fallback | included unless disabled or removed |
-| measured event receipt | strongest measured route | real event seen on relay |
-| measured author read success | strong targeted route | recent successful author read |
-| local discovery success | medium-to-strong | repeated real reads improve rank |
-| event or entity relay hint | medium | useful seed for bounded attempts |
-| NIP-65 kind `10002` | weak prior | discovery seed only |
-| timeout, auth, close, error | negative | lowers route rank, not proof of absence |
-| repeated no-yield read | weak negative | decays targeted confidence |
+| Source                       | Trust                    | Rules                                   |
+| ---------------------------- | ------------------------ | --------------------------------------- |
+| selected user relay          | correctness fallback     | included unless disabled or removed     |
+| measured event receipt       | strongest measured route | real event seen on relay                |
+| measured author read success | strong targeted route    | recent successful author read           |
+| local discovery success      | medium-to-strong         | repeated real reads improve rank        |
+| event or entity relay hint   | medium                   | useful seed for bounded attempts        |
+| NIP-65 kind `10002`          | weak prior               | discovery seed only                     |
+| timeout, auth, close, error  | negative                 | lowers route rank, not proof of absence |
+| repeated no-yield read       | weak negative            | decays targeted confidence              |
 
 ## NIP-65 Rules
 

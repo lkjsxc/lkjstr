@@ -38,12 +38,12 @@ relay sets, filter shapes, route fingerprints, request modes, or tab ids.
 
 ## Feedback
 
-| Feedback | Meaning | Next-span rule |
-| --- | --- | --- |
-| `limit-hit` | at least one relay-shaped request hit its effective limit | split near visible edge; shrink starting span |
-| `under-half` | all contacted relays completed and returned at most half limit | double span within cap |
-| `balanced` | complete, neither dense nor sparse | keep span |
-| `incomplete` | EOSE proof missing or terminal failure present | do not double; shrink only when large |
+| Feedback     | Meaning                                                        | Next-span rule                                |
+| ------------ | -------------------------------------------------------------- | --------------------------------------------- |
+| `limit-hit`  | at least one relay-shaped request hit its effective limit      | split near visible edge; shrink starting span |
+| `under-half` | all contacted relays completed and returned at most half limit | double span within cap                        |
+| `balanced`   | complete, neither dense nor sparse                             | keep span                                     |
+| `incomplete` | EOSE proof missing or terminal failure present                 | do not double; shrink only when large         |
 
 Density is per relay and per relay-shaped request. Aggregate counts across
 relays cannot create dense or sparse proof.

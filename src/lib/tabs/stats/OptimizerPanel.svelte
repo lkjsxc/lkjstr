@@ -22,13 +22,20 @@
 
 <h3>Relay optimizer</h3>
 <div class="stats-cards">
-  <article><strong>{props.scores.length}</strong><span>relay scores</span></article>
-  <article><strong>{props.hints.length}</strong><span>scan hints</span></article>
+  <article>
+    <strong>{props.scores.length}</strong><span>relay scores</span>
+  </article>
+  <article>
+    <strong>{props.hints.length}</strong><span>scan hints</span>
+  </article>
 </div>
 <h4>Relay read scores</h4>
 <table class="stats-table">
   <thead>
-    <tr><th>Relay</th><th>Surface</th><th>Score</th><th>Yield</th><th>Samples</th></tr>
+    <tr
+      ><th>Relay</th><th>Surface</th><th>Score</th><th>Yield</th><th>Samples</th
+      ></tr
+    >
   </thead>
   <tbody>
     {#if scoreRows.length === 0}
@@ -48,7 +55,11 @@
 <h4>Scan hints</h4>
 <table class="stats-table">
   <thead>
-    <tr><th>Scan key</th><th>Relay</th><th>Direction</th><th>Span</th><th>Feedback</th></tr>
+    <tr
+      ><th>Scan key</th><th>Relay</th><th>Direction</th><th>Span</th><th
+        >Feedback</th
+      ></tr
+    >
   </thead>
   <tbody>
     {#if hintRows.length === 0}

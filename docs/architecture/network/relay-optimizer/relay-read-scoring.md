@@ -35,15 +35,15 @@ error, event-limit state, bytes sent, bytes received, and update time.
 
 ## Components
 
-| Component | Meaning |
-| --- | --- |
-| `reliability` | EOSE without terminal failure is strong positive evidence |
-| `first_event_speed` | lower latency to first useful event is better |
-| `eose_speed` | lower latency to complete EOSE is better |
-| `useful_yield` | matching event yield for the request shape |
-| `unique_yield` | non-duplicate contribution across relays |
-| `penalty` | timeout, close, auth, socket error, and mild density cost |
-| `fairness_credit` | bounded retry credit for old low-score entries |
+| Component           | Meaning                                                   |
+| ------------------- | --------------------------------------------------------- |
+| `reliability`       | EOSE without terminal failure is strong positive evidence |
+| `first_event_speed` | lower latency to first useful event is better             |
+| `eose_speed`        | lower latency to complete EOSE is better                  |
+| `useful_yield`      | matching event yield for the request shape                |
+| `unique_yield`      | non-duplicate contribution across relays                  |
+| `penalty`           | timeout, close, auth, socket error, and mild density cost |
+| `fairness_credit`   | bounded retry credit for old low-score entries            |
 
 All components are clamped to `[0.0, 1.0]`.
 

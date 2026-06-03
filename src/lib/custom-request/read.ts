@@ -1,4 +1,5 @@
 import { matchesFilter, type NostrFilter } from '$lib/protocol';
+import type { PlannedTimelinePageIntent } from '$lib/relays/orchestration/page-reads';
 import type { OnProgressiveReadSnapshot } from '$lib/relays/progressive-read-types';
 import type { SubscriptionOrchestrator } from '$lib/relays/orchestration/orchestrator';
 import { feedEventsFromProgressiveSnapshot } from '$lib/timeline/timeline-progressive';
@@ -48,10 +49,18 @@ export async function readCustomRequestEvents(input: {
     subscriptions: input.subscriptions,
   });
   if (cache.kind === 'complete-cache')
-    return filterEvents(cache.page.items, input.request.filters, input.pageSize);
+    return filterEvents(
+      cache.page.items,
+      input.request.filters,
+      input.pageSize,
+    );
   if (cache.kind === 'partial-cache') {
     void readCustomRelayGroups(input, key, groups).catch(() => undefined);
-    return filterEvents(cache.page.items, input.request.filters, input.pageSize);
+    return filterEvents(
+      cache.page.items,
+      input.request.filters,
+      input.pageSize,
+    );
   }
   const page = await readCustomRelayGroups(input, key, groups);
   return filterEvents(page.items, input.request.filters, input.pageSize);
@@ -79,7 +88,7 @@ function customRequestPlan(
   input: Parameters<typeof readCustomRequestEvents>[0],
   key: string,
   groups: ReturnType<typeof customRequestGroup>[],
-) {
+): PlannedTimelinePageIntent {
   return {
     key,
     groups,

@@ -980,6 +980,7 @@ dependencies = [
  "lkjstr-app",
  "lkjstr-domain",
  "lkjstr-protocol",
+ "lkjstr-relays",
  "lkjstr-storage",
  "lkjstr-ui",
  "serde",

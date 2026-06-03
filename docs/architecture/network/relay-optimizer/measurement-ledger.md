@@ -14,12 +14,12 @@ is still open.
 
 The SQLite worker target owns these optimizer records:
 
-| Table | Purpose | Retention |
-| --- | --- | --- |
-| `relay_read_observations` | recent per-relay read diagnostics | bounded by age and count |
-| `relay_read_scores` | latest aggregate score per stable score key | bounded by age and key count |
-| `feed_scan_hints` | next-span hints for compatible grouped scans | bounded by age and semantic key count |
-| `route_evidence_scores` | measurement-informed author route trust | bounded by author plus relay age and count |
+| Table                     | Purpose                                      | Retention                                  |
+| ------------------------- | -------------------------------------------- | ------------------------------------------ |
+| `relay_read_observations` | recent per-relay read diagnostics            | bounded by age and count                   |
+| `relay_read_scores`       | latest aggregate score per stable score key  | bounded by age and key count               |
+| `feed_scan_hints`         | next-span hints for compatible grouped scans | bounded by age and semantic key count      |
+| `route_evidence_scores`   | measurement-informed author route trust      | bounded by author plus relay age and count |
 
 Existing `feed_scan_hints` rows stay recoverable page-cache data. New optimizer
 rows must be ledger-backed or otherwise counted by the storage inventory before

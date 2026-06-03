@@ -1,4 +1,7 @@
-import type { RelayReadScore, RelayReadScoreInput } from './relay-read-score-types';
+import type {
+  RelayReadScore,
+  RelayReadScoreInput,
+} from './relay-read-score-types';
 
 type BridgeResponse<T> = { readonly ok: true; readonly data: T };
 type BridgeScore = Omit<RelayReadScore, 'updatedAt'> & {
@@ -6,7 +9,10 @@ type BridgeScore = Omit<RelayReadScore, 'updatedAt'> & {
 };
 
 type RelayReadScoreBridge = {
-  readonly initial?: (keyJson: string, updatedAtMs: number) => BridgeResponse<BridgeScore>;
+  readonly initial?: (
+    keyJson: string,
+    updatedAtMs: number,
+  ) => BridgeResponse<BridgeScore>;
   readonly update?: (
     scoreJson: string,
     observationJson: string,

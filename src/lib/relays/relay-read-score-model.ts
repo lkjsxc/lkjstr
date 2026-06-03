@@ -1,4 +1,7 @@
-import { bridgeInitialScore, bridgeUpdatedScore } from './relay-read-score-bridge';
+import {
+  bridgeInitialScore,
+  bridgeUpdatedScore,
+} from './relay-read-score-bridge';
 import type {
   RelayReadScore,
   RelayReadScoreInput,
@@ -146,7 +149,9 @@ function smoothingWeight(previousSampleCount: number): number {
 }
 
 function failure(input: RelayReadScoreInput): boolean {
-  return Boolean(input.timeout || input.closed || input.auth || input.socketError);
+  return Boolean(
+    input.timeout || input.closed || input.auth || input.socketError,
+  );
 }
 
 function ratio(numerator: number, denominator: number): number {
@@ -160,4 +165,3 @@ function smooth(previous: number, next: number, weight: number): number {
 function clamp(value: number): number {
   return Number.isNaN(value) ? neutral : Math.max(0, Math.min(1, value));
 }
-
