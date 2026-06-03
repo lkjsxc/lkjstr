@@ -15,6 +15,7 @@ export type MemoryCounterKey =
   | 'active-tab-runtimes'
   | 'closed-tab-snapshots'
   | 'feed-runtime-window-size'
+  | 'feed-row-height-model-count'
   | 'relay-diagnostic-summary-count'
   | 'profile-summary-cache-count'
   | 'token-cache-count'
@@ -37,6 +38,7 @@ const memoryCounterKeys: readonly MemoryCounterKey[] = [
   'active-tab-runtimes',
   'closed-tab-snapshots',
   'feed-runtime-window-size',
+  'feed-row-height-model-count',
   'relay-diagnostic-summary-count',
   'profile-summary-cache-count',
   'token-cache-count',

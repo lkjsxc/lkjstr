@@ -18,6 +18,7 @@ import {
   listRecentScanDensityModels,
   readScanOptimizerDebugSnapshot,
 } from '../feed-surface/scan-model-debug';
+import { feedRowHeightReservationCount } from '../feed-surface/row-height-reservation';
 
 export type MemoryDebugExport = {
   readonly counters: Record<MemoryCounterKey, number>;
@@ -54,6 +55,7 @@ export function syncDerivedMemoryCounters(): void {
   );
   setMemoryCounter('profile-summary-cache-count', profileCacheSize());
   setMemoryCounter('token-cache-count', contentTokenCacheSize());
+  setMemoryCounter('feed-row-height-model-count', feedRowHeightReservationCount());
 }
 
 export function memoryDebugExport(): MemoryDebugExport {
