@@ -6,6 +6,10 @@ The relay wait policy decides when a feed surface paints cached rows, partial
 relay rows, incomplete states, late inserts, and terminal empty or unavailable
 states.
 
+Status: Rust owns pure wait, terminal-empty, scroll-anchor, and late-merge
+reducers in `crates/lkjstr-app/src/feed_wait/`. Product feed wiring and browser
+late-merge UI affordances are still open.
+
 ## First Paint
 
 - At read start, render complete cache rows immediately when coverage proves

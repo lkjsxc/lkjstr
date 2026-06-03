@@ -10,6 +10,7 @@ reducers.
 - `custom_request/`: pure Custom Request parsing, clamps, and mode selection.
 - `feed/`: pure feed-window reduction and cursor derivation.
 - `feed_scan/`: adaptive grouped scan planning and trace reducers.
+- `feed_wait/`: first-paint, empty-state, and late-merge reducers.
 - `lib.rs`: public app crate exports.
 - `query/`: pure query-demand planning from product inputs to relay contracts.
 - `startup_snapshots.rs`: startup filtering for durable tab snapshot rows.

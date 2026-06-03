@@ -3,6 +3,7 @@
 pub mod custom_request;
 pub mod feed;
 pub mod feed_scan;
+pub mod feed_wait;
 pub mod query;
 mod startup_snapshots;
 mod workspace_defaults;
@@ -32,6 +33,12 @@ pub use feed_scan::{
     ScanSegment, ScanWindowFeedback, SegmentSplitOutcome, feed_scan_trace, hint_context,
     next_span_for_feedback, plan_feed_scan, reduce_scan_feedback, scan_hint_proves_cache_absence,
     segment_from_edge, should_query_uncovered_relay, split_limit_hit_segment,
+};
+pub use feed_wait::{
+    CONTEXT_UNAVAILABLE_WAIT_MS, EmptyProofInput, FIRST_PAINT_DELAY_MS, FOREGROUND_MERGE_WINDOW_MS,
+    FeedWaitDecision, FeedWaitEventRow, FeedWaitInput, FeedWaitState, LateMergeResult,
+    ScrollAnchor, ScrollAnchorDecision, decide_feed_wait, feed_empty_is_terminal,
+    merge_late_event_rows, scroll_anchor_for_late_insert, within_foreground_merge_window,
 };
 pub use query::{QueryDemandInput, QueryDemandPlan, QuerySurface, plan_query_demand};
 pub use workspace_runtime::{

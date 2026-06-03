@@ -43,9 +43,9 @@ This file is the concise status map for the active Rust/WASM migration.
   sorts measured receipt/read evidence above NIP-65 weak prior evidence.
 - `lkjstr-app` owns startup recovery, stored tab snapshot filtering, bounded
   warm tab snapshot staging, pure query-demand planning, feed-window reduction,
-  adaptive feed-scan planning, feed-scan feedback traces, feed live-runtime
-  composition, surface query input builders, and a pure Custom Request parser
-  and mode classifier.
+  adaptive feed-scan planning, feed-scan feedback traces, feed wait and late
+  merge reducers, feed live-runtime composition, surface query input builders,
+  and a pure Custom Request parser and mode classifier.
 - `lkjstr-ui` renders the partial Leptos workspace shell, Welcome, New Tab,
   Stats inventory, Settings, Accounts, Relay Settings, Upload Settings, and
   Tweet draft surfaces.
