@@ -6,6 +6,7 @@ export type PaneScrollSnapshot = {
 export function createPaneScrollRetention() {
   const bodies = new Map<string, HTMLElement>();
   const scroll = new Map<string, number>();
+  const pendingRestore = new Map<string, number>();
 
   const scrollOwner = (tabId: string): HTMLElement | undefined => {
     const body = bodies.get(tabId);
@@ -19,9 +20,38 @@ export function createPaneScrollRetention() {
     );
   };
 
-  const applyScrollTop = (tabId: string, top: number): void => {
+  const rememberTop = (tabId: string, top: number): void => {
+    const pending = pendingRestore.get(tabId);
+    if (pending !== undefined && pending > 0 && top === 0) return;
+    scroll.set(tabId, top);
+    if (pending !== undefined && Math.abs(top - pending) <= 1)
+      pendingRestore.delete(tabId);
+  };
+
+  const applyScrollTop = (tabId: string, top: number): boolean => {
     const owner = scrollOwner(tabId);
-    if (owner) owner.scrollTop = top;
+    if (!owner) return false;
+    owner.scrollTop = top;
+    const applied = top === 0 || Math.abs(owner.scrollTop - top) <= 1;
+    if (applied) pendingRestore.delete(tabId);
+    return applied;
+  };
+
+  const scheduleFrame = (callback: () => void): void => {
+    if (typeof requestAnimationFrame === 'function')
+      requestAnimationFrame(callback);
+    else queueMicrotask(callback);
+  };
+
+  const scheduleRestore = (tabId: string, top: number): void => {
+    pendingRestore.set(tabId, top);
+    let remaining = 30;
+    const apply = () => {
+      if (applyScrollTop(tabId, top) || remaining <= 0) return;
+      remaining -= 1;
+      scheduleFrame(apply);
+    };
+    scheduleFrame(apply);
   };
 
   return {
@@ -33,16 +63,15 @@ export function createPaneScrollRetention() {
           !target.classList.contains('event-list__viewport')
         )
           return;
-        scroll.set(tabId, target.scrollTop);
+        rememberTop(tabId, target.scrollTop);
       };
       bodies.set(tabId, node);
       node.addEventListener('scroll', remember, true);
-      if (scroll.has(tabId))
-        requestAnimationFrame(() => applyScrollTop(tabId, scroll.get(tabId)!));
+      if (scroll.has(tabId)) scheduleRestore(tabId, scroll.get(tabId)!);
       return {
         destroy: () => {
           const owner = scrollOwner(tabId);
-          if (owner) scroll.set(tabId, owner.scrollTop);
+          if (owner) rememberTop(tabId, owner.scrollTop);
           node.removeEventListener('scroll', remember, true);
           bodies.delete(tabId);
         },
@@ -50,25 +79,23 @@ export function createPaneScrollRetention() {
     },
     remember: (tabId: string): void => {
       const owner = scrollOwner(tabId);
-      if (owner) scroll.set(tabId, owner.scrollTop);
+      if (owner) rememberTop(tabId, owner.scrollTop);
     },
     hasTracked: (tabId: string): boolean => bodies.has(tabId),
-    hasRememberedScroll: (tabId: string): boolean => scroll.has(tabId),
+    hasRememberedScroll: (tabId: string): boolean =>
+      scroll.has(tabId) || pendingRestore.has(tabId),
     restore: (tabId: string): void => {
-      if (!scroll.has(tabId)) return;
-      const top = scroll.get(tabId)!;
-      requestAnimationFrame(() => applyScrollTop(tabId, top));
+      const top = pendingRestore.get(tabId) ?? scroll.get(tabId);
+      if (top === undefined) return;
+      scheduleRestore(tabId, top);
     },
     snapshot: (tabId: string): PaneScrollSnapshot => ({
-      scrollTop: scroll.get(tabId),
+      scrollTop: pendingRestore.get(tabId) ?? scroll.get(tabId),
     }),
     restoreSnapshot: (tabId: string, snapshot?: PaneScrollSnapshot): void => {
       if (snapshot?.scrollTop === undefined) return;
       scroll.set(tabId, snapshot.scrollTop);
-      const apply = () => applyScrollTop(tabId, snapshot.scrollTop!);
-      if (typeof requestAnimationFrame === 'function')
-        requestAnimationFrame(apply);
-      else apply();
+      scheduleRestore(tabId, snapshot.scrollTop);
     },
   };
 }

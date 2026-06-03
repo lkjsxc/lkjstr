@@ -28,6 +28,7 @@
   let importOpen = $state(false);
   let importDraft = $state('');
   let importStatus = $state('');
+  let pendingRestoreScrollTop = $state<number | undefined>(undefined);
   let restoredFields = false;
   let changedCount = $derived(
     settings.filter(
@@ -39,7 +40,7 @@
   function applyScrollTop(): void {
     if (!root) return;
     const remembered = scrollPositions.get(scrollKey());
-    const target = remembered ?? props.restoreScrollTop;
+    const target = remembered ?? pendingRestoreScrollTop;
     if (target !== undefined) root.scrollTop = target;
   }
 
@@ -51,7 +52,8 @@
   });
 
   $effect(() => {
-    void props.restoreScrollTop;
+    if (props.restoreScrollTop !== undefined)
+      pendingRestoreScrollTop = props.restoreScrollTop;
     void props.tabId;
     if (settings.length === 0) return;
     void tick().then(() => applyScrollTop());

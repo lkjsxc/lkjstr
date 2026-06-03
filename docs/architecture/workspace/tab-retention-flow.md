@@ -32,9 +32,11 @@ When tab `B` becomes active:
 5. The coordinator emits `TabSnapshotRestore { token, payload }`.
 6. Each mounted tab body receives that token once; after render, the parent calls
    `consumeRestore` and stale tokens are ignored.
-7. Feed tabs restore virtua anchor + runtime snapshot via `restoreAnchor` and
+7. Tool tabs that load rows asynchronously keep the restore scroll value locally
+   until their scroll owner exists and content has rendered.
+8. Feed tabs restore virtua anchor + runtime snapshot via `restoreAnchor` and
    `restoreSnapshot` when mount state was missing.
-8. Active runtime and relay subscriptions resume from restored cursors; cache
+9. Active runtime and relay subscriptions resume from restored cursors; cache
    repopulates the window before network where the feed contract requires it.
 
 ## Per Tab Kind Fields
@@ -56,7 +58,9 @@ changing row layout or scrollbar width.
 
 Each tab body marks its primary scroller with `data-scroll-owner` on the
 element that owns vertical overflow. `pane-scroll-retention` reads that node
-first instead of scanning all descendants.
+first instead of scanning all descendants. A pending persisted scroll restore
+stays authoritative until it is applied, so rapid focus changes cannot overwrite
+it with a fresh mount at `0`.
 
 Virtua feed lists use the Virtua viewport element inside `.event-list__scroller`.
 Profile uses that same owner for summary rows and note rows; retention must not
