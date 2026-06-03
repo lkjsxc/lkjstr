@@ -31,10 +31,10 @@ This file is the concise status map for the active Rust/WASM migration.
   state, relay read scoring, route evidence trust, and deterministic ordering.
 - `lkjstr-app` owns startup recovery, stored tab snapshot filtering, bounded warm
   tab snapshot staging, pure query-demand planning, feed-window reduction,
-  adaptive grouped feed-scan planning, feed-scan traces, feed wait and late merge
-  reducers, initial orchestration decisions, feed live-runtime composition,
-  surface query input builders, and a pure Custom Request parser and mode
-  classifier.
+  adaptive grouped feed-scan planning, feed-scan traces, feed row geometry,
+  feed wait and late merge reducers, initial orchestration decisions, feed
+  live-runtime composition, surface query input builders, and a pure Custom
+  Request parser and mode classifier.
 - `lkjstr-ui` renders the partial Leptos workspace shell, Welcome, New Tab,
   Stats inventory, Settings, Accounts, Relay Settings, Upload Settings, and
   Tweet draft surfaces.
@@ -47,8 +47,8 @@ This file is the concise status map for the active Rust/WASM migration.
 - Orchestration now has pure Rust decisions for cache mode, relay fallback,
   prefetch, hydration, and retention hints. SQLite-backed decision memory and
   shipped runtime wiring remain open.
-- Feed surfaces move toward measured row height reservation and real-data LOD
-  trees before full Rust UI parity.
+- Feed surfaces now have pure row geometry estimates and anchor compensation.
+  Product measurement wiring and real-data LOD tree integration remain open.
 
 ## Open Foundations
 

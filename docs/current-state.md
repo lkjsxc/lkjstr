@@ -143,9 +143,10 @@ Read next: [architecture/workspace/README.md](architecture/workspace/README.md),
   prove absence, suppress uncovered relays, or replace interval-union coverage.
   Exact id reads, search reads, Author Context, Thread context, metadata,
   follow-list lookup, and reference resolution keep exact request semantics.
-- Feed-surface docs now require row height reservation from measured geometry,
-  anchor compensation for height deltas above the viewport, and real-data LOD
-  trees for heavy feeds. Product wiring remains incremental.
+- Rust now owns pure feed row geometry estimates, measured-height model updates,
+  and anchor compensation. Feed-surface docs require row height reservation from
+  measured geometry and real-data LOD trees for heavy feeds. Product wiring
+  remains incremental.
 
 ## Network And Runtimes
 

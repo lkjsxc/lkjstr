@@ -2,6 +2,7 @@
 
 pub mod custom_request;
 pub mod feed;
+pub mod feed_geometry;
 pub mod feed_scan;
 pub mod feed_wait;
 pub mod orchestration;
@@ -25,6 +26,11 @@ pub use feed::{
     notifications_live_query_input, profile_live_query_input, reduce_feed_runtime_window,
     reduce_feed_window, release_feed_runtime_live, search_query_input, set_feed_runtime_visibility,
     start_feed_runtime, thread_replies_query_input, thread_root_lookup_input,
+};
+pub use feed_geometry::{
+    AnchorCompensation, GeometryEstimateSource, RowGeometryEstimate, RowGeometryFeatures,
+    RowGeometryModel, RowHeightObservation, RowKind, anchor_compensation_for_height_delta,
+    estimate_row_geometry, geometry_bucket_key, update_row_geometry_model,
 };
 pub use feed_scan::{
     CoverageGap, CursorPoint, DEFAULT_HINT_TTL_SECONDS, DEFAULT_INITIAL_SPAN_SECONDS,

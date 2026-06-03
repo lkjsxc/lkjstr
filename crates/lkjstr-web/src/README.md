@@ -14,6 +14,7 @@ Source files expose Rust application behavior to the browser through
 - `nip07_host.rs`: browser NIP-07 public-key adapter.
 - `protocol_bridge.rs`: protocol bridge operations.
 - `relay_score/`: serializable relay read score bridge.
+- `scan_model/`: serializable scan density planning bridge.
 - `relay_host/`: relay WebSocket and browser timeout host adapters.
 - `relay_settings_host.rs`: browser-backed Relay Settings command provider.
 - `response.rs`: structured JavaScript response helpers.
