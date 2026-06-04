@@ -32,7 +32,9 @@ Normal verbose commands remain available for local debugging:
 - `pnpm verify`
 - `pnpm cloudflare:dry-run`
 
-CI must use quiet commands by default.
+CI must use quiet commands by default. Playwright web-server startup allows the
+production build enough time to compile and emit the Rust/WASM scan bridge
+assets before preview starts.
 
 ## Local
 
