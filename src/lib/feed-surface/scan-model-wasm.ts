@@ -1,5 +1,3 @@
-import { loadLkjstrWebWasm } from 'virtual:lkjstr-web-wasm';
-
 export type ScanModelWasmResult<T> =
   | { readonly ok: true; readonly value: T }
   | {
@@ -24,7 +22,8 @@ export async function loadScanModelWasmPlanner(): Promise<
   ScanModelWasmResult<ScanModelWasmPlanner>
 > {
   try {
-    const exports = (await loadLkjstrWebWasm()) as ScanModelWasmExports;
+    const module = await import('virtual:lkjstr-web-wasm');
+    const exports = (await module.loadLkjstrWebWasm()) as ScanModelWasmExports;
     return { ok: true, value: createScanModelWasmPlanner(exports) };
   } catch (error) {
     return {
