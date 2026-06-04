@@ -10,7 +10,7 @@ write-action helpers.
 - [event-order.ts](event-order.ts): canonical `compareEventsNewestFirst` for feeds.
 - Repository implementations and shared storage adapters.
 - Relay page scans, compound feed cursor ordering, durable feed coverage
-  records, and scan density model observations.
+  records, scan context helpers, and scan density model observations.
 - Feed cursors, coverage, scan hints, and scan density rows are recoverable page
   cache and should register in `cacheLedger` when persisted.
 - Content token, media, tree, zap, and scroll helpers.

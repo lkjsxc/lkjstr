@@ -51,6 +51,11 @@
       >scan storage</span
     >
   </article>
+  <article>
+    <strong>{props.scanDebug?.wasmBridge.state ?? 'loading'}</strong><span
+      >scan WASM</span
+    >
+  </article>
 </div>
 <h4>Relay read scores</h4>
 <table class="stats-table">
@@ -116,6 +121,13 @@
         ><td colspan="7"
           >SQLite scan models unavailable: {props.scanDebug
             .unavailableMessage ?? 'unavailable'}</td
+        ></tr
+      >
+    {:else if props.scanDebug.wasmBridge.state === 'unavailable'}
+      <tr
+        ><td colspan="7"
+          >Rust scan planner unavailable: {props.scanDebug.wasmBridge.message ??
+            'unavailable'}</td
         ></tr
       >
     {:else if modelRows.length === 0}

@@ -1,6 +1,7 @@
 import type { NostrFilter } from '../protocol';
 import type { BatchReadResult } from './relay-page-scan-batch';
 import { semanticFilterKey } from './relay-page-scan-diagnostics';
+import { scanContextForRelay, scanEdge } from './relay-page-scan-context';
 import type { RelayPageSegment } from './relay-page-segments';
 import type { RelayGroupPageRequest } from './relay-page';
 import {
@@ -12,7 +13,11 @@ import {
   updateScanModelsFromObservation,
   type ScanModelObservation,
 } from '$lib/feed-surface/scan-model-learning';
-import type { ScanModelContext } from '$lib/feed-surface/scan-model-records';
+import { reduceScanObservationWithRust } from '$lib/feed-surface/scan-model-bridge';
+import type {
+  ScanDensityModelRecord,
+  ScanModelContext,
+} from '$lib/feed-surface/scan-model-records';
 
 export async function recordBatchScanModels(input: {
   readonly request: RelayGroupPageRequest;
@@ -41,13 +46,16 @@ async function recordOne(input: {
   readonly segment: RelayPageSegment;
   readonly direction: 'older' | 'newer';
 }): Promise<void> {
-  const context = scanContext(input);
+  const filterKey = semanticFilterKey(input.filter);
+  const context = scanContextForRelay({ ...input, filterKey });
   const observation = scanObservation(input, context);
   const previousModels = (await selectScanModelsForContext(context)) ?? [];
-  const models = updateScanModelsFromObservation({
+  const models = await updatedModels(
+    input,
+    context,
     observation,
     previousModels,
-  });
+  );
   await insertScanObservation({
     ...context,
     id: observationId(observation),
@@ -93,19 +101,36 @@ function scanObservation(
   };
 }
 
-function scanContext(input: Parameters<typeof recordOne>[0]): ScanModelContext {
-  return {
-    semanticFeedKey: scanSemanticKey(input.request),
-    routeGroupKey: input.groupKey,
-    relayUrl: input.relayUrl,
-    semanticFilterKey: semanticFilterKey(input.filter),
+async function updatedModels(
+  input: Parameters<typeof recordOne>[0],
+  context: ScanModelContext,
+  observation: ScanModelObservation,
+  previousModels: readonly ScanDensityModelRecord[],
+): Promise<readonly ScanDensityModelRecord[]> {
+  const models = previousModels ?? [];
+  const edge = scanEdge({
+    request: input.request,
     direction: input.direction,
-    routeFingerprint: input.request.routeFingerprint ?? input.request.key,
-  };
-}
-
-function scanSemanticKey(request: RelayGroupPageRequest): string {
-  return request.semanticFeedKey ?? request.key;
+    nowMs: observation.completedAtMs,
+  });
+  const reduced = await reduceScanObservationWithRust({
+    plan: {
+      context,
+      models,
+      effectiveLimit: observation.effectiveLimit,
+      requestedLimit: observation.requestedLimit,
+      pageSize: input.request.pageSize,
+      previousSpanSeconds: input.segment.span,
+      nowMs: observation.completedAtMs,
+      ...edge,
+    },
+    observation,
+  });
+  if (reduced.ok) return reduced.value.updatedModels;
+  return updateScanModelsFromObservation({
+    observation,
+    previousModels: models,
+  });
 }
 
 function observationId(observation: ScanModelObservation): string {

@@ -24,7 +24,11 @@ export type ScanSpanProposal = {
   readonly sourceScope: ScanModelScope;
   readonly sourceModelKey: string;
   readonly confidence: number;
-  readonly capReason?: 'increase-limited' | 'decrease-limited';
+  readonly capReason?:
+    | 'increase-limited'
+    | 'decrease-limited'
+    | 'min-span'
+    | 'max-span';
 };
 
 export function proposeScanSpanFromModels(input: {

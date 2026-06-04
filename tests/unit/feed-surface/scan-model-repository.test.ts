@@ -36,6 +36,18 @@ describe('scan model repository matching', () => {
       ),
     ).toEqual(['Exact', 'RelayFilter', 'Surface']);
   });
+
+  it('orders equal scopes by model key', () => {
+    const rows = [
+      model('Surface', { modelKey: 'surface:b' }),
+      model('Surface', { modelKey: 'surface:a' }),
+    ];
+    expect(
+      selectMatchingScanModelsForContext(rows, context()).map(
+        (row) => row.modelKey,
+      ),
+    ).toEqual(['surface:a', 'surface:b']);
+  });
 });
 
 function context(): ScanModelContext {

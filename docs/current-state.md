@@ -139,10 +139,12 @@ Read next: [architecture/workspace/README.md](architecture/workspace/README.md),
   hydration, reference hydration, diagnostics, or relay bootstrap.
 - Home, Global, Profile posts, Notifications, and time-windowable Custom Request
   feeds use adaptive grouped scans. Older and newer product scans persist scan
-  observations and density models, and use available density models to warm the
-  next span. Rust/WASM remains the target primary planner for product reads.
-  Scan models and last-span hints are performance input only and must never prove
-  absence, suppress uncovered relays, or replace interval-union coverage. Exact
+  observations and density models, use available density models to warm the next
+  span, and call the Rust/WASM scan bridge for initial span choice and
+  observation reduction when the bridge is available. Follow-up segment policy
+  and reload proof remain open. Scan models and last-span hints are performance
+  input only and must never prove absence, suppress uncovered relays, or replace
+  interval-union coverage. Exact
   id reads, search reads, Author Context, Thread context, metadata, follow-list
   lookup, and reference resolution keep exact request semantics.
 - Rust now owns pure feed row geometry estimates, measured-height model updates,
@@ -166,12 +168,13 @@ Read next: [architecture/network/README.md](architecture/network/README.md) and
   `10002` discovery.
 - Matching Home tabs attach to one shared query keyed by account, selected
   relays, page size, and feed policy.
-- Stats and `__lkjstrMemoryDebug()` expose orchestration demand, lease, event
-  intake, storage operation, and memory counters. Rust now owns initial pure
-  orchestration decisions for cache mode, selected relay reads, prefetch,
-  hydration, and retention hints. Stats shows real in-memory relay score and
-  scan hint snapshots, plus durable scan density rows and decision traces when
-  SQLite storage is available. Durable orchestration, row geometry, and LOD
+- Stats, `__lkjstrMemoryDebug()`, and `window.__lkjstrDebug` expose
+  orchestration demand, lease, event intake, storage operation, scan optimizer,
+  and memory counters. Rust now owns initial pure orchestration decisions for
+  cache mode, selected relay reads, prefetch, hydration, and retention hints.
+  Stats shows real in-memory relay score and scan hint snapshots, durable scan
+  density rows, decision traces, scan storage mode, and Rust/WASM bridge state
+  when providers are available. Durable orchestration, row geometry, and LOD
   providers remain open.
 - Relay publish waiters, paged read leases, deduped read abort listeners, relay
   final-close state, and idle pool eviction have cleanup tests.

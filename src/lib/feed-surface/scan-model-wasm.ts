@@ -1,3 +1,5 @@
+import { loadLkjstrWebWasm } from 'virtual:lkjstr-web-wasm';
+
 export type ScanModelWasmResult<T> =
   | { readonly ok: true; readonly value: T }
   | {
@@ -17,6 +19,21 @@ export type ScanModelWasmPlanner = {
   readonly reduce: <T>(input: unknown) => ScanModelWasmResult<T>;
   readonly selectKeys: <T>(input: unknown) => ScanModelWasmResult<T>;
 };
+
+export async function loadScanModelWasmPlanner(): Promise<
+  ScanModelWasmResult<ScanModelWasmPlanner>
+> {
+  try {
+    const exports = (await loadLkjstrWebWasm()) as ScanModelWasmExports;
+    return { ok: true, value: createScanModelWasmPlanner(exports) };
+  } catch (error) {
+    return {
+      ok: false,
+      reason: 'unavailable',
+      message: error instanceof Error ? error.message : String(error),
+    };
+  }
+}
 
 export function createScanModelWasmPlanner(
   exports: ScanModelWasmExports | undefined,

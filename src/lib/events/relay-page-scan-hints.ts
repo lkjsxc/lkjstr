@@ -13,6 +13,11 @@ import { limitedRelayFilterGroups } from './relay-page-limits';
 import { semanticFilterKey } from './relay-page-scan-diagnostics';
 import { relaySegmentInitialSpan } from './relay-page-segments';
 import type { BatchReadResult } from './relay-page-scan-batch';
+import {
+  scanContextForRelay,
+  scanEdge,
+  scanSemanticKey,
+} from './relay-page-scan-context';
 import type { RelayGroupPageRequest } from './relay-page';
 import {
   insertScanDecisionTrace,
@@ -22,6 +27,7 @@ import {
   proposeScanSpanFromModels,
   type ScanSpanProposal,
 } from '$lib/feed-surface/scan-model-learning';
+import { planScanSpanWithRust } from '$lib/feed-surface/scan-model-bridge';
 import type { ScanModelContext } from '$lib/feed-surface/scan-model-records';
 
 export async function warmInitialSpan(
@@ -121,45 +127,56 @@ async function warmSpanForRelay(input: {
   readonly previousSpanSeconds?: number;
 }): Promise<number | undefined> {
   if (input.direction === 'initial') return undefined;
-  const context = scanContext({ ...input, direction: input.direction });
+  const context = scanContextForRelay({ ...input, direction: input.direction });
   const models = await selectScanModelsForContext(context);
   if (!models || models.length === 0) return undefined;
+  const nowMs = Date.now();
+  const edge = scanEdge({
+    request: input.request,
+    direction: input.direction,
+    nowMs,
+  });
+  const bridgePlan = {
+    context,
+    models,
+    effectiveLimit: input.effectiveLimit,
+    requestedLimit: input.effectiveLimit,
+    pageSize: input.request.pageSize,
+    previousSpanSeconds: input.previousSpanSeconds,
+    nowMs,
+    ...edge,
+  };
+  const rust = await planScanSpanWithRust(bridgePlan);
+  if (rust.ok) {
+    void recordDecisionTrace(context, rust.value.proposal, {
+      bridge: 'rust-wasm',
+      raw: rust.value.raw,
+    });
+    return rust.value.proposal.spanSeconds;
+  }
   const proposal = proposeScanSpanFromModels({
     context,
     models,
     effectiveLimit: input.effectiveLimit,
     previousSpanSeconds: input.previousSpanSeconds,
-    nowMs: Date.now(),
+    nowMs,
   });
   if (!proposal) return undefined;
-  void recordDecisionTrace(context, proposal);
+  void recordDecisionTrace(context, proposal, {
+    bridge: 'typescript-fallback',
+    unavailableMessage: rust.message,
+  });
   return proposal.spanSeconds;
-}
-
-function scanContext(input: {
-  readonly request: RelayGroupPageRequest;
-  readonly groupKey: string;
-  readonly relayUrl: string;
-  readonly filterKey: string;
-  readonly direction: 'older' | 'newer';
-}): ScanModelContext {
-  return {
-    semanticFeedKey: scanSemanticKey(input.request),
-    routeGroupKey: input.groupKey,
-    relayUrl: input.relayUrl,
-    semanticFilterKey: input.filterKey,
-    direction: input.direction,
-    routeFingerprint: input.request.routeFingerprint ?? input.request.key,
-  };
-}
-
-function scanSemanticKey(request: RelayGroupPageRequest): string {
-  return request.semanticFeedKey ?? request.key;
 }
 
 async function recordDecisionTrace(
   context: ScanModelContext,
   proposal: ScanSpanProposal,
+  bridge: {
+    readonly bridge: 'rust-wasm' | 'typescript-fallback';
+    readonly raw?: unknown;
+    readonly unavailableMessage?: string;
+  },
 ): Promise<void> {
   const createdAtMs = Date.now();
   await insertScanDecisionTrace({
@@ -168,6 +185,6 @@ async function recordDecisionTrace(
     semanticFeedKey: context.semanticFeedKey,
     direction: context.direction,
     createdAtMs,
-    recordJson: { context, proposal },
+    recordJson: { context, proposal, bridge },
   });
 }

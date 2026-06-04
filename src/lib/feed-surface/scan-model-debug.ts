@@ -2,6 +2,7 @@ import { ensureEventGraphSchema } from '$lib/storage/sqlite-opfs/event-schema';
 import { sendSqliteStorage } from '$lib/storage/sqlite-opfs/kernel-client';
 import { readSqliteStorageHealth } from '$lib/storage/sqlite-opfs/storage-health';
 import type { SqlScalar } from '$lib/storage/sqlite-opfs/types';
+import { loadScanModelWasmPlanner } from './scan-model-wasm';
 import type {
   ScanDecisionTraceRecord,
   ScanDensityModelRecord,
@@ -12,22 +13,36 @@ export type ScanOptimizerDebugSnapshot = {
   readonly decisionTraces: readonly ScanDecisionTraceRecord[];
   readonly storageMode: 'persistent-opfs' | 'temporary-memory' | 'unavailable';
   readonly unavailableMessage?: string;
+  readonly wasmBridge: {
+    readonly state: 'available' | 'unavailable';
+    readonly message?: string;
+  };
 };
 
 const debugRowLimit = 24;
 
 export async function readScanOptimizerDebugSnapshot(): Promise<ScanOptimizerDebugSnapshot> {
-  const [models, decisionTraces, storage] = await Promise.all([
+  const [models, decisionTraces, storage, wasmBridge] = await Promise.all([
     listRecentScanDensityModels(debugRowLimit),
     listRecentScanDecisionTraces(debugRowLimit),
     readScanStorageMode(),
+    readScanWasmBridgeState(),
   ]);
   return {
     models,
     decisionTraces,
     storageMode: storage.mode,
     unavailableMessage: storage.message,
+    wasmBridge,
   };
+}
+
+export const scanOptimizerSnapshot = readScanOptimizerDebugSnapshot;
+
+export async function latestScanDecision(): Promise<
+  ScanDecisionTraceRecord | undefined
+> {
+  return (await listRecentScanDecisionTraces(1))[0];
 }
 
 export async function listRecentScanDensityModels(
@@ -76,6 +91,14 @@ async function readScanStorageMode(): Promise<{
   } catch (error) {
     return { mode: 'unavailable', message: errorText(error) };
   }
+}
+
+async function readScanWasmBridgeState(): Promise<
+  ScanOptimizerDebugSnapshot['wasmBridge']
+> {
+  const planner = await loadScanModelWasmPlanner();
+  if (planner.ok) return { state: 'available' };
+  return { state: 'unavailable', message: planner.message };
 }
 
 function decode<T>(raw: unknown): T[] {

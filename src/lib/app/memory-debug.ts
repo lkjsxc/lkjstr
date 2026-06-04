@@ -14,9 +14,10 @@ import {
   activeStorageOperationGroups,
 } from '../storage/operation/tracked-operation';
 import {
+  latestScanDecision,
   listRecentScanDecisionTraces,
   listRecentScanDensityModels,
-  readScanOptimizerDebugSnapshot,
+  scanOptimizerSnapshot,
 } from '../feed-surface/scan-model-debug';
 import { feedRowHeightReservationCount } from '../feed-surface/row-height-reservation';
 
@@ -31,6 +32,8 @@ export type MemoryDebugExport = {
 export type LkjstrDebugExport = {
   readonly scanModels: typeof listRecentScanDensityModels;
   readonly scanDecisionTraces: typeof listRecentScanDecisionTraces;
+  readonly latestScanDecision: typeof latestScanDecision;
+  readonly scanOptimizerSnapshot: typeof scanOptimizerSnapshot;
   readonly storageMode: () => Promise<string>;
 };
 
@@ -85,7 +88,8 @@ export function installMemoryDebugExport(): void {
   window.__lkjstrDebug = {
     scanModels: listRecentScanDensityModels,
     scanDecisionTraces: listRecentScanDecisionTraces,
-    storageMode: async () =>
-      (await readScanOptimizerDebugSnapshot()).storageMode,
+    latestScanDecision,
+    scanOptimizerSnapshot,
+    storageMode: async () => (await scanOptimizerSnapshot()).storageMode,
   };
 }
