@@ -20,6 +20,29 @@ runtime honest while the feed runtime cutover continues.
 | Author Context            | exact author context semantics                    | not used                     | not used                         | not used                                          | not used                          | exact author reads                         |
 | Metadata and references   | exact lookup semantics                            | not used                     | not used                         | not used                                          | not used                          | exact ids, profiles, and references        |
 
+## Primary Bridge Contract
+
+Product feed reads must use the Rust/WASM bridge as the first span planner when
+WASM is available. The TypeScript layer is host glue: it loads the WASM module,
+selects SQLite rows, maps DTO fields, executes relay reads, persists rows, and
+shows explicit unavailable states. It must not fork scan mathematics without a
+visible bridge-unavailable diagnostic.
+
+The product path for each adaptive surface is:
+
+1. build a stable scan context from semantic feed key, route group, relay,
+   filter key, direction, and route fingerprint,
+2. select Exact plus parent scan density models from SQLite,
+3. call `plan_feed_scan_from_js` for the initial relay-shaped segment span,
+4. execute real relay reads with that span,
+5. call `reduce_feed_scan_observation_from_js` for real observations,
+6. persist the observation, updated density models, and decision trace, and
+7. expose the chosen span through Stats and redacted debug hooks.
+
+If WASM cannot load, product reads may continue with selected-relay correctness
+fallbacks, but Stats and debug must say the Rust scan planner is unavailable.
+Unavailable bridge state must never be represented as neutral learned evidence.
+
 ## Matching Rules
 
 - Exact scan density models require route fingerprint equality.

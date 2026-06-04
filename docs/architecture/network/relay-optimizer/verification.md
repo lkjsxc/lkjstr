@@ -34,6 +34,11 @@ pnpm test:e2e:quiet -- scan
 pnpm test:e2e:quiet -- stats
 ```
 
+Unit tests must cover the TypeScript host boundary without requiring a real
+storage worker: Exact route-fingerprint matching, parent-scope matching,
+deterministic scope ordering, DTO mapping, Rust/WASM unavailable state, latest
+decision debug projection, and trace redaction.
+
 ## Scan Learning Scenarios
 
 - dense limit-hit scan converges toward two thirds occupancy, not simple halves

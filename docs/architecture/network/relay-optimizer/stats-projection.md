@@ -40,10 +40,23 @@ They include:
 - limit-hit rate and incomplete rate
 - last update time and staleness state
 - storage mode: OPFS, memory fallback, or unavailable
+- WASM bridge state: available, unavailable, or error with a redacted message
 
-The browser debug surface may expose redacted scan model and trace rows for
-Playwright. It must not expose local signing secrets, raw relay payloads, full
-event bodies, tab ids, request ids, owner handles, or subscription ids.
+The browser debug surface may expose redacted scan optimizer data for
+Playwright:
+
+```text
+window.__lkjstrDebug.scanModels()
+window.__lkjstrDebug.scanDecisionTraces()
+window.__lkjstrDebug.latestScanDecision()
+window.__lkjstrDebug.scanOptimizerSnapshot()
+window.__lkjstrDebug.storageMode()
+```
+
+These functions return real SQLite rows, current bridge/storage availability, or
+explicit unavailable records. They must not expose local signing secrets, raw
+relay payloads, full event bodies, tab ids, request ids, owner handles,
+subscription ids, or unredacted filters.
 
 ## Relay Health Rows
 

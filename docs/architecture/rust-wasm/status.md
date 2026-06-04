@@ -42,8 +42,10 @@ This file is the concise status map for the active Rust/WASM migration.
 ## Active Target Slices
 
 - Scan-width adaptation now has pure density planning, optimizer storage rows,
-  host SQLite wrappers, and WASM bridge functions. Product feed read-path wiring
-  and Stats projection remain open.
+  host SQLite wrappers, and WASM bridge functions. The shipped SvelteKit runtime
+  must load that bridge through the Vite host boundary before using TypeScript
+  fallback span policy. Full read-path parity and Stats polish remain open until
+  reload and synthetic relay proof passes.
 - Orchestration now has pure Rust decisions for cache mode, relay fallback,
   prefetch, hydration, and retention hints. SQLite-backed decision memory and
   shipped runtime wiring remain open.
