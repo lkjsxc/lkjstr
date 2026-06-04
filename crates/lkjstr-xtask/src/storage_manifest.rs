@@ -50,10 +50,8 @@ fn source_rows(text: &str) -> BTreeMap<String, Row> {
             args.clear();
         }
         if kind.is_some() {
-            if let Some(value) = first_quoted(line) {
-                args.push(value);
-            }
-            if line == ")," {
+            args.extend(quoted_values(line));
+            if line.ends_with("),") {
                 if kind.take().is_some() {
                     insert_source_row(&mut rows, &args);
                 }
@@ -68,8 +66,8 @@ fn insert_source_row(rows: &mut BTreeMap<String, Row>, args: &[String]) {
     let Some(name) = args.first() else {
         return;
     };
-    let class_index = 2;
-    let group_index = 3;
+    let class_index = 1;
+    let group_index = 2;
     if let (Some(data_class), Some(group)) = (args.get(class_index), args.get(group_index)) {
         rows.insert(
             name.clone(),
@@ -99,11 +97,25 @@ fn docs_rows(text: &str) -> BTreeMap<String, Row> {
     rows
 }
 
-fn first_quoted(line: &str) -> Option<String> {
-    let start = line.find('\'')?;
-    let rest = line.get(start + 1..)?;
-    let end = rest.find('\'')?;
-    rest.get(..end).map(ToOwned::to_owned)
+fn quoted_values(line: &str) -> Vec<String> {
+    let mut values = Vec::new();
+    let mut rest = line;
+    while let Some(start) = rest.find('\'') {
+        let Some(after_start) = rest.get(start + 1..) else {
+            break;
+        };
+        let Some(end) = after_start.find('\'') else {
+            break;
+        };
+        if let Some(value) = after_start.get(..end) {
+            values.push(value.to_owned());
+        }
+        rest = match after_start.get(end + 1..) {
+            Some(next) => next,
+            None => break,
+        };
+    }
+    values
 }
 
 fn code(cell: &str) -> Option<String> {
