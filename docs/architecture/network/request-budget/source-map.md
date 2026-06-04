@@ -41,4 +41,4 @@ below 200 lines.
 | `crates/lkjstr-relays/tests/request_message_size_test.rs` | Rust `REQ` byte cap gates                            |
 | `tests/unit/relays/subscription-manager-*.test.ts`        | dedupe and cap behavior                              |
 | `tests/unit/events/relay-page-*.test.ts`                  | grouped page limit behavior                          |
-| `tests/unit/`                                              | Relay Settings, Stats, Search, and Custom Request UX |
+| `tests/unit/`                                             | Relay Settings, Stats, Search, and Custom Request UX |

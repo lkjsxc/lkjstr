@@ -24,9 +24,3 @@ services:
       context: .
       target: cloudflare
     image: lkjstr-cloudflare:local
-
-  e2e:
-    build:
-      context: .
-      target: e2e
-    image: lkjstr-e2e:local

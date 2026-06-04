@@ -39,7 +39,3 @@ CMD ["cargo", "run", "-p", "lkjstr-xtask", "--", "quiet", "verify"]
 
 FROM deps AS cloudflare
 CMD ["pnpm", "cloudflare:quiet"]
-
-FROM deps AS e2e
-RUN pnpm exec playwright install --with-deps chromium
-CMD ["pnpm", "test:e2e:quiet"]

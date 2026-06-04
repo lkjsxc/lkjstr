@@ -8,11 +8,7 @@ effectful runtime created by a factory function and closed by its owner.
 ## Shape
 
 ```ts
-type BackgroundTaskPriority =
-  | 'user-visible'
-  | 'near-visible'
-  | 'maintenance'
-  | 'idle';
+type BackgroundTaskPriority = 'user-visible' | 'near-visible' | 'maintenance' | 'idle';
 
 type BackgroundTask = {
   readonly id: string;

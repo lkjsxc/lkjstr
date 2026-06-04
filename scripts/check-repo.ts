@@ -30,9 +30,7 @@ const skipDirs = new Set([
   'data',
   'dist',
   'node_modules',
-  'playwright-report',
   'target',
-  'test-results',
   'tmp',
 ]);
 const sourceExts = new Set(['.css', '.html', '.js', '.svelte', '.ts']);

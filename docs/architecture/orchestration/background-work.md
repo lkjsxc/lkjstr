@@ -42,12 +42,12 @@ Background tasks own:
 
 ## Priorities
 
-| Priority | Meaning |
-| --- | --- |
-| `user-visible` | needed for the current visible surface |
-| `near-visible` | likely needed soon for overscan or active navigation |
-| `maintenance` | correctness, cleanup, repair, or diagnostics |
-| `idle` | opportunistic improvement that may be dropped under pressure |
+| Priority       | Meaning                                                      |
+| -------------- | ------------------------------------------------------------ |
+| `user-visible` | needed for the current visible surface                       |
+| `near-visible` | likely needed soon for overscan or active navigation         |
+| `maintenance`  | correctness, cleanup, repair, or diagnostics                 |
+| `idle`         | opportunistic improvement that may be dropped under pressure |
 
 ## Acceptance
 

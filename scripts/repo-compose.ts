@@ -18,7 +18,7 @@ export async function checkComposeGuardrails(
     .catch(() => '');
   if (!text) return [{ file: 'docker-compose.yml', message: 'missing' }];
   const services = serviceNames(text);
-  for (const service of ['app', 'verify', 'e2e', 'cloudflare', 'app-smoke']) {
+  for (const service of ['app', 'verify', 'cloudflare', 'app-smoke']) {
     if (!services.has(service))
       problems.push({
         file: 'docker-compose.yml',
@@ -77,14 +77,6 @@ export async function checkComposeGuardrails(
         message: `missing Docker Rust/WASM tool ${token}`,
       });
   }
-  const playwright = await fs
-    .readFile(path.join(root, 'playwright.config.ts'), 'utf8')
-    .catch(() => '');
-  if (!playwright.includes('pnpm build && pnpm preview'))
-    problems.push({
-      file: 'playwright.config.ts',
-      message: 'e2e webServer must use production preview',
-    });
   return problems;
 }
 

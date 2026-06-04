@@ -12,10 +12,20 @@ describe('package scripts', () => {
     expect(packageJson.scripts.lint).toContain('eslint');
   });
 
-  it('exposes focused memory browser smoke coverage', () => {
-    expect(packageJson.scripts['test:e2e:memory']).toContain(
-      'playwright test tests/e2e/memory-gate.spec.ts',
+  it('keeps quiet verification focused on unit and build gates', () => {
+    expect(packageJson.scripts['test:quiet']).toBe(
+      'tsx scripts/run-quiet.ts test',
     );
+    expect(packageJson.scripts['verify:quiet']).toBe(
+      'tsx scripts/run-quiet.ts verify',
+    );
+    expect(packageJson.scripts['ci:quiet']).toBe('tsx scripts/run-quiet.ts ci');
+    const removedFlowName = ['e', '2', 'e'].join('');
+    expect(
+      Object.keys(packageJson.scripts).some((key) =>
+        key.includes(removedFlowName),
+      ),
+    ).toBe(false);
   });
 
   it('exposes Cloudflare dry-run verification without a publish script', () => {

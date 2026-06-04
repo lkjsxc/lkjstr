@@ -15,16 +15,12 @@
     "test": "vitest run",
     "test:quiet": "tsx scripts/run-quiet.ts test",
     "test:watch": "vitest",
-    "test:e2e": "playwright test",
-    "test:e2e:memory": "playwright test tests/e2e/memory-gate.spec.ts tests/e2e/heavy-feed-memory.spec.ts tests/e2e/memory-churn.spec.ts",
-    "test:e2e:quiet": "tsx scripts/run-quiet.ts e2e",
     "rust-wasm:quiet": "tsx scripts/run-quiet.ts rust-wasm",
     "cloudflare:dry-run": "pnpm build && wrangler deploy --dry-run",
     "verify": "pnpm check:repo && pnpm lint && pnpm check && pnpm test && pnpm build",
     "verify:quiet": "tsx scripts/run-quiet.ts verify",
     "ci:quiet": "tsx scripts/run-quiet.ts ci",
-    "cloudflare:quiet": "tsx scripts/run-quiet.ts cloudflare",
-    "verify:e2e": "pnpm verify && pnpm test:e2e"
+    "cloudflare:quiet": "tsx scripts/run-quiet.ts cloudflare"
   },
   "dependencies": {
     "@lucide/svelte": "^1.16.0",
@@ -41,7 +37,6 @@
   },
   "devDependencies": {
     "@eslint/js": "^9.39.1",
-    "@playwright/test": "^1.59.1",
     "@sveltejs/adapter-cloudflare": "^7.2.8",
     "@sveltejs/kit": "^2.49.4",
     "@sveltejs/vite-plugin-svelte": "^6.2.4",

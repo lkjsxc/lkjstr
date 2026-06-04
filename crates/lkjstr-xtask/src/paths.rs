@@ -14,7 +14,6 @@ const SKIP_DIRS: &[&str] = &[
     "data",
     "node_modules",
     "target",
-    "test-results",
     "tmp",
 ];
 

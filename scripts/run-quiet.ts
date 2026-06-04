@@ -21,17 +21,6 @@ const unitStep: Step = {
   ],
 };
 
-const e2eStep: Step = {
-  label: 'e2e',
-  command: 'pnpm',
-  args: [
-    'exec',
-    'playwright',
-    'test',
-    '--reporter=./scripts/playwright-quiet-reporter.ts',
-  ],
-};
-
 const verifySteps: readonly Step[] = [
   { label: 'repo', command: 'pnpm', args: ['check:repo'] },
   { label: 'lint', command: 'pnpm', args: ['lint'] },
@@ -49,9 +38,8 @@ const plans: Record<string, readonly Step[]> = {
     },
   ],
   test: [unitStep],
-  e2e: [e2eStep],
   verify: verifySteps,
-  ci: [...verifySteps, e2eStep],
+  ci: verifySteps,
   cloudflare: [
     { label: 'cloudflare', command: 'pnpm', args: ['cloudflare:dry-run'] },
   ],

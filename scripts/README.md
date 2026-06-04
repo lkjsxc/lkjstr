@@ -7,26 +7,28 @@ commands.
 
 ## Table of Contents
 
+- `app-smoke.ts`: production preview smoke check for `/`.
 - `check-repo.ts`: repository contract checker.
-- `generate-icons.ts`: static icon generation.
+- `repo-compose.ts`: Docker Compose guardrails.
+- `repo-docs.ts`: docs topology and prose checks.
 - `repo-source-classes.ts`: TypeScript AST guard that rejects first-party
   classes under `src/`.
 - `run-quiet.ts`: quiet verification runner for agents and CI.
 - `vite-lkjstr-web-wasm.ts`: optional Vite asset plugin for the Rust scan bridge.
 - `vitest-quiet-reporter.ts`: minimal Vitest reporter for quiet unit runs.
-- `playwright-quiet-reporter.ts`: minimal Playwright reporter for quiet e2e runs.
 
 `pnpm check:repo` runs the class guard along with documentation, README,
-Compose, line-length, and forbidden dependency text checks.
+Compose, line-length, storage, timer, runtime counter, and dependency text
+checks.
 
-## Quiet runner (`run-quiet.ts`)
+## Quiet Runner
 
-Modes: `test`, `e2e`, `verify`, `ci`, `cloudflare`.
+Modes: `test`, `verify`, `ci`, `cloudflare`, `rust-wasm`.
 
 - Passing run: prints exactly one line, `ok <mode>`.
 - Failing run: prints `failed <step>`, exit code or signal, then the captured
-  stdout/stderr tail (128 KiB byte budget).
+  stdout/stderr tail using the shared byte budget.
 - Successful child steps print nothing.
 
-`ci` runs repository checks, lint, typecheck, unit tests, build, and e2e. It
-does not include Cloudflare dry-run.
+`ci` runs repository checks, lint, typecheck, unit tests, and build. It does not
+include Cloudflare dry-run.
