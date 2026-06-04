@@ -43,16 +43,17 @@ ownership context.
 
 ## Jobs, Diagnostics, And Retention
 
-| Current family | SQLite table group | Status | Notes |
-| --- | --- | --- | --- |
-| `jobs` | `jobs` | implemented | Publish and maintenance job records use the worker. |
-| `relayDiagnosticSummaries` | `relay_diagnostic_summaries` | implemented | Stats reads durable summaries through SQLite. |
-| `relayInformation` | `relay_information` | implemented | NIP-11 records use SQLite product wiring. |
-| `relayListSuggestions` | `relay_list_suggestions` | implemented | Suggestions remain explicit-import only. |
-| `authorRelayRoutes` | `author_relay_routes` | implemented | Disabled relays and route blocks still dominate. |
-| `cacheLedger` | `cache_ledger` | partial | SQLite resource writes, summaries, prune selection, and event/direct retention deletion use ledger rows; repair still needs cutover. |
-| `cacheMeta` | `cache_meta` | partial | Cache status metadata uses SQLite; repair and integrity state still need cutover. |
-| app log | `app_log` | open | Durable redacted app log is a diagnostics target. |
+| Current family | SQLite table group | Status | Deletion blocker | Notes |
+| --- | --- | --- | --- | --- |
+| `jobs` | `jobs` | implemented | none | Publish and maintenance job records use the worker. |
+| `relayDiagnosticSummaries` | `relay_diagnostic_summaries` | implemented | none | Stats reads durable summaries through SQLite. |
+| `relayInformation` | `relay_information` | implemented | none | NIP-11 records use SQLite product wiring. |
+| `relayListSuggestions` | `relay_list_suggestions` | implemented | none | Suggestions remain explicit-import only. |
+| `authorRelayRoutes` | `author_relay_routes` | implemented | none | Disabled relays and route blocks still dominate. |
+| `cacheLedger` | `cache_ledger` | partial | `src/lib/cache/cache-ledger-repair.ts`, `cache-ledger-repair-rows.ts`, `cache-ledger-target.ts`, and `unowned-cache-cleanup.ts` still scan Dexie. | Add `repairCacheLedger` and `readCacheLedgerHealth` repository commands that chunk resource and ledger scans by deterministic primary-key cursor. |
+| `cacheMeta` | `cache_meta` | partial | Repair metadata still writes through `cache-ledger-repair.ts`; cache tool summaries still depend on repair health from Dexie. | Add `readCacheToolSummary` and write repair/inventory metadata from SQLite commands. |
+| physical inventory | SQLite catalog and ledger summaries | partial | `src/lib/storage/storage-inventory.ts`, `indexed-db-inventory.ts`, and `dexie-inventory-fallback.ts` still enumerate IndexedDB stores. | Add `readPhysicalInventory` with table counts, ledger byte estimates, storage mode, and explicit unavailable rows. |
+| app log | `app_log` | open | `src/lib/log/app-log.ts` is session memory only and `src/lib/tabs/log/LkjstrLogTab.svelte` renders no durable rows. | Add `appendAppLog`, `listAppLog`, and `clearRecoverableAppLog` repositories with redaction and bounded retention. |
 
 ## Deletion Criterion
 

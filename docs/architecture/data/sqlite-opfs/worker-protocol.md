@@ -37,6 +37,18 @@ Product repositories use typed commands, not raw SQL:
 The lower host adapter may carry storage-crate statement ids and bound
 parameters, but product UI code must never construct SQL text.
 
+## Required Storage Tool Commands
+
+| Command | Input | Output | Contract |
+| --- | --- | --- | --- |
+| `repairCacheLedger` | `nowMs`, `chunkLimit`, `deleteLimit`, `includeUnownedCleanup` | repair progress metadata | Chunks resource and ledger scans; deletes only definitely missing unprotected ledger rows. |
+| `readCacheLedgerHealth` | optional `chunkLimit` | orphan and missing ledger counts plus unavailable count | Reports partial or unavailable evidence explicitly. |
+| `readPhysicalInventory` | scan limits and deadline | table counts, ledger bytes, storage mode, old-store rows | Reads SQLite catalog and ledger summaries; old IndexedDB rows are diagnostic only. |
+| `readCacheToolSummary` | none | cache status fields needed by Stats and cache actions | Combines health, latest repair metadata, pressure, and inventory status. |
+| `appendAppLog` | redacted log row | stored row id and retention result | Stores no local secrets, raw relay payloads, filters, tab ids, request ids, subscription ids, or owner handles. |
+| `listAppLog` | `limit`, optional `beforeMs` | newest redacted rows | Returns durable rows in reverse chronological order. |
+| `clearRecoverableAppLog` | optional age or count policy | deleted count | Deletes only recoverable diagnostic rows. |
+
 ## Health Command
 
 `getStorageHealth` returns:

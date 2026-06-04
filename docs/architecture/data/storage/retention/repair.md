@@ -5,32 +5,60 @@
 Repair restores ledger consistency for recoverable cache resources without
 deleting protected records or trusting unavailable stores.
 
-## Algorithm
+## SQLite Algorithm
 
-1. Start a repair run and record start time.
-2. For each ledger manifest resource, scan the owning table in chunks.
-3. Upsert missing ledger rows.
-4. Update stale byte estimates when the existing row is not protected.
-5. Scan ledger rows in chunks.
-6. Delete orphan ledger rows only when the target is definitely missing.
-7. Skip orphan deletion when target state is unavailable.
-8. Delete unowned cache rows only when a classifier proves they are
-   recoverable and not protected.
-9. Delete obsolete old stores or databases only when the cleanup allowlist
-   classifies them as recoverable.
-10. Write repair metadata.
+Repair is a SQLite worker command. Product UI calls the repository command and
+never scans stores directly.
 
-## Metadata
+1. Start a repair run and record start time in memory.
+2. For each ledger manifest resource, scan the owning SQLite table in chunks by
+   its deterministic primary-key cursor.
+3. Build the ledger row from the resource codec and owned child-row byte
+   estimates.
+4. Upsert a missing ledger row in the same worker transaction chunk.
+5. Update stale byte estimates only when the existing row is not protected.
+6. Scan `cache_ledger` in chunks by `id`.
+7. Check each ledger target with the manifest-owned table and primary key.
+8. Delete an orphan ledger row only when the target state is definitely
+   `missing`.
+9. Skip deletion when the target state is `unavailable`.
+10. Delete unowned cache rows only when the manifest classifier proves the row is
+    recoverable and not protected.
+11. Write repair metadata to `cache_meta`.
 
-Repair metadata records rows scanned, chunks processed, missing rows inserted,
-stale rows updated, orphan rows deleted, unowned rows deleted, old stores or
-databases deleted, unavailable targets skipped, and elapsed time.
+## Target State
+
+| State | Meaning | Deletion allowed |
+| --- | --- | --- |
+| `present` | The owning SQLite table was read and the primary key exists. | no |
+| `missing` | The owning SQLite table was read and the primary key does not exist. | yes, for unprotected ledger rows |
+| `unavailable` | The table, row codec, query, or chunk budget was unavailable. | no |
+
+## Chunking
+
+Every repair scan uses:
+
+```text
+scan(table, after_primary_key, limit) -> rows, next_primary_key
+```
+
+The cursor is the table primary key, or an explicitly documented deterministic
+index when a table has a composite primary key. Chunk limits are bounded by the
+worker command input. A chunk that exhausts its budget reports partial metadata
+instead of deleting anything it did not prove missing.
+
+## Metadata And Stats
+
+Repair metadata records scanned resource rows, scanned ledger rows, chunks
+processed, missing rows inserted, stale rows updated, protected rows skipped,
+orphan rows deleted, unowned rows deleted, unavailable targets skipped, start
+time, finish time, elapsed time, and partial reason. Stats projects the latest
+metadata, plus `orphanLedgerRows` and `missingLedgerRows`, from SQLite.
 
 ## Rule
 
-Full-table `toArray()` repair is allowed only for tests or bounded stores. Large
-or unbounded repair paths must chunk by primary key or another deterministic
-index.
+Full-table `toArray()` repair is allowed only in tests. Product repair must use
+SQLite chunk cursors and typed repositories.
 
 Repair is conservative. It never deletes protected account data, signing
 secrets, settings, relay sets, workspace state, drafts, active jobs, active tab
