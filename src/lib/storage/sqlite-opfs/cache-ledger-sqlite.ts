@@ -56,7 +56,7 @@ export function sqlitePutCacheMeta(meta: CacheMetadata): Promise<boolean> {
   return sqliteRecordBatch(ensureCacheLedgerSchema, [cacheMetaStep(meta)]);
 }
 
-async function ensureCacheLedgerSchema(): Promise<boolean> {
+export async function ensureCacheLedgerSchema(): Promise<boolean> {
   const response = await applySqliteSchema(
     cacheLedgerSchemaHash,
     cacheLedgerSchema,

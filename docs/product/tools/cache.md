@@ -43,6 +43,9 @@ surface; status appears in Stats.
   when database enumeration is available.
 - Stats shows ledger inventory by owner kind and resource kind so
   notification-heavy and page-heavy pressure is visible.
+- Manual repair uses SQLite cache-ledger health and repair; it only deletes
+  orphan ledger rows after the target table was read and the target primary key
+  was definitely missing.
 - Event pruning removes relay receipts, tag rows, and affected feed evidence.
   Notification pruning does not delete source events unless their event ledger
   rows are also selected.

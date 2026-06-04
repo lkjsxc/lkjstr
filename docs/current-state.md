@@ -100,13 +100,13 @@ Read next: [architecture/data/README.md](architecture/data/README.md),
   the same top-level return path.
 - Durable redacted app log rows append to `app_log`; lkjstr Log reads durable
   rows and session rows when storage is available.
-- Remaining Dexie cutover work is limited to SQLite repair, physical
-  inventory, cache tool summaries and actions, any residual product readers or
-  writers, and deletion of `src/lib/storage/browser-db.ts` plus Dexie metadata
-  once no caller remains.
+- Cache ledger health and repair run through chunked SQLite repository calls;
+  orphan deletion requires definite target absence and never removes protected
+  rows.
+- Remaining Dexie cutover work is limited to physical inventory, cache tool
+  inventory summaries, any residual product readers or writers, and deletion
+  of `src/lib/storage/browser-db.ts` plus Dexie metadata once no caller remains.
 - Immediate unfinished storage queue:
-  - move `src/lib/cache/cache-ledger-repair.ts` and repair row collection to
-    chunked SQLite worker commands;
   - replace IndexedDB physical inventory in `src/lib/storage/storage-inventory.ts`
     with SQLite table inventory plus explicit old-store diagnostics;
   - move cache tool health, repair, and summary reads to typed SQLite

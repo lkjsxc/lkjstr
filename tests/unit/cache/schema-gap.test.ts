@@ -37,6 +37,7 @@ describe('cache schema gaps', () => {
     await expect(repair.cacheLedgerHealth()).resolves.toEqual({
       orphanLedgerRows: 0,
       missingLedgerRows: 0,
+      unavailableTargets: 1,
     });
     await expect(repair.repairCacheLedger()).resolves.toMatchObject({
       orphanLedgerRowsDeleted: 0,
@@ -75,6 +76,7 @@ describe('cache schema gaps', () => {
     await expect(repair.cacheLedgerHealth()).resolves.toEqual({
       orphanLedgerRows: 0,
       missingLedgerRows: 0,
+      unavailableTargets: 1,
     });
     await expect(repair.repairCacheLedger()).resolves.toMatchObject({
       orphanLedgerRowsDeleted: 0,

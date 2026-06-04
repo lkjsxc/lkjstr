@@ -78,7 +78,7 @@ export function sqliteDeleteTabStates(
   );
 }
 
-async function ensureTabStateSchema(): Promise<boolean> {
+export async function ensureTabStateSchema(): Promise<boolean> {
   const response = await applySqliteSchema(tabStateSchemaHash, tabStateSchema);
   return response.outcome === 'ok';
 }

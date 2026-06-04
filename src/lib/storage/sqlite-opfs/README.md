@@ -24,6 +24,7 @@ storage target.
 - `cache-ledger-sqlite.ts`: cache ledger reads and cache metadata writes.
 - `cache-compaction-sqlite.ts`: retention deletion for ledger-owned resources.
 - `app-log-repository.ts`: redacted durable app-log append, list, and clear calls.
+- `cache-ledger-repair-*.ts`: chunked cache-ledger health, repair, and target checks.
 - `test-api.ts`: localhost-only E2E storage API bridge.
 - `relay-cache-schema.ts`: relay diagnostics, route, job, and ledger schema.
 - `relay-cache-steps.ts`: relay cache SQL write steps.
