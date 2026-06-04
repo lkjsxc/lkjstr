@@ -8,6 +8,7 @@ This directory contains Vitest unit tests grouped by source domain.
 
 - [accounts/](accounts/): account and signer tests.
 - [app/](app/): runtime counters and app-level helpers.
+- [background/](background/): background task queue tests.
 - [backend/](backend/): browser-local backend query ownership tests.
 - [cache/](cache/): cache behavior tests.
 - [custom-request/](custom-request/): custom relay request tests.

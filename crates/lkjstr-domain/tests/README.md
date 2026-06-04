@@ -7,6 +7,7 @@ Domain tests port browser-independent TypeScript behavior into Rust.
 ## Table of Contents
 
 - `accounts_test.rs`: account records, local signing, and npub mining helpers.
+- `feed_lod_test.rs`: feed LOD build, forgetting, scoring, and recovery.
 - `new_tab_catalog_test.rs`: New Tab option labels and active-account config.
 - `relay_sets_test.rs`: default relay sets and relay settings reducers.
 - `tweet_draft_test.rs`: Tweet draft row shape and body detection.

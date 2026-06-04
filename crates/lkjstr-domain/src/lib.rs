@@ -1,6 +1,7 @@
 #![doc = "Pure domain reducers and models for lkjstr."]
 
 pub mod accounts;
+pub mod feed_lod;
 pub mod local_account;
 pub mod npub_miner;
 pub mod relay_sets;
@@ -12,6 +13,11 @@ pub use accounts::{
     Account, AccountCapabilities, SignerType, capabilities_for, create_account,
     create_labeled_account, normalize_account, parse_pubkey, parse_readonly_account, short_key,
     signer_type_key,
+};
+pub use feed_lod::{
+    FeedLodLevel, FeedLodNode, FeedLodRow, ForgettingDecision, MaterializationAction,
+    RecoveryRecipe, RetentionSignals, apply_forgetting, build_lod_tree, forgetting_plan,
+    is_recoverable, low_value, materialization_plan, recovery_recipe_for, retention_score,
 };
 pub use local_account::{
     LocalAccountError, LocalAccountSecret, create_local_account_record, generate_nsec, parse_nsec,
