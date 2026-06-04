@@ -46,7 +46,8 @@
   let scanDebug = $state<ScanOptimizerDebugSnapshot | null>(null);
   let autoRefresh = $state(false);
   let timer: ReturnType<typeof setInterval> | undefined;
-  let disposed = false;
+  let disposed = false,
+    refreshSeq = 0;
   let totals = $derived(totalStats(snapshots));
   let subscriptionRows = $derived(relaySubscriptionRows(snapshots));
 
@@ -57,21 +58,22 @@
   });
 
   async function refresh(): Promise<void> {
+    const seq = ++refreshSeq;
     snapshots = currentRelaySnapshots();
     memory = runtimeMemorySnapshot();
     optimizerScores = relayReadScoreSnapshot();
     scanHints = feedScanHintSnapshot();
     await new Promise((resolve) => setTimeout(resolve, 100));
-    if (disposed) return;
-    [summaries, jobHealth, cache, storageHealth, scanDebug] = await Promise.all(
-      [
-        safeRead(() => listRelayDiagnosticSummaries(), summaries),
-        safeRead(() => loadJobHealthSummary(), jobHealth),
-        safeRead(() => cacheStatus(), cache),
-        safeRead(() => readSqliteStorageHealth(), storageHealth),
-        safeRead(() => readScanOptimizerDebugSnapshot(), scanDebug),
-      ],
-    );
+    if (disposed || seq !== refreshSeq) return;
+    const next = await Promise.all([
+      safeRead(() => listRelayDiagnosticSummaries(), summaries),
+      safeRead(() => loadJobHealthSummary(), jobHealth),
+      safeRead(() => cacheStatus(), cache),
+      safeRead(() => readSqliteStorageHealth(), storageHealth),
+      safeRead(() => readScanOptimizerDebugSnapshot(), scanDebug),
+    ]);
+    if (disposed || seq !== refreshSeq) return;
+    [summaries, jobHealth, cache, storageHealth, scanDebug] = next;
   }
 
   async function safeRead<T>(read: () => Promise<T>, fallback: T): Promise<T> {

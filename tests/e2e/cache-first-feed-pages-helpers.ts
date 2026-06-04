@@ -5,7 +5,7 @@ import { semanticFilterKey } from '../../src/lib/events/relay-page-scan-diagnost
 import {
   pageIntentSemanticKey,
   routeGroupFingerprint,
-} from '../../src/lib/relays/orchestration/page-reads';
+} from '../../src/lib/relays/orchestration/page-read-keys';
 import {
   eventSteps,
   feedCoverageStep,
