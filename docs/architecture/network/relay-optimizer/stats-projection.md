@@ -54,9 +54,11 @@ window.__lkjstrDebug.storageMode()
 ```
 
 These functions return real SQLite rows, current bridge/storage availability, or
-explicit unavailable records. They must not expose local signing secrets, raw
-relay payloads, full event bodies, tab ids, request ids, owner handles,
-subscription ids, or unredacted filters.
+explicit unavailable records. Debug projections must hydrate row identity from
+SQLite columns when older `record_json` payloads do not contain it, so Stats
+lists never use missing or duplicate Svelte keys. They must not expose local
+signing secrets, raw relay payloads, full event bodies, tab ids, request ids,
+owner handles, subscription ids, or unredacted filters.
 
 ## Relay Health Rows
 

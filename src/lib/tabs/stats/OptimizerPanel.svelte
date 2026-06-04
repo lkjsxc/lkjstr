@@ -133,7 +133,7 @@
     {:else if modelRows.length === 0}
       <tr><td colspan="7">No durable scan density models recorded yet</td></tr>
     {/if}
-    {#each modelRows as model (model.modelKey)}
+    {#each modelRows as model, index (`${model.modelKey}:${index}`)}
       <tr>
         <td>{model.scope}</td>
         <td>{short(model.semanticFeedKey)}</td>
@@ -161,7 +161,7 @@
     {:else if traceRows.length === 0}
       <tr><td colspan="5">No durable scan decision traces recorded yet</td></tr>
     {/if}
-    {#each traceRows as trace (trace.traceId)}
+    {#each traceRows as trace, index (`${trace.traceId}:${index}`)}
       <tr>
         <td>{short(trace.traceId)}</td>
         <td>{short(trace.modelKey)}</td>
