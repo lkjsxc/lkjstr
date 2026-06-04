@@ -71,6 +71,7 @@ export type StorageOp =
       readonly rowLimit: number;
     }
   | { readonly kind: 'get-storage-health' }
+  | { readonly kind: 'read-physical-inventory' }
   | {
       readonly kind: 'batch';
       readonly mode: BatchMode;

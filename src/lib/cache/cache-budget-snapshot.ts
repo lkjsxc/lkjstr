@@ -2,7 +2,6 @@ import {
   storageInventory,
   type StorageInventoryRow,
 } from '../storage/storage-inventory';
-import { indexedDbAvailable } from '../storage/safe-storage';
 import {
   estimatedEventCacheBytes,
   estimatedLedgerBytes,
@@ -119,7 +118,7 @@ export async function cacheBudgetSnapshot(
     ),
     ledgerInventory,
     storageInventory: inventory,
-    storageApiAvailable: indexedDbAvailable(),
+    storageApiAvailable: budget.browserUsageBytes !== null,
   };
 }
 

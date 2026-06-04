@@ -12,20 +12,22 @@ storage target.
 - `open-database.ts`: VFS selection and database opening.
 - `worker-core.ts`: request handling independent of worker globals.
 - `worker-health.ts`: storage health projection.
-- `event-schema.ts`: SQLite event graph, relay receipt, tag, cursor, and ledger schema.
+- `physical-inventory.ts`: worker-side bounded table inventory.
+- `physical-inventory-repository.ts`: Stats-facing inventory rows.
+- `event-schema.ts`: event graph, relay receipt, tag, cursor, and ledger schema.
 - `event-row-codec.ts`: stored-event row decoding helpers.
 - `events-sqlite.ts`: event and feed cursor writes plus direct event lookups.
 - `notifications-sqlite.ts`: notification rows and notification ledger writes.
 - `feed-cache-steps.ts`: feed coverage and scan hint SQL write/delete steps.
 - `feed-cache-sqlite.ts`: feed coverage and scan hint repositories.
 - `event-pages-sqlite.ts`: timeline, profile, thread, and tag cache reads.
-- `event-matching-sqlite.ts`: Nostr filter candidate reads for local cache search.
-- `sqlite-record-helpers.ts`: JSON record table helpers shared by SQLite repositories.
+- `event-matching-sqlite.ts`: Nostr filter candidate reads for cache search.
+- `sqlite-record-helpers.ts`: JSON record table helpers.
 - `cache-ledger-sqlite.ts`: cache ledger reads and cache metadata writes.
-- `cache-compaction-sqlite.ts`: retention deletion for ledger-owned resources.
-- `app-log-repository.ts`: redacted durable app-log append, list, and clear calls.
-- `cache-ledger-repair-*.ts`: chunked cache-ledger health, repair, and target checks.
-- `test-api.ts`: localhost-only E2E storage API bridge.
+- `cache-compaction-sqlite.ts`: retention deletion for ledger resources.
+- `app-log-repository.ts`: redacted durable app-log append, list, and clear.
+- `cache-ledger-repair-*.ts`: chunked cache-ledger health and repair.
+- `test-api.ts`: localhost-only storage API bridge for focused tests.
 - `relay-cache-schema.ts`: relay diagnostics, route, job, and ledger schema.
 - `relay-cache-steps.ts`: relay cache SQL write steps.
 - `relay-cache-sqlite.ts`: relay diagnostics, NIP-11, suggestions, routes, and blocks.
@@ -33,13 +35,13 @@ storage target.
 - `worker.ts`: dedicated module worker entry point.
 - `client.ts`: browser client with deadlines, cancellation, and cleanup.
 - `kernel-client.ts`: shared open/apply/send helper for product repositories.
-- `accounts-sqlite.ts`: SQLite-backed account and local secret repositories.
+- `accounts-sqlite.ts`: account and local secret repositories.
 - `storage-health.ts`: Stats-facing health reader for the SQLite worker.
-- `settings-sqlite.ts`: SQLite-backed flat setting override repository.
-- `workspace-sqlite.ts`: SQLite-backed workspace layout repository.
-- `relay-sets-sqlite.ts`: SQLite-backed relay set repository.
-- `tweet-drafts-sqlite.ts`: SQLite-backed Tweet draft repository.
-- `tab-states-sqlite.ts`: SQLite-backed tab snapshot repository.
+- `settings-sqlite.ts`: flat setting override repository.
+- `workspace-sqlite.ts`: workspace layout repository.
+- `relay-sets-sqlite.ts`: relay set repository.
+- `tweet-drafts-sqlite.ts`: Tweet draft repository.
+- `tab-states-sqlite.ts`: tab snapshot repository.
 
 ## Contract
 

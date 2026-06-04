@@ -52,7 +52,7 @@ ownership context.
 | `authorRelayRoutes` | `author_relay_routes` | implemented | none | Disabled relays and route blocks still dominate. |
 | `cacheLedger` | `cache_ledger` | implemented | none | Resource writes, summaries, prune selection, event/direct retention deletion, health, and repair use SQLite. Old Dexie repair helper files are unused deletion targets. |
 | `cacheMeta` | `cache_meta` | implemented | none | Cache status metadata and repair metadata use SQLite; cache tool summary gaps now come from physical inventory. |
-| physical inventory | SQLite catalog and ledger summaries | partial | `src/lib/storage/storage-inventory.ts`, `indexed-db-inventory.ts`, and `dexie-inventory-fallback.ts` still enumerate IndexedDB stores. | Add `readPhysicalInventory` with table counts, ledger byte estimates, storage mode, and explicit unavailable rows. |
+| physical inventory | SQLite catalog and old-store diagnostics | implemented | none | `storage-inventory.ts` composes SQLite table counts, old IndexedDB database presence without row scans, localStorage, Cache Storage, and residual overhead. |
 | app log | `app_log` | implemented | none | `src/lib/storage/sqlite-opfs/app-log-repository.ts` appends, lists, clears, and trims redacted rows; `src/lib/tabs/log/LkjstrLogTab.svelte` renders durable rows with session rows. |
 
 ## Deletion Criterion

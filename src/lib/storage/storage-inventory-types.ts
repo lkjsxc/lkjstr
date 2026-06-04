@@ -9,13 +9,15 @@ export type StorageGroup =
 
 export type StorageInventoryStatus =
   | 'exact'
+  | 'estimated'
   | 'partial'
   | 'timeout'
   | 'unavailable'
-  | 'unsupported';
+  | 'unsupported'
+  | 'not-applicable';
 
 export type StorageInventoryKind =
-  | 'indexeddb-object-store'
+  | 'sqlite-table'
   | 'indexeddb-database'
   | 'local-storage'
   | 'cache-storage'

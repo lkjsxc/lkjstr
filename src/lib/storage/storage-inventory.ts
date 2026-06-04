@@ -1,8 +1,8 @@
-import { indexedDbInventory } from './indexed-db-inventory';
-import { indexedDbAvailable } from './safe-storage';
 import { nonIndexedStorageInventory } from './non-indexed-storage-inventory';
+import { oldIndexedDbDiagnostics } from './old-indexed-db-diagnostics';
 import { storageManifestGroup } from './schema/table-groups';
 import { isStorageTableName, storageTableNames } from './schema/table-names';
+import { readSqlitePhysicalInventory } from './sqlite-opfs/physical-inventory-repository';
 import type {
   StorageGroup,
   StorageInventoryOptions,
@@ -25,11 +25,12 @@ export async function storageInventory(
   browserUsageBytes: number | null,
   options: StorageInventoryOptions = {},
 ): Promise<StorageInventoryRow[]> {
-  const indexedRows = indexedDbAvailable()
-    ? await indexedDbInventory(options)
-    : [indexedDbUnavailableRow()];
-  const nonIndexedRows = await nonIndexedStorageInventory();
-  const rows = [...indexedRows, ...nonIndexedRows];
+  const [sqlite, oldIndexedRows, nonIndexedRows] = await Promise.all([
+    readSqlitePhysicalInventory(options.totalDeadlineMs),
+    oldIndexedDbDiagnostics(),
+    nonIndexedStorageInventory(),
+  ]);
+  const rows = [...sqlite.rows, ...oldIndexedRows, ...nonIndexedRows];
   const knownBytes = rows
     .filter((row) => row.group !== 'overhead')
     .reduce((sum, row) => sum + row.estimatedBytes, 0);
@@ -62,18 +63,4 @@ function overheadRows(
       recoverable: false,
     },
   ];
-}
-
-function indexedDbUnavailableRow(): StorageInventoryRow {
-  return {
-    table: 'IndexedDB',
-    kind: 'indexeddb-database',
-    ownership: 'unknown-unowned',
-    dataClass: 'unknown-legacy-or-unowned-storage',
-    group: 'unknown',
-    rowCount: null,
-    estimatedBytes: 0,
-    status: 'unavailable',
-    recoverable: false,
-  };
 }

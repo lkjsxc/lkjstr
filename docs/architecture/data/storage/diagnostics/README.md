@@ -7,7 +7,7 @@ and which verification proves storage behavior.
 
 ## Table of Contents
 
-- [inventory.md](inventory.md): IndexedDB and browser storage inventory.
+- [inventory.md](inventory.md): SQLite-first and browser storage inventory.
 - [pressure-states.md](pressure-states.md): cache pressure labels.
 - [stats.md](stats.md): Stats UI projection.
 - [verification.md](verification.md): required checks.

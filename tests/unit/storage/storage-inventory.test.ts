@@ -1,14 +1,16 @@
-import { describe, expect, it } from 'vitest';
-import { deadlineResult } from '../../../src/lib/storage/indexed-db-inventory-rows';
-import { classifyIndexedDbStore } from '../../../src/lib/storage/storage-inventory-classify';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 import {
   knownStorageTables,
   storageGroup,
   storageInventory,
 } from '../../../src/lib/storage/storage-inventory';
-import { browserDb } from '../../../src/lib/storage/browser-db';
 
 describe('storage inventory', () => {
+  afterEach(() => {
+    vi.restoreAllMocks();
+    vi.resetModules();
+  });
+
   it('classifies storage tables by ownership group', () => {
     expect(storageGroup('events')).toBe('prunable-cache');
     expect(storageGroup('eventRelays')).toBe('prunable-cache');
@@ -22,19 +24,16 @@ describe('storage inventory', () => {
     expect(storageGroup('futureTable')).toBe('unknown');
   });
 
-  it('classifies every current Dexie table explicitly', () => {
-    const known = new Set<string>(knownStorageTables);
-    for (const table of browserDb().tables) {
-      expect(known.has(table.name)).toBe(true);
-      expect(storageGroup(table.name)).not.toBe('unknown');
-    }
+  it('classifies every manifest table explicitly', () => {
+    for (const table of knownStorageTables)
+      expect(storageGroup(table)).not.toBe('unknown');
   });
 
-  it('reports residual browser overhead when indexeddb is unavailable', async () => {
+  it('reports residual overhead when SQLite is unavailable', async () => {
     const rows = await storageInventory(128);
     expect(rows).toContainEqual(
       expect.objectContaining({
-        table: 'IndexedDB',
+        table: 'SQLite',
         group: 'unknown',
         rowCount: null,
         estimatedBytes: 0,
@@ -45,42 +44,67 @@ describe('storage inventory', () => {
       expect.objectContaining({
         table: 'residual-browser-overhead',
         group: 'overhead',
-        rowCount: null,
         estimatedBytes: 128,
         status: 'exact',
       }),
     );
   });
 
-  it('detects current, legacy, and unknown stores', () => {
-    expect(classifyIndexedDbStore('lkjstr', 'events')).toMatchObject({
-      group: 'prunable-cache',
-      ownership: 'current-known-store',
+  it('lists old IndexedDB databases without scanning object-store rows', async () => {
+    vi.stubGlobal('indexedDB', {
+      open: vi.fn(),
+      databases: async () => [{ name: 'lkjstr' }, { name: 'foreign' }],
     });
-    expect(
-      classifyIndexedDbStore('lkjstr', 'passkeyAccountSecrets'),
-    ).toMatchObject({
-      group: 'unknown',
-      ownership: 'legacy-protected',
-      recoverable: false,
-    });
-    expect(classifyIndexedDbStore('lkjstr', 'futureTable')).toMatchObject({
-      group: 'unknown',
-      ownership: 'unknown-unowned',
-    });
+
+    const rows = await storageInventory(null);
+    expect(rows).toContainEqual(
+      expect.objectContaining({
+        table: 'old-indexeddb:lkjstr',
+        database: 'lkjstr',
+        status: 'estimated',
+        reason: 'old IndexedDB database presence; row scan skipped',
+      }),
+    );
+    expect(rows).toContainEqual(
+      expect.objectContaining({
+        table: 'old-indexeddb:foreign',
+        ownership: 'unknown-unowned',
+      }),
+    );
   });
 
-  it('marks deadline scans as partial instead of exact', () => {
-    expect(deadlineResult(3, 42)).toMatchObject({
-      rowCount: 3,
-      status: 'partial',
-      estimatedBytes: 42,
-    });
-    expect(deadlineResult(0, 0)).toMatchObject({
-      rowCount: null,
-      status: 'timeout',
-      estimatedBytes: 0,
-    });
+  it('maps SQLite physical inventory rows to storage groups', async () => {
+    vi.doMock('../../../src/lib/storage/sqlite-opfs/kernel-client', () => ({
+      sendSqliteStorage: async () => ({
+        outcome: 'ok',
+        rows: [
+          row('events', 3, 768),
+          row('local_account_secrets', 1, 256),
+          row('feed_scan_density_models', 2, 512),
+        ],
+        diagnostics: { mode: 'persistent-opfs' },
+      }),
+    }));
+    const { readSqlitePhysicalInventory } =
+      await import('../../../src/lib/storage/sqlite-opfs/physical-inventory-repository');
+
+    const result = await readSqlitePhysicalInventory();
+    expect(result.mode).toBe('persistent-opfs');
+    expect(result.rows).toContainEqual(
+      expect.objectContaining({ table: 'events', group: 'prunable-cache' }),
+    );
+    expect(result.rows).toContainEqual(
+      expect.objectContaining({
+        table: 'local_account_secrets',
+        group: 'protected',
+      }),
+    );
+    expect(result.rows).toContainEqual(
+      expect.objectContaining({
+        table: 'feed_scan_density_models',
+        group: 'derived-page-cache',
+      }),
+    );
   });
 
   it('keeps overhead out when browser usage is unknown', async () => {
@@ -88,3 +112,7 @@ describe('storage inventory', () => {
     expect(rows.some((row) => row.group === 'overhead')).toBe(false);
   });
 });
+
+function row(table: string, row_count: number, estimated_bytes: number) {
+  return { table, row_count, estimated_bytes, status: 'estimated' };
+}

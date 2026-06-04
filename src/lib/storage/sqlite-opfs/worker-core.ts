@@ -8,6 +8,7 @@ import {
 } from './database';
 import { createStorageHealth } from './worker-health';
 import { openSqliteDatabase, type OpenedSqliteDatabase } from './open-database';
+import { readPhysicalInventoryRows } from './physical-inventory';
 import type {
   OpenDatabase,
   StorageDiagnostics,
@@ -72,6 +73,8 @@ export function createSqliteWorkerCore(options: SqliteWorkerCoreOptions) {
     const current = opened;
     if (!current) throw new Error('SQLite database is not open');
     if (op.kind === 'get-storage-health') return health(request, current);
+    if (op.kind === 'read-physical-inventory')
+      return physicalInventory(request, current);
     if (op.kind === 'apply-schema') return applySchema(request, current, op);
     if (op.kind === 'execute') {
       const rowsAffected = executeSql(current.db, op.statement, op.params);
@@ -136,6 +139,18 @@ export function createSqliteWorkerCore(options: SqliteWorkerCoreOptions) {
       health,
     });
   };
+
+  const physicalInventory = (
+    request: StorageRequest,
+    current: OpenedSqliteDatabase,
+  ): StorageResponse =>
+    response(
+      request,
+      'ok',
+      readPhysicalInventoryRows(current),
+      0,
+      current.diagnostics,
+    );
 
   const close = (request: StorageRequest): StorageResponse => {
     opened?.db.close();
