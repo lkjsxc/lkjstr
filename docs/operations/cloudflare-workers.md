@@ -23,6 +23,10 @@ Cloudflare Workers docs define the hosted build target for lkjstr.
 - The only compatibility flag is `nodejs_als`.
 - Repository scripts provide a dry-run verification command only; publishing is
   intentionally not scripted.
+- If the Cloudflare build image lacks `wasm-pack`, the SvelteKit build must keep
+  succeeding and the browser shows an explicit Rust/WASM scan bridge unavailable
+  state. Docker and Rust/WASM verification remain the strict gates that prove the
+  bridge compiles when the Rust toolchain is present.
 
 ## Verification
 

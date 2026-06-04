@@ -43,9 +43,11 @@ This file is the concise status map for the active Rust/WASM migration.
 
 - Scan-width adaptation now has pure density planning, optimizer storage rows,
   host SQLite wrappers, WASM bridge functions, and SvelteKit Vite-hosted WASM
-  loading for initial scan span choice and observation reduction. Follow-up
-  segment policy, reload proof, synthetic relay proof, and Stats polish remain
-  open before the ledger can mark full read-path parity.
+  loading for initial scan span choice and observation reduction. Hosted builds
+  degrade to an explicit bridge-unavailable state when `wasm-pack` is missing;
+  Docker and Rust/WASM gates still prove the bridge compiles where Rust tools are
+  present. Follow-up segment policy, reload proof, synthetic relay proof, and
+  Stats polish remain open before the ledger can mark full read-path parity.
 - Orchestration now has pure Rust decisions for cache mode, relay fallback,
   prefetch, hydration, and retention hints. SQLite-backed decision memory and
   shipped runtime wiring remain open.
