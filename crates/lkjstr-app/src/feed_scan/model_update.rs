@@ -1,4 +1,5 @@
 use super::config::ScanSpanConfig;
+use super::hierarchy::{ScanModelContext, scan_model_key_for_scope};
 use super::model::{ScanDensityModel, ScanModelKey, ScanModelScope, empty_scan_density_model};
 use super::observation::ScanSegmentObservation;
 
@@ -11,7 +12,7 @@ pub fn update_scan_density_model(
 ) -> ScanDensityModel {
     let density = observation.observed_density_events_per_second();
     let weight = observation_weight(observation);
-    let key = key_from_observation(observation);
+    let key = key_from_observation(observation, &scope);
     let prior = previous
         .cloned()
         .unwrap_or_else(|| empty_scan_density_model(key, scope.clone()));
@@ -46,15 +47,21 @@ pub fn scan_model_from_observation(
     update_scan_density_model(None, observation, scope, config)
 }
 
-fn key_from_observation(observation: &ScanSegmentObservation) -> ScanModelKey {
-    ScanModelKey {
-        semantic_feed_key: observation.semantic_feed_key.clone(),
-        route_group_key: observation.route_group_key.clone(),
-        relay_url: observation.relay_url.clone(),
-        semantic_filter_key: observation.semantic_filter_key.clone(),
-        direction: observation.direction.clone(),
-        route_fingerprint: observation.route_fingerprint.clone(),
-    }
+fn key_from_observation(
+    observation: &ScanSegmentObservation,
+    scope: &ScanModelScope,
+) -> ScanModelKey {
+    scan_model_key_for_scope(
+        &ScanModelContext {
+            semantic_feed_key: observation.semantic_feed_key.clone(),
+            route_group_key: observation.route_group_key.clone(),
+            relay_url: observation.relay_url.clone(),
+            semantic_filter_key: observation.semantic_filter_key.clone(),
+            direction: observation.direction.clone(),
+            route_fingerprint: observation.route_fingerprint.clone(),
+        },
+        scope,
+    )
 }
 
 fn blended_density(

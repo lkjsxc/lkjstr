@@ -49,4 +49,6 @@ pub use span_cap::SpanCapReason;
 pub use trace::{FeedScanTrace, feed_scan_trace};
 
 #[cfg(test)]
+mod model_scope_tests;
+#[cfg(test)]
 mod tests;

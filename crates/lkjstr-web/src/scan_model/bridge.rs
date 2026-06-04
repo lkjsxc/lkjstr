@@ -25,6 +25,7 @@ struct ReduceOutputDto {
     unresolved: bool,
     follow_up_segments: Vec<super::dto::SegmentDto>,
     updated_model: super::dto::ModelDto,
+    updated_models: Vec<super::dto::ModelDto>,
     proposal: super::dto::ProposalDto,
 }
 
@@ -60,6 +61,7 @@ pub fn reduce_feed_scan_observation(input: JsValue) -> Result<JsValue, JsValue> 
             .map(segment_to_dto)
             .collect(),
         updated_model: model_to_dto(&update.updated_model),
+        updated_models: update.updated_models.iter().map(model_to_dto).collect(),
         proposal: proposal_to_dto(&update.proposal),
     })
 }

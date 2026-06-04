@@ -1,5 +1,6 @@
 use super::config::{DEFAULT_HINT_TTL_SECONDS, ScanSpanConfig};
 use super::feedback::ScanWindowFeedback;
+use super::hierarchy::scan_model_scope_order;
 use super::hint::FeedScanHint;
 use super::model::{ScanDensityModel, ScanModelScope};
 use super::model_update::update_scan_density_model;
@@ -14,6 +15,7 @@ pub struct ScanFeedbackUpdate {
     pub follow_up_segments: Vec<ScanSegment>,
     pub unresolved: bool,
     pub updated_model: ScanDensityModel,
+    pub updated_models: Vec<ScanDensityModel>,
     pub proposal: SpanProposal,
 }
 
@@ -21,11 +23,17 @@ pub fn reduce_scan_observation(
     input: &FeedScanPlanInput,
     observation: &ScanSegmentObservation,
 ) -> ScanFeedbackUpdate {
-    let model =
-        update_scan_density_model(None, observation, ScanModelScope::Exact, &input.span_config);
+    let updated_models = updated_density_models(input, observation);
+    let model = updated_models
+        .iter()
+        .find(|item| item.scope == ScanModelScope::Exact)
+        .cloned()
+        .unwrap_or_else(|| {
+            update_scan_density_model(None, observation, ScanModelScope::Exact, &input.span_config)
+        });
     let proposal = propose_scan_span(
         &super::planner::scan_model_context(input),
-        std::slice::from_ref(&model),
+        &updated_models,
         input.previous_hint.as_ref(),
         observation.effective_limit,
         observation.completed_at_ms,
@@ -44,8 +52,27 @@ pub fn reduce_scan_observation(
         unresolved: matches!(split, SegmentSplitOutcome::Unresolved(_)),
         follow_up_segments: split_segments(split),
         updated_model: model,
+        updated_models,
         proposal,
     }
+}
+
+fn updated_density_models(
+    input: &FeedScanPlanInput,
+    observation: &ScanSegmentObservation,
+) -> Vec<ScanDensityModel> {
+    scan_model_scope_order()
+        .iter()
+        .filter(|scope| scope != &&ScanModelScope::Neutral)
+        .map(|scope| {
+            update_scan_density_model(
+                input.scan_models.iter().find(|model| model.scope == *scope),
+                observation,
+                scope.clone(),
+                &input.span_config,
+            )
+        })
+        .collect()
 }
 
 pub fn reduce_scan_feedback(
