@@ -5,7 +5,7 @@ import { sqliteReadAccounts } from '../sqlite-opfs/accounts-sqlite';
 import { ensureEventGraphSchema } from '../sqlite-opfs/event-schema';
 import { sendSqliteStorage } from '../sqlite-opfs/kernel-client';
 import { sqliteReadWorkspace } from '../sqlite-opfs/workspace-sqlite';
-import { dexieProtectionSnapshot } from './protection-dexie-fallback';
+import { collectNotificationProtections } from './protection-notifications';
 import type { ProtectionSnapshot } from './protection-scan';
 
 export type CompactionEventCandidate = {
@@ -50,7 +50,13 @@ export async function protectionSnapshot(
   const protectedRows = await sqliteProtectedLedgerRows(limit).catch(
     () => undefined,
   );
-  if (!eventRows || !protectedRows) return dexieProtectionSnapshot(options);
+  if (!eventRows || !protectedRows)
+    return {
+      ids,
+      complete: false,
+      scannedRows: 0,
+      reason: 'storage-error',
+    };
   for (const id of latestEventIdsByPubkey(eventRows, 0)) ids.add(id);
   const accountPubkeys = new Set(
     (await sqliteReadAccounts().catch(() => []))?.map((row) => row.pubkey) ??
@@ -59,6 +65,9 @@ export async function protectionSnapshot(
   for (const id of latestEventIdsByPubkey(eventRows, 3, accountPubkeys))
     ids.add(id);
   for (const row of protectedRows) ids.add(row.resourceId);
+  await collectNotificationProtections(ids, accountPubkeys, limit).catch(
+    () => undefined,
+  );
   await collectActiveTabStates(ids).catch(() => undefined);
   return {
     ids,

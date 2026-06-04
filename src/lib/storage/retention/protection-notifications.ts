@@ -1,54 +1,90 @@
 import { cacheLedgerId } from '../../cache/cache-ledger-id';
-import { browserDb } from '../browser-db';
-import { scanRows, type MutableProtectionSnapshot } from './protection-scan';
+import { ensureEventGraphSchema } from '../sqlite-opfs/event-schema';
+import { sendSqliteStorage } from '../sqlite-opfs/kernel-client';
 
-export async function collectProtectedNotifications(
-  snapshot: MutableProtectionSnapshot,
+type ProtectionNotificationRow = {
+  readonly id: string;
+  readonly accountPubkey: string;
+  readonly sourceEventId: string;
+  readonly createdAt: number;
+  readonly readAt: number | null;
+  readonly rootEventId?: string;
+  readonly targetEventId?: string;
+};
+
+export async function collectNotificationProtections(
+  ids: Set<string>,
+  accountPubkeys: Set<string>,
   limit: number,
 ): Promise<void> {
-  const latestByAccount = new Map<string, string[]>();
+  const rows = await sqliteNotificationRows(limit);
+  if (!rows) return;
+  const latestByAccount = new Map<string, number>();
   const unreadRecentCutoff = Date.now() - 30 * 24 * 60 * 60 * 1000;
-  await scanRows(
-    snapshot,
-    browserDb().notifications.orderBy('createdAt').reverse(),
-    limit,
-    (row) => {
-      const retained = latestByAccount.get(row.accountPubkey) ?? [];
-      if (retained.length < 200) {
-        retained.push(row.id);
-        latestByAccount.set(row.accountPubkey, retained);
-        protectNotification(snapshot.ids, row);
-      }
-      if (row.readAt === null && row.createdAt * 1000 >= unreadRecentCutoff)
-        protectNotification(snapshot.ids, row);
-    },
-  );
+  for (const row of rows) {
+    const retained = latestByAccount.get(row.accountPubkey) ?? 0;
+    if (retained < 200) {
+      latestByAccount.set(row.accountPubkey, retained + 1);
+      protectNotification(ids, row);
+    }
+    if (row.readAt === null && row.createdAt * 1000 >= unreadRecentCutoff)
+      protectNotification(ids, row);
+  }
+  await collectPotentialNotificationSources(ids, accountPubkeys, limit);
 }
 
-export async function collectPotentialNotificationSources(
+async function collectPotentialNotificationSources(
+  ids: Set<string>,
   accountPubkeys: Set<string>,
-  snapshot: MutableProtectionSnapshot,
   limit: number,
 ): Promise<void> {
   for (const pubkey of accountPubkeys) {
-    if (!snapshot.complete) return;
-    await scanRows(
-      snapshot,
-      browserDb().eventTags.where('[tagName+tagValue]').equals(['p', pubkey]),
-      limit,
-      (row) => snapshot.ids.add(row.eventId),
+    const response = await sendSqliteStorage(
+      {
+        kind: 'query',
+        statement:
+          'SELECT event_id FROM event_tags WHERE tag_name = ?1 AND tag_value = ?2 LIMIT ?3;',
+        params: ['p', pubkey, limit],
+        rowLimit: limit,
+      },
+      { deadlineMs: 10_000 },
     );
+    if (response.outcome !== 'ok') return;
+    for (const row of response.rows) ids.add(String(row.event_id));
+  }
+}
+
+async function sqliteNotificationRows(
+  limit: number,
+): Promise<ProtectionNotificationRow[] | undefined> {
+  if (!(await ensureEventGraphSchema())) return undefined;
+  const response = await sendSqliteStorage(
+    {
+      kind: 'query',
+      statement:
+        'SELECT record_json FROM notifications ORDER BY created_at DESC LIMIT ?1;',
+      params: [limit],
+      rowLimit: limit,
+    },
+    { deadlineMs: 10_000 },
+  );
+  if (response.outcome !== 'ok') return undefined;
+  return response.rows.flatMap((row) => decodeNotification(row.record_json));
+}
+
+function decodeNotification(raw: unknown): ProtectionNotificationRow[] {
+  if (typeof raw !== 'string') return [];
+  try {
+    const parsed = JSON.parse(raw) as ProtectionNotificationRow;
+    return parsed.id && parsed.sourceEventId ? [parsed] : [];
+  } catch {
+    return [];
   }
 }
 
 function protectNotification(
   target: Set<string>,
-  row: {
-    readonly id: string;
-    readonly sourceEventId: string;
-    readonly rootEventId?: string;
-    readonly targetEventId?: string;
-  },
+  row: ProtectionNotificationRow,
 ): void {
   target.add(cacheLedgerId('notification', row.id));
   target.add(row.sourceEventId);

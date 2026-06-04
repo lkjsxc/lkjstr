@@ -7,12 +7,10 @@ retention policy, and SQLite worker host glue.
 
 ## Table of Contents
 
-- `browser-db.ts`: deletion-only Dexie binding until the SQLite cutover removes
-  it.
 - `old-indexed-db-diagnostics.ts`: presence-only diagnostics for old databases.
-- `schema/`: table manifest and remaining IndexedDB store shape.
+- `schema/`: logical table manifest and inventory groups.
 - `ledger/`: cache ledger resource manifest and dispatch helpers.
-- `operation/`: typed storage results, deadlines, tracking, and transactions.
+- `operation/`: typed storage results, deadlines, and operation tracking.
 - `repositories/`: feature-facing storage access wrappers.
 - `retention/`: cache-pressure protection and retention policy helpers.
 - `sqlite-opfs/`: official SQLite WASM worker client and worker core.
@@ -20,6 +18,5 @@ retention policy, and SQLite worker host glue.
 
 ## Contract
 
-New durable storage work targets worker-owned SQLite. Feature code calls
-repository functions and does not choose Dexie tables, open IndexedDB, open
-SQLite, or touch OPFS directly.
+Durable storage work targets worker-owned SQLite. Feature code calls repository
+functions and does not open IndexedDB, SQLite, or OPFS directly.

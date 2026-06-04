@@ -52,20 +52,19 @@ These budgets are initial targets and may be refined after measurement:
 
 ## Major Leak Areas
 
-### IndexedDB and Dexie churn
+### Storage operation churn
 
-Dexie `IDBRequest` and `IDBTransaction` objects can accumulate when operations
-are not awaited to completion or when requests are created faster than they
-settle. The fix is to batch reads and writes, use bounded cursor scans instead
-of unbounded `toArray`, and ensure `try/finally` decrements operation counters.
+Storage request objects can accumulate when operations are not awaited to
+completion or when requests are created faster than they settle. The fix is to
+batch reads and writes, use bounded repository calls instead of unbounded scans,
+and ensure `try/finally` decrements operation counters.
 
 ### Relay diagnostic summaries
 
 Relay diagnostic summary objects contain a `recentDiagnostics` array that grows
-with each snapshot merge. Summaries are stored in IndexedDB on every update.
-The fix is to keep only the most recent configured summaries in memory, cap the
-`recentDiagnostics` array, batch persistence writes, and avoid one
-transaction per tiny update.
+with each snapshot merge. The fix is to keep only the most recent configured
+summaries in memory, cap the `recentDiagnostics` array, batch persistence
+writes, and avoid one transaction per tiny update.
 
 ### Abort listener accumulation
 

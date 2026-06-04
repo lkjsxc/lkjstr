@@ -105,9 +105,8 @@ is removed only through cache-ledger dispatchers.
 
 ## Host Adapter
 
-The current host adapter uses `web_sys` IndexedDB directly for the partial
-Leptos shell. It remains temporary while SvelteKit product paths still need
-Dexie and while Rust/SQLite repositories are incomplete.
+The Rust host adapter still includes narrow `web_sys` IndexedDB support for
+partial Leptos shell experiments. Product storage uses the SQLite worker path.
 
 The temporary TypeScript host adapter creates a SQLite worker, sends typed
 storage requests, enforces deadlines, maps outcomes, supports cancellation,
@@ -116,5 +115,5 @@ owner slot and cleared on settle, cancel, timeout, or close. Late worker
 responses become typed late outcomes rather than reaching product logic.
 
 The Rust adapter exposes the same boundary through `lkjstr-web`. Protected,
-core event-cache, and diagnostics Rust repository calls now use it, but product
-paths still need wiring before they can leave IndexedDB or Dexie.
+core event-cache, and diagnostics Rust repository calls now use it. Remaining
+Rust work is parity wiring, not an old browser database dependency.

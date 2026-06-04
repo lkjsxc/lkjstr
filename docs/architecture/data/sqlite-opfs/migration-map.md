@@ -13,7 +13,7 @@ ownership context.
 - `implemented` means the shipped Svelte product path writes through the SQLite
   worker under normal browser startup.
 - `partial` means schema or host calls exist but at least one product read,
-  write, delete, repair, inventory, or retention path still depends on Dexie.
+  write, delete, repair, inventory, or retention path still needs SQLite wiring.
 - `open` means only the contract exists.
 
 ## Protected Data
@@ -50,12 +50,12 @@ ownership context.
 | `relayInformation` | `relay_information` | implemented | none | NIP-11 records use SQLite product wiring. |
 | `relayListSuggestions` | `relay_list_suggestions` | implemented | none | Suggestions remain explicit-import only. |
 | `authorRelayRoutes` | `author_relay_routes` | implemented | none | Disabled relays and route blocks still dominate. |
-| `cacheLedger` | `cache_ledger` | implemented | none | Resource writes, summaries, prune selection, event/direct retention deletion, health, and repair use SQLite. Old Dexie repair helper files are unused deletion targets. |
+| `cacheLedger` | `cache_ledger` | implemented | none | Resource writes, summaries, prune selection, event/direct retention deletion, health, and repair use SQLite. |
 | `cacheMeta` | `cache_meta` | implemented | none | Cache status metadata and repair metadata use SQLite; cache tool summary gaps now come from physical inventory. |
 | physical inventory | SQLite catalog and old-store diagnostics | implemented | none | `storage-inventory.ts` composes SQLite table counts, old IndexedDB database presence without row scans, localStorage, Cache Storage, and residual overhead. |
 | app log | `app_log` | implemented | none | `src/lib/storage/sqlite-opfs/app-log-repository.ts` appends, lists, clears, and trims redacted rows; `src/lib/tabs/log/LkjstrLogTab.svelte` renders durable rows with session rows. |
 
 ## Deletion Criterion
 
-Dexie can be removed only after every row above is implemented or explicitly
-reclassified as memory-only or out of scope in the same docs and source change.
+Old browser database bindings are removed. New storage work stays on typed
+SQLite repositories or explicit temporary memory mode.

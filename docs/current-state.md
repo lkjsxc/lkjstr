@@ -65,9 +65,7 @@ Read next: [architecture/data/README.md](architecture/data/README.md),
   signing secrets, drafts, notifications, relay purpose lists, relay
   information, relay summaries, jobs, feed/page records, diagnostics, route
   evidence, and cached events.
-- IndexedDB through Dexie is deletion-only during the SQLite cutover. New
-  product storage behavior targets the SQLite worker contract.
-- The target durable path is official SQLite WASM in a worker, backed by OPFS
+- The durable product path is official SQLite WASM in a worker, backed by OPFS
   when available and by explicit temporary memory mode when OPFS cannot open.
 - Main-thread app code must not open SQLite or OPFS directly. Product code calls
   typed repositories; repositories talk to the worker-owned storage kernel.
@@ -78,9 +76,9 @@ Read next: [architecture/data/README.md](architecture/data/README.md),
   jobs, cache ledger summaries, cache metadata, protection snapshots, and
   retention deletion use the SQLite worker with memory fallback when workers are
   unavailable.
-- Remaining cutover work is limited to physical inventory, cache tool inventory
-  summaries, residual product readers or writers, and deletion of Dexie binding
-  files plus dependency metadata after the no-import proof is clean.
+- Physical inventory, cache tool summaries, retention target checks, repair,
+  and protection snapshots use SQLite paths. Old IndexedDB diagnostics are
+  presence-only and never scan old rows.
 - Storage inventory is SQLite-first. It reads SQLite table counts, cache ledger
   summaries, browser quota estimates, localStorage, Cache Storage, and old
   IndexedDB database presence diagnostics without scanning every old row.
@@ -159,8 +157,8 @@ and [operations/memory-verification.md](operations/memory-verification.md).
   collection tests, storage-operation settlement tests, and retention tests.
 - Browser heap snapshots and long-session observations are manual diagnostics,
   not canonical automated gates.
-- Relay diagnostic summaries are bounded in memory. Current IndexedDB list reads
-  are capped while the SQLite cutover is in progress.
+- Relay diagnostic summaries are bounded in memory. Storage diagnostics avoid
+  full old-store scans.
 - Runtime-visible and open-reference cache pins are owner-scoped, bounded, and
   cleaned up on owner teardown.
 - Cache pressure records protected data, prunable cache, unknown storage, and
@@ -168,9 +166,8 @@ and [operations/memory-verification.md](operations/memory-verification.md).
 
 ## Open Contracts
 
-- SQLite worker storage is the active durable-storage contract. Product paths
-  that still read or write Dexie must move to typed SQLite repositories, then
-  the Dexie dependency and binding must be deleted.
+- SQLite worker storage is the active durable-storage contract. Product modules
+  must use typed repositories and must not add direct browser database access.
 - Passkey-protected local secret storage is a follow-up product contract: it
   must actually encrypt local signer secrets with Web Crypto and WebAuthn PRF
   when supported, and show an unsupported state when the browser cannot do so.

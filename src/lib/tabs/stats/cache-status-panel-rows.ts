@@ -19,7 +19,7 @@ export function cacheSummaryRows(cache: CacheMetadata): CacheStatusRow[] {
     bytes('Site target', cache.budgetBytes),
     bytes('Browser origin usage', cache.browserUsageBytes),
     bytes('Over target', cache.overTargetBytes),
-    bytes('Physical IndexedDB bytes', cache.indexedDbEstimatedBytes),
+    bytes('Physical SQLite and old-store bytes', cache.indexedDbEstimatedBytes),
     bytes('Known app-managed cache', cache.knownAppManagedCacheBytes),
     bytes('Ledger-accounted resources', cache.ledgerBytes),
     bytes('Prunable cache', cache.prunableCacheBytes),

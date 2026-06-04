@@ -57,8 +57,8 @@ read the current live storage state in [storage/README.md](storage/README.md).
   transactions, and repositories.
 - [storage/kernel/manifest.md](storage/kernel/manifest.md): executable table
   manifest contract.
-- [storage/kernel/schema-steps.md](storage/kernel/schema-steps.md): Dexie
-  schema step rules.
+- [storage/kernel/schema-steps.md](storage/kernel/schema-steps.md): SQLite
+  schema change rules.
 - [storage/kernel/operation-results.md](storage/kernel/operation-results.md):
   typed storage outcomes.
 - [storage/kernel/transactions.md](storage/kernel/transactions.md):

@@ -21,7 +21,6 @@ const VALID_STATIC_KEYS = new Set([
   'active-timers',
   'active-workers',
   'active-indexeddb-ops',
-  'active-dexie-transactions',
   'active-tab-runtimes',
   'closed-tab-snapshots',
   'tab-snapshot-durable-save',

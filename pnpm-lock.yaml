@@ -22,9 +22,6 @@ importers:
       '@sqlite.org/sqlite-wasm':
         specifier: 3.53.0-build1
         version: 3.53.0-build1
-      dexie:
-        specifier: ^4.2.1
-        version: 4.4.2
       emoji-picker-element:
         specifier: ^1.29.1
         version: 1.29.1
@@ -2034,12 +2031,6 @@ packages:
     resolution:
       {
         integrity: sha512-4CXDYRBGqN+57wVJkuXBYmpAVUSg3L6JAQa/DFqm238G73E1wuyc/JhGQJzN7vUf/CMphYau2zXbfWzDR5aTEw==,
-      }
-
-  dexie@4.4.2:
-    resolution:
-      {
-        integrity: sha512-zMtV8q79EFE5U8FKZvt0Y/77PCU/Hr/RDxv1EDeo228L+m/HTbeN2AjoQm674rhQCX8n3ljK87lajt7UQuZfvw==,
       }
 
   dijkstrajs@1.0.3:
@@ -4160,8 +4151,6 @@ snapshots:
   detect-libc@2.1.2: {}
 
   devalue@5.8.1: {}
-
-  dexie@4.4.2: {}
 
   dijkstrajs@1.0.3: {}
 

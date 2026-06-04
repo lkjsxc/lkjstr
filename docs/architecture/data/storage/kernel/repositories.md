@@ -12,11 +12,10 @@ Feature modules call repository functions for accounts, secrets, settings, relay
 sets, workspaces, drafts, events, notifications, feed pages, jobs, relay
 diagnostics, and tab states.
 
-Direct `browserDb()` access is deletion-only and allowed only inside storage or
-cache-maintenance modules that have not yet moved to SQLite.
+Direct browser database access is not allowed in product modules.
 
-SQLite repositories live under `src/lib/storage/sqlite-opfs/` during the
-TypeScript cutover. Product UI code must not format SQL or open OPFS.
+SQLite repositories live under `src/lib/storage/sqlite-opfs/`. Product UI code
+must not format SQL or open OPFS.
 
 ## Repository Rules
 

@@ -24,9 +24,9 @@ repair, and Stats never observe half-owned durable resources.
 
 ## Helper Rule
 
-The transaction helper receives manifest table names, purpose, mode, and a
-function that runs against the Dexie database. It records operation telemetry
-and normalizes Dexie errors into storage failure reasons.
+SQLite batch helpers receive storage-owned statement records, purpose, mode,
+and bound parameters. They record operation telemetry and normalize storage
+errors into typed failure reasons.
 
 Feature repositories receive typed transaction results. UI adapters decide
 which fallback is acceptable for the current user flow.

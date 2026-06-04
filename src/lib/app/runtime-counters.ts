@@ -45,7 +45,6 @@ export type RuntimeCounterKey =
   | 'active-timers'
   | 'active-workers'
   | 'active-indexeddb-ops'
-  | 'active-dexie-transactions'
   | 'active-tab-runtimes'
   | 'closed-tab-snapshots'
   | 'tab-snapshot-durable-save'
@@ -105,7 +104,6 @@ const runtimeCounterKeys = new Set<RuntimeCounterKey>([
   'active-timers',
   'active-workers',
   'active-indexeddb-ops',
-  'active-dexie-transactions',
   'active-tab-runtimes',
   'closed-tab-snapshots',
   'tab-snapshot-durable-save',

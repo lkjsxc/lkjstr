@@ -6,8 +6,8 @@ This decision records the durable browser storage target for lkjstr.
 
 ## Decision
 
-Browser-owned durable data moves from IndexedDB through Dexie to official
-SQLite WASM opened in a worker and persisted with OPFS when available.
+Browser-owned durable data uses official SQLite WASM opened in a worker and
+persisted with OPFS when available.
 
 The normal product mode is persistent OPFS SQLite. If OPFS cannot open, the app
 may start in explicit temporary memory mode so the Welcome workspace remains
@@ -35,8 +35,7 @@ events came from without duplicating event payloads.
   fails or when a test explicitly forces it. The UI must warn that changes may
   disappear when the browser session ends.
 
-Do not use IndexedDB as a new fallback durable store. Existing Dexie code is a
-cutover source only.
+Do not use IndexedDB as a new fallback durable store.
 
 ## Boundaries
 
@@ -49,7 +48,7 @@ cutover source only.
 
 ## Non Goals
 
-- Preserving old Dexie storage behavior as a permanent path.
+- Preserving old browser database behavior as a permanent path.
 - Adding a server account system, relay proxy, or cloud sync service.
 - Hiding temporary memory mode from the user.
 - Storing decrypted private messages in general search by default.

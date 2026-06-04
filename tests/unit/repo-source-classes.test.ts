@@ -8,7 +8,7 @@ describe('repo source class guard', () => {
   it('rejects first-party source classes', async () => {
     const root = await fs.mkdtemp(path.join(os.tmpdir(), 'lkjstr-classes-'));
     const source = path.join(root, 'src', 'lib', 'feature.ts');
-    const storage = path.join(root, 'src', 'lib', 'storage', 'browser-db.ts');
+    const storage = path.join(root, 'src', 'lib', 'storage', 'bad.ts');
     const test = path.join(root, 'tests', 'unit', 'fake.ts');
     await fs.mkdir(path.dirname(source), { recursive: true });
     await fs.mkdir(path.dirname(storage), { recursive: true });
@@ -25,7 +25,7 @@ describe('repo source class guard', () => {
         message: expect.any(String),
       },
       {
-        file: path.join('src', 'lib', 'storage', 'browser-db.ts'),
+        file: path.join('src', 'lib', 'storage', 'bad.ts'),
         message: expect.any(String),
       },
     ]);

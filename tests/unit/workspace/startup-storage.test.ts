@@ -41,22 +41,13 @@ describe('startup workspace storage', () => {
     expect((await loadWorkspace()).name).toBe('Memory workspace');
   });
 
-  it('falls back when IndexedDB reads and writes time out', async () => {
-    vi.stubGlobal('indexedDB', { open: () => ({}) });
-    vi.doMock('../../../src/lib/storage/browser-db', () => ({
-      browserDb: () => ({
-        workspaces: {
-          get: () => new Promise(() => undefined),
-          put: () => new Promise(() => undefined),
-        },
-      }),
-    }));
-    vi.useFakeTimers();
+  it('falls back when durable workspace storage is unavailable', async () => {
     const { loadWorkspace } =
       await import('../../../src/lib/workspace/workspace-persistence');
-    const loaded = loadWorkspace();
-    await vi.advanceTimersByTimeAsync(400);
-    expect(await loaded).toMatchObject({ id: 'main', name: 'Main workspace' });
+    await expect(loadWorkspace()).resolves.toMatchObject({
+      id: 'main',
+      name: 'Main workspace',
+    });
   });
 
   it('ignores oversized local workspace snapshots before parsing', async () => {

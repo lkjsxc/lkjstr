@@ -1,43 +1,20 @@
-import { browserDb } from '../storage/browser-db';
-import { visitStorageRows } from '../storage/ledger/table-scan';
-
-const DELETE_BATCH_SIZE = 100;
+import { ensureEventGraphSchema } from '../storage/sqlite-opfs/event-schema';
+import { sendSqliteStorage } from '../storage/sqlite-opfs/kernel-client';
 
 export async function deleteUnownedCacheRows(): Promise<number> {
-  const relayRows = await deleteRowsWithoutEvent(
-    browserDb().eventRelays,
-    (row) => row.eventId,
-  );
-  const tagRows = await deleteRowsWithoutEvent(
-    browserDb().eventTags,
-    (row) => row.eventId,
-  );
+  if (!(await ensureEventGraphSchema())) return 0;
+  const [relayRows, tagRows] = await Promise.all([
+    deleteRows(
+      'DELETE FROM event_relays WHERE event_id NOT IN (SELECT id FROM events);',
+    ),
+    deleteRows(
+      'DELETE FROM event_tags WHERE event_id NOT IN (SELECT id FROM events);',
+    ),
+  ]);
   return relayRows + tagRows;
 }
 
-async function deleteRowsWithoutEvent<T extends { readonly id: string }>(
-  table: {
-    readonly bulkDelete: (ids: string[]) => Promise<unknown>;
-    readonly each: (visit: (row: T) => void) => Promise<void>;
-  },
-  eventId: (row: T) => string,
-): Promise<number> {
-  let deleted = 0;
-  const ids: string[] = [];
-  await visitStorageRows(table, async (row) => {
-    if (await browserDb().events.get(eventId(row))) return;
-    ids.push(row.id);
-    deleted += 1;
-    if (ids.length >= DELETE_BATCH_SIZE) await flushDeletes(table, ids);
-  });
-  await flushDeletes(table, ids);
-  return deleted;
-}
-
-async function flushDeletes(
-  table: { readonly bulkDelete: (ids: string[]) => Promise<unknown> },
-  ids: string[],
-): Promise<void> {
-  if (ids.length === 0) return;
-  await table.bulkDelete(ids.splice(0, ids.length));
+async function deleteRows(statement: string): Promise<number> {
+  const response = await sendSqliteStorage({ kind: 'execute', statement });
+  return response.outcome === 'ok' ? response.rowsAffected : 0;
 }

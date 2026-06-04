@@ -2,7 +2,6 @@ import type { StorageTableSpec } from './table-spec';
 
 export function table(
   name: StorageTableSpec['name'],
-  dexie: string,
   dataClass: StorageTableSpec['dataClass'],
   inventoryGroup: StorageTableSpec['inventoryGroup'],
   primaryOwner: string,
@@ -10,7 +9,6 @@ export function table(
 ): StorageTableSpec {
   return {
     name,
-    dexie,
     dataClass,
     inventoryGroup,
     primaryOwner,
@@ -22,7 +20,6 @@ export function table(
 
 export function ledgerTable(
   name: StorageTableSpec['name'],
-  dexie: string,
   dataClass: StorageTableSpec['dataClass'],
   inventoryGroup: StorageTableSpec['inventoryGroup'],
   primaryOwner: string,
@@ -31,7 +28,6 @@ export function ledgerTable(
 ): StorageTableSpec {
   return {
     name,
-    dexie,
     dataClass,
     inventoryGroup,
     primaryOwner,

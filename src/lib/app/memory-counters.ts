@@ -11,7 +11,6 @@ export type MemoryCounterKey =
   | 'active-timers'
   | 'active-workers'
   | 'active-indexeddb-ops'
-  | 'active-dexie-transactions'
   | 'active-tab-runtimes'
   | 'closed-tab-snapshots'
   | 'feed-runtime-window-size'
@@ -34,7 +33,6 @@ const memoryCounterKeys: readonly MemoryCounterKey[] = [
   'active-timers',
   'active-workers',
   'active-indexeddb-ops',
-  'active-dexie-transactions',
   'active-tab-runtimes',
   'closed-tab-snapshots',
   'feed-runtime-window-size',

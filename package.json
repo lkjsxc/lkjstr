@@ -28,7 +28,6 @@
     "@noble/hashes": "^2.0.1",
     "@scure/base": "^2.0.0",
     "@sqlite.org/sqlite-wasm": "3.53.0-build1",
-    "dexie": "^4.2.1",
     "emoji-picker-element": "^1.29.1",
     "qrcode": "^1.5.4",
     "svelte-persisted-store": "^0.12.0",

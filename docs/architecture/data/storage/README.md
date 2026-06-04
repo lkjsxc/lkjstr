@@ -3,10 +3,9 @@
 ## Purpose
 
 Storage is the LLM-first contract for all browser-owned durable data. Read this
-directory before changing current IndexedDB tables, cache retention, feed
-evidence, Stats inventory, settings persistence, or storage failure recovery.
-New Rust/WASM durable storage work targets
-[../sqlite-opfs/README.md](../sqlite-opfs/README.md).
+directory before changing SQLite tables, cache retention, feed evidence, Stats
+inventory, settings persistence, or storage failure recovery. New durable
+storage work targets [../sqlite-opfs/README.md](../sqlite-opfs/README.md).
 
 ## First Screen Contract
 
@@ -24,20 +23,18 @@ diagnostics, protocol cache, route evidence, finished jobs, and stale absent
 tab snapshots are recoverable when a ledger row, delete path, repair path, and
 byte estimate exist.
 
-All writes use storage repositories. Feature modules should not choose Dexie
-tables directly after a repository exists for that data family. New repositories
-target OPFS SQLite instead of extending Dexie.
+All writes use storage repositories. Feature modules should not choose database
+tables directly. Repositories target OPFS SQLite.
 
-The current live contract is proved by the manifest docs, current IndexedDB
-schema, SQLite worker tests, repository checks, storage unit tests, storage
-pressure focused tests, and Docker Compose verification. The target contract adds
-executable SQLite schema checks from [../sqlite-opfs/schema.md](../sqlite-opfs/schema.md).
+The current live contract is proved by the manifest docs, SQLite worker tests,
+repository checks, storage unit tests, storage pressure focused tests, and Docker
+Compose verification.
 
 ## Table of Contents
 
 - [kernel/README.md](kernel/README.md): manifest, operations, transactions, and repositories.
 - [kernel/manifest.md](kernel/manifest.md): executable table manifest contract.
-- [kernel/schema-steps.md](kernel/schema-steps.md): Dexie schema step rules.
+- [kernel/schema-steps.md](kernel/schema-steps.md): SQLite schema change rules.
 - [kernel/operation-results.md](kernel/operation-results.md): typed storage outcomes.
 - [kernel/transactions.md](kernel/transactions.md): transactional write families.
 - [kernel/repositories.md](kernel/repositories.md): repository boundary.
@@ -64,14 +61,12 @@ executable SQLite schema checks from [../sqlite-opfs/schema.md](../sqlite-opfs/s
 
 ## Kernel Rule
 
-The Storage Manifest is the source for current live IndexedDB table names,
-schema strings, data classes, inventory groups, ledger resource ownership,
-compaction flags, and repair flags. SQLite schema records become the storage
-source of truth as each repository family moves to OPFS.
+The Storage Manifest is the source for logical table names, data classes,
+inventory groups, ledger resource ownership, compaction flags, and repair flags.
+SQLite schema modules own raw table shape.
 
-Removed stores are not live manifest entries. Cleanup for removed object stores
-belongs in a separate removed-store helper with tests, so live table checks stay
-unambiguous.
+Old browser stores are not live manifest entries. Diagnostics report them by
+presence only, so live table checks stay unambiguous.
 
 ## Write Rule
 

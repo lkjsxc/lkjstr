@@ -2,9 +2,9 @@
 
 ## Purpose
 
-The Storage Manifest is the executable table contract. It prevents future
-agents from editing Dexie schema, docs, inventory groups, and retention policy
-as separate truths.
+The Storage Manifest is the executable logical table contract. It prevents
+agents from editing schema docs, inventory groups, and retention policy as
+separate truths.
 
 ## Manifest Fields
 
@@ -12,7 +12,6 @@ Each live table entry contains:
 
 ```text
 name
-dexie schema string or null
 data class
 inventory group
 primary owner
@@ -22,28 +21,27 @@ repairable flag
 compactable flag
 ```
 
-`null` schema strings are allowed only for removed-store cleanup outside the
-live table manifest. Live object stores always have a Dexie schema string.
+SQLite table shape lives in typed repository schema modules. The manifest owns
+logical storage families and policy, not raw SQL text.
 
 ## Consumers
 
 The manifest drives or verifies:
 
-- Dexie `stores()` shape.
-- Known table names.
-- Inventory groups.
-- Storage docs table.
-- Stats grouping.
-- Retention eligibility.
-- Ledger resource coverage.
-- Repair collector coverage.
-- Delete dispatcher coverage.
-- Repository boundary checks.
+- known logical table names;
+- inventory groups;
+- storage docs table;
+- Stats grouping;
+- retention eligibility;
+- ledger resource coverage;
+- repair collector coverage;
+- delete dispatcher coverage;
+- repository boundary checks.
 
 ## Invariants
 
 No live table may classify as `unknown`. Runtime diagnostics may report missing
-stores as unavailable, but missing stores do not prove protected records can be
+tables as unavailable, but missing tables do not prove protected records can be
 deleted.
 
 Every compactable table has exactly one ledger resource kind, a byte estimator,

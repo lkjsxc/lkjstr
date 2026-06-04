@@ -53,7 +53,7 @@ must close, what it may retain, and what it must never retain.
 | Worker | Worker owners in tab or job modules |
 | Svelte store subscription | `src/lib/tabs/*`, runtime factories |
 | DOM event listener | Tab components, drag actions, popovers |
-| IndexedDB transaction | `src/lib/storage/safe-storage.ts`, Dexie stores |
+| Storage operation | `src/lib/storage/operation/`, SQLite worker repositories |
 | Feed runtime | `src/lib/timeline/timeline-runtime.ts`, profile/thread runtimes |
 | Tab runtime | Per-tab runtime under `src/lib/tabs/` and `src/lib/timeline/` |
 | Closed-tab snapshot | `src/lib/workspace/session-tab-snapshots.ts` |

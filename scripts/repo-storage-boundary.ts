@@ -17,10 +17,10 @@ export async function checkStorageBoundary(
     const rel = path.relative(root, file);
     if (!isCheckedSource(rel) || isAllowedStoragePath(rel)) continue;
     const text = await fs.readFile(file, 'utf8');
-    if (usesBrowserDb(text))
+    if (usesRawBrowserStorage(text))
       problems.push({
         file: rel,
-        message: 'browserDb access must go through storage repositories',
+        message: 'raw browser storage access must stay behind repositories',
       });
   }
   return problems;
@@ -34,6 +34,8 @@ function isAllowedStoragePath(rel: string): boolean {
   return allowedPrefixes.some((prefix) => rel.startsWith(prefix));
 }
 
-function usesBrowserDb(text: string): boolean {
-  return text.includes('browserDb(');
+function usesRawBrowserStorage(text: string): boolean {
+  return /\b(?:globalThis|window)\.(?:indexedDB|localStorage)\b|\b(?:indexedDB|localStorage)\s*\./.test(
+    text,
+  );
 }

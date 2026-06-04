@@ -26,8 +26,8 @@ graph, cached feed, tag lookup, local filter-search, relay diagnostics, relay
 information, relay suggestion, author route, route block, notification, feed
 coverage, scan hint, cache ledger summary, cache metadata, retention, and job
 repositories now use the TypeScript SQLite worker path. Other Svelte product
-paths still use IndexedDB or Dexie until their SQLite paths are wired and tested
-as durable product paths.
+paths use the SQLite worker for durable product storage. Remaining Rust work is
+parity wiring and UI ownership.
 
 ## Repository Families
 
@@ -36,30 +36,23 @@ as durable product paths.
   path.
 - event cache: events, tags, relay provenance, feed cursors, cached feed pages,
   tag lookups, local filter search, notifications, feed coverage, and scan hints
-  are implemented in the Svelte SQLite path. Repair and compaction dispatch
-  remain open.
+  are implemented in the Svelte SQLite path. Repair and compaction dispatch use
+  SQLite repositories.
 - relay diagnostics: relay information, summaries, suggestions, author routes,
   route blocks, and jobs are implemented in the Svelte SQLite path. App log rows
   remain open. Relay diagnostics, suggestions, routes, and finished jobs are
   ledger-backed. Route blocks are protected safety rows and are not ledger-backed.
-- retention: cache ledger rows, protection snapshots, prune selection, and
-  deletion dispatch are SQLite-backed. Repair and physical inventory snapshots
-  remain open. SQLite inventory uses storage-owned count statements for known
-  schema tables; host code must not format table names itself.
+- retention: cache ledger rows, protection snapshots, prune selection,
+  deletion dispatch, repair, and physical inventory are SQLite-backed. SQLite
+  inventory uses storage-owned count statements for known schema tables; host
+  code must not format table names itself.
 
 ## Remaining Cutover Tasks
 
-- Repair: ledger repair, orphan cleanup, and consistency checks run through
-  typed SQLite repositories.
-- Physical inventory: table counts, byte estimates, and unknown storage reports
-  use storage-owned SQL statements.
-- Cache tools: manual cleanup, compaction, and reset actions dispatch through
-  SQLite repositories and report typed outcomes.
-- App log rows: durable log persistence moves to SQLite when still open.
-- Product readers and writers: any remaining `browserDb`, Dexie, or IndexedDB
-  product caller moves to typed SQLite access.
-- Deletion: after no caller remains, delete `src/lib/storage/browser-db.ts`, old
-  Dexie schema helpers, and Dexie package metadata.
+- Cache maintenance: manual cleanup, compaction, and reset actions stay bounded
+  and report typed outcomes.
+- Rust parity: Rust repositories cover every live table family before the
+  TypeScript product surface can be removed.
 
 ## Statement Shape
 

@@ -51,8 +51,8 @@ product code after equivalent Rust/WASM behavior is real and verified.
   disabled relay record.
 - Docker checks build images and do not mount the source tree.
 - Browser workflow suites are not canonical verification gates.
-- New source may not import Dexie. The current Dexie binding is deletion-only
-  until the SQLite cutover removes it.
+- New source must use typed SQLite repositories and must not add direct browser
+  database access.
 - `src/lib/storage/sqlite-opfs/` owns current SQLite worker host glue;
   `src/lib/storage/sqlite/` owns new database access modules when added.
 - First-party storage workers use factory functions and plain data, not classes.

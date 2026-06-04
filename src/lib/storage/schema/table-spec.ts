@@ -44,7 +44,6 @@ export type StorageTableName =
 
 export type StorageTableSpec = {
   readonly name: StorageTableName;
-  readonly dexie: string;
   readonly dataClass: StorageDataClass;
   readonly inventoryGroup: StorageInventoryGroup;
   readonly primaryOwner: string;
