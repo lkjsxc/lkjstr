@@ -116,12 +116,12 @@ pub const DIAGNOSTIC_STATEMENTS: &[SqliteStatementSpec] = &[
     read(
         "app_log.recent",
         "app_log",
-        "SELECT log_id, level, message, context_json, created_at_ms FROM app_log ORDER BY created_at_ms DESC, log_id ASC LIMIT ?1;",
+        "SELECT log_id, area, level, code, message, context_json, record_json, created_at_ms FROM app_log ORDER BY created_at_ms DESC, log_id ASC LIMIT ?1;",
     ),
     write(
         "app_log.insert",
         "app_log",
-        "INSERT INTO app_log (log_id, level, message, context_json, created_at_ms) VALUES (?1, ?2, ?3, ?4, ?5) ON CONFLICT(log_id) DO UPDATE SET level = excluded.level, message = excluded.message, context_json = excluded.context_json, created_at_ms = excluded.created_at_ms;",
+        "INSERT INTO app_log (log_id, area, level, code, message, context_json, record_json, created_at_ms) VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8) ON CONFLICT(log_id) DO UPDATE SET area = excluded.area, level = excluded.level, code = excluded.code, message = excluded.message, context_json = excluded.context_json, record_json = excluded.record_json, created_at_ms = excluded.created_at_ms;",
     ),
 ];
 

@@ -1,3 +1,5 @@
+import { sqliteAppendAppLog } from '../storage/sqlite-opfs/app-log-repository';
+
 export type AppLogArea =
   | 'runtime'
   | 'relay'
@@ -37,6 +39,7 @@ export function appendAppLog(input: AppLogInput): AppLogRecord | undefined {
   };
   records = [...records.slice(-(maxRecords - 1)), record];
   emit();
+  void sqliteAppendAppLog(record).catch(() => undefined);
   return record;
 }
 

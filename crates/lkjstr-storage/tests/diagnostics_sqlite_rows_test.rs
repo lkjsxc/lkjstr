@@ -79,9 +79,12 @@ fn job_route_block_and_app_log_rows_keep_protection_shape() -> Result<(), serde_
     };
     let log = AppLogRecord {
         log_id: "log".to_owned(),
+        area: "runtime".to_owned(),
         level: "error".to_owned(),
+        code: "window-error".to_owned(),
         message: "failed".to_owned(),
         context_json: "{}".to_owned(),
+        record_json: "{}".to_owned(),
         created_at_ms: 10,
     };
 

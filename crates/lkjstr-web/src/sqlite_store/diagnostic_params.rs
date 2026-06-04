@@ -74,9 +74,12 @@ pub fn job_params(row: JobRecord) -> Option<SqlParams> {
 pub fn app_log_params(row: AppLogRecord) -> Option<SqlParams> {
     params(vec![
         text(row.log_id),
+        text(row.area),
         text(row.level),
+        text(row.code),
         text(row.message),
         text(row.context_json),
+        text(row.record_json),
         integer(row.created_at_ms),
     ])
 }

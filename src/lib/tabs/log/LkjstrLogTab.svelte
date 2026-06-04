@@ -11,9 +11,11 @@
     startRelaySnapshotPolling,
   } from '$lib/relays/session-snapshots';
   import type { RelaySnapshot } from '$lib/relays/types';
+  import { sqliteListAppLog } from '$lib/storage/sqlite-opfs/app-log-repository';
   import JobTreeLog from './JobTreeLog.svelte';
 
   let snapshots = $state<RelaySnapshot[]>([]);
+  let durableLogs = $state<readonly AppLogRecord[]>([]);
   let sessionLogs = $state<readonly AppLogRecord[]>(appLogRecords());
   let relayLogs = $derived(
     flattenRelayDiagnostics(snapshots).map((item, index) => ({
@@ -27,10 +29,15 @@
     })) satisfies readonly AppLogRecord[],
   );
   let logs = $derived(
-    [...sessionLogs, ...relayLogs].sort((a, b) => a.timestamp - b.timestamp),
+    uniqueChronological([...durableLogs, ...sessionLogs, ...relayLogs]),
   );
 
   onMount(() => {
+    void sqliteListAppLog(300)
+      .then((records) => {
+        durableLogs = records;
+      })
+      .catch(() => undefined);
     const stopLog = subscribeAppLog((records) => (sessionLogs = records));
     const stopSnapshots = startRelaySnapshotPolling((next) => {
       snapshots = next;
@@ -47,6 +54,13 @@
 
   function contextText(record: AppLogRecord): string {
     return record.context ? JSON.stringify(record.context) : '';
+  }
+
+  function uniqueChronological(
+    records: readonly AppLogRecord[],
+  ): AppLogRecord[] {
+    const byId = new Map(records.map((record) => [record.id, record]));
+    return [...byId.values()].sort((a, b) => a.timestamp - b.timestamp);
   }
 </script>
 

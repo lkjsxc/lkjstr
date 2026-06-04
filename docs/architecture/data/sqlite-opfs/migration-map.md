@@ -53,7 +53,7 @@ ownership context.
 | `cacheLedger` | `cache_ledger` | partial | `src/lib/cache/cache-ledger-repair.ts`, `cache-ledger-repair-rows.ts`, `cache-ledger-target.ts`, and `unowned-cache-cleanup.ts` still scan Dexie. | Add `repairCacheLedger` and `readCacheLedgerHealth` repository commands that chunk resource and ledger scans by deterministic primary-key cursor. |
 | `cacheMeta` | `cache_meta` | partial | Repair metadata still writes through `cache-ledger-repair.ts`; cache tool summaries still depend on repair health from Dexie. | Add `readCacheToolSummary` and write repair/inventory metadata from SQLite commands. |
 | physical inventory | SQLite catalog and ledger summaries | partial | `src/lib/storage/storage-inventory.ts`, `indexed-db-inventory.ts`, and `dexie-inventory-fallback.ts` still enumerate IndexedDB stores. | Add `readPhysicalInventory` with table counts, ledger byte estimates, storage mode, and explicit unavailable rows. |
-| app log | `app_log` | open | `src/lib/log/app-log.ts` is session memory only and `src/lib/tabs/log/LkjstrLogTab.svelte` renders no durable rows. | Add `appendAppLog`, `listAppLog`, and `clearRecoverableAppLog` repositories with redaction and bounded retention. |
+| app log | `app_log` | implemented | none | `src/lib/storage/sqlite-opfs/app-log-repository.ts` appends, lists, clears, and trims redacted rows; `src/lib/tabs/log/LkjstrLogTab.svelte` renders durable rows with session rows. |
 
 ## Deletion Criterion
 

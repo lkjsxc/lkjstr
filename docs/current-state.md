@@ -98,10 +98,12 @@ Read next: [architecture/data/README.md](architecture/data/README.md),
   returns SQLite rows without relay I/O; partial coverage renders cached rows
   and starts uncovered relay work in the background. Notifications still need
   the same top-level return path.
+- Durable redacted app log rows append to `app_log`; lkjstr Log reads durable
+  rows and session rows when storage is available.
 - Remaining Dexie cutover work is limited to SQLite repair, physical
-  inventory, cache tool summaries and actions, durable app log rows, any
-  residual product readers or writers, and deletion of
-  `src/lib/storage/browser-db.ts` plus Dexie metadata once no caller remains.
+  inventory, cache tool summaries and actions, any residual product readers or
+  writers, and deletion of `src/lib/storage/browser-db.ts` plus Dexie metadata
+  once no caller remains.
 - Immediate unfinished storage queue:
   - move `src/lib/cache/cache-ledger-repair.ts` and repair row collection to
     chunked SQLite worker commands;
@@ -109,8 +111,6 @@ Read next: [architecture/data/README.md](architecture/data/README.md),
     with SQLite table inventory plus explicit old-store diagnostics;
   - move cache tool health, repair, and summary reads to typed SQLite
     repositories;
-  - persist redacted app log rows in `app_log` and render durable rows in lkjstr
-    Log;
   - remove Dexie imports, dependency metadata, and `browser-db.ts` after the
     no-import proof is clean.
 - Protected records are never removed by cache cleanup: accounts, local signing

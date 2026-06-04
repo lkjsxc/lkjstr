@@ -58,13 +58,13 @@ references should stay as relative Markdown links.
 
 ## Storage Cutover
 
-| Clause                             | Contract                                                                                  | Status  | Notes                                                                                                 |
-| ---------------------------------- | ----------------------------------------------------------------------------------------- | ------- | ----------------------------------------------------------------------------------------------------- |
-| SQLite cache-ledger repair         | [repair.md](../architecture/data/storage/retention/repair.md)                              | partial | Dexie repair files remain in `src/lib/cache`; target command is `repairCacheLedger`.                   |
-| SQLite physical inventory          | [inventory.md](../architecture/data/storage/diagnostics/inventory.md)                      | partial | `storage-inventory.ts` still uses IndexedDB enumeration; target command is `readPhysicalInventory`.    |
-| SQLite cache tool summary          | [worker-protocol.md](../architecture/data/sqlite-opfs/worker-protocol.md)                  | partial | Stats repair health still calls the Dexie repair module; target command is `readCacheToolSummary`.     |
-| Durable redacted app log           | [log.md](tools/log.md)                                                                     | partial | `app_log` schema exists; shipped Log tab still renders session rows until repository wiring lands.     |
-| Dexie dependency deletion          | [deletion-ledger.md](../architecture/rust-wasm/cutover/deletion-ledger.md)                 | blocked | Remove only after no product import of `Dexie`, `browserDb`, or Dexie schema helpers remains.          |
+| Clause                     | Contract                                                                   | Status      | Notes                                                                                                                                             |
+| -------------------------- | -------------------------------------------------------------------------- | ----------- | ------------------------------------------------------------------------------------------------------------------------------------------------- |
+| SQLite cache-ledger repair | [repair.md](../architecture/data/storage/retention/repair.md)              | partial     | Dexie repair files remain in `src/lib/cache`; target command is `repairCacheLedger`.                                                              |
+| SQLite physical inventory  | [inventory.md](../architecture/data/storage/diagnostics/inventory.md)      | partial     | `storage-inventory.ts` still uses IndexedDB enumeration; target command is `readPhysicalInventory`.                                               |
+| SQLite cache tool summary  | [worker-protocol.md](../architecture/data/sqlite-opfs/worker-protocol.md)  | partial     | Stats repair health still calls the Dexie repair module; target command is `readCacheToolSummary`.                                                |
+| Durable redacted app log   | [log.md](tools/log.md)                                                     | implemented | `app-log-repository.ts`, `app-log.test.ts`, and `sqlite-opfs-app-log.test.ts` prove redaction, append, list, clear, and bounded retention wiring. |
+| Dexie dependency deletion  | [deletion-ledger.md](../architecture/rust-wasm/cutover/deletion-ledger.md) | blocked     | Remove only after no product import of `Dexie`, `browserDb`, or Dexie schema helpers remains.                                                     |
 
 ## Feed Surface
 

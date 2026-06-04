@@ -149,9 +149,12 @@ pub const SQLITE_DIAGNOSTIC_TABLES: &[SqliteTableSpec] = &[
         None,
         r#"CREATE TABLE IF NOT EXISTS app_log (
   log_id TEXT PRIMARY KEY,
+  area TEXT NOT NULL,
   level TEXT NOT NULL,
+  code TEXT NOT NULL,
   message TEXT NOT NULL,
   context_json TEXT NOT NULL,
+  record_json TEXT NOT NULL,
   created_at_ms INTEGER NOT NULL
 ) STRICT;"#
     ),
