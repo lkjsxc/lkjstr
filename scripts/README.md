@@ -12,6 +12,7 @@ commands.
 - `repo-source-classes.ts`: TypeScript AST guard that rejects first-party
   classes under `src/`.
 - `run-quiet.ts`: quiet verification runner for agents and CI.
+- `vite-lkjstr-web-wasm.ts`: optional Vite asset plugin for the Rust scan bridge.
 - `vitest-quiet-reporter.ts`: minimal Vitest reporter for quiet unit runs.
 - `playwright-quiet-reporter.ts`: minimal Playwright reporter for quiet e2e runs.
 
