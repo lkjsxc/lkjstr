@@ -2,69 +2,71 @@
 
 ## Purpose
 
-Testing ownership maps behavior to the right test layer.
+Testing ownership maps each behavior to the smallest reliable test layer. The
+repository favors many focused tests over browser workflow suites.
 
-## Unit
+## Unit And Pure Reducers
 
-- Workspace commands and resize math.
-- Tab registry and New Tab option list.
-- Settings schema and override store.
-- Package scripts run `kit:sync` before lint or check tools read generated
-  SvelteKit config.
-- Relay set selection and disabled-relay exclusion.
-- Event repository paging, tag lookup, relay provenance, memory fallback, and
-  compaction.
-- Subscription manager one-shot page reads, EOSE cleanup, timeout cleanup, and
-  relay provenance, in-flight dedupe, logical key restoration, compact relay
-  IDs, and session compatibility filtering.
-- Relay page helper sorting, duplicate relay provenance, `before` and `after`
-  cursor filtering, same-second boundaries, and NIP-11 limit shaping.
-- Adaptive relay segment planning, per-relay density classification, dense
-  subdivision, sparse growth, unresolved coverage, and aggregate false-positive
-  guards.
-- Follow-list parsing, dedupe, and self inclusion.
-- Timeline no-active-account, loading-follows, no-follow-list,
-  no-enabled-relay, auth-required, subscription-closed, relay-failed,
-  ready-empty, ready-with-events, EOSE, and cleanup behavior.
-- Relay diagnostics for `CLOSED`, `NOTICE`, `AUTH`, parse failure, and invalid
-  signatures.
-- Tweet draft and publish helpers.
-- Thread cache and runtime behavior.
-- Home, Global, Profile, Thread, and Notifications `loadOlder()` and
-  `loadNewer()` behavior.
-- Event list near-bottom scroll triggering.
-- Cold-cache initial relay backfill for Home, Global, Profile, and Thread.
-- Home and Global newer relay catch-up, Profile initial post persistence, and
-  adaptive Home backfill without fixed day labels.
-- Compound cursor filtering for same-second older relay results.
-- Media/content parsing for image, video, audio, normal links, and invalid URLs.
-- Deep event tree continuation rows and same-pane Profile or Thread tab reuse.
-- Identity hydration mismatch and stale async response guards.
-- Latest-only profile cache writes and timeline metadata hydration.
-- Profile note relay provenance fallback behavior.
-- Profile split initial metadata, follow-list, and note reads; post-only
-  visible pages; older/newer pruning recovery; and live-event deferral while an
-  older window is visible.
-- Notification context safety for malformed records without event ids.
-- Inactive tab retention expiry, setting changes, tab close cleanup, and
-  subscription release.
+Unit tests own deterministic behavior:
 
-## E2E
+- Workspace commands, resize math, layout tree transforms, tab registry, New
+  Tab choices, and tab snapshot save/load/delete rules.
+- Settings schema, flat key-value persistence, and override stores.
+- Protocol parsing, event normalization, filters, tag helpers, NIP-19, relay URL
+  normalization, signing helpers, content parsing, media extraction, and custom
+  emoji rules.
+- Feed merge reducers, display bounds, scroll anchors, cursors, window caps,
+  coverage intervals, row shell states, and footer phases.
+- Retention scoring, byte accounting, protected-row decisions, deletion
+  dispatch, repair planning, pressure stop reasons, and LOD forgetting plans.
+- Relay set selection, disabled-relay exclusion, subscription lease keys, page
+  read dedupe, limiter cancellation, relay score reducers, route trust, scan
+  density, and wait policy.
+- Stats projection reducers for storage, relay, optimizer, runtime, and memory
+  diagnostics.
 
-- Root workspace render.
-- New Tab direct choices.
-- Flat Settings tab.
-- Tweet tab label and prerequisites.
-- Relay settings affecting active Account home behavior.
-- Synthetic relay diagnostics and cache-first Timeline notes.
-- Synthetic relay `since`, `until`, and `limit` handling.
-- Synthetic relay cold-cache Home notes from historical initial pages.
-- Row click Thread navigation and avatar or name Profile navigation.
-- Quote/reference clicks and media sizing inside desktop and mobile panes.
-- Long profile metadata followed by Notes rows in the Profile tab scroll flow.
-- Inactive tab scroll retention within the configured grace period and retained
-  body removal after expiry.
-- Heavy-feed smoke coverage for thousands of events, large follows, bounded
-  runtime counters, real signed synthetic relay events, and app heap under
-  `100 MB`.
-- Tile resize persistence.
+## Repository And Worker Integration
+
+Repository tests own durable behavior without a full browser app flow:
+
+- SQLite worker protocol requests and typed response shapes.
+- OPFS availability, temporary-memory fallback, blocked storage, corrupt rows,
+  timeouts, and unavailable states.
+- Event, tag, relay provenance, feed page, notification, job, relay settings,
+  app log, cache ledger, inventory, and retention repositories.
+- Cache repair and compaction batches with protected rows present.
+- Old IndexedDB presence diagnostics that do not scan every old row.
+
+## Host Boundary
+
+Host-boundary tests are allowed only when Node cannot model the API precisely:
+
+- Worker module loading.
+- OPFS or official SQLite WASM host behavior.
+- Browser timeout and WebSocket host adapters.
+- WASM bridge loading and explicit bridge-unavailable states.
+
+These tests stay narrow. They do not drive the tiled workspace through a
+browser page.
+
+## Smoke
+
+Smoke checks prove production packaging:
+
+- `app-smoke` builds the production app, starts preview, fetches `/`, and
+  verifies a nonblank workspace shell response.
+- `cloudflare:quiet` runs the SvelteKit Cloudflare build and Wrangler dry-run.
+- Docker Compose builds and runs `app`, `verify`, `cloudflare`, and
+  `app-smoke` from images without mounting the source tree.
+
+## Manual Diagnostics
+
+Manual diagnostics are useful but not canonical automated gates:
+
+- Browser heap snapshots and long-session storage observation.
+- Real relay sessions under selected user relay sets.
+- Mobile and desktop visual inspection of workspace interactions.
+- Production host header checks when deployment access exists.
+
+Manual findings should become small reducer, repository, host-boundary, or smoke
+tests whenever the behavior can be isolated cheaply.

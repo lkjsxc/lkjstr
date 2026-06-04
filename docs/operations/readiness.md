@@ -39,10 +39,10 @@ Readiness checks whether the app contract is shippable.
 - Cache compaction protects accounts, settings, relay sets, workspace state,
   Tweet drafts, active jobs, active tab snapshots, recent or unread
   notifications, and relay route blocks.
-- App heap stays below `100 MB` in the heavy-feed smoke test; Chromium RSS is
-  reported separately.
+- App-owned memory counters return to documented idle states after heavy-feed
+  cleanup; Chromium RSS remains manual diagnostic evidence.
 - Tweet publishes only with a signing account and enabled write relays.
 - Docker config contains no bind mounts.
-- Docker Compose config, image build, verify, and e2e gates pass when Docker is
+- Docker Compose config, image build, verify, and focused gates pass when Docker is
   available.
-- Unit and e2e checks pass for the changed surface.
+- Unit and focused checks pass for the changed surface.

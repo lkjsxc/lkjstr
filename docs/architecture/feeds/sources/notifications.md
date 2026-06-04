@@ -66,4 +66,4 @@ A notification relay filter is protocol-safe only when it includes:
 
 - `tests/unit/notifications/notification-filters.test.ts`
 - `tests/unit/notifications/notification-paging.test.ts`
-- `tests/e2e/timeline-regression.spec.ts` scenario F
+- `tests/unit/notifications/notification-window.test.ts`

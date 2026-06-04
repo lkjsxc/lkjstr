@@ -16,7 +16,7 @@ Workflow docs define the change process.
    WASM, Trunk, and `lkjstr-xtask` checks documented in
    [verification.md](../operations/verification.md).
 6. Run Docker Compose as the final gate: config, image builds, then `verify`,
-   `e2e`, `cloudflare`, and `app-smoke` services with `--progress quiet`.
+   `cloudflare`, and `app-smoke` services with `--progress quiet`.
 7. Keep CI behavior aligned with quiet local and Docker Compose verification.
 
 ## Commit Slices

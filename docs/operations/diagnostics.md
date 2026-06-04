@@ -67,8 +67,8 @@ shows compact runtime memory counters and redacted subscription purpose labels.
 They must not duplicate lkjstr Log rows or expose raw logs, relay payloads,
 event arrays, tab ids, or request ids.
 
-Clean-browser Playwright is the source of truth for app-origin console
-diagnostics. Suppression is limited to the external `lockdown-install.js` plus
+Manual clean-browser diagnostics are the source of truth for app-origin console
+diagnostics when investigating a real browser session. Suppression is limited to the external `lockdown-install.js` plus
 `SES_UNCAUGHT_EXCEPTION` plus null payload case. App-origin null errors,
 non-null SES errors, and non-lockdown errors remain visible app-log records.
 

@@ -23,9 +23,9 @@ UI shell, and repository checks.
   both runtimes exist.
 - `src/lib/storage/sqlite-opfs/`: temporary TypeScript host worker and client
   for official SQLite WASM while the Rust adapter lands.
-- `tests/`: Playwright and WASM browser tests.
+- `tests/`: focused tests and WASM browser tests.
 - `tools/`: repository tooling that is not part of product runtime.
-- `package.json`: minimal Node tooling for Playwright, Wrangler, wrappers, and
+- `package.json`: minimal Node tooling for focused tests, Wrangler, wrappers, and
   the official SQLite WASM worker package.
 
 ## Crate Paths

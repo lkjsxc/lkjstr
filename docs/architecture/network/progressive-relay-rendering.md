@@ -124,6 +124,6 @@ Required coverage:
 - UI tests for no false empty state while relays are pending, partial status
   with visible rows, timeout retaining rows as incomplete, and provenance
   updates without row duplication.
-- Synthetic relay e2e: a fast relay emits an older event, a slow relay emits a
-  newer event, and a failed relay terminates; the UI renders the fast row early
+- Synthetic relay focused test: a fast relay emits an older event, a slow relay
+  emits a newer event, and a failed relay terminates; the UI renders the fast row early
   and later merges the slow row above it.

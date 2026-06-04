@@ -2,26 +2,33 @@
 
 ## Purpose
 
-Operations docs define local verification, Docker verification, diagnostics,
-data safety, and test ownership.
+Operations docs define quiet verification, Docker, CI, Cloudflare, data safety,
+readiness, diagnostics, and focused gates.
 
 ## Table of Contents
 
-- [ci.md](ci.md): hosted gates and GHCR images.
-- [cloudflare-workers.md](cloudflare-workers.md): Workers dry-run target.
-- [data-safety.md](data-safety.md): local data safety.
-- [diagnostics.md](diagnostics.md): debugging guidance.
-- [docker.md](docker.md): built-image Compose workflow.
-- [feed-route-isolation-regression.md](feed-route-isolation-regression.md):
-  Home, Profile, Notifications, and tool route isolation gates.
-- [focused-gates.md](focused-gates.md): extra checks by change area.
-- [memory-verification.md](memory-verification.md): heap snapshot collection
-  and memory test commands.
-- [readiness.md](readiness.md): handoff checks.
-- [storage-pressure-verification.md](storage-pressure-verification.md):
-  whole-origin cache pressure scenario.
-- [sqlite-opfs-testing.md](sqlite-opfs-testing.md): worker-owned SQLite OPFS checks.
-- [testing-ownership.md](testing-ownership.md): unit and e2e ownership.
-- [verification.md](verification.md): command gate.
+- [verification.md](verification.md): canonical local, Rust/WASM, Cloudflare,
+  and Docker gates.
+- [focused-gates.md](focused-gates.md): narrow checks by change area.
+- [testing-ownership.md](testing-ownership.md): unit, repository,
+  host-boundary, smoke, and manual ownership.
+- [docker.md](docker.md): Compose image targets and guardrails.
+- [ci.md](ci.md): CI jobs and Compose commands.
+- [cloudflare-workers.md](cloudflare-workers.md): Workers Static Assets target.
+- [memory-verification.md](memory-verification.md): cleanup counters and manual
+  heap diagnostics.
+- [storage-pressure-verification.md](storage-pressure-verification.md): storage
+  budget and compaction acceptance.
+- [sqlite-opfs-testing.md](sqlite-opfs-testing.md): SQLite worker host checks.
+- [data-safety.md](data-safety.md): protected data and export safety.
+- [diagnostics.md](diagnostics.md): lkjstr Log and runtime diagnostics.
+- [readiness.md](readiness.md): final readiness checklist.
+- [feed-route-isolation-regression.md](feed-route-isolation-regression.md): feed
+  route isolation investigation.
 - [timeline-notification-regression-investigation.md](timeline-notification-regression-investigation.md):
-  Home and Notifications regression notes.
+  notification and timeline investigation notes.
+
+## Rule
+
+Run the focused gate for the area you changed, then the Docker final gate from
+[verification.md](verification.md) before claiming the repository is verified.

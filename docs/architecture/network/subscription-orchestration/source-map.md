@@ -35,12 +35,12 @@ Map documentation topics to implementation files. Each module stays at or below
 
 ## Tests
 
-| Path                                           | Role               |
-| ---------------------------------------------- | ------------------ |
-| `tests/unit/relays/orchestration/`             | unit gates         |
-| `tests/e2e/subscription-lease-sharing.spec.ts` | live lease sharing |
-| `tests/e2e/subscription-three-home.spec.ts`    | three-tab dedupe   |
-| `tests/e2e/subscription-pane-churn.spec.ts`    | cleanup gauges     |
+| Path | Role |
+| --- | --- |
+| `tests/unit/relays/orchestration/` | pure orchestration gates |
+| `tests/unit/relays/subscription-manager-dedupe.test.ts` | compatible read dedupe |
+| `tests/unit/relays/subscription-manager-read-limiter.test.ts` | queued read cleanup |
+| `tests/unit/timeline/timeline-runtime-close.test.ts` | runtime owner release |
 
 ## Related
 

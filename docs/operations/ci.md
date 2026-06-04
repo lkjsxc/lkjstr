@@ -2,35 +2,30 @@
 
 ## Purpose
 
-CI keeps repository gates reproducible outside a developer machine.
+Continuous integration runs the same quiet and Docker-backed gates expected of
+LLM agents.
 
-## Gates
+## Jobs
 
-- `pnpm verify` runs current repository checks, lint, Svelte checks, unit tests,
-  and build.
-- Rust/WASM gates add cargo format, clippy, Rust tests, WASM browser tests, and
-  Trunk build as soon as those commands exist in the workspace.
-- Playwright runs browser workflows with the checked-in app.
-- Docker Compose validates `docker-compose.yml` and builds `app`, `verify`,
-  `e2e`, `cloudflare`, and `app-smoke` targets.
-- Docker Compose runs the `verify`, `e2e`, `cloudflare`, and `app-smoke`
-  targets from built images.
-- Docker Compose runs `app-smoke`, which starts production preview on port
-  `5173`, fetches `/`, and fails on non-OK or blank app HTML.
+- `verify` installs Node dependencies and runs `pnpm verify:quiet`.
+- `compose` validates Compose config, builds `app`, `verify`, `cloudflare`, and
+  `app-smoke`, then runs the `verify`, `cloudflare`, and `app-smoke` services.
+- `publish` builds and publishes the `app` target to GHCR from `main` after the
+  verification jobs pass.
 
-## Images
+## Compose Commands
 
-`main` publishes one GHCR image:
-
-- `ghcr.io/lkjsxc/lkjstr`
-
-The image builds from the `app` Dockerfile target and receives `latest` and
-`sha-<commit>` tags, so `ghcr.io/lkjsxc/lkjstr:latest` is the default runtime
-image.
+```sh
+docker compose -f docker-compose.yml config
+docker compose --progress quiet -f docker-compose.yml build app verify cloudflare app-smoke
+docker compose --progress quiet -f docker-compose.yml run --rm verify
+docker compose --progress quiet -f docker-compose.yml run --rm cloudflare
+docker compose --progress quiet -f docker-compose.yml run --rm app-smoke
+```
 
 ## Rules
 
-- CI must use `docker-compose.yml`.
-- Compose services must not require environment blocks.
-- The Compose gate includes `cloudflare` and `app-smoke`.
-- GHCR publishing is limited to `main`.
+- Passing quiet commands emit one final `ok ...` line.
+- Failure output is bounded and local to the failed step.
+- Cloudflare Workers Static Assets deployability stays green.
+- CI does not run browser workspace workflow suites.

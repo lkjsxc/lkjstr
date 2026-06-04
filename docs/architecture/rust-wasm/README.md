@@ -40,7 +40,7 @@ This subtree defines the Rust/WASM client target.
 ## Ownership Summary
 
 Rust owns the application contract. JavaScript remains only for browser host
-bootstrap, Playwright, Wrangler, and narrow APIs that the browser exposes as
+bootstrap, focused tests, Wrangler, and narrow APIs that the browser exposes as
 JavaScript objects.
 
 The first implementation slices must be pure and testable: protocol parsing,

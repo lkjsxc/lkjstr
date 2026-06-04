@@ -25,15 +25,17 @@ without changing result correctness.
 - Rust `lkjstr-relays` tests cover pure budget derivation, warning kinds,
   filter clamping, read-cap merge, and serialized `REQ` byte caps.
 
-## Browser Gates
+## Component And Projection Gates
 
-- Relay Settings displays real NIP-11 info, stale state, failures, limitations,
-  and policy warnings.
-- Stats displays request caps, clamp reasons, relay statuses, and EOSE/OK
-  counters without raw payload exposure.
-- Search keeps NIP-50 filter semantics and shows relay support diagnostics.
-- Custom Request shows user input and effective outbound request separately.
-- One failing relay does not block a reachable relay for Home or Global.
+- Relay Settings projection displays real NIP-11 info, stale state, failures,
+  limitations, and policy warnings.
+- Stats projection displays request caps, clamp reasons, relay statuses, and
+  EOSE/OK counters without raw payload exposure.
+- Search reducers keep NIP-50 filter semantics and relay support diagnostics.
+- Custom Request reducers show user input and effective outbound request
+  separately.
+- Relay orchestration tests prove one failing relay does not block a reachable
+  relay for Home or Global.
 
 ## Final Gate
 
@@ -41,9 +43,8 @@ Docker Compose remains authoritative:
 
 ```bash
 docker compose -f docker-compose.yml config
-docker compose --progress quiet -f docker-compose.yml build app verify e2e cloudflare app-smoke
+docker compose --progress quiet -f docker-compose.yml build app verify cloudflare app-smoke
 docker compose --progress quiet -f docker-compose.yml run --rm verify
-docker compose --progress quiet -f docker-compose.yml run --rm e2e
 docker compose --progress quiet -f docker-compose.yml run --rm cloudflare
 docker compose --progress quiet -f docker-compose.yml run --rm app-smoke
 ```

@@ -43,7 +43,7 @@ They include:
 - WASM bridge state: available, unavailable, or error with a redacted message
 
 The browser debug surface may expose redacted scan optimizer data for
-Playwright:
+focused tests:
 
 ```text
 window.__lkjstrDebug.scanModels()
@@ -67,6 +67,11 @@ connection state, active subscriptions, REQ and CLOSE counts, accepted and
 dropped events, bytes sent and received, first-event timing, EOSE timing,
 timeout/auth/close/error counts, event-limit count, score, fairness credit, and
 last observation time.
+
+Duplicate provider samples are reduced by a stable key:
+`relayUrl + surface + direction + routeFingerprint`. The projection combines
+samples deterministically, records source count, and renders one explicit
+unavailable row for unavailable providers.
 
 ## Cache And Coverage Rows
 

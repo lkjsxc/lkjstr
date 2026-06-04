@@ -39,7 +39,6 @@ Required service names stay stable:
 
 - `app`
 - `verify`
-- `e2e`
 - `cloudflare`
 - `app-smoke`
 

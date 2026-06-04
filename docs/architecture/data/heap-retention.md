@@ -93,31 +93,36 @@ timers, and evict idle clients from the pool map.
 Profile summaries, token caches, and feed runtime windows can grow without
 bounds. The fix is to use bounded LRU or TTL caches with documented caps.
 
-## Measured Baselines
+## Automated Evidence
 
-Production-build Playwright memory tests (`pnpm test:e2e:memory`) currently
-pass with these gates:
+Focused tests currently own memory behavior through cleanup counters and bounded
+resource checks:
 
-- Heavy feed (1200 notes): heap delta under `350 MiB` after forced GC.
-- Workspace churn (open/close surfaces): heap delta under `80 MiB` after forced
-  GC.
-- Memory gate: zero `active-paged-reads`, `queued-read-waiters`,
-  `active-relay-publish-waiters`, `active-abort-listeners`, and
-  `active-indexeddb-ops` after teardown.
+- zero `active-paged-reads`, `queued-read-waiters`,
+  `active-relay-publish-waiters`, `active-abort-listeners`, and active storage
+  operations after teardown;
+- relay diagnostic summaries stay under documented caps;
+- runtime windows, profile caches, token caches, and retention pins evict by
+  documented bounds;
+- owner cancellation ignores late async completions.
+
+Browser heap snapshots are manual diagnostics. When they reveal retaining
+paths, add focused tests for the owning factory, reducer, repository, or task
+queue.
 
 ## Confirmed Root Causes
 
 Status: under active investigation. Update this section only after heap
-snapshots confirm retaining paths beyond the e2e gates above.
+snapshots or focused tests confirm retaining paths.
 
 | Symptom group | Suspected owner module | Cleanup owner | Verification test |
 |---------------|------------------------|---------------|-------------------|
-| `IDBRequest` / `IDBTransaction` spike | `safe-storage.ts`, store `toArray()` callers | `try/finally` on storage ops; bounded reads | `memory-churn.spec.ts` `active-indexeddb-ops` zero |
-| Relay diagnostic summary shapes | `relay-diagnostic-summary.ts` | Bounded map eviction; batched `bulkPut` | Counter `relay-diagnostic-summary-count` under cap |
-| `AbortSignal` / abort listeners | `shared-abort-controller.ts`, `read-limiter.ts` | `finally` removal; manager `close()` | Counter `active-abort-listeners` zero after tab close |
-| Svelte context / listeners | Tab Svelte surfaces, row components | `onDestroy` / `$effect` cleanup; small view models | `active-dom-listeners` zero after surface destroy |
+| Storage request spike | `safe-storage.ts`, bounded repository readers | `try/finally` on storage ops; bounded reads | active storage counters return to zero |
+| Relay diagnostic summary shapes | `relay-diagnostic-summary.ts` | Bounded map eviction; batched writes | `relay-diagnostic-summary-count` under cap |
+| `AbortSignal` / abort listeners | `shared-abort-controller.ts`, `read-limiter.ts` | `finally` removal; manager `close()` | `active-abort-listeners` zero after tab close |
+| Svelte context / listeners | Tab Svelte surfaces, row components | `onDestroy` / `$effect` cleanup; small view models | active listener counters return to zero |
 | Relay pool maps / timers | `relay-pool.ts`, `relay-client.ts` | `close()` idempotent; idle eviction | `active-relay-clients` zero after pool idle |
-| Feed/profile/token caches | Feed runtimes, profile cache, token cache | LRU/TTL bounded maps | Cache counters under documented caps |
+| Feed/profile/token caches | Feed runtimes, profile cache, token cache | LRU/TTL bounded maps | cache counters under documented caps |
 
 ## Cleanup Ownership
 
@@ -129,8 +134,8 @@ Every retained object group must have an explicit owner. See
 - Unit tests prove each factory releases its resources.
 - Component tests prove destroy removes listeners and cancels async
   continuations.
-- Playwright e2e tests run against a production build, force GC at checkpoints,
-  and assert heap stays under the documented budget.
+- Manual browser diagnostics may run against a production build, force GC at
+  checkpoints, and record heap for investigation.
 - Memory tests read compact runtime counters and assert they return to zero
   after teardown.
 

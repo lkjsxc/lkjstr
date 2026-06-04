@@ -41,9 +41,8 @@ tests. Chrome uses container-safe flags for Docker.
 
 ```sh
 docker compose -f docker-compose.yml config
-docker compose --progress quiet -f docker-compose.yml build app verify e2e cloudflare app-smoke
+docker compose --progress quiet -f docker-compose.yml build app verify cloudflare app-smoke
 docker compose --progress quiet -f docker-compose.yml run --rm verify
-docker compose --progress quiet -f docker-compose.yml run --rm e2e
 docker compose --progress quiet -f docker-compose.yml run --rm cloudflare
 docker compose --progress quiet -f docker-compose.yml run --rm app-smoke
 ```
@@ -59,5 +58,5 @@ docker compose --progress quiet -f docker-compose.yml run --rm app-smoke
 - storage manifest doc comparison.
 - quiet command orchestration.
 
-`pnpm check:repo` remains active while TypeScript, Svelte, Playwright, Wrangler,
+`pnpm check:repo` remains active while TypeScript, Svelte, focused tests, Wrangler,
 or repository scripts are still part of product verification.

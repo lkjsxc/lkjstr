@@ -45,7 +45,7 @@ belongs in operations checks, not in tribal deployment knowledge.
 ## JavaScript Boundary
 
 JavaScript remains minimal host glue. It may load the WASM module, expose
-browser objects, run Playwright, run Wrangler, and support toolchain commands.
+browser objects, run focused tests, run Wrangler, and support toolchain commands.
 It does not own product reducers, protocol parsing, relay orchestration, or
 storage rules.
 

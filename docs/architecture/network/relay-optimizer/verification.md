@@ -25,13 +25,13 @@ cargo test -p lkjstr-storage -- optimizer
 cargo clippy --workspace --all-targets -- -D warnings
 ```
 
-## Browser And WASM Gates
+## TypeScript And WASM Gates
 
 ```sh
-pnpm test:quiet
+pnpm test -- tests/unit/feed-surface/scan-model-bridge.test.ts
+pnpm test -- tests/unit/feed-surface/scan-model-repository.test.ts
+pnpm test -- tests/unit/relays/relay-read-score.test.ts
 pnpm rust-wasm:quiet
-pnpm test:e2e:quiet -- scan
-pnpm test:e2e:quiet -- stats
 ```
 
 Unit tests must cover the TypeScript host boundary without requiring a real
@@ -75,5 +75,5 @@ decision debug projection, and trace redaction.
 ## Final Gate
 
 Docker Compose remains the final gate: validate Compose config, build `app`,
-`verify`, `e2e`, `cloudflare`, and `app-smoke`, then run those verification
+`verify`, `cloudflare`, and `app-smoke`, then run those verification
 services from the built images.

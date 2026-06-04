@@ -2,36 +2,26 @@
 
 ## Purpose
 
-The feed level-of-detail tree indexes real feed rows so heavy feeds can keep
-stable scroll math without materializing every enriched row.
+The feed level-of-detail tree indexes real feed rows so heavy feeds keep stable
+scroll math while low-value branches degrade to compact recoverable summaries.
 
-## Data Model
+## Materialization Levels
 
-The tree indexes flattened feed rows with real metadata:
+| Level | Data kept |
+| --- | --- |
+| `full` | event row, normalized event, relay provenance, parsed content, profiles, references, previews, media layout, measured height, and UI row model |
+| `shell` | event id, kind, pubkey, timestamp, estimated height, measured height when known, provenance count, media flags, reply or quote flags, and coverage state |
+| `block` | real-row summary: time range, count, cumulative height, loaded count, route group, coverage state, density marker, score range, structural hints, and recovery recipe |
+| `recovery` | semantic feed key, route fingerprint, selected-relay fallback set, route-evidence relays, filter shape, time interval, scan hints, coverage status, and geometry model |
 
-```text
-row id or event id
-row kind
-timestamp
-estimated height
-measured height when available
-loaded state
-coverage state
-route group
-relay provenance count
-media flag
-preview flag
-reply child count
-```
-
-It never creates fake event content. Missing coverage is represented as real
-unavailable or uncovered state only where the UI already supports such rows.
+The tree never creates fake events or fake previews. Missing data is uncovered,
+compacted, unavailable, or recovering.
 
 ## Shape
 
 - Leaf: one real row.
-- Block: 16 to 64 rows with cumulative height, time range, loaded count, and
-  dense or unresolved markers.
+- Block: 16 to 64 rows with cumulative height, time range, loaded count,
+  coverage state, and dense or unresolved markers.
 - Superblock: larger cumulative ranges for fast offset-to-row mapping.
 
 ## Operations
@@ -41,20 +31,44 @@ build_lod_tree(rows, geometry_models)
 offset_to_row(tree, scroll_offset)
 visible_range(tree, scroll_offset, viewport_height, overscan)
 materialization_plan(tree, visible_range)
+forgetting_plan(tree, retention_scores, byte_pressure)
+recovery_recipe(tree, compacted_range)
 height_delta_update(tree, row_id, measured_height)
 coverage_gap_projection(tree)
 ```
 
-## Rendering Rules
+## Forgetting Rule
 
-- Visible rows render full real rows.
-- Near-visible rows render full row shells and schedule enrichment first.
-- Mid-distance rows render real shells with reserved height and no heavy
-  previews until near-visible.
-- Far rows use block-level real metadata for virtualizer math and optional
-  compact timeline overview.
-- Live prepends and older appends update cumulative heights without changing the
-  current visible anchor unless the user is intentionally at the top.
+Low-value branches degrade in order:
+
+1. `full` to `shell`: drop profiles, previews, parsed token arrays, media
+   dimensions that can be recomputed, and rendered row view models.
+2. `shell` to `block`: keep cumulative geometry, event ids when affordable,
+   time ranges, coverage state, and recovery recipe.
+3. `block` to `recovery`: keep enough information to request from SQLite or
+   relays again.
+4. `recovery` to absent only when no durable value or user-visible state depends
+   on the branch.
+
+Hard protection covers visible viewport and overscan, focused tab, active
+Thread root and ancestors, active Profile header and visible posts, unread
+recent notifications, active drafts, runtime-pinned events, latest metadata,
+active follow lists, and user-owned protected storage.
+
+## Recovery Path
+
+When the user navigates to a compacted branch:
+
+1. Ask SQLite for full or shell rows in the interval.
+2. If SQLite coverage is complete, materialize from SQLite.
+3. If SQLite is partial, render cached shells and schedule relay work for
+   uncovered intervals.
+4. Use route evidence, selected relay fallback, NIP-65 hints, relay provenance,
+   and scan density hints to plan reads.
+5. Do not prove absence unless interval-union coverage is complete for required
+   relays, route groups, semantic key, filter key, and interval.
+6. Persist recovered rows through normal event repositories and cache ledger.
+7. Update geometry and retention scores.
 
 ## Consumers
 
@@ -67,6 +81,8 @@ Stats feed-density or coverage displays.
 - Offset-to-row mapping stays correct after height updates.
 - Live prepends preserve anchor when the user is not at the top.
 - Older loads append blocks without changing the current anchor.
-- Missing parent replies can remain roots until the parent arrives.
-- Dense blocks trigger planning diagnostics without proving absence.
+- Far branches can degrade without losing scroll height.
+- Compacted branches have real recovery recipes.
+- Rehydration checks SQLite first.
+- Relay reacquisition does not prove absence from incomplete coverage.
 - Heavy-feed tests prove the virtualizer does not materialize all rows.

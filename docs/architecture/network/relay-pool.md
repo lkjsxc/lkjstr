@@ -93,8 +93,8 @@ events, publish acknowledgements, and relay snapshots.
 
 ## Browser Diagnostics
 
-- A clean Playwright browser is authoritative for app-origin console messages.
-- If the SES lockdown message is absent in clean Playwright, document it as
+- A manual clean browser is authoritative for app-origin console messages.
+- If the SES lockdown message is absent in manual clean-browser diagnostics, document it as
   external extension or provider injection.
 - Do not add synthetic SES handling unless clean-browser verification
   reproduces an app-origin failure.

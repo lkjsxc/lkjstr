@@ -16,13 +16,12 @@ Layout docs map repository paths to ownership.
 - `index.html`: Trunk browser entry document for the Rust/WASM shell.
 - `src/`: current SvelteKit app and TypeScript modules until replaced.
 - `docs/`: product and engineering contract.
-- `tests/unit/`: Vitest unit tests.
-- `tests/e2e/`: Playwright browser tests.
+- `tests/unit/`: focused Vitest unit and integration tests.
 - `tools/`: target non-product tooling home.
-- `Dockerfile`: app, verify, and e2e image targets.
+- `Dockerfile`: app, verify, cloudflare, and app-smoke image targets.
 - `docker-compose.yml`: built-image services.
-- `package.json`: current Node app tooling; target minimal Playwright,
-  Wrangler, and wrapper tooling.
+- `package.json`: current Node app tooling; target minimal Vitest, Wrangler,
+  and wrapper tooling.
 - `.github/_README.md`: repository automation notes that do not replace the
   root project overview on GitHub.
 - `.github/workflows/ci.yml`: hosted gates and GHCR publishing.

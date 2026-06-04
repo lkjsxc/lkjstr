@@ -30,7 +30,7 @@ target OPFS SQLite instead of extending Dexie.
 
 The current live contract is proved by the manifest docs, current IndexedDB
 schema, SQLite worker tests, repository checks, storage unit tests, storage
-pressure e2e tests, and Docker Compose verification. The target contract adds
+pressure focused tests, and Docker Compose verification. The target contract adds
 executable SQLite schema checks from [../sqlite-opfs/schema.md](../sqlite-opfs/schema.md).
 
 ## Table of Contents

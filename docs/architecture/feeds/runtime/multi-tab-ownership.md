@@ -31,5 +31,6 @@ each tab owns its page cursors and Demand owner identity.
 
 ## Tests
 
-- `tests/e2e/subscription-lease-sharing.spec.ts`
-- `tests/e2e/timeline-multi-tab.spec.ts`
+- `tests/unit/relays/orchestration/orchestrator-refcount.test.ts`
+- `tests/unit/relays/orchestration/live-demand-handles.test.ts`
+- `tests/unit/timeline/timeline-runtime-close.test.ts`

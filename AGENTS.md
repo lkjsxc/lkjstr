@@ -16,9 +16,8 @@ factory functions instead of first-party classes in `src`.
 
 Prefer Rust/WASM for new product implementation. Keep TypeScript and Svelte
 runtime code only where it is still the implemented surface or where browser
-host glue, Playwright, Wrangler, or migration tests require it. Remove
-TypeScript or Svelte product code after equivalent Rust/WASM behavior is real
-and verified.
+host glue, Wrangler, or migration tests require it. Remove TypeScript or Svelte
+product code after equivalent Rust/WASM behavior is real and verified.
 
 ## Product Rules
 
@@ -33,7 +32,7 @@ and verified.
 - Profile tabs open from identity clicks. Profile Edit opens for active-account
   metadata editing. Thread tabs open from event clicks.
 - Settings are one flat key-value list.
-- Selected read relays are the base and fallback for Home, Global,
+- Selected read relays are eligible fallback relays for Home, Global,
   Notifications, Profile, and Thread. Targeted reads may also use bounded
   protocol-derived routes from NIP-65, NIP-02, entity or tag hints, event relay
   receipts, and local route evidence. Global stays selected-relay based.
@@ -51,15 +50,16 @@ and verified.
   protocol data. Suggestions require explicit import and must not overwrite a
   disabled relay record.
 - Docker checks build images and do not mount the source tree.
+- Browser workflow suites are not canonical verification gates.
 - New source may not import Dexie. The current Dexie binding is deletion-only
   until the SQLite cutover removes it.
 - `src/lib/storage/sqlite-opfs/` owns current SQLite worker host glue;
   `src/lib/storage/sqlite/` owns new database access modules when added.
 - First-party storage workers use factory functions and plain data, not classes.
-- Relay, diagnostic, and tab runtime memory must be bounded or cleaned up through
-  explicit close and destroy paths. Durable cached events are not capped by a
-  fixed application item count; runtime feed windows and relay read caps remain
-  bounded.
+- Relay, diagnostic, and tab runtime memory must be bounded or cleaned up
+  through explicit close and destroy paths. Durable cached events are not capped
+  by a fixed application item count; runtime feed windows and relay read caps
+  remain bounded.
 
 ## Source Map
 
@@ -83,11 +83,10 @@ and verified.
 ## Verification
 
 Run focused checks after edits. Docker Compose is the authoritative final gate:
-`docker compose -f docker-compose.yml config`, build `app`, `verify`, `e2e`,
-`cloudflare`, and `app-smoke`, then run the `verify`, `e2e`, `cloudflare`,
-and `app-smoke` services.
-Use synthetic relay tests for network behavior and Playwright for workspace
-flows.
+validate config, build `app`, `verify`, `cloudflare`, and `app-smoke`, then run
+`verify`, `cloudflare`, and `app-smoke` services from those images. Use
+synthetic relay tests at module level and host-boundary tests only where Node
+cannot represent the browser API.
 
 ## Commit Protocol
 

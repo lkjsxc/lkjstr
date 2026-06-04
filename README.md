@@ -3,9 +3,9 @@
 ## Purpose
 
 lkjstr is a browser-first Nostr workspace. It opens directly into a tiled
-desktop-style app for reading timelines, composing notes, inspecting relay
-behavior, managing signing accounts, and following event threads without a
-server-side account system.
+app for reading timelines, composing notes, inspecting relay behavior, managing
+signing accounts, and following event threads without a server-side account
+system.
 
 ## Table of Contents
 
@@ -46,7 +46,7 @@ server-side account system.
 
 - **Tweet** - compose and publish notes.
 - **Replies, reposts, reactions** - inline event actions.
-- **Zaps** - open or copy NIP-57 invoices (wallet custody is out of scope).
+- **Zaps** - open or copy NIP-57 invoices; wallet custody is out of scope.
 - **Media upload** - NIP-96 upload with NIP-98 auth.
 - **Custom emoji** - NIP-30 emoji parsing and publishing.
 - **Profile Edit** - update active-account metadata.
@@ -56,38 +56,32 @@ server-side account system.
 - **Accounts** - manage local signing keys and NIP-07 browser extensions.
 - **Relay Settings** - user-owned relay list with explicit import for protocol hints.
 - **Custom Request** - send raw Nostr filters to selected relays.
-- **Stats** - relay diagnostics and connection metrics.
-- **lkjstr Log** - current-session diagnostics.
+- **Stats** - relay, storage, optimizer, and memory diagnostics.
+- **lkjstr Log** - current-session and durable diagnostics.
 - **Mine npub** - vanity local signing key generation.
 - **Welcome** - onboarding and quick-start reference.
 
 ## How to Run
 
-Requirements: Node.js >= 24, pnpm 11.1.2.
-Rust/WASM work also requires the Rust toolchain in `rust-toolchain.toml`.
+Requirements: Node.js >= 24 and pnpm 11.1.2. Rust/WASM work also requires the
+Rust toolchain in `rust-toolchain.toml`.
 
 ```sh
-# Install dependencies
 pnpm install
-
-# Start the dev server
 pnpm dev
-
-# Build for production
 pnpm build
-
-# Preview the production build
 pnpm preview
 ```
 
 ## How to Verify
 
-Canonical quiet commands (one success line on pass; full output on failure):
+Canonical quiet commands print one success line on pass and bounded output on
+failure:
 
 ```sh
 pnpm check:repo
 pnpm test:quiet
-pnpm test:e2e:quiet
+pnpm rust-wasm:quiet
 pnpm verify:quiet
 pnpm ci:quiet
 pnpm cloudflare:quiet
@@ -102,25 +96,22 @@ cargo run -p lkjstr-xtask -- check-rust-style
 cargo run -p lkjstr-xtask -- check-storage-manifest-docs
 
 docker compose -f docker-compose.yml config
-docker compose --progress quiet -f docker-compose.yml build app verify e2e cloudflare app-smoke
+docker compose --progress quiet -f docker-compose.yml build app verify cloudflare app-smoke
 docker compose --progress quiet -f docker-compose.yml run --rm verify
-docker compose --progress quiet -f docker-compose.yml run --rm e2e
 docker compose --progress quiet -f docker-compose.yml run --rm cloudflare
 docker compose --progress quiet -f docker-compose.yml run --rm app-smoke
 ```
 
 See [docs/operations/verification.md](docs/operations/verification.md) for the
-quiet verification contract.
+quiet verification contract and focused gates.
 
-### Debugging (verbose)
+### Debugging
 
 ```sh
 pnpm lint
 pnpm check
 pnpm test
 pnpm verify
-pnpm test:e2e
-pnpm test:e2e:memory
 pnpm cloudflare:dry-run
 ```
 
@@ -140,8 +131,7 @@ All contracts live under [`docs/`](docs/README.md):
 
 ## Repository Map
 
-- [`.github/_README.md`](.github/_README.md) - GitHub Actions and repository
-  automation notes.
+- [`.github/_README.md`](.github/_README.md) - GitHub Actions and repository automation notes.
 - [`.cargo/`](.cargo/) - Rust workspace command configuration.
 - [`_headers`](_headers) - Cloudflare headers for worker-backed OPFS storage.
 - [`AGENTS.md`](AGENTS.md) - agent-facing repository rules.
@@ -150,7 +140,7 @@ All contracts live under [`docs/`](docs/README.md):
 - [`scripts/`](scripts/) - repository checks and quiet verification wrappers.
 - [`src/`](src/) - SvelteKit application source.
 - [`static/`](static/) - static browser assets and manifest files.
-- [`tests/`](tests/) - Vitest unit tests and Playwright browser tests.
+- [`tests/`](tests/) - focused Vitest unit and integration tests.
 
 ## License
 

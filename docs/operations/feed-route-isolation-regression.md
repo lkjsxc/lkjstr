@@ -27,21 +27,20 @@ Notifications, and selected-relay tools.
 - Relay scanner batch keys include a sanitized group identity.
 - Owner lifecycle and surface semantic keys remain separate concerns.
 
-## Browser Gates
+## Integration Gates
 
-- Home/Profile/Notifications opened together do not share visible cursor state.
+- Home/Profile/Notifications planned together do not share cursor state.
 - Home live receives events after discovered-route refresh.
-- Hidden Home or Profile tabs do not close visible matching live leases.
+- Hidden Home or Profile owners do not close visible matching live leases.
 
 ## Commands
 
 - `pnpm test -- tests/unit/relays/orchestration/page-reads.test.ts`
+- `pnpm test -- tests/unit/relays/orchestration/page-reads-route-planning.test.ts`
+- `pnpm test -- tests/unit/relays/orchestration/live-demand-handles.test.ts`
+- `pnpm test -- tests/unit/relays/orchestration/orchestrator-refcount.test.ts`
 - `pnpm test -- tests/unit/profile/profile-runtime-paging.test.ts`
 - `pnpm test -- tests/unit/timeline/timeline-runtime-route-discovery.test.ts`
-- `pnpm test:e2e -- tests/e2e/subscription-three-home.spec.ts`
-- `pnpm test:e2e -- tests/e2e/subscription-lease-sharing.spec.ts`
-- `pnpm test:e2e -- tests/e2e/timeline-multi-tab.spec.ts`
-- `pnpm test:e2e -- tests/e2e/timeline-regression.spec.ts`
 
 ## Latest Evidence
 
@@ -49,9 +48,9 @@ Notifications, and selected-relay tools.
 - `pnpm test -- tests/unit/relays/orchestration/page-reads.test.ts`
 - `pnpm test -- tests/unit/profile/profile-runtime-paging.test.ts`
 - `pnpm test -- tests/unit/timeline/timeline-runtime-route-discovery.test.ts`
-- Browser gate commands listed above.
+- Integration gate commands listed above.
 
-These checks prove the current route-isolation contract at unit and browser
+These checks prove the current route-isolation contract at unit and integration
 level. Docker Compose remains the final repository gate after broader source
 changes.
 

@@ -13,11 +13,11 @@ cargo test -p lkjstr-storage -- orchestration
 cargo clippy --workspace --all-targets -- -D warnings
 ```
 
-## Browser Gates
+## Focused Gates
 
 ```sh
-pnpm test:quiet -- orchestration
-pnpm test:e2e:quiet -- orchestration
+pnpm test -- tests/unit/relays/orchestration
+pnpm test -- tests/unit/cache tests/unit/feed-surface
 pnpm rust-wasm:quiet
 ```
 

@@ -58,6 +58,6 @@ movement, preserves the same `tabId` and therefore preserves the durable row.
 Required coverage includes durable keying, save/load after pane movement,
 delete-by-tab-id, stale-row cleanup, warm LRU ownership, falsy-value merge,
 one-shot restore consume, stale-token rejection, and cleanup only for absent
-tabs. Runtime and Playwright coverage must include focus retention, cross-pane
+tabs. Runtime and focused tests coverage must include focus retention, cross-pane
 move, edge-split move, reload restore, active-tab reload, tool restore, close
 cleanup, warm LRU cap, and no hidden feed paging.

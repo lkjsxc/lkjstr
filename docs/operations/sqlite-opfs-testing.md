@@ -21,7 +21,7 @@ Required worker tests:
 
 ## Persistence Tests
 
-Required Playwright scenarios:
+Required focused tests scenarios:
 
 - Empty origin startup reaches Welcome and reports storage health.
 - Settings survive reload in persistent OPFS mode.
@@ -64,9 +64,8 @@ The final gate is Docker Compose from built images:
 
 ```sh
 docker compose -f docker-compose.yml config
-docker compose --progress quiet -f docker-compose.yml build app verify e2e cloudflare app-smoke
+docker compose --progress quiet -f docker-compose.yml build app verify cloudflare app-smoke
 docker compose --progress quiet -f docker-compose.yml run --rm verify
-docker compose --progress quiet -f docker-compose.yml run --rm e2e
 docker compose --progress quiet -f docker-compose.yml run --rm cloudflare
 docker compose --progress quiet -f docker-compose.yml run --rm app-smoke
 ```

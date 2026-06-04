@@ -2,135 +2,82 @@
 
 ## Purpose
 
-This document defines how to run memory tests, collect heap snapshots, and
-interpret the results. Memory verification is a required gate before claiming
-that a release or change is safe.
+Memory verification proves app-owned resources are bounded, cleaned up, and
+observable. Automated gates use focused tests and runtime counters. Browser heap
+and RSS measurements are manual diagnostics.
 
-## Commands
-
-Run the focused memory e2e test:
+## Automated Gate
 
 ```sh
-pnpm test:e2e:memory
+pnpm check:repo
+pnpm test -- tests/unit/fp tests/unit/memory tests/unit/app/runtime-counters.test.ts
+pnpm test -- tests/unit/relays/subscription-manager-read-limiter.test.ts
+pnpm test -- tests/unit/relays/subscription-manager-dedupe.test.ts
+pnpm test -- tests/unit/timeline/timeline-runtime-close.test.ts
+pnpm test -- tests/unit/cache tests/unit/feed-surface
+pnpm test:quiet
 ```
 
-Run the full e2e suite including memory tests:
+The gate proves:
 
-```sh
-pnpm test:e2e
-```
+- factory cleanup is idempotent;
+- abort listeners are removed in `finally` paths;
+- timers are cleared on owner teardown;
+- request maps, wait queues, diagnostic arrays, feed windows, and retention
+  stores have deletion paths or explicit bounds;
+- queued relay reads abort when owners close;
+- hidden feed tabs release live demands;
+- storage operations settle and decrement counters;
+- background tasks cancel by owner and cannot grow unbounded;
+- cache compaction and repair run in bounded batches.
 
-Run the Docker Compose e2e path:
+## Runtime Counters
 
-```sh
-docker compose -f docker-compose.yml run --rm e2e
-```
+`__lkjstrMemoryDebug()` and `window.__lkjstrDebug` expose aggregate counters for
+live demands, leases, read waiters, publish waiters, relay clients, storage
+operations, background tasks, and bounded diagnostic collections.
 
-## Heap Snapshot Collection
+Counters use static aggregate keys only. They must not include tab ids, event
+ids, relay URLs, request ids, or user-controlled strings as metric names.
 
-1. Build the production app:
-   ```sh
-   pnpm build
-   ```
-2. Start the preview server:
-   ```sh
-   pnpm preview
-   ```
-3. Open Chromium and navigate to the app.
-4. Open DevTools, go to the Memory tab.
-5. Click the garbage can icon to force GC.
-6. Take a heap snapshot.
-7. Perform the workload (open tabs, load feeds, close tabs).
-8. Force GC again.
-9. Take a second heap snapshot.
-10. Compare retained object counts between the two snapshots.
+## Background Work Rules
 
-## Authoritative Measurements
+Long work must run through cancellable owners:
 
-The following measurements are owned assertions. A test failure means the
-change cannot land:
+- storage physical inventory;
+- cache compaction and repair;
+- optimizer trace and density reductions;
+- profile and reference hydration;
+- relay metadata refresh;
+- app-log trimming;
+- LOD degradation and rehydration planning.
 
-- **Used JavaScript heap after forced GC**: Measured via
-  `performance.memory.usedJSHeapSize` in Chromium or CDP `Runtime.getHeapUsage`.
-- **Compact runtime counter cleanup**: After closing all test-created tabs and
-  subscriptions, every app-owned counter must read zero.
-- **Orchestration lease cleanup**: `activeLeases`, `activeDemands`, and
-  `liveLeases` from orchestration metrics must read zero after pane churn tests.
-- **Heap delta after repeated open/close cycles**: The delta must stay under the
-  documented threshold.
+Each task has an owner, abort signal, bounded queue policy, checkpoint, and
+error reporting path. Maintenance work yields often and never blocks visible UI.
 
-## Diagnostic Measurements
+## Manual Browser Diagnostics
 
-The following measurements help investigation but do not block a change by
-itself:
+Use manual browser diagnostics when investigating suspected runtime pressure:
 
-- **RSS**: System resident set size includes the browser process, renderer,
-  GPU, and other sub-processes. It is noisy and not a precise signal for
-  JavaScript heap leaks.
-- **DevTools live heap size**: Includes retained and non-retained objects
-  before forced GC.
-- **Synthetic relay fixture memory**: The test relay itself has overhead that
-  is not app-owned.
+1. Build the production app.
+2. Start preview.
+3. Open a clean profile.
+4. Record app JavaScript heap when `performance.memory` exists.
+5. Exercise the suspected long session with real or protocol-shaped synthetic
+   relay data.
+6. Record `__lkjstrMemoryDebug()` before and after closing tabs and relays.
+7. Capture heap snapshots if counters do not explain growth.
 
-## Interpreting a Retained Object Spike
+Chromium RSS is diagnostic only because the browser process includes baseline,
+renderer, GPU, cache, and tool overhead outside app ownership. App JavaScript
+heap and app counters are the owned evidence.
 
-1. Force GC and take a heap snapshot.
-2. Search for the suspect object type (for example `IDBRequest`,
-   `RelayDiagnosticSummary`, `AbortSignal`).
-3. Note the constructor or object shape and approximate retained count.
-4. Follow the retaining path to find the owning module.
-5. Identify the cleanup function that should have released it.
-6. Write a test that fails before the fix and passes after it.
-7. Apply the fix and re-run the memory test.
+## Acceptance
 
-## Test Artifacts
-
-- Heap snapshots are large binary files. Do not commit them to the repository.
-- Store snapshots in `/tmp/` or a local `artifacts/` directory that is
-  `.gitignore`d.
-- Commit only the counter JSON and a short diagnostic note.
-
-## Budgets
-
-See [heap-retention.md](../architecture/data/heap-retention.md) for the current
-budgets and targets.
-
-## Regression Tests
-
-The e2e memory test must:
-
-- Launch Chromium with forced GC support or use CDP heap collection.
-- Start the app at `/`.
-- Use deterministic relay-like input.
-- Open and close Home, Global, Profile, Notifications, Custom Request, Search,
-  and Thread surfaces.
-- Simulate relay churn, profile hydration, event reference previews, tab
-  creation, tab closing, and pane splitting.
-- Force GC at stable checkpoints.
-- Read compact counters.
-- Fail if heap growth is unbounded.
-- Fail if cleanup counters remain nonzero after teardown.
-
-## Storage Pressure Checks
-
-Storage-pressure verification must cover the same browser-local cache policy
-used by production compaction:
-
-- Notification-heavy pressure prunes old or low-value notification rows while
-  retaining recent, unread, and visible notifications.
-- Feed/page-heavy pressure prunes scan hints, coverage rows, and cursors without
-  deleting source events or suppressing future relay reads.
-- Event-heavy pressure still prunes cached Nostr events plus owned receipts and
-  tags.
-- Protected-only pressure reports protected or unknown usage instead of deleting
-  user-owned records.
-- Stats shows browser usage, site budget, prunable cache, protected user data,
-  unknown overhead, ledger inventory, and last compaction evidence.
-
-## Reference
-
-- [heap-retention.md](../architecture/data/heap-retention.md): symptoms,
-  investigation strategy, and budgets.
-- [resource-ownership.md](../architecture/data/resource-ownership.md): who
-  creates and who closes each resource.
-- [verification.md](verification.md): general verification commands.
+- Closing a workspace, tab, relay runtime, storage worker, or background owner
+  returns owned counters to zero or to the documented bounded idle state.
+- Hidden tabs do not continue feed paging or live relay work.
+- Late relay, storage, or task completions after cancellation are ignored and
+  do not retain owners.
+- Manual heap observations that show growth get converted into focused tests
+  for the owning reducer, repository, factory, or task queue.

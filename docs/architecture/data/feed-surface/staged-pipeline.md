@@ -31,5 +31,5 @@ real rows.
 ## Verification
 
 - Unit: `tests/unit/feed-surface/row-shell.test.ts`
-- Playwright: older-page rows appear before profile names on synthetic relay
+- focused tests: older-page rows appear before profile names on synthetic relay
 - Scroll: enrichment above the viewport preserves the current visible anchor

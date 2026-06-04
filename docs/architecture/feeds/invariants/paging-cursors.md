@@ -39,4 +39,5 @@ duplicates, or inverted UI order.
 ## Tests
 
 - `tests/unit/timeline/timeline-reducer.test.ts`
-- `tests/e2e/timeline-regression.spec.ts`
+- `tests/unit/events/relay-page-scan-cursors.test.ts`
+- `tests/unit/events/event-order.test.ts`
