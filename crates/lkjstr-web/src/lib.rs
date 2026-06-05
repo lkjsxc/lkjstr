@@ -17,6 +17,8 @@ pub mod scan_model;
 #[cfg(target_arch = "wasm32")]
 mod settings_host;
 #[cfg(target_arch = "wasm32")]
+mod settings_host_store;
+#[cfg(target_arch = "wasm32")]
 pub mod sqlite_store;
 #[cfg(target_arch = "wasm32")]
 pub mod storage_worker;

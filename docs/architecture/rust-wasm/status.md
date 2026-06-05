@@ -56,8 +56,8 @@ This file is the concise status map for the active Rust/WASM migration.
 - Feed surfaces now have pure row geometry estimates, anchor compensation, and
   real-data LOD tree reducers. Product measurement and virtualizer wiring remain
   open.
-- Rust Settings persistence through the SQLite worker typed repository is the
-  active storage wiring target for the Rust Settings host.
+- Rust Settings persistence now uses the SQLite worker typed repository in the
+  Rust Settings host. CSS side effects and cache-budget enforcement remain open.
 - Followees and User Timeline are target slices for Rust protocol/domain input
   builders while shipped Svelte surfaces remain temporary renderers.
 

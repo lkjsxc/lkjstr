@@ -54,6 +54,7 @@ pub use relay_routes::{
 pub use relay_sets::{sqlite_relay_set_get, sqlite_relay_set_put, sqlite_relay_sets_all};
 pub use settings::{
     sqlite_setting_delete, sqlite_setting_get, sqlite_setting_put, sqlite_settings_all,
+    sqlite_settings_replace_all,
 };
 pub use tab_states::{
     sqlite_tab_state_delete, sqlite_tab_state_get, sqlite_tab_state_ledger_get,

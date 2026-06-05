@@ -78,6 +78,35 @@ pub async fn sqlite_settings_all(
     StorageOutcome::Ok(out)
 }
 
+pub async fn sqlite_settings_replace_all(
+    store: &SqliteStore,
+    rows: &[SettingOverrideRecord],
+) -> StorageOutcome<()> {
+    let mut steps = Vec::with_capacity(rows.len() + 1);
+    match store.step("settings.clear", no_params()) {
+        StorageOutcome::Ok(step) => steps.push(step),
+        outcome => return outcome.map(|_| ()),
+    }
+    for row in rows {
+        let row = match sqlite_setting_row(row) {
+            Ok(row) => row,
+            Err(_) => return corrupt("settings.replace"),
+        };
+        match store.step(
+            "settings.upsert",
+            params(vec![
+                text(row.key),
+                text(row.value_json),
+                integer(row.updated_at_ms),
+            ]),
+        ) {
+            StorageOutcome::Ok(step) => steps.push(step),
+            outcome => return outcome.map(|_| ()),
+        }
+    }
+    store.batch(steps).await
+}
+
 fn corrupt<T>(operation_id: &'static str) -> StorageOutcome<T> {
     StorageOutcome::Corrupt(lkjstr_storage::StorageProblem::new(
         lkjstr_storage::StorageOperation::Read,

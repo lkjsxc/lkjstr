@@ -17,6 +17,7 @@ Browser-bound WASM tests prove exported functions call real Rust code.
 - `relay_settings_tab_test.rs`: Rust Relay Settings browser persistence tests.
 - `settings_tab_test.rs`: Rust Settings browser rendering and persistence tests.
 - `sqlite_store_test.rs`: SQLite protected repository calls over the worker adapter.
+- `sqlite_settings_store_test.rs`: SQLite settings replace-all repository tests.
 - `stats_tab_test.rs`: Rust Stats browser rendering tests.
 - `storage_worker_test.rs`: Rust SQLite storage-worker adapter tests.
 - `tweet_draft_tab_test.rs`: Rust Tweet draft persistence and legacy fallback tests.

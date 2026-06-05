@@ -53,7 +53,7 @@ closing gates so this concise matrix stays readable.
 | Rust relay state machine basics           | [relay-runtime.md](../architecture/rust-wasm/relay-runtime.md)                 | implemented     | relay crate tests                                                 |
 | Rust relay client and browser adapters    | [relay-runtime.md](../architecture/rust-wasm/relay-runtime.md)                 | partial         | pure reducer plus WebSocket/timer adapters; product wiring open   |
 | Rust Leptos workspace shell               | [ui-runtime.md](../architecture/rust-wasm/ui-runtime.md)                       | partial         | Welcome, New Tab, persistence, Stats inventory                    |
-| Rust Settings surface                     | [settings.md](tools/settings.md)                                               | partial         | flat schema; SQLite worker persistence wiring active              |
+| Rust Settings surface                     | [settings.md](tools/settings.md)                                               | partial         | flat schema and SQLite worker overrides; side effects open        |
 | Rust Followees surface                    | [followees.md](feeds/followees.md)                                             | not implemented | action-opened real kind `3` followee rows open                    |
 | Rust User Timeline surface                | [user-timeline.md](feeds/user-timeline.md)                                     | not implemented | target-pubkey timeline runtime open                               |
 | Rust Accounts surface                     | [accounts.md](tools/accounts.md)                                               | partial         | rows, local secret transaction, NIP-07 connect                    |

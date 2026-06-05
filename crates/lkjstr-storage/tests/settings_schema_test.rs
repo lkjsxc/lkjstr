@@ -20,6 +20,16 @@ fn settings_schema_contains_current_flat_keys() {
             .iter()
             .any(|row| row.key == "tweet.mediaUploadProvider")
     );
+    assert!(
+        settings
+            .iter()
+            .any(|row| row.key == "publish.clientTag.enabled" && row.value == json!(false))
+    );
+    assert!(
+        settings
+            .iter()
+            .any(|row| row.key == "timeline.showClientTags" && row.value == json!(false))
+    );
     assert!(!settings.iter().any(|row| row.key == "cache.maxEvents"));
 }
 

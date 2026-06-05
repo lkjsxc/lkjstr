@@ -23,6 +23,7 @@ pub const PROTECTED_STATEMENTS: &[SqliteStatementSpec] = &[
         "settings",
         "DELETE FROM settings WHERE key = ?1;",
     ),
+    write("settings.clear", "settings", "DELETE FROM settings;"),
     read(
         "workspaces.select",
         "workspaces",

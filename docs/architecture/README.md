@@ -79,21 +79,22 @@ state, storage, relay orchestration, cleanup, and Rust/WASM migration.
 `orchestration/background-work.md` `orchestration/cancellation.md` `orchestration/database-memory.md`
 `orchestration/decision-model.md` `orchestration/stats.md` `orchestration/surface-inputs.md`
 `orchestration/task-queue.md` `orchestration/verification.md` `runtime-ownership.md`
-`runtimes/README.md` `runtimes/global-runtime.md` `runtimes/home-runtime.md`
-`runtimes/notifications-runtime.md` `runtimes/profile-runtime.md` `runtimes/public-chat-runtime.md`
-`runtimes/query-runtime.md` `runtimes/thread-runtime.md` `runtimes/tweet-runtime.md`
-`rust-wasm/README.md` `rust-wasm/app-boundary.md` `rust-wasm/crate-boundaries.md`
-`rust-wasm/cutover/README.md` `rust-wasm/cutover/build-contract.md` `rust-wasm/cutover/deletion-ledger.md`
-`rust-wasm/cutover/parity-ledger.md` `rust-wasm/host-boundary.md` `rust-wasm/memory-ownership.md`
-`rust-wasm/protocol-kernel.md` `rust-wasm/relay-runtime.md` `rust-wasm/source-map.md`
-`rust-wasm/status.md` `rust-wasm/storage-kernel.md` `rust-wasm/ui-runtime.md`
-`rust-wasm/verification.md` `source-map.md` `workspace/README.md`
-`workspace/pane-chrome-scope.md` `workspace/pane-drop-target.md` `workspace/resize.md`
-`workspace/scroll-layout.md` `workspace/scroll-surface-audit.md` `workspace/tab-body-mount.md`
-`workspace/tab-dragging.md` `workspace/tab-retention-flow.md` `workspace/tab-runtime.md`
-`workspace/tab-shell-layout.md` `workspace/tab-snapshot-fields.md` `workspace/tab-strip-gestures.md`
-`workspace/theme.md` `workspace/tile-menu.md` `workspace/tile-overlays.md`
-`workspace/ui-composition.md` `workspace/workspace-layout-tree.md`
+`runtimes/README.md` `runtimes/followees-runtime.md` `runtimes/global-runtime.md`
+`runtimes/home-runtime.md` `runtimes/notifications-runtime.md` `runtimes/profile-runtime.md`
+`runtimes/public-chat-runtime.md` `runtimes/query-runtime.md` `runtimes/thread-runtime.md`
+`runtimes/tweet-runtime.md` `runtimes/user-timeline-runtime.md` `rust-wasm/README.md`
+`rust-wasm/app-boundary.md` `rust-wasm/crate-boundaries.md` `rust-wasm/cutover/README.md`
+`rust-wasm/cutover/build-contract.md` `rust-wasm/cutover/deletion-ledger.md` `rust-wasm/cutover/parity-ledger.md`
+`rust-wasm/host-boundary.md` `rust-wasm/memory-ownership.md` `rust-wasm/protocol-kernel.md`
+`rust-wasm/relay-runtime.md` `rust-wasm/source-map.md` `rust-wasm/status.md`
+`rust-wasm/storage-kernel.md` `rust-wasm/ui-runtime.md` `rust-wasm/verification.md`
+`source-map.md` `workspace/README.md` `workspace/pane-chrome-scope.md`
+`workspace/pane-drop-target.md` `workspace/resize.md` `workspace/scroll-layout.md`
+`workspace/scroll-surface-audit.md` `workspace/tab-body-mount.md` `workspace/tab-dragging.md`
+`workspace/tab-retention-flow.md` `workspace/tab-runtime.md` `workspace/tab-shell-layout.md`
+`workspace/tab-snapshot-fields.md` `workspace/tab-strip-gestures.md` `workspace/theme.md`
+`workspace/tile-menu.md` `workspace/tile-overlays.md` `workspace/ui-composition.md`
+`workspace/workspace-layout-tree.md`
 ```
 
 ## Shared Contract

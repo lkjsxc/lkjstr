@@ -32,9 +32,9 @@ impl SqliteStore {
         let store = Self::from_client(client, deadline_ms);
         let open = OpenDatabase {
             database_name,
-            preferred_vfs: Some("opfs".to_owned()),
+            preferred_vfs: Some("opfs-sahpool".to_owned()),
             allow_sahpool: true,
-            allow_transient: false,
+            allow_transient: true,
         };
         match store
             .client
