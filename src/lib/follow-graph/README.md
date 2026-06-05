@@ -13,6 +13,7 @@ and author-set construction for Followees and User Timeline.
 - `target-follow-list-runtime.ts`: cache-first target discovery runtime.
 - `target-follow-list-diagnostics.ts`: compact diagnostics helpers.
 - `follow-graph-authors.ts`: author-set derivation.
+- `follow-graph-bridge.ts`: optional Rust/WASM follow-list parser bridge.
 
 ## Rules
 

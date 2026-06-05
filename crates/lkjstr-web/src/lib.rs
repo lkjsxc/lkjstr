@@ -4,6 +4,7 @@
 mod accounts_active;
 #[cfg(target_arch = "wasm32")]
 mod accounts_host;
+pub mod follow_graph;
 #[cfg(target_arch = "wasm32")]
 mod nip07_host;
 mod protocol_bridge;

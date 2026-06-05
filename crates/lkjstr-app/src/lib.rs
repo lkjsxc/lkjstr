@@ -6,6 +6,7 @@ pub mod feed_geometry;
 pub mod feed_lod;
 pub mod feed_scan;
 pub mod feed_wait;
+pub mod follow_graph;
 pub mod orchestration;
 pub mod public_chat;
 pub mod query;
@@ -60,6 +61,10 @@ pub use feed_wait::{
     FeedWaitDecision, FeedWaitEventRow, FeedWaitInput, FeedWaitState, LateMergeResult,
     ScrollAnchor, ScrollAnchorDecision, decide_feed_wait, feed_empty_is_terminal,
     merge_late_event_rows, scroll_anchor_for_late_insert, within_foreground_merge_window,
+};
+pub use follow_graph::{
+    FollowListReadPhase, FollowListSummary, TargetFollowListState, UserTimelineAuthorSet,
+    author_set_hash, summarize_follow_list, target_posts_only_author_set, user_timeline_author_set,
 };
 pub use orchestration::{
     CacheReadMode, CoverageEvidenceState, FeedPrefetchPlan, HydrationPlan, OptimizerEvidenceState,
