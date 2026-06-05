@@ -23,8 +23,9 @@ This file is the concise status map for the active Rust/WASM migration.
   keys, ledger rows, and protected plus cache SQLite row codecs.
 - `lkjstr-web` owns typed browser adapters for IndexedDB, SQLite worker calls,
   relay WebSocket and timeout foundations, protocol parsing bridges, relay-score
-  bridge calls, scan-model planning bridge calls, follow-graph parsing bridge
-  calls, and early host calls needed by the partial Leptos shell.
+  bridge calls, scan-model planning bridge calls, feed geometry, visual
+  fragment, and anchor bridge calls, follow-graph parsing bridge calls, and
+  early host calls needed by the partial Leptos shell.
 - `lkjstr-relays` owns pure send queue, request scheduler, subscription id,
   subscription alias, close tombstone, request budget derivation, outbound `REQ`
   message-size budget, semantic page-read keys, in-flight page-read registry,
@@ -58,9 +59,11 @@ This file is the concise status map for the active Rust/WASM migration.
 - Feed surfaces now have pure content-aware row geometry estimates, width
   buckets, content-shape hashing, anchor reducers, real long-content visual
   fragmentation, real-data LOD tree reducers, and Svelte width-bucketed session
-  measurement. The active implementation target is wiring this Rust geometry
-  model through WASM bridge calls, Svelte temporary bridge use, SQLite
-  observation persistence, Stats diagnostics, and Leptos feed use. Durable
+  measurement. WASM bridge calls now expose estimation, measurement reduction,
+  visual-fragment planning, anchor capture, and anchor reconciliation. The
+  active implementation target is wiring this bridge through Svelte temporary
+  bridge use, SQLite observation persistence, Stats diagnostics, and Leptos feed
+  use. Durable
   SQLite geometry model wiring remains open.
 - Rust Settings persistence now uses the SQLite worker typed repository in the
   Rust Settings host. CSS side effects and cache-budget enforcement remain open.
