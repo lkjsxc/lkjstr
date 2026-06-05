@@ -7,12 +7,13 @@ reference previews, and media dimensions do not visibly move the user's anchor.
 
 ## Contract
 
-Status: the shipped Svelte scroll surface applies session-measured min-height
-reservation and compensates height changes above the viewport. Rust/WASM
-feature estimates and SQLite persistence remain the target durable path.
+Status: the shipped Svelte scroll surface applies session-measured reservation
+and compensates height changes above the viewport. Rust/WASM feature estimates
+and SQLite persistence remain the durable target.
 
-- Every row has a stable geometry key derived from real row identity and stable
-  content features.
+- Every row has a stable geometry key from real row identity and content shape.
+- Measurement keys include row key, row kind, content shape hash, and width
+  bucket.
 - Rows reserve a predicted height before profile, reference, media, and action
   enrichment finishes.
 - Predictions come from real measured rows and stable features, not fake
@@ -22,6 +23,23 @@ feature estimates and SQLite persistence remain the target durable path.
   row ids and coverage states.
 - Height changes above the viewport preserve the current anchor by applying the
   measured scroll delta.
+
+## Width Buckets
+
+Measurements are scoped to stable coarse width buckets:
+
+```text
+0-319
+320-479
+480-639
+640-799
+800-1023
+1024+
+```
+
+A height measured in one bucket must not remain a permanent minimum height after
+the tile crosses into another bucket. When the bucket changes, the row resets to
+the estimate for the new bucket or to a conservative fallback until measured.
 
 ## Features
 
@@ -46,13 +64,14 @@ Tab ids, pane ids, owner handles, and request ids are not geometry keys.
 ## Measurement Loop
 
 1. Build row features before rendering enrichment.
-2. Ask Rust/WASM for an estimated height and confidence.
-3. Apply a reserved min-height or virtualizer estimate.
-4. Measure materialized rows with `ResizeObserver`.
-5. If the row is above the viewport, compensate scroll by the height delta.
-6. Persist observations through the SQLite worker when the durable geometry
+2. Ask Rust/WASM for an estimated height and confidence when available.
+3. Apply a virtualizer estimate or temporary reserved minimum height.
+4. Observe row height and inline size with `ResizeObserver`.
+5. Recompute reservation when the width bucket changes.
+6. If the row is above the viewport, compensate scroll by the height delta.
+7. Persist observations through the SQLite worker when the durable geometry
    repository is wired.
-7. Update the model and expose counts in Stats.
+8. Update the model and expose counts in Stats.
 
 ## Media And Previews
 
@@ -67,5 +86,6 @@ Tab ids, pane ids, owner handles, and request ids are not geometry keys.
 - Profile hydration above the viewport preserves the visible anchor.
 - Reference preview hydration above the viewport preserves the visible anchor.
 - Media dimension changes above the viewport preserve the visible anchor.
-- Split-pane resize recomputes estimates and keeps the closest stable anchor.
-- Height observations persist across reload and improve estimates.
+- Split-pane resize recomputes width-bucket estimates and can shrink rows.
+- Widening after a narrow measurement does not keep stale excess height.
+- Height observations stay bounded in memory and improve estimates.

@@ -26,36 +26,51 @@ active signing account is optional and must not be required for reading.
 
 ## Feed Contract
 
-User Timeline loads the target pubkey's latest kind `3`, extracts valid followee
-pubkeys, adds the target pubkey, and reads feed-display events from those
-authors. It uses the same row rendering, sensitive-content gate, profile
-hydration, paging, and bounded runtime rules as Home and Profile.
+User Timeline first tries to load the target pubkey's latest kind `3`, extracts
+valid followee pubkeys, adds the target pubkey, and reads feed-display events
+from those authors. It uses the same row rendering, sensitive-content gate,
+profile hydration, paging, and bounded runtime rules as Home and Profile.
 
 The tab clearly labels whose timeline is being shown. It must not imply private
 or personalized access.
+
+## Degraded Mode
+
+If the public follow graph is unavailable but the target's public posts are
+reachable, the tab renders a degraded target-posts-only mode with this notice:
+`Public follow graph unavailable; showing this user's own public posts.`
+
+This mode does not synthesize a follow graph and does not imply that the target
+follows nobody. It is a truthful fallback for real events authored by the target.
 
 ## Relay Routing
 
 Selected read relays are the base and fallback. The runtime may add bounded
 protocol-derived routes from target profile metadata, follow-list relay hints,
-relay receipts, and local route evidence. Disabled or removed relays remain
-excluded.
+relay receipts, NIP-65 routes, and local route evidence. Disabled or removed
+relays remain excluded.
 
 Global routing rules do not apply. User Timeline is target-scoped.
 
 ## Cache Contract
 
 Cached rows may render before relay results only when coverage evidence supports
-the target pubkey, route fingerprint, selected relay fingerprint, page size,
-feed policy, and time interval. Cached rows for one target must not appear in
-another target's timeline unless the underlying author set and coverage evidence
-match the new target query.
+the target pubkey, route fingerprint, selected relay fingerprint, author-set
+hash, filter shape, page size, feed policy, and time interval. Cached rows for
+one target must not appear in another target's timeline unless the underlying
+author set and coverage evidence match the new target query.
+
+A cached follow list may render immediately while relay refresh runs. A newer
+relay kind `3` replaces it. Older relay results do not erase a newer cached
+follow list. Partial relay failure does not clear cached rows.
 
 ## Empty States
 
-- No follow list has been received for this user.
+- Follow-list discovery in progress.
+- Public follow graph unavailable; showing this user's own public posts.
 - Follow list has no valid authors beyond the target pubkey.
 - Relay reads are unavailable, with diagnostics.
 - No covered events exist for the current bounded interval.
+- No public follow list was found on attempted relays.
 
 Empty states never synthesize posts or profile data.

@@ -14,42 +14,62 @@ Timeline runtimes distinguish viewer and target:
 Home sets target to the active account and requires it. User Timeline sets target
 to the tab pubkey and does not require an active account. Global has no target.
 
-## Query Key
+## Target Follow-List Dependency
 
-A User Timeline query key includes:
+User Timeline depends on the target follow-list runtime. Cached kind `3` data may
+seed the author set immediately. Relay discovery runs in parallel and replans the
+feed when a newer target follow list appears.
 
-- target pubkey.
-- selected read relay fingerprint.
-- route fingerprint.
-- page size.
-- feed policy.
+## Author Set
 
-It does not include tab id. Matching tabs may share a query only when all
-semantic key fields match. Different target pubkeys must never merge.
+The author set is target pubkey plus valid deduplicated followee pubkeys. If the
+follow list is absent or discovery is incomplete, the runtime may read only the
+target pubkey as degraded target-posts-only mode.
 
-## Lease Key
+## Query And Route Fingerprint
 
-Live and page-read leases include the target pubkey and route fingerprint. This
-keeps Alice's public timeline, Bob's public timeline, Home, and Global isolated
-while still allowing exact duplicate tabs to share work.
+A query key includes target pubkey, selected read-relay fingerprint, route
+fingerprint, author-set hash, filter shape, page size, and feed policy. It does
+not include tab id. Matching tabs may share work only when all semantic fields
+match.
+
+Routes can include selected relays, NIP-65 routes, follow-list relay hints,
+receipt routes, local route evidence, and selected-relay fallback. Disabled or
+removed relays are excluded.
+
+## Cache-First Coverage Proof
+
+Cached rows render before relay results only with complete coverage evidence for
+semantic feed key, selected relay fingerprint, route fingerprint, author-set
+hash, filter shape, and interval. Missing, compacted, stale, failed, dense, or
+incomplete evidence cannot prove absence.
 
 ## Startup Flow
 
-1. Load cached latest kind `3` for the target pubkey.
-2. Extract valid followee pubkeys and add the target pubkey.
-3. Read cached feed rows for that author set only when coverage evidence is
-   complete for the query key.
-4. Start a bounded latest-kind-`3` read for the target.
-5. Start bounded feed-display reads for the current author set.
-6. Replan the feed when a newer target follow list arrives.
+1. Load cached target follow list.
+2. Derive author set and read covered cached rows when coverage proves them.
+3. Start target follow-list discovery.
+4. Start target-post reads for degraded mode while discovery is pending.
+5. When a follow list is found, store it, derive the author set, hydrate visible
+   authors, and start feed reads for that author set.
+6. If absence is proven, keep target-posts-only mode when real posts exist.
+7. If reads are partial, show retryable diagnostics without clearing cache.
 
-## Shared Logic
+## Paging And Snapshots
 
-User Timeline uses the Home feed row renderer, sensitive-content gate, profile
-hydration, paging, route planning, relay diagnostics, and runtime window caps.
-The difference is the target subject and query key.
+Older and newer paging use shared feed readers, scan-density span planning,
+route fingerprints, progressive snapshots, cursor preservation, and cache
+coverage writes. The runtime preserves anchors across relayout and never marks
+history exhausted from incomplete relay evidence.
 
 ## Cleanup
 
-Closing the tab releases page-read leases, live leases, profile hydration owner
-state, diagnostics, and bounded feed windows. Cleanup is idempotent.
+Closing the tab releases page-read leases, live leases, follow-list discovery,
+profile hydration owner state, diagnostics, open reference pins, and bounded
+feed windows. Cleanup is idempotent and keeps only compact tab snapshots.
+
+## Tests
+
+Tests cover cache hit, relay follow-list found, degraded target-posts-only mode,
+proven absence, partial failure, disabled relay exclusion, older-load planning,
+cache coverage mismatch, duplicate-tab work sharing, and owner cleanup.

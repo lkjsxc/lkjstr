@@ -11,11 +11,29 @@ scroll math while low-value branches degrade to compact recoverable summaries.
 | --- | --- |
 | `full` | event row, normalized event, relay provenance, parsed content, profiles, references, previews, media layout, measured height, and UI row model |
 | `shell` | event id, kind, pubkey, timestamp, estimated height, measured height when known, provenance count, media flags, reply or quote flags, and coverage state |
-| `block` | real-row summary: time range, count, cumulative height, loaded count, route group, coverage state, density marker, score range, structural hints, and recovery recipe |
+| `block` | time range, count, cumulative height, loaded count, route group, coverage state, density marker, score range, structural hints, and recovery recipe id |
 | `recovery` | semantic feed key, route fingerprint, selected-relay fallback set, route-evidence relays, filter shape, time interval, scan hints, coverage status, and geometry model |
+| `absent` | no durable row data and no user-visible recovery value |
 
 The tree never creates fake events or fake previews. Missing data is uncovered,
 compacted, unavailable, or recovering.
+
+## Storage Tables
+
+The worker-owned SQLite manifest owns these records:
+
+```text
+feed_lod_nodes
+feed_lod_recovery_recipes
+feed_lod_materialization
+feed_interval_coverage
+feed_geometry_models
+cache_retention_traces
+```
+
+Main-thread product code calls typed repositories. It must not open SQLite or
+OPFS directly. Schema changes are recorded in the Rust storage manifest before
+TypeScript callers depend on them.
 
 ## Shape
 
@@ -37,23 +55,30 @@ height_delta_update(tree, row_id, measured_height)
 coverage_gap_projection(tree)
 ```
 
-## Forgetting Rule
+## Retention Actions
 
 Low-value branches degrade in order:
 
-1. `full` to `shell`: drop profiles, previews, parsed token arrays, media
-   dimensions that can be recomputed, and rendered row view models.
+1. `full` to `shell`: drop profiles, previews, parsed token arrays, recomputable
+   media dimensions, and rendered row view models.
 2. `shell` to `block`: keep cumulative geometry, event ids when affordable,
-   time ranges, coverage state, and recovery recipe.
+   time ranges, coverage state, density markers, and recovery recipe id.
 3. `block` to `recovery`: keep enough information to request from SQLite or
    relays again.
-4. `recovery` to absent only when no durable value or user-visible state depends
-   on the branch.
+4. `recovery` to `absent` only when no durable value or user-visible state
+   depends on the branch.
 
-Hard protection covers visible viewport and overscan, focused tab, active
-Thread root and ancestors, active Profile header and visible posts, unread
-recent notifications, active drafts, runtime-pinned events, latest metadata,
-active follow lists, and user-owned protected storage.
+Ordinary event compaction must not globally delete feed coverage or scan hints.
+It degrades only intervals whose supporting materialization changed and records
+the retained recovery path.
+
+## Protection
+
+Hard protection covers visible viewport and overscan, focused tab, active Thread
+root and ancestors, active Profile header and visible posts, unread recent
+notifications, active drafts, runtime-pinned events, latest metadata, active
+follow lists, open Followees targets, open User Timeline targets, and user-owned
+protected storage.
 
 ## Recovery Path
 
@@ -70,19 +95,11 @@ When the user navigates to a compacted branch:
 6. Persist recovered rows through normal event repositories and cache ledger.
 7. Update geometry and retention scores.
 
-## Consumers
-
-The tree informs scrollbar stability, prefetch windows, hydration priority,
-cache retention priority, row geometry updates, scan planning diagnostics, and
-Stats feed-density or coverage displays.
-
 ## Verification
 
 - Offset-to-row mapping stays correct after height updates.
-- Live prepends preserve anchor when the user is not at the top.
 - Older loads append blocks without changing the current anchor.
 - Far branches can degrade without losing scroll height.
 - Compacted branches have real recovery recipes.
-- Rehydration checks SQLite first.
+- Rehydration checks SQLite first and relays only for uncovered intervals.
 - Relay reacquisition does not prove absence from incomplete coverage.
-- Heavy-feed tests prove the virtualizer does not materialize all rows.

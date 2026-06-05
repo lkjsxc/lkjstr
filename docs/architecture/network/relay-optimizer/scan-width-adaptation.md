@@ -6,9 +6,9 @@ Adaptive grouped scans choose the next relay-shaped time span from real event
 density. The optimizer improves speed only; coverage proof remains interval
 union coverage.
 
-Status: Rust owns the pure scan planner target. Product wiring must persist scan
-observations and density models through SQLite and expose decisions through WASM
-and Stats.
+Status: Rust owns the pure span planner target. Product wiring persists scan
+observations and density models through SQLite, exposes decisions through WASM
+and Stats, and uses TypeScript only as an explicit bridge-unavailable fallback.
 
 ## Durable Objects
 
@@ -21,6 +21,16 @@ Scan hints are not enough. The durable source of truth is:
 
 `feed_scan_hints` may remain as a thin last-span table. New decisions must read
 `feed_scan_density_models` first and may append `feed_scan_decision_traces`.
+
+## Rust Wiring Contract
+
+The Rust span planner is authoritative when the WASM bridge is loaded. Shipped
+feed surfaces must report whether each decision used Rust or TypeScript
+fallback. Fallback exists only to keep the browser usable when the bridge is
+unavailable; it must use the same input contract and cannot invent coverage.
+
+Stats shows the bridge source, selected model scope, confidence, proposed span,
+cap reason, and fallback reason when applicable.
 
 ## Context And Scopes
 
@@ -65,8 +75,7 @@ bounds are stricter.
 - Complete non-limit observations give exact density from
   `final_visible_count / span_seconds`.
 - Limit-hit observations are censored density evidence. True density is at least
-  `effective_limit / span_seconds`; the next span targets two thirds occupancy
-  and does not simply halve.
+  `effective_limit / span_seconds`; the next span targets two thirds occupancy.
 - Sparse complete observations compute the needed span from density. They may
   grow by more than two times, capped by the configured change factor.
 - Incomplete observations may add weak lower-confidence density when events
@@ -78,26 +87,19 @@ bounds are stricter.
 - Repeated failures lower confidence and add diagnostics. They do not globally
   reset scan width.
 
-## Staleness
+## Product Consumption
 
-Expired evidence decays in confidence and weight. It is not discarded while no
-better parent evidence exists. A stale exact model may blend with fresh parent
-evidence or lose to that parent. Missing or incompatible last-span hints do not
-force a reset to sixty seconds when parent density exists.
+Older loads choose the first span from persisted density models, then warm the
+next likely older span while the user is reading near the bottom. Matching page
+reads dedupe by semantic key, route fingerprint, relay group, direction, and
+interval. Dense windows split earlier; sparse complete windows grow within caps.
 
 ## Stats Trace
 
-Every chosen span reports:
-
-- selected source scope and fallback level
-- confidence and sample weight
-- target count and effective limit
-- density estimate and target fraction
-- previous span and proposed span
-- cap application and cap factor
-- latest observation count
-- limit-hit rate and incomplete rate
-- neutral reason when neutral was used
+Every chosen span reports selected source scope, fallback level, confidence,
+sample weight, target count, effective limit, density estimate, target fraction,
+previous span, proposed span, cap application, latest observation count,
+limit-hit rate, incomplete rate, neutral reason, and Rust-vs-fallback status.
 
 ## Correctness Boundaries
 

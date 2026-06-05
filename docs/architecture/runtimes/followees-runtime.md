@@ -13,41 +13,71 @@ The runtime key includes:
 - tab id.
 - target profile pubkey.
 - optional source follow-list event id.
+- selected read-relay fingerprint.
 
-The owner id is the tab id. All cache reads, relay subscriptions, profile
-hydration jobs, diagnostics, and visible row windows are scoped to that owner.
+The owner id is the tab id. Cache reads, relay reads, profile hydration,
+diagnostics, and visible row windows are scoped to that owner and are cancelled
+when the owner closes.
 
-## Startup Flow
+## Target Follow-List Discovery
+
+Startup is cache-first and relay-backed:
 
 1. Load cached latest kind `3` for the target pubkey.
-2. If a seed follow-list event id is supplied, prefer that cached event when it
-   matches the target pubkey and kind `3`.
-3. Extract deduplicated valid `p` tags.
-4. Render cached rows with unavailable profile metadata fallback.
-5. Hydrate visible profile rows through the shared profile coordinator.
-6. Start a bounded relay read for latest kind `3` from selected read relays plus
-   eligible protocol-derived routes.
-7. Replace rows only when a newer valid follow-list event is received.
+2. Prefer a supplied cached seed event when it matches target and kind `3`.
+3. Extract deduplicated valid `p` tags and render cache rows immediately.
+4. Start bounded relay discovery unless the caller explicitly suppresses it.
+5. Read groups in order: selected relays, author routes or NIP-65 routes,
+   receipt routes, discovery fallback.
+6. Store the newest found event and provenance with typed repositories.
+7. Replace rows only when the new event is newer than the current event.
 
-## Route Hints
+A cache miss is a discovery state. It is not proof of absence.
 
-The runtime may use selected read relays, target NIP-65 hints, profile relay
-hints, relay receipts, and local route evidence. Disabled or removed relays are
-excluded. Missing relay answers never prove absence.
+## Profile Hydration
 
-## Memory Bounds
+Only visible and near-visible followee pubkeys submit hydration demand. Hydration
+uses the shared profile coordinator, selected relays, valid row relay hints, and
+bounded target routes. Hidden or closed tabs release owner demand.
 
-The runtime keeps:
+## Scroll Virtualization
 
-- one current follow-list event reference.
-- one deduplicated followee vector capped by the actual kind `3` event.
-- one visible profile hydration window.
-- compact diagnostics per relay.
+Followees uses the shared feed scroll surface or equivalent virtual list. The
+pane owns the scroll element, bottom rows are reachable, and row actions stay in
+an action zone that does not trigger row navigation.
 
-It does not retain full profile histories or unbounded relay snapshots.
+## Route Groups
 
-## Cleanup
+Eligible routes are:
 
-Closing the tab cancels follow-list reads, releases profile hydration demand,
-removes owner-scoped diagnostics, and clears runtime memory. Cleanup is
-idempotent.
+- selected read relays.
+- target NIP-65 read or both relays.
+- local author routes.
+- receipts for known kind `3` events.
+- small configured discovery fallback relays.
+
+Disabled or removed relays are excluded. Discovery fallback is lower-confidence
+and bounded.
+
+## Retry And Unavailable States
+
+Runtime states are `idle`, `cache_hit`, `reading_selected`,
+`reading_author_routes`, `reading_receipt_routes`, `reading_discovery`, `found`,
+`empty_follow_list`, `not_found_proven`, `partial_failure`, `all_failed`, and
+`aborted`.
+
+Timeout, AUTH, socket close, or relay failure produces retryable diagnostics and
+never proves absence. `not_found_proven` requires complete EOSE evidence from all
+attempted relay groups and no newer cache result.
+
+## Stats Counters
+
+Stats records selected group, attempted relays, failed relays, returned relay
+urls, valid entry count, invalid tag count, final state, retry count, and whether
+Rust or TypeScript parsed the follow list.
+
+## Tests
+
+Tests cover cache hit, selected-relay found, NIP-65 found, receipt-route found,
+discovery fallback, partial failure, all failed, disabled relay exclusion,
+duplicate `p` tags, invalid tags, retry, and owner cleanup.

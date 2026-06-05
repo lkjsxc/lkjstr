@@ -18,9 +18,9 @@ Read next: [product/README.md](product/README.md),
 - Home, Global, Public Chat, Profile, Thread, Notifications, Search, Custom
   Request, Author Context, Accounts, Relay Settings, Stats, Settings, Upload
   Settings, lkjstr Log, Mine npub, Profile Edit, and Welcome are implemented.
-- Followees and User Timeline are partial action-opened surfaces. They render
-  cached real NIP-02 data and cached real events while relay runtime parity
-  remains open.
+- Followees and User Timeline are active implementation targets. Cache-hit real
+  NIP-02 data may render immediately, but a cache miss must start relay-backed
+  target discovery before any final unavailable state is shown.
 - Tweet, replies, reposts, reactions, zaps, Blossom upload, NIP-96
   compatibility upload settings, NIP-98 auth, NIP-30 custom emoji,
   sensitive-content reveal, and event reference previews are implemented.
@@ -126,10 +126,10 @@ Read next: [architecture/workspace/README.md](architecture/workspace/README.md),
   required relay, route group, semantic key, filter shape, and bounded interval.
   Incomplete, failed, compacted, dense, stale, or missing evidence cannot prove
   absence.
-- Rust owns pure feed row geometry estimates, measured-height model updates,
-  anchor compensation, and a pure real-data feed LOD tree. LOD forgetting
-  degrades low-value branches from full rows to shells, blocks, and recovery
-  recipes without creating fake rows.
+- Rust owns pure feed row geometry estimates, width-bucketed measured-height
+  model updates, anchor compensation, and a pure real-data feed LOD tree. LOD
+  forgetting degrades low-value branches from full rows to shells, blocks, and
+  recovery recipes without creating fake rows.
 
 ## Network And Runtimes
 
@@ -179,7 +179,8 @@ and [operations/memory-verification.md](operations/memory-verification.md).
   must use typed repositories and must not add direct browser database access.
 - Followees and User Timeline are active product contracts. They must render
   real NIP-02 data or explicit unavailable states and must not synthesize users
-  or posts.
+  or posts. A local cache miss is a relay discovery trigger, not proof that a
+  public follow list is unavailable.
 - NIP-89 client tags are opt-in and must be added before signing only when a
   valid handler coordinate and relay hint exist.
 - NIP-29 groups must use relay plus group id, `h` tags, relay-scoped state, and

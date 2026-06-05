@@ -31,33 +31,53 @@ valid `p` tags, deduplicates by pubkey, and preserves first valid relay hint and
 petname values from the follow-list event.
 
 Invalid pubkeys are ignored. Invalid rows may increment diagnostics but must not
-render as fake users. If no follow list is available, the tab shows a real
-unavailable state with retry.
+render as fake users. If no cached follow list is available, the tab starts
+relay discovery. A cache miss is not an unavailable state.
+
+## Discovery States
+
+The tab reports one truthful state at a time:
+
+- cache-hit displayed immediately.
+- relay discovery in progress.
+- found on selected relay.
+- found on author route or NIP-65 relay.
+- found on receipt route.
+- found on discovery fallback.
+- empty valid follow list.
+- partial relay failure with retry.
+- not found only after complete EOSE evidence from attempted relays.
+- all failed with attempted relay diagnostics.
+
+Partial failure, timeout, AUTH, socket close, or missing EOSE never proves that a
+follow list is absent.
 
 ## Row Contract
 
-Each row shows:
+Each row uses the shared user-row component and shows:
 
 - avatar when real profile metadata has one.
-- best display name from profile metadata.
-- verified NIP-05 marker when verification evidence exists.
-- compact `npub` fallback.
+- best display name from profile metadata, or `Unknown`.
+- NIP-05 subtitle when available.
 - petname from the follow-list tag as local context.
 - normalized relay hint when present and valid.
 - actions to open Profile, open User Timeline, and copy `npub`.
 
 Rows never invent avatars, names, verification, relay support, or relationships.
+Action controls must not accidentally trigger row navigation.
 
 ## Runtime Rules
 
-The runtime owns a bounded visible row window, hydrates visible profiles through
-the shared profile cache and coordinator, and closes all subscriptions when the
-tab closes. Partial relay failure is diagnostic and does not hide reachable
-relay data.
+The runtime owns a bounded visible row window, hydrates visible and near-visible
+profiles through the shared profile cache and coordinator, and closes all reads
+when the tab closes. It may read selected relays, target NIP-65 routes, receipt
+routes, local route evidence, and bounded discovery fallback relays. Disabled or
+removed relays are excluded.
 
 ## Empty States
 
-- Loading while a cache or relay read is in progress.
-- No follow list received for this profile.
+- Loading while cache read or relay discovery is in progress.
+- No public follow list was found on attempted relays.
 - Follow list contains no valid `p` tags.
-- Relay unavailable, with details in diagnostics.
+- Follow-list discovery is incomplete, with relay diagnostics and retry.
+- Relay reads all failed, with attempted-relay diagnostics.
