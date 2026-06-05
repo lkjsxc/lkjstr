@@ -32,6 +32,8 @@ closing gates so this concise matrix stays readable.
 | Rust protocol emoji source helpers        | [protocol-kernel.md](../architecture/rust-wasm/protocol-kernel.md)             | implemented     | NIP-51 Rust tests                                                 |
 | Rust protocol zaps and upload auth        | [protocol-kernel.md](../architecture/rust-wasm/protocol-kernel.md)             | implemented     | NIP-57, Blossom, NIP-96, NIP-98 tests                             |
 | Rust protocol relay list metadata         | [protocol-kernel.md](../architecture/rust-wasm/protocol-kernel.md)             | implemented     | NIP-65 Rust tests                                                 |
+| Rust protocol NIP-29 groups               | [nip29-groups.md](../protocol/nip29-groups.md)                                 | partial         | constants and pure parsers are active; group UI and publish open  |
+| Rust protocol NIP-89 client tag           | [nip89-client-tag.md](../protocol/nip89-client-tag.md)                         | partial         | validation and tag building active; publish integration open      |
 | Rust protocol WASM bridge                 | [host-boundary.md](../architecture/rust-wasm/host-boundary.md)                 | implemented     | browser WASM tests                                                |
 | Rust pure account domain                  | [app-boundary.md](../architecture/rust-wasm/app-boundary.md)                   | implemented     | domain account tests                                              |
 | Rust workspace model basics               | [app-boundary.md](../architecture/rust-wasm/app-boundary.md)                   | implemented     | domain workspace tests                                            |
@@ -51,7 +53,9 @@ closing gates so this concise matrix stays readable.
 | Rust relay state machine basics           | [relay-runtime.md](../architecture/rust-wasm/relay-runtime.md)                 | implemented     | relay crate tests                                                 |
 | Rust relay client and browser adapters    | [relay-runtime.md](../architecture/rust-wasm/relay-runtime.md)                 | partial         | pure reducer plus WebSocket/timer adapters; product wiring open   |
 | Rust Leptos workspace shell               | [ui-runtime.md](../architecture/rust-wasm/ui-runtime.md)                       | partial         | Welcome, New Tab, persistence, Stats inventory                    |
-| Rust Settings surface                     | [settings.md](tools/settings.md)                                               | partial         | flat schema and IndexedDB overrides                               |
+| Rust Settings surface                     | [settings.md](tools/settings.md)                                               | partial         | flat schema; SQLite worker persistence wiring active              |
+| Rust Followees surface                    | [followees.md](feeds/followees.md)                                             | not implemented | action-opened real kind `3` followee rows open                    |
+| Rust User Timeline surface                | [user-timeline.md](feeds/user-timeline.md)                                     | not implemented | target-pubkey timeline runtime open                               |
 | Rust Accounts surface                     | [accounts.md](tools/accounts.md)                                               | partial         | rows, local secret transaction, NIP-07 connect                    |
 | Rust Relay Settings surface               | [relay-management.md](tools/relay-management.md)                               | partial         | relay sets and default selection                                  |
 | Rust Upload Settings surface              | [upload-settings.md](tools/upload-settings.md)                                 | partial         | media upload settings, Blossom endpoint display, NIP-96 discovery |

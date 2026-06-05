@@ -7,8 +7,11 @@ Settings provide editable local preferences as one flat key-value list.
 ## Contract
 
 - Settings opens from New Tab.
-- Flat setting overrides are persisted through the SQLite worker when browser
-  Workers are available, with in-memory fallback for unavailable storage.
+- Flat setting overrides are persisted through the SQLite worker typed settings
+  repository when browser Workers are available, with explicit temporary memory
+  mode for unavailable persistent storage.
+- Rust Settings host code uses the SQLite worker repository. IndexedDB settings
+  access is limited to migration tests and old-store diagnostics.
 - Every record shows label, key, description, editor, type, and changed state.
 - There are no category columns, inspectors, search panes, or sectioned lists.
 - Keys use namespaces only for persistence and scanning.
@@ -30,6 +33,9 @@ Settings provide editable local preferences as one flat key-value list.
   when uploads are sent.
 - Notification unread tab badge settings are retired and must not be loaded,
   displayed, or used.
+- NIP-89 client-tag settings use `publish.clientTag.*` keys and remain disabled
+  until the user stores a valid handler coordinate and relay hint.
+- `timeline.showClientTags` controls optional display of incoming client tags.
 - `notifications.enabled` and `notifications.defaultCategories` remain inert
   flat settings. They do not gate notification capture, indexing, unread state,
   or rendering.
@@ -66,5 +72,6 @@ Settings provide editable local preferences as one flat key-value list.
 
 - The Rust/WASM shell renders the flat settings schema and stored overrides
   from Rust.
+- Rust Settings persistence uses the SQLite worker typed repository.
 - Rust Settings side effects such as CSS appearance updates and cache budget
   enforcement remain incomplete until the Rust UI owns the full surface.

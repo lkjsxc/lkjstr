@@ -18,12 +18,14 @@ itself: split tiles, tabs, relay-backed data, and local state.
   focused gates.
 - [audit/verification-gaps.md](audit/verification-gaps.md): focused audit gates.
 - [feeds/README.md](feeds/README.md): relay-backed reading surfaces.
+- [feeds/followees.md](feeds/followees.md): viewed-profile following list.
 - [feeds/global.md](feeds/global.md): Global feed.
 - [feeds/home.md](feeds/home.md): Home feed.
 - [feeds/notifications.md](feeds/notifications.md): Notifications feed.
 - [feeds/profiles.md](feeds/profiles.md): Profile feed.
 - [feeds/public-chat.md](feeds/public-chat.md): Public Chat channel surface.
 - [feeds/threads.md](feeds/threads.md): Thread feed.
+- [feeds/user-timeline.md](feeds/user-timeline.md): public follow-graph timeline.
 - [tools/README.md](tools/README.md): local tools and settings surfaces.
 - [tools/accounts.md](tools/accounts.md): account records and signers.
 - [tools/author-context.md](tools/author-context.md): nearby posts by an event

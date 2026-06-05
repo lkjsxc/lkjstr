@@ -6,6 +6,7 @@ Runtime docs define how tab-owned loaders combine cache and relay data.
 
 ## Table of Contents
 
+- [followees-runtime.md](followees-runtime.md): viewed-profile follow-list rows.
 - [global-runtime.md](global-runtime.md): global recent notes.
 - [home-runtime.md](home-runtime.md): home follow and note loading.
 - [notifications-runtime.md](notifications-runtime.md): notification indexing.
@@ -14,6 +15,7 @@ Runtime docs define how tab-owned loaders combine cache and relay data.
 - [query-runtime.md](query-runtime.md): query contracts.
 - [thread-runtime.md](thread-runtime.md): thread root and replies.
 - [tweet-runtime.md](tweet-runtime.md): draft and publish helpers.
+- [user-timeline-runtime.md](user-timeline-runtime.md): public target-user timelines.
 
 ## Shared Contract
 
@@ -32,5 +34,7 @@ Runtime docs define how tab-owned loaders combine cache and relay data.
 - Near-end loading uses `max(1200px, 2 x viewport)` and optional sentinels.
 - Public Chat is a feed-like runtime with channel discovery, selected-channel
   messages, explicit coverage, and tab-owned cleanup.
+- Followees and User Timeline are action-opened runtimes keyed by target pubkey;
+  User Timeline separates viewer account from target subject.
 - Hosted Worker code serves the SvelteKit shell only. Tab runtimes do not depend
   on Cloudflare storage, a server-side account service, or a relay proxy.

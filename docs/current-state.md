@@ -33,6 +33,9 @@ Read next: [protocol/README.md](protocol/README.md),
 - Implemented Nostr surfaces include NIP-01, NIP-02, NIP-05, NIP-07, NIP-10,
   NIP-11, NIP-18, NIP-19, NIP-25, NIP-28, NIP-30, NIP-36, NIP-50, NIP-51,
   NIP-57, NIP-65, Blossom/NIP-B7 upload, NIP-96, and NIP-98.
+- Partial protocol targets include NIP-29 relay-based groups and NIP-89 client
+  tags. They must remain labeled partial until real read, publish, settings, and
+  opt-out paths are verified.
 - Relay AUTH is diagnostic-only.
 - Search combines cached matches with relay NIP-50 filters when selected relays
   support them.
@@ -169,6 +172,13 @@ and [operations/memory-verification.md](operations/memory-verification.md).
 
 - SQLite worker storage is the active durable-storage contract. Product modules
   must use typed repositories and must not add direct browser database access.
+- Followees and User Timeline are active product contracts. They must render
+  real NIP-02 data or explicit unavailable states and must not synthesize users
+  or posts.
+- NIP-89 client tags are opt-in and must be added before signing only when a
+  valid handler coordinate and relay hint exist.
+- NIP-29 groups must use relay plus group id, `h` tags, relay-scoped state, and
+  real relay data; do not implement raw kind `29`.
 - Passkey-protected local secret storage is a follow-up product contract: it
   must actually encrypt local signer secrets with Web Crypto and WebAuthn PRF
   when supported, and show an unsupported state when the browser cannot do so.

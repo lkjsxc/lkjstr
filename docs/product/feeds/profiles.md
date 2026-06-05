@@ -57,7 +57,13 @@ Profile tabs show identity metadata and authored text notes.
 - Follow-list JSON is the latest viewed profile kind `3` event or `null`.
 - Registered relay-set JSON includes all configured relay sets with normalized
   relay URL plus relay enabled, read, and write flags.
-- Profile shows following count from the viewed profile's latest kind `3`.
+- Profile shows following count as a button when the viewed profile's latest
+  kind `3` is known.
+- Clicking the following count opens or focuses the Followees tab for the
+  viewed pubkey in the same tile.
+- A known empty follow list shows `0 following`. An unavailable follow list does
+  not invent a count and leaves Followees available only through explicit retry
+  or menu actions once implemented.
 - Long `about`, `npub`, and website values wrap without overlapping the Notes
   section at desktop, mobile, or narrow split-pane widths.
 - Profile note rows start below the full profile header inside the same scroll

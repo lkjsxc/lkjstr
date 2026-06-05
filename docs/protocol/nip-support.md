@@ -27,6 +27,8 @@ Nostr protocol surfaces without claiming unavailable behavior.
   reactions, custom emoji reactions, and `k` target-kind tags.
 - NIP-28 channel creation, metadata, messages, hide-message actions, and mute
   user actions for Public Chat.
+- NIP-29 relay-based groups are partial: constants, pure tag parsing, and group
+  state contracts are active before group UI and publish parity.
 - NIP-30 custom emoji tags, optional kind `30030` emoji-set addresses, custom
   emoji reactions, HTTPS emoji rendering, and incoming shortcodes limited to
   `[A-Za-z0-9_-]`.
@@ -44,6 +46,8 @@ Nostr protocol surfaces without claiming unavailable behavior.
   summaries.
 - NIP-65 relay list metadata parsing for kind `10002` `r` tags with explicit
   import controls.
+- NIP-89 client tags are partial: validation and pre-sign tag building are
+  active before shipped publish integration and opt-out verification.
 - Blossom/NIP-B7 configured-server media upload with raw blob transport,
   scoped auth event, descriptor parsing, and SHA-256 validation.
 - NIP-96 media upload discovery and response parsing for compatibility
@@ -55,7 +59,9 @@ Nostr protocol surfaces without claiming unavailable behavior.
 
 ## Status
 
-- Implemented: listed core and product support above.
+- Implemented: listed core and product support above except rows explicitly
+  marked partial.
+- Partial: NIP-29 groups and NIP-89 client tags.
 - Design-only: passkey-protected local secret storage.
 - Not implemented: encrypted direct messages.
 - Out of scope: wallet custody. Zap support opens or copies invoices only.

@@ -33,6 +33,12 @@ Tabs define the workspace surface area.
 - Profile opens from identity buttons in timelines and profile-related UI.
 - Profile actions focus a matching Profile tab already present in the same
   tile; otherwise they open a new Profile tab in that tile.
+- Followees opens from Profile following counts and profile-related actions. It
+  focuses a same-tile Followees tab with the same viewed pubkey before creating
+  one.
+- User Timeline opens from Profile actions, Followees rows, and future
+  identity-related menus. It focuses a same-tile User Timeline tab with the same
+  target pubkey before creating one.
 - Profile Edit opens from the active account profile action. The tab focuses an
   existing Profile Edit tab in the same tile before creating one.
 - Profile Edit always edits the current active signing account.
