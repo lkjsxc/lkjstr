@@ -1,4 +1,5 @@
 import type { NostrEvent } from '$lib/protocol';
+import { contentShapeHash } from './feed-geometry-hash';
 
 export type FeedGeometryFeatures = {
   readonly rowKind: string;
@@ -135,26 +136,6 @@ function baseHeight(rowKind: string): number {
   if (rowKind === 'leading') return 180;
   if (rowKind === 'footer') return 64;
   return 72;
-}
-
-function contentShapeHash(shape: {
-  readonly [key: string]: number | boolean;
-}): string {
-  let state = 0xcbf29ce484222325n;
-  for (const key of Object.keys(shape).sort()) {
-    state = foldText(state, key);
-    state = foldText(state, String(shape[key]));
-  }
-  return state.toString(16).padStart(16, '0').slice(-16);
-}
-
-function foldText(state: bigint, value: string): bigint {
-  let next = state;
-  for (const char of value) {
-    next ^= BigInt(char.codePointAt(0) ?? 0);
-    next = BigInt.asUintN(64, next * 0x100000001b3n);
-  }
-  return next;
 }
 
 function countReferenceTags(tags: readonly (readonly string[])[]): number {

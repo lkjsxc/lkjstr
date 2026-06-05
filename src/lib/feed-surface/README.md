@@ -13,6 +13,7 @@ row helpers for timeline-like tabs.
 - [speculative-older.ts](speculative-older.ts): deduped older-page coordinator.
 - [staged-rows.ts](staged-rows.ts): immediate row shell projection.
 - [feed-geometry-features.ts](feed-geometry-features.ts): content-aware row features.
+- [feed-geometry-hash.ts](feed-geometry-hash.ts): Rust-compatible content-shape hashing.
 - [feed-geometry-wasm.ts](feed-geometry-wasm.ts): temporary WASM bridge wrapper.
 - [feed-visual-fragments.ts](feed-visual-fragments.ts): oversized event visual rows.
 - [feed-visual-fragment-text.ts](feed-visual-fragment-text.ts): Unicode-safe text segmentation.
