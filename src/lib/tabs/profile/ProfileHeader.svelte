@@ -11,6 +11,11 @@
     normalizedProfileWebsite,
     relaySetsCopyJson,
   } from '$lib/profile/profile-links';
+  import {
+    followCountKnown,
+    followCountLabel,
+  } from '$lib/profile/follow-count-state';
+  import type { ProfileFollowListStatus } from '$lib/profile/profile-state';
   import type { RelaySet } from '$lib/relays/relay-store';
   import ProfileAbout from './ProfileAbout.svelte';
   import ProfileActions from './ProfileActions.svelte';
@@ -24,6 +29,7 @@
     nprofile: string;
     followList?: NostrEvent;
     followingCount: number;
+    followListStatus: ProfileFollowListStatus;
     openFollowees: () => void;
     openUserTimeline: () => void;
     openProfileEdit: () => void;
@@ -49,6 +55,14 @@
       if (copied === label) copied = '';
     }, 1200);
   }
+
+  let followingLabel = $derived(
+    followCountLabel({
+      count: props.followingCount,
+      status: props.followListStatus,
+    }),
+  );
+  let followingKnown = $derived(followCountKnown(props.followListStatus));
 </script>
 
 <header class="profile-card">
@@ -129,15 +143,19 @@
           {props.profile?.website}
         </a>
       {/if}
-      {#if props.followList}
+      {#if followingKnown}
         <button
           type="button"
           class="profile-card__fact-button"
           aria-label="Open following list"
           onclick={props.openFollowees}
         >
-          {props.followingCount} following
+          {followingLabel}
         </button>
+      {:else}
+        <span class="profile-card__fact-muted" role="status">
+          {followingLabel}
+        </span>
       {/if}
       <button
         type="button"

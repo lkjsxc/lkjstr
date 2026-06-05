@@ -3,10 +3,20 @@ import type { FeedEvent } from '$lib/events/types';
 import type { ProfileSummary } from '$lib/identity/identity';
 import type { NostrEvent } from '$lib/protocol';
 
+export type ProfileFollowListStatus =
+  | 'loading-cache'
+  | 'discovering-relays'
+  | 'known'
+  | 'known-empty'
+  | 'incomplete'
+  | 'unavailable'
+  | 'failed';
+
 export type ProfileState = {
   readonly profile: ProfileSummary | null;
   readonly posts: readonly FeedEvent[];
   readonly followList?: NostrEvent;
+  readonly followListStatus: ProfileFollowListStatus;
   readonly loading: boolean;
   readonly error: string | null;
   readonly relays: readonly string[];
@@ -26,6 +36,7 @@ export function emptyProfileState(): ProfileState {
     profile: null,
     posts: [],
     followList: undefined,
+    followListStatus: 'loading-cache',
     loading: true,
     error: null,
     relays: [],

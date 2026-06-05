@@ -111,6 +111,10 @@
   text-decoration: underline;
 }
 
+.profile-card__fact-muted {
+  color: var(--color-text-muted);
+}
+
 .profile-copy-menu {
   position: relative;
 }

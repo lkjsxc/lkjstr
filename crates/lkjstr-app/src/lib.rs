@@ -65,8 +65,10 @@ pub use feed_wait::{
     merge_late_event_rows, scroll_anchor_for_late_insert, within_foreground_merge_window,
 };
 pub use follow_graph::{
-    FollowListReadPhase, FollowListSummary, TargetFollowListState, UserTimelineAuthorSet,
-    author_set_hash, summarize_follow_list, target_posts_only_author_set, user_timeline_author_set,
+    FollowCountEvidence, FollowCountState, FollowListReadPhase, FollowListSummary,
+    TargetFollowListState, UserTimelineAuthorSet, author_set_hash, follow_count_label,
+    reduce_follow_count, summarize_follow_list, target_posts_only_author_set,
+    user_timeline_author_set,
 };
 pub use orchestration::{
     CacheReadMode, CoverageEvidenceState, FeedPrefetchPlan, HydrationPlan, OptimizerEvidenceState,

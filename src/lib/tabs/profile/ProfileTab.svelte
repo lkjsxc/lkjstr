@@ -42,6 +42,13 @@
     openProfileEdit: () => void;
   };
 
+  function profileEmptyText(next: ProfileState): string {
+    if (next.loading) return 'Loading notes...';
+    if (next.error) return 'Profile notes are partially unavailable.';
+    if (next.hasOlder) return 'Searching older notes...';
+    return 'No public notes found on attempted relays.';
+  }
+
   let props: Props = $props();
   let state = $state<ProfileState>(emptyProfileState());
   let profiles = $derived<Record<string, ProfileSummary>>(
@@ -143,7 +150,7 @@
     relaySets={props.relaySets}
     activeAccountPubkey={props.activeAccount?.pubkey}
     loading={state.loading}
-    emptyText="No notes have been received for this profile."
+    emptyText={profileEmptyText(state)}
     loadingOlder={state.loadingOlder}
     loadingNewer={state.loadingNewer}
     hasOlder={state.hasOlder}
@@ -170,6 +177,7 @@
           {nprofile}
           followList={state.followList}
           followingCount={followingCount(state.followList)}
+          followListStatus={state.followListStatus}
           openFollowees={() => props.openFollowees(props.pubkey)}
           openUserTimeline={() => props.openUserTimeline(props.pubkey)}
           openProfileEdit={props.openProfileEdit}

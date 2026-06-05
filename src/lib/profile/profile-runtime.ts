@@ -17,6 +17,7 @@ import { submitProfilePostsLiveIntent } from './profile-route-plans';
 import { createProfileRuntimeHandlers } from './profile-runtime-handlers';
 import { loadInitialProfilePage } from './profile-runtime-initial';
 import { createProfilePageLoaders } from './profile-runtime-loaders';
+import { profileFollowListStatus } from './follow-count-state';
 import { emptyProfileState, type ProfileState } from './profile-state';
 import { withProfileCursors } from './profile-runtime-display';
 import type { ProfileOlderPreserveMode } from './profile-runtime-paging';
@@ -96,12 +97,20 @@ export function createProfileRuntime(
         ...state,
         profile: page.profile,
         followList: page.followList,
+        followListStatus: page.followList
+          ? profileFollowListStatus(page.followList)
+          : 'incomplete',
         posts: page.posts,
         loading: false,
         relays: [...new Set([...state.relays, ...page.relays])],
       });
     } catch (error) {
-      emit({ ...state, loading: false, error: boundedErrorText(error) });
+      emit({
+        ...state,
+        loading: false,
+        followListStatus: state.followList ? state.followListStatus : 'failed',
+        error: boundedErrorText(error),
+      });
     }
   };
   const runtime = {
@@ -126,12 +135,17 @@ export function createProfileRuntime(
         profile,
         posts,
         followList,
+        followListStatus: followList
+          ? profileFollowListStatus(followList)
+          : relays.length > 0
+            ? 'discovering-relays'
+            : 'unavailable',
         loading: relays.length > 0,
         updatedAt: meta ? meta.created_at * 1000 : null,
         oldestCreatedAt: oldestCreatedAt(posts),
       });
       if (relays.length === 0) {
-        emit({ ...state, loading: false });
+        emit({ ...state, loading: false, followListStatus: 'unavailable' });
         return;
       }
       cleanup.push(
