@@ -24,13 +24,14 @@ product code after equivalent Rust/WASM behavior is real and verified.
 - The root route renders the workspace app.
 - Tiles have a tab strip, plus button, tile menu, and persistent resize state.
 - New Tab offers Home, Tweet, Notifications, Search, Custom Request, Global,
-  Profile Edit, Accounts, Relay Settings, Stats, Settings, Upload Settings,
-  lkjstr Log, Mine npub, and Welcome.
+  Public Chat, Profile Edit, Accounts, Relay Settings, Stats, Settings, Upload
+  Settings, lkjstr Log, Mine npub, and Welcome.
 - Clean startup focuses Welcome and also creates Accounts, Relay Settings,
   Home, Notifications, and Tweet. Storage failure must recover to a usable
   Welcome workspace.
 - Profile tabs open from identity clicks. Profile Edit opens for active-account
-  metadata editing. Thread tabs open from event clicks.
+  metadata editing. Thread tabs open from event clicks. Public Chat opens real
+  NIP-28 channel chat from New Tab.
 - Settings are one flat key-value list.
 - Selected read relays are eligible fallback relays for Home, Global,
   Notifications, Profile, and Thread. Targeted reads may also use bounded

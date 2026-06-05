@@ -37,6 +37,7 @@ system.
 
 - **Home** - timeline of followed pubkeys.
 - **Global** - public firehose with optional filters.
+- **Public Chat** - real NIP-28 channels, messages, hide, and mute actions.
 - **Profile** - a user's notes and metadata.
 - **Thread** - reply chains with context.
 - **Notifications** - mentions, reactions, reposts, zaps.
@@ -50,6 +51,8 @@ system.
 - **Media upload** - Blossom upload with NIP-96 compatibility providers.
 - **Custom emoji** - NIP-30 emoji parsing and publishing.
 - **Profile Edit** - update active-account metadata.
+- **Public Chat messages** - create channels, send messages, reply, and edit
+  owned channel metadata.
 
 ### Tools
 
