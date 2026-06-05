@@ -1,3 +1,5 @@
+#[path = "groups_tags.rs"]
+mod tag_parse;
 #[path = "groups_types.rs"]
 mod types;
 
@@ -14,6 +16,7 @@ use crate::{
     },
 };
 
+use tag_parse::{group_ref_from_tag, member_from_tag};
 pub use types::{
     GroupAdmin, GroupMember, GroupMetadata, GroupParseError, GroupPreviousRef, GroupReference,
     GroupRole,
@@ -79,7 +82,11 @@ pub fn group_admins_from_event(event: &NostrEvent) -> Result<Vec<GroupAdmin>, Gr
 
 pub fn group_members_from_event(event: &NostrEvent) -> Result<Vec<GroupMember>, GroupParseError> {
     ensure_state(event, KIND_GROUP_MEMBERS)?;
-    Ok(event.tags.iter().filter_map(member_from_tag).collect())
+    Ok(event
+        .tags
+        .iter()
+        .filter_map(|tag| member_from_tag(tag))
+        .collect())
 }
 
 pub fn group_roles_from_event(event: &NostrEvent) -> Result<Vec<GroupRole>, GroupParseError> {
@@ -102,7 +109,11 @@ pub fn group_user_list_from_event(
     event: &NostrEvent,
 ) -> Result<Vec<GroupReference>, GroupParseError> {
     ensure_kind(event, KIND_USER_GROUPS)?;
-    Ok(event.tags.iter().filter_map(group_ref_from_tag).collect())
+    Ok(event
+        .tags
+        .iter()
+        .filter_map(|tag| group_ref_from_tag(tag))
+        .collect())
 }
 
 pub fn is_group_state_kind(kind: u64) -> bool {
@@ -178,23 +189,4 @@ fn text(content: &Value, key: &str) -> Option<String> {
         .map(str::trim)
         .filter(|item| !item.is_empty())
         .map(ToOwned::to_owned)
-}
-
-fn member_from_tag(tag: &Vec<String>) -> Option<GroupMember> {
-    let pubkey = tag.get(1)?.to_owned();
-    is_pubkey(&pubkey).then(|| GroupMember {
-        pubkey,
-        label: tag.get(2).filter(|item| !item.is_empty()).cloned(),
-    })
-}
-
-fn group_ref_from_tag(tag: &Vec<String>) -> Option<GroupReference> {
-    if !tag.first().is_some_and(|name| name == "group") {
-        return None;
-    }
-    let group_id = tag.get(2).filter(|item| !item.is_empty())?.to_owned();
-    Some(GroupReference {
-        relay: tag.get(1).filter(|item| !item.is_empty()).cloned(),
-        group_id,
-    })
 }

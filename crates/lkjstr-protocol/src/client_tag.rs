@@ -78,7 +78,7 @@ pub fn append_client_tag(
 ) -> Vec<NostrTag> {
     let mut out: Vec<NostrTag> = tags
         .into_iter()
-        .filter(|tag| !tag.first().is_some_and(|name| name == "client"))
+        .filter(|tag| tag.first().is_none_or(|name| name != "client"))
         .collect();
     if !client_tag_allowed_for_kind(event_kind) {
         return out;
