@@ -1,8 +1,4 @@
-import {
-  compactFeedCoverage,
-  deleteAllFeedCoverageAfterEventCompaction,
-} from '../events/feed-coverage-store';
-import { deleteAllFeedScanHintsWithLedger } from '../storage/repositories/feed-scan-hints-store';
+import { compactFeedCoverage } from '../events/feed-coverage-store';
 import {
   sqliteDeleteDirectCacheRows,
   sqliteDeleteEventCacheRows,
@@ -38,8 +34,6 @@ export async function deletePrunedEvents(
   if (ids.length === 0)
     return { prunedEvents: 0, prunedResources: 0, prunedBytes: 0 };
   await sqliteDeleteEventCacheRows(rows);
-  await deleteAllFeedCoverageAfterEventCompaction();
-  await deleteAllFeedScanHintsWithLedger();
   await compactFeedCoverage(30 * 24 * 60 * 60);
   return {
     prunedEvents: ids.length,
