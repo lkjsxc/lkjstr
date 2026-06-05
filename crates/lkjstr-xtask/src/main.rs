@@ -2,6 +2,7 @@ mod command;
 mod doc_check;
 mod line_check;
 mod paths;
+mod quiet_steps;
 mod rust_style;
 mod sqlite_schema_doc;
 mod storage_manifest;
@@ -33,7 +34,7 @@ fn run() -> Result<(), String> {
         }
         "quiet" => {
             let Some(target) = args.next() else {
-                return Err("quiet requires rust-wasm, verify, or ci".to_owned());
+                return Err("quiet requires rust-wasm, verify, ci, or docker-verify".to_owned());
             };
             command::quiet(&root, &target)
         }
@@ -51,6 +52,7 @@ fn usage() -> String {
         "  cargo run -p lkjstr-xtask -- quiet rust-wasm",
         "  cargo run -p lkjstr-xtask -- quiet verify",
         "  cargo run -p lkjstr-xtask -- quiet ci",
+        "  cargo run -p lkjstr-xtask -- quiet docker-verify",
     ]
     .join("\n")
 }

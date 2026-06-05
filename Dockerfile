@@ -26,16 +26,18 @@ COPY package.json pnpm-lock.yaml pnpm-workspace.yaml .npmrc ./
 RUN pnpm install --frozen-lockfile
 COPY . .
 
-FROM deps AS app
+FROM deps AS verify
+CMD ["cargo", "run", "-p", "lkjstr-xtask", "--", "quiet", "docker-verify"]
+
+FROM deps AS app-build
 RUN pnpm build
+
+FROM app-build AS app
 EXPOSE 5173
 CMD ["pnpm", "preview", "--host", "0.0.0.0", "--port", "5173"]
 
 FROM app AS app-smoke
 CMD ["pnpm", "exec", "tsx", "scripts/app-smoke.ts"]
 
-FROM deps AS verify
-CMD ["cargo", "run", "-p", "lkjstr-xtask", "--", "quiet", "verify"]
-
-FROM deps AS cloudflare
-CMD ["pnpm", "cloudflare:quiet"]
+FROM app-build AS cloudflare
+CMD ["pnpm", "cloudflare:dry-run:built"]

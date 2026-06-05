@@ -15,7 +15,7 @@ permissions:
   packages: write
 
 jobs:
-  verify:
+  repository:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v6
@@ -25,9 +25,9 @@ jobs:
           node-version: 24
           cache: pnpm
       - run: pnpm install --frozen-lockfile
-      - run: pnpm verify:quiet
+      - run: pnpm check:repo
 
-  compose:
+  docker-final:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v6
@@ -41,8 +41,7 @@ jobs:
   publish:
     if: github.ref == 'refs/heads/main'
     needs:
-      - verify
-      - compose
+      - docker-final
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v6
@@ -57,6 +56,8 @@ jobs:
           context: .
           target: app
           push: true
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
           tags: |
             ghcr.io/lkjsxc/lkjstr:latest
             ghcr.io/lkjsxc/lkjstr:sha-${{ github.sha }}

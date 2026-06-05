@@ -7,11 +7,13 @@ authoritative final gate.
 
 ## Job Graph
 
-- `repository` is cheap host feedback. It checks documentation, repository
-  shape, and static guardrails. It does not build the production app.
+- `repository` is cheap host feedback. It runs `pnpm check:repo` and does not
+  build the production app.
 - `docker-final` validates Compose config, builds `app`, `verify`,
   `cloudflare`, and `app-smoke`, then runs `verify`, `cloudflare`, and
-  `app-smoke` services from those images.
+  `app-smoke` services from those images. The `verify` image runs
+  `lkjstr-xtask quiet docker-verify`, so the production app build is owned by
+  the `app` image.
 - `publish` runs only from `main` after `docker-final` passes. It reuses the
   checked app image or the same Docker cache and target, and does not run an
   unrelated cold rebuild.
@@ -32,8 +34,7 @@ docker compose --progress quiet -f docker-compose.yml run --rm app-smoke
   verification inside Docker on the default pull request path.
 - CI must not build the production app repeatedly unless a target needs a
   distinct artifact.
-- Cloudflare dry-run should consume the already-built app artifact inside
-  Docker.
+- Cloudflare dry-run consumes the already-built app artifact inside Docker.
 - Publish should reuse the checked app image or the same build cache and target.
 - `xtask` quiet orchestration must not recurse through `pnpm` commands that call
   `xtask` again.

@@ -17,6 +17,7 @@
     "test:watch": "vitest",
     "rust-wasm:quiet": "tsx scripts/run-quiet.ts rust-wasm",
     "cloudflare:dry-run": "pnpm build && wrangler deploy --dry-run",
+    "cloudflare:dry-run:built": "wrangler deploy --dry-run",
     "verify": "pnpm check:repo && pnpm lint && pnpm check && pnpm test && pnpm build",
     "verify:quiet": "tsx scripts/run-quiet.ts verify",
     "ci:quiet": "tsx scripts/run-quiet.ts ci",

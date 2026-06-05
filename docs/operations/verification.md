@@ -64,8 +64,8 @@ Wrangler failures remain easy to isolate.
   verification inside Docker on the default pull request path.
 - CI must not build the production app repeatedly unless a target needs a
   distinct artifact.
-- Docker Cloudflare dry-run should consume the already-built app artifact when
-  the Docker graph has already built that artifact.
+- Docker Cloudflare dry-run consumes the already-built app artifact from the
+  `app-build` target.
 - Publish must reuse the checked app image or the same Docker cache and target.
 - Quiet command ownership must avoid `xtask -> pnpm -> xtask` and
   `pnpm -> xtask -> pnpm verify:quiet` recursion.
@@ -102,6 +102,9 @@ repository result shapes, retention deletion, inventory summaries, and Stats
 projection. It does not open a full browser workspace flow.
 
 ## Docker
+
+The Docker `verify` target runs `lkjstr-xtask quiet docker-verify`, which omits
+production app build because the `app` target owns that artifact.
 
 ```sh
 docker compose -f docker-compose.yml config

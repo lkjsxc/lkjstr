@@ -40,7 +40,7 @@ export async function checkComposeGuardrails(
     .readFile(path.join(root, 'Dockerfile'), 'utf8')
     .catch(() => '');
   if (
-    !/FROM deps AS app[\s\S]*RUN pnpm build[\s\S]*CMD \["pnpm", "preview"/.test(
+    !/FROM deps AS app-build[\s\S]*RUN pnpm build[\s\S]*FROM app-build AS app[\s\S]*CMD \["pnpm", "preview"/.test(
       dockerfile,
     )
   )
@@ -58,13 +58,22 @@ export async function checkComposeGuardrails(
       message: 'app-smoke target must run app smoke',
     });
   if (
-    !/FROM deps AS verify[\s\S]*CMD \["cargo", "run", "-p", "lkjstr-xtask", "--", "quiet", "verify"\]/.test(
+    !/FROM deps AS verify[\s\S]*CMD \["cargo", "run", "-p", "lkjstr-xtask", "--", "quiet", "docker-verify"\]/.test(
       dockerfile,
     )
   )
     problems.push({
       file: 'Dockerfile',
-      message: 'verify target must run xtask quiet verify',
+      message: 'verify target must run xtask quiet docker-verify',
+    });
+  if (
+    !/FROM app-build AS cloudflare[\s\S]*cloudflare:dry-run:built/.test(
+      dockerfile,
+    )
+  )
+    problems.push({
+      file: 'Dockerfile',
+      message: 'cloudflare target must reuse built app',
     });
   for (const token of [
     'rustup show',
