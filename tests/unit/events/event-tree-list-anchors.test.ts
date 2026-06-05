@@ -31,7 +31,7 @@ describe('event tree list anchors', () => {
     expect(scrollTo).toHaveBeenCalledWith(325);
   });
 
-  it('keeps a top-locked list at offset zero for live prepends', async () => {
+  it('does not issue redundant top-locked zero scrolls', async () => {
     const scrollTo = vi.fn();
     syncFeedListAnchor({
       previous: [row('a', 0), row('b', 1)],
@@ -44,6 +44,27 @@ describe('event tree list anchors', () => {
         scrollTo,
       },
     });
+    await tick();
+    expect(scrollTo).not.toHaveBeenCalled();
+  });
+
+  it('repairs top-locked drift after live prepends', async () => {
+    let offset = 0;
+    const scrollTo = vi.fn((next: number) => {
+      offset = next;
+    });
+    syncFeedListAnchor({
+      previous: [row('a', 0), row('b', 1)],
+      rows: [row('x', 0), row('a', 1), row('b', 2)],
+      key: (item) => item.event.id,
+      destroyed: () => false,
+      list: {
+        getScrollOffset: () => offset,
+        getItemOffset: (index) => index * 100,
+        scrollTo,
+      },
+    });
+    offset = 80;
     await tick();
     expect(scrollTo).toHaveBeenCalledWith(0);
   });

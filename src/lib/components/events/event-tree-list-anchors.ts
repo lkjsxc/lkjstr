@@ -57,7 +57,7 @@ export function syncFeedListAnchor(args: {
   void tick().then(() => {
     if (args.destroyed()) return;
     if (atTop && !anchor) {
-      args.list?.scrollTo?.(0);
+      if (feedListOffset(args.list) > 1) args.list?.scrollTo?.(0);
       return;
     }
     restoreVirtualAnchor(
