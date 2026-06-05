@@ -92,6 +92,7 @@ fn tab_content(input: TabContentInput) -> impl IntoView {
                 sequence=input.sequence
                 pane_id=input.pane_id
                 tab_id=Some(input.tab_id)
+                active_account_pubkey=None
                 persistence=input.persistence
             />
         }
