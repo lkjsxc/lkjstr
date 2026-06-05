@@ -76,9 +76,11 @@
         />
       </div>
     {:else if props.targetItem}
-      <p class="event-content">
-        Notification event unavailable. Showing target context.
-      </p>
+      {#if chrome.kind !== 'compact-fallback'}
+        <p class="event-content">
+          Notification event unavailable. Showing target context.
+        </p>
+      {/if}
       <div class="notification-row__event">
         <EventRow
           item={props.targetItem}
