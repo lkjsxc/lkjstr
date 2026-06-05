@@ -37,7 +37,9 @@ unbounded profile hydration queue. Fast relay rows render early; slow, failed,
 or incomplete relays merge later as diagnostics without blocking visible rows.
 
 The tab clearly labels whose timeline is being shown. It must not imply private
-or personalized access.
+or personalized access. The identity header, notices, and retry diagnostics are
+in-flow rows inside the feed scroll surface; they must scroll away with content
+rather than remain fixed above the user's timeline.
 
 ## Degraded Mode
 

@@ -15,6 +15,7 @@
   } from '$lib/user-timeline/user-timeline-runtime';
   import type { UserTimelineSnapshot } from '$lib/user-timeline/user-timeline-state';
   import type { TimelineItem } from '$lib/timeline/timeline-store';
+  import type { EventTreeListLeadingRow } from '$lib/components/events/event-tree-list-helpers';
 
   type Props = {
     tabId: string;
@@ -44,6 +45,11 @@
   const subscriptions = sharedSubscriptionOrchestrator;
   let relays = $derived(timelineRelays(props.relaySets));
   let runtimeKey = $derived(`${props.pubkey}|${relays.join('\u0000')}`);
+  let leadingRows = $derived<EventTreeListLeadingRow[]>([
+    { key: 'user-timeline-header', nearStart: true },
+    ...(notice ? [{ key: 'user-timeline-notice' }] : []),
+    ...(error ? [{ key: 'user-timeline-error' }] : []),
+  ]);
 
   $effect(() => {
     if (!props.visible) return;
@@ -128,16 +134,6 @@
 </script>
 
 <section class="user-timeline-tab feed-tab" aria-label="User Timeline">
-  <header class="user-timeline-tab__header">
-    <h2>User Timeline</h2>
-    <p>Public timeline for {safeNpub(props.pubkey)}</p>
-  </header>
-  {#if notice}<p>{notice}</p>{/if}
-  {#if error}
-    <p role="alert">{error}</p>
-    <button type="button" onclick={() => void start(++generation)}>Retry</button
-    >
-  {/if}
   <EventTreeList
     tabId={props.tabId}
     pagingEnabled={props.visible !== false}
@@ -156,8 +152,27 @@
     olderLoadMode="auto-near-end"
     olderPrefetchReady={items.length > 0}
     onNearEnd={() => void loadOlder()}
+    {leadingRows}
     openProfile={props.openProfile}
     openThread={props.openThread}
     openAuthorContext={props.openAuthorContext}
-  />
+  >
+    {#snippet leadingRow(row)}
+      {#if row.key === 'user-timeline-header'}
+        <header class="user-timeline-tab__header">
+          <h2>User Timeline</h2>
+          <p>Public timeline for {safeNpub(props.pubkey)}</p>
+        </header>
+      {:else if row.key === 'user-timeline-notice'}
+        <p class="timeline-tab__guidance">{notice}</p>
+      {:else if row.key === 'user-timeline-error'}
+        <div role="alert">
+          <p>{error}</p>
+          <button type="button" onclick={() => void start(++generation)}>
+            Retry
+          </button>
+        </div>
+      {/if}
+    {/snippet}
+  </EventTreeList>
 </section>
