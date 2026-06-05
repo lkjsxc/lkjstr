@@ -64,7 +64,7 @@ Profile tabs show identity metadata and authored text notes.
 - Following count state is explicit: `loading-cache`, `discovering-relays`,
   `known`, `known-empty`, `incomplete`, `unavailable`, and `failed`.
 - Unknown or discovering follow lists show stable text such as `Loading
-  following...` or `Calculating following...`, not `0 following`.
+following...` or `Calculating following...`, not `0 following`.
 - A known empty follow list shows `0 following`. Partial failure, timeout,
   relay `AUTH`, socket close, or missing EOSE shows incomplete or unavailable
   diagnostics and never invents a count.

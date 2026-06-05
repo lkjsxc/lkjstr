@@ -17,18 +17,18 @@ NIP-11-driven request budgeting and diagnostics are implemented and tracked in
 
 ## User-Requested Reliability And Rust Migration
 
-| Item                                | Destination doc                                                  | Test strategy                                                  |
-| ----------------------------------- | ---------------------------------------------------------------- | -------------------------------------------------------------- |
-| Top-anchor live inserts             | [feed-memory.md](../architecture/data/feed-memory.md)            | Rust reducer plus event-list anchor tests                      |
-| Followee count loading state        | [profiles.md](feeds/profiles.md)                                 | Profile header and Rust follow-count state tests               |
-| Bounded User Timeline runtime       | [user-timeline.md](feeds/user-timeline.md)                       | Huge follow graph chunking and degraded-mode tests             |
-| Cache preview and hold policy       | [feed-memory.md](../architecture/data/feed-memory.md)            | Rust cache policy and User Timeline cache-display tests        |
-| Browser storage prompt removal      | [accounts.md](tools/accounts.md)                                 | Grep, Accounts UI, and Custom Request regression tests         |
-| Search functionality                | [search.md](tools/search.md)                                     | SQLite token-index, cursor, NIP-50 merge, and diagnostics tests |
-| Fixed lkjsxc New Tab item           | [tabs.md](workspace/tabs.md)                                     | Rust catalog, NIP-19 decode, Svelte catalog, and action tests  |
-| Stable Tweet publish layout         | [tweet.md](tools/tweet.md)                                       | Composer footer bounding-rect and shortcut tests               |
-| Profile sparse historical scan      | [profiles.md](feeds/profiles.md)                                 | Sparse old-note synthetic relay and false-empty tests          |
-| Visibility-prioritized hydration    | [feed-memory.md](../architecture/data/feed-memory.md)            | Rust scheduler, visible-range, pause, cancel, and dedupe tests |
+| Item                             | Destination doc                                       | Test strategy                                                   |
+| -------------------------------- | ----------------------------------------------------- | --------------------------------------------------------------- |
+| Top-anchor live inserts          | [feed-memory.md](../architecture/data/feed-memory.md) | Rust reducer plus event-list anchor tests                       |
+| Followee count loading state     | [profiles.md](feeds/profiles.md)                      | Profile header and Rust follow-count state tests                |
+| Bounded User Timeline runtime    | [user-timeline.md](feeds/user-timeline.md)            | Huge follow graph chunking and degraded-mode tests              |
+| Cache preview and hold policy    | [feed-memory.md](../architecture/data/feed-memory.md) | Rust cache policy and User Timeline cache-display tests         |
+| Browser storage prompt removal   | [accounts.md](tools/accounts.md)                      | Grep, Accounts UI, and Custom Request regression tests          |
+| Search functionality             | [search.md](tools/search.md)                          | SQLite token-index, cursor, NIP-50 merge, and diagnostics tests |
+| Fixed lkjsxc New Tab item        | [tabs.md](workspace/tabs.md)                          | Rust catalog, NIP-19 decode, Svelte catalog, and action tests   |
+| Stable Tweet publish layout      | [tweet.md](tools/tweet.md)                            | Composer footer bounding-rect and shortcut tests                |
+| Profile sparse historical scan   | [profiles.md](feeds/profiles.md)                      | Sparse old-note synthetic relay and false-empty tests           |
+| Visibility-prioritized hydration | [feed-memory.md](../architecture/data/feed-memory.md) | Rust scheduler, visible-range, pause, cancel, and dedupe tests  |
 
 ## Completed (feeds)
 

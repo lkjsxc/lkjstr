@@ -94,16 +94,16 @@ closing gates so this concise matrix stays readable.
 
 ## Tab Continuity
 
-| Clause                              | Contract                                                                                                                                   | Status      | Notes                           |
-| ----------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------ | ----------- | ------------------------------- |
-| Scroll + virtua anchor              | [tab-runtime.md](../architecture/workspace/tab-runtime.md)                                                                                 | implemented | session + IDB                   |
+| Clause                              | Contract                                                                                                                                   | Status      | Notes                                |
+| ----------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------ | ----------- | ------------------------------------ |
+| Scroll + virtua anchor              | [tab-runtime.md](../architecture/workspace/tab-runtime.md)                                                                                 | implemented | session + IDB                        |
 | Top-anchor live inserts             | [feed-memory.md](../architecture/data/feed-memory.md)                                                                                      | implemented | Rust reducer and Svelte anchor tests |
-| Feed cursors in snapshot            | [tab-runtime.md](../architecture/workspace/tab-runtime.md), [tab-snapshots.md](../architecture/data/storage/data-classes/tab-snapshots.md) | implemented | `tab-runtime-registry`          |
-| `hasOlder` / `hasNewer` in snapshot | [tab-runtime.md](../architecture/workspace/tab-runtime.md)                                                                                 | implemented | runtime snapshot                |
-| Search query in tool snapshot       | [tabs.md](workspace/tabs.md)                                                                                                               | implemented | Search tab fields               |
-| Session cap 32                      | [tab-runtime.md](../architecture/workspace/tab-runtime.md)                                                                                 | implemented | `session-tab-snapshots`         |
-| Hidden-mount inactive tab bodies    | [tab-body-mount.md](../architecture/workspace/tab-body-mount.md)                                                                           | implemented | `PaneTabStack`, paused runtimes |
-| DOM-first scroll on tab return      | [tab-retention-flow.md](../architecture/workspace/tab-retention-flow.md)                                                                   | implemented | `hasTracked` in focus sync      |
+| Feed cursors in snapshot            | [tab-runtime.md](../architecture/workspace/tab-runtime.md), [tab-snapshots.md](../architecture/data/storage/data-classes/tab-snapshots.md) | implemented | `tab-runtime-registry`               |
+| `hasOlder` / `hasNewer` in snapshot | [tab-runtime.md](../architecture/workspace/tab-runtime.md)                                                                                 | implemented | runtime snapshot                     |
+| Search query in tool snapshot       | [tabs.md](workspace/tabs.md)                                                                                                               | implemented | Search tab fields                    |
+| Session cap 32                      | [tab-runtime.md](../architecture/workspace/tab-runtime.md)                                                                                 | implemented | `session-tab-snapshots`              |
+| Hidden-mount inactive tab bodies    | [tab-body-mount.md](../architecture/workspace/tab-body-mount.md)                                                                           | implemented | `PaneTabStack`, paused runtimes      |
+| DOM-first scroll on tab return      | [tab-retention-flow.md](../architecture/workspace/tab-retention-flow.md)                                                                   | implemented | `hasTracked` in focus sync           |
 
 ## Media Upload
 
@@ -195,9 +195,9 @@ closing gates so this concise matrix stays readable.
 | No horizontal overflow on scroll owner | scroll-surface-audit.md | implemented | focused `assertNoHorizontalOverflow` checks scroll owners and `.event-list__viewport`                          |
 | Notifications on FeedScrollSurface     | feed-scroll-surface.md  | implemented | Notifications use Virtua via `FeedScrollSurface` and the shared footer/near-end semantics                      |
 | Profile in-flow summary rows           | profiles.md             | implemented | `ProfileHeader`, status, load-newer, empty, note, and footer rows share one `EventTreeList` scroll owner       |
-| Profile follow-count discovery state   | profiles.md             | partial     | Unknown no longer renders as zero; relay proof details remain active                                          |
-| Profile sparse historical empty proof  | profiles.md             | partial     | Searching copy active; full scan planner proof remains open                                                   |
-| Stable Tweet publish footer            | tweet.md                | partial     | Footer layout and bounding tests active                                                                       |
-| Fixed lkjsxc New Tab item              | workspace/tabs.md       | implemented | Catalog constant, NIP-19 decode, Svelte catalog, and action tests                                             |
-| Browser storage prompt removal         | tools/accounts.md       | implemented | Accounts UI no longer exposes the special browser prompt surface                                              |
+| Profile follow-count discovery state   | profiles.md             | partial     | Unknown no longer renders as zero; relay proof details remain active                                           |
+| Profile sparse historical empty proof  | profiles.md             | partial     | Searching copy active; full scan planner proof remains open                                                    |
+| Stable Tweet publish footer            | tweet.md                | partial     | Footer layout and bounding tests active                                                                        |
+| Fixed lkjsxc New Tab item              | workspace/tabs.md       | implemented | Catalog constant, NIP-19 decode, Svelte catalog, and action tests                                              |
+| Browser storage prompt removal         | tools/accounts.md       | implemented | Accounts UI no longer exposes the special browser prompt surface                                               |
 | Pane.svelte at or below 200 lines      | repository standards    | implemented | Pane header moved to `PaneHead.svelte` to keep the file within the cap                                         |
