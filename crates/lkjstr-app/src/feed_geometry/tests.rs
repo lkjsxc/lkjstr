@@ -11,7 +11,7 @@ fn features() -> RowGeometryFeatures {
         has_profile_summary: false,
         has_notification_chrome: false,
         has_action_bar: true,
-        width_bucket: 40,
+        width_bucket: WidthBucket::from_width_px(640).as_model_bucket(),
         font_scale_bucket: 10,
     }
 }
@@ -54,4 +54,14 @@ fn visible_row_height_delta_does_not_compensate() {
 
     assert!(!compensation.should_apply);
     assert_eq!(compensation.scroll_delta_px, 0);
+}
+
+#[test]
+fn width_buckets_match_feed_surface_contract() {
+    assert_eq!(WidthBucket::from_width_px(100).as_key(), "0-319");
+    assert_eq!(WidthBucket::from_width_px(320).as_key(), "320-479");
+    assert_eq!(WidthBucket::from_width_px(480).as_key(), "480-639");
+    assert_eq!(WidthBucket::from_width_px(640).as_key(), "640-799");
+    assert_eq!(WidthBucket::from_width_px(800).as_key(), "800-1023");
+    assert_eq!(WidthBucket::from_width_px(1024).as_key(), "1024+");
 }

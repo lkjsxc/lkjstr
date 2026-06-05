@@ -32,8 +32,9 @@ pub use feed::{
 };
 pub use feed_geometry::{
     AnchorCompensation, GeometryEstimateSource, RowGeometryEstimate, RowGeometryFeatures,
-    RowGeometryModel, RowHeightObservation, RowKind, anchor_compensation_for_height_delta,
-    estimate_row_geometry, geometry_bucket_key, update_row_geometry_model,
+    RowGeometryModel, RowHeightObservation, RowKind, WidthBucket,
+    anchor_compensation_for_height_delta, estimate_row_geometry, geometry_bucket_key,
+    update_row_geometry_model,
 };
 pub use feed_lod::{
     CoverageProjection, FeedLodBlock, FeedLodRow, FeedLodRowKind, FeedLodTree, MaterializationPlan,
