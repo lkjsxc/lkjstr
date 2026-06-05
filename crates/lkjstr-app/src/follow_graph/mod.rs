@@ -6,8 +6,8 @@ mod read_plan;
 mod state;
 
 pub use author_set::{
-    FollowListSummary, UserTimelineAuthorSet, author_set_hash, summarize_follow_list,
-    target_posts_only_author_set, user_timeline_author_set,
+    FollowListSummary, UserTimelineAuthorSet, author_set_hash, chunk_author_set,
+    summarize_follow_list, target_posts_only_author_set, user_timeline_author_set,
 };
 pub use count::{FollowCountEvidence, FollowCountState, follow_count_label, reduce_follow_count};
 pub use read_plan::FollowListReadPhase;
@@ -18,8 +18,8 @@ mod tests {
     use lkjstr_protocol::{NostrEvent, kinds::KIND_FOLLOW_LIST};
 
     use super::{
-        FollowCountEvidence, FollowCountState, follow_count_label, reduce_follow_count,
-        summarize_follow_list, user_timeline_author_set,
+        FollowCountEvidence, FollowCountState, chunk_author_set, follow_count_label,
+        reduce_follow_count, summarize_follow_list, user_timeline_author_set,
     };
 
     #[test]
@@ -63,6 +63,16 @@ mod tests {
             ),
             FollowCountState::Incomplete
         );
+    }
+
+    #[test]
+    fn chunks_large_author_sets() {
+        let authors = (0..450)
+            .map(|index| format!("{index:064x}"))
+            .collect::<Vec<_>>();
+        let chunks = chunk_author_set(&authors, 200);
+        assert_eq!(chunks.len(), 3);
+        assert!(chunks.iter().all(|chunk| chunk.len() <= 200));
     }
 
     #[test]

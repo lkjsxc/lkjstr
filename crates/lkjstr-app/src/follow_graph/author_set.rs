@@ -55,6 +55,12 @@ pub fn target_posts_only_author_set(target_pubkey: &str) -> UserTimelineAuthorSe
 }
 
 #[must_use]
+pub fn chunk_author_set(authors: &[String], chunk_size: usize) -> Vec<Vec<String>> {
+    let size = chunk_size.max(1);
+    authors.chunks(size).map(<[String]>::to_vec).collect()
+}
+
+#[must_use]
 pub fn author_set_hash(authors: &[String]) -> String {
     let sorted = authors.iter().collect::<BTreeSet<_>>();
     sorted.into_iter().cloned().collect::<Vec<_>>().join(",")

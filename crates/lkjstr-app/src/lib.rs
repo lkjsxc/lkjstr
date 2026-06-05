@@ -71,8 +71,8 @@ pub use feed_wait::{
 };
 pub use follow_graph::{
     FollowCountEvidence, FollowCountState, FollowListReadPhase, FollowListSummary,
-    TargetFollowListState, UserTimelineAuthorSet, author_set_hash, follow_count_label,
-    reduce_follow_count, summarize_follow_list, target_posts_only_author_set,
+    TargetFollowListState, UserTimelineAuthorSet, author_set_hash, chunk_author_set,
+    follow_count_label, reduce_follow_count, summarize_follow_list, target_posts_only_author_set,
     user_timeline_author_set,
 };
 pub use orchestration::{
