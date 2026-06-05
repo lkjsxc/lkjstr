@@ -124,10 +124,19 @@ fn content_shape_hash_is_stable_and_sensitive() {
 fn capture_and_reconcile_anchor_for_height_delta_above() {
     let old_rows = rows(&[("a", 0, 100), ("b", 100, 100)]);
     let new_rows = rows(&[("a", 0, 130), ("b", 130, 100)]);
-    let anchor = capture_feed_anchor(&old_rows, 120, 500, 3, 1).unwrap();
-    let result = reconcile_feed_anchor(&old_rows, &new_rows, &anchor);
+    let anchor = capture_feed_anchor(&old_rows, 120, 500, 3, 1);
+    let result = match anchor.as_ref() {
+        Some(anchor) => reconcile_feed_anchor(&old_rows, &new_rows, anchor),
+        None => AnchorReconcileResult {
+            scroll_delta_px: 0,
+            confidence: AnchorConfidence::None,
+        },
+    };
 
-    assert_eq!(anchor.row_key, "b");
+    assert_eq!(
+        anchor.as_ref().map(|value| value.row_key.as_str()),
+        Some("b")
+    );
     assert_eq!(result.scroll_delta_px, 30);
     assert_eq!(result.confidence, AnchorConfidence::Exact);
 }
@@ -136,8 +145,14 @@ fn capture_and_reconcile_anchor_for_height_delta_above() {
 fn row_removal_uses_nearest_survivor_with_degraded_confidence() {
     let old_rows = rows(&[("a", 0, 100), ("b", 100, 100), ("c", 200, 100)]);
     let new_rows = rows(&[("a", 0, 120), ("c", 120, 100)]);
-    let anchor = capture_feed_anchor(&old_rows, 120, 500, 3, 1).unwrap();
-    let result = reconcile_feed_anchor(&old_rows, &new_rows, &anchor);
+    let anchor = capture_feed_anchor(&old_rows, 120, 500, 3, 1);
+    let result = match anchor.as_ref() {
+        Some(anchor) => reconcile_feed_anchor(&old_rows, &new_rows, anchor),
+        None => AnchorReconcileResult {
+            scroll_delta_px: 1,
+            confidence: AnchorConfidence::None,
+        },
+    };
 
     assert_eq!(result.scroll_delta_px, 0);
     assert_eq!(result.confidence, AnchorConfidence::Degraded);

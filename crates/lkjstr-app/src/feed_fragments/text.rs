@@ -60,12 +60,10 @@ fn preferred_boundary(
 }
 
 fn byte_after_chars(content: &str, start: usize, char_count: usize) -> usize {
-    let mut seen = 0;
-    for (relative, _) in content[start..].char_indices() {
+    for (seen, (relative, _)) in content[start..].char_indices().enumerate() {
         if seen == char_count {
             return start + relative;
         }
-        seen += 1;
     }
     content.len()
 }
