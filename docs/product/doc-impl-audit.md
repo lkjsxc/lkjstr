@@ -97,7 +97,7 @@ closing gates so this concise matrix stays readable.
 | Clause                              | Contract                                                                                                                                   | Status      | Notes                           |
 | ----------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------ | ----------- | ------------------------------- |
 | Scroll + virtua anchor              | [tab-runtime.md](../architecture/workspace/tab-runtime.md)                                                                                 | implemented | session + IDB                   |
-| Top-anchor live inserts             | [feed-memory.md](../architecture/data/feed-memory.md)                                                                                      | partial     | Rust reducer and Svelte anchor tests active |
+| Top-anchor live inserts             | [feed-memory.md](../architecture/data/feed-memory.md)                                                                                      | implemented | Rust reducer and Svelte anchor tests |
 | Feed cursors in snapshot            | [tab-runtime.md](../architecture/workspace/tab-runtime.md), [tab-snapshots.md](../architecture/data/storage/data-classes/tab-snapshots.md) | implemented | `tab-runtime-registry`          |
 | `hasOlder` / `hasNewer` in snapshot | [tab-runtime.md](../architecture/workspace/tab-runtime.md)                                                                                 | implemented | runtime snapshot                |
 | Search query in tool snapshot       | [tabs.md](workspace/tabs.md)                                                                                                               | implemented | Search tab fields               |
@@ -198,6 +198,6 @@ closing gates so this concise matrix stays readable.
 | Profile follow-count discovery state   | profiles.md             | partial     | Unknown no longer renders as zero; relay proof details remain active                                          |
 | Profile sparse historical empty proof  | profiles.md             | partial     | Searching copy active; full scan planner proof remains open                                                   |
 | Stable Tweet publish footer            | tweet.md                | partial     | Footer layout and bounding tests active                                                                       |
-| Fixed lkjsxc New Tab item              | workspace/tabs.md       | partial     | Catalog constant, NIP-19 decode, and Svelte action tests active                                               |
-| Browser storage prompt removal         | tools/accounts.md       | partial     | UI and tests must prove no special persistence surface remains                                                |
+| Fixed lkjsxc New Tab item              | workspace/tabs.md       | implemented | Catalog constant, NIP-19 decode, Svelte catalog, and action tests                                             |
+| Browser storage prompt removal         | tools/accounts.md       | implemented | Accounts UI no longer exposes the special browser prompt surface                                              |
 | Pane.svelte at or below 200 lines      | repository standards    | implemented | Pane header moved to `PaneHead.svelte` to keep the file within the cap                                         |
