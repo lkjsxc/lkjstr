@@ -17,6 +17,8 @@ row helpers for timeline-like tabs.
 - [scan-model-keys.ts](scan-model-keys.ts): scope keys and parent contexts.
 - [scan-model-dto.ts](scan-model-dto.ts): Rust/WASM scan DTO mapping.
 - [scan-model-bridge.ts](scan-model-bridge.ts): async Rust/WASM scan planner calls.
+- [scan-model-bridge-validation.ts](scan-model-bridge-validation.ts): typed bridge
+  input failure states.
 - [scan-model-proposal.ts](scan-model-proposal.ts): fallback density span proposal helper.
 - [scan-model-observation.ts](scan-model-observation.ts): fallback model update helper.
 - [scan-model-repository.ts](scan-model-repository.ts): SQLite scan model rows.

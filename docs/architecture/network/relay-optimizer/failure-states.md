@@ -7,14 +7,14 @@ continue safely without inventing evidence.
 
 ## State Table
 
-| State | Meaning | Product behavior |
-| --- | --- | --- |
-| `available` | Rust/WASM bridge, storage, and product inputs are usable | Plan spans, reduce observations, persist rows, and show real Stats rows |
-| `unavailable` | Required host capability or bridge export is missing | Continue correctness fallback and show unavailable diagnostics |
-| `timeout` | A bridge, storage, or read provider exceeded its deadline | Continue correctness fallback and record timeout diagnostics only |
-| `memory-fallback` | SQLite worker is running in temporary memory mode | Use rows for the session only and show temporary memory state |
-| `storage-unavailable` | Storage worker or schema cannot be used | Do not persist optimizer rows; show storage unavailable state |
-| `invalid-input` | DTOs, model keys, or scan context fail validation | Reject the optimizer step and continue without learned evidence |
+| State                 | Meaning                                                   | Product behavior                                                        |
+| --------------------- | --------------------------------------------------------- | ----------------------------------------------------------------------- |
+| `available`           | Rust/WASM bridge, storage, and product inputs are usable  | Plan spans, reduce observations, persist rows, and show real Stats rows |
+| `unavailable`         | Required host capability or bridge export is missing      | Continue correctness fallback and show unavailable diagnostics          |
+| `timeout`             | A bridge, storage, or read provider exceeded its deadline | Continue correctness fallback and record timeout diagnostics only       |
+| `memory-fallback`     | SQLite worker is running in temporary memory mode         | Use rows for the session only and show temporary memory state           |
+| `storage-unavailable` | Storage worker or schema cannot be used                   | Do not persist optimizer rows; show storage unavailable state           |
+| `invalid-input`       | DTOs, model keys, or scan context fail validation         | Reject the optimizer step and continue without learned evidence         |
 
 ## Relay Read Failures
 

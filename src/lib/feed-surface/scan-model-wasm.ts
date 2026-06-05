@@ -1,8 +1,13 @@
+import type { ScanBridgeFailureReason } from './scan-model-bridge-validation';
+
 export type ScanModelWasmResult<T> =
   | { readonly ok: true; readonly value: T }
   | {
       readonly ok: false;
-      readonly reason: 'unavailable' | 'error';
+      readonly reason: Extract<
+        ScanBridgeFailureReason,
+        'unavailable' | 'timeout' | 'invalid-input'
+      >;
       readonly message: string;
     };
 
@@ -18,7 +23,15 @@ export type ScanModelWasmPlanner = {
   readonly selectKeys: <T>(input: unknown) => ScanModelWasmResult<T>;
 };
 
+const bridgeLoadDeadlineMs = 5_000;
+
 export async function loadScanModelWasmPlanner(): Promise<
+  ScanModelWasmResult<ScanModelWasmPlanner>
+> {
+  return withBridgeTimeout(loadScanModelWasmPlannerUnbounded());
+}
+
+async function loadScanModelWasmPlannerUnbounded(): Promise<
   ScanModelWasmResult<ScanModelWasmPlanner>
 > {
   try {
@@ -31,6 +44,26 @@ export async function loadScanModelWasmPlanner(): Promise<
       reason: 'unavailable',
       message: error instanceof Error ? error.message : String(error),
     };
+  }
+}
+
+async function withBridgeTimeout<T>(
+  input: Promise<ScanModelWasmResult<T>>,
+): Promise<ScanModelWasmResult<T>> {
+  let timer: ReturnType<typeof setTimeout> | undefined;
+  const timeout = new Promise<ScanModelWasmResult<T>>((resolve) => {
+    timer = setTimeout(() => {
+      resolve({
+        ok: false,
+        reason: 'timeout',
+        message: 'scan model WASM bridge load timed out',
+      });
+    }, bridgeLoadDeadlineMs);
+  });
+  try {
+    return await Promise.race([input, timeout]);
+  } finally {
+    if (timer) clearTimeout(timer);
   }
 }
 
@@ -63,7 +96,7 @@ function call<T>(
   } catch (error) {
     return {
       ok: false,
-      reason: 'error',
+      reason: 'invalid-input',
       message: error instanceof Error ? error.message : String(error),
     };
   }

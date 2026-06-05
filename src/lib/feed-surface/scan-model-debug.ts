@@ -2,7 +2,10 @@ import { ensureEventGraphSchema } from '$lib/storage/sqlite-opfs/event-schema';
 import { sendSqliteStorage } from '$lib/storage/sqlite-opfs/kernel-client';
 import { readSqliteStorageHealth } from '$lib/storage/sqlite-opfs/storage-health';
 import type { SqlScalar } from '$lib/storage/sqlite-opfs/types';
-import { loadScanModelWasmPlanner } from './scan-model-wasm';
+import {
+  loadScanModelWasmPlanner,
+  type ScanModelWasmResult,
+} from './scan-model-wasm';
 import type {
   ScanDecisionTraceRecord,
   ScanDensityModelRecord,
@@ -14,10 +17,19 @@ export type ScanOptimizerDebugSnapshot = {
   readonly storageMode: 'persistent-opfs' | 'temporary-memory' | 'unavailable';
   readonly unavailableMessage?: string;
   readonly wasmBridge: {
-    readonly state: 'available' | 'unavailable';
+    readonly state: 'available' | ScanWasmUnavailableState;
     readonly message?: string;
   };
 };
+
+type ScanWasmUnavailableState = Exclude<
+  ScanModelWasmResult<unknown>,
+  { readonly ok: true }
+>['reason'];
+
+export type ScanOptimizerState =
+  | ScanOptimizerDebugSnapshot['storageMode']
+  | ScanOptimizerDebugSnapshot['wasmBridge']['state'];
 
 const debugRowLimit = 24;
 
@@ -128,7 +140,7 @@ async function readScanWasmBridgeState(): Promise<
 > {
   const planner = await loadScanModelWasmPlanner();
   if (planner.ok) return { state: 'available' };
-  return { state: 'unavailable', message: planner.message };
+  return { state: planner.reason, message: planner.message };
 }
 
 function parseObject(raw: unknown): Record<string, unknown> | undefined {

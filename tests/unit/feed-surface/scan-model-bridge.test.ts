@@ -1,10 +1,14 @@
 import { describe, expect, it } from 'vitest';
-import { planScanSpanWithRust } from '../../../src/lib/feed-surface/scan-model-bridge';
+import {
+  planScanSpanWithRust,
+  reduceScanObservationWithRust,
+} from '../../../src/lib/feed-surface/scan-model-bridge';
 import {
   modelRecordFromRust,
   proposalFromRust,
 } from '../../../src/lib/feed-surface/scan-model-dto';
 import type { ScanModelContext } from '../../../src/lib/feed-surface/scan-model-records';
+import { createScanModelWasmPlanner } from '../../../src/lib/feed-surface/scan-model-wasm';
 
 describe('scan model Rust bridge host', () => {
   it('reports explicit unavailable state in the unit test host', async () => {
@@ -19,7 +23,76 @@ describe('scan model Rust bridge host', () => {
       nowMs: 1_000_000,
     });
     expect(result.ok).toBe(false);
-    if (!result.ok) expect(result.message).toContain('unavailable');
+    if (!result.ok) {
+      expect(result.reason).toBe('unavailable');
+      expect(result.message).toContain('unavailable');
+    }
+  });
+
+  it('rejects invalid plan input before loading the bridge', async () => {
+    const result = await planScanSpanWithRust({
+      context: context(),
+      models: [],
+      effectiveLimit: 0,
+      requestedLimit: 100,
+      pageSize: 100,
+      edgeSeconds: 1_000,
+      edgeId: 'edge',
+      nowMs: 1_000_000,
+    });
+    expect(result.ok).toBe(false);
+    if (!result.ok) expect(result.reason).toBe('invalid-input');
+  });
+
+  it('rejects invalid observations before loading the bridge', async () => {
+    const result = await reduceScanObservationWithRust({
+      plan: {
+        context: context(),
+        models: [],
+        effectiveLimit: 100,
+        requestedLimit: 100,
+        pageSize: 100,
+        edgeSeconds: 1_000,
+        edgeId: 'edge',
+        nowMs: 1_000_000,
+      },
+      observation: {
+        ...context(),
+        sinceSeconds: 20,
+        untilSeconds: 10,
+        requestedLimit: 100,
+        effectiveLimit: 100,
+        eventCount: 0,
+        uniqueEventCount: 0,
+        finalVisibleCount: 0,
+        eventLimitReached: false,
+        eose: true,
+        timeout: false,
+        closed: false,
+        auth: false,
+        socketError: false,
+        startedAtMs: 1,
+        completedAtMs: 2,
+      },
+    });
+    expect(result.ok).toBe(false);
+    if (!result.ok) expect(result.reason).toBe('invalid-input');
+  });
+
+  it('classifies throwing bridge exports as invalid input', () => {
+    const planner = createScanModelWasmPlanner({
+      plan_feed_scan_from_js: () => {
+        throw new Error('bad dto');
+      },
+    });
+
+    const result = planner.plan<unknown>({});
+
+    expect(result.ok).toBe(false);
+    if (!result.ok) {
+      expect(result.reason).toBe('invalid-input');
+      expect(result.message).toContain('bad dto');
+    }
   });
 
   it('maps Rust model DTOs to stable parent model records', () => {

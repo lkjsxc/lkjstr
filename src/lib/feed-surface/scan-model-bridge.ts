@@ -12,10 +12,19 @@ import {
   type RustReduceOutput,
 } from './scan-model-dto';
 import { loadScanModelWasmPlanner } from './scan-model-wasm';
+import {
+  invalidObservationInputMessage,
+  invalidPlanInputMessage,
+  type ScanBridgeFailureReason,
+} from './scan-model-bridge-validation';
 
 export type ScanBridgeResult<T> =
   | { readonly ok: true; readonly value: T }
-  | { readonly ok: false; readonly message: string };
+  | {
+      readonly ok: false;
+      readonly reason: ScanBridgeFailureReason;
+      readonly message: string;
+    };
 
 export type ScanPlanBridgeValue = {
   readonly proposal: ScanSpanProposal;
@@ -43,10 +52,14 @@ export type ScanBridgePlanInput = {
 export async function planScanSpanWithRust(
   input: ScanBridgePlanInput,
 ): Promise<ScanBridgeResult<ScanPlanBridgeValue>> {
+  const invalid = invalidPlanInputMessage(input);
+  if (invalid) return { ok: false, reason: 'invalid-input', message: invalid };
   const planner = await loadScanModelWasmPlanner();
-  if (!planner.ok) return { ok: false, message: planner.message };
+  if (!planner.ok)
+    return { ok: false, reason: planner.reason, message: planner.message };
   const planned = planner.value.plan<RustPlanOutput>(rustPlanInput(input));
-  if (!planned.ok) return { ok: false, message: planned.message };
+  if (!planned.ok)
+    return { ok: false, reason: planned.reason, message: planned.message };
   return {
     ok: true,
     value: {
@@ -60,13 +73,25 @@ export async function reduceScanObservationWithRust(input: {
   readonly plan: ScanBridgePlanInput;
   readonly observation: ScanModelObservation;
 }): Promise<ScanBridgeResult<ScanReduceBridgeValue>> {
+  const invalidPlan = invalidPlanInputMessage(input.plan);
+  if (invalidPlan)
+    return { ok: false, reason: 'invalid-input', message: invalidPlan };
+  const invalidObservation = invalidObservationInputMessage(input.observation);
+  if (invalidObservation)
+    return {
+      ok: false,
+      reason: 'invalid-input',
+      message: invalidObservation,
+    };
   const planner = await loadScanModelWasmPlanner();
-  if (!planner.ok) return { ok: false, message: planner.message };
+  if (!planner.ok)
+    return { ok: false, reason: planner.reason, message: planner.message };
   const reduced = planner.value.reduce<RustReduceOutput>({
     plan: rustPlanInput(input.plan),
     observation: rustObservation(input.observation),
   });
-  if (!reduced.ok) return { ok: false, message: reduced.message };
+  if (!reduced.ok)
+    return { ok: false, reason: reduced.reason, message: reduced.message };
   const models = reduced.value.updated_models ?? [reduced.value.updated_model];
   return {
     ok: true,

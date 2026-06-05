@@ -30,7 +30,11 @@ vi.mock('../../../src/lib/storage/sqlite-opfs/storage-health', () => ({
 }));
 
 vi.mock('../../../src/lib/feed-surface/scan-model-wasm', () => ({
-  loadScanModelWasmPlanner: async () => ({ ok: false, message: 'test bridge' }),
+  loadScanModelWasmPlanner: async () => ({
+    ok: false,
+    reason: 'unavailable',
+    message: 'test bridge',
+  }),
 }));
 
 const { listRecentScanDecisionTraces, readScanOptimizerDebugSnapshot } =

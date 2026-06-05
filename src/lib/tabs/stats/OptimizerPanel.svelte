@@ -123,11 +123,11 @@
             .unavailableMessage ?? 'unavailable'}</td
         ></tr
       >
-    {:else if props.scanDebug.wasmBridge.state === 'unavailable'}
+    {:else if props.scanDebug.wasmBridge.state !== 'available'}
       <tr
         ><td colspan="7"
-          >Rust scan planner unavailable: {props.scanDebug.wasmBridge.message ??
-            'unavailable'}</td
+          >Rust scan planner {props.scanDebug.wasmBridge.state}: {props
+            .scanDebug.wasmBridge.message ?? 'unavailable'}</td
         ></tr
       >
     {:else if modelRows.length === 0}
