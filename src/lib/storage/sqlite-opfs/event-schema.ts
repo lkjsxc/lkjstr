@@ -19,6 +19,17 @@ const eventSchema = [
   'CREATE INDEX IF NOT EXISTS events_kind_created_at_idx ON events(kind, created_at DESC, id DESC);',
   'CREATE INDEX IF NOT EXISTS events_pubkey_kind_created_at_idx ON events(pubkey, kind, created_at DESC, id DESC);',
   'CREATE INDEX IF NOT EXISTS events_created_at_idx ON events(created_at DESC, id DESC);',
+  `CREATE TABLE IF NOT EXISTS event_search_tokens (
+  id TEXT PRIMARY KEY,
+  event_id TEXT NOT NULL REFERENCES events(id) ON DELETE CASCADE,
+  token TEXT NOT NULL,
+  token_pos INTEGER NOT NULL,
+  created_at INTEGER NOT NULL,
+  kind INTEGER NOT NULL,
+  pubkey TEXT NOT NULL
+) STRICT;`,
+  'CREATE INDEX IF NOT EXISTS event_search_tokens_lookup_idx ON event_search_tokens(token, created_at DESC, event_id);',
+  'CREATE INDEX IF NOT EXISTS event_search_tokens_event_idx ON event_search_tokens(event_id);',
   `CREATE TABLE IF NOT EXISTS event_relays (
   id TEXT PRIMARY KEY,
   event_id TEXT NOT NULL REFERENCES events(id) ON DELETE CASCADE,

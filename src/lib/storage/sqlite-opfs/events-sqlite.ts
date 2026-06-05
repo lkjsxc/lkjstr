@@ -7,6 +7,7 @@ import type {
 } from '../../events/types';
 import type { NostrEvent } from '../../protocol';
 import { ensureEventGraphSchema } from './event-schema';
+import { eventSearchIndexSteps } from './event-search-steps';
 import { decodeStoredEventRow, storedEventColumns } from './event-row-codec';
 import { sendSqliteStorage } from './kernel-client';
 import type { SqlStep } from './types';
@@ -73,6 +74,7 @@ export async function sqlitePutStoredEventWithLedger(
       mode: 'readwrite',
       steps: [
         eventStep(input.stored),
+        ...eventSearchIndexSteps(input.event),
         ...input.receipts.map((receipt) =>
           receiptStep(receipt, input.receivedAt),
         ),

@@ -1,13 +1,14 @@
 import { feedDisplayKinds } from '$lib/events/feed-kinds';
-import { beforeCursor } from '$lib/events/repository-shared';
 import { boundaryUntil, readRelayFeedPage } from '$lib/events/relay-page';
-import { eventsMatching, upsertEvent } from '$lib/events/repository';
+import { upsertEvent } from '$lib/events/repository';
 import type { FeedCursorPoint, FeedEvent } from '$lib/events/types';
 import { compareEventsDesc } from '$lib/protocol';
 import { relayMaySupportNip50 } from '$lib/relays/relay-info';
 import type { SubscriptionOrchestrator } from '$lib/relays/orchestration/orchestrator';
 import { pageIntentSemanticKey } from '$lib/relays/orchestration/page-reads';
 import type { OnProgressiveReadSnapshot } from '$lib/relays/progressive-read-types';
+import { indexedSearchEvents } from '$lib/storage/repositories/search-index-store';
+import { memorySearchEvents } from './search-index-memory';
 
 export type SearchPageRequest = {
   readonly query: string;
@@ -90,14 +91,20 @@ async function cachedSearch(
   limit: number,
   before?: FeedCursorPoint,
 ): Promise<FeedEvent[]> {
-  const needle = query.toLowerCase();
-  const events = await eventsMatching([
-    { kinds: feedDisplayKinds, until: boundaryUntil(before) },
-  ]);
-  return events
-    .filter((item) => beforeCursor(item.event, before))
-    .filter((item) => item.event.content.toLowerCase().includes(needle))
-    .slice(0, limit + 1);
+  const records =
+    (await indexedSearchEvents({
+      query,
+      limit: limit + 1,
+      before,
+      kinds: feedDisplayKinds,
+    }).catch(() => undefined)) ??
+    memorySearchEvents({
+      query,
+      limit: limit + 1,
+      before,
+      kinds: feedDisplayKinds,
+    });
+  return records.map((event) => ({ event, relays: event.relayUrls }));
 }
 
 function mergeItems(items: readonly FeedEvent[]): FeedEvent[] {

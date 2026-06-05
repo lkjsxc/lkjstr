@@ -82,7 +82,10 @@ describe('SQLite event graph repositories', () => {
 
     const batch = state.sent.find((op) => op.kind === 'batch');
     expect(batch).toMatchObject({ kind: 'batch', steps: expect.any(Array) });
-    expect(batch?.kind === 'batch' ? batch.steps.length : 0).toBe(5);
+    expect(batch?.kind === 'batch' ? batch.steps.length : 0).toBe(7);
+    expect(batch?.kind === 'batch' ? batch.steps[1]?.statement : '').toContain(
+      'event_search_tokens',
+    );
   });
 
   test('queries global pages with SQL ordering', async () => {

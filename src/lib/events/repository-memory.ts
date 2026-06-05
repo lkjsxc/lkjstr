@@ -4,6 +4,10 @@ import {
   type NostrFilter,
 } from '../protocol';
 import { createBoundedMap } from '../fp/bounded-map';
+import {
+  clearMemorySearchIndex,
+  putMemorySearchEvent,
+} from '../search/search-index-memory';
 import { feedDisplayKinds } from './feed-kinds';
 import type {
   EventRelayReceipt,
@@ -109,6 +113,7 @@ export function putMemory(
   tags: readonly EventTagRow[],
 ): void {
   memoryEvents.set(event.id, event);
+  putMemorySearchEvent(event);
   receipts.forEach((item) => memoryReceipts.set(item.id, item));
   [...memoryTags.values()]
     .filter((item) => item.eventId === event.id)
@@ -154,6 +159,7 @@ export function clearMemoryRepository(): void {
   memoryReceipts.clear();
   memoryTags.clear();
   memoryCursors.clear();
+  clearMemorySearchIndex();
 }
 
 export function fallbackRepositoryCounts(): {

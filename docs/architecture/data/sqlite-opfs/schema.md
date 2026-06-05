@@ -98,5 +98,7 @@ Index:
 ## Search
 
 Local Search is SQL-owned. Use FTS when the bundled SQLite build exposes it. If
-FTS is absent, use deterministic indexed SQL filters and `LIKE`; do not fall
-back to unbounded JavaScript scans.
+FTS is absent, use `event_search_tokens` with event id, normalized token,
+position, created_at, kind, and pubkey. Query token intersections through SQL,
+then verify bounded candidates in product code. Do not fall back to unbounded
+JavaScript scans.
