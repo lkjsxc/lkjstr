@@ -2,15 +2,18 @@ import { loadSettings, saveSetting } from '../settings/settings-store';
 import type { SettingRecord } from '../settings/settings-key';
 import {
   cleanUploadProvider,
+  providerProtocol,
   providerServer,
   validCustomUploadServer,
   type MediaUploadProvider,
+  type MediaUploadProtocol,
 } from './providers';
 
 export type UploadSettings = {
   readonly provider: MediaUploadProvider;
   readonly customServer: string;
   readonly server: string;
+  readonly protocol: MediaUploadProtocol;
   readonly noTransform: boolean;
 };
 
@@ -32,6 +35,7 @@ export async function loadUploadSettings(): Promise<UploadSettings> {
     provider,
     customServer,
     server: providerServer(provider, customServer),
+    protocol: providerProtocol(provider),
     noTransform: value(settings, 'tweet.mediaUploadNoTransform') !== false,
   };
 }

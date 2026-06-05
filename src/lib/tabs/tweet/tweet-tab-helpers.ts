@@ -8,9 +8,10 @@ import type { TweetAttachment } from '$lib/tweet/draft-store';
 import type { UploadSettings } from '$lib/tweet/media-upload';
 
 export const defaultTweetUploadSettings: UploadSettings = {
-  provider: 'nostr-build',
+  provider: 'blossom',
   customServer: '',
-  server: 'https://nostr.build',
+  server: '',
+  protocol: 'blossom',
   noTransform: true,
 };
 

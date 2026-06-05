@@ -1,5 +1,6 @@
 #![doc = "Rust Nostr protocol kernel for lkjstr."]
 
+pub mod blossom;
 pub mod bytes;
 pub mod content_tags;
 pub mod crypto;
@@ -28,6 +29,10 @@ pub mod reactions;
 pub mod relay_url;
 pub mod tags;
 
+pub use blossom::{
+    BlossomAuthInput, BlossomBlobDescriptor, blossom_upload_auth_event, blossom_upload_endpoint,
+    parse_blossom_blob_descriptor_value,
+};
 pub use bytes::{
     ascii_to_bytes, bytes_to_ascii, bytes_to_hex, bytes_to_utf8, hex_to_bytes, is_lower_hex,
     try_hex_to_bytes, utf8_to_bytes,
@@ -53,10 +58,10 @@ pub use event_sign::{EventTemplate, SignError, finalize_event, sign_event_with_s
 pub use event_verify::{VerificationCode, VerificationResult, verify_event};
 pub use filter::{NostrFilter, matches_any_filter, matches_filter, parse_filter_value};
 pub use kinds::{
-    KIND_DELETION, KIND_EMOJI_LIST, KIND_EMOJI_SET, KIND_FOLLOW_LIST, KIND_GENERIC_REPOST,
-    KIND_HTTP_AUTH, KIND_METADATA, KIND_REACTION, KIND_RECOMMEND_RELAY, KIND_RELAY_AUTH,
-    KIND_RELAY_LIST_METADATA, KIND_REPOST, KIND_TEXT_NOTE, KIND_ZAP_RECEIPT, KIND_ZAP_REQUEST,
-    is_addressable_kind, is_ephemeral_kind, is_replaceable_kind,
+    KIND_BLOSSOM_AUTH, KIND_DELETION, KIND_EMOJI_LIST, KIND_EMOJI_SET, KIND_FOLLOW_LIST,
+    KIND_GENERIC_REPOST, KIND_HTTP_AUTH, KIND_METADATA, KIND_REACTION, KIND_RECOMMEND_RELAY,
+    KIND_RELAY_AUTH, KIND_RELAY_LIST_METADATA, KIND_REPOST, KIND_TEXT_NOTE, KIND_ZAP_RECEIPT,
+    KIND_ZAP_REQUEST, is_addressable_kind, is_ephemeral_kind, is_replaceable_kind,
 };
 pub use messages::{
     ClientMessage, MessageErrorCode, MessageParseError, RelayMessage, encode_client_message,

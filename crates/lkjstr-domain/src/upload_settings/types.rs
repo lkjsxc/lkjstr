@@ -13,6 +13,7 @@ pub struct UploadSettings {
 #[serde(rename_all = "kebab-case")]
 pub enum UploadProvider {
     Disabled,
+    Blossom,
     NostrBuild,
     Nostrcheck,
     VoidCat,
@@ -37,14 +38,14 @@ pub fn upload_settings(
 
 #[must_use]
 pub fn default_upload_settings() -> UploadSettings {
-    upload_settings(UploadProvider::NostrBuild, "", true)
+    upload_settings(UploadProvider::Blossom, "", true)
 }
 
 #[must_use]
 pub fn provider_server(provider: UploadProvider, custom_server: &str) -> String {
     match provider {
         UploadProvider::Disabled => String::new(),
-        UploadProvider::Custom => custom_server.trim().to_owned(),
+        UploadProvider::Blossom | UploadProvider::Custom => custom_server.trim().to_owned(),
         UploadProvider::NostrBuild => "https://nostr.build".to_owned(),
         UploadProvider::Nostrcheck => "https://nostrcheck.me".to_owned(),
         UploadProvider::VoidCat => "https://void.cat".to_owned(),

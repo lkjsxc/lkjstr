@@ -47,7 +47,7 @@ system.
 - **Tweet** - compose and publish notes.
 - **Replies, reposts, reactions** - inline event actions.
 - **Zaps** - open or copy NIP-57 invoices; wallet custody is out of scope.
-- **Media upload** - NIP-96 compatibility upload with NIP-98 auth; Blossom is the preferred target.
+- **Media upload** - Blossom upload with NIP-96 compatibility providers.
 - **Custom emoji** - NIP-30 emoji parsing and publishing.
 - **Profile Edit** - update active-account metadata.
 

@@ -1,3 +1,4 @@
+export * from './blossom';
 export * from './bytes';
 export * from './crypto';
 export * from './event';

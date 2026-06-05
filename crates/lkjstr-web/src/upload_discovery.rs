@@ -3,6 +3,17 @@ use wasm_bindgen_futures::JsFuture;
 
 use lkjstr_protocol::{nip96_discovery_url, parse_nip96_server_value, valid_https_url};
 
+pub fn resolve_blossom_upload_endpoint(server: &str) -> Result<String, String> {
+    let url = valid_https_url(server.trim())
+        .ok_or_else(|| "Blossom upload server must be HTTPS.".to_owned())?;
+    let path = url.path();
+    if path.is_empty() || path == "/" {
+        Ok(format!("{}/upload", url.origin().ascii_serialization()))
+    } else {
+        Ok(url.as_str().to_owned())
+    }
+}
+
 pub async fn resolve_upload_endpoint(server: &str) -> Result<String, String> {
     let direct = valid_https_url(server.trim())
         .ok_or_else(|| "Media upload server must be HTTPS.".to_owned())?;
@@ -70,4 +81,22 @@ async fn fetch_json(url: &str) -> Result<Option<serde_json::Value>, String> {
     serde_wasm_bindgen::from_value(value)
         .map(Some)
         .map_err(|error| error.to_string())
+}
+
+#[cfg(test)]
+mod tests {
+    use super::resolve_blossom_upload_endpoint;
+
+    #[test]
+    fn resolves_blossom_upload_endpoint() {
+        assert_eq!(
+            resolve_blossom_upload_endpoint("https://media.example").as_deref(),
+            Ok("https://media.example/upload")
+        );
+        assert_eq!(
+            resolve_blossom_upload_endpoint("https://media.example/custom").as_deref(),
+            Ok("https://media.example/custom")
+        );
+        assert!(resolve_blossom_upload_endpoint("http://media.example").is_err());
+    }
 }

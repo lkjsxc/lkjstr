@@ -32,8 +32,8 @@ notifications.enabled|Notifications|boolean|true|Enable notifications.
 notifications.defaultCategories|Categories|json|["mentions"]|Notification categories.
 content.hideSensitiveEvents|Hide sensitive events|boolean|true|Hide NIP-36 content until revealed.
 tweet.defaultPublishMode|Publish mode|enum|selected-relays|Tweet publish target.|selected-relays
-tweet.mediaUploadProvider|Media upload provider|enum|nostr-build|NIP-96 upload provider.|disabled,nostr-build,nostrcheck,void-cat,custom
-tweet.mediaUploadCustomServer|Custom upload server|string||Optional HTTPS NIP-96 upload server.
+tweet.mediaUploadProvider|Media upload provider|enum|blossom|Media upload provider.|disabled,blossom,nostr-build,nostrcheck,void-cat,custom
+tweet.mediaUploadCustomServer|Custom upload server|string||Optional HTTPS media upload server.
 tweet.mediaUploadNoTransform|No transform upload|boolean|true|Request original media upload.
 accounts.defaultMode|Account mode|enum|read-only|Default account mode.|read-only,nip07
 security.allowLocalNsecImport|Local nsec|boolean|false|Allow local nsec import.

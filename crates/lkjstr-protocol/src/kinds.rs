@@ -11,6 +11,7 @@ pub const KIND_EMOJI_LIST: u64 = 10_030;
 pub const KIND_ZAP_REQUEST: u64 = 9_734;
 pub const KIND_ZAP_RECEIPT: u64 = 9_735;
 pub const KIND_RELAY_AUTH: u64 = 22_242;
+pub const KIND_BLOSSOM_AUTH: u64 = 24_242;
 pub const KIND_HTTP_AUTH: u64 = 27_235;
 pub const KIND_EMOJI_SET: u64 = 30_030;
 

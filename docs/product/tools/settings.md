@@ -19,10 +19,11 @@ Settings provide editable local preferences as one flat key-value list.
   events render behind a local reveal gate.
 - Guided Tweet media upload editing lives in Upload Settings; Settings remains
   the raw flat key-value editor.
-- `tweet.mediaUploadProvider` selects `disabled`, `nostr-build`, `nostrcheck`,
-  `void-cat`, or `custom` today. The next provider id is `blossom`.
+- `tweet.mediaUploadProvider` selects `disabled`, `blossom`, `nostr-build`,
+  `nostrcheck`, `void-cat`, or `custom`.
+- Missing or invalid saved provider ids resolve to `blossom`.
 - `tweet.mediaUploadCustomServer` stores an optional HTTPS upload server origin
-  or endpoint for custom NIP-96 and Blossom providers. Blank disables custom
+  or endpoint for Blossom and custom NIP-96 providers. Blank disables custom
   upload.
 - Invalid custom upload server values stay inline and are not saved.
 - `tweet.mediaUploadNoTransform` requests no server-side media transformation

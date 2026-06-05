@@ -1,10 +1,17 @@
 import {
+  blossomUploadEndpoint,
   nip96DiscoveryUrl,
   parseNip96Server,
   validHttpsUrl,
 } from '../protocol';
 
 export type Fetcher = typeof fetch;
+
+export function resolveBlossomUploadEndpoint(server: string): string {
+  const endpoint = blossomUploadEndpoint(server);
+  if (!endpoint) throw new Error('Blossom upload server must be HTTPS.');
+  return endpoint;
+}
 
 export async function resolveUploadEndpoint(
   server: string,

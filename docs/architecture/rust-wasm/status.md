@@ -11,7 +11,8 @@ This file is the concise status map for the active Rust/WASM migration.
   message basics, Schnorr verification, local signing, relay URL normalization,
   NIP-19 entities, NIP-30 helpers, NIP-36 warnings, tag indexing, reactions,
   action tags, NIP-51 emoji source helpers, NIP-57 zaps, NIP-65 relay-list
-  metadata, NIP-96 upload metadata, and NIP-98 auth helpers.
+  metadata, Blossom upload descriptors and auth scopes, NIP-96 upload metadata,
+  and NIP-98 auth helpers.
 - `lkjstr-domain` owns account records, relay-set reducers, Tweet draft models,
   workspace layout reducers, tab movement, edge splits, clean startup,
   recovery, New Tab catalog data, and tab snapshot payload contracts.

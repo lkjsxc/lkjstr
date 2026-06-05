@@ -7,16 +7,16 @@ ships SvelteKit and moves pure kernels into Rust/WASM.
 
 ## Current Ownership
 
-| Area | Owner | Contract |
-| --- | --- | --- |
-| UI rendering | SvelteKit in `src/` | Shipped workspace and tab surfaces |
-| Workspace reducers | TypeScript now, Rust parity in progress | Pure layout and tab commands |
-| Protocol validation | Rust target, TypeScript bridge still used | Event, filter, relay URL, tag, and auth helpers |
-| Relay state | TypeScript shipped, Rust reducers in progress | WebSocket effects stay in host adapters |
-| Feed state | TypeScript shipped, Rust planning in progress | Feed windows, route plans, and cache proof |
-| Storage | SQLite worker repositories | Main thread never opens SQLite or OPFS directly |
-| Signing | Account signer adapters | NIP-07 and local signing are explicit effects |
-| Diagnostics | Runtime counters plus SQLite rows | Stats and Log render real bounded state |
+| Area                | Owner                                         | Contract                                        |
+| ------------------- | --------------------------------------------- | ----------------------------------------------- |
+| UI rendering        | SvelteKit in `src/`                           | Shipped workspace and tab surfaces              |
+| Workspace reducers  | TypeScript now, Rust parity in progress       | Pure layout and tab commands                    |
+| Protocol validation | Rust target, TypeScript bridge still used     | Event, filter, relay URL, tag, and auth helpers |
+| Relay state         | TypeScript shipped, Rust reducers in progress | WebSocket effects stay in host adapters         |
+| Feed state          | TypeScript shipped, Rust planning in progress | Feed windows, route plans, and cache proof      |
+| Storage             | SQLite worker repositories                    | Main thread never opens SQLite or OPFS directly |
+| Signing             | Account signer adapters                       | NIP-07 and local signing are explicit effects   |
+| Diagnostics         | Runtime counters plus SQLite rows             | Stats and Log render real bounded state         |
 
 ## Invariants
 

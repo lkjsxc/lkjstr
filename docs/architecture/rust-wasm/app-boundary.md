@@ -30,7 +30,7 @@ does not introduce remote account state.
 - Own relay-set edit commands and selected default relay-set persistence above
   the pure `lkjstr-domain` relay-set reducers.
 - Own Upload Settings commands for shared Tweet media configuration and route
-  NIP-96 discovery to the browser host.
+  Blossom endpoint display plus NIP-96 discovery to the browser host.
 - Route UI commands to protocol, relay, storage, and host services.
 - Expose compact view models and command results to `lkjstr-ui`.
 - Own startup recovery, job recovery, account selection, and settings loading.

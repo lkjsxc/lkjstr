@@ -6,6 +6,7 @@ Protocol source files define event, filter, message, signing, and NIP behavior.
 
 ## Table of Contents
 
+- `blossom.rs`: Blossom upload endpoint, auth, and descriptor helpers.
 - `bytes.rs`: byte, hex, ASCII, and UTF-8 helpers.
 - `content_tags.rs`: content-derived mention and emoji tags.
 - `crypto.rs`: Schnorr key, signature, and public-key helpers.

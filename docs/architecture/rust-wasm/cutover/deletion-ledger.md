@@ -28,7 +28,7 @@ first-party product modules.
 | `src/lib/identity`           | blocked     | Rust identity view models and NIP-05 flow                                 | identity rendering tests                                |
 | `src/lib/jobs`               | blocked     | Rust protected active jobs and finished jobs                              | recovery, cancel, Stats tests                           |
 | `src/lib/log`                | blocked     | Rust bounded session log                                                  | redaction and browser log tests                         |
-| `src/lib/media`              | blocked     | Rust NIP-96 and NIP-98 upload path                                        | upload transport tests                                  |
+| `src/lib/media`              | blocked     | Rust Blossom, NIP-96, and NIP-98 upload path                              | upload transport tests                                  |
 | `src/lib/memory`             | blocked     | Rust diagnostics and bounded counters                                     | memory focused tests                                    |
 | `src/lib/notifications`      | blocked     | Rust notification runtime and UI                                          | notification feed tests                                 |
 | `src/lib/profile`            | blocked     | Rust Profile runtime and UI                                               | profile route and render tests                          |

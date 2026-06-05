@@ -12,6 +12,7 @@ export const kinds = {
   zapReceipt: 9735,
   httpAuth: 27235,
   relayAuth: 22242,
+  blossomAuth: 24242,
 } as const;
 
 export function isReplaceableKind(kind: number): boolean {

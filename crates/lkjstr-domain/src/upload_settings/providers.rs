@@ -18,27 +18,33 @@ const PROVIDERS: &[UploadProviderConfig] = &[
         server: "",
     },
     UploadProviderConfig {
+        id: UploadProvider::Blossom,
+        key: "blossom",
+        label: "Blossom custom server",
+        server: "",
+    },
+    UploadProviderConfig {
         id: UploadProvider::NostrBuild,
         key: "nostr-build",
-        label: "nostr.build",
+        label: "nostr.build NIP-96",
         server: "https://nostr.build",
     },
     UploadProviderConfig {
         id: UploadProvider::Nostrcheck,
         key: "nostrcheck",
-        label: "Nostrcheck",
+        label: "Nostrcheck NIP-96",
         server: "https://nostrcheck.me",
     },
     UploadProviderConfig {
         id: UploadProvider::VoidCat,
         key: "void-cat",
-        label: "void.cat",
+        label: "void.cat NIP-96",
         server: "https://void.cat",
     },
     UploadProviderConfig {
         id: UploadProvider::Custom,
         key: "custom",
-        label: "Custom",
+        label: "Custom NIP-96",
         server: "",
     },
 ];

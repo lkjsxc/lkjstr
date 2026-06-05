@@ -12,7 +12,7 @@ use lkjstr_ui::{
 use serde_json::Value;
 
 use crate::indexed_db::settings_store;
-use crate::upload_discovery::resolve_upload_endpoint;
+use crate::upload_discovery::{resolve_blossom_upload_endpoint, resolve_upload_endpoint};
 
 pub fn upload_settings_provider(db_name: String) -> UploadSettingsProvider {
     UploadSettingsProvider::new(move |command| {
@@ -89,14 +89,24 @@ async fn discover(command: UploadDiscoverCommand) {
     } else if !valid_custom_upload_server(&command.settings.custom_server) {
         "Custom upload server must be blank or HTTPS.".to_owned()
     } else {
-        match resolve_upload_endpoint(&command.server).await {
-            Ok(endpoint) => format!("Discovery OK: {endpoint}"),
+        match endpoint_status(&command).await {
+            Ok(status) => status,
             Err(error) => error,
         }
     };
     command
         .complete
         .complete(UploadSettingsResult::new(command.settings, status));
+}
+
+async fn endpoint_status(command: &UploadDiscoverCommand) -> Result<String, String> {
+    if command.settings.provider == UploadProvider::Blossom {
+        return resolve_blossom_upload_endpoint(&command.server)
+            .map(|endpoint| format!("Blossom endpoint OK: {endpoint}"));
+    }
+    resolve_upload_endpoint(&command.server)
+        .await
+        .map(|endpoint| format!("Discovery OK: {endpoint}"))
 }
 
 async fn save_value(db_name: &str, key: &str, value: Value, ok_status: &str) -> String {
@@ -129,7 +139,7 @@ async fn load_result(db_name: &str, status: &str) -> UploadSettingsResult {
 fn settings_from_records(records: &[SettingRecord]) -> UploadSettings {
     let provider = value_text(records, "tweet.mediaUploadProvider")
         .and_then(upload_provider_from_key)
-        .unwrap_or(UploadProvider::NostrBuild);
+        .unwrap_or(UploadProvider::Blossom);
     let custom_server = value_text(records, "tweet.mediaUploadCustomServer")
         .unwrap_or_default()
         .to_owned();

@@ -82,12 +82,16 @@ describe('settings store helpers', () => {
       (item) => item.key === 'tweet.mediaUploadProvider',
     );
     if (!provider) throw new Error('expected setting');
-    expect(provider.defaultValue).toBe('nostr-build');
+    expect(provider.defaultValue).toBe('blossom');
+    expect(coerceValue(provider, 'blossom')).toEqual({
+      ok: true,
+      value: 'blossom',
+    });
     expect(coerceValue(provider, 'nostr-build')).toEqual({
       ok: true,
       value: 'nostr-build',
     });
-    expect(coerceValue(provider, 'legacy')).toEqual({ ok: false });
+    expect(coerceValue(provider, 'old-provider')).toEqual({ ok: false });
   });
 
   it('coerces Tweet custom media upload server settings', () => {

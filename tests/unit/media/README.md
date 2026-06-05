@@ -2,7 +2,8 @@
 
 ## Purpose
 
-Media tests cover shared upload settings, endpoint discovery, and upload forms.
+Media tests cover shared upload settings, Blossom endpoints, NIP-96 discovery,
+and upload transports.
 
 ## Table of Contents
 
@@ -11,5 +12,6 @@ Media tests cover shared upload settings, endpoint discovery, and upload forms.
 ## Coverage
 
 - Provider default and fallback behavior.
+- Blossom endpoint resolution and raw upload transport.
 - NIP-96 endpoint resolution and delegated discovery.
 - Multipart upload fields and optional payload hash auth.

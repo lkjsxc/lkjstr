@@ -5,7 +5,12 @@ use lkjstr_domain::{
 
 #[test]
 fn resolves_provider_servers() {
-    assert_eq!(default_upload_settings().server, "https://nostr.build");
+    assert_eq!(default_upload_settings().provider, UploadProvider::Blossom);
+    assert_eq!(default_upload_settings().server, "");
+    assert_eq!(
+        upload_settings(UploadProvider::Blossom, " https://media.example ", true).server,
+        "https://media.example"
+    );
     assert_eq!(
         upload_settings(UploadProvider::Custom, " https://media.example ", true).server,
         "https://media.example"
@@ -19,6 +24,10 @@ fn resolves_provider_servers() {
 #[test]
 fn parses_provider_keys() {
     assert_eq!(
+        upload_provider_from_key("blossom"),
+        Some(UploadProvider::Blossom)
+    );
+    assert_eq!(
         upload_provider_from_key("void-cat"),
         Some(UploadProvider::VoidCat)
     );
@@ -26,7 +35,7 @@ fn parses_provider_keys() {
         upload_provider_key(UploadProvider::Nostrcheck),
         "nostrcheck"
     );
-    assert_eq!(upload_provider_from_key("legacy"), None);
+    assert_eq!(upload_provider_from_key("old-provider"), None);
 }
 
 #[test]

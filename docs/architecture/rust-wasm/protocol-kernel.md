@@ -9,8 +9,9 @@ Schnorr verification, local signing, relay URL normalization, NIP-19 scalar
 plus TLV entities, NIP-30 custom emoji helpers, NIP-36 content-warning helpers,
 tag indexing, reaction parsing, action tag builders, and content-derived tags.
 NIP-51 emoji source helpers, NIP-57 zap helpers, NIP-65 relay-list metadata
-parsing, NIP-96 upload metadata parsers, and NIP-98 HTTP auth helpers.
-Remaining protocol surfaces are design-only.
+parsing, Blossom upload descriptors and scoped auth, NIP-96 upload metadata
+parsers, and NIP-98 HTTP auth helpers. Remaining protocol surfaces are
+not implemented.
 
 ## Owner
 
@@ -41,6 +42,8 @@ serialization.
 - NIP-51 list helpers used by the app. Status: implemented for custom emoji
   list and set helpers.
 - NIP-65 relay-list parsing. Status: implemented.
+- Blossom upload endpoint resolution, descriptor parsing, and scoped auth
+  event construction. Status: implemented.
 - NIP-96 upload response parsing. Status: implemented.
 - NIP-98 HTTP auth event construction. Status: implemented.
 

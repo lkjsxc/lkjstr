@@ -2,11 +2,15 @@
   import { onMount } from 'svelte';
   import {
     mediaUploadProviders,
+    providerProtocol,
     providerServer,
     validCustomUploadServer,
     type MediaUploadProvider,
   } from '$lib/media/providers';
-  import { resolveUploadEndpoint } from '$lib/media/endpoint';
+  import {
+    resolveBlossomUploadEndpoint,
+    resolveUploadEndpoint,
+  } from '$lib/media/endpoint';
   import {
     loadUploadSettings,
     saveUploadCustomServer,
@@ -16,9 +20,10 @@
   } from '$lib/media/settings';
 
   let settings = $state<UploadSettings>({
-    provider: 'nostr-build',
+    provider: 'blossom',
     customServer: '',
-    server: 'https://nostr.build',
+    server: '',
+    protocol: 'blossom',
     noTransform: true,
   });
   let customDraft = $state('');
@@ -45,6 +50,7 @@
       ...settings,
       provider,
       server: providerServer(provider, customDraft),
+      protocol: providerProtocol(provider),
     };
     status = '';
     await saveUploadProvider(provider);
@@ -57,6 +63,7 @@
       ...settings,
       customServer: customDraft,
       server: providerServer(settings.provider, customDraft),
+      protocol: providerProtocol(settings.provider),
     };
     status = 'Custom server saved.';
   }
@@ -73,13 +80,20 @@
     testing = true;
     status = '';
     try {
-      const endpoint = await resolveUploadEndpoint(resolvedServer);
-      status = `Discovery OK: ${endpoint}`;
+      const endpoint =
+        settings.protocol === 'blossom'
+          ? resolveBlossomUploadEndpoint(resolvedServer)
+          : await resolveUploadEndpoint(resolvedServer);
+      status = `${providerLabel()} OK: ${endpoint}`;
     } catch (error) {
       status = error instanceof Error ? error.message : 'Discovery failed.';
     } finally {
       testing = false;
     }
+  }
+
+  function providerLabel(): string {
+    return settings.protocol === 'blossom' ? 'Blossom endpoint' : 'Discovery';
   }
 </script>
 

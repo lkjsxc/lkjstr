@@ -6,6 +6,7 @@ Protocol tests port current TypeScript protocol behavior to Rust.
 
 ## Table of Contents
 
+- `blossom_test.rs`: Blossom endpoint, auth, and descriptor helpers.
 - `bytes_test.rs`: strict byte and text conversion behavior.
 - `content_tags_test.rs`: mention and emoji tag derivation.
 - `crypto_test.rs`: key derivation, signing, verification, and redaction.

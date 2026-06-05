@@ -26,9 +26,10 @@ export function createProfileEditController(input: {
   let saving = false;
   let uploading: keyof ProfileMetadataDraft | '' = '';
   let uploadSettings: UploadSettings = {
-    provider: 'nostr-build',
+    provider: 'blossom',
     customServer: '',
-    server: 'https://nostr.build',
+    server: '',
+    protocol: 'blossom',
     noTransform: true,
   };
 

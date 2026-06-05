@@ -46,8 +46,8 @@ The Rust Relay Settings body renders protected relay-set rows, seeds default
 user/discovery sets, edits relay enablement and user read/write flags, and
 restores default sets through Rust storage commands.
 The Rust Upload Settings body renders shared Tweet media upload settings,
-persists provider/custom-server/no-transform changes, and performs real NIP-96
-discovery through the Rust browser host.
+persists provider/custom-server/no-transform changes, reports Blossom endpoints,
+and performs real NIP-96 discovery through the Rust browser host.
 The Rust Tweet body renders a real draft editor backed by protected
 `tweetDrafts` rows. It loads `tab:{tabId}` drafts, falls back to the `main`
 draft when needed, and persists text plus sensitive-warning fields

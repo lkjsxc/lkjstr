@@ -27,6 +27,7 @@ const DEFAULT_TAB: &[&str] = &["timeline", "new-tab"];
 const PUBLISH_MODE: &[&str] = &["selected-relays"];
 const UPLOAD_PROVIDER: &[&str] = &[
     "disabled",
+    "blossom",
     "nostr-build",
     "nostrcheck",
     "void-cat",
@@ -54,8 +55,8 @@ pub(super) const SETTINGS: &[SettingDefinition] = &[
     setting("notifications.defaultCategories", "Categories", SettingValueType::Json, r#"["mentions"]"#, "Notification categories.", NONE),
     setting("content.hideSensitiveEvents", "Hide sensitive events", SettingValueType::Boolean, "true", "Hide NIP-36 content until revealed.", NONE),
     setting("tweet.defaultPublishMode", "Publish mode", SettingValueType::Enum, "selected-relays", "Tweet publish target.", PUBLISH_MODE),
-    setting("tweet.mediaUploadProvider", "Media upload provider", SettingValueType::Enum, "nostr-build", "NIP-96 upload provider.", UPLOAD_PROVIDER),
-    setting("tweet.mediaUploadCustomServer", "Custom upload server", SettingValueType::String, "", "Optional HTTPS NIP-96 upload server.", NONE),
+    setting("tweet.mediaUploadProvider", "Media upload provider", SettingValueType::Enum, "blossom", "Media upload provider.", UPLOAD_PROVIDER),
+    setting("tweet.mediaUploadCustomServer", "Custom upload server", SettingValueType::String, "", "Optional HTTPS media upload server.", NONE),
     setting("tweet.mediaUploadNoTransform", "No transform upload", SettingValueType::Boolean, "true", "Request original media upload.", NONE),
     setting("accounts.defaultMode", "Account mode", SettingValueType::Enum, "read-only", "Default account mode.", ACCOUNT_MODE),
     setting("security.allowLocalNsecImport", "Local nsec", SettingValueType::Boolean, "false", "Allow local nsec import.", NONE),

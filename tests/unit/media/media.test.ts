@@ -2,6 +2,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { importSettingsJson } from '../../../src/lib/settings/settings-store';
 import {
   cleanUploadProvider,
+  providerProtocol,
   validCustomUploadServer,
 } from '../../../src/lib/media/providers';
 import { loadUploadSettings } from '../../../src/lib/media/settings';
@@ -23,9 +24,11 @@ describe('media upload settings', () => {
     await importSettingsJson('[]');
   });
 
-  it('defaults and falls back to nostr.build while respecting disabled', async () => {
-    expect((await loadUploadSettings()).provider).toBe('nostr-build');
-    expect(cleanUploadProvider('legacy')).toBe('nostr-build');
+  it('defaults and falls back to Blossom while respecting disabled', async () => {
+    const defaults = await loadUploadSettings();
+    expect(defaults.provider).toBe('blossom');
+    expect(defaults.protocol).toBe('blossom');
+    expect(cleanUploadProvider('unknown-provider')).toBe('blossom');
     await importSettingsJson(
       JSON.stringify([{ key: 'tweet.mediaUploadProvider', value: 'disabled' }]),
     );
@@ -36,6 +39,12 @@ describe('media upload settings', () => {
     expect(validCustomUploadServer('')).toBe(true);
     expect(validCustomUploadServer('https://media.example')).toBe(true);
     expect(validCustomUploadServer('http://media.example')).toBe(false);
+  });
+
+  it('classifies Blossom and NIP-96 provider protocols', () => {
+    expect(providerProtocol('blossom')).toBe('blossom');
+    expect(providerProtocol('custom')).toBe('nip96');
+    expect(providerProtocol('nostr-build')).toBe('nip96');
   });
 });
 
@@ -105,6 +114,7 @@ describe('media upload transport', () => {
         provider: 'custom',
         customServer: 'https://media.example',
         server: 'https://media.example',
+        protocol: 'nip96',
         noTransform: true,
       },
       {

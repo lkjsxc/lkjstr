@@ -18,9 +18,9 @@ Read next: [product/README.md](product/README.md),
 - Home, Global, Profile, Thread, Notifications, Search, Custom Request, Author
   Context, Accounts, Relay Settings, Stats, Settings, Upload Settings, lkjstr
   Log, Mine npub, Profile Edit, and Welcome are implemented.
-- Tweet, replies, reposts, reactions, zaps, NIP-96 compatibility upload
-  settings, NIP-98 auth, NIP-30 custom emoji, sensitive-content reveal, and
-  event reference previews are implemented.
+- Tweet, replies, reposts, reactions, zaps, Blossom upload, NIP-96
+  compatibility upload settings, NIP-98 auth, NIP-30 custom emoji,
+  sensitive-content reveal, and event reference previews are implemented.
 - Cloudflare Workers Static Assets is only a hosting target. It is not an app
   backend, account service, relay proxy, or storage service.
 
@@ -32,7 +32,7 @@ Read next: [protocol/README.md](protocol/README.md),
 
 - Implemented Nostr surfaces include NIP-01, NIP-02, NIP-05, NIP-07, NIP-10,
   NIP-11, NIP-18, NIP-19, NIP-25, NIP-30, NIP-36, NIP-50, NIP-51, NIP-57,
-  NIP-65, NIP-96, and NIP-98.
+  NIP-65, Blossom/NIP-B7 upload, NIP-96, and NIP-98.
 - Relay AUTH is diagnostic-only.
 - Search combines cached matches with relay NIP-50 filters when selected relays
   support them.
@@ -53,7 +53,8 @@ Read next: [protocol/README.md](protocol/README.md),
 - Rust owns protocol codecs, event parsing, canonical serialization, event ID
   hashing, Schnorr checks, local signing, relay URL normalization, NIP-19,
   custom emoji, content warning, tag indexing, reaction parsing, action tags,
-  relay-list parsing, upload metadata parsing, and NIP-98 helpers.
+  relay-list parsing, Blossom descriptors, upload metadata parsing, and NIP-98
+  helpers.
 
 ## Storage State
 
@@ -179,9 +180,9 @@ and [operations/memory-verification.md](operations/memory-verification.md).
   compact memory counters, storage diagnostics, recoverable optimizer and
   orchestration traces, and persisted job records.
 - Remote NIP-50 results depend on actual relay support.
-- Blossom/NIP-B7 upload is the preferred media target. The current shipped
-  transport remains NIP-96 compatibility until the provider adapter is real and
-  tested.
+- Blossom/NIP-B7 upload is the preferred media target. Configured Blossom
+  uploads use raw blob transport, scoped signed auth, and descriptor-hash
+  validation. NIP-96 remains a compatibility provider path.
 - RSS remains diagnostic-only for memory verification; app JavaScript heap is
   the owned browser memory assertion when manually measured.
 
