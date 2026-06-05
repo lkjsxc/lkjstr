@@ -5,7 +5,7 @@
 Follow graph modules own target NIP-02 follow-list discovery, row derivation,
 and author-set construction for Followees and User Timeline.
 
-## Files
+## Table of Contents
 
 - `target-follow-list-state.ts`: state and result contracts.
 - `target-follow-list-cache.ts`: typed repository cache helpers.

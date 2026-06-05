@@ -5,7 +5,7 @@
 User Timeline modules own public target timeline author derivation, route keys,
 cache reads, and relay-backed page loading.
 
-## Files
+## Table of Contents
 
 - `user-timeline-state.ts`: runtime state contracts.
 - `user-timeline-authors.ts`: target plus followee author sets.

@@ -13,6 +13,7 @@ reducers.
 - `feed_lod/`: real-data feed level-of-detail tree.
 - `feed_scan/`: adaptive grouped scan planning and trace reducers.
 - `feed_wait/`: first-paint, empty-state, and late-merge reducers.
+- `follow_graph/`: target NIP-02 follow graph reducers.
 - `lib.rs`: public app crate exports.
 - `orchestration/`: pure read, prefetch, hydration, and retention decisions.
 - `public_chat/`: pure NIP-28 query plans and publish templates.
