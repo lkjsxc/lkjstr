@@ -32,8 +32,8 @@ closing gates so this concise matrix stays readable.
 | Rust protocol emoji source helpers        | [protocol-kernel.md](../architecture/rust-wasm/protocol-kernel.md)             | implemented     | NIP-51 Rust tests                                                 |
 | Rust protocol zaps and upload auth        | [protocol-kernel.md](../architecture/rust-wasm/protocol-kernel.md)             | implemented     | NIP-57, Blossom, NIP-96, NIP-98 tests                             |
 | Rust protocol relay list metadata         | [protocol-kernel.md](../architecture/rust-wasm/protocol-kernel.md)             | implemented     | NIP-65 Rust tests                                                 |
-| Rust protocol NIP-29 groups               | [nip29-groups.md](../protocol/nip29-groups.md)                                 | partial         | constants and pure parsers are active; group UI and publish open  |
-| Rust protocol NIP-89 client tag           | [nip89-client-tag.md](../protocol/nip89-client-tag.md)                         | partial         | validation and tag building active; publish integration open      |
+| Rust protocol NIP-29 groups               | [nip29-groups.md](../protocol/nip29-groups.md)                                 | partial         | constants and pure parser tests pass; group UI and publish open   |
+| Rust protocol NIP-89 client tag           | [nip89-client-tag.md](../protocol/nip89-client-tag.md)                         | partial         | validation and tag-builder tests pass; publish integration open   |
 | Rust protocol WASM bridge                 | [host-boundary.md](../architecture/rust-wasm/host-boundary.md)                 | implemented     | browser WASM tests                                                |
 | Rust pure account domain                  | [app-boundary.md](../architecture/rust-wasm/app-boundary.md)                   | implemented     | domain account tests                                              |
 | Rust workspace model basics               | [app-boundary.md](../architecture/rust-wasm/app-boundary.md)                   | implemented     | domain workspace tests                                            |
@@ -54,6 +54,7 @@ closing gates so this concise matrix stays readable.
 | Rust relay client and browser adapters    | [relay-runtime.md](../architecture/rust-wasm/relay-runtime.md)                 | partial         | pure reducer plus WebSocket/timer adapters; product wiring open   |
 | Rust Leptos workspace shell               | [ui-runtime.md](../architecture/rust-wasm/ui-runtime.md)                       | partial         | Welcome, New Tab, persistence, Stats inventory                    |
 | Rust Settings surface                     | [settings.md](tools/settings.md)                                               | partial         | flat schema and SQLite worker overrides; side effects open        |
+| Rust follow-list extraction               | [followees.md](feeds/followees.md)                                             | implemented     | `follow_list_test.rs` covers dedupe, invalid rows, and hints      |
 | Rust Followees surface                    | [followees.md](feeds/followees.md)                                             | not implemented | action-opened real kind `3` followee rows open                    |
 | Rust User Timeline surface                | [user-timeline.md](feeds/user-timeline.md)                                     | not implemented | target-pubkey timeline runtime open                               |
 | Rust Accounts surface                     | [accounts.md](tools/accounts.md)                                               | partial         | rows, local secret transaction, NIP-07 connect                    |

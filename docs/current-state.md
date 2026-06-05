@@ -56,8 +56,9 @@ Read next: [protocol/README.md](protocol/README.md),
 - Rust owns protocol codecs, event parsing, canonical serialization, event ID
   hashing, Schnorr checks, local signing, relay URL normalization, NIP-19,
   custom emoji, content warning, tag indexing, reaction parsing, action tags,
-  relay-list parsing, Blossom descriptors, upload metadata parsing, and NIP-98
-  helpers.
+  relay-list parsing, Blossom descriptors, upload metadata parsing, NIP-98
+  helpers, NIP-89 client-tag validation, NIP-29 group tag parsing, and NIP-02
+  follow-list extraction.
 
 ## Storage State
 

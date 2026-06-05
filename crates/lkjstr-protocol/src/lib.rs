@@ -2,6 +2,7 @@
 
 pub mod blossom;
 pub mod bytes;
+pub mod client_tag;
 pub mod content_tags;
 pub mod crypto;
 pub mod error;
@@ -12,6 +13,8 @@ pub mod event_sign;
 mod event_tags;
 pub mod event_verify;
 pub mod filter;
+pub mod follow_list;
+pub mod groups;
 pub mod kinds;
 mod message_parts;
 pub mod messages;
@@ -39,6 +42,10 @@ pub use bytes::{
     ascii_to_bytes, bytes_to_ascii, bytes_to_hex, bytes_to_utf8, hex_to_bytes, is_lower_hex,
     try_hex_to_bytes, utf8_to_bytes,
 };
+pub use client_tag::{
+    ClientTag, ClientTagConfig, ClientTagError, ClientTagPolicy, append_client_tag, client_tag,
+    client_tag_allowed_for_kind, client_tag_parts, parse_client_tag,
+};
 pub use content_tags::{content_derived_tags, emoji_tags, mention_tags};
 pub use crypto::{
     CryptoError, SecretKeyBytes, generate_secret_key, parse_secret_key_hex, public_key_from_secret,
@@ -59,13 +66,28 @@ pub use event_id::{compute_event_id, serialize_event};
 pub use event_sign::{EventTemplate, SignError, finalize_event, sign_event_with_secret_hex};
 pub use event_verify::{VerificationCode, VerificationResult, verify_event};
 pub use filter::{NostrFilter, matches_any_filter, matches_filter, parse_filter_value};
+pub use follow_list::{
+    FollowEntry, dedupe_follow_entries, follow_entries_from_event, following_count,
+};
+pub use groups::{
+    GroupAdmin, GroupMember, GroupMetadata, GroupParseError, GroupPreviousRef, GroupReference,
+    GroupRole, group_admins_from_event, group_id_from_h_tag, group_members_from_event,
+    group_metadata_from_event, group_previous_refs, group_roles_from_event,
+    group_state_id_from_d_tag, group_user_event_filter, group_user_list_from_event,
+    is_group_moderation_kind, is_group_state_kind,
+};
 pub use kinds::{
     KIND_BLOSSOM_AUTH, KIND_CHANNEL_CREATE, KIND_CHANNEL_HIDE_MESSAGE, KIND_CHANNEL_MESSAGE,
     KIND_CHANNEL_METADATA, KIND_CHANNEL_MUTE_USER, KIND_DELETION, KIND_EMOJI_LIST, KIND_EMOJI_SET,
-    KIND_FOLLOW_LIST, KIND_GENERIC_REPOST, KIND_HTTP_AUTH, KIND_METADATA, KIND_REACTION,
-    KIND_RECOMMEND_RELAY, KIND_RELAY_AUTH, KIND_RELAY_LIST_METADATA, KIND_REPOST, KIND_TEXT_NOTE,
-    KIND_ZAP_RECEIPT, KIND_ZAP_REQUEST, is_addressable_kind, is_ephemeral_kind,
-    is_replaceable_kind,
+    KIND_FOLLOW_LIST, KIND_GENERIC_REPOST, KIND_GROUP_ADMINS, KIND_GROUP_CLOSE_REPORT,
+    KIND_GROUP_CREATE_GROUP, KIND_GROUP_CREATE_INVITE, KIND_GROUP_DELETE_EVENT,
+    KIND_GROUP_DELETE_GROUP, KIND_GROUP_EDIT_METADATA, KIND_GROUP_JOIN_REQUEST,
+    KIND_GROUP_LEAVE_REQUEST, KIND_GROUP_LIVEKIT_PARTICIPANTS, KIND_GROUP_MEMBERS,
+    KIND_GROUP_METADATA, KIND_GROUP_PUT_USER, KIND_GROUP_REMOVE_USER, KIND_GROUP_ROLES,
+    KIND_HANDLER_INFORMATION, KIND_HANDLER_RECOMMENDATION, KIND_HTTP_AUTH, KIND_METADATA,
+    KIND_REACTION, KIND_RECOMMEND_RELAY, KIND_RELAY_AUTH, KIND_RELAY_LIST_METADATA, KIND_REPOST,
+    KIND_TEXT_NOTE, KIND_USER_GROUPS, KIND_ZAP_RECEIPT, KIND_ZAP_REQUEST, is_addressable_kind,
+    is_ephemeral_kind, is_replaceable_kind,
 };
 pub use messages::{
     ClientMessage, MessageErrorCode, MessageParseError, RelayMessage, encode_client_message,

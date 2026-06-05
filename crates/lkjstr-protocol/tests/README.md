@@ -8,11 +8,14 @@ Protocol tests port current TypeScript protocol behavior to Rust.
 
 - `blossom_test.rs`: Blossom endpoint, auth, and descriptor helpers.
 - `bytes_test.rs`: strict byte and text conversion behavior.
+- `client_tag_test.rs`: NIP-89 client tag validation.
 - `content_tags_test.rs`: mention and emoji tag derivation.
 - `crypto_test.rs`: key derivation, signing, verification, and redaction.
 - `event_builders_test.rs`: event action tag builders.
 - `event_test.rs`: event validation, frame limits, and event IDs.
 - `filter_test.rs`: relay filter parsing and matching.
+- `follow_list_test.rs`: NIP-02 follow-list extraction.
+- `groups_test.rs`: NIP-29 group tag and state parsing.
 - `kinds_test.rs`: event kind range classifiers.
 - `messages_test.rs`: client and relay message codecs.
 - `nip19_test.rs`: NIP-19 scalar and TLV entity round trips.

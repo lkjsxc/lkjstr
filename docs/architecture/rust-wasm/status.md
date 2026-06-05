@@ -12,8 +12,8 @@ This file is the concise status map for the active Rust/WASM migration.
   NIP-19 entities, NIP-30 helpers, NIP-36 warnings, tag indexing, reactions,
   action tags, NIP-51 emoji source helpers, NIP-57 zaps, NIP-65 relay-list
   metadata, Blossom upload descriptors and auth scopes, NIP-96 upload metadata,
-  and NIP-98 auth helpers. NIP-29 group and NIP-89 client-tag protocol modules
-  are active targets.
+  NIP-98 auth helpers, NIP-89 client-tag validation, NIP-29 group tag parsing,
+  and NIP-02 follow-list extraction.
 - `lkjstr-domain` owns account records, relay-set reducers, Tweet draft models,
   workspace layout reducers, tab movement, edge splits, clean startup,
   recovery, New Tab catalog data, and tab snapshot payload contracts.
@@ -58,8 +58,8 @@ This file is the concise status map for the active Rust/WASM migration.
   open.
 - Rust Settings persistence now uses the SQLite worker typed repository in the
   Rust Settings host. CSS side effects and cache-budget enforcement remain open.
-- Followees and User Timeline are target slices for Rust protocol/domain input
-  builders while shipped Svelte surfaces remain temporary renderers.
+- Followees and User Timeline are target slices for Rust domain input builders
+  and shipped Svelte action wiring.
 
 ## Open Foundations
 
