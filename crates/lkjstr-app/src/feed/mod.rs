@@ -8,6 +8,7 @@ mod surface_input_types;
 mod surface_inputs;
 mod thread_inputs;
 mod tool_inputs;
+mod top_anchor;
 mod types;
 
 pub use author_context_inputs::{author_context_anchor_input, author_context_nearby_input};
@@ -30,6 +31,9 @@ pub use surface_inputs::{
 };
 pub use thread_inputs::{thread_replies_query_input, thread_root_lookup_input};
 pub use tool_inputs::{custom_request_query_input, search_query_input};
+pub use top_anchor::{
+    NewestCursorPolicy, TopAnchorAction, TopAnchorDecision, TopAnchorInput, decide_top_anchor,
+};
 pub use types::{
     FeedWindowCursor, FeedWindowEvidence, FeedWindowFlags, FeedWindowState, FeedWindowStatus,
 };

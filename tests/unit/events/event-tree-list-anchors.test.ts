@@ -30,4 +30,21 @@ describe('event tree list anchors', () => {
     await tick();
     expect(scrollTo).toHaveBeenCalledWith(325);
   });
+
+  it('keeps a top-locked list at offset zero for live prepends', async () => {
+    const scrollTo = vi.fn();
+    syncFeedListAnchor({
+      previous: [row('a', 0), row('b', 1)],
+      rows: [row('x', 0), row('a', 1), row('b', 2)],
+      key: (item) => item.event.id,
+      destroyed: () => false,
+      list: {
+        getScrollOffset: () => 0,
+        getItemOffset: (index) => index * 100,
+        scrollTo,
+      },
+    });
+    await tick();
+    expect(scrollTo).toHaveBeenCalledWith(0);
+  });
 });

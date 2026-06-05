@@ -51,16 +51,21 @@ export function syncFeedListAnchor(args: {
   readonly key: (node: FlatEventTreeItem) => string;
   readonly destroyed: () => boolean;
 }): { readonly rows: EventAnchorRow[]; readonly anchor?: TabFeedAnchor } {
+  const atTop = feedListOffset(args.list) <= 1;
   const anchor = captureFeedListAnchor(args.previous, args.list, args.key);
   if (args.tabId && anchor) setTabFeedAnchor(args.tabId, anchor);
   void tick().then(() => {
-    if (!args.destroyed())
-      restoreVirtualAnchor(
-        anchor ? { key: anchor.anchorKey, offset: anchor.offset } : undefined,
-        args.rows,
-        (row) => args.key(row.node),
-        visualIndexList(args.rows, args.list),
-      );
+    if (args.destroyed()) return;
+    if (atTop && !anchor) {
+      args.list?.scrollTo?.(0);
+      return;
+    }
+    restoreVirtualAnchor(
+      anchor ? { key: anchor.anchorKey, offset: anchor.offset } : undefined,
+      args.rows,
+      (row) => args.key(row.node),
+      visualIndexList(args.rows, args.list),
+    );
   });
   return { rows: [...args.rows], anchor };
 }
@@ -87,6 +92,10 @@ export function captureAndStoreFeedListAnchor(args: {
   if (!args.tabId) return;
   const anchor = captureFeedListAnchor(args.rows, args.list, args.key);
   if (anchor) setTabFeedAnchor(args.tabId, anchor);
+}
+
+function feedListOffset(list?: TreeListAnchorHandle): number {
+  return list?.getScrollOffset?.() ?? list?.getOffset?.() ?? 0;
 }
 
 function visualIndexList(
