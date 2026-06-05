@@ -22,6 +22,8 @@ row helpers for timeline-like tabs.
 - [scan-model-proposal.ts](scan-model-proposal.ts): fallback density span proposal helper.
 - [scan-model-observation.ts](scan-model-observation.ts): fallback model update helper.
 - [scan-model-repository.ts](scan-model-repository.ts): SQLite scan model rows.
+- [scan-model-repository-match.ts](scan-model-repository-match.ts): pure model
+  scope matching.
 - [scan-model-debug.ts](scan-model-debug.ts): redacted scan optimizer debug rows.
 - [scan-model-wasm.ts](scan-model-wasm.ts): narrow WASM bridge wrapper.
 - [virtual-lkjstr-web-wasm.d.ts](virtual-lkjstr-web-wasm.d.ts): virtual module type.

@@ -5,27 +5,20 @@ import type {
   ScanDecisionTraceRecord,
   ScanDensityModelRecord,
   ScanModelContext,
-  ScanModelScope,
   ScanObservationRecord,
 } from './scan-model-records';
+import { selectMatchingScanModelsForContext as matchingScanModels } from './scan-model-repository-match';
+export { selectMatchingScanModelsForContext } from './scan-model-repository-match';
 
 export async function selectScanModelsForContext(
   context: ScanModelContext,
 ): Promise<ScanDensityModelRecord[] | undefined> {
-  if (typeof Worker === 'undefined') return undefined;
-  if (!(await ensureEventGraphSchema())) return undefined;
+  if (!(await canUseScanStorage())) return undefined;
   const rows = await queryRecords<ScanDensityModelRecord>(
     "SELECT record_json FROM feed_scan_density_models WHERE direction = ?1 AND (semantic_feed_key = ?2 OR semantic_feed_key = '') ORDER BY updated_at_ms DESC LIMIT 64;",
     [context.direction, context.semanticFeedKey],
   );
-  return selectMatchingScanModelsForContext(rows, context);
-}
-
-export function selectMatchingScanModelsForContext(
-  rows: readonly ScanDensityModelRecord[],
-  context: ScanModelContext,
-): ScanDensityModelRecord[] {
-  return rows.filter((row) => modelMatches(row, context)).toSorted(scopeSort);
+  return matchingScanModels(rows, context);
 }
 
 export async function upsertScanDensityModels(
@@ -101,26 +94,33 @@ function traceStep(row: ScanDecisionTraceRecord): SqlStep {
 
 async function batch(steps: readonly SqlStep[]): Promise<boolean> {
   if (steps.length === 0) return true;
-  if (typeof Worker === 'undefined') return false;
-  if (!(await ensureEventGraphSchema())) return false;
-  const response = await sendSqliteStorage(
-    { kind: 'batch', mode: 'readwrite', steps },
-    { deadlineMs: 10_000 },
-  );
-  return response.outcome === 'ok';
+  if (!(await canUseScanStorage())) return false;
+  try {
+    const response = await sendSqliteStorage(
+      { kind: 'batch', mode: 'readwrite', steps },
+      { deadlineMs: 10_000 },
+    );
+    return response.outcome === 'ok';
+  } catch {
+    return false;
+  }
 }
 
 async function queryRecords<T>(
   statement: string,
   params: readonly SqlScalar[],
 ): Promise<T[]> {
-  if (typeof Worker === 'undefined') return [];
-  const response = await sendSqliteStorage(
-    { kind: 'query', statement, params, rowLimit: 64 },
-    { deadlineMs: 10_000 },
-  );
-  if (response.outcome !== 'ok') return [];
-  return response.rows.flatMap((row) => decode<T>(row.record_json));
+  if (!(await canUseScanStorage())) return [];
+  try {
+    const response = await sendSqliteStorage(
+      { kind: 'query', statement, params, rowLimit: 64 },
+      { deadlineMs: 10_000 },
+    );
+    if (response.outcome !== 'ok') return [];
+    return response.rows.flatMap((row) => decode<T>(row.record_json));
+  } catch {
+    return [];
+  }
 }
 
 function decode<T>(raw: unknown): T[] {
@@ -132,65 +132,11 @@ function decode<T>(raw: unknown): T[] {
   }
 }
 
-function modelMatches(
-  row: ScanDensityModelRecord,
-  context: ScanModelContext,
-): boolean {
-  return (
-    row.direction === context.direction &&
-    matches(
-      scopeUsesSurface(row.scope),
-      row.semanticFeedKey,
-      context.semanticFeedKey,
-    ) &&
-    matches(
-      scopeUsesRoute(row.scope),
-      row.routeGroupKey,
-      context.routeGroupKey,
-    ) &&
-    matches(scopeUsesRelay(row.scope), row.relayUrl, context.relayUrl) &&
-    matches(
-      scopeUsesFilter(row.scope),
-      row.semanticFilterKey,
-      context.semanticFilterKey,
-    ) &&
-    matches(
-      scopeUsesRouteFingerprint(row.scope),
-      row.routeFingerprint,
-      context.routeFingerprint,
-    )
-  );
+async function canUseScanStorage(): Promise<boolean> {
+  if (typeof Worker === 'undefined') return false;
+  try {
+    return await ensureEventGraphSchema();
+  } catch {
+    return false;
+  }
 }
-
-function matches(used: boolean, left: string, right: string): boolean {
-  return !used || left === right;
-}
-
-function scopeSort(a: ScanDensityModelRecord, b: ScanDensityModelRecord) {
-  return (
-    scopeRank(a.scope) - scopeRank(b.scope) ||
-    a.modelKey.localeCompare(b.modelKey)
-  );
-}
-
-function scopeRank(scope: ScanModelScope): number {
-  return [
-    'Exact',
-    'RouteGroup',
-    'RelayFilter',
-    'SurfaceFilter',
-    'Surface',
-    'Global',
-    'Neutral',
-  ].indexOf(scope);
-}
-
-const scopeUsesSurface = (scope: ScanModelScope) =>
-  ['Exact', 'RouteGroup', 'SurfaceFilter', 'Surface'].includes(scope);
-const scopeUsesRoute = (scope: ScanModelScope) =>
-  ['Exact', 'RouteGroup'].includes(scope);
-const scopeUsesRelay = (scope: ScanModelScope) =>
-  ['Exact', 'RelayFilter'].includes(scope);
-const scopeUsesFilter = (scope: ScanModelScope) =>
-  ['Exact', 'RelayFilter', 'SurfaceFilter'].includes(scope);
-const scopeUsesRouteFingerprint = (scope: ScanModelScope) => scope === 'Exact';

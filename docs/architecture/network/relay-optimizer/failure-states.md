@@ -27,8 +27,8 @@ continue safely without inventing evidence.
 ## Storage Failures
 
 - Temporary memory mode is explicit and visible in Stats.
-- Storage unavailable means no optimizer observation, model, or trace row is
-  written for that step.
+- Storage unavailable means model reads return no learned rows and no optimizer
+  observation, model, or trace row is written for that step.
 - Repair may report orphan optimizer rows, but optimizer repair must not delete
   protected product records.
 
