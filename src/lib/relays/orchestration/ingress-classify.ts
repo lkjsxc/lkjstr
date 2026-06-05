@@ -15,7 +15,8 @@ export function isRenderCriticalForSurface(
     surface === 'home' ||
     surface === 'global' ||
     surface === 'profile' ||
-    surface === 'thread'
+    surface === 'thread' ||
+    surface === 'user-timeline'
   ) {
     return feedDisplayKinds.includes(
       event.kind as (typeof feedDisplayKinds)[number],

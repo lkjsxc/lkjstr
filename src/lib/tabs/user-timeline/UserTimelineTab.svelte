@@ -2,16 +2,19 @@
   import { onDestroy } from 'svelte';
   import EventTreeList from '$lib/components/events/EventTreeList.svelte';
   import type { ProfileSummary } from '$lib/identity/identity';
-  import { hydrateProfiles } from '$lib/identity/profile-hydration';
-  import { encodeNpub } from '$lib/protocol/nip19';
-  import { followeeEntries } from '$lib/profile/followees';
-  import { cachedProfileFollowList } from '$lib/profile/profile-store';
   import type { RelaySet } from '$lib/relays/relay-store';
-  import {
-    loadCachedTimeline,
-    type TimelineItem,
-  } from '$lib/timeline/timeline-store';
+  import { sharedSubscriptionOrchestrator } from '$lib/relays/orchestration/orchestrator';
   import { timelineRelays } from '$lib/timeline/timeline-subscription';
+  import { safeNpub } from '$lib/components/identity/user-event-row';
+  import { loadTimelineProfiles } from '$lib/timeline/timeline-profiles';
+  import { mergeUserTimelineItems } from '$lib/user-timeline/user-timeline-cache';
+  import { readOlderUserTimeline } from '$lib/user-timeline/user-timeline-loaders';
+  import {
+    runUserTimelineRuntime,
+    type UserTimelineRuntimeInput,
+  } from '$lib/user-timeline/user-timeline-runtime';
+  import type { UserTimelineSnapshot } from '$lib/user-timeline/user-timeline-state';
+  import type { TimelineItem } from '$lib/timeline/timeline-store';
 
   type Props = {
     tabId: string;
@@ -28,8 +31,16 @@
   let items = $state<TimelineItem[]>([]);
   let profiles = $state<Record<string, ProfileSummary>>({});
   let loading = $state(true);
-  let unavailable = $state('');
+  let loadingOlder = $state(false);
+  let hasOlder = $state(false);
+  let notice = $state('Discovering public follow graph...');
+  let error = $state<string | null>(null);
+  let relayStatusText = $state('');
+  let authors = $state<string[]>([]);
   let generation = 0;
+  let hydrateRun = 0;
+  let controller: AbortController | undefined;
+  const subscriptions = sharedSubscriptionOrchestrator;
   let relays = $derived(timelineRelays(props.relaySets));
   let runtimeKey = $derived(`${props.pubkey}|${relays.join('\u0000')}`);
 
@@ -37,45 +48,79 @@
     if (!props.visible) return;
     const key = runtimeKey;
     if (!key) return;
-    void loadTimeline(++generation);
+    void start(++generation);
   });
 
   onDestroy(() => {
     generation++;
+    controller?.abort();
+    subscriptions.releaseOwner(props.tabId);
   });
 
-  async function loadTimeline(run: number): Promise<void> {
-    loading = true;
-    unavailable = '';
-    const followList = await cachedProfileFollowList(props.pubkey);
-    if (run !== generation) return;
-    const authors = [
-      props.pubkey,
-      ...followeeEntries(followList).map((entry) => entry.pubkey),
-    ];
-    const uniqueAuthors = [...new Set(authors)];
-    unavailable = followList
-      ? ''
-      : 'No follow list has been received for this user.';
-    const [cached, hydrated] = await Promise.all([
-      loadCachedTimeline(60, uniqueAuthors),
-      hydrateProfiles({
-        pubkeys: uniqueAuthors.slice(0, 120),
-        relays,
-        owner: props.tabId,
-      }),
-    ]);
-    if (run !== generation) return;
-    items = cached;
-    profiles = hydrated;
-    loading = false;
+  async function start(run: number): Promise<void> {
+    controller?.abort();
+    controller = new AbortController();
+    const input: UserTimelineRuntimeInput = {
+      targetPubkey: props.pubkey,
+      relays,
+      owner: props.tabId,
+      subscriptions,
+      signal: controller.signal,
+      onSnapshot: (snapshot) => applySnapshot(run, snapshot),
+    };
+    await runUserTimelineRuntime(input);
   }
 
-  function safeNpub(pubkey: string): string {
+  function applySnapshot(run: number, snapshot: UserTimelineSnapshot): void {
+    if (run !== generation) return;
+    items = [...snapshot.items];
+    authors = [...snapshot.authors];
+    loading = snapshot.loading;
+    loadingOlder = snapshot.loadingOlder;
+    hasOlder = snapshot.hasOlder;
+    notice = snapshot.notice;
+    relayStatusText = snapshot.relayStatusText;
+    error = snapshot.error;
+    void hydrateVisibleAuthors();
+  }
+
+  async function hydrateVisibleAuthors(): Promise<void> {
+    const visible = items.map((item) => item.event.pubkey);
+    const pubkeys = [...new Set([...visible, ...authors])]
+      .filter((pubkey) => !profiles[pubkey])
+      .slice(0, 80);
+    if (pubkeys.length === 0) return;
+    const run = ++hydrateRun;
+    const loaded = await loadTimelineProfiles(
+      pubkeys,
+      relays,
+      `${props.tabId}:user-timeline-profiles`,
+    );
+    if (run === hydrateRun) profiles = { ...profiles, ...loaded };
+  }
+
+  async function loadOlder(): Promise<void> {
+    if (loadingOlder || !hasOlder || !controller) return;
+    loadingOlder = true;
     try {
-      return encodeNpub(pubkey);
-    } catch {
-      return pubkey;
+      const page = await readOlderUserTimeline({
+        items,
+        authors,
+        relays,
+        owner: props.tabId,
+        subscriptions,
+        signal: controller.signal,
+      });
+      if (!page) return;
+      items = mergeUserTimelineItems({
+        current: items,
+        incoming: page.items,
+        limit: items.length + page.items.length,
+      });
+      hasOlder = page.hasOlder;
+      void hydrateVisibleAuthors();
+    } finally {
+      loadingOlder = false;
     }
   }
 </script>
@@ -83,13 +128,12 @@
 <section class="user-timeline-tab feed-tab" aria-label="User Timeline">
   <header class="user-timeline-tab__header">
     <h2>User Timeline</h2>
-    <p>Public follow graph for {safeNpub(props.pubkey)}</p>
+    <p>Public timeline for {safeNpub(props.pubkey)}</p>
   </header>
-  {#if unavailable}
-    <p>{unavailable}</p>
-    <button type="button" onclick={() => void loadTimeline(++generation)}>
-      Retry
-    </button>
+  {#if notice}<p>{notice}</p>{/if}
+  {#if error}
+    <p role="alert">{error}</p>
+    <button type="button" onclick={() => void start(++generation)}>Retry</button>
   {/if}
   <EventTreeList
     tabId={props.tabId}
@@ -99,14 +143,16 @@
     relaySets={props.relaySets}
     activeAccountPubkey={props.activeAccountPubkey}
     {loading}
-    emptyText="No cached posts are available for this user's follow graph."
-    loadingOlder={false}
+    {relayStatusText}
+    emptyText="No public posts are available for this timeline."
+    {loadingOlder}
     loadingNewer={false}
-    hasOlder={false}
+    {hasOlder}
     hasNewer={false}
-    historyExhaustion="proven"
-    olderLoadMode="explicit"
-    olderPrefetchReady={false}
+    historyExhaustion={hasOlder ? 'unknown' : 'proven'}
+    olderLoadMode="auto-near-end"
+    olderPrefetchReady={items.length > 0}
+    onNearEnd={() => void loadOlder()}
     openProfile={props.openProfile}
     openThread={props.openThread}
     openAuthorContext={props.openAuthorContext}

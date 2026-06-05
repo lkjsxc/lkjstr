@@ -7,5 +7,5 @@ follow-list data.
 
 ## Table of Contents
 
-- `FolloweesTab.svelte`: cache-backed Followees tab with profile hydration and
-  row actions.
+- `FolloweesTab.svelte`: relay-backed Followees tab with cache-first rendering,
+  virtual scrolling, shared user rows, and owner-scoped profile hydration.

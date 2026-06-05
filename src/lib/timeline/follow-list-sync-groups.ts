@@ -27,6 +27,7 @@ export type PreferredFollowRelayGroups = {
 export async function buildPreferredRelayGroups(input: {
   readonly activePubkey: string;
   readonly selectedRelays: readonly string[];
+  readonly allowDiscoveryFallback?: boolean;
 }): Promise<PreferredFollowRelayGroups> {
   const userBlocked = await blockedRelayUrls('user');
   const discoveryBlocked = await blockedRelayUrls('discovery');
@@ -70,17 +71,14 @@ export async function buildPreferredRelayGroups(input: {
       .filter((relay) => !userBlocked.has(relay)),
   );
 
-  // Bootstrap determinism: only add discovery relays when the caller did not
-  // provide any selected relays. This keeps follow-list ownership scoped to
-  // the intended relay set (important for tests and user-visible state).
-  const discovery =
-    selected.length > 0
-      ? []
-      : dedupePreserveOrder(
-          (await configuredDiscoveryRelays()).filter(
-            (url) => !discoveryBlocked.has(url),
-          ),
-        );
+  const allowDiscovery = input.allowDiscoveryFallback || selected.length === 0;
+  const discovery = allowDiscovery
+    ? dedupePreserveOrder(
+        (await configuredDiscoveryRelays()).filter(
+          (url) => !discoveryBlocked.has(url),
+        ),
+      )
+    : [];
 
   return { selected, nip65, receiptKind3, discovery };
 }

@@ -18,6 +18,7 @@
   import '../styles/reactions.css';
   import '../styles/event-actions.css';
   import '../styles/identity.css';
+  import '../styles/user-row.css';
   import '../styles/tables.css';
   import '../styles/welcome.css';
   import '../styles/stats.css';

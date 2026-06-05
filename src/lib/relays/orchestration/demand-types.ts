@@ -9,6 +9,7 @@ export type DemandSurface =
   | 'profile'
   | 'thread'
   | 'notifications'
+  | 'user-timeline'
   | 'search'
   | 'custom-request'
   | 'author-context';

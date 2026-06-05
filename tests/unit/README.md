@@ -14,6 +14,7 @@ This directory contains Vitest unit tests grouped by source domain.
 - [custom-request/](custom-request/): custom relay request tests.
 - [events/](events/): event parsing and repository tests.
 - [feed-surface/](feed-surface/): shared feed paging tests.
+- [follow-graph/](follow-graph/): target follow-list tests.
 - [fp/](fp/): shared functional helper tests.
 - [identity/](identity/): profile identity tests.
 - [jobs/](jobs/): job manager tests.
@@ -33,4 +34,5 @@ This directory contains Vitest unit tests grouped by source domain.
 - [thread/](thread/): thread runtime tests.
 - [timeline/](timeline/): timeline runtime tests.
 - [tweet/](tweet/): Tweet draft and publish helper tests.
+- [user-timeline/](user-timeline/): public target timeline tests.
 - [workspace/](workspace/): workspace layout tests.

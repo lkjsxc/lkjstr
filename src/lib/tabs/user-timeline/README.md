@@ -2,10 +2,10 @@
 
 ## Purpose
 
-This directory renders a public target-user timeline from cached real events
-while relay-backed runtime parity is being added.
+This directory renders a public target-user timeline from real NIP-02 data and
+real target-authored events.
 
 ## Table of Contents
 
-- `UserTimelineTab.svelte`: target follow-list extraction, cached feed rows, and
-  profile hydration.
+- `UserTimelineTab.svelte`: relay-backed target follow-graph timeline with a
+  truthful target-posts-only degraded mode.

@@ -18,9 +18,9 @@ Read next: [product/README.md](product/README.md),
 - Home, Global, Public Chat, Profile, Thread, Notifications, Search, Custom
   Request, Author Context, Accounts, Relay Settings, Stats, Settings, Upload
   Settings, lkjstr Log, Mine npub, Profile Edit, and Welcome are implemented.
-- Followees and User Timeline are active implementation targets. Cache-hit real
-  NIP-02 data may render immediately, but a cache miss must start relay-backed
-  target discovery before any final unavailable state is shown.
+- Followees and User Timeline are relay-backed action-opened surfaces. Cache-hit
+  real NIP-02 data may render immediately, cache misses start target discovery,
+  and User Timeline can show a truthful target-posts-only degraded mode.
 - Tweet, replies, reposts, reactions, zaps, Blossom upload, NIP-96
   compatibility upload settings, NIP-98 auth, NIP-30 custom emoji,
   sensitive-content reveal, and event reference previews are implemented.
