@@ -12,6 +12,7 @@
   import '../styles/workspace-menu.css';
   import '../styles/scroll-layout.css';
   import '../styles/timeline.css';
+  import '../styles/media-embed.css';
   import '../styles/notifications.css';
   import '../styles/content-warning.css';
   import '../styles/mentions.css';

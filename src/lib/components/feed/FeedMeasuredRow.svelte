@@ -3,6 +3,7 @@
   import {
     estimateFeedRowHeight,
     recordFeedRowHeight,
+    widthBucketForPx,
   } from '$lib/feed-surface/row-height-reservation';
 
   type Props = {
@@ -14,21 +15,34 @@
 
   let { item, getKey, scrollElement, row }: Props = $props();
   let element: HTMLDivElement | undefined;
+  let widthPx = $state<number | undefined>();
   let key = $derived(getKey(item));
-  let reservedHeight = $derived(estimateFeedRowHeight({ key, item }));
+  let reservedHeight = $derived(estimateFeedRowHeight({ key, item, widthPx }));
 
   $effect(() => {
     if (!element || typeof ResizeObserver === 'undefined') return;
     const node = element;
-    let previous = Math.round(node.getBoundingClientRect().height);
+    const initial = node.getBoundingClientRect();
+    let previousHeight = Math.round(initial.height);
+    let previousBucket = widthBucketForPx(initial.width);
+    widthPx = initial.width;
     const observer = new ResizeObserver((entries) => {
-      const height = Math.round(entries[0]?.contentRect.height ?? 0);
-      if (height <= 0 || height === previous) return;
-      const delta = height - previous;
+      const rect = entries[0]?.contentRect;
+      const height = Math.round(rect?.height ?? 0);
+      const width = Math.round(rect?.width ?? 0);
+      if (width > 0) widthPx = width;
+      const bucket = widthBucketForPx(width);
+      if (bucket !== previousBucket) {
+        previousBucket = bucket;
+        previousHeight = height;
+        return;
+      }
+      if (height <= 0 || height === previousHeight) return;
+      const delta = height - previousHeight;
       if (isAboveViewport(node, scrollElement) && delta !== 0)
         scrollElement!.scrollTop += delta;
-      previous = height;
-      recordFeedRowHeight({ key, heightPx: height });
+      previousHeight = height;
+      recordFeedRowHeight({ key, widthPx: width, heightPx: height });
     });
     observer.observe(node);
     return () => observer.disconnect();

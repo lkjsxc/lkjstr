@@ -17,9 +17,15 @@ the product behavior should be changed after the destination doc is updated.
 | Tweet publish loading state             | `src/lib/tabs/tweet/`, `src/lib/tweet/`, `src/lib/relays/relay-pool*`     | relay publish and account signing tests     |
 | Visible profile prefetch                | `src/lib/profile/`, `src/lib/events/`, `src/lib/tabs/timeline/`           | memory gate plus profile store tests        |
 | Visible event reference prefetch        | `src/lib/events/`, `src/lib/protocol/`, `src/lib/components/events/`      | event repository and protocol event tests   |
-| Reaction notification chrome            | `src/lib/notifications/`, `src/lib/components/notifications/`            | notification row chrome tests               |
-| Image click hitbox                      | `src/lib/components/events/`, `src/styles/timeline.css`                  | media attachment hitbox test                |
-| Width-stale row heights                 | `src/lib/feed-surface/`, `src/lib/components/feed/`                      | row height reservation tests                |
+
+
+## Closed Polish Rows
+
+| Item                         | Source anchors                                                 | Closing gate                 |
+| ---------------------------- | -------------------------------------------------------------- | ---------------------------- |
+| Reaction notification chrome | `src/lib/notifications/`, `src/lib/components/notifications/` | notification row chrome test |
+| Image click hitbox           | `src/lib/components/events/`, `src/styles/media-embed.css`    | media hitbox CSS test        |
+| Width-stale row heights      | `src/lib/feed-surface/`, `src/lib/components/feed/`           | row height width tests       |
 
 ## Workspace Rows
 

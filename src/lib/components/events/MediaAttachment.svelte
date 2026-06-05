@@ -19,17 +19,30 @@
 <!-- eslint-disable svelte/no-navigation-without-resolve -->
 {#if props.attachment.type === 'image'}
   <a
-    class="media-embed"
+    class="media-embed media-embed--image-link"
     href={props.attachment.url}
     target="_blank"
     rel="noopener noreferrer"
-    style:aspect-ratio={props.attachment.aspectRatio}
     onclick={stop}
   >
-    <img src={props.attachment.url} alt="" loading="lazy" />
+    <span
+      class="media-embed__image-box"
+      style:aspect-ratio={props.attachment.aspectRatio}
+    >
+      <img
+        class="media-embed__image"
+        src={props.attachment.url}
+        alt=""
+        loading="lazy"
+        decoding="async"
+      />
+    </span>
   </a>
 {:else if props.attachment.type === 'video'}
-  <div class="media-embed" style:aspect-ratio={props.attachment.aspectRatio}>
+  <div
+    class="media-embed media-embed--video"
+    style:aspect-ratio={props.attachment.aspectRatio}
+  >
     <!-- svelte-ignore a11y_media_has_caption -->
     <video src={props.attachment.url} controls onclick={stop}></video>
     <button type="button" onclick={(event) => (stop(event), open())}>
@@ -37,7 +50,7 @@
     </button>
   </div>
 {:else if props.attachment.type === 'audio'}
-  <div class="media-embed">
+  <div class="media-embed media-embed--audio">
     <audio src={props.attachment.url} controls onclick={stop}></audio>
     <button type="button" onclick={(event) => (stop(event), open())}>
       Open audio

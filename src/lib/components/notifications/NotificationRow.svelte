@@ -4,7 +4,7 @@
   import type { FeedEvent } from '$lib/events/types';
   import type { ProfileSummary } from '$lib/identity/identity';
   import type { NotificationRecord } from '$lib/notifications/notification';
-  import { notificationActionLabel } from '$lib/notifications/notification-presentation';
+  import { notificationRowChrome } from '$lib/notifications/notification-row-chrome';
   import type { RelaySet } from '$lib/relays/relay-store';
 
   type Props = {
@@ -21,34 +21,46 @@
   };
 
   let props: Props = $props();
-  let label = $derived(notificationActionLabel(props.record.kind));
   let time = $derived(new Date(props.record.createdAt * 1000).toLocaleString());
   let sourceShowsActor = $derived(
     props.item?.event.pubkey === props.record.actorPubkey,
+  );
+  let chrome = $derived(
+    notificationRowChrome({
+      record: props.record,
+      hasSourceItem: Boolean(props.item),
+      sourceShowsActor,
+    }),
   );
 </script>
 
 <article class:unread={!props.record.readAt} class="notification-row">
   {#if !props.record.readAt}<span class="sr-only">Unread</span>{/if}
   <div class="notification-row__body">
-    <div class="notification-row__meta">
-      {#if !sourceShowsActor}
-        <button
-          type="button"
-          class="identity-button notification-row__actor"
-          onclick={() => props.openProfile?.(props.record.actorPubkey)}
-        >
-          <IdentityChip
-            pubkey={props.record.actorPubkey}
-            profile={props.profile}
-          />
-        </button>
-      {/if}
-      <strong>{label}</strong>
-      <time datetime={new Date(props.record.createdAt * 1000).toISOString()}>
-        {time}
-      </time>
-    </div>
+    {#if chrome.kind === 'normal'}
+      <div class="notification-row__meta">
+        {#if chrome.showActor}
+          <button
+            type="button"
+            class="identity-button notification-row__actor"
+            onclick={() => props.openProfile?.(props.record.actorPubkey)}
+          >
+            <IdentityChip
+              pubkey={props.record.actorPubkey}
+              profile={props.profile}
+            />
+          </button>
+        {/if}
+        <strong>{chrome.label}</strong>
+        {#if chrome.showTime}
+          <time datetime={new Date(props.record.createdAt * 1000).toISOString()}>
+            {time}
+          </time>
+        {/if}
+      </div>
+    {:else if chrome.kind === 'compact-fallback'}
+      <p class="event-content">{chrome.text}</p>
+    {/if}
     {#if props.item}
       <div class="notification-row__event">
         <EventRow
