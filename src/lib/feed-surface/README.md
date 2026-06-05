@@ -12,6 +12,10 @@ row helpers for timeline-like tabs.
 - [older-prefetch.ts](older-prefetch.ts): safe Home/Global prefetch predicate.
 - [speculative-older.ts](speculative-older.ts): deduped older-page coordinator.
 - [staged-rows.ts](staged-rows.ts): immediate row shell projection.
+- [feed-geometry-features.ts](feed-geometry-features.ts): content-aware row features.
+- [feed-geometry-wasm.ts](feed-geometry-wasm.ts): temporary WASM bridge wrapper.
+- [feed-visual-fragments.ts](feed-visual-fragments.ts): oversized event visual rows.
+- [feed-visual-fragment-text.ts](feed-visual-fragment-text.ts): Unicode-safe text segmentation.
 - [row-height-reservation.ts](row-height-reservation.ts): session measured row heights.
 - [scan-model-records.ts](scan-model-records.ts): scan density repository types.
 - [scan-model-keys.ts](scan-model-keys.ts): scope keys and parent contexts.

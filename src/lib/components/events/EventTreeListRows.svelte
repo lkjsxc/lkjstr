@@ -2,6 +2,7 @@
   import type { Snippet } from 'svelte';
   import FeedSurfaceStatus from './FeedSurfaceStatus.svelte';
   import type { FeedPagingPhase } from '$lib/feed-surface/paging-state';
+  import EventFragmentRow from './EventFragmentRow.svelte';
   import EventRow from './EventRow.svelte';
   import type { ProfileSummary } from '$lib/identity/identity';
   import type { RelaySet } from '$lib/relays/relay-store';
@@ -59,6 +60,24 @@
   >
     Continue thread ({collapsed.hiddenCount})
   </button>
+{:else if props.node.kind === 'eventFragment'}
+  <EventFragmentRow
+    node={props.node.node}
+    fragment={props.node.fragment}
+    profile={props.profiles?.[props.node.node.event.pubkey]}
+    relaySets={props.relaySets}
+    activeAccountPubkey={props.activeAccountPubkey}
+    liked={actionStateForEvent(props.actionStates, props.node.node.event.id)
+      .liked}
+    reposted={actionStateForEvent(props.actionStates, props.node.node.event.id)
+      .reposted}
+    reactions={props.reactions?.[props.node.node.event.id]}
+    reposts={props.reposts?.[props.node.node.event.id]}
+    profiles={props.profiles}
+    openProfile={props.openProfile}
+    openThread={props.openThread}
+    openAuthorContext={props.openAuthorContext}
+  />
 {:else if eventNode && 'event' in eventNode}
   <EventRow
     item={eventNode}

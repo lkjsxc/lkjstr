@@ -41,16 +41,22 @@ before the SvelteKit product runtime can be removed.
 
 Feed-like surfaces cannot be marked `implemented` until this shared proof exists:
 
-| Requirement | Proof before feed-surface parity |
-| --- | --- |
-| Rust row-fragment planner | oversized text, media, reference, and action tests |
-| Rust geometry estimator | feature, bucket, hash, and confidence tests |
-| Rust anchor reducer | height delta, live insert, resize, and fallback tests |
-| WASM bridge tests | serialization and explicit unavailable/error states |
-| Svelte temporary bridge use | shipped feeds consume the same model while Svelte remains runtime |
-| Leptos feed surface use | visible rows, footer rows, and scroll retention match product behavior |
-| Scroll regression tests | tall text, long token, hydration, media, resize, and overflow coverage |
-| Deletion-ledger update | `src/lib/feed-surface` row records files, tests, and no-import proof |
+| Requirement                 | Proof before feed-surface parity                                       |
+| --------------------------- | ---------------------------------------------------------------------- |
+| Rust row-fragment planner   | oversized text, media, reference, and action tests                     |
+| Rust geometry estimator     | feature, bucket, hash, and confidence tests                            |
+| Rust anchor reducer         | height delta, live insert, resize, and fallback tests                  |
+| WASM bridge tests           | serialization and explicit unavailable/error states                    |
+| Svelte temporary bridge use | shipped feeds consume the same model while Svelte remains runtime      |
+| Leptos feed surface use     | visible rows, footer rows, and scroll retention match product behavior |
+| Scroll regression tests     | tall text, long token, hydration, media, resize, and overflow coverage |
+| Deletion-ledger update      | `src/lib/feed-surface` row records files, tests, and no-import proof   |
+
+Current feed-surface evidence: Rust planner, estimator, anchor reducer, and WASM
+bridge exist with focused tests. The shipped Svelte feed uses temporary matching
+host glue for content-aware estimates and long-content fragments. SQLite
+observation persistence, Stats projection, Leptos feed use, and browser scroll
+regression proof remain open.
 
 ## Storage Ledger
 

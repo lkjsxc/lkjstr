@@ -1,6 +1,15 @@
 import { createBoundedMap } from '$lib/fp/bounded-map';
+import {
+  estimateHeightFromFeatures,
+  featuresForFeedItem,
+} from './feed-geometry-features';
+import {
+  estimateHeightWithRust,
+  warmFeedGeometryWasmBridge,
+} from './feed-geometry-wasm';
 
 const measuredHeights = createBoundedMap<string, number>({ maxSize: 2_000 });
+warmFeedGeometryWasmBridge();
 
 export type FeedRowWidthBucket =
   | '0-319'
@@ -17,11 +26,16 @@ export function estimateFeedRowHeight(input: {
 }): number {
   const measured = measuredHeights.get(measurementKey(input));
   if (measured) return measured;
-  return fallbackHeight(input.item);
+  const features = featuresForFeedItem(input.item, input.widthPx);
+  return (
+    estimateHeightWithRust({ key: input.key, features }) ??
+    estimateHeightFromFeatures(features)
+  );
 }
 
 export function recordFeedRowHeight(input: {
   readonly key: string;
+  readonly item?: unknown;
   readonly widthPx?: number;
   readonly heightPx: number;
 }): void {
@@ -51,21 +65,15 @@ export function widthBucketForPx(widthPx?: number): FeedRowWidthBucket {
 
 function measurementKey(input: {
   readonly key: string;
+  readonly item?: unknown;
   readonly widthPx?: number;
 }): string {
-  return `${input.key}\u0000${widthBucketForPx(input.widthPx)}`;
-}
-
-function fallbackHeight(item: unknown): number {
-  const kind = rowKind(item);
-  if (kind === 'leading') return 220;
-  if (kind === 'event') return 168;
-  if (kind === 'empty') return 96;
-  return 72;
-}
-
-function rowKind(item: unknown): string | undefined {
-  if (typeof item !== 'object' || item === null) return undefined;
-  const kind = (item as { readonly kind?: unknown }).kind;
-  return typeof kind === 'string' ? kind : undefined;
+  const features = featuresForFeedItem(input.item, input.widthPx);
+  return [
+    input.key,
+    features.rowKind,
+    features.contentShapeHash,
+    widthBucketForPx(input.widthPx),
+    features.fontScaleBucket,
+  ].join('\u0000');
 }

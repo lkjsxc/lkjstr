@@ -50,6 +50,14 @@
       <strong>{props.memory.caches.contentTokens}</strong>
       <span>token cache</span>
     </article>
+    <article>
+      <strong>{props.memory.geometry.measuredRows}</strong>
+      <span>feed geometry rows</span>
+    </article>
+    <article>
+      <strong>{props.memory.geometry.bridgeStatus}</strong>
+      <span>geometry bridge</span>
+    </article>
   </div>
   <p>
     fallback {props.memory.fallbackRepository.events} events · references

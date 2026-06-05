@@ -3,9 +3,14 @@
   --scroll-content-inset: var(--space-3);
 }
 
-.feed-tab,
 .event-list__viewport,
-.notification-list-scroll,
+.notification-list-scroll {
+  box-sizing: border-box;
+  overflow-x: clip;
+  padding-inline-end: var(--scroll-track-edge);
+  scrollbar-gutter: stable;
+}
+
 .settings-tab,
 .data-tab,
 .profile-tab,
@@ -19,7 +24,11 @@
   scrollbar-gutter: stable;
 }
 
-.feed-scroll-item,
+.feed-scroll-item {
+  padding-inline-end: var(--scroll-content-inset);
+  padding-inline-start: var(--scroll-content-inset);
+}
+
 .settings-tab > *,
 .data-tab > *,
 .profile-tab > *,

@@ -5,13 +5,13 @@
 This source directory owns the narrow WASM bridge for Rust feed geometry,
 fragment planning, measurement reduction, and anchor reducers.
 
-## Files
+## Table of Contents
 
-- `mod.rs`: exported `wasm_bindgen` functions.
-- `bridge.rs`: JS value parsing, calls into `lkjstr-app`, and output encoding.
-- `dto.rs`: serializable host-boundary shapes.
-- `codec.rs`: geometry, model, measurement, and anchor conversion.
-- `row_codec.rs`: visual row conversion.
+- [mod.rs](mod.rs): exported `wasm_bindgen` functions.
+- [bridge.rs](bridge.rs): JavaScript value parsing, app calls, and output encoding.
+- [dto.rs](dto.rs): serializable host-boundary shapes.
+- [codec.rs](codec.rs): geometry, model, measurement, and anchor conversion.
+- [row_codec.rs](row_codec.rs): visual row conversion.
 
 ## Rules
 

@@ -16,7 +16,7 @@ export function nearVisibleEventIds(
   const end = scrollOffset + viewport * 2;
   return rows
     .flatMap((row, index) => {
-      if (row.kind !== 'event') return [];
+      if (row.kind !== 'event' && row.kind !== 'eventFragment') return [];
       const offset = getOffset(index);
       return offset === undefined || (offset >= start && offset <= end)
         ? [row.node.event.id]
@@ -31,6 +31,10 @@ export function fallbackNodeIds(nodes: readonly FlatEventTreeItem[]): string[] {
 
 function fallbackIds(rows: readonly EventTreeListViewRow[]): string[] {
   return rows
-    .flatMap((row) => (row.kind === 'event' ? [row.node.event.id] : []))
+    .flatMap((row) =>
+      row.kind === 'event' || row.kind === 'eventFragment'
+        ? [row.node.event.id]
+        : [],
+    )
     .slice(0, fallbackPinLimit);
 }

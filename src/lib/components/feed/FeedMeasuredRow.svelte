@@ -42,7 +42,7 @@
       if (isAboveViewport(node, scrollElement) && delta !== 0)
         scrollElement!.scrollTop += delta;
       previousHeight = height;
-      recordFeedRowHeight({ key, widthPx: width, heightPx: height });
+      recordFeedRowHeight({ key, item, widthPx: width, heightPx: height });
     });
     observer.observe(node);
     return () => observer.disconnect();

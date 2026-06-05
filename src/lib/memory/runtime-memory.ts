@@ -3,6 +3,8 @@ import { contentTokenCacheSize } from '../events/content-tokens';
 import { fallbackRepositoryCounts } from '../events/repository-memory';
 import { referenceCacheSize } from '../events/reference-resolver';
 import { profileCacheSize } from '../identity/profile-cache';
+import { feedGeometryWasmBridgeStatus } from '../feed-surface/feed-geometry-wasm';
+import { feedRowHeightReservationCount } from '../feed-surface/row-height-reservation';
 import { appLogCount } from '../log/app-log';
 import { relayDiagnosticSuppressionCount } from '../relays/relay-diagnostic-log';
 import { currentRelaySnapshots } from '../relays/session-snapshots';
@@ -27,6 +29,10 @@ export type RuntimeMemorySnapshot = {
     readonly references: number;
     readonly profiles: number;
     readonly contentTokens: number;
+  };
+  readonly geometry: {
+    readonly bridgeStatus: string;
+    readonly measuredRows: number;
   };
   readonly jsHeap?: {
     readonly usedJSHeapSize: number;
@@ -57,6 +63,10 @@ export function runtimeMemorySnapshot(): RuntimeMemorySnapshot {
       references: referenceCacheSize(),
       profiles: profileCacheSize(),
       contentTokens: contentTokenCacheSize(),
+    },
+    geometry: {
+      bridgeStatus: feedGeometryWasmBridgeStatus().status,
+      measuredRows: feedRowHeightReservationCount(),
     },
     jsHeap: jsHeapSnapshot(),
   };

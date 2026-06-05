@@ -9,6 +9,7 @@ Source files expose Rust application behavior to the browser through
 
 - `accounts_active.rs`: local-storage active account helper.
 - `accounts_host.rs`: browser-backed Accounts command provider.
+- `feed_geometry/`: feed geometry, fragment, measurement, and anchor bridge.
 - `follow_graph/`: target follow-list parser bridge.
 - `lib.rs`: public WASM exports.
 - `indexed_db/`: browser IndexedDB host adapter.

@@ -5,6 +5,10 @@ import {
 } from '$lib/events/tree';
 import type { FeedEvent } from '$lib/events/types';
 import type { HistoryExhaustion } from '$lib/feed-surface/paging-state';
+import {
+  planEventVisualFragments,
+  type FeedVisualFragment,
+} from '$lib/feed-surface/feed-visual-fragments';
 
 export type EventTreeListLeadingRow = {
   readonly key: string;
@@ -16,6 +20,12 @@ export type EventTreeListViewRow =
   | {
       readonly kind: 'event';
       readonly node: FlatEventTreeItem;
+      readonly visualIndex: number;
+    }
+  | {
+      readonly kind: 'eventFragment';
+      readonly node: FlatEventTreeItem;
+      readonly fragment: FeedVisualFragment;
       readonly visualIndex: number;
     }
   | { readonly kind: 'loadingOlder' }
@@ -35,13 +45,25 @@ export function buildViewRows(
     kind: 'leading',
     row,
   }));
-  rows.push(
-    ...nodes.map((node, index) => ({
-      kind: 'event' as const,
-      node,
-      visualIndex: leadingRows.length + index,
-    })),
-  );
+  for (const node of nodes) {
+    if ('collapsed' in node) {
+      rows.push({ kind: 'event', node, visualIndex: rows.length });
+      continue;
+    }
+    const fragments = planEventVisualFragments(node);
+    if (fragments.length === 1 && fragments[0]?.kind === 'event-full') {
+      rows.push({ kind: 'event', node, visualIndex: rows.length });
+      continue;
+    }
+    for (const fragment of fragments) {
+      rows.push({
+        kind: 'eventFragment',
+        node,
+        fragment,
+        visualIndex: rows.length,
+      });
+    }
+  }
   if (nodes.length === 0 && !loading)
     rows.push({ kind: 'empty', text: emptyText });
   if (loadingOlder && hasOlder) return [...rows, { kind: 'loadingOlder' }];
@@ -65,12 +87,18 @@ export function eventNodeKey(node: FlatEventTreeItem): string {
   return node.event.id;
 }
 
-export function eventRows(
-  rows: readonly EventTreeListViewRow[],
-): { readonly node: FlatEventTreeItem; readonly visualIndex: number }[] {
+export function eventRows(rows: readonly EventTreeListViewRow[]): {
+  readonly node: FlatEventTreeItem;
+  readonly visualIndex: number;
+  readonly rowKey?: string;
+}[] {
   return rows
-    .filter((row) => row.kind === 'event')
-    .map((row) => ({ node: row.node, visualIndex: row.visualIndex }));
+    .filter((row) => row.kind === 'event' || row.kind === 'eventFragment')
+    .map((row) => ({
+      node: row.node,
+      visualIndex: row.visualIndex,
+      rowKey: row.kind === 'eventFragment' ? row.fragment.rowKey : undefined,
+    }));
 }
 
 export function nearStartVisualIndex(
@@ -79,7 +107,8 @@ export function nearStartVisualIndex(
   const index = rows.findIndex(
     (row) =>
       (row.kind === 'leading' && row.row.nearStart === true) ||
-      row.kind === 'event',
+      row.kind === 'event' ||
+      row.kind === 'eventFragment',
   );
   return index >= 0 ? index : undefined;
 }
@@ -101,5 +130,6 @@ export function viewRowKey(row: EventTreeListViewRow): string {
   if (row.kind === 'terminal') return 'event-list-terminal';
   if (row.kind === 'loadingOlder') return 'event-list-loading-older';
   if (row.kind === 'empty') return 'event-list-empty';
+  if (row.kind === 'eventFragment') return row.fragment.rowKey;
   return row.node.event.id;
 }

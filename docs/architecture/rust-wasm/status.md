@@ -61,9 +61,10 @@ This file is the concise status map for the active Rust/WASM migration.
   fragmentation, real-data LOD tree reducers, and Svelte width-bucketed session
   measurement. WASM bridge calls now expose estimation, measurement reduction,
   visual-fragment planning, anchor capture, and anchor reconciliation. The
-  active implementation target is wiring this bridge through Svelte temporary
-  bridge use, SQLite observation persistence, Stats diagnostics, and Leptos feed
-  use. Durable
+  shipped Svelte feed now warms that bridge, falls back to the equivalent
+  temporary TypeScript estimator when unavailable, and decomposes oversized
+  event rows into real visual fragments. The active implementation target is
+  SQLite observation persistence, Stats diagnostics, and Leptos feed use. Durable
   SQLite geometry model wiring remains open.
 - Rust Settings persistence now uses the SQLite worker typed repository in the
   Rust Settings host. CSS side effects and cache-budget enforcement remain open.

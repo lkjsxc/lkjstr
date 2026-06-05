@@ -5,13 +5,13 @@
 This source directory owns pure Rust planning for real visual feed rows produced
 from oversized semantic Nostr events.
 
-## Files
+## Table of Contents
 
-- `model.rs`: fragment constants, semantic event input, and visual row output.
-- `text.rs`: Unicode-safe text segmentation.
-- `keys.rs`: stable content-derived fragment keys.
-- `plan.rs`: deterministic planner from semantic event to visual rows.
-- `tests.rs`: exact-content, key stability, and ordering coverage.
+- [model.rs](model.rs): fragment constants, semantic event input, and visual row output.
+- [text.rs](text.rs): Unicode-safe text segmentation.
+- [keys.rs](keys.rs): stable content-derived fragment keys.
+- [plan.rs](plan.rs): deterministic planner from semantic event to visual rows.
+- [tests.rs](tests.rs): exact-content, key stability, and ordering coverage.
 
 ## Rules
 

@@ -7,10 +7,10 @@ compensation for feed surfaces.
 
 ## Status
 
-Status: active implementation target. Rust owns feature extraction, estimation,
-fragment planning, and anchor reducers. The shipped Svelte feed may use a narrow
-WASM bridge or an explicitly marked temporary TypeScript bridge while Leptos feed
-parity is incomplete.
+Status: partially implemented. Rust owns feature extraction, estimation,
+fragment planning, anchor reducers, and the WASM bridge. The shipped Svelte feed
+warms the bridge and uses explicitly temporary TypeScript fallback logic while
+Leptos feed parity and SQLite observation persistence remain incomplete.
 
 ## Geometry Key
 

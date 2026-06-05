@@ -9,6 +9,7 @@ reducers.
 
 - `custom_request/`: pure Custom Request parsing, clamps, and mode selection.
 - `feed/`: pure feed-window reduction and cursor derivation.
+- `feed_fragments/`: real visual row planning for oversized events.
 - `feed_geometry/`: row height estimates, measured models, and anchors.
 - `feed_lod/`: real-data feed level-of-detail tree.
 - `feed_scan/`: adaptive grouped scan planning and trace reducers.

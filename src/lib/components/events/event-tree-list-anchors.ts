@@ -13,6 +13,7 @@ import {
 export type EventAnchorRow = {
   readonly node: FlatEventTreeItem;
   readonly visualIndex: number;
+  readonly rowKey?: string;
 };
 
 export type TreeListAnchorHandle = VirtualListHandle & {
@@ -37,7 +38,7 @@ export async function restoreFeedListAnchor(args: {
     restoreVirtualAnchor(
       { key: restore.anchorKey, offset: restore.offset },
       args.rows,
-      (row) => args.key(row.node),
+      (row) => row.rowKey ?? args.key(row.node),
       visualIndexList(args.rows, args.list),
     );
   return key;
@@ -63,7 +64,7 @@ export function syncFeedListAnchor(args: {
     restoreVirtualAnchor(
       anchor ? { key: anchor.anchorKey, offset: anchor.offset } : undefined,
       args.rows,
-      (row) => args.key(row.node),
+      (row) => row.rowKey ?? args.key(row.node),
       visualIndexList(args.rows, args.list),
     );
   });
@@ -77,7 +78,7 @@ export function captureFeedListAnchor(
 ): TabFeedAnchor | undefined {
   const anchor = captureVirtualAnchor(
     rows,
-    (row) => key(row.node),
+    (row) => row.rowKey ?? key(row.node),
     visualIndexList(rows, list),
   );
   return anchor ? { anchorKey: anchor.key, offset: anchor.offset } : undefined;

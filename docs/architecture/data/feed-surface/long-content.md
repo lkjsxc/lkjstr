@@ -7,9 +7,9 @@ without adding nested scrolling, fake rows, or placeholder product data.
 
 ## Status
 
-Status: active implementation target. The shipped Svelte feed must consume this
-model while Leptos parity remains incomplete. Rust owns the durable planner
-when the WASM bridge is available; any TypeScript path is temporary host glue.
+Status: partially implemented. Rust owns the durable planner and WASM bridge;
+the shipped Svelte feed renders real oversized-event fragments through matching
+temporary TypeScript host glue while Leptos parity remains incomplete.
 
 ## Scroll Invariant
 
