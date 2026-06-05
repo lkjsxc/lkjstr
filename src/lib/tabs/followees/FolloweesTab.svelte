@@ -31,6 +31,7 @@
   let message = $state('');
   let copied = $state('');
   let generation = 0;
+  let startedKey = '';
   let controller: AbortController | undefined;
   let copyTimer: ReturnType<typeof setTimeout> | undefined;
   let hydrateRun = 0;
@@ -41,7 +42,8 @@
   $effect(() => {
     if (!props.visible) return;
     const key = runtimeKey;
-    if (!key) return;
+    if (!key || key === startedKey) return;
+    startedKey = key;
     void startFollowees(++generation);
   });
 

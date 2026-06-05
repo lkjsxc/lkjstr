@@ -38,6 +38,7 @@
   let relayStatusText = $state('');
   let authors = $state<string[]>([]);
   let generation = 0;
+  let startedKey = '';
   let hydrateRun = 0;
   let controller: AbortController | undefined;
   const subscriptions = sharedSubscriptionOrchestrator;
@@ -47,7 +48,8 @@
   $effect(() => {
     if (!props.visible) return;
     const key = runtimeKey;
-    if (!key) return;
+    if (!key || key === startedKey) return;
+    startedKey = key;
     void start(++generation);
   });
 

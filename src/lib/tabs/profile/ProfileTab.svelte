@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { untrack } from 'svelte';
+  import { onDestroy, untrack } from 'svelte';
   import { captureStartupPromise } from '$lib/app/runtime-log';
   import type { Account } from '$lib/accounts/account';
   import EventTreeList from '$lib/components/events/EventTreeList.svelte';
@@ -7,6 +7,7 @@
   import type { OlderLoadTrigger } from '$lib/feed-surface/older-load-mode';
   import type { ProfileSummary } from '$lib/identity/identity';
   import { getProfile } from '$lib/identity/profile-cache';
+  import { profileEmptyText } from '$lib/profile/profile-empty-text';
   import { profileUpdatedEvent } from '$lib/profile/profile-metadata-draft';
   import { encodeNprofile, encodeNpub } from '$lib/protocol/nip19';
   import {
@@ -42,13 +43,6 @@
     openProfileEdit: () => void;
   };
 
-  function profileEmptyText(next: ProfileState): string {
-    if (next.loading) return 'Loading notes...';
-    if (next.error) return 'Profile notes are partially unavailable.';
-    if (next.hasOlder) return 'Searching older notes...';
-    return 'No public notes found on attempted relays.';
-  }
-
   let props: Props = $props();
   let state = $state<ProfileState>(emptyProfileState());
   let profiles = $derived<Record<string, ProfileSummary>>(
@@ -63,6 +57,8 @@
     safeNprofile(props.pubkey, timelineRelays(props.relaySets)),
   );
   let runtime: ProfileRuntime | undefined;
+  let runtimeCleanup: (() => void) | undefined;
+  let startedKey = '';
   let olderRequests = createOlderRequestCoordinator<OlderLoadTrigger>(
     async (trigger) => {
       if (trigger === 'scroll') await runtime?.loadOlder({ preserve: 'older' });
@@ -80,17 +76,21 @@
       return;
     }
     runtime?.setVisibility?.(true);
-    if (!runtimeKey) return;
+    const key = runtimeKey;
+    if (!key || key === startedKey) return;
+    stopRuntime();
+    startedKey = key;
     const { pubkey, relaySets, tabId } = untrack(() => props);
     olderRequests.reset();
-    runtime = createProfileRuntime(
+    const created = createProfileRuntime(
       pubkey,
       timelineRelays(relaySets),
       createTimelineSubId(tabId, 'profile'),
       tabId,
     );
-    const unsubscribe = runtime.subscribe((next) => (state = next));
-    captureStartupPromise(runtime.start(), {
+    runtime = created;
+    const unsubscribe = created.subscribe((next) => (state = next));
+    captureStartupPromise(created.start(), {
       code: 'profile-runtime-start-failed',
       surface: 'profile',
       kind: 'profile',
@@ -98,19 +98,24 @@
       relayCount: timelineRelays(relaySets).length,
     });
     const refreshProfile = (event: Event) => {
-      if ((event as CustomEvent<string>).detail === props.pubkey)
-        state = {
-          ...state,
-          profile: getProfile(props.pubkey) ?? state.profile,
-        };
+      if ((event as CustomEvent<string>).detail === pubkey)
+        state = { ...state, profile: getProfile(pubkey) ?? state.profile };
     };
     window.addEventListener(profileUpdatedEvent, refreshProfile);
-    return () => {
+    runtimeCleanup = () => {
       window.removeEventListener(profileUpdatedEvent, refreshProfile);
       unsubscribe();
-      runtime?.close();
+      created.close();
+      if (runtime === created) runtime = undefined;
     };
   });
+
+  onDestroy(stopRuntime);
+
+  function stopRuntime(): void {
+    runtimeCleanup?.();
+    runtimeCleanup = undefined;
+  }
 
   function safeNpub(pubkey: string): string {
     try {
