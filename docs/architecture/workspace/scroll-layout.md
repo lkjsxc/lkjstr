@@ -21,8 +21,14 @@ without overlapping text or controls.
   their scrollbar tracks sit at the same frame distance as Notifications.
 - `.pane-body` does not add inline padding on the scroll axis. Block-axis
   padding may remain for vertical rhythm.
+- The scroll owner is the layout root for vertical movement. It is not the
+  semantic owner of one feed event or one product row.
 - Feed virtual lists keep status rows inside the scroll flow so the footer moves
   with content.
+- Oversized semantic events may produce multiple real visual rows in the same
+  scroll flow. The fragments preserve event identity, content, provenance,
+  ordering, and actions per
+  [long-content.md](../data/feed-surface/long-content.md).
 - Profile summary and note rows share the same feed scroll owner so the summary
   scrolls away with the notes.
 - Horizontal overflow in pane bodies is forbidden except for intentional rails
@@ -71,6 +77,10 @@ Profile leading rows use the same viewport and content wrapper as note rows.
 
 - [feed-scroll-surface.md](../data/feed-surface/feed-scroll-surface.md): shared
   scroll component.
+- [long-content.md](../data/feed-surface/long-content.md): oversized event
+  visual fragments.
+- [geometry-model.md](../data/feed-surface/geometry-model.md): row estimates and
+  anchor compensation.
 - [feed-row-chrome.md](../data/feed-surface/feed-row-chrome.md): row separators
   and control inset.
 - [tab-shell-layout.md](tab-shell-layout.md): feed-tab vs form-tab.

@@ -56,7 +56,11 @@ This file is the concise status map for the active Rust/WASM migration.
   shipped runtime wiring remain open.
 - Feed surfaces now have pure row geometry estimates, width buckets, anchor
   compensation, real-data LOD tree reducers, and Svelte width-bucketed session
-  measurement. Durable SQLite geometry model wiring remains open.
+  measurement. The active implementation target is the Rust feed geometry model:
+  content-aware feature extraction, real long-content visual fragmentation,
+  pure anchor reducers, WASM bridge calls, Svelte temporary bridge use, SQLite
+  observation persistence, Stats diagnostics, and Leptos feed use. Durable
+  SQLite geometry model wiring remains open.
 - Rust Settings persistence now uses the SQLite worker typed repository in the
   Rust Settings host. CSS side effects and cache-budget enforcement remain open.
 - Followees and User Timeline now have Rust target follow-graph reducers, a
@@ -107,5 +111,6 @@ ledgers.
 3. Wire SQLite repositories into startup, Stats, and feed cache paths.
 4. Wire relay reducers, request budgets, page-read dedupe, and browser adapters
    into product query services.
-5. Wire scan density, orchestration, row geometry, and LOD into shipped feeds.
+5. Wire scan density, orchestration, row geometry, long-content fragments, and
+   LOD into shipped feeds.
 6. Delete replaced TypeScript or Svelte modules only after parity is proven.

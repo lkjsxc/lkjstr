@@ -16,8 +16,14 @@ materialization, row geometry, and real-data level of detail.
   value for feed events.
 - [footer-phase.md](footer-phase.md): `feedPagingPhase` and `FeedSurfaceStatus`.
 - [staged-pipeline.md](staged-pipeline.md): relay page, row shell, enrichment.
-- [height-reservation.md](height-reservation.md): measured row height models and
-  anchor compensation.
+- [height-reservation.md](height-reservation.md): shipped reservation loop and
+  concise summary of row-height contracts.
+- [geometry-model.md](geometry-model.md): durable geometry keys, estimates,
+  measurements, and anchor compensation.
+- [long-content.md](long-content.md): real visual fragments for oversized event
+  content without nested scroll.
+- [scroll-regression-tests.md](scroll-regression-tests.md): host-boundary and
+  reducer tests for scroll correctness.
 - [lod-tree.md](lod-tree.md): real-data level-of-detail tree for heavy feeds.
 - [surface-matrix.md](surface-matrix.md): per-tab list mode and paging.
 - [feed-scroll-surface.md](feed-scroll-surface.md): shared scroll shell and

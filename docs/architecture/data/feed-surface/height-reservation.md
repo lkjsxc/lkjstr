@@ -8,12 +8,14 @@ reference previews, and media dimensions do not visibly move the user's anchor.
 ## Contract
 
 Status: the shipped Svelte scroll surface applies session-measured reservation
-and compensates height changes above the viewport. Rust/WASM feature estimates
-and SQLite persistence remain the durable target.
+and compensates height changes above the viewport. The active durable contract
+lives in [geometry-model.md](geometry-model.md), and oversized semantic events
+use [long-content.md](long-content.md) visual fragments.
 
-- Every row has a stable geometry key from real row identity and content shape.
-- Measurement keys include row key, row kind, content shape hash, and width
-  bucket.
+- Every visual row has a stable geometry key from real row identity, content
+  shape, fragment kind, fragment index, width bucket, and font-scale bucket.
+- Measurement keys include row key, row kind, content shape hash, fragment
+  fields, width bucket, and schema hash.
 - Rows reserve a predicted height before profile, reference, media, and action
   enrichment finishes.
 - Predictions come from real measured rows and stable features, not fake
@@ -47,16 +49,21 @@ Geometry models bucket only durable, generalizable data:
 
 ```text
 row kind
+event kind
 content length
+Unicode scalar count
 line break count
+longest unbroken token length
 url count
 media count
-reference preview flag
+reference preview count
+custom emoji count
 profile summary flag
 notification chrome flag
 action bar flag
 width bucket
 font scale bucket
+content shape hash
 ```
 
 Tab ids, pane ids, owner handles, and request ids are not geometry keys.

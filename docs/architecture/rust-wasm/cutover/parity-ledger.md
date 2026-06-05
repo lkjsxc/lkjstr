@@ -37,6 +37,21 @@ before the SvelteKit product runtime can be removed.
 | Tweet           | partial         | `protocol`, `storage`, `relays`, `app`, `ui` publish path     | local and NIP-07 signing, publish queue, media, emoji                |
 | Welcome         | partial         | `domain`, `app`, `storage`, `ui` startup path                 | full links, startup fallback, browser tests                          |
 
+## Feed Surface Parity Requirements
+
+Feed-like surfaces cannot be marked `implemented` until this shared proof exists:
+
+| Requirement | Proof before feed-surface parity |
+| --- | --- |
+| Rust row-fragment planner | oversized text, media, reference, and action tests |
+| Rust geometry estimator | feature, bucket, hash, and confidence tests |
+| Rust anchor reducer | height delta, live insert, resize, and fallback tests |
+| WASM bridge tests | serialization and explicit unavailable/error states |
+| Svelte temporary bridge use | shipped feeds consume the same model while Svelte remains runtime |
+| Leptos feed surface use | visible rows, footer rows, and scroll retention match product behavior |
+| Scroll regression tests | tall text, long token, hydration, media, resize, and overflow coverage |
+| Deletion-ledger update | `src/lib/feed-surface` row records files, tests, and no-import proof |
+
 ## Storage Ledger
 
 | Storage family      | Rust status     | Required Rust modules             | Proof before cutover                                            |

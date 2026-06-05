@@ -1,0 +1,86 @@
+# Feed Scroll Regression Tests
+
+## Purpose
+
+This checklist defines focused tests that prove feed scrolling remains stable
+for oversized content, delayed enrichment, and split-pane resize.
+
+## Status
+
+Status: active implementation target. Unit tests cover pure Rust reducers and
+host-boundary tests cover DOM scroll behavior that Node cannot represent.
+
+## Required Fixtures
+
+Fixtures must be deterministic real Nostr event-shaped records. Prefer valid
+ids and signatures generated through the protocol path. If a host test cannot
+sign at runtime, store the generated event with a comment naming the generator.
+
+Fixture set:
+
+- text note with at least 20,000 visible characters.
+- text note with at least 300 line breaks.
+- text note with one very long unbroken token or URL.
+- note with real reference tags and delayed profile hydration.
+- note with media metadata that becomes known after initial render.
+
+Synthetic relays are allowed only as test harnesses. Product rows must represent
+real event data or explicit unavailable states.
+
+## Browser Or Host-Boundary Tests
+
+| Test | Assertion |
+| --- | --- |
+| Tall text note | User can scroll from above the note to below it. |
+| Long unbroken URL or token | `[data-scroll-owner]` has no horizontal overflow. |
+| Many line breaks | Row segmentation preserves order and scroll continuity. |
+| Late profile hydration above viewport | `scrollTop` changes by measured delta and visible anchor remains. |
+| Reference preview hydration above viewport | Visible event or fragment remains stable. |
+| Media dimension update above viewport | Viewport does not jump after image dimensions resolve. |
+| Split-pane width shrink | Width bucket changes and estimates recompute upward when needed. |
+| Split-pane width widen | Stale narrow measurements do not force excess height. |
+| Live insert above non-top anchor | Existing visible content remains visible. |
+| User at top with live insert | Top-anchor policy shows new resident rows immediately. |
+| Notifications | Notification chrome and referenced event preview share one scroll owner. |
+| Profile summary | Profile summary and notes share one scroll owner. |
+| Horizontal overflow | Scroll owners report `scrollWidth <= clientWidth + 1`. |
+
+## Structural Audit Tests
+
+Each feed-like surface must assert:
+
+- exactly one `[data-scroll-owner]` inside the tab body.
+- no nested vertical `overflow: auto` between `.feed-tab` and the scroll owner.
+- `.pane-body` is not the feed tab's vertical scroll owner.
+- status rows are inside the scroll flow.
+- scrollbar right edge aligns with the pane body within one device pixel.
+
+Feed-like surfaces: Home, Global, Profile, Thread, Search, Notifications,
+Custom Request, Author Context, Public Chat feed paths, and lkjstr Log when it
+renders long chronological rows.
+
+## Pure Reducer Tests
+
+Rust tests must cover:
+
+- feature extraction for short notes, long notes, line breaks, long tokens,
+  URLs, media, references, and custom emoji.
+- content-shape hash stability and change detection.
+- normal rows staying single and oversized rows fragmenting.
+- text segments joining exactly to original content.
+- stable fragment keys.
+- anchor reconcile for height increase, height decrease, row removal, live
+  inserts, partial anchor-row changes, and empty feeds.
+
+## Diagnostics Tests
+
+Stats must show bounded aggregate diagnostics for:
+
+- geometry bridge status.
+- measured session row count.
+- persisted observation count.
+- visible fragment count.
+- oversized semantic row count.
+- anchor compensation count and last delta.
+- width-bucket distribution.
+- stale observations dropped.

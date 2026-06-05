@@ -50,8 +50,9 @@ changed. Each docs directory has one README that acts as a table of contents.
 `architecture/data/event-tree.md` `architecture/data/feed-coverage.md` `architecture/data/feed-memory.md`
 `architecture/data/feed-surface.md` `architecture/data/feed-surface/README.md` `architecture/data/feed-surface/event-value.md`
 `architecture/data/feed-surface/feed-row-chrome.md` `architecture/data/feed-surface/feed-scroll-surface.md` `architecture/data/feed-surface/footer-phase.md`
-`architecture/data/feed-surface/height-reservation.md` `architecture/data/feed-surface/lod-tree.md` `architecture/data/feed-surface/near-end.md`
-`architecture/data/feed-surface/older-load-mode.md` `architecture/data/feed-surface/staged-pipeline.md` `architecture/data/feed-surface/surface-matrix.md`
+`architecture/data/feed-surface/geometry-model.md` `architecture/data/feed-surface/height-reservation.md` `architecture/data/feed-surface/lod-tree.md`
+`architecture/data/feed-surface/long-content.md` `architecture/data/feed-surface/near-end.md` `architecture/data/feed-surface/older-load-mode.md`
+`architecture/data/feed-surface/scroll-regression-tests.md` `architecture/data/feed-surface/staged-pipeline.md` `architecture/data/feed-surface/surface-matrix.md`
 `architecture/data/heap-retention.md` `architecture/data/local-secret-security.md` `architecture/data/memory-prioritization.md`
 `architecture/data/relay-pages.md` `architecture/data/resource-ownership.md` `architecture/data/sqlite-opfs/README.md`
 `architecture/data/sqlite-opfs/failure-recovery.md` `architecture/data/sqlite-opfs/import-export.md` `architecture/data/sqlite-opfs/migration-map.md`

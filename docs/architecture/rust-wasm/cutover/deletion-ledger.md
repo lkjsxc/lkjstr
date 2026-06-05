@@ -23,7 +23,7 @@ first-party product modules.
 | `src/lib/custom-request`     | blocked     | Rust Custom Request parser, runner, and UI                                | parse, routing, cancel tests                            |
 | `src/lib/emoji`              | blocked     | Rust NIP-30 and NIP-51 render/publish helpers                             | emoji unit and row-render tests                         |
 | `src/lib/events`             | blocked     | Rust event repository and row view models                                 | repository and feed-row tests                           |
-| `src/lib/feed-surface`       | blocked     | Rust virtual feed surface and row pipeline                                | scroll, anchor, footer tests                            |
+| `src/lib/feed-surface`       | blocked     | Rust virtual feed surface, real fragmented rows, geometry, and anchor pipeline | fragmented-row, anchor preservation, footer behavior, one scroll owner, long-post browser test, and no-import proof |
 | `src/lib/follow-graph`       | blocked     | Rust follow graph runtime and UI bridge cover all callers                 | follow graph bridge and runtime tests                   |
 | `src/lib/fp`                 | blocked     | Rust reducers or no replacement need                                      | deletion PR proves no imports                           |
 | `src/lib/identity`           | blocked     | Rust identity view models and NIP-05 flow                                 | identity rendering tests                                |

@@ -146,9 +146,11 @@ Read next: [architecture/workspace/README.md](architecture/workspace/README.md),
   Incomplete, failed, compacted, dense, stale, or missing evidence cannot prove
   absence.
 - Rust owns pure feed row geometry estimates, width-bucketed measured-height
-  model updates, anchor compensation, and a pure real-data feed LOD tree. LOD
-  forgetting degrades low-value branches from full rows to shells, blocks, and
-  recovery recipes without creating fake rows.
+  model updates, anchor compensation, long-content visual-fragment planning,
+  and a pure real-data feed LOD tree. The shipped Svelte feed may use temporary
+  bridge glue until Leptos feed parity is proven. LOD forgetting degrades
+  low-value branches from full rows to shells, blocks, and recovery recipes
+  without creating fake rows.
 
 ## Network And Runtimes
 
