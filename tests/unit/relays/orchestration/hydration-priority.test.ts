@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 import {
   planHydrationJobs,
   type HydrationJob,
-} from '../../../../src/lib/orchestration/hydration-priority';
+} from '../../../../src/lib/relays/orchestration/hydration-priority';
 
 describe('hydration priority', () => {
   it('runs visible and near-visible jobs before background work', () => {
