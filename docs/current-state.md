@@ -172,6 +172,9 @@ and [operations/memory-verification.md](operations/memory-verification.md).
 - Passkey-protected local secret storage is a follow-up product contract: it
   must actually encrypt local signer secrets with Web Crypto and WebAuthn PRF
   when supported, and show an unsupported state when the browser cannot do so.
+- Public Chat is a follow-up product contract until real NIP-28 channel chat
+  code, tests, relay behavior, storage behavior, and UI are implemented. Do not
+  show sample channels or placeholder success states.
 - Encrypted direct messages are a follow-up product contract. The forward path
   is NIP-17 with NIP-44 and NIP-59; do not add fake message previews or make
   NIP-04 the primary new feature.

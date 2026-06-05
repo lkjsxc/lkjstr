@@ -12,6 +12,7 @@ Tabs define the workspace surface area.
 - Search
 - Custom Request
 - Global
+- Public Chat
 - My Profile (only when a signing account is active; opens the active account profile)
 - Profile Edit
 - Accounts
@@ -53,6 +54,21 @@ Tabs define the workspace surface area.
 - Tweet clears immediately after signed local queueing. Notifications show
   lightweight action context headers and render source notification events with
   canonical Timeline row behavior; target/root context is fallback-only.
+- Public Chat opens from New Tab and renders real NIP-28 channels and messages.
+
+## New Tab Filtering
+
+- New Tab has a search input above the option groups.
+- The filter matches label, description, tab kind key, group, and aliases.
+- Filtering is case-insensitive and trims whitespace.
+- Empty query shows all choices.
+- Result order remains the canonical catalog order.
+- Primary and secondary grouping remains visible when matching options exist.
+- No-results state is explicit and non-fatal.
+- Enter may open the first visible option only when a deterministic focused
+  result exists.
+- Escape clears the filter.
+- Filtering is pure and testable.
 
 ## Movement
 

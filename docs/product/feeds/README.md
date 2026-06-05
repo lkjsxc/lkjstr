@@ -10,6 +10,7 @@ Feed surface docs define relay-backed read tabs and action-opened read tabs.
 - [home.md](home.md): account-follow feed behavior.
 - [notifications.md](notifications.md): account activity behavior.
 - [profiles.md](profiles.md): profile opening and authored notes.
+- [public-chat.md](public-chat.md): NIP-28 channel chat behavior.
 - [threads.md](threads.md): event thread opening and rendering.
 
 ## Shared Contract
@@ -26,5 +27,5 @@ Feed surface docs define relay-backed read tabs and action-opened read tabs.
 - Feed tabs may show partial relay rows while slower relays continue. Empty
   states mean terminal coverage, not merely "no fast relay answered yet."
 - Event-rendering tabs automatically restore per-tab row anchors on Home,
-  Global, Profile, Notifications, Thread, Search, Custom Request, and Author
-  Context.
+  Global, Profile, Notifications, Thread, Search, Custom Request, Author
+  Context, and Public Chat.

@@ -22,6 +22,7 @@ itself: split tiles, tabs, relay-backed data, and local state.
 - [feeds/home.md](feeds/home.md): Home feed.
 - [feeds/notifications.md](feeds/notifications.md): Notifications feed.
 - [feeds/profiles.md](feeds/profiles.md): Profile feed.
+- [feeds/public-chat.md](feeds/public-chat.md): Public Chat channel surface.
 - [feeds/threads.md](feeds/threads.md): Thread feed.
 - [tools/README.md](tools/README.md): local tools and settings surfaces.
 - [tools/accounts.md](tools/accounts.md): account records and signers.

@@ -13,6 +13,7 @@ Protocol docs define Nostr event, filter, relay, and NIP contracts.
 - [kernel.md](kernel.md): protocol module boundary.
 - [media-upload.md](media-upload.md): Blossom upload, NIP-96 compatibility, and upload auth.
 - [nip-support.md](nip-support.md): supported NIP surface.
+- [public-chat.md](public-chat.md): NIP-28 channel chat rules.
 - [relays.md](relays.md): relay URL and set behavior.
 - [zaps.md](zaps.md): NIP-57 invoice handoff.
 
@@ -20,5 +21,6 @@ Protocol docs define Nostr event, filter, relay, and NIP contracts.
 
 Relay reads follow NIP-01 `EVENT`, `EOSE`, and `CLOSED` evidence. NIP-50 search
 results are merged by event time with local cache results; relay relevance order
-is not preserved in the combined feed. NIP-65 relay-list metadata can expand
-targeted routes while selected read relays remain the fallback.
+is not preserved in the combined feed. NIP-65 relay-list metadata and NIP-28
+channel relay hints can expand targeted routes while selected read relays remain
+the fallback.

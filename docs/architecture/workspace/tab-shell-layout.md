@@ -23,7 +23,18 @@ readers and retention code.
   the tool surface.
 - Used by: Settings, Relay Settings, Stats, Welcome, Upload Settings, Accounts,
   Tweet, Profile Edit, Mine npub, Custom Request (when not using feed shell),
-  Author Context (when not using feed shell), lkjstr Log.
+  Author Context (when not using feed shell), lkjstr Log, New Tab, and Public
+  Chat.
+
+## New Tab Filter Layout
+
+- The filter row sits above option groups inside the New Tab form surface.
+- The search input uses the available width and must not create horizontal
+  overflow.
+- A clear control is keyboard reachable when the query is non-empty.
+- Group headings remain visible only for groups with matching options.
+- The no-results state occupies the same scroll root as the option groups.
+- Svelte and Leptos use the same pure catalog filtering rules.
 
 ### `.data-tab` (compat alias)
 

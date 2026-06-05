@@ -2,16 +2,19 @@
 
 ## Purpose
 
-Continuous integration runs the same quiet and Docker-backed gates expected of
-LLM agents.
+Continuous integration runs a deduplicated graph with Docker Compose as the
+authoritative final gate.
 
-## Jobs
+## Job Graph
 
-- `verify` installs Node dependencies and runs `pnpm verify:quiet`.
-- `compose` validates Compose config, builds `app`, `verify`, `cloudflare`, and
-  `app-smoke`, then runs the `verify`, `cloudflare`, and `app-smoke` services.
-- `publish` builds and publishes the `app` target to GHCR from `main` after the
-  verification jobs pass.
+- `repository` is cheap host feedback. It checks documentation, repository
+  shape, and static guardrails. It does not build the production app.
+- `docker-final` validates Compose config, builds `app`, `verify`,
+  `cloudflare`, and `app-smoke`, then runs `verify`, `cloudflare`, and
+  `app-smoke` services from those images.
+- `publish` runs only from `main` after `docker-final` passes. It reuses the
+  checked app image or the same Docker cache and target, and does not run an
+  unrelated cold rebuild.
 
 ## Compose Commands
 
@@ -22,6 +25,18 @@ docker compose --progress quiet -f docker-compose.yml run --rm verify
 docker compose --progress quiet -f docker-compose.yml run --rm cloudflare
 docker compose --progress quiet -f docker-compose.yml run --rm app-smoke
 ```
+
+## No Duplicate Work
+
+- CI must not run full host verification and then repeat the same full
+  verification inside Docker on the default pull request path.
+- CI must not build the production app repeatedly unless a target needs a
+  distinct artifact.
+- Cloudflare dry-run should consume the already-built app artifact inside
+  Docker.
+- Publish should reuse the checked app image or the same build cache and target.
+- `xtask` quiet orchestration must not recurse through `pnpm` commands that call
+  `xtask` again.
 
 ## Rules
 

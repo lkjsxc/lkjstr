@@ -2,8 +2,9 @@
 
 ## Purpose
 
-Canonical architecture for Home, Global, Profile, Thread, and Notifications feed
-semantics: ordering, paging, filters, merge, cursors, and multi-tab ownership.
+Canonical architecture for Home, Global, Profile, Thread, Notifications, and
+feed-like Public Chat semantics: ordering, paging, filters, merge, cursors, and
+multi-tab ownership.
 
 ## Table of Contents
 
@@ -21,6 +22,7 @@ semantics: ordering, paging, filters, merge, cursors, and multi-tab ownership.
 - [sources/global.md](sources/global.md)
 - [sources/profile.md](sources/profile.md)
 - [sources/notifications.md](sources/notifications.md)
+- [sources/public-chat.md](sources/public-chat.md)
 
 ### Runtime
 

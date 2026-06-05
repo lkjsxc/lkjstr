@@ -22,6 +22,7 @@ before the SvelteKit product runtime can be removed.
 | Notifications   | not implemented | `app`, `relays`, `storage`, `ui` notification runtime     | mentions, reactions, reposts, zaps, older windows                    |
 | Search          | not implemented | `app`, `relays`, `storage`, `ui` search runtime           | local cache search, NIP-50 routing, cancellation                     |
 | Custom Request  | not implemented | `app`, `protocol`, `relays`, `ui` request runtime         | raw filter parse, validation, selected relay routing                 |
+| Public Chat     | not implemented | `protocol`, `domain`, `app`, `relays`, `storage`, `ui`, `web` | NIP-28 parsing, channel reads, publish, partial failure, cleanup |
 | Author Context  | not implemented | `app`, `relays`, `storage`, `ui` context runtime          | nearby author posts, exact reads, unavailable states                 |
 | Accounts        | partial         | `domain`, `storage`, `web`, `ui` accounts path            | local, read-only, NIP-07 signing, secret safety tests                |
 | Relay Settings  | partial         | `domain`, `storage`, `web`, `ui` relay settings path      | NIP-11, discovery, NIP-65 suggestions, diagnostics                   |

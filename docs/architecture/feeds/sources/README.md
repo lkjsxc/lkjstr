@@ -11,6 +11,7 @@ relay semantics; sources must not leak into one another.
 - [global.md](global.md)
 - [profile.md](profile.md)
 - [notifications.md](notifications.md)
+- [public-chat.md](public-chat.md)
 
 ## Source kinds
 
@@ -20,7 +21,9 @@ relay semantics; sources must not leak into one another.
 | global        | omitted                         | -                     | all display kinds on selected relays |
 | profile       | single profile pubkey           | -                     |                                      |
 | notifications | omitted                         | `#p` = active account | not Home authors                     |
+| public-chat   | omitted                         | `#e` = channel id     | channel chat, not note firehose      |
 
 ## Implementation
 
-`TimelineFilterInput` in `src/lib/query/timeline-filters.ts`
+`TimelineFilterInput` in `src/lib/query/timeline-filters.ts` owns standard note
+feeds. Public Chat uses separate NIP-28 channel filters and ordering rules.

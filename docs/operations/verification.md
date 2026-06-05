@@ -54,8 +54,21 @@ pnpm cloudflare:quiet
 ```
 
 `pnpm verify:quiet` runs repository checks, lint, typecheck, unit tests, and a
-production build. `pnpm ci:quiet` runs the same quiet local plan. Cloudflare
-stays separate so adapter and Wrangler failures remain easy to isolate.
+production build. `pnpm ci:quiet` is an orchestration alias only when it does
+not repeat the same child plan. Cloudflare stays separate so adapter and
+Wrangler failures remain easy to isolate.
+
+## No Duplicate Work
+
+- CI must not run full host verification and then repeat the same full
+  verification inside Docker on the default pull request path.
+- CI must not build the production app repeatedly unless a target needs a
+  distinct artifact.
+- Docker Cloudflare dry-run should consume the already-built app artifact when
+  the Docker graph has already built that artifact.
+- Publish must reuse the checked app image or the same Docker cache and target.
+- Quiet command ownership must avoid `xtask -> pnpm -> xtask` and
+  `pnpm -> xtask -> pnpm verify:quiet` recursion.
 
 ## Rust And Host Boundary
 
