@@ -23,13 +23,13 @@ fn parses_group_ids_and_previous_refs() {
 }
 
 #[test]
-fn parses_group_state_events() {
+fn parses_group_state_events() -> Result<(), GroupParseError> {
     let metadata = event(
         KIND_GROUP_METADATA,
         vec![tag(&["d", "group-a"])],
         r#"{"name":"Group A","about":"About","public":true,"open":false}"#,
     );
-    let parsed = group_metadata_from_event(&metadata).expect("metadata parses");
+    let parsed = group_metadata_from_event(&metadata)?;
 
     assert_eq!(
         group_state_id_from_d_tag(&metadata),
@@ -37,10 +37,11 @@ fn parses_group_state_events() {
     );
     assert_eq!(parsed.name.as_deref(), Some("Group A"));
     assert_eq!(parsed.public, Some(true));
+    Ok(())
 }
 
 #[test]
-fn parses_admin_member_role_and_user_group_lists() {
+fn parses_admin_member_role_and_user_group_lists() -> Result<(), GroupParseError> {
     let pubkey = "2".repeat(64);
     let admins = event(
         KIND_GROUP_ADMINS,
@@ -67,23 +68,16 @@ fn parses_admin_member_role_and_user_group_lists() {
     );
 
     assert_eq!(
-        group_admins_from_event(&admins).expect("admins")[0].roles,
+        group_admins_from_event(&admins)?[0].roles,
         vec!["moderator"]
     );
     assert_eq!(
-        group_members_from_event(&members).expect("members")[0]
-            .label
-            .as_deref(),
+        group_members_from_event(&members)?[0].label.as_deref(),
         Some("Alice")
     );
-    assert_eq!(
-        group_roles_from_event(&roles).expect("roles")[0].role,
-        "moderator"
-    );
-    assert_eq!(
-        group_user_list_from_event(&groups).expect("groups")[0].group_id,
-        "g"
-    );
+    assert_eq!(group_roles_from_event(&roles)?[0].role, "moderator");
+    assert_eq!(group_user_list_from_event(&groups)?[0].group_id, "g");
+    Ok(())
 }
 
 #[test]

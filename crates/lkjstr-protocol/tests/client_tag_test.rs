@@ -13,13 +13,14 @@ fn config() -> ClientTagConfig {
 }
 
 #[test]
-fn client_tag_builder_normalizes_valid_parts() {
-    let tag = client_tag_parts(&config()).expect("valid client tag");
+fn client_tag_builder_normalizes_valid_parts() -> Result<(), ClientTagError> {
+    let tag = client_tag_parts(&config())?;
 
     assert_eq!(tag[0], "client");
     assert_eq!(tag[1], "lkjstr");
     assert_eq!(tag[2], format!("31990:{}:lkjstr", "a".repeat(64)));
     assert_eq!(tag[3], "wss://relay.example/");
+    Ok(())
 }
 
 #[test]
@@ -53,16 +54,17 @@ fn append_client_tag_replaces_existing_only_for_allowed_kinds() {
 }
 
 #[test]
-fn parse_client_tag_ignores_malformed_tags() {
+fn parse_client_tag_ignores_malformed_tags() -> Result<(), &'static str> {
     let tags = vec![vec![
         "client".to_owned(),
         "lkjstr".to_owned(),
         format!("31990:{}:lkjstr", "b".repeat(64)),
         "https://relay.example/path//".to_owned(),
     ]];
-    let parsed = parse_client_tag(&tags).expect("valid incoming client tag");
+    let parsed = parse_client_tag(&tags).ok_or("missing valid client tag")?;
 
     assert_eq!(parsed.name, "lkjstr");
     assert_eq!(parsed.relay, "wss://relay.example/path");
     assert!(parse_client_tag(&[vec!["client".to_owned(), "bad".to_owned()]]).is_none());
+    Ok(())
 }
