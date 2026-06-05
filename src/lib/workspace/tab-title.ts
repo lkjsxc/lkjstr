@@ -6,6 +6,7 @@ export function titleFor(kind: TabKind): string {
     'new-tab': 'New Tab',
     timeline: 'Home',
     global: 'Global',
+    'public-chat': 'Public Chat',
     notifications: 'Notifications',
     profile: 'Profile',
     'profile-edit': 'Profile Edit',

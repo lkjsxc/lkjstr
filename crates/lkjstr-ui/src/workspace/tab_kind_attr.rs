@@ -6,6 +6,7 @@ pub(crate) const fn tab_kind_attr(kind: TabKind) -> &'static str {
         TabKind::NewTab => "new-tab",
         TabKind::Timeline => "timeline",
         TabKind::Global => "global",
+        TabKind::PublicChat => "public-chat",
         TabKind::Notifications => "notifications",
         TabKind::Profile => "profile",
         TabKind::ProfileEdit => "profile-edit",

@@ -18,6 +18,7 @@ The workspace snapshot coordinator owns durable identity and restore tokens.
 - [npub-miner/](npub-miner/): vanity public key miner.
 - [profile/](profile/): profile display tab.
 - [profile-edit/](profile-edit/): own-profile editor tab.
+- [public-chat/](public-chat/): NIP-28 channel chat tab.
 - [relays/](relays/): relay settings tab.
 - [search/](search/): search tab.
 - [settings/](settings/): flat settings tab.

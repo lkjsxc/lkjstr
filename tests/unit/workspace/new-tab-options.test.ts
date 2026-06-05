@@ -17,6 +17,7 @@ const canonicalLabels = [
   'Search',
   'Custom Request',
   'Global',
+  'Public Chat',
   'Profile Edit',
   'Accounts',
   'Relay Settings',
@@ -39,24 +40,27 @@ describe('new tab options', () => {
   });
 
   it('filters by label', () => {
-    expect(labels(newTabOptionsForAccountAndQuery(undefined, 'tweet'))).toEqual([
-      'Tweet',
-    ]);
+    expect(labels(newTabOptionsForAccountAndQuery(undefined, 'tweet'))).toEqual(
+      ['Tweet'],
+    );
   });
 
   it('filters by description', () => {
-    expect(labels(newTabOptionsForAccountAndQuery(undefined, 'identity'))).toEqual([
-      'Accounts',
-    ]);
+    expect(
+      labels(newTabOptionsForAccountAndQuery(undefined, 'identity')),
+    ).toEqual(['Accounts']);
   });
 
   it('filters by alias', () => {
-    expect(labels(newTabOptionsForAccountAndQuery(undefined, 'compose'))).toEqual([
-      'Tweet',
-    ]);
-    expect(labels(newTabOptionsForAccountAndQuery(undefined, 'firehose'))).toEqual([
-      'Global',
-    ]);
+    expect(
+      labels(newTabOptionsForAccountAndQuery(undefined, 'compose')),
+    ).toEqual(['Tweet']);
+    expect(
+      labels(newTabOptionsForAccountAndQuery(undefined, 'firehose')),
+    ).toEqual(['Global']);
+    expect(labels(newTabOptionsForAccountAndQuery(undefined, 'nip28'))).toEqual(
+      ['Public Chat'],
+    );
   });
 
   it('filters by tab kind key', () => {
@@ -66,24 +70,29 @@ describe('new tab options', () => {
   });
 
   it('trims and ignores query case', () => {
-    expect(labels(newTabOptionsForAccountAndQuery(undefined, '  MeDiA  '))).toEqual([
-      'Upload Settings',
-    ]);
+    expect(
+      labels(newTabOptionsForAccountAndQuery(undefined, '  MeDiA  ')),
+    ).toEqual(['Upload Settings']);
   });
 
   it('keeps My Profile filterable when an account is active', () => {
     const options = newTabOptionsForAccount('abc');
     const profile = options.find((option) => option.label === 'My Profile');
-    expect(profile).toMatchObject({ kind: 'profile', config: { pubkey: 'abc' } });
-    expect(labels(options).indexOf('My Profile')).toBe(6);
+    expect(profile).toMatchObject({
+      kind: 'profile',
+      config: { pubkey: 'abc' },
+    });
+    expect(labels(options).indexOf('My Profile')).toBe(7);
     expect(profile && newTabOptionMatches(profile, 'profile')).toBe(true);
     expect(profile && newTabOptionMatches(profile, 'me')).toBe(true);
-    expect(labels(newTabOptionsForAccountAndQuery('abc', 'my profile'))).toEqual([
-      'My Profile',
-    ]);
+    expect(
+      labels(newTabOptionsForAccountAndQuery('abc', 'my profile')),
+    ).toEqual(['My Profile']);
   });
 
   it('returns no matches for an unknown query', () => {
-    expect(newTabOptionsForAccountAndQuery(undefined, 'zzz-not-found')).toEqual([]);
+    expect(newTabOptionsForAccountAndQuery(undefined, 'zzz-not-found')).toEqual(
+      [],
+    );
   });
 });

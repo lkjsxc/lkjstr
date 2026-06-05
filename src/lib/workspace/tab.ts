@@ -3,6 +3,7 @@ export type TabKind =
   | 'new-tab'
   | 'timeline'
   | 'global'
+  | 'public-chat'
   | 'notifications'
   | 'profile'
   | 'profile-edit'
@@ -58,6 +59,7 @@ export function iconFor(kind: TabKind): string {
     'new-tab': 'plus',
     timeline: 'list',
     global: 'globe',
+    'public-chat': 'message',
     notifications: 'bell',
     profile: 'user',
     'profile-edit': 'id-card',

@@ -2,6 +2,7 @@
   import type { Account } from '$lib/accounts/account';
   import type { RelaySet } from '$lib/relays/relay-store';
   import NewTab from '$lib/tabs/new-tab/NewTab.svelte';
+  import PublicChatTab from '$lib/tabs/public-chat/PublicChatTab.svelte';
   import type { TabFeedAnchor } from '$lib/workspace/tab-anchor-registry';
   import type { TabKind, WorkspaceTab } from '$lib/workspace/tab';
   import type { TabSnapshotPayload } from '$lib/workspace/tab-snapshot';
@@ -70,6 +71,12 @@
     tabId={props.tab.id}
     activeAccountPubkey={props.activeAccount?.pubkey}
     convert={props.convertTab}
+  />
+{:else if props.tab.kind === 'public-chat'}
+  <PublicChatTab
+    tabId={props.tab.id}
+    activeAccount={props.activeAccount}
+    relaySets={props.relaySets}
   />
 {:else if feedKinds.has(props.tab.kind)}
   <PaneFeedTabBody

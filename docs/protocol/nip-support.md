@@ -25,6 +25,8 @@ Nostr protocol surfaces without claiming unavailable behavior.
   tokens in shared post surfaces.
 - NIP-25 reaction target parsing, `+`/empty likes, `-` dislikes, Unicode emoji
   reactions, custom emoji reactions, and `k` target-kind tags.
+- NIP-28 channel creation, metadata, messages, hide-message actions, and mute
+  user actions for Public Chat.
 - NIP-30 custom emoji tags, optional kind `30030` emoji-set addresses, custom
   emoji reactions, HTTPS emoji rendering, and incoming shortcodes limited to
   `[A-Za-z0-9_-]`.

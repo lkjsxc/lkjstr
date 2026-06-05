@@ -32,7 +32,7 @@ first-party product modules.
 | `src/lib/memory`             | blocked     | Rust diagnostics and bounded counters                                     | memory focused tests                                    |
 | `src/lib/notifications`      | blocked     | Rust notification runtime and UI                                          | notification feed tests                                 |
 | `src/lib/profile`            | blocked     | Rust Profile runtime and UI                                               | profile route and render tests                          |
-| `src/lib/public-chat`        | blocked     | Rust Public Chat runtime, relay planning, storage, and UI                  | NIP-28 channel and publish tests                         |
+| `src/lib/public-chat`        | blocked     | Rust Public Chat runtime, relay planning, storage, and UI                 | NIP-28 channel and publish tests                        |
 | `src/lib/protocol`           | blocked     | Rust protocol parity plus WASM bridge tests                               | protocol Rust and WASM tests                            |
 | `src/lib/query`              | blocked     | Rust query planning and filter reducers                                   | feed query unit tests                                   |
 | `src/lib/relays`             | blocked     | Rust relay client, subscriptions, budgets, adapters, optimizer            | synthetic relay browser tests                           |
@@ -40,7 +40,7 @@ first-party product modules.
 | `src/lib/settings`           | blocked     | Rust settings store and runtime side effects                              | settings unit and browser tests                         |
 | `src/lib/storage`            | blocked     | typed repositories, transactions, retention, repair                       | storage and pressure tests                              |
 | `src/lib/tabs`               | blocked     | each Leptos tab surface reaches parity                                    | product surface browser tests                           |
-| `src/lib/tabs/public-chat`   | blocked     | Leptos Public Chat reaches shipped surface parity                          | public chat browser and Rust UI tests                    |
+| `src/lib/tabs/public-chat`   | blocked     | Leptos Public Chat reaches shipped surface parity                         | public chat browser and Rust UI tests                   |
 | `src/lib/telemetry`          | blocked     | Rust diagnostics or explicit removal                                      | diagnostics and no-import proof                         |
 | `src/lib/thread`             | blocked     | Rust Thread runtime and UI                                                | thread exact-read tests                                 |
 | `src/lib/timeline`           | blocked     | Rust Home and Global feed runtimes                                        | timeline and route tests                                |

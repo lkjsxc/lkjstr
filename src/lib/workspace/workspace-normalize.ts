@@ -91,6 +91,7 @@ const validKinds: readonly TabKind[] = [
   'new-tab',
   'timeline',
   'global',
+  'public-chat',
   'notifications',
   'profile',
   'profile-edit',

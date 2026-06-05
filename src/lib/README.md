@@ -26,6 +26,7 @@ This directory contains reusable application code shared by routes and tabs.
 - [notifications/](notifications/): notification indexing and state.
 - [profile/](profile/): profile runtimes and stores.
 - [protocol/](protocol/): Nostr protocol kernel.
+- [public-chat/](public-chat/): NIP-28 channel chat adapters.
 - [query/](query/): timeline query helpers.
 - [relays/](relays/): relay clients, pools, and settings.
 - [search/](search/): search query parsing.

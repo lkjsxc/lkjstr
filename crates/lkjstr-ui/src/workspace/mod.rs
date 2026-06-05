@@ -6,6 +6,7 @@ mod accounts_row;
 mod menu;
 mod pane;
 mod persistence;
+mod public_chat;
 mod relay_row;
 mod relay_settings;
 mod relay_settings_provider;

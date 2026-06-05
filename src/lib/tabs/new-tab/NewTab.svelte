@@ -64,7 +64,8 @@
       {/if}
     </div>
     <p class="new-tab-result-count" aria-live="polite">
-      {filteredOptions.length} {filteredOptions.length === 1 ? 'choice' : 'choices'}
+      {filteredOptions.length}
+      {filteredOptions.length === 1 ? 'choice' : 'choices'}
     </p>
   </div>
 
@@ -109,7 +110,9 @@
   {/if}
 
   {#if filteredOptions.length === 0}
-    <p class="new-tab-empty" role="status">No New Tab choices match this filter.</p>
+    <p class="new-tab-empty" role="status">
+      No New Tab choices match this filter.
+    </p>
   {/if}
 </section>
 

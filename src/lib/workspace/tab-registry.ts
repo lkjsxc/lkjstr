@@ -47,6 +47,7 @@ export function createDefaultTabRegistry(): TabRegistry {
     'new-tab',
     'timeline',
     'global',
+    'public-chat',
     'notifications',
     'profile',
     'profile-edit',

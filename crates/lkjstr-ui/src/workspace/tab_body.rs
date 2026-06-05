@@ -1,11 +1,12 @@
 use leptos::prelude::*;
-use lkjstr_domain::{TabKind, WorkspaceTab};
+use lkjstr_domain::{TabKind, WorkspaceTab, empty_public_chat_state};
 
 use crate::app::RuntimeSignal;
 use crate::workspace::accounts::AccountsTab;
 use crate::workspace::accounts_provider::AccountsProvider;
 use crate::workspace::menu::NewTabMenu;
 use crate::workspace::persistence::WorkspacePersistence;
+use crate::workspace::public_chat::PublicChatTab;
 use crate::workspace::relay_settings::RelaySettingsTab;
 use crate::workspace::relay_settings_provider::RelaySettingsProvider;
 use crate::workspace::settings::SettingsTab;
@@ -99,6 +100,14 @@ fn tab_content(input: TabContentInput) -> impl IntoView {
         .into_any(),
         TabKind::NetworkStats => view! {
             <StatsTab runtime=input.runtime provider=input.stats_provider />
+        }
+        .into_any(),
+        TabKind::PublicChat => view! {
+            <PublicChatTab
+                state=empty_public_chat_state()
+                read_relays=Vec::new()
+                active_pubkey=None
+            />
         }
         .into_any(),
         TabKind::AccountManager => view! {

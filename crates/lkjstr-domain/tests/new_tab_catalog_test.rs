@@ -15,6 +15,7 @@ fn canonical_labels() -> Vec<&'static str> {
         "Search",
         "Custom Request",
         "Global",
+        "Public Chat",
         "Profile Edit",
         "Accounts",
         "Relay Settings",
@@ -70,6 +71,10 @@ fn filters_by_alias() {
         labels(&new_tab_options_for_account_and_query(None, "firehose")),
         vec!["Global"]
     );
+    assert_eq!(
+        labels(&new_tab_options_for_account_and_query(None, "nip28")),
+        vec!["Public Chat"]
+    );
 }
 
 #[test]
@@ -108,7 +113,7 @@ fn active_account_profile_remains_filterable() -> Result<(), String> {
         options
             .iter()
             .position(|option| option.label == "My Profile"),
-        Some(6)
+        Some(7)
     );
     assert!(new_tab_option_matches(profile, "profile"));
     assert!(new_tab_option_matches(profile, "me"));

@@ -36,7 +36,7 @@ pub fn new_tab_options_for_account(active_pubkey: Option<&str>) -> Vec<NewTabOpt
     };
     let insert_at = options
         .iter()
-        .position(|option| option.kind == TabKind::Global)
+        .position(|option| option.kind == TabKind::PublicChat)
         .map_or(options.len(), |index| index + 1);
     options.insert(insert_at, profile);
     options
@@ -79,6 +79,12 @@ fn base_options() -> Vec<NewTabOption> {
             "Relay notes.",
             NewTabOptionGroup::Primary,
             &["firehose", "relay"],
+        ),
+        option(
+            TabKind::PublicChat,
+            "NIP-28 channel chat.",
+            NewTabOptionGroup::Primary,
+            &["chat", "channel", "nip28", "room", "public"],
         ),
         option(
             TabKind::ProfileEdit,

@@ -15,9 +15,9 @@ Read next: [product/README.md](product/README.md),
 - The root route opens the tiled workspace app.
 - Clean launch focuses Welcome and also opens Accounts, Relay Settings, Home,
   Notifications, and Tweet.
-- Home, Global, Profile, Thread, Notifications, Search, Custom Request, Author
-  Context, Accounts, Relay Settings, Stats, Settings, Upload Settings, lkjstr
-  Log, Mine npub, Profile Edit, and Welcome are implemented.
+- Home, Global, Public Chat, Profile, Thread, Notifications, Search, Custom
+  Request, Author Context, Accounts, Relay Settings, Stats, Settings, Upload
+  Settings, lkjstr Log, Mine npub, Profile Edit, and Welcome are implemented.
 - Tweet, replies, reposts, reactions, zaps, Blossom upload, NIP-96
   compatibility upload settings, NIP-98 auth, NIP-30 custom emoji,
   sensitive-content reveal, and event reference previews are implemented.
@@ -31,8 +31,8 @@ Read next: [protocol/README.md](protocol/README.md),
 [architecture/network/README.md](architecture/network/README.md).
 
 - Implemented Nostr surfaces include NIP-01, NIP-02, NIP-05, NIP-07, NIP-10,
-  NIP-11, NIP-18, NIP-19, NIP-25, NIP-30, NIP-36, NIP-50, NIP-51, NIP-57,
-  NIP-65, Blossom/NIP-B7 upload, NIP-96, and NIP-98.
+  NIP-11, NIP-18, NIP-19, NIP-25, NIP-28, NIP-30, NIP-36, NIP-50, NIP-51,
+  NIP-57, NIP-65, Blossom/NIP-B7 upload, NIP-96, and NIP-98.
 - Relay AUTH is diagnostic-only.
 - Search combines cached matches with relay NIP-50 filters when selected relays
   support them.
@@ -172,9 +172,6 @@ and [operations/memory-verification.md](operations/memory-verification.md).
 - Passkey-protected local secret storage is a follow-up product contract: it
   must actually encrypt local signer secrets with Web Crypto and WebAuthn PRF
   when supported, and show an unsupported state when the browser cannot do so.
-- Public Chat is a follow-up product contract until real NIP-28 channel chat
-  code, tests, relay behavior, storage behavior, and UI are implemented. Do not
-  show sample channels or placeholder success states.
 - Encrypted direct messages are a follow-up product contract. The forward path
   is NIP-17 with NIP-44 and NIP-59; do not add fake message previews or make
   NIP-04 the primary new feature.

@@ -50,6 +50,13 @@ const baseOptions: readonly NewTabOption[] = [
     aliases: ['firehose', 'relay'],
   },
   {
+    kind: 'public-chat',
+    label: 'Public Chat',
+    description: 'NIP-28 channel chat.',
+    group: 'primary',
+    aliases: ['chat', 'channel', 'nip28', 'room', 'public'],
+  },
+  {
     kind: 'profile-edit',
     label: 'Profile Edit',
     description: 'Active account metadata.',
@@ -119,11 +126,15 @@ export function newTabOptionsForAccount(
     aliases: ['profile', 'me'],
     config: { pubkey: activePubkey },
   };
-  const globalIndex = baseOptions.findIndex((o) => o.kind === 'global');
+  const publicChatIndex = baseOptions.findIndex(
+    (o) => o.kind === 'public-chat',
+  );
+  const insertIndex =
+    publicChatIndex >= 0 ? publicChatIndex + 1 : baseOptions.length;
   return [
-    ...baseOptions.slice(0, globalIndex + 1),
+    ...baseOptions.slice(0, insertIndex),
     profile,
-    ...baseOptions.slice(globalIndex + 1),
+    ...baseOptions.slice(insertIndex),
   ];
 }
 
@@ -148,7 +159,9 @@ export function newTabOptionMatches(
   query: string,
 ): boolean {
   const normalized = normalizeNewTabQuery(query);
-  return normalized === '' || newTabOptionSearchText(option).includes(normalized);
+  return (
+    normalized === '' || newTabOptionSearchText(option).includes(normalized)
+  );
 }
 
 export function filterNewTabOptions(
