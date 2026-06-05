@@ -56,7 +56,11 @@ closing gates so this concise matrix stays readable.
 | Rust Settings surface                     | [settings.md](tools/settings.md)                                               | partial         | flat schema and SQLite worker overrides; side effects open           |
 | Rust follow-list extraction               | [followees.md](feeds/followees.md)                                             | implemented     | `follow_list_test.rs` covers dedupe, invalid rows, and hints         |
 | Rust Followees surface                    | [followees.md](feeds/followees.md)                                             | partial         | Svelte action tab uses cached real kind `3`; relay runtime open      |
+| Rust follow-count state                   | [profiles.md](feeds/profiles.md)                                               | partial         | Rust state model and Profile UI wiring active                        |
 | Rust User Timeline surface                | [user-timeline.md](feeds/user-timeline.md)                                     | partial         | Svelte action tab uses cached real events; relay runtime open        |
+| Rust cache-display policy                 | [feed-memory.md](../architecture/data/feed-memory.md)                          | partial         | Pure policy active; product cache promotion proof remains open       |
+| Rust hydration priority reducer           | [feed-memory.md](../architecture/data/feed-memory.md)                          | partial         | Pure scheduler active; shipped hydration wiring remains open         |
+| Rust Search planning and indexing         | [search.md](tools/search.md)                                                   | partial         | Token index and NIP-50 merge tests required before complete          |
 | Rust Accounts surface                     | [accounts.md](tools/accounts.md)                                               | partial         | rows, local secret transaction, NIP-07 connect                       |
 | Rust Relay Settings surface               | [relay-management.md](tools/relay-management.md)                               | partial         | relay sets and default selection                                     |
 | Rust Upload Settings surface              | [upload-settings.md](tools/upload-settings.md)                                 | partial         | media upload settings, Blossom endpoint display, NIP-96 discovery    |
@@ -93,6 +97,7 @@ closing gates so this concise matrix stays readable.
 | Clause                              | Contract                                                                                                                                   | Status      | Notes                           |
 | ----------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------ | ----------- | ------------------------------- |
 | Scroll + virtua anchor              | [tab-runtime.md](../architecture/workspace/tab-runtime.md)                                                                                 | implemented | session + IDB                   |
+| Top-anchor live inserts             | [feed-memory.md](../architecture/data/feed-memory.md)                                                                                      | partial     | Rust reducer and Svelte anchor tests active |
 | Feed cursors in snapshot            | [tab-runtime.md](../architecture/workspace/tab-runtime.md), [tab-snapshots.md](../architecture/data/storage/data-classes/tab-snapshots.md) | implemented | `tab-runtime-registry`          |
 | `hasOlder` / `hasNewer` in snapshot | [tab-runtime.md](../architecture/workspace/tab-runtime.md)                                                                                 | implemented | runtime snapshot                |
 | Search query in tool snapshot       | [tabs.md](workspace/tabs.md)                                                                                                               | implemented | Search tab fields               |
@@ -190,4 +195,9 @@ closing gates so this concise matrix stays readable.
 | No horizontal overflow on scroll owner | scroll-surface-audit.md | implemented | focused `assertNoHorizontalOverflow` checks scroll owners and `.event-list__viewport`                          |
 | Notifications on FeedScrollSurface     | feed-scroll-surface.md  | implemented | Notifications use Virtua via `FeedScrollSurface` and the shared footer/near-end semantics                      |
 | Profile in-flow summary rows           | profiles.md             | implemented | `ProfileHeader`, status, load-newer, empty, note, and footer rows share one `EventTreeList` scroll owner       |
+| Profile follow-count discovery state   | profiles.md             | partial     | Unknown no longer renders as zero; relay proof details remain active                                          |
+| Profile sparse historical empty proof  | profiles.md             | partial     | Searching copy active; full scan planner proof remains open                                                   |
+| Stable Tweet publish footer            | tweet.md                | partial     | Footer layout and bounding tests active                                                                       |
+| Fixed lkjsxc New Tab item              | workspace/tabs.md       | partial     | Catalog constant, NIP-19 decode, and Svelte action tests active                                               |
+| Request persistence removal            | tools/accounts.md       | partial     | UI and tests must prove no special persistence surface remains                                                |
 | Pane.svelte at or below 200 lines      | repository standards    | implemented | Pane header moved to `PaneHead.svelte` to keep the file within the cap                                         |

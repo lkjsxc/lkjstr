@@ -34,8 +34,12 @@ uploads, or fake custom emoji metadata.
   as the Publish button through the shared shortcut helper.
 - Drafts persist a sensitive-content flag and optional reason. Publishing a
   sensitive draft adds a `content-warning` tag with the reason when present.
+- The composer uses a stable footer region. Attachment previews, upload
+  progress, upload errors, and long media URLs render above the footer and may
+  wrap or scroll without changing the Publish button position.
 - The toolbar places media and emoji buttons together and keeps Publish aligned
-  right.
+  right in a stable-width publish area.
+- Focus order remains editor, media control, emoji control, then Publish.
 - Unicode emoji selection inserts at the textarea cursor.
 - Custom emoji selection inserts `:shortcode:` at the cursor and persists that
   emoji in draft state. Manually typed valid `:shortcode:` tokens resolve only
@@ -64,3 +68,11 @@ uploads, or fake custom emoji metadata.
   `main` draft, then focuses the editor. Late diagnostics are shown only when
   every relay rejects the event or relay publishing fails.
 - Tweet does not bypass relay settings or bundle a public media host.
+
+## Layout Acceptance
+
+- The Publish button bounding rectangle stays stable before and after attaching
+  one image, multiple images, an upload error, and a long media URL.
+- Stability tolerance is only for sub-pixel browser rounding.
+- `Ctrl+Enter` and `Command+Enter` use the same disabled rules as clicking the
+  stable Publish button.

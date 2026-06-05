@@ -31,6 +31,11 @@ valid followee pubkeys, adds the target pubkey, and reads feed-display events
 from those authors. It uses the same row rendering, sensitive-content gate,
 profile hydration, paging, and bounded runtime rules as Home and Profile.
 
+Author filters are chunked by request budget. A large follow graph must not
+create one unbounded filter, duplicate route scan, full-follow-graph fanout, or
+unbounded profile hydration queue. Fast relay rows render early; slow, failed,
+or incomplete relays merge later as diagnostics without blocking visible rows.
+
 The tab clearly labels whose timeline is being shown. It must not imply private
 or personalized access.
 
@@ -42,6 +47,10 @@ reachable, the tab renders a degraded target-posts-only mode with this notice:
 
 This mode does not synthesize a follow graph and does not imply that the target
 follows nobody. It is a truthful fallback for real events authored by the target.
+
+Opening the fixed `lkjsxc` New Tab item uses this same runtime for
+`0f38afb23cec30570ee64f9a4aa099229395ec3371c5fe867e09c9111480015d`; see
+[workspace tabs](../workspace/tabs.md).
 
 ## Relay Routing
 
@@ -59,6 +68,16 @@ the target pubkey, route fingerprint, selected relay fingerprint, author-set
 hash, filter shape, page size, feed policy, and time interval. Cached rows for
 one target must not appear in another target's timeline unless the underlying
 author set and coverage evidence match the new target query.
+
+Cache display policy is explicit:
+
+- `coverage-proven`: render cached rows normally.
+- `cache-preview`: render one bounded preview page with `Local cache preview
+  while relays refresh`.
+- `hold-cache`: delay cached rows that would create misleading dominance from
+  one author, stale route, or mismatched author set.
+- `relay-refreshing`: start relay reads immediately.
+- `complete`: promote or replace preview rows only after coverage proof exists.
 
 A cached follow list may render immediately while relay refresh runs. A newer
 relay kind `3` replaces it. Older relay results do not erase a newer cached

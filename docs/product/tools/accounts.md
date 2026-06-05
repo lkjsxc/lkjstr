@@ -14,10 +14,9 @@ Accounts represent public identities and signing capability.
 - Local account records and local signing secrets are browser-owned SQLite
   worker data when Workers are available. Event-cache cleanup never deletes
   them.
-- Accounts may show browser persistent-storage support and request it through
-  `navigator.storage.persisted()` and `navigator.storage.persist()` when
-  supported. The UI reports only actual states: already persisted, granted,
-  denied, unsupported, or failed.
+- Accounts shows protected-data safety copy only. It does not expose a special
+  browser persistent-storage request control; durable protection is owned by the
+  SQLite worker, manifest, and retention policy.
 - Account lists, workspace data, and UI props must never expose local key
   material.
 - Local and NIP-07 accounts are signing accounts. Read-only accounts cannot
@@ -56,5 +55,5 @@ Accounts represent public identities and signing capability.
 - Rust Accounts connects NIP-07 by calling the browser `window.nostr`
   `getPublicKey` method, validates the returned public key, stores a signing
   account, and makes it active.
-- Rust Accounts does not yet request persistent browser storage; the
-  TypeScript surface remains the parity source for that flow.
+- Rust Accounts and the TypeScript surface intentionally do not expose browser
+  persistent-storage request controls.

@@ -52,6 +52,11 @@ The tab reports one truthful state at a time:
 Partial failure, timeout, AUTH, socket close, or missing EOSE never proves that a
 follow list is absent.
 
+Profile consumes the same discovery state for its following count. It may render
+`N following` or `0 following` only after the latest kind `3` is known. Cache
+miss, relay discovery, partial failure, unavailable routes, and all-failed reads
+remain separate count states with stable loading or retry copy.
+
 ## Row Contract
 
 Each row uses the shared user-row component and shows:
@@ -74,6 +79,11 @@ when the tab closes. It may read selected relays, target NIP-65 routes, receipt
 routes, local route evidence, and bounded discovery fallback relays. Disabled or
 removed relays are excluded.
 
+Row hydration priority is visible rows first, near-visible rows within roughly
+two viewports second, active offscreen rows third, hidden mounted tabs paused,
+and closed or stale generations cancelled. Duplicate profile jobs use the
+pubkey as the semantic key so rows and tabs share work.
+
 ## Empty States
 
 - Loading while cache read or relay discovery is in progress.
@@ -81,3 +91,6 @@ removed relays are excluded.
 - Follow list contains no valid `p` tags.
 - Follow-list discovery is incomplete, with relay diagnostics and retry.
 - Relay reads all failed, with attempted-relay diagnostics.
+
+Retry starts a new bounded discovery generation. It does not clear a known newer
+cached follow list unless a newer relay kind `3` replaces it.

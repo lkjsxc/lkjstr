@@ -4,7 +4,8 @@
 
 Progressive relay rendering lets feed surfaces render cached rows first, then
 merge relay evidence as each read produces valid events, relay state, timeout,
-or terminal coverage.
+or terminal coverage. User Timeline and Search are first-class consumers: both
+must render fast local or fast-relay results before slower relay proof finishes.
 
 Status: Rust owns the pure snapshot reducer and event provenance merge. The
 TypeScript read manager still emits product snapshots until Rust feed runtimes
@@ -99,6 +100,14 @@ Fast relays must not wait for slow relay EOSE before first visible rows render.
 Pending slow relays keep aggregate state incomplete instead of empty. Late
 events merge by canonical ordering without duplicate ids or false complete
 coverage.
+
+User Timeline reads may emit rows from a fast relay for a chunked author set
+while slow route groups continue. Later rows merge by event order and keep
+follow-graph or degraded-mode notice intact.
+
+Search reads emit local indexed matches immediately, then NIP-50 relay matches
+as each relay responds. Unsupported or ignored search filters update diagnostics
+without removing local results.
 
 ## Cancellation
 

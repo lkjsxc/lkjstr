@@ -21,6 +21,14 @@ Read next: [product/README.md](product/README.md),
 - Followees and User Timeline are relay-backed action-opened surfaces. Cache-hit
   real NIP-02 data may render immediately, cache misses start target discovery,
   and User Timeline can show a truthful target-posts-only degraded mode.
+- New Tab includes a fixed `lkjsxc` choice that opens the public User Timeline
+  for `0f38afb23cec30570ee64f9a4aa099229395ec3371c5fe867e09c9111480015d`.
+- Search is treated as complete only when the local SQLite token index and
+  relay NIP-50 merge tests pass. It must never fall back to full cached-event
+  scans for normal local search.
+- The browser persistent-storage request surface is removed. Generic workspace
+  tab snapshots and protected SQLite data remain; no special request
+  persistence feature remains.
 - Tweet, replies, reposts, reactions, zaps, Blossom upload, NIP-96
   compatibility upload settings, NIP-98 auth, NIP-30 custom emoji,
   sensitive-content reveal, and event reference previews are implemented.
@@ -122,6 +130,18 @@ Read next: [architecture/workspace/README.md](architecture/workspace/README.md),
 - Feed surfaces share near-end sentinels, footer phase semantics, bounded
   viewport-fill, older-load intent gating, and staged row shells on Home,
   Global, Profile, Thread, and Notifications.
+- Live inserts follow a top-anchor policy. A user at the top sees new resident
+  rows immediately; a user away from the top keeps the visible anchor and sees
+  newer-available state instead of being yanked upward.
+- Profile following counts are not binary. Unknown counts render loading,
+  discovery, incomplete, unavailable, or failed states; only a known kind `3`
+  follow list may render `0 following`.
+- Profile notes do not show a no-notes empty state until sparse historical relay
+  scans prove absence for attempted routes. Long-inactive profiles remain in a
+  loading, searching older, partial, auth-required, failed, or unavailable state
+  until proof exists.
+- Visibility-prioritized hydration is the feed enrichment policy: visible rows,
+  then near-visible rows, then active offscreen work, then hidden diagnostics.
 - Cache-first feed display requires complete coverage evidence for every
   required relay, route group, semantic key, filter shape, and bounded interval.
   Incomplete, failed, compacted, dense, stale, or missing evidence cannot prove
@@ -142,6 +162,12 @@ Read next: [architecture/network/README.md](architecture/network/README.md),
 - Feed route isolation keeps Home and Profile route-group reads on resolved
   route fingerprints, while Notifications and selected-relay tools keep
   independent semantic keys.
+- User Timeline chunks large author sets, renders fast relay results before slow
+  relay completion, and degrades to target-authored posts only when follow-graph
+  discovery is unavailable but real target posts are reachable.
+- Search renders local indexed results without waiting for remote relays, sends
+  bounded NIP-50 filters to eligible selected read relays, and reports unsupported
+  or clamped relays as diagnostics.
 - Matching Home tabs attach to one shared query keyed by account, selected
   relays, page size, and feed policy.
 - Background work is owner-scoped, cancellable, chunked, and non-blocking.

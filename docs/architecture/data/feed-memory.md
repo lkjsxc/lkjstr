@@ -63,8 +63,42 @@ bounded as timelines grow.
 - Loading near the bottom adds older chunks. Loading near the top adds newer
   chunks. Rendering flattens chunks only for display.
 - Live prepends and chunk changes preserve the visible scroll anchor.
+- Top-anchor live policy is explicit:
+  - `atTop` means scroll offset is at or near zero and the feed is not restoring
+    an intentionally older-pruned snapshot.
+  - `topLocked` means the active visible tab is at top and not in snapshot
+    restore.
+  - If `topLocked`, live prepends become resident rows and scroll stays `0`.
+  - If not `topLocked`, the visible row is compensated and `hasNewer` is true.
+  - `newestCursor` advances only after the row is resident or a newer catch-up
+    segment is proven.
 - Virtual event lists include terminal history markers inside the row data, so
   the marker scrolls with loaded content.
+
+## Cache Display Policy
+
+- `coverage-proven`: render cached rows normally.
+- `cache-preview`: render one bounded preview page with clear refresh copy.
+- `hold-cache`: delay cache rows that would imply false coverage, stale route
+  dominance, mismatched selected relays, mismatched author-set hash, or one
+  cached author dominating an unproven target timeline.
+- `relay-refreshing`: relay reads start immediately while preview or hold state
+  is visible.
+- `complete`: promote preview rows only after coverage evidence supports target
+  pubkey, route fingerprint, selected relay fingerprint, author-set hash, filter
+  shape, page size, feed policy, and interval.
+
+## Visibility-Prioritized Hydration
+
+- Visible rows are highest priority.
+- Near-visible rows within roughly two viewports are high priority.
+- Active-tab offscreen rows are medium priority.
+- Hidden mounted tabs pause live hydration and keep bounded windows only.
+- Closed tabs or stale generations cancel queued work.
+- Background diagnostics are lowest priority.
+- Jobs dedupe by semantic key: pubkey, event id, media URL hash, emoji source
+  coordinate, or relay read key. Tab ids may appear in diagnostics but not in
+  dedupe keys.
 
 ## Scroll Anchoring
 

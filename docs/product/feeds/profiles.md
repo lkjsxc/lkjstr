@@ -61,9 +61,13 @@ Profile tabs show identity metadata and authored text notes.
   kind `3` is known.
 - Clicking the following count opens or focuses the Followees tab for the
   viewed pubkey in the same tile.
-- A known empty follow list shows `0 following`. An unavailable follow list does
-  not invent a count and leaves Followees available only through explicit retry
-  or menu actions once implemented.
+- Following count state is explicit: `loading-cache`, `discovering-relays`,
+  `known`, `known-empty`, `incomplete`, `unavailable`, and `failed`.
+- Unknown or discovering follow lists show stable text such as `Loading
+  following...` or `Calculating following...`, not `0 following`.
+- A known empty follow list shows `0 following`. Partial failure, timeout,
+  relay `AUTH`, socket close, or missing EOSE shows incomplete or unavailable
+  diagnostics and never invents a count.
 - Long `about`, `npub`, and website values wrap without overlapping the Notes
   section at desktop, mobile, or narrow split-pane widths.
 - Profile note rows start below the full profile header inside the same scroll
@@ -74,10 +78,22 @@ Profile tabs show identity metadata and authored text notes.
   newer profile rows after the list is scrollable.
 - Scroll position automatically restores per Profile tab after tab switching and
   reload.
+- Profile note state is one of `metadata-loading`, `notes-loading-recent`,
+  `notes-searching-older`, `notes-partial`, `notes-ready-with-events`,
+  `notes-ready-empty-proven`, `notes-unavailable`, `notes-auth-required`, or
+  `notes-all-relays-failed`.
+- The old copy `No notes have been received for this profile.` is not shown
+  while cache or relay evidence is incomplete. Empty copy is allowed only in
+  `notes-ready-empty-proven` and must mention attempted public relays.
 - Initial and historical note pages use compound `{createdAt,id}` cursors,
   adaptive bounded windows with `since` and `until`, local relay boundary
   filtering, and merged relay provenance. Sparse complete windows keep scanning
   older; dense or incomplete windows remain non-exhaustive.
+- Sparse historical scans start with recent bounded windows. Complete empty
+  windows widen or step older toward `created_at = 0` without unbounded relay
+  requests. Progress text may include the oldest checked year.
+- Metadata and follow-list rendering do not block on the note scan. Note-scan
+  cancellation happens when the tab closes or its generation changes.
 - Scanner-owned bounds are enforced at relay dispatch. A relay-effective limit
   smaller than the visible page size is dense when it fills.
 - Repeated stale bottom triggers must not queue unbounded older reads or keep

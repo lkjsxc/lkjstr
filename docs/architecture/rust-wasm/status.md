@@ -60,8 +60,19 @@ This file is the concise status map for the active Rust/WASM migration.
 - Rust Settings persistence now uses the SQLite worker typed repository in the
   Rust Settings host. CSS side effects and cache-budget enforcement remain open.
 - Followees and User Timeline now have Rust target follow-graph reducers, a
-  WASM parser bridge, and shipped Svelte relay-backed action wiring. Leptos
-  surface parity and deletion of the Svelte tabs remain open.
+  WASM parser bridge, a fixed lkjsxc catalog constant, follow-count state,
+  author chunking contracts, cache-display policy reducers, and shipped Svelte
+  relay-backed action wiring. Leptos surface parity and deletion of the Svelte
+  tabs remain open.
+- Feed windows are gaining Rust top-anchor live-insert policy tests while the
+  shipped Svelte feed list consumes the equivalent anchor behavior.
+- Search is an active Rust target for tokenizer, cache query planning, SQLite
+  token-index contracts, relay NIP-50 merge state, and diagnostics. It remains
+  open until storage and product tests prove indexed local search plus remote
+  merge.
+- Hydration scheduling is an active Rust target for semantic-key priority,
+  visible and near-visible ordering, hidden-tab pause, stale-generation cancel,
+  and cross-tab dedupe.
 
 ## Open Foundations
 
@@ -75,6 +86,10 @@ This file is the concise status map for the active Rust/WASM migration.
 - Product feed runtime wiring for Home, Global, Profile, Thread, Notifications,
   Search, Custom Request, and Author Context. Pure query inputs and feed-window
   reducers exist; shipped surfaces still use TypeScript.
+- Rust completion evidence remains required before moving top-anchor policy,
+  follow-count state, cache-display policy, search indexing, sparse profile
+  scans, User Timeline runtime, or hydration scheduling out of active target
+  status.
 - Publish jobs, local signing flow integration, NIP-07 `signEvent`, media upload
   transport, custom emoji publish support, and Profile Edit publish.
 - Full Leptos parity for every product surface and responsive browser QA.
