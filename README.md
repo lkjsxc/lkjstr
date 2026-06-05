@@ -47,7 +47,7 @@ system.
 - **Tweet** - compose and publish notes.
 - **Replies, reposts, reactions** - inline event actions.
 - **Zaps** - open or copy NIP-57 invoices; wallet custody is out of scope.
-- **Media upload** - NIP-96 upload with NIP-98 auth.
+- **Media upload** - NIP-96 compatibility upload with NIP-98 auth; Blossom is the preferred target.
 - **Custom emoji** - NIP-30 emoji parsing and publishing.
 - **Profile Edit** - update active-account metadata.
 
@@ -125,6 +125,7 @@ All contracts live under [`docs/`](docs/README.md):
 - **[docs/architecture/](docs/architecture/README.md)** - runtime and data ownership.
 - **[docs/operations/](docs/operations/README.md)** - verification, CI, and data safety.
 - **[docs/repository/](docs/repository/README.md)** - layout, workflow, and style rules.
+- **[docs/security/](docs/security/README.md)** - local keys and content safety.
 - **[docs/decisions/](docs/decisions/README.md)** - durable architectural decisions.
 - **[docs/research/](docs/research/README.md)** - background notes and open questions.
 - **[docs/vision/](docs/vision/README.md)** - long-term scope and principles.

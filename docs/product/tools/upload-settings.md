@@ -4,7 +4,7 @@
 
 Upload Settings is the guided media upload configuration surface.
 
-## Contract
+## Current Behavior
 
 - Upload Settings opens from New Tab.
 - The tab edits `tweet.mediaUploadProvider`, `tweet.mediaUploadCustomServer`,
@@ -18,6 +18,14 @@ Upload Settings is the guided media upload configuration surface.
 - Changes dispatch the shared settings-changed event so open Tweet and Profile
   Edit tabs use new upload behavior without reload.
 
+## Target Behavior
+
+- Add a Blossom provider choice that uses the custom HTTPS server field.
+- Label NIP-96 providers as compatibility upload choices.
+- Test discovery should describe the selected protocol: Blossom raw upload
+  endpoint or NIP-96 discovery.
+- Blank custom server disables custom media upload without blocking text notes.
+
 ## Rust Conversion Status
 
 - The Rust/WASM shell renders Upload Settings from real IndexedDB `settings`
@@ -29,6 +37,6 @@ Upload Settings is the guided media upload configuration surface.
   `fetch`.
 - Successful Rust Upload Settings saves dispatch the shared
   `lkjstr-settings-changed` browser event.
-- Rust Upload Settings does not yet upload files, sign NIP-98 upload auth, or
-  own Tweet/Profile Edit media consumers; those flows remain owned by the
-  existing runtime until the writing surfaces are converted.
+- Rust Upload Settings does not yet upload files, sign upload auth, or own
+  Tweet/Profile Edit media consumers; those flows remain owned by the existing
+  runtime until the writing surfaces are converted.

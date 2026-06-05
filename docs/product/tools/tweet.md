@@ -44,7 +44,8 @@ uploads, or fake custom emoji metadata.
 - Custom emoji choices come from the active account's newest kind `10030` emoji
   list, direct `emoji` tags, and referenced newest kind `30030` emoji sets
   discovered from cache first and then selected read relays.
-- Paste and file-picker uploads use the configured NIP-96 HTTPS upload server.
+- Paste and file-picker uploads use the configured HTTPS media provider. NIP-96
+  providers are compatibility choices; Blossom is the preferred provider target.
 - Each Tweet tab owns a unique visually hidden file input behind an accessible
   icon button, so file selection is scoped to the active composer.
 - A blank upload server disables media upload without blocking text publishing.

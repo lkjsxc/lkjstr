@@ -12,6 +12,8 @@ state, storage, relay orchestration, cleanup, and Rust/WASM migration.
 - [feeds/README.md](feeds/README.md): feed invariants, sources, and runtime.
 - [network/README.md](network/README.md): relays, routing, jobs, and budgets.
 - [orchestration/README.md](orchestration/README.md): database-backed decision memory.
+- [runtime-ownership.md](runtime-ownership.md): owner map for shipped and target runtimes.
+- [source-map.md](source-map.md): repository path ownership map.
 - [rust-wasm/README.md](rust-wasm/README.md): Rust/WASM client target.
 - [runtimes/README.md](runtimes/README.md): tab-owned data loading.
 - [workspace/README.md](workspace/README.md): panes, tabs, scroll, and layout.
@@ -72,7 +74,7 @@ state, storage, relay orchestration, cleanup, and Rust/WASM migration.
 `network/subscription-orchestration/metrics.md` `network/subscription-orchestration/notifications-profile-thread-integration.md` `network/subscription-orchestration/owner-visibility.md`
 `network/subscription-orchestration/page-read-dedupe.md` `network/subscription-orchestration/relay-read-scoring.md` `network/subscription-orchestration/route-plan.md`
 `network/subscription-orchestration/routing-by-surface.md` `network/subscription-orchestration/source-map.md` `network/subscription-orchestration/tests.md`
-`network/system.md` `orchestration/README.md` `orchestration/background-work.md`
+`network/system.md` `runtime-ownership.md` `source-map.md` `orchestration/README.md` `orchestration/background-work.md`
 `orchestration/cancellation.md` `orchestration/database-memory.md` `orchestration/decision-model.md`
 `orchestration/stats.md` `orchestration/surface-inputs.md` `orchestration/task-queue.md`
 `orchestration/verification.md` `runtimes/README.md` `runtimes/global-runtime.md`

@@ -42,8 +42,9 @@ Nostr protocol surfaces without claiming unavailable behavior.
   summaries.
 - NIP-65 relay list metadata parsing for kind `10002` `r` tags with explicit
   import controls.
-- NIP-96 media upload discovery and response parsing.
-- NIP-98 HTTP auth events for media upload.
+- NIP-96 media upload discovery and response parsing for compatibility
+  providers.
+- NIP-98 HTTP auth events for NIP-96 media upload.
 - NIP-11 relay information documents from relay HTTP endpoints with
   `application/nostr+json` accept headers, including local request-budget
   inputs from limitation fields.
@@ -53,6 +54,7 @@ Nostr protocol surfaces without claiming unavailable behavior.
 - Implemented: listed core and product support above.
 - Design-only: passkey-protected local secret storage.
 - Not implemented: encrypted direct messages.
+- Target: Blossom/NIP-B7 media upload as the preferred provider model.
 - Out of scope: wallet custody. Zap support opens or copies invoices only.
 
 ## Rule

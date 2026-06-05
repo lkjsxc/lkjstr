@@ -14,6 +14,7 @@ changed. Each docs directory has one README that acts as a table of contents.
 - [architecture/README.md](architecture/README.md): runtime and data ownership.
 - [operations/README.md](operations/README.md): checks, Docker, and safety.
 - [repository/README.md](repository/README.md): workflow and style rules.
+- [security/README.md](security/README.md): local keys and content safety.
 - [research/README.md](research/README.md): investigations.
 - [vision/README.md](vision/README.md): product direction.
 - [decisions/README.md](decisions/README.md): durable decisions.
@@ -27,6 +28,8 @@ changed. Each docs directory has one README that acts as a table of contents.
   and [architecture/network/relay-optimizer/README.md](architecture/network/relay-optimizer/README.md).
 - Storage: [architecture/data/sqlite-opfs/README.md](architecture/data/sqlite-opfs/README.md)
   and [architecture/data/storage/README.md](architecture/data/storage/README.md).
+- Security: [security/README.md](security/README.md) and
+  [architecture/data/local-secret-security.md](architecture/data/local-secret-security.md).
 - Rust/WASM: [architecture/rust-wasm/README.md](architecture/rust-wasm/README.md).
 - Verification: [operations/verification.md](operations/verification.md).
 
@@ -76,7 +79,8 @@ changed. Each docs directory has one README that acts as a table of contents.
 `architecture/network/subscription-orchestration/live-lease.md` `architecture/network/subscription-orchestration/metrics.md` `architecture/network/subscription-orchestration/notifications-profile-thread-integration.md`
 `architecture/network/subscription-orchestration/owner-visibility.md` `architecture/network/subscription-orchestration/page-read-dedupe.md` `architecture/network/subscription-orchestration/relay-read-scoring.md`
 `architecture/network/subscription-orchestration/route-plan.md` `architecture/network/subscription-orchestration/routing-by-surface.md` `architecture/network/subscription-orchestration/source-map.md`
-`architecture/network/subscription-orchestration/tests.md` `architecture/network/system.md` `architecture/orchestration/README.md`
+`architecture/network/subscription-orchestration/tests.md` `architecture/network/system.md` `architecture/runtime-ownership.md`
+`architecture/source-map.md` `architecture/orchestration/README.md`
 `architecture/orchestration/background-work.md` `architecture/orchestration/cancellation.md` `architecture/orchestration/database-memory.md`
 `architecture/orchestration/decision-model.md` `architecture/orchestration/stats.md` `architecture/orchestration/surface-inputs.md`
 `architecture/orchestration/task-queue.md` `architecture/orchestration/verification.md` `architecture/runtimes/README.md`
@@ -116,8 +120,9 @@ changed. Each docs directory has one README that acts as a table of contents.
 `protocol/events.md` `protocol/kernel.md` `protocol/media-upload.md`
 `protocol/nip-support.md` `protocol/relays.md` `protocol/zaps.md`
 `repository/README.md` `repository/commit-protocol.md` `repository/documentation-standards.md`
-`repository/functional-style.md` `repository/layout.md` `repository/llm-maintenance.md`
-`repository/workflow.md` `research/README.md` `research/browser-storage.md`
+`repository/functional-style.md` `repository/layout.md` `repository/line-limits.md` `repository/llm-maintenance.md`
+`repository/workflow.md` `security/README.md` `security/content-safety.md` `security/local-keys.md`
+`research/README.md` `research/browser-storage.md`
 `research/nostr-client-surfaces.md` `research/open-questions.md` `research/relay-optimizer-audit.md`
 `vision/README.md` `vision/north-star.md` `vision/principles.md`
 `vision/scope.md`

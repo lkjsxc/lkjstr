@@ -82,6 +82,7 @@ NIP-11-driven request budgeting and diagnostics are implemented and tracked in
 | Event reference rendering hardening              | [event-tree.md](../architecture/data/event-tree.md)                                                | Unit NIP-10/NIP-18 derivation; focused tests reference unavailable state |
 | Custom emoji rendering hardening                 | [custom-emoji.md](../protocol/custom-emoji.md)                                                     | Unit NIP-30 parse; focused tests emoji in note                           |
 | Upload settings clarity                          | [tools/upload-settings.md](tools/upload-settings.md)                                               | focused tests Upload Settings tab fields                                 |
+| Blossom provider adapter                         | [media-upload.md](../protocol/media-upload.md)                                                     | unit local fixture tests plus Tweet upload adapter tests                  |
 
 ## Deferred (design-only or out of scope)
 

@@ -18,9 +18,9 @@ Read next: [product/README.md](product/README.md),
 - Home, Global, Profile, Thread, Notifications, Search, Custom Request, Author
   Context, Accounts, Relay Settings, Stats, Settings, Upload Settings, lkjstr
   Log, Mine npub, Profile Edit, and Welcome are implemented.
-- Tweet, replies, reposts, reactions, zaps, NIP-96 upload settings, NIP-98
-  auth, NIP-30 custom emoji, sensitive-content reveal, and event reference
-  previews are implemented.
+- Tweet, replies, reposts, reactions, zaps, NIP-96 compatibility upload
+  settings, NIP-98 auth, NIP-30 custom emoji, sensitive-content reveal, and
+  event reference previews are implemented.
 - Cloudflare Workers Static Assets is only a hosting target. It is not an app
   backend, account service, relay proxy, or storage service.
 
@@ -179,6 +179,9 @@ and [operations/memory-verification.md](operations/memory-verification.md).
   compact memory counters, storage diagnostics, recoverable optimizer and
   orchestration traces, and persisted job records.
 - Remote NIP-50 results depend on actual relay support.
+- Blossom/NIP-B7 upload is the preferred media target. The current shipped
+  transport remains NIP-96 compatibility until the provider adapter is real and
+  tested.
 - RSS remains diagnostic-only for memory verification; app JavaScript heap is
   the owned browser memory assertion when manually measured.
 

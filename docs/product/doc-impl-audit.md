@@ -91,6 +91,13 @@ references should stay as relative Markdown links.
 | Hidden-mount inactive tab bodies    | [tab-body-mount.md](../architecture/workspace/tab-body-mount.md)                                                                           | implemented | `PaneTabStack`, paused runtimes |
 | DOM-first scroll on tab return      | [tab-retention-flow.md](../architecture/workspace/tab-retention-flow.md)                                                                   | implemented | `hasTracked` in focus sync      |
 
+## Media Upload
+
+| Clause                         | Contract                               | Status  | Notes                                      |
+| ------------------------------ | -------------------------------------- | ------- | ------------------------------------------ |
+| NIP-96 compatibility upload     | [media-upload.md](../protocol/media-upload.md) | implemented | Current Tweet and Profile Edit uploader path |
+| Blossom preferred upload target | [media-upload.md](../protocol/media-upload.md) | open    | Provider adapter and local fixture tests needed |
+
 ## Event Actions
 
 | Clause                      | Contract          | Status      | Notes                   |
