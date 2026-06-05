@@ -17,6 +17,7 @@ import { submitProfilePostsLiveIntent } from './profile-route-plans';
 import { createProfileRuntimeHandlers } from './profile-runtime-handlers';
 import { loadInitialProfilePage } from './profile-runtime-initial';
 import { createProfilePageLoaders } from './profile-runtime-loaders';
+import { continueSparseProfileScan } from './profile-runtime-sparse';
 import { profileFollowListStatus } from './follow-count-state';
 import { emptyProfileState, type ProfileState } from './profile-state';
 import { withProfileCursors } from './profile-runtime-display';
@@ -93,6 +94,7 @@ export function createProfileRuntime(
         signal: aborts.signal,
       });
       if (!active(run)) return;
+      olderScanCursor = page.nextOlderCursor;
       emit({
         ...state,
         profile: page.profile,
@@ -101,9 +103,16 @@ export function createProfileRuntime(
           ? profileFollowListStatus(page.followList)
           : 'incomplete',
         posts: page.posts,
+        hasOlder: page.hasOlder,
         loading: false,
         relays: [...new Set([...state.relays, ...page.relays])],
       });
+      if (page.posts.length === 0 && page.hasOlder)
+        void continueSparseProfileScan({
+          active: () => active(run),
+          getState: () => state,
+          loadOlder: () => loaders.loadOlder(),
+        });
     } catch (error) {
       emit({
         ...state,

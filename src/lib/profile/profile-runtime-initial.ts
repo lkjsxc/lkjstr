@@ -123,6 +123,9 @@ export async function loadInitialProfilePage(request: Request) {
         ...posts.items.flatMap((item) => item.relays),
       ]),
     ],
+    hasOlder: posts.hasMorePossible,
+    nextOlderCursor: posts.nextCursor,
+    incomplete: posts.incomplete,
   };
 }
 

@@ -8,6 +8,7 @@ pub mod feed_scan;
 pub mod feed_wait;
 pub mod follow_graph;
 pub mod orchestration;
+pub mod profile_history;
 pub mod public_chat;
 pub mod query;
 mod startup_snapshots;
@@ -76,6 +77,7 @@ pub use orchestration::{
     SurfaceKind, SurfaceReadPlan, plan_cache_retention, plan_feed_prefetch, plan_hydration,
     plan_surface_read,
 };
+pub use profile_history::{ProfileScanDecision, ProfileScanInput, plan_profile_sparse_scan};
 pub use public_chat::{
     PublicChatPublishTemplate, PublicChatQueryInput, PublicChatReadPlan, channel_discovery_plan,
     channel_message_template, channel_metadata_plan, channel_reply_template,
