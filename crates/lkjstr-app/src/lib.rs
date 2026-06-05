@@ -8,6 +8,7 @@ pub mod feed_lod;
 pub mod feed_scan;
 pub mod feed_wait;
 pub mod follow_graph;
+pub mod hydration_priority;
 pub mod orchestration;
 pub mod profile_history;
 pub mod public_chat;
@@ -75,6 +76,7 @@ pub use follow_graph::{
     follow_count_label, reduce_follow_count, summarize_follow_list, target_posts_only_author_set,
     user_timeline_author_set,
 };
+pub use hydration_priority::{HydrationJob, HydrationPriority, plan_hydration_jobs};
 pub use orchestration::{
     CacheReadMode, CoverageEvidenceState, FeedPrefetchPlan, HydrationPlan, OptimizerEvidenceState,
     OrchestrationContext, OrchestrationDecisionTrace, OrchestrationPolicy, RetentionHintPlan,
