@@ -1,5 +1,6 @@
 import type { RelaySet } from '$lib/relays/relay-store';
 import { removeRelay, setRelayEnabled } from '$lib/relays/relay-store';
+import { findPane, paneIds } from './layout-tree';
 import {
   openAuthorContextTab,
   openFolloweesTab,
@@ -36,6 +37,42 @@ type Deps = {
 
 const resolved = (): Promise<void> => Promise.resolve();
 
+function convertOrFocusActionTab(
+  workspace: Workspace,
+  tabId: string,
+  kind: TabKind,
+  config: Record<string, unknown>,
+): Workspace {
+  const pubkey = typeof config.pubkey === 'string' ? config.pubkey : '';
+  const paneId = paneIdForTab(workspace, tabId);
+  if (kind !== 'user-timeline' || !pubkey || !paneId)
+    return convertWorkspaceTab(workspace, tabId, kind, config);
+  const pane = workspace.layout
+    ? findPane(workspace.layout, paneId)
+    : undefined;
+  const group = pane ? workspace.tabGroups[pane.tabGroupId] : undefined;
+  const existing = group?.tabIds.find((id) => {
+    const tab = workspace.tabs[id];
+    return id !== tabId && tab?.kind === kind && tab.config.pubkey === pubkey;
+  });
+  if (!existing) return convertWorkspaceTab(workspace, tabId, kind, config);
+  return focusTab(
+    closeWorkspaceTab(workspace, paneId, tabId),
+    paneId,
+    existing,
+  );
+}
+
+function paneIdForTab(workspace: Workspace, tabId: string): string | undefined {
+  if (!workspace.layout) return undefined;
+  return paneIds(workspace.layout).find((paneId) => {
+    const pane = findPane(workspace.layout!, paneId);
+    return Boolean(
+      pane && workspace.tabGroups[pane.tabGroupId]?.tabIds.includes(tabId),
+    );
+  });
+}
+
 export function createWorkspacePageActions(deps: Deps) {
   const updateWorkspace = (next: Workspace): Promise<void> => deps.update(next);
   return {
@@ -45,10 +82,12 @@ export function createWorkspacePageActions(deps: Deps) {
       tabId: string,
       kind: TabKind,
       config: Record<string, unknown> = {},
-    ): Promise<void> =>
-      updateWorkspace(
-        convertWorkspaceTab(deps.getWorkspace(), tabId, kind, config),
-      ),
+    ): Promise<void> => {
+      const workspace = deps.getWorkspace();
+      return updateWorkspace(
+        convertOrFocusActionTab(workspace, tabId, kind, config),
+      );
+    },
     openProfile: (paneId: string, pubkey: string): Promise<void> =>
       updateWorkspace(openProfileTab(deps.getWorkspace(), paneId, pubkey)),
     openFollowees: (paneId: string, pubkey: string): Promise<void> =>

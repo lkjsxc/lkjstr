@@ -4,6 +4,9 @@ use std::collections::BTreeMap;
 
 use crate::workspace::tab::{TabKind, title_for};
 
+pub const LKJSXC_TIMELINE_PUBKEY: &str =
+    "0f38afb23cec30570ee64f9a4aa099229395ec3371c5fe867e09c9111480015d";
+
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
 pub enum NewTabOptionGroup {
     Primary,
@@ -36,7 +39,12 @@ pub fn new_tab_options_for_account(active_pubkey: Option<&str>) -> Vec<NewTabOpt
     };
     let insert_at = options
         .iter()
-        .position(|option| option.kind == TabKind::PublicChat)
+        .position(|option| option.label == "lkjsxc")
+        .or_else(|| {
+            options
+                .iter()
+                .position(|option| option.kind == TabKind::PublicChat)
+        })
         .map_or(options.len(), |index| index + 1);
     options.insert(insert_at, profile);
     options
@@ -86,6 +94,7 @@ fn base_options() -> Vec<NewTabOption> {
             NewTabOptionGroup::Primary,
             &["chat", "channel", "nip28", "room", "public"],
         ),
+        lkjstr_option(),
         option(
             TabKind::ProfileEdit,
             "Active account metadata.",
@@ -156,5 +165,22 @@ fn option(
         group,
         aliases,
         config: BTreeMap::new(),
+    }
+}
+
+fn lkjstr_option() -> NewTabOption {
+    NewTabOption {
+        kind: TabKind::UserTimeline,
+        label: "lkjsxc",
+        description: "Show lkjsxc's public follow-graph timeline.",
+        group: NewTabOptionGroup::Primary,
+        aliases: &[
+            "lkjsxc",
+            "starter",
+            "recommended",
+            "public timeline",
+            "npub1puu2",
+        ],
+        config: BTreeMap::from([("pubkey".to_owned(), LKJSXC_TIMELINE_PUBKEY.to_owned())]),
     }
 }

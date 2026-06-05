@@ -6,7 +6,11 @@ import {
   openThreadTab,
   openUserTimelineTab,
 } from '../../../src/lib/workspace/action-tabs';
-import { createWorkspace } from '../../../src/lib/workspace/workspace';
+import {
+  createWorkspace,
+  openNewTabChooser,
+} from '../../../src/lib/workspace/workspace';
+import { createWorkspacePageActions } from '../../../src/lib/workspace/workspace-page-actions';
 
 describe('workspace action tabs', () => {
   it('focuses an existing matching profile tab in the same pane', () => {
@@ -48,5 +52,39 @@ describe('workspace action tabs', () => {
       Object.values(reused.tabs).filter((tab) => tab.kind === 'user-timeline'),
     ).toHaveLength(1);
     expect(reused.focusedTabId).toBe(timeline.focusedTabId);
+  });
+
+  it('converts fixed timeline choices by focusing an existing same-pane tab', async () => {
+    let workspace = createWorkspace();
+    const paneId = paneIds(workspace.layout!)[0]!;
+    const pubkey = 'd'.repeat(64);
+    workspace = openUserTimelineTab(workspace, paneId, pubkey);
+    workspace = openNewTabChooser(workspace, paneId);
+    const chooserId = workspace.focusedTabId!;
+    const actions = createWorkspacePageActions({
+      getWorkspace: () => workspace,
+      update: async (next) => {
+        workspace = next;
+      },
+      captureAllTabs: () => undefined,
+      snapshotCoordinator: () =>
+        ({
+          captureTab: async () => undefined,
+          deleteTab: async () => undefined,
+        }) as never,
+      refreshData: async () => undefined,
+      setRelaySets: () => undefined,
+    });
+
+    await actions.convertTab(chooserId, 'user-timeline', { pubkey });
+
+    expect(
+      Object.values(workspace.tabs).filter((tab) => tab.kind === 'new-tab'),
+    ).toHaveLength(0);
+    expect(
+      Object.values(workspace.tabs).filter(
+        (tab) => tab.kind === 'user-timeline',
+      ),
+    ).toHaveLength(1);
   });
 });

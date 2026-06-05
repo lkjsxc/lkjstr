@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import {
   filterNewTabOptions,
+  lkjsxcTimelinePubkey,
   newTabOptionMatches,
   newTabOptionsForAccount,
   newTabOptionsForAccountAndQuery,
@@ -18,6 +19,7 @@ const canonicalLabels = [
   'Custom Request',
   'Global',
   'Public Chat',
+  'lkjsxc',
   'Profile Edit',
   'Accounts',
   'Relay Settings',
@@ -51,6 +53,18 @@ describe('new tab options', () => {
     ).toEqual(['Accounts']);
   });
 
+  it('exposes the fixed lkjsxc public timeline', () => {
+    const item = newTabOptionsForAccount().find(
+      (option) => option.label === 'lkjsxc',
+    );
+    expect(item).toMatchObject({
+      kind: 'user-timeline',
+      config: { pubkey: lkjsxcTimelinePubkey },
+    });
+    expect(item && newTabOptionMatches(item, 'starter')).toBe(true);
+    expect(item && newTabOptionMatches(item, 'public timeline')).toBe(true);
+  });
+
   it('filters by alias', () => {
     expect(
       labels(newTabOptionsForAccountAndQuery(undefined, 'compose')),
@@ -82,7 +96,7 @@ describe('new tab options', () => {
       kind: 'profile',
       config: { pubkey: 'abc' },
     });
-    expect(labels(options).indexOf('My Profile')).toBe(7);
+    expect(labels(options).indexOf('My Profile')).toBe(8);
     expect(profile && newTabOptionMatches(profile, 'profile')).toBe(true);
     expect(profile && newTabOptionMatches(profile, 'me')).toBe(true);
     expect(

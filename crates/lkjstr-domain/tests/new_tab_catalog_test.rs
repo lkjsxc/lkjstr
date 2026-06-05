@@ -1,6 +1,6 @@
 use lkjstr_domain::{
-    TabKind, filter_new_tab_options, new_tab_option_matches, new_tab_options_for_account,
-    new_tab_options_for_account_and_query,
+    LKJSXC_TIMELINE_PUBKEY, TabKind, filter_new_tab_options, new_tab_option_matches,
+    new_tab_options_for_account, new_tab_options_for_account_and_query,
 };
 
 fn labels(options: &[lkjstr_domain::NewTabOption]) -> Vec<&'static str> {
@@ -16,6 +16,7 @@ fn canonical_labels() -> Vec<&'static str> {
         "Custom Request",
         "Global",
         "Public Chat",
+        "lkjsxc",
         "Profile Edit",
         "Accounts",
         "Relay Settings",
@@ -59,6 +60,24 @@ fn filters_by_description() {
         labels(&new_tab_options_for_account_and_query(None, "identity")),
         vec!["Accounts"]
     );
+}
+
+#[test]
+fn exposes_fixed_lkjsxc_timeline() -> Result<(), String> {
+    let options = new_tab_options_for_account(None);
+    let item = options
+        .iter()
+        .find(|option| option.label == "lkjsxc")
+        .ok_or_else(|| "missing lkjsxc".to_owned())?;
+
+    assert_eq!(item.kind, TabKind::UserTimeline);
+    assert_eq!(
+        item.config.get("pubkey").map(String::as_str),
+        Some(LKJSXC_TIMELINE_PUBKEY)
+    );
+    assert!(new_tab_option_matches(item, "starter"));
+    assert!(new_tab_option_matches(item, "public timeline"));
+    Ok(())
 }
 
 #[test]
@@ -113,7 +132,7 @@ fn active_account_profile_remains_filterable() -> Result<(), String> {
         options
             .iter()
             .position(|option| option.label == "My Profile"),
-        Some(7)
+        Some(8)
     );
     assert!(new_tab_option_matches(profile, "profile"));
     assert!(new_tab_option_matches(profile, "me"));

@@ -1,4 +1,6 @@
 import type { TabKind } from '$lib/workspace/tab';
+export const lkjsxcTimelinePubkey =
+  '0f38afb23cec30570ee64f9a4aa099229395ec3371c5fe867e09c9111480015d';
 
 export type NewTabOption = {
   readonly kind: TabKind;
@@ -8,7 +10,6 @@ export type NewTabOption = {
   readonly aliases?: readonly string[];
   readonly config?: Record<string, unknown>;
 };
-
 const baseOptions: readonly NewTabOption[] = [
   {
     kind: 'timeline',
@@ -55,6 +56,20 @@ const baseOptions: readonly NewTabOption[] = [
     description: 'NIP-28 channel chat.',
     group: 'primary',
     aliases: ['chat', 'channel', 'nip28', 'room', 'public'],
+  },
+  {
+    kind: 'user-timeline',
+    label: 'lkjsxc',
+    description: "Show lkjsxc's public follow-graph timeline.",
+    group: 'primary',
+    aliases: [
+      'lkjsxc',
+      'starter',
+      'recommended',
+      'public timeline',
+      'npub1puu2',
+    ],
+    config: { pubkey: lkjsxcTimelinePubkey },
   },
   {
     kind: 'profile-edit',
@@ -126,11 +141,12 @@ export function newTabOptionsForAccount(
     aliases: ['profile', 'me'],
     config: { pubkey: activePubkey },
   };
+  const lkjstrIndex = baseOptions.findIndex((o) => o.label === 'lkjsxc');
   const publicChatIndex = baseOptions.findIndex(
     (o) => o.kind === 'public-chat',
   );
-  const insertIndex =
-    publicChatIndex >= 0 ? publicChatIndex + 1 : baseOptions.length;
+  const anchorIndex = lkjstrIndex >= 0 ? lkjstrIndex : publicChatIndex;
+  const insertIndex = anchorIndex >= 0 ? anchorIndex + 1 : baseOptions.length;
   return [
     ...baseOptions.slice(0, insertIndex),
     profile,

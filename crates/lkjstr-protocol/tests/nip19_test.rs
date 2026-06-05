@@ -82,6 +82,16 @@ fn roundtrips_tlv_entities() -> Result<(), String> {
 }
 
 #[test]
+fn decodes_lkjsxc_public_timeline_npub() {
+    assert_eq!(
+        decode_nip19("npub1puu2lv3uasc9wrhxf7dy4gyey2fetmpnw8zlapn7p8y3z9yqq9wsve28r2"),
+        Some(NostrEntity::Npub(
+            "0f38afb23cec30570ee64f9a4aa099229395ec3371c5fe867e09c9111480015d".to_owned()
+        ))
+    );
+}
+
+#[test]
 fn rejects_malformed_and_oversized_values() {
     assert_eq!(decode_nip19("not-an-entity"), None);
     assert_eq!(decode_nip19(&format!("npub1{}", "q".repeat(5000))), None);
