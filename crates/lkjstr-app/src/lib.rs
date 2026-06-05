@@ -7,6 +7,7 @@ pub mod feed_lod;
 pub mod feed_scan;
 pub mod feed_wait;
 pub mod orchestration;
+pub mod public_chat;
 pub mod query;
 mod startup_snapshots;
 mod workspace_defaults;
@@ -65,6 +66,12 @@ pub use orchestration::{
     OrchestrationContext, OrchestrationDecisionTrace, OrchestrationPolicy, RetentionHintPlan,
     SurfaceKind, SurfaceReadPlan, plan_cache_retention, plan_feed_prefetch, plan_hydration,
     plan_surface_read,
+};
+pub use public_chat::{
+    PublicChatPublishTemplate, PublicChatQueryInput, PublicChatReadPlan, channel_discovery_plan,
+    channel_message_template, channel_metadata_plan, channel_reply_template,
+    create_channel_template, hide_message_template, mute_user_template, own_hide_plan,
+    own_mute_plan, route_relays, selected_channel_messages_plan, update_channel_metadata_template,
 };
 pub use query::{QueryDemandInput, QueryDemandPlan, QuerySurface, plan_query_demand};
 pub use workspace_runtime::{

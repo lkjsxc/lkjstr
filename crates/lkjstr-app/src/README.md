@@ -15,6 +15,7 @@ reducers.
 - `feed_wait/`: first-paint, empty-state, and late-merge reducers.
 - `lib.rs`: public app crate exports.
 - `orchestration/`: pure read, prefetch, hydration, and retention decisions.
+- `public_chat/`: pure NIP-28 query plans and publish templates.
 - `query/`: pure query-demand planning from product inputs to relay contracts.
 - `startup_snapshots.rs`: startup filtering for durable tab snapshot rows.
 - `workspace_defaults.rs`: workspace runtime defaults and recovery IDs.

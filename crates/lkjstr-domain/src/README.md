@@ -11,6 +11,7 @@ Domain source files define pure reducers and shared browser-independent models.
 - `lib.rs`: public domain exports.
 - `local_account.rs`: local secret records, nsec parsing, and signing.
 - `npub_miner.rs`: npub prefix parsing and search-size helpers.
+- `public_chat/`: pure NIP-28 channel chat state and reducers.
 - `relay_sets/`: pure relay-set records and edit reducers.
 - `tweet_draft/`: pure Tweet draft row model and draft helpers.
 - `upload_settings/`: pure media upload provider resolution.

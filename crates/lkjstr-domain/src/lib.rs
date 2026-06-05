@@ -4,6 +4,7 @@ pub mod accounts;
 pub mod feed_lod;
 pub mod local_account;
 pub mod npub_miner;
+pub mod public_chat;
 pub mod relay_sets;
 pub mod tweet_draft;
 pub mod upload_settings;
@@ -25,6 +26,13 @@ pub use local_account::{
 };
 pub use npub_miner::{
     NpubPrefix, NpubPrefixError, estimated_attempts, npub_matches_prefix, parse_npub_prefix,
+};
+pub use public_chat::{
+    PublicChatChannel, PublicChatLoadingState, PublicChatMessage, PublicChatMetadata,
+    PublicChatPublishState, PublicChatState, PublishRelayResult, apply_own_hide_events,
+    apply_own_mute_events, empty_public_chat_state, mark_publish_queued, merge_channel_create,
+    merge_channel_messages, merge_channel_metadata, merge_publish_result, newest_channel_first_key,
+    reset_on_tab_close, select_channel, set_composer_text, sort_channels, sort_messages,
 };
 pub use relay_sets::{
     RelayConnectionState, RelayHealth, RelayPatch, RelayPurpose, RelayRecord, RelaySet,
