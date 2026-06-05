@@ -12,6 +12,8 @@ use crate::workspace::settings::SettingsTab;
 use crate::workspace::settings_provider::SettingsProvider;
 use crate::workspace::state::TabSequence;
 use crate::workspace::stats::StatsTab;
+use crate::workspace::tab_kind_attr::tab_kind_attr;
+use crate::workspace::tab_pending::pending_message;
 use crate::workspace::stats_provider::StatsProvider;
 use crate::workspace::tweet::TweetTab;
 use crate::workspace::tweet_provider::TweetProvider;
@@ -124,52 +126,5 @@ fn tab_content(input: TabContentInput) -> impl IntoView {
             </div>
         }
         .into_any(),
-    }
-}
-
-fn pending_message(kind: TabKind) -> &'static str {
-    match kind {
-        TabKind::Timeline => "The Rust Home body is not converted yet.",
-        TabKind::Global => "The Rust Global body is not converted yet.",
-        TabKind::Notifications => "The Rust Notifications body is not converted yet.",
-        TabKind::Profile => "The Rust Profile body is not converted yet.",
-        TabKind::ProfileEdit => "The Rust Profile Edit body is not converted yet.",
-        TabKind::UploadSettings => "",
-        TabKind::AccountManager => "",
-        TabKind::NpubMiner => "The Rust Mine npub body is not converted yet.",
-        TabKind::Thread => "The Rust Thread body is not converted yet.",
-        TabKind::RelayMonitor => "The Rust lkjstr Log body is not converted yet.",
-        TabKind::RelaySettings => "",
-        TabKind::NetworkStats => "",
-        TabKind::Search => "The Rust Search body is not converted yet.",
-        TabKind::CustomRequest => "The Rust Custom Request body is not converted yet.",
-        TabKind::AuthorContext => "The Rust Author Context body is not converted yet.",
-        TabKind::Tweet => "",
-        TabKind::Settings => "",
-        TabKind::Welcome | TabKind::NewTab => "",
-    }
-}
-
-const fn tab_kind_attr(kind: TabKind) -> &'static str {
-    match kind {
-        TabKind::Welcome => "welcome",
-        TabKind::NewTab => "new-tab",
-        TabKind::Timeline => "timeline",
-        TabKind::Global => "global",
-        TabKind::Notifications => "notifications",
-        TabKind::Profile => "profile",
-        TabKind::ProfileEdit => "profile-edit",
-        TabKind::UploadSettings => "upload-settings",
-        TabKind::AccountManager => "account-manager",
-        TabKind::NpubMiner => "npub-miner",
-        TabKind::Thread => "thread",
-        TabKind::RelayMonitor => "relay-monitor",
-        TabKind::RelaySettings => "relay-settings",
-        TabKind::NetworkStats => "network-stats",
-        TabKind::Search => "search",
-        TabKind::CustomRequest => "custom-request",
-        TabKind::AuthorContext => "author-context",
-        TabKind::Tweet => "tweet",
-        TabKind::Settings => "settings",
     }
 }

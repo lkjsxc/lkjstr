@@ -18,6 +18,8 @@ mod state;
 mod stats;
 mod stats_provider;
 mod tab_body;
+mod tab_kind_attr;
+mod tab_pending;
 mod tweet;
 mod tweet_provider;
 mod upload_settings;
