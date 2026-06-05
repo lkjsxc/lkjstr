@@ -138,7 +138,7 @@
             copied={copied === entry.pubkey}
             openProfile={props.openProfile}
             openUserTimeline={props.openUserTimeline}
-            copyNpub={copyNpub}
+            {copyNpub}
           />
         {/snippet}
       </FeedScrollSurface>

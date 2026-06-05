@@ -34,7 +34,10 @@ describe('notification row chrome', () => {
         hasSourceItem: false,
         sourceShowsActor: false,
       }),
-    ).toEqual({ kind: 'compact-fallback', text: 'Reaction event unavailable.' });
+    ).toEqual({
+      kind: 'compact-fallback',
+      text: 'Reaction event unavailable.',
+    });
   });
 
   it('keeps labels for non-reaction notifications', () => {

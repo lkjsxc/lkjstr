@@ -26,14 +26,15 @@
       text={view.title}
       emojis={props.profile?.customEmojis ?? []}
     />
-    {#if view.verifiedNip05}<span aria-label="verified NIP-05">verified</span>{/if}
+    {#if view.verifiedNip05}<span aria-label="verified NIP-05">verified</span
+      >{/if}
   </strong>
   {#if !props.compact && view.subtitle}
     <span class="user-event-row__subtitle">{view.subtitle}</span>
   {/if}
   {#if !props.compact && view.chips.length > 0}
     <span class="user-event-row__chips">
-      {#each view.chips as chip}<small>{chip}</small>{/each}
+      {#each view.chips as chip (chip)}<small>{chip}</small>{/each}
     </span>
   {/if}
 </div>

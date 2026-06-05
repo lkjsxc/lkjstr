@@ -20,21 +20,17 @@ vi.mock('../../../src/lib/storage/repositories/feed-scan-hints-store', () => ({
   }),
 }));
 
-vi.mock(
-  '../../../src/lib/storage/sqlite-opfs/cache-compaction-sqlite',
-  () => ({
-    sqliteDeleteEventCacheRows: mocks.sqliteDeleteEventCacheRows,
-    sqliteDeleteDirectCacheRows: mocks.sqliteDeleteDirectCacheRows,
-  }),
-);
+vi.mock('../../../src/lib/storage/sqlite-opfs/cache-compaction-sqlite', () => ({
+  sqliteDeleteEventCacheRows: mocks.sqliteDeleteEventCacheRows,
+  sqliteDeleteDirectCacheRows: mocks.sqliteDeleteDirectCacheRows,
+}));
 
 describe('compaction deletion', () => {
   beforeEach(() => vi.clearAllMocks());
 
   it('prunes event rows without global coverage or scan-hint deletion', async () => {
-    const { deletePrunedEvents } = await import(
-      '../../../src/lib/cache/compaction-delete'
-    );
+    const { deletePrunedEvents } =
+      await import('../../../src/lib/cache/compaction-delete');
     const rows = [record('a', 10), record('b', 20)];
     await expect(deletePrunedEvents(rows)).resolves.toMatchObject({
       prunedEvents: 2,

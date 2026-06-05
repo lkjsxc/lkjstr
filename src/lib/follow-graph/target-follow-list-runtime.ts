@@ -54,7 +54,8 @@ export async function runTargetFollowListRuntime(
     current = newestFollowList(current, result.followList);
     if (current?.id === result.followList.id)
       await storeFound(result.followList, result.relayUrls);
-    const state = entriesFor(current).length === 0 ? 'empty_follow_list' : 'found';
+    const state =
+      entriesFor(current).length === 0 ? 'empty_follow_list' : 'found';
     return finish(
       input,
       snapshot(input.targetPubkey, state, current, {
@@ -68,7 +69,8 @@ export async function runTargetFollowListRuntime(
     );
   }
   if (current) {
-    const state = result.type === 'partialFailure' ? 'partial_failure' : 'cache_hit';
+    const state =
+      result.type === 'partialFailure' ? 'partial_failure' : 'cache_hit';
     return finish(
       input,
       snapshot(input.targetPubkey, state, current, {
@@ -81,14 +83,17 @@ export async function runTargetFollowListRuntime(
       }),
     );
   }
-  return finish(input, snapshot(input.targetPubkey, stateFromRead(result.type), undefined, {
-    attemptedRelays: result.attemptedRelays,
-    failedRelays: result.failedRelays,
-    relayUrls: [],
-    partialFailure: result.type === 'partialFailure',
-    provenAbsent: result.type === 'notFound',
-    source: 'none',
-  }));
+  return finish(
+    input,
+    snapshot(input.targetPubkey, stateFromRead(result.type), undefined, {
+      attemptedRelays: result.attemptedRelays,
+      failedRelays: result.failedRelays,
+      relayUrls: [],
+      partialFailure: result.type === 'partialFailure',
+      provenAbsent: result.type === 'notFound',
+      source: 'none',
+    }),
+  );
 }
 
 function snapshot(

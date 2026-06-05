@@ -82,20 +82,35 @@ async function readPlannedGroups(input: {
       relays,
       groupIndex: input.plan.findIndex((item) => item[0] === source),
     });
-    if (result.statuses.some((status) => status.aborted)) return { type: 'aborted' };
+    if (result.statuses.some((status) => status.aborted))
+      return { type: 'aborted' };
     anyEose ||= hasRelayEose(result.statuses);
     anyFailure ||= hasRelayFailure(result.statuses);
     failed.push(...failedRelaysFromStatuses(result.statuses));
-    for (const item of result.events) addEventRelay(allEvents, relaysByEvent, item);
+    for (const item of result.events)
+      addEventRelay(allEvents, relaysByEvent, item);
     const candidate = selectLatestFollowList(input.targetPubkey, allEvents);
-    if (candidate) return found(candidate, source, attempted, failed, relaysByEvent);
+    if (candidate)
+      return found(candidate, source, attempted, failed, relaysByEvent);
     if (input.signal.aborted) return { type: 'aborted' };
   }
   if (anyEose)
     return anyFailure
-      ? { type: 'partialFailure', attemptedRelays: dedupe(attempted), failedRelays: dedupe(failed) }
-      : { type: 'notFound', attemptedRelays: dedupe(attempted), failedRelays: [] };
-  return { type: 'allFailed', attemptedRelays: dedupe(attempted), failedRelays: dedupe(failed) };
+      ? {
+          type: 'partialFailure',
+          attemptedRelays: dedupe(attempted),
+          failedRelays: dedupe(failed),
+        }
+      : {
+          type: 'notFound',
+          attemptedRelays: dedupe(attempted),
+          failedRelays: [],
+        };
+  return {
+    type: 'allFailed',
+    attemptedRelays: dedupe(attempted),
+    failedRelays: dedupe(failed),
+  };
 }
 
 function addEventRelay(

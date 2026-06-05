@@ -133,7 +133,8 @@
   {#if notice}<p>{notice}</p>{/if}
   {#if error}
     <p role="alert">{error}</p>
-    <button type="button" onclick={() => void start(++generation)}>Retry</button>
+    <button type="button" onclick={() => void start(++generation)}>Retry</button
+    >
   {/if}
   <EventTreeList
     tabId={props.tabId}

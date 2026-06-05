@@ -3,10 +3,7 @@
   import UserEventRowActions from './UserEventRowActions.svelte';
   import UserEventRowMeta from './UserEventRowMeta.svelte';
   import type { ProfileSummary } from '$lib/identity/identity';
-  import {
-    userEventRowView,
-    type UserEventRowContext,
-  } from './user-event-row';
+  import { userEventRowView, type UserEventRowContext } from './user-event-row';
 
   type Props = {
     pubkey: string;
@@ -41,7 +38,7 @@
   function shouldKeepLocal(target: EventTarget | null): boolean {
     return Boolean(
       target instanceof Element &&
-        target.closest('button,a,input,textarea,select,form,.event-action-zone'),
+      target.closest('button,a,input,textarea,select,form,.event-action-zone'),
     );
   }
 </script>

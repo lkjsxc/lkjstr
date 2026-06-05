@@ -29,11 +29,13 @@ describe('user timeline authors', () => {
       },
       targetKey,
     );
-    expect(userTimelineAuthorSet({ targetPubkey: target, followList })).toEqual({
-      authors: [target, a, b],
-      hash: [a, b, target].sort().join(','),
-      mode: 'follow_graph',
-    });
+    expect(userTimelineAuthorSet({ targetPubkey: target, followList })).toEqual(
+      {
+        authors: [target, a, b],
+        hash: [a, b, target].sort().join(','),
+        mode: 'follow_graph',
+      },
+    );
   });
 
   it('builds explicit target-posts-only author set', () => {

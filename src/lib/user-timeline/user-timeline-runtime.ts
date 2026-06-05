@@ -42,7 +42,10 @@ export async function runUserTimelineRuntime(
     input.onSnapshot(state);
   };
   emit({});
-  void loadAuthors(targetPostsOnlyAuthorSet(input.targetPubkey), degradedNotice);
+  void loadAuthors(
+    targetPostsOnlyAuthorSet(input.targetPubkey),
+    degradedNotice,
+  );
   const follow = await runTargetFollowListRuntime({
     targetPubkey: input.targetPubkey,
     selectedReadRelays: input.relays,

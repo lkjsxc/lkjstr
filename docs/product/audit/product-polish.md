@@ -18,11 +18,10 @@ the product behavior should be changed after the destination doc is updated.
 | Visible profile prefetch                | `src/lib/profile/`, `src/lib/events/`, `src/lib/tabs/timeline/`           | memory gate plus profile store tests        |
 | Visible event reference prefetch        | `src/lib/events/`, `src/lib/protocol/`, `src/lib/components/events/`      | event repository and protocol event tests   |
 
-
 ## Closed Polish Rows
 
-| Item                         | Source anchors                                                 | Closing gate                 |
-| ---------------------------- | -------------------------------------------------------------- | ---------------------------- |
+| Item                         | Source anchors                                                | Closing gate                 |
+| ---------------------------- | ------------------------------------------------------------- | ---------------------------- |
 | Reaction notification chrome | `src/lib/notifications/`, `src/lib/components/notifications/` | notification row chrome test |
 | Image click hitbox           | `src/lib/components/events/`, `src/styles/media-embed.css`    | media hitbox CSS test        |
 | Width-stale row heights      | `src/lib/feed-surface/`, `src/lib/components/feed/`           | row height width tests       |

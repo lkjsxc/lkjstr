@@ -53,7 +53,9 @@
         {/if}
         <strong>{chrome.label}</strong>
         {#if chrome.showTime}
-          <time datetime={new Date(props.record.createdAt * 1000).toISOString()}>
+          <time
+            datetime={new Date(props.record.createdAt * 1000).toISOString()}
+          >
             {time}
           </time>
         {/if}

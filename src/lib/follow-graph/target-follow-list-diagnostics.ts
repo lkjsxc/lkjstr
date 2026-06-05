@@ -20,7 +20,9 @@ export function hasRelayFailure(
   return failedRelaysFromStatuses(statuses).length > 0;
 }
 
-export function hasRelayEose(statuses: readonly ReadPageRelayStatus[]): boolean {
+export function hasRelayEose(
+  statuses: readonly ReadPageRelayStatus[],
+): boolean {
   return statuses.some((status) => status.eose);
 }
 

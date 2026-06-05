@@ -43,7 +43,8 @@ export function decodeBridgeResponse(value: unknown): FollowGraphBridgeResult {
   }
   return {
     ok: false,
-    message: typeof value.message === 'string' ? value.message : 'bridge failed',
+    message:
+      typeof value.message === 'string' ? value.message : 'bridge failed',
   };
 }
 
