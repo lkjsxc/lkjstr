@@ -23,8 +23,8 @@ This file is the concise status map for the active Rust/WASM migration.
   keys, ledger rows, and protected plus cache SQLite row codecs.
 - `lkjstr-web` owns typed browser adapters for IndexedDB, SQLite worker calls,
   relay WebSocket and timeout foundations, protocol parsing bridges, relay-score
-  bridge calls, scan-model planning bridge calls, and early host calls needed by
-  the partial Leptos shell.
+  bridge calls, scan-model planning bridge calls, follow-graph parsing bridge
+  calls, and early host calls needed by the partial Leptos shell.
 - `lkjstr-relays` owns pure send queue, request scheduler, subscription id,
   subscription alias, close tombstone, request budget derivation, outbound `REQ`
   message-size budget, semantic page-read keys, in-flight page-read registry,
@@ -34,9 +34,10 @@ This file is the concise status map for the active Rust/WASM migration.
 - `lkjstr-app` owns startup recovery, stored tab snapshot filtering, bounded warm
   tab snapshot staging, pure query-demand planning, feed-window reduction,
   adaptive grouped feed-scan planning, feed-scan traces, feed row geometry,
-  feed LOD tree reducers, feed wait and late merge reducers, initial
-  orchestration decisions, feed live-runtime composition, surface query input
-  builders, and a pure Custom Request parser and mode classifier.
+  feed width buckets, feed LOD tree reducers, target follow-graph reducers,
+  feed wait and late merge reducers, initial orchestration decisions, feed
+  live-runtime composition, surface query input builders, and a pure Custom
+  Request parser and mode classifier.
 - `lkjstr-ui` renders the partial Leptos workspace shell, Welcome, New Tab,
   Stats inventory, Settings, Accounts, Relay Settings, Upload Settings, and
   Tweet draft surfaces.
@@ -53,13 +54,14 @@ This file is the concise status map for the active Rust/WASM migration.
 - Orchestration now has pure Rust decisions for cache mode, relay fallback,
   prefetch, hydration, and retention hints. SQLite-backed decision memory and
   shipped runtime wiring remain open.
-- Feed surfaces now have pure row geometry estimates, anchor compensation, and
-  real-data LOD tree reducers. Product measurement and virtualizer wiring remain
-  open.
+- Feed surfaces now have pure row geometry estimates, width buckets, anchor
+  compensation, real-data LOD tree reducers, and Svelte width-bucketed session
+  measurement. Durable SQLite geometry model wiring remains open.
 - Rust Settings persistence now uses the SQLite worker typed repository in the
   Rust Settings host. CSS side effects and cache-budget enforcement remain open.
-- Followees and User Timeline are target slices for Rust domain input builders
-  and shipped Svelte action wiring.
+- Followees and User Timeline now have Rust target follow-graph reducers, a
+  WASM parser bridge, and shipped Svelte relay-backed action wiring. Leptos
+  surface parity and deletion of the Svelte tabs remain open.
 
 ## Open Foundations
 

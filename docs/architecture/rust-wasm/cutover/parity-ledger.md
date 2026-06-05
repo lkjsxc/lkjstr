@@ -18,6 +18,8 @@ before the SvelteKit product runtime can be removed.
 | Home            | not implemented | `app`, `relays`, `storage`, `ui` feed runtime                 | cache coverage, relay reads, shared query tests, browser feed tests  |
 | Global          | not implemented | `app`, `relays`, `storage`, `ui` feed runtime                 | selected-relay reads, grouped scans, progressive snapshots           |
 | Profile         | not implemented | `app`, `relays`, `storage`, `ui` profile runtime              | metadata card, route reads, posts, identity links                    |
+| Followees       | partial         | `protocol`, `app`, `web`, `relays`, `ui` follow graph path    | Leptos user rows, relay discovery UI, cleanup                        |
+| User Timeline   | partial         | `protocol`, `app`, `web`, `relays`, `ui` target timeline path | Leptos feed surface, follow graph reads, degraded mode               |
 | Thread          | not implemented | `app`, `relays`, `storage`, `ui` thread runtime               | root lookup, reply pages, references, exact reads                    |
 | Notifications   | not implemented | `app`, `relays`, `storage`, `ui` notification runtime         | mentions, reactions, reposts, zaps, older windows                    |
 | Search          | not implemented | `app`, `relays`, `storage`, `ui` search runtime               | local cache search, NIP-50 routing, cancellation                     |

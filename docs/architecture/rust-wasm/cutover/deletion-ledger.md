@@ -24,6 +24,7 @@ first-party product modules.
 | `src/lib/emoji`              | blocked     | Rust NIP-30 and NIP-51 render/publish helpers                             | emoji unit and row-render tests                         |
 | `src/lib/events`             | blocked     | Rust event repository and row view models                                 | repository and feed-row tests                           |
 | `src/lib/feed-surface`       | blocked     | Rust virtual feed surface and row pipeline                                | scroll, anchor, footer tests                            |
+| `src/lib/follow-graph`       | blocked     | Rust follow graph runtime and UI bridge cover all callers                 | follow graph bridge and runtime tests                   |
 | `src/lib/fp`                 | blocked     | Rust reducers or no replacement need                                      | deletion PR proves no imports                           |
 | `src/lib/identity`           | blocked     | Rust identity view models and NIP-05 flow                                 | identity rendering tests                                |
 | `src/lib/jobs`               | blocked     | Rust protected active jobs and finished jobs                              | recovery, cancel, Stats tests                           |
@@ -45,6 +46,7 @@ first-party product modules.
 | `src/lib/thread`             | blocked     | Rust Thread runtime and UI                                                | thread exact-read tests                                 |
 | `src/lib/timeline`           | blocked     | Rust Home and Global feed runtimes                                        | timeline and route tests                                |
 | `src/lib/tweet`              | blocked     | Rust draft, signing, upload, queue, publish jobs                          | publish and draft tests                                 |
+| `src/lib/user-timeline`      | blocked     | Rust User Timeline runtime and Leptos surface parity                      | target timeline relay and UI tests                      |
 | `src/lib/workspace`          | blocked     | Leptos workspace parity and snapshot persistence                          | workspace browser tests                                 |
 | `src/routes`                 | blocked     | root route is served by the Rust/WASM app build                           | app build and root smoke tests                          |
 | Old browser database binding | implemented | live storage families use SQLite repositories                             | no-import proof, storage, pressure, Stats, Docker gates |
