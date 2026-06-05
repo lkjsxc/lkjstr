@@ -11,6 +11,10 @@ Each implemented row should name the owning contract and the source or test
 surface that proves it. Bare filenames below are source anchors; contract
 references should stay as relative Markdown links.
 
+Partial and not implemented rows use the executable detail ledgers in
+[audit/README.md](audit/README.md). Those ledgers name the next source paths and
+closing gates so this concise matrix stays readable.
+
 ## Rust WASM Target
 
 | Clause                                    | Contract                                                                       | Status          | Notes                                                             |

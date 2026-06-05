@@ -61,9 +61,10 @@ state, storage, relay orchestration, cleanup, and Rust/WASM migration.
 `feeds/runtime/relay-incomplete-windows.md` `feeds/sources/README.md` `feeds/sources/global.md`
 `feeds/sources/home.md` `feeds/sources/notifications.md` `feeds/sources/profile.md`
 `network/README.md` `network/identity-rendering.md` `network/job-manager.md`
-`network/progressive-relay-rendering.md` `network/relay-optimizer/README.md` `network/relay-optimizer/measurement-ledger.md`
-`network/relay-optimizer/product-wiring-ledger.md` `network/relay-optimizer/relay-read-scoring.md` `network/relay-optimizer/relay-wait-policy.md`
-`network/relay-optimizer/route-evidence-trust.md` `network/relay-optimizer/scan-width-adaptation.md` `network/relay-optimizer/stats-projection.md`
+`network/progressive-relay-rendering.md` `network/relay-optimizer/README.md` `network/relay-optimizer/failure-states.md`
+`network/relay-optimizer/implementation-slices.md` `network/relay-optimizer/measurement-ledger.md` `network/relay-optimizer/product-wiring-ledger.md`
+`network/relay-optimizer/relay-read-scoring.md` `network/relay-optimizer/relay-wait-policy.md` `network/relay-optimizer/route-evidence-trust.md`
+`network/relay-optimizer/scan-width-adaptation.md` `network/relay-optimizer/source-map.md` `network/relay-optimizer/stats-projection.md`
 `network/relay-optimizer/verification.md` `network/relay-pool.md` `network/relay-routing.md`
 `network/request-budget/README.md` `network/request-budget/effective-limits.md` `network/request-budget/intent.md`
 `network/request-budget/message-size.md` `network/request-budget/nip11.md` `network/request-budget/scoring.md`

@@ -11,6 +11,12 @@ itself: split tiles, tabs, relay-backed data, and local state.
   test strategies.
 - [doc-impl-audit.md](doc-impl-audit.md): documentation vs implementation
   alignment matrix.
+- [audit/README.md](audit/README.md): executable detail for partial audit rows.
+- [audit/rust-wasm-target.md](audit/rust-wasm-target.md): Rust/WASM source paths
+  and closing gates.
+- [audit/product-polish.md](audit/product-polish.md): backlog source paths and
+  focused gates.
+- [audit/verification-gaps.md](audit/verification-gaps.md): focused audit gates.
 - [feeds/README.md](feeds/README.md): relay-backed reading surfaces.
 - [feeds/global.md](feeds/global.md): Global feed.
 - [feeds/home.md](feeds/home.md): Home feed.

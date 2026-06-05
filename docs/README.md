@@ -67,8 +67,9 @@ changed. Each docs directory has one README that acts as a table of contents.
 `architecture/feeds/sources/global.md` `architecture/feeds/sources/home.md` `architecture/feeds/sources/notifications.md`
 `architecture/feeds/sources/profile.md` `architecture/network/README.md` `architecture/network/identity-rendering.md`
 `architecture/network/job-manager.md` `architecture/network/progressive-relay-rendering.md` `architecture/network/relay-optimizer/README.md`
-`architecture/network/relay-optimizer/measurement-ledger.md` `architecture/network/relay-optimizer/product-wiring-ledger.md` `architecture/network/relay-optimizer/relay-read-scoring.md`
-`architecture/network/relay-optimizer/relay-wait-policy.md` `architecture/network/relay-optimizer/route-evidence-trust.md` `architecture/network/relay-optimizer/scan-width-adaptation.md`
+`architecture/network/relay-optimizer/failure-states.md` `architecture/network/relay-optimizer/implementation-slices.md` `architecture/network/relay-optimizer/measurement-ledger.md`
+`architecture/network/relay-optimizer/product-wiring-ledger.md` `architecture/network/relay-optimizer/relay-read-scoring.md` `architecture/network/relay-optimizer/relay-wait-policy.md`
+`architecture/network/relay-optimizer/route-evidence-trust.md` `architecture/network/relay-optimizer/scan-width-adaptation.md` `architecture/network/relay-optimizer/source-map.md`
 `architecture/network/relay-optimizer/stats-projection.md` `architecture/network/relay-optimizer/verification.md` `architecture/network/relay-pool.md`
 `architecture/network/relay-routing.md` `architecture/network/request-budget/README.md` `architecture/network/request-budget/effective-limits.md`
 `architecture/network/request-budget/intent.md` `architecture/network/request-budget/message-size.md` `architecture/network/request-budget/nip11.md`
@@ -106,7 +107,8 @@ changed. Each docs directory has one README that acts as a table of contents.
 `operations/memory-verification.md` `operations/readiness.md` `operations/sqlite-opfs-testing.md`
 `operations/storage-pressure-verification.md` `operations/testing-ownership.md` `operations/timeline-notification-regression-investigation.md`
 `operations/verification.md` `product/README.md` `product/backlog.md`
-`product/doc-impl-audit.md` `product/feeds/README.md` `product/feeds/global.md`
+`product/doc-impl-audit.md` `product/audit/README.md` `product/audit/product-polish.md`
+`product/audit/rust-wasm-target.md` `product/audit/verification-gaps.md` `product/feeds/README.md` `product/feeds/global.md`
 `product/feeds/home.md` `product/feeds/notifications.md` `product/feeds/profiles.md`
 `product/feeds/threads.md` `product/tools/README.md` `product/tools/accounts.md`
 `product/tools/author-context.md` `product/tools/cache.md` `product/tools/custom-request.md`

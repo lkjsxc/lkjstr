@@ -19,6 +19,12 @@ and app boundaries.
   optimizer storage rows.
 - [relay-optimizer/product-wiring-ledger.md](relay-optimizer/product-wiring-ledger.md):
   shipped surface wiring.
+- [relay-optimizer/source-map.md](relay-optimizer/source-map.md): source paths
+  and proof files.
+- [relay-optimizer/implementation-slices.md](relay-optimizer/implementation-slices.md):
+  work slices and focused gates.
+- [relay-optimizer/failure-states.md](relay-optimizer/failure-states.md): typed
+  optimizer unavailable states.
 - [relay-optimizer/relay-read-scoring.md](relay-optimizer/relay-read-scoring.md):
   Rust score model.
 - [relay-optimizer/relay-wait-policy.md](relay-optimizer/relay-wait-policy.md):

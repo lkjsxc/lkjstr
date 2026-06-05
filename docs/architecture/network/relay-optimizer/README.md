@@ -12,6 +12,11 @@ performance and observability layer only.
   score, and trace rows.
 - [product-wiring-ledger.md](product-wiring-ledger.md): shipped surface wiring
   and open read-path gaps.
+- [source-map.md](source-map.md): source paths, proof files, and product
+  surfaces.
+- [implementation-slices.md](implementation-slices.md): coherent optimizer work
+  slices and focused gates.
+- [failure-states.md](failure-states.md): typed unavailable and failure states.
 - [route-evidence-trust.md](route-evidence-trust.md): measured route trust and
   NIP-65 limits.
 - [relay-read-scoring.md](relay-read-scoring.md): Rust score model and fairness.
