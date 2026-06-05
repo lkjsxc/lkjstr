@@ -40,29 +40,65 @@ pub fn estimate_row_geometry(
 }
 
 fn formula_height(features: &RowGeometryFeatures) -> u16 {
-    let base = match features.row_kind {
+    let base = base_height(features.row_kind.clone());
+    let text = estimated_text_height(features);
+    let media = features.media_count.min(6).saturating_mul(150);
+    let previews = features.reference_preview_count.min(6).saturating_mul(96);
+    let profile = if features.has_profile_summary { 88 } else { 0 };
+    let chrome = if features.has_notification_chrome {
+        36
+    } else {
+        0
+    };
+    let action = if features.has_action_bar { 40 } else { 0 };
+    let warning = if features.has_content_warning { 28 } else { 0 };
+    (base + text + media + previews + profile + chrome + action + warning).clamp(48, 8_000)
+}
+
+fn base_height(row_kind: RowKind) -> u16 {
+    match row_kind {
         RowKind::Event | RowKind::ThreadRoot => 96,
-        RowKind::Notification => 112,
+        RowKind::EventHeader => 72,
+        RowKind::EventTextSegment => 48,
+        RowKind::EventMediaSegment => 180,
+        RowKind::EventReferenceSegment => 120,
+        RowKind::EventActions => 56,
+        RowKind::Notification => 116,
         RowKind::ProfileSummary => 180,
         RowKind::Footer => 64,
         RowKind::Unavailable => 72,
-    };
-    let text = (features.content_length / 48) as u16 * 18;
-    let breaks = features.line_break_count.saturating_mul(16);
-    let media = features.media_count.min(4).saturating_mul(140);
-    let preview = if features.has_reference_preview {
-        92
-    } else {
-        0
-    };
-    let profile = if features.has_profile_summary { 88 } else { 0 };
-    let chrome = if features.has_notification_chrome {
-        32
-    } else {
-        0
-    };
-    let action = if features.has_action_bar { 36 } else { 0 };
-    (base + text + breaks + media + preview + profile + chrome + action).clamp(48, 1200)
+    }
+}
+
+fn estimated_text_height(features: &RowGeometryFeatures) -> u16 {
+    let chars_per_line = chars_per_line(features.width_bucket).max(1);
+    let wrap_lines = div_ceil(features.unicode_scalar_count, chars_per_line);
+    let token_extra = div_ceil(features.longest_unbroken_token_length, chars_per_line * 2);
+    let explicit_breaks = u32::from(features.line_break_count);
+    let url_extra = u32::from(features.url_count.min(12)) * 2;
+    let emoji_extra = u32::from(features.custom_emoji_count.min(24)) / 4;
+    let lines = wrap_lines
+        .saturating_add(explicit_breaks)
+        .saturating_add(token_extra)
+        .saturating_add(url_extra)
+        .saturating_add(emoji_extra);
+    let line_px = 20 + u32::from(features.font_scale_bucket.min(4)) * 2;
+    lines.saturating_mul(line_px).min(u32::from(u16::MAX)) as u16
+}
+
+fn chars_per_line(width_bucket: u16) -> u32 {
+    match width_bucket {
+        0 => 30,
+        1 => 42,
+        2 => 56,
+        3 => 72,
+        4 => 88,
+        _ => 108,
+    }
+}
+
+fn div_ceil(value: u32, divisor: u32) -> u32 {
+    value.saturating_add(divisor.saturating_sub(1)) / divisor
 }
 
 fn model_confidence(sample_count: u32) -> f64 {

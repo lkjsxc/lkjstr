@@ -33,11 +33,12 @@ This file is the concise status map for the active Rust/WASM migration.
   state, relay read scoring, route evidence trust, and deterministic ordering.
 - `lkjstr-app` owns startup recovery, stored tab snapshot filtering, bounded warm
   tab snapshot staging, pure query-demand planning, feed-window reduction,
-  adaptive grouped feed-scan planning, feed-scan traces, feed row geometry,
-  feed width buckets, feed LOD tree reducers, target follow-graph reducers,
-  feed wait and late merge reducers, initial orchestration decisions, feed
-  live-runtime composition, surface query input builders, and a pure Custom
-  Request parser and mode classifier.
+  adaptive grouped feed-scan planning, feed-scan traces, content-aware feed row
+  geometry, content-shape hashing, long-content visual-fragment planning, pure
+  feed anchor reducers, feed width buckets, feed LOD tree reducers,
+  target follow-graph reducers, feed wait and late merge reducers, initial
+  orchestration decisions, feed live-runtime composition, surface query input
+  builders, and a pure Custom Request parser and mode classifier.
 - `lkjstr-ui` renders the partial Leptos workspace shell, Welcome, New Tab,
   Stats inventory, Settings, Accounts, Relay Settings, Upload Settings, and
   Tweet draft surfaces.
@@ -54,11 +55,11 @@ This file is the concise status map for the active Rust/WASM migration.
 - Orchestration now has pure Rust decisions for cache mode, relay fallback,
   prefetch, hydration, and retention hints. SQLite-backed decision memory and
   shipped runtime wiring remain open.
-- Feed surfaces now have pure row geometry estimates, width buckets, anchor
-  compensation, real-data LOD tree reducers, and Svelte width-bucketed session
-  measurement. The active implementation target is the Rust feed geometry model:
-  content-aware feature extraction, real long-content visual fragmentation,
-  pure anchor reducers, WASM bridge calls, Svelte temporary bridge use, SQLite
+- Feed surfaces now have pure content-aware row geometry estimates, width
+  buckets, content-shape hashing, anchor reducers, real long-content visual
+  fragmentation, real-data LOD tree reducers, and Svelte width-bucketed session
+  measurement. The active implementation target is wiring this Rust geometry
+  model through WASM bridge calls, Svelte temporary bridge use, SQLite
   observation persistence, Stats diagnostics, and Leptos feed use. Durable
   SQLite geometry model wiring remains open.
 - Rust Settings persistence now uses the SQLite worker typed repository in the

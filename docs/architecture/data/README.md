@@ -17,6 +17,10 @@ read the current live storage state in [storage/README.md](storage/README.md).
 - [feed-surface/feed-scroll-surface.md](feed-surface/feed-scroll-surface.md):
   shared feed scroll shell.
 - [feed-surface/footer-phase.md](feed-surface/footer-phase.md): footer phase.
+- [feed-surface/geometry-model.md](feed-surface/geometry-model.md): durable row
+  geometry keys, estimates, and anchors.
+- [feed-surface/long-content.md](feed-surface/long-content.md): oversized event
+  visual fragments.
 - [feed-surface/near-end.md](feed-surface/near-end.md): near-end paging.
 - [feed-surface/older-load-mode.md](feed-surface/older-load-mode.md): older
   load gating.
@@ -25,6 +29,8 @@ read the current live storage state in [storage/README.md](storage/README.md).
 - [feed-surface/height-reservation.md](feed-surface/height-reservation.md): row
   geometry and scroll-anchor compensation.
 - [feed-surface/lod-tree.md](feed-surface/lod-tree.md): real-data feed LOD tree.
+- [feed-surface/scroll-regression-tests.md](feed-surface/scroll-regression-tests.md):
+  scroll regression matrix.
 - [feed-surface/staged-pipeline.md](feed-surface/staged-pipeline.md): staged
   row loading.
 - [feed-surface/surface-matrix.md](feed-surface/surface-matrix.md): surface

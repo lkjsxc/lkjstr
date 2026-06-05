@@ -3,6 +3,7 @@
 pub mod cache_display;
 pub mod custom_request;
 pub mod feed;
+pub mod feed_fragments;
 pub mod feed_geometry;
 pub mod feed_lod;
 pub mod feed_scan;
@@ -37,10 +38,16 @@ pub use feed::{
     reduce_feed_window, release_feed_runtime_live, search_query_input, set_feed_runtime_visibility,
     start_feed_runtime, thread_replies_query_input, thread_root_lookup_input,
 };
+pub use feed_fragments::{
+    FeedFragmentConfig, FeedVisualRow, SemanticFeedEvent, fragment_key, plan_feed_visual_rows,
+    split_text_segments,
+};
 pub use feed_geometry::{
-    AnchorCompensation, GeometryEstimateSource, RowGeometryEstimate, RowGeometryFeatures,
-    RowGeometryModel, RowHeightObservation, RowKind, WidthBucket,
-    anchor_compensation_for_height_delta, estimate_row_geometry, geometry_bucket_key,
+    AnchorCompensation, AnchorConfidence, AnchorReconcileResult, ContentShapeInput,
+    FeedScrollAnchor, GeometryEstimateSource, MeasuredFeedRow, RowGeometryEstimate,
+    RowGeometryFeatures, RowGeometryModel, RowHeightObservation, RowKind, WidthBucket,
+    anchor_compensation_for_height_delta, capture_feed_anchor, content_shape_hash,
+    estimate_row_geometry, event_geometry_features, geometry_bucket_key, reconcile_feed_anchor,
     update_row_geometry_model,
 };
 pub use feed_lod::{
