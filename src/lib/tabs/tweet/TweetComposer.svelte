@@ -69,47 +69,75 @@
   }
 </script>
 
-<textarea
-  bind:this={textarea}
-  aria-label="Tweet content"
-  bind:value={content}
-  id="tweet-content"
-  name="tweet-content"
-  oninput={props.touchDraft}
-  onblur={() => void props.flushDraft()}
-  onpaste={props.handlePaste}
-  onkeydown={(event) => {
-    if (isSubmitShortcut(event)) void props.publish();
-  }}
-></textarea>
-<TweetSensitiveControls
-  bind:sensitive
-  bind:warningReason
-  touchDraft={props.touchDraft}
-  flushDraft={props.flushDraft}
-/>
-<TweetAttachments
-  attachments={props.attachments}
-  remove={props.removeAttachment}
-/>
-<TweetMediaControls
-  inputId={`tweet-media-${props.tabId}`}
-  uploading={props.uploading}
-  publishing={props.publishing}
-  hasSigner={props.hasSigner}
-  uploadServer={props.uploadSettings.server}
-  canPublish={props.canPublish}
-  customEmojis={props.customEmojis}
-  uploadFiles={props.uploadFiles}
-  publish={props.publish}
-  insertUnicodeEmoji={insertText}
-  {insertCustomEmoji}
-/>
-{#if !props.hasSigner}
-  <p>Add a signing account before publishing.</p>
-{/if}
-{#if props.message}
-  <p role="status">{props.message}</p>
-{:else if props.publishing}
-  <p role="status">Publishing...</p>
-{/if}
+<div class="tweet-composer">
+  <textarea
+    bind:this={textarea}
+    aria-label="Tweet content"
+    bind:value={content}
+    id="tweet-content"
+    name="tweet-content"
+    oninput={props.touchDraft}
+    onblur={() => void props.flushDraft()}
+    onpaste={props.handlePaste}
+    onkeydown={(event) => {
+      if (isSubmitShortcut(event)) void props.publish();
+    }}
+  ></textarea>
+  <TweetSensitiveControls
+    bind:sensitive
+    bind:warningReason
+    touchDraft={props.touchDraft}
+    flushDraft={props.flushDraft}
+  />
+  <div
+    class="tweet-composer__attachments"
+    data-testid="tweet-attachments-region"
+  >
+    <TweetAttachments
+      attachments={props.attachments}
+      remove={props.removeAttachment}
+    />
+    {#if !props.hasSigner}
+      <p>Add a signing account before publishing.</p>
+    {/if}
+    {#if props.message}
+      <p role="status">{props.message}</p>
+    {:else if props.publishing}
+      <p role="status">Publishing...</p>
+    {/if}
+  </div>
+  <footer class="tweet-composer__footer" data-testid="tweet-composer-footer">
+    <TweetMediaControls
+      inputId={`tweet-media-${props.tabId}`}
+      uploading={props.uploading}
+      publishing={props.publishing}
+      hasSigner={props.hasSigner}
+      uploadServer={props.uploadSettings.server}
+      canPublish={props.canPublish}
+      customEmojis={props.customEmojis}
+      uploadFiles={props.uploadFiles}
+      publish={props.publish}
+      insertUnicodeEmoji={insertText}
+      {insertCustomEmoji}
+    />
+  </footer>
+</div>
+
+<style>
+  .tweet-composer {
+    display: grid;
+    gap: var(--space-3);
+    min-block-size: 0;
+  }
+
+  .tweet-composer__attachments {
+    max-block-size: 14rem;
+    min-block-size: 0;
+    overflow: auto;
+  }
+
+  .tweet-composer__footer {
+    border-block-start: 1px solid var(--color-border);
+    padding-block-start: var(--space-2);
+  }
+</style>
