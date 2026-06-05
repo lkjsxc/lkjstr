@@ -12,6 +12,7 @@ The workspace snapshot coordinator owns durable identity and restore tokens.
 - [author-context/](author-context/): nearby authored posts tab.
 - [cache/](cache/): cache status tab.
 - [custom-request/](custom-request/): validated relay request tab.
+- [followees/](followees/): viewed-profile following list.
 - [log/](log/): lkjstr Log tab.
 - [new-tab/](new-tab/): New Tab chooser.
 - [notifications/](notifications/): Notifications tab.
@@ -27,4 +28,5 @@ The workspace snapshot coordinator owns durable identity and restore tokens.
 - [timeline/](timeline/): Home and Global timeline tab.
 - [tweet/](tweet/): Tweet composer tab.
 - [upload-settings/](upload-settings/): guided media upload settings.
+- [user-timeline/](user-timeline/): target user's public follow-graph timeline.
 - [welcome/](welcome/): first-launch welcome tab.

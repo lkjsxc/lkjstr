@@ -94,6 +94,8 @@ const validKinds: readonly TabKind[] = [
   'public-chat',
   'notifications',
   'profile',
+  'followees',
+  'user-timeline',
   'profile-edit',
   'upload-settings',
   'account-manager',

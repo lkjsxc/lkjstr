@@ -50,6 +50,8 @@ export function createDefaultTabRegistry(): TabRegistry {
     'public-chat',
     'notifications',
     'profile',
+    'followees',
+    'user-timeline',
     'profile-edit',
     'upload-settings',
     'account-manager',

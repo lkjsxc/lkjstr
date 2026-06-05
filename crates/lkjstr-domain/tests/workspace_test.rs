@@ -96,6 +96,11 @@ fn converts_new_tab_choices_without_replacing_the_tab_id() -> Result<(), &'stati
     assert_eq!(tab.title, "Profile");
     assert_eq!(tab.config.get("pubkey").map(String::as_str), Some("abc"));
     assert_eq!(tab.created_at, 10);
+    assert_eq!(lkjstr_domain::title_for(TabKind::Followees), "Following");
+    assert_eq!(
+        lkjstr_domain::tab_kind_key(TabKind::UserTimeline),
+        "user-timeline"
+    );
     Ok(())
 }
 

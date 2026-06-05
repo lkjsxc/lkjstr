@@ -50,6 +50,8 @@ export function captureTabSnapshot(
     tabKind === 'timeline' ||
     tabKind === 'global' ||
     tabKind === 'profile' ||
+    tabKind === 'followees' ||
+    tabKind === 'user-timeline' ||
     tabKind === 'notifications' ||
     tabKind === 'thread' ||
     tabKind === 'search' ||

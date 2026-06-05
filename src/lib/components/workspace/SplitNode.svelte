@@ -44,6 +44,8 @@
     toggleRelay: (setId: string, url: string, enabled: boolean) => void;
     removeRelay: (setId: string, url: string) => void;
     openProfile: (paneId: string, pubkey: string) => void;
+    openFollowees: (paneId: string, pubkey: string) => void;
+    openUserTimeline: (paneId: string, pubkey: string) => void;
     openProfileEdit: (paneId: string) => void;
     openThread: (paneId: string, eventId: string) => void;
     openAuthorContext: (
@@ -84,6 +86,8 @@
     toggleRelay={props.toggleRelay}
     removeRelay={props.removeRelay}
     openProfile={props.openProfile}
+    openFollowees={props.openFollowees}
+    openUserTimeline={props.openUserTimeline}
     openProfileEdit={props.openProfileEdit}
     openThread={props.openThread}
     openAuthorContext={props.openAuthorContext}
@@ -121,6 +125,8 @@
           toggleRelay={props.toggleRelay}
           removeRelay={props.removeRelay}
           openProfile={props.openProfile}
+          openFollowees={props.openFollowees}
+          openUserTimeline={props.openUserTimeline}
           openProfileEdit={props.openProfileEdit}
           openThread={props.openThread}
           openAuthorContext={props.openAuthorContext}

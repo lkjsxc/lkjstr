@@ -24,6 +24,8 @@
     nprofile: string;
     followList?: NostrEvent;
     followingCount: number;
+    openFollowees: () => void;
+    openUserTimeline: () => void;
     openProfileEdit: () => void;
   };
 
@@ -127,9 +129,23 @@
           {props.profile?.website}
         </a>
       {/if}
-      {#if props.followingCount > 0}
-        <span>{props.followingCount} following</span>
+      {#if props.followList}
+        <button
+          type="button"
+          class="profile-card__fact-button"
+          aria-label="Open following list"
+          onclick={props.openFollowees}
+        >
+          {props.followingCount} following
+        </button>
       {/if}
+      <button
+        type="button"
+        class="profile-card__fact-button"
+        onclick={props.openUserTimeline}
+      >
+        Open user timeline
+      </button>
       {#if copied}<span role="status">Copied {copied}</span>{/if}
     </div>
   </div>

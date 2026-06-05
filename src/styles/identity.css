@@ -92,12 +92,23 @@
 }
 
 .profile-card__facts a,
+.profile-card__fact-button,
 .profile-card__about,
 .profile-card__about a,
 .profile-card__identity h2,
 .profile-card__identity p,
 .profile-card__identity small {
   overflow-wrap: anywhere;
+}
+
+.profile-card__fact-button {
+  background: transparent;
+  border: 0;
+  color: inherit;
+  cursor: pointer;
+  font: inherit;
+  padding: 0;
+  text-decoration: underline;
 }
 
 .profile-copy-menu {

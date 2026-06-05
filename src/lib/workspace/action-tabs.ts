@@ -1,6 +1,9 @@
 import { findPane } from './layout-tree';
 import { focusTab, openTab, type Workspace } from './workspace';
 
+type MatchingKind = 'profile' | 'thread' | 'followees' | 'user-timeline';
+type ActionKind = MatchingKind | 'profile-edit' | 'author-context';
+
 export function openProfileTab(
   workspace: Workspace,
   paneId: string,
@@ -15,6 +18,22 @@ export function openThreadTab(
   eventId: string,
 ): Workspace {
   return openMatchingTab(workspace, paneId, 'thread', 'eventId', eventId);
+}
+
+export function openFolloweesTab(
+  workspace: Workspace,
+  paneId: string,
+  pubkey: string,
+): Workspace {
+  return openMatchingTab(workspace, paneId, 'followees', 'pubkey', pubkey);
+}
+
+export function openUserTimelineTab(
+  workspace: Workspace,
+  paneId: string,
+  pubkey: string,
+): Workspace {
+  return openMatchingTab(workspace, paneId, 'user-timeline', 'pubkey', pubkey);
 }
 
 export function openAuthorContextTab(
@@ -49,7 +68,7 @@ export function openProfileEditTab(
 function openMatchingTab(
   workspace: Workspace,
   paneId: string,
-  kind: 'profile' | 'thread',
+  kind: MatchingKind,
   key: 'pubkey' | 'eventId',
   value: string,
 ): Workspace {
@@ -61,7 +80,7 @@ function openMatchingTab(
 function matchingTabId(
   workspace: Workspace,
   paneId: string,
-  kind: 'profile' | 'profile-edit' | 'thread' | 'author-context',
+  kind: ActionKind,
   key?: 'pubkey' | 'eventId',
   value?: string,
 ): string | undefined {
@@ -74,6 +93,8 @@ function matchingTabId(
   });
 }
 
-function title(kind: 'profile' | 'thread'): string {
-  return kind === 'profile' ? 'Profile' : 'Thread';
+function title(kind: MatchingKind): string {
+  if (kind === 'profile') return 'Profile';
+  if (kind === 'thread') return 'Thread';
+  return kind === 'followees' ? 'Following' : 'User Timeline';
 }

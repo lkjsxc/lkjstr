@@ -18,6 +18,9 @@ Read next: [product/README.md](product/README.md),
 - Home, Global, Public Chat, Profile, Thread, Notifications, Search, Custom
   Request, Author Context, Accounts, Relay Settings, Stats, Settings, Upload
   Settings, lkjstr Log, Mine npub, Profile Edit, and Welcome are implemented.
+- Followees and User Timeline are partial action-opened surfaces. They render
+  cached real NIP-02 data and cached real events while relay runtime parity
+  remains open.
 - Tweet, replies, reposts, reactions, zaps, Blossom upload, NIP-96
   compatibility upload settings, NIP-98 auth, NIP-30 custom emoji,
   sensitive-content reveal, and event reference previews are implemented.

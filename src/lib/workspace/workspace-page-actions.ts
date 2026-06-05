@@ -2,9 +2,11 @@ import type { RelaySet } from '$lib/relays/relay-store';
 import { removeRelay, setRelayEnabled } from '$lib/relays/relay-store';
 import {
   openAuthorContextTab,
+  openFolloweesTab,
   openProfileEditTab,
   openProfileTab,
   openThreadTab,
+  openUserTimelineTab,
 } from './action-tabs';
 import { moveWorkspaceTab } from './move-tab';
 import { openToolTab } from './open-tool-tab';
@@ -49,6 +51,10 @@ export function createWorkspacePageActions(deps: Deps) {
       ),
     openProfile: (paneId: string, pubkey: string): Promise<void> =>
       updateWorkspace(openProfileTab(deps.getWorkspace(), paneId, pubkey)),
+    openFollowees: (paneId: string, pubkey: string): Promise<void> =>
+      updateWorkspace(openFolloweesTab(deps.getWorkspace(), paneId, pubkey)),
+    openUserTimeline: (paneId: string, pubkey: string): Promise<void> =>
+      updateWorkspace(openUserTimelineTab(deps.getWorkspace(), paneId, pubkey)),
     openThread: (paneId: string, eventId: string): Promise<void> =>
       updateWorkspace(openThreadTab(deps.getWorkspace(), paneId, eventId)),
     openAuthorContext: (

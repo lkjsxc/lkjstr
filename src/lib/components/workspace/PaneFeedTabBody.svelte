@@ -3,11 +3,13 @@
   import type { RelaySet } from '$lib/relays/relay-store';
   import AuthorContextTab from '$lib/tabs/author-context/AuthorContextTab.svelte';
   import CustomRequestTab from '$lib/tabs/custom-request/CustomRequestTab.svelte';
+  import FolloweesTab from '$lib/tabs/followees/FolloweesTab.svelte';
   import NotificationsTab from '$lib/tabs/notifications/NotificationsTab.svelte';
   import ProfileTab from '$lib/tabs/profile/ProfileTab.svelte';
   import SearchTab from '$lib/tabs/search/SearchTab.svelte';
   import ThreadTab from '$lib/tabs/thread/ThreadTab.svelte';
   import TimelineTab from '$lib/tabs/timeline/TimelineTab.svelte';
+  import UserTimelineTab from '$lib/tabs/user-timeline/UserTimelineTab.svelte';
   import type { TabFeedAnchor } from '$lib/workspace/tab-anchor-registry';
   import type { TabSnapshotPayload } from '$lib/workspace/tab-snapshot';
   import type { WorkspaceTab } from '$lib/workspace/tab';
@@ -22,6 +24,8 @@
     relaySets: RelaySet[];
     pageDataReady: boolean;
     openProfile: (paneId: string, pubkey: string) => void;
+    openFollowees: (paneId: string, pubkey: string) => void;
+    openUserTimeline: (paneId: string, pubkey: string) => void;
     openProfileEdit: (paneId: string) => void;
     openThread: (paneId: string, eventId: string) => void;
     openAuthorContext: (
@@ -36,6 +40,10 @@
     props.openProfile(props.paneId, pubkey);
   const openThread = (eventId: string) =>
     props.openThread(props.paneId, eventId);
+  const openFollowees = (pubkey: string) =>
+    props.openFollowees(props.paneId, pubkey);
+  const openUserTimeline = (pubkey: string) =>
+    props.openUserTimeline(props.paneId, pubkey);
   const openAuthorContext = (eventId: string, pubkey: string) =>
     props.openAuthorContext(props.paneId, eventId, pubkey);
 </script>
@@ -121,7 +129,29 @@
     activeAccount={props.activeAccount}
     relaySets={props.relaySets}
     {openProfile}
+    {openFollowees}
+    {openUserTimeline}
     openProfileEdit={() => props.openProfileEdit(props.paneId)}
+    {openThread}
+    {openAuthorContext}
+  />
+{:else if props.tab.kind === 'followees'}
+  <FolloweesTab
+    tabId={props.tab.id}
+    visible={props.visible}
+    pubkey={String(props.tab.config.pubkey ?? '')}
+    relaySets={props.relaySets}
+    {openProfile}
+    {openUserTimeline}
+  />
+{:else if props.tab.kind === 'user-timeline'}
+  <UserTimelineTab
+    tabId={props.tab.id}
+    visible={props.visible}
+    pubkey={String(props.tab.config.pubkey ?? '')}
+    activeAccountPubkey={props.activeAccount?.pubkey}
+    relaySets={props.relaySets}
+    {openProfile}
     {openThread}
     {openAuthorContext}
   />

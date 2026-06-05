@@ -30,6 +30,8 @@
     toggleRelay: (setId: string, url: string, enabled: boolean) => void;
     removeRelay: (setId: string, url: string) => void;
     openProfile: (paneId: string, pubkey: string) => void;
+    openFollowees: (paneId: string, pubkey: string) => void;
+    openUserTimeline: (paneId: string, pubkey: string) => void;
     openProfileEdit: (paneId: string) => void;
     openThread: (paneId: string, eventId: string) => void;
     openAuthorContext: (
@@ -50,6 +52,8 @@
     'notifications',
     'author-context',
     'profile',
+    'followees',
+    'user-timeline',
     'thread',
   ]);
   const toolKinds = new Set<TabKind>([
@@ -89,6 +93,8 @@
     relaySets={props.relaySets}
     pageDataReady={props.pageDataReady}
     openProfile={props.openProfile}
+    openFollowees={props.openFollowees}
+    openUserTimeline={props.openUserTimeline}
     openProfileEdit={props.openProfileEdit}
     openThread={props.openThread}
     openAuthorContext={props.openAuthorContext}

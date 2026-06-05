@@ -27,6 +27,8 @@
     toggleRelay: (setId: string, url: string, enabled: boolean) => void;
     removeRelay: (setId: string, url: string) => void;
     openProfile: (paneId: string, pubkey: string) => void;
+    openFollowees: (paneId: string, pubkey: string) => void;
+    openUserTimeline: (paneId: string, pubkey: string) => void;
     openProfileEdit: (paneId: string) => void;
     openThread: (paneId: string, eventId: string) => void;
     openAuthorContext: (
@@ -54,6 +56,8 @@
     toggleRelay,
     removeRelay,
     openProfile,
+    openFollowees,
+    openUserTimeline,
     openProfileEdit,
     openThread,
     openAuthorContext,
@@ -110,6 +114,8 @@
         {toggleRelay}
         {removeRelay}
         {openProfile}
+        {openFollowees}
+        {openUserTimeline}
         {openProfileEdit}
         {openThread}
         {openAuthorContext}

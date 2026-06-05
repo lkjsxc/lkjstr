@@ -35,6 +35,8 @@
     activeAccount?: Account;
     relaySets: readonly RelaySet[];
     openProfile: (pubkey: string) => void;
+    openFollowees: (pubkey: string) => void;
+    openUserTimeline: (pubkey: string) => void;
     openThread: (eventId: string) => void;
     openAuthorContext?: (eventId: string, pubkey: string) => void;
     openProfileEdit: () => void;
@@ -168,6 +170,8 @@
           {nprofile}
           followList={state.followList}
           followingCount={followingCount(state.followList)}
+          openFollowees={() => props.openFollowees(props.pubkey)}
+          openUserTimeline={() => props.openUserTimeline(props.pubkey)}
           openProfileEdit={props.openProfileEdit}
         />
       {:else if row.key === 'profile-error'}

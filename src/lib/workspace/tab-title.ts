@@ -9,6 +9,8 @@ export function titleFor(kind: TabKind): string {
     'public-chat': 'Public Chat',
     notifications: 'Notifications',
     profile: 'Profile',
+    followees: 'Following',
+    'user-timeline': 'User Timeline',
     'profile-edit': 'Profile Edit',
     'upload-settings': 'Upload Settings',
     'account-manager': 'Accounts',

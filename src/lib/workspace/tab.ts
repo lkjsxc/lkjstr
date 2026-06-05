@@ -6,6 +6,8 @@ export type TabKind =
   | 'public-chat'
   | 'notifications'
   | 'profile'
+  | 'followees'
+  | 'user-timeline'
   | 'profile-edit'
   | 'upload-settings'
   | 'account-manager'
@@ -62,6 +64,8 @@ export function iconFor(kind: TabKind): string {
     'public-chat': 'message',
     notifications: 'bell',
     profile: 'user',
+    followees: 'users',
+    'user-timeline': 'list-tree',
     'profile-edit': 'id-card',
     'upload-settings': 'upload',
     'account-manager': 'users',
