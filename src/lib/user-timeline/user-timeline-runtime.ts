@@ -11,6 +11,7 @@ import {
   mergeUserTimelineItems,
   loadCachedUserTimeline,
 } from './user-timeline-cache';
+import { userTimelineCachePolicy } from './user-timeline-cache-policy';
 import { readInitialUserTimeline } from './user-timeline-loaders';
 import {
   targetPostsOnlyAuthorSet,
@@ -91,12 +92,17 @@ export async function runUserTimelineRuntime(
       limit: feedPageSize,
     }).catch(() => [] as TimelineItem[]);
     if (planKey !== nextKey || input.signal.aborted) return;
+    const cachePolicy = userTimelineCachePolicy({
+      items: cached,
+      coverageProven: false,
+      authorSetMatches: true,
+    });
     emit({
       mode: set.mode,
-      items: cached,
+      items: cachePolicy.items,
       authors: set.authors,
       loading: true,
-      notice,
+      notice: notice || cachePolicy.notice,
       error: null,
     });
     try {
@@ -121,7 +127,7 @@ export async function runUserTimelineRuntime(
       if (planKey !== nextKey || input.signal.aborted) return;
       emit({
         items: mergeUserTimelineItems({
-          current: cached,
+          current: state.items,
           incoming: page.items,
           limit: feedPageSize,
         }),

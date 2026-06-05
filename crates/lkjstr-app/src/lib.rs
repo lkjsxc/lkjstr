@@ -1,5 +1,6 @@
 #![doc = "Pure application composition reducers for lkjstr."]
 
+pub mod cache_display;
 pub mod custom_request;
 pub mod feed;
 pub mod feed_geometry;
@@ -15,6 +16,9 @@ mod startup_snapshots;
 mod workspace_defaults;
 pub mod workspace_runtime;
 
+pub use cache_display::{
+    CacheDisplayEvidence, CacheDisplayMode, cache_display_policy, complete_cache_display,
+};
 pub use custom_request::{
     CustomRequest, CustomRequestError, CustomRequestErrorKind, CustomRequestMode,
     custom_request_mode, parse_custom_request,
