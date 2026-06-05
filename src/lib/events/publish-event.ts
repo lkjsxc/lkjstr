@@ -1,5 +1,6 @@
 import { resolveActiveSigner } from '../accounts/signer';
 import type { NostrEvent, UnsignedNostrEvent } from '../protocol';
+import { clientTaggedEvent } from './publish-client-tag';
 import { sharedRelayPool, type PublishResult } from '../relays/relay-pool';
 import type { RelaySet } from '../relays/relay-store';
 import { enabledWriteRelays } from '../timeline/timeline-subscription';
@@ -34,7 +35,8 @@ export async function signAndStartPublishing(
   const relays = enabledWriteRelays(relaySets);
   if (relays.length === 0)
     return { ok: false, message: 'Enable at least one write relay.' };
-  const event = await signer.signEvent(build(signer.account.pubkey));
+  const unsigned = await clientTaggedEvent(build(signer.account.pubkey));
+  const event = await signer.signEvent(unsigned);
   await storeTimelineEvent(event);
   return { ok: true, event, delivery: sharedRelayPool.publish(relays, event) };
 }

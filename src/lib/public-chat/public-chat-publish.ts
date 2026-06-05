@@ -1,4 +1,5 @@
 import { resolveActiveSigner } from '$lib/accounts/signer';
+import { clientTaggedEvent } from '$lib/events/publish-client-tag';
 import { upsertEvent } from '$lib/events/repository';
 import { kinds, type NostrEvent, type NostrTag } from '$lib/protocol';
 import { sharedRelayPool, type PublishResult } from '$lib/relays/relay-pool';
@@ -30,13 +31,15 @@ export async function publishPublicChatTemplate(
   ];
   if (relays.length === 0)
     return { ok: false, message: 'Enable at least one write relay.' };
-  const event = await signer.signEvent({
-    pubkey: signer.account.pubkey,
-    created_at: Math.floor(Date.now() / 1000),
-    kind: template.kind,
-    tags: template.tags,
-    content: template.content,
-  });
+  const event = await signer.signEvent(
+    await clientTaggedEvent({
+      pubkey: signer.account.pubkey,
+      created_at: Math.floor(Date.now() / 1000),
+      kind: template.kind,
+      tags: template.tags,
+      content: template.content,
+    }),
+  );
   await upsertEvent(event, relays);
   return { ok: true, event, delivery: sharedRelayPool.publish(relays, event) };
 }

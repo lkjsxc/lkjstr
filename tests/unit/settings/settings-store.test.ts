@@ -125,6 +125,13 @@ describe('settings store helpers', () => {
     expect(coerceValue(setting, 1.5)).toEqual({ ok: false });
   });
 
+  it('exposes opt-in client tag settings', () => {
+    const keys = defaultSettings().map((setting) => setting.key);
+    expect(keys).toContain('publish.clientTag.enabled');
+    expect(keys).toContain('publish.clientTag.address');
+    expect(keys).toContain('timeline.showClientTags');
+  });
+
   it('does not expose relay-list JSON ownership settings', () => {
     const keys = defaultSettings().map((setting) => setting.key);
     expect(keys).not.toContain('timeline.defaultRelays');

@@ -35,6 +35,11 @@ tweet.defaultPublishMode|Publish mode|enum|selected-relays|Tweet publish target.
 tweet.mediaUploadProvider|Media upload provider|enum|blossom|Media upload provider.|disabled,blossom,nostr-build,nostrcheck,void-cat,custom
 tweet.mediaUploadCustomServer|Custom upload server|string||Optional HTTPS media upload server.
 tweet.mediaUploadNoTransform|No transform upload|boolean|true|Request original media upload.
+publish.clientTag.enabled|Client tag|boolean|false|Attach a valid NIP-89 client tag before signing public events.
+publish.clientTag.name|Client tag name|string|lkjstr|NIP-89 client tag display name.
+publish.clientTag.address|Client tag address|string||NIP-89 kind 31990 handler coordinate.
+publish.clientTag.relay|Client tag relay|string||Relay hint for the NIP-89 handler coordinate.
+timeline.showClientTags|Show client tags|boolean|false|Show valid incoming NIP-89 client tag labels.
 accounts.defaultMode|Account mode|enum|read-only|Default account mode.|read-only,nip07
 security.allowLocalNsecImport|Local nsec|boolean|false|Allow local nsec import.
 security.logSensitiveValues|Sensitive logs|boolean|false|Log sensitive values.

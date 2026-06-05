@@ -14,4 +14,5 @@ write-action helpers.
 - Feed cursors, coverage, scan hints, and scan density rows are recoverable page
   cache and should register in `cacheLedger` when persisted.
 - Content token, media, tree, zap, and scroll helpers.
+- [publish-client-tag.ts](publish-client-tag.ts): opt-in NIP-89 tag enrichment before signing.
 - [action-state.ts](action-state.ts) and [action-state-cache.ts](action-state-cache.ts): pressed Heart/Repost state.

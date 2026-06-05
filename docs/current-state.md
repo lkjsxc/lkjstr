@@ -37,8 +37,9 @@ Read next: [protocol/README.md](protocol/README.md),
   NIP-11, NIP-18, NIP-19, NIP-25, NIP-28, NIP-30, NIP-36, NIP-50, NIP-51,
   NIP-57, NIP-65, Blossom/NIP-B7 upload, NIP-96, and NIP-98.
 - Partial protocol targets include NIP-29 relay-based groups and NIP-89 client
-  tags. They must remain labeled partial until real read, publish, settings, and
-  opt-out paths are verified.
+  tags. NIP-89 settings and shared TypeScript public publish enrichment are
+  implemented, but it remains partial until every write surface and display
+  option is verified.
 - Relay AUTH is diagnostic-only.
 - Search combines cached matches with relay NIP-50 filters when selected relays
   support them.

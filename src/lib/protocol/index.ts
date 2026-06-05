@@ -2,6 +2,7 @@ export * from './blossom';
 export * from './bytes';
 export * from './crypto';
 export * from './event';
+export * from './client-tag';
 export * from './event-id';
 export * from './event-sign';
 export * from './event-builders';
