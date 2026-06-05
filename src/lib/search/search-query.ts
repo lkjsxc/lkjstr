@@ -20,27 +20,49 @@ export type SearchPageRequest = {
   readonly onSnapshot?: OnProgressiveReadSnapshot;
 };
 
-export async function searchPage(
-  request: SearchPageRequest,
-): Promise<{ items: FeedEvent[]; hasOlder: boolean }> {
+export type SearchDiagnostics = {
+  readonly searchedRelays: readonly string[];
+  readonly unsupportedRelays: readonly string[];
+};
+
+export function searchDiagnosticsText(unsupported: readonly string[]): string {
+  if (unsupported.length === 0) return '';
+  return `${unsupported.length} selected relay${unsupported.length === 1 ? '' : 's'} did not advertise NIP-50 search.`;
+}
+
+export async function searchPage(request: SearchPageRequest): Promise<{
+  items: FeedEvent[];
+  hasOlder: boolean;
+  diagnostics: SearchDiagnostics;
+}> {
   const query = request.query.trim();
-  if (!query) return { items: [], hasOlder: false };
+  if (!query)
+    return {
+      items: [],
+      hasOlder: false,
+      diagnostics: { searchedRelays: [], unsupportedRelays: [] },
+    };
+  const support = await nip50Relays(request.relays);
   const [local, relay] = await Promise.all([
     cachedSearch(query, request.limit, request.before),
-    relaySearch(request, query),
+    relaySearch(request, query, support.relays),
   ]);
   const merged = mergeItems([...local, ...relay]);
   return {
     items: merged.slice(0, request.limit),
     hasOlder: merged.length > request.limit || relay.length >= request.limit,
+    diagnostics: {
+      searchedRelays: support.relays,
+      unsupportedRelays: support.unsupportedRelays,
+    },
   };
 }
 
 async function relaySearch(
   request: SearchPageRequest,
   query: string,
+  searchRelays: readonly string[],
 ): Promise<FeedEvent[]> {
-  const searchRelays = await nip50Relays(request.relays);
   const filters = [
     {
       kinds: feedDisplayKinds,
@@ -76,14 +98,22 @@ async function relaySearch(
   return relayItems;
 }
 
-async function nip50Relays(relays: readonly string[]): Promise<string[]> {
+async function nip50Relays(relays: readonly string[]): Promise<{
+  readonly relays: readonly string[];
+  readonly unsupportedRelays: readonly string[];
+}> {
   const support = await Promise.all(
     relays.map(async (relay) => ({
       relay,
       supported: await relayMaySupportNip50(relay),
     })),
   );
-  return support.filter((item) => item.supported).map((item) => item.relay);
+  return {
+    relays: support.filter((item) => item.supported).map((item) => item.relay),
+    unsupportedRelays: support
+      .filter((item) => !item.supported)
+      .map((item) => item.relay),
+  };
 }
 
 async function cachedSearch(

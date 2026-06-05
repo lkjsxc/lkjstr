@@ -9,7 +9,7 @@
   import type { FeedEvent } from '$lib/events/types';
   import type { RelaySet } from '$lib/relays/relay-store';
   import { sharedSubscriptionOrchestrator } from '$lib/relays/orchestration/orchestrator';
-  import { searchPage } from '$lib/search/search-query';
+  import { searchDiagnosticsText, searchPage } from '$lib/search/search-query';
   import { timelineRelays } from '$lib/timeline/timeline-subscription';
   import { loadTimelineProfiles } from '$lib/timeline/timeline-profiles';
   import {
@@ -17,7 +17,7 @@
     progressiveStatusText,
   } from '$lib/timeline/timeline-progressive';
   import type { TabFeedAnchor } from '$lib/workspace/tab-anchor-registry';
-
+  import { mergeSearchItems } from './search-tab-merge';
   type Props = {
     tabId: string;
     visible?: boolean;
@@ -99,14 +99,19 @@
         onSnapshot: (snapshot) => {
           if (destroyed) return;
           if (snapshot.events.length > 0)
-            items = merge(items, feedEventsFromProgressiveSnapshot(snapshot));
+            items = mergeSearchItems(
+              items,
+              feedEventsFromProgressiveSnapshot(snapshot),
+            );
           relayStatusText = progressiveStatusText(snapshot.status);
         },
       });
       if (destroyed) return;
       items = page.items;
       hasOlder = page.hasOlder;
-      relayStatusText = '';
+      relayStatusText = searchDiagnosticsText(
+        page.diagnostics.unsupportedRelays,
+      );
     } catch (err) {
       if (destroyed) return;
       error = err instanceof Error ? err.message : 'Search failed.';
@@ -132,32 +137,22 @@
         onSnapshot: (snapshot) => {
           if (destroyed) return;
           if (snapshot.events.length > 0)
-            items = merge(items, feedEventsFromProgressiveSnapshot(snapshot));
+            items = mergeSearchItems(
+              items,
+              feedEventsFromProgressiveSnapshot(snapshot),
+            );
           relayStatusText = progressiveStatusText(snapshot.status);
         },
       });
       if (destroyed) return;
-      items = merge(items, page.items);
+      items = mergeSearchItems(items, page.items);
       hasOlder = page.hasOlder;
-      relayStatusText = '';
+      relayStatusText = searchDiagnosticsText(
+        page.diagnostics.unsupportedRelays,
+      );
     } finally {
       if (!destroyed) loadingOlder = false;
     }
-  }
-
-  function merge(current: FeedEvent[], incoming: readonly FeedEvent[]) {
-    const ids: string[] = [];
-    return [...current, ...incoming]
-      .filter((item) => {
-        if (ids.includes(item.event.id)) return false;
-        ids.push(item.event.id);
-        return true;
-      })
-      .sort((a, b) =>
-        b.event.created_at === a.event.created_at
-          ? a.event.id.localeCompare(b.event.id)
-          : b.event.created_at - a.event.created_at,
-      );
   }
 </script>
 

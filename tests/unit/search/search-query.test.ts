@@ -7,9 +7,16 @@ import {
 import type { NostrEvent } from '../../../src/lib/protocol';
 import type { PoolEvent } from '../../../src/lib/relays/relay-pool';
 import { stubOrchestrator } from '../relays/orchestration/orchestrator-mock';
+import {
+  clearRelayInformationMemoryForTests,
+  saveRelayInformation,
+} from '../../../src/lib/relays/relay-info';
 
 describe('search query', () => {
-  beforeEach(() => clearEventRepositoryForTests());
+  beforeEach(() => {
+    clearEventRepositoryForTests();
+    clearRelayInformationMemoryForTests();
+  });
 
   it('returns no results for an empty query', async () => {
     const page = await searchPage({
@@ -20,7 +27,11 @@ describe('search query', () => {
       limit: 10,
     });
 
-    expect(page).toEqual({ items: [], hasOlder: false });
+    expect(page).toEqual({
+      items: [],
+      hasOlder: false,
+      diagnostics: { searchedRelays: [], unsupportedRelays: [] },
+    });
   });
 
   it('uses compound cursors for same-second cached paging', async () => {
@@ -77,6 +88,28 @@ describe('search query', () => {
     expect(
       page.items.find((item) => item.event.id === cached.id)?.relays,
     ).toEqual(['wss://cache.example/', 'wss://relay.example/']);
+  });
+
+  it('reports relays known not to support NIP-50 as diagnostics', async () => {
+    await saveRelayInformation({
+      relayUrl: 'wss://unsupported.example/',
+      fetchedAt: Date.now(),
+      status: 'available',
+      info: { supported_nips: [1, 11] },
+    });
+
+    const page = await searchPage({
+      query: 'nostr',
+      relays: ['wss://unsupported.example/'],
+      owner: 'search',
+      subscriptions: fakeSubscriptions([]),
+      limit: 10,
+    });
+
+    expect(page.diagnostics).toEqual({
+      searchedRelays: [],
+      unsupportedRelays: ['wss://unsupported.example/'],
+    });
   });
 
   it('uses different relay read keys for different queries', async () => {
