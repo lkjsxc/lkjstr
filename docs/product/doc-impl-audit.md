@@ -199,5 +199,5 @@ closing gates so this concise matrix stays readable.
 | Profile sparse historical empty proof  | profiles.md             | partial     | Searching copy active; full scan planner proof remains open                                                   |
 | Stable Tweet publish footer            | tweet.md                | partial     | Footer layout and bounding tests active                                                                       |
 | Fixed lkjsxc New Tab item              | workspace/tabs.md       | partial     | Catalog constant, NIP-19 decode, and Svelte action tests active                                               |
-| Request persistence removal            | tools/accounts.md       | partial     | UI and tests must prove no special persistence surface remains                                                |
+| Browser storage prompt removal         | tools/accounts.md       | partial     | UI and tests must prove no special persistence surface remains                                                |
 | Pane.svelte at or below 200 lines      | repository standards    | implemented | Pane header moved to `PaneHead.svelte` to keep the file within the cap                                         |

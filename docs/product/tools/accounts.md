@@ -15,8 +15,8 @@ Accounts represent public identities and signing capability.
   worker data when Workers are available. Event-cache cleanup never deletes
   them.
 - Accounts shows protected-data safety copy only. It does not expose a special
-  browser persistent-storage request control; durable protection is owned by the
-  SQLite worker, manifest, and retention policy.
+  browser storage prompt; durable protection is owned by the SQLite worker,
+  manifest, and retention policy.
 - Account lists, workspace data, and UI props must never expose local key
   material.
 - Local and NIP-07 accounts are signing accounts. Read-only accounts cannot
@@ -56,4 +56,4 @@ Accounts represent public identities and signing capability.
   `getPublicKey` method, validates the returned public key, stores a signing
   account, and makes it active.
 - Rust Accounts and the TypeScript surface intentionally do not expose browser
-  persistent-storage request controls.
+  storage prompt controls.

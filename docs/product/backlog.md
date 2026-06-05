@@ -23,7 +23,7 @@ NIP-11-driven request budgeting and diagnostics are implemented and tracked in
 | Followee count loading state        | [profiles.md](feeds/profiles.md)                                 | Profile header and Rust follow-count state tests               |
 | Bounded User Timeline runtime       | [user-timeline.md](feeds/user-timeline.md)                       | Huge follow graph chunking and degraded-mode tests             |
 | Cache preview and hold policy       | [feed-memory.md](../architecture/data/feed-memory.md)            | Rust cache policy and User Timeline cache-display tests        |
-| Request persistence removal         | [accounts.md](tools/accounts.md)                                 | Grep, Accounts UI, and Custom Request regression tests         |
+| Browser storage prompt removal      | [accounts.md](tools/accounts.md)                                 | Grep, Accounts UI, and Custom Request regression tests         |
 | Search functionality                | [search.md](tools/search.md)                                     | SQLite token-index, cursor, NIP-50 merge, and diagnostics tests |
 | Fixed lkjsxc New Tab item           | [tabs.md](workspace/tabs.md)                                     | Rust catalog, NIP-19 decode, Svelte catalog, and action tests  |
 | Stable Tweet publish layout         | [tweet.md](tools/tweet.md)                                       | Composer footer bounding-rect and shortcut tests               |

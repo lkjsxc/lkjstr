@@ -26,9 +26,8 @@ Read next: [product/README.md](product/README.md),
 - Search is treated as complete only when the local SQLite token index and
   relay NIP-50 merge tests pass. It must never fall back to full cached-event
   scans for normal local search.
-- The browser persistent-storage request surface is removed. Generic workspace
-  tab snapshots and protected SQLite data remain; no special request
-  persistence feature remains.
+- The old browser storage prompt is removed. Generic workspace tab snapshots
+  and protected SQLite data remain; no special durable request feature remains.
 - Tweet, replies, reposts, reactions, zaps, Blossom upload, NIP-96
   compatibility upload settings, NIP-98 auth, NIP-30 custom emoji,
   sensitive-content reveal, and event reference previews are implemented.
