@@ -25,6 +25,8 @@ pub mod nip57;
 pub mod nip65;
 pub mod nip96;
 pub mod nip98;
+pub mod public_chat;
+mod public_chat_metadata;
 pub mod reactions;
 pub mod relay_url;
 pub mod tags;
@@ -58,10 +60,12 @@ pub use event_sign::{EventTemplate, SignError, finalize_event, sign_event_with_s
 pub use event_verify::{VerificationCode, VerificationResult, verify_event};
 pub use filter::{NostrFilter, matches_any_filter, matches_filter, parse_filter_value};
 pub use kinds::{
-    KIND_BLOSSOM_AUTH, KIND_DELETION, KIND_EMOJI_LIST, KIND_EMOJI_SET, KIND_FOLLOW_LIST,
-    KIND_GENERIC_REPOST, KIND_HTTP_AUTH, KIND_METADATA, KIND_REACTION, KIND_RECOMMEND_RELAY,
-    KIND_RELAY_AUTH, KIND_RELAY_LIST_METADATA, KIND_REPOST, KIND_TEXT_NOTE, KIND_ZAP_RECEIPT,
-    KIND_ZAP_REQUEST, is_addressable_kind, is_ephemeral_kind, is_replaceable_kind,
+    KIND_BLOSSOM_AUTH, KIND_CHANNEL_CREATE, KIND_CHANNEL_HIDE_MESSAGE, KIND_CHANNEL_MESSAGE,
+    KIND_CHANNEL_METADATA, KIND_CHANNEL_MUTE_USER, KIND_DELETION, KIND_EMOJI_LIST, KIND_EMOJI_SET,
+    KIND_FOLLOW_LIST, KIND_GENERIC_REPOST, KIND_HTTP_AUTH, KIND_METADATA, KIND_REACTION,
+    KIND_RECOMMEND_RELAY, KIND_RELAY_AUTH, KIND_RELAY_LIST_METADATA, KIND_REPOST, KIND_TEXT_NOTE,
+    KIND_ZAP_RECEIPT, KIND_ZAP_REQUEST, is_addressable_kind, is_ephemeral_kind,
+    is_replaceable_kind,
 };
 pub use messages::{
     ClientMessage, MessageErrorCode, MessageParseError, RelayMessage, encode_client_message,
@@ -94,6 +98,12 @@ pub use nip96::{
     parse_nip96_upload_result_value, valid_https_url,
 };
 pub use nip98::{HttpAuthInput, http_auth_event, nostr_authorization_header};
+pub use public_chat::{
+    ChannelMetadata, ChannelMetadataUpdate, PublicChatError, channel_message_reply_tags,
+    channel_message_root_tag, channel_reply_event_id, channel_root_event_id, hide_message_target,
+    is_public_chat_kind, mute_user_target, parse_channel_create_metadata,
+    parse_channel_metadata_update,
+};
 pub use reactions::{
     ParsedReaction, ReactionKind, custom_emoji_reaction, custom_emoji_reaction_content,
     custom_emoji_reaction_shortcode, parse_reaction, reaction_content, reaction_target_event_id,
