@@ -12,6 +12,7 @@ mod snapshot;
 mod snapshot_ops;
 mod tab;
 mod tab_catalog;
+mod tab_catalog_filter;
 
 pub use bootstrap::{BootstrapIds, bootstrap_workspace};
 pub use commands::{
@@ -34,5 +35,9 @@ pub use snapshot_ops::{
     capture_tab_snapshot, feed_anchor_from_payload, feed_runtime_snapshot,
     feed_snapshot_seed_from_payload, merge_tab_snapshot, merge_tab_snapshot_payload,
 };
-pub use tab::{TabKind, WorkspaceTab, title_for};
+pub use tab::{TabKind, WorkspaceTab, tab_kind_key, title_for};
 pub use tab_catalog::{NewTabOption, NewTabOptionGroup, new_tab_options_for_account};
+pub use tab_catalog_filter::{
+    filter_new_tab_options, new_tab_option_matches, new_tab_option_search_text,
+    new_tab_options_for_account_and_query, normalize_new_tab_query,
+};

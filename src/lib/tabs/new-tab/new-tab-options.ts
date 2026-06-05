@@ -5,6 +5,7 @@ export type NewTabOption = {
   readonly label: string;
   readonly description: string;
   readonly group: 'primary' | 'secondary';
+  readonly aliases?: readonly string[];
   readonly config?: Record<string, unknown>;
 };
 
@@ -14,12 +15,14 @@ const baseOptions: readonly NewTabOption[] = [
     label: 'Home',
     description: 'Account follows.',
     group: 'primary',
+    aliases: ['timeline', 'follows'],
   },
   {
     kind: 'tweet',
     label: 'Tweet',
     description: 'Single note draft.',
     group: 'primary',
+    aliases: ['note', 'post', 'compose'],
   },
   {
     kind: 'notifications',
@@ -44,6 +47,7 @@ const baseOptions: readonly NewTabOption[] = [
     label: 'Global',
     description: 'Relay notes.',
     group: 'primary',
+    aliases: ['firehose', 'relay'],
   },
   {
     kind: 'profile-edit',
@@ -86,12 +90,14 @@ const baseOptions: readonly NewTabOption[] = [
     label: 'lkjstr Log',
     description: 'Session diagnostics.',
     group: 'secondary',
+    aliases: ['diagnostics', 'log'],
   },
   {
     kind: 'npub-miner',
     label: 'Mine npub',
     description: 'Vanity key search.',
     group: 'secondary',
+    aliases: ['vanity', 'key'],
   },
   {
     kind: 'welcome',
@@ -110,6 +116,7 @@ export function newTabOptionsForAccount(
     label: 'My Profile',
     description: 'Active account profile.',
     group: 'primary',
+    aliases: ['profile', 'me'],
     config: { pubkey: activePubkey },
   };
   const globalIndex = baseOptions.findIndex((o) => o.kind === 'global');
@@ -118,4 +125,46 @@ export function newTabOptionsForAccount(
     profile,
     ...baseOptions.slice(globalIndex + 1),
   ];
+}
+
+export function normalizeNewTabQuery(query: string): string {
+  return query.trim().toLowerCase();
+}
+
+export function newTabOptionSearchText(option: NewTabOption): string {
+  return [
+    option.label,
+    option.description,
+    option.kind,
+    option.group,
+    ...(option.aliases ?? []),
+  ]
+    .join(' ')
+    .toLowerCase();
+}
+
+export function newTabOptionMatches(
+  option: NewTabOption,
+  query: string,
+): boolean {
+  const normalized = normalizeNewTabQuery(query);
+  return normalized === '' || newTabOptionSearchText(option).includes(normalized);
+}
+
+export function filterNewTabOptions(
+  options: readonly NewTabOption[],
+  query: string,
+): readonly NewTabOption[] {
+  const normalized = normalizeNewTabQuery(query);
+  if (normalized === '') return options;
+  return options.filter((option) =>
+    newTabOptionSearchText(option).includes(normalized),
+  );
+}
+
+export function newTabOptionsForAccountAndQuery(
+  activePubkey: string | undefined,
+  query: string,
+): readonly NewTabOption[] {
+  return filterNewTabOptions(newTabOptionsForAccount(activePubkey), query);
 }
