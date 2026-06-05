@@ -104,6 +104,21 @@ describe('NIP-96 endpoint resolution', () => {
   });
 });
 
+describe('media upload validation', () => {
+  it('rejects empty, oversized, and unsupported media files', async () => {
+    const { maxMediaUploadBytes, validateMediaFile } =
+      await import('../../../src/lib/media/upload');
+    expect(validateMediaFile({ size: 0, type: 'image/png' })).toMatch(/empty/);
+    expect(
+      validateMediaFile({ size: maxMediaUploadBytes + 1, type: 'image/png' }),
+    ).toMatch(/larger/);
+    expect(validateMediaFile({ size: 1, type: 'text/plain' })).toMatch(
+      /image, video, or audio/,
+    );
+    expect(validateMediaFile({ size: 1, type: 'video/mp4' })).toBeUndefined();
+  });
+});
+
 describe('media upload transport', () => {
   it('posts file, no_transform, and payload hash auth', async () => {
     const { uploadMediaFile } = await import('../../../src/lib/media/upload');

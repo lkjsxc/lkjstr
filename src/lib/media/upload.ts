@@ -31,11 +31,26 @@ export type UploadedMedia = {
   readonly imeta: NostrTag;
 };
 
+export const maxMediaUploadBytes = 100 * 1024 * 1024;
+
+export function validateMediaFile(
+  file: Pick<File, 'size' | 'type'>,
+): string | undefined {
+  if (file.size <= 0) return 'Media upload file is empty.';
+  if (file.size > maxMediaUploadBytes)
+    return 'Media upload file is larger than 100 MiB.';
+  if (!supportedMediaMime(file.type))
+    return 'Media upload only accepts image, video, or audio files.';
+  return undefined;
+}
+
 export async function uploadMediaFile(
   file: File,
   settings: UploadSettings,
   options: MediaUploadOptions = {},
 ): Promise<UploadedMedia> {
+  const validation = validateMediaFile(file);
+  if (validation) throw new Error(validation);
   if (!settings.server.trim()) throw new Error('Media upload is disabled.');
   return settings.protocol === 'blossom'
     ? uploadBlossomMedia(file, settings, options.fetcher ?? fetch)
@@ -155,4 +170,10 @@ function blossomHeaders(file: File, auth: unknown): HeadersInit {
 
 function fallbackBlobUrl(endpoint: string, hash: string): string {
   return `${new URL(endpoint).origin}/${hash}`;
+}
+
+function supportedMediaMime(type: string): boolean {
+  return ['image/', 'video/', 'audio/'].some((prefix) =>
+    type.startsWith(prefix),
+  );
 }

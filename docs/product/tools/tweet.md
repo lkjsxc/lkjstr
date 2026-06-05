@@ -47,6 +47,8 @@ uploads, or fake custom emoji metadata.
 - Paste and file-picker uploads use the configured HTTPS media provider.
   Blossom is the preferred provider; NIP-96 providers are compatibility
   choices.
+- Media upload rejects empty files, unsupported MIME types, and files over
+  104857600 bytes before signing or network upload.
 - Each Tweet tab owns a unique visually hidden file input behind an accessible
   icon button, so file selection is scoped to the active composer.
 - A blank upload server disables media upload without blocking text publishing.

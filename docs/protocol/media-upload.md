@@ -17,6 +17,8 @@ separated compatibility provider while real users still configure those servers.
   blank or HTTPS.
 - `blossom` treats an HTTPS origin as `/upload` and accepts an explicit HTTPS
   upload endpoint.
+- Local validation rejects empty files, unsupported MIME types, and files over
+  104857600 bytes before any signing or network request.
 - Blossom upload computes SHA-256 before sending, signs a scoped auth event,
   sends a raw `PUT` upload, and validates the returned descriptor hash.
 - Blossom descriptors normalize into the shared attachment shape: media URL,
@@ -38,7 +40,8 @@ separated compatibility provider while real users still configure those servers.
 
 - Upload is never automatic on file selection without explicit composer action.
 - Failed upload never marks Tweet publish as successful.
-- Upload responses are untrusted and must be shape-checked before use.
+- Upload inputs and responses are untrusted and must be shape-checked before
+  use.
 - Upload auth signs only the method, URL, and hash scope required by the chosen
   provider.
 - Local file paths are never logged or sent.
@@ -51,7 +54,8 @@ separated compatibility provider while real users still configure those servers.
 
 - `src/lib/media/providers.ts`: provider ids, labels, protocols, and defaults.
 - `src/lib/media/endpoint.ts`: Blossom and NIP-96 endpoint resolution.
-- `src/lib/media/upload.ts`: Blossom raw upload and NIP-96 multipart upload.
+- `src/lib/media/upload.ts`: file validation, Blossom raw upload, and NIP-96
+  multipart upload.
 - `src/lib/protocol/blossom.ts`: Blossom descriptors and scoped upload auth.
 - `src/lib/protocol/nip96.ts`: NIP-96 discovery and response parsing.
 - `src/lib/protocol/http-auth.ts`: NIP-98 authorization events.
