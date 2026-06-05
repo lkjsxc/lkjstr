@@ -4,6 +4,7 @@ import type { StorageOp } from '../../../src/lib/storage/sqlite-opfs/types';
 const state = vi.hoisted(() => ({
   rows: [] as Record<string, unknown>[],
   sent: [] as StorageOp[],
+  throwStorage: false,
 }));
 
 vi.mock('../../../src/lib/storage/sqlite-opfs/event-schema', () => ({
@@ -13,6 +14,7 @@ vi.mock('../../../src/lib/storage/sqlite-opfs/event-schema', () => ({
 vi.mock('../../../src/lib/storage/sqlite-opfs/kernel-client', () => ({
   sendSqliteStorage: async (op: StorageOp) => {
     state.sent.push(op);
+    if (state.throwStorage) throw new Error('storage offline');
     return {
       requestId: 'test',
       outcome: 'ok',
@@ -45,6 +47,7 @@ describe('scan model debug projection', () => {
     vi.stubGlobal('Worker', function Worker() {});
     state.rows = [];
     state.sent = [];
+    state.throwStorage = false;
   });
 
   it('hydrates trace identity from SQLite columns when record_json lacks it', async () => {
@@ -72,6 +75,16 @@ describe('scan model debug projection', () => {
       state: 'unavailable',
       message: 'test bridge',
     });
+    expect(snapshot.storageMode).toBe('temporary-memory');
+  });
+
+  it('keeps debug snapshot available when scan row queries fail', async () => {
+    state.throwStorage = true;
+
+    const snapshot = await readScanOptimizerDebugSnapshot();
+
+    expect(snapshot.models).toEqual([]);
+    expect(snapshot.decisionTraces).toEqual([]);
     expect(snapshot.storageMode).toBe('temporary-memory');
   });
 });

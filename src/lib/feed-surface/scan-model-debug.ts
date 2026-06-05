@@ -27,10 +27,6 @@ type ScanWasmUnavailableState = Exclude<
   { readonly ok: true }
 >['reason'];
 
-export type ScanOptimizerState =
-  | ScanOptimizerDebugSnapshot['storageMode']
-  | ScanOptimizerDebugSnapshot['wasmBridge']['state'];
-
 const debugRowLimit = 24;
 
 export async function readScanOptimizerDebugSnapshot(): Promise<ScanOptimizerDebugSnapshot> {
@@ -83,16 +79,20 @@ async function queryRows(
 ): Promise<readonly Record<string, unknown>[]> {
   if (typeof Worker === 'undefined') return [];
   if (!(await ensureEventGraphSchema())) return [];
-  const response = await sendSqliteStorage(
-    {
-      kind: 'query',
-      statement,
-      params,
-      rowLimit: boundedLimit(Number(params[0])),
-    },
-    { deadlineMs: 5_000 },
-  );
-  return response.outcome === 'ok' ? response.rows : [];
+  try {
+    const response = await sendSqliteStorage(
+      {
+        kind: 'query',
+        statement,
+        params,
+        rowLimit: boundedLimit(Number(params[0])),
+      },
+      { deadlineMs: 5_000 },
+    );
+    return response.outcome === 'ok' ? response.rows : [];
+  } catch {
+    return [];
+  }
 }
 
 function modelRecord(row: Record<string, unknown>): ScanDensityModelRecord[] {

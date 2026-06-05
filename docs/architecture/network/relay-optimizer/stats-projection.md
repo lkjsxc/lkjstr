@@ -40,7 +40,8 @@ They include:
 - limit-hit rate and incomplete rate
 - last update time and staleness state
 - storage mode: OPFS, memory fallback, or unavailable
-- WASM bridge state: available, unavailable, or error with a redacted message
+- WASM bridge state: available, unavailable, timeout, or invalid input with a
+  redacted message
 
 The browser debug surface may expose redacted scan optimizer data for
 focused tests:
