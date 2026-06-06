@@ -59,7 +59,8 @@ Each feed-like surface must assert:
 - no nested vertical `overflow: auto` between `.feed-tab` and the scroll owner.
 - `.pane-body` is not the feed tab's vertical scroll owner.
 - status rows are inside the scroll flow.
-- scrollbar right edge aligns with the pane body within one device pixel.
+- scrollbar right edge is inset by the shared `--scroll-track-edge` token within
+  one device pixel.
 
 Feed-like surfaces: Home, Global, Profile, Thread, Search, Notifications,
 Custom Request, Author Context, Public Chat feed paths, and lkjstr Log when it

@@ -13,6 +13,8 @@ list chrome inside the scroll flow.
 - Exactly one descendant carries `data-scroll-owner` and owns vertical scroll.
 - The scroll root uses `scrollbar-gutter: stable`, `overflow-x: clip`, and
   scroll-layout tokens from [scroll-layout.md](../../workspace/scroll-layout.md).
+- The shared `.event-list__scroller` wrapper applies `--scroll-track-edge` so
+  feed scrollbars are inset consistently from split handles.
 - Near-end detection uses `IntersectionObserver` with scroll fallback per
   [near-end.md](near-end.md).
 - `FeedSurfaceStatus` renders as a row inside the scroll flow, not in a fixed
@@ -37,7 +39,8 @@ list chrome inside the scroll flow.
   active layout bucket.
 - Height deltas above the viewport apply compensating scroll changes through
   existing anchor infrastructure.
-- No second vertical scroll-owner may be introduced for geometry handling.
+- No second vertical scroll-owner may be introduced for geometry or scrollbar
+  spacing.
 
 ## Scroll Root Classes
 

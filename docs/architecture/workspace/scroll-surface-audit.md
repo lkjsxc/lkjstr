@@ -7,7 +7,7 @@ surface. Each row must pass before the scroll-layout contract is complete.
 
 ## Checklist
 
-| Surface                                         | Scroll root                       | Track at tile edge | Content inset on child | Status   |
+| Surface                                         | Scroll root                       | Shared track inset | Content inset on child | Status   |
 | ----------------------------------------------- | --------------------------------- | ------------------ | ---------------------- | -------- |
 | Home / Global                                   | `.event-list__viewport`           | required           | required               | required |
 | Oversized Home / Global event                   | `.event-list__viewport`           | required           | required               | required |
@@ -47,8 +47,8 @@ surface. Each row must pass before the scroll-layout contract is complete.
 
 ## Verification
 
-- Scrolling element `getBoundingClientRect().right` aligns with pane body right
-  edge within one device pixel.
+- Scrolling element `getBoundingClientRect().right` is inset from the pane body
+  right edge by `--scroll-track-edge` within one device pixel.
 - Text in the rightmost column does not sit under the scrollbar thumb.
 - `scrollbar-gutter: stable` prevents layout shift when scrollbars appear.
 - Feed tabs use `.feed-tab` with exactly one `[data-scroll-owner]`.

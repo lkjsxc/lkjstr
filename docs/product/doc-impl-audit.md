@@ -131,7 +131,7 @@ closing gates so this concise matrix stays readable.
 | Scroll owner retention                | tab-retention-flow.md | implemented | `data-scroll-owner`, scrollTop=0 |
 | Feed scroll gutter on viewport        | scroll-layout.md      | implemented | `.event-list__viewport` + token  |
 | Tab strip excluded from split         | pane-chrome-scope.md  | implemented | chromeBottom from `.pane-head`   |
-| Scrollbar at tile edge                | scroll-layout.md      | implemented | `--scroll-track-edge`, pane body |
+| Scrollbar split-handle inset          | scroll-layout.md      | implemented | `--scroll-track-edge`, pane body |
 | Tile-scoped emoji                     | tile-overlays.md      | implemented |                                  |
 | No feed npub subtitle                 | identity-rendering.md | implemented | feed-identity                    |
 | Welcome document links                | welcome.md            | implemented |                                  |

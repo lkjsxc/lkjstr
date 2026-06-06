@@ -2,23 +2,23 @@
 
 ## Purpose
 
-Scroll layout keeps long content readable when scrollbars sit at the tile edge
-without overlapping text or controls.
+Scroll layout keeps long content readable while scrollbar tracks stay slightly
+inset from split handles and do not overlap text or controls.
 
 ## Contract
 
 - The **scrolling element** for each surface owns `scrollbar-gutter: stable`.
 - `--scroll-track-edge` is the distance from the tile inner border to the
-  scrollbar track (default `0`). Feed tabs keep this gap tight so the scrollbar
-  sits close to split resize handles without covering row controls.
+  scrollbar track (default `var(--space-2)`). Feed and tool tabs use the same
+  token so scrollbar tracks do not sit flush against split resize handles.
 - `--scroll-content-inset` (default `var(--space-3)`) pads direct content
   children on the inline end so text does not sit under the thumb.
-- Home and Global reset the direct `.event-list` child inset so their Virtua
-  scrollbar aligns with the Notifications scroll position instead of being
-  pushed inward twice.
+- `FeedScrollSurface` applies the track edge on the shared
+  `.event-list__scroller` wrapper. Home, Global, Thread, Search, Profile,
+  Notifications, Followees, User Timeline, Custom Request, and Author Context
+  therefore use the same scrollbar inset.
 - Tool-style tab scroll roots (`.data-tab`, `.settings-tab`, `.new-tab`,
-  `.relay-monitor`, and `.relay-settings`) share the same inline-end margin so
-  their scrollbar tracks sit at the same frame distance as Notifications.
+  `.relay-monitor`, and `.relay-settings`) use the same inline-end margin.
 - `.pane-body` does not add inline padding on the scroll axis. Block-axis
   padding may remain for vertical rhythm.
 - The scroll owner is the layout root for vertical movement. It is not the
@@ -45,13 +45,14 @@ without overlapping text or controls.
 ## Tokens
 
 ```css
---scroll-track-edge: 0px;
+--scroll-track-edge: var(--space-2);
 --scroll-content-inset: var(--space-3);
 ```
 
 Apply `padding-inline-end: var(--scroll-content-inset)` on inner content
-wrappers listed in `scroll-layout.css`; apply the track edge as the scroll
-owner's inline-end padding only when a surface needs extra clearance.
+wrappers listed in `scroll-layout.css`; apply the track edge to the shared feed
+scroller wrapper or to a tool root margin so the scroll owner itself moves away
+from split handles.
 
 ## Surfaces
 

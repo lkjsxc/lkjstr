@@ -1,13 +1,17 @@
 :root {
-  --scroll-track-edge: 0px;
+  --scroll-track-edge: var(--space-2);
   --scroll-content-inset: var(--space-3);
+}
+
+.event-list__scroller {
+  box-sizing: border-box;
+  padding-inline-end: var(--scroll-track-edge);
 }
 
 .event-list__viewport,
 .notification-list-scroll {
   box-sizing: border-box;
   overflow-x: clip;
-  padding-inline-end: var(--scroll-track-edge);
   scrollbar-gutter: stable;
 }
 
@@ -19,7 +23,7 @@
 .relay-monitor,
 .relay-settings {
   box-sizing: border-box;
-  padding-inline-end: var(--scroll-track-edge);
+  padding-inline-end: 0;
   padding-inline-start: var(--scroll-content-inset);
   scrollbar-gutter: stable;
 }
@@ -44,11 +48,11 @@
 .new-tab,
 .relay-monitor,
 .relay-settings {
-  margin-inline-end: var(--scroll-content-inset);
+  margin-inline-end: var(--scroll-track-edge);
 }
 
 .feed-tab {
-  --scroll-track-edge: 0px;
+  --scroll-track-edge: var(--space-2);
   display: flex;
   flex-direction: column;
   gap: var(--space-3);
