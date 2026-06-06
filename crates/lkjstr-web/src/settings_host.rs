@@ -11,11 +11,11 @@ use lkjstr_ui::{
 };
 
 use crate::{
-    settings_host_store::open_settings_store,
+    host_status::{browser_now_ms, problem_status},
+    sqlite_host_store::with_sqlite_store,
     sqlite_store::{
         sqlite_setting_delete, sqlite_setting_put, sqlite_settings_all, sqlite_settings_replace_all,
     },
-    storage_worker::DEFAULT_WORKER_URL,
 };
 
 #[derive(Clone)]
@@ -28,10 +28,6 @@ struct SettingsHost {
 struct ImportRow {
     key: String,
     value: Value,
-}
-
-pub fn settings_provider(db_name: String) -> SettingsProvider {
-    settings_provider_with_worker_url(db_name, DEFAULT_WORKER_URL.to_owned())
 }
 
 pub fn settings_provider_with_worker_url(db_name: String, worker_url: String) -> SettingsProvider {
@@ -64,22 +60,26 @@ async fn save_setting(host: &SettingsHost, command: SettingsValueCommand) {
             .complete(load_result(host, "Invalid setting value").await);
         return;
     };
-    let status = match open_store(host).await {
-        StorageOutcome::Ok(store) => match sqlite_setting_put(&store, &row).await {
-            StorageOutcome::Ok(()) => format!("Saved {}", row.key),
-            outcome => problem_status("Save failed", outcome),
-        },
+    let key = row.key.clone();
+    let status = match with_sqlite_store(&host.db_name, &host.worker_url, |store| async move {
+        sqlite_setting_put(&store, &row).await
+    })
+    .await
+    {
+        StorageOutcome::Ok(()) => format!("Saved {key}"),
         outcome => problem_status("Save failed", outcome),
     };
     command.complete.complete(load_result(host, &status).await);
 }
 
 async fn reset_setting(host: &SettingsHost, command: SettingsKeyCommand) {
-    let status = match open_store(host).await {
-        StorageOutcome::Ok(store) => match sqlite_setting_delete(&store, &command.key).await {
-            StorageOutcome::Ok(()) => format!("Reset {}", command.key),
-            outcome => problem_status("Reset failed", outcome),
-        },
+    let key = command.key.clone();
+    let status = match with_sqlite_store(&host.db_name, &host.worker_url, |store| async move {
+        sqlite_setting_delete(&store, &key).await
+    })
+    .await
+    {
+        StorageOutcome::Ok(()) => format!("Reset {}", command.key),
         outcome => problem_status("Reset failed", outcome),
     };
     command.complete.complete(load_result(host, &status).await);
@@ -95,11 +95,13 @@ async fn import_settings(host: &SettingsHost, command: SettingsImportCommand) {
             return;
         }
     };
-    let status = match open_store(host).await {
-        StorageOutcome::Ok(store) => match sqlite_settings_replace_all(&store, &rows).await {
-            StorageOutcome::Ok(()) => format!("Imported {} settings", rows.len()),
-            outcome => problem_status("Settings import failed", outcome),
-        },
+    let imported = rows.len();
+    let status = match with_sqlite_store(&host.db_name, &host.worker_url, |store| async move {
+        sqlite_settings_replace_all(&store, &rows).await
+    })
+    .await
+    {
+        StorageOutcome::Ok(()) => format!("Imported {imported} settings"),
         outcome => problem_status("Settings import failed", outcome),
     };
     command.complete.complete(load_result(host, &status).await);
@@ -125,27 +127,12 @@ async fn load_result(host: &SettingsHost, status: &str) -> SettingsResult {
 }
 
 async fn load_overrides(host: &SettingsHost) -> StorageOutcome<Vec<SettingOverrideRecord>> {
-    match open_store(host).await {
-        StorageOutcome::Ok(store) => sqlite_settings_all(&store).await,
-        outcome => outcome.map(|_| Vec::new()),
-    }
-}
-
-async fn open_store(host: &SettingsHost) -> StorageOutcome<crate::sqlite_store::SqliteStore> {
-    open_settings_store(&host.db_name, &host.worker_url).await
+    with_sqlite_store(&host.db_name, &host.worker_url, |store| async move {
+        sqlite_settings_all(&store).await
+    })
+    .await
 }
 
 fn defaults() -> Vec<SettingRecord> {
     default_setting_records(browser_now_ms())
-}
-
-fn problem_status<T>(prefix: &str, outcome: StorageOutcome<T>) -> String {
-    outcome.problem().map_or_else(
-        || prefix.to_owned(),
-        |problem| format!("{prefix}: {}", problem.reason),
-    )
-}
-
-fn browser_now_ms() -> u64 {
-    js_sys::Date::now().max(0.0) as u64
 }

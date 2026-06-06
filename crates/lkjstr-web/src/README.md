@@ -8,24 +8,30 @@ Source files expose Rust application behavior to the browser through
 ## Table of Contents
 
 - `accounts_active.rs`: local-storage active account helper.
-- `accounts_host.rs`: browser-backed Accounts command provider.
+- `accounts_host.rs`: SQLite-backed Accounts command provider.
 - `feed_geometry/`: feed geometry, fragment, measurement, and anchor bridge.
 - `follow_graph/`: target follow-list parser bridge.
+- `host_providers.rs`: Rust UI host provider assembly.
+- `host_status.rs`: shared host status and browser time helpers.
 - `lib.rs`: public WASM exports.
-- `indexed_db/`: browser IndexedDB host adapter.
+- `indexed_db/`: browser IndexedDB host adapter for narrow exports and tests.
 - `nip07_host.rs`: browser NIP-07 public-key adapter.
 - `protocol_bridge.rs`: protocol bridge operations.
 - `relay_score/`: serializable relay read score bridge.
 - `scan_model/`: serializable scan density planning bridge.
 - `relay_host/`: relay WebSocket and browser timeout host adapters.
-- `relay_settings_host.rs`: browser-backed Relay Settings command provider.
+- `relay_selection.rs`: local selected relay-set preference helper.
+- `relay_settings_host.rs`: SQLite-backed Relay Settings command provider.
 - `response.rs`: structured JavaScript response helpers.
-- `settings_host.rs`: browser-backed Settings command provider.
+- `settings_host.rs`: SQLite-backed Settings command provider.
+- `sqlite_host_store.rs`: owned open, close, and scoped SQLite store helper.
 - `sqlite_store/`: worker-backed SQLite repository calls.
 - `storage_worker/`: Rust host adapter for the SQLite storage worker.
-- `tweet_host.rs`: browser-backed Tweet draft command provider.
+- `tweet_host.rs`: SQLite-backed Tweet draft command provider.
 - `upload_discovery.rs`: browser `fetch` NIP-96 endpoint resolution.
-- `upload_settings_host.rs`: browser-backed Upload Settings command provider.
+- `upload_settings_host.rs`: SQLite-backed Upload Settings command provider.
+- `workspace_host.rs`: SQLite-backed workspace startup and persistence helper.
 
-`lib.rs` also owns the WASM start hook that loads workspace startup state from
-IndexedDB before mounting the Rust UI shell.
+`lib.rs` owns the WASM start hook. The start hook asks `host_providers.rs` to
+load workspace startup state from the SQLite worker before mounting the Rust UI
+shell.

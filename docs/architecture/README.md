@@ -27,6 +27,7 @@ state, storage, relay orchestration, cleanup, and Rust/WASM migration.
 - [network/request-budget/README.md](network/request-budget/README.md): effective relay limits.
 - [network/subscription-orchestration/README.md](network/subscription-orchestration/README.md): Demand and Lease planning.
 - [rust-wasm/cutover/README.md](rust-wasm/cutover/README.md): parity and deletion ledgers.
+- [rust-wasm/surface-cutover-order.md](rust-wasm/surface-cutover-order.md): dependency-ranked cutover order.
 
 ## All Files
 
@@ -89,7 +90,7 @@ state, storage, relay orchestration, cleanup, and Rust/WASM migration.
 `rust-wasm/cutover/build-contract.md` `rust-wasm/cutover/deletion-ledger.md` `rust-wasm/cutover/parity-ledger.md`
 `rust-wasm/host-boundary.md` `rust-wasm/memory-ownership.md` `rust-wasm/protocol-kernel.md`
 `rust-wasm/relay-runtime.md` `rust-wasm/source-map.md` `rust-wasm/status.md`
-`rust-wasm/storage-kernel.md` `rust-wasm/ui-runtime.md` `rust-wasm/verification.md`
+`rust-wasm/storage-kernel.md` `rust-wasm/surface-cutover-order.md` `rust-wasm/ui-runtime.md` `rust-wasm/verification.md`
 `source-map.md` `workspace/README.md` `workspace/pane-chrome-scope.md`
 `workspace/pane-drop-target.md` `workspace/resize.md` `workspace/scroll-layout.md`
 `workspace/scroll-surface-audit.md` `workspace/tab-body-mount.md` `workspace/tab-dragging.md`

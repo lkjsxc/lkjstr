@@ -7,56 +7,73 @@ use lkjstr_ui::{
     RelaySetIdCommand, RelaySettingsCommand, RelaySettingsProvider, RelaySettingsResult,
 };
 
-use crate::indexed_db::relay_set_store;
+use crate::{
+    host_status::{browser_now_ms, problem_status},
+    relay_selection::{selected_relay_set_id, set_selected_relay_set_id},
+    sqlite_host_store::with_sqlite_store,
+    sqlite_store::{sqlite_relay_sets_all, sqlite_relay_sets_put_all},
+};
 
-const SELECTED_RELAY_SET_KEY: &str = "lkjstr.defaultRelaySetId";
 const DEFAULT_USER_SET_ID: &str = "public-default";
 
-pub fn relay_settings_provider(db_name: String) -> RelaySettingsProvider {
+#[derive(Clone)]
+struct RelayHost {
+    db_name: String,
+    worker_url: String,
+}
+
+pub fn relay_settings_provider_with_worker_url(
+    db_name: String,
+    worker_url: String,
+) -> RelaySettingsProvider {
+    let host = RelayHost {
+        db_name,
+        worker_url,
+    };
     RelaySettingsProvider::new(move |command| {
-        let db_name = db_name.clone();
+        let host = host.clone();
         wasm_bindgen_futures::spawn_local(async move {
-            run_command(&db_name, command).await;
+            run_command(&host, command).await;
         });
     })
 }
 
-async fn run_command(db_name: &str, command: RelaySettingsCommand) {
+async fn run_command(host: &RelayHost, command: RelaySettingsCommand) {
     match command {
-        RelaySettingsCommand::Load(complete) => complete.complete(load_result(db_name, "").await),
+        RelaySettingsCommand::Load(complete) => complete.complete(load_result(host, "").await),
         RelaySettingsCommand::Add(command) => {
-            let sets = apply_change(db_name, |sets, now| {
+            let sets = apply_change(host, |sets, now| {
                 add_relay(&sets, &command.set_id, &command.input, now)
             })
             .await;
-            command.complete.complete(load_after(db_name, sets).await);
+            command.complete.complete(load_after(host, sets).await);
         }
         RelaySettingsCommand::Patch(command) => {
-            let sets = apply_change(db_name, |sets, now| {
+            let sets = apply_change(host, |sets, now| {
                 patch_relay(&sets, &command.set_id, &command.url, command.patch, now)
             })
             .await;
-            command.complete.complete(load_after(db_name, sets).await);
+            command.complete.complete(load_after(host, sets).await);
         }
         RelaySettingsCommand::Remove(command) => {
-            let sets = apply_change(db_name, |sets, now| {
+            let sets = apply_change(host, |sets, now| {
                 remove_relay(&sets, &command.set_id, &command.url, now)
             })
             .await;
-            command.complete.complete(load_after(db_name, sets).await);
+            command.complete.complete(load_after(host, sets).await);
         }
         RelaySettingsCommand::Restore(command) => {
             let now = browser_now_ms();
-            let loaded = load_sets(db_name, now).await;
+            let loaded = load_sets(host, now).await;
             let sets = loaded.map(|sets| restore_default_relay_set(&sets, command.purpose, now));
-            command.complete.complete(load_after(db_name, sets).await);
+            command.complete.complete(load_after(host, sets).await);
         }
-        RelaySettingsCommand::MakeDefault(command) => make_default(db_name, command).await,
+        RelaySettingsCommand::MakeDefault(command) => make_default(host, command).await,
     }
 }
 
-async fn make_default(db_name: &str, command: RelaySetIdCommand) {
-    let loaded = load_sets(db_name, browser_now_ms()).await;
+async fn make_default(host: &RelayHost, command: RelaySetIdCommand) {
+    let loaded = load_sets(host, browser_now_ms()).await;
     let status = match loaded {
         StorageOutcome::Ok(sets) => match ensure_user_set(&sets, &command.set_id) {
             Ok(()) => {
@@ -70,17 +87,15 @@ async fn make_default(db_name: &str, command: RelaySetIdCommand) {
         },
         outcome => problem_status("Relay sets unavailable", outcome),
     };
-    command
-        .complete
-        .complete(load_result(db_name, &status).await);
+    command.complete.complete(load_result(host, &status).await);
 }
 
 async fn apply_change(
-    db_name: &str,
+    host: &RelayHost,
     change: impl FnOnce(Vec<RelaySet>, u64) -> Result<Vec<RelaySet>, RelaySetError>,
 ) -> StorageOutcome<Vec<RelaySet>> {
     let now = browser_now_ms();
-    let sets = match load_sets(db_name, now).await {
+    let sets = match load_sets(host, now).await {
         StorageOutcome::Ok(sets) => sets,
         outcome => return outcome,
     };
@@ -95,18 +110,18 @@ async fn apply_change(
     }
 }
 
-async fn load_after(db_name: &str, sets: StorageOutcome<Vec<RelaySet>>) -> RelaySettingsResult {
+async fn load_after(host: &RelayHost, sets: StorageOutcome<Vec<RelaySet>>) -> RelaySettingsResult {
     match sets {
         StorageOutcome::Ok(rows) => {
-            let status = match relay_set_store::relay_sets_put_all(db_name, &rows).await {
+            let status = match save_sets(host, &rows).await {
                 StorageOutcome::Ok(()) => "Relay settings saved.".to_owned(),
                 outcome => problem_status("Relay settings save failed", outcome),
             };
-            load_result(db_name, &status).await
+            load_result(host, &status).await
         }
         outcome => {
             load_result(
-                db_name,
+                host,
                 &problem_status("Relay settings change failed", outcome),
             )
             .await
@@ -114,11 +129,10 @@ async fn load_after(db_name: &str, sets: StorageOutcome<Vec<RelaySet>>) -> Relay
     }
 }
 
-async fn load_result(db_name: &str, status: &str) -> RelaySettingsResult {
-    match load_sets(db_name, browser_now_ms()).await {
+async fn load_result(host: &RelayHost, status: &str) -> RelaySettingsResult {
+    match load_sets(host, browser_now_ms()).await {
         StorageOutcome::Ok(sets) => {
-            let selected = resolve_selected_id(&sets);
-            RelaySettingsResult::new(sets, selected, status.to_owned())
+            RelaySettingsResult::new(sets.clone(), resolve_selected_id(&sets), status.to_owned())
         }
         outcome => RelaySettingsResult::new(
             Vec::new(),
@@ -128,11 +142,11 @@ async fn load_result(db_name: &str, status: &str) -> RelaySettingsResult {
     }
 }
 
-async fn load_sets(db_name: &str, now: u64) -> StorageOutcome<Vec<RelaySet>> {
-    match relay_set_store::relay_sets_all(db_name).await {
+async fn load_sets(host: &RelayHost, now: u64) -> StorageOutcome<Vec<RelaySet>> {
+    match read_sets(host).await {
         StorageOutcome::Ok(rows) if rows.is_empty() => {
             let seeded = seed_relay_sets(&[], now);
-            match relay_set_store::relay_sets_put_all(db_name, &seeded).await {
+            match save_sets(host, &seeded).await {
                 StorageOutcome::Ok(()) => StorageOutcome::Ok(sorted_relay_sets(seeded)),
                 outcome => outcome.map(|_| Vec::new()),
             }
@@ -140,6 +154,20 @@ async fn load_sets(db_name: &str, now: u64) -> StorageOutcome<Vec<RelaySet>> {
         StorageOutcome::Ok(rows) => StorageOutcome::Ok(seed_relay_sets(&rows, now)),
         outcome => outcome,
     }
+}
+
+async fn read_sets(host: &RelayHost) -> StorageOutcome<Vec<RelaySet>> {
+    with_sqlite_store(&host.db_name, &host.worker_url, |store| async move {
+        sqlite_relay_sets_all(&store).await
+    })
+    .await
+}
+
+async fn save_sets(host: &RelayHost, rows: &[RelaySet]) -> StorageOutcome<()> {
+    with_sqlite_store(&host.db_name, &host.worker_url, |store| async move {
+        sqlite_relay_sets_put_all(&store, rows).await
+    })
+    .await
 }
 
 fn resolve_selected_id(sets: &[RelaySet]) -> String {
@@ -160,38 +188,10 @@ fn resolve_selected_id(sets: &[RelaySet]) -> String {
     fallback
 }
 
-fn selected_relay_set_id() -> Option<String> {
-    local_storage()?
-        .get_item(SELECTED_RELAY_SET_KEY)
-        .ok()
-        .flatten()
-}
-
-fn set_selected_relay_set_id(id: &str) {
-    if let Some(storage) = local_storage() {
-        let _result = storage.set_item(SELECTED_RELAY_SET_KEY, id);
-    }
-}
-
-fn local_storage() -> Option<web_sys::Storage> {
-    web_sys::window()?.local_storage().ok().flatten()
-}
-
-fn problem_status<T>(prefix: &str, outcome: StorageOutcome<T>) -> String {
-    outcome.problem().map_or_else(
-        || prefix.to_owned(),
-        |problem| format!("{prefix}: {}", problem.reason),
-    )
-}
-
 const fn relay_error_reason(error: RelaySetError) -> &'static str {
     match error {
         RelaySetError::InvalidUrl => "invalid-url",
         RelaySetError::SetNotFound => "set-not-found",
         RelaySetError::NotUserSet => "not-user-set",
     }
-}
-
-fn browser_now_ms() -> u64 {
-    js_sys::Date::now().max(0.0) as u64
 }

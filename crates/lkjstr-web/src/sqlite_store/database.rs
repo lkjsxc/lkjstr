@@ -133,6 +133,10 @@ impl SqliteStore {
             .map(|_| ())
     }
 
+    pub async fn close(&self) -> StorageOutcome<()> {
+        self.client.close().await
+    }
+
     pub fn step(&self, id: &'static str, params: Option<SqlParams>) -> StorageOutcome<SqlStep> {
         statement(id).map(|statement| SqlStep {
             statement: statement.sql.to_owned(),

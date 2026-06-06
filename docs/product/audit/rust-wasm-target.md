@@ -7,22 +7,22 @@ that are partial or not implemented.
 
 ## Partial Rows
 
-| Audit row                                 | Next source paths                                                                     | Closing gate                                                               |
-| ----------------------------------------- | ------------------------------------------------------------------------------------- | -------------------------------------------------------------------------- |
-| Rust/WASM client ownership                | `docs/architecture/runtime-ownership.md`, `crates/lkjstr-web/`, `src/lib/tabs/`       | `pnpm rust-wasm:quiet` plus focused surface tests                          |
-| Rust/WASM architecture subtree            | `docs/architecture/rust-wasm/status.md`, `docs/architecture/rust-wasm/cutover/`       | `pnpm check:repo`                                                          |
-| Rust feed query input builders            | `crates/lkjstr-app/src/feed/`, `crates/lkjstr-app/tests/*input*`                      | `cargo test -p lkjstr-app -- feed`                                         |
-| Rust Custom Request parser                | `crates/lkjstr-app/src/custom_request/`, `crates/lkjstr-web/src/`                     | `cargo test -p lkjstr-app -- custom_request` and WASM custom request tests |
-| Rust workspace/settings IndexedDB adapter | `crates/lkjstr-web/src/storage/`, `src/lib/storage/sqlite-opfs/`                      | browser storage WASM tests and `pnpm test -- tests/unit/settings`          |
+| Audit row                                 | Next source paths                                                                               | Closing gate                                                               |
+| ----------------------------------------- | ----------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------- |
+| Rust/WASM client ownership                | `docs/architecture/runtime-ownership.md`, `crates/lkjstr-web/`, `src/lib/tabs/`                 | `pnpm rust-wasm:quiet` plus focused surface tests                          |
+| Rust/WASM architecture subtree            | `docs/architecture/rust-wasm/status.md`, `docs/architecture/rust-wasm/cutover/`                 | `pnpm check:repo`                                                          |
+| Rust feed query input builders            | `crates/lkjstr-app/src/feed/`, `crates/lkjstr-app/tests/*input*`                                | `cargo test -p lkjstr-app -- feed`                                         |
+| Rust Custom Request parser                | `crates/lkjstr-app/src/custom_request/`, `crates/lkjstr-web/src/`                               | `cargo test -p lkjstr-app -- custom_request` and WASM custom request tests |
+| Rust workspace/settings IndexedDB adapter | `crates/lkjstr-web/src/storage/`, `src/lib/storage/sqlite-opfs/`                                | browser storage WASM tests and `pnpm test -- tests/unit/settings`          |
 | Rust SQLite OPFS storage target           | `crates/lkjstr-storage/`, `crates/lkjstr-web/src/sqlite_store/`, `src/lib/storage/sqlite-opfs/` | `cargo test -p lkjstr-storage` and SQLite OPFS focused tests               |
-| Rust relay client and browser adapters    | `crates/lkjstr-relays/src/client/`, `crates/lkjstr-web/src/relay*`, `src/lib/relays/` | relay WASM host tests and relay unit tests                                 |
-| Rust Leptos workspace shell               | `crates/lkjstr-ui/`, `crates/lkjstr-web/`, `src/lib/tabs/` deletion ledger            | `trunk build --release` plus parity surface tests                          |
-| Rust Settings surface                     | `crates/lkjstr-ui/`, `crates/lkjstr-domain/src/settings*`, `src/lib/settings/`        | settings store tests plus `pnpm rust-wasm:quiet`                           |
-| Rust Accounts surface                     | `crates/lkjstr-ui/`, `crates/lkjstr-domain/src/accounts*`, `src/lib/accounts/`        | account tests plus secret redaction tests                                  |
-| Rust Relay Settings surface               | `crates/lkjstr-ui/`, `crates/lkjstr-domain/src/relays*`, `src/lib/relays/`            | relay settings and relay storage tests                                     |
-| Rust Upload Settings surface              | `crates/lkjstr-ui/`, `crates/lkjstr-protocol/src/upload*`, `src/lib/media/`           | protocol upload tests plus Upload Settings tests                           |
-| Rust Tweet draft surface                  | `crates/lkjstr-ui/`, `crates/lkjstr-domain/src/tweet*`, `src/lib/tweet/`              | Tweet draft and publish queue tests                                        |
-| Docker Rust/WASM verification             | `Dockerfile`, `docker-compose.yml`, `crates/lkjstr-xtask/`                            | Docker final gate from operations verification                             |
+| Rust relay client and browser adapters    | `crates/lkjstr-relays/src/client/`, `crates/lkjstr-web/src/relay*`, `src/lib/relays/`           | relay WASM host tests and relay unit tests                                 |
+| Rust Leptos workspace shell               | `crates/lkjstr-ui/`, `crates/lkjstr-web/`, `src/lib/tabs/` deletion ledger                      | `trunk build --release` plus parity surface tests                          |
+| Rust Settings surface                     | `crates/lkjstr-ui/`, `crates/lkjstr-domain/src/settings*`, `src/lib/settings/`                  | settings store tests plus `pnpm rust-wasm:quiet`                           |
+| Rust Accounts surface                     | `crates/lkjstr-ui/`, `crates/lkjstr-domain/src/accounts*`, `src/lib/accounts/`                  | account tests plus secret redaction tests                                  |
+| Rust Relay Settings surface               | `crates/lkjstr-ui/`, `crates/lkjstr-domain/src/relays*`, `src/lib/relays/`                      | relay settings and relay storage tests                                     |
+| Rust Upload Settings surface              | `crates/lkjstr-ui/`, `crates/lkjstr-protocol/src/upload*`, `src/lib/media/`                     | protocol upload tests plus Upload Settings tests                           |
+| Rust Tweet draft surface                  | `crates/lkjstr-ui/`, `crates/lkjstr-domain/src/tweet*`, `src/lib/tweet/`                        | Tweet draft and publish queue tests                                        |
+| Docker Rust/WASM verification             | `Dockerfile`, `docker-compose.yml`, `crates/lkjstr-xtask/`                                      | Docker final gate from operations verification                             |
 
 ## Protected Storage Wiring Checklist
 
@@ -35,8 +35,10 @@ Source paths:
 
 Data ownership:
 
-- startup and workspace persistence use `workspaces` and `tab_states`.
-- Accounts use `accounts` and `local_account_secrets`.
+- startup and workspace persistence use `workspaces` and `tab_states` through
+  `workspace_host.rs`.
+- Accounts use `accounts` and `local_account_secrets` through
+  `accounts_host.rs`.
 - Relay Settings use `relay_sets` plus local selected-set preference until the
   selected set has a protected table row.
 - Upload Settings and Settings use flat `settings` rows.

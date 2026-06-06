@@ -84,13 +84,13 @@ bounded retry sources; shipped Svelte wiring remains the visible surface.
 
 ## Storage Ledger
 
-| Storage family      | Rust status     | Required Rust modules             | Proof before cutover                                            |
-| ------------------- | --------------- | --------------------------------- | --------------------------------------------------------------- |
+| Storage family      | Rust status     | Required Rust modules             | Proof before cutover                                                                            |
+| ------------------- | --------------- | --------------------------------- | ----------------------------------------------------------------------------------------------- |
 | Protected records   | partial         | `storage`, `web`, `app`, `ui`     | SQLite startup, workspace, settings, accounts, relay sets, drafts, worker tests, recovery tests |
-| Event cache         | not implemented | `storage`, `web`, `app`, `relays` | event/tag/provenance tests and cache-first browser tests        |
-| Feed evidence       | not implemented | `storage`, `app`, `relays`        | coverage, cursor, scan-hint, compaction invalidation            |
-| Diagnostics and log | partial         | `storage`, `web`, `app`, `ui`     | Stats inventory is wired; lkjstr Log, pressure, and failure tests remain |
-| Relay optimizer     | partial         | `relays`, `app`, `storage`, `web` | score, scan hint, route trust, Stats, and synthetic relay tests |
+| Event cache         | not implemented | `storage`, `web`, `app`, `relays` | event/tag/provenance tests and cache-first browser tests                                        |
+| Feed evidence       | not implemented | `storage`, `app`, `relays`        | coverage, cursor, scan-hint, compaction invalidation                                            |
+| Diagnostics and log | partial         | `storage`, `web`, `app`, `ui`     | Stats inventory is wired; lkjstr Log, pressure, and failure tests remain                        |
+| Relay optimizer     | partial         | `relays`, `app`, `storage`, `web` | score, scan hint, route trust, Stats, and synthetic relay tests                                 |
 
 ## Product Rule
 

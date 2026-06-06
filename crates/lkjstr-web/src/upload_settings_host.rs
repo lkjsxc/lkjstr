@@ -11,76 +11,77 @@ use lkjstr_ui::{
 };
 use serde_json::Value;
 
-use crate::indexed_db::settings_store;
-use crate::upload_discovery::{resolve_blossom_upload_endpoint, resolve_upload_endpoint};
+use crate::{
+    host_status::{browser_now_ms, problem_status},
+    sqlite_host_store::with_sqlite_store,
+    sqlite_store::{sqlite_setting_put, sqlite_settings_all},
+    upload_discovery::{resolve_blossom_upload_endpoint, resolve_upload_endpoint},
+};
 
-pub fn upload_settings_provider(db_name: String) -> UploadSettingsProvider {
+#[derive(Clone)]
+struct UploadHost {
+    db_name: String,
+    worker_url: String,
+}
+
+pub fn upload_settings_provider_with_worker_url(
+    db_name: String,
+    worker_url: String,
+) -> UploadSettingsProvider {
+    let host = UploadHost {
+        db_name,
+        worker_url,
+    };
     UploadSettingsProvider::new(move |command| {
-        let db_name = db_name.clone();
+        let host = host.clone();
         wasm_bindgen_futures::spawn_local(async move {
-            run_command(&db_name, command).await;
+            run_command(&host, command).await;
         });
     })
 }
 
-async fn run_command(db_name: &str, command: UploadSettingsCommand) {
+async fn run_command(host: &UploadHost, command: UploadSettingsCommand) {
     match command {
-        UploadSettingsCommand::Load(complete) => {
-            complete.complete(load_result(db_name, "").await);
-        }
-        UploadSettingsCommand::SaveProvider(command) => save_provider(db_name, command).await,
-        UploadSettingsCommand::SaveCustom(command) => save_custom(db_name, command).await,
-        UploadSettingsCommand::SaveNoTransform(command) => {
-            save_no_transform(db_name, command).await
-        }
+        UploadSettingsCommand::Load(complete) => complete.complete(load_result(host, "").await),
+        UploadSettingsCommand::SaveProvider(command) => save_provider(host, command).await,
+        UploadSettingsCommand::SaveCustom(command) => save_custom(host, command).await,
+        UploadSettingsCommand::SaveNoTransform(command) => save_no_transform(host, command).await,
         UploadSettingsCommand::Discover(command) => discover(command).await,
     }
 }
 
-async fn save_provider(db_name: &str, command: UploadProviderCommand) {
+async fn save_provider(host: &UploadHost, command: UploadProviderCommand) {
     let value = Value::String(upload_provider_key(command.provider).to_owned());
-    let status = save_value(
-        db_name,
-        "tweet.mediaUploadProvider",
-        value,
-        "Provider saved",
-    )
-    .await;
-    command
-        .complete
-        .complete(load_result(db_name, &status).await);
+    let status = save_value(host, "tweet.mediaUploadProvider", value, "Provider saved").await;
+    command.complete.complete(load_result(host, &status).await);
 }
 
-async fn save_custom(db_name: &str, command: UploadTextCommand) {
+async fn save_custom(host: &UploadHost, command: UploadTextCommand) {
     if !valid_custom_upload_server(&command.text) {
         command
             .complete
-            .complete(load_result(db_name, "Custom upload server must be blank or HTTPS.").await);
+            .complete(load_result(host, "Custom upload server must be blank or HTTPS.").await);
         return;
     }
     let status = save_value(
-        db_name,
+        host,
         "tweet.mediaUploadCustomServer",
         Value::String(command.text),
         "Custom server saved.",
     )
     .await;
-    command
-        .complete
-        .complete(load_result(db_name, &status).await);
+    command.complete.complete(load_result(host, &status).await);
 }
 
-async fn save_no_transform(db_name: &str, command: UploadBoolCommand) {
+async fn save_no_transform(host: &UploadHost, command: UploadBoolCommand) {
     let status = save_value(
-        db_name,
+        host,
         "tweet.mediaUploadNoTransform",
         Value::Bool(command.value),
         "No transform setting saved.",
     )
     .await;
-    command
-        .complete
-        .complete(load_result(db_name, &status).await);
+    command.complete.complete(load_result(host, &status).await);
 }
 
 async fn discover(command: UploadDiscoverCommand) {
@@ -89,10 +90,9 @@ async fn discover(command: UploadDiscoverCommand) {
     } else if !valid_custom_upload_server(&command.settings.custom_server) {
         "Custom upload server must be blank or HTTPS.".to_owned()
     } else {
-        match endpoint_status(&command).await {
-            Ok(status) => status,
-            Err(error) => error,
-        }
+        endpoint_status(&command)
+            .await
+            .unwrap_or_else(|error| error)
     };
     command
         .complete
@@ -109,12 +109,15 @@ async fn endpoint_status(command: &UploadDiscoverCommand) -> Result<String, Stri
         .map(|endpoint| format!("Discovery OK: {endpoint}"))
 }
 
-async fn save_value(db_name: &str, key: &str, value: Value, ok_status: &str) -> String {
-    let now = browser_now_ms();
-    let Some(row) = setting_override_for_value(key, value, now) else {
+async fn save_value(host: &UploadHost, key: &str, value: Value, ok_status: &str) -> String {
+    let Some(row) = setting_override_for_value(key, value, browser_now_ms()) else {
         return "Invalid upload setting value.".to_owned();
     };
-    match settings_store::setting_put(db_name, &row).await {
+    let outcome = with_sqlite_store(&host.db_name, &host.worker_url, |store| async move {
+        sqlite_setting_put(&store, &row).await
+    })
+    .await;
+    match outcome {
         StorageOutcome::Ok(()) => {
             notify_settings_changed();
             ok_status.to_owned()
@@ -123,8 +126,12 @@ async fn save_value(db_name: &str, key: &str, value: Value, ok_status: &str) -> 
     }
 }
 
-async fn load_result(db_name: &str, status: &str) -> UploadSettingsResult {
-    match settings_store::settings_all(db_name).await {
+async fn load_result(host: &UploadHost, status: &str) -> UploadSettingsResult {
+    match with_sqlite_store(&host.db_name, &host.worker_url, |store| async move {
+        sqlite_settings_all(&store).await
+    })
+    .await
+    {
         StorageOutcome::Ok(overrides) => {
             let records = merge_setting_overrides(&overrides, browser_now_ms());
             UploadSettingsResult::new(settings_from_records(&records), status.to_owned())
@@ -161,21 +168,10 @@ fn value_bool(records: &[SettingRecord], key: &str) -> Option<bool> {
         .and_then(|row| row.value.as_bool())
 }
 
-fn problem_status<T>(prefix: &str, outcome: StorageOutcome<T>) -> String {
-    outcome.problem().map_or_else(
-        || prefix.to_owned(),
-        |problem| format!("{prefix}: {}", problem.reason),
-    )
-}
-
 fn notify_settings_changed() {
     if let Some(window) = web_sys::window()
         && let Ok(event) = web_sys::Event::new("lkjstr-settings-changed")
     {
         let _result = window.dispatch_event(&event);
     }
-}
-
-fn browser_now_ms() -> u64 {
-    js_sys::Date::now().max(0.0) as u64
 }

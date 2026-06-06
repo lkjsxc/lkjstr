@@ -71,6 +71,19 @@ pub async fn sqlite_relay_sets_all(store: &SqliteStore) -> StorageOutcome<Vec<Re
     StorageOutcome::Ok(sorted_relay_sets(out))
 }
 
+pub async fn sqlite_relay_sets_put_all(
+    store: &SqliteStore,
+    rows: &[RelaySetRecord],
+) -> StorageOutcome<()> {
+    for row in rows {
+        match sqlite_relay_set_put(store, row).await {
+            StorageOutcome::Ok(()) => {}
+            outcome => return outcome,
+        }
+    }
+    StorageOutcome::Ok(())
+}
+
 fn corrupt<T>(operation_id: &'static str) -> StorageOutcome<T> {
     StorageOutcome::Corrupt(lkjstr_storage::StorageProblem::new(
         lkjstr_storage::StorageOperation::Read,

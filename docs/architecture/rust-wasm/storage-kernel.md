@@ -32,21 +32,22 @@ terminates a browser `Worker`, sends typed envelopes, enforces request
 deadlines, supports explicit cancellation, drops callbacks on close, maps worker
 outcomes into the storage outcome contract, and records late response counters.
 It also has protected SQLite repository calls for settings, workspaces, tab
-states plus ledger, accounts, local secrets, relay sets, and Tweet drafts. Core
-event-cache repository calls now cover atomic event/tag/relay writes, event
-lookups, notification owner reads and marks, feed cursor reads, feed coverage
-reads, fresh scan-hint reads, relay diagnostic summaries, relay information,
-relay suggestions, author routes, route blocks, jobs, and app log rows. The
-active product wiring target is Rust startup, workspace persistence, Accounts,
-Relay Settings, Upload Settings, Tweet drafts, and Stats through those SQLite
-worker calls before feed runtimes move.
+states plus ledger, accounts, local secrets, relay sets, and Tweet drafts. Rust
+startup, workspace persistence, Accounts, Relay Settings, Upload Settings,
+Tweet drafts, and Stats inventory now use those SQLite worker calls. Core
+event-cache repository calls cover atomic event/tag/relay writes, event lookups,
+notification owner reads and marks, feed cursor reads, feed coverage reads,
+fresh scan-hint reads, relay diagnostic summaries, relay information, relay
+suggestions, author routes, route blocks, jobs, and app log rows. Feed runtimes
+and full diagnostics still need product wiring.
 
 Target now: OPFS-backed SQLite WASM in a dedicated worker. The detailed target
 lives in [../data/sqlite-opfs/README.md](../data/sqlite-opfs/README.md).
 
 Not implemented yet: feed runtime SQLite wiring, cache delete and repair paths,
-retention dispatchers, ledger repair, full ledger and byte inventory
-diagnostics, full browser OPFS matrix tests, and multi-tab lock handling.
+retention dispatchers, ledger repair, active-account storage rows, full ledger
+and byte inventory diagnostics, full browser OPFS matrix tests, and multi-tab
+lock handling.
 
 ## Manifest Contract
 

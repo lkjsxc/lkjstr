@@ -25,30 +25,26 @@ async fn indexed_db_workspace_store_round_trips() -> Result<(), JsValue> {
 }
 
 #[wasm_bindgen_test(async)]
-async fn rust_shell_reads_workspace_startup_from_indexed_db() -> Result<(), JsValue> {
+async fn rust_shell_startup_uses_sqlite_not_indexed_db() -> Result<(), JsValue> {
     reset_shells()?;
     let db_name = test_db_name("workspace-startup");
     let workspace = stored_workspace("Stored Welcome");
     assert_ok(indexed_db::workspace_store::workspace_put(&db_name, &workspace).await)?;
     mount_rust_workspace_shell_from_db(db_name);
     wait_for_shell().await?;
-    assert!(document_text()?.contains("Stored Welcome"));
+    let text = document_text()?;
+    assert!(text.contains("Welcome"));
+    assert!(!text.contains("Stored Welcome"));
     Ok(())
 }
 
 #[wasm_bindgen_test(async)]
-async fn rust_shell_persists_workspace_actions_to_indexed_db() -> Result<(), JsValue> {
+async fn rust_shell_recovers_when_sqlite_worker_is_unavailable() -> Result<(), JsValue> {
     reset_shells()?;
-    let db_name = test_db_name("workspace-write-through");
-    mount_rust_workspace_shell_from_db(db_name.clone());
+    mount_rust_workspace_shell_from_db(test_db_name("workspace-recovery"));
     wait_for_shell().await?;
     click("[data-testid='welcome-open-network-stats']")?;
-    wait_for_saved_tab(&db_name, "Stats").await?;
-    reset_shells()?;
-    mount_rust_workspace_shell_from_db(db_name);
-    wait_for_shell().await?;
-    assert!(document_text()?.contains("Storage inventory"));
-    Ok(())
+    wait_for_text("Storage inventory").await
 }
 
 #[wasm_bindgen_test(async)]
@@ -70,26 +66,6 @@ async fn indexed_db_settings_store_round_trips_and_deletes() -> Result<(), JsVal
     match indexed_db::settings_store::setting_get(&db_name, &row.key).await {
         StorageOutcome::Ok(None) => Ok(()),
         outcome => Err(outcome_error("setting delete failed", outcome.problem())),
-    }
-}
-
-async fn wait_for_saved_tab(db_name: &str, title: &str) -> Result<(), JsValue> {
-    for _ in 0..50 {
-        next_task().await?;
-        if workspace_has_tab(db_name, title).await? {
-            return Ok(());
-        }
-    }
-    Err(js_error("timed out waiting for saved workspace tab"))
-}
-
-async fn workspace_has_tab(db_name: &str, title: &str) -> Result<bool, JsValue> {
-    match indexed_db::workspace_store::workspace_get(db_name, "main").await {
-        StorageOutcome::Ok(Some(workspace)) => {
-            Ok(workspace.tabs.values().any(|tab| tab.title == title))
-        }
-        StorageOutcome::Ok(None) => Ok(false),
-        outcome => Err(outcome_error("workspace poll failed", outcome.problem())),
     }
 }
 
@@ -141,7 +117,7 @@ fn test_db_name(label: &str) -> String {
 }
 
 async fn wait_for_shell() -> Result<(), JsValue> {
-    for _ in 0..50 {
+    for _ in 0..80 {
         next_task().await?;
         if document()?
             .query_selector("[data-testid='rust-workspace-shell']")?
@@ -151,6 +127,16 @@ async fn wait_for_shell() -> Result<(), JsValue> {
         }
     }
     Err(js_error("timed out waiting for rust workspace shell"))
+}
+
+async fn wait_for_text(text: &str) -> Result<(), JsValue> {
+    for _ in 0..80 {
+        next_task().await?;
+        if document_text()?.contains(text) {
+            return Ok(());
+        }
+    }
+    Err(js_error(&format!("timed out waiting for text: {text}")))
 }
 
 async fn next_task() -> Result<(), JsValue> {

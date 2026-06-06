@@ -93,6 +93,10 @@ Read next: [architecture/data/README.md](architecture/data/README.md),
   jobs, cache ledger summaries, cache metadata, protection snapshots, and
   retention deletion use the SQLite worker with memory fallback when workers are
   unavailable.
+- The Rust Leptos startup path and protected tool hosts use the SQLite worker
+  for workspace recovery, workspace persistence, Settings, Accounts, Relay
+  Settings, Upload Settings, Tweet drafts, and Stats inventory. The Rust
+  IndexedDB adapter remains for host-boundary tests and narrow WASM exports.
 - Physical inventory, cache tool summaries, retention target checks, repair,
   and protection snapshots use SQLite paths. Old IndexedDB diagnostics are
   presence-only and never scan old rows.

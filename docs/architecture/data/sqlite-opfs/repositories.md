@@ -22,17 +22,17 @@ calls for settings, workspaces, tab states with ledger rows, accounts, local
 secrets, relay sets, Tweet drafts, events, tags, relay provenance,
 notifications, feed cursors, feed coverage, scan hints, relay diagnostics,
 relay information, relay suggestions, author routes, route blocks, jobs, app
-log rows, and SQLite table-count inventory. The active Rust product wiring
-slice routes startup, workspace persistence, Accounts, Relay Settings, Upload
-Settings, Tweet drafts, and Stats through these calls. The Svelte product path
-continues to use the TypeScript SQLite worker repositories until each surface
-has Leptos parity and deletion proof.
+log rows, and SQLite table-count inventory. Rust startup, workspace
+persistence, Accounts, Relay Settings, Settings, Upload Settings, Tweet drafts,
+and Stats inventory route through these calls. The Svelte product path continues
+to use the TypeScript SQLite worker repositories until each surface has Leptos
+parity and deletion proof.
 
 ## Repository Families
 
 - protected data: settings, workspaces, tab states, accounts, secrets, relay
   sets, Tweet drafts, and route blocks have Rust SQLite worker calls. Startup
-  and Rust tool hosts must use these calls before Leptos parity expands.
+  and Rust tool hosts use these calls before Leptos parity expands.
 - event cache: events, tags, relay provenance, feed cursors, cached feed pages,
   tag lookups, local filter search, notifications, feed coverage, and scan hints
   have SQLite repositories. Feed surfaces may render cached rows only when

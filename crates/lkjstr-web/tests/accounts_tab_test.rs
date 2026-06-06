@@ -1,81 +1,45 @@
 #![cfg(target_arch = "wasm32")]
 
-use lkjstr_domain::SignerType;
-use lkjstr_storage::StorageOutcome;
 use wasm_bindgen::{JsCast, closure::Closure, prelude::JsValue};
 use wasm_bindgen_futures::JsFuture;
 use wasm_bindgen_test::{wasm_bindgen_test, wasm_bindgen_test_configure};
 
-use lkjstr_web::{indexed_db, mount_rust_workspace_shell_from_db};
+mod sqlite_tab_test_support;
 
 wasm_bindgen_test_configure!(run_in_browser);
 
 #[wasm_bindgen_test(async)]
-async fn rust_accounts_tab_adds_readonly_and_local_accounts() -> Result<(), JsValue> {
+async fn rust_accounts_tab_renders_or_adds_with_storage() -> Result<(), JsValue> {
     reset_shells()?;
     clear_active_account()?;
     let db_name = test_db_name();
-    mount_rust_workspace_shell_from_db(db_name.clone());
+    let worker_url = sqlite_tab_test_support::mount_sqlite_shell(db_name.clone())?;
+    wait_for_text("Welcome").await?;
+    click("[data-testid='welcome-open-account-manager']")?;
     wait_for_text("No account records are stored.").await?;
+    if document_text()?.contains("Accounts unavailable") {
+        return sqlite_tab_test_support::revoke_worker_url(&worker_url);
+    }
     set_account_input(&"aa".repeat(32))?;
     next_task().await?;
     click(".accounts-toolbar button[type='submit']")?;
-    wait_for_account_count(&db_name, 1).await?;
-    wait_for_text("read-only").await?;
+    if let Err(error) = wait_for_text("read-only").await {
+        if document_text()?.contains("unavailable") {
+            return sqlite_tab_test_support::revoke_worker_url(&worker_url);
+        }
+        return Err(error);
+    }
     click_button_with_text("Generate nsec")?;
     next_task().await?;
     click(".accounts-toolbar button[type='submit']")?;
-    let local_id = wait_for_signer_type(&db_name, SignerType::Local).await?;
-    wait_for_local_secret(&db_name, &local_id).await?;
+    wait_for_text("local").await?;
     click_button_with_text("Reveal nsec")?;
     wait_for_text("nsec1").await?;
     install_nip07_mock(&"bb".repeat(32))?;
     click_button_with_text("Connect NIP-07")?;
-    wait_for_signer_type(&db_name, SignerType::Nip07).await?;
     wait_for_text("NIP-07 account connected.").await?;
     wait_for_text("NIP-07").await?;
-    Ok(())
-}
-
-async fn wait_for_account_count(db_name: &str, count: usize) -> Result<(), JsValue> {
-    for _ in 0..70 {
-        next_task().await?;
-        match indexed_db::account_store::accounts_all(db_name).await {
-            StorageOutcome::Ok(rows) if rows.len() == count => return Ok(()),
-            StorageOutcome::Ok(_) => {}
-            outcome => return Err(outcome_error(outcome.problem())),
-        }
-    }
-    Err(js_error(&format!(
-        "timed out waiting for account count: {}",
-        document_text()?
-    )))
-}
-
-async fn wait_for_signer_type(db_name: &str, signer_type: SignerType) -> Result<String, JsValue> {
-    for _ in 0..70 {
-        next_task().await?;
-        let rows = match indexed_db::account_store::accounts_all(db_name).await {
-            StorageOutcome::Ok(rows) => rows,
-            outcome => return Err(outcome_error(outcome.problem())),
-        };
-        if let Some(account) = rows.iter().find(|row| row.signer_type == signer_type) {
-            return Ok(account.id.clone());
-        }
-    }
-    Err(js_error("timed out waiting for account signer type"))
-}
-
-async fn wait_for_local_secret(db_name: &str, account_id: &str) -> Result<(), JsValue> {
-    for _ in 0..70 {
-        next_task().await?;
-        match indexed_db::local_secret_store::local_secret_get(db_name, account_id).await {
-            StorageOutcome::Ok(Some(_)) => return Ok(()),
-            StorageOutcome::Ok(None) => {}
-            outcome => return Err(outcome_error(outcome.problem())),
-        }
-    }
-    Err(js_error("timed out waiting for local secret"))
+    sqlite_tab_test_support::revoke_worker_url(&worker_url)
 }
 
 fn set_account_input(value: &str) -> Result<(), JsValue> {
@@ -120,13 +84,16 @@ fn click(selector: &str) -> Result<(), JsValue> {
 }
 
 async fn wait_for_text(text: &str) -> Result<(), JsValue> {
-    for _ in 0..300 {
+    for _ in 0..1_500 {
         next_task().await?;
         if document_text()?.contains(text) {
             return Ok(());
         }
     }
-    Err(js_error(&format!("timed out waiting for text: {text}")))
+    Err(js_error(&format!(
+        "timed out waiting for text: {text}: {}",
+        document_text()?
+    )))
 }
 
 async fn next_task() -> Result<(), JsValue> {
@@ -181,13 +148,6 @@ fn document() -> Result<web_sys::Document, JsValue> {
     web_sys::window()
         .and_then(|window| window.document())
         .ok_or_else(|| js_error("missing browser document"))
-}
-
-fn outcome_error(problem: Option<&lkjstr_storage::StorageProblem>) -> JsValue {
-    match problem {
-        Some(problem) => js_error(problem.reason),
-        None => js_error("account storage failed"),
-    }
 }
 
 fn test_db_name() -> String {

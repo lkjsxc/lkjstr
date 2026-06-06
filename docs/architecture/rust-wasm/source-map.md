@@ -60,8 +60,12 @@ UI shell, and repository checks.
 - `crates/lkjstr-web/`: WASM entrypoint and browser host adapters.
 - `crates/lkjstr-web/src/relay_host/`: relay WebSocket and browser timeout
   host adapters with owned callback cleanup.
+- `crates/lkjstr-web/src/sqlite_host_store.rs`: scoped open, close, and
+  typed error propagation for SQLite worker-backed Rust hosts.
 - `crates/lkjstr-web/src/sqlite_store/`: protected, cache, diagnostics, jobs,
   route-block, and app-log SQLite repository calls.
+- `crates/lkjstr-web/src/workspace_host.rs`: SQLite-backed Rust workspace
+  startup and persistence.
 - `crates/lkjstr-web/src/storage_worker/`: typed SQLite worker host adapter.
 - `crates/lkjstr-xtask/`: repository checks and quiet gates.
 

@@ -7,11 +7,17 @@ mod accounts_host;
 pub mod feed_geometry;
 pub mod follow_graph;
 #[cfg(target_arch = "wasm32")]
+mod host_providers;
+#[cfg(target_arch = "wasm32")]
+mod host_status;
+#[cfg(target_arch = "wasm32")]
 mod nip07_host;
 mod protocol_bridge;
 #[cfg(target_arch = "wasm32")]
 pub mod relay_host;
 pub mod relay_score;
+#[cfg(target_arch = "wasm32")]
+mod relay_selection;
 #[cfg(target_arch = "wasm32")]
 mod relay_settings_host;
 mod response;
@@ -19,7 +25,7 @@ pub mod scan_model;
 #[cfg(target_arch = "wasm32")]
 mod settings_host;
 #[cfg(target_arch = "wasm32")]
-mod settings_host_store;
+mod sqlite_host_store;
 #[cfg(target_arch = "wasm32")]
 pub mod sqlite_store;
 #[cfg(target_arch = "wasm32")]
@@ -30,6 +36,8 @@ mod tweet_host;
 mod upload_discovery;
 #[cfg(target_arch = "wasm32")]
 mod upload_settings_host;
+#[cfg(target_arch = "wasm32")]
+mod workspace_host;
 
 #[cfg(target_arch = "wasm32")]
 pub mod indexed_db;
@@ -46,35 +54,17 @@ pub fn start() {
 
 #[cfg(target_arch = "wasm32")]
 pub fn mount_rust_workspace_shell() {
-    mount_rust_workspace_shell_from_db(indexed_db::database::DEFAULT_DB_NAME.to_owned());
+    host_providers::mount_rust_workspace_shell();
 }
 
 #[cfg(target_arch = "wasm32")]
 pub fn mount_rust_workspace_shell_from_db(db_name: String) {
-    wasm_bindgen_futures::spawn_local(async move {
-        let startup =
-            indexed_db::workspace_store::workspace_startup_input(&db_name, browser_now_ms()).await;
-        let persistence = workspace_persistence(db_name.clone());
-        let accounts_provider = accounts_host::accounts_provider(db_name.clone());
-        let relay_settings_provider = relay_settings_host::relay_settings_provider(db_name.clone());
-        let stats_provider = stats_provider(db_name.clone());
-        let settings_provider = settings_host::settings_provider(db_name.clone());
-        let upload_settings_provider =
-            upload_settings_host::upload_settings_provider(db_name.clone());
-        let tweet_provider = tweet_host::tweet_provider(db_name);
-        lkjstr_ui::mount_app_with_host(
-            startup,
-            lkjstr_ui::HostProviders {
-                persistence,
-                accounts: accounts_provider,
-                relay_settings: relay_settings_provider,
-                stats: stats_provider,
-                settings: settings_provider,
-                upload_settings: upload_settings_provider,
-                tweet: tweet_provider,
-            },
-        );
-    });
+    host_providers::mount_rust_workspace_shell_from_db(db_name);
+}
+
+#[cfg(target_arch = "wasm32")]
+pub fn mount_rust_workspace_shell_from_db_with_worker(db_name: String, worker_url: String) {
+    host_providers::mount_rust_workspace_shell_from_db_with_worker(db_name, worker_url);
 }
 
 #[cfg(target_arch = "wasm32")]
@@ -159,34 +149,4 @@ pub async fn put_tweet_draft_record_json(json: &str) -> JsValue {
 #[wasm_bindgen]
 pub async fn get_tweet_draft_record_json(id: &str) -> JsValue {
     indexed_db::tweet_draft_get_json_response(id).await
-}
-
-#[cfg(target_arch = "wasm32")]
-fn browser_now_ms() -> u64 {
-    let now = js_sys::Date::now();
-    if now.is_sign_negative() {
-        0
-    } else {
-        now as u64
-    }
-}
-
-#[cfg(target_arch = "wasm32")]
-fn workspace_persistence(db_name: String) -> lkjstr_ui::WorkspacePersistence {
-    lkjstr_ui::WorkspacePersistence::new(move |workspace| {
-        let db_name = db_name.clone();
-        wasm_bindgen_futures::spawn_local(async move {
-            let _outcome = indexed_db::workspace_store::workspace_put(&db_name, &workspace).await;
-        });
-    })
-}
-
-#[cfg(target_arch = "wasm32")]
-fn stats_provider(db_name: String) -> lkjstr_ui::StatsProvider {
-    lkjstr_ui::StatsProvider::new(move |complete| {
-        let db_name = db_name.clone();
-        wasm_bindgen_futures::spawn_local(async move {
-            complete.complete(indexed_db::inventory_store::storage_stats_snapshot(&db_name).await);
-        });
-    })
 }

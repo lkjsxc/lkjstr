@@ -21,11 +21,12 @@ This file is the concise status map for the active Rust/WASM migration.
   map, typed operation outcomes, executable SQLite schema records, protected,
   event-cache, diagnostics, and optimizer statements, schema hash, tab-state
   keys, ledger rows, and protected plus cache SQLite row codecs.
-- `lkjstr-web` owns typed browser adapters for IndexedDB, SQLite worker calls,
-  relay WebSocket and timeout foundations, protocol parsing bridges, relay-score
-  bridge calls, scan-model planning bridge calls, feed geometry, visual
-  fragment, and anchor bridge calls, follow-graph parsing bridge calls, and
-  early host calls needed by the partial Leptos shell.
+- `lkjstr-web` owns typed browser adapters for IndexedDB host-boundary tests,
+  SQLite worker calls, SQLite-backed Rust startup, workspace persistence,
+  Accounts, Relay Settings, Settings, Upload Settings, Tweet drafts, Stats
+  inventory, relay WebSocket and timeout foundations, protocol parsing bridges,
+  relay-score bridge calls, scan-model planning bridge calls, feed geometry,
+  visual fragment, anchor bridge calls, and follow-graph parsing bridge calls.
 - `lkjstr-relays` owns pure send queue, request scheduler, subscription id,
   subscription alias, close tombstone, request budget derivation, outbound `REQ`
   message-size budget, semantic page-read keys, in-flight page-read registry,
@@ -68,8 +69,11 @@ This file is the concise status map for the active Rust/WASM migration.
   reservations through lighter row representations. Active implementation
   targets are SQLite observation persistence, deeper Stats diagnostics, and
   Leptos feed use. Durable SQLite geometry model wiring remains open.
-- Rust Settings persistence now uses the SQLite worker typed repository in the
-  Rust Settings host. CSS side effects and cache-budget enforcement remain open.
+- Rust protected tool hosts now use the SQLite worker typed repositories for
+  startup, workspace persistence, Settings, Accounts, Relay Settings, Upload
+  Settings, Tweet drafts, and Stats inventory. CSS side effects, cache-budget
+  enforcement, active-account storage rows, and full pressure diagnostics remain
+  open.
 - Followees and User Timeline now have Rust target follow-graph reducers, a
   WASM parser bridge, a fixed lkjsxc catalog constant, follow-count state,
   author chunking contracts, cache-display policy reducers, a Rust User Timeline
@@ -95,8 +99,9 @@ This file is the concise status map for the active Rust/WASM migration.
   integration, relay optimizer measurement, and Stats projection.
 - Relay adapter product wiring from pure reducers to browser WebSocket and timer
   handles.
-- Product SQLite wiring, cache delete and repair paths, retention dispatchers,
-  and full ledger and byte inventory diagnostics.
+- Feed-runtime SQLite wiring, cache delete and repair paths, retention
+  dispatchers, active-account storage rows, and full ledger and byte inventory
+  diagnostics.
 - Product feed runtime wiring for Home, Global, Profile, Thread, Notifications,
   Search, Custom Request, and Author Context. Pure query inputs and feed-window
   reducers exist; shipped surfaces still use TypeScript.
@@ -122,16 +127,16 @@ Use [surface-cutover-order.md](surface-cutover-order.md) for dependency rank.
 Each executable slice records docs touched, Rust crates touched, replaced
 TypeScript or Svelte paths, focused gate, and final gate.
 
-### SQLite Protected Product Wiring
+### SQLite Feed And Diagnostics Wiring
 
 - Docs touched: this file, [storage-kernel.md](storage-kernel.md),
   [../data/sqlite-opfs/repositories.md](../data/sqlite-opfs/repositories.md),
   [cutover/parity-ledger.md](cutover/parity-ledger.md), and
   [cutover/deletion-ledger.md](cutover/deletion-ledger.md).
-- Rust crates touched: `lkjstr-web`, `lkjstr-ui`, and `lkjstr-storage` when
-  view-model fields change.
-- TypeScript or Svelte paths replaced: none deleted until startup, protected
-  records, tab snapshots, and no-import proof are complete.
+- Rust crates touched: `lkjstr-storage`, `lkjstr-web`, `lkjstr-app`, and
+  `lkjstr-ui` when view-model fields change.
+- TypeScript or Svelte paths replaced: none deleted until feed evidence,
+  diagnostics, retention, tab snapshots, and no-import proof are complete.
 - Focused gate: `cargo test -p lkjstr-storage` and `pnpm rust-wasm:quiet`.
 - Final gate: Docker Compose config, image builds, and service runs from
   [../../operations/verification.md](../../operations/verification.md).
