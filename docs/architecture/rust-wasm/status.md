@@ -63,16 +63,19 @@ This file is the concise status map for the active Rust/WASM migration.
   visual-fragment planning, anchor capture, and anchor reconciliation. The
   shipped Svelte feed now warms that bridge, falls back to the equivalent
   temporary TypeScript estimator when unavailable, and decomposes oversized
-  event rows into real visual fragments. The active implementation target is
-  SQLite observation persistence, Stats diagnostics, and Leptos feed use. Durable
+  event rows into real visual fragments. Active implementation targets are the
+  Rust height-reservation reducer, unload-preserved geometry model, SQLite
+  observation persistence, Stats diagnostics, and Leptos feed use. Durable
   SQLite geometry model wiring remains open.
 - Rust Settings persistence now uses the SQLite worker typed repository in the
   Rust Settings host. CSS side effects and cache-budget enforcement remain open.
 - Followees and User Timeline now have Rust target follow-graph reducers, a
   WASM parser bridge, a fixed lkjsxc catalog constant, follow-count state,
   author chunking contracts, cache-display policy reducers, and shipped Svelte
-  relay-backed action wiring. Leptos surface parity and deletion of the Svelte
-  tabs remain open.
+  relay-backed action wiring. Active targets are a Rust User Timeline discovery
+  planner with route groups, degraded-mode decisions, retry policy, and bounded
+  diagnostics. Leptos surface parity and deletion of the Svelte tabs remain
+  open.
 - Feed windows own Rust top-anchor live-insert policy tests, and the shipped
   Svelte feed list consumes equivalent top-locked anchor behavior.
 - Search now has a shipped SQLite token-index path in TypeScript storage glue.
@@ -80,6 +83,10 @@ This file is the concise status map for the active Rust/WASM migration.
 - Hydration scheduling owns a Rust semantic-key priority reducer for visible,
   near-visible, hidden-paused, stale-generation, and deduped work. Product
   wiring beyond focused scheduler tests remains active.
+- Event display planning is an active target for shared event view-model
+  unification. Rust should own the repost display planner, unavailable event
+  decisions, shared chrome policy, and geometry-feature inputs while shipped
+  Svelte components remain the bridge surface until Leptos parity is real.
 
 ## Open Foundations
 

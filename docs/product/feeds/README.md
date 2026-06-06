@@ -31,6 +31,9 @@ Feed surface docs define relay-backed read tabs and action-opened read tabs.
   absent.
 - Feed tabs may show partial relay rows while slower relays continue. Empty
   states mean terminal coverage, not merely "no fast relay answered yet."
+- User Timeline discovery reports attempted route groups, degraded target-only
+  mode, retry affordances, and incomplete diagnostics without inferring absence
+  from cache misses.
 - Event-rendering tabs automatically restore per-tab row anchors on Home,
   Global, Profile, Notifications, Thread, Search, Custom Request, Author
   Context, and Public Chat.

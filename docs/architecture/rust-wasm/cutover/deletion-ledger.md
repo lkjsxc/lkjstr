@@ -19,19 +19,19 @@ first-party product modules.
 | `src/lib/author-context`     | blocked     | Rust Author Context runtime and UI                                             | exact-read and unavailable-state tests                                                                              |
 | `src/lib/backend`            | blocked     | Rust app composition owns shared query services                                | Home query sharing and cleanup tests                                                                                |
 | `src/lib/cache`              | blocked     | Rust storage repositories, retention, repair                                   | cache pressure and Stats tests                                                                                      |
-| `src/lib/components`         | blocked     | Leptos components cover equivalent UI behavior                                 | browser parity tests                                                                                                |
+| `src/lib/components`         | blocked     | Leptos components cover equivalent UI behavior and shared event renderer parity | browser parity, shared event rendering, repost target, and no-import tests                                          |
 | `src/lib/custom-request`     | blocked     | Rust Custom Request parser, runner, and UI                                     | parse, routing, cancel tests                                                                                        |
 | `src/lib/emoji`              | blocked     | Rust NIP-30 and NIP-51 render/publish helpers                                  | emoji unit and row-render tests                                                                                     |
-| `src/lib/events`             | blocked     | Rust event repository and row view models                                      | repository and feed-row tests                                                                                       |
-| `src/lib/feed-surface`       | blocked     | Rust virtual feed surface, real fragmented rows, geometry, and anchor pipeline | fragmented-row, anchor preservation, footer behavior, one scroll owner, long-post browser test, and no-import proof |
-| `src/lib/follow-graph`       | blocked     | Rust follow graph runtime and UI bridge cover all callers                      | follow graph bridge and runtime tests                                                                               |
+| `src/lib/events`             | blocked     | Rust event repository, shared display planner, and row view models             | repository, shared renderer, repost rendering, unavailable state, and feed-row tests                                |
+| `src/lib/feed-surface`       | blocked     | Rust virtual feed surface, real fragmented rows, unload-stable geometry, and anchor pipeline | fragmented-row, unload height-stability, dematerialization, pane resize, anchor preservation, footer behavior, one scroll owner, long-post browser test, and no-import proof |
+| `src/lib/follow-graph`       | blocked     | Rust follow graph runtime and UI bridge cover all callers                      | route discovery, retry, degraded-mode, diagnostics, bridge, and runtime tests                                       |
 | `src/lib/fp`                 | blocked     | Rust reducers or no replacement need                                           | deletion PR proves no imports                                                                                       |
 | `src/lib/identity`           | blocked     | Rust identity view models and NIP-05 flow                                      | identity rendering tests                                                                                            |
 | `src/lib/jobs`               | blocked     | Rust protected active jobs and finished jobs                                   | recovery, cancel, Stats tests                                                                                       |
 | `src/lib/log`                | blocked     | Rust bounded session log                                                       | redaction and browser log tests                                                                                     |
 | `src/lib/media`              | blocked     | Rust Blossom, NIP-96, and NIP-98 upload path                                   | upload transport tests                                                                                              |
 | `src/lib/memory`             | blocked     | Rust diagnostics and bounded counters                                          | memory focused tests                                                                                                |
-| `src/lib/notifications`      | blocked     | Rust notification runtime and UI                                               | notification feed tests                                                                                             |
+| `src/lib/notifications`      | blocked     | Rust notification runtime and UI                                               | notification feed, shared reference rendering, repost notification, and unload-stability tests                      |
 | `src/lib/profile`            | blocked     | Rust Profile runtime and UI                                                    | profile route and render tests                                                                                      |
 | `src/lib/public-chat`        | blocked     | Rust Public Chat runtime, relay planning, storage, and UI                      | NIP-28 channel and publish tests                                                                                    |
 | `src/lib/protocol`           | blocked     | Rust protocol parity plus WASM bridge tests                                    | protocol Rust and WASM tests                                                                                        |
@@ -46,7 +46,7 @@ first-party product modules.
 | `src/lib/thread`             | blocked     | Rust Thread runtime and UI                                                     | thread exact-read tests                                                                                             |
 | `src/lib/timeline`           | blocked     | Rust Home and Global feed runtimes                                             | timeline and route tests                                                                                            |
 | `src/lib/tweet`              | blocked     | Rust draft, signing, upload, queue, publish jobs                               | publish and draft tests                                                                                             |
-| `src/lib/user-timeline`      | blocked     | Rust User Timeline runtime and Leptos surface parity                           | target timeline relay and UI tests                                                                                  |
+| `src/lib/user-timeline`      | blocked     | Rust User Timeline discovery planner, runtime, and Leptos surface parity       | selected, NIP-65, provenance, partial failure, timeout, auth, target-only degraded, retry, diagnostics, and UI tests |
 | `src/lib/workspace`          | blocked     | Leptos workspace parity and snapshot persistence                               | workspace browser tests                                                                                             |
 | `src/routes`                 | blocked     | root route is served by the Rust/WASM app build                                | app build and root smoke tests                                                                                      |
 | Old browser database binding | implemented | live storage families use SQLite repositories                                  | no-import proof, storage, pressure, Stats, Docker gates                                                             |
@@ -58,9 +58,10 @@ first-party product modules.
 
 Current `src/lib/feed-surface` evidence is partial only: Rust geometry,
 fragments, anchors, and WASM bridge exist; shipped Svelte uses temporary host
-fragments and estimates. Deletion remains blocked until SQLite geometry
-persistence, Stats projection, Leptos feed use, browser long-post scroll proof,
-and no-import proof exist.
+fragments and estimates. Deletion remains blocked until Rust/WASM unload-stable
+reservation behavior, shared event renderer parity, repost rendering tests,
+User Timeline discovery tests, SQLite geometry persistence, Stats projection,
+Leptos feed use, browser scroll proof, and no-import proof exist.
 
 When a row becomes removable, update the row with the Rust files, tests, and
 verification commands that proved parity, then delete the TypeScript or Svelte

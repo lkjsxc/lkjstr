@@ -18,7 +18,11 @@ read the current live storage state in [storage/README.md](storage/README.md).
   shared feed scroll shell.
 - [feed-surface/footer-phase.md](feed-surface/footer-phase.md): footer phase.
 - [feed-surface/geometry-model.md](feed-surface/geometry-model.md): durable row
-  geometry keys, estimates, and anchors.
+  geometry keys, reservations, estimates, and anchors.
+- [feed-surface/unload-height-stability.md](feed-surface/unload-height-stability.md):
+  stable reservations through unload and dematerialization.
+- [feed-surface/repost-rendering.md](feed-surface/repost-rendering.md): shared
+  event rendering for repost targets.
 - [feed-surface/long-content.md](feed-surface/long-content.md): oversized event
   visual fragments.
 - [feed-surface/near-end.md](feed-surface/near-end.md): near-end paging.

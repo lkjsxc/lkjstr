@@ -42,6 +42,8 @@ surface. Each row must pass before the scroll-layout contract is complete.
 | No horizontal overflow on `[data-scroll-owner]`                           | All feed scroll roots                                |
 | Oversized semantic events become real visual fragments, not nested scroll | Home, Global, Profile, Thread, Search, Notifications |
 | Width-bucket resize can shrink stale narrow measurements                  | All virtual feed scroll roots                        |
+| Unload or dematerialization preserves measured reservation                | All row-like scroll roots                            |
+| Repost targets use shared event rendering and geometry                    | Home, Global, Search, Profile, Thread, Notifications |
 
 ## Verification
 

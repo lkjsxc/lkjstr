@@ -14,17 +14,23 @@ Timeline runtimes distinguish viewer and target:
 Home sets target to the active account and requires it. User Timeline sets target
 to the tab pubkey and does not require an active account. Global has no target.
 
-## Target Follow-List Dependency
+## Discovery Dependency
 
 User Timeline depends on the target follow-list runtime. Cached kind `3` data may
-seed the author set immediately. Relay discovery runs in parallel and replans the
-feed when a newer target follow list appears.
+seed the author set immediately when coverage evidence is sufficient. Relay
+discovery still runs and replans the feed when a newer target follow list
+appears.
+
+Discovery states carry attempted, successful, failed, and pending route groups;
+newest follow-list event id; reason codes; and retry affordances. Cache miss is a
+discovery trigger, not absence proof.
 
 ## Author Set
 
 The author set is target pubkey plus valid deduplicated followee pubkeys. If the
-follow list is absent or discovery is incomplete, the runtime may read only the
-target pubkey as degraded target-posts-only mode.
+follow list is unavailable but target-authored posts are reachable, the runtime
+may read only the target pubkey as labeled target-posts-only mode. It must not
+synthesize followees or claim the target follows nobody.
 
 ## Query And Route Fingerprint
 
@@ -33,9 +39,10 @@ fingerprint, author-set hash, filter shape, page size, and feed policy. It does
 not include tab id. Matching tabs may share work only when all semantic fields
 match.
 
-Routes can include selected relays, NIP-65 routes, follow-list relay hints,
-receipt routes, local route evidence, and selected-relay fallback. Disabled or
-removed relays are excluded.
+Routes can include selected relays, target event relays, profile provenance,
+NIP-65 routes, follow-list relay hints, receipt routes, event tag hints, local
+route evidence, previously successful route groups, and selected-relay fallback.
+Disabled or removed relays are excluded.
 
 ## Cache-First Coverage Proof
 
@@ -46,21 +53,31 @@ incomplete evidence cannot prove absence.
 
 ## Startup Flow
 
-1. Load cached target follow list.
+1. Load cached target follow list and route evidence.
 2. Derive author set and read covered cached rows when coverage proves them.
-3. Start target follow-list discovery.
+3. Start selected-relay and target-route follow-list discovery.
 4. Start target-post reads for degraded mode while discovery is pending.
-5. When a follow list is found, store it, derive the author set, hydrate visible
+5. Add real NIP-65 and provenance routes when evidence is available.
+6. When a follow list is found, store it, derive the author set, hydrate visible
    authors, and start feed reads for that author set.
-6. If absence is proven, keep target-posts-only mode when real posts exist.
-7. If reads are partial, show retryable diagnostics without clearing cache.
+7. If discovery is incomplete, keep partial or target-posts-only rows when real
+   data is available and show retryable diagnostics.
+8. If reads are partial, failed, auth-required, rate-limited, or offline, show
+   structured diagnostics without clearing cache.
+
+## Retry Policy
+
+Retries are explicit and bounded. The runtime may retry failed routes, selected
+relays, target hints, known provenance relays, and imported suggestions. It must
+back off repeated failures, avoid unbounded relay fanout, and keep disabled
+relays excluded.
 
 ## Paging And Snapshots
 
 Older and newer paging use shared feed readers, scan-density span planning,
-route fingerprints, progressive snapshots, cursor preservation, and cache
-coverage writes. The runtime preserves anchors across relayout and never marks
-history exhausted from incomplete relay evidence.
+route fingerprints, progressive snapshots, cursor preservation, height
+reservation, and cache coverage writes. The runtime preserves anchors across
+relayout and never marks history exhausted from incomplete relay evidence.
 
 ## Cleanup
 
@@ -70,6 +87,9 @@ feed windows. Cleanup is idempotent and keeps only compact tab snapshots.
 
 ## Tests
 
-Tests cover cache hit, relay follow-list found, degraded target-posts-only mode,
-proven absence, partial failure, disabled relay exclusion, older-load planning,
-cache coverage mismatch, duplicate-tab work sharing, and owner cleanup.
+Tests cover cache hit, cache miss triggering relay discovery, selected-relay
+success, NIP-65 route success, provenance-route success, partial relay failure,
+all-route timeout, auth-required relay, disabled-relay exclusion, honest
+target-posts-only mode, bounded retry expansion, incomplete reason codes,
+older-load planning, cache coverage mismatch, duplicate-tab work sharing, and
+owner cleanup.

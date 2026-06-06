@@ -39,7 +39,8 @@ state, storage, relay orchestration, cleanup, and Rust/WASM migration.
 `data/feed-surface/README.md` `data/feed-surface/event-value.md` `data/feed-surface/feed-row-chrome.md`
 `data/feed-surface/feed-scroll-surface.md` `data/feed-surface/footer-phase.md` `data/feed-surface/geometry-model.md`
 `data/feed-surface/height-reservation.md` `data/feed-surface/lod-tree.md` `data/feed-surface/long-content.md`
-`data/feed-surface/near-end.md` `data/feed-surface/older-load-mode.md` `data/feed-surface/scroll-regression-tests.md`
+`data/feed-surface/near-end.md` `data/feed-surface/older-load-mode.md` `data/feed-surface/repost-rendering.md`
+`data/feed-surface/scroll-regression-tests.md` `data/feed-surface/unload-height-stability.md`
 `data/feed-surface/staged-pipeline.md` `data/feed-surface/surface-matrix.md` `data/heap-retention.md`
 `data/local-secret-security.md` `data/memory-prioritization.md` `data/relay-pages.md`
 `data/resource-ownership.md` `data/sqlite-opfs/README.md` `data/sqlite-opfs/failure-recovery.md`

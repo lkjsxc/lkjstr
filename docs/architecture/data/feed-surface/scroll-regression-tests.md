@@ -3,7 +3,8 @@
 ## Purpose
 
 This checklist defines focused tests that prove feed scrolling remains stable
-for oversized content, delayed enrichment, and split-pane resize.
+for oversized content, delayed enrichment, unload, dematerialization, repost
+rendering, and split-pane resize.
 
 ## Status
 
@@ -37,6 +38,11 @@ real event data or explicit unavailable states.
 | Late profile hydration above viewport | `scrollTop` changes by measured delta and visible anchor remains. |
 | Reference preview hydration above viewport | Visible event or fragment remains stable. |
 | Media dimension update above viewport | Viewport does not jump after image dimensions resolve. |
+| Event row unload | Measured reservation does not shrink. |
+| Profile card unload | Measured reservation does not shrink. |
+| Notification row unload | Measured reservation does not shrink. |
+| Repost target unload | Shared target event reservation does not shrink. |
+| LOD shell | Dematerialized shell preserves reserved block height. |
 | Split-pane width shrink | Width bucket changes and estimates recompute upward when needed. |
 | Split-pane width widen | Stale narrow measurements do not force excess height. |
 | Live insert above non-top anchor | Existing visible content remains visible. |
@@ -69,8 +75,13 @@ Rust tests must cover:
 - normal rows staying single and oversized rows fragmenting.
 - text segments joining exactly to original content.
 - stable fragment keys.
+- reservation reducer for row measured, unloaded, rematerialized, width bucket,
+  font bucket, density bucket, content shape, schema generation, and expiration
+  actions.
 - anchor reconcile for height increase, height decrease, row removal, live
-  inserts, partial anchor-row changes, and empty feeds.
+  inserts, partial anchor-row changes, dematerialization, and empty feeds.
+- shared event display planning for normal event rows, repost targets, compact
+  unavailable targets, and notification repost references.
 
 ## Diagnostics Tests
 
@@ -81,6 +92,7 @@ Stats must show bounded aggregate diagnostics for:
 - persisted observation count.
 - visible fragment count.
 - oversized semantic row count.
+- unload-preserved reservation count.
 - anchor compensation count and last delta.
 - width-bucket distribution.
 - stale observations dropped.

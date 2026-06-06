@@ -35,6 +35,7 @@ Runtime docs define how tab-owned loaders combine cache and relay data.
 - Public Chat is a feed-like runtime with channel discovery, selected-channel
   messages, explicit coverage, and tab-owned cleanup.
 - Followees and User Timeline are action-opened runtimes keyed by target pubkey;
-  User Timeline separates viewer account from target subject.
+  User Timeline separates viewer account from target subject and reports
+  explicit discovery, degraded, retry, and incomplete diagnostics.
 - Hosted Worker code serves the SvelteKit shell only. Tab runtimes do not depend
   on Cloudflare storage, a server-side account service, or a relay proxy.

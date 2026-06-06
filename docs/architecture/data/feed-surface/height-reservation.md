@@ -2,29 +2,58 @@
 
 ## Purpose
 
-Feed rows reserve vertical height before enrichment so profile metadata,
-reference previews, and media dimensions do not visibly move the user's anchor.
+Feed rows reserve vertical height so enrichment, unloading, and level-of-detail
+changes do not move the user's scroll anchor.
 
 ## Contract
 
 Status: the shipped Svelte scroll surface applies session-measured reservation
-and compensates height changes above the viewport. The active durable contract
-lives in [geometry-model.md](geometry-model.md), and oversized semantic events
-use [long-content.md](long-content.md) visual fragments.
+and compensates legitimate height changes above the viewport. Rust owns the
+pure estimation and anchor reducers. Durable SQLite observation persistence and
+full Leptos feed use remain active targets.
 
-- Every visual row has a stable geometry key from real row identity, content
-  shape, fragment kind, fragment index, width bucket, and font-scale bucket.
-- Measurement keys include row key, row kind, content shape hash, fragment
-  fields, width bucket, and schema hash.
-- Rows reserve a predicted height before profile, reference, media, and action
-  enrichment finishes.
-- Predictions come from real measured rows and stable features, not fake
+Measured height is a **reservation** for the visual row at the matching geometry
+key and layout bucket. A reservation is part of the scroll model, not an
+implementation detail of the materialized DOM.
+
+Required behavior:
+
+- Every visual row has a semantic row key and visual row key from real row
+  identity, fragment kind, fragment index, and content shape.
+- Measurement keys include width bucket, font scale bucket, density bucket, and
+  geometry schema generation.
+- Rows reserve an estimated or measured height before profile, reference, media,
+  action, and emoji enrichment finishes.
+- Predictions come from real measurements or deterministic features, never fake
   content.
-- Visible and near-visible rows render full real content.
-- Far rows may use shells and predicted heights, but they still represent real
-  row ids and coverage states.
+- Visible and near-visible rows render real content, real loading states, or real
+  unavailable states.
+- Far rows may use cheap DOM, shells, or LOD blocks, but they keep the reserved
+  block height.
+- Unloading, dematerializing, releasing enrichment, or switching to a shell must
+  not reduce reserved height.
+- Height may shrink only after explicit remeasurement caused by a legitimate
+  layout or content condition.
 - Height changes above the viewport preserve the current anchor by applying the
   measured scroll delta.
+
+Detailed unload rules live in
+[unload-height-stability.md](unload-height-stability.md).
+
+## Legitimate Remeasurement
+
+A reservation may be replaced by a smaller or larger value when one of these
+changes:
+
+- pane width or split-pane size changes the width bucket.
+- font scale, device pixel ratio, or density changes its bucket.
+- the semantic row renders a different event or row identity.
+- the content shape hash changes because real content, known media dimensions,
+  or known reference state changed.
+- the geometry schema generation changes.
+- a measurement expires and the row falls back to a marked estimate.
+
+Unloading is not a legitimate remeasurement reason.
 
 ## Width Buckets
 
@@ -40,8 +69,9 @@ Measurements are scoped to stable coarse width buckets:
 ```
 
 A height measured in one bucket must not remain a permanent minimum height after
-the tile crosses into another bucket. When the bucket changes, the row resets to
-the estimate for the new bucket or to a conservative fallback until measured.
+the tile crosses into another bucket. When the bucket changes, the row uses a
+matching observation, a new estimate, or a conservative fallback until the
+materialized row is measured.
 
 ## Features
 
@@ -54,7 +84,7 @@ content length
 Unicode scalar count
 line break count
 longest unbroken token length
-url count
+URL count
 media count
 reference preview count
 custom emoji count
@@ -63,36 +93,49 @@ notification chrome flag
 action bar flag
 width bucket
 font scale bucket
+density bucket
 content shape hash
+measurement generation
 ```
 
-Tab ids, pane ids, owner handles, and request ids are not geometry keys.
+Tab ids, pane ids, owner handles, request ids, current scroll offset, and relay
+socket ids are not geometry keys.
 
 ## Measurement Loop
 
 1. Build row features before rendering enrichment.
 2. Ask Rust/WASM for an estimated height and confidence when available.
-3. Apply a virtualizer estimate or temporary reserved minimum height.
-4. Observe row height and inline size with `ResizeObserver`.
-5. Recompute reservation when the width bucket changes.
-6. If the row is above the viewport, compensate scroll by the height delta.
-7. Persist observations through the SQLite worker when the durable geometry
-   repository is wired.
-8. Update the model and expose counts in Stats.
+3. Apply the active reserved height to the outer row wrapper.
+4. Observe materialized row height and inline size with `ResizeObserver`.
+5. Record measurements only when the row is materialized in the current layout
+   bucket.
+6. Preserve the previous reservation when the row unloads or dematerializes.
+7. Recompute the reservation when an allowed remeasurement trigger occurs.
+8. If the row is above the viewport, compensate scroll by the height delta.
+9. Persist bounded observations through the SQLite worker when wired.
+10. Expose aggregate reservation counts in Stats.
 
 ## Media And Previews
 
 - Known media aspect ratios reserve bounded media slots before load.
-- Unknown media reserves a conservative bounded slot and updates after load.
+- Unknown media reserves a conservative bounded slot and updates after real
+  dimensions are known.
 - Reference previews and profile cards reserve bounded preview heights before
   hydration.
+- Compact unavailable states are real states and may have their own measured
+  reservations.
 - Content remains accessible; do not hide real content only to freeze height.
 
 ## Verification
 
-- Profile hydration above the viewport preserves the visible anchor.
-- Reference preview hydration above the viewport preserves the visible anchor.
-- Media dimension changes above the viewport preserve the visible anchor.
+- Event, repost target, profile card, notification, reference, media, log, and
+  tool rows do not shrink merely because they unload or dematerialize.
+- Shells preserve the prior reserved block height.
+- Rows may shrink after width, font, density, content shape, or schema
+  generation changes and materialized remeasurement.
+- Late profile, reference, and media hydration above the viewport preserve the
+  visible anchor.
 - Split-pane resize recomputes width-bucket estimates and can shrink rows.
 - Widening after a narrow measurement does not keep stale excess height.
-- Height observations stay bounded in memory and improve estimates.
+- Height observations stay bounded in memory and storage.
+- Each feed tab still has exactly one primary `[data-scroll-owner]`.

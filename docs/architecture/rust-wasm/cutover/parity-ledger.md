@@ -19,7 +19,7 @@ before the SvelteKit product runtime can be removed.
 | Global          | not implemented | `app`, `relays`, `storage`, `ui` feed runtime                 | selected-relay reads, grouped scans, progressive snapshots           |
 | Profile         | not implemented | `app`, `relays`, `storage`, `ui` profile runtime              | metadata card, route reads, posts, identity links                    |
 | Followees       | partial         | `protocol`, `app`, `web`, `relays`, `ui` follow graph path    | Leptos user rows, relay discovery UI, cleanup                        |
-| User Timeline   | partial         | `protocol`, `app`, `web`, `relays`, `ui` target timeline path | Leptos feed surface, follow graph reads, degraded mode               |
+| User Timeline   | partial         | `protocol`, `app`, `web`, `relays`, `ui` target timeline path | Leptos feed surface, route discovery states, follow graph reads, degraded mode, retry diagnostics |
 | Thread          | not implemented | `app`, `relays`, `storage`, `ui` thread runtime               | root lookup, reply pages, references, exact reads                    |
 | Notifications   | not implemented | `app`, `relays`, `storage`, `ui` notification runtime         | mentions, reactions, reposts, zaps, older windows                    |
 | Search          | not implemented | `app`, `relays`, `storage`, `ui` search runtime               | local cache search, NIP-50 routing, cancellation                     |
@@ -46,6 +46,9 @@ Feed-like surfaces cannot be marked `implemented` until this shared proof exists
 | Rust row-fragment planner   | oversized text, media, reference, and action tests                     |
 | Rust geometry estimator     | feature, bucket, hash, and confidence tests                            |
 | Rust anchor reducer         | height delta, live insert, resize, and fallback tests                  |
+| Stable height after unload  | event, profile, notification, repost target, shell, and LOD tests      |
+| Anchor after dematerialize  | unload-preserved height and allowed shrink compensation tests          |
+| Pane resize remeasurement   | width-bucket change can shrink or grow with anchor preservation        |
 | WASM bridge tests           | serialization and explicit unavailable/error states                    |
 | Svelte temporary bridge use | shipped feeds consume the same model while Svelte remains runtime      |
 | Leptos feed surface use     | visible rows, footer rows, and scroll retention match product behavior |
@@ -54,9 +57,26 @@ Feed-like surfaces cannot be marked `implemented` until this shared proof exists
 
 Current feed-surface evidence: Rust planner, estimator, anchor reducer, and WASM
 bridge exist with focused tests. The shipped Svelte feed uses temporary matching
-host glue for content-aware estimates and long-content fragments. SQLite
-observation persistence, Stats projection, Leptos feed use, and browser scroll
-regression proof remain open.
+host glue for content-aware estimates and long-content fragments. Rust
+height-reservation decisions, unload-preserved geometry, SQLite observation
+persistence, Stats projection, Leptos feed use, and browser scroll regression
+proof remain open.
+
+## Event Display Proof
+
+Shared event display parity requires Rust proof for normal event and repost
+target planning, shared geometry-feature extraction, compact unavailable states,
+custom emoji, media, references, sensitive-content policy, actions, and
+notification repost rows. Repost-specific code may provide contextual chrome but
+must not fork target event rendering without a documented tested reason.
+
+## User Timeline Discovery Proof
+
+User Timeline parity requires Rust proof for cache-hit rendering, cache-miss
+relay discovery, selected-relay success, NIP-65 route success, provenance-route
+success, disabled-relay exclusion, partial relay failure, all-route timeout,
+auth-required diagnostics, honest target-posts-only degraded mode, bounded retry
+expansion, and incomplete states with reason codes.
 
 ## Storage Ledger
 

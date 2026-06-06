@@ -20,8 +20,9 @@ list chrome inside the scroll flow.
 - Profile leading rows, loading/error text, load-newer affordance, empty state,
   and note rows belong to the same scroll owner.
 - Virtualized lists use Virtua `VList` until Rust UI parity lands.
-- Row estimates and measured deltas feed the geometry contracts in
-  [height-reservation.md](height-reservation.md) and
+- Row estimates, measured reservations, unload stability, and measured deltas
+  feed the geometry contracts in [height-reservation.md](height-reservation.md),
+  [unload-height-stability.md](unload-height-stability.md), and
   [geometry-model.md](geometry-model.md).
 - Oversized semantic events may render as multiple real visual rows per
   [long-content.md](long-content.md), but they still use this one scroll owner.
@@ -31,7 +32,9 @@ list chrome inside the scroll flow.
 - Every rendered visual row has a stable key used by the virtualizer and
   geometry model.
 - The row wrapper applies a reserved height before enrichment.
-- `ResizeObserver` records measured heights for materialized rows.
+- Unloaded and dematerialized rows keep their previous reserved height.
+- `ResizeObserver` records measured heights only for materialized rows in the
+  active layout bucket.
 - Height deltas above the viewport apply compensating scroll changes through
   existing anchor infrastructure.
 - No second vertical scroll-owner may be introduced for geometry handling.

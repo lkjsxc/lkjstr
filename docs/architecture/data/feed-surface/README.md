@@ -18,8 +18,12 @@ materialization, row geometry, and real-data level of detail.
 - [staged-pipeline.md](staged-pipeline.md): relay page, row shell, enrichment.
 - [height-reservation.md](height-reservation.md): shipped reservation loop and
   concise summary of row-height contracts.
+- [unload-height-stability.md](unload-height-stability.md): unload,
+  dematerialization, shells, and preserved reserved height.
 - [geometry-model.md](geometry-model.md): durable geometry keys, estimates,
-  measurements, and anchor compensation.
+  measurements, reservations, and anchor compensation.
+- [repost-rendering.md](repost-rendering.md): shared event renderer contract for
+  repost targets and contextual chrome.
 - [long-content.md](long-content.md): real visual fragments for oversized event
   content without nested scroll.
 - [scroll-regression-tests.md](scroll-regression-tests.md): host-boundary and

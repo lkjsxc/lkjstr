@@ -2,39 +2,60 @@
 
 ## Purpose
 
-This contract defines durable row-height estimates, measurements, and anchor
-compensation for feed surfaces.
+This contract defines row geometry keys, reservations, invalidation, retention,
+and persistence for feed-like scroll surfaces.
 
 ## Status
 
 Status: partially implemented. Rust owns feature extraction, estimation,
-fragment planning, anchor reducers, and the WASM bridge. The shipped Svelte feed
-warms the bridge and uses explicitly temporary TypeScript fallback logic while
-Leptos feed parity and SQLite observation persistence remain incomplete.
+content-shape hashing, anchor reducers, and WASM bridge calls. The shipped
+Svelte feed uses temporary matching host glue while Leptos feed parity and
+SQLite observation persistence remain active targets.
+
+## Terms
+
+- **Semantic row key**: stable identity of the product row, such as an event id,
+  notification id, profile summary id, log row id, or unavailable reference id.
+- **Visual row key**: semantic row key plus visual fragment kind and fragment
+  index. A semantic event may produce several visual rows.
+- **Geometry key**: reusable measurement key for a visual row shape in a layout
+  bucket.
+- **Content shape hash**: deterministic hash of height-affecting features that
+  does not store full content.
+- **Layout bucket**: width bucket, font scale bucket, density bucket, and
+  geometry schema generation.
+- **Measured height**: observed materialized row height for the active geometry
+  key and layout bucket.
+- **Estimated height**: deterministic model output used before measurement.
+- **Reserved height**: active block height used by the scroll model.
+- **Confidence**: fallback, session, durable, degraded, or stale.
+- **Measurement generation**: schema-controlled number that invalidates old
+  observations when row geometry rules change.
 
 ## Geometry Key
 
-A geometry key identifies reusable measurements for one visual row shape:
+A geometry key includes:
 
 ```text
-surface-row-kind
+semantic row key
+visual row key
+surface row kind
 event kind when present
-event id or stable non-event row id
-content-shape hash
+content shape hash
 fragment kind
 fragment index
 width bucket
-font-scale bucket
-geometry schema hash
+font scale bucket
+density bucket
+measurement generation
 ```
 
-The key must not include tab id, pane id, request id, owner handle, relay socket
-id, current scroll offset, or timing data.
+It must not include tab id, pane id, request id, owner handle, relay socket id,
+current scroll offset, wall-clock render timing, or transient hydration state.
 
-## Content-Shape Hash
+## Content Shape Hash
 
-The content-shape hash is deterministic and derived from features that affect
-height without storing full content:
+The content shape hash is derived from:
 
 ```text
 content length
@@ -47,10 +68,12 @@ reference preview count
 custom emoji count
 content warning flag
 fragment count
+known media dimension bucket
+known reference state bucket
 ```
 
-The hash changes when the semantic layout shape changes. It does not replace the
-event id and does not store event text in SQLite.
+It changes when the semantic layout shape changes. It does not replace event id
+identity and does not store event text in SQLite.
 
 ## Buckets
 
@@ -75,89 +98,120 @@ Font-scale buckets:
 1.60+
 ```
 
-Crossing a bucket invalidates the active estimate for that row until a matching
-observation exists. Rows may shrink after widening; stale narrow measurements
-must not become permanent minimum heights.
+Density buckets are explicit app-density labels such as compact, normal, and
+comfortable. Crossing any bucket makes measurements from the previous bucket
+inactive for the current row.
 
-## Estimate Confidence
+## Reserved Height Decision
 
-Every estimate carries confidence:
+The reducer receives previous state and an action, then returns the next active
+reservation and diagnostics.
+
+Actions:
+
+```text
+row_measured
+row_unloaded
+row_rematerialized
+width_bucket_changed
+font_bucket_changed
+density_bucket_changed
+content_shape_changed
+schema_generation_changed
+measurement_expired
+```
+
+Rules:
+
+- `row_unloaded` keeps the previous reserved height.
+- `row_rematerialized` keeps the reservation until measurement in the current
+  layout bucket.
+- `row_measured` may increase or decrease only when materialized in the current
+  layout bucket.
+- Width, font, density, content shape, and schema-generation changes choose a
+  matching observation or estimate; they may shrink.
+- Expired measurement falls back to an estimate with stale or degraded
+  confidence, not a false current measurement.
+
+## Confidence
 
 | Confidence | Meaning |
 | --- | --- |
 | `fallback` | No matching observation; content-aware formula only. |
-| `session` | Current browser session has matching measured rows. |
+| `session` | Current browser session has a matching measured row. |
 | `durable` | SQLite has matching observations for this geometry key. |
-| `degraded` | Anchor fallback or stale observation was used. |
+| `degraded` | Anchor fallback or stale compatible data was used. |
+| `stale` | Old measurement is visible only as diagnostic history. |
 
 Product UI may show aggregate diagnostics, but it must not expose unbounded
 per-event labels.
 
-## Measurement Sources
+## SQLite Persistence Target
 
-Session measurements are bounded in memory by least-recent observation and by a
-maximum count per surface family. Durable measurements are stored in worker-owned
-SQLite through typed repositories.
-
-SQLite geometry rows store only:
+Worker-owned SQLite stores only:
 
 ```text
 geometry key
+semantic row key
+visual row key
+content shape hash
 width bucket
-font-scale bucket
+font scale bucket
+density bucket
 estimated height
 measured height
 confidence
 sample count
+measurement generation
 last observed time
-schema hash
 ```
 
-They do not store full event content, tab ownership, pane ownership, or relay
-connection handles.
+It does not store full event content, profile records, tab ownership, pane
+ownership, relay handles, or raw diagnostic traces.
+
+## Invalidation Rules
+
+Ignore or discard observations when:
+
+- measurement generation changes.
+- semantic row key or visual row key changes.
+- content shape hash changes.
+- width, font, or density bucket changes without a matching observation.
+- row family is no longer produced by the planner.
+- sample is beyond retention horizon and low confidence.
+- storage pressure selects geometry rows after protected product records.
+
+Old observations for other buckets may remain durable until retention removes
+them, but they are not active reservations for the current bucket.
+
+## Bounded Retention
+
+Session memory keeps a bounded least-recent observation map per surface family.
+Durable storage keeps bounded samples by geometry key and drops low-confidence,
+old, or superseded rows first. Durable cached events are not capped by this
+geometry rule; only geometry observations are bounded here.
 
 ## Anchor Compensation
 
-When a measured row changes height, the scroll owner applies this delta:
+When an allowed remeasurement changes rows above the anchor:
 
 ```text
-scroll_delta = sum(new_height - old_height for changed rows above anchor)
+scroll_delta = sum(new_reserved_height - old_reserved_height)
 ```
 
-If the anchor row itself changes while partially visible, preserve the offset
-inside that row:
-
-```text
-new_scroll_top = new_anchor_top + anchor_offset_inside_row - viewport_relative_top
-```
-
-If the anchor row disappears because filters or retention changed, choose the
-nearest surviving row and mark confidence `degraded`.
-
-## Split-Pane Resize Behavior
-
-- Inline resize recomputes width buckets for visible and near-visible rows.
-- The virtualizer receives estimates for the new bucket before enrichment.
-- Measurements from the old bucket remain stored but inactive.
-- Widening after a narrow measurement can reduce estimated height.
-- Shrinking to a narrow bucket can increase estimates before measurement.
-
-## Stale Observation Deletion
-
-Delete or ignore geometry observations when:
-
-- the schema hash changes.
-- the content-shape hash for a key changes.
-- the row family is no longer produced by the planner.
-- the sample is older than the retention horizon and has low confidence.
-- retention pressure selects geometry rows after protected product records.
+The scroll owner applies the delta once. If the anchor row changes while visible,
+preserve the offset inside that row. If the anchor row disappears because filters
+or retention changed, choose the nearest surviving row and mark confidence
+`degraded`.
 
 ## Verification
 
 - Very long text receives a large initial estimate.
-- Many line breaks and long unbroken tokens affect the estimate.
+- Many line breaks and long tokens affect the estimate.
+- Unload and dematerialization preserve reserved height.
+- Width-bucket resize can shrink stale narrow measurements.
+- Content-shape and measurement-generation changes invalidate old measurements.
 - Late profile, reference, and media hydration above the viewport preserve the
   visible anchor.
-- Live inserts above a non-top anchor do not yank the viewport.
-- Width bucket changes recompute and can shrink rows.
-- Stats reports bounded geometry counts and stale-drop counts.
+- Stats reports bounded geometry counts, unload-preserved counts, anchor
+  compensations, stale ignores, and retention drops.

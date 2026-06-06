@@ -25,6 +25,9 @@ without overlapping text or controls.
   semantic owner of one feed event or one product row.
 - Feed virtual lists keep status rows inside the scroll flow so the footer moves
   with content.
+- Feed rows preserve reserved height when they unload, dematerialize, or switch
+  to shells; only legitimate remeasurement may shrink a row per
+  [unload-height-stability.md](../data/feed-surface/unload-height-stability.md).
 - Oversized semantic events may produce multiple real visual rows in the same
   scroll flow. The fragments preserve event identity, content, provenance,
   ordering, and actions per
@@ -79,8 +82,10 @@ Profile leading rows use the same viewport and content wrapper as note rows.
   scroll component.
 - [long-content.md](../data/feed-surface/long-content.md): oversized event
   visual fragments.
-- [geometry-model.md](../data/feed-surface/geometry-model.md): row estimates and
-  anchor compensation.
+- [geometry-model.md](../data/feed-surface/geometry-model.md): row reservations,
+  estimates, and anchor compensation.
+- [unload-height-stability.md](../data/feed-surface/unload-height-stability.md):
+  preserved height for unloaded and dematerialized rows.
 - [feed-row-chrome.md](../data/feed-surface/feed-row-chrome.md): row separators
   and control inset.
 - [tab-shell-layout.md](tab-shell-layout.md): feed-tab vs form-tab.

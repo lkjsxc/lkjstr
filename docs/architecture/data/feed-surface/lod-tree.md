@@ -16,7 +16,9 @@ scroll math while low-value branches degrade to compact recoverable summaries.
 | `absent` | no durable row data and no user-visible recovery value |
 
 The tree never creates fake events or fake previews. Missing data is uncovered,
-compacted, unavailable, or recovering.
+compacted, unavailable, or recovering. Dematerializing a branch preserves the
+previous reserved height for the matching geometry bucket until an allowed
+remeasurement invalidates it.
 
 ## Storage Tables
 
@@ -100,6 +102,7 @@ When the user navigates to a compacted branch:
 - Offset-to-row mapping stays correct after height updates.
 - Older loads append blocks without changing the current anchor.
 - Far branches can degrade without losing scroll height.
+- Shell and block rows preserve measured reservations after unload.
 - Compacted branches have real recovery recipes.
 - Rehydration checks SQLite first and relays only for uncovered intervals.
 - Relay reacquisition does not prove absence from incomplete coverage.
