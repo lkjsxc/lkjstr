@@ -62,6 +62,10 @@ export async function runTargetFollowListRuntime(
         attemptedRelays: result.attemptedRelays,
         failedRelays: result.failedRelays,
         relayUrls: result.relayUrls,
+        attemptedRouteGroups: result.attemptedRouteGroups ?? [],
+        failedRouteGroups: result.failedRouteGroups ?? [],
+        pendingRouteGroups: [],
+        reasonCodes: result.reasonCodes ?? [],
         partialFailure: result.failedRelays.length > 0,
         provenAbsent: false,
         source: result.source,
@@ -77,6 +81,10 @@ export async function runTargetFollowListRuntime(
         attemptedRelays: result.attemptedRelays,
         failedRelays: result.failedRelays,
         relayUrls: [],
+        attemptedRouteGroups: result.attemptedRouteGroups ?? [],
+        failedRouteGroups: result.failedRouteGroups ?? [],
+        pendingRouteGroups: [],
+        reasonCodes: result.reasonCodes ?? [],
         partialFailure: result.type !== 'notFound',
         provenAbsent: result.type === 'notFound',
         source: 'cache',
@@ -89,6 +97,10 @@ export async function runTargetFollowListRuntime(
       attemptedRelays: result.attemptedRelays,
       failedRelays: result.failedRelays,
       relayUrls: [],
+      attemptedRouteGroups: result.attemptedRouteGroups ?? [],
+      failedRouteGroups: result.failedRouteGroups ?? [],
+      pendingRouteGroups: [],
+      reasonCodes: result.reasonCodes ?? [],
       partialFailure: result.type === 'partialFailure',
       provenAbsent: result.type === 'notFound',
       source: 'none',
@@ -109,8 +121,8 @@ function snapshot(
     followList,
     entries,
     followingCount: entries.length,
-    message: targetFollowListMessage(state),
     ...diagnostics,
+    message: targetFollowListMessage(state, diagnostics),
   };
 }
 
@@ -119,7 +131,12 @@ function entriesFor(followList?: NostrEvent): FolloweeEntry[] {
 }
 
 function readingState(
-  phase: 'selected' | 'author_routes' | 'receipt_routes' | 'discovery',
+  phase:
+    | 'selected'
+    | 'author_routes'
+    | 'receipt_routes'
+    | 'provenance_routes'
+    | 'discovery',
 ): TargetFollowListStateName {
   return `reading_${phase}`;
 }

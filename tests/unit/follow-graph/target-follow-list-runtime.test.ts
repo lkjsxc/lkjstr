@@ -70,6 +70,8 @@ describe('target follow-list runtime', () => {
     expect(result.state).toBe('partial_failure');
     expect(result.followList?.id).toBe(cached.id);
     expect(result.provenAbsent).toBe(false);
+    expect(result.message).not.toBe('Follow-list discovery is incomplete.');
+    expect(result.message).toContain('Retry');
   });
 
   it('proves absence only after a complete not-found read', async () => {

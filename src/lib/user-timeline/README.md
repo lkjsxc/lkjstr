@@ -7,7 +7,8 @@ cache reads, and relay-backed page loading.
 
 ## Table of Contents
 
-- `user-timeline-state.ts`: runtime state contracts.
+- `user-timeline-state.ts`: runtime state and discovery diagnostics contracts.
+- `user-timeline-discovery.ts`: UI diagnostics and bounded outcome counters.
 - `user-timeline-authors.ts`: target plus followee author sets.
 - `user-timeline-route-plan.ts`: semantic route fingerprints.
 - `user-timeline-cache.ts`: cache helpers.
@@ -18,4 +19,5 @@ cache reads, and relay-backed page loading.
 
 The runtime renders real follow-graph feeds when the target kind `3` is found,
 or real target-authored posts in degraded mode when the follow graph is absent
-or still being discovered.
+or still being discovered. Incomplete states include attempted route groups,
+reason codes, and retry affordances.

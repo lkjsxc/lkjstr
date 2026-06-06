@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import {
   clearFeedRowHeightsForKey,
   estimateFeedRowHeight,
+  feedRowHeightDiagnostics,
   feedRowHeightReservationCount,
   recordFeedRowHeight,
   widthBucketForPx,
@@ -53,22 +54,23 @@ describe('row height reservation', () => {
     expect(feedRowHeightReservationCount()).toBeGreaterThanOrEqual(before + 1);
   });
 
-  it('does not reuse a measurement after content shape changes', () => {
-    const short = eventRow('short note');
-    const long = eventRow('x'.repeat(20_000));
+  it('preserves a measured reservation when a row unloads lighter', () => {
+    const full = eventRow('x'.repeat(4_000));
+    const shell = eventRow('');
     recordFeedRowHeight({
-      key: 'event:shape',
-      item: short,
+      key: 'event:unload',
+      item: full,
       widthPx: 640,
-      heightPx: 120,
+      heightPx: 860,
     });
 
     expect(
-      estimateFeedRowHeight({ key: 'event:shape', item: short, widthPx: 640 }),
-    ).toBe(120);
+      estimateFeedRowHeight({ key: 'event:unload', item: full, widthPx: 640 }),
+    ).toBe(860);
     expect(
-      estimateFeedRowHeight({ key: 'event:shape', item: long, widthPx: 640 }),
-    ).toBeGreaterThan(1_400);
+      estimateFeedRowHeight({ key: 'event:unload', item: shell, widthPx: 640 }),
+    ).toBe(860);
+    expect(feedRowHeightDiagnostics().unloadPreservedRows).toBeGreaterThan(0);
   });
 
   it('uses content-aware fallbacks before measurement', () => {
@@ -121,6 +123,29 @@ describe('row height reservation', () => {
     expect(
       estimateFeedRowHeight({ key: 'status', item: { kind: 'loadingOlder' } }),
     ).toBe(64);
+  });
+
+  it('allows shrink after width bucket change and remeasurement', () => {
+    const item = eventRow('narrow measurement');
+    recordFeedRowHeight({
+      key: 'event:resize',
+      item,
+      widthPx: 360,
+      heightPx: 440,
+    });
+    recordFeedRowHeight({
+      key: 'event:resize',
+      item,
+      widthPx: 900,
+      heightPx: 180,
+    });
+
+    expect(
+      estimateFeedRowHeight({ key: 'event:resize', item, widthPx: 360 }),
+    ).toBe(440);
+    expect(
+      estimateFeedRowHeight({ key: 'event:resize', item, widthPx: 900 }),
+    ).toBe(180);
   });
 
   it('clears all width buckets for a destructive row change', () => {

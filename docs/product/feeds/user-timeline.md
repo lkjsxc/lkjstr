@@ -123,7 +123,7 @@ Cache display policy is explicit:
 
 - `coverage-proven`: render cached rows normally.
 - `cache-preview`: render one bounded preview page with `Local cache preview
-  while relays refresh`.
+while relays refresh`.
 - `hold-cache`: delay cached rows that would create misleading dominance from
   one author, stale route, or mismatched author set.
 - `relay-refreshing`: start relay reads immediately.

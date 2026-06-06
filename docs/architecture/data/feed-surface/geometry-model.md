@@ -8,9 +8,10 @@ and persistence for feed-like scroll surfaces.
 ## Status
 
 Status: partially implemented. Rust owns feature extraction, estimation,
-content-shape hashing, anchor reducers, and WASM bridge calls. The shipped
-Svelte feed uses temporary matching host glue while Leptos feed parity and
-SQLite observation persistence remain active targets.
+content-shape hashing, reserved-height decisions, anchor reducers, and WASM
+bridge calls. The shipped Svelte feed uses temporary matching host glue and
+active reservation preservation while Leptos feed parity and SQLite observation
+persistence remain active targets.
 
 ## Terms
 

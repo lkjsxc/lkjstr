@@ -7,8 +7,8 @@ and author-set construction for Followees and User Timeline.
 
 ## Table of Contents
 
-- `target-follow-list-state.ts`: state and result contracts.
-- `target-follow-list-cache.ts`: typed repository cache helpers.
+- `target-follow-list-state.ts`: state, route diagnostics, and result contracts.
+- `target-follow-list-cache.ts`: typed repository cache and route-evidence helpers.
 - `target-follow-list-read.ts`: relay group read orchestration.
 - `target-follow-list-runtime.ts`: cache-first target discovery runtime.
 - `target-follow-list-diagnostics.ts`: compact diagnostics helpers.
@@ -19,3 +19,4 @@ and author-set construction for Followees and User Timeline.
 
 A cache miss starts relay discovery. It never proves absence. All rows and
 author sets come from real kind `3` data or explicit target-only degraded mode.
+Discovery diagnostics stay bounded by route group and reason code.

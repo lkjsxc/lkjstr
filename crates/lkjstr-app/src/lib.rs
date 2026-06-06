@@ -2,6 +2,7 @@
 
 pub mod cache_display;
 pub mod custom_request;
+pub mod events;
 pub mod feed;
 pub mod feed_fragments;
 pub mod feed_geometry;
@@ -15,6 +16,7 @@ pub mod profile_history;
 pub mod public_chat;
 pub mod query;
 mod startup_snapshots;
+pub mod user_timeline;
 mod workspace_defaults;
 pub mod workspace_runtime;
 
@@ -24,6 +26,10 @@ pub use cache_display::{
 pub use custom_request::{
     CustomRequest, CustomRequestError, CustomRequestErrorKind, CustomRequestMode,
     custom_request_mode, parse_custom_request,
+};
+pub use events::{
+    EventDisplayCapabilities, EventDisplayChromePolicy, EventDisplayContext, EventDisplayInput,
+    EventDisplayPlan, EventDisplayRenderer, plan_event_display, plan_repost_target_display,
 };
 pub use feed::{
     AuthorContextAnchorInput, AuthorContextNearbyInput, CustomRequestQueryInput,
@@ -44,11 +50,12 @@ pub use feed_fragments::{
 };
 pub use feed_geometry::{
     AnchorCompensation, AnchorConfidence, AnchorReconcileResult, ContentShapeInput,
-    FeedScrollAnchor, GeometryEstimateSource, MeasuredFeedRow, RowGeometryEstimate,
-    RowGeometryFeatures, RowGeometryModel, RowHeightObservation, RowKind, WidthBucket,
-    anchor_compensation_for_height_delta, capture_feed_anchor, content_shape_hash,
-    estimate_row_geometry, event_geometry_features, geometry_bucket_key, reconcile_feed_anchor,
-    update_row_geometry_model,
+    FeedScrollAnchor, GeometryAction, GeometryConfidence, GeometryEstimateSource, GeometryKey,
+    MeasuredFeedRow, ReservedHeightDecision, ReservedHeightReason, RowGeometryEstimate,
+    RowGeometryFeatures, RowGeometryModel, RowGeometryState, RowHeightObservation, RowKind,
+    WidthBucket, anchor_compensation_for_height_delta, capture_feed_anchor, content_shape_hash,
+    estimate_row_geometry, event_geometry_features, geometry_bucket_key, next_reserved_height,
+    reconcile_feed_anchor, update_row_geometry_model,
 };
 pub use feed_lod::{
     CoverageProjection, FeedLodBlock, FeedLodRow, FeedLodRowKind, FeedLodTree, MaterializationPlan,
@@ -98,6 +105,10 @@ pub use public_chat::{
     own_mute_plan, route_relays, selected_channel_messages_plan, update_channel_metadata_template,
 };
 pub use query::{QueryDemandInput, QueryDemandPlan, QuerySurface, plan_query_demand};
+pub use user_timeline::{
+    DiscoveryRouteGroup, DiscoveryRouteOutcome, DiscoveryRouteSource, UserTimelineDiscoveryInput,
+    UserTimelineDiscoveryPlan, UserTimelineDiscoveryState, plan_user_timeline_discovery,
+};
 pub use workspace_runtime::{
     DEFAULT_WARM_SNAPSHOT_CAP, StartupInput, StartupResult, StartupSource, WorkspaceRuntimeState,
     close_runtime_tab, convert_runtime_tab, default_recovery_ids, focus_runtime_tab,

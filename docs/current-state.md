@@ -20,7 +20,8 @@ Read next: [product/README.md](product/README.md),
   Settings, lkjstr Log, Mine npub, Profile Edit, and Welcome are implemented.
 - Followees and User Timeline are relay-backed action-opened surfaces. Cache-hit
   real NIP-02 data may render immediately, cache misses start target discovery,
-  and User Timeline can show a truthful target-posts-only degraded mode.
+  and User Timeline can show a truthful target-posts-only degraded mode with
+  route-group diagnostics and retryable incomplete states.
 - New Tab includes a fixed `lkjsxc` choice that opens the public User Timeline
   for `0f38afb23cec30570ee64f9a4aa099229395ec3371c5fe867e09c9111480015d`.
 - Search is treated as complete only when the local SQLite token index and
@@ -147,12 +148,13 @@ Read next: [architecture/workspace/README.md](architecture/workspace/README.md),
   absence.
 - Rust owns pure feed row geometry estimates, width-bucketed measured-height
   model updates, anchor compensation, long-content visual-fragment planning,
-  and a pure real-data feed LOD tree. The shipped Svelte feed warms the Rust
-  geometry bridge, uses equivalent temporary TypeScript fallback logic when the
-  bridge is unavailable, and renders oversized events as real visual fragments
-  in the single feed scroll flow. LOD forgetting degrades
-  low-value branches from full rows to shells, blocks, and recovery recipes
-  without creating fake rows.
+  and a pure real-data feed LOD tree. Rust also owns the unload-stable reserved
+  height reducer. The shipped Svelte feed warms the Rust geometry bridge, uses
+  equivalent temporary TypeScript fallback logic when the bridge is unavailable,
+  preserves measured reservations through unload and dematerialization, and
+  renders oversized events as real visual fragments in the single feed scroll
+  flow. LOD forgetting degrades low-value branches from full rows to shells,
+  blocks, and recovery recipes without creating fake rows.
 
 ## Network And Runtimes
 
@@ -179,7 +181,8 @@ Read next: [architecture/network/README.md](architecture/network/README.md),
   trimming, and LOD materialization run through queued tasks.
 - Stats, `__lkjstrMemoryDebug()`, and `window.__lkjstrDebug` expose
   orchestration demand, lease, event intake, storage operation, scan optimizer,
-  storage pressure, and memory counters.
+  storage pressure, feed geometry reservation, anchor compensation, and memory
+  counters.
 - Relay publish waiters, paged read leases, deduped read abort listeners, relay
   final-close state, idle pool eviction, and background tasks have cleanup
   tests.

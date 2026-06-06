@@ -19,10 +19,15 @@ import {
   type UserTimelineAuthorSet,
 } from './user-timeline-authors';
 import {
-  degradedNotice,
+  pendingTargetPostNotice,
   userTimelineInitialSnapshot,
   type UserTimelineSnapshot,
 } from './user-timeline-state';
+import {
+  discoveryFromFollow,
+  recordUserTimelineDiscoveryOutcome,
+  userTimelineNotice,
+} from './user-timeline-discovery';
 
 export type UserTimelineRuntimeInput = {
   readonly targetPubkey: string;
@@ -31,23 +36,29 @@ export type UserTimelineRuntimeInput = {
   readonly subscriptions: SubscriptionOrchestrator;
   readonly signal: AbortSignal;
   readonly onSnapshot: (snapshot: UserTimelineSnapshot) => void;
+  readonly runFollowList?: typeof runTargetFollowListRuntime;
+  readonly readInitial?: typeof readInitialUserTimeline;
+  readonly loadCached?: typeof loadCachedUserTimeline;
 };
 
 export async function runUserTimelineRuntime(
   input: UserTimelineRuntimeInput,
 ): Promise<UserTimelineSnapshot> {
+  const runFollowList = input.runFollowList ?? runTargetFollowListRuntime;
+  const readInitial = input.readInitial ?? readInitialUserTimeline;
+  const loadCached = input.loadCached ?? loadCachedUserTimeline;
   let state = userTimelineInitialSnapshot();
   let planKey = '';
   const emit = (patch: Partial<UserTimelineSnapshot>) => {
     state = { ...state, ...patch };
     input.onSnapshot(state);
   };
-  emit({});
-  void loadAuthors(
+  emit({ discovery: { ...state.discovery, state: 'loading-cache' } });
+  const targetPosts = loadAuthors(
     targetPostsOnlyAuthorSet(input.targetPubkey),
-    degradedNotice,
+    pendingTargetPostNotice,
   );
-  const follow = await runTargetFollowListRuntime({
+  const follow = await runFollowList({
     targetPubkey: input.targetPubkey,
     selectedReadRelays: input.relays,
     owner: input.owner,
@@ -57,13 +68,26 @@ export async function runUserTimelineRuntime(
     allowDiscoveryFallback: true,
     onSnapshot: (snapshot) => void handleFollowSnapshot(snapshot),
   });
-  if (!follow.followList && !input.signal.aborted)
-    emit({ notice: follow.message || degradedNotice, loading: false });
+  if (follow.followList && !input.signal.aborted) {
+    await handleFollowSnapshot(follow);
+    recordUserTimelineDiscoveryOutcome(discoveryFromFollow(follow, false));
+  } else if (!input.signal.aborted) {
+    await targetPosts.catch(() => undefined);
+    const hasTargetPosts = state.items.length > 0;
+    const discovery = discoveryFromFollow(follow, hasTargetPosts);
+    recordUserTimelineDiscoveryOutcome(discovery);
+    emit({
+      discovery,
+      notice: userTimelineNotice(follow, hasTargetPosts),
+      loading: false,
+    });
+  }
   return state;
 
   async function handleFollowSnapshot(
     snapshot: TargetFollowListSnapshot,
   ): Promise<void> {
+    emit({ discovery: discoveryFromFollow(snapshot, state.items.length > 0) });
     if (snapshot.followList) {
       await loadAuthors(
         userTimelineAuthorSet({
@@ -87,7 +111,7 @@ export async function runUserTimelineRuntime(
     const nextKey = `${set.mode}:${set.hash}`;
     if (planKey === nextKey || input.signal.aborted) return;
     planKey = nextKey;
-    const cached = await loadCachedUserTimeline({
+    const cached = await loadCached({
       authors: set.authors,
       limit: feedPageSize,
     }).catch(() => [] as TimelineItem[]);
@@ -106,7 +130,7 @@ export async function runUserTimelineRuntime(
       error: null,
     });
     try {
-      const page = await readInitialUserTimeline({
+      const page = await readInitial({
         authors: set.authors,
         relays: input.relays,
         owner: input.owner,

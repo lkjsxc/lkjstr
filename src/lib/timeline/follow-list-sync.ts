@@ -56,6 +56,7 @@ export async function readLatestFollowListFromRelays(
     groups.selected,
     groups.nip65,
     groups.receiptKind3,
+    groups.provenance,
     groups.discovery,
   ];
 

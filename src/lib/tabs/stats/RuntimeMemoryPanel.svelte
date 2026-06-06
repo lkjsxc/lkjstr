@@ -55,8 +55,28 @@
       <span>feed geometry rows</span>
     </article>
     <article>
+      <strong>{props.memory.geometry.activeReservations}</strong>
+      <span>active row reservations</span>
+    </article>
+    <article>
+      <strong>{props.memory.geometry.unloadPreservedRows}</strong>
+      <span>unload-preserved rows</span>
+    </article>
+    <article>
+      <strong>{props.memory.geometry.anchorCompensations}</strong>
+      <span>anchor compensations</span>
+    </article>
+    <article>
       <strong>{props.memory.geometry.bridgeStatus}</strong>
       <span>geometry bridge</span>
+    </article>
+    <article>
+      <strong>{props.memory.userTimeline.outcomes.length}</strong>
+      <span>User Timeline outcomes</span>
+    </article>
+    <article>
+      <strong>{props.memory.userTimeline.reasons.length}</strong>
+      <span>User Timeline reasons</span>
     </article>
   </div>
   <p>

@@ -12,7 +12,8 @@ Stats shows current-session network and cache counters.
 
 - Stats opens from New Tab as `network-stats`.
 - It reads relay snapshots, optimizer snapshots, cache status, SQLite worker
-  health, job health, and runtime memory counters.
+  health, job health, feed geometry reservation counters, and runtime memory
+  counters.
 - It labels active subscriptions by redacted purpose instead of exposing opaque
   ids as the primary row text.
 - `subscription-rows.ts` maps relay snapshots into Stats table rows.

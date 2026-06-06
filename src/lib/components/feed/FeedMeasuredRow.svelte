@@ -2,6 +2,7 @@
   import type { Snippet } from 'svelte';
   import {
     estimateFeedRowHeight,
+    recordFeedRowAnchorCompensation,
     recordFeedRowHeight,
     widthBucketForPx,
   } from '$lib/feed-surface/row-height-reservation';
@@ -26,23 +27,30 @@
     let previousHeight = Math.round(initial.height);
     let previousBucket = widthBucketForPx(initial.width);
     widthPx = initial.width;
+    if (previousHeight > 0)
+      recordFeedRowHeight({
+        key,
+        item,
+        widthPx: initial.width,
+        heightPx: previousHeight,
+      });
     const observer = new ResizeObserver((entries) => {
       const rect = entries[0]?.contentRect;
       const height = Math.round(rect?.height ?? 0);
       const width = Math.round(rect?.width ?? 0);
       if (width > 0) widthPx = width;
       const bucket = widthBucketForPx(width);
-      if (bucket !== previousBucket) {
-        previousBucket = bucket;
-        previousHeight = height;
-        return;
-      }
-      if (height <= 0 || height === previousHeight) return;
+      if (height <= 0) return;
+      const bucketChanged = bucket !== previousBucket;
       const delta = height - previousHeight;
-      if (isAboveViewport(node, scrollElement) && delta !== 0)
+      if (bucketChanged) previousBucket = bucket;
+      if (delta !== 0 && isAboveViewport(node, scrollElement)) {
         scrollElement!.scrollTop += delta;
+        recordFeedRowAnchorCompensation();
+      }
       previousHeight = height;
-      recordFeedRowHeight({ key, item, widthPx: width, heightPx: height });
+      if (bucketChanged || delta !== 0)
+        recordFeedRowHeight({ key, item, widthPx: width, heightPx: height });
     });
     observer.observe(node);
     return () => observer.disconnect();

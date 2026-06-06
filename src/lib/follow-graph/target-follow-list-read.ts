@@ -16,20 +16,26 @@ export type TargetFollowListReadPhase = Exclude<
   'none' | 'cache'
 >;
 
+type ReadDiagnostics = {
+  readonly attemptedRouteGroups?: readonly string[];
+  readonly failedRouteGroups?: readonly string[];
+  readonly reasonCodes?: readonly string[];
+};
+
 export type TargetFollowListReadResult =
-  | {
+  | ({
       readonly type: 'found';
       readonly followList: NostrEvent;
       readonly source: TargetFollowListReadPhase;
       readonly attemptedRelays: readonly string[];
       readonly failedRelays: readonly string[];
       readonly relayUrls: readonly string[];
-    }
-  | {
+    } & ReadDiagnostics)
+  | ({
       readonly type: 'notFound' | 'partialFailure' | 'allFailed';
       readonly attemptedRelays: readonly string[];
       readonly failedRelays: readonly string[];
-    }
+    } & ReadDiagnostics)
   | { readonly type: 'aborted' };
 
 export async function readTargetFollowList(input: {
@@ -51,6 +57,7 @@ export async function readTargetFollowList(input: {
     ['selected', groups.selected],
     ['author_routes', groups.nip65],
     ['receipt_routes', groups.receiptKind3],
+    ['provenance_routes', groups.provenance],
     ['discovery', groups.discovery],
   ];
   return readPlannedGroups({ ...input, plan });
@@ -66,6 +73,8 @@ async function readPlannedGroups(input: {
 }): Promise<TargetFollowListReadResult> {
   const attempted: string[] = [];
   const failed: string[] = [];
+  const attemptedGroups: string[] = [];
+  const failedGroups: string[] = [];
   const allEvents: NostrEvent[] = [];
   const relaysByEvent = new Map<string, Set<string>>();
   let anyEose = false;
@@ -73,43 +82,65 @@ async function readPlannedGroups(input: {
   for (const [source, relays] of input.plan) {
     if (relays.length === 0) continue;
     input.onPhase?.(source);
+    attemptedGroups.push(source);
     attempted.push(...relays);
+    const groupIndex = input.plan.findIndex((item) => item[0] === source);
     const result = await readLatestFollowListFromRelaysWithGroup({
       activePubkey: input.targetPubkey,
       subscriptions: input.subscriptions,
       signal: input.signal,
       key: input.key,
       relays,
-      groupIndex: input.plan.findIndex((item) => item[0] === source),
+      groupIndex,
     });
     if (result.statuses.some((status) => status.aborted))
       return { type: 'aborted' };
+    const groupFailed = failedRelaysFromStatuses(result.statuses);
+    if (groupFailed.length > 0) failedGroups.push(source);
     anyEose ||= hasRelayEose(result.statuses);
     anyFailure ||= hasRelayFailure(result.statuses);
-    failed.push(...failedRelaysFromStatuses(result.statuses));
+    failed.push(...groupFailed);
     for (const item of result.events)
       addEventRelay(allEvents, relaysByEvent, item);
     const candidate = selectLatestFollowList(input.targetPubkey, allEvents);
     if (candidate)
-      return found(candidate, source, attempted, failed, relaysByEvent);
+      return found(candidate, source, attempted, failed, relaysByEvent, {
+        attemptedGroups,
+        failedGroups,
+      });
     if (input.signal.aborted) return { type: 'aborted' };
   }
+  const diagnostics = readDiagnostics(attemptedGroups, failedGroups);
   if (anyEose)
     return anyFailure
       ? {
           type: 'partialFailure',
           attemptedRelays: dedupe(attempted),
           failedRelays: dedupe(failed),
+          ...diagnostics,
         }
       : {
           type: 'notFound',
           attemptedRelays: dedupe(attempted),
           failedRelays: [],
+          ...diagnostics,
         };
   return {
     type: 'allFailed',
     attemptedRelays: dedupe(attempted),
     failedRelays: dedupe(failed),
+    ...diagnostics,
+  };
+}
+
+function readDiagnostics(
+  attemptedGroups: readonly string[],
+  failedGroups: readonly string[],
+): ReadDiagnostics {
+  return {
+    attemptedRouteGroups: dedupe(attemptedGroups),
+    failedRouteGroups: dedupe(failedGroups),
+    reasonCodes: attemptedGroups.length === 0 ? ['no-route-groups'] : [],
   };
 }
 
@@ -130,6 +161,10 @@ function found(
   attempted: readonly string[],
   failed: readonly string[],
   relaysByEvent: Map<string, Set<string>>,
+  diagnostics: {
+    attemptedGroups: readonly string[];
+    failedGroups: readonly string[];
+  },
 ): TargetFollowListReadResult {
   return {
     type: 'found',
@@ -138,5 +173,6 @@ function found(
     attemptedRelays: dedupe(attempted),
     failedRelays: dedupe(failed),
     relayUrls: dedupe([...(relaysByEvent.get(event.id) ?? [])]),
+    ...readDiagnostics(diagnostics.attemptedGroups, diagnostics.failedGroups),
   };
 }

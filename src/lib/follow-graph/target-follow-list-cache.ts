@@ -1,6 +1,7 @@
 import type { NostrEvent } from '$lib/protocol';
 import { upsertEvent } from '$lib/events/repository';
 import { cachedProfileFollowList } from '$lib/profile/profile-store';
+import { saveAuthorRelayRoutes } from '$lib/relays/relay-route-store';
 
 export async function loadCachedTargetFollowList(
   targetPubkey: string,
@@ -16,6 +17,15 @@ export async function storeTargetFollowList(
   relayUrls: readonly string[],
 ): Promise<void> {
   await upsertEvent(event, relayUrls);
+  await saveAuthorRelayRoutes(
+    relayUrls.map((relayUrl) => ({
+      authorPubkey: event.pubkey,
+      relayUrl,
+      source: 'nip02' as const,
+      purpose: 'read' as const,
+      eventId: event.id,
+    })),
+  );
 }
 
 export function newestFollowList(

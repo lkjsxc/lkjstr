@@ -7,10 +7,11 @@ changes do not move the user's scroll anchor.
 
 ## Contract
 
-Status: the shipped Svelte scroll surface applies session-measured reservation
-and compensates legitimate height changes above the viewport. Rust owns the
-pure estimation and anchor reducers. Durable SQLite observation persistence and
-full Leptos feed use remain active targets.
+Status: the shipped Svelte scroll surface applies session-measured reservation,
+preserves active reservations through unload, and compensates legitimate height
+changes above the viewport. Rust owns pure estimation, reservation, and anchor
+reducers. Durable SQLite observation persistence and full Leptos feed use remain
+active targets.
 
 Measured height is a **reservation** for the visual row at the matching geometry
 key and layout bucket. A reservation is part of the scroll model, not an
