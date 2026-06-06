@@ -101,8 +101,8 @@ changed. Each docs directory has one README that acts as a table of contents.
 `architecture/rust-wasm/cutover/README.md` `architecture/rust-wasm/cutover/build-contract.md` `architecture/rust-wasm/cutover/deletion-ledger.md`
 `architecture/rust-wasm/cutover/parity-ledger.md` `architecture/rust-wasm/host-boundary.md` `architecture/rust-wasm/memory-ownership.md`
 `architecture/rust-wasm/protocol-kernel.md` `architecture/rust-wasm/relay-runtime.md` `architecture/rust-wasm/source-map.md`
-`architecture/rust-wasm/status.md` `architecture/rust-wasm/storage-kernel.md` `architecture/rust-wasm/ui-runtime.md`
-`architecture/rust-wasm/verification.md` `architecture/source-map.md` `architecture/workspace/README.md`
+`architecture/rust-wasm/status.md` `architecture/rust-wasm/storage-kernel.md` `architecture/rust-wasm/surface-cutover-order.md`
+`architecture/rust-wasm/ui-runtime.md` `architecture/rust-wasm/verification.md` `architecture/source-map.md` `architecture/workspace/README.md`
 `architecture/workspace/pane-chrome-scope.md` `architecture/workspace/pane-drop-target.md` `architecture/workspace/resize.md`
 `architecture/workspace/scroll-layout.md` `architecture/workspace/scroll-surface-audit.md` `architecture/workspace/tab-body-mount.md`
 `architecture/workspace/tab-dragging.md` `architecture/workspace/tab-retention-flow.md` `architecture/workspace/tab-runtime.md`

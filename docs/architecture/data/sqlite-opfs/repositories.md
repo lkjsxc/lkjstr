@@ -20,27 +20,26 @@ Implemented now: protected and core event-cache row codecs plus SQL statement
 records live in `lkjstr-storage`; `lkjstr-web` has worker-backed repository
 calls for settings, workspaces, tab states with ledger rows, accounts, local
 secrets, relay sets, Tweet drafts, events, tags, relay provenance,
-notifications, feed cursors, feed coverage, and scan hints. The Svelte Settings,
-workspace, tab snapshot, Accounts, local secret, relay set, Tweet draft, event
-graph, cached feed, tag lookup, local filter-search, relay diagnostics, relay
-information, relay suggestion, author route, route block, notification, feed
-coverage, scan hint, cache ledger summary, cache metadata, retention, and job
-repositories now use the TypeScript SQLite worker path. Other Svelte product
-paths use the SQLite worker for durable product storage. Remaining Rust work is
-parity wiring and UI ownership.
+notifications, feed cursors, feed coverage, scan hints, relay diagnostics,
+relay information, relay suggestions, author routes, route blocks, jobs, app
+log rows, and SQLite table-count inventory. The active Rust product wiring
+slice routes startup, workspace persistence, Accounts, Relay Settings, Upload
+Settings, Tweet drafts, and Stats through these calls. The Svelte product path
+continues to use the TypeScript SQLite worker repositories until each surface
+has Leptos parity and deletion proof.
 
 ## Repository Families
 
 - protected data: settings, workspaces, tab states, accounts, secrets, relay
-  sets, Tweet drafts, and route blocks are implemented in the Svelte SQLite
-  path.
+  sets, Tweet drafts, and route blocks have Rust SQLite worker calls. Startup
+  and Rust tool hosts must use these calls before Leptos parity expands.
 - event cache: events, tags, relay provenance, feed cursors, cached feed pages,
   tag lookups, local filter search, notifications, feed coverage, and scan hints
-  are implemented in the Svelte SQLite path. Repair and compaction dispatch use
-  SQLite repositories.
+  have SQLite repositories. Feed surfaces may render cached rows only when
+  coverage proof is complete.
 - relay diagnostics: relay information, summaries, suggestions, author routes,
-  route blocks, and jobs are implemented in the Svelte SQLite path. App log rows
-  remain open. Relay diagnostics, suggestions, routes, and finished jobs are
+  route blocks, jobs, and app log rows have SQLite repositories. Relay
+  diagnostics, suggestions, routes, finished jobs, and app logs are
   ledger-backed. Route blocks are protected safety rows and are not ledger-backed.
 - retention: cache ledger rows, protection snapshots, prune selection,
   deletion dispatch, repair, and physical inventory are SQLite-backed. SQLite
@@ -51,8 +50,10 @@ parity wiring and UI ownership.
 
 - Cache maintenance: manual cleanup, compaction, and reset actions stay bounded
   and report typed outcomes.
-- Rust parity: Rust repositories cover every live table family before the
-  TypeScript product surface can be removed.
+- Rust feed parity: feed runtimes consume event cache, feed evidence,
+  diagnostics, and retention repositories through `lkjstr-app`.
+- Removal proof: TypeScript repositories stay until Rust covers every live table
+  family, tests pass, and no-import proof is recorded.
 
 ## Statement Shape
 

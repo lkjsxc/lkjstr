@@ -12,11 +12,8 @@ records, protected, event-cache, and diagnostics SQL statement records, schema
 hash, the tab-state key plus ledger-row contract for workspace snapshots, and
 SQLite row codecs for protected startup data, events, tags, relay provenance,
 notifications, feed cursors, feed coverage, and scan hints. `lkjstr-web` owns a
-narrow real IndexedDB adapter for
-workspace startup, workspace rows, settings override rows, protected account
-rows, local secrets, relay sets, Tweet drafts, and the first multi-store
-transaction helper. Rust tab-state snapshot writes store the `tabStates` row and
-matching `cacheLedger` row in one IndexedDB transaction.
+narrow real IndexedDB adapter for host-boundary tests that still need IndexedDB
+and a typed SQLite worker adapter for product storage calls.
 
 The SvelteKit host layer now has a temporary SQLite WASM worker/client
 bootstrap using the official `@sqlite.org/sqlite-wasm` package. It can open
@@ -39,14 +36,15 @@ states plus ledger, accounts, local secrets, relay sets, and Tweet drafts. Core
 event-cache repository calls now cover atomic event/tag/relay writes, event
 lookups, notification owner reads and marks, feed cursor reads, feed coverage
 reads, fresh scan-hint reads, relay diagnostic summaries, relay information,
-relay suggestions, author routes, route blocks, jobs, and app log rows. These
-calls plus SQLite table-count inventory are not wired into product startup or
-feed runtimes yet.
+relay suggestions, author routes, route blocks, jobs, and app log rows. The
+active product wiring target is Rust startup, workspace persistence, Accounts,
+Relay Settings, Upload Settings, Tweet drafts, and Stats through those SQLite
+worker calls before feed runtimes move.
 
 Target now: OPFS-backed SQLite WASM in a dedicated worker. The detailed target
 lives in [../data/sqlite-opfs/README.md](../data/sqlite-opfs/README.md).
 
-Not implemented yet: product wiring to SQLite, cache delete/repair paths,
+Not implemented yet: feed runtime SQLite wiring, cache delete and repair paths,
 retention dispatchers, ledger repair, full ledger and byte inventory
 diagnostics, full browser OPFS matrix tests, and multi-tab lock handling.
 
@@ -86,12 +84,12 @@ Storage operations return a typed outcome:
 
 UI and Stats paths continue from these states without uncaught runtime errors.
 
-The Rust workspace adapter maps browser IndexedDB availability, blocked opens,
-quota failures, corrupt stored rows, and request failures into this outcome
-contract. Tab-state startup loading is best-effort: unavailable or corrupt
-snapshot rows do not prevent workspace recovery. Browser storage callers outside
-the Rust workspace startup path still use the TypeScript operation result until
-their repositories are ported.
+The Rust SQLite worker adapter maps browser worker availability, blocked opens,
+quota failures, corrupt stored rows, timeouts, cancellations, and late responses
+into this outcome contract. Tab-state startup loading is best-effort:
+unavailable or corrupt snapshot rows do not prevent workspace recovery. Browser
+storage callers outside Rust product wiring still use the TypeScript operation
+result until their repositories are ported.
 
 ## Repository Rule
 
@@ -106,7 +104,7 @@ is removed only through cache-ledger dispatchers.
 ## Host Adapter
 
 The Rust host adapter still includes narrow `web_sys` IndexedDB support for
-partial Leptos shell experiments. Product storage uses the SQLite worker path.
+host-boundary tests. Product storage uses the SQLite worker path.
 
 The temporary TypeScript host adapter creates a SQLite worker, sends typed
 storage requests, enforces deadlines, maps outcomes, supports cancellation,

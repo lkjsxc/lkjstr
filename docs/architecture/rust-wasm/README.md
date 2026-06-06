@@ -19,6 +19,7 @@ This subtree defines the Rust/WASM client target.
 - [source-map.md](source-map.md): intended repository paths.
 - [status.md](status.md): current implemented Rust slices and open foundations.
 - [storage-kernel.md](storage-kernel.md): manifest, repositories, and OPFS SQLite.
+- [surface-cutover-order.md](surface-cutover-order.md): dependency-ranked product cutover order.
 - [ui-runtime.md](ui-runtime.md): Leptos UI ownership.
 - [verification.md](verification.md): Rust/WASM verification matrix.
 
