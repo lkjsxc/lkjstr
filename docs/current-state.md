@@ -105,9 +105,9 @@ Read next: [architecture/data/README.md](architecture/data/README.md),
   unavailable.
 - The Rust Leptos startup path and protected tool hosts use the SQLite worker
   for workspace recovery, workspace persistence, Settings, Accounts, Relay
-  Settings, Upload Settings, Tweet drafts, Stats inventory, and Stats SQLite
-  health. The Rust IndexedDB adapter remains for host-boundary tests and narrow
-  WASM exports.
+  Settings, Upload Settings, Tweet drafts, Stats inventory, Stats SQLite health,
+  and durable lkjstr Log rows. The Rust IndexedDB adapter remains for
+  host-boundary tests and narrow WASM exports.
 - Physical inventory, cache tool summaries, retention target checks, repair,
   and protection snapshots use SQLite paths. Old IndexedDB diagnostics are
   presence-only and never scan old rows.

@@ -27,7 +27,7 @@ pub use accounts::{
     sqlite_local_account_put, sqlite_local_secret_delete, sqlite_local_secret_get,
     sqlite_local_secret_put,
 };
-pub use app_log::{sqlite_app_log_insert, sqlite_app_log_recent};
+pub use app_log::{sqlite_app_log_clear_before, sqlite_app_log_insert, sqlite_app_log_recent};
 pub use database::SqliteStore;
 pub use events::{
     sqlite_event_get, sqlite_event_put, sqlite_event_relays, sqlite_events_by_author_kind,

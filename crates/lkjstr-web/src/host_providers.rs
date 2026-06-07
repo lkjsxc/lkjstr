@@ -2,7 +2,7 @@ use lkjstr_storage::StorageOutcome;
 use lkjstr_ui::{HostProviders, WorkspacePersistence};
 
 use crate::{
-    accounts_host, host_status::browser_now_ms, relay_settings_host, settings_host,
+    accounts_host, app_log_host, host_status::browser_now_ms, relay_settings_host, settings_host,
     sqlite_host_store::with_sqlite_store, sqlite_store::sqlite_storage_stats_snapshot,
     storage_worker::DEFAULT_WORKER_URL, tweet_host, upload_settings_host, workspace_host,
 };
@@ -37,6 +37,7 @@ fn providers(db_name: String, worker_url: String) -> HostProviders {
             worker_url.clone(),
         ),
         stats: stats_provider(db_name.clone(), worker_url.clone()),
+        log: app_log_host::log_provider_with_worker_url(db_name.clone(), worker_url.clone()),
         settings: settings_host::settings_provider_with_worker_url(
             db_name.clone(),
             worker_url.clone(),

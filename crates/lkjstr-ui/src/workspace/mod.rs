@@ -3,6 +3,9 @@
 mod accounts;
 mod accounts_provider;
 mod accounts_row;
+mod log;
+mod log_provider;
+mod log_row;
 mod menu;
 mod pane;
 mod persistence;
@@ -30,6 +33,7 @@ mod welcome;
 
 pub use accounts_provider::{AccountsCommand, AccountsComplete, AccountsProvider, AccountsResult};
 pub use accounts_provider::{AccountsIdCommand, AccountsInputCommand};
+pub use log_provider::{LogComplete, LogProvider, LogResult};
 pub use persistence::WorkspacePersistence;
 pub use relay_settings_provider::{
     RelayIdCommand, RelayInputCommand, RelayPatchCommand, RelayPurposeCommand, RelaySetIdCommand,

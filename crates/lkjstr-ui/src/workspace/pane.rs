@@ -3,6 +3,7 @@ use lkjstr_domain::PaneNode;
 
 use crate::app::RuntimeSignal;
 use crate::workspace::accounts_provider::AccountsProvider;
+use crate::workspace::log_provider::LogProvider;
 use crate::workspace::persistence::WorkspacePersistence;
 use crate::workspace::relay_settings_provider::RelaySettingsProvider;
 use crate::workspace::settings_provider::SettingsProvider;
@@ -21,6 +22,7 @@ pub fn PaneView(
     accounts_provider: Option<AccountsProvider>,
     relay_settings_provider: Option<RelaySettingsProvider>,
     stats_provider: Option<StatsProvider>,
+    log_provider: Option<LogProvider>,
     settings_provider: Option<SettingsProvider>,
     upload_settings_provider: Option<UploadSettingsProvider>,
     tweet_provider: Option<TweetProvider>,
@@ -35,6 +37,7 @@ pub fn PaneView(
     let body_accounts_provider = accounts_provider.clone();
     let body_relay_settings_provider = relay_settings_provider.clone();
     let body_stats_provider = stats_provider.clone();
+    let body_log_provider = log_provider.clone();
     let body_settings_provider = settings_provider.clone();
     let body_upload_settings_provider = upload_settings_provider.clone();
     let body_tweet_provider = tweet_provider.clone();
@@ -81,6 +84,7 @@ pub fn PaneView(
                     let accounts_provider = body_accounts_provider.clone();
                     let relay_settings_provider = body_relay_settings_provider.clone();
                     let stats_provider = body_stats_provider.clone();
+                    let log_provider = body_log_provider.clone();
                     let settings_provider = body_settings_provider.clone();
                     let upload_settings_provider = body_upload_settings_provider.clone();
                     let tweet_provider = body_tweet_provider.clone();
@@ -96,6 +100,7 @@ pub fn PaneView(
                                 accounts_provider=accounts_provider.clone()
                                 relay_settings_provider=relay_settings_provider.clone()
                                 stats_provider=stats_provider.clone()
+                                log_provider=log_provider.clone()
                                 settings_provider=settings_provider.clone()
                                 upload_settings_provider=upload_settings_provider.clone()
                                 tweet_provider=tweet_provider.clone()

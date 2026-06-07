@@ -10,6 +10,9 @@ New Tab chooser, and converted Rust tool bodies.
 - `accounts.rs`: Rust Accounts body.
 - `accounts_provider.rs`: accounts command provider wrapper.
 - `accounts_row.rs`: row rendering for stored account records.
+- `log.rs`: Rust durable lkjstr Log body.
+- `log_provider.rs`: app-log read and clear provider wrapper.
+- `log_row.rs`: redacted app-log row rendering.
 - `menu.rs`: New Tab menu actions.
 - `mod.rs`: module exports.
 - `pane.rs`: pane chrome and tab rail.

@@ -14,7 +14,7 @@ pub(crate) fn pending_message(kind: TabKind) -> &'static str {
         TabKind::AccountManager => "",
         TabKind::NpubMiner => "The Rust Mine npub body is not converted yet.",
         TabKind::Thread => "The Rust Thread body is not converted yet.",
-        TabKind::RelayMonitor => "The Rust lkjstr Log body is not converted yet.",
+        TabKind::RelayMonitor => "",
         TabKind::RelaySettings => "",
         TabKind::NetworkStats => "",
         TabKind::Search => "The Rust Search body is not converted yet.",

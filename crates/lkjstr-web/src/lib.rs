@@ -4,6 +4,8 @@
 mod accounts_active;
 #[cfg(target_arch = "wasm32")]
 mod accounts_host;
+#[cfg(target_arch = "wasm32")]
+mod app_log_host;
 pub mod feed_geometry;
 pub mod follow_graph;
 #[cfg(target_arch = "wasm32")]

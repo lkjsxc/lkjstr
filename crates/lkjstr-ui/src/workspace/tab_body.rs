@@ -4,6 +4,8 @@ use lkjstr_domain::{TabKind, WorkspaceTab, empty_public_chat_state};
 use crate::app::RuntimeSignal;
 use crate::workspace::accounts::AccountsTab;
 use crate::workspace::accounts_provider::AccountsProvider;
+use crate::workspace::log::LogTab;
+use crate::workspace::log_provider::LogProvider;
 use crate::workspace::menu::NewTabMenu;
 use crate::workspace::persistence::WorkspacePersistence;
 use crate::workspace::public_chat::PublicChatTab;
@@ -32,6 +34,7 @@ pub fn TabBody(
     accounts_provider: Option<AccountsProvider>,
     relay_settings_provider: Option<RelaySettingsProvider>,
     stats_provider: Option<StatsProvider>,
+    log_provider: Option<LogProvider>,
     settings_provider: Option<SettingsProvider>,
     upload_settings_provider: Option<UploadSettingsProvider>,
     tweet_provider: Option<TweetProvider>,
@@ -50,6 +53,7 @@ pub fn TabBody(
         accounts_provider,
         relay_settings_provider,
         stats_provider,
+        log_provider,
         settings_provider,
         upload_settings_provider,
         tweet_provider,
@@ -73,6 +77,7 @@ struct TabContentInput {
     accounts_provider: Option<AccountsProvider>,
     relay_settings_provider: Option<RelaySettingsProvider>,
     stats_provider: Option<StatsProvider>,
+    log_provider: Option<LogProvider>,
     settings_provider: Option<SettingsProvider>,
     upload_settings_provider: Option<UploadSettingsProvider>,
     tweet_provider: Option<TweetProvider>,
@@ -103,6 +108,10 @@ fn tab_content(input: TabContentInput) -> impl IntoView {
         .into_any(),
         TabKind::NetworkStats => view! {
             <StatsTab runtime=input.runtime provider=input.stats_provider />
+        }
+        .into_any(),
+        TabKind::RelayMonitor => view! {
+            <LogTab provider=input.log_provider />
         }
         .into_any(),
         TabKind::PublicChat => view! {

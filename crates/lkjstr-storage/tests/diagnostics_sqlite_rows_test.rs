@@ -1,7 +1,7 @@
 use lkjstr_storage::{
     AppLogRecord, AuthorRelayRouteRecord, JobRecord, RelayDiagnosticSummaryRecord,
     RelayInformationRecord, RelayListSuggestionRecord, RelayRouteBlockRecord,
-    author_route_ledger_record, job_ledger_record, relay_info_ledger_record,
+    author_route_ledger_record, job_ledger_record, redact_app_log_text, relay_info_ledger_record,
     relay_suggestion_ledger_record, relay_summary_ledger_record, sqlite_cache_ledger_row_for_table,
 };
 
@@ -95,6 +95,12 @@ fn job_route_block_and_app_log_rows_keep_protection_shape() -> Result<(), serde_
     assert_eq!(block.pubkey, "pubkey");
     assert_eq!(log.context_json, "{}");
     Ok(())
+}
+
+#[test]
+fn app_log_display_redaction_blocks_secret_markers() {
+    assert_eq!(redact_app_log_text(r#"{"nsec":"secret"}"#), "[redacted]");
+    assert_eq!(redact_app_log_text("relay ok"), "relay ok");
 }
 
 fn sample_job(state: &str) -> JobRecord {

@@ -15,3 +15,24 @@ pub struct AppLogRecord {
 }
 
 pub type SqliteAppLogRow = AppLogRecord;
+
+const SENSITIVE_MARKERS: &[&str] = &[
+    "nsec",
+    "private",
+    "secret",
+    "signer",
+    "token",
+    "authorization",
+];
+
+#[must_use]
+pub fn redact_app_log_text(value: &str) -> String {
+    let lower = value.to_ascii_lowercase();
+    if SENSITIVE_MARKERS
+        .iter()
+        .any(|marker| lower.contains(marker))
+    {
+        return "[redacted]".to_string();
+    }
+    value.to_string()
+}

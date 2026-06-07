@@ -9,6 +9,7 @@ Source files expose Rust application behavior to the browser through
 
 - `accounts_active.rs`: local-storage active account helper.
 - `accounts_host.rs`: SQLite-backed Accounts command provider.
+- `app_log_host.rs`: SQLite-backed lkjstr Log command provider.
 - `feed_geometry/`: feed geometry, fragment, measurement, and anchor bridge.
 - `follow_graph/`: target follow-list parser bridge.
 - `host_providers.rs`: Rust UI host provider assembly.

@@ -123,6 +123,11 @@ pub const DIAGNOSTIC_STATEMENTS: &[SqliteStatementSpec] = &[
         "app_log",
         "INSERT INTO app_log (log_id, area, level, code, message, context_json, record_json, created_at_ms) VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8) ON CONFLICT(log_id) DO UPDATE SET area = excluded.area, level = excluded.level, code = excluded.code, message = excluded.message, context_json = excluded.context_json, record_json = excluded.record_json, created_at_ms = excluded.created_at_ms;",
     ),
+    write(
+        "app_log.clear_before",
+        "app_log",
+        "DELETE FROM app_log WHERE created_at_ms <= ?1;",
+    ),
 ];
 
 const fn read(id: &'static str, table: &'static str, sql: &'static str) -> SqliteStatementSpec {

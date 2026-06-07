@@ -24,8 +24,8 @@ This file is the concise status map for the active Rust/WASM migration.
 - `lkjstr-web` owns typed browser adapters for IndexedDB host-boundary tests,
   SQLite worker calls, SQLite-backed Rust startup, workspace persistence,
   Accounts, Relay Settings, Settings, Upload Settings, Tweet drafts, Stats
-  inventory, Stats SQLite health, relay WebSocket and timeout foundations,
-  protocol parsing bridges,
+  inventory, Stats SQLite health, durable lkjstr Log reads and clears, relay
+  WebSocket and timeout foundations, protocol parsing bridges,
   relay-score bridge calls, scan-model planning bridge calls, feed geometry,
   visual fragment, anchor bridge calls, and follow-graph parsing bridge calls.
 - `lkjstr-relays` owns pure send queue, request scheduler, subscription id,
@@ -44,7 +44,7 @@ This file is the concise status map for the active Rust/WASM migration.
   builders, and a pure Custom Request parser and mode classifier.
 - `lkjstr-ui` renders the partial Leptos workspace shell, Welcome, New Tab,
   Stats inventory and SQLite health, Settings, Accounts, Relay Settings, Upload
-  Settings, and Tweet draft surfaces.
+  Settings, lkjstr Log durable rows, and Tweet draft surfaces.
 
 ## Active Target Slices
 
@@ -111,7 +111,8 @@ This file is the concise status map for the active Rust/WASM migration.
   scans, User Timeline runtime, or hydration scheduling out of active target
   status.
 - Publish jobs, local signing flow integration, NIP-07 `signEvent`, media upload
-  transport, custom emoji publish support, and Profile Edit publish.
+  transport, custom emoji publish support, Profile Edit publish, and session log
+  capture wiring for the Rust Log body.
 - Full Leptos parity for every product surface and responsive browser QA.
 
 ## Runtime Rule

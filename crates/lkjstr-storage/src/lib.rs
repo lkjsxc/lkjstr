@@ -31,7 +31,7 @@ pub use accounts::{
     AccountRecord, SqliteAccountRow, account_from_sqlite_row, account_record_id,
     account_record_json_bytes, account_sqlite_key, signer_kind, sqlite_account_row,
 };
-pub use app_log::{AppLogRecord, SqliteAppLogRow};
+pub use app_log::{AppLogRecord, SqliteAppLogRow, redact_app_log_text};
 pub use data_class::{StorageDataClass, StorageInventoryGroup};
 pub use diagnostics::{
     AuthorRelayRouteRecord, RelayDiagnosticSummaryRecord, RelayInformationRecord,

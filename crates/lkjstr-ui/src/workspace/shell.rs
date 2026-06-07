@@ -3,6 +3,7 @@ use lkjstr_domain::TabKind;
 
 use crate::app::RuntimeSignal;
 use crate::workspace::accounts_provider::AccountsProvider;
+use crate::workspace::log_provider::LogProvider;
 use crate::workspace::pane::PaneView;
 use crate::workspace::persistence::WorkspacePersistence;
 use crate::workspace::relay_settings_provider::RelaySettingsProvider;
@@ -19,6 +20,7 @@ pub fn WorkspaceShell(
     accounts_provider: Option<AccountsProvider>,
     relay_settings_provider: Option<RelaySettingsProvider>,
     stats_provider: Option<StatsProvider>,
+    log_provider: Option<LogProvider>,
     settings_provider: Option<SettingsProvider>,
     upload_settings_provider: Option<UploadSettingsProvider>,
     tweet_provider: Option<TweetProvider>,
@@ -54,6 +56,7 @@ pub fn WorkspaceShell(
                             accounts_provider=accounts_provider.clone()
                             relay_settings_provider=relay_settings_provider.clone()
                             stats_provider=stats_provider.clone()
+                            log_provider=log_provider.clone()
                             settings_provider=settings_provider.clone()
                             upload_settings_provider=upload_settings_provider.clone()
                             tweet_provider=tweet_provider.clone()
