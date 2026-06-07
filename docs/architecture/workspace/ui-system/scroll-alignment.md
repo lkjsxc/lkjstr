@@ -28,14 +28,13 @@ duplicate the content inset.
 
 ## Form Tabs
 
-Form tabs use `FormTabShell` with a non-scrolling `.form-tab` root and a
-`.form-tab__scroll` child that owns vertical scroll.
+Form tabs use `FormTabShell` with the same two-layer pattern as feed lists.
 
-| Layer         | Owner                                              |
-| ------------- | -------------------------------------------------- |
-| Track edge    | `.form-tab__scroll` via `padding-inline-end`       |
-| Content inset | scroll children via both inline paddings           |
-| Scroll owner  | `.form-tab__scroll` with `data-scroll-owner`       |
+| Layer         | Owner                                          |
+| ------------- | ---------------------------------------------- |
+| Track edge    | `.form-tab__scroller` via `padding-inline-end` |
+| Content inset | scroll children via both inline paddings       |
+| Scroll owner  | `.form-tab__scroll` with `data-scroll-owner`   |
 
 All tool tabs route through `FormTabShell.svelte` so New Tab, Settings, Tweet,
 and the other form surfaces share the feed track-edge mechanism.

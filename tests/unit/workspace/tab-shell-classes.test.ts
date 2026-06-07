@@ -28,6 +28,7 @@ function sectionClass(source: string): string | undefined {
 describe('tab shell classes', () => {
   it('keeps form-tab on the shared form shell root', () => {
     expect(formShell).toContain('class="form-tab');
+    expect(formShell).toContain('form-tab__scroller');
     expect(formShell).toContain('form-tab__scroll');
     expect(formShell).toContain('data-scroll-owner');
   });

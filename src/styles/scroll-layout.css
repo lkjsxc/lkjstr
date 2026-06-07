@@ -3,13 +3,18 @@
   --scroll-content-inset: var(--space-3);
 }
 
-.event-list__scroller {
+.event-list__scroller,
+.form-tab__scroller {
   box-sizing: border-box;
+  min-height: 0;
+  min-width: 0;
+  overflow: hidden;
   padding-inline-end: var(--scroll-track-edge);
 }
 
 .event-list__viewport,
-.notification-list-scroll {
+.notification-list-scroll,
+.form-tab__scroll {
   box-sizing: border-box;
   overflow-x: clip;
   scrollbar-gutter: stable;
@@ -26,8 +31,13 @@
   padding: 0;
 }
 
+.form-tab__scroller {
+  display: flex;
+  flex: 1 1 0;
+  flex-direction: column;
+}
+
 .form-tab__scroll {
-  box-sizing: border-box;
   display: flex;
   flex: 1 1 0;
   flex-direction: column;
@@ -37,8 +47,6 @@
   min-width: 0;
   overflow: auto;
   overscroll-behavior: contain;
-  padding-inline-end: var(--scroll-track-edge);
-  scrollbar-gutter: stable;
 }
 
 .form-tab__scroll > :where(*) {

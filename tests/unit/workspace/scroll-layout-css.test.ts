@@ -4,25 +4,24 @@ import { describe, expect, it } from 'vitest';
 const css = () => readFileSync('src/styles/scroll-layout.css', 'utf8');
 
 describe('scroll layout css', () => {
-  it('uses one shared feed scrollbar inset for timelines and notifications', () => {
+  it('uses one shared track-edge scroller for feed and form tabs', () => {
     const source = css();
 
     expect(source).toContain('--scroll-track-edge: var(--space-2);');
-    expect(source).toContain('.event-list__scroller');
+    expect(source).toContain('.event-list__scroller,\n.form-tab__scroller');
     expect(source).toContain('padding-inline-end: var(--scroll-track-edge);');
     expect(source).toContain('.notification-list-scroll');
   });
 
-  it('uses the feed-matching track-edge padding on form scroll roots', () => {
+  it('keeps the scroll owner inside the padded scroller wrapper', () => {
     const source = css();
 
     expect(source).toContain('.form-tab__scroll');
-    expect(source).toContain('padding-inline-end: var(--scroll-track-edge);');
-    expect(source).not.toContain(
-      'margin-inline-end: var(--scroll-track-edge);',
+    expect(source).not.toMatch(
+      /\.form-tab__scroll\s*\{[^}]*padding-inline-end:\s*var\(--scroll-track-edge\)/s,
     );
     expect(source).not.toContain(
-      'margin-inline-end: var(--scroll-content-inset);',
+      'margin-inline-end: var(--scroll-track-edge);',
     );
   });
 

@@ -17,7 +17,8 @@ inset so scrollbar tracks align across tab kinds inside split panes.
 ### Track edge
 
 - Feed tabs: `.event-list__scroller` applies `padding-inline-end`.
-- Form tabs: `.form-tab__scroll` applies the same `padding-inline-end`.
+- Form tabs: `.form-tab__scroller` applies the same `padding-inline-end` as
+  `.event-list__scroller`.
 - `.pane-body` never applies horizontal inset on the scroll axis.
 
 ### Content inset
@@ -34,7 +35,7 @@ inset so scrollbar tracks align across tab kinds inside split panes.
 | Pattern | Tab root                        | Track edge              | Content inset       |
 | ------- | ------------------------------- | ----------------------- | ------------------- |
 | Feed    | `.feed-tab`, `overflow: hidden` | `.event-list__scroller` | `.feed-scroll-item` |
-| Form    | `.form-tab`, `overflow: hidden` | `.form-tab__scroll`     | scroll children     |
+| Form    | `.form-tab`, `overflow: hidden` | `.form-tab__scroller`   | scroll children     |
 
 ```text
 Feed tab
@@ -46,8 +47,9 @@ Feed tab
 
 Form tab
   .form-tab (no horizontal padding)
-    .form-tab__scroll (track edge + scroll owner)
-      direct child (content inset both sides)
+    .form-tab__scroller (track edge)
+      .form-tab__scroll [data-scroll-owner]
+        direct child (content inset both sides)
 ```
 
 ## Split Pane Alignment

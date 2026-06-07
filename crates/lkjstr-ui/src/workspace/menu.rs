@@ -25,10 +25,12 @@ pub fn NewTabMenu(
 
     view! {
         <section class="form-tab new-tab" aria-label="New Tab">
-            <div class="form-tab__scroll" data-scroll-owner="">
-                <div class="option-grid lkjstr-new-tab-options" aria-label="New Tab options">
+            <div class="form-tab__scroller">
+                <div class="form-tab__scroll" data-scroll-owner="">
+                    <div class="option-grid lkjstr-new-tab-options" aria-label="New Tab options">
                     {base_options.into_iter().map(|option| option_button(option, action.clone()))
                         .collect_view()}
+                    </div>
                 </div>
             </div>
         </section>

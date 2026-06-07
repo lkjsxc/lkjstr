@@ -17,7 +17,9 @@
 </script>
 
 <section class="form-tab {className}" aria-label={label}>
-  <div class="form-tab__scroll" data-scroll-owner="" bind:this={scrollOwner}>
-    {@render children()}
+  <div class="form-tab__scroller">
+    <div class="form-tab__scroll" data-scroll-owner="" bind:this={scrollOwner}>
+      {@render children()}
+    </div>
   </div>
 </section>
