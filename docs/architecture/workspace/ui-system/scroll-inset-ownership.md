@@ -14,6 +14,15 @@ inset so scrollbar tracks align across tab kinds inside split panes.
 
 ## Single-Owner Rules
 
+### Root platform gutter
+
+- Feed tabs: `.feed-tab` applies `scrollbar-gutter: stable` on the non-scrolling
+  tab root.
+- Form tabs: `.form-tab` applies the same root gutter so New Tab, Relay
+  Settings, and every other tool tab align with feed tabs on classic-scrollbar
+  browsers.
+- `.pane-body` never owns this gutter.
+
 ### Track edge
 
 - Feed tabs: `.tab-scroll-track` on the `.event-list__scroller` wrapper applies
@@ -33,21 +42,21 @@ inset so scrollbar tracks align across tab kinds inside split panes.
 
 ## Feed vs Form
 
-| Pattern | Tab root                        | Track edge                               | Content inset       |
-| ------- | ------------------------------- | ---------------------------------------- | ------------------- |
-| Feed    | `.feed-tab`, `overflow: hidden` | `.tab-scroll-track.event-list__scroller` | `.feed-scroll-item` |
-| Form    | `.form-tab`, `overflow: hidden` | `.tab-scroll-track.form-tab__scroller`   | scroll children     |
+| Pattern | Tab root                        | Root gutter                | Track edge                               | Content inset       |
+| ------- | ------------------------------- | -------------------------- | ---------------------------------------- | ------------------- |
+| Feed    | `.feed-tab`, `overflow: hidden` | `scrollbar-gutter: stable` | `.tab-scroll-track.event-list__scroller` | `.feed-scroll-item` |
+| Form    | `.form-tab`, `overflow: hidden` | `scrollbar-gutter: stable` | `.tab-scroll-track.form-tab__scroller`   | scroll children     |
 
 ```text
 Feed tab
-  .feed-tab (no horizontal padding)
+  .feed-tab (no horizontal padding; stable root gutter)
     .tab-scroll-track.event-list__scroller (track edge)
       .tab-scroll-owner.event-list__viewport [data-scroll-owner]
         .feed-scroll-item (content inset)
           row content
 
 Form tab
-  .form-tab (no horizontal padding)
+  .form-tab (no horizontal padding; stable root gutter)
     .tab-scroll-track.form-tab__scroller (track edge)
       .tab-scroll-owner.form-tab__scroll [data-scroll-owner]
         direct child (content inset both sides)

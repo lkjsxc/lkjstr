@@ -17,11 +17,12 @@ same horizontal position when the user switches tab kinds inside one split pane.
 Feed tabs use `.feed-tab` with `overflow: hidden` and zero horizontal padding on
 the tab root.
 
-| Layer         | Owner                                                                       |
-| ------------- | --------------------------------------------------------------------------- |
-| Track edge    | `.tab-scroll-track` / `.event-list__scroller` via `padding-inline-end`      |
-| Content inset | `.feed-scroll-item` via both inline paddings                                |
-| Scroll owner  | `.tab-scroll-owner` / documented notification root with `data-scroll-owner` |
+| Layer                | Owner                                                                       |
+| -------------------- | --------------------------------------------------------------------------- |
+| Root platform gutter | `.feed-tab` via `scrollbar-gutter: stable`                                  |
+| Track edge           | `.tab-scroll-track` / `.event-list__scroller` via `padding-inline-end`      |
+| Content inset        | `.feed-scroll-item` via both inline paddings                                |
+| Scroll owner         | `.tab-scroll-owner` / documented notification root with `data-scroll-owner` |
 
 Feed tab roots must not add a second horizontal inset. `.event-main` must not
 duplicate the content inset.
@@ -30,11 +31,12 @@ duplicate the content inset.
 
 Form tabs use `FormTabShell` with the same two-layer pattern as feed lists.
 
-| Layer         | Owner                                                                           |
-| ------------- | ------------------------------------------------------------------------------- |
-| Track edge    | `.tab-scroll-track.form-tab__scroller` via `padding-inline-end`                 |
-| Content inset | scroll children via both inline paddings                                        |
-| Scroll owner  | `.tab-scroll-owner.form-tab__scroll` with `data-scroll-owner` and no x-overflow |
+| Layer                | Owner                                                                           |
+| -------------------- | ------------------------------------------------------------------------------- |
+| Root platform gutter | `.form-tab` via `scrollbar-gutter: stable`                                      |
+| Track edge           | `.tab-scroll-track.form-tab__scroller` via `padding-inline-end`                 |
+| Content inset        | scroll children via both inline paddings                                        |
+| Scroll owner         | `.tab-scroll-owner.form-tab__scroll` with `data-scroll-owner` and no x-overflow |
 
 All tool tabs route through `FormTabShell.svelte` so New Tab, Settings, Tweet,
 and the other form surfaces share the feed track-edge mechanism.
@@ -42,8 +44,11 @@ and the other form surfaces share the feed track-edge mechanism.
 ## Tab Kind Switch Rule
 
 When the user switches between a feed tab and a form tab in the same pane, the
-active scroll owner's `getBoundingClientRect().right` must differ from the pane
-body right edge by `--scroll-track-edge` within one device pixel.
+active scroll owner's `getBoundingClientRect().right` must stay in the same
+position within one device pixel. On classic-scrollbar browsers this offset is
+the root platform gutter plus `--scroll-track-edge`; on overlay-scrollbar
+browsers it may visually collapse to the track edge, but feed and form tabs must
+match each other.
 
 Misalignment usually means:
 

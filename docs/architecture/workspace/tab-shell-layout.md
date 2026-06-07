@@ -23,6 +23,8 @@ readers and retention code.
 - Required on every non-feed tool tab root.
 - Scrolls through the shared inner `.tab-scroll-owner.form-tab__scroll`, not
   the tab root.
+- Reserves the same root `scrollbar-gutter: stable` as `.feed-tab` so all tool
+  tabs align with feed tabs.
 - Used by: Settings, Relay Settings, Stats, Welcome, Upload Settings, Accounts,
   Tweet, Profile Edit, Mine npub, lkjstr Log, New Tab, and Public Chat.
 - `.data-tab` remains a styling alias but must also include `.form-tab` on tool

@@ -59,8 +59,9 @@ All scroll roots share:
 --scroll-content-inset: var(--space-3);
 ```
 
-Feed virtual lists and form tabs apply track edge on `.tab-scroll-track` and
-content inset on `.feed-scroll-item` or direct `.form-tab__scroll` children.
+Feed and form tab roots both reserve `scrollbar-gutter: stable`. Feed virtual
+lists and form tabs then apply track edge on `.tab-scroll-track` and content
+inset on `.feed-scroll-item` or direct `.form-tab__scroll` children.
 
 ## Related
 

@@ -8,6 +8,10 @@ inset from split handles and do not overlap text or controls.
 ## Contract
 
 - The **scrolling element** for each surface owns `scrollbar-gutter: stable`.
+- The tab root also reserves the same platform gutter: `.feed-tab` and
+  `.form-tab` both set `scrollbar-gutter: stable` even though the root itself
+  does not scroll. This keeps form tabs such as New Tab and Relay Settings in
+  the same horizontal position as Home and Notifications.
 - `--scroll-track-edge` is the distance from the tile inner border to the
   scrollbar track (default `var(--space-2)`). Feed and tool tabs use the same
   token so scrollbar tracks do not sit flush against split resize handles.

@@ -57,8 +57,10 @@ surface. Each row must pass before the scroll-layout contract is complete.
 
 ## Verification
 
-- Scrolling element `getBoundingClientRect().right` is inset from the pane body
-  right edge by `--scroll-track-edge` within one device pixel.
+- Feed and form scrolling elements in the same pane have matching
+  `getBoundingClientRect().right` within one device pixel. The body-edge offset
+  includes the platform scrollbar gutter plus `--scroll-track-edge` on
+  classic-scrollbar browsers.
 - Text in the rightmost column does not sit under the scrollbar thumb.
 - `scrollbar-gutter: stable` prevents layout shift when scrollbars appear.
 - Feed tabs use `.feed-tab` with exactly one `[data-scroll-owner]`.

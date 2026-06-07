@@ -8,8 +8,8 @@ list chrome inside the scroll flow.
 
 ## Contract
 
-- Each feed tab root uses `.feed-tab` with `overflow: hidden`. The tab shell
-  must not scroll vertically.
+- Each feed tab root uses `.feed-tab` with `overflow: hidden` and
+  `scrollbar-gutter: stable`. The tab shell must not scroll vertically.
 - Exactly one descendant carries `data-scroll-owner` and owns vertical scroll.
 - The scroll root uses `scrollbar-gutter: stable`, `overflow-x: clip`, and
   scroll-layout tokens from [scroll-layout.md](../../workspace/scroll-layout.md).

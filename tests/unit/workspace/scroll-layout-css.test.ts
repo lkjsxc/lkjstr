@@ -34,6 +34,13 @@ describe('scroll layout css', () => {
     expect(source).not.toMatch(/\.form-tab__scroll\s*\{[^}]*overflow:\s*auto/s);
   });
 
+  it('reserves the same platform gutter on feed and form tab roots', () => {
+    const source = css();
+
+    expect(source).toMatch(/\.form-tab\s*\{[^}]*scrollbar-gutter:\s*stable;/s);
+    expect(source).toMatch(/\.feed-tab\s*\{[^}]*scrollbar-gutter:\s*stable;/s);
+  });
+
   it('stamps shared scroll classes on feed and form scroll hosts', () => {
     expect(feedScrollSurface()).toContain(
       '<div class={`${scrollerClass} tab-scroll-track`}',

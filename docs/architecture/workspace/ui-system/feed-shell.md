@@ -49,9 +49,10 @@ All feed scroll roots share:
 --scroll-content-inset: var(--space-3);
 ```
 
-The shared `.tab-scroll-track` scroller wrapper applies the track edge.
-`.feed-scroll-item` applies the content inset so thumbs do not overlap text.
-Feed tab roots must not add horizontal padding. See
+The `.feed-tab` root reserves the platform gutter with
+`scrollbar-gutter: stable`. The shared `.tab-scroll-track` scroller wrapper then
+applies the track edge. `.feed-scroll-item` applies the content inset so thumbs
+do not overlap text. Feed tab roots must not add horizontal padding. See
 [scroll-inset-ownership.md](scroll-inset-ownership.md).
 
 ## Leading Rows
