@@ -34,8 +34,7 @@
   );
 </script>
 
-<article class:unread={!props.record.readAt} class="notification-row">
-  {#if !props.record.readAt}<span class="sr-only">Unread</span>{/if}
+<article class="notification-row">
   <div class="notification-row__body">
     {#if chrome.kind === 'normal'}
       <div class="notification-row__meta">

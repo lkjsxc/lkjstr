@@ -18,7 +18,6 @@ pub struct NotificationRecord {
     pub actor_pubkey: String,
     pub notification_kind: String,
     pub created_at: u64,
-    pub read_at_ms: Option<u64>,
     pub updated_at_ms: u64,
 }
 

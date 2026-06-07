@@ -13,11 +13,11 @@ import {
 import type { NotificationRecord } from '../../../src/lib/notifications/notification';
 
 describe('cache ledger policy', () => {
-  it('prunes low-value read reactions before unread mentions', () => {
-    const readReaction = notification('reaction', 100, 200);
-    const unreadMention = notification('mention', 100, null);
-    expect(scoreNotification(readReaction)).toBeLessThan(
-      scoreNotification(unreadMention),
+  it('prunes low-value reactions before important mentions', () => {
+    const reaction = notification('reaction', 100);
+    const mention = notification('mention', 100);
+    expect(scoreNotification(reaction)).toBeLessThan(
+      scoreNotification(mention),
     );
   });
 
@@ -56,12 +56,12 @@ describe('cache ledger policy', () => {
 
   it('skips durable and dynamic protected ledger rows', () => {
     const rows = [
-      notificationLedgerRecord(notification('reaction', 10, 20)),
+      notificationLedgerRecord(notification('reaction', 10)),
       {
-        ...notificationLedgerRecord(notification('mention', 20, null)),
+        ...notificationLedgerRecord(notification('mention', 20)),
         protected: true,
       },
-      notificationLedgerRecord(notification('reply', 30, null)),
+      notificationLedgerRecord(notification('reply', 30)),
     ];
     expect(selectPruneIds(rows, new Set([rows[2].id]), 3)).toEqual([
       rows[0].resourceId,
@@ -72,7 +72,6 @@ describe('cache ledger policy', () => {
 function notification(
   kind: NotificationRecord['kind'],
   createdAt: number,
-  readAt: number | null,
 ): NotificationRecord {
   return {
     id: `${kind}:${createdAt}`,
@@ -82,7 +81,6 @@ function notification(
     kind,
     createdAt,
     receivedAt: createdAt,
-    readAt,
     muted: false,
     hidden: false,
     relayUrls: [],

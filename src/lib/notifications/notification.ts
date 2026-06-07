@@ -16,7 +16,6 @@ export type NotificationRecord = {
   readonly kind: NotificationKind;
   readonly createdAt: number;
   readonly receivedAt: number;
-  readonly readAt: number | null;
   readonly muted: boolean;
   readonly hidden: boolean;
   readonly rootEventId?: string;

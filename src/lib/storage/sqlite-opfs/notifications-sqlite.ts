@@ -44,7 +44,7 @@ export function sqliteReadAccountNotifications(
 function notificationStep(record: NotificationRecord): SqlStep {
   return {
     statement:
-      'INSERT INTO notifications (id, account_pubkey, source_event_id, actor_pubkey, kind, created_at, read_at, record_json, updated_at_ms) VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9) ON CONFLICT(id) DO UPDATE SET read_at = excluded.read_at, record_json = excluded.record_json, updated_at_ms = excluded.updated_at_ms;',
+      'INSERT INTO notifications (id, account_pubkey, source_event_id, actor_pubkey, kind, created_at, record_json, updated_at_ms) VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8) ON CONFLICT(id) DO UPDATE SET record_json = excluded.record_json, updated_at_ms = excluded.updated_at_ms;',
     params: [
       record.id,
       record.accountPubkey,
@@ -52,7 +52,6 @@ function notificationStep(record: NotificationRecord): SqlStep {
       record.actorPubkey,
       record.kind,
       record.createdAt,
-      record.readAt,
       JSON.stringify(record),
       Date.now(),
     ],

@@ -2,8 +2,8 @@ use serde::Serialize;
 use wasm_bindgen::prelude::JsValue;
 
 use lkjstr_app::{
-    capture_feed_anchor, estimate_row_geometry, plan_feed_visual_rows, reconcile_feed_anchor,
-    update_row_geometry_model,
+    capture_feed_anchor, estimate_row_geometry, next_reserved_height, plan_feed_visual_rows,
+    reconcile_feed_anchor, update_row_geometry_model,
 };
 
 use super::codec::{
@@ -15,6 +15,10 @@ use super::dto::{
     CaptureAnchorInputDto, EstimateInputDto, PlanFragmentsInputDto, ReconcileAnchorInputDto,
     ReconcileAnchorOutputDto, RecordMeasurementInputDto,
 };
+use super::reservation_codec::{
+    reservation_action_from_dto, reservation_decision_to_dto, row_state_from_dto,
+};
+use super::reservation_dto::ReservationInputDto;
 use super::row_codec::visual_row_to_dto;
 
 #[derive(Serialize)]
@@ -42,6 +46,14 @@ pub fn record_feed_row_measurement(input: JsValue) -> Result<JsValue, JsValue> {
     let observation = observation_from_dto(dto.observation);
     let model = update_row_geometry_model(previous.as_ref(), &observation);
     to_js(&model_to_dto(&model))
+}
+
+pub fn next_feed_row_reservation(input: JsValue) -> Result<JsValue, JsValue> {
+    let dto = parse::<ReservationInputDto>(input)?;
+    let previous = dto.previous.map(row_state_from_dto);
+    let action = reservation_action_from_dto(dto.action);
+    let decision = next_reserved_height(previous.as_ref(), action);
+    to_js(&reservation_decision_to_dto(&decision))
 }
 
 pub fn plan_fragments(input: JsValue) -> Result<JsValue, JsValue> {

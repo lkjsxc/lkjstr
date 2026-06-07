@@ -53,6 +53,7 @@
   let viewportHeight = $derived(
     list?.getViewportSize?.() ?? scrollerElement?.clientHeight ?? 0,
   );
+  let surfaceWidthPx = $state<number | undefined>();
   let scrollIntent = createFeedScrollIntent();
   let previousIntentKey: string | undefined;
   let previousIntentOwner: HTMLElement | undefined;
@@ -107,6 +108,19 @@
   });
 
   $effect(() => {
+    if (!scrollerElement) return;
+    const initialWidth = Math.round(scrollerElement.clientWidth);
+    if (initialWidth > 0) surfaceWidthPx = initialWidth;
+    if (typeof ResizeObserver === 'undefined') return;
+    const observer = new ResizeObserver((entries) => {
+      const width = Math.round(entries[0]?.contentRect.width ?? 0);
+      if (width > 0) surfaceWidthPx = width;
+    });
+    observer.observe(scrollerElement);
+    return () => observer.disconnect();
+  });
+
+  $effect(() => {
     if (!scrollElement) return;
     const target = scrollElement;
     target.addEventListener('wheel', markWheelIntent);
@@ -121,19 +135,27 @@
 </script>
 
 <div class={`${scrollerClass} tab-scroll-track`} bind:this={scrollerElement}>
-  <VList
-    bind:this={list}
-    class={`${viewportClass} tab-scroll-owner`}
-    {...{ 'data-scroll-owner': '' }}
-    {data}
-    style="height: 100%; min-height: 0;"
-    {getKey}
-    onscroll={handleScroll}
-  >
-    {#snippet children(item)}
-      <FeedMeasuredRow {item} {getKey} {scrollElement} {row} />
-    {/snippet}
-  </VList>
+  {#if surfaceWidthPx !== undefined}
+    <VList
+      bind:this={list}
+      class={`${viewportClass} tab-scroll-owner`}
+      {...{ 'data-scroll-owner': '' }}
+      {data}
+      style="height: 100%; min-height: 0;"
+      {getKey}
+      onscroll={handleScroll}
+    >
+      {#snippet children(item)}
+        <FeedMeasuredRow
+          {item}
+          {getKey}
+          {scrollElement}
+          {surfaceWidthPx}
+          {row}
+        />
+      {/snippet}
+    </VList>
+  {/if}
   <EventTreeListNearEnd
     enabled={nearEndEnabled}
     {viewportHeight}

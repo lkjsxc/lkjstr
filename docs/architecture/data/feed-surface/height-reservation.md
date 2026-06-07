@@ -7,15 +7,16 @@ changes do not move the user's scroll anchor.
 
 ## Contract
 
-Status: the shipped Svelte scroll surface applies session-measured reservation,
-preserves active reservations through unload, and compensates legitimate height
-changes above the viewport. Rust owns pure estimation, reservation, and anchor
-reducers. Durable SQLite observation persistence and full Leptos feed use remain
-active targets.
+Status: Rust is the authoritative pure reducer for reservation choices,
+measurement invalidation, and anchor deltas. Svelte reports DOM observations and
+applies returned reservations. Session TypeScript maps may cache bridge results
+for responsiveness but are not the product geometry engine. Durable SQLite
+observation persistence and full Leptos feed use remain active targets.
 
-Measured height is a **reservation** for the visual row at the matching geometry
-key and layout bucket. A reservation is part of the scroll model, not an
-implementation detail of the materialized DOM.
+Measured height is a **structural reservation** for the visual row at the
+matching geometry key and layout bucket. A reservation is part of the scroll
+state, not just CSS `min-height` and not an implementation detail of the
+materialized DOM.
 
 Required behavior:
 
@@ -24,16 +25,19 @@ Required behavior:
 - Measurement keys include width bucket, font scale bucket, density bucket, and
   geometry schema generation.
 - Rows reserve an estimated or measured height before profile, reference, media,
-  action, and emoji enrichment finishes.
+  action, reaction, nested repost, and emoji enrichment finishes.
 - Predictions come from real measurements or deterministic features, never fake
   content.
 - Visible and near-visible rows render real content, real loading states, or real
   unavailable states.
 - Far rows may use cheap DOM, shells, or LOD blocks, but they keep the reserved
   structural block height.
-- Unloading or dematerializing must not reduce structural reserved height.
-  Enrichment-only height may collapse per
-  [enrichment-height-tiers.md](enrichment-height-tiers.md).
+- Profile chips, reference previews, nested repost targets, media, custom emoji,
+  and action or reaction summaries each have deterministic tiered reservation
+  behavior before asynchronous resolution completes.
+- Dematerialization emits `row_unloaded`; remount emits `row_rematerialized`.
+  Neither event may shrink the preserved structural reservation. Enrichment-only
+  height may collapse per [enrichment-height-tiers.md](enrichment-height-tiers.md).
 - Height may shrink only after explicit remeasurement caused by a legitimate
   layout or content condition.
 - Height changes above the viewport preserve the current anchor by applying the
@@ -51,7 +55,8 @@ changes:
 - font scale, device pixel ratio, or density changes its bucket.
 - the semantic row renders a different event or row identity.
 - the content shape hash changes because real content, known media dimensions,
-  or known reference state changed.
+  reference resolution state, nested repost state, action or reaction summary
+  state, or media availability changed.
 - the geometry schema generation changes.
 - a measurement expires and the row falls back to a marked estimate.
 
@@ -71,9 +76,10 @@ Measurements are scoped to stable coarse width buckets:
 ```
 
 A height measured in one bucket must not remain a permanent minimum height after
-the tile crosses into another bucket. When the bucket changes, the row uses a
-matching observation, a new estimate, or a conservative fallback until the
-materialized row is measured.
+the tile crosses into another bucket. When the bucket changes, old height data is
+inactive for the current row. The row uses a matching observation, a new
+estimate, or a conservative fallback until recomputation and materialized
+remeasurement in the new bucket allow shrink or growth.
 
 ## Features
 
@@ -99,6 +105,9 @@ density bucket
 content shape hash
 materialization tier
 reference resolution state
+media resolution state
+nested repost state
+action or reaction summary state
 measurement generation
 ```
 

@@ -14,14 +14,11 @@ const importantKinds = new Set([
 ]);
 
 export function scoreNotification(record: NotificationRecord): number {
-  const read = record.readAt !== null;
   const important = importantKinds.has(record.kind);
   const recency = Math.floor(record.createdAt / 3600) * 10;
   if (record.hidden || record.muted) return 100 + recency;
-  if (read && !important) return 200 + recency;
-  if (read && record.kind === 'profile-reference') return 300 + recency;
-  if (read) return 400 + recency;
-  if (!important) return 700 + recency;
+  if (record.kind === 'profile-reference') return 300 + recency;
+  if (!important) return 500 + recency;
   return 900 + recency;
 }
 
@@ -59,7 +56,6 @@ function notificationLedgerDraft(
     cacheBytes: 0,
     protected: false,
     accountPubkey: record.accountPubkey,
-    reason:
-      record.readAt === null ? 'unread-notification' : 'read-notification',
+    reason: 'notification-record',
   };
 }

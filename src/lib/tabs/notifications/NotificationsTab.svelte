@@ -95,21 +95,15 @@
     const unsubscribe = runtime.subscribe(
       (next) => (viewState = { ...next, profiles: currentProfiles }),
     );
-    captureStartupPromise(
-      runtime.start().then(() => markVisibleRead()),
-      {
-        code: 'notifications-runtime-start-failed',
-        surface: 'notifications',
-        kind: 'notifications',
-        tabId,
-        relayCount: relays.length,
-      },
-    );
-    const onFocus = () => void markVisibleRead();
-    window.addEventListener('focus', onFocus);
+    captureStartupPromise(runtime.start(), {
+      code: 'notifications-runtime-start-failed',
+      surface: 'notifications',
+      kind: 'notifications',
+      tabId,
+      relayCount: relays.length,
+    });
     return () => {
       profileRequest += 1;
-      window.removeEventListener('focus', onFocus);
       unsubscribe();
       runtime?.close();
       runtime = undefined;
@@ -125,10 +119,6 @@
         notificationRecordIds: viewState.records.map((record) => record.id),
       }),
     );
-  });
-
-  $effect(() => {
-    if (props.visible) void markVisibleRead();
   });
 
   $effect(() => {
@@ -153,11 +143,6 @@
       },
     );
   });
-
-  async function markVisibleRead(): Promise<void> {
-    if (!props.visible || document.visibilityState !== 'visible') return;
-    await runtime?.markVisibleRead();
-  }
 </script>
 
 <section class="feed-tab" aria-label="Notifications">

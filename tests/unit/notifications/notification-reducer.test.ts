@@ -14,7 +14,6 @@ function record(id: string, createdAt: number): NotificationRecord {
     kind: 'mention',
     createdAt,
     receivedAt: createdAt,
-    readAt: null,
     muted: false,
     hidden: false,
     relayUrls: [],

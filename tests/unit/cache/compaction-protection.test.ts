@@ -88,6 +88,5 @@ function notification(
     rootEventId,
     targetEventId,
     createdAt: Math.floor(Date.now() / 1000),
-    readAt: null,
   };
 }

@@ -43,6 +43,36 @@ describe('feed geometry WASM bridge wrapper', () => {
     });
   });
 
+  it('passes observation models and reservation calls through', () => {
+    const calls: unknown[] = [];
+    const bridge = createFeedGeometryWasmBridge({
+      estimate_feed_row_height_from_js: (input) => {
+        calls.push(input);
+        return { estimated_height_px: 200 };
+      },
+      next_feed_row_reservation_from_js: (input) => ({ input }),
+    });
+
+    bridge.estimateHeight({
+      key: 'row',
+      features: featuresForFeedItem(eventRow('hello'), 640),
+      models: [
+        {
+          bucket_key: 'bucket',
+          average_height_px: 200,
+          sample_count: 2,
+          updated_at_ms: 1,
+        },
+      ],
+    });
+    expect(calls[0]).toMatchObject({ models: [{ bucket_key: 'bucket' }] });
+    expect(
+      bridge.nextReservation({ action: { kind: 'row-unloaded' } }),
+    ).toEqual({
+      input: { action: { kind: 'row-unloaded' } },
+    });
+  });
+
   it('returns unavailable when an export is missing', () => {
     const bridge = createFeedGeometryWasmBridge({});
 

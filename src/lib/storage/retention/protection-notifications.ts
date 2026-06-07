@@ -7,7 +7,6 @@ type ProtectionNotificationRow = {
   readonly accountPubkey: string;
   readonly sourceEventId: string;
   readonly createdAt: number;
-  readonly readAt: number | null;
   readonly rootEventId?: string;
   readonly targetEventId?: string;
 };
@@ -20,15 +19,11 @@ export async function collectNotificationProtections(
   const rows = await sqliteNotificationRows(limit);
   if (!rows) return;
   const latestByAccount = new Map<string, number>();
-  const unreadRecentCutoff = Date.now() - 30 * 24 * 60 * 60 * 1000;
   for (const row of rows) {
     const retained = latestByAccount.get(row.accountPubkey) ?? 0;
-    if (retained < 200) {
-      latestByAccount.set(row.accountPubkey, retained + 1);
-      protectNotification(ids, row);
-    }
-    if (row.readAt === null && row.createdAt * 1000 >= unreadRecentCutoff)
-      protectNotification(ids, row);
+    if (retained >= 200) continue;
+    latestByAccount.set(row.accountPubkey, retained + 1);
+    protectNotification(ids, row);
   }
   await collectPotentialNotificationSources(ids, accountPubkeys, limit);
 }

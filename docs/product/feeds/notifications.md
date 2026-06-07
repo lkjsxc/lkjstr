@@ -51,8 +51,10 @@ notification context header and the source event as the primary body.
 - Exactly one bottom border separates notification items. Embedded `EventRow`
   uses `showSeparator={false}`. See
   [feed-row-chrome.md](../../architecture/data/feed-surface/feed-row-chrome.md).
-- Visible notifications are marked read when the tab is visible and receives
-  focus.
+- Notifications have no user-visible read or unread state. There is no unread
+  stripe, no screen-reader-only unread label, and no transient unread flash.
+- Opening, focusing, or viewing Notifications does not mutate notification rows
+  merely to mark them read.
 - Initial loading settles after local records load and subscription setup
   finishes, even when no notification event arrives.
 - Partial relay failure stays visible in diagnostics but does not block cached

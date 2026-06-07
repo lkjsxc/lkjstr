@@ -45,8 +45,9 @@ inset from split handles and do not overlap text or controls.
 - Feed scroll roots use `overflow-x: clip`.
 - Event More menu uses `right: var(--scroll-content-inset)` and `.event-main`
   reserves the same inline-end padding.
-- Feed tabs use `.feed-tab` with a single `[data-scroll-owner]` child per
-  [tab-shell-layout.md](tab-shell-layout.md).
+- Feed tabs use `.feed-tab` with exactly one explicit `[data-scroll-owner]`
+  child per [tab-shell-layout.md](tab-shell-layout.md). Retention must not scan
+  arbitrary descendants to guess a scroll owner.
 
 ## Tokens
 
@@ -77,8 +78,10 @@ Per-surface checklist: [scroll-surface-audit.md](scroll-surface-audit.md).
 
 ## Marking Scroll Owners
 
-Tab bodies set `data-scroll-owner` on the primary vertical scroller so tab
-retention can capture `scrollTop` without scanning arbitrary descendants.
+Tab bodies set `data-scroll-owner` on exactly one primary vertical scroller so
+tab retention can capture `scrollTop` without fallback discovery. The owner is
+scoped to the containing tab body; scroll restore targets only the active tab
+being restored and never a nested or unrelated scroll container.
 
 Virtua feed lists use the Virtua viewport element inside `.event-list__scroller`.
 Profile leading rows use the same viewport and content wrapper as note rows.

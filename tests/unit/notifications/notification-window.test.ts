@@ -43,7 +43,6 @@ function record(
     kind: 'mention',
     createdAt: id === 'old' ? 1 : 2,
     receivedAt: 1,
-    readAt: null,
     muted: false,
     hidden: false,
     targetEventId,

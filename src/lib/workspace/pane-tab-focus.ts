@@ -32,6 +32,29 @@ export async function syncPaneTabFocus(args: {
   readonly snapshots: SessionTabSnapshots<TabSnapshot>;
 }): Promise<PaneFocusSync> {
   const activeId = args.active?.id;
+  let persistedTabId: string | undefined;
+  let persistedPayload: TabSnapshotPayload | undefined;
+  if (args.previousActiveId && args.previousActiveId !== activeId) {
+    const previous = args.tabs[args.previousActiveId];
+    if (previous && args.group?.tabIds.includes(previous.id)) {
+      args.bodyScroll.remember(args.previousActiveId);
+      const scrollTop =
+        args.bodyScroll.snapshot(args.previousActiveId).scrollTop ?? 0;
+      const payload = snapshotPayloadForTab(previous, scrollTop);
+      persistedPayload = await persistTabSnapshot(
+        args.workspaceId,
+        args.paneId,
+        previous,
+        scrollTop,
+      );
+      persistedTabId = previous.id;
+      if (args.inactiveRetentionSeconds > 0)
+        args.snapshots.retain(
+          { id: previous.id, ...payload },
+          args.inactiveRetentionSeconds,
+        );
+    }
+  }
   let restorePayload: TabSnapshotPayload | undefined;
   if (activeId) {
     const hadLiveScroll = args.bodyScroll.hasRememberedScroll(activeId);
@@ -58,29 +81,6 @@ export async function syncPaneTabFocus(args: {
       }
     }
     if (!hadLiveScroll) args.bodyScroll.restore(activeId);
-  }
-  let persistedTabId: string | undefined;
-  let persistedPayload: TabSnapshotPayload | undefined;
-  if (args.previousActiveId && args.previousActiveId !== activeId) {
-    const previous = args.tabs[args.previousActiveId];
-    if (previous && args.group?.tabIds.includes(previous.id)) {
-      args.bodyScroll.remember(args.previousActiveId);
-      const scrollTop =
-        args.bodyScroll.snapshot(args.previousActiveId).scrollTop ?? 0;
-      const payload = snapshotPayloadForTab(previous, scrollTop);
-      persistedPayload = await persistTabSnapshot(
-        args.workspaceId,
-        args.paneId,
-        previous,
-        scrollTop,
-      );
-      persistedTabId = previous.id;
-      if (args.inactiveRetentionSeconds > 0)
-        args.snapshots.retain(
-          { id: previous.id, ...payload },
-          args.inactiveRetentionSeconds,
-        );
-    }
   }
   return {
     restorePayload,

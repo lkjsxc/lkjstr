@@ -71,7 +71,6 @@
   let footerPhase = $derived(footerPhaseFromPaging({ loadingOlder, hasOlder, historyExhaustion, rowCount: records.length, error }));
   let nearEndEnabled = $derived(hasOlder && !loadingOlder && olderPrefetchReady);
   let retryVisible = $derived(autoFillExhausted && shouldShowNotificationRetry({ recordCount: records.length, hasOlder, loadingOlder, olderPrefetchReady, historyExhaustion, error, autoFillAttempts: notificationAutoFillAttemptCap }));
-  let surfaceKey = $derived(records.length === 0 ? (retryVisible ? 'retry' : 'empty') : 'records');
   $effect(() => {
     listElement = scrollElement;
   });
@@ -146,53 +145,51 @@
 </script>
 
 <div class="event-list notification-list">
-  {#key surfaceKey}
-    <FeedScrollSurface
-      data={rows}
-      getKey={(item: unknown) =>
-        notificationViewRowKey(item as NotificationViewRow)}
-      scrollerClass="event-list__scroller notification-list-scroller"
-      viewportClass="notification-list-scroll"
-      {nearEndEnabled}
-      {intentKey}
-      onNearEnd={requestOlder}
-      onScrollOffset={captureCurrentAnchor}
-      bind:list
-      bind:scrollElement
-    >
-      {#snippet row(item: unknown)}
-        {@const view = item as NotificationViewRow}
-        {#if view.kind === 'footer'}
-          {#if retryVisible}
-            <button
-              class="notification-list__retry"
-              type="button"
-              onclick={requestExplicitOlder}
-            >
-              Load older notifications
-            </button>
-          {:else}
-            <FeedSurfaceStatus
-              {...feedSurfaceStatusProps(footerPhase, error ?? undefined)}
-            />
-          {/if}
+  <FeedScrollSurface
+    data={rows}
+    getKey={(item: unknown) =>
+      notificationViewRowKey(item as NotificationViewRow)}
+    scrollerClass="event-list__scroller notification-list-scroller"
+    viewportClass="notification-list-scroll"
+    {nearEndEnabled}
+    {intentKey}
+    onNearEnd={requestOlder}
+    onScrollOffset={captureCurrentAnchor}
+    bind:list
+    bind:scrollElement
+  >
+    {#snippet row(item: unknown)}
+      {@const view = item as NotificationViewRow}
+      {#if view.kind === 'footer'}
+        {#if retryVisible}
+          <button
+            class="notification-list__retry"
+            type="button"
+            onclick={requestExplicitOlder}
+          >
+            Load older notifications
+          </button>
         {:else}
-          <NotificationRow
-            record={view.record}
-            item={itemById.get(view.record.sourceEventId)}
-            targetItem={targetItemById.get(
-              view.record.targetEventId ?? view.record.rootEventId ?? '',
-            )}
-            profile={profiles[view.record.actorPubkey]}
-            {profiles}
-            {relaySets}
-            activeAccountPubkey={activeAccountPubkey ?? null}
-            {openProfile}
-            {openThread}
-            {openAuthorContext}
+          <FeedSurfaceStatus
+            {...feedSurfaceStatusProps(footerPhase, error ?? undefined)}
           />
         {/if}
-      {/snippet}
-    </FeedScrollSurface>
-  {/key}
+      {:else}
+        <NotificationRow
+          record={view.record}
+          item={itemById.get(view.record.sourceEventId)}
+          targetItem={targetItemById.get(
+            view.record.targetEventId ?? view.record.rootEventId ?? '',
+          )}
+          profile={profiles[view.record.actorPubkey]}
+          {profiles}
+          {relaySets}
+          activeAccountPubkey={activeAccountPubkey ?? null}
+          {openProfile}
+          {openThread}
+          {openAuthorContext}
+        />
+      {/if}
+    {/snippet}
+  </FeedScrollSurface>
 </div>

@@ -12,6 +12,10 @@ pub fn next_reserved_height(
         GeometryAction::RowMeasured { key, height_px } => measured(previous, key, height_px),
         GeometryAction::RowUnloaded => preserve_on_unload(previous),
         GeometryAction::RowRematerialized => rematerialized(previous),
+        GeometryAction::RowBecameVisible | GeometryAction::RowBecameNearVisible => {
+            visibility_changed(previous, true)
+        }
+        GeometryAction::RowBecameFarStructural => visibility_changed(previous, false),
         GeometryAction::WidthBucketChanged { key, estimate_px }
         | GeometryAction::FontBucketChanged { key, estimate_px }
         | GeometryAction::DensityBucketChanged { key, estimate_px } => invalidated(
@@ -25,6 +29,15 @@ pub fn next_reserved_height(
             key,
             estimate_px,
             ReservedHeightReason::ContentInvalidated,
+        ),
+        GeometryAction::ReferenceStateChanged { key, estimate_px }
+        | GeometryAction::MediaStateChanged { key, estimate_px }
+        | GeometryAction::NestedRepostStateChanged { key, estimate_px }
+        | GeometryAction::ActionSummaryStateChanged { key, estimate_px } => invalidated(
+            previous,
+            key,
+            estimate_px,
+            ReservedHeightReason::EnrichmentInvalidated,
         ),
         GeometryAction::SchemaGenerationChanged { key, estimate_px } => invalidated(
             previous,
@@ -56,7 +69,7 @@ fn measured(
         confidence: GeometryConfidence::Session,
         materialized: true,
     };
-    decision(state, old, ReservedHeightReason::Measured)
+    measured_decision(state, old)
 }
 
 fn preserve_on_unload(previous: Option<&RowGeometryState>) -> ReservedHeightDecision {
@@ -82,6 +95,22 @@ fn rematerialized(previous: Option<&RowGeometryState>) -> ReservedHeightDecision
         state,
         Some(previous.reserved_height_px),
         ReservedHeightReason::Estimated,
+    )
+}
+
+fn visibility_changed(
+    previous: Option<&RowGeometryState>,
+    materialized: bool,
+) -> ReservedHeightDecision {
+    let Some(previous) = previous else {
+        return fallback_empty(ReservedHeightReason::VisibilityChanged);
+    };
+    let mut state = previous.clone();
+    state.materialized = materialized;
+    decision(
+        state,
+        Some(previous.reserved_height_px),
+        ReservedHeightReason::VisibilityChanged,
     )
 }
 
@@ -122,6 +151,12 @@ fn expired(previous: Option<&RowGeometryState>, estimate_px: u16) -> ReservedHei
     )
 }
 
+fn measured_decision(state: RowGeometryState, old: Option<u16>) -> ReservedHeightDecision {
+    let mut next = decision(state, old, ReservedHeightReason::Measured);
+    next.persist_observation = next.state.measured_height_px.is_some();
+    next
+}
+
 fn decision(
     state: RowGeometryState,
     old: Option<u16>,
@@ -135,6 +170,8 @@ fn decision(
         previous_reserved_height_px: old,
         height_delta_px,
         reason,
+        anchor_compensation_required: height_delta_px != 0,
+        persist_observation: false,
     }
 }
 

@@ -93,6 +93,7 @@
     <div
       class="pane-body"
       data-active-tab={isActive}
+      data-tab-id={tabId}
       aria-hidden={!isActive}
       use:trackBody={tabId}
       use:consumeOnMount={{ tabId, restore: tabRestore }}

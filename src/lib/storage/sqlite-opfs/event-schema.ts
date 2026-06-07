@@ -1,6 +1,7 @@
 import { applySqliteSchema } from './kernel-client';
 
-const eventSchemaHash = 'event-graph-feed-cache-scan-density';
+const eventSchemaHash =
+  'event-graph-feed-cache-scan-density-notification-readless';
 
 const eventSchema = [
   'PRAGMA foreign_keys = ON;',
@@ -123,7 +124,6 @@ const eventSchema = [
   actor_pubkey TEXT NOT NULL,
   kind TEXT NOT NULL,
   created_at INTEGER NOT NULL,
-  read_at INTEGER,
   record_json TEXT NOT NULL,
   updated_at_ms INTEGER NOT NULL
 ) STRICT;`,

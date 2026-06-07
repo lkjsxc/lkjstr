@@ -4,7 +4,7 @@ use lkjstr_storage::{
 };
 
 #[test]
-fn sqlite_notification_rows_keep_owner_and_read_state() -> Result<(), serde_json::Error> {
+fn sqlite_notification_rows_keep_owner_and_timestamps() -> Result<(), serde_json::Error> {
     let row = NotificationRecord {
         notification_id: "owner:event:reply".to_owned(),
         owner_pubkey: "owner".to_owned(),
@@ -14,7 +14,6 @@ fn sqlite_notification_rows_keep_owner_and_read_state() -> Result<(), serde_json
         actor_pubkey: "actor".to_owned(),
         notification_kind: "reply".to_owned(),
         created_at: 1_700_000_001,
-        read_at_ms: Some(42),
         updated_at_ms: 43,
     };
 

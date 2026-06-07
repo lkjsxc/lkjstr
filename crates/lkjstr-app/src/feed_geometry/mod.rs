@@ -19,8 +19,8 @@ pub use hash::{ContentShapeInput, MaterializationTier, content_shape_hash};
 pub use model::{RowGeometryModel, RowHeightObservation, update_row_geometry_model};
 pub use reservation::next_reserved_height;
 pub use reservation_types::{
-    GeometryAction, GeometryConfidence, GeometryKey, ReservedHeightDecision, ReservedHeightReason,
-    RowGeometryState,
+    EnrichmentResolutionState, FeedRowReservationInput, GeometryAction, GeometryConfidence,
+    GeometryKey, ReservedHeightDecision, ReservedHeightReason, RowGeometryState,
 };
 pub use width_bucket::WidthBucket;
 

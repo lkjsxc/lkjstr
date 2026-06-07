@@ -10,7 +10,6 @@ const base: NotificationRecord = {
   kind: 'reaction',
   createdAt: 1,
   receivedAt: 1,
-  readAt: null,
   muted: false,
   hidden: false,
   relayUrls: [],

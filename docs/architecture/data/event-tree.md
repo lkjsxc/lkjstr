@@ -20,8 +20,7 @@ model.
 - Rows render avatar, display name, optional nip05 subtitle only, timestamp,
   and wrapped content. npub and hex pubkeys never appear beside the display name
   on feed rows.
-- Timeline rows do not use a left-side new-event stripe. Notification unread
-  styling stays scoped to notification rows only.
+- Timeline and notification rows do not use unread or new-event side stripes.
 - Profile and reference hydration prefetch authors and reference targets for
   visible rows and rows within one viewport of the visible range.
 - Long labels, ids, URLs, code, and note content wrap inside the row.

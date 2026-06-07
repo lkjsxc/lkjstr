@@ -155,7 +155,6 @@ describe('SQLite event graph repositories', () => {
       kind: 'mention' as const,
       createdAt: 50,
       receivedAt: 60,
-      readAt: null,
       muted: false,
       hidden: false,
       relayUrls: ['cache'],

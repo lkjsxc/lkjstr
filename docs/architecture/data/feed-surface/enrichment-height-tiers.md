@@ -2,98 +2,85 @@
 
 ## Purpose
 
-Enrichment height tiers separate structural row height from optional enrichment
-height so virtualized feeds stay scroll-stable without leaving large empty gaps
-after dematerialization.
+Enrichment height tiers make asynchronous row content predictable. They reserve
+real structural space before references, media, repost targets, profiles,
+custom emoji, and action summaries resolve, without creating fake event content.
 
 ## Tiers
 
-### Shell
+### Structural Tier
 
-- Cheap placeholder DOM for a real row id.
-- Uses deterministic feature estimates only.
-- No resolved reference cards, hydrated profile blocks, or expanded action
-  panels.
+- Real row identity, author chrome, event text, base action bar, and bounded
+  slots for known height-affecting children.
+- Preserved across virtualizer unload, dematerialization, hidden-tab pause, and
+  remount.
+- May shrink only after a legitimate invalidation and materialized
+  remeasurement in the active width, font, and density bucket.
 
-### Structural
+### Loading Tier
 
-- Real event text, action bar, loading reference shells, and bounded preview
-  slots.
-- Preserved across unload and dematerialization.
+- A real loading state for a known reference, repost target, profile chip,
+  media item, custom emoji, or action summary.
+- Reserves the deterministic bounded slot chosen by the Rust geometry reducer.
+- May increase structural reservation when known tags or metadata prove that the
+  loading child exists.
 
-### Enriched
+### Resolved Compact Tier
 
-- Resolved reference cards, hydrated profile metadata blocks, expanded reply or
-  zap panels, and measured media layout.
-- May collapse back to structural or shell tier on dematerialization.
+- A resolved real event, profile, media, or summary rendered in compact form.
+- Used for reference cards, unavailable target context, small media, and summary
+  rows that do not need expanded detail.
+- May increase reservation if compact real content exceeds the loading slot.
 
-## Reservation Rule
+### Resolved Expanded Tier
 
-When `materializationTier` drops from `enriched` to `structural` or `shell`, the
-reservation may shrink to the tier estimate for the current content shape hash.
-The scroll owner applies anchor compensation when the shrink happens above the
-viewport.
+- A resolved real child in expanded form, such as a nested repost card, media
+  with known dimensions, or opened action/reaction detail.
+- May increase reservation while materialized.
+- Expanded-only height may collapse back to structural, loading, compact, or
+  shell estimates when the row deliberately drops materialization tier.
 
-When tier stays `structural` or rises to `enriched`, normal unload preservation
-rules from [unload-height-stability.md](unload-height-stability.md) apply.
+### Unavailable Tier
 
-## Content Shape Hash
+- A compact real unavailable state for a missing or failed reference, repost
+  target, media item, or profile.
+- It is not fake preview content.
+- It may shrink from loading or expanded only after the reducer records the
+  unavailable state as a content-shape change or tier change.
 
-The shape hash includes:
+## Transitions
 
-- tag-derived reference counts
-- reference resolution state: `pending`, `resolved`, `unavailable`
-- `materializationTier`
-- row kind, including `user-row` for Followees entries
+Allowed increases:
 
-A tier drop is a legitimate remeasurement trigger.
+- Structural to loading when real metadata proves an enrichment child exists.
+- Loading to compact or expanded when resolved content exceeds the reserved slot.
+- Compact to expanded when the user or materialization policy opens more real
+  detail.
 
-## Row Kinds
+Allowed shrinks:
 
-- `user-row`: Followees and identity list rows use a dedicated base height.
-- `event`, `thread-root`, `notification`, `leading`, `footer`: unchanged
-  families.
-- `eventFragment`: fragment rows keep fragment index in the visual row key.
+- Width, font, density, content-shape, schema-generation, or measurement-expiry
+  invalidation followed by recomputation.
+- Expanded to compact, loading, unavailable, structural, or shell when the
+  materialization tier intentionally drops.
+- Loading to unavailable after the real unavailable state is known.
 
-## Implementation
+Forbidden shrinks:
 
-The shipped Svelte feed tracks materialized row keys in
-`row-height-reservation.ts`. Visible rows estimate at the `enriched` tier;
-dematerialized rows fall back to `structural` tier estimates. Enrichment
-collapse returns reference preview blocks to structural shell height instead of
-keeping full measured enriched height.
+- Virtualizer unload or remount of the same row.
+- Hidden-tab pause.
+- Replacing real structural content with shorter placeholder DOM.
+- Reusing a measurement from another width bucket as the current minimum.
 
-## Measurement Key Fix
+## Shape Inputs
 
-Quote and reply reference cards left excessive offscreen spacing when enriched
-DOM measurements were reused after dematerialization.
-
-Required fix in `row-height-reservation-keys.ts`:
-
-1. Include `materializationTier` in `measurementKeyFromFeatures`.
-2. Reject enriched measurements when estimating structural or shell tiers.
-3. On `markFeedRowDematerialized`, allow reservation shrink to the structural
-   tier estimate even when the content shape hash is unchanged.
-
-Closing gate: `tests/unit/feed-surface/row-height-reservation-tier.test.ts`.
-
-## Known Gap
-
-Reply and zap inline panels that expand while a row is visible may still need a
-stronger action-state bit in the shape hash if expanded height differs greatly
-from the action-bar estimate.
-
-Reproduction:
-
-1. Open a feed with reply or zap inline panels available.
-2. Expand reply or zap on a visible row.
-3. Scroll the row offscreen and back.
-4. If reserved height stays at the expanded panel size after dematerialization,
-   record the event kind, panel mode, and measured heights here before adding an
-   action-state machine.
+The content-shape hash and persisted observation key include the materialization
+tier plus reference resolution, media resolution, nested repost, and
+action/reaction summary states. They exclude tab id, pane id, request id, relay
+socket id, owner handle, and current scroll offset.
 
 ## Related
 
-- [unload-height-stability.md](unload-height-stability.md).
 - [height-reservation.md](height-reservation.md).
+- [unload-height-stability.md](unload-height-stability.md).
 - [geometry-model.md](geometry-model.md).

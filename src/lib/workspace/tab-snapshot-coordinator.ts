@@ -85,6 +85,11 @@ export function createTabSnapshotCoordinator(args: {
     tabId: string,
   ): Promise<TabSnapshotPayload | undefined> {
     const hadLiveScroll = bodyScroll.hasRememberedScroll(tabId);
+    if (bodyScroll.hasTracked(tabId) && hadLiveScroll) {
+      warm.take(tabId);
+      bodyScroll.remember(tabId);
+      return undefined;
+    }
     const session = warm.take(tabId);
     const payload =
       session ??
@@ -141,7 +146,6 @@ export function createTabSnapshotCoordinator(args: {
       readonly tabs: Record<string, WorkspaceTab>;
       readonly group?: TabGroup;
     }): Promise<void> => {
-      if (input.active) await restoreTab(input.active.id);
       const previous = input.previousActiveId
         ? input.tabs[input.previousActiveId]
         : undefined;
@@ -151,6 +155,7 @@ export function createTabSnapshotCoordinator(args: {
         input.group?.tabIds.includes(previous.id)
       )
         await captureTab(input.paneId, previous);
+      if (input.active) await restoreTab(input.active.id);
     },
     loadTabs: async (tabIds: readonly string[]): Promise<void> => {
       const loaded = await loadPersistedTabSnapshots(args.workspaceId, tabIds);

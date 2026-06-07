@@ -161,15 +161,18 @@ Read next: [architecture/workspace/README.md](architecture/workspace/README.md),
   required relay, route group, semantic key, filter shape, and bounded interval.
   Incomplete, failed, compacted, dense, stale, or missing evidence cannot prove
   absence.
-- Rust owns pure feed row geometry estimates, width-bucketed measured-height
-  model updates, anchor compensation, long-content visual-fragment planning,
-  and a pure real-data feed LOD tree. Rust also owns the unload-stable reserved
-  height reducer. The shipped Svelte feed warms the Rust geometry bridge, uses
-  equivalent temporary TypeScript fallback logic when the bridge is unavailable,
-  preserves measured reservations through unload and dematerialization, and
-  renders oversized events as real visual fragments in the single feed scroll
-  flow. LOD forgetting degrades low-value branches from full rows to shells,
-  blocks, and recovery recipes without creating fake rows.
+- Rust owns pure feed row geometry estimates, reservation decisions,
+  width-bucketed measured-height model updates, anchor compensation,
+  long-content visual-fragment planning, and a pure real-data feed LOD tree.
+  Svelte feed code is host glue: it reports DOM observations, applies Rust
+  reservation decisions when the bridge is available, preserves measured
+  reservations through unload and dematerialization, and renders oversized
+  events as real visual fragments in the single feed scroll flow. Session-only
+  TypeScript reservation maps remain a bridge fallback, not the durable source
+  of truth. SQLite-backed row-height observation persistence remains incomplete
+  and must use typed worker repositories when added. LOD forgetting degrades
+  low-value branches from full rows to shells, blocks, and recovery recipes
+  without creating fake rows.
 
 ## Network And Runtimes
 

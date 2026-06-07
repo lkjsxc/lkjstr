@@ -21,28 +21,12 @@ export function deriveNotifications(
     kind,
     createdAt: event.created_at,
     receivedAt,
-    readAt: null,
     muted: false,
     hidden: false,
     rootEventId: rootEventId(event),
     targetEventId: targetEventId(event),
     relayUrls,
   }));
-}
-
-export function unreadCount(records: readonly NotificationRecord[]): number {
-  return records.filter(
-    (record) => !record.readAt && !record.muted && !record.hidden,
-  ).length;
-}
-
-export function markRead(
-  records: readonly NotificationRecord[],
-  now = Date.now(),
-): NotificationRecord[] {
-  return records.map((record) =>
-    record.readAt ? record : { ...record, readAt: now },
-  );
 }
 
 function notificationKinds(

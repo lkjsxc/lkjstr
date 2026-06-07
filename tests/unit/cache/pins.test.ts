@@ -66,7 +66,6 @@ function notification(
     kind: 'mention',
     createdAt: 1,
     receivedAt: 1,
-    readAt: null,
     muted: false,
     hidden: false,
     rootEventId,

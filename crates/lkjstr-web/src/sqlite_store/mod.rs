@@ -39,9 +39,7 @@ pub use feed_cache::{
 };
 pub use inventory::sqlite_storage_stats_snapshot;
 pub use jobs::{sqlite_job_get, sqlite_job_put, sqlite_jobs_recent};
-pub use notifications::{
-    sqlite_notifications_for_owner, sqlite_notifications_mark_owner_read, sqlite_notifications_put,
-};
+pub use notifications::{sqlite_notifications_for_owner, sqlite_notifications_put};
 pub use relay_diagnostics::{
     sqlite_relay_information_get, sqlite_relay_information_put, sqlite_relay_information_recent,
     sqlite_relay_summaries_recent, sqlite_relay_summary_get, sqlite_relay_summary_put,

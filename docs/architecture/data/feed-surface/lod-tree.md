@@ -77,10 +77,10 @@ the retained recovery path.
 ## Protection
 
 Hard protection covers visible viewport and overscan, focused tab, active Thread
-root and ancestors, active Profile header and visible posts, unread recent
-notifications, active drafts, runtime-pinned events, latest metadata, active
-follow lists, open Followees targets, open User Timeline targets, and user-owned
-protected storage.
+root and ancestors, active Profile header and visible posts, recent visible
+notification windows, active drafts, runtime-pinned events, latest metadata,
+active follow lists, open Followees targets, open User Timeline targets, and
+user-owned protected storage.
 
 ## Recovery Path
 

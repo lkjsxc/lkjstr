@@ -120,7 +120,6 @@ function notificationRecord(): NotificationRecord {
     kind: 'mention',
     createdAt: 10,
     receivedAt: 20,
-    readAt: null,
     muted: false,
     hidden: false,
     relayUrls: ['cache'],

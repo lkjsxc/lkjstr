@@ -8,10 +8,11 @@ backstop reload and missing-mount cases without live relay work on hidden tabs.
 
 ## Blur Path
 
-When pane focus leaves tab `A` for tab `B`:
+When pane focus leaves tab `A` for tab `B`, blur capture happens before any
+focus restore for `B`:
 
-1. `tab-snapshot-coordinator.rememberScroll(A)` captures the primary scroll owner
-   `scrollTop`, including `0`.
+1. `tab-snapshot-coordinator.rememberScroll(A)` captures the explicit primary
+   `[data-scroll-owner]` `scrollTop`, including `0`.
 2. `captureRuntimeSnapshot(A)` merges feed cursors, anchors, and tool fields
    from `tabRuntimeRegistry`.
 3. The coordinator writes a durable SQLite OPFS worker tab snapshot with key
@@ -26,7 +27,9 @@ Tab `A` body stays mounted but hidden. Feed runtimes pause.
 When tab `B` becomes active:
 
 1. Show tab `B` body (visibility and pointer events).
-2. When `B` stayed mounted, use live DOM scroll and fields first.
+2. When `B` stayed mounted, use live DOM scroll and fields first. A mounted live
+   scroll owner wins over warm or persisted snapshots during normal tab
+   switches.
 3. Else the workspace coordinator consumes the warm snapshot when present.
 4. Else it loads the durable worker snapshot by `workspaceId + tabId`.
 5. The coordinator emits `TabSnapshotRestore { token, payload }`.
@@ -56,11 +59,15 @@ changing row layout or scrollbar width.
 
 ## Scroll Owner
 
-Each tab body marks its primary scroller with `data-scroll-owner` on the
-element that owns vertical overflow. `pane-scroll-retention` reads that node
-first instead of scanning all descendants. A pending persisted scroll restore
-stays authoritative until it is applied, so rapid focus changes cannot overwrite
-it with a fresh mount at `0`.
+Each tab body marks exactly one primary scroller with `data-scroll-owner` on the
+element that owns vertical overflow. `pane-scroll-retention` reads only that
+node and forbids arbitrary descendant scanning. A pending persisted scroll
+restore stays authoritative until it is applied, so rapid focus changes cannot
+overwrite it with a fresh mount at `0`.
+
+Scroll restore is owner-scoped: it targets only the active tab being restored,
+and scroll events are ignored when the target owner does not belong to the
+tracked tab body.
 
 Virtua feed lists use the Virtua viewport element inside `.event-list__scroller`.
 Profile uses that same owner for summary rows and note rows; retention must not

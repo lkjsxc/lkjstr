@@ -4,9 +4,17 @@ export type FeedGeometryBridgeStatus =
   | { readonly status: 'unrequested' | 'loading' | 'available' }
   | { readonly status: 'unavailable'; readonly message: string };
 
+export type FeedGeometryModel = {
+  readonly bucket_key: string;
+  readonly average_height_px: number;
+  readonly sample_count: number;
+  readonly updated_at_ms: number;
+};
+
 export type FeedGeometryWasmExports = {
   readonly estimate_feed_row_height_from_js?: (input: unknown) => unknown;
   readonly record_feed_row_measurement_from_js?: (input: unknown) => unknown;
+  readonly next_feed_row_reservation_from_js?: (input: unknown) => unknown;
   readonly plan_feed_visual_rows_from_js?: (input: unknown) => unknown;
   readonly capture_feed_anchor_from_js?: (input: unknown) => unknown;
   readonly reconcile_feed_anchor_from_js?: (input: unknown) => unknown;
@@ -43,15 +51,20 @@ export function feedGeometryWasmBridgeStatus(): FeedGeometryBridgeStatus {
 export function estimateHeightWithRust(input: {
   readonly key: string;
   readonly features: FeedGeometryFeatures;
+  readonly models?: readonly FeedGeometryModel[];
 }): number | undefined {
   const fn = exportsCache?.estimate_feed_row_height_from_js;
   if (!fn) return undefined;
   const output = fn({
     key: input.key,
     features: rustFeatures(input.features),
-    models: [],
+    models: input.models ?? [],
   });
   return heightFromOutput(output);
+}
+
+export function nextReservationWithRust(input: unknown): unknown {
+  return exportsCache?.next_feed_row_reservation_from_js?.(input);
 }
 
 export function createFeedGeometryWasmBridge(exports: FeedGeometryWasmExports) {
@@ -59,13 +72,17 @@ export function createFeedGeometryWasmBridge(exports: FeedGeometryWasmExports) {
     estimateHeight(input: {
       readonly key: string;
       readonly features: FeedGeometryFeatures;
+      readonly models?: readonly FeedGeometryModel[];
     }) {
       const output = exports.estimate_feed_row_height_from_js?.({
         key: input.key,
         features: rustFeatures(input.features),
-        models: [],
+        models: input.models ?? [],
       });
       return heightFromOutput(output);
+    },
+    nextReservation(input: unknown) {
+      return exports.next_feed_row_reservation_from_js?.(input);
     },
   };
 }

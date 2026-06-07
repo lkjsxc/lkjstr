@@ -149,6 +149,26 @@ runtime evidence:
   RSS is diagnostic only.
 - Real production hosts return expected headers when deployment access exists.
 
+## Real-Data Layout Regression Checklist
+
+Use real-shaped Nostr events through relay-backed or repository-backed paths,
+not placeholder UI rows.
+
+- Feed height stability: scroll Home or Global with references, media, custom
+  emoji, nested reposts, profiles, reactions, and action summaries resolving
+  above the viewport; the visible anchor remains stable and deltas are
+  compensated.
+- Width buckets: resize a tile across at least two feed width buckets; stale
+  measurements from the old bucket do not remain permanent minimums.
+- Timeline whitespace: inspect row diagnostics for reservation gaps, content
+  trailing blank lines, empty child margins, action/reaction gaps,
+  embed/reference gaps, and width-bucket mismatches.
+- Notifications: no row renders unread styling, an unread accessible label, or a
+  view/focus read-marking mutation; ordering, windowing, paging, and event
+  rendering remain unchanged.
+- Tab scroll isolation: switch, reorder, split, and close tabs with different
+  scroll positions; only the intended tab scroll owner changes.
+
 ## Storage Pressure Acceptance
 
 - Stats reads SQLite storage health and mode instead of showing indefinite

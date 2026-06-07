@@ -92,7 +92,6 @@ pub const SQLITE_CACHE_TABLES: &[SqliteTableSpec] = &[
   actor_pubkey TEXT NOT NULL,
   notification_kind TEXT NOT NULL,
   created_at INTEGER NOT NULL,
-  read_at_ms INTEGER,
   updated_at_ms INTEGER NOT NULL
 ) STRICT;"#
     ),

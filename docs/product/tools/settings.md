@@ -37,8 +37,7 @@ Settings provide editable local preferences as one flat key-value list.
   until the user stores a valid handler coordinate and relay hint.
 - `timeline.showClientTags` controls optional display of incoming client tags.
 - `notifications.enabled` and `notifications.defaultCategories` remain inert
-  flat settings. They do not gate notification capture, indexing, unread state,
-  or rendering.
+  flat settings. They do not gate notification capture, indexing, or rendering.
 - Stats auto-refresh is controlled by a checkbox in Stats, not by a text-like
   button.
 - JSON import uses an inline textarea and status. Browser prompt dialogs are

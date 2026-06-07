@@ -37,8 +37,8 @@ Readiness checks whether the app contract is shippable.
 - Inactive tab retention keeps switched-away tabs alive for the configured
   grace period and closes subscriptions after expiry.
 - Cache compaction protects accounts, settings, relay sets, workspace state,
-  Tweet drafts, active jobs, active tab snapshots, recent or unread
-  notifications, and relay route blocks.
+  Tweet drafts, active jobs, active tab snapshots, recent notification windows,
+  and relay route blocks.
 - App-owned memory counters return to documented idle states after heavy-feed
   cleanup; Chromium RSS remains manual diagnostic evidence.
 - Tweet publishes only with a signing account and enabled write relays.

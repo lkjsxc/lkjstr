@@ -24,11 +24,6 @@
   padding: var(--space-3) 0;
 }
 
-.notification-row.unread {
-  border-left: 2px solid var(--color-focus);
-  padding-left: var(--space-2);
-}
-
 .notification-row__body,
 .notification-row__meta {
   min-width: 0;

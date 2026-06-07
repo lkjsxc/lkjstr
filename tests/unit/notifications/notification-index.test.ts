@@ -1,9 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import {
-  deriveNotifications,
-  markRead,
-  unreadCount,
-} from '../../../src/lib/notifications/notification-index';
+import { deriveNotifications } from '../../../src/lib/notifications/notification-index';
 import {
   notificationActionLabel,
   notificationActionText,
@@ -34,8 +30,7 @@ describe('notification index', () => {
       kind: 'reply',
       actorPubkey: event.pubkey,
     });
-    expect(unreadCount(records)).toBe(1);
-    expect(unreadCount(markRead(records))).toBe(0);
+    expect(Object.keys(records[0])).not.toContain('read' + 'At');
   });
 
   it('maps notification records to expected action labels', () => {

@@ -43,15 +43,3 @@ export async function accountNotifications(
 function isSupportedNotification(record: NotificationRecord): boolean {
   return record.kind !== ('follow' as NotificationRecord['kind']);
 }
-
-export async function markAccountNotificationsRead(
-  accountPubkey: string,
-): Promise<void> {
-  const records = await accountNotifications(accountPubkey, 5000);
-  const now = Date.now();
-  await saveNotifications(
-    records.map((record) =>
-      record.readAt ? record : { ...record, readAt: now },
-    ),
-  );
-}

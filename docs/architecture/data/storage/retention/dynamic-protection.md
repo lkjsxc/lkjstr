@@ -13,7 +13,6 @@ recoverable cache permanently protected.
 - active jobs
 - latest kind `0` metadata per pubkey
 - latest kind `3` follow list for local accounts
-- recent unread notifications
 - latest notification window per account
 - notification root, target, and source events
 - explicit protected ledger rows
@@ -30,5 +29,5 @@ protected record.
 
 ## Verification
 
-Tests cover active tab snapshots, unread notifications, notification source
-events, latest metadata, latest follow lists, and partial protection.
+Tests cover active tab snapshots, notification source events, latest metadata,
+latest follow lists, and partial protection.

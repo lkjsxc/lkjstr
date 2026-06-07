@@ -56,17 +56,12 @@ pub const CACHE_STATEMENTS: &[SqliteStatementSpec] = &[
     read(
         "notifications.by_owner",
         "notifications",
-        "SELECT notification_id, owner_pubkey, source_event_id, target_event_id, root_event_id, actor_pubkey, notification_kind, created_at, read_at_ms, updated_at_ms FROM notifications WHERE owner_pubkey = ?1 AND created_at < ?2 ORDER BY created_at DESC, notification_id ASC LIMIT ?3;",
+        "SELECT notification_id, owner_pubkey, source_event_id, target_event_id, root_event_id, actor_pubkey, notification_kind, created_at, updated_at_ms FROM notifications WHERE owner_pubkey = ?1 AND created_at < ?2 ORDER BY created_at DESC, notification_id ASC LIMIT ?3;",
     ),
     write(
         "notifications.upsert",
         "notifications",
-        "INSERT INTO notifications (notification_id, owner_pubkey, source_event_id, target_event_id, root_event_id, actor_pubkey, notification_kind, created_at, read_at_ms, updated_at_ms) VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10) ON CONFLICT(notification_id) DO UPDATE SET owner_pubkey = excluded.owner_pubkey, source_event_id = excluded.source_event_id, target_event_id = excluded.target_event_id, root_event_id = excluded.root_event_id, actor_pubkey = excluded.actor_pubkey, notification_kind = excluded.notification_kind, created_at = excluded.created_at, read_at_ms = excluded.read_at_ms, updated_at_ms = excluded.updated_at_ms;",
-    ),
-    write(
-        "notifications.mark_owner_read",
-        "notifications",
-        "UPDATE notifications SET read_at_ms = ?2, updated_at_ms = ?2 WHERE owner_pubkey = ?1 AND read_at_ms IS NULL;",
+        "INSERT INTO notifications (notification_id, owner_pubkey, source_event_id, target_event_id, root_event_id, actor_pubkey, notification_kind, created_at, updated_at_ms) VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9) ON CONFLICT(notification_id) DO UPDATE SET owner_pubkey = excluded.owner_pubkey, source_event_id = excluded.source_event_id, target_event_id = excluded.target_event_id, root_event_id = excluded.root_event_id, actor_pubkey = excluded.actor_pubkey, notification_kind = excluded.notification_kind, created_at = excluded.created_at, updated_at_ms = excluded.updated_at_ms;",
     ),
     read(
         "feed_cursors.select",

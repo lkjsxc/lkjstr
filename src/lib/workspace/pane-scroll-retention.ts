@@ -11,13 +11,26 @@ export function createPaneScrollRetention() {
   const scrollOwner = (tabId: string): HTMLElement | undefined => {
     const body = bodies.get(tabId);
     if (!body) return undefined;
-    return (
-      body.querySelector<HTMLElement>('[data-scroll-owner]') ??
-      body.querySelector<HTMLElement>('.event-list__viewport') ??
-      [...body.querySelectorAll<HTMLElement>('*')].find(
-        (node) => node.scrollHeight > node.clientHeight + 8,
-      )
-    );
+    const owners = body.querySelectorAll<HTMLElement>('[data-scroll-owner]');
+    if (owners.length !== 1) return undefined;
+    const owner = owners[0];
+    if (!belongsToTabBody(owner, body, tabId)) return undefined;
+    owner.setAttribute?.('data-scroll-owner-tab-id', tabId);
+    return owner;
+  };
+
+  const belongsToTabBody = (
+    owner: HTMLElement,
+    body: HTMLElement,
+    tabId: string,
+  ): boolean => {
+    const declared = owner.getAttribute?.('data-scroll-owner-tab-id');
+    if (declared && declared !== tabId) return false;
+    const closest = owner.closest?.('[data-tab-id]') as
+      | HTMLElement
+      | null
+      | undefined;
+    return !closest || closest === body;
   };
 
   const rememberTop = (tabId: string, top: number): void => {
@@ -58,11 +71,8 @@ export function createPaneScrollRetention() {
     track: (tabId: string, node: HTMLElement) => {
       const remember = (event: Event) => {
         const target = event.target as HTMLElement;
-        if (
-          !target.hasAttribute('data-scroll-owner') &&
-          !target.classList.contains('event-list__viewport')
-        )
-          return;
+        if (!target.hasAttribute?.('data-scroll-owner')) return;
+        if (target !== scrollOwner(tabId)) return;
         rememberTop(tabId, target.scrollTop);
       };
       bodies.set(tabId, node);

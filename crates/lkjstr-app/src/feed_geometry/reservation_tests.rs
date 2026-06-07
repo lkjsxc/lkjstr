@@ -130,3 +130,43 @@ fn expiration_falls_back_without_claiming_current_measurement() {
     assert_eq!(decision.state.measured_height_px, None);
     assert_eq!(decision.state.confidence, GeometryConfidence::Stale);
 }
+
+#[test]
+fn reference_resolution_change_uses_enrichment_reason() {
+    let state = measured_state();
+    let decision = next_reserved_height(
+        Some(&state),
+        GeometryAction::ReferenceStateChanged {
+            key: key("shape-ref-resolved", 3, 1),
+            estimate_px: 520,
+        },
+    );
+
+    assert_eq!(decision.state.reserved_height_px, 520);
+    assert_eq!(decision.reason, ReservedHeightReason::EnrichmentInvalidated);
+    assert!(decision.anchor_compensation_required);
+}
+
+#[test]
+fn measured_rows_request_observation_persistence() {
+    let decision = next_reserved_height(
+        Some(&measured_state()),
+        GeometryAction::RowMeasured {
+            key: key("shape-a", 3, 1),
+            height_px: 440,
+        },
+    );
+
+    assert!(decision.persist_observation);
+    assert_eq!(decision.height_delta_px, 20);
+}
+
+#[test]
+fn far_structural_transition_preserves_reserved_height() {
+    let state = measured_state();
+    let decision = next_reserved_height(Some(&state), GeometryAction::RowBecameFarStructural);
+
+    assert_eq!(decision.state.reserved_height_px, 420);
+    assert!(!decision.state.materialized);
+    assert!(!decision.anchor_compensation_required);
+}

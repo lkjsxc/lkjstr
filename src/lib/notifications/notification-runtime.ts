@@ -12,10 +12,7 @@ import {
   emptyNotificationState,
   type NotificationState,
 } from './notification-state';
-import {
-  accountNotifications,
-  markAccountNotificationsRead,
-} from './notification-store';
+import { accountNotifications } from './notification-store';
 import { trackNotificationRecords } from '../app/tab-runtime-counters';
 import {
   notificationRecordWindowSize,
@@ -145,7 +142,6 @@ export function createNotificationRuntime(
         }),
       );
     },
-    markVisibleRead: async (): Promise<void> => { if (closed || !accountPubkey) return; await markAccountNotificationsRead(accountPubkey); if (!closed) await reload(false); },
     loadOlder: async (): Promise<void> => {
       if (closed || !accountPubkey || state.loadingOlder || !state.hasOlder)
         return;

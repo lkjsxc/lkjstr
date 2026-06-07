@@ -3,6 +3,8 @@
 mod bridge;
 mod codec;
 mod dto;
+mod reservation_codec;
+mod reservation_dto;
 mod row_codec;
 
 use wasm_bindgen::prelude::{JsValue, wasm_bindgen};
@@ -15,6 +17,11 @@ pub fn estimate_feed_row_height_from_js(input: JsValue) -> Result<JsValue, JsVal
 #[wasm_bindgen]
 pub fn record_feed_row_measurement_from_js(input: JsValue) -> Result<JsValue, JsValue> {
     bridge::record_feed_row_measurement(input)
+}
+
+#[wasm_bindgen]
+pub fn next_feed_row_reservation_from_js(input: JsValue) -> Result<JsValue, JsValue> {
+    bridge::next_feed_row_reservation(input)
 }
 
 #[wasm_bindgen]
@@ -36,9 +43,11 @@ pub fn reconcile_feed_anchor_from_js(input: JsValue) -> Result<JsValue, JsValue>
 mod tests {
     use super::codec::{features_from_dto, fragment_config_from_dto};
     use super::dto::FeaturesDto;
+    use super::reservation_codec::{reservation_action_from_dto, reservation_decision_to_dto};
+    use super::reservation_dto::{GeometryKeyDto, ReservationActionDto};
     use super::row_codec::visual_row_to_dto;
     use lkjstr_app::feed_fragments::EventTextSegmentRow;
-    use lkjstr_app::{FeedVisualRow, RowKind};
+    use lkjstr_app::{FeedVisualRow, GeometryAction, RowKind, next_reserved_height};
 
     #[test]
     fn default_fragment_config_is_available() {
@@ -70,6 +79,35 @@ mod tests {
         assert_eq!(dto.kind, "event-text-segment");
         assert_eq!(dto.text.as_deref(), Some("hello"));
         assert_eq!(dto.starts_at, Some(4));
+    }
+
+    #[test]
+    fn reservation_codec_maps_reference_state_action() {
+        let action = reservation_action_from_dto(ReservationActionDto {
+            kind: "reference-state-changed".to_owned(),
+            key: Some(key_dto()),
+            height_px: None,
+            estimate_px: Some(320),
+        });
+        assert!(matches!(
+            action,
+            GeometryAction::ReferenceStateChanged { .. }
+        ));
+        let decision = next_reserved_height(None, action);
+        let dto = reservation_decision_to_dto(&decision);
+        assert_eq!(dto.reason, "enrichment-invalidated");
+    }
+
+    fn key_dto() -> GeometryKeyDto {
+        GeometryKeyDto {
+            semantic_row_key: "event:a".to_owned(),
+            visual_row_key: "event:a:full".to_owned(),
+            content_shape_hash: "shape".to_owned(),
+            width_bucket: 3,
+            font_scale_bucket: 1,
+            density_bucket: 1,
+            measurement_generation: 1,
+        }
     }
 
     fn features_dto(row_kind: &str) -> FeaturesDto {

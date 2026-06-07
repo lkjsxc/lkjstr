@@ -36,7 +36,7 @@ pub(crate) const STORAGE_TABLE_SPECS: &[StorageTableSpec] = &[
     t!("workspaces", "&id, updatedAt, activeAccountId", ProtectedUserData, Protected, "workspace", true),
     t!("accounts", "&id, pubkey, signerType, updatedAt, lastUsedAt", ProtectedUserData, Protected, "accounts", true),
     t!("localAccountSecrets", "&accountId, pubkey, updatedAt", ProtectedUserData, Protected, "signer", true),
-    lt!("notifications", "&id, accountPubkey, sourceEventId, actorPubkey, kind, readAt, createdAt, [accountPubkey+createdAt]", RecoverableCache, PrunableCache, "notifications", NotificationRecord, false),
+    lt!("notifications", "&id, accountPubkey, sourceEventId, actorPubkey, kind, createdAt, [accountPubkey+createdAt]", RecoverableCache, PrunableCache, "notifications", NotificationRecord, false),
     t!("tweetDrafts", "&id, accountId, updatedAt", ProtectedUserData, Protected, "tweet", true),
     lt!("events", "&id, pubkey, kind, created_at, [kind+created_at], [pubkey+kind+created_at]", RecoverableCache, PrunableCache, "events", NostrEvent, false),
     t!("cacheLedger", "&id, ownerKind, resourceKind, resourceId, score, createdAt, updatedAt, protected, accountPubkey, feedKey, relayUrl, [protected+score], [ownerKind+score], [resourceKind+score]", Ledger, Ledger, "storage", false),

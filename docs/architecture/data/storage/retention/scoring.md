@@ -21,15 +21,14 @@ These never evict through score compaction:
 - latest kind `3` follow list per active account pubkey
 - runtime-pinned event ids
 - newest retained notification window per account
-- unread recent notifications
 - notifications visible in mounted Notifications surfaces
 - feed keys owned by open feed surfaces
 
 ## Score Shape
 
 Event scores combine recency, kind, structural source, and direct target value.
-Notification scores use account, created time, read time, muted or hidden
-state, kind, and visible-surface protection.
+Notification scores use account, created time, muted or hidden state, kind, and
+visible-surface protection.
 
 Feed scan hints score low, feed coverage scores by proof quality and freshness,
 feed cursors score by open-feed ownership, diagnostics score by usefulness, and

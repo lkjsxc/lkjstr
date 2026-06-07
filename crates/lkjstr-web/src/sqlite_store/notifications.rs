@@ -6,7 +6,7 @@ use crate::{
     sqlite_store::{
         cache_ledger::ledger_step,
         database::SqliteStore,
-        params::{integer, opt_integer, opt_text, params, text},
+        params::{integer, opt_text, params, text},
         rows::all_rows,
     },
     storage_worker::SqlParams,
@@ -67,21 +67,6 @@ pub async fn sqlite_notifications_for_owner(
     all_rows(rows, "notifications", "notifications.by_owner")
 }
 
-pub async fn sqlite_notifications_mark_owner_read(
-    store: &SqliteStore,
-    owner_pubkey: &str,
-    read_at_ms: u64,
-) -> StorageOutcome<()> {
-    let mark = match store.step(
-        "notifications.mark_owner_read",
-        params(vec![text(owner_pubkey), integer(read_at_ms)]),
-    ) {
-        StorageOutcome::Ok(step) => step,
-        outcome => return outcome.map(|_| ()),
-    };
-    store.batch(vec![mark]).await
-}
-
 fn notification_params(row: SqliteNotificationRow) -> Option<SqlParams> {
     params(vec![
         text(row.notification_id),
@@ -92,7 +77,6 @@ fn notification_params(row: SqliteNotificationRow) -> Option<SqlParams> {
         text(row.actor_pubkey),
         text(row.notification_kind),
         integer(row.created_at),
-        opt_integer(row.read_at_ms),
         integer(row.updated_at_ms),
     ])
 }

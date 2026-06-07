@@ -16,11 +16,16 @@ function fakeScrollOwner(scrollTop: number): HTMLElement {
 }
 
 function fakePaneBody(owner: HTMLElement): HTMLElement {
+  return fakePaneBodyWithOwners([owner]);
+}
+
+function fakePaneBodyWithOwners(owners: readonly HTMLElement[]): HTMLElement {
   return {
     className: 'pane-body',
     innerHTML: '',
-    querySelector: () => owner,
-    querySelectorAll: () => [owner],
+    querySelector: () => owners[0],
+    querySelectorAll: (selector: string) =>
+      selector === '[data-scroll-owner]' ? owners : [],
     addEventListener: () => undefined,
     removeEventListener: () => undefined,
   } as unknown as HTMLElement;
@@ -32,6 +37,21 @@ describe('syncPaneTabFocus', () => {
       cb(0);
       return 0;
     });
+  });
+
+  it('requires exactly one explicit scroll owner', () => {
+    const bodyScroll = createPaneScrollRetention();
+    const owner = fakeScrollOwner(240);
+    const none = fakePaneBodyWithOwners([]);
+    const many = fakePaneBodyWithOwners([owner, fakeScrollOwner(12)]);
+
+    bodyScroll.track('none', none);
+    bodyScroll.track('many', many);
+    bodyScroll.remember('none');
+    bodyScroll.remember('many');
+
+    expect(bodyScroll.snapshot('none').scrollTop).toBeUndefined();
+    expect(bodyScroll.snapshot('many').scrollTop).toBeUndefined();
   });
 
   it('skips scroll restore when the tab body stayed mounted', async () => {

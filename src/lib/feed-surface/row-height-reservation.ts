@@ -168,6 +168,6 @@ function recordPreservedReservation(
   reservation: ReservedRowHeight,
   contentShapeHash: string,
 ): void {
-  if (reservation.contentShapeHash === contentShapeHash) return;
+  if (reservation.contentShapeHash !== contentShapeHash) return;
   preservedReservationKeys.set(key, true);
 }
