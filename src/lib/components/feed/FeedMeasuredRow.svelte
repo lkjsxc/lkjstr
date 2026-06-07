@@ -103,5 +103,7 @@
   data-gap-classification={gapClassification}
   style={`min-height: ${reservedHeight}px;`}
 >
-  {@render row(item)}
+  {#if item !== undefined && item !== null}
+    {@render row(item)}
+  {/if}
 </div>

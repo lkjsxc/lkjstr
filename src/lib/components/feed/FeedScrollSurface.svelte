@@ -3,6 +3,7 @@
   import { VList } from 'virtua/svelte';
   import EventTreeListNearEnd from '$lib/components/events/EventTreeListNearEnd.svelte';
   import FeedMeasuredRow from './FeedMeasuredRow.svelte';
+  import { safeFeedRowKey } from '$lib/feed-surface/feed-scroll-key';
   import { isNearEnd } from '$lib/feed-surface/near-end';
   import type { OlderLoadTrigger } from '$lib/feed-surface/older-load-mode';
   import {
@@ -58,6 +59,10 @@
   let previousIntentKey: string | undefined;
   let previousIntentOwner: HTMLElement | undefined;
   let hasIntentBaseline = false;
+
+  function getSafeKey(item: unknown): string {
+    return safeFeedRowKey(item, getKey);
+  }
 
   function handleScroll(offset: number): void {
     onScrollOffset?.(offset);
@@ -142,13 +147,13 @@
       {...{ 'data-scroll-owner': '' }}
       {data}
       style="height: 100%; min-height: 0;"
-      {getKey}
+      getKey={getSafeKey}
       onscroll={handleScroll}
     >
       {#snippet children(item)}
         <FeedMeasuredRow
           {item}
-          {getKey}
+          getKey={getSafeKey}
           {scrollElement}
           {surfaceWidthPx}
           {row}
