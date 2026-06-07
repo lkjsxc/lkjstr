@@ -21,6 +21,8 @@ read the current live storage state in [storage/README.md](storage/README.md).
   geometry keys, reservations, estimates, and anchors.
 - [feed-surface/unload-height-stability.md](feed-surface/unload-height-stability.md):
   stable reservations through unload and dematerialization.
+- [feed-surface/enrichment-height-tiers.md](feed-surface/enrichment-height-tiers.md):
+  structural vs enrichment height collapse on dematerialization.
 - [feed-surface/repost-rendering.md](feed-surface/repost-rendering.md): shared
   event rendering for repost targets.
 - [feed-surface/long-content.md](feed-surface/long-content.md): oversized event

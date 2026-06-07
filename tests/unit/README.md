@@ -12,6 +12,7 @@ This directory contains Vitest unit tests grouped by source domain.
 - [backend/](backend/): browser-local backend query ownership tests.
 - [cache/](cache/): cache behavior tests.
 - [custom-request/](custom-request/): custom relay request tests.
+- [emoji/](emoji/): emoji palette tests.
 - [events/](events/): event parsing and repository tests.
 - [feed-surface/](feed-surface/): shared feed paging tests.
 - [follow-graph/](follow-graph/): target follow-list tests.

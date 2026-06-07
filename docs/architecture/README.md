@@ -19,6 +19,14 @@ state, storage, relay orchestration, cleanup, and Rust/WASM migration.
 - [workspace/README.md](workspace/README.md): panes, tabs, scroll, and layout.
 - [workspace/ui-system/README.md](workspace/ui-system/README.md): shared UI
   components and interaction patterns.
+- [workspace/ui-system/hybrid-tab-shells.md](workspace/ui-system/hybrid-tab-shells.md):
+  Custom Request and Author Context hybrid layout.
+- [workspace/ui-system/polish-backlog.md](workspace/ui-system/polish-backlog.md):
+  executable UX polish acceptance criteria.
+- [workspace/ui-system/scroll-alignment.md](workspace/ui-system/scroll-alignment.md):
+  feed vs form scrollbar alignment.
+- [workspace/ui-system/surface-source-map.md](workspace/ui-system/surface-source-map.md):
+  contract to source and test gate map.
 
 ## High-Value Contracts
 
