@@ -1,4 +1,5 @@
 <script lang="ts">
+  import FormTabShell from '$lib/components/workspace/FormTabShell.svelte';
   import { onMount } from 'svelte';
   import type { Account } from '$lib/accounts/account';
   import { settingsChangedEvent } from '$lib/settings/settings-events';
@@ -48,7 +49,7 @@
   };
 </script>
 
-<section class="data-tab form-tab profile-edit-tab" aria-label="Profile Edit">
+<FormTabShell label="Profile Edit" class="data-tab profile-edit-tab">
   {#if view.canEdit}
     {#if view.loading}<p>Loading profile metadata...</p>{/if}
     <ProfileTextField
@@ -153,4 +154,4 @@
     <p>Select a signing account before editing a profile.</p>
   {/if}
   {#if view.status}<p role="status">{view.status}</p>{/if}
-</section>
+</FormTabShell>

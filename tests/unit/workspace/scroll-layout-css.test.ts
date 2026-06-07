@@ -13,11 +13,14 @@ describe('scroll layout css', () => {
     expect(source).toContain('.notification-list-scroll');
   });
 
-  it('uses the same track-edge token for tool-style scroll roots', () => {
+  it('uses the feed-matching track-edge padding on form scroll roots', () => {
     const source = css();
 
-    expect(source).toContain('.form-tab,');
-    expect(source).toContain('margin-inline-end: var(--scroll-track-edge);');
+    expect(source).toContain('.form-tab__scroll');
+    expect(source).toContain('padding-inline-end: var(--scroll-track-edge);');
+    expect(source).not.toContain(
+      'margin-inline-end: var(--scroll-track-edge);',
+    );
     expect(source).not.toContain(
       'margin-inline-end: var(--scroll-content-inset);',
     );

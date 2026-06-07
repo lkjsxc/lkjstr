@@ -1,4 +1,5 @@
 <script lang="ts">
+  import FormTabShell from '$lib/components/workspace/FormTabShell.svelte';
   import type { TabKind } from '$lib/workspace/tab';
   import {
     newTabOptionsForAccount,
@@ -23,7 +24,7 @@
   }
 </script>
 
-<section class="new-tab form-tab" aria-label="New Tab">
+<FormTabShell label="New Tab" class="new-tab">
   <div class="option-grid" aria-label="New Tab options">
     {#each options as option (option.label)}
       <button
@@ -38,4 +39,4 @@
       </button>
     {/each}
   </div>
-</section>
+</FormTabShell>

@@ -1,4 +1,5 @@
 <script lang="ts">
+  import FormTabShell from '$lib/components/workspace/FormTabShell.svelte';
   import type { Account } from '$lib/accounts/account';
   import {
     addAccountFromInput,
@@ -83,7 +84,7 @@
   }
 </script>
 
-<section class="data-tab form-tab" aria-label="Accounts">
+<FormTabShell label="Accounts" class="data-tab">
   <form
     class="toolbar"
     onsubmit={(event) => {
@@ -130,4 +131,4 @@
   {:else}
     <p>No account records are stored.</p>
   {/if}
-</section>
+</FormTabShell>

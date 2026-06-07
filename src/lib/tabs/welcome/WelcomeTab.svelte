@@ -1,4 +1,5 @@
 <script lang="ts">
+  import FormTabShell from '$lib/components/workspace/FormTabShell.svelte';
   import type { Account } from '$lib/accounts/account';
   import type { RelaySet } from '$lib/relays/relay-store';
   import { selectedDefaultRelaySet } from '$lib/relays/relay-store';
@@ -24,7 +25,7 @@
   let postReady = $derived(accountReady && writeRelays.length > 0);
 </script>
 
-<section class="data-tab form-tab welcome-tab" aria-label="Welcome">
+<FormTabShell label="Welcome" class="data-tab welcome-tab">
   <article class="welcome-doc">
     <h2>What this workspace is</h2>
     <p>
@@ -124,4 +125,4 @@
       support docs for the current boundary.
     </p>
   </article>
-</section>
+</FormTabShell>

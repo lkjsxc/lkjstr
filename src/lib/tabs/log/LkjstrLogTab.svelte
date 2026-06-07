@@ -1,4 +1,5 @@
 <script lang="ts">
+  import FormTabShell from '$lib/components/workspace/FormTabShell.svelte';
   import { onMount } from 'svelte';
   import {
     appLogRecords,
@@ -64,7 +65,7 @@
   }
 </script>
 
-<section class="relay-monitor form-tab" aria-label="lkjstr Log">
+<FormTabShell label="lkjstr Log" class="relay-monitor">
   <JobTreeLog />
   {#each logs as item (item.id)}
     <article class="relay-log-row">
@@ -82,4 +83,4 @@
   {:else}
     <p>No diagnostics recorded this session.</p>
   {/each}
-</section>
+</FormTabShell>

@@ -1,4 +1,5 @@
 <script lang="ts">
+  import FormTabShell from '$lib/components/workspace/FormTabShell.svelte';
   import { onDestroy } from 'svelte';
   import {
     createNpubMiner,
@@ -84,7 +85,7 @@
   }
 </script>
 
-<section class="miner-panel data-tab form-tab" aria-label="Mine npub">
+<FormTabShell label="Mine npub" class="miner-panel data-tab">
   <label>
     Prefix after npub1
     <input bind:value={prefix} disabled={running} placeholder="lkj" />
@@ -119,4 +120,4 @@
       >
     </article>
   {/if}
-</section>
+</FormTabShell>

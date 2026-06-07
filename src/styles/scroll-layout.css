@@ -15,18 +15,37 @@
   scrollbar-gutter: stable;
 }
 
-.form-tab,
-.data-tab,
-.settings-tab,
-.new-tab,
-.relay-monitor,
-.relay-settings {
+.form-tab {
   box-sizing: border-box;
-  margin-inline-end: var(--scroll-track-edge);
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  min-height: 0;
+  min-width: 0;
+  overflow: hidden;
+  padding: 0;
+}
+
+.form-tab__scroll {
+  box-sizing: border-box;
+  display: flex;
+  flex: 1 1 0;
+  flex-direction: column;
+  gap: var(--space-3);
+  margin: 0;
+  min-height: 0;
+  min-width: 0;
   overflow: auto;
-  padding-inline-end: 0;
-  padding-inline-start: var(--scroll-content-inset);
+  overscroll-behavior: contain;
+  padding-inline-end: var(--scroll-track-edge);
   scrollbar-gutter: stable;
+}
+
+.form-tab__scroll > :where(*) {
+  box-sizing: border-box;
+  min-width: 0;
+  padding-inline-end: var(--scroll-content-inset);
+  padding-inline-start: var(--scroll-content-inset);
 }
 
 .profile-tab.feed-tab,
@@ -43,15 +62,6 @@
 .feed-scroll-item {
   padding-inline-end: var(--scroll-content-inset);
   padding-inline-start: var(--scroll-content-inset);
-}
-
-.form-tab > *,
-.data-tab > *,
-.settings-tab > *,
-.new-tab > *,
-.relay-monitor > *,
-.relay-settings > * {
-  padding-inline-end: var(--scroll-content-inset);
 }
 
 .feed-tab {

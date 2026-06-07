@@ -1,4 +1,5 @@
 <script lang="ts">
+  import FormTabShell from '$lib/components/workspace/FormTabShell.svelte';
   import { onMount } from 'svelte';
   import type { Account } from '$lib/accounts/account';
   import {
@@ -122,7 +123,7 @@
   });
 </script>
 
-<section class="relay-settings form-tab" aria-label="Relay Settings">
+<FormTabShell label="Relay Settings" class="relay-settings">
   {#if error}<p role="alert">{error}</p>{/if}
   <RelayPurposeSection
     title="User relays"
@@ -159,4 +160,4 @@
     importSuggestion={(setId, suggestion) =>
       void importSuggestion(setId, suggestion)}
   />
-</section>
+</FormTabShell>

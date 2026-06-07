@@ -3,6 +3,10 @@ import { join } from 'node:path';
 import { describe, expect, it } from 'vitest';
 
 const tabDir = 'src/lib/tabs';
+const formShell = readFileSync(
+  'src/lib/components/workspace/FormTabShell.svelte',
+  'utf8',
+);
 
 function tabFiles(): string[] {
   const files: string[] = [];
@@ -22,7 +26,13 @@ function sectionClass(source: string): string | undefined {
 }
 
 describe('tab shell classes', () => {
-  it('gives every tool tab root a form-tab class', () => {
+  it('keeps form-tab on the shared form shell root', () => {
+    expect(formShell).toContain('class="form-tab');
+    expect(formShell).toContain('form-tab__scroll');
+    expect(formShell).toContain('data-scroll-owner');
+  });
+
+  it('routes every tool tab through FormTabShell', () => {
     const feedOnly = new Set([
       'timeline/TimelineTab.svelte',
       'profile/ProfileTab.svelte',
@@ -40,18 +50,20 @@ describe('tab shell classes', () => {
     for (const file of tabFiles()) {
       const rel = file.replace(`${tabDir}/`, '');
       const source = readFileSync(file, 'utf8');
-      const classes = sectionClass(source) ?? '';
       if (feedOnly.has(rel)) {
+        const classes = sectionClass(source) ?? '';
         expect(classes, rel).toContain('feed-tab');
         expect(classes, rel).not.toContain('form-tab');
+        expect(source, rel).not.toContain('FormTabShell');
         continue;
       }
       if (hybrid.has(rel)) {
+        const classes = sectionClass(source) ?? '';
         expect(classes, rel).toContain('hybrid-tab');
         expect(classes, rel).toContain('feed-tab');
         continue;
       }
-      expect(classes, rel).toContain('form-tab');
+      expect(source, rel).toContain('FormTabShell');
     }
   });
 });

@@ -1,5 +1,6 @@
 <script lang="ts">
   import { onMount, tick } from 'svelte';
+  import FormTabShell from '$lib/components/workspace/FormTabShell.svelte';
   import type { Account } from '$lib/accounts/account';
   import type { RelaySet } from '$lib/relays/relay-store';
   import type { CustomEmoji } from '$lib/protocol';
@@ -192,7 +193,7 @@
   function addCustomEmoji(emoji: CustomEmoji): void { customEmojis = upsertCustomEmoji(customEmojis, emoji); }
 </script>
 
-<section class="data-tab form-tab" aria-label="Tweet">
+<FormTabShell label="Tweet" class="data-tab">
   <!-- prettier-ignore -->
   <TweetTabView tabId={props.tabId} bind:sensitive bind:warningReason bind:content {attachments} customEmojis={allCustomEmojis} {uploading} {publishing} {hasSigner} {uploadSettings} {canPublish} {message} {focusNonce} {touchDraft} {flushDraft} {uploadFiles} {publish} {removeAttachment} {handlePaste} addCustomEmoji={addCustomEmoji} openUploadSettings={props.openUploadSettings} />
-</section>
+</FormTabShell>

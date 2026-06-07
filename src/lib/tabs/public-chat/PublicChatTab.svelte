@@ -1,4 +1,5 @@
 <script lang="ts">
+  import FormTabShell from '$lib/components/workspace/FormTabShell.svelte';
   import { onDestroy, onMount } from 'svelte';
   import type { Account } from '$lib/accounts/account';
   import { publicChatReadRelays } from '$lib/public-chat/public-chat-filters';
@@ -162,7 +163,7 @@
   }
 </script>
 
-<section class="data-tab form-tab public-chat-tab" aria-label="Public Chat">
+<FormTabShell label="Public Chat" class="data-tab public-chat-tab">
   <PublicChatToolbar
     {status}
     {readRelays}
@@ -196,4 +197,4 @@
     setDraft={(value) => (draft = value)}
     {sendMessage}
   />
-</section>
+</FormTabShell>

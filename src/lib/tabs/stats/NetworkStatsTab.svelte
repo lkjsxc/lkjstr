@@ -1,4 +1,5 @@
 <script lang="ts">
+  import FormTabShell from '$lib/components/workspace/FormTabShell.svelte';
   import { onDestroy, onMount } from 'svelte';
   import { cacheStatus, type CacheMetadata } from '$lib/cache/cache-status';
   import {
@@ -96,7 +97,7 @@
   }
 </script>
 
-<section class="data-tab form-tab stats-tab" aria-label="Stats">
+<FormTabShell label="Stats" class="data-tab stats-tab">
   <header class="settings-header">
     <div class="settings-actions">
       <CacheActions {cache} {refresh} />
@@ -196,4 +197,4 @@
   <OptimizerPanel scores={optimizerScores} hints={scanHints} {scanDebug} />
   <RuntimeCounters />
   <RuntimeMemoryPanel {memory} />
-</section>
+</FormTabShell>

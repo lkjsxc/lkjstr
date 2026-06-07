@@ -1,6 +1,7 @@
 <script lang="ts">
   import { onDestroy, onMount, tick } from 'svelte';
   import { SvelteMap } from 'svelte/reactivity';
+  import FormTabShell from '$lib/components/workspace/FormTabShell.svelte';
   import SettingsRow from '$lib/components/settings/SettingsRow.svelte';
   import type { SettingRecord } from '$lib/settings/settings-key';
   import {
@@ -127,12 +128,7 @@
   }
 </script>
 
-<section
-  class="settings-tab form-tab"
-  aria-label="Settings"
-  data-scroll-owner=""
-  bind:this={root}
->
+<FormTabShell label="Settings" class="settings-tab" bind:scrollOwner={root}>
   <header class="settings-header">
     <span>{changedCount} changed</span>
     <div class="settings-actions">
@@ -171,4 +167,4 @@
       <SettingsRow {setting} {save} {reset} />
     {/each}
   </div>
-</section>
+</FormTabShell>

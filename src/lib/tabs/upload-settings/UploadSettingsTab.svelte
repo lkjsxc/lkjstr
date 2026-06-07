@@ -1,4 +1,5 @@
 <script lang="ts">
+  import FormTabShell from '$lib/components/workspace/FormTabShell.svelte';
   import { onMount } from 'svelte';
   import {
     mediaUploadProviders,
@@ -97,10 +98,7 @@
   }
 </script>
 
-<section
-  class="data-tab form-tab upload-settings-tab"
-  aria-label="Upload Settings"
->
+<FormTabShell label="Upload Settings" class="data-tab upload-settings-tab">
   <fieldset>
     <legend>Provider</legend>
     {#each mediaUploadProviders as provider (provider.id)}
@@ -152,4 +150,4 @@
   {#if status}
     <p role="status">{status}</p>
   {/if}
-</section>
+</FormTabShell>
