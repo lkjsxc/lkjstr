@@ -28,16 +28,17 @@ duplicate the content inset.
 
 ## Form Tabs
 
-Form tabs use `.form-tab` and may scroll on the tab root with `overflow: auto`.
+Form tabs use `FormTabShell` with a non-scrolling `.form-tab` root and a
+`.form-tab__scroll` child that owns vertical scroll.
 
-| Layer         | Owner                                                          |
-| ------------- | -------------------------------------------------------------- |
-| Track edge    | tab root via `margin-inline-end`                               |
-| Content inset | direct children via `padding-inline-end`                       |
-| Scroll owner  | tab root with `data-scroll-owner` when the whole panel scrolls |
+| Layer         | Owner                                              |
+| ------------- | -------------------------------------------------- |
+| Track edge    | `.form-tab__scroll` via `padding-inline-end`       |
+| Content inset | scroll children via both inline paddings           |
+| Scroll owner  | `.form-tab__scroll` with `data-scroll-owner`       |
 
-`.data-tab`, `.settings-tab`, and `.relay-settings` share the same form-tab
-scroll rules through `scroll-layout.css`.
+All tool tabs route through `FormTabShell.svelte` so New Tab, Settings, Tweet,
+and the other form surfaces share the feed track-edge mechanism.
 
 ## Tab Kind Switch Rule
 
@@ -48,7 +49,7 @@ body right edge by `--scroll-track-edge` within one device pixel.
 Misalignment usually means:
 
 - a feed tab root still pads content horizontally,
-- a form tab root is missing `.form-tab`,
+- a form tab is missing `.form-tab__scroll`,
 - a hybrid tab uses a toolbar outside the feed scroll owner without the hybrid
   shell contract.
 
