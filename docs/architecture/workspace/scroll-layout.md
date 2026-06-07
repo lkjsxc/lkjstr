@@ -13,12 +13,14 @@ inset from split handles and do not overlap text or controls.
   token so scrollbar tracks do not sit flush against split resize handles.
 - `--scroll-content-inset` (default `var(--space-3)`) pads direct content
   children on the inline end so text does not sit under the thumb.
-- `FeedScrollSurface` applies the track edge on the shared
-  `.event-list__scroller` wrapper. Home, Global, Thread, Search, Profile,
-  Notifications, Followees, User Timeline, Custom Request, and Author Context
-  therefore use the same scrollbar inset.
+- `FeedScrollSurface` and `FormTabShell` stamp the shared `.tab-scroll-track`
+  wrapper and `.tab-scroll-owner` scroll host. Home, Global, Thread, Search,
+  Profile, Notifications, Followees, User Timeline, Custom Request, Author
+  Context, New Tab, Relay Settings, and every tool tab therefore use the same
+  scrollbar inset.
 - Tool-style tab scroll roots (`.data-tab`, `.settings-tab`, `.new-tab`,
-  `.relay-monitor`, and `.relay-settings`) use the same inline-end margin.
+  `.relay-monitor`, and `.relay-settings`) use the same padded wrapper rather
+  than per-tab margins.
 - `.pane-body` does not add inline padding on the scroll axis. Block-axis
   padding may remain for vertical rhythm.
 - The scroll owner is the layout root for vertical movement. It is not the
@@ -56,13 +58,13 @@ from split handles.
 
 ## Surfaces
 
-| Surface                                                   | Scrolling element                          | Content wrapper      |
-| --------------------------------------------------------- | ------------------------------------------ | -------------------- |
-| Home, Global, Thread, Search, Profile                     | Virtua viewport in `.event-list__scroller` | `.feed-scroll-item`  |
-| Notifications                                             | `.notification-list-scroll`                | `.feed-scroll-item`  |
-| Settings, Relay Settings, Stats, Welcome, Upload Settings | tool-style tab root                        | root direct children |
-| Custom Request, Author Context, lkjstr Log                | feed or tool-style tab root                | root direct children |
-| Pane tab shell                                            | `.pane-body` (non-scrolling container)     | tab root inside body |
+| Surface                                                   | Scrolling element                        | Content wrapper      |
+| --------------------------------------------------------- | ---------------------------------------- | -------------------- |
+| Home, Global, Thread, Search, Profile                     | `.tab-scroll-owner.event-list__viewport` | `.feed-scroll-item`  |
+| Notifications                                             | `.notification-list-scroll`              | `.feed-scroll-item`  |
+| Settings, Relay Settings, Stats, Welcome, Upload Settings | `.form-tab__scroll.tab-scroll-owner`     | root direct children |
+| Custom Request, Author Context, lkjstr Log                | shared feed or form scroll owner         | root direct children |
+| Pane tab shell                                            | `.pane-body` (non-scrolling container)   | tab root inside body |
 
 `.pane-body` and `.event-list__scroller` wrappers may use `overflow: hidden`
 while the Virtua or tool child owns vertical scroll.

@@ -39,7 +39,7 @@ surface. Each row must pass before the scroll-layout contract is complete.
 | Upload Settings                                 | `.upload-settings-tab.form-tab`   | required           | required               | implemented  |
 | Custom Request                                  | `.event-list__viewport`           | required           | required               | implemented  |
 | Author Context                                  | `.event-list__viewport`           | required           | required               | implemented  |
-| lkjstr Log                                      | tab scroll root                   | required           | required               | open         |
+| lkjstr Log                                      | `.relay-monitor.form-tab`         | required           | required               | implemented  |
 | Pane shell                                      | no inline padding on `.pane-body` | n/a                | tab inner roots        | implemented  |
 
 ## Additional Checks

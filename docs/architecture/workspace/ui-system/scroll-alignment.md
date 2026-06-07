@@ -17,11 +17,11 @@ same horizontal position when the user switches tab kinds inside one split pane.
 Feed tabs use `.feed-tab` with `overflow: hidden` and zero horizontal padding on
 the tab root.
 
-| Layer         | Owner                                                                            |
-| ------------- | -------------------------------------------------------------------------------- |
-| Track edge    | `.event-list__scroller` via `padding-inline-end`                                 |
-| Content inset | `.feed-scroll-item` via both inline paddings                                     |
-| Scroll owner  | `.event-list__viewport` or documented notification root with `data-scroll-owner` |
+| Layer         | Owner                                                                       |
+| ------------- | --------------------------------------------------------------------------- |
+| Track edge    | `.tab-scroll-track` / `.event-list__scroller` via `padding-inline-end`      |
+| Content inset | `.feed-scroll-item` via both inline paddings                                |
+| Scroll owner  | `.tab-scroll-owner` / documented notification root with `data-scroll-owner` |
 
 Feed tab roots must not add a second horizontal inset. `.event-main` must not
 duplicate the content inset.
@@ -30,11 +30,11 @@ duplicate the content inset.
 
 Form tabs use `FormTabShell` with the same two-layer pattern as feed lists.
 
-| Layer         | Owner                                          |
-| ------------- | ---------------------------------------------- |
-| Track edge    | `.form-tab__scroller` via `padding-inline-end` |
-| Content inset | scroll children via both inline paddings       |
-| Scroll owner  | `.form-tab__scroll` with `data-scroll-owner`   |
+| Layer         | Owner                                                                           |
+| ------------- | ------------------------------------------------------------------------------- |
+| Track edge    | `.tab-scroll-track.form-tab__scroller` via `padding-inline-end`                 |
+| Content inset | scroll children via both inline paddings                                        |
+| Scroll owner  | `.tab-scroll-owner.form-tab__scroll` with `data-scroll-owner` and no x-overflow |
 
 All tool tabs route through `FormTabShell.svelte` so New Tab, Settings, Tweet,
 and the other form surfaces share the feed track-edge mechanism.

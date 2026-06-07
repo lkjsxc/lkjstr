@@ -23,8 +23,8 @@ Required on:
 .hybrid-tab.feed-tab
   .hybrid-tab__toolbar (non-scrolling)
   .event-list (flex child, min-height 0)
-    .event-list__scroller (track edge)
-      .event-list__viewport [data-scroll-owner]
+    .tab-scroll-track.event-list__scroller (track edge)
+      .tab-scroll-owner.event-list__viewport [data-scroll-owner]
         .feed-scroll-item rows
 ```
 
@@ -51,7 +51,8 @@ Rules:
 
 Hybrid tabs participate in the tab kind switch rule from
 [scroll-alignment.md](scroll-alignment.md). Because they use `.feed-tab`, their
-track edge comes from `.event-list__scroller`, not from form-tab margin rules.
+track edge comes from `.tab-scroll-track.event-list__scroller`, not from
+form-tab margin rules.
 
 ## Source
 

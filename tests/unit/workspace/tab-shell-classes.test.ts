@@ -14,7 +14,8 @@ function tabFiles(): string[] {
     if (!entry.isDirectory()) continue;
     const path = join(tabDir, entry.name);
     for (const child of readdirSync(path)) {
-      if (child.endsWith('Tab.svelte')) files.push(join(path, child));
+      if (child.endsWith('Tab.svelte') || child === 'NewTab.svelte')
+        files.push(join(path, child));
     }
   }
   return files.sort();
@@ -28,8 +29,8 @@ function sectionClass(source: string): string | undefined {
 describe('tab shell classes', () => {
   it('keeps form-tab on the shared form shell root', () => {
     expect(formShell).toContain('class="form-tab');
-    expect(formShell).toContain('form-tab__scroller');
-    expect(formShell).toContain('form-tab__scroll');
+    expect(formShell).toContain('tab-scroll-track form-tab__scroller');
+    expect(formShell).toContain('tab-scroll-owner form-tab__scroll');
     expect(formShell).toContain('data-scroll-owner');
   });
 

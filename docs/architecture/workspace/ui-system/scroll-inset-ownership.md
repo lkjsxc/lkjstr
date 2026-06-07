@@ -16,9 +16,10 @@ inset so scrollbar tracks align across tab kinds inside split panes.
 
 ### Track edge
 
-- Feed tabs: `.event-list__scroller` applies `padding-inline-end`.
-- Form tabs: `.form-tab__scroller` applies the same `padding-inline-end` as
-  `.event-list__scroller`.
+- Feed tabs: `.tab-scroll-track` on the `.event-list__scroller` wrapper applies
+  `padding-inline-end`.
+- Form tabs: `.tab-scroll-track` on `.form-tab__scroller` applies the same
+  `padding-inline-end`.
 - `.pane-body` never applies horizontal inset on the scroll axis.
 
 ### Content inset
@@ -32,23 +33,23 @@ inset so scrollbar tracks align across tab kinds inside split panes.
 
 ## Feed vs Form
 
-| Pattern | Tab root                        | Track edge              | Content inset       |
-| ------- | ------------------------------- | ----------------------- | ------------------- |
-| Feed    | `.feed-tab`, `overflow: hidden` | `.event-list__scroller` | `.feed-scroll-item` |
-| Form    | `.form-tab`, `overflow: hidden` | `.form-tab__scroller`   | scroll children     |
+| Pattern | Tab root                        | Track edge                               | Content inset       |
+| ------- | ------------------------------- | ---------------------------------------- | ------------------- |
+| Feed    | `.feed-tab`, `overflow: hidden` | `.tab-scroll-track.event-list__scroller` | `.feed-scroll-item` |
+| Form    | `.form-tab`, `overflow: hidden` | `.tab-scroll-track.form-tab__scroller`   | scroll children     |
 
 ```text
 Feed tab
   .feed-tab (no horizontal padding)
-    .event-list__scroller (track edge)
-      .event-list__viewport [data-scroll-owner]
+    .tab-scroll-track.event-list__scroller (track edge)
+      .tab-scroll-owner.event-list__viewport [data-scroll-owner]
         .feed-scroll-item (content inset)
           row content
 
 Form tab
   .form-tab (no horizontal padding)
-    .form-tab__scroller (track edge)
-      .form-tab__scroll [data-scroll-owner]
+    .tab-scroll-track.form-tab__scroller (track edge)
+      .tab-scroll-owner.form-tab__scroll [data-scroll-owner]
         direct child (content inset both sides)
 ```
 

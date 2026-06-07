@@ -21,8 +21,8 @@ readers and retention code.
 ### `.form-tab`
 
 - Required on every non-feed tool tab root.
-- May scroll at the tab shell with `overflow: auto` when the whole panel is
-  the tool surface.
+- Scrolls through the shared inner `.tab-scroll-owner.form-tab__scroll`, not
+  the tab root.
 - Used by: Settings, Relay Settings, Stats, Welcome, Upload Settings, Accounts,
   Tweet, Profile Edit, Mine npub, lkjstr Log, New Tab, and Public Chat.
 - `.data-tab` remains a styling alias but must also include `.form-tab` on tool

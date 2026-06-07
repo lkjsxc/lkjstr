@@ -27,23 +27,23 @@ tab root and `[data-scroll-owner]` are forbidden.
 
 ## Form Tabs
 
-Form tabs use `.form-tab` with `overflow: auto` on the tab root when the whole
-panel is the tool surface.
+Form tabs use `.form-tab` with one inner `.tab-scroll-owner.form-tab__scroll`;
+the tab root itself remains non-scrolling.
 
-| Tab kind        | Tab root class                |
-| --------------- | ----------------------------- |
-| New Tab         | `.form-tab` / `.new-tab`      |
-| Settings        | `.form-tab` / `.settings-tab` |
-| Relay Settings  | `.form-tab` / `.settings-tab` |
-| Stats           | `.form-tab` / `.settings-tab` |
-| Welcome         | `.form-tab` / `.settings-tab` |
-| Upload Settings | `.form-tab` / `.data-tab`     |
-| Accounts        | `.form-tab` / `.data-tab`     |
-| Tweet           | `.form-tab`                   |
-| Profile Edit    | `.form-tab` / `.data-tab`     |
-| Mine npub       | `.form-tab`                   |
-| Public Chat     | `.form-tab`                   |
-| lkjstr Log      | `.data-tab`                   |
+| Tab kind        | Tab root class                  | Scroll root                          |
+| --------------- | ------------------------------- | ------------------------------------ |
+| New Tab         | `.form-tab` / `.new-tab`        | `.tab-scroll-owner.form-tab__scroll` |
+| Settings        | `.form-tab` / `.settings-tab`   | `.tab-scroll-owner.form-tab__scroll` |
+| Relay Settings  | `.form-tab` / `.relay-settings` | `.tab-scroll-owner.form-tab__scroll` |
+| Stats           | `.form-tab` / `.stats-tab`      | `.tab-scroll-owner.form-tab__scroll` |
+| Welcome         | `.form-tab` / `.welcome-tab`    | `.tab-scroll-owner.form-tab__scroll` |
+| Upload Settings | `.form-tab` / `.data-tab`       | `.tab-scroll-owner.form-tab__scroll` |
+| Accounts        | `.form-tab` / `.data-tab`       | `.tab-scroll-owner.form-tab__scroll` |
+| Tweet           | `.form-tab`                     | `.tab-scroll-owner.form-tab__scroll` |
+| Profile Edit    | `.form-tab` / `.data-tab`       | `.tab-scroll-owner.form-tab__scroll` |
+| Mine npub       | `.form-tab`                     | `.tab-scroll-owner.form-tab__scroll` |
+| Public Chat     | `.form-tab`                     | `.tab-scroll-owner.form-tab__scroll` |
+| lkjstr Log      | `.form-tab` / `.relay-monitor`  | `.tab-scroll-owner.form-tab__scroll` |
 
 ## Pane Body
 
@@ -59,8 +59,8 @@ All scroll roots share:
 --scroll-content-inset: var(--space-3);
 ```
 
-Feed virtual lists apply track edge on `.event-list__scroller` and content
-inset on `.feed-scroll-item`. Form tabs apply both tokens on the tab root.
+Feed virtual lists and form tabs apply track edge on `.tab-scroll-track` and
+content inset on `.feed-scroll-item` or direct `.form-tab__scroll` children.
 
 ## Related
 

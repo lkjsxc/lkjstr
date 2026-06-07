@@ -11,5 +11,5 @@ menus.
 - `WorkspaceRoot` exposes the tab snapshot coordinator through context.
 - `Pane` tracks scroll owners and restore tokens through the coordinator instead
   of owning pane-local durable retention.
-- `FormTabShell.svelte`: shared non-feed tab root with `.form-tab__scroller`
-  track inset and `.form-tab__scroll` scroll owner, matching feed lists.
+- `FormTabShell.svelte`: shared non-feed tab root with `.tab-scroll-track`
+  track inset and `.tab-scroll-owner` scroll host, matching feed lists.

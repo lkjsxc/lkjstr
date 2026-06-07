@@ -13,8 +13,9 @@ list chrome inside the scroll flow.
 - Exactly one descendant carries `data-scroll-owner` and owns vertical scroll.
 - The scroll root uses `scrollbar-gutter: stable`, `overflow-x: clip`, and
   scroll-layout tokens from [scroll-layout.md](../../workspace/scroll-layout.md).
-- The shared `.event-list__scroller` wrapper applies `--scroll-track-edge` so
-  feed scrollbars are inset consistently from split handles.
+- The shared `.tab-scroll-track` / `.event-list__scroller` wrapper applies
+  `--scroll-track-edge` so feed scrollbars are inset consistently from split
+  handles and aligned with form tabs.
 - Near-end detection uses `IntersectionObserver` with scroll fallback per
   [near-end.md](near-end.md).
 - `FeedSurfaceStatus` renders as a row inside the scroll flow, not in a fixed
@@ -46,9 +47,9 @@ list chrome inside the scroll flow.
 
 | Surface | Scroll root class | Virtualized |
 | ------- | ----------------- | ----------- |
-| Home, Global, Thread, Search, Profile | `.event-list__viewport` inside `.event-list__scroller` | yes |
-| Followees, User Timeline | `.event-list__viewport` inside `.event-list__scroller` | yes |
-| Notifications | `.event-list__viewport` inside `.event-list__scroller` | yes |
+| Home, Global, Thread, Search, Profile | `.tab-scroll-owner.event-list__viewport` inside `.tab-scroll-track.event-list__scroller` | yes |
+| Followees, User Timeline | `.tab-scroll-owner.event-list__viewport` inside `.tab-scroll-track.event-list__scroller` | yes |
+| Notifications | `.tab-scroll-owner.notification-list-scroll` inside `.tab-scroll-track.event-list__scroller` | yes |
 | Custom Request, Author Context | tab-specific, see surface matrix | yes |
 
 ## Component Ownership

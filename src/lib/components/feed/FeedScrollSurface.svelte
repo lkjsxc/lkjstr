@@ -120,10 +120,10 @@
   });
 </script>
 
-<div class={scrollerClass} bind:this={scrollerElement}>
+<div class={`${scrollerClass} tab-scroll-track`} bind:this={scrollerElement}>
   <VList
     bind:this={list}
-    class={viewportClass}
+    class={`${viewportClass} tab-scroll-owner`}
     {...{ 'data-scroll-owner': '' }}
     {data}
     style="height: 100%; min-height: 0;"
