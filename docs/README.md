@@ -38,7 +38,9 @@ changed. Each docs directory has one README that acts as a table of contents.
 - Security: [security/README.md](security/README.md) and
   [architecture/data/local-secret-security.md](architecture/data/local-secret-security.md).
 - UI system: [architecture/workspace/ui-system/README.md](architecture/workspace/ui-system/README.md).
-- Rust/WASM: [architecture/rust-wasm/README.md](architecture/rust-wasm/README.md).
+- Rust/WASM: [architecture/rust-wasm/README.md](architecture/rust-wasm/README.md),
+  [architecture/rust-wasm/crate-inventory.md](architecture/rust-wasm/crate-inventory.md), and
+  [architecture/rust-wasm/cutover/implementation-ledger.md](architecture/rust-wasm/cutover/implementation-ledger.md).
 - Verification: [operations/verification.md](operations/verification.md).
 
 ## All Files
@@ -100,8 +102,10 @@ changed. Each docs directory has one README that acts as a table of contents.
 `architecture/runtimes/profile-runtime.md` `architecture/runtimes/public-chat-runtime.md` `architecture/runtimes/query-runtime.md`
 `architecture/runtimes/thread-runtime.md` `architecture/runtimes/tweet-runtime.md` `architecture/runtimes/user-timeline-runtime.md`
 `architecture/rust-wasm/README.md` `architecture/rust-wasm/app-boundary.md` `architecture/rust-wasm/crate-boundaries.md`
-`architecture/rust-wasm/cutover/README.md` `architecture/rust-wasm/cutover/build-contract.md` `architecture/rust-wasm/cutover/deletion-ledger.md`
-`architecture/rust-wasm/cutover/parity-ledger.md` `architecture/rust-wasm/host-boundary.md` `architecture/rust-wasm/memory-ownership.md`
+`architecture/rust-wasm/crate-inventory.md` `architecture/rust-wasm/cutover/README.md` `architecture/rust-wasm/cutover/build-contract.md`
+`architecture/rust-wasm/cutover/deletion-ledger.md` `architecture/rust-wasm/cutover/implementation-ledger.md`
+`architecture/rust-wasm/cutover/parity-ledger.md` `architecture/rust-wasm/cutover/typescript-inventory.md`
+`architecture/rust-wasm/cutover/verification-ledger.md` `architecture/rust-wasm/host-boundary.md` `architecture/rust-wasm/memory-ownership.md`
 `architecture/rust-wasm/protocol-kernel.md` `architecture/rust-wasm/relay-runtime.md` `architecture/rust-wasm/source-map.md`
 `architecture/rust-wasm/status.md` `architecture/rust-wasm/storage-kernel.md` `architecture/rust-wasm/surface-cutover-order.md`
 `architecture/rust-wasm/ui-runtime.md` `architecture/rust-wasm/verification.md` `architecture/source-map.md` `architecture/workspace/README.md`

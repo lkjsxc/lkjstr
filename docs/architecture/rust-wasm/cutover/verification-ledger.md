@@ -1,0 +1,53 @@
+# Verification Ledger
+
+## Purpose
+
+This ledger maps Rust-first cutover areas to focused checks and the final Docker
+Compose gate. Use it with [implementation-ledger.md](implementation-ledger.md)
+before claiming parity or deleting TypeScript and Svelte product code.
+
+## Gate Rule
+
+A focused gate proves the edited slice. The final gate proves the repository
+artifact. Do not mark a row ready unless the named focused checks pass after the
+change and Docker Compose verification is either run or recorded as not run.
+
+## Focused Checks By Area
+
+| Area                            | Focused checks                                                                                                                  | Final gate                           | Notes                                                                   |
+| ------------------------------- | ------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------ | ----------------------------------------------------------------------- |
+| Documentation contracts         | `pnpm check:repo`                                                                                                               | `docker compose run --rm verify`     | Run before implementation when docs changed.                            |
+| Protocol kernels                | `cargo test -p lkjstr-protocol`, `pnpm test -- tests/unit/protocol`                                                             | `docker compose run --rm verify`     | Product paths must not use fake protocol results.                       |
+| Storage manifest and row codecs | `cargo test -p lkjstr-storage`, `pnpm test -- tests/unit/storage`                                                               | `docker compose run --rm verify`     | Protected records and cache records need separate proof.                |
+| SQLite worker host              | `pnpm test -- tests/unit/storage/sqlite-opfs-worker.test.ts`, `wasm-pack test --headless --chrome crates/lkjstr-web -- storage` | `docker compose run --rm verify`     | Worker fallback must produce visible memory-mode diagnostics.           |
+| Accounts and local secrets      | `pnpm test -- tests/unit/accounts`, `cargo test -p lkjstr-storage -- local_secret`                                              | `docker compose run --rm verify`     | Private material must be redacted outside explicit export.              |
+| Relay runtime                   | `cargo test -p lkjstr-relays`, `pnpm test -- tests/unit/relays`                                                                 | `docker compose run --rm verify`     | Include cancellation, malformed ingress, and budget denial.             |
+| Relay WebSocket host            | `wasm-pack test --headless --chrome crates/lkjstr-web -- relay`, `pnpm test -- tests/unit/relays/relay-client.test.ts`          | `docker compose run --rm verify`     | Browser effects stay behind typed adapters.                             |
+| Feed runtime                    | `cargo test -p lkjstr-app -- feed`, `pnpm test -- tests/unit/events tests/unit/feed-surface`                                    | `docker compose run --rm verify`     | Cache miss is not proof of absence.                                     |
+| Home and Global                 | `pnpm test -- tests/unit/timeline`, `cargo test -p lkjstr-app -- feed`                                                          | `docker compose run --rm verify`     | Home requires follow-list ownership proof; Global uses selected relays. |
+| Profile and Author Context      | `pnpm test -- tests/unit/profile tests/unit/identity`, `cargo test -p lkjstr-app -- profile`                                    | `docker compose run --rm verify`     | Follow count and sparse scans must expose unknown and partial states.   |
+| Thread                          | `pnpm test -- tests/unit/thread tests/unit/events`, `cargo test -p lkjstr-protocol -- tags`                                     | `docker compose run --rm verify`     | Missing parents use compact unavailable state.                          |
+| Notifications                   | `pnpm test -- tests/unit/notifications`, `cargo test -p lkjstr-app -- notification`                                             | `docker compose run --rm verify`     | Account switching and bounded older windows are required.               |
+| Search                          | `pnpm test -- tests/unit/search tests/unit/storage/sqlite-opfs-events.test.ts`, `cargo test -p lkjstr-app -- search`            | `docker compose run --rm verify`     | Local token index and relay NIP-50 merge both need coverage.            |
+| Custom Request                  | `pnpm test -- tests/unit/custom-request`, `cargo test -p lkjstr-app -- custom_request`                                          | `docker compose run --rm verify`     | Validation errors must be exact.                                        |
+| Tweet and Profile Edit publish  | `pnpm test -- tests/unit/tweet tests/unit/media tests/unit/protocol`, `cargo test -p lkjstr-protocol -- event`                  | `docker compose run --rm verify`     | Signing must follow explicit user intent.                               |
+| Upload settings and media       | `pnpm test -- tests/unit/media`, `cargo test -p lkjstr-protocol -- upload`                                                      | `docker compose run --rm verify`     | Insert media URL only after a real upload success.                      |
+| Stats and lkjstr Log            | `pnpm test -- tests/unit/log tests/unit/storage tests/unit/relays`, `cargo test -p lkjstr-storage -- stats`                     | `docker compose run --rm verify`     | Durable logs are bounded and redacted.                                  |
+| Public Chat                     | `pnpm test -- tests/unit/public-chat`, `cargo test -p lkjstr-domain -- public_chat`                                             | `docker compose run --rm verify`     | NIP-28 data must come from real events or test-only fixtures.           |
+| Workspace and UI shell          | `pnpm check`, `pnpm test -- tests/unit/workspace`, `cargo test -p lkjstr-ui`                                                    | `docker compose run --rm verify`     | Svelte may stay view-only until Leptos parity.                          |
+| Cloudflare static hosting       | `pnpm cloudflare:quiet`                                                                                                         | `docker compose run --rm cloudflare` | Cloudflare remains static hosting only.                                 |
+| App smoke                       | `pnpm verify:quiet`                                                                                                             | `docker compose run --rm app-smoke`  | Proves nonblank root workspace response.                                |
+
+## Docker Final Path
+
+Before a major handoff or deletion claim, run:
+
+```sh
+docker compose -f docker-compose.yml config
+docker compose --progress quiet -f docker-compose.yml build app verify cloudflare app-smoke
+docker compose --progress quiet -f docker-compose.yml run --rm verify
+docker compose --progress quiet -f docker-compose.yml run --rm cloudflare
+docker compose --progress quiet -f docker-compose.yml run --rm app-smoke
+```
+
+Record skipped final gates in commit trailers or handoff notes.

@@ -104,13 +104,13 @@ NIP-11-driven request budgeting and diagnostics are implemented and tracked in
 | Custom emoji rendering hardening                 | [custom-emoji.md](../protocol/custom-emoji.md)                                                     | Unit NIP-30 parse; focused tests emoji in note                           |
 | Upload settings clarity                          | [tools/upload-settings.md](tools/upload-settings.md)                                               | focused tests Upload Settings tab fields                                 |
 
-## Deferred (design-only or out of scope)
+## Follow-Up Or Out Of Scope
 
-| Item                                   | Notes                                                                                     |
-| -------------------------------------- | ----------------------------------------------------------------------------------------- |
-| Passkey-protected local secret storage | Design-only per [local-secret-security.md](../architecture/data/local-secret-security.md) |
-| Encrypted direct messages              | Not implemented per [nip-support.md](../protocol/nip-support.md)                          |
-| Wallet custody for zaps                | Out of scope; invoice handoff only per [zaps.md](../protocol/zaps.md)                     |
+| Item                                   | Notes                                                                                                                                                                  |
+| -------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Passkey-protected local secret storage | Follow-up product contract; implement only with real Web Crypto and WebAuthn PRF support per [local-secret-security.md](../architecture/data/local-secret-security.md) |
+| Encrypted direct messages              | Not implemented per [nip-support.md](../protocol/nip-support.md)                                                                                                       |
+| Wallet custody for zaps                | Out of scope; invoice handoff only per [zaps.md](../protocol/zaps.md)                                                                                                  |
 
 ## Reference
 

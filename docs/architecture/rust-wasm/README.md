@@ -8,6 +8,7 @@ This subtree defines the Rust/WASM client target.
 
 - [app-boundary.md](app-boundary.md): app composition and command ownership.
 - [crate-boundaries.md](crate-boundaries.md): crate responsibilities.
+- [crate-inventory.md](crate-inventory.md): crate ownership, tests, and next targets.
 - [cutover/README.md](cutover/README.md): build cutover, parity, and deletion ledgers.
 - [cutover/build-contract.md](cutover/build-contract.md): app build cutover.
 - [cutover/parity-ledger.md](cutover/parity-ledger.md): product surface parity.

@@ -125,9 +125,11 @@ ledgers.
 
 ## Next Order
 
-Use [surface-cutover-order.md](surface-cutover-order.md) for dependency rank.
-Each executable slice records docs touched, Rust crates touched, replaced
-TypeScript or Svelte paths, focused gate, and final gate.
+Use [surface-cutover-order.md](surface-cutover-order.md) for dependency rank,
+[cutover/implementation-ledger.md](cutover/implementation-ledger.md) for owner
+and dependency rows, and [cutover/verification-ledger.md](cutover/verification-ledger.md)
+for checks. Each executable slice records docs touched, Rust crates touched,
+replaced TypeScript or Svelte paths, focused gate, and final gate.
 
 ### SQLite Feed And Diagnostics Wiring
 

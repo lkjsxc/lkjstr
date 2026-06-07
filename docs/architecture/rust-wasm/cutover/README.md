@@ -8,8 +8,11 @@ TypeScript or Svelte product modules may be removed.
 ## Table of Contents
 
 - [build-contract.md](build-contract.md): app build and verification cutover.
-- [parity-ledger.md](parity-ledger.md): Rust parity for each product surface.
 - [deletion-ledger.md](deletion-ledger.md): TypeScript and Svelte removal guard.
+- [implementation-ledger.md](implementation-ledger.md): dependency, owner, and next-task map.
+- [parity-ledger.md](parity-ledger.md): Rust parity for each product surface.
+- [typescript-inventory.md](typescript-inventory.md): TypeScript and Svelte module classification.
+- [verification-ledger.md](verification-ledger.md): focused and final gates by cutover area.
 
 ## Current Contract
 
@@ -17,7 +20,10 @@ Rust/WASM is partial and active, not design-only. The SvelteKit app remains the
 implemented product runtime until the Rust shell satisfies the root workspace
 contract with real behavior and matching tests.
 
-No product mock is allowed. Synthetic relays are test-only fixtures.
+No product mock is allowed. Synthetic relays are test-only fixtures. Use
+[implementation-ledger.md](implementation-ledger.md) and
+[typescript-inventory.md](typescript-inventory.md) before adding product logic to
+TypeScript or Svelte.
 
 ## Migration Board
 

@@ -3,8 +3,10 @@
 ## Purpose
 
 This document summarizes the implemented product state and the active contracts
-for storage, relay work, memory, and verification. Detailed behavior lives in
-the linked product, protocol, architecture, and operations pages.
+for storage, relay work, memory, and verification. The shipped product runtime
+is still SvelteKit and TypeScript, while Rust/WASM is the target owner as each
+real slice reaches parity. Detailed behavior lives in the linked product,
+protocol, architecture, and operations pages.
 
 ## Product Surfaces
 
