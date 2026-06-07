@@ -94,7 +94,7 @@ pub use optimizer::{
     sqlite_route_evidence_score_row, sqlite_scan_decision_trace_row, sqlite_scan_density_model_row,
     sqlite_scan_observation_row,
 };
-pub use outcome::{StorageOperation, StorageOutcome, StorageProblem};
+pub use outcome::{StorageOperation, StorageOutcome, StorageProblem, StorageProblemKind};
 pub use relay_sets::{
     RelaySetRecord, SqliteRelaySetRow, relay_set_from_sqlite_row, relay_set_record_id,
     relay_set_record_json_bytes, sqlite_relay_set_row,

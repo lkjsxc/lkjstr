@@ -26,6 +26,24 @@ Read operations return either an `ok` value or a failure with fallback, reason,
 duration, and operation id. Write operations return either `ok` or failure with
 reason, duration, and operation id.
 
+## Problem Taxonomy
+
+Rust storage exposes stable problem-kind labels for diagnostics and host bridges:
+
+- `unavailable-browser-capability`: required storage capability is absent.
+- `opfs-open-failed`: OPFS could not be opened.
+- `sqlite-worker-init-failed`: the worker or SQLite module did not initialize.
+- `temporary-memory-fallback-active`: storage is usable but not durable.
+- `schema-repair-performed`: repair changed recoverable storage state.
+- `schema-repair-failed`: repair could not produce a safe state.
+- `protected-record-decode-failed`: protected row decoding failed.
+- `cache-record-decode-failed`: cache row decoding failed.
+- `quota-or-write-failed`: a write or quota-bound operation failed.
+
+Outcome labels such as `timeout`, `blocked`, `busy`, `corrupt`, `canceled`,
+`late-settled`, and `late-rejected` remain valid problem labels when they name
+the exact failure more directly.
+
 ## Tracking Rule
 
 Deadline fallback is not settlement. An IndexedDB promise that continues after

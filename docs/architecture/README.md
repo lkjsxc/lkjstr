@@ -98,8 +98,10 @@ state, storage, relay orchestration, cleanup, and Rust/WASM migration.
 `runtimes/home-runtime.md` `runtimes/notifications-runtime.md` `runtimes/profile-runtime.md`
 `runtimes/public-chat-runtime.md` `runtimes/query-runtime.md` `runtimes/thread-runtime.md`
 `runtimes/tweet-runtime.md` `runtimes/user-timeline-runtime.md` `rust-wasm/README.md`
-`rust-wasm/app-boundary.md` `rust-wasm/crate-boundaries.md` `rust-wasm/cutover/README.md`
-`rust-wasm/cutover/build-contract.md` `rust-wasm/cutover/deletion-ledger.md` `rust-wasm/cutover/parity-ledger.md`
+`rust-wasm/app-boundary.md` `rust-wasm/crate-boundaries.md` `rust-wasm/crate-inventory.md`
+`rust-wasm/cutover/README.md` `rust-wasm/cutover/build-contract.md` `rust-wasm/cutover/deletion-ledger.md`
+`rust-wasm/cutover/implementation-ledger.md` `rust-wasm/cutover/parity-ledger.md`
+`rust-wasm/cutover/typescript-inventory.md` `rust-wasm/cutover/verification-ledger.md`
 `rust-wasm/host-boundary.md` `rust-wasm/memory-ownership.md` `rust-wasm/protocol-kernel.md`
 `rust-wasm/relay-runtime.md` `rust-wasm/source-map.md` `rust-wasm/status.md`
 `rust-wasm/storage-kernel.md` `rust-wasm/surface-cutover-order.md` `rust-wasm/ui-runtime.md` `rust-wasm/verification.md`

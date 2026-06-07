@@ -1,4 +1,4 @@
-use lkjstr_storage::{StorageOperation, StorageOutcome, StorageProblem};
+use lkjstr_storage::{StorageOperation, StorageOutcome, StorageProblem, StorageProblemKind};
 
 #[test]
 fn storage_problem_records_operation_context() {
@@ -13,6 +13,23 @@ fn storage_problem_records_operation_context() {
     assert_eq!(problem.table, "events");
     assert_eq!(problem.reason, "timeout");
     assert_eq!(problem.operation_id, "operation-1");
+}
+
+#[test]
+fn storage_problem_kind_provides_stable_reason_labels() {
+    let problem = StorageProblem::with_kind(
+        StorageOperation::Repair,
+        "accounts",
+        StorageProblemKind::ProtectedRecordDecodeFailed,
+        "repair-1",
+    );
+
+    assert_eq!(
+        StorageProblemKind::OpfsOpenFailed.as_str(),
+        "opfs-open-failed"
+    );
+    assert_eq!(problem.reason, "protected-record-decode-failed");
+    assert_eq!(problem.operation_id, "repair-1");
 }
 
 #[test]

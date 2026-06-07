@@ -24,6 +24,50 @@ impl StorageOperation {
     }
 }
 
+#[derive(Clone, Copy, Debug, Eq, PartialEq)]
+pub enum StorageProblemKind {
+    UnavailableBrowserCapability,
+    OpfsOpenFailed,
+    SqliteWorkerInitFailed,
+    TemporaryMemoryFallbackActive,
+    SchemaRepairPerformed,
+    SchemaRepairFailed,
+    ProtectedRecordDecodeFailed,
+    CacheRecordDecodeFailed,
+    QuotaOrWriteFailed,
+    Busy,
+    Blocked,
+    Timeout,
+    Corrupt,
+    Canceled,
+    LateSettled,
+    LateRejected,
+}
+
+impl StorageProblemKind {
+    #[must_use]
+    pub const fn as_str(self) -> &'static str {
+        match self {
+            Self::UnavailableBrowserCapability => "unavailable-browser-capability",
+            Self::OpfsOpenFailed => "opfs-open-failed",
+            Self::SqliteWorkerInitFailed => "sqlite-worker-init-failed",
+            Self::TemporaryMemoryFallbackActive => "temporary-memory-fallback-active",
+            Self::SchemaRepairPerformed => "schema-repair-performed",
+            Self::SchemaRepairFailed => "schema-repair-failed",
+            Self::ProtectedRecordDecodeFailed => "protected-record-decode-failed",
+            Self::CacheRecordDecodeFailed => "cache-record-decode-failed",
+            Self::QuotaOrWriteFailed => "quota-or-write-failed",
+            Self::Busy => "busy",
+            Self::Blocked => "blocked",
+            Self::Timeout => "timeout",
+            Self::Corrupt => "corrupt",
+            Self::Canceled => "canceled",
+            Self::LateSettled => "late-settled",
+            Self::LateRejected => "late-rejected",
+        }
+    }
+}
+
 #[derive(Clone, Debug, Eq, PartialEq)]
 pub struct StorageProblem {
     pub operation: StorageOperation,
@@ -46,6 +90,16 @@ impl StorageProblem {
             reason,
             operation_id: operation_id.into(),
         }
+    }
+
+    #[must_use]
+    pub fn with_kind(
+        operation: StorageOperation,
+        table: &'static str,
+        kind: StorageProblemKind,
+        operation_id: impl Into<String>,
+    ) -> Self {
+        Self::new(operation, table, kind.as_str(), operation_id)
     }
 }
 

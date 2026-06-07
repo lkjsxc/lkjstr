@@ -119,6 +119,9 @@ Read next: [architecture/data/README.md](architecture/data/README.md),
 - Stats must read SQLite health and storage mode on startup. A loading row is
   short-lived only; after a bounded deadline Stats shows available, temporary
   memory, unavailable, timeout, blocked, corrupt, or unknown-old-storage.
+- Rust storage outcomes expose stable problem-kind labels for OPFS failures,
+  worker init, temporary memory fallback, repair, decode, quota, and write
+  failure diagnostics.
 - Protected records are never removed by cache cleanup: accounts, local signing
   secrets, settings, relay sets, workspace state, Tweet drafts, active tab
   snapshots, active jobs, and route blocks.

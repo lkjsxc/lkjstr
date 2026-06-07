@@ -11,8 +11,11 @@ This subtree defines the Rust/WASM client target.
 - [crate-inventory.md](crate-inventory.md): crate ownership, tests, and next targets.
 - [cutover/README.md](cutover/README.md): build cutover, parity, and deletion ledgers.
 - [cutover/build-contract.md](cutover/build-contract.md): app build cutover.
-- [cutover/parity-ledger.md](cutover/parity-ledger.md): product surface parity.
 - [cutover/deletion-ledger.md](cutover/deletion-ledger.md): removal guard.
+- [cutover/implementation-ledger.md](cutover/implementation-ledger.md): cutover owner and task map.
+- [cutover/parity-ledger.md](cutover/parity-ledger.md): product surface parity.
+- [cutover/typescript-inventory.md](cutover/typescript-inventory.md): shipped TS/Svelte classification.
+- [cutover/verification-ledger.md](cutover/verification-ledger.md): focused and final gates.
 - [host-boundary.md](host-boundary.md): browser API and JavaScript boundary.
 - [memory-ownership.md](memory-ownership.md): resources and cleanup.
 - [protocol-kernel.md](protocol-kernel.md): Nostr protocol ownership.
