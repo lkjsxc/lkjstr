@@ -50,7 +50,7 @@ first-party product modules.
 | `src/lib/workspace`          | blocked     | Leptos workspace parity and snapshot persistence                                             | workspace browser tests                                                                                                                                                      |
 | `src/routes`                 | blocked     | root route is served by the Rust/WASM app build                                              | app build and root smoke tests                                                                                                                                               |
 | Old browser database binding | implemented | live storage families use SQLite repositories                                                | no-import proof, storage, pressure, Stats, Docker gates                                                                                                                      |
-| TypeScript storage repos     | blocked     | Rust repositories and Leptos hosts cover every live table family, including optimizer rows   | repository tests, browser storage tests, startup recovery, Stats inventory, and no-import proof                                                                              |
+| TypeScript storage repos     | blocked     | Rust repositories and Leptos hosts cover every live table family, including optimizer rows   | repository tests, browser storage tests, startup recovery, Stats inventory and health, and no-import proof                                                                   |
 | Svelte tab surfaces          | blocked     | Leptos surface parity by tab                                                                 | surface browser tests and ledgers                                                                                                                                            |
 | old test helpers             | blocked     | Rust/WASM tests cover the same behavior                                                      | no-import proof and passing gates                                                                                                                                            |
 
@@ -63,6 +63,11 @@ preservation. Deletion remains blocked until shared event renderer parity,
 repost rendering tests, User Timeline discovery tests, SQLite geometry
 persistence, Stats projection, Leptos feed use, browser scroll proof, and
 no-import proof exist.
+
+Current storage deletion evidence remains blocked: Rust Stats now consumes
+SQLite inventory and health, but TypeScript storage repositories still own
+shipped Svelte surfaces until feed, retention, pressure, and no-import proof
+exist.
 
 When a row becomes removable, update the row with the Rust files, tests, and
 verification commands that proved parity, then delete the TypeScript or Svelte

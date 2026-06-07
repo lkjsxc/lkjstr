@@ -50,12 +50,34 @@ pub struct SqliteRowCount {
 }
 
 #[derive(Clone, Debug, Deserialize, Eq, PartialEq, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct SqliteStorageHealth {
+    pub mode: String,
+    pub vfs_name: String,
+    pub worker_kind: String,
+    pub sqlite_version: String,
+    pub database_name: String,
+    pub applied_schema_changes: Vec<String>,
+    pub page_count: u64,
+    pub page_size: u64,
+    pub freelist_count: u64,
+    pub event_count: u64,
+    pub relay_receipt_count: u64,
+    pub tag_row_count: u64,
+    pub last_integrity_check_at: Option<u64>,
+    pub warnings: Vec<String>,
+}
+
+#[derive(Clone, Debug, Deserialize, Eq, PartialEq, Serialize)]
 pub struct StorageStatsSnapshot {
     pub inventory_status: String,
     pub table_count: usize,
     pub available_table_count: usize,
     pub unavailable_table_count: usize,
     pub total_known_rows: u64,
+    pub storage_health_status: String,
+    pub storage_health_reason: Option<String>,
+    pub storage_health: Option<SqliteStorageHealth>,
     pub rows: Vec<StorageInventoryRow>,
 }
 
@@ -91,7 +113,7 @@ impl StorageStatsSnapshot {
             .iter()
             .map(|spec| StorageTableCount::unavailable(spec.name, reason))
             .collect();
-        Self::from_counts(counts)
+        Self::from_counts(counts).with_storage_health_problem(reason)
     }
 
     #[must_use]
@@ -131,8 +153,27 @@ impl StorageStatsSnapshot {
             available_table_count,
             unavailable_table_count,
             total_known_rows,
+            storage_health_status: "unavailable".to_string(),
+            storage_health_reason: Some("not-requested".to_string()),
+            storage_health: None,
             rows,
         }
+    }
+
+    #[must_use]
+    pub fn with_storage_health(mut self, health: SqliteStorageHealth) -> Self {
+        self.storage_health_status = health.mode.clone();
+        self.storage_health_reason = None;
+        self.storage_health = Some(health);
+        self
+    }
+
+    #[must_use]
+    pub fn with_storage_health_problem(mut self, reason: &str) -> Self {
+        self.storage_health_status = reason.to_string();
+        self.storage_health_reason = Some(reason.to_string());
+        self.storage_health = None;
+        self
     }
 }
 

@@ -34,20 +34,20 @@ outcomes into the storage outcome contract, and records late response counters.
 It also has protected SQLite repository calls for settings, workspaces, tab
 states plus ledger, accounts, local secrets, relay sets, and Tweet drafts. Rust
 startup, workspace persistence, Accounts, Relay Settings, Upload Settings,
-Tweet drafts, and Stats inventory now use those SQLite worker calls. Core
-event-cache repository calls cover atomic event/tag/relay writes, event lookups,
-notification owner reads and marks, feed cursor reads, feed coverage reads,
-fresh scan-hint reads, relay diagnostic summaries, relay information, relay
-suggestions, author routes, route blocks, jobs, and app log rows. Feed runtimes
-and full diagnostics still need product wiring.
+Tweet drafts, Stats inventory, and Stats SQLite health now use those SQLite
+worker calls. Core event-cache repository calls cover atomic event/tag/relay
+writes, event lookups, notification owner reads and marks, feed cursor reads,
+feed coverage reads, fresh scan-hint reads, relay diagnostic summaries, relay
+information, relay suggestions, author routes, route blocks, jobs, and app log
+rows. Feed runtimes and full diagnostics still need product wiring.
 
 Target now: OPFS-backed SQLite WASM in a dedicated worker. The detailed target
 lives in [../data/sqlite-opfs/README.md](../data/sqlite-opfs/README.md).
 
 Not implemented yet: feed runtime SQLite wiring, cache delete and repair paths,
-retention dispatchers, ledger repair, active-account storage rows, full ledger
-and byte inventory diagnostics, full browser OPFS matrix tests, and multi-tab
-lock handling.
+retention dispatchers, ledger repair, active-account storage rows, pressure and
+byte inventory diagnostics, full browser OPFS matrix tests, and multi-tab lock
+handling.
 
 ## Manifest Contract
 
@@ -87,10 +87,12 @@ UI and Stats paths continue from these states without uncaught runtime errors.
 
 The Rust SQLite worker adapter maps browser worker availability, blocked opens,
 quota failures, corrupt stored rows, timeouts, cancellations, and late responses
-into this outcome contract. Tab-state startup loading is best-effort:
-unavailable or corrupt snapshot rows do not prevent workspace recovery. Browser
-storage callers outside Rust product wiring still use the TypeScript operation
-result until their repositories are ported.
+into this outcome contract. Stats maps SQLite health failures through the same
+contract, so persistent OPFS, temporary memory, unavailable, timeout, blocked,
+corrupt, and canceled states are visible. Tab-state startup loading is
+best-effort: unavailable or corrupt snapshot rows do not prevent workspace
+recovery. Browser storage callers outside Rust product wiring still use the
+TypeScript operation result until their repositories are ported.
 
 ## Repository Rule
 

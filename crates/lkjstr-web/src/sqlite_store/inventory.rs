@@ -8,11 +8,16 @@ use lkjstr_storage::{
 use crate::sqlite_store::{SqliteStore, rows::first_row};
 
 pub async fn sqlite_storage_stats_snapshot(store: &SqliteStore) -> StorageStatsSnapshot {
+    let health = store.storage_health().await;
     let mut counts = Vec::new();
     for table in sqlite_schema_table_names() {
         counts.push(sqlite_table_count(store, table).await);
     }
-    StorageStatsSnapshot::from_sqlite_counts(counts)
+    let snapshot = StorageStatsSnapshot::from_sqlite_counts(counts);
+    match health {
+        StorageOutcome::Ok(health) => snapshot.with_storage_health(health),
+        outcome => snapshot.with_storage_health_problem(&outcome_reason(outcome)),
+    }
 }
 
 async fn sqlite_table_count(store: &SqliteStore, table: &'static str) -> StorageTableCount {

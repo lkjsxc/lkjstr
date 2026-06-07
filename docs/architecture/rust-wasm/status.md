@@ -24,7 +24,8 @@ This file is the concise status map for the active Rust/WASM migration.
 - `lkjstr-web` owns typed browser adapters for IndexedDB host-boundary tests,
   SQLite worker calls, SQLite-backed Rust startup, workspace persistence,
   Accounts, Relay Settings, Settings, Upload Settings, Tweet drafts, Stats
-  inventory, relay WebSocket and timeout foundations, protocol parsing bridges,
+  inventory, Stats SQLite health, relay WebSocket and timeout foundations,
+  protocol parsing bridges,
   relay-score bridge calls, scan-model planning bridge calls, feed geometry,
   visual fragment, anchor bridge calls, and follow-graph parsing bridge calls.
 - `lkjstr-relays` owns pure send queue, request scheduler, subscription id,
@@ -42,8 +43,8 @@ This file is the concise status map for the active Rust/WASM migration.
   orchestration decisions, feed live-runtime composition, surface query input
   builders, and a pure Custom Request parser and mode classifier.
 - `lkjstr-ui` renders the partial Leptos workspace shell, Welcome, New Tab,
-  Stats inventory, Settings, Accounts, Relay Settings, Upload Settings, and
-  Tweet draft surfaces.
+  Stats inventory and SQLite health, Settings, Accounts, Relay Settings, Upload
+  Settings, and Tweet draft surfaces.
 
 ## Active Target Slices
 
@@ -71,9 +72,9 @@ This file is the concise status map for the active Rust/WASM migration.
   Leptos feed use. Durable SQLite geometry model wiring remains open.
 - Rust protected tool hosts now use the SQLite worker typed repositories for
   startup, workspace persistence, Settings, Accounts, Relay Settings, Upload
-  Settings, Tweet drafts, and Stats inventory. CSS side effects, cache-budget
-  enforcement, active-account storage rows, and full pressure diagnostics remain
-  open.
+  Settings, Tweet drafts, Stats inventory, and Stats SQLite health. CSS side
+  effects, cache-budget enforcement, active-account storage rows, and full
+  pressure diagnostics remain open.
 - Followees and User Timeline now have Rust target follow-graph reducers, a
   WASM parser bridge, a fixed lkjsxc catalog constant, follow-count state,
   author chunking contracts, cache-display policy reducers, a Rust User Timeline
@@ -100,7 +101,7 @@ This file is the concise status map for the active Rust/WASM migration.
 - Relay adapter product wiring from pure reducers to browser WebSocket and timer
   handles.
 - Feed-runtime SQLite wiring, cache delete and repair paths, retention
-  dispatchers, active-account storage rows, and full ledger and byte inventory
+  dispatchers, active-account storage rows, and pressure plus byte inventory
   diagnostics.
 - Product feed runtime wiring for Home, Global, Profile, Thread, Notifications,
   Search, Custom Request, and Author Context. Pure query inputs and feed-window
@@ -137,6 +138,9 @@ TypeScript or Svelte paths, focused gate, and final gate.
   `lkjstr-ui` when view-model fields change.
 - TypeScript or Svelte paths replaced: none deleted until feed evidence,
   diagnostics, retention, tab snapshots, and no-import proof are complete.
+- Current sub-slice: Stats consumes real SQLite worker health through the Rust
+  storage worker adapter and renders the resulting storage mode or typed
+  failure state.
 - Focused gate: `cargo test -p lkjstr-storage` and `pnpm rust-wasm:quiet`.
 - Final gate: Docker Compose config, image builds, and service runs from
   [../../operations/verification.md](../../operations/verification.md).

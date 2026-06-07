@@ -64,6 +64,8 @@ pub enum StorageOp {
         #[serde(rename = "rowLimit")]
         row_limit: u32,
     },
+    GetStorageHealth,
+    ReadPhysicalInventory,
     Batch {
         mode: BatchMode,
         steps: Vec<SqlStep>,
@@ -92,6 +94,8 @@ pub struct StorageDiagnostics {
     pub vfs: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub message: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub health: Option<lkjstr_storage::SqliteStorageHealth>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub storage_usage_bytes: Option<u64>,
     #[serde(skip_serializing_if = "Option::is_none")]

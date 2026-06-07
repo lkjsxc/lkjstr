@@ -17,6 +17,7 @@ mod settings_row;
 mod shell;
 mod state;
 mod stats;
+mod stats_health;
 mod stats_provider;
 mod tab_body;
 mod tab_kind_attr;

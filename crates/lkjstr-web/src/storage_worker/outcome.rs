@@ -40,7 +40,9 @@ pub fn local_response(request_id: &str, outcome: WorkerOutcome) -> StorageRespon
 pub fn operation_for(op: &StorageOp) -> StorageOperation {
     match op {
         StorageOp::Query { .. } => StorageOperation::Read,
-        StorageOp::EstimateStorage => StorageOperation::Inventory,
+        StorageOp::EstimateStorage
+        | StorageOp::GetStorageHealth
+        | StorageOp::ReadPhysicalInventory => StorageOperation::Inventory,
         StorageOp::Execute { .. } => StorageOperation::Write,
         StorageOp::Open { .. }
         | StorageOp::Close

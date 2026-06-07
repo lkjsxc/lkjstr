@@ -29,7 +29,7 @@ codecs, ledger resource map, and typed operation outcomes.
 - `settings.rs`: settings override row identity, JSON helpers, and SQLite row codec.
 - `settings_schema.rs`: flat settings schema and override merging.
 - `sql/`: executable SQLite schema records for OPFS storage.
-- `stats.rs`: storage inventory view models for Stats.
+- `stats.rs`: storage inventory and SQLite health view models for Stats.
 - `tab_state.rs`: tab-state keys, rows, ledger rows, and SQLite row codecs.
 - `table_specs.rs`: table manifest row data.
 - `workspace.rs`: workspace row identity, JSON size helpers, and SQLite row codec.

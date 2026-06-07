@@ -25,6 +25,7 @@ async fn rust_stats_tab_renders_real_inventory() -> Result<(), JsValue> {
     mount_rust_workspace_shell_from_db(db_name);
     wait_for_text("Welcome").await?;
     click("[data-testid='welcome-open-network-stats']")?;
+    wait_for_text("Storage health").await?;
     wait_for_text("Storage inventory").await?;
     wait_for_text("workspaces").await?;
     wait_for_text("available").await?;

@@ -50,6 +50,9 @@ Stats shows current-session relay counters and persisted operational summaries.
 - SQLite storage health shows persistent OPFS or temporary memory mode, VFS,
   worker kind, SQLite library text, database name, page counts, event count,
   relay receipt count, tag row count, schema change count, and warnings.
+- The Rust Stats body reads SQLite worker health through the Rust host provider
+  and renders unavailable, timeout, blocked, corrupt, or temporary-memory states
+  explicitly instead of waiting on an unbounded loading row.
 - Temporary memory mode shows the exact warning that changes may disappear when
   the browser session ends.
 - Cache diagnostic reads must treat missing IndexedDB object stores as
@@ -90,9 +93,10 @@ Detailed optimizer projection rules live in
 
 ## Rust Migration Status
 
-- The Rust/WASM shell renders a partial Stats body with real workspace counters
-  and manifest-backed IndexedDB table counts.
+- The Rust/WASM shell renders a partial Stats body with real workspace counters,
+  SQLite schema table counts, and SQLite worker health.
 - Rust Stats may show unavailable rows for relay snapshots, job health,
-  compaction, repair, browser quota, or memory data until each provider exists.
+  compaction, repair, browser quota, pressure, or memory data until each
+  provider exists.
 - Unavailable rows must be explicit; they must not use fake counters or
   synthetic relay/cache records.

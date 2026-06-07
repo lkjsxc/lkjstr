@@ -1,6 +1,6 @@
 use lkjstr_storage::{
-    SqliteRowCount, StorageStatsSnapshot, StorageTableCount, sqlite_schema_table_names,
-    sqlite_table_count_sql, storage_table_specs,
+    SqliteRowCount, SqliteStorageHealth, StorageStatsSnapshot, StorageTableCount,
+    sqlite_schema_table_names, sqlite_table_count_sql, storage_table_specs,
 };
 
 #[test]
@@ -38,8 +38,32 @@ fn stats_snapshot_can_report_manifest_unavailable() {
     let snapshot = StorageStatsSnapshot::manifest_unavailable("unavailable");
 
     assert_eq!(snapshot.inventory_status, "unavailable");
+    assert_eq!(snapshot.storage_health_status, "unavailable");
     assert_eq!(snapshot.available_table_count, 0);
     assert!(snapshot.rows.iter().all(|row| row.status == "unavailable"));
+}
+
+#[test]
+fn stats_snapshot_can_report_sqlite_storage_health() {
+    let snapshot = StorageStatsSnapshot::from_sqlite_counts(Vec::new())
+        .with_storage_health(test_health("temporary-memory"));
+
+    assert_eq!(snapshot.storage_health_status, "temporary-memory");
+    assert_eq!(
+        snapshot.storage_health.as_ref().map(|item| item.page_size),
+        Some(4096)
+    );
+    assert_eq!(snapshot.storage_health_reason, None);
+}
+
+#[test]
+fn stats_snapshot_can_report_storage_health_problem() {
+    let snapshot =
+        StorageStatsSnapshot::from_sqlite_counts(Vec::new()).with_storage_health_problem("timeout");
+
+    assert_eq!(snapshot.storage_health_status, "timeout");
+    assert_eq!(snapshot.storage_health_reason.as_deref(), Some("timeout"));
+    assert_eq!(snapshot.storage_health, None);
 }
 
 #[test]
@@ -73,4 +97,23 @@ fn sqlite_table_count_sql_is_limited_to_known_tables() -> Result<(), serde_json:
         4
     );
     Ok(())
+}
+
+fn test_health(mode: &str) -> SqliteStorageHealth {
+    SqliteStorageHealth {
+        mode: mode.to_string(),
+        vfs_name: "memory".to_string(),
+        worker_kind: "dedicated".to_string(),
+        sqlite_version: "3.test".to_string(),
+        database_name: ":memory:".to_string(),
+        applied_schema_changes: vec!["schema".to_string()],
+        page_count: 1,
+        page_size: 4096,
+        freelist_count: 0,
+        event_count: 0,
+        relay_receipt_count: 0,
+        tag_row_count: 0,
+        last_integrity_check_at: None,
+        warnings: Vec::new(),
+    }
 }

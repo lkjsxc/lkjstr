@@ -22,11 +22,11 @@ calls for settings, workspaces, tab states with ledger rows, accounts, local
 secrets, relay sets, Tweet drafts, events, tags, relay provenance,
 notifications, feed cursors, feed coverage, scan hints, relay diagnostics,
 relay information, relay suggestions, author routes, route blocks, jobs, app
-log rows, and SQLite table-count inventory. Rust startup, workspace
-persistence, Accounts, Relay Settings, Settings, Upload Settings, Tweet drafts,
-and Stats inventory route through these calls. The Svelte product path continues
-to use the TypeScript SQLite worker repositories until each surface has Leptos
-parity and deletion proof.
+log rows, SQLite table-count inventory, and SQLite worker health. Rust startup,
+workspace persistence, Accounts, Relay Settings, Settings, Upload Settings,
+Tweet drafts, Stats inventory, and Stats health route through these calls. The
+Svelte product path continues to use the TypeScript SQLite worker repositories
+until each surface has Leptos parity and deletion proof.
 
 ## Repository Families
 
@@ -38,9 +38,10 @@ parity and deletion proof.
   have SQLite repositories. Feed surfaces may render cached rows only when
   coverage proof is complete.
 - relay diagnostics: relay information, summaries, suggestions, author routes,
-  route blocks, jobs, and app log rows have SQLite repositories. Relay
-  diagnostics, suggestions, routes, finished jobs, and app logs are
-  ledger-backed. Route blocks are protected safety rows and are not ledger-backed.
+  route blocks, jobs, app log rows, and SQLite worker health have SQLite
+  repositories or host calls. Relay diagnostics, suggestions, routes, finished
+  jobs, and app logs are ledger-backed. Route blocks are protected safety rows
+  and are not ledger-backed.
 - retention: cache ledger rows, protection snapshots, prune selection,
   deletion dispatch, repair, and physical inventory are SQLite-backed. SQLite
   inventory uses storage-owned count statements for known schema tables; host

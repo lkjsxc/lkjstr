@@ -1,8 +1,8 @@
 #![doc = "SQLite worker-backed database handle."]
 
 use lkjstr_storage::{
-    StorageOperation, StorageOutcome, StorageProblem, sqlite_schema_hash, sqlite_schema_statements,
-    sqlite_statement,
+    SqliteStorageHealth, StorageOperation, StorageOutcome, StorageProblem, sqlite_schema_hash,
+    sqlite_schema_statements, sqlite_statement,
 };
 
 use crate::storage_worker::{
@@ -101,6 +101,35 @@ impl SqliteStore {
             )
             .await
             .map(|response| response.rows)
+    }
+
+    pub async fn storage_health(&self) -> StorageOutcome<SqliteStorageHealth> {
+        match self
+            .client
+            .send(StorageOp::GetStorageHealth, self.deadline_ms)
+            .await
+        {
+            StorageOutcome::Ok(response) => response.diagnostics.health.map_or_else(
+                || {
+                    StorageOutcome::Corrupt(StorageProblem::new(
+                        StorageOperation::Inventory,
+                        "sqlite_storage_health",
+                        "missing-health",
+                        "get-storage-health",
+                    ))
+                },
+                StorageOutcome::Ok,
+            ),
+            StorageOutcome::Unavailable(problem) => StorageOutcome::Unavailable(problem),
+            StorageOutcome::Timeout(problem) => StorageOutcome::Timeout(problem),
+            StorageOutcome::Busy(problem) => StorageOutcome::Busy(problem),
+            StorageOutcome::Blocked(problem) => StorageOutcome::Blocked(problem),
+            StorageOutcome::Quota(problem) => StorageOutcome::Quota(problem),
+            StorageOutcome::Corrupt(problem) => StorageOutcome::Corrupt(problem),
+            StorageOutcome::Canceled(problem) => StorageOutcome::Canceled(problem),
+            StorageOutcome::LateSettled(problem) => StorageOutcome::LateSettled(problem),
+            StorageOutcome::LateRejected(problem) => StorageOutcome::LateRejected(problem),
+        }
     }
 
     pub async fn execute(&self, id: &'static str, params: Option<SqlParams>) -> StorageOutcome<()> {

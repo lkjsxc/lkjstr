@@ -4,6 +4,7 @@ use leptos::prelude::*;
 use lkjstr_storage::{StorageInventoryRow, StorageStatsSnapshot};
 
 use crate::app::RuntimeSignal;
+use crate::workspace::stats_health::storage_health_rows;
 use crate::workspace::stats_provider::StatsProvider;
 
 #[component]
@@ -60,6 +61,10 @@ pub fn StatsTab(runtime: RuntimeSignal, provider: Option<StatsProvider>) -> impl
                     <tr><th>"Pressure state"</th><td>"unavailable in Rust Stats"</td></tr>
                     <tr><th>"Residual browser overhead"</th><td>"unavailable in Rust Stats"</td></tr>
                 </tbody>
+            </table>
+            <h3>"Storage health"</h3>
+            <table class="stats-table">
+                <tbody>{move || storage_health_rows(snapshot.get())}</tbody>
             </table>
             <h3>"Storage inventory"</h3>
             <table class="stats-table">

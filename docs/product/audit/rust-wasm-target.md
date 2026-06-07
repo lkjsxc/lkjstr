@@ -31,7 +31,8 @@ Source paths:
 - `crates/lkjstr-web/src/sqlite_store/`: typed worker repository calls.
 - `crates/lkjstr-web/src/*_host.rs`: Rust UI host providers.
 - `crates/lkjstr-ui/src/workspace/stats*.rs`: Stats view model rendering.
-- `crates/lkjstr-storage/src/stats.rs`: inventory snapshot contracts.
+- `crates/lkjstr-storage/src/stats.rs`: inventory and SQLite health snapshot
+  contracts.
 
 Data ownership:
 
@@ -43,7 +44,8 @@ Data ownership:
   selected set has a protected table row.
 - Upload Settings and Settings use flat `settings` rows.
 - Tweet drafts use `tweet_drafts`.
-- Stats reads SQLite schema table counts and typed failure states.
+- Stats reads SQLite schema table counts, SQLite worker health, and typed
+  failure states.
 
 Closing tests:
 
