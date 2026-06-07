@@ -89,6 +89,7 @@ function rustFeatures(features: FeedGeometryFeatures) {
     width_bucket: features.widthBucket,
     font_scale_bucket: features.fontScaleBucket,
     content_shape_hash: features.contentShapeHash,
+    materialization_tier: features.materializationTier,
   };
 }
 

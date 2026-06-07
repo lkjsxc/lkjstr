@@ -29,6 +29,7 @@
     handlePaste: (event: ClipboardEvent) => void;
     addCustomEmoji: (emoji: CustomEmoji) => void;
     focusNonce: number;
+    openUploadSettings: () => void;
   };
 
   let {
@@ -119,6 +120,7 @@
       publish={props.publish}
       insertUnicodeEmoji={insertText}
       {insertCustomEmoji}
+      openUploadSettings={props.openUploadSettings}
     />
   </footer>
 </div>

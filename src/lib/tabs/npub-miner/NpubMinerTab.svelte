@@ -84,7 +84,7 @@
   }
 </script>
 
-<section class="miner-panel data-tab" aria-label="Mine npub">
+<section class="miner-panel data-tab form-tab" aria-label="Mine npub">
   <label>
     Prefix after npub1
     <input bind:value={prefix} disabled={running} placeholder="lkj" />

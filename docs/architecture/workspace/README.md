@@ -27,6 +27,7 @@ visual rules.
 - [theme.md](theme.md): visual constraints.
 - [tile-menu.md](tile-menu.md): anchored tile commands.
 - [ui-composition.md](ui-composition.md): component ownership.
+- [ui-system/README.md](ui-system/README.md): shared UI component catalog.
 - [workspace-layout-tree.md](workspace-layout-tree.md): recursive layout.
 
 ## Shared Contract

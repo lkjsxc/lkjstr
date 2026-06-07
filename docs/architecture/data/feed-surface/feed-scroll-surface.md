@@ -47,7 +47,8 @@ list chrome inside the scroll flow.
 | Surface | Scroll root class | Virtualized |
 | ------- | ----------------- | ----------- |
 | Home, Global, Thread, Search, Profile | `.event-list__viewport` inside `.event-list__scroller` | yes |
-| Notifications | `.notification-list-scroll` | yes |
+| Followees, User Timeline | `.event-list__viewport` inside `.event-list__scroller` | yes |
+| Notifications | `.event-list__viewport` inside `.event-list__scroller` | yes |
 | Custom Request, Author Context | tab-specific, see surface matrix | yes |
 
 ## Component Ownership

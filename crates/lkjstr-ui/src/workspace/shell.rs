@@ -22,6 +22,7 @@ pub fn WorkspaceShell(
     settings_provider: Option<SettingsProvider>,
     upload_settings_provider: Option<UploadSettingsProvider>,
     tweet_provider: Option<TweetProvider>,
+    #[prop(default = None)] active_account_pubkey: Option<String>,
 ) -> impl IntoView {
     let sequence: TabSequence = RwSignal::new(0_u64);
     let persistence_for_open = persistence.clone();
@@ -56,6 +57,7 @@ pub fn WorkspaceShell(
                             settings_provider=settings_provider.clone()
                             upload_settings_provider=upload_settings_provider.clone()
                             tweet_provider=tweet_provider.clone()
+                            active_account_pubkey=active_account_pubkey.clone()
                         />
                     }
                 }).collect_view()}

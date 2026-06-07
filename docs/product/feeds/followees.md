@@ -57,6 +57,13 @@ Profile consumes the same discovery state for its following count. It may render
 miss, relay discovery, partial failure, unavailable routes, and all-failed reads
 remain separate count states with stable loading or retry copy.
 
+## Leading Header
+
+Followees places a `FeedIdentityHeader` for the viewed profile pubkey as the
+first in-flow row inside the shared virtual scroll owner. Discovery guidance,
+retry controls, and followee rows share that scroll surface. The header never
+shows raw `npub` or hex pubkey text.
+
 ## Row Contract
 
 Each row uses the shared user-row component and shows:
@@ -66,10 +73,15 @@ Each row uses the shared user-row component and shows:
 - NIP-05 subtitle when available.
 - petname from the follow-list tag as local context.
 - normalized relay hint when present and valid.
-- actions to open Profile, open User Timeline, and copy `npub`.
+
+Row click opens Profile. Secondary actions live in a three-dot overflow menu:
+
+- Open User Timeline
+- Copy npub
 
 Rows never invent avatars, names, verification, relay support, or relationships.
-Action controls must not accidentally trigger row navigation.
+Inline Profile, Timeline, and Copy npub buttons must not appear on list rows.
+Overflow menu clicks must not trigger row navigation.
 
 ## Runtime Rules
 

@@ -25,6 +25,7 @@
     removeAttachment: (url: string) => void;
     handlePaste: (event: ClipboardEvent) => void;
     addCustomEmoji: (emoji: CustomEmoji) => void;
+    openUploadSettings: () => void;
   };
 
   let {
@@ -56,4 +57,5 @@
   removeAttachment={props.removeAttachment}
   handlePaste={props.handlePaste}
   addCustomEmoji={props.addCustomEmoji}
+  openUploadSettings={props.openUploadSettings}
 />

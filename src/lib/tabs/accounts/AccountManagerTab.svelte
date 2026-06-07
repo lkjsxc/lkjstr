@@ -83,7 +83,7 @@
   }
 </script>
 
-<section class="data-tab" aria-label="Accounts">
+<section class="data-tab form-tab" aria-label="Accounts">
   <form
     class="toolbar"
     onsubmit={(event) => {

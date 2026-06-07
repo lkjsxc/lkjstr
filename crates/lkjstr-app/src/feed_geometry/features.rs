@@ -1,4 +1,4 @@
-use super::hash::{ContentShapeInput, content_shape_hash};
+use super::hash::{ContentShapeInput, MaterializationTier, content_shape_hash};
 use super::width_bucket::WidthBucket;
 use lkjstr_protocol::NostrEvent;
 
@@ -33,6 +33,7 @@ pub struct RowGeometryFeatures {
     pub has_profile_summary: bool,
     pub has_notification_chrome: bool,
     pub has_action_bar: bool,
+    pub materialization_tier: MaterializationTier,
     pub width_bucket: u16,
     pub font_scale_bucket: u16,
     pub content_shape_hash: String,
@@ -46,6 +47,7 @@ pub fn event_geometry_features(
     font_scale: f32,
     has_notification_chrome: bool,
     has_action_bar: bool,
+    materialization_tier: MaterializationTier,
 ) -> RowGeometryFeatures {
     let content = event.content.as_str();
     let media_count = count_media_tags(&event.tags);
@@ -62,6 +64,7 @@ pub fn event_geometry_features(
         custom_emoji_count,
         has_content_warning: has_content_warning(&event.tags),
         fragment_count: 1,
+        materialization_tier,
     };
     RowGeometryFeatures {
         row_kind,
@@ -78,6 +81,7 @@ pub fn event_geometry_features(
         has_profile_summary: false,
         has_notification_chrome,
         has_action_bar,
+        materialization_tier,
         width_bucket: WidthBucket::from_width_px(width_px).as_model_bucket(),
         font_scale_bucket: font_scale_bucket(font_scale),
         content_shape_hash: content_shape_hash(&shape),
@@ -108,7 +112,7 @@ fn count_media_tags(tags: &[Vec<String>]) -> u16 {
 fn count_reference_tags(tags: &[Vec<String>]) -> u16 {
     as_u16(
         tags.iter()
-            .filter(|tag| tag_name_is(tag, "e") || tag_name_is(tag, "a"))
+            .filter(|tag| tag_name_is(tag, "e") || tag_name_is(tag, "a") || tag_name_is(tag, "q"))
             .count(),
     )
 }

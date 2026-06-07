@@ -1,4 +1,5 @@
 use super::features::{RowGeometryFeatures, RowKind, geometry_bucket_key};
+use super::hash::MaterializationTier;
 use super::model::RowGeometryModel;
 
 #[derive(Clone, Debug, Eq, PartialEq)]
@@ -43,7 +44,7 @@ fn formula_height(features: &RowGeometryFeatures) -> u16 {
     let base = base_height(features.row_kind.clone());
     let text = estimated_text_height(features);
     let media = features.media_count.min(6).saturating_mul(150);
-    let previews = features.reference_preview_count.min(6).saturating_mul(96);
+    let previews = reference_preview_height(features);
     let profile = if features.has_profile_summary { 88 } else { 0 };
     let chrome = if features.has_notification_chrome {
         36
@@ -53,6 +54,18 @@ fn formula_height(features: &RowGeometryFeatures) -> u16 {
     let action = if features.has_action_bar { 40 } else { 0 };
     let warning = if features.has_content_warning { 28 } else { 0 };
     (base + text + media + previews + profile + chrome + action + warning).clamp(48, 8_000)
+}
+
+fn reference_preview_height(features: &RowGeometryFeatures) -> u16 {
+    let count = features.reference_preview_count.min(6);
+    if count == 0 {
+        return 0;
+    }
+    match features.materialization_tier {
+        MaterializationTier::Enriched => count.saturating_mul(96),
+        MaterializationTier::Structural => count.min(3).saturating_mul(36),
+        MaterializationTier::Shell => 0,
+    }
 }
 
 fn base_height(row_kind: RowKind) -> u16 {

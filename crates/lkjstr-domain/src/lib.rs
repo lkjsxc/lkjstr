@@ -52,16 +52,14 @@ pub use upload_settings::{
 pub use workspace::{
     BootstrapIds, EdgePaneIds, FeedCursorPoint, FeedRuntimeSnapshotSource, FeedSnapshotSeed,
     FeedTabSnapshot, FeedTabSnapshotPatch, HistoryExhaustion, LKJSXC_TIMELINE_PUBKEY, LayoutNode,
-    MoveTabInput, NewPaneIds, NewTabIds, NewTabOption, NewTabOptionGroup, PaneNode, SplitDirection,
-    TabAnchor, TabDropEdge, TabGroup, TabKind, TabSnapshotPatch, TabSnapshotPayload,
-    TabSnapshotRestore, ToolTabSnapshot, ToolTabSnapshotPatch, Workspace, WorkspaceIds,
-    WorkspaceTab, bootstrap_workspace, capture_tab_snapshot, close_workspace_tab, convert_tab,
-    create_workspace, ensure_usable_workspace, feed_anchor_from_payload, feed_runtime_snapshot,
-    feed_snapshot_seed_from_payload, filter_new_tab_options, focus_tab, merge_tab_snapshot,
-    merge_tab_snapshot_payload, move_workspace_tab, move_workspace_tab_to_edge,
-    new_tab_option_matches, new_tab_option_search_text, new_tab_options_for_account,
-    new_tab_options_for_account_and_query, normalize_new_tab_query, open_configured_tab, open_tab,
-    split_focused_pane, tab_kind_key, title_for,
+    MoveTabInput, NewPaneIds, NewTabIds, NewTabOption, PaneNode, SplitDirection, TabAnchor,
+    TabDropEdge, TabGroup, TabKind, TabSnapshotPatch, TabSnapshotPayload, TabSnapshotRestore,
+    ToolTabSnapshot, ToolTabSnapshotPatch, Workspace, WorkspaceIds, WorkspaceTab,
+    bootstrap_workspace, capture_tab_snapshot, close_workspace_tab, convert_tab, create_workspace,
+    ensure_usable_workspace, feed_anchor_from_payload, feed_runtime_snapshot,
+    feed_snapshot_seed_from_payload, focus_tab, merge_tab_snapshot, merge_tab_snapshot_payload,
+    move_workspace_tab, move_workspace_tab_to_edge, new_tab_options_for_account,
+    open_configured_tab, open_tab, split_focused_pane, tab_kind_key, title_for,
 };
 
 /// Crate ownership marker used by repository checks and docs.

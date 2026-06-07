@@ -28,8 +28,8 @@ async fn rust_settings_tab_renders_and_saves_override() -> Result<(), JsValue> {
 async fn open_settings_tab() -> Result<(), JsValue> {
     wait_for_text("Welcome").await?;
     click("[aria-label='New tab']")?;
-    wait_for_selector("[data-testid='new-tab-open-settings']").await?;
-    click("[data-testid='new-tab-open-settings']")?;
+    wait_for_selector("[data-testid='new-tab-option-settings']").await?;
+    click("[data-testid='new-tab-option-settings']")?;
     Ok(())
 }
 

@@ -1,3 +1,5 @@
+export type MaterializationTier = 'shell' | 'structural' | 'enriched';
+
 export type ContentShapeInput = {
   readonly contentLength: number;
   readonly unicodeScalarCount: number;
@@ -9,6 +11,7 @@ export type ContentShapeInput = {
   readonly customEmojiCount: number;
   readonly hasContentWarning: boolean;
   readonly fragmentCount: number;
+  readonly materializationTier: MaterializationTier;
 };
 
 const fnvOffset = 0xcbf29ce484222325n;
@@ -26,6 +29,14 @@ export function contentShapeHash(input: ContentShapeInput): string {
   state = foldU16(state, input.customEmojiCount);
   state = foldByte(state, input.hasContentWarning ? 1 : 0);
   state = foldU16(state, input.fragmentCount);
+  state = foldByte(
+    state,
+    input.materializationTier === 'enriched'
+      ? 2
+      : input.materializationTier === 'structural'
+        ? 1
+        : 0,
+  );
   return state.toString(16).padStart(16, '0');
 }
 

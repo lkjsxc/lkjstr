@@ -162,7 +162,7 @@
   }
 </script>
 
-<section class="data-tab public-chat-tab" aria-label="Public Chat">
+<section class="data-tab form-tab public-chat-tab" aria-label="Public Chat">
   <PublicChatToolbar
     {status}
     {readRelays}

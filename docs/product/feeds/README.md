@@ -34,6 +34,13 @@ Feed surface docs define relay-backed read tabs and action-opened read tabs.
 - User Timeline discovery reports attempted route groups, degraded target-only
   mode, retry affordances, and incomplete diagnostics without inferring absence
   from cache misses.
+- Followees and User Timeline use the shared feed identity header and overflow
+  menu contracts in
+  [identity-surfaces.md](../../architecture/workspace/ui-system/identity-surfaces.md)
+  and [overflow-actions.md](../../architecture/workspace/ui-system/overflow-actions.md).
+- Feed scroll ownership and inset rules live in
+  [feed-shell.md](../../architecture/workspace/ui-system/feed-shell.md) and
+  [scroll-inset-ownership.md](../../architecture/workspace/ui-system/scroll-inset-ownership.md).
 - Event-rendering tabs automatically restore per-tab row anchors on Home,
-  Global, Profile, Notifications, Thread, Search, Custom Request, Author
-  Context, and Public Chat.
+  Global, Profile, Followees, User Timeline, Notifications, Thread, Search,
+  Custom Request, Author Context, and Public Chat.

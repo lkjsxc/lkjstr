@@ -10,8 +10,8 @@ describe('user timeline scroll flow', () => {
 
     expect(source).toContain('let leadingRows = $derived');
     expect(source).toContain('{#snippet leadingRow(row)}');
-    expect(source.indexOf('<EventTreeList')).toBeLessThan(
-      source.indexOf('user-timeline-tab__header'),
-    );
+    expect(source).toContain('FeedIdentityHeader');
+    expect(source).toContain("row.key === 'user-timeline-header'");
+    expect(source).not.toContain('user-timeline-tab__header');
   });
 });

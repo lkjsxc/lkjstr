@@ -3,10 +3,19 @@ import {
   estimateHeightFromFeatures,
   featuresForFeedItem,
 } from './feed-geometry-features';
+import type { MaterializationTier } from './feed-geometry-hash';
 import {
   estimateHeightWithRust,
   warmFeedGeometryWasmBridge,
 } from './feed-geometry-wasm';
+import {
+  measurementKeyFromFeatures,
+  reservationKeyFromFeatures,
+  widthBucketForPx,
+} from './row-height-reservation-keys';
+
+export { widthBucketForPx };
+export type { FeedRowWidthBucket } from './row-height-reservation-keys';
 
 type ReservedRowHeight = {
   readonly heightPx: number;
@@ -21,24 +30,27 @@ const activeReservations = createBoundedMap<string, ReservedRowHeight>({
 const preservedReservationKeys = createBoundedMap<string, true>({
   maxSize: 500,
 });
+const materializedRowKeys = createBoundedMap<string, true>({ maxSize: 500 });
 let allowedShrinkCount = 0;
 let anchorCompensationCount = 0;
 warmFeedGeometryWasmBridge();
 
-export type FeedRowWidthBucket =
-  | '0-319'
-  | '320-479'
-  | '480-639'
-  | '640-799'
-  | '800-1023'
-  | '1024+';
+export function markFeedRowMaterialized(key: string): void {
+  materializedRowKeys.set(key, true);
+}
+
+export function markFeedRowDematerialized(key: string): void {
+  materializedRowKeys.delete(key);
+}
 
 export function estimateFeedRowHeight(input: {
   readonly key: string;
   readonly item: unknown;
   readonly widthPx?: number;
 }): number {
-  const features = featuresForFeedItem(input.item, input.widthPx);
+  const tier = materializationTierForKey(input.key);
+  const features = featuresForFeedItem(input.item, input.widthPx, tier);
+  const structuralEstimate = structuralHeightEstimate(input, tier);
   const exact = measuredHeights.get(
     measurementKeyFromFeatures(input, features),
   );
@@ -46,13 +58,24 @@ export function estimateFeedRowHeight(input: {
     exact ??
     estimateHeightWithRust({ key: input.key, features }) ??
     estimateHeightFromFeatures(features);
-  const key = reservationKeyFromFeatures(input, features);
-  const reserved = activeReservations.get(key);
+  const reservationKey = reservationKeyFromFeatures(input, features);
+  const reserved = activeReservations.get(reservationKey);
   if (reserved && reserved.heightPx > estimated) {
-    recordPreservedReservation(key, reserved, features.contentShapeHash);
-    return reserved.heightPx;
+    if (
+      tier === 'enriched' &&
+      reserved.contentShapeHash === features.contentShapeHash
+    ) {
+      recordPreservedReservation(
+        reservationKey,
+        reserved,
+        features.contentShapeHash,
+      );
+      return reserved.heightPx;
+    }
+    if (tier !== 'enriched' && reserved.heightPx > structuralEstimate)
+      return Math.max(estimated, structuralEstimate);
   }
-  activeReservations.set(key, {
+  activeReservations.set(reservationKey, {
     heightPx: estimated,
     contentShapeHash: features.contentShapeHash,
     source: exact ? 'measurement' : 'estimate',
@@ -68,12 +91,13 @@ export function recordFeedRowHeight(input: {
 }): void {
   const height = Math.round(input.heightPx);
   if (height <= 0) return;
-  const features = featuresForFeedItem(input.item, input.widthPx);
+  const tier = materializationTierForKey(input.key);
+  const features = featuresForFeedItem(input.item, input.widthPx, tier);
   measuredHeights.set(measurementKeyFromFeatures(input, features), height);
-  const key = reservationKeyFromFeatures(input, features);
-  const previous = activeReservations.get(key)?.heightPx;
+  const reservationKey = reservationKeyFromFeatures(input, features);
+  const previous = activeReservations.get(reservationKey)?.heightPx;
   if (previous !== undefined && height < previous) allowedShrinkCount += 1;
-  activeReservations.set(key, {
+  activeReservations.set(reservationKey, {
     heightPx: height,
     contentShapeHash: features.contentShapeHash,
     source: 'measurement',
@@ -81,6 +105,7 @@ export function recordFeedRowHeight(input: {
 }
 
 export function clearFeedRowHeightsForKey(key: string): void {
+  materializedRowKeys.delete(key);
   for (const [storedKey] of measuredHeights.entries()) {
     if (storedKey.startsWith(`${key}\u0000`)) measuredHeights.delete(storedKey);
   }
@@ -92,6 +117,26 @@ export function clearFeedRowHeightsForKey(key: string): void {
     if (storedKey.startsWith(`${key}\u0000`))
       preservedReservationKeys.delete(storedKey);
   }
+}
+
+function materializationTierForKey(key: string): MaterializationTier {
+  return materializedRowKeys.get(key) ? 'enriched' : 'structural';
+}
+
+function structuralHeightEstimate(
+  input: { readonly item: unknown; readonly widthPx?: number },
+  tier: MaterializationTier,
+): number {
+  if (tier === 'enriched') return 0;
+  const structural = featuresForFeedItem(
+    input.item,
+    input.widthPx,
+    'structural',
+  );
+  return (
+    estimateHeightWithRust({ key: 'structural-cap', features: structural }) ??
+    estimateHeightFromFeatures(structural)
+  );
 }
 
 export function feedRowHeightReservationCount(): number {
@@ -116,41 +161,6 @@ export function feedRowHeightDiagnostics(): {
     allowedShrinkRows: allowedShrinkCount,
     anchorCompensations: anchorCompensationCount,
   };
-}
-
-export function widthBucketForPx(widthPx?: number): FeedRowWidthBucket {
-  const width = Math.max(0, Math.round(widthPx ?? 640));
-  if (width <= 319) return '0-319';
-  if (width <= 479) return '320-479';
-  if (width <= 639) return '480-639';
-  if (width <= 799) return '640-799';
-  if (width <= 1023) return '800-1023';
-  return '1024+';
-}
-
-function measurementKeyFromFeatures(
-  input: { readonly key: string; readonly widthPx?: number },
-  features: ReturnType<typeof featuresForFeedItem>,
-): string {
-  return [
-    input.key,
-    features.rowKind,
-    features.contentShapeHash,
-    widthBucketForPx(input.widthPx),
-    features.fontScaleBucket,
-  ].join('\u0000');
-}
-
-function reservationKeyFromFeatures(
-  input: { readonly key: string; readonly widthPx?: number },
-  features: ReturnType<typeof featuresForFeedItem>,
-): string {
-  return [
-    input.key,
-    features.rowKind,
-    widthBucketForPx(input.widthPx),
-    features.fontScaleBucket,
-  ].join('\u0000');
 }
 
 function recordPreservedReservation(

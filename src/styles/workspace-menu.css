@@ -6,9 +6,18 @@
   display: grid;
   gap: var(--space-1);
   min-width: 9rem;
+  opacity: 0;
   padding: var(--space-2);
+  pointer-events: none;
   position: fixed;
+  visibility: hidden;
   z-index: 1000;
+}
+
+.anchored-popover--positioned {
+  opacity: 1;
+  pointer-events: auto;
+  visibility: visible;
 }
 
 .anchored-popover button {

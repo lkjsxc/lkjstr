@@ -11,6 +11,7 @@
   import '../styles/workspace-resize.css';
   import '../styles/workspace-menu.css';
   import '../styles/scroll-layout.css';
+  import '../styles/hybrid-tab.css';
   import '../styles/timeline.css';
   import '../styles/media-embed.css';
   import '../styles/notifications.css';

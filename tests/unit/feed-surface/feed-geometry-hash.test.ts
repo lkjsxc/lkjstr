@@ -15,7 +15,8 @@ describe('feed geometry content shape hash', () => {
         customEmojiCount: 0,
         hasContentWarning: false,
         fragmentCount: 1,
+        materializationTier: 'structural',
       }),
-    ).toBe('b917df0a9956a012');
+    ).toBe('da3012028e320049');
   });
 });

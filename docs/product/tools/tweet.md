@@ -56,6 +56,9 @@ uploads, or fake custom emoji metadata.
 - Each Tweet tab owns a unique visually hidden file input behind an accessible
   icon button, so file selection is scoped to the active composer.
 - A blank upload server disables media upload without blocking text publishing.
+- When upload is not configured, Tweet shows `Configure media upload in Upload
+Settings.` and opens Upload Settings on click instead of failing silently on
+  the attach control.
 - Upload provider setting changes apply to an open Tweet tab without recreating
   the tab.
 - Successful uploads append the media URL to note content and publish matching

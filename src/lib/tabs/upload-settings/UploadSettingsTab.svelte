@@ -97,7 +97,10 @@
   }
 </script>
 
-<section class="data-tab upload-settings-tab" aria-label="Upload Settings">
+<section
+  class="data-tab form-tab upload-settings-tab"
+  aria-label="Upload Settings"
+>
   <fieldset>
     <legend>Provider</legend>
     {#each mediaUploadProviders as provider (provider.id)}

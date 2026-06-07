@@ -41,8 +41,8 @@ async fn rust_upload_settings_renders_or_saves_when_storage_available() -> Resul
 async fn open_upload_settings_tab() -> Result<(), JsValue> {
     wait_for_text("Welcome").await?;
     click("[aria-label='New tab']")?;
-    wait_for_selector("[data-testid='new-tab-open-upload-settings']").await?;
-    click("[data-testid='new-tab-open-upload-settings']")
+    wait_for_selector("[data-testid='new-tab-option-upload-settings']").await?;
+    click("[data-testid='new-tab-option-upload-settings']")
 }
 
 fn install_fetch_mock() -> Result<(), JsValue> {

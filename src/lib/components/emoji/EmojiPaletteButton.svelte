@@ -2,11 +2,13 @@
   import { Smile } from '@lucide/svelte';
   import type { CustomEmoji } from '$lib/protocol';
   import AnchoredPopover from '$lib/components/popover/AnchoredPopover.svelte';
+  import type { PopoverPlacement } from '$lib/components/popover/position';
   import EmojiPopover from './EmojiPopover.svelte';
 
   type Props = {
     customEmojis?: readonly CustomEmoji[];
     disabled?: boolean;
+    preferred?: PopoverPlacement;
     onUnicode: (emoji: string) => void;
     onCustom: (emoji: CustomEmoji) => void;
   };
@@ -33,7 +35,7 @@
     <AnchoredPopover
       {anchor}
       label="Emoji palette"
-      preferred="bottom-start"
+      preferred={props.preferred ?? 'bottom-start'}
       close={() => (open = false)}
     >
       <EmojiPopover

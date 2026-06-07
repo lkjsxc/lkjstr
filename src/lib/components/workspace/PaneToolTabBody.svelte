@@ -45,6 +45,7 @@
     tabId={props.tab.id}
     activeAccount={props.activeAccount}
     relaySets={props.relaySets}
+    openUploadSettings={() => props.openTool(props.paneId, 'upload-settings')}
   />
 {:else if props.tab.kind === 'upload-settings'}
   <UploadSettingsTab />
@@ -71,6 +72,7 @@
     tabId={props.tab.id}
     activeAccount={props.activeAccount}
     relaySets={props.relaySets}
+    openUploadSettings={() => props.openTool(props.paneId, 'upload-settings')}
   />
 {:else if props.tab.kind === 'welcome'}
   <WelcomeTab

@@ -5,32 +5,42 @@
 This checklist tracks scrollbar placement and content inset per scrolling
 surface. Each row must pass before the scroll-layout contract is complete.
 
+## Audit Status Legend
+
+| Value         | Meaning                                             |
+| ------------- | --------------------------------------------------- |
+| `implemented` | Verified against the scroll-layout contract         |
+| `open`        | Contract required; verification or fix still active |
+
 ## Checklist
 
-| Surface                                         | Scroll root                       | Shared track inset | Content inset on child | Status   |
-| ----------------------------------------------- | --------------------------------- | ------------------ | ---------------------- | -------- |
-| Home / Global                                   | `.event-list__viewport`           | required           | required               | required |
-| Oversized Home / Global event                   | `.event-list__viewport`           | required           | required               | required |
-| Thread                                          | `.event-list__viewport`           | required           | required               | required |
-| Oversized Thread root                           | `.event-list__viewport`           | required           | required               | required |
-| Oversized Thread reply                          | `.event-list__viewport`           | required           | required               | required |
-| Search                                          | `.event-list__viewport`           | required           | required               | required |
-| Oversized Search result                         | `.event-list__viewport`           | required           | required               | required |
-| Profile                                         | `.event-list__viewport`           | required           | required               | required |
-| Oversized Profile note                          | `.event-list__viewport`           | required           | required               | required |
-| Notifications                                   | `.notification-list-scroll`       | required           | required               | required |
-| Oversized notification referenced event preview | `.notification-list-scroll`       | required           | required               | required |
-| Long unbroken text or URL                       | feed scroll root                  | required           | required               | required |
-| Split-pane resize after narrow measurement      | feed scroll root                  | required           | required               | required |
-| Settings                                        | `.settings-tab`                   | required           | required               | required |
-| Relay Settings                                  | `.settings-tab`                   | required           | required               | required |
-| Stats                                           | `.settings-tab`                   | required           | required               | required |
-| Welcome                                         | `.settings-tab`                   | required           | required               | required |
-| Upload Settings                                 | `.settings-tab`                   | required           | required               | required |
-| Custom Request                                  | tab scroll root                   | required           | required               | required |
-| Author Context                                  | tab scroll root                   | required           | required               | required |
-| lkjstr Log                                      | tab scroll root                   | required           | required               | required |
-| Pane shell                                      | no inline padding on `.pane-body` | n/a                | tab inner roots        | required |
+| Surface                                         | Scroll root                       | Shared track inset | Content inset on child | Audit status |
+| ----------------------------------------------- | --------------------------------- | ------------------ | ---------------------- | ------------ |
+| Home / Global                                   | `.event-list__viewport`           | required           | required               | implemented  |
+| Oversized Home / Global event                   | `.event-list__viewport`           | required           | required               | implemented  |
+| Thread                                          | `.event-list__viewport`           | required           | required               | implemented  |
+| Oversized Thread root                           | `.event-list__viewport`           | required           | required               | implemented  |
+| Oversized Thread reply                          | `.event-list__viewport`           | required           | required               | implemented  |
+| Search                                          | `.event-list__viewport`           | required           | required               | implemented  |
+| Oversized Search result                         | `.event-list__viewport`           | required           | required               | implemented  |
+| Profile                                         | `.event-list__viewport`           | required           | required               | implemented  |
+| Followees                                       | `.event-list__viewport`           | required           | required               | implemented  |
+| User Timeline                                   | `.event-list__viewport`           | required           | required               | implemented  |
+| Oversized Profile note                          | `.event-list__viewport`           | required           | required               | open         |
+| Notifications                                   | `.event-list__viewport`           | required           | required               | implemented  |
+| Oversized notification referenced event preview | `.event-list__viewport`           | required           | required               | open         |
+| Long unbroken text or URL                       | feed scroll root                  | required           | required               | open         |
+| Split-pane resize after narrow measurement      | feed scroll root                  | required           | required               | open         |
+| Tab kind switch in same pane                    | feed and form scroll roots        | required           | required               | implemented  |
+| Settings                                        | `.settings-tab.form-tab`          | required           | required               | implemented  |
+| Relay Settings                                  | `.relay-settings.form-tab`        | required           | required               | implemented  |
+| Stats                                           | `.stats-tab.form-tab`             | required           | required               | implemented  |
+| Welcome                                         | `.welcome-tab.form-tab`           | required           | required               | implemented  |
+| Upload Settings                                 | `.upload-settings-tab.form-tab`   | required           | required               | implemented  |
+| Custom Request                                  | `.event-list__viewport`           | required           | required               | implemented  |
+| Author Context                                  | `.event-list__viewport`           | required           | required               | implemented  |
+| lkjstr Log                                      | tab scroll root                   | required           | required               | open         |
+| Pane shell                                      | no inline padding on `.pane-body` | n/a                | tab inner roots        | implemented  |
 
 ## Additional Checks
 
@@ -61,3 +71,4 @@ surface. Each row must pass before the scroll-layout contract is complete.
 - [feed-row-chrome.md](../data/feed-surface/feed-row-chrome.md).
 - [tab-shell-layout.md](tab-shell-layout.md).
 - [scroll-layout.md](scroll-layout.md): tokens and contract.
+- [ui-system/scroll-inset-ownership.md](ui-system/scroll-inset-ownership.md).

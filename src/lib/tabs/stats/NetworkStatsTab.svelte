@@ -96,7 +96,7 @@
   }
 </script>
 
-<section class="data-tab stats-tab" aria-label="Stats">
+<section class="data-tab form-tab stats-tab" aria-label="Stats">
   <header class="settings-header">
     <div class="settings-actions">
       <CacheActions {cache} {refresh} />

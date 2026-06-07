@@ -21,6 +21,7 @@ fn features_for(content: &str, width: u16) -> RowGeometryFeatures {
         1.0,
         false,
         true,
+        crate::feed_geometry::hash::MaterializationTier::Structural,
     )
 }
 
@@ -72,6 +73,7 @@ fn event_feature_extraction_counts_shape_inputs() {
         1.25,
         true,
         true,
+        crate::feed_geometry::hash::MaterializationTier::Structural,
     );
 
     assert_eq!(features.url_count, 1);
@@ -112,6 +114,7 @@ fn content_shape_hash_is_stable_and_sensitive() {
         custom_emoji_count: 0,
         has_content_warning: false,
         fragment_count: 1,
+        materialization_tier: crate::feed_geometry::hash::MaterializationTier::Structural,
     };
     let mut changed = shape.clone();
     changed.line_break_count = 2;

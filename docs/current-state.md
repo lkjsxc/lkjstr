@@ -22,6 +22,16 @@ Read next: [product/README.md](product/README.md),
   real NIP-02 data may render immediately, cache misses start target discovery,
   and User Timeline can show a truthful target-posts-only degraded mode with
   route-group diagnostics and retryable incomplete states.
+- Shared UI system catalog lives in
+  [architecture/workspace/ui-system/README.md](architecture/workspace/ui-system/README.md).
+  Shipped components cover feed identity headers, user-row overflow menus, flat
+  New Tab, upload gate hints, tile-portaled emoji palettes, feed scroll inset on
+  `.feed-scroll-item`, and profile header layout with following count under the
+  display name. Active polish targets live in
+  [architecture/workspace/ui-system/polish-backlog.md](architecture/workspace/ui-system/polish-backlog.md):
+  tab-kind scroll alignment, hybrid tab shells, attach-click upload routing,
+  emoji placement proof, and tier-tagged height reservation. Reply and zap
+  expanded panels remain a documented enrichment-tier gap.
 - New Tab includes a fixed `lkjsxc` choice that opens the public User Timeline
   for `0f38afb23cec30570ee64f9a4aa099229395ec3371c5fe867e09c9111480015d`.
 - Search is treated as complete only when the local SQLite token index and

@@ -113,18 +113,20 @@
   }
 </script>
 
-<section class="timeline-tab" aria-label="Custom Request">
-  <form
-    class="toolbar"
-    onsubmit={(event) => {
-      event.preventDefault();
-      void run();
-    }}
-  >
-    <textarea aria-label="Custom request JSON" bind:value={input}></textarea>
-    <button type="submit" disabled={loading || !input.trim()}>Run</button>
-  </form>
-  {#if error}<p role="alert">{error}</p>{/if}
+<section class="hybrid-tab feed-tab timeline-tab" aria-label="Custom Request">
+  <div class="hybrid-tab__toolbar">
+    <form
+      class="toolbar"
+      onsubmit={(event) => {
+        event.preventDefault();
+        void run();
+      }}
+    >
+      <textarea aria-label="Custom request JSON" bind:value={input}></textarea>
+      <button type="submit" disabled={loading || !input.trim()}>Run</button>
+    </form>
+    {#if error}<p role="alert">{error}</p>{/if}
+  </div>
   <EventTreeList
     tabId={props.tabId}
     restoreAnchor={props.restoreAnchor}

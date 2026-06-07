@@ -1,6 +1,13 @@
 const FNV_OFFSET: u64 = 0xcbf29ce484222325;
 const FNV_PRIME: u64 = 0x00000100000001b3;
 
+#[derive(Clone, Copy, Debug, Eq, PartialEq)]
+pub enum MaterializationTier {
+    Shell,
+    Structural,
+    Enriched,
+}
+
 #[derive(Clone, Debug, Eq, PartialEq)]
 pub struct ContentShapeInput {
     pub content_length: u32,
@@ -13,6 +20,7 @@ pub struct ContentShapeInput {
     pub custom_emoji_count: u16,
     pub has_content_warning: bool,
     pub fragment_count: u16,
+    pub materialization_tier: MaterializationTier,
 }
 
 #[must_use]
@@ -28,6 +36,14 @@ pub fn content_shape_hash(input: &ContentShapeInput) -> String {
     fold_u16(&mut state, input.custom_emoji_count);
     fold_bool(&mut state, input.has_content_warning);
     fold_u16(&mut state, input.fragment_count);
+    fold_byte(
+        &mut state,
+        match input.materialization_tier {
+            MaterializationTier::Shell => 0,
+            MaterializationTier::Structural => 1,
+            MaterializationTier::Enriched => 2,
+        },
+    );
     format!("{state:016x}")
 }
 

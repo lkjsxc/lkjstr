@@ -26,5 +26,7 @@ Workspace docs define the first screen, tile mechanics, tab list, and flows.
 - Feed tab scroll, retention, and list chrome follow
   [tab-retention-flow.md](../../architecture/workspace/tab-retention-flow.md),
   [scroll-layout.md](../../architecture/workspace/scroll-layout.md),
-  [tab-shell-layout.md](../../architecture/workspace/tab-shell-layout.md), and
-  [feed-scroll-surface.md](../../architecture/data/feed-surface/feed-scroll-surface.md).
+  [tab-shell-layout.md](../../architecture/workspace/tab-shell-layout.md),
+  [feed-scroll-surface.md](../../architecture/data/feed-surface/feed-scroll-surface.md),
+  and the shared UI catalog in
+  [ui-system/README.md](../../architecture/workspace/ui-system/README.md).

@@ -120,6 +120,23 @@ closing gates so this concise matrix stays readable.
 | Pressed off visible window  | event-actions.md  | implemented | `action-state-index.ts` |
 | Persistent action index     | storage/README.md | implemented | hybrid with feed merge  |
 
+## UI System
+
+| Clause                          | Contract                                                                                   | Status      | Notes                                                        |
+| ------------------------------- | ------------------------------------------------------------------------------------------ | ----------- | ------------------------------------------------------------ |
+| Feed identity leading header    | [identity-surfaces.md](../architecture/workspace/ui-system/identity-surfaces.md)           | implemented | `FeedIdentityHeader.svelte`                                  |
+| User row overflow menu          | [overflow-actions.md](../architecture/workspace/ui-system/overflow-actions.md)             | implemented | `UserRowOverflowMenu.svelte`                                 |
+| Flat New Tab grid               | [new-tab-menu.md](../architecture/workspace/ui-system/new-tab-menu.md)                     | implemented | `NewTab.svelte`, `menu.rs`                                   |
+| Upload gate hint                | [media-upload-gate.md](../architecture/workspace/ui-system/media-upload-gate.md)           | implemented | `UploadGateHint.svelte`, attach click routing                |
+| Canonical emoji palette         | [emoji-palette.md](../architecture/workspace/ui-system/emoji-palette.md)                   | implemented | `bottom-start` default, position and palette tests           |
+| Followees single scroll owner   | [feed-shell.md](../architecture/workspace/ui-system/feed-shell.md)                         | implemented | leading rows inside `FeedScrollSurface`                      |
+| Scroll inset single ownership   | [scroll-inset-ownership.md](../architecture/workspace/ui-system/scroll-inset-ownership.md) | implemented | `scroll-layout.css`, tab-shell class test                    |
+| Tab kind scroll alignment       | [scroll-alignment.md](../architecture/workspace/ui-system/scroll-alignment.md)             | implemented | shared track-edge tokens and form-tab class test             |
+| Hybrid tab shells               | [hybrid-tab-shells.md](../architecture/workspace/ui-system/hybrid-tab-shells.md)           | implemented | `.hybrid-tab.feed-tab` on Custom Request and Author Context  |
+| Profile header layout           | [profile-header-layout.md](../architecture/workspace/ui-system/profile-header-layout.md)   | implemented | following count under display name in `ProfileHeader.svelte` |
+| Reaction surface split          | [reaction-surfaces.md](../architecture/workspace/ui-system/reaction-surfaces.md)           | implemented | picker vs `ReactionSummary` documented                       |
+| Enrichment height tier collapse | [enrichment-height-tiers.md](../architecture/data/feed-surface/enrichment-height-tiers.md) | implemented | tier-tagged measurement keys; reply/zap gap remains          |
+
 ## Workspace Polish
 
 | Clause                                | Contract              | Status      | Notes                            |

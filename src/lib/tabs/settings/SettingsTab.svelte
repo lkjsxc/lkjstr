@@ -128,7 +128,7 @@
 </script>
 
 <section
-  class="settings-tab"
+  class="settings-tab form-tab"
   aria-label="Settings"
   data-scroll-owner=""
   bind:this={root}

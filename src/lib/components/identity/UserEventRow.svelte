@@ -1,7 +1,7 @@
 <script lang="ts">
   import Avatar from './Avatar.svelte';
-  import UserEventRowActions from './UserEventRowActions.svelte';
   import UserEventRowMeta from './UserEventRowMeta.svelte';
+  import UserRowOverflowMenu from './UserRowOverflowMenu.svelte';
   import type { ProfileSummary } from '$lib/identity/identity';
   import { userEventRowView, type UserEventRowContext } from './user-event-row';
 
@@ -24,6 +24,7 @@
       context: props.context,
     }),
   );
+  let hasOverflow = $derived(Boolean(props.openUserTimeline || props.copyNpub));
 
   function openRow(event?: MouseEvent): void {
     if (event && shouldKeepLocal(event.target)) return;
@@ -58,18 +59,21 @@
     size={props.compact ? 'sm' : 'md'}
   />
   <div class="user-event-row__main">
-    <UserEventRowMeta
-      pubkey={props.pubkey}
-      profile={props.profile}
-      context={props.context}
-      compact={props.compact}
-    />
-    <UserEventRowActions
-      pubkey={props.pubkey}
-      copied={props.copied}
-      openProfile={props.openProfile}
-      openUserTimeline={props.openUserTimeline}
-      copyNpub={props.copyNpub}
-    />
+    <div class="user-event-row__head">
+      <UserEventRowMeta
+        pubkey={props.pubkey}
+        profile={props.profile}
+        context={props.context}
+        compact={props.compact}
+      />
+      {#if hasOverflow}
+        <UserRowOverflowMenu
+          pubkey={props.pubkey}
+          copied={props.copied}
+          openUserTimeline={props.openUserTimeline}
+          copyNpub={props.copyNpub}
+        />
+      {/if}
+    </div>
   </div>
 </div>

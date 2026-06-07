@@ -82,7 +82,7 @@ async fn welcome_and_new_tab_actions_use_rust_reducers() -> Result<(), JsValue> 
 
     click(".lkjstr-activity-bar button")?;
     next_task().await?;
-    click("[data-testid='new-tab-open-search']")?;
+    click("[data-testid='new-tab-option-search']")?;
     next_task().await?;
     let text = document_text()?;
     assert!(text.contains("Search"));

@@ -20,6 +20,8 @@ materialization, row geometry, and real-data level of detail.
   concise summary of row-height contracts.
 - [unload-height-stability.md](unload-height-stability.md): unload,
   dematerialization, shells, and preserved reserved height.
+- [enrichment-height-tiers.md](enrichment-height-tiers.md): structural vs
+  enrichment collapse on dematerialization.
 - [geometry-model.md](geometry-model.md): durable geometry keys, estimates,
   measurements, reservations, and anchor compensation.
 - [repost-rendering.md](repost-rendering.md): shared event renderer contract for

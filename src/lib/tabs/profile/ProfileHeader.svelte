@@ -110,6 +110,9 @@
             >
               Copy relay sets JSON
             </button>
+            <button type="button" onclick={props.openUserTimeline}>
+              Open user timeline
+            </button>
           </div>
         </details>
         <ProfileActions
@@ -127,6 +130,20 @@
           emojis={props.profile?.customEmojis ?? []}
         />
       </h2>
+      {#if followingKnown}
+        <button
+          type="button"
+          class="profile-card__fact-button"
+          aria-label="Open following list"
+          onclick={props.openFollowees}
+        >
+          {followingLabel}
+        </button>
+      {:else}
+        <span class="profile-card__fact-muted" role="status">
+          {followingLabel}
+        </span>
+      {/if}
       <p>{display.subtitle}</p>
       <small>{props.npub}</small>
     </div>
@@ -143,27 +160,6 @@
           {props.profile?.website}
         </a>
       {/if}
-      {#if followingKnown}
-        <button
-          type="button"
-          class="profile-card__fact-button"
-          aria-label="Open following list"
-          onclick={props.openFollowees}
-        >
-          {followingLabel}
-        </button>
-      {:else}
-        <span class="profile-card__fact-muted" role="status">
-          {followingLabel}
-        </span>
-      {/if}
-      <button
-        type="button"
-        class="profile-card__fact-button"
-        onclick={props.openUserTimeline}
-      >
-        Open user timeline
-      </button>
       {#if copied}<span role="status">Copied {copied}</span>{/if}
     </div>
   </div>

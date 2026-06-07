@@ -1,6 +1,7 @@
 <script lang="ts">
   import { ImagePlus } from '@lucide/svelte';
   import EmojiPaletteButton from '$lib/components/emoji/EmojiPaletteButton.svelte';
+  import UploadGateHint from '$lib/components/media/UploadGateHint.svelte';
   import type { CustomEmoji } from '$lib/protocol';
 
   type Props = {
@@ -15,38 +16,61 @@
     publish: () => Promise<void>;
     insertUnicodeEmoji: (emoji: string) => void;
     insertCustomEmoji: (emoji: CustomEmoji) => void;
+    openUploadSettings: () => void;
   };
 
   let props: Props = $props();
+  let uploadConfigured = $derived(Boolean(props.uploadServer.trim()));
   let canUpload = $derived(
-    !props.uploading && props.hasSigner && Boolean(props.uploadServer.trim()),
+    !props.uploading && props.hasSigner && uploadConfigured,
   );
 </script>
 
 <div class="tweet-toolbar">
   <div class="tweet-toolbar__tools">
-    <label
-      class="button-like icon-button"
-      for={props.inputId}
-      title="Attach media"
-    >
-      <ImagePlus size={16} />
-      <span class="sr-only">Attach media</span>
-    </label>
-    <input
-      class="sr-only"
-      id={props.inputId}
-      name={props.inputId}
-      type="file"
-      accept="image/*,video/*"
-      multiple
-      disabled={!canUpload}
-      onchange={(event) => {
-        const files = event.currentTarget.files;
-        if (files) void props.uploadFiles(files);
-        event.currentTarget.value = '';
-      }}
-    />
+    {#if canUpload}
+      <label
+        class="button-like icon-button"
+        for={props.inputId}
+        title="Attach media"
+      >
+        <ImagePlus size={16} />
+        <span class="sr-only">Attach media</span>
+      </label>
+      <input
+        class="sr-only"
+        id={props.inputId}
+        name={props.inputId}
+        type="file"
+        accept="image/*,video/*"
+        multiple
+        onchange={(event) => {
+          const files = event.currentTarget.files;
+          if (files) void props.uploadFiles(files);
+          event.currentTarget.value = '';
+        }}
+      />
+    {:else if props.hasSigner && !uploadConfigured}
+      <button
+        type="button"
+        class="button-like icon-button"
+        title="Configure media upload"
+        onclick={props.openUploadSettings}
+      >
+        <ImagePlus size={16} />
+        <span class="sr-only">Configure media upload</span>
+      </button>
+      <UploadGateHint openUploadSettings={props.openUploadSettings} />
+    {:else}
+      <span
+        class="button-like icon-button icon-button--disabled"
+        title="Attach media"
+        aria-disabled="true"
+      >
+        <ImagePlus size={16} />
+        <span class="sr-only">Attach media</span>
+      </span>
+    {/if}
     <EmojiPaletteButton
       customEmojis={props.customEmojis}
       disabled={props.publishing}

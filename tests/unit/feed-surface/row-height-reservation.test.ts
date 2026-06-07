@@ -2,7 +2,6 @@ import { describe, expect, it } from 'vitest';
 import {
   clearFeedRowHeightsForKey,
   estimateFeedRowHeight,
-  feedRowHeightDiagnostics,
   feedRowHeightReservationCount,
   recordFeedRowHeight,
   widthBucketForPx,
@@ -54,7 +53,21 @@ describe('row height reservation', () => {
     expect(feedRowHeightReservationCount()).toBeGreaterThanOrEqual(before + 1);
   });
 
-  it('preserves a measured reservation when a row unloads lighter', () => {
+  it('preserves a measured reservation for the same content shape', () => {
+    const item = eventRow('steady content');
+    recordFeedRowHeight({
+      key: 'event:steady',
+      item,
+      widthPx: 640,
+      heightPx: 320,
+    });
+
+    expect(
+      estimateFeedRowHeight({ key: 'event:steady', item, widthPx: 640 }),
+    ).toBe(320);
+  });
+
+  it('collapses enrichment reservation when content shape changes', () => {
     const full = eventRow('x'.repeat(4_000));
     const shell = eventRow('');
     recordFeedRowHeight({
@@ -69,8 +82,7 @@ describe('row height reservation', () => {
     ).toBe(860);
     expect(
       estimateFeedRowHeight({ key: 'event:unload', item: shell, widthPx: 640 }),
-    ).toBe(860);
-    expect(feedRowHeightDiagnostics().unloadPreservedRows).toBeGreaterThan(0);
+    ).toBeLessThan(860);
   });
 
   it('uses content-aware fallbacks before measurement', () => {

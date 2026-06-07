@@ -30,9 +30,10 @@ Required behavior:
 - Visible and near-visible rows render real content, real loading states, or real
   unavailable states.
 - Far rows may use cheap DOM, shells, or LOD blocks, but they keep the reserved
-  block height.
-- Unloading, dematerializing, releasing enrichment, or switching to a shell must
-  not reduce reserved height.
+  structural block height.
+- Unloading or dematerializing must not reduce structural reserved height.
+  Enrichment-only height may collapse per
+  [enrichment-height-tiers.md](enrichment-height-tiers.md).
 - Height may shrink only after explicit remeasurement caused by a legitimate
   layout or content condition.
 - Height changes above the viewport preserve the current anchor by applying the
@@ -96,6 +97,8 @@ width bucket
 font scale bucket
 density bucket
 content shape hash
+materialization tier
+reference resolution state
 measurement generation
 ```
 

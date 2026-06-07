@@ -17,6 +17,8 @@ state, storage, relay orchestration, cleanup, and Rust/WASM migration.
 - [rust-wasm/README.md](rust-wasm/README.md): Rust/WASM client target.
 - [runtimes/README.md](runtimes/README.md): tab-owned data loading.
 - [workspace/README.md](workspace/README.md): panes, tabs, scroll, and layout.
+- [workspace/ui-system/README.md](workspace/ui-system/README.md): shared UI
+  components and interaction patterns.
 
 ## High-Value Contracts
 
@@ -28,6 +30,7 @@ state, storage, relay orchestration, cleanup, and Rust/WASM migration.
 - [network/subscription-orchestration/README.md](network/subscription-orchestration/README.md): Demand and Lease planning.
 - [rust-wasm/cutover/README.md](rust-wasm/cutover/README.md): parity and deletion ledgers.
 - [rust-wasm/surface-cutover-order.md](rust-wasm/surface-cutover-order.md): dependency-ranked cutover order.
+- [workspace/ui-system/README.md](workspace/ui-system/README.md): shared UI catalog.
 
 ## All Files
 
@@ -42,7 +45,8 @@ state, storage, relay orchestration, cleanup, and Rust/WASM migration.
 `data/feed-surface/height-reservation.md` `data/feed-surface/lod-tree.md` `data/feed-surface/long-content.md`
 `data/feed-surface/near-end.md` `data/feed-surface/older-load-mode.md` `data/feed-surface/repost-rendering.md`
 `data/feed-surface/scroll-regression-tests.md` `data/feed-surface/unload-height-stability.md`
-`data/feed-surface/staged-pipeline.md` `data/feed-surface/surface-matrix.md` `data/heap-retention.md`
+`data/feed-surface/enrichment-height-tiers.md` `data/feed-surface/staged-pipeline.md`
+`data/feed-surface/surface-matrix.md` `data/heap-retention.md`
 `data/local-secret-security.md` `data/memory-prioritization.md` `data/relay-pages.md`
 `data/resource-ownership.md` `data/sqlite-opfs/README.md` `data/sqlite-opfs/failure-recovery.md`
 `data/sqlite-opfs/import-export.md` `data/sqlite-opfs/migration-map.md` `data/sqlite-opfs/query-ownership.md`
@@ -97,6 +101,11 @@ state, storage, relay orchestration, cleanup, and Rust/WASM migration.
 `workspace/tab-retention-flow.md` `workspace/tab-runtime.md` `workspace/tab-shell-layout.md`
 `workspace/tab-snapshot-fields.md` `workspace/tab-strip-gestures.md` `workspace/theme.md`
 `workspace/tile-menu.md` `workspace/tile-overlays.md` `workspace/ui-composition.md`
+`workspace/ui-system/README.md` `workspace/ui-system/emoji-palette.md` `workspace/ui-system/feed-shell.md`
+`workspace/ui-system/identity-surfaces.md` `workspace/ui-system/media-upload-gate.md`
+`workspace/ui-system/new-tab-menu.md` `workspace/ui-system/overflow-actions.md`
+`workspace/ui-system/profile-header-layout.md` `workspace/ui-system/reaction-surfaces.md`
+`workspace/ui-system/scroll-inset-ownership.md` `workspace/ui-system/scroll-ownership.md`
 `workspace/workspace-layout-tree.md`
 ```
 

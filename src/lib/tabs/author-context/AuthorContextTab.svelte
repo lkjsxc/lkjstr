@@ -79,8 +79,10 @@
   }
 </script>
 
-<section class="timeline-tab" aria-label="Author Context">
-  {#if error}<p role="alert">{error}</p>{/if}
+<section class="hybrid-tab feed-tab timeline-tab" aria-label="Author Context">
+  <div class="hybrid-tab__toolbar">
+    {#if error}<p role="alert">{error}</p>{/if}
+  </div>
   <EventTreeList
     tabId={props.tabId}
     restoreAnchor={props.restoreAnchor}

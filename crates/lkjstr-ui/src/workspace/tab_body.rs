@@ -35,6 +35,7 @@ pub fn TabBody(
     settings_provider: Option<SettingsProvider>,
     upload_settings_provider: Option<UploadSettingsProvider>,
     tweet_provider: Option<TweetProvider>,
+    #[prop(default = None)] active_account_pubkey: Option<String>,
 ) -> impl IntoView {
     let kind = tab.kind;
     let tab_id = tab.id;
@@ -52,6 +53,7 @@ pub fn TabBody(
         settings_provider,
         upload_settings_provider,
         tweet_provider,
+        active_account_pubkey,
     };
     view! {
         <div class="lkjstr-tab-body" data-tab-kind=tab_kind_attr(kind)>
@@ -74,6 +76,7 @@ struct TabContentInput {
     settings_provider: Option<SettingsProvider>,
     upload_settings_provider: Option<UploadSettingsProvider>,
     tweet_provider: Option<TweetProvider>,
+    active_account_pubkey: Option<String>,
 }
 
 fn tab_content(input: TabContentInput) -> impl IntoView {
@@ -93,7 +96,7 @@ fn tab_content(input: TabContentInput) -> impl IntoView {
                 sequence=input.sequence
                 pane_id=input.pane_id
                 tab_id=Some(input.tab_id)
-                active_account_pubkey=None
+                active_account_pubkey=input.active_account_pubkey.clone()
                 persistence=input.persistence
             />
         }

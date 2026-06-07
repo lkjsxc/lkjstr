@@ -25,6 +25,7 @@
     tabId: string;
     activeAccount?: Account;
     relaySets: readonly RelaySet[];
+    openUploadSettings: () => void;
   };
   let props: Props = $props();
   let content = $state('');
@@ -158,7 +159,7 @@
     const pending = acceptedTweetMedia(files);
     if (pending.length === 0) return;
     if (!uploadSettings.server.trim()) {
-      message = 'Configure a media upload server in Settings first.';
+      message = 'Configure media upload in Upload Settings.';
       return;
     }
     uploading = true;
@@ -191,7 +192,7 @@
   function addCustomEmoji(emoji: CustomEmoji): void { customEmojis = upsertCustomEmoji(customEmojis, emoji); }
 </script>
 
-<section class="data-tab" aria-label="Tweet">
+<section class="data-tab form-tab" aria-label="Tweet">
   <!-- prettier-ignore -->
-  <TweetTabView tabId={props.tabId} bind:sensitive bind:warningReason bind:content {attachments} customEmojis={allCustomEmojis} {uploading} {publishing} {hasSigner} {uploadSettings} {canPublish} {message} {focusNonce} {touchDraft} {flushDraft} {uploadFiles} {publish} {removeAttachment} {handlePaste} addCustomEmoji={addCustomEmoji} />
+  <TweetTabView tabId={props.tabId} bind:sensitive bind:warningReason bind:content {attachments} customEmojis={allCustomEmojis} {uploading} {publishing} {hasSigner} {uploadSettings} {canPublish} {message} {focusNonce} {touchDraft} {flushDraft} {uploadFiles} {publish} {removeAttachment} {handlePaste} addCustomEmoji={addCustomEmoji} openUploadSettings={props.openUploadSettings} />
 </section>

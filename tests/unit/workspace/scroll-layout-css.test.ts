@@ -16,9 +16,28 @@ describe('scroll layout css', () => {
   it('uses the same track-edge token for tool-style scroll roots', () => {
     const source = css();
 
+    expect(source).toContain('.form-tab,');
     expect(source).toContain('margin-inline-end: var(--scroll-track-edge);');
     expect(source).not.toContain(
       'margin-inline-end: var(--scroll-content-inset);',
+    );
+  });
+
+  it('documents hybrid feed tabs with one event-list child inset rule', () => {
+    const source = css();
+
+    expect(source).toContain('.hybrid-tab.feed-tab');
+    expect(source).toContain('.hybrid-tab > .event-list');
+  });
+
+  it('keeps feed tab roots free of horizontal padding', () => {
+    const source = css();
+
+    expect(source).toContain(
+      '.feed-tab {\n  box-sizing: border-box;\n  padding-inline: 0;',
+    );
+    expect(source).not.toMatch(
+      /\.profile-tab,\s*\n\.timeline-tab,\s*\n\.followees-tab/,
     );
   });
 });

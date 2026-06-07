@@ -21,6 +21,7 @@ pub fn AppWithStartup(
     #[prop(optional)] settings_provider: Option<SettingsProvider>,
     #[prop(optional)] upload_settings_provider: Option<UploadSettingsProvider>,
     #[prop(optional)] tweet_provider: Option<TweetProvider>,
+    #[prop(default = None)] active_account_pubkey: Option<String>,
 ) -> impl IntoView {
     let startup = start_workspace(startup);
     let runtime = RwSignal::new(startup.state);
@@ -35,6 +36,7 @@ pub fn AppWithStartup(
             settings_provider=settings_provider
             upload_settings_provider=upload_settings_provider
             tweet_provider=tweet_provider
+            active_account_pubkey=active_account_pubkey
         />
     }
 }

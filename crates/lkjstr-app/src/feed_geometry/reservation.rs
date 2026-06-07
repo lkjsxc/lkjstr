@@ -32,6 +32,12 @@ pub fn next_reserved_height(
             estimate_px,
             ReservedHeightReason::GenerationInvalidated,
         ),
+        GeometryAction::MaterializationTierChanged { key, estimate_px } => invalidated(
+            previous,
+            key,
+            estimate_px,
+            ReservedHeightReason::TierChanged,
+        ),
         GeometryAction::MeasurementExpired { estimate_px } => expired(previous, estimate_px),
     }
 }

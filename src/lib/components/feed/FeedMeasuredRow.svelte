@@ -2,6 +2,8 @@
   import type { Snippet } from 'svelte';
   import {
     estimateFeedRowHeight,
+    markFeedRowDematerialized,
+    markFeedRowMaterialized,
     recordFeedRowAnchorCompensation,
     recordFeedRowHeight,
     widthBucketForPx,
@@ -19,6 +21,11 @@
   let widthPx = $state<number | undefined>();
   let key = $derived(getKey(item));
   let reservedHeight = $derived(estimateFeedRowHeight({ key, item, widthPx }));
+
+  $effect(() => {
+    markFeedRowMaterialized(key);
+    return () => markFeedRowDematerialized(key);
+  });
 
   $effect(() => {
     if (!element || typeof ResizeObserver === 'undefined') return;

@@ -12,6 +12,8 @@ Per-tab list integration, paging mode, geometry, and level-of-detail use.
 | Thread | Virtual | Cursor plus newer | Required | Yes |
 | Search | Virtual | Cursor window | Required | Yes |
 | Notifications | Virtua via `FeedScrollSurface` | Older-only | Required | Yes |
+| Followees | Virtua via `FeedScrollSurface` | Scroll offset hydrate | Required | No |
+| User Timeline | Virtual `EventTreeList` | Auto near-end | Required | Yes |
 | Custom Request | Virtual | Single read | Required for event lists | On run |
 | Author Context | Virtual | Cursor window | Required | Yes |
 

@@ -1,11 +1,11 @@
 <script lang="ts">
   import { onDestroy } from 'svelte';
   import EventTreeList from '$lib/components/events/EventTreeList.svelte';
+  import FeedIdentityHeader from '$lib/components/identity/FeedIdentityHeader.svelte';
   import type { ProfileSummary } from '$lib/identity/identity';
   import type { RelaySet } from '$lib/relays/relay-store';
   import { sharedSubscriptionOrchestrator } from '$lib/relays/orchestration/orchestrator';
   import { timelineRelays } from '$lib/timeline/timeline-subscription';
-  import { safeNpub } from '$lib/components/identity/user-event-row';
   import { loadTimelineProfiles } from '$lib/timeline/timeline-profiles';
   import { mergeUserTimelineItems } from '$lib/user-timeline/user-timeline-cache';
   import { readOlderUserTimeline } from '$lib/user-timeline/user-timeline-loaders';
@@ -59,6 +59,19 @@
     void start(++generation);
   });
 
+  $effect(() => {
+    const pubkey = props.pubkey;
+    if (!pubkey) return;
+    void relays;
+    void loadTimelineProfiles(
+      [pubkey],
+      relays,
+      `${props.tabId}:user-timeline-target`,
+    ).then((loaded) => {
+      profiles = { ...profiles, ...loaded };
+    });
+  });
+
   onDestroy(() => {
     generation++;
     controller?.abort();
@@ -94,7 +107,7 @@
 
   async function hydrateVisibleAuthors(): Promise<void> {
     const visible = items.map((item) => item.event.pubkey);
-    const pubkeys = [...new Set([...visible, ...authors])]
+    const pubkeys = [...new Set([props.pubkey, ...visible, ...authors])]
       .filter((pubkey) => !profiles[pubkey])
       .slice(0, 80);
     if (pubkeys.length === 0) return;
@@ -159,10 +172,12 @@
   >
     {#snippet leadingRow(row)}
       {#if row.key === 'user-timeline-header'}
-        <header class="user-timeline-tab__header">
-          <h2>User Timeline</h2>
-          <p>Public timeline for {safeNpub(props.pubkey)}</p>
-        </header>
+        <FeedIdentityHeader
+          pubkey={props.pubkey}
+          profile={profiles[props.pubkey]}
+          label="User timeline"
+          openProfile={props.openProfile}
+        />
       {:else if row.key === 'user-timeline-notice'}
         <p class="timeline-tab__guidance">{notice}</p>
       {:else if row.key === 'user-timeline-error'}

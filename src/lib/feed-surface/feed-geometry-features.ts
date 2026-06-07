@@ -1,29 +1,17 @@
 import type { NostrEvent } from '$lib/protocol';
-import { contentShapeHash } from './feed-geometry-hash';
+import {
+  contentShapeHash,
+  type MaterializationTier,
+} from './feed-geometry-hash';
 
-export type FeedGeometryFeatures = {
-  readonly rowKind: string;
-  readonly eventKind?: number;
-  readonly contentLength: number;
-  readonly unicodeScalarCount: number;
-  readonly lineBreakCount: number;
-  readonly longestUnbrokenTokenLength: number;
-  readonly urlCount: number;
-  readonly mediaCount: number;
-  readonly referencePreviewCount: number;
-  readonly customEmojiCount: number;
-  readonly hasContentWarning: boolean;
-  readonly hasProfileSummary: boolean;
-  readonly hasNotificationChrome: boolean;
-  readonly hasActionBar: boolean;
-  readonly widthBucket: number;
-  readonly fontScaleBucket: number;
-  readonly contentShapeHash: string;
-};
+export type { FeedGeometryFeatures } from './feed-geometry-features-types';
+export { estimateHeightFromFeatures } from './feed-geometry-estimate';
+import type { FeedGeometryFeatures } from './feed-geometry-features-types';
 
 export function featuresForFeedItem(
   item: unknown,
   widthPx?: number,
+  materializationTier: MaterializationTier = 'structural',
 ): FeedGeometryFeatures {
   const event = eventFromItem(item);
   const rowKind = rowKindFromItem(item, event);
@@ -40,6 +28,7 @@ export function featuresForFeedItem(
     customEmojiCount: countTags(tags, 'emoji'),
     hasContentWarning: hasTag(tags, 'content-warning'),
     fragmentCount: 1,
+    materializationTier,
   };
   return {
     rowKind,
@@ -52,24 +41,6 @@ export function featuresForFeedItem(
     fontScaleBucket: 1,
     contentShapeHash: contentShapeHash(shape),
   };
-}
-
-export function estimateHeightFromFeatures(
-  features: FeedGeometryFeatures,
-): number {
-  const base = baseHeight(features.rowKind);
-  const text = estimatedTextHeight(features);
-  const media = Math.min(6, features.mediaCount) * 150;
-  const previews = Math.min(6, features.referencePreviewCount) * 96;
-  const profile = features.hasProfileSummary ? 88 : 0;
-  const chrome = features.hasNotificationChrome ? 36 : 0;
-  const action = features.hasActionBar ? 40 : 0;
-  const warning = features.hasContentWarning ? 28 : 0;
-  return clamp(
-    base + text + media + previews + profile + chrome + action + warning,
-    48,
-    8_000,
-  );
 }
 
 export function widthBucketIndex(widthPx?: number): number {
@@ -92,6 +63,14 @@ function eventFromItem(item: unknown): NostrEvent | undefined {
 
 function rowKindFromItem(item: unknown, event: NostrEvent | undefined): string {
   if (!isRecord(item)) return event ? 'event' : 'unavailable';
+  if (item.kind === 'followee' || item.kind === 'user-row') return 'user-row';
+  if (
+    item.kind === 'header' ||
+    item.kind === 'guidance' ||
+    item.kind === 'retry'
+  )
+    return 'leading';
+  if (item.kind === 'status') return 'footer';
   if (item.kind === 'leading') return 'leading';
   if (item.kind === 'empty') return 'unavailable';
   if (
@@ -112,30 +91,6 @@ function eventValue(value: unknown): NostrEvent | undefined {
     return undefined;
   if (!Array.isArray(value.tags)) return undefined;
   return value as NostrEvent;
-}
-
-function estimatedTextHeight(features: FeedGeometryFeatures): number {
-  const charsPerLine = [30, 42, 56, 72, 88, 108][features.widthBucket] ?? 108;
-  const wrapLines = divCeil(features.unicodeScalarCount, charsPerLine);
-  const tokenExtra = divCeil(
-    features.longestUnbrokenTokenLength,
-    charsPerLine * 2,
-  );
-  const lines =
-    wrapLines +
-    features.lineBreakCount +
-    tokenExtra +
-    Math.min(12, features.urlCount) * 2 +
-    Math.floor(Math.min(24, features.customEmojiCount) / 4);
-  return lines * (20 + Math.min(4, features.fontScaleBucket) * 2);
-}
-
-function baseHeight(rowKind: string): number {
-  if (rowKind === 'thread-root' || rowKind === 'event') return 96;
-  if (rowKind === 'notification') return 116;
-  if (rowKind === 'leading') return 180;
-  if (rowKind === 'footer') return 64;
-  return 72;
 }
 
 function countReferenceTags(tags: readonly (readonly string[])[]): number {
@@ -166,14 +121,6 @@ function longestToken(content: string): number {
 
 function countMatches(content: string, token: string): number {
   return content.split(token).length - 1;
-}
-
-function divCeil(value: number, divisor: number): number {
-  return Math.floor((value + divisor - 1) / divisor);
-}
-
-function clamp(value: number, min: number, max: number): number {
-  return Math.min(max, Math.max(min, Math.round(value)));
 }
 
 function isRecord(value: unknown): value is Record<string, unknown> {

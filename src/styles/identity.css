@@ -88,7 +88,12 @@
 }
 
 .profile-card__about {
-  margin: 0;
+  margin: 0 0 var(--space-5);
+}
+
+.profile-card__identity .profile-card__fact-button,
+.profile-card__identity .profile-card__fact-muted {
+  margin-top: 0;
 }
 
 .profile-card__facts a,

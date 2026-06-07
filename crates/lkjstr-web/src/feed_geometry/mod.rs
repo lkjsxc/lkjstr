@@ -91,6 +91,7 @@ mod tests {
             width_bucket: 3,
             font_scale_bucket: 1,
             content_shape_hash: "shape".to_owned(),
+            materialization_tier: "structural".to_owned(),
         }
     }
 }

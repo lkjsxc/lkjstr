@@ -15,16 +15,28 @@
   scrollbar-gutter: stable;
 }
 
-.settings-tab,
+.form-tab,
 .data-tab,
-.profile-tab,
-.timeline-tab,
+.settings-tab,
 .new-tab,
 .relay-monitor,
 .relay-settings {
   box-sizing: border-box;
+  margin-inline-end: var(--scroll-track-edge);
+  overflow: auto;
   padding-inline-end: 0;
   padding-inline-start: var(--scroll-content-inset);
+  scrollbar-gutter: stable;
+}
+
+.profile-tab.feed-tab,
+.timeline-tab.feed-tab,
+.followees-tab.feed-tab,
+.user-timeline-tab.feed-tab,
+.hybrid-tab.feed-tab,
+.feed-tab {
+  box-sizing: border-box;
+  padding-inline: 0;
   scrollbar-gutter: stable;
 }
 
@@ -33,22 +45,13 @@
   padding-inline-start: var(--scroll-content-inset);
 }
 
-.settings-tab > *,
+.form-tab > *,
 .data-tab > *,
-.profile-tab > *,
-.timeline-tab > *,
+.settings-tab > *,
 .new-tab > *,
 .relay-monitor > *,
 .relay-settings > * {
   padding-inline-end: var(--scroll-content-inset);
-}
-
-.settings-tab,
-.data-tab,
-.new-tab,
-.relay-monitor,
-.relay-settings {
-  margin-inline-end: var(--scroll-track-edge);
 }
 
 .feed-tab {
@@ -63,6 +66,9 @@
   overscroll-behavior: contain;
 }
 
-.timeline-tab > .event-list {
+.timeline-tab > .event-list,
+.followees-tab > .event-list,
+.user-timeline-tab > .event-list,
+.hybrid-tab > .event-list {
   padding-inline-end: 0;
 }

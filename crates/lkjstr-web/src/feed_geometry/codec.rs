@@ -1,7 +1,7 @@
 use lkjstr_app::{
     AnchorConfidence, FeedFragmentConfig, FeedScrollAnchor, GeometryEstimateSource,
-    MeasuredFeedRow, RowGeometryFeatures, RowGeometryModel, RowHeightObservation, RowKind,
-    SemanticFeedEvent,
+    MaterializationTier, MeasuredFeedRow, RowGeometryFeatures, RowGeometryModel,
+    RowHeightObservation, RowKind, SemanticFeedEvent,
 };
 
 use super::dto::{
@@ -27,6 +27,7 @@ pub fn features_from_dto(dto: FeaturesDto) -> RowGeometryFeatures {
         width_bucket: dto.width_bucket,
         font_scale_bucket: dto.font_scale_bucket,
         content_shape_hash: dto.content_shape_hash,
+        materialization_tier: materialization_tier_from_str(&dto.materialization_tier),
     }
 }
 
@@ -163,6 +164,14 @@ fn confidence_from_str(value: &str) -> AnchorConfidence {
         "exact" => AnchorConfidence::Exact,
         "degraded" => AnchorConfidence::Degraded,
         _ => AnchorConfidence::None,
+    }
+}
+
+fn materialization_tier_from_str(value: &str) -> MaterializationTier {
+    match value {
+        "shell" => MaterializationTier::Shell,
+        "enriched" => MaterializationTier::Enriched,
+        _ => MaterializationTier::Structural,
     }
 }
 

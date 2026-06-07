@@ -24,8 +24,13 @@ tool rows, and any other vertically scrolling row-like surface.
 ## Stability Rule
 
 A row that has been measured for the current geometry key and layout bucket must
-not reserve less height merely because it unloads, dematerializes, loses
-enrichment, or renders a lighter shell.
+not reserve less **structural** height merely because it unloads, dematerializes,
+or renders a lighter shell.
+
+**Enrichment-only** height from resolved reference cards, hydrated profile
+blocks, or expanded inline action panels may collapse when
+`materializationTier` drops from `enriched` to `structural` or `shell`. See
+[enrichment-height-tiers.md](enrichment-height-tiers.md).
 
 Allowed height changes:
 
@@ -40,10 +45,12 @@ Allowed height changes:
 
 Forbidden height changes:
 
-- Unloading a row reduces its reserved height.
-- Dropping profile metadata, media DOM, action controls, reference previews, or
-  custom emoji reduces a reservation.
-- Replacing real content with a shell collapses the row block.
+- Unloading a row reduces its reserved **structural** height below the current
+  structural tier estimate.
+- Dropping structural event text, action bars, or known unavailable shells
+  reduces a reservation.
+- Replacing real structural content with a shorter fake shell collapses the row
+  block.
 - Cache miss or missing enrichment creates shorter fake content.
 - Hidden tab demand release rewrites row identity or row height.
 
@@ -112,6 +119,8 @@ Diagnostics are aggregate and bounded. They do not list unbounded event ids.
 
 ## Related
 
+- [enrichment-height-tiers.md](enrichment-height-tiers.md): structural vs
+  enrichment collapse rules.
 - [height-reservation.md](height-reservation.md): concise row reservation loop.
 - [geometry-model.md](geometry-model.md): keys, buckets, and persistence target.
 - [lod-tree.md](lod-tree.md): shell and block retention.

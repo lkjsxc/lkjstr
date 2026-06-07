@@ -50,6 +50,7 @@ real event data or explicit unavailable states.
 | Notifications | Notification chrome and referenced event preview share one scroll owner. |
 | Profile summary | Profile summary and notes share one scroll owner. |
 | Horizontal overflow | Scroll owners report `scrollWidth <= clientWidth + 1`. |
+| Tab kind switch in same pane | Feed and form tab scroll owners share the same track-edge inset within one device pixel. |
 
 ## Structural Audit Tests
 

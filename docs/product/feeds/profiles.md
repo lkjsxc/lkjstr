@@ -9,8 +9,8 @@ Profile tabs show identity metadata and authored text notes.
 - Profile tabs open from identity actions, not New Tab.
 - The tab receives a hex pubkey from the workspace command.
 - Runtime loads cached metadata and notes before relay data.
-- Metadata cache reads are latest-only and consult memory before IndexedDB.
-  Older metadata events must never replace newer profile metadata.
+- Metadata cache reads are latest-only and consult memory before the SQLite
+  worker cache. Older metadata events must never replace newer profile metadata.
 - Selected read relays are the base and fallback. Profile may also use the
   author's NIP-65 write relays, NIP-02 hints, event receipts, and discovery
   evidence. Disabled or removed relays remain excluded.
@@ -29,9 +29,15 @@ Profile tabs show identity metadata and authored text notes.
 - Profile metadata supports banner, picture, display name, name, NIP-05,
   website, Lightning address, and about text.
 - Profile header identity content starts below the avatar/action row. Display
-  name, subtitle, full `npub`, facts, and about text share one content width.
-  The avatar may overlap banner media, but text and notes never overlap the
-  banner.
+  name, following count, subtitle, full `npub`, and about text share one content
+  width. The avatar may overlap banner media, but text and notes never overlap
+  the banner.
+- Following count sits directly under display name and before subtitle and
+  `npub` when known.
+- About text and the first note row keep `var(--space-5)` visible spacing
+  between them.
+- `Open user timeline` lives in the profile overflow menu, not as a large
+  standalone fact button.
 - Website values and safe HTTP, HTTPS, or schemeless domain-like URLs inside
   about text render as clickable links after HTTP/HTTPS normalization.
   Unsafe schemes such as `javascript:` never render as links.

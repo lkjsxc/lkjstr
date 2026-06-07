@@ -87,6 +87,12 @@ User Timeline renders useful real data while discovery continues:
 The tab labels whose timeline is being shown and must not imply private or
 personalized access.
 
+## Header Contract
+
+The leading in-flow row uses the shared feed identity header for the target
+pubkey: avatar, display name, and subtitle from hydrated profile metadata. The
+header must not show raw `npub` or `Public timeline for npub...` copy.
+
 ## Feed Contract
 
 When a latest kind `3` is found, the runtime extracts valid followee pubkeys,

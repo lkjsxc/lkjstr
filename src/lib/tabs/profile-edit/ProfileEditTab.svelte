@@ -11,6 +11,7 @@
     tabId: string;
     activeAccount?: Account;
     relaySets: readonly RelaySet[];
+    openUploadSettings: () => void;
   };
 
   let props: Props = $props();
@@ -47,7 +48,7 @@
   };
 </script>
 
-<section class="data-tab profile-edit-tab" aria-label="Profile Edit">
+<section class="data-tab form-tab profile-edit-tab" aria-label="Profile Edit">
   {#if view.canEdit}
     {#if view.loading}<p>Loading profile metadata...</p>{/if}
     <ProfileTextField
@@ -62,6 +63,8 @@
       id={`profile-banner-${props.tabId}`}
       label="Upload banner"
       uploading={view.uploading === 'banner'}
+      uploadConfigured={Boolean(view.uploadSettings.server.trim())}
+      openUploadSettings={props.openUploadSettings}
       upload={(files) => void controller.upload('banner', files).then(refresh)}
     />
     <ProfileTextField
@@ -76,6 +79,8 @@
       id={`profile-picture-${props.tabId}`}
       label="Upload picture"
       uploading={view.uploading === 'picture'}
+      uploadConfigured={Boolean(view.uploadSettings.server.trim())}
+      openUploadSettings={props.openUploadSettings}
       upload={(files) => void controller.upload('picture', files).then(refresh)}
     />
     <ProfileTextField

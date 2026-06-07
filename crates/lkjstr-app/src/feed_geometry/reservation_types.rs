@@ -26,6 +26,7 @@ pub enum ReservedHeightReason {
     LayoutInvalidated,
     ContentInvalidated,
     GenerationInvalidated,
+    TierChanged,
     Expired,
 }
 
@@ -49,6 +50,7 @@ pub enum GeometryAction {
     DensityBucketChanged { key: GeometryKey, estimate_px: u16 },
     ContentShapeChanged { key: GeometryKey, estimate_px: u16 },
     SchemaGenerationChanged { key: GeometryKey, estimate_px: u16 },
+    MaterializationTierChanged { key: GeometryKey, estimate_px: u16 },
     MeasurementExpired { estimate_px: u16 },
 }
 

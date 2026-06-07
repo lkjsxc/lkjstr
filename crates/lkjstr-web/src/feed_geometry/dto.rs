@@ -1,5 +1,9 @@
 use serde::{Deserialize, Serialize};
 
+fn default_materialization_tier() -> String {
+    "structural".to_owned()
+}
+
 #[derive(Clone, Deserialize)]
 pub struct FeaturesDto {
     pub row_kind: String,
@@ -19,6 +23,8 @@ pub struct FeaturesDto {
     pub width_bucket: u16,
     pub font_scale_bucket: u16,
     pub content_shape_hash: String,
+    #[serde(default = "default_materialization_tier")]
+    pub materialization_tier: String,
 }
 
 #[derive(Clone, Deserialize, Serialize)]

@@ -24,7 +24,7 @@
   let postReady = $derived(accountReady && writeRelays.length > 0);
 </script>
 
-<section class="data-tab welcome-tab" aria-label="Welcome">
+<section class="data-tab form-tab welcome-tab" aria-label="Welcome">
   <article class="welcome-doc">
     <h2>What this workspace is</h2>
     <p>

@@ -69,19 +69,13 @@ Tabs define the workspace surface area.
   canonical Timeline row behavior; target/root context is fallback-only.
 - Public Chat opens from New Tab and renders real NIP-28 channels and messages.
 
-## New Tab Filtering
+## New Tab Layout
 
-- New Tab has a search input above the option groups.
-- The filter matches label, description, tab kind key, group, and aliases.
-- Filtering is case-insensitive and trims whitespace.
-- Empty query shows all choices.
-- Result order remains the canonical catalog order.
-- Primary and secondary grouping remains visible when matching options exist.
-- No-results state is explicit and non-fatal.
-- Enter may open the first visible option only when a deterministic focused
-  result exists.
-- Escape clears the filter.
-- Filtering is pure and testable.
+- New Tab shows one flat option grid in canonical catalog order.
+- Each option card shows label and short description.
+- New Tab has no search input, filter label, result count, or primary/secondary
+  headings.
+- Svelte and Leptos use the same pure catalog data and ordering rules.
 
 ## Movement
 
@@ -116,10 +110,12 @@ Tabs define the workspace surface area.
 - Pane content must not create horizontal scrolling.
 - Tab bodies fill the pane body height and keep scroll ownership local.
 - Inactive tab bodies stay mounted but hidden; feed runtimes pause. Every blur
-  writes a durable IndexedDB snapshot and, within `tabs.inactiveRetentionSeconds`,
-  a session snapshot (up to `32` warm tabs) for reload backstop.
+  writes a durable SQLite OPFS worker tab snapshot and, within
+  `tabs.inactiveRetentionSeconds`, a session snapshot (up to `32` warm tabs) for
+  reload backstop.
 - Reselecting a tab keeps scroll, list anchor, and form fields from the hidden
-  DOM when possible; session and IndexedDB apply after reload or missing mount.
+  DOM when possible; session and durable worker snapshots apply after reload or
+  missing mount.
   Active feed tabs resume relay work from restored cursors; cached events
   repopulate the window before network. See
   [tab-body-mount.md](../../architecture/workspace/tab-body-mount.md) and

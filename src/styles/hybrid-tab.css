@@ -1,0 +1,23 @@
+.hybrid-tab.feed-tab {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+
+.hybrid-tab__toolbar {
+  box-sizing: border-box;
+  flex: 0 0 auto;
+  min-width: 0;
+  padding-inline-end: var(--scroll-content-inset);
+  padding-inline-start: var(--scroll-content-inset);
+}
+
+.hybrid-tab__toolbar .toolbar {
+  display: grid;
+  gap: var(--space-2);
+}
+
+.hybrid-tab > .event-list {
+  flex: 1 1 0;
+  min-height: 0;
+}

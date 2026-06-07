@@ -122,7 +122,7 @@
   });
 </script>
 
-<section class="relay-settings" aria-label="Relay Settings">
+<section class="relay-settings form-tab" aria-label="Relay Settings">
   {#if error}<p role="alert">{error}</p>{/if}
   <RelayPurposeSection
     title="User relays"

@@ -51,11 +51,11 @@ pub use feed_fragments::{
 pub use feed_geometry::{
     AnchorCompensation, AnchorConfidence, AnchorReconcileResult, ContentShapeInput,
     FeedScrollAnchor, GeometryAction, GeometryConfidence, GeometryEstimateSource, GeometryKey,
-    MeasuredFeedRow, ReservedHeightDecision, ReservedHeightReason, RowGeometryEstimate,
-    RowGeometryFeatures, RowGeometryModel, RowGeometryState, RowHeightObservation, RowKind,
-    WidthBucket, anchor_compensation_for_height_delta, capture_feed_anchor, content_shape_hash,
-    estimate_row_geometry, event_geometry_features, geometry_bucket_key, next_reserved_height,
-    reconcile_feed_anchor, update_row_geometry_model,
+    MaterializationTier, MeasuredFeedRow, ReservedHeightDecision, ReservedHeightReason,
+    RowGeometryEstimate, RowGeometryFeatures, RowGeometryModel, RowGeometryState,
+    RowHeightObservation, RowKind, WidthBucket, anchor_compensation_for_height_delta,
+    capture_feed_anchor, content_shape_hash, estimate_row_geometry, event_geometry_features,
+    geometry_bucket_key, next_reserved_height, reconcile_feed_anchor, update_row_geometry_model,
 };
 pub use feed_lod::{
     CoverageProjection, FeedLodBlock, FeedLodRow, FeedLodRowKind, FeedLodTree, MaterializationPlan,

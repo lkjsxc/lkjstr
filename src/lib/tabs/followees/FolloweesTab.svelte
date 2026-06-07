@@ -1,6 +1,7 @@
 <script lang="ts">
   import { onDestroy } from 'svelte';
   import FeedScrollSurface from '$lib/components/feed/FeedScrollSurface.svelte';
+  import FeedIdentityHeader from '$lib/components/identity/FeedIdentityHeader.svelte';
   import UserEventRow from '$lib/components/identity/UserEventRow.svelte';
   import type { ProfileSummary } from '$lib/identity/identity';
   import { hydrateProfiles } from '$lib/identity/profile-hydration';
@@ -14,6 +15,11 @@
     type TargetFollowListRuntimeInput,
   } from '$lib/follow-graph/target-follow-list-runtime';
   import type { TargetFollowListSnapshot } from '$lib/follow-graph/target-follow-list-state';
+  import {
+    followeesScrollRowKey,
+    followeesScrollRows,
+    type FolloweesScrollRow,
+  } from './followees-scroll-rows';
 
   type Props = {
     tabId: string;
@@ -38,6 +44,7 @@
   const subscriptions = sharedSubscriptionOrchestrator;
   let relays = $derived(timelineRelays(props.relaySets));
   let runtimeKey = $derived(`${props.pubkey}|${relays.join('\u0000')}`);
+  let scrollRows = $derived(followeesScrollRows({ entries, message, loading }));
 
   $effect(() => {
     if (!props.visible) return;
@@ -82,7 +89,18 @@
     entries = [...snapshot.entries];
     message = snapshot.message;
     loading = !final && snapshot.entries.length === 0;
+    void hydrateViewedProfile();
     if (snapshot.entries.length > 0) void hydrateWindow(0);
+  }
+
+  async function hydrateViewedProfile(): Promise<void> {
+    if (profiles[props.pubkey]) return;
+    const loaded = await hydrateProfiles({
+      pubkeys: [props.pubkey],
+      relays,
+      owner: props.tabId,
+    });
+    profiles = { ...profiles, ...loaded };
   }
 
   async function hydrateWindow(offset: number): Promise<void> {
@@ -111,43 +129,50 @@
   }
 </script>
 
-<section class="followees-tab timeline-tab" aria-label="Following">
-  <header class="followees-tab__header">
-    <h2>Following</h2>
-    <p>{safeNpub(props.pubkey)}</p>
-  </header>
-  {#if message}<p class="timeline-tab__guidance">{message}</p>{/if}
-  {#if entries.length === 0 && !loading}
-    <button type="button" onclick={() => void startFollowees(++generation)}>
-      Retry
-    </button>
-  {/if}
+<section class="followees-tab feed-tab" aria-label="Following">
   <div class="event-list">
-    {#if entries.length > 0}
-      <FeedScrollSurface
-        data={entries}
-        getKey={(item: unknown) => (item as FolloweeEntry).pubkey}
-        scrollerClass="event-list__scroller"
-        viewportClass="event-list__viewport"
-        onScrollOffset={(offset) => void hydrateWindow(offset)}
-      >
-        {#snippet row(item: unknown)}
-          {@const entry = item as FolloweeEntry}
+    <FeedScrollSurface
+      data={scrollRows}
+      getKey={(item: unknown) =>
+        followeesScrollRowKey(item as FolloweesScrollRow)}
+      scrollerClass="event-list__scroller"
+      viewportClass="event-list__viewport"
+      onScrollOffset={(offset) => void hydrateWindow(offset)}
+    >
+      {#snippet row(item: unknown)}
+        {@const row = item as FolloweesScrollRow}
+        {#if row.kind === 'header'}
+          <FeedIdentityHeader
+            pubkey={props.pubkey}
+            profile={profiles[props.pubkey]}
+            label="Following"
+          />
+        {:else if row.kind === 'guidance'}
+          <p class="timeline-tab__guidance">{row.message}</p>
+        {:else if row.kind === 'retry'}
+          <button
+            type="button"
+            onclick={() => void startFollowees(++generation)}
+          >
+            Retry
+          </button>
+        {:else if row.kind === 'status'}
+          <p class="event-list__empty">{row.message}</p>
+        {:else}
           <UserEventRow
-            pubkey={entry.pubkey}
-            profile={profiles[entry.pubkey]}
-            context={{ petname: entry.petname, relayUrl: entry.relayUrl }}
-            copied={copied === entry.pubkey}
+            pubkey={row.entry.pubkey}
+            profile={profiles[row.entry.pubkey]}
+            context={{
+              petname: row.entry.petname,
+              relayUrl: row.entry.relayUrl,
+            }}
+            copied={copied === row.entry.pubkey}
             openProfile={props.openProfile}
             openUserTimeline={props.openUserTimeline}
             {copyNpub}
           />
-        {/snippet}
-      </FeedScrollSurface>
-    {:else}
-      <p class="event-list__empty">
-        {loading ? 'Loading following list...' : message}
-      </p>
-    {/if}
+        {/if}
+      {/snippet}
+    </FeedScrollSurface>
   </div>
 </section>

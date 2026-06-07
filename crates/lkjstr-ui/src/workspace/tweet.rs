@@ -16,7 +16,7 @@ pub fn TweetTab(tab_id: String, provider: Option<TweetProvider>) -> impl IntoVie
     });
 
     view! {
-        <section class="data-tab tweet-tab" aria-label="Tweet">
+        <section class="data-tab form-tab tweet-tab" aria-label="Tweet">
             <label>
                 "Content"
                 <textarea
@@ -45,7 +45,11 @@ pub fn TweetTab(tab_id: String, provider: Option<TweetProvider>) -> impl IntoVie
                     />
                 </label>
             </Show>
+            <p class="upload-gate-hint">
+                "Configure media upload in Upload Settings before attaching files."
+            </p>
             <div class="tweet-tab__actions">
+                <button type="button" disabled=true aria-label="Attach media">"Attach media"</button>
                 <button type="button" disabled=true aria-label="Publish Tweet">"Publish"</button>
                 <span>"Publishing waits for Rust signing and relay queueing."</span>
             </div>

@@ -14,7 +14,7 @@ When pane focus leaves tab `A` for tab `B`:
    `scrollTop`, including `0`.
 2. `captureRuntimeSnapshot(A)` merges feed cursors, anchors, and tool fields
    from `tabRuntimeRegistry`.
-3. The coordinator writes IndexedDB `tabStates` with key
+3. The coordinator writes a durable SQLite OPFS worker tab snapshot with key
    `workspaceId + tabId`; `paneId` is stored only as `lastPaneId`.
 4. If `tabs.inactiveRetentionSeconds > 0`, the coordinator stores an in-memory
    copy (LRU cap `32`).
@@ -28,7 +28,7 @@ When tab `B` becomes active:
 1. Show tab `B` body (visibility and pointer events).
 2. When `B` stayed mounted, use live DOM scroll and fields first.
 3. Else the workspace coordinator consumes the warm snapshot when present.
-4. Else it loads IndexedDB by `workspaceId + tabId`.
+4. Else it loads the durable worker snapshot by `workspaceId + tabId`.
 5. The coordinator emits `TabSnapshotRestore { token, payload }`.
 6. Each mounted tab body receives that token once; after render, the parent calls
    `consumeRestore` and stale tokens are ignored.
@@ -68,9 +68,10 @@ capture a nested Notes scroller.
 
 ## Reload
 
-IndexedDB snapshots survive session TTL expiry and full page reload. Layout and
-tab metadata restore from the `workspaces` store independently. Stale pane-keyed
-rows from older schemas are ignored and removed during workspace cleanup.
+Durable worker tab snapshots survive session TTL expiry and full page reload.
+Layout and tab metadata restore from the SQLite workspace store independently.
+Stale pane-keyed rows from older schemas are ignored and removed during
+workspace cleanup.
 
 ## Related
 

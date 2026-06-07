@@ -83,7 +83,7 @@
 
 .lkjstr-pane-body {
   min-height: 0;
-  overflow: auto;
+  overflow: hidden;
 }
 
 @media (min-width: 820px) {

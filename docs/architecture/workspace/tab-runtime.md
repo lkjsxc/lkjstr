@@ -37,12 +37,13 @@ Tab runtime defines valid tab kinds and lifecycle ownership.
 - Notifications may also store up to `200` notification record ids.
 - Tool tabs store scroll position and `fields` key-value pairs for cheap UI
   state (Search query, Custom Request input, Settings import draft, etc.).
-- IndexedDB `tabStates` stores durable snapshots for reload restore keyed by
-  `workspaceId + tabId`. Pane id is last-placement metadata only.
+- The SQLite OPFS worker stores durable tab snapshots for reload restore keyed
+  by `workspaceId + tabId`. Pane id is last-placement metadata only.
 - Session-memory retains at most `32` warm snapshots (LRU by tab id). TTL is
   `tabs.inactiveRetentionSeconds` (default `300`).
 - On focus, prefer live DOM state when the body stayed mounted. Otherwise restore
-  order is warm snapshot, IndexedDB load, then runtime recreate. Restore payloads
+  order is warm snapshot, durable worker load, then runtime recreate. Restore
+  payloads
   are one-shot tokens; stale tokens are ignored.
 - `tabRuntimeRegistry` captures runtime-owned fields before durable save.
 - When retention is positive, a tab reselected within the window may use a

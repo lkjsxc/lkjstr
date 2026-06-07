@@ -15,7 +15,7 @@ pub use anchor::{
 };
 pub use estimate::{GeometryEstimateSource, RowGeometryEstimate, estimate_row_geometry};
 pub use features::{RowGeometryFeatures, RowKind, event_geometry_features, geometry_bucket_key};
-pub use hash::{ContentShapeInput, content_shape_hash};
+pub use hash::{ContentShapeInput, MaterializationTier, content_shape_hash};
 pub use model::{RowGeometryModel, RowHeightObservation, update_row_geometry_model};
 pub use reservation::next_reserved_height;
 pub use reservation_types::{
@@ -28,3 +28,5 @@ pub use width_bucket::WidthBucket;
 mod reservation_tests;
 #[cfg(test)]
 mod tests;
+#[cfg(test)]
+mod tier_tests;

@@ -37,6 +37,7 @@ changed. Each docs directory has one README that acts as a table of contents.
   and [architecture/data/storage/README.md](architecture/data/storage/README.md).
 - Security: [security/README.md](security/README.md) and
   [architecture/data/local-secret-security.md](architecture/data/local-secret-security.md).
+- UI system: [architecture/workspace/ui-system/README.md](architecture/workspace/ui-system/README.md).
 - Rust/WASM: [architecture/rust-wasm/README.md](architecture/rust-wasm/README.md).
 - Verification: [operations/verification.md](operations/verification.md).
 
@@ -53,7 +54,8 @@ changed. Each docs directory has one README that acts as a table of contents.
 `architecture/data/feed-surface/geometry-model.md` `architecture/data/feed-surface/height-reservation.md` `architecture/data/feed-surface/lod-tree.md`
 `architecture/data/feed-surface/long-content.md` `architecture/data/feed-surface/near-end.md` `architecture/data/feed-surface/older-load-mode.md`
 `architecture/data/feed-surface/repost-rendering.md` `architecture/data/feed-surface/unload-height-stability.md`
-`architecture/data/feed-surface/scroll-regression-tests.md` `architecture/data/feed-surface/staged-pipeline.md` `architecture/data/feed-surface/surface-matrix.md`
+`architecture/data/feed-surface/enrichment-height-tiers.md` `architecture/data/feed-surface/scroll-regression-tests.md`
+`architecture/data/feed-surface/staged-pipeline.md` `architecture/data/feed-surface/surface-matrix.md`
 `architecture/data/heap-retention.md` `architecture/data/local-secret-security.md` `architecture/data/memory-prioritization.md`
 `architecture/data/relay-pages.md` `architecture/data/resource-ownership.md` `architecture/data/sqlite-opfs/README.md`
 `architecture/data/sqlite-opfs/failure-recovery.md` `architecture/data/sqlite-opfs/import-export.md` `architecture/data/sqlite-opfs/migration-map.md`
@@ -108,7 +110,15 @@ changed. Each docs directory has one README that acts as a table of contents.
 `architecture/workspace/tab-dragging.md` `architecture/workspace/tab-retention-flow.md` `architecture/workspace/tab-runtime.md`
 `architecture/workspace/tab-shell-layout.md` `architecture/workspace/tab-snapshot-fields.md` `architecture/workspace/tab-strip-gestures.md`
 `architecture/workspace/theme.md` `architecture/workspace/tile-menu.md` `architecture/workspace/tile-overlays.md`
-`architecture/workspace/ui-composition.md` `architecture/workspace/workspace-layout-tree.md` `current-state.md`
+`architecture/workspace/ui-composition.md` `architecture/workspace/ui-system/README.md`
+`architecture/workspace/ui-system/emoji-palette.md` `architecture/workspace/ui-system/feed-shell.md`
+`architecture/workspace/ui-system/identity-surfaces.md` `architecture/workspace/ui-system/media-upload-gate.md`
+`architecture/workspace/ui-system/new-tab-menu.md` `architecture/workspace/ui-system/overflow-actions.md`
+`architecture/workspace/ui-system/profile-header-layout.md` `architecture/workspace/ui-system/reaction-surfaces.md`
+`architecture/workspace/ui-system/scroll-inset-ownership.md` `architecture/workspace/ui-system/scroll-ownership.md`
+`architecture/workspace/ui-system/scroll-alignment.md` `architecture/workspace/ui-system/hybrid-tab-shells.md`
+`architecture/workspace/ui-system/polish-backlog.md` `architecture/workspace/ui-system/surface-source-map.md`
+`architecture/workspace/workspace-layout-tree.md` `current-state.md`
 `decisions/README.md` `decisions/browser-first.md` `decisions/protocol-kernel.md`
 `decisions/relay-ownership.md` `decisions/rust-wasm-client.md` `decisions/sqlite-opfs-storage.md`
 `decisions/worker-owned-storage.md` `operations/README.md` `operations/ci.md`

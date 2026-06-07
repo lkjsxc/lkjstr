@@ -64,7 +64,7 @@
   }
 </script>
 
-<section class="relay-monitor" aria-label="lkjstr Log">
+<section class="relay-monitor form-tab" aria-label="lkjstr Log">
   <JobTreeLog />
   {#each logs as item (item.id)}
     <article class="relay-log-row">

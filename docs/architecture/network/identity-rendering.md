@@ -7,6 +7,8 @@ display UI.
 
 ## Contract
 
+- Shared UI components and feed leading-row rules live in
+  [../workspace/ui-system/identity-surfaces.md](../workspace/ui-system/identity-surfaces.md).
 - `IdentityChip` renders avatar, title, and optional subtitle.
 - Timeline avatar and author controls are buttons that open Profile tabs.
 - Missing metadata falls back to a neutral title such as `Unknown`. Feed rows

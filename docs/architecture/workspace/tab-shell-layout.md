@@ -13,28 +13,31 @@ readers and retention code.
 - `height: 100%`, `min-height: 0`, `min-width: 0`.
 - Exactly one child owns vertical scroll via `FeedScrollSurface` or an
   equivalent documented scroll root with `data-scroll-owner`.
-- Used by: Home, Global, Search, Profile, Thread, Notifications.
+- Used by: Home, Global, Search, Profile, Thread, Notifications, Followees,
+  and User Timeline.
 - Profile keeps summary rows and note rows in that single child. A nested Notes
   scroller is not allowed.
 
 ### `.form-tab`
 
+- Required on every non-feed tool tab root.
 - May scroll at the tab shell with `overflow: auto` when the whole panel is
   the tool surface.
 - Used by: Settings, Relay Settings, Stats, Welcome, Upload Settings, Accounts,
-  Tweet, Profile Edit, Mine npub, Custom Request (when not using feed shell),
-  Author Context (when not using feed shell), lkjstr Log, New Tab, and Public
-  Chat.
+  Tweet, Profile Edit, Mine npub, lkjstr Log, New Tab, and Public Chat.
+- `.data-tab` remains a styling alias but must also include `.form-tab` on tool
+  tab roots.
 
-## New Tab Filter Layout
+### `.hybrid-tab.feed-tab`
 
-- The filter row sits above option groups inside the New Tab form surface.
-- The search input uses the available width and must not create horizontal
-  overflow.
-- A clear control is keyboard reachable when the query is non-empty.
-- Group headings remain visible only for groups with matching options.
-- The no-results state occupies the same scroll root as the option groups.
-- Svelte and Leptos use the same pure catalog filtering rules.
+- Required on Custom Request and Author Context.
+- Fixed toolbar plus one feed scroll owner. See
+  [ui-system/hybrid-tab-shells.md](ui-system/hybrid-tab-shells.md).
+
+## New Tab Layout
+
+- New Tab is a `.form-tab` with one flat option grid.
+- See [ui-system/new-tab-menu.md](ui-system/new-tab-menu.md).
 
 ### `.data-tab` (compat alias)
 

@@ -103,6 +103,22 @@ fn content_shape_and_generation_invalidate_old_measurements() {
 }
 
 #[test]
+fn materialization_tier_change_collapses_reservation() {
+    let state = measured_state();
+    let decision = next_reserved_height(
+        Some(&state),
+        GeometryAction::MaterializationTierChanged {
+            key: key("shape-a", 3, 1),
+            estimate_px: 180,
+        },
+    );
+
+    assert_eq!(decision.state.reserved_height_px, 180);
+    assert_eq!(decision.height_delta_px, -240);
+    assert_eq!(decision.reason, ReservedHeightReason::TierChanged);
+}
+
+#[test]
 fn expiration_falls_back_without_claiming_current_measurement() {
     let state = measured_state();
     let decision = next_reserved_height(
