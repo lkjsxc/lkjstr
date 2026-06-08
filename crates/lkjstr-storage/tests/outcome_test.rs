@@ -30,6 +30,14 @@ fn storage_problem_kind_provides_stable_reason_labels() {
     );
     assert_eq!(problem.reason, "protected-record-decode-failed");
     assert_eq!(problem.operation_id, "repair-1");
+    assert_eq!(
+        StorageProblemKind::ActiveAccountSelectorDecodeFailed.as_str(),
+        "active-account-selector-decode-failed"
+    );
+    assert_eq!(
+        StorageProblemKind::PressureInventoryIncomplete.as_str(),
+        "pressure-inventory-incomplete"
+    );
 }
 
 #[test]

@@ -26,7 +26,7 @@ Product repositories use typed commands, not raw SQL:
 - open, close, health, integrity check, compact, reset.
 - settings load, save, delete, and replace.
 - workspace and tab-state load, save, delete, and cleanup.
-- accounts, local secrets, relay sets, and Tweet drafts.
+- accounts, active-account selectors, local secrets, relay sets, and Tweet drafts.
 - event batch ingestion, event lookup, timelines, profile events, threads,
   action-state evidence, and local search.
 - notifications derive, query, and mark read.
@@ -45,6 +45,10 @@ parameters, but product UI code must never construct SQL text.
 | `readCacheLedgerHealth` | optional `chunkLimit` | orphan and missing ledger counts plus unavailable count | Reports partial or unavailable evidence explicitly. |
 | `readPhysicalInventory` | scan limits and deadline | table counts, ledger bytes, storage mode, old-store rows | Reads SQLite catalog and ledger summaries; old IndexedDB rows are diagnostic only. |
 | `readCacheToolSummary` | none | cache status fields needed by Stats and cache actions | Combines health, latest repair metadata, pressure, and inventory status. |
+| `readActiveAccountSelector` | none | selected account id plus signer availability states | Reads the protected selector row; missing rows are explicit and do not expose secrets. |
+| `writeActiveAccountSelector` | selected account id plus signer availability states | stored selector metadata | Writes only public account id, pubkey, signer kind, read-only state, local signer state, NIP-07 availability, and time. |
+| `readStoragePressureSnapshot` | none | latest pressure bytes and stop reason | Reads protected, prunable, unknown, residual overhead, pruned counts, and exact stop reason. |
+| `writeStoragePressureSnapshot` | pressure bytes and stop reason | stored snapshot metadata | Writes the latest pressure snapshot into metadata without deleting rows. |
 | `appendAppLog` | redacted log row | stored row id and retention result | Stores no local secrets, raw relay payloads, filters, tab ids, request ids, subscription ids, or owner handles. |
 | `listAppLog` | `limit`, optional `beforeMs` | newest redacted rows | Returns durable rows in reverse chronological order. |
 | `clearRecoverableAppLog` | optional age or count policy | deleted count | Deletes only recoverable diagnostic rows. |

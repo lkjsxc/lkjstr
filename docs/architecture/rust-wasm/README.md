@@ -10,6 +10,9 @@ This subtree defines the Rust/WASM client target.
 - [crate-boundaries.md](crate-boundaries.md): crate responsibilities.
 - [crate-inventory.md](crate-inventory.md): crate ownership, tests, and next targets.
 - [cutover/README.md](cutover/README.md): build cutover, parity, and deletion ledgers.
+- [cutover/areas/README.md](cutover/areas/README.md): narrow cutover area contracts.
+- [cutover/areas/storage.md](cutover/areas/storage.md): storage cutover area.
+- [cutover/areas/relay.md](cutover/areas/relay.md): relay cutover area.
 - [cutover/build-contract.md](cutover/build-contract.md): app build cutover.
 - [cutover/deletion-ledger.md](cutover/deletion-ledger.md): removal guard.
 - [cutover/feed-runtime.md](cutover/feed-runtime.md): shared feed runtime contract.

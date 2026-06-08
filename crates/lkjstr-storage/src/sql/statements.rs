@@ -25,6 +25,16 @@ pub const PROTECTED_STATEMENTS: &[SqliteStatementSpec] = &[
     ),
     write("settings.clear", "settings", "DELETE FROM settings;"),
     read(
+        "cache_meta.select",
+        "cache_meta",
+        "SELECT key, value_json, updated_at_ms FROM cache_meta WHERE key = ?1;",
+    ),
+    write(
+        "cache_meta.upsert",
+        "cache_meta",
+        "INSERT INTO cache_meta (key, value_json, updated_at_ms) VALUES (?1, ?2, ?3) ON CONFLICT(key) DO UPDATE SET value_json = excluded.value_json, updated_at_ms = excluded.updated_at_ms;",
+    ),
+    read(
         "workspaces.select",
         "workspaces",
         "SELECT workspace_id, layout_json, active_pane_id, active_tab_id, created_at_ms, updated_at_ms FROM workspaces WHERE workspace_id = ?1;",

@@ -1,6 +1,7 @@
 #![doc = "Worker-backed SQLite repository calls."]
 
 mod accounts;
+mod active_account;
 mod app_log;
 mod cache_ledger;
 mod database;
@@ -13,6 +14,7 @@ mod inventory;
 mod jobs;
 mod notifications;
 mod params;
+mod pressure;
 mod relay_diagnostics;
 mod relay_routes;
 mod relay_sets;
@@ -27,6 +29,10 @@ pub use accounts::{
     sqlite_local_account_put, sqlite_local_secret_delete, sqlite_local_secret_get,
     sqlite_local_secret_put,
 };
+pub use active_account::{
+    sqlite_active_account_selector_delete, sqlite_active_account_selector_get,
+    sqlite_active_account_selector_put,
+};
 pub use app_log::{sqlite_app_log_clear_before, sqlite_app_log_insert, sqlite_app_log_recent};
 pub use database::SqliteStore;
 pub use events::{
@@ -40,6 +46,7 @@ pub use feed_cache::{
 pub use inventory::sqlite_storage_stats_snapshot;
 pub use jobs::{sqlite_job_get, sqlite_job_put, sqlite_jobs_recent};
 pub use notifications::{sqlite_notifications_for_owner, sqlite_notifications_put};
+pub use pressure::{sqlite_storage_pressure_get, sqlite_storage_pressure_put};
 pub use relay_diagnostics::{
     sqlite_relay_information_get, sqlite_relay_information_put, sqlite_relay_information_recent,
     sqlite_relay_summaries_recent, sqlite_relay_summary_get, sqlite_relay_summary_put,

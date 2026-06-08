@@ -23,14 +23,15 @@ Executable records live in `crates/lkjstr-storage/src/sql/`.
 | `schema_meta` | storage | schema hash, schema change metadata, and storage flags. |
 | `workspaces` | workspace | layout tree, active pane, active tab, and timestamps. |
 | `tab_states` | workspace | compact tab snapshots and scroll anchors. |
-| `settings` | settings | flat setting overrides by key. |
+| `settings` | settings | flat setting overrides by key and active-account selector rows. |
 | `accounts` | accounts | account label, signer kind, and safe metadata. |
 | `local_account_secrets` | signer | local secret payload under the current raw-secret contract. |
 | `relay_sets` | relays | named relay sets and selected read/write flags. |
 | `relay_route_blocks` | relays | protected blocks for unsafe route suggestions. |
 | `tweet_drafts` | tweet | durable compose body, attachments, and tags. |
 
-Protected rows are never deleted by cache compaction.
+Protected rows are never deleted by cache compaction. The active-account
+selector is a protected `settings` row, not localStorage product state.
 
 ## Event Cache Tables
 

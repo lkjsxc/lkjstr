@@ -42,6 +42,15 @@ pub enum StorageProblemKind {
     Canceled,
     LateSettled,
     LateRejected,
+    ActiveAccountSelectorDecodeFailed,
+    PressureNoPrunableCandidates,
+    PressureProtectedOnly,
+    PressureUnknownUsage,
+    PressureInventoryIncomplete,
+    PressureQuota,
+    PressureStorageApiUnavailable,
+    PressureCompactionError,
+    PressureDeadline,
 }
 
 impl StorageProblemKind {
@@ -64,6 +73,15 @@ impl StorageProblemKind {
             Self::Canceled => "canceled",
             Self::LateSettled => "late-settled",
             Self::LateRejected => "late-rejected",
+            Self::ActiveAccountSelectorDecodeFailed => "active-account-selector-decode-failed",
+            Self::PressureNoPrunableCandidates => "pressure-no-prunable-candidates",
+            Self::PressureProtectedOnly => "pressure-protected-only",
+            Self::PressureUnknownUsage => "pressure-unknown-usage",
+            Self::PressureInventoryIncomplete => "pressure-inventory-incomplete",
+            Self::PressureQuota => "pressure-quota",
+            Self::PressureStorageApiUnavailable => "pressure-storage-api-unavailable",
+            Self::PressureCompactionError => "pressure-compaction-error",
+            Self::PressureDeadline => "pressure-deadline",
         }
     }
 }

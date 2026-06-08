@@ -102,14 +102,14 @@ Read next: [architecture/data/README.md](architecture/data/README.md),
   relay sets, Tweet drafts, event graph, tags, relay provenance, feed cursors,
   cached feed pages, tag lookup, local filter search, relay diagnostics, relay
   information, relay suggestions, author routes, route blocks, notifications,
-  jobs, cache ledger summaries, cache metadata, protection snapshots, and
-  retention deletion use the SQLite worker with memory fallback when workers are
-  unavailable.
+  jobs, cache ledger summaries, cache metadata, active account selectors,
+  pressure snapshots, protection snapshots, and retention deletion use the
+  SQLite worker with memory fallback when workers are unavailable.
 - The Rust Leptos startup path and protected tool hosts use the SQLite worker
   for workspace recovery, workspace persistence, Settings, Accounts, Relay
   Settings, Upload Settings, Tweet drafts, Stats inventory, Stats SQLite health,
-  and durable lkjstr Log rows. The Rust IndexedDB adapter remains for
-  host-boundary tests and narrow WASM exports.
+  active account selectors, pressure snapshots, and durable lkjstr Log rows. The
+  Rust IndexedDB adapter remains for host-boundary tests and narrow WASM exports.
 - Physical inventory, cache tool summaries, retention target checks, repair,
   and protection snapshots use SQLite paths. Old IndexedDB diagnostics are
   presence-only and never scan old rows.
@@ -120,8 +120,8 @@ Read next: [architecture/data/README.md](architecture/data/README.md),
   short-lived only; after a bounded deadline Stats shows available, temporary
   memory, unavailable, timeout, blocked, corrupt, or unknown-old-storage.
 - Rust storage outcomes expose stable problem-kind labels for OPFS failures,
-  worker init, temporary memory fallback, repair, decode, quota, and write
-  failure diagnostics.
+  worker init, temporary memory fallback, repair, decode, active account
+  selector, pressure, quota, and write failure diagnostics.
 - Protected records are never removed by cache cleanup: accounts, local signing
   secrets, settings, relay sets, workspace state, Tweet drafts, active tab
   snapshots, active jobs, and route blocks.

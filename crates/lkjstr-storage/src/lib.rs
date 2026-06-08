@@ -1,6 +1,7 @@
 #![doc = "Rust storage contracts for lkjstr."]
 
 pub mod accounts;
+pub mod active_account;
 pub mod app_log;
 pub mod data_class;
 pub mod diagnostics;
@@ -14,6 +15,7 @@ pub mod manifest;
 pub mod notifications;
 pub mod optimizer;
 pub mod outcome;
+pub mod pressure;
 pub mod relay_sets;
 pub mod resource;
 pub mod route_blocks;
@@ -30,6 +32,12 @@ pub mod workspace;
 pub use accounts::{
     AccountRecord, SqliteAccountRow, account_from_sqlite_row, account_record_id,
     account_record_json_bytes, account_sqlite_key, signer_kind, sqlite_account_row,
+};
+pub use active_account::{
+    ACTIVE_ACCOUNT_SELECTOR_KEY, ACTIVE_ACCOUNT_SELECTOR_SCOPE, ActiveAccountSelectorRecord,
+    SqliteActiveAccountSelectorRow, active_account_selector_from_sqlite_row,
+    active_account_selector_json_bytes, active_account_selector_key,
+    sqlite_active_account_selector_row,
 };
 pub use app_log::{AppLogRecord, SqliteAppLogRow, redact_app_log_text};
 pub use data_class::{StorageDataClass, StorageInventoryGroup};
@@ -95,6 +103,12 @@ pub use optimizer::{
     sqlite_scan_observation_row,
 };
 pub use outcome::{StorageOperation, StorageOutcome, StorageProblem, StorageProblemKind};
+pub use pressure::{
+    PRESSURE_STOP_REASONS, STORAGE_PRESSURE_META_KEY, SqliteStoragePressureSnapshotRow,
+    StoragePressureSnapshotRecord, pressure_problem_kind, pressure_stop_reason_is_known,
+    sqlite_storage_pressure_snapshot_row, storage_pressure_from_sqlite_row,
+    storage_pressure_json_bytes, storage_pressure_meta_key,
+};
 pub use relay_sets::{
     RelaySetRecord, SqliteRelaySetRow, relay_set_from_sqlite_row, relay_set_record_id,
     relay_set_record_json_bytes, sqlite_relay_set_row,

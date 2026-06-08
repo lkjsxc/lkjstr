@@ -37,14 +37,17 @@ removed.
 - Deletion target: matching `src/lib/storage/repositories/**`,
   `src/lib/storage/sqlite-opfs/**`, and event or feed repository modules only
   after all live callers have Rust replacements and no-import proof exists.
-- Current status: partial. Rust row codecs and many worker calls exist; full
-  active-account rows, pressure diagnostics, retention dispatch, repair, and
-  feed-runtime consumption remain open.
-- Next task: add active-account selectors and pressure diagnostics, then expose
-  feed repository commands through the Rust worker adapter.
+- Current status: partial. Rust row codecs and many worker calls exist;
+  active-account selector rows and pressure snapshot rows now have worker
+  repository calls. Product wiring, full pressure byte inventory diagnostics,
+  retention dispatch, repair, and feed-runtime consumption remain open.
+- Next task: expose feed repository commands through the Rust worker adapter and
+  wire selector plus pressure rows into product view models.
 
 ## Acceptance Checklist
 
+- [x] Active-account selector rows and pressure snapshot rows have Rust codecs
+  and typed worker calls.
 - [ ] Every touched table has a Rust row codec and typed command.
 - [ ] Every command has input, output, stable problem kind, and fixture proof.
 - [ ] No product code opens SQLite or OPFS outside the worker.

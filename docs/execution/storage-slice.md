@@ -10,8 +10,9 @@ cutover rows and tests pass.
 
 The current storage slice wires Rust typed repositories for active-account
 selectors, pressure diagnostics, feed cache, feed coverage, retention dispatch,
-repair, and Stats projection. It must not delete TypeScript storage repositories
-until Rust covers every live table family and no-import proof is recorded.
+repair, and Stats projection. Active-account selectors use a protected settings
+row. It must not delete TypeScript storage repositories until Rust covers every
+live table family and no-import proof is recorded.
 
 ## Read First
 
@@ -65,6 +66,8 @@ pnpm rust-wasm:quiet
 
 ## Acceptance
 
+- Active-account selectors and pressure snapshots have Rust row codecs and
+  worker repository calls.
 - Product modules call typed repositories only.
 - Main-thread product code does not open SQLite or OPFS directly.
 - Stats shows storage health and mode without indefinite loading.

@@ -37,6 +37,7 @@ state, storage, relay orchestration, cleanup, and Rust/WASM migration.
 - [network/request-budget/README.md](network/request-budget/README.md): effective relay limits.
 - [network/subscription-orchestration/README.md](network/subscription-orchestration/README.md): Demand and Lease planning.
 - [rust-wasm/cutover/README.md](rust-wasm/cutover/README.md): parity and deletion ledgers.
+- [rust-wasm/cutover/areas/README.md](rust-wasm/cutover/areas/README.md): narrow area contracts.
 - [rust-wasm/cutover/storage-wiring.md](rust-wasm/cutover/storage-wiring.md): storage cutover contract.
 - [rust-wasm/cutover/relay-wiring.md](rust-wasm/cutover/relay-wiring.md): relay cutover contract.
 - [rust-wasm/cutover/feed-runtime.md](rust-wasm/cutover/feed-runtime.md): shared feed runtime cutover contract.
@@ -103,7 +104,8 @@ state, storage, relay orchestration, cleanup, and Rust/WASM migration.
 `runtimes/public-chat-runtime.md` `runtimes/query-runtime.md` `runtimes/thread-runtime.md`
 `runtimes/tweet-runtime.md` `runtimes/user-timeline-runtime.md` `rust-wasm/README.md`
 `rust-wasm/app-boundary.md` `rust-wasm/crate-boundaries.md` `rust-wasm/crate-inventory.md`
-`rust-wasm/cutover/README.md` `rust-wasm/cutover/build-contract.md` `rust-wasm/cutover/deletion-ledger.md`
+`rust-wasm/cutover/README.md` `rust-wasm/cutover/areas/README.md` `rust-wasm/cutover/areas/relay.md`
+`rust-wasm/cutover/areas/storage.md` `rust-wasm/cutover/build-contract.md` `rust-wasm/cutover/deletion-ledger.md`
 `rust-wasm/cutover/feed-runtime.md` `rust-wasm/cutover/implementation-ledger.md`
 `rust-wasm/cutover/parity-ledger.md` `rust-wasm/cutover/relay-wiring.md`
 `rust-wasm/cutover/storage-wiring.md` `rust-wasm/cutover/typescript-inventory.md`

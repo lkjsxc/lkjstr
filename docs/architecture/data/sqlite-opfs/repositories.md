@@ -22,7 +22,8 @@ calls for settings, workspaces, tab states with ledger rows, accounts, local
 secrets, relay sets, Tweet drafts, events, tags, relay provenance,
 notifications, feed cursors, feed coverage, scan hints, relay diagnostics,
 relay information, relay suggestions, author routes, route blocks, jobs, app
-log rows, SQLite table-count inventory, and SQLite worker health. Rust startup,
+log rows, active-account selector rows, pressure snapshots, SQLite table-count
+inventory, and SQLite worker health. Rust startup,
 workspace persistence, Accounts, Relay Settings, Settings, Upload Settings,
 Tweet drafts, Stats inventory, and Stats health route through these calls. The
 Svelte product path continues to use the TypeScript SQLite worker repositories
@@ -38,8 +39,8 @@ until each surface has Leptos parity and deletion proof.
   have SQLite repositories. Feed surfaces may render cached rows only when
   coverage proof is complete.
 - relay diagnostics: relay information, summaries, suggestions, author routes,
-  route blocks, jobs, app log rows, and SQLite worker health have SQLite
-  repositories or host calls. Relay diagnostics, suggestions, routes, finished
+  route blocks, jobs, app log rows, pressure snapshots, active-account selector
+  rows, and SQLite worker health have SQLite repositories or host calls. Relay diagnostics, suggestions, routes, finished
   jobs, and app logs are ledger-backed. Route blocks are protected safety rows
   and are not ledger-backed.
 - retention: cache ledger rows, protection snapshots, prune selection,

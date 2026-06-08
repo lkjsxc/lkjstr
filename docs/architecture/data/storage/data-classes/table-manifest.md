@@ -44,3 +44,7 @@ ledger-backed and compacted through the `tab-state` dispatcher.
 
 `jobs` is compactable for finished jobs. Pending and running jobs are protected
 by dynamic protection.
+
+The active-account selector is stored as a protected `settings` row so account
+selection, read-only state, local signer state, and NIP-07 availability do not
+use localStorage as product storage.

@@ -9,8 +9,9 @@ This file defines Rust ownership for durable browser storage. Status: partial.
 Implemented now: `lkjstr-storage` owns the executable storage table manifest,
 cache ledger resource map, typed operation outcomes, executable SQLite schema
 records, protected, event-cache, and diagnostics SQL statement records, schema
-hash, the tab-state key plus ledger-row contract for workspace snapshots, and
-SQLite row codecs for protected startup data, events, tags, relay provenance,
+hash, the tab-state key plus ledger-row contract for workspace snapshots,
+active-account selector rows, storage pressure snapshot rows, and SQLite row
+codecs for protected startup data, events, tags, relay provenance,
 notifications, feed cursors, feed coverage, and scan hints. `lkjstr-web` owns a
 narrow real IndexedDB adapter for host-boundary tests that still need IndexedDB
 and a typed SQLite worker adapter for product storage calls.
@@ -38,16 +39,17 @@ Tweet drafts, Stats inventory, and Stats SQLite health now use those SQLite
 worker calls. Core event-cache repository calls cover atomic event/tag/relay
 writes, event lookups, notification owner reads and marks, feed cursor reads,
 feed coverage reads, fresh scan-hint reads, relay diagnostic summaries, relay
-information, relay suggestions, author routes, route blocks, jobs, and app log
-rows. Feed runtimes and full diagnostics still need product wiring.
+information, relay suggestions, author routes, route blocks, jobs, app log
+rows, active-account selectors, and pressure snapshots. Feed runtimes and full
+diagnostics still need product wiring.
 
 Target now: OPFS-backed SQLite WASM in a dedicated worker. The detailed target
 lives in [../data/sqlite-opfs/README.md](../data/sqlite-opfs/README.md).
 
 Not implemented yet: feed runtime SQLite wiring, cache delete and repair paths,
-retention dispatchers, ledger repair, active-account storage rows, pressure and
-byte inventory diagnostics, full browser OPFS matrix tests, and multi-tab lock
-handling.
+retention dispatchers, ledger repair, active-account product wiring, full
+pressure byte inventory diagnostics, full browser OPFS matrix tests, and
+multi-tab lock handling.
 
 ## Manifest Contract
 

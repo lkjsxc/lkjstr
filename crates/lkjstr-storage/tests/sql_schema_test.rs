@@ -134,6 +134,8 @@ fn protected_sqlite_statements_are_owned_by_documented_tables() {
     let statements = protected_sqlite_statements();
     assert!(statements.iter().any(|item| item.id == "settings.upsert"));
     assert!(statements.iter().any(|item| item.id == "settings.clear"));
+    assert!(statements.iter().any(|item| item.id == "cache_meta.select"));
+    assert!(statements.iter().any(|item| item.id == "cache_meta.upsert"));
     assert!(statements.iter().any(|item| item.id == "workspaces.upsert"));
     assert!(statements.iter().any(|item| item.id == "tab_states.upsert"));
     assert!(
