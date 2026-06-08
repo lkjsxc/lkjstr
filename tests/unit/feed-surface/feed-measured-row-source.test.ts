@@ -11,7 +11,9 @@ describe('FeedMeasuredRow measurement source', () => {
     expect(source).toContain('let contentElement');
     expect(source).toContain('const contentNode = contentElement');
     expect(source).toContain('observer.observe(contentNode)');
-    expect(source).toContain('measurementGeneration += 1');
+    expect(source).toContain('bumpMeasurementGeneration()');
+    expect(source).toContain('untrack(() => measurementGeneration) + 1');
+    expect(source).not.toContain('measurementGeneration += 1');
     expect(source).toContain('class="feed-scroll-item__content"');
     expect(source).toContain('style={`min-height: ${reservedHeight}px;`}');
   });

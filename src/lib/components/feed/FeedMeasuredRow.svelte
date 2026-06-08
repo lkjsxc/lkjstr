@@ -1,5 +1,5 @@
 <script lang="ts">
-  import type { Snippet } from 'svelte';
+  import { untrack, type Snippet } from 'svelte';
   import { featuresForFeedItem } from '$lib/feed-surface/feed-geometry-features';
   import {
     estimateFeedRowHeight,
@@ -48,17 +48,23 @@
   });
 
   $effect(() => {
-    if (appliedReservationKey !== key) {
-      appliedReservationKey = key;
-      appliedReservedHeight = reservedHeight;
+    const nextKey = key;
+    const nextReservedHeight = reservedHeight;
+    const previousKey = untrack(() => appliedReservationKey);
+    const previousHeight = untrack(() => appliedReservedHeight);
+    if (previousKey !== nextKey) {
+      appliedReservationKey = nextKey;
+      if (previousHeight !== nextReservedHeight)
+        appliedReservedHeight = nextReservedHeight;
       return;
     }
-    const delta = reservedHeight - appliedReservedHeight;
+    const delta = nextReservedHeight - previousHeight;
     if (delta < 0 && element && isAboveViewport(element, scrollElement)) {
       scrollElement!.scrollTop += delta;
       recordFeedRowAnchorCompensation();
     }
-    appliedReservedHeight = reservedHeight;
+    if (previousHeight !== nextReservedHeight)
+      appliedReservedHeight = nextReservedHeight;
   });
 
   $effect(() => {
@@ -78,7 +84,7 @@
         widthPx: initial.width,
         heightPx: previousHeight,
       });
-      measurementGeneration += 1;
+      bumpMeasurementGeneration();
     }
     const observer = new ResizeObserver((entries) => {
       const rect = entries[0]?.contentRect;
@@ -98,12 +104,16 @@
       previousHeight = height;
       if (bucketChanged || delta !== 0) {
         recordFeedRowHeight({ key, item, widthPx: width, heightPx: height });
-        measurementGeneration += 1;
+        bumpMeasurementGeneration();
       }
     });
     observer.observe(contentNode);
     return () => observer.disconnect();
   });
+
+  function bumpMeasurementGeneration(): void {
+    measurementGeneration = untrack(() => measurementGeneration) + 1;
+  }
 
   function isAboveViewport(
     node: HTMLElement,
