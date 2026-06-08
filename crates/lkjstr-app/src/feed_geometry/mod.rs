@@ -25,6 +25,8 @@ pub use reservation_types::{
 pub use width_bucket::WidthBucket;
 
 #[cfg(test)]
+mod action_tests;
+#[cfg(test)]
 mod reservation_tests;
 #[cfg(test)]
 mod tests;

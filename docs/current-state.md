@@ -169,6 +169,9 @@ Read next: [architecture/workspace/README.md](architecture/workspace/README.md),
 - Rust owns pure feed row geometry estimates, reservation decisions,
   width-bucketed measured-height model updates, anchor compensation,
   long-content visual-fragment planning, and a pure real-data feed LOD tree.
+  Shipped feed rows measure real content inside the reserved wrapper so
+  overestimated repost and reference reservations can shrink after materialized
+  measurement without recording the blank min-height gap as content.
   Svelte feed code is host glue: it reports DOM observations, applies Rust
   reservation decisions when the bridge is available, preserves measured
   reservations through unload and dematerialization, and renders oversized

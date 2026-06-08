@@ -20,10 +20,17 @@
 
   let { item, getKey, scrollElement, surfaceWidthPx, row }: Props = $props();
   let element: HTMLDivElement | undefined;
-  let widthPx = $state<number | undefined>(surfaceWidthPx);
+  let contentElement: HTMLDivElement | undefined;
+  let widthPx = $state<number | undefined>();
   let measuredHeight = $state(0);
+  let measurementGeneration = $state(0);
+  let appliedReservedHeight = $state(0);
+  let appliedReservationKey = $state('');
   let key = $derived(getKey(item));
-  let reservedHeight = $derived(estimateFeedRowHeight({ key, item, widthPx }));
+  let reservedHeight = $derived.by(() => {
+    void measurementGeneration;
+    return estimateFeedRowHeight({ key, item, widthPx });
+  });
   let widthBucket = $derived(widthBucketForPx(widthPx));
   let heightGap = $derived(Math.max(0, reservedHeight - measuredHeight));
   let contentShape = $derived(
@@ -41,20 +48,38 @@
   });
 
   $effect(() => {
-    if (!element || typeof ResizeObserver === 'undefined') return;
+    if (appliedReservationKey !== key) {
+      appliedReservationKey = key;
+      appliedReservedHeight = reservedHeight;
+      return;
+    }
+    const delta = reservedHeight - appliedReservedHeight;
+    if (delta < 0 && element && isAboveViewport(element, scrollElement)) {
+      scrollElement!.scrollTop += delta;
+      recordFeedRowAnchorCompensation();
+    }
+    appliedReservedHeight = reservedHeight;
+  });
+
+  $effect(() => {
+    if (!element || !contentElement || typeof ResizeObserver === 'undefined')
+      return;
     const node = element;
-    const initial = node.getBoundingClientRect();
+    const contentNode = contentElement;
+    const initial = contentNode.getBoundingClientRect();
     let previousHeight = Math.round(initial.height);
     let previousBucket = widthBucketForPx(initial.width);
     widthPx = initial.width;
     measuredHeight = previousHeight;
-    if (previousHeight > 0)
+    if (previousHeight > 0) {
       recordFeedRowHeight({
         key,
         item,
         widthPx: initial.width,
         heightPx: previousHeight,
       });
+      measurementGeneration += 1;
+    }
     const observer = new ResizeObserver((entries) => {
       const rect = entries[0]?.contentRect;
       const height = Math.round(rect?.height ?? 0);
@@ -71,10 +96,12 @@
         recordFeedRowAnchorCompensation();
       }
       previousHeight = height;
-      if (bucketChanged || delta !== 0)
+      if (bucketChanged || delta !== 0) {
         recordFeedRowHeight({ key, item, widthPx: width, heightPx: height });
+        measurementGeneration += 1;
+      }
     });
-    observer.observe(node);
+    observer.observe(contentNode);
     return () => observer.disconnect();
   });
 
@@ -103,7 +130,9 @@
   data-gap-classification={gapClassification}
   style={`min-height: ${reservedHeight}px;`}
 >
-  {#if item !== undefined && item !== null}
-    {@render row(item)}
-  {/if}
+  <div bind:this={contentElement} class="feed-scroll-item__content">
+    {#if item !== undefined && item !== null}
+      {@render row(item)}
+    {/if}
+  </div>
 </div>

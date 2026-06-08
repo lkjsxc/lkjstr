@@ -1,6 +1,10 @@
 use super::hash::{ContentShapeInput, MaterializationTier, content_shape_hash};
 use super::width_bucket::WidthBucket;
-use lkjstr_protocol::NostrEvent;
+use lkjstr_protocol::{
+    NostrEvent,
+    kinds::{KIND_DELETION, KIND_GENERIC_REPOST, KIND_REACTION, KIND_REPOST, KIND_ZAP_RECEIPT},
+    tag_values,
+};
 
 #[derive(Clone, Debug, Eq, PartialEq)]
 pub enum RowKind {
@@ -49,7 +53,7 @@ pub fn event_geometry_features(
     has_action_bar: bool,
     materialization_tier: MaterializationTier,
 ) -> RowGeometryFeatures {
-    let content = event.content.as_str();
+    let content = geometry_visible_content(event);
     let media_count = count_media_tags(&event.tags);
     let reference_preview_count = count_reference_tags(&event.tags);
     let custom_emoji_count = count_custom_emoji_tags(&event.tags);
@@ -57,8 +61,8 @@ pub fn event_geometry_features(
         content_length: as_u32(content.len()),
         unicode_scalar_count: as_u32(content.chars().count()),
         line_break_count: as_u16(content.matches('\n').count()),
-        longest_unbroken_token_length: longest_token(content),
-        url_count: count_urls(content),
+        longest_unbroken_token_length: longest_token(&content),
+        url_count: count_urls(&content),
         media_count,
         reference_preview_count,
         custom_emoji_count,
@@ -103,6 +107,23 @@ pub fn geometry_bucket_key(features: &RowGeometryFeatures) -> String {
         features.has_notification_chrome,
         features.has_action_bar
     )
+}
+
+fn geometry_visible_content(event: &NostrEvent) -> String {
+    match event.kind {
+        KIND_REPOST => "reposted".to_owned(),
+        KIND_GENERIC_REPOST => format!("reposted {}", generic_repost_target(event)),
+        KIND_REACTION => "reacted with".to_owned(),
+        KIND_DELETION => "deleted a referenced event".to_owned(),
+        KIND_ZAP_RECEIPT => "zapped this event".to_owned(),
+        _ => event.content.clone(),
+    }
+}
+
+fn generic_repost_target(event: &NostrEvent) -> String {
+    tag_values(event, "k")
+        .first()
+        .map_or_else(|| "an event".to_owned(), |kind| format!("kind {kind}"))
 }
 
 fn count_media_tags(tags: &[Vec<String>]) -> u16 {

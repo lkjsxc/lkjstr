@@ -119,7 +119,9 @@ socket ids are not geometry keys.
 1. Build row features before rendering enrichment.
 2. Ask Rust/WASM for an estimated height and confidence when available.
 3. Apply the active reserved height to the outer row wrapper.
-4. Observe materialized row height and inline size with `ResizeObserver`.
+4. Observe materialized row content height and inline size with
+   `ResizeObserver` inside the reserved wrapper. Do not record the wrapper
+   `min-height` gap as content height.
 5. Record measurements only when the row is materialized in the current layout
    bucket.
 6. Preserve the previous reservation when the row unloads or dematerializes.
@@ -143,6 +145,8 @@ socket ids are not geometry keys.
 
 - Event, repost target, profile card, notification, reference, media, log, and
   tool rows do not shrink merely because they unload or dematerialize.
+- Overestimated reference or repost reservations shrink after real materialized
+  content is measured, with above-viewport anchor compensation.
 - Shells preserve the prior reserved block height.
 - Rows may shrink after width, font, density, content shape, or schema
   generation changes and materialized remeasurement.

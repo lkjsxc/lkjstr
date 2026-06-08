@@ -17,4 +17,5 @@ measured-height model updates, and scroll-anchor compensation decisions.
 - [width_bucket.rs](width_bucket.rs): stable row width buckets.
 - [anchor.rs](anchor.rs): scroll delta compensation.
 - [tests.rs](tests.rs): unit coverage.
+- [action_tests.rs](action_tests.rs): compact action-event geometry tests.
 - [reservation_tests.rs](reservation_tests.rs): reservation reducer tests.

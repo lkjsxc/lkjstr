@@ -1,4 +1,5 @@
 import type { NostrEvent } from '$lib/protocol';
+import { actionSummary } from '$lib/events/action-summary';
 import {
   contentShapeHash,
   type MaterializationTier,
@@ -15,7 +16,7 @@ export function featuresForFeedItem(
 ): FeedGeometryFeatures {
   const event = eventFromItem(item);
   const rowKind = rowKindFromItem(item, event);
-  const content = event?.content ?? '';
+  const content = geometryVisibleContent(event);
   const tags = event?.tags ?? [];
   const shape = {
     contentLength: content.length,
@@ -83,6 +84,13 @@ function rowKindFromItem(item: unknown, event: NostrEvent | undefined): string {
   if (item.kind === 'event' && isRecord(item.node) && item.node.depth === 0)
     return 'thread-root';
   return event ? 'event' : 'unavailable';
+}
+
+function geometryVisibleContent(event: NostrEvent | undefined): string {
+  if (!event) return '';
+  const summary = actionSummary(event);
+  if (!summary) return event.content;
+  return [summary.verb, summary.detail].filter(Boolean).join(' ');
 }
 
 function eventValue(value: unknown): NostrEvent | undefined {

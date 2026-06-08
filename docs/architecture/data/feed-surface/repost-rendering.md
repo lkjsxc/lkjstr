@@ -51,9 +51,11 @@ It must not duplicate target event rendering.
 
 A repost target inherits the shared visual row key and geometry features for the
 target event plus a small contextual wrapper feature when chrome is present.
-The target event measurement participates in the same width, font, density,
-content-shape, and schema-generation rules as normal rows. Unloading the repost
-wrapper or target display preserves reserved height.
+Repost wrapper geometry uses the rendered action summary and nested target, not
+raw repost JSON content, so long embedded event JSON cannot create permanent
+blank space. The target event measurement participates in the same width, font,
+density, content-shape, and schema-generation rules as normal rows. Unloading
+the repost wrapper or target display preserves reserved height.
 
 ## Unavailable Targets
 
