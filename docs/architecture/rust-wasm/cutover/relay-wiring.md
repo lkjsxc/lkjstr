@@ -31,16 +31,16 @@ timer, NIP-11 fetch, diagnostics, and product-surface demand wiring.
 
 `lkjstr-relays` owns these decisions before any browser effect runs:
 
-| Area | Rust source | Required proof |
-| ---- | ----------- | -------------- |
-| Connection state | `client/state.rs`, `client/reducer.rs` | connect, reconnect, close, final-close tombstone, ignored-after-close tests |
-| Effects | `client/effect.rs` | `OpenSocket`, `SendFrame`, `CloseSocket`, timer, diagnostic, and snapshot effects |
-| Ingress caps | `ingress.rs` | invalid JSON, oversized frame, and message cap tests |
-| Request budget | `request_budget/**`, `request_message_size.rs` | NIP-11 limits, local defaults, clamp diagnostics, size rejection |
-| Page dedupe | `page_read/**` | semantic key equality and inequality across surfaces |
-| Progressive snapshots | `page_read/progressive*.rs` | fast relay, slow relay, failed relay, timeout, and cancellation snapshots |
-| Route planning | `route_plan/**`, `route_evidence/**`, `read_score/**` | disabled exclusion, selected fallback, trust order, advisory scores |
-| Live ownership | `demand/**`, `live_lease/**` | shared Home leases, hidden-tab release, final owner cleanup |
+| Area                  | Rust source                                           | Required proof                                                                    |
+| --------------------- | ----------------------------------------------------- | --------------------------------------------------------------------------------- |
+| Connection state      | `client/state.rs`, `client/reducer.rs`                | connect, reconnect, close, final-close tombstone, ignored-after-close tests       |
+| Effects               | `client/effect.rs`                                    | `OpenSocket`, `SendFrame`, `CloseSocket`, timer, diagnostic, and snapshot effects |
+| Ingress caps          | `ingress.rs`                                          | invalid JSON, oversized frame, and message cap tests                              |
+| Request budget        | `request_budget/**`, `request_message_size.rs`        | NIP-11 limits, local defaults, clamp diagnostics, size rejection                  |
+| Page dedupe           | `page_read/**`                                        | semantic key equality and inequality across surfaces                              |
+| Progressive snapshots | `page_read/progressive*.rs`                           | fast relay, slow relay, failed relay, timeout, and cancellation snapshots         |
+| Route planning        | `route_plan/**`, `route_evidence/**`, `read_score/**` | disabled exclusion, selected fallback, trust order, advisory scores               |
+| Live ownership        | `demand/**`, `live_lease/**`                          | shared Home leases, hidden-tab release, final owner cleanup                       |
 
 ## Typed Effect Requests
 
