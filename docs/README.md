@@ -13,6 +13,7 @@ changed. Each docs directory has one README that acts as a table of contents.
 - [protocol/README.md](protocol/README.md): Nostr event and relay rules.
 - [architecture/README.md](architecture/README.md): runtime and data ownership.
 - [operations/README.md](operations/README.md): checks, Docker, and safety.
+- [execution/README.md](execution/README.md): execution queue and blockers.
 - [repository/README.md](repository/README.md): workflow and style rules.
 - [security/README.md](security/README.md): local keys and content safety.
 - [research/README.md](research/README.md): investigations.
@@ -39,6 +40,9 @@ changed. Each docs directory has one README that acts as a table of contents.
 - Security: [security/README.md](security/README.md) and
   [architecture/data/local-secret-security.md](architecture/data/local-secret-security.md).
 - UI system: [architecture/workspace/ui-system/README.md](architecture/workspace/ui-system/README.md).
+- Execution queue: [execution/README.md](execution/README.md),
+  [execution/operating-rules.md](execution/operating-rules.md), and
+  [execution/current-blockers.md](execution/current-blockers.md).
 - Rust/WASM: [architecture/rust-wasm/README.md](architecture/rust-wasm/README.md),
   [architecture/rust-wasm/crate-inventory.md](architecture/rust-wasm/crate-inventory.md), and
   [architecture/rust-wasm/cutover/implementation-ledger.md](architecture/rust-wasm/cutover/implementation-ledger.md),
@@ -132,7 +136,8 @@ changed. Each docs directory has one README that acts as a table of contents.
 `architecture/workspace/workspace-layout-tree.md` `current-state.md`
 `decisions/README.md` `decisions/autonomous-decision-defaults.md` `decisions/browser-first.md`
 `decisions/protocol-kernel.md` `decisions/relay-ownership.md` `decisions/rust-wasm-client.md` `decisions/sqlite-opfs-storage.md`
-`decisions/worker-owned-storage.md` `operations/README.md` `operations/ci.md`
+`decisions/worker-owned-storage.md` `execution/README.md` `execution/current-blockers.md` `execution/operating-rules.md`
+`operations/README.md` `operations/ci.md`
 `operations/cloudflare-workers.md` `operations/data-safety.md` `operations/diagnostics.md`
 `operations/docker.md` `operations/feed-route-isolation-regression.md` `operations/focused-gates.md`
 `operations/memory-verification.md` `operations/readiness.md` `operations/sqlite-opfs-testing.md`
