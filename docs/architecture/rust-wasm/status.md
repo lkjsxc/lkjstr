@@ -135,6 +135,7 @@ replaced TypeScript or Svelte paths, focused gate, and final gate.
 
 - Docs touched: this file, [storage-kernel.md](storage-kernel.md),
   [../data/sqlite-opfs/repositories.md](../data/sqlite-opfs/repositories.md),
+  [cutover/areas/storage.md](cutover/areas/storage.md),
   [cutover/parity-ledger.md](cutover/parity-ledger.md), and
   [cutover/deletion-ledger.md](cutover/deletion-ledger.md).
 - Rust crates touched: `lkjstr-storage`, `lkjstr-web`, `lkjstr-app`, and

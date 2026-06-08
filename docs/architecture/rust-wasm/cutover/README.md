@@ -7,6 +7,7 @@ TypeScript or Svelte product modules may be removed.
 
 ## Table of Contents
 
+- [areas/README.md](areas/README.md): narrow area contracts for ledger rows.
 - [build-contract.md](build-contract.md): app build and verification cutover.
 - [deletion-ledger.md](deletion-ledger.md): TypeScript and Svelte removal guard.
 - [feed-runtime.md](feed-runtime.md): shared feed runtime cutover contract.

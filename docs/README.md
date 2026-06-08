@@ -41,8 +41,9 @@ changed. Each docs directory has one README that acts as a table of contents.
   [architecture/data/local-secret-security.md](architecture/data/local-secret-security.md).
 - UI system: [architecture/workspace/ui-system/README.md](architecture/workspace/ui-system/README.md).
 - Execution queue: [execution/README.md](execution/README.md),
-  [execution/operating-rules.md](execution/operating-rules.md), and
-  [execution/current-blockers.md](execution/current-blockers.md).
+  [execution/operating-rules.md](execution/operating-rules.md),
+  [execution/current-blockers.md](execution/current-blockers.md), and
+  [execution/storage-slice.md](execution/storage-slice.md).
 - Rust/WASM: [architecture/rust-wasm/README.md](architecture/rust-wasm/README.md),
   [architecture/rust-wasm/crate-inventory.md](architecture/rust-wasm/crate-inventory.md), and
   [architecture/rust-wasm/cutover/implementation-ledger.md](architecture/rust-wasm/cutover/implementation-ledger.md),
@@ -111,7 +112,8 @@ changed. Each docs directory has one README that acts as a table of contents.
 `architecture/runtimes/profile-runtime.md` `architecture/runtimes/public-chat-runtime.md` `architecture/runtimes/query-runtime.md`
 `architecture/runtimes/thread-runtime.md` `architecture/runtimes/tweet-runtime.md` `architecture/runtimes/user-timeline-runtime.md`
 `architecture/rust-wasm/README.md` `architecture/rust-wasm/app-boundary.md` `architecture/rust-wasm/crate-boundaries.md`
-`architecture/rust-wasm/crate-inventory.md` `architecture/rust-wasm/cutover/README.md` `architecture/rust-wasm/cutover/build-contract.md`
+`architecture/rust-wasm/crate-inventory.md` `architecture/rust-wasm/cutover/README.md` `architecture/rust-wasm/cutover/areas/README.md`
+`architecture/rust-wasm/cutover/areas/relay.md` `architecture/rust-wasm/cutover/areas/storage.md` `architecture/rust-wasm/cutover/build-contract.md`
 `architecture/rust-wasm/cutover/deletion-ledger.md` `architecture/rust-wasm/cutover/feed-runtime.md`
 `architecture/rust-wasm/cutover/implementation-ledger.md` `architecture/rust-wasm/cutover/parity-ledger.md`
 `architecture/rust-wasm/cutover/relay-wiring.md` `architecture/rust-wasm/cutover/storage-wiring.md`
@@ -137,7 +139,7 @@ changed. Each docs directory has one README that acts as a table of contents.
 `decisions/README.md` `decisions/autonomous-decision-defaults.md` `decisions/browser-first.md`
 `decisions/protocol-kernel.md` `decisions/relay-ownership.md` `decisions/rust-wasm-client.md` `decisions/sqlite-opfs-storage.md`
 `decisions/worker-owned-storage.md` `execution/README.md` `execution/current-blockers.md` `execution/operating-rules.md`
-`operations/README.md` `operations/ci.md`
+`execution/storage-slice.md` `operations/README.md` `operations/ci.md`
 `operations/cloudflare-workers.md` `operations/data-safety.md` `operations/diagnostics.md`
 `operations/docker.md` `operations/feed-route-isolation-regression.md` `operations/focused-gates.md`
 `operations/memory-verification.md` `operations/readiness.md` `operations/sqlite-opfs-testing.md`

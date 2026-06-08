@@ -55,3 +55,5 @@ images were built and the services ran from those images.
   deletion, fake data, security states, and docs alignment.
 - [current-blockers.md](current-blockers.md): dependency-ordered blocker map
   with docs, crates, source paths, tests, and proof.
+- [storage-slice.md](storage-slice.md): executable storage repository wiring
+  slice.

@@ -12,6 +12,12 @@ A row marked `partial` does not allow TypeScript or Svelte deletion. Deletion
 requires real behavior, focused tests, a no-import proof, and an updated row in
 [deletion-ledger.md](deletion-ledger.md).
 
+## Area Details
+
+- [areas/storage.md](areas/storage.md): protected storage plus event cache and
+  feed evidence rows.
+- [areas/relay.md](areas/relay.md): relay runtime row.
+
 ## Product Cutover Rows
 
 | Area                             | Current product owner                                               | Desired Rust owner                                                                               | Real behavior required                                                                    | Storage dependency                                | Relay dependency                                   | Browser dependency                     | Tests required                                                     | Files to delete after cutover                                                  | Current status                    | Next task                                                                |
