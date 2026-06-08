@@ -12,9 +12,13 @@ This subtree defines the Rust/WASM client target.
 - [cutover/README.md](cutover/README.md): build cutover, parity, and deletion ledgers.
 - [cutover/build-contract.md](cutover/build-contract.md): app build cutover.
 - [cutover/deletion-ledger.md](cutover/deletion-ledger.md): removal guard.
+- [cutover/feed-runtime.md](cutover/feed-runtime.md): shared feed runtime contract.
 - [cutover/implementation-ledger.md](cutover/implementation-ledger.md): cutover owner and task map.
 - [cutover/parity-ledger.md](cutover/parity-ledger.md): product surface parity.
+- [cutover/relay-wiring.md](cutover/relay-wiring.md): relay host wiring contract.
+- [cutover/storage-wiring.md](cutover/storage-wiring.md): storage family wiring contract.
 - [cutover/typescript-inventory.md](cutover/typescript-inventory.md): shipped TS/Svelte classification.
+- [cutover/ui-surface-map.md](cutover/ui-surface-map.md): Svelte to Leptos surface map.
 - [cutover/verification-ledger.md](cutover/verification-ledger.md): focused and final gates.
 - [host-boundary.md](host-boundary.md): browser API and JavaScript boundary.
 - [memory-ownership.md](memory-ownership.md): resources and cleanup.
@@ -53,5 +57,6 @@ event identity, filter matching, relay message encoding, storage manifest
 records, and workspace reducers. Browser effects are added only behind explicit
 host adapters with cleanup handles.
 
-The build cutover rule, surface ledger, and deletion ledger live under
-[cutover/README.md](cutover/README.md).
+The build cutover rule, surface ledger, deletion ledger, and autonomous
+planning defaults in [../../decisions/autonomous-decision-defaults.md](../../decisions/autonomous-decision-defaults.md)
+live under this target contract.

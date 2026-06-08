@@ -9,9 +9,13 @@ TypeScript or Svelte product modules may be removed.
 
 - [build-contract.md](build-contract.md): app build and verification cutover.
 - [deletion-ledger.md](deletion-ledger.md): TypeScript and Svelte removal guard.
+- [feed-runtime.md](feed-runtime.md): shared feed runtime cutover contract.
 - [implementation-ledger.md](implementation-ledger.md): dependency, owner, and next-task map.
 - [parity-ledger.md](parity-ledger.md): Rust parity for each product surface.
+- [relay-wiring.md](relay-wiring.md): relay host adapter and reducer wiring.
+- [storage-wiring.md](storage-wiring.md): storage family wiring and deletion gates.
 - [typescript-inventory.md](typescript-inventory.md): TypeScript and Svelte module classification.
+- [ui-surface-map.md](ui-surface-map.md): Svelte tab to Leptos surface map.
 - [verification-ledger.md](verification-ledger.md): focused and final gates by cutover area.
 
 ## Current Contract
@@ -21,7 +25,9 @@ implemented product runtime until the Rust shell satisfies the root workspace
 contract with real behavior and matching tests.
 
 No product mock is allowed. Synthetic relays are test-only fixtures. Use
-[implementation-ledger.md](implementation-ledger.md) and
+[storage-wiring.md](storage-wiring.md), [relay-wiring.md](relay-wiring.md),
+[feed-runtime.md](feed-runtime.md), [ui-surface-map.md](ui-surface-map.md),
+[implementation-ledger.md](implementation-ledger.md), and
 [typescript-inventory.md](typescript-inventory.md) before adding product logic to
 TypeScript or Svelte.
 

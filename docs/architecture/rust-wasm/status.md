@@ -142,8 +142,9 @@ replaced TypeScript or Svelte paths, focused gate, and final gate.
 - TypeScript or Svelte paths replaced: none deleted until feed evidence,
   diagnostics, retention, tab snapshots, and no-import proof are complete.
 - Current sub-slice: Stats consumes real SQLite worker health through the Rust
-  storage worker adapter and renders the resulting storage mode or typed
-  failure state.
+  storage worker adapter. Event-cache and feed-coverage Rust row codecs plus
+  `lkjstr-web` worker repository calls exist; full product cache proof,
+  retention dispatch, and surface consumption remain open.
 - Focused gate: `cargo test -p lkjstr-storage` and `pnpm rust-wasm:quiet`.
 - Final gate: Docker Compose config, image builds, and service runs from
   [../../operations/verification.md](../../operations/verification.md).

@@ -18,6 +18,7 @@ changed. Each docs directory has one README that acts as a table of contents.
 - [research/README.md](research/README.md): investigations.
 - [vision/README.md](vision/README.md): product direction.
 - [decisions/README.md](decisions/README.md): durable decisions.
+- [decisions/autonomous-decision-defaults.md](decisions/autonomous-decision-defaults.md): safe defaults for autonomous work.
 
 ## Fast Routing
 
@@ -40,7 +41,11 @@ changed. Each docs directory has one README that acts as a table of contents.
 - UI system: [architecture/workspace/ui-system/README.md](architecture/workspace/ui-system/README.md).
 - Rust/WASM: [architecture/rust-wasm/README.md](architecture/rust-wasm/README.md),
   [architecture/rust-wasm/crate-inventory.md](architecture/rust-wasm/crate-inventory.md), and
-  [architecture/rust-wasm/cutover/implementation-ledger.md](architecture/rust-wasm/cutover/implementation-ledger.md).
+  [architecture/rust-wasm/cutover/implementation-ledger.md](architecture/rust-wasm/cutover/implementation-ledger.md),
+  [architecture/rust-wasm/cutover/storage-wiring.md](architecture/rust-wasm/cutover/storage-wiring.md),
+  [architecture/rust-wasm/cutover/relay-wiring.md](architecture/rust-wasm/cutover/relay-wiring.md),
+  [architecture/rust-wasm/cutover/feed-runtime.md](architecture/rust-wasm/cutover/feed-runtime.md), and
+  [architecture/rust-wasm/cutover/ui-surface-map.md](architecture/rust-wasm/cutover/ui-surface-map.md).
 - Verification: [operations/verification.md](operations/verification.md).
 
 ## All Files
@@ -103,8 +108,10 @@ changed. Each docs directory has one README that acts as a table of contents.
 `architecture/runtimes/thread-runtime.md` `architecture/runtimes/tweet-runtime.md` `architecture/runtimes/user-timeline-runtime.md`
 `architecture/rust-wasm/README.md` `architecture/rust-wasm/app-boundary.md` `architecture/rust-wasm/crate-boundaries.md`
 `architecture/rust-wasm/crate-inventory.md` `architecture/rust-wasm/cutover/README.md` `architecture/rust-wasm/cutover/build-contract.md`
-`architecture/rust-wasm/cutover/deletion-ledger.md` `architecture/rust-wasm/cutover/implementation-ledger.md`
-`architecture/rust-wasm/cutover/parity-ledger.md` `architecture/rust-wasm/cutover/typescript-inventory.md`
+`architecture/rust-wasm/cutover/deletion-ledger.md` `architecture/rust-wasm/cutover/feed-runtime.md`
+`architecture/rust-wasm/cutover/implementation-ledger.md` `architecture/rust-wasm/cutover/parity-ledger.md`
+`architecture/rust-wasm/cutover/relay-wiring.md` `architecture/rust-wasm/cutover/storage-wiring.md`
+`architecture/rust-wasm/cutover/typescript-inventory.md` `architecture/rust-wasm/cutover/ui-surface-map.md`
 `architecture/rust-wasm/cutover/verification-ledger.md` `architecture/rust-wasm/host-boundary.md` `architecture/rust-wasm/memory-ownership.md`
 `architecture/rust-wasm/protocol-kernel.md` `architecture/rust-wasm/relay-runtime.md` `architecture/rust-wasm/source-map.md`
 `architecture/rust-wasm/status.md` `architecture/rust-wasm/storage-kernel.md` `architecture/rust-wasm/surface-cutover-order.md`
@@ -123,8 +130,8 @@ changed. Each docs directory has one README that acts as a table of contents.
 `architecture/workspace/ui-system/scroll-alignment.md` `architecture/workspace/ui-system/hybrid-tab-shells.md`
 `architecture/workspace/ui-system/polish-backlog.md` `architecture/workspace/ui-system/surface-source-map.md`
 `architecture/workspace/workspace-layout-tree.md` `current-state.md`
-`decisions/README.md` `decisions/browser-first.md` `decisions/protocol-kernel.md`
-`decisions/relay-ownership.md` `decisions/rust-wasm-client.md` `decisions/sqlite-opfs-storage.md`
+`decisions/README.md` `decisions/autonomous-decision-defaults.md` `decisions/browser-first.md`
+`decisions/protocol-kernel.md` `decisions/relay-ownership.md` `decisions/rust-wasm-client.md` `decisions/sqlite-opfs-storage.md`
 `decisions/worker-owned-storage.md` `operations/README.md` `operations/ci.md`
 `operations/cloudflare-workers.md` `operations/data-safety.md` `operations/diagnostics.md`
 `operations/docker.md` `operations/feed-route-isolation-regression.md` `operations/focused-gates.md`

@@ -7,6 +7,7 @@ implementation.
 
 ## Table of Contents
 
+- [autonomous-decision-defaults.md](autonomous-decision-defaults.md): safe defaults when human input is unavailable.
 - [browser-first.md](browser-first.md): browser runtime boundary.
 - [protocol-kernel.md](protocol-kernel.md): protocol isolation.
 - [relay-ownership.md](relay-ownership.md): user relay ownership.

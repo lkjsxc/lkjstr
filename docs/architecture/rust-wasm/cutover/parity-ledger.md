@@ -37,6 +37,32 @@ before the SvelteKit product runtime can be removed.
 | Tweet           | partial         | `protocol`, `storage`, `relays`, `app`, `ui` publish path     | local and NIP-07 signing, publish queue, media, emoji                                             |
 | Welcome         | partial         | `domain`, `app`, `storage`, `ui` startup path                 | full links, startup fallback, browser tests                                                       |
 
+## Surface Focused Gates
+
+| Surface | Focused gate before `implemented` |
+| ------- | --------------------------------- |
+| Home | Feed Regression, Subscription Orchestration, and `cargo test -p lkjstr-app feed` |
+| Global | Relay Paging, Feed Regression, and selected-relay read tests |
+| Profile | Profile route, sparse scan, follow-count, and shared feed runtime tests |
+| Followees | Follow graph bridge, relay discovery, retry, and cleanup tests |
+| User Timeline | User Timeline, follow graph, degraded mode, and route diagnostics tests |
+| Thread | Thread exact-read, reference hydration, and shared event display tests |
+| Notifications | Notification filters, paging, windows, reference, and shared feed tests |
+| Search | Rust tokenizer, local index, NIP-50, cancellation, and no full-scan tests |
+| Custom Request | Raw filter parse, clamp, selected relay, partial response, and cancel tests |
+| Public Chat | NIP-28 reducer, relay routing, publish, moderation, partial failure, and cleanup tests |
+| Author Context | Nearby author posts, exact reads, unavailable states, and relay diagnostics tests |
+| Accounts | Account storage, signer source, NIP-07, local secret, and redaction tests |
+| Relay Settings | Relay URL, role, NIP-11, NIP-65 suggestion, disabled exclusion, and Stats tests |
+| Stats | Storage, relay, optimizer, jobs, memory, pressure, and redaction tests |
+| Settings | Flat setting edit, persistence, side effect, and cache-budget tests |
+| Upload Settings | Blossom, NIP-96, NIP-98, provider fallback, and upload job tests |
+| lkjstr Log | Durable rows, session capture, redaction, refresh, clear, and bounds tests |
+| Mine npub | Rust mining worker, cancellation, bounded ownership, and explicit-save tests |
+| Profile Edit | Kind `0` load, edit, sign, publish, retry, and cache update tests |
+| Tweet | Draft, local signer, NIP-07, publish queue, upload, emoji, and relay result tests |
+| Welcome | Clean startup, links, fallback, and browser smoke tests |
+
 ## Feed Surface Parity Requirements
 
 Feed-like surfaces cannot be marked `implemented` until this shared proof exists:
@@ -84,13 +110,13 @@ bounded retry sources; shipped Svelte wiring remains the visible surface.
 
 ## Storage Ledger
 
-| Storage family      | Rust status     | Required Rust modules             | Proof before cutover                                                                              |
-| ------------------- | --------------- | --------------------------------- | ------------------------------------------------------------------------------------------------- |
-| Protected records   | partial         | `storage`, `web`, `app`, `ui`     | SQLite startup, workspace, settings, accounts, relay sets, drafts, worker tests, recovery tests   |
-| Event cache         | not implemented | `storage`, `web`, `app`, `relays` | event/tag/provenance tests and cache-first browser tests                                          |
-| Feed evidence       | not implemented | `storage`, `app`, `relays`        | coverage, cursor, scan-hint, compaction invalidation                                              |
-| Diagnostics and log | partial         | `storage`, `web`, `app`, `ui`     | Stats inventory, SQLite health, and durable Log rows are wired; pressure and failure tests remain |
-| Relay optimizer     | partial         | `relays`, `app`, `storage`, `web` | score, scan hint, route trust, Stats, and synthetic relay tests                                   |
+| Storage family      | Rust status | Required Rust modules             | Proof before cutover                                                                              |
+| ------------------- | ----------- | --------------------------------- | ------------------------------------------------------------------------------------------------- |
+| Protected records   | partial     | `storage`, `web`, `app`, `ui`     | SQLite startup, workspace, settings, accounts, relay sets, drafts, worker tests, recovery tests   |
+| Event cache         | partial     | `storage`, `web`, `app`, `relays` | Rust event/tag/provenance row tests pass; validation, query breadth, retention, and feed proof remain |
+| Feed evidence       | partial     | `storage`, `app`, `relays`        | Rust coverage/cursor row tests pass; complete route-group proof and compaction invalidation remain |
+| Diagnostics and log | partial     | `storage`, `web`, `app`, `ui`     | Stats inventory, SQLite health, and durable Log rows are wired; pressure and failure tests remain |
+| Relay optimizer     | partial     | `relays`, `app`, `storage`, `web` | score, scan hint, route trust, Stats, and synthetic relay tests                                   |
 
 ## Product Rule
 

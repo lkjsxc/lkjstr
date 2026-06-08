@@ -37,6 +37,10 @@ state, storage, relay orchestration, cleanup, and Rust/WASM migration.
 - [network/request-budget/README.md](network/request-budget/README.md): effective relay limits.
 - [network/subscription-orchestration/README.md](network/subscription-orchestration/README.md): Demand and Lease planning.
 - [rust-wasm/cutover/README.md](rust-wasm/cutover/README.md): parity and deletion ledgers.
+- [rust-wasm/cutover/storage-wiring.md](rust-wasm/cutover/storage-wiring.md): storage cutover contract.
+- [rust-wasm/cutover/relay-wiring.md](rust-wasm/cutover/relay-wiring.md): relay cutover contract.
+- [rust-wasm/cutover/feed-runtime.md](rust-wasm/cutover/feed-runtime.md): shared feed runtime cutover contract.
+- [rust-wasm/cutover/ui-surface-map.md](rust-wasm/cutover/ui-surface-map.md): Leptos surface map.
 - [rust-wasm/surface-cutover-order.md](rust-wasm/surface-cutover-order.md): dependency-ranked cutover order.
 - [workspace/ui-system/README.md](workspace/ui-system/README.md): shared UI catalog.
 
@@ -100,8 +104,10 @@ state, storage, relay orchestration, cleanup, and Rust/WASM migration.
 `runtimes/tweet-runtime.md` `runtimes/user-timeline-runtime.md` `rust-wasm/README.md`
 `rust-wasm/app-boundary.md` `rust-wasm/crate-boundaries.md` `rust-wasm/crate-inventory.md`
 `rust-wasm/cutover/README.md` `rust-wasm/cutover/build-contract.md` `rust-wasm/cutover/deletion-ledger.md`
-`rust-wasm/cutover/implementation-ledger.md` `rust-wasm/cutover/parity-ledger.md`
-`rust-wasm/cutover/typescript-inventory.md` `rust-wasm/cutover/verification-ledger.md`
+`rust-wasm/cutover/feed-runtime.md` `rust-wasm/cutover/implementation-ledger.md`
+`rust-wasm/cutover/parity-ledger.md` `rust-wasm/cutover/relay-wiring.md`
+`rust-wasm/cutover/storage-wiring.md` `rust-wasm/cutover/typescript-inventory.md`
+`rust-wasm/cutover/ui-surface-map.md` `rust-wasm/cutover/verification-ledger.md`
 `rust-wasm/host-boundary.md` `rust-wasm/memory-ownership.md` `rust-wasm/protocol-kernel.md`
 `rust-wasm/relay-runtime.md` `rust-wasm/source-map.md` `rust-wasm/status.md`
 `rust-wasm/storage-kernel.md` `rust-wasm/surface-cutover-order.md` `rust-wasm/ui-runtime.md` `rust-wasm/verification.md`

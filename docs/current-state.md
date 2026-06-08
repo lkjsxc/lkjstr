@@ -233,6 +233,8 @@ and [operations/memory-verification.md](operations/memory-verification.md).
 
 ## Open Contracts
 
+- Autonomous implementation defaults live in
+  [decisions/autonomous-decision-defaults.md](decisions/autonomous-decision-defaults.md).
 - SQLite worker storage is the active durable-storage contract. Product modules
   must use typed repositories and must not add direct browser database access.
 - Followees and User Timeline are active product contracts. They must render
