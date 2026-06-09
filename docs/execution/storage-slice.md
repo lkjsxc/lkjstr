@@ -12,8 +12,23 @@ The current storage slice preserves implemented active-account selector,
 pressure-row, protected, event-cache, feed-evidence, diagnostics,
 notifications, jobs, app-log, inventory, optimizer, and batch-capable
 command-shape contracts. Retention dispatch, repair, search/tag lookup, full
-physical pressure inventory, and product consumption remain open. It must not delete TypeScript storage repositories
-until Rust covers every live table family and no-import proof is recorded.
+physical pressure inventory, and product consumption remain open. It must not
+delete TypeScript storage repositories until Rust covers every live table family
+and no-import proof is recorded.
+
+## Agent Start
+
+- Current source owner: TypeScript SQLite worker repositories for shipped
+  product storage plus partial Rust storage worker adapters.
+- Desired Rust owner: `lkjstr-storage` for policy and rows, `lkjstr-web` for
+  worker calls, `lkjstr-app` for product use, and `lkjstr-ui` for Stats views.
+- First source edit: `crates/lkjstr-web/src/sqlite_store/retention.rs`.
+- Focused tests: storage command tests, retention tests, web retention tests,
+  cache unit tests, and `pnpm rust-wasm:quiet`.
+- Ledgers: storage cutover area, implementation ledger rows that gain behavior,
+  and verification ledger after actual checks.
+- Keep: all TypeScript storage repositories and Svelte product surfaces until
+  Rust parity and no-import proof are recorded.
 
 ## Read First
 

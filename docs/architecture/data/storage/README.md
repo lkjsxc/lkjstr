@@ -30,6 +30,22 @@ The current live contract is proved by the manifest docs, SQLite worker tests,
 repository checks, storage unit tests, storage pressure focused tests, and Docker
 Compose verification.
 
+## Agent Start
+
+- Current source owner: TypeScript SQLite worker repositories plus partial Rust
+  protected-tool and Stats storage paths.
+- Desired Rust owner: `lkjstr-storage` policy and metadata, `lkjstr-web` worker
+  adapters, `lkjstr-app` product composition, and `lkjstr-ui` Stats models.
+- First source edit: `crates/lkjstr-web/src/sqlite_store/retention.rs`, after
+  retention command docs name the exact statement sequence.
+- Focused tests: `cargo test -p lkjstr-storage retention`,
+  `cargo test -p lkjstr-web retention`, cache unit tests, and
+  `pnpm rust-wasm:quiet`.
+- Ledgers: update the storage cutover area and verification ledger only with
+  commands that actually ran.
+- Keep: `src/lib/storage/sqlite-opfs/**`, `src/lib/storage/repositories/**`,
+  `src/lib/cache/**`, and shipped Stats/cache surfaces until no-import proof.
+
 ## Table of Contents
 
 - [kernel/README.md](kernel/README.md): manifest, operations, transactions, and repositories.

@@ -14,6 +14,19 @@ byte target without deleting protected records.
 - [deletion.md](deletion.md): delete dispatcher contract.
 - [repair.md](repair.md): ledger repair and backfill.
 
+## Agent Start
+
+- Current source owner: `lkjstr-storage/src/retention/` owns planning;
+  TypeScript cache maintenance still dispatches shipped cleanup.
+- Desired Rust owner: `lkjstr-storage` keeps policy and `lkjstr-web` executes
+  table-specific worker batches.
+- First source edit: `crates/lkjstr-web/src/sqlite_store/retention.rs`.
+- Focused tests: storage retention tests, web retention tests, cache-ledger web
+  tests, cache unit tests, and `pnpm rust-wasm:quiet`.
+- Ledgers: update storage area and verification ledger after checks run.
+- Keep: `cache-ledger-*.ts`, `cache-compaction-sqlite.ts`, `src/lib/cache/**`,
+  and shipped Stats/cache tabs until Rust retention product proof exists.
+
 ## Contract
 
 - `cacheLedger` is the only eviction queue.

@@ -35,12 +35,14 @@ Active after command spec shape and cache command metadata are in place.
 - [ ] Read retention deletion, ledger, scoring, dynamic protection, pressure,
   and repair contracts.
 - [ ] Update retention and repair command docs before changing source.
-- [ ] Add a pure Rust retention planner with deterministic candidate ordering
-  and exact stop reasons.
-- [ ] Add command metadata for `retention.plan` and
-  `retention.delete-dispatch` with real statement ids, then wire the worker
-  dispatcher in a follow-up slice.
-- [ ] Add conservative repair target states and chunked scan outputs.
+- [ ] Preserve the implemented pure Rust planner and `retention.plan` plus
+  `retention.delete-dispatch` command metadata.
+- [ ] Add `crates/lkjstr-web/src/sqlite_store/retention.rs` and export it from
+  `crates/lkjstr-web/src/sqlite_store/mod.rs`.
+- [ ] Map planner delete intents to the statement ids documented in the command
+  matrix and delete each resource row with its `cache_ledger` row in one batch.
+- [ ] Add conservative repair target states and chunked scan outputs only after
+  retention dispatch passes.
 - [ ] Run retention, repair, cache-ledger, cache unit, and Rust/WASM gates; then
   record actual verification.
 
@@ -65,12 +67,14 @@ and backfill results without silently marking unknown rows safe.
 
 ## Rust Files To Touch
 
-- `crates/lkjstr-storage/src/ledger.rs`.
-- `crates/lkjstr-storage/src/resource.rs`.
-- `crates/lkjstr-storage/src/retention.rs` when present.
-- `crates/lkjstr-storage/src/repair.rs` when present.
-- `crates/lkjstr-storage/src/commands/retention.rs`.
-- `crates/lkjstr-web/src/sqlite_store/cache_ledger.rs`.
+- `crates/lkjstr-storage/src/ledger.rs` only if resource ownership changes.
+- `crates/lkjstr-storage/src/resource.rs` only if resource kinds change.
+- `crates/lkjstr-storage/src/retention/**` for planner input or output shape.
+- `crates/lkjstr-storage/src/commands/retention.rs` for command metadata drift.
+- `crates/lkjstr-web/src/sqlite_store/retention.rs` as the next adapter.
+- `crates/lkjstr-web/src/sqlite_store/mod.rs` to export the adapter.
+- `crates/lkjstr-web/src/sqlite_store/cache_ledger.rs` for shared ledger steps.
+- `crates/lkjstr-storage/src/repair/**` after retention dispatch is proved.
 
 ## Temporary TypeScript Or Svelte Files To Keep
 
@@ -81,13 +85,17 @@ have no-import proof.
 
 ## Tests To Add Or Update
 
-- Protected rows are never selected or deleted.
-- Ledger-backed prunable rows are deleted by table-specific dispatchers.
+- Event deletion batches child event rows, the event row, and `cache_ledger`.
+- Feed cursor, coverage, scan-hint, diagnostic, route, and job deletes pair the
+  resource statement with `cache_ledger.delete`.
+- Protected, dynamically protected, and unknown table inputs return typed skip
+  or problem states without deleting resources.
+- Batch failure maps to a `StorageOutcome` problem and does not claim success.
 - Stop reasons distinguish no-prunable-candidates, protected-only,
   unknown-unowned-usage, inventory-incomplete, quota-pressure,
   storage-api-unavailable, and compaction-error.
 - Repair reports orphan, corrupt, decode-failure, schema-mismatch, and temporary
-  memory fallback states.
+  memory fallback states after retention dispatch lands.
 - Cache unit tests continue to pass while TypeScript owns shipped maintenance UI.
 
 ## Focused Gate
@@ -112,7 +120,9 @@ shared command shape change requires one commit.
 
 ## Must Not
 
-- Do not prune protected records.
+- Do not move retention policy into `lkjstr-web`.
+- Do not prune protected records or active jobs.
+- Do not delete unknown, unowned, or malformed input rows.
 - Do not treat missing ledger ownership as safe.
 - Do not hide inventory-incomplete or storage-API-unavailable states.
 - Do not delete TypeScript maintenance paths before product parity.

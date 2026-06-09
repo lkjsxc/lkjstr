@@ -6,6 +6,23 @@ This contract maps every live storage family from TypeScript SQLite worker code
 to the Rust storage manifest, Rust row codecs, worker messages, tests, and the
 condition that allows TypeScript product storage deletion.
 
+## Agent Start
+
+- Current source owner: shipped TypeScript SQLite worker repositories, with Rust
+  worker calls already present for protected rows, cache evidence, diagnostics,
+  optimizer rows, pressure rows, inventory, and app log.
+- Desired Rust owner: storage command specs in `lkjstr-storage`, worker effects
+  in `lkjstr-web`, and product consumption in `lkjstr-app` and `lkjstr-ui`.
+- First source edit: add `crates/lkjstr-web/src/sqlite_store/retention.rs` and
+  export it from `crates/lkjstr-web/src/sqlite_store/mod.rs`.
+- Focused tests: `cargo test -p lkjstr-storage retention`,
+  `cargo test -p lkjstr-web retention`, `cargo test -p lkjstr-web cache_ledger`,
+  cache unit tests, and `pnpm rust-wasm:quiet`.
+- Ledgers: storage area and verification ledger after checks; deletion ledger
+  only with no-import proof.
+- Keep: TypeScript storage repositories, SQLite OPFS glue, cache maintenance,
+  Search storage, and Svelte Stats/cache tabs until Rust parity exists.
+
 ## Current Evidence
 
 - Rust manifest and row codecs: `crates/lkjstr-storage/src/**`.

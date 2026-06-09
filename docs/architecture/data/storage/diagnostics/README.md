@@ -12,6 +12,20 @@ and which verification proves storage behavior.
 - [stats.md](stats.md): Stats UI projection.
 - [verification.md](verification.md): required checks.
 
+## Agent Start
+
+- Current source owner: TypeScript Stats/cache diagnostics plus Rust pressure
+  rows and partial Rust Stats projection.
+- Desired Rust owner: `lkjstr-storage` inventory and Stats models,
+  `lkjstr-web` inventory/pressure adapters, and `lkjstr-ui` Stats rendering.
+- First source edit: complete retention dispatch before adding pressure
+  inventory fields to `crates/lkjstr-storage/src/stats.rs`.
+- Focused tests: `cargo test -p lkjstr-storage pressure`,
+  `cargo test -p lkjstr-storage stats`, and `cargo test -p lkjstr-ui stats`.
+- Ledgers: storage cutover area and verification ledger after proof only.
+- Keep: TypeScript Stats, cache inventory, pressure, and old-store presence
+  helpers until Rust Stats parity and no-import proof.
+
 ## Contract
 
 Diagnostics may be partial, but they must be explicit. A timeout, unavailable

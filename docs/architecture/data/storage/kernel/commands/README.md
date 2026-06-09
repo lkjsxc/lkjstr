@@ -21,6 +21,20 @@ specs, worker adapters, retention, repair, inventory, or Stats rows.
 - [repair.md](repair.md): conservative repair reporting, inventory exceptions,
   search/tag lookup status, and open gaps.
 
+## Agent Start
+
+- Current source owner: `crates/lkjstr-storage/src/commands/**` for metadata
+  and TypeScript repositories for shipped storage product calls.
+- Desired Rust owner: `lkjstr-storage` command specs plus `lkjstr-web` typed
+  adapters that execute those specs through worker messages.
+- First source edit: add `crates/lkjstr-web/src/sqlite_store/retention.rs` and
+  keep `crates/lkjstr-storage/src/commands/retention.rs` as the policy map.
+- Focused tests: `cargo test -p lkjstr-storage commands`,
+  `cargo test -p lkjstr-web retention`, and storage manifest doc checks.
+- Ledgers: update storage cutover and verification ledgers after proof only.
+- Keep: TypeScript storage repositories and Svelte product surfaces until Rust
+  product wiring and no-import proof are recorded.
+
 ## Row Fields
 
 Every implemented command row records command id, family, operation, input type,
@@ -50,6 +64,15 @@ app log, inventory snapshot, and optimizer scan-model rows.
 5. relay effect wiring.
 6. shared feed runtime.
 7. Home feed slice.
+
+## Open Command Route
+
+| Command id | Rust metadata | SQL or table route | Worker adapter | TypeScript retained | Focused test |
+| --- | --- | --- | --- | --- | --- |
+| `retention.delete-dispatch` | `commands/retention.rs` | table statements in [retention.md](retention.md) | add `sqlite_store/retention.rs` | cache ledger and compaction repositories | `cargo test -p lkjstr-web retention` |
+| `repair.scan-ledger` and repair writes | add `commands/repair.rs` | cache ledger chunks plus manifest target probes | add `sqlite_store/repair.rs` | cache maintenance repositories | `cargo test -p lkjstr-storage repair` |
+| `search.local-query` and `search.update-event-index` | add `commands/search.rs` | token rows plus event tag lookups | add `sqlite_store/search.rs` | search-index repositories | `cargo test -p lkjstr-storage search` |
+| `storage-inventory.snapshot` gaps | `commands/inventory.rs` | generated table counts and browser inventory | `sqlite_store/inventory.rs` | Stats/cache repositories | `cargo test -p lkjstr-storage stats` |
 
 ## Rules
 

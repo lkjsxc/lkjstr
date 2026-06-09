@@ -37,6 +37,17 @@ and resource kind are proved.
 | `search.update-event-index` | not implemented | search-index | transaction | open | open | token update open | search token tables open | token row codecs open | cache decode, write/quota | recoverable-cache, ledger | same-batch | recoverable-cache | cache-summary | search storage path | search repositories | search tests | Rust Search parity plus no-import proof |
 | `tag-lookup.by-value` | partial | search-index | read | open | open | `events.by_tag_value` | `events`, `event_tags` | `event_from_sqlite_row` | cache decode | recoverable-cache | none | recoverable-cache | none | `sqlite_store/events.rs` | event-matching repositories | event cache tests | Rust Search parity plus no-import proof |
 
+## Open Cross-Reference
+
+| Command id | Rust metadata file | SQL statement id | Manifest table | Row codec | Worker adapter function | TypeScript retained | Focused test |
+| --- | --- | --- | --- | --- | --- | --- | --- |
+| `repair.scan-ledger` | add `crates/lkjstr-storage/src/commands/repair.rs` | open cache ledger chunk scan and target probes | `cache_ledger` plus manifest prunable tables | `sqlite_cache_ledger_row` plus target codecs | add `sqlite_store/repair.rs` | cache maintenance repositories | `cargo test -p lkjstr-storage repair` |
+| `repair.backfill-ledger` | add `crates/lkjstr-storage/src/commands/repair.rs` | open resource scans and ledger upserts | manifest prunable tables and `cache_ledger` | target codecs plus `sqlite_cache_ledger_row` | add `sqlite_store/repair.rs` | cache maintenance repositories | `cargo test -p lkjstr-web repair` |
+| `repair.report-inventory` | add `crates/lkjstr-storage/src/commands/repair.rs` | inventory report open | manifest tables | inventory rows | add `sqlite_store/repair.rs` | cache maintenance repositories | `cargo test -p lkjstr-storage repair` |
+| `search.local-query` | add `crates/lkjstr-storage/src/commands/search.rs` | search token query open | search token tables open | token row codecs open | add `sqlite_store/search.rs` | search-index repositories | `cargo test -p lkjstr-storage search` |
+| `search.update-event-index` | add `crates/lkjstr-storage/src/commands/search.rs` | token delete and insert open | search token tables open | token row codecs open | add `sqlite_store/search.rs` | search-index repositories | `cargo test -p lkjstr-storage search` |
+| `tag-lookup.by-value` | add or extend search metadata | `events.by_tag_value` | `events`, `event_tags` | `event_from_sqlite_row` | `sqlite_store/events.rs` first bridge | event-matching repositories | event cache and search tests |
+
 ## Inventory Exception
 
 `storage-inventory.snapshot` is documented in [retention.md](retention.md) as

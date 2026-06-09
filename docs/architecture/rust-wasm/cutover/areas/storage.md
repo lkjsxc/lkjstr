@@ -13,6 +13,22 @@ removed.
 - Related Stats and lkjstr Log storage fields in
   [../implementation-ledger.md](../implementation-ledger.md).
 
+## Agent Start
+
+- Current source owner: TypeScript storage repositories plus partial Rust
+  worker adapters for protected rows, cache evidence, pressure, inventory,
+  optimizer, and Stats.
+- Desired Rust owner: `lkjstr-storage`, `lkjstr-web`, `lkjstr-app`, and
+  `lkjstr-ui` along the storage-kernel boundary.
+- First source edit: `crates/lkjstr-web/src/sqlite_store/retention.rs` with
+  statement ids from `lkjstr-storage/src/commands/retention.rs`.
+- Focused tests: retention and command tests in `lkjstr-storage`, retention
+  tests in `lkjstr-web`, cache unit tests, and `pnpm rust-wasm:quiet`.
+- Ledgers: this file, implementation ledger rows, and verification ledger when
+  evidence changes; deletion ledger only after actual removals.
+- Keep: `src/lib/storage/sqlite-opfs/**`, `src/lib/storage/repositories/**`,
+  and shipped Svelte storage surfaces until no-import proof.
+
 ## Contract
 
 - Current product owner: TypeScript SQLite worker repositories plus partial Rust
