@@ -70,12 +70,10 @@ fn stats_provider(db_name: String, worker_url: String) -> lkjstr_ui::StatsProvid
                 StorageOutcome::Ok(sqlite_storage_stats_snapshot(&store).await)
             })
             .await;
+            let browser_rows = browser_inventory::browser_inventory_rows().await;
             complete.complete(match snapshot {
-                StorageOutcome::Ok(snapshot) => {
-                    let rows = browser_inventory::browser_inventory_rows().await;
-                    snapshot.with_additional_rows(rows)
-                }
-                outcome => unavailable_snapshot(outcome),
+                StorageOutcome::Ok(snapshot) => snapshot.with_additional_rows(browser_rows),
+                outcome => unavailable_snapshot(outcome).with_additional_rows(browser_rows),
             });
         });
     })

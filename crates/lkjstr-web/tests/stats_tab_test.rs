@@ -4,7 +4,9 @@ use wasm_bindgen::{JsCast, closure::Closure, prelude::JsValue};
 use wasm_bindgen_futures::JsFuture;
 use wasm_bindgen_test::{wasm_bindgen_test, wasm_bindgen_test_configure};
 
-use lkjstr_web::{indexed_db, mount_rust_workspace_shell_from_db};
+use lkjstr_web::{indexed_db, mount_rust_workspace_shell_from_db_with_worker};
+
+const TEST_WORKER_URL: &str = "/static/sqlite-opfs-worker.js";
 
 wasm_bindgen_test_configure!(run_in_browser);
 
@@ -22,7 +24,7 @@ async fn storage_stats_snapshot_counts_manifest_tables() -> Result<(), JsValue> 
 async fn rust_stats_tab_renders_real_inventory() -> Result<(), JsValue> {
     reset_shells()?;
     let db_name = test_db_name();
-    mount_rust_workspace_shell_from_db(db_name);
+    mount_rust_workspace_shell_from_db_with_worker(db_name, TEST_WORKER_URL.to_owned());
     wait_for_text("Welcome").await?;
     click("[data-testid='welcome-open-network-stats']")?;
     wait_for_text("Storage health").await?;

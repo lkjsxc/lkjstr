@@ -22,7 +22,8 @@ commands.
 - Rust UI Stats text tests cover explicit pressure unavailable states,
   temporary-memory warning text, and distinct health problem states.
 - Rust host Stats surfaces localStorage count/status, Cache Storage
-  count/status, and old IndexedDB presence rows.
+  count/status, and old IndexedDB presence rows, including when SQLite worker
+  inventory is unavailable.
 - localStorage and Cache Storage byte estimates plus repair action linkage
   remain TypeScript-owned or open until Rust host adapters move.
 

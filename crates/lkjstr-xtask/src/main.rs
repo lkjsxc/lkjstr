@@ -1,3 +1,4 @@
+mod browser_driver;
 mod command;
 mod doc_check;
 mod line_check;

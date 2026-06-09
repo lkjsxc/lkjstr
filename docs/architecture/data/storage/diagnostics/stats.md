@@ -29,8 +29,9 @@ Rust Stats renders pressure byte-summary rows for browser usage, site target,
 protected, prunable, unknown or unowned, and residual overhead classes. Missing
 pressure data keeps those rows visible as unavailable instead of showing zero.
 The Rust host also adds localStorage count/status, Cache Storage request
-count/status, and old IndexedDB presence rows. Byte estimates for non-indexed
-browser storage remain transitional until Rust host adapters own that scan.
+count/status, and old IndexedDB presence rows even when the SQLite worker is
+unavailable. Byte estimates for non-indexed browser storage remain transitional
+until Rust host adapters own that scan.
 
 ## Groups
 

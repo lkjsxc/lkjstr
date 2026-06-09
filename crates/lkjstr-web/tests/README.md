@@ -24,7 +24,7 @@ Browser-bound WASM tests prove exported functions call real Rust code.
 - `sqlite_store_test.rs`: SQLite protected repository calls over the worker adapter.
 - `sqlite_settings_store_test.rs`: SQLite settings replace-all repository tests.
 - `sqlite_tab_test_support.rs`: shared static-worker URL helper for tab tests.
-- `stats_tab_test.rs`: Rust Stats browser rendering tests.
+- `stats_tab_test.rs`: Rust Stats browser rendering tests with the wasm-pack static worker URL.
 - `storage_worker_test.rs`: Rust SQLite storage-worker adapter tests.
 - `tweet_draft_tab_test.rs`: Rust Tweet draft rendering and storage-state tests.
 - `upload_settings_tab_test.rs`: Rust Upload Settings rendering and NIP-96 discovery tests.

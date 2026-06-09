@@ -4,14 +4,17 @@ use std::{
     process::{Command, Output},
 };
 
-use crate::tool_path::{cargo_bin, prefer_rustup_cargo};
+use crate::{
+    browser_driver::chrome_driver_args,
+    tool_path::{cargo_bin, prefer_rustup_cargo},
+};
 
 const TAIL_BYTES: usize = 128 * 1024;
 
 pub struct Step {
     pub name: &'static str,
     program: OsString,
-    args: Vec<&'static str>,
+    args: Vec<OsString>,
     clear_no_color: bool,
 }
 
@@ -47,8 +50,8 @@ pub fn rust_wasm_steps() -> Vec<Step> {
             ],
         ),
         step("cargo test", cargo, vec!["test", "--workspace"]),
-        step("wasm-pack chrome", "wasm-pack", wasm_pack_args("--chrome")),
-        step(
+        step_os("wasm-pack chrome", "wasm-pack", wasm_pack_args("--chrome")),
+        step_os(
             "wasm-pack firefox",
             "wasm-pack",
             wasm_pack_args("--firefox"),
@@ -56,7 +59,7 @@ pub fn rust_wasm_steps() -> Vec<Step> {
         Step {
             name: "trunk build",
             program: OsString::from("trunk"),
-            args: vec!["build", "--release"],
+            args: os_args(vec!["build", "--release"]),
             clear_no_color: true,
         },
     ]
@@ -99,8 +102,13 @@ pub fn run_quiet_step(root: &Path, step: &Step) -> Result<(), String> {
     }
 }
 
-fn wasm_pack_args(browser: &'static str) -> Vec<&'static str> {
-    vec!["test", "--headless", browser, "crates/lkjstr-web"]
+fn wasm_pack_args(browser: &'static str) -> Vec<OsString> {
+    let mut args = os_args(vec!["test", "--headless", browser]);
+    if browser == "--chrome" {
+        args.extend(chrome_driver_args());
+    }
+    args.push(OsString::from("crates/lkjstr-web"));
+    args
 }
 
 fn step<I>(name: &'static str, program: I, args: Vec<&'static str>) -> Step
@@ -110,9 +118,25 @@ where
     Step {
         name,
         program: program.into(),
+        args: os_args(args),
+        clear_no_color: false,
+    }
+}
+
+fn step_os<I>(name: &'static str, program: I, args: Vec<OsString>) -> Step
+where
+    I: Into<OsString>,
+{
+    Step {
+        name,
+        program: program.into(),
         args,
         clear_no_color: false,
     }
+}
+
+fn os_args(args: Vec<&'static str>) -> Vec<OsString> {
+    args.into_iter().map(OsString::from).collect()
 }
 
 fn status_text(output: &Output) -> String {
