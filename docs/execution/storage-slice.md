@@ -8,12 +8,13 @@ cutover rows and tests pass.
 
 ## Summary
 
-The current storage slice wires Rust typed repositories for active-account
-selectors, pressure diagnostics, feed cache, feed coverage, retention dispatch,
-repair, and Stats projection. Active-account selectors use a protected settings
-row. Pressure Stats rows use real pressure snapshots or explicit unavailable
-states. It must not delete TypeScript storage repositories until Rust covers
-every live table family and no-import proof is recorded.
+The current storage slice preserves implemented active-account selector,
+pressure-row, and batch-capable command-shape contracts, then expands command
+coverage for remaining live SQLite worker repositories. Feed cache, feed
+coverage, event cache, retention dispatch, repair, full pressure inventory, and
+Stats projection remain partial. It must not delete TypeScript storage
+repositories until Rust covers every live table family and no-import proof is
+recorded.
 
 ## Read First
 
@@ -41,14 +42,15 @@ every live table family and no-import proof is recorded.
 
 1. Inventory live SQLite table families from storage docs and current worker
    repositories.
-2. Add or verify Rust row codecs for protected rows, event rows, tags, relay
+2. Preserve Rust row codecs for protected rows, event rows, tags, relay
    provenance, feed coverage, feed cursors, cache ledger rows, diagnostics,
    optimizer rows, job rows, log rows, active-account selectors, and pressure
    snapshots.
-3. Add typed command definitions with input type, output type, stable problem
-   kind, row codec, and real-shaped fixtures.
-4. Wire `lkjstr-web` worker calls without adding main-thread SQLite or OPFS
-   access.
+3. Add typed command definitions with input type, output type, statement ids,
+   tables, stable problem kinds, row codecs, data classes, ledger policy,
+   protection policy, Stats projection, and real-shaped fixtures.
+4. Wire remaining `lkjstr-web` worker calls without adding main-thread SQLite or
+   OPFS access.
 5. Expose persistent OPFS, temporary memory, unavailable, timeout, blocked,
    corrupt, and unknown-old-storage health states.
 6. Report protected bytes, prunable bytes, unknown storage, residual browser
@@ -68,8 +70,9 @@ pnpm rust-wasm:quiet
 
 ## Acceptance
 
-- Active-account selectors and pressure snapshots have Rust row codecs and
-  worker repository calls.
+- Active-account selector, pressure snapshot, and batch command-shape contracts
+  remain preserved.
+- Remaining live worker repositories gain truthful command specs.
 - Product modules call typed repositories only.
 - Main-thread product code does not open SQLite or OPFS directly.
 - Stats shows storage health, mode, and real pressure snapshot fields without

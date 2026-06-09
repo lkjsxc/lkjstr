@@ -25,9 +25,11 @@ no-import proof allow removal.
 
 ## Slice Order
 
-- Current first slice: storage repository wiring for active-account selectors,
-  pressure diagnostics, feed cache, feed coverage, retention, repair, and Stats
-  projection.
+- Current first slice: storage command metadata coverage for remaining live
+  SQLite worker repositories, then feed cache, feed coverage, event cache,
+  retention, repair, full pressure inventory, and Stats projection. The
+  batch-capable command shape and active-account selector proof are implemented
+  and retained in task evidence files.
 - Second slice: relay runtime wiring from Rust reducers to browser WebSocket,
   timer, and NIP-11 host effects.
 - Third slice: shared feed runtime that consumes strict cache proof and
@@ -62,3 +64,22 @@ images were built and the services ran from those images.
   slice.
 - [tasks/README.md](tasks/README.md): granular executable task files for the
   active Rust/WASM queue.
+- [tasks/storage-command-spec-shape.md](tasks/storage-command-spec-shape.md):
+  implemented batch-capable storage command metadata shape.
+- [tasks/storage-command-metadata.md](tasks/storage-command-metadata.md): live
+  storage command metadata coverage.
+- [tasks/storage-feed-cache-commands.md](tasks/storage-feed-cache-commands.md):
+  event and feed cache command coverage.
+- [tasks/storage-retention-repair.md](tasks/storage-retention-repair.md):
+  retention delete dispatch and repair reporting.
+- [tasks/storage-stats-pressure-inventory.md](tasks/storage-stats-pressure-inventory.md):
+  pressure inventory and Stats diagnostics.
+- [tasks/storage-search-index.md](tasks/storage-search-index.md): storage-owned
+  search and tag lookup rows.
+- [tasks/storage-active-selector.md](tasks/storage-active-selector.md): closed
+  active-account selector evidence.
+- [tasks/relay-effect-runner.md](tasks/relay-effect-runner.md): relay browser
+  effect runner task.
+- [tasks/shared-feed-view-model.md](tasks/shared-feed-view-model.md): shared
+  feed row view-model task.
+- [tasks/home-feed-slice.md](tasks/home-feed-slice.md): first Home feed slice.

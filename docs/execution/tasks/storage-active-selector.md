@@ -2,73 +2,67 @@
 
 ## Purpose
 
-Route the Rust Accounts active-account selector through the SQLite worker. The
-old `localStorage` key is migration-only evidence, not the product source.
+Record the implemented active-account selector storage slice and the proof that
+must be preserved while surrounding Accounts and storage product paths remain
+partial.
 
-## Current Evidence
+## Status
+
+Implemented. Retain this file as closed evidence until broader Accounts and
+storage cutover work removes the surrounding TypeScript product paths with
+parity and no-import proof.
+
+## Implemented Behavior
 
 - `lkjstr-storage/src/active_account.rs` defines protected selector rows without
   secret fields.
-- `lkjstr-web/src/sqlite_store/active_account.rs` exposes typed worker get, put,
-  and delete calls.
-- `lkjstr-web/src/accounts_active.rs` still owns the old
-  `lkjstr.activeAccountId` localStorage helper.
-- `lkjstr-web/src/accounts_host.rs` still used that helper for active selection
-  before this task.
-
-## Target Behavior
-
-- Account activation writes an `ActiveAccountSelectorRecord` through the SQLite
-  worker after the target account is found.
-- Account add and NIP-07 connect persist the selector through SQLite after the
-  account save succeeds.
-- Account removal deletes the SQLite selector when the removed account is active.
-- Load reads SQLite first, migrates a matching old localStorage key only when no
-  SQLite selector exists, removes the old key after successful SQLite write, and
-  otherwise falls back to the first stored account with a SQLite selector write.
-- SQLite unavailable, timeout, blocked, corrupt, canceled, or quota outcomes are
-  shown as explicit Accounts status text and are not treated as selector absence.
+- `lkjstr-web/src/sqlite_store/active_account.rs` exposes typed worker get,
+  put, and delete calls.
+- Rust Accounts loads the selector from SQLite first.
+- The old `lkjstr.activeAccountId` localStorage key is migration-only evidence.
+- A matching old key is removed after a successful SQLite selector write.
+- Account activation, account add, NIP-07 connect, fallback selection, and
+  active-account removal update the SQLite selector row.
+- Selector read, write, delete, unavailable, timeout, blocked, corrupt,
+  canceled, and quota outcomes surface as explicit Accounts status text.
 - Protected account rows and local signing secrets are never pruned or logged.
 
-## Files To Read
+## Current Evidence
+
+- Storage row-codec proof lives in `crates/lkjstr-storage` active-account tests.
+- Worker and product-host proof lives in `crates/lkjstr-web` active-account and
+  accounts tests.
+- Cutover status remains partial in
+  `docs/architecture/rust-wasm/cutover/areas/storage.md` because Accounts
+  parity, local secret safety proof, and TypeScript deletion proof remain open.
+
+## Preservation Rule
+
+Future storage work may refactor command metadata, worker envelopes, or Accounts
+hosts only if these behaviors stay true:
+
+- SQLite remains the steady-state selector source.
+- localStorage remains migration-only.
+- selector failures are visible and are not treated as absence.
+- selector rows never contain secret material.
+- no TypeScript or Svelte Accounts path is deleted from this closed evidence.
+
+## Files To Read Before Touching
 
 - `docs/execution/storage-slice.md`.
 - `docs/architecture/rust-wasm/cutover/areas/storage.md`.
 - `docs/architecture/rust-wasm/cutover/storage-wiring.md`.
 - `crates/lkjstr-storage/src/active_account.rs`.
+- `crates/lkjstr-web/src/accounts_active.rs`.
 - `crates/lkjstr-web/src/accounts_host.rs`.
 - `crates/lkjstr-web/src/sqlite_store/active_account.rs`.
-
-## Docs To Update First
-
-- This task file.
-- `docs/architecture/rust-wasm/cutover/areas/storage.md`.
-- `docs/architecture/rust-wasm/cutover/storage-wiring.md` when behavior or proof
-  changes.
-- `docs/architecture/rust-wasm/status.md`.
-- `docs/architecture/rust-wasm/cutover/verification-ledger.md` after checks run.
-
-## Rust Files To Touch
-
-- `crates/lkjstr-web/src/accounts_active.rs`.
-- `crates/lkjstr-web/src/accounts_selector_host.rs`.
-- `crates/lkjstr-web/src/accounts_host.rs`.
-- Tests under `crates/lkjstr-web/tests/` when host behavior changes.
 
 ## Temporary TypeScript Or Svelte Files To Keep
 
 Keep `src/lib/accounts/**`, `src/lib/storage/**`, and Svelte tab surfaces until
 Accounts parity, storage parity, no-import proof, and ledgers allow deletion.
 
-## Tests To Add Or Update
-
-- Selector get, put, and delete through the worker.
-- Migration from the old localStorage key and old-key removal after success.
-- Activation and fallback selector writes.
-- Explicit status when selector read fails.
-- Secret redaction assertions for selector JSON.
-
-## Focused Gate
+## Focused Gate When This Evidence Changes
 
 ```sh
 cargo test -p lkjstr-storage active_account
@@ -82,15 +76,10 @@ pnpm rust-wasm:quiet
 Run the Docker Compose final gate from `docs/operations/verification.md` before
 claiming broad storage parity or deleting TypeScript or Svelte code.
 
-## Commit Boundary
-
-One commit should cover this task: docs, selector host helper, Accounts host
-wiring, focused tests, and ledger evidence.
-
 ## Must Not
 
+- Do not use localStorage as a steady-state selector source.
 - Do not delete TypeScript or Svelte product paths.
 - Do not add direct SQLite or OPFS access outside the worker.
-- Do not use localStorage as a steady-state selector source.
 - Do not log or display local signing secrets.
-- Do not claim Accounts or storage cutover parity from this partial slice.
+- Do not claim Accounts or storage cutover parity from this closed slice.

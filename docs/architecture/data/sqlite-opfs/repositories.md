@@ -57,6 +57,16 @@ until each surface has Leptos parity and deletion proof.
 - Removal proof: TypeScript repositories stay until Rust covers every live table
   family, tests pass, and no-import proof is recorded.
 
+## Command Metadata Contract
+
+Every live worker repository command has storage-owned metadata. The metadata
+names the command id, family, operation, input type, output type, statement ids,
+tables, row codecs, problem kinds, data classes, ledger policy, protection
+policy, and Stats projection. Batch commands list every statement they execute;
+ledger-backed writes store resource rows and ledger rows in the same batch.
+Inventory-only commands may omit manifest tables only when documented as
+inventory-only.
+
 ## Statement Shape
 
 Every SQL statement record declares:

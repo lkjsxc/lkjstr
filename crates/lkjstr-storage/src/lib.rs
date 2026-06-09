@@ -46,10 +46,11 @@ pub use app_log::{AppLogRecord, SqliteAppLogRow, redact_app_log_text};
 pub use commands::{
     ActiveAccountSelectorDeleteInput, ActiveAccountSelectorDeleteOutput,
     ActiveAccountSelectorGetInput, ActiveAccountSelectorGetOutput, ActiveAccountSelectorPutInput,
-    ActiveAccountSelectorPutOutput, STORAGE_REPOSITORY_COMMANDS, StoragePressureGetInput,
-    StoragePressureGetOutput, StoragePressureProjectInput, StoragePressureProjectOutput,
-    StoragePressurePutInput, StoragePressurePutOutput, StorageRepositoryCommandSpec,
-    storage_repository_commands,
+    ActiveAccountSelectorPutOutput, STORAGE_REPOSITORY_COMMANDS, StorageCommandFamily,
+    StorageLedgerPolicy, StoragePressureGetInput, StoragePressureGetOutput,
+    StoragePressureProjectInput, StoragePressureProjectOutput, StoragePressurePutInput,
+    StoragePressurePutOutput, StorageProtectionPolicy, StorageRepositoryCommandSpec,
+    StorageStatsProjection, storage_repository_commands,
 };
 pub use data_class::{StorageDataClass, StorageInventoryGroup};
 pub use diagnostics::{

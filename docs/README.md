@@ -144,7 +144,10 @@ changed. Each docs directory has one README that acts as a table of contents.
 `execution/operating-rules.md` `execution/storage-slice.md` `execution/tasks/README.md`
 `execution/tasks/home-feed-slice.md` `execution/tasks/relay-effect-runner.md`
 `execution/tasks/shared-feed-view-model.md` `execution/tasks/storage-active-selector.md`
-`execution/tasks/storage-command-metadata.md` `operations/README.md` `operations/ci.md`
+`execution/tasks/storage-command-metadata.md` `execution/tasks/storage-command-spec-shape.md`
+`execution/tasks/storage-feed-cache-commands.md` `execution/tasks/storage-retention-repair.md`
+`execution/tasks/storage-search-index.md` `execution/tasks/storage-stats-pressure-inventory.md`
+`operations/README.md` `operations/ci.md`
 `operations/cloudflare-workers.md` `operations/data-safety.md` `operations/diagnostics.md`
 `operations/docker.md` `operations/feed-route-isolation-regression.md` `operations/focused-gates.md`
 `operations/memory-verification.md` `operations/readiness.md` `operations/sqlite-opfs-testing.md`

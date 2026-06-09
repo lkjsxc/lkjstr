@@ -9,6 +9,7 @@ condition that allows TypeScript product storage deletion.
 ## Current Evidence
 
 - Rust manifest and row codecs: `crates/lkjstr-storage/src/**`.
+- Batch-capable command metadata shape: `crates/lkjstr-storage/src/commands/**`.
 - Rust worker adapter and repository calls: `crates/lkjstr-web/src/sqlite_store/**`
   and `crates/lkjstr-web/src/storage_worker/**`.
 - Current TypeScript worker glue: `src/lib/storage/sqlite-opfs/**` and
@@ -22,15 +23,18 @@ condition that allows TypeScript product storage deletion.
 ## Worker Message Contract
 
 `lkjstr-storage` owns table names, SQL statement ids, row codecs, data classes,
-ledger resource kinds, and typed outcomes. `lkjstr-web` sends worker messages
-through `StorageOp`: `open`, `apply-schema`, `query`, `execute`, `batch`,
-`get-storage-health`, `read-physical-inventory`, `estimate-storage`, `cancel`,
-and `close`. Product crates never format SQL or open OPFS. Accounts active
-selection reads and writes the protected SQLite selector row; the old
-`lkjstr.activeAccountId` localStorage key is migration-only and is removed after
-a successful selector write. Feed cache, feed coverage, retention, and repair
-need the same typed command metadata now used by active selector and pressure
-rows.
+ledger resource kinds, command metadata, and typed outcomes. Command metadata
+must describe batch-shaped operations by statement ids, tables, ledger policy,
+protection policy, and Stats projection instead of one-table shorthand.
+`lkjstr-web` sends worker messages through `StorageOp`: `open`, `apply-schema`,
+`query`, `execute`, `batch`, `get-storage-health`,
+`read-physical-inventory`, `estimate-storage`, `cancel`, and `close`. Product
+crates never format SQL or open OPFS. Accounts active selection reads and writes
+the protected SQLite selector row; the old `lkjstr.activeAccountId` localStorage
+key is migration-only and is removed after a successful selector write. Feed
+cache, feed coverage, event cache, diagnostics, retention, repair, optimizer,
+jobs, app log, search/tag lookup, and pressure inventory need the same truthful
+command metadata now used by active selector and pressure rows.
 
 ## Storage Family Matrix
 

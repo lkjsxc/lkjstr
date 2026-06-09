@@ -7,7 +7,9 @@ browser storage manifest.
 
 ## Table of Contents
 
-- `commands_test.rs`: typed repository command specs.
+- `commands_shape_test.rs`: shared repository command metadata invariants.
+- `commands_protected_test.rs`: protected and active selector command specs.
+- `commands_diagnostics_test.rs`: diagnostics and pressure command specs.
 - `ledger_test.rs`: cache resource ownership manifest behavior.
 - `manifest_docs_test.rs`: docs table metadata compared with Rust manifest.
 - `manifest_test.rs`: table manifest names, retention, and grouping.

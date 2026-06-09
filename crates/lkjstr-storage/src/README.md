@@ -10,7 +10,7 @@ codecs, ledger resource map, and typed operation outcomes.
 - `accounts.rs`: account row identity, JSON helpers, and SQLite row codec.
 - `active_account.rs`: protected active-account selector row codec.
 - `app_log.rs`: app log row codec.
-- `commands.rs`: typed repository command contracts.
+- `commands/`: typed repository command metadata and command-family specs.
 - `data_class.rs`: table data classes and inventory groups.
 - `diagnostics.rs`: relay diagnostic row codecs and ledger row helpers.
 - `events.rs`: cached event, event tag, relay provenance, and ledger row helpers.

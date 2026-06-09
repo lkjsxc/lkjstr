@@ -44,8 +44,9 @@ removed.
   selectors through the SQLite worker and treats the old localStorage key as a
   migration source only. Full pressure byte inventory diagnostics, retention
   dispatch, repair, and feed-runtime consumption remain open.
-- Next task: expose feed repository commands through the Rust worker adapter and
-  expand storage command metadata for remaining live table families.
+- Next task: use the batch-capable command metadata shape to add coverage for
+  feed cache, event cache, retention, repair, diagnostics, optimizer rows, jobs,
+  app log, search/tag lookup, and pressure inventory.
 
 ## Acceptance Checklist
 
@@ -55,8 +56,11 @@ removed.
   migration-only source.
 - [x] Active-account selector and pressure snapshot commands have typed specs,
   stable problem kinds, row-codec links, and Stats projection metadata.
+- [x] Command metadata supports statement arrays, table arrays, ledger policy,
+  protection policy, and typed Stats projection.
 - [ ] Every touched table has a Rust row codec and typed command.
-- [ ] Every command has input, output, stable problem kind, and fixture proof.
+- [ ] Every command has input, output, statement ids, stable problem kinds,
+  ledger policy, protection policy, Stats projection, and fixture proof.
 - [ ] No product code opens SQLite or OPFS outside the worker.
 - [ ] Stats shows persistent, temporary memory, unavailable, timeout, blocked,
   corrupt, or unknown-old-storage states without indefinite loading.

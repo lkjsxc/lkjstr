@@ -112,10 +112,10 @@ bounded retry sources; shipped Svelte wiring remains the visible surface.
 
 | Storage family      | Rust status | Required Rust modules             | Proof before cutover                                                                                  |
 | ------------------- | ----------- | --------------------------------- | ----------------------------------------------------------------------------------------------------- |
-| Protected records   | partial     | `storage`, `web`, `app`, `ui`     | SQLite startup, workspace, settings, accounts, active selector, relay sets, drafts, worker tests      |
+| Protected records   | partial     | `storage`, `web`, `app`, `ui`     | SQLite startup, workspace, settings, accounts, active selector proof, relay sets, drafts, worker tests |
 | Event cache         | partial     | `storage`, `web`, `app`, `relays` | Rust event/tag/provenance row tests pass; validation, query breadth, retention, and feed proof remain |
 | Feed evidence       | partial     | `storage`, `app`, `relays`        | Rust coverage/cursor row tests pass; complete route-group proof and compaction invalidation remain    |
-| Diagnostics and log | partial     | `storage`, `web`, `app`, `ui`     | Stats inventory, SQLite health, durable Log rows, and pressure row codecs exist; product wiring remains |
+| Diagnostics and log | partial     | `storage`, `web`, `app`, `ui`     | Stats inventory, SQLite health, durable Log rows, pressure rows, and command coverage remain partial |
 | Relay optimizer     | partial     | `relays`, `app`, `storage`, `web` | score, scan hint, route trust, Stats, and synthetic relay tests                                       |
 
 ## Product Rule
