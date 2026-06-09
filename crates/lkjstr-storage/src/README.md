@@ -36,6 +36,7 @@ codecs, ledger resource map, and typed operation outcomes.
 - `settings_schema.rs`: flat settings schema and override merging.
 - `sql/`: executable SQLite schema records for OPFS storage.
 - `stats.rs`: storage inventory and pressure view models for Stats.
+- `stats/`: pressure byte-summary and inventory row helpers.
 - `stats_rows.rs`: storage inventory row records.
 - `storage_health.rs`: SQLite health view model for Stats.
 - `tab_state.rs`: tab-state keys, rows, ledger rows, and SQLite row codecs.

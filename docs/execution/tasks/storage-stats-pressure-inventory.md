@@ -15,26 +15,29 @@ commands.
 - Rust pressure snapshot row codecs and worker calls exist.
 - Rust Stats can project protected bytes, prunable bytes, unknown storage,
   residual overhead, and stop reason from a real pressure snapshot row.
-- Full physical byte inventory, old IndexedDB presence diagnostics, and repair
-  linkage remain open.
+- Rust Stats exposes pressure byte-summary rows from real pressure snapshots and
+  leaves byte rows unavailable when pressure data is missing.
+- Full localStorage, Cache Storage, old IndexedDB host diagnostics, and repair
+  action linkage remain TypeScript-owned or open until Rust host adapters move.
 
 ## Current Next Edit
 
-1. Keep pressure and optimizer command metadata intact while retention lands.
-2. Link full inventory work to retention and repair outputs instead of inventing
-   standalone byte safety.
-3. Add UI projection changes only after storage rows expose real unavailable
-   states.
+1. Keep pressure and optimizer command metadata intact while inventory moves.
+2. Link browser inventory work to retention and repair outputs instead of
+   inventing standalone byte safety.
+3. Move localStorage, Cache Storage, and old IndexedDB presence diagnostics only
+   through explicit Rust host adapters.
 
 ## Next Checklist
 
 - [ ] Read inventory, pressure-state, Stats, and storage-pressure verification
   contracts.
 - [ ] Update docs for any new pressure state or inventory field before source.
-- [ ] Add storage-owned inventory rows or projections for missing physical byte
+- [x] Add storage-owned inventory rows or projections for missing physical byte
   classes.
-- [ ] Add Stats projections for every unavailable mode and pressure stop reason.
-- [ ] Add Rust UI tests for explicit unavailable states when view fields change.
+- [x] Add Stats projections for pressure unavailable modes and stop reasons.
+- [ ] Add Rust UI tests for explicit unavailable states where browser rendering
+  coverage is stable.
 - [ ] Run pressure, stats, commands, UI stats, and Rust/WASM gates; then record
   actual verification.
 
@@ -46,6 +49,11 @@ protected bytes, prunable bytes, unknown storage, residual browser overhead,
 localStorage, Cache Storage, SQLite table counts, cache ledger summaries, and
 old IndexedDB presence diagnostics. Missing pressure data renders an explicit
 unavailable reason.
+
+The current Rust slice covers SQLite health, SQLite table counts, saved pressure
+snapshots, and pressure byte-summary rows. TypeScript remains the shipped owner
+for localStorage, Cache Storage, and old IndexedDB presence until equivalent
+Rust host adapters are implemented and no-import proof exists.
 
 ## Docs To Update First
 

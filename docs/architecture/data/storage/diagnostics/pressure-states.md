@@ -42,6 +42,10 @@ Compaction records one final stop reason:
 - `compaction-error`
 - `deadline`
 
+Stats projects these stop reasons from real pressure snapshot rows. If the row
+is missing or unreadable, pressure byte rows stay unavailable with the storage
+problem reason instead of reporting `target-met` or zero-byte success.
+
 ## Trigger Points
 
 Pressure checks run through background tasks:

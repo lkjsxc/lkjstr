@@ -112,15 +112,16 @@ Read next: [architecture/data/README.md](architecture/data/README.md),
   Settings, Upload Settings, Tweet drafts, Stats inventory, Stats SQLite health,
   active account selectors, pressure snapshots, and durable lkjstr Log rows. The
   Rust IndexedDB adapter remains for host-boundary tests and narrow WASM exports.
-- Physical inventory, cache tool summaries, retention target checks, and
-  protection snapshots use SQLite paths. Repair has a storage-owned model,
-  basic worker adapter, and physical target probes. Old IndexedDB is presence-only.
+- Physical inventory, cache summaries, retention target checks, and protection
+  snapshots use SQLite paths. Repair has models, adapters, and target probes.
 - Storage inventory is SQLite-first. It reads SQLite table counts, cache ledger
   summaries, browser quota estimates, localStorage, Cache Storage, and old
   IndexedDB database presence diagnostics without scanning every old row.
 - Rust Stats reads SQLite health and storage mode on startup. Its provider read
   is bounded; after timeout Stats shows available, temporary memory, timeout,
   unavailable, blocked, corrupt, or unknown-old-storage states explicitly.
+- Rust Stats renders pressure byte-summary rows from saved pressure snapshots
+  and keeps localStorage, Cache Storage, and old IndexedDB diagnostics in TypeScript.
 - Rust storage command metadata covers active selectors, pressure, protected
   rows, cache/feed evidence, diagnostics, jobs, app log, inventory, optimizer,
   retention, repair scan/backfill/report rows, and Search token/tag rows.

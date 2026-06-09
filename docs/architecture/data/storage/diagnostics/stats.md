@@ -25,6 +25,9 @@ The Rust UI bounds provider reads with a timeout snapshot while worker calls
 keep their typed deadlines. Timeout and unavailable states are explicit
 diagnostic rows. Pressure fields come from a real pressure snapshot row or an
 explicit unavailable reason; Stats must not invent byte counts.
+Rust Stats renders pressure byte-summary rows for browser usage, site target,
+protected, prunable, unknown or unowned, and residual overhead classes. Missing
+pressure data keeps those rows visible as unavailable instead of showing zero.
 
 ## Groups
 

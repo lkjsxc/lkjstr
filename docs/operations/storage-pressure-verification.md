@@ -34,6 +34,10 @@ unknown origin usage as success.
 - Stats separates SQLite table estimates, ledger bytes, localStorage bytes,
   Cache Storage bytes, old IndexedDB database presence, unknown old or unowned
   storage, and residual browser overhead.
+- Rust Stats pressure rows show browser usage, site target, protected bytes,
+  prunable bytes, unknown or unowned bytes, and residual overhead only when a
+  real pressure snapshot exists; missing pressure data stays visible as
+  unavailable.
 - Repair deletes orphan ledger rows, backfills missing rows, removes safe
   unowned cache rows, and never adds ledger rows for protected route blocks.
 - If browser usage remains over target, Stats reports

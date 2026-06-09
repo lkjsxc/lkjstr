@@ -1,15 +1,17 @@
 #![doc = "Storage inventory view models for Stats."]
 
-use std::collections::BTreeMap;
-
 use serde::{Deserialize, Serialize};
 
-pub use crate::stats_rows::{SqliteRowCount, StorageInventoryRow, StorageTableCount};
+mod bytes;
+mod inventory;
 
-use crate::manifest::storage_table_specs;
+pub use crate::stats_rows::{SqliteRowCount, StorageInventoryRow, StorageTableCount};
+pub use bytes::StorageByteInventoryRow;
+
 use crate::pressure::StoragePressureSnapshotRecord;
-use crate::sql::sqlite_schema_tables;
 use crate::storage_health::SqliteStorageHealth;
+use bytes::pressure_byte_rows;
+use inventory::{inventory_status, manifest_rows, sqlite_rows};
 
 #[derive(Clone, Debug, Deserialize, Eq, PartialEq, Serialize)]
 pub struct StorageStatsSnapshot {
@@ -24,19 +26,20 @@ pub struct StorageStatsSnapshot {
     pub storage_pressure_status: String,
     pub storage_pressure_reason: Option<String>,
     pub storage_pressure: Option<StoragePressureSnapshotRecord>,
+    pub byte_rows: Vec<StorageByteInventoryRow>,
     pub rows: Vec<StorageInventoryRow>,
 }
 
 impl StorageStatsSnapshot {
     #[must_use]
     pub fn from_counts(counts: Vec<StorageTableCount>) -> Self {
-        let rows = manifest_rows(counts_by_table(counts));
+        let rows = manifest_rows(counts);
         Self::from_rows(rows)
     }
 
     #[must_use]
     pub fn manifest_unavailable(reason: &str) -> Self {
-        let counts = storage_table_specs()
+        let counts = crate::storage_table_specs()
             .iter()
             .map(|spec| StorageTableCount::unavailable(spec.name, reason))
             .collect();
@@ -52,7 +55,7 @@ impl StorageStatsSnapshot {
 
     #[must_use]
     pub fn from_sqlite_counts(counts: Vec<StorageTableCount>) -> Self {
-        let rows = sqlite_rows(counts_by_table(counts));
+        let rows = sqlite_rows(counts);
         Self::from_rows(rows)
     }
 
@@ -74,6 +77,7 @@ impl StorageStatsSnapshot {
             storage_pressure_status: "unavailable".to_string(),
             storage_pressure_reason: Some("not-requested".to_string()),
             storage_pressure: None,
+            byte_rows: pressure_byte_rows(None, Some("not-requested")),
             rows,
         }
     }
@@ -98,6 +102,7 @@ impl StorageStatsSnapshot {
     pub fn with_storage_pressure(mut self, pressure: StoragePressureSnapshotRecord) -> Self {
         self.storage_pressure_status = pressure.stop_reason.clone();
         self.storage_pressure_reason = None;
+        self.byte_rows = pressure_byte_rows(Some(&pressure), None);
         self.storage_pressure = Some(pressure);
         self
     }
@@ -107,79 +112,8 @@ impl StorageStatsSnapshot {
         self.storage_pressure_status = reason.to_string();
         self.storage_pressure_reason = Some(reason.to_string());
         self.storage_pressure = None;
+        self.byte_rows = pressure_byte_rows(None, Some(reason));
         self
-    }
-}
-
-fn counts_by_table(counts: Vec<StorageTableCount>) -> BTreeMap<String, StorageTableCount> {
-    counts
-        .into_iter()
-        .map(|count| (count.table.clone(), count))
-        .collect()
-}
-
-fn manifest_rows(counts: BTreeMap<String, StorageTableCount>) -> Vec<StorageInventoryRow> {
-    storage_table_specs()
-        .iter()
-        .map(|spec| {
-            inventory_row(
-                spec.name,
-                spec.data_class.as_str(),
-                spec.inventory_group.as_str(),
-                &counts,
-            )
-        })
-        .collect()
-}
-
-fn sqlite_rows(counts: BTreeMap<String, StorageTableCount>) -> Vec<StorageInventoryRow> {
-    sqlite_schema_tables()
-        .into_iter()
-        .map(|spec| {
-            inventory_row(
-                spec.name,
-                spec.data_class.as_str(),
-                spec.inventory_group.as_str(),
-                &counts,
-            )
-        })
-        .collect()
-}
-
-fn inventory_row(
-    table: &str,
-    data_class: &str,
-    group: &str,
-    counts: &BTreeMap<String, StorageTableCount>,
-) -> StorageInventoryRow {
-    let count = counts.get(table);
-    let row_count = count.and_then(|item| item.row_count);
-    let problem_reason = count.and_then(|item| item.problem_reason.clone());
-    StorageInventoryRow {
-        table: table.to_string(),
-        data_class: data_class.to_string(),
-        group: group.to_string(),
-        status: row_status(row_count).to_string(),
-        row_count,
-        problem_reason,
-    }
-}
-
-fn row_status(row_count: Option<u64>) -> &'static str {
-    if row_count.is_some() {
-        "available"
-    } else {
-        "unavailable"
-    }
-}
-
-fn inventory_status(table_count: usize, available_table_count: usize) -> &'static str {
-    if table_count == available_table_count {
-        "complete"
-    } else if available_table_count == 0 {
-        "unavailable"
-    } else {
-        "partial"
     }
 }
 

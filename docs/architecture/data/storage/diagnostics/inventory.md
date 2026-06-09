@@ -45,6 +45,22 @@ The inventory uses typed SQLite repositories and known table ownership. It reads
 row counts through bounded statements and ledger summaries through cache ledger
 repositories. It does not expose raw SQL to product modules.
 
+## Pressure Byte Summary
+
+Rust Stats projects pressure byte rows only from a saved pressure snapshot. The
+rows are:
+
+- browser usage;
+- site target;
+- protected bytes;
+- prunable bytes;
+- unknown or unowned bytes;
+- residual browser overhead.
+
+When the pressure snapshot is missing, timed out, blocked, corrupt, or otherwise
+unavailable, each byte row carries that status and has no byte count. Stats must
+not infer byte classes from SQLite table counts alone.
+
 ## Old IndexedDB Diagnostics
 
 Old IndexedDB handling is presence-based:

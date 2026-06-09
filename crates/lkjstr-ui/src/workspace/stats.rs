@@ -4,6 +4,7 @@ use leptos::prelude::*;
 use lkjstr_storage::{StorageInventoryRow, StoragePressureSnapshotRecord, StorageStatsSnapshot};
 
 use crate::app::RuntimeSignal;
+use crate::workspace::stats_bytes::storage_byte_rows;
 use crate::workspace::stats_health::storage_health_rows;
 use crate::workspace::stats_provider::StatsProvider;
 use crate::workspace::stats_refresh::{StatsRefreshState, refresh_stats};
@@ -65,6 +66,13 @@ pub fn StatsTab(runtime: RuntimeSignal, provider: Option<StatsProvider>) -> impl
                     <tr><th>"Unknown bytes"</th><td>{move || pressure_value_text(snapshot.get(), |item| item.unknown_bytes)}</td></tr>
                     <tr><th>"Residual browser overhead"</th><td>{move || pressure_value_text(snapshot.get(), |item| item.residual_overhead_bytes)}</td></tr>
                 </tbody>
+            </table>
+            <h3>"Storage bytes"</h3>
+            <table class="stats-table">
+                <thead>
+                    <tr><th>"Class"</th><th>"Group"</th><th>"Status"</th><th>"Bytes"</th></tr>
+                </thead>
+                <tbody>{move || storage_byte_rows(snapshot.get())}</tbody>
             </table>
             <h3>"Storage health"</h3>
             <table class="stats-table">

@@ -20,6 +20,7 @@ mod settings_row;
 mod shell;
 mod state;
 mod stats;
+mod stats_bytes;
 mod stats_health;
 mod stats_provider;
 mod stats_refresh;
