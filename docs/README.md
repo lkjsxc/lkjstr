@@ -84,6 +84,7 @@ changed. Each docs directory has one README that acts as a table of contents.
 `architecture/data/storage/kernel/commands/diagnostics.md` `architecture/data/storage/kernel/commands/event-cache.md`
 `architecture/data/storage/kernel/commands/feed-evidence.md` `architecture/data/storage/kernel/commands/protected.md`
 `architecture/data/storage/kernel/commands/repair.md` `architecture/data/storage/kernel/commands/retention.md`
+`architecture/data/storage/kernel/commands/search.md`
 `architecture/data/storage/kernel/failure-recovery.md` `architecture/data/storage/kernel/local-secrets.md`
 `architecture/data/storage/kernel/manifest.md` `architecture/data/storage/kernel/operation-results.md` `architecture/data/storage/kernel/repositories.md`
 `architecture/data/storage/kernel/schema-steps.md` `architecture/data/storage/kernel/transactions.md` `architecture/data/storage/retention/README.md`

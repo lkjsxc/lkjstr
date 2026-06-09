@@ -60,6 +60,7 @@ Compose verification.
 - [kernel/commands/protected.md](kernel/commands/protected.md): protected commands.
 - [kernel/commands/repair.md](kernel/commands/repair.md): repair commands.
 - [kernel/commands/retention.md](kernel/commands/retention.md): retention commands.
+- [kernel/commands/search.md](kernel/commands/search.md): Search token and tag commands.
 - [kernel/failure-recovery.md](kernel/failure-recovery.md): degraded storage startup.
 - [kernel/local-secrets.md](kernel/local-secrets.md): local signing secret boundary.
 - [data-classes/README.md](data-classes/README.md): durable data classes.

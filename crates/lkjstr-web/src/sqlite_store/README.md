@@ -20,7 +20,7 @@ This directory contains Rust repository calls over the SQLite storage worker.
 - `repair.rs`: repair scan, inventory, and ledger backfill adapter calls.
 - `retention.rs`: retention delete dispatch adapter and worker batch binding.
 - `rows.rs`: SQLite row decoding helpers.
-- `search.rs`: local Search token-index batch step helpers.
+- `search.rs`: local Search token-index batch and query helpers.
 - `settings.rs`: settings protected repository calls.
 - `tab_states.rs`: tab-state and ledger repository calls.
 - `tweet_drafts.rs`: Tweet draft protected repository calls.

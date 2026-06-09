@@ -54,8 +54,8 @@ until each surface has Leptos parity and deletion proof.
 
 - Cache maintenance: manual cleanup, compaction, and reset actions stay bounded
   and report typed outcomes.
-- Local Search: worker query adapter, app planner, and NIP-50 merge remain open;
-  shipped TypeScript Search storage stays active until parity proof.
+- Local Search: app planner, NIP-50 merge, and UI parity remain open; shipped
+  TypeScript Search storage stays active until parity proof.
 - Rust feed parity: feed runtimes consume event cache, feed evidence,
   diagnostics, and retention repositories through `lkjstr-app`.
 - Removal proof: TypeScript repositories stay until Rust covers every live table

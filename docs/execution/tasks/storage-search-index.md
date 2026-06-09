@@ -8,8 +8,8 @@ skipping storage, relay, or feed dependency order.
 ## Status
 
 Partial. Storage-owned token rows, command metadata, SQL table/index records,
-and event-write token batch steps exist. Product Search runtime parity remains
-a later surface task.
+event-write token batch steps, and local indexed query adapters exist. Product
+Search runtime parity remains a later surface task.
 
 ## Current Evidence
 
@@ -17,14 +17,15 @@ a later surface task.
 - Rust storage owns tokenization, token row codecs, search SQL table/index
   records, tag lookup metadata, update-event-index metadata, and local-query
   metadata.
-- Local query worker adapter, app-level planner, relay NIP-50 merge, Leptos
-  Search parity, and no-import proof remain open.
+- App-level planner, relay NIP-50 merge, Leptos Search parity, and no-import
+  proof remain open.
 
 ## Current Next Edit
 
 1. Keep shipped TypeScript Search paths active.
-2. Add the local Search query worker adapter after storage token rows stabilize.
-3. Keep relay NIP-50 merge decisions in app and relay runtime code.
+2. Keep relay NIP-50 merge decisions in app and relay runtime code.
+3. Keep shipped TypeScript Search paths until Rust indexed rows have no-import
+   proof.
 
 ## Next Checklist
 
@@ -39,7 +40,8 @@ a later surface task.
   metadata, and update-event-index metadata.
 - [x] Run Rust storage search and command tests plus shipped TypeScript Search
   tests; record actual verification.
-- [ ] Add local query worker adapter tests and product planner tests.
+- [x] Add local query worker adapter compile proof.
+- [ ] Add product planner, NIP-50 merge, and UI parity tests.
 
 ## Target Behavior
 

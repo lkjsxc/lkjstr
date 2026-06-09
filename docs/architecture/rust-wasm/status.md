@@ -79,9 +79,9 @@ This file is the concise status map for the active Rust/WASM migration.
   command metadata shape now supports batch-shaped specs for active selector and
   pressure commands. Current storage work has Rust retention planning, command
   metadata, delete dispatch through `lkjstr-web` worker batches, Search token
-  rows, and Search command metadata. Repair physical probes, local Search query
-  adapters, full pressure byte inventory diagnostics, CSS side effects, and
-  cache-budget enforcement remain open.
+  rows, Search command metadata, and local indexed query adapters. Repair
+  physical probes, full pressure byte inventory diagnostics, CSS side effects,
+  and cache-budget enforcement remain open.
 - Followees and User Timeline now have Rust target follow-graph reducers, a
   WASM parser bridge, a fixed lkjsxc catalog constant, follow-count state,
   author chunking contracts, cache-display policy reducers, a Rust User Timeline
@@ -91,7 +91,7 @@ This file is the concise status map for the active Rust/WASM migration.
 - Feed windows own Rust top-anchor live-insert policy tests, and the shipped
   Svelte feed list consumes equivalent top-locked anchor behavior.
 - Search now has a shipped SQLite token-index path in TypeScript storage glue
-  and Rust storage token rows plus command metadata. Local query adapters, app
+  and Rust storage token rows, command metadata, and local query adapters. App
   planner, relay NIP-50 merge, and Leptos surface parity remain active.
 - Hydration scheduling owns a Rust semantic-key priority reducer for visible,
   near-visible, hidden-paused, stale-generation, and deduped work. Product
@@ -108,10 +108,10 @@ This file is the concise status map for the active Rust/WASM migration.
   integration, relay optimizer measurement, and Stats projection.
 - Relay adapter product wiring from pure reducers to browser WebSocket and timer
   handles.
-- Feed-runtime SQLite wiring, repair physical probes, local Search query
-  adapters, and pressure plus byte inventory diagnostics. Retention delete
-  dispatch, basic repair worker adapters, and Search token/tag metadata are
-  wired at the Rust boundary, but product consumption remains open.
+- Feed-runtime SQLite wiring, repair physical probes, pressure plus byte
+  inventory diagnostics, Search app planning, and NIP-50 merge. Retention
+  delete dispatch, basic repair worker adapters, and Search token/tag/query
+  adapters are wired at the Rust boundary, but product consumption remains open.
 - Product feed runtime wiring for Home, Global, Profile, Thread, Notifications,
   Search, Custom Request, and Author Context. Pure query inputs and feed-window
   reducers exist; shipped surfaces still use TypeScript.
@@ -161,8 +161,8 @@ replaced TypeScript or Svelte paths, focused gate, and final gate.
   pressure, and inventory worker calls now have command specs. Optimizer
   metadata, retention planner metadata, retention delete dispatch,
   storage-owned repair command models plus basic worker adapters, and Search
-  token/tag metadata are implemented; repair physical probes, local Search
-  query adapters, full product cache proof, and surface consumption remain open.
+  token/tag/query metadata are implemented; repair physical probes, full product
+  cache proof, Search app planning, NIP-50 merge, and surface consumption remain open.
 - Focused gate: `cargo test -p lkjstr-storage` and `pnpm rust-wasm:quiet`.
 - Final gate: Docker Compose config, image builds, and service runs from
   [../../operations/verification.md](../../operations/verification.md).

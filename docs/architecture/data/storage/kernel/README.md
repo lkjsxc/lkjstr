@@ -20,6 +20,7 @@ failure-recovery behavior.
 - [commands/protected.md](commands/protected.md): protected data command specs.
 - [commands/repair.md](commands/repair.md): repair command specs.
 - [commands/retention.md](commands/retention.md): retention command specs.
+- [commands/search.md](commands/search.md): Search token and tag command specs.
 - [failure-recovery.md](failure-recovery.md): degraded startup and session fallback.
 - [local-secrets.md](local-secrets.md): local signing secret boundary.
 

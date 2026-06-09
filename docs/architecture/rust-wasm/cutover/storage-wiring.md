@@ -55,9 +55,10 @@ selector, pressure, protected rows, event cache, feed evidence, diagnostics,
 notifications, jobs, app log, and inventory snapshot now use the batch-capable
 metadata shape. Optimizer scan-model command metadata is implemented;
 retention planner, command metadata, and delete dispatch adapter are
-implemented. Search token rows, tag lookup metadata, and event-write token
-batch steps are implemented. Retention product consumption, repair physical
-probes, local Search query adapters, and surface parity remain open.
+implemented. Search token rows, tag lookup metadata, event-write token batch
+steps, and local indexed query adapters are implemented. Retention product
+consumption, repair physical probes, Search app planning, NIP-50 merge, and
+surface parity remain open.
 
 ## Storage Family Matrix
 
@@ -74,7 +75,7 @@ probes, local Search query adapters, and surface parity remain open.
 | Route blocks                                        | `repositories/route-blocks-store.ts`, `sqlite-opfs/relay-cache-sqlite.ts`                                | `lkjstr-storage/src/route_blocks.rs`, `sqlite_store/relay_routes.rs`                                                   | `query`, `batch` | `diagnostics_sqlite_rows_test.rs`                   | Relay routing ignores blocked routes through Rust planners only.                              |
 | Cached events, tags, graph, provenance              | `repositories/events-store.ts`, `sqlite-opfs/events-sqlite.ts`                                           | `lkjstr-storage/src/events.rs`, `sqlite_store/events.rs`                                                               | `query`, `batch` | `event_cache_sqlite_rows_test.rs`                   | Rust validates, writes, queries, prunes, and proves cache-hit rows for feeds.                 |
 | Feed cursors, pages, coverage                       | `repositories/feed-coverage-store.ts`, `sqlite-opfs/feed-cache-sqlite.ts`                                | `lkjstr-storage/src/feed_cache.rs`, `sqlite_store/feed_cache.rs`                                                       | `query`, `batch` | `feed_cache_sqlite_rows_test.rs`                    | Rust feed runtime accepts only complete coverage proof before empty or cache-hit states.      |
-| Tag lookup and local filter search                  | `event-matching-store.ts`, `search-index-store.ts`, `event-matching-sqlite.ts`, `search-index-sqlite.ts` | `lkjstr-storage/src/search.rs`, `commands/search.rs`, `sql/search.rs`; event writes use `sqlite_store/search.rs` token batches | `query`, `batch` | `search_test.rs`, `commands_search_test.rs`, `sql_schema_test.rs` | Local query adapter, app planner, NIP-50 merge, Leptos parity, and no-import proof.           |
+| Tag lookup and local filter search                  | `event-matching-store.ts`, `search-index-store.ts`, `event-matching-sqlite.ts`, `search-index-sqlite.ts` | `lkjstr-storage/src/search.rs`, `commands/search.rs`, `sql/search.rs`; `sqlite_store/search.rs` token batches and local query | `query`, `batch` | `search_test.rs`, `commands_search_test.rs`, `sql_schema_test.rs` | App planner, NIP-50 merge, Leptos parity, and no-import proof.                                |
 | Relay diagnostics, info, suggestions, author routes | `relay-*-store.ts`, `sqlite-opfs/relay-cache-sqlite.ts`                                                  | `lkjstr-storage/src/diagnostics.rs`, `sqlite_store/relay_*`                                                            | `query`, `batch` | `diagnostics_sqlite_rows_test.rs`                   | Relay Settings and Stats use Rust rows, route evidence, and import-only suggestions.          |
 | Notifications                                       | `repositories/notifications-store.ts`, `sqlite-opfs/notifications-sqlite.ts`                             | `lkjstr-storage/src/notifications.rs`, `sqlite_store/notifications.rs`                                                 | `query`, `batch` | `notifications_sqlite_rows_test.rs`                 | Rust Notifications runtime owns rows, references, and bounded paging.                         |
 | App log                                             | `src/lib/log/**`, `sqlite-opfs/app-log-repository.ts`                                                    | `lkjstr-storage/src/app_log.rs`, `sqlite_store/app_log.rs`                                                             | `query`, `batch` | `diagnostics_sqlite_rows_test.rs`                   | Rust Log owns capture, redaction, display, refresh, clear, and bounds.                        |

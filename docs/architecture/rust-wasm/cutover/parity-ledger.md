@@ -22,7 +22,7 @@ before the SvelteKit product runtime can be removed.
 | User Timeline   | partial         | `protocol`, `app`, `web`, `relays`, `ui` target timeline path | Leptos feed surface, route discovery states, follow graph reads, degraded mode, retry diagnostics |
 | Thread          | not implemented | `app`, `relays`, `storage`, `ui` thread runtime               | root lookup, reply pages, references, exact reads                                                 |
 | Notifications   | not implemented | `app`, `relays`, `storage`, `ui` notification runtime         | mentions, reactions, reposts, zaps, older windows                                                 |
-| Search          | not implemented | `app`, `relays`, `storage`, `ui` search runtime               | local query adapter, app planner, NIP-50 routing, cancellation, Leptos parity                      |
+| Search          | not implemented | `app`, `relays`, `storage`, `ui` search runtime               | app planner, NIP-50 routing, cancellation, Leptos parity                                           |
 | Custom Request  | not implemented | `app`, `protocol`, `relays`, `ui` request runtime             | raw filter parse, validation, selected relay routing                                              |
 | Public Chat     | partial         | `protocol`, `domain`, `app`, `relays`, `storage`, `ui`, `web` | NIP-28 parsing, channel reads, publish, partial failure, cleanup                                  |
 | Author Context  | not implemented | `app`, `relays`, `storage`, `ui` context runtime              | nearby author posts, exact reads, unavailable states                                              |
@@ -48,7 +48,7 @@ before the SvelteKit product runtime can be removed.
 | User Timeline   | User Timeline, follow graph, degraded mode, and route diagnostics tests                |
 | Thread          | Thread exact-read, reference hydration, and shared event display tests                 |
 | Notifications   | Notification filters, paging, windows, reference, and shared feed tests                |
-| Search          | local query adapter, app planner, NIP-50, cancellation, and no full-scan tests         |
+| Search          | app planner, NIP-50, cancellation, and no full-scan tests                              |
 | Custom Request  | Raw filter parse, clamp, selected relay, partial response, and cancel tests            |
 | Public Chat     | NIP-28 reducer, relay routing, publish, moderation, partial failure, and cleanup tests |
 | Author Context  | Nearby author posts, exact reads, unavailable states, and relay diagnostics tests      |

@@ -76,6 +76,32 @@ pub fn search_candidate_row_limit(limit: u64) -> u64 {
     limit.max(limit.saturating_mul(5).min(500))
 }
 
+#[must_use]
+pub fn local_search_event_ids(
+    row_groups: &[Vec<SqliteEventSearchTokenRow>],
+    limit: u64,
+) -> Vec<String> {
+    if row_groups.is_empty() || limit == 0 {
+        return Vec::new();
+    }
+    let mut ids = Vec::new();
+    for row in &row_groups[0] {
+        if ids.iter().any(|id| id == &row.event_id) {
+            continue;
+        }
+        if row_groups[1..]
+            .iter()
+            .all(|group| has_event(group, &row.event_id))
+        {
+            ids.push(row.event_id.clone());
+        }
+        if ids.len() as u64 == limit {
+            break;
+        }
+    }
+    ids
+}
+
 fn push_token_char(current: &mut String, ch: char) {
     if current.len() < SEARCH_MAX_TOKEN_LENGTH {
         current.push(ch);
@@ -99,6 +125,10 @@ fn can_join(current: &str, next: Option<char>) -> bool {
     !current.is_empty()
         && !matches!(current.chars().last(), Some('-' | '_'))
         && next.is_some_and(char::is_alphanumeric)
+}
+
+fn has_event(rows: &[SqliteEventSearchTokenRow], event_id: &str) -> bool {
+    rows.iter().any(|row| row.event_id == event_id)
 }
 
 const fn is_joiner(ch: char) -> bool {

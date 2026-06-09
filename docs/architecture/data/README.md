@@ -84,6 +84,7 @@ read the current live storage state in [storage/README.md](storage/README.md).
 - [storage/kernel/commands/protected.md](storage/kernel/commands/protected.md): protected commands.
 - [storage/kernel/commands/repair.md](storage/kernel/commands/repair.md): repair commands.
 - [storage/kernel/commands/retention.md](storage/kernel/commands/retention.md): retention commands.
+- [storage/kernel/commands/search.md](storage/kernel/commands/search.md): Search token and tag commands.
 - [storage/kernel/failure-recovery.md](storage/kernel/failure-recovery.md):
   degraded startup and session fallback.
 - [storage/kernel/local-secrets.md](storage/kernel/local-secrets.md): local

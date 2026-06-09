@@ -72,8 +72,8 @@ state, storage, relay orchestration, cleanup, and Rust/WASM migration.
 `data/storage/diagnostics/stats.md` `data/storage/diagnostics/verification.md` `data/storage/kernel/README.md`
 `data/storage/kernel/commands/README.md` `data/storage/kernel/commands/diagnostics.md` `data/storage/kernel/commands/event-cache.md`
 `data/storage/kernel/commands/feed-evidence.md` `data/storage/kernel/commands/protected.md` `data/storage/kernel/commands/repair.md`
-`data/storage/kernel/commands/retention.md` `data/storage/kernel/failure-recovery.md` `data/storage/kernel/local-secrets.md`
-`data/storage/kernel/manifest.md`
+`data/storage/kernel/commands/retention.md` `data/storage/kernel/commands/search.md`
+`data/storage/kernel/failure-recovery.md` `data/storage/kernel/local-secrets.md` `data/storage/kernel/manifest.md`
 `data/storage/kernel/operation-results.md` `data/storage/kernel/repositories.md` `data/storage/kernel/schema-steps.md`
 `data/storage/kernel/transactions.md` `data/storage/retention/README.md` `data/storage/retention/byte-accounting.md`
 `data/storage/retention/deletion.md` `data/storage/retention/dynamic-protection.md` `data/storage/retention/ledger.md`

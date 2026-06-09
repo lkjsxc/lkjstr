@@ -11,8 +11,8 @@ cutover rows and tests pass.
 The current storage slice preserves implemented active-account selector,
 pressure-row, protected, event-cache, feed-evidence, diagnostics,
 notifications, jobs, app-log, inventory, optimizer, retention planning,
-retention delete dispatch, and batch-capable command-shape contracts. Repair,
-local Search query adapters, full physical pressure inventory, and retention
+retention delete dispatch, local Search query adapters, and batch-capable
+command-shape contracts. Repair, full physical pressure inventory, and retention
 product consumption remain open. It must not delete TypeScript storage repositories
 until Rust covers every live table family and no-import proof is recorded.
 
@@ -61,9 +61,8 @@ until Rust covers every live table family and no-import proof is recorded.
    provenance, feed coverage, feed cursors, cache ledger rows, diagnostics,
    optimizer rows, job rows, log rows, active-account selectors, and pressure
    snapshots.
-3. Preserve retention, repair, and Search command definitions, then add local
-   query adapters and inventory gaps with input type, output type, statement ids,
-   tables,
+3. Preserve retention, repair, and Search command definitions, then add repair
+   probes and inventory gaps with input type, output type, statement ids, tables,
    stable problem kinds, row codecs, data classes, ledger policy, protection
    policy, Stats projection, and real-shaped fixtures.
 4. Wire remaining `lkjstr-web` worker calls without adding main-thread SQLite or
@@ -89,8 +88,8 @@ pnpm rust-wasm:quiet
 
 - Active-account selector, pressure snapshot, and batch command-shape contracts
   remain preserved.
-- Repair, local Search query, and inventory worker gaps gain truthful command
-  specs while retention delete dispatch remains covered by Rust adapter tests.
+- Repair and inventory worker gaps gain truthful command specs while retention
+  delete dispatch and local Search query stay covered by Rust adapter tests.
 - Product modules call typed repositories only.
 - Main-thread product code does not open SQLite or OPFS directly.
 - Stats shows storage health, mode, and real pressure snapshot fields without

@@ -23,8 +23,7 @@ and pressure inventory.
 - Repair scan, backfill, and inventory report command metadata are implemented
   with conservative storage-owned models and basic `lkjstr-web` worker outcome
   adapters. Search token rows, tag lookup metadata, update-event-index metadata,
-  and local-query metadata are implemented; local-query adapter wiring remains
-  open.
+  local-query metadata, and local-query adapter wiring are implemented.
 - Event and feed writes use batch metadata because one command may touch
   resource rows, child rows, provenance rows, and `cache_ledger` rows.
 
@@ -34,8 +33,8 @@ and pressure inventory.
    manifest tables, codecs, problem kinds, ledger policy, protection policy,
    and Stats projection when any.
 2. Add repair physical target probes.
-3. Add the local Search query worker adapter after storage token rows are
-   stable.
+3. Keep app-level Search planning, NIP-50 merge, and UI parity out of storage
+   command metadata.
 
 ## Next Checklist
 

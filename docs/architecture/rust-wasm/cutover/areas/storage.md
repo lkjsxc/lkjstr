@@ -62,18 +62,18 @@ removed.
   Retention planner, command metadata, and delete dispatch adapter are
   implemented; product consumption remains open. Repair metadata, storage-owned
   models, worker health/outcome mapping, and ledger backfill batching are
-  implemented. Search token rows, tag lookup metadata, and event-write token
-  batches are implemented; physical repair probes, local Search query adapters,
-  full pressure byte inventory diagnostics, and feed consumption remain open.
+  implemented. Search token rows, tag lookup metadata, event-write token
+  batches, and local indexed query adapters are implemented; physical repair
+  probes, Search app planning, NIP-50 merge, full pressure byte inventory
+  diagnostics, and feed consumption remain open.
 - Command metadata status: active selector, pressure, protected rows, event
   cache, feed evidence, relay diagnostics, notifications, jobs, app log,
   inventory snapshot, optimizer scan-model rows, retention planner rows,
   retention delete dispatch rows, repair scan/backfill/report rows, and Search
-  token/tag rows are implemented. Search local query worker adapters and
-  product parity are not implemented.
-- Next task order: repair physical target probes, local Search query adapter,
-  pressure inventory completion, relay effect wiring, shared feed runtime, and
-  Home feed slice.
+  token/tag rows are implemented. Search app planning, NIP-50 merge, Leptos
+  parity, and deletion proof are not implemented.
+- Next task order: repair physical target probes, pressure inventory completion,
+  relay effect wiring, shared feed runtime, and Home feed slice.
 
 ## Acceptance Checklist
 
@@ -89,14 +89,15 @@ removed.
   jobs, app log, pressure, and inventory worker calls have Rust command
   metadata.
 - [x] Optimizer scan-model commands have Rust metadata and focused proof.
-- [ ] Repair probes and local Search query adapters have worker wiring and
-  focused proof.
+- [ ] Repair probes have worker wiring and focused proof.
 - [x] Repair scan, backfill, and inventory report commands have Rust metadata,
   stable labels, conservative models, and focused storage proof.
 - [x] Repair worker adapters propagate health/outcome states and batch only
   storage-approved ledger backfill rows.
 - [x] Search token rows, tag lookup metadata, event-write token batch steps, and
   indexed local-query command metadata have focused storage proof.
+- [x] Local Search query adapters use indexed token rows and focused web compile
+  proof.
 - [ ] Every command has input, output, statement ids when not inventory-only,
   stable problem kinds, ledger policy, protection policy, Stats projection, and
   fixture proof.

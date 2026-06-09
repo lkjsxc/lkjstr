@@ -125,7 +125,7 @@ Read next: [architecture/data/README.md](architecture/data/README.md),
   rows, cache/feed evidence, diagnostics, jobs, app log, inventory, optimizer,
   retention, repair scan/backfill/report rows, and Search token/tag rows.
   Retention, repair, and Search adapters are partial; product consumption,
-  repair probes, local Search query adapters, and parity remain open.
+  repair probes, Search app planning, NIP-50 merge, and parity remain open.
 - Rust storage outcomes expose stable problem-kind labels for OPFS failures,
   worker init, temporary memory fallback, repair, decode, active account
   selector, pressure snapshot decode, optimizer record decode, pressure stop

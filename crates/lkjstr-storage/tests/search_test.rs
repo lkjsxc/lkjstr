@@ -1,7 +1,8 @@
 use lkjstr_protocol::NostrEvent;
 use lkjstr_storage::{
-    SEARCH_MAX_EVENT_TOKENS, event_search_token_rows, search_candidate_row_limit,
-    tokenize_search_query, tokenize_search_text,
+    SEARCH_MAX_EVENT_TOKENS, SqliteEventSearchTokenRow, event_search_token_rows,
+    local_search_event_ids, search_candidate_row_limit, tokenize_search_query,
+    tokenize_search_text,
 };
 
 #[test]
@@ -39,6 +40,27 @@ fn search_candidate_limit_is_bounded_without_full_scan() {
     assert_eq!(tokenize_search_text("..hello--world__").len(), 2);
 }
 
+#[test]
+fn local_search_event_ids_intersect_token_rows() {
+    let groups = vec![
+        vec![
+            token_row("event-a"),
+            token_row("event-b"),
+            token_row("event-a"),
+        ],
+        vec![token_row("event-b"), token_row("event-a")],
+    ];
+
+    assert_eq!(
+        local_search_event_ids(&groups, 2),
+        vec!["event-a".to_owned(), "event-b".to_owned()]
+    );
+    assert_eq!(
+        local_search_event_ids(&groups, 1),
+        vec!["event-a".to_owned()]
+    );
+}
+
 fn event(content: &str) -> NostrEvent {
     NostrEvent {
         id: "1".repeat(64),
@@ -48,5 +70,16 @@ fn event(content: &str) -> NostrEvent {
         tags: Vec::new(),
         content: content.to_owned(),
         sig: "3".repeat(128),
+    }
+}
+
+fn token_row(event_id: &str) -> SqliteEventSearchTokenRow {
+    SqliteEventSearchTokenRow {
+        event_id: event_id.to_owned(),
+        token: "nostr".to_owned(),
+        position: 0,
+        created_at: 1,
+        kind: 1,
+        pubkey: "2".repeat(64),
     }
 }
