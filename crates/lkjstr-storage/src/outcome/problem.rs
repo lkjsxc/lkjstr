@@ -1,5 +1,3 @@
-#![doc = "Typed storage operation outcomes."]
-
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
 pub enum StorageOperation {
     Read,
@@ -53,6 +51,18 @@ pub enum StorageProblemKind {
     PressureStorageApiUnavailable,
     PressureCompactionError,
     PressureDeadline,
+    RepairSchemaMismatch,
+    RepairCorruptRow,
+    RepairDecodeFailure,
+    RepairOrphanLedgerRow,
+    RepairOrphanResourceRow,
+    RepairIncompleteInventory,
+    RepairTemporaryMemoryMode,
+    RepairUnknownUnownedRow,
+    RepairSkippedUnknownRow,
+    RepairBackfillPlanned,
+    RepairBackfillApplied,
+    RepairChunkContinuation,
 }
 
 impl StorageProblemKind {
@@ -86,6 +96,18 @@ impl StorageProblemKind {
             Self::PressureStorageApiUnavailable => "pressure-storage-api-unavailable",
             Self::PressureCompactionError => "pressure-compaction-error",
             Self::PressureDeadline => "pressure-deadline",
+            Self::RepairSchemaMismatch => "repair-schema-mismatch",
+            Self::RepairCorruptRow => "repair-corrupt-row",
+            Self::RepairDecodeFailure => "repair-decode-failure",
+            Self::RepairOrphanLedgerRow => "repair-orphan-ledger-row",
+            Self::RepairOrphanResourceRow => "repair-orphan-resource-row",
+            Self::RepairIncompleteInventory => "repair-incomplete-inventory",
+            Self::RepairTemporaryMemoryMode => "repair-temporary-memory-mode",
+            Self::RepairUnknownUnownedRow => "repair-unknown-unowned-row",
+            Self::RepairSkippedUnknownRow => "repair-skipped-unknown-row",
+            Self::RepairBackfillPlanned => "repair-backfill-planned",
+            Self::RepairBackfillApplied => "repair-backfill-applied",
+            Self::RepairChunkContinuation => "repair-chunk-continuation",
         }
     }
 }
@@ -122,57 +144,5 @@ impl StorageProblem {
         operation_id: impl Into<String>,
     ) -> Self {
         Self::new(operation, table, kind.as_str(), operation_id)
-    }
-}
-
-#[derive(Clone, Debug, Eq, PartialEq)]
-pub enum StorageOutcome<T> {
-    Ok(T),
-    Unavailable(StorageProblem),
-    Timeout(StorageProblem),
-    Busy(StorageProblem),
-    Blocked(StorageProblem),
-    Quota(StorageProblem),
-    Corrupt(StorageProblem),
-    Canceled(StorageProblem),
-    LateSettled(StorageProblem),
-    LateRejected(StorageProblem),
-}
-
-impl<T> StorageOutcome<T> {
-    #[must_use]
-    pub const fn is_ok(&self) -> bool {
-        matches!(self, Self::Ok(_))
-    }
-
-    #[must_use]
-    pub const fn problem(&self) -> Option<&StorageProblem> {
-        match self {
-            Self::Ok(_) => None,
-            Self::Unavailable(problem)
-            | Self::Timeout(problem)
-            | Self::Busy(problem)
-            | Self::Blocked(problem)
-            | Self::Quota(problem)
-            | Self::Corrupt(problem)
-            | Self::Canceled(problem)
-            | Self::LateSettled(problem)
-            | Self::LateRejected(problem) => Some(problem),
-        }
-    }
-
-    pub fn map<U>(self, value: impl FnOnce(T) -> U) -> StorageOutcome<U> {
-        match self {
-            Self::Ok(inner) => StorageOutcome::Ok(value(inner)),
-            Self::Unavailable(problem) => StorageOutcome::Unavailable(problem),
-            Self::Timeout(problem) => StorageOutcome::Timeout(problem),
-            Self::Busy(problem) => StorageOutcome::Busy(problem),
-            Self::Blocked(problem) => StorageOutcome::Blocked(problem),
-            Self::Quota(problem) => StorageOutcome::Quota(problem),
-            Self::Corrupt(problem) => StorageOutcome::Corrupt(problem),
-            Self::Canceled(problem) => StorageOutcome::Canceled(problem),
-            Self::LateSettled(problem) => StorageOutcome::LateSettled(problem),
-            Self::LateRejected(problem) => StorageOutcome::LateRejected(problem),
-        }
     }
 }

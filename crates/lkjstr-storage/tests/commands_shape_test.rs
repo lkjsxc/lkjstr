@@ -82,7 +82,11 @@ fn commands_have_specific_codecs_and_problem_kinds() -> Result<(), String> {
 fn commands_declare_ledger_protection_and_stats_policies() -> Result<(), String> {
     for command in storage_repository_commands() {
         if command.statements.contains(&"cache_ledger.upsert")
-            && command.ledger_policy != StorageLedgerPolicy::ResourceAndLedgerSameBatch
+            && !matches!(
+                command.ledger_policy,
+                StorageLedgerPolicy::ResourceAndLedgerSameBatch
+                    | StorageLedgerPolicy::RepairsLedger
+            )
         {
             return Err(format!("{} does not declare same-batch ledger", command.id));
         }

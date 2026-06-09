@@ -106,9 +106,10 @@ This file is the concise status map for the active Rust/WASM migration.
   integration, relay optimizer measurement, and Stats projection.
 - Relay adapter product wiring from pure reducers to browser WebSocket and timer
   handles.
-- Feed-runtime SQLite wiring, repair paths, search/tag command metadata, and
-  pressure plus byte inventory diagnostics. Retention delete dispatch is wired
-  at the Rust adapter boundary, but product consumption remains open.
+- Feed-runtime SQLite wiring, repair worker paths, search/tag command metadata,
+  and pressure plus byte inventory diagnostics. Retention delete dispatch is
+  wired at the Rust adapter boundary, and repair has storage-owned command
+  models, but product consumption remains open.
 - Product feed runtime wiring for Home, Global, Profile, Thread, Notifications,
   Search, Custom Request, and Author Context. Pure query inputs and feed-window
   reducers exist; shipped surfaces still use TypeScript.
@@ -156,9 +157,10 @@ replaced TypeScript or Svelte paths, focused gate, and final gate.
   table arrays plus ledger, protection, and Stats policy enums. Live protected,
   event cache, feed evidence, relay diagnostics, notifications, jobs, app log,
   pressure, and inventory worker calls now have command specs. Optimizer
-  metadata, retention planner metadata, and retention delete dispatch are
-  implemented; repair, search/tag lookup, full product cache proof, and surface
-  consumption remain open.
+  metadata, retention planner metadata, retention delete dispatch, and
+  storage-owned repair command models are implemented; repair worker adapters,
+  search/tag lookup, full product cache proof, and surface consumption remain
+  open.
 - Focused gate: `cargo test -p lkjstr-storage` and `pnpm rust-wasm:quiet`.
 - Final gate: Docker Compose config, image builds, and service runs from
   [../../operations/verification.md](../../operations/verification.md).

@@ -113,8 +113,8 @@ Read next: [architecture/data/README.md](architecture/data/README.md),
   active account selectors, pressure snapshots, and durable lkjstr Log rows. The
   Rust IndexedDB adapter remains for host-boundary tests and narrow WASM exports.
 - Physical inventory, cache tool summaries, retention target checks, and
-  protection snapshots use SQLite paths. Repair reporting is the next Rust
-  storage slice. Old IndexedDB diagnostics are presence-only.
+  protection snapshots use SQLite paths. Repair has a storage-owned command
+  model; its worker adapter is next. Old IndexedDB diagnostics are presence-only.
 - Storage inventory is SQLite-first. It reads SQLite table counts, cache ledger
   summaries, browser quota estimates, localStorage, Cache Storage, and old
   IndexedDB database presence diagnostics without scanning every old row.
@@ -122,10 +122,10 @@ Read next: [architecture/data/README.md](architecture/data/README.md),
   short-lived only; after a bounded deadline Stats shows available, temporary
   memory, unavailable, timeout, blocked, corrupt, or unknown-old-storage.
 - Rust storage command metadata covers active selectors, pressure, protected
-  rows, event cache, feed evidence, diagnostics, notifications, jobs, app log,
-  inventory, optimizer, retention planner, and retention delete dispatch rows.
-  Retention delete dispatch is wired through `lkjstr-web` worker batches.
-  Retention product consumption, repair, and search/tag lookup remain open.
+  rows, cache/feed evidence, diagnostics, jobs, app log, inventory, optimizer,
+  retention, and repair scan/backfill/report rows. Retention dispatch is wired
+  through `lkjstr-web`; product consumption, repair dispatch, and search/tag
+  lookup remain open.
 - Rust storage outcomes expose stable problem-kind labels for OPFS failures,
   worker init, temporary memory fallback, repair, decode, active account
   selector, pressure snapshot decode, optimizer record decode, pressure stop

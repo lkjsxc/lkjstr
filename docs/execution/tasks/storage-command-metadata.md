@@ -20,7 +20,9 @@ and pressure inventory.
   optimizer scan-model rows have typed specs.
 - Retention planner and delete-dispatch metadata are implemented, and
   `lkjstr-web` binds delete-dispatch statement plans to one worker batch.
-- Repair and search/tag lookup command coverage are not implemented.
+- Repair scan, backfill, and inventory report command metadata are implemented
+  with conservative storage-owned models. Repair worker adapters and
+  search/tag lookup command coverage are not implemented.
 - Event and feed writes use batch metadata because one command may touch
   resource rows, child rows, provenance rows, and `cache_ledger` rows.
 
@@ -31,7 +33,7 @@ and pressure inventory.
 2. Preserve `retention.plan` and `retention.delete-dispatch` specs with real
    statement ids, manifest tables, codecs, problem kinds, ledger policy,
    protection policy, and Stats projection.
-3. Implement conservative repair commands next.
+3. Bind repair commands through `lkjstr-web` worker adapters next.
 
 ## Next Checklist
 
@@ -42,6 +44,8 @@ and pressure inventory.
   codecs, problem kinds, data classes, delete condition, and policies.
 - [x] Register retention specs in `storage_repository_commands()`.
 - [x] Add retention-focused command tests and docs-coverage assertions.
+- [x] Register repair scan, backfill, and inventory report specs with focused
+  storage command tests.
 - [ ] Run the storage command focused gate and update verification evidence with
   actual commands.
 

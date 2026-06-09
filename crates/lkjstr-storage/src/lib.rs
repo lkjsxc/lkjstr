@@ -18,6 +18,7 @@ pub mod optimizer;
 pub mod outcome;
 pub mod pressure;
 pub mod relay_sets;
+pub mod repair;
 pub mod resource;
 pub mod retention;
 pub mod route_blocks;
@@ -47,8 +48,10 @@ pub use app_log::{AppLogRecord, SqliteAppLogRow, redact_app_log_text};
 pub use commands::{
     ActiveAccountSelectorDeleteInput, ActiveAccountSelectorDeleteOutput,
     ActiveAccountSelectorGetInput, ActiveAccountSelectorGetOutput, ActiveAccountSelectorPutInput,
-    ActiveAccountSelectorPutOutput, RetentionDeleteDispatchInput, RetentionDeleteDispatchOutput,
-    RetentionPlanOutput, STORAGE_REPOSITORY_COMMANDS, StorageCommandFamily, StorageLedgerPolicy,
+    ActiveAccountSelectorPutOutput, RepairBackfillInput, RepairBackfillOutput,
+    RepairInventoryReportInput, RepairInventoryReportOutput, RepairScanInput, RepairScanOutput,
+    RetentionDeleteDispatchInput, RetentionDeleteDispatchOutput, RetentionPlanOutput,
+    STORAGE_REPOSITORY_COMMANDS, StorageCommandFamily, StorageLedgerPolicy,
     StoragePressureGetInput, StoragePressureGetOutput, StoragePressureProjectInput,
     StoragePressureProjectOutput, StoragePressurePutInput, StoragePressurePutOutput,
     StorageProtectionPolicy, StorageRepositoryCommandSpec, StorageStatsProjection,
@@ -126,6 +129,10 @@ pub use pressure::{
 pub use relay_sets::{
     RelaySetRecord, SqliteRelaySetRow, relay_set_from_sqlite_row, relay_set_record_id,
     relay_set_record_json_bytes, sqlite_relay_set_row,
+};
+pub use repair::{
+    RepairBackfillPlan, RepairFinding, RepairFindingKind, RepairScanRow, RepairTargetState,
+    plan_repair_backfill, report_repair_inventory, scan_repair,
 };
 pub use resource::{CacheOwnerKind, CacheResourceKind};
 pub use retention::{

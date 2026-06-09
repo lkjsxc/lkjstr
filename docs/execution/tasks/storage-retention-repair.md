@@ -8,7 +8,9 @@ prunable rows and reports exact reasons, counts, and repair findings.
 ## Status
 
 Active. Retention delete dispatch has Rust statement planning, worker-adapter
-binding, and batch outcome mapping. Repair is the next source slice.
+binding, and batch outcome mapping. Repair now has conservative storage-owned
+scan, backfill, inventory report models, stable labels, command metadata, and
+focused storage tests. The repair worker adapter is the next source slice.
 
 ## Current Evidence
 
@@ -17,10 +19,13 @@ binding, and batch outcome mapping. Repair is the next source slice.
   and retention command metadata.
 - `lkjstr-web` owns retention statement-id planning and binds those statements
   to one SQLite worker batch for delete dispatch.
+- `lkjstr-storage` owns repair finding labels, chunked scan records,
+  conservative backfill reporting, inventory report records, and repair command
+  metadata.
 - TypeScript cache cleanup and compaction paths still own many shipped product
   maintenance actions until Rust product consumption is wired.
 - Stats can project real pressure snapshot rows when they exist, but full byte
-  inventory diagnostics and repair dispatch remain open.
+  inventory diagnostics and repair worker dispatch remain open.
 
 ## Current Next Edit
 
@@ -28,8 +33,8 @@ binding, and batch outcome mapping. Repair is the next source slice.
    `lkjstr-web`; do not move storage policy into the host adapter.
 2. Retain shipped TypeScript cache maintenance until Rust product wiring,
    focused tests, and no-import proof exist.
-3. Implement repair scan and backfill only after retention delete semantics are
-   proved.
+3. Bind repair scan, backfill, and inventory reports through `lkjstr-web`
+   worker adapters without moving safety policy into the host layer.
 
 ## Next Checklist
 
@@ -44,7 +49,7 @@ binding, and batch outcome mapping. Repair is the next source slice.
   matrix and delete each resource row with its `cache_ledger` row in one batch.
 - [x] Prove protected, dynamic-protected, unknown, unsupported, raw-SQL, and
   batch-failure mapping states at the Rust adapter boundary.
-- [ ] Add conservative repair target states and chunked scan outputs only after
+- [x] Add conservative repair target states and chunked scan outputs only after
   retention dispatch passes.
 - [ ] Run retention, repair, cache-ledger, cache unit, and Rust/WASM gates; then
   record actual verification.
@@ -56,7 +61,7 @@ pinned rows, dispatches table-specific deletes through `lkjstr-web`, and reports
 candidate count, deleted count, skipped protected count, dynamic-protected skip
 count, target bytes, deleted or estimated bytes, and exact stop reason. Repair
 reports schema mismatch, corrupt rows, decode failures, incomplete inventory,
-temporary memory fallback, orphan rows, skipped unknown rows, chunk continuation,
+temporary memory mode, orphan rows, skipped unknown rows, chunk continuation,
 and backfill results without silently marking unknown rows safe.
 
 ## Docs To Update First
@@ -79,7 +84,9 @@ and backfill results without silently marking unknown rows safe.
 - `crates/lkjstr-web/src/sqlite_store/retention.rs` for worker batch binding.
 - `crates/lkjstr-web/src/sqlite_store/mod.rs` to export the adapter.
 - `crates/lkjstr-web/src/sqlite_store/cache_ledger.rs` for shared ledger steps.
-- `crates/lkjstr-storage/src/repair/**` after retention dispatch is proved.
+- `crates/lkjstr-storage/src/repair/**` for the implemented storage-owned
+  model.
+- `crates/lkjstr-web/src/sqlite_store/repair.rs` for the next worker adapter.
 
 ## Temporary TypeScript Or Svelte Files To Keep
 

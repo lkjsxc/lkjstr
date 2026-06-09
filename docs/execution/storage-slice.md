@@ -22,7 +22,8 @@ until Rust covers every live table family and no-import proof is recorded.
   product storage plus partial Rust storage worker adapters.
 - Desired Rust owner: `lkjstr-storage` for policy and rows, `lkjstr-web` for
   worker calls, `lkjstr-app` for product use, and `lkjstr-ui` for Stats views.
-- Next source edit: repair command models and worker adapters.
+- Next source edit: repair worker adapters after the storage-owned repair
+  command model.
 - Focused tests: storage command tests, retention tests, web retention tests,
   cache unit tests, and `pnpm rust-wasm:quiet`.
 - Ledgers: storage cutover area, implementation ledger rows that gain behavior,
@@ -60,7 +61,7 @@ until Rust covers every live table family and no-import proof is recorded.
    provenance, feed coverage, feed cursors, cache ledger rows, diagnostics,
    optimizer rows, job rows, log rows, active-account selectors, and pressure
    snapshots.
-3. Preserve retention command definitions and add repair, search/tag lookup,
+3. Preserve retention and repair command definitions, then add search/tag lookup
    and inventory gaps with input type, output type, statement ids, tables,
    stable problem kinds, row codecs, data classes, ledger policy, protection
    policy, Stats projection, and real-shaped fixtures.

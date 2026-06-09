@@ -10,6 +10,7 @@ pub mod jobs;
 pub mod optimizer;
 pub mod pressure;
 pub mod protected;
+pub mod repair;
 pub mod retention;
 pub mod spec;
 
@@ -21,6 +22,10 @@ pub use active_account::{
 pub use pressure::{
     StoragePressureGetInput, StoragePressureGetOutput, StoragePressureProjectInput,
     StoragePressureProjectOutput, StoragePressurePutInput, StoragePressurePutOutput,
+};
+pub use repair::{
+    RepairBackfillInput, RepairBackfillOutput, RepairInventoryReportInput,
+    RepairInventoryReportOutput, RepairScanInput, RepairScanOutput,
 };
 pub use retention::{
     RetentionDeleteDispatchInput, RetentionDeleteDispatchOutput, RetentionPlanOutput,
@@ -100,6 +105,9 @@ pub const STORAGE_REPOSITORY_COMMANDS: &[StorageRepositoryCommandSpec] = &[
     optimizer::FEED_SCAN_DECISION_TRACE_INSERT_COMMAND,
     retention::RETENTION_PLAN_COMMAND,
     retention::RETENTION_DELETE_DISPATCH_COMMAND,
+    repair::REPAIR_SCAN_LEDGER_COMMAND,
+    repair::REPAIR_BACKFILL_LEDGER_COMMAND,
+    repair::REPAIR_REPORT_INVENTORY_COMMAND,
     app_log::APP_LOG_INSERT_COMMAND,
     app_log::APP_LOG_RECENT_COMMAND,
     app_log::APP_LOG_CLEAR_BEFORE_COMMAND,
