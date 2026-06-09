@@ -25,6 +25,9 @@ Accounts represent public identities and signing capability.
   enable/disable control; disabling is treated as account retirement and is not
   exposed.
 - Stored account records with unsupported signer types are ignored during reads.
+- The Rust Accounts active selector is protected settings-backed state. The old
+  `lkjstr.activeAccountId` localStorage key is a migration source only in the
+  Rust host and is removed after a successful SQLite selector write.
 - Removing the active account selects the newest remaining account or clears
   active state when none remain.
 - Accounts supports one inline input for `npub`, hex pubkey, or `nsec`.
@@ -54,6 +57,6 @@ Accounts represent public identities and signing capability.
   `nsec` fill, active selection, disconnect, and explicit local secret reveal.
 - Rust Accounts connects NIP-07 by calling the browser `window.nostr`
   `getPublicKey` method, validates the returned public key, stores a signing
-  account, and makes it active.
+  account, and makes it active through the SQLite selector row.
 - Rust Accounts and the TypeScript surface intentionally do not expose browser
   storage prompt controls.

@@ -7,8 +7,13 @@ Source files expose Rust application behavior to the browser through
 
 ## Table of Contents
 
-- `accounts_active.rs`: local-storage active account helper.
+- `accounts_active.rs`: migration-only old active account localStorage helper.
 - `accounts_host.rs`: SQLite-backed Accounts command provider.
+- `accounts_nip07_host.rs`: NIP-07 account lookup helper for Accounts.
+- `accounts_reveal_host.rs`: local secret reveal helper for Accounts.
+- `accounts_selector_host.rs`: SQLite active-account selector resolution helper.
+- `accounts_selector_status.rs`: Accounts selector status text helpers.
+- `accounts_selector_store.rs`: SQLite active-account selector worker helpers.
 - `app_log_host.rs`: SQLite-backed lkjstr Log command provider.
 - `feed_geometry/`: feed geometry, fragment, measurement, and anchor bridge.
 - `follow_graph/`: target follow-list parser bridge.

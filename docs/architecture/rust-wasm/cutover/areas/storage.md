@@ -40,16 +40,19 @@ removed.
 - Current status: partial. Rust row codecs and many worker calls exist;
   active-account selector rows and pressure snapshot rows now have worker
   repository calls, typed command specs, and Rust Stats pressure projection
-  from real snapshot rows. Active selector product wiring, full pressure byte
-  inventory diagnostics, retention dispatch, repair, and feed-runtime
-  consumption remain open.
+  from real snapshot rows. Rust Accounts product wiring now resolves active
+  selectors through the SQLite worker and treats the old localStorage key as a
+  migration source only. Full pressure byte inventory diagnostics, retention
+  dispatch, repair, and feed-runtime consumption remain open.
 - Next task: expose feed repository commands through the Rust worker adapter and
-  wire active selector rows into product view models.
+  expand storage command metadata for remaining live table families.
 
 ## Acceptance Checklist
 
 - [x] Active-account selector rows and pressure snapshot rows have Rust codecs
   and typed worker calls.
+- [x] Rust Accounts uses SQLite active selector rows with localStorage as a
+  migration-only source.
 - [x] Active-account selector and pressure snapshot commands have typed specs,
   stable problem kinds, row-codec links, and Stats projection metadata.
 - [ ] Every touched table has a Rust row codec and typed command.

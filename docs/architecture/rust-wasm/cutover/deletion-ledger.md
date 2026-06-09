@@ -56,45 +56,46 @@ first-party product modules.
 
 ## Replacement Source Map
 
-Each blocked row needs a concrete Rust path, focused test, and no-import proof
-before removal.
+Each blocked row needs a concrete Rust path, focused test, deletion status, and
+no-import proof before removal. Proof commands avoid shell alternation so table
+columns stay stable.
 
-| Module group             | Rust replacement path                                                                            | No-import proof shape     |
-| ------------------------ | ------------------------------------------------------------------------------------------------ | ------------------------- | ------------------------------------------------------------ | -------------------------------------- |
-| `src/lib/accounts`       | `crates/lkjstr-domain`, `lkjstr-storage/src/accounts.rs`, `lkjstr-ui/src/workspace/accounts*.rs` | `rg "\\$lib/accounts      | src/lib/accounts                                             | tabs/accounts" src tests scripts`      |
-| `src/lib/app`            | `crates/lkjstr-app`, `crates/lkjstr-ui/src/app.rs`, `crates/lkjstr-web`                          | `rg "src/lib/app          | \\$lib/app" src tests scripts`                               |
-| `src/lib/author-context` | `lkjstr-app` Author Context inputs and new `lkjstr-ui` surface                                   | `rg "author-context       | author_context" src tests scripts`                           |
-| `src/lib/backend`        | `lkjstr-app` orchestration and feed runtime                                                      | `rg "\\$lib/backend       | src/lib/backend" src tests scripts`                          |
-| `src/lib/cache`          | `lkjstr-storage` ledger and Rust retention modules                                               | `rg "\\$lib/cache         | src/lib/cache" src tests scripts`                            |
-| `src/lib/components`     | Shared `lkjstr-ui` Leptos components                                                             | `rg "\\$lib/components    | src/lib/components" src tests scripts`                       |
-| `src/lib/custom-request` | `lkjstr-app/src/custom_request/**` and new Leptos surface                                        | `rg "custom-request       | custom_request" src tests scripts`                           |
-| `src/lib/emoji`          | `lkjstr-protocol` emoji helpers and Leptos renderer                                              | `rg "\\$lib/emoji         | src/lib/emoji" src tests scripts`                            |
-| `src/lib/events`         | `lkjstr-storage/src/events.rs`, `lkjstr-app/src/events/**`, Leptos event rows                    | `rg "\\$lib/events        | src/lib/events" src tests scripts`                           |
-| `src/lib/feed-surface`   | `lkjstr-app` feed geometry, fragments, LOD, and Leptos feed rows                                 | `rg "feed-surface         | feed_surface" src tests scripts`                             |
-| `src/lib/follow-graph`   | `lkjstr-app/src/follow_graph/**` and Leptos Followees/User Timeline                              | `rg "follow-graph         | follow_graph" src tests scripts`                             |
-| `src/lib/fp`             | Rust reducers or local factories where still needed                                              | `rg "\\$lib/fp            | src/lib/fp" src tests scripts`                               |
-| `src/lib/identity`       | `lkjstr-app` identity view models and Leptos identity components                                 | `rg "\\$lib/identity      | src/lib/identity" src tests scripts`                         |
-| `src/lib/jobs`           | `lkjstr-storage/src/jobs.rs` and `lkjstr-app` job runtimes                                       | `rg "\\$lib/jobs          | src/lib/jobs" src tests scripts`                             |
-| `src/lib/log`            | `lkjstr-storage/src/app_log.rs` and `lkjstr-ui/src/workspace/log*.rs`                            | `rg "\\$lib/log           | src/lib/log" src tests scripts`                              |
-| `src/lib/media`          | `lkjstr-protocol` upload helpers, `lkjstr-web` upload host, Leptos upload UI                     | `rg "\\$lib/media         | src/lib/media" src tests scripts`                            |
-| `src/lib/memory`         | `lkjstr-app` and `lkjstr-storage` diagnostics view models                                        | `rg "\\$lib/memory        | src/lib/memory" src tests scripts`                           |
-| `src/lib/notifications`  | `lkjstr-app` notification runtime and Leptos surface                                             | `rg "\\$lib/notifications | src/lib/notifications                                        | tabs/notifications" src tests scripts` |
-| `src/lib/profile`        | `lkjstr-app` profile runtime and Leptos profile surface                                          | `rg "\\$lib/profile       | src/lib/profile" src tests scripts`                          |
-| `src/lib/public-chat`    | `lkjstr-app/src/public_chat/**` and `lkjstr-ui/src/workspace/public_chat.rs`                     | `rg "public-chat          | public_chat" src tests scripts`                              |
-| `src/lib/protocol`       | `lkjstr-protocol` plus WASM bridge exports                                                       | `rg "\\$lib/protocol      | src/lib/protocol" src tests scripts`                         |
-| `src/lib/query`          | `lkjstr-app/src/query/**` and feed input builders                                                | `rg "\\$lib/query         | src/lib/query" src tests scripts`                            |
-| `src/lib/relays`         | `lkjstr-relays` and `lkjstr-web/src/relay_host/**`                                               | `rg "\\$lib/relays        | src/lib/relays" src tests scripts`                           |
-| `src/lib/search`         | `lkjstr-app` search planner, `lkjstr-storage` search rows, Leptos search                         | `rg "\\$lib/search        | src/lib/search" src tests scripts`                           |
-| `src/lib/settings`       | `lkjstr-domain`, `lkjstr-storage/src/settings*.rs`, Leptos Settings                              | `rg "\\$lib/settings      | src/lib/settings" src tests scripts`                         |
-| `src/lib/storage`        | `lkjstr-storage`, `lkjstr-web/src/sqlite_store/**`, storage worker bridge                        | `rg "\\$lib/storage       | src/lib/storage" src tests scripts` after host-glue carveout |
-| `src/lib/tabs`           | `lkjstr-ui/src/workspace/**` tab surfaces                                                        | `rg "\\$lib/tabs          | src/lib/tabs" src tests scripts`                             |
-| `src/lib/telemetry`      | Rust diagnostics or explicit removal                                                             | `rg "\\$lib/telemetry     | src/lib/telemetry" src tests scripts`                        |
-| `src/lib/thread`         | `lkjstr-app` thread runtime and Leptos Thread                                                    | `rg "\\$lib/thread        | src/lib/thread" src tests scripts`                           |
-| `src/lib/timeline`       | `lkjstr-app` shared feed runtime and Leptos Home/Global                                          | `rg "\\$lib/timeline      | src/lib/timeline" src tests scripts`                         |
-| `src/lib/tweet`          | `lkjstr-app` publish jobs and Leptos Tweet                                                       | `rg "\\$lib/tweet         | src/lib/tweet" src tests scripts`                            |
-| `src/lib/user-timeline`  | `lkjstr-app/src/user_timeline/**` and Leptos User Timeline                                       | `rg "user-timeline        | user_timeline" src tests scripts`                            |
-| `src/lib/workspace`      | `lkjstr-domain` workspace model and Leptos shell                                                 | `rg "\\$lib/workspace     | src/lib/workspace" src tests scripts`                        |
-| `src/routes`             | Rust/WASM root artifact plus SvelteKit shell only                                                | `rg "from .\*routes       | src/routes" src tests scripts` and root smoke                |
+| Module group | Rust replacement path | No-import proof command | Deletion status | Notes |
+| --- | --- | --- | --- | --- |
+| `src/lib/accounts` | `lkjstr-domain`, `lkjstr-storage/src/accounts.rs`, `lkjstr-ui/src/workspace/accounts*.rs` | `rg -e "\\$lib/accounts" -e "src/lib/accounts" -e "tabs/accounts" src tests scripts` | blocked | Accounts parity and secret-safety proof remain open. |
+| `src/lib/app` | `lkjstr-app`, `lkjstr-ui/src/app.rs`, `lkjstr-web` | `rg -e "src/lib/app" -e "\\$lib/app" src tests scripts` | blocked | Root shell cutover is not proven. |
+| `src/lib/author-context` | `lkjstr-app` Author Context inputs and `lkjstr-ui` surface | `rg -e "author-context" -e "author_context" src tests scripts` | blocked | Needs exact-read and unavailable-state proof. |
+| `src/lib/backend` | `lkjstr-app` orchestration and feed runtime | `rg -e "\\$lib/backend" -e "src/lib/backend" src tests scripts` | blocked | Shared query services remain TypeScript-owned. |
+| `src/lib/cache` | `lkjstr-storage` ledger and Rust retention modules | `rg -e "\\$lib/cache" -e "src/lib/cache" src tests scripts` | blocked | Retention and repair dispatch remain open. |
+| `src/lib/components` | Shared `lkjstr-ui` Leptos components | `rg -e "\\$lib/components" -e "src/lib/components" src tests scripts` | blocked | Shared renderer parity remains open. |
+| `src/lib/custom-request` | `lkjstr-app/src/custom_request/**` and Leptos surface | `rg -e "custom-request" -e "custom_request" src tests scripts` | blocked | Runner and relay wiring remain open. |
+| `src/lib/emoji` | `lkjstr-protocol` emoji helpers and Leptos renderer | `rg -e "\\$lib/emoji" -e "src/lib/emoji" src tests scripts` | blocked | Render and publish parity remain open. |
+| `src/lib/events` | `lkjstr-storage/src/events.rs`, `lkjstr-app/src/events/**`, Leptos rows | `rg -e "\\$lib/events" -e "src/lib/events" src tests scripts` | blocked | Event display and cache proof remain open. |
+| `src/lib/feed-surface` | `lkjstr-app` feed geometry, fragments, LOD, and Leptos rows | `rg -e "feed-surface" -e "feed_surface" src tests scripts` | blocked | Leptos feed use and scroll proof remain open. |
+| `src/lib/follow-graph` | `lkjstr-app/src/follow_graph/**` and Leptos Followees/User Timeline | `rg -e "follow-graph" -e "follow_graph" src tests scripts` | blocked | Discovery UI and runtime parity remain open. |
+| `src/lib/fp` | Rust reducers or local factories where still needed | `rg -e "\\$lib/fp" -e "src/lib/fp" src tests scripts` | blocked | Removal requires no-import proof. |
+| `src/lib/identity` | `lkjstr-app` identity view models and Leptos components | `rg -e "\\$lib/identity" -e "src/lib/identity" src tests scripts` | blocked | NIP-05 and display parity remain open. |
+| `src/lib/jobs` | `lkjstr-storage/src/jobs.rs` and `lkjstr-app` job runtimes | `rg -e "\\$lib/jobs" -e "src/lib/jobs" src tests scripts` | blocked | Job recovery and Stats parity remain open. |
+| `src/lib/log` | `lkjstr-storage/src/app_log.rs` and `lkjstr-ui/src/workspace/log*.rs` | `rg -e "\\$lib/log" -e "src/lib/log" src tests scripts` | blocked | Session capture and redaction proof remain open. |
+| `src/lib/media` | `lkjstr-protocol`, `lkjstr-web` upload host, and Leptos upload UI | `rg -e "\\$lib/media" -e "src/lib/media" src tests scripts` | blocked | Real upload transport parity remains open. |
+| `src/lib/memory` | `lkjstr-app` and `lkjstr-storage` diagnostics view models | `rg -e "\\$lib/memory" -e "src/lib/memory" src tests scripts` | blocked | Memory gates remain TypeScript-heavy. |
+| `src/lib/notifications` | `lkjstr-app` notification runtime and Leptos surface | `rg -e "\\$lib/notifications" -e "src/lib/notifications" -e "tabs/notifications" src tests scripts` | blocked | Shared feed proof remains open. |
+| `src/lib/profile` | `lkjstr-app` profile runtime and Leptos surface | `rg -e "\\$lib/profile" -e "src/lib/profile" src tests scripts` | blocked | Sparse scan proof remains open. |
+| `src/lib/public-chat` | `lkjstr-app/src/public_chat/**` and `lkjstr-ui/src/workspace/public_chat.rs` | `rg -e "public-chat" -e "public_chat" src tests scripts` | blocked | NIP-28 runtime parity remains open. |
+| `src/lib/protocol` | `lkjstr-protocol` plus WASM bridge exports | `rg -e "\\$lib/protocol" -e "src/lib/protocol" src tests scripts` | blocked | Product imports remain until all bridges cut over. |
+| `src/lib/query` | `lkjstr-app/src/query/**` and feed input builders | `rg -e "\\$lib/query" -e "src/lib/query" src tests scripts` | blocked | Feed runtime wiring remains open. |
+| `src/lib/relays` | `lkjstr-relays` and `lkjstr-web/src/relay_host/**` | `rg -e "\\$lib/relays" -e "src/lib/relays" src tests scripts` | blocked | Relay effect runner remains open. |
+| `src/lib/search` | `lkjstr-app`, `lkjstr-storage` search rows, and Leptos search | `rg -e "\\$lib/search" -e "src/lib/search" src tests scripts` | blocked | Rust tokenizer and query planner remain open. |
+| `src/lib/settings` | `lkjstr-domain`, `lkjstr-storage/src/settings*.rs`, Leptos Settings | `rg -e "\\$lib/settings" -e "src/lib/settings" src tests scripts` | blocked | Side-effect parity remains open. |
+| `src/lib/storage` | `lkjstr-storage`, `lkjstr-web/src/sqlite_store/**`, storage worker bridge | `rg -e "\\$lib/storage" -e "src/lib/storage" src tests scripts` | blocked | Host-glue carveout must be named before removal. |
+| `src/lib/tabs` | `lkjstr-ui/src/workspace/**` tab surfaces | `rg -e "\\$lib/tabs" -e "src/lib/tabs" src tests scripts` | blocked | Surface parity remains open. |
+| `src/lib/telemetry` | Rust diagnostics or explicit removal | `rg -e "\\$lib/telemetry" -e "src/lib/telemetry" src tests scripts` | blocked | Needs diagnostics decision and no-import proof. |
+| `src/lib/thread` | `lkjstr-app` thread runtime and Leptos Thread | `rg -e "\\$lib/thread" -e "src/lib/thread" src tests scripts` | blocked | Exact-read parity remains open. |
+| `src/lib/timeline` | `lkjstr-app` shared feed runtime and Leptos Home/Global | `rg -e "\\$lib/timeline" -e "src/lib/timeline" src tests scripts` | blocked | Shared feed runtime remains open. |
+| `src/lib/tweet` | `lkjstr-app` publish jobs and Leptos Tweet | `rg -e "\\$lib/tweet" -e "src/lib/tweet" src tests scripts` | blocked | Signing and publish queue parity remain open. |
+| `src/lib/user-timeline` | `lkjstr-app/src/user_timeline/**` and Leptos User Timeline | `rg -e "user-timeline" -e "user_timeline" src tests scripts` | blocked | UI and route-discovery parity remain open. |
+| `src/lib/workspace` | `lkjstr-domain` workspace model and Leptos shell | `rg -e "\\$lib/workspace" -e "src/lib/workspace" src tests scripts` | blocked | Workspace browser parity remains open. |
+| `src/routes` | Rust/WASM root artifact plus SvelteKit shell only | `rg -e "from .*routes" -e "src/routes" src tests scripts` | blocked | Root smoke and build cutover remain open. |
 
 ## Evidence
 

@@ -1,7 +1,4 @@
-use lkjstr_domain::{
-    SignerType, create_account, create_local_account_record, parse_nsec, parse_readonly_account,
-};
-use lkjstr_protocol::encode_nsec;
+use lkjstr_domain::{SignerType, create_local_account_record, parse_nsec, parse_readonly_account};
 use lkjstr_storage::{AccountRecord, StorageOutcome};
 use lkjstr_ui::{
     AccountsCommand, AccountsComplete, AccountsIdCommand, AccountsInputCommand, AccountsProvider,
@@ -9,13 +6,16 @@ use lkjstr_ui::{
 };
 
 use crate::{
-    accounts_active::{active_account_id, set_active_account_id},
+    accounts_nip07_host::nip07_account,
+    accounts_reveal_host::reveal_secret_result,
+    accounts_selector_host::resolve_active_selector,
+    accounts_selector_status::{join_status, selector_save_status, selector_update_status},
+    accounts_selector_store::delete_selector_if_account_active,
     host_status::{browser_now_ms, problem_status},
-    nip07_host::nip07_public_key,
     sqlite_host_store::with_sqlite_store,
     sqlite_store::{
-        sqlite_account_delete, sqlite_account_put, sqlite_accounts_all, sqlite_local_account_put,
-        sqlite_local_secret_delete, sqlite_local_secret_get,
+        sqlite_account_delete, sqlite_account_get, sqlite_account_put, sqlite_accounts_all,
+        sqlite_local_account_put, sqlite_local_secret_delete,
     },
 };
 
@@ -32,9 +32,7 @@ pub fn accounts_provider_with_worker_url(db_name: String, worker_url: String) ->
     };
     AccountsProvider::new(move |command| {
         let host = host.clone();
-        wasm_bindgen_futures::spawn_local(async move {
-            run_command(&host, command).await;
-        });
+        wasm_bindgen_futures::spawn_local(async move { run_command(&host, command).await });
     })
 }
 
@@ -50,11 +48,8 @@ async fn run_command(host: &AccountsHost, command: AccountsCommand) {
 }
 
 async fn connect_nip07(host: &AccountsHost, complete: AccountsComplete) {
-    let status = match nip07_public_key().await {
-        Ok(pubkey) => match create_account(&pubkey, SignerType::Nip07, browser_now_ms()) {
-            Some(account) => save_public_account(host, &account, "NIP-07 account connected.").await,
-            None => "NIP-07 signer returned an invalid public key.".to_owned(),
-        },
+    let status = match nip07_account().await {
+        Ok(account) => save_public_account(host, &account, "NIP-07 account connected.").await,
         Err(message) => message,
     };
     complete.complete(load_result(host, &status).await);
@@ -87,10 +82,19 @@ async fn account_input_status(host: &AccountsHost, input: &str) -> String {
 }
 
 async fn activate(host: &AccountsHost, command: AccountsIdCommand) {
-    set_active_account_id(Some(&command.account_id));
-    command
-        .complete
-        .complete(load_result(host, "Active account updated.").await);
+    let account_id = command.account_id.clone();
+    let account = with_sqlite_store(&host.db_name, &host.worker_url, |store| async move {
+        sqlite_account_get(&store, &account_id).await
+    })
+    .await;
+    let status = match account {
+        StorageOutcome::Ok(Some(account)) => {
+            selector_update_status(&host.db_name, &host.worker_url, &account).await
+        }
+        StorageOutcome::Ok(None) => "Active account is unavailable.".to_owned(),
+        outcome => problem_status("Active account lookup failed", outcome),
+    };
+    command.complete.complete(load_result(host, &status).await);
 }
 
 async fn remove_account(host: &AccountsHost, command: AccountsIdCommand) {
@@ -104,29 +108,23 @@ async fn remove_account(host: &AccountsHost, command: AccountsIdCommand) {
         sqlite_local_secret_delete(&store, &secret_id).await
     })
     .await;
-    if active_account_id().as_deref() == Some(command.account_id.as_str()) {
-        set_active_account_id(None);
-    }
+    let selector_status = if account_status.is_ok() {
+        delete_selector_if_account_active(&host.db_name, &host.worker_url, &command.account_id)
+            .await
+    } else {
+        None
+    };
     let status = match account_status {
         StorageOutcome::Ok(()) => "Account disconnected.".to_owned(),
         outcome => problem_status("Account disconnect failed", outcome),
     };
+    let status = join_status(&status, selector_status);
     command.complete.complete(load_result(host, &status).await);
 }
 
 async fn reveal_secret(host: &AccountsHost, command: AccountsIdCommand) {
-    let account_id = command.account_id.clone();
-    let result = match with_sqlite_store(&host.db_name, &host.worker_url, |store| async move {
-        sqlite_local_secret_get(&store, &account_id).await
-    })
-    .await
-    {
-        StorageOutcome::Ok(Some(row)) => encode_nsec(&row.secret_key)
-            .map(|nsec| ("Local nsec revealed.".to_owned(), Some(nsec)))
-            .unwrap_or_else(|_| ("Local secret is invalid.".to_owned(), None)),
-        StorageOutcome::Ok(None) => ("Local secret is unavailable.".to_owned(), None),
-        outcome => (problem_status("Local secret unavailable", outcome), None),
-    };
+    let result =
+        reveal_secret_result(&host.db_name, &host.worker_url, command.account_id.clone()).await;
     let mut loaded = load_result(host, &result.0).await;
     if let Some(nsec) = result.1 {
         loaded = loaded.with_revealed_nsec(command.account_id, nsec);
@@ -141,8 +139,12 @@ async fn save_public_account(host: &AccountsHost, account: &AccountRecord, ok: &
     .await
     {
         StorageOutcome::Ok(()) => {
-            set_active_account_id(Some(&account.id));
-            ok.to_owned()
+            let nip07 = if account.signer_type == SignerType::Nip07 {
+                "available"
+            } else {
+                "not-applicable"
+            };
+            selector_save_status(&host.db_name, &host.worker_url, account, false, nip07, ok).await
         }
         outcome => problem_status("Account save failed", outcome),
     }
@@ -159,8 +161,15 @@ async fn save_local_account(
     .await
     {
         StorageOutcome::Ok(()) => {
-            set_active_account_id(Some(&account.id));
-            "Local account added.".to_owned()
+            selector_save_status(
+                &host.db_name,
+                &host.worker_url,
+                account,
+                true,
+                "not-applicable",
+                "Local account added.",
+            )
+            .await
         }
         outcome => problem_status("Local account save failed", outcome),
     }
@@ -173,8 +182,10 @@ async fn load_result(host: &AccountsHost, status: &str) -> AccountsResult {
     .await
     {
         StorageOutcome::Ok(accounts) => {
-            let active_id = resolve_active_id(&accounts);
-            AccountsResult::new(accounts, active_id, status.to_owned())
+            let selector =
+                resolve_active_selector(&host.db_name, &host.worker_url, &accounts).await;
+            let status = join_status(status, selector.status);
+            AccountsResult::new(accounts, selector.active_id, status)
         }
         outcome => AccountsResult::new(
             Vec::new(),
@@ -182,16 +193,4 @@ async fn load_result(host: &AccountsHost, status: &str) -> AccountsResult {
             problem_status("Accounts unavailable", outcome),
         ),
     }
-}
-
-fn resolve_active_id(accounts: &[AccountRecord]) -> Option<String> {
-    let stored = active_account_id();
-    if let Some(id) = stored
-        && accounts.iter().any(|account| account.id == id)
-    {
-        return Some(id);
-    }
-    let fallback = accounts.first().map(|account| account.id.clone());
-    set_active_account_id(fallback.as_deref());
-    fallback
 }

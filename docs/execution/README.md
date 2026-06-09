@@ -60,3 +60,5 @@ images were built and the services ran from those images.
   with docs, crates, source paths, tests, and proof.
 - [storage-slice.md](storage-slice.md): executable storage repository wiring
   slice.
+- [tasks/README.md](tasks/README.md): granular executable task files for the
+  active Rust/WASM queue.

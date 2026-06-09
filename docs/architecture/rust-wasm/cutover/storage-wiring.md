@@ -25,15 +25,18 @@ condition that allows TypeScript product storage deletion.
 ledger resource kinds, and typed outcomes. `lkjstr-web` sends worker messages
 through `StorageOp`: `open`, `apply-schema`, `query`, `execute`, `batch`,
 `get-storage-health`, `read-physical-inventory`, `estimate-storage`, `cancel`,
-and `close`. Product crates never format SQL or open OPFS. Feed cache,
-feed coverage, retention, and repair need the same typed command metadata now
-used by active selector and pressure rows.
+and `close`. Product crates never format SQL or open OPFS. Accounts active
+selection reads and writes the protected SQLite selector row; the old
+`lkjstr.activeAccountId` localStorage key is migration-only and is removed after
+a successful selector write. Feed cache, feed coverage, retention, and repair
+need the same typed command metadata now used by active selector and pressure
+rows.
 
 ## Storage Family Matrix
 
 | Family                                              | Current TypeScript path                                                                                  | Rust storage and web path                                                                                              | Worker message   | Row codec and proof                                 | Deletion condition                                                                            |
 | --------------------------------------------------- | -------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------- | ---------------- | --------------------------------------------------- | --------------------------------------------------------------------------------------------- |
-| Accounts                                            | `repositories/accounts-store.ts`, `sqlite-opfs/accounts-sqlite.ts`                                       | `lkjstr-storage/src/accounts.rs`, `lkjstr-web/src/sqlite_store/accounts.rs`                                            | `query`, `batch` | `accounts_test.rs`, `protected_sqlite_rows_test.rs` | Leptos Accounts owns local, read-only, and NIP-07 account flows with no TS imports.           |
+| Accounts and active selector                        | `repositories/accounts-store.ts`, `sqlite-opfs/accounts-sqlite.ts`, old `lkjstr.activeAccountId` key      | `lkjstr-storage/src/accounts.rs`, `active_account.rs`, `lkjstr-web/src/sqlite_store/accounts.rs`, `active_account.rs` | `query`, `batch` | `accounts_test.rs`, `active_account_test.rs`, Accounts host tests | Leptos Accounts owns local, read-only, NIP-07, selector migration, and no TS imports.         |
 | Local signing secrets                               | `repositories/secrets-store.ts`, `sqlite-opfs/accounts-sqlite.ts`                                        | `lkjstr-storage/src/local_secrets.rs`, `sqlite_store/accounts.rs`                                                      | `query`, `batch` | `accounts_test.rs`                                  | Protected and unprotected signer records have Rust UI, redaction, migration, and tests.       |
 | Settings                                            | `repositories/settings-store.ts`, `sqlite-opfs/settings-sqlite.ts`                                       | `lkjstr-storage/src/settings*.rs`, `sqlite_store/settings.rs`                                                          | `query`, `batch` | `settings_schema_test.rs`, `settings_test.rs`       | Settings side effects and flat editor are Rust-owned.                                         |
 | Relay sets                                          | `repositories/relay-sets-store.ts`, `sqlite-opfs/relay-sets-sqlite.ts`                                   | `lkjstr-storage/src/relay_sets.rs`, `sqlite_store/relay_sets.rs`                                                       | `query`, `batch` | `relay_sets_test.rs`                                | Relay Settings reads, writes, defaults, and diagnostics are Rust-owned.                       |

@@ -43,8 +43,9 @@ changed. Each docs directory has one README that acts as a table of contents.
 - Execution queue: [execution/README.md](execution/README.md),
   [execution/agent-route.md](execution/agent-route.md),
   [execution/operating-rules.md](execution/operating-rules.md),
-  [execution/current-blockers.md](execution/current-blockers.md), and
-  [execution/storage-slice.md](execution/storage-slice.md).
+  [execution/current-blockers.md](execution/current-blockers.md),
+  [execution/storage-slice.md](execution/storage-slice.md), and
+  [execution/tasks/README.md](execution/tasks/README.md).
 - Rust/WASM: [architecture/rust-wasm/README.md](architecture/rust-wasm/README.md),
   [architecture/rust-wasm/crate-inventory.md](architecture/rust-wasm/crate-inventory.md), and
   [architecture/rust-wasm/cutover/implementation-ledger.md](architecture/rust-wasm/cutover/implementation-ledger.md),
@@ -140,7 +141,10 @@ changed. Each docs directory has one README that acts as a table of contents.
 `decisions/README.md` `decisions/autonomous-decision-defaults.md` `decisions/browser-first.md`
 `decisions/protocol-kernel.md` `decisions/relay-ownership.md` `decisions/rust-wasm-client.md` `decisions/sqlite-opfs-storage.md`
 `decisions/worker-owned-storage.md` `execution/README.md` `execution/agent-route.md` `execution/current-blockers.md`
-`execution/operating-rules.md` `execution/storage-slice.md` `operations/README.md` `operations/ci.md`
+`execution/operating-rules.md` `execution/storage-slice.md` `execution/tasks/README.md`
+`execution/tasks/home-feed-slice.md` `execution/tasks/relay-effect-runner.md`
+`execution/tasks/shared-feed-view-model.md` `execution/tasks/storage-active-selector.md`
+`execution/tasks/storage-command-metadata.md` `operations/README.md` `operations/ci.md`
 `operations/cloudflare-workers.md` `operations/data-safety.md` `operations/diagnostics.md`
 `operations/docker.md` `operations/feed-route-isolation-regression.md` `operations/focused-gates.md`
 `operations/memory-verification.md` `operations/readiness.md` `operations/sqlite-opfs-testing.md`
