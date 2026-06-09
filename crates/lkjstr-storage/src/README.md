@@ -24,6 +24,7 @@ codecs, ledger resource map, and typed operation outcomes.
 - `notifications.rs`: notification row and ledger helpers.
 - `optimizer/`: relay optimizer row codecs, retention, and repair helpers.
 - `outcome.rs`: typed storage operation outcomes.
+- `retention/`: pure cache-retention planner, row conversion, and delete intents.
 - `pressure.rs`: storage pressure snapshot row codec and stop reasons.
 - `relay_sets.rs`: protected relay-set row identity, JSON helpers, and SQLite row codec.
 - `resource.rs`: cache owner and resource kind strings.

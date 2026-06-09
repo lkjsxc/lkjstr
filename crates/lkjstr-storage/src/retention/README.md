@@ -4,7 +4,7 @@
 
 This module owns pure cache-retention planning for ledger-backed resources.
 
-## File Map
+## Table of Contents
 
 - `mod.rs`: public exports.
 - `model.rs`: input, output, stop reason, and delete intent data.
