@@ -17,16 +17,18 @@ commands.
   residual overhead, and stop reason from a real pressure snapshot row.
 - Rust Stats exposes pressure byte-summary rows from real pressure snapshots and
   leaves byte rows unavailable when pressure data is missing.
-- Full localStorage, Cache Storage, old IndexedDB host diagnostics, and repair
-  action linkage remain TypeScript-owned or open until Rust host adapters move.
+- Rust host Stats surfaces a localStorage count/status row.
+- localStorage byte estimates, Cache Storage scans, old IndexedDB host
+  diagnostics, and repair action linkage remain TypeScript-owned or open until
+  Rust host adapters move.
 
 ## Current Next Edit
 
 1. Keep pressure and optimizer command metadata intact while inventory moves.
 2. Link browser inventory work to retention and repair outputs instead of
    inventing standalone byte safety.
-3. Move localStorage, Cache Storage, and old IndexedDB presence diagnostics only
-   through explicit Rust host adapters.
+3. Move Cache Storage and old IndexedDB presence diagnostics only through
+   explicit Rust host adapters.
 
 ## Next Checklist
 
@@ -51,9 +53,10 @@ old IndexedDB presence diagnostics. Missing pressure data renders an explicit
 unavailable reason.
 
 The current Rust slice covers SQLite health, SQLite table counts, saved pressure
-snapshots, and pressure byte-summary rows. TypeScript remains the shipped owner
-for localStorage, Cache Storage, and old IndexedDB presence until equivalent
-Rust host adapters are implemented and no-import proof exists.
+snapshots, pressure byte-summary rows, and localStorage count/status. TypeScript
+remains the shipped owner for localStorage byte estimates, Cache Storage, and
+old IndexedDB presence until equivalent Rust host adapters are implemented and
+no-import proof exists.
 
 ## Docs To Update First
 

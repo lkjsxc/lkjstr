@@ -15,6 +15,7 @@ Source files expose Rust application behavior to the browser through
 - `accounts_selector_status.rs`: Accounts selector status text helpers.
 - `accounts_selector_store.rs`: SQLite active-account selector worker helpers.
 - `app_log_host.rs`: SQLite-backed lkjstr Log command provider.
+- `browser_inventory.rs`: browser-owned storage rows for Rust Stats.
 - `feed_geometry/`: feed geometry, fragment, measurement, and anchor bridge.
 - `follow_graph/`: target follow-list parser bridge.
 - `host_providers.rs`: Rust UI host provider assembly.

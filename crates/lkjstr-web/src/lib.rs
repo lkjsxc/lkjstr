@@ -16,6 +16,8 @@ mod accounts_selector_status;
 mod accounts_selector_store;
 #[cfg(target_arch = "wasm32")]
 mod app_log_host;
+#[cfg(target_arch = "wasm32")]
+mod browser_inventory;
 pub mod feed_geometry;
 pub mod follow_graph;
 #[cfg(target_arch = "wasm32")]

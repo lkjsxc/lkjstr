@@ -28,6 +28,7 @@ async fn rust_stats_tab_renders_real_inventory() -> Result<(), JsValue> {
     wait_for_text("Storage health").await?;
     wait_for_text("Storage bytes").await?;
     wait_for_text("Storage inventory").await?;
+    wait_for_text("localStorage").await?;
     wait_for_text("workspaces").await?;
     wait_for_text("available").await?;
     wait_for_text("Auto refresh every 2s").await?;

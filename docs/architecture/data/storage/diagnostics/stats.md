@@ -28,6 +28,9 @@ explicit unavailable reason; Stats must not invent byte counts.
 Rust Stats renders pressure byte-summary rows for browser usage, site target,
 protected, prunable, unknown or unowned, and residual overhead classes. Missing
 pressure data keeps those rows visible as unavailable instead of showing zero.
+The Rust host also adds a localStorage count/status row; byte estimates for
+non-indexed browser storage remain transitional until Rust host adapters own
+that scan.
 
 ## Groups
 

@@ -61,16 +61,12 @@ impl StorageStatsSnapshot {
 
     #[must_use]
     pub fn from_rows(rows: Vec<StorageInventoryRow>) -> Self {
-        let table_count = rows.len();
-        let available_table_count = rows.iter().filter(|row| row.status == "available").count();
-        let total_known_rows = rows.iter().filter_map(|row| row.row_count).sum();
-        let unavailable_table_count = table_count.saturating_sub(available_table_count);
-        Self {
-            inventory_status: inventory_status(table_count, available_table_count).to_string(),
-            table_count,
-            available_table_count,
-            unavailable_table_count,
-            total_known_rows,
+        let mut snapshot = Self {
+            inventory_status: "unavailable".to_string(),
+            table_count: 0,
+            available_table_count: 0,
+            unavailable_table_count: 0,
+            total_known_rows: 0,
             storage_health_status: "unavailable".to_string(),
             storage_health_reason: Some("not-requested".to_string()),
             storage_health: None,
@@ -79,7 +75,16 @@ impl StorageStatsSnapshot {
             storage_pressure: None,
             byte_rows: pressure_byte_rows(None, Some("not-requested")),
             rows,
-        }
+        };
+        snapshot.recount_rows();
+        snapshot
+    }
+
+    #[must_use]
+    pub fn with_additional_rows(mut self, rows: Vec<StorageInventoryRow>) -> Self {
+        self.rows.extend(rows);
+        self.recount_rows();
+        self
     }
 
     #[must_use]
@@ -114,6 +119,19 @@ impl StorageStatsSnapshot {
         self.storage_pressure = None;
         self.byte_rows = pressure_byte_rows(None, Some(reason));
         self
+    }
+
+    fn recount_rows(&mut self) {
+        self.table_count = self.rows.len();
+        self.available_table_count = self
+            .rows
+            .iter()
+            .filter(|row| row.status == "available")
+            .count();
+        self.total_known_rows = self.rows.iter().filter_map(|row| row.row_count).sum();
+        self.unavailable_table_count = self.table_count.saturating_sub(self.available_table_count);
+        self.inventory_status =
+            inventory_status(self.table_count, self.available_table_count).to_string();
     }
 }
 

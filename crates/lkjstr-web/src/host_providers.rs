@@ -2,9 +2,10 @@ use lkjstr_storage::StorageOutcome;
 use lkjstr_ui::{HostProviders, WorkspacePersistence};
 
 use crate::{
-    accounts_host, app_log_host, host_status::browser_now_ms, relay_settings_host, settings_host,
-    sqlite_host_store::with_sqlite_store, sqlite_store::sqlite_storage_stats_snapshot,
-    storage_worker::DEFAULT_WORKER_URL, tweet_host, upload_settings_host, workspace_host,
+    accounts_host, app_log_host, browser_inventory, host_status::browser_now_ms,
+    relay_settings_host, settings_host, sqlite_host_store::with_sqlite_store,
+    sqlite_store::sqlite_storage_stats_snapshot, storage_worker::DEFAULT_WORKER_URL, tweet_host,
+    upload_settings_host, workspace_host,
 };
 
 const DEFAULT_DB_NAME: &str = "lkjstr";
@@ -70,7 +71,9 @@ fn stats_provider(db_name: String, worker_url: String) -> lkjstr_ui::StatsProvid
             })
             .await;
             complete.complete(match snapshot {
-                StorageOutcome::Ok(snapshot) => snapshot,
+                StorageOutcome::Ok(snapshot) => {
+                    snapshot.with_additional_rows(browser_inventory::browser_inventory_rows())
+                }
                 outcome => unavailable_snapshot(outcome),
             });
         });
