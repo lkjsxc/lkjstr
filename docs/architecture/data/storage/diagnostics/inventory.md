@@ -84,10 +84,10 @@ Cache Storage scans enumerate named caches and response metadata when supported.
 localStorage scans enumerate keys and values. Failures remain visible as rows
 with status and reason.
 
-The current Rust Stats host emits a bounded localStorage count/status row
-without scanning key values. localStorage byte estimates, Cache Storage scans,
-and old IndexedDB database listing stay in the transitional TypeScript inventory
-until equivalent Rust host adapters land.
+The current Rust Stats host emits a bounded localStorage count/status row and
+old IndexedDB database presence rows without scanning key values or old object
+stores. localStorage byte estimates and Cache Storage scans stay in the
+transitional TypeScript inventory until equivalent Rust host adapters land.
 
 ## Statuses
 

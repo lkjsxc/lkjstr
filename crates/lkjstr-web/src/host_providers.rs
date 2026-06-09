@@ -72,7 +72,8 @@ fn stats_provider(db_name: String, worker_url: String) -> lkjstr_ui::StatsProvid
             .await;
             complete.complete(match snapshot {
                 StorageOutcome::Ok(snapshot) => {
-                    snapshot.with_additional_rows(browser_inventory::browser_inventory_rows())
+                    let rows = browser_inventory::browser_inventory_rows().await;
+                    snapshot.with_additional_rows(rows)
                 }
                 outcome => unavailable_snapshot(outcome),
             });

@@ -120,8 +120,8 @@ Read next: [architecture/data/README.md](architecture/data/README.md),
 - Rust Stats reads SQLite health and storage mode on startup. Its provider read
   is bounded; after timeout Stats shows available, temporary memory, timeout,
   unavailable, blocked, corrupt, or unknown-old-storage states explicitly.
-- Rust Stats renders pressure byte-summary rows from saved pressure snapshots and
-  a localStorage count/status row; Cache Storage, localStorage byte estimates, and old IndexedDB diagnostics remain TypeScript-owned.
+- Rust Stats renders pressure byte-summary rows, localStorage count/status, and
+  old IndexedDB presence; Cache Storage and localStorage byte estimates remain TypeScript-owned.
 - Rust storage command metadata covers active selectors, pressure, protected
   rows, cache/feed evidence, diagnostics, jobs, app log, inventory, optimizer,
   retention, repair scan/backfill/report rows, and Search token/tag rows.
