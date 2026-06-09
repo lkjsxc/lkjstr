@@ -14,6 +14,7 @@ browser storage manifest.
 - `commands_diagnostics_test.rs`: diagnostics and pressure command specs.
 - `commands_event_cache_test.rs`: event-cache command specs.
 - `commands_feed_cache_test.rs`: feed-evidence command specs.
+- `commands_metadata_coverage_test.rs`: cross-family command coverage invariants.
 - `commands_optimizer_test.rs`: optimizer command specs.
 - `commands_retention_test.rs`: retention command specs.
 - `diagnostic_sql_statements_test.rs`: diagnostics statement records.
