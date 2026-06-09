@@ -161,9 +161,9 @@ replaced TypeScript or Svelte paths, focused gate, and final gate.
   pressure, and inventory worker calls now have command specs. Optimizer
   metadata, retention planner metadata, retention delete dispatch,
   storage-owned repair command models plus basic worker adapters, pressure
-  byte-summary Stats rows, localStorage count/status, old IndexedDB presence,
-  and Search token/tag/query metadata are implemented; localStorage byte
-  estimates, Cache Storage, full product cache proof, Search app planning,
+  byte-summary Stats rows, localStorage count/status, Cache Storage
+  count/status, old IndexedDB presence, and Search token/tag/query metadata are
+  implemented; browser byte estimates, full product cache proof, Search app planning,
   NIP-50 merge, and surface consumption remain open.
 - Focused gate: `cargo test -p lkjstr-storage` and `pnpm rust-wasm:quiet`.
 - Final gate: Docker Compose config, image builds, and service runs from

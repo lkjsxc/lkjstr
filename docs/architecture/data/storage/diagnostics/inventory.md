@@ -80,14 +80,15 @@ localStorage and Cache Storage are measured as non-indexed browser storage. They
 are not authoritative app stores for accounts, secrets, relays, events,
 notifications, drafts, workspace state, or feed state.
 
-Cache Storage scans enumerate named caches and response metadata when supported.
-localStorage scans enumerate keys and values. Failures remain visible as rows
-with status and reason.
+Cache Storage scans enumerate named caches and request keys when supported.
+localStorage scans enumerate keys and values when byte estimates are requested.
+Failures remain visible as rows with status and reason.
 
 The current Rust Stats host emits a bounded localStorage count/status row and
-old IndexedDB database presence rows without scanning key values or old object
-stores. localStorage byte estimates and Cache Storage scans stay in the
-transitional TypeScript inventory until equivalent Rust host adapters land.
+Cache Storage request count/status row plus old IndexedDB database presence
+rows without scanning localStorage values, response bodies, or old object
+stores. localStorage and Cache Storage byte estimates stay in the transitional
+TypeScript inventory until equivalent Rust host adapters land.
 
 ## Statuses
 

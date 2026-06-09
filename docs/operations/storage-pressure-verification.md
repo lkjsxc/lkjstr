@@ -38,6 +38,9 @@ unknown origin usage as success.
   prunable bytes, unknown or unowned bytes, and residual overhead only when a
   real pressure snapshot exists; missing pressure data stays visible as
   unavailable.
+- Rust Stats inventory rows show localStorage count/status, Cache Storage
+  count/status, and old IndexedDB presence without claiming byte-accurate
+  cleanup evidence.
 - Repair deletes orphan ledger rows, backfills missing rows, removes safe
   unowned cache rows, and never adds ledger rows for protected route blocks.
 - If browser usage remains over target, Stats reports

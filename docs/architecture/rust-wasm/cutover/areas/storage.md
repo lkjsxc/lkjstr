@@ -63,9 +63,9 @@ removed.
   implemented; product consumption remains open. Repair metadata, storage-owned
   models, worker health/outcome mapping, and ledger backfill batching are
   implemented. Search token rows, tag lookup metadata, event-write token
-  batches, local indexed query adapters, and physical repair probes are
-  implemented; Search app planning, NIP-50 merge, full pressure byte inventory
-  diagnostics, and feed consumption remain open.
+  batches, local indexed query adapters, physical repair probes, and Stats
+  browser-storage count diagnostics are implemented; Search app planning,
+  NIP-50 merge, browser byte estimates, and feed consumption remain open.
 - Command metadata status: active selector, pressure, protected rows, event
   cache, feed evidence, relay diagnostics, notifications, jobs, app log,
   inventory snapshot, optimizer scan-model rows, retention planner rows,
