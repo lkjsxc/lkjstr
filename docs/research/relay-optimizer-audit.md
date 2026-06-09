@@ -10,10 +10,10 @@ route evidence, adaptive scan learning, and Stats visibility.
 - `pnpm install`: passed; dependencies were already current.
 - `pnpm check:repo`: passed.
 - `pnpm test:quiet`: passed.
-- `pnpm rust-wasm:quiet`: failed before Rust tests because
-  `docker-compose.verify.yml` is missing.
-- `cargo run -p lkjstr-xtask -- check-docs`: failed with the same missing
-  `docker-compose.verify.yml` path.
+- `pnpm rust-wasm:quiet`: previous audit failed before Rust tests because it
+  referenced an obsolete Compose verify file path.
+- `cargo run -p lkjstr-xtask -- check-docs`: previous audit failed with the
+  same obsolete path. Current verification uses `docker-compose.yml`.
 
 ## Findings
 

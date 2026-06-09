@@ -14,6 +14,30 @@ fn stats_byte_rows_project_pressure_snapshot() {
 }
 
 #[test]
+fn stats_byte_rows_keep_separate_byte_classes() {
+    let snapshot = StorageStatsSnapshot::from_sqlite_counts(Vec::new())
+        .with_storage_pressure(test_pressure("protected-only"));
+    let keys: Vec<&str> = snapshot
+        .byte_rows
+        .iter()
+        .map(|row| row.key.as_str())
+        .collect();
+
+    assert_eq!(
+        keys,
+        vec![
+            "browser-usage",
+            "site-target",
+            "protected",
+            "prunable",
+            "unknown-unowned",
+            "residual-browser-overhead"
+        ]
+    );
+    assert_eq!(snapshot.byte_rows.len(), 6);
+}
+
+#[test]
 fn stats_byte_rows_keep_timeout_unavailable() {
     let snapshot = StorageStatsSnapshot::timeout();
 

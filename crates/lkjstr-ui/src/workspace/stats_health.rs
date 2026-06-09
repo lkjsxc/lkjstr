@@ -16,9 +16,7 @@ fn rows_for_snapshot(snapshot: StorageStatsSnapshot) -> impl IntoView {
     match snapshot.storage_health {
         Some(health) => health_rows(status, health).into_any(),
         None => {
-            let reason = snapshot
-                .storage_health_reason
-                .unwrap_or_else(|| "unavailable".to_string());
+            let reason = health_problem_reason(snapshot.storage_health_reason);
             view! {
                 <tr><th>"Status"</th><td>{status}</td></tr>
                 <tr><th>"Reason"</th><td>{reason}</td></tr>
@@ -26,6 +24,10 @@ fn rows_for_snapshot(snapshot: StorageStatsSnapshot) -> impl IntoView {
             .into_any()
         }
     }
+}
+
+fn health_problem_reason(reason: Option<String>) -> String {
+    reason.unwrap_or_else(|| "unavailable".to_string())
 }
 
 fn health_rows(status: String, health: SqliteStorageHealth) -> impl IntoView {
@@ -56,4 +58,54 @@ fn warning_rows(health: &SqliteStorageHealth) -> String {
         return "none".to_string();
     }
     health.warnings.join("; ")
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn health_problem_reason_keeps_exact_states() {
+        for reason in [
+            "unavailable",
+            "timeout",
+            "blocked",
+            "corrupt",
+            "unknown-old-storage",
+        ] {
+            let snapshot = StorageStatsSnapshot::from_sqlite_counts(Vec::new())
+                .with_storage_health_problem(reason);
+
+            assert_eq!(snapshot.storage_health_status, reason);
+            assert_eq!(
+                health_problem_reason(snapshot.storage_health_reason),
+                reason
+            );
+        }
+    }
+
+    #[test]
+    fn temporary_memory_health_warns_without_loading_copy() {
+        let health = SqliteStorageHealth {
+            mode: "temporary-memory".to_string(),
+            vfs_name: "memory".to_string(),
+            worker_kind: "dedicated".to_string(),
+            sqlite_version: "3.test".to_string(),
+            database_name: ":memory:".to_string(),
+            applied_schema_changes: Vec::new(),
+            page_count: 1,
+            page_size: 4096,
+            freelist_count: 0,
+            event_count: 0,
+            relay_receipt_count: 0,
+            tag_row_count: 0,
+            last_integrity_check_at: None,
+            warnings: Vec::new(),
+        };
+
+        assert_eq!(
+            warning_rows(&health),
+            "Temporary memory mode: changes may disappear when the browser session ends."
+        );
+    }
 }

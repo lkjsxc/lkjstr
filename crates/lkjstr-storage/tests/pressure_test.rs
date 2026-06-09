@@ -10,15 +10,46 @@ fn pressure_stop_reasons_are_stable() {
         assert!(pressure_stop_reason_is_known(reason));
     }
     assert!(!pressure_stop_reason_is_known("silent-success"));
-    assert_eq!(
-        pressure_problem_kind("protected-only"),
-        Some(StorageProblemKind::PressureProtectedOnly)
-    );
+    assert_eq!(pressure_problem_kind("below-target"), None);
     assert_eq!(pressure_problem_kind("target-met"), None);
     assert_eq!(
         StorageProblemKind::PressureSnapshotDecodeFailed.as_str(),
         "pressure-snapshot-decode-failed"
     );
+}
+
+#[test]
+fn pressure_problem_kind_maps_every_problem_stop_reason() {
+    let expected = [
+        (
+            "no-prunable-candidates",
+            StorageProblemKind::PressureNoPrunableCandidates,
+        ),
+        ("protected-only", StorageProblemKind::PressureProtectedOnly),
+        (
+            "unknown-unowned-usage",
+            StorageProblemKind::PressureUnknownUsage,
+        ),
+        (
+            "inventory-incomplete",
+            StorageProblemKind::PressureInventoryIncomplete,
+        ),
+        ("quota-pressure", StorageProblemKind::PressureQuota),
+        (
+            "storage-api-unavailable",
+            StorageProblemKind::PressureStorageApiUnavailable,
+        ),
+        (
+            "compaction-error",
+            StorageProblemKind::PressureCompactionError,
+        ),
+        ("deadline", StorageProblemKind::PressureDeadline),
+    ];
+
+    for (reason, kind) in expected {
+        assert_eq!(pressure_problem_kind(reason), Some(kind));
+        assert!(pressure_stop_reason_is_known(reason));
+    }
 }
 
 #[test]

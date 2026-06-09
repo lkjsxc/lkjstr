@@ -22,8 +22,9 @@ removed.
   `lkjstr-ui` along the storage-kernel boundary.
 - First source edit: pressure inventory completion after implemented repair
   target probes.
-- Focused tests: retention and command tests in `lkjstr-storage`, retention
-  tests in `lkjstr-web`, cache unit tests, and `pnpm rust-wasm:quiet`.
+- Focused tests: pressure, Stats, command, retention, and repair tests in
+  `lkjstr-storage`, UI Stats tests in `lkjstr-ui`, web retention or repair
+  tests when adapters change, cache unit tests, and `pnpm rust-wasm:quiet`.
 - Ledgers: this file, implementation ledger rows, and verification ledger when
   evidence changes; deletion ledger only after actual removals.
 - Keep: `src/lib/storage/sqlite-opfs/**`, `src/lib/storage/repositories/**`,
@@ -72,8 +73,8 @@ removed.
   retention delete dispatch rows, repair scan/probe/backfill/report rows, and
   Search token/tag rows are implemented. Search app planning, NIP-50 merge,
   Leptos parity, and deletion proof are not implemented.
-- Next task order: pressure inventory completion, relay effect wiring, shared
-  feed runtime, and Home feed slice.
+- Next task order: pressure and Stats proof, inventory linkage to retention and
+  repair, relay effect wiring, shared feed runtime, and Home feed slice.
 
 ## Acceptance Checklist
 

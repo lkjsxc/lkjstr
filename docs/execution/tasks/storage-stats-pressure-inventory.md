@@ -17,6 +17,10 @@ commands.
   residual overhead, and stop reason from a real pressure snapshot row.
 - Rust Stats exposes pressure byte-summary rows from real pressure snapshots and
   leaves byte rows unavailable when pressure data is missing.
+- Rust pressure tests cover every problem stop-reason to stable problem-kind
+  mapping; successful stop reasons do not map to problem kinds.
+- Rust UI Stats text tests cover explicit pressure unavailable states,
+  temporary-memory warning text, and distinct health problem states.
 - Rust host Stats surfaces localStorage count/status, Cache Storage
   count/status, and old IndexedDB presence rows.
 - localStorage and Cache Storage byte estimates plus repair action linkage
@@ -38,10 +42,10 @@ commands.
 - [x] Add storage-owned inventory rows or projections for missing physical byte
   classes.
 - [x] Add Stats projections for pressure unavailable modes and stop reasons.
-- [ ] Add Rust UI tests for explicit unavailable states where browser rendering
+- [x] Add Rust UI tests for explicit unavailable states where browser rendering
   coverage is stable.
-- [ ] Run pressure, stats, commands, UI stats, and Rust/WASM gates; then record
-  actual verification.
+- [ ] Get the full Rust/WASM quiet gate passing; the current run still fails in
+  the existing Chrome harness path after focused pressure and Stats checks pass.
 
 ## Target Behavior
 
@@ -83,14 +87,18 @@ presence helpers until Rust Stats parity and no-import proof exist.
 
 ## Tests To Add Or Update
 
-- Pressure snapshot decode and unavailable-state projection.
+- Pressure snapshot decode and every stop-reason to problem-kind mapping where
+  the stop reason represents a problem.
+- Pressure and byte-row unavailable-state projection for not recorded, timeout,
+  blocked, corrupt, storage API unavailable, and usage not reported.
 - Inventory-only commands are exempt from manifest table assertions only when
   documented as inventory-only.
 - Stats distinguishes no-prunable-candidates, protected-only,
   unknown-unowned-usage, inventory-incomplete, quota-pressure,
-  storage-api-unavailable, and compaction-error.
+  storage-api-unavailable, compaction-error, and deadline.
 - Old IndexedDB diagnostics report presence only and do not scan old rows.
-- Rust UI renders explicit unavailable states instead of indefinite loading.
+- Rust UI renders explicit unavailable states instead of indefinite loading once
+  the bounded provider returns or times out.
 
 ## Focused Gate
 

@@ -54,11 +54,13 @@ Stats groups bytes as:
 ## Required Fields
 
 Stats shows browser usage, site budget, storage mode, schema readiness, total
-ledger bytes, prunable ledger bytes, protected estimates, localStorage bytes,
-Cache Storage bytes, overhead, unknown or unowned bytes, inventory status,
-ledger rows by owner and resource kind, physical SQLite rows by table, old
-IndexedDB database presence, last compaction reason, deleted resource count, and
-deleted byte estimate.
+ledger bytes, prunable ledger bytes, protected estimates, overhead, unknown or
+unowned bytes, inventory status, ledger rows by owner and resource kind,
+physical SQLite rows by table, old IndexedDB database presence, last compaction
+reason, deleted resource count, and deleted byte estimate. Current Rust Stats
+shows localStorage count/status and Cache Storage request count/status; byte
+estimates for those non-indexed stores remain TypeScript-owned until Rust host
+adapters own bounded byte scans.
 
 Operation diagnostics distinguish durable success, unavailable storage,
 timeout, quota failure, blocked storage, corrupt rows, and late-settled work.

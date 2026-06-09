@@ -1,13 +1,16 @@
 use std::time::Duration;
 
 use leptos::prelude::*;
-use lkjstr_storage::{StorageInventoryRow, StoragePressureSnapshotRecord, StorageStatsSnapshot};
+use lkjstr_storage::{StorageInventoryRow, StorageStatsSnapshot};
 
 use crate::app::RuntimeSignal;
 use crate::workspace::stats_bytes::storage_byte_rows;
 use crate::workspace::stats_health::storage_health_rows;
 use crate::workspace::stats_provider::StatsProvider;
 use crate::workspace::stats_refresh::{StatsRefreshState, refresh_stats};
+use crate::workspace::stats_text::{
+    available_text, pressure_state_text, pressure_value_text, status_text, unavailable_text,
+};
 
 #[component]
 pub fn StatsTab(runtime: RuntimeSignal, provider: Option<StatsProvider>) -> impl IntoView {
@@ -89,48 +92,6 @@ pub fn StatsTab(runtime: RuntimeSignal, provider: Option<StatsProvider>) -> impl
             <p>"Relay snapshots and subscription counters are unavailable until the Rust relay host adapter owns live sessions."</p>
         </section>
     }
-}
-
-fn status_text(snapshot: Option<StorageStatsSnapshot>) -> String {
-    snapshot.map_or_else(|| "loading".to_string(), |item| item.inventory_status)
-}
-
-fn available_text(snapshot: Option<StorageStatsSnapshot>) -> String {
-    snapshot.map_or_else(
-        || "loading".to_string(),
-        |item| format!("{}/{}", item.available_table_count, item.table_count),
-    )
-}
-
-fn unavailable_text(snapshot: Option<StorageStatsSnapshot>) -> usize {
-    snapshot.map_or(0, |item| item.unavailable_table_count)
-}
-
-fn pressure_state_text(snapshot: Option<StorageStatsSnapshot>) -> String {
-    snapshot.map_or_else(
-        || "loading".to_string(),
-        |item| match item.storage_pressure {
-            Some(pressure) => pressure.stop_reason,
-            None => item
-                .storage_pressure_reason
-                .unwrap_or(item.storage_pressure_status),
-        },
-    )
-}
-
-fn pressure_value_text(
-    snapshot: Option<StorageStatsSnapshot>,
-    value: fn(&StoragePressureSnapshotRecord) -> u64,
-) -> String {
-    snapshot.map_or_else(
-        || "loading".to_string(),
-        |item| match item.storage_pressure.as_ref() {
-            Some(pressure) => value(pressure).to_string(),
-            None => item
-                .storage_pressure_reason
-                .unwrap_or(item.storage_pressure_status),
-        },
-    )
 }
 
 fn inventory_rows(snapshot: Option<StorageStatsSnapshot>) -> impl IntoView {

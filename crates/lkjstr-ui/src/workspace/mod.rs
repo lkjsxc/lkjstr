@@ -24,6 +24,7 @@ mod stats_bytes;
 mod stats_health;
 mod stats_provider;
 mod stats_refresh;
+mod stats_text;
 mod tab_body;
 mod tab_kind_attr;
 mod tab_pending;

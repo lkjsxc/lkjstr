@@ -13,10 +13,12 @@ condition that allows TypeScript product storage deletion.
   optimizer rows, pressure rows, inventory, and app log.
 - Desired Rust owner: storage command specs in `lkjstr-storage`, worker effects
   in `lkjstr-web`, and product consumption in `lkjstr-app` and `lkjstr-ui`.
-- Next source edit: repair command models and worker adapters.
-- Focused tests: `cargo test -p lkjstr-storage retention`,
-  `cargo test -p lkjstr-web retention`, `cargo test -p lkjstr-web cache_ledger`,
-  cache unit tests, and `pnpm rust-wasm:quiet`.
+- Next source edit: pressure and Stats proof, then inventory linkage to
+  retention and repair product consumption.
+- Focused tests: `cargo test -p lkjstr-storage pressure`,
+  `cargo test -p lkjstr-storage stats`, `cargo test -p lkjstr-storage commands`,
+  `cargo test -p lkjstr-ui stats`, touched web adapter tests, cache unit tests,
+  and `pnpm rust-wasm:quiet`.
 - Ledgers: storage area and verification ledger after checks; deletion ledger
   only with no-import proof.
 - Keep: TypeScript storage repositories, SQLite OPFS glue, cache maintenance,

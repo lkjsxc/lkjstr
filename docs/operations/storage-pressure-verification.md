@@ -52,6 +52,10 @@ unknown origin usage as success.
 
 ```sh
 pnpm check:repo
+cargo test -p lkjstr-storage pressure
+cargo test -p lkjstr-storage stats
+cargo test -p lkjstr-storage commands
+cargo test -p lkjstr-ui stats
 pnpm test -- tests/unit/cache/storage-quota.test.ts tests/unit/cache/compaction.test.ts
 pnpm test -- tests/unit/cache/cache-status.test.ts tests/unit/cache/cache-ledger.test.ts
 pnpm test -- tests/unit/events/repository.test.ts tests/unit/settings/settings-store.test.ts

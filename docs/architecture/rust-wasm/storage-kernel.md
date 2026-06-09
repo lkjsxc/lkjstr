@@ -46,10 +46,10 @@ diagnostics still need product wiring.
 Target now: OPFS-backed SQLite WASM in a dedicated worker. The detailed target
 lives in [../data/sqlite-opfs/README.md](../data/sqlite-opfs/README.md).
 
-Not implemented yet: feed runtime SQLite wiring, cache delete and repair paths,
-retention dispatchers, ledger repair, command metadata for retention, repair,
-search/tag lookup, full pressure byte inventory diagnostics, full browser OPFS
-matrix tests, and multi-tab lock handling.
+Not complete yet: feed runtime SQLite wiring, retention product consumption,
+repair product consumption, pressure and Stats UI proof for every unavailable
+state, Search app planning and NIP-50 merge, full browser OPFS matrix tests,
+and multi-tab lock handling.
 
 ## Manifest Contract
 

@@ -23,10 +23,11 @@ until Rust covers every live table family and no-import proof is recorded.
   product storage plus partial Rust storage worker adapters.
 - Desired Rust owner: `lkjstr-storage` for policy and rows, `lkjstr-web` for
   worker calls, `lkjstr-app` for product use, and `lkjstr-ui` for Stats views.
-- Next source edit: pressure inventory completion after repair physical target
+- Next source edit: pressure and Stats proof after repair physical target
   probes.
-- Focused tests: storage command tests, retention tests, web retention tests,
-  cache unit tests, and `pnpm rust-wasm:quiet`.
+- Focused tests: pressure, Stats, command, UI Stats, retention, repair, web
+  retention, cache unit tests, and `pnpm rust-wasm:quiet` as the touched files
+  require.
 - Ledgers: storage cutover area, implementation ledger rows that gain behavior,
   and verification ledger after actual checks.
 - Keep: all TypeScript storage repositories and Svelte product surfaces until
@@ -62,10 +63,11 @@ until Rust covers every live table family and no-import proof is recorded.
    provenance, feed coverage, feed cursors, cache ledger rows, diagnostics,
    optimizer rows, job rows, log rows, active-account selectors, and pressure
    snapshots.
-3. Preserve retention, repair, and Search command definitions, then add
-   inventory gaps with input type, output type, statement ids, tables,
-   stable problem kinds, row codecs, data classes, ledger policy, protection
-   policy, Stats projection, and real-shaped fixtures.
+3. Preserve retention, repair, Search, pressure, and inventory command
+   definitions, then close proof gaps with input type, output type, statement
+   ids, tables or documented inventory-only status, stable problem kinds, row
+   codecs, data classes, ledger policy, protection policy, Stats projection,
+   and real-shaped fixtures.
 4. Wire remaining `lkjstr-web` worker calls without adding main-thread SQLite or
    OPFS access.
 5. Expose persistent OPFS, temporary memory, unavailable, timeout, blocked,

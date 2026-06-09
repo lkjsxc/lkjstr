@@ -36,10 +36,12 @@ Compose verification.
   protected-tool and Stats storage paths.
 - Desired Rust owner: `lkjstr-storage` policy and metadata, `lkjstr-web` worker
   adapters, `lkjstr-app` product composition, and `lkjstr-ui` Stats models.
-- Next source edit: conservative repair command models and worker adapters.
-- Focused tests: `cargo test -p lkjstr-storage retention`,
-  `cargo test -p lkjstr-web retention`, cache unit tests, and
-  `pnpm rust-wasm:quiet`.
+- Next source edit: pressure and Stats proof, then inventory linkage to
+  retention and repair product consumption.
+- Focused tests: `cargo test -p lkjstr-storage pressure`,
+  `cargo test -p lkjstr-storage stats`, `cargo test -p lkjstr-storage commands`,
+  `cargo test -p lkjstr-ui stats`, adapter tests for touched web paths, cache
+  unit tests, and `pnpm rust-wasm:quiet`.
 - Ledgers: update the storage cutover area and verification ledger only with
   commands that actually ran.
 - Keep: `src/lib/storage/sqlite-opfs/**`, `src/lib/storage/repositories/**`,
