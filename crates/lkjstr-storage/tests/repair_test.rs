@@ -1,7 +1,7 @@
 use lkjstr_storage::{
-    RepairBackfillInput, RepairBackfillPlan, RepairFindingKind, RepairInventoryReportInput,
-    RepairScanInput, RepairScanRow, RepairTargetState, plan_repair_backfill,
-    report_repair_inventory, scan_repair,
+    CacheLedgerRecord, CacheOwnerKind, CacheResourceKind, RepairBackfillInput, RepairBackfillPlan,
+    RepairFindingKind, RepairInventoryReportInput, RepairScanInput, RepairScanRow,
+    RepairTargetState, plan_repair_backfill, report_repair_inventory, scan_repair,
 };
 
 #[test]
@@ -159,5 +159,24 @@ fn backfill_plan(
         target_state: RepairTargetState::Missing,
         protected,
         known_owner,
+        ledger_record: (!protected && known_owner).then(|| ledger(resource_id)),
+    }
+}
+
+fn ledger(resource_id: &str) -> CacheLedgerRecord {
+    CacheLedgerRecord {
+        id: format!("event:{resource_id}"),
+        owner_kind: CacheOwnerKind::Event,
+        resource_kind: CacheResourceKind::NostrEvent,
+        resource_id: resource_id.to_owned(),
+        score: 10,
+        created_at: 1,
+        updated_at: 2,
+        cache_bytes: 20,
+        protected: false,
+        account_pubkey: None,
+        feed_key: None,
+        relay_url: None,
+        reason: Some("repair-test".to_owned()),
     }
 }

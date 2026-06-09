@@ -20,8 +20,8 @@ removed.
   optimizer, and Stats.
 - Desired Rust owner: `lkjstr-storage`, `lkjstr-web`, `lkjstr-app`, and
   `lkjstr-ui` along the storage-kernel boundary.
-- First source edit: repair worker adapters after the implemented retention
-  delete dispatch adapter and storage-owned repair command model.
+- First source edit: repair physical target probes after the implemented
+  retention adapter and basic repair worker outcome adapter.
 - Focused tests: retention and command tests in `lkjstr-storage`, retention
   tests in `lkjstr-web`, cache unit tests, and `pnpm rust-wasm:quiet`.
 - Ledgers: this file, implementation ledger rows, and verification ledger when
@@ -60,19 +60,19 @@ removed.
   selectors through the SQLite worker and treats the old localStorage key as a
   migration source only. Optimizer scan-model command metadata is implemented.
   Retention planner, command metadata, and delete dispatch adapter are
-  implemented; product consumption remains open. Repair scan, backfill, and
-  inventory report metadata plus storage-owned models are implemented; repair
-  worker adapters, search/tag lookup, full pressure byte inventory diagnostics,
-  and feed-runtime consumption remain open.
+  implemented; product consumption remains open. Repair metadata, storage-owned
+  models, worker health/outcome mapping, and ledger backfill batching are
+  implemented; physical target probes, search/tag lookup, full pressure byte
+  inventory diagnostics, and feed-runtime consumption remain open.
 - Command metadata status: active selector, pressure, protected rows, event
   cache, feed evidence, relay diagnostics, notifications, jobs, app log,
   inventory snapshot, optimizer scan-model rows, retention planner rows, and
   retention delete dispatch rows are implemented. Repair scan, backfill, and
-  inventory report command metadata are implemented. Repair worker adapters and
-  search/tag lookup command coverage are not implemented.
-- Next task order: repair worker adapter, search/tag lookup storage command
-  coverage, pressure inventory completion, relay effect wiring, shared feed
-  runtime, and Home feed slice.
+  inventory report command metadata are implemented with basic worker adapters.
+  Search/tag lookup command coverage is not implemented.
+- Next task order: repair physical target probes, search/tag lookup storage
+  command coverage, pressure inventory completion, relay effect wiring, shared
+  feed runtime, and Home feed slice.
 
 ## Acceptance Checklist
 
@@ -92,6 +92,8 @@ removed.
   wiring where applicable, and focused proof.
 - [x] Repair scan, backfill, and inventory report commands have Rust metadata,
   stable labels, conservative models, and focused storage proof.
+- [x] Repair worker adapters propagate health/outcome states and batch only
+  storage-approved ledger backfill rows.
 - [ ] Every command has input, output, statement ids when not inventory-only,
   stable problem kinds, ledger policy, protection policy, Stats projection, and
   fixture proof.

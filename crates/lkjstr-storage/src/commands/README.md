@@ -19,4 +19,5 @@ repositories.
 - `optimizer.rs`: scan-model optimizer command specs.
 - `pressure.rs`: storage pressure command specs.
 - `protected.rs`: protected storage command specs.
+- `repair.rs`: repair scan, backfill, and inventory report command specs.
 - `retention.rs`: retention planner and delete-dispatch command specs.

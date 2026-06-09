@@ -32,6 +32,7 @@ pub mod relay_score;
 mod relay_selection;
 #[cfg(target_arch = "wasm32")]
 mod relay_settings_host;
+pub mod repair_adapter;
 mod response;
 pub mod retention_dispatch;
 mod retention_routes;

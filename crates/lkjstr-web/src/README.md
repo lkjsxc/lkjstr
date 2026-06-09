@@ -28,6 +28,7 @@ Source files expose Rust application behavior to the browser through
 - `relay_host/`: relay WebSocket and browser timeout host adapters.
 - `relay_selection.rs`: local selected relay-set preference helper.
 - `relay_settings_host.rs`: SQLite-backed Relay Settings command provider.
+- `repair_adapter.rs`: repair health and worker outcome mapping helpers.
 - `retention_dispatch.rs`: pure retention dispatch statement-id planning.
 - `retention_routes.rs`: retention resource-kind to statement-id routing.
 - `response.rs`: structured JavaScript response helpers.

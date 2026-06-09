@@ -132,7 +132,7 @@ pub use relay_sets::{
 };
 pub use repair::{
     RepairBackfillPlan, RepairFinding, RepairFindingKind, RepairScanRow, RepairTargetState,
-    plan_repair_backfill, report_repair_inventory, scan_repair,
+    plan_repair_backfill, repair_backfill_ledger_rows, report_repair_inventory, scan_repair,
 };
 pub use resource::{CacheOwnerKind, CacheResourceKind};
 pub use retention::{

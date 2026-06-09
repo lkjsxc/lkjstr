@@ -9,8 +9,9 @@ prunable rows and reports exact reasons, counts, and repair findings.
 
 Active. Retention delete dispatch has Rust statement planning, worker-adapter
 binding, and batch outcome mapping. Repair now has conservative storage-owned
-scan, backfill, inventory report models, stable labels, command metadata, and
-focused storage tests. The repair worker adapter is the next source slice.
+scan, backfill, inventory report models, stable labels, command metadata,
+worker health/outcome mapping, and storage-approved ledger backfill batching.
+Physical target probes and product wiring remain open.
 
 ## Current Evidence
 
@@ -22,10 +23,13 @@ focused storage tests. The repair worker adapter is the next source slice.
 - `lkjstr-storage` owns repair finding labels, chunked scan records,
   conservative backfill reporting, inventory report records, and repair command
   metadata.
+- `lkjstr-web` maps repair health, timeout, cancellation, and late-settlement
+  outcomes through the SQLite worker and binds only storage-approved ledger
+  backfill rows to worker batches.
 - TypeScript cache cleanup and compaction paths still own many shipped product
   maintenance actions until Rust product consumption is wired.
 - Stats can project real pressure snapshot rows when they exist, but full byte
-  inventory diagnostics and repair worker dispatch remain open.
+  inventory diagnostics and repair physical target probes remain open.
 
 ## Current Next Edit
 
@@ -33,8 +37,8 @@ focused storage tests. The repair worker adapter is the next source slice.
    `lkjstr-web`; do not move storage policy into the host adapter.
 2. Retain shipped TypeScript cache maintenance until Rust product wiring,
    focused tests, and no-import proof exist.
-3. Bind repair scan, backfill, and inventory reports through `lkjstr-web`
-   worker adapters without moving safety policy into the host layer.
+3. Add repair physical target probes without moving safety policy into the host
+   layer or exposing raw SQL to product code.
 
 ## Next Checklist
 
@@ -51,6 +55,8 @@ focused storage tests. The repair worker adapter is the next source slice.
   batch-failure mapping states at the Rust adapter boundary.
 - [x] Add conservative repair target states and chunked scan outputs only after
   retention dispatch passes.
+- [x] Bind repair health/outcome mapping and storage-approved ledger backfill
+  rows through `lkjstr-web`.
 - [ ] Run retention, repair, cache-ledger, cache unit, and Rust/WASM gates; then
   record actual verification.
 
@@ -86,7 +92,8 @@ and backfill results without silently marking unknown rows safe.
 - `crates/lkjstr-web/src/sqlite_store/cache_ledger.rs` for shared ledger steps.
 - `crates/lkjstr-storage/src/repair/**` for the implemented storage-owned
   model.
-- `crates/lkjstr-web/src/sqlite_store/repair.rs` for the next worker adapter.
+- `crates/lkjstr-web/src/sqlite_store/repair.rs` for the implemented basic
+  worker adapter and next physical target probes.
 
 ## Temporary TypeScript Or Svelte Files To Keep
 

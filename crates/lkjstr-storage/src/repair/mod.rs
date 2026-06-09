@@ -6,6 +6,7 @@ mod scan;
 
 pub use backfill::{
     RepairBackfillInput, RepairBackfillOutput, RepairBackfillPlan, plan_repair_backfill,
+    repair_backfill_ledger_rows,
 };
 pub use finding::{RepairFinding, RepairFindingKind};
 pub use scan::{
