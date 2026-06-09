@@ -51,14 +51,14 @@ pub use commands::{
     ActiveAccountSelectorGetInput, ActiveAccountSelectorGetOutput, ActiveAccountSelectorPutInput,
     ActiveAccountSelectorPutOutput, RepairBackfillInput, RepairBackfillOutput,
     RepairInventoryReportInput, RepairInventoryReportOutput, RepairScanInput, RepairScanOutput,
-    RetentionDeleteDispatchInput, RetentionDeleteDispatchOutput, RetentionPlanOutput,
-    STORAGE_REPOSITORY_COMMANDS, SearchLocalQueryInput, SearchLocalQueryOutput,
-    SearchUpdateEventIndexInput, SearchUpdateEventIndexOutput, StorageCommandFamily,
-    StorageLedgerPolicy, StoragePressureGetInput, StoragePressureGetOutput,
-    StoragePressureProjectInput, StoragePressureProjectOutput, StoragePressurePutInput,
-    StoragePressurePutOutput, StorageProtectionPolicy, StorageRepositoryCommandSpec,
-    StorageStatsProjection, TagLookupByValueInput, TagLookupByValueOutput,
-    storage_repository_commands,
+    RepairTargetProbeInput, RepairTargetProbeOutput, RetentionDeleteDispatchInput,
+    RetentionDeleteDispatchOutput, RetentionPlanOutput, STORAGE_REPOSITORY_COMMANDS,
+    SearchLocalQueryInput, SearchLocalQueryOutput, SearchUpdateEventIndexInput,
+    SearchUpdateEventIndexOutput, StorageCommandFamily, StorageLedgerPolicy,
+    StoragePressureGetInput, StoragePressureGetOutput, StoragePressureProjectInput,
+    StoragePressureProjectOutput, StoragePressurePutInput, StoragePressurePutOutput,
+    StorageProtectionPolicy, StorageRepositoryCommandSpec, StorageStatsProjection,
+    TagLookupByValueInput, TagLookupByValueOutput, storage_repository_commands,
 };
 pub use data_class::{StorageDataClass, StorageInventoryGroup};
 pub use diagnostics::{
@@ -134,8 +134,10 @@ pub use relay_sets::{
     relay_set_record_json_bytes, sqlite_relay_set_row,
 };
 pub use repair::{
-    RepairBackfillPlan, RepairFinding, RepairFindingKind, RepairScanRow, RepairTargetState,
-    plan_repair_backfill, repair_backfill_ledger_rows, report_repair_inventory, scan_repair,
+    RepairBackfillPlan, RepairFinding, RepairFindingKind, RepairProbeHit, RepairScanRow,
+    RepairTargetProbe, RepairTargetProbeBatch, RepairTargetState, finish_repair_target_probe,
+    plan_repair_backfill, repair_backfill_ledger_rows, repair_probe_row, repair_probe_statement_id,
+    repair_target_probe_batch, report_repair_inventory, scan_repair,
 };
 pub use resource::{CacheOwnerKind, CacheResourceKind};
 pub use retention::{
@@ -162,8 +164,8 @@ pub use sql::{
     FOREIGN_KEYS_PRAGMA, SqliteIndexSpec, SqliteRetentionClass, SqliteSchemaStatement,
     SqliteStatementKind, SqliteStatementSpec, SqliteTableSpec, cache_sqlite_statements,
     diagnostic_sqlite_statements, optimizer_sqlite_statements, protected_sqlite_statements,
-    search_sqlite_statements, sqlite_repository_statements, sqlite_schema_hash,
-    sqlite_schema_index_names, sqlite_schema_indexes, sqlite_schema_statements,
+    repair_sqlite_statements, search_sqlite_statements, sqlite_repository_statements,
+    sqlite_schema_hash, sqlite_schema_index_names, sqlite_schema_indexes, sqlite_schema_statements,
     sqlite_schema_table, sqlite_schema_table_names, sqlite_schema_tables, sqlite_statement,
     sqlite_table_count_sql,
 };

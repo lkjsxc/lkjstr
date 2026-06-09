@@ -1,8 +1,11 @@
 use lkjstr_storage::{
     RepairFindingKind, RepairInventoryReportInput, RepairScanInput, RepairScanRow,
-    RepairTargetState, SqliteStorageHealth, StorageOperation, StorageOutcome, StorageProblem,
+    RepairTargetProbeInput, RepairTargetState, SqliteStorageHealth, StorageOperation,
+    StorageOutcome, StorageProblem,
 };
-use lkjstr_web::repair_adapter::{repair_inventory_after_health, repair_scan_after_health};
+use lkjstr_web::repair_adapter::{
+    repair_inventory_after_health, repair_probe_input_after_health, repair_scan_after_health,
+};
 
 #[test]
 fn repair_scan_after_health_marks_temporary_memory() -> Result<(), String> {
@@ -86,9 +89,45 @@ fn repair_inventory_after_health_surfaces_temporary_memory() -> Result<(), Strin
     Ok(())
 }
 
+#[test]
+fn repair_probe_input_after_health_surfaces_temporary_memory() -> Result<(), String> {
+    let output = match repair_probe_input_after_health(probe_input(), health("temporary-memory")) {
+        StorageOutcome::Ok(output) => output,
+        outcome => return Err(format!("unexpected outcome {outcome:?}")),
+    };
+    assert!(output.temporary_memory_mode);
+    Ok(())
+}
+
+#[test]
+fn repair_probe_input_after_health_propagates_timeout() -> Result<(), String> {
+    let problem = StorageProblem::new(
+        StorageOperation::Inventory,
+        "sqlite_worker",
+        "timeout",
+        "probe",
+    );
+    match repair_probe_input_after_health(probe_input(), StorageOutcome::Timeout(problem.clone())) {
+        StorageOutcome::Timeout(actual) => assert_eq!(actual, problem),
+        outcome => return Err(format!("unexpected outcome {outcome:?}")),
+    }
+    Ok(())
+}
+
 fn scan_input(rows: Vec<RepairScanRow>) -> RepairScanInput {
     RepairScanInput {
         rows,
+        after_resource_id: None,
+        limit: 10,
+        inventory_complete: true,
+        temporary_memory_mode: false,
+        schema_matches: true,
+    }
+}
+
+fn probe_input() -> RepairTargetProbeInput {
+    RepairTargetProbeInput {
+        targets: Vec::new(),
         after_resource_id: None,
         limit: 10,
         inventory_complete: true,

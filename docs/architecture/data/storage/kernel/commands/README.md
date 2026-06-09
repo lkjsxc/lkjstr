@@ -29,8 +29,8 @@ specs, worker adapters, retention, repair, inventory, or Stats rows.
   and TypeScript repositories for shipped storage product calls.
 - Desired Rust owner: `lkjstr-storage` command specs plus `lkjstr-web` typed
   adapters that execute those specs through worker messages.
-- Next source edit: add repair command metadata without changing retention
-  policy.
+- Next source edit: keep repair physical probes and pressure inventory inside
+  storage-owned command metadata without changing retention policy.
 - Focused tests: `cargo test -p lkjstr-storage commands`,
   `cargo test -p lkjstr-web retention`, and storage manifest doc checks.
 - Ledgers: update storage cutover and verification ledgers after proof only.
@@ -72,8 +72,8 @@ app log, inventory snapshot, and optimizer scan-model rows.
 | Command id | Rust metadata | SQL or table route | Worker adapter | TypeScript retained | Focused test |
 | --- | --- | --- | --- | --- | --- |
 | `retention.delete-dispatch` | `commands/retention.rs` | table statements in [retention.md](retention.md) | `sqlite_store/retention.rs` | cache ledger and compaction repositories | `cargo test -p lkjstr-web retention` |
-| `repair.scan-ledger` and repair writes | add `commands/repair.rs` | cache ledger chunks plus manifest target probes | add `sqlite_store/repair.rs` | cache maintenance repositories | `cargo test -p lkjstr-storage repair` |
-| `search.local-query` and `search.update-event-index` | `commands/search.rs` | token rows plus event tag lookups | event put token batch bridge; local query adapter pending | search-index repositories | `cargo test -p lkjstr-storage search` |
+| `repair.scan-ledger`, `repair.probe-targets`, and repair writes | `commands/repair.rs` | cache ledger chunks plus approved manifest target probes | `sqlite_store/repair.rs` | cache maintenance repositories | `cargo test -p lkjstr-storage repair` |
+| `search.local-query` and `search.update-event-index` | `commands/search.rs` | token rows plus event tag lookups | event put token batch bridge and local indexed query adapter | search-index repositories | `cargo test -p lkjstr-storage search` |
 | `storage-inventory.snapshot` gaps | `commands/inventory.rs` | generated table counts and browser inventory | `sqlite_store/inventory.rs` | Stats/cache repositories | `cargo test -p lkjstr-storage stats` |
 
 ## Rules

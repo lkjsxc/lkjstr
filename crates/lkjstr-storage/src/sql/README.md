@@ -13,4 +13,5 @@ target.
 - `diagnostics.rs`: relay diagnostics and app log tables.
 - `indexes.rs`: SQLite index records.
 - `metadata.rs`: ledger and metadata tables.
+- `repair_statements.rs`: repair physical target probe statements.
 - `statements.rs`: protected repository SQL statement records.

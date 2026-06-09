@@ -20,6 +20,12 @@ fn repair_commands_are_registered_with_stable_metadata() -> Result<(), String> {
     assert!(backfill.statements.contains(&"cache_ledger.upsert"));
     assert!(backfill.row_codecs.contains(&"repair_backfill_plan"));
 
+    let probe = command("repair.probe-targets")?;
+    assert_eq!(probe.ledger_policy, StorageLedgerPolicy::RepairsLedger);
+    assert!(probe.statements.contains(&"events.repair_probe"));
+    assert!(probe.statements.contains(&"jobs.repair_probe"));
+    assert!(probe.row_codecs.contains(&"repair_probe_hit"));
+
     let inventory = command("repair.report-inventory")?;
     assert_eq!(
         inventory.protection_policy,

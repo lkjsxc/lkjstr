@@ -57,8 +57,8 @@ metadata shape. Optimizer scan-model command metadata is implemented;
 retention planner, command metadata, and delete dispatch adapter are
 implemented. Search token rows, tag lookup metadata, event-write token batch
 steps, and local indexed query adapters are implemented. Retention product
-consumption, repair physical probes, Search app planning, NIP-50 merge, and
-surface parity remain open.
+consumption, pressure inventory completion, Search app planning, NIP-50 merge,
+and surface parity remain open.
 
 ## Storage Family Matrix
 

@@ -11,7 +11,7 @@ Active. Retention delete dispatch has Rust statement planning, worker-adapter
 binding, and batch outcome mapping. Repair now has conservative storage-owned
 scan, backfill, inventory report models, stable labels, command metadata,
 worker health/outcome mapping, and storage-approved ledger backfill batching.
-Physical target probes and product wiring remain open.
+Physical target probes are implemented; product wiring remains open.
 
 ## Current Evidence
 
@@ -26,6 +26,8 @@ Physical target probes and product wiring remain open.
 - `lkjstr-web` maps repair health, timeout, cancellation, and late-settlement
   outcomes through the SQLite worker and binds only storage-approved ledger
   backfill rows to worker batches.
+- `repair.probe-targets` routes only storage-approved target statements through
+  `lkjstr-web`; unknown, mismatched, or unprobeable targets stay unsafe.
 - TypeScript cache cleanup and compaction paths still own many shipped product
   maintenance actions until Rust product consumption is wired.
 - Stats can project real pressure snapshot rows when they exist, but full byte
@@ -37,14 +39,14 @@ Physical target probes and product wiring remain open.
    `lkjstr-web`; do not move storage policy into the host adapter.
 2. Retain shipped TypeScript cache maintenance until Rust product wiring,
    focused tests, and no-import proof exist.
-3. Add repair physical target probes without moving safety policy into the host
-   layer or exposing raw SQL to product code.
+3. Keep repair physical target probes storage-routed; do not expose raw SQL to
+   product code.
 
 ## Next Checklist
 
 - [ ] Read retention deletion, ledger, scoring, dynamic protection, pressure,
   and repair contracts.
-- [ ] Update retention and repair command docs before changing source.
+- [x] Update retention and repair command docs before changing source.
 - [ ] Preserve the implemented pure Rust planner and `retention.plan` plus
   `retention.delete-dispatch` command metadata.
 - [x] Add `crates/lkjstr-web/src/sqlite_store/retention.rs` and export it from
@@ -57,6 +59,8 @@ Physical target probes and product wiring remain open.
   retention dispatch passes.
 - [x] Bind repair health/outcome mapping and storage-approved ledger backfill
   rows through `lkjstr-web`.
+- [x] Add repair physical target probes without moving safety policy into the
+  host layer.
 - [ ] Run retention, repair, cache-ledger, cache unit, and Rust/WASM gates; then
   record actual verification.
 

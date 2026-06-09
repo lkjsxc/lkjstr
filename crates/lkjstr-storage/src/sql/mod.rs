@@ -10,6 +10,7 @@ mod metadata;
 mod optimizer;
 mod optimizer_statements;
 mod protected;
+mod repair_statements;
 mod repository_statements;
 mod search;
 mod search_statements;
@@ -156,8 +157,8 @@ pub fn sqlite_schema_statements() -> Vec<SqliteSchemaStatement> {
 pub use hash::sqlite_schema_hash;
 pub use repository_statements::{
     cache_sqlite_statements, diagnostic_sqlite_statements, optimizer_sqlite_statements,
-    protected_sqlite_statements, search_sqlite_statements, sqlite_repository_statements,
-    sqlite_statement,
+    protected_sqlite_statements, repair_sqlite_statements, search_sqlite_statements,
+    sqlite_repository_statements, sqlite_statement,
 };
 
 #[must_use]

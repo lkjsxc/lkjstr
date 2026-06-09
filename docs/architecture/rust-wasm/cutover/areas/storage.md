@@ -20,8 +20,8 @@ removed.
   optimizer, and Stats.
 - Desired Rust owner: `lkjstr-storage`, `lkjstr-web`, `lkjstr-app`, and
   `lkjstr-ui` along the storage-kernel boundary.
-- First source edit: repair physical target probes after the implemented
-  retention adapter and basic repair worker outcome adapter.
+- First source edit: pressure inventory completion after implemented repair
+  target probes.
 - Focused tests: retention and command tests in `lkjstr-storage`, retention
   tests in `lkjstr-web`, cache unit tests, and `pnpm rust-wasm:quiet`.
 - Ledgers: this file, implementation ledger rows, and verification ledger when
@@ -63,17 +63,17 @@ removed.
   implemented; product consumption remains open. Repair metadata, storage-owned
   models, worker health/outcome mapping, and ledger backfill batching are
   implemented. Search token rows, tag lookup metadata, event-write token
-  batches, and local indexed query adapters are implemented; physical repair
-  probes, Search app planning, NIP-50 merge, full pressure byte inventory
+  batches, local indexed query adapters, and physical repair probes are
+  implemented; Search app planning, NIP-50 merge, full pressure byte inventory
   diagnostics, and feed consumption remain open.
 - Command metadata status: active selector, pressure, protected rows, event
   cache, feed evidence, relay diagnostics, notifications, jobs, app log,
   inventory snapshot, optimizer scan-model rows, retention planner rows,
-  retention delete dispatch rows, repair scan/backfill/report rows, and Search
-  token/tag rows are implemented. Search app planning, NIP-50 merge, Leptos
-  parity, and deletion proof are not implemented.
-- Next task order: repair physical target probes, pressure inventory completion,
-  relay effect wiring, shared feed runtime, and Home feed slice.
+  retention delete dispatch rows, repair scan/probe/backfill/report rows, and
+  Search token/tag rows are implemented. Search app planning, NIP-50 merge,
+  Leptos parity, and deletion proof are not implemented.
+- Next task order: pressure inventory completion, relay effect wiring, shared
+  feed runtime, and Home feed slice.
 
 ## Acceptance Checklist
 
@@ -89,7 +89,7 @@ removed.
   jobs, app log, pressure, and inventory worker calls have Rust command
   metadata.
 - [x] Optimizer scan-model commands have Rust metadata and focused proof.
-- [ ] Repair probes have worker wiring and focused proof.
+- [x] Repair probes have worker wiring and focused proof.
 - [x] Repair scan, backfill, and inventory report commands have Rust metadata,
   stable labels, conservative models, and focused storage proof.
 - [x] Repair worker adapters propagate health/outcome states and batch only

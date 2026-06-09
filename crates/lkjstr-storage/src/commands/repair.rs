@@ -2,7 +2,8 @@
 
 pub use crate::repair::{
     RepairBackfillInput, RepairBackfillOutput, RepairInventoryReportInput,
-    RepairInventoryReportOutput, RepairScanInput, RepairScanOutput,
+    RepairInventoryReportOutput, RepairScanInput, RepairScanOutput, RepairTargetProbeInput,
+    RepairTargetProbeOutput,
 };
 
 use crate::{
@@ -103,6 +104,36 @@ pub const REPAIR_BACKFILL_LEDGER_COMMAND: Spec = Spec {
     stats_projection: Stats::CacheSummary,
 };
 
+pub const REPAIR_PROBE_TARGETS_COMMAND: Spec = Spec {
+    id: "repair.probe-targets",
+    family: Family::Repair,
+    operation: Op::Repair,
+    input_type: "RepairTargetProbeInput",
+    output_type: "RepairTargetProbeOutput",
+    statements: &[
+        "events.repair_probe",
+        "notifications.repair_probe",
+        "feed_cursors.repair_probe",
+        "feed_coverage.repair_probe",
+        "feed_scan_hints.repair_probe",
+        "relay_diagnostic_summaries.repair_probe",
+        "relay_information.repair_probe",
+        "relay_read_observations.repair_probe",
+        "relay_read_scores.repair_probe",
+        "relay_list_suggestions.repair_probe",
+        "author_relay_routes.repair_probe",
+        "route_evidence_scores.repair_probe",
+        "jobs.repair_probe",
+    ],
+    tables: REPAIR_TABLES,
+    row_codecs: &["repair_probe_target", "repair_probe_hit", "repair_scan_row"],
+    problem_kinds: REPAIR_PROBLEMS,
+    data_classes: REPAIR_CLASSES,
+    ledger_policy: Ledger::RepairsLedger,
+    protection_policy: Protection::Mixed,
+    stats_projection: Stats::CacheSummary,
+};
+
 pub const REPAIR_REPORT_INVENTORY_COMMAND: Spec = Spec {
     id: "repair.report-inventory",
     family: Family::Repair,
@@ -128,6 +159,7 @@ pub const REPAIR_REPORT_INVENTORY_COMMAND: Spec = Spec {
 
 pub const REPAIR_COMMANDS: &[Spec] = &[
     REPAIR_SCAN_LEDGER_COMMAND,
+    REPAIR_PROBE_TARGETS_COMMAND,
     REPAIR_BACKFILL_LEDGER_COMMAND,
     REPAIR_REPORT_INVENTORY_COMMAND,
 ];

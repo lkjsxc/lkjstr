@@ -17,7 +17,7 @@ This directory contains Rust repository calls over the SQLite storage worker.
 - `params.rs`: SQL parameter helpers.
 - `pressure.rs`: storage pressure snapshot repository calls.
 - `relay_sets.rs`: relay-set protected repository calls and bounded bulk save.
-- `repair.rs`: repair scan, inventory, and ledger backfill adapter calls.
+- `repair.rs`: repair scan, target probe, inventory, and ledger backfill calls.
 - `retention.rs`: retention delete dispatch adapter and worker batch binding.
 - `rows.rs`: SQLite row decoding helpers.
 - `search.rs`: local Search token-index batch and query helpers.

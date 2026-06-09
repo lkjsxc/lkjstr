@@ -3,8 +3,8 @@
 use lkjstr_storage::{
     RepairBackfillInput, RepairBackfillOutput, RepairFinding, RepairFindingKind,
     RepairInventoryReportInput, RepairInventoryReportOutput, RepairScanInput, RepairScanOutput,
-    SqliteStorageHealth, StorageOutcome, plan_repair_backfill, report_repair_inventory,
-    scan_repair,
+    RepairTargetProbeInput, SqliteStorageHealth, StorageOutcome, plan_repair_backfill,
+    report_repair_inventory, scan_repair,
 };
 
 pub fn repair_scan_after_health(
@@ -31,6 +31,19 @@ pub fn repair_inventory_after_health(
     let mut next = input;
     next.temporary_memory_mode |= temporary;
     StorageOutcome::Ok(report_repair_inventory(next))
+}
+
+pub fn repair_probe_input_after_health(
+    input: RepairTargetProbeInput,
+    health: StorageOutcome<SqliteStorageHealth>,
+) -> StorageOutcome<RepairTargetProbeInput> {
+    let temporary = match temporary_memory_mode(health) {
+        Ok(temporary) => temporary,
+        Err(outcome) => return outcome,
+    };
+    let mut next = input;
+    next.temporary_memory_mode |= temporary;
+    StorageOutcome::Ok(next)
 }
 
 pub fn repair_backfill_after_health(

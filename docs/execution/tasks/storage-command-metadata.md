@@ -22,8 +22,9 @@ and pressure inventory.
   `lkjstr-web` binds delete-dispatch statement plans to one worker batch.
 - Repair scan, backfill, and inventory report command metadata are implemented
   with conservative storage-owned models and basic `lkjstr-web` worker outcome
-  adapters. Search token rows, tag lookup metadata, update-event-index metadata,
-  local-query metadata, and local-query adapter wiring are implemented.
+  adapters. Physical target probes are implemented. Search token rows, tag
+  lookup metadata, update-event-index metadata, local-query metadata, and
+  local-query adapter wiring are implemented.
 - Event and feed writes use batch metadata because one command may touch
   resource rows, child rows, provenance rows, and `cache_ledger` rows.
 
@@ -32,7 +33,8 @@ and pressure inventory.
 1. Preserve retention, repair, and Search command specs with real statement ids,
    manifest tables, codecs, problem kinds, ledger policy, protection policy,
    and Stats projection when any.
-2. Add repair physical target probes.
+2. Keep repair physical target probes storage-routed and host-executed only by
+   approved statement ids.
 3. Keep app-level Search planning, NIP-50 merge, and UI parity out of storage
    command metadata.
 
@@ -51,6 +53,7 @@ and pressure inventory.
   of storage.
 - [x] Register Search token/tag command specs and indexed token row codecs with
   focused storage tests.
+- [x] Add repair physical target probe command metadata and adapter proof.
 - [ ] Run the storage command focused gate and update verification evidence with
   actual commands.
 

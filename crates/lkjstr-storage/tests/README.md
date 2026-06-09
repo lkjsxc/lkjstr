@@ -16,7 +16,9 @@ browser storage manifest.
 - `commands_feed_cache_test.rs`: feed-evidence command specs.
 - `commands_metadata_coverage_test.rs`: cross-family command coverage invariants.
 - `commands_optimizer_test.rs`: optimizer command specs.
+- `commands_search_test.rs`: Search command specs.
 - `commands_retention_test.rs`: retention command specs.
+- `commands_repair_test.rs`: repair command specs.
 - `diagnostic_sql_statements_test.rs`: diagnostics statement records.
 - `diagnostics_sqlite_rows_test.rs`: diagnostics row codecs.
 - `event_cache_sqlite_rows_test.rs`: event-cache row codecs.
@@ -29,7 +31,10 @@ browser storage manifest.
 - `pressure_test.rs`: pressure snapshot codec and stop reasons.
 - `protected_sqlite_rows_test.rs`: SQLite protected row codecs.
 - `relay_sets_test.rs`: protected relay-set row serialization.
+- `repair_probe_test.rs`: repair physical target probe routes.
+- `repair_test.rs`: conservative repair scan and backfill behavior.
 - `retention_test.rs`: pure retention planner behavior.
+- `search_test.rs`: Search tokenization and indexed result behavior.
 - `settings_schema_test.rs`: settings schema defaults.
 - `settings_test.rs`: setting row behavior.
 - `sql_schema_test.rs`: SQLite schema and statement records.

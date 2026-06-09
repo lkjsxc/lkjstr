@@ -12,8 +12,9 @@ The current storage slice preserves implemented active-account selector,
 pressure-row, protected, event-cache, feed-evidence, diagnostics,
 notifications, jobs, app-log, inventory, optimizer, retention planning,
 retention delete dispatch, local Search query adapters, and batch-capable
-command-shape contracts. Repair, full physical pressure inventory, and retention
-product consumption remain open. It must not delete TypeScript storage repositories
+command-shape contracts. Repair physical probes are implemented; full physical
+pressure inventory and retention product consumption remain open. It must not
+delete TypeScript storage repositories
 until Rust covers every live table family and no-import proof is recorded.
 
 ## Agent Start
@@ -22,8 +23,8 @@ until Rust covers every live table family and no-import proof is recorded.
   product storage plus partial Rust storage worker adapters.
 - Desired Rust owner: `lkjstr-storage` for policy and rows, `lkjstr-web` for
   worker calls, `lkjstr-app` for product use, and `lkjstr-ui` for Stats views.
-- Next source edit: repair physical target probes after the storage-owned model
-  and basic worker adapter.
+- Next source edit: pressure inventory completion after repair physical target
+  probes.
 - Focused tests: storage command tests, retention tests, web retention tests,
   cache unit tests, and `pnpm rust-wasm:quiet`.
 - Ledgers: storage cutover area, implementation ledger rows that gain behavior,
@@ -61,8 +62,8 @@ until Rust covers every live table family and no-import proof is recorded.
    provenance, feed coverage, feed cursors, cache ledger rows, diagnostics,
    optimizer rows, job rows, log rows, active-account selectors, and pressure
    snapshots.
-3. Preserve retention, repair, and Search command definitions, then add repair
-   probes and inventory gaps with input type, output type, statement ids, tables,
+3. Preserve retention, repair, and Search command definitions, then add
+   inventory gaps with input type, output type, statement ids, tables,
    stable problem kinds, row codecs, data classes, ledger policy, protection
    policy, Stats projection, and real-shaped fixtures.
 4. Wire remaining `lkjstr-web` worker calls without adding main-thread SQLite or

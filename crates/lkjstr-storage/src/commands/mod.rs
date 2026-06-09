@@ -26,7 +26,8 @@ pub use pressure::{
 };
 pub use repair::{
     RepairBackfillInput, RepairBackfillOutput, RepairInventoryReportInput,
-    RepairInventoryReportOutput, RepairScanInput, RepairScanOutput,
+    RepairInventoryReportOutput, RepairScanInput, RepairScanOutput, RepairTargetProbeInput,
+    RepairTargetProbeOutput,
 };
 pub use retention::{
     RetentionDeleteDispatchInput, RetentionDeleteDispatchOutput, RetentionPlanOutput,
@@ -111,6 +112,7 @@ pub const STORAGE_REPOSITORY_COMMANDS: &[StorageRepositoryCommandSpec] = &[
     retention::RETENTION_PLAN_COMMAND,
     retention::RETENTION_DELETE_DISPATCH_COMMAND,
     repair::REPAIR_SCAN_LEDGER_COMMAND,
+    repair::REPAIR_PROBE_TARGETS_COMMAND,
     repair::REPAIR_BACKFILL_LEDGER_COMMAND,
     repair::REPAIR_REPORT_INVENTORY_COMMAND,
     search::TAG_LOOKUP_BY_VALUE_COMMAND,

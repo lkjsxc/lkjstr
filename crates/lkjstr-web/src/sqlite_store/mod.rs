@@ -64,7 +64,10 @@ pub use relay_routes::{
 pub use relay_sets::{
     sqlite_relay_set_get, sqlite_relay_set_put, sqlite_relay_sets_all, sqlite_relay_sets_put_all,
 };
-pub use repair::{sqlite_repair_backfill, sqlite_repair_inventory_report, sqlite_repair_scan};
+pub use repair::{
+    sqlite_repair_backfill, sqlite_repair_inventory_report, sqlite_repair_probe_targets,
+    sqlite_repair_scan,
+};
 pub use retention::{
     SqliteRetentionDispatchBatch, SqliteRetentionDispatchStep, sqlite_retention_delete_dispatch,
     sqlite_retention_delete_dispatch_steps,

@@ -2,7 +2,7 @@
 
 use super::{
     SqliteStatementSpec, cache_statements, diagnostic_statements, optimizer_statements,
-    search_statements, statements,
+    repair_statements, search_statements, statements,
 };
 
 #[must_use]
@@ -31,6 +31,11 @@ pub const fn optimizer_sqlite_statements() -> &'static [SqliteStatementSpec] {
 }
 
 #[must_use]
+pub const fn repair_sqlite_statements() -> &'static [SqliteStatementSpec] {
+    repair_statements::REPAIR_STATEMENTS
+}
+
+#[must_use]
 pub fn sqlite_repository_statements() -> Vec<&'static SqliteStatementSpec> {
     statements::PROTECTED_STATEMENTS
         .iter()
@@ -38,6 +43,7 @@ pub fn sqlite_repository_statements() -> Vec<&'static SqliteStatementSpec> {
         .chain(search_statements::SEARCH_STATEMENTS.iter())
         .chain(optimizer_statements::OPTIMIZER_STATEMENTS.iter())
         .chain(diagnostic_statements::DIAGNOSTIC_STATEMENTS.iter())
+        .chain(repair_statements::REPAIR_STATEMENTS.iter())
         .collect()
 }
 

@@ -34,6 +34,19 @@ never scans stores directly.
 | `missing` | The owning SQLite table was read and the primary key does not exist. | yes, for unprotected ledger rows |
 | `unavailable` | The table, row codec, query, or chunk budget was unavailable. | no |
 
+## Physical Probes
+
+`repair.probe-targets` is the physical target command. `lkjstr-storage`
+chooses the resource-kind and table route, and `lkjstr-web` executes only the
+approved `*.repair_probe` statement id for that route. Product code supplies
+typed targets only; it never supplies SQL, table names for ad hoc probing, or
+raw predicates.
+
+Probe output feeds `repair.scan-ledger`. Unknown resource kinds, table/resource
+kind mismatches, protected rows, and unprobeable composite owners remain
+reported as unavailable or unknown instead of safe. A missing target is only a
+fact for an approved statement that ran successfully.
+
 ## Chunking
 
 Every repair scan uses:

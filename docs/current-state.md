@@ -113,8 +113,8 @@ Read next: [architecture/data/README.md](architecture/data/README.md),
   active account selectors, pressure snapshots, and durable lkjstr Log rows. The
   Rust IndexedDB adapter remains for host-boundary tests and narrow WASM exports.
 - Physical inventory, cache tool summaries, retention target checks, and
-  protection snapshots use SQLite paths. Repair has a storage-owned model and
-  basic worker adapter; physical probes are next. Old IndexedDB is presence-only.
+  protection snapshots use SQLite paths. Repair has a storage-owned model,
+  basic worker adapter, and physical target probes. Old IndexedDB is presence-only.
 - Storage inventory is SQLite-first. It reads SQLite table counts, cache ledger
   summaries, browser quota estimates, localStorage, Cache Storage, and old
   IndexedDB database presence diagnostics without scanning every old row.
@@ -125,7 +125,7 @@ Read next: [architecture/data/README.md](architecture/data/README.md),
   rows, cache/feed evidence, diagnostics, jobs, app log, inventory, optimizer,
   retention, repair scan/backfill/report rows, and Search token/tag rows.
   Retention, repair, and Search adapters are partial; product consumption,
-  repair probes, Search app planning, NIP-50 merge, and parity remain open.
+  Search app planning, NIP-50 merge, and parity remain open.
 - Rust storage outcomes expose stable problem-kind labels for OPFS failures,
   worker init, temporary memory fallback, repair, decode, active account
   selector, pressure snapshot decode, optimizer record decode, pressure stop
