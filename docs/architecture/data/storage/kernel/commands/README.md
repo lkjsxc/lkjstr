@@ -27,8 +27,8 @@ specs, worker adapters, retention, repair, inventory, or Stats rows.
   and TypeScript repositories for shipped storage product calls.
 - Desired Rust owner: `lkjstr-storage` command specs plus `lkjstr-web` typed
   adapters that execute those specs through worker messages.
-- Next source edit: prove retention worker failure mapping, then add repair
-  command metadata without changing retention policy.
+- Next source edit: add repair command metadata without changing retention
+  policy.
 - Focused tests: `cargo test -p lkjstr-storage commands`,
   `cargo test -p lkjstr-web retention`, and storage manifest doc checks.
 - Ledgers: update storage cutover and verification ledgers after proof only.

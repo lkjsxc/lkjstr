@@ -20,7 +20,7 @@ byte target without deleting protected records.
   TypeScript cache maintenance still dispatches shipped cleanup.
 - Desired Rust owner: `lkjstr-storage` keeps policy and `lkjstr-web` executes
   table-specific worker batches.
-- First source edit: repair models after retention worker failure proof.
+- First source edit: repair models after retention dispatch proof.
 - Focused tests: storage retention tests, web retention tests, cache-ledger web
   tests, cache unit tests, and `pnpm rust-wasm:quiet`.
 - Ledgers: update storage area and verification ledger after checks run.

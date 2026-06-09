@@ -10,8 +10,7 @@ ledger-backed prunable rows and must report exact stop reasons.
 
 1. Keep the pure Rust planner, command metadata, and dispatch adapter aligned
    with the statement ids below.
-2. Add worker-host failure coverage for `sqlite_retention_delete_dispatch` when
-   a focused worker mock can force batch failure.
+2. Keep batch outcome mapping covered by `retention_dispatch_failure_test.rs`.
 3. Only after retention dispatch passes focused tests, implement conservative
    repair commands.
 

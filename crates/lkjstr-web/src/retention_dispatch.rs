@@ -19,6 +19,13 @@ pub struct RetentionDispatchBatch {
     pub output: RetentionDeleteDispatchOutput,
 }
 
+pub fn retention_delete_dispatch_finish(
+    batch_result: StorageOutcome<()>,
+    output: RetentionDeleteDispatchOutput,
+) -> StorageOutcome<RetentionDeleteDispatchOutput> {
+    batch_result.map(|_| output)
+}
+
 pub fn retention_delete_dispatch_steps(
     input: RetentionDeleteDispatchInput,
     dynamic_protections: &[RetentionDynamicProtection],

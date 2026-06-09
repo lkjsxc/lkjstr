@@ -68,9 +68,9 @@ removed.
   inventory snapshot, optimizer scan-model rows, retention planner rows, and
   retention delete dispatch rows are implemented. Repair and search/tag lookup
   command coverage are not implemented.
-- Next task order: retention worker failure proof, repair command coverage,
-  search/tag lookup storage command coverage, pressure inventory completion,
-  relay effect wiring, shared feed runtime, and Home feed slice.
+- Next task order: repair command coverage, search/tag lookup storage command
+  coverage, pressure inventory completion, relay effect wiring, shared feed
+  runtime, and Home feed slice.
 
 ## Acceptance Checklist
 

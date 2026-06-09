@@ -7,8 +7,8 @@ prunable rows and reports exact reasons, counts, and repair findings.
 
 ## Status
 
-Active. Retention delete dispatch has Rust statement planning and worker-adapter
-binding; repair remains next after worker failure proof.
+Active. Retention delete dispatch has Rust statement planning, worker-adapter
+binding, and batch outcome mapping. Repair is the next source slice.
 
 ## Current Evidence
 
@@ -26,11 +26,9 @@ binding; repair remains next after worker failure proof.
 
 1. Keep pure retention planning in `lkjstr-storage` and worker dispatch in
    `lkjstr-web`; do not move storage policy into the host adapter.
-2. Add focused worker-host failure proof for `sqlite_retention_delete_dispatch`
-   when the worker mock can force batch failure.
-3. Retain shipped TypeScript cache maintenance until Rust product wiring,
+2. Retain shipped TypeScript cache maintenance until Rust product wiring,
    focused tests, and no-import proof exist.
-4. Implement repair scan and backfill only after retention delete semantics are
+3. Implement repair scan and backfill only after retention delete semantics are
    proved.
 
 ## Next Checklist
@@ -44,6 +42,8 @@ binding; repair remains next after worker failure proof.
   `crates/lkjstr-web/src/sqlite_store/mod.rs`.
 - [x] Map planner delete intents to the statement ids documented in the command
   matrix and delete each resource row with its `cache_ledger` row in one batch.
+- [x] Prove protected, dynamic-protected, unknown, unsupported, raw-SQL, and
+  batch-failure mapping states at the Rust adapter boundary.
 - [ ] Add conservative repair target states and chunked scan outputs only after
   retention dispatch passes.
 - [ ] Run retention, repair, cache-ledger, cache unit, and Rust/WASM gates; then

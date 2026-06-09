@@ -7,7 +7,8 @@ use lkjstr_storage::{
 
 use crate::{
     retention_dispatch::{
-        RetentionDispatchBatch, RetentionDispatchStep, retention_delete_dispatch_steps,
+        RetentionDispatchBatch, RetentionDispatchStep, retention_delete_dispatch_finish,
+        retention_delete_dispatch_steps,
     },
     sqlite_store::{
         SqliteStore,
@@ -35,7 +36,7 @@ pub async fn sqlite_retention_delete_dispatch(
             outcome => return outcome.map(|_| output),
         }
     }
-    store.batch(steps).await.map(|_| output)
+    retention_delete_dispatch_finish(store.batch(steps).await, output)
 }
 
 pub fn sqlite_retention_delete_dispatch_steps(

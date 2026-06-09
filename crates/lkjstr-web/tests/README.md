@@ -16,6 +16,7 @@ Browser-bound WASM tests prove exported functions call real Rust code.
 - `relay_host_socket_test.rs`: relay WebSocket host adapter lifecycle tests.
 - `relay_host_timer_test.rs`: relay timer host adapter cleanup tests.
 - `relay_score_bridge_test.rs`: relay score WASM bridge tests.
+- `retention_dispatch_failure_test.rs`: retention dispatch failure mapping tests.
 - `relay_settings_tab_test.rs`: Rust Relay Settings rendering and storage-state tests.
 - `settings_tab_test.rs`: Rust Settings browser rendering and persistence tests.
 - `sqlite_active_selector_store_test.rs`: SQLite active selector get, put, and delete tests.
