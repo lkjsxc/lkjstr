@@ -6,31 +6,32 @@ use lkjstr_storage::{StorageInventoryRow, StoragePressureSnapshotRecord, Storage
 use crate::app::RuntimeSignal;
 use crate::workspace::stats_health::storage_health_rows;
 use crate::workspace::stats_provider::StatsProvider;
+use crate::workspace::stats_refresh::{StatsRefreshState, refresh_stats};
 
 #[component]
 pub fn StatsTab(runtime: RuntimeSignal, provider: Option<StatsProvider>) -> impl IntoView {
     let provider = provider.unwrap_or_else(StatsProvider::manifest_only);
     let snapshot = RwSignal::new(None::<StorageStatsSnapshot>);
     let refreshing = RwSignal::new(false);
-    let timer = RwSignal::new(None::<IntervalHandle>);
+    let refresh_state = StatsRefreshState::new();
 
-    refresh_stats(provider.clone(), snapshot, refreshing);
-    on_cleanup(move || clear_timer(timer));
+    refresh_stats(provider.clone(), snapshot, refreshing, refresh_state);
+    on_cleanup(move || refresh_state.clear_all());
 
     let refresh_click = {
         let provider = provider.clone();
-        move |_| refresh_stats(provider.clone(), snapshot, refreshing)
+        move |_| refresh_stats(provider.clone(), snapshot, refreshing, refresh_state)
     };
     let auto_change = move |event| {
-        clear_timer(timer);
+        refresh_state.clear_interval();
         if event_target_checked(&event) {
             let provider = provider.clone();
             let handle = set_interval_with_handle(
-                move || refresh_stats(provider.clone(), snapshot, refreshing),
+                move || refresh_stats(provider.clone(), snapshot, refreshing, refresh_state),
                 Duration::from_secs(2),
             );
             if let Ok(handle) = handle {
-                timer.set(Some(handle));
+                refresh_state.set_interval(handle);
             }
         }
     };
@@ -79,26 +80,6 @@ pub fn StatsTab(runtime: RuntimeSignal, provider: Option<StatsProvider>) -> impl
             <h3>"Relay diagnostics"</h3>
             <p>"Relay snapshots and subscription counters are unavailable until the Rust relay host adapter owns live sessions."</p>
         </section>
-    }
-}
-
-fn refresh_stats(
-    provider: StatsProvider,
-    snapshot: RwSignal<Option<StorageStatsSnapshot>>,
-    refreshing: RwSignal<bool>,
-) {
-    refreshing.set(true);
-    let complete = Callback::new(move |next| {
-        let _unused = snapshot.try_set(Some(next));
-        let _unused = refreshing.try_set(false);
-    });
-    provider.read(complete);
-}
-
-fn clear_timer(timer: RwSignal<Option<IntervalHandle>>) {
-    if let Some(handle) = timer.get_untracked() {
-        handle.clear();
-        timer.set(None);
     }
 }
 

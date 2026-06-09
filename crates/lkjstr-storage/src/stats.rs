@@ -46,6 +46,11 @@ impl StorageStatsSnapshot {
     }
 
     #[must_use]
+    pub fn timeout() -> Self {
+        Self::manifest_unavailable("timeout")
+    }
+
+    #[must_use]
     pub fn from_sqlite_counts(counts: Vec<StorageTableCount>) -> Self {
         let rows = sqlite_rows(counts_by_table(counts));
         Self::from_rows(rows)
@@ -75,7 +80,7 @@ impl StorageStatsSnapshot {
 
     #[must_use]
     pub fn with_storage_health(mut self, health: SqliteStorageHealth) -> Self {
-        self.storage_health_status = health.mode.clone();
+        self.storage_health_status = storage_health_status(&health).to_string();
         self.storage_health_reason = None;
         self.storage_health = Some(health);
         self
@@ -175,5 +180,13 @@ fn inventory_status(table_count: usize, available_table_count: usize) -> &'stati
         "unavailable"
     } else {
         "partial"
+    }
+}
+
+fn storage_health_status(health: &SqliteStorageHealth) -> &'static str {
+    if health.mode == "temporary-memory" {
+        "temporary-memory"
+    } else {
+        "available"
     }
 }

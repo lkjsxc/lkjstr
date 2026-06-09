@@ -21,9 +21,10 @@ provider resolves to one of these states:
 | `unknown-old-storage` | old browser storage exists but cannot be classified |
 
 Stats must not show indefinite text such as storage health has not been read.
-Timeout and unavailable states are explicit diagnostic rows. Pressure fields
-come from a real pressure snapshot row or an explicit unavailable reason; Stats
-must not invent byte counts.
+The Rust UI bounds provider reads with a timeout snapshot while worker calls
+keep their typed deadlines. Timeout and unavailable states are explicit
+diagnostic rows. Pressure fields come from a real pressure snapshot row or an
+explicit unavailable reason; Stats must not invent byte counts.
 
 ## Groups
 

@@ -100,6 +100,9 @@ removed.
 - [ ] No product code opens SQLite or OPFS outside the worker.
 - [ ] Stats shows persistent, temporary memory, unavailable, timeout, blocked,
   corrupt, or unknown-old-storage states without indefinite loading.
+- [x] Rust Stats normalizes persistent SQLite health to available, preserves
+  the raw mode detail, and resolves provider reads to an explicit timeout
+  snapshot instead of indefinite loading.
 - [x] Rust Stats projects protected bytes, prunable bytes, unknown storage,
   residual overhead, and exact stop reason from a real pressure snapshot row.
 - [x] Retention dispatch deletes only ledger-backed prunable statement routes

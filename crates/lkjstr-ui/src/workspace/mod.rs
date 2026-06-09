@@ -22,6 +22,7 @@ mod state;
 mod stats;
 mod stats_health;
 mod stats_provider;
+mod stats_refresh;
 mod tab_body;
 mod tab_kind_attr;
 mod tab_pending;

@@ -118,9 +118,9 @@ Read next: [architecture/data/README.md](architecture/data/README.md),
 - Storage inventory is SQLite-first. It reads SQLite table counts, cache ledger
   summaries, browser quota estimates, localStorage, Cache Storage, and old
   IndexedDB database presence diagnostics without scanning every old row.
-- Stats must read SQLite health and storage mode on startup. A loading row is
-  short-lived only; after a bounded deadline Stats shows available, temporary
-  memory, unavailable, timeout, blocked, corrupt, or unknown-old-storage.
+- Rust Stats reads SQLite health and storage mode on startup. Its provider read
+  is bounded; after timeout Stats shows available, temporary memory, timeout,
+  unavailable, blocked, corrupt, or unknown-old-storage states explicitly.
 - Rust storage command metadata covers active selectors, pressure, protected
   rows, cache/feed evidence, diagnostics, jobs, app log, inventory, optimizer,
   retention, and repair scan/backfill/report rows. Retention and repair

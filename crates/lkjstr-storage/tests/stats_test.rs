@@ -44,6 +44,16 @@ fn stats_snapshot_can_report_manifest_unavailable() {
 }
 
 #[test]
+fn stats_snapshot_can_report_timeout() {
+    let snapshot = StorageStatsSnapshot::timeout();
+
+    assert_eq!(snapshot.inventory_status, "unavailable");
+    assert_eq!(snapshot.storage_health_status, "timeout");
+    assert_eq!(snapshot.storage_pressure_status, "timeout");
+    assert!(snapshot.rows.iter().all(|row| row.status == "unavailable"));
+}
+
+#[test]
 fn stats_snapshot_can_report_sqlite_storage_health() {
     let snapshot = StorageStatsSnapshot::from_sqlite_counts(Vec::new())
         .with_storage_health(test_health("temporary-memory"));
@@ -54,6 +64,21 @@ fn stats_snapshot_can_report_sqlite_storage_health() {
         Some(4096)
     );
     assert_eq!(snapshot.storage_health_reason, None);
+}
+
+#[test]
+fn stats_snapshot_reports_persistent_health_as_available() {
+    let snapshot = StorageStatsSnapshot::from_sqlite_counts(Vec::new())
+        .with_storage_health(test_health("persistent-opfs"));
+
+    assert_eq!(snapshot.storage_health_status, "available");
+    assert_eq!(
+        snapshot
+            .storage_health
+            .as_ref()
+            .map(|item| item.mode.as_str()),
+        Some("persistent-opfs")
+    );
 }
 
 #[test]
