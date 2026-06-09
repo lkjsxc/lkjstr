@@ -9,7 +9,9 @@ condition that allows TypeScript product storage deletion.
 ## Current Evidence
 
 - Rust manifest and row codecs: `crates/lkjstr-storage/src/**`.
-- Batch-capable command metadata shape: `crates/lkjstr-storage/src/commands/**`.
+- Batch-capable command metadata shape and matrix:
+  `crates/lkjstr-storage/src/commands/**` and
+  [../../data/storage/kernel/commands/README.md](../../data/storage/kernel/commands/README.md).
 - Rust worker adapter and repository calls: `crates/lkjstr-web/src/sqlite_store/**`
   and `crates/lkjstr-web/src/storage_worker/**`.
 - Current TypeScript worker glue: `src/lib/storage/sqlite-opfs/**` and
@@ -31,10 +33,11 @@ protection policy, and Stats projection instead of one-table shorthand.
 `read-physical-inventory`, `estimate-storage`, `cancel`, and `close`. Product
 crates never format SQL or open OPFS. Accounts active selection reads and writes
 the protected SQLite selector row; the old `lkjstr.activeAccountId` localStorage
-key is migration-only and is removed after a successful selector write. Feed
-cache, feed coverage, event cache, diagnostics, retention, repair, optimizer,
-jobs, app log, search/tag lookup, and pressure inventory need the same truthful
-command metadata now used by active selector and pressure rows.
+key is migration-only and is removed after a successful selector write. Active
+selector, pressure, protected rows, event cache, feed evidence, diagnostics,
+notifications, jobs, app log, and inventory snapshot now use the batch-capable
+metadata shape. Optimizer coverage is partial; retention, repair, and
+search/tag lookup commands are still not implemented.
 
 ## Storage Family Matrix
 
@@ -56,7 +59,7 @@ command metadata now used by active selector and pressure rows.
 | Notifications                                       | `repositories/notifications-store.ts`, `sqlite-opfs/notifications-sqlite.ts`                             | `lkjstr-storage/src/notifications.rs`, `sqlite_store/notifications.rs`                                                 | `query`, `batch` | `notifications_sqlite_rows_test.rs`                 | Rust Notifications runtime owns rows, references, and bounded paging.                         |
 | App log                                             | `src/lib/log/**`, `sqlite-opfs/app-log-repository.ts`                                                    | `lkjstr-storage/src/app_log.rs`, `sqlite_store/app_log.rs`                                                             | `query`, `batch` | `diagnostics_sqlite_rows_test.rs`                   | Rust Log owns capture, redaction, display, refresh, clear, and bounds.                        |
 | Cache ledger and retention metadata                 | `sqlite-opfs/cache-ledger-*.ts`, `cache-compaction-sqlite.ts`                                            | `lkjstr-storage/src/ledger.rs`, `tab_state.rs`, `sqlite_store/cache_ledger.rs`                                         | `query`, `batch` | `ledger_test.rs`, `manifest_test.rs`                | Rust retention dispatch deletes only ledger-backed prunable rows and reports pressure.        |
-| Optimizer and geometry observations                 | `feed-surface/scan-model-repository.ts`, `sqlite-opfs/feed-cache-*`                                      | `lkjstr-storage/src/optimizer/**`, `lkjstr-web/src/scan_model/**`; add durable row-height rows before geometry cutover | `query`, `batch` | `optimizer::tests*`, `scan-model-repository` tests  | Stats and feed runtime consume Rust optimizer and geometry rows without TS session fallbacks. |
+| Optimizer and geometry observations                 | `feed-surface/scan-model-repository.ts`, `sqlite-opfs/feed-cache-*`                                      | `lkjstr-storage/src/optimizer/**`, `lkjstr-web/src/scan_model/**`; add durable row-height rows before geometry cutover | `query`, `batch` | partial command metadata; `optimizer::tests*`, `scan-model-repository` tests | Stats and feed runtime consume Rust optimizer and geometry rows without TS session fallbacks. |
 
 ## Deletion Proof
 

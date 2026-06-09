@@ -13,6 +13,7 @@ failure-recovery behavior.
 - [operation-results.md](operation-results.md): typed storage outcomes.
 - [transactions.md](transactions.md): transactional write families.
 - [repositories.md](repositories.md): feature-facing storage boundary.
+- [commands/README.md](commands/README.md): storage command metadata matrix.
 - [failure-recovery.md](failure-recovery.md): degraded startup and session fallback.
 - [local-secrets.md](local-secrets.md): local signing secret boundary.
 

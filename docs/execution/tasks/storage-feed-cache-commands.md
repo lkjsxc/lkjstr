@@ -7,14 +7,16 @@ feed-coverage, scan-hint, and cached-feed-page SQLite worker calls.
 
 ## Status
 
-Active after `storage-command-spec-shape.md` lands.
+Implemented for event-cache, feed-cursor, feed-coverage, and scan-hint command
+metadata. Product feed runtime consumption remains partial.
 
 ## Current Evidence
 
 - Rust row codecs exist for events, tags, relay provenance, feed cursors, feed
   coverage, and scan hints.
 - `lkjstr-web/src/sqlite_store/events.rs` and `feed_cache.rs` expose worker
-  calls used by storage and feed paths.
+  calls used by storage and feed paths, and each exported call has command
+  metadata.
 - Shipped Svelte feed surfaces still use TypeScript repositories until Rust feed
   runtime parity exists.
 

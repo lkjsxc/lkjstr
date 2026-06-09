@@ -41,8 +41,10 @@ until each surface has Leptos parity and deletion proof.
 - relay diagnostics: relay information, summaries, suggestions, author routes,
   route blocks, jobs, app log rows, pressure snapshots, active-account selector
   rows, and SQLite worker health have SQLite repositories or host calls. Relay diagnostics, suggestions, routes, finished
-  jobs, and app logs are ledger-backed. Route blocks are protected safety rows
-  and are not ledger-backed.
+  jobs are ledger-backed. App log rows are bounded diagnostics rows in the
+  current worker path and are not ledger-backed until a retention command adds a
+  real ledger policy. Route blocks are protected safety rows and are not
+  ledger-backed.
 - retention: cache ledger rows, protection snapshots, prune selection,
   deletion dispatch, repair, and physical inventory are SQLite-backed. SQLite
   inventory uses storage-owned count statements for known schema tables; host

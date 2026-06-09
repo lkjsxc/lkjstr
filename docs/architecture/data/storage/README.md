@@ -38,6 +38,7 @@ Compose verification.
 - [kernel/operation-results.md](kernel/operation-results.md): typed storage outcomes.
 - [kernel/transactions.md](kernel/transactions.md): transactional write families.
 - [kernel/repositories.md](kernel/repositories.md): repository boundary.
+- [kernel/commands/README.md](kernel/commands/README.md): command metadata matrix.
 - [kernel/failure-recovery.md](kernel/failure-recovery.md): degraded storage startup.
 - [kernel/local-secrets.md](kernel/local-secrets.md): local signing secret boundary.
 - [data-classes/README.md](data-classes/README.md): durable data classes.

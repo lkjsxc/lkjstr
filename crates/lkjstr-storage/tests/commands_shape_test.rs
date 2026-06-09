@@ -20,7 +20,9 @@ fn command_ids_are_unique() -> Result<(), String> {
 #[test]
 fn commands_name_existing_statements_and_tables() -> Result<(), String> {
     for command in storage_repository_commands() {
-        if command.statements.is_empty() {
+        if command.statements.is_empty()
+            && command.protection_policy != StorageProtectionPolicy::InventoryOnly
+        {
             return Err(format!("{} has no statement ids", command.id));
         }
         for statement in command.statements {
@@ -85,9 +87,9 @@ fn commands_declare_ledger_protection_and_stats_policies() -> Result<(), String>
             return Err(format!("{} does not declare same-batch ledger", command.id));
         }
         if command.protection_policy == StorageProtectionPolicy::Protected
-            && command.ledger_policy == StorageLedgerPolicy::DeletesLedgerBackedRows
+            && command.operation == StorageOperation::Compaction
         {
-            return Err(format!("{} deletes protected ledger rows", command.id));
+            return Err(format!("{} prunes protected rows", command.id));
         }
         if command.stats_projection != StorageStatsProjection::None
             && command.stats_projection.as_str() == "none"
@@ -96,6 +98,50 @@ fn commands_declare_ledger_protection_and_stats_policies() -> Result<(), String>
         }
     }
     Ok(())
+}
+
+#[test]
+fn commands_have_stable_shape_and_documentation() -> Result<(), String> {
+    let docs = command_matrix_docs()?;
+    for command in storage_repository_commands() {
+        if command.input_type.trim().is_empty() || command.output_type.trim().is_empty() {
+            return Err(format!("{} has an empty type label", command.id));
+        }
+        if !stable_id(command.id) {
+            return Err(format!("{} is not a stable dotted id", command.id));
+        }
+        if !docs.contains(&format!("`{}`", command.id)) {
+            return Err(format!("{} is missing from command docs", command.id));
+        }
+    }
+    Ok(())
+}
+
+fn command_matrix_docs() -> Result<String, String> {
+    let root = env!("CARGO_MANIFEST_DIR");
+    let dir = format!("{root}/../../docs/architecture/data/storage/kernel/commands");
+    let mut text = String::new();
+    for file in [
+        "protected.md",
+        "event-cache.md",
+        "feed-evidence.md",
+        "diagnostics.md",
+        "retention.md",
+        "repair.md",
+    ] {
+        text.push_str(
+            &std::fs::read_to_string(format!("{dir}/{file}"))
+                .map_err(|error| format!("{file}: {error}"))?,
+        );
+    }
+    Ok(text)
+}
+
+fn stable_id(id: &str) -> bool {
+    id.contains('.')
+        && id.bytes().all(|byte| {
+            byte.is_ascii_lowercase() || byte.is_ascii_digit() || byte == b'-' || byte == b'.'
+        })
 }
 
 fn is_decode_kind(kind: StorageProblemKind) -> bool {

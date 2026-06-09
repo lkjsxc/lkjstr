@@ -38,6 +38,33 @@ fn active_selector_commands_are_protected_settings_commands() -> Result<(), Stri
     Ok(())
 }
 
+#[test]
+fn protected_repository_commands_use_protected_policy() -> Result<(), String> {
+    for id in [
+        "settings.put",
+        "settings.replace-all",
+        "workspace.put",
+        "tab-state.put",
+        "account.local-put",
+        "local-secret.put",
+        "relay-set.put-all",
+        "tweet-draft.put",
+    ] {
+        let command = command(id)?;
+        assert_eq!(command.family, StorageCommandFamily::Protected);
+        assert_eq!(
+            command.protection_policy,
+            StorageProtectionPolicy::Protected
+        );
+        assert!(
+            command
+                .problem_kinds
+                .contains(&StorageProblemKind::QuotaOrWriteFailed)
+        );
+    }
+    Ok(())
+}
+
 fn command(id: &str) -> Result<&'static lkjstr_storage::StorageRepositoryCommandSpec, String> {
     storage_repository_commands()
         .iter()

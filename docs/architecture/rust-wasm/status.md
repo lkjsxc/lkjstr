@@ -153,9 +153,11 @@ replaced TypeScript or Svelte paths, focused gate, and final gate.
   and pressure snapshot Rust row codecs plus `lkjstr-web` worker repository
   calls exist. Accounts now uses the SQLite active selector row and migrates the
   old localStorage key only when needed. Command metadata now has statement and
-  table arrays plus ledger, protection, and Stats policy enums. Next work uses
-  that shape for remaining live worker families; full product cache proof,
-  retention dispatch, and surface consumption remain open.
+  table arrays plus ledger, protection, and Stats policy enums. Live protected,
+  event cache, feed evidence, relay diagnostics, notifications, jobs, app log,
+  pressure, and inventory worker calls now have command specs. Optimizer
+  metadata is partial; retention, repair, search/tag lookup, full product cache
+  proof, and surface consumption remain open.
 - Focused gate: `cargo test -p lkjstr-storage` and `pnpm rust-wasm:quiet`.
 - Final gate: Docker Compose config, image builds, and service runs from
   [../../operations/verification.md](../../operations/verification.md).

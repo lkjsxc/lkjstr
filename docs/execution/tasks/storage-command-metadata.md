@@ -9,14 +9,19 @@ multi-statement batches.
 ## Status
 
 Active. This task follows the command-shape split and groups coverage by live
-repository family.
+repository family in this order: protected, event cache, feed evidence,
+diagnostics, jobs, app log, optimizer, retention, repair, search/tag lookup,
+and pressure inventory.
 
 ## Current Evidence
 
-- Active-account selector and pressure commands have typed specs.
-- Many `lkjstr-web/src/sqlite_store/**` exports exist without matching command
-  metadata.
-- Event and feed writes need batch metadata because one command may touch
+- Active-account selector, pressure, protected rows, event cache, feed
+  evidence, diagnostics, notifications, jobs, app log, and inventory snapshot
+  have typed specs.
+- Optimizer command coverage is partial because row codecs and statement records
+  exist, but command specs for the scan-model worker path are still open.
+- Retention, repair, and search/tag lookup command coverage are not implemented.
+- Event and feed writes use batch metadata because one command may touch
   resource rows, child rows, provenance rows, and `cache_ledger` rows.
 
 ## Target Behavior
@@ -38,7 +43,9 @@ ledger policy. Protected commands are protected and never prunable.
 
 ## Docs To Update First
 
-- Storage command matrix under storage docs when command families change.
+- Storage command matrix under
+  `docs/architecture/data/storage/kernel/commands/` when command families
+  change.
 - `docs/architecture/rust-wasm/cutover/areas/storage.md`.
 - `docs/architecture/rust-wasm/cutover/storage-wiring.md`.
 - `docs/architecture/rust-wasm/cutover/verification-ledger.md` after checks run.
