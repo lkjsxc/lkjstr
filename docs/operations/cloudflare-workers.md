@@ -6,7 +6,7 @@ Cloudflare Workers docs define the hosted build target for lkjstr.
 
 ## Contract
 
-- Cloudflare Workers is a hosting target for the SvelteKit app shell.
+- Cloudflare Workers is currently a hosting target for the SvelteKit app shell.
 - Core lkjstr behavior stays browser-first: relay reads and writes use browser
   WebSockets, cache state uses browser storage, and signing remains local or
   extension-backed.
@@ -19,6 +19,11 @@ Cloudflare Workers docs define the hosted build target for lkjstr.
   binding.
 - Storage uses `opfs-sahpool` by default, so the Cloudflare target does not add
   COOP/COEP headers solely for SQLite.
+- Final root build cutover changes the asset directory to the Rust/Leptos
+  static artifact only after product parity and no-import proof exist.
+- An optional Rust Worker may route assets, SPA fallback, headers, and
+  diagnostics only. It must not add backend account, storage, relay, signing, or
+  feed behavior.
 - The compatibility date is `2026-05-23`.
 - The only compatibility flag is `nodejs_als`.
 - Repository scripts provide a dry-run verification command only; publishing is
@@ -41,5 +46,9 @@ docker compose -f docker-compose.yml run --rm cloudflare
 
 - Cloudflare Workers SvelteKit guide:
   <https://developers.cloudflare.com/workers/framework-guides/web-apps/svelte/>
+- Cloudflare Workers Static Assets:
+  <https://developers.cloudflare.com/workers/static-assets/>
+- Cloudflare Workers Rust guide:
+  <https://developers.cloudflare.com/workers/languages/rust/>
 - SvelteKit Cloudflare adapter docs:
   <https://svelte.dev/docs/kit/adapter-cloudflare>

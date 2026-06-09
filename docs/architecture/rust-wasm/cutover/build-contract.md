@@ -11,6 +11,15 @@ runtime to the Rust/WASM product runtime.
 checks are required for the active Rust crates, protocol bridge, Leptos shell,
 storage adapters, and host adapters that already exist.
 
+## Build States
+
+1. Current: SvelteKit shell plus growing Rust/WASM islands.
+2. Transition: SvelteKit hosts while product surfaces move to Rust/Leptos and
+   TypeScript product modules are deleted only after no-import proof.
+3. Final: Rust/Leptos static browser app is the root artifact served by
+   Cloudflare Workers Static Assets. An optional Rust Worker may handle static
+   routing, SPA fallback, headers, and diagnostics only.
+
 ## Cutover Rule
 
 Use Trunk and Rust as the app build only when the Rust shell satisfies the
@@ -44,3 +53,5 @@ Required service names stay stable:
 
 Docker services build images from `Dockerfile` and do not mount the source
 tree.
+
+Read next: [root-build.md](root-build.md).

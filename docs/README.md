@@ -51,7 +51,8 @@ changed. Each docs directory has one README that acts as a table of contents.
   [architecture/rust-wasm/cutover/implementation-ledger.md](architecture/rust-wasm/cutover/implementation-ledger.md),
   [architecture/rust-wasm/cutover/storage-wiring.md](architecture/rust-wasm/cutover/storage-wiring.md),
   [architecture/rust-wasm/cutover/relay-wiring.md](architecture/rust-wasm/cutover/relay-wiring.md),
-  [architecture/rust-wasm/cutover/feed-runtime.md](architecture/rust-wasm/cutover/feed-runtime.md), and
+  [architecture/rust-wasm/cutover/feed-runtime.md](architecture/rust-wasm/cutover/feed-runtime.md),
+  [architecture/rust-wasm/cutover/root-build.md](architecture/rust-wasm/cutover/root-build.md), and
   [architecture/rust-wasm/cutover/ui-surface-map.md](architecture/rust-wasm/cutover/ui-surface-map.md).
 - Verification: [operations/verification.md](operations/verification.md).
 
@@ -122,7 +123,8 @@ changed. Each docs directory has one README that acts as a table of contents.
 `architecture/rust-wasm/cutover/areas/relay.md` `architecture/rust-wasm/cutover/areas/storage.md` `architecture/rust-wasm/cutover/build-contract.md`
 `architecture/rust-wasm/cutover/deletion-ledger.md` `architecture/rust-wasm/cutover/feed-runtime.md`
 `architecture/rust-wasm/cutover/implementation-ledger.md` `architecture/rust-wasm/cutover/parity-ledger.md`
-`architecture/rust-wasm/cutover/relay-wiring.md` `architecture/rust-wasm/cutover/storage-wiring.md`
+`architecture/rust-wasm/cutover/relay-wiring.md` `architecture/rust-wasm/cutover/root-build.md`
+`architecture/rust-wasm/cutover/storage-wiring.md`
 `architecture/rust-wasm/cutover/typescript-inventory.md` `architecture/rust-wasm/cutover/ui-surface-map.md`
 `architecture/rust-wasm/cutover/verification-ledger.md` `architecture/rust-wasm/host-boundary.md` `architecture/rust-wasm/memory-ownership.md`
 `architecture/rust-wasm/protocol-kernel.md` `architecture/rust-wasm/relay-runtime.md` `architecture/rust-wasm/source-map.md`

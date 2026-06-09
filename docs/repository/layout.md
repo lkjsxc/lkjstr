@@ -14,6 +14,10 @@ Layout docs map repository paths to ownership.
 - `crates/`: Rust protocol, domain, relay, storage, app, UI, web, and
   repository-check crates.
 - `index.html`: Trunk browser entry document for the Rust/WASM shell.
+- `static/`: target hand-authored static media and manifest assets for the
+  Rust root build.
+- `public/` or `web/`: target root HTML shell after SvelteKit removal.
+- `dist/` or `build/cloudflare/`: target generated Cloudflare static artifact.
 - `src/`: current SvelteKit app and TypeScript modules until replaced.
 - `docs/`: product and engineering contract.
 - `tests/unit/`: focused Vitest unit and integration tests.
@@ -41,6 +45,8 @@ Layout docs map repository paths to ownership.
 - `crates/lkjstr-ui`: Leptos components and CSS-class rendering contracts.
 - `crates/lkjstr-web`: WASM entrypoint and browser host adapters.
 - `crates/lkjstr-xtask`: repository checks and quiet gate orchestration.
+- `crates/lkjstr-worker`: optional later Rust Worker static router only; it
+  must not own product backend behavior.
 
 ## Current Source
 

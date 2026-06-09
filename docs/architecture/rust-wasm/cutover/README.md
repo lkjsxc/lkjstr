@@ -16,6 +16,7 @@ TypeScript or Svelte product modules may be removed.
 - [implementation-ledger.md](implementation-ledger.md): dependency, owner, and next-task map.
 - [parity-ledger.md](parity-ledger.md): Rust parity for each product surface.
 - [relay-wiring.md](relay-wiring.md): relay host adapter and reducer wiring.
+- [root-build.md](root-build.md): final Rust/Leptos static artifact design.
 - [storage-wiring.md](storage-wiring.md): storage family wiring and deletion gates.
 - [typescript-inventory.md](typescript-inventory.md): TypeScript and Svelte module classification.
 - [ui-surface-map.md](ui-surface-map.md): Svelte tab to Leptos surface map.

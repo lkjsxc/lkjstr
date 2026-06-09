@@ -20,8 +20,8 @@ removed.
   optimizer, and Stats.
 - Desired Rust owner: `lkjstr-storage`, `lkjstr-web`, `lkjstr-app`, and
   `lkjstr-ui` along the storage-kernel boundary.
-- First source edit: `crates/lkjstr-web/src/sqlite_store/retention.rs` with
-  statement ids from `lkjstr-storage/src/commands/retention.rs`.
+- First source edit: repair command models after the implemented retention
+  delete dispatch adapter.
 - Focused tests: retention and command tests in `lkjstr-storage`, retention
   tests in `lkjstr-web`, cache unit tests, and `pnpm rust-wasm:quiet`.
 - Ledgers: this file, implementation ledger rows, and verification ledger when

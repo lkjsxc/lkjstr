@@ -38,9 +38,11 @@ mount `lkjstr-ui` into the browser document. Browser adapters cover:
   signing is still pending the Rust publish path.
 - Workers, including storage-worker cancellation and cleanup.
 
-Production hosting for the primary SQLite OPFS path must emit COOP and COEP
-headers so `SharedArrayBuffer` is available to SQLite WASM. Header verification
-belongs in operations checks, not in tribal deployment knowledge.
+Current production hosting uses SQLite's `opfs-sahpool` VFS as the primary
+hosted storage mode. It avoids requiring app-wide COOP/COEP headers and keeps
+arbitrary Nostr media usable. Standard OPFS VFS modes that require
+`SharedArrayBuffer` may be enabled only behind an explicit storage mode switch
+and only when deployment headers and media rendering are compatible.
 
 ## JavaScript Boundary
 

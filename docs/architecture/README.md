@@ -41,6 +41,7 @@ state, storage, relay orchestration, cleanup, and Rust/WASM migration.
 - [rust-wasm/cutover/storage-wiring.md](rust-wasm/cutover/storage-wiring.md): storage cutover contract.
 - [rust-wasm/cutover/relay-wiring.md](rust-wasm/cutover/relay-wiring.md): relay cutover contract.
 - [rust-wasm/cutover/feed-runtime.md](rust-wasm/cutover/feed-runtime.md): shared feed runtime cutover contract.
+- [rust-wasm/cutover/root-build.md](rust-wasm/cutover/root-build.md): final Rust/Leptos static artifact.
 - [rust-wasm/cutover/ui-surface-map.md](rust-wasm/cutover/ui-surface-map.md): Leptos surface map.
 - [rust-wasm/surface-cutover-order.md](rust-wasm/surface-cutover-order.md): dependency-ranked cutover order.
 - [workspace/ui-system/README.md](workspace/ui-system/README.md): shared UI catalog.
@@ -111,7 +112,8 @@ state, storage, relay orchestration, cleanup, and Rust/WASM migration.
 `rust-wasm/cutover/areas/storage.md` `rust-wasm/cutover/build-contract.md` `rust-wasm/cutover/deletion-ledger.md`
 `rust-wasm/cutover/feed-runtime.md` `rust-wasm/cutover/implementation-ledger.md`
 `rust-wasm/cutover/parity-ledger.md` `rust-wasm/cutover/relay-wiring.md`
-`rust-wasm/cutover/storage-wiring.md` `rust-wasm/cutover/typescript-inventory.md`
+`rust-wasm/cutover/root-build.md` `rust-wasm/cutover/storage-wiring.md`
+`rust-wasm/cutover/typescript-inventory.md`
 `rust-wasm/cutover/ui-surface-map.md` `rust-wasm/cutover/verification-ledger.md`
 `rust-wasm/host-boundary.md` `rust-wasm/memory-ownership.md` `rust-wasm/protocol-kernel.md`
 `rust-wasm/relay-runtime.md` `rust-wasm/source-map.md` `rust-wasm/status.md`

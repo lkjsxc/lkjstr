@@ -19,6 +19,7 @@ This subtree defines the Rust/WASM client target.
 - [cutover/implementation-ledger.md](cutover/implementation-ledger.md): cutover owner and task map.
 - [cutover/parity-ledger.md](cutover/parity-ledger.md): product surface parity.
 - [cutover/relay-wiring.md](cutover/relay-wiring.md): relay host wiring contract.
+- [cutover/root-build.md](cutover/root-build.md): final Rust/Leptos static artifact.
 - [cutover/storage-wiring.md](cutover/storage-wiring.md): storage family wiring contract.
 - [cutover/typescript-inventory.md](cutover/typescript-inventory.md): shipped TS/Svelte classification.
 - [cutover/ui-surface-map.md](cutover/ui-surface-map.md): Svelte to Leptos surface map.

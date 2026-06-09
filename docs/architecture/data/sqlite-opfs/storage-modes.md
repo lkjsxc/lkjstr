@@ -12,15 +12,18 @@ name in storage health.
 
 Preferred VFS order:
 
-1. `opfs-sahpool`, because it avoids cross-origin isolation headers and fits a
-   single storage owner.
+1. `opfs-sahpool`, because it avoids cross-origin isolation headers, fits a
+   single storage owner, and is the current Cloudflare-hosted primary mode.
 2. `opfs-wl`, only after platform support and media rendering are verified.
-3. `opfs`, only when cross-origin isolation is safe for the current deployment.
+3. `opfs`, only behind an explicit mode switch when cross-origin isolation is
+   safe for the current deployment.
 
 The worker should reserve enough SAH pool capacity for the main database,
 journal files, metadata, and temporary query work. The initial target is 64 MiB,
 with diagnostics when usage approaches the pool limit. App hosting should not
 set COOP/COEP only for storage while `opfs-sahpool` is the normal path.
+Standard OPFS VFS modes that require `SharedArrayBuffer` are not the hosted
+default.
 
 ## Temporary Memory
 
@@ -44,7 +47,17 @@ sources, diagnostics, or browser-owned non-database storage only.
 
 ## Health Fields
 
-Storage health reports:
+Storage health reports one of the user-visible states:
+
+- persistent OPFS.
+- temporary memory.
+- unavailable.
+- timeout.
+- blocked.
+- corrupt.
+- unknown old storage.
+
+It also reports:
 
 - mode: `persistent-opfs` or `temporary-memory`.
 - VFS name.

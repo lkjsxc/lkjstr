@@ -29,9 +29,11 @@ asset. The app database name is `/lkjstr/main.sqlite3`.
 Preferred order:
 
 1. `opfs-sahpool`: normal browser mode because it is worker-only, fast, and does
-   not require cross-origin isolation headers.
+   not require cross-origin isolation headers. This is the current hosted
+   primary mode.
 2. `opfs-wl`: allowed after browser support and media rendering are verified.
-3. `opfs`: allowed only when cross-origin isolation is safe for the deployment.
+3. `opfs`: allowed only behind an explicit mode switch when cross-origin
+   isolation is safe for the deployment.
 4. `:memory:`: explicit temporary mode when persistent storage cannot open.
 
 The standard `opfs` VFS requires SharedArrayBuffer and therefore COOP/COEP

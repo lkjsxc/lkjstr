@@ -10,11 +10,11 @@ cutover rows and tests pass.
 
 The current storage slice preserves implemented active-account selector,
 pressure-row, protected, event-cache, feed-evidence, diagnostics,
-notifications, jobs, app-log, inventory, optimizer, and batch-capable
-command-shape contracts. Retention dispatch, repair, search/tag lookup, full
-physical pressure inventory, and product consumption remain open. It must not
-delete TypeScript storage repositories until Rust covers every live table family
-and no-import proof is recorded.
+notifications, jobs, app-log, inventory, optimizer, retention planning,
+retention delete dispatch, and batch-capable command-shape contracts. Repair,
+search/tag lookup, full physical pressure inventory, and retention product
+consumption remain open. It must not delete TypeScript storage repositories
+until Rust covers every live table family and no-import proof is recorded.
 
 ## Agent Start
 
@@ -60,10 +60,10 @@ and no-import proof is recorded.
    provenance, feed coverage, feed cursors, cache ledger rows, diagnostics,
    optimizer rows, job rows, log rows, active-account selectors, and pressure
    snapshots.
-3. Add typed command definitions for retention, repair, search/tag lookup, and
-   inventory gaps with input type, output type, statement ids, tables, stable
-   problem kinds, row codecs, data classes, ledger policy, protection policy,
-   Stats projection, and real-shaped fixtures.
+3. Preserve retention command definitions and add repair, search/tag lookup,
+   and inventory gaps with input type, output type, statement ids, tables,
+   stable problem kinds, row codecs, data classes, ledger policy, protection
+   policy, Stats projection, and real-shaped fixtures.
 4. Wire remaining `lkjstr-web` worker calls without adding main-thread SQLite or
    OPFS access.
 5. Expose persistent OPFS, temporary memory, unavailable, timeout, blocked,
@@ -87,8 +87,8 @@ pnpm rust-wasm:quiet
 
 - Active-account selector, pressure snapshot, and batch command-shape contracts
   remain preserved.
-- Remaining retention, repair, search/tag lookup, and inventory worker paths
-  gain truthful command specs.
+- Repair, search/tag lookup, and inventory worker gaps gain truthful command
+  specs while retention delete dispatch remains covered by Rust adapter tests.
 - Product modules call typed repositories only.
 - Main-thread product code does not open SQLite or OPFS directly.
 - Stats shows storage health, mode, and real pressure snapshot fields without

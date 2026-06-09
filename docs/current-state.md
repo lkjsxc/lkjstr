@@ -44,8 +44,9 @@ Read next: [product/README.md](product/README.md),
 - Tweet, replies, reposts, reactions, zaps, Blossom upload, NIP-96
   compatibility upload settings, NIP-98 auth, NIP-30 custom emoji,
   sensitive-content reveal, and event reference previews are implemented.
-- Cloudflare Workers Static Assets is only a hosting target. It is not an app
-  backend, account service, relay proxy, or storage service.
+- Cloudflare Workers Static Assets is only a hosting target. The current path is
+  SvelteKit; final Rust/Leptos static cutover requires parity and no-import
+  proof. It is not a backend, account service, relay proxy, or storage service.
 
 ## Protocol Support
 
@@ -94,8 +95,9 @@ Read next: [architecture/data/README.md](architecture/data/README.md),
   signing secrets, drafts, notifications, relay purpose lists, relay
   information, relay summaries, jobs, feed/page records, diagnostics, route
   evidence, and cached events.
-- The durable product path is official SQLite WASM in a worker, backed by OPFS
-  when available and by explicit temporary memory mode when OPFS cannot open.
+- The durable product path is official SQLite WASM in a worker, using
+  `opfs-sahpool` OPFS as the hosted primary mode and explicit temporary memory
+  mode when persistence cannot open.
 - Main-thread app code must not open SQLite or OPFS directly. Product code calls
   typed repositories; repositories talk to the worker-owned storage kernel.
 - Settings, workspace layout, tab snapshots, Accounts, local signing secrets,
@@ -110,20 +112,20 @@ Read next: [architecture/data/README.md](architecture/data/README.md),
   Settings, Upload Settings, Tweet drafts, Stats inventory, Stats SQLite health,
   active account selectors, pressure snapshots, and durable lkjstr Log rows. The
   Rust IndexedDB adapter remains for host-boundary tests and narrow WASM exports.
-- Physical inventory, cache tool summaries, retention target checks, repair,
-  and protection snapshots use SQLite paths. Old IndexedDB diagnostics are
-  presence-only and never scan old rows.
+- Physical inventory, cache tool summaries, retention target checks, and
+  protection snapshots use SQLite paths. Repair reporting is the next Rust
+  storage slice. Old IndexedDB diagnostics are presence-only.
 - Storage inventory is SQLite-first. It reads SQLite table counts, cache ledger
   summaries, browser quota estimates, localStorage, Cache Storage, and old
   IndexedDB database presence diagnostics without scanning every old row.
 - Stats must read SQLite health and storage mode on startup. A loading row is
   short-lived only; after a bounded deadline Stats shows available, temporary
   memory, unavailable, timeout, blocked, corrupt, or unknown-old-storage.
-- Rust storage command metadata covers active selectors, pressure rows,
-  protected rows, event cache, feed evidence, relay diagnostics, notifications,
-  jobs, app log, inventory snapshot, optimizer scan-model rows, retention
-  planner rows, and retention delete dispatch rows. Retention product
-  consumption, repair, and search/tag lookup metadata remain open.
+- Rust storage command metadata covers active selectors, pressure, protected
+  rows, event cache, feed evidence, diagnostics, notifications, jobs, app log,
+  inventory, optimizer, retention planner, and retention delete dispatch rows.
+  Retention delete dispatch is wired through `lkjstr-web` worker batches.
+  Retention product consumption, repair, and search/tag lookup remain open.
 - Rust storage outcomes expose stable problem-kind labels for OPFS failures,
   worker init, temporary memory fallback, repair, decode, active account
   selector, pressure snapshot decode, optimizer record decode, pressure stop
