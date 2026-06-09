@@ -11,6 +11,26 @@ NIP-11 host actions without moving relay correctness into `lkjstr-web`.
   progressive snapshots.
 - `lkjstr-web/src/relay_host/**` owns socket and timeout foundations.
 
+## Current Next Edit
+
+1. Start only after storage command coverage is stable enough for diagnostics,
+   route evidence, optimizer rows, and Stats paths.
+2. Map reducer effects to host handles without moving relay correctness into
+   `lkjstr-web`.
+3. Prove final-close tombstones reject late host events before product wiring.
+
+## Next Checklist
+
+- [ ] Read relay runtime, relay wiring, and relay host source before editing.
+- [ ] Update relay wiring docs if effect shapes or cleanup ownership change.
+- [ ] Add or split host runner modules under line limits.
+- [ ] Add effect-to-host, timer, socket, NIP-11, owner cleanup, and late-event
+  tests.
+- [ ] Keep TypeScript relay paths until product demand wiring and no-import
+  proof exist.
+- [ ] Run relay, web relay host, browser host, and Rust/WASM gates; then record
+  actual verification.
+
 ## Target Behavior
 
 A host runner maps reducer effects to open socket, send frame, close socket,

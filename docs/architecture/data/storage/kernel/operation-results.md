@@ -38,6 +38,7 @@ Rust storage exposes stable problem-kind labels for diagnostics and host bridges
 - `schema-repair-failed`: repair could not produce a safe state.
 - `protected-record-decode-failed`: protected row decoding failed.
 - `cache-record-decode-failed`: cache row decoding failed.
+- `optimizer-record-decode-failed`: optimizer row decoding failed.
 - `quota-or-write-failed`: a write or quota-bound operation failed.
 
 Outcome labels such as `timeout`, `blocked`, `busy`, `corrupt`, `canceled`,

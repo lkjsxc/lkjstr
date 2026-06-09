@@ -18,6 +18,25 @@ Active after command spec shape and cache command metadata are in place.
 - Stats can project real pressure snapshot rows when they exist, but full byte
   inventory diagnostics and repair dispatch remain open.
 
+## Current Next Edit
+
+1. Add pure retention planning before delete-dispatch worker wiring.
+2. Add retention command metadata only for real planner and dispatcher paths.
+3. Implement repair scan and backfill only after retention semantics are proved.
+
+## Next Checklist
+
+- [ ] Read retention deletion, ledger, scoring, dynamic protection, pressure,
+  and repair contracts.
+- [ ] Update retention and repair command docs before changing source.
+- [ ] Add a pure Rust retention planner with deterministic candidate ordering
+  and exact stop reasons.
+- [ ] Add command metadata for `retention.plan` and
+  `retention.delete-dispatch` only when real dispatch exists.
+- [ ] Add conservative repair target states and chunked scan outputs.
+- [ ] Run retention, repair, cache-ledger, cache unit, and Rust/WASM gates; then
+  record actual verification.
+
 ## Target Behavior
 
 Retention selects candidates from `cache_ledger`, skips protected or dynamically

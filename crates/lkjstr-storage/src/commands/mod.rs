@@ -7,6 +7,7 @@ pub mod events;
 pub mod feed_cache;
 pub mod inventory;
 pub mod jobs;
+pub mod optimizer;
 pub mod pressure;
 pub mod protected;
 pub mod spec;
@@ -89,6 +90,10 @@ pub const STORAGE_REPOSITORY_COMMANDS: &[StorageRepositoryCommandSpec] = &[
     jobs::JOB_PUT_COMMAND,
     jobs::JOB_GET_COMMAND,
     jobs::JOBS_RECENT_COMMAND,
+    optimizer::FEED_SCAN_OBSERVATION_INSERT_COMMAND,
+    optimizer::FEED_SCAN_DENSITY_MODEL_SELECT_CONTEXT_COMMAND,
+    optimizer::FEED_SCAN_DENSITY_MODEL_UPSERT_COMMAND,
+    optimizer::FEED_SCAN_DECISION_TRACE_INSERT_COMMAND,
     app_log::APP_LOG_INSERT_COMMAND,
     app_log::APP_LOG_RECENT_COMMAND,
     app_log::APP_LOG_CLEAR_BEFORE_COMMAND,

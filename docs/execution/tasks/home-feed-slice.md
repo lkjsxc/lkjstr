@@ -11,6 +11,26 @@ without claiming broader feed or Home parity.
 - Rust query inputs, feed reducers, cache display policy, and geometry pieces
   exist but are not one product Home runtime yet.
 
+## Current Next Edit
+
+1. Start only after the shared Rust feed view model can emit real rows and
+   explicit state rows.
+2. Render a narrow Home slice without changing the shipped Svelte owner.
+3. Keep parity and deletion ledgers blocked until no-import proof exists.
+
+## Next Checklist
+
+- [ ] Read Home product, followees, Home runtime, feed source, and UI runtime
+  contracts.
+- [ ] Update product or runtime docs only for behavior that is actually
+  implemented.
+- [ ] Add Home query input and view-model tests that consume shared feed rows.
+- [ ] Add minimal Leptos row rendering for event, unavailable, diagnostic, and
+  footer rows.
+- [ ] Keep TypeScript timeline and tab glue while Svelte remains shipped owner.
+- [ ] Run app Home, UI Home, timeline reducer, tab-retention, and Rust/WASM
+  gates; then record actual verification.
+
 ## Target Behavior
 
 A narrow Home slice renders real cached rows when coverage proof is complete or

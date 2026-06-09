@@ -11,6 +11,26 @@ Notifications, Search lists, Author Context, and User Timeline.
   pieces.
 - Shipped feed surfaces still render through TypeScript and Svelte runtimes.
 
+## Current Next Edit
+
+1. Start after storage command coverage and relay effect wiring can provide real
+   cache proof and progressive snapshots.
+2. Define shared row data before any Home-specific rendering.
+3. Keep every row backed by real events, real profile state, diagnostics, or an
+   explicit unavailable state.
+
+## Next Checklist
+
+- [ ] Read feed runtime, feed-surface, app feed, storage cache, and relay page
+  contracts.
+- [ ] Update feed runtime docs before changing row or footer semantics.
+- [ ] Add stable row-id and feed row view-model data types in `lkjstr-app`.
+- [ ] Add conversions from cache/protocol render plans and unavailable states.
+- [ ] Add pure tests for row ids, duplicate merge, unavailable, diagnostic,
+  footer, and no-placeholder states.
+- [ ] Run app feed view-model and protocol tests; then record actual
+  verification.
+
 ## Target Behavior
 
 Rows use stable ids and real data only: event rows, profile rows, notification

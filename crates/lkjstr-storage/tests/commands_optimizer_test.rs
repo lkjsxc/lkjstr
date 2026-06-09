@@ -1,0 +1,94 @@
+use lkjstr_storage::{
+    StorageCommandFamily, StorageLedgerPolicy, StorageOperation, StorageProblemKind,
+    StorageProtectionPolicy, StorageStatsProjection, storage_repository_commands,
+};
+
+#[test]
+fn commands_optimizer_specs_are_present() -> Result<(), String> {
+    for id in [
+        "optimizer.feed-scan-observation.insert",
+        "optimizer.feed-scan-density-model.select-context",
+        "optimizer.feed-scan-density-model.upsert",
+        "optimizer.feed-scan-decision-trace.insert",
+    ] {
+        let command = command(id)?;
+        assert_eq!(command.family, StorageCommandFamily::Optimizer);
+        assert_eq!(command.ledger_policy, StorageLedgerPolicy::None);
+        assert_eq!(command.stats_projection, StorageStatsProjection::Optimizer);
+        assert_eq!(
+            command.protection_policy,
+            StorageProtectionPolicy::RecoverableDiagnostics
+        );
+    }
+    Ok(())
+}
+
+#[test]
+fn commands_optimizer_reads_and_writes_have_stable_shapes() -> Result<(), String> {
+    let observation = command("optimizer.feed-scan-observation.insert")?;
+    assert_optimizer_write(
+        observation,
+        &["feed_scan_observations.insert"],
+        &["feed_scan_observations"],
+        &["sqlite_scan_observation_row"],
+    );
+
+    let select = command("optimizer.feed-scan-density-model.select-context")?;
+    assert_eq!(select.operation, StorageOperation::Read);
+    assert_eq!(
+        select.statements,
+        &["feed_scan_density_models.select_context"]
+    );
+    assert_eq!(select.tables, &["feed_scan_density_models"]);
+    assert_eq!(select.row_codecs, &["scan_density_model_from_sqlite_row"]);
+    assert_eq!(
+        select.problem_kinds,
+        &[StorageProblemKind::OptimizerRecordDecodeFailed]
+    );
+
+    let upsert = command("optimizer.feed-scan-density-model.upsert")?;
+    assert_optimizer_write(
+        upsert,
+        &["feed_scan_density_models.upsert"],
+        &["feed_scan_density_models"],
+        &["sqlite_scan_density_model_row"],
+    );
+
+    let trace = command("optimizer.feed-scan-decision-trace.insert")?;
+    assert_optimizer_write(
+        trace,
+        &["feed_scan_decision_traces.insert"],
+        &["feed_scan_decision_traces"],
+        &["sqlite_scan_decision_trace_row"],
+    );
+    Ok(())
+}
+
+fn assert_optimizer_write(
+    command: &lkjstr_storage::StorageRepositoryCommandSpec,
+    statements: &[&str],
+    tables: &[&str],
+    row_codecs: &[&str],
+) {
+    assert_eq!(command.operation, StorageOperation::Write);
+    assert_eq!(command.statements, statements);
+    assert_eq!(command.tables, tables);
+    assert_eq!(command.row_codecs, row_codecs);
+    assert!(
+        command
+            .problem_kinds
+            .contains(&StorageProblemKind::OptimizerRecordDecodeFailed)
+    );
+    assert!(
+        command
+            .problem_kinds
+            .contains(&StorageProblemKind::QuotaOrWriteFailed)
+    );
+}
+
+fn command(id: &str) -> Result<&'static lkjstr_storage::StorageRepositoryCommandSpec, String> {
+    storage_repository_commands()
+        .iter()
+        .find(|command| command.id == id)
+        .ok_or_else(|| format!("missing command {id}"))
+}

@@ -47,9 +47,9 @@ Target now: OPFS-backed SQLite WASM in a dedicated worker. The detailed target
 lives in [../data/sqlite-opfs/README.md](../data/sqlite-opfs/README.md).
 
 Not implemented yet: feed runtime SQLite wiring, cache delete and repair paths,
-retention dispatchers, ledger repair, command metadata coverage for remaining
-live worker repositories, full pressure byte inventory diagnostics, full browser
-OPFS matrix tests, and multi-tab lock handling.
+retention dispatchers, ledger repair, command metadata for retention, repair,
+search/tag lookup, full pressure byte inventory diagnostics, full browser OPFS
+matrix tests, and multi-tab lock handling.
 
 ## Manifest Contract
 

@@ -18,6 +18,27 @@ runtime parity remains a later surface task.
 - `docs/architecture/rust-wasm/cutover/storage-wiring.md` marks Rust search and
   tag lookup modules as missing.
 
+## Current Next Edit
+
+1. Wait for retention and repair command coverage.
+2. Start with storage-owned tag lookup proof before local Search surface parity.
+3. Keep shipped TypeScript Search paths until Rust indexed rows have no-import
+   proof.
+
+## Next Checklist
+
+- [ ] Read Search product docs, SQLite repository contracts, and TypeScript
+  search-index and event-matching paths.
+- [ ] Update storage command matrix docs before adding Rust search commands.
+- [ ] Add tag lookup and token row codecs without changing product Search
+  parity status.
+- [ ] Add command specs for `tag-lookup.by-value`, `search.local-query`, and
+  `search.update-event-index` as real repositories land.
+- [ ] Add tests for token insert/delete/query, tag lookup, and stale token
+  removal on event updates.
+- [ ] Run Rust storage search and command tests plus shipped TypeScript Search
+  tests; then record actual verification.
+
 ## Target Behavior
 
 Rust storage owns token row codecs, tag lookup command metadata, indexed local

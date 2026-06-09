@@ -149,6 +149,7 @@ fn is_decode_kind(kind: StorageProblemKind) -> bool {
         kind,
         StorageProblemKind::ActiveAccountSelectorDecodeFailed
             | StorageProblemKind::PressureSnapshotDecodeFailed
+            | StorageProblemKind::OptimizerRecordDecodeFailed
             | StorageProblemKind::ProtectedRecordDecodeFailed
             | StorageProblemKind::CacheRecordDecodeFailed
     )

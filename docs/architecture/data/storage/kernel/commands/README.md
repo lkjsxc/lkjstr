@@ -39,17 +39,17 @@ repository retained, focused tests, and deletion condition.
 
 ## Implementation Order
 
-1. protected command coverage.
-2. event cache command coverage.
-3. feed evidence command coverage.
-4. diagnostics command coverage.
-5. jobs command coverage.
-6. app log command coverage.
-7. optimizer command coverage.
-8. retention command coverage.
-9. repair command coverage.
-10. search/tag lookup storage command coverage.
-11. pressure inventory command coverage.
+Implemented command metadata already covers active selector, pressure,
+protected rows, event cache, feed evidence, diagnostics, notifications, jobs,
+app log, inventory snapshot, and optimizer scan-model rows.
+
+1. retention command coverage.
+2. repair command coverage.
+3. search/tag lookup storage command coverage.
+4. pressure inventory completion.
+5. relay effect wiring.
+6. shared feed runtime.
+7. Home feed slice.
 
 ## Rules
 

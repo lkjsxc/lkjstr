@@ -9,12 +9,11 @@ cutover rows and tests pass.
 ## Summary
 
 The current storage slice preserves implemented active-account selector,
-pressure-row, and batch-capable command-shape contracts, then expands command
-coverage for remaining live SQLite worker repositories. Feed cache, feed
-coverage, event cache, retention dispatch, repair, full pressure inventory, and
-Stats projection remain partial. It must not delete TypeScript storage
-repositories until Rust covers every live table family and no-import proof is
-recorded.
+pressure-row, protected, event-cache, feed-evidence, diagnostics,
+notifications, jobs, app-log, inventory, optimizer, and batch-capable
+command-shape contracts. Retention dispatch, repair, search/tag lookup, full
+physical pressure inventory, and product consumption remain open. It must not delete TypeScript storage repositories
+until Rust covers every live table family and no-import proof is recorded.
 
 ## Read First
 
@@ -46,9 +45,10 @@ recorded.
    provenance, feed coverage, feed cursors, cache ledger rows, diagnostics,
    optimizer rows, job rows, log rows, active-account selectors, and pressure
    snapshots.
-3. Add typed command definitions with input type, output type, statement ids,
-   tables, stable problem kinds, row codecs, data classes, ledger policy,
-   protection policy, Stats projection, and real-shaped fixtures.
+3. Add typed command definitions for retention, repair, search/tag lookup, and
+   inventory gaps with input type, output type, statement ids, tables, stable
+   problem kinds, row codecs, data classes, ledger policy, protection policy,
+   Stats projection, and real-shaped fixtures.
 4. Wire remaining `lkjstr-web` worker calls without adding main-thread SQLite or
    OPFS access.
 5. Expose persistent OPFS, temporary memory, unavailable, timeout, blocked,
@@ -72,7 +72,8 @@ pnpm rust-wasm:quiet
 
 - Active-account selector, pressure snapshot, and batch command-shape contracts
   remain preserved.
-- Remaining live worker repositories gain truthful command specs.
+- Remaining retention, repair, search/tag lookup, and inventory worker paths
+  gain truthful command specs.
 - Product modules call typed repositories only.
 - Main-thread product code does not open SQLite or OPFS directly.
 - Stats shows storage health, mode, and real pressure snapshot fields without

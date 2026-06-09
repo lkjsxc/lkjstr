@@ -6,6 +6,14 @@ This file records storage command gaps that must stay conservative until real
 row codecs, command specs, worker adapters, and focused tests exist. Repair
 must report problems instead of silently classifying unknown rows as safe.
 
+## Current Next Edit
+
+1. Wait for retention delete-dispatch proof.
+2. Add repair scan, backfill, and inventory commands only with conservative
+   target states.
+3. Keep search/tag lookup blocked until storage row codecs and command specs are
+   real.
+
 ## Matrix
 
 | Command id | Status | Family | Operation | Input type | Output type | Statements | Tables | Row codecs | Problems | Data classes | Ledger | Protection | Stats | Worker adapter | TypeScript retained | Focused tests | Delete |

@@ -16,13 +16,30 @@ and pressure inventory.
 ## Current Evidence
 
 - Active-account selector, pressure, protected rows, event cache, feed
-  evidence, diagnostics, notifications, jobs, app log, and inventory snapshot
-  have typed specs.
-- Optimizer command coverage is partial because row codecs and statement records
-  exist, but command specs for the scan-model worker path are still open.
+  evidence, diagnostics, notifications, jobs, app log, inventory snapshot, and
+  optimizer scan-model rows have typed specs.
 - Retention, repair, and search/tag lookup command coverage are not implemented.
 - Event and feed writes use batch metadata because one command may touch
   resource rows, child rows, provenance rows, and `cache_ledger` rows.
+
+## Current Next Edit
+
+1. Implement retention planning and delete-dispatch command coverage.
+2. Add tests proving command ids, statements, tables, row codecs, problem kinds,
+   ledger policy, protection policy, and Stats projection.
+3. Only after retention metadata passes, implement conservative repair commands.
+
+## Next Checklist
+
+- [ ] Read retention deletion, ledger, scoring, dynamic protection, pressure,
+  and command matrix contracts.
+- [ ] Update command matrix docs before changing Rust command metadata.
+- [ ] Add retention planner and command specs with real statements, tables, row
+  codecs, problem kinds, and policies.
+- [ ] Register retention specs in `storage_repository_commands()`.
+- [ ] Add retention-focused command tests and docs-coverage assertions.
+- [ ] Run the storage command focused gate and update verification evidence with
+  actual commands.
 
 ## Target Behavior
 

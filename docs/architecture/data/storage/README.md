@@ -39,6 +39,12 @@ Compose verification.
 - [kernel/transactions.md](kernel/transactions.md): transactional write families.
 - [kernel/repositories.md](kernel/repositories.md): repository boundary.
 - [kernel/commands/README.md](kernel/commands/README.md): command metadata matrix.
+- [kernel/commands/diagnostics.md](kernel/commands/diagnostics.md): diagnostics commands.
+- [kernel/commands/event-cache.md](kernel/commands/event-cache.md): event-cache commands.
+- [kernel/commands/feed-evidence.md](kernel/commands/feed-evidence.md): feed evidence commands.
+- [kernel/commands/protected.md](kernel/commands/protected.md): protected commands.
+- [kernel/commands/repair.md](kernel/commands/repair.md): repair commands.
+- [kernel/commands/retention.md](kernel/commands/retention.md): retention commands.
 - [kernel/failure-recovery.md](kernel/failure-recovery.md): degraded storage startup.
 - [kernel/local-secrets.md](kernel/local-secrets.md): local signing secret boundary.
 - [data-classes/README.md](data-classes/README.md): durable data classes.

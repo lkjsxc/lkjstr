@@ -18,6 +18,26 @@ commands.
 - Full physical byte inventory, old IndexedDB presence diagnostics, and repair
   linkage remain open.
 
+## Current Next Edit
+
+1. Keep pressure and optimizer command metadata intact while retention lands.
+2. Link full inventory work to retention and repair outputs instead of inventing
+   standalone byte safety.
+3. Add UI projection changes only after storage rows expose real unavailable
+   states.
+
+## Next Checklist
+
+- [ ] Read inventory, pressure-state, Stats, and storage-pressure verification
+  contracts.
+- [ ] Update docs for any new pressure state or inventory field before source.
+- [ ] Add storage-owned inventory rows or projections for missing physical byte
+  classes.
+- [ ] Add Stats projections for every unavailable mode and pressure stop reason.
+- [ ] Add Rust UI tests for explicit unavailable states when view fields change.
+- [ ] Run pressure, stats, commands, UI stats, and Rust/WASM gates; then record
+  actual verification.
+
 ## Target Behavior
 
 Stats shows persistent OPFS, temporary memory, unavailable, timeout, blocked,

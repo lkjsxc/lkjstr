@@ -14,6 +14,12 @@ failure-recovery behavior.
 - [transactions.md](transactions.md): transactional write families.
 - [repositories.md](repositories.md): feature-facing storage boundary.
 - [commands/README.md](commands/README.md): storage command metadata matrix.
+- [commands/diagnostics.md](commands/diagnostics.md): diagnostics command specs.
+- [commands/event-cache.md](commands/event-cache.md): event-cache command specs.
+- [commands/feed-evidence.md](commands/feed-evidence.md): feed evidence command specs.
+- [commands/protected.md](commands/protected.md): protected data command specs.
+- [commands/repair.md](commands/repair.md): repair command specs.
+- [commands/retention.md](commands/retention.md): retention command specs.
 - [failure-recovery.md](failure-recovery.md): degraded startup and session fallback.
 - [local-secrets.md](local-secrets.md): local signing secret boundary.
 

@@ -42,18 +42,16 @@ removed.
   repository calls, typed command specs, and Rust Stats pressure projection
   from real snapshot rows. Rust Accounts product wiring now resolves active
   selectors through the SQLite worker and treats the old localStorage key as a
-  migration source only. Full pressure byte inventory diagnostics, retention
-  dispatch, repair, and feed-runtime consumption remain open.
+  migration source only. Optimizer scan-model command metadata is implemented.
+  Retention dispatch, repair, search/tag lookup, full pressure byte inventory
+  diagnostics, and feed-runtime consumption remain open.
 - Command metadata status: active selector, pressure, protected rows, event
-  cache, feed evidence, relay diagnostics, notifications, jobs, app log, and
-  inventory snapshot are implemented. Optimizer command coverage is partial.
-  Retention, repair, and search/tag lookup command coverage are not
-  implemented.
-- Next task order: protected command coverage, event cache command coverage,
-  feed evidence command coverage, diagnostics command coverage, jobs command
-  coverage, app log command coverage, optimizer command coverage, retention
-  command coverage, repair command coverage, search/tag lookup storage command
-  coverage, and pressure inventory command coverage.
+  cache, feed evidence, relay diagnostics, notifications, jobs, app log,
+  inventory snapshot, and optimizer scan-model rows are implemented. Retention,
+  repair, and search/tag lookup command coverage are not implemented.
+- Next task order: retention command coverage, repair command coverage,
+  search/tag lookup storage command coverage, pressure inventory completion,
+  relay effect wiring, shared feed runtime, and Home feed slice.
 
 ## Acceptance Checklist
 
@@ -68,8 +66,9 @@ removed.
 - [x] Live protected, event cache, feed evidence, diagnostics, notifications,
   jobs, app log, pressure, and inventory worker calls have Rust command
   metadata.
-- [ ] Optimizer, retention, repair, and search/tag lookup commands have full
-  Rust metadata and focused proof.
+- [x] Optimizer scan-model commands have Rust metadata and focused proof.
+- [ ] Retention, repair, and search/tag lookup commands have full Rust metadata
+  and focused proof.
 - [ ] Every command has input, output, statement ids when not inventory-only,
   stable problem kinds, ledger policy, protection policy, Stats projection, and
   fixture proof.

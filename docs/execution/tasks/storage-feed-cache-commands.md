@@ -20,6 +20,24 @@ metadata. Product feed runtime consumption remains partial.
 - Shipped Svelte feed surfaces still use TypeScript repositories until Rust feed
   runtime parity exists.
 
+## Current Next Edit
+
+1. Preserve implemented event-cache, feed-cursor, coverage, scan-hint, and
+   optimizer command metadata while retention lands.
+2. Do not add product feed parity claims from command metadata alone.
+3. Feed consumption moves later through the shared Rust feed runtime task.
+
+## Next Checklist
+
+- [ ] Read feed coverage, cache-first pages, and feed runtime contracts before
+  changing proof semantics.
+- [ ] Update command matrix docs if a feed worker command changes shape.
+- [ ] Keep event/feed writes ledger-backed in one batch.
+- [ ] Add tests for any changed coverage proof state or statement list.
+- [ ] Run storage commands, feed cache, web feed cache, event repository, and
+  scan-model tests.
+- [ ] Update verification evidence only with commands actually run.
+
 ## Target Behavior
 
 Event and feed commands name every statement and table touched by the batch.

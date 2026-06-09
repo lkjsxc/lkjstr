@@ -77,6 +77,13 @@ read the current live storage state in [storage/README.md](storage/README.md).
   transactional write families.
 - [storage/kernel/repositories.md](storage/kernel/repositories.md):
   repository boundary.
+- [storage/kernel/commands/README.md](storage/kernel/commands/README.md): storage command metadata matrix.
+- [storage/kernel/commands/diagnostics.md](storage/kernel/commands/diagnostics.md): diagnostics commands.
+- [storage/kernel/commands/event-cache.md](storage/kernel/commands/event-cache.md): event-cache commands.
+- [storage/kernel/commands/feed-evidence.md](storage/kernel/commands/feed-evidence.md): feed evidence commands.
+- [storage/kernel/commands/protected.md](storage/kernel/commands/protected.md): protected commands.
+- [storage/kernel/commands/repair.md](storage/kernel/commands/repair.md): repair commands.
+- [storage/kernel/commands/retention.md](storage/kernel/commands/retention.md): retention commands.
 - [storage/kernel/failure-recovery.md](storage/kernel/failure-recovery.md):
   degraded startup and session fallback.
 - [storage/kernel/local-secrets.md](storage/kernel/local-secrets.md): local
