@@ -108,6 +108,41 @@ pub const CACHE_STATEMENTS: &[SqliteStatementSpec] = &[
         "feed_scan_hints",
         "DELETE FROM feed_scan_hints WHERE expires_at_ms <= ?1;",
     ),
+    read(
+        "cache_ledger.compaction_candidates",
+        "cache_ledger",
+        "SELECT resource_id, resource_kind, table_name, byte_count, protected, score, owner_key, created_at_ms, updated_at_ms FROM cache_ledger ORDER BY score ASC, updated_at_ms ASC, resource_kind ASC, resource_id ASC LIMIT ?1;",
+    ),
+    write(
+        "events.delete",
+        "events",
+        "DELETE FROM events WHERE event_id = ?1;",
+    ),
+    write(
+        "event_relays.delete_by_event",
+        "event_relays",
+        "DELETE FROM event_relays WHERE event_id = ?1;",
+    ),
+    write(
+        "notifications.delete",
+        "notifications",
+        "DELETE FROM notifications WHERE notification_id = ?1;",
+    ),
+    write(
+        "feed_cursors.delete",
+        "feed_cursors",
+        "DELETE FROM feed_cursors WHERE cursor_id = ?1;",
+    ),
+    write(
+        "feed_coverage.delete",
+        "feed_coverage",
+        "DELETE FROM feed_coverage WHERE coverage_id = ?1;",
+    ),
+    write(
+        "feed_scan_hints.delete",
+        "feed_scan_hints",
+        "DELETE FROM feed_scan_hints WHERE semantic_feed_key || char(31) || route_group_key || char(31) || relay_url || char(31) || semantic_filter_key || char(31) || direction || char(31) || route_fingerprint = ?1;",
+    ),
 ];
 
 const fn read(id: &'static str, table: &'static str, sql: &'static str) -> SqliteStatementSpec {

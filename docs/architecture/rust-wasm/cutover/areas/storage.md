@@ -43,13 +43,15 @@ removed.
   from real snapshot rows. Rust Accounts product wiring now resolves active
   selectors through the SQLite worker and treats the old localStorage key as a
   migration source only. Optimizer scan-model command metadata is implemented.
-  Retention dispatch, repair, search/tag lookup, full pressure byte inventory
-  diagnostics, and feed-runtime consumption remain open.
+  Retention planner and command metadata are implemented before worker dispatch.
+  Repair, search/tag lookup, full pressure byte inventory diagnostics, and
+  feed-runtime consumption remain open.
 - Command metadata status: active selector, pressure, protected rows, event
   cache, feed evidence, relay diagnostics, notifications, jobs, app log,
-  inventory snapshot, and optimizer scan-model rows are implemented. Retention,
-  repair, and search/tag lookup command coverage are not implemented.
-- Next task order: retention command coverage, repair command coverage,
+  inventory snapshot, optimizer scan-model rows, and retention planner rows are
+  implemented. Retention worker dispatch remains open. Repair and search/tag
+  lookup command coverage are not implemented.
+- Next task order: retention worker dispatch, repair command coverage,
   search/tag lookup storage command coverage, pressure inventory completion,
   relay effect wiring, shared feed runtime, and Home feed slice.
 
@@ -67,8 +69,8 @@ removed.
   jobs, app log, pressure, and inventory worker calls have Rust command
   metadata.
 - [x] Optimizer scan-model commands have Rust metadata and focused proof.
-- [ ] Retention, repair, and search/tag lookup commands have full Rust metadata
-  and focused proof.
+- [ ] Retention, repair, and search/tag lookup commands have full Rust metadata,
+  worker wiring where applicable, and focused proof.
 - [ ] Every command has input, output, statement ids when not inventory-only,
   stable problem kinds, ledger policy, protection policy, Stats projection, and
   fixture proof.

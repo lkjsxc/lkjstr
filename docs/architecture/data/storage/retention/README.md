@@ -22,6 +22,8 @@ byte target without deleting protected records.
 - IndexedDB table estimates and ledger estimates are diagnostics.
 - Selection uses score, then recency, then id.
 - Durable and dynamic protection skip candidates.
+- `lkjstr-storage` owns pure retention planning; `lkjstr-web` owns worker
+  delete dispatch.
 - Every deletion uses a resource-kind dispatcher.
 - Every stop records a concrete reason instead of reporting success from
   ledger bytes alone.

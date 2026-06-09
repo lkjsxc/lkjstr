@@ -43,7 +43,7 @@ Implemented command metadata already covers active selector, pressure,
 protected rows, event cache, feed evidence, diagnostics, notifications, jobs,
 app log, inventory snapshot, and optimizer scan-model rows.
 
-1. retention command coverage.
+1. retention worker dispatch coverage.
 2. repair command coverage.
 3. search/tag lookup storage command coverage.
 4. pressure inventory completion.

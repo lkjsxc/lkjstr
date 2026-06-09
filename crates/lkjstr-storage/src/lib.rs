@@ -19,6 +19,7 @@ pub mod outcome;
 pub mod pressure;
 pub mod relay_sets;
 pub mod resource;
+pub mod retention;
 pub mod route_blocks;
 pub mod settings;
 mod settings_defs;
@@ -46,11 +47,12 @@ pub use app_log::{AppLogRecord, SqliteAppLogRow, redact_app_log_text};
 pub use commands::{
     ActiveAccountSelectorDeleteInput, ActiveAccountSelectorDeleteOutput,
     ActiveAccountSelectorGetInput, ActiveAccountSelectorGetOutput, ActiveAccountSelectorPutInput,
-    ActiveAccountSelectorPutOutput, STORAGE_REPOSITORY_COMMANDS, StorageCommandFamily,
-    StorageLedgerPolicy, StoragePressureGetInput, StoragePressureGetOutput,
-    StoragePressureProjectInput, StoragePressureProjectOutput, StoragePressurePutInput,
-    StoragePressurePutOutput, StorageProtectionPolicy, StorageRepositoryCommandSpec,
-    StorageStatsProjection, storage_repository_commands,
+    ActiveAccountSelectorPutOutput, RetentionDeleteDispatchInput, RetentionDeleteDispatchOutput,
+    RetentionPlanOutput, STORAGE_REPOSITORY_COMMANDS, StorageCommandFamily, StorageLedgerPolicy,
+    StoragePressureGetInput, StoragePressureGetOutput, StoragePressureProjectInput,
+    StoragePressureProjectOutput, StoragePressurePutInput, StoragePressurePutOutput,
+    StorageProtectionPolicy, StorageRepositoryCommandSpec, StorageStatsProjection,
+    storage_repository_commands,
 };
 pub use data_class::{StorageDataClass, StorageInventoryGroup};
 pub use diagnostics::{
@@ -126,6 +128,12 @@ pub use relay_sets::{
     relay_set_record_json_bytes, sqlite_relay_set_row,
 };
 pub use resource::{CacheOwnerKind, CacheResourceKind};
+pub use retention::{
+    RetentionByteTarget, RetentionCandidate, RetentionDeleteIntent, RetentionDynamicProtection,
+    RetentionPlan, RetentionPlanInput, RetentionPlanSummary, RetentionStopReason,
+    candidate_is_dynamically_protected, candidate_is_prunable, plan_retention,
+    retention_candidate_from_ledger_row, retention_stop_reason,
+};
 pub use route_blocks::{RelayRouteBlockRecord, SqliteRelayRouteBlockRow};
 pub use settings::{
     SettingOverrideRecord, SqliteSettingRow, setting_from_sqlite_row, setting_namespace,

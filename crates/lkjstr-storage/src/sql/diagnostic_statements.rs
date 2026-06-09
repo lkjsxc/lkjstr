@@ -113,6 +113,42 @@ pub const DIAGNOSTIC_STATEMENTS: &[SqliteStatementSpec] = &[
         "jobs",
         "INSERT INTO jobs (job_id, job_kind, state, owner_id, payload_json, created_at_ms, updated_at_ms, finished_at_ms) VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8) ON CONFLICT(job_id) DO UPDATE SET job_kind = excluded.job_kind, state = excluded.state, owner_id = excluded.owner_id, payload_json = excluded.payload_json, updated_at_ms = excluded.updated_at_ms, finished_at_ms = excluded.finished_at_ms;",
     ),
+    write(
+        "relay_diagnostic_summaries.delete",
+        "relay_diagnostic_summaries",
+        "DELETE FROM relay_diagnostic_summaries WHERE relay_url = ?1;",
+    ),
+    write(
+        "relay_information.delete",
+        "relay_information",
+        "DELETE FROM relay_information WHERE relay_url = ?1;",
+    ),
+    write(
+        "relay_read_observations.delete",
+        "relay_read_observations",
+        "DELETE FROM relay_read_observations WHERE id = ?1;",
+    ),
+    write(
+        "relay_read_scores.delete",
+        "relay_read_scores",
+        "DELETE FROM relay_read_scores WHERE relay_url || char(31) || surface || char(31) || phase || char(31) || direction || char(31) || route_group_key || char(31) || filter_shape || char(31) || purpose = ?1;",
+    ),
+    write(
+        "relay_list_suggestions.delete",
+        "relay_list_suggestions",
+        "DELETE FROM relay_list_suggestions WHERE pubkey || ':' || relay_url || ':' || purpose = ?1;",
+    ),
+    write(
+        "author_relay_routes.delete",
+        "author_relay_routes",
+        "DELETE FROM author_relay_routes WHERE pubkey || ':' || relay_url || ':' || route_kind = ?1;",
+    ),
+    write(
+        "route_evidence_scores.delete",
+        "route_evidence_scores",
+        "DELETE FROM route_evidence_scores WHERE author_pubkey || char(31) || relay_url || char(31) || surface || char(31) || source = ?1;",
+    ),
+    write("jobs.delete", "jobs", "DELETE FROM jobs WHERE job_id = ?1;"),
     read(
         "app_log.recent",
         "app_log",

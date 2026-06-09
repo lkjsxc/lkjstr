@@ -121,8 +121,9 @@ Read next: [architecture/data/README.md](architecture/data/README.md),
   memory, unavailable, timeout, blocked, corrupt, or unknown-old-storage.
 - Rust storage command metadata covers active selectors, pressure rows,
   protected rows, event cache, feed evidence, relay diagnostics, notifications,
-  jobs, app log, inventory snapshot, and optimizer scan-model rows. Retention,
-  repair, and search/tag lookup metadata remain open.
+  jobs, app log, inventory snapshot, optimizer scan-model rows, and partial
+  retention planner rows. Retention worker dispatch, repair, and search/tag
+  lookup metadata remain open.
 - Rust storage outcomes expose stable problem-kind labels for OPFS failures,
   worker init, temporary memory fallback, repair, decode, active account
   selector, pressure snapshot decode, optimizer record decode, pressure stop

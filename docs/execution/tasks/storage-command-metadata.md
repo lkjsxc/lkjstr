@@ -18,16 +18,21 @@ and pressure inventory.
 - Active-account selector, pressure, protected rows, event cache, feed
   evidence, diagnostics, notifications, jobs, app log, inventory snapshot, and
   optimizer scan-model rows have typed specs.
-- Retention, repair, and search/tag lookup command coverage are not implemented.
+- Retention planner and delete-dispatch metadata are implemented; worker
+  dispatch remains a follow-up until `lkjstr-web` calls the listed statements.
+- Repair and search/tag lookup command coverage are not implemented.
 - Event and feed writes use batch metadata because one command may touch
   resource rows, child rows, provenance rows, and `cache_ledger` rows.
 
 ## Current Next Edit
 
-1. Implement retention planning and delete-dispatch command coverage.
-2. Add tests proving command ids, statements, tables, row codecs, problem kinds,
-   ledger policy, protection policy, and Stats projection.
-3. Only after retention metadata passes, implement conservative repair commands.
+1. Wire `retention.delete-dispatch` through `lkjstr-web` worker adapters without
+   moving policy out of `lkjstr-storage`.
+2. Preserve `retention.plan` and `retention.delete-dispatch` specs with real
+   statement ids, manifest tables, codecs, problem kinds, ledger policy,
+   protection policy, and Stats projection.
+3. Only after retention worker dispatch passes, implement conservative repair
+   commands.
 
 ## Next Checklist
 
@@ -35,7 +40,7 @@ and pressure inventory.
   and command matrix contracts.
 - [ ] Update command matrix docs before changing Rust command metadata.
 - [ ] Add retention planner and command specs with real statements, tables, row
-  codecs, problem kinds, and policies.
+  codecs, problem kinds, data classes, delete condition, and policies.
 - [ ] Register retention specs in `storage_repository_commands()`.
 - [ ] Add retention-focused command tests and docs-coverage assertions.
 - [ ] Run the storage command focused gate and update verification evidence with

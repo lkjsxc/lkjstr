@@ -37,7 +37,8 @@ key is migration-only and is removed after a successful selector write. Active
 selector, pressure, protected rows, event cache, feed evidence, diagnostics,
 notifications, jobs, app log, and inventory snapshot now use the batch-capable
 metadata shape. Optimizer scan-model command metadata is implemented;
-retention, repair, and search/tag lookup commands remain open.
+retention planner and command metadata are implemented; retention worker
+dispatch, repair, and search/tag lookup commands remain open.
 
 ## Storage Family Matrix
 
@@ -58,7 +59,7 @@ retention, repair, and search/tag lookup commands remain open.
 | Relay diagnostics, info, suggestions, author routes | `relay-*-store.ts`, `sqlite-opfs/relay-cache-sqlite.ts`                                                  | `lkjstr-storage/src/diagnostics.rs`, `sqlite_store/relay_*`                                                            | `query`, `batch` | `diagnostics_sqlite_rows_test.rs`                   | Relay Settings and Stats use Rust rows, route evidence, and import-only suggestions.          |
 | Notifications                                       | `repositories/notifications-store.ts`, `sqlite-opfs/notifications-sqlite.ts`                             | `lkjstr-storage/src/notifications.rs`, `sqlite_store/notifications.rs`                                                 | `query`, `batch` | `notifications_sqlite_rows_test.rs`                 | Rust Notifications runtime owns rows, references, and bounded paging.                         |
 | App log                                             | `src/lib/log/**`, `sqlite-opfs/app-log-repository.ts`                                                    | `lkjstr-storage/src/app_log.rs`, `sqlite_store/app_log.rs`                                                             | `query`, `batch` | `diagnostics_sqlite_rows_test.rs`                   | Rust Log owns capture, redaction, display, refresh, clear, and bounds.                        |
-| Cache ledger and retention metadata                 | `sqlite-opfs/cache-ledger-*.ts`, `cache-compaction-sqlite.ts`                                            | `lkjstr-storage/src/ledger.rs`, `tab_state.rs`, `sqlite_store/cache_ledger.rs`                                         | `query`, `batch` | `ledger_test.rs`, `manifest_test.rs`                | Rust retention dispatch deletes only ledger-backed prunable rows and reports pressure.        |
+| Cache ledger and retention metadata                 | `sqlite-opfs/cache-ledger-*.ts`, `cache-compaction-sqlite.ts`                                            | `lkjstr-storage/src/ledger.rs`, `retention.rs`, `tab_state.rs`, `sqlite_store/cache_ledger.rs`; add `sqlite_store/retention.rs` for dispatch | `query`, `batch` | `ledger_test.rs`, `manifest_test.rs`, retention and command tests | Rust retention dispatch deletes only ledger-backed prunable rows and reports pressure.        |
 | Optimizer and geometry observations                 | `feed-surface/scan-model-repository.ts`, `sqlite-opfs/feed-cache-*`                                      | `lkjstr-storage/src/optimizer/**`, `lkjstr-storage/src/commands/optimizer.rs`, `lkjstr-web/src/scan_model/**`; add durable row-height rows before geometry cutover | `query`, `batch` | optimizer scan-model command metadata; `commands_optimizer_test.rs`; `optimizer::tests*`, `scan-model-repository` tests | Stats and feed runtime consume Rust optimizer and geometry rows without TS session fallbacks. |
 
 ## Deletion Proof

@@ -28,8 +28,8 @@ no-import proof allow removal.
 - Current first slice: storage command metadata coverage for remaining live
   SQLite worker repositories, then feed cache, feed coverage, event cache,
   retention, repair, full pressure inventory, and Stats projection. The
-  batch-capable command shape and active-account selector proof are implemented
-  and retained in task evidence files.
+  batch-capable command shape, active-account selector proof, and retention
+  planner metadata are implemented and retained in task evidence files.
 - Second slice: relay runtime wiring from Rust reducers to browser WebSocket,
   timer, and NIP-11 host effects.
 - Third slice: shared feed runtime that consumes strict cache proof and

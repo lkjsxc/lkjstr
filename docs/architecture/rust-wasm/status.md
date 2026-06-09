@@ -77,10 +77,10 @@ This file is the concise status map for the active Rust/WASM migration.
   resolves the active selector through SQLite with the old localStorage key as a
   migration source only. The active-selector task is closed evidence, and the
   command metadata shape now supports batch-shaped specs for active selector and
-  pressure commands. Current storage work is command coverage for remaining live
-  worker repositories, then feed cache, event cache, retention, repair, full
-  pressure byte inventory diagnostics, CSS side effects, and cache-budget
-  enforcement.
+  pressure commands. Current storage work has Rust retention planning and
+  command metadata; retention worker dispatch, repair, full pressure byte
+  inventory diagnostics, CSS side effects, and cache-budget enforcement remain
+  open.
 - Followees and User Timeline now have Rust target follow-graph reducers, a
   WASM parser bridge, a fixed lkjsxc catalog constant, follow-count state,
   author chunking contracts, cache-display policy reducers, a Rust User Timeline
@@ -156,8 +156,9 @@ replaced TypeScript or Svelte paths, focused gate, and final gate.
   table arrays plus ledger, protection, and Stats policy enums. Live protected,
   event cache, feed evidence, relay diagnostics, notifications, jobs, app log,
   pressure, and inventory worker calls now have command specs. Optimizer
-  metadata is partial; retention, repair, search/tag lookup, full product cache
-  proof, and surface consumption remain open.
+  metadata and retention planner metadata are partial; retention worker
+  dispatch, repair, search/tag lookup, full product cache proof, and surface
+  consumption remain open.
 - Focused gate: `cargo test -p lkjstr-storage` and `pnpm rust-wasm:quiet`.
 - Final gate: Docker Compose config, image builds, and service runs from
   [../../operations/verification.md](../../operations/verification.md).

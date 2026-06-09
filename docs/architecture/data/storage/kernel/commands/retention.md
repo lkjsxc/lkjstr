@@ -8,10 +8,12 @@ ledger-backed prunable rows and must report exact stop reasons.
 
 ## Current Next Edit
 
-1. Implement retention planning and delete-dispatch command coverage.
-2. Add tests proving command ids, statements, tables, row codecs, problem kinds,
-   ledger policy, protection policy, and Stats projection.
-3. Only after retention metadata passes, implement conservative repair commands.
+1. Keep the pure Rust planner and command metadata aligned with the statement
+   ids below.
+2. Wire `retention.delete-dispatch` through `lkjstr-web/src/sqlite_store/` so
+   the worker executes the listed table-specific delete statements.
+3. Only after worker dispatch passes focused tests, implement conservative
+   repair commands.
 
 ## Matrix
 
@@ -25,12 +27,26 @@ ledger-backed prunable rows and must report exact stop reasons.
 | `optimizer.feed-scan-density-model.select-context` | implemented | optimizer | read | `FeedScanDensityModelSelectContextInput` | `FeedScanDensityModelSelectContextOutput` | `feed_scan_density_models.select_context` | `feed_scan_density_models` | `scan_density_model_from_sqlite_row` | optimizer decode | diagnostics-cache | none | recoverable-diagnostics | optimizer | scan-model storage path | scan-model repositories | `commands_optimizer_test.rs` | Rust optimizer parity plus no-import proof |
 | `optimizer.feed-scan-density-model.upsert` | implemented | optimizer | write | `FeedScanDensityModelUpsertInput` | `FeedScanDensityModelUpsertOutput` | `feed_scan_density_models.upsert` | `feed_scan_density_models` | `sqlite_scan_density_model_row` | optimizer decode, write/quota | diagnostics-cache | none | recoverable-diagnostics | optimizer | scan-model storage path | scan-model repositories | `commands_optimizer_test.rs` | Rust optimizer parity plus no-import proof |
 | `optimizer.feed-scan-decision-trace.insert` | implemented | optimizer | write | `FeedScanDecisionTraceInsertInput` | `FeedScanDecisionTraceInsertOutput` | `feed_scan_decision_traces.insert` | `feed_scan_decision_traces` | `sqlite_scan_decision_trace_row` | optimizer decode, write/quota | diagnostics-cache | none | recoverable-diagnostics | optimizer | scan-model storage path | scan-model repositories | `commands_optimizer_test.rs` | Rust optimizer parity plus no-import proof |
-| `retention.plan` | not implemented | retention | compaction | open | open | cache ledger selector open | `cache_ledger` | ledger row codecs exist | pressure stop reasons | ledger | reads-ledger | mixed | pressure | cache maintenance | retention tests | Rust retention parity plus no-import proof |
-| `retention.delete-dispatch` | not implemented | retention | compaction | open | open | table delete dispatch open | prunable manifest tables | table codecs exist | write/quota, pressure stop reasons | recoverable cache classes | deletes-ledger-backed-rows | recoverable-cache | pressure | cache maintenance | retention tests | Rust retention parity plus no-import proof |
+| `retention.plan` | partial | retention | compaction | `RetentionPlanInput` | `RetentionPlanOutput` | `cache_ledger.compaction_candidates` | `cache_ledger` | `sqlite_cache_ledger_row`, `retention_candidate_from_ledger_row` | cache decode, pressure stop reasons, storage unavailable, timeout, blocked | ledger, recoverable-cache, derived-feed-cache, diagnostics-cache, metadata | reads-ledger | mixed | pressure | pure `lkjstr-storage/src/retention/` planner; worker call not wired | cache maintenance | `retention_test.rs`, `commands_retention_test.rs` | Rust retention parity plus no-import proof |
+| `retention.delete-dispatch` | partial | retention | compaction | `RetentionDeleteDispatchInput` | `RetentionDeleteDispatchOutput` | `events.delete`, `event_tags.delete_by_event`, `event_relays.delete_by_event`, `notifications.delete`, `feed_cursors.delete`, `feed_coverage.delete`, `feed_scan_hints.delete`, `relay_diagnostic_summaries.delete`, `relay_information.delete`, `relay_read_observations.delete`, `relay_read_scores.delete`, `relay_list_suggestions.delete`, `author_relay_routes.delete`, `route_evidence_scores.delete`, `jobs.delete`, `cache_ledger.delete` | `events`, `event_tags`, `event_relays`, `notifications`, `feed_cursors`, `feed_coverage`, `feed_scan_hints`, `relay_diagnostic_summaries`, `relay_information`, `relay_read_observations`, `relay_read_scores`, `relay_list_suggestions`, `author_relay_routes`, `route_evidence_scores`, `jobs`, `cache_ledger` | `sqlite_cache_ledger_row`, table delete codecs | write/quota, pressure stop reasons, storage unavailable, timeout, blocked | ledger, recoverable-cache, derived-feed-cache, diagnostics-cache | deletes-ledger-backed-rows | mixed | pressure | `sqlite_store/retention.rs` next; not wired yet | cache maintenance | `commands_retention_test.rs`; worker tests pending | Rust retention parity plus no-import proof |
 
 ## Stop Reasons
 
-Retention reports one exact stop reason: `no-prunable-candidates`,
-`protected-only`, `unknown-unowned-usage`, `inventory-incomplete`,
-`quota-pressure`, `storage-api-unavailable`, or `compaction-error`. Missing
-ledger ownership is not safe to prune.
+Retention reports one exact stop reason when pressure remains:
+`no-prunable-candidates`, `protected-only`, `unknown-unowned-usage`,
+`inventory-incomplete`, `quota-pressure`, `storage-api-unavailable`, or
+`compaction-error`. Missing ledger ownership is not safe to prune. A plan that
+reaches the byte target records target satisfaction separately from these
+failure stop reasons.
+
+## Source Steps
+
+1. Read `cache_ledger` candidates with `cache_ledger.compaction_candidates`.
+2. Convert each ledger row into a planner candidate only when the resource kind
+   is ledger-backed and recoverable.
+3. Sort by score, older update time, resource kind, and resource id.
+4. Skip protected rows, unknown ownership, and dynamic protection pins.
+5. Dispatch deletes by resource kind and delete the `cache_ledger` row in the
+   same worker batch.
+6. Re-read pressure after dispatch and report the exact stop reason when the
+   target is still not satisfied.

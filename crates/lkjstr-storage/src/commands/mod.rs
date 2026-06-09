@@ -10,6 +10,7 @@ pub mod jobs;
 pub mod optimizer;
 pub mod pressure;
 pub mod protected;
+pub mod retention;
 pub mod spec;
 
 pub use active_account::{
@@ -20,6 +21,9 @@ pub use active_account::{
 pub use pressure::{
     StoragePressureGetInput, StoragePressureGetOutput, StoragePressureProjectInput,
     StoragePressureProjectOutput, StoragePressurePutInput, StoragePressurePutOutput,
+};
+pub use retention::{
+    RetentionDeleteDispatchInput, RetentionDeleteDispatchOutput, RetentionPlanOutput,
 };
 pub use spec::{
     StorageCommandFamily, StorageLedgerPolicy, StorageProtectionPolicy,
@@ -94,6 +98,8 @@ pub const STORAGE_REPOSITORY_COMMANDS: &[StorageRepositoryCommandSpec] = &[
     optimizer::FEED_SCAN_DENSITY_MODEL_SELECT_CONTEXT_COMMAND,
     optimizer::FEED_SCAN_DENSITY_MODEL_UPSERT_COMMAND,
     optimizer::FEED_SCAN_DECISION_TRACE_INSERT_COMMAND,
+    retention::RETENTION_PLAN_COMMAND,
+    retention::RETENTION_DELETE_DISPATCH_COMMAND,
     app_log::APP_LOG_INSERT_COMMAND,
     app_log::APP_LOG_RECENT_COMMAND,
     app_log::APP_LOG_CLEAR_BEFORE_COMMAND,
