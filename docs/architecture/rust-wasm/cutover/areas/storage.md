@@ -39,22 +39,26 @@ removed.
   after all live callers have Rust replacements and no-import proof exists.
 - Current status: partial. Rust row codecs and many worker calls exist;
   active-account selector rows and pressure snapshot rows now have worker
-  repository calls. Product wiring, full pressure byte inventory diagnostics,
-  retention dispatch, repair, and feed-runtime consumption remain open.
+  repository calls, typed command specs, and Rust Stats pressure projection
+  from real snapshot rows. Active selector product wiring, full pressure byte
+  inventory diagnostics, retention dispatch, repair, and feed-runtime
+  consumption remain open.
 - Next task: expose feed repository commands through the Rust worker adapter and
-  wire selector plus pressure rows into product view models.
+  wire active selector rows into product view models.
 
 ## Acceptance Checklist
 
 - [x] Active-account selector rows and pressure snapshot rows have Rust codecs
   and typed worker calls.
+- [x] Active-account selector and pressure snapshot commands have typed specs,
+  stable problem kinds, row-codec links, and Stats projection metadata.
 - [ ] Every touched table has a Rust row codec and typed command.
 - [ ] Every command has input, output, stable problem kind, and fixture proof.
 - [ ] No product code opens SQLite or OPFS outside the worker.
 - [ ] Stats shows persistent, temporary memory, unavailable, timeout, blocked,
   corrupt, or unknown-old-storage states without indefinite loading.
-- [ ] Pressure reports protected bytes, prunable bytes, unknown storage,
-  residual overhead, and exact stop reason.
+- [x] Rust Stats projects protected bytes, prunable bytes, unknown storage,
+  residual overhead, and exact stop reason from a real pressure snapshot row.
 - [ ] Retention deletes only ledger-backed prunable rows and reports counts.
 - [ ] Repair reports schema mismatch, corrupt rows, decode failures, incomplete
   inventory, and temporary memory fallback.

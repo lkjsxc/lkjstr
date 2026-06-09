@@ -10,53 +10,13 @@ pub struct StorageTableSpec {
     pub data_class: StorageDataClass,
     pub inventory_group: StorageInventoryGroup,
     pub primary_owner: &'static str,
+    pub command_family: &'static str,
+    pub retention_behavior: &'static str,
+    pub stats_projection: &'static str,
     pub ledger_resource_kind: Option<CacheResourceKind>,
     pub protected_by_default: bool,
     pub repairable: bool,
     pub compactable: bool,
-}
-
-pub(crate) const fn table(
-    name: &'static str,
-    schema: &'static str,
-    data_class: StorageDataClass,
-    inventory_group: StorageInventoryGroup,
-    primary_owner: &'static str,
-    protected_by_default: bool,
-) -> StorageTableSpec {
-    StorageTableSpec {
-        name,
-        schema,
-        data_class,
-        inventory_group,
-        primary_owner,
-        ledger_resource_kind: None,
-        protected_by_default,
-        repairable: false,
-        compactable: false,
-    }
-}
-
-pub(crate) const fn ledger_table(
-    name: &'static str,
-    schema: &'static str,
-    data_class: StorageDataClass,
-    inventory_group: StorageInventoryGroup,
-    primary_owner: &'static str,
-    ledger_resource_kind: CacheResourceKind,
-    protected_by_default: bool,
-) -> StorageTableSpec {
-    StorageTableSpec {
-        name,
-        schema,
-        data_class,
-        inventory_group,
-        primary_owner,
-        ledger_resource_kind: Some(ledger_resource_kind),
-        protected_by_default,
-        repairable: true,
-        compactable: true,
-    }
 }
 
 #[must_use]

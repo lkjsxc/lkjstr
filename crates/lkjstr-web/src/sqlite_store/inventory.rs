@@ -5,18 +5,24 @@ use lkjstr_storage::{
     sqlite_schema_table_names, sqlite_table_count_sql,
 };
 
-use crate::sqlite_store::{SqliteStore, rows::first_row};
+use crate::sqlite_store::{SqliteStore, pressure::sqlite_storage_pressure_get, rows::first_row};
 
 pub async fn sqlite_storage_stats_snapshot(store: &SqliteStore) -> StorageStatsSnapshot {
     let health = store.storage_health().await;
+    let pressure = sqlite_storage_pressure_get(store).await;
     let mut counts = Vec::new();
     for table in sqlite_schema_table_names() {
         counts.push(sqlite_table_count(store, table).await);
     }
     let snapshot = StorageStatsSnapshot::from_sqlite_counts(counts);
-    match health {
+    let snapshot = match health {
         StorageOutcome::Ok(health) => snapshot.with_storage_health(health),
         outcome => snapshot.with_storage_health_problem(&outcome_reason(outcome)),
+    };
+    match pressure {
+        StorageOutcome::Ok(Some(pressure)) => snapshot.with_storage_pressure(pressure),
+        StorageOutcome::Ok(None) => snapshot.with_storage_pressure_problem("not-recorded"),
+        outcome => snapshot.with_storage_pressure_problem(&outcome_reason(outcome)),
     }
 }
 

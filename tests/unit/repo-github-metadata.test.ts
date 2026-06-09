@@ -12,7 +12,7 @@ describe('GitHub metadata documentation guard', () => {
   });
 
   it('rejects README.md because it hides the project overview', async () => {
-    const root = await fixture({ rootReadme: true, underscore: true });
+    const root = await fixture({ readme: true, underscore: true });
 
     await expect(checkGithubMetadataReadme(root)).resolves.toEqual([
       {
@@ -35,14 +35,13 @@ describe('GitHub metadata documentation guard', () => {
 });
 
 async function fixture(options: {
-  readonly rootReadme?: boolean;
+  readonly readme?: boolean;
   readonly underscore?: boolean;
 }) {
   const root = await fs.mkdtemp(path.join(os.tmpdir(), 'lkjstr-github-'));
   const dir = path.join(root, '.github');
   await fs.mkdir(dir, { recursive: true });
-  if (options.rootReadme)
-    await fs.writeFile(path.join(dir, 'README.md'), '# GitHub\n');
+  if (options.readme) await fs.writeFile(path.join(dir, 'README.md'), '# GitHub\n');
   if (options.underscore)
     await fs.writeFile(path.join(dir, '_README.md'), '# GitHub\n');
   return root;

@@ -9,7 +9,7 @@ This directory contains Rust repository calls over the SQLite storage worker.
 - `accounts.rs`: account and local-secret protected repository calls.
 - `active_account.rs`: active-account selector repository calls.
 - `database.rs`: worker-backed database handle, health, and statement dispatch.
-- `inventory.rs`: SQLite table counts for Rust Stats.
+- `inventory.rs`: SQLite table counts, health, and pressure rows for Rust Stats.
 - `mod.rs`: public exports.
 - `params.rs`: SQL parameter helpers.
 - `pressure.rs`: storage pressure snapshot repository calls.

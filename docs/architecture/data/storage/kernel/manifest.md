@@ -15,6 +15,9 @@ name
 data class
 inventory group
 primary owner
+repository command family
+retention behavior
+Stats projection behavior
 ledger resource kind when compactable
 protected-by-default flag
 repairable flag
@@ -31,7 +34,8 @@ The manifest drives or verifies:
 - known logical table names;
 - inventory groups;
 - storage docs table;
-- Stats grouping;
+- repository command family inventory;
+- Stats grouping and pressure projection;
 - retention eligibility;
 - ledger resource coverage;
 - repair collector coverage;

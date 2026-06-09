@@ -1,7 +1,7 @@
 use std::time::Duration;
 
 use leptos::prelude::*;
-use lkjstr_storage::{StorageInventoryRow, StorageStatsSnapshot};
+use lkjstr_storage::{StorageInventoryRow, StoragePressureSnapshotRecord, StorageStatsSnapshot};
 
 use crate::app::RuntimeSignal;
 use crate::workspace::stats_health::storage_health_rows;
@@ -58,8 +58,11 @@ pub fn StatsTab(runtime: RuntimeSignal, provider: Option<StatsProvider>) -> impl
                     <tr><th>"Inventory status"</th><td>{move || status_text(snapshot.get())}</td></tr>
                     <tr><th>"Available stores"</th><td>{move || available_text(snapshot.get())}</td></tr>
                     <tr><th>"Unavailable stores"</th><td>{move || unavailable_text(snapshot.get())}</td></tr>
-                    <tr><th>"Pressure state"</th><td>"unavailable in Rust Stats"</td></tr>
-                    <tr><th>"Residual browser overhead"</th><td>"unavailable in Rust Stats"</td></tr>
+                    <tr><th>"Pressure state"</th><td>{move || pressure_state_text(snapshot.get())}</td></tr>
+                    <tr><th>"Protected bytes"</th><td>{move || pressure_value_text(snapshot.get(), |item| item.protected_bytes)}</td></tr>
+                    <tr><th>"Prunable bytes"</th><td>{move || pressure_value_text(snapshot.get(), |item| item.prunable_bytes)}</td></tr>
+                    <tr><th>"Unknown bytes"</th><td>{move || pressure_value_text(snapshot.get(), |item| item.unknown_bytes)}</td></tr>
+                    <tr><th>"Residual browser overhead"</th><td>{move || pressure_value_text(snapshot.get(), |item| item.residual_overhead_bytes)}</td></tr>
                 </tbody>
             </table>
             <h3>"Storage health"</h3>
@@ -112,6 +115,33 @@ fn available_text(snapshot: Option<StorageStatsSnapshot>) -> String {
 
 fn unavailable_text(snapshot: Option<StorageStatsSnapshot>) -> usize {
     snapshot.map_or(0, |item| item.unavailable_table_count)
+}
+
+fn pressure_state_text(snapshot: Option<StorageStatsSnapshot>) -> String {
+    snapshot.map_or_else(
+        || "loading".to_string(),
+        |item| match item.storage_pressure {
+            Some(pressure) => pressure.stop_reason,
+            None => item
+                .storage_pressure_reason
+                .unwrap_or(item.storage_pressure_status),
+        },
+    )
+}
+
+fn pressure_value_text(
+    snapshot: Option<StorageStatsSnapshot>,
+    value: fn(&StoragePressureSnapshotRecord) -> u64,
+) -> String {
+    snapshot.map_or_else(
+        || "loading".to_string(),
+        |item| match item.storage_pressure.as_ref() {
+            Some(pressure) => value(pressure).to_string(),
+            None => item
+                .storage_pressure_reason
+                .unwrap_or(item.storage_pressure_status),
+        },
+    )
 }
 
 fn inventory_rows(snapshot: Option<StorageStatsSnapshot>) -> impl IntoView {

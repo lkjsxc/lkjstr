@@ -41,6 +41,7 @@ changed. Each docs directory has one README that acts as a table of contents.
   [architecture/data/local-secret-security.md](architecture/data/local-secret-security.md).
 - UI system: [architecture/workspace/ui-system/README.md](architecture/workspace/ui-system/README.md).
 - Execution queue: [execution/README.md](execution/README.md),
+  [execution/agent-route.md](execution/agent-route.md),
   [execution/operating-rules.md](execution/operating-rules.md),
   [execution/current-blockers.md](execution/current-blockers.md), and
   [execution/storage-slice.md](execution/storage-slice.md).
@@ -138,8 +139,8 @@ changed. Each docs directory has one README that acts as a table of contents.
 `architecture/workspace/workspace-layout-tree.md` `current-state.md`
 `decisions/README.md` `decisions/autonomous-decision-defaults.md` `decisions/browser-first.md`
 `decisions/protocol-kernel.md` `decisions/relay-ownership.md` `decisions/rust-wasm-client.md` `decisions/sqlite-opfs-storage.md`
-`decisions/worker-owned-storage.md` `execution/README.md` `execution/current-blockers.md` `execution/operating-rules.md`
-`execution/storage-slice.md` `operations/README.md` `operations/ci.md`
+`decisions/worker-owned-storage.md` `execution/README.md` `execution/agent-route.md` `execution/current-blockers.md`
+`execution/operating-rules.md` `execution/storage-slice.md` `operations/README.md` `operations/ci.md`
 `operations/cloudflare-workers.md` `operations/data-safety.md` `operations/diagnostics.md`
 `operations/docker.md` `operations/feed-route-isolation-regression.md` `operations/focused-gates.md`
 `operations/memory-verification.md` `operations/readiness.md` `operations/sqlite-opfs-testing.md`

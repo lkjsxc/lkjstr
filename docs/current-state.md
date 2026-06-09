@@ -121,7 +121,8 @@ Read next: [architecture/data/README.md](architecture/data/README.md),
   memory, unavailable, timeout, blocked, corrupt, or unknown-old-storage.
 - Rust storage outcomes expose stable problem-kind labels for OPFS failures,
   worker init, temporary memory fallback, repair, decode, active account
-  selector, pressure, quota, and write failure diagnostics.
+  selector, pressure snapshot decode, pressure stop reasons, quota, and write
+  failure diagnostics.
 - Protected records are never removed by cache cleanup: accounts, local signing
   secrets, settings, relay sets, workspace state, Tweet drafts, active tab
   snapshots, active jobs, and route blocks.
@@ -229,7 +230,9 @@ and [operations/memory-verification.md](operations/memory-verification.md).
 - Runtime-visible and open-reference cache pins are owner-scoped, bounded, and
   cleaned up on owner teardown.
 - Cache pressure records protected data, prunable cache, unknown storage, and
-  residual browser overhead separately.
+  residual browser overhead separately. Rust Stats projects these fields from a
+  real pressure snapshot row when one exists, otherwise it shows an explicit
+  unavailable reason.
 
 ## Open Contracts
 

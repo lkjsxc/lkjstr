@@ -38,6 +38,12 @@ change and Docker Compose verification is either run or recorded as not run.
 | Cloudflare static hosting       | `pnpm cloudflare:quiet`                                                                                                         | `docker compose run --rm cloudflare` | Cloudflare remains static hosting only.                                 |
 | App smoke                       | `pnpm verify:quiet`                                                                                                             | `docker compose run --rm app-smoke`  | Proves nonblank root workspace response.                                |
 
+## Recent Focused Evidence
+
+| Date | Area | Commands | Result | Final gate |
+| --- | --- | --- | --- | --- |
+| 2026-06-09 | Storage command metadata and pressure Stats projection | `pnpm check:repo`; `cargo run -p lkjstr-xtask -- check-docs`; `cargo run -p lkjstr-xtask -- check-lines`; `cargo run -p lkjstr-xtask -- check-storage-manifest-docs`; `cargo fmt --check`; `cargo test -p lkjstr-storage`; `cargo test -p lkjstr-web`; `pnpm test -- tests/unit/repo-github-metadata.test.ts tests/unit/cache tests/unit/events/repository.test.ts`; `pnpm test -- tests/unit/feed-surface/scan-model-repository.test.ts`; `pnpm rust-wasm:quiet` | passed | not run |
+
 ## Docker Final Path
 
 Before a major handoff or deletion claim, run:

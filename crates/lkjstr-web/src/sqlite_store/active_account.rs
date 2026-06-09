@@ -18,7 +18,7 @@ pub async fn sqlite_active_account_selector_put(
 ) -> StorageOutcome<()> {
     let row = match sqlite_active_account_selector_row(row) {
         Ok(row) => row,
-        Err(_) => return corrupt("settings.upsert"),
+        Err(_) => return corrupt(StorageOperation::Write, "settings.upsert"),
     };
     store
         .execute(
@@ -49,7 +49,7 @@ pub async fn sqlite_active_account_selector_get(
     match first_row::<SqliteActiveAccountSelectorRow>(rows, "settings", "settings.select") {
         StorageOutcome::Ok(Some(row)) => match active_account_selector_from_sqlite_row(&row) {
             Ok(row) => StorageOutcome::Ok(Some(row)),
-            Err(_) => corrupt("settings.select"),
+            Err(_) => corrupt(StorageOperation::Read, "settings.select"),
         },
         outcome => outcome.map(|row| row.and(None)),
     }
@@ -64,9 +64,9 @@ pub async fn sqlite_active_account_selector_delete(store: &SqliteStore) -> Stora
         .await
 }
 
-fn corrupt<T>(operation_id: &'static str) -> StorageOutcome<T> {
+fn corrupt<T>(operation: StorageOperation, operation_id: &'static str) -> StorageOutcome<T> {
     StorageOutcome::Corrupt(StorageProblem::with_kind(
-        StorageOperation::Read,
+        operation,
         "settings",
         StorageProblemKind::ActiveAccountSelectorDecodeFailed,
         operation_id,

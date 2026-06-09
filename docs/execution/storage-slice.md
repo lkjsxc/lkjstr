@@ -11,8 +11,9 @@ cutover rows and tests pass.
 The current storage slice wires Rust typed repositories for active-account
 selectors, pressure diagnostics, feed cache, feed coverage, retention dispatch,
 repair, and Stats projection. Active-account selectors use a protected settings
-row. It must not delete TypeScript storage repositories until Rust covers every
-live table family and no-import proof is recorded.
+row. Pressure Stats rows use real pressure snapshots or explicit unavailable
+states. It must not delete TypeScript storage repositories until Rust covers
+every live table family and no-import proof is recorded.
 
 ## Read First
 
@@ -26,8 +27,9 @@ live table family and no-import proof is recorded.
 
 ## Implementation Targets
 
-- `crates/lkjstr-storage/`: manifest records, row codecs, operation outcomes,
-  repository command types, retention, repair, and diagnostics.
+- `crates/lkjstr-storage/`: manifest records, command-family metadata, row
+  codecs, operation outcomes, repository command types, retention, repair, and
+  diagnostics.
 - `crates/lkjstr-web/src/sqlite_store/`: typed worker adapter calls and outcome
   mapping for storage commands.
 - `crates/lkjstr-app/`: product composition that consumes typed repositories.
@@ -70,7 +72,8 @@ pnpm rust-wasm:quiet
   worker repository calls.
 - Product modules call typed repositories only.
 - Main-thread product code does not open SQLite or OPFS directly.
-- Stats shows storage health and mode without indefinite loading.
+- Stats shows storage health, mode, and real pressure snapshot fields without
+  indefinite loading.
 - Temporary memory mode is explicit.
 - Pressure stop reason is exact.
 - Protected data is never pruned.

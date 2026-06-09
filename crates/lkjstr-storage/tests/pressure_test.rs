@@ -15,6 +15,10 @@ fn pressure_stop_reasons_are_stable() {
         Some(StorageProblemKind::PressureProtectedOnly)
     );
     assert_eq!(pressure_problem_kind("target-met"), None);
+    assert_eq!(
+        StorageProblemKind::PressureSnapshotDecodeFailed.as_str(),
+        "pressure-snapshot-decode-failed"
+    );
 }
 
 #[test]

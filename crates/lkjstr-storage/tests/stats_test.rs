@@ -1,6 +1,6 @@
 use lkjstr_storage::{
-    SqliteRowCount, SqliteStorageHealth, StorageStatsSnapshot, StorageTableCount,
-    sqlite_schema_table_names, sqlite_table_count_sql, storage_table_specs,
+    SqliteRowCount, SqliteStorageHealth, StoragePressureSnapshotRecord, StorageStatsSnapshot,
+    StorageTableCount, sqlite_schema_table_names, sqlite_table_count_sql, storage_table_specs,
 };
 
 #[test]
@@ -67,6 +67,29 @@ fn stats_snapshot_can_report_storage_health_problem() {
 }
 
 #[test]
+fn stats_snapshot_can_report_pressure_snapshot() {
+    let snapshot = StorageStatsSnapshot::from_sqlite_counts(Vec::new())
+        .with_storage_pressure(test_pressure("protected-only"));
+
+    assert_eq!(snapshot.storage_pressure_status, "protected-only");
+    assert_eq!(snapshot.storage_pressure_reason, None);
+    assert_eq!(
+        snapshot
+            .storage_pressure
+            .as_ref()
+            .map(|item| item.protected_bytes),
+        Some(40)
+    );
+    assert_eq!(
+        snapshot
+            .storage_pressure
+            .as_ref()
+            .map(|item| item.residual_overhead_bytes),
+        Some(20)
+    );
+}
+
+#[test]
 fn stats_snapshot_can_use_sqlite_schema_tables() {
     let counts = sqlite_schema_table_names()
         .into_iter()
@@ -97,6 +120,21 @@ fn sqlite_table_count_sql_is_limited_to_known_tables() -> Result<(), serde_json:
         4
     );
     Ok(())
+}
+
+fn test_pressure(stop_reason: &str) -> StoragePressureSnapshotRecord {
+    StoragePressureSnapshotRecord {
+        target_bytes: 64,
+        usage_bytes: Some(96),
+        protected_bytes: 40,
+        prunable_bytes: 24,
+        unknown_bytes: 12,
+        residual_overhead_bytes: 20,
+        pruned_bytes: 8,
+        pruned_resource_count: 2,
+        stop_reason: stop_reason.to_string(),
+        checked_at_ms: 123,
+    }
 }
 
 fn test_health(mode: &str) -> SqliteStorageHealth {

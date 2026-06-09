@@ -15,10 +15,11 @@ no-import proof allow removal.
 ## Read Order
 
 1. Start with [../current-state.md](../current-state.md).
-2. Read [operating-rules.md](operating-rules.md) for autonomous work rules.
-3. Read [current-blockers.md](current-blockers.md) to choose the next slice.
-4. Read the area README and contracts linked by the blocker row.
-5. Use [../operations/focused-gates.md](../operations/focused-gates.md) for
+2. Read [agent-route.md](agent-route.md) for the shortest executable route.
+3. Read [operating-rules.md](operating-rules.md) for autonomous work rules.
+4. Read [current-blockers.md](current-blockers.md) to choose the next slice.
+5. Read the area README and contracts linked by the blocker row.
+6. Use [../operations/focused-gates.md](../operations/focused-gates.md) for
    focused checks and [../operations/verification.md](../operations/verification.md)
    for local and Docker verification.
 
@@ -51,6 +52,8 @@ images were built and the services ran from those images.
 
 ## Table of Contents
 
+- [agent-route.md](agent-route.md): shortest read, change, proof, ledger, and
+  deletion route.
 - [operating-rules.md](operating-rules.md): rules for autonomous decisions,
   deletion, fake data, security states, and docs alignment.
 - [current-blockers.md](current-blockers.md): dependency-ordered blocker map

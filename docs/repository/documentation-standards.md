@@ -35,8 +35,8 @@ for that subtree.
 
 ## Directory Rules
 
-- Every tracked, non-generated application directory contains one `README.md`.
-  Repository service metadata directories such as `.github` are excluded.
+- Every tracked, non-generated application or tooling directory contains one
+  `README.md`, except `.github` uses `_README.md` for GitHub display safety.
 - Strict recursive topology applies only to `docs/` and root documentation.
 - Each directory under `docs/` has a `README.md` plus at least two Markdown
   files or child directories.

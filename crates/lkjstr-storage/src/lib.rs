@@ -3,6 +3,7 @@
 pub mod accounts;
 pub mod active_account;
 pub mod app_log;
+pub mod commands;
 pub mod data_class;
 pub mod diagnostics;
 pub mod events;
@@ -24,6 +25,8 @@ mod settings_defs;
 pub mod settings_schema;
 pub mod sql;
 pub mod stats;
+mod stats_rows;
+pub mod storage_health;
 pub mod tab_state;
 mod table_specs;
 pub mod tweet_drafts;
@@ -40,6 +43,14 @@ pub use active_account::{
     sqlite_active_account_selector_row,
 };
 pub use app_log::{AppLogRecord, SqliteAppLogRow, redact_app_log_text};
+pub use commands::{
+    ActiveAccountSelectorDeleteInput, ActiveAccountSelectorDeleteOutput,
+    ActiveAccountSelectorGetInput, ActiveAccountSelectorGetOutput, ActiveAccountSelectorPutInput,
+    ActiveAccountSelectorPutOutput, STORAGE_REPOSITORY_COMMANDS, StoragePressureGetInput,
+    StoragePressureGetOutput, StoragePressureProjectInput, StoragePressureProjectOutput,
+    StoragePressurePutInput, StoragePressurePutOutput, StorageRepositoryCommandSpec,
+    storage_repository_commands,
+};
 pub use data_class::{StorageDataClass, StorageInventoryGroup};
 pub use diagnostics::{
     AuthorRelayRouteRecord, RelayDiagnosticSummaryRecord, RelayInformationRecord,
@@ -131,10 +142,8 @@ pub use sql::{
     sqlite_schema_indexes, sqlite_schema_statements, sqlite_schema_table,
     sqlite_schema_table_names, sqlite_schema_tables, sqlite_statement, sqlite_table_count_sql,
 };
-pub use stats::{
-    SqliteRowCount, SqliteStorageHealth, StorageInventoryRow, StorageStatsSnapshot,
-    StorageTableCount,
-};
+pub use stats::{SqliteRowCount, StorageInventoryRow, StorageStatsSnapshot, StorageTableCount};
+pub use storage_health::SqliteStorageHealth;
 pub use tab_state::{
     CacheLedgerRecord, SqliteCacheLedgerRow, SqliteTabStateRow, TabStateRecord, cache_ledger_id,
     encoded_json_bytes, sqlite_cache_ledger_row, sqlite_cache_ledger_row_for_table,

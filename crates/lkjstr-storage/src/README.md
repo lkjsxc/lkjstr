@@ -10,6 +10,7 @@ codecs, ledger resource map, and typed operation outcomes.
 - `accounts.rs`: account row identity, JSON helpers, and SQLite row codec.
 - `active_account.rs`: protected active-account selector row codec.
 - `app_log.rs`: app log row codec.
+- `commands.rs`: typed repository command contracts.
 - `data_class.rs`: table data classes and inventory groups.
 - `diagnostics.rs`: relay diagnostic row codecs and ledger row helpers.
 - `events.rs`: cached event, event tag, relay provenance, and ledger row helpers.
@@ -31,7 +32,10 @@ codecs, ledger resource map, and typed operation outcomes.
 - `settings.rs`: settings override row identity, JSON helpers, and SQLite row codec.
 - `settings_schema.rs`: flat settings schema and override merging.
 - `sql/`: executable SQLite schema records for OPFS storage.
-- `stats.rs`: storage inventory and SQLite health view models for Stats.
+- `stats.rs`: storage inventory and pressure view models for Stats.
+- `stats_rows.rs`: storage inventory row records.
+- `storage_health.rs`: SQLite health view model for Stats.
 - `tab_state.rs`: tab-state keys, rows, ledger rows, and SQLite row codecs.
 - `table_specs.rs`: table manifest row data.
+- `tweet_drafts.rs`: Tweet draft row identity, JSON helpers, and SQLite row codec.
 - `workspace.rs`: workspace row identity, JSON size helpers, and SQLite row codec.

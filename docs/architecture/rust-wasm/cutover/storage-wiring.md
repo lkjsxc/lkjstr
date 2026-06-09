@@ -13,7 +13,9 @@ condition that allows TypeScript product storage deletion.
   and `crates/lkjstr-web/src/storage_worker/**`.
 - Current TypeScript worker glue: `src/lib/storage/sqlite-opfs/**` and
   `src/lib/storage/repositories/**`.
-- Focused proof run for this audit: `cargo test -p lkjstr-storage` passed.
+- Focused proof run for this slice: `cargo test -p lkjstr-storage`,
+  `cargo test -p lkjstr-web`, storage-focused Vitest paths, and
+  `pnpm rust-wasm:quiet` passed.
 - Product cutover remains partial because shipped Svelte surfaces still call
   TypeScript repositories for many live reads and maintenance operations.
 
@@ -23,7 +25,9 @@ condition that allows TypeScript product storage deletion.
 ledger resource kinds, and typed outcomes. `lkjstr-web` sends worker messages
 through `StorageOp`: `open`, `apply-schema`, `query`, `execute`, `batch`,
 `get-storage-health`, `read-physical-inventory`, `estimate-storage`, `cancel`,
-and `close`. Product crates never format SQL or open OPFS.
+and `close`. Product crates never format SQL or open OPFS. Feed cache,
+feed coverage, retention, and repair need the same typed command metadata now
+used by active selector and pressure rows.
 
 ## Storage Family Matrix
 
