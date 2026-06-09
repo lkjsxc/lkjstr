@@ -7,15 +7,18 @@ prunable rows and reports exact reasons, counts, and repair findings.
 
 ## Status
 
-Active after command spec shape and cache command metadata are in place.
+Active. Retention delete dispatch has Rust statement planning and worker-adapter
+binding; repair remains next after worker failure proof.
 
 ## Current Evidence
 
 - `lkjstr-storage` owns the table manifest, data classes, cache ledger resource
   map, pressure row codecs, retention policy records, pure retention planner,
   and retention command metadata.
+- `lkjstr-web` owns retention statement-id planning and binds those statements
+  to one SQLite worker batch for delete dispatch.
 - TypeScript cache cleanup and compaction paths still own many shipped product
-  maintenance actions until Rust worker dispatch is wired.
+  maintenance actions until Rust product consumption is wired.
 - Stats can project real pressure snapshot rows when they exist, but full byte
   inventory diagnostics and repair dispatch remain open.
 
@@ -23,10 +26,10 @@ Active after command spec shape and cache command metadata are in place.
 
 1. Keep pure retention planning in `lkjstr-storage` and worker dispatch in
    `lkjstr-web`; do not move storage policy into the host adapter.
-2. Wire `retention.delete-dispatch` through the SQLite worker path after the
-   Rust planner and command metadata are proved.
-3. Retain shipped TypeScript cache maintenance until Rust dispatch, product
-   wiring, focused tests, and no-import proof exist.
+2. Add focused worker-host failure proof for `sqlite_retention_delete_dispatch`
+   when the worker mock can force batch failure.
+3. Retain shipped TypeScript cache maintenance until Rust product wiring,
+   focused tests, and no-import proof exist.
 4. Implement repair scan and backfill only after retention delete semantics are
    proved.
 
@@ -37,9 +40,9 @@ Active after command spec shape and cache command metadata are in place.
 - [ ] Update retention and repair command docs before changing source.
 - [ ] Preserve the implemented pure Rust planner and `retention.plan` plus
   `retention.delete-dispatch` command metadata.
-- [ ] Add `crates/lkjstr-web/src/sqlite_store/retention.rs` and export it from
+- [x] Add `crates/lkjstr-web/src/sqlite_store/retention.rs` and export it from
   `crates/lkjstr-web/src/sqlite_store/mod.rs`.
-- [ ] Map planner delete intents to the statement ids documented in the command
+- [x] Map planner delete intents to the statement ids documented in the command
   matrix and delete each resource row with its `cache_ledger` row in one batch.
 - [ ] Add conservative repair target states and chunked scan outputs only after
   retention dispatch passes.
@@ -71,7 +74,9 @@ and backfill results without silently marking unknown rows safe.
 - `crates/lkjstr-storage/src/resource.rs` only if resource kinds change.
 - `crates/lkjstr-storage/src/retention/**` for planner input or output shape.
 - `crates/lkjstr-storage/src/commands/retention.rs` for command metadata drift.
-- `crates/lkjstr-web/src/sqlite_store/retention.rs` as the next adapter.
+- `crates/lkjstr-web/src/retention_dispatch.rs` for dispatch step planning.
+- `crates/lkjstr-web/src/retention_routes.rs` for resource-kind routing.
+- `crates/lkjstr-web/src/sqlite_store/retention.rs` for worker batch binding.
 - `crates/lkjstr-web/src/sqlite_store/mod.rs` to export the adapter.
 - `crates/lkjstr-web/src/sqlite_store/cache_ledger.rs` for shared ledger steps.
 - `crates/lkjstr-storage/src/repair/**` after retention dispatch is proved.

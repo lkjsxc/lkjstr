@@ -36,8 +36,8 @@ Compose verification.
   protected-tool and Stats storage paths.
 - Desired Rust owner: `lkjstr-storage` policy and metadata, `lkjstr-web` worker
   adapters, `lkjstr-app` product composition, and `lkjstr-ui` Stats models.
-- First source edit: `crates/lkjstr-web/src/sqlite_store/retention.rs`, after
-  retention command docs name the exact statement sequence.
+- Next source edit: focused worker failure proof for retention dispatch, then
+  conservative repair command models.
 - Focused tests: `cargo test -p lkjstr-storage retention`,
   `cargo test -p lkjstr-web retention`, cache unit tests, and
   `pnpm rust-wasm:quiet`.

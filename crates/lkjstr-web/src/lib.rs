@@ -33,6 +33,8 @@ mod relay_selection;
 #[cfg(target_arch = "wasm32")]
 mod relay_settings_host;
 mod response;
+pub mod retention_dispatch;
+mod retention_routes;
 pub mod scan_model;
 #[cfg(target_arch = "wasm32")]
 mod settings_host;

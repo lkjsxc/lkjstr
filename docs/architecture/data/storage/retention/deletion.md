@@ -5,6 +5,13 @@
 Deletion dispatchers remove recoverable resources and their ledger rows without
 touching protected data.
 
+## Current Rust Adapter
+
+`crates/lkjstr-web/src/retention_dispatch.rs` maps retention delete intents to
+statement ids. `crates/lkjstr-web/src/sqlite_store/retention.rs` binds those ids
+through `SqliteStore::step` and executes one worker batch. The adapter has no raw
+SQL strings and does not decide retention eligibility.
+
 ## Dispatcher Rules
 
 - Delete by `resourceKind`.

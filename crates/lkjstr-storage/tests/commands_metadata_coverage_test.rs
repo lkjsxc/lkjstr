@@ -65,7 +65,10 @@ fn commands_touching_protected_tables_use_protected_policy() -> Result<(), Strin
             if table.retention == SqliteRetentionClass::Protected
                 && command.protection_policy != StorageProtectionPolicy::Protected
             {
-                return Err(format!("{} touches protected table {table_name}", command.id));
+                return Err(format!(
+                    "{} touches protected table {table_name}",
+                    command.id
+                ));
             }
         }
     }

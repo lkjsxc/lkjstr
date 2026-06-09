@@ -22,7 +22,7 @@ and no-import proof is recorded.
   product storage plus partial Rust storage worker adapters.
 - Desired Rust owner: `lkjstr-storage` for policy and rows, `lkjstr-web` for
   worker calls, `lkjstr-app` for product use, and `lkjstr-ui` for Stats views.
-- First source edit: `crates/lkjstr-web/src/sqlite_store/retention.rs`.
+- Next source edit: retention worker failure proof, then repair command models.
 - Focused tests: storage command tests, retention tests, web retention tests,
   cache unit tests, and `pnpm rust-wasm:quiet`.
 - Ledgers: storage cutover area, implementation ledger rows that gain behavior,

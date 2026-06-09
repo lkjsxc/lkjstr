@@ -57,7 +57,7 @@ fn retention_skips_dynamic_protection() {
     };
     assert!(candidate_is_dynamically_protected(
         &candidate,
-        &[protection.clone()]
+        std::slice::from_ref(&protection)
     ));
     let plan = plan_retention(input(vec![candidate], vec![protection], 200, 100));
     assert!(plan.intents.is_empty());

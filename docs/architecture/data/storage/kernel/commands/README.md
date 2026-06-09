@@ -27,8 +27,8 @@ specs, worker adapters, retention, repair, inventory, or Stats rows.
   and TypeScript repositories for shipped storage product calls.
 - Desired Rust owner: `lkjstr-storage` command specs plus `lkjstr-web` typed
   adapters that execute those specs through worker messages.
-- First source edit: add `crates/lkjstr-web/src/sqlite_store/retention.rs` and
-  keep `crates/lkjstr-storage/src/commands/retention.rs` as the policy map.
+- Next source edit: prove retention worker failure mapping, then add repair
+  command metadata without changing retention policy.
 - Focused tests: `cargo test -p lkjstr-storage commands`,
   `cargo test -p lkjstr-web retention`, and storage manifest doc checks.
 - Ledgers: update storage cutover and verification ledgers after proof only.
@@ -69,7 +69,7 @@ app log, inventory snapshot, and optimizer scan-model rows.
 
 | Command id | Rust metadata | SQL or table route | Worker adapter | TypeScript retained | Focused test |
 | --- | --- | --- | --- | --- | --- |
-| `retention.delete-dispatch` | `commands/retention.rs` | table statements in [retention.md](retention.md) | add `sqlite_store/retention.rs` | cache ledger and compaction repositories | `cargo test -p lkjstr-web retention` |
+| `retention.delete-dispatch` | `commands/retention.rs` | table statements in [retention.md](retention.md) | `sqlite_store/retention.rs` | cache ledger and compaction repositories | `cargo test -p lkjstr-web retention` |
 | `repair.scan-ledger` and repair writes | add `commands/repair.rs` | cache ledger chunks plus manifest target probes | add `sqlite_store/repair.rs` | cache maintenance repositories | `cargo test -p lkjstr-storage repair` |
 | `search.local-query` and `search.update-event-index` | add `commands/search.rs` | token rows plus event tag lookups | add `sqlite_store/search.rs` | search-index repositories | `cargo test -p lkjstr-storage search` |
 | `storage-inventory.snapshot` gaps | `commands/inventory.rs` | generated table counts and browser inventory | `sqlite_store/inventory.rs` | Stats/cache repositories | `cargo test -p lkjstr-storage stats` |

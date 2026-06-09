@@ -59,15 +59,16 @@ removed.
   from real snapshot rows. Rust Accounts product wiring now resolves active
   selectors through the SQLite worker and treats the old localStorage key as a
   migration source only. Optimizer scan-model command metadata is implemented.
-  Retention planner and command metadata are implemented before worker dispatch.
-  Repair, search/tag lookup, full pressure byte inventory diagnostics, and
-  feed-runtime consumption remain open.
+  Retention planner, command metadata, and delete dispatch adapter are
+  implemented; product consumption remains open. Repair, search/tag lookup,
+  full pressure byte inventory diagnostics, and feed-runtime consumption remain
+  open.
 - Command metadata status: active selector, pressure, protected rows, event
   cache, feed evidence, relay diagnostics, notifications, jobs, app log,
-  inventory snapshot, optimizer scan-model rows, and retention planner rows are
-  implemented. Retention worker dispatch remains open. Repair and search/tag
-  lookup command coverage are not implemented.
-- Next task order: retention worker dispatch, repair command coverage,
+  inventory snapshot, optimizer scan-model rows, retention planner rows, and
+  retention delete dispatch rows are implemented. Repair and search/tag lookup
+  command coverage are not implemented.
+- Next task order: retention worker failure proof, repair command coverage,
   search/tag lookup storage command coverage, pressure inventory completion,
   relay effect wiring, shared feed runtime, and Home feed slice.
 
@@ -85,8 +86,8 @@ removed.
   jobs, app log, pressure, and inventory worker calls have Rust command
   metadata.
 - [x] Optimizer scan-model commands have Rust metadata and focused proof.
-- [ ] Retention, repair, and search/tag lookup commands have full Rust metadata,
-  worker wiring where applicable, and focused proof.
+- [ ] Repair and search/tag lookup commands have full Rust metadata, worker
+  wiring where applicable, and focused proof.
 - [ ] Every command has input, output, statement ids when not inventory-only,
   stable problem kinds, ledger policy, protection policy, Stats projection, and
   fixture proof.
@@ -95,7 +96,8 @@ removed.
   corrupt, or unknown-old-storage states without indefinite loading.
 - [x] Rust Stats projects protected bytes, prunable bytes, unknown storage,
   residual overhead, and exact stop reason from a real pressure snapshot row.
-- [ ] Retention deletes only ledger-backed prunable rows and reports counts.
+- [x] Retention dispatch deletes only ledger-backed prunable statement routes
+  and reports counts in Rust adapter tests.
 - [ ] Repair reports schema mismatch, corrupt rows, decode failures, incomplete
   inventory, and temporary memory fallback.
 - [ ] Parity and deletion ledgers state the actual status.

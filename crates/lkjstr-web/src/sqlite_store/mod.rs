@@ -18,6 +18,7 @@ mod pressure;
 mod relay_diagnostics;
 mod relay_routes;
 mod relay_sets;
+mod retention;
 mod rows;
 mod settings;
 mod tab_states;
@@ -58,6 +59,10 @@ pub use relay_routes::{
 };
 pub use relay_sets::{
     sqlite_relay_set_get, sqlite_relay_set_put, sqlite_relay_sets_all, sqlite_relay_sets_put_all,
+};
+pub use retention::{
+    SqliteRetentionDispatchBatch, SqliteRetentionDispatchStep, sqlite_retention_delete_dispatch,
+    sqlite_retention_delete_dispatch_steps,
 };
 pub use settings::{
     sqlite_setting_delete, sqlite_setting_get, sqlite_setting_put, sqlite_settings_all,
