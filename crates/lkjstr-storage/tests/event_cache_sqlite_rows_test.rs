@@ -17,7 +17,8 @@ fn sqlite_event_rows_preserve_raw_event_and_tags() -> Result<(), Box<dyn std::er
     let row = sqlite_event_row(&record)?;
     let tags = sqlite_event_tag_rows(&event)?;
     let relay = sqlite_event_relay_row(&event.id, "wss://relay.example", 2_000, "read");
-    let bytes = event_cache_bytes(&record, &tags, std::slice::from_ref(&relay))?;
+    let tokens = lkjstr_storage::event_search_token_rows(&record.event);
+    let bytes = event_cache_bytes(&record, &tags, std::slice::from_ref(&relay), &tokens)?;
     let ledger =
         sqlite_cache_ledger_row_for_table(&event_cache_ledger_record(&record, bytes), "events");
 

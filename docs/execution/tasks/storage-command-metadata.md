@@ -10,7 +10,7 @@ multi-statement batches.
 
 Active. This task follows the command-shape split and groups coverage by live
 repository family in this order: protected, event cache, feed evidence,
-diagnostics, jobs, app log, optimizer, retention, repair, search/tag lookup,
+diagnostics, jobs, app log, optimizer, retention, repair, Search query adapter,
 and pressure inventory.
 
 ## Current Evidence
@@ -22,19 +22,20 @@ and pressure inventory.
   `lkjstr-web` binds delete-dispatch statement plans to one worker batch.
 - Repair scan, backfill, and inventory report command metadata are implemented
   with conservative storage-owned models and basic `lkjstr-web` worker outcome
-  adapters. Search/tag lookup command coverage is not implemented.
+  adapters. Search token rows, tag lookup metadata, update-event-index metadata,
+  and local-query metadata are implemented; local-query adapter wiring remains
+  open.
 - Event and feed writes use batch metadata because one command may touch
   resource rows, child rows, provenance rows, and `cache_ledger` rows.
 
 ## Current Next Edit
 
-1. Preserve `retention.delete-dispatch` through `lkjstr-web` worker adapters
-   without moving policy out of `lkjstr-storage`.
-2. Preserve `retention.plan` and `retention.delete-dispatch` specs with real
-   statement ids, manifest tables, codecs, problem kinds, ledger policy,
-   protection policy, and Stats projection.
-3. Add repair physical target probes, then implement search/tag lookup command
-   coverage.
+1. Preserve retention, repair, and Search command specs with real statement ids,
+   manifest tables, codecs, problem kinds, ledger policy, protection policy,
+   and Stats projection when any.
+2. Add repair physical target probes.
+3. Add the local Search query worker adapter after storage token rows are
+   stable.
 
 ## Next Checklist
 
@@ -49,6 +50,8 @@ and pressure inventory.
   storage command tests.
 - [x] Add repair worker outcome adapter tests without moving safety policy out
   of storage.
+- [x] Register Search token/tag command specs and indexed token row codecs with
+  focused storage tests.
 - [ ] Run the storage command focused gate and update verification evidence with
   actual commands.
 

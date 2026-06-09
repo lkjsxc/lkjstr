@@ -7,6 +7,7 @@ mod cache_ledger;
 mod database;
 mod diagnostic_params;
 mod event_params;
+mod event_put;
 mod events;
 mod feed_cache;
 mod feed_params;
@@ -21,6 +22,7 @@ mod relay_sets;
 mod repair;
 mod retention;
 mod rows;
+mod search;
 mod settings;
 mod tab_states;
 mod tweet_drafts;
@@ -37,9 +39,10 @@ pub use active_account::{
 };
 pub use app_log::{sqlite_app_log_clear_before, sqlite_app_log_insert, sqlite_app_log_recent};
 pub use database::SqliteStore;
+pub use event_put::sqlite_event_put;
 pub use events::{
-    sqlite_event_get, sqlite_event_put, sqlite_event_relays, sqlite_events_by_author_kind,
-    sqlite_events_by_kind, sqlite_events_by_tag_value,
+    sqlite_event_get, sqlite_event_relays, sqlite_events_by_author_kind, sqlite_events_by_kind,
+    sqlite_events_by_tag_value,
 };
 pub use feed_cache::{
     sqlite_feed_coverage_for_feed, sqlite_feed_coverage_put, sqlite_feed_cursor_get,

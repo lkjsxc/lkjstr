@@ -40,6 +40,7 @@ selector is a protected `settings` row, not localStorage product state.
 | `events` | events | canonical event JSON plus pubkey, kind, time, signature, and content columns. |
 | `event_tags` | events | ordered tag rows with lookup columns for references and routing. |
 | `event_relays` | events | relay provenance and latest-seen evidence. |
+| `event_search_tokens` | search | normalized token rows for indexed local Search candidates. |
 | `notifications` | notifications | materialized account notification rows derived from stored events. |
 
 Indexes:
@@ -48,6 +49,7 @@ Indexes:
 - `events_by_pubkey_kind_time`: profile and author queries.
 - `event_tags_lookup`: thread, mention, emoji, and route tag lookups.
 - `event_relays_by_relay`: relay diagnostics and relay-specific cache reads.
+- `event_search_tokens_lookup`: indexed local Search token candidates.
 - `notifications_by_owner_time`: notification paging.
 
 ## Feed Evidence Tables
@@ -100,6 +102,6 @@ Index:
 
 Local Search is SQL-owned. Use FTS when the bundled SQLite build exposes it. If
 FTS is absent, use `event_search_tokens` with event id, normalized token,
-position, created_at, kind, and pubkey. Query token intersections through SQL,
+position, created_at, kind, and pubkey. Query token candidates through SQL,
 then verify bounded candidates in product code. Do not fall back to unbounded
 JavaScript scans.

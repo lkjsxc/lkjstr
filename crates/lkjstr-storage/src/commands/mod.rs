@@ -12,6 +12,7 @@ pub mod pressure;
 pub mod protected;
 pub mod repair;
 pub mod retention;
+pub mod search;
 pub mod spec;
 
 pub use active_account::{
@@ -29,6 +30,10 @@ pub use repair::{
 };
 pub use retention::{
     RetentionDeleteDispatchInput, RetentionDeleteDispatchOutput, RetentionPlanOutput,
+};
+pub use search::{
+    SearchLocalQueryInput, SearchLocalQueryOutput, SearchUpdateEventIndexInput,
+    SearchUpdateEventIndexOutput, TagLookupByValueInput, TagLookupByValueOutput,
 };
 pub use spec::{
     StorageCommandFamily, StorageLedgerPolicy, StorageProtectionPolicy,
@@ -108,6 +113,9 @@ pub const STORAGE_REPOSITORY_COMMANDS: &[StorageRepositoryCommandSpec] = &[
     repair::REPAIR_SCAN_LEDGER_COMMAND,
     repair::REPAIR_BACKFILL_LEDGER_COMMAND,
     repair::REPAIR_REPORT_INVENTORY_COMMAND,
+    search::TAG_LOOKUP_BY_VALUE_COMMAND,
+    search::SEARCH_UPDATE_EVENT_INDEX_COMMAND,
+    search::SEARCH_LOCAL_QUERY_COMMAND,
     app_log::APP_LOG_INSERT_COMMAND,
     app_log::APP_LOG_RECENT_COMMAND,
     app_log::APP_LOG_CLEAR_BEFORE_COMMAND,

@@ -29,6 +29,16 @@ pub const SQLITE_INDEXES: &[SqliteIndexSpec] = &[
         "CREATE INDEX IF NOT EXISTS event_relays_by_relay ON event_relays (relay_url, last_seen_at_ms DESC);",
     ),
     index(
+        "event_search_tokens_lookup",
+        "event_search_tokens",
+        "CREATE INDEX IF NOT EXISTS event_search_tokens_lookup ON event_search_tokens (token, created_at DESC, event_id);",
+    ),
+    index(
+        "event_search_tokens_event",
+        "event_search_tokens",
+        "CREATE INDEX IF NOT EXISTS event_search_tokens_event ON event_search_tokens (event_id);",
+    ),
+    index(
         "notifications_by_owner_time",
         "notifications",
         "CREATE INDEX IF NOT EXISTS notifications_by_owner_time ON notifications (owner_pubkey, created_at DESC, notification_id);",

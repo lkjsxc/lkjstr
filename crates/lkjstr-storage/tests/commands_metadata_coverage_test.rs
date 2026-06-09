@@ -102,6 +102,7 @@ fn command_matrix_docs() -> Result<String, String> {
         "protected.md",
         "event-cache.md",
         "feed-evidence.md",
+        "search.md",
         "diagnostics.md",
         "retention.md",
         "repair.md",

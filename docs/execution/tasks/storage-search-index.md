@@ -7,37 +7,39 @@ skipping storage, relay, or feed dependency order.
 
 ## Status
 
-Queued. Implement only storage-owned row and command work here; product search
-runtime parity remains a later surface task.
+Partial. Storage-owned token rows, command metadata, SQL table/index records,
+and event-write token batch steps exist. Product Search runtime parity remains
+a later surface task.
 
 ## Current Evidence
 
-- Shipped search has a SQLite token-index path in TypeScript storage glue.
-- Rust protocol kernels can parse events and tags, but Rust tokenizer, local
-  token query planner, and Leptos Search parity remain open.
-- `docs/architecture/rust-wasm/cutover/storage-wiring.md` marks Rust search and
-  tag lookup modules as missing.
+- Shipped search still has a SQLite token-index path in TypeScript storage glue.
+- Rust storage owns tokenization, token row codecs, search SQL table/index
+  records, tag lookup metadata, update-event-index metadata, and local-query
+  metadata.
+- Local query worker adapter, app-level planner, relay NIP-50 merge, Leptos
+  Search parity, and no-import proof remain open.
 
 ## Current Next Edit
 
-1. Wait for retention and repair command coverage.
-2. Start with storage-owned tag lookup proof before local Search surface parity.
-3. Keep shipped TypeScript Search paths until Rust indexed rows have no-import
-   proof.
+1. Keep shipped TypeScript Search paths active.
+2. Add the local Search query worker adapter after storage token rows stabilize.
+3. Keep relay NIP-50 merge decisions in app and relay runtime code.
 
 ## Next Checklist
 
 - [ ] Read Search product docs, SQLite repository contracts, and TypeScript
   search-index and event-matching paths.
-- [ ] Update storage command matrix docs before adding Rust search commands.
-- [ ] Add tag lookup and token row codecs without changing product Search
+- [x] Update storage command matrix docs before adding Rust search commands.
+- [x] Add tag lookup and token row codecs without changing product Search
   parity status.
-- [ ] Add command specs for `tag-lookup.by-value`, `search.local-query`, and
+- [x] Add command specs for `tag-lookup.by-value`, `search.local-query`, and
   `search.update-event-index` as real repositories land.
-- [ ] Add tests for token insert/delete/query, tag lookup, and stale token
-  removal on event updates.
-- [ ] Run Rust storage search and command tests plus shipped TypeScript Search
-  tests; then record actual verification.
+- [x] Add tests for token row codecs, tag lookup metadata, indexed local-query
+  metadata, and update-event-index metadata.
+- [x] Run Rust storage search and command tests plus shipped TypeScript Search
+  tests; record actual verification.
+- [ ] Add local query worker adapter tests and product planner tests.
 
 ## Target Behavior
 

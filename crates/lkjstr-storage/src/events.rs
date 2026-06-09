@@ -6,6 +6,7 @@ use serde::{Deserialize, Serialize};
 use crate::{
     CacheLedgerRecord,
     resource::{CacheOwnerKind, CacheResourceKind},
+    search::SqliteEventSearchTokenRow,
     tab_state::{cache_ledger_id, encoded_json_bytes},
 };
 
@@ -120,8 +121,12 @@ pub fn event_cache_bytes(
     row: &StoredEventRecord,
     tags: &[SqliteEventTagRow],
     relays: &[SqliteEventRelayRow],
+    tokens: &[SqliteEventSearchTokenRow],
 ) -> Result<usize, serde_json::Error> {
-    Ok(encoded_json_bytes(row)? + encoded_json_bytes(&tags)? + encoded_json_bytes(&relays)?)
+    Ok(encoded_json_bytes(row)?
+        + encoded_json_bytes(&tags)?
+        + encoded_json_bytes(&relays)?
+        + encoded_json_bytes(&tokens)?)
 }
 
 fn sqlite_event_tag_row(

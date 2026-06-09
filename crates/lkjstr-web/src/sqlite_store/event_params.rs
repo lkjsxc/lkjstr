@@ -1,6 +1,8 @@
 #![doc = "SQLite cached-event parameter helpers."]
 
-use lkjstr_storage::{SqliteEventRelayRow, SqliteEventRow, SqliteEventTagRow};
+use lkjstr_storage::{
+    SqliteEventRelayRow, SqliteEventRow, SqliteEventSearchTokenRow, SqliteEventTagRow,
+};
 
 use crate::{
     sqlite_store::params::{integer, opt_text, params, text},
@@ -40,5 +42,16 @@ pub fn relay_params(row: SqliteEventRelayRow) -> Option<SqlParams> {
         integer(row.first_seen_at_ms),
         integer(row.last_seen_at_ms),
         text(row.source_kind),
+    ])
+}
+
+pub fn search_token_params(row: SqliteEventSearchTokenRow) -> Option<SqlParams> {
+    params(vec![
+        text(row.event_id),
+        text(row.token),
+        integer(row.position),
+        integer(row.created_at),
+        integer(row.kind),
+        text(row.pubkey),
     ])
 }

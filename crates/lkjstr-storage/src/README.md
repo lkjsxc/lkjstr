@@ -30,6 +30,7 @@ codecs, ledger resource map, and typed operation outcomes.
 - `relay_sets.rs`: protected relay-set row identity, JSON helpers, and SQLite row codec.
 - `resource.rs`: cache owner and resource kind strings.
 - `route_blocks.rs`: protected relay route-block row codec.
+- `search.rs`: local Search token rows and tokenizer helpers.
 - `settings_defs.rs`: flat settings definition rows.
 - `settings.rs`: settings override row identity, JSON helpers, and SQLite row codec.
 - `settings_schema.rs`: flat settings schema and override merging.

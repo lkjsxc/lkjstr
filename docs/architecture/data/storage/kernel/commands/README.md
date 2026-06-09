@@ -12,6 +12,8 @@ specs, worker adapters, retention, repair, inventory, or Stats rows.
   relay-set, Tweet draft, active selector, and protected route-block rows.
 - [event-cache.md](event-cache.md): cached events, event tags, relay provenance,
   notifications, and cache ledger writes for events.
+- [search.md](search.md): indexed local Search token rows and tag lookup
+  commands.
 - [feed-evidence.md](feed-evidence.md): feed cursors, coverage rows, scan hints,
   and ledger-backed feed evidence.
 - [diagnostics.md](diagnostics.md): relay information, summaries, suggestions,
@@ -59,7 +61,7 @@ app log, inventory snapshot, and optimizer scan-model rows.
 
 1. retention worker dispatch coverage.
 2. repair command coverage.
-3. search/tag lookup storage command coverage.
+3. repair physical target probes.
 4. pressure inventory completion.
 5. relay effect wiring.
 6. shared feed runtime.
@@ -71,7 +73,7 @@ app log, inventory snapshot, and optimizer scan-model rows.
 | --- | --- | --- | --- | --- | --- |
 | `retention.delete-dispatch` | `commands/retention.rs` | table statements in [retention.md](retention.md) | `sqlite_store/retention.rs` | cache ledger and compaction repositories | `cargo test -p lkjstr-web retention` |
 | `repair.scan-ledger` and repair writes | add `commands/repair.rs` | cache ledger chunks plus manifest target probes | add `sqlite_store/repair.rs` | cache maintenance repositories | `cargo test -p lkjstr-storage repair` |
-| `search.local-query` and `search.update-event-index` | add `commands/search.rs` | token rows plus event tag lookups | add `sqlite_store/search.rs` | search-index repositories | `cargo test -p lkjstr-storage search` |
+| `search.local-query` and `search.update-event-index` | `commands/search.rs` | token rows plus event tag lookups | event put token batch bridge; local query adapter pending | search-index repositories | `cargo test -p lkjstr-storage search` |
 | `storage-inventory.snapshot` gaps | `commands/inventory.rs` | generated table counts and browser inventory | `sqlite_store/inventory.rs` | Stats/cache repositories | `cargo test -p lkjstr-storage stats` |
 
 ## Rules

@@ -85,7 +85,7 @@ columns stay stable.
 | `src/lib/protocol` | `lkjstr-protocol` plus WASM bridge exports | `rg -e "\\$lib/protocol" -e "src/lib/protocol" src tests scripts` | blocked | Product imports remain until all bridges cut over. |
 | `src/lib/query` | `lkjstr-app/src/query/**` and feed input builders | `rg -e "\\$lib/query" -e "src/lib/query" src tests scripts` | blocked | Feed runtime wiring remains open. |
 | `src/lib/relays` | `lkjstr-relays` and `lkjstr-web/src/relay_host/**` | `rg -e "\\$lib/relays" -e "src/lib/relays" src tests scripts` | blocked | Relay effect runner remains open. |
-| `src/lib/search` | `lkjstr-app`, `lkjstr-storage` search rows, and Leptos search | `rg -e "\\$lib/search" -e "src/lib/search" src tests scripts` | blocked | Rust tokenizer and query planner remain open. |
+| `src/lib/search` | `lkjstr-app`, `lkjstr-storage` search rows, and Leptos search | `rg -e "\\$lib/search" -e "src/lib/search" src tests scripts` | blocked | Local query adapter, app planner, and UI parity remain open. |
 | `src/lib/settings` | `lkjstr-domain`, `lkjstr-storage/src/settings*.rs`, Leptos Settings | `rg -e "\\$lib/settings" -e "src/lib/settings" src tests scripts` | blocked | Side-effect parity remains open. |
 | `src/lib/storage` | `lkjstr-storage`, `lkjstr-web/src/sqlite_store/**`, storage worker bridge | `rg -e "\\$lib/storage" -e "src/lib/storage" src tests scripts` | blocked | Host-glue carveout must be named before removal. |
 | `src/lib/tabs` | `lkjstr-ui/src/workspace/**` tab surfaces | `rg -e "\\$lib/tabs" -e "src/lib/tabs" src tests scripts` | blocked | Surface parity remains open. |

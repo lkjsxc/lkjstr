@@ -9,6 +9,9 @@ This directory contains Rust repository calls over the SQLite storage worker.
 - `accounts.rs`: account and local-secret protected repository calls.
 - `active_account.rs`: active-account selector repository calls.
 - `database.rs`: worker-backed database handle, health, and statement dispatch.
+- `event_params.rs`: cached-event SQL parameter helpers.
+- `event_put.rs`: cached-event write batch construction.
+- `events.rs`: cached-event query repository calls.
 - `inventory.rs`: SQLite table counts, health, and pressure rows for Rust Stats.
 - `mod.rs`: public exports.
 - `params.rs`: SQL parameter helpers.
@@ -17,6 +20,7 @@ This directory contains Rust repository calls over the SQLite storage worker.
 - `repair.rs`: repair scan, inventory, and ledger backfill adapter calls.
 - `retention.rs`: retention delete dispatch adapter and worker batch binding.
 - `rows.rs`: SQLite row decoding helpers.
+- `search.rs`: local Search token-index batch step helpers.
 - `settings.rs`: settings protected repository calls.
 - `tab_states.rs`: tab-state and ledger repository calls.
 - `tweet_drafts.rs`: Tweet draft protected repository calls.

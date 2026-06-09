@@ -10,6 +10,9 @@ mod metadata;
 mod optimizer;
 mod optimizer_statements;
 mod protected;
+mod repository_statements;
+mod search;
+mod search_statements;
 mod statements;
 
 use crate::{
@@ -91,6 +94,7 @@ pub fn sqlite_schema_tables() -> Vec<&'static SqliteTableSpec> {
     protected::SQLITE_PROTECTED_TABLES
         .iter()
         .chain(cache::SQLITE_CACHE_TABLES.iter())
+        .chain(search::SQLITE_SEARCH_TABLES.iter())
         .chain(optimizer::SQLITE_OPTIMIZER_TABLES.iter())
         .chain(diagnostics::SQLITE_DIAGNOSTIC_TABLES.iter())
         .chain(metadata::SQLITE_METADATA_TABLES.iter())
@@ -150,43 +154,11 @@ pub fn sqlite_schema_statements() -> Vec<SqliteSchemaStatement> {
 }
 
 pub use hash::sqlite_schema_hash;
-
-#[must_use]
-pub const fn protected_sqlite_statements() -> &'static [SqliteStatementSpec] {
-    statements::PROTECTED_STATEMENTS
-}
-
-#[must_use]
-pub const fn cache_sqlite_statements() -> &'static [SqliteStatementSpec] {
-    cache_statements::CACHE_STATEMENTS
-}
-
-#[must_use]
-pub const fn diagnostic_sqlite_statements() -> &'static [SqliteStatementSpec] {
-    diagnostic_statements::DIAGNOSTIC_STATEMENTS
-}
-
-#[must_use]
-pub const fn optimizer_sqlite_statements() -> &'static [SqliteStatementSpec] {
-    optimizer_statements::OPTIMIZER_STATEMENTS
-}
-
-#[must_use]
-pub fn sqlite_repository_statements() -> Vec<&'static SqliteStatementSpec> {
-    statements::PROTECTED_STATEMENTS
-        .iter()
-        .chain(cache_statements::CACHE_STATEMENTS.iter())
-        .chain(optimizer_statements::OPTIMIZER_STATEMENTS.iter())
-        .chain(diagnostic_statements::DIAGNOSTIC_STATEMENTS.iter())
-        .collect()
-}
-
-#[must_use]
-pub fn sqlite_statement(id: &str) -> Option<&'static SqliteStatementSpec> {
-    sqlite_repository_statements()
-        .into_iter()
-        .find(|statement| statement.id == id)
-}
+pub use repository_statements::{
+    cache_sqlite_statements, diagnostic_sqlite_statements, optimizer_sqlite_statements,
+    protected_sqlite_statements, search_sqlite_statements, sqlite_repository_statements,
+    sqlite_statement,
+};
 
 #[must_use]
 pub fn sqlite_table_count_sql(table_name: &str) -> Option<String> {

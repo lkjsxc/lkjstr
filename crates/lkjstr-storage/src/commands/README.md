@@ -21,3 +21,4 @@ repositories.
 - `protected.rs`: protected storage command specs.
 - `repair.rs`: repair scan, backfill, and inventory report command specs.
 - `retention.rs`: retention planner and delete-dispatch command specs.
+- `search.rs`: tag lookup and local Search token-index command specs.

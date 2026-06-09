@@ -22,6 +22,7 @@ pub mod repair;
 pub mod resource;
 pub mod retention;
 pub mod route_blocks;
+pub mod search;
 pub mod settings;
 mod settings_defs;
 pub mod settings_schema;
@@ -51,10 +52,12 @@ pub use commands::{
     ActiveAccountSelectorPutOutput, RepairBackfillInput, RepairBackfillOutput,
     RepairInventoryReportInput, RepairInventoryReportOutput, RepairScanInput, RepairScanOutput,
     RetentionDeleteDispatchInput, RetentionDeleteDispatchOutput, RetentionPlanOutput,
-    STORAGE_REPOSITORY_COMMANDS, StorageCommandFamily, StorageLedgerPolicy,
-    StoragePressureGetInput, StoragePressureGetOutput, StoragePressureProjectInput,
-    StoragePressureProjectOutput, StoragePressurePutInput, StoragePressurePutOutput,
-    StorageProtectionPolicy, StorageRepositoryCommandSpec, StorageStatsProjection,
+    STORAGE_REPOSITORY_COMMANDS, SearchLocalQueryInput, SearchLocalQueryOutput,
+    SearchUpdateEventIndexInput, SearchUpdateEventIndexOutput, StorageCommandFamily,
+    StorageLedgerPolicy, StoragePressureGetInput, StoragePressureGetOutput,
+    StoragePressureProjectInput, StoragePressureProjectOutput, StoragePressurePutInput,
+    StoragePressurePutOutput, StorageProtectionPolicy, StorageRepositoryCommandSpec,
+    StorageStatsProjection, TagLookupByValueInput, TagLookupByValueOutput,
     storage_repository_commands,
 };
 pub use data_class::{StorageDataClass, StorageInventoryGroup};
@@ -142,6 +145,11 @@ pub use retention::{
     retention_candidate_from_ledger_row, retention_stop_reason,
 };
 pub use route_blocks::{RelayRouteBlockRecord, SqliteRelayRouteBlockRow};
+pub use search::{
+    SEARCH_MAX_EVENT_TOKENS, SEARCH_MAX_QUERY_TOKENS, SEARCH_MAX_TOKEN_LENGTH,
+    SqliteEventSearchTokenRow, event_search_token_rows, normalize_search_text,
+    search_candidate_row_limit, tokenize_search_query, tokenize_search_text,
+};
 pub use settings::{
     SettingOverrideRecord, SqliteSettingRow, setting_from_sqlite_row, setting_namespace,
     setting_record_json_bytes, setting_record_key, sqlite_setting_row,
@@ -154,9 +162,10 @@ pub use sql::{
     FOREIGN_KEYS_PRAGMA, SqliteIndexSpec, SqliteRetentionClass, SqliteSchemaStatement,
     SqliteStatementKind, SqliteStatementSpec, SqliteTableSpec, cache_sqlite_statements,
     diagnostic_sqlite_statements, optimizer_sqlite_statements, protected_sqlite_statements,
-    sqlite_repository_statements, sqlite_schema_hash, sqlite_schema_index_names,
-    sqlite_schema_indexes, sqlite_schema_statements, sqlite_schema_table,
-    sqlite_schema_table_names, sqlite_schema_tables, sqlite_statement, sqlite_table_count_sql,
+    search_sqlite_statements, sqlite_repository_statements, sqlite_schema_hash,
+    sqlite_schema_index_names, sqlite_schema_indexes, sqlite_schema_statements,
+    sqlite_schema_table, sqlite_schema_table_names, sqlite_schema_tables, sqlite_statement,
+    sqlite_table_count_sql,
 };
 pub use stats::{SqliteRowCount, StorageInventoryRow, StorageStatsSnapshot, StorageTableCount};
 pub use storage_health::SqliteStorageHealth;
