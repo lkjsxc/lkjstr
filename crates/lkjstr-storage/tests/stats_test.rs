@@ -35,12 +35,21 @@ fn stats_snapshot_marks_partial_inventory() {
 
 #[test]
 fn stats_snapshot_can_report_manifest_unavailable() {
-    let snapshot = StorageStatsSnapshot::manifest_unavailable("unavailable");
+    let snapshot = StorageStatsSnapshot::manifest_unavailable("blocked");
 
     assert_eq!(snapshot.inventory_status, "unavailable");
-    assert_eq!(snapshot.storage_health_status, "unavailable");
+    assert_eq!(snapshot.storage_health_status, "blocked");
+    assert_eq!(snapshot.storage_health_reason.as_deref(), Some("blocked"));
+    assert_eq!(snapshot.storage_pressure_status, "blocked");
+    assert_eq!(snapshot.storage_pressure_reason.as_deref(), Some("blocked"));
     assert_eq!(snapshot.available_table_count, 0);
     assert!(snapshot.rows.iter().all(|row| row.status == "unavailable"));
+    assert!(
+        snapshot
+            .byte_rows
+            .iter()
+            .all(|row| row.problem_reason.as_deref() == Some("blocked"))
+    );
 }
 
 #[test]
@@ -50,7 +59,14 @@ fn stats_snapshot_can_report_timeout() {
     assert_eq!(snapshot.inventory_status, "unavailable");
     assert_eq!(snapshot.storage_health_status, "timeout");
     assert_eq!(snapshot.storage_pressure_status, "timeout");
+    assert_eq!(snapshot.storage_pressure_reason.as_deref(), Some("timeout"));
     assert!(snapshot.rows.iter().all(|row| row.status == "unavailable"));
+    assert!(
+        snapshot
+            .byte_rows
+            .iter()
+            .all(|row| row.problem_reason.as_deref() == Some("timeout"))
+    );
 }
 
 #[test]

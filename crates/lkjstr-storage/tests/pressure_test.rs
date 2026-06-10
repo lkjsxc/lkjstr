@@ -10,6 +10,7 @@ fn pressure_stop_reasons_are_stable() {
         assert!(pressure_stop_reason_is_known(reason));
     }
     assert!(!pressure_stop_reason_is_known("silent-success"));
+    assert_eq!(pressure_problem_kind("silent-success"), None);
     assert_eq!(pressure_problem_kind("below-target"), None);
     assert_eq!(pressure_problem_kind("target-met"), None);
     assert_eq!(

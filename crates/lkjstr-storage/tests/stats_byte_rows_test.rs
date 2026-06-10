@@ -56,6 +56,27 @@ fn stats_byte_rows_keep_timeout_unavailable() {
 }
 
 #[test]
+fn stats_byte_rows_keep_missing_pressure_unavailable() {
+    let snapshot = StorageStatsSnapshot::from_sqlite_counts(Vec::new())
+        .with_storage_pressure_problem("not-recorded");
+
+    assert_eq!(snapshot.byte_rows.len(), 6);
+    assert!(snapshot.byte_rows.iter().all(|row| row.bytes.is_none()));
+    assert!(
+        snapshot
+            .byte_rows
+            .iter()
+            .all(|row| row.status == "unavailable")
+    );
+    assert!(
+        snapshot
+            .byte_rows
+            .iter()
+            .all(|row| row.problem_reason.as_deref() == Some("not-recorded"))
+    );
+}
+
+#[test]
 fn stats_byte_rows_report_missing_usage_as_unavailable() {
     let mut pressure = test_pressure("inventory-incomplete");
     pressure.usage_bytes = None;
@@ -73,6 +94,15 @@ fn stats_byte_rows_report_missing_usage_as_unavailable() {
         usage.and_then(|row| row.problem_reason.as_deref()),
         Some("usage-not-reported")
     );
+    assert!(
+        snapshot
+            .byte_rows
+            .iter()
+            .filter(|row| row.key != "browser-usage")
+            .all(|row| row.status == "exact"
+                && row.bytes.is_some()
+                && row.problem_reason.is_none())
+    );
 }
 
 #[test]
@@ -87,6 +117,24 @@ fn stats_byte_rows_keep_pressure_problem_unavailable() {
             .byte_rows
             .iter()
             .all(|row| row.problem_reason.as_deref() == Some("blocked"))
+    );
+}
+
+#[test]
+fn stats_byte_rows_replace_unavailable_with_real_pressure() {
+    let snapshot = StorageStatsSnapshot::from_sqlite_counts(Vec::new())
+        .with_storage_pressure_problem("not-recorded")
+        .with_storage_pressure(test_pressure("target-met"));
+
+    assert_eq!(snapshot.storage_pressure_reason, None);
+    assert_eq!(snapshot.storage_pressure_status, "target-met");
+    assert!(snapshot.byte_rows.iter().all(|row| row.status == "exact"));
+    assert!(snapshot.byte_rows.iter().all(|row| row.bytes.is_some()));
+    assert!(
+        snapshot
+            .byte_rows
+            .iter()
+            .all(|row| row.problem_reason.is_none())
     );
 }
 
