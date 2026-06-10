@@ -35,6 +35,7 @@ export async function checkDocs(
     checkAscii(problems, rel, text);
     if (!rel.endsWith('LICENSE')) checkBanned(problems, rel, text);
     checkProseLineLength(problems, rel, text);
+    checkTableColumns(problems, rel, text);
     problems.push(...(await localMarkdownLinkProblems(root, rel, text)));
   }
   await checkDocsTopology(problems, root, files, skipDirs);
@@ -94,6 +95,44 @@ function checkProseLineLength(
 function isTableLine(line: string): boolean {
   const t = line.trim();
   return t.startsWith('|') && t.endsWith('|') && t.includes('|');
+}
+
+const TABLE_COLUMN_LIMIT = 6;
+
+function checkTableColumns(
+  problems: RepoProblem[],
+  file: string,
+  text: string,
+) {
+  if (allowsWideTables(file, text)) return;
+  const lines = text.split(/\r?\n/);
+  let inCodeBlock = false;
+  for (let i = 0; i < lines.length; i++) {
+    const line = lines[i]!;
+    if (line.startsWith('```')) inCodeBlock = !inCodeBlock;
+    if (inCodeBlock) continue;
+    const columns = tableColumns(line);
+    if (columns > TABLE_COLUMN_LIMIT) {
+      problems.push({
+        file,
+        message: `line ${i + 1} has ${columns} table columns over ${TABLE_COLUMN_LIMIT}`,
+      });
+    }
+  }
+}
+
+function tableColumns(line: string): number {
+  const trimmed = line.trim();
+  if (!trimmed.startsWith('|') || !trimmed.endsWith('|')) return 0;
+  return Math.max(0, trimmed.split('|').length - 2);
+}
+
+function allowsWideTables(file: string, text: string): boolean {
+  return (
+    file.endsWith('-ledger.md') ||
+    file.endsWith('table-manifest.md') ||
+    /^## Matrix$/m.test(text)
+  );
 }
 
 async function checkDocsTopology(

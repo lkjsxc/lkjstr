@@ -40,24 +40,31 @@ change and Docker Compose verification is either run or recorded as not run.
 
 ## Current Run Notes
 
-- 2026-06-10 documentation task-shape and Search command-status checks passed.
-  Commands:
-  - `pnpm check:repo`.
+- 2026-06-10 documentation readability, topology, and storage/Search status
+  checks passed. Commands:
+  - `pnpm install`.
+  - `git status --short`.
+  - `PATH=/home/lkjsxc/.cargo/bin:$PATH pnpm check:repo`.
   - `PATH=/home/lkjsxc/.cargo/bin:$PATH cargo fmt --check`.
   - `PATH=/home/lkjsxc/.cargo/bin:$PATH cargo clippy -p lkjstr-xtask --all-targets -- -D warnings`.
+  - `PATH=/home/lkjsxc/.cargo/bin:$PATH cargo test -p lkjstr-xtask`.
   - `PATH=/home/lkjsxc/.cargo/bin:$PATH cargo run -p lkjstr-xtask -- check-docs`.
   - `PATH=/home/lkjsxc/.cargo/bin:$PATH cargo run -p lkjstr-xtask -- check-lines`.
   - `PATH=/home/lkjsxc/.cargo/bin:$PATH cargo run -p lkjstr-xtask -- check-storage-manifest-docs`.
   - `PATH=/home/lkjsxc/.cargo/bin:$PATH cargo run -p lkjstr-xtask -- check-rust-style`.
-  - `PATH=/home/lkjsxc/.cargo/bin:$PATH cargo test -p lkjstr-xtask`.
-  - `PATH=/home/lkjsxc/.cargo/bin:$PATH cargo test -p lkjstr-storage commands`.
-  - `PATH=/home/lkjsxc/.cargo/bin:$PATH cargo test -p lkjstr-storage search`.
-  - `PATH=/home/lkjsxc/.cargo/bin:$PATH cargo test -p lkjstr-web sqlite_store`.
-  - `pnpm test -- tests/unit/search tests/unit/storage/sqlite-opfs-events.test.ts`.
-  - `pnpm test:quiet`.
-- Baseline `PATH=/home/lkjsxc/.cargo/bin:$PATH pnpm rust-wasm:quiet` timed out
-  after 600 seconds before edits and was not rerun after the docs-only change.
-- Docker final gate was not run for this docs-only pass.
+  - `PATH=/home/lkjsxc/.cargo/bin:$PATH cargo test -p lkjstr-storage`.
+  - `PATH=/home/lkjsxc/.cargo/bin:$PATH cargo test -p lkjstr-web`.
+  - `PATH=/home/lkjsxc/.cargo/bin:$PATH pnpm test -- tests/unit/cache tests/unit/events/repository.test.ts`.
+  - `PATH=/home/lkjsxc/.cargo/bin:$PATH pnpm test -- tests/unit/feed-surface/scan-model-repository.test.ts`.
+  - `PATH=/home/lkjsxc/.cargo/bin:$PATH pnpm test:quiet`.
+  - `PATH=/home/lkjsxc/.cargo/bin:$PATH pnpm rust-wasm:quiet`.
+- Source inspection confirmed `search.local-query` has Rust command metadata,
+  indexed token SQL, and the `lkjstr-web` local query adapter. Search app
+  planning, relay NIP-50 merge, Leptos parity, and deletion proof remain open.
+- Plain Cargo tool lookup resolves to `/home/lkjsxc/.bun/bin/cargo` in this
+  shell and fails on a missing obsolete Compose file. Verification above used
+  `PATH=/home/lkjsxc/.cargo/bin:$PATH` to run the real Cargo binary.
+- Docker final gate was not run for this docs and check pass.
 
 ## Recent Focused Evidence
 

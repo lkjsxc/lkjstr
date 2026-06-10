@@ -22,7 +22,8 @@ This crate owns Rust repository checks and quiet command orchestration.
 
 ## Commands
 
-- `check-docs`: strict documentation shape and docs topology.
+- `check-docs`: strict documentation shape, table readability, recursive README
+  coverage, and docs topology.
 - `check-lines`: documentation and source line caps.
 - `check-rust-style`: production Rust panic, placeholder, and global state scan.
 - `check-storage-manifest-docs`: storage manifest docs comparison.

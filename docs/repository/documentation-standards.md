@@ -26,6 +26,8 @@ for that subtree.
 - Keep docs and implementation in the same change when they define one behavior.
 - Optimize for LLM agents first: put contracts in short files, state ownership
   before detail, and prefer explicit links over implicit context.
+- Keep Markdown tables small. Tables with more than six columns must be explicit
+  matrix or ledger files, or generated manifest views.
 - Avoid milestone labels in filenames and headings.
 - Avoid numeric release shorthand and named release phases.
 - Avoid backward-compatibility framing. State the current contract directly.
@@ -45,7 +47,7 @@ for that subtree.
   files or child directories.
 - `docs/README.md` is the recursive table of contents for the full docs tree.
 - Child `README.md` files recursively list descendant documentation for that
-  subtree.
+  subtree; repository checks require these recursive links.
 - Supporting files hold the detail so the `README.md` remains scannable.
 - Keep README entries terse when a subtree is large; move rationale into child
   documents rather than growing the index.

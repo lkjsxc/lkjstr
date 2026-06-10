@@ -14,6 +14,7 @@ pub fn check(root: &Path) -> Result<(), String> {
         check_task_doc_shape(&mut problems, &rel, &text);
     }
     check_docs_topology(root, &mut problems)?;
+    check_readme_descendants(root, &mut problems)?;
     if problems.is_empty() {
         println!("ok check-docs");
         Ok(())
@@ -36,6 +37,7 @@ fn check_doc_shape(problems: &mut Vec<String>, rel: &str, text: &str) {
         problems.push(format!("{rel}: contains release shorthand"));
     }
     check_prose_width(problems, rel, text);
+    check_table_shape(problems, rel, text);
 }
 
 fn check_prose_width(problems: &mut Vec<String>, rel: &str, text: &str) {
@@ -49,6 +51,44 @@ fn check_prose_width(problems: &mut Vec<String>, rel: &str, text: &str) {
             problems.push(format!("{rel}: line {} exceeds 160 prose chars", index + 1));
         }
     }
+}
+
+const TABLE_COLUMN_LIMIT: usize = 6;
+
+fn check_table_shape(problems: &mut Vec<String>, rel: &str, text: &str) {
+    if allows_wide_tables(rel, text) {
+        return;
+    }
+    let mut in_code = false;
+    for (index, line) in text.lines().enumerate() {
+        if line.starts_with("```") {
+            in_code = !in_code;
+        }
+        if in_code {
+            continue;
+        }
+        let columns = table_columns(line);
+        if columns > TABLE_COLUMN_LIMIT {
+            problems.push(format!(
+                "{rel}: line {} has {columns} table columns over {TABLE_COLUMN_LIMIT}",
+                index + 1
+            ));
+        }
+    }
+}
+
+fn table_columns(line: &str) -> usize {
+    let trimmed = line.trim();
+    if !(trimmed.starts_with('|') && trimmed.ends_with('|')) {
+        return 0;
+    }
+    trimmed.matches('|').count().saturating_sub(1)
+}
+
+fn allows_wide_tables(rel: &str, text: &str) -> bool {
+    rel.ends_with("-ledger.md")
+        || rel.ends_with("table-manifest.md")
+        || text.lines().any(|line| line == "## Matrix")
 }
 
 const REQUIRED_TASK_HEADINGS: &[&str] = &[
@@ -116,6 +156,39 @@ fn check_docs_topology(root: &Path, problems: &mut Vec<String>) -> Result<(), St
         }
     }
     Ok(())
+}
+
+fn check_readme_descendants(root: &Path, problems: &mut Vec<String>) -> Result<(), String> {
+    let docs_root = root.join("docs");
+    let files = paths::walk_files(&docs_root)?;
+    for dir in paths::walk_dirs(&docs_root)? {
+        let readme = dir.join("README.md");
+        if !readme.is_file() {
+            continue;
+        }
+        let rel = paths::rel(root, &readme);
+        let text = fs::read_to_string(&readme).map_err(|error| format!("{rel}: {error}"))?;
+        for file in files
+            .iter()
+            .filter(|file| is_descendant_doc(&dir, &readme, file))
+        {
+            let target = paths::rel(&dir, file);
+            if !toc_mentions(&text, &target) {
+                problems.push(format!("{rel}: TOC missing {target}"));
+            }
+        }
+    }
+    Ok(())
+}
+
+fn is_descendant_doc(dir: &Path, readme: &Path, file: &Path) -> bool {
+    file.starts_with(dir)
+        && file != readme
+        && file.extension().and_then(|ext| ext.to_str()) == Some("md")
+}
+
+fn toc_mentions(text: &str, target: &str) -> bool {
+    text.contains(&format!("]({target})")) || text.contains(&format!("`{target}`"))
 }
 
 fn counts_as_docs_child(path: &Path) -> bool {
