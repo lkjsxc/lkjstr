@@ -41,7 +41,8 @@ async function fixture(options: {
   const root = await fs.mkdtemp(path.join(os.tmpdir(), 'lkjstr-github-'));
   const dir = path.join(root, '.github');
   await fs.mkdir(dir, { recursive: true });
-  if (options.readme) await fs.writeFile(path.join(dir, 'README.md'), '# GitHub\n');
+  if (options.readme)
+    await fs.writeFile(path.join(dir, 'README.md'), '# GitHub\n');
   if (options.underscore)
     await fs.writeFile(path.join(dir, '_README.md'), '# GitHub\n');
   return root;

@@ -79,39 +79,39 @@ removed.
 ## Acceptance Checklist
 
 - [x] Active-account selector rows and pressure snapshot rows have Rust codecs
-  and typed worker calls.
+      and typed worker calls.
 - [x] Rust Accounts uses SQLite active selector rows with localStorage as a
-  migration-only source.
+      migration-only source.
 - [x] Active-account selector and pressure snapshot commands have typed specs,
-  stable problem kinds, row-codec links, and Stats projection metadata.
+      stable problem kinds, row-codec links, and Stats projection metadata.
 - [x] Command metadata supports statement arrays, table arrays, ledger policy,
-  protection policy, and typed Stats projection.
+      protection policy, and typed Stats projection.
 - [x] Live protected, event cache, feed evidence, diagnostics, notifications,
-  jobs, app log, pressure, and inventory worker calls have Rust command
-  metadata.
+      jobs, app log, pressure, and inventory worker calls have Rust command
+      metadata.
 - [x] Optimizer scan-model commands have Rust metadata and focused proof.
 - [x] Repair probes have worker wiring and focused proof.
 - [x] Repair scan, backfill, and inventory report commands have Rust metadata,
-  stable labels, conservative models, and focused storage proof.
+      stable labels, conservative models, and focused storage proof.
 - [x] Repair worker adapters propagate health/outcome states and batch only
-  storage-approved ledger backfill rows.
+      storage-approved ledger backfill rows.
 - [x] Search token rows, tag lookup metadata, event-write token batch steps, and
-  indexed local-query command metadata have focused storage proof.
+      indexed local-query command metadata have focused storage proof.
 - [x] Local Search query adapters use indexed token rows and focused web compile
-  proof.
+      proof.
 - [ ] Every command has input, output, statement ids when not inventory-only,
-  stable problem kinds, ledger policy, protection policy, Stats projection, and
-  fixture proof.
+      stable problem kinds, ledger policy, protection policy, Stats projection, and
+      fixture proof.
 - [ ] No product code opens SQLite or OPFS outside the worker.
 - [ ] Stats shows persistent, temporary memory, unavailable, timeout, blocked,
-  corrupt, or unknown-old-storage states without indefinite loading.
+      corrupt, or unknown-old-storage states without indefinite loading.
 - [x] Rust Stats normalizes persistent SQLite health to available, preserves
-  the raw mode detail, and resolves provider reads to an explicit timeout
-  snapshot instead of indefinite loading.
+      the raw mode detail, and resolves provider reads to an explicit timeout
+      snapshot instead of indefinite loading.
 - [x] Rust Stats projects protected bytes, prunable bytes, unknown storage,
-  residual overhead, and exact stop reason from a real pressure snapshot row.
+      residual overhead, and exact stop reason from a real pressure snapshot row.
 - [x] Retention dispatch deletes only ledger-backed prunable statement routes
-  and reports counts in Rust adapter tests.
+      and reports counts in Rust adapter tests.
 - [x] Repair storage models report schema mismatch, corrupt rows, decode
-  failures, incomplete inventory, and temporary memory mode.
+      failures, incomplete inventory, and temporary memory mode.
 - [ ] Parity and deletion ledgers state the actual status.

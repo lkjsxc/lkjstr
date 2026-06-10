@@ -32,16 +32,16 @@ Search runtime parity remains a later surface task.
 ## Next Checklist
 
 - [ ] Read Search product docs, SQLite repository contracts, and TypeScript
-  search-index and event-matching paths.
+      search-index and event-matching paths.
 - [x] Update storage command matrix docs before adding Rust search commands.
 - [x] Add tag lookup and token row codecs without changing product Search
-  parity status.
+      parity status.
 - [x] Add command specs for `tag-lookup.by-value`, `search.local-query`, and
-  `search.update-event-index` as real repositories land.
+      `search.update-event-index` as real repositories land.
 - [x] Add tests for token row codecs, tag lookup metadata, indexed local-query
-  metadata, and update-event-index metadata.
+      metadata, and update-event-index metadata.
 - [x] Run Rust storage search and command tests plus shipped TypeScript Search
-  tests; record actual verification.
+      tests; record actual verification.
 - [x] Add local query worker adapter compile proof.
 - [ ] Add product planner, NIP-50 merge, and UI parity tests.
 

@@ -45,24 +45,24 @@ Physical target probes are implemented; product wiring remains open.
 ## Next Checklist
 
 - [ ] Read retention deletion, ledger, scoring, dynamic protection, pressure,
-  and repair contracts.
+      and repair contracts.
 - [x] Update retention and repair command docs before changing source.
 - [ ] Preserve the implemented pure Rust planner and `retention.plan` plus
-  `retention.delete-dispatch` command metadata.
+      `retention.delete-dispatch` command metadata.
 - [x] Add `crates/lkjstr-web/src/sqlite_store/retention.rs` and export it from
-  `crates/lkjstr-web/src/sqlite_store/mod.rs`.
+      `crates/lkjstr-web/src/sqlite_store/mod.rs`.
 - [x] Map planner delete intents to the statement ids documented in the command
-  matrix and delete each resource row with its `cache_ledger` row in one batch.
+      matrix and delete each resource row with its `cache_ledger` row in one batch.
 - [x] Prove protected, dynamic-protected, unknown, unsupported, raw-SQL, and
-  batch-failure mapping states at the Rust adapter boundary.
+      batch-failure mapping states at the Rust adapter boundary.
 - [x] Add conservative repair target states and chunked scan outputs only after
-  retention dispatch passes.
+      retention dispatch passes.
 - [x] Bind repair health/outcome mapping and storage-approved ledger backfill
-  rows through `lkjstr-web`.
+      rows through `lkjstr-web`.
 - [x] Add repair physical target probes without moving safety policy into the
-  host layer.
+      host layer.
 - [ ] Run retention, repair, cache-ledger, cache unit, and Rust/WASM gates; then
-  record actual verification.
+      record actual verification.
 
 ## Acceptance
 

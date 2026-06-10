@@ -30,11 +30,11 @@ route-evidence dependencies.
 - [ ] Update relay wiring docs if effect shapes or cleanup ownership change.
 - [ ] Add or split host runner modules under line limits.
 - [ ] Add effect-to-host, timer, socket, NIP-11, owner cleanup, and late-event
-  tests.
+      tests.
 - [ ] Keep TypeScript relay paths until product demand wiring and no-import
-  proof exist.
+      proof exist.
 - [ ] Run relay, web relay host, browser host, and Rust/WASM gates; then record
-  actual verification.
+      actual verification.
 
 ## Acceptance
 

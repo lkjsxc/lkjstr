@@ -38,15 +38,15 @@ commands.
 ## Next Checklist
 
 - [ ] Read inventory, pressure-state, Stats, and storage-pressure verification
-  contracts.
+      contracts.
 - [ ] Update docs for any new pressure state or inventory field before source.
 - [x] Add storage-owned inventory rows or projections for missing physical byte
-  classes.
+      classes.
 - [x] Add Stats projections for pressure unavailable modes and stop reasons.
 - [x] Add Rust UI tests for explicit unavailable states where browser rendering
-  coverage is stable.
+      coverage is stable.
 - [ ] Get the full Rust/WASM quiet gate passing; the current run still fails in
-  the existing Chrome harness path after focused pressure and Stats checks pass.
+      the existing Chrome harness path after focused pressure and Stats checks pass.
 
 ## Acceptance
 

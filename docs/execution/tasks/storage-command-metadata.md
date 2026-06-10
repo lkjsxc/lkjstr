@@ -41,21 +41,21 @@ and pressure inventory.
 ## Next Checklist
 
 - [ ] Read retention deletion, ledger, scoring, dynamic protection, pressure,
-  and command matrix contracts.
+      and command matrix contracts.
 - [ ] Update command matrix docs before changing Rust command metadata.
 - [x] Add retention planner and command specs with real statements, tables, row
-  codecs, problem kinds, data classes, delete condition, and policies.
+      codecs, problem kinds, data classes, delete condition, and policies.
 - [x] Register retention specs in `storage_repository_commands()`.
 - [x] Add retention-focused command tests and docs-coverage assertions.
 - [x] Register repair scan, backfill, and inventory report specs with focused
-  storage command tests.
+      storage command tests.
 - [x] Add repair worker outcome adapter tests without moving safety policy out
-  of storage.
+      of storage.
 - [x] Register Search token/tag command specs and indexed token row codecs with
-  focused storage tests.
+      focused storage tests.
 - [x] Add repair physical target probe command metadata and adapter proof.
 - [ ] Run the storage command focused gate and update verification evidence with
-  actual commands.
+      actual commands.
 
 ## Acceptance
 

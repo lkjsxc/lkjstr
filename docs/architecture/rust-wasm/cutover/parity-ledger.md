@@ -22,7 +22,7 @@ before the SvelteKit product runtime can be removed.
 | User Timeline   | partial         | `protocol`, `app`, `web`, `relays`, `ui` target timeline path | Leptos feed surface, route discovery states, follow graph reads, degraded mode, retry diagnostics |
 | Thread          | not implemented | `app`, `relays`, `storage`, `ui` thread runtime               | root lookup, reply pages, references, exact reads                                                 |
 | Notifications   | not implemented | `app`, `relays`, `storage`, `ui` notification runtime         | mentions, reactions, reposts, zaps, older windows                                                 |
-| Search          | not implemented | `app`, `relays`, `storage`, `ui` search runtime               | app planner, NIP-50 routing, cancellation, Leptos parity                                           |
+| Search          | not implemented | `app`, `relays`, `storage`, `ui` search runtime               | app planner, NIP-50 routing, cancellation, Leptos parity                                          |
 | Custom Request  | not implemented | `app`, `protocol`, `relays`, `ui` request runtime             | raw filter parse, validation, selected relay routing                                              |
 | Public Chat     | partial         | `protocol`, `domain`, `app`, `relays`, `storage`, `ui`, `web` | NIP-28 parsing, channel reads, publish, partial failure, cleanup                                  |
 | Author Context  | not implemented | `app`, `relays`, `storage`, `ui` context runtime              | nearby author posts, exact reads, unavailable states                                              |
@@ -110,13 +110,13 @@ bounded retry sources; shipped Svelte wiring remains the visible surface.
 
 ## Storage Ledger
 
-| Storage family      | Rust status | Required Rust modules             | Proof before cutover                                                                                  |
-| ------------------- | ----------- | --------------------------------- | ----------------------------------------------------------------------------------------------------- |
+| Storage family      | Rust status | Required Rust modules             | Proof before cutover                                                                                   |
+| ------------------- | ----------- | --------------------------------- | ------------------------------------------------------------------------------------------------------ |
 | Protected records   | partial     | `storage`, `web`, `app`, `ui`     | SQLite startup, workspace, settings, accounts, active selector proof, relay sets, drafts, worker tests |
-| Event cache         | partial     | `storage`, `web`, `app`, `relays` | Rust event/tag/provenance row tests pass; validation, query breadth, retention, and feed proof remain |
-| Feed evidence       | partial     | `storage`, `app`, `relays`        | Rust coverage/cursor row tests pass; complete route-group proof and compaction invalidation remain    |
-| Diagnostics and log | partial     | `storage`, `web`, `app`, `ui`     | Stats inventory, SQLite health, durable Log rows, pressure rows, and command coverage remain partial |
-| Relay optimizer     | partial     | `relays`, `app`, `storage`, `web` | score, scan hint, route trust, Stats, and synthetic relay tests                                       |
+| Event cache         | partial     | `storage`, `web`, `app`, `relays` | Rust event/tag/provenance row tests pass; validation, query breadth, retention, and feed proof remain  |
+| Feed evidence       | partial     | `storage`, `app`, `relays`        | Rust coverage/cursor row tests pass; complete route-group proof and compaction invalidation remain     |
+| Diagnostics and log | partial     | `storage`, `web`, `app`, `ui`     | Stats inventory, SQLite health, durable Log rows, pressure rows, and command coverage remain partial   |
+| Relay optimizer     | partial     | `relays`, `app`, `storage`, `web` | score, scan hint, route trust, Stats, and synthetic relay tests                                        |
 
 ## Product Rule
 

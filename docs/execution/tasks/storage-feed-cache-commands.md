@@ -30,12 +30,12 @@ metadata. Product feed runtime consumption remains partial.
 ## Next Checklist
 
 - [ ] Read feed coverage, cache-first pages, and feed runtime contracts before
-  changing proof semantics.
+      changing proof semantics.
 - [ ] Update command matrix docs if a feed worker command changes shape.
 - [ ] Keep event/feed writes ledger-backed in one batch.
 - [ ] Add tests for any changed coverage proof state or statement list.
 - [ ] Run storage commands, feed cache, web feed cache, event repository, and
-  scan-model tests.
+      scan-model tests.
 - [ ] Update verification evidence only with commands actually run.
 
 ## Acceptance

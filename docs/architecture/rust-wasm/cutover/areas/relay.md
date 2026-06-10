@@ -39,12 +39,12 @@ removed.
 ## Acceptance Checklist
 
 - [ ] Rust emits typed effect commands for sockets, frames, timers, NIP-11, and
-  diagnostics.
+      diagnostics.
 - [ ] Host events are typed and cannot update a closed or replaced owner.
 - [ ] WebSocket, timer, fetch, and page-read handles close idempotently.
 - [ ] Malformed ingress is bounded before expensive parsing.
 - [ ] Disabled and removed relays stay excluded.
 - [ ] Partial relay failure is diagnostic and never blocks reachable relays.
 - [ ] Progressive snapshots include per-relay state, EOSE, timeout, auth
-  required, malformed count, and clamped filters.
+      required, malformed count, and clamped filters.
 - [ ] Parity and deletion ledgers state the actual status.

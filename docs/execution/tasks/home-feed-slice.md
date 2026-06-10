@@ -26,15 +26,15 @@ real proof.
 ## Next Checklist
 
 - [ ] Read Home product, followees, Home runtime, feed source, and UI runtime
-  contracts.
+      contracts.
 - [ ] Update product or runtime docs only for behavior that is actually
-  implemented.
+      implemented.
 - [ ] Add Home query input and view-model tests that consume shared feed rows.
 - [ ] Add minimal Leptos row rendering for event, unavailable, diagnostic, and
-  footer rows.
+      footer rows.
 - [ ] Keep TypeScript timeline and tab glue while Svelte remains shipped owner.
 - [ ] Run app Home, UI Home, timeline reducer, tab-retention, and Rust/WASM
-  gates; then record actual verification.
+      gates; then record actual verification.
 
 ## Acceptance
 

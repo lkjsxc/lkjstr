@@ -27,14 +27,14 @@ and progressive snapshots.
 ## Next Checklist
 
 - [ ] Read feed runtime, feed-surface, app feed, storage cache, and relay page
-  contracts.
+      contracts.
 - [ ] Update feed runtime docs before changing row or footer semantics.
 - [ ] Add stable row-id and feed row view-model data types in `lkjstr-app`.
 - [ ] Add conversions from cache/protocol render plans and unavailable states.
 - [ ] Add pure tests for row ids, duplicate merge, unavailable, diagnostic,
-  footer, and no-placeholder states.
+      footer, and no-placeholder states.
 - [ ] Run app feed view-model and protocol tests; then record actual
-  verification.
+      verification.
 
 ## Acceptance
 
