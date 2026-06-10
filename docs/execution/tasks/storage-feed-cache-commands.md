@@ -20,7 +20,7 @@ metadata. Product feed runtime consumption remains partial.
 - Shipped Svelte feed surfaces still use TypeScript repositories until Rust feed
   runtime parity exists.
 
-## Current Next Edit
+## Next Edit
 
 1. Preserve implemented event-cache, feed-cursor, coverage, scan-hint, and
    optimizer command metadata while retention lands.
@@ -38,13 +38,21 @@ metadata. Product feed runtime consumption remains partial.
   scan-model tests.
 - [ ] Update verification evidence only with commands actually run.
 
-## Target Behavior
+## Acceptance
 
 Event and feed commands name every statement and table touched by the batch.
 Ledger-backed writes store resource rows and `cache_ledger` rows in the same
 batch. Coverage reads preserve route group, semantic key, filter shape, interval,
 and relay evidence. Incomplete, failed, stale, compacted, dense, or missing
 coverage cannot prove absence.
+
+## Files To Read
+
+- `docs/architecture/data/feed-coverage.md`.
+- `docs/architecture/data/cache-first-feed-pages.md`.
+- `docs/architecture/rust-wasm/cutover/storage-wiring.md`.
+- `crates/lkjstr-storage/src/feed_cache.rs`.
+- `crates/lkjstr-web/src/sqlite_store/feed_cache.rs`.
 
 ## Docs To Update First
 
@@ -54,7 +62,7 @@ coverage cannot prove absence.
 - `docs/architecture/rust-wasm/cutover/areas/storage.md`.
 - `docs/architecture/rust-wasm/cutover/verification-ledger.md` after checks run.
 
-## Rust Files To Touch
+## Files To Touch
 
 - `crates/lkjstr-storage/src/events.rs`.
 - `crates/lkjstr-storage/src/feed_cache.rs`.

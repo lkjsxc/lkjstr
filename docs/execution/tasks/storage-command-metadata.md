@@ -28,7 +28,7 @@ and pressure inventory.
 - Event and feed writes use batch metadata because one command may touch
   resource rows, child rows, provenance rows, and `cache_ledger` rows.
 
-## Current Next Edit
+## Next Edit
 
 1. Preserve retention, repair, and Search command specs with real statement ids,
    manifest tables, codecs, problem kinds, ledger policy, protection policy,
@@ -57,7 +57,7 @@ and pressure inventory.
 - [ ] Run the storage command focused gate and update verification evidence with
   actual commands.
 
-## Target Behavior
+## Acceptance
 
 Each live command names its id, family, operation kind, input type, output type,
 statement ids, tables, row codecs, stable problem kinds, data classes, ledger
@@ -83,7 +83,7 @@ ledger policy. Protected commands are protected and never prunable.
 - `docs/architecture/rust-wasm/cutover/storage-wiring.md`.
 - `docs/architecture/rust-wasm/cutover/verification-ledger.md` after checks run.
 
-## Rust Files To Touch
+## Files To Touch
 
 - `crates/lkjstr-storage/src/commands/**`.
 - `crates/lkjstr-storage/src/lib.rs` when public exports move.

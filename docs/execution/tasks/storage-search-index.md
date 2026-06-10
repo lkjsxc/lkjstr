@@ -17,10 +17,12 @@ Search runtime parity remains a later surface task.
 - Rust storage owns tokenization, token row codecs, search SQL table/index
   records, tag lookup metadata, update-event-index metadata, and local-query
   metadata.
+- `crates/lkjstr-web/src/sqlite_store/search.rs` exposes local indexed query
+  adapters and event-write token batch steps.
 - App-level planner, relay NIP-50 merge, Leptos Search parity, and no-import
   proof remain open.
 
-## Current Next Edit
+## Next Edit
 
 1. Keep shipped TypeScript Search paths active.
 2. Keep relay NIP-50 merge decisions in app and relay runtime code.
@@ -43,12 +45,20 @@ Search runtime parity remains a later surface task.
 - [x] Add local query worker adapter compile proof.
 - [ ] Add product planner, NIP-50 merge, and UI parity tests.
 
-## Target Behavior
+## Acceptance
 
 Rust storage owns token row codecs, tag lookup command metadata, indexed local
 query commands, and delete/update commands for cached event changes. Product
 search never falls back to full cached-event scans for normal local search.
 NIP-50 merge state stays in app and relay runtime modules, not storage.
+
+## Files To Read
+
+- `docs/product/tools/search.md`.
+- `docs/architecture/data/sqlite-opfs/repositories.md`.
+- `docs/architecture/rust-wasm/cutover/storage-wiring.md`.
+- `crates/lkjstr-storage/src/search.rs`.
+- `crates/lkjstr-web/src/sqlite_store/search.rs`.
 
 ## Docs To Update First
 
@@ -59,13 +69,14 @@ NIP-50 merge state stays in app and relay runtime modules, not storage.
 - `docs/architecture/rust-wasm/cutover/parity-ledger.md` when search status changes.
 - `docs/architecture/rust-wasm/cutover/verification-ledger.md` after checks run.
 
-## Rust Files To Touch
+## Files To Touch
 
-- `crates/lkjstr-storage/src/search.rs` when added.
+- `crates/lkjstr-storage/src/search.rs`.
 - `crates/lkjstr-storage/src/commands/search.rs`.
 - `crates/lkjstr-storage/src/events.rs` for tag lookup linkage when needed.
-- `crates/lkjstr-web/src/sqlite_store/events.rs` as the first bridge, or a new
-  `search.rs` adapter when repository calls exist.
+- `crates/lkjstr-web/src/sqlite_store/events.rs` for tag lookup bridging.
+- `crates/lkjstr-web/src/sqlite_store/search.rs` for local query and token batch
+  adapters.
 - Later product work belongs in `crates/lkjstr-app` search modules.
 
 ## Temporary TypeScript Or Svelte Files To Keep
@@ -87,6 +98,7 @@ until Rust search parity and no-import proof exist.
 ```sh
 cargo test -p lkjstr-storage search
 cargo test -p lkjstr-storage commands
+cargo test -p lkjstr-web sqlite_store
 pnpm test -- tests/unit/search
 pnpm test -- tests/unit/storage/sqlite-opfs-events.test.ts
 ```

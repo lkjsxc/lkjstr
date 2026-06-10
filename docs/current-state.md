@@ -124,8 +124,8 @@ Read next: [architecture/data/README.md](architecture/data/README.md),
   Cache Storage count/status, and old IndexedDB presence; browser byte estimates remain TypeScript-owned.
 - Rust storage command metadata covers active selectors, pressure, protected
   rows, cache/feed evidence, diagnostics, jobs, app log, inventory, optimizer,
-  retention, repair scan/backfill/report rows, and Search token/tag rows.
-  Retention, repair, and Search adapters are partial; product consumption,
+  retention, repair scan/backfill/report rows, Search token/tag rows, and
+  storage/web local-query adapters. Retention and repair product consumption,
   Search app planning, NIP-50 merge, and parity remain open.
 - Rust storage outcomes expose stable problem-kind labels for OPFS failures,
   worker init, temporary memory fallback, repair, decode, active account

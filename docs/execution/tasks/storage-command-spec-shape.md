@@ -24,12 +24,24 @@ remaining command-family coverage stays active.
   provenance rows, and `cache_ledger` rows in one batch, but their command-family
   coverage remains open.
 
-## Implemented Behavior
+## Next Edit
+
+Preserve the implemented batch-capable shape while later command-family metadata
+adds live repository coverage.
+
+## Acceptance
 
 `StorageRepositoryCommandSpec` names command id, family, operation, input type,
 output type, statement ids, table names, row codecs, problem kinds, data
 classes, ledger policy, protection policy, and Stats projection. Metadata stays
 as explicit compile-time arrays with no macro layer.
+
+## Files To Read
+
+- `docs/execution/tasks/storage-command-metadata.md`.
+- `docs/architecture/data/sqlite-opfs/repositories.md`.
+- `docs/architecture/rust-wasm/cutover/storage-wiring.md`.
+- `crates/lkjstr-storage/src/commands/**`.
 
 ## Docs To Update First
 
@@ -39,7 +51,7 @@ as explicit compile-time arrays with no macro layer.
 - `docs/architecture/rust-wasm/cutover/areas/storage.md`.
 - `docs/architecture/rust-wasm/cutover/verification-ledger.md` after checks run.
 
-## Rust Files To Touch
+## Files To Touch
 
 - `crates/lkjstr-storage/src/commands/mod.rs`.
 - `crates/lkjstr-storage/src/commands/spec.rs`.

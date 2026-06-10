@@ -27,7 +27,7 @@ commands.
 - localStorage and Cache Storage byte estimates plus repair action linkage
   remain TypeScript-owned or open until Rust host adapters move.
 
-## Current Next Edit
+## Next Edit
 
 1. Keep pressure and optimizer command metadata intact while inventory moves.
 2. Link browser inventory work to retention and repair outputs instead of
@@ -48,7 +48,7 @@ commands.
 - [ ] Get the full Rust/WASM quiet gate passing; the current run still fails in
   the existing Chrome harness path after focused pressure and Stats checks pass.
 
-## Target Behavior
+## Acceptance
 
 Stats shows persistent OPFS, temporary memory, unavailable, timeout, blocked,
 corrupt, or unknown-old-storage without indefinite loading. Inventory separates
@@ -63,6 +63,14 @@ count/status, and old IndexedDB presence. TypeScript remains the shipped owner
 for browser byte estimates until equivalent Rust host adapters are implemented
 and no-import proof exists.
 
+## Files To Read
+
+- `docs/architecture/data/storage/diagnostics/inventory.md`.
+- `docs/architecture/data/storage/diagnostics/pressure-states.md`.
+- `docs/architecture/data/storage/diagnostics/stats.md`.
+- `docs/operations/storage-pressure-verification.md`.
+- `crates/lkjstr-storage/src/stats.rs`.
+
 ## Docs To Update First
 
 - `docs/architecture/data/storage/diagnostics/inventory.md`.
@@ -72,7 +80,7 @@ and no-import proof exists.
 - `docs/architecture/rust-wasm/cutover/areas/storage.md`.
 - `docs/architecture/rust-wasm/cutover/verification-ledger.md` after checks run.
 
-## Rust Files To Touch
+## Files To Touch
 
 - `crates/lkjstr-storage/src/pressure.rs`.
 - `crates/lkjstr-storage/src/stats.rs`.

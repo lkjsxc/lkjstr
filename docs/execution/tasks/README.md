@@ -38,5 +38,7 @@ Implemented evidence:
 ## Task Rule
 
 A task is not complete until docs, implementation, focused tests, ledger status,
-and actual verification evidence are updated. Do not claim parity or delete
+and actual verification evidence are updated. Task files keep the checked
+Purpose, Status, Current Evidence, Next Edit, Files To Read, Files To Touch,
+Focused Gate, Acceptance, and Must Not headings. Do not claim parity or delete
 TypeScript or Svelte product paths from a task marked partial.

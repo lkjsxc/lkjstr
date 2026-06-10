@@ -5,13 +5,18 @@
 Define the pure Rust row view model shared by Home, Global, Profile, Thread,
 Notifications, Search lists, Author Context, and User Timeline.
 
+## Status
+
+Open after storage proof and relay effect wiring can supply real cache evidence
+and progressive snapshots.
+
 ## Current Evidence
 
 - Rust has feed reducers, geometry, fragments, anchors, LOD, and cache evidence
   pieces.
 - Shipped feed surfaces still render through TypeScript and Svelte runtimes.
 
-## Current Next Edit
+## Next Edit
 
 1. Start after storage command coverage and relay effect wiring can provide real
    cache proof and progressive snapshots.
@@ -31,7 +36,7 @@ Notifications, Search lists, Author Context, and User Timeline.
 - [ ] Run app feed view-model and protocol tests; then record actual
   verification.
 
-## Target Behavior
+## Acceptance
 
 Rows use stable ids and real data only: event rows, profile rows, notification
 rows, explicit unavailable rows, diagnostics, and footers. Components do not
@@ -50,7 +55,7 @@ parse Nostr events.
 - Feed-surface data contract.
 - Parity and verification ledgers after proof exists.
 
-## Rust Files To Touch
+## Files To Touch
 
 - `crates/lkjstr-app/src/feed/view_model/**`.
 - `crates/lkjstr-ui` only after pure view-model tests exist.

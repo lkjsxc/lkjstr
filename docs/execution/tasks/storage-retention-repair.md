@@ -31,9 +31,9 @@ Physical target probes are implemented; product wiring remains open.
 - TypeScript cache cleanup and compaction paths still own many shipped product
   maintenance actions until Rust product consumption is wired.
 - Stats can project real pressure snapshot rows when they exist, but full byte
-  inventory diagnostics and repair physical target probes remain open.
+  inventory diagnostics remain open.
 
-## Current Next Edit
+## Next Edit
 
 1. Keep pure retention planning in `lkjstr-storage` and worker dispatch in
    `lkjstr-web`; do not move storage policy into the host adapter.
@@ -64,7 +64,7 @@ Physical target probes are implemented; product wiring remains open.
 - [ ] Run retention, repair, cache-ledger, cache unit, and Rust/WASM gates; then
   record actual verification.
 
-## Target Behavior
+## Acceptance
 
 Retention selects candidates from `cache_ledger`, skips protected or dynamically
 pinned rows, dispatches table-specific deletes through `lkjstr-web`, and reports
@@ -73,6 +73,14 @@ count, target bytes, deleted or estimated bytes, and exact stop reason. Repair
 reports schema mismatch, corrupt rows, decode failures, incomplete inventory,
 temporary memory mode, orphan rows, skipped unknown rows, chunk continuation,
 and backfill results without silently marking unknown rows safe.
+
+## Files To Read
+
+- `docs/architecture/data/storage/retention/README.md`.
+- `docs/architecture/data/storage/retention/deletion.md`.
+- `docs/architecture/data/storage/retention/repair.md`.
+- `docs/architecture/data/storage/diagnostics/pressure-states.md`.
+- `docs/architecture/rust-wasm/cutover/storage-wiring.md`.
 
 ## Docs To Update First
 
@@ -83,7 +91,7 @@ and backfill results without silently marking unknown rows safe.
 - `docs/architecture/rust-wasm/cutover/areas/storage.md`.
 - `docs/architecture/rust-wasm/cutover/verification-ledger.md` after checks run.
 
-## Rust Files To Touch
+## Files To Touch
 
 - `crates/lkjstr-storage/src/ledger.rs` only if resource ownership changes.
 - `crates/lkjstr-storage/src/resource.rs` only if resource kinds change.
@@ -96,8 +104,8 @@ and backfill results without silently marking unknown rows safe.
 - `crates/lkjstr-web/src/sqlite_store/cache_ledger.rs` for shared ledger steps.
 - `crates/lkjstr-storage/src/repair/**` for the implemented storage-owned
   model.
-- `crates/lkjstr-web/src/sqlite_store/repair.rs` for the implemented basic
-  worker adapter and next physical target probes.
+- `crates/lkjstr-web/src/sqlite_store/repair.rs` for the implemented worker
+  adapter and physical target probes.
 
 ## Temporary TypeScript Or Svelte Files To Keep
 

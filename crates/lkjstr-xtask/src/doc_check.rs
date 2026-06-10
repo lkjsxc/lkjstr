@@ -11,6 +11,7 @@ pub fn check(root: &Path) -> Result<(), String> {
         }
         let text = fs::read_to_string(&file).map_err(|error| format!("{rel}: {error}"))?;
         check_doc_shape(&mut problems, &rel, &text);
+        check_task_doc_shape(&mut problems, &rel, &text);
     }
     check_docs_topology(root, &mut problems)?;
     if problems.is_empty() {
@@ -46,6 +47,30 @@ fn check_prose_width(problems: &mut Vec<String>, rel: &str, text: &str) {
         let table = line.trim().starts_with('|') && line.trim().ends_with('|');
         if !in_code && !table && line.len() > 160 {
             problems.push(format!("{rel}: line {} exceeds 160 prose chars", index + 1));
+        }
+    }
+}
+
+const REQUIRED_TASK_HEADINGS: &[&str] = &[
+    "Purpose",
+    "Status",
+    "Current Evidence",
+    "Next Edit",
+    "Files To Read",
+    "Files To Touch",
+    "Focused Gate",
+    "Acceptance",
+    "Must Not",
+];
+
+fn check_task_doc_shape(problems: &mut Vec<String>, rel: &str, text: &str) {
+    if !rel.starts_with("docs/execution/tasks/") || rel == "docs/execution/tasks/README.md" {
+        return;
+    }
+    for heading in REQUIRED_TASK_HEADINGS {
+        let marker = format!("## {heading}");
+        if !text.lines().any(|line| line == marker.as_str()) {
+            problems.push(format!("{rel}: task doc missing {heading}"));
         }
     }
 }

@@ -11,6 +11,7 @@ commands.
 - `check-repo.ts`: repository contract checker.
 - `repo-compose.ts`: Docker Compose guardrails.
 - `repo-docs.ts`: docs topology and prose checks.
+- `repo-doc-task-shape.ts`: required headings for execution task files.
 - `repo-source-classes.ts`: TypeScript AST guard that rejects first-party
   classes under `src/`.
 - `run-quiet.ts`: quiet verification runner for agents and CI.

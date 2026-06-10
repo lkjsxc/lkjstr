@@ -5,13 +5,18 @@
 Wire pure relay reducer effects to browser WebSocket, timer, diagnostic, and
 NIP-11 host actions without moving relay correctness into `lkjstr-web`.
 
+## Status
+
+Open after the active storage slice has enough proof for relay diagnostics and
+route-evidence dependencies.
+
 ## Current Evidence
 
 - `lkjstr-relays` owns pure queues, budgets, leases, route groups, ingress, and
   progressive snapshots.
 - `lkjstr-web/src/relay_host/**` owns socket and timeout foundations.
 
-## Current Next Edit
+## Next Edit
 
 1. Start only after storage command coverage is stable enough for diagnostics,
    route evidence, optimizer rows, and Stats paths.
@@ -31,7 +36,7 @@ NIP-11 host actions without moving relay correctness into `lkjstr-web`.
 - [ ] Run relay, web relay host, browser host, and Rust/WASM gates; then record
   actual verification.
 
-## Target Behavior
+## Acceptance
 
 A host runner maps reducer effects to open socket, send frame, close socket,
 schedule timeout, clear timeout, fetch NIP-11, emit diagnostic, and feed parsed
@@ -50,7 +55,7 @@ host events back to reducers. Owner cleanup rejects late events.
 - `docs/execution/current-blockers.md` when scope changes.
 - Verification ledger after checks run.
 
-## Rust Files To Touch
+## Files To Touch
 
 - `crates/lkjstr-web/src/relay_host/effect_runner.rs`.
 - Split existing relay host files before exceeding line caps.

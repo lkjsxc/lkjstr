@@ -38,6 +38,27 @@ change and Docker Compose verification is either run or recorded as not run.
 | Cloudflare static hosting       | `pnpm cloudflare:quiet`                                                                                                         | `docker compose run --rm cloudflare` | Cloudflare remains static hosting only.                                 |
 | App smoke                       | `pnpm verify:quiet`                                                                                                             | `docker compose run --rm app-smoke`  | Proves nonblank root workspace response.                                |
 
+## Current Run Notes
+
+- 2026-06-10 documentation task-shape and Search command-status checks passed.
+  Commands:
+  - `pnpm check:repo`.
+  - `PATH=/home/lkjsxc/.cargo/bin:$PATH cargo fmt --check`.
+  - `PATH=/home/lkjsxc/.cargo/bin:$PATH cargo clippy -p lkjstr-xtask --all-targets -- -D warnings`.
+  - `PATH=/home/lkjsxc/.cargo/bin:$PATH cargo run -p lkjstr-xtask -- check-docs`.
+  - `PATH=/home/lkjsxc/.cargo/bin:$PATH cargo run -p lkjstr-xtask -- check-lines`.
+  - `PATH=/home/lkjsxc/.cargo/bin:$PATH cargo run -p lkjstr-xtask -- check-storage-manifest-docs`.
+  - `PATH=/home/lkjsxc/.cargo/bin:$PATH cargo run -p lkjstr-xtask -- check-rust-style`.
+  - `PATH=/home/lkjsxc/.cargo/bin:$PATH cargo test -p lkjstr-xtask`.
+  - `PATH=/home/lkjsxc/.cargo/bin:$PATH cargo test -p lkjstr-storage commands`.
+  - `PATH=/home/lkjsxc/.cargo/bin:$PATH cargo test -p lkjstr-storage search`.
+  - `PATH=/home/lkjsxc/.cargo/bin:$PATH cargo test -p lkjstr-web sqlite_store`.
+  - `pnpm test -- tests/unit/search tests/unit/storage/sqlite-opfs-events.test.ts`.
+  - `pnpm test:quiet`.
+- Baseline `PATH=/home/lkjsxc/.cargo/bin:$PATH pnpm rust-wasm:quiet` timed out
+  after 600 seconds before edits and was not rerun after the docs-only change.
+- Docker final gate was not run for this docs-only pass.
+
 ## Recent Focused Evidence
 
 | Date | Area | Commands | Result | Final gate |

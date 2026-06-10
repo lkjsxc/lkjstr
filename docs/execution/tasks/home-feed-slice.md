@@ -5,13 +5,18 @@
 Render the first narrow Home Leptos feed rows from real Rust feed view models
 without claiming broader feed or Home parity.
 
+## Status
+
+Open. Start only after storage, relay effects, and shared feed view models have
+real proof.
+
 ## Current Evidence
 
 - Home remains a shipped TypeScript and Svelte surface.
 - Rust query inputs, feed reducers, cache display policy, and geometry pieces
   exist but are not one product Home runtime yet.
 
-## Current Next Edit
+## Next Edit
 
 1. Start only after the shared Rust feed view model can emit real rows and
    explicit state rows.
@@ -31,7 +36,7 @@ without claiming broader feed or Home parity.
 - [ ] Run app Home, UI Home, timeline reducer, tab-retention, and Rust/WASM
   gates; then record actual verification.
 
-## Target Behavior
+## Acceptance
 
 A narrow Home slice renders real cached rows when coverage proof is complete or
 real progressive relay rows when available. Loading, partial, unavailable,
@@ -50,7 +55,7 @@ retry, and footer states come from Rust data.
 - Parity ledger stays `not implemented` until complete proof exists.
 - Verification ledger after checks run.
 
-## Rust Files To Touch
+## Files To Touch
 
 - `crates/lkjstr-app` Home/feed view-model modules.
 - `crates/lkjstr-ui` Home feed rows.

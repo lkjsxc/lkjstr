@@ -32,6 +32,9 @@ for that subtree.
 - Use explicit statuses: implemented, design-only, not implemented, out of
   scope, or open question.
 - Record uncertainty as an explicit assumption or open question.
+- Task files under `docs/execution/tasks/` must keep the checked headings:
+  Purpose, Status, Current Evidence, Next Edit, Files To Read, Files To Touch,
+  Focused Gate, Acceptance, and Must Not.
 
 ## Directory Rules
 
