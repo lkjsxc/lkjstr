@@ -13,8 +13,8 @@ lives in the linked docs.
 - Use the documented default when no human answer exists, then update the
   relevant docs, implementation, tests, and ledgers in the same change when the
   default changes product behavior.
-- Do not use fake relay data, fake protocol results, fake metadata, fake upload
-  URLs, fake passkey success, or placeholder success UI outside tests.
+- Do not use fake product data or placeholder success UI outside tests. The
+  canonical rule is [../agent/no-fake-data.md](../agent/no-fake-data.md).
 - Do not delete TypeScript or Svelte product code until Rust parity, focused
   tests, a ledger update, and no-import proof exist.
 - Do not make unsupported browser security features silently degrade. Show an

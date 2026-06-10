@@ -24,16 +24,11 @@ Read next: [product/README.md](product/README.md),
   real NIP-02 data may render immediately, cache misses start target discovery,
   and User Timeline can show a truthful target-posts-only degraded mode with
   route-group diagnostics and retryable incomplete states.
-- Shared UI system catalog lives in
-  [architecture/workspace/ui-system/README.md](architecture/workspace/ui-system/README.md).
-  Shipped components cover feed identity headers, user-row overflow menus, flat
-  New Tab, upload gate hints, tile-portaled emoji palettes, feed scroll inset on
-  `.feed-scroll-item`, and profile header layout with following count under the
-  display name. Active polish targets live in
-  [architecture/workspace/ui-system/polish-backlog.md](architecture/workspace/ui-system/polish-backlog.md):
-  tab-kind scroll alignment, hybrid tab shells, attach-click upload routing,
-  emoji placement proof, and tier-tagged height reservation. Reply and zap
-  expanded panels remain a documented enrichment-tier gap.
+- Shared UI system catalog and shipped component list live in
+  [architecture/workspace/ui-system/README.md](architecture/workspace/ui-system/README.md);
+  polish acceptance rows live in
+  [architecture/workspace/ui-system/polish-backlog.md](architecture/workspace/ui-system/polish-backlog.md).
+  Reply and zap expanded panels remain a documented enrichment-tier gap.
 - New Tab includes a fixed `lkjsxc` choice that opens the public User Timeline
   for `0f38afb23cec30570ee64f9a4aa099229395ec3371c5fe867e09c9111480015d`.
 - Search is treated as complete only when the local SQLite token index and
@@ -175,21 +170,15 @@ Read next: [architecture/workspace/README.md](architecture/workspace/README.md),
   required relay, route group, semantic key, filter shape, and bounded interval.
   Incomplete, failed, compacted, dense, stale, or missing evidence cannot prove
   absence.
-- Rust owns pure feed row geometry estimates, reservation decisions,
-  width-bucketed measured-height model updates, anchor compensation,
-  long-content visual-fragment planning, and a pure real-data feed LOD tree.
-  Shipped feed rows measure real content inside the reserved wrapper so
-  overestimated repost and reference reservations can shrink after materialized
-  measurement without recording the blank min-height gap as content.
-  Svelte feed code is host glue: it reports DOM observations, applies Rust
-  reservation decisions when the bridge is available, preserves measured
-  reservations through unload and dematerialization, and renders oversized
-  events as real visual fragments in the single feed scroll flow. Session-only
-  TypeScript reservation maps remain a bridge fallback, not the durable source
-  of truth. SQLite-backed row-height observation persistence remains incomplete
-  and must use typed worker repositories when added. LOD forgetting degrades
-  low-value branches from full rows to shells, blocks, and recovery recipes
-  without creating fake rows.
+- Rust owns pure feed row geometry estimates, reservation decisions, anchor
+  compensation, long-content visual fragments, and a real-data feed LOD tree.
+  Svelte feed code is host glue that applies Rust decisions when the bridge is
+  available, with session-only TypeScript estimates as the fallback only.
+  SQLite-backed row-height persistence remains incomplete and must use typed
+  worker repositories when added. Reservation, unload-stability, and LOD rules
+  live in
+  [architecture/data/feed-surface/height-reservation.md](architecture/data/feed-surface/height-reservation.md)
+  and [architecture/data/feed-surface/lod-tree.md](architecture/data/feed-surface/lod-tree.md).
 
 ## Network And Runtimes
 

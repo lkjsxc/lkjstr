@@ -15,7 +15,8 @@ no-import proof allow removal.
 ## Read Order
 
 1. Start with [../current-state.md](../current-state.md).
-2. Read [agent-route.md](agent-route.md) for the shortest executable route.
+2. Read [../agent/work-loop.md](../agent/work-loop.md) for the change loop
+   and the skill index.
 3. Read [operating-rules.md](operating-rules.md) for autonomous work rules.
 4. Read [current-blockers.md](current-blockers.md) to choose the next slice.
 5. Read the area README and contracts linked by the blocker row.
@@ -54,8 +55,6 @@ images were built and the services ran from those images.
 
 ## Table of Contents
 
-- [agent-route.md](agent-route.md): shortest read, change, proof, ledger, and
-  deletion route.
 - [operating-rules.md](operating-rules.md): rules for autonomous decisions,
   deletion, fake data, security states, and docs alignment.
 - [current-blockers.md](current-blockers.md): dependency-ordered blocker map

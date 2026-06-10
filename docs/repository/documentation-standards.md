@@ -37,6 +37,9 @@ for that subtree.
 - Task files under `docs/execution/tasks/` must keep the checked headings:
   Purpose, Status, Current Evidence, Next Edit, Files To Read, Files To Touch,
   Focused Gate, Acceptance, and Must Not.
+- Skill files under `docs/agent/skills/` must keep the checked headings:
+  Purpose, Trigger, Read First, Files Likely Touched, Procedure, Focused
+  Gate, Final Gate, Must Not, and Handoff.
 
 ## Directory Rules
 

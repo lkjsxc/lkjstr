@@ -9,6 +9,7 @@ changed. Each docs directory has one README that acts as a table of contents.
 ## Table of Contents
 
 - [current-state.md](current-state.md): concise implemented-state map.
+- [agent/README.md](agent/README.md): agent work loop, handoff, and skills.
 - [product/README.md](product/README.md): user-visible behavior.
 - [protocol/README.md](protocol/README.md): Nostr event and relay rules.
 - [architecture/README.md](architecture/README.md): runtime and data ownership.
@@ -40,8 +41,12 @@ changed. Each docs directory has one README that acts as a table of contents.
 - Security: [security/README.md](security/README.md) and
   [architecture/data/local-secret-security.md](architecture/data/local-secret-security.md).
 - UI system: [architecture/workspace/ui-system/README.md](architecture/workspace/ui-system/README.md).
+- Agent workflow: [agent/README.md](agent/README.md),
+  [agent/work-loop.md](agent/work-loop.md),
+  [agent/no-fake-data.md](agent/no-fake-data.md),
+  [agent/handoff.md](agent/handoff.md), and
+  [agent/skills/README.md](agent/skills/README.md).
 - Execution queue: [execution/README.md](execution/README.md),
-  [execution/agent-route.md](execution/agent-route.md),
   [execution/operating-rules.md](execution/operating-rules.md),
   [execution/current-blockers.md](execution/current-blockers.md),
   [execution/storage-slice.md](execution/storage-slice.md), and
@@ -59,7 +64,12 @@ changed. Each docs directory has one README that acts as a table of contents.
 ## All Files
 
 ```text
-`README.md` `architecture/README.md` `architecture/backend/README.md`
+`README.md` `agent/README.md` `agent/work-loop.md`
+`agent/no-fake-data.md` `agent/handoff.md` `agent/skills/README.md`
+`agent/skills/doc-contract-edit.md` `agent/skills/rust-wasm-slice.md` `agent/skills/storage-kernel.md`
+`agent/skills/relay-runtime.md` `agent/skills/feed-runtime.md` `agent/skills/ui-surface.md`
+`agent/skills/deletion-proof.md` `agent/skills/security-local-keys.md` `agent/skills/agent-maintenance.md`
+`architecture/README.md` `architecture/backend/README.md`
 `architecture/backend/boundary.md` `architecture/backend/cache-budget.md` `architecture/backend/home-query-lifecycle.md`
 `architecture/backend/query-registry.md` `architecture/backend/transport-contract.md` `architecture/data/README.md`
 `architecture/data/bounded-memory.md` `architecture/data/cache-first-feed-pages.md` `architecture/data/event-surface-paging.md`
@@ -147,7 +157,7 @@ changed. Each docs directory has one README that acts as a table of contents.
 `architecture/workspace/workspace-layout-tree.md` `current-state.md`
 `decisions/README.md` `decisions/autonomous-decision-defaults.md` `decisions/browser-first.md`
 `decisions/protocol-kernel.md` `decisions/relay-ownership.md` `decisions/rust-wasm-client.md` `decisions/sqlite-opfs-storage.md`
-`decisions/worker-owned-storage.md` `execution/README.md` `execution/agent-route.md` `execution/current-blockers.md`
+`decisions/worker-owned-storage.md` `execution/README.md` `execution/current-blockers.md`
 `execution/operating-rules.md` `execution/storage-slice.md` `execution/tasks/README.md`
 `execution/tasks/home-feed-slice.md` `execution/tasks/relay-effect-runner.md`
 `execution/tasks/shared-feed-view-model.md` `execution/tasks/storage-active-selector.md`

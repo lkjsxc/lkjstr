@@ -15,6 +15,7 @@ import { checkGithubMetadataReadme } from './repo-github-metadata';
 import { checkStorageManifestDocs } from './repo-storage-manifest';
 import { checkStorageBoundary } from './repo-storage-boundary';
 import { checkTaskDocShape } from './repo-doc-task-shape';
+import { checkSkillDocShape } from './repo-doc-skill-shape';
 
 type Problem = { file: string; message: string };
 
@@ -52,6 +53,7 @@ problems.push(...(await checkGithubMetadataReadme(root)));
 problems.push(...(await checkStorageManifestDocs(root)));
 problems.push(...(await checkStorageBoundary(root, files)));
 problems.push(...(await checkTaskDocShape(root, files)));
+problems.push(...(await checkSkillDocShape(root, files)));
 
 for (const problem of problems.sort((a, b) => a.file.localeCompare(b.file))) {
   console.error(`${problem.file}: ${problem.message}`);

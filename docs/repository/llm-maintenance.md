@@ -7,6 +7,9 @@ change, and verify it with minimal hidden context.
 
 ## Reading Order
 
+The agent entry read order lives in `AGENTS.md`; the per-change loop lives in
+[../agent/work-loop.md](../agent/work-loop.md). For repository maintenance:
+
 1. Read [../current-state.md](../current-state.md) for implemented behavior.
 2. Read the nearest product or architecture contract for the surface being
    changed.

@@ -123,6 +123,7 @@ pnpm cloudflare:dry-run
 All contracts live under [`docs/`](docs/README.md):
 
 - **[docs/current-state.md](docs/current-state.md)** - implemented app state summary.
+- **[docs/agent/](docs/agent/README.md)** - agent work loop, handoff, and skills.
 - **[docs/product/](docs/product/README.md)** - user-facing workspace behavior.
 - **[docs/protocol/](docs/protocol/README.md)** - Nostr and relay protocol support.
 - **[docs/architecture/](docs/architecture/README.md)** - runtime and data ownership.

@@ -1,6 +1,6 @@
 use std::{fs, path::Path};
 
-use crate::{line_check, paths};
+use crate::{doc_shape, line_check, paths};
 
 pub fn check(root: &Path) -> Result<(), String> {
     let mut problems = Vec::new();
@@ -11,7 +11,8 @@ pub fn check(root: &Path) -> Result<(), String> {
         }
         let text = fs::read_to_string(&file).map_err(|error| format!("{rel}: {error}"))?;
         check_doc_shape(&mut problems, &rel, &text);
-        check_task_doc_shape(&mut problems, &rel, &text);
+        doc_shape::check_task_doc_shape(&mut problems, &rel, &text);
+        doc_shape::check_skill_doc_shape(&mut problems, &rel, &text);
     }
     check_docs_topology(root, &mut problems)?;
     check_readme_descendants(root, &mut problems)?;
@@ -89,30 +90,6 @@ fn allows_wide_tables(rel: &str, text: &str) -> bool {
     rel.ends_with("-ledger.md")
         || rel.ends_with("table-manifest.md")
         || text.lines().any(|line| line == "## Matrix")
-}
-
-const REQUIRED_TASK_HEADINGS: &[&str] = &[
-    "Purpose",
-    "Status",
-    "Current Evidence",
-    "Next Edit",
-    "Files To Read",
-    "Files To Touch",
-    "Focused Gate",
-    "Acceptance",
-    "Must Not",
-];
-
-fn check_task_doc_shape(problems: &mut Vec<String>, rel: &str, text: &str) {
-    if !rel.starts_with("docs/execution/tasks/") || rel == "docs/execution/tasks/README.md" {
-        return;
-    }
-    for heading in REQUIRED_TASK_HEADINGS {
-        let marker = format!("## {heading}");
-        if !text.lines().any(|line| line == marker.as_str()) {
-            problems.push(format!("{rel}: task doc missing {heading}"));
-        }
-    }
 }
 
 fn contains_release_shorthand(text: &str) -> bool {
