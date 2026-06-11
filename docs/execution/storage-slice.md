@@ -23,8 +23,8 @@ until Rust covers every live table family and no-import proof is recorded.
   product storage plus partial Rust storage worker adapters.
 - Desired Rust owner: `lkjstr-storage` for policy and rows, `lkjstr-web` for
   worker calls, `lkjstr-app` for product use, and `lkjstr-ui` for Stats views.
-- Next source edit: pressure and Stats proof after repair physical target
-  probes.
+- Next source edit: retention and repair product consumption through the
+  storage-owned inventory readiness signal.
 - Focused tests: pressure, Stats, command, UI Stats, retention, repair, web
   retention, cache unit tests, and `pnpm rust-wasm:quiet` as the touched files
   require.

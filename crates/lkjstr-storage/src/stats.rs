@@ -4,9 +4,13 @@ use serde::{Deserialize, Serialize};
 
 mod bytes;
 mod inventory;
+mod readiness;
 
 pub use crate::stats_rows::{SqliteRowCount, StorageInventoryRow, StorageTableCount};
 pub use bytes::StorageByteInventoryRow;
+pub use readiness::{
+    InventoryReadinessGap, RetentionInventoryReadiness, classify_inventory_for_retention,
+};
 
 use crate::pressure::StoragePressureSnapshotRecord;
 use crate::storage_health::SqliteStorageHealth;

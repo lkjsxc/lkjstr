@@ -33,6 +33,13 @@ count/status, and old IndexedDB presence rows even when the SQLite worker is
 unavailable. Byte estimates for non-indexed browser storage remain transitional
 until Rust host adapters own that scan.
 
+Stats snapshots also expose a storage-owned retention readiness classifier.
+It permits byte-based ledger retention only when pressure bytes are recorded,
+prunable bytes are known, storage APIs are usable, and inventory scans are not
+partial or timed out. The classifier reports old IndexedDB presence as
+`unknown-unowned-usage`; it reports count-only localStorage and Cache Storage
+rows as diagnostic-only `not-recorded` byte evidence.
+
 ## Groups
 
 Stats groups bytes as:

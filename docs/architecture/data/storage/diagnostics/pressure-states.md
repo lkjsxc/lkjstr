@@ -44,7 +44,9 @@ Compaction records one final stop reason:
 
 Stats projects these stop reasons from real pressure snapshot rows. If the row
 is missing or unreadable, pressure byte rows stay unavailable with the storage
-problem reason instead of reporting `target-met` or zero-byte success.
+problem reason instead of reporting `target-met` or zero-byte success. The Rust
+retention-readiness classifier reuses the same labels so retention and repair
+consume inventory gaps without inventing different reasons.
 
 `below-target` and `target-met` are successful terminal states and do not map to
 storage problem kinds. The remaining stop reasons map to stable pressure

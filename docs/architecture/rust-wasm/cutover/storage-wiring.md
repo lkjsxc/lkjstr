@@ -13,8 +13,8 @@ condition that allows TypeScript product storage deletion.
   optimizer rows, pressure rows, inventory, and app log.
 - Desired Rust owner: storage command specs in `lkjstr-storage`, worker effects
   in `lkjstr-web`, and product consumption in `lkjstr-app` and `lkjstr-ui`.
-- Next source edit: pressure and Stats proof, then inventory linkage to
-  retention and repair product consumption.
+- Next source edit: retention and repair product consumption through the
+  storage-owned inventory readiness signal.
 - Focused tests: `cargo test -p lkjstr-storage pressure`,
   `cargo test -p lkjstr-storage stats`, `cargo test -p lkjstr-storage commands`,
   `cargo test -p lkjstr-ui stats`, touched web adapter tests, cache unit tests,
@@ -65,8 +65,9 @@ repair inventory report, repair target probes, Search token rows, tag lookup,
 event-write token batch steps, and local indexed Search query adapters are
 implemented at the storage and web-adapter boundary.
 
-Retention product consumption, pressure inventory completion, Search app
-planning, NIP-50 merge, and surface parity remain open.
+Retention and repair product consumption, Search app planning, NIP-50 merge,
+and surface parity remain open. Pressure inventory has a storage-owned
+readiness classifier, while browser byte estimates remain open.
 
 ## Storage Families
 

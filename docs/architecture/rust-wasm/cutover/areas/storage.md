@@ -20,8 +20,8 @@ removed.
   optimizer, and Stats.
 - Desired Rust owner: `lkjstr-storage`, `lkjstr-web`, `lkjstr-app`, and
   `lkjstr-ui` along the storage-kernel boundary.
-- First source edit: pressure inventory completion after implemented repair
-  target probes.
+- First source edit: retention and repair product consumption through the
+  storage-owned inventory readiness signal.
 - Focused tests: pressure, Stats, command, retention, and repair tests in
   `lkjstr-storage`, UI Stats tests in `lkjstr-ui`, web retention or repair
   tests when adapters change, cache unit tests, and `pnpm rust-wasm:quiet`.
@@ -64,17 +64,19 @@ removed.
   implemented; product consumption remains open. Repair metadata, storage-owned
   models, worker health/outcome mapping, and ledger backfill batching are
   implemented. Search token rows, tag lookup metadata, event-write token
-  batches, local indexed query adapters, physical repair probes, and Stats
-  browser-storage count diagnostics are implemented; Search app planning,
-  NIP-50 merge, browser byte estimates, and feed consumption remain open.
+  batches, local indexed query adapters, physical repair probes, Stats
+  browser-storage count diagnostics, and storage-owned inventory readiness
+  classification are implemented; Search app planning, NIP-50 merge, browser
+  byte estimates, and feed consumption remain open.
 - Command metadata status: active selector, pressure, protected rows, event
   cache, feed evidence, relay diagnostics, notifications, jobs, app log,
   inventory snapshot, optimizer scan-model rows, retention planner rows,
   retention delete dispatch rows, repair scan/probe/backfill/report rows, and
   Search token/tag rows are implemented. Search app planning, NIP-50 merge,
   Leptos parity, and deletion proof are not implemented.
-- Next task order: pressure and Stats proof, inventory linkage to retention and
-  repair, relay effect wiring, shared feed runtime, and Home feed slice.
+- Next task order: retention and repair product consumption through the
+  readiness signal, relay effect wiring, shared feed runtime, and Home feed
+  slice.
 
 ## Acceptance Checklist
 
@@ -110,6 +112,8 @@ removed.
       snapshot instead of indefinite loading.
 - [x] Rust Stats projects protected bytes, prunable bytes, unknown storage,
       residual overhead, and exact stop reason from a real pressure snapshot row.
+- [x] Rust storage classifies Stats inventory for retention readiness without
+      turning count-only or unknown browser storage into cleanup evidence.
 - [x] Retention dispatch deletes only ledger-backed prunable statement routes
       and reports counts in Rust adapter tests.
 - [x] Repair storage models report schema mismatch, corrupt rows, decode

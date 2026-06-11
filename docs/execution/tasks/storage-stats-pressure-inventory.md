@@ -24,14 +24,17 @@ commands.
 - Rust host Stats surfaces localStorage count/status, Cache Storage
   count/status, and old IndexedDB presence rows, including when SQLite worker
   inventory is unavailable.
+- Rust storage now classifies Stats snapshots for retention readiness with
+  exact inventory, storage API, unknown/unowned, not-recorded, timeout, blocked,
+  and corrupt gap labels.
 - localStorage and Cache Storage byte estimates plus repair action linkage
   remain TypeScript-owned or open until Rust host adapters move.
 
 ## Next Edit
 
 1. Keep pressure and optimizer command metadata intact while inventory moves.
-2. Link browser inventory work to retention and repair outputs instead of
-   inventing standalone byte safety.
+2. Preserve the storage-owned readiness classifier that links browser inventory
+   to retention and repair outputs without inventing standalone byte safety.
 3. Keep Cache Storage cleanup and byte estimates out of scope until the count
    diagnostics are verified.
 
@@ -45,8 +48,11 @@ commands.
 - [x] Add Stats projections for pressure unavailable modes and stop reasons.
 - [x] Add Rust UI tests for explicit unavailable states where browser rendering
       coverage is stable.
-- [ ] Get the full Rust/WASM quiet gate passing; the current run still fails in
-      the existing Chrome harness path after focused pressure and Stats checks pass.
+- [x] Add storage-owned retention readiness classification for pressure bytes,
+      count-only browser rows, old IndexedDB presence, partial scans, and
+      temporary-memory mode.
+- [ ] Preserve the passing Rust/WASM quiet gate and record future failures with
+      exact harness diagnostics.
 
 ## Acceptance
 
@@ -59,9 +65,9 @@ unavailable reason.
 
 The current Rust slice covers SQLite health, SQLite table counts, saved pressure
 snapshots, pressure byte-summary rows, localStorage count/status, Cache Storage
-count/status, and old IndexedDB presence. TypeScript remains the shipped owner
-for browser byte estimates until equivalent Rust host adapters are implemented
-and no-import proof exists.
+count/status, old IndexedDB presence, and a storage-owned retention readiness
+classifier. TypeScript remains the shipped owner for browser byte estimates
+until equivalent Rust host adapters are implemented and no-import proof exists.
 
 ## Files To Read
 

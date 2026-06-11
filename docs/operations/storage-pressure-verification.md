@@ -41,6 +41,9 @@ unknown origin usage as success.
 - Rust Stats inventory rows show localStorage count/status, Cache Storage
   count/status, and old IndexedDB presence without claiming byte-accurate
   cleanup evidence.
+- Rust storage readiness links Stats inventory to retention and repair: missing
+  pressure rows, partial scans, temporary memory, and old IndexedDB presence use
+  exact gap labels instead of byte-safe cleanup claims.
 - Repair deletes orphan ledger rows, backfills missing rows, removes safe
   unowned cache rows, and never adds ledger rows for protected route blocks.
 - If browser usage remains over target, Stats reports

@@ -61,6 +61,18 @@ When the pressure snapshot is missing, timed out, blocked, corrupt, or otherwise
 unavailable, each byte row carries that status and has no byte count. Stats must
 not infer byte classes from SQLite table counts alone.
 
+## Retention And Repair Readiness
+
+Rust storage classifies each Stats snapshot before retention or repair consumes
+it. The readiness model names known pressure byte classes, diagnostic-only
+count rows, and blocking gaps with the same labels used by pressure and Stats:
+`inventory-incomplete`, `storage-api-unavailable`, `unknown-unowned-usage`,
+`not-recorded`, `timeout`, `blocked`, and `corrupt`. A complete pressure
+snapshot with known prunable bytes can enable ledger-backed retention planning.
+Missing pressure rows, partial scans, temporary-memory mode, or unknown old
+storage remain explicit gaps; count-only localStorage or Cache Storage rows stay
+diagnostic evidence and never become byte-safe cleanup proof.
+
 ## Old IndexedDB Diagnostics
 
 Old IndexedDB handling is presence-based:

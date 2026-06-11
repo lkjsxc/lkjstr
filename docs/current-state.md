@@ -117,6 +117,8 @@ Read next: [architecture/data/README.md](architecture/data/README.md),
   unavailable, blocked, corrupt, or unknown-old-storage states explicitly.
 - Rust Stats renders pressure byte-summary rows, localStorage count/status,
   Cache Storage count/status, and old IndexedDB presence; browser byte estimates remain TypeScript-owned.
+- Rust storage classifies Stats inventory for retention readiness without using
+  count-only or unknown browser storage as byte-safe cleanup evidence.
 - Rust storage command metadata covers active selectors, pressure, protected
   rows, cache/feed evidence, diagnostics, jobs, app log, inventory, optimizer,
   retention, repair scan/backfill/report rows, Search token/tag rows, and

@@ -43,10 +43,12 @@ metadata.
 - Completion proof: batch-capable Rust command specs cover implemented
   families, retention delete dispatch, repair metadata and probes, Search
   token, tag, and local-query metadata, current pressure byte projections,
-  pressure-state mapping tests, and UI Stats unavailable-state tests.
-- Next proof: link inventory output to retention and repair consumption gaps.
-  Protected rows are never pruned; ledgers stay partial unless no-import proof
-  exists.
+  pressure-state mapping tests, UI Stats unavailable-state tests, and
+  storage-owned inventory readiness classification.
+- Next proof: wire retention and repair product consumption to the readiness
+  signal without treating count-only or unknown browser inventory as byte-safe
+  cleanup evidence. Protected rows are never pruned; ledgers stay partial unless
+  no-import proof exists.
 
 ## 2. Relay effect runner
 
