@@ -10,9 +10,9 @@ ledger-backed prunable rows and must report exact stop reasons.
 
 1. Keep the pure Rust planner, command metadata, and dispatch adapter aligned
    with the statement ids below.
-2. Keep batch outcome mapping covered by `retention_dispatch_failure_test.rs`.
-3. Only after retention dispatch passes focused tests, implement conservative
-   repair commands.
+2. Product retention planning must consume the storage-owned readiness
+   classifier before deriving byte targets from a pressure snapshot.
+3. Keep batch outcome mapping covered by `retention_dispatch_failure_test.rs`.
 
 ## Matrix
 
@@ -54,7 +54,8 @@ failure stop reasons.
 ## Source Steps
 
 1. Read `cache_ledger` candidates with `cache_ledger.compaction_candidates`.
-2. Convert each ledger row into a planner candidate only when the resource kind
+2. Convert each ledger row into a planner candidate only when the readiness
+   classifier allows pressure-byte planning and the resource kind
    is ledger-backed and recoverable.
 3. Sort by score, older update time, resource kind, and resource id.
 4. Skip protected rows, unknown ownership, and dynamic protection pins.

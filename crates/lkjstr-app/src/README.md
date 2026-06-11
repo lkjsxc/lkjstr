@@ -20,6 +20,7 @@ reducers.
 - `orchestration/`: pure read, prefetch, hydration, and retention decisions.
 - `public_chat/`: pure NIP-28 query plans and publish templates.
 - `query/`: pure query-demand planning from product inputs to relay contracts.
+- `storage_maintenance.rs`: readiness-gated retention and repair planning.
 - `user_timeline/`: pure public target timeline discovery planning.
 - `startup_snapshots.rs`: startup filtering for durable tab snapshot rows.
 - `workspace_defaults.rs`: workspace runtime defaults and recovery IDs.

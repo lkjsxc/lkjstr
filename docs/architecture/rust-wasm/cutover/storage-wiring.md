@@ -65,9 +65,10 @@ repair inventory report, repair target probes, Search token rows, tag lookup,
 event-write token batch steps, and local indexed Search query adapters are
 implemented at the storage and web-adapter boundary.
 
-Retention and repair product consumption, Search app planning, NIP-50 merge,
-and surface parity remain open. Pressure inventory has a storage-owned
-readiness classifier, while browser byte estimates remain open.
+Rust app retention and repair planning consumes the storage-owned readiness
+classifier. Search app planning, NIP-50 merge, and surface parity remain open.
+Pressure inventory has a storage-owned readiness classifier, while browser byte
+estimates remain open.
 
 ## Storage Families
 

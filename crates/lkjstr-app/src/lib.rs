@@ -16,6 +16,7 @@ pub mod profile_history;
 pub mod public_chat;
 pub mod query;
 mod startup_snapshots;
+pub mod storage_maintenance;
 pub mod user_timeline;
 mod workspace_defaults;
 pub mod workspace_runtime;
@@ -105,6 +106,10 @@ pub use public_chat::{
     own_mute_plan, route_relays, selected_channel_messages_plan, update_channel_metadata_template,
 };
 pub use query::{QueryDemandInput, QueryDemandPlan, QuerySurface, plan_query_demand};
+pub use storage_maintenance::{
+    StorageMaintenanceInput, StorageMaintenancePlan, StorageRepairConsumption,
+    plan_storage_maintenance,
+};
 pub use user_timeline::{
     DiscoveryRouteGroup, DiscoveryRouteOutcome, DiscoveryRouteSource, UserTimelineDiscoveryInput,
     UserTimelineDiscoveryPlan, UserTimelineDiscoveryState, plan_user_timeline_discovery,

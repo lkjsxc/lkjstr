@@ -12,9 +12,9 @@ The current storage slice preserves implemented active-account selector,
 pressure-row, protected, event-cache, feed-evidence, diagnostics,
 notifications, jobs, app-log, inventory, optimizer, retention planning,
 retention delete dispatch, local Search query adapters, and batch-capable
-command-shape contracts. Repair physical probes are implemented; full physical
-pressure inventory and retention product consumption remain open. It must not
-delete TypeScript storage repositories
+command-shape contracts. Repair physical probes are implemented; Rust product
+maintenance now must consume the storage-owned readiness signal before
+retention or repair acts. It must not delete TypeScript storage repositories
 until Rust covers every live table family and no-import proof is recorded.
 
 ## Agent Start
@@ -23,8 +23,8 @@ until Rust covers every live table family and no-import proof is recorded.
   product storage plus partial Rust storage worker adapters.
 - Desired Rust owner: `lkjstr-storage` for policy and rows, `lkjstr-web` for
   worker calls, `lkjstr-app` for product use, and `lkjstr-ui` for Stats views.
-- Next source edit: retention and repair product consumption through the
-  storage-owned inventory readiness signal.
+- Next source edit: keep expanding storage maintenance consumers while retaining
+  the readiness gate and shipped TypeScript storage paths.
 - Focused tests: pressure, Stats, command, UI Stats, retention, repair, web
   retention, cache unit tests, and `pnpm rust-wasm:quiet` as the touched files
   require.
@@ -76,6 +76,8 @@ until Rust covers every live table family and no-import proof is recorded.
    overhead, and exact pressure stop reasons.
 7. Add retention and repair commands that never prune protected rows and always
    report reasons and counts.
+8. Route product retention and repair planning through the storage-owned
+   readiness classifier before deriving byte targets or repair inputs.
 
 ## Focused Gates
 
@@ -92,7 +94,8 @@ pnpm rust-wasm:quiet
 - Active-account selector, pressure snapshot, and batch command-shape contracts
   remain preserved.
 - Repair and inventory worker gaps gain truthful command specs while retention
-  delete dispatch and local Search query stay covered by Rust adapter tests.
+  delete dispatch, readiness-gated product planning, and local Search query stay
+  covered by focused Rust tests.
 - Product modules call typed repositories only.
 - Main-thread product code does not open SQLite or OPFS directly.
 - Stats shows storage health, mode, and real pressure snapshot fields without

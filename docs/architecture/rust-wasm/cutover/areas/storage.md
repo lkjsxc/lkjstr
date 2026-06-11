@@ -60,23 +60,23 @@ removed.
   from real snapshot rows. Rust Accounts product wiring now resolves active
   selectors through the SQLite worker and treats the old localStorage key as a
   migration source only. Optimizer scan-model command metadata is implemented.
-  Retention planner, command metadata, and delete dispatch adapter are
-  implemented; product consumption remains open. Repair metadata, storage-owned
-  models, worker health/outcome mapping, and ledger backfill batching are
-  implemented. Search token rows, tag lookup metadata, event-write token
-  batches, local indexed query adapters, physical repair probes, Stats
-  browser-storage count diagnostics, and storage-owned inventory readiness
-  classification are implemented; Search app planning, NIP-50 merge, browser
-  byte estimates, and feed consumption remain open.
+  Retention planner, command metadata, delete dispatch adapter, and
+  readiness-gated Rust app product planning are implemented. Repair metadata,
+  storage-owned models, worker health/outcome mapping, ledger backfill batching,
+  and readiness-gated app repair reporting are implemented. Search token rows,
+  tag lookup metadata, event-write token batches, local indexed query adapters,
+  physical repair probes, Stats browser-storage count diagnostics, and
+  storage-owned inventory readiness classification are implemented; Search app
+  planning, NIP-50 merge, browser byte estimates, and feed consumption remain
+  open.
 - Command metadata status: active selector, pressure, protected rows, event
   cache, feed evidence, relay diagnostics, notifications, jobs, app log,
   inventory snapshot, optimizer scan-model rows, retention planner rows,
   retention delete dispatch rows, repair scan/probe/backfill/report rows, and
   Search token/tag rows are implemented. Search app planning, NIP-50 merge,
   Leptos parity, and deletion proof are not implemented.
-- Next task order: retention and repair product consumption through the
-  readiness signal, relay effect wiring, shared feed runtime, and Home feed
-  slice.
+- Next task order: relay effect wiring, shared feed runtime, Home feed slice,
+  Search planning, and broader storage parity proof.
 
 ## Acceptance Checklist
 
@@ -114,6 +114,8 @@ removed.
       residual overhead, and exact stop reason from a real pressure snapshot row.
 - [x] Rust storage classifies Stats inventory for retention readiness without
       turning count-only or unknown browser storage into cleanup evidence.
+- [x] Rust app retention and repair planning consumes the readiness signal
+      before deriving retention byte targets or repair inputs.
 - [x] Retention dispatch deletes only ledger-backed prunable statement routes
       and reports counts in Rust adapter tests.
 - [x] Repair storage models report schema mismatch, corrupt rows, decode

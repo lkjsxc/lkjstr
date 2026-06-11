@@ -10,8 +10,9 @@ may delete or rewrite rows. Unknown rows are never silently marked safe.
 
 1. Keep physical target probes routed by `lkjstr-storage` and executed only by
    approved worker statement ids.
-2. Keep repair deletion disabled until reporting, backfill, target probes,
-   deadlines, cancellation, and late-settlement behavior are verified together.
+2. Product repair planning must consume the storage-owned readiness classifier
+   so incomplete inventory, temporary memory, and unknown/unowned evidence stay
+   visible before any repair action.
 3. Keep Search app planning, relay NIP-50 merge, Leptos parity, and no-import
    deletion proof out of storage and web-adapter command metadata.
 

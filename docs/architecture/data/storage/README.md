@@ -36,8 +36,8 @@ Compose verification.
   protected-tool and Stats storage paths.
 - Desired Rust owner: `lkjstr-storage` policy and metadata, `lkjstr-web` worker
   adapters, `lkjstr-app` product composition, and `lkjstr-ui` Stats models.
-- Next source edit: retention and repair product consumption through the
-  storage-owned inventory readiness signal.
+- Next source edit: keep retention and repair consumers on the storage-owned
+  readiness signal while shipped TypeScript storage paths remain in place.
 - Focused tests: `cargo test -p lkjstr-storage pressure`,
   `cargo test -p lkjstr-storage stats`, `cargo test -p lkjstr-storage commands`,
   `cargo test -p lkjstr-ui stats`, adapter tests for touched web paths, cache
@@ -108,6 +108,10 @@ is not an acceptable steady state.
 
 `cacheLedger` is the only eviction queue. Cache pressure deletes by manifest
 dispatcher, skips durable and dynamic protection, and records the pressure state
-that remains. If all eligible rows are gone and the browser still reports high
-usage, Stats must show protected data, overhead, incomplete inventory, or
-unavailable APIs instead of a silent success.
+that remains. Rust product maintenance consumes the storage-owned readiness
+classifier before retention or repair acts. Count-only browser inventory,
+unknown storage, old IndexedDB presence, residual browser overhead, and unowned
+storage are diagnostic or repair evidence, never byte-safe cleanup evidence. If
+all eligible rows are gone and the browser still reports high usage, Stats must
+show protected data, overhead, incomplete inventory, or unavailable APIs instead
+of a silent success.

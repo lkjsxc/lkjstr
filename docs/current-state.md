@@ -117,13 +117,15 @@ Read next: [architecture/data/README.md](architecture/data/README.md),
   unavailable, blocked, corrupt, or unknown-old-storage states explicitly.
 - Rust Stats renders pressure byte-summary rows, localStorage count/status,
   Cache Storage count/status, and old IndexedDB presence; browser byte estimates remain TypeScript-owned.
-- Rust storage classifies Stats inventory for retention readiness without using
-  count-only or unknown browser storage as byte-safe cleanup evidence.
+- Rust app storage maintenance consumes the storage-owned retention readiness
+  classifier before retention or repair planning, without using count-only,
+  unknown, old IndexedDB, residual overhead, or unowned browser storage as
+  byte-safe cleanup evidence.
 - Rust storage command metadata covers active selectors, pressure, protected
   rows, cache/feed evidence, diagnostics, jobs, app log, inventory, optimizer,
   retention, repair scan/backfill/report rows, Search token/tag rows, and
-  storage/web local-query adapters. Retention and repair product consumption,
-  Search app planning, NIP-50 merge, and parity remain open.
+  storage/web local-query adapters. Search app planning, NIP-50 merge, broader
+  product parity, and deletion proof remain open.
 - Rust storage outcomes expose stable problem-kind labels for OPFS failures,
   worker init, temporary memory fallback, repair, decode, active account
   selector, pressure snapshot decode, optimizer record decode, pressure stop
