@@ -3,6 +3,7 @@ use lkjstr_domain::TabKind;
 
 use crate::app::RuntimeSignal;
 use crate::workspace::accounts_provider::AccountsProvider;
+use crate::workspace::author_context_provider::AuthorContextFeedProvider;
 use crate::workspace::followees_provider::FolloweesProvider;
 use crate::workspace::global_provider::GlobalFeedProvider;
 use crate::workspace::home_provider::HomeFeedProvider;
@@ -42,6 +43,7 @@ pub(crate) struct TabContentInput {
     pub(crate) search_feed_provider: Option<SearchFeedProvider>,
     pub(crate) notifications_feed_provider: Option<NotificationsFeedProvider>,
     pub(crate) profile_feed_provider: Option<ProfileFeedProvider>,
+    pub(crate) author_context_feed_provider: Option<AuthorContextFeedProvider>,
     pub(crate) profile_copy_provider: Option<ProfileCopyProvider>,
     pub(crate) profile_follow_provider: Option<ProfileFollowProvider>,
     pub(crate) thread_feed_provider: Option<ThreadFeedProvider>,
@@ -53,4 +55,6 @@ pub(crate) struct TabContentInput {
     pub(crate) thread_feed: Option<ThreadFeedView>,
     pub(crate) profile_pubkey: Option<String>,
     pub(crate) thread_event_id: Option<String>,
+    pub(crate) author_context_event_id: Option<String>,
+    pub(crate) author_context_pubkey: Option<String>,
 }

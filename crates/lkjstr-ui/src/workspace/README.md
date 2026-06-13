@@ -10,6 +10,8 @@ New Tab chooser, and converted Rust tool bodies.
 - `accounts.rs`: Rust Accounts body.
 - `accounts_provider.rs`: accounts command provider wrapper.
 - `accounts_row.rs`: row rendering for stored account records.
+- `author_context.rs`: narrow Rust Author Context feed row rendering.
+- `author_context_provider.rs`: async Author Context feed provider wrapper.
 - `followees.rs`: narrow Rust Followees rows from real NIP-02 entries.
 - `followees_provider.rs`: async Followees view-model provider wrapper.
 - `global.rs`: narrow Rust Global feed row rendering.

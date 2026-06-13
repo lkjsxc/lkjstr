@@ -3,6 +3,8 @@
 #[cfg(all(test, target_arch = "wasm32"))]
 wasm_bindgen_test::wasm_bindgen_test_configure!(run_in_browser);
 
+#[cfg(target_arch = "wasm32")]
+mod author_context_host;
 pub mod feed_geometry;
 pub mod follow_graph;
 #[cfg(target_arch = "wasm32")]
@@ -24,8 +26,10 @@ mod thread_feed_status;
 #[cfg(target_arch = "wasm32")]
 pub use mount_api::{
     mount_rust_workspace_shell, mount_rust_workspace_shell_from_db,
-    mount_rust_workspace_shell_from_db_with_worker, mount_rust_workspace_shell_with_global_feed,
-    mount_rust_workspace_shell_with_home_feed, mount_rust_workspace_shell_with_profile_feed,
+    mount_rust_workspace_shell_from_db_with_worker,
+    mount_rust_workspace_shell_with_author_context_feed_provider,
+    mount_rust_workspace_shell_with_global_feed, mount_rust_workspace_shell_with_home_feed,
+    mount_rust_workspace_shell_with_profile_feed,
     mount_rust_workspace_shell_with_profile_feed_and_followees_provider,
     mount_rust_workspace_shell_with_profile_feed_followees_and_user_timeline_provider,
     mount_rust_workspace_shell_with_profile_feed_provider, mount_rust_workspace_shell_with_startup,

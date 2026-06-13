@@ -1,8 +1,9 @@
 use crate::workspace::{
-    AccountsProvider, FolloweesProvider, GlobalFeedProvider, HomeFeedProvider, LogProvider,
-    NotificationsFeedProvider, ProfileCopyProvider, ProfileFeedProvider, ProfileFollowProvider,
-    RelaySettingsProvider, SearchFeedProvider, SettingsProvider, StatsProvider, ThreadFeedProvider,
-    TweetProvider, UploadSettingsProvider, UserTimelineProvider, WorkspacePersistence,
+    AccountsProvider, AuthorContextFeedProvider, FolloweesProvider, GlobalFeedProvider,
+    HomeFeedProvider, LogProvider, NotificationsFeedProvider, ProfileCopyProvider,
+    ProfileFeedProvider, ProfileFollowProvider, RelaySettingsProvider, SearchFeedProvider,
+    SettingsProvider, StatsProvider, ThreadFeedProvider, TweetProvider, UploadSettingsProvider,
+    UserTimelineProvider, WorkspacePersistence,
 };
 
 #[derive(Clone)]
@@ -21,6 +22,7 @@ pub struct HostProviders {
     pub search_feed: SearchFeedProvider,
     pub notifications_feed: NotificationsFeedProvider,
     pub profile_feed: ProfileFeedProvider,
+    pub author_context_feed: AuthorContextFeedProvider,
     pub profile_copy: ProfileCopyProvider,
     pub profile_follow: ProfileFollowProvider,
     pub thread_feed: ThreadFeedProvider,

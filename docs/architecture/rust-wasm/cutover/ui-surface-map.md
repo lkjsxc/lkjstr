@@ -12,8 +12,9 @@ Leptos component group, Rust state owner, and deletion gate.
 - Current Leptos shell code lives under `crates/lkjstr-ui/src/workspace/**`.
 - `TabBody` renders real Leptos Welcome, New Tab, Stats, Log, Accounts, Relay
   Settings, Settings, Upload Settings, Tweet draft, and partial Public Chat
-  surfaces. Other tab kinds still render pending Leptos bodies while shipped
-  behavior remains Svelte.
+  surfaces. Partial feed-family Leptos bodies include injected Author Context
+  shared-feed rows. Other tab kinds still render pending Leptos bodies while
+  shipped behavior remains Svelte.
 
 ## Surface Map
 
@@ -37,7 +38,7 @@ Leptos component group, Rust state owner, and deletion gate.
 | `src/lib/tabs/custom-request/**`, `src/lib/custom-request/**`                                  | `workspace/custom_request/**` to add                          | `lkjstr-app`, `lkjstr-protocol`, `lkjstr-relays`                   | Raw filter parse, clamping, selected relay states, cancellation, and real output pass.           |
 | `src/lib/tabs/public-chat/**`, `src/lib/public-chat/**`                                        | `workspace/public_chat.rs` plus chat modules                  | `lkjstr-app`, `lkjstr-protocol`, `lkjstr-relays`                   | NIP-28 channels, messages, moderation, publish, partial failure, and cleanup pass.               |
 | `src/lib/tabs/profile-edit/**`                                                                 | `workspace/profile_edit/**` to add                            | `lkjstr-protocol`, `lkjstr-app`, `lkjstr-relays`                   | Kind `0` load, edit, sign, publish, retry, and real cache update pass.                           |
-| `src/lib/tabs/author-context/**`, `src/lib/author-context/**`                                  | `workspace/author_context/**` to add                          | `lkjstr-app`, `lkjstr-relays`, `lkjstr-storage`                    | Nearby real author posts, exact reads, route proof, and unavailable states pass.                 |
+| `src/lib/tabs/author-context/**`, `src/lib/author-context/**`                                  | `workspace/author_context*.rs`                                 | `lkjstr-app`, `lkjstr-web`, `lkjstr-relays`, `lkjstr-storage`      | Cache reads, relay reads, action opening, route proof, unavailable states, and no-import pass.   |
 | `src/lib/tabs/followees/**`, `src/lib/follow-graph/**`                                         | `workspace/followees/**` to add                               | `lkjstr-protocol`, `lkjstr-app`, `lkjstr-relays`                   | Real kind `3`, relay discovery, retry, degraded states, and cleanup pass.                        |
 | `src/lib/tabs/user-timeline/**`, `src/lib/user-timeline/**`                                    | `workspace/user_timeline/**` to add                           | `lkjstr-app`, `lkjstr-relays`, `lkjstr-storage`                    | Cache hit, discovery, selected/NIP-65/provenance routes, target-only degraded mode, and UI pass. |
 | `src/lib/tabs/npub-miner/**`, `src/lib/accounts/npub-miner*`                                   | `workspace/mine_npub/**` to add                               | `lkjstr-protocol`, `lkjstr-app`, `lkjstr-web`                      | Bounded worker ownership, cancellation, explicit save, and memory tests pass.                    |

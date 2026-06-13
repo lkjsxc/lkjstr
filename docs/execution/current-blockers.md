@@ -30,7 +30,8 @@ rows, bounded relay NIP-50 merge proof, Search tab snapshot restore, cached
 plus relay older-page proof, cached plus relay-refreshed Profile
 metadata/follow-count header rendering, selected-relay plus stored-route
 Followees/User Timeline kind `3` discovery, and Followees/User Timeline cleanup
-plus retry diagnostics. Do not skip this order for visible polish.
+plus retry diagnostics, and first injected Author Context shared-feed rows. Do
+not skip this order for visible polish.
 
 ## 1. Storage command coverage (implemented enabling proof)
 
@@ -155,9 +156,10 @@ models, anchors, footer states, and unavailable states.
   parent-chain hydration, terminal unavailable-parent rows, Thread continuation
   rows, Search app/UI demand, worker-backed Search provider execution, local
   indexed rows, bounded relay NIP-50 merge proof, Search tab snapshot restore,
-  cached plus relay older-page proof, and Rust/WASM quiet.
-- Remaining completion proof: other feed surfaces still need Rust host parity.
-  Deletion proof remains open.
+  cached plus relay older-page proof, first injected Author Context shared-feed
+  rows, and Rust/WASM quiet.
+- Remaining completion proof: Author Context cache, relay, action-opening, and
+  other feed-surface deletion prerequisites remain open. Deletion proof remains open.
   Missing coverage never proves absence, and no placeholder rows exist.
 
 ## 4. First Home Leptos feed slice

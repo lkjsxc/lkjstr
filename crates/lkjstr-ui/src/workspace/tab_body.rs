@@ -4,6 +4,7 @@ use lkjstr_domain::WorkspaceTab;
 
 use crate::app::RuntimeSignal;
 use crate::workspace::accounts_provider::AccountsProvider;
+use crate::workspace::author_context_provider::AuthorContextFeedProvider;
 use crate::workspace::followees_provider::FolloweesProvider;
 use crate::workspace::global_provider::GlobalFeedProvider;
 use crate::workspace::home_provider::HomeFeedProvider;
@@ -46,6 +47,7 @@ pub fn TabBody(
     search_feed_provider: Option<SearchFeedProvider>,
     notifications_feed_provider: Option<NotificationsFeedProvider>,
     profile_feed_provider: Option<ProfileFeedProvider>,
+    author_context_feed_provider: Option<AuthorContextFeedProvider>,
     profile_copy_provider: Option<ProfileCopyProvider>,
     profile_follow_provider: Option<ProfileFollowProvider>,
     thread_feed_provider: Option<ThreadFeedProvider>,
@@ -61,6 +63,8 @@ pub fn TabBody(
     let title = tab.title;
     let profile_pubkey = tab.config.get("pubkey").cloned();
     let thread_event_id = tab.config.get("eventId").cloned();
+    let author_context_event_id = thread_event_id.clone();
+    let author_context_pubkey = profile_pubkey.clone();
     let input = TabContentInput {
         runtime,
         sequence,
@@ -81,6 +85,7 @@ pub fn TabBody(
         search_feed_provider,
         notifications_feed_provider,
         profile_feed_provider,
+        author_context_feed_provider,
         profile_copy_provider,
         profile_follow_provider,
         thread_feed_provider,
@@ -92,6 +97,8 @@ pub fn TabBody(
         thread_feed,
         profile_pubkey,
         thread_event_id,
+        author_context_event_id,
+        author_context_pubkey,
     };
     view! {
         <div class="lkjstr-tab-body" data-tab-kind=tab_kind_attr(kind)>

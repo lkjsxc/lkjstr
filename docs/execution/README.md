@@ -116,6 +116,8 @@ images were built and the services ran from those images.
   Followees provider and first Rust NIP-02 row proof.
 - [tasks/user-timeline-provider-wiring.md](tasks/user-timeline-provider-wiring.md):
   User Timeline provider and first Rust feed-row proof.
+- [tasks/author-context-provider-wiring.md](tasks/author-context-provider-wiring.md):
+  Author Context provider and first shared-feed row proof.
 - [tasks/search-feed-provider-wiring.md](tasks/search-feed-provider-wiring.md):
   Search provider, local indexed rows, and relay snapshot merge proof.
 - [tasks/thread-feed-provider-wiring.md](tasks/thread-feed-provider-wiring.md):

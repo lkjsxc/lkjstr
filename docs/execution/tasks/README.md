@@ -12,9 +12,8 @@ verification ledgers in the same change.
 Active queue:
 
 - Next shared-feed task comes from
-  [current-blockers.md](../current-blockers.md): continue Followees/User
-  Timeline target/NIP-65/provenance discovery, retry diagnostics, cleanup, and
-  deletion prerequisites.
+  [current-blockers.md](../current-blockers.md): continue remaining feed-surface
+  host parity and deletion prerequisites.
 
 Storage evidence to preserve:
 
@@ -64,6 +63,9 @@ Implemented evidence:
 - [user-timeline-provider-wiring.md](user-timeline-provider-wiring.md): replace
   the Rust User Timeline placeholder with injected and default cached real
   event-row proof plus selected-relay kind `3` discovery.
+- [author-context-provider-wiring.md](author-context-provider-wiring.md):
+  preserve the first Rust Author Context body from real shared-feed rows
+  without claiming cache, relay, or deletion proof.
 
 ## Task Rule
 

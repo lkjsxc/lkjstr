@@ -1,5 +1,6 @@
 #![doc = "Pure application composition reducers for lkjstr."]
 
+pub mod author_context_feed;
 pub mod cache_display;
 pub mod custom_request;
 pub mod events;
@@ -27,6 +28,11 @@ pub mod user_timeline;
 mod workspace_defaults;
 pub mod workspace_runtime;
 
+pub use author_context_feed::{
+    AuthorContextFeedDiagnosticInput, AuthorContextFeedSourceState, AuthorContextFeedStatus,
+    AuthorContextFeedView, AuthorContextFeedViewInput, author_context_feed_id,
+    build_author_context_feed_view, default_author_context_feed_view,
+};
 pub use cache_display::{
     CacheDisplayEvidence, CacheDisplayMode, cache_display_policy, complete_cache_display,
 };

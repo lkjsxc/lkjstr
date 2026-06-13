@@ -66,6 +66,21 @@ pub fn mount_app_with_global_feed(
 }
 
 #[cfg(target_arch = "wasm32")]
+pub fn mount_app_with_author_context_feed_provider(
+    startup: lkjstr_app::StartupInput,
+    author_context_feed_provider: AuthorContextFeedProvider,
+) {
+    leptos::mount::mount_to_body(move || {
+        leptos::view! {
+            <AppWithStartup
+                startup=startup.clone()
+                author_context_feed_provider=author_context_feed_provider.clone()
+            />
+        }
+    });
+}
+
+#[cfg(target_arch = "wasm32")]
 pub fn mount_app_with_global_feed_provider(
     startup: lkjstr_app::StartupInput,
     global_feed_provider: GlobalFeedProvider,
@@ -163,6 +178,7 @@ pub fn mount_app_with_host(startup: lkjstr_app::StartupInput, providers: HostPro
                 search_feed_provider=providers.search_feed.clone()
                 notifications_feed_provider=providers.notifications_feed.clone()
                 profile_feed_provider=providers.profile_feed.clone()
+                author_context_feed_provider=providers.author_context_feed.clone()
                 profile_copy_provider=providers.profile_copy.clone()
                 profile_follow_provider=providers.profile_follow.clone()
                 thread_feed_provider=providers.thread_feed.clone()

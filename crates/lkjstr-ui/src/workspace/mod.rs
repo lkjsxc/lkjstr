@@ -3,6 +3,8 @@
 mod accounts;
 mod accounts_provider;
 mod accounts_row;
+mod author_context;
+mod author_context_provider;
 mod followees;
 mod followees_provider;
 mod global;
@@ -77,6 +79,9 @@ mod welcome;
 
 pub use accounts_provider::{AccountsCommand, AccountsComplete, AccountsProvider, AccountsResult};
 pub use accounts_provider::{AccountsIdCommand, AccountsInputCommand};
+pub use author_context_provider::{
+    AuthorContextFeedComplete, AuthorContextFeedProvider, AuthorContextFeedRequest,
+};
 pub use followees_provider::{FolloweesComplete, FolloweesProvider, FolloweesRequest};
 pub use global_provider::{
     GlobalFeedComplete, GlobalFeedProvider, GlobalFeedRequest, GlobalOlderRequest,

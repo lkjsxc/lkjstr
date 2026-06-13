@@ -37,6 +37,13 @@ pub fn mount_rust_workspace_shell_with_global_feed(
     lkjstr_ui::mount_app_with_global_feed(startup, global_feed);
 }
 
+pub fn mount_rust_workspace_shell_with_author_context_feed_provider(
+    startup: lkjstr_app::StartupInput,
+    author_context_feed_provider: lkjstr_ui::AuthorContextFeedProvider,
+) {
+    lkjstr_ui::mount_app_with_author_context_feed_provider(startup, author_context_feed_provider);
+}
+
 pub fn mount_rust_workspace_shell_with_profile_feed(
     startup: lkjstr_app::StartupInput,
     active_account_pubkey: String,

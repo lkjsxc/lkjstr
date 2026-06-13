@@ -4,6 +4,7 @@ use lkjstr_domain::TabKind;
 
 use crate::app::RuntimeSignal;
 use crate::workspace::accounts_provider::AccountsProvider;
+use crate::workspace::author_context_provider::AuthorContextFeedProvider;
 use crate::workspace::followees_provider::FolloweesProvider;
 use crate::workspace::global_provider::GlobalFeedProvider;
 use crate::workspace::home_provider::HomeFeedProvider;
@@ -41,6 +42,7 @@ pub fn WorkspaceShell(
     search_feed_provider: Option<SearchFeedProvider>,
     notifications_feed_provider: Option<NotificationsFeedProvider>,
     profile_feed_provider: Option<ProfileFeedProvider>,
+    author_context_feed_provider: Option<AuthorContextFeedProvider>,
     profile_copy_provider: Option<ProfileCopyProvider>,
     profile_follow_provider: Option<ProfileFollowProvider>,
     thread_feed_provider: Option<ThreadFeedProvider>,
@@ -91,6 +93,7 @@ pub fn WorkspaceShell(
                             search_feed_provider=search_feed_provider.clone()
                             notifications_feed_provider=notifications_feed_provider.clone()
                             profile_feed_provider=profile_feed_provider.clone()
+                            author_context_feed_provider=author_context_feed_provider.clone()
                             profile_copy_provider=profile_copy_provider.clone()
                             profile_follow_provider=profile_follow_provider.clone()
                             thread_feed_provider=thread_feed_provider.clone()

@@ -2,17 +2,15 @@ use lkjstr_storage::StorageOutcome;
 use lkjstr_ui::{HostProviders, WorkspacePersistence};
 
 use crate::{
-    accounts_host, accounts_selector_host, app_log_host, browser_inventory, followees_host,
-    global_feed_host,
-    home_feed_host,
+    accounts_host, accounts_selector_host, app_log_host, author_context_host, browser_inventory,
+    followees_host, global_feed_host, home_feed_host,
     host_status::browser_now_ms,
-    notifications_feed_host, profile_feed_host, relay_settings_host, settings_host,
-    search_feed_host, profile_clipboard_host, profile_follow_host,
+    notifications_feed_host, profile_clipboard_host, profile_feed_host, profile_follow_host,
+    relay_settings_host, search_feed_host, settings_host,
     sqlite_host_store::with_sqlite_store,
     sqlite_store::{sqlite_accounts_all, sqlite_storage_stats_snapshot},
     storage_worker::DEFAULT_WORKER_URL,
-    thread_feed_host,
-    tweet_host, upload_settings_host, user_timeline_host, workspace_host,
+    thread_feed_host, tweet_host, upload_settings_host, user_timeline_host, workspace_host,
 };
 
 const DEFAULT_DB_NAME: &str = "lkjstr";
@@ -84,6 +82,7 @@ fn providers(
             db_name.clone(),
             worker_url.clone(),
         ),
+        author_context_feed: author_context_host::author_context_feed_provider(),
         profile_copy: profile_clipboard_host::profile_copy_provider(),
         profile_follow: profile_follow_host::profile_follow_provider_with_worker_url(
             db_name.clone(),
