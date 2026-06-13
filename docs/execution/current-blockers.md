@@ -28,9 +28,9 @@ and Thread continuation rows; the shared Rust feed core now proves owner
 release cleanup plus Search app/UI demand, provider execution, local indexed
 rows, bounded relay NIP-50 merge proof, Search tab snapshot restore, cached
 plus relay older-page proof, cached plus relay-refreshed Profile
-metadata/follow-count header rendering, selected-relay Followees plus User
-Timeline kind `3` discovery, and Followees/User Timeline cleanup plus retry
-diagnostics. Do not skip this order for visible polish.
+metadata/follow-count header rendering, selected-relay plus stored-route
+Followees/User Timeline kind `3` discovery, and Followees/User Timeline cleanup
+plus retry diagnostics. Do not skip this order for visible polish.
 
 ## 1. Storage command coverage (implemented enabling proof)
 
@@ -143,7 +143,7 @@ models, anchors, footer states, and unavailable states.
   Profile Followees/User Timeline/Profile Edit/copy-npub/nprofile/follow-list/relay-set JSON actions,
   Profile Follow/Unfollow state loading plus local and NIP-07 publish without fake success,
   Profile sparse-history empty proof, first Rust Followees NIP-02 row rendering,
-  default cached plus selected-relay Followees host-provider, cleanup, and retry diagnostics proof,
+  default cached plus selected-relay/stored-route/disabled-route Followees host-provider, cleanup, and retry diagnostics proof,
   first Rust User Timeline NIP-02 author-set feed-row rendering,
   default cached User Timeline host-provider proof, selected-relay User
   Timeline kind `3` discovery, stored NIP-65 route discovery, and retry diagnostics proof,

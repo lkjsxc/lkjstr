@@ -11,6 +11,7 @@ mod followees_host;
 mod followees_relay;
 mod followees_relay_input;
 mod followees_relay_read;
+mod followees_routes;
 mod global_feed_cache;
 mod global_feed_coverage;
 mod global_feed_host;

@@ -4,12 +4,14 @@ use lkjstr_app::{
 };
 use lkjstr_domain::seed_relay_sets;
 use lkjstr_protocol::KIND_FOLLOW_LIST;
+use lkjstr_relays::AuthorRelayRoute;
 use lkjstr_storage::{StorageOutcome, StoredEventRecord};
 use lkjstr_ui::FolloweesProvider;
 
 use crate::{
     followees_relay::start_followees_relay_read,
     followees_relay_input::{FolloweesRelayInputSeed, FolloweesRelayReadInput},
+    followees_routes::author_routes,
     host_status::browser_now_ms,
     relay_read_handle::RelayReadSlot,
     relay_selection::selected_read_relays,
@@ -81,6 +83,10 @@ pub(crate) async fn followees_load(
         StorageOutcome::Ok(relays) => relays,
         _ => Vec::new(),
     };
+    let routes = match author_routes(host, &pubkey).await {
+        StorageOutcome::Ok(routes) => routes,
+        _ => Vec::new(),
+    };
     match latest_follow_list(host, &pubkey).await {
         StorageOutcome::Ok(Some(row)) => loaded(
             followees_view_from_summary(
@@ -92,8 +98,13 @@ pub(crate) async fn followees_load(
             None,
         ),
         StorageOutcome::Ok(None) => loaded(
-            loading_selected_model(owner, target_pubkey, &selected),
-            followees_relay_input(owner, &pubkey, &selected),
+            loading_model(owner, target_pubkey, &selected, &routes),
+            crate::followees_relay_input::followees_relay_input(FolloweesRelayInputSeed {
+                owner,
+                target_pubkey: &pubkey,
+                selected_relays: &selected,
+                author_routes: &routes,
+            }),
         ),
         _ => loaded(
             followees_view_from_summary(
@@ -149,32 +160,25 @@ async fn selected_relays(host: &FolloweesHost) -> StorageOutcome<Vec<String>> {
     .await
 }
 
-fn loading_selected_model(
+fn loading_model(
     owner: &str,
     target_pubkey: Option<String>,
     selected: &[String],
+    author_routes: &[AuthorRelayRoute],
 ) -> FolloweesView {
-    if selected.is_empty() {
+    let state = if selected.is_empty() && !author_routes.is_empty() {
+        TargetFollowListState::ReadingAuthorRoutes
+    } else if selected.is_empty() {
         return default_followees_view(owner, target_pubkey);
-    }
+    } else {
+        TargetFollowListState::ReadingSelected
+    };
     followees_view_from_summary(
         owner,
         target_pubkey,
-        TargetFollowListState::ReadingSelected,
+        state,
         empty_summary(),
     )
-}
-
-fn followees_relay_input(
-    owner: &str,
-    target_pubkey: &str,
-    selected_relays: &[String],
-) -> Option<FolloweesRelayReadInput> {
-    crate::followees_relay_input::followees_relay_input(FolloweesRelayInputSeed {
-        owner,
-        target_pubkey,
-        selected_relays,
-    })
 }
 
 fn empty_summary() -> FollowListSummary {

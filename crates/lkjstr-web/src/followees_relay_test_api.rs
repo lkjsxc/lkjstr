@@ -89,6 +89,7 @@ fn input() -> Option<FolloweesRelayReadInput> {
         owner: "followees-tab",
         target_pubkey: &pubkey("a"),
         selected_relays: &["wss://selected.example".to_owned()],
+        author_routes: &[],
     })
 }
 

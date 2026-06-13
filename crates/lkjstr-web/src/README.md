@@ -19,7 +19,8 @@ Source files expose Rust application behavior to the browser through
 - `feed_geometry/`: feed geometry, fragment, measurement, and anchor bridge.
 - `follow_graph/`: target follow-list parser bridge.
 - `followees_host.rs`: SQLite-backed Followees view-model provider.
-- `followees_relay*.rs`: Followees selected-relay follow-list read bridge and probes.
+- `followees_relay*.rs`: Followees selected and route follow-list read bridge and probes.
+- `followees_routes.rs`: Followees stored author-route loader.
 - `global_feed_cache.rs`: Global selected-relay cache evidence composition.
 - `global_feed_host.rs`: SQLite-backed Global feed view-model provider.
 - `global_feed_host_commands.rs`: retained Global older-load host commands.

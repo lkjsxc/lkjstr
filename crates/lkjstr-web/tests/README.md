@@ -15,6 +15,7 @@ Browser-bound WASM tests prove exported functions call real Rust code.
 - `followees_cleanup_test.rs`: Rust Followees selected-relay cleanup browser proof.
 - `followees_provider_test.rs`: Rust Followees tab rendering from host-owned SQLite kind-3 rows.
 - `followees_relay_provider_test.rs`: Rust Followees selected-relay kind-3 discovery proof.
+- `followees_route_provider_test.rs`: Rust Followees stored route discovery proof.
 - `followees_retry_test.rs`: Rust Followees selected-relay retry diagnostic browser proof.
 - `home_feed_provider_test.rs`: Rust Home tab rendering from host-owned SQLite cache evidence.
 - `home_feed_tab_test.rs`: Rust Home tab rendering from injected feed view-model rows.
@@ -26,6 +27,10 @@ Browser-bound WASM tests prove exported functions call real Rust code.
 - `notifications_feed_scroll_older_test.rs`: Rust Notifications downward near-end older scroll browser proof.
 - `notifications_feed_scroll_test.rs`: Rust Notifications tab scroll-owner and row-flow browser proof.
 - `profile_feed_tab_test.rs`: Rust Profile tab rendering from injected feed view-model rows.
+- `profile_copy_support/`: shared copy-action test helpers.
+- `profile_feed_tab_support/`: shared Profile tab browser helpers.
+- `profile_follow_host_support/`: shared Profile follow host test helpers.
+- `support/`: shared browser test support modules.
 - `user_timeline_cleanup_test.rs`: Rust User Timeline selected-relay cleanup browser proof.
 - `user_timeline_provider_test.rs`: Rust User Timeline rendering from host-owned SQLite kind-3 and display rows.
 - `user_timeline_relay_provider_test.rs`: Rust User Timeline selected-relay kind-3 discovery proof.

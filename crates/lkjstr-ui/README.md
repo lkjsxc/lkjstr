@@ -7,6 +7,7 @@ This crate owns Leptos components and CSS-class rendering contracts.
 ## Table of Contents
 
 - [src/](src/): Leptos UI source.
+- [tests/](tests/): focused UI provider and rendering tests.
 
 ## Ownership Index
 

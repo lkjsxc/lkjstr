@@ -9,8 +9,8 @@ deletion proof.
 ## Status
 
 Implemented enabling slice. TypeScript Followees and follow-graph modules remain
-the shipped owner until broader discovery, no-import, and final verification
-proof exist.
+the shipped owner until remaining parity, no-import, and final verification proof
+exist.
 
 ## Current Evidence
 
@@ -40,11 +40,16 @@ proof exist.
   Followees reads close on tab cleanup and forced late relay events do not render.
 - `crates/lkjstr-web/tests/followees_retry_test.rs` proves selected-relay
   no-event reads render retryable diagnostics and Retry starts a new read.
+- `crates/lkjstr-web/src/followees_routes.rs` loads stored author routes and
+  excludes disabled-only route relays.
+- `crates/lkjstr-web/tests/followees_route_provider_test.rs` proves stored
+  NIP-65, provenance, and target routes discover a real follow-list while a
+  disabled stored route is not requested.
 
 ## Next Edit
 
-Continue with broader Followees route discovery and broader User Timeline
-target/NIP-65/provenance discovery parity. Do not start deletion proof yet.
+Continue remaining Followees parity and no-import prerequisites. Do not start
+deletion proof yet.
 
 ## Files To Read
 
@@ -60,7 +65,9 @@ target/NIP-65/provenance discovery parity. Do not start deletion proof yet.
 - `crates/lkjstr-app/src/follow_graph/**`
 - `crates/lkjstr-ui/src/workspace/followees*.rs`
 - `crates/lkjstr-web/src/followees_host.rs`
+- `crates/lkjstr-web/src/followees_routes.rs`
 - `crates/lkjstr-web/tests/profile_feed_tab_test.rs`
+- `crates/lkjstr-web/tests/followees_route_provider_test.rs`
 - Rust/WASM cutover ledgers and `docs/current-state.md`
 
 ## Focused Gate
@@ -71,6 +78,7 @@ cargo test -p lkjstr-ui followees
 cargo check -p lkjstr-web --target wasm32-unknown-unknown
 wasm-pack test --headless --chrome crates/lkjstr-web --test followees_provider_test
 wasm-pack test --headless --chrome crates/lkjstr-web --test followees_relay_provider_test
+wasm-pack test --headless --chrome crates/lkjstr-web --test followees_route_provider_test
 wasm-pack test --headless --chrome crates/lkjstr-web --test followees_cleanup_test
 wasm-pack test --headless --chrome crates/lkjstr-web --test followees_retry_test
 wasm-pack test --headless --chrome crates/lkjstr-web --test profile_feed_tab_test
@@ -87,11 +95,14 @@ pnpm rust-wasm:quiet
   exists.
 - Cache miss starts selected-relay kind `3` discovery and updates from real
   relay events stored in worker SQLite.
+- Stored NIP-65, provenance, and target author routes can discover kind `3`
+  without selected relays.
+- Disabled stored route relays are excluded from Followees discovery.
 - Cleanup closes selected-relay reads and suppresses late relay completions.
 - Selected-relay no-event reads complete to retryable diagnostics and retry
   starts a new bounded read without claiming absence.
 - Profile opening proof reaches the real Followees body.
-- TypeScript Followees and follow-graph paths remain until broader discovery,
+- TypeScript Followees and follow-graph paths remain until remaining parity,
   no-import, and final gates prove deletion readiness.
 
 ## Must Not

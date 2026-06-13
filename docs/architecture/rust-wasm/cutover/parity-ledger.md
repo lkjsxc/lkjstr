@@ -18,7 +18,7 @@ before the SvelteKit product runtime can be removed.
 | Home            | not implemented | `app`, `relays`, `storage`, `ui` feed runtime                 | cache coverage, relay reads, shared query tests, browser feed tests                          |
 | Global          | not implemented | `app`, `relays`, `storage`, `ui` feed runtime                 | selected-relay reads, grouped scans, progressive snapshots                                   |
 | Profile         | not implemented | `app`, `relays`, `storage`, `ui` profile runtime              | metadata card, route reads, posts, identity links                                            |
-| Followees       | partial         | `protocol`, `app`, `web`, `relays`, `ui` follow graph path    | broader relay discovery UI and no-import proof                                               |
+| Followees       | partial         | `protocol`, `app`, `web`, `relays`, `ui` follow graph path    | remaining parity, no-import, and deletion proof                                              |
 | User Timeline   | partial         | `protocol`, `app`, `web`, `relays`, `ui` target timeline path | no-import and deletion proof                                                                 |
 | Thread          | partial         | `app`, `relays`, `storage`, `ui` thread runtime               | root lookup, reply pages, references, exact reads                                            |
 | Notifications   | not implemented | `app`, `relays`, `storage`, `ui` notification runtime         | mentions, reactions, reposts, zaps, older windows                                            |
@@ -93,9 +93,10 @@ metadata/follow-count header rendering, the Followees/User Timeline/Profile
 Edit actions, local/NIP-07 follow publish, and sparse empty coverage rules.
 Rust Followees now has first Leptos rows from real NIP-02 entries injected
 through a provider, and the default browser provider reads cached kind `3` rows
-from worker SQLite, starts selected-relay kind `3` discovery on cache miss, and
-closes the owner relay read on cleanup; no-event selected reads render retry
-diagnostics. Rust User Timeline
+from worker SQLite, starts selected-relay or stored author-route kind `3`
+discovery on cache miss, excludes disabled stored route relays, and closes the
+owner relay read on cleanup; no-event selected reads render retry diagnostics.
+Rust User Timeline
 has first Leptos feed rows from a real NIP-02 author set injected through a
 provider and a default browser provider that reads cached kind `3` author sets
 plus display rows as partial cache evidence, starts selected-relay kind `3`

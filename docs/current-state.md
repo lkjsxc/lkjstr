@@ -19,8 +19,8 @@ Read next: [product/README.md](product/README.md),
   Request, Author Context, Accounts, Relay Settings, Stats, Settings, Upload
   Settings, lkjstr Log, Mine npub, Profile Edit, and Welcome are implemented.
 - Followees and User Timeline are relay-backed action-opened surfaces. Rust Followees
-  renders injected/default cached real NIP-02 rows and selected-relay kind `3`
-  discovery with cleanup and retry diagnostics. Rust User Timeline renders real
+  renders injected/default cached real NIP-02 rows, selected-relay plus stored-route
+  kind `3` discovery, cleanup, retry diagnostics, and disabled-route exclusion. Rust User Timeline renders real
   NIP-02 rows, exact cache-ready rows, stored routes, cleanup, retry diagnostics, partial-route diagnostics, and degraded target-posts-only mode.
 - Shared UI system catalog and shipped component list live in
   [architecture/workspace/ui-system/README.md](architecture/workspace/ui-system/README.md);
@@ -207,9 +207,9 @@ Read next: [architecture/network/README.md](architecture/network/README.md),
 - Feed route isolation keeps Home and Profile route-group reads on resolved
   route fingerprints, while Notifications and selected-relay tools keep
   independent semantic keys.
-- Followees and User Timeline discover missing target kind `3` through selected relays;
-  User Timeline also reads stored NIP-65 routes. No-event/AUTH/rate-limited/timeout reads and partial route failures render explicit diagnostics.
-  It keeps a distinct Rust query surface, real author-set rows, and exact cached coverage readiness; Rust cutover stays partial.
+- Followees and User Timeline discover missing target kind `3` through selected
+  relays and stored author routes while excluding disabled route relays. No-event/AUTH/rate-limited/timeout reads and partial route failures render diagnostics.
+  Rust keeps distinct query surfaces, real author-set rows, exact cached coverage readiness, and partial cutover status.
 - Search restores query filter snapshots, renders local indexed results without
   waiting for remote relays, sends bounded NIP-50 filters to eligible selected
   read relays, loads cached and relay older pages by compound cursor, and reports

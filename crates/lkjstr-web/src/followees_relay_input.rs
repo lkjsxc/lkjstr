@@ -1,6 +1,7 @@
 use std::collections::BTreeSet;
 
 use lkjstr_protocol::{KIND_FOLLOW_LIST, NostrEvent, NostrFilter};
+use lkjstr_relays::AuthorRelayRoute;
 
 #[derive(Clone)]
 pub(crate) struct FolloweesRelayReadInput {
@@ -13,12 +14,18 @@ pub(crate) struct FolloweesRelayInputSeed<'a> {
     pub(crate) owner: &'a str,
     pub(crate) target_pubkey: &'a str,
     pub(crate) selected_relays: &'a [String],
+    pub(crate) author_routes: &'a [AuthorRelayRoute],
 }
 
 pub(crate) fn followees_relay_input(
     seed: FolloweesRelayInputSeed<'_>,
 ) -> Option<FolloweesRelayReadInput> {
-    let relays = unique_sorted(seed.selected_relays.iter().cloned());
+    let relays = unique_sorted(
+        seed.selected_relays
+            .iter()
+            .cloned()
+            .chain(seed.author_routes.iter().map(|route| route.relay_url.clone())),
+    );
     if relays.is_empty() {
         return None;
     }
@@ -70,6 +77,7 @@ mod tests {
                 "wss://a.example".to_owned(),
                 "wss://b.example".to_owned(),
             ],
+            author_routes: &[],
         })
         .ok_or("missing relay input")?;
         let filters = followees_relay_filters(&input, "wss://a.example");
@@ -93,6 +101,7 @@ mod tests {
             owner: "followees-tab",
             target_pubkey: &pubkey("a"),
             selected_relays: &["wss://a.example".to_owned()],
+            author_routes: &[],
         })
         .ok_or("missing relay input")?;
 
@@ -108,6 +117,30 @@ mod tests {
             &input,
             &event(KIND_FOLLOW_LIST, &pubkey("b"))
         ));
+        Ok(())
+    }
+
+    #[test]
+    fn author_routes_create_follow_list_filter() -> Result<(), &'static str> {
+        let input = followees_relay_input(FolloweesRelayInputSeed {
+            owner: "followees-tab",
+            target_pubkey: &pubkey("a"),
+            selected_relays: &[],
+            author_routes: &[AuthorRelayRoute {
+                author: pubkey("a"),
+                relay_url: "wss://route.example/".to_owned(),
+                source: lkjstr_relays::RouteEvidenceSource::Nip65,
+                score: 0,
+            }],
+        })
+        .ok_or("missing route input")?;
+        let filters = followees_relay_filters(&input, "wss://route.example/");
+
+        assert_eq!(input.relays, vec!["wss://route.example/"]);
+        assert_eq!(
+            filters.first().and_then(|filter| filter.authors.clone()),
+            Some(vec![pubkey("a")])
+        );
         Ok(())
     }
 

@@ -91,7 +91,7 @@ This file is the concise status map for the active Rust/WASM migration.
   discovery planner, first Leptos Followees rows, a default cached Followees
   host provider, first Leptos User Timeline feed rows from injected real NIP-02
   data, default cached User Timeline host provider, selected-relay kind `3`
-  discovery for Followees/User Timeline, User Timeline stored route-group
+  discovery for Followees/User Timeline, Followees/User Timeline stored route-group
   discovery with disabled-route exclusion, Followees/User Timeline cleanup, and
   Followees retry plus User Timeline retry/auth/rate-limit/timeout and partial
   route diagnostics plus exact cache coverage proof. Deletion remains open.
