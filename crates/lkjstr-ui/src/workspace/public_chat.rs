@@ -1,5 +1,12 @@
 use leptos::prelude::*;
-use lkjstr_domain::PublicChatState;
+use lkjstr_domain::{PublicChatState, empty_public_chat_state};
+
+#[component]
+pub fn EmptyPublicChatTab() -> impl IntoView {
+    view! {
+        <PublicChatTab state=empty_public_chat_state() read_relays=Vec::new() active_pubkey=None />
+    }
+}
 
 #[component]
 pub fn PublicChatTab(

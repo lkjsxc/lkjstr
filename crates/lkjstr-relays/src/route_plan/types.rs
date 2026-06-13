@@ -5,6 +5,7 @@ pub enum RoutePlanSurface {
     Home,
     Global,
     Profile,
+    UserTimeline,
     Thread,
     Notifications,
     Search,

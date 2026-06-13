@@ -26,15 +26,37 @@ no-import proof allow removal.
 
 ## Slice Order
 
-- Current first slice: storage command metadata coverage for remaining live
-  SQLite worker repositories, then feed cache, feed coverage, event cache,
-  retention, repair, full pressure inventory, and Stats projection. The
-  batch-capable command shape, active-account selector proof, and retention
-  planner metadata are implemented and retained in task evidence files.
-- Second slice: relay runtime wiring from Rust reducers to browser WebSocket,
-  timer, and NIP-11 host effects.
-- Third slice: shared feed runtime that consumes strict cache proof and
-  progressive relay snapshots before any individual feed surface is removed.
+- Completed enabling slice: storage command metadata coverage for live SQLite
+  worker repositories, feed cache, feed coverage, event cache, retention,
+  repair, pressure inventory, and Stats projection. Preserve the task evidence;
+  storage parity and deletion remain blocked.
+- Completed enabling slice: relay host-runner mapping from Rust reducer effects
+  to typed browser WebSocket, timer, NIP-11, diagnostic, and owner-cleanup host
+  actions. Preserve the tests; relay parity and deletion remain blocked.
+- Completed enabling slice: pure shared feed row view-model data with stable
+  ids, explicit unavailable and diagnostic rows, and footer states. Preserve
+  the tests; feed runtime parity and deletion remain blocked.
+- Completed enabling slice: first Rust Home feed rendering from app-owned row
+  view models, with browser proof through an injected real event row. Preserve
+  the tests; Home parity and deletion remain blocked.
+- Completed enabling slice: default Rust Home provider wiring from protected
+  SQLite account, relay, follow-list, cached event, and feed-coverage evidence.
+  Preserve the tests; exact coverage proof, live relay snapshots, Home parity,
+  and deletion remain blocked.
+- Completed enabling slice: first Rust Profile feed rendering, provider wiring,
+  sparse-history empty proof, cached header rendering, relay header refresh,
+  Followees/User Timeline/Profile Edit actions, and first Rust Followees body
+  proof plus default cached Followees host proof, first Rust User Timeline
+  body proof, and default cached User Timeline host proof. Preserve the tests;
+  parity and deletion remain blocked.
+- Completed enabling slice: first Rust Thread cached root/reply provider wiring
+  plus bounded bootstrap relay reads, explicit older page reads,
+  scroll-triggered and viewport-fill older requests, bounded live reply windows,
+  focused-reference hydration, bounded cached parent-chain hydration, terminal
+  unavailable-parent rows, continuation rows, and cleanup proof. Preserve the
+  tests; Thread parity and deletion remain blocked.
+- Current first incomplete slice: broader Followees/User Timeline route
+  discovery and deletion proof from [current-blockers.md](current-blockers.md).
 
 ## Canonical Links
 
@@ -82,3 +104,19 @@ images were built and the services ran from those images.
 - [tasks/shared-feed-view-model.md](tasks/shared-feed-view-model.md): shared
   feed row view-model task.
 - [tasks/home-feed-slice.md](tasks/home-feed-slice.md): first Home feed slice.
+- [tasks/home-feed-provider-wiring.md](tasks/home-feed-provider-wiring.md):
+  Home feed provider wiring.
+- [tasks/profile-feed-slice.md](tasks/profile-feed-slice.md): first Profile feed
+  slice.
+- [tasks/profile-feed-provider-wiring.md](tasks/profile-feed-provider-wiring.md):
+  Profile feed provider wiring.
+- [tasks/profile-sparse-history-proof.md](tasks/profile-sparse-history-proof.md):
+  Profile sparse-history empty-state proof.
+- [tasks/followees-provider-wiring.md](tasks/followees-provider-wiring.md):
+  Followees provider and first Rust NIP-02 row proof.
+- [tasks/user-timeline-provider-wiring.md](tasks/user-timeline-provider-wiring.md):
+  User Timeline provider and first Rust feed-row proof.
+- [tasks/search-feed-provider-wiring.md](tasks/search-feed-provider-wiring.md):
+  Search provider, local indexed rows, and relay snapshot merge proof.
+- [tasks/thread-feed-provider-wiring.md](tasks/thread-feed-provider-wiring.md):
+  Thread cached root/reply/focused-reference/parent provider wiring.

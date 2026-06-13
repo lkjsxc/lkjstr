@@ -148,9 +148,10 @@ pub use retention::{
 };
 pub use route_blocks::{RelayRouteBlockRecord, SqliteRelayRouteBlockRow};
 pub use search::{
-    SEARCH_MAX_EVENT_TOKENS, SEARCH_MAX_QUERY_TOKENS, SEARCH_MAX_TOKEN_LENGTH,
+    SEARCH_MAX_EVENT_TOKENS, SEARCH_MAX_QUERY_TOKENS, SEARCH_MAX_TOKEN_LENGTH, SearchCursor,
     SqliteEventSearchTokenRow, event_search_token_rows, local_search_event_ids,
-    normalize_search_text, search_candidate_row_limit, tokenize_search_query, tokenize_search_text,
+    local_search_event_ids_before, normalize_search_text, search_candidate_row_limit,
+    search_row_before, tokenize_search_query, tokenize_search_text,
 };
 pub use settings::{
     SettingOverrideRecord, SqliteSettingRow, setting_from_sqlite_row, setting_namespace,

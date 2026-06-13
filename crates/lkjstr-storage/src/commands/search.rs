@@ -8,7 +8,7 @@ use crate::{
         StorageProtectionPolicy as Protection, StorageRepositoryCommandSpec as Spec,
         StorageStatsProjection as Stats,
     },
-    search::SqliteEventSearchTokenRow,
+    search::{SearchCursor, SqliteEventSearchTokenRow},
 };
 
 #[derive(Clone, Debug, Eq, PartialEq)]
@@ -32,6 +32,7 @@ pub type SearchUpdateEventIndexOutput = usize;
 pub struct SearchLocalQueryInput {
     pub tokens: Vec<String>,
     pub limit: u64,
+    pub before: Option<SearchCursor>,
 }
 
 pub type SearchLocalQueryOutput = Vec<StoredEventRecord>;
@@ -76,7 +77,7 @@ pub const TAG_LOOKUP_BY_VALUE_COMMAND: Spec = search_command("tag-lookup.by-valu
 #[rustfmt::skip]
 pub const SEARCH_UPDATE_EVENT_INDEX_COMMAND: Spec = search_command("search.update-event-index", Op::Transaction, "SearchUpdateEventIndexInput", "SearchUpdateEventIndexOutput", &["event_search_tokens.delete_by_event", "event_search_tokens.upsert"], &["event_search_tokens"], &["sqlite_event_search_token_rows"], CACHE_WRITE);
 #[rustfmt::skip]
-pub const SEARCH_LOCAL_QUERY_COMMAND: Spec = search_command("search.local-query", Op::Read, "SearchLocalQueryInput", "SearchLocalQueryOutput", &["event_search_tokens.by_token", "events.select"], &["event_search_tokens", "events"], &["sqlite_event_search_token_row", "event_from_sqlite_row"], CACHE_READ);
+pub const SEARCH_LOCAL_QUERY_COMMAND: Spec = search_command("search.local-query", Op::Read, "SearchLocalQueryInput", "SearchLocalQueryOutput", &["event_search_tokens.by_token", "event_search_tokens.by_token_before", "events.select"], &["event_search_tokens", "events"], &["sqlite_event_search_token_row", "event_from_sqlite_row"], CACHE_READ);
 
 pub const SEARCH_COMMANDS: &[Spec] = &[
     TAG_LOOKUP_BY_VALUE_COMMAND,

@@ -14,6 +14,9 @@ timer, NIP-11 fetch, diagnostics, and product-surface demand wiring.
 - Current Rust proof covers reducer effects, request budgets, page-read dedupe,
   progressive snapshots, route plans, lease fingerprints, scoring, and route
   evidence. Product surfaces still consume TypeScript relay runtime paths.
+- The first host-runner proof is `crates/lkjstr-web/src/relay_host/effect_runner.rs`:
+  it maps reducer effects to typed host actions and rejects callbacks whose
+  owner generation has closed or been replaced.
 
 ## Host Adapter Responsibilities
 
@@ -59,6 +62,9 @@ emit_diagnostic
 
 No product surface calls `WebSocket` directly. Effects carry an owner id, relay
 URL, request key, and cleanup context so late frames cannot pollute another tab.
+The host runner may translate effects to browser actions, but it does not
+decide reconnect, route trust, feed completeness, relay exclusion, or cache
+coverage.
 
 ## Route Planning Inputs
 

@@ -2,6 +2,7 @@
 
 mod author_set;
 mod count;
+mod followees_view;
 mod read_plan;
 mod state;
 
@@ -10,6 +11,11 @@ pub use author_set::{
     summarize_follow_list, target_posts_only_author_set, user_timeline_author_set,
 };
 pub use count::{FollowCountEvidence, FollowCountState, follow_count_label, reduce_follow_count};
+pub use followees_view::{
+    FolloweesDiagnostic, FolloweesRow, FolloweesStatus, FolloweesView, FolloweesViewInput,
+    build_followees_view, default_followees_view, followees_retryable_failure_view,
+    followees_status_message, followees_view_from_summary,
+};
 pub use read_plan::FollowListReadPhase;
 pub use state::TargetFollowListState;
 

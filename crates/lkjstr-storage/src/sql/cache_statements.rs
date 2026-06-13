@@ -76,12 +76,12 @@ pub const CACHE_STATEMENTS: &[SqliteStatementSpec] = &[
     read(
         "feed_coverage.by_feed",
         "feed_coverage",
-        "SELECT coverage_id, feed_key, relay_url, filter_fingerprint, since_exclusive, until_exclusive, completed_at_ms, event_count, dense FROM feed_coverage WHERE feed_key = ?1 ORDER BY completed_at_ms DESC, coverage_id ASC;",
+        "SELECT coverage_id, feed_key, route_group_key, relay_url, filter_fingerprint, status, since_exclusive, until_exclusive, completed_at_ms, event_count, dense FROM feed_coverage WHERE feed_key = ?1 ORDER BY completed_at_ms DESC, coverage_id ASC;",
     ),
     write(
         "feed_coverage.upsert",
         "feed_coverage",
-        "INSERT INTO feed_coverage (coverage_id, feed_key, relay_url, filter_fingerprint, since_exclusive, until_exclusive, completed_at_ms, event_count, dense) VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9) ON CONFLICT(coverage_id) DO UPDATE SET feed_key = excluded.feed_key, relay_url = excluded.relay_url, filter_fingerprint = excluded.filter_fingerprint, since_exclusive = excluded.since_exclusive, until_exclusive = excluded.until_exclusive, completed_at_ms = excluded.completed_at_ms, event_count = excluded.event_count, dense = excluded.dense;",
+        "INSERT INTO feed_coverage (coverage_id, feed_key, route_group_key, relay_url, filter_fingerprint, status, since_exclusive, until_exclusive, completed_at_ms, event_count, dense) VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11) ON CONFLICT(coverage_id) DO UPDATE SET feed_key = excluded.feed_key, route_group_key = excluded.route_group_key, relay_url = excluded.relay_url, filter_fingerprint = excluded.filter_fingerprint, status = excluded.status, since_exclusive = excluded.since_exclusive, until_exclusive = excluded.until_exclusive, completed_at_ms = excluded.completed_at_ms, event_count = excluded.event_count, dense = excluded.dense;",
     ),
     write(
         "feed_coverage.delete_by_feed",

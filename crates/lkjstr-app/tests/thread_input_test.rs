@@ -32,7 +32,7 @@ fn thread_root_lookup_uses_exact_id_and_event_lookup_purpose() -> Result<(), Str
 }
 
 #[test]
-fn thread_replies_query_targets_e_tag_without_author_filter() -> Result<(), String> {
+fn thread_replies_query_targets_root_and_focused_e_tags() -> Result<(), String> {
     let query = thread_replies_query_input(replies_input(Some(pubkey("a"))));
     let [filter] = query.filters.as_slice() else {
         return Err("wanted one filter".to_owned());
@@ -41,7 +41,10 @@ fn thread_replies_query_targets_e_tag_without_author_filter() -> Result<(), Stri
     assert_eq!(query.channel.as_deref(), Some("thread-replies"));
     assert_eq!(query.phase, DemandPhase::Page);
     assert_eq!(filter.authors, None);
-    assert_eq!(filter.tags.get("e"), Some(&vec![event_id()]));
+    assert_eq!(
+        filter.tags.get("e"),
+        Some(&vec![event_id(), focus_event_id()])
+    );
     assert_eq!(
         filter.kinds,
         Some(vec![KIND_TEXT_NOTE, KIND_REPOST, KIND_GENERIC_REPOST])
@@ -81,6 +84,7 @@ fn replies_input(root_author: Option<String>) -> ThreadRepliesQueryInput {
         selected_relays: vec!["https://selected.example".to_owned()],
         disabled_relays: Vec::new(),
         root_event_id: event_id(),
+        focus_event_id: focus_event_id(),
         root_author,
         author_routes: vec![route(pubkey("a"), "https://route.example")],
         phase: DemandPhase::Page,
@@ -102,6 +106,10 @@ fn route(author: String, relay_url: &str) -> AuthorRelayRoute {
 
 fn event_id() -> String {
     "f".repeat(64)
+}
+
+fn focus_event_id() -> String {
+    "e".repeat(64)
 }
 
 fn pubkey(value: &str) -> String {

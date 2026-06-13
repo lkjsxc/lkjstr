@@ -48,6 +48,10 @@ Profile tabs show identity metadata and authored text notes.
 - Profile displays banner media when metadata provides `banner`.
 - Profile editing is not inline. Own-profile actions open Profile Edit in the
   same tile.
+- Non-own profiles with an active account expose Follow or Unfollow as a
+  signing action and must not claim success unless publishing succeeds. The
+  Rust host supports local and NIP-07 kind `3` publish; read-only accounts show
+  explicit status.
 - Profile Edit merges with the latest cached kind `0` metadata. Blank known
   fields delete those keys; unknown keys, `lud06`, and matching latest profile
   custom emoji tags remain preserved.

@@ -16,12 +16,15 @@ reducers.
 - `feed_scan/`: adaptive grouped scan planning and trace reducers.
 - `feed_wait/`: first-paint, empty-state, and late-merge reducers.
 - `follow_graph/`: target NIP-02 follow graph reducers.
+- `home_feed/`: Home feed view-model and query composition.
 - `lib.rs`: public app crate exports.
+- `notifications_feed/`: Notifications feed view-model and query composition.
 - `orchestration/`: pure read, prefetch, hydration, and retention decisions.
+- `profile_feed/`: Profile feed view-model and query composition.
 - `public_chat/`: pure NIP-28 query plans and publish templates.
 - `query/`: pure query-demand planning from product inputs to relay contracts.
 - `storage_maintenance.rs`: readiness-gated retention and repair planning.
-- `user_timeline/`: pure public target timeline discovery planning.
+- `user_timeline/`: public target timeline discovery planning and feed view.
 - `startup_snapshots.rs`: startup filtering for durable tab snapshot rows.
 - `workspace_defaults.rs`: workspace runtime defaults and recovery IDs.
 - `workspace_runtime.rs`: workspace startup and tab snapshot staging.

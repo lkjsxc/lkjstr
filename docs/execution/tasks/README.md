@@ -11,6 +11,13 @@ verification ledgers in the same change.
 
 Active queue:
 
+- Next shared-feed task comes from
+  [current-blockers.md](../current-blockers.md): continue Followees/User
+  Timeline target/NIP-65/provenance discovery, retry diagnostics, cleanup, and
+  deletion prerequisites.
+
+Storage evidence to preserve:
+
 - [storage-command-metadata.md](storage-command-metadata.md): expand typed
   storage command coverage with the batch-capable shape.
 - [storage-feed-cache-commands.md](storage-feed-cache-commands.md): cover event
@@ -21,19 +28,42 @@ Active queue:
   complete pressure, inventory, and Stats storage diagnostics.
 - [storage-search-index.md](storage-search-index.md): add storage-owned search
   and tag lookup rows without advancing Search surface parity.
-- [relay-effect-runner.md](relay-effect-runner.md): wire relay reducer effects
-  to browser host actions.
-- [shared-feed-view-model.md](shared-feed-view-model.md): define pure Rust feed
-  row view-model data.
-- [home-feed-slice.md](home-feed-slice.md): render a narrow real Home feed slice
-  without parity inflation.
 
 Implemented evidence:
 
+- [home-feed-slice.md](home-feed-slice.md): preserve first Rust Home feed
+  rendering from app-owned view-model rows without parity inflation.
+- [profile-feed-slice.md](profile-feed-slice.md): preserve first Rust Profile
+  note rendering from app-owned view-model rows without parity inflation.
+- [shared-feed-view-model.md](shared-feed-view-model.md): preserve pure Rust
+  feed row view-model data, stable ids, explicit state rows, and footer proof.
+- [relay-effect-runner.md](relay-effect-runner.md): preserve relay reducer
+  effect mapping, typed host event feeding, and owner callback rejection proof.
 - [storage-command-spec-shape.md](storage-command-spec-shape.md): preserve the
   batch-capable command metadata shape.
 - [storage-active-selector.md](storage-active-selector.md): preserve the closed
   SQLite active-account selector proof while Accounts parity remains partial.
+- [home-feed-provider-wiring.md](home-feed-provider-wiring.md): preserve Rust
+  Home cache proof and relay snapshot provider wiring.
+- [profile-feed-provider-wiring.md](profile-feed-provider-wiring.md): preserve
+  Rust Profile cache, header, and relay snapshot provider wiring.
+- [profile-sparse-history-proof.md](profile-sparse-history-proof.md): preserve
+  Rust Profile sparse historical absence proof.
+- [search-feed-provider-wiring.md](search-feed-provider-wiring.md): preserve
+  Rust Search provider, local indexed rows, relay snapshot merge, tab snapshot
+  restore, and cached plus relay older-page proof.
+- [thread-feed-provider-wiring.md](thread-feed-provider-wiring.md): preserve
+  Rust Thread cached root/reply provider wiring, bounded bootstrap relay reads,
+  explicit older-page relay commands, and scroll-triggered plus viewport-fill
+  older requests plus bounded live reply windows, focused-reference hydration,
+  bounded cached parent-chain hydration, terminal unavailable-parent rows, and
+  continuation rows without parity inflation.
+- [followees-provider-wiring.md](followees-provider-wiring.md): preserve the
+  first Rust Followees body and default cached host provider from real NIP-02
+  follow-list entries without claiming follow-graph deletion readiness.
+- [user-timeline-provider-wiring.md](user-timeline-provider-wiring.md): replace
+  the Rust User Timeline placeholder with injected and default cached real
+  event-row proof plus selected-relay kind `3` discovery.
 
 ## Task Rule
 

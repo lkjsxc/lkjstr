@@ -113,8 +113,10 @@ pub const SQLITE_CACHE_TABLES: &[SqliteTableSpec] = &[
         r#"CREATE TABLE IF NOT EXISTS feed_coverage (
   coverage_id TEXT PRIMARY KEY,
   feed_key TEXT NOT NULL,
+  route_group_key TEXT NOT NULL,
   relay_url TEXT NOT NULL,
   filter_fingerprint TEXT NOT NULL,
+  status TEXT NOT NULL,
   since_exclusive INTEGER,
   until_exclusive INTEGER,
   completed_at_ms INTEGER NOT NULL,

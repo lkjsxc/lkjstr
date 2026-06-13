@@ -1,100 +1,37 @@
 #![doc = "Rust/WASM browser bridge for lkjstr."]
 
-#[cfg(target_arch = "wasm32")]
-mod accounts_active;
-#[cfg(target_arch = "wasm32")]
-mod accounts_host;
-#[cfg(target_arch = "wasm32")]
-mod accounts_nip07_host;
-#[cfg(target_arch = "wasm32")]
-mod accounts_reveal_host;
-#[cfg(target_arch = "wasm32")]
-mod accounts_selector_host;
-#[cfg(target_arch = "wasm32")]
-mod accounts_selector_status;
-#[cfg(target_arch = "wasm32")]
-mod accounts_selector_store;
-#[cfg(target_arch = "wasm32")]
-mod app_log_host;
-#[cfg(target_arch = "wasm32")]
-mod browser_inventory;
+#[cfg(all(test, target_arch = "wasm32"))]
+wasm_bindgen_test::wasm_bindgen_test_configure!(run_in_browser);
+
 pub mod feed_geometry;
 pub mod follow_graph;
 #[cfg(target_arch = "wasm32")]
-mod host_providers;
+mod profile_feed_status;
 #[cfg(target_arch = "wasm32")]
-mod host_status;
-#[cfg(target_arch = "wasm32")]
-mod nip07_host;
+include!("wasm_modules.rs");
 mod protocol_bridge;
 #[cfg(target_arch = "wasm32")]
-pub mod relay_host;
+mod relay_read_handle;
 pub mod relay_score;
-#[cfg(target_arch = "wasm32")]
-mod relay_selection;
-#[cfg(target_arch = "wasm32")]
-mod relay_settings_host;
 pub mod repair_adapter;
 mod response;
 pub mod retention_dispatch;
 mod retention_routes;
 pub mod scan_model;
 #[cfg(target_arch = "wasm32")]
-mod settings_host;
-#[cfg(target_arch = "wasm32")]
-mod sqlite_host_store;
-#[cfg(target_arch = "wasm32")]
-pub mod sqlite_store;
-#[cfg(target_arch = "wasm32")]
-pub mod storage_worker;
-#[cfg(target_arch = "wasm32")]
-mod tweet_host;
-#[cfg(target_arch = "wasm32")]
-mod upload_discovery;
-#[cfg(target_arch = "wasm32")]
-mod upload_settings_host;
-#[cfg(target_arch = "wasm32")]
-mod workspace_host;
+mod thread_feed_status;
 
 #[cfg(target_arch = "wasm32")]
-pub mod indexed_db;
+pub use mount_api::{
+    mount_rust_workspace_shell, mount_rust_workspace_shell_from_db,
+    mount_rust_workspace_shell_from_db_with_worker, mount_rust_workspace_shell_with_global_feed,
+    mount_rust_workspace_shell_with_home_feed, mount_rust_workspace_shell_with_profile_feed,
+    mount_rust_workspace_shell_with_profile_feed_and_followees_provider,
+    mount_rust_workspace_shell_with_profile_feed_followees_and_user_timeline_provider,
+    mount_rust_workspace_shell_with_profile_feed_provider, mount_rust_workspace_shell_with_startup,
+};
 
 use wasm_bindgen::prelude::{JsValue, wasm_bindgen};
-
-#[cfg(target_arch = "wasm32")]
-#[wasm_bindgen(start)]
-pub fn start() {
-    if !is_wasm_bindgen_test_runner() {
-        mount_rust_workspace_shell();
-    }
-}
-
-#[cfg(target_arch = "wasm32")]
-pub fn mount_rust_workspace_shell() {
-    host_providers::mount_rust_workspace_shell();
-}
-
-#[cfg(target_arch = "wasm32")]
-pub fn mount_rust_workspace_shell_from_db(db_name: String) {
-    host_providers::mount_rust_workspace_shell_from_db(db_name);
-}
-
-#[cfg(target_arch = "wasm32")]
-pub fn mount_rust_workspace_shell_from_db_with_worker(db_name: String, worker_url: String) {
-    host_providers::mount_rust_workspace_shell_from_db_with_worker(db_name, worker_url);
-}
-
-#[cfg(target_arch = "wasm32")]
-pub fn mount_rust_workspace_shell_with_startup(startup: lkjstr_app::StartupInput) {
-    lkjstr_ui::mount_app_with_startup(startup);
-}
-
-#[cfg(target_arch = "wasm32")]
-fn is_wasm_bindgen_test_runner() -> bool {
-    web_sys::window()
-        .and_then(|window| window.location().pathname().ok())
-        .is_some_and(|path| path.contains("wasm-bindgen-test"))
-}
 
 #[wasm_bindgen]
 pub fn validate_event_json(json: &str) -> JsValue {

@@ -20,6 +20,7 @@ struct LiveQueryParts {
     author_routes: Vec<AuthorRelayRoute>,
     disabled_relays: Vec<String>,
     filter_authors: Option<Vec<String>>,
+    filter_kinds: Vec<u64>,
     since: Option<u64>,
     now_sec: u64,
     page_size: u64,
@@ -37,6 +38,26 @@ pub fn home_live_query_input(input: FeedLiveQueryInput) -> QueryDemandInput {
         author_routes: input.author_routes,
         disabled_relays: input.disabled_relays,
         filter_authors: Some(authors),
+        filter_kinds: display_kinds(),
+        since: input.since,
+        now_sec: input.now_sec,
+        page_size: input.page_size,
+    })
+}
+
+#[must_use]
+pub fn user_timeline_live_query_input(input: FeedLiveQueryInput) -> QueryDemandInput {
+    let authors = unique_sorted(input.authors);
+    live_query_input(LiveQueryParts {
+        surface: QuerySurface::UserTimeline,
+        owner: input.owner,
+        visibility: input.visibility,
+        selected_relays: input.selected_relays,
+        authors: authors.clone(),
+        author_routes: input.author_routes,
+        disabled_relays: input.disabled_relays,
+        filter_authors: Some(authors),
+        filter_kinds: display_kinds(),
         since: input.since,
         now_sec: input.now_sec,
         page_size: input.page_size,
@@ -54,6 +75,7 @@ pub fn global_live_query_input(input: FeedLiveQueryInput) -> QueryDemandInput {
         author_routes: Vec::new(),
         disabled_relays: input.disabled_relays,
         filter_authors: None,
+        filter_kinds: vec![KIND_TEXT_NOTE],
         since: input.since,
         now_sec: input.now_sec,
         page_size: input.page_size,
@@ -72,6 +94,7 @@ pub fn profile_live_query_input(input: ProfileLiveQueryInput) -> QueryDemandInpu
         author_routes: routes_for_author(input.author_routes, &profile_pubkey),
         disabled_relays: input.disabled_relays,
         filter_authors: Some(vec![profile_pubkey]),
+        filter_kinds: display_kinds(),
         since: input.since,
         now_sec: input.now_sec,
         page_size: input.page_size,
@@ -119,7 +142,7 @@ fn live_query_input(parts: LiveQueryParts) -> QueryDemandInput {
         disabled_relays: parts.disabled_relays,
         filters: vec![NostrFilter {
             authors: parts.filter_authors,
-            kinds: Some(display_kinds()),
+            kinds: Some(parts.filter_kinds),
             since: parts.since,
             limit: Some(parts.page_size),
             ..NostrFilter::default()

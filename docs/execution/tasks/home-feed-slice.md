@@ -7,33 +7,37 @@ without claiming broader feed or Home parity.
 
 ## Status
 
-Open. Start only after storage, relay effects, and shared feed view models have
-real proof.
+Implemented as a first rendering slice. Home parity remains blocked until real
+storage cache proof and relay snapshots feed the Rust model without injection.
 
 ## Current Evidence
 
 - Home remains a shipped TypeScript and Svelte surface.
-- Rust query inputs, feed reducers, cache display policy, and geometry pieces
-  exist but are not one product Home runtime yet.
+- `crates/lkjstr-app/src/home_feed/**` composes Home follow state, optional
+  live query input, shared feed row view models, unavailable rows,
+  diagnostics, and footer states.
+- `crates/lkjstr-ui/src/workspace/home.rs` renders event, unavailable,
+  diagnostic, profile, notification, and footer rows from `HomeFeedView`.
+- A browser WASM test mounts the Rust Home tab with an injected model carrying
+  a real event row and cache-hit footer.
 
 ## Next Edit
 
-1. Start only after the shared Rust feed view model can emit real rows and
-   explicit state rows.
-2. Render a narrow Home slice without changing the shipped Svelte owner.
-3. Keep parity and deletion ledgers blocked until no-import proof exists.
+Wire a real host provider that supplies Home feed models from SQLite cache proof
+and relay snapshots. Keep parity and deletion ledgers blocked until no-import
+proof exists.
 
 ## Next Checklist
 
-- [ ] Read Home product, followees, Home runtime, feed source, and UI runtime
+- [x] Read Home product, followees, Home runtime, feed source, and UI runtime
       contracts.
-- [ ] Update product or runtime docs only for behavior that is actually
+- [x] Update product or runtime docs only for behavior that is actually
       implemented.
-- [ ] Add Home query input and view-model tests that consume shared feed rows.
-- [ ] Add minimal Leptos row rendering for event, unavailable, diagnostic, and
+- [x] Add Home query input and view-model tests that consume shared feed rows.
+- [x] Add minimal Leptos row rendering for event, unavailable, diagnostic, and
       footer rows.
-- [ ] Keep TypeScript timeline and tab glue while Svelte remains shipped owner.
-- [ ] Run app Home, UI Home, timeline reducer, tab-retention, and Rust/WASM
+- [x] Keep TypeScript timeline and tab glue while Svelte remains shipped owner.
+- [x] Run app Home, UI Home, timeline reducer, tab-retention, and Rust/WASM
       gates; then record actual verification.
 
 ## Acceptance
@@ -75,9 +79,13 @@ Home parity and deletion proof exist.
 ## Focused Gate
 
 ```sh
-cargo test -p lkjstr-app -- home
-cargo test -p lkjstr-ui -- home
+/home/lkjsxc/.cargo/bin/cargo test -p lkjstr-app -- home_feed
+/home/lkjsxc/.cargo/bin/cargo test -p lkjstr-app -- feed
+/home/lkjsxc/.cargo/bin/cargo test -p lkjstr-ui -- home
+PATH=/home/lkjsxc/.cargo/bin:$PATH wasm-pack test --headless --chrome --chromedriver /home/lkjsxc/.cache/.wasm-pack/chromedriver-4c97d18784ddc26e/chromedriver crates/lkjstr-web -- rust_home_tab
 pnpm test -- tests/unit/timeline/timeline-reducer.test.ts
+pnpm test -- tests/unit/workspace/tab-retention.test.ts
+PATH=/home/lkjsxc/.cargo/bin:$PATH pnpm rust-wasm:quiet
 ```
 
 ## Final Gate

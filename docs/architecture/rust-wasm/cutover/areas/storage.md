@@ -101,12 +101,15 @@ removed.
       indexed local-query command metadata have focused storage proof.
 - [x] Local Search query adapters use indexed token rows and focused web compile
       proof.
-- [ ] Every command has input, output, statement ids when not inventory-only,
-      stable problem kinds, ledger policy, protection policy, Stats projection, and
-      fixture proof.
-- [ ] No product code opens SQLite or OPFS outside the worker.
-- [ ] Stats shows persistent, temporary memory, unavailable, timeout, blocked,
-      corrupt, or unknown-old-storage states without indefinite loading.
+- [x] `cargo test -p lkjstr-storage commands` proves command input, output,
+      statement ids when not inventory-only, stable problem kinds, ledger
+      policy, protection policy, Stats projection, and fixture coverage.
+- [x] `pnpm check:repo` rejects raw SQLite WASM imports and OPFS open
+      primitives outside `src/lib/storage/sqlite-opfs/`.
+- [x] `cargo test -p lkjstr-storage stats` and
+      `cargo test -p lkjstr-ui stats` prove persistent, temporary memory,
+      unavailable, timeout, blocked, corrupt, and unknown-old-storage Stats
+      states without indefinite loading after provider return or timeout.
 - [x] Rust Stats normalizes persistent SQLite health to available, preserves
       the raw mode detail, and resolves provider reads to an explicit timeout
       snapshot instead of indefinite loading.
@@ -120,4 +123,4 @@ removed.
       and reports counts in Rust adapter tests.
 - [x] Repair storage models report schema mismatch, corrupt rows, decode
       failures, incomplete inventory, and temporary memory mode.
-- [ ] Parity and deletion ledgers state the actual status.
+- [x] Parity and deletion ledgers state the actual partial or blocked status.

@@ -18,19 +18,23 @@ each tab owns its page cursors and Demand owner identity.
 
 ## Hidden tabs
 
-- Release live Demands (`visibility: hidden`)
+- Hidden visibility suspends live wire traffic while retaining the owner record.
+- Tab body unmount or close releases the live Demand and retains cached window
+  state for later restore.
 - Retain cached window and cursors until tab close
 
 ## Status
 
-| Rule                     | Status                  |
-| ------------------------ | ----------------------- |
-| Per-runtime demand owner | implemented             |
-| Shared live lease        | implemented (by design) |
-| Isolated page cursors    | implemented             |
+| Rule                       | Status                  |
+| -------------------------- | ----------------------- |
+| Per-runtime demand owner   | implemented             |
+| Shared live lease          | implemented (by design) |
+| Rust owner release cleanup | implemented             |
+| Isolated page cursors      | implemented             |
 
 ## Tests
 
 - `tests/unit/relays/orchestration/orchestrator-refcount.test.ts`
 - `tests/unit/relays/orchestration/live-demand-handles.test.ts`
 - `tests/unit/timeline/timeline-runtime-close.test.ts`
+- `crates/lkjstr-app/tests/feed_runtime_lifecycle_test.rs`

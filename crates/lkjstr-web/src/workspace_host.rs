@@ -1,9 +1,12 @@
 use lkjstr_app::{StartupInput, default_recovery_ids};
-use lkjstr_storage::{StorageOutcome, WorkspaceRecord};
+use lkjstr_storage::{StorageOutcome, TabStateRecord, WorkspaceRecord};
 
 use crate::{
     sqlite_host_store::with_sqlite_store,
-    sqlite_store::{sqlite_tab_states_for_workspace, sqlite_workspace_get, sqlite_workspace_put},
+    sqlite_store::{
+        sqlite_tab_state_put, sqlite_tab_states_for_workspace, sqlite_workspace_get,
+        sqlite_workspace_put,
+    },
 };
 
 pub async fn workspace_startup_input(db_name: &str, worker_url: &str, now: u64) -> StartupInput {
@@ -30,6 +33,17 @@ pub async fn workspace_put(
 ) -> StorageOutcome<()> {
     with_sqlite_store(db_name, worker_url, |store| async move {
         sqlite_workspace_put(&store, row).await
+    })
+    .await
+}
+
+pub async fn tab_state_put(
+    db_name: &str,
+    worker_url: &str,
+    row: &TabStateRecord,
+) -> StorageOutcome<()> {
+    with_sqlite_store(db_name, worker_url, |store| async move {
+        sqlite_tab_state_put(&store, row).await
     })
     .await
 }

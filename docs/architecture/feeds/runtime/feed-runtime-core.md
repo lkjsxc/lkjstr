@@ -29,6 +29,8 @@ TypeScript runtime wiring.
   demand state without creating another open effect.
 - Releasing closes only when the final visible compatible owner detaches.
 - Visibility changes suspend or resume through the shared live lease reducer.
+- Release removes the runtime owner from active live demand while retaining the
+  bounded feed window for reattach.
 - Window evidence remains generation-guarded and effect-free.
 
 ## Source
@@ -37,3 +39,5 @@ TypeScript runtime wiring.
 - `crates/lkjstr-app/src/feed/runtime_types.rs`: runtime core input and output
   records.
 - `crates/lkjstr-app/tests/feed_runtime_test.rs`: composition tests.
+- `crates/lkjstr-app/tests/feed_runtime_lifecycle_test.rs`: owner release and
+  window-retention tests.

@@ -4,6 +4,17 @@
 
 Global runtime owns unauthenticated recent-note loading from readable relays.
 
+## Status
+
+`lkjstr-app` and `lkjstr-ui` build and render `GlobalFeedView` rows from real
+events, selected-relay live-query input, and explicit no-relay, partial, and
+ready states. The Rust browser host now loads selected-relay SQLite cache rows,
+requires exact Global coverage before cache-ready, starts bounded
+selected-relay reads after partial proof, and proves older-page scroll
+ownership, explicit older commands, underfilled-viewport older requests, and
+compound older relay cursors. The shipped Global runtime remains TypeScript-owned
+until deletion proof closes.
+
 ## Render-Critical Kinds
 
 | Phase     | Kinds         |

@@ -31,20 +31,20 @@ removed.
 - Deletion target: `src/lib/relays/**` orchestration and pool modules only
   after shipped surfaces use Rust demand wiring and no-import proof exists.
 - Current status: partial. Reducers, request budgets, page-read keys,
-  progressive snapshots, route planning, scoring, and host foundations exist;
-  product wiring to all shipped surfaces remains open.
-- Next task: connect Rust relay effects to the browser host loop and feed
-  shipped surface demand without deleting TypeScript relay paths.
+  progressive snapshots, route planning, scoring, and the host effect runner
+  exist; product wiring to all shipped surfaces remains open.
+- Next task: feed shared runtime demand into the Rust relay host runner without
+  deleting TypeScript relay paths.
 
 ## Acceptance Checklist
 
-- [ ] Rust emits typed effect commands for sockets, frames, timers, NIP-11, and
+- [x] Rust emits typed effect commands for sockets, frames, timers, NIP-11, and
       diagnostics.
-- [ ] Host events are typed and cannot update a closed or replaced owner.
+- [x] Host events are typed and cannot update a closed or replaced owner.
 - [ ] WebSocket, timer, fetch, and page-read handles close idempotently.
 - [ ] Malformed ingress is bounded before expensive parsing.
 - [ ] Disabled and removed relays stay excluded.
 - [ ] Partial relay failure is diagnostic and never blocks reachable relays.
 - [ ] Progressive snapshots include per-relay state, EOSE, timeout, auth
       required, malformed count, and clamped filters.
-- [ ] Parity and deletion ledgers state the actual status.
+- [x] Parity and deletion ledgers state the actual status.

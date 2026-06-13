@@ -2,7 +2,7 @@ use lkjstr_domain::TabKind;
 
 pub(crate) fn pending_message(kind: TabKind) -> &'static str {
     match kind {
-        TabKind::Timeline => "The Rust Home body is not converted yet.",
+        TabKind::Timeline => "The Rust Home body is waiting for feed data.",
         TabKind::Global => "The Rust Global body is not converted yet.",
         TabKind::PublicChat => "The Rust Public Chat body is loading real state.",
         TabKind::Notifications => "The Rust Notifications body is not converted yet.",
@@ -17,7 +17,7 @@ pub(crate) fn pending_message(kind: TabKind) -> &'static str {
         TabKind::RelayMonitor => "",
         TabKind::RelaySettings => "",
         TabKind::NetworkStats => "",
-        TabKind::Search => "The Rust Search body is not converted yet.",
+        TabKind::Search => "",
         TabKind::CustomRequest => "The Rust Custom Request body is not converted yet.",
         TabKind::AuthorContext => "The Rust Author Context body is not converted yet.",
         TabKind::Tweet => "",

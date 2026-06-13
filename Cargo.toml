@@ -56,6 +56,7 @@ lkjstr-relays = { path = "crates/lkjstr-relays" }
 serde = { version = "1.0.228", features = ["derive"] }
 serde-wasm-bindgen = "0.6.5"
 serde_json = "1.0.145"
+send_wrapper = "0.6.0"
 wasm-bindgen = "0.2.122"
 wasm-bindgen-futures = "0.4.52"
 web-sys = { version = "0.3.82", features = [

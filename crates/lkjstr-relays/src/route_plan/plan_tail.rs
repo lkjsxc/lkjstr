@@ -12,6 +12,7 @@ pub(super) fn surface_allows_author_routes(surface: RoutePlanSurface) -> bool {
         surface,
         RoutePlanSurface::Home
             | RoutePlanSurface::Profile
+            | RoutePlanSurface::UserTimeline
             | RoutePlanSurface::Thread
             | RoutePlanSurface::Notifications
             | RoutePlanSurface::AuthorContext

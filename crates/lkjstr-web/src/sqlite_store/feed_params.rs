@@ -22,8 +22,10 @@ pub fn coverage_params(row: SqliteFeedCoverageRow) -> Option<SqlParams> {
     params(vec![
         text(row.coverage_id),
         text(row.feed_key),
+        text(row.route_group_key),
         text(row.relay_url),
         text(row.filter_fingerprint),
+        text(row.status),
         opt_integer(row.since_exclusive),
         opt_integer(row.until_exclusive),
         integer(row.completed_at_ms),

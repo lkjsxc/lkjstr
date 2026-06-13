@@ -18,12 +18,30 @@ Source files expose Rust application behavior to the browser through
 - `browser_inventory/`: browser-owned storage rows for Rust Stats.
 - `feed_geometry/`: feed geometry, fragment, measurement, and anchor bridge.
 - `follow_graph/`: target follow-list parser bridge.
-- `host_providers.rs`: Rust UI host provider assembly.
+- `followees_host.rs`: SQLite-backed Followees view-model provider.
+- `followees_relay*.rs`: Followees selected-relay follow-list read bridge and probes.
+- `global_feed_cache.rs`: Global selected-relay cache evidence composition.
+- `global_feed_host.rs`: SQLite-backed Global feed view-model provider.
+- `global_feed_host_commands.rs`: retained Global older-load host commands.
+- `global_feed_relay*.rs`: Global selected-relay browser read bridge and cursor probes.
+- `host_providers.rs`: Rust UI host provider assembly with conservative action-tab defaults.
+- `home_feed_cache.rs`: Home feed cache evidence composition.
+- `home_feed_host.rs`: SQLite-backed Home feed view-model provider.
 - `host_status.rs`: shared host status and browser time helpers.
 - `lib.rs`: public WASM exports.
 - `indexed_db/`: browser IndexedDB host adapter for narrow exports and tests.
-- `nip07_host.rs`: browser NIP-07 public-key adapter.
+- `nip07_host.rs`: browser NIP-07 public-key and signing adapter.
+- `notifications_feed_cache.rs`: Notifications SQLite row and source-event cache evidence.
+- `notifications_feed_host.rs`: SQLite-backed Notifications feed view-model provider.
+- `notifications_feed_host_*.rs`: Notifications host commands, diagnostics, and storage helpers.
+- `notifications_feed_relay*.rs`: Notifications selected-relay read, retained state, and test probes.
+- `mount_api.rs`: browser mount helpers including injected feed test seams.
+- `profile_follow_event.rs`: Profile follow-list event construction and signing.
+- `profile_follow_host.rs`: SQLite-backed Profile follow state and toggle provider.
+- `profile_follow_publish.rs`: Profile follow relay publish adapter.
+- `profile_feed_status.rs`: shared Profile feed diagnostic and storage status helpers.
 - `protocol_bridge.rs`: protocol bridge operations.
+- `relay_read_handle.rs`: browser-local relay read cancellation slots for leased UI requests.
 - `relay_score/`: serializable relay read score bridge.
 - `scan_model/`: serializable scan density planning bridge.
 - `relay_host/`: relay WebSocket and browser timeout host adapters.
@@ -38,6 +56,8 @@ Source files expose Rust application behavior to the browser through
 - `sqlite_store/`: worker-backed SQLite repository calls.
 - `storage_worker/`: Rust host adapter for the SQLite storage worker.
 - `tweet_host.rs`: SQLite-backed Tweet draft command provider.
+- `thread_feed_status.rs`: shared Thread feed diagnostic and storage status helpers.
+- `user_timeline_*.rs`: User Timeline cache, relay discovery, and view-model provider.
 - `upload_discovery.rs`: browser `fetch` NIP-96 endpoint resolution.
 - `upload_settings_host.rs`: SQLite-backed Upload Settings command provider.
 - `workspace_host.rs`: SQLite-backed workspace startup and persistence helper.

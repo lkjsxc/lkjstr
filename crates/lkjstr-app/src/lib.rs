@@ -10,13 +10,19 @@ pub mod feed_lod;
 pub mod feed_scan;
 pub mod feed_wait;
 pub mod follow_graph;
+pub mod global_feed;
+pub mod home_feed;
 pub mod hydration_priority;
+pub mod notifications_feed;
 pub mod orchestration;
+pub mod profile_feed;
 pub mod profile_history;
 pub mod public_chat;
 pub mod query;
+pub mod search_feed;
 mod startup_snapshots;
 pub mod storage_maintenance;
+pub mod thread_feed;
 pub mod user_timeline;
 mod workspace_defaults;
 pub mod workspace_runtime;
@@ -34,16 +40,24 @@ pub use events::{
 };
 pub use feed::{
     AuthorContextAnchorInput, AuthorContextNearbyInput, CustomRequestQueryInput,
-    FeedLiveQueryInput, FeedRuntimeInput, FeedRuntimeLeaseOutcome, FeedRuntimeLiveOutcome,
-    FeedRuntimeState, FeedWindowCursor, FeedWindowEvidence, FeedWindowFlags, FeedWindowState,
-    FeedWindowStatus, NewestCursorPolicy, NotificationsLiveQueryInput, ProfileLiveQueryInput,
-    SearchQueryInput, ThreadRepliesQueryInput, ThreadRootLookupInput, TopAnchorAction,
-    TopAnchorDecision, TopAnchorInput, attach_feed_runtime_live, author_context_anchor_input,
-    author_context_nearby_input, custom_request_query_input, decide_top_anchor, empty_feed_window,
-    feed_window_empty_ready, global_live_query_input, home_live_query_input,
-    notifications_live_query_input, profile_live_query_input, reduce_feed_runtime_window,
-    reduce_feed_window, release_feed_runtime_live, search_query_input, set_feed_runtime_visibility,
-    start_feed_runtime, thread_replies_query_input, thread_root_lookup_input,
+    FEED_LOAD_OLDER_COMMAND, FeedContinuationRow, FeedDiagnosticRow, FeedDiagnosticSeverity,
+    FeedEventRow, FeedFooterRow, FeedFooterState, FeedLiveQueryInput, FeedNotificationRow,
+    FeedProfileRow, FeedRowRenderer, FeedRuntimeInput, FeedRuntimeLeaseOutcome,
+    FeedRuntimeLiveOutcome, FeedRuntimeState, FeedStateRow, FeedUnavailableRow, FeedViewModel,
+    FeedViewModelInput, FeedViewRow, FeedWindowCursor, FeedWindowEvidence, FeedWindowFlags,
+    FeedWindowState, FeedWindowStatus, NewestCursorPolicy, NotificationsLiveQueryInput,
+    ProfileLiveQueryInput, SearchQueryInput, ThreadRepliesQueryInput, ThreadRootLookupInput,
+    TopAnchorAction, TopAnchorDecision, TopAnchorInput, attach_feed_runtime_live,
+    author_context_anchor_input, author_context_nearby_input, build_feed_view_model,
+    custom_request_query_input, decide_top_anchor, diagnostic_state_row, empty_feed_window,
+    feed_continuation_row_id, feed_diagnostic_row_id, feed_event_row_id, feed_footer_row_id,
+    feed_notification_row_id, feed_profile_row_id, feed_unavailable_row_id,
+    feed_window_empty_ready, footer_row, footer_row_from_window, global_live_query_input,
+    home_live_query_input, notification_state_row, notifications_live_query_input,
+    profile_live_query_input, profile_state_row, reduce_feed_runtime_window, reduce_feed_window,
+    release_feed_runtime_live, search_query_input, set_feed_runtime_visibility, start_feed_runtime,
+    thread_replies_query_input, thread_root_lookup_input, unavailable_state_row,
+    user_timeline_live_query_input,
 };
 pub use feed_fragments::{
     FeedFragmentConfig, FeedVisualRow, SemanticFeedEvent, fragment_key, plan_feed_visual_rows,
@@ -87,16 +101,47 @@ pub use feed_wait::{
 };
 pub use follow_graph::{
     FollowCountEvidence, FollowCountState, FollowListReadPhase, FollowListSummary,
-    TargetFollowListState, UserTimelineAuthorSet, author_set_hash, chunk_author_set,
-    follow_count_label, reduce_follow_count, summarize_follow_list, target_posts_only_author_set,
-    user_timeline_author_set,
+    FolloweesDiagnostic, FolloweesRow, FolloweesStatus, FolloweesView, FolloweesViewInput,
+    TargetFollowListState, UserTimelineAuthorSet, author_set_hash, build_followees_view,
+    chunk_author_set, default_followees_view, follow_count_label, followees_retryable_failure_view,
+    followees_status_message, followees_view_from_summary, reduce_follow_count,
+    summarize_follow_list, target_posts_only_author_set, user_timeline_author_set,
+};
+pub use global_feed::{
+    GLOBAL_MAX_AUTO_EMPTY_OLDER_REQUESTS, GlobalFeedDiagnosticInput, GlobalFeedSourceState,
+    GlobalFeedStatus, GlobalFeedView, GlobalFeedViewInput, GlobalHistoryExhaustion,
+    GlobalOlderBlockReason, GlobalOlderIntent, GlobalOlderIntentInput, GlobalOlderLoadTrigger,
+    GlobalOlderPageInput, GlobalOlderPageOutcome, GlobalRelayCursor, build_global_feed_view,
+    default_global_feed_view, global_cursor_contains, global_feed_id, older_global_cursor,
+    plan_global_older_intent, plan_global_older_page,
+};
+pub use home_feed::{
+    HomeFeedDiagnosticInput, HomeFeedSourceState, HomeFeedStatus, HomeFeedView, HomeFeedViewInput,
+    HomeFollowState, build_home_feed_view, default_home_feed_view, home_authors, home_feed_id,
 };
 pub use hydration_priority::{HydrationJob, HydrationPriority, plan_hydration_jobs};
+pub use notifications_feed::{
+    NOTIFICATION_CLOCK_SKEW_SECONDS, NOTIFICATION_MAX_AUTO_EMPTY_OLDER_REQUESTS,
+    NotificationItemInput, NotificationRelayCursor, NotificationsFeedDiagnosticInput,
+    NotificationsFeedSourceState, NotificationsFeedStatus, NotificationsFeedView,
+    NotificationsFeedViewInput, NotificationsHistoryExhaustion, NotificationsOlderBlockReason,
+    NotificationsOlderIntent, NotificationsOlderIntentInput, NotificationsOlderLoadTrigger,
+    NotificationsOlderPageInput, NotificationsOlderPageOutcome, build_notifications_feed_view,
+    default_notifications_feed_view, initial_notification_cursor, notification_cursor_contains,
+    notifications_feed_id, older_notification_cursor, plan_notifications_older_intent,
+    plan_notifications_older_page,
+};
 pub use orchestration::{
     CacheReadMode, CoverageEvidenceState, FeedPrefetchPlan, HydrationPlan, OptimizerEvidenceState,
     OrchestrationContext, OrchestrationDecisionTrace, OrchestrationPolicy, RetentionHintPlan,
     SurfaceKind, SurfaceReadPlan, plan_cache_retention, plan_feed_prefetch, plan_hydration,
     plan_surface_read,
+};
+pub use profile_feed::{
+    ProfileFeedDiagnosticInput, ProfileFeedSourceState, ProfileFeedStatus, ProfileFeedView,
+    ProfileFeedViewInput, ProfileHeaderInput, ProfileHeaderView, build_profile_feed_view,
+    default_profile_feed_view, profile_feed_id, profile_header_view,
+    profile_header_with_copy_context, profile_header_with_relays, relay_sets_copy_json,
 };
 pub use profile_history::{ProfileScanDecision, ProfileScanInput, plan_profile_sparse_scan};
 pub use public_chat::{
@@ -106,13 +151,29 @@ pub use public_chat::{
     own_mute_plan, route_relays, selected_channel_messages_plan, update_channel_metadata_template,
 };
 pub use query::{QueryDemandInput, QueryDemandPlan, QuerySurface, plan_query_demand};
+pub use search_feed::{
+    SearchFeedDiagnosticInput, SearchFeedSourceState, SearchFeedStatus, SearchFeedView,
+    SearchFeedViewInput, build_search_feed_view, default_search_feed_view,
+    partial_search_feed_view, pending_search_feed_view, search_feed_id,
+};
 pub use storage_maintenance::{
     StorageMaintenanceInput, StorageMaintenancePlan, StorageRepairConsumption,
     plan_storage_maintenance,
 };
+pub use thread_feed::{
+    THREAD_MAX_AUTO_EMPTY_OLDER_REQUESTS, ThreadFeedDiagnosticInput, ThreadFeedSourceState,
+    ThreadFeedStatus, ThreadFeedView, ThreadFeedViewInput, ThreadHistoryExhaustion,
+    ThreadOlderBlockReason, ThreadOlderIntent, ThreadOlderIntentInput, ThreadOlderLoadTrigger,
+    ThreadOlderPageInput, ThreadOlderPageOutcome, ThreadRelayCursor, build_thread_feed_view,
+    default_thread_feed_view, older_thread_cursor, plan_thread_older_intent,
+    plan_thread_older_page, thread_cursor_contains, thread_feed_id,
+};
 pub use user_timeline::{
     DiscoveryRouteGroup, DiscoveryRouteOutcome, DiscoveryRouteSource, UserTimelineDiscoveryInput,
-    UserTimelineDiscoveryPlan, UserTimelineDiscoveryState, plan_user_timeline_discovery,
+    UserTimelineDiscoveryPlan, UserTimelineDiscoveryState, UserTimelineFeedDiagnosticInput,
+    UserTimelineFeedSourceState, UserTimelineFeedStatus, UserTimelineFeedView,
+    UserTimelineFeedViewInput, build_user_timeline_feed_view, default_user_timeline_feed_view,
+    plan_user_timeline_discovery, user_timeline_feed_id, user_timeline_target_only_notice,
 };
 pub use workspace_runtime::{
     DEFAULT_WARM_SNAPSHOT_CAP, StartupInput, StartupResult, StartupSource, WorkspaceRuntimeState,

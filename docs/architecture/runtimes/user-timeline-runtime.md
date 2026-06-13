@@ -87,9 +87,9 @@ feed windows. Cleanup is idempotent and keeps only compact tab snapshots.
 
 ## Tests
 
-Tests cover cache hit, cache miss triggering relay discovery, selected-relay
-success, NIP-65 route success, provenance-route success, partial relay failure,
-all-route timeout, auth-required relay, disabled-relay exclusion, honest
-target-posts-only mode, bounded retry expansion, incomplete reason codes,
-older-load planning, cache coverage mismatch, duplicate-tab work sharing, and
-owner cleanup.
+Tests currently cover cache hit, cache miss triggering relay discovery,
+selected-relay success, NIP-65/provenance/target-route success, partial route
+failure diagnostics, no-event retry, auth-required, rate-limited, and timeout
+selected relays, disabled-relay exclusion, honest target-posts-only mode,
+bounded retry expansion, incomplete reason codes, and owner cleanup. Coverage,
+older-load planning, and work-sharing proof remain open.

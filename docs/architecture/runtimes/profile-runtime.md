@@ -45,3 +45,26 @@ Profile runtime owns metadata and authored-note loading for one pubkey.
 - Hidden tabs release live post Demands; metadata Demands may complete if already in flight.
 - Close all Demands and abort page reads on tab close.
 - Startup rejection paths log one bounded app-log runtime failure for the tab.
+
+## Current Rust Evidence
+
+The first Rust Profile slice builds `ProfileFeedView` note rows from the shared
+feed row model and renders injected real authored notes in the Leptos Profile
+tab. Missing pubkey, missing selected relays, and partial coverage are explicit.
+The Rust host provider now reads SQLite authored display-kind rows through
+selected-relay fallback or target author routes, promotes cache-ready only from
+exact Profile coverage proof, starts bounded relay reads after partial proof,
+excludes kind `0` and kind `3` rows from visible notes, renders cached kind `0`
+header metadata plus known or unknown kind `3` follow-count state, and releases
+owner cleanup on tab switch. Recent complete-empty coverage now scans older
+sparse history instead of rendering empty, and only contiguous exact empty
+coverage down to the floor renders terminal empty. A separate header relay read
+requests kind `0`/`10002` metadata through author routes or selected fallback,
+requests kind `3` follow lists through selected relays, stores accepted events
+in worker-owned SQLite, and rebuilds the cached header. Known following-count
+clicks open or focus Followees, and Profile header actions open or focus User
+Timeline for the viewed pubkey. Own-profile actions open or focus Profile Edit.
+The Rust copy menu copies npub, nprofile, follow-list JSON, and relay-set JSON
+through the host provider before showing copied status. Follow/unfollow actions
+publish local or NIP-07 kind `3` updates only after relay acceptance. Deletion
+proof remains open.

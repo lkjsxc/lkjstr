@@ -2,11 +2,9 @@
 
 ## Purpose
 
-This document summarizes the implemented product state and the active contracts
-for storage, relay work, memory, and verification. The shipped product runtime
-is still SvelteKit and TypeScript, while Rust/WASM is the target owner as each
-real slice reaches parity. Detailed behavior lives in the linked product,
-protocol, architecture, and operations pages.
+This document summarizes implemented product state and active storage, relay,
+memory, and verification contracts. The shipped runtime is still SvelteKit and
+TypeScript while Rust/WASM becomes owner slice by slice.
 
 ## Product Surfaces
 
@@ -20,15 +18,14 @@ Read next: [product/README.md](product/README.md),
 - Home, Global, Public Chat, Profile, Thread, Notifications, Search, Custom
   Request, Author Context, Accounts, Relay Settings, Stats, Settings, Upload
   Settings, lkjstr Log, Mine npub, Profile Edit, and Welcome are implemented.
-- Followees and User Timeline are relay-backed action-opened surfaces. Cache-hit
-  real NIP-02 data may render immediately, cache misses start target discovery,
-  and User Timeline can show a truthful target-posts-only degraded mode with
-  route-group diagnostics and retryable incomplete states.
+- Followees and User Timeline are relay-backed action-opened surfaces. Rust Followees
+  renders injected/default cached real NIP-02 rows and selected-relay kind `3`
+  discovery with cleanup and retry diagnostics. Rust User Timeline renders real NIP-02 rows,
+  stored routes, cleanup, retry/auth/rate-limit/timeout and partial-route diagnostics, plus degraded target-posts-only mode.
 - Shared UI system catalog and shipped component list live in
   [architecture/workspace/ui-system/README.md](architecture/workspace/ui-system/README.md);
   polish acceptance rows live in
   [architecture/workspace/ui-system/polish-backlog.md](architecture/workspace/ui-system/polish-backlog.md).
-  Reply and zap expanded panels remain a documented enrichment-tier gap.
 - New Tab includes a fixed `lkjsxc` choice that opens the public User Timeline
   for `0f38afb23cec30570ee64f9a4aa099229395ec3371c5fe867e09c9111480015d`.
 - Search is treated as complete only when the local SQLite token index and
@@ -102,11 +99,12 @@ Read next: [architecture/data/README.md](architecture/data/README.md),
   jobs, cache ledger summaries, cache metadata, active account selectors,
   pressure snapshots, protection snapshots, and retention deletion use the
   SQLite worker with memory fallback when workers are unavailable.
-- The Rust Leptos startup path and protected tool hosts use the SQLite worker
-  for workspace recovery, workspace persistence, Settings, Accounts, Relay
-  Settings, Upload Settings, Tweet drafts, Stats inventory, Stats SQLite health,
-  active account selectors, pressure snapshots, and durable lkjstr Log rows. The
-  Rust IndexedDB adapter remains for host-boundary tests and narrow WASM exports.
+- The Rust Leptos startup path, protected tool hosts, and first feed hosts use
+  the SQLite worker for workspace recovery, workspace persistence, Settings,
+  Accounts, Relay Settings, Upload Settings, Tweet drafts, Stats inventory,
+  Stats SQLite health, active account selectors, pressure snapshots, durable
+  lkjstr Log rows, and cached Home, Global, Notifications, Profile, and Thread feed rows.
+  The Rust IndexedDB adapter remains for host-boundary tests and narrow WASM exports.
 - Physical inventory, cache summaries, retention target checks, and protection
   snapshots use SQLite paths. Repair has models, adapters, and target probes.
 - Storage inventory is SQLite-first. It reads SQLite table counts, cache ledger
@@ -123,9 +121,10 @@ Read next: [architecture/data/README.md](architecture/data/README.md),
   byte-safe cleanup evidence.
 - Rust storage command metadata covers active selectors, pressure, protected
   rows, cache/feed evidence, diagnostics, jobs, app log, inventory, optimizer,
-  retention, repair scan/backfill/report rows, Search token/tag rows, and
-  storage/web local-query adapters. Search app planning, NIP-50 merge, broader
-  product parity, and deletion proof remain open.
+  retention, repair scan/backfill/report rows, Search token/tag rows,
+  storage/web local-query adapters, and worker-backed Rust Search provider,
+  tab snapshot restore, cached older-page proof, and relay older-page proof.
+  Broader product parity and deletion proof remain open.
 - Rust storage outcomes expose stable problem-kind labels for OPFS failures,
   worker init, temporary memory fallback, repair, decode, active account
   selector, pressure snapshot decode, optimizer record decode, pressure stop
@@ -155,17 +154,30 @@ Read next: [architecture/workspace/README.md](architecture/workspace/README.md),
   anchors, feed cursors, bounded row ids, and recoverable filter fields. They do
   not store full events, profiles, diagnostics, active workers, or unbounded
   arrays.
-- Feed surfaces share near-end sentinels, footer phase semantics, bounded
-  viewport-fill, older-load intent gating, and staged row shells on Home,
-  Global, Profile, Thread, and Notifications.
+- Feed surfaces share near-end sentinels, footer phase semantics, bounded viewport-fill,
+  older-load intent gating, and staged row shells on Home, Global, Profile, Thread, and Notifications.
+- The Rust Home tab requests protected SQLite account, relay, follow-list,
+  cached event, and feed-coverage evidence, then renders cached rows, exact
+  cache-ready proof, bounded selected-relay reads, cleanup ownership, and
+  explicit startup storage failures. Rust Global requests selected-relay cache,
+  exact coverage, kind `1` rows, tab-cleanup suppression, footer/scroll older
+  requests, viewport-fill older requests, and compound older relay cursors. Rust Notifications
+  loads SQLite notification records/source events, exact `#p` coverage, bounded
+  reads, footer/scroll older requests, and retained relay state. Rust Profile
+  requests SQLite selected-relay or author-route cache, exact coverage, bounded
+  note relay reads, owner cleanup, cached and relay-refreshed kind `0`
+  metadata plus kind `3` follow counts, and sparse empty proof while excluding
+  metadata and follow-list note rows. Rust Thread reads cached root, reply, focused-reference,
+  and parent rows, renders parent-miss and continuation rows, runs bootstrap/live reads, merges snapshots, and starts footer/scroll/viewport older requests.
+  It stays partial until broader Thread parity and deletion proof are converted.
 - Live inserts follow a top-anchor policy. A user at the top sees new resident
   rows immediately; a user away from the top keeps the visible anchor and sees
   newer-available state instead of being yanked upward.
-- Profile following counts are not binary. Unknown counts render loading,
-  discovery, incomplete, unavailable, or failed states; only a known kind `3`
-  follow list may render `0 following`.
-- Profile notes do not show a no-notes empty state until sparse historical relay
-  scans prove absence for attempted routes. Long-inactive profiles remain in a
+- Profile following counts/actions are explicit: unknown states never render zero;
+  known counts open Rust Followees/User Timeline/Edit, copy npub, nprofile,
+  follow-list, and relay-set JSON, and non-own Rust follow buttons publish local or
+  NIP-07 kind `3` updates only after relay OK; only kind `3` may render `0 following`.
+- Profile notes do not show a no-notes empty state until sparse historical relay scans prove absence for attempted routes. Long-inactive profiles remain in a
   loading, searching older, partial, auth-required, failed, or unavailable state
   until proof exists.
 - Visibility-prioritized hydration is the feed enrichment policy: visible rows,
@@ -175,10 +187,11 @@ Read next: [architecture/workspace/README.md](architecture/workspace/README.md),
   Incomplete, failed, compacted, dense, stale, or missing evidence cannot prove
   absence.
 - Rust owns pure feed row geometry estimates, reservation decisions, anchor
-  compensation, long-content visual fragments, and a real-data feed LOD tree.
-  Svelte feed code is host glue that applies Rust decisions when the bridge is
-  available, with session-only TypeScript estimates as the fallback only.
-  SQLite-backed row-height persistence remains incomplete and must use typed
+  compensation, long-content visual fragments, a real-data feed LOD tree, and
+  shared owner-release proof that closes wire traffic while retaining bounded
+  windows. Svelte feed code is host glue that applies Rust decisions when the
+  bridge is available, with session-only TypeScript estimates as the fallback
+  only. SQLite-backed row-height persistence remains incomplete and must use typed
   worker repositories when added. Reservation, unload-stability, and LOD rules
   live in
   [architecture/data/feed-surface/height-reservation.md](architecture/data/feed-surface/height-reservation.md)
@@ -187,20 +200,20 @@ Read next: [architecture/workspace/README.md](architecture/workspace/README.md),
 ## Network And Runtimes
 
 Read next: [architecture/network/README.md](architecture/network/README.md),
-[architecture/runtimes/README.md](architecture/runtimes/README.md), and
-[architecture/orchestration/README.md](architecture/orchestration/README.md).
+[architecture/runtimes/README.md](architecture/runtimes/README.md), and [architecture/orchestration/README.md](architecture/orchestration/README.md).
 
 - Surfaces submit demands. The subscription orchestrator plans shared leases
   and issues reads through the subscription manager.
 - Feed route isolation keeps Home and Profile route-group reads on resolved
   route fingerprints, while Notifications and selected-relay tools keep
   independent semantic keys.
-- User Timeline chunks large author sets, renders fast relay results before slow
-  relay completion, and degrades to target-authored posts only when follow-graph
-  discovery is unavailable but real target posts are reachable.
-- Search renders local indexed results without waiting for remote relays, sends
-  bounded NIP-50 filters to eligible selected read relays, and reports unsupported
-  or clamped relays as diagnostics.
+- Followees and User Timeline discover missing target kind `3` through selected relays;
+  User Timeline also reads stored NIP-65 routes. No-event/AUTH/rate-limited/timeout reads and partial route failures render explicit diagnostics.
+  It keeps a distinct Rust query surface for large author sets and renders real author-set feed rows; broader route completion stays partial.
+- Search restores query filter snapshots, renders local indexed results without
+  waiting for remote relays, sends bounded NIP-50 filters to eligible selected
+  read relays, loads cached and relay older pages by compound cursor, and reports
+  unsupported or clamped relays as diagnostics.
 - Matching Home tabs attach to one shared query keyed by account, selected
   relays, page size, and feed policy.
 - Background work is owner-scoped, cancellable, chunked, and non-blocking.
@@ -237,14 +250,11 @@ and [operations/memory-verification.md](operations/memory-verification.md).
 
 ## Open Contracts
 
-- Autonomous implementation defaults live in
-  [decisions/autonomous-decision-defaults.md](decisions/autonomous-decision-defaults.md).
-- SQLite worker storage is the active durable-storage contract. Product modules
-  must use typed repositories and must not add direct browser database access.
-- Followees and User Timeline are active product contracts. They must render
-  real NIP-02 data or explicit unavailable states and must not synthesize users
-  or posts. A local cache miss is a relay discovery trigger, not proof that a
-  public follow list is unavailable.
+- Autonomous implementation defaults live in [decisions/autonomous-decision-defaults.md](decisions/autonomous-decision-defaults.md).
+- SQLite worker storage is the active durable-storage contract. Product modules must use typed repositories and must not add direct browser database access.
+- Followees and User Timeline are active product contracts. They must render real
+  NIP-02 data or explicit unavailable states and must not synthesize users or
+  posts. A local cache miss triggers relay discovery and never proves absence.
 - NIP-89 client tags are opt-in and must be added before signing only when a
   valid handler coordinate and relay hint exist.
 - NIP-29 groups must use relay plus group id, `h` tags, relay-scoped state, and
@@ -286,8 +296,5 @@ and [operations/memory-verification.md](operations/memory-verification.md).
 
 ## Verification Gate
 
-Docker Compose is the final verification path: validate Compose config, build
-`app`, `verify`, `cloudflare`, and `app-smoke`, then run `verify`,
-`cloudflare`, and `app-smoke` services from those images. Canonical local gates
-are repository checks, focused unit and integration tests, Rust/WASM checks,
-production build, Cloudflare dry-run, and app-smoke.
+Docker Compose is the final verification path: validate Compose config, then
+build and run `app`, `verify`, `cloudflare`, and `app-smoke` from images.

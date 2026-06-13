@@ -5,6 +5,24 @@
 Notifications runtime owns active-account notification indexing and relay
 backfill.
 
+## Current Rust Evidence
+
+The Rust Notifications tab can build shared feed rows from host-owned SQLite
+notification records and cached source events for the active account. It
+promotes cache-ready only when feed coverage proves the exact account `#p`
+filter, selected relay, route group, and bounded interval. Partial cache proof
+starts a bounded selected-relay read and merges progressive relay snapshots.
+The Rust tab has one scroll owner for status, rows, events, and footer. Pure
+Rust proof covers initial/older cursors, history exhaustion rules, and
+fill-then-scroll older intent gating. The Rust host now builds bounded older
+relay windows, rejects out-of-window or unmatched `#p` relay events, and keeps
+empty complete older windows retryable. A completed initial relay page retains
+its in-memory window and older cursor, and the shared `feed.loadOlder` footer
+command plus a downward near-end scroll gesture starts the next bounded older
+relay read through the shared planner. Deletion proof remains open.
+Browser cleanup proof releases the provider lease and suppresses late
+completions after tab cleanup.
+
 ## Render-Critical Kinds
 
 | Phase            | Kinds                                                     |
@@ -48,7 +66,9 @@ backfill.
 Notifications mark `historyExhaustion: 'proven'` only when the scan reaches the
 lower bound, local cache has no older records, and every contacted relay read is
 complete without timeout, abort, auth, socket, close, or event-limit ambiguity.
-Incomplete relay reads keep exhaustion unknown so later scrolls can retry.
+Incomplete relay reads keep exhaustion unknown so later scrolls can retry. Rust
+currently proves pure cursor outcomes, bounded older relay window handling, and
+browser scroll-gesture handoff.
 
 ## Viewport Fill
 
@@ -57,15 +77,18 @@ Incomplete relay reads keep exhaustion unknown so later scrolls can retry.
 - Automatic viewport-fill may issue at most four zero-record older requests per
   runtime intent while the list remains underfilled.
 - After the automatic cap, older scans continue only through a current downward
-  scroll-owner gesture or the explicit notification footer command.
+  scroll-owner gesture or the explicit notification footer command. Rust wires
+  both paths to retained older relay state.
+- Rust has a pure intent planner for this gate and browser proof that the
+  Notifications tab exposes the required single scroll owner.
 
 ## Contract
 
 - Load local notification records before relay Demands.
 - Initial and historical notification pages must prove exact coverage for the
   account `#p` filter, selected notification relays, route group, and bounded
-  interval before relay reads. This top-level return path is not implemented
-  yet; grouped scans still prune covered relay work internally.
+  interval before cache-ready display. Missing coverage starts an initial
+  bounded selected-relay read instead of proving absence.
 - Build relay filters through `notification-filters` (`#p` targeting only).
 - Reject self-authored kind `1` without `#p` self tag as notification rows.
 - Use active account NIP-65 read relays plus selected read fallback.

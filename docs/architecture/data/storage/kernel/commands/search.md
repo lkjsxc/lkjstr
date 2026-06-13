@@ -2,13 +2,15 @@
 
 ## Purpose
 
-Search command metadata covers storage-owned local token rows and tag lookup
-queries. It does not claim Search surface parity or relay NIP-50 merge behavior.
+Search command metadata covers storage-owned local token rows, cursor-bound
+local pages, and tag lookup queries. It does not claim full Search surface
+parity or relay NIP-50 merge behavior.
 
 ## Status
 
 Implemented at the storage and web-adapter boundary. App planning, relay
-NIP-50 merge, Leptos parity, and TypeScript deletion proof remain open.
+NIP-50 merge, cached older-page proof, and Leptos shell slices exist; relay
+older pages and TypeScript deletion proof remain open.
 
 ## Commands
 
@@ -57,13 +59,14 @@ NIP-50 merge, Leptos parity, and TypeScript deletion proof remain open.
 
 ### `search.local-query`
 
-- Status: implemented at the storage and web-adapter boundary; app parity is
-  pending.
+- Status: implemented at the storage and web-adapter boundary with compound
+  cursor paging; full app parity is pending.
 - Family: search-index.
 - Operation: read.
 - Input type: `SearchLocalQueryInput`.
 - Output type: `SearchLocalQueryOutput`.
-- Statements: `event_search_tokens.by_token` and `events.select`.
+- Statements: `event_search_tokens.by_token`,
+  `event_search_tokens.by_token_before`, and `events.select`.
 - Tables: `event_search_tokens` and `events`.
 - Row codecs: `sqlite_event_search_token_row` and `event_from_sqlite_row`.
 - Problems: cache decode.
@@ -87,6 +90,7 @@ with event deletion; the event cache ledger row remains the resource owner.
 ## Boundary
 
 Storage owns token row codecs, tag lookup metadata, and indexed local candidate
-commands. `lkjstr-web` executes the typed worker steps. Product ranking, NIP-50
-relay merge, cancellation, and Search UI states belong to later `lkjstr-app`,
+commands. Cursor-bound reads use `{createdAt,id}` ordering to avoid skipping
+same-second rows. `lkjstr-web` executes the typed worker steps. Product ranking,
+NIP-50 relay merge, cancellation, and Search UI states belong to `lkjstr-app`,
 relay, and `lkjstr-ui` work.

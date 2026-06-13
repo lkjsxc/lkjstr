@@ -29,6 +29,7 @@ pub const fn is_render_critical_for_surface(surface: DemandSurface, kind: u64) -
         DemandSurface::Home
         | DemandSurface::Global
         | DemandSurface::Profile
+        | DemandSurface::UserTimeline
         | DemandSurface::Thread => is_feed_display_kind(kind),
         DemandSurface::Search | DemandSurface::CustomRequest | DemandSurface::AuthorContext => true,
     }

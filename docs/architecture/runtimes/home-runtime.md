@@ -35,6 +35,23 @@ Home runtime owns active-account follow discovery and followed-note loading.
 ## Contract
 
 - Load cached kind `3` follows and matching cached display-kind notes first.
+- The Rust Home slice builds a typed Home feed view model before Leptos
+  rendering. It emits no notes query while follows are loading or absent, and
+  consumes the shared feed row view model for event, diagnostic, unavailable,
+  and footer rows.
+- The Rust shell requests the Home model through a host provider. The provider
+  may render cached rows from protected SQLite event repositories, but it keeps
+  missing follow-list or coverage proof explicit instead of treating cache miss
+  as absence.
+- The provider may mark cache complete only when coverage rows match the Home
+  feed id, route group, relay URL, semantic filter key, and finite requested
+  interval; dense or incomplete rows remain partial retry evidence.
+- When cache proof is partial, the Rust provider may publish a later bounded
+  relay snapshot into the same `HomeFeedView`. Relay failures with no events
+  stay partial or unavailable and must not become an empty success state.
+- The Rust Home provider lease is released when the tab body unmounts. Release
+  cancels the owner relay read, closes sockets and timers, and suppresses late
+  completions.
 - Read cached pages through the shared repository.
 - For initial, older, and newer note pages, run the cache-first page planner
   before relay reads. Complete coverage returns the SQLite page without relay

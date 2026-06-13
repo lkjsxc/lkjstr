@@ -17,6 +17,7 @@ pub enum RelayClientDiagnosticKind {
     RelayNotice,
     RelayAuth,
     RelayOkRejected,
+    MalformedMessage,
 }
 
 #[derive(Clone, Debug, Eq, PartialEq)]
@@ -36,6 +37,7 @@ pub enum RelayClientEffect {
     ClearTimer {
         kind: RelayTimerKind,
     },
+    FetchNip11,
     RecordDiagnostic {
         kind: RelayClientDiagnosticKind,
         detail: String,

@@ -86,6 +86,7 @@ pub struct ThreadRepliesQueryInput {
     pub selected_relays: Vec<String>,
     pub disabled_relays: Vec<String>,
     pub root_event_id: String,
+    pub focus_event_id: String,
     pub root_author: Option<String>,
     pub author_routes: Vec<AuthorRelayRoute>,
     pub phase: DemandPhase,

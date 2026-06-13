@@ -8,8 +8,9 @@ skipping storage, relay, or feed dependency order.
 ## Status
 
 Partial. Storage-owned token rows, command metadata, SQL table/index records,
-event-write token batch steps, and local indexed query adapters exist. Product
-Search runtime parity remains a later surface task.
+event-write token batch steps, local indexed query adapters, and compound
+cursor metadata exist. Product Search runtime parity remains a later surface
+task.
 
 ## Current Evidence
 
@@ -18,9 +19,10 @@ Search runtime parity remains a later surface task.
   records, tag lookup metadata, update-event-index metadata, and local-query
   metadata.
 - `crates/lkjstr-web/src/sqlite_store/search.rs` exposes local indexed query
-  adapters and event-write token batch steps.
-- App-level planner, relay NIP-50 merge, Leptos Search parity, and no-import
-  proof remain open.
+  adapters, cursor-bound older reads, and event-write token batch steps.
+- App-level planner, Rust local provider execution, bounded relay NIP-50 merge
+  proof, tab snapshot restore, and cached older-page proof exist. Relay older
+  pages, broader Leptos Search parity, and no-import proof remain open.
 
 ## Next Edit
 
@@ -39,7 +41,7 @@ Search runtime parity remains a later surface task.
 - [x] Add command specs for `tag-lookup.by-value`, `search.local-query`, and
       `search.update-event-index` as real repositories land.
 - [x] Add tests for token row codecs, tag lookup metadata, indexed local-query
-      metadata, and update-event-index metadata.
+      metadata, compound cursor paging, and update-event-index metadata.
 - [x] Run Rust storage search and command tests plus shipped TypeScript Search
       tests; record actual verification.
 - [x] Add local query worker adapter compile proof.
@@ -50,7 +52,8 @@ Search runtime parity remains a later surface task.
 Rust storage owns token row codecs, tag lookup command metadata, indexed local
 query commands, and delete/update commands for cached event changes. Product
 search never falls back to full cached-event scans for normal local search.
-NIP-50 merge state stays in app and relay runtime modules, not storage.
+Cached older pages use compound `{createdAt,id}` cursors. NIP-50 merge state
+stays in app and relay runtime modules, not storage.
 
 ## Files To Read
 
@@ -91,6 +94,7 @@ until Rust search parity and no-import proof exist.
 - Tag lookup query command specs.
 - Event cache update removes stale search tokens before inserting new tokens.
 - Local search uses indexed rows, not a full cached-event scan.
+- Local older search uses compound cursors for same-second events.
 - TypeScript Search tests still pass while shipped Search remains TypeScript-owned.
 
 ## Focused Gate

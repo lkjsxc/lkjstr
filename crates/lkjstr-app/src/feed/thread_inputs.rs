@@ -49,7 +49,10 @@ pub fn thread_replies_query_input(input: ThreadRepliesQueryInput) -> QueryDemand
         disabled_relays: input.disabled_relays,
         filters: vec![NostrFilter {
             kinds: Some(display_kinds()),
-            tags: BTreeMap::from([("e".to_owned(), vec![input.root_event_id])]),
+            tags: BTreeMap::from([(
+                "e".to_owned(),
+                reply_targets(input.root_event_id, input.focus_event_id),
+            )]),
             since: input.since,
             until: input.until,
             limit: Some(input.page_size),
@@ -61,6 +64,13 @@ pub fn thread_replies_query_input(input: ThreadRepliesQueryInput) -> QueryDemand
         limit: Some(input.page_size),
         now_sec: input.now_sec,
     }
+}
+
+fn reply_targets(root: String, focus: String) -> Vec<String> {
+    if root == focus {
+        return vec![root];
+    }
+    vec![root, focus]
 }
 
 fn author_route_parts(

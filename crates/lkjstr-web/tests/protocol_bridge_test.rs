@@ -86,7 +86,8 @@ async fn welcome_and_new_tab_actions_use_rust_reducers() -> Result<(), JsValue> 
     next_task().await?;
     let text = document_text()?;
     assert!(text.contains("Search"));
-    assert!(text.contains("The Rust Search body is not converted yet."));
+    assert!(text.contains("Enter a search query"));
+    assert!(!text.contains("The Rust Search body is not converted yet."));
     Ok(())
 }
 

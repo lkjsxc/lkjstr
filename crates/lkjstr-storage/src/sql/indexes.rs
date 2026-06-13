@@ -46,7 +46,7 @@ pub const SQLITE_INDEXES: &[SqliteIndexSpec] = &[
     index(
         "feed_coverage_lookup",
         "feed_coverage",
-        "CREATE INDEX IF NOT EXISTS feed_coverage_lookup ON feed_coverage (feed_key, relay_url, filter_fingerprint, since_exclusive, until_exclusive);",
+        "CREATE INDEX IF NOT EXISTS feed_coverage_lookup ON feed_coverage (feed_key, route_group_key, relay_url, filter_fingerprint, status, since_exclusive, until_exclusive);",
     ),
     index(
         "feed_scan_hints_lookup",

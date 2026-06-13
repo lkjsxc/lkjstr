@@ -7,33 +7,35 @@ Notifications, Search lists, Author Context, and User Timeline.
 
 ## Status
 
-Open after storage proof and relay effect wiring can supply real cache evidence
-and progressive snapshots.
+Implemented as an enabling slice. The broader shared feed runtime remains
+partial until cache proof and relay snapshots feed a Rust-owned surface.
 
 ## Current Evidence
 
 - Rust has feed reducers, geometry, fragments, anchors, LOD, and cache evidence
   pieces.
+- `crates/lkjstr-app/src/feed/view_model/**` builds stable typed rows from
+  feed-window events, explicit state rows, and footer inputs.
+- Focused proof covers event rows, duplicate relay merge, profile and
+  notification row ids, unavailable rows, diagnostic rows, and footer states.
 - Shipped feed surfaces still render through TypeScript and Svelte runtimes.
 
 ## Next Edit
 
-1. Start after storage command coverage and relay effect wiring can provide real
-   cache proof and progressive snapshots.
-2. Define shared row data before any Home-specific rendering.
-3. Keep every row backed by real events, real profile state, diagnostics, or an
-   explicit unavailable state.
+Wire cache proof and relay snapshots through this row model in the narrow Home
+feed slice before any broader feed surface parity claim.
 
 ## Next Checklist
 
-- [ ] Read feed runtime, feed-surface, app feed, storage cache, and relay page
+- [x] Read feed runtime, feed-surface, app feed, storage cache, and relay page
       contracts.
-- [ ] Update feed runtime docs before changing row or footer semantics.
-- [ ] Add stable row-id and feed row view-model data types in `lkjstr-app`.
-- [ ] Add conversions from cache/protocol render plans and unavailable states.
-- [ ] Add pure tests for row ids, duplicate merge, unavailable, diagnostic,
+- [x] Update feed runtime docs before changing row or footer semantics.
+- [x] Add stable row-id and feed row view-model data types in `lkjstr-app`.
+- [x] Add conversions from feed-window events, event render plans, and explicit
+      unavailable states.
+- [x] Add pure tests for row ids, duplicate merge, unavailable, diagnostic,
       footer, and no-placeholder states.
-- [ ] Run app feed view-model and protocol tests; then record actual
+- [x] Run app feed view-model and protocol tests; then record actual
       verification.
 
 ## Acceptance
@@ -74,8 +76,11 @@ Svelte paths until Leptos parity and no-import proof exist.
 ## Focused Gate
 
 ```sh
-cargo test -p lkjstr-app feed view_model
+/home/lkjsxc/.cargo/bin/cargo test -p lkjstr-app feed_view_model
+/home/lkjsxc/.cargo/bin/cargo test -p lkjstr-app feed
 cargo test -p lkjstr-protocol
+pnpm test -- tests/unit/feed-surface tests/unit/timeline/timeline-reducer.test.ts tests/unit/timeline/timeline-follow-loading.test.ts
+PATH=/home/lkjsxc/.cargo/bin:$PATH pnpm rust-wasm:quiet
 ```
 
 ## Final Gate

@@ -52,6 +52,11 @@ fn local_search_metadata_uses_indexed_rows() {
             .contains(&"event_search_tokens.by_token")
     );
     assert!(
+        SEARCH_LOCAL_QUERY_COMMAND
+            .statements
+            .contains(&"event_search_tokens.by_token_before")
+    );
+    assert!(
         !SEARCH_LOCAL_QUERY_COMMAND
             .statements
             .contains(&"events.by_kind_time")

@@ -52,12 +52,35 @@ The Rust Tweet body renders a real draft editor backed by protected
 `tweetDrafts` rows. It loads `tab:{tabId}` drafts, falls back to the `main`
 draft when needed, and persists text plus sensitive-warning fields
 without pretending that publish transport is converted.
+The Rust Home body renders a narrow shared-feed view model. The default Rust
+shell asks a host provider for protected SQLite account, relay, follow-list,
+coverage, and cached event evidence; injected models remain test-only. The
+provider renders real cached rows when present and keeps missing proof explicit.
+It can publish bounded selected-relay snapshots after partial cache proof and
+keeps startup storage failures visible as Home account and relay diagnostics.
+It does not replace the shipped Svelte Home runtime.
+The Rust Global body renders `GlobalFeedView` rows from real app row models.
+Its default host provider loads selected-relay SQLite cache rows, requires exact
+Global coverage before cache-ready, starts bounded selected-relay reads after
+partial proof, releases on tab cleanup, and keeps no-relay or partial states
+explicit. Global scroll parity remains open.
+The Rust Notifications body renders `NotificationsFeedView` rows from real app
+row models. Its default host provider loads active-account SQLite notification
+records and cached source events, promotes cache-ready only from exact account
+`#p` coverage, starts bounded selected-relay reads after partial proof, and
+renders status, rows, events, and footer inside one Notifications scroll owner.
+Pure Rust cursor and fill-then-scroll intent proof exists. Rust/WASM proof now
+covers bounded older relay filters, event rejection, and empty older-window
+footer behavior. The older-ready footer renders a real `feed.loadOlder` command
+button that asks the host to start the next bounded older relay read from
+retained relay state. Automatic scroll-gesture orchestration remains open.
+Cleanup releases provider leases and suppresses late completions.
 
-Not implemented yet: feed surfaces, most tool surfaces, relay-backed content,
-Stats relay/job/compaction diagnostics, Settings appearance side effects, Relay
-Settings NIP-11/suggestions/diagnostics, Upload Settings file upload/NIP-98
-transport, Tweet signing/publish/media/custom emoji transport, and full
-responsive/a11y QA.
+Not implemented yet: remaining feed-surface host providers beyond Home, Global,
+and partial Notifications, most tool surfaces, Stats relay/job/compaction
+diagnostics, Settings appearance side effects, Relay Settings
+NIP-11/suggestions/diagnostics, Upload Settings file upload/NIP-98 transport,
+Tweet signing/publish/media/custom emoji transport, and full responsive/a11y QA.
 
 ## Component Split
 

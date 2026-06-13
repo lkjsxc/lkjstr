@@ -93,3 +93,82 @@ fn failed_routes_are_bounded_for_retry() {
     assert_eq!(plan.state, UserTimelineDiscoveryState::Failed);
     assert_eq!(plan.retry_sources.len(), 4);
 }
+
+#[test]
+fn auth_required_route_beats_generic_failure() {
+    let plan = plan_user_timeline_discovery(&UserTimelineDiscoveryInput {
+        groups: vec![
+            group(
+                DiscoveryRouteSource::Selected,
+                DiscoveryRouteOutcome::Failed,
+            ),
+            group(
+                DiscoveryRouteSource::Nip65,
+                DiscoveryRouteOutcome::AuthRequired,
+            ),
+        ],
+        cache_checked: true,
+        follow_list_found: false,
+        target_posts_reachable: false,
+        offline: false,
+    });
+
+    assert_eq!(plan.state, UserTimelineDiscoveryState::AuthRequired);
+    assert_eq!(
+        plan.retry_sources,
+        vec![DiscoveryRouteSource::Selected, DiscoveryRouteSource::Nip65]
+    );
+}
+
+#[test]
+fn rate_limited_route_beats_generic_failure() {
+    let plan = plan_user_timeline_discovery(&UserTimelineDiscoveryInput {
+        groups: vec![
+            group(
+                DiscoveryRouteSource::Selected,
+                DiscoveryRouteOutcome::Failed,
+            ),
+            group(
+                DiscoveryRouteSource::TargetRoutes,
+                DiscoveryRouteOutcome::RateLimited,
+            ),
+        ],
+        cache_checked: true,
+        follow_list_found: false,
+        target_posts_reachable: false,
+        offline: false,
+    });
+
+    assert_eq!(plan.state, UserTimelineDiscoveryState::RateLimited);
+    assert_eq!(
+        plan.retry_sources,
+        vec![
+            DiscoveryRouteSource::Selected,
+            DiscoveryRouteSource::TargetRoutes
+        ]
+    );
+}
+
+#[test]
+fn found_follow_list_preserves_partial_route_outcomes() {
+    let plan = plan_user_timeline_discovery(&UserTimelineDiscoveryInput {
+        groups: vec![
+            group(DiscoveryRouteSource::Nip65, DiscoveryRouteOutcome::Failed),
+            group(
+                DiscoveryRouteSource::Provenance,
+                DiscoveryRouteOutcome::Succeeded,
+            ),
+        ],
+        cache_checked: true,
+        follow_list_found: true,
+        target_posts_reachable: false,
+        offline: false,
+    });
+
+    assert_eq!(plan.state, UserTimelineDiscoveryState::Partial);
+    assert_eq!(plan.failed_sources, vec![DiscoveryRouteSource::Nip65]);
+    assert_eq!(
+        plan.successful_sources,
+        vec![DiscoveryRouteSource::Provenance]
+    );
+}

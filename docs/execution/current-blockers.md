@@ -8,14 +8,34 @@ shipped source paths, tests, and proof needed to move a cutover-ledger row.
 
 ## Dependency Order
 
-Storage wiring enables relay proof. Relay wiring enables feed runtime proof.
-Shared feed runtime proof enables surface cutover. Do not skip this order for
-visible polish.
+Storage wiring enables relay proof. The storage command-coverage and relay
+host-runner enabling slices are implemented; storage and relay parity plus
+deletion remain blocked. Shared feed runtime is the current first incomplete
+blocker and has pure row-view-model, first Home rendering, cache-backed
+provider, exact Home coverage proof, bounded Home relay snapshot wiring, Rust
+Home owner-release cleanup, first Global rendering, Global cache-backed
+provider proof, Global browser cleanup proof, Global footer/scroll and
+viewport-fill older request proof, first Notifications cached
+provider proof, Notifications browser cleanup proof, Notifications bounded
+older relay-window plus footer and scroll-triggered older proof, and first
+Profile storage-backed provider proof with exact route coverage and sparse
+empty proof, plus first Thread cached root/reply provider proof, bounded
+Thread bootstrap relay-read proof, explicit Thread older-page relay command
+proof, scroll-triggered plus viewport-fill Thread older request proof, bounded
+Thread live reply-window proof, focused-reference Thread hydration proof,
+bounded cached Thread parent-chain proof, terminal unavailable-parent rows,
+and Thread continuation rows; the shared Rust feed core now proves owner
+release cleanup plus Search app/UI demand, provider execution, local indexed
+rows, bounded relay NIP-50 merge proof, Search tab snapshot restore, cached
+plus relay older-page proof, cached plus relay-refreshed Profile
+metadata/follow-count header rendering, selected-relay Followees plus User
+Timeline kind `3` discovery, and Followees/User Timeline cleanup plus retry
+diagnostics. Do not skip this order for visible polish.
 
-## 1. Storage command coverage
+## 1. Storage command coverage (implemented enabling proof)
 
-Complete remaining storage command coverage for retention, repair, full pressure
-inventory diagnostics, and Rust Stats consumption.
+Preserve completed storage command coverage for retention, repair, full
+pressure inventory diagnostics, and Rust Stats consumption.
 
 Preserve implemented active selector, pressure, protected, event cache, feed
 evidence, diagnostics, notifications, jobs, app log, inventory, optimizer,
@@ -40,17 +60,18 @@ metadata.
   `pnpm test -- tests/unit/cache tests/unit/events/repository.test.ts`,
   `pnpm test -- tests/unit/feed-surface/scan-model-repository.test.ts`, and
   `pnpm rust-wasm:quiet`.
-- Completion proof: batch-capable Rust command specs cover implemented
+- Completed proof: batch-capable Rust command specs cover implemented
   families, retention delete dispatch, repair metadata and probes, Search
   token, tag, and local-query metadata, current pressure byte projections,
   pressure-state mapping tests, UI Stats unavailable-state tests, storage-owned
   inventory readiness classification, and readiness-gated retention/repair app
   planning.
-- Next proof: expand Rust storage product consumers toward Search app planning,
-  NIP-50 merge, and feed/runtime use. Protected rows are never pruned; ledgers
-  stay partial unless no-import proof exists.
+- Next queue: shared feed runtime. Preserve Search provider execution and
+  snapshot restore proof, then return to feed/runtime storage consumers and
+  broader storage parity only after their dependency rows are ready. Protected rows are never pruned;
+  ledgers stay partial unless no-import proof exists.
 
-## 2. Relay effect runner
+## 2. Relay effect runner (implemented host mapping proof)
 
 Wire Rust relay effects to browser WebSocket, timers, NIP-11 fetch, budgets,
 page-read cleanup, and progressive snapshots.
@@ -71,9 +92,13 @@ page-read cleanup, and progressive snapshots.
   `cargo test -p lkjstr-web`,
   `pnpm test -- tests/unit/events/relay-page-scan.test.ts tests/unit/events/relay-page-adaptive-window.test.ts`,
   and `pnpm rust-wasm:quiet`.
-- Completion proof: Rust owns budgets, leases, malformed ingress diagnostics,
-  owner-scoped cleanup, and progressive snapshots. Disabled relays stay
-  excluded and partial failure remains diagnostic.
+- Completed proof: `lkjstr-web` maps relay reducer effects to typed socket,
+  frame, timer, NIP-11, diagnostic, snapshot, and callback-owner host actions.
+  Typed host events feed reducer events only while the owner generation is
+  active; closed owners emit ignored-after-close diagnostics and replaced
+  generations are rejected. Firefox socket and timer host tests plus
+  Rust/WASM quiet passed. Product surfaces still consume TypeScript relay
+  runtime paths until shared feed demand wiring and no-import proof exist.
 
 ## 3. Shared feed runtime
 
@@ -98,9 +123,42 @@ models, anchors, footer states, and unavailable states.
   `pnpm test -- tests/unit/feed-surface`,
   `pnpm test -- tests/unit/timeline/timeline-reducer.test.ts tests/unit/timeline/timeline-follow-loading.test.ts`,
   and `pnpm rust-wasm:quiet`.
-- Completion proof: a Rust feed view model renders real rows from SQLite cache
-  evidence plus relay snapshots. Missing coverage never proves absence, hidden
-  tabs release live relay work, and no placeholder rows exist.
+- Completed enabling proof: `lkjstr-app` now has a pure row view model with
+  stable event, profile, notification, unavailable, diagnostic, and footer row
+  ids. Focused tests cover duplicate relay merge, explicit unavailable and
+  diagnostic rows, profile and notification ids, footer states, first Rust Home
+  row rendering, first injected Global feed rendering, Global selected-relay
+  cache provider proof, exact Global coverage proof, bounded Home and Global
+  relay snapshot wiring, Global explicit/scroll/viewport-fill older request
+  proof with compound older relay cursors, feed regressions, protocol events,
+  Home and Global browser cleanup, first Notifications cached provider proof,
+  Notifications
+  browser cleanup, exact Notifications account coverage, bounded Notifications
+  relay snapshot wiring, Notifications scroll-owner and cursor-gating proof,
+  Notifications bounded older relay-window proof, explicit Notifications older
+  footer command wiring from retained relay state, scroll-triggered
+  Notifications older request proof, Profile storage-backed provider proof,
+  exact Profile route coverage, Profile metadata/follow-list exclusion, cached
+  Profile metadata/follow-count rendering, Profile relay header refresh,
+  Profile Followees/User Timeline/Profile Edit/copy-npub/nprofile/follow-list/relay-set JSON actions,
+  Profile Follow/Unfollow state loading plus local and NIP-07 publish without fake success,
+  Profile sparse-history empty proof, first Rust Followees NIP-02 row rendering,
+  default cached plus selected-relay Followees host-provider, cleanup, and retry diagnostics proof,
+  first Rust User Timeline NIP-02 author-set feed-row rendering,
+  default cached User Timeline host-provider proof, selected-relay User
+  Timeline kind `3` discovery, stored NIP-65 route discovery, and retry diagnostics proof,
+  Thread cached root/reply provider proof, shared
+  feed owner-release cleanup, bounded Thread bootstrap relay reads, Thread relay
+  owner cleanup, explicit Thread older-page relay reads from the footer command,
+  scroll-triggered and viewport-fill Thread older requests, bounded Thread live
+  reply windows, focused-reference Thread hydration, bounded cached Thread
+  parent-chain hydration, terminal unavailable-parent rows, Thread continuation
+  rows, Search app/UI demand, worker-backed Search provider execution, local
+  indexed rows, bounded relay NIP-50 merge proof, Search tab snapshot restore,
+  cached plus relay older-page proof, and Rust/WASM quiet.
+- Remaining completion proof: other feed surfaces still need Rust host parity.
+  Deletion proof remains open.
+  Missing coverage never proves absence, and no placeholder rows exist.
 
 ## 4. First Home Leptos feed slice
 
@@ -124,9 +182,24 @@ broader surface parity.
   `pnpm test -- tests/unit/timeline/timeline-reducer.test.ts tests/unit/timeline/timeline-follow-loading.test.ts`,
   `pnpm test -- tests/unit/workspace/tab-retention.test.ts`, and
   `pnpm rust-wasm:quiet`.
-- Completion proof: Home rows come from the shared Rust feed model,
-  unavailable states are truthful, clean startup behavior remains, and
-  TypeScript Home runtime remains until deletion proof is complete.
+- Completed enabling proof: `lkjstr-app` composes Home follow state, live query
+  input, source state, shared feed rows, diagnostics, unavailable rows, and
+  footer data. `lkjstr-ui` renders Home rows from `HomeFeedView`, and a browser
+  WASM test proves an injected real event row plus cache-hit footer renders in
+  the Rust Home tab. A host-provider browser test proves the default Rust Home
+  tab can render real cached rows from protected SQLite account, relay,
+  follow-list, event, and coverage repositories without fake data. The same
+  browser proof keeps incomplete coverage partial and reaches ready only from
+  exact feed, route, relay, filter, and interval coverage. Partial cache proof
+  now starts a bounded selected-relay Home read that publishes real relay event
+  snapshots into the same Rust view model while no-event terminal failures stay
+  partial. The Rust Home tab releases its provider lease on cleanup, suppresses
+  late completions, and cancels the owner relay read so browser sockets and
+  timers close. Browser startup proof mounts the Rust shell with unavailable
+  storage, keeps Welcome usable, and renders explicit Home account and relay
+  diagnostics instead of a success state.
+- Remaining completion proof: broader feed-surface host wiring and TypeScript
+  deletion proof remain open.
 
 ## 5. Deletion proof
 

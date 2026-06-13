@@ -7,33 +7,35 @@ NIP-11 host actions without moving relay correctness into `lkjstr-web`.
 
 ## Status
 
-Open after the active storage slice has enough proof for relay diagnostics and
-route-evidence dependencies.
+Implemented enabling proof. Product relay parity remains partial until shipped
+surface demand wiring consumes the host runner and no-import proof exists.
 
 ## Current Evidence
 
 - `lkjstr-relays` owns pure queues, budgets, leases, route groups, ingress, and
   progressive snapshots.
-- `lkjstr-web/src/relay_host/**` owns socket and timeout foundations.
+- `lkjstr-web/src/relay_host/**` owns socket, timeout, and effect-runner host
+  foundations.
 
 ## Next Edit
 
-1. Start only after storage command coverage is stable enough for diagnostics,
-   route evidence, optimizer rows, and Stats paths.
-2. Map reducer effects to host handles without moving relay correctness into
-   `lkjstr-web`.
-3. Prove final-close tombstones reject late host events before product wiring.
+1. Feed shared runtime demand into the host runner without deleting TypeScript
+   relay paths.
+2. Keep relay correctness in `lkjstr-relays`; `lkjstr-web` remains the browser
+   effect boundary.
+3. Preserve owner-generation rejection while product surfaces start consuming
+   Rust relay snapshots.
 
 ## Next Checklist
 
-- [ ] Read relay runtime, relay wiring, and relay host source before editing.
-- [ ] Update relay wiring docs if effect shapes or cleanup ownership change.
-- [ ] Add or split host runner modules under line limits.
-- [ ] Add effect-to-host, timer, socket, NIP-11, owner cleanup, and late-event
+- [x] Read relay runtime, relay wiring, and relay host source before editing.
+- [x] Update relay wiring docs if effect shapes or cleanup ownership change.
+- [x] Add or split host runner modules under line limits.
+- [x] Add effect-to-host, timer, socket, NIP-11, owner cleanup, and late-event
       tests.
-- [ ] Keep TypeScript relay paths until product demand wiring and no-import
+- [x] Keep TypeScript relay paths until product demand wiring and no-import
       proof exist.
-- [ ] Run relay, web relay host, browser host, and Rust/WASM gates; then record
+- [x] Run relay, web relay host, browser host, and Rust/WASM gates; then record
       actual verification.
 
 ## Acceptance
@@ -57,6 +59,7 @@ host events back to reducers. Owner cleanup rejects late events.
 
 ## Files To Touch
 
+- `crates/lkjstr-web/src/relay_host/effect_action.rs`.
 - `crates/lkjstr-web/src/relay_host/effect_runner.rs`.
 - Split existing relay host files before exceeding line caps.
 
@@ -76,8 +79,16 @@ exist.
 ```sh
 cargo test -p lkjstr-relays
 cargo test -p lkjstr-web relay_host
+wasm-pack test --node crates/lkjstr-web -- relay_effect_runner
 wasm-pack test --headless --chrome crates/lkjstr-web -- relay_socket
+wasm-pack test --headless --chrome crates/lkjstr-web -- browser_timeout
+wasm-pack test --headless --firefox crates/lkjstr-web -- relay_socket
+wasm-pack test --headless --firefox crates/lkjstr-web -- browser_timeout
+pnpm rust-wasm:quiet
 ```
+
+Use a matching `--chromedriver` path when multiple cached ChromeDrivers exist;
+the quiet wrapper selects the matching driver automatically.
 
 ## Final Gate
 

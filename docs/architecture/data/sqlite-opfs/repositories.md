@@ -16,6 +16,10 @@ and retention flows. Product crates and UI components do not call raw SQL.
 `lkjstr-web` transports storage requests to the worker and maps browser failures
 into storage outcomes. It does not contain product query rules.
 
+`pnpm check:repo` enforces the browser boundary: raw SQLite WASM imports and
+OPFS open primitives stay in `src/lib/storage/sqlite-opfs/`, while raw browser
+store access stays in storage-owned compatibility areas.
+
 Implemented now: protected and core event-cache row codecs plus SQL statement
 records live in `lkjstr-storage`; `lkjstr-web` has worker-backed repository
 calls for settings, workspaces, tab states with ledger rows, accounts, local

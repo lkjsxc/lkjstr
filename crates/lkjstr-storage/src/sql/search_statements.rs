@@ -8,6 +8,11 @@ pub const SEARCH_STATEMENTS: &[SqliteStatementSpec] = &[
         "event_search_tokens",
         "SELECT event_id, token, position, created_at, kind, pubkey FROM event_search_tokens WHERE token = ?1 ORDER BY created_at DESC, event_id ASC LIMIT ?2;",
     ),
+    read(
+        "event_search_tokens.by_token_before",
+        "event_search_tokens",
+        "SELECT event_id, token, position, created_at, kind, pubkey FROM event_search_tokens WHERE token = ?1 AND (created_at < ?2 OR (created_at = ?2 AND event_id > ?3)) ORDER BY created_at DESC, event_id ASC LIMIT ?4;",
+    ),
     write(
         "event_search_tokens.delete_by_event",
         "event_search_tokens",

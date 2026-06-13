@@ -15,7 +15,7 @@ use wasm_bindgen_futures::JsFuture;
 pub const ACTIVE_KEY: &str = "lkjstr.activeAccountId";
 pub const WORKER_URL: &str = "/static/sqlite-opfs-worker.js";
 
-async fn store_for(db_name: &str) -> Result<(StorageWorkerClient, SqliteStore), JsValue> {
+pub async fn store_for(db_name: &str) -> Result<(StorageWorkerClient, SqliteStore), JsValue> {
     let client = client_for(WORKER_URL)?;
     let store = assert_ok(SqliteStore::open(client.clone(), db_name.to_owned(), 1_000).await)?;
     Ok((client, store))
@@ -80,7 +80,7 @@ pub async fn wait_for_text(text: &str) -> Result<(), JsValue> {
     )))
 }
 
-async fn next_task() -> Result<(), JsValue> {
+pub async fn next_task() -> Result<(), JsValue> {
     let promise = js_sys::Promise::new(&mut |resolve, reject| {
         let callback = Closure::once_into_js(move || {
             let _ = resolve.call0(&JsValue::NULL);

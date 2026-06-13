@@ -16,3 +16,11 @@ Pure feed reducers for browser-independent runtime state.
 - `thread_inputs.rs`: Thread root lookup and reply builders.
 - `tool_inputs.rs`: Search and Custom Request builders.
 - `types.rs`: feed-window state, cursor, evidence, and status types.
+- `view_model/`: shared feed row view-model data and stable row ids.
+
+## Tests
+
+- `tests/feed_runtime_test.rs`: attach, sharing, visibility, and generation
+  guards.
+- `tests/feed_runtime_lifecycle_test.rs`: owner release, wire close, and
+  bounded window retention across feed surfaces.

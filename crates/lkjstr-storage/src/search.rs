@@ -17,6 +17,12 @@ pub struct SqliteEventSearchTokenRow {
     pub pubkey: String,
 }
 
+#[derive(Clone, Debug, Deserialize, Eq, PartialEq, Serialize)]
+pub struct SearchCursor {
+    pub created_at: u64,
+    pub event_id: String,
+}
+
 #[must_use]
 pub fn normalize_search_text(text: &str) -> String {
     text.to_lowercase()
@@ -81,11 +87,23 @@ pub fn local_search_event_ids(
     row_groups: &[Vec<SqliteEventSearchTokenRow>],
     limit: u64,
 ) -> Vec<String> {
+    local_search_event_ids_before(row_groups, limit, None)
+}
+
+#[must_use]
+pub fn local_search_event_ids_before(
+    row_groups: &[Vec<SqliteEventSearchTokenRow>],
+    limit: u64,
+    before: Option<&SearchCursor>,
+) -> Vec<String> {
     if row_groups.is_empty() || limit == 0 {
         return Vec::new();
     }
     let mut ids = Vec::new();
     for row in &row_groups[0] {
+        if before.is_some_and(|cursor| !search_row_before(row, cursor)) {
+            continue;
+        }
         if ids.iter().any(|id| id == &row.event_id) {
             continue;
         }
@@ -100,6 +118,12 @@ pub fn local_search_event_ids(
         }
     }
     ids
+}
+
+#[must_use]
+pub fn search_row_before(row: &SqliteEventSearchTokenRow, cursor: &SearchCursor) -> bool {
+    row.created_at < cursor.created_at
+        || row.created_at == cursor.created_at && row.event_id > cursor.event_id
 }
 
 fn push_token_char(current: &mut String, ch: char) {

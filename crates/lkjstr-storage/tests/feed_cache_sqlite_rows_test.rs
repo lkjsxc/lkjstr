@@ -18,8 +18,10 @@ fn sqlite_feed_cache_rows_map_ledger_and_dense_state() -> Result<(), serde_json:
     let coverage = FeedCoverageRecord {
         coverage_id: "coverage".to_owned(),
         feed_key: cursor.feed_key.clone(),
+        route_group_key: "selected:fallback".to_owned(),
         relay_url: "wss://relay.example".to_owned(),
         filter_fingerprint: "filter".to_owned(),
+        status: "complete".to_owned(),
         since_exclusive: Some(1),
         until_exclusive: Some(9),
         completed_at_ms: 11,

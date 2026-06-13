@@ -58,6 +58,7 @@ fn global_live_input_uses_selected_relays_without_authors_or_routes() -> Result<
     assert!(query.authors.is_empty());
     assert!(query.author_routes.is_empty());
     assert_eq!(filter.authors, None);
+    assert_eq!(filter.kinds, Some(vec![KIND_TEXT_NOTE]));
     assert_eq!(group.source, RoutePlanGroupSource::SelectedFallback);
     assert_eq!(group.relays, vec!["wss://selected.example/".to_owned()]);
     Ok(())

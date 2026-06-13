@@ -14,6 +14,8 @@ TypeScript still calls the current product visibility handlers.
   visible holder of that fingerprint.
 - `visibility: hidden` releases live wire traffic for that owner; refcount remains
   until `releaseOwner`.
+- Rust feed runtime release removes the owner demand while keeping the bounded
+  feed window and cursors outside the lease registry.
 - Cached items, cursors, and scroll anchors stay in the runtime until tab close.
 
 ## Pane churn

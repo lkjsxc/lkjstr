@@ -72,7 +72,9 @@ pub use retention::{
     SqliteRetentionDispatchBatch, SqliteRetentionDispatchStep, sqlite_retention_delete_dispatch,
     sqlite_retention_delete_dispatch_steps,
 };
-pub use search::{sqlite_search_local_query, sqlite_search_local_tokens};
+pub use search::{
+    sqlite_search_local_query, sqlite_search_local_query_before, sqlite_search_local_tokens,
+};
 pub use settings::{
     sqlite_setting_delete, sqlite_setting_get, sqlite_setting_put, sqlite_settings_all,
     sqlite_settings_replace_all,
