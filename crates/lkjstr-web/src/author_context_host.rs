@@ -9,8 +9,15 @@ use lkjstr_storage::StorageOutcome;
 use lkjstr_ui::AuthorContextFeedProvider;
 
 use crate::{
-    author_context_cache::author_context_cache_state, host_status::browser_now_ms,
-    relay_selection::selected_read_relays, sqlite_host_store::with_sqlite_store,
+    author_context_cache::author_context_cache_state,
+    author_context_relay::start_author_context_relay_read,
+    author_context_relay_input::{
+        AuthorContextRelayInputSeed, AuthorContextRelayReadInput, author_context_relay_input,
+    },
+    host_status::browser_now_ms,
+    relay_read_handle::RelayReadSlot,
+    relay_selection::selected_read_relays,
+    sqlite_host_store::with_sqlite_store,
     sqlite_store::sqlite_relay_sets_all,
 };
 
@@ -43,6 +50,9 @@ pub(crate) fn author_context_feed_provider_with_worker_url(
     };
     AuthorContextFeedProvider::new(move |request| {
         let host = host.clone();
+        let relay_slot = RelayReadSlot::default();
+        let release_slot = relay_slot.clone();
+        request.lease().on_release(move || release_slot.cancel());
         wasm_bindgen_futures::spawn_local(async move {
             let owner = request.owner.clone();
             let event_id = request.event_id.clone();
@@ -50,12 +60,28 @@ pub(crate) fn author_context_feed_provider_with_worker_url(
             if request.is_released() {
                 return;
             }
-            let model = author_context_model(&host, &owner, event_id, author_pubkey).await;
-            if !request.is_released() {
-                request.complete(model);
+            let load = author_context_model(&host, &owner, event_id, author_pubkey).await;
+            if request.is_released() {
+                return;
+            }
+            request.complete(load.model);
+            if let Some(relay) = load.relay
+                && !request.is_released()
+            {
+                let relay_request = request.clone();
+                if let Some(handle) = start_author_context_relay_read(relay, move |model| {
+                    relay_request.complete(model);
+                }) {
+                    relay_slot.replace(handle);
+                }
             }
         });
     })
+}
+
+struct AuthorContextFeedLoad {
+    model: AuthorContextFeedView,
+    relay: Option<AuthorContextRelayReadInput>,
 }
 
 async fn author_context_model(
@@ -63,13 +89,22 @@ async fn author_context_model(
     owner: &str,
     event_id: Option<String>,
     author_pubkey: Option<String>,
-) -> AuthorContextFeedView {
+) -> AuthorContextFeedLoad {
     let Some(event_id_value) = event_id.clone() else {
-        return default_author_context_feed_view(owner, event_id, author_pubkey);
+        return load_without_relay(default_author_context_feed_view(
+            owner,
+            event_id,
+            author_pubkey,
+        ));
     };
     let Some(author_pubkey_value) = author_pubkey.clone() else {
-        return default_author_context_feed_view(owner, event_id, author_pubkey);
+        return load_without_relay(default_author_context_feed_view(
+            owner,
+            event_id,
+            author_pubkey,
+        ));
     };
+    let now_sec = browser_now_ms() / 1_000;
     let selected = match selected_relays(host).await {
         StorageOutcome::Ok(relays) => relays,
         _ => Vec::new(),
@@ -82,7 +117,18 @@ async fn author_context_model(
         &mut diagnostics,
     )
     .await;
-    build_view(
+    let relay = author_context_relay_input(AuthorContextRelayInputSeed {
+        owner,
+        event_id: &Some(event_id_value.clone()),
+        author_pubkey: &Some(author_pubkey_value.clone()),
+        source_state: &cache.source_state,
+        selected_relays: &selected,
+        window: &cache.window,
+        diagnostics: &diagnostics,
+        anchor_created_at: cache.anchor_created_at,
+        now_sec,
+    });
+    let model = build_view(
         owner,
         AuthorContextModelParts {
             event_id,
@@ -93,7 +139,12 @@ async fn author_context_model(
             anchor_created_at: cache.anchor_created_at,
             diagnostics,
         },
-    )
+    );
+    AuthorContextFeedLoad { model, relay }
+}
+
+fn load_without_relay(model: AuthorContextFeedView) -> AuthorContextFeedLoad {
+    AuthorContextFeedLoad { model, relay: None }
 }
 
 fn build_view(owner: &str, parts: AuthorContextModelParts) -> AuthorContextFeedView {

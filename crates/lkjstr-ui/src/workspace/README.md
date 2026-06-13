@@ -11,6 +11,9 @@ New Tab chooser, and converted Rust tool bodies.
 - `accounts_provider.rs`: accounts command provider wrapper.
 - `accounts_row.rs`: row rendering for stored account records.
 - `author_context.rs`: narrow Rust Author Context feed row rendering.
+- `author_context_actions.rs`: Author Context row action callback bundle.
+- `author_context_event.rs`: Author Context event row actions.
+- `author_context_open.rs`: Author Context row action tab-opening helpers.
 - `author_context_provider.rs`: async Author Context feed provider wrapper.
 - `followees.rs`: narrow Rust Followees rows from real NIP-02 entries.
 - `followees_provider.rs`: async Followees view-model provider wrapper.

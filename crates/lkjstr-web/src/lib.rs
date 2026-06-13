@@ -7,6 +7,19 @@ wasm_bindgen_test::wasm_bindgen_test_configure!(run_in_browser);
 mod author_context_cache;
 #[cfg(target_arch = "wasm32")]
 mod author_context_host;
+#[cfg(target_arch = "wasm32")]
+mod author_context_relay;
+#[cfg(target_arch = "wasm32")]
+mod author_context_relay_input;
+#[cfg(target_arch = "wasm32")]
+mod author_context_relay_model;
+#[cfg(target_arch = "wasm32")]
+mod author_context_relay_read;
+#[cfg(target_arch = "wasm32")]
+mod author_context_relay_read_tail;
+#[cfg(all(target_arch = "wasm32", debug_assertions))]
+#[doc(hidden)]
+pub mod author_context_relay_test_api;
 pub mod feed_geometry;
 pub mod follow_graph;
 #[cfg(target_arch = "wasm32")]

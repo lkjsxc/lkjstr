@@ -27,6 +27,9 @@ async fn rust_author_context_tab_renders_provider_feed_rows() -> Result<(), JsVa
 
     wait_for_text("Author Context ready.").await?;
     wait_for_text("real author context event").await?;
+    wait_for_text("Open profile").await?;
+    wait_for_text("Open thread").await?;
+    wait_for_text("Author context").await?;
     wait_for_text("Cached rows").await?;
     assert!(!document_text()?.contains("The Rust Author Context body is not converted yet."));
     Ok(())

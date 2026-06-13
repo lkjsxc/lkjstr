@@ -105,8 +105,8 @@ This file is the concise status map for the active Rust/WASM migration.
 - Author Context now has a pure Rust feed view over shared feed rows, explicit
   missing event/author/relay/anchor states, a Leptos body, provider bridge, and
   Chrome proof from injected real `NostrEvent` rows plus worker-cached anchor
-  and nearby author rows. Relay host reads, action-opening parity, no-import
-  proof, and deletion remain open.
+  and nearby author rows plus bounded selected-relay reads and row actions.
+  Exact anchor lookup, stored author routes, no-import proof, and deletion remain open.
 - Hydration scheduling owns a Rust semantic-key priority reducer for visible,
   near-visible, hidden-paused, stale-generation, and deduped work. Product
   wiring beyond focused scheduler tests remains active.
@@ -135,9 +135,9 @@ This file is the concise status map for the active Rust/WASM migration.
   and continuation-row proof exist. Search provider execution, snapshot
   restore, and cached older pages are wired. Profile
   Follow/Unfollow publishes local or NIP-07 kind `3` events only after relay
-  acceptance; Author Context has injected-row and cache-backed Leptos slices,
-  while Custom Request, Author Context relay/action-opening/deletion proof, and
-  shipped TypeScript surface replacement remain open.
+  acceptance; Author Context has injected, cache-backed, selected-relay, and
+  row-action slices, while Custom Request, Author Context exact-route/deletion
+  proof, and shipped TypeScript surface replacement remain open.
 - Rust completion evidence remains required before moving top-anchor policy,
   follow-count state, cache-display policy, search indexing, User Timeline
   runtime, or hydration scheduling out of active target status.

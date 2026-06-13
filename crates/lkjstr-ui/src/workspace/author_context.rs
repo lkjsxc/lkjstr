@@ -1,9 +1,11 @@
 use leptos::prelude::*;
 use lkjstr_app::{
-    AuthorContextFeedStatus, AuthorContextFeedView, FeedEventRow, FeedFooterState, FeedViewRow,
+    AuthorContextFeedStatus, AuthorContextFeedView, FeedFooterState, FeedViewRow,
     default_author_context_feed_view,
 };
 
+use crate::workspace::author_context_actions::AuthorContextActions;
+use crate::workspace::author_context_event::event_row;
 use crate::workspace::author_context_provider::AuthorContextFeedProvider;
 
 #[component]
@@ -13,6 +15,7 @@ pub fn AuthorContextTab(
     author_pubkey: Option<String>,
     model: AuthorContextFeedView,
     provider: Option<AuthorContextFeedProvider>,
+    actions: AuthorContextActions,
 ) -> impl IntoView {
     let model = RwSignal::new(model);
     if let Some(provider) = provider {
@@ -28,7 +31,16 @@ pub fn AuthorContextTab(
         <section class="lkjstr-author-context-feed" aria-label="Author Context">
             <p class="lkjstr-feed-status">{move || status_text(model.get().status)}</p>
             <div class="lkjstr-feed-rows">
-                {move || model.get().view_model.rows.into_iter().map(context_row).collect_view()}
+                {move || {
+                    let actions = actions.clone();
+                    model
+                        .get()
+                        .view_model
+                        .rows
+                        .into_iter()
+                        .map(move |row| context_row(row, actions.clone()))
+                        .collect_view()
+                }}
             </div>
         </section>
     }
@@ -39,6 +51,7 @@ pub fn author_context_tab_content(
     event_id: Option<String>,
     author_pubkey: Option<String>,
     provider: Option<AuthorContextFeedProvider>,
+    actions: AuthorContextActions,
 ) -> impl IntoView {
     let model = default_author_context_feed_view(&tab_id, event_id.clone(), author_pubkey.clone());
     view! {
@@ -48,13 +61,14 @@ pub fn author_context_tab_content(
             author_pubkey=author_pubkey
             model=model
             provider=provider
+            actions=actions
         />
     }
 }
 
-fn context_row(row: FeedViewRow) -> impl IntoView {
+fn context_row(row: FeedViewRow, actions: AuthorContextActions) -> impl IntoView {
     match row {
-        FeedViewRow::Event(row) => event_row(row).into_any(),
+        FeedViewRow::Event(row) => event_row(row, actions).into_any(),
         FeedViewRow::Unavailable(row) => view! {
             <article class="lkjstr-feed-row unavailable" data-row-id=row.row_id>
                 <strong>{row.reason}</strong>
@@ -93,31 +107,6 @@ fn context_row(row: FeedViewRow) -> impl IntoView {
             </article>
         }
         .into_any(),
-    }
-}
-
-fn event_row(row: FeedEventRow) -> impl IntoView {
-    let text_rows = row
-        .visual_rows
-        .into_iter()
-        .filter_map(|item| match item {
-            lkjstr_app::FeedVisualRow::EventFull(row) => Some(row.content),
-            lkjstr_app::FeedVisualRow::EventTextSegment(row) => Some(row.text),
-            lkjstr_app::FeedVisualRow::EventMediaSegment(row) => {
-                Some(format!("media segment {}", row.index))
-            }
-            lkjstr_app::FeedVisualRow::EventReferenceSegment(row) => {
-                Some(format!("reference segment {}", row.index))
-            }
-            lkjstr_app::FeedVisualRow::EventHeader(_)
-            | lkjstr_app::FeedVisualRow::EventActions(_) => None,
-        })
-        .collect::<Vec<_>>();
-    view! {
-        <article class="lkjstr-feed-row event" data-row-id=row.row_id data-event-id=row.event_id>
-            <small>{format!("created {}", row.created_at)}</small>
-            {text_rows.into_iter().map(|text| view! { <p>{text}</p> }).collect_view()}
-        </article>
     }
 }
 

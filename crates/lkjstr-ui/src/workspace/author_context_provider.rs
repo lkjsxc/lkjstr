@@ -45,6 +45,10 @@ impl AuthorContextFeedLease {
     pub fn is_released(&self) -> bool {
         self.state.is_released()
     }
+
+    pub fn on_release(&self, cleanup: impl FnOnce() + Send + Sync + 'static) {
+        self.state.on_release(cleanup);
+    }
 }
 
 impl AuthorContextFeedComplete {
@@ -63,6 +67,11 @@ impl AuthorContextFeedRequest {
     #[must_use]
     pub fn is_released(&self) -> bool {
         self.lease.is_released()
+    }
+
+    #[must_use]
+    pub fn lease(&self) -> AuthorContextFeedLease {
+        self.lease.clone()
     }
 }
 

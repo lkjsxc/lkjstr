@@ -7,9 +7,10 @@ nearby author posts without claiming relay parity or deletion proof.
 
 ## Status
 
-Injected-row and cache-backed default-provider slices are implemented.
-TypeScript Author Context and event-row menu paths remain the shipped owner
-until Rust relay, action-opening, no-import, and final verification proof exist.
+Injected-row, cache-backed default-provider, bounded selected-relay relay-read,
+and row action-opening slices are implemented. TypeScript Author Context and
+event-row menu paths remain shipped until exact relay lookup, stored routes,
+no-import, and final verification proof exist.
 
 ## Current Evidence
 
@@ -23,14 +24,20 @@ until Rust relay, action-opening, no-import, and final verification proof exist.
 - `crates/lkjstr-web/src/author_context_host.rs` reads worker-owned SQLite
   anchor and bounded nearby author event rows and marks them partial without
   complete coverage proof.
+- `crates/lkjstr-web/src/author_context_relay*.rs` starts a bounded selected-relay
+  bootstrap read around the cached anchor timestamp and merges real same-author
+  relay events into shared feed rows.
+- `crates/lkjstr-ui/src/workspace/author_context*.rs` renders row action buttons
+  that open Profile, Thread, and Author Context tabs from real row pubkeys and
+  event ids.
 - `src/lib/author-context/author-context.ts` is the shipped loader for cached and
   relay-backed nearby author posts.
 
 ## Next Edit
 
-Wire bounded relay reads around the anchor timestamp and action-opening parity.
-Keep TypeScript and Svelte deletion blocked until no-import and final proof
-exist.
+Add exact anchor relay lookup and stored author-route expansion without moving
+route policy into `lkjstr-web`. Keep TypeScript/Svelte deletion blocked until
+no-import and final proof exist.
 
 ## Files To Read
 
@@ -50,6 +57,8 @@ exist.
 - `crates/lkjstr-ui/src/workspace/tab_content.rs`
 - `crates/lkjstr-web/tests/author_context_tab_test.rs`
 - `crates/lkjstr-web/tests/author_context_provider_test.rs`
+- `crates/lkjstr-web/tests/author_context_relay_test.rs`
+- `crates/lkjstr-web/tests/author_context_relay_provider_test.rs`
 - Rust/WASM cutover ledgers and `docs/current-state.md`
 
 ## Focused Gate
@@ -60,6 +69,8 @@ PATH=/home/lkjsxc/.cargo/bin:$PATH cargo test -p lkjstr-ui author_context
 PATH=/home/lkjsxc/.cargo/bin:$PATH cargo check -p lkjstr-web --target wasm32-unknown-unknown
 PATH=/home/lkjsxc/.cargo/bin:$PATH wasm-pack test --headless --chrome --chromedriver /home/lkjsxc/.cache/.wasm-pack/chromedriver-4c97d18784ddc26e/chromedriver crates/lkjstr-web --test author_context_tab_test
 PATH=/home/lkjsxc/.cargo/bin:$PATH wasm-pack test --headless --chrome --chromedriver /home/lkjsxc/.cache/.wasm-pack/chromedriver-4c97d18784ddc26e/chromedriver crates/lkjstr-web --test author_context_provider_test
+PATH=/home/lkjsxc/.cargo/bin:$PATH wasm-pack test --headless --chrome --chromedriver /home/lkjsxc/.cache/.wasm-pack/chromedriver-4c97d18784ddc26e/chromedriver crates/lkjstr-web --test author_context_relay_test
+PATH=/home/lkjsxc/.cargo/bin:$PATH wasm-pack test --headless --chrome --chromedriver /home/lkjsxc/.cache/.wasm-pack/chromedriver-4c97d18784ddc26e/chromedriver crates/lkjstr-web --test author_context_relay_provider_test
 PATH=/home/lkjsxc/.cargo/bin:$PATH pnpm rust-wasm:quiet
 ```
 
@@ -73,8 +84,13 @@ PATH=/home/lkjsxc/.cargo/bin:$PATH pnpm rust-wasm:quiet
 - The view model exposes anchor and nearby query-demand inputs from Rust data.
 - The default browser provider can render cached anchor/nearby rows from
   worker SQLite without claiming complete coverage.
-- TypeScript Author Context and Svelte tab paths remain until relay,
-  action-opening, no-import, and final gates prove deletion readiness.
+- Bounded relay bootstrap reads use selected read relays, the cached anchor
+  timestamp, same-author display-kind filters, owner cleanup, and real relay
+  events only.
+- Rust row action buttons can open Thread and Author Context tabs from real
+  event row ids and pubkeys.
+- TypeScript Author Context and Svelte tab paths remain until exact relay
+  lookup, stored routes, no-import, and final gates prove deletion readiness.
 
 ## Must Not
 

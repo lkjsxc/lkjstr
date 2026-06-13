@@ -82,10 +82,11 @@ must use before their TypeScript feed runtimes are deleted.
 - Author Context first slice: `crates/lkjstr-app/src/author_context_feed/**`,
   `crates/lkjstr-ui/src/workspace/author_context*.rs`, and
   `crates/lkjstr-web/src/author_context_*.rs` render injected rows and
-  worker-cached anchor/nearby author rows through shared `FeedViewModel` rows.
-  Missing event id, author pubkey, relay/route input, and anchor timestamp are
-  explicit unavailable states. Relay host reads, action-opening parity, and
-  deletion proof remain open.
+  worker-cached anchor/nearby author rows plus bounded selected-relay rows
+  through shared `FeedViewModel` rows. Missing event id, author pubkey,
+  relay/route input, and anchor timestamp are explicit unavailable states. Row
+  action buttons open Rust Profile, Thread, and Author Context tabs. Exact
+  anchor lookup, stored author routes, and deletion proof remain open.
 - Cached and relay-refreshed Profile header metadata/follow-count proof exists.
   The known following-count action opens converted Followees, the Profile header
   action opens converted User Timeline, own-profile actions open Profile Edit, the copy

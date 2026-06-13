@@ -2,7 +2,7 @@ use leptos::prelude::*;
 use lkjstr_domain::TabKind;
 
 use crate::workspace::accounts::AccountsTab;
-use crate::workspace::author_context::author_context_tab_content;
+use crate::workspace::author_context_open::author_context_tab_content;
 use crate::workspace::followees::followees_tab_content;
 use crate::workspace::global::{GlobalTab, default_global_feed};
 use crate::workspace::home::{HomeTab, default_home_feed};
@@ -93,13 +93,7 @@ pub(crate) fn tab_content(input: TabContentInput) -> impl IntoView {
             .into_any()
         }
         TabKind::Profile => profile_tab_content(input).into_any(),
-        TabKind::AuthorContext => author_context_tab_content(
-            input.tab_id,
-            input.author_context_event_id,
-            input.author_context_pubkey,
-            input.author_context_feed_provider,
-        )
-        .into_any(),
+        TabKind::AuthorContext => author_context_tab_content(input).into_any(),
         TabKind::Followees => {
             followees_tab_content(input.tab_id, input.profile_pubkey, input.followees_provider)
                 .into_any()
