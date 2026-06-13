@@ -20,8 +20,8 @@ Read next: [product/README.md](product/README.md),
   Settings, lkjstr Log, Mine npub, Profile Edit, and Welcome are implemented.
 - Followees and User Timeline are relay-backed action-opened surfaces. Rust Followees
   renders injected/default cached real NIP-02 rows and selected-relay kind `3`
-  discovery with cleanup and retry diagnostics. Rust User Timeline renders real NIP-02 rows,
-  stored routes, cleanup, retry/auth/rate-limit/timeout and partial-route diagnostics, plus degraded target-posts-only mode.
+  discovery with cleanup and retry diagnostics. Rust User Timeline renders real
+  NIP-02 rows, exact cache-ready rows, stored routes, cleanup, retry diagnostics, partial-route diagnostics, and degraded target-posts-only mode.
 - Shared UI system catalog and shipped component list live in
   [architecture/workspace/ui-system/README.md](architecture/workspace/ui-system/README.md);
   polish acceptance rows live in
@@ -209,7 +209,7 @@ Read next: [architecture/network/README.md](architecture/network/README.md),
   independent semantic keys.
 - Followees and User Timeline discover missing target kind `3` through selected relays;
   User Timeline also reads stored NIP-65 routes. No-event/AUTH/rate-limited/timeout reads and partial route failures render explicit diagnostics.
-  It keeps a distinct Rust query surface for large author sets and renders real author-set feed rows; broader route completion stays partial.
+  It keeps a distinct Rust query surface, real author-set rows, and exact cached coverage readiness; Rust cutover stays partial.
 - Search restores query filter snapshots, renders local indexed results without
   waiting for remote relays, sends bounded NIP-50 filters to eligible selected
   read relays, loads cached and relay older pages by compound cursor, and reports

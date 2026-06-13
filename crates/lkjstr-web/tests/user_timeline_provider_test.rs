@@ -6,9 +6,15 @@ use accounts_selector_test_support::{
     WORKER_URL, account, clear_legacy, click, reset_shells, store_for, test_db_name, wait_for_text,
 };
 use lkjstr_domain::default_user_relay_set;
-use lkjstr_protocol::{KIND_FOLLOW_LIST, KIND_TEXT_NOTE, NostrEvent, NostrTag};
-use lkjstr_storage::{StorageOutcome, StoredEventRecord, sqlite_event_relay_row};
-use lkjstr_web::sqlite_store::{sqlite_account_put, sqlite_event_put, sqlite_relay_set_put};
+use lkjstr_protocol::{
+    KIND_FOLLOW_LIST, KIND_TEXT_NOTE, NostrEvent, NostrTag, normalize_relay_url,
+};
+use lkjstr_storage::{
+    FeedCoverageRecord, StorageOutcome, StoredEventRecord, sqlite_event_relay_row,
+};
+use lkjstr_web::sqlite_store::{
+    sqlite_account_put, sqlite_event_put, sqlite_feed_coverage_put, sqlite_relay_set_put,
+};
 use wasm_bindgen::prelude::JsValue;
 use wasm_bindgen_test::{wasm_bindgen_test, wasm_bindgen_test_configure};
 
@@ -19,7 +25,7 @@ async fn rust_user_timeline_tab_loads_cached_rows_from_host_provider() -> Result
     reset_shells()?;
     clear_legacy()?;
     let db_name = test_db_name("user-timeline-provider");
-    if let Err(error) = seed_user_timeline_cache(&db_name).await {
+    if let Err(error) = seed_user_timeline_cache(&db_name, false).await {
         return skip_unavailable_worker(error);
     }
 
@@ -35,7 +41,28 @@ async fn rust_user_timeline_tab_loads_cached_rows_from_host_provider() -> Result
     wait_for_text("Cached User Timeline rows loaded without complete coverage proof.").await
 }
 
-async fn seed_user_timeline_cache(db_name: &str) -> Result<(), JsValue> {
+#[wasm_bindgen_test(async)]
+async fn rust_user_timeline_tab_uses_exact_complete_coverage() -> Result<(), JsValue> {
+    reset_shells()?;
+    clear_legacy()?;
+    let db_name = test_db_name("user-timeline-provider-complete");
+    if let Err(error) = seed_user_timeline_cache(&db_name, true).await {
+        return skip_unavailable_worker(error);
+    }
+
+    lkjstr_web::mount_rust_workspace_shell_from_db_with_worker(db_name, WORKER_URL.to_owned());
+    wait_for_text("Welcome").await?;
+    click("[aria-label='New tab']")?;
+    wait_for_text("My Profile").await?;
+    click("[data-testid='new-tab-option-profile']")?;
+    wait_for_text("Open user timeline").await?;
+    click("[aria-label='Open user timeline']")?;
+    wait_for_text("User Timeline ready.").await?;
+    wait_for_text("provider user timeline event").await?;
+    wait_for_text("Cached rows").await
+}
+
+async fn seed_user_timeline_cache(db_name: &str, complete_coverage: bool) -> Result<(), JsValue> {
     let (client, store) = store_for(db_name).await?;
     let account = account("a", 7)?;
     let followed_pubkey = pubkey("b");
@@ -68,6 +95,10 @@ async fn seed_user_timeline_cache(db_name: &str) -> Result<(), JsValue> {
         &relay_url,
     )
     .await?;
+    if complete_coverage {
+        let relay_url = normalize_relay_url(&relay_url).ok_or_else(|| js_error("bad relay"))?;
+        assert_ok(sqlite_feed_coverage_put(&store, &[coverage(&relay_url)]).await)?;
+    }
     assert_ok(client.close().await)
 }
 
@@ -97,6 +128,30 @@ fn follow_event(pubkey: &str, followed_pubkey: &str, relay_url: &str) -> NostrEv
             "followed".to_owned(),
         ]],
         "",
+    )
+}
+
+fn coverage(relay_url: &str) -> FeedCoverageRecord {
+    FeedCoverageRecord {
+        coverage_id: "user-timeline-complete".to_owned(),
+        feed_key: "user-timeline:rust-user-timeline-2".to_owned(),
+        route_group_key: "selected:fallback".to_owned(),
+        relay_url: relay_url.to_owned(),
+        filter_fingerprint: user_timeline_filter_key(),
+        status: "complete".to_owned(),
+        since_exclusive: Some(0),
+        until_exclusive: Some(u64::MAX),
+        completed_at_ms: 10,
+        event_count: 1,
+        dense: false,
+    }
+}
+
+fn user_timeline_filter_key() -> String {
+    format!(
+        r#"{{"authors":["{}","{}"],"kinds":[1,6,16],"tags":[]}}"#,
+        pubkey("a"),
+        pubkey("b")
     )
 }
 

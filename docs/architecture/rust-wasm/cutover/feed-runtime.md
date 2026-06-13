@@ -71,12 +71,14 @@ must use before their TypeScript feed runtimes are deleted.
   `crates/lkjstr-web/tests/profile_feed_tab_test.rs` render first Leptos feed
   rows from an injected real NIP-02 author set. The default browser provider
   also reads cached kind `3` author sets and cached display rows from worker
-  SQLite as partial cache evidence. It starts a bounded selected-relay kind `3`
-  read on cache miss, reads stored NIP-65/provenance/target author routes when
-  present, excludes disabled stored route relays, rebuilds from stored relay
-  events, turns no-event/AUTH/rate-limited/timeout reads and partial route
-  failures into explicit diagnostics, and closes the selected-relay read on tab
-  switch. Coverage and deletion proof remain open.
+  SQLite, keeps them partial without complete coverage, and promotes cache-ready
+  only from exact User Timeline coverage proof. It starts a bounded
+  selected-relay kind `3` read on cache miss, reads stored
+  NIP-65/provenance/target author routes when present, excludes disabled stored
+  route relays, rebuilds from stored relay events, turns
+  no-event/AUTH/rate-limited/timeout reads and partial route failures into
+  explicit diagnostics, and closes the selected-relay read on tab switch.
+  Deletion proof remains open.
 - Cached and relay-refreshed Profile header metadata/follow-count proof exists.
   The known following-count action opens converted Followees, the Profile header
   action opens converted User Timeline, own-profile actions open Profile Edit, the copy

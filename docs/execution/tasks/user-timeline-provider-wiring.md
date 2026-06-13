@@ -9,8 +9,7 @@ completion or deletion proof.
 ## Status
 
 Implemented enabling slice. TypeScript User Timeline modules remain the shipped
-owner until route diagnostics, coverage, no-import, and final verification proof
-exist.
+owner until no-import, deletion, and final verification proof exist.
 
 ## Current Evidence
 
@@ -26,8 +25,11 @@ exist.
 - `crates/lkjstr-web/src/user_timeline_host.rs` and
   `crates/lkjstr-web/src/user_timeline_cache.rs` are the default browser
   provider path for cached worker-owned SQLite kind `3` and display rows.
+- `crates/lkjstr-web/src/user_timeline_coverage.rs` promotes cached rows to
+  ready only from exact feed, route, relay, filter, and interval coverage proof.
 - `crates/lkjstr-web/tests/user_timeline_provider_test.rs` proves the default
-  provider path through Profile action and real cached User Timeline data.
+  provider path through Profile action, real cached User Timeline data, partial
+  rows without coverage, and ready rows with exact coverage.
 - `crates/lkjstr-web/src/user_timeline_relay*.rs` starts a bounded selected-relay
   kind `3` read on cache miss, stores the relay event in worker SQLite, and
   rebuilds the User Timeline from real cache rows.
@@ -49,8 +51,8 @@ exist.
 
 ## Next Edit
 
-Continue coverage, no-import proof, and deletion-prerequisite work without
-removing TypeScript/Svelte paths.
+Continue no-import proof and deletion-prerequisite work without removing
+TypeScript/Svelte paths.
 
 ## Files To Read
 

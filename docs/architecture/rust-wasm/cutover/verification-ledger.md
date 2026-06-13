@@ -91,30 +91,30 @@ change and Docker Compose verification is either run or recorded as not run.
     selected-relay read on cleanup, no-event selected reads render retryable
     diagnostics, AUTH selected reads render auth-required diagnostics, and
     CLOSED rate-limited plus timed-out selected reads render retry diagnostics
-    without claiming absence. Docker final gate was not run. Coverage, no-import
-    proof, and TypeScript/Svelte deletion remain open.
-- 2026-06-13 User Timeline cached host-provider proof passed focused Rust and
-  Chrome WASM gates. Commands:
-  - `/home/lkjsxc/.cargo/bin/cargo fmt --check`.
-  - `/home/lkjsxc/.cargo/bin/cargo check -p lkjstr-web --target wasm32-unknown-unknown`.
+    without claiming absence. Docker final gate was not run. No-import proof and
+    TypeScript/Svelte deletion remain open.
+- 2026-06-13 User Timeline exact cached coverage proof passed focused Rust and
+  browser WASM gates. Commands:
+  - `/home/lkjsxc/.cargo/bin/cargo fmt --check`; `/home/lkjsxc/.cargo/bin/cargo check -p lkjstr-web --target wasm32-unknown-unknown`.
   - `/home/lkjsxc/.cargo/bin/cargo test -p lkjstr-app -- user_timeline`.
   - `/home/lkjsxc/.cargo/bin/cargo test -p lkjstr-ui user_timeline`.
-  - `/home/lkjsxc/.cargo/bin/cargo test -p lkjstr-web --target wasm32-unknown-unknown --test user_timeline_provider_test`
-    with `PATH`, `CARGO_TARGET_WASM32_UNKNOWN_UNKNOWN_RUNNER`, `CHROMEDRIVER`,
-    and `WASM_BINDGEN_TEST_ONLY_WEB=1` set for the cached Chrome runner.
+  - `/home/lkjsxc/.cargo/bin/cargo test -p lkjstr-web user_timeline`.
+  - From `crates/lkjstr-web`: `cargo test --target wasm32-unknown-unknown --test user_timeline_provider_test` with cached Chrome runner env.
   - `/home/lkjsxc/.cargo/bin/cargo clippy -p lkjstr-web --target wasm32-unknown-unknown --all-targets -- -D warnings`.
   - `/home/lkjsxc/.cargo/bin/cargo clippy -p lkjstr-app -p lkjstr-ui --all-targets -- -D warnings`.
-  - `PATH=/home/lkjsxc/.cargo/bin:$PATH pnpm check:repo`.
-  - `/home/lkjsxc/.cargo/bin/cargo run -p lkjstr-xtask -- check-docs`.
-  - `/home/lkjsxc/.cargo/bin/cargo run -p lkjstr-xtask -- check-lines`.
-  - `git diff --check`.
-  - `PATH=/home/lkjsxc/.cargo/bin:$PATH pnpm rust-wasm:quiet` printed
-    `ok rust-wasm`.
-  - The default Rust User Timeline host now reads latest cached kind `3`
-    author sets and cached display events from worker SQLite, keeps rows
-    partial without complete coverage proof, and leaves cache miss in discovery.
-    Docker final gate was not run. Relay-backed discovery, retry diagnostics,
-    cleanup parity, no-import proof, and TypeScript/Svelte deletion remain open.
+  - `PATH=/home/lkjsxc/.cargo/bin:$PATH pnpm check:repo`;
+    `/home/lkjsxc/.cargo/bin/cargo run -p lkjstr-xtask -- check-docs`;
+    `/home/lkjsxc/.cargo/bin/cargo run -p lkjstr-xtask -- check-lines`.
+  - `/home/lkjsxc/.cargo/bin/cargo run -p lkjstr-xtask -- check-rust-style`; `git diff --check`.
+  - `PATH=/home/lkjsxc/.cargo/bin:$PATH pnpm test:quiet`;
+    `PATH=/home/lkjsxc/.cargo/bin:$PATH pnpm rust-wasm:quiet` printed
+    `ok rust-wasm`; `PATH=/home/lkjsxc/.cargo/bin:$PATH pnpm verify:quiet`
+    printed `ok verify`.
+  - The default Rust User Timeline host reads cached kind `3` author sets and
+    display events from worker SQLite, keeps rows partial without complete
+    coverage, promotes ready only from exact feed/route/relay/filter/interval
+    proof, and leaves cache miss in discovery. Docker final gate was not run.
+    No-import proof and TypeScript/Svelte deletion remain open.
 - 2026-06-13 Followees cached host-provider proof passed focused and quiet
   Rust/WASM gates. Commands:
   - `/home/lkjsxc/.cargo/bin/cargo fmt`.

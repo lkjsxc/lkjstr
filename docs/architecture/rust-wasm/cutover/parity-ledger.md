@@ -19,7 +19,7 @@ before the SvelteKit product runtime can be removed.
 | Global          | not implemented | `app`, `relays`, `storage`, `ui` feed runtime                 | selected-relay reads, grouped scans, progressive snapshots                                   |
 | Profile         | not implemented | `app`, `relays`, `storage`, `ui` profile runtime              | metadata card, route reads, posts, identity links                                            |
 | Followees       | partial         | `protocol`, `app`, `web`, `relays`, `ui` follow graph path    | broader relay discovery UI and no-import proof                                               |
-| User Timeline   | partial         | `protocol`, `app`, `web`, `relays`, `ui` target timeline path | coverage, no-import proof                                                                    |
+| User Timeline   | partial         | `protocol`, `app`, `web`, `relays`, `ui` target timeline path | no-import and deletion proof                                                                 |
 | Thread          | partial         | `app`, `relays`, `storage`, `ui` thread runtime               | root lookup, reply pages, references, exact reads                                            |
 | Notifications   | not implemented | `app`, `relays`, `storage`, `ui` notification runtime         | mentions, reactions, reposts, zaps, older windows                                            |
 | Search          | partial         | `app`, `relays`, `storage`, `ui` search runtime               | provider execution, NIP-50 merge, older pages, cancellation, snapshots, deletion proof       |
@@ -141,16 +141,18 @@ expansion, and incomplete states with reason codes. Current Rust proof covers
 pure discovery planning, target-only degraded decisions, reason codes, bounded
 retry sources, and a first Leptos feed body from injected real NIP-02 author-set
 rows. Default cached User Timeline host proof covers worker SQLite kind `3`
-author-set rows plus cached display events, and selected-relay kind `3`
-discovery proof covers cache miss from the fixed `lkjsxc` New Tab path. Stored
-route-group proof covers NIP-65, provenance, and target-route kind `3`
-discovery without selected relays and excludes disabled stored route relays.
-Retry/auth/rate-limit/timeout proof covers no-event selected-relay completion
-without claiming absence, AUTH auth-required status, rate-limited selected-relay
-status, and all-route timeout diagnostics. Route proof covers partial NIP-65
-failure while another stored route discovers the real kind `3`. Cleanup proof
-covers closing the selected-relay read and suppressing late events. The surface
-stays partial until coverage proof exists.
+author-set rows plus cached display events, keeps them partial without complete
+coverage, and promotes ready state only from exact User Timeline feed, route,
+relay, filter, and interval proof. Selected-relay kind `3` discovery proof
+covers cache miss from the fixed `lkjsxc` New Tab path. Stored route-group proof
+covers NIP-65, provenance, and target-route kind `3` discovery without selected
+relays and excludes disabled stored route relays. Retry/auth/rate-limit/timeout
+proof covers no-event selected-relay completion without claiming absence, AUTH
+auth-required status, rate-limited selected-relay status, and all-route timeout
+diagnostics. Route proof covers partial NIP-65 failure while another stored
+route discovers the real kind `3`. Cleanup proof covers closing the
+selected-relay read and suppressing late events. The surface stays partial until
+no-import and deletion proof exist.
 
 ## Storage Ledger
 

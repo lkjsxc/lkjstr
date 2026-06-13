@@ -57,7 +57,8 @@ Source files expose Rust application behavior to the browser through
 - `storage_worker/`: Rust host adapter for the SQLite storage worker.
 - `tweet_host.rs`: SQLite-backed Tweet draft command provider.
 - `thread_feed_status.rs`: shared Thread feed diagnostic and storage status helpers.
-- `user_timeline_*.rs`: User Timeline cache, relay discovery, and view-model provider.
+- `user_timeline_*.rs`: User Timeline cache, exact coverage, relay discovery,
+  and view-model provider.
 - `upload_discovery.rs`: browser `fetch` NIP-96 endpoint resolution.
 - `upload_settings_host.rs`: SQLite-backed Upload Settings command provider.
 - `workspace_host.rs`: SQLite-backed workspace startup and persistence helper.
