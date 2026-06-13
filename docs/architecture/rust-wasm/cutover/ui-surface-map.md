@@ -12,9 +12,9 @@ Leptos component group, Rust state owner, and deletion gate.
 - Current Leptos shell code lives under `crates/lkjstr-ui/src/workspace/**`.
 - `TabBody` renders real Leptos Welcome, New Tab, Stats, Log, Accounts, Relay
   Settings, Settings, Upload Settings, Tweet draft, and partial Public Chat
-  surfaces. Partial feed-family Leptos bodies include injected Author Context
-  shared-feed rows. Other tab kinds still render pending Leptos bodies while
-  shipped behavior remains Svelte.
+  surfaces. Partial feed-family Leptos bodies include injected and
+  worker-cached Author Context shared-feed rows. Other tab kinds still render
+  pending Leptos bodies while shipped behavior remains Svelte.
 
 ## Surface Map
 

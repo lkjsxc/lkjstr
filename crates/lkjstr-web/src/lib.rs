@@ -4,6 +4,8 @@
 wasm_bindgen_test::wasm_bindgen_test_configure!(run_in_browser);
 
 #[cfg(target_arch = "wasm32")]
+mod author_context_cache;
+#[cfg(target_arch = "wasm32")]
 mod author_context_host;
 pub mod feed_geometry;
 pub mod follow_graph;

@@ -9,6 +9,7 @@ Browser-bound WASM tests prove exported functions call real Rust code.
 - `accounts_active_selector_test.rs`: SQLite active selector migration and failure-status tests.
 - `accounts_indexed_db_test.rs`: IndexedDB account and local-secret tests.
 - `accounts_selector_test_support.rs`: shared Accounts active selector test helpers.
+- `author_context_provider_test.rs`: Rust Author Context tab rendering from host-owned SQLite event rows.
 - `author_context_tab_test.rs`: Rust Author Context tab rendering from injected feed view-model rows.
 - `global_feed_cleanup_test.rs`: Rust Global tab provider cleanup browser proof.
 - `global_feed_provider_test.rs`: Rust Global tab rendering from selected-relay SQLite cache evidence.

@@ -3,13 +3,13 @@
 ## Purpose
 
 Replace the Rust Author Context placeholder with real shared-feed rows for
-nearby author posts without claiming cache/relay parity or deletion proof.
+nearby author posts without claiming relay parity or deletion proof.
 
 ## Status
 
-First injected-row slice implemented. TypeScript Author Context and event-row
-menu paths remain the shipped owner until Rust cache, relay, action-opening,
-no-import, and final verification proof exist.
+Injected-row and cache-backed default-provider slices are implemented.
+TypeScript Author Context and event-row menu paths remain the shipped owner
+until Rust relay, action-opening, no-import, and final verification proof exist.
 
 ## Current Evidence
 
@@ -20,15 +20,17 @@ no-import, and final verification proof exist.
   missing-route, and missing-anchor-time states.
 - `crates/lkjstr-ui/src/workspace/author_context*.rs` renders a configured
   Author Context tab through a typed provider instead of the pending body.
-- `crates/lkjstr-web/src/author_context_host.rs` returns honest default
-  unavailable state until cache and relay host reads are wired.
+- `crates/lkjstr-web/src/author_context_host.rs` reads worker-owned SQLite
+  anchor and bounded nearby author event rows and marks them partial without
+  complete coverage proof.
 - `src/lib/author-context/author-context.ts` is the shipped loader for cached and
   relay-backed nearby author posts.
 
 ## Next Edit
 
-Wire cache and relay host reads plus action-opening parity. Do not delete
-TypeScript or Svelte Author Context paths until no-import and final proof exist.
+Wire bounded relay reads around the anchor timestamp and action-opening parity.
+Keep TypeScript and Svelte deletion blocked until no-import and final proof
+exist.
 
 ## Files To Read
 
@@ -47,6 +49,7 @@ TypeScript or Svelte Author Context paths until no-import and final proof exist.
 - `crates/lkjstr-ui/src/workspace/author_context*.rs`
 - `crates/lkjstr-ui/src/workspace/tab_content.rs`
 - `crates/lkjstr-web/tests/author_context_tab_test.rs`
+- `crates/lkjstr-web/tests/author_context_provider_test.rs`
 - Rust/WASM cutover ledgers and `docs/current-state.md`
 
 ## Focused Gate
@@ -56,6 +59,7 @@ PATH=/home/lkjsxc/.cargo/bin:$PATH cargo test -p lkjstr-app -- author_context
 PATH=/home/lkjsxc/.cargo/bin:$PATH cargo test -p lkjstr-ui author_context
 PATH=/home/lkjsxc/.cargo/bin:$PATH cargo check -p lkjstr-web --target wasm32-unknown-unknown
 PATH=/home/lkjsxc/.cargo/bin:$PATH wasm-pack test --headless --chrome --chromedriver /home/lkjsxc/.cache/.wasm-pack/chromedriver-4c97d18784ddc26e/chromedriver crates/lkjstr-web --test author_context_tab_test
+PATH=/home/lkjsxc/.cargo/bin:$PATH wasm-pack test --headless --chrome --chromedriver /home/lkjsxc/.cache/.wasm-pack/chromedriver-4c97d18784ddc26e/chromedriver crates/lkjstr-web --test author_context_provider_test
 PATH=/home/lkjsxc/.cargo/bin:$PATH pnpm rust-wasm:quiet
 ```
 
@@ -67,7 +71,9 @@ PATH=/home/lkjsxc/.cargo/bin:$PATH pnpm rust-wasm:quiet
 - Missing event id, missing author pubkey, and missing route/relay inputs render
   explicit unavailable states.
 - The view model exposes anchor and nearby query-demand inputs from Rust data.
-- TypeScript Author Context and Svelte tab paths remain until cache, relay,
+- The default browser provider can render cached anchor/nearby rows from
+  worker SQLite without claiming complete coverage.
+- TypeScript Author Context and Svelte tab paths remain until relay,
   action-opening, no-import, and final gates prove deletion readiness.
 
 ## Must Not

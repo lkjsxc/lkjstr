@@ -59,6 +59,11 @@ impl AuthorContextFeedRequest {
             self.complete.complete(model);
         }
     }
+
+    #[must_use]
+    pub fn is_released(&self) -> bool {
+        self.lease.is_released()
+    }
 }
 
 impl AuthorContextFeedProvider {

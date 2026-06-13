@@ -168,8 +168,8 @@ Read next: [architecture/workspace/README.md](architecture/workspace/README.md),
   note relay reads, owner cleanup, cached and relay-refreshed kind `0`
   metadata plus kind `3` follow counts, and sparse empty proof while excluding
   metadata and follow-list note rows. Rust Thread reads cached root/reply/focused,
-  parent, unavailable, continuation, older, and live rows. Rust Author Context
-  renders injected real shared-feed rows and explicit missing event/author/relay/anchor states; cache, relay, action-opening, and deletion proof remain open.
+  parent, unavailable, continuation, older, and live rows. Rust Author Context renders
+  injected and worker-cached real rows with explicit missing states; relay, action-opening, and deletion proof remain open.
 - Live inserts follow a top-anchor policy. A user at the top sees new resident
   rows immediately; a user away from the top keeps the visible anchor and sees
   newer-available state instead of being yanked upward.

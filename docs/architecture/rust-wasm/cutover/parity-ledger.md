@@ -110,8 +110,10 @@ Rust Author Context now has a first Leptos body that renders real shared-feed
 rows supplied through an injected `AuthorContextFeedProvider`. The app view
 model exposes anchor and nearby query-demand inputs, and missing event id,
 missing author pubkey, no route/relay input, and missing anchor timestamp
-produce explicit unavailable or partial rows. Cache-backed reads, relay reads,
-action-opening parity, no-import proof, and deletion proof remain open.
+produce explicit unavailable or partial rows. The default browser provider reads
+cached anchor and nearby author event rows from worker SQLite and renders them
+as partial cache evidence. Relay reads, action-opening parity, no-import proof,
+and deletion proof remain open.
 Rust Thread now loads cached focused/root events, cached replies by `#e` root
 or focused-event tags, bounded cached parent-chain rows by exact id, bounded
 bootstrap relay snapshots, explicit older footer-command page reads,

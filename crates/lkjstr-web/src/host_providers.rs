@@ -82,7 +82,10 @@ fn providers(
             db_name.clone(),
             worker_url.clone(),
         ),
-        author_context_feed: author_context_host::author_context_feed_provider(),
+        author_context_feed: author_context_host::author_context_feed_provider_with_worker_url(
+            db_name.clone(),
+            worker_url.clone(),
+        ),
         profile_copy: profile_clipboard_host::profile_copy_provider(),
         profile_follow: profile_follow_host::profile_follow_provider_with_worker_url(
             db_name.clone(),
