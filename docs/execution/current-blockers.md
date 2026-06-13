@@ -31,8 +31,8 @@ plus relay older-page proof, cached plus relay-refreshed Profile
 metadata/follow-count header rendering, selected-relay plus stored-route
 Followees/User Timeline kind `3` discovery, and Followees/User Timeline cleanup
 plus retry diagnostics, first injected/cache/relay Author Context rows, exact
-anchor lookup, stored routes, and row actions. Do not skip this order for
-visible polish.
+anchor lookup, stored routes, unavailable-state browser proof, and row actions.
+Do not skip this order for visible polish.
 
 ## 1. Storage command coverage (implemented enabling proof)
 
@@ -158,8 +158,8 @@ models, anchors, footer states, and unavailable states.
   rows, Search app/UI demand, worker-backed Search provider execution, local
   indexed rows, bounded relay NIP-50 merge proof, Search tab snapshot restore,
   cached plus relay older-page proof, injected, worker-cached, relay-backed,
-  exact-anchor, and stored-route Author Context rows, Rust row actions, and
-  Rust/WASM quiet.
+  exact-anchor, stored-route, and unavailable-state Author Context rows, Rust
+  row actions, and Rust/WASM quiet.
 - Remaining completion proof: Author Context no-import and final-gate deletion
   readiness plus other feed-surface deletion prerequisites remain open.
   Missing coverage never proves absence, and no placeholder rows exist.

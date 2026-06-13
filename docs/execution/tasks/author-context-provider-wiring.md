@@ -9,8 +9,9 @@ nearby author posts without claiming relay parity or deletion proof.
 
 Injected-row, cache-backed default-provider, bounded selected-relay relay-read,
 row action-opening, exact anchor lookup, and stored author-route slices are
-implemented. TypeScript Author Context and event-row menu paths remain shipped
-until no-import and final verification proof exist.
+implemented. Browser proof covers explicit unavailable states. TypeScript
+Author Context and event-row menu paths remain shipped until no-import and
+final verification proof exist.
 
 ## Current Evidence
 
@@ -31,6 +32,8 @@ until no-import and final verification proof exist.
   routes from worker-owned SQLite and feeds them to Rust query demand.
 - Exact anchor relay lookup renders a real relay-returned anchor row when no
   cached anchor timestamp exists.
+- Browser tab proof renders missing-event, missing-author, no-route, and
+  missing-anchor-time states explicitly.
 - `crates/lkjstr-ui/src/workspace/author_context*.rs` renders row action buttons
   that open Profile, Thread, and Author Context tabs from real row pubkeys and
   event ids.
