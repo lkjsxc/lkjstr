@@ -8,9 +8,9 @@ nearby author posts without claiming relay parity or deletion proof.
 ## Status
 
 Injected-row, cache-backed default-provider, bounded selected-relay relay-read,
-and row action-opening slices are implemented. TypeScript Author Context and
-event-row menu paths remain shipped until exact relay lookup, stored routes,
-no-import, and final verification proof exist.
+row action-opening, exact anchor lookup, and stored author-route slices are
+implemented. TypeScript Author Context and event-row menu paths remain shipped
+until no-import and final verification proof exist.
 
 ## Current Evidence
 
@@ -27,6 +27,10 @@ no-import, and final verification proof exist.
 - `crates/lkjstr-web/src/author_context_relay*.rs` starts a bounded selected-relay
   bootstrap read around the cached anchor timestamp and merges real same-author
   relay events into shared feed rows.
+- `crates/lkjstr-web/src/author_context_routes.rs` reads typed stored author
+  routes from worker-owned SQLite and feeds them to Rust query demand.
+- Exact anchor relay lookup renders a real relay-returned anchor row when no
+  cached anchor timestamp exists.
 - `crates/lkjstr-ui/src/workspace/author_context*.rs` renders row action buttons
   that open Profile, Thread, and Author Context tabs from real row pubkeys and
   event ids.
@@ -35,9 +39,10 @@ no-import, and final verification proof exist.
 
 ## Next Edit
 
-Add exact anchor relay lookup and stored author-route expansion without moving
-route policy into `lkjstr-web`. Keep TypeScript/Svelte deletion blocked until
-no-import and final proof exist.
+Next deletion-readiness work must prove no-import and final verification before
+removing TypeScript/Svelte paths. `lkjstr-app` owns the anchor and nearby query
+demand; `lkjstr-web` only reads typed route rows, binds browser sockets, and
+maps outcomes.
 
 ## Files To Read
 
@@ -55,6 +60,8 @@ no-import and final proof exist.
 - `crates/lkjstr-app/src/lib.rs`
 - `crates/lkjstr-ui/src/workspace/author_context*.rs`
 - `crates/lkjstr-ui/src/workspace/tab_content.rs`
+- `crates/lkjstr-web/src/author_context_routes.rs`
+- `crates/lkjstr-web/src/author_context_relay*.rs`
 - `crates/lkjstr-web/tests/author_context_tab_test.rs`
 - `crates/lkjstr-web/tests/author_context_provider_test.rs`
 - `crates/lkjstr-web/tests/author_context_relay_test.rs`
@@ -87,10 +94,14 @@ PATH=/home/lkjsxc/.cargo/bin:$PATH pnpm rust-wasm:quiet
 - Bounded relay bootstrap reads use selected read relays, the cached anchor
   timestamp, same-author display-kind filters, owner cleanup, and real relay
   events only.
+- If the anchor is not cached, exact relay lookup uses real selected or stored
+  author-route relays, an ids+author filter, and the returned event timestamp.
+- Stored author routes are read from worker-owned SQLite and passed into Rust
+  query demand without making route policy decisions in `lkjstr-web`.
 - Rust row action buttons can open Thread and Author Context tabs from real
   event row ids and pubkeys.
-- TypeScript Author Context and Svelte tab paths remain until exact relay
-  lookup, stored routes, no-import, and final gates prove deletion readiness.
+- TypeScript Author Context and Svelte tab paths remain until no-import and
+  final gates prove deletion readiness.
 
 ## Must Not
 

@@ -135,9 +135,10 @@ This file is the concise status map for the active Rust/WASM migration.
   and continuation-row proof exist. Search provider execution, snapshot
   restore, and cached older pages are wired. Profile
   Follow/Unfollow publishes local or NIP-07 kind `3` events only after relay
-  acceptance; Author Context has injected, cache-backed, selected-relay, and
-  row-action slices, while Custom Request, Author Context exact-route/deletion
-  proof, and shipped TypeScript surface replacement remain open.
+  acceptance; Author Context has injected, cache-backed, selected-relay,
+  exact-anchor, stored-route, and row-action slices, while Custom Request,
+  Author Context deletion proof, and shipped TypeScript surface replacement
+  remain open.
 - Rust completion evidence remains required before moving top-anchor policy,
   follow-count state, cache-display policy, search indexing, User Timeline
   runtime, or hydration scheduling out of active target status.

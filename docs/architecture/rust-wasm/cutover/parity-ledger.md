@@ -25,7 +25,7 @@ before the SvelteKit product runtime can be removed.
 | Search          | partial         | `app`, `relays`, `storage`, `ui` search runtime               | provider execution, NIP-50 merge, older pages, cancellation, snapshots, deletion proof       |
 | Custom Request  | not implemented | `app`, `protocol`, `relays`, `ui` request runtime             | raw filter parse, validation, selected relay routing                                         |
 | Public Chat     | partial         | `protocol`, `domain`, `app`, `relays`, `storage`, `ui`, `web` | NIP-28 parsing, channel reads, publish, partial failure, cleanup                             |
-| Author Context  | partial         | `app`, `web`, `relays`, `storage`, `ui` context runtime       | exact lookup, stored routes, unavailable states, no-import proof                             |
+| Author Context  | partial         | `app`, `web`, `relays`, `storage`, `ui` context runtime       | no-import proof and final deletion readiness                                                 |
 | Accounts        | partial         | `domain`, `storage`, `web`, `ui` accounts path                | local, read-only, NIP-07 signing, secret safety tests                                        |
 | Relay Settings  | partial         | `domain`, `storage`, `web`, `ui` relay settings path          | NIP-11, discovery, NIP-65 suggestions, diagnostics                                           |
 | Stats           | partial         | `storage`, `relays`, `app`, `web`, `ui` diagnostics           | storage, relay, optimizer, job, compaction, memory diagnostics                               |
@@ -51,7 +51,7 @@ before the SvelteKit product runtime can be removed.
 | Search          | browser cleanup, no full-scan proof, remaining parity, and no-import proof             |
 | Custom Request  | Raw filter parse, clamp, selected relay, partial response, and cancel tests            |
 | Public Chat     | NIP-28 reducer, relay routing, publish, moderation, partial failure, and cleanup tests |
-| Author Context  | Injected rows, cache reads, relay reads, action opening, exact lookup, stored routes, unavailable states, and no-import proof |
+| Author Context  | Injected rows, cache reads, relay reads, action opening, unavailable states, no-import proof, and final gate |
 | Accounts        | Account storage, signer source, NIP-07, local secret, and redaction tests              |
 | Relay Settings  | Relay URL, role, NIP-11, NIP-65 suggestion, disabled exclusion, and Stats tests        |
 | Stats           | Storage, relay, optimizer, jobs, memory, pressure, and redaction tests                 |
@@ -113,8 +113,8 @@ missing author pubkey, no route/relay input, and missing anchor timestamp
 produce explicit unavailable or partial rows. The default browser provider reads
 cached anchor and nearby author event rows from worker SQLite and renders them
 as partial cache evidence. Bounded selected-relay reads around the cached
-anchor and row action buttons are wired. Exact anchor lookup, stored author
-routes, no-import proof, and deletion proof remain open.
+anchor, exact anchor lookup through stored author routes, and row action
+buttons are wired. No-import proof and deletion proof remain open.
 Rust Thread now loads cached focused/root events, cached replies by `#e` root
 or focused-event tags, bounded cached parent-chain rows by exact id, bounded
 bootstrap relay snapshots, explicit older footer-command page reads,

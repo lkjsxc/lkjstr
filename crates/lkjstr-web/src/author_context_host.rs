@@ -4,7 +4,7 @@ use lkjstr_app::{
     build_author_context_feed_view, default_author_context_feed_view,
 };
 use lkjstr_domain::seed_relay_sets;
-use lkjstr_relays::DemandVisibility;
+use lkjstr_relays::{AuthorRelayRoute, DemandVisibility};
 use lkjstr_storage::StorageOutcome;
 use lkjstr_ui::AuthorContextFeedProvider;
 
@@ -14,6 +14,7 @@ use crate::{
     author_context_relay_input::{
         AuthorContextRelayInputSeed, AuthorContextRelayReadInput, author_context_relay_input,
     },
+    author_context_routes::{author_routes, route_diagnostic},
     host_status::browser_now_ms,
     relay_read_handle::RelayReadSlot,
     relay_selection::selected_read_relays,
@@ -34,6 +35,7 @@ struct AuthorContextModelParts {
     event_id: Option<String>,
     author_pubkey: Option<String>,
     selected_relays: Vec<String>,
+    author_routes: Vec<AuthorRelayRoute>,
     window: FeedWindowState,
     source_state: AuthorContextFeedSourceState,
     anchor_created_at: Option<u64>,
@@ -104,12 +106,21 @@ async fn author_context_model(
             author_pubkey,
         ));
     };
-    let now_sec = browser_now_ms() / 1_000;
+    let now_ms = browser_now_ms();
+    let now_sec = now_ms / 1_000;
     let selected = match selected_relays(host).await {
         StorageOutcome::Ok(relays) => relays,
         _ => Vec::new(),
     };
     let mut diagnostics = Vec::<AuthorContextFeedDiagnosticInput>::new();
+    let routes = author_routes(host, &author_pubkey_value, now_ms).await;
+    if let Some(diagnostic) = route_diagnostic(&routes) {
+        diagnostics.push(diagnostic);
+    }
+    let routes = match routes {
+        StorageOutcome::Ok(routes) => routes,
+        _ => Vec::new(),
+    };
     let cache = author_context_cache_state(
         host,
         &event_id_value,
@@ -123,6 +134,7 @@ async fn author_context_model(
         author_pubkey: &Some(author_pubkey_value.clone()),
         source_state: &cache.source_state,
         selected_relays: &selected,
+        author_routes: &routes,
         window: &cache.window,
         diagnostics: &diagnostics,
         anchor_created_at: cache.anchor_created_at,
@@ -134,6 +146,7 @@ async fn author_context_model(
             event_id,
             author_pubkey,
             selected_relays: selected,
+            author_routes: routes,
             window: cache.window,
             source_state: cache.source_state,
             anchor_created_at: cache.anchor_created_at,
@@ -155,7 +168,7 @@ fn build_view(owner: &str, parts: AuthorContextModelParts) -> AuthorContextFeedV
         source_state: parts.source_state,
         selected_relays: parts.selected_relays,
         disabled_relays: Vec::new(),
-        author_routes: Vec::new(),
+        author_routes: parts.author_routes,
         visibility: DemandVisibility::Visible,
         anchor_created_at: parts.anchor_created_at,
         now_sec: browser_now_ms() / 1_000,

@@ -1,4 +1,7 @@
-use lkjstr_app::{AuthorContextNearbyInput, author_context_nearby_input, plan_query_demand};
+use lkjstr_app::{
+    AuthorContextAnchorInput, AuthorContextNearbyInput, author_context_anchor_input,
+    author_context_nearby_input, plan_query_demand,
+};
 use lkjstr_relays::{DemandPhase, DemandVisibility, initial_relay_subscription_id};
 
 use crate::{
@@ -46,16 +49,38 @@ pub(crate) fn author_context_relay_plan(
 }
 
 fn relay_plan_relays(input: &AuthorContextRelayReadInput) -> Vec<String> {
+    if input.anchor_created_at.is_none() {
+        return anchor_plan_relays(input);
+    }
+    nearby_plan_relays(input)
+}
+
+fn anchor_plan_relays(input: &AuthorContextRelayReadInput) -> Vec<String> {
+    let demand = author_context_anchor_input(AuthorContextAnchorInput {
+        owner: input.owner.clone(),
+        visibility: DemandVisibility::Visible,
+        selected_relays: input.selected_relays.clone(),
+        disabled_relays: Vec::new(),
+        event_id: input.event_id.clone(),
+        author_pubkey: input.author_pubkey.clone(),
+        author_routes: input.author_routes.clone(),
+        now_sec: input.now_sec,
+    });
+    plan_query_demand(demand).wire_request.relays
+}
+
+fn nearby_plan_relays(input: &AuthorContextRelayReadInput) -> Vec<String> {
+    let anchor_created_at = input.anchor_created_at.unwrap_or(input.now_sec);
     let demand = author_context_nearby_input(AuthorContextNearbyInput {
         owner: input.owner.clone(),
         visibility: DemandVisibility::Visible,
         selected_relays: input.selected_relays.clone(),
         disabled_relays: Vec::new(),
         author_pubkey: input.author_pubkey.clone(),
-        author_routes: Vec::new(),
+        author_routes: input.author_routes.clone(),
         phase: DemandPhase::Bootstrap,
-        since: Some(input.anchor_created_at.saturating_sub(NEARBY_SECONDS)),
-        until: Some(input.anchor_created_at.saturating_add(NEARBY_SECONDS)),
+        since: Some(anchor_created_at.saturating_sub(NEARBY_SECONDS)),
+        until: Some(anchor_created_at.saturating_add(NEARBY_SECONDS)),
         now_sec: input.now_sec,
         page_size: PAGE_SIZE,
     });

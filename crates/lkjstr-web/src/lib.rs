@@ -20,6 +20,8 @@ mod author_context_relay_read_tail;
 #[cfg(all(target_arch = "wasm32", debug_assertions))]
 #[doc(hidden)]
 pub mod author_context_relay_test_api;
+#[cfg(target_arch = "wasm32")]
+mod author_context_routes;
 pub mod feed_geometry;
 pub mod follow_graph;
 #[cfg(target_arch = "wasm32")]

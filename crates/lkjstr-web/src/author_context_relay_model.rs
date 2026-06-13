@@ -13,6 +13,7 @@ pub(crate) fn model_from_snapshot(
     input: &AuthorContextRelayReadInput,
     snapshot: ProgressiveReadSnapshot,
 ) -> AuthorContextFeedView {
+    let anchor_created_at = anchor_created_at(input, &snapshot);
     let source_state = source_state(&snapshot);
     let diagnostics = relay_diagnostics(input, &snapshot);
     let window = reduce_feed_window(
@@ -30,9 +31,9 @@ pub(crate) fn model_from_snapshot(
         source_state,
         selected_relays: input.selected_relays.clone(),
         disabled_relays: Vec::new(),
-        author_routes: Vec::new(),
+        author_routes: input.author_routes.clone(),
         visibility: DemandVisibility::Visible,
-        anchor_created_at: Some(input.anchor_created_at),
+        anchor_created_at,
         now_sec: input.now_sec,
         page_size: PAGE_SIZE,
         window,
@@ -41,6 +42,19 @@ pub(crate) fn model_from_snapshot(
         geometry_models: Vec::<RowGeometryModel>::new(),
         fragment_config: FeedFragmentConfig::default(),
         diagnostics,
+    })
+}
+
+fn anchor_created_at(
+    input: &AuthorContextRelayReadInput,
+    snapshot: &ProgressiveReadSnapshot,
+) -> Option<u64> {
+    input.anchor_created_at.or_else(|| {
+        snapshot
+            .events
+            .iter()
+            .find(|event| event.event.id == input.event_id)
+            .map(|event| event.event.created_at)
     })
 }
 

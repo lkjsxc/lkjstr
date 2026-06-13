@@ -8,6 +8,7 @@ use crate::{
 };
 
 pub struct AuthorContextRelayFilterProbe {
+    pub ids: Option<Vec<String>>,
     pub since: Option<u64>,
     pub until: Option<u64>,
     pub limit: Option<u64>,
@@ -24,33 +25,68 @@ pub struct AuthorContextRelayPlanProbe {
 pub struct AuthorContextRelayMatchProbe {
     pub older_same_author: bool,
     pub newer_same_author: bool,
+    pub exact_anchor: bool,
+    pub nearby_before_anchor: bool,
     pub wrong_author: bool,
     pub unsupported_kind: bool,
     pub outside_window: bool,
 }
 
 pub fn author_context_relay_plan_probe() -> Option<AuthorContextRelayPlanProbe> {
-    let plan = author_context_relay_plan(&input())?;
-    Some(AuthorContextRelayPlanProbe {
+    let plan = author_context_relay_plan(&input(Some(1_700_000_010)))?;
+    Some(plan_probe(plan))
+}
+
+pub fn author_context_anchor_plan_probe() -> Option<AuthorContextRelayPlanProbe> {
+    let plan = author_context_relay_plan(&input(None))?;
+    Some(plan_probe(plan))
+}
+
+fn plan_probe(
+    plan: crate::author_context_relay::AuthorContextRelayPlan,
+) -> AuthorContextRelayPlanProbe {
+    AuthorContextRelayPlanProbe {
         sub_id: plan.sub_id,
         relays: plan.relays,
         filters: plan.filters.iter().map(filter_probe).collect(),
-    })
+    }
 }
 
 pub fn author_context_relay_match_probe() -> AuthorContextRelayMatchProbe {
-    let input = input();
+    let nearby_input = input(Some(1_700_000_010));
+    let exact_input = input(None);
     AuthorContextRelayMatchProbe {
-        older_same_author: author_context_event_matches_read(&input, &event(1_700_000_009, 2, 1)),
-        newer_same_author: author_context_event_matches_read(&input, &event(1_700_000_011, 3, 1)),
-        wrong_author: author_context_event_matches_read(&input, &wrong_author_event()),
-        unsupported_kind: author_context_event_matches_read(&input, &event(1_700_000_009, 4, 7)),
-        outside_window: author_context_event_matches_read(&input, &event(1_699_900_000, 5, 1)),
+        older_same_author: author_context_event_matches_read(
+            &nearby_input,
+            &event(1_700_000_009, 2, 1),
+        ),
+        newer_same_author: author_context_event_matches_read(
+            &nearby_input,
+            &event(1_700_000_011, 3, 1),
+        ),
+        exact_anchor: author_context_event_matches_read(
+            &exact_input,
+            &event(1_700_000_010, 1, KIND_TEXT_NOTE),
+        ),
+        nearby_before_anchor: author_context_event_matches_read(
+            &exact_input,
+            &event(1_700_000_009, 2, KIND_TEXT_NOTE),
+        ),
+        wrong_author: author_context_event_matches_read(&nearby_input, &wrong_author_event()),
+        unsupported_kind: author_context_event_matches_read(
+            &nearby_input,
+            &event(1_700_000_009, 4, 7),
+        ),
+        outside_window: author_context_event_matches_read(
+            &nearby_input,
+            &event(1_699_900_000, 5, 1),
+        ),
     }
 }
 
 fn filter_probe(filter: &NostrFilter) -> AuthorContextRelayFilterProbe {
     AuthorContextRelayFilterProbe {
+        ids: filter.ids.clone(),
         since: filter.since,
         until: filter.until,
         limit: filter.limit,
@@ -59,12 +95,18 @@ fn filter_probe(filter: &NostrFilter) -> AuthorContextRelayFilterProbe {
     }
 }
 
-fn input() -> AuthorContextRelayReadInput {
+fn input(anchor_created_at: Option<u64>) -> AuthorContextRelayReadInput {
     AuthorContextRelayReadInput {
         owner: "author-context-tab".to_owned(),
         event_id: id(1),
         author_pubkey: pubkey(),
         selected_relays: vec!["wss://selected.example".to_owned()],
+        author_routes: vec![lkjstr_relays::AuthorRelayRoute {
+            author: pubkey(),
+            relay_url: "wss://author-route.example".to_owned(),
+            source: lkjstr_relays::RouteEvidenceSource::Nip65,
+            score: 10,
+        }],
         cache_window: reduce_feed_window(
             empty_feed_window(1, 180),
             FeedWindowEvidence::Events {
@@ -74,7 +116,7 @@ fn input() -> AuthorContextRelayReadInput {
             },
         ),
         diagnostics: Vec::new(),
-        anchor_created_at: 1_700_000_010,
+        anchor_created_at,
         now_sec: 1_700_000_030,
     }
 }

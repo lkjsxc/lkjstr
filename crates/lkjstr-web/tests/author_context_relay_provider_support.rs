@@ -3,6 +3,7 @@
 
 use lkjstr_domain::{RelayConnectionState, RelayHealth, RelayPurpose, RelayRecord, RelaySet};
 use lkjstr_protocol::NostrEvent;
+use lkjstr_storage::AuthorRelayRouteRecord;
 use wasm_bindgen::prelude::JsValue;
 
 pub(crate) const SELECTED_RELAY: &str = "wss://selected.example";
@@ -80,6 +81,17 @@ pub(crate) fn relay_set() -> RelaySet {
             health: RelayHealth::default(),
         }],
         updated_at: 9,
+    }
+}
+
+pub(crate) fn author_route(pubkey: String) -> AuthorRelayRouteRecord {
+    AuthorRelayRouteRecord {
+        pubkey,
+        relay_url: SELECTED_RELAY.to_owned(),
+        route_kind: "nip65".to_owned(),
+        evidence_json: "{}".to_owned(),
+        updated_at_ms: 9,
+        expires_at_ms: None,
     }
 }
 
