@@ -11,6 +11,10 @@
     resetSetting,
     saveSetting,
   } from '$lib/settings/settings-store';
+  import {
+    copySettingsJson,
+    settingsCopyStatusText,
+  } from '$lib/tabs/settings/settings-copy-status';
   import { registerTabRuntimeSnapshot } from '$lib/workspace/tab-runtime-registry';
   import type { TabSnapshotPayload } from '$lib/workspace/tab-snapshot';
 
@@ -112,6 +116,15 @@
     }
   }
 
+  async function copySettingsExport(): Promise<void> {
+    const status = await copySettingsJson(
+      'Settings JSON export',
+      JSON.stringify(settings),
+      navigator.clipboard,
+    );
+    importStatus = settingsCopyStatusText(status);
+  }
+
   function applyAppearance(records: readonly SettingRecord[]): void {
     const root = document.documentElement;
     const radius = records.find(
@@ -134,7 +147,9 @@
     <div class="settings-actions">
       <button
         type="button"
-        onclick={() => navigator.clipboard?.writeText(JSON.stringify(settings))}
+        onclick={() => {
+          void copySettingsExport();
+        }}
       >
         Copy JSON export
       </button>

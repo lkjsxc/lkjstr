@@ -42,6 +42,8 @@ Settings provide editable local preferences as one flat key-value list.
   button.
 - JSON import uses an inline textarea and status. Browser prompt dialogs are
   not used.
+- JSON export copy reports clipboard unavailable or rejected writes explicitly;
+  copied status appears only after the browser clipboard write resolves.
 - Retired draft-tree settings are not part of the schema.
 - `tabs.inactiveRetentionSeconds` controls how long inactive tab UI snapshots
   are retained in session memory after focus changes.

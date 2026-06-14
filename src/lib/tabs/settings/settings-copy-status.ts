@@ -1,4 +1,4 @@
-export type AccountCopyStatus =
+export type SettingsCopyStatus =
   | {
       readonly kind: 'copied';
       readonly label: string;
@@ -9,15 +9,15 @@ export type AccountCopyStatus =
       readonly reason: string;
     };
 
-export type AccountClipboard = {
+export type SettingsClipboard = {
   readonly writeText?: (value: string) => Promise<void>;
 };
 
-export async function copyAccountSecret(
+export async function copySettingsJson(
   label: string,
   value: string,
-  clipboard: AccountClipboard | undefined,
-): Promise<AccountCopyStatus> {
+  clipboard: SettingsClipboard | undefined,
+): Promise<SettingsCopyStatus> {
   if (!clipboard?.writeText) {
     return { kind: 'failed', label, reason: 'Clipboard unavailable' };
   }
@@ -29,7 +29,7 @@ export async function copyAccountSecret(
   }
 }
 
-export function accountCopyStatusText(status: AccountCopyStatus): string {
+export function settingsCopyStatusText(status: SettingsCopyStatus): string {
   if (status.kind === 'copied') {
     return `${status.label} copied.`;
   }

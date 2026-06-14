@@ -6,14 +6,15 @@ import {
 
 describe('account copy status', () => {
   it('reports copied only after clipboard write succeeds', async () => {
-    const writes: string[] = [];
-    const status = await copyAccountSecret('Local nsec', 'nsec1...', {
-      writeText: async (value) => {
-        writes.push(value);
+    const clipboard = {
+      writes: [] as string[],
+      async writeText(value: string) {
+        this.writes.push(value);
       },
-    });
+    };
+    const status = await copyAccountSecret('Local nsec', 'nsec1...', clipboard);
 
-    expect(writes).toEqual(['nsec1...']);
+    expect(clipboard.writes).toEqual(['nsec1...']);
     expect(status).toEqual({ kind: 'copied', label: 'Local nsec' });
     expect(accountCopyStatusText(status)).toBe('Local nsec copied.');
   });
