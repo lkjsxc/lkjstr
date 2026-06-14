@@ -6,7 +6,8 @@ use lkjstr_app::{
 use crate::workspace::author_context_actions::AuthorContextActions;
 use crate::workspace::author_context_event::event_row;
 use crate::workspace::author_context_provider::AuthorContextFeedProvider;
-use crate::workspace::feed_footer_text::{FooterAuthLabel, footer_state_text};
+use crate::workspace::feed_footer_row::state_footer;
+use crate::workspace::feed_footer_text::FooterAuthLabel;
 use crate::workspace::feed_state_row;
 
 #[component]
@@ -72,12 +73,9 @@ fn context_row(row: FeedViewRow, actions: AuthorContextActions) -> impl IntoView
         FeedViewRow::Event(row) => event_row(row, actions).into_any(),
         FeedViewRow::Unavailable(row) => feed_state_row::unavailable(row).into_any(),
         FeedViewRow::Diagnostic(row) => feed_state_row::diagnostic(row).into_any(),
-        FeedViewRow::Footer(row) => view! {
-            <footer class="lkjstr-feed-footer" data-row-id=row.row_id>
-                {footer_state_text(row.state, FooterAuthLabel::Auth)}
-            </footer>
+        FeedViewRow::Footer(row) => {
+            state_footer(row.row_id, row.state, FooterAuthLabel::Auth).into_any()
         }
-        .into_any(),
         FeedViewRow::Continuation(row) => feed_state_row::plain_continuation(row).into_any(),
         FeedViewRow::Profile(row) => feed_state_row::profile(row).into_any(),
         FeedViewRow::Notification(row) => feed_state_row::notification(row).into_any(),

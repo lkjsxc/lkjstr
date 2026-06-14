@@ -87,7 +87,7 @@ must use before their TypeScript feed runtimes are deleted.
   stored author-route relays when the anchor is uncached. Missing event id,
   author pubkey, relay/route input, and anchor timestamp are explicit
   unavailable states. Converted Rust feed surfaces share event body, common
-  state-row rendering, and footer text mapping. Row action buttons open Rust
+  state-row rendering, and footer shell rendering. Row action buttons open Rust
   Profile, Thread, and Author Context tabs. Deletion proof remains open.
 - Cached and relay-refreshed Profile header metadata/follow-count proof exists.
   The known following-count action opens converted Followees, the Profile header

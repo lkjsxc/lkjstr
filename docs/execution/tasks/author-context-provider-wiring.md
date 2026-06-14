@@ -44,8 +44,9 @@ event-row menu paths remain until no-import and final verification proof exist.
   across converted Rust feed surfaces while preserving Author Context actions.
 - `crates/lkjstr-ui/src/workspace/feed_state_row.rs` shares unavailable,
   diagnostic, profile, notification, and plain continuation state rows.
-- `crates/lkjstr-ui/src/workspace/feed_footer_text.rs` shares footer text
-  mapping while preserving surface-specific auth copy.
+- `crates/lkjstr-ui/src/workspace/feed_footer_row.rs` and
+  `feed_footer_text.rs` share footer shell rendering while preserving
+  surface-specific auth copy.
 - Focused `lkjstr-ui` unit tests cover shared event-fragment text extraction
   plus shared state-row and footer presentation data without browser-only proof.
 - `src/lib/tabs/author-context/AuthorContextTab.svelte` mounts the Rust body
@@ -127,7 +128,7 @@ PATH=/home/lkjsxc/.cargo/bin:$PATH pnpm rust-wasm:quiet
   Rust feed surfaces, with actions still attached from real row ids and pubkeys.
 - Rust Author Context uses shared feed state-row rendering for explicit
   unavailable, diagnostic, profile, notification, and plain continuation rows.
-- Rust Author Context uses shared feed footer text mapping while preserving the
+- Rust Author Context uses shared feed footer shell rendering while preserving the
   existing `Auth required` copy.
 - The shipped Svelte Author Context tab can mount and unmount the Rust body
   without leaking a provider lease, and row actions call the Svelte workspace
