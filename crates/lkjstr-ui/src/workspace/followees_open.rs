@@ -74,7 +74,7 @@ mod tests {
     use super::*;
 
     #[test]
-    fn copy_npub_action_encodes_pubkey_and_reports_completion() {
+    fn copy_npub_action_encodes_pubkey_and_reports_completion() -> Result<(), &'static str> {
         let captured = Arc::new(Mutex::new(None::<(String, String)>));
         let captured_provider = captured.clone();
         let provider = ProfileCopyProvider::new(move |command| {
@@ -84,7 +84,7 @@ mod tests {
                 .complete(ProfileCopyResult::copied(command.label));
         });
         let status = RwSignal::new(None::<String>);
-        let action = copy_npub_action(Some(provider), status).expect("copy action");
+        let action = copy_npub_action(Some(provider), status).ok_or("missing copy action")?;
         let pubkey = "a".repeat(64);
 
         action.run(pubkey.clone());
@@ -94,6 +94,7 @@ mod tests {
             Some(&("npub".to_owned(), profile_npub(&pubkey)))
         );
         assert_eq!(status.get_untracked(), Some("Copied npub".to_owned()));
+        Ok(())
     }
 
     #[test]

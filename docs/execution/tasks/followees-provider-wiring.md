@@ -22,6 +22,9 @@ remaining parity, no-import, and final verification proof exist.
   from real deduped NIP-02 entries and do not claim absence before proof.
 - `crates/lkjstr-ui/src/workspace/followees.rs` renders a real Followees body
   from `FolloweesView`.
+- `crates/lkjstr-ui/src/workspace/followees_row.rs` renders followee rows as
+  profile buttons only when a real profile callback exists; otherwise rows stay
+  static.
 - `crates/lkjstr-ui/tests/followees_provider_test.rs` proves provider request
   forwarding and release suppression.
 - `crates/lkjstr-web/tests/profile_feed_tab_test.rs` proves Profile opens the
@@ -113,7 +116,8 @@ pnpm rust-wasm:quiet
 - The shipped Svelte Followees tab is only a lifecycle wrapper for the Rust
   island and releases it on visibility changes or destruction.
 - Rust rows expose real pubkeys, relay hints, petnames, and profile,
-  user-timeline, and copy actions without synthesizing profile metadata.
+  user-timeline, and copy actions without synthesizing profile metadata or
+  no-op row controls.
 - TypeScript Followees and follow-graph paths remain until remaining parity,
   no-import, and final gates prove deletion readiness.
 

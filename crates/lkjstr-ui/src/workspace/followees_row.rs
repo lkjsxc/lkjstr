@@ -19,8 +19,20 @@ pub(crate) fn followee_row(row: FolloweesRow, actions: FolloweesActions) -> impl
         .filter(|item| !item.trim().is_empty())
         .unwrap_or_else(|| "No petname".to_owned());
     let relay = row.relay.unwrap_or_else(|| "No relay hint".to_owned());
-    let row_click = row_profile_click(pubkey.clone(), actions.open_profile);
-    let row_key = row_profile_keydown(pubkey.clone(), actions.open_profile);
+    let body_actions = actions.clone();
+    if !followee_profile_available(&actions) {
+        return view! {
+            <article class="lkjstr-feed-row profile" data-row-id=row.row_id>
+                {followee_row_body(label, petname, relay, pubkey, body_actions)}
+            </article>
+        }
+        .into_any();
+    }
+    let Some(open_profile) = actions.open_profile else {
+        return ().into_any();
+    };
+    let row_click = row_profile_click(pubkey.clone(), open_profile);
+    let row_key = row_profile_keydown(pubkey.clone(), open_profile);
     view! {
         <article
             class="lkjstr-feed-row profile"
@@ -31,11 +43,24 @@ pub(crate) fn followee_row(row: FolloweesRow, actions: FolloweesActions) -> impl
             on:click=row_click
             on:keydown=row_key
         >
-            <strong>{label}</strong>
-            <p>{petname}</p>
-            <small>{relay}</small>
-            {followee_actions(pubkey, actions)}
+            {followee_row_body(label, petname, relay, pubkey, body_actions)}
         </article>
+    }
+    .into_any()
+}
+
+fn followee_row_body(
+    label: String,
+    petname: String,
+    relay: String,
+    pubkey: String,
+    actions: FolloweesActions,
+) -> impl IntoView {
+    view! {
+        <strong>{label}</strong>
+        <p>{petname}</p>
+        <small>{relay}</small>
+        {followee_actions(pubkey, actions)}
     }
 }
 
@@ -103,33 +128,30 @@ fn action_button(
     })
 }
 
-fn row_profile_click(
-    pubkey: String,
-    action: Option<Callback<String>>,
-) -> impl Fn(MouseEvent) + 'static {
+fn row_profile_click(pubkey: String, action: Callback<String>) -> impl Fn(MouseEvent) + 'static {
     move |_event| {
-        if let Some(action) = action {
-            action.run(pubkey.clone());
-        }
+        action.run(pubkey.clone());
     }
 }
 
 fn row_profile_keydown(
     pubkey: String,
-    action: Option<Callback<String>>,
+    action: Callback<String>,
 ) -> impl Fn(KeyboardEvent) + 'static {
     move |event| {
         if event.key() != "Enter" {
             return;
         }
-        if let Some(action) = action {
-            action.run(pubkey.clone());
-        }
+        action.run(pubkey.clone());
     }
 }
 
 fn followee_overflow_available(actions: &FolloweesActions) -> bool {
     actions.open_user_timeline.is_some() || actions.copy_npub.is_some()
+}
+
+fn followee_profile_available(actions: &FolloweesActions) -> bool {
+    actions.open_profile.is_some()
 }
 
 fn compact_pubkey(pubkey: &str) -> String {
@@ -146,33 +168,5 @@ fn compact_pubkey(pubkey: &str) -> String {
 }
 
 #[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test]
-    fn compact_pubkey_keeps_both_ends() {
-        assert_eq!(compact_pubkey(&"a".repeat(64)), "aaaaaaaa...aaaaaaaa");
-    }
-
-    #[test]
-    fn followee_overflow_excludes_primary_profile_action() {
-        let actions = FolloweesActions {
-            open_profile: Some(Callback::new(|_: String| {})),
-            open_user_timeline: None,
-            copy_npub: None,
-        };
-
-        assert!(!followee_overflow_available(&actions));
-    }
-
-    #[test]
-    fn followee_overflow_keeps_secondary_actions() {
-        let actions = FolloweesActions {
-            open_profile: None,
-            open_user_timeline: Some(Callback::new(|_: String| {})),
-            copy_npub: Some(Callback::new(|_: String| {})),
-        };
-
-        assert!(followee_overflow_available(&actions));
-    }
-}
+#[path = "followees_row_tests.rs"]
+mod followees_row_tests;
