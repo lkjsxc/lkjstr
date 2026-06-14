@@ -58,7 +58,8 @@ and final verification proof exist.
 - Focused `lkjstr-ui` unit tests cover shared event-fragment text extraction
   plus shared state-row and footer presentation data without browser-only proof.
 - `src/lib/tabs/author-context/AuthorContextTab.svelte` mounts the Rust body
-  through the WASM asset loader and forwards workspace action callbacks.
+  through the WASM asset loader and forwards required workspace action callbacks
+  instead of dummy no-op row actions.
 - Fast `lkjstr-ui` provider tests prove Author Context lease cleanup runs once,
   released requests expose `is_released()`, and late completions are suppressed.
 - The retired `src/lib/author-context` helper directory has no product imports
@@ -149,8 +150,8 @@ PATH=/home/lkjsxc/.cargo/bin:$PATH pnpm rust-wasm:quiet
 - Rust Author Context uses shared feed footer shell rendering while preserving the
   existing `Auth required` copy.
 - The shipped Svelte Author Context tab can mount and unmount the Rust body
-  without leaking a provider lease, and row actions call the Svelte workspace
-  callbacks.
+  without leaking a provider lease, and row actions call required Svelte
+  workspace callbacks rather than no-op fallbacks.
 - The Author Context provider request exposes `is_released()` so host adapters
   can guard late async completions at the typed request boundary.
 - The unused TypeScript loader and deletion-anchor directory remain removed

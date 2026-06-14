@@ -106,8 +106,9 @@ preservation. Rust feed event bodies, `FeedEventRow` content/action rows,
 unavailable preview states, author metadata fallback, sensitive warning reveal,
 common state rows, and nearby/copy event menus now share Leptos rendering across
 converted feed surfaces. Retained Svelte copy actions report clipboard
-unavailable and rejected writes explicitly, and optional retained event/profile
-actions render static rows instead of no-op buttons when callbacks are absent.
+unavailable and rejected writes explicitly, optional retained event/profile
+actions render static rows instead of no-op buttons, and Rust-island hosts
+forward required workspace callbacks instead of dummy row actions.
 Rust tests cover bounded action/repost rows, public User Timeline discovery
 states, and typed row-height observation/model SQLite rows, while
 browser/deletion proof stays open. Deletion remains blocked until

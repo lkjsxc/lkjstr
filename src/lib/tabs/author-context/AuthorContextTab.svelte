@@ -12,7 +12,7 @@
     relaySets?: readonly unknown[];
     openProfile: (pubkey: string) => void;
     openThread: (eventId: string) => void;
-    openAuthorContext?: (eventId: string, pubkey: string) => void;
+    openAuthorContext: (eventId: string, pubkey: string) => void;
   };
 
   type AuthorContextIslandHandle = {
@@ -74,7 +74,7 @@
         props.pubkey,
         props.openProfile,
         props.openThread,
-        props.openAuthorContext ?? (() => {}),
+        props.openAuthorContext,
       );
       if (generation !== current) {
         next.unmount();

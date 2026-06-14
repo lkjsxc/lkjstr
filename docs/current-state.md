@@ -18,9 +18,9 @@ Read next: [product/README.md](product/README.md),
   Request, Accounts, Relay Settings, Stats, Settings, Upload Settings,
   lkjstr Log, Mine npub, Profile Edit, Welcome, and Rust-island Author
   Context, Followees, and User Timeline bodies are implemented.
-- Followees/User Timeline mount Rust bodies through Svelte as WASM islands and
-  render real NIP-02 rows, selected/stored-route discovery, cleanup, retry,
-  partial-route, and degraded states. Rust Followees rows open Profile and keep Timeline/Copy npub in overflow with explicit copy status.
+- Followees/User Timeline Rust islands render real NIP-02 rows,
+  selected/stored-route discovery, cleanup, retry, partial/degraded states, and
+  real workspace callbacks instead of dummy no-op actions.
 - Shared UI system catalog and shipped component list live in
   [architecture/workspace/ui-system/README.md](architecture/workspace/ui-system/README.md);
   polish acceptance rows live in

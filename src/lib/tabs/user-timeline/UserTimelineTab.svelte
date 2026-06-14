@@ -12,7 +12,7 @@
     relaySets?: readonly unknown[];
     openProfile: (pubkey: string) => void;
     openThread: (eventId: string) => void;
-    openAuthorContext?: (eventId: string, pubkey: string) => void;
+    openAuthorContext: (eventId: string, pubkey: string) => void;
   };
 
   type UserTimelineIslandHandle = {
@@ -70,7 +70,7 @@
         props.pubkey,
         props.openProfile,
         props.openThread,
-        props.openAuthorContext ?? (() => {}),
+        props.openAuthorContext,
       );
       if (generation !== current) {
         next.unmount();
@@ -91,7 +91,10 @@
   }
 </script>
 
-<section class="hybrid-tab feed-tab user-timeline-tab" aria-label="User Timeline">
+<section
+  class="hybrid-tab feed-tab user-timeline-tab"
+  aria-label="User Timeline"
+>
   <div class="hybrid-tab__toolbar">
     {#if error}<p role="alert">{error}</p>{/if}
   </div>
