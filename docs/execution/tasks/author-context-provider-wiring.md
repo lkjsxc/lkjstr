@@ -11,8 +11,8 @@ Injected-row, cache-backed default-provider, bounded selected-relay relay-read,
 row action-opening, exact anchor lookup, and stored author-route slices are
 implemented. Browser proof covers explicit unavailable states and the shipped
 Svelte tab now mounts the Rust body as a WASM island. The unused TypeScript
-Author Context loader has no product imports; Svelte host and event-row menu
-paths remain until no-import and final verification proof exist.
+Author Context loader was removed after no-import proof; Svelte host and
+event-row menu paths remain until no-import and final verification proof exist.
 
 ## Current Evidence
 
@@ -47,8 +47,9 @@ paths remain until no-import and final verification proof exist.
 
 ## Next Edit
 
-Remove the unused TypeScript loader with no-import proof. Keep the Svelte host
-wrapper and event-row menu call paths until shared Leptos event renderer parity,
+Prove the remaining Author Context deletion blockers: Svelte host no-import,
+event-row menu replacement, and final verification. Keep the Svelte host wrapper
+and shared event-row menu call paths until shared Leptos event renderer parity,
 host no-import proof, and final verification exist.
 `lkjstr-app` owns the anchor and nearby query demand; `lkjstr-web` only reads
 typed route rows, binds browser sockets, and maps outcomes.
@@ -117,7 +118,7 @@ PATH=/home/lkjsxc/.cargo/bin:$PATH pnpm rust-wasm:quiet
 - The shipped Svelte Author Context tab can mount and unmount the Rust body
   without leaking a provider lease, and row actions call the Svelte workspace
   callbacks.
-- The unused TypeScript loader is removed only after no-import proof.
+- The unused TypeScript loader remains removed after no-import proof.
 - Svelte tab and event-row menu paths remain until no-import and final gates
   prove deletion readiness.
 
