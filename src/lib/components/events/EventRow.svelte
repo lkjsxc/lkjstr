@@ -8,6 +8,10 @@
   import EventActions from './EventActions.svelte';
   import EventMoreMenu from './EventMoreMenu.svelte';
   import ReactionSummary from './ReactionSummary.svelte';
+  import {
+    hasOpenProfileAction,
+    hasOpenThreadAction,
+  } from './action-availability';
   import type {
     ReactionGroup,
     RepostGroup,
@@ -42,12 +46,15 @@
   );
   let highlighted = $state(false);
   let highlightTimer: ReturnType<typeof setTimeout> | undefined;
+  let canOpenProfile = $derived(hasOpenProfileAction(props.openProfile));
+  let canOpenThread = $derived(hasOpenThreadAction(props.openThread));
 
   onDestroy(() => {
     if (highlightTimer) clearTimeout(highlightTimer);
   });
 
   function openRow(event?: MouseEvent): void {
+    if (!canOpenThread) return;
     if (event && shouldKeepLocal(event.target)) return;
     props.openThread?.(props.item.event.id);
   }
@@ -66,6 +73,7 @@
 
   function openProfile(event: MouseEvent): void {
     event.stopPropagation();
+    if (!canOpenProfile) return;
     props.openProfile?.(props.item.event.pubkey);
   }
 
@@ -76,25 +84,21 @@
   }
 </script>
 
-<div
-  class="event-row"
-  class:event-row--compact={props.compact}
-  class:event-row--embedded={props.showSeparator === false}
-  class:event-row--action-success={highlighted}
-  role="button"
-  tabindex="0"
-  style={`--event-depth: ${props.depth ?? 0}`}
-  onclick={openRow}
-  onkeydown={handleKeydown}
->
-  <button
-    type="button"
-    class="avatar-button"
-    aria-label="Open profile"
-    onclick={openProfile}
-  >
-    <EventMeta event={props.item.event} relays={[]} {profile} avatarOnly />
-  </button>
+{#snippet rowBody()}
+  {#if canOpenProfile}
+    <button
+      type="button"
+      class="avatar-button"
+      aria-label="Open profile"
+      onclick={openProfile}
+    >
+      <EventMeta event={props.item.event} relays={[]} {profile} avatarOnly />
+    </button>
+  {:else}
+    <span class="avatar-button">
+      <EventMeta event={props.item.event} relays={[]} {profile} avatarOnly />
+    </span>
+  {/if}
   <div class="event-main">
     <EventMeta
       event={props.item.event}
@@ -135,4 +139,30 @@
       openProfile={props.openProfile}
     />
   </div>
-</div>
+{/snippet}
+
+{#if canOpenThread}
+  <div
+    class="event-row event-row--interactive"
+    class:event-row--compact={props.compact}
+    class:event-row--embedded={props.showSeparator === false}
+    class:event-row--action-success={highlighted}
+    role="button"
+    tabindex="0"
+    style={`--event-depth: ${props.depth ?? 0}`}
+    onclick={openRow}
+    onkeydown={handleKeydown}
+  >
+    {@render rowBody()}
+  </div>
+{:else}
+  <div
+    class="event-row"
+    class:event-row--compact={props.compact}
+    class:event-row--embedded={props.showSeparator === false}
+    class:event-row--action-success={highlighted}
+    style={`--event-depth: ${props.depth ?? 0}`}
+  >
+    {@render rowBody()}
+  </div>
+{/if}

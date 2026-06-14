@@ -14,6 +14,10 @@
   import EventMeta from './EventMeta.svelte';
   import EventMoreMenu from './EventMoreMenu.svelte';
   import ReactionSummary from './ReactionSummary.svelte';
+  import {
+    hasOpenProfileAction,
+    hasOpenThreadAction,
+  } from './action-availability';
 
   type Props = {
     node: FlatEventTreeItem;
@@ -37,12 +41,15 @@
   let fragmentEvent = $derived(
     fragmentEventContent(props.node, props.fragment),
   );
+  let canOpenProfile = $derived(hasOpenProfileAction(props.openProfile));
+  let canOpenThread = $derived(hasOpenThreadAction(props.openThread));
 
   onDestroy(() => {
     if (highlightTimer) clearTimeout(highlightTimer);
   });
 
   function openRow(event?: MouseEvent): void {
+    if (!canOpenThread) return;
     if (event && shouldKeepLocal(event.target)) return;
     props.openThread?.(props.node.event.id);
   }
@@ -61,6 +68,7 @@
 
   function openProfile(event: MouseEvent): void {
     event.stopPropagation();
+    if (!canOpenProfile) return;
     props.openProfile?.(props.node.event.pubkey);
   }
 
@@ -71,29 +79,32 @@
   }
 </script>
 
-<div
-  class="event-row event-row--fragment"
-  class:event-row--action-success={highlighted}
-  role="button"
-  tabindex="0"
-  style={`--event-depth: ${props.node.depth ?? 0}`}
-  onclick={openRow}
-  onkeydown={handleKeydown}
->
+{#snippet rowBody()}
   {#if props.fragment.kind === 'event-header'}
-    <button
-      type="button"
-      class="avatar-button"
-      aria-label="Open profile"
-      onclick={openProfile}
-    >
-      <EventMeta
-        event={props.node.event}
-        relays={[]}
-        profile={props.profile}
-        avatarOnly
-      />
-    </button>
+    {#if canOpenProfile}
+      <button
+        type="button"
+        class="avatar-button"
+        aria-label="Open profile"
+        onclick={openProfile}
+      >
+        <EventMeta
+          event={props.node.event}
+          relays={[]}
+          profile={props.profile}
+          avatarOnly
+        />
+      </button>
+    {:else}
+      <span class="avatar-button">
+        <EventMeta
+          event={props.node.event}
+          relays={[]}
+          profile={props.profile}
+          avatarOnly
+        />
+      </span>
+    {/if}
     <div class="event-main">
       <EventMeta
         event={props.node.event}
@@ -137,4 +148,26 @@
       {/if}
     </div>
   {/if}
-</div>
+{/snippet}
+
+{#if canOpenThread}
+  <div
+    class="event-row event-row--fragment event-row--interactive"
+    class:event-row--action-success={highlighted}
+    role="button"
+    tabindex="0"
+    style={`--event-depth: ${props.node.depth ?? 0}`}
+    onclick={openRow}
+    onkeydown={handleKeydown}
+  >
+    {@render rowBody()}
+  </div>
+{:else}
+  <div
+    class="event-row event-row--fragment"
+    class:event-row--action-success={highlighted}
+    style={`--event-depth: ${props.node.depth ?? 0}`}
+  >
+    {@render rowBody()}
+  </div>
+{/if}
