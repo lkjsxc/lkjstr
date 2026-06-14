@@ -34,6 +34,10 @@ async fn rust_stats_tab_renders_real_inventory() -> Result<(), JsValue> {
     wait_for_text("workspaces").await?;
     wait_for_text("available").await?;
     wait_for_text("Auto refresh every 2s").await?;
+    wait_for_text("Repair report").await?;
+    assert!(!document_text()?.contains("Compact now"));
+    click("[data-testid='stats-repair-report-action']")?;
+    wait_for_text("Repair report complete").await?;
     Ok(())
 }
 

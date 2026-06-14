@@ -64,6 +64,7 @@ Source files expose Rust application behavior to the browser through
 - `retention_routes.rs`: retention resource-kind to statement-id routing.
 - `response.rs`: structured JavaScript response helpers.
 - `settings_host.rs`: SQLite-backed Settings command provider.
+- `stats_actions_host.rs`: report-only Rust Stats storage action callback.
 - `sqlite_host_store.rs`: owned open, close, and scoped SQLite store helper.
 - `sqlite_store/`: worker-backed SQLite repository calls.
 - `storage_worker/`: Rust host adapter for the SQLite storage worker.

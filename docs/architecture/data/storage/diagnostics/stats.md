@@ -73,14 +73,21 @@ timeout, quota failure, blocked storage, corrupt rows, and late-settled work.
 
 ## Action Contract
 
-Stats exposes manual refresh, compact, and repair actions. Actions enqueue
-background tasks and return immediate UI feedback. Repair fixes missing or stale
-ledger rows, deletes orphan ledger rows, removes safe unowned cache rows, and
-deletes only old stores or databases classified as obsolete and recoverable.
+Shipped Stats exposes manual refresh, compact, and repair actions through the
+current TypeScript storage paths. Those actions enqueue background tasks and
+return immediate UI feedback. Repair fixes missing or stale ledger rows, deletes
+orphan ledger rows, removes safe unowned cache rows, and deletes only old stores
+or databases classified as obsolete and recoverable.
 
 Compact uses browser origin usage when available and keeps deleting bounded
 batches of prunable ledger resources until the site budget is met or a stop
 reason explains why it cannot continue.
+
+Rust Stats renders action buttons only when a real Rust host callback exists.
+The first Rust repair action is report-only: it reads typed storage health and
+inventory, reports findings and table counts, and performs no deletion,
+backfill, or compaction. Rust compaction stays unavailable until a real typed
+adapter owns bounded deletion and stop-reason reporting.
 
 ## Rule
 

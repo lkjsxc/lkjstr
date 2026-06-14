@@ -47,6 +47,9 @@ Stats shows current-session relay counters and persisted operational summaries.
   schema-incomplete storage, the actions report through the normal cache status
   path and keep the tab usable. `Compact now` may fall back to the displayed
   site target when the settings store cannot be read.
+- During Rust cutover, Rust Stats action buttons render only for real callbacks.
+  The current Rust `Repair report` action reports typed inventory findings only;
+  it does not claim cleanup, deletion, backfill, or compaction success.
 - SQLite storage health shows persistent OPFS or temporary memory mode, VFS,
   worker kind, SQLite library text, database name, page counts, event count,
   relay receipt count, tag row count, schema change count, and warnings.

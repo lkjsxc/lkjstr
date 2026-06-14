@@ -93,6 +93,7 @@ mod search_feed_relay_model;
 mod search_feed_relay_read;
 mod search_feed_relay_read_tail;
 mod settings_host;
+mod stats_actions_host;
 mod sqlite_host_store;
 pub mod sqlite_store;
 pub mod storage_worker;

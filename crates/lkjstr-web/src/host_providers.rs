@@ -9,6 +9,7 @@ use crate::{
     relay_settings_host, search_feed_host, settings_host,
     sqlite_host_store::with_sqlite_store,
     sqlite_store::{sqlite_accounts_all, sqlite_storage_stats_snapshot},
+    stats_actions_host::stats_actions_provider,
     storage_worker::DEFAULT_WORKER_URL,
     thread_feed_host, tweet_host, upload_settings_host, user_timeline_host, workspace_host,
 };
@@ -148,7 +149,8 @@ fn workspace_persistence(db_name: String, worker_url: String) -> WorkspacePersis
 }
 
 fn stats_provider(db_name: String, worker_url: String) -> lkjstr_ui::StatsProvider {
-    lkjstr_ui::StatsProvider::new(move |complete| {
+    let actions = stats_actions_provider(db_name.clone(), worker_url.clone());
+    lkjstr_ui::StatsProvider::with_actions(move |complete| {
         let db_name = db_name.clone();
         let worker_url = worker_url.clone();
         wasm_bindgen_futures::spawn_local(async move {
@@ -162,7 +164,7 @@ fn stats_provider(db_name: String, worker_url: String) -> lkjstr_ui::StatsProvid
                 outcome => unavailable_snapshot(outcome).with_additional_rows(browser_rows),
             });
         });
-    })
+    }, actions)
 }
 
 fn unavailable_snapshot<T>(outcome: StorageOutcome<T>) -> lkjstr_storage::StorageStatsSnapshot {

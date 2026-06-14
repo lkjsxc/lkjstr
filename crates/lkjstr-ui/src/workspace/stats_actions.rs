@@ -19,10 +19,10 @@ pub(crate) fn storage_action_view(actions: StatsActions) -> impl IntoView {
         <h3>"Storage actions"</h3>
         <div class="lkjstr-stats-actions">
             {actions.can_compact().then(|| view! {
-                <button type="button" on:click=compact_click>"Compact now"</button>
+                <button type="button" data-testid="stats-compact-action" on:click=compact_click>"Compact now"</button>
             })}
             {actions.can_repair().then(|| view! {
-                <button type="button" on:click=repair_click>"Repair storage"</button>
+                <button type="button" data-testid="stats-repair-report-action" on:click=repair_click>"Repair report"</button>
             })}
             {unavailable.map(|text| view! { <p role="status">{text}</p> })}
             {move || action_status(status.get())}
