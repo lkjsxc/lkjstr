@@ -43,6 +43,12 @@
       reaction.emoji?.address ?? '',
     ].join(':');
   }
+
+  function openActor(actor: string): void {
+    const openProfile = props.openProfile;
+    if (!hasOpenProfileAction(openProfile)) return;
+    openProfile(actor);
+  }
 </script>
 
 {#if props.reactions && props.reactions.length > 0}
@@ -79,10 +85,7 @@
           <div class="reaction-summary__actors" {id}>
             {#each reaction.actors as actor (actor)}
               {#if canOpenProfile}
-                <button
-                  type="button"
-                  onclick={() => props.openProfile?.(actor)}
-                >
+                <button type="button" onclick={() => openActor(actor)}>
                   <Avatar
                     pubkey={actor}
                     name={name(actor)}
@@ -135,7 +138,7 @@
       <div class="reaction-summary__actors" id="reposts">
         {#each props.reposts.actors as actor (actor)}
           {#if canOpenProfile}
-            <button type="button" onclick={() => props.openProfile?.(actor)}>
+            <button type="button" onclick={() => openActor(actor)}>
               <Avatar
                 pubkey={actor}
                 name={name(actor)}
