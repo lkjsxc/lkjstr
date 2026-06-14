@@ -98,6 +98,7 @@ fn event_with_media(content: &str, attachments: &[ContentAttachment]) -> Semanti
         created_at: 1,
         content: content.to_owned(),
         media_attachments: attachments.to_vec(),
+        event_references: Vec::new(),
         media_count: attachments.len().min(usize::from(u16::MAX)) as u16,
         reference_count: 0,
         relay_provenance: Vec::new(),

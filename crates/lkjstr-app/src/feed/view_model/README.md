@@ -13,4 +13,5 @@ Pure shared feed row view-model data for Rust-owned feed surfaces.
 - `ids.rs`: stable row-id constructors.
 - `media_rows.rs`: real media attachment row insertion.
 - `mod.rs`: public view-model exports.
+- `reference_rows.rs`: real reference identity row insertion.
 - `types.rs`: row, footer, unavailable, and diagnostic data types.

@@ -7,6 +7,7 @@ use lkjstr_protocol::{
 };
 
 use super::media_rows::inject_media_rows;
+use super::reference_rows::inject_reference_rows;
 use super::{FeedEventContentRow, FeedEventCustomEmoji, FeedEventUnavailablePreview};
 
 #[derive(Clone, Debug, Eq, PartialEq)]
@@ -59,6 +60,13 @@ pub fn plan_feed_event_content(
         content_shape_hash,
         &event.media_attachments,
         config.media_items_per_segment,
+    );
+    let rows = inject_reference_rows(
+        rows,
+        &event.event_id,
+        content_shape_hash,
+        &event.event_references,
+        config.references_per_segment,
     );
     if has_content_warning {
         return FeedEventContent::Sensitive {

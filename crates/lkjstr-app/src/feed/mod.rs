@@ -41,9 +41,10 @@ pub use types::{
 pub use view_model::{
     FEED_LOAD_OLDER_COMMAND, FeedContinuationRow, FeedDiagnosticRow, FeedDiagnosticSeverity,
     FeedEventContent, FeedEventContentRow, FeedEventCustomEmoji, FeedEventMediaAttachment,
-    FeedEventMediaKind, FeedEventRow, FeedEventUnavailablePreview, FeedFooterRow, FeedFooterState,
-    FeedNotificationRow, FeedProfileRow, FeedRowRenderer, FeedStateRow, FeedUnavailableRow,
-    FeedViewModel, FeedViewModelInput, FeedViewRow, build_feed_view_model, diagnostic_state_row,
+    FeedEventMediaKind, FeedEventReferenceKind, FeedEventReferenceUnavailable, FeedEventRow,
+    FeedEventUnavailablePreview, FeedFooterRow, FeedFooterState, FeedNotificationRow,
+    FeedProfileRow, FeedRowRenderer, FeedStateRow, FeedUnavailableRow, FeedViewModel,
+    FeedViewModelInput, FeedViewRow, build_feed_view_model, diagnostic_state_row,
     feed_continuation_row_id, feed_diagnostic_row_id, feed_event_content, feed_event_content_rows,
     feed_event_geometry_model_keys, feed_event_row_id, feed_footer_row_id,
     feed_notification_row_id, feed_profile_row_id, feed_unavailable_row_id, footer_row,

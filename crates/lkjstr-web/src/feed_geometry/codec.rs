@@ -76,6 +76,7 @@ pub fn semantic_event_from_dto(dto: &super::dto::PlanFragmentsInputDto) -> Seman
         created_at: dto.created_at,
         content: dto.content.clone(),
         media_attachments: Vec::new(),
+        event_references: Vec::new(),
         media_count: dto.media_count,
         reference_count: dto.reference_count,
         relay_provenance: dto.relay_provenance.clone(),

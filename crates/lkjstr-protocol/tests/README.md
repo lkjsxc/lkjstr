@@ -13,6 +13,7 @@ Protocol tests port current TypeScript protocol behavior to Rust.
 - `content_tags_test.rs`: mention and emoji tag derivation.
 - `crypto_test.rs`: key derivation, signing, verification, and redaction.
 - `event_builders_test.rs`: event action tag builders.
+- `event_references_test.rs`: event reference identity extraction.
 - `event_test.rs`: event validation, frame limits, and event IDs.
 - `filter_test.rs`: relay filter parsing and matching.
 - `follow_list_test.rs`: NIP-02 follow-list extraction.

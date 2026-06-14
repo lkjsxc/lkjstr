@@ -6,6 +6,7 @@ pub enum FeedEventContentRow {
     CustomEmoji(FeedEventCustomEmoji),
     MediaAttachment(FeedEventMediaAttachment),
     MediaPreviewUnavailable(FeedEventUnavailablePreview),
+    ReferenceUnavailable(FeedEventReferenceUnavailable),
     ReferencePreviewUnavailable(FeedEventUnavailablePreview),
 }
 
@@ -33,6 +34,26 @@ pub enum FeedEventMediaKind {
 }
 
 #[derive(Clone, Debug, Eq, PartialEq)]
+pub struct FeedEventReferenceUnavailable {
+    pub row_key: String,
+    pub segment_index: u16,
+    pub event_id: String,
+    pub kind: FeedEventReferenceKind,
+    pub relays: Vec<String>,
+}
+
+#[derive(Clone, Debug, Eq, PartialEq)]
+pub enum FeedEventReferenceKind {
+    ReplyRoot,
+    ReplyParent,
+    Quote,
+    Repost,
+    Reaction,
+    Deletion,
+    NostrEvent,
+}
+
+#[derive(Clone, Debug, Eq, PartialEq)]
 pub struct FeedEventUnavailablePreview {
     pub row_key: String,
     pub segment_index: u16,
@@ -46,6 +67,7 @@ impl FeedEventContentRow {
             Self::CustomEmoji(emoji) => custom_emoji_token_text(&emoji.shortcode),
             Self::MediaAttachment(media) => media.url.clone(),
             Self::MediaPreviewUnavailable(_) => "Media preview unavailable".to_owned(),
+            Self::ReferenceUnavailable(reference) => reference.event_id.clone(),
             Self::ReferencePreviewUnavailable(_) => "Reference preview unavailable".to_owned(),
         }
     }

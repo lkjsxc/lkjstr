@@ -4,6 +4,7 @@ use lkjstr_app::feed::{
 };
 
 use super::feed_event_media::media_attachment;
+use super::feed_event_reference::reference_unavailable;
 
 #[derive(Clone, Debug, Eq, PartialEq)]
 struct CustomEmojiImageAttrs {
@@ -70,6 +71,9 @@ fn content_row(row: FeedEventContentRow) -> impl IntoView {
         FeedEventContentRow::MediaAttachment(media) => media_attachment(media).into_any(),
         FeedEventContentRow::MediaPreviewUnavailable(preview) => {
             unavailable_preview(preview, "Media preview unavailable").into_any()
+        }
+        FeedEventContentRow::ReferenceUnavailable(reference) => {
+            reference_unavailable(reference).into_any()
         }
         FeedEventContentRow::ReferencePreviewUnavailable(preview) => {
             unavailable_preview(preview, "Reference preview unavailable").into_any()

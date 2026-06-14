@@ -131,6 +131,7 @@ fn event(kind: u64, content: &str) -> SemanticFeedEvent {
         created_at: 1,
         content: content.to_owned(),
         media_attachments: Vec::new(),
+        event_references: Vec::new(),
         media_count: 0,
         reference_count: 0,
         relay_provenance: Vec::new(),

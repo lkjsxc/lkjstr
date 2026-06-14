@@ -15,6 +15,10 @@ Protocol source files define event, filter, message, signing, and NIP behavior.
 - `event.rs`: signed and unsigned event parsing.
 - `event_builders.rs`: reply, reaction, repost, and zap request tag builders.
 - `event_id.rs`: NIP-01 canonical serialization and event IDs.
+- `event_reference_parts.rs`: shared event reference row assembly helpers.
+- `event_reference_scan.rs`: shared content `nostr:` entity scanner.
+- `event_reference_types.rs`: typed event-reference identity records.
+- `event_references.rs`: event reference identity extraction.
 - `event_sign.rs`: local event finalization from secret keys.
 - `event_tags.rs`: tag parsing and frame policy checks.
 - `event_verify.rs`: event ID and signature verification.

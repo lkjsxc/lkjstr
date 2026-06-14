@@ -154,6 +154,7 @@ fn event_row(
     let content_warning_reason = lkjstr_protocol::content_warning_reason(&event.event);
     let custom_emojis = lkjstr_protocol::custom_emojis(&event.event);
     let media_attachments = lkjstr_protocol::embedded_media_attachments(&event.event);
+    let event_references = lkjstr_protocol::event_references(&event.event);
     let semantic = SemanticFeedEvent {
         event_id: event.event.id.clone(),
         event_kind: event.event.kind,
@@ -162,7 +163,8 @@ fn event_row(
         content: event.event.content.clone(),
         media_count: media_attachments.len().min(usize::from(u16::MAX)) as u16,
         media_attachments,
-        reference_count: features.reference_preview_count,
+        reference_count: event_references.len().min(usize::from(u16::MAX)) as u16,
+        event_references,
         relay_provenance: event.relays.clone(),
         has_action_bar: display.chrome.show_actions,
     };

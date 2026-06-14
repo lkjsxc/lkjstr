@@ -10,6 +10,10 @@ pub mod error;
 pub mod event;
 pub mod event_builders;
 pub mod event_id;
+mod event_reference_parts;
+mod event_reference_scan;
+mod event_reference_types;
+pub mod event_references;
 pub mod event_sign;
 mod event_tags;
 pub mod event_verify;
@@ -68,6 +72,8 @@ pub use event_builders::{
     zap_request_tags,
 };
 pub use event_id::{compute_event_id, serialize_event};
+pub use event_reference_types::{EventReference, EventReferenceKind, EventReferenceSource};
+pub use event_references::event_references;
 pub use event_sign::{EventTemplate, SignError, finalize_event, sign_event_with_secret_hex};
 pub use event_verify::{VerificationCode, VerificationResult, verify_event};
 pub use filter::{NostrFilter, matches_any_filter, matches_filter, parse_filter_value};

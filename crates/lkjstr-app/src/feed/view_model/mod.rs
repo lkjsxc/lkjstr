@@ -4,12 +4,15 @@ mod build;
 mod content;
 #[cfg(test)]
 mod content_media_tests;
+#[cfg(test)]
+mod content_reference_tests;
 mod content_row;
 #[cfg(test)]
 mod content_tests;
 mod geometry;
 mod ids;
 mod media_rows;
+mod reference_rows;
 mod types;
 
 pub use build::{
@@ -21,7 +24,7 @@ pub use content::{
 };
 pub use content_row::{
     FeedEventContentRow, FeedEventCustomEmoji, FeedEventMediaAttachment, FeedEventMediaKind,
-    FeedEventUnavailablePreview,
+    FeedEventReferenceKind, FeedEventReferenceUnavailable, FeedEventUnavailablePreview,
 };
 pub use geometry::feed_event_geometry_model_keys;
 pub use ids::{

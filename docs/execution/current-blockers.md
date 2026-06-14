@@ -179,9 +179,10 @@ models, anchors, footer states, and unavailable states.
   full FeedViewModel action/repost summary rows,
   `FeedEventRow` content/action rows, indexed unavailable media/reference
   preview states with UI attribute proof, real HTTPS media attachment row
-  planning, validated custom emoji rows with image presentation proof,
-  notification repost event rows, author metadata, sensitive-warning reveal
-  rendering, common state-row rendering,
+  planning, unavailable reference rows with real referenced event identity,
+  validated custom emoji rows with image presentation proof, notification repost
+  event rows, author metadata, sensitive-warning reveal rendering, common
+  state-row rendering,
   shared footer shell rendering across converted feed rows, retained Svelte copy
   actions with explicit clipboard failure states, and retained optional Svelte
   event/profile actions plus Rust-island hosts suppress unavailable no-op

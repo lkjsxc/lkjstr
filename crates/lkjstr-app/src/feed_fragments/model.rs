@@ -1,3 +1,5 @@
+use lkjstr_protocol::{ContentAttachment, EventReference};
+
 pub const TEXT_SEGMENT_TARGET_CHARS: usize = 1_800;
 pub const TEXT_SEGMENT_MAX_CHARS: usize = 2_400;
 pub const OVERSIZE_ESTIMATED_HEIGHT: u16 = 1_400;
@@ -33,6 +35,7 @@ pub struct SemanticFeedEvent {
     pub created_at: u64,
     pub content: String,
     pub media_attachments: Vec<ContentAttachment>,
+    pub event_references: Vec<EventReference>,
     pub media_count: u16,
     pub reference_count: u16,
     pub relay_provenance: Vec<String>,
@@ -94,4 +97,3 @@ impl FeedVisualRow {
         }
     }
 }
-use lkjstr_protocol::ContentAttachment;
