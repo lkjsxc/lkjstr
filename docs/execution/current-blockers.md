@@ -169,8 +169,8 @@ models, anchors, footer states, and unavailable states.
   full FeedViewModel action/repost summary rows,
   `FeedEventRow` content/action rows, unavailable media/reference preview states,
   author metadata, sensitive-warning reveal rendering, common state-row rendering,
-  shared footer shell rendering across converted feed rows, retained Svelte
-  event-menu explicit clipboard failure states, and Rust/WASM quiet.
+  shared footer shell rendering across converted feed rows, retained Svelte copy
+  actions with explicit clipboard failure states, and Rust/WASM quiet.
 - Remaining completion proof: Author Context Svelte-host no-import,
   event-row menu deletion readiness, and final-gate deletion readiness plus
   other feed-surface deletion prerequisites remain open.
