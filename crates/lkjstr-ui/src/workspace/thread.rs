@@ -4,7 +4,8 @@ use lkjstr_app::{
     FeedViewRow, ThreadFeedStatus, ThreadFeedView, ThreadOlderLoadTrigger, default_thread_feed_view,
 };
 
-use crate::workspace::feed_event_row::event_row;
+use crate::workspace::feed_event_actions::FeedEventActions;
+use crate::workspace::feed_event_menu::event_row_with_nearby_menu;
 use crate::workspace::feed_state_row;
 use crate::workspace::thread_continuation::continuation_row;
 use crate::workspace::thread_footer::footer_row;
@@ -19,6 +20,7 @@ pub fn ThreadTab(
     model: ThreadFeedView,
     provider: Option<ThreadFeedProvider>,
     open_thread: Option<Callback<String>>,
+    #[prop(optional)] actions: FeedEventActions,
 ) -> impl IntoView {
     let model = RwSignal::new(model);
     let complete = Callback::new(move |next| model.set(next));
@@ -55,8 +57,11 @@ pub fn ThreadTab(
                         {move || {
                             let older_command = older_command;
                             let open_thread = open_thread;
+                            let actions = actions.clone();
                             model.get().view_model.rows.into_iter()
-                                .map(move |row| thread_row(row, older_command, open_thread))
+                                .map(move |row| {
+                                    thread_row(row, older_command, open_thread, actions.clone())
+                                })
                                 .collect_view()
                         }}
                     </div>
@@ -77,18 +82,35 @@ pub fn thread_tab_content(
     thread_feed: Option<ThreadFeedView>,
     provider: Option<ThreadFeedProvider>,
     open_thread: Option<Callback<String>>,
+    actions: FeedEventActions,
 ) -> impl IntoView {
     let model = thread_feed.unwrap_or_else(|| default_thread_feed(&tab_id, event_id.clone()));
-    view! { <ThreadTab owner=tab_id event_id=event_id model=model provider=provider open_thread=open_thread /> }
+    view! {
+        <ThreadTab
+            owner=tab_id
+            event_id=event_id
+            model=model
+            provider=provider
+            open_thread=open_thread
+            actions=actions
+        />
+    }
 }
 
 fn thread_row(
     row: FeedViewRow,
     older_command: Option<Callback<ThreadOlderLoadTrigger>>,
     open_thread: Option<Callback<String>>,
+    actions: FeedEventActions,
 ) -> impl IntoView {
     match row {
-        FeedViewRow::Event(row) => event_row(row, ()).into_any(),
+        FeedViewRow::Event(row) => event_row_with_nearby_menu(
+            row,
+            actions,
+            "thread-open-author-context",
+            "thread-copy-event-id",
+        )
+        .into_any(),
         FeedViewRow::Unavailable(row) => feed_state_row::unavailable(row).into_any(),
         FeedViewRow::Diagnostic(row) => feed_state_row::diagnostic(row).into_any(),
         FeedViewRow::Continuation(row) => continuation_row(row, open_thread).into_any(),

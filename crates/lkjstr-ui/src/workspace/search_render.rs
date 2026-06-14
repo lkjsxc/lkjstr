@@ -1,14 +1,25 @@
 use leptos::prelude::*;
 use lkjstr_app::{FEED_LOAD_OLDER_COMMAND, FeedFooterRow, FeedViewRow, SearchFeedStatus};
 
-use crate::workspace::feed_event_row::event_row;
+use crate::workspace::feed_event_actions::FeedEventActions;
+use crate::workspace::feed_event_menu::event_row_with_nearby_menu;
 use crate::workspace::feed_footer_row::{command_footer, plain_footer};
 use crate::workspace::feed_footer_text::{FooterAuthLabel, footer_state_text};
 use crate::workspace::feed_state_row;
 
-pub(crate) fn search_row(row: FeedViewRow, older_command: Option<Callback<()>>) -> impl IntoView {
+pub(crate) fn search_row(
+    row: FeedViewRow,
+    older_command: Option<Callback<()>>,
+    actions: FeedEventActions,
+) -> impl IntoView {
     match row {
-        FeedViewRow::Event(row) => event_row(row, ()).into_any(),
+        FeedViewRow::Event(row) => event_row_with_nearby_menu(
+            row,
+            actions,
+            "search-open-author-context",
+            "search-copy-event-id",
+        )
+        .into_any(),
         FeedViewRow::Unavailable(row) => feed_state_row::unavailable(row).into_any(),
         FeedViewRow::Diagnostic(row) => feed_state_row::diagnostic(row).into_any(),
         FeedViewRow::Footer(row) => footer_row(row, older_command).into_any(),

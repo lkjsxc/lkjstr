@@ -4,7 +4,8 @@ use lkjstr_app::{
     default_notifications_feed_view,
 };
 
-use crate::workspace::feed_event_row::event_row;
+use crate::workspace::feed_event_actions::FeedEventActions;
+use crate::workspace::feed_event_menu::event_row_with_nearby_menu;
 use crate::workspace::feed_state_row;
 use crate::workspace::notifications_footer::footer_row;
 use crate::workspace::notifications_older::NotificationsOlderLoader;
@@ -16,6 +17,7 @@ pub fn NotificationsTab(
     owner: String,
     model: NotificationsFeedView,
     provider: Option<NotificationsFeedProvider>,
+    #[prop(optional)] actions: FeedEventActions,
 ) -> impl IntoView {
     let model = RwSignal::new(model);
     let complete = Callback::new(move |next| model.set(next));
@@ -48,8 +50,9 @@ pub fn NotificationsTab(
                     <div class="lkjstr-feed-rows">
                         {move || {
                             let older_command = older_command;
+                            let actions = actions.clone();
                             model.get().view_model.rows.into_iter()
-                                .map(move |row| row_view(row, older_command))
+                                .map(move |row| row_view(row, older_command, actions.clone()))
                                 .collect_view()
                         }}
                     </div>
@@ -70,9 +73,16 @@ pub fn default_notifications_feed(
 fn row_view(
     row: FeedViewRow,
     older_command: Option<Callback<NotificationsOlderLoadTrigger>>,
+    actions: FeedEventActions,
 ) -> impl IntoView {
     match row {
-        FeedViewRow::Event(row) => event_row(row, ()).into_any(),
+        FeedViewRow::Event(row) => event_row_with_nearby_menu(
+            row,
+            actions,
+            "notifications-open-author-context",
+            "notifications-copy-event-id",
+        )
+        .into_any(),
         FeedViewRow::Notification(row) => feed_state_row::notification(row).into_any(),
         FeedViewRow::Unavailable(row) => feed_state_row::unavailable(row).into_any(),
         FeedViewRow::Diagnostic(row) => feed_state_row::diagnostic(row).into_any(),

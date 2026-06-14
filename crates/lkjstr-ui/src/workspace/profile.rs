@@ -1,7 +1,8 @@
 use leptos::prelude::*;
 use lkjstr_app::{FeedViewRow, ProfileFeedStatus, ProfileFeedView, default_profile_feed_view};
 
-use crate::workspace::feed_event_row::event_row;
+use crate::workspace::feed_event_actions::FeedEventActions;
+use crate::workspace::feed_event_menu::event_row_with_nearby_menu;
 use crate::workspace::feed_footer_row::state_footer;
 use crate::workspace::feed_footer_text::FooterAuthLabel;
 use crate::workspace::feed_state_row;
@@ -18,6 +19,7 @@ pub(crate) struct ProfileActions {
     pub(crate) open_profile_edit: Option<Callback<()>>,
     pub(crate) copy_profile: Option<ProfileCopyProvider>,
     pub(crate) follow_profile: Option<ProfileFollowProvider>,
+    pub(crate) event_actions: FeedEventActions,
 }
 
 #[component]
@@ -29,6 +31,8 @@ pub fn ProfileTab(
     actions: ProfileActions,
 ) -> impl IntoView {
     let model = RwSignal::new(model);
+    let header_actions = actions.clone();
+    let row_actions = actions.event_actions.clone();
     if let Some(provider) = provider {
         let lease = provider.read(
             owner,
@@ -40,7 +44,7 @@ pub fn ProfileTab(
     view! {
         <section class="lkjstr-profile-feed" aria-label="Profile">
             {move || {
-                let actions = actions.clone();
+                let actions = header_actions.clone();
                 model
                     .get()
                     .profile_header
@@ -60,7 +64,16 @@ pub fn ProfileTab(
             }}
             <p class="lkjstr-feed-status">{move || profile_status_text(model.get().status)}</p>
             <div class="lkjstr-feed-rows">
-                {move || model.get().view_model.rows.into_iter().map(profile_row).collect_view()}
+                {move || {
+                    let event_actions = row_actions.clone();
+                    model
+                        .get()
+                        .view_model
+                        .rows
+                        .into_iter()
+                        .map(move |row| profile_row(row, event_actions.clone()))
+                        .collect_view()
+                }}
             </div>
         </section>
     }
@@ -86,9 +99,15 @@ pub fn profile_tab_content(
     }
 }
 
-fn profile_row(row: FeedViewRow) -> impl IntoView {
+fn profile_row(row: FeedViewRow, actions: FeedEventActions) -> impl IntoView {
     match row {
-        FeedViewRow::Event(row) => event_row(row, ()).into_any(),
+        FeedViewRow::Event(row) => event_row_with_nearby_menu(
+            row,
+            actions,
+            "profile-open-author-context",
+            "profile-copy-event-id",
+        )
+        .into_any(),
         FeedViewRow::Unavailable(row) => feed_state_row::unavailable(row).into_any(),
         FeedViewRow::Diagnostic(row) => feed_state_row::diagnostic(row).into_any(),
         FeedViewRow::Continuation(row) => feed_state_row::plain_continuation(row).into_any(),

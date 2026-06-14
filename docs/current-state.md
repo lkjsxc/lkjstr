@@ -167,9 +167,9 @@ Read next: [architecture/workspace/README.md](architecture/workspace/README.md),
   note relay reads, owner cleanup, cached and relay-refreshed kind `0`
   metadata plus kind `3` follow counts, and sparse empty proof while excluding
   metadata and follow-list note rows. Rust Thread reads cached root/reply/focused,
-  parent, unavailable, continuation, older, and live rows. Rust Author Context covers
-  cache/relay anchors/actions/menu/copy/metadata/warnings/FeedEventRow content/action rows, Followees/User Timeline mount Rust islands, and Custom
-  Request shows plan states; deletion remains open.
+  parent, unavailable, continuation, older, and live rows. Converted Rust feed
+  rows share nearby/copy menus plus `FeedEventRow` content/action rows. Author
+  Context covers anchors/metadata/warnings; other converted slices remain open.
 - Live inserts follow a top-anchor policy. A user at the top sees new resident
   rows immediately; a user away from the top keeps the visible anchor and sees
   newer-available state instead of being yanked upward.

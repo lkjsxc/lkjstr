@@ -4,6 +4,7 @@ use leptos::prelude::*;
 use lkjstr_domain::{NewTabOption, TabKind};
 
 use crate::app::RuntimeSignal;
+use crate::workspace::feed_event_open::nearby_event_actions;
 use crate::workspace::persistence::WorkspacePersistence;
 use crate::workspace::state::{self, TabSequence};
 use crate::workspace::tab_content_input::TabContentInput;
@@ -16,12 +17,20 @@ pub(crate) fn thread_tab_content(input: TabContentInput) -> impl IntoView {
         input.pane_id.clone(),
         input.persistence.clone(),
     );
+    let actions = nearby_event_actions(
+        input.runtime,
+        input.sequence,
+        input.pane_id.clone(),
+        input.persistence.clone(),
+        input.profile_copy_provider,
+    );
     thread::thread_tab_content(
         input.tab_id,
         input.thread_event_id,
         input.thread_feed,
         input.thread_feed_provider,
         Some(open_thread),
+        actions,
     )
 }
 

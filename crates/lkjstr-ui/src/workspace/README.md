@@ -19,6 +19,9 @@ New Tab chooser, and converted Rust tool bodies.
 - `custom_request_provider.rs`: async Custom Request run-plan provider wrapper.
 - `custom_request_snapshot.rs`: Custom Request feed filter-state snapshots.
 - `feed_event_actions.rs`: shared Rust feed event-row action buttons.
+- `feed_event_content.rs`: shared Rust feed event-row content rendering.
+- `feed_event_menu.rs`: shared Rust feed nearby/copy event menu rendering.
+- `feed_event_open.rs`: workspace tab callbacks for shared event menus.
 - `feed_event_row.rs`: shared Rust feed event-row body rendering.
 - `feed_footer_row.rs`: shared Rust feed footer shell rendering.
 - `feed_footer_text.rs`: shared Rust feed footer text mapping.

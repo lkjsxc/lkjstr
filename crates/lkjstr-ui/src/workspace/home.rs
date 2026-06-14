@@ -1,7 +1,8 @@
 use leptos::prelude::*;
 use lkjstr_app::{FeedViewRow, HomeFeedStatus, HomeFeedView, default_home_feed_view};
 
-use crate::workspace::feed_event_row::event_row;
+use crate::workspace::feed_event_actions::FeedEventActions;
+use crate::workspace::feed_event_menu::event_row_with_nearby_menu;
 use crate::workspace::feed_footer_row::state_footer;
 use crate::workspace::feed_footer_text::FooterAuthLabel;
 use crate::workspace::feed_state_row;
@@ -12,6 +13,7 @@ pub fn HomeTab(
     owner: String,
     model: HomeFeedView,
     provider: Option<HomeFeedProvider>,
+    #[prop(optional)] actions: FeedEventActions,
 ) -> impl IntoView {
     let model = RwSignal::new(model);
     if let Some(provider) = provider {
@@ -22,7 +24,16 @@ pub fn HomeTab(
         <section class="lkjstr-home-feed" aria-label="Home">
             <p class="lkjstr-feed-status">{move || home_status_text(model.get().status)}</p>
             <div class="lkjstr-feed-rows">
-                {move || model.get().view_model.rows.into_iter().map(home_row).collect_view()}
+                {move || {
+                    let actions = actions.clone();
+                    model
+                        .get()
+                        .view_model
+                        .rows
+                        .into_iter()
+                        .map(move |row| home_row(row, actions.clone()))
+                        .collect_view()
+                }}
             </div>
         </section>
     }
@@ -33,9 +44,15 @@ pub fn default_home_feed(tab_id: &str, active_pubkey: Option<String>) -> HomeFee
     default_home_feed_view(tab_id, active_pubkey)
 }
 
-fn home_row(row: FeedViewRow) -> impl IntoView {
+fn home_row(row: FeedViewRow, actions: FeedEventActions) -> impl IntoView {
     match row {
-        FeedViewRow::Event(row) => event_row(row, ()).into_any(),
+        FeedViewRow::Event(row) => event_row_with_nearby_menu(
+            row,
+            actions,
+            "home-open-author-context",
+            "home-copy-event-id",
+        )
+        .into_any(),
         FeedViewRow::Unavailable(row) => feed_state_row::unavailable(row).into_any(),
         FeedViewRow::Diagnostic(row) => feed_state_row::diagnostic(row).into_any(),
         FeedViewRow::Continuation(row) => feed_state_row::plain_continuation(row).into_any(),

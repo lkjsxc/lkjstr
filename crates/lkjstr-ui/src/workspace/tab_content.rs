@@ -5,6 +5,7 @@ use crate::workspace::accounts::AccountsTab;
 use crate::workspace::author_context_open::author_context_tab_content;
 use crate::workspace::custom_request::CustomRequestTab;
 use crate::workspace::custom_request_snapshot::CustomRequestSnapshotHandle;
+use crate::workspace::feed_event_open::nearby_event_actions;
 use crate::workspace::followees::followees_tab_content;
 use crate::workspace::global::{GlobalTab, default_global_feed};
 use crate::workspace::home::{HomeTab, default_home_feed};
@@ -61,18 +62,28 @@ pub(crate) fn tab_content(input: TabContentInput) -> impl IntoView {
             let model = input
                 .home_feed
                 .unwrap_or_else(|| default_home_feed(&input.tab_id, input.active_account_pubkey));
-            view! {
-                <HomeTab owner=input.tab_id model=model provider=input.home_feed_provider />
-            }
+            let actions = nearby_event_actions(
+                input.runtime,
+                input.sequence,
+                input.pane_id.clone(),
+                input.persistence.clone(),
+                input.profile_copy_provider,
+            );
+            view! { <HomeTab owner=input.tab_id model=model provider=input.home_feed_provider actions=actions /> }
             .into_any()
         }
         TabKind::Global => {
             let model = input
                 .global_feed
                 .unwrap_or_else(|| default_global_feed(&input.tab_id));
-            view! {
-                <GlobalTab owner=input.tab_id model=model provider=input.global_feed_provider />
-            }
+            let actions = nearby_event_actions(
+                input.runtime,
+                input.sequence,
+                input.pane_id.clone(),
+                input.persistence.clone(),
+                input.profile_copy_provider,
+            );
+            view! { <GlobalTab owner=input.tab_id model=model provider=input.global_feed_provider actions=actions /> }
             .into_any()
         }
         TabKind::Search => {
@@ -80,9 +91,16 @@ pub(crate) fn tab_content(input: TabContentInput) -> impl IntoView {
             let model = default_search_feed(&owner);
             let snapshot = SearchSnapshotHandle::new(
                 input.runtime,
-                input.pane_id,
+                input.pane_id.clone(),
                 owner.clone(),
                 input.persistence.clone(),
+            );
+            let actions = nearby_event_actions(
+                input.runtime,
+                input.sequence,
+                input.pane_id.clone(),
+                input.persistence.clone(),
+                input.profile_copy_provider,
             );
             view! {
                 <SearchTab
@@ -90,6 +108,7 @@ pub(crate) fn tab_content(input: TabContentInput) -> impl IntoView {
                     model=model
                     provider=input.search_feed_provider
                     snapshot=snapshot
+                    actions=actions
                 />
             }
             .into_any()
@@ -127,13 +146,14 @@ pub(crate) fn tab_content(input: TabContentInput) -> impl IntoView {
         TabKind::Thread => thread_tab_content(input).into_any(),
         TabKind::Notifications => {
             let model = default_notifications_feed(&input.tab_id, input.active_account_pubkey);
-            view! {
-                <NotificationsTab
-                    owner=input.tab_id
-                    model=model
-                    provider=input.notifications_feed_provider
-                />
-            }
+            let actions = nearby_event_actions(
+                input.runtime,
+                input.sequence,
+                input.pane_id.clone(),
+                input.persistence.clone(),
+                input.profile_copy_provider,
+            );
+            view! { <NotificationsTab owner=input.tab_id model=model provider=input.notifications_feed_provider actions=actions /> }
             .into_any()
         }
         TabKind::AccountManager => {

@@ -2,7 +2,8 @@ use leptos::html::Div;
 use leptos::prelude::*;
 use lkjstr_app::{FeedViewRow, GlobalFeedStatus, GlobalFeedView};
 
-use crate::workspace::feed_event_row::event_row;
+use crate::workspace::feed_event_actions::FeedEventActions;
+use crate::workspace::feed_event_menu::event_row_with_nearby_menu;
 use crate::workspace::feed_state_row;
 use crate::workspace::global_footer::footer_row;
 use crate::workspace::global_older::GlobalOlderLoader;
@@ -14,6 +15,7 @@ pub fn GlobalTab(
     owner: String,
     model: GlobalFeedView,
     provider: Option<GlobalFeedProvider>,
+    #[prop(optional)] actions: FeedEventActions,
 ) -> impl IntoView {
     let model = RwSignal::new(model);
     let complete = Callback::new(move |next| model.set(next));
@@ -49,12 +51,13 @@ pub fn GlobalTab(
                     <div class="lkjstr-feed-rows">
                         {move || {
                             let older_command = older_command;
+                            let actions = actions.clone();
                             model
                                 .get()
                                 .view_model
                                 .rows
                                 .into_iter()
-                                .map(move |row| global_row(row, older_command))
+                                .map(move |row| global_row(row, older_command, actions.clone()))
                                 .collect_view()
                         }}
                     </div>
@@ -72,9 +75,16 @@ pub fn default_global_feed(tab_id: &str) -> GlobalFeedView {
 fn global_row(
     row: FeedViewRow,
     older_command: Option<Callback<lkjstr_app::GlobalOlderLoadTrigger>>,
+    actions: FeedEventActions,
 ) -> impl IntoView {
     match row {
-        FeedViewRow::Event(row) => event_row(row, ()).into_any(),
+        FeedViewRow::Event(row) => event_row_with_nearby_menu(
+            row,
+            actions,
+            "global-open-author-context",
+            "global-copy-event-id",
+        )
+        .into_any(),
         FeedViewRow::Unavailable(row) => feed_state_row::unavailable(row).into_any(),
         FeedViewRow::Diagnostic(row) => feed_state_row::diagnostic(row).into_any(),
         FeedViewRow::Continuation(row) => feed_state_row::plain_continuation(row).into_any(),

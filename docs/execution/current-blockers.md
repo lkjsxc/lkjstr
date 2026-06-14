@@ -161,9 +161,9 @@ models, anchors, footer states, and unavailable states.
   indexed rows, bounded relay NIP-50 merge proof, Search tab snapshot restore,
   cached plus relay older-page proof, injected, worker-cached, relay-backed,
   exact-anchor, stored-route, and unavailable-state Author Context rows, Rust
-  row actions, shared Rust event action rendering for Author Context and User
-  Timeline rows, host-backed Rust event-id copy actions, Rust event menu shell,
-  shared Rust event body, `FeedEventRow` content/action rows, unavailable
+  row actions, shared Rust event action rendering, host-backed Rust event-id
+  copy actions, nearby-author menus across converted Rust feed rows, shared
+  Rust event body, `FeedEventRow` content/action rows, unavailable
   media/reference preview states, author metadata, sensitive-warning reveal
   rendering, common state-row rendering, shared footer shell rendering across
   converted feed rows, and Rust/WASM quiet.

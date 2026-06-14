@@ -3,6 +3,7 @@ use lkjstr_app::{
     SearchFeedView, default_search_feed_view, partial_search_feed_view, pending_search_feed_view,
 };
 
+use crate::workspace::feed_event_actions::FeedEventActions;
 use crate::workspace::search_provider::{SearchFeedLease, SearchFeedProvider};
 use crate::workspace::search_render::{search_row, search_status_text};
 use crate::workspace::search_snapshot::SearchSnapshotHandle;
@@ -15,6 +16,7 @@ pub fn SearchTab(
     model: SearchFeedView,
     provider: Option<SearchFeedProvider>,
     snapshot: SearchSnapshotHandle,
+    #[prop(optional)] actions: FeedEventActions,
 ) -> impl IntoView {
     let model = RwSignal::new(model);
     let query = RwSignal::new(snapshot.restored_query());
@@ -81,12 +83,13 @@ pub fn SearchTab(
             <div class="lkjstr-feed-rows">
                 {move || {
                     let command = older_command;
+                    let actions = actions.clone();
                     model
                         .get()
                         .view_model
                         .rows
                         .into_iter()
-                        .map(move |row| search_row(row, command))
+                        .map(move |row| search_row(row, command, actions.clone()))
                         .collect_view()
                 }}
             </div>

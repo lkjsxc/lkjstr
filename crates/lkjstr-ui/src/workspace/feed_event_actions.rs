@@ -7,11 +7,24 @@ use crate::workspace::profile_clipboard_provider::{
 use crate::workspace::user_timeline_actions::UserTimelineActions;
 
 #[derive(Clone, Default)]
-pub(crate) struct FeedEventActions {
+pub struct FeedEventActions {
     open_profile: Option<Callback<String>>,
     open_thread: Option<Callback<String>>,
     open_author_context: Option<Callback<(String, String)>>,
     copy_event_id: Option<ProfileCopyProvider>,
+}
+
+impl FeedEventActions {
+    pub(crate) fn nearby(
+        open_author_context: Option<Callback<(String, String)>>,
+        copy_event_id: Option<ProfileCopyProvider>,
+    ) -> Self {
+        Self {
+            open_author_context,
+            copy_event_id,
+            ..Self::default()
+        }
+    }
 }
 
 #[derive(Clone, Copy)]
