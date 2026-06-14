@@ -127,6 +127,7 @@ async fn thread_feed_model(
         selected_relays: &selected,
         author_routes: &[],
         window: &cache.window,
+        geometry_models: &geometry_models,
         diagnostics: &diagnostics,
         now_sec,
     });

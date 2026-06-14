@@ -1,4 +1,6 @@
-use lkjstr_app::{ThreadFeedDiagnosticInput, ThreadFeedSourceState, older_thread_cursor};
+use lkjstr_app::{
+    RowGeometryModel, ThreadFeedDiagnosticInput, ThreadFeedSourceState, older_thread_cursor,
+};
 use lkjstr_protocol::{
     KIND_GENERIC_REPOST, KIND_REPOST, KIND_TEXT_NOTE, NostrEvent, reply_root,
 };
@@ -22,6 +24,7 @@ pub(crate) struct ThreadRelayReadInput {
     pub(crate) selected_relays: Vec<String>,
     pub(crate) author_routes: Vec<AuthorRelayRoute>,
     pub(crate) cache_window: lkjstr_app::FeedWindowState,
+    pub(crate) geometry_models: Vec<RowGeometryModel>,
     pub(crate) diagnostics: Vec<ThreadFeedDiagnosticInput>,
     pub(crate) since: u64,
     pub(crate) until: u64,
@@ -37,6 +40,7 @@ pub(crate) struct ThreadRelayInputSeed<'a> {
     pub(crate) selected_relays: &'a [String],
     pub(crate) author_routes: &'a [AuthorRelayRoute],
     pub(crate) window: &'a lkjstr_app::FeedWindowState,
+    pub(crate) geometry_models: &'a [RowGeometryModel],
     pub(crate) diagnostics: &'a [ThreadFeedDiagnosticInput],
     pub(crate) now_sec: u64,
 }
@@ -59,6 +63,7 @@ pub(crate) fn thread_relay_input(
         selected_relays: seed.selected_relays.to_vec(),
         author_routes: seed.author_routes.to_vec(),
         cache_window: seed.window.clone(),
+        geometry_models: seed.geometry_models.to_vec(),
         diagnostics: seed.diagnostics.to_vec(),
         since: seed.now_sec.saturating_sub(30),
         until: seed.now_sec,
@@ -120,13 +125,11 @@ mod tests {
             event_id: &Some(id("a")),
             root_event_id: &None,
             root_author: &None,
-            source_state: &ThreadFeedSourceState::Partial {
-                reason: "cache".to_owned(),
-                retry_available: true,
-            },
+            source_state: &ThreadFeedSourceState::Pending,
             selected_relays: &["wss://selected.example".to_owned()],
             author_routes: &[],
             window: &empty_feed_window(1, 240),
+            geometry_models: &[],
             diagnostics: &[],
             now_sec: 100,
         }) else {
@@ -166,6 +169,7 @@ mod tests {
             selected_relays: vec!["wss://selected.example".to_owned()],
             author_routes: Vec::new(),
             cache_window: empty_feed_window(1, 240),
+            geometry_models: Vec::new(),
             diagnostics: Vec::new(),
             since: 70,
             until: 100,

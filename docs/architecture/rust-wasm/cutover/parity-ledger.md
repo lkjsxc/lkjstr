@@ -85,7 +85,8 @@ Current feed-surface evidence: Rust planner, estimator, anchor reducer,
 height-reservation reducer, row view model, first Home row rendering, WASM
 bridge, and typed row-height observation/model SQLite rows exist with focused
 tests; Home, Global, Notifications, Profile, Thread, Search, Author Context, and
-User Timeline cached rows consume durable models; Home/Global snapshots retain them. Rust Home, Global, Notifications, and Profile tabs can load
+User Timeline cached rows consume durable models; Home/Global/Author
+Context/Thread snapshots retain them. Rust Home, Global, Notifications, and Profile tabs can load
 SQLite cache evidence into shared feed rows, keep exact
 coverage proof explicit, start bounded relay reads where converted, and suppress
 late completions after cleanup. Global also proves footer/scroll and
@@ -139,8 +140,8 @@ uses temporary matching host glue for content-aware estimates,
 unload-preserved active reservations, and long-content fragments. Durable
 geometry model consumption beyond
 Home/Global/Notifications/Profile/Thread/Search/Author Context/User Timeline,
-deeper Stats projection, remaining non-Home/Global relay snapshot host wiring,
-deletion proof, and broader browser scroll regression proof remain open.
+deeper Stats projection, remaining non-Home/Global/Author Context/Thread relay
+snapshot host wiring, deletion proof, and broader browser scroll regression proof remain open.
 
 ## Event Display Proof
 

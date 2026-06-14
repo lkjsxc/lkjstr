@@ -195,9 +195,9 @@ estimates, visual fragments, height reservation, dematerialization, and LOD tree
 state. `lkjstr-web` may report DOM measurements and load persisted model rows.
 Durable row-height persistence is partial: typed `feed_row_height_*` repositories
 exist and Home/Global/Notifications/Profile/Thread/Search/Author Context/User
-Timeline consume matching models for cached rows. Home/Global relay snapshots
-preserve cache-loaded models; other relay snapshot hosts, browser scroll proof,
-and Stats projection remain open.
+Timeline consume matching models for cached rows. Home/Global/Author
+Context/Thread relay snapshots preserve cache-loaded models; other relay
+snapshot hosts, browser scroll proof, and Stats projection remain open.
 
 ## Unavailable-State Derivation
 

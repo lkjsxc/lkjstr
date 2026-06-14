@@ -115,6 +115,7 @@ fn input(anchor_created_at: Option<u64>) -> AuthorContextRelayReadInput {
                 flags: FeedWindowFlags::default(),
             },
         ),
+        geometry_models: Vec::new(),
         diagnostics: Vec::new(),
         anchor_created_at,
         now_sec: 1_700_000_030,

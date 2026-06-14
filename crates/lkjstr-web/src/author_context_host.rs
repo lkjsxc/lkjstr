@@ -134,6 +134,7 @@ async fn author_context_model(
         selected_relays: &selected,
         author_routes: &routes,
         window: &cache.window,
+        geometry_models: &geometry_models,
         diagnostics: &diagnostics,
         anchor_created_at: cache.anchor_created_at,
         now_sec,

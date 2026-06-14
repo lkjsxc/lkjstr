@@ -153,6 +153,7 @@ mod tests {
             selected_relays: vec!["wss://selected.example".to_owned()],
             author_routes: Vec::new(),
             cache_window: empty_feed_window(1, 240),
+            geometry_models: Vec::new(),
             diagnostics: Vec::new(),
             since: 70,
             until: 100,

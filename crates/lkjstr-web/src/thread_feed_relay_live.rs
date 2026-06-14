@@ -48,6 +48,7 @@ mod tests {
                     flags: FeedWindowFlags::default(),
                 },
             ),
+            geometry_models: Vec::new(),
             diagnostics: Vec::new(),
             since: 1_970,
             until: 2_000,

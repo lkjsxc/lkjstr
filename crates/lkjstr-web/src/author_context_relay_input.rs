@@ -1,4 +1,6 @@
-use lkjstr_app::{AuthorContextFeedDiagnosticInput, AuthorContextFeedSourceState};
+use lkjstr_app::{
+    AuthorContextFeedDiagnosticInput, AuthorContextFeedSourceState, RowGeometryModel,
+};
 use lkjstr_protocol::{
     KIND_GENERIC_REPOST, KIND_REPOST, KIND_TEXT_NOTE, NostrEvent, NostrFilter, matches_any_filter,
 };
@@ -16,6 +18,7 @@ pub(crate) struct AuthorContextRelayReadInput {
     pub(crate) selected_relays: Vec<String>,
     pub(crate) author_routes: Vec<AuthorRelayRoute>,
     pub(crate) cache_window: lkjstr_app::FeedWindowState,
+    pub(crate) geometry_models: Vec<RowGeometryModel>,
     pub(crate) diagnostics: Vec<AuthorContextFeedDiagnosticInput>,
     pub(crate) anchor_created_at: Option<u64>,
     pub(crate) now_sec: u64,
@@ -29,6 +32,7 @@ pub(crate) struct AuthorContextRelayInputSeed<'a> {
     pub(crate) selected_relays: &'a [String],
     pub(crate) author_routes: &'a [AuthorRelayRoute],
     pub(crate) window: &'a lkjstr_app::FeedWindowState,
+    pub(crate) geometry_models: &'a [RowGeometryModel],
     pub(crate) diagnostics: &'a [AuthorContextFeedDiagnosticInput],
     pub(crate) anchor_created_at: Option<u64>,
     pub(crate) now_sec: u64,
@@ -49,6 +53,7 @@ pub(crate) fn author_context_relay_input(
         selected_relays: seed.selected_relays.to_vec(),
         author_routes: seed.author_routes.to_vec(),
         cache_window: seed.window.clone(),
+        geometry_models: seed.geometry_models.to_vec(),
         diagnostics: seed.diagnostics.to_vec(),
         anchor_created_at: seed.anchor_created_at,
         now_sec: seed.now_sec,

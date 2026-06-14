@@ -133,6 +133,7 @@ fn input(phase: ThreadRelayReadPhase, since: u64, until: u64) -> ThreadRelayRead
                 flags: FeedWindowFlags::default(),
             },
         ),
+        geometry_models: Vec::new(),
         diagnostics: Vec::new(),
         since,
         until,
