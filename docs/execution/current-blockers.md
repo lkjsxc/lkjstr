@@ -185,9 +185,11 @@ models, anchors, footer states, and unavailable states.
   suppressed; Profile following-count actions require a real Followees opener,
   unused tab-snapshot no-op persistence construction is removed, and Rust/WASM
   quiet.
-- Remaining completion proof: Author Context Svelte-host no-import,
-  event-row menu deletion readiness, and final-gate deletion readiness plus
-  other feed-surface deletion prerequisites remain open.
+- Remaining completion proof: `PaneFeedTabBody.svelte` still imports the Svelte
+  Author Context host, and `EventRow.svelte` plus `EventFragmentRow.svelte`
+  still import `EventMoreMenu.svelte`. Their no-import proof, event-row menu
+  deletion readiness, final-gate deletion readiness, and other feed-surface
+  deletion prerequisites remain open.
   Missing coverage never proves absence, and no placeholder rows exist.
 
 ## 4. First Home Leptos feed slice
