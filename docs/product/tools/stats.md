@@ -66,7 +66,8 @@ Stats shows current-session relay counters and persisted operational summaries.
   cache size, profile cache size, token cache size, relay snapshot totals,
   orchestration demand and lease counts (active, live, bootstrap), relay REQ and
   CLOSE totals, events received vs accepted vs dropped, feed geometry measured
-  row count, feed geometry bridge status, and optional JavaScript heap.
+  row count, feed geometry bridge status, Rust-owned User Timeline diagnostics
+  as unavailable until a Rust Stats provider exists, and optional JavaScript heap.
 - Runtime memory output is redacted count data only. It must not expose raw
   events, relay payloads, tab ids, request ids, or log messages.
 - Relay optimizer rows show in-memory relay scores, scan hints from real runtime

@@ -71,14 +71,13 @@
       <span>geometry bridge</span>
     </article>
     <article>
-      <strong>{props.memory.userTimeline.outcomes.length}</strong>
-      <span>User Timeline outcomes</span>
-    </article>
-    <article>
-      <strong>{props.memory.userTimeline.reasons.length}</strong>
-      <span>User Timeline reasons</span>
+      <strong>{props.memory.userTimeline.status}</strong>
+      <span>User Timeline diagnostics</span>
     </article>
   </div>
+  {#if props.memory.userTimeline.status === 'unavailable'}
+    <p>{props.memory.userTimeline.reason}</p>
+  {/if}
   <p>
     fallback {props.memory.fallbackRepository.events} events · references
     {props.memory.caches.references} · profiles {props.memory.caches.profiles}

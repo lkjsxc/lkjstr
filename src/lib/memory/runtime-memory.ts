@@ -10,7 +10,18 @@ import { relayDiagnosticSuppressionCount } from '../relays/relay-diagnostic-log'
 import { currentRelaySnapshots } from '../relays/session-snapshots';
 import { orchestrationMetricsSnapshot } from '../relays/orchestration/metrics';
 import { sharedSubscriptionOrchestrator } from '../relays/orchestration/orchestrator';
-import { userTimelineDiscoveryDiagnostics } from '../user-timeline/user-timeline-discovery';
+
+type RuntimeDiagnosticCount = {
+  readonly key: string;
+  readonly count: number;
+};
+
+type UnavailableRuntimeDiagnostics = {
+  readonly status: 'unavailable';
+  readonly reason: string;
+  readonly outcomes: readonly RuntimeDiagnosticCount[];
+  readonly reasons: readonly RuntimeDiagnosticCount[];
+};
 
 export type RuntimeMemorySnapshot = {
   readonly runtimeCounters: ReturnType<typeof runtimeCounterSnapshots>;
@@ -34,7 +45,7 @@ export type RuntimeMemorySnapshot = {
   readonly geometry: ReturnType<typeof feedRowHeightDiagnostics> & {
     readonly bridgeStatus: string;
   };
-  readonly userTimeline: ReturnType<typeof userTimelineDiscoveryDiagnostics>;
+  readonly userTimeline: UnavailableRuntimeDiagnostics;
   readonly jsHeap?: {
     readonly usedJSHeapSize: number;
     readonly totalJSHeapSize: number;
@@ -69,8 +80,17 @@ export function runtimeMemorySnapshot(): RuntimeMemorySnapshot {
       bridgeStatus: feedGeometryWasmBridgeStatus().status,
       ...feedRowHeightDiagnostics(),
     },
-    userTimeline: userTimelineDiscoveryDiagnostics(),
+    userTimeline: unavailableUserTimelineDiagnostics(),
     jsHeap: jsHeapSnapshot(),
+  };
+}
+
+function unavailableUserTimelineDiagnostics(): UnavailableRuntimeDiagnostics {
+  return {
+    status: 'unavailable',
+    reason: 'User Timeline diagnostics are Rust-owned; Stats provider pending.',
+    outcomes: [],
+    reasons: [],
   };
 }
 

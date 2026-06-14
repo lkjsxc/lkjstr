@@ -53,11 +53,15 @@ deletion, and final verification proof exist.
   glue that loads the Rust/WASM island and releases it on hidden or destroy.
 - `crates/lkjstr-web/tests/user_timeline_island_test.rs` proves explicit
   unavailable rendering and unmount cleanup for the Svelte-hosted Rust island.
+- TypeScript Stats no longer imports retained User Timeline discovery counters;
+  Rust-owned diagnostics render as explicit unavailable until a Rust provider
+  exists.
 
 ## Next Edit
 
-Continue remaining User Timeline parity and no-import prerequisites. Do not
-start deletion proof until retained TypeScript imports are proven removable.
+Continue remaining User Timeline parity and no-import prerequisites, including
+Rust Stats diagnostics. Do not start deletion proof until retained TypeScript
+imports are proven removable.
 
 ## Files To Read
 
