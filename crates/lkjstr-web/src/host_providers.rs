@@ -3,7 +3,7 @@ use lkjstr_ui::{HostProviders, WorkspacePersistence};
 
 use crate::{
     accounts_host, accounts_selector_host, app_log_host, author_context_host, browser_inventory,
-    followees_host, global_feed_host, home_feed_host,
+    custom_request_host, followees_host, global_feed_host, home_feed_host,
     host_status::browser_now_ms,
     notifications_feed_host, profile_clipboard_host, profile_feed_host, profile_follow_host,
     relay_settings_host, search_feed_host, settings_host,
@@ -71,6 +71,10 @@ fn providers(
             worker_url.clone(),
         ),
         search_feed: search_feed_host::search_feed_provider_with_worker_url(
+            db_name.clone(),
+            worker_url.clone(),
+        ),
+        custom_request: custom_request_host::custom_request_provider_with_worker_url(
             db_name.clone(),
             worker_url.clone(),
         ),

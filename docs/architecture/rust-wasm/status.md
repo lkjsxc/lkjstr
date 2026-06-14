@@ -42,12 +42,12 @@ This file is the concise status map for the active Rust/WASM migration.
   feed anchor reducers, feed width buckets, feed LOD tree reducers,
   target follow-graph reducers, feed wait and late merge reducers, initial
   orchestration decisions, feed live-runtime composition, surface query input
-  builders, Thread feed view-model/query composition, and pure Custom Request
+  builders, Thread feed view-model/query composition, and Custom Request
   parsing, mode classification, and run planning.
 - `lkjstr-ui` renders the partial Leptos workspace shell, Welcome, New Tab,
   Stats inventory and SQLite health, Settings, Accounts, Relay Settings, Upload
   Settings, lkjstr Log durable rows, Tweet draft surfaces, and partial
-  Home/Global/Notifications/Profile/Thread feed surfaces.
+  Home/Global/Notifications/Profile/Thread feed and Custom Request surfaces.
 
 ## Active Target Slices
 
@@ -137,9 +137,9 @@ This file is the concise status map for the active Rust/WASM migration.
   restore, and cached older pages are wired. Profile
   Follow/Unfollow publishes local or NIP-07 kind `3` events only after relay
   acceptance; Author Context has injected, cache-backed, selected-relay,
-  exact-anchor, stored-route, and row-action slices, while Custom Request
-  host/UI relay output, Author Context deletion proof, and shipped TypeScript
-  surface replacement remain open.
+  exact-anchor, stored-route, and row-action slices. Custom Request has Rust
+  provider-backed planning states, while relay output, cancellation, deletion
+  proof, and shipped TypeScript surface replacement remain open.
 - Rust completion evidence remains required before moving top-anchor policy,
   follow-count state, cache-display policy, search indexing, User Timeline
   runtime, or hydration scheduling out of active target status.

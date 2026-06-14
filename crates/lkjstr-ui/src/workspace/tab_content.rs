@@ -3,6 +3,8 @@ use lkjstr_domain::TabKind;
 
 use crate::workspace::accounts::AccountsTab;
 use crate::workspace::author_context_open::author_context_tab_content;
+use crate::workspace::custom_request::CustomRequestTab;
+use crate::workspace::custom_request_snapshot::CustomRequestSnapshotHandle;
 use crate::workspace::followees::followees_tab_content;
 use crate::workspace::global::{GlobalTab, default_global_feed};
 use crate::workspace::home::{HomeTab, default_home_feed};
@@ -87,6 +89,23 @@ pub(crate) fn tab_content(input: TabContentInput) -> impl IntoView {
                     owner=owner
                     model=model
                     provider=input.search_feed_provider
+                    snapshot=snapshot
+                />
+            }
+            .into_any()
+        }
+        TabKind::CustomRequest => {
+            let owner = input.tab_id;
+            let snapshot = CustomRequestSnapshotHandle::new(
+                input.runtime,
+                input.pane_id,
+                owner.clone(),
+                input.persistence.clone(),
+            );
+            view! {
+                <CustomRequestTab
+                    owner=owner
+                    provider=input.custom_request_provider
                     snapshot=snapshot
                 />
             }

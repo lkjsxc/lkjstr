@@ -8,6 +8,9 @@ mod author_context_actions;
 mod author_context_event;
 mod author_context_open;
 mod author_context_provider;
+mod custom_request;
+mod custom_request_provider;
+mod custom_request_snapshot;
 mod followees;
 mod followees_provider;
 mod global;
@@ -84,6 +87,9 @@ pub use accounts_provider::{AccountsCommand, AccountsComplete, AccountsProvider,
 pub use accounts_provider::{AccountsIdCommand, AccountsInputCommand};
 pub use author_context_provider::{
     AuthorContextFeedComplete, AuthorContextFeedProvider, AuthorContextFeedRequest,
+};
+pub use custom_request_provider::{
+    CustomRequestComplete, CustomRequestLease, CustomRequestProvider, CustomRequestRunRequest,
 };
 pub use followees_provider::{FolloweesComplete, FolloweesProvider, FolloweesRequest};
 pub use global_provider::{

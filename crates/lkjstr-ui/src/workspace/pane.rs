@@ -5,6 +5,7 @@ use lkjstr_domain::PaneNode;
 use crate::app::RuntimeSignal;
 use crate::workspace::accounts_provider::AccountsProvider;
 use crate::workspace::author_context_provider::AuthorContextFeedProvider;
+use crate::workspace::custom_request_provider::CustomRequestProvider;
 use crate::workspace::followees_provider::FolloweesProvider;
 use crate::workspace::global_provider::GlobalFeedProvider;
 use crate::workspace::home_provider::HomeFeedProvider;
@@ -42,6 +43,7 @@ pub fn PaneView(
     followees_provider: Option<FolloweesProvider>,
     global_feed_provider: Option<GlobalFeedProvider>,
     search_feed_provider: Option<SearchFeedProvider>,
+    custom_request_provider: Option<CustomRequestProvider>,
     notifications_feed_provider: Option<NotificationsFeedProvider>,
     profile_feed_provider: Option<ProfileFeedProvider>,
     author_context_feed_provider: Option<AuthorContextFeedProvider>,
@@ -72,6 +74,7 @@ pub fn PaneView(
     let body_followees_provider = followees_provider.clone();
     let body_global_feed_provider = global_feed_provider.clone();
     let body_search_feed_provider = search_feed_provider.clone();
+    let body_custom_request_provider = custom_request_provider.clone();
     let body_notifications_feed_provider = notifications_feed_provider.clone();
     let body_profile_feed_provider = profile_feed_provider.clone();
     let body_author_context_feed_provider = author_context_feed_provider.clone();
@@ -134,6 +137,7 @@ pub fn PaneView(
                     let followees_provider = body_followees_provider.clone();
                     let global_feed_provider = body_global_feed_provider.clone();
                     let search_feed_provider = body_search_feed_provider.clone();
+                    let custom_request_provider = body_custom_request_provider.clone();
                     let notifications_feed_provider = body_notifications_feed_provider.clone();
                     let profile_feed_provider = body_profile_feed_provider.clone();
                     let author_context_feed_provider = body_author_context_feed_provider.clone();
@@ -165,6 +169,7 @@ pub fn PaneView(
                                 followees_provider=followees_provider.clone()
                                 global_feed_provider=global_feed_provider.clone()
                                 search_feed_provider=search_feed_provider.clone()
+                                custom_request_provider=custom_request_provider.clone()
                                 notifications_feed_provider=notifications_feed_provider.clone()
                                 profile_feed_provider=profile_feed_provider.clone()
                                 author_context_feed_provider=author_context_feed_provider.clone()

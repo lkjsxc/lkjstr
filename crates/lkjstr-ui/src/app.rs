@@ -5,11 +5,11 @@ use lkjstr_app::{
 };
 
 use crate::workspace::{
-    AccountsProvider, AuthorContextFeedProvider, FolloweesProvider, GlobalFeedProvider,
-    HomeFeedProvider, LogProvider, NotificationsFeedProvider, ProfileCopyProvider,
-    ProfileFeedProvider, ProfileFollowProvider, RelaySettingsProvider, SearchFeedProvider,
-    SettingsProvider, StatsProvider, ThreadFeedProvider, TweetProvider, UploadSettingsProvider,
-    UserTimelineProvider, WorkspacePersistence, WorkspaceShell,
+    AccountsProvider, AuthorContextFeedProvider, CustomRequestProvider, FolloweesProvider,
+    GlobalFeedProvider, HomeFeedProvider, LogProvider, NotificationsFeedProvider,
+    ProfileCopyProvider, ProfileFeedProvider, ProfileFollowProvider, RelaySettingsProvider,
+    SearchFeedProvider, SettingsProvider, StatsProvider, ThreadFeedProvider, TweetProvider,
+    UploadSettingsProvider, UserTimelineProvider, WorkspacePersistence, WorkspaceShell,
 };
 
 #[component]
@@ -32,6 +32,7 @@ pub fn AppWithStartup(
     #[prop(optional)] followees_provider: Option<FolloweesProvider>,
     #[prop(optional)] global_feed_provider: Option<GlobalFeedProvider>,
     #[prop(optional)] search_feed_provider: Option<SearchFeedProvider>,
+    #[prop(optional)] custom_request_provider: Option<CustomRequestProvider>,
     #[prop(optional)] notifications_feed_provider: Option<NotificationsFeedProvider>,
     #[prop(optional)] profile_feed_provider: Option<ProfileFeedProvider>,
     #[prop(optional)] author_context_feed_provider: Option<AuthorContextFeedProvider>,
@@ -63,6 +64,7 @@ pub fn AppWithStartup(
             followees_provider=followees_provider
             global_feed_provider=global_feed_provider
             search_feed_provider=search_feed_provider
+            custom_request_provider=custom_request_provider
             notifications_feed_provider=notifications_feed_provider
             profile_feed_provider=profile_feed_provider
             author_context_feed_provider=author_context_feed_provider

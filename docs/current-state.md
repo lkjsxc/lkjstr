@@ -169,7 +169,7 @@ Read next: [architecture/workspace/README.md](architecture/workspace/README.md),
   metadata plus kind `3` follow counts, and sparse empty proof while excluding
   metadata and follow-list note rows. Rust Thread reads cached root/reply/focused,
   parent, unavailable, continuation, older, and live rows. Rust Author Context
-  renders injected, cached, selected-relay, exact-anchor, stored-route rows/actions; deletion remains open.
+  covers cache/relay anchors and row actions; Custom Request shows plan states; deletion remains open.
 - Live inserts follow a top-anchor policy. A user at the top sees new resident
   rows immediately; a user away from the top keeps the visible anchor and sees
   newer-available state instead of being yanked upward.

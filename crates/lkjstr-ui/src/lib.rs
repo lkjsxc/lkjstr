@@ -176,6 +176,7 @@ pub fn mount_app_with_host(startup: lkjstr_app::StartupInput, providers: HostPro
                 followees_provider=providers.followees.clone()
                 global_feed_provider=providers.global_feed.clone()
                 search_feed_provider=providers.search_feed.clone()
+                custom_request_provider=providers.custom_request.clone()
                 notifications_feed_provider=providers.notifications_feed.clone()
                 profile_feed_provider=providers.profile_feed.clone()
                 author_context_feed_provider=providers.author_context_feed.clone()

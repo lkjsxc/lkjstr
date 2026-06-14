@@ -56,8 +56,11 @@ UI shell, and repository checks.
 - `crates/lkjstr-app/src/custom_request/`: Custom Request parser, policy
   clamps, exact/adaptive mode classification, and run planning.
 - `crates/lkjstr-app/src/query/`: pure app-level query demand planning.
-- `crates/lkjstr-ui/`: Leptos components and UI CSS contracts.
+- `crates/lkjstr-ui/`: Leptos components, Custom Request planning form, and
+  UI CSS contracts.
 - `crates/lkjstr-web/`: WASM entrypoint and browser host adapters.
+- `crates/lkjstr-web/src/custom_request_host.rs`: worker-backed relay-settings
+  provider for Custom Request run planning.
 - `crates/lkjstr-web/src/relay_host/`: relay WebSocket and browser timeout
   host adapters with owned callback cleanup.
 - `crates/lkjstr-web/src/sqlite_host_store.rs`: scoped open, close, and

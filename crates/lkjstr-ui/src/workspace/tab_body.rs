@@ -5,6 +5,7 @@ use lkjstr_domain::WorkspaceTab;
 use crate::app::RuntimeSignal;
 use crate::workspace::accounts_provider::AccountsProvider;
 use crate::workspace::author_context_provider::AuthorContextFeedProvider;
+use crate::workspace::custom_request_provider::CustomRequestProvider;
 use crate::workspace::followees_provider::FolloweesProvider;
 use crate::workspace::global_provider::GlobalFeedProvider;
 use crate::workspace::home_provider::HomeFeedProvider;
@@ -45,6 +46,7 @@ pub fn TabBody(
     followees_provider: Option<FolloweesProvider>,
     global_feed_provider: Option<GlobalFeedProvider>,
     search_feed_provider: Option<SearchFeedProvider>,
+    custom_request_provider: Option<CustomRequestProvider>,
     notifications_feed_provider: Option<NotificationsFeedProvider>,
     profile_feed_provider: Option<ProfileFeedProvider>,
     author_context_feed_provider: Option<AuthorContextFeedProvider>,
@@ -83,6 +85,7 @@ pub fn TabBody(
         followees_provider,
         global_feed_provider,
         search_feed_provider,
+        custom_request_provider,
         notifications_feed_provider,
         profile_feed_provider,
         author_context_feed_provider,
