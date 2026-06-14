@@ -109,8 +109,8 @@ converted feed surfaces. Rust tests cover bounded action/repost rows, public
 User Timeline discovery states, and typed row-height observation/model SQLite
 rows, while browser/deletion proof stays open. Deletion remains blocked until
 Svelte shared event-row parity, durable geometry consumption beyond
-Home/Global/Notifications/Profile/Thread/Search/User Timeline, Stats
-projection, browser scroll proof, and no-import proof exist.
+Home/Global/Notifications/Profile/Thread/Search/Author Context/User Timeline,
+Stats projection, browser scroll proof, and no-import proof exist.
 
 Current storage deletion evidence remains blocked: Rust Stats consumes SQLite
 inventory and health; active selector, pressure rows, command metadata,

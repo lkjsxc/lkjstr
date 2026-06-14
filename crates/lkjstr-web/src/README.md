@@ -16,7 +16,9 @@ Source files expose Rust application behavior to the browser through
 - `accounts_selector_store.rs`: SQLite active-account selector worker helpers.
 - `app_log_host.rs`: SQLite-backed lkjstr Log command provider.
 - `author_context_cache.rs`: Author Context worker-cache event row composition.
+- `author_context_geometry.rs`: Author Context feed durable geometry model loader.
 - `author_context_host.rs`: SQLite-backed Author Context feed view-model provider.
+- `author_context_selected_relays.rs`: Author Context selected read relay loader.
 - `browser_inventory/`: browser-owned storage rows for Rust Stats.
 - `feed_geometry/`: feed geometry, fragment, measurement, and anchor bridge.
 - `feed_geometry_models.rs`: shared SQLite model loading for feed row geometry.

@@ -3,23 +3,21 @@ use lkjstr_app::{
     AuthorContextFeedViewInput, FeedFragmentConfig, FeedWindowState, RowGeometryModel,
     build_author_context_feed_view, default_author_context_feed_view,
 };
-use lkjstr_domain::seed_relay_sets;
 use lkjstr_relays::{AuthorRelayRoute, DemandVisibility};
 use lkjstr_storage::StorageOutcome;
 use lkjstr_ui::AuthorContextFeedProvider;
 
 use crate::{
     author_context_cache::author_context_cache_state,
+    author_context_geometry::author_context_geometry_models,
     author_context_relay::start_author_context_relay_read,
     author_context_relay_input::{
         AuthorContextRelayInputSeed, AuthorContextRelayReadInput, author_context_relay_input,
     },
     author_context_routes::{author_routes, route_diagnostic},
+    author_context_selected_relays::selected_relays,
     host_status::browser_now_ms,
     relay_read_handle::RelayReadSlot,
-    relay_selection::selected_read_relays,
-    sqlite_host_store::with_sqlite_store,
-    sqlite_store::sqlite_relay_sets_all,
 };
 
 pub(crate) const PAGE_SIZE: u64 = 30;
@@ -39,6 +37,7 @@ struct AuthorContextModelParts {
     window: FeedWindowState,
     source_state: AuthorContextFeedSourceState,
     anchor_created_at: Option<u64>,
+    geometry_models: Vec<RowGeometryModel>,
     diagnostics: Vec<AuthorContextFeedDiagnosticInput>,
 }
 
@@ -108,10 +107,7 @@ async fn author_context_model(
     };
     let now_ms = browser_now_ms();
     let now_sec = now_ms / 1_000;
-    let selected = match selected_relays(host).await {
-        StorageOutcome::Ok(relays) => relays,
-        _ => Vec::new(),
-    };
+    let selected = selected_relays(host).await;
     let mut diagnostics = Vec::<AuthorContextFeedDiagnosticInput>::new();
     let routes = author_routes(host, &author_pubkey_value, now_ms).await;
     if let Some(diagnostic) = route_diagnostic(&routes) {
@@ -128,6 +124,8 @@ async fn author_context_model(
         &mut diagnostics,
     )
     .await;
+    let geometry_models =
+        author_context_geometry_models(host, &cache.window, &mut diagnostics, 680, 1.0).await;
     let relay = author_context_relay_input(AuthorContextRelayInputSeed {
         owner,
         event_id: &Some(event_id_value.clone()),
@@ -150,6 +148,7 @@ async fn author_context_model(
             window: cache.window,
             source_state: cache.source_state,
             anchor_created_at: cache.anchor_created_at,
+            geometry_models,
             diagnostics,
         },
     );
@@ -176,21 +175,8 @@ fn build_view(owner: &str, parts: AuthorContextModelParts) -> AuthorContextFeedV
         window: parts.window,
         width_px: 680,
         font_scale: 1.0,
-        geometry_models: Vec::<RowGeometryModel>::new(),
+        geometry_models: parts.geometry_models,
         fragment_config: FeedFragmentConfig::default(),
         diagnostics: parts.diagnostics,
     })
-}
-
-async fn selected_relays(host: &AuthorContextHost) -> StorageOutcome<Vec<String>> {
-    let now = browser_now_ms();
-    with_sqlite_store(&host.db_name, &host.worker_url, |store| async move {
-        match sqlite_relay_sets_all(&store).await {
-            StorageOutcome::Ok(rows) => {
-                StorageOutcome::Ok(selected_read_relays(&seed_relay_sets(&rows, now)))
-            }
-            outcome => outcome.map(|_| Vec::new()),
-        }
-    })
-    .await
 }
