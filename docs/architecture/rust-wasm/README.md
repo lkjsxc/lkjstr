@@ -34,6 +34,8 @@ This subtree defines the Rust/WASM client target.
 - [surface-cutover-order.md](surface-cutover-order.md): dependency-ranked product cutover order.
 - [ui-runtime.md](ui-runtime.md): Leptos UI ownership.
 - [verification.md](verification.md): Rust/WASM verification matrix.
+- [cutover/verification-run-notes-2026-06-13.md](cutover/verification-run-notes-2026-06-13.md):
+  archived focused run notes.
 
 ## Status
 

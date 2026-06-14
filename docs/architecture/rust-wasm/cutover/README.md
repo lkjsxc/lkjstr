@@ -21,6 +21,8 @@ TypeScript or Svelte product modules may be removed.
 - [typescript-inventory.md](typescript-inventory.md): TypeScript and Svelte module classification.
 - [ui-surface-map.md](ui-surface-map.md): Svelte tab to Leptos surface map.
 - [verification-ledger.md](verification-ledger.md): focused and final gates by cutover area.
+- [verification-run-notes-2026-06-13.md](verification-run-notes-2026-06-13.md):
+  archived detailed run notes.
 
 ## Current Contract
 

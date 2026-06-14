@@ -137,7 +137,8 @@ changed. Each docs directory has one README that acts as a table of contents.
 `architecture/rust-wasm/cutover/relay-wiring.md` `architecture/rust-wasm/cutover/root-build.md`
 `architecture/rust-wasm/cutover/storage-wiring.md`
 `architecture/rust-wasm/cutover/typescript-inventory.md` `architecture/rust-wasm/cutover/ui-surface-map.md`
-`architecture/rust-wasm/cutover/verification-ledger.md` `architecture/rust-wasm/host-boundary.md` `architecture/rust-wasm/memory-ownership.md`
+`architecture/rust-wasm/cutover/verification-ledger.md` `architecture/rust-wasm/cutover/verification-run-notes-2026-06-13.md`
+`architecture/rust-wasm/host-boundary.md` `architecture/rust-wasm/memory-ownership.md`
 `architecture/rust-wasm/protocol-kernel.md` `architecture/rust-wasm/relay-runtime.md` `architecture/rust-wasm/source-map.md`
 `architecture/rust-wasm/status.md` `architecture/rust-wasm/storage-kernel.md` `architecture/rust-wasm/surface-cutover-order.md`
 `architecture/rust-wasm/ui-runtime.md` `architecture/rust-wasm/verification.md` `architecture/source-map.md` `architecture/workspace/README.md`

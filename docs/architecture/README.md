@@ -115,6 +115,7 @@ state, storage, relay orchestration, cleanup, and Rust/WASM migration.
 `rust-wasm/cutover/root-build.md` `rust-wasm/cutover/storage-wiring.md`
 `rust-wasm/cutover/typescript-inventory.md`
 `rust-wasm/cutover/ui-surface-map.md` `rust-wasm/cutover/verification-ledger.md`
+`rust-wasm/cutover/verification-run-notes-2026-06-13.md`
 `rust-wasm/host-boundary.md` `rust-wasm/memory-ownership.md` `rust-wasm/protocol-kernel.md`
 `rust-wasm/relay-runtime.md` `rust-wasm/source-map.md` `rust-wasm/status.md`
 `rust-wasm/storage-kernel.md` `rust-wasm/surface-cutover-order.md` `rust-wasm/ui-runtime.md` `rust-wasm/verification.md`
