@@ -12,8 +12,9 @@ row action-opening, exact anchor lookup, and stored author-route slices are
 implemented. Browser proof covers explicit unavailable states and the shipped
 Svelte tab now mounts the Rust body as a WASM island. The unused TypeScript
 Author Context loader and its deletion-anchor directory were removed after
-no-import proof; Svelte host and event-row menu paths remain until no-import
-and final verification proof exist.
+no-import proof. Row-level `EventMoreMenu.svelte` imports are removed, while
+the retained event menu file and generic Svelte host paths remain until
+component deletion proof and final verification exist.
 
 ## Current Evidence
 
@@ -73,10 +74,10 @@ and final verification proof exist.
 
 ## Next Edit
 
-Prove the remaining Author Context deletion blockers: event-row menu
-replacement and final verification. Keep the generic Svelte host glue and
-shared event-row menu call paths until shared Leptos event renderer parity,
-host no-import proof, and final verification exist.
+Prove the remaining Author Context deletion blockers: retained event menu file
+deletion readiness and final verification. Keep the generic Svelte host glue
+and retained event menu file until shared Leptos event renderer parity, host
+no-import proof, component deletion proof, and final verification exist.
 `lkjstr-app` owns the anchor and nearby query demand; `lkjstr-web` only reads
 typed route rows, binds browser sockets, and maps outcomes.
 
@@ -169,11 +170,13 @@ PATH=/home/lkjsxc/.cargo/bin:$PATH pnpm rust-wasm:quiet
   can guard late async completions at the typed request boundary.
 - The unused TypeScript loader and deletion-anchor directory remain removed
   after no-import proof.
-- Generic Svelte host glue and event-row menu paths remain until no-import and
+- Row-level `EventMoreMenu.svelte` imports are removed; generic Svelte host glue
+  and the retained event menu file remain until component deletion proof and
   final gates prove deletion readiness.
 
 ## Must Not
 
 - Do not synthesize author posts, anchor events, profiles, or successful reads.
 - Do not treat cache misses or missing relay answers as absence.
-- Do not delete generic host glue or event row menu glue before no-import proof.
+- Do not delete generic host glue or the retained event menu file before
+  component deletion proof and final gates.
