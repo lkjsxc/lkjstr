@@ -1,6 +1,10 @@
 <script lang="ts">
   import { onDestroy } from 'svelte';
   import { loadLkjstrWebWasm } from 'virtual:lkjstr-web-wasm';
+  import {
+    copyUserRowNpub,
+    userRowCopyStatusText,
+  } from '$lib/components/identity/user-row-copy-status';
   import { safeNpub } from '$lib/components/identity/user-event-row';
 
   type Props = {
@@ -23,13 +27,14 @@
       pubkey: string,
       openProfile: (pubkey: string) => void,
       openUserTimeline: (pubkey: string) => void,
-      copyNpub: (pubkey: string) => void,
+      copyNpub: (pubkey: string) => void | Promise<void>,
     ) => FolloweesIslandHandle;
   };
 
   let props: Props = $props();
   let host = $state<HTMLElement>();
   let error = $state('');
+  let copyStatus = $state('');
   let activeKey = '';
   let generation = 0;
   let handle: FolloweesIslandHandle | undefined;
@@ -83,7 +88,8 @@
   }
 
   async function copyNpub(pubkey: string): Promise<void> {
-    await navigator.clipboard?.writeText(safeNpub(pubkey));
+    const status = await copyUserRowNpub(safeNpub(pubkey), navigator.clipboard);
+    copyStatus = userRowCopyStatusText(status);
   }
 
   function releaseIsland(): void {
@@ -95,6 +101,7 @@
 <section class="hybrid-tab feed-tab followees-tab" aria-label="Following">
   <div class="hybrid-tab__toolbar">
     {#if error}<p role="alert">{error}</p>{/if}
+    {#if copyStatus}<p role="status">{copyStatus}</p>{/if}
   </div>
   <div bind:this={host}></div>
 </section>

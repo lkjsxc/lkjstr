@@ -1,6 +1,12 @@
 <script lang="ts">
   import { MoreHorizontal } from '@lucide/svelte';
   import { safeNpub } from './user-event-row';
+  import {
+    copyUserRowNpub,
+    type UserRowCopyStatus,
+    userRowCopyFailure,
+    userRowCopyStatusText,
+  } from './user-row-copy-status';
 
   type Props = {
     pubkey: string;
@@ -10,6 +16,7 @@
   };
 
   let props: Props = $props();
+  let copyStatus = $state<UserRowCopyStatus | null>(null);
 
   function stop(event: MouseEvent): void {
     event.stopPropagation();
@@ -18,10 +25,18 @@
   async function copy(event: MouseEvent): Promise<void> {
     stop(event);
     if (props.copyNpub) {
-      await props.copyNpub(props.pubkey);
+      try {
+        await props.copyNpub(props.pubkey);
+        copyStatus = null;
+      } catch (error) {
+        copyStatus = userRowCopyFailure(error);
+      }
       return;
     }
-    await navigator.clipboard?.writeText(safeNpub(props.pubkey));
+    copyStatus = await copyUserRowNpub(
+      safeNpub(props.pubkey),
+      navigator.clipboard,
+    );
   }
 </script>
 
@@ -43,5 +58,8 @@
     {/if}
     <button type="button" onclick={copy}>Copy npub</button>
     {#if props.copied}<span role="status">Copied</span>{/if}
+    {#if !props.copied && copyStatus}
+      <span role="status">{userRowCopyStatusText(copyStatus)}</span>
+    {/if}
   </div>
 </details>

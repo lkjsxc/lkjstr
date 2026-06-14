@@ -27,7 +27,7 @@ declare module 'virtual:lkjstr-web-wasm' {
       pubkey: string,
       openProfile: (pubkey: string) => void,
       openUserTimeline: (pubkey: string) => void,
-      copyNpub: (pubkey: string) => void,
+      copyNpub: (pubkey: string) => void | Promise<void>,
     ) => FolloweesIslandHandle;
     readonly mount_user_timeline_tab?: (
       parent: HTMLElement,

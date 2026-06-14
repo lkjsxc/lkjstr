@@ -51,6 +51,8 @@ zap, emoji. Event More menus stay separate from identity overflow menus.
 - Overflow trigger has an `aria-label`.
 - Open menu items are keyboard reachable.
 - Copied feedback uses `role="status"` without shifting row geometry.
+- Copy npub actions report clipboard unavailable or rejected writes explicitly;
+  copied feedback appears only after the browser clipboard write resolves.
 
 ## Related
 

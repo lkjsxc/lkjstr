@@ -82,6 +82,8 @@ Row click opens Profile. Secondary actions live in a three-dot overflow menu:
 Rows never invent avatars, names, verification, relay support, or relationships.
 Inline Profile, Timeline, and Copy npub buttons must not appear on list rows.
 Overflow menu clicks must not trigger row navigation.
+Copy npub reports clipboard unavailable or rejected writes explicitly; copied
+status appears only after the browser clipboard write resolves.
 
 ## Runtime Rules
 
