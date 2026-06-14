@@ -8,6 +8,7 @@ pub use app::{
     mount_app_with_profile_feed_and_followees_provider,
     mount_app_with_profile_feed_followees_and_user_timeline_provider,
 };
+pub use leptos::prelude::Callback;
 pub use workspace::*;
 #[cfg(target_arch = "wasm32")]
 pub fn mount_app_with_profile_feed(

@@ -9,9 +9,10 @@ nearby author posts without claiming relay parity or deletion proof.
 
 Injected-row, cache-backed default-provider, bounded selected-relay relay-read,
 row action-opening, exact anchor lookup, and stored author-route slices are
-implemented. Browser proof covers explicit unavailable states. TypeScript
-Author Context and event-row menu paths remain shipped until no-import and
-final verification proof exist.
+implemented. Browser proof covers explicit unavailable states and the shipped
+Svelte tab now mounts the Rust body as a WASM island. The retained TypeScript
+Author Context loader and event-row menu paths remain until no-import and final
+verification proof exist.
 
 ## Current Evidence
 
@@ -37,15 +38,18 @@ final verification proof exist.
 - `crates/lkjstr-ui/src/workspace/author_context*.rs` renders row action buttons
   that open Profile, Thread, and Author Context tabs from real row pubkeys and
   event ids.
-- `src/lib/author-context/author-context.ts` is the shipped loader for cached and
-  relay-backed nearby author posts.
+- `src/lib/tabs/author-context/AuthorContextTab.svelte` mounts the Rust body
+  through the WASM asset loader and forwards workspace action callbacks.
+- `src/lib/author-context/author-context.ts` is a retained loader until
+  no-import and final deletion proof are complete.
 
 ## Next Edit
 
-Next deletion-readiness work must prove no-import and final verification before
-removing TypeScript/Svelte paths. `lkjstr-app` owns the anchor and nearby query
-demand; `lkjstr-web` only reads typed route rows, binds browser sockets, and
-maps outcomes.
+Prove no-import and deletion readiness only after the remaining Author Context
+and event-row menu call paths have Rust parity. Do not delete TypeScript/Svelte
+paths yet; final verification remains separate deletion-readiness proof.
+`lkjstr-app` owns the anchor and nearby query demand; `lkjstr-web` only reads
+typed route rows, binds browser sockets, and maps outcomes.
 
 ## Files To Read
 
@@ -63,6 +67,8 @@ maps outcomes.
 - `crates/lkjstr-app/src/lib.rs`
 - `crates/lkjstr-ui/src/workspace/author_context*.rs`
 - `crates/lkjstr-ui/src/workspace/tab_content.rs`
+- `crates/lkjstr-web/src/author_context_island.rs`
+- `src/lib/tabs/author-context/AuthorContextTab.svelte`
 - `crates/lkjstr-web/src/author_context_routes.rs`
 - `crates/lkjstr-web/src/author_context_relay*.rs`
 - `crates/lkjstr-web/tests/author_context_tab_test.rs`
@@ -81,6 +87,7 @@ PATH=/home/lkjsxc/.cargo/bin:$PATH wasm-pack test --headless --chrome --chromedr
 PATH=/home/lkjsxc/.cargo/bin:$PATH wasm-pack test --headless --chrome --chromedriver /home/lkjsxc/.cache/.wasm-pack/chromedriver-4c97d18784ddc26e/chromedriver crates/lkjstr-web --test author_context_provider_test
 PATH=/home/lkjsxc/.cargo/bin:$PATH wasm-pack test --headless --chrome --chromedriver /home/lkjsxc/.cache/.wasm-pack/chromedriver-4c97d18784ddc26e/chromedriver crates/lkjstr-web --test author_context_relay_test
 PATH=/home/lkjsxc/.cargo/bin:$PATH wasm-pack test --headless --chrome --chromedriver /home/lkjsxc/.cache/.wasm-pack/chromedriver-4c97d18784ddc26e/chromedriver crates/lkjstr-web --test author_context_relay_provider_test
+PATH=/home/lkjsxc/.cargo/bin:$PATH wasm-pack test --headless --chrome --chromedriver /home/lkjsxc/.cache/.wasm-pack/chromedriver-4c97d18784ddc26e/chromedriver crates/lkjstr-web --test author_context_island_test
 PATH=/home/lkjsxc/.cargo/bin:$PATH pnpm rust-wasm:quiet
 ```
 
@@ -103,6 +110,9 @@ PATH=/home/lkjsxc/.cargo/bin:$PATH pnpm rust-wasm:quiet
   query demand without making route policy decisions in `lkjstr-web`.
 - Rust row action buttons can open Thread and Author Context tabs from real
   event row ids and pubkeys.
+- The shipped Svelte Author Context tab can mount and unmount the Rust body
+  without leaking a provider lease, and row actions call the Svelte workspace
+  callbacks.
 - TypeScript Author Context and Svelte tab paths remain until no-import and
   final gates prove deletion readiness.
 

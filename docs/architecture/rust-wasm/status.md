@@ -106,8 +106,9 @@ This file is the concise status map for the active Rust/WASM migration.
   missing event/author/relay/anchor states, a Leptos body, provider bridge, and
   Chrome proof from injected real `NostrEvent` rows plus worker-cached anchor
   and nearby author rows plus bounded selected-relay reads and row actions.
-  Exact anchor lookup and stored author routes are wired; no-import proof and
-  deletion remain open.
+  The shipped Svelte tab now mounts that Rust body as a WASM island with
+  unmount cleanup. Exact anchor lookup and stored author routes are wired;
+  no-import proof and deletion remain open.
 - Hydration scheduling owns a Rust semantic-key priority reducer for visible,
   near-visible, hidden-paused, stale-generation, and deduped work. Product
   wiring beyond focused scheduler tests remains active.

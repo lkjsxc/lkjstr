@@ -6,6 +6,7 @@ mod accounts_selector_host;
 mod accounts_selector_status;
 mod accounts_selector_store;
 mod app_log_host;
+mod author_context_island;
 mod browser_inventory;
 mod custom_request_host;
 mod followees_host;

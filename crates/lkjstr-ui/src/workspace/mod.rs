@@ -6,6 +6,8 @@ mod accounts_row;
 mod author_context;
 mod author_context_actions;
 mod author_context_event;
+#[cfg(target_arch = "wasm32")]
+mod author_context_island;
 mod author_context_open;
 mod author_context_provider;
 mod custom_request;
@@ -85,6 +87,8 @@ mod welcome;
 
 pub use accounts_provider::{AccountsCommand, AccountsComplete, AccountsProvider, AccountsResult};
 pub use accounts_provider::{AccountsIdCommand, AccountsInputCommand};
+#[cfg(target_arch = "wasm32")]
+pub use author_context_island::{AuthorContextIslandActions, mount_author_context_island};
 pub use author_context_provider::{
     AuthorContextFeedComplete, AuthorContextFeedProvider, AuthorContextFeedRequest,
 };

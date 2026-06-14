@@ -16,12 +16,12 @@ Read next: [product/README.md](product/README.md),
 - Clean launch focuses Welcome and also opens Accounts, Relay Settings, Home,
   Notifications, and Tweet.
 - Home, Global, Public Chat, Profile, Thread, Notifications, Search, Custom
-  Request, Author Context, Accounts, Relay Settings, Stats, Settings, Upload
-  Settings, lkjstr Log, Mine npub, Profile Edit, and Welcome are implemented.
-- Followees and User Timeline are relay-backed action-opened surfaces. Rust Followees
-  renders injected/default cached real NIP-02 rows, selected-relay plus stored-route
-  kind `3` discovery, cleanup, retry diagnostics, and disabled-route exclusion. Rust User Timeline renders real
-  NIP-02 rows, exact cache-ready rows, stored routes, cleanup, retry diagnostics, partial-route diagnostics, and degraded target-posts-only mode.
+  Request, Accounts, Relay Settings, Stats, Settings, Upload Settings,
+  lkjstr Log, Mine npub, Profile Edit, Welcome, and a Rust-island Author
+  Context body are implemented.
+- Followees/User Timeline are relay-backed action-opened surfaces. Rust
+  Followees/User Timeline render real NIP-02 rows, selected/stored-route
+  discovery, cleanup, retry, partial-route, and degraded states.
 - Shared UI system catalog and shipped component list live in
   [architecture/workspace/ui-system/README.md](architecture/workspace/ui-system/README.md);
   polish acceptance rows live in
