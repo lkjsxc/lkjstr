@@ -168,8 +168,9 @@ models, anchors, footer states, and unavailable states.
   `FeedEventRow` content/action rows, unavailable media/reference preview states,
   author metadata, sensitive-warning reveal rendering, common state-row rendering,
   shared footer shell rendering across converted feed rows, and Rust/WASM quiet.
-- Remaining completion proof: Author Context no-import and final-gate deletion
-  readiness plus other feed-surface deletion prerequisites remain open.
+- Remaining completion proof: Author Context Svelte-host no-import,
+  event-row menu deletion readiness, and final-gate deletion readiness plus
+  other feed-surface deletion prerequisites remain open.
   Missing coverage never proves absence, and no placeholder rows exist.
 
 ## 4. First Home Leptos feed slice
