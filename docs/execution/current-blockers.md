@@ -148,9 +148,10 @@ models, anchors, footer states, and unavailable states.
   Profile sparse-history empty proof, first Rust Followees NIP-02 row rendering,
   default cached plus selected-relay/stored-route/disabled-route Followees host-provider, cleanup, retry diagnostics, and Svelte-hosted Rust island proof,
   first Rust User Timeline NIP-02 author-set feed-row rendering,
-  default cached User Timeline host-provider proof, selected-relay User
-  Timeline kind `3` discovery, stored NIP-65 route discovery, cleanup, retry
-  diagnostics, and Svelte-hosted Rust island proof,
+  default cached User Timeline host-provider proof, public no-route/loading
+  discovery-state tests, selected-relay User Timeline kind `3` discovery,
+  stored NIP-65 route discovery, cleanup, retry diagnostics, and Svelte-hosted
+  Rust island proof,
   Thread cached root/reply provider proof, shared
   feed owner-release cleanup, bounded Thread bootstrap relay reads, Thread relay
   owner cleanup, explicit Thread older-page relay reads from the footer command,

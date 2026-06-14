@@ -105,11 +105,10 @@ Svelte uses temporary host fragments, estimates, and active reservation
 preservation. Rust feed event bodies, `FeedEventRow` content/action rows,
 unavailable preview states, author metadata fallback, sensitive warning reveal,
 common state rows, and nearby/copy event menus now share Leptos rendering across
-converted feed surfaces. Rust FeedViewModel tests cover bounded action/repost row
-summaries, while browser repost proof and deletion proof stay open.
+converted feed surfaces. Rust tests cover bounded action/repost rows and public
+User Timeline discovery states, while browser/deletion proof stays open.
 Deletion remains blocked until Svelte shared event-row parity,
-User Timeline discovery tests, SQLite geometry persistence, Stats projection,
-browser scroll proof, and no-import proof exist.
+SQLite geometry persistence, Stats projection, browser scroll proof, and no-import proof exist.
 
 Current storage deletion evidence remains blocked: Rust Stats consumes SQLite
 inventory and health; active selector, pressure rows, command metadata,

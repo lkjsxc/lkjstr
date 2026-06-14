@@ -156,9 +156,10 @@ relay discovery, selected-relay success, NIP-65 route success, provenance-route
 success, disabled-relay exclusion, partial relay failure, all-route timeout,
 auth-required diagnostics, honest target-posts-only degraded mode, bounded retry
 expansion, and incomplete states with reason codes. Current Rust proof covers
-pure discovery planning, target-only degraded decisions, reason codes, bounded
-retry sources, and a first Leptos feed body from injected real NIP-02 author-set
-rows. Default cached User Timeline host proof covers worker SQLite kind `3`
+pure/public discovery planning, no-route incomplete states, route-source loading
+states, target-only degraded decisions, reason codes, bounded retry sources, and
+a first Leptos feed body from injected real NIP-02 author-set rows. Default
+cached User Timeline host proof covers worker SQLite kind `3`
 author-set rows plus cached display events, keeps them partial without complete
 coverage, and promotes ready state only from exact User Timeline feed, route,
 relay, filter, and interval proof. Selected-relay kind `3` discovery proof

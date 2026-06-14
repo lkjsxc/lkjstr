@@ -168,8 +168,8 @@ Read next: [architecture/workspace/README.md](architecture/workspace/README.md),
   metadata plus kind `3` follow counts, and sparse empty proof while excluding
   metadata and follow-list note rows. Rust Thread reads cached root/reply/focused,
   parent, unavailable, continuation, older, and live rows. Converted Rust feed
-  rows share nearby/copy menus plus full action/repost summary rows and
-  `FeedEventRow` content/action rows. Other converted slices remain open.
+  rows share nearby/copy menus plus full action/repost summary rows,
+  User Timeline discovery-state proof, and `FeedEventRow` content/action rows.
 - Live inserts follow a top-anchor policy. A user at the top sees new resident
   rows immediately; a user away from the top keeps the visible anchor and sees
   newer-available state instead of being yanked upward.
