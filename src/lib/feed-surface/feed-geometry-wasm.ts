@@ -18,6 +18,7 @@ export type FeedGeometryWasmExports = {
   readonly plan_feed_visual_rows_from_js?: (input: unknown) => unknown;
   readonly capture_feed_anchor_from_js?: (input: unknown) => unknown;
   readonly reconcile_feed_anchor_from_js?: (input: unknown) => unknown;
+  readonly feed_geometry_runtime_snapshot?: () => unknown;
 };
 
 let exportsCache: FeedGeometryWasmExports | undefined;

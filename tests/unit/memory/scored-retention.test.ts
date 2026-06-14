@@ -5,6 +5,7 @@ import {
   scoreRetentionCandidate,
   selectRetained,
 } from '../../../src/lib/memory/scored-retention';
+import { normalizeFeedGeometryDiagnostics } from '../../../src/lib/memory/feed-geometry-diagnostics';
 import { normalizeUserTimelineDiagnostics } from '../../../src/lib/memory/user-timeline-diagnostics';
 
 describe('scored retention', () => {
@@ -37,6 +38,9 @@ describe('scored retention', () => {
       relaySuppressionCount: expect.any(Number),
       fallbackRepository: expect.any(Object),
       caches: expect.any(Object),
+      geometry: expect.objectContaining({
+        rust: expect.objectContaining({ status: 'unavailable' }),
+      }),
       userTimeline: {
         status: 'available',
         outcomes: [{ key: 'ready', count: 2 }],
@@ -54,6 +58,33 @@ describe('scored retention', () => {
       status: 'unavailable',
       outcomes: [],
       reasons: [],
+    });
+  });
+
+  it('normalizes Rust feed geometry diagnostics as bounded counts', () => {
+    expect(
+      normalizeFeedGeometryDiagnostics({
+        status: 'available',
+        estimates: 2.8,
+        measurement_updates: 1,
+        reservations: -1,
+        fragment_plans: Number.POSITIVE_INFINITY,
+        anchor_captures: 3,
+        anchor_reconciles: 4,
+        errors: 1,
+      }),
+    ).toMatchObject({
+      status: 'available',
+      estimates: 2,
+      reservations: 0,
+      fragmentPlans: 0,
+      anchorReconciles: 4,
+      errors: 1,
+    });
+    expect(normalizeFeedGeometryDiagnostics({ status: 'ready' })).toMatchObject({
+      status: 'unavailable',
+      estimates: 0,
+      errors: 0,
     });
   });
 

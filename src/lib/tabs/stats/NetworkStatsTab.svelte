@@ -16,7 +16,7 @@
     runtimeMemorySnapshot,
     type RuntimeMemorySnapshot,
   } from '$lib/memory/runtime-memory';
-  import { readUserTimelineDiagnostics } from '$lib/memory/user-timeline-diagnostics';
+  import { readRuntimeDiagnostics } from '$lib/memory/runtime-diagnostics';
   import {
     readSqliteStorageHealth,
     type SqliteStorageHealthStatus,
@@ -74,11 +74,11 @@
       safeRead(() => cacheStatus(), cache),
       safeRead(() => readSqliteStorageHealth(), storageHealth),
       safeRead(() => readScanOptimizerDebugSnapshot(), scanDebug),
-      safeRead(() => readUserTimelineDiagnostics(), currentMemory.userTimeline),
+      safeRead(() => readRuntimeDiagnostics(currentMemory), currentMemory),
     ]);
     if (disposed || seq !== refreshSeq) return;
     [summaries, jobHealth, cache, storageHealth, scanDebug] = next;
-    memory = runtimeMemorySnapshot(next[5]);
+    memory = next[5];
   }
 
   async function safeRead<T>(read: () => Promise<T>, fallback: T): Promise<T> {

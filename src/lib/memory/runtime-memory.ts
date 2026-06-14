@@ -11,6 +11,10 @@ import { currentRelaySnapshots } from '../relays/session-snapshots';
 import { orchestrationMetricsSnapshot } from '../relays/orchestration/metrics';
 import { sharedSubscriptionOrchestrator } from '../relays/orchestration/orchestrator';
 import {
+  unavailableFeedGeometryDiagnostics,
+  type FeedGeometryRuntimeDiagnostics,
+} from './feed-geometry-diagnostics';
+import {
   unavailableUserTimelineDiagnostics,
   type UserTimelineRuntimeDiagnostics,
 } from './user-timeline-diagnostics';
@@ -36,6 +40,7 @@ export type RuntimeMemorySnapshot = {
   };
   readonly geometry: ReturnType<typeof feedRowHeightDiagnostics> & {
     readonly bridgeStatus: string;
+    readonly rust: FeedGeometryRuntimeDiagnostics;
   };
   readonly userTimeline: UserTimelineRuntimeDiagnostics;
   readonly jsHeap?: {
@@ -48,6 +53,9 @@ export type RuntimeMemorySnapshot = {
 export function runtimeMemorySnapshot(
   userTimeline = unavailableUserTimelineDiagnostics(
     'Rust User Timeline diagnostics bridge has not loaded.',
+  ),
+  feedGeometry = unavailableFeedGeometryDiagnostics(
+    'Rust feed geometry diagnostics bridge has not loaded.',
   ),
 ): RuntimeMemorySnapshot {
   const snapshots = currentRelaySnapshots();
@@ -74,6 +82,7 @@ export function runtimeMemorySnapshot(
     },
     geometry: {
       bridgeStatus: feedGeometryWasmBridgeStatus().status,
+      rust: feedGeometry,
       ...feedRowHeightDiagnostics(),
     },
     userTimeline,

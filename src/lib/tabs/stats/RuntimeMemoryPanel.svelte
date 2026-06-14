@@ -79,10 +79,25 @@
       <span>geometry bridge</span>
     </article>
     <article>
+      <strong>{props.memory.geometry.rust.status}</strong>
+      <span>Rust geometry diagnostics</span>
+    </article>
+    <article>
+      <strong>{props.memory.geometry.rust.estimates}</strong>
+      <span>Rust geometry estimates</span>
+    </article>
+    <article>
+      <strong>{props.memory.geometry.rust.errors}</strong>
+      <span>Rust geometry errors</span>
+    </article>
+    <article>
       <strong>{props.memory.userTimeline.status}</strong>
       <span>User Timeline diagnostics</span>
     </article>
   </div>
+  {#if props.memory.geometry.rust.status === 'unavailable'}
+    <p>{props.memory.geometry.rust.reason}</p>
+  {/if}
   {#if props.memory.userTimeline.status === 'unavailable'}
     <p>{props.memory.userTimeline.reason}</p>
   {:else}

@@ -66,9 +66,9 @@ Stats shows current-session relay counters and persisted operational summaries.
   cache size, profile cache size, token cache size, relay snapshot totals,
   orchestration demand and lease counts (active, live, bootstrap), relay REQ and
   CLOSE totals, events received vs accepted vs dropped, feed geometry measured
-  row count, feed geometry bridge status, Rust-owned User Timeline status and
-  diagnostic aggregate counts when the WASM bridge is available, and optional
-  JavaScript heap.
+  row count, feed geometry bridge status, Rust-owned feed geometry diagnostics,
+  Rust-owned User Timeline status and diagnostic aggregate counts when the WASM
+  bridge is available, and optional JavaScript heap.
 - User Timeline diagnostic counts come only from real Rust provider completions.
   They are bounded aggregate counts by explicit status and static key. When
   the Rust bridge is unavailable, Stats renders an explicit unavailable reason.

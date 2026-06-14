@@ -12,6 +12,7 @@ fragment planning, measurement reduction, and anchor reducers.
 - [dto.rs](dto.rs): serializable host-boundary shapes.
 - [codec.rs](codec.rs): geometry, model, measurement, and anchor conversion.
 - [row_codec.rs](row_codec.rs): visual row conversion.
+- [stats.rs](stats.rs): redacted runtime counter export for Stats.
 
 ## Rules
 

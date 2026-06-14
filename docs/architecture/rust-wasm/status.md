@@ -75,8 +75,9 @@ This file is the concise status map for the active Rust/WASM migration.
   broader Leptos feed use. Durable SQLite geometry model wiring exists for Home,
   Global, Notifications, Profile, Thread, Search, Author Context, and User
   Timeline cached rows; converted event snapshots and Profile header relay
-  rebuilds preserve cache-loaded models. Stats shows row-height table counts;
-  browser scroll proof and runtime geometry counters remain open.
+  rebuilds preserve cache-loaded models. Stats shows row-height table counts
+  and bounded Rust/WASM runtime geometry counters; browser scroll proof remains
+  open.
 - Rust protected tool hosts now use the SQLite worker typed repositories for
   startup, workspace persistence, Settings, Accounts, Relay Settings, Upload
   Settings, Tweet drafts, Stats inventory, and Stats SQLite health. Rust also

@@ -20,6 +20,7 @@ use super::reservation_codec::{
 };
 use super::reservation_dto::ReservationInputDto;
 use super::row_codec::visual_row_to_dto;
+use super::stats::{self, FeedGeometryOperation as Operation};
 
 #[derive(Serialize)]
 struct BridgeError {
@@ -28,6 +29,7 @@ struct BridgeError {
 }
 
 pub fn estimate_feed_row_height(input: JsValue) -> Result<JsValue, JsValue> {
+    stats::record_call(Operation::Estimate);
     let dto = parse::<EstimateInputDto>(input)?;
     let features = features_from_dto(dto.features);
     let models = dto
@@ -35,28 +37,31 @@ pub fn estimate_feed_row_height(input: JsValue) -> Result<JsValue, JsValue> {
         .into_iter()
         .map(model_from_dto)
         .collect::<Vec<_>>();
-    to_js(&estimate_to_dto(&estimate_row_geometry(
+    track(to_js(&estimate_to_dto(&estimate_row_geometry(
         dto.key, &features, &models,
-    )))
+    ))))
 }
 
 pub fn record_feed_row_measurement(input: JsValue) -> Result<JsValue, JsValue> {
+    stats::record_call(Operation::Measurement);
     let dto = parse::<RecordMeasurementInputDto>(input)?;
     let previous = dto.previous.map(model_from_dto);
     let observation = observation_from_dto(dto.observation);
     let model = update_row_geometry_model(previous.as_ref(), &observation);
-    to_js(&model_to_dto(&model))
+    track(to_js(&model_to_dto(&model)))
 }
 
 pub fn next_feed_row_reservation(input: JsValue) -> Result<JsValue, JsValue> {
+    stats::record_call(Operation::Reservation);
     let dto = parse::<ReservationInputDto>(input)?;
     let previous = dto.previous.map(row_state_from_dto);
     let action = reservation_action_from_dto(dto.action);
     let decision = next_reserved_height(previous.as_ref(), action);
-    to_js(&reservation_decision_to_dto(&decision))
+    track(to_js(&reservation_decision_to_dto(&decision)))
 }
 
 pub fn plan_fragments(input: JsValue) -> Result<JsValue, JsValue> {
+    stats::record_call(Operation::FragmentPlan);
     let dto = parse::<PlanFragmentsInputDto>(input)?;
     let event = semantic_event_from_dto(&dto);
     let config = fragment_config_from_dto(dto.config.clone());
@@ -66,10 +71,13 @@ pub fn plan_fragments(input: JsValue) -> Result<JsValue, JsValue> {
         dto.estimated_height_px,
         &config,
     );
-    to_js(&rows.iter().map(visual_row_to_dto).collect::<Vec<_>>())
+    track(to_js(
+        &rows.iter().map(visual_row_to_dto).collect::<Vec<_>>(),
+    ))
 }
 
 pub fn capture_anchor(input: JsValue) -> Result<JsValue, JsValue> {
+    stats::record_call(Operation::AnchorCapture);
     let dto = parse::<CaptureAnchorInputDto>(input)?;
     let rows = dto.rows.into_iter().map(row_from_dto).collect::<Vec<_>>();
     let anchor = capture_feed_anchor(
@@ -79,10 +87,11 @@ pub fn capture_anchor(input: JsValue) -> Result<JsValue, JsValue> {
         dto.width_bucket,
         dto.generation,
     );
-    to_js(&anchor.as_ref().map(anchor_to_dto))
+    track(to_js(&anchor.as_ref().map(anchor_to_dto)))
 }
 
 pub fn reconcile_anchor(input: JsValue) -> Result<JsValue, JsValue> {
+    stats::record_call(Operation::AnchorReconcile);
     let dto = parse::<ReconcileAnchorInputDto>(input)?;
     let old_rows = dto
         .old_rows
@@ -96,17 +105,27 @@ pub fn reconcile_anchor(input: JsValue) -> Result<JsValue, JsValue> {
         .collect::<Vec<_>>();
     let anchor = anchor_from_dto(dto.anchor);
     let result = reconcile_feed_anchor(&old_rows, &new_rows, &anchor);
-    to_js(&ReconcileAnchorOutputDto {
+    track(to_js(&ReconcileAnchorOutputDto {
         scroll_delta_px: result.scroll_delta_px,
         confidence: confidence_to_string(&result.confidence),
-    })
+    }))
+}
+
+fn track(result: Result<JsValue, JsValue>) -> Result<JsValue, JsValue> {
+    if result.is_err() {
+        stats::record_error();
+    }
+    result
 }
 
 fn parse<T>(input: JsValue) -> Result<T, JsValue>
 where
     T: for<'de> serde::Deserialize<'de>,
 {
-    serde_wasm_bindgen::from_value(input).map_err(|error| js_error("bad_input", error.to_string()))
+    serde_wasm_bindgen::from_value(input).map_err(|error| {
+        stats::record_error();
+        js_error("bad_input", error.to_string())
+    })
 }
 
 fn to_js<T: Serialize>(value: &T) -> Result<JsValue, JsValue> {

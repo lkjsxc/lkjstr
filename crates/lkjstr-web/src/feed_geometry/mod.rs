@@ -6,6 +6,7 @@ mod dto;
 mod reservation_codec;
 mod reservation_dto;
 mod row_codec;
+mod stats;
 
 use wasm_bindgen::prelude::{JsValue, wasm_bindgen};
 
@@ -37,6 +38,17 @@ pub fn capture_feed_anchor_from_js(input: JsValue) -> Result<JsValue, JsValue> {
 #[wasm_bindgen]
 pub fn reconcile_feed_anchor_from_js(input: JsValue) -> Result<JsValue, JsValue> {
     bridge::reconcile_anchor(input)
+}
+
+#[wasm_bindgen]
+pub fn feed_geometry_runtime_snapshot() -> JsValue {
+    stats::snapshot_js()
+}
+
+#[cfg(debug_assertions)]
+#[wasm_bindgen]
+pub fn reset_feed_geometry_runtime_for_test() {
+    stats::reset_for_test();
 }
 
 #[cfg(test)]

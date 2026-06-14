@@ -202,8 +202,9 @@ state. `lkjstr-web` may report DOM measurements and load persisted model rows.
 Durable row-height persistence is partial: typed `feed_row_height_*` repositories
 exist and Home/Global/Notifications/Profile/Thread/Search/Author Context/User
 Timeline consume matching models for cached rows. Converted event snapshots and
-Profile header relay rebuilds preserve cache-loaded models; browser scroll
-proof and runtime geometry counters remain open.
+Profile header relay rebuilds preserve cache-loaded models. Runtime geometry
+counters are exposed through a Rust/WASM diagnostics export for Stats; browser
+scroll proof remains open.
 
 ## Unavailable-State Derivation
 
