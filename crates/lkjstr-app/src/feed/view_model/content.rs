@@ -1,10 +1,12 @@
 use crate::feed_fragments::{
-    FeedFragmentConfig, FeedVisualRow, SemanticFeedEvent, plan_feed_visual_rows,
+    EventIndexedRow, FeedFragmentConfig, FeedVisualRow, SemanticFeedEvent, plan_feed_visual_rows,
 };
 use lkjstr_protocol::{
     CustomEmoji, KIND_GENERIC_REPOST, KIND_REACTION, KIND_REPOST, KIND_ZAP_RECEIPT,
     custom_emoji_token_text,
 };
+
+use super::{FeedEventContentRow, FeedEventCustomEmoji, FeedEventUnavailablePreview};
 
 #[derive(Clone, Debug, Eq, PartialEq)]
 pub enum FeedEventContent {
@@ -13,33 +15,6 @@ pub enum FeedEventContent {
         rows: Vec<FeedEventContentRow>,
     },
     Rows(Vec<FeedEventContentRow>),
-}
-
-#[derive(Clone, Debug, Eq, PartialEq)]
-pub enum FeedEventContentRow {
-    Text(String),
-    CustomEmoji(FeedEventCustomEmoji),
-    MediaPreviewUnavailable,
-    ReferencePreviewUnavailable,
-}
-
-#[derive(Clone, Debug, Eq, PartialEq)]
-pub struct FeedEventCustomEmoji {
-    pub shortcode: String,
-    pub url: String,
-    pub address: Option<String>,
-}
-
-impl FeedEventContentRow {
-    #[must_use]
-    pub fn text(&self) -> String {
-        match self {
-            Self::Text(text) => text.clone(),
-            Self::CustomEmoji(emoji) => custom_emoji_token_text(&emoji.shortcode),
-            Self::MediaPreviewUnavailable => "Media preview unavailable".to_owned(),
-            Self::ReferencePreviewUnavailable => "Reference preview unavailable".to_owned(),
-        }
-    }
 }
 
 #[must_use]
@@ -103,10 +78,12 @@ fn feed_event_content_row(row: &FeedVisualRow) -> Option<FeedEventContentRow> {
     match row {
         FeedVisualRow::EventFull(row) => Some(FeedEventContentRow::Text(row.content.clone())),
         FeedVisualRow::EventTextSegment(row) => Some(FeedEventContentRow::Text(row.text.clone())),
-        FeedVisualRow::EventMediaSegment(_) => Some(FeedEventContentRow::MediaPreviewUnavailable),
-        FeedVisualRow::EventReferenceSegment(_) => {
-            Some(FeedEventContentRow::ReferencePreviewUnavailable)
-        }
+        FeedVisualRow::EventMediaSegment(row) => Some(
+            FeedEventContentRow::MediaPreviewUnavailable(unavailable_preview(row)),
+        ),
+        FeedVisualRow::EventReferenceSegment(row) => Some(
+            FeedEventContentRow::ReferencePreviewUnavailable(unavailable_preview(row)),
+        ),
         FeedVisualRow::EventHeader(_) | FeedVisualRow::EventActions(_) => None,
     }
 }
@@ -126,6 +103,13 @@ fn reaction_summary(content: &str) -> String {
         return "Reaction target unavailable".to_owned();
     }
     format!("Reacted with {content}")
+}
+
+fn unavailable_preview(row: &EventIndexedRow) -> FeedEventUnavailablePreview {
+    FeedEventUnavailablePreview {
+        row_key: row.row_key.clone(),
+        segment_index: row.index,
+    }
 }
 
 fn split_text_custom_emojis(

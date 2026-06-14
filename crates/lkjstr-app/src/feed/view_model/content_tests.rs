@@ -1,7 +1,7 @@
 use super::content::feed_event_content_rows_with_emojis;
 use super::{
-    FeedEventContent, FeedEventContentRow, feed_event_content, feed_event_content_rows,
-    plan_feed_event_content,
+    FeedEventContent, FeedEventContentRow, FeedEventUnavailablePreview, feed_event_content,
+    feed_event_content_rows, plan_feed_event_content,
 };
 use crate::feed_fragments::{
     EventFullRow, EventIndexedRow, EventMarkerRow, EventTextSegmentRow, FeedFragmentConfig,
@@ -25,8 +25,8 @@ fn content_rows_keep_renderable_fragments_in_order() {
         vec![
             FeedEventContentRow::Text("hello".to_owned()),
             FeedEventContentRow::Text("world".to_owned()),
-            FeedEventContentRow::MediaPreviewUnavailable,
-            FeedEventContentRow::ReferencePreviewUnavailable,
+            FeedEventContentRow::MediaPreviewUnavailable(unavailable("indexed-2", 2)),
+            FeedEventContentRow::ReferencePreviewUnavailable(unavailable("indexed-3", 3)),
         ]
     );
 }
@@ -166,5 +166,12 @@ fn indexed(index: u16) -> EventIndexedRow {
         row_key: format!("indexed-{index}"),
         index,
         relay_provenance: Vec::new(),
+    }
+}
+
+fn unavailable(row_key: &str, segment_index: u16) -> FeedEventUnavailablePreview {
+    FeedEventUnavailablePreview {
+        row_key: row_key.to_owned(),
+        segment_index,
     }
 }

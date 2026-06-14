@@ -1,5 +1,7 @@
 use leptos::{ev::MouseEvent, prelude::*};
-use lkjstr_app::feed::{FeedEventContent, FeedEventContentRow, FeedEventCustomEmoji};
+use lkjstr_app::feed::{
+    FeedEventContent, FeedEventContentRow, FeedEventCustomEmoji, FeedEventUnavailablePreview,
+};
 
 #[derive(Clone, Debug, Eq, PartialEq)]
 struct CustomEmojiImageAttrs {
@@ -56,12 +58,23 @@ fn content_row(row: FeedEventContentRow) -> impl IntoView {
     match row {
         FeedEventContentRow::Text(text) => view! { <p>{text}</p> }.into_any(),
         FeedEventContentRow::CustomEmoji(emoji) => custom_emoji(emoji).into_any(),
-        FeedEventContentRow::MediaPreviewUnavailable => {
-            view! { <p>"Media preview unavailable"</p> }.into_any()
+        FeedEventContentRow::MediaPreviewUnavailable(preview) => {
+            unavailable_preview(preview, "Media preview unavailable").into_any()
         }
-        FeedEventContentRow::ReferencePreviewUnavailable => {
-            view! { <p>"Reference preview unavailable"</p> }.into_any()
+        FeedEventContentRow::ReferencePreviewUnavailable(preview) => {
+            unavailable_preview(preview, "Reference preview unavailable").into_any()
         }
+    }
+}
+
+fn unavailable_preview(preview: FeedEventUnavailablePreview, label: &'static str) -> impl IntoView {
+    view! {
+        <p
+            data-row-key=preview.row_key
+            data-segment-index=preview.segment_index.to_string()
+        >
+            {label}
+        </p>
     }
 }
 

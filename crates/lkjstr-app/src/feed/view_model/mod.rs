@@ -2,6 +2,7 @@
 
 mod build;
 mod content;
+mod content_row;
 #[cfg(test)]
 mod content_tests;
 mod geometry;
@@ -13,9 +14,9 @@ pub use build::{
     footer_row_from_window, notification_state_row, profile_state_row, unavailable_state_row,
 };
 pub use content::{
-    FeedEventContent, FeedEventContentRow, FeedEventCustomEmoji, feed_event_content,
-    feed_event_content_rows, plan_feed_event_content,
+    FeedEventContent, feed_event_content, feed_event_content_rows, plan_feed_event_content,
 };
+pub use content_row::{FeedEventContentRow, FeedEventCustomEmoji, FeedEventUnavailablePreview};
 pub use geometry::feed_event_geometry_model_keys;
 pub use ids::{
     feed_continuation_row_id, feed_diagnostic_row_id, feed_event_row_id, feed_footer_row_id,
