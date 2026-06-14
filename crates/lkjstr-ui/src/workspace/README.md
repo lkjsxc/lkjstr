@@ -18,6 +18,7 @@ New Tab chooser, and converted Rust tool bodies.
 - `custom_request.rs`: Rust Custom Request planning-state body.
 - `custom_request_provider.rs`: async Custom Request run-plan provider wrapper.
 - `custom_request_snapshot.rs`: Custom Request feed filter-state snapshots.
+- `feed_event_actions.rs`: shared Rust feed event-row action buttons.
 - `followees.rs`: narrow Rust Followees rows from real NIP-02 entries.
 - `followees_provider.rs`: async Followees view-model provider wrapper.
 - `global.rs`: narrow Rust Global feed row rendering.

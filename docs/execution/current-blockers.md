@@ -161,7 +161,8 @@ models, anchors, footer states, and unavailable states.
   indexed rows, bounded relay NIP-50 merge proof, Search tab snapshot restore,
   cached plus relay older-page proof, injected, worker-cached, relay-backed,
   exact-anchor, stored-route, and unavailable-state Author Context rows, Rust
-  row actions, and Rust/WASM quiet.
+  row actions, shared Rust event action rendering for Author Context and User
+  Timeline rows, and Rust/WASM quiet.
 - Remaining completion proof: Author Context no-import and final-gate deletion
   readiness plus other feed-surface deletion prerequisites remain open.
   Missing coverage never proves absence, and no placeholder rows exist.

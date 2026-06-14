@@ -1,6 +1,9 @@
 use leptos::prelude::*;
 use lkjstr_app::{FeedEventRow, FeedFooterState, FeedViewRow};
 
+use crate::workspace::feed_event_actions::{
+    FeedEventActionLabels, event_actions as feed_event_actions,
+};
 use crate::workspace::user_timeline_actions::UserTimelineActions;
 
 pub(crate) fn timeline_row(row: FeedViewRow, actions: UserTimelineActions) -> impl IntoView {
@@ -81,40 +84,19 @@ fn event_text(item: lkjstr_app::FeedVisualRow) -> Option<String> {
 }
 
 fn event_actions(event_id: String, pubkey: String, actions: UserTimelineActions) -> impl IntoView {
-    view! {
-        <div class="lkjstr-feed-actions">
-            {string_button(pubkey.clone(), actions.open_profile, "user-timeline-open-profile", "Profile")}
-            {string_button(event_id.clone(), actions.open_thread, "user-timeline-open-thread", "Thread")}
-            {author_context_button(event_id, pubkey, actions.open_author_context)}
-        </div>
-    }
-}
-
-fn string_button(
-    value: String,
-    action: Option<Callback<String>>,
-    test_id: &'static str,
-    label: &'static str,
-) -> impl IntoView {
-    action.map(|action| {
-        let run = move |_| action.run(value.clone());
-        view! { <button type="button" data-testid=test_id on:click=run>{label}</button> }
-    })
-}
-
-fn author_context_button(
-    event_id: String,
-    pubkey: String,
-    action: Option<Callback<(String, String)>>,
-) -> impl IntoView {
-    action.map(|action| {
-        let run = move |_| action.run((event_id.clone(), pubkey.clone()));
-        view! {
-            <button type="button" data-testid="user-timeline-open-author-context" on:click=run>
-                "Author context"
-            </button>
-        }
-    })
+    feed_event_actions(
+        event_id,
+        pubkey,
+        actions.into(),
+        FeedEventActionLabels {
+            profile_test_id: "user-timeline-open-profile",
+            profile_label: "Profile",
+            thread_test_id: "user-timeline-open-thread",
+            thread_label: "Thread",
+            author_context_test_id: "user-timeline-open-author-context",
+            author_context_label: "Author context",
+        },
+    )
 }
 
 fn footer_state_text(state: FeedFooterState) -> &'static str {

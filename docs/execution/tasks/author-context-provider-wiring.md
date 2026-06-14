@@ -38,6 +38,8 @@ paths remain until no-import and final verification proof exist.
 - `crates/lkjstr-ui/src/workspace/author_context*.rs` renders row action buttons
   that open Profile, Thread, and Author Context tabs from real row pubkeys and
   event ids.
+- `crates/lkjstr-ui/src/workspace/feed_event_actions.rs` shares the Rust
+  Profile, Thread, and Author Context row action renderer with User Timeline.
 - `src/lib/tabs/author-context/AuthorContextTab.svelte` mounts the Rust body
   through the WASM asset loader and forwards workspace action callbacks.
 - `src/lib/author-context/author-context.ts` has no product imports and is
@@ -110,6 +112,8 @@ PATH=/home/lkjsxc/.cargo/bin:$PATH pnpm rust-wasm:quiet
   query demand without making route policy decisions in `lkjstr-web`.
 - Rust row action buttons can open Thread and Author Context tabs from real
   event row ids and pubkeys.
+- Rust Author Context and User Timeline rows share the same Leptos event action
+  renderer while retaining surface-specific labels and test ids.
 - The shipped Svelte Author Context tab can mount and unmount the Rust body
   without leaking a provider lease, and row actions call the Svelte workspace
   callbacks.
