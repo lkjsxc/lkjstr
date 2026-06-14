@@ -15,6 +15,13 @@ pub struct ContentAttachment {
     pub aspect_ratio: Option<String>,
 }
 
+#[derive(Clone, Debug, Eq, PartialEq)]
+pub struct ContentUrlSpan {
+    pub url: String,
+    pub start: usize,
+    pub end: usize,
+}
+
 #[must_use]
 pub fn content_attachments(event: &NostrEvent) -> Vec<ContentAttachment> {
     dedupe(
@@ -31,6 +38,14 @@ pub fn content_attachments(event: &NostrEvent) -> Vec<ContentAttachment> {
 
 #[must_use]
 pub fn content_urls(content: &str) -> Vec<String> {
+    content_url_spans(content)
+        .into_iter()
+        .map(|item| item.url)
+        .collect()
+}
+
+#[must_use]
+pub fn content_url_spans(content: &str) -> Vec<ContentUrlSpan> {
     let bytes = content.as_bytes();
     let mut urls = Vec::new();
     let mut index = 0;
@@ -40,11 +55,12 @@ pub fn content_urls(content: &str) -> Vec<String> {
             index = start + 1;
             continue;
         }
-        let end = scan_url_end(bytes, start);
-        if let Some(url) = clean_https_url(&content[start..end]) {
-            urls.push(url);
+        let raw_end = scan_url_end(bytes, start);
+        if let Some(url) = clean_https_url(&content[start..raw_end]) {
+            let end = start + url.len();
+            urls.push(ContentUrlSpan { url, start, end });
         }
-        index = end;
+        index = raw_end;
     }
     urls
 }

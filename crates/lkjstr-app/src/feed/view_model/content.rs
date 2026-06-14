@@ -6,6 +6,7 @@ use lkjstr_protocol::{
     custom_emoji_token_text, strip_event_reference_tokens,
 };
 
+use super::link_rows::inject_link_rows;
 use super::media_rows::inject_media_rows;
 use super::reference_rows::inject_reference_rows;
 use super::{FeedEventContentRow, FeedEventCustomEmoji, FeedEventUnavailablePreview};
@@ -54,6 +55,7 @@ pub fn plan_feed_event_content(
     };
     let rows = plan_feed_visual_rows(&event, content_shape_hash, estimated_height_px, config);
     let rows = feed_event_content_rows_with_emojis(&rows, custom_emojis);
+    let rows = inject_link_rows(rows);
     let rows = inject_media_rows(
         rows,
         &event.event_id,

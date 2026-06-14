@@ -3,6 +3,8 @@
 mod build;
 mod content;
 #[cfg(test)]
+mod content_link_tests;
+#[cfg(test)]
 mod content_media_tests;
 #[cfg(test)]
 mod content_reference_tests;
@@ -11,6 +13,7 @@ mod content_row;
 mod content_tests;
 mod geometry;
 mod ids;
+mod link_rows;
 mod media_rows;
 mod reference_rows;
 mod types;
@@ -23,8 +26,9 @@ pub use content::{
     FeedEventContent, feed_event_content, feed_event_content_rows, plan_feed_event_content,
 };
 pub use content_row::{
-    FeedEventContentRow, FeedEventCustomEmoji, FeedEventMediaAttachment, FeedEventMediaKind,
-    FeedEventReferenceKind, FeedEventReferenceUnavailable, FeedEventUnavailablePreview,
+    FeedEventContentRow, FeedEventCustomEmoji, FeedEventLink, FeedEventMediaAttachment,
+    FeedEventMediaKind, FeedEventReferenceKind, FeedEventReferenceUnavailable,
+    FeedEventUnavailablePreview,
 };
 pub use geometry::feed_event_geometry_model_keys;
 pub use ids::{

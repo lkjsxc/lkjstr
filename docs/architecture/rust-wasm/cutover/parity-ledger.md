@@ -154,9 +154,10 @@ selection, unavailable target planning, chrome policy, validated custom emoji
 content rows with image presentation proof, real HTTPS media attachment row
 planning from content and `imeta` tags, unavailable reference rows with real
 referenced event identity, inline content event-reference token suppression
-before Rust row planning, indexed unavailable media/reference rows with UI
-attribute proof, notification repost event rows, and full FeedViewModel bounded
-summaries for repost, generic repost, reaction, and zap rows.
+before Rust row planning, safe HTTPS link rows while suppressing embedded media
+URLs inline, indexed unavailable media/reference rows with UI attribute proof,
+notification repost event rows, and full FeedViewModel bounded summaries for
+repost, generic repost, reaction, and zap rows.
 Repost-specific code may provide contextual chrome but must not fork target event
 rendering without a documented tested reason.
 

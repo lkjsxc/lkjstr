@@ -52,8 +52,8 @@ pub use client_tag::{
     client_tag_allowed_for_kind, client_tag_parts, parse_client_tag,
 };
 pub use content_media::{
-    ContentAttachment, ContentAttachmentKind, classify_url, content_attachments, content_urls,
-    embedded_media_attachments,
+    ContentAttachment, ContentAttachmentKind, ContentUrlSpan, classify_url, content_attachments,
+    content_url_spans, content_urls, embedded_media_attachments,
 };
 pub use content_tags::{content_derived_tags, emoji_tags, mention_tags};
 pub use crypto::{

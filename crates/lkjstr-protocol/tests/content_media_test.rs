@@ -1,6 +1,6 @@
 use lkjstr_protocol::{
-    ContentAttachment, ContentAttachmentKind, NostrEvent, classify_url, content_attachments,
-    content_urls, embedded_media_attachments,
+    ContentAttachment, ContentAttachmentKind, ContentUrlSpan, NostrEvent, classify_url,
+    content_attachments, content_url_spans, content_urls, embedded_media_attachments,
 };
 
 #[test]
@@ -83,6 +83,18 @@ fn extracts_clean_https_urls_from_content_text() {
     assert_eq!(
         classify_url("https://example.com/file.mov?download=1").kind,
         ContentAttachmentKind::Video
+    );
+}
+
+#[test]
+fn content_url_spans_keep_punctuation_outside_clean_url() {
+    assert_eq!(
+        content_url_spans("see https://example.com/page, then"),
+        vec![ContentUrlSpan {
+            url: "https://example.com/page".to_owned(),
+            start: 4,
+            end: 28,
+        }]
     );
 }
 

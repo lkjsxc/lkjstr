@@ -11,6 +11,7 @@ Pure shared feed row view-model data for Rust-owned feed surfaces.
 - `content_row.rs`: render-ready shared event content row data.
 - `geometry.rs`: event-row geometry model key selection.
 - `ids.rs`: stable row-id constructors.
+- `link_rows.rs`: safe HTTPS link row insertion.
 - `media_rows.rs`: real media attachment row insertion.
 - `mod.rs`: public view-model exports.
 - `reference_rows.rs`: real reference identity row insertion.

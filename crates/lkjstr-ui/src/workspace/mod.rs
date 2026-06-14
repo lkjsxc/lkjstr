@@ -16,6 +16,7 @@ mod custom_request_render;
 mod custom_request_snapshot;
 mod feed_event_actions;
 mod feed_event_content;
+mod feed_event_link;
 mod feed_event_media;
 mod feed_event_menu;
 mod feed_event_open;
