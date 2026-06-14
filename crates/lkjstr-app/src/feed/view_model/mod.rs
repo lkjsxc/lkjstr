@@ -4,6 +4,7 @@ mod build;
 mod content;
 #[cfg(test)]
 mod content_tests;
+mod geometry;
 mod ids;
 mod types;
 
@@ -15,6 +16,7 @@ pub use content::{
     FeedEventContent, FeedEventContentRow, feed_event_content, feed_event_content_rows,
     plan_feed_event_content,
 };
+pub use geometry::feed_event_geometry_model_keys;
 pub use ids::{
     feed_continuation_row_id, feed_diagnostic_row_id, feed_event_row_id, feed_footer_row_id,
     feed_notification_row_id, feed_profile_row_id, feed_unavailable_row_id,

@@ -153,14 +153,15 @@ Read next: [architecture/workspace/README.md](architecture/workspace/README.md),
   anchors, feed cursors, bounded row ids, and recoverable filter fields. They do
   not store full events, profiles, diagnostics, active workers, or unbounded
   arrays.
-- Feed surfaces share near-end sentinels, footer phase semantics, bounded viewport-fill,
-  older-load intent gating, and staged row shells on Home, Global, Profile, Thread, and Notifications.
+- Feed surfaces share near-end sentinels, footer phases, viewport-fill,
+  older-load gating, and staged shells on Home, Global, Profile, Thread, and Notifications.
 - The Rust Home tab requests protected SQLite account, relay, follow-list,
   cached event, and feed-coverage evidence, then renders cached rows, exact
-  cache-ready proof, bounded selected-relay reads, cleanup ownership, and
-  explicit startup storage failures. Rust Global requests selected-relay cache,
-  exact coverage, kind `1` rows, tab-cleanup suppression, footer/scroll older
-  requests, viewport-fill older requests, and compound older relay cursors. Rust Notifications
+  cache-ready proof, durable row-height model estimates for cached rows,
+  bounded selected-relay reads, cleanup ownership, and explicit startup storage
+  failures. Rust Global requests selected-relay cache, exact coverage, kind `1`
+  rows, tab-cleanup suppression, footer/scroll older requests, viewport-fill
+  older requests, and compound older relay cursors. Rust Notifications
   loads SQLite notification records/source events, exact `#p` coverage, bounded
   reads, footer/scroll older requests, and retained relay state. Rust Profile
   requests SQLite selected-relay or author-route cache, exact coverage, bounded
@@ -170,9 +171,8 @@ Read next: [architecture/workspace/README.md](architecture/workspace/README.md),
   parent, unavailable, continuation, older, and live rows. Converted Rust feed
   rows share nearby/copy menus plus full action/repost summary rows,
   User Timeline discovery-state proof, and `FeedEventRow` content/action rows.
-- Live inserts follow a top-anchor policy. A user at the top sees new resident
-  rows immediately; a user away from the top keeps the visible anchor and sees
-  newer-available state instead of being yanked upward.
+- Live inserts use top-anchor policy: top users see new rows immediately; away
+  users keep the visible anchor and see newer-available state.
 - Profile following counts/actions are explicit: unknown states never render zero;
   known counts open Rust Followees/User Timeline/Edit, copy npub, nprofile,
   follow-list, and relay-set JSON, and non-own Rust follow buttons publish local or
@@ -192,8 +192,8 @@ Read next: [architecture/workspace/README.md](architecture/workspace/README.md),
   windows. Svelte feed code is host glue that applies Rust decisions when the
   bridge is available, with session-only TypeScript estimates as the fallback
   only. Typed SQLite row-height observation/model rows and web adapters exist;
-  feed consumption and Stats projection remain open. Reservation, unload, and LOD rules
-  live in
+  Home consumes matching durable models for cached rows; other feed hosts and
+  Stats projection remain open. Reservation, unload, and LOD rules live in
   [architecture/data/feed-surface/height-reservation.md](architecture/data/feed-surface/height-reservation.md)
   and [architecture/data/feed-surface/lod-tree.md](architecture/data/feed-surface/lod-tree.md).
 

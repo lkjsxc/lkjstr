@@ -1,7 +1,6 @@
 use lkjstr_app::{
     FeedDiagnosticSeverity, FeedFragmentConfig, HomeFeedDiagnosticInput, HomeFeedSourceState,
-    HomeFeedView, HomeFeedViewInput, HomeFollowState, RowGeometryModel, build_home_feed_view,
-    empty_feed_window,
+    HomeFeedView, HomeFeedViewInput, HomeFollowState, build_home_feed_view, empty_feed_window,
 };
 use lkjstr_domain::{Account, seed_relay_sets};
 use lkjstr_relays::DemandVisibility;
@@ -11,6 +10,7 @@ use lkjstr_ui::HomeFeedProvider;
 use crate::{
     accounts_selector_host::resolve_active_selector,
     home_feed_cache::home_cache_state,
+    home_feed_geometry::home_feed_geometry_models,
     home_feed_relay::start_home_relay_read,
     home_feed_relay_input::{HomeRelayInputSeed, HomeRelayReadInput, home_relay_input},
     host_status::{browser_now_ms, problem_status},
@@ -22,6 +22,8 @@ use crate::{
 
 pub(crate) const PAGE_SIZE: u64 = 30;
 pub(crate) const WINDOW_MAX: usize = 180;
+const VIEW_WIDTH_PX: u16 = 680;
+const VIEW_FONT_SCALE: f32 = 1.0;
 
 #[derive(Clone)]
 pub(crate) struct HomeFeedHost {
@@ -94,6 +96,9 @@ async fn home_feed_model(host: &HomeFeedHost, owner: &str) -> HomeFeedLoad {
             HomeFeedSourceState::Pending,
         ),
     };
+    let geometry_models =
+        home_feed_geometry_models(host, &window, &mut diagnostics, VIEW_WIDTH_PX, VIEW_FONT_SCALE)
+            .await;
     let relay = home_relay_input(HomeRelayInputSeed {
         owner,
         active_pubkey: &active_pubkey,
@@ -117,9 +122,9 @@ async fn home_feed_model(host: &HomeFeedHost, owner: &str) -> HomeFeedLoad {
         now_sec,
         page_size: PAGE_SIZE,
         window,
-        width_px: 680,
-        font_scale: 1.0,
-        geometry_models: Vec::<RowGeometryModel>::new(),
+        width_px: VIEW_WIDTH_PX,
+        font_scale: VIEW_FONT_SCALE,
+        geometry_models,
         fragment_config: FeedFragmentConfig::default(),
         diagnostics,
     });

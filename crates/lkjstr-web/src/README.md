@@ -29,6 +29,7 @@ Source files expose Rust application behavior to the browser through
 - `global_feed_relay*.rs`: Global selected-relay browser read bridge and cursor probes.
 - `host_providers.rs`: Rust UI host provider assembly with conservative action-tab defaults.
 - `home_feed_cache.rs`: Home feed cache evidence composition.
+- `home_feed_geometry.rs`: Home feed durable geometry model loader.
 - `home_feed_host.rs`: SQLite-backed Home feed view-model provider.
 - `host_status.rs`: shared host status and browser time helpers.
 - `lib.rs`: public WASM exports.

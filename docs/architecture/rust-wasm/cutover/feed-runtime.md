@@ -192,9 +192,10 @@ ready. Footer rows must carry the command, disabled reason, or diagnostic id;
 
 `lkjstr-app` owns pure anchor capture, anchor reconciliation, row geometry
 estimates, visual fragments, height reservation, dematerialization, and LOD tree
-state. `lkjstr-web` may report DOM measurements. Durable row-height observation
-persistence remains partial: it must use typed `feed_row_height_observations`
-and `feed_row_height_models` SQLite repositories before feed cutover claims it.
+state. `lkjstr-web` may report DOM measurements and load persisted model rows.
+Durable row-height persistence is partial: typed `feed_row_height_*` repositories
+exist and Home consumes matching models for cached rows, while other feed
+surfaces, browser scroll proof, and Stats projection remain open.
 
 ## Unavailable-State Derivation
 

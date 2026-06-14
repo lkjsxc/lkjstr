@@ -3,16 +3,14 @@ use super::{
     FeedFooterState, FeedNotificationRow, FeedProfileRow, FeedStateRow, FeedUnavailableRow,
     FeedViewModel, FeedViewRow, feed_diagnostic_row_id, feed_event_row_id, feed_footer_row_id,
     feed_notification_row_id, feed_profile_row_id, feed_unavailable_row_id,
+    geometry::feed_event_display, geometry::feed_event_geometry_features_with_actions,
     plan_feed_event_content,
 };
 use crate::{
-    events::{EventDisplayContext, EventDisplayInput, plan_event_display},
+    events::EventDisplayContext,
     feed::{FeedWindowState, feed_window_empty_ready},
     feed_fragments::{FeedFragmentConfig, SemanticFeedEvent},
-    feed_geometry::{
-        MaterializationTier, RowGeometryModel, RowKind, estimate_row_geometry,
-        event_geometry_features,
-    },
+    feed_geometry::{RowGeometryModel, estimate_row_geometry},
 };
 use lkjstr_relays::ProgressiveEvent;
 #[derive(Clone, Debug)]
@@ -144,21 +142,12 @@ fn event_row(
     models: &[RowGeometryModel],
     config: &FeedFragmentConfig,
 ) -> super::FeedEventRow {
-    let display = plan_event_display(&EventDisplayInput {
-        event_id: Some(event.event.id.clone()),
-        event_kind: Some(event.event.kind),
-        content_shape_hash: None,
-        context,
-        target_available: true,
-    });
-    let features = event_geometry_features(
+    let display = feed_event_display(&event.event, context);
+    let features = feed_event_geometry_features_with_actions(
         &event.event,
-        RowKind::Event,
         width_px,
         font_scale,
-        false,
         display.chrome.show_actions,
-        MaterializationTier::Enriched,
     );
     let row_id = feed_event_row_id(&event.event.id);
     let geometry_estimate = estimate_row_geometry(row_id.clone(), &features, models);

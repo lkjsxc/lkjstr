@@ -29,6 +29,7 @@ mod home_feed_cache;
 mod home_feed_cache_events;
 mod home_feed_cache_filter;
 mod home_feed_coverage;
+mod home_feed_geometry;
 mod home_feed_host;
 mod home_feed_relay;
 mod home_feed_relay_input;
