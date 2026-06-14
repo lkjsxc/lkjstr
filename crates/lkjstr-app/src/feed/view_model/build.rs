@@ -191,6 +191,7 @@ fn event_row(
         geometry_estimate,
         display,
         has_content_warning: features.has_content_warning,
+        content_warning_reason: lkjstr_protocol::content_warning_reason(&event.event),
         custom_emoji_count: features.custom_emoji_count,
     }
 }

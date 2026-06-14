@@ -16,8 +16,18 @@ fn feed_view_model_builds_stable_event_rows_from_window_events() -> Result<(), S
             generation: 3,
             events: vec![
                 progressive(1, 10, "wss://relay-a.example"),
-                progressive(2, 20, "wss://relay-b.example"),
-                progressive(2, 20, "wss://relay-c.example"),
+                progressive_with_tags(
+                    2,
+                    20,
+                    "wss://relay-b.example",
+                    vec![vec!["content-warning".to_owned(), "spoiler".to_owned()]],
+                ),
+                progressive_with_tags(
+                    2,
+                    20,
+                    "wss://relay-c.example",
+                    vec![vec!["content-warning".to_owned(), "spoiler".to_owned()]],
+                ),
             ],
             flags: FeedWindowFlags::default(),
         },
@@ -32,6 +42,8 @@ fn feed_view_model_builds_stable_event_rows_from_window_events() -> Result<(), S
     assert_eq!(row.event_id, id(2));
     assert_eq!(row.relay_provenance.len(), 2);
     assert_eq!(row.display.geometry_context, "shared-event");
+    assert!(row.has_content_warning);
+    assert_eq!(row.content_warning_reason.as_deref(), Some("spoiler"));
     assert!(!row.visual_rows.is_empty());
     assert!(matches!(model.rows.last(), Some(FeedViewRow::Footer(_))));
     Ok(())
@@ -149,6 +161,15 @@ fn input(
 }
 
 fn progressive(value: u64, created_at: u64, relay: &str) -> ProgressiveEvent {
+    progressive_with_tags(value, created_at, relay, Vec::new())
+}
+
+fn progressive_with_tags(
+    value: u64,
+    created_at: u64,
+    relay: &str,
+    tags: Vec<Vec<String>>,
+) -> ProgressiveEvent {
     ProgressiveEvent {
         relays: vec![relay.to_owned()],
         sub_id: "sub-a".to_owned(),
@@ -157,7 +178,7 @@ fn progressive(value: u64, created_at: u64, relay: &str) -> ProgressiveEvent {
             pubkey: "a".repeat(64),
             created_at,
             kind: 1,
-            tags: Vec::new(),
+            tags,
             content: format!("event {value}"),
             sig: "b".repeat(128),
         },

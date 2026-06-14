@@ -6,7 +6,11 @@ pub(crate) fn event_row(row: FeedEventRow, trailing: impl IntoView) -> impl Into
     let row_id = row.row_id;
     let author = compact_pubkey(&row.author_pubkey);
     let created_at = row.created_at;
-    let content = event_content(row.has_content_warning, row.visual_rows);
+    let content = event_content(
+        row.has_content_warning,
+        row.content_warning_reason,
+        row.visual_rows,
+    );
     view! {
         <article class="lkjstr-feed-row event" data-row-id=row_id data-event-id=event_id>
             <small>{format!("{author} created {created_at}")}</small>
@@ -18,14 +22,21 @@ pub(crate) fn event_row(row: FeedEventRow, trailing: impl IntoView) -> impl Into
 
 #[derive(Debug, Eq, PartialEq)]
 enum EventContentRows {
-    Sensitive,
+    Sensitive(Option<String>),
     Text(Vec<String>),
 }
 
-fn event_content(has_content_warning: bool, rows: Vec<FeedVisualRow>) -> impl IntoView {
-    match event_content_rows(has_content_warning, rows) {
-        EventContentRows::Sensitive => view! {
-            <aside class="content-warning"><strong>"Sensitive content"</strong></aside>
+fn event_content(
+    has_content_warning: bool,
+    reason: Option<String>,
+    rows: Vec<FeedVisualRow>,
+) -> impl IntoView {
+    match event_content_rows(has_content_warning, reason, rows) {
+        EventContentRows::Sensitive(reason) => view! {
+            <aside class="content-warning">
+                <strong>"Sensitive content"</strong>
+                {warning_reason(reason)}
+            </aside>
         }
         .into_any(),
         EventContentRows::Text(rows) => view! {
@@ -35,11 +46,19 @@ fn event_content(has_content_warning: bool, rows: Vec<FeedVisualRow>) -> impl In
     }
 }
 
-fn event_content_rows(has_content_warning: bool, rows: Vec<FeedVisualRow>) -> EventContentRows {
+fn event_content_rows(
+    has_content_warning: bool,
+    reason: Option<String>,
+    rows: Vec<FeedVisualRow>,
+) -> EventContentRows {
     if has_content_warning {
-        return EventContentRows::Sensitive;
+        return EventContentRows::Sensitive(reason.filter(|item| !item.trim().is_empty()));
     }
     EventContentRows::Text(event_text_rows(rows))
+}
+
+fn warning_reason(reason: Option<String>) -> impl IntoView {
+    reason.map(|reason| view! { <span>{reason}</span> })
 }
 
 fn event_text_rows(rows: Vec<FeedVisualRow>) -> Vec<String> {
@@ -109,11 +128,19 @@ mod tests {
     #[test]
     fn content_warning_hides_event_text_rows() {
         assert_eq!(
-            event_content_rows(true, vec![FeedVisualRow::EventFull(full("secret"))]),
-            EventContentRows::Sensitive,
+            event_content_rows(
+                true,
+                Some("spoiler".to_owned()),
+                vec![FeedVisualRow::EventFull(full("secret"))],
+            ),
+            EventContentRows::Sensitive(Some("spoiler".to_owned())),
         );
         assert_eq!(
-            event_content_rows(false, vec![FeedVisualRow::EventFull(full("public"))]),
+            event_content_rows(
+                false,
+                Some("spoiler".to_owned()),
+                vec![FeedVisualRow::EventFull(full("public"))],
+            ),
             EventContentRows::Text(vec!["public".to_owned()]),
         );
     }

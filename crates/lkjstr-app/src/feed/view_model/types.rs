@@ -74,6 +74,7 @@ pub struct FeedEventRow {
     pub visual_rows: Vec<FeedVisualRow>,
     pub geometry_estimate: RowGeometryEstimate,
     pub has_content_warning: bool,
+    pub content_warning_reason: Option<String>,
     pub custom_emoji_count: u16,
 }
 
