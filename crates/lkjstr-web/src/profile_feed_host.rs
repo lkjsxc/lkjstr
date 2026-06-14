@@ -14,6 +14,7 @@ use crate::{
     profile_feed_header_relay_input::{
         ProfileHeaderRelayInputSeed, ProfileHeaderRelayReadInput, profile_header_relay_input,
     },
+    profile_feed_geometry::profile_feed_geometry_models,
     profile_feed_relay::start_profile_relay_read,
     profile_feed_relay_input::{ProfileRelayInputSeed, ProfileRelayReadInput, profile_relay_input},
     profile_feed_routes::{author_routes, diagnostics, query_selected_relays, relay_sets},
@@ -140,6 +141,8 @@ async fn profile_feed_model(
             ProfileFeedSourceState::Pending,
         ),
     };
+    let geometry_models =
+        profile_feed_geometry_models(host, &window, &mut diagnostics, 680, 1.0).await;
     let relay = profile_relay_input(ProfileRelayInputSeed {
         owner,
         profile_pubkey: &profile_pubkey,
@@ -183,7 +186,7 @@ async fn profile_feed_model(
         window,
         width_px: 680,
         font_scale: 1.0,
-        geometry_models: Vec::new(),
+        geometry_models,
         fragment_config: FeedFragmentConfig::default(),
         diagnostics,
     });

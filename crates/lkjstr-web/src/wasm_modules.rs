@@ -65,6 +65,7 @@ mod profile_follow_event;
 mod profile_follow_host;
 mod profile_follow_mutation;
 mod profile_follow_publish;
+mod profile_feed_geometry;
 mod profile_feed_header;
 mod profile_feed_header_relay;
 mod profile_feed_header_relay_input;

@@ -47,6 +47,7 @@ Source files expose Rust application behavior to the browser through
 - `profile_follow_host.rs`: SQLite-backed Profile follow state and toggle provider.
 - `profile_follow_publish.rs`: Profile follow relay publish adapter.
 - `profile_feed_status.rs`: shared Profile feed diagnostic and storage status helpers.
+- `profile_feed_geometry.rs`: Profile feed durable geometry model loader.
 - `protocol_bridge.rs`: protocol bridge operations.
 - `relay_read_handle.rs`: browser-local relay read cancellation slots for leased UI requests.
 - `relay_score/`: serializable relay read score bridge.
