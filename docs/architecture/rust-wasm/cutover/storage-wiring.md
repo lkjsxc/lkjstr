@@ -258,9 +258,9 @@ estimates remain open.
 - Current TypeScript path: `feed-surface/scan-model-repository.ts` and
   `sqlite-opfs/feed-cache-*`.
 - Rust storage and web path: `lkjstr-storage/src/optimizer/**`,
-  `lkjstr-storage/src/commands/optimizer.rs`, and
-  `lkjstr-web/src/scan_model/**`; add durable row-height rows before geometry
-  cutover.
+  `lkjstr-storage/src/commands/optimizer.rs`,
+  `lkjstr-web/src/scan_model/**`, and typed `feed_row_height_*` rows before
+  geometry cutover.
 - Worker message: `query` and `batch`.
 - Row codec and proof: optimizer scan-model command metadata,
   `commands_optimizer_test.rs`, optimizer unit tests, and scan-model repository

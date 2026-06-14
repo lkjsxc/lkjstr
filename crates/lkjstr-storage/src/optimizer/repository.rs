@@ -11,6 +11,8 @@ pub const OPTIMIZER_TABLES: &[&str] = &[
     "feed_scan_density_models",
     "feed_scan_hints",
     "feed_scan_decision_traces",
+    "feed_row_height_observations",
+    "feed_row_height_models",
     "route_evidence_scores",
 ];
 
@@ -37,6 +39,16 @@ pub const OPTIMIZER_REPOSITORY_STATEMENTS: &[OptimizerRepositoryStatement] = &[
         "feed_scan_decision_traces.insert",
         "feed_scan_decision_traces",
     ),
+    statement(
+        "feed_row_height_observations.insert",
+        "feed_row_height_observations",
+    ),
+    statement(
+        "feed_row_height_observations.delete_before",
+        "feed_row_height_observations",
+    ),
+    statement("feed_row_height_models.select", "feed_row_height_models"),
+    statement("feed_row_height_models.upsert", "feed_row_height_models"),
     statement("route_evidence_scores.upsert", "route_evidence_scores"),
     statement("route_evidence_scores.by_author", "route_evidence_scores"),
 ];

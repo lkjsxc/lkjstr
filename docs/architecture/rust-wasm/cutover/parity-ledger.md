@@ -82,9 +82,10 @@ Feed-like surfaces cannot be marked `implemented` until this shared proof exists
 | Deletion-ledger update      | `src/lib/feed-surface` row records files, tests, and no-import proof   |
 
 Current feed-surface evidence: Rust planner, estimator, anchor reducer,
-height-reservation reducer, row view model, first Home row rendering, and WASM
-bridge exist with focused tests. Rust Home, Global, Notifications, and Profile
-tabs can load host-owned SQLite cache evidence into shared feed rows, keep exact
+height-reservation reducer, row view model, first Home row rendering, WASM
+bridge, and typed row-height observation/model SQLite rows exist with focused
+tests. Rust Home, Global, Notifications, and Profile tabs can load host-owned
+SQLite cache evidence into shared feed rows, keep exact
 coverage proof explicit, start bounded relay reads where converted, and suppress
 late completions after cleanup. Global also proves footer/scroll and
 viewport-fill older requests plus compound older relay cursor filtering.
@@ -134,9 +135,10 @@ Broader Rust feed runtime tests prove owner release removes live demand, closes
 wire traffic, and keeps bounded
 windows for Home, Global, Profile, and Notifications. The shipped Svelte feed
 uses temporary matching host glue for content-aware estimates,
-unload-preserved active reservations, and long-content fragments. SQLite
-observation persistence, deeper Stats projection, remaining feed host wiring,
-deletion proof, and broader browser scroll regression proof remain open.
+unload-preserved active reservations, and long-content fragments. Feed
+consumption of durable geometry models, deeper Stats projection, remaining feed
+host wiring, deletion proof, and broader browser scroll regression proof remain
+open.
 
 ## Event Display Proof
 

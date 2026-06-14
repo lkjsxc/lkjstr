@@ -23,6 +23,7 @@ browser storage manifest.
 - `diagnostics_sqlite_rows_test.rs`: diagnostics row codecs.
 - `event_cache_sqlite_rows_test.rs`: event-cache row codecs.
 - `feed_cache_sqlite_rows_test.rs`: feed-evidence row codecs.
+- `geometry_rows_test.rs`: feed row-height geometry row codecs.
 - `ledger_test.rs`: cache resource ownership manifest behavior.
 - `manifest_docs_test.rs`: docs table metadata compared with Rust manifest.
 - `manifest_test.rs`: table manifest names, retention, and grouping.

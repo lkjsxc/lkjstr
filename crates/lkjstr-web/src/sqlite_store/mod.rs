@@ -10,6 +10,7 @@ mod event_params;
 mod event_put;
 mod events;
 mod feed_cache;
+mod feed_geometry;
 mod feed_params;
 mod inventory;
 mod jobs;
@@ -47,6 +48,10 @@ pub use events::{
 pub use feed_cache::{
     sqlite_feed_coverage_for_feed, sqlite_feed_coverage_put, sqlite_feed_cursor_get,
     sqlite_feed_cursor_put, sqlite_feed_scan_hint_put, sqlite_feed_scan_hints_for_feed,
+};
+pub use feed_geometry::{
+    sqlite_feed_row_height_model_select, sqlite_feed_row_height_model_upsert,
+    sqlite_feed_row_height_observation_insert, sqlite_feed_row_height_observations_prune_before,
 };
 pub use inventory::sqlite_storage_stats_snapshot;
 pub use jobs::{sqlite_job_get, sqlite_job_put, sqlite_jobs_recent};

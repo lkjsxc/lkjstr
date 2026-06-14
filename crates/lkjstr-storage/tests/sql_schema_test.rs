@@ -11,7 +11,8 @@ fn sqlite_schema_contains_target_tables() {
         "schema_meta", "workspaces", "tab_states", "settings", "accounts", "local_account_secrets",
         "relay_sets", "relay_route_blocks", "tweet_drafts", "events", "event_tags", "event_relays",
         "notifications", "feed_cursors", "feed_coverage", "feed_scan_hints", "jobs", "event_search_tokens",
-        "feed_scan_observations", "feed_scan_density_models", "feed_scan_decision_traces", "relay_information",
+        "feed_scan_observations", "feed_scan_density_models", "feed_scan_decision_traces",
+        "feed_row_height_observations", "feed_row_height_models", "relay_information",
         "relay_diagnostic_summaries", "relay_read_observations", "relay_read_scores", "relay_list_suggestions",
         "author_relay_routes", "route_evidence_scores", "app_log", "cache_ledger", "cache_meta",
     ]);
@@ -25,6 +26,7 @@ fn sqlite_schema_contains_target_indexes() {
         "event_tags_lookup", "event_relays_by_relay", "event_search_tokens_lookup",
         "event_search_tokens_event", "notifications_by_owner_time", "feed_coverage_lookup", "feed_scan_hints_lookup",
         "feed_scan_observations_recent", "feed_scan_density_models_context",
+        "feed_row_height_observations_recent",
         "relay_read_observations_recent", "relay_read_scores_recent",
         "route_evidence_scores_author", "jobs_by_state_updated", "cache_ledger_prune", "app_log_by_time",
     ]);
@@ -100,6 +102,10 @@ fn sqlite_schema_maps_ledger_resources() {
     assert!(matches!(
         sqlite_schema_table("feed_scan_density_models"),
         Some(table) if table.ledger_resource_kind == Some(CacheResourceKind::ScanDensityModel)
+    ));
+    assert!(matches!(
+        sqlite_schema_table("feed_row_height_models"),
+        Some(table) if table.ledger_resource_kind.is_none()
     ));
     assert!(matches!(
         sqlite_schema_table("route_evidence_scores"),

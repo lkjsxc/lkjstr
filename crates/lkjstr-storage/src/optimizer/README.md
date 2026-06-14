@@ -10,6 +10,7 @@ performance inputs; they are never coverage proof.
 
 - `relay_observation_row.rs`: per-read observation row codec.
 - `relay_score_row.rs`: aggregate relay read score row codec.
+- `geometry_row.rs`: feed row-height observation and model row codecs.
 - `scan_hint_row.rs`: expanded scan hint row codec and key guard.
 - `route_evidence_row.rs`: measured route evidence row codec.
 - `repository.rs`: repository statement identifiers and table list.

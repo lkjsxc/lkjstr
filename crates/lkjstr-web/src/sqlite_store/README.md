@@ -12,6 +12,7 @@ This directory contains Rust repository calls over the SQLite storage worker.
 - `event_params.rs`: cached-event SQL parameter helpers.
 - `event_put.rs`: cached-event write batch construction.
 - `events.rs`: cached-event query repository calls.
+- `feed_geometry.rs`: feed row-height observation and model repository calls.
 - `inventory.rs`: SQLite table counts, health, and pressure rows for Rust Stats.
 - `mod.rs`: public exports.
 - `params.rs`: SQL parameter helpers.

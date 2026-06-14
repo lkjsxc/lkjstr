@@ -127,7 +127,8 @@ socket ids are not geometry keys.
 6. Preserve the previous reservation when the row unloads or dematerializes.
 7. Recompute the reservation when an allowed remeasurement trigger occurs.
 8. If the row is above the viewport, compensate scroll by the height delta.
-9. Persist bounded observations through the SQLite worker when wired.
+9. Persist bounded observations through typed `feed_row_height_observations`
+   and `feed_row_height_models` SQLite worker statements when wired.
 10. Expose aggregate reservation counts in Stats.
 
 ## Media And Previews

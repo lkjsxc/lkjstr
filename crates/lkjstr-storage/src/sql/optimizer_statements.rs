@@ -23,6 +23,26 @@ pub const OPTIMIZER_STATEMENTS: &[SqliteStatementSpec] = &[
         "feed_scan_decision_traces",
         "INSERT INTO feed_scan_decision_traces (trace_id, model_key, semantic_feed_key, route_group_key, relay_url, semantic_filter_key, direction, route_fingerprint, source_scope, confidence, target_count, effective_limit, density_events_per_second, previous_span_seconds, proposed_span_seconds, cap_reason, diagnostics_json, created_at_ms) VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11, ?12, ?13, ?14, ?15, ?16, ?17, ?18);",
     ),
+    write(
+        "feed_row_height_observations.insert",
+        "feed_row_height_observations",
+        "INSERT INTO feed_row_height_observations (observation_id, row_key, bucket_key, row_kind, event_kind, width_bucket, font_scale_bucket, materialization_tier, content_shape_hash, measured_height_px, observed_width_px, observed_at_ms, created_at_ms) VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11, ?12, ?13);",
+    ),
+    write(
+        "feed_row_height_observations.delete_before",
+        "feed_row_height_observations",
+        "DELETE FROM feed_row_height_observations WHERE observed_at_ms < ?1;",
+    ),
+    read(
+        "feed_row_height_models.select",
+        "feed_row_height_models",
+        "SELECT bucket_key, average_height_px, sample_count, updated_at_ms FROM feed_row_height_models WHERE bucket_key = ?1;",
+    ),
+    write(
+        "feed_row_height_models.upsert",
+        "feed_row_height_models",
+        "INSERT INTO feed_row_height_models (bucket_key, average_height_px, sample_count, updated_at_ms) VALUES (?1, ?2, ?3, ?4) ON CONFLICT(bucket_key) DO UPDATE SET average_height_px = excluded.average_height_px, sample_count = excluded.sample_count, updated_at_ms = excluded.updated_at_ms;",
+    ),
 ];
 
 const fn read(id: &'static str, table: &'static str, sql: &'static str) -> SqliteStatementSpec {

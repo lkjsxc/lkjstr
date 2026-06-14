@@ -11,8 +11,8 @@ cutover rows and tests pass.
 The current storage slice preserves implemented active-account selector,
 pressure-row, protected, event-cache, feed-evidence, diagnostics,
 notifications, jobs, app-log, inventory, optimizer, retention planning,
-retention delete dispatch, local Search query adapters, and batch-capable
-command-shape contracts. Repair physical probes are implemented; Rust product
+row-height observation/model rows, retention delete dispatch, local Search query
+adapters, and batch-capable command-shape contracts. Repair physical probes are implemented; Rust product
 maintenance now must consume the storage-owned readiness signal before
 retention or repair acts. It must not delete TypeScript storage repositories
 until Rust covers every live table family and no-import proof is recorded.

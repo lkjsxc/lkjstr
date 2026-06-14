@@ -120,7 +120,7 @@ Read next: [architecture/data/README.md](architecture/data/README.md),
   byte-safe cleanup evidence.
 - Rust storage command metadata covers active selectors, pressure, protected
   rows, cache/feed evidence, diagnostics, jobs, app log, inventory, optimizer,
-  retention, repair scan/backfill/report rows, Search token/tag rows,
+  row-height observation/model rows, retention, repair, Search token/tag rows,
   storage/web local-query adapters, and worker-backed Rust Search provider,
   tab snapshot restore, cached older-page proof, and relay older-page proof.
   Broader product parity and deletion proof remain open.
@@ -191,8 +191,8 @@ Read next: [architecture/workspace/README.md](architecture/workspace/README.md),
   shared owner-release proof that closes wire traffic while retaining bounded
   windows. Svelte feed code is host glue that applies Rust decisions when the
   bridge is available, with session-only TypeScript estimates as the fallback
-  only. SQLite-backed row-height persistence remains incomplete and must use typed
-  worker repositories when added. Reservation, unload-stability, and LOD rules
+  only. Typed SQLite row-height observation/model rows and web adapters exist;
+  feed consumption and Stats projection remain open. Reservation, unload, and LOD rules
   live in
   [architecture/data/feed-surface/height-reservation.md](architecture/data/feed-surface/height-reservation.md)
   and [architecture/data/feed-surface/lod-tree.md](architecture/data/feed-surface/lod-tree.md).

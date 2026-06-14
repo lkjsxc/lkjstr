@@ -1,5 +1,6 @@
 #![doc = "Optimizer storage row codecs and retention helpers."]
 
+mod geometry_row;
 mod relay_observation_row;
 mod relay_score_row;
 mod repository;
@@ -12,6 +13,12 @@ mod scan_model_key;
 mod scan_model_repository;
 mod scan_observation_row;
 
+pub use geometry_row::{
+    FeedRowHeightModelRecord, FeedRowHeightObservationRecord, SqliteFeedRowHeightModelRow,
+    SqliteFeedRowHeightObservationRow, feed_row_height_model_from_sqlite_row,
+    feed_row_height_observation_from_sqlite_row, sqlite_feed_row_height_model_row,
+    sqlite_feed_row_height_observation_row,
+};
 pub use relay_observation_row::{
     RelayReadObservationRecord, SqliteRelayReadObservationRow,
     relay_read_observation_from_sqlite_row, sqlite_relay_read_observation_row,

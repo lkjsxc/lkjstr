@@ -108,4 +108,33 @@ pub const SQLITE_OPTIMIZER_TABLES: &[SqliteTableSpec] = &[
   created_at_ms INTEGER NOT NULL
 ) STRICT;"#
     ),
+    optimizer!(
+        "feed_row_height_observations",
+        None,
+        r#"CREATE TABLE IF NOT EXISTS feed_row_height_observations (
+  observation_id TEXT PRIMARY KEY,
+  row_key TEXT NOT NULL,
+  bucket_key TEXT NOT NULL,
+  row_kind TEXT NOT NULL,
+  event_kind INTEGER,
+  width_bucket INTEGER NOT NULL,
+  font_scale_bucket INTEGER NOT NULL,
+  materialization_tier TEXT NOT NULL,
+  content_shape_hash TEXT NOT NULL,
+  measured_height_px INTEGER NOT NULL,
+  observed_width_px INTEGER NOT NULL,
+  observed_at_ms INTEGER NOT NULL,
+  created_at_ms INTEGER NOT NULL
+) STRICT;"#
+    ),
+    optimizer!(
+        "feed_row_height_models",
+        None,
+        r#"CREATE TABLE IF NOT EXISTS feed_row_height_models (
+  bucket_key TEXT PRIMARY KEY,
+  average_height_px INTEGER NOT NULL,
+  sample_count INTEGER NOT NULL,
+  updated_at_ms INTEGER NOT NULL
+) STRICT;"#
+    ),
 ];

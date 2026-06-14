@@ -10,6 +10,10 @@ fn commands_optimizer_specs_are_present() -> Result<(), String> {
         "optimizer.feed-scan-density-model.select-context",
         "optimizer.feed-scan-density-model.upsert",
         "optimizer.feed-scan-decision-trace.insert",
+        "optimizer.feed-row-height-observation.insert",
+        "optimizer.feed-row-height-observation.prune-before",
+        "optimizer.feed-row-height-model.select",
+        "optimizer.feed-row-height-model.upsert",
     ] {
         let command = command(id)?;
         assert_eq!(command.family, StorageCommandFamily::Optimizer);
@@ -60,6 +64,40 @@ fn commands_optimizer_reads_and_writes_have_stable_shapes() -> Result<(), String
         &["feed_scan_decision_traces.insert"],
         &["feed_scan_decision_traces"],
         &["sqlite_scan_decision_trace_row"],
+    );
+
+    let observation = command("optimizer.feed-row-height-observation.insert")?;
+    assert_optimizer_write(
+        observation,
+        &["feed_row_height_observations.insert"],
+        &["feed_row_height_observations"],
+        &["sqlite_feed_row_height_observation_row"],
+    );
+
+    let prune = command("optimizer.feed-row-height-observation.prune-before")?;
+    assert_optimizer_write(
+        prune,
+        &["feed_row_height_observations.delete_before"],
+        &["feed_row_height_observations"],
+        &["sqlite_feed_row_height_observation_row"],
+    );
+
+    let model = command("optimizer.feed-row-height-model.select")?;
+    assert_eq!(model.operation, StorageOperation::Read);
+    assert_eq!(model.statements, &["feed_row_height_models.select"]);
+    assert_eq!(model.tables, &["feed_row_height_models"]);
+    assert_eq!(model.row_codecs, &["feed_row_height_model_from_sqlite_row"]);
+    assert_eq!(
+        model.problem_kinds,
+        &[StorageProblemKind::OptimizerRecordDecodeFailed]
+    );
+
+    let upsert = command("optimizer.feed-row-height-model.upsert")?;
+    assert_optimizer_write(
+        upsert,
+        &["feed_row_height_models.upsert"],
+        &["feed_row_height_models"],
+        &["sqlite_feed_row_height_model_row"],
     );
     Ok(())
 }

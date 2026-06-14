@@ -73,6 +73,16 @@ fn optimizer_sqlite_statements_are_owned_by_documented_tables() {
             .iter()
             .any(|item| item.id == "feed_scan_density_models.upsert")
     );
+    assert!(
+        statements
+            .iter()
+            .any(|item| item.id == "feed_row_height_models.upsert")
+    );
+    assert!(
+        statements
+            .iter()
+            .any(|item| item.id == "feed_row_height_observations.delete_before")
+    );
     for statement in statements {
         assert!(sqlite_schema_table(statement.table_name).is_some());
     }
