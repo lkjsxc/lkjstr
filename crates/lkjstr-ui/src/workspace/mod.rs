@@ -86,7 +86,11 @@ mod tweet_provider;
 mod upload_settings;
 mod upload_settings_provider;
 mod user_timeline;
+mod user_timeline_actions;
+#[cfg(target_arch = "wasm32")]
+mod user_timeline_island;
 mod user_timeline_provider;
+mod user_timeline_row;
 mod welcome;
 
 pub use accounts_provider::{AccountsCommand, AccountsComplete, AccountsProvider, AccountsResult};
@@ -143,4 +147,6 @@ pub use upload_settings_provider::{
     UploadBoolCommand, UploadDiscoverCommand, UploadProviderCommand, UploadSettingsCommand,
     UploadSettingsComplete, UploadSettingsProvider, UploadSettingsResult, UploadTextCommand,
 };
+#[cfg(target_arch = "wasm32")]
+pub use user_timeline_island::{UserTimelineIslandActions, mount_user_timeline_island};
 pub use user_timeline_provider::{UserTimelineComplete, UserTimelineProvider, UserTimelineRequest};

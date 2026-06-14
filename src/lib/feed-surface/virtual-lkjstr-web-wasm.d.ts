@@ -7,6 +7,10 @@ declare module 'virtual:lkjstr-web-wasm' {
     readonly unmount: () => void;
   };
 
+  export type UserTimelineIslandHandle = {
+    readonly unmount: () => void;
+  };
+
   export type LkjstrWebWasmModule = {
     readonly mount_author_context_tab?: (
       parent: HTMLElement,
@@ -25,6 +29,14 @@ declare module 'virtual:lkjstr-web-wasm' {
       openUserTimeline: (pubkey: string) => void,
       copyNpub: (pubkey: string) => void,
     ) => FolloweesIslandHandle;
+    readonly mount_user_timeline_tab?: (
+      parent: HTMLElement,
+      tabId: string,
+      pubkey: string,
+      openProfile: (pubkey: string) => void,
+      openThread: (eventId: string) => void,
+      openAuthorContext: (eventId: string, pubkey: string) => void,
+    ) => UserTimelineIslandHandle;
   } & Record<string, unknown>;
 
   export function loadLkjstrWebWasm(): Promise<LkjstrWebWasmModule>;

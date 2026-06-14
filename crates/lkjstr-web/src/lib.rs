@@ -55,6 +55,8 @@ pub use mount_api::{
     mount_rust_workspace_shell_with_profile_feed_followees_and_user_timeline_provider,
     mount_rust_workspace_shell_with_profile_feed_provider, mount_rust_workspace_shell_with_startup,
 };
+#[cfg(target_arch = "wasm32")]
+pub use user_timeline_island::{UserTimelineIslandHandle, mount_user_timeline_tab};
 
 use wasm_bindgen::prelude::{JsValue, wasm_bindgen};
 

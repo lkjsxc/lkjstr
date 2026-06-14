@@ -7,5 +7,5 @@ real target-authored events.
 
 ## Table of Contents
 
-- `UserTimelineTab.svelte`: relay-backed target follow-graph timeline with a
-  truthful target-posts-only degraded mode.
+- `UserTimelineTab.svelte`: lifecycle wrapper that mounts the Rust/WASM User
+  Timeline body and forwards profile, thread, and Author Context actions.

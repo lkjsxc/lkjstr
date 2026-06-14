@@ -1,193 +1,97 @@
 <script lang="ts">
   import { onDestroy } from 'svelte';
-  import EventTreeList from '$lib/components/events/EventTreeList.svelte';
-  import FeedIdentityHeader from '$lib/components/identity/FeedIdentityHeader.svelte';
-  import type { ProfileSummary } from '$lib/identity/identity';
-  import type { RelaySet } from '$lib/relays/relay-store';
-  import { sharedSubscriptionOrchestrator } from '$lib/relays/orchestration/orchestrator';
-  import { timelineRelays } from '$lib/timeline/timeline-subscription';
-  import { loadTimelineProfiles } from '$lib/timeline/timeline-profiles';
-  import { mergeUserTimelineItems } from '$lib/user-timeline/user-timeline-cache';
-  import { readOlderUserTimeline } from '$lib/user-timeline/user-timeline-loaders';
-  import {
-    runUserTimelineRuntime,
-    type UserTimelineRuntimeInput,
-  } from '$lib/user-timeline/user-timeline-runtime';
-  import type { UserTimelineSnapshot } from '$lib/user-timeline/user-timeline-state';
-  import type { TimelineItem } from '$lib/timeline/timeline-store';
-  import type { EventTreeListLeadingRow } from '$lib/components/events/event-tree-list-helpers';
+  import { loadLkjstrWebWasm } from 'virtual:lkjstr-web-wasm';
 
   type Props = {
     tabId: string;
     pubkey: string;
     visible?: boolean;
     activeAccountPubkey?: string | null;
-    relaySets: readonly RelaySet[];
+    relaySets?: readonly unknown[];
     openProfile: (pubkey: string) => void;
     openThread: (eventId: string) => void;
     openAuthorContext?: (eventId: string, pubkey: string) => void;
   };
 
+  type UserTimelineIslandHandle = {
+    unmount: () => void;
+  };
+
+  type UserTimelineModule = {
+    mount_user_timeline_tab?: (
+      parent: HTMLElement,
+      tabId: string,
+      pubkey: string,
+      openProfile: (pubkey: string) => void,
+      openThread: (eventId: string) => void,
+      openAuthorContext: (eventId: string, pubkey: string) => void,
+    ) => UserTimelineIslandHandle;
+  };
+
   let props: Props = $props();
-  let items = $state<TimelineItem[]>([]);
-  let profiles = $state<Record<string, ProfileSummary>>({});
-  let loading = $state(true);
-  let loadingOlder = $state(false);
-  let hasOlder = $state(false);
-  let notice = $state('Discovering public follow graph...');
-  let error = $state<string | null>(null);
-  let relayStatusText = $state('');
-  let authors = $state<string[]>([]);
+  let host = $state<HTMLElement>();
+  let error = $state('');
+  let activeKey = '';
   let generation = 0;
-  let startedKey = '';
-  let hydrateRun = 0;
-  let controller: AbortController | undefined;
-  const subscriptions = sharedSubscriptionOrchestrator;
-  let relays = $derived(timelineRelays(props.relaySets));
-  let runtimeKey = $derived(`${props.pubkey}|${relays.join('\u0000')}`);
-  let leadingRows = $derived<EventTreeListLeadingRow[]>([
-    { key: 'user-timeline-header', nearStart: true },
-    ...(notice ? [{ key: 'user-timeline-notice' }] : []),
-    ...(error ? [{ key: 'user-timeline-error' }] : []),
-  ]);
+  let handle: UserTimelineIslandHandle | undefined;
 
   $effect(() => {
-    if (!props.visible) return;
-    const key = runtimeKey;
-    if (!key || key === startedKey) return;
-    startedKey = key;
-    void start(++generation);
-  });
-
-  $effect(() => {
-    const pubkey = props.pubkey;
-    if (!pubkey) return;
-    void relays;
-    void loadTimelineProfiles(
-      [pubkey],
-      relays,
-      `${props.tabId}:user-timeline-target`,
-    ).then((loaded) => {
-      profiles = { ...profiles, ...loaded };
-    });
+    const key = props.visible ? `${props.tabId}:${props.pubkey}` : '';
+    if (!key) {
+      releaseIsland();
+      activeKey = '';
+      return;
+    }
+    if (key === activeKey) return;
+    void mountIsland(key);
   });
 
   onDestroy(() => {
-    generation++;
-    controller?.abort();
-    subscriptions.releaseOwner(props.tabId);
+    generation += 1;
+    releaseIsland();
   });
 
-  async function start(run: number): Promise<void> {
-    controller?.abort();
-    controller = new AbortController();
-    const input: UserTimelineRuntimeInput = {
-      targetPubkey: props.pubkey,
-      relays,
-      owner: props.tabId,
-      subscriptions,
-      signal: controller.signal,
-      onSnapshot: (snapshot) => applySnapshot(run, snapshot),
-    };
-    await runUserTimelineRuntime(input);
-  }
-
-  function applySnapshot(run: number, snapshot: UserTimelineSnapshot): void {
-    if (run !== generation) return;
-    items = [...snapshot.items];
-    authors = [...snapshot.authors];
-    loading = snapshot.loading;
-    loadingOlder = snapshot.loadingOlder;
-    hasOlder = snapshot.hasOlder;
-    notice = snapshot.notice;
-    relayStatusText = snapshot.relayStatusText;
-    error = snapshot.error;
-    void hydrateVisibleAuthors();
-  }
-
-  async function hydrateVisibleAuthors(): Promise<void> {
-    const visible = items.map((item) => item.event.pubkey);
-    const pubkeys = [...new Set([props.pubkey, ...visible, ...authors])]
-      .filter((pubkey) => !profiles[pubkey])
-      .slice(0, 80);
-    if (pubkeys.length === 0) return;
-    const run = ++hydrateRun;
-    const loaded = await loadTimelineProfiles(
-      pubkeys,
-      relays,
-      `${props.tabId}:user-timeline-profiles`,
-    );
-    if (run === hydrateRun) profiles = { ...profiles, ...loaded };
-  }
-
-  async function loadOlder(): Promise<void> {
-    if (loadingOlder || !hasOlder || !controller) return;
-    loadingOlder = true;
+  async function mountIsland(key: string): Promise<void> {
+    const parent = host;
+    if (!parent) return;
+    generation += 1;
+    const current = generation;
+    releaseIsland();
+    error = '';
     try {
-      const page = await readOlderUserTimeline({
-        items,
-        authors,
-        relays,
-        owner: props.tabId,
-        subscriptions,
-        signal: controller.signal,
-      });
-      if (!page) return;
-      items = mergeUserTimelineItems({
-        current: items,
-        incoming: page.items,
-        limit: items.length + page.items.length,
-      });
-      hasOlder = page.hasOlder;
-      void hydrateVisibleAuthors();
-    } finally {
-      loadingOlder = false;
+      const module = (await loadLkjstrWebWasm()) as UserTimelineModule;
+      const mount = module.mount_user_timeline_tab;
+      if (!mount) throw new Error('Rust User Timeline bridge unavailable.');
+      const next = mount(
+        parent,
+        props.tabId,
+        props.pubkey,
+        props.openProfile,
+        props.openThread,
+        props.openAuthorContext ?? (() => {}),
+      );
+      if (generation !== current) {
+        next.unmount();
+        return;
+      }
+      handle = next;
+      activeKey = key;
+    } catch (err) {
+      if (generation === current) {
+        error = err instanceof Error ? err.message : 'User Timeline failed.';
+      }
     }
+  }
+
+  function releaseIsland(): void {
+    handle?.unmount();
+    handle = undefined;
   }
 </script>
 
-<section class="user-timeline-tab feed-tab" aria-label="User Timeline">
-  <EventTreeList
-    tabId={props.tabId}
-    pagingEnabled={props.visible !== false}
-    {items}
-    {profiles}
-    relaySets={props.relaySets}
-    activeAccountPubkey={props.activeAccountPubkey}
-    {loading}
-    {relayStatusText}
-    emptyText="No public posts are available for this timeline."
-    {loadingOlder}
-    loadingNewer={false}
-    {hasOlder}
-    hasNewer={false}
-    historyExhaustion={hasOlder ? 'unknown' : 'proven'}
-    olderLoadMode="auto-near-end"
-    olderPrefetchReady={items.length > 0}
-    onNearEnd={() => void loadOlder()}
-    {leadingRows}
-    openProfile={props.openProfile}
-    openThread={props.openThread}
-    openAuthorContext={props.openAuthorContext}
-  >
-    {#snippet leadingRow(row)}
-      {#if row.key === 'user-timeline-header'}
-        <FeedIdentityHeader
-          pubkey={props.pubkey}
-          profile={profiles[props.pubkey]}
-          label="User timeline"
-          openProfile={props.openProfile}
-        />
-      {:else if row.key === 'user-timeline-notice'}
-        <p class="timeline-tab__guidance">{notice}</p>
-      {:else if row.key === 'user-timeline-error'}
-        <div role="alert">
-          <p>{error}</p>
-          <button type="button" onclick={() => void start(++generation)}>
-            Retry
-          </button>
-        </div>
-      {/if}
-    {/snippet}
-  </EventTreeList>
+<section class="hybrid-tab feed-tab user-timeline-tab" aria-label="User Timeline">
+  <div class="hybrid-tab__toolbar">
+    {#if error}<p role="alert">{error}</p>{/if}
+  </div>
+  <div bind:this={host}></div>
 </section>

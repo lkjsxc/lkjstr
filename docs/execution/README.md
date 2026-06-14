@@ -46,9 +46,9 @@ no-import proof allow removal.
 - Completed enabling slice: first Rust Profile feed rendering, provider wiring,
   sparse-history empty proof, cached header rendering, relay header refresh,
   Followees/User Timeline/Profile Edit actions, and first Rust Followees body
-  proof plus default cached Followees host proof, first Rust User Timeline
-  body proof, and default cached User Timeline host proof. Preserve the tests;
-  parity and deletion remain blocked.
+  proof plus default cached and Svelte-hosted island Followees proof, first
+  Rust User Timeline body proof, default cached User Timeline host proof, and
+  Svelte-hosted island proof. Preserve the tests; parity and deletion remain blocked.
 - Completed enabling slice: first Rust Thread cached root/reply provider wiring
   plus bounded bootstrap relay reads, explicit older page reads,
   scroll-triggered and viewport-fill older requests, bounded live reply windows,
@@ -115,7 +115,7 @@ images were built and the services ran from those images.
 - [tasks/followees-provider-wiring.md](tasks/followees-provider-wiring.md):
   Followees provider and first Rust NIP-02 row proof.
 - [tasks/user-timeline-provider-wiring.md](tasks/user-timeline-provider-wiring.md):
-  User Timeline provider and first Rust feed-row proof.
+  User Timeline provider, first Rust feed-row, and island proof.
 - [tasks/author-context-provider-wiring.md](tasks/author-context-provider-wiring.md):
   Author Context provider and first shared-feed row proof.
 - [tasks/custom-request-provider-wiring.md](tasks/custom-request-provider-wiring.md):

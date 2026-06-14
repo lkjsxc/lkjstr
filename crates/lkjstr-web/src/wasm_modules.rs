@@ -109,6 +109,7 @@ mod user_timeline_host;
 mod user_timeline_host_cached;
 mod user_timeline_host_model;
 mod user_timeline_host_view;
+mod user_timeline_island;
 mod user_timeline_relay;
 mod user_timeline_relay_diagnostics;
 mod user_timeline_relay_input;

@@ -8,8 +8,9 @@ completion or deletion proof.
 
 ## Status
 
-Implemented enabling slice. TypeScript User Timeline modules remain the shipped
-owner until no-import, deletion, and final verification proof exist.
+Implemented bridge slice. The shipped Svelte tab mounts the Rust User Timeline
+body while TypeScript User Timeline modules remain available until no-import,
+deletion, and final verification proof exist.
 
 ## Current Evidence
 
@@ -48,11 +49,15 @@ owner until no-import, deletion, and final verification proof exist.
   cleanup closes the relay read and suppresses late events.
 - Focused User Timeline tests, browser wasm profile-action tests, clippy,
   repo/doc/line checks, and `pnpm rust-wasm:quiet` pass for this slice.
+- `src/lib/tabs/user-timeline/UserTimelineTab.svelte` is now shipped lifecycle
+  glue that loads the Rust/WASM island and releases it on hidden or destroy.
+- `crates/lkjstr-web/tests/user_timeline_island_test.rs` proves explicit
+  unavailable rendering and unmount cleanup for the Svelte-hosted Rust island.
 
 ## Next Edit
 
-Continue no-import proof and deletion-prerequisite work without removing
-TypeScript/Svelte paths.
+Continue remaining User Timeline parity and no-import prerequisites. Do not
+start deletion proof until retained TypeScript imports are proven removable.
 
 ## Files To Read
 
@@ -71,7 +76,9 @@ TypeScript/Svelte paths.
 - `crates/lkjstr-app/src/feed/surface_inputs.rs`
 - `crates/lkjstr-ui/src/workspace/user_timeline*.rs`
 - `crates/lkjstr-web/src/user_timeline_*.rs`
+- `src/lib/tabs/user-timeline/UserTimelineTab.svelte`
 - `crates/lkjstr-web/tests/profile_feed_tab_test.rs`
+- `crates/lkjstr-web/tests/user_timeline_island_test.rs`
 - `crates/lkjstr-web/tests/user_timeline_provider_test.rs`
 - `crates/lkjstr-web/tests/user_timeline_cleanup_test.rs`
 - `crates/lkjstr-web/tests/user_timeline_relay_provider_test.rs`
@@ -83,6 +90,7 @@ TypeScript/Svelte paths.
 cargo test -p lkjstr-app -- user_timeline
 cargo test -p lkjstr-ui user_timeline
 cargo check -p lkjstr-web --target wasm32-unknown-unknown
+wasm-pack test --headless --chrome crates/lkjstr-web --test user_timeline_island_test
 wasm-pack test --headless --chrome crates/lkjstr-web --test profile_feed_tab_test
 wasm-pack test --headless --chrome crates/lkjstr-web --test user_timeline_provider_test
 wasm-pack test --headless --chrome crates/lkjstr-web --test user_timeline_cleanup_test
@@ -111,6 +119,10 @@ pnpm rust-wasm:quiet
 - Partial route failures and all selected-relay timeouts complete to explicit
   diagnostics without blocking reachable routes or claiming absence.
 - The Profile action proof reaches the real User Timeline body.
+- The shipped Svelte User Timeline tab is only a lifecycle wrapper for the Rust
+  island and releases it on visibility changes or destruction.
+- Rust rows expose profile, thread, and Author Context actions from real row
+  pubkeys and event ids without synthesizing profile metadata.
 - TypeScript User Timeline paths remain until broader route discovery,
   no-import, and final gates prove deletion readiness.
 

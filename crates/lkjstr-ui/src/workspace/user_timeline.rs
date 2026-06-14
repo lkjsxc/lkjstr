@@ -1,10 +1,9 @@
 use leptos::prelude::*;
-use lkjstr_app::{
-    FeedEventRow, FeedFooterState, FeedViewRow, UserTimelineFeedStatus, UserTimelineFeedView,
-    default_user_timeline_feed_view,
-};
+use lkjstr_app::{UserTimelineFeedStatus, UserTimelineFeedView, default_user_timeline_feed_view};
 
+use crate::workspace::user_timeline_actions::UserTimelineActions;
 use crate::workspace::user_timeline_provider::UserTimelineProvider;
+use crate::workspace::user_timeline_row::timeline_row;
 
 #[component]
 pub fn UserTimelineTab(
@@ -12,12 +11,13 @@ pub fn UserTimelineTab(
     target_pubkey: Option<String>,
     model: UserTimelineFeedView,
     provider: Option<UserTimelineProvider>,
+    actions: UserTimelineActions,
 ) -> impl IntoView {
     let model = RwSignal::new(model);
     if let Some(provider) = provider {
         let lease = provider.read(
             owner,
-            target_pubkey,
+            target_pubkey.clone(),
             Callback::new(move |next| model.set(next)),
         );
         on_cleanup(move || lease.release());
@@ -29,12 +29,22 @@ pub fn UserTimelineTab(
                     <div class="profile-card__identity">
                         <h2>"User Timeline"</h2>
                         <p>{move || user_timeline_header_mode(model.get())}</p>
+                        {target_profile_button(target_pubkey.clone(), actions.open_profile)}
                     </div>
                 </div>
             </header>
             <p class="lkjstr-feed-status">{move || user_timeline_status_text(model.get().status)}</p>
             <div class="lkjstr-feed-rows">
-                {move || model.get().view_model.rows.into_iter().map(timeline_row).collect_view()}
+                {move || {
+                    let actions = actions.clone();
+                    model
+                        .get()
+                        .view_model
+                        .rows
+                        .into_iter()
+                        .map(move |row| timeline_row(row, actions.clone()))
+                        .collect_view()
+                }}
             </div>
         </section>
     }
@@ -52,77 +62,25 @@ pub fn user_timeline_tab_content(
             target_pubkey=target_pubkey
             model=model
             provider=provider
+            actions=UserTimelineActions::default()
         />
     }
 }
 
-fn timeline_row(row: FeedViewRow) -> impl IntoView {
-    match row {
-        FeedViewRow::Event(row) => event_row(row).into_any(),
-        FeedViewRow::Unavailable(row) => view! {
-            <article class="lkjstr-feed-row unavailable" data-row-id=row.row_id>
-                <strong>{row.reason}</strong>
-                <p>{row.detail}</p>
-            </article>
-        }
-        .into_any(),
-        FeedViewRow::Diagnostic(row) => view! {
-            <article class="lkjstr-feed-row diagnostic" data-row-id=row.row_id>
-                <strong>{format!("{:?}", row.severity)}</strong>
-                <p>{row.message}</p>
-            </article>
-        }
-        .into_any(),
-        FeedViewRow::Footer(row) => view! {
-            <footer class="lkjstr-feed-footer" data-row-id=row.row_id>
-                {footer_state_text(row.state)}
-            </footer>
-        }
-        .into_any(),
-        FeedViewRow::Continuation(row) => view! {
-            <article class="lkjstr-feed-row continuation" data-row-id=row.row_id>
-                <strong>{format!("Continue thread ({})", row.hidden_count)}</strong>
-            </article>
-        }
-        .into_any(),
-        FeedViewRow::Profile(row) => view! {
-            <article class="lkjstr-feed-row profile" data-row-id=row.row_id>
-                <strong>{row.display_name}</strong>
-            </article>
-        }
-        .into_any(),
-        FeedViewRow::Notification(row) => view! {
-            <article class="lkjstr-feed-row notification" data-row-id=row.row_id>
-                <strong>{row.notification_kind}</strong>
-            </article>
-        }
-        .into_any(),
-    }
-}
-
-fn event_row(row: FeedEventRow) -> impl IntoView {
-    let text_rows = row
-        .visual_rows
-        .into_iter()
-        .filter_map(|item| match item {
-            lkjstr_app::FeedVisualRow::EventFull(row) => Some(row.content),
-            lkjstr_app::FeedVisualRow::EventTextSegment(row) => Some(row.text),
-            lkjstr_app::FeedVisualRow::EventMediaSegment(row) => {
-                Some(format!("media segment {}", row.index))
+fn target_profile_button(
+    target_pubkey: Option<String>,
+    open_profile: Option<Callback<String>>,
+) -> impl IntoView {
+    target_pubkey.and_then(|pubkey| {
+        open_profile.map(|open| {
+            let run = move |_| open.run(pubkey.clone());
+            view! {
+                <button type="button" data-testid="user-timeline-open-target-profile" on:click=run>
+                    "Open profile"
+                </button>
             }
-            lkjstr_app::FeedVisualRow::EventReferenceSegment(row) => {
-                Some(format!("reference segment {}", row.index))
-            }
-            lkjstr_app::FeedVisualRow::EventHeader(_)
-            | lkjstr_app::FeedVisualRow::EventActions(_) => None,
         })
-        .collect::<Vec<_>>();
-    view! {
-        <article class="lkjstr-feed-row event" data-row-id=row.row_id data-event-id=row.event_id>
-            <small>{format!("created {}", row.created_at)}</small>
-            {text_rows.into_iter().map(|text| view! { <p>{text}</p> }).collect_view()}
-        </article>
-    }
+    })
 }
 
 fn user_timeline_header_mode(model: UserTimelineFeedView) -> &'static str {
@@ -146,21 +104,6 @@ fn user_timeline_status_text(status: UserTimelineFeedStatus) -> &'static str {
         UserTimelineFeedStatus::AuthRequired => "User Timeline relay auth required.",
         UserTimelineFeedStatus::RateLimited => "User Timeline relays rate limited.",
         UserTimelineFeedStatus::Offline => "User Timeline offline.",
-    }
-}
-
-fn footer_state_text(state: FeedFooterState) -> &'static str {
-    match state {
-        FeedFooterState::Loading => "Loading",
-        FeedFooterState::CacheHit => "Cached rows",
-        FeedFooterState::ReadingRelays => "Reading relays",
-        FeedFooterState::Partial => "Partial",
-        FeedFooterState::AuthRequired => "Auth required",
-        FeedFooterState::RetryableFailure => "Retry available",
-        FeedFooterState::ConfigurationUnavailable => "Configuration unavailable",
-        FeedFooterState::TerminalEmpty => "No rows",
-        FeedFooterState::TerminalWithRows => "Rows loaded",
-        FeedFooterState::OlderLoadReady => "Older rows available",
     }
 }
 

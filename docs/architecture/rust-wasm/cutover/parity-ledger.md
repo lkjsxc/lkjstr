@@ -107,7 +107,9 @@ stored NIP-65/provenance/target author routes can discover kind `3` without
 selected relays, disabled stored route relays stay excluded, no-event selected
 AUTH/rate-limited/timeout reads render explicit diagnostics, partial route
 failure stays diagnostic, and owner cleanup closes the relay read. Coverage
-and deletion proof remain open.
+and deletion proof remain open. The shipped Svelte User Timeline tab now mounts
+the Rust body as a WASM island, forwards profile, thread, and Author Context
+actions, and releases the island on visibility changes or destruction.
 Rust Author Context now has a first Leptos body that renders real shared-feed
 rows supplied through an injected `AuthorContextFeedProvider`. The app view
 model exposes anchor and nearby query-demand inputs, and missing event id,

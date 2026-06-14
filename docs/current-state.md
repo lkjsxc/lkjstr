@@ -17,8 +17,8 @@ Read next: [product/README.md](product/README.md),
 - Home, Global, Public Chat, Profile, Thread, Notifications, Search, Custom
   Request, Accounts, Relay Settings, Stats, Settings, Upload Settings,
   lkjstr Log, Mine npub, Profile Edit, Welcome, and Rust-island Author
-  Context and Followees bodies are implemented.
-- Followees mounts its Rust body through Svelte as a WASM island.
+  Context, Followees, and User Timeline bodies are implemented.
+- Followees and User Timeline mount Rust bodies through Svelte as WASM islands.
   Followees/User Timeline render real NIP-02 rows, selected/stored-route
   discovery, cleanup, retry, partial-route, and degraded states.
 - Shared UI system catalog and shipped component list live in
@@ -168,7 +168,7 @@ Read next: [architecture/workspace/README.md](architecture/workspace/README.md),
   metadata plus kind `3` follow counts, and sparse empty proof while excluding
   metadata and follow-list note rows. Rust Thread reads cached root/reply/focused,
   parent, unavailable, continuation, older, and live rows. Rust Author Context covers
-  cache/relay anchors/actions, Followees mounts a Rust island, and Custom
+  cache/relay anchors/actions, Followees/User Timeline mount Rust islands, and Custom
   Request shows plan states; deletion remains open.
 - Live inserts follow a top-anchor policy. A user at the top sees new resident
   rows immediately; a user away from the top keeps the visible anchor and sees

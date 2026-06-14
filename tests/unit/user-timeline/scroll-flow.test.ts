@@ -2,16 +2,15 @@ import { readFileSync } from 'node:fs';
 import { describe, expect, it } from 'vitest';
 
 describe('user timeline scroll flow', () => {
-  it('renders header and notices as feed leading rows', () => {
+  it('mounts the Rust island from Svelte host glue', () => {
     const source = readFileSync(
       'src/lib/tabs/user-timeline/UserTimelineTab.svelte',
       'utf8',
     );
 
-    expect(source).toContain('let leadingRows = $derived');
-    expect(source).toContain('{#snippet leadingRow(row)}');
-    expect(source).toContain('FeedIdentityHeader');
-    expect(source).toContain("row.key === 'user-timeline-header'");
-    expect(source).not.toContain('user-timeline-tab__header');
+    expect(source).toContain('loadLkjstrWebWasm');
+    expect(source).toContain('mount_user_timeline_tab');
+    expect(source).toContain('releaseIsland');
+    expect(source).not.toContain('runUserTimelineRuntime');
   });
 });
