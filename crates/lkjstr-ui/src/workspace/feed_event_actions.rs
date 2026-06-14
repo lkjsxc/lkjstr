@@ -1,4 +1,4 @@
-use leptos::prelude::*;
+use leptos::{ev::MouseEvent, prelude::*};
 
 use crate::workspace::author_context_actions::AuthorContextActions;
 use crate::workspace::profile_clipboard_provider::{
@@ -33,36 +33,40 @@ pub(crate) fn event_actions(
     labels: FeedEventActionLabels,
 ) -> impl IntoView {
     let copy_status = RwSignal::new(None::<String>);
+    let stop_menu_click = |event: MouseEvent| event.stop_propagation();
     view! {
-        <div class="lkjstr-feed-actions">
-            {string_button(
-                pubkey.clone(),
-                actions.open_profile,
-                labels.profile_test_id,
-                labels.profile_label,
-            )}
-            {string_button(
-                event_id.clone(),
-                actions.open_thread,
-                labels.thread_test_id,
-                labels.thread_label,
-            )}
-            {author_context_button(
-                event_id.clone(),
-                pubkey,
-                actions.open_author_context,
-                labels.author_context_test_id,
-                labels.author_context_label,
-            )}
-            {copy_event_id_button(
-                event_id,
-                actions.copy_event_id,
-                labels.copy_test_id,
-                labels.copy_label,
-                copy_status,
-            )}
-            {copy_status_view(copy_status)}
-        </div>
+        <details class="lkjstr-feed-actions event-action-zone">
+            <summary aria-label="Event menu" title="Event menu" on:click=stop_menu_click>"..."</summary>
+            <div class="lkjstr-feed-actions__items">
+                {string_button(
+                    pubkey.clone(),
+                    actions.open_profile,
+                    labels.profile_test_id,
+                    labels.profile_label,
+                )}
+                {string_button(
+                    event_id.clone(),
+                    actions.open_thread,
+                    labels.thread_test_id,
+                    labels.thread_label,
+                )}
+                {author_context_button(
+                    event_id.clone(),
+                    pubkey,
+                    actions.open_author_context,
+                    labels.author_context_test_id,
+                    labels.author_context_label,
+                )}
+                {copy_event_id_button(
+                    event_id,
+                    actions.copy_event_id,
+                    labels.copy_test_id,
+                    labels.copy_label,
+                    copy_status,
+                )}
+                {copy_status_view(copy_status)}
+            </div>
+        </details>
     }
 }
 

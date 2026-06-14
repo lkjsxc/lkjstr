@@ -162,8 +162,8 @@ models, anchors, footer states, and unavailable states.
   cached plus relay older-page proof, injected, worker-cached, relay-backed,
   exact-anchor, stored-route, and unavailable-state Author Context rows, Rust
   row actions, shared Rust event action rendering for Author Context and User
-  Timeline rows, host-backed Rust event-id copy actions, shared Rust event body
-  rendering, common state-row rendering, shared footer shell rendering across
+  Timeline rows, host-backed Rust event-id copy actions, Rust event menu shell,
+  shared Rust event body rendering, common state-row rendering, shared footer shell rendering across
   converted feed rows, and Rust/WASM quiet.
 - Remaining completion proof: Author Context no-import and final-gate deletion
   readiness plus other feed-surface deletion prerequisites remain open.
