@@ -5,6 +5,7 @@ import {
   scoreRetentionCandidate,
   selectRetained,
 } from '../../../src/lib/memory/scored-retention';
+import { normalizeUserTimelineDiagnostics } from '../../../src/lib/memory/user-timeline-diagnostics';
 
 describe('scored retention', () => {
   it('keeps high-signal ephemeral candidates first', () => {
@@ -24,7 +25,11 @@ describe('scored retention', () => {
   });
 
   it('returns redacted runtime memory counts', () => {
-    const snapshot = runtimeMemorySnapshot();
+    const snapshot = runtimeMemorySnapshot({
+      status: 'available',
+      outcomes: [{ key: 'ready', count: 2 }],
+      reasons: [{ key: 'selected-relay', count: 1 }],
+    });
     const text = JSON.stringify(snapshot);
 
     expect(snapshot).toMatchObject({
@@ -33,9 +38,9 @@ describe('scored retention', () => {
       fallbackRepository: expect.any(Object),
       caches: expect.any(Object),
       userTimeline: {
-        status: 'unavailable',
-        outcomes: [],
-        reasons: [],
+        status: 'available',
+        outcomes: [{ key: 'ready', count: 2 }],
+        reasons: [{ key: 'selected-relay', count: 1 }],
       },
     });
     expect(text).not.toContain('subId');
@@ -44,10 +49,23 @@ describe('scored retention', () => {
     expect(text).not.toContain('relayPayload');
   });
 
+  it('normalizes malformed Rust User Timeline diagnostics as unavailable', () => {
+    expect(normalizeUserTimelineDiagnostics({ status: 'ready' })).toMatchObject({
+      status: 'unavailable',
+      outcomes: [],
+      reasons: [],
+    });
+  });
+
   it('does not import retained user timeline runtime counters into Stats', () => {
     const source = readFileSync('src/lib/memory/runtime-memory.ts', 'utf8');
+    const bridge = readFileSync(
+      'src/lib/memory/user-timeline-diagnostics.ts',
+      'utf8',
+    );
 
     expect(source).not.toContain('../user-timeline');
+    expect(bridge).not.toContain('../user-timeline');
     expect(source).toContain('unavailableUserTimelineDiagnostics');
   });
 });

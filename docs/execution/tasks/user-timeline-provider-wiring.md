@@ -53,15 +53,16 @@ deletion, and final verification proof exist.
   glue that loads the Rust/WASM island and releases it on hidden or destroy.
 - `crates/lkjstr-web/tests/user_timeline_island_test.rs` proves explicit
   unavailable rendering and unmount cleanup for the Svelte-hosted Rust island.
+- `crates/lkjstr-web/src/user_timeline_stats.rs` records bounded Rust-owned
+  User Timeline status and diagnostic aggregates from real provider completions.
 - TypeScript Stats no longer imports retained User Timeline discovery counters;
-  Rust-owned diagnostics render as explicit unavailable until a Rust provider
-  exists.
+  it reads the Rust aggregate through the WASM bridge and renders explicit
+  unavailable when the bridge is absent.
 
 ## Next Edit
 
-Continue remaining User Timeline parity and no-import prerequisites, including
-Rust Stats diagnostics. Do not start deletion proof until retained TypeScript
-imports are proven removable.
+Continue remaining User Timeline parity and no-import prerequisites. Do not
+start deletion proof until retained TypeScript imports are proven removable.
 
 ## Files To Read
 
@@ -83,6 +84,7 @@ imports are proven removable.
 - `src/lib/tabs/user-timeline/UserTimelineTab.svelte`
 - `crates/lkjstr-web/tests/profile_feed_tab_test.rs`
 - `crates/lkjstr-web/tests/user_timeline_island_test.rs`
+- `src/lib/memory/user-timeline-diagnostics.ts`
 - `crates/lkjstr-web/tests/user_timeline_provider_test.rs`
 - `crates/lkjstr-web/tests/user_timeline_cleanup_test.rs`
 - `crates/lkjstr-web/tests/user_timeline_relay_provider_test.rs`
@@ -125,6 +127,8 @@ pnpm rust-wasm:quiet
 - The Profile action proof reaches the real User Timeline body.
 - The shipped Svelte User Timeline tab is only a lifecycle wrapper for the Rust
   island and releases it on visibility changes or destruction.
+- Shipped Stats reads Rust-owned User Timeline diagnostic aggregates when the
+  WASM bridge is available and otherwise shows an explicit unavailable reason.
 - Rust rows expose profile, thread, and Author Context actions from real row
   pubkeys and event ids without synthesizing profile metadata.
 - TypeScript User Timeline paths remain until broader route discovery,

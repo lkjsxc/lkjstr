@@ -10,18 +10,10 @@ import { relayDiagnosticSuppressionCount } from '../relays/relay-diagnostic-log'
 import { currentRelaySnapshots } from '../relays/session-snapshots';
 import { orchestrationMetricsSnapshot } from '../relays/orchestration/metrics';
 import { sharedSubscriptionOrchestrator } from '../relays/orchestration/orchestrator';
-
-type RuntimeDiagnosticCount = {
-  readonly key: string;
-  readonly count: number;
-};
-
-type UnavailableRuntimeDiagnostics = {
-  readonly status: 'unavailable';
-  readonly reason: string;
-  readonly outcomes: readonly RuntimeDiagnosticCount[];
-  readonly reasons: readonly RuntimeDiagnosticCount[];
-};
+import {
+  unavailableUserTimelineDiagnostics,
+  type UserTimelineRuntimeDiagnostics,
+} from './user-timeline-diagnostics';
 
 export type RuntimeMemorySnapshot = {
   readonly runtimeCounters: ReturnType<typeof runtimeCounterSnapshots>;
@@ -45,7 +37,7 @@ export type RuntimeMemorySnapshot = {
   readonly geometry: ReturnType<typeof feedRowHeightDiagnostics> & {
     readonly bridgeStatus: string;
   };
-  readonly userTimeline: UnavailableRuntimeDiagnostics;
+  readonly userTimeline: UserTimelineRuntimeDiagnostics;
   readonly jsHeap?: {
     readonly usedJSHeapSize: number;
     readonly totalJSHeapSize: number;
@@ -53,7 +45,11 @@ export type RuntimeMemorySnapshot = {
   };
 };
 
-export function runtimeMemorySnapshot(): RuntimeMemorySnapshot {
+export function runtimeMemorySnapshot(
+  userTimeline = unavailableUserTimelineDiagnostics(
+    'Rust User Timeline diagnostics bridge has not loaded.',
+  ),
+): RuntimeMemorySnapshot {
   const snapshots = currentRelaySnapshots();
   return {
     runtimeCounters: runtimeCounterSnapshots(),
@@ -80,17 +76,8 @@ export function runtimeMemorySnapshot(): RuntimeMemorySnapshot {
       bridgeStatus: feedGeometryWasmBridgeStatus().status,
       ...feedRowHeightDiagnostics(),
     },
-    userTimeline: unavailableUserTimelineDiagnostics(),
+    userTimeline,
     jsHeap: jsHeapSnapshot(),
-  };
-}
-
-function unavailableUserTimelineDiagnostics(): UnavailableRuntimeDiagnostics {
-  return {
-    status: 'unavailable',
-    reason: 'User Timeline diagnostics are Rust-owned; Stats provider pending.',
-    outcomes: [],
-    reasons: [],
   };
 }
 

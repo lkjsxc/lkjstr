@@ -6,3 +6,5 @@ Runtime memory helpers expose bounded retention and compact diagnostic counts.
 
 - `runtime-memory.ts`: redacted app-owned runtime memory snapshot.
 - `scored-retention.ts`: pure scored retention helper for ephemeral data.
+- `user-timeline-diagnostics.ts`: WASM bridge for Rust-owned User Timeline
+  diagnostic aggregates.

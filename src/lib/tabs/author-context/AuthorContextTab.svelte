@@ -1,12 +1,15 @@
 <script lang="ts">
   import { onDestroy } from 'svelte';
   import { loadLkjstrWebWasm } from 'virtual:lkjstr-web-wasm';
+  import type { TabFeedAnchor } from '$lib/workspace/tab-anchor-registry';
 
   type Props = {
     tabId: string;
     visible?: boolean;
     eventId: string;
     pubkey: string;
+    restoreAnchor?: TabFeedAnchor;
+    relaySets?: readonly unknown[];
     openProfile: (pubkey: string) => void;
     openThread: (eventId: string) => void;
     openAuthorContext?: (eventId: string, pubkey: string) => void;

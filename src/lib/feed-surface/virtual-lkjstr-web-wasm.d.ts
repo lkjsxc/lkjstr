@@ -37,6 +37,7 @@ declare module 'virtual:lkjstr-web-wasm' {
       openThread: (eventId: string) => void,
       openAuthorContext: (eventId: string, pubkey: string) => void,
     ) => UserTimelineIslandHandle;
+    readonly user_timeline_diagnostics_snapshot?: () => unknown;
   } & Record<string, unknown>;
 
   export function loadLkjstrWebWasm(): Promise<LkjstrWebWasmModule>;

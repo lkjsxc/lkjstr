@@ -117,6 +117,7 @@ mod user_timeline_relay_outcome;
 mod user_timeline_relay_read;
 mod user_timeline_relay_store;
 mod user_timeline_routes;
+mod user_timeline_stats;
 mod upload_discovery;
 mod upload_settings_host;
 mod workspace_host;

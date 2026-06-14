@@ -6,6 +6,14 @@
   };
 
   let props: Props = $props();
+
+  function countText(
+    rows: readonly { readonly key: string; readonly count: number }[],
+  ): string {
+    return rows.length
+      ? rows.map((row) => `${row.key}: ${row.count}`).join(' · ')
+      : 'none';
+  }
 </script>
 
 <h3>Runtime memory</h3>
@@ -77,6 +85,11 @@
   </div>
   {#if props.memory.userTimeline.status === 'unavailable'}
     <p>{props.memory.userTimeline.reason}</p>
+  {:else}
+    <p>
+      User Timeline statuses {countText(props.memory.userTimeline.outcomes)} ·
+      reasons {countText(props.memory.userTimeline.reasons)}
+    </p>
   {/if}
   <p>
     fallback {props.memory.fallbackRepository.events} events · references

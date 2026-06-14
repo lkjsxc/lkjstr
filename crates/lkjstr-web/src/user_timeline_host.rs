@@ -4,6 +4,7 @@ use crate::{
     relay_read_handle::RelayReadSlot,
     user_timeline_host_model::user_timeline_load,
     user_timeline_relay::start_user_timeline_relay_read,
+    user_timeline_stats,
 };
 
 pub(crate) const PAGE_SIZE: u64 = 30;
@@ -39,7 +40,8 @@ pub(crate) fn user_timeline_provider_with_worker_url(
             if lease.is_released() {
                 return;
             }
-            request.complete(load.model);
+            request.complete(load.model.clone());
+            user_timeline_stats::record_model(&load.model);
             let Some(relay_input) = load.relay else {
                 return;
             };
@@ -47,7 +49,8 @@ pub(crate) fn user_timeline_provider_with_worker_url(
             let relay_lease = lease.clone();
             if let Some(handle) = start_user_timeline_relay_read(host, relay_input, move |model| {
                 if !relay_lease.is_released() {
-                    relay_request.complete(model);
+                    relay_request.complete(model.clone());
+                    user_timeline_stats::record_model(&model);
                 }
             }) {
                 relay_slot.replace(handle);

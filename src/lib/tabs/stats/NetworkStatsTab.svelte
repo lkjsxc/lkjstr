@@ -16,6 +16,7 @@
     runtimeMemorySnapshot,
     type RuntimeMemorySnapshot,
   } from '$lib/memory/runtime-memory';
+  import { readUserTimelineDiagnostics } from '$lib/memory/user-timeline-diagnostics';
   import {
     readSqliteStorageHealth,
     type SqliteStorageHealthStatus,
@@ -61,7 +62,8 @@
   async function refresh(): Promise<void> {
     const seq = ++refreshSeq;
     snapshots = currentRelaySnapshots();
-    memory = runtimeMemorySnapshot();
+    const currentMemory = runtimeMemorySnapshot();
+    memory = currentMemory;
     optimizerScores = relayReadScoreSnapshot();
     scanHints = feedScanHintSnapshot();
     await new Promise((resolve) => setTimeout(resolve, 100));
@@ -72,9 +74,11 @@
       safeRead(() => cacheStatus(), cache),
       safeRead(() => readSqliteStorageHealth(), storageHealth),
       safeRead(() => readScanOptimizerDebugSnapshot(), scanDebug),
+      safeRead(() => readUserTimelineDiagnostics(), currentMemory.userTimeline),
     ]);
     if (disposed || seq !== refreshSeq) return;
     [summaries, jobHealth, cache, storageHealth, scanDebug] = next;
+    memory = runtimeMemorySnapshot(next[5]);
   }
 
   async function safeRead<T>(read: () => Promise<T>, fallback: T): Promise<T> {
@@ -102,11 +106,7 @@
     <div class="settings-actions">
       <CacheActions {cache} {refresh} />
       <label class="stats-auto">
-        <input
-          type="checkbox"
-          bind:checked={autoRefresh}
-          onchange={toggleAuto}
-        />
+        <input type="checkbox" bind:checked={autoRefresh} onchange={toggleAuto} />
         <span>Auto refresh every 2s</span>
       </label>
     </div>
@@ -123,11 +123,11 @@
   </div>
   <table class="stats-table">
     <thead>
-      <tr
-        ><th>Relay</th><th>State</th><th>Events</th><th>OK</th><th>Bytes</th><th
+      <tr>
+        <th>Relay</th><th>State</th><th>Events</th><th>OK</th><th>Bytes</th><th
           >Diagnostics</th
-        ></tr
-      >
+        >
+      </tr>
     </thead>
     <tbody>
       {#each snapshots as snapshot (snapshot.url)}
@@ -166,11 +166,11 @@
   <h3>Persisted relay summaries</h3>
   <table class="stats-table">
     <thead>
-      <tr
-        ><th>Relay</th><th>Attempts</th><th>Events</th><th>Last event</th><th
+      <tr>
+        <th>Relay</th><th>Attempts</th><th>Events</th><th>Last event</th><th
           >Latency</th
-        ></tr
-      >
+        >
+      </tr>
     </thead>
     <tbody>
       {#each summaries as summary (summary.relayUrl)}

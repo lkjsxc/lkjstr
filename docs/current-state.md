@@ -223,7 +223,7 @@ Read next: [architecture/network/README.md](architecture/network/README.md),
 - Stats, `__lkjstrMemoryDebug()`, and `window.__lkjstrDebug` expose
   orchestration demand, lease, event intake, storage operation, scan optimizer,
   storage pressure, feed geometry reservation, anchor compensation, memory
-  counters, and explicit unavailable Rust-owned User Timeline diagnostics.
+  counters, and Rust-owned User Timeline diagnostic aggregates when available.
 - Relay publish waiters, paged read leases, deduped read abort listeners, relay
   final-close state, idle pool eviction, and background tasks have cleanup
   tests.
