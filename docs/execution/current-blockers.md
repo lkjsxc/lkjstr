@@ -174,7 +174,8 @@ models, anchors, footer states, and unavailable states.
   shared footer shell rendering across converted feed rows, retained Svelte copy
   actions with explicit clipboard failure states, and retained optional Svelte
   event/profile actions plus Rust-island hosts suppress unavailable no-op
-  actions, empty Rust action menus are suppressed, and Rust/WASM quiet.
+  actions, empty Rust action menus and unavailable Thread continuation buttons
+  are suppressed, and Rust/WASM quiet.
 - Remaining completion proof: Author Context Svelte-host no-import,
   event-row menu deletion readiness, and final-gate deletion readiness plus
   other feed-surface deletion prerequisites remain open.

@@ -28,8 +28,9 @@ Deletion proof and broader Thread parity remain open.
   and shared feed rows.
 - `crates/lkjstr-ui/src/workspace/thread.rs` renders Thread rows from
   `ThreadFeedView`; `thread_continuation.rs` opens matching Thread tabs for
-  collapsed branches, and `thread_provider.rs` suppresses late completions
-  after tab cleanup.
+  collapsed branches only when a real thread callback exists, otherwise
+  continuation rows stay static, and `thread_provider.rs` suppresses late
+  completions after tab cleanup.
 - `crates/lkjstr-web/src/thread_feed_cache.rs` reads cached focused/root events
   plus cached replies by `#e` root and focused-event tags from the SQLite worker
   and exact cached parent-chain rows by id. The cached-only result stays partial
@@ -130,7 +131,8 @@ PATH=/home/lkjsxc/.cargo/bin:$PATH wasm-pack test --headless --chrome \
 - Terminal parent misses render retryable unavailable-parent rows only after
   exact cache and complete relay lookup.
 - Capped deep reply branches render continuation rows that open configured
-  Thread tabs for the hidden target event.
+  Thread tabs for the hidden target event only when the callback exists; missing
+  callbacks render static continuation rows.
 - The explicit older footer command starts a bounded `#e` page read before the
   current oldest Thread row.
 - Downward near-end Thread scroll requests an older load only from a scrollable
