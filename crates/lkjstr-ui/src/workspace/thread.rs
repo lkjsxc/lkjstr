@@ -24,9 +24,12 @@ pub fn ThreadTab(
 ) -> impl IntoView {
     let model = RwSignal::new(model);
     let complete = Callback::new(move |next| model.set(next));
-    let older_loader = provider.as_ref().map(|provider| {
-        ThreadOlderLoader::new(owner.clone(), event_id.clone(), provider.clone(), complete)
-    });
+    let older_loader = provider
+        .as_ref()
+        .filter(|provider| provider.supports_older())
+        .map(|provider| {
+            ThreadOlderLoader::new(owner.clone(), event_id.clone(), provider.clone(), complete)
+        });
     let older_command = older_loader
         .as_ref()
         .map(ThreadOlderLoader::command_callback);

@@ -115,8 +115,11 @@ fn older_command(
     provider: Option<SearchFeedProvider>,
     active_older_lease: RwSignal<Option<SearchFeedLease>>,
 ) -> Option<Callback<()>> {
-    provider.map(|provider| {
-        Callback::new(move |()| {
+    provider.and_then(|provider| {
+        if !provider.supports_older() {
+            return None;
+        }
+        Some(Callback::new(move |()| {
             release_current(active_older_lease);
             let current = model.get_untracked();
             if !current.window.has_older {
@@ -131,7 +134,7 @@ fn older_command(
                 current.window,
                 Callback::new(move |next| model.set(next)),
             );
-            active_older_lease.set(Some(lease));
-        })
+            active_older_lease.set(lease);
+        }))
     })
 }

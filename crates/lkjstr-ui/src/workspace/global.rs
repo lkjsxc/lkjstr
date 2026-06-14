@@ -21,6 +21,7 @@ pub fn GlobalTab(
     let complete = Callback::new(move |next| model.set(next));
     let older_loader = provider
         .as_ref()
+        .filter(|provider| provider.supports_older())
         .map(|provider| GlobalOlderLoader::new(owner.clone(), provider.clone(), complete));
     let older_command = older_loader
         .as_ref()

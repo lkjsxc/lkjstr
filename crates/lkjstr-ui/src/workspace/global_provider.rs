@@ -8,7 +8,7 @@ use crate::workspace::local_lease::LocalLease;
 #[derive(Clone)]
 pub struct GlobalFeedProvider {
     read: Arc<dyn Fn(GlobalFeedRequest) + Send + Sync>,
-    load_older: Arc<dyn Fn(GlobalOlderRequest) + Send + Sync>,
+    load_older: Option<Arc<dyn Fn(GlobalOlderRequest) + Send + Sync>>,
 }
 
 #[derive(Clone)]
@@ -105,7 +105,10 @@ impl GlobalOlderRequest {
 impl GlobalFeedProvider {
     #[must_use]
     pub fn new(read: impl Fn(GlobalFeedRequest) + Send + Sync + 'static) -> Self {
-        Self::with_older(read, |_| {})
+        Self {
+            read: Arc::new(read),
+            load_older: None,
+        }
     }
 
     #[must_use]
@@ -115,8 +118,13 @@ impl GlobalFeedProvider {
     ) -> Self {
         Self {
             read: Arc::new(read),
-            load_older: Arc::new(load_older),
+            load_older: Some(Arc::new(load_older)),
         }
+    }
+
+    #[must_use]
+    pub fn supports_older(&self) -> bool {
+        self.load_older.is_some()
     }
 
     pub fn read(&self, owner: String, complete: Callback<GlobalFeedView>) -> GlobalFeedLease {
@@ -136,9 +144,12 @@ impl GlobalFeedProvider {
         scrollable: bool,
         user_scrolled_down: bool,
         complete: Callback<GlobalFeedView>,
-    ) -> GlobalFeedLease {
+    ) -> Option<GlobalFeedLease> {
+        let Some(load_older) = &self.load_older else {
+            return None;
+        };
         let lease = GlobalFeedLease::new();
-        (self.load_older)(GlobalOlderRequest {
+        (load_older)(GlobalOlderRequest {
             owner,
             trigger,
             scrollable,
@@ -146,6 +157,6 @@ impl GlobalFeedProvider {
             complete: GlobalFeedComplete { complete },
             lease: lease.clone(),
         });
-        lease
+        Some(lease)
     }
 }

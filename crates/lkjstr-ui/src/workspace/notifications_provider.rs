@@ -8,7 +8,7 @@ use crate::workspace::local_lease::LocalLease;
 #[derive(Clone)]
 pub struct NotificationsFeedProvider {
     read: Arc<dyn Fn(NotificationsFeedRequest) + Send + Sync>,
-    load_older: Arc<dyn Fn(NotificationsOlderRequest) + Send + Sync>,
+    load_older: Option<Arc<dyn Fn(NotificationsOlderRequest) + Send + Sync>>,
 }
 
 #[derive(Clone)]
@@ -105,7 +105,10 @@ impl NotificationsOlderRequest {
 impl NotificationsFeedProvider {
     #[must_use]
     pub fn new(read: impl Fn(NotificationsFeedRequest) + Send + Sync + 'static) -> Self {
-        Self::with_older(read, |_| {})
+        Self {
+            read: Arc::new(read),
+            load_older: None,
+        }
     }
 
     #[must_use]
@@ -115,8 +118,13 @@ impl NotificationsFeedProvider {
     ) -> Self {
         Self {
             read: Arc::new(read),
-            load_older: Arc::new(load_older),
+            load_older: Some(Arc::new(load_older)),
         }
+    }
+
+    #[must_use]
+    pub fn supports_older(&self) -> bool {
+        self.load_older.is_some()
     }
 
     pub fn read(
@@ -140,9 +148,12 @@ impl NotificationsFeedProvider {
         scrollable: bool,
         user_scrolled_down: bool,
         complete: Callback<NotificationsFeedView>,
-    ) -> NotificationsFeedLease {
+    ) -> Option<NotificationsFeedLease> {
+        let Some(load_older) = &self.load_older else {
+            return None;
+        };
         let lease = NotificationsFeedLease::new();
-        (self.load_older)(NotificationsOlderRequest {
+        (load_older)(NotificationsOlderRequest {
             owner,
             trigger,
             scrollable,
@@ -150,6 +161,6 @@ impl NotificationsFeedProvider {
             complete: NotificationsFeedComplete { complete },
             lease: lease.clone(),
         });
-        lease
+        Some(lease)
     }
 }

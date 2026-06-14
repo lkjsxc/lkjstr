@@ -51,6 +51,9 @@ Deletion proof and broader Thread parity remain open.
 - `crates/lkjstr-ui/src/workspace/thread_scroll.rs` gates downward near-end
   Thread scroll gestures and underfilled viewport probes before forwarding an
   older request.
+- `crates/lkjstr-ui/src/workspace/thread_provider.rs` exposes Thread older
+  loading only for providers built with a real older handler; injected read-only
+  providers do not render older controls or dispatch no-op older requests.
 
 ## Next Edit
 
@@ -134,7 +137,7 @@ PATH=/home/lkjsxc/.cargo/bin:$PATH wasm-pack test --headless --chrome \
   Thread tabs for the hidden target event only when the callback exists; missing
   callbacks render static continuation rows.
 - The explicit older footer command starts a bounded `#e` page read before the
-  current oldest Thread row.
+  current oldest Thread row only when the provider exposes a real older handler.
 - Downward near-end Thread scroll requests an older load only from a scrollable
   owner.
 - Underfilled Thread viewport measurement requests an older load without user

@@ -8,7 +8,7 @@ use crate::workspace::local_lease::LocalLease;
 #[derive(Clone)]
 pub struct ThreadFeedProvider {
     read: Arc<dyn Fn(ThreadFeedRequest) + Send + Sync>,
-    load_older: Arc<dyn Fn(ThreadOlderRequest) + Send + Sync>,
+    load_older: Option<Arc<dyn Fn(ThreadOlderRequest) + Send + Sync>>,
 }
 
 #[derive(Clone)]
@@ -107,7 +107,10 @@ impl ThreadOlderRequest {
 impl ThreadFeedProvider {
     #[must_use]
     pub fn new(read: impl Fn(ThreadFeedRequest) + Send + Sync + 'static) -> Self {
-        Self::with_older(read, |_| {})
+        Self {
+            read: Arc::new(read),
+            load_older: None,
+        }
     }
 
     #[must_use]
@@ -117,8 +120,13 @@ impl ThreadFeedProvider {
     ) -> Self {
         Self {
             read: Arc::new(read),
-            load_older: Arc::new(load_older),
+            load_older: Some(Arc::new(load_older)),
         }
+    }
+
+    #[must_use]
+    pub fn supports_older(&self) -> bool {
+        self.load_older.is_some()
     }
 
     pub fn read(
@@ -145,9 +153,12 @@ impl ThreadFeedProvider {
         scrollable: bool,
         user_scrolled_down: bool,
         complete: Callback<ThreadFeedView>,
-    ) -> ThreadFeedLease {
+    ) -> Option<ThreadFeedLease> {
+        let Some(load_older) = &self.load_older else {
+            return None;
+        };
         let lease = ThreadFeedLease::new();
-        (self.load_older)(ThreadOlderRequest {
+        (load_older)(ThreadOlderRequest {
             owner,
             event_id,
             trigger,
@@ -156,6 +167,6 @@ impl ThreadFeedProvider {
             complete: ThreadFeedComplete { complete },
             lease: lease.clone(),
         });
-        lease
+        Some(lease)
     }
 }

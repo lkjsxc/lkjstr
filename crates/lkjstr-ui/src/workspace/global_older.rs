@@ -39,13 +39,15 @@ impl GlobalOlderLoader {
         user_scrolled_down: bool,
     ) {
         release_older_lease(&self.lease);
-        let lease = self.provider.load_older(
+        let Some(lease) = self.provider.load_older(
             self.owner.clone(),
             trigger,
             scrollable,
             user_scrolled_down,
             self.complete,
-        );
+        ) else {
+            return;
+        };
         remember_older_lease(&self.lease, lease);
     }
 

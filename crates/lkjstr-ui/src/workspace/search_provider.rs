@@ -8,7 +8,7 @@ use crate::workspace::local_lease::LocalLease;
 #[derive(Clone)]
 pub struct SearchFeedProvider {
     read: Arc<dyn Fn(SearchFeedRequest) + Send + Sync>,
-    read_older: Arc<dyn Fn(SearchOlderRequest) + Send + Sync>,
+    read_older: Option<Arc<dyn Fn(SearchOlderRequest) + Send + Sync>>,
 }
 
 #[derive(Clone)]
@@ -107,7 +107,7 @@ impl SearchFeedProvider {
     pub fn new(read: impl Fn(SearchFeedRequest) + Send + Sync + 'static) -> Self {
         Self {
             read: Arc::new(read),
-            read_older: Arc::new(|_| {}),
+            read_older: None,
         }
     }
 
@@ -118,8 +118,13 @@ impl SearchFeedProvider {
     ) -> Self {
         Self {
             read: Arc::new(read),
-            read_older: Arc::new(read_older),
+            read_older: Some(Arc::new(read_older)),
         }
+    }
+
+    #[must_use]
+    pub fn supports_older(&self) -> bool {
+        self.read_older.is_some()
     }
 
     pub fn read(
@@ -144,15 +149,18 @@ impl SearchFeedProvider {
         query: String,
         window: FeedWindowState,
         complete: Callback<SearchFeedView>,
-    ) -> SearchFeedLease {
+    ) -> Option<SearchFeedLease> {
+        let Some(read_older) = &self.read_older else {
+            return None;
+        };
         let lease = SearchFeedLease::new();
-        (self.read_older)(SearchOlderRequest {
+        (read_older)(SearchOlderRequest {
             owner,
             query,
             window,
             complete: SearchFeedComplete { complete },
             lease: lease.clone(),
         });
-        lease
+        Some(lease)
     }
 }

@@ -33,7 +33,9 @@ Followees/User Timeline kind `3` discovery, Followees/User Timeline cleanup,
 retry diagnostics, and Svelte-hosted Rust island proof, first injected/cache/relay
 Author Context rows, exact anchor lookup, stored routes, unavailable-state browser
 proof, row actions, and Followees/User Timeline/Author Context request-level
-cleanup guards.
+cleanup guards. Global, Thread, Notifications, and Search older controls now
+require a real provider older handler before rendering or dispatching older
+loads.
 Do not skip this order for visible polish.
 
 ## 1. Storage command coverage (implemented enabling proof)
@@ -174,8 +176,9 @@ models, anchors, footer states, and unavailable states.
   shared footer shell rendering across converted feed rows, retained Svelte copy
   actions with explicit clipboard failure states, and retained optional Svelte
   event/profile actions plus Rust-island hosts suppress unavailable no-op
-  actions, empty Rust action menus and unavailable Thread continuation buttons
-  are suppressed, and Rust/WASM quiet.
+  actions, empty Rust action menus, unavailable Thread continuation buttons,
+  and Rust older-load controls without real older provider handlers are
+  suppressed, and Rust/WASM quiet.
 - Remaining completion proof: Author Context Svelte-host no-import,
   event-row menu deletion readiness, and final-gate deletion readiness plus
   other feed-surface deletion prerequisites remain open.

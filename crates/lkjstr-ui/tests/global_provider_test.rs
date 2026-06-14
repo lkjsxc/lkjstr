@@ -16,6 +16,7 @@ fn global_feed_lease_runs_release_cleanup_once() {
         });
     });
 
+    assert!(!provider.supports_older());
     let lease = provider.read("tab-a".to_owned(), Callback::new(|_| {}));
     lease.release();
     lease.release();
@@ -46,6 +47,21 @@ fn released_global_feed_request_suppresses_late_completion() {
 }
 
 #[test]
+fn global_provider_without_older_handler_rejects_older_request() {
+    let provider = GlobalFeedProvider::new(|_| {});
+    let lease = provider.load_older(
+        "tab-a".to_owned(),
+        GlobalOlderLoadTrigger::Explicit,
+        true,
+        true,
+        Callback::new(|_| {}),
+    );
+
+    assert!(!provider.supports_older());
+    assert!(lease.is_none());
+}
+
+#[test]
 fn global_provider_forwards_older_request_trigger() -> Result<(), String> {
     let request = Arc::new(Mutex::new(None::<GlobalOlderRequest>));
     let request_capture = request.clone();
@@ -63,6 +79,9 @@ fn global_provider_forwards_older_request_trigger() -> Result<(), String> {
         true,
         Callback::new(|_| {}),
     );
+    let Some(lease) = lease else {
+        return Err("older handler supported".to_owned());
+    };
 
     let Some(captured) = older_snapshot(&request) else {
         return Err("older request captured".to_owned());

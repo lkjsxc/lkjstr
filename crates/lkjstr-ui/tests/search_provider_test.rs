@@ -16,6 +16,7 @@ fn search_feed_lease_runs_release_cleanup_once() {
         });
     });
 
+    assert!(!provider.supports_older());
     let lease = provider.read(
         "tab-a".to_owned(),
         "nostr".to_owned(),
@@ -72,6 +73,21 @@ fn search_provider_forwards_query_text() -> Result<(), String> {
 }
 
 #[test]
+fn search_provider_without_older_handler_rejects_older_request() {
+    let provider = SearchFeedProvider::new(|_| {});
+    let window = default_search_feed_view("tab-a").window;
+    let lease = provider.load_older(
+        "tab-a".to_owned(),
+        "nostr wasm".to_owned(),
+        window,
+        Callback::new(|_| {}),
+    );
+
+    assert!(!provider.supports_older());
+    assert!(lease.is_none());
+}
+
+#[test]
 fn search_provider_forwards_older_window() -> Result<(), String> {
     let request = Arc::new(Mutex::new(None::<SearchOlderRequest>));
     let request_capture = request.clone();
@@ -85,6 +101,9 @@ fn search_provider_forwards_older_window() -> Result<(), String> {
         window.clone(),
         Callback::new(|_| {}),
     );
+    let Some(lease) = lease else {
+        return Err("older handler supported".to_owned());
+    };
     let Some(captured) = older_request_snapshot(&request) else {
         return Err("older request captured".to_owned());
     };

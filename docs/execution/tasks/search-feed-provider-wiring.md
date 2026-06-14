@@ -27,7 +27,8 @@ Search tab remains product owner until broader parity and no-import proof exist.
   real row windows by event id and relay provenance.
 - `crates/lkjstr-ui/src/workspace/search.rs` submits non-empty queries through
   cancellable provider leases, renders provider completions and older footer
-  commands, and restores `filterState.searchQuery` from tab snapshots.
+  commands only when the provider exposes a real older handler, and restores
+  `filterState.searchQuery` from tab snapshots.
 - `crates/lkjstr-ui/src/workspace/search_snapshot.rs` records Search
   `filterState.searchQuery` into runtime tab snapshots.
 - `crates/lkjstr-web/src/search_feed_host.rs` reads the worker-owned local
@@ -95,7 +96,8 @@ pnpm test -- tests/unit/search
 - Search restores `filterState.searchQuery` from feed tab snapshots and persists
   submitted query text to worker-owned tab-state rows.
 - Cached and relay older pages load through the footer command without
-  skipping same-second events across compound cursor boundaries.
+  skipping same-second events across compound cursor boundaries when the
+  provider supplies a real older handler.
 - The slice does not claim broader Search parity or TypeScript deletion.
 
 ## Must Not
