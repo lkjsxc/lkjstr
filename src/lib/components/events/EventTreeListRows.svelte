@@ -12,6 +12,7 @@
   } from '$lib/thread/thread-reactions';
   import type { EventActionState } from '$lib/events/action-state';
   import { actionStateForEvent } from '$lib/events/action-state';
+  import { hasOpenThreadAction } from './action-availability';
   import type {
     EventTreeListLeadingRow,
     EventTreeListViewRow,
@@ -39,6 +40,7 @@
   let collapsed = $derived(
     eventNode && 'collapsed' in eventNode ? eventNode : undefined,
   );
+  let canOpenThread = $derived(hasOpenThreadAction(props.openThread));
 </script>
 
 {#if props.node.kind === 'leading'}
@@ -52,14 +54,20 @@
 {:else if props.node.kind === 'empty'}
   <p class="event-list__empty">{props.node.text}</p>
 {:else if collapsed}
-  <button
-    type="button"
-    class="thread-continuation"
-    style={`--event-depth: ${collapsed.depth}`}
-    onclick={() => props.openThread?.(collapsed.targetId)}
-  >
-    Continue thread ({collapsed.hiddenCount})
-  </button>
+  {#if canOpenThread}
+    <button
+      type="button"
+      class="thread-continuation"
+      style={`--event-depth: ${collapsed.depth}`}
+      onclick={() => props.openThread?.(collapsed.targetId)}
+    >
+      Continue thread ({collapsed.hiddenCount})
+    </button>
+  {:else}
+    <p class="thread-continuation" style={`--event-depth: ${collapsed.depth}`}>
+      {collapsed.hiddenCount} hidden thread item(s) unavailable.
+    </p>
+  {/if}
 {:else if props.node.kind === 'eventFragment'}
   <EventFragmentRow
     node={props.node.node}

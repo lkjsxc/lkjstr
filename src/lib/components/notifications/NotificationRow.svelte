@@ -1,5 +1,6 @@
 <script lang="ts">
   import EventRow from '$lib/components/events/EventRow.svelte';
+  import { hasOpenProfileAction } from '$lib/components/events/action-availability';
   import IdentityChip from '$lib/components/identity/IdentityChip.svelte';
   import type { FeedEvent } from '$lib/events/types';
   import type { ProfileSummary } from '$lib/identity/identity';
@@ -25,6 +26,7 @@
   let sourceShowsActor = $derived(
     props.item?.event.pubkey === props.record.actorPubkey,
   );
+  let canOpenProfile = $derived(hasOpenProfileAction(props.openProfile));
   let chrome = $derived(
     notificationRowChrome({
       record: props.record,
@@ -39,16 +41,25 @@
     {#if chrome.kind === 'normal'}
       <div class="notification-row__meta">
         {#if chrome.showActor}
-          <button
-            type="button"
-            class="identity-button notification-row__actor"
-            onclick={() => props.openProfile?.(props.record.actorPubkey)}
-          >
-            <IdentityChip
-              pubkey={props.record.actorPubkey}
-              profile={props.profile}
-            />
-          </button>
+          {#if canOpenProfile}
+            <button
+              type="button"
+              class="identity-button notification-row__actor"
+              onclick={() => props.openProfile?.(props.record.actorPubkey)}
+            >
+              <IdentityChip
+                pubkey={props.record.actorPubkey}
+                profile={props.profile}
+              />
+            </button>
+          {:else}
+            <span class="identity-button notification-row__actor">
+              <IdentityChip
+                pubkey={props.record.actorPubkey}
+                profile={props.profile}
+              />
+            </span>
+          {/if}
         {/if}
         <strong>{chrome.label}</strong>
         {#if chrome.showTime}
