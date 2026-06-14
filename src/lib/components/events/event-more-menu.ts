@@ -11,6 +11,16 @@ export type EventMoreMenuClipboard = {
   readonly writeText?: (value: string) => Promise<void>;
 };
 
+export type EventMoreMenuAuthorContextAction =
+  | ((eventId: string, pubkey: string) => void)
+  | undefined;
+
+export function eventMoreMenuHasAuthorContext(
+  action: EventMoreMenuAuthorContextAction,
+): boolean {
+  return typeof action === 'function';
+}
+
 export async function copyEventIdToClipboard(
   eventId: string,
   clipboard: EventMoreMenuClipboard | undefined,

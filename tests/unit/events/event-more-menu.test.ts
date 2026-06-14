@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import {
   copyEventIdToClipboard,
   copyEventStatusLabel,
+  eventMoreMenuHasAuthorContext,
 } from '../../../src/lib/components/events/event-more-menu';
 
 describe('event more menu clipboard', () => {
@@ -40,5 +41,12 @@ describe('event more menu clipboard', () => {
 
     expect(status).toEqual({ kind: 'failed', reason: 'denied' });
     expect(copyEventStatusLabel(status)).toBe('Copy failed: denied');
+  });
+});
+
+describe('event more menu author context action', () => {
+  it('exposes nearby author action only when a callback exists', () => {
+    expect(eventMoreMenuHasAuthorContext(undefined)).toBe(false);
+    expect(eventMoreMenuHasAuthorContext(() => undefined)).toBe(true);
   });
 });

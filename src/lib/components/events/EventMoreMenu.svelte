@@ -5,6 +5,7 @@
   import {
     copyEventIdToClipboard,
     copyEventStatusLabel,
+    eventMoreMenuHasAuthorContext,
     type EventMoreMenuCopyStatus,
   } from './event-more-menu';
 
@@ -14,6 +15,9 @@
   };
 
   let props: Props = $props();
+  let hasAuthorContext = $derived(
+    eventMoreMenuHasAuthorContext(props.openAuthorContext),
+  );
   let copyStatus = $state<EventMoreMenuCopyStatus | null>(null);
   let copyTimer: ReturnType<typeof setTimeout> | undefined;
 
@@ -42,9 +46,11 @@
     <MoreHorizontal size={16} />
   </summary>
   <div class="event-more__items">
-    <button type="button" onclick={openNearby}
-      >Nearby posts by this author</button
-    >
+    {#if hasAuthorContext}
+      <button type="button" onclick={openNearby}
+        >Nearby posts by this author</button
+      >
+    {/if}
     <button type="button" onclick={copyEventId}>Copy event ID</button>
     {#if copyStatus}<small role="status"
         >{copyEventStatusLabel(copyStatus)}</small
