@@ -150,8 +150,9 @@ Shared event display parity requires Rust proof for normal event and repost
 target planning, shared geometry-feature extraction, compact unavailable states,
 custom emoji, media, references, sensitive-content policy, actions, and
 notification repost rows. Current Rust proof covers shared/repost renderer
-selection, unavailable target planning, chrome policy, and full FeedViewModel
-bounded summaries for repost, generic repost, reaction, and zap rows.
+selection, unavailable target planning, chrome policy, validated custom emoji
+content rows, and full FeedViewModel bounded summaries for repost, generic
+repost, reaction, and zap rows.
 Repost-specific code may provide contextual chrome but must not fork target event
 rendering without a documented tested reason.
 

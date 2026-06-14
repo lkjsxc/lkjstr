@@ -1,5 +1,5 @@
 use leptos::{ev::MouseEvent, prelude::*};
-use lkjstr_app::feed::{FeedEventContent, FeedEventContentRow};
+use lkjstr_app::feed::{FeedEventContent, FeedEventContentRow, FeedEventCustomEmoji};
 
 pub(crate) fn event_content(content: FeedEventContent) -> impl IntoView {
     match content {
@@ -38,6 +38,35 @@ fn warning_reason(reason: Option<String>) -> impl IntoView {
 
 fn text_rows_view(rows: Vec<FeedEventContentRow>) -> impl IntoView {
     rows.into_iter()
-        .map(|row| view! { <p>{row.text().to_owned()}</p> })
+        .map(|row| content_row(row).into_any())
         .collect_view()
+}
+
+fn content_row(row: FeedEventContentRow) -> impl IntoView {
+    match row {
+        FeedEventContentRow::Text(text) => view! { <p>{text}</p> }.into_any(),
+        FeedEventContentRow::CustomEmoji(emoji) => custom_emoji(emoji).into_any(),
+        FeedEventContentRow::MediaPreviewUnavailable => {
+            view! { <p>"Media preview unavailable"</p> }.into_any()
+        }
+        FeedEventContentRow::ReferencePreviewUnavailable => {
+            view! { <p>"Reference preview unavailable"</p> }.into_any()
+        }
+    }
+}
+
+fn custom_emoji(emoji: FeedEventCustomEmoji) -> impl IntoView {
+    let token = format!(":{}:", emoji.shortcode);
+    view! {
+        <p>
+            <img
+                class="custom-emoji"
+                src=emoji.url
+                alt=token.clone()
+                title=token
+                loading="lazy"
+                referrerpolicy="no-referrer"
+            />
+        </p>
+    }
 }

@@ -51,10 +51,7 @@ fn event_row_text(kind: u64, content: String) -> Result<String, String> {
     let FeedEventContent::Rows(rows) = &row.content else {
         return Err("unexpected sensitive row".to_owned());
     };
-    Ok(rows
-        .first()
-        .map(|row| row.text().to_owned())
-        .unwrap_or_default())
+    Ok(rows.first().map(|row| row.text()).unwrap_or_default())
 }
 
 fn input(feed_id: &str, window: lkjstr_app::FeedWindowState) -> FeedViewModelInput {

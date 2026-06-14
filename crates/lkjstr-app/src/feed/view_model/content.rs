@@ -1,7 +1,10 @@
 use crate::feed_fragments::{
     FeedFragmentConfig, FeedVisualRow, SemanticFeedEvent, plan_feed_visual_rows,
 };
-use lkjstr_protocol::{KIND_GENERIC_REPOST, KIND_REACTION, KIND_REPOST, KIND_ZAP_RECEIPT};
+use lkjstr_protocol::{
+    CustomEmoji, KIND_GENERIC_REPOST, KIND_REACTION, KIND_REPOST, KIND_ZAP_RECEIPT,
+    custom_emoji_token_text,
+};
 
 #[derive(Clone, Debug, Eq, PartialEq)]
 pub enum FeedEventContent {
@@ -15,17 +18,26 @@ pub enum FeedEventContent {
 #[derive(Clone, Debug, Eq, PartialEq)]
 pub enum FeedEventContentRow {
     Text(String),
+    CustomEmoji(FeedEventCustomEmoji),
     MediaPreviewUnavailable,
     ReferencePreviewUnavailable,
 }
 
+#[derive(Clone, Debug, Eq, PartialEq)]
+pub struct FeedEventCustomEmoji {
+    pub shortcode: String,
+    pub url: String,
+    pub address: Option<String>,
+}
+
 impl FeedEventContentRow {
     #[must_use]
-    pub fn text(&self) -> &str {
+    pub fn text(&self) -> String {
         match self {
-            Self::Text(text) => text,
-            Self::MediaPreviewUnavailable => "Media preview unavailable",
-            Self::ReferencePreviewUnavailable => "Reference preview unavailable",
+            Self::Text(text) => text.clone(),
+            Self::CustomEmoji(emoji) => custom_emoji_token_text(&emoji.shortcode),
+            Self::MediaPreviewUnavailable => "Media preview unavailable".to_owned(),
+            Self::ReferencePreviewUnavailable => "Reference preview unavailable".to_owned(),
         }
     }
 }
@@ -51,6 +63,7 @@ pub fn plan_feed_event_content(
     has_content_warning: bool,
     reason: Option<String>,
     event: &SemanticFeedEvent,
+    custom_emojis: &[CustomEmoji],
     content_shape_hash: &str,
     estimated_height_px: u16,
     config: &FeedFragmentConfig,
@@ -60,12 +73,30 @@ pub fn plan_feed_event_content(
         ..event.clone()
     };
     let rows = plan_feed_visual_rows(&event, content_shape_hash, estimated_height_px, config);
-    feed_event_content(has_content_warning, reason, &rows)
+    let rows = feed_event_content_rows_with_emojis(&rows, custom_emojis);
+    if has_content_warning {
+        return FeedEventContent::Sensitive {
+            reason: reason.filter(|item| !item.trim().is_empty()),
+            rows,
+        };
+    }
+    FeedEventContent::Rows(rows)
 }
 
 #[must_use]
 pub fn feed_event_content_rows(rows: &[FeedVisualRow]) -> Vec<FeedEventContentRow> {
     rows.iter().filter_map(feed_event_content_row).collect()
+}
+
+#[must_use]
+pub fn feed_event_content_rows_with_emojis(
+    rows: &[FeedVisualRow],
+    custom_emojis: &[CustomEmoji],
+) -> Vec<FeedEventContentRow> {
+    feed_event_content_rows(rows)
+        .into_iter()
+        .flat_map(|row| split_text_custom_emojis(row, custom_emojis))
+        .collect()
 }
 
 fn feed_event_content_row(row: &FeedVisualRow) -> Option<FeedEventContentRow> {
@@ -95,4 +126,54 @@ fn reaction_summary(content: &str) -> String {
         return "Reaction target unavailable".to_owned();
     }
     format!("Reacted with {content}")
+}
+
+fn split_text_custom_emojis(
+    row: FeedEventContentRow,
+    custom_emojis: &[CustomEmoji],
+) -> Vec<FeedEventContentRow> {
+    let FeedEventContentRow::Text(text) = row else {
+        return vec![row];
+    };
+    split_custom_emoji_text(&text, custom_emojis)
+}
+
+fn split_custom_emoji_text(text: &str, custom_emojis: &[CustomEmoji]) -> Vec<FeedEventContentRow> {
+    let mut rows = Vec::new();
+    let mut rest = text;
+    while !rest.is_empty() {
+        let Some((index, emoji)) = next_custom_emoji(rest, custom_emojis) else {
+            rows.push(FeedEventContentRow::Text(rest.to_owned()));
+            break;
+        };
+        if index > 0 {
+            rows.push(FeedEventContentRow::Text(rest[..index].to_owned()));
+        }
+        rows.push(FeedEventContentRow::CustomEmoji(emoji.into()));
+        rest = &rest[index + custom_emoji_token_text(&emoji.shortcode).len()..];
+    }
+    rows
+}
+
+fn next_custom_emoji<'a>(
+    text: &str,
+    custom_emojis: &'a [CustomEmoji],
+) -> Option<(usize, &'a CustomEmoji)> {
+    custom_emojis
+        .iter()
+        .filter_map(|emoji| {
+            text.find(&custom_emoji_token_text(&emoji.shortcode))
+                .map(|i| (i, emoji))
+        })
+        .min_by_key(|(index, _)| *index)
+}
+
+impl From<&CustomEmoji> for FeedEventCustomEmoji {
+    fn from(value: &CustomEmoji) -> Self {
+        Self {
+            shortcode: value.shortcode.clone(),
+            url: value.url.clone(),
+            address: value.address.clone(),
+        }
+    }
 }

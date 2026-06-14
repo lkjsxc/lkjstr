@@ -1,3 +1,4 @@
+use super::content::feed_event_content_rows_with_emojis;
 use super::{
     FeedEventContent, FeedEventContentRow, feed_event_content, feed_event_content_rows,
     plan_feed_event_content,
@@ -6,7 +7,7 @@ use crate::feed_fragments::{
     EventFullRow, EventIndexedRow, EventMarkerRow, EventTextSegmentRow, FeedFragmentConfig,
     FeedVisualRow, SemanticFeedEvent,
 };
-use lkjstr_protocol::{KIND_REACTION, KIND_REPOST, KIND_ZAP_RECEIPT};
+use lkjstr_protocol::{CustomEmoji, KIND_REACTION, KIND_REPOST, KIND_ZAP_RECEIPT};
 
 #[test]
 fn content_rows_keep_renderable_fragments_in_order() {
@@ -50,12 +51,33 @@ fn content_warning_keeps_rows_for_local_reveal() {
 }
 
 #[test]
+fn content_rows_replace_valid_custom_emoji_tokens_with_render_rows() {
+    let rows = vec![FeedVisualRow::EventFull(full("hi :party: now :party:"))];
+    let emoji = CustomEmoji {
+        shortcode: "party".to_owned(),
+        url: "https://emoji.example/party.png".to_owned(),
+        address: Some(format!("30030:{}:set", "a".repeat(64))),
+    };
+
+    assert_eq!(
+        feed_event_content_rows_with_emojis(&rows, std::slice::from_ref(&emoji)),
+        vec![
+            FeedEventContentRow::Text("hi ".to_owned()),
+            FeedEventContentRow::CustomEmoji((&emoji).into()),
+            FeedEventContentRow::Text(" now ".to_owned()),
+            FeedEventContentRow::CustomEmoji((&emoji).into()),
+        ]
+    );
+}
+
+#[test]
 fn action_events_render_bounded_protocol_summary_rows() {
     assert_eq!(
         content_texts(plan_feed_event_content(
             false,
             None,
             &event(KIND_REPOST, &"{".repeat(3_000)),
+            &[],
             "shape",
             120,
             &FeedFragmentConfig::default(),
@@ -67,6 +89,7 @@ fn action_events_render_bounded_protocol_summary_rows() {
             false,
             None,
             &event(KIND_REACTION, "+"),
+            &[],
             "shape",
             120,
             &FeedFragmentConfig::default(),
@@ -78,6 +101,7 @@ fn action_events_render_bounded_protocol_summary_rows() {
             false,
             None,
             &event(KIND_ZAP_RECEIPT, ""),
+            &[],
             "shape",
             120,
             &FeedFragmentConfig::default(),
@@ -90,7 +114,7 @@ fn content_texts(content: FeedEventContent) -> Vec<String> {
     let rows = match content {
         FeedEventContent::Sensitive { rows, .. } | FeedEventContent::Rows(rows) => rows,
     };
-    rows.into_iter().map(|row| row.text().to_owned()).collect()
+    rows.into_iter().map(|row| row.text()).collect()
 }
 
 fn event(kind: u64, content: &str) -> SemanticFeedEvent {

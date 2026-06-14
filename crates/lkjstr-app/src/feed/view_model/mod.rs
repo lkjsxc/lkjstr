@@ -13,8 +13,8 @@ pub use build::{
     footer_row_from_window, notification_state_row, profile_state_row, unavailable_state_row,
 };
 pub use content::{
-    FeedEventContent, FeedEventContentRow, feed_event_content, feed_event_content_rows,
-    plan_feed_event_content,
+    FeedEventContent, FeedEventContentRow, FeedEventCustomEmoji, feed_event_content,
+    feed_event_content_rows, plan_feed_event_content,
 };
 pub use geometry::feed_event_geometry_model_keys;
 pub use ids::{

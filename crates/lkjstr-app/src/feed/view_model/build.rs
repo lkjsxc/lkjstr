@@ -152,6 +152,7 @@ fn event_row(
     let row_id = feed_event_row_id(&event.event.id);
     let geometry_estimate = estimate_row_geometry(row_id.clone(), &features, models);
     let content_warning_reason = lkjstr_protocol::content_warning_reason(&event.event);
+    let custom_emojis = lkjstr_protocol::custom_emojis(&event.event);
     let semantic = SemanticFeedEvent {
         event_id: event.event.id.clone(),
         event_kind: event.event.kind,
@@ -167,6 +168,7 @@ fn event_row(
         features.has_content_warning,
         content_warning_reason.clone(),
         &semantic,
+        &custom_emojis,
         &features.content_shape_hash,
         geometry_estimate.estimated_height_px,
         config,
@@ -183,6 +185,6 @@ fn event_row(
         display,
         has_content_warning: features.has_content_warning,
         content_warning_reason,
-        custom_emoji_count: features.custom_emoji_count,
+        custom_emoji_count: custom_emojis.len().min(usize::from(u16::MAX)) as u16,
     }
 }
