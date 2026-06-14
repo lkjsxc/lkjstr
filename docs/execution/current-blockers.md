@@ -147,7 +147,9 @@ models, anchors, footer states, and unavailable states.
   Profile Followees/User Timeline/Profile Edit/copy-npub/nprofile/follow-list/relay-set JSON actions,
   Profile Follow/Unfollow state loading plus local and NIP-07 publish without fake success,
   Profile sparse-history empty proof, first Rust Followees NIP-02 row rendering,
-  default cached plus selected-relay/stored-route/disabled-route Followees host-provider, cleanup, retry diagnostics, and Svelte-hosted Rust island proof,
+  default cached plus selected-relay/stored-route/disabled-route Followees
+  host-provider, cleanup, retry diagnostics, root row actions with explicit copy
+  status, and Svelte-hosted Rust island proof,
   first Rust User Timeline NIP-02 author-set feed-row rendering,
   default cached User Timeline host-provider proof, public no-route/loading
   discovery-state tests, selected-relay User Timeline kind `3` discovery,
