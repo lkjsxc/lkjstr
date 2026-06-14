@@ -40,6 +40,8 @@ event-row menu paths remain until no-import and final verification proof exist.
   event ids.
 - `crates/lkjstr-ui/src/workspace/feed_event_actions.rs` shares the Rust
   Profile, Thread, and Author Context row action renderer with User Timeline.
+- Rust feed event actions expose host-backed event-id copy through the existing
+  browser clipboard provider without calling browser APIs from `lkjstr-ui`.
 - `crates/lkjstr-ui/src/workspace/feed_event_row.rs` shares event body rendering
   across converted Rust feed surfaces while preserving Author Context actions.
 - `crates/lkjstr-ui/src/workspace/feed_state_row.rs` shares unavailable,
@@ -124,6 +126,8 @@ PATH=/home/lkjsxc/.cargo/bin:$PATH pnpm rust-wasm:quiet
   event row ids and pubkeys.
 - Rust Author Context and User Timeline rows share the same Leptos event action
   renderer while retaining surface-specific labels and test ids.
+- Rust Author Context rows expose event-id copy through a host-provided
+  clipboard action; copy failure renders an explicit status string.
 - Rust Author Context rows use the shared event body renderer used by converted
   Rust feed surfaces, with actions still attached from real row ids and pubkeys.
 - Rust Author Context uses shared feed state-row rendering for explicit

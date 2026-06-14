@@ -29,6 +29,8 @@ fn event_actions(
             thread_label: "Open thread",
             author_context_test_id: "author-context-open-context",
             author_context_label: "Author context",
+            copy_test_id: "author-context-copy-event-id",
+            copy_label: "Copy event ID",
         },
     )
 }

@@ -121,6 +121,7 @@ pub(crate) fn tab_content(input: TabContentInput) -> impl IntoView {
             input.tab_id,
             input.profile_pubkey,
             input.user_timeline_provider,
+            input.profile_copy_provider,
         )
         .into_any(),
         TabKind::Thread => thread_tab_content(input).into_any(),

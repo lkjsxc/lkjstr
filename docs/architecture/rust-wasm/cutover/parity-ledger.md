@@ -118,9 +118,9 @@ produce explicit unavailable or partial rows. The default browser provider reads
 cached anchor and nearby author event rows from worker SQLite and renders them
 as partial cache evidence. Bounded selected-relay reads around the cached
 anchor, exact anchor lookup through stored author routes, and row action
-buttons are wired, the shipped Svelte tab mounts the Rust body as a WASM
-island, and browser proof covers explicit unavailable states plus island
-mount/unmount. No-import proof and deletion proof remain open.
+buttons plus host-backed event-id copy are wired, the shipped Svelte tab mounts
+the Rust body as a WASM island, and browser proof covers explicit unavailable
+states plus island mount/unmount. No-import proof and deletion proof remain open.
 Rust Thread now loads cached focused/root events, cached replies by `#e` root
 or focused-event tags, bounded cached parent-chain rows by exact id, bounded
 bootstrap relay snapshots, explicit older footer-command page reads,

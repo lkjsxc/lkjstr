@@ -1,6 +1,7 @@
 use leptos::prelude::*;
 use lkjstr_app::{UserTimelineFeedStatus, UserTimelineFeedView, default_user_timeline_feed_view};
 
+use crate::workspace::profile_clipboard_provider::ProfileCopyProvider;
 use crate::workspace::user_timeline_actions::UserTimelineActions;
 use crate::workspace::user_timeline_provider::UserTimelineProvider;
 use crate::workspace::user_timeline_row::timeline_row;
@@ -54,6 +55,7 @@ pub fn user_timeline_tab_content(
     tab_id: String,
     target_pubkey: Option<String>,
     provider: Option<UserTimelineProvider>,
+    copy_event_id: Option<ProfileCopyProvider>,
 ) -> impl IntoView {
     let model = default_user_timeline_feed_view(&tab_id, target_pubkey.clone());
     view! {
@@ -62,7 +64,10 @@ pub fn user_timeline_tab_content(
             target_pubkey=target_pubkey
             model=model
             provider=provider
-            actions=UserTimelineActions::default()
+            actions=UserTimelineActions {
+                copy_event_id,
+                ..UserTimelineActions::default()
+            }
         />
     }
 }

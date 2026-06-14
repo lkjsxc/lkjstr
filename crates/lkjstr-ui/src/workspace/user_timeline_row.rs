@@ -42,6 +42,8 @@ fn event_actions(event_id: String, pubkey: String, actions: UserTimelineActions)
             thread_label: "Thread",
             author_context_test_id: "user-timeline-open-author-context",
             author_context_label: "Author context",
+            copy_test_id: "user-timeline-copy-event-id",
+            copy_label: "Copy event ID",
         },
     )
 }

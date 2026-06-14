@@ -55,6 +55,7 @@ pub fn mount_user_timeline_tab(
             open_profile: Some(string_callback(open_profile)),
             open_thread: Some(string_callback(open_thread)),
             open_author_context: Some(pair_callback(open_author_context)),
+            copy_event_id: Some(crate::profile_clipboard_host::profile_copy_provider()),
         },
     );
     UserTimelineIslandHandle {

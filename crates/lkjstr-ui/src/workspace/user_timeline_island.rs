@@ -18,6 +18,7 @@ pub fn mount_user_timeline_island(
         open_profile: actions.open_profile,
         open_thread: actions.open_thread,
         open_author_context: actions.open_author_context,
+        copy_event_id: actions.copy_event_id,
     };
     let handle = leptos::mount::mount_to(parent, move || {
         view! {
@@ -41,4 +42,5 @@ pub struct UserTimelineIslandActions {
     pub open_profile: Option<Callback<String>>,
     pub open_thread: Option<Callback<String>>,
     pub open_author_context: Option<Callback<(String, String)>>,
+    pub copy_event_id: Option<crate::workspace::profile_clipboard_provider::ProfileCopyProvider>,
 }

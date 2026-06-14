@@ -8,6 +8,7 @@ use crate::workspace::author_context;
 use crate::workspace::author_context_actions::AuthorContextActions;
 use crate::workspace::persistence::WorkspacePersistence;
 use crate::workspace::profile_action_tabs::pubkey_tab_callback;
+use crate::workspace::profile_clipboard_provider::ProfileCopyProvider;
 use crate::workspace::state::{self, TabSequence};
 use crate::workspace::tab_content_input::TabContentInput;
 
@@ -17,6 +18,7 @@ pub(crate) fn author_context_tab_content(input: TabContentInput) -> impl IntoVie
         input.sequence,
         input.pane_id.clone(),
         input.persistence.clone(),
+        input.profile_copy_provider,
     );
     author_context::author_context_tab_content(
         input.tab_id,
@@ -32,6 +34,7 @@ fn actions(
     sequence: TabSequence,
     pane_id: String,
     persistence: Option<WorkspacePersistence>,
+    copy_event_id: Option<ProfileCopyProvider>,
 ) -> AuthorContextActions {
     AuthorContextActions {
         open_profile: Some(pubkey_tab_callback(
@@ -54,6 +57,7 @@ fn actions(
             pane_id,
             persistence,
         )),
+        copy_event_id,
     }
 }
 
