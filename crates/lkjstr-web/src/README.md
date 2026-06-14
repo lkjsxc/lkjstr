@@ -38,6 +38,7 @@ Source files expose Rust application behavior to the browser through
 - `indexed_db/`: browser IndexedDB host adapter for narrow exports and tests.
 - `nip07_host.rs`: browser NIP-07 public-key and signing adapter.
 - `notifications_feed_cache.rs`: Notifications SQLite row and source-event cache evidence.
+- `notifications_feed_geometry.rs`: Notifications feed durable geometry model loader.
 - `notifications_feed_host.rs`: SQLite-backed Notifications feed view-model provider.
 - `notifications_feed_host_*.rs`: Notifications host commands, diagnostics, and storage helpers.
 - `notifications_feed_relay*.rs`: Notifications selected-relay read, retained state, and test probes.

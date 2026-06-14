@@ -1,6 +1,6 @@
 use lkjstr_app::{
     FeedFragmentConfig, NotificationsFeedSourceState, NotificationsFeedView,
-    NotificationsFeedViewInput, RowGeometryModel, build_notifications_feed_view, empty_feed_window,
+    NotificationsFeedViewInput, build_notifications_feed_view, empty_feed_window,
     initial_notification_cursor,
 };
 use lkjstr_relays::DemandVisibility;
@@ -11,6 +11,7 @@ use crate::{
     host_status::browser_now_ms,
     notifications_feed_cache::{CachedNotifications, cached_notifications},
     notifications_feed_coverage::{NotificationsCoverageInput, load_notifications_source_state},
+    notifications_feed_geometry::notifications_feed_geometry_models,
     notifications_feed_host_commands::{
         complete_read_output, release_owner as release_notifications_owner, start_older_request,
     },
@@ -26,6 +27,8 @@ use crate::{
 
 pub(crate) const PAGE_SIZE: u64 = 30;
 pub(crate) const WINDOW_MAX: usize = 180;
+const VIEW_WIDTH_PX: u16 = 680;
+const VIEW_FONT_SCALE: f32 = 1.0;
 
 #[derive(Clone)]
 pub(crate) struct NotificationsFeedHost {
@@ -136,6 +139,14 @@ async fn notifications_feed_model(
         }
         _ => NotificationsFeedSourceState::Pending,
     };
+    let geometry_models = notifications_feed_geometry_models(
+        host,
+        &window,
+        &mut diagnostics,
+        VIEW_WIDTH_PX,
+        VIEW_FONT_SCALE,
+    )
+    .await;
     let relay = notifications_relay_input(NotificationsRelayInputSeed {
         owner,
         active_pubkey: &active_pubkey,
@@ -161,9 +172,9 @@ async fn notifications_feed_model(
         page_size: PAGE_SIZE,
         window,
         notification_rows,
-        width_px: 680,
-        font_scale: 1.0,
-        geometry_models: Vec::<RowGeometryModel>::new(),
+        width_px: VIEW_WIDTH_PX,
+        font_scale: VIEW_FONT_SCALE,
+        geometry_models,
         fragment_config: FeedFragmentConfig::default(),
         diagnostics,
     });

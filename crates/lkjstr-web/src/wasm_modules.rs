@@ -46,6 +46,7 @@ mod mount_api;
 mod nip07_host;
 mod notifications_feed_cache;
 mod notifications_feed_coverage;
+mod notifications_feed_geometry;
 mod notifications_feed_host;
 mod notifications_feed_host_commands;
 mod notifications_feed_host_diagnostics;
