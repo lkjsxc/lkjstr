@@ -12,3 +12,4 @@ newer recovery.
 - `ProfileHeader.svelte`: banner-safe full-width identity below avatar/actions,
   copy menu, actions, and facts.
 - `ProfileAbout.svelte`: profile-only about text rendering with safe links.
+- `profile-copy-status.ts`: copy menu success and failure labels.

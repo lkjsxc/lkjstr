@@ -34,6 +34,8 @@ no-import proof and final verification exist.
 - `crates/lkjstr-web/tests/profile_copy_tab_test.rs` proves the Rust Profile
   copy menu sends npub, nprofile, follow-list JSON, and relay-set JSON values
   through the host copy provider before showing copied status.
+- The retained Svelte Profile header copy menu reports clipboard unavailable or
+  rejected writes explicitly instead of claiming copied status.
 - `crates/lkjstr-web/tests/profile_follow_tab_test.rs` proves the Rust Profile
   follow button loads cached provider state, toggles through the provider,
   preserves state when publishing fails, and stores local or NIP-07 kind `3`

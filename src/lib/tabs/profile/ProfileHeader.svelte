@@ -19,6 +19,11 @@
   import type { RelaySet } from '$lib/relays/relay-store';
   import ProfileAbout from './ProfileAbout.svelte';
   import ProfileActions from './ProfileActions.svelte';
+  import {
+    copyProfileValue,
+    profileCopyStatusLabel,
+    type ProfileCopyStatus,
+  } from './profile-copy-status';
 
   type Props = {
     pubkey: string;
@@ -40,7 +45,7 @@
     identityDisplay(props.pubkey, props.profile ?? undefined),
   );
   let website = $derived(normalizedProfileWebsite(props.profile?.website));
-  let copied = $state('');
+  let copyStatus = $state<ProfileCopyStatus | null>(null);
   let copyTimer: ReturnType<typeof setTimeout> | undefined;
 
   onDestroy(() => {
@@ -48,11 +53,10 @@
   });
 
   async function copy(label: string, value: string): Promise<void> {
-    await navigator.clipboard?.writeText(value);
-    copied = label;
+    copyStatus = await copyProfileValue(label, value, navigator.clipboard);
     if (copyTimer) clearTimeout(copyTimer);
     copyTimer = setTimeout(() => {
-      if (copied === label) copied = '';
+      if (copyStatus?.label === label) copyStatus = null;
     }, 1200);
   }
 
@@ -160,7 +164,9 @@
           {props.profile?.website}
         </a>
       {/if}
-      {#if copied}<span role="status">Copied {copied}</span>{/if}
+      {#if copyStatus}<span role="status"
+          >{profileCopyStatusLabel(copyStatus)}</span
+        >{/if}
     </div>
   </div>
 </header>
