@@ -11,8 +11,9 @@ Injected-row, cache-backed default-provider, bounded selected-relay relay-read,
 row action-opening, exact anchor lookup, and stored author-route slices are
 implemented. Browser proof covers explicit unavailable states and the shipped
 Svelte tab now mounts the Rust body as a WASM island. The unused TypeScript
-Author Context loader was removed after no-import proof; Svelte host and
-event-row menu paths remain until no-import and final verification proof exist.
+Author Context loader and its deletion-anchor directory were removed after
+no-import proof; Svelte host and event-row menu paths remain until no-import
+and final verification proof exist.
 
 ## Current Evidence
 
@@ -56,8 +57,8 @@ event-row menu paths remain until no-import and final verification proof exist.
   plus shared state-row and footer presentation data without browser-only proof.
 - `src/lib/tabs/author-context/AuthorContextTab.svelte` mounts the Rust body
   through the WASM asset loader and forwards workspace action callbacks.
-- `src/lib/author-context/author-context.ts` has no product imports and is
-  removed in the loader deletion slice.
+- The retired `src/lib/author-context` helper directory has no product imports
+  and is removed in the loader deletion slice.
 
 ## Next Edit
 
@@ -73,7 +74,6 @@ typed route rows, binds browser sockets, and maps outcomes.
 - `docs/product/tools/author-context.md`
 - `docs/architecture/rust-wasm/cutover/feed-runtime.md`
 - `docs/architecture/rust-wasm/cutover/ui-surface-map.md`
-- `src/lib/author-context/README.md`
 - `src/lib/tabs/author-context/AuthorContextTab.svelte`
 - `crates/lkjstr-app/src/feed/author_context_inputs.rs`
 - `crates/lkjstr-ui/src/workspace/tab_content.rs`
@@ -147,7 +147,8 @@ PATH=/home/lkjsxc/.cargo/bin:$PATH pnpm rust-wasm:quiet
 - The shipped Svelte Author Context tab can mount and unmount the Rust body
   without leaking a provider lease, and row actions call the Svelte workspace
   callbacks.
-- The unused TypeScript loader remains removed after no-import proof.
+- The unused TypeScript loader and deletion-anchor directory remain removed
+  after no-import proof.
 - Svelte tab and event-row menu paths remain until no-import and final gates
   prove deletion readiness.
 

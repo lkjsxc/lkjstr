@@ -44,7 +44,8 @@ no-import proof and final verification exist.
 ## Next Edit
 
 Continue to Profile and Author Context deletion proof. Do not delete TypeScript
-Profile or Author Context paths until the no-import and final gates pass.
+Profile paths, the Author Context Svelte host, or shared event-row glue until
+the no-import and final gates pass.
 
 ## Next Checklist
 
@@ -64,8 +65,8 @@ Profile or Author Context paths until the no-import and final gates pass.
 - [x] Publish non-own Profile Follow/Unfollow through local or NIP-07 signing
       only after enabled write relays accept the kind `3` event.
 - [x] Prove owner cleanup suppresses late provider completions and relay output.
-- [x] Keep TypeScript Profile and Author Context paths until parity, no-import,
-      and deletion proof exist.
+- [x] Keep TypeScript Profile paths, the Author Context Svelte host, and shared
+      event-row glue until parity, no-import, and deletion proof exist.
 
 ## Acceptance
 
@@ -96,8 +97,8 @@ shown only after complete proof.
 
 ## Temporary TypeScript Or Svelte Files To Keep
 
-Keep `src/lib/profile/**`, `src/lib/author-context/**`, and Profile tab glue
-until Rust host providers and deletion proof exist.
+Keep `src/lib/profile/**`, `src/lib/tabs/author-context/**`, shared event-row
+glue, and Profile tab glue until Rust host providers and deletion proof exist.
 
 ## Focused Gate
 
