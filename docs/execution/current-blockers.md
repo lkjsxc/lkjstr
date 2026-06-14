@@ -184,7 +184,8 @@ models, anchors, footer states, and unavailable states.
   and Rust older-load controls without real older provider handlers are
   suppressed; Profile following-count actions require a real Followees opener,
   unused tab-snapshot no-op persistence construction is removed, and Rust/WASM
-  quiet.
+  quiet. Author Context, Followees, and User Timeline Svelte-hosted Rust
+  islands cancel pending WASM mounts when hidden or destroyed.
 - Remaining completion proof: `PaneFeedTabBody.svelte` still imports the Svelte
   Author Context host, and `EventRow.svelte` plus `EventFragmentRow.svelte`
   still import `EventMoreMenu.svelte`. Their no-import proof, event-row menu

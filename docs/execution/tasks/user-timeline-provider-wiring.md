@@ -129,6 +129,8 @@ pnpm rust-wasm:quiet
 - The shipped Svelte User Timeline tab is only a lifecycle wrapper for the Rust
   island, passes real workspace callbacks instead of no-op fallbacks, and
   releases it on visibility changes or destruction.
+- The Svelte host cancels pending WASM mounts when hidden or destroyed, so late
+  bridge loads cannot remount a hidden island.
 - Shipped Stats reads Rust-owned User Timeline diagnostic aggregates when the
   WASM bridge is available and otherwise shows an explicit unavailable reason.
 - Rust rows expose profile, thread, and Author Context actions from real row

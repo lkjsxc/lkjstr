@@ -115,6 +115,8 @@ pnpm rust-wasm:quiet
 - Profile opening proof reaches the real Followees body.
 - The shipped Svelte Followees tab is only a lifecycle wrapper for the Rust
   island and releases it on visibility changes or destruction.
+- The Svelte host cancels pending WASM mounts when hidden or destroyed, so late
+  bridge loads cannot remount a hidden island.
 - Rust rows expose real pubkeys, relay hints, petnames, and profile,
   user-timeline, and copy actions without synthesizing profile metadata or
   no-op row controls.

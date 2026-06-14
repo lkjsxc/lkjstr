@@ -42,8 +42,7 @@
   $effect(() => {
     const key = props.visible ? `${props.tabId}:${props.pubkey}` : '';
     if (!key) {
-      releaseIsland();
-      activeKey = '';
+      cancelIsland();
       return;
     }
     if (key === activeKey) return;
@@ -51,8 +50,7 @@
   });
 
   onDestroy(() => {
-    generation += 1;
-    releaseIsland();
+    cancelIsland();
   });
 
   async function mountIsland(key: string): Promise<void> {
@@ -95,6 +93,12 @@
   function releaseIsland(): void {
     handle?.unmount();
     handle = undefined;
+  }
+
+  function cancelIsland(): void {
+    generation += 1;
+    releaseIsland();
+    activeKey = '';
   }
 </script>
 
