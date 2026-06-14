@@ -12,6 +12,7 @@ use crate::{
     user_timeline_cache::{cached_events, window_from_events},
     user_timeline_coverage::{UserTimelineCoverageInput, load_user_timeline_source_state},
     user_timeline_discovery_view::{discovery_plan, discovery_plan_for_relay_outcomes},
+    user_timeline_geometry::user_timeline_geometry_models,
     user_timeline_host::{PAGE_SIZE, UserTimelineHost, WINDOW_MAX},
     user_timeline_host_view::{
         UserTimelineModelParts, diagnostic, storage_problem, user_timeline_view,
@@ -66,6 +67,8 @@ pub(crate) async fn cached_model(
     if let Some(outcomes) = &relay_outcomes {
         diagnostics.extend(relay_diagnostics(&selected_relays, &author_routes, outcomes));
     }
+    let geometry_models =
+        user_timeline_geometry_models(host, &window, &mut diagnostics, 680, 1.0).await;
     let discovery = relay_outcomes.as_ref().map_or_else(
         || {
             discovery_plan(
@@ -94,6 +97,7 @@ pub(crate) async fn cached_model(
         author_routes,
         window,
         since: Some(since),
+        geometry_models,
         diagnostics,
     })
 }

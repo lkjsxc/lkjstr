@@ -29,6 +29,7 @@ pub(crate) struct UserTimelineModelParts<'a> {
     pub(crate) author_routes: Vec<AuthorRelayRoute>,
     pub(crate) window: lkjstr_app::FeedWindowState,
     pub(crate) since: Option<u64>,
+    pub(crate) geometry_models: Vec<RowGeometryModel>,
     pub(crate) diagnostics: Vec<UserTimelineFeedDiagnosticInput>,
 }
 
@@ -54,6 +55,7 @@ pub(crate) fn loading_selected_model(
         author_routes: author_routes.to_vec(),
         window: empty_feed_window(1, WINDOW_MAX),
         since: None,
+        geometry_models: Vec::new(),
         diagnostics,
     })
 }
@@ -77,6 +79,7 @@ pub(crate) fn partial_failure_view(
         author_routes: Vec::new(),
         window: empty_feed_window(1, WINDOW_MAX),
         since: None,
+        geometry_models: Vec::new(),
         diagnostics,
     })
 }
@@ -104,6 +107,7 @@ pub(crate) fn relay_failure_view(
         author_routes,
         window: empty_feed_window(1, WINDOW_MAX),
         since: None,
+        geometry_models: Vec::new(),
         diagnostics,
     })
 }
@@ -125,7 +129,7 @@ pub(crate) fn user_timeline_view(input: UserTimelineModelParts<'_>) -> UserTimel
         window: input.window,
         width_px: 680,
         font_scale: 1.0,
-        geometry_models: Vec::<RowGeometryModel>::new(),
+        geometry_models: input.geometry_models,
         fragment_config: FeedFragmentConfig::default(),
         diagnostics: input.diagnostics,
     })

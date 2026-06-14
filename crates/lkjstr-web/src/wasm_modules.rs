@@ -112,6 +112,7 @@ mod tweet_host;
 mod user_timeline_cache;
 mod user_timeline_coverage;
 mod user_timeline_discovery_view;
+mod user_timeline_geometry;
 mod user_timeline_host;
 mod user_timeline_host_cached;
 mod user_timeline_host_model;

@@ -53,6 +53,7 @@ Source files expose Rust application behavior to the browser through
 - `relay_score/`: serializable relay read score bridge.
 - `scan_model/`: serializable scan density planning bridge.
 - `search_feed_geometry.rs`: Search feed durable geometry model loader.
+- `user_timeline_geometry.rs`: User Timeline feed durable geometry model loader.
 - `relay_host/`: relay WebSocket and browser timeout host adapters.
 - `relay_selection.rs`: local selected relay-set preference helper.
 - `relay_settings_host.rs`: SQLite-backed Relay Settings command provider.
