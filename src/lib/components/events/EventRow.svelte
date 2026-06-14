@@ -54,9 +54,10 @@
   });
 
   function openRow(event?: MouseEvent): void {
-    if (!canOpenThread) return;
+    const openThread = props.openThread;
+    if (!hasOpenThreadAction(openThread)) return;
     if (event && shouldKeepLocal(event.target)) return;
-    props.openThread?.(props.item.event.id);
+    openThread(props.item.event.id);
   }
 
   function handleKeydown(event: KeyboardEvent): void {
@@ -73,8 +74,9 @@
 
   function openProfile(event: MouseEvent): void {
     event.stopPropagation();
-    if (!canOpenProfile) return;
-    props.openProfile?.(props.item.event.pubkey);
+    const openProfile = props.openProfile;
+    if (!hasOpenProfileAction(openProfile)) return;
+    openProfile(props.item.event.pubkey);
   }
 
   function highlightAction(): void {

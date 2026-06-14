@@ -38,6 +38,13 @@
       navigator.clipboard,
     );
   }
+
+  function openUserTimeline(event: MouseEvent): void {
+    stop(event);
+    const openTimeline = props.openUserTimeline;
+    if (!openTimeline) return;
+    openTimeline(props.pubkey);
+  }
 </script>
 
 <details class="user-row-overflow-menu event-action-zone">
@@ -46,13 +53,7 @@
   </summary>
   <div class="user-row-overflow-menu__items">
     {#if props.openUserTimeline}
-      <button
-        type="button"
-        onclick={(event) => {
-          stop(event);
-          props.openUserTimeline?.(props.pubkey);
-        }}
-      >
+      <button type="button" onclick={openUserTimeline}>
         Open user timeline
       </button>
     {/if}

@@ -37,7 +37,9 @@
 
   function openNearby(event: MouseEvent): void {
     event.stopPropagation();
-    props.openAuthorContext?.(props.event.id, props.event.pubkey);
+    const openAuthorContext = props.openAuthorContext;
+    if (!eventMoreMenuHasAuthorContext(openAuthorContext)) return;
+    openAuthorContext(props.event.id, props.event.pubkey);
   }
 </script>
 

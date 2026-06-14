@@ -49,6 +49,13 @@
         })
       )[event.pubkey];
   });
+
+  function open(event: MouseEvent): void {
+    event.stopPropagation();
+    const openThread = props.openThread;
+    if (!hasOpenThreadAction(openThread)) return;
+    openThread(props.eventId);
+  }
 </script>
 
 {#if canOpenThread}
@@ -56,10 +63,7 @@
     type="button"
     class="content-token content-mention-token event-mention-chip"
     title={props.rawText}
-    onclick={(event) => {
-      event.stopPropagation();
-      props.openThread?.(props.eventId);
-    }}
+    onclick={open}
   >
     <span>{label}</span>
     {#if profile}

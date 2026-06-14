@@ -17,7 +17,7 @@ export type EventMoreMenuAuthorContextAction =
 
 export function eventMoreMenuHasAuthorContext(
   action: EventMoreMenuAuthorContextAction,
-): boolean {
+): action is (eventId: string, pubkey: string) => void {
   return typeof action === 'function';
 }
 

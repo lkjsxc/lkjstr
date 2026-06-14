@@ -23,8 +23,9 @@
 
   function open(id: string, domEvent?: Event): void {
     domEvent?.stopPropagation();
-    if (!canOpenThread) return;
-    props.openThread?.(id);
+    const openThread = props.openThread;
+    if (!hasOpenThreadAction(openThread)) return;
+    openThread(id);
   }
 </script>
 

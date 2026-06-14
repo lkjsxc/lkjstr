@@ -24,8 +24,9 @@
 
   function openProfile(event: MouseEvent): void {
     event.stopPropagation();
-    if (!canOpenProfile) return;
-    props.openProfile?.(props.event.pubkey);
+    const openProfile = props.openProfile;
+    if (!hasOpenProfileAction(openProfile)) return;
+    openProfile(props.event.pubkey);
   }
 </script>
 

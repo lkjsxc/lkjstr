@@ -34,6 +34,12 @@
       sourceShowsActor,
     }),
   );
+
+  function openActor(): void {
+    const openProfile = props.openProfile;
+    if (!hasOpenProfileAction(openProfile)) return;
+    openProfile(props.record.actorPubkey);
+  }
 </script>
 
 <article class="notification-row">
@@ -45,7 +51,7 @@
             <button
               type="button"
               class="identity-button notification-row__actor"
-              onclick={() => props.openProfile?.(props.record.actorPubkey)}
+              onclick={openActor}
             >
               <IdentityChip
                 pubkey={props.record.actorPubkey}

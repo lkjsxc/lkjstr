@@ -13,6 +13,13 @@
 
   let props: Props = $props();
   let canOpenProfile = $derived(hasOpenProfileAction(props.openProfile));
+
+  function open(event: MouseEvent): void {
+    event.stopPropagation();
+    const openProfile = props.openProfile;
+    if (!hasOpenProfileAction(openProfile)) return;
+    openProfile(props.pubkey);
+  }
 </script>
 
 {#if canOpenProfile}
@@ -20,10 +27,7 @@
     type="button"
     class="content-token content-mention-token"
     title={props.rawText}
-    onclick={(event) => {
-      event.stopPropagation();
-      props.openProfile?.(props.pubkey);
-    }}
+    onclick={open}
   >
     <EmojifiedText
       text={props.text}

@@ -41,6 +41,12 @@
     eventNode && 'collapsed' in eventNode ? eventNode : undefined,
   );
   let canOpenThread = $derived(hasOpenThreadAction(props.openThread));
+
+  function openCollapsedThread(eventId: string): void {
+    const openThread = props.openThread;
+    if (!hasOpenThreadAction(openThread)) return;
+    openThread(eventId);
+  }
 </script>
 
 {#if props.node.kind === 'leading'}
@@ -59,7 +65,7 @@
       type="button"
       class="thread-continuation"
       style={`--event-depth: ${collapsed.depth}`}
-      onclick={() => props.openThread?.(collapsed.targetId)}
+      onclick={() => openCollapsedThread(collapsed.targetId)}
     >
       Continue thread ({collapsed.hiddenCount})
     </button>
