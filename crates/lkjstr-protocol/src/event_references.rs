@@ -2,7 +2,7 @@ use crate::{
     EventReference, EventReferenceKind, EventReferenceSource, KIND_DELETION, KIND_GENERIC_REPOST,
     KIND_REACTION, KIND_REPOST, NostrEntity, NostrEvent, decode_nip19,
     event_reference_parts::{dedupe, last_e_tag, push, push_event_tag, tag_name_is, tag_relay},
-    event_reference_scan::nostr_entities,
+    event_reference_scan::{nostr_entities, nostr_entity_spans},
     is_event_id, reply_parent, reply_root,
 };
 
@@ -54,6 +54,32 @@ pub fn event_references(event: &NostrEvent) -> Vec<EventReference> {
     }
     refs.extend(nostr_event_references(&event.content));
     dedupe(refs)
+}
+
+#[must_use]
+pub fn strip_event_reference_tokens(content: &str, refs: &[EventReference]) -> String {
+    if refs.is_empty() {
+        return content.to_owned();
+    }
+    let mut output = String::new();
+    let mut cursor = 0;
+    let mut removed = false;
+    for span in nostr_entity_spans(content) {
+        let Some(id) = event_entity_id(&span.entity) else {
+            continue;
+        };
+        if !refs.iter().any(|item| item.id == id) {
+            continue;
+        }
+        output.push_str(&content[cursor..span.start]);
+        cursor = span.end;
+        removed = true;
+    }
+    if !removed {
+        return content.to_owned();
+    }
+    output.push_str(&content[cursor..]);
+    output.trim().to_owned()
 }
 
 fn push_marked_replies(refs: &mut Vec<EventReference>, event: &NostrEvent) {
@@ -119,6 +145,14 @@ fn nostr_event_references(content: &str) -> Vec<EventReference> {
             _ => None,
         })
         .collect()
+}
+
+fn event_entity_id(entity: &str) -> Option<String> {
+    match decode_nip19(entity) {
+        Some(NostrEntity::Note(id)) if is_event_id(&id) => Some(id),
+        Some(NostrEntity::Nevent(pointer)) if is_event_id(&pointer.id) => Some(pointer.id),
+        _ => None,
+    }
 }
 
 fn content_ref(id: String, relays: Vec<String>, author_pubkey: Option<String>) -> EventReference {

@@ -153,7 +153,8 @@ notification repost rows. Current Rust proof covers shared/repost renderer
 selection, unavailable target planning, chrome policy, validated custom emoji
 content rows with image presentation proof, real HTTPS media attachment row
 planning from content and `imeta` tags, unavailable reference rows with real
-referenced event identity, indexed unavailable media/reference rows with UI
+referenced event identity, inline content event-reference token suppression
+before Rust row planning, indexed unavailable media/reference rows with UI
 attribute proof, notification repost event rows, and full FeedViewModel bounded
 summaries for repost, generic repost, reaction, and zap rows.
 Repost-specific code may provide contextual chrome but must not fork target event

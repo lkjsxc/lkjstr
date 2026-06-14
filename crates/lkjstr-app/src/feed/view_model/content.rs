@@ -3,7 +3,7 @@ use crate::feed_fragments::{
 };
 use lkjstr_protocol::{
     CustomEmoji, KIND_GENERIC_REPOST, KIND_REACTION, KIND_REPOST, KIND_ZAP_RECEIPT,
-    custom_emoji_token_text,
+    custom_emoji_token_text, strip_event_reference_tokens,
 };
 
 use super::media_rows::inject_media_rows;
@@ -119,7 +119,7 @@ fn visible_event_content(event: &SemanticFeedEvent) -> String {
         KIND_REPOST | KIND_GENERIC_REPOST => "Reposted target unavailable".to_owned(),
         KIND_REACTION => reaction_summary(&event.content),
         KIND_ZAP_RECEIPT => "Zap receipt target unavailable".to_owned(),
-        _ => event.content.clone(),
+        _ => strip_event_reference_tokens(&event.content, &event.event_references),
     }
 }
 

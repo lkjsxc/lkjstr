@@ -1,6 +1,7 @@
 use lkjstr_protocol::{
     EventPointer, EventReferenceKind, EventReferenceSource, KIND_REACTION, KIND_REPOST,
-    KIND_TEXT_NOTE, NostrEvent, encode_nevent, event_references,
+    KIND_TEXT_NOTE, NostrEvent, encode_nevent, encode_npub, event_references,
+    strip_event_reference_tokens,
 };
 
 #[test]
@@ -86,6 +87,28 @@ fn content_nevent_references_keep_relays_and_author() -> Result<(), String> {
     assert_eq!(refs[0].id, id);
     assert_eq!(refs[0].relays, vec!["wss://relay.example"]);
     assert_eq!(refs[0].author_pubkey, Some(author));
+    Ok(())
+}
+
+#[test]
+fn strip_event_reference_tokens_keeps_non_event_entities() -> Result<(), String> {
+    let id = "2".repeat(64);
+    let pubkey = "3".repeat(64);
+    let nevent = encode_nevent(&EventPointer {
+        id: id.clone(),
+        relays: Some(vec!["wss://relay.example".to_owned()]),
+        author: None,
+        kind: None,
+    })
+    .map_err(|error| format!("{error:?}"))?;
+    let npub = encode_npub(&pubkey).map_err(|error| format!("{error:?}"))?;
+    let content = format!("see nostr:{nevent} by nostr:{npub}");
+    let refs = event_references(&event(KIND_TEXT_NOTE, &content, vec![]));
+
+    assert_eq!(
+        strip_event_reference_tokens(&content, &refs),
+        format!("see  by nostr:{npub}")
+    );
     Ok(())
 }
 

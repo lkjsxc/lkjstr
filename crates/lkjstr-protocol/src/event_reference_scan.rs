@@ -1,4 +1,18 @@
-pub fn nostr_entities(content: &str) -> Vec<String> {
+#[derive(Clone, Debug, Eq, PartialEq)]
+pub(crate) struct NostrEntitySpan {
+    pub(crate) entity: String,
+    pub(crate) start: usize,
+    pub(crate) end: usize,
+}
+
+pub(crate) fn nostr_entities(content: &str) -> Vec<String> {
+    nostr_entity_spans(content)
+        .into_iter()
+        .map(|item| item.entity)
+        .collect()
+}
+
+pub(crate) fn nostr_entity_spans(content: &str) -> Vec<NostrEntitySpan> {
     let bytes = content.as_bytes();
     let mut items = Vec::new();
     let mut index = 0;
@@ -7,7 +21,11 @@ pub fn nostr_entities(content: &str) -> Vec<String> {
             let start = index + 6;
             let end = scan_entity_end(bytes, start);
             if end > start {
-                items.push(content[start..end].to_owned());
+                items.push(NostrEntitySpan {
+                    entity: content[start..end].to_owned(),
+                    start: index,
+                    end,
+                });
             }
             index = end;
         } else {

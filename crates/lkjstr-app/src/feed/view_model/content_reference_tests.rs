@@ -3,7 +3,7 @@ use super::{
     FeedEventUnavailablePreview, plan_feed_event_content,
 };
 use crate::feed_fragments::{FeedFragmentConfig, FeedVisualRow, SemanticFeedEvent};
-use lkjstr_protocol::{EventReference, EventReferenceKind, EventReferenceSource};
+use lkjstr_protocol::{EventReference, EventReferenceKind, EventReferenceSource, encode_note};
 
 #[test]
 fn content_rows_append_real_reference_for_full_events() {
@@ -56,6 +56,32 @@ fn content_rows_replace_reference_segments_with_identity_rows() {
             reference_row("shape", 1, "c", FeedEventReferenceKind::ReplyParent),
         ]
     );
+}
+
+#[test]
+fn content_rows_suppress_inline_event_reference_tokens() -> Result<(), String> {
+    let note = encode_note(&"f".repeat(64)).map_err(|error| format!("{error:?}"))?;
+    let content = plan_feed_event_content(
+        false,
+        None,
+        &event_with_references(
+            &format!("see nostr:{note} after"),
+            &[reference("f", EventReferenceKind::NostrEvent)],
+        ),
+        &[],
+        "shape",
+        120,
+        &FeedFragmentConfig::default(),
+    );
+
+    assert_eq!(
+        content_rows(content),
+        vec![
+            FeedEventContentRow::Text("see  after".to_owned()),
+            reference_row("shape", 0, "f", FeedEventReferenceKind::NostrEvent),
+        ]
+    );
+    Ok(())
 }
 
 #[test]
