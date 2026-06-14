@@ -20,7 +20,7 @@ Read next: [product/README.md](product/README.md),
   Context, Followees, and User Timeline bodies are implemented.
 - Followees/User Timeline mount Rust bodies through Svelte as WASM islands and
   render real NIP-02 rows, selected/stored-route discovery, cleanup, retry,
-  partial-route, and degraded states. Rust Followees rows open Profile from the row and keep Timeline and Copy npub in overflow.
+  partial-route, and degraded states. Rust Followees rows open Profile and keep Timeline in overflow; the Svelte island also keeps Copy npub in overflow.
 - Shared UI system catalog and shipped component list live in
   [architecture/workspace/ui-system/README.md](architecture/workspace/ui-system/README.md);
   polish acceptance rows live in

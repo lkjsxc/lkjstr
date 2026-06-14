@@ -61,6 +61,7 @@ pub fn followees_tab_content(
     tab_id: String,
     target_pubkey: Option<String>,
     provider: Option<FolloweesProvider>,
+    actions: FolloweesActions,
 ) -> impl IntoView {
     let model = default_followees_view(&tab_id, target_pubkey.clone());
     view! {
@@ -69,7 +70,7 @@ pub fn followees_tab_content(
             target_pubkey=target_pubkey
             model=model
             provider=provider
-            actions=FolloweesActions::default()
+            actions=actions
         />
     }
 }

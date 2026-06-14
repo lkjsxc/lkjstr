@@ -113,6 +113,7 @@ mod tests {
 
     #[test]
     fn pubkey_callbacks_open_or_focus_matching_tabs() -> Result<(), &'static str> {
+        assert_pubkey_callback(TabKind::Profile)?;
         assert_pubkey_callback(TabKind::Followees)?;
         assert_pubkey_callback(TabKind::UserTimeline)
     }

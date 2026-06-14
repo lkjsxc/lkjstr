@@ -6,7 +6,7 @@ use crate::workspace::author_context_open::author_context_tab_content;
 use crate::workspace::custom_request::CustomRequestTab;
 use crate::workspace::custom_request_snapshot::CustomRequestSnapshotHandle;
 use crate::workspace::feed_event_open::nearby_event_actions;
-use crate::workspace::followees::followees_tab_content;
+use crate::workspace::followees_open::followees_open_content;
 use crate::workspace::global::{GlobalTab, default_global_feed};
 use crate::workspace::home::{HomeTab, default_home_feed};
 use crate::workspace::log::LogTab;
@@ -132,10 +132,7 @@ pub(crate) fn tab_content(input: TabContentInput) -> impl IntoView {
         }
         TabKind::Profile => profile_tab_content(input).into_any(),
         TabKind::AuthorContext => author_context_tab_content(input).into_any(),
-        TabKind::Followees => {
-            followees_tab_content(input.tab_id, input.profile_pubkey, input.followees_provider)
-                .into_any()
-        }
+        TabKind::Followees => followees_open_content(input).into_any(),
         TabKind::UserTimeline => user_timeline_tab_content(
             input.tab_id,
             input.profile_pubkey,

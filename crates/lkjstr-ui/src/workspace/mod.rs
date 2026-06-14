@@ -25,6 +25,7 @@ mod followees;
 mod followees_actions;
 #[cfg(target_arch = "wasm32")]
 mod followees_island;
+mod followees_open;
 mod followees_provider;
 mod followees_row;
 mod global;

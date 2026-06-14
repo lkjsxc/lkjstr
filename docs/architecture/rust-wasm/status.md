@@ -98,11 +98,12 @@ This file is the concise status map for the active Rust/WASM migration.
   discovery for Followees/User Timeline, Followees/User Timeline stored route-group
   discovery with disabled-route exclusion, Followees/User Timeline cleanup, and
   Followees retry plus User Timeline retry/auth/rate-limit/timeout and partial
-  route diagnostics plus exact cache coverage proof. The shipped Svelte
-  Followees tab now mounts the Rust body as a WASM island with row-click Profile,
-  overflow Timeline and Copy npub callbacks, and unmount callbacks; the shipped
-  Svelte User Timeline tab mounts its Rust body with profile, thread, Author
-  Context, and unmount callbacks. Deletion remains open.
+  route diagnostics plus exact cache coverage proof. The Rust root Followees
+  tab wires row-click Profile and overflow Timeline callbacks. The shipped
+  Svelte Followees tab mounts the Rust body as a WASM island with row-click
+  Profile, overflow Timeline and Copy npub callbacks, and unmount callbacks;
+  the shipped Svelte User Timeline tab mounts its Rust body with profile,
+  thread, Author Context, and unmount callbacks. Deletion remains open.
 - Feed windows own Rust top-anchor live-insert policy tests, and the shipped
   Svelte feed list consumes equivalent top-locked anchor behavior.
 - Search now has a shipped SQLite token-index path in TypeScript storage glue,
