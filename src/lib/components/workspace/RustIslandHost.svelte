@@ -10,6 +10,7 @@
     className?: string;
     mountKey: string;
     fallbackError: string;
+    status?: string;
     mount: (parent: HTMLElement) => RustIslandHandle | Promise<RustIslandHandle>;
   };
 
@@ -74,6 +75,7 @@
 >
   <div class="hybrid-tab__toolbar">
     {#if error}<p role="alert">{error}</p>{/if}
+    {#if props.status}<p role="status">{props.status}</p>{/if}
   </div>
   <div bind:this={host}></div>
 </section>

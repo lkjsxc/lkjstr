@@ -101,10 +101,11 @@ This file is the concise status map for the active Rust/WASM migration.
   Followees retry plus User Timeline retry/auth/rate-limit/timeout and partial
   route diagnostics plus exact cache coverage proof. The Rust root Followees
   tab wires row-click Profile plus overflow Timeline and Copy npub callbacks
-  with copy completion status. The shipped Svelte Followees tab mounts the Rust
-  body as a WASM island with the same row actions and unmount callbacks; the
-  shipped Svelte User Timeline tab mounts its Rust body with profile, thread,
-  Author Context, and unmount callbacks. Deletion remains open.
+  with copy completion status. The shipped workspace mounts Followees through
+  the generic Rust-island host plus typed mounter with the same row actions and
+  unmount callbacks; the shipped User Timeline tab uses the same generic host
+  pattern with profile, thread, Author Context, and unmount callbacks. Deletion
+  remains open.
 - Feed windows own Rust top-anchor live-insert policy tests, and the shipped
   Svelte feed list consumes equivalent top-locked anchor behavior.
 - Search now has a shipped SQLite token-index path in TypeScript storage glue,

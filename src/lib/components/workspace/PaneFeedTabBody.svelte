@@ -2,13 +2,13 @@
   import type { Account } from '$lib/accounts/account';
   import type { RelaySet } from '$lib/relays/relay-store';
   import CustomRequestTab from '$lib/tabs/custom-request/CustomRequestTab.svelte';
-  import FolloweesTab from '$lib/tabs/followees/FolloweesTab.svelte';
   import NotificationsTab from '$lib/tabs/notifications/NotificationsTab.svelte';
   import ProfileTab from '$lib/tabs/profile/ProfileTab.svelte';
   import SearchTab from '$lib/tabs/search/SearchTab.svelte';
   import ThreadTab from '$lib/tabs/thread/ThreadTab.svelte';
   import TimelineTab from '$lib/tabs/timeline/TimelineTab.svelte';
   import { mountAuthorContextIsland } from './author-context-island';
+  import { mountFolloweesIsland } from './followees-island';
   import { mountUserTimelineIsland } from './user-timeline-island';
   import RustIslandHost from './RustIslandHost.svelte';
   import type { TabFeedAnchor } from '$lib/workspace/tab-anchor-registry';
@@ -37,6 +37,7 @@
   };
 
   let props: Props = $props();
+  let followeesCopyStatus = $state('');
   const openProfile = (pubkey: string) =>
     props.openProfile(props.paneId, pubkey);
   const openThread = (eventId: string) =>
@@ -66,6 +67,16 @@
       openProfile,
       openThread,
       openAuthorContext,
+    });
+  }
+
+  function mountFollowees(parent: HTMLElement) {
+    return mountFolloweesIsland(parent, {
+      tabId: props.tab.id,
+      pubkey: String(props.tab.config.pubkey ?? ''),
+      openProfile,
+      openUserTimeline,
+      setCopyStatus: (status) => (followeesCopyStatus = status),
     });
   }
 </script>
@@ -134,9 +145,7 @@
   <RustIslandHost
     label="Author Context"
     className="timeline-tab"
-    mountKey={props.visible
-      ? `${props.tab.id}:${props.tab.config.eventId ?? ''}:${props.tab.config.pubkey ?? ''}`
-      : ''}
+    mountKey={props.visible ? `${props.tab.id}:${props.tab.config.eventId ?? ''}:${props.tab.config.pubkey ?? ''}` : ''}
     fallbackError="Author Context failed."
     mount={mountAuthorContext}
   />
@@ -156,21 +165,19 @@
     {openAuthorContext}
   />
 {:else if props.tab.kind === 'followees'}
-  <FolloweesTab
-    tabId={props.tab.id}
-    visible={props.visible}
-    pubkey={String(props.tab.config.pubkey ?? '')}
-    relaySets={props.relaySets}
-    {openProfile}
-    {openUserTimeline}
+  <RustIslandHost
+    label="Following"
+    className="followees-tab"
+    mountKey={props.visible ? `${props.tab.id}:${props.tab.config.pubkey ?? ''}` : ''}
+    fallbackError="Followees failed."
+    status={followeesCopyStatus}
+    mount={mountFollowees}
   />
 {:else if props.tab.kind === 'user-timeline'}
   <RustIslandHost
     label="User Timeline"
     className="user-timeline-tab"
-    mountKey={props.visible
-      ? `${props.tab.id}:${props.tab.config.pubkey ?? ''}`
-      : ''}
+    mountKey={props.visible ? `${props.tab.id}:${props.tab.config.pubkey ?? ''}` : ''}
     fallbackError="User Timeline failed."
     mount={mountUserTimeline}
   />

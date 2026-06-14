@@ -15,4 +15,5 @@ menus.
   track inset and `.tab-scroll-owner` scroll host, matching feed lists.
 - `RustIslandHost.svelte`: generic Svelte host glue for Rust/WASM tab bodies.
 - `author-context-island.ts`: typed Author Context WASM island mounter.
+- `followees-island.ts`: typed Followees WASM island mounter.
 - `user-timeline-island.ts`: typed User Timeline WASM island mounter.

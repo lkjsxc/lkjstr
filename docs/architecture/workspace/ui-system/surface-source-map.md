@@ -10,8 +10,8 @@ without searching the whole tree.
 
 | Contract clause     | Component                    | Tab or consumer                                 | Test gate                  |
 | ------------------- | ---------------------------- | ----------------------------------------------- | -------------------------- |
-| Feed leading header | `FeedIdentityHeader.svelte`  | `RustIslandHost.svelte`, `FolloweesTab.svelte`  | identity-surfaces contract |
-| User list row       | `UserEventRow.svelte`        | `FolloweesTab.svelte`                           | followees scroll rows      |
+| Feed leading header | `FeedIdentityHeader.svelte`  | `RustIslandHost.svelte`                         | identity-surfaces contract |
+| User list row       | `UserEventRow.svelte`        | Followees Rust island                           | followees scroll rows      |
 | Row overflow menu   | `UserRowOverflowMenu.svelte` | `UserEventRow.svelte`                           | overflow-actions contract  |
 | Inline chip         | `IdentityChip.svelte`        | `AccountRow.svelte`, `EventMeta.svelte`         | account tests              |
 | Profile card        | `ProfileHeader.svelte`       | `ProfileTab.svelte`                             | profile header layout      |
@@ -28,7 +28,7 @@ without searching the whole tree.
 
 | Contract clause   | Component                  | Tab or consumer                              | Test gate                    |
 | ----------------- | -------------------------- | -------------------------------------------- | ---------------------------- |
-| Virtual feed list | `FeedScrollSurface.svelte` | feed tabs, `FolloweesTab.svelte`             | feed-scroll-surface tests    |
+| Virtual feed list | `FeedScrollSurface.svelte` | feed tabs, Followees Rust island             | feed-scroll-surface tests    |
 | Event tree list   | `EventTreeList.svelte`     | Home, Profile, Thread, Search, User Timeline | scroll-anchor tests          |
 | Row measurement   | `FeedMeasuredRow.svelte`   | `EventTreeListSurface.svelte`                | row-height-reservation tests |
 | Scroll tokens     | `scroll-layout.css`        | all tab roots                                | scroll-layout-css test       |

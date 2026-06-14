@@ -8,9 +8,10 @@ deletion proof.
 
 ## Status
 
-Implemented bridge slice. The shipped Svelte tab mounts the Rust Followees body
-as a WASM island while TypeScript follow-graph modules remain available until
-remaining parity, no-import, and final verification proof exist.
+Implemented bridge slice. The shipped workspace mounts the Rust Followees body
+through generic Rust-island host glue while TypeScript follow-graph modules
+remain available until remaining parity, no-import, and final verification
+proof exist.
 
 ## Current Evidence
 
@@ -48,8 +49,10 @@ remaining parity, no-import, and final verification proof exist.
 - `crates/lkjstr-web/tests/followees_route_provider_test.rs` proves stored
   NIP-65, provenance, and target routes discover a real follow-list while a
   disabled stored route is not requested.
-- `src/lib/tabs/followees/FolloweesTab.svelte` is now a shipped lifecycle
-  wrapper that mounts the Rust/WASM island and forwards callbacks.
+- `src/lib/components/workspace/followees-island.ts` is the typed mounter that
+  loads the Rust/WASM island and forwards profile, timeline, and copy actions.
+- `src/lib/components/workspace/RustIslandHost.svelte` owns lifecycle cleanup
+  for the shipped Followees island.
 - `crates/lkjstr-web/tests/followees_island_test.rs` proves explicit
   unavailable rendering and unmount cleanup through the exported bridge.
 
@@ -74,7 +77,9 @@ Do not start deletion proof yet.
 - `crates/lkjstr-web/src/followees_island.rs`
 - `crates/lkjstr-web/src/followees_host.rs`
 - `crates/lkjstr-web/src/followees_routes.rs`
-- `src/lib/tabs/followees/FolloweesTab.svelte`
+- `src/lib/components/workspace/followees-island.ts`
+- `src/lib/components/workspace/RustIslandHost.svelte`
+- `src/lib/tabs/followees/followees-scroll-rows.ts`
 - `crates/lkjstr-web/tests/profile_feed_tab_test.rs`
 - `crates/lkjstr-web/tests/followees_island_test.rs`
 - `crates/lkjstr-web/tests/followees_route_provider_test.rs`
@@ -113,10 +118,10 @@ pnpm rust-wasm:quiet
 - Selected-relay no-event reads complete to retryable diagnostics and retry
   starts a new bounded read without claiming absence.
 - Profile opening proof reaches the real Followees body.
-- The shipped Svelte Followees tab is only a lifecycle wrapper for the Rust
-  island and releases it on visibility changes or destruction.
-- The Svelte host cancels pending WASM mounts when hidden or destroyed, so late
-  bridge loads cannot remount a hidden island.
+- The shipped Followees tab uses only generic Svelte lifecycle host glue for
+  the Rust island and releases it on visibility changes or destruction.
+- The generic Svelte host cancels pending WASM mounts when hidden or destroyed,
+  so late bridge loads cannot remount a hidden island.
 - Rust rows expose real pubkeys, relay hints, petnames, and profile,
   user-timeline, and copy actions without synthesizing profile metadata or
   no-op row controls.
@@ -127,4 +132,5 @@ pnpm rust-wasm:quiet
 
 - Do not synthesize users, profiles, follow-list rows, or successful discovery.
 - Do not treat missing follow-list data as absence.
-- Do not delete `src/lib/follow-graph`, `src/lib/tabs/followees`, or tab glue.
+- Do not delete `src/lib/follow-graph`, Followees scroll helpers, or generic
+  workspace tab glue.

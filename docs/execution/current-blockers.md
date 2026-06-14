@@ -188,9 +188,9 @@ models, anchors, footer states, and unavailable states.
   leases suppress late completions; Profile following-count actions require a
   real Followees opener, unused tab-snapshot no-op persistence construction is
   removed, Rust geometry runtime counters are exposed to Stats, and Rust/WASM
-  quiet. Author Context and User Timeline use generic Rust island host glue,
-  while the Followees Svelte-hosted Rust island cancels pending WASM mounts when
-  hidden or destroyed and unmounts late handles before accepting stale mounts.
+  quiet. Author Context, Followees, and User Timeline use generic Rust island
+  host glue, which cancels pending WASM mounts when hidden or destroyed and
+  unmounts late handles before accepting stale mounts.
 - Remaining completion proof: `EventRow.svelte` and
   `EventFragmentRow.svelte` still import `EventMoreMenu.svelte`. Their
   no-import proof, event-row menu deletion readiness, final-gate deletion

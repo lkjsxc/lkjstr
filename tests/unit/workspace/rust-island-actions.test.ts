@@ -3,7 +3,6 @@ import { describe, expect, it } from 'vitest';
 
 const islandHosts = [
   'src/lib/components/workspace/RustIslandHost.svelte',
-  'src/lib/tabs/followees/FolloweesTab.svelte',
 ];
 
 describe('Rust island action callbacks', () => {
@@ -25,6 +24,18 @@ describe('Rust island action callbacks', () => {
     );
     expect(pane).toContain('openAuthorContext,');
     expect(pane).toContain('mountUserTimelineIsland');
+  });
+
+  it('keeps Followees copy status explicit in the typed mounter', () => {
+    const source = readFileSync(
+      'src/lib/components/workspace/followees-island.ts',
+      'utf8',
+    );
+    expect(source).toContain('setCopyStatus: (status: string) => void;');
+    expect(source).toContain('copyUserRowNpub');
+    expect(source).toContain('userRowCopyStatusText');
+    expect(source).toContain('navigator.clipboard');
+    expect(source).not.toContain('?? (() => {})');
   });
 
   it('cancels pending island mounts when hosts hide or destroy', () => {

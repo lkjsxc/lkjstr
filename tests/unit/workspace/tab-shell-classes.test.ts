@@ -45,7 +45,6 @@ describe('tab shell classes', () => {
       'notifications/NotificationsTab.svelte',
       'thread/ThreadTab.svelte',
       'search/SearchTab.svelte',
-      'followees/FolloweesTab.svelte',
     ]);
     const hybrid = new Set([
       'custom-request/CustomRequestTab.svelte',

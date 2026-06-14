@@ -99,8 +99,8 @@ through a provider, and the default browser provider reads cached kind `3` rows
 from worker SQLite, starts selected-relay or stored author-route kind `3`
 discovery on cache miss, excludes disabled stored route relays, and closes the
 owner relay read on cleanup; no-event selected reads render retry diagnostics,
-and the shipped Svelte tab mounts the Rust body as a WASM island with row
-Profile, Timeline, and Copy npub actions.
+and the shipped workspace mounts the Rust body through generic island host glue
+with row Profile, Timeline, and Copy npub actions.
 Rust User Timeline
 has first Leptos feed rows from a real NIP-02 author set injected through a
 provider and a default browser provider that reads cached kind `3` author sets

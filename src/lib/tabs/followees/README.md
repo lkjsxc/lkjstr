@@ -2,10 +2,10 @@
 
 ## Purpose
 
-This directory renders the action-opened Followees surface from real NIP-02
-follow-list data.
+This directory retains Followees support helpers while the shipped tab mounts
+the Rust/WASM body through workspace generic island host glue.
 
 ## Table of Contents
 
-- `FolloweesTab.svelte`: lifecycle wrapper that mounts the Rust/WASM Followees
-  body and forwards profile, timeline, and copy actions.
+- `followees-scroll-rows.ts`: scroll-row helpers retained for transitional
+  tests and shipped TypeScript callers.
