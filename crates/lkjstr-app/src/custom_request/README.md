@@ -11,4 +11,5 @@ rendering.
 - `mod.rs`: module exports.
 - `mode.rs`: exact versus adaptive-feed classifier.
 - `parse.rs`: JSON shape parser and app policy clamps.
+- `plan.rs`: run planner that emits typed demand only for valid runnable input.
 - `types.rs`: request, mode, and error records.

@@ -128,9 +128,10 @@ code.
   and nearby-author builders.
 - `crates/lkjstr-app/src/feed/tool_inputs.rs`: Search and Custom Request query
   input builders.
-- `crates/lkjstr-app/src/custom_request/`: Custom Request parser and mode
-  classifier.
+- `crates/lkjstr-app/src/custom_request/`: Custom Request parser, mode
+  classifier, and run planner.
 - `crates/lkjstr-app/tests/feed_surface_input_test.rs`: feed builder tests.
 - `crates/lkjstr-app/tests/thread_input_test.rs`: Thread builder tests.
 - `crates/lkjstr-app/tests/author_context_input_test.rs`: Author Context tests.
-- `crates/lkjstr-app/tests/custom_request_test.rs`: parser and mode tests.
+- `crates/lkjstr-app/tests/custom_request*_test.rs`: parser, mode, and run
+  planner tests.

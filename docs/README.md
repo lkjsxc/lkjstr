@@ -159,9 +159,9 @@ changed. Each docs directory has one README that acts as a table of contents.
 `decisions/protocol-kernel.md` `decisions/relay-ownership.md` `decisions/rust-wasm-client.md` `decisions/sqlite-opfs-storage.md`
 `decisions/worker-owned-storage.md` `execution/README.md` `execution/current-blockers.md`
 `execution/operating-rules.md` `execution/storage-slice.md` `execution/tasks/README.md`
-`execution/tasks/author-context-provider-wiring.md` `execution/tasks/followees-provider-wiring.md`
-`execution/tasks/home-feed-provider-wiring.md` `execution/tasks/home-feed-slice.md`
-`execution/tasks/profile-feed-provider-wiring.md`
+`execution/tasks/author-context-provider-wiring.md` `execution/tasks/custom-request-provider-wiring.md`
+`execution/tasks/followees-provider-wiring.md` `execution/tasks/home-feed-provider-wiring.md`
+`execution/tasks/home-feed-slice.md` `execution/tasks/profile-feed-provider-wiring.md`
 `execution/tasks/profile-feed-slice.md` `execution/tasks/profile-sparse-history-proof.md`
 `execution/tasks/relay-effect-runner.md` `execution/tasks/shared-feed-view-model.md` `execution/tasks/storage-active-selector.md`
 `execution/tasks/search-feed-provider-wiring.md` `execution/tasks/thread-feed-provider-wiring.md`

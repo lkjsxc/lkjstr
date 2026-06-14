@@ -14,6 +14,9 @@ Active queue:
 - Next shared-feed task comes from
   [current-blockers.md](../current-blockers.md): continue remaining feed-surface
   host parity and deletion prerequisites.
+- [custom-request-provider-wiring.md](custom-request-provider-wiring.md): move
+  Custom Request execution planning and host-provider wiring into Rust without
+  claiming result parity.
 
 Storage evidence to preserve:
 

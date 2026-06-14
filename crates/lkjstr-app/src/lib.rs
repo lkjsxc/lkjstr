@@ -38,7 +38,8 @@ pub use cache_display::{
 };
 pub use custom_request::{
     CustomRequest, CustomRequestError, CustomRequestErrorKind, CustomRequestMode,
-    custom_request_mode, parse_custom_request,
+    CustomRequestRunInput, CustomRequestRunPlan, CustomRequestRunStatus, custom_request_mode,
+    parse_custom_request, plan_custom_request_run,
 };
 pub use events::{
     EventDisplayCapabilities, EventDisplayChromePolicy, EventDisplayContext, EventDisplayInput,

@@ -54,7 +54,7 @@ UI shell, and repository checks.
   composition, surface query input builders, feed-window reduction, cursor
   derivation, generation guards, and terminal empty-state readiness.
 - `crates/lkjstr-app/src/custom_request/`: Custom Request parser, policy
-  clamps, and exact/adaptive mode classification.
+  clamps, exact/adaptive mode classification, and run planning.
 - `crates/lkjstr-app/src/query/`: pure app-level query demand planning.
 - `crates/lkjstr-ui/`: Leptos components and UI CSS contracts.
 - `crates/lkjstr-web/`: WASM entrypoint and browser host adapters.

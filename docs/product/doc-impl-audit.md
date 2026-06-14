@@ -43,7 +43,7 @@ closing gates so this concise matrix stays readable.
 | Rust workspace runtime composition       | [app-boundary.md](../architecture/rust-wasm/app-boundary.md)                   | implemented     | app workspace tests                                                  |
 | Rust startup tab snapshot recovery       | [app-boundary.md](../architecture/rust-wasm/app-boundary.md)                   | implemented     | app and browser storage tests                                        |
 | Rust feed query input builders           | [feed-surface-inputs.md](../architecture/feeds/runtime/feed-surface-inputs.md) | partial         | feed, thread, author-context, search, custom-request app tests       |
-| Rust Custom Request parser               | [custom-request.md](tools/custom-request.md)                                   | partial         | parser, clamp, and mode app tests                                    |
+| Rust Custom Request parser and planner   | [custom-request.md](tools/custom-request.md)                                   | partial         | parser, clamp, mode, and run-planner app tests                       |
 | Rust storage manifest and outcomes       | [storage-kernel.md](../architecture/rust-wasm/storage-kernel.md)               | implemented     | storage crate tests                                                  |
 | Rust event-cache row codecs              | [storage-wiring.md](../architecture/rust-wasm/cutover/storage-wiring.md)       | implemented     | `event_cache_sqlite_rows_test.rs`                                    |
 | Rust feed-coverage row codecs            | [storage-wiring.md](../architecture/rust-wasm/cutover/storage-wiring.md)       | implemented     | `feed_cache_sqlite_rows_test.rs`                                     |

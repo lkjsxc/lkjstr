@@ -118,6 +118,8 @@ images were built and the services ran from those images.
   User Timeline provider and first Rust feed-row proof.
 - [tasks/author-context-provider-wiring.md](tasks/author-context-provider-wiring.md):
   Author Context provider and first shared-feed row proof.
+- [tasks/custom-request-provider-wiring.md](tasks/custom-request-provider-wiring.md):
+  Custom Request parser, run planning, and host-provider wiring.
 - [tasks/search-feed-provider-wiring.md](tasks/search-feed-provider-wiring.md):
   Search provider, local indexed rows, and relay snapshot merge proof.
 - [tasks/thread-feed-provider-wiring.md](tasks/thread-feed-provider-wiring.md):
