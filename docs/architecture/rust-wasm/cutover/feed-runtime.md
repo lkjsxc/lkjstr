@@ -197,7 +197,7 @@ Durable row-height persistence is partial: typed `feed_row_height_*` repositorie
 exist and Home/Global/Notifications/Profile/Thread/Search/Author Context/User
 Timeline consume matching models for cached rows. Converted event snapshots and
 Profile header relay rebuilds preserve cache-loaded models; browser scroll
-proof and Stats projection remain open.
+proof and runtime geometry counters remain open.
 
 ## Unavailable-State Derivation
 

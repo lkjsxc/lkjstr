@@ -41,6 +41,7 @@ browser storage manifest.
 - `sql_schema_test.rs`: SQLite schema and statement records.
 - `stats_browser_rows_test.rs`: Stats browser inventory row extension.
 - `stats_byte_rows_test.rs`: Stats pressure byte-summary projection.
+- `stats_geometry_test.rs`: Stats feed row-height aggregate projection.
 - `stats_test.rs`: Stats inventory, health, and pressure projection.
 - `tab_state_test.rs`: tab-state key and ledger record behavior.
 - `tweet_drafts_test.rs`: protected Tweet draft row serialization.

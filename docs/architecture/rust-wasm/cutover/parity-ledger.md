@@ -140,8 +140,8 @@ uses temporary matching host glue for content-aware estimates,
 unload-preserved active reservations, and long-content fragments. Durable
 geometry model consumption beyond
 Home/Global/Notifications/Profile/Thread/Search/Author Context/User Timeline,
-deeper Stats projection, deletion proof, and broader browser scroll regression
-proof remain open.
+deeper runtime Stats counters, deletion proof, and broader browser scroll
+regression proof remain open.
 
 ## Event Display Proof
 

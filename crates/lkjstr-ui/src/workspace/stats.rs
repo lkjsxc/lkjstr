@@ -5,6 +5,7 @@ use lkjstr_storage::{StorageInventoryRow, StorageStatsSnapshot};
 
 use crate::app::RuntimeSignal;
 use crate::workspace::stats_bytes::storage_byte_rows;
+use crate::workspace::stats_geometry::feed_geometry_rows;
 use crate::workspace::stats_health::storage_health_rows;
 use crate::workspace::stats_provider::StatsProvider;
 use crate::workspace::stats_refresh::{StatsRefreshState, refresh_stats};
@@ -80,6 +81,10 @@ pub fn StatsTab(runtime: RuntimeSignal, provider: Option<StatsProvider>) -> impl
             <h3>"Storage health"</h3>
             <table class="stats-table">
                 <tbody>{move || storage_health_rows(snapshot.get())}</tbody>
+            </table>
+            <h3>"Feed geometry"</h3>
+            <table class="stats-table">
+                <tbody>{move || feed_geometry_rows(snapshot.get())}</tbody>
             </table>
             <h3>"Storage inventory"</h3>
             <table class="stats-table">

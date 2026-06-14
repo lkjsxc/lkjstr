@@ -152,4 +152,5 @@ fn unique_sorted(values: impl Iterator<Item = String>) -> Vec<String> {
 }
 
 #[cfg(test)]
+#[path = "profile_feed_header_relay_input_tests.rs"]
 mod tests;

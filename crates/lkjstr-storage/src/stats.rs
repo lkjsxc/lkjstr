@@ -3,11 +3,13 @@
 use serde::{Deserialize, Serialize};
 
 mod bytes;
+mod geometry;
 mod inventory;
 mod readiness;
 
 pub use crate::stats_rows::{SqliteRowCount, StorageInventoryRow, StorageTableCount};
 pub use bytes::StorageByteInventoryRow;
+pub use geometry::StorageFeedGeometryStats;
 pub use readiness::{
     InventoryReadinessGap, RetentionInventoryReadiness, classify_inventory_for_retention,
 };
@@ -31,6 +33,7 @@ pub struct StorageStatsSnapshot {
     pub storage_pressure_reason: Option<String>,
     pub storage_pressure: Option<StoragePressureSnapshotRecord>,
     pub byte_rows: Vec<StorageByteInventoryRow>,
+    pub feed_geometry: StorageFeedGeometryStats,
     pub rows: Vec<StorageInventoryRow>,
 }
 
@@ -78,6 +81,7 @@ impl StorageStatsSnapshot {
             storage_pressure_reason: Some("not-requested".to_string()),
             storage_pressure: None,
             byte_rows: pressure_byte_rows(None, Some("not-requested")),
+            feed_geometry: StorageFeedGeometryStats::unavailable("not-requested"),
             rows,
         };
         snapshot.recount_rows();
@@ -136,6 +140,7 @@ impl StorageStatsSnapshot {
         self.unavailable_table_count = self.table_count.saturating_sub(self.available_table_count);
         self.inventory_status =
             inventory_status(self.table_count, self.available_table_count).to_string();
+        self.feed_geometry = StorageFeedGeometryStats::from_inventory_rows(&self.rows);
     }
 }
 

@@ -171,8 +171,8 @@ pub use sql::{
     sqlite_table_count_sql,
 };
 pub use stats::{
-    SqliteRowCount, StorageByteInventoryRow, StorageInventoryRow, StorageStatsSnapshot,
-    StorageTableCount,
+    SqliteRowCount, StorageByteInventoryRow, StorageFeedGeometryStats, StorageInventoryRow,
+    StorageStatsSnapshot, StorageTableCount,
 };
 pub use storage_health::SqliteStorageHealth;
 pub use tab_state::{
