@@ -138,8 +138,8 @@ PATH=/home/lkjsxc/.cargo/bin:$PATH pnpm rust-wasm:quiet
 - Rust Author Context rows with content-warning tags render explicit sensitive
   state, real NIP-36 reason text, and local reveal controls before note text is
   shown.
-- Rust Author Context media/reference fragments render explicit unavailable
-  preview text instead of synthetic preview content.
+- Rust Author Context media/reference fragments receive app-owned explicit
+  unavailable preview rows instead of synthetic preview content.
 - Rust Author Context uses shared feed state-row rendering for explicit
   unavailable, diagnostic, profile, notification, and plain continuation rows.
 - Rust Author Context uses shared feed footer shell rendering while preserving the

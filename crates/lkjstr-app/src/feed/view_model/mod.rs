@@ -1,12 +1,16 @@
 #![doc = "Pure shared feed row view-model data."]
 
 mod build;
+mod content;
 mod ids;
 mod types;
 
 pub use build::{
     FeedViewModelInput, build_feed_view_model, diagnostic_state_row, footer_row,
     footer_row_from_window, notification_state_row, profile_state_row, unavailable_state_row,
+};
+pub use content::{
+    FeedEventContent, FeedEventContentRow, feed_event_content, feed_event_content_rows,
 };
 pub use ids::{
     feed_continuation_row_id, feed_diagnostic_row_id, feed_event_row_id, feed_footer_row_id,

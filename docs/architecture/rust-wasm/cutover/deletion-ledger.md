@@ -102,9 +102,11 @@ columns stay stable.
 Current `src/lib/feed-surface` evidence is partial only: Rust geometry,
 fragments, anchors, unload-stable reservations, and WASM bridge exist; shipped
 Svelte uses temporary host fragments, estimates, and active reservation
-preservation. Rust feed event bodies, unavailable preview states, author metadata fallback, sensitive warning reveal, and common state rows now share Leptos
-rendering across converted feed surfaces. Host-backed event-id copy and the Rust
-event menu shell are present in Rust feed actions. Deletion remains blocked until Svelte shared event-row parity,
+preservation. Rust feed event bodies, app-owned content rows, unavailable preview
+states, author metadata fallback, sensitive warning reveal, and common state rows
+now share Leptos rendering across converted feed surfaces. Host-backed event-id
+copy and the Rust event menu shell are present in Rust feed actions.
+Deletion remains blocked until Svelte shared event-row parity,
 repost rendering tests, User Timeline discovery tests, SQLite geometry
 persistence, Stats projection, browser scroll proof, and no-import proof exist.
 

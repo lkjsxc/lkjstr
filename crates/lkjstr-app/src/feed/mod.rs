@@ -40,10 +40,11 @@ pub use types::{
 };
 pub use view_model::{
     FEED_LOAD_OLDER_COMMAND, FeedContinuationRow, FeedDiagnosticRow, FeedDiagnosticSeverity,
-    FeedEventRow, FeedFooterRow, FeedFooterState, FeedNotificationRow, FeedProfileRow,
-    FeedRowRenderer, FeedStateRow, FeedUnavailableRow, FeedViewModel, FeedViewModelInput,
-    FeedViewRow, build_feed_view_model, diagnostic_state_row, feed_continuation_row_id,
-    feed_diagnostic_row_id, feed_event_row_id, feed_footer_row_id, feed_notification_row_id,
-    feed_profile_row_id, feed_unavailable_row_id, footer_row, footer_row_from_window,
-    notification_state_row, profile_state_row, unavailable_state_row,
+    FeedEventContent, FeedEventContentRow, FeedEventRow, FeedFooterRow, FeedFooterState,
+    FeedNotificationRow, FeedProfileRow, FeedRowRenderer, FeedStateRow, FeedUnavailableRow,
+    FeedViewModel, FeedViewModelInput, FeedViewRow, build_feed_view_model, diagnostic_state_row,
+    feed_continuation_row_id, feed_diagnostic_row_id, feed_event_content, feed_event_content_rows,
+    feed_event_row_id, feed_footer_row_id, feed_notification_row_id, feed_profile_row_id,
+    feed_unavailable_row_id, footer_row, footer_row_from_window, notification_state_row,
+    profile_state_row, unavailable_state_row,
 };
