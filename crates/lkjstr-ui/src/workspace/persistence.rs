@@ -10,14 +10,6 @@ pub struct WorkspacePersistence {
 
 impl WorkspacePersistence {
     #[must_use]
-    pub fn new(save: impl Fn(Workspace) + Send + Sync + 'static) -> Self {
-        Self {
-            save: Callback::new(save),
-            save_tab_snapshot: Callback::new(|_: TabStateRecord| {}),
-        }
-    }
-
-    #[must_use]
     pub fn with_tab_snapshots(
         save: impl Fn(Workspace) + Send + Sync + 'static,
         save_tab_snapshot: impl Fn(TabStateRecord) + Send + Sync + 'static,
