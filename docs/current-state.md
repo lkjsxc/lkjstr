@@ -192,8 +192,8 @@ Read next: [architecture/workspace/README.md](architecture/workspace/README.md),
   windows. Svelte feed code is host glue that applies Rust decisions when the
   bridge is available, with session-only TypeScript estimates as the fallback
   only. Typed SQLite row-height observation/model rows and web adapters exist;
-  Home consumes matching durable models for cached rows; other feed hosts and
-  Stats projection remain open. Reservation, unload, and LOD rules live in
+  Home and Global consume matching durable models for cached rows; other feed
+  hosts and Stats projection remain open. Reservation, unload, and LOD rules live in
   [architecture/data/feed-surface/height-reservation.md](architecture/data/feed-surface/height-reservation.md)
   and [architecture/data/feed-surface/lod-tree.md](architecture/data/feed-surface/lod-tree.md).
 

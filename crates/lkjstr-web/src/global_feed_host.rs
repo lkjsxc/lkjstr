@@ -1,7 +1,6 @@
 use lkjstr_app::{
     FeedDiagnosticSeverity, FeedFragmentConfig, GlobalFeedDiagnosticInput, GlobalFeedSourceState,
-    GlobalFeedView, GlobalFeedViewInput, RowGeometryModel, build_global_feed_view,
-    empty_feed_window,
+    GlobalFeedView, GlobalFeedViewInput, build_global_feed_view, empty_feed_window,
 };
 use lkjstr_domain::seed_relay_sets;
 use lkjstr_relays::DemandVisibility;
@@ -10,6 +9,7 @@ use lkjstr_ui::GlobalFeedProvider;
 
 use crate::{
     global_feed_cache::global_cache_state,
+    global_feed_geometry::global_feed_geometry_models,
     global_feed_host_commands::{
         complete_read_output, release_owner as release_global_owner, start_older_request,
     },
@@ -27,6 +27,8 @@ use crate::{
 
 pub(crate) const PAGE_SIZE: u64 = 30;
 pub(crate) const WINDOW_MAX: usize = 180;
+const VIEW_WIDTH_PX: u16 = 680;
+const VIEW_FONT_SCALE: f32 = 1.0;
 
 #[derive(Clone)]
 pub(crate) struct GlobalFeedHost {
@@ -112,6 +114,9 @@ async fn global_feed_model(host: &GlobalFeedHost, owner: &str) -> GlobalFeedLoad
     } else {
         global_cache_state(host, owner, &selected_relays, now_sec, &mut diagnostics).await
     };
+    let geometry_models =
+        global_feed_geometry_models(host, &window, &mut diagnostics, VIEW_WIDTH_PX, VIEW_FONT_SCALE)
+            .await;
     let seed = GlobalRelayInputSeed {
         owner,
         source_state: &source_state,
@@ -132,9 +137,9 @@ async fn global_feed_model(host: &GlobalFeedHost, owner: &str) -> GlobalFeedLoad
         now_sec,
         page_size: PAGE_SIZE,
         window,
-        width_px: 680,
-        font_scale: 1.0,
-        geometry_models: Vec::<RowGeometryModel>::new(),
+        width_px: VIEW_WIDTH_PX,
+        font_scale: VIEW_FONT_SCALE,
+        geometry_models,
         fragment_config: FeedFragmentConfig::default(),
         diagnostics,
     });

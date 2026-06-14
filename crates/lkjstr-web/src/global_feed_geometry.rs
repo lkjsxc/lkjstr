@@ -1,18 +1,18 @@
 use lkjstr_app::{
-    EventDisplayContext, FeedWindowState, HomeFeedDiagnosticInput, RowGeometryModel,
+    EventDisplayContext, FeedWindowState, GlobalFeedDiagnosticInput, RowGeometryModel,
 };
 use lkjstr_storage::StorageOutcome;
 
 use crate::{
     feed_geometry_models::feed_geometry_models,
-    home_feed_host::{HomeFeedHost, diagnostic},
+    global_feed_host::{GlobalFeedHost, diagnostic},
     host_status::problem_status,
 };
 
-pub(crate) async fn home_feed_geometry_models(
-    host: &HomeFeedHost,
+pub(crate) async fn global_feed_geometry_models(
+    host: &GlobalFeedHost,
     window: &FeedWindowState,
-    diagnostics: &mut Vec<HomeFeedDiagnosticInput>,
+    diagnostics: &mut Vec<GlobalFeedDiagnosticInput>,
     width_px: u16,
     font_scale: f32,
 ) -> Vec<RowGeometryModel> {

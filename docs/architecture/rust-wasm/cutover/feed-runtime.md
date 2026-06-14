@@ -194,7 +194,7 @@ ready. Footer rows must carry the command, disabled reason, or diagnostic id;
 estimates, visual fragments, height reservation, dematerialization, and LOD tree
 state. `lkjstr-web` may report DOM measurements and load persisted model rows.
 Durable row-height persistence is partial: typed `feed_row_height_*` repositories
-exist and Home consumes matching models for cached rows, while other feed
+exist and Home/Global consume matching models for cached rows, while other feed
 surfaces, browser scroll proof, and Stats projection remain open.
 
 ## Unavailable-State Derivation
