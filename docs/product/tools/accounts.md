@@ -39,6 +39,8 @@ Accounts represent public identities and signing capability.
   explicitly added.
 - Local signing accounts can reveal or copy their `nsec` only after an inline
   user action. Read-only and NIP-07 accounts never expose local secret controls.
+- Local `nsec` copy reports clipboard unavailable or rejected writes explicitly;
+  copied status appears only after the browser clipboard write resolves.
 - Account flows must not use browser prompt or alert dialogs.
 - Tweet publishing requires an active signing account and enabled write relays.
 - Accounts can mine a CPU-only vanity `npub` prefix after `npub1`.

@@ -12,6 +12,10 @@
   import { encodeNsec } from '$lib/protocol';
   import AccountRow from './AccountRow.svelte';
   import AccountStorageSafety from './AccountStorageSafety.svelte';
+  import {
+    accountCopyStatusText,
+    copyAccountSecret,
+  } from './account-copy-status';
 
   type Props = {
     accounts: Account[];
@@ -79,8 +83,9 @@
   async function copy(account: Account): Promise<void> {
     const nsec = revealed[account.id];
     if (!nsec) return;
-    await navigator.clipboard?.writeText(nsec);
-    status = 'Local nsec copied.';
+    status = accountCopyStatusText(
+      await copyAccountSecret('Local nsec', nsec, navigator.clipboard),
+    );
   }
 </script>
 
