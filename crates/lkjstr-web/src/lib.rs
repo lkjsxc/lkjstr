@@ -43,6 +43,8 @@ mod thread_feed_status;
 #[cfg(target_arch = "wasm32")]
 pub use author_context_island::{AuthorContextIslandHandle, mount_author_context_tab};
 #[cfg(target_arch = "wasm32")]
+pub use followees_island::{FolloweesIslandHandle, mount_followees_tab};
+#[cfg(target_arch = "wasm32")]
 pub use mount_api::{
     mount_rust_workspace_shell, mount_rust_workspace_shell_from_db,
     mount_rust_workspace_shell_from_db_with_worker,

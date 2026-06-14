@@ -1,9 +1,9 @@
 use leptos::prelude::*;
-use lkjstr_app::{
-    FolloweesDiagnostic, FolloweesRow, FolloweesStatus, FolloweesView, default_followees_view,
-};
+use lkjstr_app::{FolloweesStatus, FolloweesView, default_followees_view};
 
+use crate::workspace::followees_actions::FolloweesActions;
 use crate::workspace::followees_provider::{FolloweesLease, FolloweesProvider};
+use crate::workspace::followees_row::{diagnostic_row, followee_row};
 
 #[component]
 pub fn FolloweesTab(
@@ -11,6 +11,7 @@ pub fn FolloweesTab(
     target_pubkey: Option<String>,
     model: FolloweesView,
     provider: Option<FolloweesProvider>,
+    actions: FolloweesActions,
 ) -> impl IntoView {
     let model = RwSignal::new(model);
     let active_lease = RwSignal::new(None::<FolloweesLease>);
@@ -40,7 +41,15 @@ pub fn FolloweesTab(
                     )}
                     <div class="lkjstr-feed-rows">
                         {move || model.get().diagnostics.into_iter().map(diagnostic_row).collect_view()}
-                        {move || model.get().rows.into_iter().map(followee_row).collect_view()}
+                        {move || {
+                            let actions = actions.clone();
+                            model
+                                .get()
+                                .rows
+                                .into_iter()
+                                .map(move |row| followee_row(row, actions.clone()))
+                                .collect_view()
+                        }}
                     </div>
                 </div>
             </div>
@@ -60,6 +69,7 @@ pub fn followees_tab_content(
             target_pubkey=target_pubkey
             model=model
             provider=provider
+            actions=FolloweesActions::default()
         />
     }
 }
@@ -80,34 +90,6 @@ fn followees_header(model: FolloweesView) -> impl IntoView {
                 </div>
             </div>
         </header>
-    }
-}
-
-fn followee_row(row: FolloweesRow) -> impl IntoView {
-    let relay = row.relay.unwrap_or_else(|| "No relay hint".to_owned());
-    let petname = row.petname.unwrap_or_else(|| "No petname".to_owned());
-    view! {
-        <article class="lkjstr-feed-row profile" data-row-id=row.row_id>
-            <strong>"Unknown"</strong>
-            <p>{petname}</p>
-            <small>{relay}</small>
-        </article>
-    }
-}
-
-fn diagnostic_row(row: FolloweesDiagnostic) -> impl IntoView {
-    let relay = row.relay.unwrap_or_else(|| "selected relay".to_owned());
-    let retry = if row.retry_available {
-        "Retry available"
-    } else {
-        "Retry unavailable"
-    };
-    view! {
-        <article class="lkjstr-feed-row diagnostic" data-row-id=row.row_id>
-            <strong>{retry}</strong>
-            <p>{row.message}</p>
-            <small>{relay}</small>
-        </article>
     }
 }
 

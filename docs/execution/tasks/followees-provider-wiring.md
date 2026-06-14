@@ -8,9 +8,9 @@ deletion proof.
 
 ## Status
 
-Implemented enabling slice. TypeScript Followees and follow-graph modules remain
-the shipped owner until remaining parity, no-import, and final verification proof
-exist.
+Implemented bridge slice. The shipped Svelte tab mounts the Rust Followees body
+as a WASM island while TypeScript follow-graph modules remain available until
+remaining parity, no-import, and final verification proof exist.
 
 ## Current Evidence
 
@@ -45,11 +45,15 @@ exist.
 - `crates/lkjstr-web/tests/followees_route_provider_test.rs` proves stored
   NIP-65, provenance, and target routes discover a real follow-list while a
   disabled stored route is not requested.
+- `src/lib/tabs/followees/FolloweesTab.svelte` is now a shipped lifecycle
+  wrapper that mounts the Rust/WASM island and forwards callbacks.
+- `crates/lkjstr-web/tests/followees_island_test.rs` proves explicit
+  unavailable rendering and unmount cleanup through the exported bridge.
 
 ## Next Edit
 
-Continue remaining Followees parity and no-import prerequisites. Do not start
-deletion proof yet.
+Continue remaining Followees/User Timeline parity and no-import prerequisites.
+Do not start deletion proof yet.
 
 ## Files To Read
 
@@ -64,9 +68,12 @@ deletion proof yet.
 
 - `crates/lkjstr-app/src/follow_graph/**`
 - `crates/lkjstr-ui/src/workspace/followees*.rs`
+- `crates/lkjstr-web/src/followees_island.rs`
 - `crates/lkjstr-web/src/followees_host.rs`
 - `crates/lkjstr-web/src/followees_routes.rs`
+- `src/lib/tabs/followees/FolloweesTab.svelte`
 - `crates/lkjstr-web/tests/profile_feed_tab_test.rs`
+- `crates/lkjstr-web/tests/followees_island_test.rs`
 - `crates/lkjstr-web/tests/followees_route_provider_test.rs`
 - Rust/WASM cutover ledgers and `docs/current-state.md`
 
@@ -76,6 +83,7 @@ deletion proof yet.
 cargo test -p lkjstr-app -- follow
 cargo test -p lkjstr-ui followees
 cargo check -p lkjstr-web --target wasm32-unknown-unknown
+wasm-pack test --headless --chrome crates/lkjstr-web --test followees_island_test
 wasm-pack test --headless --chrome crates/lkjstr-web --test followees_provider_test
 wasm-pack test --headless --chrome crates/lkjstr-web --test followees_relay_provider_test
 wasm-pack test --headless --chrome crates/lkjstr-web --test followees_route_provider_test
@@ -102,6 +110,10 @@ pnpm rust-wasm:quiet
 - Selected-relay no-event reads complete to retryable diagnostics and retry
   starts a new bounded read without claiming absence.
 - Profile opening proof reaches the real Followees body.
+- The shipped Svelte Followees tab is only a lifecycle wrapper for the Rust
+  island and releases it on visibility changes or destruction.
+- Rust rows expose real pubkeys, relay hints, petnames, and profile,
+  user-timeline, and copy actions without synthesizing profile metadata.
 - TypeScript Followees and follow-graph paths remain until remaining parity,
   no-import, and final gates prove deletion readiness.
 

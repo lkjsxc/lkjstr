@@ -14,7 +14,11 @@ mod custom_request;
 mod custom_request_provider;
 mod custom_request_snapshot;
 mod followees;
+mod followees_actions;
+#[cfg(target_arch = "wasm32")]
+mod followees_island;
 mod followees_provider;
+mod followees_row;
 mod global;
 mod global_footer;
 mod global_older;
@@ -95,6 +99,8 @@ pub use author_context_provider::{
 pub use custom_request_provider::{
     CustomRequestComplete, CustomRequestLease, CustomRequestProvider, CustomRequestRunRequest,
 };
+#[cfg(target_arch = "wasm32")]
+pub use followees_island::{FolloweesIslandActions, mount_followees_island};
 pub use followees_provider::{FolloweesComplete, FolloweesProvider, FolloweesRequest};
 pub use global_provider::{
     GlobalFeedComplete, GlobalFeedProvider, GlobalFeedRequest, GlobalOlderRequest,

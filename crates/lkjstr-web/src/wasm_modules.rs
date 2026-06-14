@@ -10,6 +10,7 @@ mod author_context_island;
 mod browser_inventory;
 mod custom_request_host;
 mod followees_host;
+mod followees_island;
 mod followees_relay;
 mod followees_relay_input;
 mod followees_relay_read;

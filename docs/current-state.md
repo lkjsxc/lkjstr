@@ -13,13 +13,12 @@ Read next: [product/README.md](product/README.md),
 [product/tools/README.md](product/tools/README.md).
 
 - The root route opens the tiled workspace app.
-- Clean launch focuses Welcome and also opens Accounts, Relay Settings, Home,
-  Notifications, and Tweet.
+- Clean launch focuses Welcome and opens Accounts, Relay Settings, Home, Notifications, and Tweet.
 - Home, Global, Public Chat, Profile, Thread, Notifications, Search, Custom
   Request, Accounts, Relay Settings, Stats, Settings, Upload Settings,
-  lkjstr Log, Mine npub, Profile Edit, Welcome, and a Rust-island Author
-  Context body are implemented.
-- Followees/User Timeline are relay-backed action-opened surfaces. Rust
+  lkjstr Log, Mine npub, Profile Edit, Welcome, and Rust-island Author
+  Context and Followees bodies are implemented.
+- Followees mounts its Rust body through Svelte as a WASM island.
   Followees/User Timeline render real NIP-02 rows, selected/stored-route
   discovery, cleanup, retry, partial-route, and degraded states.
 - Shared UI system catalog and shipped component list live in
@@ -168,8 +167,9 @@ Read next: [architecture/workspace/README.md](architecture/workspace/README.md),
   note relay reads, owner cleanup, cached and relay-refreshed kind `0`
   metadata plus kind `3` follow counts, and sparse empty proof while excluding
   metadata and follow-list note rows. Rust Thread reads cached root/reply/focused,
-  parent, unavailable, continuation, older, and live rows. Rust Author Context
-  covers cache/relay anchors and row actions; Custom Request shows plan states; deletion remains open.
+  parent, unavailable, continuation, older, and live rows. Rust Author Context covers
+  cache/relay anchors/actions, Followees mounts a Rust island, and Custom
+  Request shows plan states; deletion remains open.
 - Live inserts follow a top-anchor policy. A user at the top sees new resident
   rows immediately; a user away from the top keeps the visible anchor and sees
   newer-available state instead of being yanked upward.

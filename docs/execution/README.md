@@ -55,8 +55,8 @@ no-import proof allow removal.
   focused-reference hydration, bounded cached parent-chain hydration, terminal
   unavailable-parent rows, continuation rows, and cleanup proof. Preserve the
   tests; Thread parity and deletion remain blocked.
-- Current first incomplete slice: broader Followees/User Timeline route
-  discovery and deletion proof from [current-blockers.md](current-blockers.md).
+- Current first incomplete slice: remaining Followees/User Timeline parity,
+  no-import, and deletion proof from [current-blockers.md](current-blockers.md).
 
 ## Canonical Links
 
