@@ -14,6 +14,7 @@ mod custom_request;
 mod custom_request_provider;
 mod custom_request_snapshot;
 mod feed_event_actions;
+mod feed_event_row;
 mod followees;
 mod followees_actions;
 #[cfg(target_arch = "wasm32")]

@@ -1,9 +1,10 @@
 use leptos::prelude::*;
 use lkjstr_app::{
-    FeedEventRow, FeedViewRow, NotificationsFeedStatus, NotificationsFeedView,
-    NotificationsOlderLoadTrigger, default_notifications_feed_view,
+    FeedViewRow, NotificationsFeedStatus, NotificationsFeedView, NotificationsOlderLoadTrigger,
+    default_notifications_feed_view,
 };
 
+use crate::workspace::feed_event_row::event_row;
 use crate::workspace::notifications_footer::footer_row;
 use crate::workspace::notifications_older::NotificationsOlderLoader;
 use crate::workspace::notifications_provider::NotificationsFeedProvider;
@@ -70,7 +71,7 @@ fn row_view(
     older_command: Option<Callback<NotificationsOlderLoadTrigger>>,
 ) -> impl IntoView {
     match row {
-        FeedViewRow::Event(row) => event_row(row).into_any(),
+        FeedViewRow::Event(row) => event_row(row, ()).into_any(),
         FeedViewRow::Notification(row) => view! {
             <article class="lkjstr-feed-row notification" data-row-id=row.row_id>
                 <strong>{row.notification_kind}</strong>
@@ -105,37 +106,6 @@ fn row_view(
         }
         .into_any(),
     }
-}
-
-fn event_row(row: FeedEventRow) -> impl IntoView {
-    let event_id = row.event_id.clone();
-    let row_id = row.row_id.clone();
-    let created_at = row.created_at;
-    let text_rows = event_text(row);
-    view! {
-        <article class="lkjstr-feed-row event" data-row-id=row_id data-event-id=event_id>
-            <small>{format!("created {created_at}")}</small>
-            {text_rows.into_iter().map(|text| view! { <p>{text}</p> }).collect_view()}
-        </article>
-    }
-}
-
-fn event_text(row: FeedEventRow) -> Vec<String> {
-    row.visual_rows
-        .into_iter()
-        .filter_map(|item| match item {
-            lkjstr_app::FeedVisualRow::EventFull(row) => Some(row.content),
-            lkjstr_app::FeedVisualRow::EventTextSegment(row) => Some(row.text),
-            lkjstr_app::FeedVisualRow::EventMediaSegment(row) => {
-                Some(format!("media segment {}", row.index))
-            }
-            lkjstr_app::FeedVisualRow::EventReferenceSegment(row) => {
-                Some(format!("reference segment {}", row.index))
-            }
-            lkjstr_app::FeedVisualRow::EventHeader(_)
-            | lkjstr_app::FeedVisualRow::EventActions(_) => None,
-        })
-        .collect()
 }
 
 fn status_text(status: NotificationsFeedStatus) -> &'static str {

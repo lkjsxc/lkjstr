@@ -13,8 +13,9 @@ Leptos component group, Rust state owner, and deletion gate.
 - `TabBody` renders real Leptos Welcome, New Tab, Stats, Log, Accounts, Relay
   Settings, Settings, Upload Settings, Tweet draft, and partial Public Chat
   surfaces. Partial feed-family Leptos bodies include injected and
-  worker/relay-backed Author Context shared-feed rows and row actions; the
-  shipped Svelte Author Context tab hosts that Rust body as a WASM island.
+  worker/relay-backed Author Context shared-feed rows, shared event body
+  rendering, and row actions; the shipped Svelte Author Context tab hosts that
+  Rust body as a WASM island.
   Other tab kinds still render pending Leptos bodies while shipped behavior
   remains Svelte.
 

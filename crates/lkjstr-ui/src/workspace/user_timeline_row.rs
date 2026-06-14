@@ -4,6 +4,7 @@ use lkjstr_app::{FeedEventRow, FeedFooterState, FeedViewRow};
 use crate::workspace::feed_event_actions::{
     FeedEventActionLabels, event_actions as feed_event_actions,
 };
+use crate::workspace::feed_event_row::event_row as feed_event_row;
 use crate::workspace::user_timeline_actions::UserTimelineActions;
 
 pub(crate) fn timeline_row(row: FeedViewRow, actions: UserTimelineActions) -> impl IntoView {
@@ -53,34 +54,7 @@ pub(crate) fn timeline_row(row: FeedViewRow, actions: UserTimelineActions) -> im
 fn event_row(row: FeedEventRow, actions: UserTimelineActions) -> impl IntoView {
     let event_id = row.event_id.clone();
     let author_pubkey = row.author_pubkey.clone();
-    let text_rows = row
-        .visual_rows
-        .into_iter()
-        .filter_map(event_text)
-        .collect::<Vec<_>>();
-    view! {
-        <article class="lkjstr-feed-row event" data-row-id=row.row_id data-event-id=row.event_id>
-            <small>{format!("created {}", row.created_at)}</small>
-            {text_rows.into_iter().map(|text| view! { <p>{text}</p> }).collect_view()}
-            {event_actions(event_id, author_pubkey, actions)}
-        </article>
-    }
-}
-
-fn event_text(item: lkjstr_app::FeedVisualRow) -> Option<String> {
-    match item {
-        lkjstr_app::FeedVisualRow::EventFull(row) => Some(row.content),
-        lkjstr_app::FeedVisualRow::EventTextSegment(row) => Some(row.text),
-        lkjstr_app::FeedVisualRow::EventMediaSegment(row) => {
-            Some(format!("media segment {}", row.index))
-        }
-        lkjstr_app::FeedVisualRow::EventReferenceSegment(row) => {
-            Some(format!("reference segment {}", row.index))
-        }
-        lkjstr_app::FeedVisualRow::EventHeader(_) | lkjstr_app::FeedVisualRow::EventActions(_) => {
-            None
-        }
-    }
+    feed_event_row(row, event_actions(event_id, author_pubkey, actions))
 }
 
 fn event_actions(event_id: String, pubkey: String, actions: UserTimelineActions) -> impl IntoView {
