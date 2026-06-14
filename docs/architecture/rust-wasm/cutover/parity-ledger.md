@@ -15,13 +15,13 @@ before the SvelteKit product runtime can be removed.
 
 | Surface         | Rust status     | Required Rust modules                                         | Proof before `implemented`                                                                   |
 | --------------- | --------------- | ------------------------------------------------------------- | -------------------------------------------------------------------------------------------- |
-| Home            | not implemented | `app`, `relays`, `storage`, `ui` feed runtime                 | cache coverage, relay reads, shared query tests, browser feed tests                          |
-| Global          | not implemented | `app`, `relays`, `storage`, `ui` feed runtime                 | selected-relay reads, grouped scans, progressive snapshots                                   |
-| Profile         | not implemented | `app`, `relays`, `storage`, `ui` profile runtime              | metadata card, route reads, posts, identity links                                            |
+| Home            | partial         | `app`, `relays`, `storage`, `ui` feed runtime                 | cache coverage, relay reads, shared query tests, browser feed tests                          |
+| Global          | partial         | `app`, `relays`, `storage`, `ui` feed runtime                 | selected-relay reads, grouped scans, progressive snapshots                                   |
+| Profile         | partial         | `app`, `relays`, `storage`, `ui` profile runtime              | metadata card, route reads, posts, identity links                                            |
 | Followees       | partial         | `protocol`, `app`, `web`, `relays`, `ui` follow graph path    | remaining parity, no-import, and deletion proof                                              |
 | User Timeline   | partial         | `protocol`, `app`, `web`, `relays`, `ui` target timeline path | no-import and deletion proof                                                                 |
 | Thread          | partial         | `app`, `relays`, `storage`, `ui` thread runtime               | root lookup, reply pages, references, exact reads                                            |
-| Notifications   | not implemented | `app`, `relays`, `storage`, `ui` notification runtime         | mentions, reactions, reposts, zaps, older windows                                            |
+| Notifications   | partial         | `app`, `relays`, `storage`, `ui` notification runtime         | mentions, reactions, reposts, zaps, older windows                                            |
 | Search          | partial         | `app`, `relays`, `storage`, `ui` search runtime               | provider execution, NIP-50 merge, older pages, cancellation, snapshots, deletion proof       |
 | Custom Request  | partial         | `app`, `protocol`, `relays`, `ui` request runtime             | relay result output, cancellation, no-import proof                                           |
 | Public Chat     | partial         | `protocol`, `domain`, `app`, `relays`, `storage`, `ui`, `web` | NIP-28 parsing, channel reads, publish, partial failure, cleanup                             |
