@@ -82,6 +82,7 @@ pub mod relay_host;
 mod relay_selection;
 mod relay_settings_host;
 mod search_feed_cache;
+mod search_feed_geometry;
 mod search_feed_host;
 mod search_feed_host_commands;
 mod search_feed_relay;

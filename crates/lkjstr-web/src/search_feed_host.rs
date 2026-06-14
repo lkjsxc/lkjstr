@@ -1,7 +1,6 @@
 use lkjstr_app::{
-    FeedDiagnosticSeverity, FeedFragmentConfig, RowGeometryModel, SearchFeedDiagnosticInput,
-    SearchFeedSourceState, SearchFeedView, SearchFeedViewInput, build_search_feed_view,
-    empty_feed_window,
+    FeedDiagnosticSeverity, FeedFragmentConfig, SearchFeedDiagnosticInput, SearchFeedSourceState,
+    SearchFeedView, SearchFeedViewInput, build_search_feed_view, empty_feed_window,
 };
 use lkjstr_domain::seed_relay_sets;
 use lkjstr_relays::DemandVisibility;
@@ -12,6 +11,7 @@ use crate::{
     host_status::{browser_now_ms, problem_status},
     relay_selection::selected_read_relays,
     search_feed_cache::search_cache_window,
+    search_feed_geometry::search_feed_geometry_models,
     search_feed_host_commands::start_older_request,
     search_feed_relay::start_search_relay_read,
     search_feed_relay_input::{SearchRelayInputSeed, SearchRelayReadInput, search_relay_input},
@@ -83,6 +83,8 @@ async fn search_feed_model(host: &SearchFeedHost, owner: &str, query: &str) -> S
     };
     let (window, source_state) =
         search_cache_state(host, query, &selected_relays, &mut diagnostics).await;
+    let geometry_models =
+        search_feed_geometry_models(host, &window, &mut diagnostics, 680, 1.0).await;
     let relay = search_relay_input(SearchRelayInputSeed {
         owner,
         query,
@@ -106,7 +108,7 @@ async fn search_feed_model(host: &SearchFeedHost, owner: &str, query: &str) -> S
         window,
         width_px: 680,
         font_scale: 1.0,
-        geometry_models: Vec::<RowGeometryModel>::new(),
+        geometry_models,
         fragment_config: FeedFragmentConfig::default(),
         diagnostics,
     });

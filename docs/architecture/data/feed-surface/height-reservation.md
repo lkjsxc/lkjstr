@@ -12,7 +12,7 @@ measurement invalidation, and anchor deltas. Svelte reports DOM observations and
 applies returned reservations. Session TypeScript maps may cache bridge results
 for responsiveness but are not the product geometry engine. Durable SQLite
 observation/model persistence exists for Rust-owned rows, and
-Home/Global/Notifications/Profile/Thread cached rows consume matching models first. Full Leptos feed use remains an active target.
+Home/Global/Notifications/Profile/Thread/Search cached rows consume matching models first. Full Leptos feed use remains an active target.
 
 Measured height is a **structural reservation** for the visual row at the
 matching geometry key and layout bucket. A reservation is part of the scroll
@@ -131,7 +131,7 @@ socket ids are not geometry keys.
 9. Persist bounded observations through typed `feed_row_height_observations`
    and `feed_row_height_models` SQLite worker statements.
 10. Load matching model rows into converted feed hosts before estimating rows;
-    Home/Global/Notifications/Profile/Thread cached rows are first, and broader host coverage remains open.
+    Home/Global/Notifications/Profile/Thread/Search cached rows are first, and broader host coverage remains open.
 11. Expose aggregate reservation counts in Stats.
 
 ## Media And Previews
