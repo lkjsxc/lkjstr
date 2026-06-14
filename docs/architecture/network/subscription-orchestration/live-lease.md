@@ -13,9 +13,12 @@ side effects.
 
 1. First visible owner registers intent; orchestrator opens wire REQ.
 2. Additional compatible owners attach listeners without new REQ.
-3. All owners hidden: suspend wire (CLOSE) but retain lease record.
-4. Any owner visible again: resume wire without duplicate REQ if plan unchanged.
-5. Last owner released: CLOSE and remove lease.
+3. All owners hidden: suspend wire (CLOSE) but retain lease record with no
+   active release handle.
+4. Releasing the last visible owner while hidden owners remain also suspends
+   the wire.
+5. Any owner visible again: resume wire without duplicate REQ if plan unchanged.
+6. Last owner released: CLOSE when needed and remove lease.
 
 ## Modules
 

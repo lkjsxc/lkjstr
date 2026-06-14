@@ -105,7 +105,9 @@ page-read cleanup, and progressive snapshots.
   Typed host events feed reducer events only while the owner generation is
   active; closed owners emit ignored-after-close diagnostics and replaced
   generations are rejected. Firefox socket and timer host tests plus
-  Rust/WASM quiet passed. Product surfaces still consume TypeScript relay
+  Rust/WASM quiet passed. The transitional TypeScript orchestrator closes live
+  wires when a visible owner releases and only hidden owners remain, without
+  no-op release sentinels. Product surfaces still consume TypeScript relay
   runtime paths until shared feed demand wiring and no-import proof exist.
 
 ## 3. Shared feed runtime

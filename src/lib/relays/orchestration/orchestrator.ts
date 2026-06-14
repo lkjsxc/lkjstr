@@ -19,7 +19,6 @@ import type {
 import { demandToWireRequest } from './lease-key';
 import {
   createLiveLeaseController,
-  noopLiveRelease,
   releaseOwnerLeases,
   type LiveLease,
 } from './orchestrator-live';
@@ -44,7 +43,7 @@ export function createSubscriptionOrchestrator(
   const syncLiveGauge = (): void => {
     let openLiveLeases = 0;
     for (const lease of liveLeases.values()) {
-      if (lease.releaseManager !== noopLiveRelease) openLiveLeases += 1;
+      if (lease.releaseManager) openLiveLeases += 1;
     }
     setOrchestrationGauge('liveLeases', openLiveLeases);
     setOrchestrationGauge('bootstrapLeases', bootstrapInFlight);
@@ -111,7 +110,7 @@ export function createSubscriptionOrchestrator(
     readPage: manager.readPage.bind(manager),
     readPageDetailed: manager.readPageDetailed.bind(manager),
     close: (): void => {
-      for (const lease of liveLeases.values()) lease.releaseManager();
+      for (const lease of liveLeases.values()) lease.releaseManager?.();
       liveLeases.clear();
       bootstrapInFlight = 0;
       manager.close();

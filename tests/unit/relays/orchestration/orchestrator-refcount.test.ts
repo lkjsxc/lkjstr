@@ -36,4 +36,40 @@ describe('subscription orchestrator', () => {
     releaseB();
     expect(manager.counts().liveSubscriptions).toBe(0);
   });
+
+  it('closes live wire when only hidden owners remain', () => {
+    const manager = createRelaySubscriptionManager();
+    const orchestrator = createSubscriptionOrchestrator(
+      undefined as never,
+      manager,
+    );
+    const filters = [{ kinds: [1], limit: 30 }];
+    const relays = ['wss://relay.example'];
+    const releaseA = orchestrator.subscribeDemand(
+      liveFeedDemand({
+        surface: 'home',
+        owner: 'tab-a',
+        relays,
+        filters,
+      }),
+      () => undefined,
+    );
+    const releaseB = orchestrator.subscribeDemand(
+      liveFeedDemand({
+        surface: 'home',
+        owner: 'tab-b',
+        relays,
+        filters,
+      }),
+      () => undefined,
+    );
+    expect(manager.counts().liveSubscriptions).toBe(1);
+    orchestrator.pauseOwner('tab-b');
+    releaseA();
+    expect(manager.counts().liveSubscriptions).toBe(0);
+    orchestrator.resumeOwner('tab-b');
+    expect(manager.counts().liveSubscriptions).toBe(1);
+    releaseB();
+    expect(manager.counts().liveSubscriptions).toBe(0);
+  });
 });

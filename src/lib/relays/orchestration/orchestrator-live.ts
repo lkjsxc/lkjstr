@@ -11,15 +11,13 @@ export type LiveLease = {
   readonly fingerprint: string;
   readonly listeners: Set<(event: PoolEvent) => void>;
   readonly demand: Demand;
-  releaseManager: () => void;
+  releaseManager: (() => void) | undefined;
 };
 
 function acceptLiveEvent(demand: Demand, event: NostrEvent): boolean {
   if (demand.purpose !== 'feed') return true;
   return isRenderCriticalForSurface(demand.surface, event);
 }
-
-export const noopLiveRelease = (): void => undefined;
 
 export function createLiveLeaseController(
   manager: RelaySubscriptionManager,
@@ -45,28 +43,38 @@ export function createLiveLeaseController(
     syncLiveGauge();
   };
 
+  const closeWire = (lease: LiveLease): boolean => {
+    const release = lease.releaseManager;
+    if (!release) return false;
+    release();
+    lease.releaseManager = undefined;
+    incOrchestrationMetric('relayCloseTotal');
+    return true;
+  };
+
   const detachLive = (fingerprint: string, owner: string): void => {
     registry.release(owner, fingerprint);
     const lease = liveLeases.get(fingerprint);
-    if (!lease || registry.hasOwners(fingerprint)) return;
-    lease.releaseManager();
+    if (!lease) return;
+    if (registry.hasOwners(fingerprint)) {
+      if (registry.visibleOwnerCount(fingerprint) === 0 && closeWire(lease)) {
+        syncLiveGauge();
+      }
+      return;
+    }
+    closeWire(lease);
     liveLeases.delete(fingerprint);
-    incOrchestrationMetric('relayCloseTotal');
     syncLiveGauge();
   };
 
   const suspendLive = (fingerprint: string): void => {
     const lease = liveLeases.get(fingerprint);
-    if (!lease || lease.releaseManager === noopLiveRelease) return;
-    lease.releaseManager();
-    lease.releaseManager = noopLiveRelease;
-    incOrchestrationMetric('relayCloseTotal');
-    syncLiveGauge();
+    if (lease && closeWire(lease)) syncLiveGauge();
   };
 
   const resumeLive = (fingerprint: string): void => {
     const lease = liveLeases.get(fingerprint);
-    if (!lease || lease.releaseManager !== noopLiveRelease) return;
+    if (!lease || lease.releaseManager) return;
     openWire(lease);
   };
 
@@ -85,7 +93,7 @@ export function createLiveLeaseController(
         fingerprint,
         listeners,
         demand,
-        releaseManager: noopLiveRelease,
+        releaseManager: undefined,
       };
       liveLeases.set(fingerprint, lease);
       if (demand.visibility === 'visible') openWire(lease);
