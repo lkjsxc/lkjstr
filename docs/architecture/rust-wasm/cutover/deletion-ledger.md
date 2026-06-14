@@ -107,7 +107,8 @@ unavailable preview states, author metadata fallback, sensitive warning reveal,
 common state rows, and nearby/copy event menus now share Leptos rendering across
 converted feed surfaces; copy-only menu providers and converted Author
 Context/User Timeline action providers keep the menu available only from real
-providers. Empty Rust action menus are suppressed when no provider exists.
+providers, and Rust event copy status text matches the retained Svelte menu.
+Empty Rust action menus are suppressed when no provider exists.
 Retained Svelte copy actions report clipboard
 unavailable and rejected writes explicitly, optional retained event/profile
 actions render static rows instead of no-op buttons, and Rust-island hosts

@@ -42,7 +42,8 @@ and final verification proof exist.
 - `crates/lkjstr-ui/src/workspace/feed_event_actions.rs` shares the Rust
   Profile, Thread, and Author Context row action renderer with User Timeline.
 - Rust feed event actions expose host-backed event-id copy through the existing
-  browser clipboard provider without calling browser APIs from `lkjstr-ui`.
+  browser clipboard provider without calling browser APIs from `lkjstr-ui`, and
+  keep success/failure status text compatible with the retained Svelte menu.
 - Rust feed event actions render behind an accessible Rust-owned event menu shell.
   The menu shell is suppressed when no real action provider exists.
 - Focused UI tests prove copy-only event menus and converted Author
@@ -139,7 +140,8 @@ PATH=/home/lkjsxc/.cargo/bin:$PATH pnpm rust-wasm:quiet
 - Rust Author Context and User Timeline rows share the same Leptos event action
   renderer while retaining surface-specific labels and test ids.
 - Rust Author Context rows expose event-id copy through a host-provided
-  clipboard action; copy failure renders an explicit status string.
+  clipboard action; copy success and failure render explicit status strings
+  matching the retained Svelte event menu.
 - Rust Author Context rows render those actions inside a Rust-owned event menu
   shell instead of exposing only loose buttons, and empty action menus are not
   rendered.

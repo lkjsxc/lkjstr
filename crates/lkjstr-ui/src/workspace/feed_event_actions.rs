@@ -157,7 +157,7 @@ fn copy_status_view(status: RwSignal<Option<String>>) -> impl IntoView {
 
 fn copy_event_status_text(result: ProfileCopyResult) -> String {
     match result.status {
-        ProfileCopyStatus::Copied => format!("Copied {}", result.label),
+        ProfileCopyStatus::Copied => "Copied".to_owned(),
         ProfileCopyStatus::Failed(reason) => format!("Copy failed: {reason}"),
     }
 }

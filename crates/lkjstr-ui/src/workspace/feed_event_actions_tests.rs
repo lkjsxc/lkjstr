@@ -6,7 +6,7 @@ use super::*;
 fn copy_event_status_text_names_success_and_failure() {
     assert_eq!(
         copy_event_status_text(ProfileCopyResult::copied("event id")),
-        "Copied event id"
+        "Copied"
     );
     assert_eq!(
         copy_event_status_text(ProfileCopyResult::failed("event id", "denied")),
