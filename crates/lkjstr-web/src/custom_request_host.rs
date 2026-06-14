@@ -9,7 +9,12 @@ use lkjstr_storage::StorageOutcome;
 use lkjstr_ui::CustomRequestProvider;
 
 use crate::{
-    host_status::browser_now_ms, relay_selection::selected_read_relays,
+    custom_request_relay_input::custom_request_relay_input,
+    custom_request_relay_model::model_from_input,
+    custom_request_relay_read::start_custom_request_relay_read,
+    host_status::browser_now_ms,
+    relay_read_handle::RelayReadSlot,
+    relay_selection::selected_read_relays,
     sqlite_host_store::with_sqlite_store, sqlite_store::sqlite_relay_sets_all,
 };
 
@@ -17,7 +22,7 @@ const PAGE_SIZE: u64 = 30;
 const WINDOW_MAX: usize = 180;
 const VIEW_WIDTH_PX: u16 = 680;
 const VIEW_FONT_SCALE: f32 = 1.0;
-const RELAY_OUTPUT_GAP: &str = "Rust Custom Request relay result output is not wired yet.";
+const RELAY_OUTPUT_UNAVAILABLE: &str = "Custom Request relay output is unavailable.";
 
 pub fn custom_request_provider_with_worker_url(
     db_name: String,
@@ -26,6 +31,9 @@ pub fn custom_request_provider_with_worker_url(
     CustomRequestProvider::new(move |request| {
         let db_name = db_name.clone();
         let worker_url = worker_url.clone();
+        let relay_slot = RelayReadSlot::default();
+        let release_slot = relay_slot.clone();
+        request.lease().on_release(move || release_slot.cancel());
         wasm_bindgen_futures::spawn_local(async move {
             if request.is_released() {
                 return;
@@ -43,7 +51,23 @@ pub fn custom_request_provider_with_worker_url(
                 now_sec: browser_now_ms() / 1_000,
                 page_size: PAGE_SIZE,
             });
-            request.complete(view_from_plan(request.owner.clone(), plan));
+            let Some(relay_input) = custom_request_relay_input(request.owner.clone(), plan.clone())
+            else {
+                request.complete(local_view_from_plan(request.owner.clone(), plan));
+                return;
+            };
+            request.complete(model_from_input(
+                &relay_input,
+                CustomRequestFeedSourceState::RelayProgressive,
+            ));
+            if request.is_released() {
+                return;
+            }
+            let read_request = request.clone();
+            let handle = start_custom_request_relay_read(relay_input, move |output| {
+                read_request.complete(output.model);
+            });
+            relay_slot.replace(handle);
         });
     })
 }
@@ -60,10 +84,10 @@ async fn selected_relays(db_name: &str, worker_url: &str) -> Vec<String> {
     }
 }
 
-fn view_from_plan(owner: String, plan: CustomRequestRunPlan) -> CustomRequestFeedView {
+fn local_view_from_plan(owner: String, plan: CustomRequestRunPlan) -> CustomRequestFeedView {
     let source_state = match plan.status {
         CustomRequestRunStatus::Ready => CustomRequestFeedSourceState::Partial {
-            reason: RELAY_OUTPUT_GAP.to_owned(),
+            reason: RELAY_OUTPUT_UNAVAILABLE.to_owned(),
             retry_available: false,
         },
         CustomRequestRunStatus::Invalid | CustomRequestRunStatus::NoRelay => {

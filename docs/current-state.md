@@ -213,8 +213,8 @@ Read next: [architecture/network/README.md](architecture/network/README.md),
   waiting for remote relays, sends bounded NIP-50 filters to eligible selected
   read relays, loads cached and relay older pages by compound cursor, and reports
   unsupported or clamped relays as diagnostics.
-- Rust Custom Request validates and plans demand, cancels provider leases, renders app-owned result rows, and shows explicit
-  unavailable rows while host relay output remains unwired.
+- Rust Custom Request validates and plans demand, cancels provider leases, renders app-owned result rows, and has wasm-target
+  host wiring for real relay snapshots while browser/live parity proof remains open.
 - Matching Home tabs attach to one shared query keyed by account, selected
   relays, page size, and feed policy.
 - Background work is owner-scoped, cancellable, chunked, and non-blocking.

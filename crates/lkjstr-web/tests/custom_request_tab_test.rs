@@ -30,7 +30,7 @@ async fn rust_custom_request_tab_plans_selected_relay_demand() -> Result<(), JsV
     assert!(!document_text()?.contains("Rust Custom Request body is not converted yet."));
 
     click(".lkjstr-custom-request-controls button[type='submit']")?;
-    wait_for_text("Rust Custom Request relay result output is not wired yet.").await?;
+    wait_for_text("Ready for relay read: 1 relay target.").await?;
     input_value("textarea[aria-label='Custom request JSON']", "{")?;
     click(".lkjstr-custom-request-controls button[type='submit']")?;
     wait_for_text("Invalid request: InvalidJson.").await
