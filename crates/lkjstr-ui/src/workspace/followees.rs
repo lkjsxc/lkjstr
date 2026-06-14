@@ -12,6 +12,7 @@ pub fn FolloweesTab(
     model: FolloweesView,
     provider: Option<FolloweesProvider>,
     actions: FolloweesActions,
+    copy_status: Option<RwSignal<Option<String>>>,
 ) -> impl IntoView {
     let model = RwSignal::new(model);
     let active_lease = RwSignal::new(None::<FolloweesLease>);
@@ -31,6 +32,7 @@ pub fn FolloweesTab(
                 <div class="tab-scroll-owner event-list__viewport" data-scroll-owner="">
                     {move || followees_header(model.get())}
                     <p class="lkjstr-feed-status">{move || model.get().message}</p>
+                    {copy_status_line(copy_status)}
                     {move || retry_button(
                         model.get().status,
                         provider.clone(),
@@ -62,6 +64,7 @@ pub fn followees_tab_content(
     target_pubkey: Option<String>,
     provider: Option<FolloweesProvider>,
     actions: FolloweesActions,
+    copy_status: Option<RwSignal<Option<String>>>,
 ) -> impl IntoView {
     let model = default_followees_view(&tab_id, target_pubkey.clone());
     view! {
@@ -71,8 +74,21 @@ pub fn followees_tab_content(
             model=model
             provider=provider
             actions=actions
+            copy_status=copy_status
         />
     }
+}
+
+fn copy_status_line(status: Option<RwSignal<Option<String>>>) -> AnyView {
+    let Some(status) = status else {
+        return ().into_any();
+    };
+    view! {
+        {move || status.get().map(|text| view! {
+            <p class="lkjstr-feed-status" role="status">{text}</p>
+        })}
+    }
+    .into_any()
 }
 
 fn followees_header(model: FolloweesView) -> impl IntoView {

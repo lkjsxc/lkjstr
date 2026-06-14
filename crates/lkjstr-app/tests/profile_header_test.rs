@@ -1,5 +1,6 @@
 use lkjstr_app::{
-    ProfileHeaderInput, profile_header_view, profile_header_with_relays, relay_sets_copy_json,
+    ProfileHeaderInput, profile_header_view, profile_header_with_relays, profile_npub,
+    relay_sets_copy_json,
 };
 use lkjstr_domain::{RelayConnectionState, RelayHealth, RelayPurpose, RelayRecord, RelaySet};
 use lkjstr_protocol::{KIND_FOLLOW_LIST, KIND_METADATA, NostrEntity, NostrEvent, decode_nip19};
@@ -94,6 +95,19 @@ fn profile_header_nprofile_preserves_relay_hints() -> Result<(), String> {
         pointer.relays,
         Some(vec!["wss://selected.example".to_owned()])
     );
+    Ok(())
+}
+
+#[test]
+fn profile_npub_encodes_pubkeys_and_preserves_invalid_input() -> Result<(), String> {
+    let author = pubkey("a");
+    let value = profile_npub(&author);
+    let Some(NostrEntity::Npub(decoded)) = decode_nip19(&value) else {
+        return Err(format!("unexpected npub payload: {value}"));
+    };
+
+    assert_eq!(decoded, author);
+    assert_eq!(profile_npub("bad"), "bad");
     Ok(())
 }
 

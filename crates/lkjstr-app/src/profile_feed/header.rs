@@ -23,7 +23,7 @@ pub fn profile_header_view(input: ProfileHeaderInput<'_>) -> ProfileHeaderView {
         pubkey: input.pubkey.to_owned(),
         display_name: display_name(input.pubkey, metadata.as_ref()),
         subtitle: subtitle(input.pubkey, metadata.as_ref()),
-        npub: npub(input.pubkey),
+        npub: profile_npub(input.pubkey),
         nprofile: None,
         follow_list_json: follow_list_json(input.pubkey, input.follow_list_event),
         relay_sets_json: "[]".to_owned(),
@@ -131,7 +131,8 @@ fn following_label(state: FollowCountState) -> String {
     }
 }
 
-fn npub(pubkey: &str) -> String {
+#[must_use]
+pub fn profile_npub(pubkey: &str) -> String {
     encode_npub(pubkey).unwrap_or_else(|_| pubkey.to_owned())
 }
 
@@ -144,7 +145,7 @@ fn nprofile(pubkey: &str, relays: &[String]) -> Option<String> {
 }
 
 fn short_npub(pubkey: &str) -> String {
-    let value = npub(pubkey);
+    let value = profile_npub(pubkey);
     if !is_pubkey(pubkey) || value.len() < 16 {
         return pubkey.to_owned();
     }

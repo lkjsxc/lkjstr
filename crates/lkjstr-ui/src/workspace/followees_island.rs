@@ -27,6 +27,7 @@ pub fn mount_followees_island(
                 model=model.clone()
                 provider=Some(provider.clone())
                 actions=actions.clone()
+                copy_status=None
             />
         }
     });

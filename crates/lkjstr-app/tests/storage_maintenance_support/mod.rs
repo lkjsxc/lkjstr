@@ -64,6 +64,7 @@ pub(crate) fn browser_count_row(
         group: "non-indexed".to_string(),
         status: status.to_string(),
         row_count,
+        estimated_bytes: row_count.map(|count| count.saturating_mul(256)),
         problem_reason: None,
     }
 }
@@ -110,6 +111,7 @@ fn unknown_row(table: &str, reason: &str) -> StorageInventoryRow {
         group: "unknown".to_string(),
         status: "estimated".to_string(),
         row_count: None,
+        estimated_bytes: None,
         problem_reason: Some(reason.to_string()),
     }
 }

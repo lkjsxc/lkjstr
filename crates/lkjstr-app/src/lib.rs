@@ -148,7 +148,8 @@ pub use profile_feed::{
     ProfileFeedDiagnosticInput, ProfileFeedSourceState, ProfileFeedStatus, ProfileFeedView,
     ProfileFeedViewInput, ProfileHeaderInput, ProfileHeaderView, build_profile_feed_view,
     default_profile_feed_view, profile_feed_id, profile_header_view,
-    profile_header_with_copy_context, profile_header_with_relays, relay_sets_copy_json,
+    profile_header_with_copy_context, profile_header_with_relays, profile_npub,
+    relay_sets_copy_json,
 };
 pub use profile_history::{ProfileScanDecision, ProfileScanInput, plan_profile_sparse_scan};
 pub use public_chat::{
