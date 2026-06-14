@@ -25,7 +25,7 @@
 
   let props: Props = $props();
   let settings = $state<SettingRecord[]>(mergeSettings([]));
-  let root: HTMLElement | undefined;
+  let root = $state<HTMLElement | undefined>(undefined);
   let importOpen = $state(false);
   let importDraft = $state('');
   let importStatus = $state('');
