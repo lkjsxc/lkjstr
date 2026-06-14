@@ -2,7 +2,7 @@ use std::collections::BTreeSet;
 
 use lkjstr_app::{
     FeedFragmentConfig, ProfileFeedDiagnosticInput, ProfileFeedSourceState, ProfileFeedView,
-    ProfileFeedViewInput, ProfileHeaderView, build_profile_feed_view,
+    ProfileFeedViewInput, ProfileHeaderView, RowGeometryModel, build_profile_feed_view,
 };
 use lkjstr_protocol::{
     KIND_FOLLOW_LIST, KIND_METADATA, KIND_RELAY_LIST_METADATA, NostrEvent, NostrFilter,
@@ -24,6 +24,7 @@ pub(crate) struct ProfileHeaderRelayReadInput {
     pub(crate) author_routes: Vec<AuthorRelayRoute>,
     pub(crate) profile_header: Option<ProfileHeaderView>,
     pub(crate) cache_window: lkjstr_app::FeedWindowState,
+    pub(crate) geometry_models: Vec<RowGeometryModel>,
     pub(crate) source_state: ProfileFeedSourceState,
     pub(crate) diagnostics: Vec<ProfileFeedDiagnosticInput>,
     pub(crate) now_sec: u64,
@@ -38,6 +39,7 @@ pub(crate) struct ProfileHeaderRelayInputSeed<'a> {
     pub(crate) author_routes: &'a [AuthorRelayRoute],
     pub(crate) profile_header: &'a Option<ProfileHeaderView>,
     pub(crate) window: &'a lkjstr_app::FeedWindowState,
+    pub(crate) geometry_models: &'a [RowGeometryModel],
     pub(crate) source_state: &'a ProfileFeedSourceState,
     pub(crate) diagnostics: &'a [ProfileFeedDiagnosticInput],
     pub(crate) now_sec: u64,
@@ -64,6 +66,7 @@ pub(crate) fn profile_header_relay_input(
         author_routes: seed.author_routes.to_vec(),
         profile_header: seed.profile_header.clone(),
         cache_window: seed.window.clone(),
+        geometry_models: seed.geometry_models.to_vec(),
         source_state: seed.source_state.clone(),
         diagnostics: seed.diagnostics.to_vec(),
         now_sec: seed.now_sec,
@@ -127,7 +130,7 @@ pub(crate) fn profile_header_model(
         window: input.cache_window.clone(),
         width_px: 680,
         font_scale: 1.0,
-        geometry_models: Vec::new(),
+        geometry_models: input.geometry_models.clone(),
         fragment_config: FeedFragmentConfig::default(),
         diagnostics,
     })
@@ -149,52 +152,4 @@ fn unique_sorted(values: impl Iterator<Item = String>) -> Vec<String> {
 }
 
 #[cfg(test)]
-mod tests {
-    use super::*;
-    use lkjstr_app::{ProfileFeedSourceState, empty_feed_window};
-
-    #[test]
-    fn header_relay_routes_filters() -> Result<(), &'static str> {
-        let input = profile_header_relay_input(ProfileHeaderRelayInputSeed {
-            owner: "profile-tab",
-            profile_pubkey: &Some("a".repeat(64)),
-            selected_relays: &["wss://selected.example".to_owned()],
-            view_selected_relays: &[],
-            relay_sets_json: "[]",
-            author_routes: &[route("wss://author.example")],
-            profile_header: &None,
-            window: &empty_feed_window(1, 180),
-            source_state: &ProfileFeedSourceState::Pending,
-            diagnostics: &[],
-            now_sec: 10,
-        })
-        .ok_or("expected relay input")?;
-
-        assert_eq!(input.relays, vec!["wss://author.example", "wss://selected.example"]);
-        assert_eq!(
-            filter_kinds(&input, "wss://author.example"),
-            vec![KIND_METADATA, KIND_RELAY_LIST_METADATA]
-        );
-        assert_eq!(
-            filter_kinds(&input, "wss://selected.example"),
-            vec![KIND_FOLLOW_LIST]
-        );
-        Ok(())
-    }
-
-    fn filter_kinds(input: &ProfileHeaderRelayReadInput, relay: &str) -> Vec<u64> {
-        profile_header_relay_filters(input, relay)
-            .into_iter()
-            .flat_map(|filter| filter.kinds.unwrap_or_default())
-            .collect()
-    }
-
-    fn route(relay_url: &str) -> AuthorRelayRoute {
-        AuthorRelayRoute {
-            author: "a".repeat(64),
-            relay_url: relay_url.to_owned(),
-            source: lkjstr_relays::RouteEvidenceSource::Nip65,
-            score: 0,
-        }
-    }
-}
+mod tests;

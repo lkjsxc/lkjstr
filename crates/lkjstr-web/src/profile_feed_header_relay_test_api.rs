@@ -131,6 +131,7 @@ fn input(
         author_routes: routes,
         profile_header: &None,
         window: &empty_feed_window(1, 180),
+        geometry_models: &[],
         source_state: &ProfileFeedSourceState::Pending,
         diagnostics: &[],
         now_sec: 2_000,

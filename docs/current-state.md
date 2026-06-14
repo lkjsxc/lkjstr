@@ -193,7 +193,7 @@ Read next: [architecture/workspace/README.md](architecture/workspace/README.md),
   bridge is available, with session-only TypeScript estimates as the fallback
   only. Typed SQLite row-height observation/model rows and web adapters exist;
   Home, Global, Notifications, Profile, Thread, Search, Author Context, and
-  User Timeline use durable cached-row models; converted event relay snapshots retain them. Stats projection remains open. Reservation rules live in
+  User Timeline use durable cached-row models; converted event and header relay rebuilds retain them. Stats projection remains open. Reservation rules live in
   [architecture/data/feed-surface/height-reservation.md](architecture/data/feed-surface/height-reservation.md)
   and [architecture/data/feed-surface/lod-tree.md](architecture/data/feed-surface/lod-tree.md).
 
