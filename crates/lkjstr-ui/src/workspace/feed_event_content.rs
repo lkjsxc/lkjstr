@@ -1,6 +1,16 @@
 use leptos::{ev::MouseEvent, prelude::*};
 use lkjstr_app::feed::{FeedEventContent, FeedEventContentRow, FeedEventCustomEmoji};
 
+#[derive(Clone, Debug, Eq, PartialEq)]
+struct CustomEmojiImageAttrs {
+    class_name: &'static str,
+    src: String,
+    alt: String,
+    title: String,
+    loading: &'static str,
+    referrer_policy: &'static str,
+}
+
 pub(crate) fn event_content(content: FeedEventContent) -> impl IntoView {
     match content {
         FeedEventContent::Sensitive { reason, rows } => sensitive_content(reason, rows).into_any(),
@@ -56,17 +66,55 @@ fn content_row(row: FeedEventContentRow) -> impl IntoView {
 }
 
 fn custom_emoji(emoji: FeedEventCustomEmoji) -> impl IntoView {
-    let token = format!(":{}:", emoji.shortcode);
+    let attrs = custom_emoji_image_attrs(&emoji);
     view! {
         <p>
             <img
-                class="custom-emoji"
-                src=emoji.url
-                alt=token.clone()
-                title=token
-                loading="lazy"
-                referrerpolicy="no-referrer"
+                class=attrs.class_name
+                src=attrs.src
+                alt=attrs.alt
+                title=attrs.title
+                loading=attrs.loading
+                referrerpolicy=attrs.referrer_policy
             />
         </p>
+    }
+}
+
+fn custom_emoji_image_attrs(emoji: &FeedEventCustomEmoji) -> CustomEmojiImageAttrs {
+    let token = format!(":{}:", emoji.shortcode);
+    CustomEmojiImageAttrs {
+        class_name: "custom-emoji",
+        src: emoji.url.clone(),
+        alt: token.clone(),
+        title: token,
+        loading: "lazy",
+        referrer_policy: "no-referrer",
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn custom_emoji_attrs_keep_real_url_and_safe_image_policy() {
+        let attrs = custom_emoji_image_attrs(&FeedEventCustomEmoji {
+            shortcode: "party".to_owned(),
+            url: "https://emoji.example/party.png".to_owned(),
+            address: Some(format!("30030:{}:set", "a".repeat(64))),
+        });
+
+        assert_eq!(
+            attrs,
+            CustomEmojiImageAttrs {
+                class_name: "custom-emoji",
+                src: "https://emoji.example/party.png".to_owned(),
+                alt: ":party:".to_owned(),
+                title: ":party:".to_owned(),
+                loading: "lazy",
+                referrer_policy: "no-referrer",
+            }
+        );
     }
 }
