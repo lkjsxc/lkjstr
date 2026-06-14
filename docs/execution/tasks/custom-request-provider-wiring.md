@@ -14,8 +14,10 @@ disabled or invalid relay URLs do not produce a ready demand. Leptos now renders
 planning states through a host provider that reads selected relays from the
 worker-owned relay settings. The Rust body now exposes an in-flight cancel
 control that releases the provider lease and renders an explicit canceled state
-without claiming relay results. The shipped Svelte/TypeScript Custom Request tab
-remains the product owner for real relay reads and result rendering.
+without claiming relay results. `lkjstr-app` now builds Custom Request result
+view models from real shared feed windows and explicit state rows. The shipped
+Svelte/TypeScript Custom Request tab remains the product owner for real relay
+reads and result rendering.
 
 ## Current Evidence
 
@@ -24,6 +26,9 @@ remains the product owner for real relay reads and result rendering.
   plans typed demand.
 - `crates/lkjstr-app/src/feed/tool_inputs.rs` builds Custom Request query demand
   from parsed requests.
+- `crates/lkjstr-app/src/custom_request_feed/**` maps planned demand, real feed
+  window rows, and explicit invalid/no-relay/canceled/partial states into the
+  shared feed view model.
 - `crates/lkjstr-ui/src/workspace/custom_request*.rs` renders the Rust planning
   form, restores request/run filter fields, releases canceled provider leases,
   renders canceled status, and suppresses late completions.
@@ -34,8 +39,9 @@ remains the product owner for real relay reads and result rendering.
 
 ## Next Edit
 
-Wire Rust relay result output and shared event rows without moving relay
-correctness or result synthesis into the UI/provider layer.
+Wire Rust relay result output into the app-owned result view model and render
+those rows in the Leptos tab without moving relay correctness or result
+synthesis into the UI/provider layer.
 
 ## Files To Read
 
@@ -43,6 +49,7 @@ correctness or result synthesis into the UI/provider layer.
 - `docs/architecture/feeds/runtime/feed-surface-inputs.md`
 - `docs/architecture/network/request-budget/intent.md`
 - `crates/lkjstr-app/src/custom_request/**`
+- `crates/lkjstr-app/src/custom_request_feed/**`
 - `crates/lkjstr-app/src/feed/tool_inputs.rs`
 - `src/lib/custom-request/**`
 - `src/lib/tabs/custom-request/CustomRequestTab.svelte`
@@ -50,6 +57,7 @@ correctness or result synthesis into the UI/provider layer.
 ## Files To Touch
 
 - `crates/lkjstr-app/src/custom_request/**`
+- `crates/lkjstr-app/src/custom_request_feed/**`
 - `crates/lkjstr-ui/src/workspace/custom_request*.rs`
 - `crates/lkjstr-web/src/custom_request_host.rs`
 - `crates/lkjstr-web/tests/custom_request*_test.rs`
@@ -81,6 +89,8 @@ PATH=/home/lkjsxc/.cargo/bin:$PATH pnpm rust-wasm:quiet
 - The Rust tab persists request JSON and run-state filter fields for restore.
 - Ready state means routed relay demand is planned; it does not claim events
   were fetched or matched.
+- Rust result rows must come from the shared feed window and render explicit
+  invalid, no-relay, canceled, loading, partial, empty, or terminal states.
 - TypeScript/Svelte Custom Request paths remain until Rust relay output, full UI
   parity, no-import proof, and final gates exist.
 

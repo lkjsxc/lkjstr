@@ -3,6 +3,7 @@
 pub mod author_context_feed;
 pub mod cache_display;
 pub mod custom_request;
+pub mod custom_request_feed;
 pub mod events;
 pub mod feed;
 pub mod feed_fragments;
@@ -40,6 +41,11 @@ pub use custom_request::{
     CustomRequest, CustomRequestError, CustomRequestErrorKind, CustomRequestMode,
     CustomRequestRunInput, CustomRequestRunPlan, CustomRequestRunStatus, custom_request_mode,
     parse_custom_request, plan_custom_request_run,
+};
+pub use custom_request_feed::{
+    CustomRequestFeedSourceState, CustomRequestFeedStatus, CustomRequestFeedView,
+    CustomRequestFeedViewInput, build_custom_request_feed_view, canceled_custom_request_feed_view,
+    custom_request_feed_id, default_custom_request_feed_view, planning_custom_request_feed_view,
 };
 pub use events::{
     EventDisplayCapabilities, EventDisplayChromePolicy, EventDisplayContext, EventDisplayInput,
