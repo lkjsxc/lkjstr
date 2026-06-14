@@ -52,9 +52,8 @@ Read next: [protocol/README.md](protocol/README.md),
   tags. NIP-89 settings and shared TypeScript public publish enrichment are
   implemented, but it remains partial until every write surface and display
   option is verified.
-- Relay AUTH is diagnostic-only.
-- Search combines cached matches with relay NIP-50 filters when selected relays
-  support them.
+- Relay AUTH is diagnostic-only. Search combines cached matches with relay
+  NIP-50 filters when selected relays support them.
 - Relay reads render progressive snapshots. Partial relay failure is diagnostic
   and must not block reachable relays.
 - Selected read relays are eligible correctness fallback relays for Home,
@@ -214,6 +213,8 @@ Read next: [architecture/network/README.md](architecture/network/README.md),
   waiting for remote relays, sends bounded NIP-50 filters to eligible selected
   read relays, loads cached and relay older pages by compound cursor, and reports
   unsupported or clamped relays as diagnostics.
+- Rust Custom Request validates and plans request demand through the worker-backed provider, preserves request state, and can cancel
+  an in-flight provider lease without claiming relay results.
 - Matching Home tabs attach to one shared query keyed by account, selected
   relays, page size, and feed policy.
 - Background work is owner-scoped, cancellable, chunked, and non-blocking.
@@ -296,5 +297,4 @@ and [operations/memory-verification.md](operations/memory-verification.md).
 
 ## Verification Gate
 
-Docker Compose is the final verification path: validate Compose config, then
-build and run `app`, `verify`, `cloudflare`, and `app-smoke` from images.
+Docker Compose is the final verification path: validate Compose config, then build and run `app`, `verify`, `cloudflare`, and `app-smoke` from images.

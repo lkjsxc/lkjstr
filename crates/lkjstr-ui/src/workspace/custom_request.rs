@@ -17,6 +17,7 @@ pub fn CustomRequestTab(
     let ran = RwSignal::new(snapshot.restored_ran());
     let pending = RwSignal::new(false);
     let provider_gap = RwSignal::new(false);
+    let canceled = RwSignal::new(false);
     let plan = RwSignal::new(None::<CustomRequestRunPlan>);
     let active_lease = RwSignal::new(None::<CustomRequestLease>);
     let input_snapshot = snapshot.clone();
@@ -35,6 +36,7 @@ pub fn CustomRequestTab(
         ran.set(true);
         submit_snapshot.save(raw.clone(), true);
         plan.set(None);
+        canceled.set(false);
         provider_gap.set(false);
         pending.set(false);
         let Some(provider) = submit_provider.clone() else {
@@ -52,6 +54,16 @@ pub fn CustomRequestTab(
         );
         active_lease.set(Some(lease));
     };
+    let cancel = move |_| {
+        if !can_cancel(pending.get_untracked()) {
+            return;
+        }
+        release_current(active_lease);
+        pending.set(false);
+        plan.set(None);
+        provider_gap.set(false);
+        canceled.set(true);
+    };
     on_cleanup(move || release_current(active_lease));
 
     view! {
@@ -67,9 +79,24 @@ pub fn CustomRequestTab(
                 }>
                     "Run"
                 </button>
+                <button
+                    type="button"
+                    prop:hidden=move || !can_cancel(pending.get())
+                    on:click=cancel
+                >
+                    "Cancel"
+                </button>
             </form>
             <p class="lkjstr-feed-status" role=move || alert_role(plan.get())>
-                {move || status_text(pending.get(), provider_gap.get(), ran.get(), plan.get())}
+                {move || {
+                    status_text(
+                        pending.get(),
+                        provider_gap.get(),
+                        canceled.get(),
+                        ran.get(),
+                        plan.get(),
+                    )
+                }}
             </p>
         </section>
     }
@@ -92,6 +119,7 @@ fn alert_role(plan: Option<CustomRequestRunPlan>) -> &'static str {
 fn status_text(
     pending: bool,
     provider_gap: bool,
+    canceled: bool,
     ran: bool,
     plan: Option<CustomRequestRunPlan>,
 ) -> String {
@@ -100,6 +128,9 @@ fn status_text(
     }
     if provider_gap {
         return PROVIDER_GAP.to_owned();
+    }
+    if canceled {
+        return "Custom Request canceled.".to_owned();
     }
     let Some(plan) = plan else {
         return if ran {
@@ -117,6 +148,10 @@ fn status_text(
     }
 }
 
+fn can_cancel(pending: bool) -> bool {
+    pending
+}
+
 fn ready_text(plan: &CustomRequestRunPlan) -> String {
     format!(
         "Ready for relay read: {} relay target{}, {} mode.",
@@ -125,6 +160,10 @@ fn ready_text(plan: &CustomRequestRunPlan) -> String {
         mode_text(plan.mode)
     )
 }
+
+#[cfg(test)]
+#[path = "custom_request_tests.rs"]
+mod custom_request_tests;
 
 fn invalid_text(plan: &CustomRequestRunPlan) -> String {
     match &plan.error {

@@ -23,7 +23,7 @@ before the SvelteKit product runtime can be removed.
 | Thread          | partial         | `app`, `relays`, `storage`, `ui` thread runtime               | root lookup, reply pages, references, exact reads                                            |
 | Notifications   | partial         | `app`, `relays`, `storage`, `ui` notification runtime         | mentions, reactions, reposts, zaps, older windows                                            |
 | Search          | partial         | `app`, `relays`, `storage`, `ui` search runtime               | provider execution, NIP-50 merge, older pages, cancellation, snapshots, deletion proof       |
-| Custom Request  | partial         | `app`, `protocol`, `relays`, `ui` request runtime             | relay result output, cancellation, no-import proof                                           |
+| Custom Request  | partial         | `app`, `protocol`, `relays`, `ui` request runtime             | relay result output, shared event rows, no-import proof                                      |
 | Public Chat     | partial         | `protocol`, `domain`, `app`, `relays`, `storage`, `ui`, `web` | NIP-28 parsing, channel reads, publish, partial failure, cleanup                             |
 | Author Context  | partial         | `app`, `web`, `relays`, `storage`, `ui` context runtime       | no-import proof and final deletion readiness                                                 |
 | Accounts        | partial         | `domain`, `storage`, `web`, `ui` accounts path                | local, read-only, NIP-07 signing, secret safety tests                                        |
