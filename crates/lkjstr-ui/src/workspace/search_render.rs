@@ -1,9 +1,8 @@
 use leptos::prelude::*;
-use lkjstr_app::{
-    FEED_LOAD_OLDER_COMMAND, FeedFooterRow, FeedFooterState, FeedViewRow, SearchFeedStatus,
-};
+use lkjstr_app::{FEED_LOAD_OLDER_COMMAND, FeedFooterRow, FeedViewRow, SearchFeedStatus};
 
 use crate::workspace::feed_event_row::event_row;
+use crate::workspace::feed_footer_text::{FooterAuthLabel, footer_state_text};
 use crate::workspace::feed_state_row;
 
 pub(crate) fn search_row(row: FeedViewRow, older_command: Option<Callback<()>>) -> impl IntoView {
@@ -21,7 +20,7 @@ pub(crate) fn search_row(row: FeedViewRow, older_command: Option<Callback<()>>) 
 fn footer_row(row: FeedFooterRow, older_command: Option<Callback<()>>) -> impl IntoView {
     let command_ready = row.command.as_deref() == Some(FEED_LOAD_OLDER_COMMAND);
     let row_id = row.row_id;
-    let text = footer_state_text(row.state);
+    let text = footer_state_text(row.state, FooterAuthLabel::Account);
     match (command_ready, older_command) {
         (true, Some(command)) => command_footer(row_id, text, command).into_any(),
         _ => view! {
@@ -49,21 +48,6 @@ pub(crate) fn search_status_text(status: SearchFeedStatus) -> &'static str {
         SearchFeedStatus::Idle => "Enter a search query",
         SearchFeedStatus::Ready => "Search ready",
         SearchFeedStatus::Partial => "Search partial",
-    }
-}
-
-fn footer_state_text(state: FeedFooterState) -> &'static str {
-    match state {
-        FeedFooterState::Loading => "Loading",
-        FeedFooterState::CacheHit => "Cached rows",
-        FeedFooterState::ReadingRelays => "Reading relays",
-        FeedFooterState::Partial => "Partial",
-        FeedFooterState::AuthRequired => "Account required",
-        FeedFooterState::RetryableFailure => "Retry available",
-        FeedFooterState::ConfigurationUnavailable => "Configuration unavailable",
-        FeedFooterState::TerminalEmpty => "No rows",
-        FeedFooterState::TerminalWithRows => "Rows loaded",
-        FeedFooterState::OlderLoadReady => "Older rows available",
     }
 }
 

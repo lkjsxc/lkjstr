@@ -1,9 +1,8 @@
 use leptos::prelude::*;
-use lkjstr_app::{
-    FeedFooterState, FeedViewRow, HomeFeedStatus, HomeFeedView, default_home_feed_view,
-};
+use lkjstr_app::{FeedViewRow, HomeFeedStatus, HomeFeedView, default_home_feed_view};
 
 use crate::workspace::feed_event_row::event_row;
+use crate::workspace::feed_footer_text::{FooterAuthLabel, footer_state_text};
 use crate::workspace::feed_state_row;
 use crate::workspace::home_provider::HomeFeedProvider;
 
@@ -41,7 +40,7 @@ fn home_row(row: FeedViewRow) -> impl IntoView {
         FeedViewRow::Continuation(row) => feed_state_row::plain_continuation(row).into_any(),
         FeedViewRow::Footer(row) => view! {
             <footer class="lkjstr-feed-footer" data-row-id=row.row_id>
-                {footer_state_text(row.state)}
+                {footer_state_text(row.state, FooterAuthLabel::Account)}
             </footer>
         }
         .into_any(),
@@ -62,24 +61,10 @@ fn home_status_text(status: HomeFeedStatus) -> &'static str {
     }
 }
 
-fn footer_state_text(state: FeedFooterState) -> &'static str {
-    match state {
-        FeedFooterState::Loading => "Loading",
-        FeedFooterState::CacheHit => "Cached rows",
-        FeedFooterState::ReadingRelays => "Reading relays",
-        FeedFooterState::Partial => "Partial",
-        FeedFooterState::AuthRequired => "Account required",
-        FeedFooterState::RetryableFailure => "Retry available",
-        FeedFooterState::ConfigurationUnavailable => "Configuration unavailable",
-        FeedFooterState::TerminalEmpty => "No rows",
-        FeedFooterState::TerminalWithRows => "Rows loaded",
-        FeedFooterState::OlderLoadReady => "Older rows available",
-    }
-}
-
 #[cfg(test)]
 mod tests {
     use super::*;
+    use lkjstr_app::FeedFooterState;
 
     #[test]
     fn home_status_text_names_explicit_states() {
@@ -92,9 +77,10 @@ mod tests {
 
     #[test]
     fn home_footer_text_names_cache_and_unavailable_states() {
-        assert_eq!(footer_state_text(FeedFooterState::CacheHit), "Cached rows");
+        let text = |state| footer_state_text(state, FooterAuthLabel::Account);
+        assert_eq!(text(FeedFooterState::CacheHit), "Cached rows");
         assert_eq!(
-            footer_state_text(FeedFooterState::ConfigurationUnavailable),
+            text(FeedFooterState::ConfigurationUnavailable),
             "Configuration unavailable"
         );
     }

@@ -1,12 +1,12 @@
 use leptos::prelude::*;
 use lkjstr_app::{
-    AuthorContextFeedStatus, AuthorContextFeedView, FeedFooterState, FeedViewRow,
-    default_author_context_feed_view,
+    AuthorContextFeedStatus, AuthorContextFeedView, FeedViewRow, default_author_context_feed_view,
 };
 
 use crate::workspace::author_context_actions::AuthorContextActions;
 use crate::workspace::author_context_event::event_row;
 use crate::workspace::author_context_provider::AuthorContextFeedProvider;
+use crate::workspace::feed_footer_text::{FooterAuthLabel, footer_state_text};
 use crate::workspace::feed_state_row;
 
 #[component]
@@ -74,7 +74,7 @@ fn context_row(row: FeedViewRow, actions: AuthorContextActions) -> impl IntoView
         FeedViewRow::Diagnostic(row) => feed_state_row::diagnostic(row).into_any(),
         FeedViewRow::Footer(row) => view! {
             <footer class="lkjstr-feed-footer" data-row-id=row.row_id>
-                {footer_state_text(row.state)}
+                {footer_state_text(row.state, FooterAuthLabel::Auth)}
             </footer>
         }
         .into_any(),
@@ -91,21 +91,6 @@ fn status_text(status: AuthorContextFeedStatus) -> &'static str {
         AuthorContextFeedStatus::NoEnabledRelay => "Author Context needs a relay.",
         AuthorContextFeedStatus::Ready => "Author Context ready.",
         AuthorContextFeedStatus::Partial => "Author Context partial.",
-    }
-}
-
-fn footer_state_text(state: FeedFooterState) -> &'static str {
-    match state {
-        FeedFooterState::Loading => "Loading",
-        FeedFooterState::CacheHit => "Cached rows",
-        FeedFooterState::ReadingRelays => "Reading relays",
-        FeedFooterState::Partial => "Partial",
-        FeedFooterState::AuthRequired => "Auth required",
-        FeedFooterState::RetryableFailure => "Retry available",
-        FeedFooterState::ConfigurationUnavailable => "Configuration unavailable",
-        FeedFooterState::TerminalEmpty => "No rows",
-        FeedFooterState::TerminalWithRows => "Rows loaded",
-        FeedFooterState::OlderLoadReady => "Older rows available",
     }
 }
 

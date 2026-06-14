@@ -1,9 +1,8 @@
 use leptos::prelude::*;
-use lkjstr_app::{
-    FeedFooterState, FeedViewRow, ProfileFeedStatus, ProfileFeedView, default_profile_feed_view,
-};
+use lkjstr_app::{FeedViewRow, ProfileFeedStatus, ProfileFeedView, default_profile_feed_view};
 
 use crate::workspace::feed_event_row::event_row;
+use crate::workspace::feed_footer_text::{FooterAuthLabel, footer_state_text};
 use crate::workspace::feed_state_row;
 use crate::workspace::profile_clipboard_provider::ProfileCopyProvider;
 use crate::workspace::profile_follow_provider::ProfileFollowProvider;
@@ -94,7 +93,7 @@ fn profile_row(row: FeedViewRow) -> impl IntoView {
         FeedViewRow::Continuation(row) => feed_state_row::plain_continuation(row).into_any(),
         FeedViewRow::Footer(row) => view! {
             <footer class="lkjstr-feed-footer" data-row-id=row.row_id>
-                {footer_state_text(row.state)}
+                {footer_state_text(row.state, FooterAuthLabel::Account)}
             </footer>
         }
         .into_any(),
@@ -109,21 +108,6 @@ fn profile_status_text(status: ProfileFeedStatus) -> &'static str {
         ProfileFeedStatus::NoEnabledRelay => "No enabled relay",
         ProfileFeedStatus::Ready => "Profile ready",
         ProfileFeedStatus::Partial => "Profile partial",
-    }
-}
-
-fn footer_state_text(state: FeedFooterState) -> &'static str {
-    match state {
-        FeedFooterState::Loading => "Loading",
-        FeedFooterState::CacheHit => "Cached rows",
-        FeedFooterState::ReadingRelays => "Reading relays",
-        FeedFooterState::Partial => "Partial",
-        FeedFooterState::AuthRequired => "Account required",
-        FeedFooterState::RetryableFailure => "Retry available",
-        FeedFooterState::ConfigurationUnavailable => "Configuration unavailable",
-        FeedFooterState::TerminalEmpty => "No rows",
-        FeedFooterState::TerminalWithRows => "Rows loaded",
-        FeedFooterState::OlderLoadReady => "Older rows available",
     }
 }
 

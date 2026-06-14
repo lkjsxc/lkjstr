@@ -1,10 +1,11 @@
 use leptos::prelude::*;
-use lkjstr_app::{FeedEventRow, FeedFooterState, FeedViewRow};
+use lkjstr_app::{FeedEventRow, FeedViewRow};
 
 use crate::workspace::feed_event_actions::{
     FeedEventActionLabels, event_actions as feed_event_actions,
 };
 use crate::workspace::feed_event_row::event_row as feed_event_row;
+use crate::workspace::feed_footer_text::{FooterAuthLabel, footer_state_text};
 use crate::workspace::feed_state_row;
 use crate::workspace::user_timeline_actions::UserTimelineActions;
 
@@ -15,7 +16,7 @@ pub(crate) fn timeline_row(row: FeedViewRow, actions: UserTimelineActions) -> im
         FeedViewRow::Diagnostic(row) => feed_state_row::diagnostic(row).into_any(),
         FeedViewRow::Footer(row) => view! {
             <footer class="lkjstr-feed-footer" data-row-id=row.row_id>
-                {footer_state_text(row.state)}
+                {footer_state_text(row.state, FooterAuthLabel::Auth)}
             </footer>
         }
         .into_any(),
@@ -45,19 +46,4 @@ fn event_actions(event_id: String, pubkey: String, actions: UserTimelineActions)
             author_context_label: "Author context",
         },
     )
-}
-
-fn footer_state_text(state: FeedFooterState) -> &'static str {
-    match state {
-        FeedFooterState::Loading => "Loading",
-        FeedFooterState::CacheHit => "Cached rows",
-        FeedFooterState::ReadingRelays => "Reading relays",
-        FeedFooterState::Partial => "Partial",
-        FeedFooterState::AuthRequired => "Auth required",
-        FeedFooterState::RetryableFailure => "Retry available",
-        FeedFooterState::ConfigurationUnavailable => "Configuration unavailable",
-        FeedFooterState::TerminalEmpty => "No rows",
-        FeedFooterState::TerminalWithRows => "Rows loaded",
-        FeedFooterState::OlderLoadReady => "Older rows available",
-    }
 }
