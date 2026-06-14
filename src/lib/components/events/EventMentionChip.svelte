@@ -5,6 +5,7 @@
   import type { ProfileSummary } from '$lib/identity/identity';
   import IdentityChip from '$lib/components/identity/IdentityChip.svelte';
   import type { EventReference } from '$lib/protocol';
+  import { hasOpenThreadAction } from './action-availability';
 
   type Props = {
     eventId: string;
@@ -19,6 +20,7 @@
   let profile = $state<ProfileSummary | undefined>();
   let excerpt = $state('');
   let label = $derived(`event:${props.eventId.slice(0, 8)}`);
+  let canOpenThread = $derived(hasOpenThreadAction(props.openThread));
 
   onMount(async () => {
     const relays = [
@@ -49,18 +51,31 @@
   });
 </script>
 
-<button
-  type="button"
-  class="content-token content-mention-token event-mention-chip"
-  title={props.rawText}
-  onclick={(event) => {
-    event.stopPropagation();
-    props.openThread?.(props.eventId);
-  }}
->
-  <span>{label}</span>
-  {#if profile}
-    <IdentityChip pubkey={profile.pubkey} {profile} compact />
-  {/if}
-  {#if excerpt}<small>{excerpt}</small>{/if}
-</button>
+{#if canOpenThread}
+  <button
+    type="button"
+    class="content-token content-mention-token event-mention-chip"
+    title={props.rawText}
+    onclick={(event) => {
+      event.stopPropagation();
+      props.openThread?.(props.eventId);
+    }}
+  >
+    <span>{label}</span>
+    {#if profile}
+      <IdentityChip pubkey={profile.pubkey} {profile} compact />
+    {/if}
+    {#if excerpt}<small>{excerpt}</small>{/if}
+  </button>
+{:else}
+  <span
+    class="content-token content-mention-token event-mention-chip"
+    title={props.rawText}
+  >
+    <span>{label}</span>
+    {#if profile}
+      <IdentityChip pubkey={profile.pubkey} {profile} compact />
+    {/if}
+    {#if excerpt}<small>{excerpt}</small>{/if}
+  </span>
+{/if}

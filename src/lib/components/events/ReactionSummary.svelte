@@ -4,6 +4,7 @@
   import EmojifiedText from './EmojifiedText.svelte';
   import { bestDisplayName } from '$lib/identity/display-name';
   import type { ProfileSummary } from '$lib/identity/identity';
+  import { hasOpenProfileAction } from './action-availability';
   import type {
     ReactionGroup,
     RepostGroup,
@@ -19,6 +20,7 @@
 
   let props: Props = $props();
   let expanded = $state('');
+  let canOpenProfile = $derived(hasOpenProfileAction(props.openProfile));
 
   function toggle(id: string): void {
     expanded = expanded === id ? '' : id;
@@ -76,20 +78,40 @@
         {#if expanded === id}
           <div class="reaction-summary__actors" {id}>
             {#each reaction.actors as actor (actor)}
-              <button type="button" onclick={() => props.openProfile?.(actor)}>
-                <Avatar
-                  pubkey={actor}
-                  name={name(actor)}
-                  src={props.profiles?.[actor]?.avatarUrl}
-                  size="sm"
-                />
-                <span>
-                  <EmojifiedText
-                    text={name(actor)}
-                    emojis={props.profiles?.[actor]?.customEmojis ?? []}
+              {#if canOpenProfile}
+                <button
+                  type="button"
+                  onclick={() => props.openProfile?.(actor)}
+                >
+                  <Avatar
+                    pubkey={actor}
+                    name={name(actor)}
+                    src={props.profiles?.[actor]?.avatarUrl}
+                    size="sm"
                   />
+                  <span>
+                    <EmojifiedText
+                      text={name(actor)}
+                      emojis={props.profiles?.[actor]?.customEmojis ?? []}
+                    />
+                  </span>
+                </button>
+              {:else}
+                <span class="reaction-summary__actor">
+                  <Avatar
+                    pubkey={actor}
+                    name={name(actor)}
+                    src={props.profiles?.[actor]?.avatarUrl}
+                    size="sm"
+                  />
+                  <span>
+                    <EmojifiedText
+                      text={name(actor)}
+                      emojis={props.profiles?.[actor]?.customEmojis ?? []}
+                    />
+                  </span>
                 </span>
-              </button>
+              {/if}
             {/each}
           </div>
         {/if}
@@ -112,20 +134,37 @@
     {#if expanded === 'reposts'}
       <div class="reaction-summary__actors" id="reposts">
         {#each props.reposts.actors as actor (actor)}
-          <button type="button" onclick={() => props.openProfile?.(actor)}>
-            <Avatar
-              pubkey={actor}
-              name={name(actor)}
-              src={props.profiles?.[actor]?.avatarUrl}
-              size="sm"
-            />
-            <span>
-              <EmojifiedText
-                text={name(actor)}
-                emojis={props.profiles?.[actor]?.customEmojis ?? []}
+          {#if canOpenProfile}
+            <button type="button" onclick={() => props.openProfile?.(actor)}>
+              <Avatar
+                pubkey={actor}
+                name={name(actor)}
+                src={props.profiles?.[actor]?.avatarUrl}
+                size="sm"
               />
+              <span>
+                <EmojifiedText
+                  text={name(actor)}
+                  emojis={props.profiles?.[actor]?.customEmojis ?? []}
+                />
+              </span>
+            </button>
+          {:else}
+            <span class="reaction-summary__actor">
+              <Avatar
+                pubkey={actor}
+                name={name(actor)}
+                src={props.profiles?.[actor]?.avatarUrl}
+                size="sm"
+              />
+              <span>
+                <EmojifiedText
+                  text={name(actor)}
+                  emojis={props.profiles?.[actor]?.customEmojis ?? []}
+                />
+              </span>
             </span>
-          </button>
+          {/if}
         {/each}
       </div>
     {/if}

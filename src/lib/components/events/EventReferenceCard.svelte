@@ -4,6 +4,7 @@
   import { eventReferenceLabel } from '$lib/events/reference-label';
   import type { ResolvedReference } from '$lib/events/reference-resolver';
   import type { ProfileSummary } from '$lib/identity/identity';
+  import { hasOpenThreadAction } from './action-availability';
   import EmojifiedText from './EmojifiedText.svelte';
   import EventMeta from './EventMeta.svelte';
 
@@ -18,40 +19,67 @@
   let event = $derived(props.reference.event?.event);
   let preview = $derived(event?.content.trim().replace(/\s+/gu, ' '));
   let mediaCount = $derived(event ? contentAttachments(event).length : 0);
+  let canOpenThread = $derived(hasOpenThreadAction(props.openThread));
 
   function open(id: string, domEvent?: Event): void {
     domEvent?.stopPropagation();
+    if (!canOpenThread) return;
     props.openThread?.(id);
   }
 </script>
 
-<div
-  class="event-embed"
-  data-kind={props.reference.kind}
-  role="button"
-  tabindex="0"
-  onclick={(event) => open(props.reference.id, event)}
-  onkeydown={(event) =>
-    event.key === 'Enter' && open(props.reference.id, event)}
->
-  <strong class="sr-only">
-    {eventReferenceLabel(props.reference as EventReference)}
-  </strong>
-  {#if event}
-    <EventMeta
-      {event}
-      relays={props.reference.event?.relays ?? []}
-      profile={props.profiles[event.pubkey]}
-      openProfile={props.openProfile}
-      avatarInline
-    />
-    {#if preview}
-      <p class="event-content">
-        <EmojifiedText text={preview} emojis={customEmojis(event)} />
-      </p>
+{#if canOpenThread}
+  <div
+    class="event-embed"
+    data-kind={props.reference.kind}
+    role="button"
+    tabindex="0"
+    onclick={(event) => open(props.reference.id, event)}
+    onkeydown={(event) =>
+      event.key === 'Enter' && open(props.reference.id, event)}
+  >
+    <strong class="sr-only">
+      {eventReferenceLabel(props.reference as EventReference)}
+    </strong>
+    {#if event}
+      <EventMeta
+        {event}
+        relays={props.reference.event?.relays ?? []}
+        profile={props.profiles[event.pubkey]}
+        openProfile={props.openProfile}
+        avatarInline
+      />
+      {#if preview}
+        <p class="event-content">
+          <EmojifiedText text={preview} emojis={customEmojis(event)} />
+        </p>
+      {/if}
+      {#if mediaCount > 0}<small>{mediaCount} media attachment(s)</small>{/if}
+    {:else}
+      <p>Event unavailable.</p>
     {/if}
-    {#if mediaCount > 0}<small>{mediaCount} media attachment(s)</small>{/if}
-  {:else}
-    <p>Event unavailable.</p>
-  {/if}
-</div>
+  </div>
+{:else}
+  <div class="event-embed" data-kind={props.reference.kind}>
+    <strong class="sr-only">
+      {eventReferenceLabel(props.reference as EventReference)}
+    </strong>
+    {#if event}
+      <EventMeta
+        {event}
+        relays={props.reference.event?.relays ?? []}
+        profile={props.profiles[event.pubkey]}
+        openProfile={props.openProfile}
+        avatarInline
+      />
+      {#if preview}
+        <p class="event-content">
+          <EmojifiedText text={preview} emojis={customEmojis(event)} />
+        </p>
+      {/if}
+      {#if mediaCount > 0}<small>{mediaCount} media attachment(s)</small>{/if}
+    {:else}
+      <p>Event unavailable.</p>
+    {/if}
+  </div>
+{/if}

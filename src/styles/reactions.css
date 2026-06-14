@@ -46,7 +46,8 @@
   z-index: 3;
 }
 
-.reaction-summary__actors button {
+.reaction-summary__actors button,
+.reaction-summary__actor {
   align-items: center;
   background: transparent;
   border: 0;
