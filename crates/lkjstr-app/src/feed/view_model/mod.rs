@@ -2,6 +2,8 @@
 
 mod build;
 mod content;
+#[cfg(test)]
+mod content_tests;
 mod ids;
 mod types;
 
