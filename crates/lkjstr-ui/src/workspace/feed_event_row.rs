@@ -8,11 +8,7 @@ pub(crate) fn event_row(row: FeedEventRow, trailing: impl IntoView) -> impl Into
     let row_id = row.row_id;
     let author = compact_pubkey(&row.author_pubkey);
     let created_at = row.created_at;
-    let content = event_content(
-        row.has_content_warning,
-        row.content_warning_reason,
-        row.visual_rows,
-    );
+    let content = event_content(row.content);
     view! {
         <article class="lkjstr-feed-row event" data-row-id=row_id data-event-id=event_id>
             <small>{format!("{author} created {created_at}")}</small>

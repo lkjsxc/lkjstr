@@ -1,22 +1,20 @@
-use lkjstr_relays::ProgressiveEvent;
-
-use crate::{
-    events::{EventDisplayContext, EventDisplayInput, plan_event_display},
-    feed::{FeedWindowState, feed_window_empty_ready},
-    feed_fragments::{FeedFragmentConfig, SemanticFeedEvent, plan_feed_visual_rows},
-    feed_geometry::{
-        MaterializationTier, RowGeometryModel, RowKind, estimate_row_geometry,
-        event_geometry_features,
-    },
-};
-
 use super::{
     FEED_LOAD_OLDER_COMMAND, FeedDiagnosticRow, FeedDiagnosticSeverity, FeedFooterRow,
     FeedFooterState, FeedNotificationRow, FeedProfileRow, FeedStateRow, FeedUnavailableRow,
     FeedViewModel, FeedViewRow, feed_diagnostic_row_id, feed_event_row_id, feed_footer_row_id,
     feed_notification_row_id, feed_profile_row_id, feed_unavailable_row_id,
+    plan_feed_event_content,
 };
-
+use crate::{
+    events::{EventDisplayContext, EventDisplayInput, plan_event_display},
+    feed::{FeedWindowState, feed_window_empty_ready},
+    feed_fragments::{FeedFragmentConfig, SemanticFeedEvent},
+    feed_geometry::{
+        MaterializationTier, RowGeometryModel, RowKind, estimate_row_geometry,
+        event_geometry_features,
+    },
+};
+use lkjstr_relays::ProgressiveEvent;
 #[derive(Clone, Debug)]
 pub struct FeedViewModelInput {
     pub feed_id: String,
@@ -164,6 +162,7 @@ fn event_row(
     );
     let row_id = feed_event_row_id(&event.event.id);
     let geometry_estimate = estimate_row_geometry(row_id.clone(), &features, models);
+    let content_warning_reason = lkjstr_protocol::content_warning_reason(&event.event);
     let semantic = SemanticFeedEvent {
         event_id: event.event.id.clone(),
         event_kind: event.event.kind,
@@ -175,6 +174,14 @@ fn event_row(
         relay_provenance: event.relays.clone(),
         has_action_bar: display.chrome.show_actions,
     };
+    let content = plan_feed_event_content(
+        features.has_content_warning,
+        content_warning_reason.clone(),
+        &semantic,
+        &features.content_shape_hash,
+        geometry_estimate.estimated_height_px,
+        config,
+    );
     super::FeedEventRow {
         row_id,
         event_id: event.event.id.clone(),
@@ -182,16 +189,11 @@ fn event_row(
         created_at: event.event.created_at,
         event_kind: event.event.kind,
         relay_provenance: event.relays.clone(),
-        visual_rows: plan_feed_visual_rows(
-            &semantic,
-            &features.content_shape_hash,
-            geometry_estimate.estimated_height_px,
-            config,
-        ),
+        content,
         geometry_estimate,
         display,
         has_content_warning: features.has_content_warning,
-        content_warning_reason: lkjstr_protocol::content_warning_reason(&event.event),
+        content_warning_reason,
         custom_emoji_count: features.custom_emoji_count,
     }
 }

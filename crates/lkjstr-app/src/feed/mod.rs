@@ -46,5 +46,5 @@ pub use view_model::{
     feed_continuation_row_id, feed_diagnostic_row_id, feed_event_content, feed_event_content_rows,
     feed_event_row_id, feed_footer_row_id, feed_notification_row_id, feed_profile_row_id,
     feed_unavailable_row_id, footer_row, footer_row_from_window, notification_state_row,
-    profile_state_row, unavailable_state_row,
+    plan_feed_event_content, profile_state_row, unavailable_state_row,
 };

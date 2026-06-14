@@ -163,7 +163,7 @@ models, anchors, footer states, and unavailable states.
   exact-anchor, stored-route, and unavailable-state Author Context rows, Rust
   row actions, shared Rust event action rendering for Author Context and User
   Timeline rows, host-backed Rust event-id copy actions, Rust event menu shell,
-  shared Rust event body, app-owned content rows, unavailable media/reference
+  shared Rust event body, `FeedEventRow` content rows, unavailable media/reference
   preview states, author metadata, sensitive-warning reveal rendering, common
   state-row rendering, shared footer shell rendering across converted feed rows,
   and Rust/WASM quiet.

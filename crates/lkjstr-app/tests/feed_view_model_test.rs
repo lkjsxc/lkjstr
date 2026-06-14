@@ -1,3 +1,4 @@
+use lkjstr_app::feed::FeedEventContent;
 use lkjstr_app::{
     EventDisplayContext, FEED_LOAD_OLDER_COMMAND, FeedDiagnosticSeverity, FeedFooterState,
     FeedFragmentConfig, FeedStateRow, FeedViewModelInput, FeedViewRow, FeedWindowEvidence,
@@ -44,7 +45,11 @@ fn feed_view_model_builds_stable_event_rows_from_window_events() -> Result<(), S
     assert_eq!(row.display.geometry_context, "shared-event");
     assert!(row.has_content_warning);
     assert_eq!(row.content_warning_reason.as_deref(), Some("spoiler"));
-    assert!(!row.visual_rows.is_empty());
+    assert!(matches!(
+        &row.content,
+        FeedEventContent::Sensitive { reason, rows }
+            if reason.as_deref() == Some("spoiler") && !rows.is_empty()
+    ));
     assert!(matches!(model.rows.last(), Some(FeedViewRow::Footer(_))));
     Ok(())
 }

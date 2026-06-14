@@ -1,6 +1,5 @@
-use crate::{
-    events::EventDisplayPlan, feed_fragments::FeedVisualRow, feed_geometry::RowGeometryEstimate,
-};
+use super::content::FeedEventContent;
+use crate::{events::EventDisplayPlan, feed_geometry::RowGeometryEstimate};
 
 pub const FEED_LOAD_OLDER_COMMAND: &str = "feed.loadOlder";
 
@@ -71,7 +70,7 @@ pub struct FeedEventRow {
     pub event_kind: u64,
     pub relay_provenance: Vec<String>,
     pub display: EventDisplayPlan,
-    pub visual_rows: Vec<FeedVisualRow>,
+    pub content: FeedEventContent,
     pub geometry_estimate: RowGeometryEstimate,
     pub has_content_warning: bool,
     pub content_warning_reason: Option<String>,

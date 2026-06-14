@@ -11,6 +11,7 @@ pub use build::{
 };
 pub use content::{
     FeedEventContent, FeedEventContentRow, feed_event_content, feed_event_content_rows,
+    plan_feed_event_content,
 };
 pub use ids::{
     feed_continuation_row_id, feed_diagnostic_row_id, feed_event_row_id, feed_footer_row_id,

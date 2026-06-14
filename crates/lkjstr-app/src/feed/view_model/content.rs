@@ -1,4 +1,6 @@
-use crate::feed_fragments::FeedVisualRow;
+use crate::feed_fragments::{
+    FeedFragmentConfig, FeedVisualRow, SemanticFeedEvent, plan_feed_visual_rows,
+};
 
 #[derive(Clone, Debug, Eq, PartialEq)]
 pub enum FeedEventContent {
@@ -41,6 +43,19 @@ pub fn feed_event_content(
         };
     }
     FeedEventContent::Rows(rows)
+}
+
+#[must_use]
+pub fn plan_feed_event_content(
+    has_content_warning: bool,
+    reason: Option<String>,
+    event: &SemanticFeedEvent,
+    content_shape_hash: &str,
+    estimated_height_px: u16,
+    config: &FeedFragmentConfig,
+) -> FeedEventContent {
+    let rows = plan_feed_visual_rows(event, content_shape_hash, estimated_height_px, config);
+    feed_event_content(has_content_warning, reason, &rows)
 }
 
 #[must_use]
