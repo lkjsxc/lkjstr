@@ -178,8 +178,9 @@ models, anchors, footer states, and unavailable states.
   rows, shared Rust event body, Author Context request-level cleanup guards,
   full FeedViewModel action/repost summary rows,
   `FeedEventRow` content/action rows, unavailable media/reference preview states,
-  validated custom emoji rows with image presentation proof, author metadata,
-  sensitive-warning reveal rendering, common state-row rendering,
+  validated custom emoji rows with image presentation proof, notification repost
+  event rows, author metadata, sensitive-warning reveal rendering, common
+  state-row rendering,
   shared footer shell rendering across converted feed rows, retained Svelte copy
   actions with explicit clipboard failure states, and retained optional Svelte
   event/profile actions plus Rust-island hosts suppress unavailable no-op

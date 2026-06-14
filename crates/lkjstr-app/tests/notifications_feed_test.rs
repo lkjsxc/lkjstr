@@ -1,10 +1,10 @@
 use lkjstr_app::{
-    FeedFooterState, FeedFragmentConfig, FeedViewRow, FeedWindowEvidence, FeedWindowFlags,
-    NotificationItemInput, NotificationsFeedSourceState, NotificationsFeedStatus,
+    EventDisplayContext, FeedFooterState, FeedFragmentConfig, FeedViewRow, FeedWindowEvidence,
+    FeedWindowFlags, NotificationItemInput, NotificationsFeedSourceState, NotificationsFeedStatus,
     NotificationsFeedViewInput, RowGeometryModel, build_notifications_feed_view, empty_feed_window,
-    reduce_feed_window,
+    feed::FeedEventContent, reduce_feed_window,
 };
-use lkjstr_protocol::{KIND_REACTION, NostrEvent};
+use lkjstr_protocol::{KIND_REACTION, KIND_REPOST, NostrEvent};
 use lkjstr_relays::{DemandVisibility, ProgressiveEvent};
 
 #[test]
@@ -72,10 +72,51 @@ fn notifications_feed_cache_complete_uses_cache_footer() {
     ));
 }
 
+#[test]
+fn notifications_feed_repost_event_uses_notification_context() -> Result<(), String> {
+    let account = pubkey("a");
+    let mut input = input(
+        Some(account.clone()),
+        vec![NotificationItemInput {
+            notification_id: "notify-repost".to_owned(),
+            notification_kind: "repost".to_owned(),
+            source_event_id: Some("1".repeat(64)),
+        }],
+    );
+    input.window = reduce_feed_window(
+        empty_feed_window(1, 180),
+        FeedWindowEvidence::Events {
+            generation: 1,
+            events: vec![progressive_with(KIND_REPOST, "", &account)],
+            flags: FeedWindowFlags::default(),
+        },
+    );
+
+    let view = build_notifications_feed_view(input);
+    let Some(row) = view.view_model.rows.iter().find_map(|row| match row {
+        FeedViewRow::Event(event) if event.event_kind == KIND_REPOST => Some(event),
+        _ => None,
+    }) else {
+        return Err("missing repost event row".to_owned());
+    };
+    let FeedEventContent::Rows(content_rows) = &row.content else {
+        return Err("unexpected sensitive repost row".to_owned());
+    };
+
+    assert_eq!(row.display.context, EventDisplayContext::Notification);
+    assert_eq!(row.display.geometry_context, "shared-event:notification");
+    assert_eq!(
+        content_rows.first().map(|item| item.text()),
+        Some("Reposted target unavailable".to_owned())
+    );
+    Ok(())
+}
+
 fn input(
     active_pubkey: Option<String>,
     notification_rows: Vec<NotificationItemInput>,
 ) -> NotificationsFeedViewInput {
+    let account = active_pubkey.clone().unwrap_or_else(|| pubkey("a"));
     NotificationsFeedViewInput {
         owner: "notifications-tab".to_owned(),
         active_pubkey,
@@ -95,7 +136,7 @@ fn input(
             empty_feed_window(1, 180),
             FeedWindowEvidence::Events {
                 generation: 1,
-                events: vec![progressive()],
+                events: vec![progressive_with(KIND_REACTION, "+", &account)],
                 flags: FeedWindowFlags::default(),
             },
         ),
@@ -108,7 +149,7 @@ fn input(
     }
 }
 
-fn progressive() -> ProgressiveEvent {
+fn progressive_with(kind: u64, content: &str, account: &str) -> ProgressiveEvent {
     ProgressiveEvent {
         relays: vec!["wss://selected.example".to_owned()],
         sub_id: "notifications".to_owned(),
@@ -116,9 +157,9 @@ fn progressive() -> ProgressiveEvent {
             id: "1".repeat(64),
             pubkey: pubkey("b"),
             created_at: 1_700_000_001,
-            kind: KIND_REACTION,
-            tags: vec![vec!["p".to_owned(), pubkey("a")]],
-            content: "+".to_owned(),
+            kind,
+            tags: vec![vec!["p".to_owned(), account.to_owned()]],
+            content: content.to_owned(),
             sig: "c".repeat(128),
         },
     }
