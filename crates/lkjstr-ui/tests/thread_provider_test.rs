@@ -98,6 +98,36 @@ fn thread_provider_forwards_older_request_trigger() -> Result<(), String> {
     Ok(())
 }
 
+#[test]
+fn released_thread_older_request_suppresses_late_completion() -> Result<(), String> {
+    let request = Arc::new(Mutex::new(None::<ThreadOlderRequest>));
+    let request_capture = request.clone();
+    let provider =
+        ThreadFeedProvider::with_older(|_| {}, move |next| replace_slot(&request_capture, next));
+    let completed = Arc::new(AtomicBool::new(false));
+    let completed_capture = completed.clone();
+    let lease = provider.load_older(
+        "tab-a".to_owned(),
+        Some(id()),
+        ThreadOlderLoadTrigger::Explicit,
+        true,
+        true,
+        Callback::new(move |_| completed_capture.store(true, Ordering::SeqCst)),
+    );
+    let Some(lease) = lease else {
+        return Err("older handler supported".to_owned());
+    };
+
+    lease.release();
+    let Some(request) = older_snapshot(&request) else {
+        return Err("older request captured".to_owned());
+    };
+    request.complete(default_thread_feed_view("tab-a", Some(id())));
+
+    assert!(!completed.load(Ordering::SeqCst));
+    Ok(())
+}
+
 fn replace_slot<T: Clone>(slot: &Arc<Mutex<Option<T>>>, value: T) {
     match slot.lock() {
         Ok(mut slot) => {

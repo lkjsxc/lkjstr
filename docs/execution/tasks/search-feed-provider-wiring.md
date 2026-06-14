@@ -29,6 +29,8 @@ Search tab remains product owner until broader parity and no-import proof exist.
   cancellable provider leases, renders provider completions and older footer
   commands only when the provider exposes a real older handler, and restores
   `filterState.searchQuery` from tab snapshots.
+- `crates/lkjstr-ui/tests/search_provider_test.rs` proves both released initial
+  and older Search provider requests suppress late completions.
 - `crates/lkjstr-ui/src/workspace/search_snapshot.rs` records Search
   `filterState.searchQuery` into runtime tab snapshots.
 - `crates/lkjstr-web/src/search_feed_host.rs` reads the worker-owned local
@@ -98,6 +100,7 @@ pnpm test -- tests/unit/search
 - Cached and relay older pages load through the footer command without
   skipping same-second events across compound cursor boundaries when the
   provider supplies a real older handler.
+- Released Search older-provider leases suppress late completions.
 - The slice does not claim broader Search parity or TypeScript deletion.
 
 ## Must Not

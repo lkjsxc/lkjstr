@@ -35,9 +35,10 @@ Author Context rows, exact anchor lookup, stored routes, unavailable-state brows
 proof, row actions, and Followees/User Timeline/Author Context request-level
 cleanup guards. Global, Thread, Notifications, and Search older controls now
 require a real provider older handler before rendering or dispatching older
-loads, and the unused Rust workspace-persistence constructor that dropped tab
-snapshots is removed. Profile following-count rows render as actions only when
-a real Followees opener exists.
+loads, and released older-provider leases suppress late completions. The unused
+Rust workspace-persistence constructor that dropped tab snapshots is removed.
+Profile following-count rows render as actions only when a real Followees opener
+exists.
 Do not skip this order for visible polish.
 
 ## 1. Storage command coverage (implemented enabling proof)
@@ -182,10 +183,12 @@ models, anchors, footer states, and unavailable states.
   event/profile actions plus Rust-island hosts suppress unavailable no-op
   actions, empty Rust action menus, unavailable Thread continuation buttons,
   and Rust older-load controls without real older provider handlers are
-  suppressed; Profile following-count actions require a real Followees opener,
-  unused tab-snapshot no-op persistence construction is removed, and Rust/WASM
-  quiet. Author Context, Followees, and User Timeline Svelte-hosted Rust
-  islands cancel pending WASM mounts when hidden or destroyed.
+  suppressed; released Global, Notifications, Search, and Thread older-provider
+  leases suppress late completions; Profile following-count actions require a
+  real Followees opener, unused tab-snapshot no-op persistence construction is
+  removed, and Rust/WASM quiet. Author Context, Followees, and User Timeline
+  Svelte-hosted Rust islands cancel pending WASM mounts when hidden or
+  destroyed.
 - Remaining completion proof: `PaneFeedTabBody.svelte` still imports the Svelte
   Author Context host, and `EventRow.svelte` plus `EventFragmentRow.svelte`
   still import `EventMoreMenu.svelte`. Their no-import proof, event-row menu

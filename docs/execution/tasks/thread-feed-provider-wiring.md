@@ -54,6 +54,8 @@ Deletion proof and broader Thread parity remain open.
 - `crates/lkjstr-ui/src/workspace/thread_provider.rs` exposes Thread older
   loading only for providers built with a real older handler; injected read-only
   providers do not render older controls or dispatch no-op older requests.
+- `crates/lkjstr-ui/tests/thread_provider_test.rs` proves released initial and
+  older Thread provider requests suppress late completions.
 
 ## Next Edit
 
@@ -138,6 +140,7 @@ PATH=/home/lkjsxc/.cargo/bin:$PATH wasm-pack test --headless --chrome \
   callbacks render static continuation rows.
 - The explicit older footer command starts a bounded `#e` page read before the
   current oldest Thread row only when the provider exposes a real older handler.
+- Released Thread older-provider leases suppress late completions.
 - Downward near-end Thread scroll requests an older load only from a scrollable
   owner.
 - Underfilled Thread viewport measurement requests an older load without user
