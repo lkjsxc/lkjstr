@@ -1,6 +1,6 @@
 use lkjstr_app::{
-    FeedFragmentConfig, RowGeometryModel, ThreadFeedSourceState, ThreadFeedView,
-    ThreadFeedViewInput, build_thread_feed_view, empty_feed_window,
+    FeedFragmentConfig, ThreadFeedSourceState, ThreadFeedView, ThreadFeedViewInput,
+    build_thread_feed_view, empty_feed_window,
 };
 use lkjstr_domain::seed_relay_sets;
 use lkjstr_relays::DemandVisibility;
@@ -17,6 +17,7 @@ use crate::{
     thread_feed_host_commands::{
         complete_read_output, release_owner as release_thread_owner, start_older_request,
     },
+    thread_feed_geometry::thread_feed_geometry_models,
     thread_feed_relay::start_thread_relay_read,
     thread_feed_relay_input::{ThreadRelayInputSeed, ThreadRelayReadInput, thread_relay_input},
     thread_feed_relay_state::ThreadRelayState,
@@ -115,6 +116,8 @@ async fn thread_feed_model(
         }
         _ => empty_cache_state(),
     };
+    let geometry_models =
+        thread_feed_geometry_models(host, &cache.window, &mut diagnostics, 680, 1.0).await;
     let relay = thread_relay_input(ThreadRelayInputSeed {
         owner,
         event_id: &event_id,
@@ -145,7 +148,7 @@ async fn thread_feed_model(
         window: cache.window,
         width_px: 680,
         font_scale: 1.0,
-        geometry_models: Vec::<RowGeometryModel>::new(),
+        geometry_models,
         fragment_config: FeedFragmentConfig::default(),
         diagnostics,
     });

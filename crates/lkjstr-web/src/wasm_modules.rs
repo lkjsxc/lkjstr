@@ -95,6 +95,7 @@ pub mod sqlite_store;
 pub mod storage_worker;
 mod thread_feed_cache;
 mod thread_feed_cache_parents;
+mod thread_feed_geometry;
 mod thread_feed_host;
 mod thread_feed_host_commands;
 mod thread_feed_relay;

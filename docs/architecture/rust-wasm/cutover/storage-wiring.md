@@ -260,7 +260,7 @@ estimates remain open.
 - Rust storage and web path: `lkjstr-storage/src/optimizer/**`,
   `lkjstr-storage/src/commands/optimizer.rs`,
   `lkjstr-web/src/scan_model/**`, and typed `feed_row_height_*` rows. Home,
-  Global, Notifications, and Profile cached rows consume matching models first.
+  Global, Notifications, Profile, and Thread cached rows consume matching models first.
 - Worker message: `query` and `batch`.
 - Row codec and proof: optimizer scan-model command metadata,
   `commands_optimizer_test.rs`, optimizer unit tests, and scan-model repository
