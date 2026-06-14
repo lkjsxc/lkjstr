@@ -1,4 +1,6 @@
-use lkjstr_app::{FeedWindowCursor, GlobalFeedDiagnosticInput, GlobalFeedSourceState};
+use lkjstr_app::{
+    FeedWindowCursor, GlobalFeedDiagnosticInput, GlobalFeedSourceState, RowGeometryModel,
+};
 use lkjstr_protocol::{KIND_TEXT_NOTE, NostrEvent};
 
 #[derive(Clone, Debug, Eq, PartialEq)]
@@ -12,6 +14,7 @@ pub(crate) struct GlobalRelayReadInput {
     pub(crate) owner: String,
     pub(crate) selected_relays: Vec<String>,
     pub(crate) cache_window: lkjstr_app::FeedWindowState,
+    pub(crate) geometry_models: Vec<RowGeometryModel>,
     pub(crate) diagnostics: Vec<GlobalFeedDiagnosticInput>,
     pub(crate) now_sec: u64,
     pub(crate) phase: GlobalRelayReadPhase,
@@ -23,6 +26,7 @@ pub(crate) struct GlobalRelayInputSeed<'a> {
     pub(crate) source_state: &'a GlobalFeedSourceState,
     pub(crate) selected_relays: &'a [String],
     pub(crate) window: &'a lkjstr_app::FeedWindowState,
+    pub(crate) geometry_models: &'a [RowGeometryModel],
     pub(crate) diagnostics: &'a [GlobalFeedDiagnosticInput],
     pub(crate) now_sec: u64,
 }
@@ -44,6 +48,7 @@ pub(crate) fn global_base_relay_input(
         owner: seed.owner.to_owned(),
         selected_relays: seed.selected_relays.to_vec(),
         cache_window: seed.window.clone(),
+        geometry_models: seed.geometry_models.to_vec(),
         diagnostics: seed.diagnostics.to_vec(),
         now_sec: seed.now_sec,
         phase: GlobalRelayReadPhase::Initial,

@@ -1,8 +1,7 @@
 use lkjstr_app::{
     FeedFragmentConfig, FeedWindowEvidence, FeedWindowFlags, GlobalFeedDiagnosticInput,
     GlobalFeedSourceState, GlobalFeedView, GlobalFeedViewInput, GlobalOlderPageInput,
-    GlobalOlderPageOutcome, RowGeometryModel, build_global_feed_view, plan_global_older_page,
-    reduce_feed_window,
+    GlobalOlderPageOutcome, build_global_feed_view, plan_global_older_page, reduce_feed_window,
 };
 use lkjstr_relays::{
     DemandVisibility, ProgressiveReadSnapshot, ProgressiveReadStatus,
@@ -55,7 +54,7 @@ pub(crate) fn output_from_snapshot(
         window,
         width_px: 680,
         font_scale: 1.0,
-        geometry_models: Vec::<RowGeometryModel>::new(),
+        geometry_models: input.geometry_models.clone(),
         fragment_config: FeedFragmentConfig::default(),
         diagnostics,
     });

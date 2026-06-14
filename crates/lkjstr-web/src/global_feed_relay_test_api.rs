@@ -91,6 +91,7 @@ fn input(phase: GlobalRelayReadPhase) -> GlobalRelayReadInput {
                 },
             },
         ),
+        geometry_models: Vec::new(),
         diagnostics: Vec::new(),
         now_sec: 2_100,
         phase,

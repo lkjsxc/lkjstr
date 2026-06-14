@@ -122,6 +122,7 @@ async fn global_feed_model(host: &GlobalFeedHost, owner: &str) -> GlobalFeedLoad
         source_state: &source_state,
         selected_relays: &selected_relays,
         window: &window,
+        geometry_models: &geometry_models,
         diagnostics: &diagnostics,
         now_sec,
     };

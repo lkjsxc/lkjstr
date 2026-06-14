@@ -106,6 +106,7 @@ async fn home_feed_model(host: &HomeFeedHost, owner: &str) -> HomeFeedLoad {
         source_state: &source_state,
         selected_relays: &selected_relays,
         window: &window,
+        geometry_models: &geometry_models,
         diagnostics: &diagnostics,
         now_sec,
     });
