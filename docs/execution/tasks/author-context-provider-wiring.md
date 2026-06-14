@@ -44,6 +44,8 @@ and final verification proof exist.
 - Rust feed event actions expose host-backed event-id copy through the existing
   browser clipboard provider without calling browser APIs from `lkjstr-ui`.
 - Rust feed event actions render behind an accessible Rust-owned event menu shell.
+- The retained Svelte `EventMoreMenu` reports clipboard unavailable or rejected
+  writes explicitly instead of claiming copied status.
 - `crates/lkjstr-ui/src/workspace/feed_event_row.rs` shares event body rendering
   plus real author-pubkey metadata fallback and sensitive-content warning
   reason/reveal rows; media and reference fragments render explicit unavailable

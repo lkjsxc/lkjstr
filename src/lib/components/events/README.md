@@ -11,5 +11,7 @@ actions, reaction summaries, zaps, emoji, and media.
   embeds, media, reaction actor lists, and action panels.
 - `EventContentCore.svelte` owns the shared content, media, reference,
   sensitive-content, and emoji pipeline.
+- `event-more-menu.ts` owns explicit clipboard copy success and failure labels
+  for legacy Svelte event rows.
 - `EventRepostTarget.svelte` renders reposted targets through that shared
   pipeline with contextual repost chrome.

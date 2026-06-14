@@ -2,6 +2,11 @@
   import { onDestroy } from 'svelte';
   import { MoreHorizontal } from '@lucide/svelte';
   import type { NostrEvent } from '$lib/protocol';
+  import {
+    copyEventIdToClipboard,
+    copyEventStatusLabel,
+    type EventMoreMenuCopyStatus,
+  } from './event-more-menu';
 
   type Props = {
     event: NostrEvent;
@@ -9,7 +14,7 @@
   };
 
   let props: Props = $props();
-  let copied = $state(false);
+  let copyStatus = $state<EventMoreMenuCopyStatus | null>(null);
   let copyTimer: ReturnType<typeof setTimeout> | undefined;
 
   onDestroy(() => {
@@ -18,10 +23,12 @@
 
   async function copyEventId(event: MouseEvent): Promise<void> {
     event.stopPropagation();
-    await navigator.clipboard?.writeText(props.event.id);
-    copied = true;
+    copyStatus = await copyEventIdToClipboard(
+      props.event.id,
+      navigator.clipboard,
+    );
     if (copyTimer) clearTimeout(copyTimer);
-    copyTimer = setTimeout(() => (copied = false), 1200);
+    copyTimer = setTimeout(() => (copyStatus = null), 1200);
   }
 
   function openNearby(event: MouseEvent): void {
@@ -39,6 +46,8 @@
       >Nearby posts by this author</button
     >
     <button type="button" onclick={copyEventId}>Copy event ID</button>
-    {#if copied}<small role="status">Copied</small>{/if}
+    {#if copyStatus}<small role="status"
+        >{copyEventStatusLabel(copyStatus)}</small
+      >{/if}
   </div>
 </details>
