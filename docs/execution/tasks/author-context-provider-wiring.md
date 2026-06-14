@@ -44,6 +44,8 @@ event-row menu paths remain until no-import and final verification proof exist.
   across converted Rust feed surfaces while preserving Author Context actions.
 - `crates/lkjstr-ui/src/workspace/feed_state_row.rs` shares unavailable,
   diagnostic, profile, notification, and plain continuation state rows.
+- Focused `lkjstr-ui` unit tests cover shared event-fragment text extraction
+  and shared state-row presentation data without browser-only proof.
 - `src/lib/tabs/author-context/AuthorContextTab.svelte` mounts the Rust body
   through the WASM asset loader and forwards workspace action callbacks.
 - `src/lib/author-context/author-context.ts` has no product imports and is
