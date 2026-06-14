@@ -139,6 +139,9 @@ mod workspace_host;
 
 #[cfg(debug_assertions)]
 #[doc(hidden)]
+pub mod custom_request_relay_test_api;
+#[cfg(debug_assertions)]
+#[doc(hidden)]
 pub mod followees_relay_test_api;
 #[cfg(debug_assertions)]
 #[doc(hidden)]

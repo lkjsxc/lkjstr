@@ -214,7 +214,7 @@ Read next: [architecture/network/README.md](architecture/network/README.md),
   read relays, loads cached and relay older pages by compound cursor, and reports
   unsupported or clamped relays as diagnostics.
 - Rust Custom Request validates and plans demand, cancels provider leases, renders app-owned result rows, and has wasm-target
-  host wiring for real relay snapshots while browser/live parity proof remains open.
+  relay snapshot wiring plus Node WASM filter/match proof while browser/live parity remains open.
 - Matching Home tabs attach to one shared query keyed by account, selected
   relays, page size, and feed policy.
 - Background work is owner-scoped, cancellable, chunked, and non-blocking.

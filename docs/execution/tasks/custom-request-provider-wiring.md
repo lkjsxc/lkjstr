@@ -18,9 +18,10 @@ control that releases the provider lease and renders an explicit canceled state.
 windows and explicit state rows. Leptos renders those shared rows. The host
 provider now starts a typed relay read for ready plans, maps progressive relay
 snapshots into app-owned feed rows, and cancels socket/timer ownership through
-the provider lease. The shipped Svelte/TypeScript Custom Request tab remains the
-product owner until browser/live relay proof, no-import proof, and deletion
-gates exist.
+the provider lease. Node WASM relay probes cover routed request filters, event
+matching, complete snapshot rows, and failed-empty partial state. The shipped
+Svelte/TypeScript Custom Request tab remains the product owner until
+browser/live relay proof, no-import proof, and deletion gates exist.
 
 ## Current Evidence
 
@@ -40,6 +41,8 @@ gates exist.
   plans, and cancels that read through provider lease release.
 - `crates/lkjstr-web/src/custom_request_relay*.rs` routes real WebSocket
   messages through typed relay snapshots before building app-owned feed rows.
+- `crates/lkjstr-web/tests/custom_request_relay_test.rs` proves the relay
+  filter, match, and snapshot output path in Node WASM without opening sockets.
 - `src/lib/custom-request/**` remains the shipped relay runner and result
   renderer until Rust host/UI parity exists.
 

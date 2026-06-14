@@ -12,6 +12,7 @@ Browser-bound WASM tests prove exported functions call real Rust code.
 - `author_context_provider_test.rs`: Rust Author Context tab rendering from host-owned SQLite event rows.
 - `author_context_tab_test.rs`: Rust Author Context tab rendering from injected feed view-model rows.
 - `author_context_unavailable_tab_test.rs`: Rust Author Context browser rendering of explicit unavailable states.
+- `custom_request_relay_test.rs`: Custom Request relay filter, match, and snapshot Node WASM proof.
 - `global_feed_cleanup_test.rs`: Rust Global tab provider cleanup browser proof.
 - `global_feed_provider_test.rs`: Rust Global tab rendering from selected-relay SQLite cache evidence.
 - `global_feed_tab_test.rs`: Rust Global tab rendering from injected feed view-model rows.
