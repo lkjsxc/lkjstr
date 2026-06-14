@@ -86,6 +86,13 @@ fn event_feature_extraction_counts_shape_inputs() {
 }
 
 #[test]
+fn event_feature_extraction_counts_content_media_urls() {
+    let features = features_for("photo https://example.test/photo.webp", 480);
+
+    assert_eq!(features.media_count, 1);
+}
+
+#[test]
 fn measured_model_improves_confidence() {
     let observation = RowHeightObservation {
         key: "event-a".to_owned(),

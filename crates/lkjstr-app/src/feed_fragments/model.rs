@@ -32,6 +32,7 @@ pub struct SemanticFeedEvent {
     pub pubkey: String,
     pub created_at: u64,
     pub content: String,
+    pub media_attachments: Vec<ContentAttachment>,
     pub media_count: u16,
     pub reference_count: u16,
     pub relay_provenance: Vec<String>,
@@ -93,3 +94,4 @@ impl FeedVisualRow {
         }
     }
 }
+use lkjstr_protocol::ContentAttachment;

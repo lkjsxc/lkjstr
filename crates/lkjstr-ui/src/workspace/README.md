@@ -22,6 +22,7 @@ New Tab chooser, and converted Rust tool bodies.
 - `feed_event_actions.rs`: shared Rust feed event-row action buttons.
 - `feed_event_content.rs`: shared Rust feed event-row content rendering.
 - `feed_event_menu.rs`: shared Rust feed nearby/copy event menu rendering.
+- `feed_event_media.rs`: shared Rust feed media attachment rendering.
 - `feed_event_open.rs`: workspace tab callbacks for shared event menus.
 - `feed_event_row.rs`: shared Rust feed event-row body rendering.
 - `feed_footer_row.rs`: shared Rust feed footer shell rendering.

@@ -2,11 +2,14 @@
 
 mod build;
 mod content;
+#[cfg(test)]
+mod content_media_tests;
 mod content_row;
 #[cfg(test)]
 mod content_tests;
 mod geometry;
 mod ids;
+mod media_rows;
 mod types;
 
 pub use build::{
@@ -16,7 +19,10 @@ pub use build::{
 pub use content::{
     FeedEventContent, feed_event_content, feed_event_content_rows, plan_feed_event_content,
 };
-pub use content_row::{FeedEventContentRow, FeedEventCustomEmoji, FeedEventUnavailablePreview};
+pub use content_row::{
+    FeedEventContentRow, FeedEventCustomEmoji, FeedEventMediaAttachment, FeedEventMediaKind,
+    FeedEventUnavailablePreview,
+};
 pub use geometry::feed_event_geometry_model_keys;
 pub use ids::{
     feed_continuation_row_id, feed_diagnostic_row_id, feed_event_row_id, feed_footer_row_id,

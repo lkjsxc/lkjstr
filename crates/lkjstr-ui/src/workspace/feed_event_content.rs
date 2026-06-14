@@ -3,6 +3,8 @@ use lkjstr_app::feed::{
     FeedEventContent, FeedEventContentRow, FeedEventCustomEmoji, FeedEventUnavailablePreview,
 };
 
+use super::feed_event_media::media_attachment;
+
 #[derive(Clone, Debug, Eq, PartialEq)]
 struct CustomEmojiImageAttrs {
     class_name: &'static str,
@@ -65,6 +67,7 @@ fn content_row(row: FeedEventContentRow) -> impl IntoView {
     match row {
         FeedEventContentRow::Text(text) => view! { <p>{text}</p> }.into_any(),
         FeedEventContentRow::CustomEmoji(emoji) => custom_emoji(emoji).into_any(),
+        FeedEventContentRow::MediaAttachment(media) => media_attachment(media).into_any(),
         FeedEventContentRow::MediaPreviewUnavailable(preview) => {
             unavailable_preview(preview, "Media preview unavailable").into_any()
         }

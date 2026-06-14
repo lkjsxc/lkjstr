@@ -153,13 +153,15 @@ fn event_row(
     let geometry_estimate = estimate_row_geometry(row_id.clone(), &features, models);
     let content_warning_reason = lkjstr_protocol::content_warning_reason(&event.event);
     let custom_emojis = lkjstr_protocol::custom_emojis(&event.event);
+    let media_attachments = lkjstr_protocol::embedded_media_attachments(&event.event);
     let semantic = SemanticFeedEvent {
         event_id: event.event.id.clone(),
         event_kind: event.event.kind,
         pubkey: event.event.pubkey.clone(),
         created_at: event.event.created_at,
         content: event.event.content.clone(),
-        media_count: features.media_count,
+        media_count: media_attachments.len().min(usize::from(u16::MAX)) as u16,
+        media_attachments,
         reference_count: features.reference_preview_count,
         relay_provenance: event.relays.clone(),
         has_action_bar: display.chrome.show_actions,

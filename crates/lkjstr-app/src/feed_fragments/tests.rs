@@ -7,6 +7,7 @@ fn event(content: String) -> SemanticFeedEvent {
         pubkey: "b".repeat(64),
         created_at: 42,
         content,
+        media_attachments: Vec::new(),
         media_count: 0,
         reference_count: 0,
         relay_provenance: vec!["wss://relay.example".to_owned()],

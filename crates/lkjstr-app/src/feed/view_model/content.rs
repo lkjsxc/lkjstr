@@ -6,6 +6,7 @@ use lkjstr_protocol::{
     custom_emoji_token_text,
 };
 
+use super::media_rows::inject_media_rows;
 use super::{FeedEventContentRow, FeedEventCustomEmoji, FeedEventUnavailablePreview};
 
 #[derive(Clone, Debug, Eq, PartialEq)]
@@ -43,12 +44,22 @@ pub fn plan_feed_event_content(
     estimated_height_px: u16,
     config: &FeedFragmentConfig,
 ) -> FeedEventContent {
+    let media_attachments = event_media_attachments(event);
     let event = SemanticFeedEvent {
         content: visible_event_content(event),
+        media_count: media_attachments.len().min(usize::from(u16::MAX)) as u16,
+        media_attachments,
         ..event.clone()
     };
     let rows = plan_feed_visual_rows(&event, content_shape_hash, estimated_height_px, config);
     let rows = feed_event_content_rows_with_emojis(&rows, custom_emojis);
+    let rows = inject_media_rows(
+        rows,
+        &event.event_id,
+        content_shape_hash,
+        &event.media_attachments,
+        config.media_items_per_segment,
+    );
     if has_content_warning {
         return FeedEventContent::Sensitive {
             reason: reason.filter(|item| !item.trim().is_empty()),
@@ -85,6 +96,13 @@ fn feed_event_content_row(row: &FeedVisualRow) -> Option<FeedEventContentRow> {
             FeedEventContentRow::ReferencePreviewUnavailable(unavailable_preview(row)),
         ),
         FeedVisualRow::EventHeader(_) | FeedVisualRow::EventActions(_) => None,
+    }
+}
+
+fn event_media_attachments(event: &SemanticFeedEvent) -> Vec<lkjstr_protocol::ContentAttachment> {
+    match event.event_kind {
+        KIND_REPOST | KIND_GENERIC_REPOST | KIND_REACTION | KIND_ZAP_RECEIPT => Vec::new(),
+        _ => event.media_attachments.clone(),
     }
 }
 

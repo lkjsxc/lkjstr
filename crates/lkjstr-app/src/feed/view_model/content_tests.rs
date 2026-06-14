@@ -111,10 +111,16 @@ fn action_events_render_bounded_protocol_summary_rows() {
 }
 
 fn content_texts(content: FeedEventContent) -> Vec<String> {
-    let rows = match content {
+    content_rows(content)
+        .into_iter()
+        .map(|row| row.text())
+        .collect()
+}
+
+fn content_rows(content: FeedEventContent) -> Vec<FeedEventContentRow> {
+    match content {
         FeedEventContent::Sensitive { rows, .. } | FeedEventContent::Rows(rows) => rows,
-    };
-    rows.into_iter().map(|row| row.text()).collect()
+    }
 }
 
 fn event(kind: u64, content: &str) -> SemanticFeedEvent {
@@ -124,6 +130,7 @@ fn event(kind: u64, content: &str) -> SemanticFeedEvent {
         pubkey: "a".repeat(64),
         created_at: 1,
         content: content.to_owned(),
+        media_attachments: Vec::new(),
         media_count: 0,
         reference_count: 0,
         relay_provenance: Vec::new(),

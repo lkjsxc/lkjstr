@@ -1,7 +1,7 @@
 use super::hash::{ContentShapeInput, MaterializationTier, content_shape_hash};
 use super::width_bucket::WidthBucket;
 use lkjstr_protocol::{
-    NostrEvent,
+    NostrEvent, embedded_media_attachments,
     kinds::{KIND_DELETION, KIND_GENERIC_REPOST, KIND_REACTION, KIND_REPOST, KIND_ZAP_RECEIPT},
     tag_values,
 };
@@ -54,7 +54,7 @@ pub fn event_geometry_features(
     materialization_tier: MaterializationTier,
 ) -> RowGeometryFeatures {
     let content = geometry_visible_content(event);
-    let media_count = count_media_tags(&event.tags);
+    let media_count = as_u16(embedded_media_attachments(event).len());
     let reference_preview_count = count_reference_tags(&event.tags);
     let custom_emoji_count = count_custom_emoji_tags(&event.tags);
     let shape = ContentShapeInput {
@@ -124,10 +124,6 @@ fn generic_repost_target(event: &NostrEvent) -> String {
     tag_values(event, "k")
         .first()
         .map_or_else(|| "an event".to_owned(), |kind| format!("kind {kind}"))
-}
-
-fn count_media_tags(tags: &[Vec<String>]) -> u16 {
-    as_u16(tags.iter().filter(|tag| tag_name_is(tag, "imeta")).count())
 }
 
 fn count_reference_tags(tags: &[Vec<String>]) -> u16 {

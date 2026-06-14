@@ -3,6 +3,7 @@
 pub mod blossom;
 pub mod bytes;
 pub mod client_tag;
+pub mod content_media;
 pub mod content_tags;
 pub mod crypto;
 pub mod error;
@@ -45,6 +46,10 @@ pub use bytes::{
 pub use client_tag::{
     ClientTag, ClientTagConfig, ClientTagError, ClientTagPolicy, append_client_tag, client_tag,
     client_tag_allowed_for_kind, client_tag_parts, parse_client_tag,
+};
+pub use content_media::{
+    ContentAttachment, ContentAttachmentKind, classify_url, content_attachments, content_urls,
+    embedded_media_attachments,
 };
 pub use content_tags::{content_derived_tags, emoji_tags, mention_tags};
 pub use crypto::{
