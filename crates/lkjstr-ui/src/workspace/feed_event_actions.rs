@@ -45,6 +45,9 @@ pub(crate) fn event_actions(
     actions: FeedEventActions,
     labels: FeedEventActionLabels,
 ) -> impl IntoView {
+    if !feed_event_actions_available(&actions) {
+        return ().into_any();
+    }
     let copy_status = RwSignal::new(None::<String>);
     let stop_menu_click = |event: MouseEvent| event.stop_propagation();
     view! {
@@ -81,6 +84,7 @@ pub(crate) fn event_actions(
             </div>
         </details>
     }
+    .into_any()
 }
 
 impl From<AuthorContextActions> for FeedEventActions {
@@ -158,6 +162,13 @@ fn copy_event_status_text(result: ProfileCopyResult) -> String {
     }
 }
 
+fn feed_event_actions_available(actions: &FeedEventActions) -> bool {
+    actions.open_profile.is_some()
+        || actions.open_thread.is_some()
+        || actions.open_author_context.is_some()
+        || actions.copy_event_id.is_some()
+}
+
 fn author_context_button(
     event_id: String,
     pubkey: String,
@@ -172,18 +183,5 @@ fn author_context_button(
 }
 
 #[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test]
-    fn copy_event_status_text_names_success_and_failure() {
-        assert_eq!(
-            copy_event_status_text(ProfileCopyResult::copied("event id")),
-            "Copied event id"
-        );
-        assert_eq!(
-            copy_event_status_text(ProfileCopyResult::failed("event id", "denied")),
-            "Copy failed: denied"
-        );
-    }
-}
+#[path = "feed_event_actions_tests.rs"]
+mod feed_event_actions_tests;

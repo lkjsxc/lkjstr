@@ -44,6 +44,7 @@ and final verification proof exist.
 - Rust feed event actions expose host-backed event-id copy through the existing
   browser clipboard provider without calling browser APIs from `lkjstr-ui`.
 - Rust feed event actions render behind an accessible Rust-owned event menu shell.
+  The menu shell is suppressed when no real action provider exists.
 - The retained Svelte `EventMoreMenu` reports clipboard unavailable or rejected
   writes explicitly instead of claiming copied status.
 - `crates/lkjstr-ui/src/workspace/feed_event_row.rs` shares event body rendering
@@ -137,7 +138,8 @@ PATH=/home/lkjsxc/.cargo/bin:$PATH pnpm rust-wasm:quiet
 - Rust Author Context rows expose event-id copy through a host-provided
   clipboard action; copy failure renders an explicit status string.
 - Rust Author Context rows render those actions inside a Rust-owned event menu
-  shell instead of exposing only loose buttons.
+  shell instead of exposing only loose buttons, and empty action menus are not
+  rendered.
 - Rust Author Context rows use the shared event body and author metadata
   renderer, with actions still attached from real row ids and pubkeys.
 - Rust Author Context rows with content-warning tags render explicit sensitive
