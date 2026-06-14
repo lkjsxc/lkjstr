@@ -44,7 +44,7 @@ event-row menu paths remain until no-import and final verification proof exist.
   browser clipboard provider without calling browser APIs from `lkjstr-ui`.
 - Rust feed event actions render behind an accessible Rust-owned event menu shell.
 - `crates/lkjstr-ui/src/workspace/feed_event_row.rs` shares event body rendering
-  across converted Rust feed surfaces while preserving Author Context actions.
+  and real author-pubkey metadata fallback across converted Rust feed surfaces.
 - `crates/lkjstr-ui/src/workspace/feed_state_row.rs` shares unavailable,
   diagnostic, profile, notification, and plain continuation state rows.
 - `crates/lkjstr-ui/src/workspace/feed_footer_row.rs` and
@@ -131,8 +131,8 @@ PATH=/home/lkjsxc/.cargo/bin:$PATH pnpm rust-wasm:quiet
   clipboard action; copy failure renders an explicit status string.
 - Rust Author Context rows render those actions inside a Rust-owned event menu
   shell instead of exposing only loose buttons.
-- Rust Author Context rows use the shared event body renderer used by converted
-  Rust feed surfaces, with actions still attached from real row ids and pubkeys.
+- Rust Author Context rows use the shared event body and author metadata
+  renderer, with actions still attached from real row ids and pubkeys.
 - Rust Author Context uses shared feed state-row rendering for explicit
   unavailable, diagnostic, profile, notification, and plain continuation rows.
 - Rust Author Context uses shared feed footer shell rendering while preserving the

@@ -4,11 +4,12 @@ use lkjstr_app::{FeedEventRow, FeedVisualRow};
 pub(crate) fn event_row(row: FeedEventRow, trailing: impl IntoView) -> impl IntoView {
     let event_id = row.event_id;
     let row_id = row.row_id;
+    let author = compact_pubkey(&row.author_pubkey);
     let created_at = row.created_at;
     let text_rows = event_text_rows(row.visual_rows);
     view! {
         <article class="lkjstr-feed-row event" data-row-id=row_id data-event-id=event_id>
-            <small>{format!("created {created_at}")}</small>
+            <small>{format!("{author} created {created_at}")}</small>
             {text_rows.into_iter().map(|text| view! { <p>{text}</p> }).collect_view()}
             {trailing}
         </article>
@@ -29,6 +30,19 @@ fn event_text(item: FeedVisualRow) -> Option<String> {
         }
         FeedVisualRow::EventHeader(_) | FeedVisualRow::EventActions(_) => None,
     }
+}
+
+fn compact_pubkey(pubkey: &str) -> String {
+    let chars = pubkey.chars().collect::<Vec<_>>();
+    if chars.len() <= 16 {
+        return pubkey.to_owned();
+    }
+    let prefix = chars.iter().take(8).collect::<String>();
+    let suffix = chars
+        .iter()
+        .skip(chars.len().saturating_sub(8))
+        .collect::<String>();
+    format!("{prefix}...{suffix}")
 }
 
 #[cfg(test)]
@@ -58,6 +72,12 @@ mod tests {
                 "reference segment 3".to_owned(),
             ]
         );
+    }
+
+    #[test]
+    fn compact_pubkey_keeps_both_ends() {
+        assert_eq!(compact_pubkey(&"a".repeat(64)), "aaaaaaaa...aaaaaaaa");
+        assert_eq!(compact_pubkey("short"), "short");
     }
 
     fn full(content: &str) -> EventFullRow {
