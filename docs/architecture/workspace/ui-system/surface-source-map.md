@@ -10,7 +10,7 @@ without searching the whole tree.
 
 | Contract clause     | Component                    | Tab or consumer                                 | Test gate                  |
 | ------------------- | ---------------------------- | ----------------------------------------------- | -------------------------- |
-| Feed leading header | `FeedIdentityHeader.svelte`  | `UserTimelineTab.svelte`, `FolloweesTab.svelte` | identity-surfaces contract |
+| Feed leading header | `FeedIdentityHeader.svelte`  | `RustIslandHost.svelte`, `FolloweesTab.svelte`  | identity-surfaces contract |
 | User list row       | `UserEventRow.svelte`        | `FolloweesTab.svelte`                           | followees scroll rows      |
 | Row overflow menu   | `UserRowOverflowMenu.svelte` | `UserEventRow.svelte`                           | overflow-actions contract  |
 | Inline chip         | `IdentityChip.svelte`        | `AccountRow.svelte`, `EventMeta.svelte`         | account tests              |

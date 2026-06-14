@@ -10,7 +10,7 @@ named test gate passes.
 
 | Target               | Acceptance                                                                     | Source anchors                                        | Gate                       |
 | -------------------- | ------------------------------------------------------------------------------ | ----------------------------------------------------- | -------------------------- |
-| User Timeline header | Leading row uses `FeedIdentityHeader`; no raw npub or hex                      | `UserTimelineTab.svelte`, `FeedIdentityHeader.svelte` | identity contract test     |
+| User Timeline header | Leading row uses `FeedIdentityHeader`; no raw npub or hex                      | `RustIslandHost.svelte`, `FeedIdentityHeader.svelte`  | identity contract test     |
 | Followees rows       | Row click opens Profile; Timeline and Copy npub only in overflow menu          | `FolloweesTab.svelte`, `UserEventRow.svelte`          | followees tab render test  |
 | Profile overflow     | Open user timeline lives in copy overflow menu, not a large fact button        | `ProfileHeader.svelte`                                | profile header layout test |
 | Profile spacing      | Following count under display name; about block has `space-5` gap before notes | `ProfileHeader.svelte`, `identity.css`                | CSS contract test          |

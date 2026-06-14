@@ -27,5 +27,4 @@ The workspace snapshot coordinator owns durable identity and restore tokens.
 - [timeline/](timeline/): Home and Global timeline tab.
 - [tweet/](tweet/): Tweet composer tab.
 - [upload-settings/](upload-settings/): guided media upload settings.
-- [user-timeline/](user-timeline/): target user's public follow-graph timeline.
 - [welcome/](welcome/): first-launch welcome tab.

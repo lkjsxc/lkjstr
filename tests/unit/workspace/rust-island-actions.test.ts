@@ -4,12 +4,14 @@ import { describe, expect, it } from 'vitest';
 const islandHosts = [
   'src/lib/components/workspace/RustIslandHost.svelte',
   'src/lib/tabs/followees/FolloweesTab.svelte',
-  'src/lib/tabs/user-timeline/UserTimelineTab.svelte',
 ];
 
 describe('Rust island action callbacks', () => {
   it('does not pass no-op Author Context callbacks into Rust islands', () => {
-    for (const file of ['src/lib/components/workspace/author-context-island.ts']) {
+    for (const file of [
+      'src/lib/components/workspace/author-context-island.ts',
+      'src/lib/components/workspace/user-timeline-island.ts',
+    ]) {
       const source = readFileSync(file, 'utf8');
       expect(source, file).toContain(
         'openAuthorContext: (eventId: string, pubkey: string) => void;',
@@ -22,6 +24,7 @@ describe('Rust island action callbacks', () => {
       'utf8',
     );
     expect(pane).toContain('openAuthorContext,');
+    expect(pane).toContain('mountUserTimelineIsland');
   });
 
   it('cancels pending island mounts when hosts hide or destroy', () => {

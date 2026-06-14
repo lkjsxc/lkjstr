@@ -30,7 +30,7 @@ rows, bounded relay NIP-50 merge proof, Search tab snapshot restore, cached
 plus relay older-page proof, cached plus relay-refreshed Profile
 metadata/follow-count header rendering, selected-relay plus stored-route
 Followees/User Timeline kind `3` discovery, Followees/User Timeline cleanup,
-retry diagnostics, and Svelte-hosted Rust island proof, first injected/cache/relay
+retry diagnostics, and Rust island host proof, first injected/cache/relay
 Author Context rows, exact anchor lookup, stored routes, unavailable-state browser
 proof, row actions, and Followees/User Timeline/Author Context request-level
 cleanup guards. Global, Thread, Notifications, and Search older controls now
@@ -156,12 +156,12 @@ models, anchors, footer states, and unavailable states.
   Profile sparse-history empty proof, first Rust Followees NIP-02 row rendering,
   default cached plus selected-relay/stored-route/disabled-route Followees
   host-provider, cleanup, retry diagnostics, root row actions with explicit copy
-  status, and Svelte-hosted Rust island proof,
+  status, and Rust island host proof,
   first Rust User Timeline NIP-02 author-set feed-row rendering,
   default cached User Timeline host-provider proof, public no-route/loading
   discovery-state tests, selected-relay User Timeline kind `3` discovery,
-  stored NIP-65 route discovery, cleanup, retry diagnostics, and Svelte-hosted
-  Rust island proof,
+  stored NIP-65 route discovery, cleanup, retry diagnostics, and Rust island
+  host proof,
   Thread cached root/reply provider proof, shared
   feed owner-release cleanup, bounded Thread bootstrap relay reads, Thread relay
   owner cleanup, explicit Thread older-page relay reads from the footer command,
@@ -188,10 +188,9 @@ models, anchors, footer states, and unavailable states.
   leases suppress late completions; Profile following-count actions require a
   real Followees opener, unused tab-snapshot no-op persistence construction is
   removed, Rust geometry runtime counters are exposed to Stats, and Rust/WASM
-  quiet. Author Context, Followees, and User Timeline Svelte-hosted Rust islands
-  cancel pending WASM mounts when hidden or destroyed and unmount late handles
-  before accepting stale mounts. The dedicated Author Context Svelte tab wrapper
-  is removed; `PaneFeedTabBody.svelte` uses generic Rust island host glue.
+  quiet. Author Context and User Timeline use generic Rust island host glue,
+  while the Followees Svelte-hosted Rust island cancels pending WASM mounts when
+  hidden or destroyed and unmounts late handles before accepting stale mounts.
 - Remaining completion proof: `EventRow.svelte` and
   `EventFragmentRow.svelte` still import `EventMoreMenu.svelte`. Their
   no-import proof, event-row menu deletion readiness, final-gate deletion

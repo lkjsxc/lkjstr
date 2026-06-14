@@ -115,9 +115,10 @@ actions render static rows instead of no-op buttons, and Rust-island hosts
 forward required workspace callbacks instead of dummy row actions while late
 mount handles are unmounted before stale islands can attach. The dedicated
 Author Context Svelte tab wrapper is removed; generic workspace Rust-island host
-glue mounts the Rust body. Deletion of the retained shared Svelte event menu
-remains blocked while `EventRow.svelte` and `EventFragmentRow.svelte` import
-`EventMoreMenu.svelte`.
+glue mounts the Rust body. The dedicated User Timeline Svelte tab wrapper is
+removed while `src/lib/user-timeline` runtime modules stay blocked. Deletion of
+the retained shared Svelte event menu remains blocked while `EventRow.svelte`
+and `EventFragmentRow.svelte` import `EventMoreMenu.svelte`.
 Rust tests cover bounded action/repost rows, public User Timeline discovery
 states, and typed row-height observation/model SQLite rows, while
 browser/deletion proof stays open. Deletion remains blocked until

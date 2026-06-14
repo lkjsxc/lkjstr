@@ -8,8 +8,8 @@
   import SearchTab from '$lib/tabs/search/SearchTab.svelte';
   import ThreadTab from '$lib/tabs/thread/ThreadTab.svelte';
   import TimelineTab from '$lib/tabs/timeline/TimelineTab.svelte';
-  import UserTimelineTab from '$lib/tabs/user-timeline/UserTimelineTab.svelte';
   import { mountAuthorContextIsland } from './author-context-island';
+  import { mountUserTimelineIsland } from './user-timeline-island';
   import RustIslandHost from './RustIslandHost.svelte';
   import type { TabFeedAnchor } from '$lib/workspace/tab-anchor-registry';
   import type { TabSnapshotPayload } from '$lib/workspace/tab-snapshot';
@@ -52,6 +52,16 @@
     return mountAuthorContextIsland(parent, {
       tabId: props.tab.id,
       eventId: String(props.tab.config.eventId ?? ''),
+      pubkey: String(props.tab.config.pubkey ?? ''),
+      openProfile,
+      openThread,
+      openAuthorContext,
+    });
+  }
+
+  function mountUserTimeline(parent: HTMLElement) {
+    return mountUserTimelineIsland(parent, {
+      tabId: props.tab.id,
       pubkey: String(props.tab.config.pubkey ?? ''),
       openProfile,
       openThread,
@@ -155,15 +165,14 @@
     {openUserTimeline}
   />
 {:else if props.tab.kind === 'user-timeline'}
-  <UserTimelineTab
-    tabId={props.tab.id}
-    visible={props.visible}
-    pubkey={String(props.tab.config.pubkey ?? '')}
-    activeAccountPubkey={props.activeAccount?.pubkey}
-    relaySets={props.relaySets}
-    {openProfile}
-    {openThread}
-    {openAuthorContext}
+  <RustIslandHost
+    label="User Timeline"
+    className="user-timeline-tab"
+    mountKey={props.visible
+      ? `${props.tab.id}:${props.tab.config.pubkey ?? ''}`
+      : ''}
+    fallbackError="User Timeline failed."
+    mount={mountUserTimeline}
   />
 {:else if props.tab.kind === 'thread'}
   <ThreadTab
