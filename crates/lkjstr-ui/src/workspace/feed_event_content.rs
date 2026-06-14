@@ -78,10 +78,8 @@ fn event_text(item: FeedVisualRow) -> Option<String> {
     match item {
         FeedVisualRow::EventFull(row) => Some(row.content),
         FeedVisualRow::EventTextSegment(row) => Some(row.text),
-        FeedVisualRow::EventMediaSegment(row) => Some(format!("media segment {}", row.index)),
-        FeedVisualRow::EventReferenceSegment(row) => {
-            Some(format!("reference segment {}", row.index))
-        }
+        FeedVisualRow::EventMediaSegment(_) => Some("Media preview unavailable".to_owned()),
+        FeedVisualRow::EventReferenceSegment(_) => Some("Reference preview unavailable".to_owned()),
         FeedVisualRow::EventHeader(_) | FeedVisualRow::EventActions(_) => None,
     }
 }
@@ -109,8 +107,8 @@ mod tests {
             vec![
                 "hello".to_owned(),
                 "world".to_owned(),
-                "media segment 2".to_owned(),
-                "reference segment 3".to_owned(),
+                "Media preview unavailable".to_owned(),
+                "Reference preview unavailable".to_owned(),
             ]
         );
     }

@@ -45,7 +45,8 @@ event-row menu paths remain until no-import and final verification proof exist.
 - Rust feed event actions render behind an accessible Rust-owned event menu shell.
 - `crates/lkjstr-ui/src/workspace/feed_event_row.rs` shares event body rendering
   plus real author-pubkey metadata fallback and sensitive-content warning
-  reason/reveal rows.
+  reason/reveal rows; media and reference fragments render explicit unavailable
+  preview text until real preview data is present.
 - `crates/lkjstr-ui/src/workspace/feed_state_row.rs` shares unavailable,
   diagnostic, profile, notification, and plain continuation state rows.
 - `crates/lkjstr-ui/src/workspace/feed_footer_row.rs` and
@@ -137,6 +138,8 @@ PATH=/home/lkjsxc/.cargo/bin:$PATH pnpm rust-wasm:quiet
 - Rust Author Context rows with content-warning tags render explicit sensitive
   state, real NIP-36 reason text, and local reveal controls before note text is
   shown.
+- Rust Author Context media/reference fragments render explicit unavailable
+  preview text instead of synthetic preview content.
 - Rust Author Context uses shared feed state-row rendering for explicit
   unavailable, diagnostic, profile, notification, and plain continuation rows.
 - Rust Author Context uses shared feed footer shell rendering while preserving the
