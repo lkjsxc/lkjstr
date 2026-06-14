@@ -13,6 +13,13 @@ struct CustomEmojiImageAttrs {
     referrer_policy: &'static str,
 }
 
+#[derive(Clone, Debug, Eq, PartialEq)]
+struct UnavailablePreviewAttrs {
+    row_key: String,
+    segment_index: String,
+    label: &'static str,
+}
+
 pub(crate) fn event_content(content: FeedEventContent) -> impl IntoView {
     match content {
         FeedEventContent::Sensitive { reason, rows } => sensitive_content(reason, rows).into_any(),
@@ -68,13 +75,25 @@ fn content_row(row: FeedEventContentRow) -> impl IntoView {
 }
 
 fn unavailable_preview(preview: FeedEventUnavailablePreview, label: &'static str) -> impl IntoView {
+    let attrs = unavailable_preview_attrs(preview, label);
     view! {
         <p
-            data-row-key=preview.row_key
-            data-segment-index=preview.segment_index.to_string()
+            data-row-key=attrs.row_key
+            data-segment-index=attrs.segment_index
         >
-            {label}
+            {attrs.label}
         </p>
+    }
+}
+
+fn unavailable_preview_attrs(
+    preview: FeedEventUnavailablePreview,
+    label: &'static str,
+) -> UnavailablePreviewAttrs {
+    UnavailablePreviewAttrs {
+        row_key: preview.row_key,
+        segment_index: preview.segment_index.to_string(),
+        label,
     }
 }
 
@@ -127,6 +146,26 @@ mod tests {
                 title: ":party:".to_owned(),
                 loading: "lazy",
                 referrer_policy: "no-referrer",
+            }
+        );
+    }
+
+    #[test]
+    fn unavailable_preview_attrs_keep_fragment_identity() {
+        let attrs = unavailable_preview_attrs(
+            FeedEventUnavailablePreview {
+                row_key: "event:shape:event-media-segment:2".to_owned(),
+                segment_index: 2,
+            },
+            "Media preview unavailable",
+        );
+
+        assert_eq!(
+            attrs,
+            UnavailablePreviewAttrs {
+                row_key: "event:shape:event-media-segment:2".to_owned(),
+                segment_index: "2".to_owned(),
+                label: "Media preview unavailable",
             }
         );
     }
