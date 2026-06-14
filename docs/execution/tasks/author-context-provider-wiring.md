@@ -10,9 +10,9 @@ nearby author posts without claiming relay parity or deletion proof.
 Injected-row, cache-backed default-provider, bounded selected-relay relay-read,
 row action-opening, exact anchor lookup, and stored author-route slices are
 implemented. Browser proof covers explicit unavailable states and the shipped
-Svelte tab now mounts the Rust body as a WASM island. The retained TypeScript
-Author Context loader and event-row menu paths remain until no-import and final
-verification proof exist.
+Svelte tab now mounts the Rust body as a WASM island. The unused TypeScript
+Author Context loader has no product imports; Svelte host and event-row menu
+paths remain until no-import and final verification proof exist.
 
 ## Current Evidence
 
@@ -40,14 +40,14 @@ verification proof exist.
   event ids.
 - `src/lib/tabs/author-context/AuthorContextTab.svelte` mounts the Rust body
   through the WASM asset loader and forwards workspace action callbacks.
-- `src/lib/author-context/author-context.ts` is a retained loader until
-  no-import and final deletion proof are complete.
+- `src/lib/author-context/author-context.ts` has no product imports and is
+  removed in the loader deletion slice.
 
 ## Next Edit
 
-Prove no-import and deletion readiness only after the remaining Author Context
-and event-row menu call paths have Rust parity. Do not delete TypeScript/Svelte
-paths yet; final verification remains separate deletion-readiness proof.
+Remove the unused TypeScript loader with no-import proof. Keep the Svelte host
+wrapper and event-row menu call paths until shared Leptos event renderer parity,
+host no-import proof, and final verification exist.
 `lkjstr-app` owns the anchor and nearby query demand; `lkjstr-web` only reads
 typed route rows, binds browser sockets, and maps outcomes.
 
@@ -56,7 +56,7 @@ typed route rows, binds browser sockets, and maps outcomes.
 - `docs/product/tools/author-context.md`
 - `docs/architecture/rust-wasm/cutover/feed-runtime.md`
 - `docs/architecture/rust-wasm/cutover/ui-surface-map.md`
-- `src/lib/author-context/author-context.ts`
+- `src/lib/author-context/README.md`
 - `src/lib/tabs/author-context/AuthorContextTab.svelte`
 - `crates/lkjstr-app/src/feed/author_context_inputs.rs`
 - `crates/lkjstr-ui/src/workspace/tab_content.rs`
@@ -113,12 +113,12 @@ PATH=/home/lkjsxc/.cargo/bin:$PATH pnpm rust-wasm:quiet
 - The shipped Svelte Author Context tab can mount and unmount the Rust body
   without leaking a provider lease, and row actions call the Svelte workspace
   callbacks.
-- TypeScript Author Context and Svelte tab paths remain until no-import and
-  final gates prove deletion readiness.
+- The unused TypeScript loader is removed only after no-import proof.
+- Svelte tab and event-row menu paths remain until no-import and final gates
+  prove deletion readiness.
 
 ## Must Not
 
 - Do not synthesize author posts, anchor events, profiles, or successful reads.
 - Do not treat cache misses or missing relay answers as absence.
-- Do not delete `src/lib/author-context`, `src/lib/tabs/author-context`, or
-  event row menu glue.
+- Do not delete `src/lib/tabs/author-context` or event row menu glue.

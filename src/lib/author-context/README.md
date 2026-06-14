@@ -2,8 +2,8 @@
 
 ## Purpose
 
-Author Context retained helpers load nearby real events from one author around an
-anchor event while deletion proof remains open.
+This directory is kept as the local deletion-ledger anchor for retired
+TypeScript Author Context helpers.
 
 ## Table of Contents
 
@@ -11,8 +11,8 @@ anchor event while deletion proof remains open.
 
 ## Contract
 
-- The anchor event is loaded from cache or selected relays.
-- Cached and relay results are merged and deduplicated.
-- Metadata and follow-list events never appear in the rendered result list.
-- The shipped tab now mounts a Rust/WASM island; these helpers stay only until
-  no-import proof and final deletion gates pass.
+- Product Author Context loading is Rust-owned in `lkjstr-app` and `lkjstr-web`.
+- The shipped tab wrapper in `src/lib/tabs/author-context` remains Svelte host
+  glue until broader tab deletion proof exists.
+- Event-row menu glue remains in shared Svelte event rows until shared Leptos
+  event renderer parity and no-import proof exist.

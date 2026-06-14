@@ -8,7 +8,8 @@ This directory contains reusable application code shared by routes and tabs.
 
 - [accounts/](accounts/): account records, signers, and local secrets.
 - [app/](app/): app metadata and runtime logging.
-- [author-context/](author-context/): nearby authored event loading.
+- [author-context/](author-context/): deletion anchor for retired Author Context
+  helpers.
 - [background/](background/): owner-scoped background task queue.
 - [backend/](backend/): browser-local shared query services.
 - [cache/](cache/): cache status and retention.

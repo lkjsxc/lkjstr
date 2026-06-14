@@ -53,7 +53,7 @@ Layout docs map repository paths to ownership.
 - `src/lib/accounts`: account records, local secret handling, NIP-07 access,
   and mining.
 - `src/lib/app`: app metadata, runtime counters, and runtime log helpers.
-- `src/lib/author-context`: retained nearby-author query helpers pending deletion proof.
+- `src/lib/author-context`: deletion anchor for retired Author Context helpers.
 - `src/lib/backend`: browser-local shared query services.
 - `src/lib/cache`: cache status, retention, and compaction.
 - `src/lib/components`: shared Svelte UI components.
