@@ -6,14 +6,15 @@ import {
 
 describe('event more menu clipboard', () => {
   it('reports copied only after clipboard write succeeds', async () => {
-    const writes: string[] = [];
-    const status = await copyEventIdToClipboard('event-id', {
-      writeText: async (value) => {
-        writes.push(value);
+    const clipboard = {
+      writes: [] as string[],
+      async writeText(value: string) {
+        this.writes.push(value);
       },
-    });
+    };
+    const status = await copyEventIdToClipboard('event-id', clipboard);
 
-    expect(writes).toEqual(['event-id']);
+    expect(clipboard.writes).toEqual(['event-id']);
     expect(status).toEqual({ kind: 'copied' });
     expect(copyEventStatusLabel(status)).toBe('Copied');
   });

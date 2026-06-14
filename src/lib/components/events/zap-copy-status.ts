@@ -1,4 +1,4 @@
-export type EventMoreMenuCopyStatus =
+export type ZapInvoiceCopyStatus =
   | {
       readonly kind: 'copied';
     }
@@ -7,30 +7,30 @@ export type EventMoreMenuCopyStatus =
       readonly reason: string;
     };
 
-export type EventMoreMenuClipboard = {
+export type ZapInvoiceClipboard = {
   readonly writeText?: (value: string) => Promise<void>;
 };
 
-export async function copyEventIdToClipboard(
-  eventId: string,
-  clipboard: EventMoreMenuClipboard | undefined,
-): Promise<EventMoreMenuCopyStatus> {
+export async function copyZapInvoice(
+  invoice: string,
+  clipboard: ZapInvoiceClipboard | undefined,
+): Promise<ZapInvoiceCopyStatus> {
   if (!clipboard?.writeText) {
     return { kind: 'failed', reason: 'Clipboard unavailable' };
   }
   try {
-    await clipboard.writeText(eventId);
+    await clipboard.writeText(invoice);
     return { kind: 'copied' };
   } catch (error) {
     return { kind: 'failed', reason: copyFailureReason(error) };
   }
 }
 
-export function copyEventStatusLabel(status: EventMoreMenuCopyStatus): string {
+export function zapInvoiceCopyStatusText(status: ZapInvoiceCopyStatus): string {
   if (status.kind === 'copied') {
-    return 'Copied';
+    return 'Invoice copied.';
   }
-  return `Copy failed: ${status.reason}`;
+  return `Invoice copy failed: ${status.reason}`;
 }
 
 function copyFailureReason(error: unknown): string {

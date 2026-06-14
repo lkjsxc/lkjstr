@@ -4,6 +4,10 @@
   import type { NostrEvent } from '$lib/protocol';
   import type { RelaySet } from '$lib/relays/relay-store';
   import { createZapInvoices, type ZapInvoice } from '$lib/events/zap';
+  import {
+    copyZapInvoice,
+    zapInvoiceCopyStatusText,
+  } from '$lib/components/events/zap-copy-status';
 
   type Props = {
     event: NostrEvent;
@@ -36,6 +40,11 @@
     } finally {
       busy = false;
     }
+  }
+
+  async function copyInvoice(invoice: string): Promise<void> {
+    const copyStatus = await copyZapInvoice(invoice, navigator.clipboard);
+    status = zapInvoiceCopyStatusText(copyStatus);
   }
 </script>
 
@@ -78,7 +87,9 @@
             class="icon-button"
             aria-label="Copy invoice"
             title="Copy invoice"
-            onclick={() => navigator.clipboard?.writeText(invoice.invoice)}
+            onclick={() => {
+              void copyInvoice(invoice.invoice);
+            }}
           >
             <Copy size={16} />
           </button>

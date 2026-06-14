@@ -6,14 +6,15 @@ import {
 
 describe('profile copy status', () => {
   it('reports copied only after clipboard write succeeds', async () => {
-    const writes: string[] = [];
-    const status = await copyProfileValue('npub', 'npub1...', {
-      writeText: async (value) => {
-        writes.push(value);
+    const clipboard = {
+      writes: [] as string[],
+      async writeText(value: string) {
+        this.writes.push(value);
       },
-    });
+    };
+    const status = await copyProfileValue('npub', 'npub1...', clipboard);
 
-    expect(writes).toEqual(['npub1...']);
+    expect(clipboard.writes).toEqual(['npub1...']);
     expect(status).toEqual({ kind: 'copied', label: 'npub' });
     expect(profileCopyStatusLabel(status)).toBe('Copied npub');
   });

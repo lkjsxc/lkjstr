@@ -36,3 +36,5 @@ Event actions define the row-level write controls available on feed events.
   publishes a tagged kind `1` reply.
 - Zap opens an inline amount/message form, signs a NIP-57 kind `9734` request,
   fetches an invoice, then exposes a `lightning:` payment URI.
+- Zap invoice copy reports clipboard unavailable or rejected writes explicitly;
+  copied status appears only after the browser clipboard write resolves.

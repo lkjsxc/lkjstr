@@ -13,5 +13,7 @@ actions, reaction summaries, zaps, emoji, and media.
   sensitive-content, and emoji pipeline.
 - `event-more-menu.ts` owns explicit clipboard copy success and failure labels
   for legacy Svelte event rows.
+- `zap-copy-status.ts` owns explicit zap invoice clipboard success and failure
+  labels.
 - `EventRepostTarget.svelte` renders reposted targets through that shared
   pipeline with contextual repost chrome.

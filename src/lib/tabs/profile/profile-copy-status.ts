@@ -18,12 +18,11 @@ export async function copyProfileValue(
   value: string,
   clipboard: ProfileClipboard | undefined,
 ): Promise<ProfileCopyStatus> {
-  const writeText = clipboard?.writeText;
-  if (!writeText) {
+  if (!clipboard?.writeText) {
     return { kind: 'failed', label, reason: 'Clipboard unavailable' };
   }
   try {
-    await writeText(value);
+    await clipboard.writeText(value);
     return { kind: 'copied', label };
   } catch (error) {
     return { kind: 'failed', label, reason: copyFailureReason(error) };
