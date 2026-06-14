@@ -191,10 +191,11 @@ models, anchors, footer states, and unavailable states.
   quiet. Author Context, Followees, and User Timeline use generic Rust island
   host glue, which cancels pending WASM mounts when hidden or destroyed and
   unmounts late handles before accepting stale mounts.
-- Remaining completion proof: `EventRow.svelte` and
-  `EventFragmentRow.svelte` still import `EventMoreMenu.svelte`. Their
-  no-import proof, event-row menu deletion readiness, final-gate deletion
-  readiness, and other feed-surface deletion prerequisites remain open.
+- Remaining completion proof: retained Svelte event overflow behavior now lives
+  in `EventMeta.svelte`, and `EventRow.svelte` plus `EventFragmentRow.svelte`
+  no longer import `EventMoreMenu.svelte`. The retained component file,
+  event-row menu deletion readiness, final-gate deletion readiness, and other
+  feed-surface deletion prerequisites remain open.
   Missing coverage never proves absence, and no placeholder rows exist.
 
 ## 4. First Home Leptos feed slice

@@ -6,7 +6,6 @@
   import EventContent from './EventContent.svelte';
   import EventMeta from './EventMeta.svelte';
   import EventActions from './EventActions.svelte';
-  import EventMoreMenu from './EventMoreMenu.svelte';
   import ReactionSummary from './ReactionSummary.svelte';
   import {
     hasOpenProfileAction,
@@ -107,13 +106,9 @@
       relays={props.item.relays}
       {profile}
       openProfile={props.openProfile}
+      showMore={props.showMore !== false}
+      openAuthorContext={props.openAuthorContext}
     />
-    {#if props.showMore !== false}
-      <EventMoreMenu
-        event={props.item.event}
-        openAuthorContext={props.openAuthorContext}
-      />
-    {/if}
     <EventContent
       event={props.item.event}
       relays={props.item.relays}

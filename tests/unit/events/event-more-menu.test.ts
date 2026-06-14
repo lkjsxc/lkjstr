@@ -1,3 +1,4 @@
+import { readFileSync } from 'node:fs';
 import { describe, expect, it } from 'vitest';
 import {
   copyEventIdToClipboard,
@@ -48,5 +49,29 @@ describe('event more menu author context action', () => {
   it('exposes nearby author action only when a callback exists', () => {
     expect(eventMoreMenuHasAuthorContext(undefined)).toBe(false);
     expect(eventMoreMenuHasAuthorContext(() => undefined)).toBe(true);
+  });
+});
+
+describe('event more menu ownership', () => {
+  it('keeps row components from importing the retained Svelte menu', () => {
+    for (const file of [
+      'src/lib/components/events/EventRow.svelte',
+      'src/lib/components/events/EventFragmentRow.svelte',
+    ]) {
+      const source = readFileSync(file, 'utf8');
+      expect(source, file).not.toContain('EventMoreMenu.svelte');
+      expect(source, file).not.toContain('<EventMoreMenu');
+      expect(source, file).toContain('openAuthorContext=');
+    }
+  });
+
+  it('keeps retained overflow behavior colocated with event metadata', () => {
+    const source = readFileSync(
+      'src/lib/components/events/EventMeta.svelte',
+      'utf8',
+    );
+    expect(source).toContain('copyEventIdToClipboard');
+    expect(source).toContain('Nearby posts by this author');
+    expect(source).toContain('event-action-zone');
   });
 });

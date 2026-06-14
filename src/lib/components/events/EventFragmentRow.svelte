@@ -12,7 +12,6 @@
   import EventActions from './EventActions.svelte';
   import EventContent from './EventContent.svelte';
   import EventMeta from './EventMeta.svelte';
-  import EventMoreMenu from './EventMoreMenu.svelte';
   import ReactionSummary from './ReactionSummary.svelte';
   import {
     hasOpenProfileAction,
@@ -113,9 +112,7 @@
         relays={props.node.relays}
         profile={props.profile}
         openProfile={props.openProfile}
-      />
-      <EventMoreMenu
-        event={props.node.event}
+        showMore
         openAuthorContext={props.openAuthorContext}
       />
     </div>
