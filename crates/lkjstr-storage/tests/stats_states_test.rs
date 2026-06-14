@@ -69,6 +69,7 @@ fn row(
         group: "test".to_string(),
         status: status.to_string(),
         row_count,
+        estimated_bytes: None,
         problem_reason: problem_reason.map(str::to_string),
     }
 }

@@ -21,22 +21,20 @@ commands.
   mapping; successful stop reasons do not map to problem kinds.
 - Rust UI Stats text tests cover explicit pressure unavailable states,
   temporary-memory warning text, and distinct health problem states.
-- Rust host Stats surfaces localStorage count/status, Cache Storage
-  count/status, and old IndexedDB presence rows, including when SQLite worker
-  inventory is unavailable.
+- Rust host Stats surfaces localStorage count/status/bytes, Cache Storage
+  count/status/response bytes, and old IndexedDB presence rows, including when
+  SQLite worker inventory is unavailable.
 - Rust storage now classifies Stats snapshots for retention readiness with
   exact inventory, storage API, unknown/unowned, not-recorded, timeout, blocked,
   and corrupt gap labels.
-- localStorage and Cache Storage byte estimates plus repair action linkage
-  remain TypeScript-owned or open until Rust host adapters move.
+- Repair action linkage remains open until Rust host adapters own the action.
 
 ## Next Edit
 
 1. Keep pressure and optimizer command metadata intact while inventory moves.
 2. Preserve the storage-owned readiness classifier that links browser inventory
    to retention and repair outputs without inventing standalone byte safety.
-3. Keep Cache Storage cleanup and byte estimates out of scope until the count
-   diagnostics are verified.
+3. Keep Cache Storage cleanup out of scope until action adapters are verified.
 
 ## Next Checklist
 
@@ -64,10 +62,10 @@ old IndexedDB presence diagnostics. Missing pressure data renders an explicit
 unavailable reason.
 
 The current Rust slice covers SQLite health, SQLite table counts, saved pressure
-snapshots, pressure byte-summary rows, localStorage count/status, Cache Storage
-count/status, old IndexedDB presence, and a storage-owned retention readiness
-classifier. TypeScript remains the shipped owner for browser byte estimates
-until equivalent Rust host adapters are implemented and no-import proof exists.
+snapshots, pressure byte-summary rows, localStorage count/status/bytes, Cache
+Storage count/status/response bytes, old IndexedDB presence, and a storage-owned
+retention readiness classifier. TypeScript remains the shipped owner for cache
+actions until Rust action adapters and no-import proof exist.
 
 ## Files To Read
 

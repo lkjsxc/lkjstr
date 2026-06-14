@@ -160,6 +160,7 @@ fn sqlite_row() -> StorageInventoryRow {
         group: "prunable-cache".to_string(),
         status: "available".to_string(),
         row_count: Some(2),
+        estimated_bytes: None,
         problem_reason: None,
     }
 }
@@ -171,6 +172,7 @@ fn old_indexed_db_row() -> StorageInventoryRow {
         group: "unknown".to_string(),
         status: "estimated".to_string(),
         row_count: None,
+        estimated_bytes: None,
         problem_reason: Some("old IndexedDB database presence; row scan skipped".to_string()),
     }
 }
@@ -182,6 +184,7 @@ fn browser_count_row(table: &str, status: &str, row_count: Option<u64>) -> Stora
         group: "non-indexed".to_string(),
         status: status.to_string(),
         row_count,
+        estimated_bytes: row_count.map(|count| count.saturating_mul(256)),
         problem_reason: None,
     }
 }

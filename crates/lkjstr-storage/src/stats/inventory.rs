@@ -68,6 +68,7 @@ fn inventory_row(
         group: group.to_string(),
         status: row_status(row_count).to_string(),
         row_count,
+        estimated_bytes: None,
         problem_reason,
     }
 }

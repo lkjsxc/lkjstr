@@ -89,7 +89,7 @@ pub fn StatsTab(runtime: RuntimeSignal, provider: Option<StatsProvider>) -> impl
             <h3>"Storage inventory"</h3>
             <table class="stats-table">
                 <thead>
-                    <tr><th>"Store"</th><th>"Group"</th><th>"Status"</th><th>"Rows"</th></tr>
+                    <tr><th>"Store"</th><th>"Group"</th><th>"Status"</th><th>"Rows"</th><th>"Bytes"</th></tr>
                 </thead>
                 <tbody>{move || inventory_rows(snapshot.get())}</tbody>
             </table>
@@ -108,7 +108,7 @@ fn inventory_rows(snapshot: Option<StorageStatsSnapshot>) -> impl IntoView {
             .collect_view()
             .into_any(),
         None => view! {
-            <tr><td colspan="4">"Loading storage inventory"</td></tr>
+            <tr><td colspan="5">"Loading storage inventory"</td></tr>
         }
         .into_any(),
     }
@@ -120,6 +120,7 @@ fn row_view(row: StorageInventoryRow) -> impl IntoView {
         group,
         status,
         row_count,
+        estimated_bytes,
         problem_reason,
         ..
     } = row;
@@ -133,6 +134,11 @@ fn row_view(row: StorageInventoryRow) -> impl IntoView {
             <td>{group}</td>
             <td>{status}</td>
             <td>{rows}</td>
+            <td>{byte_text(estimated_bytes)}</td>
         </tr>
     }
+}
+
+fn byte_text(estimated_bytes: Option<u64>) -> String {
+    estimated_bytes.map_or_else(|| "not-recorded".to_string(), |bytes| bytes.to_string())
 }

@@ -38,9 +38,9 @@ unknown origin usage as success.
   prunable bytes, unknown or unowned bytes, and residual overhead only when a
   real pressure snapshot exists; missing pressure data stays visible as
   unavailable.
-- Rust Stats inventory rows show localStorage count/status, Cache Storage
-  count/status, and old IndexedDB presence without claiming byte-accurate
-  cleanup evidence.
+- Rust Stats inventory rows show localStorage count/status/bytes, Cache Storage
+  count/status/response bytes, and old IndexedDB presence without claiming
+  byte-safe cleanup evidence.
 - Rust storage readiness links Stats inventory to retention and repair: missing
   pressure rows, partial scans, temporary memory, and old IndexedDB presence use
   exact gap labels instead of byte-safe cleanup claims.

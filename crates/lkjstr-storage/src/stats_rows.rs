@@ -36,6 +36,8 @@ pub struct StorageInventoryRow {
     pub group: String,
     pub status: String,
     pub row_count: Option<u64>,
+    #[serde(default)]
+    pub estimated_bytes: Option<u64>,
     pub problem_reason: Option<String>,
 }
 

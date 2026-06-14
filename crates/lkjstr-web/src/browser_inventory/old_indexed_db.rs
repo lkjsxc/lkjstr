@@ -67,6 +67,7 @@ fn old_indexed_db_database_rows(databases: Array) -> Vec<StorageInventoryRow> {
             group: "unknown".to_string(),
             status: "estimated".to_string(),
             row_count: None,
+            estimated_bytes: None,
             problem_reason: Some("old IndexedDB database presence; row scan skipped".to_string()),
         })
         .collect()
@@ -79,6 +80,7 @@ fn old_indexed_db_status_row(status: &str, reason: &str) -> StorageInventoryRow 
         group: "unknown".to_string(),
         status: status.to_string(),
         row_count: None,
+        estimated_bytes: None,
         problem_reason: Some(reason.to_string()),
     }
 }

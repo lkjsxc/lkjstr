@@ -19,7 +19,7 @@ async fn cache_storage_row() -> StorageInventoryRow {
         return unavailable_row("cache-storage-unavailable");
     };
     if caches.is_null() || caches.is_undefined() {
-        return status_row("unsupported", None, Some("cache-storage-unsupported"));
+        return status_row("unsupported", None, None, Some("cache-storage-unsupported"));
     }
     let started_at = js_sys::Date::now();
     let names = match call_array_method(&caches, "keys").await {
@@ -27,8 +27,9 @@ async fn cache_storage_row() -> StorageInventoryRow {
         Err(reason) => return unavailable_row(reason),
     };
     let mut request_count = 0;
+    let mut estimated_bytes = 0;
     for name in names.iter().filter_map(|item| item.as_string()) {
-        if let Some(row) = deadline_row(started_at, request_count) {
+        if let Some(row) = deadline_row(started_at, request_count, estimated_bytes) {
             return row;
         }
         let name_value = JsValue::from_str(&name);
@@ -40,10 +41,23 @@ async fn cache_storage_row() -> StorageInventoryRow {
             Ok(requests) => requests,
             Err(reason) => return unavailable_row(reason),
         };
-        request_count += u64::from(requests.length());
+        for request in requests.iter() {
+            if let Some(row) = deadline_row(started_at, request_count, estimated_bytes) {
+                return row;
+            }
+            request_count = request_count.saturating_add(1);
+            let response = match call_value_method_with_arg(&cache, "match", &request).await {
+                Ok(response) => response,
+                Err(reason) => return unavailable_row(reason),
+            };
+            estimated_bytes = estimated_bytes.saturating_add(match response_bytes(&response).await {
+                Ok(bytes) => bytes,
+                Err(reason) => return unavailable_row(reason),
+            });
+        }
     }
-    deadline_row(started_at, request_count)
-        .unwrap_or_else(|| status_row("exact", Some(request_count), None))
+    deadline_row(started_at, request_count, estimated_bytes)
+        .unwrap_or_else(|| status_row("exact", Some(request_count), Some(estimated_bytes), None))
 }
 
 async fn call_array_method(
@@ -94,7 +108,24 @@ fn method_function(receiver: &JsValue, method: &'static str) -> Result<Function,
         .map_err(|_| "cache-storage-method-unavailable")
 }
 
-fn deadline_row(started_at: f64, request_count: u64) -> Option<StorageInventoryRow> {
+async fn response_bytes(response: &JsValue) -> Result<u64, &'static str> {
+    if response.is_null() || response.is_undefined() {
+        return Ok(0);
+    }
+    let blob = call_value_method(response, "blob").await?;
+    Reflect::get(&blob, &JsValue::from_str("size"))
+        .map_err(|_| "cache-storage-malformed")?
+        .as_f64()
+        .filter(|value| value.is_finite() && *value >= 0.0)
+        .map(|value| value.min(u64::MAX as f64) as u64)
+        .ok_or("cache-storage-malformed")
+}
+
+fn deadline_row(
+    started_at: f64,
+    request_count: u64,
+    estimated_bytes: u64,
+) -> Option<StorageInventoryRow> {
     let elapsed = js_sys::Date::now() - started_at;
     if elapsed <= DEADLINE_MS {
         return None;
@@ -107,21 +138,28 @@ fn deadline_row(started_at: f64, request_count: u64) -> Option<StorageInventoryR
     Some(status_row(
         status,
         Some(request_count),
+        Some(estimated_bytes),
         Some("cache scan deadline reached"),
     ))
 }
 
 fn unavailable_row(reason: &str) -> StorageInventoryRow {
-    status_row("unavailable", None, Some(reason))
+    status_row("unavailable", None, None, Some(reason))
 }
 
-fn status_row(status: &str, row_count: Option<u64>, reason: Option<&str>) -> StorageInventoryRow {
+fn status_row(
+    status: &str,
+    row_count: Option<u64>,
+    estimated_bytes: Option<u64>,
+    reason: Option<&str>,
+) -> StorageInventoryRow {
     StorageInventoryRow {
         table: "Cache Storage".to_string(),
         data_class: "non-indexed-browser-storage".to_string(),
         group: "non-indexed".to_string(),
         status: status.to_string(),
         row_count,
+        estimated_bytes,
         problem_reason: reason.map(str::to_string),
     }
 }

@@ -28,10 +28,10 @@ explicit unavailable reason; Stats must not invent byte counts.
 Rust Stats renders pressure byte-summary rows for browser usage, site target,
 protected, prunable, unknown or unowned, and residual overhead classes. Missing
 pressure data keeps those rows visible as unavailable instead of showing zero.
-The Rust host also adds localStorage count/status, Cache Storage request
-count/status, and old IndexedDB presence rows even when the SQLite worker is
-unavailable. Byte estimates for non-indexed browser storage remain transitional
-until Rust host adapters own that scan.
+The Rust host also adds localStorage count/status/byte rows, Cache Storage
+request count/status/response-byte rows, and old IndexedDB presence rows even
+when the SQLite worker is unavailable. Non-indexed browser byte estimates are
+diagnostic only and do not authorize cleanup without pressure/readiness proof.
 
 Stats snapshots also expose a storage-owned retention readiness classifier.
 It permits byte-based ledger retention only when pressure bytes are recorded,
@@ -64,11 +64,9 @@ Stats groups bytes as:
 Stats shows browser usage, site budget, storage mode, schema readiness, total
 ledger bytes, prunable ledger bytes, protected estimates, overhead, unknown or
 unowned bytes, inventory status, ledger rows by owner and resource kind,
-physical SQLite rows by table, old IndexedDB database presence, last compaction
-reason, deleted resource count, and deleted byte estimate. Current Rust Stats
-shows localStorage count/status and Cache Storage request count/status; byte
-estimates for those non-indexed stores remain TypeScript-owned until Rust host
-adapters own bounded byte scans.
+physical SQLite rows by table, localStorage and Cache Storage diagnostic byte
+estimates, old IndexedDB database presence, last compaction reason, deleted
+resource count, and deleted byte estimate.
 
 Operation diagnostics distinguish durable success, unavailable storage,
 timeout, quota failure, blocked storage, corrupt rows, and late-settled work.
