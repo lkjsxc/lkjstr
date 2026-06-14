@@ -173,7 +173,8 @@ models, anchors, footer states, and unavailable states.
   cached plus relay older-page proof, injected, worker-cached, relay-backed,
   exact-anchor, stored-route, and unavailable-state Author Context rows, Rust
   row actions, shared Rust event action rendering, host-backed Rust event-id
-  copy actions, nearby-author menus across converted Rust feed rows, shared
+  copy actions, copy-only menu proof, converted action providers,
+  nearby-author menus across converted Rust feed rows, shared
   Rust event body, Author Context request-level cleanup guards,
   full FeedViewModel action/repost summary rows,
   `FeedEventRow` content/action rows, unavailable media/reference preview states,

@@ -45,6 +45,9 @@ and final verification proof exist.
   browser clipboard provider without calling browser APIs from `lkjstr-ui`.
 - Rust feed event actions render behind an accessible Rust-owned event menu shell.
   The menu shell is suppressed when no real action provider exists.
+- Focused UI tests prove copy-only event menus and converted Author
+  Context/User Timeline action providers keep the Rust menu available only from
+  real providers.
 - The retained Svelte `EventMoreMenu` reports clipboard unavailable or rejected
   writes explicitly instead of claiming copied status.
 - `crates/lkjstr-ui/src/workspace/feed_event_row.rs` shares event body rendering

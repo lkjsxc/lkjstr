@@ -105,8 +105,10 @@ Svelte uses temporary host fragments, estimates, and active reservation
 preservation. Rust feed event bodies, `FeedEventRow` content/action rows,
 unavailable preview states, author metadata fallback, sensitive warning reveal,
 common state rows, and nearby/copy event menus now share Leptos rendering across
-converted feed surfaces; empty Rust action menus are suppressed when no provider
-exists. Retained Svelte copy actions report clipboard
+converted feed surfaces; copy-only menu providers and converted Author
+Context/User Timeline action providers keep the menu available only from real
+providers. Empty Rust action menus are suppressed when no provider exists.
+Retained Svelte copy actions report clipboard
 unavailable and rejected writes explicitly, optional retained event/profile
 actions render static rows instead of no-op buttons, and Rust-island hosts
 forward required workspace callbacks instead of dummy row actions. Deletion of
