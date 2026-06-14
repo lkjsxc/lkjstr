@@ -20,6 +20,7 @@ New Tab chooser, and converted Rust tool bodies.
 - `custom_request_snapshot.rs`: Custom Request feed filter-state snapshots.
 - `feed_event_actions.rs`: shared Rust feed event-row action buttons.
 - `feed_event_row.rs`: shared Rust feed event-row body rendering.
+- `feed_state_row.rs`: shared Rust feed state-row rendering.
 - `followees.rs`: narrow Rust Followees rows from real NIP-02 entries.
 - `followees_provider.rs`: async Followees view-model provider wrapper.
 - `global.rs`: narrow Rust Global feed row rendering.

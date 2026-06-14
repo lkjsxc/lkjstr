@@ -42,6 +42,8 @@ event-row menu paths remain until no-import and final verification proof exist.
   Profile, Thread, and Author Context row action renderer with User Timeline.
 - `crates/lkjstr-ui/src/workspace/feed_event_row.rs` shares event body rendering
   across converted Rust feed surfaces while preserving Author Context actions.
+- `crates/lkjstr-ui/src/workspace/feed_state_row.rs` shares unavailable,
+  diagnostic, profile, notification, and plain continuation state rows.
 - `src/lib/tabs/author-context/AuthorContextTab.svelte` mounts the Rust body
   through the WASM asset loader and forwards workspace action callbacks.
 - `src/lib/author-context/author-context.ts` has no product imports and is
@@ -119,6 +121,8 @@ PATH=/home/lkjsxc/.cargo/bin:$PATH pnpm rust-wasm:quiet
   renderer while retaining surface-specific labels and test ids.
 - Rust Author Context rows use the shared event body renderer used by converted
   Rust feed surfaces, with actions still attached from real row ids and pubkeys.
+- Rust Author Context uses shared feed state-row rendering for explicit
+  unavailable, diagnostic, profile, notification, and plain continuation rows.
 - The shipped Svelte Author Context tab can mount and unmount the Rust body
   without leaking a provider lease, and row actions call the Svelte workspace
   callbacks.

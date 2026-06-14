@@ -4,43 +4,17 @@ use lkjstr_app::{
 };
 
 use crate::workspace::feed_event_row::event_row;
+use crate::workspace::feed_state_row;
 
 pub(crate) fn search_row(row: FeedViewRow, older_command: Option<Callback<()>>) -> impl IntoView {
     match row {
         FeedViewRow::Event(row) => event_row(row, ()).into_any(),
-        FeedViewRow::Unavailable(row) => view! {
-            <article class="lkjstr-feed-row unavailable" data-row-id=row.row_id>
-                <strong>{row.reason}</strong>
-                <p>{row.detail}</p>
-            </article>
-        }
-        .into_any(),
-        FeedViewRow::Diagnostic(row) => view! {
-            <article class="lkjstr-feed-row diagnostic" data-row-id=row.row_id>
-                <strong>{format!("{:?}", row.severity)}</strong>
-                <p>{row.message}</p>
-            </article>
-        }
-        .into_any(),
+        FeedViewRow::Unavailable(row) => feed_state_row::unavailable(row).into_any(),
+        FeedViewRow::Diagnostic(row) => feed_state_row::diagnostic(row).into_any(),
         FeedViewRow::Footer(row) => footer_row(row, older_command).into_any(),
-        FeedViewRow::Continuation(row) => view! {
-            <article class="lkjstr-feed-row continuation" data-row-id=row.row_id>
-                <strong>{format!("Continue thread ({})", row.hidden_count)}</strong>
-            </article>
-        }
-        .into_any(),
-        FeedViewRow::Profile(row) => view! {
-            <article class="lkjstr-feed-row profile" data-row-id=row.row_id>
-                <strong>{row.display_name}</strong>
-            </article>
-        }
-        .into_any(),
-        FeedViewRow::Notification(row) => view! {
-            <article class="lkjstr-feed-row notification" data-row-id=row.row_id>
-                <strong>{row.notification_kind}</strong>
-            </article>
-        }
-        .into_any(),
+        FeedViewRow::Continuation(row) => feed_state_row::plain_continuation(row).into_any(),
+        FeedViewRow::Profile(row) => feed_state_row::profile(row).into_any(),
+        FeedViewRow::Notification(row) => feed_state_row::notification(row).into_any(),
     }
 }
 
