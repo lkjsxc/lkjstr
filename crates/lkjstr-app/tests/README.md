@@ -6,6 +6,7 @@ App tests prove browser-independent application composition behavior.
 
 ## Table of Contents
 
+- `feed_action_event_rows_test.rs`: action-event row summaries in the shared feed view model.
 - `feed_window_test.rs`: pure feed-window merge, cursor, and guard behavior.
 - `feed_runtime_test.rs`: pure feed runtime query, live lease, and window composition.
 - `feed_surface_input_test.rs`: Home and Global live query input builders.

@@ -163,10 +163,10 @@ models, anchors, footer states, and unavailable states.
   exact-anchor, stored-route, and unavailable-state Author Context rows, Rust
   row actions, shared Rust event action rendering, host-backed Rust event-id
   copy actions, nearby-author menus across converted Rust feed rows, shared
-  Rust event body, `FeedEventRow` content/action rows, unavailable
-  media/reference preview states, author metadata, sensitive-warning reveal
-  rendering, common state-row rendering, shared footer shell rendering across
-  converted feed rows, and Rust/WASM quiet.
+  Rust event body, full FeedViewModel action/repost summary rows,
+  `FeedEventRow` content/action rows, unavailable media/reference preview states,
+  author metadata, sensitive-warning reveal rendering, common state-row rendering,
+  shared footer shell rendering across converted feed rows, and Rust/WASM quiet.
 - Remaining completion proof: Author Context no-import and final-gate deletion
   readiness plus other feed-surface deletion prerequisites remain open.
   Missing coverage never proves absence, and no placeholder rows exist.
