@@ -9,6 +9,7 @@
     type NpubMineProgress,
     type NpubMineResult,
   } from '$lib/accounts/npub-miner';
+  import { copyMinedValue, minerCopyStatusText } from './miner-copy-status';
 
   type Props = {
     addMinedSigning: (nsec: string) => Promise<void>;
@@ -68,9 +69,10 @@
     status = message;
   }
 
-  async function copy(value: string): Promise<void> {
-    await navigator.clipboard?.writeText(value);
-    status = 'Copied.';
+  async function copy(label: string, value: string): Promise<void> {
+    status = minerCopyStatusText(
+      await copyMinedValue(label, value, navigator.clipboard),
+    );
   }
 
   async function addSigning(): Promise<void> {
@@ -113,8 +115,12 @@
     <article class="row">
       <strong>{mined.npub}</strong>
       <code>{mined.nsec}</code>
-      <button type="button" onclick={() => copy(mined.npub)}>Copy npub</button>
-      <button type="button" onclick={() => copy(mined.nsec)}>Copy nsec</button>
+      <button type="button" onclick={() => copy('npub', mined.npub)}
+        >Copy npub</button
+      >
+      <button type="button" onclick={() => copy('nsec', mined.nsec)}
+        >Copy nsec</button
+      >
       <button type="button" disabled={saved} onclick={addSigning}
         >Add signing account</button
       >

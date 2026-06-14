@@ -13,5 +13,7 @@ Mine npub generates a vanity local signing key whose public key has a requested
   elapsed time.
 - The user can cancel an active run.
 - A found result exposes copy actions for `npub` and `nsec`.
+- Copy actions report clipboard unavailable or rejected writes explicitly; they
+  show copied status only after the browser clipboard write resolves.
 - Adding the mined signing account requires explicit user action after a match
   is found.
