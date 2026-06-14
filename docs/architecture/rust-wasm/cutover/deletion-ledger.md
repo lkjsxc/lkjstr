@@ -111,8 +111,9 @@ providers. Empty Rust action menus are suppressed when no provider exists.
 Retained Svelte copy actions report clipboard
 unavailable and rejected writes explicitly, optional retained event/profile
 actions render static rows instead of no-op buttons, and Rust-island hosts
-forward required workspace callbacks instead of dummy row actions. Deletion of
-the retained shared Svelte event menu remains blocked while
+forward required workspace callbacks instead of dummy row actions while late
+mount handles are unmounted before stale islands can attach. Deletion of the
+retained shared Svelte event menu remains blocked while
 `EventRow.svelte` and `EventFragmentRow.svelte` import `EventMoreMenu.svelte`;
 Author Context tab deletion remains blocked while `PaneFeedTabBody.svelte`
 mounts `AuthorContextTab.svelte` as the Rust island host.

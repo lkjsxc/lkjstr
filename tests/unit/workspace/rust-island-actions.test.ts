@@ -34,4 +34,15 @@ describe('Rust island action callbacks', () => {
       );
     }
   });
+
+  it('unmounts late island handles before accepting stale mounts', () => {
+    for (const file of islandHosts) {
+      const source = readFileSync(file, 'utf8');
+      expect(source, file).toContain('const current = generation;');
+      expect(source, file).toContain(
+        'if (generation !== current) {\n        next.unmount();\n        return;\n      }',
+      );
+      expect(source, file).toContain('if (generation === current) {');
+    }
+  });
 });

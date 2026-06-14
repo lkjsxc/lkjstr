@@ -158,7 +158,8 @@ PATH=/home/lkjsxc/.cargo/bin:$PATH pnpm rust-wasm:quiet
   without leaking a provider lease, and row actions call required Svelte
   workspace callbacks rather than no-op fallbacks.
 - The Svelte host cancels pending WASM mounts when hidden or destroyed, so late
-  bridge loads cannot remount a hidden island.
+  bridge loads unmount their returned handle instead of remounting a hidden
+  island.
 - The Author Context provider request exposes `is_released()` so host adapters
   can guard late async completions at the typed request boundary.
 - The unused TypeScript loader and deletion-anchor directory remain removed
