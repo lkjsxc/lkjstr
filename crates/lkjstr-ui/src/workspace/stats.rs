@@ -4,6 +4,7 @@ use leptos::prelude::*;
 use lkjstr_storage::{StorageInventoryRow, StorageStatsSnapshot};
 
 use crate::app::RuntimeSignal;
+use crate::workspace::stats_actions::storage_action_view;
 use crate::workspace::stats_bytes::storage_byte_rows;
 use crate::workspace::stats_geometry::feed_geometry_rows;
 use crate::workspace::stats_health::storage_health_rows;
@@ -19,6 +20,7 @@ pub fn StatsTab(runtime: RuntimeSignal, provider: Option<StatsProvider>) -> impl
     let snapshot = RwSignal::new(None::<StorageStatsSnapshot>);
     let refreshing = RwSignal::new(false);
     let refresh_state = StatsRefreshState::new();
+    let actions = provider.actions();
 
     refresh_stats(provider.clone(), snapshot, refreshing, refresh_state);
     on_cleanup(move || refresh_state.clear_all());
@@ -27,10 +29,11 @@ pub fn StatsTab(runtime: RuntimeSignal, provider: Option<StatsProvider>) -> impl
         let provider = provider.clone();
         move |_| refresh_stats(provider.clone(), snapshot, refreshing, refresh_state)
     };
+    let auto_provider = provider.clone();
     let auto_change = move |event| {
         refresh_state.clear_interval();
         if event_target_checked(&event) {
-            let provider = provider.clone();
+            let provider = auto_provider.clone();
             let handle = set_interval_with_handle(
                 move || refresh_stats(provider.clone(), snapshot, refreshing, refresh_state),
                 Duration::from_secs(2),
@@ -71,6 +74,7 @@ pub fn StatsTab(runtime: RuntimeSignal, provider: Option<StatsProvider>) -> impl
                     <tr><th>"Residual browser overhead"</th><td>{move || pressure_value_text(snapshot.get(), |item| item.residual_overhead_bytes)}</td></tr>
                 </tbody>
             </table>
+            {storage_action_view(actions)}
             <h3>"Storage bytes"</h3>
             <table class="stats-table">
                 <thead>

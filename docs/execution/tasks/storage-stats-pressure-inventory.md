@@ -27,14 +27,20 @@ commands.
 - Rust storage now classifies Stats snapshots for retention readiness with
   exact inventory, storage API, unknown/unowned, not-recorded, timeout, blocked,
   and corrupt gap labels.
-- Repair action linkage remains open until Rust host adapters own the action.
+- Rust Stats exposes storage action capability explicitly. Action buttons render
+  only when a host provides a real callback; otherwise the Rust surface reports
+  storage actions unavailable.
+- Repair and compaction action linkage remain open until Rust host adapters own
+  the real actions.
 
 ## Next Edit
 
 1. Keep pressure and optimizer command metadata intact while inventory moves.
 2. Preserve the storage-owned readiness classifier that links browser inventory
    to retention and repair outputs without inventing standalone byte safety.
-3. Keep Cache Storage cleanup out of scope until action adapters are verified.
+3. Wire real Rust repair and compaction host adapters before enabling action
+   buttons.
+4. Keep Cache Storage cleanup out of scope until action adapters are verified.
 
 ## Next Checklist
 
@@ -64,8 +70,9 @@ unavailable reason.
 The current Rust slice covers SQLite health, SQLite table counts, saved pressure
 snapshots, pressure byte-summary rows, localStorage count/status/bytes, Cache
 Storage count/status/response bytes, old IndexedDB presence, and a storage-owned
-retention readiness classifier. TypeScript remains the shipped owner for cache
-actions until Rust action adapters and no-import proof exist.
+retention readiness classifier. Rust action capability is explicit but
+unavailable until real adapters exist. TypeScript remains the shipped owner for
+cache actions until Rust action adapters and no-import proof exist.
 
 ## Files To Read
 

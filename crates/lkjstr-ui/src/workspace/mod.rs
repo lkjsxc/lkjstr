@@ -73,6 +73,8 @@ mod settings_row;
 mod shell;
 mod state;
 mod stats;
+mod stats_action_provider;
+mod stats_actions;
 mod stats_bytes;
 mod stats_geometry;
 mod stats_health;
@@ -146,6 +148,9 @@ pub use search_provider::{
 pub use settings_provider::{SettingsCommand, SettingsComplete, SettingsProvider, SettingsResult};
 pub use settings_provider::{SettingsImportCommand, SettingsKeyCommand, SettingsValueCommand};
 pub use shell::WorkspaceShell;
+pub use stats_action_provider::{
+    StatsActionCommand, StatsActionComplete, StatsActionKind, StatsActionResult, StatsActions,
+};
 pub use stats_provider::{StatsComplete, StatsProvider};
 pub use thread_provider::{
     ThreadFeedComplete, ThreadFeedProvider, ThreadFeedRequest, ThreadOlderRequest,

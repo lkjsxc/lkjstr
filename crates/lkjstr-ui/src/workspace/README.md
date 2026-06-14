@@ -60,6 +60,7 @@ New Tab chooser, and converted Rust tool bodies.
 - `shell.rs`: top-level workspace shell.
 - `state.rs`: view selectors and command helpers.
 - `stats.rs`: Rust Stats body for host-provided diagnostics.
+- `stats_actions.rs`: explicit storage action capability rendering.
 - `stats_bytes.rs`: pressure byte-summary rows for Stats.
 - `stats_geometry.rs`: feed row-height aggregate rows for Stats.
 - `stats_health.rs`: SQLite worker health rows for Stats.

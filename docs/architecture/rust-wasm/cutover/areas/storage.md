@@ -65,9 +65,11 @@ removed.
   storage-owned models, worker health/outcome mapping, ledger backfill batching,
   and readiness-gated app repair reporting are implemented. Search token rows,
   tag lookup metadata, event-write token batches, local indexed query adapters,
-  physical repair probes, Stats browser-storage count and byte diagnostics, and
-  storage-owned inventory readiness classification are implemented; Search app
-  planning, NIP-50 merge, repair actions, and feed consumption remain open.
+  physical repair probes, Stats browser-storage count and byte diagnostics,
+  storage-owned inventory readiness classification, and explicit Rust Stats
+  storage-action capability states are implemented; Search app planning,
+  NIP-50 merge, real repair/compaction action adapters, and feed consumption
+  remain open.
 - Command metadata status: active selector, pressure, protected rows, event
   cache, feed evidence, relay diagnostics, notifications, jobs, app log,
   inventory snapshot, optimizer scan-model rows, retention planner rows,

@@ -1,0 +1,58 @@
+use std::sync::{Arc, Mutex};
+
+use leptos::prelude::Callback;
+
+use super::*;
+
+#[test]
+fn unavailable_actions_do_not_expose_buttons() {
+    let actions = StatsActions::unavailable("host-missing");
+    assert!(!actions.can_compact());
+    assert!(!actions.can_repair());
+    assert!(!actions.has_any_action());
+    assert_eq!(
+        actions.unavailable_text(),
+        "Storage actions unavailable: host-missing"
+    );
+}
+
+#[test]
+fn available_actions_run_through_typed_command() {
+    let seen = Arc::new(Mutex::new(Vec::new()));
+    let seen_run = Arc::clone(&seen);
+    let actions = StatsActions::new(
+        move |command| match command {
+            StatsActionCommand::Compact(complete) => {
+                seen_run.lock().unwrap().push("compact");
+                complete.complete(StatsActionResult::new(
+                    StatsActionKind::Compact,
+                    "Compaction planned",
+                ));
+            }
+            StatsActionCommand::Repair(complete) => {
+                seen_run.lock().unwrap().push("repair");
+                complete.complete(StatsActionResult::new(
+                    StatsActionKind::Repair,
+                    "Repair planned",
+                ));
+            }
+        },
+        true,
+        false,
+    );
+    assert!(actions.can_compact());
+    assert!(!actions.can_repair());
+    actions.compact(Callback::new(|result: StatsActionResult| {
+        assert_eq!(result.kind, StatsActionKind::Compact);
+        assert_eq!(result.status, "Compaction planned");
+    }));
+    assert_eq!(seen.lock().unwrap().as_slice(), ["compact"]);
+    actions.repair(Callback::new(|result: StatsActionResult| {
+        assert_eq!(result.kind, StatsActionKind::Repair);
+        assert_eq!(
+            result.status,
+            "Storage action unavailable: action-not-provided"
+        );
+    }));
+    assert_eq!(seen.lock().unwrap().as_slice(), ["compact"]);
+}

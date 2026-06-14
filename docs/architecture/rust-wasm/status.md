@@ -87,9 +87,10 @@ This file is the concise status map for the active Rust/WASM migration.
   command metadata shape now supports batch-shaped specs for active selector and
   pressure commands. Current storage work has Rust retention planning, command
   metadata, delete dispatch through `lkjstr-web` worker batches, Search token
-  rows, Search command metadata, local indexed query adapters, and repair
-  physical target probes. Full pressure byte inventory diagnostics, CSS side
-  effects, and cache-budget enforcement remain open.
+  rows, Search command metadata, local indexed query adapters, repair physical
+  target probes, and explicit Rust Stats storage-action capability states. Real
+  repair/compaction action adapters, CSS side effects, and cache-budget
+  enforcement remain open.
 - Followees and User Timeline now have Rust target follow-graph reducers, a
   WASM parser bridge, a fixed lkjsxc catalog constant, follow-count state,
   author chunking contracts, cache-display policy reducers, a Rust User Timeline
@@ -197,9 +198,10 @@ replaced TypeScript or Svelte paths, focused gate, and final gate.
   metadata, retention planner metadata, retention delete dispatch,
   storage-owned repair command models plus basic worker adapters, pressure
   byte-summary Stats rows, localStorage count/status/bytes, Cache Storage
-  count/status/response bytes, old IndexedDB presence, and Search token/tag/query
-  metadata are implemented; full product cache proof, Search app planning,
-  NIP-50 merge, repair actions, and surface consumption remain open.
+  count/status/response bytes, old IndexedDB presence, explicit Stats
+  storage-action capability states, and Search token/tag/query metadata are
+  implemented; full product cache proof, Search app planning, NIP-50 merge,
+  real repair/compaction action adapters, and surface consumption remain open.
 - Focused gate: `cargo test -p lkjstr-storage` and `pnpm rust-wasm:quiet`.
 - Final gate: Docker Compose config, image builds, and service runs from
   [../../operations/verification.md](../../operations/verification.md).
