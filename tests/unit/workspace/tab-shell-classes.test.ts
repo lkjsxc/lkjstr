@@ -7,6 +7,10 @@ const formShell = readFileSync(
   'src/lib/components/workspace/FormTabShell.svelte',
   'utf8',
 );
+const rustIslandHost = readFileSync(
+  'src/lib/components/workspace/RustIslandHost.svelte',
+  'utf8',
+);
 
 function tabFiles(): string[] {
   const files: string[] = [];
@@ -46,7 +50,6 @@ describe('tab shell classes', () => {
     ]);
     const hybrid = new Set([
       'custom-request/CustomRequestTab.svelte',
-      'author-context/AuthorContextTab.svelte',
     ]);
 
     for (const file of tabFiles()) {
@@ -67,5 +70,10 @@ describe('tab shell classes', () => {
       }
       expect(source, rel).toContain('FormTabShell');
     }
+  });
+
+  it('keeps Rust islands on the hybrid feed shell', () => {
+    expect(rustIslandHost).toContain('hybrid-tab feed-tab');
+    expect(rustIslandHost).toContain('aria-label={props.label}');
   });
 });

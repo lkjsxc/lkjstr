@@ -13,3 +13,5 @@ menus.
   of owning pane-local durable retention.
 - `FormTabShell.svelte`: shared non-feed tab root with `.tab-scroll-track`
   track inset and `.tab-scroll-owner` scroll host, matching feed lists.
+- `RustIslandHost.svelte`: generic Svelte host glue for Rust/WASM tab bodies.
+- `author-context-island.ts`: typed Author Context WASM island mounter.

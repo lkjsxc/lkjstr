@@ -28,7 +28,7 @@ named test gate passes.
 | --------------- | ------------------------------------------------------------------------------ | ---------------------------------------------------- | ----------------------------------- |
 | Form tab class  | Every tool tab root carries `.form-tab` or documented hybrid class             | tab `*.svelte` roots, `scroll-layout.css`            | scroll-layout-css test              |
 | Tab kind switch | Feed and form scroll owners in the same pane share track-edge inset within 1px | `scroll-layout.css`, workspace shell                 | tab-kind-scroll-alignment host test |
-| Hybrid tabs     | Custom Request and Author Context keep one feed scroll owner                   | `CustomRequestTab.svelte`, `AuthorContextTab.svelte` | hybrid-tab-shell test               |
+| Hybrid tabs     | Custom Request and Author Context keep one feed scroll owner                   | `CustomRequestTab.svelte`, `RustIslandHost.svelte`   | hybrid-tab-shell test               |
 
 ## Media Upload Gate
 

@@ -2,17 +2,14 @@ import { readFileSync } from 'node:fs';
 import { describe, expect, it } from 'vitest';
 
 const islandHosts = [
-  'src/lib/tabs/author-context/AuthorContextTab.svelte',
+  'src/lib/components/workspace/RustIslandHost.svelte',
   'src/lib/tabs/followees/FolloweesTab.svelte',
   'src/lib/tabs/user-timeline/UserTimelineTab.svelte',
 ];
 
 describe('Rust island action callbacks', () => {
   it('does not pass no-op Author Context callbacks into Rust islands', () => {
-    for (const file of [
-      'src/lib/tabs/author-context/AuthorContextTab.svelte',
-      'src/lib/tabs/user-timeline/UserTimelineTab.svelte',
-    ]) {
+    for (const file of ['src/lib/components/workspace/author-context-island.ts']) {
       const source = readFileSync(file, 'utf8');
       expect(source, file).toContain(
         'openAuthorContext: (eventId: string, pubkey: string) => void;',
@@ -20,6 +17,11 @@ describe('Rust island action callbacks', () => {
       expect(source, file).not.toContain('openAuthorContext?:');
       expect(source, file).not.toContain('?? (() => {})');
     }
+    const pane = readFileSync(
+      'src/lib/components/workspace/PaneFeedTabBody.svelte',
+      'utf8',
+    );
+    expect(pane).toContain('openAuthorContext,');
   });
 
   it('cancels pending island mounts when hosts hide or destroy', () => {

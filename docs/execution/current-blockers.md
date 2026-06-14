@@ -190,12 +190,12 @@ models, anchors, footer states, and unavailable states.
   removed, Rust geometry runtime counters are exposed to Stats, and Rust/WASM
   quiet. Author Context, Followees, and User Timeline Svelte-hosted Rust islands
   cancel pending WASM mounts when hidden or destroyed and unmount late handles
-  before accepting stale mounts.
-- Remaining completion proof: `PaneFeedTabBody.svelte` still imports the Svelte
-  Author Context host, and `EventRow.svelte` plus `EventFragmentRow.svelte`
-  still import `EventMoreMenu.svelte`. Their no-import proof, event-row menu
-  deletion readiness, final-gate deletion readiness, and other feed-surface
-  deletion prerequisites remain open.
+  before accepting stale mounts. The dedicated Author Context Svelte tab wrapper
+  is removed; `PaneFeedTabBody.svelte` uses generic Rust island host glue.
+- Remaining completion proof: `EventRow.svelte` and
+  `EventFragmentRow.svelte` still import `EventMoreMenu.svelte`. Their
+  no-import proof, event-row menu deletion readiness, final-gate deletion
+  readiness, and other feed-surface deletion prerequisites remain open.
   Missing coverage never proves absence, and no placeholder rows exist.
 
 ## 4. First Home Leptos feed slice

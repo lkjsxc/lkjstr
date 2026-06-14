@@ -57,7 +57,9 @@ form-tab margin rules.
 ## Source
 
 - `src/lib/tabs/custom-request/CustomRequestTab.svelte`
-- `src/lib/tabs/author-context/AuthorContextTab.svelte`
+- `src/lib/components/workspace/RustIslandHost.svelte`
+- `src/lib/components/workspace/author-context-island.ts`
+- `src/lib/components/workspace/PaneFeedTabBody.svelte`
 - `src/styles/scroll-layout.css`
 - `src/styles/hybrid-tab.css`
 

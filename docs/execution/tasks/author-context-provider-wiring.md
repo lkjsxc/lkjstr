@@ -62,9 +62,10 @@ and final verification proof exist.
   surface-specific auth copy.
 - Focused `lkjstr-ui` unit tests cover shared event-fragment text extraction
   plus shared state-row and footer presentation data without browser-only proof.
-- `src/lib/tabs/author-context/AuthorContextTab.svelte` mounts the Rust body
-  through the WASM asset loader and forwards required workspace action callbacks
-  instead of dummy no-op row actions.
+- `src/lib/components/workspace/RustIslandHost.svelte` and
+  `author-context-island.ts` mount the Rust body through the WASM asset loader
+  and forward required workspace action callbacks instead of dummy no-op row
+  actions.
 - Fast `lkjstr-ui` provider tests prove Author Context lease cleanup runs once,
   released requests expose `is_released()`, and late completions are suppressed.
 - The retired `src/lib/author-context` helper directory has no product imports
@@ -72,9 +73,9 @@ and final verification proof exist.
 
 ## Next Edit
 
-Prove the remaining Author Context deletion blockers: Svelte host no-import,
-event-row menu replacement, and final verification. Keep the Svelte host wrapper
-and shared event-row menu call paths until shared Leptos event renderer parity,
+Prove the remaining Author Context deletion blockers: event-row menu
+replacement and final verification. Keep the generic Svelte host glue and
+shared event-row menu call paths until shared Leptos event renderer parity,
 host no-import proof, and final verification exist.
 `lkjstr-app` owns the anchor and nearby query demand; `lkjstr-web` only reads
 typed route rows, binds browser sockets, and maps outcomes.
@@ -84,7 +85,8 @@ typed route rows, binds browser sockets, and maps outcomes.
 - `docs/product/tools/author-context.md`
 - `docs/architecture/rust-wasm/cutover/feed-runtime.md`
 - `docs/architecture/rust-wasm/cutover/ui-surface-map.md`
-- `src/lib/tabs/author-context/AuthorContextTab.svelte`
+- `src/lib/components/workspace/RustIslandHost.svelte`
+- `src/lib/components/workspace/author-context-island.ts`
 - `crates/lkjstr-app/src/feed/author_context_inputs.rs`
 - `crates/lkjstr-ui/src/workspace/tab_content.rs`
 
@@ -95,7 +97,8 @@ typed route rows, binds browser sockets, and maps outcomes.
 - `crates/lkjstr-ui/src/workspace/author_context*.rs`
 - `crates/lkjstr-ui/src/workspace/tab_content.rs`
 - `crates/lkjstr-web/src/author_context_island.rs`
-- `src/lib/tabs/author-context/AuthorContextTab.svelte`
+- `src/lib/components/workspace/RustIslandHost.svelte`
+- `src/lib/components/workspace/author-context-island.ts`
 - `crates/lkjstr-web/src/author_context_routes.rs`
 - `crates/lkjstr-web/src/author_context_relay*.rs`
 - `crates/lkjstr-web/tests/author_context_tab_test.rs`
@@ -166,11 +169,11 @@ PATH=/home/lkjsxc/.cargo/bin:$PATH pnpm rust-wasm:quiet
   can guard late async completions at the typed request boundary.
 - The unused TypeScript loader and deletion-anchor directory remain removed
   after no-import proof.
-- Svelte tab and event-row menu paths remain until no-import and final gates
-  prove deletion readiness.
+- Generic Svelte host glue and event-row menu paths remain until no-import and
+  final gates prove deletion readiness.
 
 ## Must Not
 
 - Do not synthesize author posts, anchor events, profiles, or successful reads.
 - Do not treat cache misses or missing relay answers as absence.
-- Do not delete `src/lib/tabs/author-context` or event row menu glue.
+- Do not delete generic host glue or event row menu glue before no-import proof.

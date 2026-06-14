@@ -9,7 +9,6 @@ The workspace snapshot coordinator owns durable identity and restore tokens.
 ## Table of Contents
 
 - [accounts/](accounts/): account management tab.
-- [author-context/](author-context/): nearby authored posts tab.
 - [cache/](cache/): cache status tab.
 - [custom-request/](custom-request/): validated relay request tab.
 - [followees/](followees/): viewed-profile following list.

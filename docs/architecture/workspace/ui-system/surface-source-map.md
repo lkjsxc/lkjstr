@@ -46,7 +46,7 @@ without searching the whole tree.
 | Contract clause        | Component                 | Tab or consumer     | Test gate             |
 | ---------------------- | ------------------------- | ------------------- | --------------------- |
 | Request toolbar + feed | `CustomRequestTab.svelte` | workspace feed body | hybrid-tab-shell test |
-| Author context feed    | `AuthorContextTab.svelte` | workspace feed body | hybrid-tab-shell test |
+| Author context feed    | `RustIslandHost.svelte`   | workspace feed body | hybrid-tab-shell test |
 
 ## Rust Leptos Mirrors
 

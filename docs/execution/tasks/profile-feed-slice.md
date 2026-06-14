@@ -55,8 +55,8 @@ no empty state is shown without complete proof.
 
 ## Temporary TypeScript Or Svelte Files To Keep
 
-Keep `src/lib/profile/**`, `src/lib/tabs/author-context/**`, and Profile tab
-glue until Rust host providers and deletion proof exist.
+Keep `src/lib/profile/**`, shared Author Context event-row glue, and Profile
+tab glue until Rust host providers and deletion proof exist.
 
 ## Focused Gate
 
