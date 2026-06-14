@@ -32,7 +32,8 @@ metadata/follow-count header rendering, selected-relay plus stored-route
 Followees/User Timeline kind `3` discovery, Followees/User Timeline cleanup,
 retry diagnostics, and Svelte-hosted Rust island proof, first injected/cache/relay
 Author Context rows, exact anchor lookup, stored routes, unavailable-state browser
-proof, row actions, and Followees/User Timeline request-level cleanup guards.
+proof, row actions, and Followees/User Timeline/Author Context request-level
+cleanup guards.
 Do not skip this order for visible polish.
 
 ## 1. Storage command coverage (implemented enabling proof)
@@ -164,7 +165,8 @@ models, anchors, footer states, and unavailable states.
   exact-anchor, stored-route, and unavailable-state Author Context rows, Rust
   row actions, shared Rust event action rendering, host-backed Rust event-id
   copy actions, nearby-author menus across converted Rust feed rows, shared
-  Rust event body, full FeedViewModel action/repost summary rows,
+  Rust event body, Author Context request-level cleanup guards,
+  full FeedViewModel action/repost summary rows,
   `FeedEventRow` content/action rows, unavailable media/reference preview states,
   author metadata, sensitive-warning reveal rendering, common state-row rendering,
   shared footer shell rendering across converted feed rows, and Rust/WASM quiet.

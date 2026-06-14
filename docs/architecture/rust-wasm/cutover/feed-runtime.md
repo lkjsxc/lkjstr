@@ -92,7 +92,9 @@ must use before their TypeScript feed runtimes are deleted.
   author pubkey, relay/route input, and anchor timestamp are explicit
   unavailable states. Converted Rust feed surfaces share event body, common
   state-row rendering, and footer shell rendering. Row action buttons open Rust
-  Profile, Thread, and Author Context tabs. Deletion proof remains open.
+  Profile, Thread, and Author Context tabs. Fast UI provider proof covers
+  request-level release guards and late-completion suppression. Deletion proof
+  remains open.
 - Cached and relay-refreshed Profile header metadata/follow-count proof exists.
   The known following-count action opens converted Followees, the Profile header
   action opens converted User Timeline, own-profile actions open Profile Edit, the copy

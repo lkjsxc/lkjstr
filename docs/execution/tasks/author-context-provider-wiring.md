@@ -57,6 +57,8 @@ and final verification proof exist.
   plus shared state-row and footer presentation data without browser-only proof.
 - `src/lib/tabs/author-context/AuthorContextTab.svelte` mounts the Rust body
   through the WASM asset loader and forwards workspace action callbacks.
+- Fast `lkjstr-ui` provider tests prove Author Context lease cleanup runs once,
+  released requests expose `is_released()`, and late completions are suppressed.
 - The retired `src/lib/author-context` helper directory has no product imports
   and is removed in the loader deletion slice.
 
@@ -147,6 +149,8 @@ PATH=/home/lkjsxc/.cargo/bin:$PATH pnpm rust-wasm:quiet
 - The shipped Svelte Author Context tab can mount and unmount the Rust body
   without leaking a provider lease, and row actions call the Svelte workspace
   callbacks.
+- The Author Context provider request exposes `is_released()` so host adapters
+  can guard late async completions at the typed request boundary.
 - The unused TypeScript loader and deletion-anchor directory remain removed
   after no-import proof.
 - Svelte tab and event-row menu paths remain until no-import and final gates
