@@ -6,14 +6,40 @@ pub(crate) fn event_row(row: FeedEventRow, trailing: impl IntoView) -> impl Into
     let row_id = row.row_id;
     let author = compact_pubkey(&row.author_pubkey);
     let created_at = row.created_at;
-    let text_rows = event_text_rows(row.visual_rows);
+    let content = event_content(row.has_content_warning, row.visual_rows);
     view! {
         <article class="lkjstr-feed-row event" data-row-id=row_id data-event-id=event_id>
             <small>{format!("{author} created {created_at}")}</small>
-            {text_rows.into_iter().map(|text| view! { <p>{text}</p> }).collect_view()}
+            {content}
             {trailing}
         </article>
     }
+}
+
+#[derive(Debug, Eq, PartialEq)]
+enum EventContentRows {
+    Sensitive,
+    Text(Vec<String>),
+}
+
+fn event_content(has_content_warning: bool, rows: Vec<FeedVisualRow>) -> impl IntoView {
+    match event_content_rows(has_content_warning, rows) {
+        EventContentRows::Sensitive => view! {
+            <aside class="content-warning"><strong>"Sensitive content"</strong></aside>
+        }
+        .into_any(),
+        EventContentRows::Text(rows) => view! {
+            {rows.into_iter().map(|text| view! { <p>{text}</p> }).collect_view()}
+        }
+        .into_any(),
+    }
+}
+
+fn event_content_rows(has_content_warning: bool, rows: Vec<FeedVisualRow>) -> EventContentRows {
+    if has_content_warning {
+        return EventContentRows::Sensitive;
+    }
+    EventContentRows::Text(event_text_rows(rows))
 }
 
 fn event_text_rows(rows: Vec<FeedVisualRow>) -> Vec<String> {
@@ -78,6 +104,18 @@ mod tests {
     fn compact_pubkey_keeps_both_ends() {
         assert_eq!(compact_pubkey(&"a".repeat(64)), "aaaaaaaa...aaaaaaaa");
         assert_eq!(compact_pubkey("short"), "short");
+    }
+
+    #[test]
+    fn content_warning_hides_event_text_rows() {
+        assert_eq!(
+            event_content_rows(true, vec![FeedVisualRow::EventFull(full("secret"))]),
+            EventContentRows::Sensitive,
+        );
+        assert_eq!(
+            event_content_rows(false, vec![FeedVisualRow::EventFull(full("public"))]),
+            EventContentRows::Text(vec!["public".to_owned()]),
+        );
     }
 
     fn full(content: &str) -> EventFullRow {
