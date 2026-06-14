@@ -143,11 +143,9 @@ fn following_count(
     pubkey: String,
     open_followees: Option<Callback<String>>,
 ) -> impl IntoView {
-    if known {
+    if let (true, Some(open_followees)) = (known, open_followees) {
         let open = move |_event: MouseEvent| {
-            if let Some(open_followees) = open_followees {
-                open_followees.run(pubkey.clone());
-            }
+            open_followees.run(pubkey.clone());
         };
         view! {
             <button
@@ -170,6 +168,11 @@ fn following_count(
     }
 }
 
+#[cfg(test)]
+fn following_count_opens(known: bool, open_followees: &Option<Callback<String>>) -> bool {
+    known && open_followees.is_some()
+}
+
 fn profile_facts(website: Option<String>, copy_status: RwSignal<Option<String>>) -> impl IntoView {
     view! {
         <div class="profile-card__facts">
@@ -180,3 +183,7 @@ fn profile_facts(website: Option<String>, copy_status: RwSignal<Option<String>>)
         </div>
     }
 }
+
+#[cfg(test)]
+#[path = "profile_header_tests.rs"]
+mod profile_header_tests;

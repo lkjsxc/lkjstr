@@ -31,6 +31,9 @@ no-import proof and final verification exist.
 - `crates/lkjstr-web/tests/profile_feed_tab_test.rs` proves known following
   count clicks open Followees, Profile header actions open User Timeline for the
   viewed pubkey, and own-profile actions open Profile Edit.
+- `crates/lkjstr-ui/src/workspace/profile_header.rs` renders the known
+  following count as a button only when a real Followees opener exists;
+  otherwise it stays static instead of dispatching a no-op action.
 - `crates/lkjstr-web/tests/profile_copy_tab_test.rs` proves the Rust Profile
   copy menu sends npub, nprofile, follow-list JSON, and relay-set JSON values
   through the host copy provider before showing copied status.
@@ -58,6 +61,8 @@ the no-import and final gates pass.
 - [x] Render cached kind `0` metadata and kind `3` follow-count state.
 - [x] Refresh header metadata/follow-list state from relay-discovered events.
 - [x] Open Followees from the known following-count action.
+- [x] Suppress Profile following-count no-op actions when no Followees opener
+      exists.
 - [x] Open User Timeline from the Profile header action.
 - [x] Open Profile Edit from the own-profile action.
 - [x] Copy npub, nprofile, follow-list JSON, and relay-set JSON through the

@@ -36,7 +36,8 @@ proof, row actions, and Followees/User Timeline/Author Context request-level
 cleanup guards. Global, Thread, Notifications, and Search older controls now
 require a real provider older handler before rendering or dispatching older
 loads, and the unused Rust workspace-persistence constructor that dropped tab
-snapshots is removed.
+snapshots is removed. Profile following-count rows render as actions only when
+a real Followees opener exists.
 Do not skip this order for visible polish.
 
 ## 1. Storage command coverage (implemented enabling proof)
@@ -179,8 +180,9 @@ models, anchors, footer states, and unavailable states.
   event/profile actions plus Rust-island hosts suppress unavailable no-op
   actions, empty Rust action menus, unavailable Thread continuation buttons,
   and Rust older-load controls without real older provider handlers are
-  suppressed; unused tab-snapshot no-op persistence construction is removed,
-  and Rust/WASM quiet.
+  suppressed; Profile following-count actions require a real Followees opener,
+  unused tab-snapshot no-op persistence construction is removed, and Rust/WASM
+  quiet.
 - Remaining completion proof: Author Context Svelte-host no-import,
   event-row menu deletion readiness, and final-gate deletion readiness plus
   other feed-surface deletion prerequisites remain open.
