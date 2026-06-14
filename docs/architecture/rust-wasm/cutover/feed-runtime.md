@@ -64,8 +64,10 @@ must use before their TypeScript feed runtimes are deleted.
   default browser provider also reads cached kind `3` rows from worker SQLite
   and starts bounded selected-relay or stored author-route kind `3` discovery on
   cache miss. Disabled stored route relays are excluded. Browser cleanup proof
-  closes the selected-relay read and suppresses late events. No-event selected
-  reads complete to retryable diagnostics. Deletion proof remains open.
+  closes the selected-relay read and suppresses late events. The typed request
+  now exposes the same `is_released()` guard shape as other feed providers.
+  No-event selected reads complete to retryable diagnostics. Deletion proof
+  remains open.
 - User Timeline action tab slice: `crates/lkjstr-app/src/user_timeline/**`,
   `crates/lkjstr-ui/src/workspace/user_timeline*.rs`, and
   `crates/lkjstr-web/tests/profile_feed_tab_test.rs` render first Leptos feed
@@ -77,7 +79,9 @@ must use before their TypeScript feed runtimes are deleted.
   NIP-65/provenance/target author routes when present, excludes disabled stored
   route relays, rebuilds from stored relay events, turns
   no-event/AUTH/rate-limited/timeout reads and partial route failures into
-  explicit diagnostics, and closes the selected-relay read on tab switch.
+  explicit diagnostics, and closes the selected-relay read on tab switch. The
+  typed request now exposes the same `is_released()` guard shape as other feed
+  providers.
   Deletion proof remains open.
 - Author Context first slice: `crates/lkjstr-app/src/author_context_feed/**`,
   `crates/lkjstr-ui/src/workspace/author_context*.rs`, and

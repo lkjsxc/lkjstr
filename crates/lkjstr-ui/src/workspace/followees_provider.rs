@@ -64,6 +64,11 @@ impl FolloweesRequest {
     }
 
     #[must_use]
+    pub fn is_released(&self) -> bool {
+        self.lease.is_released()
+    }
+
+    #[must_use]
     pub fn lease(&self) -> FolloweesLease {
         self.lease.clone()
     }

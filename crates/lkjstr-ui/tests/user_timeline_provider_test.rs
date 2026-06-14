@@ -66,6 +66,7 @@ fn released_user_timeline_request_suppresses_late_completion() {
     lease.release();
     let captured = request_snapshot(&request);
     if let Some(request) = captured.as_ref() {
+        assert!(request.is_released());
         request.complete(default_user_timeline_feed_view(
             "tab-a",
             Some("a".repeat(64)),

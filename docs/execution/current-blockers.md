@@ -32,7 +32,7 @@ metadata/follow-count header rendering, selected-relay plus stored-route
 Followees/User Timeline kind `3` discovery, Followees/User Timeline cleanup,
 retry diagnostics, and Svelte-hosted Rust island proof, first injected/cache/relay
 Author Context rows, exact anchor lookup, stored routes, unavailable-state browser
-proof, and row actions.
+proof, row actions, and Followees/User Timeline request-level cleanup guards.
 Do not skip this order for visible polish.
 
 ## 1. Storage command coverage (implemented enabling proof)

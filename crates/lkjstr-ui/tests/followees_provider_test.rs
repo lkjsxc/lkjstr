@@ -39,6 +39,7 @@ fn released_followees_request_suppresses_late_completion() {
     lease.release();
     let captured = request_snapshot(&request);
     if let Some(request) = captured.as_ref() {
+        assert!(request.is_released());
         request.complete(default_followees_view("tab-a", Some(pubkey())));
     }
 

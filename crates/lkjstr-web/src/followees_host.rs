@@ -47,11 +47,11 @@ pub(crate) fn followees_provider_with_worker_url(
             let relay_slot = RelayReadSlot::default();
             let release_slot = relay_slot.clone();
             lease.on_release(move || release_slot.cancel());
-            if lease.is_released() {
+            if request.is_released() {
                 return;
             }
             let load = followees_load(&host, &owner, target).await;
-            if lease.is_released() {
+            if request.is_released() {
                 return;
             }
             request.complete(load.model);
@@ -59,9 +59,8 @@ pub(crate) fn followees_provider_with_worker_url(
                 return;
             };
             let relay_request = request.clone();
-            let relay_lease = lease.clone();
             if let Some(handle) = start_followees_relay_read(host, relay_input, move |model| {
-                if !relay_lease.is_released() {
+                if !relay_request.is_released() {
                     relay_request.complete(model);
                 }
             }) {

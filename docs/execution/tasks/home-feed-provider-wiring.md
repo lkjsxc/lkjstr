@@ -9,7 +9,9 @@ snapshots instead of an injected test model.
 
 Implemented enabling proof. Cache-backed default provider wiring, exact
 coverage proof, bounded relay snapshot updates, and Rust Home owner cleanup are
-implemented; broader shared lease parity and deletion proof remain open.
+implemented. Followees and User Timeline request-level lease guards now match
+the Home-style `request.is_released()` API. Broader shared lease parity and
+deletion proof remain open.
 
 ## Current Evidence
 
@@ -36,11 +38,17 @@ implemented; broader shared lease parity and deletion proof remain open.
   relay sockets and timers.
 - `crates/lkjstr-app/tests/home_feed_relay_test.rs` proves relay-progressive
   Home snapshots render real rows with the reading-relays footer.
+- `crates/lkjstr-ui/tests/followees_provider_test.rs` and
+  `user_timeline_provider_test.rs` prove released request objects report
+  `is_released()` and suppress late completions.
+- `crates/lkjstr-web/src/followees_host.rs` and `user_timeline_host.rs` use
+  request-level release guards before host loads, after host loads, and before
+  relay callback completion.
 
 ## Next Edit
 
-Generalize the Home owner cleanup proof into shared feed lease cleanup across
-the remaining Rust feed surfaces.
+Continue shared lease cleanup proof for remaining feed surfaces and older-load
+paths without deleting TypeScript or Svelte owners.
 
 ## Next Checklist
 
