@@ -50,6 +50,7 @@ fn input() -> NotificationsRelayReadInput {
             },
         ),
         notification_rows: Vec::new(),
+        geometry_models: Vec::new(),
         diagnostics: Vec::new(),
         now_sec: 2_100,
         since: 1_940,

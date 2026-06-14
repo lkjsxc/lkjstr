@@ -1,6 +1,6 @@
 use lkjstr_app::{
     NotificationItemInput, NotificationsFeedDiagnosticInput, NotificationsFeedSourceState,
-    older_notification_cursor,
+    RowGeometryModel, older_notification_cursor,
 };
 use lkjstr_protocol::NostrEvent;
 
@@ -17,6 +17,7 @@ pub(crate) struct NotificationsRelayReadInput {
     pub(crate) selected_relays: Vec<String>,
     pub(crate) cache_window: lkjstr_app::FeedWindowState,
     pub(crate) notification_rows: Vec<NotificationItemInput>,
+    pub(crate) geometry_models: Vec<RowGeometryModel>,
     pub(crate) diagnostics: Vec<NotificationsFeedDiagnosticInput>,
     pub(crate) now_sec: u64,
     pub(crate) since: u64,
@@ -31,6 +32,7 @@ pub(crate) struct NotificationsRelayInputSeed<'a> {
     pub(crate) selected_relays: &'a [String],
     pub(crate) window: &'a lkjstr_app::FeedWindowState,
     pub(crate) notification_rows: &'a [NotificationItemInput],
+    pub(crate) geometry_models: &'a [RowGeometryModel],
     pub(crate) diagnostics: &'a [NotificationsFeedDiagnosticInput],
     pub(crate) now_sec: u64,
     pub(crate) since: u64,
@@ -59,6 +61,7 @@ pub(crate) fn notifications_initial_relay_input(
         selected_relays: seed.selected_relays.to_vec(),
         cache_window: seed.window.clone(),
         notification_rows: seed.notification_rows.to_vec(),
+        geometry_models: seed.geometry_models.to_vec(),
         diagnostics: seed.diagnostics.to_vec(),
         now_sec: seed.now_sec,
         since: seed.since,

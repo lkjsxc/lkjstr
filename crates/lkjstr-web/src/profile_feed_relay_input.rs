@@ -1,4 +1,6 @@
-use lkjstr_app::{ProfileFeedDiagnosticInput, ProfileFeedSourceState, ProfileHeaderView};
+use lkjstr_app::{
+    ProfileFeedDiagnosticInput, ProfileFeedSourceState, ProfileHeaderView, RowGeometryModel,
+};
 use lkjstr_protocol::{KIND_GENERIC_REPOST, KIND_REPOST, KIND_TEXT_NOTE, NostrEvent};
 use lkjstr_relays::AuthorRelayRoute;
 
@@ -12,6 +14,7 @@ pub(crate) struct ProfileRelayReadInput {
     pub(crate) author_routes: Vec<AuthorRelayRoute>,
     pub(crate) profile_header: Option<ProfileHeaderView>,
     pub(crate) cache_window: lkjstr_app::FeedWindowState,
+    pub(crate) geometry_models: Vec<RowGeometryModel>,
     pub(crate) diagnostics: Vec<ProfileFeedDiagnosticInput>,
     pub(crate) since: u64,
     pub(crate) until: u64,
@@ -27,6 +30,7 @@ pub(crate) struct ProfileRelayInputSeed<'a> {
     pub(crate) author_routes: &'a [AuthorRelayRoute],
     pub(crate) profile_header: &'a Option<ProfileHeaderView>,
     pub(crate) window: &'a lkjstr_app::FeedWindowState,
+    pub(crate) geometry_models: &'a [RowGeometryModel],
     pub(crate) diagnostics: &'a [ProfileFeedDiagnosticInput],
     pub(crate) now_sec: u64,
 }
@@ -53,6 +57,7 @@ pub(crate) fn profile_relay_input(
         author_routes: seed.author_routes.to_vec(),
         profile_header: seed.profile_header.clone(),
         cache_window: seed.window.clone(),
+        geometry_models: seed.geometry_models.to_vec(),
         diagnostics: seed.diagnostics.to_vec(),
         since,
         until,
@@ -101,6 +106,7 @@ mod tests {
             author_routes: &[],
             profile_header: &None,
             window: &empty_feed_window(1, 180),
+            geometry_models: &[],
             diagnostics: &[],
             now_sec: 1_700_000_000,
         }) else {

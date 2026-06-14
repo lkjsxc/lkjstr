@@ -1,9 +1,8 @@
 use lkjstr_app::{
     FeedFragmentConfig, FeedWindowEvidence, FeedWindowFlags, NotificationsFeedDiagnosticInput,
     NotificationsFeedSourceState, NotificationsFeedView, NotificationsFeedViewInput,
-    NotificationsOlderPageInput, NotificationsOlderPageOutcome, RowGeometryModel,
-    build_notifications_feed_view, older_notification_cursor, plan_notifications_older_page,
-    reduce_feed_window,
+    NotificationsOlderPageInput, NotificationsOlderPageOutcome, build_notifications_feed_view,
+    older_notification_cursor, plan_notifications_older_page, reduce_feed_window,
 };
 use lkjstr_relays::{
     DemandVisibility, ProgressiveReadSnapshot, ProgressiveReadStatus,
@@ -60,7 +59,7 @@ pub(crate) fn output_from_snapshot(
         notification_rows: input.notification_rows.clone(),
         width_px: 680,
         font_scale: 1.0,
-        geometry_models: Vec::<RowGeometryModel>::new(),
+        geometry_models: input.geometry_models.clone(),
         fragment_config: FeedFragmentConfig::default(),
         diagnostics,
     });

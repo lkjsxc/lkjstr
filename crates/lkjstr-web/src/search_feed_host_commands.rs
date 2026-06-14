@@ -1,6 +1,6 @@
 use lkjstr_app::{
-    FeedFragmentConfig, RowGeometryModel, SearchFeedDiagnosticInput, SearchFeedSourceState,
-    SearchFeedView, SearchFeedViewInput, build_search_feed_view,
+    FeedFragmentConfig, SearchFeedDiagnosticInput, SearchFeedSourceState, SearchFeedView,
+    SearchFeedViewInput, build_search_feed_view,
 };
 use lkjstr_relays::DemandVisibility;
 use lkjstr_storage::StorageOutcome;
@@ -10,6 +10,7 @@ use crate::{
     host_status::browser_now_ms,
     relay_read_handle::RelayReadSlot,
     search_feed_cache::search_cache_older_window,
+    search_feed_geometry::search_feed_geometry_models,
     search_feed_host::{PAGE_SIZE, SearchFeedHost, diagnostic, selected_relays, storage_problem},
     search_feed_relay::start_search_relay_read,
     search_feed_relay_input::{SearchRelayReadInput, SearchRelayReadPhase},
@@ -52,10 +53,13 @@ async fn search_older_model(host: &SearchFeedHost, request: &SearchOlderRequest)
     };
     let before = request.window.oldest_cursor.clone();
     let (window, source_state) = search_older_window(host, request, &mut diagnostics).await;
+    let geometry_models =
+        search_feed_geometry_models(host, &window, &mut diagnostics, 680, 1.0).await;
     let relay = older_relay_input(
         request,
         selected_relays.clone(),
         window.clone(),
+        geometry_models.clone(),
         diagnostics.clone(),
         now_sec,
         before,
@@ -74,7 +78,7 @@ async fn search_older_model(host: &SearchFeedHost, request: &SearchOlderRequest)
         window,
         width_px: 680,
         font_scale: 1.0,
-        geometry_models: Vec::<RowGeometryModel>::new(),
+        geometry_models,
         fragment_config: FeedFragmentConfig::default(),
         diagnostics,
     });
@@ -121,6 +125,7 @@ fn older_relay_input(
     request: &SearchOlderRequest,
     selected_relays: Vec<String>,
     cache_window: lkjstr_app::FeedWindowState,
+    geometry_models: Vec<lkjstr_app::RowGeometryModel>,
     diagnostics: Vec<SearchFeedDiagnosticInput>,
     now_sec: u64,
     before: Option<lkjstr_app::FeedWindowCursor>,
@@ -135,6 +140,7 @@ fn older_relay_input(
         query: query.to_owned(),
         selected_relays,
         cache_window,
+        geometry_models,
         diagnostics,
         now_sec,
         phase: SearchRelayReadPhase::Older { before },

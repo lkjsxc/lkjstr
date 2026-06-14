@@ -91,6 +91,7 @@ async fn search_feed_model(host: &SearchFeedHost, owner: &str, query: &str) -> S
         source_state: &source_state,
         selected_relays: &selected_relays,
         window: &window,
+        geometry_models: &geometry_models,
         diagnostics: &diagnostics,
         now_sec,
     });

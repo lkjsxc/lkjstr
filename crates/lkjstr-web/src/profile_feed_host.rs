@@ -153,6 +153,7 @@ async fn profile_feed_model(
         author_routes: &routes,
         profile_header: &profile_header,
         window: &window,
+        geometry_models: &geometry_models,
         diagnostics: &diagnostics,
         now_sec,
     });

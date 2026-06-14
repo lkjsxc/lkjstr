@@ -154,6 +154,7 @@ async fn notifications_feed_model(
         selected_relays: &selected_relays,
         window: &window,
         notification_rows: &notification_rows,
+        geometry_models: &geometry_models,
         diagnostics: &diagnostics,
         now_sec,
         since: cursor.since,
