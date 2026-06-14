@@ -1,4 +1,4 @@
-import { readFileSync } from 'node:fs';
+import { readdirSync, readFileSync, statSync } from 'node:fs';
 import { describe, expect, it } from 'vitest';
 import {
   copyEventIdToClipboard,
@@ -74,4 +74,43 @@ describe('event more menu ownership', () => {
     expect(source).toContain('Nearby posts by this author');
     expect(source).toContain('event-action-zone');
   });
+
+  it('keeps shipped product files from mounting the retained Svelte menu', () => {
+    for (const file of productSourceFiles('src')) {
+      if (file === 'src/lib/components/events/EventMoreMenu.svelte') continue;
+      const source = readFileSync(file, 'utf8');
+
+      expect(source, file).not.toMatch(
+        /EventMoreMenu\.svelte|import\s+EventMoreMenu|<EventMoreMenu(?:\s|>)/,
+      );
+    }
+  });
 });
+
+function productSourceFiles(root: string): string[] {
+  const entries = readdirSync(root);
+  const files: string[] = [];
+  for (const entry of entries) {
+    const path = `${root}/${entry}`;
+    if (path.includes('/node_modules/') || path.includes('/.svelte-kit/')) {
+      continue;
+    }
+    const stat = statSync(path);
+    if (stat.isDirectory()) {
+      files.push(...productSourceFiles(path));
+      continue;
+    }
+    if (isProductSourceFile(path)) {
+      files.push(path);
+    }
+  }
+  return files;
+}
+
+function isProductSourceFile(path: string): boolean {
+  return (
+    path.endsWith('.svelte') ||
+    path.endsWith('.ts') ||
+    path.endsWith('.js')
+  );
+}
