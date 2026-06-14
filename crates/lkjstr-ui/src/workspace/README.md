@@ -15,8 +15,9 @@ New Tab chooser, and converted Rust tool bodies.
 - `author_context_event.rs`: Author Context event row actions.
 - `author_context_open.rs`: Author Context row action tab-opening helpers.
 - `author_context_provider.rs`: async Author Context feed provider wrapper.
-- `custom_request.rs`: Rust Custom Request planning-state body.
-- `custom_request_provider.rs`: async Custom Request run-plan provider wrapper.
+- `custom_request.rs`: Rust Custom Request app-owned result feed body.
+- `custom_request_provider.rs`: async Custom Request view-model provider wrapper.
+- `custom_request_render.rs`: Custom Request shared feed-row rendering.
 - `custom_request_snapshot.rs`: Custom Request feed filter-state snapshots.
 - `feed_event_actions.rs`: shared Rust feed event-row action buttons.
 - `feed_event_content.rs`: shared Rust feed event-row content rendering.

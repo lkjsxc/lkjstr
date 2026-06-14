@@ -1,7 +1,7 @@
 use std::sync::Arc;
 
 use leptos::prelude::{Callable, Callback};
-use lkjstr_app::CustomRequestRunPlan;
+use lkjstr_app::CustomRequestFeedView;
 
 use crate::workspace::local_lease::LocalLease;
 
@@ -12,7 +12,7 @@ pub struct CustomRequestProvider {
 
 #[derive(Clone)]
 pub struct CustomRequestComplete {
-    complete: Callback<CustomRequestRunPlan>,
+    complete: Callback<CustomRequestFeedView>,
 }
 
 #[derive(Clone)]
@@ -51,15 +51,15 @@ impl CustomRequestLease {
 }
 
 impl CustomRequestComplete {
-    pub fn complete(&self, plan: CustomRequestRunPlan) {
-        let _unused = self.complete.try_run(plan);
+    pub fn complete(&self, view: CustomRequestFeedView) {
+        let _unused = self.complete.try_run(view);
     }
 }
 
 impl CustomRequestRunRequest {
-    pub fn complete(&self, plan: CustomRequestRunPlan) {
+    pub fn complete(&self, view: CustomRequestFeedView) {
         if !self.lease.is_released() {
-            self.complete.complete(plan);
+            self.complete.complete(view);
         }
     }
 
@@ -84,7 +84,7 @@ impl CustomRequestProvider {
         &self,
         owner: String,
         raw_json: String,
-        complete: Callback<CustomRequestRunPlan>,
+        complete: Callback<CustomRequestFeedView>,
     ) -> CustomRequestLease {
         let lease = CustomRequestLease::new();
         (self.run)(CustomRequestRunRequest {

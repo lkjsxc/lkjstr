@@ -20,6 +20,21 @@ pub fn canceled_custom_request_feed_view(owner: &str) -> CustomRequestFeedView {
     build_custom_request_feed_view(empty_input(owner, CustomRequestFeedSourceState::Canceled))
 }
 
+#[must_use]
+pub fn unavailable_custom_request_feed_view(
+    owner: &str,
+    reason: &str,
+    retry_available: bool,
+) -> CustomRequestFeedView {
+    build_custom_request_feed_view(empty_input(
+        owner,
+        CustomRequestFeedSourceState::Unavailable {
+            reason: reason.to_owned(),
+            retry_available,
+        },
+    ))
+}
+
 fn empty_input(
     owner: &str,
     source_state: CustomRequestFeedSourceState,

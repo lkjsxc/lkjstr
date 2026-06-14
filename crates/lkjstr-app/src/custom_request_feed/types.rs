@@ -8,6 +8,10 @@ pub enum CustomRequestFeedSourceState {
     Idle,
     Planning,
     Canceled,
+    Unavailable {
+        reason: String,
+        retry_available: bool,
+    },
     RelayProgressive,
     Complete,
     Partial {
@@ -23,6 +27,7 @@ pub enum CustomRequestFeedStatus {
     Ready,
     Partial,
     Canceled,
+    Unavailable,
     Invalid,
     NoRelay,
 }

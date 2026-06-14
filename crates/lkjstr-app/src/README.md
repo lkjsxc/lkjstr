@@ -9,6 +9,7 @@ reducers.
 
 - `author_context_feed/`: Author Context shared feed view-model composition.
 - `custom_request/`: pure Custom Request parsing, clamps, and mode selection.
+- `custom_request_feed/`: Custom Request shared feed view-model composition.
 - `events/`: pure shared event display planning.
 - `feed/`: pure feed-window reduction and cursor derivation.
 - `feed_fragments/`: real visual row planning for oversized events.

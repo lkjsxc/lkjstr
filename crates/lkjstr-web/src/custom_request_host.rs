@@ -1,4 +1,8 @@
-use lkjstr_app::{CustomRequestRunInput, plan_custom_request_run};
+use lkjstr_app::{
+    CustomRequestFeedSourceState, CustomRequestFeedView, CustomRequestFeedViewInput,
+    CustomRequestRunInput, CustomRequestRunPlan, CustomRequestRunStatus, FeedFragmentConfig,
+    build_custom_request_feed_view, empty_feed_window, plan_custom_request_run,
+};
 use lkjstr_domain::seed_relay_sets;
 use lkjstr_relays::DemandVisibility;
 use lkjstr_storage::StorageOutcome;
@@ -10,6 +14,10 @@ use crate::{
 };
 
 const PAGE_SIZE: u64 = 30;
+const WINDOW_MAX: usize = 180;
+const VIEW_WIDTH_PX: u16 = 680;
+const VIEW_FONT_SCALE: f32 = 1.0;
+const RELAY_OUTPUT_GAP: &str = "Rust Custom Request relay result output is not wired yet.";
 
 pub fn custom_request_provider_with_worker_url(
     db_name: String,
@@ -35,7 +43,7 @@ pub fn custom_request_provider_with_worker_url(
                 now_sec: browser_now_ms() / 1_000,
                 page_size: PAGE_SIZE,
             });
-            request.complete(plan);
+            request.complete(view_from_plan(request.owner.clone(), plan));
         });
     })
 }
@@ -50,4 +58,26 @@ async fn selected_relays(db_name: &str, worker_url: &str) -> Vec<String> {
         StorageOutcome::Ok(rows) => selected_read_relays(&seed_relay_sets(&rows, now)),
         _ => Vec::new(),
     }
+}
+
+fn view_from_plan(owner: String, plan: CustomRequestRunPlan) -> CustomRequestFeedView {
+    let source_state = match plan.status {
+        CustomRequestRunStatus::Ready => CustomRequestFeedSourceState::Partial {
+            reason: RELAY_OUTPUT_GAP.to_owned(),
+            retry_available: false,
+        },
+        CustomRequestRunStatus::Invalid | CustomRequestRunStatus::NoRelay => {
+            CustomRequestFeedSourceState::Complete
+        }
+    };
+    build_custom_request_feed_view(CustomRequestFeedViewInput {
+        owner,
+        run_plan: Some(plan),
+        source_state,
+        window: empty_feed_window(1, WINDOW_MAX),
+        width_px: VIEW_WIDTH_PX,
+        font_scale: VIEW_FONT_SCALE,
+        geometry_models: Vec::new(),
+        fragment_config: FeedFragmentConfig::default(),
+    })
 }

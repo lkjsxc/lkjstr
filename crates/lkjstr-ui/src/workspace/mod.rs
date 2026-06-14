@@ -12,6 +12,7 @@ mod author_context_open;
 mod author_context_provider;
 mod custom_request;
 mod custom_request_provider;
+mod custom_request_render;
 mod custom_request_snapshot;
 mod feed_event_actions;
 mod feed_event_content;

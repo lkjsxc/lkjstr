@@ -10,4 +10,5 @@ events and explicit request states.
 - `build.rs`: Custom Request feed view construction.
 - `defaults.rs`: default and planning Custom Request feed states.
 - `mod.rs`: module exports.
+- `state.rs`: Custom Request feed status and state-row selection.
 - `types.rs`: Custom Request feed input and output records.

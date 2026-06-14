@@ -2,7 +2,7 @@ use std::sync::atomic::{AtomicBool, AtomicUsize, Ordering};
 use std::sync::{Arc, Mutex};
 
 use leptos::prelude::Callback;
-use lkjstr_app::{CustomRequestRunPlan, CustomRequestRunStatus};
+use lkjstr_app::unavailable_custom_request_feed_view;
 use lkjstr_ui::{CustomRequestProvider, CustomRequestRunRequest as UiRunRequest};
 
 #[test]
@@ -39,7 +39,11 @@ fn released_custom_request_suppresses_late_completion() {
     lease.release();
     let captured = request_snapshot(&request);
     if let Some(request) = captured.as_ref() {
-        request.complete(invalid_plan());
+        request.complete(unavailable_custom_request_feed_view(
+            "tab-a",
+            "late completion",
+            false,
+        ));
     }
 
     assert!(captured.is_some(), "request captured");
@@ -65,17 +69,6 @@ fn custom_request_provider_forwards_raw_json() -> Result<(), String> {
     assert_eq!(captured.raw_json, r#"{"kinds":[1]}"#);
     lease.release();
     Ok(())
-}
-
-fn invalid_plan() -> lkjstr_app::CustomRequestRunPlan {
-    CustomRequestRunPlan {
-        status: CustomRequestRunStatus::Invalid,
-        request: None,
-        mode: None,
-        demand: None,
-        error: None,
-        relays: Vec::new(),
-    }
 }
 
 fn replace_slot<T: Clone>(slot: &Arc<Mutex<Option<T>>>, value: T) {

@@ -4,7 +4,7 @@ use lkjstr_app::{
     CustomRequestRunPlan, CustomRequestRunStatus, EventDisplayContext, FeedFooterState,
     FeedFragmentConfig, FeedViewRow, FeedWindowEvidence, FeedWindowFlags, RowGeometryModel,
     build_custom_request_feed_view, canceled_custom_request_feed_view, empty_feed_window,
-    plan_custom_request_run, reduce_feed_window,
+    plan_custom_request_run, reduce_feed_window, unavailable_custom_request_feed_view,
 };
 use lkjstr_protocol::{KIND_TEXT_NOTE, NostrEvent};
 use lkjstr_relays::{DemandVisibility, ProgressiveEvent};
@@ -51,6 +51,20 @@ fn custom_request_canceled_view_is_explicit_and_queryless() {
         matches!(row, FeedViewRow::Unavailable(item)
             if item.reason == "custom-request-canceled"
                 && item.retry_available)
+    }));
+}
+
+#[test]
+fn custom_request_unavailable_view_is_explicit_and_queryless() {
+    let model =
+        unavailable_custom_request_feed_view("custom-tab", "Relay output unavailable.", false);
+
+    assert_eq!(model.status, CustomRequestFeedStatus::Unavailable);
+    assert!(model.demand.is_none());
+    assert!(model.view_model.rows.iter().any(|row| {
+        matches!(row, FeedViewRow::Unavailable(item)
+            if item.reason == "custom-request-unavailable"
+                && item.detail == "Relay output unavailable.")
     }));
 }
 

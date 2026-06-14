@@ -117,15 +117,23 @@ pub(crate) fn tab_content(input: TabContentInput) -> impl IntoView {
             let owner = input.tab_id;
             let snapshot = CustomRequestSnapshotHandle::new(
                 input.runtime,
-                input.pane_id,
+                input.pane_id.clone(),
                 owner.clone(),
                 input.persistence.clone(),
+            );
+            let actions = nearby_event_actions(
+                input.runtime,
+                input.sequence,
+                input.pane_id,
+                input.persistence.clone(),
+                input.profile_copy_provider,
             );
             view! {
                 <CustomRequestTab
                     owner=owner
                     provider=input.custom_request_provider
                     snapshot=snapshot
+                    actions=actions
                 />
             }
             .into_any()

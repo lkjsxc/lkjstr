@@ -23,7 +23,7 @@ before the SvelteKit product runtime can be removed.
 | Thread          | partial         | `app`, `relays`, `storage`, `ui` thread runtime               | root lookup, reply pages, references, exact reads                                            |
 | Notifications   | partial         | `app`, `relays`, `storage`, `ui` notification runtime         | mentions, reactions, reposts, zaps, older windows                                            |
 | Search          | partial         | `app`, `relays`, `storage`, `ui` search runtime               | provider execution, NIP-50 merge, older pages, cancellation, snapshots, deletion proof       |
-| Custom Request  | partial         | `app`, `protocol`, `relays`, `ui` request runtime             | host relay output, UI result rows, no-import proof                                          |
+| Custom Request  | partial         | `app`, `protocol`, `relays`, `ui` request runtime             | host relay output, live result rows, no-import proof                                        |
 | Public Chat     | partial         | `protocol`, `domain`, `app`, `relays`, `storage`, `ui`, `web` | NIP-28 parsing, channel reads, publish, partial failure, cleanup                             |
 | Author Context  | partial         | `app`, `web`, `relays`, `storage`, `ui` context runtime       | no-import proof and final deletion readiness                                                 |
 | Accounts        | partial         | `domain`, `storage`, `web`, `ui` accounts path                | local, read-only, NIP-07 signing, secret safety tests                                        |
@@ -49,7 +49,7 @@ before the SvelteKit product runtime can be removed.
 | Thread          | Thread exact-read, reference hydration, and shared event display tests                                       |
 | Notifications   | Notification filters, paging, windows, reference, and shared feed tests                                      |
 | Search          | browser cleanup, no full-scan proof, remaining parity, and no-import proof                                   |
-| Custom Request  | Raw filter parse, clamp, selected relay, app result-row, partial response, and cancel tests                  |
+| Custom Request  | Raw filter parse, clamp, selected relay, UI result-row, partial response, and cancel tests                   |
 | Public Chat     | NIP-28 reducer, relay routing, publish, moderation, partial failure, and cleanup tests                       |
 | Author Context  | Injected rows, cache reads, relay reads, action opening, unavailable states, no-import proof, and final gate |
 | Accounts        | Account storage, signer source, NIP-07, local secret, and redaction tests                                    |

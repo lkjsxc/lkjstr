@@ -46,6 +46,7 @@ pub use custom_request_feed::{
     CustomRequestFeedSourceState, CustomRequestFeedStatus, CustomRequestFeedView,
     CustomRequestFeedViewInput, build_custom_request_feed_view, canceled_custom_request_feed_view,
     custom_request_feed_id, default_custom_request_feed_view, planning_custom_request_feed_view,
+    unavailable_custom_request_feed_view,
 };
 pub use events::{
     EventDisplayCapabilities, EventDisplayChromePolicy, EventDisplayContext, EventDisplayInput,
