@@ -14,7 +14,7 @@ no-import proof and final verification exist.
 
 - `crates/lkjstr-app/src/profile_feed/**` builds author note queries, explicit
   missing-pubkey and missing-relay rows, partial coverage rows, and shared footer
-  states.
+  states with pending note loading distinct from ready evidence.
 - `crates/lkjstr-ui/src/workspace/profile.rs` renders real event rows from an
   injected `ProfileFeedView`.
 - `crates/lkjstr-web/tests/profile_feed_tab_test.rs` proves the Rust browser tab
@@ -84,7 +84,8 @@ render without fake zero counts, refresh from relay events stored in worker
 SQLite, copy npub/nprofile/follow-list/relay-set JSON through the host provider,
 open Followees/User Timeline/Profile Edit action tabs, and show or locally
 or NIP-07 publish Follow/Unfollow without fake success. Empty Profile notes are
-shown only after complete proof.
+shown only after complete proof. Pending note provider work renders loading,
+not ready.
 
 ## Files To Read
 

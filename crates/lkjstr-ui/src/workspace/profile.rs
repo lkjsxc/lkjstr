@@ -123,6 +123,7 @@ fn profile_status_text(status: ProfileFeedStatus) -> &'static str {
     match status {
         ProfileFeedStatus::MissingPubkey => "Profile unavailable",
         ProfileFeedStatus::NoEnabledRelay => "No enabled relay",
+        ProfileFeedStatus::Loading => "Profile loading",
         ProfileFeedStatus::Ready => "Profile ready",
         ProfileFeedStatus::Partial => "Profile partial",
     }
@@ -139,6 +140,7 @@ mod tests {
             text(ProfileFeedStatus::MissingPubkey),
             "Profile unavailable"
         );
+        assert_eq!(text(ProfileFeedStatus::Loading), "Profile loading");
         assert_eq!(text(ProfileFeedStatus::Partial), "Profile partial");
     }
 }

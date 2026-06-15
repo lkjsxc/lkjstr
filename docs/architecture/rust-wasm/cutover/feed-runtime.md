@@ -59,9 +59,10 @@ must use before their TypeScript feed runtimes are deleted.
   SQLite authored display-kind rows from selected-relay fallback or target
   author routes, promotes cache-ready only from exact Profile coverage proof,
   starts bounded relay reads after partial proof, excludes metadata and
-  follow-list rows from visible note slots, and releases owner cleanup on tab
-  switch. Recent complete-empty coverage now plans older sparse intervals, and
-  terminal empty requires contiguous exact empty coverage down to the floor.
+  follow-list rows from visible note slots, and renders pending note-provider
+  work as loading instead of ready. Owner cleanup releases on tab switch.
+  Recent complete-empty coverage now plans older sparse intervals, and terminal
+  empty requires contiguous exact empty coverage down to the floor.
 - Followees action tab slice: `crates/lkjstr-app/src/follow_graph/**`,
   `crates/lkjstr-ui/src/workspace/followees*.rs`, and
   `crates/lkjstr-web/tests/profile_feed_tab_test.rs` render a first Leptos

@@ -77,7 +77,7 @@ fn profile_feed_accepts_author_routes_without_selected_fallback() -> Result<(), 
     input.author_routes = vec![author_route()];
     let model = build_profile_feed_view(input);
 
-    assert_eq!(model.status, ProfileFeedStatus::Ready);
+    assert_eq!(model.status, ProfileFeedStatus::Loading);
     let query = model.live_query.ok_or("expected Profile live query")?;
     assert!(query.selected_relays.is_empty());
     assert_eq!(query.author_routes, vec![author_route()]);

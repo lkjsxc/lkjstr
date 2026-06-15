@@ -25,6 +25,7 @@ pub enum ProfileFeedSourceState {
 pub enum ProfileFeedStatus {
     MissingPubkey,
     NoEnabledRelay,
+    Loading,
     Ready,
     Partial,
 }

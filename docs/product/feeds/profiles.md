@@ -94,6 +94,9 @@ following...` or `Calculating following...`, not `0 following`.
   `notes-searching-older`, `notes-partial`, `notes-ready-with-events`,
   `notes-ready-empty-proven`, `notes-unavailable`, `notes-auth-required`, or
   `notes-all-relays-failed`.
+- Rust pending provider work renders the note state as loading, not ready,
+  until cached authored notes, progressive relay notes, EOSE, or terminal relay
+  failure provides real evidence.
 - The old copy `No notes have been received for this profile.` is not shown
   while cache or relay evidence is incomplete. Empty copy is allowed only in
   `notes-ready-empty-proven` and must mention attempted public relays.

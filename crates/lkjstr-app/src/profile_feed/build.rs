@@ -151,9 +151,8 @@ fn ready_state(
                 Some(footer_row(feed_id, FeedFooterState::Partial)),
             )
         }
-        ProfileFeedSourceState::Pending | ProfileFeedSourceState::RelayProgressive => {
-            (ProfileFeedStatus::Ready, live_query, None)
-        }
+        ProfileFeedSourceState::Pending => (ProfileFeedStatus::Loading, live_query, None),
+        ProfileFeedSourceState::RelayProgressive => (ProfileFeedStatus::Ready, live_query, None),
     }
 }
 
