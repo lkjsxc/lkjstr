@@ -28,6 +28,7 @@ New Tab chooser, and converted Rust tool bodies.
 - `feed_event_profile_mention.rs`: shared Rust profile mention rendering.
 - `feed_event_reference.rs`: shared Rust unavailable reference rendering.
 - `feed_event_row.rs`: shared Rust feed event-row body rendering.
+- `feed_event_sensitive.rs`: shared Rust sensitive-warning rendering.
 - `feed_footer_row.rs`: shared Rust feed footer shell rendering.
 - `feed_footer_text.rs`: shared Rust feed footer text mapping.
 - `feed_state_row.rs`: shared Rust feed state-row rendering.

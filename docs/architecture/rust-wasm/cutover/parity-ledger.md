@@ -162,8 +162,9 @@ mention rows with stable identity attributes, indexed unavailable media/referenc
 normalized event/profile entity relay hints, profile-open and reference
 thread-open payload proof when a converted Rust surface already passes a real
 opener,
-notification repost event rows, and full FeedViewModel bounded summaries for
-repost, generic repost, reaction, and zap rows.
+notification repost event rows, sensitive-warning reason/reveal attribute
+proof, and full FeedViewModel bounded summaries for repost, generic repost,
+reaction, and zap rows.
 Repost-specific code may provide contextual chrome but must not fork target event
 rendering without a documented tested reason.
 

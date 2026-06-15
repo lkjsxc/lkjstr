@@ -189,8 +189,8 @@ models, anchors, footer states, and unavailable states.
   profile-open and reference thread-open payload proof on converted Rust
   surfaces that pass a real opener, normalized event/profile entity relay hints, validated custom
   emoji rows with image presentation plus address and stable identity attributes,
-  notification repost event rows, author metadata, sensitive-warning reveal
-  rendering, common state-row rendering,
+  notification repost event rows, author metadata, sensitive-warning
+  reason/reveal attribute proof, common state-row rendering,
   shared footer shell rendering across converted feed rows, retained Svelte copy
   actions with explicit clipboard failure states, and retained optional Svelte
   event/profile actions plus Rust-island hosts suppress unavailable no-op

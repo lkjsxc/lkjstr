@@ -23,6 +23,7 @@ mod feed_event_open;
 mod feed_event_profile_mention;
 mod feed_event_reference;
 mod feed_event_row;
+mod feed_event_sensitive;
 mod feed_footer_row;
 mod feed_footer_text;
 mod feed_state_row;

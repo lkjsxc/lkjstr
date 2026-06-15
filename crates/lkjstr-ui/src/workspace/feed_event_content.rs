@@ -1,4 +1,4 @@
-use leptos::{ev::MouseEvent, prelude::*};
+use leptos::prelude::*;
 use lkjstr_app::feed::{
     FeedEventContent, FeedEventContentRow, FeedEventCustomEmoji, FeedEventUnavailablePreview,
 };
@@ -7,6 +7,7 @@ use super::feed_event_link::event_link;
 use super::feed_event_media::media_attachment;
 use super::feed_event_profile_mention::profile_mention;
 use super::feed_event_reference::reference_unavailable;
+use super::feed_event_sensitive::sensitive_warning;
 
 #[derive(Clone, Debug, Eq, PartialEq)]
 struct CustomEmojiImageAttrs {
@@ -57,21 +58,6 @@ fn sensitive_content(
             }
         }}
     }
-}
-
-fn sensitive_warning(reason: Option<String>, revealed: RwSignal<bool>) -> impl IntoView {
-    let reveal = move |_event: MouseEvent| revealed.set(true);
-    view! {
-        <aside class="content-warning">
-            <strong>"Sensitive content"</strong>
-            {warning_reason(reason)}
-            <button type="button" on:click=reveal>"Reveal"</button>
-        </aside>
-    }
-}
-
-fn warning_reason(reason: Option<String>) -> impl IntoView {
-    reason.map(|reason| view! { <span>{reason}</span> })
 }
 
 fn text_rows_view(
