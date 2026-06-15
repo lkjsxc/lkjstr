@@ -25,6 +25,9 @@ Global shows recent notes and reposts from the selected readable relay set.
   true. Global may start that prefetch once rows and cursors exist and the feed
   is already inside the near-end threshold.
 - Shared `FeedSurfaceStatus` footer shows loading, end of history, and errors.
+- Rust pending provider work renders a loading status until cached rows,
+  progressive relay rows, EOSE, or terminal relay failure provides real
+  evidence.
 - Initial and historical relay pages use compound `{createdAt,id}` cursors,
   adaptive bounded `since`/`until` windows, local boundary filtering, and
   merged relay provenance. Timeout or non-EOSE relay status does not prove

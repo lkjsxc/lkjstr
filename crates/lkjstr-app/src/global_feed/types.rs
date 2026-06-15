@@ -18,6 +18,7 @@ pub enum GlobalFeedSourceState {
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
 pub enum GlobalFeedStatus {
     NoEnabledRelay,
+    Loading,
     Ready,
     Partial,
 }

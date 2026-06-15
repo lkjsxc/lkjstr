@@ -98,6 +98,7 @@ fn global_row(
 fn global_status_text(status: GlobalFeedStatus) -> &'static str {
     match status {
         GlobalFeedStatus::NoEnabledRelay => "No enabled relay",
+        GlobalFeedStatus::Loading => "Global loading",
         GlobalFeedStatus::Ready => "Global ready",
         GlobalFeedStatus::Partial => "Global partial",
     }
@@ -110,6 +111,10 @@ mod tests {
     #[test]
     fn global_status_text_names_explicit_states() {
         assert_eq!(global_status_text(GlobalFeedStatus::Ready), "Global ready");
+        assert_eq!(
+            global_status_text(GlobalFeedStatus::Loading),
+            "Global loading"
+        );
         assert_eq!(
             global_status_text(GlobalFeedStatus::NoEnabledRelay),
             "No enabled relay"

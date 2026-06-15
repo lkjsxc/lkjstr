@@ -50,6 +50,14 @@ fn global_feed_requires_selected_read_relays() {
 }
 
 #[test]
+fn global_feed_pending_with_relays_is_loading_not_ready() {
+    let view = build_global_feed_view(input(GlobalFeedSourceState::Pending, relays()));
+
+    assert_eq!(view.status, GlobalFeedStatus::Loading);
+    assert!(view.live_query.is_some());
+}
+
+#[test]
 fn global_feed_partial_coverage_stays_explicit() {
     let view = build_global_feed_view(input(
         GlobalFeedSourceState::Partial {

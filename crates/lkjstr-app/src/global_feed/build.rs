@@ -112,9 +112,8 @@ fn ready_state(
                 Some(footer_row(feed_id, FeedFooterState::Partial)),
             )
         }
-        GlobalFeedSourceState::Pending | GlobalFeedSourceState::RelayProgressive => {
-            (GlobalFeedStatus::Ready, live_query, None)
-        }
+        GlobalFeedSourceState::Pending => (GlobalFeedStatus::Loading, live_query, None),
+        GlobalFeedSourceState::RelayProgressive => (GlobalFeedStatus::Ready, live_query, None),
     }
 }
 

@@ -30,7 +30,9 @@ must use before their TypeScript feed runtimes are deleted.
   selected-relay SQLite rows, require exact Global coverage before cache-ready,
   keep partial proof explicit, and start a bounded selected-relay read after
   partial proof. Browser proof confirms tab cleanup suppresses late completions.
-  Global scroll and TypeScript deletion prerequisites remain open.
+  Pending provider work renders loading instead of ready until real cache or
+  relay evidence arrives. Global scroll and TypeScript deletion prerequisites
+  remain open.
 - First Notifications rendering slice: `crates/lkjstr-app/src/notifications_feed/**`
   and `crates/lkjstr-ui/src/workspace/notifications.rs` render
   `NotificationsFeedView` rows. The default Rust shell loads active-account
