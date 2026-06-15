@@ -114,8 +114,9 @@ unavailable and rejected writes explicitly, optional retained event/profile
 actions render static rows instead of no-op buttons, and Rust-island hosts
 forward required workspace callbacks instead of dummy row actions while late
 mount handles are unmounted before stale islands can attach. The dedicated
-Author Context, Followees, and User Timeline Svelte tab wrappers are removed;
-generic workspace Rust-island host glue mounts those Rust bodies while
+Author Context, Followees, and User Timeline Svelte tab wrappers are removed
+and guarded absent by `pnpm check:repo`; generic workspace Rust-island host
+glue mounts those Rust bodies while
 `src/lib/follow-graph`, `src/lib/tabs/followees/followees-scroll-rows.ts`, and
 `src/lib/user-timeline` runtime modules stay blocked. Deletion of the retained
 shared Svelte event menu remains blocked after product import removal until

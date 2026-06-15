@@ -17,6 +17,7 @@ import { checkStorageBoundary } from './repo-storage-boundary';
 import { checkTaskDocShape } from './repo-doc-task-shape';
 import { checkSkillDocShape } from './repo-doc-skill-shape';
 import { checkEventMenuGuard } from './repo-event-menu';
+import { checkDeletedPaths } from './repo-deleted-paths';
 
 type Problem = { file: string; message: string };
 
@@ -56,6 +57,7 @@ problems.push(...(await checkStorageBoundary(root, files)));
 problems.push(...(await checkTaskDocShape(root, files)));
 problems.push(...(await checkSkillDocShape(root, files)));
 problems.push(...(await checkEventMenuGuard(root, files)));
+problems.push(...(await checkDeletedPaths(root)));
 
 for (const problem of problems.sort((a, b) => a.file.localeCompare(b.file))) {
   console.error(`${problem.file}: ${problem.message}`);

@@ -10,6 +10,7 @@ commands.
 - `app-smoke.ts`: production preview smoke check for `/`.
 - `check-repo.ts`: repository contract checker.
 - `repo-compose.ts`: Docker Compose guardrails.
+- `repo-deleted-paths.ts`: guard that removed transitional paths stay absent.
 - `repo-docs.ts`: docs topology and prose checks.
 - `repo-doc-task-shape.ts`: required headings for execution task files.
 - `repo-doc-skill-shape.ts`: required headings for agent skill files.
@@ -21,8 +22,8 @@ commands.
 - `vitest-quiet-reporter.ts`: minimal Vitest reporter for quiet unit runs.
 
 `pnpm check:repo` runs the class guard along with documentation, README,
-Compose, line-length, storage, timer, event-menu, runtime counter, and
-dependency text checks.
+Compose, deleted-path, line-length, storage, timer, event-menu, runtime counter,
+and dependency text checks.
 
 ## Quiet Runner
 

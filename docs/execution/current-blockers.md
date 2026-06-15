@@ -202,7 +202,9 @@ models, anchors, footer states, and unavailable states.
   removed, Rust geometry runtime counters are exposed to Stats, and Rust/WASM
   quiet. Author Context, Followees, and User Timeline use generic Rust island
   host glue, which cancels pending WASM mounts when hidden or destroyed and
-  unmounts late handles before accepting stale mounts.
+  unmounts late handles before accepting stale mounts. The removed
+  Author Context, Followees, and User Timeline Svelte wrappers stay absent
+  through `pnpm check:repo`.
 - Remaining completion proof: retained Svelte event overflow behavior now lives
   in `EventMeta.svelte`, and `EventRow.svelte` plus `EventFragmentRow.svelte`
   no longer import `EventMoreMenu.svelte`. The retained component file is
