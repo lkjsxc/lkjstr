@@ -1,4 +1,7 @@
-use crate::{EventReference, EventReferenceKind, EventReferenceSource, NostrEvent, is_event_id};
+use crate::{
+    EventReference, EventReferenceKind, EventReferenceSource, NostrEvent, is_event_id,
+    normalize_relay_url,
+};
 
 pub(crate) fn push_event_tag(
     refs: &mut Vec<EventReference>,
@@ -64,11 +67,23 @@ pub(crate) fn tag_name_is(tag: &[String], name: &str) -> bool {
 }
 
 pub(crate) fn tag_relay(tag: &[String]) -> Vec<String> {
-    tag.get(2)
-        .filter(|relay| !relay.is_empty())
-        .cloned()
-        .into_iter()
-        .collect()
+    normalized_relays(
+        tag.get(2)
+            .filter(|relay| !relay.is_empty())
+            .cloned()
+            .into_iter()
+            .collect(),
+    )
+}
+
+pub(crate) fn normalized_relays(relays: Vec<String>) -> Vec<String> {
+    let mut relays = relays
+        .iter()
+        .filter_map(|relay| normalize_relay_url(relay))
+        .collect::<Vec<_>>();
+    relays.sort();
+    relays.dedup();
+    relays
 }
 
 fn merge_ref(existing: &mut EventReference, item: EventReference) {

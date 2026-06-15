@@ -13,18 +13,14 @@ fn repost_and_reaction_use_last_event_tag_target() {
         "",
         vec![
             vec!["e".to_owned(), first],
-            vec![
-                "e".to_owned(),
-                second.clone(),
-                "wss://relay.example".to_owned(),
-            ],
+            vec!["e".to_owned(), second.clone(), "relay.example".to_owned()],
         ],
     ));
     let reaction_refs = event_references(&event(KIND_REACTION, "+", vec![e_tag(&second)]));
 
     assert_eq!(repost_refs[0].kind, EventReferenceKind::Repost);
     assert_eq!(repost_refs[0].id, second);
-    assert_eq!(repost_refs[0].relays, vec!["wss://relay.example"]);
+    assert_eq!(repost_refs[0].relays, vec!["wss://relay.example/"]);
     assert_eq!(reaction_refs[0].kind, EventReferenceKind::Reaction);
 }
 
@@ -52,7 +48,7 @@ fn reply_and_quote_references_preserve_identity() {
             vec![
                 "q".to_owned(),
                 quote.clone(),
-                "wss://quote.example".to_owned(),
+                "https://quote.example".to_owned(),
             ],
         ],
     ));
@@ -63,16 +59,21 @@ fn reply_and_quote_references_preserve_identity() {
     assert_eq!(refs[1].id, parent);
     assert_eq!(refs[2].kind, EventReferenceKind::Quote);
     assert_eq!(refs[2].id, quote);
+    assert_eq!(refs[2].relays, vec!["wss://quote.example/"]);
     assert_eq!(refs[2].source, EventReferenceSource::Q);
 }
 
 #[test]
-fn content_nevent_references_keep_relays_and_author() -> Result<(), String> {
+fn content_nevent_references_normalize_relays_and_keep_author() -> Result<(), String> {
     let id = "f".repeat(64);
     let author = "1".repeat(64);
     let nevent = encode_nevent(&EventPointer {
         id: id.clone(),
-        relays: Some(vec!["wss://relay.example".to_owned()]),
+        relays: Some(vec![
+            "relay.example".to_owned(),
+            "https://relay.example/".to_owned(),
+            "ftp://relay.example".to_owned(),
+        ]),
         author: Some(author.clone()),
         kind: None,
     })
@@ -85,7 +86,7 @@ fn content_nevent_references_keep_relays_and_author() -> Result<(), String> {
 
     assert_eq!(refs[0].kind, EventReferenceKind::NostrEvent);
     assert_eq!(refs[0].id, id);
-    assert_eq!(refs[0].relays, vec!["wss://relay.example"]);
+    assert_eq!(refs[0].relays, vec!["wss://relay.example/"]);
     assert_eq!(refs[0].author_pubkey, Some(author));
     Ok(())
 }

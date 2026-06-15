@@ -184,8 +184,8 @@ models, anchors, footer states, and unavailable states.
   inline content event-reference token suppression before Rust row planning,
   safe HTTPS link rows with inline embedded-media URL suppression,
   identity-only NIP-19 profile mention rows with optional profile-open actions
-  on converted Rust surfaces that pass a real opener and normalized nprofile
-  relay hints, validated custom emoji rows with image presentation proof,
+  on converted Rust surfaces that pass a real opener, normalized event/profile
+  entity relay hints, validated custom emoji rows with image presentation proof,
   notification repost event rows, author metadata, sensitive-warning reveal
   rendering, common state-row rendering,
   shared footer shell rendering across converted feed rows, retained Svelte copy

@@ -1,7 +1,9 @@
 use crate::{
     EventReference, EventReferenceKind, EventReferenceSource, KIND_DELETION, KIND_GENERIC_REPOST,
     KIND_REACTION, KIND_REPOST, NostrEntity, NostrEvent, decode_nip19,
-    event_reference_parts::{dedupe, last_e_tag, push, push_event_tag, tag_name_is, tag_relay},
+    event_reference_parts::{
+        dedupe, last_e_tag, normalized_relays, push, push_event_tag, tag_name_is, tag_relay,
+    },
     event_reference_scan::{nostr_entities, nostr_entity_spans},
     is_event_id, reply_parent, reply_root,
 };
@@ -139,7 +141,7 @@ fn nostr_event_references(content: &str) -> Vec<EventReference> {
             }
             Some(NostrEntity::Nevent(pointer)) if is_event_id(&pointer.id) => Some(content_ref(
                 pointer.id,
-                pointer.relays.unwrap_or_default(),
+                normalized_relays(pointer.relays.unwrap_or_default()),
                 pointer.author,
             )),
             _ => None,
