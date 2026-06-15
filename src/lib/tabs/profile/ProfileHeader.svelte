@@ -160,7 +160,7 @@
     <div class="profile-card__facts">
       {#if website}
         <!-- eslint-disable-next-line svelte/no-navigation-without-resolve -->
-        <a href={website} target="_blank" rel="noreferrer">
+        <a href={website} target="_blank" rel="noopener noreferrer">
           {props.profile?.website}
         </a>
       {/if}
