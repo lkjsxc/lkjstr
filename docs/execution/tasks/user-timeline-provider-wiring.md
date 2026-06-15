@@ -60,11 +60,14 @@ deletion, and final verification proof exist.
 - TypeScript Stats no longer imports retained User Timeline discovery counters;
   it reads the Rust aggregate through the WASM bridge and renders explicit
   unavailable when the bridge is absent.
+- The unused `user-timeline-route-plan.ts` helper has no live imports, is
+  removed, and is guarded absent by repository checks.
 
 ## Next Edit
 
 Continue remaining User Timeline parity and no-import prerequisites. Do not
-start deletion proof until retained TypeScript imports are proven removable.
+start broader deletion proof until retained TypeScript imports are proven
+removable.
 
 ## Files To Read
 

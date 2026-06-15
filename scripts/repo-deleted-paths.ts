@@ -9,6 +9,7 @@ const deletedPaths = [
   path.join('src', 'lib', 'tabs', 'author-context', 'AuthorContextTab.svelte'),
   path.join('src', 'lib', 'tabs', 'followees'),
   path.join('src', 'lib', 'tabs', 'user-timeline', 'UserTimelineTab.svelte'),
+  path.join('src', 'lib', 'user-timeline', 'user-timeline-route-plan.ts'),
 ];
 
 export async function checkDeletedPaths(root: string): Promise<Problem[]> {

@@ -14,6 +14,11 @@ describe('repo deleted path guard', () => {
     );
     await write(
       root,
+      'src/lib/user-timeline/user-timeline-route-plan.ts',
+      'export const oldRoutePlan = true;',
+    );
+    await write(
+      root,
       'src/lib/components/events/EventMoreMenu.svelte',
       '<button>old menu</button>',
     );
@@ -36,6 +41,15 @@ describe('repo deleted path guard', () => {
       },
       {
         file: path.join('src', 'lib', 'tabs', 'followees'),
+        message: 'removed transitional path must stay absent',
+      },
+      {
+        file: path.join(
+          'src',
+          'lib',
+          'user-timeline',
+          'user-timeline-route-plan.ts',
+        ),
         message: 'removed transitional path must stay absent',
       },
     ]);
