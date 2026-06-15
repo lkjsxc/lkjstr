@@ -177,11 +177,15 @@ fn profile_facts(website: Option<String>, copy_status: RwSignal<Option<String>>)
     view! {
         <div class="profile-card__facts">
             {website.map(|href| view! {
-                <a href=href.clone() target="_blank" rel="noreferrer">{href.clone()}</a>
+                <a href=href.clone() target="_blank" rel=profile_website_link_rel()>{href.clone()}</a>
             })}
             {profile_copy_status(copy_status)}
         </div>
     }
+}
+
+fn profile_website_link_rel() -> &'static str {
+    "noopener noreferrer"
 }
 
 #[cfg(test)]

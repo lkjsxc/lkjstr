@@ -41,6 +41,8 @@ Profile tabs show identity metadata and authored text notes.
 - Website values and safe HTTP, HTTPS, or schemeless domain-like URLs inside
   about text render as clickable links after HTTP/HTTPS normalization.
   Unsafe schemes such as `javascript:` never render as links.
+- Profile website links that open a new browsing context use the same
+  `noopener noreferrer` external-link policy as feed links.
 - Profile note lists display kinds `1`, `6`, and `16`.
 - Profile about text and display names render valid HTTPS custom emoji tags.
   Unknown, invalid, or failed-image emoji stays visible as shortcode text.
