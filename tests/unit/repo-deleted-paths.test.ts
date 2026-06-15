@@ -19,6 +19,26 @@ describe('repo deleted path guard', () => {
     );
     await write(
       root,
+      'src/lib/cache/event-store.ts',
+      'export const oldEventStore = true;',
+    );
+    await write(
+      root,
+      'src/lib/telemetry/runtime-health.ts',
+      'export const oldRuntimeHealth = true;',
+    );
+    await write(
+      root,
+      'src/lib/tweet/media-upload-providers.ts',
+      'export const oldTweetProviderReexport = true;',
+    );
+    await write(
+      root,
+      'src/lib/workspace/split-commands.ts',
+      'export const oldSplitCommands = true;',
+    );
+    await write(
+      root,
       'src/lib/components/events/EventMoreMenu.svelte',
       '<button>old menu</button>',
     );
@@ -29,6 +49,10 @@ describe('repo deleted path guard', () => {
     );
 
     await expect(checkDeletedPaths(root)).resolves.toEqual([
+      {
+        file: path.join('src', 'lib', 'cache', 'event-store.ts'),
+        message: 'removed transitional path must stay absent',
+      },
       {
         file: path.join(
           'src',
@@ -44,12 +68,24 @@ describe('repo deleted path guard', () => {
         message: 'removed transitional path must stay absent',
       },
       {
+        file: path.join('src', 'lib', 'telemetry', 'runtime-health.ts'),
+        message: 'removed transitional path must stay absent',
+      },
+      {
+        file: path.join('src', 'lib', 'tweet', 'media-upload-providers.ts'),
+        message: 'removed transitional path must stay absent',
+      },
+      {
         file: path.join(
           'src',
           'lib',
           'user-timeline',
           'user-timeline-route-plan.ts',
         ),
+        message: 'removed transitional path must stay absent',
+      },
+      {
+        file: path.join('src', 'lib', 'workspace', 'split-commands.ts'),
         message: 'removed transitional path must stay absent',
       },
     ]);

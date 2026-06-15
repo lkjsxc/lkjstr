@@ -2,8 +2,10 @@
 
 ## Purpose
 
-This directory contains runtime health and telemetry helpers.
+This directory is reserved for telemetry helpers while runtime diagnostics move
+to Rust.
 
 ## Table of Contents
 
-- Runtime health status helpers.
+- No live TypeScript helper remains after the unused runtime status shim was
+  removed.
