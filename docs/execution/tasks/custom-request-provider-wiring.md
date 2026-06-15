@@ -13,7 +13,8 @@ The planner derives those targets through the shared query route planner so
 disabled or invalid relay URLs do not produce a ready demand. Leptos now renders
 planning states through a host provider that reads selected relays from the
 worker-owned relay settings. The Rust body now exposes an in-flight cancel
-control that releases the provider lease and renders an explicit canceled state.
+control while the planned relay window is nonterminal, releases the provider
+lease, and renders an explicit canceled state.
 `lkjstr-app` now builds Custom Request result view models from real shared feed
 windows and explicit state rows. Leptos renders those shared rows. The host
 provider now starts a typed relay read for ready plans, maps progressive relay

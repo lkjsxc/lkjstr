@@ -29,6 +29,20 @@ fn status_text_names_provider_gap_row() {
 
 #[test]
 fn cancel_button_is_only_available_while_pending() {
-    assert!(can_cancel(CustomRequestFeedStatus::Planning));
-    assert!(!can_cancel(CustomRequestFeedStatus::Ready));
+    let planning = planning_custom_request_feed_view("tab");
+    let idle = default_custom_request_feed_view("tab");
+
+    assert!(can_cancel(&planning));
+    assert!(!can_cancel(&idle));
+}
+
+#[test]
+fn cancel_button_stays_available_for_active_relay_window() {
+    let mut active = default_custom_request_feed_view("tab");
+    active.status = CustomRequestFeedStatus::Ready;
+    active.relays = vec!["wss://selected.example/".to_owned()];
+
+    assert!(can_cancel(&active));
+    active.window.terminal = true;
+    assert!(!can_cancel(&active));
 }

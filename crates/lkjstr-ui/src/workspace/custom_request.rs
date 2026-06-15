@@ -1,7 +1,8 @@
 use leptos::prelude::*;
 use lkjstr_app::{
-    CustomRequestFeedStatus, canceled_custom_request_feed_view, default_custom_request_feed_view,
-    planning_custom_request_feed_view, unavailable_custom_request_feed_view,
+    CustomRequestFeedStatus, CustomRequestFeedView, canceled_custom_request_feed_view,
+    default_custom_request_feed_view, planning_custom_request_feed_view,
+    unavailable_custom_request_feed_view,
 };
 
 use crate::workspace::custom_request_provider::{CustomRequestLease, CustomRequestProvider};
@@ -58,7 +59,7 @@ pub fn CustomRequestTab(
     };
     let cancel_owner = owner.clone();
     let cancel = move |_| {
-        if !can_cancel(model.get_untracked().status) {
+        if !can_cancel(&model.get_untracked()) {
             return;
         }
         release_current(active_lease);
@@ -75,13 +76,13 @@ pub fn CustomRequestTab(
                     on:input=input_change
                 ></textarea>
                 <button type="submit" prop:disabled=move || {
-                    can_cancel(model.get().status) || input.get().trim().is_empty()
+                    can_cancel(&model.get()) || input.get().trim().is_empty()
                 }>
                     "Run"
                 </button>
                 <button
                     type="button"
-                    prop:hidden=move || !can_cancel(model.get().status)
+                    prop:hidden=move || !can_cancel(&model.get())
                     on:click=cancel
                 >
                     "Cancel"
@@ -122,8 +123,11 @@ fn alert_role(status: CustomRequestFeedStatus) -> &'static str {
     }
 }
 
-fn can_cancel(status: CustomRequestFeedStatus) -> bool {
-    status == CustomRequestFeedStatus::Planning
+fn can_cancel(model: &CustomRequestFeedView) -> bool {
+    model.status == CustomRequestFeedStatus::Planning
+        || (model.status == CustomRequestFeedStatus::Ready
+            && !model.window.terminal
+            && !model.relays.is_empty())
 }
 
 #[cfg(test)]
