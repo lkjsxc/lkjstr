@@ -3,7 +3,7 @@ import path from 'node:path';
 
 type Problem = { file: string; message: string };
 
-const retainedMenu = path.join(
+const deletedMenu = path.join(
   'src',
   'lib',
   'components',
@@ -21,12 +21,12 @@ export async function checkEventMenuGuard(
   const problems: Problem[] = [];
   for (const file of files) {
     const rel = path.relative(root, file);
-    if (!isProductSource(rel) || rel === retainedMenu) continue;
+    if (!isProductSource(rel) || rel === deletedMenu) continue;
     const text = await fs.readFile(file, 'utf8');
     if (menuPattern.test(text)) {
       problems.push({
         file: rel,
-        message: 'retained EventMoreMenu.svelte must not be mounted by product source',
+        message: 'deleted EventMoreMenu.svelte must not be mounted by product source',
       });
     }
   }

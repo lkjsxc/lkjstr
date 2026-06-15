@@ -14,11 +14,26 @@ describe('repo deleted path guard', () => {
     );
     await write(
       root,
+      'src/lib/components/events/EventMoreMenu.svelte',
+      '<button>old menu</button>',
+    );
+    await write(
+      root,
       'src/lib/tabs/followees/followees-scroll-rows.ts',
       'export const retained = true;',
     );
 
     await expect(checkDeletedPaths(root)).resolves.toEqual([
+      {
+        file: path.join(
+          'src',
+          'lib',
+          'components',
+          'events',
+          'EventMoreMenu.svelte',
+        ),
+        message: 'removed transitional path must stay absent',
+      },
       {
         file: path.join('src', 'lib', 'tabs', 'followees', 'FolloweesTab.svelte'),
         message: 'removed transitional path must stay absent',

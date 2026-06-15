@@ -13,8 +13,6 @@ actions, reaction summaries, zaps, emoji, and media.
   sensitive-content, and emoji pipeline.
 - `EventMeta.svelte` owns retained Svelte row metadata plus copy/nearby-author
   overflow behavior while Svelte rows remain shipped.
-- `EventMoreMenu.svelte` is a retained, unmounted deletion target; product rows
-  must not import or instantiate it while final deletion gates remain open.
 - `action-availability.ts` keeps optional event/profile actions from rendering
   no-op buttons.
 - `event-more-menu.ts` owns explicit clipboard copy success/failure labels and

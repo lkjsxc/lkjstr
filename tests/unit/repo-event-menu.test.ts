@@ -5,7 +5,7 @@ import { describe, expect, it } from 'vitest';
 import { checkEventMenuGuard } from '../../scripts/repo-event-menu';
 
 describe('repo event menu guard', () => {
-  it('rejects product mounts of the retained EventMoreMenu component', async () => {
+  it('rejects product mounts of the deleted EventMoreMenu component', async () => {
     const root = await fs.mkdtemp(path.join(os.tmpdir(), 'lkjstr-menu-'));
     const row = await write(
       root,
@@ -22,7 +22,7 @@ describe('repo event menu guard', () => {
       {
         file: path.join('src', 'lib', 'components', 'events', 'EventRow.svelte'),
         message:
-          'retained EventMoreMenu.svelte must not be mounted by product source',
+          'deleted EventMoreMenu.svelte must not be mounted by product source',
       },
     ]);
   });

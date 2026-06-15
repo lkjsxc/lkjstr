@@ -14,7 +14,7 @@ commands.
 - `repo-docs.ts`: docs topology and prose checks.
 - `repo-doc-task-shape.ts`: required headings for execution task files.
 - `repo-doc-skill-shape.ts`: required headings for agent skill files.
-- `repo-event-menu.ts`: retained Svelte event menu no-import guard.
+- `repo-event-menu.ts`: deleted Svelte event menu no-import guard.
 - `repo-source-classes.ts`: TypeScript AST guard that rejects first-party
   classes under `src/`.
 - `run-quiet.ts`: quiet verification runner for agents and CI.
@@ -22,8 +22,8 @@ commands.
 - `vitest-quiet-reporter.ts`: minimal Vitest reporter for quiet unit runs.
 
 `pnpm check:repo` runs the class guard along with documentation, README,
-Compose, deleted-path, line-length, storage, timer, event-menu, runtime counter,
-and dependency text checks.
+Compose, deleted-path, line-length, storage, timer, deleted event-menu,
+runtime counter, and dependency text checks.
 
 ## Quiet Runner
 

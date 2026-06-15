@@ -53,7 +53,7 @@ describe('event more menu author context action', () => {
 });
 
 describe('event more menu ownership', () => {
-  it('keeps row components from importing the retained Svelte menu', () => {
+  it('keeps row components from importing the deleted Svelte menu', () => {
     for (const file of [
       'src/lib/components/events/EventRow.svelte',
       'src/lib/components/events/EventFragmentRow.svelte',
@@ -75,9 +75,8 @@ describe('event more menu ownership', () => {
     expect(source).toContain('event-action-zone');
   });
 
-  it('keeps shipped product files from mounting the retained Svelte menu', () => {
+  it('keeps shipped product files from mounting the deleted Svelte menu', () => {
     for (const file of productSourceFiles('src')) {
-      if (file === 'src/lib/components/events/EventMoreMenu.svelte') continue;
       const source = readFileSync(file, 'utf8');
 
       expect(source, file).not.toMatch(
