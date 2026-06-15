@@ -14,6 +14,8 @@ pub enum FeedEventContentRow {
 
 #[derive(Clone, Debug, Eq, PartialEq)]
 pub struct FeedEventProfileMention {
+    pub row_key: String,
+    pub item_index: u16,
     pub pubkey: String,
     pub relays: Vec<String>,
     pub raw_text: String,

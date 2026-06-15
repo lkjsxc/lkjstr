@@ -185,7 +185,8 @@ models, anchors, footer states, and unavailable states.
   relay-hint UI attributes, inline content event-reference token suppression
   before Rust row planning, safe HTTPS link rows with stable identity and real
   media-backed inline URL suppression,
-  identity-only NIP-19 profile mention rows with optional profile-open actions
+  identity-only NIP-19 profile mention rows with stable identity attributes and
+  optional profile-open actions
   plus reference thread-open actions on converted Rust surfaces that pass a
   real opener, normalized event/profile entity relay hints, validated custom
   emoji rows with image presentation plus address and stable identity attributes,

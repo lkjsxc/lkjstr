@@ -7,12 +7,15 @@ use lkjstr_protocol::{ProfilePointer, encode_nprofile, encode_npub};
 #[test]
 fn content_rows_render_npub_profile_mentions() -> Result<(), String> {
     let pubkey = "1".repeat(64);
+    let second_pubkey = "3".repeat(64);
     let npub = encode_npub(&pubkey).map_err(|error| format!("{error:?}"))?;
+    let second_npub = encode_npub(&second_pubkey).map_err(|error| format!("{error:?}"))?;
     let raw = format!("nostr:{npub}");
+    let second_raw = format!("nostr:{second_npub}");
     let content = plan_feed_event_content(
         false,
         None,
-        &event(&format!("hi {raw}!")),
+        &event(&format!("hi {raw} and {second_raw}!")),
         &[],
         "shape",
         120,
@@ -23,7 +26,9 @@ fn content_rows_render_npub_profile_mentions() -> Result<(), String> {
         content_rows(content),
         vec![
             FeedEventContentRow::Text("hi ".to_owned()),
-            profile_mention(&pubkey, &raw, Vec::new()),
+            profile_mention(0, &pubkey, &raw, Vec::new()),
+            FeedEventContentRow::Text(" and ".to_owned()),
+            profile_mention(1, &second_pubkey, &second_raw, Vec::new()),
             FeedEventContentRow::Text("!".to_owned()),
         ]
     );
@@ -55,6 +60,7 @@ fn content_rows_render_nprofile_relay_hints() -> Result<(), String> {
     assert_eq!(
         content_rows(content),
         vec![profile_mention(
+            0,
             &pubkey,
             &raw,
             vec!["wss://relay.example/".to_owned()],
@@ -85,8 +91,15 @@ fn event(content: &str) -> SemanticFeedEvent {
     }
 }
 
-fn profile_mention(pubkey: &str, raw: &str, relays: Vec<String>) -> FeedEventContentRow {
+fn profile_mention(
+    index: u16,
+    pubkey: &str,
+    raw: &str,
+    relays: Vec<String>,
+) -> FeedEventContentRow {
     FeedEventContentRow::ProfileMention(FeedEventProfileMention {
+        row_key: format!("event:event:shape:shape:kind:event-profile-mention:index:{index}"),
+        item_index: index,
         pubkey: pubkey.to_owned(),
         relays,
         raw_text: raw.to_owned(),

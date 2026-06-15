@@ -3,6 +3,8 @@ use lkjstr_app::feed::FeedEventProfileMention;
 
 #[derive(Clone, Debug, Eq, PartialEq)]
 struct ProfileMentionAttrs {
+    row_key: String,
+    item_index: String,
     class_name: &'static str,
     pubkey: String,
     relays: String,
@@ -27,6 +29,8 @@ pub(super) fn profile_mention(
         <button
             type="button"
             class=attrs.class_name
+            data-row-key=attrs.row_key
+            data-item-index=attrs.item_index
             data-pubkey=attrs.pubkey
             data-relays=attrs.relays
             title=attrs.title
@@ -42,6 +46,8 @@ fn profile_mention_span(attrs: ProfileMentionAttrs) -> impl IntoView {
     view! {
         <span
             class=attrs.class_name
+            data-row-key=attrs.row_key
+            data-item-index=attrs.item_index
             data-pubkey=attrs.pubkey
             data-relays=attrs.relays
             title=attrs.title
@@ -53,6 +59,8 @@ fn profile_mention_span(attrs: ProfileMentionAttrs) -> impl IntoView {
 
 fn profile_mention_attrs(mention: &FeedEventProfileMention) -> ProfileMentionAttrs {
     ProfileMentionAttrs {
+        row_key: mention.row_key.clone(),
+        item_index: mention.item_index.to_string(),
         class_name: "content-token content-mention-token",
         pubkey: mention.pubkey.clone(),
         relays: mention.relays.join(" "),
@@ -73,6 +81,8 @@ mod tests {
     #[test]
     fn profile_mention_attrs_keep_real_identity_only() {
         let mention = FeedEventProfileMention {
+            row_key: "event:event:shape:shape:kind:event-profile-mention:index:0".to_owned(),
+            item_index: 0,
             pubkey: "a".repeat(64),
             relays: vec!["wss://relay.example".to_owned()],
             raw_text: "nostr:npub1example".to_owned(),
@@ -82,6 +92,8 @@ mod tests {
         assert_eq!(
             attrs,
             ProfileMentionAttrs {
+                row_key: "event:event:shape:shape:kind:event-profile-mention:index:0".to_owned(),
+                item_index: "0".to_owned(),
                 class_name: "content-token content-mention-token",
                 pubkey: "a".repeat(64),
                 relays: "wss://relay.example".to_owned(),
