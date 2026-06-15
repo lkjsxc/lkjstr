@@ -19,3 +19,5 @@ The workspace is the first screen and owns split tiles.
 - Startup focuses Welcome and also creates Accounts, Relay Settings, Home,
   Notifications, and Tweet before async storage finishes. Invalid, blocked, or
   corrupt storage recovers to a usable Welcome workspace.
+- The application header source link opens GitHub in a new browsing context
+  with `noopener noreferrer`.

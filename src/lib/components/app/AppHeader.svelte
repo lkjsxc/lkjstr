@@ -9,7 +9,7 @@
     class="app-header__source"
     href="https://github.com/lkjsxc/lkjstr"
     target="_blank"
-    rel="noreferrer"
+    rel="noopener noreferrer"
   >
     GitHub
   </a>
