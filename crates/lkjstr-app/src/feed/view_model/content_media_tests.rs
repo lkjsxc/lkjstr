@@ -61,6 +61,33 @@ fn content_rows_replace_media_segments_with_real_attachment_rows() {
 }
 
 #[test]
+fn link_kind_attachments_do_not_create_media_rows_or_index_gaps() {
+    let content = plan_feed_event_content(
+        false,
+        None,
+        &event_with_media(
+            "mixed",
+            &[
+                link("https://example.com/page"),
+                media("https://cdn.example/image.png"),
+            ],
+        ),
+        &[],
+        "shape",
+        120,
+        &FeedFragmentConfig::default(),
+    );
+
+    assert_eq!(
+        content_rows(content),
+        vec![
+            FeedEventContentRow::Text("mixed".to_owned()),
+            media_row("shape", 0, "https://cdn.example/image.png"),
+        ]
+    );
+}
+
+#[test]
 fn action_summaries_do_not_inherit_raw_media_rows() {
     let mut event = event_with_media(
         "https://cdn.example/raw.png",
@@ -111,6 +138,14 @@ fn media(url: &str) -> ContentAttachment {
         url: url.to_owned(),
         kind: ContentAttachmentKind::Image,
         aspect_ratio: Some("4 / 3".to_owned()),
+    }
+}
+
+fn link(url: &str) -> ContentAttachment {
+    ContentAttachment {
+        url: url.to_owned(),
+        kind: ContentAttachmentKind::Link,
+        aspect_ratio: None,
     }
 }
 

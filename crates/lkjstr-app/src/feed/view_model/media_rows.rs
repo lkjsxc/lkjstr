@@ -37,11 +37,13 @@ fn media_rows(
     shape: &str,
     attachments: &[ContentAttachment],
 ) -> Vec<FeedEventContentRow> {
-    attachments
-        .iter()
-        .enumerate()
-        .filter_map(|(index, item)| media_row(event_id, shape, index, item))
-        .collect()
+    let mut rows = Vec::new();
+    for item in attachments {
+        if let Some(row) = media_row(event_id, shape, rows.len(), item) {
+            rows.push(row);
+        }
+    }
+    rows
 }
 
 fn media_row(

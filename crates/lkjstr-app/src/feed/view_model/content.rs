@@ -2,8 +2,8 @@ use crate::feed_fragments::{
     EventIndexedRow, FeedFragmentConfig, FeedVisualRow, SemanticFeedEvent, plan_feed_visual_rows,
 };
 use lkjstr_protocol::{
-    CustomEmoji, KIND_GENERIC_REPOST, KIND_REACTION, KIND_REPOST, KIND_ZAP_RECEIPT,
-    custom_emoji_token_text, strip_event_reference_tokens,
+    ContentAttachment, ContentAttachmentKind, CustomEmoji, KIND_GENERIC_REPOST, KIND_REACTION,
+    KIND_REPOST, KIND_ZAP_RECEIPT, custom_emoji_token_text, strip_event_reference_tokens,
 };
 
 use super::link_rows::inject_link_rows;
@@ -111,10 +111,15 @@ fn feed_event_content_row(row: &FeedVisualRow) -> Option<FeedEventContentRow> {
     }
 }
 
-fn event_media_attachments(event: &SemanticFeedEvent) -> Vec<lkjstr_protocol::ContentAttachment> {
+fn event_media_attachments(event: &SemanticFeedEvent) -> Vec<ContentAttachment> {
     match event.event_kind {
         KIND_REPOST | KIND_GENERIC_REPOST | KIND_REACTION | KIND_ZAP_RECEIPT => Vec::new(),
-        _ => event.media_attachments.clone(),
+        _ => event
+            .media_attachments
+            .iter()
+            .filter(|item| !matches!(item.kind, ContentAttachmentKind::Link))
+            .cloned()
+            .collect(),
     }
 }
 

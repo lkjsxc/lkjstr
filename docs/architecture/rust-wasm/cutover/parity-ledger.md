@@ -154,8 +154,8 @@ notification repost rows. Current Rust proof covers shared/repost renderer
 selection, unavailable target planning, chrome policy, validated custom emoji
 content rows with image presentation and address-attribute proof, real HTTPS
 media attachment row planning from content and `imeta` tags with fallback
-open-link identity attributes, unavailable reference rows with real referenced
-event identity and relay-hint UI attributes, inline content
+open-link identity attributes and compact media-only row ids, unavailable
+reference rows with real referenced event identity and relay-hint UI attributes, inline content
 event-reference token suppression before Rust row planning, safe HTTPS link rows
 while suppressing embedded media URLs inline, identity-only NIP-19 profile
 mention rows, indexed unavailable media/reference rows with UI attribute proof,
