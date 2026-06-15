@@ -55,11 +55,13 @@ proof exist.
   for the shipped Followees island.
 - `crates/lkjstr-web/tests/followees_island_test.rs` proves explicit
   unavailable rendering and unmount cleanup through the exported bridge.
+- The old `src/lib/tabs/followees` helper directory has no live imports, is
+  removed, and is guarded absent by repository checks.
 
 ## Next Edit
 
 Continue remaining Followees/User Timeline parity and no-import prerequisites.
-Do not start deletion proof yet.
+Do not start broader follow-graph deletion proof yet.
 
 ## Files To Read
 
@@ -79,7 +81,6 @@ Do not start deletion proof yet.
 - `crates/lkjstr-web/src/followees_routes.rs`
 - `src/lib/components/workspace/followees-island.ts`
 - `src/lib/components/workspace/RustIslandHost.svelte`
-- `src/lib/tabs/followees/followees-scroll-rows.ts`
 - `crates/lkjstr-web/tests/profile_feed_tab_test.rs`
 - `crates/lkjstr-web/tests/followees_island_test.rs`
 - `crates/lkjstr-web/tests/followees_route_provider_test.rs`
@@ -120,6 +121,8 @@ pnpm rust-wasm:quiet
 - Profile opening proof reaches the real Followees body.
 - The shipped Followees tab uses only generic Svelte lifecycle host glue for
   the Rust island and releases it on visibility changes or destruction.
+- The old `src/lib/tabs/followees` helper directory remains removed after
+  no-import proof.
 - The generic Svelte host cancels pending WASM mounts when hidden or destroyed,
   so late bridge loads cannot remount a hidden island.
 - Rust rows expose real pubkeys, relay hints, petnames, and profile,
@@ -132,5 +135,6 @@ pnpm rust-wasm:quiet
 
 - Do not synthesize users, profiles, follow-list rows, or successful discovery.
 - Do not treat missing follow-list data as absence.
-- Do not delete `src/lib/follow-graph`, Followees scroll helpers, or generic
-  workspace tab glue.
+- Do not reintroduce the old `src/lib/tabs/followees` helper directory.
+- Do not delete `src/lib/follow-graph` or generic workspace tab glue before
+  remaining parity and final gates.

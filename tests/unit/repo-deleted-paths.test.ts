@@ -5,12 +5,12 @@ import { describe, expect, it } from 'vitest';
 import { checkDeletedPaths } from '../../scripts/repo-deleted-paths';
 
 describe('repo deleted path guard', () => {
-  it('rejects removed transitional wrappers without blocking retained helpers', async () => {
+  it('rejects removed transitional paths without blocking retained helpers', async () => {
     const root = await fs.mkdtemp(path.join(os.tmpdir(), 'lkjstr-deleted-'));
     await write(
       root,
-      'src/lib/tabs/followees/FolloweesTab.svelte',
-      '<section>old wrapper</section>',
+      'src/lib/tabs/followees/followees-scroll-rows.ts',
+      'export const oldHelper = true;',
     );
     await write(
       root,
@@ -35,7 +35,7 @@ describe('repo deleted path guard', () => {
         message: 'removed transitional path must stay absent',
       },
       {
-        file: path.join('src', 'lib', 'tabs', 'followees', 'FolloweesTab.svelte'),
+        file: path.join('src', 'lib', 'tabs', 'followees'),
         message: 'removed transitional path must stay absent',
       },
     ]);

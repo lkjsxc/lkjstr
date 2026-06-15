@@ -11,7 +11,6 @@ The workspace snapshot coordinator owns durable identity and restore tokens.
 - [accounts/](accounts/): account management tab.
 - [cache/](cache/): cache status tab.
 - [custom-request/](custom-request/): validated relay request tab.
-- [followees/](followees/): viewed-profile following list.
 - [log/](log/): lkjstr Log tab.
 - [new-tab/](new-tab/): New Tab chooser.
 - [notifications/](notifications/): Notifications tab.
