@@ -1,4 +1,4 @@
-use leptos::prelude::*;
+use leptos::{ev::MouseEvent, prelude::*};
 use lkjstr_app::feed::{FeedEventReferenceKind, FeedEventReferenceUnavailable};
 
 #[derive(Clone, Debug, Eq, PartialEq)]
@@ -10,8 +10,35 @@ struct ReferenceUnavailableAttrs {
     label: &'static str,
 }
 
-pub(super) fn reference_unavailable(reference: FeedEventReferenceUnavailable) -> impl IntoView {
+pub(super) fn reference_unavailable(
+    reference: FeedEventReferenceUnavailable,
+    open_thread: Option<Callback<String>>,
+) -> impl IntoView {
     let attrs = reference_unavailable_attrs(reference);
+    let Some(open_thread) = open_thread else {
+        return reference_unavailable_paragraph(attrs).into_any();
+    };
+    let event_id = attrs.event_id.clone();
+    let open = move |event: MouseEvent| {
+        event.stop_propagation();
+        open_thread.run(event_id.clone());
+    };
+    view! {
+        <button
+            type="button"
+            data-row-key=attrs.row_key
+            data-segment-index=attrs.segment_index
+            data-event-id=attrs.event_id
+            data-reference-kind=attrs.kind
+            on:click=open
+        >
+            {attrs.label}
+        </button>
+    }
+    .into_any()
+}
+
+fn reference_unavailable_paragraph(attrs: ReferenceUnavailableAttrs) -> impl IntoView {
     view! {
         <p
             data-row-key=attrs.row_key
@@ -50,6 +77,11 @@ fn reference_kind_attrs(kind: &FeedEventReferenceKind) -> (&'static str, &'stati
 }
 
 #[cfg(test)]
+fn reference_unavailable_element(can_open: bool) -> &'static str {
+    if can_open { "button" } else { "p" }
+}
+
+#[cfg(test)]
 mod tests {
     use super::*;
 
@@ -73,5 +105,11 @@ mod tests {
                 label: "Quoted event unavailable",
             }
         );
+    }
+
+    #[test]
+    fn reference_unavailable_action_requires_thread_opener() {
+        assert_eq!(reference_unavailable_element(false), "p");
+        assert_eq!(reference_unavailable_element(true), "button");
     }
 }

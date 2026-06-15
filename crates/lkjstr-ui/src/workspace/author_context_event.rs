@@ -5,16 +5,18 @@ use crate::workspace::author_context_actions::AuthorContextActions;
 use crate::workspace::feed_event_actions::{
     FeedEventActionLabels, event_actions as feed_event_actions,
 };
-use crate::workspace::feed_event_row::event_row_with_profile_opener as feed_event_row;
+use crate::workspace::feed_event_row::event_row_with_openers as feed_event_row;
 
 pub(crate) fn event_row(row: FeedEventRow, actions: AuthorContextActions) -> impl IntoView {
     let event_id = row.event_id.clone();
     let author_pubkey = row.author_pubkey.clone();
     let open_profile = actions.open_profile;
+    let open_thread = actions.open_thread;
     feed_event_row(
         row,
         event_actions(event_id, author_pubkey, actions),
         open_profile,
+        open_thread,
     )
 }
 

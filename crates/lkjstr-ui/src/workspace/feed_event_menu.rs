@@ -4,7 +4,7 @@ use lkjstr_app::FeedEventRow;
 use crate::workspace::feed_event_actions::{
     FeedEventActionLabels, FeedEventActions, event_actions,
 };
-use crate::workspace::feed_event_row::event_row_with_profile_opener;
+use crate::workspace::feed_event_row::event_row_with_openers;
 
 pub(crate) fn event_row_with_nearby_menu(
     row: FeedEventRow,
@@ -15,7 +15,8 @@ pub(crate) fn event_row_with_nearby_menu(
     let event_id = row.event_id.clone();
     let pubkey = row.author_pubkey.clone();
     let open_profile = actions.profile_opener();
-    event_row_with_profile_opener(
+    let open_thread = actions.thread_opener();
+    event_row_with_openers(
         row,
         nearby_event_menu(
             event_id,
@@ -25,6 +26,7 @@ pub(crate) fn event_row_with_nearby_menu(
             copy_test_id,
         ),
         open_profile,
+        open_thread,
     )
 }
 

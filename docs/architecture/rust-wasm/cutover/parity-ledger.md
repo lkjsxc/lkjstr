@@ -158,10 +158,10 @@ referenced event identity, inline content event-reference token suppression
 before Rust row planning, safe HTTPS link rows while suppressing embedded media
 URLs inline, identity-only NIP-19 profile mention rows, indexed unavailable
 media/reference rows with UI attribute proof, normalized event/profile entity
-relay hints, optional profile-open mention actions when a converted Rust surface
-already passes a real opener, notification repost event rows, and full
-FeedViewModel bounded summaries for repost, generic repost, reaction, and zap
-rows.
+relay hints, optional profile-open mention actions and reference thread-open
+actions when a converted Rust surface already passes a real opener,
+notification repost event rows, and full FeedViewModel bounded summaries for
+repost, generic repost, reaction, and zap rows.
 Repost-specific code may provide contextual chrome but must not fork target event
 rendering without a documented tested reason.
 

@@ -25,15 +25,16 @@ struct UnavailablePreviewAttrs {
     label: &'static str,
 }
 
-pub(crate) fn event_content_with_profile_opener(
+pub(crate) fn event_content_with_openers(
     content: FeedEventContent,
     open_profile: Option<Callback<String>>,
+    open_thread: Option<Callback<String>>,
 ) -> impl IntoView {
     match content {
         FeedEventContent::Sensitive { reason, rows } => {
-            sensitive_content(reason, rows, open_profile).into_any()
+            sensitive_content(reason, rows, open_profile, open_thread).into_any()
         }
-        FeedEventContent::Rows(rows) => text_rows_view(rows, open_profile).into_any(),
+        FeedEventContent::Rows(rows) => text_rows_view(rows, open_profile, open_thread).into_any(),
     }
 }
 
@@ -41,12 +42,13 @@ fn sensitive_content(
     reason: Option<String>,
     rows: Vec<FeedEventContentRow>,
     open_profile: Option<Callback<String>>,
+    open_thread: Option<Callback<String>>,
 ) -> impl IntoView {
     let revealed = RwSignal::new(false);
     view! {
         {move || {
             if revealed.get() {
-                text_rows_view(rows.clone(), open_profile).into_any()
+                text_rows_view(rows.clone(), open_profile, open_thread).into_any()
             } else {
                 sensitive_warning(reason.clone(), revealed).into_any()
             }
@@ -72,13 +74,18 @@ fn warning_reason(reason: Option<String>) -> impl IntoView {
 fn text_rows_view(
     rows: Vec<FeedEventContentRow>,
     open_profile: Option<Callback<String>>,
+    open_thread: Option<Callback<String>>,
 ) -> impl IntoView {
     rows.into_iter()
-        .map(|row| content_row(row, open_profile).into_any())
+        .map(|row| content_row(row, open_profile, open_thread).into_any())
         .collect_view()
 }
 
-fn content_row(row: FeedEventContentRow, open_profile: Option<Callback<String>>) -> impl IntoView {
+fn content_row(
+    row: FeedEventContentRow,
+    open_profile: Option<Callback<String>>,
+    open_thread: Option<Callback<String>>,
+) -> impl IntoView {
     match row {
         FeedEventContentRow::Text(text) => view! { <p>{text}</p> }.into_any(),
         FeedEventContentRow::Link(link) => event_link(link).into_any(),
@@ -91,7 +98,7 @@ fn content_row(row: FeedEventContentRow, open_profile: Option<Callback<String>>)
             unavailable_preview(preview, "Media preview unavailable").into_any()
         }
         FeedEventContentRow::ReferenceUnavailable(reference) => {
-            reference_unavailable(reference).into_any()
+            reference_unavailable(reference, open_thread).into_any()
         }
         FeedEventContentRow::ReferencePreviewUnavailable(preview) => {
             unavailable_preview(preview, "Reference preview unavailable").into_any()
@@ -151,47 +158,5 @@ fn custom_emoji_image_attrs(emoji: &FeedEventCustomEmoji) -> CustomEmojiImageAtt
 }
 
 #[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test]
-    fn custom_emoji_attrs_keep_real_url_and_safe_image_policy() {
-        let attrs = custom_emoji_image_attrs(&FeedEventCustomEmoji {
-            shortcode: "party".to_owned(),
-            url: "https://emoji.example/party.png".to_owned(),
-            address: Some(format!("30030:{}:set", "a".repeat(64))),
-        });
-
-        assert_eq!(
-            attrs,
-            CustomEmojiImageAttrs {
-                class_name: "custom-emoji",
-                src: "https://emoji.example/party.png".to_owned(),
-                alt: ":party:".to_owned(),
-                title: ":party:".to_owned(),
-                loading: "lazy",
-                referrer_policy: "no-referrer",
-            }
-        );
-    }
-
-    #[test]
-    fn unavailable_preview_attrs_keep_fragment_identity() {
-        let attrs = unavailable_preview_attrs(
-            FeedEventUnavailablePreview {
-                row_key: "event:shape:event-media-segment:2".to_owned(),
-                segment_index: 2,
-            },
-            "Media preview unavailable",
-        );
-
-        assert_eq!(
-            attrs,
-            UnavailablePreviewAttrs {
-                row_key: "event:shape:event-media-segment:2".to_owned(),
-                segment_index: "2".to_owned(),
-                label: "Media preview unavailable",
-            }
-        );
-    }
-}
+#[path = "feed_event_content_tests.rs"]
+mod tests;

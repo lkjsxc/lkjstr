@@ -29,6 +29,10 @@ impl FeedEventActions {
     pub(crate) fn profile_opener(&self) -> Option<Callback<String>> {
         self.open_profile
     }
+
+    pub(crate) fn thread_opener(&self) -> Option<Callback<String>> {
+        self.open_thread
+    }
 }
 
 #[derive(Clone, Copy)]

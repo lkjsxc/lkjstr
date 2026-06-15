@@ -24,6 +24,20 @@ fn feed_event_actions_available_requires_at_least_one_action() {
 }
 
 #[test]
+fn opener_accessors_return_only_real_callbacks() {
+    assert!(FeedEventActions::default().profile_opener().is_none());
+    assert!(FeedEventActions::default().thread_opener().is_none());
+    let actions = FeedEventActions {
+        open_profile: Some(Callback::new(|_: String| {})),
+        open_thread: Some(Callback::new(|_: String| {})),
+        ..FeedEventActions::default()
+    };
+
+    assert!(actions.profile_opener().is_some());
+    assert!(actions.thread_opener().is_some());
+}
+
+#[test]
 fn nearby_actions_are_available_when_any_provider_exists() {
     assert!(feed_event_actions_available(&FeedEventActions::nearby(
         Some(Callback::new(|_: (String, String)| {})),
