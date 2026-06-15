@@ -27,9 +27,15 @@ but produce the same wire REQ must share one fingerprint.
 Lease fingerprints must not include:
 
 - `owner`
+- surface identity
 - tab id
 - runtime `subId`
 - pane id
+
+Surface identity stays in demand owners, ingress classification, cache proof,
+and view-model state. Two surfaces that produce the same relay request may share
+one live wire lease, but each surface still interprets the incoming events
+through its own reducer and completeness rules.
 
 ## Home session anchor
 

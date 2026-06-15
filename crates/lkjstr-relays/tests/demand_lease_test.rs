@@ -19,6 +19,26 @@ fn fingerprint_is_stable_for_equivalent_wire_demands() {
 }
 
 #[test]
+fn surface_identity_does_not_split_wire_equivalent_leases() {
+    let home = live_demand("tab-a", vec!["wss://relay"]);
+    let mut search = home.clone();
+    search.owner = "tab-b".to_owned();
+    search.surface = DemandSurface::Search;
+    let mut registry = DemandLeaseRegistry::new();
+    let first = registry.attach(home.clone(), now_sec());
+    let second = registry.attach(search.clone(), now_sec());
+
+    assert_eq!(
+        wire_equivalent_fingerprint(&home, now_sec()),
+        wire_equivalent_fingerprint(&search, now_sec())
+    );
+    assert_eq!(first.action, DemandAttachAction::Start);
+    assert_eq!(second.action, DemandAttachAction::Share);
+    assert_eq!(second.snapshot.owner_count, 2);
+    assert_eq!(registry.counts().active_leases, 1);
+}
+
+#[test]
 fn live_filter_normalization_removes_limits_and_uses_demand_since() -> Result<(), String> {
     let since = 1_700_000_000;
     let mut left = live_demand("tab-a", vec!["wss://relay"]);
