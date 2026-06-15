@@ -206,8 +206,8 @@ models, anchors, footer states, and unavailable states.
 - Remaining completion proof: retained Svelte event overflow behavior now lives
   in `EventMeta.svelte`, and `EventRow.svelte` plus `EventFragmentRow.svelte`
   no longer import `EventMoreMenu.svelte`. The retained component file is
-  guarded as an unmounted deletion target; final-gate deletion readiness and
-  other feed-surface deletion prerequisites remain open.
+  guarded as an unmounted deletion target by `pnpm check:repo`; final-gate
+  deletion readiness and other feed-surface deletion prerequisites remain open.
   Missing coverage never proves absence, and no placeholder rows exist.
 
 ## 4. First Home Leptos feed slice
