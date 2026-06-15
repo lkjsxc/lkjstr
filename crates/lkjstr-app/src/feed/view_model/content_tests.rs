@@ -1,7 +1,6 @@
-use super::content::feed_event_content_rows_with_emojis;
 use super::{
-    FeedEventContent, FeedEventContentRow, FeedEventUnavailablePreview, feed_event_content,
-    feed_event_content_rows, plan_feed_event_content,
+    FeedEventContent, FeedEventContentRow, FeedEventCustomEmoji, FeedEventUnavailablePreview,
+    feed_event_content, feed_event_content_rows, plan_feed_event_content,
 };
 use crate::feed_fragments::{
     EventFullRow, EventIndexedRow, EventMarkerRow, EventTextSegmentRow, FeedFragmentConfig,
@@ -52,7 +51,6 @@ fn content_warning_keeps_rows_for_local_reveal() {
 
 #[test]
 fn content_rows_replace_valid_custom_emoji_tokens_with_render_rows() {
-    let rows = vec![FeedVisualRow::EventFull(full("hi :party: now :party:"))];
     let emoji = CustomEmoji {
         shortcode: "party".to_owned(),
         url: "https://emoji.example/party.png".to_owned(),
@@ -60,12 +58,20 @@ fn content_rows_replace_valid_custom_emoji_tokens_with_render_rows() {
     };
 
     assert_eq!(
-        feed_event_content_rows_with_emojis(&rows, std::slice::from_ref(&emoji)),
+        content_rows(plan_feed_event_content(
+            false,
+            None,
+            &event(1, "hi :party: now :party:"),
+            std::slice::from_ref(&emoji),
+            "shape",
+            120,
+            &FeedFragmentConfig::default(),
+        )),
         vec![
             FeedEventContentRow::Text("hi ".to_owned()),
-            FeedEventContentRow::CustomEmoji((&emoji).into()),
+            emoji_row("shape", 0, &emoji),
             FeedEventContentRow::Text(" now ".to_owned()),
-            FeedEventContentRow::CustomEmoji((&emoji).into()),
+            emoji_row("shape", 1, &emoji),
         ]
     );
 }
@@ -109,7 +115,6 @@ fn action_events_render_bounded_protocol_summary_rows() {
         vec!["Zap receipt target unavailable".to_owned()]
     );
 }
-
 fn content_texts(content: FeedEventContent) -> Vec<String> {
     content_rows(content)
         .into_iter()
@@ -182,4 +187,14 @@ fn unavailable(row_key: &str, segment_index: u16) -> FeedEventUnavailablePreview
         row_key: row_key.to_owned(),
         segment_index,
     }
+}
+
+fn emoji_row(shape: &str, index: u16, emoji: &CustomEmoji) -> FeedEventContentRow {
+    FeedEventContentRow::CustomEmoji(FeedEventCustomEmoji {
+        row_key: format!("event:event:shape:{shape}:kind:event-custom-emoji:index:{index}"),
+        item_index: index,
+        shortcode: emoji.shortcode.clone(),
+        url: emoji.url.clone(),
+        address: emoji.address.clone(),
+    })
 }

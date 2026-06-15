@@ -152,7 +152,7 @@ target planning, shared geometry-feature extraction, compact unavailable states,
 custom emoji, media, references, sensitive-content policy, actions, and
 notification repost rows. Current Rust proof covers shared/repost renderer
 selection, unavailable target planning, chrome policy, validated custom emoji
-content rows with image presentation and address-attribute proof, real HTTPS
+content rows with image presentation plus address and stable identity attributes, real HTTPS
 media attachment row planning from content and `imeta` tags with fallback
 open-link identity attributes and compact media-only row ids, unavailable
 reference rows with real referenced event identity and relay-hint UI attributes, inline content

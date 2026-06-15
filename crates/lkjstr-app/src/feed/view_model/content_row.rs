@@ -29,6 +29,8 @@ pub struct FeedEventLink {
 
 #[derive(Clone, Debug, Eq, PartialEq)]
 pub struct FeedEventCustomEmoji {
+    pub row_key: String,
+    pub item_index: u16,
     pub shortcode: String,
     pub url: String,
     pub address: Option<String>,

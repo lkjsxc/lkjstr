@@ -188,7 +188,7 @@ models, anchors, footer states, and unavailable states.
   identity-only NIP-19 profile mention rows with optional profile-open actions
   plus reference thread-open actions on converted Rust surfaces that pass a
   real opener, normalized event/profile entity relay hints, validated custom
-  emoji rows with image presentation and address-attribute proof,
+  emoji rows with image presentation plus address and stable identity attributes,
   notification repost event rows, author metadata, sensitive-warning reveal
   rendering, common state-row rendering,
   shared footer shell rendering across converted feed rows, retained Svelte copy

@@ -10,6 +10,8 @@ use super::feed_event_reference::reference_unavailable;
 
 #[derive(Clone, Debug, Eq, PartialEq)]
 struct CustomEmojiImageAttrs {
+    row_key: String,
+    item_index: String,
     class_name: &'static str,
     src: String,
     alt: String,
@@ -140,6 +142,8 @@ fn custom_emoji(emoji: FeedEventCustomEmoji) -> impl IntoView {
                 alt=attrs.alt
                 title=attrs.title
                 data-address=attrs.address
+                data-row-key=attrs.row_key
+                data-item-index=attrs.item_index
                 loading=attrs.loading
                 referrerpolicy=attrs.referrer_policy
             />
@@ -150,6 +154,8 @@ fn custom_emoji(emoji: FeedEventCustomEmoji) -> impl IntoView {
 fn custom_emoji_image_attrs(emoji: &FeedEventCustomEmoji) -> CustomEmojiImageAttrs {
     let token = format!(":{}:", emoji.shortcode);
     CustomEmojiImageAttrs {
+        row_key: emoji.row_key.clone(),
+        item_index: emoji.item_index.to_string(),
         class_name: "custom-emoji",
         src: emoji.url.clone(),
         alt: token.clone(),

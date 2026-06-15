@@ -13,6 +13,7 @@ mod content_reference_tests;
 mod content_row;
 #[cfg(test)]
 mod content_tests;
+mod custom_emoji_rows;
 mod geometry;
 mod ids;
 mod link_rows;
