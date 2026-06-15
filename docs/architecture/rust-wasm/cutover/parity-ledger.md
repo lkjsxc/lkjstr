@@ -157,7 +157,7 @@ media attachment row planning from content and `imeta` tags with fallback
 open-link identity attributes and compact media-only row ids, unavailable
 reference rows with real referenced event identity and relay-hint UI attributes, inline content
 event-reference token suppression before Rust row planning, safe HTTPS link rows
-while suppressing embedded media URLs inline, identity-only NIP-19 profile
+while suppressing real media-backed URLs inline, identity-only NIP-19 profile
 mention rows, indexed unavailable media/reference rows with UI attribute proof,
 normalized event/profile entity relay hints, optional profile-open mention
 actions and reference thread-open actions when a converted Rust surface already

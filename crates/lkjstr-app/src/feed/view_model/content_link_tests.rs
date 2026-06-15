@@ -54,6 +54,30 @@ fn content_rows_hide_embedded_media_urls_inline() {
     );
 }
 
+#[test]
+fn content_rows_keep_media_like_url_visible_without_real_attachment() {
+    let content = plan_feed_event_content(
+        false,
+        None,
+        &event("see https://cdn.example/image.png", &[]),
+        &[],
+        "shape",
+        120,
+        &FeedFragmentConfig::default(),
+    );
+
+    assert_eq!(
+        content_rows(content),
+        vec![
+            FeedEventContentRow::Text("see ".to_owned()),
+            FeedEventContentRow::Link(FeedEventLink {
+                url: "https://cdn.example/image.png".to_owned(),
+                text: "https://cdn.example/image.png".to_owned(),
+            }),
+        ]
+    );
+}
+
 fn content_rows(content: FeedEventContent) -> Vec<FeedEventContentRow> {
     match content {
         FeedEventContent::Sensitive { rows, .. } | FeedEventContent::Rows(rows) => rows,
