@@ -1,4 +1,7 @@
-use crate::{NostrEntity, decode_nip19, event_reference_scan::nostr_entity_spans, is_pubkey};
+use crate::{
+    NostrEntity, decode_nip19, event_reference_scan::nostr_entity_spans, is_pubkey,
+    normalize_relay_url,
+};
 
 #[derive(Clone, Debug, Eq, PartialEq)]
 pub struct ContentProfileMention {
@@ -28,12 +31,22 @@ fn profile_mention(
         Some(NostrEntity::Nprofile(pointer)) if is_pubkey(&pointer.pubkey) => Some(mention(
             content,
             pointer.pubkey,
-            pointer.relays.unwrap_or_default(),
+            normalized_relays(pointer.relays.unwrap_or_default()),
             span.start,
             span.end,
         )),
         _ => None,
     }
+}
+
+fn normalized_relays(relays: Vec<String>) -> Vec<String> {
+    let mut relays = relays
+        .iter()
+        .filter_map(|relay| normalize_relay_url(relay))
+        .collect::<Vec<_>>();
+    relays.sort();
+    relays.dedup();
+    relays
 }
 
 fn mention(

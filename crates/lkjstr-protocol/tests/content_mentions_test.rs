@@ -37,7 +37,34 @@ fn extracts_nprofile_relay_hints_and_ignores_event_entities() -> Result<(), Stri
         content_profile_mentions(&content),
         vec![ContentProfileMention {
             pubkey,
-            relays: vec!["wss://relay.example".to_owned()],
+            relays: vec!["wss://relay.example/".to_owned()],
+            raw: format!("nostr:{nprofile}"),
+            start: 0,
+            end: 6 + nprofile.len(),
+        }]
+    );
+    Ok(())
+}
+
+#[test]
+fn nprofile_relay_hints_are_normalized_and_deduped() -> Result<(), String> {
+    let pubkey = "4".repeat(64);
+    let nprofile = encode_nprofile(&ProfilePointer {
+        pubkey: pubkey.clone(),
+        relays: Some(vec![
+            "relay.example".to_owned(),
+            "https://relay.example/".to_owned(),
+            "ftp://relay.example".to_owned(),
+        ]),
+    })
+    .map_err(|error| format!("{error:?}"))?;
+    let content = format!("nostr:{nprofile}");
+
+    assert_eq!(
+        content_profile_mentions(&content),
+        vec![ContentProfileMention {
+            pubkey,
+            relays: vec!["wss://relay.example/".to_owned()],
             raw: format!("nostr:{nprofile}"),
             start: 0,
             end: 6 + nprofile.len(),

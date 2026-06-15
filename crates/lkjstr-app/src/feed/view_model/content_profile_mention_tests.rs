@@ -35,7 +35,10 @@ fn content_rows_render_nprofile_relay_hints() -> Result<(), String> {
     let pubkey = "2".repeat(64);
     let nprofile = encode_nprofile(&ProfilePointer {
         pubkey: pubkey.clone(),
-        relays: Some(vec!["wss://relay.example".to_owned()]),
+        relays: Some(vec![
+            "relay.example".to_owned(),
+            "https://relay.example/".to_owned(),
+        ]),
     })
     .map_err(|error| format!("{error:?}"))?;
     let raw = format!("nostr:{nprofile}");
@@ -54,7 +57,7 @@ fn content_rows_render_nprofile_relay_hints() -> Result<(), String> {
         vec![profile_mention(
             &pubkey,
             &raw,
-            vec!["wss://relay.example".to_owned()],
+            vec!["wss://relay.example/".to_owned()],
         )]
     );
     Ok(())
