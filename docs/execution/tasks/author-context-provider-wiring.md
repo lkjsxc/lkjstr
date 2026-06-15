@@ -12,9 +12,9 @@ row action-opening, exact anchor lookup, and stored author-route slices are
 implemented. Browser proof covers explicit unavailable states and the shipped
 Svelte tab now mounts the Rust body as a WASM island. The unused TypeScript
 Author Context loader and its deletion-anchor directory were removed after
-no-import proof. Row-level `EventMoreMenu.svelte` imports are removed, while
-the retained event menu file and generic Svelte host paths remain until
-component deletion proof and final verification exist.
+no-import proof. Row-level `EventMoreMenu.svelte` imports are removed, and the
+old component file is deleted and guarded absent. Generic Svelte host paths
+remain until final verification exists.
 
 ## Current Evidence
 
@@ -50,8 +50,8 @@ component deletion proof and final verification exist.
 - Focused UI tests prove copy-only event menus and converted Author
   Context/User Timeline action providers keep the Rust menu available only from
   real providers.
-- The retained Svelte `EventMoreMenu` reports clipboard unavailable or rejected
-  writes explicitly instead of claiming copied status.
+- The retained Svelte metadata overflow path reports clipboard unavailable or
+  rejected writes explicitly instead of claiming copied status.
 - `crates/lkjstr-ui/src/workspace/feed_event_row.rs` shares event body rendering
   plus real author-pubkey metadata fallback and sensitive-content warning
   reason/reveal rows; media and reference fragments render explicit unavailable
@@ -74,10 +74,10 @@ component deletion proof and final verification exist.
 
 ## Next Edit
 
-Prove the remaining Author Context deletion blockers: retained event menu file
-deletion readiness and final verification. Keep the generic Svelte host glue
-and retained event menu file until shared Leptos event renderer parity, host
-no-import proof, component deletion proof, and final verification exist.
+Prove the remaining Author Context deletion blockers: generic host final
+verification and broader component/feed deletion proof. Keep the generic Svelte
+host glue until shared Leptos event renderer parity, host no-import proof, and
+final verification exist. Keep the old event menu component file absent.
 `lkjstr-app` owns the anchor and nearby query demand; `lkjstr-web` only reads
 typed route rows, binds browser sockets, and maps outcomes.
 
@@ -147,7 +147,7 @@ PATH=/home/lkjsxc/.cargo/bin:$PATH pnpm rust-wasm:quiet
   renderer while retaining surface-specific labels and test ids.
 - Rust Author Context rows expose event-id copy through a host-provided
   clipboard action; copy success and failure render explicit status strings
-  matching the retained Svelte event menu.
+  matching the retained Svelte metadata overflow path.
 - Rust Author Context rows render those actions inside a Rust-owned event menu
   shell instead of exposing only loose buttons, and empty action menus are not
   rendered.
@@ -172,13 +172,12 @@ PATH=/home/lkjsxc/.cargo/bin:$PATH pnpm rust-wasm:quiet
   can guard late async completions at the typed request boundary.
 - The unused TypeScript loader and deletion-anchor directory remain removed
   after no-import proof.
-- Row-level `EventMoreMenu.svelte` imports are removed; generic Svelte host glue
-  and the retained event menu file remain until component deletion proof and
-  final gates prove deletion readiness.
+- Row-level `EventMoreMenu.svelte` imports are removed, and the old component
+  file is deleted and guarded absent by repository checks.
 
 ## Must Not
 
 - Do not synthesize author posts, anchor events, profiles, or successful reads.
 - Do not treat cache misses or missing relay answers as absence.
-- Do not delete generic host glue or the retained event menu file before
-  component deletion proof and final gates.
+- Do not reintroduce the old event menu component file.
+- Do not delete generic host glue before host parity and final gates.
