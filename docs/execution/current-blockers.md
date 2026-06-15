@@ -180,9 +180,10 @@ models, anchors, footer states, and unavailable states.
   full FeedViewModel action/repost summary rows,
   `FeedEventRow` content/action rows, indexed unavailable media/reference
   preview states with UI attribute proof, real HTTPS media attachment row
-  planning, unavailable reference rows with real referenced event identity,
-  inline content event-reference token suppression before Rust row planning,
-  safe HTTPS link rows with inline embedded-media URL suppression,
+  planning, unavailable reference rows with real referenced event identity and
+  relay-hint UI attributes, inline content event-reference token suppression
+  before Rust row planning, safe HTTPS link rows with inline embedded-media URL
+  suppression,
   identity-only NIP-19 profile mention rows with optional profile-open actions
   plus reference thread-open actions on converted Rust surfaces that pass a
   real opener, normalized event/profile entity relay hints, validated custom

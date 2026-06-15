@@ -6,6 +6,7 @@ struct ReferenceUnavailableAttrs {
     row_key: String,
     segment_index: String,
     event_id: String,
+    relays: String,
     kind: &'static str,
     label: &'static str,
 }
@@ -29,6 +30,7 @@ pub(super) fn reference_unavailable(
             data-row-key=attrs.row_key
             data-segment-index=attrs.segment_index
             data-event-id=attrs.event_id
+            data-relays=attrs.relays
             data-reference-kind=attrs.kind
             on:click=open
         >
@@ -44,6 +46,7 @@ fn reference_unavailable_paragraph(attrs: ReferenceUnavailableAttrs) -> impl Int
             data-row-key=attrs.row_key
             data-segment-index=attrs.segment_index
             data-event-id=attrs.event_id
+            data-relays=attrs.relays
             data-reference-kind=attrs.kind
         >
             {attrs.label}
@@ -59,6 +62,7 @@ fn reference_unavailable_attrs(
         row_key: reference.row_key,
         segment_index: reference.segment_index.to_string(),
         event_id: reference.event_id,
+        relays: reference.relays.join(" "),
         kind,
         label,
     }
@@ -101,6 +105,7 @@ mod tests {
                 row_key: "event:e:shape:s:kind:event-reference:index:1".to_owned(),
                 segment_index: "1".to_owned(),
                 event_id: "a".repeat(64),
+                relays: "wss://relay.example".to_owned(),
                 kind: "quote",
                 label: "Quoted event unavailable",
             }
