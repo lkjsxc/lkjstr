@@ -4,6 +4,7 @@ pub mod blossom;
 pub mod bytes;
 pub mod client_tag;
 pub mod content_media;
+pub mod content_mentions;
 pub mod content_tags;
 pub mod crypto;
 pub mod error;
@@ -55,6 +56,7 @@ pub use content_media::{
     ContentAttachment, ContentAttachmentKind, ContentUrlSpan, classify_url, content_attachments,
     content_url_spans, content_urls, embedded_media_attachments,
 };
+pub use content_mentions::{ContentProfileMention, content_profile_mentions};
 pub use content_tags::{content_derived_tags, emoji_tags, mention_tags};
 pub use crypto::{
     CryptoError, SecretKeyBytes, generate_secret_key, parse_secret_key_hex, public_key_from_secret,

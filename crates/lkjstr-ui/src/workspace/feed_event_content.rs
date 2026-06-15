@@ -5,6 +5,7 @@ use lkjstr_app::feed::{
 
 use super::feed_event_link::event_link;
 use super::feed_event_media::media_attachment;
+use super::feed_event_profile_mention::profile_mention;
 use super::feed_event_reference::reference_unavailable;
 
 #[derive(Clone, Debug, Eq, PartialEq)]
@@ -69,6 +70,7 @@ fn content_row(row: FeedEventContentRow) -> impl IntoView {
     match row {
         FeedEventContentRow::Text(text) => view! { <p>{text}</p> }.into_any(),
         FeedEventContentRow::Link(link) => event_link(link).into_any(),
+        FeedEventContentRow::ProfileMention(mention) => profile_mention(mention).into_any(),
         FeedEventContentRow::CustomEmoji(emoji) => custom_emoji(emoji).into_any(),
         FeedEventContentRow::MediaAttachment(media) => media_attachment(media).into_any(),
         FeedEventContentRow::MediaPreviewUnavailable(preview) => {

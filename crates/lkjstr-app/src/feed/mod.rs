@@ -41,7 +41,7 @@ pub use types::{
 pub use view_model::{
     FEED_LOAD_OLDER_COMMAND, FeedContinuationRow, FeedDiagnosticRow, FeedDiagnosticSeverity,
     FeedEventContent, FeedEventContentRow, FeedEventCustomEmoji, FeedEventLink,
-    FeedEventMediaAttachment, FeedEventMediaKind, FeedEventReferenceKind,
+    FeedEventMediaAttachment, FeedEventMediaKind, FeedEventProfileMention, FeedEventReferenceKind,
     FeedEventReferenceUnavailable, FeedEventRow, FeedEventUnavailablePreview, FeedFooterRow,
     FeedFooterState, FeedNotificationRow, FeedProfileRow, FeedRowRenderer, FeedStateRow,
     FeedUnavailableRow, FeedViewModel, FeedViewModelInput, FeedViewRow, build_feed_view_model,

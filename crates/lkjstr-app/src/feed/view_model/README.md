@@ -14,5 +14,6 @@ Pure shared feed row view-model data for Rust-owned feed surfaces.
 - `link_rows.rs`: safe HTTPS link row insertion.
 - `media_rows.rs`: real media attachment row insertion.
 - `mod.rs`: public view-model exports.
+- `profile_mention_rows.rs`: NIP-19 profile mention row insertion.
 - `reference_rows.rs`: real reference identity row insertion.
 - `types.rs`: row, footer, unavailable, and diagnostic data types.

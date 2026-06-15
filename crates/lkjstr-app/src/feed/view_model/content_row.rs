@@ -4,11 +4,19 @@ use lkjstr_protocol::custom_emoji_token_text;
 pub enum FeedEventContentRow {
     Text(String),
     Link(FeedEventLink),
+    ProfileMention(FeedEventProfileMention),
     CustomEmoji(FeedEventCustomEmoji),
     MediaAttachment(FeedEventMediaAttachment),
     MediaPreviewUnavailable(FeedEventUnavailablePreview),
     ReferenceUnavailable(FeedEventReferenceUnavailable),
     ReferencePreviewUnavailable(FeedEventUnavailablePreview),
+}
+
+#[derive(Clone, Debug, Eq, PartialEq)]
+pub struct FeedEventProfileMention {
+    pub pubkey: String,
+    pub relays: Vec<String>,
+    pub raw_text: String,
 }
 
 #[derive(Clone, Debug, Eq, PartialEq)]
@@ -72,6 +80,7 @@ impl FeedEventContentRow {
         match self {
             Self::Text(text) => text.clone(),
             Self::Link(link) => link.text.clone(),
+            Self::ProfileMention(mention) => mention.raw_text.clone(),
             Self::CustomEmoji(emoji) => custom_emoji_token_text(&emoji.shortcode),
             Self::MediaAttachment(media) => media.url.clone(),
             Self::MediaPreviewUnavailable(_) => "Media preview unavailable".to_owned(),

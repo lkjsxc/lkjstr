@@ -7,6 +7,8 @@ mod content_link_tests;
 #[cfg(test)]
 mod content_media_tests;
 #[cfg(test)]
+mod content_profile_mention_tests;
+#[cfg(test)]
 mod content_reference_tests;
 mod content_row;
 #[cfg(test)]
@@ -15,6 +17,7 @@ mod geometry;
 mod ids;
 mod link_rows;
 mod media_rows;
+mod profile_mention_rows;
 mod reference_rows;
 mod types;
 
@@ -27,8 +30,8 @@ pub use content::{
 };
 pub use content_row::{
     FeedEventContentRow, FeedEventCustomEmoji, FeedEventLink, FeedEventMediaAttachment,
-    FeedEventMediaKind, FeedEventReferenceKind, FeedEventReferenceUnavailable,
-    FeedEventUnavailablePreview,
+    FeedEventMediaKind, FeedEventProfileMention, FeedEventReferenceKind,
+    FeedEventReferenceUnavailable, FeedEventUnavailablePreview,
 };
 pub use geometry::feed_event_geometry_model_keys;
 pub use ids::{
