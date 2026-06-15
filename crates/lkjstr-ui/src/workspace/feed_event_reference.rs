@@ -15,11 +15,14 @@ pub(super) fn reference_unavailable(
     reference: FeedEventReferenceUnavailable,
     open_thread: Option<Callback<String>>,
 ) -> impl IntoView {
+    let action_event_id = reference_unavailable_action_event_id(&reference, open_thread.is_some());
     let attrs = reference_unavailable_attrs(reference);
     let Some(open_thread) = open_thread else {
         return reference_unavailable_paragraph(attrs).into_any();
     };
-    let event_id = attrs.event_id.clone();
+    let Some(event_id) = action_event_id else {
+        return reference_unavailable_paragraph(attrs).into_any();
+    };
     let open = move |event: MouseEvent| {
         event.stop_propagation();
         open_thread.run(event_id.clone());
@@ -80,6 +83,13 @@ fn reference_kind_attrs(kind: &FeedEventReferenceKind) -> (&'static str, &'stati
     }
 }
 
+fn reference_unavailable_action_event_id(
+    reference: &FeedEventReferenceUnavailable,
+    can_open: bool,
+) -> Option<String> {
+    can_open.then(|| reference.event_id.clone())
+}
+
 #[cfg(test)]
 fn reference_unavailable_element(can_open: bool) -> &'static str {
     if can_open { "button" } else { "p" }
@@ -116,5 +126,25 @@ mod tests {
     fn reference_unavailable_action_requires_thread_opener() {
         assert_eq!(reference_unavailable_element(false), "p");
         assert_eq!(reference_unavailable_element(true), "button");
+    }
+
+    #[test]
+    fn reference_unavailable_action_uses_row_event_id_only_with_opener() {
+        let reference = FeedEventReferenceUnavailable {
+            row_key: "event:e:shape:s:kind:event-reference:index:2".to_owned(),
+            segment_index: 2,
+            event_id: "c".repeat(64),
+            kind: FeedEventReferenceKind::NostrEvent,
+            relays: Vec::new(),
+        };
+
+        assert_eq!(
+            reference_unavailable_action_event_id(&reference, false),
+            None
+        );
+        assert_eq!(
+            reference_unavailable_action_event_id(&reference, true),
+            Some("c".repeat(64))
+        );
     }
 }
