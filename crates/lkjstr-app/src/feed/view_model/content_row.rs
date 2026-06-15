@@ -21,6 +21,8 @@ pub struct FeedEventProfileMention {
 
 #[derive(Clone, Debug, Eq, PartialEq)]
 pub struct FeedEventLink {
+    pub row_key: String,
+    pub item_index: u16,
     pub url: String,
     pub text: String,
 }

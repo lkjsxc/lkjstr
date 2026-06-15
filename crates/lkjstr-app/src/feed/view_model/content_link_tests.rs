@@ -21,10 +21,7 @@ fn content_rows_render_safe_https_links_with_punctuation() {
         content_rows(content),
         vec![
             FeedEventContentRow::Text("see ".to_owned()),
-            FeedEventContentRow::Link(FeedEventLink {
-                url: "https://example.com/page".to_owned(),
-                text: "https://example.com/page".to_owned(),
-            }),
+            link_row("shape", 0, "https://example.com/page"),
             FeedEventContentRow::Text(", ok".to_owned()),
         ]
     );
@@ -70,10 +67,7 @@ fn content_rows_keep_media_like_url_visible_without_real_attachment() {
         content_rows(content),
         vec![
             FeedEventContentRow::Text("see ".to_owned()),
-            FeedEventContentRow::Link(FeedEventLink {
-                url: "https://cdn.example/image.png".to_owned(),
-                text: "https://cdn.example/image.png".to_owned(),
-            }),
+            link_row("shape", 0, "https://cdn.example/image.png"),
         ]
     );
 }
@@ -115,5 +109,14 @@ fn media_row(shape: &str, index: u16, url: &str) -> FeedEventContentRow {
         url: url.to_owned(),
         kind: FeedEventMediaKind::Image,
         aspect_ratio: Some("4 / 3".to_owned()),
+    })
+}
+
+fn link_row(shape: &str, index: u16, url: &str) -> FeedEventContentRow {
+    FeedEventContentRow::Link(FeedEventLink {
+        row_key: format!("event:event:shape:{shape}:kind:event-link:index:{index}"),
+        item_index: index,
+        url: url.to_owned(),
+        text: url.to_owned(),
     })
 }

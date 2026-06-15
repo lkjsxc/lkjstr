@@ -16,6 +16,7 @@ mod content_tests;
 mod geometry;
 mod ids;
 mod link_rows;
+mod media_filter;
 mod media_rows;
 mod profile_mention_rows;
 mod reference_rows;
