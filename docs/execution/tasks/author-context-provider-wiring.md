@@ -22,7 +22,7 @@ component deletion proof and final verification exist.
   nearby-author query-demand inputs for the Author Context surface.
 - `crates/lkjstr-app/src/author_context_feed/**` builds the first pure Rust
   Author Context feed view and explicit missing-event, missing-author,
-  missing-route, and missing-anchor-time states.
+  missing-route, missing-anchor-time, and pending-loading states.
 - `crates/lkjstr-ui/src/workspace/author_context*.rs` renders a configured
   Author Context tab through a typed provider instead of the pending body.
 - `crates/lkjstr-web/src/author_context_host.rs` reads worker-owned SQLite
@@ -130,6 +130,8 @@ PATH=/home/lkjsxc/.cargo/bin:$PATH pnpm rust-wasm:quiet
 - Missing event id, missing author pubkey, and missing route/relay inputs render
   explicit unavailable states.
 - The view model exposes anchor and nearby query-demand inputs from Rust data.
+- Pending provider work renders loading until cached rows, progressive relay
+  rows, or terminal relay evidence exists.
 - The default browser provider can render cached anchor/nearby rows from
   worker SQLite without claiming complete coverage.
 - Bounded relay bootstrap reads use selected read relays, the cached anchor

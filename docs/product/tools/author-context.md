@@ -9,6 +9,8 @@ Author Context shows nearby posts by an event author around an anchor event.
 - Author Context opens from an event row menu in the same tile.
 - The view loads the anchor event and nearby cached or relay-backed events by
   the same author.
+- Pending provider work shows loading until cached anchor or nearby rows,
+  progressive relay rows, or terminal relay evidence exists.
 - Nearby relay pages use compound cursor boundaries and merge duplicate relay
   provenance before rendering.
 - Rows render through the shared event row surface, footer phase, and automatic

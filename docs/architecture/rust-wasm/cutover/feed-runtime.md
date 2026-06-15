@@ -96,9 +96,11 @@ must use before their TypeScript feed runtimes are deleted.
   through shared `FeedViewModel` rows. Exact anchor lookup uses selected or
   stored author-route relays when the anchor is uncached. Missing event id,
   author pubkey, relay/route input, and anchor timestamp are explicit
-  unavailable states. Converted Rust feed surfaces share event body, common
-  state-row rendering, and footer shell rendering. Row action buttons open Rust
-  Profile, Thread, and Author Context tabs. Fast UI provider proof covers
+  unavailable states. Pending provider work renders loading instead of ready
+  until real cache, relay, or terminal evidence exists. Converted Rust feed
+  surfaces share event body, common state-row rendering, and footer shell
+  rendering. Row action buttons open Rust Profile, Thread, and Author Context
+  tabs. Fast UI provider proof covers
   request-level release guards and late-completion suppression. Deletion proof
   remains open.
 - Cached and relay-refreshed Profile header metadata/follow-count proof exists.

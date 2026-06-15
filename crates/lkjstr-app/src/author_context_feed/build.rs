@@ -122,7 +122,13 @@ fn ready_state(
             anchor_query,
             nearby_query,
         ),
-        AuthorContextFeedSourceState::Pending | AuthorContextFeedSourceState::RelayProgressive => (
+        AuthorContextFeedSourceState::Pending => (
+            AuthorContextFeedStatus::Loading,
+            anchor_query,
+            nearby_query,
+            None,
+        ),
+        AuthorContextFeedSourceState::RelayProgressive => (
             AuthorContextFeedStatus::Ready,
             anchor_query,
             nearby_query,

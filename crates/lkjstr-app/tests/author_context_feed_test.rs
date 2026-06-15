@@ -106,7 +106,7 @@ fn author_context_accepts_author_routes_without_selected_fallback() -> Result<()
 
     let model = build_author_context_feed_view(input);
 
-    assert_eq!(model.status, AuthorContextFeedStatus::Ready);
+    assert_eq!(model.status, AuthorContextFeedStatus::Loading);
     let anchor = model.anchor_query.ok_or("missing anchor query")?;
     assert!(anchor.selected_relays.is_empty());
     assert_eq!(anchor.author_routes, vec![author_route()]);

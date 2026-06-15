@@ -87,6 +87,7 @@ fn status_text(status: AuthorContextFeedStatus) -> &'static str {
         AuthorContextFeedStatus::MissingEvent => "Author Context event unavailable.",
         AuthorContextFeedStatus::MissingAuthor => "Author Context author unavailable.",
         AuthorContextFeedStatus::NoEnabledRelay => "Author Context needs a relay.",
+        AuthorContextFeedStatus::Loading => "Author Context loading.",
         AuthorContextFeedStatus::Ready => "Author Context ready.",
         AuthorContextFeedStatus::Partial => "Author Context partial.",
     }
@@ -105,6 +106,10 @@ mod tests {
         assert_eq!(
             status_text(AuthorContextFeedStatus::Ready),
             "Author Context ready."
+        );
+        assert_eq!(
+            status_text(AuthorContextFeedStatus::Loading),
+            "Author Context loading."
         );
     }
 }

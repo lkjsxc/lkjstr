@@ -20,6 +20,7 @@ pub enum AuthorContextFeedStatus {
     MissingEvent,
     MissingAuthor,
     NoEnabledRelay,
+    Loading,
     Ready,
     Partial,
 }
