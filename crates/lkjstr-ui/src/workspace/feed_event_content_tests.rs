@@ -15,6 +15,7 @@ fn custom_emoji_attrs_keep_real_url_and_safe_image_policy() {
             src: "https://emoji.example/party.png".to_owned(),
             alt: ":party:".to_owned(),
             title: ":party:".to_owned(),
+            address: format!("30030:{}:set", "a".repeat(64)),
             loading: "lazy",
             referrer_policy: "no-referrer",
         }

@@ -14,6 +14,7 @@ struct CustomEmojiImageAttrs {
     src: String,
     alt: String,
     title: String,
+    address: String,
     loading: &'static str,
     referrer_policy: &'static str,
 }
@@ -138,6 +139,7 @@ fn custom_emoji(emoji: FeedEventCustomEmoji) -> impl IntoView {
                 src=attrs.src
                 alt=attrs.alt
                 title=attrs.title
+                data-address=attrs.address
                 loading=attrs.loading
                 referrerpolicy=attrs.referrer_policy
             />
@@ -152,6 +154,7 @@ fn custom_emoji_image_attrs(emoji: &FeedEventCustomEmoji) -> CustomEmojiImageAtt
         src: emoji.url.clone(),
         alt: token.clone(),
         title: token,
+        address: emoji.address.clone().unwrap_or_default(),
         loading: "lazy",
         referrer_policy: "no-referrer",
     }
