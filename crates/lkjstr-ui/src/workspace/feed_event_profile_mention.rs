@@ -1,4 +1,4 @@
-use leptos::prelude::*;
+use leptos::{ev::MouseEvent, prelude::*};
 use lkjstr_app::feed::FeedEventProfileMention;
 
 #[derive(Clone, Debug, Eq, PartialEq)]
@@ -10,8 +10,35 @@ struct ProfileMentionAttrs {
     text: String,
 }
 
-pub(super) fn profile_mention(mention: FeedEventProfileMention) -> impl IntoView {
+pub(super) fn profile_mention(
+    mention: FeedEventProfileMention,
+    open_profile: Option<Callback<String>>,
+) -> impl IntoView {
     let attrs = profile_mention_attrs(&mention);
+    let Some(open_profile) = open_profile else {
+        return profile_mention_span(attrs).into_any();
+    };
+    let pubkey = mention.pubkey;
+    let open = move |event: MouseEvent| {
+        event.stop_propagation();
+        open_profile.run(pubkey.clone());
+    };
+    view! {
+        <button
+            type="button"
+            class=attrs.class_name
+            data-pubkey=attrs.pubkey
+            data-relays=attrs.relays
+            title=attrs.title
+            on:click=open
+        >
+            {attrs.text}
+        </button>
+    }
+    .into_any()
+}
+
+fn profile_mention_span(attrs: ProfileMentionAttrs) -> impl IntoView {
     view! {
         <span
             class=attrs.class_name
@@ -35,16 +62,22 @@ fn profile_mention_attrs(mention: &FeedEventProfileMention) -> ProfileMentionAtt
 }
 
 #[cfg(test)]
+fn profile_mention_element(can_open: bool) -> &'static str {
+    if can_open { "button" } else { "span" }
+}
+
+#[cfg(test)]
 mod tests {
     use super::*;
 
     #[test]
     fn profile_mention_attrs_keep_real_identity_only() {
-        let attrs = profile_mention_attrs(&FeedEventProfileMention {
+        let mention = FeedEventProfileMention {
             pubkey: "a".repeat(64),
             relays: vec!["wss://relay.example".to_owned()],
             raw_text: "nostr:npub1example".to_owned(),
-        });
+        };
+        let attrs = profile_mention_attrs(&mention);
 
         assert_eq!(
             attrs,
@@ -56,5 +89,11 @@ mod tests {
                 text: "nostr:npub1example".to_owned(),
             }
         );
+    }
+
+    #[test]
+    fn profile_mention_button_policy_follows_real_opener() {
+        assert_eq!(profile_mention_element(false), "span");
+        assert_eq!(profile_mention_element(true), "button");
     }
 }

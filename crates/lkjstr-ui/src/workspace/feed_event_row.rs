@@ -1,14 +1,18 @@
 use leptos::prelude::*;
 use lkjstr_app::FeedEventRow;
 
-use crate::workspace::feed_event_content::event_content;
+use crate::workspace::feed_event_content::event_content_with_profile_opener;
 
-pub(crate) fn event_row(row: FeedEventRow, trailing: impl IntoView) -> impl IntoView {
+pub(crate) fn event_row_with_profile_opener(
+    row: FeedEventRow,
+    trailing: impl IntoView,
+    open_profile: Option<Callback<String>>,
+) -> impl IntoView {
     let event_id = row.event_id;
     let row_id = row.row_id;
     let author = compact_pubkey(&row.author_pubkey);
     let created_at = row.created_at;
-    let content = event_content(row.content);
+    let content = event_content_with_profile_opener(row.content, open_profile);
     view! {
         <article class="lkjstr-feed-row event" data-row-id=row_id data-event-id=event_id>
             <small>{format!("{author} created {created_at}")}</small>

@@ -25,6 +25,10 @@ impl FeedEventActions {
             ..Self::default()
         }
     }
+
+    pub(crate) fn profile_opener(&self) -> Option<Callback<String>> {
+        self.open_profile
+    }
 }
 
 #[derive(Clone, Copy)]

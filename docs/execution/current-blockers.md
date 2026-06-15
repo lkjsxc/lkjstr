@@ -182,9 +182,10 @@ models, anchors, footer states, and unavailable states.
   planning, unavailable reference rows with real referenced event identity,
   inline content event-reference token suppression before Rust row planning,
   safe HTTPS link rows with inline embedded-media URL suppression,
-  identity-only NIP-19 profile mention rows, validated custom emoji rows with
-  image presentation proof, notification repost event rows, author metadata,
-  sensitive-warning reveal rendering, common state-row rendering,
+  identity-only NIP-19 profile mention rows with optional profile-open actions
+  on converted Rust surfaces that pass a real opener, validated custom emoji
+  rows with image presentation proof, notification repost event rows, author
+  metadata, sensitive-warning reveal rendering, common state-row rendering,
   shared footer shell rendering across converted feed rows, retained Svelte copy
   actions with explicit clipboard failure states, and retained optional Svelte
   event/profile actions plus Rust-island hosts suppress unavailable no-op

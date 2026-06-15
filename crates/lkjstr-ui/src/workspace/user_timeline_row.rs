@@ -4,7 +4,7 @@ use lkjstr_app::{FeedEventRow, FeedViewRow};
 use crate::workspace::feed_event_actions::{
     FeedEventActionLabels, event_actions as feed_event_actions,
 };
-use crate::workspace::feed_event_row::event_row as feed_event_row;
+use crate::workspace::feed_event_row::event_row_with_profile_opener as feed_event_row;
 use crate::workspace::feed_footer_row::state_footer;
 use crate::workspace::feed_footer_text::FooterAuthLabel;
 use crate::workspace::feed_state_row;
@@ -27,7 +27,12 @@ pub(crate) fn timeline_row(row: FeedViewRow, actions: UserTimelineActions) -> im
 fn event_row(row: FeedEventRow, actions: UserTimelineActions) -> impl IntoView {
     let event_id = row.event_id.clone();
     let author_pubkey = row.author_pubkey.clone();
-    feed_event_row(row, event_actions(event_id, author_pubkey, actions))
+    let open_profile = actions.open_profile;
+    feed_event_row(
+        row,
+        event_actions(event_id, author_pubkey, actions),
+        open_profile,
+    )
 }
 
 fn event_actions(event_id: String, pubkey: String, actions: UserTimelineActions) -> impl IntoView {

@@ -25,19 +25,28 @@ struct UnavailablePreviewAttrs {
     label: &'static str,
 }
 
-pub(crate) fn event_content(content: FeedEventContent) -> impl IntoView {
+pub(crate) fn event_content_with_profile_opener(
+    content: FeedEventContent,
+    open_profile: Option<Callback<String>>,
+) -> impl IntoView {
     match content {
-        FeedEventContent::Sensitive { reason, rows } => sensitive_content(reason, rows).into_any(),
-        FeedEventContent::Rows(rows) => text_rows_view(rows).into_any(),
+        FeedEventContent::Sensitive { reason, rows } => {
+            sensitive_content(reason, rows, open_profile).into_any()
+        }
+        FeedEventContent::Rows(rows) => text_rows_view(rows, open_profile).into_any(),
     }
 }
 
-fn sensitive_content(reason: Option<String>, rows: Vec<FeedEventContentRow>) -> impl IntoView {
+fn sensitive_content(
+    reason: Option<String>,
+    rows: Vec<FeedEventContentRow>,
+    open_profile: Option<Callback<String>>,
+) -> impl IntoView {
     let revealed = RwSignal::new(false);
     view! {
         {move || {
             if revealed.get() {
-                text_rows_view(rows.clone()).into_any()
+                text_rows_view(rows.clone(), open_profile).into_any()
             } else {
                 sensitive_warning(reason.clone(), revealed).into_any()
             }
@@ -60,17 +69,22 @@ fn warning_reason(reason: Option<String>) -> impl IntoView {
     reason.map(|reason| view! { <span>{reason}</span> })
 }
 
-fn text_rows_view(rows: Vec<FeedEventContentRow>) -> impl IntoView {
+fn text_rows_view(
+    rows: Vec<FeedEventContentRow>,
+    open_profile: Option<Callback<String>>,
+) -> impl IntoView {
     rows.into_iter()
-        .map(|row| content_row(row).into_any())
+        .map(|row| content_row(row, open_profile).into_any())
         .collect_view()
 }
 
-fn content_row(row: FeedEventContentRow) -> impl IntoView {
+fn content_row(row: FeedEventContentRow, open_profile: Option<Callback<String>>) -> impl IntoView {
     match row {
         FeedEventContentRow::Text(text) => view! { <p>{text}</p> }.into_any(),
         FeedEventContentRow::Link(link) => event_link(link).into_any(),
-        FeedEventContentRow::ProfileMention(mention) => profile_mention(mention).into_any(),
+        FeedEventContentRow::ProfileMention(mention) => {
+            profile_mention(mention, open_profile).into_any()
+        }
         FeedEventContentRow::CustomEmoji(emoji) => custom_emoji(emoji).into_any(),
         FeedEventContentRow::MediaAttachment(media) => media_attachment(media).into_any(),
         FeedEventContentRow::MediaPreviewUnavailable(preview) => {
