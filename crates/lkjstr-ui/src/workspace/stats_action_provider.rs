@@ -6,6 +6,8 @@ pub struct StatsActions {
     compact: bool,
     repair: bool,
     unavailable_reason: String,
+    compact_unavailable_reason: String,
+    repair_unavailable_reason: String,
 }
 
 #[derive(Clone)]
@@ -59,11 +61,30 @@ impl StatsActions {
         compact: bool,
         repair: bool,
     ) -> Self {
+        Self::new_with_unavailable_reasons(
+            run,
+            compact,
+            repair,
+            "action-not-provided",
+            "action-not-provided",
+        )
+    }
+
+    #[must_use]
+    pub fn new_with_unavailable_reasons(
+        run: impl Fn(StatsActionCommand) + Send + Sync + 'static,
+        compact: bool,
+        repair: bool,
+        compact_unavailable_reason: impl Into<String>,
+        repair_unavailable_reason: impl Into<String>,
+    ) -> Self {
         Self {
             run: Some(Callback::new(run)),
             compact,
             repair,
             unavailable_reason: "action-not-provided".to_string(),
+            compact_unavailable_reason: compact_unavailable_reason.into(),
+            repair_unavailable_reason: repair_unavailable_reason.into(),
         }
     }
 
@@ -74,6 +95,8 @@ impl StatsActions {
             compact: false,
             repair: false,
             unavailable_reason: reason.into(),
+            compact_unavailable_reason: "action-not-provided".to_string(),
+            repair_unavailable_reason: "action-not-provided".to_string(),
         }
     }
 
@@ -108,10 +131,7 @@ impl StatsActions {
     fn run_action(&self, kind: StatsActionKind, complete: Callback<StatsActionResult>) {
         let complete = StatsActionComplete { complete };
         if !self.can_run_kind(kind) {
-            complete.complete(StatsActionResult::unavailable(
-                kind,
-                &self.unavailable_reason,
-            ));
+            complete.complete(StatsActionResult::unavailable(kind, self.reason(kind)));
             return;
         }
         if let Some(run) = &self.run {
@@ -125,6 +145,16 @@ impl StatsActions {
                 kind,
                 &self.unavailable_reason,
             ));
+        }
+    }
+
+    fn reason(&self, kind: StatsActionKind) -> &str {
+        if self.run.is_none() {
+            return &self.unavailable_reason;
+        }
+        match kind {
+            StatsActionKind::Compact => &self.compact_unavailable_reason,
+            StatsActionKind::Repair => &self.repair_unavailable_reason,
         }
     }
 

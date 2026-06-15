@@ -61,3 +61,23 @@ fn available_actions_run_through_typed_command() {
     }));
     assert_eq!(seen.load(Ordering::SeqCst), COMPACT_SEEN);
 }
+
+#[test]
+fn disabled_actions_return_kind_specific_reason() {
+    let actions = StatsActions::new_with_unavailable_reasons(
+        |_command| panic!("disabled compact action must not run"),
+        false,
+        true,
+        "compaction-adapter-missing",
+        "action-not-provided",
+    );
+    assert!(!actions.can_compact());
+    assert!(actions.can_repair());
+    actions.compact(Callback::new(|result: StatsActionResult| {
+        assert_eq!(result.kind, StatsActionKind::Compact);
+        assert_eq!(
+            result.status,
+            "Storage action unavailable: compaction-adapter-missing"
+        );
+    }));
+}

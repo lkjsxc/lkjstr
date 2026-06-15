@@ -111,8 +111,8 @@ Read next: [architecture/data/README.md](architecture/data/README.md),
 - Rust Stats reads SQLite health and storage mode on startup. Its provider read
   is bounded; after timeout Stats shows available, temporary memory, timeout,
   unavailable, blocked, corrupt, or unknown-old-storage states explicitly.
-- Rust Stats renders pressure bytes, browser storage diagnostics, old IndexedDB presence, and truthful storage-action capability;
-  Repair report uses a real Rust host callback; compaction remains hidden.
+- Rust Stats renders pressure bytes, browser diagnostics, old IndexedDB presence,
+  report-only repair, and hidden compact with an explicit missing-adapter reason.
 - Rust app storage maintenance consumes the storage-owned retention readiness
   classifier before retention or repair planning, without using count-only,
   unknown, old IndexedDB, residual overhead, or unowned browser storage as

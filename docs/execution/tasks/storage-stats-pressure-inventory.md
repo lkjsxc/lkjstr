@@ -33,6 +33,9 @@ commands.
 - Rust repair-report action linkage is implemented. It reads typed storage
   health and inventory and reports findings; it does not delete, backfill, or
   compact.
+- Rust compact action capability stays disabled with an explicit
+  `compaction-adapter-missing` reason until the host owns bounded deletion and a
+  protection snapshot.
 - Compaction action linkage remains open until Rust host adapters own bounded
   deletion and stop-reason reporting.
 

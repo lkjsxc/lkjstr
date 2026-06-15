@@ -13,7 +13,7 @@ use crate::{
 };
 
 pub fn stats_actions_provider(db_name: String, worker_url: String) -> StatsActions {
-    StatsActions::new(
+    StatsActions::new_with_unavailable_reasons(
         move |command| {
             let db_name = db_name.clone();
             let worker_url = worker_url.clone();
@@ -23,6 +23,8 @@ pub fn stats_actions_provider(db_name: String, worker_url: String) -> StatsActio
         },
         false,
         true,
+        "compaction-adapter-missing",
+        "action-not-provided",
     )
 }
 

@@ -49,7 +49,8 @@ Stats shows current-session relay counters and persisted operational summaries.
   site target when the settings store cannot be read.
 - During Rust cutover, Rust Stats action buttons render only for real callbacks.
   The current Rust `Repair report` action reports typed inventory findings only;
-  it does not claim cleanup, deletion, backfill, or compaction success.
+  it does not claim cleanup, deletion, backfill, or compaction success. Compact
+  remains hidden until the Rust host owns deletion and protection snapshots.
 - SQLite storage health shows persistent OPFS or temporary memory mode, VFS,
   worker kind, SQLite library text, database name, page counts, event count,
   relay receipt count, tag row count, schema change count, and warnings.

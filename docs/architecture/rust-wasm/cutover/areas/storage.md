@@ -67,9 +67,10 @@ removed.
   tag lookup metadata, event-write token batches, local indexed query adapters,
   physical repair probes, Stats browser-storage count and byte diagnostics,
   storage-owned inventory readiness classification, explicit Rust Stats
-  storage-action capability states, and report-only Rust repair host action are
-  implemented; Search app planning, NIP-50 merge, mutating repair/compaction
-  action adapters, and feed consumption remain open.
+  storage-action capability states, report-only Rust repair host action, and
+  explicit disabled compact action reason are implemented; Search app planning,
+  NIP-50 merge, mutating repair/compaction action adapters, and feed consumption
+  remain open.
 - Command metadata status: active selector, pressure, protected rows, event
   cache, feed evidence, relay diagnostics, notifications, jobs, app log,
   inventory snapshot, optimizer scan-model rows, retention planner rows,

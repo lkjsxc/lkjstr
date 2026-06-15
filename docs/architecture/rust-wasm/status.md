@@ -89,7 +89,8 @@ This file is the concise status map for the active Rust/WASM migration.
   metadata, delete dispatch through `lkjstr-web` worker batches, Search token
   rows, Search command metadata, local indexed query adapters, repair physical
   target probes, explicit Rust Stats storage-action capability states, and a
-  report-only Rust repair host action. Mutating repair/compaction action
+  report-only Rust repair host action. Compact stays disabled with an explicit
+  missing-adapter reason. Mutating repair/compaction action
   adapters, CSS side effects, and cache-budget enforcement remain open.
 - Followees and User Timeline now have Rust target follow-graph reducers, a
   WASM parser bridge, a fixed lkjsxc catalog constant, follow-count state,
