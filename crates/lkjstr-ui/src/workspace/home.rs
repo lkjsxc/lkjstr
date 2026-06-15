@@ -68,6 +68,7 @@ fn home_status_text(status: HomeFeedStatus) -> &'static str {
     match status {
         HomeFeedStatus::NoActiveAccount => "No active account",
         HomeFeedStatus::LoadingFollows => "Loading follows",
+        HomeFeedStatus::LoadingFeed => "Home loading",
         HomeFeedStatus::NoEnabledRelay => "No enabled relay",
         HomeFeedStatus::NoFollowList => "No follow list",
         HomeFeedStatus::Ready => "Home ready",
@@ -87,6 +88,10 @@ mod tests {
         assert_eq!(
             home_status_text(HomeFeedStatus::NoActiveAccount),
             "No active account"
+        );
+        assert_eq!(
+            home_status_text(HomeFeedStatus::LoadingFeed),
+            "Home loading"
         );
         assert_eq!(home_status_text(HomeFeedStatus::Partial), "Home partial");
     }

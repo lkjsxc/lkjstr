@@ -22,7 +22,8 @@ must use before their TypeScript feed runtimes are deleted.
   provider promotes cache-complete only from exact route, relay, filter, feed,
   and interval proof, then starts a bounded selected-relay read after partial
   proof and publishes real relay event snapshots into the same view model. Home
-  tab cleanup releases the provider lease and cancels the owner relay read.
+  pending provider work after loaded follows renders loading instead of ready.
+  Tab cleanup releases the provider lease and cancels the owner relay read.
   Broader shared lease cleanup and feed-surface host wiring remain open.
 - First Global rendering slice: `crates/lkjstr-app/src/global_feed/**` and
   `crates/lkjstr-ui/src/workspace/global.rs` render `GlobalFeedView` rows. The

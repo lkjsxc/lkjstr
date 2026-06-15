@@ -32,6 +32,7 @@ pub enum HomeFeedSourceState {
 pub enum HomeFeedStatus {
     NoActiveAccount,
     LoadingFollows,
+    LoadingFeed,
     NoEnabledRelay,
     NoFollowList,
     Ready,

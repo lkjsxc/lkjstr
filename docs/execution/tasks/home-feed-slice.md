@@ -15,7 +15,7 @@ storage cache proof and relay snapshots feed the Rust model without injection.
 - Home remains a shipped TypeScript and Svelte surface.
 - `crates/lkjstr-app/src/home_feed/**` composes Home follow state, optional
   live query input, shared feed row view models, unavailable rows,
-  diagnostics, and footer states.
+  diagnostics, pending feed loading, and footer states.
 - `crates/lkjstr-ui/src/workspace/home.rs` renders event, unavailable,
   diagnostic, profile, notification, and footer rows from `HomeFeedView`.
 - A browser WASM test mounts the Rust Home tab with an injected model carrying
@@ -44,7 +44,8 @@ proof exists.
 
 A narrow Home slice renders real cached rows when coverage proof is complete or
 real progressive relay rows when available. Loading, partial, unavailable,
-retry, and footer states come from Rust data.
+retry, and footer states come from Rust data. Pending provider work after
+follows are loaded renders loading, not ready.
 
 ## Files To Read
 

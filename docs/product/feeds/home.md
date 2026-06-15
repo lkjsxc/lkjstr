@@ -104,6 +104,9 @@ its NIP-02 follows.
 
 - `no-active-account`: cache only; account action required.
 - `loading-follows`: active account exists and follow discovery or notes load.
+- `loading-feed`: follows are known and cache or relay provider work is still
+  pending; this state must not render as ready before real cache or relay
+  evidence arrives.
 - `no-follow-list`: latest kind `3` is absent; empty feed with guidance and a
   **Check relays again** control; no self-only relay scan.
 - `no-enabled-relay`: selected set has no enabled read relay.

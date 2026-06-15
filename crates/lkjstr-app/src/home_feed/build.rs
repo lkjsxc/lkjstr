@@ -176,9 +176,8 @@ fn ready_state(
                 Some(footer_row(feed_id, FeedFooterState::Partial)),
             )
         }
-        HomeFeedSourceState::Pending | HomeFeedSourceState::RelayProgressive => {
-            (HomeFeedStatus::Ready, live_query, None)
-        }
+        HomeFeedSourceState::Pending => (HomeFeedStatus::LoadingFeed, live_query, None),
+        HomeFeedSourceState::RelayProgressive => (HomeFeedStatus::Ready, live_query, None),
     }
 }
 
