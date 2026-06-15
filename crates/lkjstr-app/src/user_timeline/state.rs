@@ -18,7 +18,6 @@ pub(super) type TimelineState = (
     Option<UserTimelineAuthorSet>,
     Option<FeedFooterRow>,
 );
-
 #[must_use]
 pub const fn user_timeline_target_only_notice() -> &'static str {
     TARGET_ONLY_NOTICE
@@ -173,7 +172,8 @@ fn source_status(
                 Some(footer_row(feed_id, FeedFooterState::Partial)),
             )
         }
-        UserTimelineFeedSourceState::Pending | UserTimelineFeedSourceState::RelayProgressive => {
+        UserTimelineFeedSourceState::Pending => (UserTimelineFeedStatus::LoadingFeed, None),
+        UserTimelineFeedSourceState::RelayProgressive => {
             (UserTimelineFeedStatus::for_target_mode(target_only), None)
         }
     }

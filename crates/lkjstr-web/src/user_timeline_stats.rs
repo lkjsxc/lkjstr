@@ -112,6 +112,7 @@ fn status_key(status: UserTimelineFeedStatus) -> &'static str {
     match status {
         UserTimelineFeedStatus::MissingPubkey => "missing-pubkey",
         UserTimelineFeedStatus::LoadingDiscovery => "loading-discovery",
+        UserTimelineFeedStatus::LoadingFeed => "loading-feed",
         UserTimelineFeedStatus::NoEnabledRelay => "no-enabled-relay",
         UserTimelineFeedStatus::Ready => "ready",
         UserTimelineFeedStatus::TargetPostsOnly => "target-posts-only",

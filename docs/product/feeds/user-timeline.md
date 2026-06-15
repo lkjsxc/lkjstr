@@ -79,6 +79,8 @@ User Timeline renders useful real data while discovery continues:
   sufficient; relay refresh still runs.
 - Partial followees may render with incomplete diagnostics.
 - Fast relay rows render before slow relays finish.
+- Pending feed-provider work after discovery renders loading until cached rows,
+  progressive relay rows, or terminal relay evidence exists.
 - Slow, failed, auth-required, or timed-out relays merge later as diagnostics
   and do not block reachable relays.
 - Status, notices, retry controls, and diagnostics are in-flow rows inside the

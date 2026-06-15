@@ -14,7 +14,8 @@ deletion, and final verification proof exist.
 
 ## Current Evidence
 
-- `crates/lkjstr-app/src/user_timeline/**` plans explicit discovery states.
+- `crates/lkjstr-app/src/user_timeline/**` plans explicit discovery states and
+  pending feed loading after discovery succeeds.
 - `crates/lkjstr-app/src/follow_graph/**` builds target timeline author sets
   from real kind `3` follow-list events.
 - `crates/lkjstr-app/src/feed/surface_inputs.rs` gives User Timeline a distinct
@@ -116,6 +117,8 @@ pnpm rust-wasm:quiet
   author-set proof, or explicit target-posts-only degraded mode.
 - Loading, incomplete, failed, auth, offline, and rate-limited states stay
   explicit and never treat cache miss as absence.
+- Pending feed-provider work after discovery renders loading until cached rows,
+  progressive relay rows, or terminal relay evidence exists.
 - Cache miss starts selected-relay kind `3` discovery and updates from real
   relay events stored in worker SQLite.
 - Stored NIP-65, provenance, and target author routes can discover kind `3`

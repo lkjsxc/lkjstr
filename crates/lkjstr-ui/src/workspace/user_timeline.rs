@@ -91,6 +91,13 @@ fn target_profile_button(
 fn user_timeline_header_mode(model: UserTimelineFeedView) -> &'static str {
     match model.status {
         UserTimelineFeedStatus::TargetPostsOnly => "Target posts only",
+        UserTimelineFeedStatus::LoadingFeed => {
+            match model.author_set.as_ref().map(|set| set.mode.as_str()) {
+                Some("target_posts_only") => "Target posts only",
+                Some("follow_graph") => "Follow graph",
+                _ => "Viewed profile",
+            }
+        }
         UserTimelineFeedStatus::Ready | UserTimelineFeedStatus::Partial => "Follow graph",
         _ => "Viewed profile",
     }
@@ -100,6 +107,7 @@ fn user_timeline_status_text(status: UserTimelineFeedStatus) -> &'static str {
     match status {
         UserTimelineFeedStatus::MissingPubkey => "User Timeline target unavailable.",
         UserTimelineFeedStatus::LoadingDiscovery => "Loading public timeline...",
+        UserTimelineFeedStatus::LoadingFeed => "User Timeline loading.",
         UserTimelineFeedStatus::NoEnabledRelay => "User Timeline needs a relay.",
         UserTimelineFeedStatus::Ready => "User Timeline ready.",
         UserTimelineFeedStatus::TargetPostsOnly => "Target posts only.",
@@ -121,6 +129,10 @@ mod tests {
         assert_eq!(
             user_timeline_status_text(UserTimelineFeedStatus::LoadingDiscovery),
             "Loading public timeline..."
+        );
+        assert_eq!(
+            user_timeline_status_text(UserTimelineFeedStatus::LoadingFeed),
+            "User Timeline loading."
         );
         assert_eq!(
             user_timeline_status_text(UserTimelineFeedStatus::TargetPostsOnly),

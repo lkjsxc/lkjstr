@@ -58,6 +58,25 @@ fn user_timeline_loading_discovery_does_not_query_target_only() {
 }
 
 #[test]
+fn user_timeline_pending_feed_after_discovery_is_loading_not_ready() {
+    let target = pubkey("a");
+    let model = build_user_timeline_feed_view(input(
+        Some(target.clone()),
+        discovery(true, true, false),
+        Some(user_timeline_author_set(
+            &target,
+            Some(&follow_list_event()),
+        )),
+        UserTimelineFeedSourceState::Pending,
+        empty_feed_window(1, 180),
+    ));
+
+    assert_eq!(model.status, UserTimelineFeedStatus::LoadingFeed);
+    assert!(model.live_query.is_some());
+    assert!(model.author_set.is_some());
+}
+
+#[test]
 fn user_timeline_target_posts_only_is_explicit_and_real() -> Result<(), String> {
     let target = pubkey("a");
     let model = build_user_timeline_feed_view(input(

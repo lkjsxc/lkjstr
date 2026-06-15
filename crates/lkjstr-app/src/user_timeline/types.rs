@@ -22,6 +22,7 @@ pub enum UserTimelineFeedSourceState {
 pub enum UserTimelineFeedStatus {
     MissingPubkey,
     LoadingDiscovery,
+    LoadingFeed,
     NoEnabledRelay,
     Ready,
     TargetPostsOnly,
