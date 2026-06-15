@@ -44,7 +44,9 @@ must use before their TypeScript feed runtimes are deleted.
   footer. Pure Rust tests cover initial/older notification cursors, history
   exhaustion, and fill-then-scroll intent gating. Rust/WASM proof covers
   bounded older relay filters, event rejection, and empty older-window footer
-  behavior. The shared footer row now carries `feed.loadOlder`, and the Rust
+  behavior. Pending provider work renders loading instead of ready until real
+  cache or relay evidence arrives. The shared footer row now carries
+  `feed.loadOlder`, and the Rust
   Notifications host retains relay output state so the explicit footer command
   and a downward near-end scroll gesture start the next bounded older relay read
   through the shared planner. Deletion proof remains open.

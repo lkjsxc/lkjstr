@@ -19,6 +19,7 @@ pub enum NotificationsFeedSourceState {
 pub enum NotificationsFeedStatus {
     NoActiveAccount,
     NoEnabledRelay,
+    Loading,
     Ready,
     Partial,
 }

@@ -130,7 +130,10 @@ fn ready_state(
                 Some(footer_row(feed_id, FeedFooterState::Partial)),
             )
         }
-        NotificationsFeedSourceState::Pending | NotificationsFeedSourceState::RelayProgressive => {
+        NotificationsFeedSourceState::Pending => {
+            (NotificationsFeedStatus::Loading, live_query, None)
+        }
+        NotificationsFeedSourceState::RelayProgressive => {
             (NotificationsFeedStatus::Ready, live_query, None)
         }
     }

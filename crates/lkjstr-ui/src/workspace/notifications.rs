@@ -97,6 +97,7 @@ fn status_text(status: NotificationsFeedStatus) -> &'static str {
     match status {
         NotificationsFeedStatus::NoActiveAccount => "No active account",
         NotificationsFeedStatus::NoEnabledRelay => "No enabled relay",
+        NotificationsFeedStatus::Loading => "Notifications loading",
         NotificationsFeedStatus::Ready => "Notifications ready",
         NotificationsFeedStatus::Partial => "Notifications partial",
     }
@@ -111,6 +112,10 @@ mod tests {
         assert_eq!(
             status_text(NotificationsFeedStatus::Partial),
             "Notifications partial"
+        );
+        assert_eq!(
+            status_text(NotificationsFeedStatus::Loading),
+            "Notifications loading"
         );
         assert_eq!(
             status_text(NotificationsFeedStatus::NoEnabledRelay),

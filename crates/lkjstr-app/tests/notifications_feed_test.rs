@@ -73,6 +73,16 @@ fn notifications_feed_cache_complete_uses_cache_footer() {
 }
 
 #[test]
+fn notifications_feed_pending_with_account_is_loading_not_ready() {
+    let mut input = input(Some(pubkey("a")), Vec::new());
+    input.source_state = NotificationsFeedSourceState::Pending;
+    let view = build_notifications_feed_view(input);
+
+    assert_eq!(view.status, NotificationsFeedStatus::Loading);
+    assert!(view.live_query.is_some());
+}
+
+#[test]
 fn notifications_feed_repost_event_uses_notification_context() -> Result<(), String> {
     let account = pubkey("a");
     let mut input = input(

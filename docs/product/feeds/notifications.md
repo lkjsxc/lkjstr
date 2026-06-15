@@ -40,6 +40,9 @@ notification context header and the source event as the primary body.
   suppress notification relay reads or prove that older notifications are absent.
 - Shared `FeedSurfaceStatus` footer shows loading, end of history, and errors.
   End of history appears only for proven exhaustion.
+- Rust pending provider work renders a loading status until cached records,
+  progressive relay records, EOSE, or terminal relay failure provides real
+  evidence.
 - The empty notification message appears only after history exhaustion is
   proven, not merely because the initial window returned zero records.
 - Notifications use `FeedScrollSurface` with Virtua on
