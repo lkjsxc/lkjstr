@@ -2,8 +2,8 @@
 
 ## Purpose
 
-A live lease is one refcounted wire subscription shared by all compatible live
-intents.
+A live lease is one refcounted wire subscription shared by all wire-compatible
+live intents, even when those intents belong to different product surfaces.
 
 Status: Rust owns the pure owner registry, visibility counts, attach/detach
 reducer, and host-effect decisions. TypeScript still owns shipped `REQ`/`CLOSE`

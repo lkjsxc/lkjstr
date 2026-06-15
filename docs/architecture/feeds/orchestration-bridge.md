@@ -53,4 +53,6 @@ Feed runtime -> Intent (owner = tab id)
 
 implemented. Home and Profile route-fingerprinted page coverage, Home live
 lease sharing, hidden-tab retention, and notification isolation are covered by
-unit and browser regression gates.
+unit and browser regression gates. Pure Rust tests also cover wire-equivalent
+live lease sharing across every `QuerySurface`; browser cleanup proof remains
+surface-specific.
