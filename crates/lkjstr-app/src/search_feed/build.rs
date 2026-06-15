@@ -59,9 +59,8 @@ fn search_state(
     };
     let remote_query = search_query(input, query);
     match &input.source_state {
-        SearchFeedSourceState::Idle | SearchFeedSourceState::Pending => {
-            (SearchFeedStatus::Ready, remote_query, None)
-        }
+        SearchFeedSourceState::Idle => (SearchFeedStatus::Ready, remote_query, None),
+        SearchFeedSourceState::Pending => (SearchFeedStatus::Searching, remote_query, None),
         SearchFeedSourceState::RelayProgressive => (SearchFeedStatus::Ready, remote_query, None),
         SearchFeedSourceState::CacheComplete => cache_complete(input, feed_id, remote_query),
         SearchFeedSourceState::Partial {

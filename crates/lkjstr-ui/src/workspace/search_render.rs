@@ -44,6 +44,7 @@ fn footer_row(row: FeedFooterRow, older_command: Option<Callback<()>>) -> impl I
 pub(crate) fn search_status_text(status: SearchFeedStatus) -> &'static str {
     match status {
         SearchFeedStatus::Idle => "Enter a search query",
+        SearchFeedStatus::Searching => "Search running",
         SearchFeedStatus::Ready => "Search ready",
         SearchFeedStatus::Partial => "Search partial",
     }
@@ -54,10 +55,14 @@ mod tests {
     use super::*;
 
     #[test]
-    fn search_status_text_names_idle_and_partial_states() {
+    fn search_status_text_names_idle_searching_and_partial_states() {
         assert_eq!(
             search_status_text(SearchFeedStatus::Idle),
             "Enter a search query"
+        );
+        assert_eq!(
+            search_status_text(SearchFeedStatus::Searching),
+            "Search running"
         );
         assert_eq!(
             search_status_text(SearchFeedStatus::Partial),

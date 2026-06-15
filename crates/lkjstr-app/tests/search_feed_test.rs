@@ -100,7 +100,7 @@ fn search_feed_partial_provider_gap_stays_explicit() {
 fn search_feed_pending_submit_preserves_query_and_waits_for_rows() {
     let model = pending_search_feed_view("search-tab", "  nostr wasm  ");
 
-    assert_eq!(model.status, SearchFeedStatus::Ready);
+    assert_eq!(model.status, SearchFeedStatus::Searching);
     assert_eq!(model.submitted_query.as_deref(), Some("nostr wasm"));
     assert!(matches!(
         model.view_model.rows.last(),

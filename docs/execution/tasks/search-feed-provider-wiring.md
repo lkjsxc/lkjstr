@@ -23,8 +23,9 @@ Search tab remains product owner until broader parity and no-import proof exist.
 - `crates/lkjstr-app/src/feed/tool_inputs.rs` builds selected-relay NIP-50
   demand from non-empty submitted Search text.
 - `crates/lkjstr-app/src/search_feed/` keeps empty Search idle, trims submitted
-  text, exposes pending/provider-gap states without fake results, and merges
-  real row windows by event id and relay provenance.
+  text, exposes submitted pending/provider-gap states without fake ready
+  status or fake results, and merges real row windows by event id and relay
+  provenance.
 - `crates/lkjstr-ui/src/workspace/search.rs` submits non-empty queries through
   cancellable provider leases, renders provider completions and older footer
   commands only when the provider exposes a real older handler, and restores
@@ -89,6 +90,8 @@ pnpm test -- tests/unit/search
 - Empty submissions stay idle and do not create query demand.
 - Non-empty submissions trim text and expose Search NIP-50 demand on selected
   relays.
+- Pending submitted provider work renders an explicit searching state, not a
+  ready state.
 - Injected real result rows render through the shared feed row model.
 - Worker-backed Rust Search provider execution reads the local token index
   without full cached-event scans.

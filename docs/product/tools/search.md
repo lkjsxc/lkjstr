@@ -51,8 +51,10 @@ matches.
 ## States
 
 - `idle`: empty query or no submitted query.
-- `local-searching`: local index query is running.
-- `remote-searching`: relay NIP-50 reads are pending.
+- `local-searching`: local index query is running; submitted provider work
+  must not render as ready until real local evidence arrives.
+- `remote-searching`: relay NIP-50 reads are pending; submitted provider work
+  must not render as ready until real relay evidence arrives.
 - `partial`: local or some relay results are visible while other relay evidence
   is pending or incomplete.
 - `unsupported`: selected relays are known not to support NIP-50; local results

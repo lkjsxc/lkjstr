@@ -19,6 +19,7 @@ pub enum SearchFeedSourceState {
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
 pub enum SearchFeedStatus {
     Idle,
+    Searching,
     Ready,
     Partial,
 }
