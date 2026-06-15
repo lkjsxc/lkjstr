@@ -118,8 +118,9 @@ must use before their TypeScript feed runtimes are deleted.
   Downward near-end scroll and underfilled viewport probes forward the same
   older path. Terminal parent misses after exact cache and complete relay lookup
   render retryable unavailable-parent rows, and capped deep branches render
-  continuation rows that open matching Thread tabs. Deletion proof and broader
-  Thread parity remain open.
+  continuation rows that open matching Thread tabs. Pending provider work
+  renders loading instead of ready until real cache or relay evidence arrives.
+  Deletion proof and broader Thread parity remain open.
 - Shared feed runtime lifecycle:
   `crates/lkjstr-app/tests/feed_runtime_lifecycle_test.rs` proves release
   removes live demand, closes the live wire, preserves the bounded window, and

@@ -73,6 +73,20 @@ fn thread_feed_requires_relay_or_author_route() {
 }
 
 #[test]
+fn thread_feed_pending_with_relays_is_loading_not_ready() {
+    let event_id = id(1);
+    let model = build_thread_feed_view(input(
+        Some(event_id.clone()),
+        Some(event_id),
+        ThreadFeedSourceState::Pending,
+        relays(),
+        empty_feed_window(1, 240),
+    ));
+    assert_eq!(model.status, ThreadFeedStatus::Loading);
+    assert!(model.root_lookup.is_some() && model.replies_query.is_some());
+}
+
+#[test]
 fn thread_feed_partial_with_older_rows_exposes_older_footer() {
     let model = build_thread_feed_view(input(
         Some(id(1)),

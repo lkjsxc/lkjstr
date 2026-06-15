@@ -25,7 +25,7 @@ Deletion proof and broader Thread parity remain open.
 
 - `crates/lkjstr-app/src/thread_feed/**` builds Thread root lookup and reply
   query inputs, explicit missing-event/no-relay states, partial source states,
-  and shared feed rows.
+  pending loading state, and shared feed rows.
 - `crates/lkjstr-ui/src/workspace/thread.rs` renders Thread rows from
   `ThreadFeedView`; `thread_continuation.rs` opens matching Thread tabs for
   collapsed branches only when a real thread callback exists, otherwise
@@ -149,6 +149,7 @@ PATH=/home/lkjsxc/.cargo/bin:$PATH wasm-pack test --headless --chrome \
   Thread row using the root and focused `#e` filter.
 - Owner cleanup cancels the in-flight Thread relay read.
 - Missing event id and missing selected relay states are explicit data rows.
+- Pending Thread provider work renders explicit loading, not ready.
 - Thread output remains partial until broader Thread parity and deletion proof
   are complete.
 - Ledgers name the remaining broader parity and deletion gaps.

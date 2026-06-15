@@ -166,7 +166,10 @@ fn source_result(
                 Some(footer_row(feed_id, footer_state)),
             )
         }
-        ThreadFeedSourceState::Pending | ThreadFeedSourceState::RelayProgressive => {
+        ThreadFeedSourceState::Pending => {
+            (ThreadFeedStatus::Loading, root_lookup, replies_query, None)
+        }
+        ThreadFeedSourceState::RelayProgressive => {
             (ThreadFeedStatus::Ready, root_lookup, replies_query, None)
         }
     }

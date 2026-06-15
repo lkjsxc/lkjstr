@@ -19,6 +19,7 @@ pub enum ThreadFeedSourceState {
 pub enum ThreadFeedStatus {
     MissingEventId,
     NoEnabledRelay,
+    Loading,
     Ready,
     Partial,
 }

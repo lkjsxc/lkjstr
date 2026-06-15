@@ -127,6 +127,7 @@ fn thread_status_text(status: ThreadFeedStatus) -> &'static str {
     match status {
         ThreadFeedStatus::MissingEventId => "Thread unavailable",
         ThreadFeedStatus::NoEnabledRelay => "No enabled relay",
+        ThreadFeedStatus::Loading => "Thread loading",
         ThreadFeedStatus::Ready => "Thread ready",
         ThreadFeedStatus::Partial => "Thread partial",
     }
@@ -141,6 +142,10 @@ mod tests {
         assert_eq!(
             thread_status_text(ThreadFeedStatus::MissingEventId),
             "Thread unavailable"
+        );
+        assert_eq!(
+            thread_status_text(ThreadFeedStatus::Loading),
+            "Thread loading"
         );
         assert_eq!(
             thread_status_text(ThreadFeedStatus::Partial),

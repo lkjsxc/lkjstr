@@ -24,6 +24,9 @@ Thread tabs show a root event and replies opened from timeline event actions.
   true.
 - Shared `FeedSurfaceStatus` footer shows loading, end of history, and errors.
   End of history appears only for proven exhaustion.
+- Rust pending provider work renders a loading status until cached thread rows,
+  progressive relay rows, EOSE, or terminal relay failure provides real
+  evidence.
 - Scroll position automatically restores per Thread tab after tab switching and
   reload.
 - Historical reply pages use the event tag index, compound `{createdAt,id}`
