@@ -7,6 +7,7 @@ const deletedPaths = [
   path.join('src', 'lib', 'author-context'),
   path.join('src', 'lib', 'cache', 'event-store.ts'),
   path.join('src', 'lib', 'components', 'events', 'EventMoreMenu.svelte'),
+  path.join('src', 'lib', 'feed-surface', 'staged-rows.ts'),
   path.join('src', 'lib', 'tabs', 'author-context', 'AuthorContextTab.svelte'),
   path.join('src', 'lib', 'tabs', 'followees'),
   path.join('src', 'lib', 'tabs', 'user-timeline', 'UserTimelineTab.svelte'),
