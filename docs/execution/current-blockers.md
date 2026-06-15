@@ -25,9 +25,10 @@ proof, scroll-triggered plus viewport-fill Thread older request proof, bounded
 Thread live reply-window proof, focused-reference Thread hydration proof,
 bounded cached Thread parent-chain proof, terminal unavailable-parent rows,
 and Thread continuation rows; the shared Rust feed core now proves owner
-release cleanup plus Search app/UI demand, provider execution, local indexed
-rows, bounded relay NIP-50 merge proof, Search tab snapshot restore, cached
-plus relay older-page proof, cached plus relay-refreshed Profile
+release cleanup across every shared `QuerySurface` plus Search app/UI demand,
+provider execution, local indexed rows, bounded relay NIP-50 merge proof,
+Search tab snapshot restore, cached plus relay older-page proof, cached plus
+relay-refreshed Profile
 metadata/follow-count header rendering, selected-relay plus stored-route
 Followees/User Timeline kind `3` discovery, Followees/User Timeline cleanup,
 retry diagnostics, and Rust island host proof, first injected/cache/relay

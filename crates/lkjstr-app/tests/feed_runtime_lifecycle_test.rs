@@ -39,7 +39,12 @@ fn release_closes_live_demand_for_each_feed_surface() -> Result<(), String> {
         QuerySurface::Home,
         QuerySurface::Global,
         QuerySurface::Profile,
+        QuerySurface::UserTimeline,
+        QuerySurface::Thread,
         QuerySurface::Notifications,
+        QuerySurface::Search,
+        QuerySurface::CustomRequest,
+        QuerySurface::AuthorContext,
     ] {
         let attached = attach_feed_runtime_live(
             runtime(&format!("{surface:?}")),

@@ -135,8 +135,9 @@ from the newest retained row. Terminal parent misses render unavailable-parent
 rows, capped branches render continuation rows, and Thread stays partial until
 broader parity and deletion proof are converted.
 Broader Rust feed runtime tests prove owner release removes live demand, closes
-wire traffic, and keeps bounded
-windows for Home, Global, Profile, and Notifications. The shipped Svelte feed
+wire traffic, and keeps bounded windows for every shared `QuerySurface`: Home,
+Global, Profile, User Timeline, Thread, Notifications, Search, Custom Request,
+and Author Context. The shipped Svelte feed
 uses temporary matching host glue for content-aware estimates,
 unload-preserved active reservations, and long-content fragments. Durable
 geometry model consumption beyond

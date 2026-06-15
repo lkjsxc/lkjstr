@@ -119,7 +119,8 @@ must use before their TypeScript feed runtimes are deleted.
 - Shared feed runtime lifecycle:
   `crates/lkjstr-app/tests/feed_runtime_lifecycle_test.rs` proves release
   removes live demand, closes the live wire, preserves the bounded window, and
-  applies to Home, Global, Profile, and Notifications.
+  applies to every shared `QuerySurface`: Home, Global, Profile, User Timeline,
+  Thread, Notifications, Search, Custom Request, and Author Context.
 - Current shipped feed runtime: `src/lib/timeline/**`, `src/lib/profile/**`,
   `src/lib/thread/**`, `src/lib/notifications/**`, and `src/lib/feed-surface/**`.
 - Rust pure reducers exist. Product wiring, SQLite proof, Leptos feed rendering,
