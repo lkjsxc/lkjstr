@@ -8,13 +8,13 @@ without searching the whole tree.
 
 ## Identity Surfaces
 
-| Contract clause     | Component                    | Tab or consumer                                 | Test gate                  |
-| ------------------- | ---------------------------- | ----------------------------------------------- | -------------------------- |
-| Feed leading header | `FeedIdentityHeader.svelte`  | `RustIslandHost.svelte`                         | identity-surfaces contract |
-| User list row       | `UserEventRow.svelte`        | Followees Rust island                           | followees scroll rows      |
-| Row overflow menu   | `UserRowOverflowMenu.svelte` | `UserEventRow.svelte`                           | overflow-actions contract  |
-| Inline chip         | `IdentityChip.svelte`        | `AccountRow.svelte`, `EventMeta.svelte`         | account tests              |
-| Profile card        | `ProfileHeader.svelte`       | `ProfileTab.svelte`                             | profile header layout      |
+| Contract clause     | Component                    | Tab or consumer                         | Test gate                  |
+| ------------------- | ---------------------------- | --------------------------------------- | -------------------------- |
+| Feed leading header | `FeedIdentityHeader.svelte`  | `RustIslandHost.svelte`                 | identity-surfaces contract |
+| User list row       | `UserEventRow.svelte`        | Followees Rust island                   | followees scroll rows      |
+| Row overflow menu   | `UserRowOverflowMenu.svelte` | `UserEventRow.svelte`                   | overflow-actions contract  |
+| Inline chip         | `IdentityChip.svelte`        | `AccountRow.svelte`, `EventMeta.svelte` | account tests              |
+| Profile card        | `ProfileHeader.svelte`       | `ProfileTab.svelte`                     | profile header layout      |
 
 ## Overflow And Actions
 

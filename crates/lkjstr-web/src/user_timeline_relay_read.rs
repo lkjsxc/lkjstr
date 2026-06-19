@@ -5,7 +5,7 @@ use lkjstr_relays::request_timeout_ms;
 
 use crate::{
     relay_host::{BrowserTimeout, RelaySocketCallbacks, RelaySocketHandle, RelaySocketMessage},
-    user_timeline_host_view::relay_failure_view,
+    user_timeline_host_cached::user_timeline_no_event_view,
     user_timeline_relay::UserTimelineRelayRead,
     user_timeline_relay_input::{user_timeline_event_matches_read, user_timeline_relay_filters},
     user_timeline_relay_outcome::UserTimelineRelayOutcome,
@@ -167,11 +167,8 @@ impl UserTimelineRelayRead {
         }
         self.close_all();
         if self.events_seen.get() == 0 && !self.cancelled.get() {
-            (self.complete)(relay_failure_view(
-                &self.input.owner,
-                Some(self.input.target_pubkey.clone()),
-                self.input.selected_relays.clone(),
-                self.input.author_routes.clone(),
+            (self.complete)(user_timeline_no_event_view(
+                &self.input,
                 self.relay_outcomes.borrow().clone(),
             ));
         }

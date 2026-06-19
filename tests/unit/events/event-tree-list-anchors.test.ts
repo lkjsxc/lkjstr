@@ -2,6 +2,7 @@ import { tick } from 'svelte';
 import { describe, expect, it, vi } from 'vitest';
 import type { FlatEventTreeItem } from '../../../src/lib/events/tree';
 import {
+  restoreFeedListAnchor,
   syncFeedListAnchor,
   type EventAnchorRow,
 } from '../../../src/lib/components/events/event-tree-list-anchors';
@@ -11,6 +12,16 @@ const node = (id: string) => ({ event: { id }, depth: 0 }) as FlatEventTreeItem;
 const row = (id: string, visualIndex: number): EventAnchorRow => ({
   node: node(id),
   visualIndex,
+});
+
+const fragmentRow = (
+  id: string,
+  visualIndex: number,
+  rowKey: string,
+): EventAnchorRow => ({
+  node: node(id),
+  visualIndex,
+  rowKey,
 });
 
 describe('event tree list anchors', () => {
@@ -29,6 +40,45 @@ describe('event tree list anchors', () => {
     });
     await tick();
     expect(scrollTo).toHaveBeenCalledWith(325);
+  });
+
+  it('anchors fragmented rows by stable row key instead of event id', async () => {
+    const scrollTo = vi.fn();
+    syncFeedListAnchor({
+      previous: [fragmentRow('a', 1, 'event:a:body')],
+      rows: [
+        fragmentRow('a', 1, 'event:a:header'),
+        fragmentRow('a', 2, 'event:a:body'),
+      ],
+      key: (item) => item.event.id,
+      destroyed: () => false,
+      list: {
+        getScrollOffset: () => 225,
+        getItemOffset: (index) => index * 100,
+        scrollTo,
+      },
+    });
+    await tick();
+    expect(scrollTo).toHaveBeenCalledWith(325);
+  });
+
+  it('restores stored fragment anchors by row key', async () => {
+    const scrollTo = vi.fn();
+    await restoreFeedListAnchor({
+      restore: { anchorKey: 'event:a:body', offset: 24 },
+      rows: [
+        fragmentRow('a', 1, 'event:a:header'),
+        fragmentRow('a', 2, 'event:a:body'),
+      ],
+      key: (item) => item.event.id,
+      destroyed: () => false,
+      restoredKey: '',
+      list: {
+        getItemOffset: (index) => index * 100,
+        scrollTo,
+      },
+    });
+    expect(scrollTo).toHaveBeenCalledWith(224);
   });
 
   it('does not issue redundant top-locked zero scrolls', async () => {

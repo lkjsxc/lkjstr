@@ -21,10 +21,13 @@ fn status_text_names_planning_request() {
 }
 
 #[test]
-fn status_text_names_provider_gap_row() {
-    let model = unavailable_custom_request_feed_view("tab", PROVIDER_GAP, false);
+fn status_text_names_provider_unavailable_row() {
+    let model = unavailable_custom_request_feed_view("tab", PROVIDER_UNAVAILABLE, false);
 
-    assert_eq!(custom_request_status_text(&model, true), PROVIDER_GAP);
+    assert_eq!(
+        custom_request_status_text(&model, true),
+        PROVIDER_UNAVAILABLE
+    );
 }
 
 #[test]

@@ -11,6 +11,11 @@ export type ZapInvoiceClipboard = {
   readonly writeText?: (value: string) => Promise<void>;
 };
 
+export type ZapInvoiceCopyStatusCallbacks = {
+  readonly clipboard: ZapInvoiceClipboard | undefined;
+  readonly setStatus: (status: string) => void;
+};
+
 export async function copyZapInvoice(
   invoice: string,
   clipboard: ZapInvoiceClipboard | undefined,
@@ -24,6 +29,14 @@ export async function copyZapInvoice(
   } catch (error) {
     return { kind: 'failed', reason: copyFailureReason(error) };
   }
+}
+
+export async function copyEventZapInvoiceStatus(
+  invoice: string,
+  callbacks: ZapInvoiceCopyStatusCallbacks,
+): Promise<void> {
+  const status = await copyZapInvoice(invoice, callbacks.clipboard);
+  callbacks.setStatus(zapInvoiceCopyStatusText(status));
 }
 
 export function zapInvoiceCopyStatusText(status: ZapInvoiceCopyStatus): string {

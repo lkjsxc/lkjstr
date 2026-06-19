@@ -1,10 +1,14 @@
 #![cfg(target_arch = "wasm32")]
 
 mod accounts_selector_test_support;
+mod feed_scroll_structure_support;
 
 use std::collections::BTreeMap;
 
 use accounts_selector_test_support::{reset_shells, wait_for_text};
+use feed_scroll_structure_support::{
+    assert_feed_scroll_boundary, assert_tab_body_not_scroll_owner,
+};
 use lkjstr_app::{
     AuthorContextFeedSourceState, AuthorContextFeedView, AuthorContextFeedViewInput,
     FeedFragmentConfig, FeedWindowEvidence, FeedWindowFlags, RowGeometryModel, StartupInput,
@@ -32,7 +36,21 @@ async fn rust_author_context_tab_renders_provider_feed_rows() -> Result<(), JsVa
     wait_for_text("Author context").await?;
     wait_for_text("Cached rows").await?;
     assert!(!document_text()?.contains("The Rust Author Context body is not converted yet."));
-    Ok(())
+    assert_author_context_scroll_owner()
+}
+
+fn assert_author_context_scroll_owner() -> Result<(), JsValue> {
+    assert_feed_scroll_boundary(
+        ".lkjstr-author-context-feed",
+        ".author-context-list-scroll[data-scroll-owner]",
+        &[
+            ".lkjstr-feed-status",
+            ".lkjstr-feed-rows",
+            ".lkjstr-feed-row.event",
+            ".lkjstr-feed-footer",
+        ],
+    )?;
+    assert_tab_body_not_scroll_owner(".lkjstr-tab-body[data-tab-kind='author-context']")
 }
 
 fn provider() -> AuthorContextFeedProvider {

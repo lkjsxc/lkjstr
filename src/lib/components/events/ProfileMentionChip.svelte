@@ -1,6 +1,9 @@
 <script lang="ts">
   import type { ProfileSummary } from '$lib/identity/identity';
-  import { hasOpenProfileAction } from './action-availability';
+  import {
+    eventProfileCanOpen,
+    stopAndOpenEventProfile,
+  } from './event-profile-activation';
   import EmojifiedText from './EmojifiedText.svelte';
 
   type Props = {
@@ -12,13 +15,10 @@
   };
 
   let props: Props = $props();
-  let canOpenProfile = $derived(hasOpenProfileAction(props.openProfile));
+  let canOpenProfile = $derived(eventProfileCanOpen(props.openProfile));
 
   function open(event: MouseEvent): void {
-    event.stopPropagation();
-    const openProfile = props.openProfile;
-    if (!hasOpenProfileAction(openProfile)) return;
-    openProfile(props.pubkey);
+    stopAndOpenEventProfile(event, props.openProfile, props.pubkey);
   }
 </script>
 

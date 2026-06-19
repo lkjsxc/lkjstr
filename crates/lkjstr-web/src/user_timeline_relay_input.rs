@@ -1,5 +1,9 @@
 use std::collections::BTreeSet;
 
+use lkjstr_app::{
+    FeedWindowState, RowGeometryModel, UserTimelineFeedDiagnosticInput,
+    UserTimelineFeedSourceState,
+};
 use lkjstr_protocol::{KIND_FOLLOW_LIST, NostrEvent, NostrFilter};
 use lkjstr_relays::AuthorRelayRoute;
 
@@ -10,6 +14,16 @@ pub(crate) struct UserTimelineRelayReadInput {
     pub(crate) selected_relays: Vec<String>,
     pub(crate) author_routes: Vec<AuthorRelayRoute>,
     pub(crate) relays: Vec<String>,
+    pub(crate) target_posts_fallback: Option<UserTimelineTargetPostsFallback>,
+}
+
+#[derive(Clone)]
+pub(crate) struct UserTimelineTargetPostsFallback {
+    pub(crate) window: FeedWindowState,
+    pub(crate) source_state: UserTimelineFeedSourceState,
+    pub(crate) since: Option<u64>,
+    pub(crate) geometry_models: Vec<RowGeometryModel>,
+    pub(crate) diagnostics: Vec<UserTimelineFeedDiagnosticInput>,
 }
 
 pub(crate) struct UserTimelineRelayInputSeed<'a> {
@@ -39,6 +53,7 @@ pub(crate) fn user_timeline_relay_input(
         selected_relays,
         author_routes,
         relays,
+        target_posts_fallback: None,
     })
 }
 

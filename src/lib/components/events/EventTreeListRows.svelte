@@ -11,12 +11,15 @@
     RepostSummaryMap,
   } from '$lib/thread/thread-reactions';
   import type { EventActionState } from '$lib/events/action-state';
-  import { actionStateForEvent } from '$lib/events/action-state';
-  import { hasOpenThreadAction } from './action-availability';
   import type {
     EventTreeListLeadingRow,
     EventTreeListViewRow,
   } from './event-tree-list-helpers';
+  import {
+    continuationPlanForViewRow,
+    openContinuationThread,
+  } from './event-tree-list-continuation-plan';
+  import { eventTreeListRowData } from './event-tree-list-row-plan';
 
   type Props = {
     node: EventTreeListViewRow;
@@ -37,16 +40,20 @@
   let eventNode = $derived(
     props.node.kind === 'event' ? props.node.node : undefined,
   );
-  let collapsed = $derived(
-    eventNode && 'collapsed' in eventNode ? eventNode : undefined,
+  let rowData = $derived(
+    props.node.kind === 'event' || props.node.kind === 'eventFragment'
+      ? eventTreeListRowData({
+          node: props.node.node,
+          profiles: props.profiles,
+          reactions: props.reactions,
+          reposts: props.reposts,
+          actionStates: props.actionStates,
+        })
+      : undefined,
   );
-  let canOpenThread = $derived(hasOpenThreadAction(props.openThread));
-
-  function openCollapsedThread(eventId: string): void {
-    const openThread = props.openThread;
-    if (!hasOpenThreadAction(openThread)) return;
-    openThread(eventId);
-  }
+  let continuation = $derived(
+    continuationPlanForViewRow(props.node, props.openThread),
+  );
 </script>
 
 {#if props.node.kind === 'leading'}
@@ -59,34 +66,35 @@
   <FeedSurfaceStatus phase="loadingOlder" />
 {:else if props.node.kind === 'empty'}
   <p class="event-list__empty">{props.node.text}</p>
-{:else if collapsed}
-  {#if canOpenThread}
+{:else if continuation.visible}
+  {#if continuation.canOpenThread}
     <button
       type="button"
       class="thread-continuation"
-      style={`--event-depth: ${collapsed.depth}`}
-      onclick={() => openCollapsedThread(collapsed.targetId)}
+      style={`--event-depth: ${continuation.depth}`}
+      onclick={() => openContinuationThread(continuation, props.openThread)}
     >
-      Continue thread ({collapsed.hiddenCount})
+      {continuation.buttonText}
     </button>
   {:else}
-    <p class="thread-continuation" style={`--event-depth: ${collapsed.depth}`}>
-      {collapsed.hiddenCount} hidden thread item(s) unavailable.
+    <p
+      class="thread-continuation"
+      style={`--event-depth: ${continuation.depth}`}
+    >
+      {continuation.unavailableText}
     </p>
   {/if}
 {:else if props.node.kind === 'eventFragment'}
   <EventFragmentRow
     node={props.node.node}
     fragment={props.node.fragment}
-    profile={props.profiles?.[props.node.node.event.pubkey]}
+    profile={rowData?.profile}
     relaySets={props.relaySets}
     activeAccountPubkey={props.activeAccountPubkey}
-    liked={actionStateForEvent(props.actionStates, props.node.node.event.id)
-      .liked}
-    reposted={actionStateForEvent(props.actionStates, props.node.node.event.id)
-      .reposted}
-    reactions={props.reactions?.[props.node.node.event.id]}
-    reposts={props.reposts?.[props.node.node.event.id]}
+    liked={rowData?.liked ?? false}
+    reposted={rowData?.reposted ?? false}
+    reactions={rowData?.reactions}
+    reposts={rowData?.reposts}
     profiles={props.profiles}
     openProfile={props.openProfile}
     openThread={props.openThread}
@@ -96,14 +104,13 @@
   <EventRow
     item={eventNode}
     depth={eventNode.depth}
-    profile={props.profiles?.[eventNode.event.pubkey]}
+    profile={rowData?.profile}
     relaySets={props.relaySets}
     activeAccountPubkey={props.activeAccountPubkey}
-    liked={actionStateForEvent(props.actionStates, eventNode.event.id).liked}
-    reposted={actionStateForEvent(props.actionStates, eventNode.event.id)
-      .reposted}
-    reactions={props.reactions?.[eventNode.event.id]}
-    reposts={props.reposts?.[eventNode.event.id]}
+    liked={rowData?.liked ?? false}
+    reposted={rowData?.reposted ?? false}
+    reactions={rowData?.reactions}
+    reposts={rowData?.reposts}
     profiles={props.profiles}
     openProfile={props.openProfile}
     openThread={props.openThread}

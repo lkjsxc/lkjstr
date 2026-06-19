@@ -2,6 +2,7 @@
   import type { FeedScanHint } from '$lib/events/feed-scan-hints';
   import type { RelayReadScore } from '$lib/relays/relay-read-score';
   import type { ScanOptimizerDebugSnapshot } from '$lib/feed-surface/scan-model-debug';
+  import OptimizerHintStatusTable from './OptimizerHintStatusTable.svelte';
 
   type Props = {
     scores: readonly RelayReadScore[];
@@ -44,6 +45,11 @@
   <article>
     <strong>{props.scanDebug?.models.length ?? 0}</strong><span
       >density models</span
+    >
+  </article>
+  <article>
+    <strong>{props.scanDebug?.decisionTraces.length ?? 0}</strong><span
+      >scan decisions</span
     >
   </article>
   <article>
@@ -146,6 +152,7 @@
     {/each}
   </tbody>
 </table>
+<OptimizerHintStatusTable scanDebug={props.scanDebug} />
 <h4>Scan decision traces</h4>
 <table class="stats-table">
   <thead>

@@ -3,8 +3,6 @@ import type { FlatEventTreeItem } from '../../../src/lib/events/tree';
 import {
   buildViewRows,
   eventRows,
-  isRowNearStart,
-  nearStartVisualIndex,
   viewRowKey,
 } from '../../../src/lib/components/events/event-tree-list-helpers';
 
@@ -41,35 +39,6 @@ describe('event tree list rows', () => {
       'a',
       'event-list-terminal',
     ]);
-    expect(nearStartVisualIndex(rows)).toBe(2);
-  });
-
-  it('uses the first marked leading row as the near-start target', () => {
-    const rows = buildViewRows(
-      [{ key: 'profile-header' }, { key: 'profile-banner', nearStart: true }],
-      [item('a')],
-      false,
-      false,
-      'proven',
-      false,
-      '',
-    );
-    expect(nearStartVisualIndex(rows)).toBe(1);
-    expect(isRowNearStart(rows, 100, offsetForRows, near)).toBe(true);
-  });
-
-  it('falls back to the first event row when no leading row is marked', () => {
-    const rows = buildViewRows(
-      [{ key: 'profile-header' }],
-      [item('a'), item('b')],
-      false,
-      false,
-      'proven',
-      false,
-      '',
-    );
-    expect(nearStartVisualIndex(rows)).toBe(1);
-    expect(isRowNearStart(rows, 100, offsetForRows, near)).toBe(true);
   });
 
   it('does not treat a profile header alone as the near-start target', () => {
@@ -82,8 +51,7 @@ describe('event tree list rows', () => {
       true,
       'Nothing here.',
     );
-    expect(nearStartVisualIndex(rows)).toBeUndefined();
-    expect(isRowNearStart(rows, 0, offsetForRows, near)).toBe(false);
+    expect(rows.map(viewRowKey)).toEqual(['event-list-leading-profile-header']);
   });
 
   it('renders empty rows inside the same row model', () => {
@@ -151,12 +119,4 @@ function realItem(id: string, content: string): FlatEventTreeItem {
     children: [],
     depth: 0,
   } as FlatEventTreeItem;
-}
-
-function offsetForRows(index: number): number {
-  return index * 100;
-}
-
-function near(delta: number): boolean {
-  return delta >= 0 && delta <= 40;
 }

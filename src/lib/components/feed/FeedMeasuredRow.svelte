@@ -7,6 +7,7 @@
     markFeedRowMaterialized,
     recordFeedRowAnchorCompensation,
     recordFeedRowHeight,
+    recordFeedRowStaleObservation,
     widthBucketForPx,
   } from '$lib/feed-surface/row-height-reservation';
 
@@ -60,8 +61,7 @@
     }
     const delta = nextReservedHeight - previousHeight;
     if (delta < 0 && element && isAboveViewport(element, scrollElement)) {
-      scrollElement!.scrollTop += delta;
-      recordFeedRowAnchorCompensation();
+      recordFeedRowAnchorCompensation(delta);
     }
     if (previousHeight !== nextReservedHeight)
       appliedReservedHeight = nextReservedHeight;
@@ -92,14 +92,16 @@
       const width = Math.round(rect?.width ?? 0);
       if (width > 0) widthPx = width;
       const bucket = widthBucketForPx(width);
-      if (height <= 0) return;
+      if (height <= 0) {
+        recordFeedRowStaleObservation();
+        return;
+      }
       measuredHeight = height;
       const bucketChanged = bucket !== previousBucket;
       const delta = height - previousHeight;
       if (bucketChanged) previousBucket = bucket;
       if (delta !== 0 && isAboveViewport(node, scrollElement)) {
-        scrollElement!.scrollTop += delta;
-        recordFeedRowAnchorCompensation();
+        recordFeedRowAnchorCompensation(delta);
       }
       previousHeight = height;
       if (bucketChanged || delta !== 0) {

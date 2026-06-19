@@ -24,28 +24,32 @@ pub fn UserTimelineTab(
         on_cleanup(move || lease.release());
     }
     view! {
-        <section class="lkjstr-user-timeline-feed" aria-label="User Timeline">
-            <header class="profile-card" data-testid="rust-user-timeline-header">
-                <div class="profile-card__main">
-                    <div class="profile-card__identity">
-                        <h2>"User Timeline"</h2>
-                        <p>{move || user_timeline_header_mode(model.get())}</p>
-                        {target_profile_button(target_pubkey.clone(), actions.open_profile)}
+        <section class="feed-tab lkjstr-user-timeline-feed" aria-label="User Timeline">
+            <div class="tab-scroll-track event-list__scroller">
+                <div class="tab-scroll-owner user-timeline-list-scroll" data-scroll-owner="">
+                    <header class="profile-card" data-testid="rust-user-timeline-header">
+                        <div class="profile-card__main">
+                            <div class="profile-card__identity">
+                                <h2>"User Timeline"</h2>
+                                <p>{move || user_timeline_header_mode(model.get())}</p>
+                                {target_profile_button(target_pubkey.clone(), actions.open_profile)}
+                            </div>
+                        </div>
+                    </header>
+                    <p class="lkjstr-feed-status">{move || user_timeline_status_text(model.get().status)}</p>
+                    <div class="lkjstr-feed-rows">
+                        {move || {
+                            let actions = actions.clone();
+                            model
+                                .get()
+                                .view_model
+                                .rows
+                                .into_iter()
+                                .map(move |row| timeline_row(row, actions.clone()))
+                                .collect_view()
+                        }}
                     </div>
                 </div>
-            </header>
-            <p class="lkjstr-feed-status">{move || user_timeline_status_text(model.get().status)}</p>
-            <div class="lkjstr-feed-rows">
-                {move || {
-                    let actions = actions.clone();
-                    model
-                        .get()
-                        .view_model
-                        .rows
-                        .into_iter()
-                        .map(move |row| timeline_row(row, actions.clone()))
-                        .collect_view()
-                }}
             </div>
         </section>
     }

@@ -21,6 +21,7 @@ pub(crate) struct NotificationsRelayReadOutput {
     pub(crate) input: NotificationsRelayReadInput,
 }
 
+#[cfg(debug_assertions)]
 pub(crate) fn model_from_snapshot(
     input: &NotificationsRelayReadInput,
     snapshot: ProgressiveReadSnapshot,

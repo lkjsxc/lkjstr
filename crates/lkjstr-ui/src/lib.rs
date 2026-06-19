@@ -5,8 +5,9 @@ mod workspace;
 pub use app::{App, AppWithStartup, default_startup_input};
 #[cfg(target_arch = "wasm32")]
 pub use app::{
-    mount_app_with_profile_feed_and_followees_provider,
+    mount_app_with_home_feed_provider, mount_app_with_profile_feed_and_followees_provider,
     mount_app_with_profile_feed_followees_and_user_timeline_provider,
+    mount_app_with_stats_provider,
 };
 pub use leptos::prelude::Callback;
 pub use workspace::*;

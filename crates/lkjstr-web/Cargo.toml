@@ -51,4 +51,4 @@ web-sys = { version = "0.3.82", features = [
 
 [dev-dependencies]
 wasm-bindgen-test = "0.3.72"
-web-sys = { version = "0.3.82", features = ["Blob", "Document", "Element", "EventInit", "HtmlElement", "HtmlInputElement", "HtmlTextAreaElement", "NodeList", "Storage", "Url", "Window"] }
+web-sys = { version = "0.3.82", features = ["Blob", "Document", "DomRect", "Element", "EventInit", "HtmlElement", "HtmlInputElement", "HtmlTextAreaElement", "NodeList", "Storage", "Url", "Window"] }

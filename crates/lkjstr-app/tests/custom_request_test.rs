@@ -16,6 +16,10 @@ fn parses_request_object_and_clamps_limit() -> Result<(), String> {
 
     assert_eq!(filter.kinds, Some(vec![KIND_TEXT_NOTE]));
     assert_eq!(filter.limit, Some(500));
+    assert_eq!(request.limit_clamps.len(), 1);
+    assert_eq!(request.limit_clamps[0].filter_index, 0);
+    assert_eq!(request.limit_clamps[0].original_limit, 999);
+    assert_eq!(request.limit_clamps[0].effective_limit, 500);
     assert_eq!(
         request.relays,
         vec!["wss://a.example/".to_owned(), "wss://b.example/".to_owned()]

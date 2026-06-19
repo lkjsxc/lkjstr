@@ -73,6 +73,20 @@ fn notifications_feed_cache_complete_uses_cache_footer() {
 }
 
 #[test]
+fn notifications_feed_cache_complete_empty_keeps_relay_reading_footer() {
+    let mut input = input(Some(pubkey("a")), Vec::new());
+    input.source_state = NotificationsFeedSourceState::CacheComplete;
+    input.window = empty_feed_window(1, 180);
+    let view = build_notifications_feed_view(input);
+
+    assert_eq!(view.status, NotificationsFeedStatus::Ready);
+    assert!(matches!(
+        view.view_model.rows.last(),
+        Some(FeedViewRow::Footer(row)) if row.state == FeedFooterState::ReadingRelays
+    ));
+}
+
+#[test]
 fn notifications_feed_pending_with_account_is_loading_not_ready() {
     let mut input = input(Some(pubkey("a")), Vec::new());
     input.source_state = NotificationsFeedSourceState::Pending;

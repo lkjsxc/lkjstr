@@ -42,38 +42,42 @@ pub fn ProfileTab(
         on_cleanup(move || lease.release());
     }
     view! {
-        <section class="lkjstr-profile-feed" aria-label="Profile">
-            {move || {
-                let actions = header_actions.clone();
-                model
-                    .get()
-                    .profile_header
-                    .into_iter()
-                    .map(move |header| {
-                        profile_header(
-                            header,
-                            actions.active_account_pubkey.clone(),
-                            actions.open_followees,
-                            actions.open_user_timeline,
-                            actions.open_profile_edit,
-                            actions.copy_profile.clone(),
-                            actions.follow_profile.clone(),
-                        )
-                    })
-                    .collect_view()
-            }}
-            <p class="lkjstr-feed-status">{move || profile_status_text(model.get().status)}</p>
-            <div class="lkjstr-feed-rows">
-                {move || {
-                    let event_actions = row_actions.clone();
-                    model
-                        .get()
-                        .view_model
-                        .rows
-                        .into_iter()
-                        .map(move |row| profile_row(row, event_actions.clone()))
-                        .collect_view()
-                }}
+        <section class="feed-tab lkjstr-profile-feed" aria-label="Profile">
+            <div class="tab-scroll-track event-list__scroller">
+                <div class="tab-scroll-owner profile-list-scroll" data-scroll-owner="">
+                    {move || {
+                        let actions = header_actions.clone();
+                        model
+                            .get()
+                            .profile_header
+                            .into_iter()
+                            .map(move |header| {
+                                profile_header(
+                                    header,
+                                    actions.active_account_pubkey.clone(),
+                                    actions.open_followees,
+                                    actions.open_user_timeline,
+                                    actions.open_profile_edit,
+                                    actions.copy_profile.clone(),
+                                    actions.follow_profile.clone(),
+                                )
+                            })
+                            .collect_view()
+                    }}
+                    <p class="lkjstr-feed-status">{move || profile_status_text(model.get().status)}</p>
+                    <div class="lkjstr-feed-rows">
+                        {move || {
+                            let event_actions = row_actions.clone();
+                            model
+                                .get()
+                                .view_model
+                                .rows
+                                .into_iter()
+                                .map(move |row| profile_row(row, event_actions.clone()))
+                                .collect_view()
+                        }}
+                    </div>
+                </div>
             </div>
         </section>
     }
@@ -111,6 +115,7 @@ fn profile_row(row: FeedViewRow, actions: FeedEventActions) -> impl IntoView {
         FeedViewRow::Unavailable(row) => feed_state_row::unavailable(row).into_any(),
         FeedViewRow::Diagnostic(row) => feed_state_row::diagnostic(row).into_any(),
         FeedViewRow::Continuation(row) => feed_state_row::plain_continuation(row).into_any(),
+        FeedViewRow::Shell(row) => feed_state_row::shell(row).into_any(),
         FeedViewRow::Footer(row) => {
             state_footer(row.row_id, row.state, FooterAuthLabel::Account).into_any()
         }

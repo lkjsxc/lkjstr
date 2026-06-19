@@ -1,7 +1,9 @@
 #![cfg(target_arch = "wasm32")]
 
 use lkjstr_app::FeedFooterState;
-use lkjstr_web::notifications_feed_relay_output_test_api::initial_complete_output_probe;
+use lkjstr_web::notifications_feed_relay_output_test_api::{
+    cache_complete_probe, initial_complete_output_probe,
+};
 use lkjstr_web::notifications_feed_relay_test_api::{
     notification_match_probe, older_complete_empty_footer_probe,
     older_incomplete_empty_footer_probe, older_relay_plan_probe,
@@ -27,6 +29,14 @@ fn notifications_relay_read_rejects_unmatched_events() {
     assert!(probe.accepted);
     assert!(!probe.before_window);
     assert!(!probe.missing_p_tag);
+}
+
+#[wasm_bindgen_test]
+fn notifications_complete_cache_skips_initial_relay_but_keeps_empty_probe() {
+    let probe = cache_complete_probe();
+
+    assert!(probe.visible_rows_skip_initial);
+    assert!(probe.empty_rows_request_older);
 }
 
 #[wasm_bindgen_test]

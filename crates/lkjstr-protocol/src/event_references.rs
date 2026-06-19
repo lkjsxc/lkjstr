@@ -1,11 +1,13 @@
 use crate::{
     EventReference, EventReferenceKind, EventReferenceSource, KIND_DELETION, KIND_GENERIC_REPOST,
-    KIND_REACTION, KIND_REPOST, NostrEntity, NostrEvent, decode_nip19,
+    KIND_REACTION, KIND_REPOST, KIND_TEXT_NOTE, NostrEntity, NostrEvent, VerificationResult,
+    decode_nip19,
     event_reference_parts::{
-        dedupe, last_e_tag, normalized_relays, push, push_event_tag, tag_name_is, tag_relay,
+        dedupe, last_e_tag, last_event_tag_id, normalized_relays, push, push_event_tag,
+        tag_name_is, tag_relay,
     },
     event_reference_scan::{nostr_entities, nostr_entity_spans},
-    is_event_id, reply_parent, reply_root,
+    is_event_id, reply_parent, reply_root, verify_event,
 };
 
 #[must_use]
@@ -56,6 +58,33 @@ pub fn event_references(event: &NostrEvent) -> Vec<EventReference> {
     }
     refs.extend(nostr_event_references(&event.content));
     dedupe(refs)
+}
+
+#[must_use]
+pub fn verified_nested_repost(event: &NostrEvent) -> Option<NostrEvent> {
+    if !matches!(event.kind, KIND_REPOST | KIND_GENERIC_REPOST) || event.content.trim().is_empty() {
+        return None;
+    }
+    let value = serde_json::from_str(&event.content).ok()?;
+    let target = crate::parse_nostr_event_value(&value, None).ok()?;
+    match verify_event(&target) {
+        VerificationResult::Ok(verified) if repost_target_matches_source(event, &verified) => {
+            Some(verified)
+        }
+        VerificationResult::Err { .. } => None,
+        VerificationResult::Ok(_) => None,
+    }
+}
+
+fn repost_target_matches_source(source: &NostrEvent, target: &NostrEvent) -> bool {
+    match source.kind {
+        KIND_REPOST => {
+            target.kind == KIND_TEXT_NOTE
+                && last_event_tag_id(source).is_some_and(|id| id == target.id)
+        }
+        KIND_GENERIC_REPOST => last_event_tag_id(source).is_none_or(|id| id == target.id),
+        _ => false,
+    }
 }
 
 #[must_use]

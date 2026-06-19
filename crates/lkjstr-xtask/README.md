@@ -14,8 +14,8 @@ This crate owns Rust repository checks and quiet command orchestration.
   manifest checks, SQLite schema doc checks, and quiet gate orchestration.
 - Forbidden meaning: product behavior, browser adapters, UI rendering, relay
   sockets, and storage row policy beyond repository validation.
-- Effect boundary: runs local commands and reports bounded output; it does not
-  implement product features.
+- Effect boundary: runs local commands and reports bounded output or step
+  timeouts; it does not implement product features.
 - Main tests: `cargo test -p lkjstr-xtask` plus direct command runs.
 - Next cutover task: keep ledgers enforced through existing docs and line checks
   before adding custom rules.

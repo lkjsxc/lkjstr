@@ -19,6 +19,13 @@ pub fn mount_rust_workspace_shell_from_db_with_worker(db_name: String, worker_ur
     crate::host_providers::mount_rust_workspace_shell_from_db_with_worker(db_name, worker_url);
 }
 
+pub fn mount_rust_workspace_shell_with_stats_provider(
+    startup: lkjstr_app::StartupInput,
+    stats_provider: lkjstr_ui::StatsProvider,
+) {
+    lkjstr_ui::mount_app_with_stats_provider(startup, stats_provider);
+}
+
 pub fn mount_rust_workspace_shell_with_startup(startup: lkjstr_app::StartupInput) {
     lkjstr_ui::mount_app_with_startup(startup);
 }
@@ -28,6 +35,13 @@ pub fn mount_rust_workspace_shell_with_home_feed(
     home_feed: lkjstr_app::HomeFeedView,
 ) {
     lkjstr_ui::mount_app_with_home_feed(startup, home_feed);
+}
+
+pub fn mount_rust_workspace_shell_with_home_feed_provider(
+    startup: lkjstr_app::StartupInput,
+    home_feed_provider: lkjstr_ui::HomeFeedProvider,
+) {
+    lkjstr_ui::mount_app_with_home_feed_provider(startup, home_feed_provider);
 }
 
 pub fn mount_rust_workspace_shell_with_global_feed(

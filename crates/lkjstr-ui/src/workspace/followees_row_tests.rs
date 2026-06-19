@@ -3,8 +3,13 @@ use leptos::prelude::Callback;
 use super::*;
 
 #[test]
-fn compact_pubkey_keeps_both_ends() {
-    assert_eq!(compact_pubkey(&"a".repeat(64)), "aaaaaaaa...aaaaaaaa");
+fn followee_display_name_uses_unknown_until_metadata_is_real() {
+    assert_eq!(followee_display_name(None), "Unknown");
+    assert_eq!(followee_display_name(Some(" ".to_owned())), "Unknown");
+    assert_eq!(
+        followee_display_name(Some("Rust Friend".to_owned())),
+        "Rust Friend"
+    );
 }
 
 #[test]

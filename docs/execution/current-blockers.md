@@ -13,7 +13,8 @@ host-runner enabling slices are implemented; storage and relay parity plus
 deletion remain blocked. Shared feed runtime is the current first incomplete
 blocker and has pure row-view-model, first Home rendering, cache-backed
 provider, exact Home coverage proof, bounded Home relay snapshot wiring, Rust
-Home owner-release cleanup, first Global rendering, Global cache-backed
+Home owner-release cleanup, Home one-scroll-owner row-flow proof, first Global
+rendering, Global cache-backed
 provider proof, Global browser cleanup proof, Global footer/scroll and
 viewport-fill older request proof, first Notifications cached
 provider proof, Notifications browser cleanup proof, Notifications bounded
@@ -24,8 +25,10 @@ Thread bootstrap relay-read proof, explicit Thread older-page relay command
 proof, scroll-triggered plus viewport-fill Thread older request proof, bounded
 Thread live reply-window proof, focused-reference Thread hydration proof,
 bounded cached Thread parent-chain proof, terminal unavailable-parent rows,
-and Thread continuation rows; the shared Rust feed core now proves owner
-release cleanup across every shared `QuerySurface` plus Search app/UI demand,
+Thread continuation rows, feed/form tab track-edge alignment, and converted
+feed structural, pane-body, horizontal-overflow, Public Chat, and lkjstr Log scroll-owner
+boundaries; the shared Rust
+feed core now proves owner release cleanup across every shared `QuerySurface` plus Search app/UI demand,
 provider execution, local indexed rows, bounded relay NIP-50 merge proof,
 Search tab snapshot restore, cached plus relay older-page proof, cached plus
 relay-refreshed Profile
@@ -139,45 +142,55 @@ models, anchors, footer states, and unavailable states.
   stable event, profile, notification, unavailable, diagnostic, and footer row
   ids. Focused tests cover duplicate relay merge, explicit unavailable and
   diagnostic rows, profile and notification ids, footer states, first Rust Home
-  row rendering, first injected Global feed rendering, Global selected-relay
-  cache provider proof, exact Global coverage proof, bounded Home and Global
-  relay snapshot wiring, Global explicit/scroll/viewport-fill older request
-  proof with compound older relay cursors, feed regressions, protocol events,
+  row rendering, Home one-scroll-owner row-flow proof, Home long-post segmented
+  plus horizontal-overflow, multiline, tall-text scroll-continuity, late
+  profile hydration anchor, reference-preview hydration anchor, media-resize
+  growth/shrink, pane-width growth/shrink, live-insert top/non-top anchor, Home
+  structural scroll-owner boundary, converted feed structural, pane-body,
+  horizontal-overflow, oversized Profile-note wrapping, Public Chat, and lkjstr Log scroll-owner proof, and
+  event LOD/profile/notification shell anchor browser proofs, first injected Global feed rendering, Global
+  selected-relay cache provider proof, exact Global coverage proof, bounded Home and Global
+  relay snapshot wiring, Global one-scroll-owner row-flow proof, Global
+  explicit/scroll/viewport-fill older request proof with compound older relay cursors,
+  feed regressions, protocol events,
   Home and Global browser cleanup, first Notifications cached provider proof,
   Notifications
   browser cleanup, exact Notifications account coverage, bounded Notifications
-  relay snapshot wiring, Notifications scroll-owner and cursor-gating proof,
+  relay snapshot wiring, cache-complete initial-read suppression plus empty
+  exact-window older probing, Notifications chrome/source-event scroll-owner/overflow and cursor-gating proof,
   Notifications bounded older relay-window proof, explicit Notifications older
   footer command wiring from retained relay state, scroll-triggered
   Notifications older request proof, Profile storage-backed provider proof,
-  exact Profile route coverage, Profile metadata/follow-list exclusion, cached
+  Profile one-scroll-owner row-flow proof, exact Profile route coverage, Profile metadata/follow-list exclusion, cached
   Profile metadata/follow-count rendering, Profile relay header refresh,
   Profile Followees/User Timeline/Profile Edit/copy-npub/nprofile/follow-list/relay-set JSON actions,
   Profile Follow/Unfollow state loading plus local and NIP-07 publish without fake success,
   Profile sparse-history empty proof, first Rust Followees NIP-02 row rendering,
   default cached plus selected-relay/stored-route/disabled-route Followees
-  host-provider, cleanup, retry diagnostics, root row actions with explicit copy
-  status, and Rust island host proof,
+  host-provider, one-scroll-owner proof, cleanup, retry diagnostics, root row
+  actions with explicit copy status, and Rust island host proof,
   first Rust User Timeline NIP-02 author-set feed-row rendering,
-  default cached User Timeline host-provider proof, public no-route/loading
-  discovery-state tests, selected-relay User Timeline kind `3` discovery,
-  stored NIP-65 route discovery, cleanup, retry diagnostics, and Rust island
-  host proof,
-  Thread cached root/reply provider proof, shared
-  feed owner-release cleanup, bounded Thread bootstrap relay reads, Thread relay
+  default cached User Timeline host-provider and one-scroll-owner proofs,
+  target-posts-only fallback proof, public no-route/loading discovery-state
+  tests, selected-relay User Timeline kind `3` discovery, stored NIP-65 route
+  discovery, cleanup, retry diagnostics, and Rust island host proof,
+  Thread cached root/reply provider proof, Thread one-scroll-owner row-flow
+  proof, shared feed owner-release cleanup, bounded Thread bootstrap relay reads, Thread relay
   owner cleanup, explicit Thread older-page relay reads from the footer command,
   scroll-triggered and viewport-fill Thread older requests, bounded Thread live
   reply windows, focused-reference Thread hydration, bounded cached Thread
   parent-chain hydration, terminal unavailable-parent rows, Thread continuation
   rows, Search app/UI demand, worker-backed Search provider execution, local
-  indexed rows, bounded relay NIP-50 merge proof, Search tab snapshot restore,
-  cached plus relay older-page proof, injected, worker-cached, relay-backed,
-  exact-anchor, stored-route, and unavailable-state Author Context rows, Rust
+  indexed rows, Search one-scroll-owner row-flow proof, bounded relay NIP-50 merge proof, Search tab snapshot restore,
+  cached plus relay older-page proof, Custom Request durable geometry model proof, injected, worker-cached, relay-backed,
+  exact-anchor, stored-route, unavailable-state, and one-scroll-owner Author Context rows, Rust
   row actions, shared Rust event action rendering, host-backed Rust event-id
   copy actions with retained-compatible status text, copy-only menu proof,
   converted action providers, nearby-author menus across converted Rust feed
   rows, shared Rust event body, Author Context request-level cleanup guards,
-  full FeedViewModel action/repost summary rows,
+  full FeedViewModel action/repost summary rows and verified nested repost
+  target rows with UI attribute proof, Rust/TypeScript declared-target mismatch
+  rejection, and nested-repost reservation invalidation,
   `FeedEventRow` content/action rows, indexed unavailable media/reference
   preview states with UI attribute proof, real HTTPS media attachment row
   planning with fallback open-link identity attributes and compact media-only
@@ -199,17 +212,27 @@ models, anchors, footer states, and unavailable states.
   suppressed; released Global, Notifications, Search, and Thread older-provider
   leases suppress late completions; Profile following-count actions require a
   real Followees opener, unused tab-snapshot no-op persistence construction is
-  removed, Rust geometry runtime counters are exposed to Stats, and Rust/WASM
-  quiet. Author Context, Followees, and User Timeline use generic Rust island
-  host glue, which cancels pending WASM mounts when hidden or destroyed and
-  unmounts late handles before accepting stale mounts. The removed
+  removed, Rust geometry runtime counters plus row-height key/tier helpers, injected row-height, scan
+  optimizer count proof, and grouped hint-status Stats rows are exposed, split
+  Rust/WASM browser plus release gates, canonical Rust/WASM quiet wrapper proof,
+  and Docker final-gate proof. Generic feed-host selection now has focused
+  mount-key proof, and `pnpm check:repo` guards product source from re-importing
+  retained Svelte feed tab bodies, TimelineTab support files, deleted feed tab wrappers, retired
+  Author Context loader symbols, removed staged-rows, row-shell, and feed-geometry-estimate helpers, and User Timeline route-plan helpers. Home, Global,
+  Profile, Thread,
+  Notifications, Search, Custom Request, Author Context, Followees, and User Timeline use generic Rust
+  island host glue, which cancels pending WASM mounts when hidden or destroyed,
+  unmounts late handles before accepting stale mounts, and preserves Search and
+  Custom Request filter snapshots through typed callbacks. The removed
   Author Context, Followees, and User Timeline Svelte wrappers stay absent
   through `pnpm check:repo`.
-- Remaining completion proof: retained Svelte event overflow behavior now lives
-  in `EventMeta.svelte`, and `EventRow.svelte` plus `EventFragmentRow.svelte`
-  no longer import `EventMoreMenu.svelte`. The old component file is removed
-  and guarded absent by `pnpm check:repo`; other feed-surface deletion
-  prerequisites remain open.
+- Remaining completion proof: retained Svelte event overflow/menu-label/propagation/copy-status lifecycle behavior,
+  row activation/dispatch/highlight lifecycle, local-control suppression, profile-open label/no-op suppression,
+  content/token propagation, repost-target-label, sensitivity-label/reveal planning,
+  event-mention opening/load-state/planning, reference preview loading/lifecycle/state/toggle/open planning,
+  reaction/repost labels/open, action-state/run/action-label/reply/completion/emoji-source/reaction/zap-submit/copy-lifecycle/zap-state/zap-label/open,
+  content/media-open/emoji/status/near-start/end/auto-fill/newer/paging/row-data/tree-cache helpers and collapsed-continuation plans live in focused helpers;
+  row components avoid old menu imports, old paths are guarded absent by `pnpm check:repo`, and other feed-surface deletion prerequisites remain open.
   Missing coverage never proves absence, and no placeholder rows exist.
 
 ## 4. First Home Leptos feed slice
@@ -245,7 +268,7 @@ broader surface parity.
   exact feed, route, relay, filter, and interval coverage. Partial cache proof
   now starts a bounded selected-relay Home read that publishes real relay event
   snapshots into the same Rust view model while no-event terminal failures stay
-  partial. The Rust Home tab releases its provider lease on cleanup, suppresses
+  partial. The Rust Home island releases its provider lease on cleanup, suppresses
   late completions, and cancels the owner relay read so browser sockets and
   timers close. Browser startup proof mounts the Rust shell with unavailable
   storage, keeps Welcome usable, and renders explicit Home account and relay

@@ -88,8 +88,7 @@ Tweet signing/publish/media/custom emoji transport, and full responsive/a11y QA.
 - `workspace`: shell, panes, pane head, pane body, tab strip, tile menu, and New
   Tab menu.
 - `tabs`: Welcome, feeds, tools, account surfaces, settings, and diagnostics.
-- `feeds`: feed rows, footers, staged rows, reference previews, and scroll
-  surfaces.
+- `feeds`: feed rows, footers, reference previews, and scroll surfaces.
 - `tools`: Tweet, Accounts, Relay Settings, Stats, Upload Settings, Custom
   Request, Search, Mine npub, Profile Edit, and lkjstr Log.
 

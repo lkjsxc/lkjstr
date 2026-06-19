@@ -1,0 +1,107 @@
+use leptos::{html::Div, prelude::*};
+
+#[cfg(target_arch = "wasm32")]
+use leptos::wasm_bindgen::JsCast;
+#[cfg(target_arch = "wasm32")]
+use std::time::Duration;
+#[cfg(target_arch = "wasm32")]
+use web_sys::HtmlElement;
+
+pub(super) fn set_preserving_anchor<T: Send + Sync + 'static>(
+    scroll_node: NodeRef<Div>,
+    model: RwSignal<T>,
+    next: T,
+) {
+    #[cfg(target_arch = "wasm32")]
+    let anchor = scroll_node
+        .get_untracked()
+        .and_then(|owner| capture_anchor(&owner));
+
+    model.set(next);
+
+    #[cfg(target_arch = "wasm32")]
+    if let Some(anchor) = anchor {
+        restore_after_render(scroll_node, anchor);
+    }
+
+    #[cfg(not(target_arch = "wasm32"))]
+    let _ = scroll_node;
+}
+
+#[cfg(target_arch = "wasm32")]
+#[derive(Clone, Debug)]
+pub(super) struct ScrollAnchor {
+    row_id: String,
+    offset_inside_px: i32,
+}
+
+#[cfg(target_arch = "wasm32")]
+pub(super) fn capture_anchor(owner: &HtmlElement) -> Option<ScrollAnchor> {
+    let scroll_top = owner.scroll_top().max(0);
+    if scroll_top == 0 {
+        return None;
+    }
+    let rows = owner.query_selector_all("[data-row-id]").ok()?;
+    let owner_top = page_top(owner);
+    for index in 0..rows.length() {
+        let row = rows.item(index)?.dyn_into::<HtmlElement>().ok()?;
+        let top = page_top(&row).saturating_sub(owner_top);
+        let bottom = top.saturating_add(row.offset_height().max(1));
+        if bottom > scroll_top {
+            return Some(ScrollAnchor {
+                row_id: row.get_attribute("data-row-id")?,
+                offset_inside_px: scroll_top.saturating_sub(top),
+            });
+        }
+    }
+    None
+}
+
+#[cfg(target_arch = "wasm32")]
+fn restore_after_render(scroll_node: NodeRef<Div>, anchor: ScrollAnchor) {
+    set_timeout(
+        move || {
+            if let Some(owner) = scroll_node.get_untracked() {
+                restore_anchor(&owner, &anchor);
+            }
+        },
+        Duration::from_millis(0),
+    );
+}
+
+#[cfg(target_arch = "wasm32")]
+pub(super) fn restore_anchor(owner: &HtmlElement, anchor: &ScrollAnchor) {
+    let Some(row) = find_row(owner, &anchor.row_id) else {
+        return;
+    };
+    let top = page_top(&row).saturating_sub(page_top(owner));
+    owner.set_scroll_top(top.saturating_add(anchor.offset_inside_px));
+}
+
+#[cfg(target_arch = "wasm32")]
+fn find_row(owner: &HtmlElement, row_id: &str) -> Option<HtmlElement> {
+    let rows = owner.query_selector_all("[data-row-id]").ok()?;
+    for index in 0..rows.length() {
+        let row = rows.item(index)?.dyn_into::<HtmlElement>().ok()?;
+        if row.get_attribute("data-row-id").as_deref() == Some(row_id) {
+            return Some(row);
+        }
+    }
+    None
+}
+
+#[cfg(target_arch = "wasm32")]
+fn page_top(element: &HtmlElement) -> i32 {
+    let mut top = element.offset_top();
+    let mut parent = element.offset_parent();
+    let mut guard = 0u8;
+    while let Some(next) = parent.and_then(|node| node.dyn_into::<HtmlElement>().ok()) {
+        top = top.saturating_add(next.offset_top());
+        parent = next.offset_parent();
+        guard = guard.saturating_add(1);
+        if guard >= 16 {
+            break;
+        }
+    }
+    top
+}

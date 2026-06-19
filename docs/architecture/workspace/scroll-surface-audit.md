@@ -26,11 +26,11 @@ surface. Each row must pass before the scroll-layout contract is complete.
 | Profile                                         | `.event-list__viewport`           | required           | required               | implemented  |
 | Followees                                       | `.event-list__viewport`           | required           | required               | implemented  |
 | User Timeline                                   | `.event-list__viewport`           | required           | required               | implemented  |
-| Oversized Profile note                          | `.event-list__viewport`           | required           | required               | open         |
+| Oversized Profile note                          | `.event-list__viewport`           | required           | required               | implemented  |
 | Notifications                                   | `.event-list__viewport`           | required           | required               | implemented  |
-| Oversized notification referenced event preview | `.event-list__viewport`           | required           | required               | open         |
-| Long unbroken text or URL                       | feed scroll root                  | required           | required               | open         |
-| Split-pane resize after narrow measurement      | feed scroll root                  | required           | required               | open         |
+| Oversized notification referenced event preview | `.event-list__viewport`           | required           | required               | implemented  |
+| Long unbroken text or URL                       | feed scroll root                  | required           | required               | implemented  |
+| Split-pane resize after narrow measurement      | feed scroll root                  | required           | required               | implemented  |
 | Tab kind switch in same pane                    | feed and form scroll roots        | required           | required               | implemented  |
 | Settings                                        | `.settings-tab.form-tab`          | required           | required               | implemented  |
 | Relay Settings                                  | `.relay-settings.form-tab`        | required           | required               | implemented  |

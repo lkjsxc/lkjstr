@@ -17,6 +17,33 @@ pub fn App() -> impl IntoView {
     view! { <AppWithStartup startup=default_startup_input() /> }
 }
 
+#[cfg(target_arch = "wasm32")]
+pub fn mount_app_with_home_feed_provider(
+    startup: StartupInput,
+    home_feed_provider: HomeFeedProvider,
+) {
+    leptos::mount::mount_to_body(move || {
+        view! {
+            <AppWithStartup
+                startup=startup.clone()
+                home_feed_provider=home_feed_provider.clone()
+            />
+        }
+    });
+}
+
+#[cfg(target_arch = "wasm32")]
+pub fn mount_app_with_stats_provider(startup: StartupInput, stats_provider: StatsProvider) {
+    leptos::mount::mount_to_body(move || {
+        view! {
+            <AppWithStartup
+                startup=startup.clone()
+                stats_provider=stats_provider.clone()
+            />
+        }
+    });
+}
+
 #[component]
 pub fn AppWithStartup(
     startup: StartupInput,

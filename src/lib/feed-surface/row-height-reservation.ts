@@ -9,6 +9,7 @@ import {
   warmFeedGeometryWasmBridge,
 } from './feed-geometry-wasm';
 import {
+  materializationTierForRowKey,
   measurementKeyFromFeatures,
   reservationKeyFromFeatures,
   widthBucketForPx,
@@ -23,6 +24,11 @@ type ReservedRowHeight = {
   readonly source: 'estimate' | 'measurement';
 };
 
+type FeedRowHeightBucketCount = {
+  readonly key: string;
+  readonly count: number;
+};
+
 const measuredHeights = createBoundedMap<string, number>({ maxSize: 2_000 });
 const activeReservations = createBoundedMap<string, ReservedRowHeight>({
   maxSize: 2_000,
@@ -33,6 +39,8 @@ const preservedReservationKeys = createBoundedMap<string, true>({
 const materializedRowKeys = createBoundedMap<string, true>({ maxSize: 500 });
 let allowedShrinkCount = 0;
 let anchorCompensationCount = 0;
+let lastAnchorCompensationDeltaPx = 0;
+let staleObservationCount = 0;
 warmFeedGeometryWasmBridge();
 
 export function markFeedRowMaterialized(key: string): void {
@@ -48,7 +56,7 @@ export function estimateFeedRowHeight(input: {
   readonly item: unknown;
   readonly widthPx?: number;
 }): number {
-  const tier = materializationTierForKey(input.key);
+  const tier = materializationTierForRowKey(input.key, isFeedRowMaterialized);
   const features = featuresForFeedItem(input.item, input.widthPx, tier);
   const structuralEstimate = structuralHeightEstimate(input, tier);
   const exact = measuredHeights.get(
@@ -91,7 +99,7 @@ export function recordFeedRowHeight(input: {
 }): void {
   const height = Math.round(input.heightPx);
   if (height <= 0) return;
-  const tier = materializationTierForKey(input.key);
+  const tier = materializationTierForRowKey(input.key, isFeedRowMaterialized);
   const features = featuresForFeedItem(input.item, input.widthPx, tier);
   measuredHeights.set(measurementKeyFromFeatures(input, features), height);
   const reservationKey = reservationKeyFromFeatures(input, features);
@@ -119,20 +127,16 @@ export function clearFeedRowHeightsForKey(key: string): void {
   }
 }
 
-function materializationTierForKey(key: string): MaterializationTier {
-  return materializedRowKeys.get(key) ? 'enriched' : 'structural';
+function isFeedRowMaterialized(key: string): boolean {
+  return Boolean(materializedRowKeys.get(key));
 }
 
 function structuralHeightEstimate(
-  input: { readonly item: unknown; readonly widthPx?: number },
+  { item, widthPx }: { readonly item: unknown; readonly widthPx?: number },
   tier: MaterializationTier,
 ): number {
   if (tier === 'enriched') return 0;
-  const structural = featuresForFeedItem(
-    input.item,
-    input.widthPx,
-    'structural',
-  );
+  const structural = featuresForFeedItem(item, widthPx, 'structural');
   return (
     estimateHeightWithRust({ key: 'structural-cap', features: structural }) ??
     estimateHeightFromFeatures(structural)
@@ -143,8 +147,13 @@ export function feedRowHeightReservationCount(): number {
   return measuredHeights.size();
 }
 
-export function recordFeedRowAnchorCompensation(): void {
+export function recordFeedRowAnchorCompensation(deltaPx = 0): void {
   anchorCompensationCount += 1;
+  lastAnchorCompensationDeltaPx = Math.round(deltaPx);
+}
+
+export function recordFeedRowStaleObservation(): void {
+  staleObservationCount += 1;
 }
 
 export function feedRowHeightDiagnostics(): {
@@ -153,6 +162,9 @@ export function feedRowHeightDiagnostics(): {
   readonly unloadPreservedRows: number;
   readonly allowedShrinkRows: number;
   readonly anchorCompensations: number;
+  readonly lastAnchorCompensationDeltaPx: number;
+  readonly widthBuckets: readonly FeedRowHeightBucketCount[];
+  readonly staleObservationsDropped: number;
 } {
   return {
     measuredRows: measuredHeights.size(),
@@ -160,7 +172,19 @@ export function feedRowHeightDiagnostics(): {
     unloadPreservedRows: preservedReservationKeys.size(),
     allowedShrinkRows: allowedShrinkCount,
     anchorCompensations: anchorCompensationCount,
+    lastAnchorCompensationDeltaPx,
+    widthBuckets: widthBucketCounts(),
+    staleObservationsDropped: staleObservationCount,
   };
+}
+
+function widthBucketCounts(): FeedRowHeightBucketCount[] {
+  const counts = new Map<string, number>();
+  for (const [key] of activeReservations.entries()) {
+    const bucket = key.split('\u0000').at(-2) ?? 'unknown';
+    counts.set(bucket, (counts.get(bucket) ?? 0) + 1);
+  }
+  return [...counts.entries()].map(([key, count]) => ({ key, count }));
 }
 
 function recordPreservedReservation(

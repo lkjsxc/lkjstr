@@ -6,7 +6,8 @@ use crate::{
     CustomRequestQueryInput, QueryDemandInput, custom_request_query_input, plan_query_demand,
 };
 
-use super::{CustomRequest, CustomRequestError, CustomRequestMode};
+use super::relay_limits::apply_custom_request_relay_limits;
+use super::{CustomRequest, CustomRequestError, CustomRequestMode, CustomRequestRelayLimitInput};
 use super::{custom_request_mode, parse_custom_request};
 
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
@@ -39,6 +40,14 @@ pub struct CustomRequestRunPlan {
 
 #[must_use]
 pub fn plan_custom_request_run(input: CustomRequestRunInput) -> CustomRequestRunPlan {
+    plan_custom_request_run_with_relay_limits(input, Vec::new())
+}
+
+#[must_use]
+pub fn plan_custom_request_run_with_relay_limits(
+    input: CustomRequestRunInput,
+    relay_limits: Vec<CustomRequestRelayLimitInput>,
+) -> CustomRequestRunPlan {
     let request = match parse_custom_request(&input.raw_json) {
         Ok(request) => request,
         Err(error) => return invalid(error),
@@ -57,6 +66,7 @@ pub fn plan_custom_request_run(input: CustomRequestRunInput) -> CustomRequestRun
     if relays.is_empty() {
         return no_relay(request, mode);
     }
+    let request = apply_custom_request_relay_limits(request, &relays, &relay_limits);
     CustomRequestRunPlan {
         status: CustomRequestRunStatus::Ready,
         request: Some(request),

@@ -9,7 +9,16 @@ rendering, and split-pane resize.
 ## Status
 
 Status: active implementation target. Unit tests cover pure Rust reducers and
-host-boundary tests cover DOM scroll behavior that Node cannot represent.
+host-boundary tests cover DOM scroll behavior that Node cannot represent. Home
+browser proofs cover oversized text, long tokens, Profile note overflow, line breaks, late profile
+hydration, reference-preview hydration, media dimension growth/shrink,
+pane-width growth/shrink, live insert top/non-top provider updates,
+Notifications chrome/source-event scroll ownership and overflow wrapping, feed/form tab track-edge
+alignment, converted-feed structural scroll-owner, pane-body, and
+horizontal-overflow boundaries, Public Chat honest empty-state and lkjstr Log
+durable-row scroll ownership, and event LOD, profile-card, notification, and repost-target shell
+dematerialization above the visible row anchor. Home disables native overflow anchoring so Rust owns row height
+compensation.
 
 ## Required Fixtures
 
@@ -36,19 +45,21 @@ real event data or explicit unavailable states.
 | Long unbroken URL or token | `[data-scroll-owner]` has no horizontal overflow. |
 | Many line breaks | Row segmentation preserves order and scroll continuity. |
 | Late profile hydration above viewport | `scrollTop` changes by measured delta and visible anchor remains. |
-| Reference preview hydration above viewport | Visible event or fragment remains stable. |
-| Media dimension update above viewport | Viewport does not jump after image dimensions resolve. |
+| Reference preview hydration above viewport | `scrollTop` changes by measured delta and visible anchor remains. |
+| Media dimension growth/shrink above viewport | Rust changes `scrollTop` by measured delta and visible anchor remains. |
 | Event row unload | Measured reservation does not shrink. |
-| Profile card unload | Measured reservation does not shrink. |
-| Notification row unload | Measured reservation does not shrink. |
-| Repost target unload | Shared target event reservation does not shrink. |
-| LOD shell | Dematerialized shell preserves reserved block height. |
-| Split-pane width shrink | Width bucket changes and estimates recompute upward when needed. |
-| Split-pane width widen | Stale narrow measurements do not force excess height. |
+| Profile card unload | Dematerialized profile shell preserves measured block height and the visible anchor. |
+| Notification row unload | Dematerialized notification shell preserves measured block height and the visible anchor. |
+| Repost target unload | Dematerialized repost-target shell preserves measured block height and the visible anchor. |
+| LOD shell | Dematerialized shell preserves measured block height and the visible anchor. |
+| Split-pane width shrink | Row remeasurement grows above-viewport height and preserves the visible anchor. |
+| Split-pane width widen | Row remeasurement shrinks above-viewport height and preserves the visible anchor. |
 | Live insert above non-top anchor | Existing visible content remains visible. |
 | User at top with live insert | Top-anchor policy shows new resident rows immediately. |
 | Notifications | Notification chrome and referenced event preview share one scroll owner. |
 | Profile summary | Profile summary and notes share one scroll owner. |
+| Public Chat | Honest empty channel/message states share one scroll owner. |
+| lkjstr Log | Durable log actions, status, and rows share one scroll owner. |
 | Horizontal overflow | Scroll owners report `scrollWidth <= clientWidth + 1`. |
 | Tab kind switch in same pane | Feed and form tab scroll owners share the same track-edge inset within one device pixel. |
 

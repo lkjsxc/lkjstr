@@ -15,6 +15,7 @@ use super::dto::{ContextDto, PlanInputDto, ReduceInputDto};
 struct PlanOutputDto {
     initial_span_seconds: u64,
     source: String,
+    hint_status: &'static str,
     proposal: super::dto::ProposalDto,
     segments: Vec<super::dto::SegmentDto>,
 }
@@ -42,6 +43,7 @@ pub fn plan_feed_scan(input: JsValue) -> Result<JsValue, JsValue> {
     to_js(&PlanOutputDto {
         initial_span_seconds: plan.initial_span_seconds,
         source: format!("{:?}", plan.source),
+        hint_status: plan.hint_status.as_kebab_str(),
         proposal: proposal_to_dto(&plan.proposal),
         segments: plan.segments.iter().map(segment_to_dto).collect(),
     })

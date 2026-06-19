@@ -16,6 +16,22 @@ pub(crate) fn discovery_plan(
     outcome: DiscoveryRouteOutcome,
     follow_list_found: bool,
 ) -> UserTimelineDiscoveryPlan {
+    discovery_plan_with_target_posts(
+        selected_relays,
+        author_routes,
+        outcome,
+        follow_list_found,
+        false,
+    )
+}
+
+pub(crate) fn discovery_plan_with_target_posts(
+    selected_relays: Vec<String>,
+    author_routes: &[AuthorRelayRoute],
+    outcome: DiscoveryRouteOutcome,
+    follow_list_found: bool,
+    target_posts_reachable: bool,
+) -> UserTimelineDiscoveryPlan {
     let mut groups = Vec::new();
     if !selected_relays.is_empty() {
         groups.push(DiscoveryRouteGroup {
@@ -42,7 +58,7 @@ pub(crate) fn discovery_plan(
         groups,
         cache_checked: true,
         follow_list_found,
-        target_posts_reachable: false,
+        target_posts_reachable,
         offline: false,
     })
 }
@@ -52,6 +68,22 @@ pub(crate) fn discovery_plan_for_relay_outcomes(
     author_routes: &[AuthorRelayRoute],
     outcomes: &BTreeMap<String, UserTimelineRelayOutcome>,
     follow_list_found: bool,
+) -> UserTimelineDiscoveryPlan {
+    discovery_plan_for_relay_outcomes_with_target_posts(
+        selected_relays,
+        author_routes,
+        outcomes,
+        follow_list_found,
+        false,
+    )
+}
+
+pub(crate) fn discovery_plan_for_relay_outcomes_with_target_posts(
+    selected_relays: Vec<String>,
+    author_routes: &[AuthorRelayRoute],
+    outcomes: &BTreeMap<String, UserTimelineRelayOutcome>,
+    follow_list_found: bool,
+    target_posts_reachable: bool,
 ) -> UserTimelineDiscoveryPlan {
     let mut groups = Vec::new();
     if !selected_relays.is_empty() {
@@ -82,7 +114,7 @@ pub(crate) fn discovery_plan_for_relay_outcomes(
         groups,
         cache_checked: true,
         follow_list_found,
-        target_posts_reachable: false,
+        target_posts_reachable,
         offline: false,
     })
 }

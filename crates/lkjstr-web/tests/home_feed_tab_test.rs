@@ -19,11 +19,39 @@ wasm_bindgen_test_configure!(run_in_browser);
 async fn rust_home_tab_renders_injected_feed_view_model() -> Result<(), JsValue> {
     reset_shells()?;
     mount_rust_workspace_shell_with_home_feed(startup(), home_model());
-    wait_for_text("Welcome").await?;
-    click("[data-testid='welcome-open-timeline']")?;
+    open_home_tab().await?;
     wait_for_text("Home ready").await?;
     wait_for_text("real home event").await?;
     wait_for_text("Cached rows").await?;
+    Ok(())
+}
+
+#[wasm_bindgen_test(async)]
+async fn rust_home_tab_uses_one_scroll_owner_for_status_and_rows() -> Result<(), JsValue> {
+    reset_shells()?;
+    mount_rust_workspace_shell_with_home_feed(startup(), home_model());
+    open_home_tab().await?;
+    wait_for_text("real home event").await?;
+
+    let section = required_element(".lkjstr-home-feed")?;
+    let owners = section.query_selector_all("[data-scroll-owner]")?;
+    if owners.length() != 1 {
+        return Err(js_error("Home tab did not render one scroll owner"));
+    }
+    let owner = required_element(".home-list-scroll")?;
+    if !owner.has_attribute("data-scroll-owner") {
+        return Err(js_error("Home scroll owner marker moved"));
+    }
+    for selector in [
+        ".lkjstr-feed-status",
+        ".lkjstr-feed-rows",
+        ".lkjstr-feed-row.event",
+        ".lkjstr-feed-footer",
+    ] {
+        if owner.query_selector(selector)?.is_none() {
+            return Err(js_error(&format!("{selector} outside Home scroll owner")));
+        }
+    }
     Ok(())
 }
 
@@ -72,6 +100,11 @@ fn progressive() -> ProgressiveEvent {
             sig: "b".repeat(128),
         },
     }
+}
+
+async fn open_home_tab() -> Result<(), JsValue> {
+    wait_for_text("Welcome").await?;
+    click("[data-testid='welcome-open-timeline']")
 }
 
 async fn wait_for_text(text: &str) -> Result<(), JsValue> {
@@ -129,6 +162,12 @@ fn document() -> Result<web_sys::Document, JsValue> {
     web_sys::window()
         .and_then(|window| window.document())
         .ok_or_else(|| js_error("missing browser document"))
+}
+
+fn required_element(selector: &str) -> Result<web_sys::Element, JsValue> {
+    document()?
+        .query_selector(selector)?
+        .ok_or_else(|| js_error(&format!("missing selector {selector}")))
 }
 
 fn startup() -> StartupInput {

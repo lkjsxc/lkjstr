@@ -5,8 +5,8 @@ use lkjstr_relays::{
 };
 
 use crate::notifications_feed_relay_input::{
-    NotificationsRelayReadInput, NotificationsRelayReadPhase,
-    notifications_older_relay_input_from_state,
+    NotificationsRelayInputSeed, NotificationsRelayReadInput, NotificationsRelayReadPhase,
+    notifications_older_relay_input_from_state, notifications_relay_input,
 };
 use crate::notifications_feed_relay_model::output_from_snapshot;
 
@@ -14,6 +14,29 @@ pub struct NotificationsRelayOutputProbe {
     pub footer: Option<FeedFooterState>,
     pub older_since: u64,
     pub older_until: u64,
+}
+
+pub struct NotificationsCacheCompleteProbe {
+    pub visible_rows_skip_initial: bool,
+    pub empty_rows_request_older: bool,
+}
+
+pub fn cache_complete_probe() -> NotificationsCacheCompleteProbe {
+    NotificationsCacheCompleteProbe {
+        visible_rows_skip_initial: relay_input_for_cache_complete(input()).is_none(),
+        empty_rows_request_older: relay_input_for_cache_complete(NotificationsRelayReadInput {
+            cache_window: empty_feed_window(1, 180),
+            ..input()
+        })
+        .is_some_and(|input| {
+            matches!(
+                input.phase,
+                NotificationsRelayReadPhase::Older {
+                    cursor_created_at: 1_940
+                }
+            )
+        }),
+    }
 }
 
 pub fn initial_complete_output_probe() -> Option<NotificationsRelayOutputProbe> {
@@ -26,6 +49,26 @@ pub fn initial_complete_output_probe() -> Option<NotificationsRelayOutputProbe> 
         footer: footer_state(output.model),
         older_since: older.since,
         older_until: older.until,
+    })
+}
+
+fn relay_input_for_cache_complete(
+    input: NotificationsRelayReadInput,
+) -> Option<NotificationsRelayReadInput> {
+    let source_state = lkjstr_app::NotificationsFeedSourceState::CacheComplete;
+    let active_pubkey = Some(input.active_pubkey.clone());
+    notifications_relay_input(NotificationsRelayInputSeed {
+        owner: &input.owner,
+        active_pubkey: &active_pubkey,
+        source_state: &source_state,
+        selected_relays: &input.selected_relays,
+        window: &input.cache_window,
+        notification_rows: &input.notification_rows,
+        geometry_models: &input.geometry_models,
+        diagnostics: &input.diagnostics,
+        now_sec: input.now_sec,
+        since: input.since,
+        until: input.until,
     })
 }
 

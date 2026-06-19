@@ -64,8 +64,12 @@ fn available_actions_run_through_typed_command() {
 
 #[test]
 fn disabled_actions_return_kind_specific_reason() {
+    let called = Arc::new(AtomicU8::new(0));
+    let called_run = Arc::clone(&called);
     let actions = StatsActions::new_with_unavailable_reasons(
-        |_command| panic!("disabled compact action must not run"),
+        move |_command| {
+            called_run.fetch_add(1, Ordering::SeqCst);
+        },
         false,
         true,
         "compaction-adapter-missing",
@@ -80,4 +84,5 @@ fn disabled_actions_return_kind_specific_reason() {
             "Storage action unavailable: compaction-adapter-missing"
         );
     }));
+    assert_eq!(called.load(Ordering::SeqCst), 0);
 }

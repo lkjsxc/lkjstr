@@ -3,7 +3,7 @@ use super::coverage::{CoverageGap, should_query_uncovered_relay};
 use super::cursor::{CursorPoint, ScanDirection};
 use super::diagnostic::ScanPlanDiagnostic;
 use super::hierarchy::ScanModelContext;
-use super::hint::{FeedScanHint, HintContext};
+use super::hint::{FeedScanHint, HintCompatibility, HintContext, ScanHintStatus};
 use super::model::{ScanDensityModel, ScanModelScope};
 use super::proposal::{SpanProposal, propose_scan_span};
 use super::segment::{ScanSegment, segment_from_edge};
@@ -40,15 +40,23 @@ pub struct FeedScanPlan {
     pub segments: Vec<ScanSegment>,
     pub initial_span_seconds: u64,
     pub source: ScanPlanSource,
+    pub hint_status: ScanHintStatus,
     pub diagnostics: Vec<ScanPlanDiagnostic>,
     pub proposal: SpanProposal,
 }
 
 pub fn plan_feed_scan(input: &FeedScanPlanInput) -> FeedScanPlan {
+    let hint_context = hint_context(input);
+    let hint_status = scan_hint_status(input.previous_hint.as_ref(), &hint_context);
+    let previous_hint = if hint_status == ScanHintStatus::Used {
+        input.previous_hint.as_ref()
+    } else {
+        None
+    };
     let proposal = propose_scan_span(
         &scan_model_context(input),
         &input.scan_models,
-        input.previous_hint.as_ref(),
+        previous_hint,
         input.effective_limit,
         input.now_seconds.saturating_mul(1000),
         &input.span_config,
@@ -58,8 +66,21 @@ pub fn plan_feed_scan(input: &FeedScanPlanInput) -> FeedScanPlan {
         segments: matching_gap_segments(input).unwrap_or_else(|| vec![root]),
         initial_span_seconds: proposal.span_seconds,
         source: source_from_proposal(&proposal),
+        hint_status,
         diagnostics: proposal.diagnostics.clone(),
         proposal,
+    }
+}
+
+pub fn scan_hint_status(
+    previous_hint: Option<&FeedScanHint>,
+    context: &HintContext,
+) -> ScanHintStatus {
+    match previous_hint.map(|hint| hint.compatibility(context)) {
+        None => ScanHintStatus::Unavailable,
+        Some(HintCompatibility::Compatible) => ScanHintStatus::Used,
+        Some(HintCompatibility::Expired) => ScanHintStatus::Expired,
+        Some(HintCompatibility::Incompatible) => ScanHintStatus::Rejected,
     }
 }
 

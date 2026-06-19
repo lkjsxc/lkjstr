@@ -26,6 +26,21 @@ impl FeedEventActions {
         }
     }
 
+    #[cfg(target_arch = "wasm32")]
+    pub(crate) fn row_actions(
+        open_profile: Option<Callback<String>>,
+        open_thread: Option<Callback<String>>,
+        open_author_context: Option<Callback<(String, String)>>,
+        copy_event_id: Option<ProfileCopyProvider>,
+    ) -> Self {
+        Self {
+            open_profile,
+            open_thread,
+            open_author_context,
+            copy_event_id,
+        }
+    }
+
     pub(crate) fn profile_opener(&self) -> Option<Callback<String>> {
         self.open_profile
     }
@@ -62,32 +77,10 @@ pub(crate) fn event_actions(
         <details class="lkjstr-feed-actions event-action-zone">
             <summary aria-label="Event menu" title="Event menu" on:click=stop_menu_click>"..."</summary>
             <div class="lkjstr-feed-actions__items">
-                {string_button(
-                    pubkey.clone(),
-                    actions.open_profile,
-                    labels.profile_test_id,
-                    labels.profile_label,
-                )}
-                {string_button(
-                    event_id.clone(),
-                    actions.open_thread,
-                    labels.thread_test_id,
-                    labels.thread_label,
-                )}
-                {author_context_button(
-                    event_id.clone(),
-                    pubkey,
-                    actions.open_author_context,
-                    labels.author_context_test_id,
-                    labels.author_context_label,
-                )}
-                {copy_event_id_button(
-                    event_id,
-                    actions.copy_event_id,
-                    labels.copy_test_id,
-                    labels.copy_label,
-                    copy_status,
-                )}
+                {string_button(pubkey.clone(), actions.open_profile, labels.profile_test_id, labels.profile_label)}
+                {string_button(event_id.clone(), actions.open_thread, labels.thread_test_id, labels.thread_label)}
+                {author_context_button(event_id.clone(), pubkey, actions.open_author_context, labels.author_context_test_id, labels.author_context_label)}
+                {copy_event_id_button(event_id, actions.copy_event_id, labels.copy_test_id, labels.copy_label, copy_status)}
                 {copy_status_view(copy_status)}
             </div>
         </details>

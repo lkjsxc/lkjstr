@@ -67,31 +67,35 @@ pub fn SearchTab(
     });
 
     view! {
-        <section class="lkjstr-search-feed" aria-label="Search">
-            <form class="lkjstr-search-controls" on:submit=submit>
-                <input
-                    type="search"
-                    aria-label="Search query"
-                    prop:value=move || query.get()
-                    on:input=input_query
-                />
-                <button type="submit" prop:disabled=move || query.get().trim().is_empty()>
-                    "Search"
-                </button>
-            </form>
-            <p class="lkjstr-feed-status">{move || search_status_text(model.get().status)}</p>
-            <div class="lkjstr-feed-rows">
-                {move || {
-                    let command = older_command;
-                    let actions = actions.clone();
-                    model
-                        .get()
-                        .view_model
-                        .rows
-                        .into_iter()
-                        .map(move |row| search_row(row, command, actions.clone()))
-                        .collect_view()
-                }}
+        <section class="feed-tab lkjstr-search-feed" aria-label="Search">
+            <div class="tab-scroll-track event-list__scroller">
+                <div class="tab-scroll-owner search-list-scroll" data-scroll-owner="">
+                    <form class="lkjstr-search-controls" on:submit=submit>
+                        <input
+                            type="search"
+                            aria-label="Search query"
+                            prop:value=move || query.get()
+                            on:input=input_query
+                        />
+                        <button type="submit" prop:disabled=move || query.get().trim().is_empty()>
+                            "Search"
+                        </button>
+                    </form>
+                    <p class="lkjstr-feed-status">{move || search_status_text(model.get().status)}</p>
+                    <div class="lkjstr-feed-rows">
+                        {move || {
+                            let command = older_command;
+                            let actions = actions.clone();
+                            model
+                                .get()
+                                .view_model
+                                .rows
+                                .into_iter()
+                                .map(move |row| search_row(row, command, actions.clone()))
+                                .collect_view()
+                        }}
+                    </div>
+                </div>
             </div>
         </section>
     }

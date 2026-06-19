@@ -75,6 +75,22 @@
       <span>anchor compensations</span>
     </article>
     <article>
+      <strong>{props.memory.geometry.lastAnchorCompensationDeltaPx}</strong>
+      <span>last anchor delta</span>
+    </article>
+    <article>
+      <strong>{props.memory.geometry.staleObservationsDropped}</strong>
+      <span>stale row observations</span>
+    </article>
+    <article>
+      <strong>{props.memory.geometry.fragments.visibleFragments}</strong>
+      <span>visible fragments</span>
+    </article>
+    <article>
+      <strong>{props.memory.geometry.fragments.oversizedSemanticRows}</strong>
+      <span>oversized semantic rows</span>
+    </article>
+    <article>
       <strong>{props.memory.geometry.bridgeStatus}</strong>
       <span>geometry bridge</span>
     </article>
@@ -102,13 +118,14 @@
     <p>{props.memory.userTimeline.reason}</p>
   {:else}
     <p>
-      User Timeline statuses {countText(props.memory.userTimeline.outcomes)} ·
-      reasons {countText(props.memory.userTimeline.reasons)}
+      User Timeline statuses {countText(props.memory.userTimeline.outcomes)} · reasons
+      {countText(props.memory.userTimeline.reasons)}
     </p>
   {/if}
   <p>
     fallback {props.memory.fallbackRepository.events} events · references
     {props.memory.caches.references} · profiles {props.memory.caches.profiles}
+    · width buckets {countText(props.memory.geometry.widthBuckets)}
     {#if props.memory.jsHeap}
       · heap {props.memory.jsHeap.usedJSHeapSize}/{props.memory.jsHeap
         .jsHeapSizeLimit}

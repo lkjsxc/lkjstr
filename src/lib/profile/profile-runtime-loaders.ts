@@ -55,13 +55,6 @@ async function loadOlder(
       preserve: options.preserve,
     });
     if (!input.active(run)) return;
-    const { feedRowShells } = await import('../feed-surface/row-shell');
-    input.emit({
-      ...input.getState(),
-      posts: feedRowShells(page.posts),
-      hasOlder: page.hasOlder,
-      loadingOlder: true,
-    });
     input.setOlderCursor(page.hasOlder ? page.nextOlderCursor : undefined);
     input.emit({
       ...input.getState(),

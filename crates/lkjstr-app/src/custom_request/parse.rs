@@ -5,7 +5,9 @@ use std::collections::BTreeSet;
 use lkjstr_protocol::{NostrFilter, normalize_relay_url, parse_filter_value};
 use serde_json::Value;
 
-use super::{CustomRequest, CustomRequestError, CustomRequestErrorKind as Kind};
+use super::{
+    CustomRequest, CustomRequestError, CustomRequestErrorKind as Kind, CustomRequestLimitClamp,
+};
 
 const MAX_JSON_BYTES: usize = 64 * 1024;
 const MAX_FILTERS: usize = 8;
@@ -34,10 +36,14 @@ fn parse_value(value: &Value) -> Result<CustomRequest, CustomRequestError> {
         return parse_req(items);
     }
     if let Value::Array(items) = value {
+        let (filters, limit_clamps) = parse_filters(items)?;
         return Ok(CustomRequest {
-            filters: parse_filters(items)?,
+            filters,
             relays: Vec::new(),
             sub_id: None,
+            limit_clamps,
+            relay_limit_clamps: Vec::new(),
+            relay_filters: Vec::new(),
         });
     }
     if let Value::Object(map) = value
@@ -46,16 +52,24 @@ fn parse_value(value: &Value) -> Result<CustomRequest, CustomRequestError> {
         let Some(raw) = map.get("filters").or_else(|| map.get("filter")) else {
             return Err(CustomRequestError::new(Kind::InvalidShape));
         };
+        let (filters, limit_clamps) = parse_filter_field(raw)?;
         return Ok(CustomRequest {
-            filters: parse_filter_field(raw)?,
+            filters,
             relays: parse_relays(map.get("relays"))?,
             sub_id: None,
+            limit_clamps,
+            relay_limit_clamps: Vec::new(),
+            relay_filters: Vec::new(),
         });
     }
+    let (filter, clamp) = parse_one_filter(value, 0)?;
     Ok(CustomRequest {
-        filters: vec![parse_one_filter(value)?],
+        filters: vec![filter],
         relays: Vec::new(),
         sub_id: None,
+        limit_clamps: clamp.into_iter().collect(),
+        relay_limit_clamps: Vec::new(),
+        relay_filters: Vec::new(),
     })
 }
 
@@ -64,31 +78,54 @@ fn parse_req(items: &[Value]) -> Result<CustomRequest, CustomRequestError> {
         .get(1)
         .and_then(Value::as_str)
         .ok_or_else(|| CustomRequestError::new(Kind::InvalidReqSubId))?;
+    let (filters, limit_clamps) = parse_filters(items.get(2..).unwrap_or_default())?;
     Ok(CustomRequest {
         sub_id: Some(sub_id.to_owned()),
-        filters: parse_filters(items.get(2..).unwrap_or_default())?,
+        filters,
         relays: Vec::new(),
+        limit_clamps,
+        relay_limit_clamps: Vec::new(),
+        relay_filters: Vec::new(),
     })
 }
 
-fn parse_filter_field(value: &Value) -> Result<Vec<NostrFilter>, CustomRequestError> {
+fn parse_filter_field(
+    value: &Value,
+) -> Result<(Vec<NostrFilter>, Vec<CustomRequestLimitClamp>), CustomRequestError> {
     match value {
         Value::Array(items) => parse_filters(items),
-        item => Ok(vec![parse_one_filter(item)?]),
+        item => {
+            let (filter, clamp) = parse_one_filter(item, 0)?;
+            Ok((vec![filter], clamp.into_iter().collect()))
+        }
     }
 }
 
-fn parse_filters(values: &[Value]) -> Result<Vec<NostrFilter>, CustomRequestError> {
+fn parse_filters(
+    values: &[Value],
+) -> Result<(Vec<NostrFilter>, Vec<CustomRequestLimitClamp>), CustomRequestError> {
     if values.len() > MAX_FILTERS {
         return Err(CustomRequestError::new(Kind::TooManyFilters));
     }
-    values.iter().map(parse_one_filter).collect()
+    let mut filters = Vec::new();
+    let mut limit_clamps = Vec::new();
+    for (index, value) in values.iter().enumerate() {
+        let (filter, clamp) = parse_one_filter(value, index)?;
+        filters.push(filter);
+        if let Some(clamp) = clamp {
+            limit_clamps.push(clamp);
+        }
+    }
+    Ok((filters, limit_clamps))
 }
 
-fn parse_one_filter(value: &Value) -> Result<NostrFilter, CustomRequestError> {
+fn parse_one_filter(
+    value: &Value,
+    index: usize,
+) -> Result<(NostrFilter, Option<CustomRequestLimitClamp>), CustomRequestError> {
     let filter =
         parse_filter_value(value).ok_or_else(|| CustomRequestError::new(Kind::InvalidFilter))?;
-    clamp_filter(filter)
+    clamp_filter(filter, index)
 }
 
 fn parse_relays(value: Option<&Value>) -> Result<Vec<String>, CustomRequestError> {
@@ -112,7 +149,10 @@ fn parse_relays(value: Option<&Value>) -> Result<Vec<String>, CustomRequestError
     Ok(relays.into_iter().collect())
 }
 
-fn clamp_filter(mut filter: NostrFilter) -> Result<NostrFilter, CustomRequestError> {
+fn clamp_filter(
+    mut filter: NostrFilter,
+    index: usize,
+) -> Result<(NostrFilter, Option<CustomRequestLimitClamp>), CustomRequestError> {
     check_values(filter.ids.as_ref(), Kind::TooManyIds)?;
     check_values(filter.authors.as_ref(), Kind::TooManyAuthors)?;
     if filter
@@ -125,10 +165,18 @@ fn clamp_filter(mut filter: NostrFilter) -> Result<NostrFilter, CustomRequestErr
     for values in filter.tags.values() {
         check_values(Some(values), Kind::TooManyTagValues)?;
     }
-    if filter.limit.is_some_and(|limit| limit > MAX_LIMIT) {
+    let clamp = filter
+        .limit
+        .filter(|limit| *limit > MAX_LIMIT)
+        .map(|original_limit| CustomRequestLimitClamp {
+            filter_index: index,
+            original_limit,
+            effective_limit: MAX_LIMIT,
+        });
+    if clamp.is_some() {
         filter.limit = Some(MAX_LIMIT);
     }
-    Ok(filter)
+    Ok((filter, clamp))
 }
 
 fn check_values(values: Option<&Vec<String>>, kind: Kind) -> Result<(), CustomRequestError> {

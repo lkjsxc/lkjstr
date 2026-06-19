@@ -11,7 +11,9 @@
     mountKey: string;
     fallbackError: string;
     status?: string;
-    mount: (parent: HTMLElement) => RustIslandHandle | Promise<RustIslandHandle>;
+    mount: (
+      parent: HTMLElement,
+    ) => RustIslandHandle | Promise<RustIslandHandle>;
   };
 
   let props: Props = $props();

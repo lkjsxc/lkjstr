@@ -7,6 +7,7 @@ use super::feed_event_link::event_link;
 use super::feed_event_media::media_attachment;
 use super::feed_event_profile_mention::profile_mention;
 use super::feed_event_reference::reference_unavailable;
+use super::feed_event_repost_target::{repost_target, repost_target_shell};
 use super::feed_event_sensitive::sensitive_warning;
 
 #[derive(Clone, Debug, Eq, PartialEq)]
@@ -21,7 +22,6 @@ struct CustomEmojiImageAttrs {
     loading: &'static str,
     referrer_policy: &'static str,
 }
-
 #[derive(Clone, Debug, Eq, PartialEq)]
 struct UnavailablePreviewAttrs {
     row_key: String,
@@ -33,12 +33,12 @@ pub(crate) fn event_content_with_openers(
     content: FeedEventContent,
     open_profile: Option<Callback<String>>,
     open_thread: Option<Callback<String>>,
-) -> impl IntoView {
+) -> AnyView {
     match content {
         FeedEventContent::Sensitive { reason, rows } => {
-            sensitive_content(reason, rows, open_profile, open_thread).into_any()
+            sensitive_content(reason, rows, open_profile, open_thread)
         }
-        FeedEventContent::Rows(rows) => text_rows_view(rows, open_profile, open_thread).into_any(),
+        FeedEventContent::Rows(rows) => text_rows_view(rows, open_profile, open_thread),
     }
 }
 
@@ -47,7 +47,7 @@ fn sensitive_content(
     rows: Vec<FeedEventContentRow>,
     open_profile: Option<Callback<String>>,
     open_thread: Option<Callback<String>>,
-) -> impl IntoView {
+) -> AnyView {
     let revealed = RwSignal::new(false);
     view! {
         {move || {
@@ -58,23 +58,25 @@ fn sensitive_content(
             }
         }}
     }
+    .into_any()
 }
 
 fn text_rows_view(
     rows: Vec<FeedEventContentRow>,
     open_profile: Option<Callback<String>>,
     open_thread: Option<Callback<String>>,
-) -> impl IntoView {
+) -> AnyView {
     rows.into_iter()
-        .map(|row| content_row(row, open_profile, open_thread).into_any())
+        .map(|row| content_row(row, open_profile, open_thread))
         .collect_view()
+        .into_any()
 }
 
 fn content_row(
     row: FeedEventContentRow,
     open_profile: Option<Callback<String>>,
     open_thread: Option<Callback<String>>,
-) -> impl IntoView {
+) -> AnyView {
     match row {
         FeedEventContentRow::Text(text) => view! { <p>{text}</p> }.into_any(),
         FeedEventContentRow::Link(link) => event_link(link).into_any(),
@@ -83,6 +85,10 @@ fn content_row(
         }
         FeedEventContentRow::CustomEmoji(emoji) => custom_emoji(emoji).into_any(),
         FeedEventContentRow::MediaAttachment(media) => media_attachment(media).into_any(),
+        FeedEventContentRow::RepostTarget(target) => {
+            repost_target(target, open_profile, open_thread)
+        }
+        FeedEventContentRow::RepostTargetShell(shell) => repost_target_shell(shell).into_any(),
         FeedEventContentRow::MediaPreviewUnavailable(preview) => {
             unavailable_preview(preview, "Media preview unavailable").into_any()
         }
@@ -151,7 +157,6 @@ fn custom_emoji_image_attrs(emoji: &FeedEventCustomEmoji) -> CustomEmojiImageAtt
         referrer_policy: "no-referrer",
     }
 }
-
 #[cfg(test)]
 #[path = "feed_event_content_tests.rs"]
 mod tests;

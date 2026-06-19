@@ -1053,7 +1053,9 @@ dependencies = [
  "lkjstr-app",
  "lkjstr-domain",
  "lkjstr-storage",
+ "send_wrapper",
  "serde_json",
+ "web-sys",
 ]
 
 [[package]]

@@ -21,6 +21,8 @@ A passing quiet command prints only one final success line:
 Quiet commands capture child stdout and stderr in memory. They print captured
 output only when the child exits with a nonzero status, is terminated by a
 signal, or fails to spawn.
+`lkjstr-xtask` quiet child steps are also bounded by a 30-minute step timeout;
+timed-out steps fail the quiet command and print the captured output tail.
 
 Quiet commands must not hide diagnostics. On failure they print the step name,
 exit status or signal, and the captured output tail with a bounded byte budget.

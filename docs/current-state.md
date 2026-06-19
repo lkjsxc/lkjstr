@@ -16,14 +16,14 @@ Read next: [product/README.md](product/README.md),
 - Clean launch focuses Welcome and opens Accounts, Relay Settings, Home, Notifications, and Tweet.
 - Home, Global, Public Chat, Profile, Thread, Notifications, Search, Custom
   Request, Accounts, Relay Settings, Stats, Settings, Upload Settings,
-  lkjstr Log, Mine npub, Profile Edit, Welcome, and Rust-island Author
-  Context, Followees, and User Timeline bodies are implemented.
+  lkjstr Log, Mine npub, Profile Edit, Welcome, and Rust-island Home, Global,
+  Profile, Thread, Notifications, Author Context, Followees, and User Timeline
+  bodies are implemented with shared feed/form scroll track-edge alignment.
 - Followees/User Timeline Rust islands render real NIP-02 rows,
   selected/stored-route discovery, cleanup, retry, partial/degraded states, and
   real workspace callbacks instead of dummy no-op actions.
-- Shared UI system catalog and shipped component list live in
-  [architecture/workspace/ui-system/README.md](architecture/workspace/ui-system/README.md);
-  polish acceptance rows live in
+- Shared UI system catalog, shipped component list, and polish acceptance rows live
+  in [architecture/workspace/ui-system/README.md](architecture/workspace/ui-system/README.md) and
   [architecture/workspace/ui-system/polish-backlog.md](architecture/workspace/ui-system/polish-backlog.md).
 - New Tab includes a fixed `lkjsxc` choice that opens the public User Timeline
   for `0f38afb23cec30570ee64f9a4aa099229395ec3371c5fe867e09c9111480015d`.
@@ -152,24 +152,27 @@ Read next: [architecture/workspace/README.md](architecture/workspace/README.md),
   anchors, feed cursors, bounded row ids, and recoverable filter fields. They do
   not store full events, profiles, diagnostics, active workers, or unbounded
   arrays.
-- Feed surfaces share near-end sentinels, footer phases, viewport-fill,
-  older-load gating, and staged shells on Home, Global, Profile, Thread, and Notifications.
-- The Rust Home tab requests protected SQLite account, relay, follow-list,
+- Home, Global, Public Chat, Profile, Thread, Notifications, Search,
+  Author Context, Followees, User Timeline, and Custom Request expose scroll-owner shells; Home
+  provider updates, live inserts, media/pane-width resize, and event LOD/profile/notification/repost-target
+  shell dematerialization preserve anchors. Feed surfaces keep sentinels, footers, viewport-fill, and older-load gates.
+- The shipped Rust Home island requests protected SQLite account, relay, follow-list,
   cached event, and feed-coverage evidence, then renders cached rows, exact
   cache-ready proof, durable row-height model estimates for cached rows,
   bounded selected-relay reads, cleanup ownership, and explicit startup storage
-  failures. Rust Global requests selected-relay cache, exact coverage, kind `1`
+  failures. The shipped Rust Global island requests selected-relay cache, exact coverage, kind `1`
   rows, tab-cleanup suppression, footer/scroll older requests, viewport-fill
-  older requests, and compound older relay cursors. Rust Notifications
-  loads SQLite notification records/source events, exact `#p` coverage, bounded
-  reads, footer/scroll older requests, and retained relay state. Rust Profile
+  older requests, and compound older relay cursors. The shipped Rust Notifications island loads
+  SQLite notification records/source events, exact `#p` coverage, cache-complete
+  chrome/source rows in one scroll owner that skip initial relay reads, empty exact windows that keep probing
+  older history, bounded reads, footer/scroll older requests, and retained relay state. The shipped Rust Profile island
   requests SQLite selected-relay or author-route cache, exact coverage, bounded
   note relay reads, owner cleanup, cached and relay-refreshed kind `0`
   metadata plus kind `3` follow counts, and sparse empty proof while excluding
-  metadata and follow-list note rows. Rust Thread reads cached root/reply/focused,
-  parent, unavailable, continuation, older, and live rows. Converted Rust feed
-  rows share nearby/copy menus plus full action/repost summary rows,
-  User Timeline discovery-state proof, and `FeedEventRow` content/action rows.
+  metadata and follow-list note rows. The shipped Rust Thread island reads cached root/reply/focused,
+  parent, unavailable, continuation, older, and live rows. Converted Rust rows
+  share menus, action/repost rows, long-token wrapping, User Timeline proof,
+  and cached kind `0` Followees labels/subtitles/avatars with `Unknown` fallback.
 - Live inserts use top-anchor policy: top users see new rows immediately; away
   users keep the visible anchor and see newer-available state.
 - Profile following counts/actions are explicit: unknown states never render zero;
@@ -186,13 +189,13 @@ Read next: [architecture/workspace/README.md](architecture/workspace/README.md),
   Incomplete, failed, compacted, dense, stale, or missing evidence cannot prove
   absence.
 - Rust owns pure feed row geometry estimates, reservation decisions, anchor
-  compensation, long-content visual fragments, a real-data feed LOD tree, and
-  shared owner-release proof that closes wire traffic while retaining bounded
-  windows. Svelte feed code is host glue that applies Rust decisions when the
-  bridge is available, with session-only TypeScript estimates as the fallback
+  compensation, long-content fragments, target-checked nested-repost rows, a
+  real-data feed LOD tree, and owner-release proof that closes wire traffic
+  while retaining bounded windows. Svelte feed code uses Rust decisions when
+  the bridge is available, with session-only TypeScript estimates as fallback
   only. Typed SQLite row-height observation/model rows and web adapters exist;
-  Home, Global, Notifications, Profile, Thread, Search, Author Context, and
-  User Timeline use durable models; converted rebuilds retain them. Stats shows row-height counts and Rust geometry runtime counters. Reservation rules live in
+  Home, Global, Notifications, Profile, Thread, Search, Author Context, User
+  Timeline, and Custom Request use durable models. Stats shows row-height, optimizer, grouped hint-status, and geometry counters. Rules live in
   [architecture/data/feed-surface/height-reservation.md](architecture/data/feed-surface/height-reservation.md)
   and [architecture/data/feed-surface/lod-tree.md](architecture/data/feed-surface/lod-tree.md).
 
@@ -208,19 +211,20 @@ Read next: [architecture/network/README.md](architecture/network/README.md),
   independent semantic keys.
 - Followees and User Timeline discover missing target kind `3` through selected
   relays and stored author routes while excluding disabled route relays. No-event/AUTH/rate-limited/timeout reads and partial route failures render diagnostics.
-  Rust keeps distinct query surfaces, real author-set rows, exact cached coverage readiness, and partial cutover status.
-- Search restores query filter snapshots, renders local indexed results without
-  waiting for remote relays, sends bounded NIP-50 filters to eligible selected
-  read relays, loads cached and relay older pages by compound cursor, and reports
-  unsupported or clamped relays as diagnostics.
-- Rust Custom Request validates and plans demand, cancels provider leases, renders app-owned result rows, and has wasm-target
-  relay snapshot wiring plus Node WASM filter/match proof while browser/live parity remains open.
-- Matching Home tabs attach to one shared query keyed by account, selected
-  relays, page size, and feed policy.
+  Rust keeps distinct query surfaces, real author-set rows, exact cached coverage, target-posts-only degraded rows, and partial status.
+- Shipped Search mounts Rust as a WASM island with query snapshot restore/save,
+  renders local indexed results without waiting for remote relays, sends bounded
+  NIP-50 filters to eligible selected read relays, loads cached and relay older
+  pages by compound cursor, and reports unsupported/clamped relays as diagnostics.
+- Shipped Custom Request mounts Rust as a WASM island with request/run-state
+  snapshots, selected-relay reads, cancellation, app-owned rows, one scroll
+  owner, relay output, and effective-filter proof; deletion proof remains open.
+  Rust lkjstr Log wraps durable-row actions, status, and table rows in one
+  scroll owner.
+- Matching Home tabs share one query keyed by account, relays, page size, and policy.
 - Background work is owner-scoped, cancellable, chunked, and non-blocking.
-  Storage compaction, repair, physical inventory, optimizer persistence,
-  profile hydration, reference hydration, relay metadata refresh, app-log
-  trimming, and LOD materialization run through queued tasks.
+  Storage compaction, repair, inventory, optimizer, hydration, relay metadata,
+  app-log trimming, and LOD work run through queued tasks.
 - Stats, `__lkjstrMemoryDebug()`, and `window.__lkjstrDebug` expose
   orchestration demand, lease, event intake, storage operation, scan optimizer,
   storage pressure, feed geometry reservation, anchor compensation, memory
@@ -294,7 +298,3 @@ and [operations/memory-verification.md](operations/memory-verification.md).
 - [operations/verification.md](operations/verification.md): verification gate.
 - [repository/documentation-standards.md](repository/documentation-standards.md):
   documentation and repository rules.
-
-## Verification Gate
-
-Docker Compose is the final verification path: validate Compose config, then build and run `app`, `verify`, `cloudflare`, and `app-smoke` from images.

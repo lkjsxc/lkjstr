@@ -1,18 +1,38 @@
-use std::{cell::RefCell, collections::BTreeMap};
-
+use crate::runtime_counter_state::{child_slot, increment_counter, read_counter, slot};
 use lkjstr_app::{FeedViewRow, UserTimelineFeedStatus, UserTimelineFeedView};
 use serde::Serialize;
 use wasm_bindgen::prelude::{JsValue, wasm_bindgen};
 
-thread_local! {
-    static COUNTERS: RefCell<UserTimelineStatsCounters> = RefCell::new(UserTimelineStatsCounters::default());
-}
+const SLOT: &str = "__lkjstrUserTimelineStats";
+const STATUSES: &str = "statuses";
+const REASONS: &str = "reasons";
+const STATUS_KEYS: &[&str] = &[
+    "missing-pubkey",
+    "loading-discovery",
+    "loading-feed",
+    "no-enabled-relay",
+    "ready",
+    "target-posts-only",
+    "partial",
+    "incomplete",
+    "failed",
+    "auth-required",
+    "rate-limited",
+    "offline",
+];
+const REASON_KEYS: &[&str] = &[
+    "relay-settings",
+    "author-routes",
+    "cache-follow-list",
+    "selected-relay",
+    "author-route",
+    "other-diagnostic",
+    "missing-pubkey",
+    "no-enabled-relay",
+    "target-posts-only",
+    "partial-user-timeline",
+];
 
-#[derive(Default)]
-struct UserTimelineStatsCounters {
-    statuses: BTreeMap<&'static str, u64>,
-    reasons: BTreeMap<&'static str, u64>,
-}
 
 #[derive(Serialize)]
 struct UserTimelineStatsSnapshot {
@@ -28,55 +48,46 @@ struct UserTimelineStatsCount {
 }
 
 pub(crate) fn record_model(model: &UserTimelineFeedView) {
-    COUNTERS.with_borrow_mut(|counters| {
-        increment(&mut counters.statuses, status_key(model.status));
-        for row in &model.view_model.rows {
-            if let Some(key) = reason_key(row) {
-                increment(&mut counters.reasons, key);
-            }
+    let state = slot(SLOT);
+    let statuses = child_slot(&state, STATUSES);
+    let reasons = child_slot(&state, REASONS);
+    increment_counter(&statuses, status_key(model.status));
+    for row in &model.view_model.rows {
+        if let Some(key) = reason_key(row) {
+            increment_counter(&reasons, key);
         }
-    });
+    }
 }
 
 #[wasm_bindgen]
 pub fn user_timeline_diagnostics_snapshot() -> JsValue {
-    to_value(&COUNTERS.with_borrow(UserTimelineStatsCounters::snapshot))
+    to_value(&snapshot())
 }
 
 #[cfg(debug_assertions)]
 #[wasm_bindgen]
 pub fn reset_user_timeline_diagnostics_for_test() {
-    COUNTERS.with_borrow_mut(UserTimelineStatsCounters::clear);
+    crate::runtime_counter_state::clear_slot(SLOT);
 }
 
-impl UserTimelineStatsCounters {
-    fn snapshot(&self) -> UserTimelineStatsSnapshot {
-        UserTimelineStatsSnapshot {
-            status: "available",
-            outcomes: count_rows(&self.statuses),
-            reasons: count_rows(&self.reasons),
-        }
-    }
-
-    #[cfg(debug_assertions)]
-    fn clear(&mut self) {
-        self.statuses.clear();
-        self.reasons.clear();
+fn snapshot() -> UserTimelineStatsSnapshot {
+    let state = slot(SLOT);
+    let statuses = child_slot(&state, STATUSES);
+    let reasons = child_slot(&state, REASONS);
+    UserTimelineStatsSnapshot {
+        status: "available",
+        outcomes: count_rows(&statuses, STATUS_KEYS),
+        reasons: count_rows(&reasons, REASON_KEYS),
     }
 }
 
-fn count_rows(input: &BTreeMap<&'static str, u64>) -> Vec<UserTimelineStatsCount> {
-    input
-        .iter()
-        .map(|(key, count)| UserTimelineStatsCount { key, count: *count })
+fn count_rows(input: &js_sys::Object, keys: &[&'static str]) -> Vec<UserTimelineStatsCount> {
+    keys.iter()
+        .filter_map(|key| {
+            let count = read_counter(input, key);
+            (count > 0).then_some(UserTimelineStatsCount { key, count })
+        })
         .collect()
-}
-
-fn increment(counters: &mut BTreeMap<&'static str, u64>, key: &'static str) {
-    counters
-        .entry(key)
-        .and_modify(|count| *count = count.saturating_add(1))
-        .or_insert(1);
 }
 
 fn reason_key(row: &FeedViewRow) -> Option<&'static str> {

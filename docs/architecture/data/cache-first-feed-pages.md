@@ -66,10 +66,13 @@ Coverage proof remains separate. Detailed hint rules live in
 ## Status
 
 Interval-union proof and partial relay pruning are implemented inside grouped
-feed page scans. Home, Global, Profile post pages, and safe Custom Request event-list reads run
-a top-level cache-first return path before relay reads. Notifications still need
-this lifted return path.
+feed page scans. Home, Global, Profile post pages, Notifications, and safe
+Custom Request event-list reads run a top-level cache-first return path before
+relay reads when exact coverage proves visible cached rows. Empty exact
+Notifications windows keep a relay-reading footer while probing older history;
+they do not render terminal absence from the initial covered interval alone.
 
 Durable warm hints are performance input and are not required for cache proof.
-The next implementation target is making hint use, rejection, expiry, and
-unavailability visible in Stats for every grouped scan.
+Aggregate scan-hint, decision-trace, and density-model counts are visible in
+Stats. The Rust planner classifies hint use, rejection, expiry, and
+unavailability in raw decision traces; Stats groups recent trace statuses.

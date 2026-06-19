@@ -1,12 +1,32 @@
 import { readdirSync, readFileSync, statSync } from 'node:fs';
 import { describe, expect, it } from 'vitest';
 import {
+  copyEventMetaEventId,
   copyEventIdToClipboard,
-  copyEventStatusLabel,
-  eventMoreMenuHasAuthorContext,
-} from '../../../src/lib/components/events/event-more-menu';
+  eventMetaCopyStatusLabel,
+  eventMetaHasAuthorContext,
+  eventMetaOverflowLabels,
+  openEventMetaAuthorContext,
+  stopEventMetaOverflowPropagation,
+} from '../../../src/lib/components/events/event-meta-overflow';
 
-describe('event more menu clipboard', () => {
+describe('event meta overflow clipboard', () => {
+  it('keeps copy action local before writing event ids', async () => {
+    const calls: string[] = [];
+    const status = await copyEventMetaEventId(
+      { stopPropagation: () => calls.push('stop') },
+      'event-id',
+      {
+        writeText: async (value) => {
+          calls.push(`write:${value}`);
+        },
+      },
+    );
+
+    expect(status).toEqual({ kind: 'copied' });
+    expect(calls).toEqual(['stop', 'write:event-id']);
+  });
+
   it('reports copied only after clipboard write succeeds', async () => {
     const clipboard = {
       writes: [] as string[],
@@ -18,7 +38,7 @@ describe('event more menu clipboard', () => {
 
     expect(clipboard.writes).toEqual(['event-id']);
     expect(status).toEqual({ kind: 'copied' });
-    expect(copyEventStatusLabel(status)).toBe('Copied');
+    expect(eventMetaCopyStatusLabel(status)).toBe('Copied');
   });
 
   it('reports unavailable clipboard without claiming success', async () => {
@@ -28,7 +48,7 @@ describe('event more menu clipboard', () => {
       kind: 'failed',
       reason: 'Clipboard unavailable',
     });
-    expect(copyEventStatusLabel(status)).toBe(
+    expect(eventMetaCopyStatusLabel(status)).toBe(
       'Copy failed: Clipboard unavailable',
     );
   });
@@ -41,18 +61,61 @@ describe('event more menu clipboard', () => {
     });
 
     expect(status).toEqual({ kind: 'failed', reason: 'denied' });
-    expect(copyEventStatusLabel(status)).toBe('Copy failed: denied');
+    expect(eventMetaCopyStatusLabel(status)).toBe('Copy failed: denied');
   });
 });
 
-describe('event more menu author context action', () => {
+describe('event meta overflow author context action', () => {
   it('exposes nearby author action only when a callback exists', () => {
-    expect(eventMoreMenuHasAuthorContext(undefined)).toBe(false);
-    expect(eventMoreMenuHasAuthorContext(() => undefined)).toBe(true);
+    expect(eventMetaHasAuthorContext(undefined)).toBe(false);
+    expect(eventMetaHasAuthorContext(() => undefined)).toBe(true);
+  });
+
+  it('opens nearby author context without bubbling into the row', () => {
+    let stopped = 0;
+    const opened: string[] = [];
+    const event = { stopPropagation: () => (stopped += 1) };
+
+    expect(
+      openEventMetaAuthorContext(
+        event,
+        (eventId, pubkey) => opened.push(`${eventId}:${pubkey}`),
+        'event-a',
+        'pubkey-a',
+      ),
+    ).toBe(true);
+    expect(
+      openEventMetaAuthorContext(event, undefined, 'event-b', 'pubkey-b'),
+    ).toBe(false);
+
+    expect(stopped).toBe(2);
+    expect(opened).toEqual(['event-a:pubkey-a']);
   });
 });
 
-describe('event more menu ownership', () => {
+describe('event meta overflow propagation', () => {
+  it('keeps menu interactions local to the metadata overflow', () => {
+    let stopped = 0;
+
+    stopEventMetaOverflowPropagation({
+      stopPropagation: () => (stopped += 1),
+    });
+
+    expect(stopped).toBe(1);
+  });
+});
+
+describe('event meta overflow labels', () => {
+  it('plans retained menu and action labels', () => {
+    expect(eventMetaOverflowLabels()).toEqual({
+      copyEventId: 'Copy event ID',
+      menu: 'Event menu',
+      nearbyAuthor: 'Nearby posts by this author',
+    });
+  });
+});
+
+describe('event meta overflow ownership', () => {
   it('keeps row components from importing the deleted Svelte menu', () => {
     for (const file of [
       'src/lib/components/events/EventRow.svelte',
@@ -70,8 +133,8 @@ describe('event more menu ownership', () => {
       'src/lib/components/events/EventMeta.svelte',
       'utf8',
     );
-    expect(source).toContain('copyEventIdToClipboard');
-    expect(source).toContain('Nearby posts by this author');
+    expect(source).toContain('copyEventMetaEventId');
+    expect(source).toContain('eventMetaOverflowLabels');
     expect(source).toContain('event-action-zone');
   });
 
@@ -108,8 +171,6 @@ function productSourceFiles(root: string): string[] {
 
 function isProductSourceFile(path: string): boolean {
   return (
-    path.endsWith('.svelte') ||
-    path.endsWith('.ts') ||
-    path.endsWith('.js')
+    path.endsWith('.svelte') || path.endsWith('.ts') || path.endsWith('.js')
   );
 }

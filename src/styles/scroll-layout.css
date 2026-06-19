@@ -23,6 +23,17 @@
   scrollbar-gutter: stable;
 }
 
+.tab-scroll-owner {
+  height: 100%;
+  min-height: 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+
+.home-list-scroll {
+  overflow-anchor: none;
+}
+
 .form-tab {
   box-sizing: border-box;
   display: flex;
@@ -76,6 +87,23 @@
 .feed-scroll-item {
   padding-inline-end: var(--scroll-content-inset);
   padding-inline-start: var(--scroll-content-inset);
+}
+
+.lkjstr-feed-row {
+  box-sizing: border-box;
+  max-width: 100%;
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.lkjstr-feed-row :where(a, button, p, small) {
+  max-width: 100%;
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.lkjstr-feed-row p {
+  white-space: pre-wrap;
 }
 
 .feed-tab {

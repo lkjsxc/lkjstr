@@ -1,7 +1,18 @@
 import sqlite3InitModule from './sqlite/index.mjs';
+import {
+  errorText,
+  isRow,
+  openDatabase,
+  outcomeFromError,
+  parseRequest,
+  response,
+} from './sqlite-opfs-worker-core.js';
+import { createStorageHealth } from './sqlite-opfs-worker-health.js';
 
-let sqlitePromise;
+let sqlitePromise, sqliteModule;
 let opened;
+const appliedSchemaChanges = new Set();
+const lastIntegrityCheckAt = null;
 const canceled = new Set();
 
 self.onmessage = (event) => {
@@ -46,6 +57,7 @@ async function runOp(request) {
   if (op.kind === 'estimate-storage') return estimate(request);
   const current = opened;
   if (!current) throw new Error('SQLite database is not open');
+  if (op.kind === 'get-storage-health') return health(request, current);
   if (op.kind === 'apply-schema') return applySchema(request, current, op);
   if (op.kind === 'execute') return execute(request, current, op);
   if (op.kind === 'query') return query(request, current, op);
@@ -56,32 +68,9 @@ async function runOp(request) {
 async function open(request, database) {
   if (opened) opened.db.close();
   sqlitePromise ??= sqlite3InitModule();
-  opened = await openDatabase(await sqlitePromise, database);
+  sqliteModule = await sqlitePromise;
+  opened = await openDatabase(sqliteModule, database);
   return response(request, 'ok', [], 0, opened.diagnostics);
-}
-
-async function openDatabase(sqlite3, database) {
-  const filename = normalizeFilename(database.databaseName);
-  if (database.preferredVfs !== 'opfs-sahpool' && sqlite3.oo1.OpfsDb) {
-    return {
-      db: new sqlite3.oo1.OpfsDb(filename, 'c'),
-      diagnostics: diagnostics(database.databaseName, 'opfs'),
-    };
-  }
-  if (database.allowSahpool && sqlite3.installOpfsSAHPoolVfs) {
-    const pool = await sqlite3.installOpfsSAHPoolVfs({ name: 'lkjstr' });
-    return {
-      db: new pool.OpfsSAHPoolDb(filename, 'c'),
-      diagnostics: diagnostics(database.databaseName, 'opfs-sahpool'),
-    };
-  }
-  if (database.allowTransient) {
-    return {
-      db: new sqlite3.oo1.DB({ filename: ':memory:', flags: 'c' }),
-      diagnostics: diagnostics(database.databaseName, 'memory'),
-    };
-  }
-  throw new Error('OPFS SQLite storage is unavailable');
 }
 
 function close(request) {
@@ -101,7 +90,18 @@ async function estimate(request) {
 
 function applySchema(request, current, op) {
   for (const statement of op.statements) current.db.exec(statement);
+  appliedSchemaChanges.add(op.schemaHash);
   return response(request, 'ok', [], 0, current.diagnostics);
+}
+
+function health(request, current) {
+  const health = createStorageHealth({
+    current,
+    sqliteModule,
+    appliedSchemaChanges,
+    lastIntegrityCheckAt,
+  });
+  return response(request, 'ok', [], 0, { ...current.diagnostics, health });
 }
 
 function execute(request, current, op) {
@@ -142,58 +142,4 @@ function batch(request, current, op) {
     current.db.exec('ROLLBACK');
     throw error;
   }
-}
-
-function response(
-  request,
-  outcome,
-  rows = [],
-  rowsAffected = 0,
-  diagnostics = {},
-) {
-  return {
-    requestId: request.requestId,
-    outcome,
-    rows,
-    rowsAffected,
-    diagnostics,
-  };
-}
-
-function parseRequest(value) {
-  if (!record(value) || typeof value.requestId !== 'string') return undefined;
-  if (typeof value.deadlineMs !== 'number') return undefined;
-  if (!record(value.op) || typeof value.op.kind !== 'string') return undefined;
-  return value;
-}
-
-function record(value) {
-  return typeof value === 'object' && value !== null;
-}
-
-function isRow(value) {
-  return record(value) && !Array.isArray(value);
-}
-
-function normalizeFilename(name) {
-  return name.startsWith('/') ? name : `/${name}`;
-}
-
-function diagnostics(databaseName, vfs) {
-  return { databaseName, vfs };
-}
-
-function outcomeFromError(error) {
-  const text = errorText(error);
-  if (/cancel/i.test(text)) return 'canceled';
-  if (/busy|locked/i.test(text)) return 'busy';
-  if (/quota|full|space/i.test(text)) return 'quota';
-  if (/blocked/i.test(text)) return 'blocked';
-  if (/corrupt|malformed|schema/i.test(text)) return 'corrupt';
-  return 'unavailable';
-}
-
-function errorText(error) {
-  if (error instanceof Error) return `${error.name}: ${error.message}`;
-  return String(error);
 }

@@ -44,6 +44,23 @@ fn custom_request_run_uses_selected_relays_when_request_has_none() -> Result<(),
 }
 
 #[test]
+fn custom_request_run_preserves_effective_clamped_filter() -> Result<(), String> {
+    let plan = plan_custom_request_run(input(
+        r#"{"filter":{"kinds":[1],"limit":999}}"#.to_owned(),
+        vec!["https://selected.example".to_owned()],
+    ));
+    let demand = plan.demand.clone().ok_or("missing demand")?;
+
+    assert_eq!(plan.status, CustomRequestRunStatus::Ready);
+    assert_eq!(demand.filters[0].limit, Some(500));
+    assert_eq!(
+        plan.request.as_ref().ok_or("missing request")?.limit_clamps[0].original_limit,
+        999
+    );
+    Ok(())
+}
+
+#[test]
 fn custom_request_run_rejects_invalid_input_without_demand() {
     let plan = plan_custom_request_run(input(
         "{".to_owned(),

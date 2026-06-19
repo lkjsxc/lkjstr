@@ -3,13 +3,14 @@
   import { onDestroy, tick } from 'svelte';
   import { isNearStart } from '$lib/feed-surface/near-end';
   import { footerPhaseFromPaging } from '$lib/feed-surface/footer-phase';
-  import { canRequestOlder } from '$lib/feed-surface/older-load-mode';
   import type { OlderLoadTrigger } from '$lib/feed-surface/older-load-mode';
-  import { shouldStartOlderPrefetch } from '$lib/feed-surface/older-prefetch';
   import type { FeedScrollListHandle } from '$lib/components/feed/FeedScrollSurface.svelte';
   import type { FlatEventTreeItem } from '$lib/events/tree';
   import EventTreeListSurface from './EventTreeListSurface.svelte';
-  import { buildViewRows, eventRows, type EventTreeListViewRow, eventNodeKey, isRowNearStart, treeNodesFromItems } from './event-tree-list-helpers';
+  import { buildViewRows, eventRows, type EventTreeListViewRow } from './event-tree-list-helpers';
+  import { isRowNearStart } from './event-tree-list-near-start-plan';
+  import { eventNodeKey, treeNodesFromItems } from './event-tree-list-tree';
+  import { canAttemptEventTreeListAutoFill, canRequestEventTreeListOlder, eventTreeListAutoFillIntentState, eventTreeListNearEndEnabled, shouldPrefetchEventTreeListOlder, shouldRequestEventTreeListNewer, shouldScheduleEventTreeListNewerCheck } from './event-tree-list-paging-plan';
   import { clearVisibleEventPins, pinVisibleEvents } from '$lib/cache/pins';
   import type { EventActionState } from '$lib/events/action-state';
   import FeedActionStatesBridge from './FeedActionStatesBridge.svelte';
@@ -30,13 +31,7 @@
   const treeCache = { key: '', nodes: [] as FlatEventTreeItem[] };
   let nodes = $derived(treeNodesFromItems(props.items, treeCache));
   let footerPhase = $derived(footerPhaseFromPaging({ loadingOlder: Boolean(props.loadingOlder), hasOlder: props.hasOlder !== false, historyExhaustion: props.historyExhaustion, rowCount: nodes.length, error: props.pagingError }));
-  let nearEndEnabled = $derived(
-    props.pagingEnabled !== false &&
-      nodes.length > 0 &&
-      Boolean(props.hasOlder) &&
-      !props.loadingOlder &&
-      Boolean(props.onNearEnd),
-  );
+  let nearEndEnabled = $derived(eventTreeListNearEndEnabled({ pagingEnabled: props.pagingEnabled, rowCount: nodes.length, hasOlder: props.hasOlder, loadingOlder: props.loadingOlder, hasOnNearEnd: Boolean(props.onNearEnd) }));
   let actionStates = $state(new Map<string, EventActionState>());
   let rows = $derived<EventTreeListViewRow[]>(buildViewRows(props.leadingRows ?? [], nodes, Boolean(props.loadingOlder), props.hasOlder, props.historyExhaustion, props.loading, props.emptyText ?? 'No events found.'));
   let previousRows: EventAnchorRow[] = [];
@@ -52,11 +47,7 @@
     if (props.pagingEnabled === false) return;
     scrollOffset = offset;
     captureAndStoreFeedListAnchor({ tabId: props.tabId, rows: eventRows(rows), list, key: eventNodeKey });
-    if (
-      isRowNearStart(rows, offset, (index) => list?.getItemOffset?.(index), isNearStart) &&
-      !props.loadingNewer &&
-      props.hasNewer
-    )
+    if (shouldRequestEventTreeListNewer({ pagingEnabled: props.pagingEnabled, nearStart: isRowNearStart(rows, offset, (index) => list?.getItemOffset?.(index), isNearStart), hasNewer: props.hasNewer, loadingNewer: props.loadingNewer }))
       void props.onNearStart?.();
   }
   $effect(() => {
@@ -65,13 +56,7 @@
       void maybeAutoFill();
   });
   $effect(() => {
-    if (
-      props.pagingEnabled === false ||
-      nodes.length === 0 ||
-      !props.hasNewer ||
-      props.loadingNewer ||
-      newerLoadPending
-    )
+    if (!shouldScheduleEventTreeListNewerCheck({ pagingEnabled: props.pagingEnabled, rowCount: nodes.length, hasNewer: props.hasNewer, loadingNewer: props.loadingNewer, newerLoadPending }))
       return;
     newerLoadPending = true;
     void tick().then(() => {
@@ -89,9 +74,10 @@
     );
   });
   $effect(() => {
-    if (autoFillIntentKey === props.intentKey) return;
-    autoFillIntentKey = props.intentKey;
-    autoFillAttempts = 0;
+    const next = eventTreeListAutoFillIntentState({ currentIntentKey: autoFillIntentKey, nextIntentKey: props.intentKey, attempts: autoFillAttempts });
+    if (!next.changed) return;
+    autoFillIntentKey = next.intentKey;
+    autoFillAttempts = next.attempts;
   });
   $effect(() => {
     void restoreFeedListAnchor({ restore: props.restoreAnchor, rows: eventRows(rows), list, key: eventNodeKey, destroyed: () => destroyed, restoredKey: restoredAnchorKey }).then((key) => {
@@ -99,12 +85,7 @@
     });
   });
   async function maybeAutoFill(): Promise<void> {
-    if (
-      autoFillPending ||
-      props.loadingOlder ||
-      !props.hasOlder ||
-      autoFillAttempts >= 4
-    )
+    if (!canAttemptEventTreeListAutoFill({ autoFillPending, loadingOlder: props.loadingOlder, hasOlder: props.hasOlder, attempts: autoFillAttempts }))
       return;
     autoFillPending = true;
     await tick();
@@ -113,7 +94,7 @@
     const total = list?.getScrollSize?.() ?? 0;
     const scrollable = total > viewport;
     if (
-      shouldStartOlderPrefetch({ mode: props.olderLoadMode, itemCount: nodes.length, hasOlder: Boolean(props.hasOlder), loadingOlder: Boolean(props.loadingOlder), cursorsReady: Boolean(props.olderPrefetchReady), scrollOffset, viewportSize: viewport, scrollSize: total })
+      shouldPrefetchEventTreeListOlder({ mode: props.olderLoadMode, rowCount: nodes.length, hasOlder: props.hasOlder, loadingOlder: props.loadingOlder, cursorsReady: props.olderPrefetchReady, scrollOffset, viewportSize: viewport, scrollSize: total })
     ) {
       autoFillAttempts += 1;
       await requestOlder('viewport-fill');
@@ -121,12 +102,7 @@
     if (!destroyed) autoFillPending = false;
   }
   async function requestOlder(trigger: OlderLoadTrigger): Promise<void> {
-    if (
-      props.loadingOlder ||
-      !props.hasOlder ||
-      nodes.length === 0 ||
-      !canRequestOlder({ mode: props.olderLoadMode, trigger, userScrolledDown: trigger === 'scroll', scrollable: (list?.getScrollSize?.() ?? 0) > (list?.getViewportSize?.() ?? 0) })
-    )
+    if (!canRequestEventTreeListOlder({ loadingOlder: props.loadingOlder, hasOlder: props.hasOlder, rowCount: nodes.length, mode: props.olderLoadMode, trigger, scrollable: (list?.getScrollSize?.() ?? 0) > (list?.getViewportSize?.() ?? 0) }))
       return;
     await props.onNearEnd?.(trigger);
   }

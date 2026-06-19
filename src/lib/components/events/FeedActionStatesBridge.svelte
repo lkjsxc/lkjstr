@@ -6,6 +6,10 @@
     loadAuthorActionStateFromCache,
     mergeActionStateMaps,
   } from '$lib/events/action-state-cache';
+  import {
+    scopedFeedActionOptimistic,
+    type FeedActionOptimisticScope,
+  } from './feed-action-states-bridge-plan';
   import type { EventActionState } from '$lib/events/action-state';
   import type { FeedEvent } from '$lib/events/types';
   import type { NostrEvent } from '$lib/protocol';
@@ -22,13 +26,13 @@
     states = $bindable(new Map<string, EventActionState>()),
   }: Props = $props();
   let optimistic = new Map<string, EventActionState>();
-  let optimisticPubkey: string | undefined;
+  let optimisticScope: FeedActionOptimisticScope | undefined;
 
   $effect(() => {
     const pubkey = activeAccountPubkey;
     if (!pubkey) {
       optimistic = new Map();
-      optimisticPubkey = undefined;
+      optimisticScope = undefined;
       states = actionStateForFeed(items, pubkey);
       return;
     }
@@ -74,15 +78,12 @@
     pubkey: string,
     visibleItems: readonly FeedEvent[],
   ): Map<string, EventActionState> {
-    if (optimisticPubkey !== pubkey) {
-      optimisticPubkey = pubkey;
-      optimistic = new Map();
-      return optimistic;
-    }
-    const visible = new Set(visibleItems.map((item) => item.event.id));
-    optimistic = new Map(
-      [...optimistic].filter(([eventId]) => visible.has(eventId)),
+    optimisticScope = scopedFeedActionOptimistic(
+      optimisticScope,
+      pubkey,
+      visibleItems,
     );
+    optimistic = optimisticScope.optimistic;
     return optimistic;
   }
 </script>

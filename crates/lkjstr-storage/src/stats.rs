@@ -5,11 +5,13 @@ use serde::{Deserialize, Serialize};
 mod bytes;
 mod geometry;
 mod inventory;
+mod optimizer;
 mod readiness;
 
 pub use crate::stats_rows::{SqliteRowCount, StorageInventoryRow, StorageTableCount};
 pub use bytes::StorageByteInventoryRow;
 pub use geometry::StorageFeedGeometryStats;
+pub use optimizer::StorageOptimizerStats;
 pub use readiness::{
     InventoryReadinessGap, RetentionInventoryReadiness, classify_inventory_for_retention,
 };
@@ -34,6 +36,7 @@ pub struct StorageStatsSnapshot {
     pub storage_pressure: Option<StoragePressureSnapshotRecord>,
     pub byte_rows: Vec<StorageByteInventoryRow>,
     pub feed_geometry: StorageFeedGeometryStats,
+    pub optimizer: StorageOptimizerStats,
     pub rows: Vec<StorageInventoryRow>,
 }
 
@@ -82,6 +85,7 @@ impl StorageStatsSnapshot {
             storage_pressure: None,
             byte_rows: pressure_byte_rows(None, Some("not-requested")),
             feed_geometry: StorageFeedGeometryStats::unavailable("not-requested"),
+            optimizer: StorageOptimizerStats::unavailable("not-requested"),
             rows,
         };
         snapshot.recount_rows();
@@ -141,6 +145,7 @@ impl StorageStatsSnapshot {
         self.inventory_status =
             inventory_status(self.table_count, self.available_table_count).to_string();
         self.feed_geometry = StorageFeedGeometryStats::from_inventory_rows(&self.rows);
+        self.optimizer = StorageOptimizerStats::from_inventory_rows(&self.rows);
     }
 }
 

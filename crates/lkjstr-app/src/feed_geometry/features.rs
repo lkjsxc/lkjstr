@@ -14,6 +14,7 @@ pub enum RowKind {
     EventMediaSegment,
     EventReferenceSegment,
     EventActions,
+    RepostTarget,
     Notification,
     ProfileSummary,
     ThreadRoot,

@@ -15,7 +15,8 @@ must use before their TypeScript feed runtimes are deleted.
   `crates/lkjstr-storage/src/feed_cache.rs`.
 - Rust row view model: `crates/lkjstr-app/src/feed/view_model/**` with focused
   tests for stable ids, duplicate relay merge, explicit unavailable and
-  diagnostic rows, profile and notification rows, and footer states.
+  diagnostic rows, profile and notification rows, verified nested repost
+  target rows, and footer states.
 - First Home rendering slice: `crates/lkjstr-app/src/home_feed/**` and
   `crates/lkjstr-ui/src/workspace/home.rs` render `HomeFeedView` rows, with
   browser proof through injected and host-provider real event rows. The host
@@ -85,8 +86,10 @@ must use before their TypeScript feed runtimes are deleted.
   NIP-65/provenance/target author routes when present, excludes disabled stored
   route relays, rebuilds from stored relay events, turns
   no-event/AUTH/rate-limited/timeout reads and partial route failures into
-  explicit diagnostics, renders pending feed-provider work after discovery as
-  loading instead of ready, and closes the selected-relay read on tab switch.
+  explicit diagnostics, keeps real cached target-authored posts as
+  target-posts-only output after exhausted follow-list discovery, renders
+  pending feed-provider work after discovery as loading instead of ready, and
+  closes the selected-relay read on tab switch.
   The typed request now exposes the same `is_released()` guard shape as other
   feed providers. Deletion proof remains open.
 - Author Context first slice: `crates/lkjstr-app/src/author_context_feed/**`,
@@ -147,7 +150,8 @@ The shared runtime state contains:
 - progressive relay snapshots and partial failure diagnostics.
 - event map, stable row ids, ordering cursors, `hasOlder`, and `hasNewer`.
 - footer state, unavailable state, and retry commands.
-- scroll anchor hints, width bucket, row geometry estimate, and reservation key.
+- scroll anchor hints, width bucket, row geometry estimate, reservation key, and
+  nested-repost enrichment invalidation.
 - hydration priority queue with owner-scoped cancellation.
 
 ## Feed Row View Model
@@ -171,8 +175,9 @@ footer:<feed-id>
 
 A row view model includes renderer kind, event id or unavailable reason,
 author identity state, timestamp, content fragments, media descriptors, custom
-emoji, content warning state, repost or reference target state, action state,
-height reservation, and diagnostics. Components must not parse Nostr events.
+emoji, content warning state, verified repost target rows, reference target
+state, action state, height reservation, and diagnostics. Components must not
+parse Nostr events.
 
 ## Cache Proof
 
@@ -211,10 +216,12 @@ estimates, visual fragments, height reservation, dematerialization, and LOD tree
 state. `lkjstr-web` may report DOM measurements and load persisted model rows.
 Durable row-height persistence is partial: typed `feed_row_height_*` repositories
 exist and Home/Global/Notifications/Profile/Thread/Search/Author Context/User
-Timeline consume matching models for cached rows. Converted event snapshots and
+Timeline consume matching models for cached rows. Custom Request relay snapshots
+load matching durable models before rebuild. Converted event snapshots and
 Profile header relay rebuilds preserve cache-loaded models. Runtime geometry
 counters are exposed through a Rust/WASM diagnostics export for Stats; browser
-scroll proof remains open.
+scroll proof remains open. Focused reducer proof covers nested-repost
+enrichment invalidation and anchor compensation.
 
 ## Unavailable-State Derivation
 

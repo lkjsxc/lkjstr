@@ -1,10 +1,10 @@
 use super::{
     FEED_LOAD_OLDER_COMMAND, FeedDiagnosticRow, FeedDiagnosticSeverity, FeedFooterRow,
     FeedFooterState, FeedNotificationRow, FeedProfileRow, FeedStateRow, FeedUnavailableRow,
-    FeedViewModel, FeedViewRow, feed_diagnostic_row_id, feed_event_row_id, feed_footer_row_id,
-    feed_notification_row_id, feed_profile_row_id, feed_unavailable_row_id,
-    geometry::feed_event_display, geometry::feed_event_geometry_features_with_actions,
-    plan_feed_event_content,
+    FeedViewModel, FeedViewRow, content::plan_feed_event_content_with_repost_target,
+    feed_diagnostic_row_id, feed_event_row_id, feed_footer_row_id, feed_notification_row_id,
+    feed_profile_row_id, feed_unavailable_row_id, geometry::feed_event_display,
+    geometry::feed_event_geometry_features_with_actions, repost_target::verified_repost_target_row,
 };
 use crate::{
     events::EventDisplayContext,
@@ -168,14 +168,16 @@ fn event_row(
         relay_provenance: event.relays.clone(),
         has_action_bar: display.chrome.show_actions,
     };
-    let content = plan_feed_event_content(
-        features.has_content_warning,
-        content_warning_reason.clone(),
+    let repost_target =
+        verified_repost_target_row(&event.event, width_px, font_scale, models, config);
+    let content = plan_feed_event_content_with_repost_target(
+        (features.has_content_warning, content_warning_reason.clone()),
         &semantic,
         &custom_emojis,
         &features.content_shape_hash,
         geometry_estimate.estimated_height_px,
         config,
+        repost_target,
     );
     super::FeedEventRow {
         row_id,

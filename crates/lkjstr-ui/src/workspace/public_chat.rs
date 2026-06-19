@@ -61,16 +61,20 @@ pub fn PublicChatTab(
             .into_any()
     };
     view! {
-        <section class="lkjstr-public-chat" aria-label="Public Chat">
-            <p>{relay_text}</p>
-            <p>{account_status}</p>
-            <div class="lkjstr-public-chat-channels">
-                <h2>"Channels"</h2>
-                {channel_view}
-            </div>
-            <div class="lkjstr-public-chat-messages">
-                <h2>"Messages"</h2>
-                {message_view}
+        <section class="feed-tab lkjstr-public-chat" aria-label="Public Chat">
+            <div class="tab-scroll-track event-list__scroller">
+                <div class="tab-scroll-owner public-chat-list-scroll" data-scroll-owner="">
+                    <p class="lkjstr-public-chat-relay-status">{relay_text}</p>
+                    <p class="lkjstr-public-chat-account-status">{account_status}</p>
+                    <div class="lkjstr-public-chat-channels">
+                        <h2>"Channels"</h2>
+                        {channel_view}
+                    </div>
+                    <div class="lkjstr-public-chat-messages">
+                        <h2>"Messages"</h2>
+                        {message_view}
+                    </div>
+                </div>
             </div>
         </section>
     }

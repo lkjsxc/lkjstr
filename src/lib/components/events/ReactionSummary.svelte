@@ -2,9 +2,13 @@
   import { Heart, ThumbsDown } from '@lucide/svelte';
   import Avatar from '$lib/components/identity/Avatar.svelte';
   import EmojifiedText from './EmojifiedText.svelte';
-  import { bestDisplayName } from '$lib/identity/display-name';
   import type { ProfileSummary } from '$lib/identity/identity';
-  import { hasOpenProfileAction } from './action-availability';
+  import { eventProfileCanOpen } from './event-profile-activation';
+  import {
+    openReactionSummaryActor,
+    planReactionSummary,
+    toggleReactionSummary,
+  } from './reaction-summary-plan';
   import type {
     ReactionGroup,
     RepostGroup,
@@ -20,57 +24,47 @@
 
   let props: Props = $props();
   let expanded = $state('');
-  let canOpenProfile = $derived(hasOpenProfileAction(props.openProfile));
-
-  function toggle(id: string): void {
-    expanded = expanded === id ? '' : id;
-  }
-
-  function name(pubkey: string): string {
-    return bestDisplayName({ ...(props.profiles?.[pubkey] ?? {}), pubkey });
-  }
-
-  function reactionLabel(content: string): string {
-    if (content === '+' || content === 'heart') return 'like';
-    if (content === '-') return 'dislike';
-    return content;
-  }
-
-  function reactionKey(reaction: ReactionGroup): string {
-    return [
-      reaction.content,
-      reaction.emoji?.url ?? '',
-      reaction.emoji?.address ?? '',
-    ].join(':');
-  }
+  let canOpenProfile = $derived(eventProfileCanOpen(props.openProfile));
+  let plan = $derived(
+    planReactionSummary({
+      reactions: props.reactions,
+      reposts: props.reposts,
+      profiles: props.profiles,
+      activeAccountPubkey: props.activeAccountPubkey,
+      expanded,
+    }),
+  );
 
   function openActor(actor: string): void {
-    const openProfile = props.openProfile;
-    if (!hasOpenProfileAction(openProfile)) return;
-    openProfile(actor);
+    openReactionSummaryActor(props.openProfile, { pubkey: actor });
+  }
+
+  function toggle(id: string): void {
+    expanded = toggleReactionSummary(expanded, id);
   }
 </script>
 
-{#if props.reactions && props.reactions.length > 0}
-  <ul class="reaction-summary" aria-label="Reactions">
-    {#each props.reactions as reaction (reactionKey(reaction))}
-      {@const id = `reaction-${reactionKey(reaction)}`}
+{#if plan.reactions.length > 0}
+  <ul class="reaction-summary" aria-label={plan.reactionsLabel}>
+    {#each plan.reactions as reaction (reaction.key)}
       <li>
         <button
           type="button"
           class="reaction-summary__trigger"
-          class:reaction-summary__own={reaction.actors.includes(
-            props.activeAccountPubkey ?? '',
-          )}
-          aria-expanded={expanded === id}
-          aria-controls={id}
-          onclick={() => toggle(id)}
+          class:reaction-summary__own={reaction.own}
+          aria-expanded={reaction.expanded}
+          aria-controls={reaction.id}
+          onclick={() => toggle(reaction.id)}
         >
           <span>
-            {#if reaction.content === '+' || reaction.content === 'heart'}
-              <Heart size={14} fill="currentColor" aria-label="like" />
-            {:else if reaction.content === '-'}
-              <ThumbsDown size={14} aria-label="dislike" />
+            {#if reaction.icon === 'like'}
+              <Heart
+                size={14}
+                fill="currentColor"
+                aria-label={reaction.label}
+              />
+            {:else if reaction.icon === 'dislike'}
+              <ThumbsDown size={14} aria-label={reaction.label} />
             {:else}
               <EmojifiedText
                 text={reaction.content}
@@ -78,41 +72,41 @@
               />
             {/if}
           </span>
-          <span class="sr-only">{reactionLabel(reaction.content)}</span>
+          <span class="sr-only">{reaction.label}</span>
           <strong>{reaction.count}</strong>
         </button>
-        {#if expanded === id}
-          <div class="reaction-summary__actors" {id}>
-            {#each reaction.actors as actor (actor)}
+        {#if reaction.expanded}
+          <div class="reaction-summary__actors" id={reaction.id}>
+            {#each reaction.actors as actor (actor.pubkey)}
               {#if canOpenProfile}
-                <button type="button" onclick={() => openActor(actor)}>
+                <button type="button" onclick={() => openActor(actor.pubkey)}>
                   <Avatar
-                    pubkey={actor}
-                    name={name(actor)}
-                    src={props.profiles?.[actor]?.avatarUrl}
+                    pubkey={actor.pubkey}
+                    name={actor.name}
+                    src={actor.avatarUrl}
                     size="sm"
                   />
-                  <span>
-                    <EmojifiedText
-                      text={name(actor)}
-                      emojis={props.profiles?.[actor]?.customEmojis ?? []}
-                    />
-                  </span>
+                  <span
+                    ><EmojifiedText
+                      text={actor.name}
+                      emojis={actor.emojis}
+                    /></span
+                  >
                 </button>
               {:else}
                 <span class="reaction-summary__actor">
                   <Avatar
-                    pubkey={actor}
-                    name={name(actor)}
-                    src={props.profiles?.[actor]?.avatarUrl}
+                    pubkey={actor.pubkey}
+                    name={actor.name}
+                    src={actor.avatarUrl}
                     size="sm"
                   />
-                  <span>
-                    <EmojifiedText
-                      text={name(actor)}
-                      emojis={props.profiles?.[actor]?.customEmojis ?? []}
-                    />
-                  </span>
+                  <span
+                    ><EmojifiedText
+                      text={actor.name}
+                      emojis={actor.emojis}
+                    /></span
+                  >
                 </span>
               {/if}
             {/each}
@@ -122,50 +116,44 @@
     {/each}
   </ul>
 {/if}
-{#if props.reposts && props.reposts.count > 0}
+{#if plan.reposts.visible}
   <div class="reaction-summary repost-summary">
     <button
       type="button"
       class="reaction-summary__trigger"
-      aria-expanded={expanded === 'reposts'}
-      aria-controls="reposts"
-      onclick={() => toggle('reposts')}
+      aria-expanded={plan.reposts.expanded}
+      aria-controls={plan.reposts.id}
+      onclick={() => toggle(plan.reposts.id)}
     >
-      <span>repost</span>
-      <strong>{props.reposts.count}</strong>
+      <span>{plan.reposts.label}</span>
+      <strong>{plan.reposts.count}</strong>
     </button>
-    {#if expanded === 'reposts'}
-      <div class="reaction-summary__actors" id="reposts">
-        {#each props.reposts.actors as actor (actor)}
+    {#if plan.reposts.expanded}
+      <div class="reaction-summary__actors" id={plan.reposts.id}>
+        {#each plan.reposts.actors as actor (actor.pubkey)}
           {#if canOpenProfile}
-            <button type="button" onclick={() => openActor(actor)}>
+            <button type="button" onclick={() => openActor(actor.pubkey)}>
               <Avatar
-                pubkey={actor}
-                name={name(actor)}
-                src={props.profiles?.[actor]?.avatarUrl}
+                pubkey={actor.pubkey}
+                name={actor.name}
+                src={actor.avatarUrl}
                 size="sm"
               />
-              <span>
-                <EmojifiedText
-                  text={name(actor)}
-                  emojis={props.profiles?.[actor]?.customEmojis ?? []}
-                />
-              </span>
+              <span
+                ><EmojifiedText text={actor.name} emojis={actor.emojis} /></span
+              >
             </button>
           {:else}
             <span class="reaction-summary__actor">
               <Avatar
-                pubkey={actor}
-                name={name(actor)}
-                src={props.profiles?.[actor]?.avatarUrl}
+                pubkey={actor.pubkey}
+                name={actor.name}
+                src={actor.avatarUrl}
                 size="sm"
               />
-              <span>
-                <EmojifiedText
-                  text={name(actor)}
-                  emojis={props.profiles?.[actor]?.customEmojis ?? []}
-                />
-              </span>
+              <span
+                ><EmojifiedText text={actor.name} emojis={actor.emojis} /></span
+              >
             </span>
           {/if}
         {/each}

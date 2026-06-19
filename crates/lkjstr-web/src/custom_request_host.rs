@@ -9,7 +9,8 @@ use lkjstr_storage::StorageOutcome;
 use lkjstr_ui::CustomRequestProvider;
 
 use crate::{
-    custom_request_relay_input::custom_request_relay_input,
+    custom_request_relay_input::{CustomRequestRelayInputSeed, custom_request_relay_input},
+    custom_request_relay_limits::custom_request_relay_limits,
     custom_request_relay_model::model_from_input,
     custom_request_relay_read::start_custom_request_relay_read,
     host_status::browser_now_ms,
@@ -42,17 +43,22 @@ pub fn custom_request_provider_with_worker_url(
             if request.is_released() {
                 return;
             }
-            let plan = plan_custom_request_run(CustomRequestRunInput {
-                owner: request.owner.clone(),
-                visibility: DemandVisibility::Visible,
+            let plan = custom_request_plan(
+                &db_name,
+                &worker_url,
+                request.owner.clone(),
+                request.raw_json.clone(),
                 selected_relays,
-                disabled_relays: Vec::new(),
-                raw_json: request.raw_json.clone(),
-                now_sec: browser_now_ms() / 1_000,
-                page_size: PAGE_SIZE,
-            });
-            let Some(relay_input) = custom_request_relay_input(request.owner.clone(), plan.clone())
-            else {
+            )
+            .await;
+            let geometry_models = Vec::new();
+            let Some(relay_input) = custom_request_relay_input(CustomRequestRelayInputSeed {
+                owner: &request.owner,
+                db_name: &db_name,
+                worker_url: &worker_url,
+                plan: plan.clone(),
+                geometry_models: &geometry_models,
+            }) else {
                 request.complete(local_view_from_plan(request.owner.clone(), plan));
                 return;
             };
@@ -70,6 +76,47 @@ pub fn custom_request_provider_with_worker_url(
             relay_slot.replace(handle);
         });
     })
+}
+
+async fn custom_request_plan(
+    db_name: &str,
+    worker_url: &str,
+    owner: String,
+    raw_json: String,
+    selected_relays: Vec<String>,
+) -> CustomRequestRunPlan {
+    let plan = plan_custom_request_run(run_input(
+        owner.clone(),
+        raw_json.clone(),
+        selected_relays.clone(),
+    ));
+    if plan.status != CustomRequestRunStatus::Ready {
+        return plan;
+    }
+    let limits = custom_request_relay_limits(db_name, worker_url, &plan.relays).await;
+    if limits.is_empty() {
+        return plan;
+    }
+    lkjstr_app::custom_request::plan_custom_request_run_with_relay_limits(
+        run_input(owner, raw_json, selected_relays),
+        limits,
+    )
+}
+
+fn run_input(
+    owner: String,
+    raw_json: String,
+    selected_relays: Vec<String>,
+) -> CustomRequestRunInput {
+    CustomRequestRunInput {
+        owner,
+        visibility: DemandVisibility::Visible,
+        selected_relays,
+        disabled_relays: Vec::new(),
+        raw_json,
+        now_sec: browser_now_ms() / 1_000,
+        page_size: PAGE_SIZE,
+    }
 }
 
 async fn selected_relays(db_name: &str, worker_url: &str) -> Vec<String> {

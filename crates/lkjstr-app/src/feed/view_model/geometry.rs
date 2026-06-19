@@ -60,9 +60,25 @@ pub(crate) fn feed_event_geometry_features_with_actions(
     font_scale: f32,
     has_action_bar: bool,
 ) -> RowGeometryFeatures {
-    event_geometry_features(
+    feed_event_geometry_features_for_row(
         event,
         RowKind::Event,
+        width_px,
+        font_scale,
+        has_action_bar,
+    )
+}
+
+pub(crate) fn feed_event_geometry_features_for_row(
+    event: &NostrEvent,
+    row_kind: RowKind,
+    width_px: u16,
+    font_scale: f32,
+    has_action_bar: bool,
+) -> RowGeometryFeatures {
+    event_geometry_features(
+        event,
+        row_kind,
         width_px,
         font_scale,
         false,

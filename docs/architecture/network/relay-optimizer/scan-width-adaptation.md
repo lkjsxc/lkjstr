@@ -30,7 +30,8 @@ fallback. Fallback exists only to keep the browser usable when the bridge is
 unavailable; it must use the same input contract and cannot invent coverage.
 
 Stats shows the bridge source, selected model scope, confidence, proposed span,
-cap reason, and fallback reason when applicable.
+cap reason, and fallback reason when applicable. Rust raw planner output also
+reports whether a previous hint was used, expired, rejected, or unavailable.
 
 ## Context And Scopes
 

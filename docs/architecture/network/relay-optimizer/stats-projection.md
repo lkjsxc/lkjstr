@@ -36,6 +36,7 @@ They include:
 - estimated density and confidence
 - previous span, proposed span, and change cap factor
 - cap reason when a cap was applied
+- grouped hint status: used, expired, rejected, unavailable, or unknown
 - latest observation event count and final visible count
 - limit-hit rate and incomplete rate
 - last update time and staleness state

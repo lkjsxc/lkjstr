@@ -10,20 +10,30 @@ commands.
 - `app-smoke.ts`: production preview smoke check for `/`.
 - `check-repo.ts`: repository contract checker.
 - `repo-compose.ts`: Docker Compose guardrails.
+- `repo-author-context-deletions.ts`: deleted Author Context loader no-import
+  guard.
 - `repo-deleted-paths.ts`: guard that removed transitional paths stay absent.
 - `repo-docs.ts`: docs topology and prose checks.
 - `repo-doc-task-shape.ts`: required headings for execution task files.
 - `repo-doc-skill-shape.ts`: required headings for agent skill files.
-- `repo-event-menu.ts`: deleted Svelte event menu no-import guard.
+- `repo-event-menu.ts`: deleted Svelte event menu and helper API guard.
+- `repo-feed-tab-islands.ts`: retained and deleted feed tab no-import guard.
+- `repo-feed-surface-deletions.ts`: deleted feed-surface helper no-import guard.
 - `repo-source-classes.ts`: TypeScript AST guard that rejects first-party
   classes under `src/`.
+- `repo-transitional-deletions.ts`: deleted transitional helper no-import
+  guard.
+- `repo-user-timeline-deletions.ts`: deleted User Timeline helper no-import
+  guard.
 - `run-quiet.ts`: quiet verification runner for agents and CI.
 - `vite-lkjstr-web-wasm.ts`: optional Vite asset plugin for the Rust scan bridge.
 - `vitest-quiet-reporter.ts`: minimal Vitest reporter for quiet unit runs.
 
 `pnpm check:repo` runs the class guard along with documentation, README,
 Compose, deleted-path, line-length, storage, timer, deleted event-menu,
-runtime counter, and dependency text checks.
+deleted Author Context loader, feed-tab island, deleted feed-surface helper,
+deleted transitional helpers, deleted User Timeline helper, runtime counter,
+and dependency text checks.
 
 ## Quiet Runner
 

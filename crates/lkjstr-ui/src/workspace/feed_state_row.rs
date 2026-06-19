@@ -1,6 +1,7 @@
 use leptos::prelude::*;
 use lkjstr_app::{
-    FeedContinuationRow, FeedDiagnosticRow, FeedNotificationRow, FeedProfileRow, FeedUnavailableRow,
+    FeedContinuationRow, FeedDiagnosticRow, FeedNotificationRow, FeedProfileRow, FeedShellRow,
+    FeedUnavailableRow,
 };
 
 pub(crate) fn unavailable(row: FeedUnavailableRow) -> impl IntoView {
@@ -26,6 +27,27 @@ pub(crate) fn profile(row: FeedProfileRow) -> impl IntoView {
 pub(crate) fn notification(row: FeedNotificationRow) -> impl IntoView {
     let row = notification_parts(row);
     text_row(row)
+}
+
+pub(crate) fn shell(row: FeedShellRow) -> impl IntoView {
+    let height = row.reserved_height_px.to_string();
+    let count = row.represented_row_count.to_string();
+    let style = format!("min-height:{height}px;");
+    view! {
+        <article
+            class="lkjstr-feed-row lod-shell"
+            data-row-id=row.row_id
+            data-lod-shell=""
+            data-semantic-row-id=row.semantic_row_id
+            data-reserved-height=height
+            data-row-count=count
+            data-route-group=row.route_group
+            data-coverage=row.coverage
+            style=style
+        >
+            <strong>"Compacted rows"</strong>
+        </article>
+    }
 }
 
 struct TextStateRow {

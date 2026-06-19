@@ -1,5 +1,6 @@
 <script lang="ts">
   import type { FeedPagingPhase } from '$lib/feed-surface/paging-state';
+  import { planFeedSurfaceStatus } from './feed-surface-status-plan';
 
   type Props = {
     phase?: FeedPagingPhase;
@@ -9,17 +10,20 @@
   };
 
   let props: Props = $props();
-  let showLoading = $derived(
-    props.phase === 'loadingOlder' || props.loadingOlder,
+  let plan = $derived(
+    planFeedSurfaceStatus({
+      phase: props.phase,
+      loadingOlder: props.loadingOlder,
+      endOfHistory: props.endOfHistory,
+      error: props.error,
+    }),
   );
-  let showEnd = $derived(props.phase === 'end' || props.endOfHistory);
-  let showError = $derived(props.phase === 'error' ? props.error : props.error);
 </script>
 
-{#if showError}
-  <p class="event-list__status" role="alert">{showError}</p>
-{:else if showLoading}
-  <p class="event-list__status" aria-busy="true">Loading older events...</p>
-{:else if showEnd}
-  <p class="event-list__status">End of known history.</p>
+{#if plan.kind === 'error'}
+  <p class="event-list__status" role={plan.role}>{plan.text}</p>
+{:else if plan.kind === 'loading'}
+  <p class="event-list__status" aria-busy={plan.ariaBusy}>{plan.text}</p>
+{:else if plan.kind === 'end'}
+  <p class="event-list__status">{plan.text}</p>
 {/if}

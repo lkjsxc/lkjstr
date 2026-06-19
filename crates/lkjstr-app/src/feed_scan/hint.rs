@@ -31,6 +31,26 @@ pub enum HintCompatibility {
     Incompatible,
 }
 
+#[derive(Clone, Copy, Debug, Eq, PartialEq)]
+pub enum ScanHintStatus {
+    Unavailable,
+    Used,
+    Expired,
+    Rejected,
+}
+
+impl ScanHintStatus {
+    #[must_use]
+    pub fn as_kebab_str(self) -> &'static str {
+        match self {
+            Self::Unavailable => "unavailable",
+            Self::Used => "used",
+            Self::Expired => "expired",
+            Self::Rejected => "rejected",
+        }
+    }
+}
+
 #[derive(Clone, Debug, Eq, PartialEq)]
 pub struct HintContext {
     pub semantic_feed_key: String,

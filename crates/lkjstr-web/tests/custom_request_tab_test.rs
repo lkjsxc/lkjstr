@@ -1,9 +1,13 @@
 #![cfg(target_arch = "wasm32")]
 
 mod accounts_selector_test_support;
+mod custom_request_relay_provider_support;
 
 use accounts_selector_test_support::{
     WORKER_URL, clear_legacy, click, reset_shells, store_for, test_db_name, wait_for_text,
+};
+use custom_request_relay_provider_support::{
+    custom_request_event, install_custom_request_websocket, request_frame_count,
 };
 use lkjstr_domain::{RelayConnectionState, RelayHealth, RelayPurpose, RelayRecord, RelaySet};
 use lkjstr_storage::StorageOutcome;
@@ -31,6 +35,12 @@ async fn rust_custom_request_tab_plans_selected_relay_demand() -> Result<(), JsV
 
     click(".lkjstr-custom-request-controls button[type='submit']")?;
     wait_for_text("Ready for relay read: 1 relay target.").await?;
+    input_value(
+        "textarea[aria-label='Custom request JSON']",
+        r#"{"filter":{"kinds":[1],"limit":999}}"#,
+    )?;
+    click(".lkjstr-custom-request-controls button[type='submit']")?;
+    wait_for_text("Effective outbound filters: filter 1 limit 500").await?;
     input_value("textarea[aria-label='Custom request JSON']", "{")?;
     click(".lkjstr-custom-request-controls button[type='submit']")?;
     wait_for_text("Invalid request: InvalidJson.").await
@@ -49,6 +59,25 @@ async fn rust_custom_request_tab_renders_no_relay_state() -> Result<(), JsValue>
     open_custom_request_tab().await?;
     click(".lkjstr-custom-request-controls button[type='submit']")?;
     wait_for_text("No enabled relay is available for this request.").await
+}
+
+#[wasm_bindgen_test(async)]
+async fn rust_custom_request_tab_renders_browser_relay_event_rows() -> Result<(), JsValue> {
+    reset_shells()?;
+    clear_legacy()?;
+    let db_name = test_db_name("custom-request-relay-row");
+    if let Err(error) = seed_relay_set(&db_name).await {
+        return skip_unavailable_worker(error);
+    }
+    let _websocket = install_custom_request_websocket(&custom_request_event())?;
+
+    lkjstr_web::mount_rust_workspace_shell_from_db_with_worker(db_name, WORKER_URL.to_owned());
+    open_custom_request_tab().await?;
+    click(".lkjstr-custom-request-controls button[type='submit']")?;
+    wait_for_text("custom request relay event").await?;
+
+    assert_eq!(request_frame_count(), 2);
+    Ok(())
 }
 
 async fn open_custom_request_tab() -> Result<(), JsValue> {

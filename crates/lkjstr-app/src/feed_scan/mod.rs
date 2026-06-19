@@ -32,7 +32,7 @@ pub use hierarchy::{
     scan_model_scope_order, scan_model_scope_rank, scan_model_scope_weight,
     select_models_for_context,
 };
-pub use hint::{FeedScanHint, HintCompatibility, HintContext};
+pub use hint::{FeedScanHint, HintCompatibility, HintContext, ScanHintStatus};
 pub use hint_update::{ScanFeedbackUpdate, reduce_scan_feedback, reduce_scan_observation};
 pub use model::{
     ScanDensityModel, ScanModelKey, ScanModelScope, decayed_sample_weight, empty_scan_density_model,
@@ -41,7 +41,7 @@ pub use model_update::{scan_model_from_observation, update_scan_density_model};
 pub use observation::ScanSegmentObservation;
 pub use planner::{
     FeedScanPlan, FeedScanPlanInput, MAX_SEGMENTS_PER_PLAN, ScanPlanSource, hint_context,
-    plan_feed_scan, scan_model_context,
+    plan_feed_scan, scan_hint_status, scan_model_context,
 };
 pub use proposal::{SpanProposal, propose_scan_span};
 pub use segment::{ScanSegment, SegmentSplitOutcome, segment_from_edge, split_limit_hit_segment};

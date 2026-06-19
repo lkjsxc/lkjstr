@@ -4,7 +4,8 @@ use lkjstr_protocol::{ClientMessage, encode_client_message};
 use lkjstr_relays::{ProgressiveReadEvidence, progressive_read_snapshot, reduce_progressive_read};
 
 use crate::{
-    custom_request_relay_model::output_from_snapshot,
+    custom_request_geometry::custom_request_geometry_models,
+    custom_request_relay_model::{output_from_snapshot_with_geometry, window_from_snapshot},
     custom_request_relay_read::CustomRequestRelayRead,
     home_feed_relay_status::{RelayEnd, relay_status, relay_terminal},
     host_status::browser_now_ms,
@@ -57,7 +58,29 @@ impl CustomRequestRelayRead {
 
     pub(super) fn publish(&self, reason: &str) {
         let snapshot = progressive_read_snapshot(&self.state.borrow(), reason, browser_now_ms());
-        (self.complete)(output_from_snapshot(&self.input, snapshot));
+        let input = self.input.clone();
+        let complete = self.complete.clone();
+        let generation = self.publish_generation.get().saturating_add(1);
+        self.publish_generation.set(generation);
+        let latest = self.publish_generation.clone();
+        wasm_bindgen_futures::spawn_local(async move {
+            let window = window_from_snapshot(&input, &snapshot);
+            let geometry_models = custom_request_geometry_models(
+                &input.db_name,
+                &input.worker_url,
+                &window,
+                680,
+                1.0,
+            )
+            .await;
+            if latest.get() == generation {
+                complete(output_from_snapshot_with_geometry(
+                    &input,
+                    snapshot,
+                    geometry_models,
+                ));
+            }
+        });
     }
 
     pub(super) fn close_all(&self) {

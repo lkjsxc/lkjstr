@@ -34,6 +34,15 @@ RepostContextChrome
   SharedEventDisplay(target_event, context = repost-target)
 ```
 
+The Rust row model may render a nested repost target only when the embedded
+event parses and passes event-id/signature verification. Invalid JSON, invalid
+event shape, id mismatch, bad signature, missing content, or declared target
+tag mismatch renders the compact unavailable target state instead of
+target-like placeholder content. Kind `6` reposts require a matching declared
+`e` target; kind `16` reposts may omit an event tag, but a present `e` target
+must not contradict the verified embedded event. Retained Svelte protocol
+helpers follow the same rule until the TypeScript surface is removed.
+
 The wrapper may show who reposted, when it was reposted, relay provenance, and
 retry or route-expansion affordances when the surrounding surface supports them.
 It must not duplicate target event rendering.
@@ -93,3 +102,5 @@ Before repost rendering is marked complete, tests prove:
 - [geometry-model.md](geometry-model.md): shared geometry keys.
 - [height-reservation.md](height-reservation.md): reserved height contract.
 - [unload-height-stability.md](unload-height-stability.md): unload behavior.
+- [NIP-18](https://github.com/nostr-protocol/nips/blob/master/18.md):
+  repost tag and content rules.

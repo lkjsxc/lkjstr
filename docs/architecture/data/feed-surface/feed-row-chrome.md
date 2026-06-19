@@ -28,11 +28,6 @@ reserve space for controls beside scrollbars.
   [notifications.md](../../../product/feeds/notifications.md).
 - Only the separator is suppressed on the embedded row, not actions or density.
 
-## Types
-
-`src/lib/feed-surface/row-shell.ts` exports list item key helpers and documents
-row chrome types used by feed adapters.
-
 ## Related
 
 - [feed-scroll-surface.md](feed-scroll-surface.md): scroll shell.

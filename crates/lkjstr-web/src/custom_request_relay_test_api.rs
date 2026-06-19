@@ -9,7 +9,9 @@ use lkjstr_relays::{
 };
 
 use crate::{
-    custom_request_relay_input::{custom_request_event_matches_read, custom_request_relay_input},
+    custom_request_relay_input::{
+        CustomRequestRelayInputSeed, custom_request_event_matches_read, custom_request_relay_input,
+    },
     custom_request_relay_model::output_from_snapshot,
 };
 
@@ -87,9 +89,11 @@ pub fn failed_empty_output_probe() -> Option<CustomRequestRelayOutputProbe> {
 }
 
 fn relay_input() -> Option<crate::custom_request_relay_input::CustomRequestRelayReadInput> {
-    custom_request_relay_input(
-        "custom-tab".to_owned(),
-        plan_custom_request_run(CustomRequestRunInput {
+    custom_request_relay_input(CustomRequestRelayInputSeed {
+        owner: "custom-tab",
+        db_name: "custom-request-test",
+        worker_url: "/worker.js",
+        plan: plan_custom_request_run(CustomRequestRunInput {
             owner: "custom-tab".to_owned(),
             visibility: DemandVisibility::Visible,
             selected_relays: vec!["wss://selected.example".to_owned()],
@@ -98,7 +102,8 @@ fn relay_input() -> Option<crate::custom_request_relay_input::CustomRequestRelay
             now_sec: 20,
             page_size: 30,
         }),
-    )
+        geometry_models: &[],
+    })
 }
 
 fn output_probe(model: lkjstr_app::CustomRequestFeedView) -> CustomRequestRelayOutputProbe {

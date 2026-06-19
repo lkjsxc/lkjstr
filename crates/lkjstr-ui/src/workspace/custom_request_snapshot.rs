@@ -1,4 +1,4 @@
-use leptos::prelude::{GetUntracked, Update};
+use leptos::prelude::{Callable, Callback, GetUntracked, Update};
 use lkjstr_app::record_tab_snapshot;
 use lkjstr_domain::{FeedTabSnapshot, TabSnapshotPayload};
 use lkjstr_storage::{TabStateRecord, tab_state_id};
@@ -11,10 +11,13 @@ const RAN_KEY: &str = "customRequestRan";
 
 #[derive(Clone)]
 pub(crate) struct CustomRequestSnapshotHandle {
-    runtime: RuntimeSignal,
+    runtime: Option<RuntimeSignal>,
     pane_id: String,
     tab_id: String,
     persistence: Option<WorkspacePersistence>,
+    restored_input: String,
+    restored_ran: bool,
+    save_state: Option<Callback<(String, bool)>>,
 }
 
 impl CustomRequestSnapshotHandle {
@@ -26,31 +29,67 @@ impl CustomRequestSnapshotHandle {
         persistence: Option<WorkspacePersistence>,
     ) -> Self {
         Self {
-            runtime,
+            runtime: Some(runtime),
             pane_id,
             tab_id,
             persistence,
+            restored_input: String::new(),
+            restored_ran: false,
+            save_state: None,
+        }
+    }
+
+    #[must_use]
+    #[cfg(target_arch = "wasm32")]
+    pub(crate) fn callback(
+        restored_input: String,
+        restored_ran: bool,
+        save_state: Callback<(String, bool)>,
+    ) -> Self {
+        Self {
+            runtime: None,
+            pane_id: String::new(),
+            tab_id: String::new(),
+            persistence: None,
+            restored_input,
+            restored_ran,
+            save_state: Some(save_state),
         }
     }
 
     #[must_use]
     pub(crate) fn restored_input(&self, fallback: &str) -> String {
-        snapshot_record(self.runtime, &self.tab_id)
+        if let Some(input) = self
+            .runtime
+            .and_then(|runtime| snapshot_record(runtime, &self.tab_id))
             .and_then(|row| input_from_payload(&row.state))
-            .unwrap_or_else(|| fallback.to_owned())
+        {
+            return input;
+        }
+        if self.runtime.is_none() {
+            return self.restored_input.clone();
+        }
+        fallback.to_owned()
     }
 
     #[must_use]
     pub(crate) fn restored_ran(&self) -> bool {
-        snapshot_record(self.runtime, &self.tab_id)
+        self.runtime
+            .and_then(|runtime| snapshot_record(runtime, &self.tab_id))
             .and_then(|row| ran_from_payload(&row.state))
-            .unwrap_or(false)
+            .unwrap_or(self.restored_ran)
     }
 
     pub(crate) fn save(&self, input: String, ran: bool) {
+        if let Some(save_state) = &self.save_state {
+            save_state.run((input.clone(), ran));
+        }
+        let Some(runtime) = self.runtime else {
+            return;
+        };
         let pane_id = self.pane_id.clone();
         let tab_id = self.tab_id.clone();
-        self.runtime.update(|state| {
+        runtime.update(|state| {
             let id = tab_state_id(&state.workspace.id, &tab_id);
             let current = state.tab_snapshots.get(&id).map(|row| row.state.clone());
             let payload = payload_with_state(current, input.clone(), ran);
@@ -58,7 +97,7 @@ impl CustomRequestSnapshotHandle {
         });
         if let (Some(persistence), Some(row)) = (
             self.persistence.clone(),
-            snapshot_record(self.runtime, &self.tab_id),
+            snapshot_record(runtime, &self.tab_id),
         ) {
             persistence.save_tab_snapshot(row);
         }

@@ -71,6 +71,7 @@ fn reference_preview_height(features: &RowGeometryFeatures) -> u16 {
 fn base_height(row_kind: RowKind) -> u16 {
     match row_kind {
         RowKind::Event | RowKind::ThreadRoot => 96,
+        RowKind::RepostTarget => 104,
         RowKind::EventHeader => 72,
         RowKind::EventTextSegment => 48,
         RowKind::EventMediaSegment => 180,

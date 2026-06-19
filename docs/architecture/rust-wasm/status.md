@@ -52,12 +52,12 @@ This file is the concise status map for the active Rust/WASM migration.
 ## Active Target Slices
 
 - Scan-width adaptation now has pure density planning, optimizer storage rows,
-  host SQLite wrappers, WASM bridge functions, and SvelteKit Vite-hosted WASM
-  loading for initial scan span choice and observation reduction. Hosted builds
-  degrade to an explicit bridge-unavailable state when `wasm-pack` is missing;
-  Docker and Rust/WASM gates still prove the bridge compiles where Rust tools are
-  present. Follow-up segment policy, reload proof, synthetic relay proof, and
-  Stats polish remain open before the ledger can mark full read-path parity.
+  host SQLite wrappers, WASM bridge functions, raw hint-status traces, grouped
+  Stats hint-status rows, and SvelteKit Vite-hosted WASM loading for initial
+  scan span choice and observation reduction. Hosted builds degrade to an
+  explicit bridge-unavailable state when `wasm-pack` is missing; Docker and
+  Rust/WASM gates still prove the bridge compiles where Rust tools are present.
+  Follow-up segment policy, reload proof, and synthetic relay proof remain open.
 - Orchestration now has pure Rust decisions for cache mode, relay fallback,
   prefetch, hydration, and retention hints. SQLite-backed decision memory and
   shipped runtime wiring remain open.
@@ -101,13 +101,17 @@ This file is the concise status map for the active Rust/WASM migration.
   discovery for Followees/User Timeline, Followees/User Timeline stored route-group
   discovery with disabled-route exclusion, Followees/User Timeline cleanup, and
   Followees retry plus User Timeline retry/auth/rate-limit/timeout and partial
-  route diagnostics plus exact cache coverage proof. The Rust root Followees
-  tab wires row-click Profile plus overflow Timeline and Copy npub callbacks
-  with copy completion status. The shipped workspace mounts Followees through
-  the generic Rust-island host plus typed mounter with the same row actions and
-  unmount callbacks; the shipped User Timeline tab uses the same generic host
-  pattern with profile, thread, Author Context, and unmount callbacks. Deletion
-  remains open.
+  route diagnostics plus exact cache coverage proof. User Timeline keeps real
+  cached target-authored posts as target-posts-only output after exhausted
+  follow-list discovery. The Rust root Followees tab wires row-click Profile
+  plus overflow Timeline and Copy npub callbacks with copy completion status.
+  Followees headers and rows now use cached kind `0` display names, NIP-05
+  subtitles, and avatars when present, with non-raw fallbacks instead of
+  compact raw pubkeys.
+  The shipped workspace mounts Followees through the generic Rust-island host
+  plus typed mounter with the same row actions and unmount callbacks; the
+  shipped User Timeline tab uses the same generic host pattern with profile,
+  thread, Author Context, and unmount callbacks. Deletion remains open.
 - Feed windows own Rust top-anchor live-insert policy tests, and the shipped
   Svelte feed list consumes equivalent top-locked anchor behavior.
 - Search now has a shipped SQLite token-index path in TypeScript storage glue,
@@ -141,8 +145,9 @@ This file is the concise status map for the active Rust/WASM migration.
   provider execution, and NIP-50 merge. Retention delete dispatch, repair worker
   adapters and physical probes, and Search token/tag/query adapters are wired at
   the Rust boundary, but product consumption remains open.
-- Product feed runtime wiring for Home, Global, Profile, Notifications, and
-  Thread and Search now have partial Rust host providers. Global has
+- Product feed runtime wiring for Home, Global, Profile, Notifications, Thread
+  and Search now has partial Rust host providers; shipped Home, Global, Profile,
+  Notifications, and Thread workspace branches mount Rust islands. Global has
   footer/scroll/viewport-fill older requests and compound older relay cursors.
   Thread bootstrap relay reads and bounded live reply reads plus
   explicit/scroll/viewport-fill older page commands are wired, and
@@ -152,8 +157,9 @@ This file is the concise status map for the active Rust/WASM migration.
   Follow/Unfollow publishes local or NIP-07 kind `3` events only after relay
   acceptance; Author Context has injected, cache-backed, selected-relay,
   exact-anchor, stored-route, and row-action slices. Custom Request has Rust
-  provider-backed planning states, while relay output, cancellation, deletion
-  proof, and shipped TypeScript surface replacement remain open.
+  provider-backed planning, relay output, cancellation, request snapshot restore,
+  and app-policy/NIP-11 effective-filter proof, while deletion proof and shipped
+  TypeScript surface replacement remain open.
 - Rust completion evidence remains required before moving top-anchor policy,
   follow-count state, cache-display policy, search indexing, User Timeline
   runtime, or hydration scheduling out of active target status.

@@ -35,7 +35,8 @@ export function unavailableUserTimelineDiagnostics(
 
 export async function readUserTimelineDiagnostics(): Promise<UserTimelineRuntimeDiagnostics> {
   try {
-    const module = (await loadLkjstrWebWasm()) as UserTimelineDiagnosticsExports;
+    const module =
+      (await loadLkjstrWebWasm()) as UserTimelineDiagnosticsExports;
     const read = module.user_timeline_diagnostics_snapshot;
     if (!read) {
       return unavailableUserTimelineDiagnostics(

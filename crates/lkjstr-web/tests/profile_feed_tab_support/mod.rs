@@ -1,17 +1,23 @@
 mod fixture;
 
-use fixture::{followees_provider, profile_model, startup, user_timeline_provider};
+pub use fixture::profile_model;
+use fixture::{followees_provider, startup, user_timeline_provider};
+use lkjstr_app::ProfileFeedView;
 use wasm_bindgen::{JsCast, closure::Closure, prelude::JsValue};
 use wasm_bindgen_futures::JsFuture;
 
 use lkjstr_web::mount_rust_workspace_shell_with_profile_feed_followees_and_user_timeline_provider;
 
 pub async fn open_profile_tab() -> Result<(), JsValue> {
+    open_profile_tab_with_model(profile_model()).await
+}
+
+pub async fn open_profile_tab_with_model(profile_model: ProfileFeedView) -> Result<(), JsValue> {
     reset_shells()?;
     mount_rust_workspace_shell_with_profile_feed_followees_and_user_timeline_provider(
         startup(),
         "a".repeat(64),
-        profile_model(),
+        profile_model,
         followees_provider(),
         user_timeline_provider(),
     );

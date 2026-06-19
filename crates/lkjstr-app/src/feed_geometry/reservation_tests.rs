@@ -148,6 +148,22 @@ fn reference_resolution_change_uses_enrichment_reason() {
 }
 
 #[test]
+fn nested_repost_state_change_uses_enrichment_reason() {
+    let state = measured_state();
+    let decision = next_reserved_height(
+        Some(&state),
+        GeometryAction::NestedRepostStateChanged {
+            key: key("shape-repost-resolved", 3, 1),
+            estimate_px: 560,
+        },
+    );
+
+    assert_eq!(decision.state.reserved_height_px, 560);
+    assert_eq!(decision.reason, ReservedHeightReason::EnrichmentInvalidated);
+    assert!(decision.anchor_compensation_required);
+}
+
+#[test]
 fn measured_rows_request_observation_persistence() {
     let decision = next_reserved_height(
         Some(&measured_state()),

@@ -30,19 +30,23 @@ pub fn AuthorContextTab(
         on_cleanup(move || lease.release());
     }
     view! {
-        <section class="lkjstr-author-context-feed" aria-label="Author Context">
-            <p class="lkjstr-feed-status">{move || status_text(model.get().status)}</p>
-            <div class="lkjstr-feed-rows">
-                {move || {
-                    let actions = actions.clone();
-                    model
-                        .get()
-                        .view_model
-                        .rows
-                        .into_iter()
-                        .map(move |row| context_row(row, actions.clone()))
-                        .collect_view()
-                }}
+        <section class="feed-tab lkjstr-author-context-feed" aria-label="Author Context">
+            <div class="tab-scroll-track event-list__scroller">
+                <div class="tab-scroll-owner author-context-list-scroll" data-scroll-owner="">
+                    <p class="lkjstr-feed-status">{move || status_text(model.get().status)}</p>
+                    <div class="lkjstr-feed-rows">
+                        {move || {
+                            let actions = actions.clone();
+                            model
+                                .get()
+                                .view_model
+                                .rows
+                                .into_iter()
+                                .map(move |row| context_row(row, actions.clone()))
+                                .collect_view()
+                        }}
+                    </div>
+                </div>
             </div>
         </section>
     }
@@ -77,6 +81,7 @@ fn context_row(row: FeedViewRow, actions: AuthorContextActions) -> impl IntoView
             state_footer(row.row_id, row.state, FooterAuthLabel::Auth).into_any()
         }
         FeedViewRow::Continuation(row) => feed_state_row::plain_continuation(row).into_any(),
+        FeedViewRow::Shell(row) => feed_state_row::shell(row).into_any(),
         FeedViewRow::Profile(row) => feed_state_row::profile(row).into_any(),
         FeedViewRow::Notification(row) => feed_state_row::notification(row).into_any(),
     }

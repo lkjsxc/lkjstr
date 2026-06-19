@@ -1,5 +1,10 @@
 #![cfg(target_arch = "wasm32")]
 
+mod feed_scroll_structure_support;
+
+use feed_scroll_structure_support::{
+    assert_feed_scroll_boundary, assert_tab_body_not_scroll_owner,
+};
 use wasm_bindgen::{JsCast, closure::Closure, prelude::JsValue};
 use wasm_bindgen_futures::JsFuture;
 use wasm_bindgen_test::{wasm_bindgen_test, wasm_bindgen_test_configure};
@@ -18,7 +23,17 @@ async fn rust_log_tab_renders_durable_empty_state() -> Result<(), JsValue> {
     click("[data-testid='new-tab-option-relay-monitor']")?;
     wait_for_text("Clear durable log").await?;
     wait_for_text("No durable log rows").await?;
+    assert_log_scroll_boundary()?;
     Ok(())
+}
+
+fn assert_log_scroll_boundary() -> Result<(), JsValue> {
+    assert_feed_scroll_boundary(
+        ".lkjstr-log",
+        ".log-list-scroll[data-scroll-owner]",
+        &[".lkjstr-log-actions", ".lkjstr-log-status", ".stats-table"],
+    )?;
+    assert_tab_body_not_scroll_owner(".lkjstr-tab-body[data-tab-kind='relay-monitor']")
 }
 
 async fn wait_for_text(text: &str) -> Result<(), JsValue> {

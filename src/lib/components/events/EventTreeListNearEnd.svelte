@@ -1,6 +1,6 @@
 <script lang="ts">
-  import { nearEndRootMargin } from '$lib/feed-surface/near-end';
   import { createNearEndSentinel } from '$lib/feed-surface/near-end-observer';
+  import { planEventTreeListNearEnd } from './event-tree-list-near-end-plan';
 
   type Props = {
     enabled: boolean;
@@ -11,18 +11,18 @@
 
   let props: Props = $props();
   let sentinelElement: HTMLDivElement | undefined;
+  let plan = $derived(planEventTreeListNearEnd(props));
   const nearEndSentinel = createNearEndSentinel({
     root: () => props.scroller,
     sentinel: () => sentinelElement,
-    rootMargin: () => nearEndRootMargin(props.viewportHeight),
-    enabled: () => props.enabled && Boolean(props.onNearEnd),
+    rootMargin: () => plan.rootMargin,
+    enabled: () => plan.enabled,
     onNearEnd: () => props.onNearEnd?.(),
   });
 
   $effect(() => {
-    const enabled = props.enabled;
-    const scroller = props.scroller;
-    if (!enabled && !scroller) return () => nearEndSentinel.disconnect();
+    const next = plan;
+    if (!next.shouldObserve) return () => nearEndSentinel.disconnect();
     nearEndSentinel.observe();
     return () => nearEndSentinel.disconnect();
   });

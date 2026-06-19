@@ -2,8 +2,8 @@
 
 ## Purpose
 
-Move Custom Request execution planning into Rust without replacing the shipped
-TypeScript runner before real relay output and deletion proof exist.
+Move Custom Request execution into Rust while retaining the old TypeScript
+runner until no-import proof and deletion proof exist.
 
 ## Status
 
@@ -19,10 +19,14 @@ lease, and renders an explicit canceled state.
 windows and explicit state rows. Leptos renders those shared rows. The host
 provider now starts a typed relay read for ready plans, maps progressive relay
 snapshots into app-owned feed rows, and cancels socket/timer ownership through
-the provider lease. Node WASM relay probes cover routed request filters, event
-matching, complete snapshot rows, and failed-empty partial state. The shipped
-Svelte/TypeScript Custom Request tab remains the product owner until
-browser/live relay proof, no-import proof, and deletion gates exist.
+the provider lease. Missing providers render an explicit unavailable state
+instead of a pending or success placeholder. Node WASM relay probes cover routed request filters, event
+matching, complete snapshot rows, failed-empty partial state, and Chrome proof
+covers request/run-state restore, app-policy and NIP-11 effective-filter
+diagnostics, plus real relay event rows. The shipped Svelte workspace now
+mounts the Rust Custom Request tab as a WASM island with typed request/run-state
+snapshot callbacks. The old Svelte/TypeScript runner remains retained until
+no-import proof and deletion gates exist.
 
 ## Current Evidence
 
@@ -33,24 +37,38 @@ browser/live relay proof, no-import proof, and deletion gates exist.
   from parsed requests.
 - `crates/lkjstr-app/src/custom_request_feed/**` maps planned demand, real feed
   window rows, and explicit invalid/no-relay/canceled/partial states into the
-  shared feed view model.
+  shared feed view model, including app-owned diagnostics when app policy or
+  NIP-11 relay metadata clamps the effective outbound filter.
 - `crates/lkjstr-ui/src/workspace/custom_request*.rs` renders the Rust planning
   form, app-owned feed rows, restored request/run filter fields, canceled
   provider leases, and late-completion suppression.
 - `crates/lkjstr-web/src/custom_request_host.rs` reads worker-owned relay
-  settings, calls the Rust app planner, starts a typed relay read for ready
-  plans, and cancels that read through provider lease release.
+  settings plus stored NIP-11 relay information, calls the Rust app planner,
+  starts a typed relay read for ready plans, and cancels that read through
+  provider lease release.
 - `crates/lkjstr-web/src/custom_request_relay*.rs` routes real WebSocket
   messages through typed relay snapshots before building app-owned feed rows.
 - `crates/lkjstr-web/tests/custom_request_relay_test.rs` proves the relay
   filter, match, and snapshot output path in Node WASM without opening sockets.
-- `src/lib/custom-request/**` remains the shipped relay runner and result
-  renderer until Rust host/UI parity exists.
+- `crates/lkjstr-web/tests/custom_request_tab_test.rs` now includes a browser
+  WebSocket harness that returns a real event frame plus EOSE and expects the
+  Rust Custom Request tab to render that event row. It also proves a raw
+  `limit:999` request renders the effective `limit 500` diagnostic from the
+  Rust feed model. The focused Chrome wasm-pack proof passes.
+- `crates/lkjstr-web/tests/custom_request_nip11_tab_test.rs` seeds stored NIP-11
+  relay metadata, expects the Rust tab to render a relay `max_limit`
+  diagnostic, and asserts the outbound `REQ` frame uses the clamped limit.
+- `crates/lkjstr-web/tests/custom_request_restore_tab_test.rs` mounts a stored
+  Rust Custom Request tab snapshot and proves the textarea input plus restored
+  run-state status are consumed in the browser.
+- `src/lib/components/workspace/custom-request-island.ts` is the shipped host
+  bridge and preserves `customRequestInput` plus `customRequestRan` snapshots.
+- `src/lib/custom-request/**` remains retained for no-import and deletion proof.
 
 ## Next Edit
 
-Prove the Custom Request relay read pipeline in a browser/live-relay harness
-without deleting shipped TypeScript or moving result synthesis into UI code.
+Extend Custom Request parity toward no-import proof and deletion gates without
+moving result synthesis into UI code.
 
 ## Files To Read
 
@@ -83,7 +101,10 @@ without deleting shipped TypeScript or moving result synthesis into UI code.
 PATH=/home/lkjsxc/.cargo/bin:$PATH cargo test -p lkjstr-app -- custom_request
 PATH=/home/lkjsxc/.cargo/bin:$PATH cargo test -p lkjstr-ui custom_request
 PATH=/home/lkjsxc/.cargo/bin:$PATH cargo check -p lkjstr-web --target wasm32-unknown-unknown
+PATH=/home/lkjsxc/.cargo/bin:$PATH wasm-pack test --node crates/lkjstr-web --test custom_request_relay_test
 PATH=/home/lkjsxc/.cargo/bin:$PATH wasm-pack test --headless --chrome crates/lkjstr-web --test custom_request_tab_test
+PATH=/home/lkjsxc/.cargo/bin:$PATH wasm-pack test --headless --chrome crates/lkjstr-web --test custom_request_nip11_tab_test
+PATH=/home/lkjsxc/.cargo/bin:$PATH wasm-pack test --headless --chrome crates/lkjstr-web --test custom_request_restore_tab_test
 PATH=/home/lkjsxc/.cargo/bin:$PATH pnpm test -- tests/unit/custom-request
 PATH=/home/lkjsxc/.cargo/bin:$PATH pnpm rust-wasm:quiet
 ```
@@ -104,8 +125,8 @@ PATH=/home/lkjsxc/.cargo/bin:$PATH pnpm rust-wasm:quiet
   invalid, no-relay, canceled, loading, partial, empty, or terminal states.
 - Real Rust relay output must use typed WebSocket host effects, reducer snapshots,
   and lease cleanup; the UI/provider layer must not synthesize result rows.
-- TypeScript/Svelte Custom Request paths remain until browser/live Rust relay
-  output proof, full UI parity, no-import proof, and final gates exist.
+- TypeScript/Svelte Custom Request paths remain until no-import proof, deletion
+  proof, and final gates exist.
 
 ## Must Not
 

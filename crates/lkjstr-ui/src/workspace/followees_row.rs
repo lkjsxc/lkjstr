@@ -8,12 +8,9 @@ use crate::workspace::followees_actions::FolloweesActions;
 
 pub(crate) fn followee_row(row: FolloweesRow, actions: FolloweesActions) -> impl IntoView {
     let pubkey = row.pubkey.clone();
-    let label = row
-        .petname
-        .as_deref()
-        .filter(|item| !item.trim().is_empty())
-        .map(str::to_owned)
-        .unwrap_or_else(|| compact_pubkey(&pubkey));
+    let label = followee_display_name(row.display_name);
+    let subtitle = row.subtitle.filter(|item| !item.trim().is_empty());
+    let avatar_url = row.avatar_url.filter(|item| !item.trim().is_empty());
     let petname = row
         .petname
         .filter(|item| !item.trim().is_empty())
@@ -23,7 +20,7 @@ pub(crate) fn followee_row(row: FolloweesRow, actions: FolloweesActions) -> impl
     if !followee_profile_available(&actions) {
         return view! {
             <article class="lkjstr-feed-row profile" data-row-id=row.row_id>
-                {followee_row_body(label, petname, relay, pubkey, body_actions)}
+                {followee_row_body(label, subtitle, avatar_url, petname, relay, pubkey, body_actions)}
             </article>
         }
         .into_any();
@@ -43,7 +40,7 @@ pub(crate) fn followee_row(row: FolloweesRow, actions: FolloweesActions) -> impl
             on:click=row_click
             on:keydown=row_key
         >
-            {followee_row_body(label, petname, relay, pubkey, body_actions)}
+            {followee_row_body(label, subtitle, avatar_url, petname, relay, pubkey, body_actions)}
         </article>
     }
     .into_any()
@@ -51,13 +48,20 @@ pub(crate) fn followee_row(row: FolloweesRow, actions: FolloweesActions) -> impl
 
 fn followee_row_body(
     label: String,
+    subtitle: Option<String>,
+    avatar_url: Option<String>,
     petname: String,
     relay: String,
     pubkey: String,
     actions: FolloweesActions,
 ) -> impl IntoView {
+    let avatar_alt = label.clone();
     view! {
+        {avatar_url.map(|url| view! {
+            <img class="avatar sm" src=url alt=avatar_alt />
+        })}
         <strong>{label}</strong>
+        {subtitle.map(|text| view! { <small>{text}</small> })}
         <p>{petname}</p>
         <small>{relay}</small>
         {followee_actions(pubkey, actions)}
@@ -154,17 +158,10 @@ fn followee_profile_available(actions: &FolloweesActions) -> bool {
     actions.open_profile.is_some()
 }
 
-fn compact_pubkey(pubkey: &str) -> String {
-    let chars = pubkey.chars().collect::<Vec<_>>();
-    if chars.len() <= 16 {
-        return pubkey.to_owned();
-    }
-    let prefix = chars.iter().take(8).collect::<String>();
-    let suffix = chars
-        .iter()
-        .skip(chars.len().saturating_sub(8))
-        .collect::<String>();
-    format!("{prefix}...{suffix}")
+fn followee_display_name(display_name: Option<String>) -> String {
+    display_name
+        .filter(|item| !item.trim().is_empty())
+        .unwrap_or_else(|| "Unknown".to_owned())
 }
 
 #[cfg(test)]

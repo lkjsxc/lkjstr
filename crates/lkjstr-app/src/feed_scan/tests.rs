@@ -191,7 +191,8 @@ fn scan_trace_reports_source_scope_and_feedback_counts() {
         Some(compatible_hint(240)),
     );
 
-    assert!(trace.hint_used);
+    assert_eq!(trace.hint_status, ScanHintStatus::Unavailable);
+    assert!(!trace.hint_used);
     assert_eq!(trace.source_scope, ScanModelScope::Exact);
     assert_eq!(trace.feedback_counts.under_half, 1);
     assert_eq!(trace.feedback_counts.limit_hit, 1);

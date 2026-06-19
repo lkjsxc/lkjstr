@@ -12,7 +12,8 @@ Partial. Storage-owned token rows, SQL command metadata, a worker-owned local
 query adapter, app-owned submitted-query demand, a Rust Search tab shell, and a
 worker-backed Rust provider for local indexed results plus bounded relay NIP-50
 snapshots, cached older pages, and relay older pages exist. The shipped Svelte
-Search tab remains product owner until broader parity and no-import proof exist.
+workspace mounts Search through a Rust WASM island while broader parity and
+no-import proof remain open.
 
 ## Current Evidence
 
@@ -43,8 +44,10 @@ Search tab remains product owner until broader parity and no-import proof exist.
   filters with exact same-second cursor rejection before merging snapshots.
 - `crates/lkjstr-web/src/host_providers.rs` persists Rust tab snapshots through
   the worker-owned SQLite tab-state repository.
-- `src/lib/tabs/search/SearchTab.svelte` remains the shipped Search product
-  surface and handles local/relay merge while Rust parity is incomplete.
+- `src/lib/components/workspace/search-island.ts` is the shipped Svelte host
+  bridge for the Rust Search body and preserves query snapshot callbacks.
+- `src/lib/tabs/search/SearchTab.svelte` is retained until Search deletion
+  proof is explicitly allowed.
 
 ## Next Edit
 
@@ -56,7 +59,8 @@ proof while wiring remaining product parity. Keep deletion proof open.
 - [search.md](../../product/tools/search.md)
 - [storage-search-index.md](storage-search-index.md)
 - [../current-blockers.md](../current-blockers.md)
-- `src/lib/tabs/search/SearchTab.svelte`
+- `src/lib/components/workspace/search-island.ts`
+- `src/lib/tabs/search/SearchTab.svelte` for retained deletion-proof context
 - `src/lib/search/search-query.ts`
 - `crates/lkjstr-app/src/feed/tool_inputs.rs`
 - `crates/lkjstr-web/src/sqlite_store/search.rs`

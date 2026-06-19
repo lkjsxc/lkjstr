@@ -2,6 +2,10 @@
   import type { ResolvedReference } from '$lib/events/reference-resolver';
   import type { ProfileSummary } from '$lib/identity/identity';
   import EventReferenceCard from './EventReferenceCard.svelte';
+  import {
+    planEventReferenceList,
+    toggleEventReferenceList,
+  } from './event-reference-list-plan';
 
   type Props = {
     references: readonly ResolvedReference[];
@@ -12,12 +16,10 @@
 
   let props: Props = $props();
   let expanded = $state(false);
-  let visible = $derived(
-    expanded ? props.references : props.references.slice(0, 3),
-  );
+  let plan = $derived(planEventReferenceList(props.references, expanded));
 </script>
 
-{#each visible as reference (`${reference.kind}:${reference.id}`)}
+{#each plan.visible as reference (`${reference.kind}:${reference.id}`)}
   <EventReferenceCard
     {reference}
     profiles={props.profiles}
@@ -25,17 +27,12 @@
     openThread={props.openThread}
   />
 {/each}
-{#if props.references.length > 3}
+{#if plan.canToggle}
   <button
     class="content-token"
     type="button"
-    onclick={(event) => {
-      event.stopPropagation();
-      expanded = !expanded;
-    }}
+    onclick={(event) => (expanded = toggleEventReferenceList(event, expanded))}
   >
-    {expanded
-      ? 'Hide references'
-      : `Show all references (${props.references.length})`}
+    {plan.toggleLabel}
   </button>
 {/if}

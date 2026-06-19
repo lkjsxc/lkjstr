@@ -1,4 +1,5 @@
 import type { featuresForFeedItem } from './feed-geometry-features';
+import type { MaterializationTier } from './feed-geometry-hash';
 
 export type FeedRowWidthBucket =
   | '0-319'
@@ -16,6 +17,13 @@ export function widthBucketForPx(widthPx?: number): FeedRowWidthBucket {
   if (width <= 799) return '640-799';
   if (width <= 1023) return '800-1023';
   return '1024+';
+}
+
+export function materializationTierForRowKey(
+  key: string,
+  isMaterialized: (key: string) => boolean,
+): MaterializationTier {
+  return isMaterialized(key) ? 'enriched' : 'structural';
 }
 
 export function measurementKeyFromFeatures(

@@ -4,6 +4,7 @@ mod doc_check;
 mod doc_shape;
 mod line_check;
 mod paths;
+mod quiet_process;
 mod quiet_steps;
 mod rust_style;
 mod sqlite_schema_doc;

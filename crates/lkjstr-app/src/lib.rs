@@ -38,9 +38,9 @@ pub use cache_display::{
     CacheDisplayEvidence, CacheDisplayMode, cache_display_policy, complete_cache_display,
 };
 pub use custom_request::{
-    CustomRequest, CustomRequestError, CustomRequestErrorKind, CustomRequestMode,
-    CustomRequestRunInput, CustomRequestRunPlan, CustomRequestRunStatus, custom_request_mode,
-    parse_custom_request, plan_custom_request_run,
+    CustomRequest, CustomRequestError, CustomRequestErrorKind, CustomRequestLimitClamp,
+    CustomRequestMode, CustomRequestRunInput, CustomRequestRunPlan, CustomRequestRunStatus,
+    custom_request_mode, parse_custom_request, plan_custom_request_run,
 };
 pub use custom_request_feed::{
     CustomRequestFeedSourceState, CustomRequestFeedStatus, CustomRequestFeedView,
@@ -57,21 +57,22 @@ pub use feed::{
     FEED_LOAD_OLDER_COMMAND, FeedContinuationRow, FeedDiagnosticRow, FeedDiagnosticSeverity,
     FeedEventRow, FeedFooterRow, FeedFooterState, FeedLiveQueryInput, FeedNotificationRow,
     FeedProfileRow, FeedRowRenderer, FeedRuntimeInput, FeedRuntimeLeaseOutcome,
-    FeedRuntimeLiveOutcome, FeedRuntimeState, FeedStateRow, FeedUnavailableRow, FeedViewModel,
-    FeedViewModelInput, FeedViewRow, FeedWindowCursor, FeedWindowEvidence, FeedWindowFlags,
-    FeedWindowState, FeedWindowStatus, NewestCursorPolicy, NotificationsLiveQueryInput,
-    ProfileLiveQueryInput, SearchQueryInput, ThreadRepliesQueryInput, ThreadRootLookupInput,
-    TopAnchorAction, TopAnchorDecision, TopAnchorInput, attach_feed_runtime_live,
-    author_context_anchor_input, author_context_nearby_input, build_feed_view_model,
-    custom_request_query_input, decide_top_anchor, diagnostic_state_row, empty_feed_window,
-    feed_continuation_row_id, feed_diagnostic_row_id, feed_event_geometry_model_keys,
-    feed_event_row_id, feed_footer_row_id, feed_notification_row_id, feed_profile_row_id,
-    feed_unavailable_row_id, feed_window_empty_ready, footer_row, footer_row_from_window,
-    global_live_query_input, home_live_query_input, notification_state_row,
-    notifications_live_query_input, profile_live_query_input, profile_state_row,
-    reduce_feed_runtime_window, reduce_feed_window, release_feed_runtime_live, search_query_input,
-    set_feed_runtime_visibility, start_feed_runtime, thread_replies_query_input,
-    thread_root_lookup_input, unavailable_state_row, user_timeline_live_query_input,
+    FeedRuntimeLiveOutcome, FeedRuntimeState, FeedShellRow, FeedStateRow, FeedUnavailableRow,
+    FeedViewModel, FeedViewModelInput, FeedViewRow, FeedWindowCursor, FeedWindowEvidence,
+    FeedWindowFlags, FeedWindowState, FeedWindowStatus, NewestCursorPolicy,
+    NotificationsLiveQueryInput, ProfileLiveQueryInput, SearchQueryInput, ThreadRepliesQueryInput,
+    ThreadRootLookupInput, TopAnchorAction, TopAnchorDecision, TopAnchorInput,
+    attach_feed_runtime_live, author_context_anchor_input, author_context_nearby_input,
+    build_feed_view_model, custom_request_query_input, decide_top_anchor, diagnostic_state_row,
+    empty_feed_window, feed_continuation_row_id, feed_diagnostic_row_id,
+    feed_event_geometry_model_keys, feed_event_row_id, feed_footer_row_id,
+    feed_notification_row_id, feed_profile_row_id, feed_unavailable_row_id,
+    feed_window_empty_ready, footer_row, footer_row_from_window, global_live_query_input,
+    home_live_query_input, notification_state_row, notifications_live_query_input,
+    profile_live_query_input, profile_state_row, reduce_feed_runtime_window, reduce_feed_window,
+    release_feed_runtime_live, search_query_input, set_feed_runtime_visibility, start_feed_runtime,
+    thread_replies_query_input, thread_root_lookup_input, unavailable_state_row,
+    user_timeline_live_query_input,
 };
 pub use feed_fragments::{
     FeedFragmentConfig, FeedVisualRow, SemanticFeedEvent, fragment_key, plan_feed_visual_rows,
@@ -115,11 +116,12 @@ pub use feed_wait::{
 };
 pub use follow_graph::{
     FollowCountEvidence, FollowCountState, FollowListReadPhase, FollowListSummary,
-    FolloweesDiagnostic, FolloweesRow, FolloweesStatus, FolloweesView, FolloweesViewInput,
-    TargetFollowListState, UserTimelineAuthorSet, author_set_hash, build_followees_view,
-    chunk_author_set, default_followees_view, follow_count_label, followees_retryable_failure_view,
-    followees_status_message, followees_view_from_summary, reduce_follow_count,
-    summarize_follow_list, target_posts_only_author_set, user_timeline_author_set,
+    FolloweesDiagnostic, FolloweesProfile, FolloweesRow, FolloweesStatus, FolloweesView,
+    FolloweesViewInput, TargetFollowListState, UserTimelineAuthorSet, author_set_hash,
+    build_followees_view, chunk_author_set, default_followees_view, follow_count_label,
+    followees_retryable_failure_view, followees_status_message, followees_view_from_summary,
+    followees_view_from_summary_with_profiles, reduce_follow_count, summarize_follow_list,
+    target_posts_only_author_set, user_timeline_author_set,
 };
 pub use global_feed::{
     GLOBAL_MAX_AUTO_EMPTY_OLDER_REQUESTS, GlobalFeedDiagnosticInput, GlobalFeedSourceState,
@@ -195,6 +197,4 @@ pub use workspace_runtime::{
     close_runtime_tab, convert_runtime_tab, default_recovery_ids, focus_runtime_tab,
     open_configured_runtime_tab, open_runtime_tab, record_tab_snapshot, start_workspace,
 };
-
-/// Crate ownership marker used by repository checks and docs.
 pub const CRATE_OWNER: &str = "app";

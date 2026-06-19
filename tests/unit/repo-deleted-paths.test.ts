@@ -39,6 +39,16 @@ describe('repo deleted path guard', () => {
     );
     await write(
       root,
+      'src/lib/feed-surface/feed-geometry-estimate.ts',
+      'export const oldGeometryEstimate = true;',
+    );
+    await write(
+      root,
+      'src/lib/feed-surface/row-shell.ts',
+      'export const oldRowShell = true;',
+    );
+    await write(
+      root,
       'src/lib/feed-surface/staged-rows.ts',
       'export const oldStagedRows = true;',
     );
@@ -46,6 +56,11 @@ describe('repo deleted path guard', () => {
       root,
       'src/lib/components/events/EventMoreMenu.svelte',
       '<button>old menu</button>',
+    );
+    await write(
+      root,
+      'src/lib/components/events/event-more-menu.ts',
+      'export const oldMenuHelper = true;',
     );
     await write(
       root,
@@ -66,6 +81,29 @@ describe('repo deleted path guard', () => {
           'events',
           'EventMoreMenu.svelte',
         ),
+        message: 'removed transitional path must stay absent',
+      },
+      {
+        file: path.join(
+          'src',
+          'lib',
+          'components',
+          'events',
+          'event-more-menu.ts',
+        ),
+        message: 'removed transitional path must stay absent',
+      },
+      {
+        file: path.join(
+          'src',
+          'lib',
+          'feed-surface',
+          'feed-geometry-estimate.ts',
+        ),
+        message: 'removed transitional path must stay absent',
+      },
+      {
+        file: path.join('src', 'lib', 'feed-surface', 'row-shell.ts'),
         message: 'removed transitional path must stay absent',
       },
       {

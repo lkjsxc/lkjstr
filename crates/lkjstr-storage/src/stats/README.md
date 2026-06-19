@@ -10,3 +10,4 @@ from the public Stats snapshot type.
 - `bytes.rs`: pressure snapshot byte-summary rows.
 - `geometry.rs`: feed row-height aggregate projection.
 - `inventory.rs`: manifest and SQLite inventory row projection.
+- `optimizer.rs`: scan optimizer aggregate projection.

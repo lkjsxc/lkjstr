@@ -1,8 +1,12 @@
 <script lang="ts">
-  import { eventReferences, type NostrEvent } from '$lib/protocol';
+  import { type NostrEvent } from '$lib/protocol';
   import type { ProfileSummary } from '$lib/identity/identity';
   import EventContentCore from './EventContentCore.svelte';
   import EventMeta from './EventMeta.svelte';
+  import {
+    eventContentReferences,
+    eventRepostTargetLabel,
+  } from './event-content-plan';
 
   type Props = {
     event: NostrEvent;
@@ -13,11 +17,8 @@
   };
 
   let props: Props = $props();
-  let references = $derived(
-    eventReferences(props.event).filter(
-      (reference) => reference.id !== props.event.id,
-    ),
-  );
+  let references = $derived(eventContentReferences(props.event));
+  const label = eventRepostTargetLabel();
 </script>
 
 <aside
@@ -25,7 +26,7 @@
   data-kind="nested-repost"
   data-event-display-context="repost-target"
 >
-  <strong class="sr-only">Reposted event</strong>
+  <strong class="sr-only">{label}</strong>
   <EventMeta
     event={props.event}
     relays={props.relays ?? []}

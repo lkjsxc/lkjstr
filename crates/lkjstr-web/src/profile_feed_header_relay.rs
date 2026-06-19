@@ -13,6 +13,7 @@ use crate::{
     relay_read_handle::RelayReadHandle,
 };
 
+#[cfg(debug_assertions)]
 pub(crate) use crate::profile_feed_header_relay_read::store_profile_header_event;
 
 pub(crate) fn start_profile_header_relay_read(

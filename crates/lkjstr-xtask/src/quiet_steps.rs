@@ -1,15 +1,13 @@
-use std::{
-    ffi::OsString,
-    path::Path,
-    process::{Command, Output},
-};
+use std::{ffi::OsString, path::Path, process::Command, time::Duration};
 
 use crate::{
     browser_driver::chrome_driver_args,
+    quiet_process::{QuietOutput, run_with_timeout},
     tool_path::{cargo_bin, prefer_rustup_cargo},
 };
 
 const TAIL_BYTES: usize = 128 * 1024;
+const STEP_TIMEOUT: Duration = Duration::from_secs(30 * 60);
 
 pub struct Step {
     pub name: &'static str,
@@ -87,10 +85,9 @@ pub fn run_quiet_step(root: &Path, step: &Step) -> Result<(), String> {
     if step.clear_no_color {
         command.env_remove("NO_COLOR");
     }
-    let output = command
-        .output()
+    let output = run_with_timeout(&mut command, STEP_TIMEOUT)
         .map_err(|error| format!("failed to run {}: {error}", step.name))?;
-    if output.status.success() {
+    if !output.timed_out && output.status.is_some_and(|status| status.success()) {
         Ok(())
     } else {
         Err(format!(
@@ -139,15 +136,22 @@ fn os_args(args: Vec<&'static str>) -> Vec<OsString> {
     args.into_iter().map(OsString::from).collect()
 }
 
-fn status_text(output: &Output) -> String {
-    output
-        .status
-        .code()
-        .map(|code| format!("exit {code}"))
-        .unwrap_or_else(|| "signal".to_owned())
+fn status_text(output: &QuietOutput) -> String {
+    if output.timed_out {
+        return format!("timeout after {}s", STEP_TIMEOUT.as_secs());
+    }
+    output.status.map_or_else(
+        || "unknown status".to_owned(),
+        |status| {
+            status
+                .code()
+                .map(|code| format!("exit {code}"))
+                .unwrap_or_else(|| "signal".to_owned())
+        },
+    )
 }
 
-fn output_tail(output: &Output) -> String {
+fn output_tail(output: &QuietOutput) -> String {
     let mut bytes = Vec::new();
     append_stream(&mut bytes, "stdout", &output.stdout);
     append_stream(&mut bytes, "stderr", &output.stderr);

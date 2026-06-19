@@ -1,12 +1,9 @@
 <script lang="ts">
-  import {
-    eventReferences,
-    verifiedNestedRepost,
-    type NostrEvent,
-  } from '$lib/protocol';
+  import { type NostrEvent } from '$lib/protocol';
   import type { ProfileSummary } from '$lib/identity/identity';
   import EventContentCore from './EventContentCore.svelte';
   import EventRepostTarget from './EventRepostTarget.svelte';
+  import { planEventContent } from './event-content-plan';
 
   type Props = {
     event: NostrEvent;
@@ -20,32 +17,26 @@
   };
 
   let props: Props = $props();
-  let nested = $derived(
-    props.renderNestedRepost === false
-      ? undefined
-      : verifiedNestedRepost(props.event),
-  );
-  let references = $derived(
-    (props.depth ?? 0) >= 2
-      ? []
-      : eventReferences(props.event)
-          .filter((reference) => reference.id !== nested?.id)
-          .filter((reference) => reference.id !== props.event.id),
+  let plan = $derived(
+    planEventContent(props.event, {
+      depth: props.depth,
+      renderNestedRepost: props.renderNestedRepost,
+    }),
   );
 </script>
 
 <EventContentCore
   event={props.event}
-  {references}
+  references={plan.references}
   relays={props.relays}
   profiles={props.profiles}
   showSummary={props.showSummary}
   openProfile={props.openProfile}
   openThread={props.openThread}
 />
-{#if nested}
+{#if plan.nested}
   <EventRepostTarget
-    event={nested}
+    event={plan.nested}
     relays={props.relays}
     profiles={props.profiles}
     openProfile={props.openProfile}

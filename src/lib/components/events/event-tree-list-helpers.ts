@@ -1,9 +1,4 @@
-import {
-  buildEventTree,
-  flattenEventTree,
-  type FlatEventTreeItem,
-} from '$lib/events/tree';
-import type { FeedEvent } from '$lib/events/types';
+import type { FlatEventTreeItem } from '$lib/events/tree';
 import type { HistoryExhaustion } from '$lib/feed-surface/paging-state';
 import {
   planEventVisualFragments,
@@ -72,21 +67,6 @@ export function buildViewRows(
   return rows;
 }
 
-export function treeNodesFromItems(
-  items: readonly FeedEvent[],
-  cache: { key: string; nodes: FlatEventTreeItem[] },
-): FlatEventTreeItem[] {
-  const key = items.map((item) => item.event.id).join('\u0000');
-  if (key === cache.key) return cache.nodes;
-  cache.key = key;
-  cache.nodes = flattenEventTree(buildEventTree(items));
-  return cache.nodes;
-}
-
-export function eventNodeKey(node: FlatEventTreeItem): string {
-  return node.event.id;
-}
-
 export function eventRows(rows: readonly EventTreeListViewRow[]): {
   readonly node: FlatEventTreeItem;
   readonly visualIndex: number;
@@ -99,30 +79,6 @@ export function eventRows(rows: readonly EventTreeListViewRow[]): {
       visualIndex: row.visualIndex,
       rowKey: row.kind === 'eventFragment' ? row.fragment.rowKey : undefined,
     }));
-}
-
-export function nearStartVisualIndex(
-  rows: readonly EventTreeListViewRow[],
-): number | undefined {
-  const index = rows.findIndex(
-    (row) =>
-      (row.kind === 'leading' && row.row.nearStart === true) ||
-      row.kind === 'event' ||
-      row.kind === 'eventFragment',
-  );
-  return index >= 0 ? index : undefined;
-}
-
-export function isRowNearStart(
-  rows: readonly EventTreeListViewRow[],
-  offset: number,
-  getItemOffset: (index: number) => number | undefined,
-  isNear: (offset: number) => boolean,
-): boolean {
-  const index = nearStartVisualIndex(rows);
-  if (index === undefined) return false;
-  const targetOffset = getItemOffset(index) ?? index;
-  return offset >= targetOffset && isNear(offset - targetOffset);
 }
 
 export function viewRowKey(row: EventTreeListViewRow): string {

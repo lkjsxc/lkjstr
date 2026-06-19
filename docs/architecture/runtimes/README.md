@@ -20,7 +20,7 @@ Runtime docs define how tab-owned loaders combine cache and relay data.
 ## Shared Contract
 
 - Feed runtimes follow [feed-surface.md](../data/feed-surface.md) for near-end
-  thresholds, speculative older prefetch, `FeedSurfaceStatus`, and staged row
+  thresholds, speculative older prefetch, `FeedSurfaceStatus`, and row
   materialization.
 - Home, Global, and Profile posts use the same cache-first page pipeline: plan
   route groups and bounded filters, prove exact SQLite coverage, render covered

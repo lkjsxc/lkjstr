@@ -20,25 +20,29 @@ pub fn LogTab(provider: Option<LogProvider>) -> impl IntoView {
     };
 
     view! {
-        <section class="data-tab log-tab lkjstr-log" aria-label="lkjstr Log">
-            <header class="lkjstr-log-actions">
-                <button type="button" on:click=refresh>
-                    {move || if busy.get() { "Refreshing log" } else { "Refresh log" }}
-                </button>
-                <button type="button" on:click=clear disabled=move || busy.get()>
-                    "Clear durable log"
-                </button>
-            </header>
-            <p>{move || status_text(result.get())}</p>
-            <table class="stats-table">
-                <thead>
-                    <tr>
-                        <th>"Time"</th><th>"Level"</th><th>"Area"</th>
-                        <th>"Code"</th><th>"Message"</th><th>"Context"</th>
-                    </tr>
-                </thead>
-                <tbody>{move || row_views(result.get())}</tbody>
-            </table>
+        <section class="data-tab feed-tab log-tab lkjstr-log" aria-label="lkjstr Log">
+            <div class="tab-scroll-track event-list__scroller">
+                <div class="tab-scroll-owner log-list-scroll" data-scroll-owner="">
+                    <header class="lkjstr-log-actions">
+                        <button type="button" on:click=refresh>
+                            {move || if busy.get() { "Refreshing log" } else { "Refresh log" }}
+                        </button>
+                        <button type="button" on:click=clear disabled=move || busy.get()>
+                            "Clear durable log"
+                        </button>
+                    </header>
+                    <p class="lkjstr-log-status">{move || status_text(result.get())}</p>
+                    <table class="stats-table">
+                        <thead>
+                            <tr>
+                                <th>"Time"</th><th>"Level"</th><th>"Area"</th>
+                                <th>"Code"</th><th>"Message"</th><th>"Context"</th>
+                            </tr>
+                        </thead>
+                        <tbody>{move || row_views(result.get())}</tbody>
+                    </table>
+                </div>
+            </div>
         </section>
     }
 }

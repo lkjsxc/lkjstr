@@ -2,6 +2,7 @@ use leptos::prelude::*;
 use lkjstr_app::{FolloweesStatus, FolloweesView, default_followees_view};
 
 use crate::workspace::followees_actions::FolloweesActions;
+use crate::workspace::followees_header::followees_header;
 use crate::workspace::followees_provider::{FolloweesLease, FolloweesProvider};
 use crate::workspace::followees_row::{diagnostic_row, followee_row};
 
@@ -89,25 +90,6 @@ fn copy_status_line(status: Option<RwSignal<Option<String>>>) -> AnyView {
         })}
     }
     .into_any()
-}
-
-fn followees_header(model: FolloweesView) -> impl IntoView {
-    let label = if model.target_pubkey.is_some() {
-        "Viewed profile"
-    } else {
-        "Unknown profile"
-    };
-    view! {
-        <header class="profile-card" data-testid="rust-followees-header">
-            <div class="profile-card__main">
-                <div class="profile-card__identity">
-                    <h2>"Following"</h2>
-                    <p>{label}</p>
-                    <small>{format!("{} entries", model.following_count)}</small>
-                </div>
-            </div>
-        </header>
-    }
 }
 
 fn retry_button(

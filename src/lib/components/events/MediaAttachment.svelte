@@ -1,5 +1,12 @@
 <script lang="ts">
   import type { ContentAttachment } from '$lib/events/content-media';
+  import {
+    mediaAttachmentOpenAfterStop,
+    mediaAttachmentOpenButtonLabel,
+    openMediaAttachment,
+    planMediaAttachmentLink,
+    stopMediaAttachmentPropagation,
+  } from './media-attachment-plan';
 
   type Props = {
     attachment: ContentAttachment;
@@ -7,23 +14,22 @@
 
   let props: Props = $props();
 
-  function stop(event: Event): void {
-    event.stopPropagation();
-  }
-
   function open(): void {
-    window.open(props.attachment.url, '_blank', 'noopener,noreferrer');
+    openMediaAttachment(props.attachment, (url, target, features) =>
+      window.open(url, target, features),
+    );
   }
 </script>
 
 <!-- eslint-disable svelte/no-navigation-without-resolve -->
 {#if props.attachment.type === 'image'}
+  {@const link = planMediaAttachmentLink(props.attachment)}
   <a
     class="media-embed media-embed--image-link"
-    href={props.attachment.url}
-    target="_blank"
-    rel="noopener noreferrer"
-    onclick={stop}
+    href={link.href}
+    target={link.target}
+    rel={link.rel}
+    onclick={stopMediaAttachmentPropagation}
   >
     <span
       class="media-embed__image-box"
@@ -44,25 +50,40 @@
     style:aspect-ratio={props.attachment.aspectRatio}
   >
     <!-- svelte-ignore a11y_media_has_caption -->
-    <video src={props.attachment.url} controls onclick={stop}></video>
-    <button type="button" onclick={(event) => (stop(event), open())}>
-      Open video
+    <video
+      src={props.attachment.url}
+      controls
+      onclick={stopMediaAttachmentPropagation}
+    ></video>
+    <button
+      type="button"
+      onclick={(event) => mediaAttachmentOpenAfterStop(event, open)}
+    >
+      {mediaAttachmentOpenButtonLabel(props.attachment.type)}
     </button>
   </div>
 {:else if props.attachment.type === 'audio'}
   <div class="media-embed media-embed--audio">
-    <audio src={props.attachment.url} controls onclick={stop}></audio>
-    <button type="button" onclick={(event) => (stop(event), open())}>
-      Open audio
+    <audio
+      src={props.attachment.url}
+      controls
+      onclick={stopMediaAttachmentPropagation}
+    ></audio>
+    <button
+      type="button"
+      onclick={(event) => mediaAttachmentOpenAfterStop(event, open)}
+    >
+      {mediaAttachmentOpenButtonLabel(props.attachment.type)}
     </button>
   </div>
 {:else}
+  {@const link = planMediaAttachmentLink(props.attachment)}
   <a
     class="event-link"
-    href={props.attachment.url}
-    target="_blank"
-    rel="noopener noreferrer"
-    onclick={stop}
+    href={link.href}
+    target={link.target}
+    rel={link.rel}
+    onclick={stopMediaAttachmentPropagation}
   >
     {props.attachment.url}
   </a>

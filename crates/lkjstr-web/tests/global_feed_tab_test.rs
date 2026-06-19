@@ -1,5 +1,10 @@
 #![cfg(target_arch = "wasm32")]
 
+mod feed_scroll_structure_support;
+
+use feed_scroll_structure_support::{
+    assert_feed_scroll_boundary, assert_tab_body_not_scroll_owner,
+};
 use wasm_bindgen::{JsCast, closure::Closure, prelude::JsValue};
 use wasm_bindgen_futures::JsFuture;
 use wasm_bindgen_test::{wasm_bindgen_test, wasm_bindgen_test_configure};
@@ -19,13 +24,30 @@ wasm_bindgen_test_configure!(run_in_browser);
 async fn rust_global_tab_renders_injected_feed_view_model() -> Result<(), JsValue> {
     reset_shells()?;
     mount_rust_workspace_shell_with_global_feed(startup(), global_model());
-    wait_for_text("Welcome").await?;
-    click("[aria-label='New tab']")?;
-    wait_for_text("Relay notes.").await?;
-    click("[data-testid='new-tab-option-global']")?;
+    open_global_tab().await?;
     wait_for_text("Global ready").await?;
     wait_for_text("real global event").await?;
     wait_for_text("Cached rows").await
+}
+
+#[wasm_bindgen_test(async)]
+async fn rust_global_tab_uses_one_scroll_owner_for_status_and_rows() -> Result<(), JsValue> {
+    reset_shells()?;
+    mount_rust_workspace_shell_with_global_feed(startup(), global_model());
+    open_global_tab().await?;
+    wait_for_text("real global event").await?;
+
+    assert_feed_scroll_boundary(
+        ".lkjstr-global-feed",
+        ".global-list-scroll[data-scroll-owner]",
+        &[
+            ".lkjstr-feed-status",
+            ".lkjstr-feed-rows",
+            ".lkjstr-feed-row.event",
+            ".lkjstr-feed-footer",
+        ],
+    )?;
+    assert_tab_body_not_scroll_owner(".lkjstr-tab-body[data-tab-kind='global']")
 }
 
 fn global_model() -> lkjstr_app::GlobalFeedView {
@@ -68,6 +90,13 @@ fn progressive() -> ProgressiveEvent {
             sig: "b".repeat(128),
         },
     }
+}
+
+async fn open_global_tab() -> Result<(), JsValue> {
+    wait_for_text("Welcome").await?;
+    click("[aria-label='New tab']")?;
+    wait_for_text("Relay notes.").await?;
+    click("[data-testid='new-tab-option-global']")
 }
 
 async fn wait_for_text(text: &str) -> Result<(), JsValue> {

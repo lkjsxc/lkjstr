@@ -1,7 +1,7 @@
 use std::time::Duration;
 
 use leptos::prelude::*;
-use lkjstr_storage::{StorageInventoryRow, StorageStatsSnapshot};
+use lkjstr_storage::{StorageInventoryRow, StorageOptimizerStats, StorageStatsSnapshot};
 
 use crate::app::RuntimeSignal;
 use crate::workspace::stats_actions::storage_action_view;
@@ -90,6 +90,10 @@ pub fn StatsTab(runtime: RuntimeSignal, provider: Option<StatsProvider>) -> impl
             <table class="stats-table">
                 <tbody>{move || feed_geometry_rows(snapshot.get())}</tbody>
             </table>
+            <h3>"Scan optimizer"</h3>
+            <table class="stats-table">
+                <tbody>{move || optimizer_rows(snapshot.get())}</tbody>
+            </table>
             <h3>"Storage inventory"</h3>
             <table class="stats-table">
                 <thead>
@@ -116,6 +120,43 @@ fn inventory_rows(snapshot: Option<StorageStatsSnapshot>) -> impl IntoView {
         }
         .into_any(),
     }
+}
+
+fn optimizer_rows(snapshot: Option<StorageStatsSnapshot>) -> impl IntoView {
+    match snapshot {
+        Some(snapshot) => optimizer_rows_for_stats(snapshot.optimizer).into_any(),
+        None => view! {
+            <tr><th>"Status"</th><td>"loading"</td></tr>
+        }
+        .into_any(),
+    }
+}
+
+fn optimizer_rows_for_stats(stats: StorageOptimizerStats) -> impl IntoView {
+    let hints = optimizer_value(&stats, |item| item.scan_hint_rows);
+    let decisions = optimizer_value(&stats, |item| item.decision_trace_rows);
+    let models = optimizer_value(&stats, |item| item.density_model_rows);
+    view! {
+        <tr><th>"Status"</th><td>{stats.status}</td></tr>
+        <tr><th>"Scan hints"</th><td>{hints}</td></tr>
+        <tr><th>"Scan decisions"</th><td>{decisions}</td></tr>
+        <tr><th>"Density models"</th><td>{models}</td></tr>
+    }
+}
+
+fn optimizer_value(
+    stats: &StorageOptimizerStats,
+    value: fn(&StorageOptimizerStats) -> Option<u64>,
+) -> String {
+    value(stats).map_or_else(
+        || {
+            stats
+                .problem_reason
+                .clone()
+                .unwrap_or_else(|| stats.status.clone())
+        },
+        |count| count.to_string(),
+    )
 }
 
 fn row_view(row: StorageInventoryRow) -> impl IntoView {

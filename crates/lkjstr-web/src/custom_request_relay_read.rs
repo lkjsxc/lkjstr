@@ -28,7 +28,6 @@ pub(crate) fn start_custom_request_relay_read(
     let relays = input.relays.clone();
     let read = Rc::new(CustomRequestRelayRead {
         sub_id: sub_id.clone(),
-        filters: input.filters.clone(),
         relays: relays.clone(),
         input,
         state: RefCell::new(initial_progressive_read(InitialProgressiveRead {
@@ -40,7 +39,8 @@ pub(crate) fn start_custom_request_relay_read(
         sockets: RefCell::new(BTreeMap::new()),
         timeout: RefCell::new(None),
         done: Cell::new(false),
-        complete: Box::new(complete),
+        publish_generation: Rc::new(Cell::new(0)),
+        complete: Rc::new(complete),
     });
     let handle = RelayReadHandle::from_rc(&read, CustomRequestRelayRead::cancel);
     install_timeout(read.clone());
@@ -53,13 +53,13 @@ pub(crate) fn start_custom_request_relay_read(
 pub(super) struct CustomRequestRelayRead {
     pub(super) input: CustomRequestRelayReadInput,
     pub(super) sub_id: String,
-    pub(super) filters: Vec<lkjstr_protocol::NostrFilter>,
     pub(super) relays: Vec<String>,
     pub(super) state: RefCell<ProgressiveReadState>,
     pub(super) sockets: RefCell<BTreeMap<String, RelaySocketHandle>>,
     pub(super) timeout: RefCell<Option<BrowserTimeout>>,
     pub(super) done: Cell<bool>,
-    pub(super) complete: Box<dyn Fn(CustomRequestRelayReadOutput)>,
+    pub(super) publish_generation: Rc<Cell<u64>>,
+    pub(super) complete: Rc<dyn Fn(CustomRequestRelayReadOutput)>,
 }
 
 fn install_timeout(read: Rc<CustomRequestRelayRead>) {
@@ -80,7 +80,7 @@ impl CustomRequestRelayRead {
         self.apply_status(relay, RelayEnd::Connected);
         let frame = ClientMessage::Req {
             subscription_id: self.sub_id.clone(),
-            filters: self.filters.clone(),
+            filters: self.input.filters_for_relay(relay),
         };
         if let Ok(frame) = encode_client_message(&frame)
             && self
@@ -146,6 +146,8 @@ impl CustomRequestRelayRead {
         if self.done.replace(true) {
             return;
         }
+        self.publish_generation
+            .set(self.publish_generation.get().saturating_add(1));
         self.reduce(ProgressiveReadEvidence::Cancel);
         self.close_all();
     }

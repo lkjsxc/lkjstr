@@ -8,9 +8,16 @@
   import EventActions from './EventActions.svelte';
   import ReactionSummary from './ReactionSummary.svelte';
   import {
-    hasOpenProfileAction,
-    hasOpenThreadAction,
-  } from './action-availability';
+    eventProfileCanOpen,
+    eventProfileOpenLabel,
+    stopAndOpenEventProfile,
+  } from './event-profile-activation';
+  import {
+    createEventRowSuccessHighlighter,
+    eventRowCanOpenThread,
+    openEventThreadFromRowClick,
+    openEventThreadFromRowKey,
+  } from './event-row-activation';
   import type {
     ReactionGroup,
     RepostGroup,
@@ -44,44 +51,31 @@
       : undefined,
   );
   let highlighted = $state(false);
-  let highlightTimer: ReturnType<typeof setTimeout> | undefined;
-  let canOpenProfile = $derived(hasOpenProfileAction(props.openProfile));
-  let canOpenThread = $derived(hasOpenThreadAction(props.openThread));
+  const successHighlighter = createEventRowSuccessHighlighter(
+    (next) => (highlighted = next),
+  );
+  const profileOpenLabel = eventProfileOpenLabel();
+  let canOpenProfile = $derived(eventProfileCanOpen(props.openProfile));
+  let canOpenThread = $derived(eventRowCanOpenThread(props.openThread));
 
   onDestroy(() => {
-    if (highlightTimer) clearTimeout(highlightTimer);
+    successHighlighter.destroy();
   });
 
   function openRow(event?: MouseEvent): void {
-    const openThread = props.openThread;
-    if (!hasOpenThreadAction(openThread)) return;
-    if (event && shouldKeepLocal(event.target)) return;
-    openThread(props.item.event.id);
+    openEventThreadFromRowClick(event, props.openThread, props.item.event.id);
   }
 
   function handleKeydown(event: KeyboardEvent): void {
-    if (event.target !== event.currentTarget) return;
-    if (event.key === 'Enter') openRow();
-  }
-
-  function shouldKeepLocal(target: EventTarget | null): boolean {
-    return Boolean(
-      target instanceof Element &&
-      target.closest('button,a,input,textarea,select,form,.event-action-zone'),
-    );
+    openEventThreadFromRowKey(event, props.openThread, props.item.event.id);
   }
 
   function openProfile(event: MouseEvent): void {
-    event.stopPropagation();
-    const openProfile = props.openProfile;
-    if (!hasOpenProfileAction(openProfile)) return;
-    openProfile(props.item.event.pubkey);
+    stopAndOpenEventProfile(event, props.openProfile, props.item.event.pubkey);
   }
 
   function highlightAction(): void {
-    highlighted = true;
-    if (highlightTimer) clearTimeout(highlightTimer);
-    highlightTimer = setTimeout(() => (highlighted = false), 900);
+    successHighlighter.trigger();
   }
 </script>
 
@@ -90,7 +84,7 @@
     <button
       type="button"
       class="avatar-button"
-      aria-label="Open profile"
+      aria-label={profileOpenLabel}
       onclick={openProfile}
     >
       <EventMeta event={props.item.event} relays={[]} {profile} avatarOnly />

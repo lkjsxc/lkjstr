@@ -1,12 +1,14 @@
 <script lang="ts">
-  import { customEmojis, type EventReference } from '$lib/protocol';
-  import { contentAttachments } from '$lib/events/content-media';
-  import { eventReferenceLabel } from '$lib/events/reference-label';
+  import { customEmojis } from '$lib/protocol';
   import type { ResolvedReference } from '$lib/events/reference-resolver';
   import type { ProfileSummary } from '$lib/identity/identity';
-  import { hasOpenThreadAction } from './action-availability';
   import EmojifiedText from './EmojifiedText.svelte';
   import EventMeta from './EventMeta.svelte';
+  import {
+    eventReferenceCardKeyOpensThread,
+    openEventReferenceCardThread,
+    planEventReferenceCard,
+  } from './event-reference-card-plan';
 
   type Props = {
     reference: ResolvedReference;
@@ -16,20 +18,16 @@
   };
 
   let props: Props = $props();
-  let event = $derived(props.reference.event?.event);
-  let preview = $derived(event?.content.trim().replace(/\s+/gu, ' '));
-  let mediaCount = $derived(event ? contentAttachments(event).length : 0);
-  let canOpenThread = $derived(hasOpenThreadAction(props.openThread));
+  let plan = $derived(
+    planEventReferenceCard(props.reference, props.profiles, props.openThread),
+  );
 
   function open(id: string, domEvent?: Event): void {
-    domEvent?.stopPropagation();
-    const openThread = props.openThread;
-    if (!hasOpenThreadAction(openThread)) return;
-    openThread(id);
+    openEventReferenceCardThread(plan, id, props.openThread, domEvent);
   }
 </script>
 
-{#if canOpenThread}
+{#if plan.canOpenThread}
   <div
     class="event-embed"
     data-kind={props.reference.kind}
@@ -37,48 +35,55 @@
     tabindex="0"
     onclick={(event) => open(props.reference.id, event)}
     onkeydown={(event) =>
-      event.key === 'Enter' && open(props.reference.id, event)}
+      eventReferenceCardKeyOpensThread(event.key) &&
+      open(props.reference.id, event)}
   >
-    <strong class="sr-only">
-      {eventReferenceLabel(props.reference as EventReference)}
-    </strong>
-    {#if event}
+    <strong class="sr-only">{plan.label}</strong>
+    {#if plan.event}
       <EventMeta
-        {event}
-        relays={props.reference.event?.relays ?? []}
-        profile={props.profiles[event.pubkey]}
+        event={plan.event}
+        relays={plan.relays}
+        profile={plan.profile}
         openProfile={props.openProfile}
         avatarInline
       />
-      {#if preview}
+      {#if plan.preview}
         <p class="event-content">
-          <EmojifiedText text={preview} emojis={customEmojis(event)} />
+          <EmojifiedText
+            text={plan.preview}
+            emojis={customEmojis(plan.event)}
+          />
         </p>
       {/if}
-      {#if mediaCount > 0}<small>{mediaCount} media attachment(s)</small>{/if}
+      {#if plan.mediaCount > 0}<small
+          >{plan.mediaCount} media attachment(s)</small
+        >{/if}
     {:else}
       <p>Event unavailable.</p>
     {/if}
   </div>
 {:else}
   <div class="event-embed" data-kind={props.reference.kind}>
-    <strong class="sr-only">
-      {eventReferenceLabel(props.reference as EventReference)}
-    </strong>
-    {#if event}
+    <strong class="sr-only">{plan.label}</strong>
+    {#if plan.event}
       <EventMeta
-        {event}
-        relays={props.reference.event?.relays ?? []}
-        profile={props.profiles[event.pubkey]}
+        event={plan.event}
+        relays={plan.relays}
+        profile={plan.profile}
         openProfile={props.openProfile}
         avatarInline
       />
-      {#if preview}
+      {#if plan.preview}
         <p class="event-content">
-          <EmojifiedText text={preview} emojis={customEmojis(event)} />
+          <EmojifiedText
+            text={plan.preview}
+            emojis={customEmojis(plan.event)}
+          />
         </p>
       {/if}
-      {#if mediaCount > 0}<small>{mediaCount} media attachment(s)</small>{/if}
+      {#if plan.mediaCount > 0}<small
+          >{plan.mediaCount} media attachment(s)</small
+        >{/if}
     {:else}
       <p>Event unavailable.</p>
     {/if}

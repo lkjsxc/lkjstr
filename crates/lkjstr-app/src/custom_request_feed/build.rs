@@ -1,6 +1,7 @@
 use crate::{EventDisplayContext, FeedViewModelInput, build_feed_view_model};
 
 use super::CustomRequestFeedView;
+use super::diagnostics::custom_request_diagnostic_rows;
 use super::{CustomRequestFeedViewInput, state::custom_request_state};
 
 #[must_use]
@@ -14,6 +15,7 @@ pub fn build_custom_request_feed_view(input: CustomRequestFeedViewInput) -> Cust
         &feed_id,
         &mut state_rows,
     );
+    state_rows.extend(custom_request_diagnostic_rows(&input.run_plan));
     let window = input.window.clone();
     let view_model = build_feed_view_model(FeedViewModelInput {
         feed_id,

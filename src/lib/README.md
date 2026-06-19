@@ -15,7 +15,7 @@ This directory contains reusable application code shared by routes and tabs.
 - [custom-request/](custom-request/): validated relay request parsing.
 - [emoji/](emoji/): custom emoji discovery and parsing.
 - [events/](events/): event repositories, parsing, and actions.
-- [feed-surface/](feed-surface/): shared feed paging, near-end, and staged row helpers.
+- [feed-surface/](feed-surface/): shared feed paging, near-end, row planning, and geometry helpers.
 - [follow-graph/](follow-graph/): target NIP-02 discovery and author sets.
 - [fp/](fp/): small functional data and resource helpers.
 - [identity/](identity/): profile identity helpers.

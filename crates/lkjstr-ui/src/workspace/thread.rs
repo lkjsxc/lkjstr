@@ -47,7 +47,7 @@ pub fn ThreadTab(
         });
     }
     view! {
-        <section class="lkjstr-thread-feed" aria-label="Thread">
+        <section class="feed-tab lkjstr-thread-feed" aria-label="Thread">
             <div class="tab-scroll-track event-list__scroller">
                 <div
                     class="tab-scroll-owner thread-list-scroll"
@@ -117,6 +117,7 @@ fn thread_row(
         FeedViewRow::Unavailable(row) => feed_state_row::unavailable(row).into_any(),
         FeedViewRow::Diagnostic(row) => feed_state_row::diagnostic(row).into_any(),
         FeedViewRow::Continuation(row) => continuation_row(row, open_thread).into_any(),
+        FeedViewRow::Shell(row) => feed_state_row::shell(row).into_any(),
         FeedViewRow::Footer(row) => footer_row(row, older_command).into_any(),
         FeedViewRow::Profile(row) => feed_state_row::profile(row).into_any(),
         FeedViewRow::Notification(row) => feed_state_row::notification(row).into_any(),

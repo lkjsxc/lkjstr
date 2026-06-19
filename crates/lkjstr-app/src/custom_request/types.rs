@@ -1,12 +1,43 @@
 #![doc = "Custom Request pure types."]
 
 use lkjstr_protocol::NostrFilter;
+use lkjstr_relays::RequestRelayLimits;
 
 #[derive(Clone, Debug, Eq, PartialEq)]
 pub struct CustomRequest {
     pub filters: Vec<NostrFilter>,
     pub relays: Vec<String>,
     pub sub_id: Option<String>,
+    pub limit_clamps: Vec<CustomRequestLimitClamp>,
+    pub relay_limit_clamps: Vec<CustomRequestRelayLimitClamp>,
+    pub relay_filters: Vec<CustomRequestRelayFilters>,
+}
+
+#[derive(Clone, Copy, Debug, Eq, PartialEq)]
+pub struct CustomRequestLimitClamp {
+    pub filter_index: usize,
+    pub original_limit: u64,
+    pub effective_limit: u64,
+}
+
+#[derive(Clone, Debug, Eq, PartialEq)]
+pub struct CustomRequestRelayLimitInput {
+    pub relay_url: String,
+    pub limits: RequestRelayLimits,
+}
+
+#[derive(Clone, Debug, Eq, PartialEq)]
+pub struct CustomRequestRelayLimitClamp {
+    pub relay_url: String,
+    pub filter_index: usize,
+    pub original_limit: u64,
+    pub effective_limit: u64,
+}
+
+#[derive(Clone, Debug, Eq, PartialEq)]
+pub struct CustomRequestRelayFilters {
+    pub relay_url: String,
+    pub filters: Vec<NostrFilter>,
 }
 
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]

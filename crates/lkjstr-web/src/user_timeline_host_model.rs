@@ -7,7 +7,7 @@ use lkjstr_storage::StorageOutcome;
 use crate::{
     user_timeline_cache::{latest_follow_list, selected_relays},
     user_timeline_host::UserTimelineHost,
-    user_timeline_host_cached::cached_model,
+    user_timeline_host_cached::{cached_model, target_posts_fallback, user_timeline_no_event_view},
     user_timeline_host_view::{
         diagnostic, diagnostics, loading_selected_model, partial_failure_view, storage_problem,
     },
@@ -70,9 +70,30 @@ async fn user_timeline_load_with_outcomes(
             None,
         ),
         StorageOutcome::Ok(None) => {
+            let fallback = target_posts_fallback(
+                host,
+                owner,
+                &target,
+                &selected,
+                &author_routes,
+                diagnostics.clone(),
+            )
+            .await;
+            if let (Some(outcomes), Some(_)) = (&relay_outcomes, &fallback)
+                && let Some(input) = relay_input_with_fallback(
+                    owner,
+                    &target,
+                    &selected,
+                    &author_routes,
+                    fallback.clone(),
+                )
+            {
+                return loaded(user_timeline_no_event_view(&input, outcomes.clone()), None);
+            }
             let model =
                 loading_selected_model(owner, target_pubkey, &selected, &author_routes, diagnostics);
-            let relay = user_timeline_relay_input(owner, &target, &selected, &author_routes);
+            let relay =
+                relay_input_with_fallback(owner, &target, &selected, &author_routes, fallback);
             loaded(model, relay)
         }
         outcome => {
@@ -83,6 +104,7 @@ async fn user_timeline_load_with_outcomes(
     }
 }
 
+#[cfg(debug_assertions)]
 pub(crate) async fn user_timeline_model(
     host: &UserTimelineHost,
     owner: &str,
@@ -116,6 +138,18 @@ fn user_timeline_relay_input(
         selected_relays,
         author_routes,
     })
+}
+
+fn relay_input_with_fallback(
+    owner: &str,
+    target_pubkey: &str,
+    selected_relays: &[String],
+    author_routes: &[AuthorRelayRoute],
+    fallback: Option<crate::user_timeline_relay_input::UserTimelineTargetPostsFallback>,
+) -> Option<UserTimelineRelayReadInput> {
+    let mut input = user_timeline_relay_input(owner, target_pubkey, selected_relays, author_routes)?;
+    input.target_posts_fallback = fallback;
+    Some(input)
 }
 
 fn loaded(model: UserTimelineFeedView, relay: Option<UserTimelineRelayReadInput>) -> UserTimelineLoad {

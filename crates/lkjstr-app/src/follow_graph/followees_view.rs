@@ -1,53 +1,9 @@
 use lkjstr_protocol::FollowEntry;
 
-use crate::follow_graph::{FollowListSummary, TargetFollowListState};
-
-#[derive(Clone, Copy, Debug, Eq, PartialEq)]
-pub enum FolloweesStatus {
-    MissingPubkey,
-    Loading,
-    Ready,
-    Empty,
-    NotFound,
-    PartialFailure,
-    Failed,
-    Cancelled,
-}
-
-#[derive(Clone, Debug, Eq, PartialEq)]
-pub struct FolloweesDiagnostic {
-    pub row_id: String,
-    pub relay: Option<String>,
-    pub message: String,
-    pub retry_available: bool,
-}
-
-#[derive(Clone, Debug, Eq, PartialEq)]
-pub struct FolloweesRow {
-    pub row_id: String,
-    pub pubkey: String,
-    pub relay: Option<String>,
-    pub petname: Option<String>,
-}
-
-#[derive(Clone, Debug, Eq, PartialEq)]
-pub struct FolloweesView {
-    pub owner: String,
-    pub target_pubkey: Option<String>,
-    pub status: FolloweesStatus,
-    pub message: String,
-    pub diagnostics: Vec<FolloweesDiagnostic>,
-    pub rows: Vec<FolloweesRow>,
-    pub following_count: usize,
-}
-
-#[derive(Clone, Debug, Eq, PartialEq)]
-pub struct FolloweesViewInput {
-    pub owner: String,
-    pub target_pubkey: Option<String>,
-    pub entries: Vec<FollowEntry>,
-    pub state: TargetFollowListState,
-}
+use crate::follow_graph::{
+    FollowListSummary, FolloweesProfile, FolloweesRow, FolloweesStatus, FolloweesView,
+    FolloweesViewInput, TargetFollowListState,
+};
 
 #[must_use]
 pub fn default_followees_view(owner: &str, target_pubkey: Option<String>) -> FolloweesView {
@@ -59,6 +15,7 @@ pub fn default_followees_view(owner: &str, target_pubkey: Option<String>) -> Fol
     FolloweesView {
         owner: owner.to_owned(),
         target_pubkey,
+        target_profile: None,
         status,
         message: followees_status_message(status).to_owned(),
         diagnostics: Vec::new(),
@@ -78,25 +35,26 @@ pub fn followees_view_from_summary(
         owner: owner.to_owned(),
         target_pubkey,
         entries: summary.entries,
+        profiles: Vec::new(),
         state,
     })
 }
 
 #[must_use]
-pub fn followees_retryable_failure_view(
+pub fn followees_view_from_summary_with_profiles(
     owner: &str,
     target_pubkey: Option<String>,
-    relays: &[String],
+    state: TargetFollowListState,
+    summary: FollowListSummary,
+    profiles: Vec<FolloweesProfile>,
 ) -> FolloweesView {
-    let mut view = followees_view_from_summary(
-        owner,
+    build_followees_view(FolloweesViewInput {
+        owner: owner.to_owned(),
         target_pubkey,
-        TargetFollowListState::PartialFailure,
-        empty_summary(),
-    );
-    view.message = retryable_failure_message(relays.len());
-    view.diagnostics = selected_relay_diagnostics(relays);
-    view
+        entries: summary.entries,
+        profiles,
+        state,
+    })
 }
 
 #[must_use]
@@ -107,12 +65,14 @@ pub fn build_followees_view(input: FolloweesViewInput) -> FolloweesView {
     let rows = input
         .entries
         .into_iter()
-        .map(followee_row)
+        .map(|entry| followee_row(entry, &input.profiles))
         .collect::<Vec<_>>();
     let status = followees_status(input.state, rows.len());
+    let target_profile = target_profile(input.target_pubkey.as_deref(), &input.profiles);
     FolloweesView {
         owner: input.owner,
         target_pubkey: input.target_pubkey,
+        target_profile,
         status,
         message: followees_status_message(status).to_owned(),
         diagnostics: Vec::new(),
@@ -159,39 +119,27 @@ fn followees_status(state: TargetFollowListState, row_count: usize) -> Followees
     }
 }
 
-fn followee_row(entry: FollowEntry) -> FolloweesRow {
+fn followee_row(entry: FollowEntry, profiles: &[FolloweesProfile]) -> FolloweesRow {
     let pubkey = entry.pubkey;
+    let profile = followee_profile(&pubkey, profiles);
     FolloweesRow {
         row_id: format!("followee:{pubkey}"),
         pubkey,
         relay: entry.relay,
         petname: entry.petname,
+        display_name: profile.and_then(|item| item.display_name.clone()),
+        subtitle: profile.and_then(|item| item.subtitle.clone()),
+        avatar_url: profile.and_then(|item| item.avatar_url.clone()),
     }
 }
 
-fn retryable_failure_message(relay_count: usize) -> String {
-    format!(
-        "Follow-list discovery incomplete after {relay_count} selected relay read. Retry available."
-    )
+fn followee_profile<'a>(
+    pubkey: &str,
+    profiles: &'a [FolloweesProfile],
+) -> Option<&'a FolloweesProfile> {
+    profiles.iter().find(|profile| profile.pubkey == pubkey)
 }
 
-fn selected_relay_diagnostics(relays: &[String]) -> Vec<FolloweesDiagnostic> {
-    relays
-        .iter()
-        .enumerate()
-        .map(|(index, relay)| FolloweesDiagnostic {
-            row_id: format!("followees-diagnostic:selected:{index}"),
-            relay: Some(relay.clone()),
-            message: "Selected relay did not return a follow list before the read ended."
-                .to_owned(),
-            retry_available: true,
-        })
-        .collect()
-}
-
-fn empty_summary() -> FollowListSummary {
-    FollowListSummary {
-        entries: Vec::new(),
-        following_count: 0,
-    }
+fn target_profile(pubkey: Option<&str>, profiles: &[FolloweesProfile]) -> Option<FolloweesProfile> {
+    followee_profile(pubkey?, profiles).cloned()
 }

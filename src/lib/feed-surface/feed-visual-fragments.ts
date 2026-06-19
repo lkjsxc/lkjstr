@@ -8,6 +8,7 @@ import {
   textSegmentMaxChars,
   textSegmentTargetChars,
 } from './feed-visual-fragment-text';
+import { recordOversizedSemanticRow } from './feed-fragment-diagnostics';
 
 export { textSegmentMaxChars, textSegmentTargetChars };
 export const oversizeEstimatedHeight = 1_400;
@@ -56,6 +57,7 @@ export function planEventVisualFragments(
         rowKey: fragmentKey(node, features.contentShapeHash, 'event-full', 0),
       },
     ];
+  recordOversizedSemanticRow(node.event.id);
   return [
     {
       kind: 'event-header',

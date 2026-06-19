@@ -11,6 +11,7 @@ pub enum FeedRowRenderer {
     Unavailable,
     Diagnostic,
     Continuation,
+    Shell,
     Footer,
 }
 
@@ -49,6 +50,7 @@ pub enum FeedViewRow {
     Unavailable(FeedUnavailableRow),
     Diagnostic(FeedDiagnosticRow),
     Continuation(FeedContinuationRow),
+    Shell(FeedShellRow),
     Footer(FeedFooterRow),
 }
 
@@ -119,6 +121,16 @@ pub struct FeedContinuationRow {
 }
 
 #[derive(Clone, Debug, Eq, PartialEq)]
+pub struct FeedShellRow {
+    pub row_id: String,
+    pub semantic_row_id: String,
+    pub reserved_height_px: u16,
+    pub represented_row_count: usize,
+    pub route_group: String,
+    pub coverage: String,
+}
+
+#[derive(Clone, Debug, Eq, PartialEq)]
 pub struct FeedFooterRow {
     pub row_id: String,
     pub feed_id: String,
@@ -138,6 +150,7 @@ impl FeedViewRow {
             Self::Unavailable(row) => &row.row_id,
             Self::Diagnostic(row) => &row.row_id,
             Self::Continuation(row) => &row.row_id,
+            Self::Shell(row) => &row.row_id,
             Self::Footer(row) => &row.row_id,
         }
     }
@@ -151,6 +164,7 @@ impl FeedViewRow {
             Self::Unavailable(_) => FeedRowRenderer::Unavailable,
             Self::Diagnostic(_) => FeedRowRenderer::Diagnostic,
             Self::Continuation(_) => FeedRowRenderer::Continuation,
+            Self::Shell(_) => FeedRowRenderer::Shell,
             Self::Footer(_) => FeedRowRenderer::Footer,
         }
     }

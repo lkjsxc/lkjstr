@@ -44,6 +44,8 @@ Required behavior:
   layout or content condition.
 - Height changes above the viewport preserve the current anchor by applying the
   measured scroll delta.
+- Resize compensation preserves the captured visible anchor, not the resizing
+  row if browser layout briefly scrolls it into view.
 
 Detailed unload rules live in
 [unload-height-stability.md](unload-height-stability.md).

@@ -88,6 +88,7 @@ fn row_view(
         FeedViewRow::Unavailable(row) => feed_state_row::unavailable(row).into_any(),
         FeedViewRow::Diagnostic(row) => feed_state_row::diagnostic(row).into_any(),
         FeedViewRow::Continuation(row) => feed_state_row::plain_continuation(row).into_any(),
+        FeedViewRow::Shell(row) => feed_state_row::shell(row).into_any(),
         FeedViewRow::Footer(row) => footer_row(row, older_command).into_any(),
         FeedViewRow::Profile(row) => feed_state_row::profile(row).into_any(),
     }

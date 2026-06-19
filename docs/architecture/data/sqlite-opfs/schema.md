@@ -62,6 +62,8 @@ Indexes:
 | `feed_scan_observations` | optimizer | append-only scan segment measurements. |
 | `feed_scan_density_models` | optimizer | weighted scan-density models by fallback scope. |
 | `feed_scan_decision_traces` | optimizer | Stats-ready scan span decisions. |
+| `feed_row_height_observations` | optimizer | bounded row-height measurements by geometry bucket. |
+| `feed_row_height_models` | optimizer | learned row-height models by geometry bucket. |
 | `relay_read_scores` | relays | latest relay read score per stable score key. |
 
 Coverage can prove cache-first absence only when every required relay, route

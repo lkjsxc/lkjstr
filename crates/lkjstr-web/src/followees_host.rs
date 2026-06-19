@@ -1,6 +1,6 @@
 use lkjstr_app::{
     FollowListSummary, FolloweesView, TargetFollowListState, default_followees_view,
-    followees_view_from_summary, summarize_follow_list,
+    followees_view_from_summary, followees_view_from_summary_with_profiles, summarize_follow_list,
 };
 use lkjstr_domain::seed_relay_sets;
 use lkjstr_protocol::KIND_FOLLOW_LIST;
@@ -11,6 +11,7 @@ use lkjstr_ui::FolloweesProvider;
 use crate::{
     followees_relay::start_followees_relay_read,
     followees_relay_input::{FolloweesRelayInputSeed, FolloweesRelayReadInput},
+    followees_profiles::{cached_followee_profile, cached_followees_profiles},
     followees_routes::author_routes,
     host_status::browser_now_ms,
     relay_read_handle::RelayReadSlot,
@@ -87,15 +88,23 @@ pub(crate) async fn followees_load(
         _ => Vec::new(),
     };
     match latest_follow_list(host, &pubkey).await {
-        StorageOutcome::Ok(Some(row)) => loaded(
-            followees_view_from_summary(
-                owner,
-                target_pubkey,
-                TargetFollowListState::CacheHit,
-                summarize_follow_list(&row.event),
-            ),
-            None,
-        ),
+        StorageOutcome::Ok(Some(row)) => {
+            let summary = summarize_follow_list(&row.event);
+            let mut profiles = cached_followees_profiles(host, &summary.entries).await;
+            if let Some(profile) = cached_followee_profile(host, &pubkey).await {
+                profiles.push(profile);
+            }
+            loaded(
+                followees_view_from_summary_with_profiles(
+                    owner,
+                    target_pubkey,
+                    TargetFollowListState::CacheHit,
+                    summary,
+                    profiles,
+                ),
+                None,
+            )
+        }
         StorageOutcome::Ok(None) => loaded(
             loading_model(owner, target_pubkey, &selected, &routes),
             crate::followees_relay_input::followees_relay_input(FolloweesRelayInputSeed {
@@ -186,7 +195,6 @@ fn empty_summary() -> FollowListSummary {
         following_count: 0,
     }
 }
-
 fn loaded(model: FolloweesView, relay: Option<FolloweesRelayReadInput>) -> FolloweesLoad {
     FolloweesLoad { model, relay }
 }

@@ -19,6 +19,7 @@ pub(crate) struct GlobalRelayReadOutput {
     pub(crate) input: GlobalRelayReadInput,
 }
 
+#[cfg(debug_assertions)]
 pub(crate) fn model_from_snapshot(
     input: &GlobalRelayReadInput,
     snapshot: ProgressiveReadSnapshot,

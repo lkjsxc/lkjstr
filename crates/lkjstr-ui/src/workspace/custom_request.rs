@@ -11,7 +11,7 @@ use crate::workspace::custom_request_snapshot::CustomRequestSnapshotHandle;
 use crate::workspace::feed_event_actions::FeedEventActions;
 
 const DEFAULT_INPUT: &str = r#"{"kinds":[1],"limit":30}"#;
-const PROVIDER_GAP: &str = "Rust Custom Request provider execution is not wired yet.";
+const PROVIDER_UNAVAILABLE: &str = "Custom Request provider is unavailable.";
 
 #[component]
 pub fn CustomRequestTab(
@@ -43,7 +43,7 @@ pub fn CustomRequestTab(
         let Some(provider) = submit_provider.clone() else {
             model.set(unavailable_custom_request_feed_view(
                 &submit_owner,
-                PROVIDER_GAP,
+                PROVIDER_UNAVAILABLE,
                 false,
             ));
             return;
@@ -68,40 +68,44 @@ pub fn CustomRequestTab(
     on_cleanup(move || release_current(active_lease));
 
     view! {
-        <section class="lkjstr-custom-request" aria-label="Custom Request">
-            <form class="lkjstr-custom-request-controls" on:submit=submit>
-                <textarea
-                    aria-label="Custom request JSON"
-                    prop:value=move || input.get()
-                    on:input=input_change
-                ></textarea>
-                <button type="submit" prop:disabled=move || {
-                    can_cancel(&model.get()) || input.get().trim().is_empty()
-                }>
-                    "Run"
-                </button>
-                <button
-                    type="button"
-                    prop:hidden=move || !can_cancel(&model.get())
-                    on:click=cancel
-                >
-                    "Cancel"
-                </button>
-            </form>
-            <p class="lkjstr-feed-status" role=move || alert_role(model.get().status)>
-                {move || custom_request_status_text(&model.get(), ran.get())}
-            </p>
-            <div class="lkjstr-feed-rows">
-                {move || {
-                    let actions = actions.clone();
-                    model
-                        .get()
-                        .view_model
-                        .rows
-                        .into_iter()
-                        .map(move |row| custom_request_row(row, actions.clone()))
-                        .collect_view()
-                }}
+        <section class="feed-tab lkjstr-custom-request" aria-label="Custom Request">
+            <div class="tab-scroll-track event-list__scroller">
+                <div class="tab-scroll-owner custom-request-list-scroll" data-scroll-owner="">
+                    <form class="lkjstr-custom-request-controls" on:submit=submit>
+                        <textarea
+                            aria-label="Custom request JSON"
+                            prop:value=move || input.get()
+                            on:input=input_change
+                        ></textarea>
+                        <button type="submit" prop:disabled=move || {
+                            can_cancel(&model.get()) || input.get().trim().is_empty()
+                        }>
+                            "Run"
+                        </button>
+                        <button
+                            type="button"
+                            prop:hidden=move || !can_cancel(&model.get())
+                            on:click=cancel
+                        >
+                            "Cancel"
+                        </button>
+                    </form>
+                    <p class="lkjstr-feed-status" role=move || alert_role(model.get().status)>
+                        {move || custom_request_status_text(&model.get(), ran.get())}
+                    </p>
+                    <div class="lkjstr-feed-rows">
+                        {move || {
+                            let actions = actions.clone();
+                            model
+                                .get()
+                                .view_model
+                                .rows
+                                .into_iter()
+                                .map(move |row| custom_request_row(row, actions.clone()))
+                                .collect_view()
+                        }}
+                    </div>
+                </div>
             </div>
         </section>
     }

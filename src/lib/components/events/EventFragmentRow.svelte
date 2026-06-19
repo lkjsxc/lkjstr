@@ -1,10 +1,14 @@
 <script lang="ts">
-  import { onDestroy } from 'svelte';
+  import { onDestroy, onMount } from 'svelte';
   import type { FlatEventTreeItem } from '$lib/events/tree';
   import type { ProfileSummary } from '$lib/identity/identity';
   import type { RelaySet } from '$lib/relays/relay-store';
   import type { FeedVisualFragment } from '$lib/feed-surface/feed-visual-fragments';
   import { fragmentEventContent } from '$lib/feed-surface/feed-visual-fragments';
+  import {
+    recordFeedFragmentMounted,
+    recordFeedFragmentUnmounted,
+  } from '$lib/feed-surface/feed-fragment-diagnostics';
   import type {
     ReactionGroup,
     RepostGroup,
@@ -14,9 +18,16 @@
   import EventMeta from './EventMeta.svelte';
   import ReactionSummary from './ReactionSummary.svelte';
   import {
-    hasOpenProfileAction,
-    hasOpenThreadAction,
-  } from './action-availability';
+    eventProfileCanOpen,
+    eventProfileOpenLabel,
+    stopAndOpenEventProfile,
+  } from './event-profile-activation';
+  import {
+    createEventRowSuccessHighlighter,
+    eventRowCanOpenThread,
+    openEventThreadFromRowClick,
+    openEventThreadFromRowKey,
+  } from './event-row-activation';
 
   type Props = {
     node: FlatEventTreeItem;
@@ -36,47 +47,39 @@
 
   let props: Props = $props();
   let highlighted = $state(false);
-  let highlightTimer: ReturnType<typeof setTimeout> | undefined;
+  const successHighlighter = createEventRowSuccessHighlighter(
+    (next) => (highlighted = next),
+  );
+  const profileOpenLabel = eventProfileOpenLabel();
   let fragmentEvent = $derived(
     fragmentEventContent(props.node, props.fragment),
   );
-  let canOpenProfile = $derived(hasOpenProfileAction(props.openProfile));
-  let canOpenThread = $derived(hasOpenThreadAction(props.openThread));
+  let canOpenProfile = $derived(eventProfileCanOpen(props.openProfile));
+  let canOpenThread = $derived(eventRowCanOpenThread(props.openThread));
+
+  onMount(() => {
+    recordFeedFragmentMounted();
+    return () => recordFeedFragmentUnmounted();
+  });
 
   onDestroy(() => {
-    if (highlightTimer) clearTimeout(highlightTimer);
+    successHighlighter.destroy();
   });
 
   function openRow(event?: MouseEvent): void {
-    const openThread = props.openThread;
-    if (!hasOpenThreadAction(openThread)) return;
-    if (event && shouldKeepLocal(event.target)) return;
-    openThread(props.node.event.id);
+    openEventThreadFromRowClick(event, props.openThread, props.node.event.id);
   }
 
   function handleKeydown(event: KeyboardEvent): void {
-    if (event.target !== event.currentTarget) return;
-    if (event.key === 'Enter') openRow();
-  }
-
-  function shouldKeepLocal(target: EventTarget | null): boolean {
-    return Boolean(
-      target instanceof Element &&
-      target.closest('button,a,input,textarea,select,form,.event-action-zone'),
-    );
+    openEventThreadFromRowKey(event, props.openThread, props.node.event.id);
   }
 
   function openProfile(event: MouseEvent): void {
-    event.stopPropagation();
-    const openProfile = props.openProfile;
-    if (!hasOpenProfileAction(openProfile)) return;
-    openProfile(props.node.event.pubkey);
+    stopAndOpenEventProfile(event, props.openProfile, props.node.event.pubkey);
   }
 
   function highlightAction(): void {
-    highlighted = true;
-    if (highlightTimer) clearTimeout(highlightTimer);
-    highlightTimer = setTimeout(() => (highlighted = false), 900);
+    successHighlighter.trigger();
   }
 </script>
 
@@ -86,7 +89,7 @@
       <button
         type="button"
         class="avatar-button"
-        aria-label="Open profile"
+        aria-label={profileOpenLabel}
         onclick={openProfile}
       >
         <EventMeta

@@ -12,9 +12,9 @@ use super::media_filter::event_media_attachments;
 use super::media_rows::inject_media_rows;
 use super::profile_mention_rows::inject_profile_mention_rows;
 use super::reference_rows::inject_reference_rows;
-use super::{FeedEventContentRow, FeedEventUnavailablePreview};
+use super::{FeedEventContentRow, FeedEventRepostTarget, FeedEventUnavailablePreview};
 
-#[derive(Clone, Debug, Eq, PartialEq)]
+#[derive(Clone, Debug, PartialEq)]
 pub enum FeedEventContent {
     Sensitive {
         reason: Option<String>,
@@ -29,14 +29,7 @@ pub fn feed_event_content(
     reason: Option<String>,
     rows: &[FeedVisualRow],
 ) -> FeedEventContent {
-    let rows = feed_event_content_rows(rows);
-    if has_content_warning {
-        return FeedEventContent::Sensitive {
-            reason: reason.filter(|item| !item.trim().is_empty()),
-            rows,
-        };
-    }
-    FeedEventContent::Rows(rows)
+    content_with_warning(has_content_warning, reason, feed_event_content_rows(rows))
 }
 
 #[must_use]
@@ -49,6 +42,70 @@ pub fn plan_feed_event_content(
     estimated_height_px: u16,
     config: &FeedFragmentConfig,
 ) -> FeedEventContent {
+    plan_feed_event_content_with_repost_target(
+        (has_content_warning, reason),
+        event,
+        custom_emojis,
+        content_shape_hash,
+        estimated_height_px,
+        config,
+        None,
+    )
+}
+
+#[must_use]
+pub(crate) fn plan_feed_event_content_with_repost_target(
+    warning: (bool, Option<String>),
+    event: &SemanticFeedEvent,
+    custom_emojis: &[CustomEmoji],
+    content_shape_hash: &str,
+    estimated_height_px: u16,
+    config: &FeedFragmentConfig,
+    repost_target: Option<FeedEventRepostTarget>,
+) -> FeedEventContent {
+    let mut rows = planned_content_rows(
+        event,
+        custom_emojis,
+        content_shape_hash,
+        estimated_height_px,
+        config,
+    );
+    if let Some(target) = repost_target {
+        rows.push(FeedEventContentRow::RepostTarget(target));
+    }
+    content_with_warning(warning.0, warning.1, rows)
+}
+
+#[must_use]
+pub(crate) fn plan_feed_event_content_without_repost_target(
+    has_content_warning: bool,
+    reason: Option<String>,
+    event: &SemanticFeedEvent,
+    custom_emojis: &[CustomEmoji],
+    content_shape_hash: &str,
+    estimated_height_px: u16,
+    config: &FeedFragmentConfig,
+) -> FeedEventContent {
+    content_with_warning(
+        has_content_warning,
+        reason,
+        planned_content_rows(
+            event,
+            custom_emojis,
+            content_shape_hash,
+            estimated_height_px,
+            config,
+        ),
+    )
+}
+
+fn planned_content_rows(
+    event: &SemanticFeedEvent,
+    custom_emojis: &[CustomEmoji],
+    content_shape_hash: &str,
+    estimated_height_px: u16,
+    config: &FeedFragmentConfig,
+) -> Vec<FeedEventContentRow> {
     let media_attachments = event_media_attachments(event);
     let event = SemanticFeedEvent {
         content: visible_event_content(event),
@@ -73,13 +130,20 @@ pub fn plan_feed_event_content(
         &event.media_attachments,
         config.media_items_per_segment,
     );
-    let rows = inject_reference_rows(
+    inject_reference_rows(
         rows,
         &event.event_id,
         content_shape_hash,
         &event.event_references,
         config.references_per_segment,
-    );
+    )
+}
+
+fn content_with_warning(
+    has_content_warning: bool,
+    reason: Option<String>,
+    rows: Vec<FeedEventContentRow>,
+) -> FeedEventContent {
     if has_content_warning {
         return FeedEventContent::Sensitive {
             reason: reason.filter(|item| !item.trim().is_empty()),

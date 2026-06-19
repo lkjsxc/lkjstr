@@ -72,10 +72,33 @@ export function verifiedNestedRepost(
   try {
     const parsed = parseNostrEvent(JSON.parse(event.content));
     if (!parsed.ok) return undefined;
-    return verifyEvent(parsed.event).ok ? parsed.event : undefined;
+    const verified = verifyEvent(parsed.event);
+    return verified.ok && repostTargetMatchesSource(event, verified.event)
+      ? verified.event
+      : undefined;
   } catch {
     return undefined;
   }
+}
+
+function repostTargetMatchesSource(
+  source: NostrEvent,
+  target: NostrEvent,
+): boolean {
+  if (source.kind === kinds.repost)
+    return (
+      target.kind === kinds.textNote && lastEventTagId(source) === target.id
+    );
+  if (source.kind === kinds.genericRepost) {
+    const declared = lastEventTagId(source);
+    return !declared || declared === target.id;
+  }
+  return false;
+}
+
+function lastEventTagId(event: NostrEvent): string | undefined {
+  const id = event.tags.filter(isETag).at(-1)?.[1];
+  return id && isEventId(id) ? id : undefined;
 }
 
 function nostrEventReferences(content: string): EventReference[] {

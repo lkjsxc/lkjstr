@@ -20,12 +20,14 @@ proof exist.
 - `crates/lkjstr-web/src/follow_graph/mod.rs` exposes the Rust follow-list
   summary bridge used by the shipped Svelte follow graph path.
 - `crates/lkjstr-app/tests/followees_view_test.rs` proves Followees rows come
-  from real deduped NIP-02 entries and do not claim absence before proof.
+  from real deduped NIP-02 entries, the header and rows carry real cached
+  metadata when supplied, and absence is not claimed before proof.
 - `crates/lkjstr-ui/src/workspace/followees.rs` renders a real Followees body
-  from `FolloweesView`.
+  from `FolloweesView`; `followees_header.rs` renders cached target metadata.
 - `crates/lkjstr-ui/src/workspace/followees_row.rs` renders followee rows as
   profile buttons only when a real profile callback exists; otherwise rows stay
-  static.
+  static, and uses `Unknown` instead of compact raw pubkey labels until real
+  profile metadata is carried.
 - `crates/lkjstr-ui/tests/followees_provider_test.rs` proves provider request
   forwarding and release suppression.
 - `crates/lkjstr-web/tests/profile_feed_tab_test.rs` proves Profile opens the
@@ -34,7 +36,8 @@ proof exist.
   cached worker-owned SQLite kind `3` rows and starts selected-relay discovery
   on cache miss.
 - `crates/lkjstr-web/tests/followees_provider_test.rs` proves the default
-  provider path through Profile following count and real cached kind `3` data.
+  provider path through Profile following count, real cached kind `3` data, and
+  cached kind `0` target header plus row display name and NIP-05 metadata.
 - `crates/lkjstr-web/src/followees_relay*.rs` starts a bounded selected-relay
   kind `3` read on cache miss, stores the relay event in worker SQLite, and
   rebuilds Followees from real cache rows.
@@ -106,8 +109,8 @@ pnpm rust-wasm:quiet
 
 - Followees tabs no longer fall through to the pending placeholder body.
 - Rust Followees rows come from real NIP-02 follow-list entries.
-- The leading in-flow row labels the viewed profile without raw placeholder
-  success copy.
+- The leading header labels the viewed profile without raw placeholder success
+  copy.
 - Empty, loading, and error states are explicit and retryable where a provider
   exists.
 - Cache miss starts selected-relay kind `3` discovery and updates from real
@@ -126,8 +129,8 @@ pnpm rust-wasm:quiet
 - The generic Svelte host cancels pending WASM mounts when hidden or destroyed,
   so late bridge loads cannot remount a hidden island.
 - Rust rows expose real pubkeys, relay hints, petnames, and profile,
-  user-timeline, and copy actions without synthesizing profile metadata or
-  no-op row controls.
+  user-timeline, and copy actions while the header and rows use only cached
+  profile metadata, without synthesizing profiles or no-op row controls.
 - TypeScript Followees and follow-graph paths remain until remaining parity,
   no-import, and final gates prove deletion readiness.
 

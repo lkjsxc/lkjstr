@@ -10,6 +10,7 @@ import {
   normalizeRelayUrl,
   replyParent,
   replyRoot,
+  verifiedNestedRepost,
 } from '../../../src/lib/protocol';
 
 const event = finalizeEvent(
@@ -96,6 +97,32 @@ describe('tags, relay URLs, and NIP-19', () => {
     ]);
   });
 
+  it('verifies nested repost targets against declared event tags', () => {
+    const target = finalizeEvent(
+      { created_at: 103, kind: kinds.textNote, tags: [], content: 'target' },
+      generateSecretKey(),
+    );
+    const content = JSON.stringify(target);
+    const repost = repostEvent(kinds.repost, content, [['e', target.id]]);
+    const generic = repostEvent(kinds.genericRepost, content, []);
+
+    expect(verifiedNestedRepost(repost)?.id).toBe(target.id);
+    expect(verifiedNestedRepost(generic)?.id).toBe(target.id);
+    expect(
+      verifiedNestedRepost(repostEvent(kinds.repost, content, [])),
+    ).toBeUndefined();
+    expect(
+      verifiedNestedRepost(
+        repostEvent(kinds.repost, content, [['e', '8'.repeat(64)]]),
+      ),
+    ).toBeUndefined();
+    expect(
+      verifiedNestedRepost(
+        repostEvent(kinds.genericRepost, content, [['e', '9'.repeat(64)]]),
+      ),
+    ).toBeUndefined();
+  });
+
   it('normalizes relay URLs', () => {
     expect(normalizeRelayUrl('relay.example/')).toBe('wss://relay.example/');
     expect(normalizeRelayUrl('https://relay.example/path/?b=2&a=1#x')).toBe(
@@ -115,3 +142,14 @@ describe('tags, relay URLs, and NIP-19', () => {
     expect(decodeEntity('not-an-entity')).toBeUndefined();
   });
 });
+
+function repostEvent(
+  kind: number,
+  content: string,
+  tags: readonly (readonly string[])[],
+) {
+  return finalizeEvent(
+    { created_at: 104, kind, tags, content },
+    generateSecretKey(),
+  );
+}

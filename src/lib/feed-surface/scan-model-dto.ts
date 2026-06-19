@@ -49,6 +49,7 @@ export type RustProposalDto = {
 export type RustPlanOutput = {
   readonly initial_span_seconds: number;
   readonly source: string;
+  readonly hint_status: 'unavailable' | 'used' | 'expired' | 'rejected';
   readonly proposal: RustProposalDto;
 };
 

@@ -4,10 +4,15 @@
   import type { NostrEvent } from '$lib/protocol';
   import type { RelaySet } from '$lib/relays/relay-store';
   import { createZapInvoices, type ZapInvoice } from '$lib/events/zap';
+  import { copyEventZapInvoiceStatus } from '$lib/components/events/zap-copy-status';
   import {
-    copyZapInvoice,
-    zapInvoiceCopyStatusText,
-  } from '$lib/components/events/zap-copy-status';
+    canSubmitEventZap,
+    eventZapPanelLabels,
+    openEventZapInvoice,
+    runEventZapSubmit,
+    submitEventZap,
+    zapInvoiceAmountSats,
+  } from './event-zap-panel-plan';
 
   type Props = {
     event: NostrEvent;
@@ -21,72 +26,76 @@
   let status = $state('');
   let busy = $state(false);
   let invoices = $state<ZapInvoice[]>([]);
+  const labels = eventZapPanelLabels();
 
   async function createInvoices(): Promise<void> {
-    busy = true;
-    status = '';
-    invoices = [];
-    try {
-      invoices = await createZapInvoices({
-        event: props.event,
-        profile: props.profile,
-        relaySets: props.relaySets,
-        amountSats: amount,
-        message,
-      });
-      status = invoices.length === 1 ? 'Invoice ready.' : 'Invoices ready.';
-    } catch (error) {
-      status = error instanceof Error ? error.message : 'Zap failed.';
-    } finally {
-      busy = false;
-    }
+    await runEventZapSubmit({
+      createInvoices: () =>
+        createZapInvoices({
+          event: props.event,
+          profile: props.profile,
+          relaySets: props.relaySets,
+          amountSats: amount,
+          message,
+        }),
+      setBusy: (next) => (busy = next),
+      setInvoices: (next) => (invoices = [...next]),
+      setStatus: (next) => (status = next),
+    });
   }
 
   async function copyInvoice(invoice: string): Promise<void> {
-    const copyStatus = await copyZapInvoice(invoice, navigator.clipboard);
-    status = zapInvoiceCopyStatusText(copyStatus);
+    await copyEventZapInvoiceStatus(invoice, {
+      clipboard: navigator.clipboard,
+      setStatus: (next) => (status = next),
+    });
+  }
+
+  function openInvoice(uri: string): void {
+    openEventZapInvoice(uri, (url, target) => window.open(url, target));
   }
 </script>
 
 <form
   class="event-inline-action event-inline-action--zap"
-  onsubmit={(event) => {
-    event.preventDefault();
-    void createInvoices();
-  }}
+  onsubmit={(event) => submitEventZap(event, () => void createInvoices())}
 >
   <input
-    aria-label="Zap amount sats"
+    aria-label={labels.amountInput}
     type="number"
     min="1"
     bind:value={amount}
   />
-  <input aria-label="Zap message" bind:value={message} />
-  <button class="compact-button" type="submit" disabled={busy || amount < 1}>
-    Invoice
+  <input aria-label={labels.messageInput} bind:value={message} />
+  <button
+    class="compact-button"
+    type="submit"
+    disabled={!canSubmitEventZap(amount, busy)}
+  >
+    {labels.submit}
   </button>
 </form>
 {#if invoices.length > 0}
   <div class="zap-invoices">
     {#each invoices as invoice (invoice.invoice)}
       <section class="zap-invoice">
-        <img src={invoice.qrDataUrl} alt="BOLT11 invoice QR code" />
+        <img src={invoice.qrDataUrl} alt={labels.invoiceQrAlt} />
         <div class="zap-invoice__controls">
-          <span>{Math.floor(invoice.amountMsats / 1000)} sats</span>
+          <span>{zapInvoiceAmountSats(invoice.amountMsats)} sats</span>
           <button
             type="button"
             class="icon-button"
-            aria-label="Open invoice"
-            title="Open invoice"
-            onclick={() => window.open(invoice.uri, '_blank')}
+            aria-label={labels.openInvoice}
+            title={labels.openInvoice}
+            onclick={() => openInvoice(invoice.uri)}
           >
             <ExternalLink size={16} />
           </button>
           <button
             type="button"
             class="icon-button"
-            aria-label="Copy invoice"
-            title="Copy invoice"
+            aria-label={labels.copyInvoice}
+            title={labels.copyInvoice}
             onclick={() => {
               void copyInvoice(invoice.invoice);
             }}

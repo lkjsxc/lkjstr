@@ -8,12 +8,12 @@ named test gate passes.
 
 ## Identity And Overflow
 
-| Target               | Acceptance                                                                     | Source anchors                                        | Gate                       |
-| -------------------- | ------------------------------------------------------------------------------ | ----------------------------------------------------- | -------------------------- |
-| User Timeline header | Leading row uses `FeedIdentityHeader`; no raw npub or hex                      | `RustIslandHost.svelte`, `FeedIdentityHeader.svelte`  | identity contract test     |
-| Followees rows       | Row click opens Profile; Timeline and Copy npub only in overflow menu          | Followees Rust island, `UserEventRow.svelte`          | followees tab render test  |
-| Profile overflow     | Open user timeline lives in copy overflow menu, not a large fact button        | `ProfileHeader.svelte`                                | profile header layout test |
-| Profile spacing      | Following count under display name; about block has `space-5` gap before notes | `ProfileHeader.svelte`, `identity.css`                | CSS contract test          |
+| Target               | Acceptance                                                                     | Source anchors                                       | Gate                       |
+| -------------------- | ------------------------------------------------------------------------------ | ---------------------------------------------------- | -------------------------- |
+| User Timeline header | Leading row uses `FeedIdentityHeader`; no raw npub or hex                      | `RustIslandHost.svelte`, `FeedIdentityHeader.svelte` | identity contract test     |
+| Followees rows       | Row click opens Profile; Timeline and Copy npub only in overflow menu          | Followees Rust island, `UserEventRow.svelte`         | followees tab render test  |
+| Profile overflow     | Open user timeline lives in copy overflow menu, not a large fact button        | `ProfileHeader.svelte`                               | profile header layout test |
+| Profile spacing      | Following count under display name; about block has `space-5` gap before notes | `ProfileHeader.svelte`, `identity.css`               | CSS contract test          |
 
 ## New Tab
 
@@ -24,11 +24,11 @@ named test gate passes.
 
 ## Scroll Alignment
 
-| Target          | Acceptance                                                                     | Source anchors                                       | Gate                                |
-| --------------- | ------------------------------------------------------------------------------ | ---------------------------------------------------- | ----------------------------------- |
-| Form tab class  | Every tool tab root carries `.form-tab` or documented hybrid class             | tab `*.svelte` roots, `scroll-layout.css`            | scroll-layout-css test              |
-| Tab kind switch | Feed and form scroll owners in the same pane share track-edge inset within 1px | `scroll-layout.css`, workspace shell                 | tab-kind-scroll-alignment host test |
-| Hybrid tabs     | Custom Request and Author Context keep one feed scroll owner                   | `CustomRequestTab.svelte`, `RustIslandHost.svelte`   | hybrid-tab-shell test               |
+| Target          | Acceptance                                                                     | Source anchors                                     | Gate                                |
+| --------------- | ------------------------------------------------------------------------------ | -------------------------------------------------- | ----------------------------------- |
+| Form tab class  | Every tool tab root carries `.form-tab` or documented hybrid class             | tab `*.svelte` roots, `scroll-layout.css`          | scroll-layout-css test              |
+| Tab kind switch | Feed and form scroll owners in the same pane share track-edge inset within 1px | `scroll-layout.css`, workspace shell               | tab-kind-scroll-alignment host test |
+| Hybrid tabs     | Custom Request and Author Context keep one feed scroll owner                   | `CustomRequestTab.svelte`, `RustIslandHost.svelte` | hybrid-tab-shell test               |
 
 ## Media Upload Gate
 

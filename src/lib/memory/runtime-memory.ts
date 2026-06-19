@@ -1,6 +1,7 @@
 import { runtimeCounterSnapshots } from '../app/runtime-counters';
 import { contentTokenCacheSize } from '../events/content-tokens';
 import { fallbackRepositoryCounts } from '../events/repository-memory';
+import { feedFragmentDiagnostics } from '../feed-surface/feed-fragment-diagnostics';
 import { referenceCacheSize } from '../events/reference-resolver';
 import { profileCacheSize } from '../identity/profile-cache';
 import { feedGeometryWasmBridgeStatus } from '../feed-surface/feed-geometry-wasm';
@@ -41,6 +42,7 @@ export type RuntimeMemorySnapshot = {
   readonly geometry: ReturnType<typeof feedRowHeightDiagnostics> & {
     readonly bridgeStatus: string;
     readonly rust: FeedGeometryRuntimeDiagnostics;
+    readonly fragments: ReturnType<typeof feedFragmentDiagnostics>;
   };
   readonly userTimeline: UserTimelineRuntimeDiagnostics;
   readonly jsHeap?: {
@@ -83,6 +85,7 @@ export function runtimeMemorySnapshot(
     geometry: {
       bridgeStatus: feedGeometryWasmBridgeStatus().status,
       rust: feedGeometry,
+      fragments: feedFragmentDiagnostics(),
       ...feedRowHeightDiagnostics(),
     },
     userTimeline,

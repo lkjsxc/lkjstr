@@ -36,6 +36,7 @@ pub mod repair_adapter;
 mod response;
 pub mod retention_dispatch;
 mod retention_routes;
+mod runtime_counter_state;
 pub mod scan_model;
 #[cfg(target_arch = "wasm32")]
 mod thread_feed_status;
@@ -43,18 +44,34 @@ mod thread_feed_status;
 #[cfg(target_arch = "wasm32")]
 pub use author_context_island::{AuthorContextIslandHandle, mount_author_context_tab};
 #[cfg(target_arch = "wasm32")]
+pub use custom_request_island::{CustomRequestIslandHandle, mount_custom_request_tab};
+#[cfg(target_arch = "wasm32")]
 pub use followees_island::{FolloweesIslandHandle, mount_followees_tab};
+#[cfg(target_arch = "wasm32")]
+pub use global_island::{GlobalIslandHandle, mount_global_tab};
+#[cfg(target_arch = "wasm32")]
+pub use home_island::{HomeIslandHandle, mount_home_tab};
 #[cfg(target_arch = "wasm32")]
 pub use mount_api::{
     mount_rust_workspace_shell, mount_rust_workspace_shell_from_db,
     mount_rust_workspace_shell_from_db_with_worker,
     mount_rust_workspace_shell_with_author_context_feed_provider,
     mount_rust_workspace_shell_with_global_feed, mount_rust_workspace_shell_with_home_feed,
+    mount_rust_workspace_shell_with_home_feed_provider,
     mount_rust_workspace_shell_with_profile_feed,
     mount_rust_workspace_shell_with_profile_feed_and_followees_provider,
     mount_rust_workspace_shell_with_profile_feed_followees_and_user_timeline_provider,
     mount_rust_workspace_shell_with_profile_feed_provider, mount_rust_workspace_shell_with_startup,
+    mount_rust_workspace_shell_with_stats_provider,
 };
+#[cfg(target_arch = "wasm32")]
+pub use notifications_island::{NotificationsIslandHandle, mount_notifications_tab};
+#[cfg(target_arch = "wasm32")]
+pub use profile_island::{ProfileIslandHandle, mount_profile_tab};
+#[cfg(target_arch = "wasm32")]
+pub use search_island::{SearchIslandHandle, mount_search_tab};
+#[cfg(target_arch = "wasm32")]
+pub use thread_island::{ThreadIslandHandle, mount_thread_tab};
 #[cfg(target_arch = "wasm32")]
 pub use user_timeline_island::{UserTimelineIslandHandle, mount_user_timeline_tab};
 #[cfg(all(target_arch = "wasm32", debug_assertions))]

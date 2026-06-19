@@ -104,7 +104,7 @@ fn ready_state(
     match &input.source_state {
         NotificationsFeedSourceState::CacheComplete => {
             let state = if input.window.visible_events().is_empty() {
-                FeedFooterState::TerminalEmpty
+                FeedFooterState::ReadingRelays
             } else {
                 FeedFooterState::CacheHit
             };

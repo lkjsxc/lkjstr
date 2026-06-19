@@ -12,10 +12,10 @@ Leptos component group, Rust state owner, and deletion gate.
 - Current Leptos shell code lives under `crates/lkjstr-ui/src/workspace/**`.
 - `TabBody` renders real Leptos Welcome, New Tab, Stats, Log, Accounts, Relay
   Settings, Settings, Upload Settings, Tweet draft, and partial Public Chat
-  surfaces. Partial feed-family Leptos bodies include injected and
-  worker/relay-backed Author Context shared-feed rows, shared event/state row
-  rendering, and row actions; generic Svelte workspace host glue mounts that
-  Rust body as a WASM island.
+  surfaces. Partial feed-family Leptos bodies include shipped Home, Global, Profile, Thread, and Notifications,
+  injected and worker/relay-backed Author Context shared-feed rows, shared
+  event/state row rendering, and row actions; generic Svelte workspace host glue
+  mounts those Rust bodies as WASM islands.
   Other tab kinds still render pending Leptos bodies while shipped behavior
   remains Svelte.
 
@@ -41,8 +41,8 @@ Leptos component group, Rust state owner, and deletion gate.
 | `src/lib/tabs/custom-request/**`, `src/lib/custom-request/**`                                  | `workspace/custom_request/**` to add                          | `lkjstr-app`, `lkjstr-protocol`, `lkjstr-relays`                   | Raw filter parse, clamping, selected relay states, cancellation, and real output pass.           |
 | `src/lib/tabs/public-chat/**`, `src/lib/public-chat/**`                                        | `workspace/public_chat.rs` plus chat modules                  | `lkjstr-app`, `lkjstr-protocol`, `lkjstr-relays`                   | NIP-28 channels, messages, moderation, publish, partial failure, and cleanup pass.               |
 | `src/lib/tabs/profile-edit/**`                                                                 | `workspace/profile_edit/**` to add                            | `lkjstr-protocol`, `lkjstr-app`, `lkjstr-relays`                   | Kind `0` load, edit, sign, publish, retry, and real cache update pass.                           |
-| Author Context host glue and event-row glue                                                     | `workspace/author_context*.rs`                                 | `lkjstr-app`, `lkjstr-web`, `lkjstr-relays`, `lkjstr-storage`      | Generic host, event-row no-import proof, and final gate pass.                                    |
-| Followees host glue and `src/lib/follow-graph/**`                                               | `workspace/followees/**` to add                               | `lkjstr-protocol`, `lkjstr-app`, `lkjstr-relays`                   | Real kind `3`, relay discovery, retry, degraded states, and cleanup pass.                        |
+| Author Context host glue and event-row glue                                                    | `workspace/author_context*.rs`                                | `lkjstr-app`, `lkjstr-web`, `lkjstr-relays`, `lkjstr-storage`      | Generic host, event-row no-import proof, and final gate pass.                                    |
+| Followees host glue and `src/lib/follow-graph/**`                                              | `workspace/followees/**` to add                               | `lkjstr-protocol`, `lkjstr-app`, `lkjstr-relays`                   | Real kind `3`, relay discovery, retry, degraded states, and cleanup pass.                        |
 | User Timeline host glue, `src/lib/user-timeline/**`                                            | `workspace/user_timeline/**` to add                           | `lkjstr-app`, `lkjstr-relays`, `lkjstr-storage`                    | Cache hit, discovery, selected/NIP-65/provenance routes, target-only degraded mode, and UI pass. |
 | `src/lib/tabs/npub-miner/**`, `src/lib/accounts/npub-miner*`                                   | `workspace/mine_npub/**` to add                               | `lkjstr-protocol`, `lkjstr-app`, `lkjstr-web`                      | Bounded worker ownership, cancellation, explicit save, and memory tests pass.                    |
 | `src/lib/components/events/**`, `src/lib/events/**`, `src/lib/identity/**`, `src/lib/emoji/**` | Shared Leptos event, identity, and emoji components to add    | `lkjstr-protocol`, `lkjstr-app`                                    | Event renderer, repost target, reference unavailable, media, custom emoji, and actions pass.     |

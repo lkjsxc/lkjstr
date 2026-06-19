@@ -48,8 +48,12 @@ deletion, and final verification proof exist.
   relays timing out renders retry diagnostics without claiming absence.
 - `crates/lkjstr-web/tests/user_timeline_cleanup_test.rs` proves selected-relay
   cleanup closes the relay read and suppresses late events.
+- `crates/lkjstr-web/tests/user_timeline_target_only_test.rs` proves cached
+  target-authored posts survive exhausted follow-list discovery as explicit
+  target-posts-only degraded output with relay diagnostics.
 - Focused User Timeline tests, browser wasm profile-action tests, clippy,
-  repo/doc/line checks, and `pnpm rust-wasm:quiet` pass for this slice.
+  repo/doc/line checks, and `pnpm rust-wasm:quiet` passed for earlier
+  provider slices; target-only proof is recorded in the verification ledger.
 - `src/lib/components/workspace/RustIslandHost.svelte` and
   `user-timeline-island.ts` now load the Rust/WASM island, forward required
   workspace action callbacks, and release it on hidden or destroy.

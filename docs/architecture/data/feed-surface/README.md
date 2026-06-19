@@ -3,8 +3,8 @@
 ## Purpose
 
 Feed surface is the shared contract for feed-like tabs: scroll ownership,
-near-end detection, footer status, speculative older prefetch, staged row
-materialization, row geometry, and real-data level of detail.
+near-end detection, footer status, speculative older prefetch, row
+materialization, geometry, and real-data level of detail.
 
 ## Table of Contents
 
@@ -15,7 +15,7 @@ materialization, row geometry, and real-data level of detail.
 - [event-value.md](event-value.md): display bounds, runtime pins, and retention
   value for feed events.
 - [footer-phase.md](footer-phase.md): `feedPagingPhase` and `FeedSurfaceStatus`.
-- [staged-pipeline.md](staged-pipeline.md): relay page, row shell, enrichment.
+- [staged-pipeline.md](staged-pipeline.md): relay pages, row planning, enrichment.
 - [height-reservation.md](height-reservation.md): shipped reservation loop and
   concise summary of row-height contracts.
 - [unload-height-stability.md](unload-height-stability.md): unload,

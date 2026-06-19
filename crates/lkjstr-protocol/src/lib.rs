@@ -75,7 +75,9 @@ pub use event_builders::{
 };
 pub use event_id::{compute_event_id, serialize_event};
 pub use event_reference_types::{EventReference, EventReferenceKind, EventReferenceSource};
-pub use event_references::{event_references, strip_event_reference_tokens};
+pub use event_references::{
+    event_references, strip_event_reference_tokens, verified_nested_repost,
+};
 pub use event_sign::{EventTemplate, SignError, finalize_event, sign_event_with_secret_hex};
 pub use event_verify::{VerificationCode, VerificationResult, verify_event};
 pub use filter::{NostrFilter, matches_any_filter, matches_filter, parse_filter_value};

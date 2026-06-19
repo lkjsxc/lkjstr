@@ -8,6 +8,11 @@
   import type { ProfileSummary } from '$lib/identity/identity';
   import type { EventReference } from '$lib/protocol';
   import EventReferenceList from './EventReferenceList.svelte';
+  import {
+    eventReferencesLoadingStatus,
+    eventReferencesShouldShowLoading,
+    loadEventReferences,
+  } from './event-reference-hydration';
 
   type Props = {
     references: readonly EventReference[];
@@ -19,42 +24,36 @@
   };
 
   let props: Props = $props();
-  let resolved = $state<ResolvedReference[]>([]);
+  let resolved = $state<readonly ResolvedReference[]>([]);
   let profiles = $state<Record<string, ProfileSummary>>({});
   let loaded = $state(false);
+  const loadingStatus = eventReferencesLoadingStatus();
 
   onMount(() => {
     let alive = true;
-    void load();
+    void loadEventReferences({
+      references: props.references,
+      relays: props.relays ?? [],
+      profiles: props.profiles,
+      callbacks: {
+        resolveReferences,
+        hydrateProfiles,
+        isAlive: () => alive,
+        apply: (plan) => {
+          resolved = plan.resolved;
+          profiles = plan.profiles;
+          loaded = plan.loaded;
+        },
+      },
+    });
     return () => {
       alive = false;
     };
-
-    async function load(): Promise<void> {
-      const next = await resolveReferences({
-        references: props.references,
-        relays: props.relays ?? [],
-        key: `refs:${props.references.length}:${props.references[0]?.id.slice(0, 12)}`,
-      });
-      if (!alive) return;
-      resolved = next;
-      const authors = [
-        ...new Set(next.flatMap((item) => item.event?.event.pubkey ?? [])),
-      ].filter((pubkey) => !props.profiles?.[pubkey]);
-      const hydrated = await hydrateProfiles({
-        pubkeys: authors,
-        relays: props.relays ?? [],
-        owner: 'event-references',
-      });
-      if (!alive) return;
-      profiles = { ...(props.profiles ?? {}), ...hydrated };
-      loaded = true;
-    }
   });
 </script>
 
-{#if !loaded && props.references.length > 0}
-  <p class="event-list__status">Loading referenced events...</p>
+{#if eventReferencesShouldShowLoading(loaded, props.references.length)}
+  <p class="event-list__status">{loadingStatus}</p>
 {/if}
 {#if loaded}
   <EventReferenceList

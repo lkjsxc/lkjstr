@@ -62,6 +62,13 @@ pub(crate) fn last_e_tag(event: &NostrEvent) -> Option<&[String]> {
         .map(Vec::as_slice)
 }
 
+pub(crate) fn last_event_tag_id(event: &NostrEvent) -> Option<&str> {
+    last_e_tag(event)?
+        .get(1)
+        .filter(|id| is_event_id(id))
+        .map(String::as_str)
+}
+
 pub(crate) fn tag_name_is(tag: &[String], name: &str) -> bool {
     tag.first().is_some_and(|item| item == name)
 }

@@ -39,7 +39,12 @@ describe('scored retention', () => {
       fallbackRepository: expect.any(Object),
       caches: expect.any(Object),
       geometry: expect.objectContaining({
+        fragments: expect.objectContaining({
+          oversizedSemanticRows: expect.any(Number),
+          visibleFragments: expect.any(Number),
+        }),
         rust: expect.objectContaining({ status: 'unavailable' }),
+        widthBuckets: expect.any(Array),
       }),
       userTimeline: {
         status: 'available',
@@ -54,11 +59,13 @@ describe('scored retention', () => {
   });
 
   it('normalizes malformed Rust User Timeline diagnostics as unavailable', () => {
-    expect(normalizeUserTimelineDiagnostics({ status: 'ready' })).toMatchObject({
-      status: 'unavailable',
-      outcomes: [],
-      reasons: [],
-    });
+    expect(normalizeUserTimelineDiagnostics({ status: 'ready' })).toMatchObject(
+      {
+        status: 'unavailable',
+        outcomes: [],
+        reasons: [],
+      },
+    );
   });
 
   it('normalizes Rust feed geometry diagnostics as bounded counts', () => {
@@ -81,11 +88,13 @@ describe('scored retention', () => {
       anchorReconciles: 4,
       errors: 1,
     });
-    expect(normalizeFeedGeometryDiagnostics({ status: 'ready' })).toMatchObject({
-      status: 'unavailable',
-      estimates: 0,
-      errors: 0,
-    });
+    expect(normalizeFeedGeometryDiagnostics({ status: 'ready' })).toMatchObject(
+      {
+        status: 'unavailable',
+        estimates: 0,
+        errors: 0,
+      },
+    );
   });
 
   it('does not import retained user timeline runtime counters into Stats', () => {

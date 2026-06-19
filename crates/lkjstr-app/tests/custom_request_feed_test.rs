@@ -89,6 +89,19 @@ fn custom_request_partial_keeps_real_rows_and_unavailable_state() {
     }));
 }
 
+#[test]
+fn custom_request_clamped_view_names_effective_outbound_filter() {
+    let model = build_custom_request_feed_view(input(Some(clamped_plan()), empty_window()));
+
+    assert!(model.view_model.rows.iter().any(|row| {
+        matches!(row, FeedViewRow::Diagnostic(item)
+            if item.scope == "custom-request"
+                && item.diagnostic_id == "effective-filters"
+                && item.message.contains("filter 1 limit 500")
+                && item.message.contains("from 999"))
+    }));
+}
+
 fn input(
     run_plan: Option<CustomRequestRunPlan>,
     window: lkjstr_app::FeedWindowState,
@@ -126,6 +139,18 @@ fn invalid_plan() -> CustomRequestRunPlan {
         error: Some(CustomRequestError::new(CustomRequestErrorKind::InvalidJson)),
         relays: Vec::new(),
     }
+}
+
+fn clamped_plan() -> CustomRequestRunPlan {
+    plan_custom_request_run(CustomRequestRunInput {
+        owner: "custom-tab".to_owned(),
+        visibility: DemandVisibility::Visible,
+        selected_relays: relays(),
+        disabled_relays: Vec::new(),
+        raw_json: r#"{"filter":{"kinds":[1],"limit":999}}"#.to_owned(),
+        now_sec: 1_700_000_030,
+        page_size: 30,
+    })
 }
 
 fn window_with_event() -> lkjstr_app::FeedWindowState {

@@ -46,9 +46,7 @@ describe('tab shell classes', () => {
       'thread/ThreadTab.svelte',
       'search/SearchTab.svelte',
     ]);
-    const hybrid = new Set([
-      'custom-request/CustomRequestTab.svelte',
-    ]);
+    const hybrid = new Set(['custom-request/CustomRequestTab.svelte']);
 
     for (const file of tabFiles()) {
       const rel = file.replace(`${tabDir}/`, '');

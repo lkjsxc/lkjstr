@@ -2,7 +2,10 @@ import {
   readFeedGeometryDiagnostics,
   type FeedGeometryRuntimeDiagnostics,
 } from './feed-geometry-diagnostics';
-import { runtimeMemorySnapshot, type RuntimeMemorySnapshot } from './runtime-memory';
+import {
+  runtimeMemorySnapshot,
+  type RuntimeMemorySnapshot,
+} from './runtime-memory';
 import { readUserTimelineDiagnostics } from './user-timeline-diagnostics';
 
 export async function readRuntimeDiagnostics(

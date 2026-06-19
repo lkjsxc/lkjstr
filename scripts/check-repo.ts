@@ -18,6 +18,11 @@ import { checkTaskDocShape } from './repo-doc-task-shape';
 import { checkSkillDocShape } from './repo-doc-skill-shape';
 import { checkEventMenuGuard } from './repo-event-menu';
 import { checkDeletedPaths } from './repo-deleted-paths';
+import { checkAuthorContextDeletionGuard } from './repo-author-context-deletions';
+import { checkFeedTabIslandGuard } from './repo-feed-tab-islands';
+import { checkFeedSurfaceDeletionGuard } from './repo-feed-surface-deletions';
+import { checkTransitionalDeletionGuard } from './repo-transitional-deletions';
+import { checkUserTimelineDeletionGuard } from './repo-user-timeline-deletions';
 
 type Problem = { file: string; message: string };
 
@@ -57,6 +62,11 @@ problems.push(...(await checkStorageBoundary(root, files)));
 problems.push(...(await checkTaskDocShape(root, files)));
 problems.push(...(await checkSkillDocShape(root, files)));
 problems.push(...(await checkEventMenuGuard(root, files)));
+problems.push(...(await checkAuthorContextDeletionGuard(root, files)));
+problems.push(...(await checkFeedTabIslandGuard(root, files)));
+problems.push(...(await checkFeedSurfaceDeletionGuard(root, files)));
+problems.push(...(await checkTransitionalDeletionGuard(root, files)));
+problems.push(...(await checkUserTimelineDeletionGuard(root, files)));
 problems.push(...(await checkDeletedPaths(root)));
 
 for (const problem of problems.sort((a, b) => a.file.localeCompare(b.file))) {

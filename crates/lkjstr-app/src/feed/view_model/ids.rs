@@ -4,6 +4,11 @@ pub fn feed_event_row_id(event_id: &str) -> String {
 }
 
 #[must_use]
+pub fn feed_repost_target_row_id(source_event_id: &str, target_event_id: &str) -> String {
+    format!("event:{source_event_id}:repost-target:{target_event_id}")
+}
+
+#[must_use]
 pub fn feed_profile_row_id(pubkey: &str) -> String {
     format!("profile:{pubkey}")
 }

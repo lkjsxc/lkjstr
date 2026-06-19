@@ -45,7 +45,8 @@ export function unavailableFeedGeometryDiagnostics(
 
 export async function readFeedGeometryDiagnostics(): Promise<FeedGeometryRuntimeDiagnostics> {
   try {
-    const module = (await loadLkjstrWebWasm()) as FeedGeometryDiagnosticsExports;
+    const module =
+      (await loadLkjstrWebWasm()) as FeedGeometryDiagnosticsExports;
     const read = module.feed_geometry_runtime_snapshot;
     if (!read) {
       return unavailableFeedGeometryDiagnostics(

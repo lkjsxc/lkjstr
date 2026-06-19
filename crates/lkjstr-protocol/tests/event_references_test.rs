@@ -1,7 +1,8 @@
 use lkjstr_protocol::{
-    EventPointer, EventReferenceKind, EventReferenceSource, KIND_REACTION, KIND_REPOST,
-    KIND_TEXT_NOTE, NostrEvent, encode_nevent, encode_npub, event_references,
-    strip_event_reference_tokens,
+    EventPointer, EventReferenceKind, EventReferenceSource, EventTemplate, KIND_GENERIC_REPOST,
+    KIND_REACTION, KIND_REPOST, KIND_TEXT_NOTE, NostrEvent, encode_nevent, encode_npub,
+    event_references, finalize_event, parse_secret_key_hex, strip_event_reference_tokens,
+    verified_nested_repost,
 };
 
 #[test]
@@ -111,6 +112,66 @@ fn strip_event_reference_tokens_keeps_non_event_entities() -> Result<(), String>
         format!("see  by nostr:{npub}")
     );
     Ok(())
+}
+
+#[test]
+fn verified_nested_repost_requires_signed_embedded_event() -> Result<(), String> {
+    let target = signed_target_event()?;
+    let repost_content = serde_json::to_string(&target).map_err(|error| error.to_string())?;
+    let repost = event(KIND_REPOST, &repost_content, vec![e_tag(&target.id)]);
+
+    assert_eq!(verified_nested_repost(&repost), Some(target.clone()));
+    assert_eq!(
+        verified_nested_repost(&event(KIND_REPOST, &repost_content, vec![])),
+        None
+    );
+    assert_eq!(
+        verified_nested_repost(&event(
+            KIND_REPOST,
+            &repost_content,
+            vec![e_tag(&"4".repeat(64))]
+        )),
+        None
+    );
+    assert_eq!(
+        verified_nested_repost(&event(KIND_GENERIC_REPOST, &repost_content, vec![])),
+        Some(target.clone())
+    );
+    assert_eq!(
+        verified_nested_repost(&event(
+            KIND_GENERIC_REPOST,
+            &repost_content,
+            vec![e_tag(&"5".repeat(64))]
+        )),
+        None
+    );
+
+    let mut changed = target;
+    changed.content = "changed".to_owned();
+    let changed_content = serde_json::to_string(&changed).map_err(|error| error.to_string())?;
+    let changed_repost = event(KIND_REPOST, &changed_content, vec![e_tag(&changed.id)]);
+    assert_eq!(verified_nested_repost(&changed_repost), None);
+    assert_eq!(
+        verified_nested_repost(&event(KIND_TEXT_NOTE, &changed_content, vec![])),
+        None
+    );
+    Ok(())
+}
+
+fn signed_target_event() -> Result<NostrEvent, String> {
+    let secret =
+        parse_secret_key_hex(&"01".repeat(32)).ok_or_else(|| "secret should parse".to_owned())?;
+    finalize_event(
+        &EventTemplate {
+            pubkey: None,
+            created_at: 2,
+            kind: KIND_TEXT_NOTE,
+            tags: Vec::new(),
+            content: "nested target".to_owned(),
+        },
+        &secret,
+    )
+    .map_err(|error| format!("{error:?}"))
 }
 
 fn e_tag(id: &str) -> Vec<String> {

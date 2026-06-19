@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import {
+  copyEventZapInvoiceStatus,
   copyZapInvoice,
   zapInvoiceCopyStatusText,
 } from '../../../src/lib/components/events/zap-copy-status';
@@ -42,5 +43,43 @@ describe('zap invoice copy status', () => {
     expect(zapInvoiceCopyStatusText(status)).toBe(
       'Invoice copy failed: denied',
     );
+  });
+
+  it('shows copied status only after the clipboard write resolves', async () => {
+    const writes: string[] = [];
+    const statuses: string[] = [];
+    let resolveWrite: (() => void) | undefined;
+    const pendingWrite = new Promise<void>((resolve) => {
+      resolveWrite = resolve;
+    });
+
+    const copy = copyEventZapInvoiceStatus('lnbc1invoice', {
+      clipboard: {
+        writeText: async (value) => {
+          writes.push(value);
+          await pendingWrite;
+        },
+      },
+      setStatus: (status) => statuses.push(status),
+    });
+
+    expect(writes).toEqual(['lnbc1invoice']);
+    expect(statuses).toEqual([]);
+
+    resolveWrite?.();
+    await copy;
+
+    expect(statuses).toEqual(['Invoice copied.']);
+  });
+
+  it('shows explicit failure status for unavailable invoice copy', async () => {
+    const statuses: string[] = [];
+
+    await copyEventZapInvoiceStatus('lnbc1invoice', {
+      clipboard: undefined,
+      setStatus: (status) => statuses.push(status),
+    });
+
+    expect(statuses).toEqual(['Invoice copy failed: Clipboard unavailable']);
   });
 });

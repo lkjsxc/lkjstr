@@ -19,6 +19,7 @@ pub(crate) fn timeline_row(row: FeedViewRow, actions: UserTimelineActions) -> im
             state_footer(row.row_id, row.state, FooterAuthLabel::Auth).into_any()
         }
         FeedViewRow::Continuation(row) => feed_state_row::plain_continuation(row).into_any(),
+        FeedViewRow::Shell(row) => feed_state_row::shell(row).into_any(),
         FeedViewRow::Profile(row) => feed_state_row::profile(row).into_any(),
         FeedViewRow::Notification(row) => feed_state_row::notification(row).into_any(),
     }

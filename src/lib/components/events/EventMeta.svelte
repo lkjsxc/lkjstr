@@ -5,14 +5,21 @@
   import Avatar from '$lib/components/identity/Avatar.svelte';
   import { feedIdentityDisplay } from '$lib/identity/feed-identity';
   import type { ProfileSummary } from '$lib/identity/identity';
-  import { hasOpenProfileAction } from './action-availability';
   import EmojifiedText from './EmojifiedText.svelte';
   import {
-    copyEventIdToClipboard,
-    copyEventStatusLabel,
-    eventMoreMenuHasAuthorContext,
-    type EventMoreMenuCopyStatus,
-  } from './event-more-menu';
+    eventProfileCanOpen,
+    stopAndOpenEventProfile,
+  } from './event-profile-activation';
+  import {
+    copyEventMetaEventId,
+    createEventMetaCopyStatusResetter,
+    eventMetaCopyStatusLabel,
+    eventMetaHasAuthorContext,
+    eventMetaOverflowLabels,
+    openEventMetaAuthorContext,
+    stopEventMetaOverflowPropagation,
+    type EventMetaCopyStatus,
+  } from './event-meta-overflow';
 
   type Props = {
     event: NostrEvent;
@@ -30,39 +37,40 @@
     feedIdentityDisplay(props.event.pubkey, props.profile),
   );
   let time = $derived(new Date(props.event.created_at * 1000).toLocaleString());
-  let canOpenProfile = $derived(hasOpenProfileAction(props.openProfile));
+  let canOpenProfile = $derived(eventProfileCanOpen(props.openProfile));
   let hasAuthorContext = $derived(
-    eventMoreMenuHasAuthorContext(props.openAuthorContext),
+    eventMetaHasAuthorContext(props.openAuthorContext),
   );
-  let copyStatus = $state<EventMoreMenuCopyStatus | null>(null);
-  let copyTimer: ReturnType<typeof setTimeout> | undefined;
+  const overflowLabels = eventMetaOverflowLabels();
+  let copyStatus = $state<EventMetaCopyStatus | null>(null);
+  const copyStatusResetter = createEventMetaCopyStatusResetter(
+    (status) => (copyStatus = status),
+  );
 
   onDestroy(() => {
-    if (copyTimer) clearTimeout(copyTimer);
+    copyStatusResetter.clear();
   });
 
   function openProfile(event: MouseEvent): void {
-    event.stopPropagation();
-    const openProfile = props.openProfile;
-    if (!hasOpenProfileAction(openProfile)) return;
-    openProfile(props.event.pubkey);
+    stopAndOpenEventProfile(event, props.openProfile, props.event.pubkey);
   }
 
   async function copyEventId(event: MouseEvent): Promise<void> {
-    event.stopPropagation();
-    copyStatus = await copyEventIdToClipboard(
+    const status = await copyEventMetaEventId(
+      event,
       props.event.id,
       navigator.clipboard,
     );
-    if (copyTimer) clearTimeout(copyTimer);
-    copyTimer = setTimeout(() => (copyStatus = null), 1200);
+    copyStatusResetter.show(status);
   }
 
   function openNearby(event: MouseEvent): void {
-    event.stopPropagation();
-    const openAuthorContext = props.openAuthorContext;
-    if (!eventMoreMenuHasAuthorContext(openAuthorContext)) return;
-    openAuthorContext(props.event.id, props.event.pubkey);
+    openEventMetaAuthorContext(
+      event,
+      props.openAuthorContext,
+      props.event.id,
+      props.event.pubkey,
+    );
   }
 </script>
 
@@ -116,20 +124,22 @@
   {#if props.showMore}
     <details class="event-more event-action-zone">
       <summary
-        aria-label="Event menu"
-        onclick={(event) => event.stopPropagation()}
+        aria-label={overflowLabels.menu}
+        onclick={stopEventMetaOverflowPropagation}
       >
         <MoreHorizontal size={16} />
       </summary>
       <div class="event-more__items">
         {#if hasAuthorContext}
           <button type="button" onclick={openNearby}
-            >Nearby posts by this author</button
+            >{overflowLabels.nearbyAuthor}</button
           >
         {/if}
-        <button type="button" onclick={copyEventId}>Copy event ID</button>
+        <button type="button" onclick={copyEventId}
+          >{overflowLabels.copyEventId}</button
+        >
         {#if copyStatus}<small role="status"
-            >{copyEventStatusLabel(copyStatus)}</small
+            >{eventMetaCopyStatusLabel(copyStatus)}</small
           >{/if}
       </div>
     </details>

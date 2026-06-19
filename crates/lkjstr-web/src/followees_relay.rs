@@ -13,6 +13,7 @@ use crate::{
     relay_read_handle::RelayReadHandle,
 };
 
+#[cfg(debug_assertions)]
 pub(crate) use crate::followees_relay_read::store_followees_relay_event;
 
 pub(crate) fn start_followees_relay_read(

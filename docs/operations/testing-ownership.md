@@ -16,7 +16,7 @@ Unit tests own deterministic behavior:
   normalization, signing helpers, content parsing, media extraction, and custom
   emoji rules.
 - Feed merge reducers, display bounds, scroll anchors, cursors, window caps,
-  coverage intervals, row shell states, and footer phases.
+  coverage intervals, row planning states, and footer phases.
 - Retention scoring, byte accounting, protected-row decisions, deletion
   dispatch, repair planning, pressure stop reasons, and LOD forgetting plans.
 - Relay set selection, disabled-relay exclusion, subscription lease keys, page

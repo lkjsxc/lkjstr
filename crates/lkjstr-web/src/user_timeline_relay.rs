@@ -13,6 +13,7 @@ use crate::{
     user_timeline_relay_read::{connect_socket, install_timeout},
 };
 
+#[cfg(debug_assertions)]
 pub(crate) use crate::user_timeline_relay_store::store_user_timeline_relay_event;
 
 pub(crate) fn start_user_timeline_relay_read(

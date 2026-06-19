@@ -40,7 +40,7 @@ pub fn GlobalTab(
         });
     }
     view! {
-        <section class="lkjstr-global-feed" aria-label="Global">
+        <section class="feed-tab lkjstr-global-feed" aria-label="Global">
             <div class="tab-scroll-track event-list__scroller">
                 <div
                     class="tab-scroll-owner global-list-scroll"
@@ -89,6 +89,7 @@ fn global_row(
         FeedViewRow::Unavailable(row) => feed_state_row::unavailable(row).into_any(),
         FeedViewRow::Diagnostic(row) => feed_state_row::diagnostic(row).into_any(),
         FeedViewRow::Continuation(row) => feed_state_row::plain_continuation(row).into_any(),
+        FeedViewRow::Shell(row) => feed_state_row::shell(row).into_any(),
         FeedViewRow::Footer(row) => footer_row(row, older_command).into_any(),
         FeedViewRow::Profile(row) => feed_state_row::profile(row).into_any(),
         FeedViewRow::Notification(row) => feed_state_row::notification(row).into_any(),

@@ -5,7 +5,6 @@
   import type { CustomEmoji, NostrEvent } from '$lib/protocol';
   import type { RelaySet } from '$lib/relays/relay-store';
   import { loadAccountEmojiSource } from '$lib/emoji/source';
-  import { timelineRelays } from '$lib/timeline/timeline-subscription';
   import {
     publishReaction,
     publishReply,
@@ -13,8 +12,22 @@
   } from '$lib/events/actions';
   import EmojiPaletteButton from '$lib/components/emoji/EmojiPaletteButton.svelte';
   import EventZapPanel from './EventZapPanel.svelte';
+  import { loadEventActionEmojiSource } from './event-actions-emoji-source';
+  import {
+    canSubmitEventActionReply,
+    eventActionLabels,
+    planCustomEmojiEventReaction,
+    planEventActionEmojiSource,
+    planUnicodeEventReaction,
+    runEventAction,
+    submitEventActionReply,
+    submitEventActionReplyShortcut,
+    toggleEventActionMode,
+    type EventActionMode,
+    type EventActionResult,
+    type EventActionReactionInput,
+  } from './event-actions-plan';
 
-  type Mode = 'none' | 'reply' | 'zap';
   type Props = {
     event: NostrEvent;
     profile?: ProfileSummary;
@@ -26,15 +39,16 @@
   };
 
   let props: Props = $props();
-  let mode = $state<Mode>('none');
+  let mode = $state<EventActionMode>('none');
   let reply = $state('');
   let status = $state('');
   let busy = $state(false);
   let customEmojis = $state<readonly CustomEmoji[]>([]);
   let emojiLoadRequest = 0;
   let destroyed = false;
-  let emojiSourceKey = $derived(
-    `${props.activeAccountPubkey ?? ''}|${timelineRelays(props.relaySets).join('\u0000')}`,
+  const labels = eventActionLabels();
+  let emojiSource = $derived(
+    planEventActionEmojiSource(props.activeAccountPubkey, props.relaySets),
   );
 
   onDestroy(() => {
@@ -42,39 +56,28 @@
   });
 
   $effect(() => {
-    const key = emojiSourceKey;
-    if (key === undefined) return;
-    const request = ++emojiLoadRequest;
-    const pubkey = props.activeAccountPubkey ?? undefined;
-    const relays = timelineRelays(props.relaySets);
-    void loadAccountEmojiSource({ pubkey, relays }).then((emoji) => {
-      if (!destroyed && request === emojiLoadRequest) customEmojis = emoji;
+    void loadEventActionEmojiSource(emojiSource, {
+      loadAccountEmojiSource,
+      nextRequest: () => ++emojiLoadRequest,
+      isCurrent: (request) => !destroyed && request === emojiLoadRequest,
+      setCustomEmojis: (emoji) => {
+        customEmojis = emoji;
+      },
     });
   });
 
-  async function run(action: () => Promise<{ ok: boolean; message?: string }>) {
-    busy = true;
-    status = '';
-    try {
-      const result = await action();
-      if (destroyed) return;
-      status = result.ok ? '' : (result.message ?? 'Action failed.');
-      if (result.ok) {
-        mode = 'none';
-        props.onSuccess?.();
-      }
-    } catch (error) {
-      if (destroyed) return;
-      status = error instanceof Error ? error.message : 'Action failed.';
-    } finally {
-      if (!destroyed) busy = false;
-    }
+  async function run(action: () => Promise<EventActionResult>) {
+    await runEventAction(action, {
+      getMode: () => mode,
+      isDestroyed: () => destroyed,
+      onSuccess: props.onSuccess,
+      setBusy: (next) => (busy = next),
+      setMode: (next) => (mode = next),
+      setStatus: (next) => (status = next),
+    });
   }
 
-  function submitEmoji(reaction: {
-    content: string;
-    emoji?: CustomEmoji;
-  }): void {
+  function submitEmoji(reaction: EventActionReactionInput): void {
     void run(() =>
       publishReaction(
         props.event,
@@ -84,6 +87,10 @@
       ),
     );
   }
+
+  function submitReply(): void {
+    void run(() => publishReply(props.event, props.relaySets, reply));
+  }
 </script>
 
 <div class="event-action-zone">
@@ -92,82 +99,76 @@
       type="button"
       class="icon-button"
       class:icon-button--pressed={props.liked}
-      title="Heart"
+      title={labels.heart}
       disabled={busy}
       aria-pressed={props.liked}
       onclick={() => run(() => publishReaction(props.event, props.relaySets))}
     >
       <Heart size={16} />
-      <span class="sr-only">Heart</span>
+      <span class="sr-only">{labels.heart}</span>
     </button>
     <button
       type="button"
       class="icon-button"
       class:icon-button--pressed={props.reposted}
-      title="Repost"
+      title={labels.repost}
       disabled={busy}
       aria-pressed={props.reposted}
       onclick={() => run(() => publishRepost(props.event, props.relaySets))}
     >
       <Repeat2 size={16} />
-      <span class="sr-only">Repost</span>
+      <span class="sr-only">{labels.repost}</span>
     </button>
     <button
       type="button"
       class:active={mode === 'reply'}
       class="icon-button"
       aria-pressed={mode === 'reply'}
-      title="Reply"
+      title={labels.reply}
       disabled={busy}
-      onclick={() => (mode = mode === 'reply' ? 'none' : 'reply')}
+      onclick={() => (mode = toggleEventActionMode(mode, 'reply'))}
     >
       <MessageCircle size={16} />
-      <span class="sr-only">Reply</span>
+      <span class="sr-only">{labels.reply}</span>
     </button>
     <button
       type="button"
       class:active={mode === 'zap'}
       class="icon-button"
       aria-pressed={mode === 'zap'}
-      title="Zap"
+      title={labels.zap}
       disabled={busy}
-      onclick={() => (mode = mode === 'zap' ? 'none' : 'zap')}
+      onclick={() => (mode = toggleEventActionMode(mode, 'zap'))}
     >
       <Zap size={16} />
-      <span class="sr-only">Zap</span>
+      <span class="sr-only">{labels.zap}</span>
     </button>
     <EmojiPaletteButton
       {customEmojis}
       disabled={busy}
-      onUnicode={(emoji) => submitEmoji({ content: emoji })}
-      onCustom={(emoji) =>
-        submitEmoji({ content: `:${emoji.shortcode}:`, emoji })}
+      onUnicode={(emoji) => submitEmoji(planUnicodeEventReaction(emoji))}
+      onCustom={(emoji) => submitEmoji(planCustomEmojiEventReaction(emoji))}
     />
   </div>
   {#if mode === 'reply'}
     <form
       class="event-inline-action"
-      onsubmit={(event) => {
-        event.preventDefault();
-        void run(() => publishReply(props.event, props.relaySets, reply));
-      }}
+      onsubmit={(event) => submitEventActionReply(event, submitReply)}
     >
       <textarea
-        aria-label="Reply"
+        aria-label={labels.reply}
         bind:value={reply}
-        onkeydown={(event) => {
-          if (event.ctrlKey && event.key === 'Enter')
-            void run(() => publishReply(props.event, props.relaySets, reply));
-        }}
+        onkeydown={(event) =>
+          submitEventActionReplyShortcut(event, submitReply)}
       ></textarea>
       <button
         class="icon-button icon-button--submit"
         type="submit"
-        title="Publish reply"
-        disabled={busy || !reply.trim()}
+        title={labels.publishReply}
+        disabled={!canSubmitEventActionReply(reply, busy)}
       >
         <Send size={16} />
-        <span class="sr-only">Publish reply</span>
+        <span class="sr-only">{labels.publishReply}</span>
       </button>
     </form>
   {:else if mode === 'zap'}

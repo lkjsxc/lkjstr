@@ -17,7 +17,8 @@ partial until cache proof and relay snapshots feed a Rust-owned surface.
 - `crates/lkjstr-app/src/feed/view_model/**` builds stable typed rows from
   feed-window events, explicit state rows, and footer inputs.
 - Focused proof covers event rows, duplicate relay merge, profile and
-  notification row ids, unavailable rows, diagnostic rows, and footer states.
+  notification row ids, unavailable rows, diagnostic rows, verified nested
+  repost target rows with declared-target checks, and footer states.
 - Shipped feed surfaces still render through TypeScript and Svelte runtimes.
 
 ## Next Edit
@@ -41,8 +42,8 @@ feed slice before any broader feed surface parity claim.
 ## Acceptance
 
 Rows use stable ids and real data only: event rows, profile rows, notification
-rows, explicit unavailable rows, diagnostics, and footers. Components do not
-parse Nostr events.
+rows, verified repost target rows, explicit unavailable rows, diagnostics, and
+footers. Components do not parse Nostr events.
 
 ## Files To Read
 

@@ -1,4 +1,4 @@
-use leptos::prelude::{GetUntracked, Update};
+use leptos::prelude::{Callable, Callback, GetUntracked, Update};
 use lkjstr_app::record_tab_snapshot;
 use lkjstr_domain::{FeedTabSnapshot, TabSnapshotPayload};
 use lkjstr_storage::{TabStateRecord, tab_state_id};
@@ -10,10 +10,12 @@ const SEARCH_QUERY_KEY: &str = "searchQuery";
 
 #[derive(Clone)]
 pub(crate) struct SearchSnapshotHandle {
-    runtime: RuntimeSignal,
+    runtime: Option<RuntimeSignal>,
     pane_id: String,
     tab_id: String,
     persistence: Option<WorkspacePersistence>,
+    restored_query: String,
+    save_query: Option<Callback<String>>,
 }
 
 impl SearchSnapshotHandle {
@@ -25,24 +27,46 @@ impl SearchSnapshotHandle {
         persistence: Option<WorkspacePersistence>,
     ) -> Self {
         Self {
-            runtime,
+            runtime: Some(runtime),
             pane_id,
             tab_id,
             persistence,
+            restored_query: String::new(),
+            save_query: None,
+        }
+    }
+
+    #[must_use]
+    #[cfg(target_arch = "wasm32")]
+    pub(crate) fn callback(restored_query: String, save_query: Callback<String>) -> Self {
+        Self {
+            runtime: None,
+            pane_id: String::new(),
+            tab_id: String::new(),
+            persistence: None,
+            restored_query,
+            save_query: Some(save_query),
         }
     }
 
     #[must_use]
     pub(crate) fn restored_query(&self) -> String {
-        snapshot_record(self.runtime, &self.tab_id)
+        self.runtime
+            .and_then(|runtime| snapshot_record(runtime, &self.tab_id))
             .and_then(|row| search_query_from_payload(&row.state))
-            .unwrap_or_default()
+            .unwrap_or_else(|| self.restored_query.clone())
     }
 
     pub(crate) fn save_query(&self, query: String) {
+        if let Some(save_query) = &self.save_query {
+            save_query.run(query.clone());
+        }
+        let Some(runtime) = self.runtime else {
+            return;
+        };
         let pane_id = self.pane_id.clone();
         let tab_id = self.tab_id.clone();
-        self.runtime.update(|state| {
+        runtime.update(|state| {
             let id = tab_state_id(&state.workspace.id, &tab_id);
             let current = state.tab_snapshots.get(&id).map(|row| row.state.clone());
             let payload = search_query_payload(current, query.clone());
@@ -50,7 +74,7 @@ impl SearchSnapshotHandle {
         });
         if let (Some(persistence), Some(row)) = (
             self.persistence.clone(),
-            snapshot_record(self.runtime, &self.tab_id),
+            snapshot_record(runtime, &self.tab_id),
         ) {
             persistence.save_tab_snapshot(row);
         }

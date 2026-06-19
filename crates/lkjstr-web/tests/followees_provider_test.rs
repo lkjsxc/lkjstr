@@ -1,11 +1,15 @@
 #![cfg(target_arch = "wasm32")]
 
 mod accounts_selector_test_support;
+mod feed_scroll_structure_support;
 
 use accounts_selector_test_support::{
     WORKER_URL, account, clear_legacy, click, reset_shells, store_for, test_db_name, wait_for_text,
 };
-use lkjstr_protocol::{KIND_FOLLOW_LIST, NostrEvent};
+use feed_scroll_structure_support::{
+    assert_feed_scroll_boundary, assert_tab_body_not_scroll_owner,
+};
+use lkjstr_protocol::{KIND_FOLLOW_LIST, KIND_METADATA, NostrEvent};
 use lkjstr_storage::{StorageOutcome, StoredEventRecord, sqlite_event_relay_row};
 use lkjstr_web::sqlite_store::{sqlite_account_put, sqlite_event_put};
 use wasm_bindgen::prelude::JsValue;
@@ -30,19 +34,67 @@ async fn rust_followees_tab_loads_cached_kind3_from_host_provider() -> Result<()
     wait_for_text("1 following").await?;
     click("[aria-label='Open following list']")?;
     wait_for_text("Public follow list found.").await?;
-    wait_for_text("best friend").await
+    wait_for_text("Target Profile").await?;
+    wait_for_text("target@example.com").await?;
+    wait_for_text("Rust Friend").await?;
+    wait_for_text("friend@example.com").await?;
+    wait_for_text("best friend").await?;
+    assert_followees_scroll_owner()
+}
+
+fn assert_followees_scroll_owner() -> Result<(), JsValue> {
+    assert_feed_scroll_boundary(
+        ".followees-tab",
+        ".event-list__viewport[data-scroll-owner]",
+        &[
+            ".profile-card",
+            ".lkjstr-feed-status",
+            ".lkjstr-feed-rows",
+            ".lkjstr-feed-row.profile",
+        ],
+    )?;
+    assert_tab_body_not_scroll_owner(".lkjstr-tab-body[data-tab-kind='followees']")
 }
 
 async fn seed_followees_cache(db_name: &str) -> Result<(), JsValue> {
     let (client, store) = store_for(db_name).await?;
     let account = account("a", 7)?;
     assert_ok(sqlite_account_put(&store, &account).await)?;
-    let event = follow_event(&account.pubkey, &pubkey("b"));
+    let followed = pubkey("b");
+    let event = follow_event(&account.pubkey, &followed);
     let relay = sqlite_event_relay_row(&event.id, "wss://relay.example", 10, "cache");
     let row = StoredEventRecord {
         event,
         received_at_ms: 10,
         updated_at_ms: 11,
+    };
+    assert_ok(sqlite_event_put(&store, &row, &[relay]).await)?;
+    let metadata = profile_event(
+        &account.pubkey,
+        "2",
+        "Target Profile",
+        "target@example.com",
+        "https://media.example/target.png",
+    );
+    let relay = sqlite_event_relay_row(&metadata.id, "wss://relay.example", 12, "cache");
+    let row = StoredEventRecord {
+        event: metadata,
+        received_at_ms: 12,
+        updated_at_ms: 13,
+    };
+    assert_ok(sqlite_event_put(&store, &row, &[relay]).await)?;
+    let metadata = profile_event(
+        &followed,
+        "3",
+        "Rust Friend",
+        "friend@example.com",
+        "https://media.example/avatar.png",
+    );
+    let relay = sqlite_event_relay_row(&metadata.id, "wss://relay.example", 12, "cache");
+    let row = StoredEventRecord {
+        event: metadata,
+        received_at_ms: 12,
+        updated_at_ms: 13,
     };
     assert_ok(sqlite_event_put(&store, &row, &[relay]).await)?;
     assert_ok(client.close().await)
@@ -62,6 +114,24 @@ fn follow_event(pubkey: &str, followed_pubkey: &str) -> NostrEvent {
         ]],
         content: String::new(),
         sig: "f".repeat(128),
+    }
+}
+
+fn profile_event(
+    pubkey: &str,
+    id_prefix: &str,
+    name: &str,
+    nip05: &str,
+    picture: &str,
+) -> NostrEvent {
+    NostrEvent {
+        id: id_prefix.repeat(64),
+        pubkey: pubkey.to_owned(),
+        created_at: ((js_sys::Date::now() / 1000.0) as u64).saturating_sub(1),
+        kind: KIND_METADATA,
+        tags: Vec::new(),
+        content: format!(r#"{{"display_name":"{name}","nip05":"{nip05}","picture":"{picture}"}}"#),
+        sig: "e".repeat(128),
     }
 }
 

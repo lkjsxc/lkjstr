@@ -2,6 +2,7 @@
 
 mod build;
 mod defaults;
+mod diagnostics;
 mod state;
 mod types;
 
