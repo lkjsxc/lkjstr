@@ -1,6 +1,6 @@
 import type { HistoryExhaustion } from '$lib/feed-surface/paging-state';
 import type { ProfileSummary } from '$lib/identity/identity';
-import type { NotificationState } from '$lib/notifications/notification-runtime';
+import type { NotificationState } from '$lib/notifications/notification-state';
 
 export const notificationAutoFillAttemptCap = 4;
 const notificationAutoFillAttempts = new Map<string, number>();
