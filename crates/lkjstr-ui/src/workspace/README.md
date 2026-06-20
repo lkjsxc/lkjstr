@@ -92,4 +92,5 @@ New Tab chooser, and converted Rust tool bodies.
 - `upload_settings_provider.rs`: upload settings command provider wrapper.
 - `user_timeline.rs`: narrow Rust User Timeline feed row rendering.
 - `user_timeline_provider.rs`: async User Timeline feed provider wrapper.
+- `user_timeline_read.rs`: leased User Timeline read-command helper.
 - `welcome.rs`: document-like Welcome surface.
