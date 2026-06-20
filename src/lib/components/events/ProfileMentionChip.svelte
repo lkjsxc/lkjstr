@@ -1,10 +1,8 @@
 <script lang="ts">
   import type { ProfileSummary } from '$lib/identity/identity';
-  import {
-    eventProfileCanOpen,
-    stopAndOpenEventProfile,
-  } from './event-profile-activation';
+  import { stopAndOpenEventProfile } from './event-profile-activation';
   import EmojifiedText from './EmojifiedText.svelte';
+  import { planProfileMentionChip } from './profile-mention-chip-plan';
 
   type Props = {
     pubkey: string;
@@ -15,30 +13,35 @@
   };
 
   let props: Props = $props();
-  let canOpenProfile = $derived(eventProfileCanOpen(props.openProfile));
+  let plan = $derived(
+    planProfileMentionChip({
+      text: props.text,
+      rawText: props.rawText,
+      profile: props.profile,
+      openProfile: props.openProfile,
+    }),
+  );
 
   function open(event: MouseEvent): void {
     stopAndOpenEventProfile(event, props.openProfile, props.pubkey);
   }
 </script>
 
-{#if canOpenProfile}
+{#snippet chipBody()}
+  <EmojifiedText text={plan.text} emojis={plan.emojis} />
+{/snippet}
+
+{#if plan.canOpenProfile}
   <button
     type="button"
     class="content-token content-mention-token"
-    title={props.rawText}
+    title={plan.title}
     onclick={open}
   >
-    <EmojifiedText
-      text={props.text}
-      emojis={props.profile?.customEmojis ?? []}
-    />
+    {@render chipBody()}
   </button>
 {:else}
-  <span class="content-token content-mention-token" title={props.rawText}>
-    <EmojifiedText
-      text={props.text}
-      emojis={props.profile?.customEmojis ?? []}
-    />
+  <span class="content-token content-mention-token" title={plan.title}>
+    {@render chipBody()}
   </span>
 {/if}

@@ -26,6 +26,7 @@
   let plan = $derived(
     planEventMentionChip({
       eventId: props.eventId,
+      rawText: props.rawText,
       relays: props.relays,
       fallbackRelays: props.fallbackRelays,
       openThread: props.openThread,
@@ -58,28 +59,28 @@
   }
 </script>
 
+{#snippet chipBody()}
+  <span>{plan.label}</span>
+  {#if profile}
+    <IdentityChip pubkey={profile.pubkey} {profile} compact />
+  {/if}
+  {#if excerpt}<small>{excerpt}</small>{/if}
+{/snippet}
+
 {#if plan.canOpenThread}
   <button
     type="button"
     class="content-token content-mention-token event-mention-chip"
-    title={props.rawText}
+    title={plan.title}
     onclick={open}
   >
-    <span>{plan.label}</span>
-    {#if profile}
-      <IdentityChip pubkey={profile.pubkey} {profile} compact />
-    {/if}
-    {#if excerpt}<small>{excerpt}</small>{/if}
+    {@render chipBody()}
   </button>
 {:else}
   <span
     class="content-token content-mention-token event-mention-chip"
-    title={props.rawText}
+    title={plan.title}
   >
-    <span>{plan.label}</span>
-    {#if profile}
-      <IdentityChip pubkey={profile.pubkey} {profile} compact />
-    {/if}
-    {#if excerpt}<small>{excerpt}</small>{/if}
+    {@render chipBody()}
   </span>
 {/if}

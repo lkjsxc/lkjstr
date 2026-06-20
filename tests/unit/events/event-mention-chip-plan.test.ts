@@ -13,6 +13,7 @@ describe('event mention chip plan', () => {
   it('keeps resolver identity, label, and relay ordering stable', () => {
     const plan = planEventMentionChip({
       eventId: 'abcdef1234567890'.padEnd(64, '0'),
+      rawText: 'nostr:nevent1abcdef',
       relays: ['wss://a.example', 'wss://b.example'],
       fallbackRelays: ['wss://b.example', 'wss://c.example'],
       openThread: () => undefined,
@@ -21,6 +22,7 @@ describe('event mention chip plan', () => {
     expect(plan.canOpenThread).toBe(true);
     expect(plan.label).toBe('event:abcdef12');
     expect(plan.resolverKey).toBe('mention:abcdef123456');
+    expect(plan.title).toBe('nostr:nevent1abcdef');
     expect(plan.reference).toEqual({
       kind: 'nostr-event',
       id: 'abcdef1234567890'.padEnd(64, '0'),

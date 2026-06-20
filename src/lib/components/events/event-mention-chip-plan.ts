@@ -8,6 +8,7 @@ export type EventMentionChipPlan = {
   readonly reference: EventReference;
   readonly relays: readonly string[];
   readonly resolverKey: string;
+  readonly title: string;
 };
 
 export type EventMentionLoadedPlan = {
@@ -21,6 +22,7 @@ type EventMentionOpenEvent = {
 
 export function planEventMentionChip(input: {
   readonly eventId: string;
+  readonly rawText: string;
   readonly relays?: readonly string[];
   readonly fallbackRelays?: readonly string[];
   readonly openThread?: (eventId: string) => void;
@@ -37,6 +39,7 @@ export function planEventMentionChip(input: {
       ...new Set([...(input.relays ?? []), ...(input.fallbackRelays ?? [])]),
     ],
     resolverKey: `mention:${input.eventId.slice(0, 12)}`,
+    title: input.rawText,
   };
 }
 
