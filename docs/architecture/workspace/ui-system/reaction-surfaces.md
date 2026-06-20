@@ -18,6 +18,8 @@ rows stay compact and popovers survive virtual list recycling.
 
 - `ReactionSummary` shows grouped reaction chips and repost counts.
 - Chip click expands an inline actor list under the chip.
+- Chip disclosure labels are count-aware and state-aware, for example show vs
+  hide labels for the current reaction or repost count.
 - Actor list expansion is not the emoji picker; it does not publish reactions.
 - Expanded actor lists may affect row height while visible; they are not part of
   the tile-scoped popover contract.

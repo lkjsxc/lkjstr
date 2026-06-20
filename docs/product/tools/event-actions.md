@@ -17,6 +17,8 @@ Event actions define the row-level write controls available on feed events.
   styling. The label stays `Repost`.
 - Pressed styling must be clearly stronger than default icon buttons and match
   the reply/zap active treatment in weight, not only color.
+- Action buttons are disabled while a retained publish action is busy. Reply
+  and Zap expose active state only for the selected inline panel.
 - Optimistic or published Heart/Repost pressed state must not reset to
   unpressed while async action-state cache refresh is pending. Optimistic state
   is scoped to the active pubkey and visible event ids.
@@ -33,7 +35,8 @@ Event actions define the row-level write controls available on feed events.
 - Repost publishes NIP-18 kind `6` for kind `1` notes.
 - Repost publishes kind `16` with `k` tags for non-kind `1` events.
 - Reply opens an inline composer under the event, supports `Ctrl+Enter`, and
-  publishes a tagged kind `1` reply.
+  publishes a tagged kind `1` reply. Its publish button is disabled until the
+  reply has non-blank text and no retained action is busy.
 - Zap opens an inline amount/message form, signs a NIP-57 kind `9734` request,
   fetches an invoice, then exposes a `lightning:` payment URI.
 - Zap invoice copy reports clipboard unavailable or rejected writes explicitly;
