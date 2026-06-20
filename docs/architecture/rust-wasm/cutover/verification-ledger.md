@@ -48,8 +48,8 @@ Keep new run evidence in the table below unless a narrative note is required.
 
 Latest focused note: on 2026-06-20, retained mention/reaction/media/metadata/avatar
 Svelte chrome uses shared snippets. Focused tests, ESLint, formatting, Svelte
-check, repo/docs/line guards, whitespace, and quiet verify passed. Rust/WASM
-quiet hung in followees_relay_provider_test; Docker was not rerun.
+check, repo/docs/line guards, whitespace, and quiet verify passed. Targeted
+Followees/Profile WASM tests passed; broad quiet exceeded 900s. Docker was not rerun.
 
 Previous focused note: on 2026-06-18, the Home anchor browser proofs and Docker
 final gate passed; the detailed command list is recorded below.
