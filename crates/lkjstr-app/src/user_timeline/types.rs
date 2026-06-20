@@ -78,6 +78,7 @@ pub struct UserTimelineFeedViewInput {
 #[derive(Clone, Debug, PartialEq)]
 pub struct UserTimelineFeedView {
     pub status: UserTimelineFeedStatus,
+    pub status_detail: String,
     pub live_query: Option<QueryDemandInput>,
     pub author_set: Option<UserTimelineAuthorSet>,
     pub view_model: FeedViewModel,

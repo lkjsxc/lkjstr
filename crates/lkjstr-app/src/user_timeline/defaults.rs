@@ -1,10 +1,10 @@
 use lkjstr_relays::DemandVisibility;
 
-use crate::{FeedFragmentConfig, empty_feed_window, plan_user_timeline_discovery};
+use crate::{empty_feed_window, plan_user_timeline_discovery, FeedFragmentConfig};
 
 use super::{
-    UserTimelineDiscoveryInput, UserTimelineFeedSourceState, UserTimelineFeedView,
-    UserTimelineFeedViewInput, build_user_timeline_feed_view,
+    build_user_timeline_feed_view, UserTimelineDiscoveryInput, UserTimelineFeedSourceState,
+    UserTimelineFeedView, UserTimelineFeedViewInput,
 };
 
 #[must_use]

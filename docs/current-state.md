@@ -211,7 +211,7 @@ Read next: [architecture/network/README.md](architecture/network/README.md),
   independent semantic keys.
 - Followees and User Timeline discover missing target kind `3` through selected
   relays and stored author routes while excluding disabled route relays. No-event/AUTH/rate-limited/timeout reads and partial route failures render diagnostics.
-  Rust keeps distinct query surfaces, real author-set rows, exact cached coverage, target-posts-only degraded rows, and partial status.
+  Rust keeps distinct query surfaces, real rows, exact cached coverage, target-only degraded rows, incomplete detail, and partial status.
 - Shipped Search mounts Rust as a WASM island with query snapshot restore/save,
   renders local indexed results without waiting for remote relays, sends bounded
   NIP-50 filters to eligible selected read relays, loads cached and relay older

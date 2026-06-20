@@ -23,5 +23,6 @@ App tests prove browser-independent application composition behavior.
 - `storage_maintenance_test.rs`: storage readiness, retention, and repair planning.
 - `storage_maintenance_support/`: shared storage maintenance fixtures.
 - `user_timeline_discovery_test.rs`: User Timeline discovery route states.
+- `user_timeline_status_test.rs`: User Timeline incomplete status detail rows.
 - `user_timeline_surface_input_test.rs`: User Timeline live query surface and routes.
 - `workspace_runtime_test.rs`: workspace startup and tab snapshot staging.

@@ -1,6 +1,10 @@
 use leptos::prelude::*;
-use lkjstr_app::{UserTimelineFeedStatus, UserTimelineFeedView, default_user_timeline_feed_view};
+use lkjstr_app::{default_user_timeline_feed_view, UserTimelineFeedStatus, UserTimelineFeedView};
 
+#[path = "user_timeline_read.rs"]
+mod user_timeline_read;
+
+use self::user_timeline_read::UserTimelineReadController;
 use crate::workspace::profile_clipboard_provider::ProfileCopyProvider;
 use crate::workspace::user_timeline_actions::UserTimelineActions;
 use crate::workspace::user_timeline_provider::UserTimelineProvider;
@@ -15,14 +19,14 @@ pub fn UserTimelineTab(
     actions: UserTimelineActions,
 ) -> impl IntoView {
     let model = RwSignal::new(model);
-    if let Some(provider) = provider {
-        let lease = provider.read(
-            owner,
-            target_pubkey.clone(),
-            Callback::new(move |next| model.set(next)),
-        );
-        on_cleanup(move || lease.release());
-    }
+    let read_controller = UserTimelineReadController::new();
+    read_controller.read(
+        provider,
+        owner,
+        target_pubkey.clone(),
+        Callback::new(move |next| model.set(next)),
+    );
+    on_cleanup(move || read_controller.release());
     view! {
         <section class="feed-tab lkjstr-user-timeline-feed" aria-label="User Timeline">
             <div class="tab-scroll-track event-list__scroller">
@@ -36,7 +40,7 @@ pub fn UserTimelineTab(
                             </div>
                         </div>
                     </header>
-                    <p class="lkjstr-feed-status">{move || user_timeline_status_text(model.get().status)}</p>
+                    <p class="lkjstr-feed-status">{move || user_timeline_status_text(model.get())}</p>
                     <div class="lkjstr-feed-rows">
                         {move || {
                             let actions = actions.clone();
@@ -107,21 +111,8 @@ fn user_timeline_header_mode(model: UserTimelineFeedView) -> &'static str {
     }
 }
 
-fn user_timeline_status_text(status: UserTimelineFeedStatus) -> &'static str {
-    match status {
-        UserTimelineFeedStatus::MissingPubkey => "User Timeline target unavailable.",
-        UserTimelineFeedStatus::LoadingDiscovery => "Loading public timeline...",
-        UserTimelineFeedStatus::LoadingFeed => "User Timeline loading.",
-        UserTimelineFeedStatus::NoEnabledRelay => "User Timeline needs a relay.",
-        UserTimelineFeedStatus::Ready => "User Timeline ready.",
-        UserTimelineFeedStatus::TargetPostsOnly => "Target posts only.",
-        UserTimelineFeedStatus::Partial => "User Timeline partial.",
-        UserTimelineFeedStatus::Incomplete => "User Timeline discovery incomplete.",
-        UserTimelineFeedStatus::Failed => "User Timeline discovery failed.",
-        UserTimelineFeedStatus::AuthRequired => "User Timeline relay auth required.",
-        UserTimelineFeedStatus::RateLimited => "User Timeline relays rate limited.",
-        UserTimelineFeedStatus::Offline => "User Timeline offline.",
-    }
+fn user_timeline_status_text(model: UserTimelineFeedView) -> String {
+    model.status_detail
 }
 
 #[cfg(test)]
@@ -130,17 +121,16 @@ mod tests {
 
     #[test]
     fn status_text_names_explicit_states() {
+        let model = default_user_timeline_feed_view("tab-a", Some("a".repeat(64)));
         assert_eq!(
-            user_timeline_status_text(UserTimelineFeedStatus::LoadingDiscovery),
+            user_timeline_status_text(model),
             "Loading public timeline..."
         );
+        let mut model = default_user_timeline_feed_view("tab-a", Some("a".repeat(64)));
+        model.status_detail = "Discovery incomplete: tried selected relays.".to_owned();
         assert_eq!(
-            user_timeline_status_text(UserTimelineFeedStatus::LoadingFeed),
-            "User Timeline loading."
-        );
-        assert_eq!(
-            user_timeline_status_text(UserTimelineFeedStatus::TargetPostsOnly),
-            "Target posts only."
+            user_timeline_status_text(model),
+            "Discovery incomplete: tried selected relays."
         );
     }
 }

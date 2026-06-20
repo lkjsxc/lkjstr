@@ -1,7 +1,7 @@
 use crate::{
-    FeedFooterRow, FeedFooterState, FeedLiveQueryInput, FeedStateRow, QueryDemandInput,
-    UserTimelineAuthorSet, diagnostic_state_row, footer_row, target_posts_only_author_set,
-    unavailable_state_row, user_timeline_live_query_input,
+    diagnostic_state_row, footer_row, target_posts_only_author_set, unavailable_state_row,
+    user_timeline_live_query_input, FeedFooterRow, FeedFooterState, FeedLiveQueryInput,
+    FeedStateRow, QueryDemandInput, UserTimelineAuthorSet,
 };
 
 use super::{

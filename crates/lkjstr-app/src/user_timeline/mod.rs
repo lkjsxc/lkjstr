@@ -3,13 +3,14 @@
 mod defaults;
 pub mod discovery;
 mod state;
+mod status;
 mod types;
 mod view;
 
 pub use defaults::default_user_timeline_feed_view;
 pub use discovery::{
-    DiscoveryRouteGroup, DiscoveryRouteOutcome, DiscoveryRouteSource, UserTimelineDiscoveryInput,
-    UserTimelineDiscoveryPlan, UserTimelineDiscoveryState, plan_user_timeline_discovery,
+    plan_user_timeline_discovery, DiscoveryRouteGroup, DiscoveryRouteOutcome, DiscoveryRouteSource,
+    UserTimelineDiscoveryInput, UserTimelineDiscoveryPlan, UserTimelineDiscoveryState,
 };
 pub use state::user_timeline_target_only_notice;
 pub use types::{

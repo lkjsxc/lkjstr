@@ -203,8 +203,9 @@ success, disabled-relay exclusion, partial relay failure, all-route timeout,
 auth-required diagnostics, honest target-posts-only degraded mode, bounded retry
 expansion, and incomplete states with reason codes. Current Rust proof covers
 pure/public discovery planning, no-route incomplete states, route-source loading
-states, target-only degraded decisions, reason codes, bounded retry sources, and
-a first Leptos feed body from injected real NIP-02 author-set rows. Default
+states, target-only degraded decisions, reason codes, bounded retry sources,
+concise incomplete status detail from attempted/failed/pending route evidence,
+and a first Leptos feed body from injected real NIP-02 author-set rows. Default
 cached User Timeline host proof covers worker SQLite kind `3`
 author-set rows plus cached display events, keeps them partial without complete
 coverage, and promotes ready state only from exact User Timeline feed, route,
@@ -216,8 +217,8 @@ proof covers no-event selected-relay completion without claiming absence, AUTH
 auth-required status, rate-limited selected-relay status, and all-route timeout
 diagnostics. Route proof covers partial NIP-65 failure while another stored
 route discovers the real kind `3`. Cleanup proof covers closing the
-selected-relay read and suppressing late events. The surface stays partial until
-no-import and deletion proof exist.
+selected-relay read and suppressing late events; Stats maps the Rust incomplete
+reason row. The surface stays partial until no-import and deletion proof exist.
 
 ## Storage Ledger
 

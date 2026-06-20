@@ -22,6 +22,9 @@ deletion, and final verification proof exist.
   query surface instead of reusing Home or Profile.
 - `crates/lkjstr-ui/src/workspace/user_timeline*.rs` renders the Leptos body
   through an async provider with cleanup and late-completion suppression.
+- `crates/lkjstr-ui/src/workspace/user_timeline_read.rs` owns read-command
+  leases and releases replaced or provider-unavailable requests before
+  dispatching reads.
 - `crates/lkjstr-web/tests/profile_feed_tab_test.rs` proves the Profile action
   reaches a real User Timeline row from an injected NIP-02 author set.
 - `crates/lkjstr-web/src/user_timeline_host.rs` and
@@ -61,17 +64,22 @@ deletion, and final verification proof exist.
   unavailable rendering and unmount cleanup for the Rust island host.
 - `crates/lkjstr-web/src/user_timeline_stats.rs` records bounded Rust-owned
   User Timeline status and diagnostic aggregates from real provider completions.
+- `crates/lkjstr-app/src/user_timeline/status.rs` derives concise incomplete
+  discovery detail from attempted/failed/pending route evidence, and the Leptos
+  status row plus Stats reason aggregate consume that Rust model truth.
 - TypeScript Stats no longer imports retained User Timeline discovery counters;
   it reads the Rust aggregate through the WASM bridge and renders explicit
   unavailable when the bridge is absent.
 - The unused `user-timeline-route-plan.ts` helper has no live imports, is
   removed, and is guarded absent by repository checks.
+- Product source no-import proof now also rejects retained
+  `src/lib/user-timeline/**` runtime imports outside that retained directory;
+  test-only imports stay allowed until broader deletion proof.
 
 ## Next Edit
 
-Continue remaining User Timeline parity and no-import prerequisites. Do not
-start broader deletion proof until retained TypeScript imports are proven
-removable.
+Continue remaining User Timeline parity and no-import prerequisites without
+starting broader User Timeline deletion proof.
 
 ## Files To Read
 
@@ -132,6 +140,8 @@ pnpm rust-wasm:quiet
   without selected relays.
 - Disabled stored route relays are excluded from User Timeline discovery.
 - Cleanup closes the selected-relay read and suppresses late events.
+- Replaced or provider-unavailable User Timeline read commands release the
+  active provider lease before the next read state is dispatched.
 - Selected-relay no-event, AUTH, and rate-limited reads complete to explicit
   diagnostics without claiming follow-list absence.
 - Partial route failures and all selected-relay timeouts complete to explicit

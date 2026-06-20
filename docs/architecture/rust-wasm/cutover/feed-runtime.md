@@ -86,10 +86,11 @@ must use before their TypeScript feed runtimes are deleted.
   NIP-65/provenance/target author routes when present, excludes disabled stored
   route relays, rebuilds from stored relay events, turns
   no-event/AUTH/rate-limited/timeout reads and partial route failures into
-  explicit diagnostics, keeps real cached target-authored posts as
-  target-posts-only output after exhausted follow-list discovery, renders
-  pending feed-provider work after discovery as loading instead of ready, and
-  closes the selected-relay read on tab switch.
+  explicit diagnostics, derives incomplete status detail from real route
+  evidence, keeps real cached target-authored posts as target-posts-only output
+  after exhausted follow-list discovery, renders pending feed-provider work
+  after discovery as loading instead of ready, and closes the selected-relay read
+  on tab switch.
   The typed request now exposes the same `is_released()` guard shape as other
   feed providers. Deletion proof remains open.
 - Author Context first slice: `crates/lkjstr-app/src/author_context_feed/**`,

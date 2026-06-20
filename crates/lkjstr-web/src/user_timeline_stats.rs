@@ -1,7 +1,7 @@
 use crate::runtime_counter_state::{child_slot, increment_counter, read_counter, slot};
 use lkjstr_app::{FeedViewRow, UserTimelineFeedStatus, UserTimelineFeedView};
 use serde::Serialize;
-use wasm_bindgen::prelude::{JsValue, wasm_bindgen};
+use wasm_bindgen::prelude::{wasm_bindgen, JsValue};
 
 const SLOT: &str = "__lkjstrUserTimelineStats";
 const STATUSES: &str = "statuses";
@@ -31,8 +31,8 @@ const REASON_KEYS: &[&str] = &[
     "no-enabled-relay",
     "target-posts-only",
     "partial-user-timeline",
+    "incomplete-user-timeline-discovery",
 ];
-
 
 #[derive(Serialize)]
 struct UserTimelineStatsSnapshot {
@@ -115,6 +115,7 @@ fn unavailable_key(reason: &str) -> Option<&'static str> {
         "no-user-timeline-relay" => Some("no-enabled-relay"),
         "target-posts-only" => Some("target-posts-only"),
         "partial-user-timeline" => Some("partial-user-timeline"),
+        "incomplete-user-timeline-discovery" => Some("incomplete-user-timeline-discovery"),
         _ => None,
     }
 }
