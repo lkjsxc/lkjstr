@@ -21,13 +21,17 @@ New Tab chooser, and converted Rust tool bodies.
 - `custom_request_run.rs`: leased Custom Request run-command helper.
 - `custom_request_snapshot.rs`: Custom Request feed filter-state snapshots.
 - `feed_event_actions.rs`: shared Rust feed event-row action buttons.
+- `feed_event_action_policy.rs`: shared Rust feed action click policy.
+- `feed_event_copy_status.rs`: shared Rust event-id copy status lifecycle.
 - `feed_event_content.rs`: shared Rust feed event-row content rendering.
 - `feed_event_link.rs`: shared Rust feed safe external link rendering.
 - `feed_event_menu.rs`: shared Rust feed nearby/copy event menu rendering.
 - `feed_event_media.rs`: shared Rust feed media attachment rendering.
 - `feed_event_open.rs`: workspace tab callbacks for shared event menus.
+- `feed_event_open_tests.rs`: shared event opener callback parity proof.
 - `feed_event_profile_mention.rs`: shared Rust profile mention rendering.
 - `feed_event_reference.rs`: shared Rust unavailable reference rendering.
+- `feed_event_row_activation.rs`: shared Rust event-row activation policy.
 - `feed_event_row.rs`: shared Rust feed event-row body rendering.
 - `feed_event_sensitive.rs`: shared Rust sensitive-warning rendering.
 - `feed_footer_row.rs`: shared Rust feed footer shell rendering.

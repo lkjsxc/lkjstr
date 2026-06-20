@@ -3,18 +3,6 @@ use leptos::prelude::Callback;
 use super::*;
 
 #[test]
-fn copy_event_status_text_names_success_and_failure() {
-    assert_eq!(
-        copy_event_status_text(ProfileCopyResult::copied("event id")),
-        "Copied"
-    );
-    assert_eq!(
-        copy_event_status_text(ProfileCopyResult::failed("event id", "denied")),
-        "Copy failed: denied"
-    );
-}
-
-#[test]
 fn feed_event_actions_available_requires_at_least_one_action() {
     assert!(!feed_event_actions_available(&FeedEventActions::default()));
     assert!(feed_event_actions_available(&FeedEventActions {
@@ -39,18 +27,21 @@ fn opener_accessors_return_only_real_callbacks() {
 
 #[test]
 fn nearby_actions_are_available_when_any_provider_exists() {
-    assert!(feed_event_actions_available(&FeedEventActions::nearby(
-        Some(Callback::new(|_: (String, String)| {})),
-        None,
-    )));
+    assert!(feed_event_actions_available(
+        &FeedEventActions::row_actions(
+            None,
+            None,
+            Some(Callback::new(|_: (String, String)| {})),
+            None,
+        )
+    ));
 }
 
 #[test]
 fn nearby_copy_provider_alone_keeps_menu_available() {
-    assert!(feed_event_actions_available(&FeedEventActions::nearby(
-        None,
-        Some(ProfileCopyProvider::unavailable()),
-    )));
+    assert!(feed_event_actions_available(
+        &FeedEventActions::row_actions(None, None, None, Some(ProfileCopyProvider::unavailable()),)
+    ));
 }
 
 #[test]

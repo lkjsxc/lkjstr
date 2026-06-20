@@ -103,10 +103,12 @@ must use before their TypeScript feed runtimes are deleted.
   unavailable states. Pending provider work renders loading instead of ready
   until real cache, relay, or terminal evidence exists. Converted Rust feed
   surfaces share event body, common state-row rendering, and footer shell
-  rendering. Row action buttons open Rust Profile, Thread, and Author Context
-  tabs. Fast UI provider proof covers
-  request-level release guards and late-completion suppression. Deletion proof
-  remains open.
+  rendering. Event rows open Thread from non-local clicks or Enter when a real
+  opener exists. Generic feed rows now receive real Profile, Thread, Author
+  Context, and copy openers. Row action, link, media, and sensitive-reveal
+  controls stay local while action buttons open those Rust tabs and reuse
+  matching Author Context tabs. Fast UI provider proof covers request-level
+  release guards and late-completion suppression. Deletion proof remains open.
 - Cached and relay-refreshed Profile header metadata/follow-count proof exists.
   The known following-count action opens converted Followees, the Profile header
   action opens converted User Timeline, own-profile actions open Profile Edit, the copy

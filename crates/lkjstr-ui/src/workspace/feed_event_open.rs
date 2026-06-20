@@ -6,6 +6,7 @@ use lkjstr_domain::{NewTabOption, TabKind};
 use crate::app::RuntimeSignal;
 use crate::workspace::feed_event_actions::FeedEventActions;
 use crate::workspace::persistence::WorkspacePersistence;
+use crate::workspace::profile_action_tabs::pubkey_tab_callback;
 use crate::workspace::profile_clipboard_provider::ProfileCopyProvider;
 use crate::workspace::state::{self, TabSequence};
 
@@ -16,7 +17,21 @@ pub(crate) fn nearby_event_actions(
     persistence: Option<WorkspacePersistence>,
     copy_event_id: Option<ProfileCopyProvider>,
 ) -> FeedEventActions {
-    FeedEventActions::nearby(
+    FeedEventActions::row_actions(
+        Some(pubkey_tab_callback(
+            runtime,
+            sequence,
+            pane_id.clone(),
+            persistence.clone(),
+            TabKind::Profile,
+        )),
+        Some(event_tab_callback(
+            runtime,
+            sequence,
+            pane_id.clone(),
+            persistence.clone(),
+            TabKind::Thread,
+        )),
         Some(author_context_callback(
             runtime,
             sequence,
@@ -34,34 +49,69 @@ fn author_context_callback(
     persistence: Option<WorkspacePersistence>,
 ) -> Callback<(String, String)> {
     Callback::new(move |(event_id, pubkey)| {
-        let option = author_context_option(event_id, pubkey);
-        if let Some(tab_id) = matching_author_context(runtime, &pane_id, &option.config) {
-            state::focus(runtime, pane_id.clone(), tab_id, persistence.clone(), 1);
-            return;
-        }
-        state::open_option(
+        open_or_focus_event_tab(
             runtime,
             sequence,
-            Some(pane_id.clone()),
-            option,
+            pane_id.clone(),
             persistence.clone(),
-            1,
+            author_context_option(event_id, pubkey),
         );
     })
 }
 
-fn matching_author_context(
+fn event_tab_callback(
+    runtime: RuntimeSignal,
+    sequence: TabSequence,
+    pane_id: String,
+    persistence: Option<WorkspacePersistence>,
+    kind: TabKind,
+) -> Callback<String> {
+    Callback::new(move |event_id| {
+        open_or_focus_event_tab(
+            runtime,
+            sequence,
+            pane_id.clone(),
+            persistence.clone(),
+            event_option(kind, event_id),
+        );
+    })
+}
+
+fn open_or_focus_event_tab(
+    runtime: RuntimeSignal,
+    sequence: TabSequence,
+    pane_id: String,
+    persistence: Option<WorkspacePersistence>,
+    option: NewTabOption,
+) {
+    if let Some(tab_id) = matching_event_tab(runtime, &pane_id, option.kind, &option.config) {
+        state::focus(runtime, pane_id, tab_id, persistence, 1);
+        return;
+    }
+    state::open_option(runtime, sequence, Some(pane_id), option, persistence, 1);
+}
+
+fn matching_event_tab(
     runtime: RuntimeSignal,
     pane_id: &str,
+    kind: TabKind,
     config: &BTreeMap<String, String>,
 ) -> Option<String> {
     let event_id = config.get("eventId")?;
     state::pane_tabs(runtime, pane_id)
         .into_iter()
-        .find(|tab| {
-            tab.kind == TabKind::AuthorContext && tab.config.get("eventId") == Some(event_id)
-        })
+        .find(|tab| tab.kind == kind && tab.config.get("eventId") == Some(event_id))
         .map(|tab| tab.id)
+}
+
+fn event_option(kind: TabKind, event_id: String) -> NewTabOption {
+    NewTabOption {
+        kind,
+        label: "Thread",
+        description: "Thread continuation.",
+        aliases: &[],
+        config: BTreeMap::from([("eventId".to_owned(), event_id)]),
+    }
 }
 
 fn author_context_option(event_id: String, pubkey: String) -> NewTabOption {
@@ -78,35 +128,5 @@ fn author_context_option(event_id: String, pubkey: String) -> NewTabOption {
 }
 
 #[cfg(test)]
-mod tests {
-    use leptos::prelude::{Callable, GetUntracked, RwSignal};
-
-    use super::*;
-
-    #[test]
-    fn nearby_author_context_callback_opens_event_tab() -> Result<(), &'static str> {
-        let runtime =
-            RwSignal::new(lkjstr_app::start_workspace(crate::app::default_startup_input()).state);
-        let sequence = RwSignal::new(0);
-        let callback =
-            author_context_callback(runtime, sequence, "bootstrap-welcome-pane".to_owned(), None);
-
-        callback.run(("event-a".to_owned(), "pubkey-a".to_owned()));
-
-        let workspace = runtime.get_untracked().workspace;
-        let tab = workspace
-            .tabs
-            .get("rust-author-context-1")
-            .ok_or("missing author context tab")?;
-        assert_eq!(tab.kind, TabKind::AuthorContext);
-        assert_eq!(
-            tab.config.get("eventId").map(String::as_str),
-            Some("event-a")
-        );
-        assert_eq!(
-            tab.config.get("pubkey").map(String::as_str),
-            Some("pubkey-a")
-        );
-        Ok(())
-    }
-}
+#[path = "feed_event_open_tests.rs"]
+mod tests;

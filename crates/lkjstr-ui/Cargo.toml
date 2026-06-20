@@ -15,4 +15,4 @@ lkjstr-domain = { path = "../lkjstr-domain" }
 lkjstr-storage = { path = "../lkjstr-storage" }
 send_wrapper = "0.6.0"
 serde_json = "1.0.145"
-web-sys = { version = "0.3.82", features = ["Element", "HtmlElement", "NodeList", "ResizeObserver"] }
+web-sys = { version = "0.3.82", features = ["Element", "HtmlElement", "Node", "NodeList", "ResizeObserver"] }

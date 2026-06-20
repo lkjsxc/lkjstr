@@ -1,10 +1,15 @@
 use leptos::{ev::MouseEvent, prelude::*};
 
 use crate::workspace::author_context_actions::AuthorContextActions;
-use crate::workspace::profile_clipboard_provider::{
-    ProfileCopyProvider, ProfileCopyResult, ProfileCopyStatus,
-};
+use crate::workspace::profile_clipboard_provider::ProfileCopyProvider;
 use crate::workspace::user_timeline_actions::UserTimelineActions;
+
+#[path = "feed_event_action_policy.rs"]
+mod feed_event_action_policy;
+#[path = "feed_event_copy_status.rs"]
+mod feed_event_copy_status;
+use feed_event_action_policy::stop_action_click;
+use feed_event_copy_status::FeedEventCopyStatus;
 
 #[derive(Clone, Default)]
 pub struct FeedEventActions {
@@ -15,18 +20,6 @@ pub struct FeedEventActions {
 }
 
 impl FeedEventActions {
-    pub(crate) fn nearby(
-        open_author_context: Option<Callback<(String, String)>>,
-        copy_event_id: Option<ProfileCopyProvider>,
-    ) -> Self {
-        Self {
-            open_author_context,
-            copy_event_id,
-            ..Self::default()
-        }
-    }
-
-    #[cfg(target_arch = "wasm32")]
     pub(crate) fn row_actions(
         open_profile: Option<Callback<String>>,
         open_thread: Option<Callback<String>>,
@@ -71,7 +64,7 @@ pub(crate) fn event_actions(
     if !feed_event_actions_available(&actions) {
         return ().into_any();
     }
-    let copy_status = RwSignal::new(None::<String>);
+    let copy_status = FeedEventCopyStatus::new();
     let stop_menu_click = |event: MouseEvent| event.stop_propagation();
     view! {
         <details class="lkjstr-feed-actions event-action-zone">
@@ -81,7 +74,7 @@ pub(crate) fn event_actions(
                 {string_button(event_id.clone(), actions.open_thread, labels.thread_test_id, labels.thread_label)}
                 {author_context_button(event_id.clone(), pubkey, actions.open_author_context, labels.author_context_test_id, labels.author_context_label)}
                 {copy_event_id_button(event_id, actions.copy_event_id, labels.copy_test_id, labels.copy_label, copy_status)}
-                {copy_status_view(copy_status)}
+                {copy_status_view(copy_status.signal())}
             </div>
         </details>
     }
@@ -117,7 +110,10 @@ fn string_button(
     label: &'static str,
 ) -> impl IntoView {
     action.map(|action| {
-        let run = move |_| action.run(value.clone());
+        let run = move |event| {
+            stop_action_click(event);
+            action.run(value.clone());
+        };
         view! { <button type="button" data-testid=test_id on:click=run>{label}</button> }
     })
 }
@@ -127,18 +123,19 @@ fn copy_event_id_button(
     copy: Option<ProfileCopyProvider>,
     test_id: &'static str,
     label: &'static str,
-    status: RwSignal<Option<String>>,
+    status: FeedEventCopyStatus,
 ) -> impl IntoView {
     let Some(copy) = copy else {
         return ().into_any();
     };
-    let copy_event = move |_| {
+    let copy_event = move |event| {
+        stop_action_click(event);
         let status = status;
         copy.copy(
             "event id".to_owned(),
             event_id.clone(),
             Callback::new(move |result| {
-                status.set(Some(copy_event_status_text(result)));
+                status.show(result);
             }),
         );
     };
@@ -153,13 +150,6 @@ fn copy_status_view(status: RwSignal<Option<String>>) -> impl IntoView {
         status
             .get()
             .map(|text| view! { <small role="status">{text}</small> })
-    }
-}
-
-fn copy_event_status_text(result: ProfileCopyResult) -> String {
-    match result.status {
-        ProfileCopyStatus::Copied => "Copied".to_owned(),
-        ProfileCopyStatus::Failed(reason) => format!("Copy failed: {reason}"),
     }
 }
 
@@ -178,7 +168,10 @@ fn author_context_button(
     label: &'static str,
 ) -> impl IntoView {
     action.map(|action| {
-        let run = move |_| action.run((event_id.clone(), pubkey.clone()));
+        let run = move |event| {
+            stop_action_click(event);
+            action.run((event_id.clone(), pubkey.clone()));
+        };
         view! { <button type="button" data-testid=test_id on:click=run>{label}</button> }
     })
 }

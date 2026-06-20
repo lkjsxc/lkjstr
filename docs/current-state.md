@@ -171,8 +171,8 @@ Read next: [architecture/workspace/README.md](architecture/workspace/README.md),
   metadata plus kind `3` follow counts, and sparse empty proof while excluding
   metadata and follow-list note rows. The shipped Rust Thread island reads cached root/reply/focused,
   parent, unavailable, continuation, older, and live rows. Converted Rust rows
-  share menus, action/repost rows, long-token wrapping, User Timeline proof,
-  and cached kind `0` Followees labels/subtitles/avatars with `Unknown` fallback.
+  share menus, action/repost rows, non-local Thread row activation, isolated local
+  controls, long-token wrapping, User Timeline proof, and cached kind `0` Followees labels/subtitles/avatars with `Unknown` fallback.
 - Live inserts use top-anchor policy: top users see new rows immediately; away
   users keep the visible anchor and see newer-available state.
 - Profile following counts/actions are explicit: unknown states never render zero;
