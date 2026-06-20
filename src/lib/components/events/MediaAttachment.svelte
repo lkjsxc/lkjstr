@@ -21,6 +21,15 @@
   }
 </script>
 
+{#snippet openButton()}
+  <button
+    type="button"
+    onclick={(event) => mediaAttachmentOpenAfterStop(event, open)}
+  >
+    {mediaAttachmentOpenButtonLabel(props.attachment.type)}
+  </button>
+{/snippet}
+
 <!-- eslint-disable svelte/no-navigation-without-resolve -->
 {#if props.attachment.type === 'image'}
   {@const link = planMediaAttachmentLink(props.attachment)}
@@ -55,12 +64,7 @@
       controls
       onclick={stopMediaAttachmentPropagation}
     ></video>
-    <button
-      type="button"
-      onclick={(event) => mediaAttachmentOpenAfterStop(event, open)}
-    >
-      {mediaAttachmentOpenButtonLabel(props.attachment.type)}
-    </button>
+    {@render openButton()}
   </div>
 {:else if props.attachment.type === 'audio'}
   <div class="media-embed media-embed--audio">
@@ -69,12 +73,7 @@
       controls
       onclick={stopMediaAttachmentPropagation}
     ></audio>
-    <button
-      type="button"
-      onclick={(event) => mediaAttachmentOpenAfterStop(event, open)}
-    >
-      {mediaAttachmentOpenButtonLabel(props.attachment.type)}
-    </button>
+    {@render openButton()}
   </div>
 {:else}
   {@const link = planMediaAttachmentLink(props.attachment)}

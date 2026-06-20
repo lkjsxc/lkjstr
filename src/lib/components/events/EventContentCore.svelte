@@ -15,6 +15,7 @@
     planEventContentCore,
     revealEventContent,
   } from './event-content-plan';
+  import EventContentWarning from './EventContentWarning.svelte';
 
   type Props = {
     event: NostrEvent;
@@ -43,21 +44,19 @@
     );
     return unsubscribe;
   });
+
+  function revealSensitiveContent(event: MouseEvent): void {
+    revealed = revealEventContent(event, () =>
+      revealSensitiveEvent(props.event.id),
+    );
+  }
 </script>
 
 {#if plan.sensitivity.gated}
-  <aside class="content-warning">
-    <strong>{plan.sensitivity.label}</strong>
-    {#if plan.sensitivity.reason}<span>{plan.sensitivity.reason}</span>{/if}
-    <button
-      type="button"
-      onclick={(event) => {
-        revealed = revealEventContent(event, () =>
-          revealSensitiveEvent(props.event.id),
-        );
-      }}>{plan.sensitivity.revealLabel}</button
-    >
-  </aside>
+  <EventContentWarning
+    sensitivity={plan.sensitivity}
+    onReveal={revealSensitiveContent}
+  />
 {:else}
   {#if plan.sensitivity.showBadge}
     <p class="content-warning-badge">{plan.sensitivity.label}</p>

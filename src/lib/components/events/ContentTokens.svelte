@@ -7,9 +7,8 @@
     contentTokenEventVisible,
     contentTokenProfileLabel,
     contentTokenRenderKey,
-    contentTokenUrlLinkPlan,
-    stopContentTokenLinkPropagation,
   } from './content-token-plan';
+  import ContentTokenLink from './ContentTokenLink.svelte';
   import EventMentionChip from './EventMentionChip.svelte';
   import ProfileMentionChip from './ProfileMentionChip.svelte';
 
@@ -26,20 +25,12 @@
   let tokens = $derived(contentTokens(props.event));
 </script>
 
-<!-- eslint-disable svelte/no-navigation-without-resolve -->
 <p class="event-content">
   {#each tokens as token, index (contentTokenRenderKey(token, index))}
     {#if token.type === 'text'}
       {token.text}
     {:else if token.type === 'url'}
-      {@const link = contentTokenUrlLinkPlan(token.url)}
-      <a
-        class="event-link"
-        href={link.href}
-        target={link.target}
-        rel={link.rel}
-        onclick={stopContentTokenLinkPropagation}>{token.text}</a
-      >
+      <ContentTokenLink text={token.text} url={token.url} />
     {:else if token.type === 'custom-emoji'}
       <CustomEmojiImage emoji={token} />
     {:else if token.type === 'profile'}
