@@ -5,13 +5,75 @@
 ブランチ: `main`
 依頼: 「切りの良いところで切り上げ、GPT-5.5-Pro に解決策を考えてもらうため、現状の問題点を含めて伝えたいことを `tmp/` に Markdown でまとめ、コミットも済ませる」
 
+## 2026-06-20 最終追記
+
+この版が最終状態です。初版 handoff 作成後、残っていた coherent slice を検証して小さく commit しました。
+
+最終状態:
+
+- `git status --short`: clean
+- handoff 最終更新前の最新 code/docs commit: `9c7a4267 Align cutover ledgers with retained runtime guards`
+- この handoff file も最新状態に更新済み
+- TypeScript/Svelte 削除完了、Shared feed runtime 完了、Rust/WASM final gate 完走は主張していません
+
+初版 handoff 後に追加で commit したもの:
+
+```text
+ff04c4bf Prove Author Context row thread activation
+9de95487 Prove deleted feed tab path guards
+b23d6c08 Extract event meta copy status helper
+925d738c Split retained event content presenters
+4097b52e Plan retained mention chip presenters
+f4239632 Plan retained emojified text tokens
+99d7cad0 Split retained reaction summary presenters
+dd4bf42d Split retained event row frame planning
+eb607dbc Plan retained event reference presenters
+d205ec55 Plan retained event tree row rendering
+90cd1d2e Split retained zap panel presenters
+bbb10482 Split retained event action presenters
+6cfc1b58 Prove retained media status presenters
+46acf9fc Document retained event presenter contracts
+92fc94f0 Index User Timeline read command helper
+7555a1dc Import notification state from source
+9c7a4267 Align cutover ledgers with retained runtime guards
+```
+
+最終盤で追加検証した代表コマンド:
+
+```sh
+PATH=/tmp/codex-pnpm-shim:$HOME/.local/bin:/home/lkjsxc/.cargo/bin:$PATH \
+  pnpm test -- tests/unit/events/event-media-status-presenter.test.ts
+
+PATH=/tmp/codex-pnpm-shim:$HOME/.local/bin:/home/lkjsxc/.cargo/bin:$PATH \
+  pnpm test -- tests/unit/notifications
+
+PATH=/tmp/codex-pnpm-shim:$HOME/.local/bin:/home/lkjsxc/.cargo/bin:$PATH \
+  pnpm check
+
+PATH=/tmp/codex-pnpm-shim:$HOME/.local/bin:/home/lkjsxc/.cargo/bin:$PATH \
+  pnpm check:repo
+```
+
+上記 `pnpm test -- ...` は、この repo の Vitest 設定により全 unit suite を実行し、`340` test files / `1132` tests pass を確認しました。`pnpm check` は `svelte-check` 0 errors / 0 warnings でした。
+
+最終盤で実行していないもの:
+
+- `pnpm rust-wasm:quiet`
+- `pnpm verify:quiet`
+- `pnpm cloudflare:quiet`
+- Docker Compose final gate
+
+古い節にある「dirty worktree が残る」前提は、初版作成時点の問題意識です。最終追記時点では該当差分はすべて coherent slice として commit 済みで、worktree は clean です。
+
 ## 最重要結論
 
 現在の第一未完了ブロッカーは、引き続き **Shared feed runtime** です。
 
 このリポジトリは browser-first / local-first Nostr workspace です。shipped product runtime はまだ `src/` 配下の SvelteKit/TypeScript を多く含みます。目標は `crates/` 配下の Rust/WASM + Leptos runtime へ slice ごとに parity を証明しながら切り替えることです。サーバー側アカウント、relay proxy、custody service、backend はありません。
 
-今回の停止点で安全に切った最後の slice は、**Custom Request の parser/query 入力境界を追加テストで証明する proof-only slice** です。実装の挙動変更は意図していません。すでに Rust 側で実装済みだった以下の制約を、focused tests で明示的に固定しました。
+初版 handoff で安全に切った slice は、**Custom Request の parser/query 入力境界を追加テストで証明する proof-only slice** でした。最終追記時点では、その後に retained Svelte event presenters、Author Context row activation、deleted path guards、Notification type import、cutover ledger alignment まで検証済み commit として積んでいます。
+
+Custom Request proof-only slice では、実装の挙動変更は意図していません。すでに Rust 側で実装済みだった以下の制約を、focused tests で明示的に固定しました。
 
 - invalid explicit relay は demand を発行しない。
 - explicit relay 数上限を超えた入力は拒否する。
@@ -21,7 +83,7 @@
 - `search` filter は exact mode として分類する。
 - Custom Request query は user filter の `since` / `until` / `search` / filter-local `limit` を保持し、runtime page size は query-level limit として別に保持する。
 
-この handoff file 自体は最終 commit に含めるため、正確な最新 commit hash は `git log -1 --oneline` で確認してください。
+この handoff file 自体も最後の commit に含まれます。正確な最新 commit hash は `git log -1 --oneline` で確認してください。
 
 ## 絶対に守る制約
 
@@ -30,8 +92,8 @@
 - TypeScript/Svelte product code を削除するには、Rust parity、focused tests、ledger evidence、no-import proof が必要です。
 - Main-thread code は SQLite/OPFS を直接開かない。product modules は typed repositories だけを呼びます。
 - `src` の source files は 200 lines 以下、docs は 300 lines 以下が通常ルールです。この `tmp/` handoff は、ユーザーが「どれだけ長くなっても構いません」と明示した例外として長く書いています。
-- dirty worktree の既存変更はユーザーまたは過去作業由来として扱い、勝手に revert しないでください。
-- 現在の worktree は複数 slice が混在しています。**`git add -A` / `git add .` は使わないでください。**
+- 最終追記時点の worktree は clean です。将来 dirty になった場合も、既存変更はユーザーまたは過去作業由来として扱い、勝手に revert しないでください。
+- 今回の作業中は複数 slice が混在していたため、今後も **`git add -A` / `git add .` は使わないでください。**
 - commit message は Lore protocol。`Tested:` と `Not-tested:` は実際の検証と一致させてください。
 - final parity/deletion claim には Docker Compose final gate が必要です。今回そこまでは走っていません。
 
@@ -92,7 +154,7 @@ Rust feed row/action/content の直近作業を見る時:
 
 ## 直近の検証済み commit
 
-この handoff 直前までの verified commits:
+初版 handoff 直前までの verified commits:
 
 ```text
 a6127611 Plan Rust feed content row openers
@@ -106,12 +168,14 @@ d3ea0da4 Prove older loader lease replacement
 2de87a2d Guard retained feed helpers behind Rust island ownership
 ```
 
-今回この handoff と同じ commit に含める想定の最終 slice:
+初版 handoff と同じ commit に含めた Custom Request proof slice:
 
 - `crates/lkjstr-app/tests/custom_request_plan_test.rs`
 - `crates/lkjstr-app/tests/custom_request_test.rs`
 - `crates/lkjstr-app/tests/feed_tool_input_test.rs`
 - `tmp/gpt-5.5-pro-handoff-2026-06-20.md`
+
+最終追記時点では、上の slice は `27493871 Prove Custom Request filter bounds` として commit 済みです。その後の commits は冒頭の「2026-06-20 最終追記」に列挙しています。
 
 ## 各 commit の意味
 
@@ -219,7 +283,7 @@ PATH=/tmp/codex-pnpm-shim:$HOME/.local/bin:/home/lkjsxc/.cargo/bin:$PATH \
 - `cargo test -p lkjstr-app feed_tool_input`: pass
 - 対象 test files は line limit 内です。
 
-commit 前にさらに以下を走らせる予定です。commit message の `Tested:` は必ず最終実行結果に合わせてください。
+初版 Custom Request proof commit では、focused tests に加えて以下も通しました。commit message の `Tested:` は実行済み内容に合わせています。
 
 ```sh
 PATH=/tmp/codex-pnpm-shim:$HOME/.local/bin:/home/lkjsxc/.cargo/bin:$PATH \
@@ -401,7 +465,7 @@ Do not claim:
 - Rust/WASM quiet gate の最新完走。
 - `pnpm verify:quiet` / `pnpm cloudflare:quiet` の pass。
 - Docker Compose final gate の pass。
-- dirty worktree 全体の正当性。
+- future dirty worktree 全体の正当性。
 
 ## 現在の中心問題
 
@@ -418,37 +482,37 @@ Do not claim:
 - deletion ledger に進めるための no-import proof。
 - final gates。
 
-### 2. dirty worktree が大きく、複数 slice が混ざっている
+### 2. worktree は clean だが、次の slice はまだ broad
 
-この handoff 作成時点で、worktree には今回 Custom Request proof slice 以外に broad edits が残っています。
+初版 handoff 時点で混ざっていた以下の dirty slice は、最終追記時点では分割して commit 済みです。
 
-大まかなグループ:
+- Web Author Context browser test/readme slice。
+- Svelte `src/lib/components/events/*` presenter/component 分割。
+- TS tests under `tests/unit/events/*` の presenter/plan regression proof。
+- cutover ledgers and task docs の retained runtime guard wording update。
+- `tests/unit/repo-deleted-paths.test.ts` の no-import/deletion guard proof。
+- `src/lib/tabs/notifications/notification-list-state.ts` の type-only import cleanup。
 
-- Web Author Context browser test/readme の dirty slice。
-- Svelte `src/lib/components/events/*` の presenter/component 分割。
-- TS tests under `tests/unit/events/*` の大規模更新。
-- cutover ledgers and task docs の広い wording update。
-- `tests/unit/repo-deleted-paths.test.ts` の no-import/deletion guard 拡張。
-- `src/lib/tabs/notifications/notification-list-state.ts` の unrelated-looking dirty edit。
-
-これらは今回 commit しません。次の agent は最初に:
+次の agent は最初に:
 
 ```sh
 git status --short
 git diff --stat
 ```
 
-を見て、1 slice ずつ explicit staging してください。
+を見て、clean であることを確認してください。新しく差分を作る場合は、引き続き 1 slice ずつ explicit staging してください。
 
-### 3. docs dirty は一部だけが検証済み
+### 3. docs は最終追記時点で同期済みだが、完了宣言ではない
 
-`docs/current-state.md`, cutover ledgers, task docs に broad edits が残っています。
+`docs/current-state.md`, cutover ledgers, task docs の残差分は `9c7a4267` で commit 済みです。
 
-過去 commit では、必要最小 blob だけを index に入れて commit しています。そのため:
+この docs commit は以下の範囲だけを主張します。
 
-- `git status` で docs がまだ `M` でも expected です。
-- `git add docs/current-state.md` のような broad add は未検証 wording を混ぜる可能性があります。
-- docs は source と同じ commit で aligned にする必要がありますが、alignment の範囲は narrow にしてください。
+- product-source no-import guard と full deletion proof を明確に分ける。
+- Custom Request / Profile / Thread / Search / Follow Graph などの retained helper は残っている。
+- deletion gate / final gate はまだ open。
+
+今後 docs を触る場合も、source/test evidence と同じ slice で narrow に更新してください。
 
 ### 4. final gates は未完走
 
@@ -486,35 +550,35 @@ User Timeline island test はこの path で pass しました。
 
 ## GPT-5.5-Pro に考えてほしいこと
 
-### A. まず worktree を「何を commit できるか」で分類する
+### A. まず clean 状態と最新 commit 境界を確認する
 
-現状は実装アイデアがいくつも worktree に残っているように見えます。まず次の分類をしてください。
+最終追記時点の worktree は clean です。まず次を確認してください。
 
-1. 既に coherent slice になっていて focused tests を足せば commit できるもの。
-2. source と docs/tests の対応が足りず、追加実装が必要なもの。
-3. 方向性は良いが broad すぎて分割が必要なもの。
-4. ユーザー作業かもしれず触らない方がよいもの。
+1. `git status --short` が空であること。
+2. `git log --oneline -20` で `27493871` 以降の stop-and-commit sequence を把握すること。
+3. `docs/execution/current-blockers.md` の第一未完了 blocker がまだ Shared feed runtime であること。
+4. 次に作る差分は 1 behavior / 1 proof / 1 docs alignment に分けること。
 
 ### B. 次の安全な slice 候補
 
 候補は複数ありますが、次の順で考えるとよいです。
 
-1. Web Author Context browser test/readme slice:
-   - `crates/lkjstr-web/tests/author_context_tab_test.rs`
-   - `crates/lkjstr-web/tests/README.md`
-   - wasm browser proof が必要そうです。
-2. Svelte event presenter split:
-   - `src/lib/components/events/*`
-   - `tests/unit/events/*`
-   - 変更量が大きいので、1 presenter / 1 component / 1 behavior proof に分割してください。
-3. docs/cutover ledger updates:
-   - 実際に source と tests が揃った slice だけ stage してください。
-4. deletion/no-import guard updates:
-   - 実際に import が消えた path だけに限定して最後に commit してください。
+1. Rust shared event renderer parity:
+   - retained Svelte presenter proof は増えましたが、Rust shared renderer parity 全体は未完了です。
+   - Rust/Leptos 側に同等の behavior proof を移す方針を検討してください。
+2. Shared feed runtime deletion prerequisites:
+   - product-source no-import guard は一部ありますが、full deletion proof と final gates は未完了です。
+   - guard を増やす時は、実際に product import が消えた entry だけに限定してください。
+3. Rust/WASM focused gates:
+   - `pnpm rust-wasm:quiet` は直近で未実行です。
+   - final claim ではなく、次の implementation slice の前提確認として走らせる価値があります。
+4. Surface-specific parity:
+   - Search / Custom Request / Profile / Thread / Notifications / Followees / User Timeline は、Rust island proof が増えていても broader parity は open です。
+   - 1 surface の 1 runtime edge だけを選んで proof を追加してください。
 
 ### C. `src/lib/components/events/*` の大規模変更は特に注意
 
-現在、多数の Svelte components と TS presenter/tests が dirty です。
+初版 handoff 時点で多数の Svelte components と TS presenter/tests が dirty でしたが、最終追記時点では小分け commit 済みです。
 
 危険な点:
 
@@ -532,7 +596,7 @@ User Timeline island test はこの path で pass しました。
 
 ### D. no-import/deletion proof は急がない
 
-今回の流れでは no-import guard や deletion-ledger wording が dirty に見えますが、TypeScript deletion は最後の証明です。
+初版 handoff 時点では no-import guard や deletion-ledger wording が dirty に見えていましたが、最終追記時点では narrow commit 済みです。TypeScript deletion は引き続き最後の証明です。
 
 守るべき順序:
 
@@ -546,117 +610,29 @@ User Timeline island test はこの path で pass しました。
 
 この順序を飛ばして docs の「removed」や ledger の deletion status だけ進めないでください。
 
-## Handoff 作成時点の dirty worktree summary
+## 最終 worktree summary
 
-この Custom Request proof commit 後も、多くの dirty files が残る想定です。正確な現状は必ず `git status --short` で再確認してください。
+最終追記前の確認では `git status --short` は空でした。初版 handoff 時点で modified / untracked だった files は、以下の coherent commits に分割済みです。
 
-主な modified files:
+- `ff04c4bf`: Author Context row の Thread activation browser proof。
+- `9de95487`: deleted feed tab path guard proof。
+- `b23d6c08`: retained event meta copy-status helper 抽出。
+- `925d738c`: retained event content presenter split。
+- `4097b52e`: mention chip presenter planning。
+- `f4239632`: emojified text token planning。
+- `99d7cad0`: reaction summary presenter split。
+- `dd4bf42d`: event row frame planning split。
+- `eb607dbc`: event reference presenter planning。
+- `d205ec55`: event tree list row planning。
+- `90cd1d2e`: zap panel presenter split。
+- `bbb10482`: event action presenter split。
+- `6cfc1b58`: media/status presenter wiring proof。
+- `46acf9fc`: event presenter docs alignment。
+- `92fc94f0`: User Timeline read-command helper README index。
+- `7555a1dc`: notification state type import cleanup。
+- `9c7a4267`: cutover ledgers/task docs aligned with retained runtime guards.
 
-```text
-crates/lkjstr-ui/src/workspace/README.md
-crates/lkjstr-web/tests/README.md
-crates/lkjstr-web/tests/author_context_tab_test.rs
-docs/architecture/rust-wasm/cutover/deletion-ledger.md
-docs/architecture/rust-wasm/cutover/implementation-ledger.md
-docs/architecture/rust-wasm/cutover/parity-ledger.md
-docs/architecture/workspace/ui-system/reaction-surfaces.md
-docs/current-state.md
-docs/execution/tasks/custom-request-provider-wiring.md
-docs/execution/tasks/followees-provider-wiring.md
-docs/execution/tasks/home-feed-provider-wiring.md
-docs/execution/tasks/profile-feed-provider-wiring.md
-docs/execution/tasks/search-feed-provider-wiring.md
-docs/execution/tasks/thread-feed-provider-wiring.md
-docs/product/tools/event-actions.md
-src/lib/components/events/ContentTokens.svelte
-src/lib/components/events/EmojifiedText.svelte
-src/lib/components/events/EventActions.svelte
-src/lib/components/events/EventContentCore.svelte
-src/lib/components/events/EventFragmentRow.svelte
-src/lib/components/events/EventMentionChip.svelte
-src/lib/components/events/EventReferenceCard.svelte
-src/lib/components/events/EventReferences.svelte
-src/lib/components/events/EventRow.svelte
-src/lib/components/events/EventTreeListRows.svelte
-src/lib/components/events/EventZapPanel.svelte
-src/lib/components/events/MediaAttachment.svelte
-src/lib/components/events/ProfileMentionChip.svelte
-src/lib/components/events/ReactionSummary.svelte
-src/lib/components/events/event-actions-emoji-source.ts
-src/lib/components/events/event-actions-plan.ts
-src/lib/components/events/event-mention-chip-plan.ts
-src/lib/components/events/event-meta-overflow.ts
-src/lib/components/events/event-reference-card-plan.ts
-src/lib/components/events/event-reference-hydration.ts
-src/lib/components/events/event-row-local-target.ts
-src/lib/components/events/event-tree-list-row-plan.ts
-src/lib/components/events/event-zap-panel-plan.ts
-src/lib/components/events/reaction-summary-plan.ts
-src/lib/tabs/notifications/notification-list-state.ts
-tests/unit/events/README.md
-tests/unit/events/event-actions-plan.test.ts
-tests/unit/events/event-actions-run-lifecycle.test.ts
-tests/unit/events/event-mention-chip-plan.test.ts
-tests/unit/events/event-meta-copy-status-lifecycle.test.ts
-tests/unit/events/event-meta-overflow.test.ts
-tests/unit/events/event-reference-card-plan.test.ts
-tests/unit/events/event-reference-hydration.test.ts
-tests/unit/events/event-row-local-target.test.ts
-tests/unit/events/event-tree-list-row-plan.test.ts
-tests/unit/events/event-zap-panel-plan.test.ts
-tests/unit/events/event-zap-submit-lifecycle.test.ts
-tests/unit/events/reaction-summary-plan.test.ts
-tests/unit/repo-deleted-paths.test.ts
-```
-
-主な untracked files:
-
-```text
-src/lib/components/events/ContentTokenLink.svelte
-src/lib/components/events/EventActionIconButton.svelte
-src/lib/components/events/EventActionInlinePanel.svelte
-src/lib/components/events/EventContentWarning.svelte
-src/lib/components/events/EventRowFrame.svelte
-src/lib/components/events/EventZapInvoiceRow.svelte
-src/lib/components/events/ReactionSummaryActorRow.svelte
-src/lib/components/events/emojified-text-plan.ts
-src/lib/components/events/event-actions-control-plan.ts
-src/lib/components/events/event-actions-label-plan.ts
-src/lib/components/events/event-actions-panel-plan.ts
-src/lib/components/events/event-actions-reaction-plan.ts
-src/lib/components/events/event-actions-reply-plan.ts
-src/lib/components/events/event-actions-run-plan.ts
-src/lib/components/events/event-meta-copy-status.ts
-src/lib/components/events/event-row-presentation-plan.ts
-src/lib/components/events/event-zap-row-plan.ts
-src/lib/components/events/event-zap-submit-plan.ts
-src/lib/components/events/profile-mention-chip-plan.ts
-src/lib/components/events/reaction-summary-label-plan.ts
-tests/unit/events/emojified-text-plan.test.ts
-tests/unit/events/event-actions-button-presenter.test.ts
-tests/unit/events/event-actions-control-plan.test.ts
-tests/unit/events/event-actions-inline-panel-presenter.test.ts
-tests/unit/events/event-actions-label-plan.test.ts
-tests/unit/events/event-actions-panel-plan.test.ts
-tests/unit/events/event-actions-presenter.test.ts
-tests/unit/events/event-actions-reaction-plan.test.ts
-tests/unit/events/event-actions-reply-plan.test.ts
-tests/unit/events/event-actions-run-plan.test.ts
-tests/unit/events/event-content-presenter.test.ts
-tests/unit/events/event-media-status-presenter.test.ts
-tests/unit/events/event-mention-chip-presenter.test.ts
-tests/unit/events/event-meta-copy-status.test.ts
-tests/unit/events/event-reference-presenter.test.ts
-tests/unit/events/event-row-presentation-plan.test.ts
-tests/unit/events/event-tree-list-presenter.test.ts
-tests/unit/events/event-zap-panel-presenter.test.ts
-tests/unit/events/event-zap-row-plan.test.ts
-tests/unit/events/event-zap-submit-plan.test.ts
-tests/unit/events/profile-mention-chip-plan.test.ts
-tests/unit/events/profile-mention-chip-presenter.test.ts
-tests/unit/events/reaction-summary-label-plan.test.ts
-tests/unit/events/reaction-summary-presenter.test.ts
-```
+次の agent は、これらを前提にしてよいです。ただし、各 commit の `Not-tested:` にある final gates は未実行です。
 
 ## Recommended next commands
 
@@ -702,10 +678,12 @@ wasm-pack test --headless --chrome \
 
 この handoff の停止条件:
 
-- Custom Request parser/query bounds が focused tests で pass。
-- 関連 tests/handoff だけ explicit staging。
-- repo/doc/line/static checks を通す。
-- Lore protocol commit を作る。
-- broader dirty worktree は残すが、未検証として明記する。
+- Custom Request parser/query bounds の proof commit がある。
+- 初版 handoff 後に残っていた coherent dirty slices が explicit staging で分割 commit 済み。
+- retained Svelte event presenter split は unit/static tests で proof 済み。
+- docs/current-state/cutover/task docs は retained runtime guard と full deletion proof の違いを明記済み。
+- `git status --short` が clean。
+- Lore protocol commit が揃っている。
+- final gates 未実行を明記している。
 
 ここまで終わったら、GPT-5.5-Pro は次の high-level 解決策検討に入れます。
