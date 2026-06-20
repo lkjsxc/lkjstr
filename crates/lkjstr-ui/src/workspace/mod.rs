@@ -13,6 +13,7 @@ mod custom_request;
 mod custom_request_island;
 mod custom_request_provider;
 mod custom_request_render;
+mod custom_request_run;
 mod custom_request_snapshot;
 mod feed_event_actions;
 mod feed_event_content;

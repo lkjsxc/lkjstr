@@ -5,8 +5,9 @@ use lkjstr_app::{
     unavailable_custom_request_feed_view,
 };
 
-use crate::workspace::custom_request_provider::{CustomRequestLease, CustomRequestProvider};
+use crate::workspace::custom_request_provider::CustomRequestProvider;
 use crate::workspace::custom_request_render::{custom_request_row, custom_request_status_text};
+use crate::workspace::custom_request_run::CustomRequestRunController;
 use crate::workspace::custom_request_snapshot::CustomRequestSnapshotHandle;
 use crate::workspace::feed_event_actions::FeedEventActions;
 
@@ -23,7 +24,7 @@ pub fn CustomRequestTab(
     let input = RwSignal::new(snapshot.restored_input(DEFAULT_INPUT));
     let ran = RwSignal::new(snapshot.restored_ran());
     let model = RwSignal::new(default_custom_request_feed_view(&owner));
-    let active_lease = RwSignal::new(None::<CustomRequestLease>);
+    let run_controller = CustomRequestRunController::new();
     let input_snapshot = snapshot.clone();
     let input_change = move |event| {
         let value = event_target_value(&event);
@@ -33,39 +34,39 @@ pub fn CustomRequestTab(
     let submit_provider = provider.clone();
     let submit_owner = owner.clone();
     let submit_snapshot = snapshot.clone();
+    let submit_controller = run_controller.clone();
     let submit = move |event: leptos::ev::SubmitEvent| {
         event.prevent_default();
-        release_current(active_lease);
         let raw = input.get_untracked();
         ran.set(true);
         submit_snapshot.save(raw.clone(), true);
         model.set(planning_custom_request_feed_view(&submit_owner));
-        let Some(provider) = submit_provider.clone() else {
-            model.set(unavailable_custom_request_feed_view(
-                &submit_owner,
-                PROVIDER_UNAVAILABLE,
-                false,
-            ));
-            return;
-        };
-        let lease = provider.run(
+        let started = submit_controller.run(
+            submit_provider.clone(),
             submit_owner.clone(),
             raw,
             Callback::new(move |next| {
                 model.set(next);
             }),
         );
-        active_lease.set(Some(lease));
+        if !started {
+            model.set(unavailable_custom_request_feed_view(
+                &submit_owner,
+                PROVIDER_UNAVAILABLE,
+                false,
+            ));
+        }
     };
     let cancel_owner = owner.clone();
+    let cancel_controller = run_controller.clone();
     let cancel = move |_| {
         if !can_cancel(&model.get_untracked()) {
             return;
         }
-        release_current(active_lease);
+        cancel_controller.release();
         model.set(canceled_custom_request_feed_view(&cancel_owner));
     };
-    on_cleanup(move || release_current(active_lease));
+    on_cleanup(move || run_controller.release());
 
     view! {
         <section class="feed-tab lkjstr-custom-request" aria-label="Custom Request">
@@ -109,13 +110,6 @@ pub fn CustomRequestTab(
             </div>
         </section>
     }
-}
-
-fn release_current(active_lease: RwSignal<Option<CustomRequestLease>>) {
-    if let Some(lease) = active_lease.get_untracked() {
-        lease.release();
-    }
-    active_lease.set(None);
 }
 
 fn alert_role(status: CustomRequestFeedStatus) -> &'static str {

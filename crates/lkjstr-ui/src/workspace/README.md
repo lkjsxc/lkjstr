@@ -18,6 +18,7 @@ New Tab chooser, and converted Rust tool bodies.
 - `custom_request.rs`: Rust Custom Request app-owned result feed body.
 - `custom_request_provider.rs`: async Custom Request view-model provider wrapper.
 - `custom_request_render.rs`: Custom Request shared feed-row rendering.
+- `custom_request_run.rs`: leased Custom Request run-command helper.
 - `custom_request_snapshot.rs`: Custom Request feed filter-state snapshots.
 - `feed_event_actions.rs`: shared Rust feed event-row action buttons.
 - `feed_event_content.rs`: shared Rust feed event-row content rendering.
