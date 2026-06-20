@@ -1,18 +1,21 @@
 <script lang="ts">
-  import { Copy, ExternalLink } from '@lucide/svelte';
   import type { ProfileSummary } from '$lib/identity/identity';
   import type { NostrEvent } from '$lib/protocol';
   import type { RelaySet } from '$lib/relays/relay-store';
   import { createZapInvoices, type ZapInvoice } from '$lib/events/zap';
   import { copyEventZapInvoiceStatus } from '$lib/components/events/zap-copy-status';
+  import { eventZapPanelLabels } from './event-zap-panel-plan';
+  import {
+    eventZapInvoiceRows,
+    hasEventZapInvoices,
+    openEventZapInvoice,
+  } from './event-zap-row-plan';
   import {
     canSubmitEventZap,
-    eventZapPanelLabels,
-    openEventZapInvoice,
     runEventZapSubmit,
     submitEventZap,
-    zapInvoiceAmountSats,
-  } from './event-zap-panel-plan';
+  } from './event-zap-submit-plan';
+  import EventZapInvoiceRow from './EventZapInvoiceRow.svelte';
 
   type Props = {
     event: NostrEvent;
@@ -54,6 +57,10 @@
   function openInvoice(uri: string): void {
     openEventZapInvoice(uri, (url, target) => window.open(url, target));
   }
+
+  function invoiceRows() {
+    return eventZapInvoiceRows(invoices, labels);
+  }
 </script>
 
 <form
@@ -75,35 +82,10 @@
     {labels.submit}
   </button>
 </form>
-{#if invoices.length > 0}
+{#if hasEventZapInvoices(invoices)}
   <div class="zap-invoices">
-    {#each invoices as invoice (invoice.invoice)}
-      <section class="zap-invoice">
-        <img src={invoice.qrDataUrl} alt={labels.invoiceQrAlt} />
-        <div class="zap-invoice__controls">
-          <span>{zapInvoiceAmountSats(invoice.amountMsats)} sats</span>
-          <button
-            type="button"
-            class="icon-button"
-            aria-label={labels.openInvoice}
-            title={labels.openInvoice}
-            onclick={() => openInvoice(invoice.uri)}
-          >
-            <ExternalLink size={16} />
-          </button>
-          <button
-            type="button"
-            class="icon-button"
-            aria-label={labels.copyInvoice}
-            title={labels.copyInvoice}
-            onclick={() => {
-              void copyInvoice(invoice.invoice);
-            }}
-          >
-            <Copy size={16} />
-          </button>
-        </div>
-      </section>
+    {#each invoiceRows() as invoice (invoice.key)}
+      <EventZapInvoiceRow row={invoice} {copyInvoice} {openInvoice} />
     {/each}
   </div>
 {/if}

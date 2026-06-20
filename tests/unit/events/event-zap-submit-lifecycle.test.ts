@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { runEventZapSubmit } from '../../../src/lib/components/events/event-zap-panel-plan';
+import { runEventZapSubmit } from '../../../src/lib/components/events/event-zap-submit-plan';
 
 describe('event zap submit lifecycle', () => {
   it('clears retained invoices, applies new invoices, and publishes success status', async () => {
