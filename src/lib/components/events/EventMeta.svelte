@@ -11,14 +11,16 @@
     stopAndOpenEventProfile,
   } from './event-profile-activation';
   import {
-    copyEventMetaEventId,
     createEventMetaCopyStatusResetter,
     eventMetaCopyStatusLabel,
+    type EventMetaCopyStatus,
+  } from './event-meta-copy-status';
+  import {
+    copyEventMetaEventId,
     eventMetaHasAuthorContext,
     eventMetaOverflowLabels,
     openEventMetaAuthorContext,
     stopEventMetaOverflowPropagation,
-    type EventMetaCopyStatus,
   } from './event-meta-overflow';
 
   type Props = {
@@ -74,6 +76,24 @@
   }
 </script>
 
+{#snippet identityBody()}
+  {#if props.avatarInline}
+    <Avatar
+      pubkey={display.pubkey}
+      name={display.title}
+      src={display.avatarUrl}
+      size="sm"
+    />
+  {/if}
+  <strong>
+    <EmojifiedText
+      text={display.title}
+      emojis={props.profile?.customEmojis ?? []}
+    />
+  </strong>
+  {#if display.subtitle}<small>{display.subtitle}</small>{/if}
+{/snippet}
+
 {#if props.avatarOnly}
   <Avatar
     pubkey={display.pubkey}
@@ -84,39 +104,11 @@
   <div class="event-meta">
     {#if canOpenProfile}
       <button type="button" class="identity-button" onclick={openProfile}>
-        {#if props.avatarInline}
-          <Avatar
-            pubkey={display.pubkey}
-            name={display.title}
-            src={display.avatarUrl}
-            size="sm"
-          />
-        {/if}
-        <strong>
-          <EmojifiedText
-            text={display.title}
-            emojis={props.profile?.customEmojis ?? []}
-          />
-        </strong>
-        {#if display.subtitle}<small>{display.subtitle}</small>{/if}
+        {@render identityBody()}
       </button>
     {:else}
       <span class="identity-button">
-        {#if props.avatarInline}
-          <Avatar
-            pubkey={display.pubkey}
-            name={display.title}
-            src={display.avatarUrl}
-            size="sm"
-          />
-        {/if}
-        <strong>
-          <EmojifiedText
-            text={display.title}
-            emojis={props.profile?.customEmojis ?? []}
-          />
-        </strong>
-        {#if display.subtitle}<small>{display.subtitle}</small>{/if}
+        {@render identityBody()}
       </span>
     {/if}
     <span>{time}</span>

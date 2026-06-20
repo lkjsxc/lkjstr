@@ -2,9 +2,8 @@
 
 ## Purpose
 
-This file lists the current Rust/WASM blockers in dependency order. Status:
-implemented as an execution map; each blocker points to the contract, crates,
-shipped source paths, tests, and proof needed to move a cutover-ledger row.
+This file lists current Rust/WASM blockers in dependency order. Status is an implemented execution map;
+each blocker points to contracts, crates, shipped source paths, tests, and proof needed to move a ledger row.
 
 ## Dependency Order
 
@@ -36,10 +35,11 @@ metadata/follow-count header rendering, selected-relay plus stored-route
 Followees/User Timeline kind `3` discovery, Followees/User Timeline cleanup,
 retry diagnostics, and Rust island host proof, first injected/cache/relay
 Author Context rows, exact anchor lookup, stored routes, unavailable-state browser
-proof, row actions, and Followees/User Timeline/Author Context request-level
-cleanup guards. Global, Thread, Notifications, and Search older controls now
-require a real provider older handler before rendering or dispatching older
-loads, and released older-provider leases suppress late completions. The unused
+proof, row actions, Profile/Thread/Notifications runtime, Search query-runner, Custom Request app/UI/Web proof, and no-import guards,
+plus Followees/User Timeline/Author Context request-level and read-command cleanup guards. Global, Thread, Notifications,
+and Search older controls require real older handlers before older dispatch,
+released older-provider leases suppress late completions, and Search primary query plus Custom Request run commands release
+replaced or provider-unavailable leases. The unused
 Rust workspace-persistence constructor that dropped tab snapshots is removed.
 Profile following-count rows render as actions only when a real Followees opener
 exists.
@@ -167,13 +167,13 @@ models, anchors, footer states, and unavailable states.
   Profile Follow/Unfollow state loading plus local and NIP-07 publish without fake success,
   Profile sparse-history empty proof, first Rust Followees NIP-02 row rendering,
   default cached plus selected-relay/stored-route/disabled-route Followees
-  host-provider, one-scroll-owner proof, cleanup, retry diagnostics, root row
+  host-provider, one-scroll-owner proof, cleanup, read-command cleanup, retry diagnostics, root row
   actions with explicit copy status, and Rust island host proof,
   first Rust User Timeline NIP-02 author-set feed-row rendering,
   default cached User Timeline host-provider and one-scroll-owner proofs,
   target-posts-only fallback proof, public no-route/loading discovery-state
   tests, selected-relay User Timeline kind `3` discovery, stored NIP-65 route
-  discovery, cleanup, retry diagnostics, and Rust island host proof,
+  discovery, cleanup, read-command cleanup, retry diagnostics, incomplete status detail and Stats reason proof, and Rust island host proof,
   Thread cached root/reply provider proof, Thread one-scroll-owner row-flow
   proof, shared feed owner-release cleanup, bounded Thread bootstrap relay reads, Thread relay
   owner cleanup, explicit Thread older-page relay reads from the footer command,
@@ -185,55 +185,55 @@ models, anchors, footer states, and unavailable states.
   cached plus relay older-page proof, Custom Request durable geometry model proof, injected, worker-cached, relay-backed,
   exact-anchor, stored-route, unavailable-state, and one-scroll-owner Author Context rows, Rust
   row actions, shared Rust event action rendering, host-backed Rust event-id
-  copy actions with retained-compatible status text, copy-only menu proof,
+  copy actions with retained-compatible status text/reset, copy-only menu proof,
   converted action providers, nearby-author menus across converted Rust feed
   rows, shared Rust event body, Author Context request-level cleanup guards,
   full FeedViewModel action/repost summary rows and verified nested repost
   target rows with UI attribute proof, Rust/TypeScript declared-target mismatch
   rejection, and nested-repost reservation invalidation,
   `FeedEventRow` content/action rows, indexed unavailable media/reference
-  preview states with UI attribute proof, real HTTPS media attachment row
-  planning with fallback open-link identity attributes and compact media-only
-  row ids, unavailable reference rows with real referenced event identity and
-  relay-hint UI attributes, inline content event-reference token suppression
-  before Rust row planning, safe HTTPS link rows with stable identity and real
-  media-backed inline URL suppression,
-  identity-only NIP-19 profile mention rows with stable identity attributes,
-  profile-open and reference thread-open payload proof on converted Rust
-  surfaces that pass a real opener, normalized event/profile entity relay hints, validated custom
-  emoji rows with image presentation plus address and stable identity attributes,
-  notification repost event rows, author metadata, sensitive-warning
-  reason/reveal attribute proof, common state-row rendering,
+  preview states with UI attribute proof, real HTTPS media rows with async image
+  decode, fallback open-link attributes, compact media-only row ids,
+  unavailable reference rows with real event identity and relay hints,
+  inline event-reference token suppression before Rust row planning, safe HTTPS
+  links with stable identity and media-backed URL suppression,
+  identity-only NIP-19 profile mention rows plus presenter proof, profile-open
+  and reference thread-open payload proof on converted Rust surfaces with real
+  openers, normalized event/profile relay hints, custom emoji async/fallback
+  rows, row dispatch/activation, opener parity, Author Context reuse,
+  link/media open-button isolation, profile/event mention/reference proof,
+  reaction/repost actor-row chrome, notification repost event rows, shared
+  author metadata chrome, sensitive-warning propagation proof, common state-row rendering,
   shared footer shell rendering across converted feed rows, retained Svelte copy
   actions with explicit clipboard failure states, and retained optional Svelte
   event/profile actions plus Rust-island hosts suppress unavailable no-op
   actions, empty Rust action menus, unavailable Thread continuation buttons,
   and Rust older-load controls without real older provider handlers are
   suppressed; released Global, Notifications, Search, and Thread older-provider
-  leases suppress late completions; Profile following-count actions require a
-  real Followees opener, unused tab-snapshot no-op persistence construction is
+  leases suppress late completions; their command helpers release replaced or
+  unsupported/blocked requests before dispatch; Search primary query commands
+  release replaced or provider-unavailable leases; Custom Request run commands
+  release replaced or provider-unavailable leases through the same cancel/cleanup helper; Profile following-count actions
+  require a real Followees opener, unused tab-snapshot no-op persistence construction is
   removed, Rust geometry runtime counters plus row-height key/tier helpers, injected row-height, scan
   optimizer count proof, and grouped hint-status Stats rows are exposed, split
   Rust/WASM browser plus release gates, canonical Rust/WASM quiet wrapper proof,
   and Docker final-gate proof. Generic feed-host selection now has focused
   mount-key proof, and `pnpm check:repo` guards product source from re-importing
-  retained Svelte feed tab bodies, TimelineTab support files, deleted feed tab wrappers, retired
-  Author Context loader symbols, removed staged-rows, row-shell, and feed-geometry-estimate helpers, and User Timeline route-plan helpers. Home, Global,
-  Profile, Thread,
-  Notifications, Search, Custom Request, Author Context, Followees, and User Timeline use generic Rust
+  retained Svelte feed tab bodies, TimelineTab support files, deleted feed tab wrappers,
+  retired Author Context loaders, removed feed-surface staging/key/intent/notification-row helpers, Profile/Thread/Search/Custom Request imports,
+  and Follow Graph/User Timeline runtime imports. Home, Global, Profile, Thread, Notifications, Search,
+  Custom Request, Author Context, Followees, and User Timeline use generic Rust
   island host glue, which cancels pending WASM mounts when hidden or destroyed,
   unmounts late handles before accepting stale mounts, and preserves Search and
   Custom Request filter snapshots through typed callbacks. The removed
   Author Context, Followees, and User Timeline Svelte wrappers stay absent
   through `pnpm check:repo`.
-- Remaining completion proof: retained Svelte event overflow/menu-label/propagation/copy-status lifecycle behavior,
-  row activation/dispatch/highlight lifecycle, local-control suppression, profile-open label/no-op suppression,
-  content/token propagation, repost-target-label, sensitivity-label/reveal planning,
-  event-mention opening/load-state/planning, reference preview loading/lifecycle/state/toggle/open planning,
-  reaction/repost labels/open, action-state/run/action-label/reply/completion/emoji-source/reaction/zap-submit/copy-lifecycle/zap-state/zap-label/open,
-  content/media-open/emoji/status/near-start/end/auto-fill/newer/paging/row-data/tree-cache helpers and collapsed-continuation plans live in focused helpers;
-  row components avoid old menu imports, old paths are guarded absent by `pnpm check:repo`, and other feed-surface deletion prerequisites remain open.
-  Missing coverage never proves absence, and no placeholder rows exist.
+- Remaining completion proof: retained Svelte tree-list render/helper wiring now has
+  focused presenter/helper proof; row components avoid old menu imports, deleted
+  feed-scroll key, near-end observer, and speculative older helpers are guarded absent by `pnpm check:repo`, and broader
+  feed-surface deletion prerequisites remain open. Missing coverage never proves absence,
+  and no placeholder rows exist.
 
 ## 4. First Home Leptos feed slice
 
