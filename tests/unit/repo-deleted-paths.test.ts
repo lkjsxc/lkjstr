@@ -9,6 +9,11 @@ describe('repo deleted path guard', () => {
     const root = await fs.mkdtemp(path.join(os.tmpdir(), 'lkjstr-deleted-'));
     await write(
       root,
+      'src/lib/author-context/load-author-context.ts',
+      'export const oldAuthorContextLoader = true;',
+    );
+    await write(
+      root,
       'src/lib/tabs/followees/followees-scroll-rows.ts',
       'export const oldHelper = true;',
     );
@@ -69,6 +74,10 @@ describe('repo deleted path guard', () => {
     );
 
     await expect(checkDeletedPaths(root)).resolves.toEqual([
+      {
+        file: path.join('src', 'lib', 'author-context'),
+        message: 'removed transitional path must stay absent',
+      },
       {
         file: path.join('src', 'lib', 'cache', 'event-store.ts'),
         message: 'removed transitional path must stay absent',
@@ -133,6 +142,43 @@ describe('repo deleted path guard', () => {
       },
       {
         file: path.join('src', 'lib', 'workspace', 'split-commands.ts'),
+        message: 'removed transitional path must stay absent',
+      },
+    ]);
+  });
+
+  it('rejects removed Rust-island Svelte tab wrappers', async () => {
+    const root = await fs.mkdtemp(path.join(os.tmpdir(), 'lkjstr-deleted-'));
+    await write(
+      root,
+      'src/lib/tabs/author-context/AuthorContextTab.svelte',
+      '<script>export let eventId;</script>',
+    );
+    await write(
+      root,
+      'src/lib/tabs/user-timeline/UserTimelineTab.svelte',
+      '<script>export let pubkey;</script>',
+    );
+
+    await expect(checkDeletedPaths(root)).resolves.toEqual([
+      {
+        file: path.join(
+          'src',
+          'lib',
+          'tabs',
+          'author-context',
+          'AuthorContextTab.svelte',
+        ),
+        message: 'removed transitional path must stay absent',
+      },
+      {
+        file: path.join(
+          'src',
+          'lib',
+          'tabs',
+          'user-timeline',
+          'UserTimelineTab.svelte',
+        ),
         message: 'removed transitional path must stay absent',
       },
     ]);
