@@ -39,29 +39,29 @@ before the SvelteKit product runtime can be removed.
 
 ## Surface Focused Gates
 
-| Surface         | Focused gate before `implemented`                                                                                                                            |
-| --------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| Home            | Feed Regression, Subscription Orchestration, and `cargo test -p lkjstr-app feed`                                                                             |
-| Global          | Relay Paging, Feed Regression, and selected-relay read tests                                                                                                 |
-| Profile         | Profile route, sparse scan, follow-count, and shared feed runtime tests                                                                                      |
-| Followees       | Follow graph bridge, relay discovery, retry, and cleanup tests                                                                                               |
-| User Timeline   | User Timeline, follow graph, degraded mode, cleanup, and route diagnostics tests                                                                             |
-| Thread          | Thread exact-read, reference hydration, and shared event display tests                                                                                       |
-| Notifications   | Notification filters, paging, windows, reference, and shared feed tests                                                                                      |
-| Search          | browser cleanup, shipped island snapshot bridge, remaining parity, and no-import proof                                                                       |
-| Custom Request  | Raw filter parse, app/NIP-11 clamp, selected relay, UI result-row, partial response, relay output, snapshot restore, shipped island bridge, and cancel tests |
-| Public Chat     | NIP-28 reducer, relay routing, publish, moderation, partial failure, and cleanup tests                                                                       |
-| Author Context  | Injected rows, cache reads, relay reads, action opening, unavailable states, no-import proof, and final gate                                                 |
-| Accounts        | Account storage, signer source, NIP-07, local secret, and redaction tests                                                                                    |
-| Relay Settings  | Relay URL, role, NIP-11, NIP-65 suggestion, disabled exclusion, and Stats tests                                                                              |
-| Stats           | Storage, relay, optimizer, jobs, memory, pressure, and redaction tests                                                                                       |
-| Settings        | Flat setting edit, persistence, side effect, and cache-budget tests                                                                                          |
-| Upload Settings | Blossom, NIP-96, NIP-98, provider fallback, and upload job tests                                                                                             |
-| lkjstr Log      | Durable rows, session capture, redaction, refresh, clear, and bounds tests                                                                                   |
-| Mine npub       | Rust mining worker, cancellation, bounded ownership, and explicit-save tests                                                                                 |
-| Profile Edit    | Kind `0` load, edit, sign, publish, retry, and cache update tests                                                                                            |
-| Tweet           | Draft, local signer, NIP-07, publish queue, upload, emoji, and relay result tests                                                                            |
-| Welcome         | Clean startup, links, fallback, and browser smoke tests                                                                                                      |
+| Surface         | Focused gate before `implemented`                                                                                                                                                                  |
+| --------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Home            | Feed Regression, Subscription Orchestration, and `cargo test -p lkjstr-app feed`                                                                                                                   |
+| Global          | Relay Paging, Feed Regression, and selected-relay read tests                                                                                                                                       |
+| Profile         | Profile route, sparse scan, follow-count, and shared feed runtime tests                                                                                                                            |
+| Followees       | Follow graph bridge, relay discovery, retry, and cleanup tests                                                                                                                                     |
+| User Timeline   | User Timeline, follow graph, degraded mode, cleanup, and route diagnostics tests                                                                                                                   |
+| Thread          | Thread exact-read, reference hydration, and shared event display tests                                                                                                                             |
+| Notifications   | Notification filters, paging, windows, reference, and shared feed tests                                                                                                                            |
+| Search          | browser cleanup, shipped island snapshot bridge, remaining parity, and no-import proof                                                                                                             |
+| Custom Request  | Raw filter parse, exact mode, query-bound preservation, app/NIP-11 clamp, selected relay, UI result-row, partial response, relay output, snapshot restore, shipped island bridge, and cancel tests |
+| Public Chat     | NIP-28 reducer, relay routing, publish, moderation, partial failure, and cleanup tests                                                                                                             |
+| Author Context  | Injected rows, cache reads, relay reads, action opening, unavailable states, no-import proof, and final gate                                                                                       |
+| Accounts        | Account storage, signer source, NIP-07, local secret, and redaction tests                                                                                                                          |
+| Relay Settings  | Relay URL, role, NIP-11, NIP-65 suggestion, disabled exclusion, and Stats tests                                                                                                                    |
+| Stats           | Storage, relay, optimizer, jobs, memory, pressure, and redaction tests                                                                                                                             |
+| Settings        | Flat setting edit, persistence, side effect, and cache-budget tests                                                                                                                                |
+| Upload Settings | Blossom, NIP-96, NIP-98, provider fallback, and upload job tests                                                                                                                                   |
+| lkjstr Log      | Durable rows, session capture, redaction, refresh, clear, and bounds tests                                                                                                                         |
+| Mine npub       | Rust mining worker, cancellation, bounded ownership, and explicit-save tests                                                                                                                       |
+| Profile Edit    | Kind `0` load, edit, sign, publish, retry, and cache update tests                                                                                                                                  |
+| Tweet           | Draft, local signer, NIP-07, publish queue, upload, emoji, and relay result tests                                                                                                                  |
+| Welcome         | Clean startup, links, fallback, and browser smoke tests                                                                                                                                            |
 
 ## Feed Surface Parity Requirements
 
@@ -138,7 +138,9 @@ typed callback glue. Search deletion proof remains open.
 The shipped Svelte Custom Request tab now mounts the Rust body as a WASM
 island, forwards real workspace actions, and preserves `customRequestInput`
 plus `customRequestRan` snapshots through typed callback glue. Custom Request
-deletion proof remains open.
+Rust app/UI/Web tests also prove exact search mode, user filter-bound wire
+requests, selected-relay demand, NIP-11 clamp diagnostics, relay result rows,
+and restore. Deletion proof remains open.
 Rust Author Context now has a first Leptos body that renders real shared-feed
 rows supplied through an injected `AuthorContextFeedProvider`. The app view
 model exposes anchor and nearby query-demand inputs, and missing event id,
@@ -147,7 +149,7 @@ produce explicit unavailable or partial rows. The default browser provider reads
 cached anchor and nearby author event rows from worker SQLite and renders them
 as partial cache evidence. Bounded selected-relay reads around the cached
 anchor, exact anchor lookup through stored author routes, and row action
-buttons plus host-backed event-id copy and the Rust event menu shell are wired,
+buttons plus host-backed event-id copy/status reset and the Rust menu shell are wired,
 the shipped Svelte tab mounts the Rust body with required workspace callbacks,
 and browser proof covers explicit unavailable states plus island mount/unmount.
 No-import proof and deletion proof remain open.
@@ -177,17 +179,17 @@ target planning, shared geometry-feature extraction, compact unavailable states,
 custom emoji, media, references, sensitive-content policy, actions, and
 notification repost rows. Current Rust proof covers shared/repost renderer
 selection, unavailable target planning, chrome policy, validated custom emoji
-content rows with image presentation plus address and stable identity attributes, real HTTPS
-media attachment row planning from content and `imeta` tags with fallback
-open-link identity attributes and compact media-only row ids, unavailable
+content rows with async/fallback images, addresses, and stable identity attributes, real HTTPS
+media attachment row planning from content and `imeta` tags with async image decode,
+fallback open-link identity attributes and compact media-only row ids, unavailable
 reference rows with real referenced event identity and relay-hint UI attributes, inline content
 event-reference token suppression before Rust row planning, safe HTTPS link rows
 with stable identity while suppressing real media-backed URLs inline, identity-only NIP-19 profile
 mention rows with stable identity attributes, indexed unavailable media/reference rows with UI attribute proof,
-normalized event/profile entity relay hints, profile-open and reference
-thread-open payload proof when a converted Rust surface already passes a real
-opener,
-notification repost event rows, sensitive-warning reason/reveal attribute
+normalized event/profile entity relay hints, profile-open, reference
+thread-open, content-row dispatch/openers, row Thread activation, generic opener
+parity, nearby Author Context tab-reuse, and action/link/media-control isolation proof when a converted Rust surface already passes a real opener,
+notification repost event rows, sensitive-warning reason/reveal propagation
 proof, and full FeedViewModel bounded summaries for repost, generic repost,
 reaction, and zap rows plus verified nested repost target rows with UI
 attribute proof, declared-target mismatch rejection, and tampered embedded event

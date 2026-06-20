@@ -19,7 +19,9 @@ hydration reads exact parent ids from worker-owned SQLite and bootstrap relay
 plans request parent ids already visible from cached Thread rows. Terminal
 unavailable-parent rows render after exact cache and complete relay lookup, and
 capped deep branches render continuation rows that open matching Thread tabs.
-Deletion proof and broader Thread parity remain open.
+The retained Svelte Thread wrapper delegates to the Rust island, and product
+imports of the retained TypeScript runtime entry are guarded absent. Deletion
+proof and broader Thread parity remain open.
 
 ## Current Evidence
 
@@ -56,6 +58,9 @@ Deletion proof and broader Thread parity remain open.
   providers do not render older controls or dispatch no-op older requests.
 - `crates/lkjstr-ui/tests/thread_provider_test.rs` proves released initial and
   older Thread provider requests suppress late completions.
+- `src/lib/tabs/thread/ThreadTab.svelte` is retained only as a Rust island
+  wrapper while `pnpm check:repo` rejects product imports of
+  `src/lib/thread/thread-runtime.ts`.
 
 ## Next Edit
 
@@ -150,6 +155,8 @@ PATH=/home/lkjsxc/.cargo/bin:$PATH wasm-pack test --headless --chrome \
 - Owner cleanup cancels the in-flight Thread relay read.
 - Missing event id and missing selected relay states are explicit data rows.
 - Pending Thread provider work renders explicit loading, not ready.
+- Retained Thread tab glue delegates to the Rust island and does not start the
+  TypeScript thread runtime from product source.
 - Thread output remains partial until broader Thread parity and deletion proof
   are complete.
 - Ledgers name the remaining broader parity and deletion gaps.
@@ -158,6 +165,6 @@ PATH=/home/lkjsxc/.cargo/bin:$PATH wasm-pack test --headless --chrome \
 
 - Do not create fake Thread rows or placeholder success.
 - Do not mark Thread implemented from cached rows alone.
-- Do not delete `src/lib/thread` or Svelte tab glue without exact-read parity
-  and no-import proof.
+- Do not delete `src/lib/thread` or the retained island wrapper without
+  exact-read parity and full no-import proof.
 - Do not open SQLite or OPFS directly from product/UI code.

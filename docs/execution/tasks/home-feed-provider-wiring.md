@@ -44,11 +44,23 @@ deletion proof remain open.
 - `crates/lkjstr-web/src/followees_host.rs` and `user_timeline_host.rs` use
   request-level release guards before host loads, after host loads, and before
   relay callback completion.
+- `followees_read.rs` owns Followees initial/retry read-command leases and
+  releases replaced or provider-unavailable requests before dispatching reads.
+- `user_timeline_read.rs` owns User Timeline read-command leases and releases
+  replaced or provider-unavailable requests before dispatching reads.
+- `global_older.rs`, `notifications_older.rs`, `search_older.rs`, and
+  `thread_older.rs` own older-load command leases and release replaced or
+  unsupported/blocked requests before dispatching new older work.
+- `search_run.rs` owns primary Search query command leases and releases
+  replaced or provider-unavailable requests before dispatching new query work.
+- `custom_request_run.rs` owns Custom Request run-command leases and releases
+  replaced or provider-unavailable requests through the same cleanup path used
+  by cancel and tab cleanup.
 
 ## Next Edit
 
-Continue shared lease cleanup proof for remaining feed surfaces and older-load
-paths without deleting TypeScript or Svelte owners.
+Continue shared lease cleanup proof for remaining feed-surface command paths
+without deleting TypeScript or Svelte owners.
 
 ## Next Checklist
 

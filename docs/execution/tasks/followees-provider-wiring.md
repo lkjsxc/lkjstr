@@ -63,11 +63,13 @@ proof exist.
   unavailable rendering and unmount cleanup through the exported bridge.
 - The old `src/lib/tabs/followees` helper directory has no live imports, is
   removed, and is guarded absent by repository checks.
+- Product source imports of retained `src/lib/follow-graph/**` runtime helpers
+  are guarded absent outside retained Follow Graph and User Timeline internals.
 
 ## Next Edit
 
-Continue remaining Followees/User Timeline parity and no-import prerequisites.
-Do not start broader follow-graph deletion proof yet.
+Continue shared read-command cleanup proof without starting broader
+follow-graph deletion proof.
 
 ## Files To Read
 

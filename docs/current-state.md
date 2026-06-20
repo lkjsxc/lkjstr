@@ -162,15 +162,15 @@ Read next: [architecture/workspace/README.md](architecture/workspace/README.md),
   bounded selected-relay reads, cleanup ownership, and explicit startup storage
   failures. The shipped Rust Global island requests selected-relay cache, exact coverage, kind `1`
   rows, tab-cleanup suppression, footer/scroll older requests, viewport-fill
-  older requests, and compound older relay cursors. The shipped Rust Notifications island loads
-  SQLite notification records/source events, exact `#p` coverage, cache-complete
-  chrome/source rows in one scroll owner that skip initial relay reads, empty exact windows that keep probing
-  older history, bounded reads, footer/scroll older requests, and retained relay state. The shipped Rust Profile island
-  requests SQLite selected-relay or author-route cache, exact coverage, bounded
-  note relay reads, owner cleanup, cached and relay-refreshed kind `0`
-  metadata plus kind `3` follow counts, and sparse empty proof while excluding
-  metadata and follow-list note rows. The shipped Rust Thread island reads cached root/reply/focused,
-  parent, unavailable, continuation, older, and live rows. Converted Rust rows
+  older requests, and compound older relay cursors. The shipped Rust Notifications
+  island loads SQLite notification records/source events, exact `#p` coverage,
+  cache-complete chrome/source rows in one scroll owner that skip initial relay reads,
+  empty exact windows, older probes, bounded reads, retained relay state, and a
+  runtime-import guard. The shipped Rust Profile island requests selected-relay
+  or author-route cache, exact coverage, bounded reads, cleanup, header/follow
+  proof, sparse-empty proof, and rejects the retained TypeScript runtime entry.
+  The shipped Rust Thread island reads cached root/reply/focused, parent,
+  unavailable, continuation, older, and live rows, and rejects its retained runtime entry. Converted Rust rows
   share menus, action/repost rows, non-local Thread row activation, isolated local
   controls, long-token wrapping, User Timeline proof, and cached kind `0` Followees labels/subtitles/avatars with `Unknown` fallback.
 - Live inserts use top-anchor policy: top users see new rows immediately; away
@@ -213,12 +213,12 @@ Read next: [architecture/network/README.md](architecture/network/README.md),
   relays and stored author routes while excluding disabled route relays. No-event/AUTH/rate-limited/timeout reads and partial route failures render diagnostics.
   Rust keeps distinct query surfaces, real rows, exact cached coverage, target-only degraded rows, incomplete detail, and partial status.
 - Shipped Search mounts Rust as a WASM island with query snapshot restore/save,
-  renders local indexed results without waiting for remote relays, sends bounded
-  NIP-50 filters to eligible selected read relays, loads cached and relay older
-  pages by compound cursor, and reports unsupported/clamped relays as diagnostics.
+  local indexed rows, bounded NIP-50 filters, cached/relay older pages,
+  unsupported/clamped relay diagnostics, and a product guard against the
+  retained TypeScript query runner.
 - Shipped Custom Request mounts Rust as a WASM island with request/run-state
   snapshots, selected-relay reads, cancellation, app-owned rows, one scroll
-  owner, relay output, and effective-filter proof; deletion proof remains open.
+  owner, relay output, effective-filter proof, and guarded no-import product proof; deletion remains open.
   Rust lkjstr Log wraps durable-row actions, status, and table rows in one
   scroll owner.
 - Matching Home tabs share one query keyed by account, relays, page size, and policy.

@@ -13,7 +13,7 @@ query adapter, app-owned submitted-query demand, a Rust Search tab shell, and a
 worker-backed Rust provider for local indexed results plus bounded relay NIP-50
 snapshots, cached older pages, and relay older pages exist. The shipped Svelte
 workspace mounts Search through a Rust WASM island while broader parity and
-no-import proof remain open.
+full no-import proof remain open.
 
 ## Current Evidence
 
@@ -51,13 +51,15 @@ no-import proof remain open.
   the worker-owned SQLite tab-state repository.
 - `src/lib/components/workspace/search-island.ts` is the shipped Svelte host
   bridge for the Rust Search body and preserves query snapshot callbacks.
-- `src/lib/tabs/search/SearchTab.svelte` is retained until Search deletion
-  proof is explicitly allowed.
+- `src/lib/tabs/search/SearchTab.svelte` delegates to the Rust island instead of
+  importing the retained TypeScript query runner.
+- `scripts/repo-search-deletions.ts` rejects product-source imports of retained
+  `src/lib/search/search-query.ts`; tokenizer/index helpers stay retained.
 
 ## Next Edit
 
-Preserve this Search provider, tab snapshot, and cached plus relay older-page
-proof while wiring remaining product parity. Keep deletion proof open.
+Keep extending Search parity and no-import prerequisites without claiming
+broader Search parity or TypeScript deletion readiness.
 
 ## Files To Read
 
@@ -117,6 +119,8 @@ pnpm test -- tests/unit/search
   active provider lease before the next command state is shown.
 - Replaced, blocked, or missing-query Search older commands release their
   active provider lease before the next older command state is dispatched.
+- Retained TypeScript Search query runner stays test-only while tokenizer/index
+  helpers remain available to storage and memory fallback paths.
 - The slice does not claim broader Search parity or TypeScript deletion.
 
 ## Must Not

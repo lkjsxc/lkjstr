@@ -7,8 +7,10 @@ bounded relay reads without claiming Profile or Author Context deletion proof.
 
 ## Status
 
-Implemented enabling slice. TypeScript Profile remains the shipped owner until
-no-import proof and final verification exist.
+Implemented enabling slice. The retained Svelte wrapper now delegates to the
+Rust island, and product imports of the retained TypeScript runtime entry are
+guarded absent. Full `src/lib/profile` deletion still requires parity, final
+no-import proof, and final verification.
 
 ## Current Evidence
 
@@ -45,12 +47,15 @@ no-import proof and final verification exist.
   follow events only after relay OK.
 - `crates/lkjstr-web/tests/profile_feed_cleanup_test.rs` proves owner cleanup
   suppresses late Profile provider completions after tab switch.
+- `src/lib/tabs/profile/ProfileTab.svelte` is retained only as a Rust island
+  wrapper while `pnpm check:repo` rejects product imports of
+  `src/lib/profile/profile-runtime.ts`.
 
 ## Next Edit
 
-Continue to Profile and Author Context deletion proof. Do not delete TypeScript
-Profile paths, the Author Context Svelte host, or shared event-row glue until
-the no-import and final gates pass.
+Continue to full Profile and Author Context deletion proof. Do not delete
+retained Profile runtime helpers, the Author Context Svelte host, or shared
+event-row glue until the full no-import and final gates pass.
 
 ## Next Checklist
 
@@ -83,9 +88,10 @@ bounded relay work. Cached Profile header metadata and follow-count states
 render without fake zero counts, refresh from relay events stored in worker
 SQLite, copy npub/nprofile/follow-list/relay-set JSON through the host provider,
 open Followees/User Timeline/Profile Edit action tabs, and show or locally
-or NIP-07 publish Follow/Unfollow without fake success. Empty Profile notes are
-shown only after complete proof. Pending note provider work renders loading,
-not ready.
+or NIP-07 publish Follow/Unfollow without fake success. The retained Svelte
+wrapper delegates to the Rust island and does not start the TypeScript Profile
+runtime from product source. Empty Profile notes are shown only after complete
+proof. Pending note provider work renders loading, not ready.
 
 ## Files To Read
 
@@ -133,4 +139,5 @@ claim.
 
 - Do not synthesize profile, relay, cache, follow-list, or event rows.
 - Do not treat missing coverage or an empty cache as absence.
-- Do not delete TypeScript or Svelte Profile paths.
+- Do not delete retained TypeScript Profile helpers or the retained island
+  wrapper.

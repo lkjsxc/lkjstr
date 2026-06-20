@@ -3,36 +3,43 @@
 ## Purpose
 
 Move Custom Request execution into Rust while retaining the old TypeScript
-runner until no-import proof and deletion proof exist.
+helpers until deletion proof and final gates exist.
 
 ## Status
 
 Rust owns parsing, app policy clamps, mode classification, and a narrow run
 planner that emits typed query demand only for valid input with relay targets.
 The planner derives those targets through the shared query route planner so
-disabled or invalid relay URLs do not produce a ready demand. Leptos now renders
-planning states through a host provider that reads selected relays from the
-worker-owned relay settings. The Rust body now exposes an in-flight cancel
-control while the planned relay window is nonterminal, releases the provider
-lease, and renders an explicit canceled state.
+disabled or invalid relay URLs do not produce a ready demand. Focused app/UI/Web
+gates now execute parser-cap, exact-mode, query-bound, relay-snapshot,
+selected-relay, NIP-11, and restore proof under the documented `custom_request`
+gate.
+Leptos now renders planning states through a host provider that reads selected
+relays from the worker-owned relay settings. The Rust body now exposes an
+in-flight cancel control while the planned relay window is nonterminal, releases
+the provider lease, and renders an explicit canceled state.
 `lkjstr-app` now builds Custom Request result view models from real shared feed
 windows and explicit state rows. Leptos renders those shared rows. The host
 provider now starts a typed relay read for ready plans, maps progressive relay
 snapshots into app-owned feed rows, and cancels socket/timer ownership through
 the provider lease. Missing providers render an explicit unavailable state
-instead of a pending or success placeholder. Node WASM relay probes cover routed request filters, event
-matching, complete snapshot rows, failed-empty partial state, and Chrome proof
-covers request/run-state restore, app-policy and NIP-11 effective-filter
-diagnostics, plus real relay event rows. The shipped Svelte workspace now
-mounts the Rust Custom Request tab as a WASM island with typed request/run-state
-snapshot callbacks. The old Svelte/TypeScript runner remains retained until
-no-import proof and deletion gates exist.
+instead of a pending or success placeholder. Node WASM relay probes cover routed
+request filters, event matching, complete snapshot rows, failed-empty partial
+state, and Chrome proof covers request/run-state restore, selected relay demand,
+app-policy and NIP-11 effective-filter diagnostics, plus real relay event rows.
+The shipped Svelte workspace now mounts the Rust Custom Request tab as a WASM
+island with typed request/run-state snapshot callbacks. Product source no longer
+imports the retained TypeScript helpers; the helper directory remains for test
+coverage until deletion gates exist.
 
 ## Current Evidence
 
 - `crates/lkjstr-app/src/custom_request/**` parses supported JSON shapes, clamps
-  limits, normalizes explicit relays, classifies exact versus adaptive mode, and
-  plans typed demand.
+  limits, normalizes explicit relays, classifies ids/search as exact mode, and
+  plans typed demand. The focused app gate covers JSON byte caps, filter count,
+  ids/authors/tag value caps, search byte caps, relay count, invalid explicit
+  relay URLs, invalid explicit relays returning no demand, and user
+  since/until/search/limit bounds preserved in the wire request.
 - `crates/lkjstr-app/src/feed/tool_inputs.rs` builds Custom Request query demand
   from parsed requests.
 - `crates/lkjstr-app/src/custom_request_feed/**` maps planned demand, real feed
@@ -63,12 +70,16 @@ no-import proof and deletion gates exist.
   run-state status are consumed in the browser.
 - `src/lib/components/workspace/custom-request-island.ts` is the shipped host
   bridge and preserves `customRequestInput` plus `customRequestRan` snapshots.
-- `src/lib/custom-request/**` remains retained for no-import and deletion proof.
+- `src/lib/tabs/custom-request/CustomRequestTab.svelte` delegates to the Rust
+  island instead of importing the retained TypeScript parser/reader.
+- `scripts/repo-custom-request-deletions.ts` rejects product-source imports of
+  retained `src/lib/custom-request/**` helpers.
+- `src/lib/custom-request/**` remains retained for test coverage and deletion proof.
 
 ## Next Edit
 
-Extend Custom Request parity toward no-import proof and deletion gates without
-moving result synthesis into UI code.
+Extend Custom Request parity toward deletion gates without moving result
+synthesis into UI code.
 
 ## Files To Read
 
@@ -109,6 +120,9 @@ PATH=/home/lkjsxc/.cargo/bin:$PATH pnpm test -- tests/unit/custom-request
 PATH=/home/lkjsxc/.cargo/bin:$PATH pnpm rust-wasm:quiet
 ```
 
+Use the matching cached ChromeDriver when multiple cached ChromeDrivers exist;
+`pnpm rust-wasm:quiet` selects it automatically.
+
 ## Acceptance
 
 - Invalid JSON or invalid request shapes return typed local errors and no relay
@@ -125,8 +139,8 @@ PATH=/home/lkjsxc/.cargo/bin:$PATH pnpm rust-wasm:quiet
   invalid, no-relay, canceled, loading, partial, empty, or terminal states.
 - Real Rust relay output must use typed WebSocket host effects, reducer snapshots,
   and lease cleanup; the UI/provider layer must not synthesize result rows.
-- TypeScript/Svelte Custom Request paths remain until no-import proof, deletion
-  proof, and final gates exist.
+- Retained TypeScript Custom Request helpers stay test-only until deletion proof
+  and final gates exist.
 
 ## Must Not
 
