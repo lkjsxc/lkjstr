@@ -9,8 +9,7 @@
   import type { EventReference } from '$lib/protocol';
   import EventReferenceList from './EventReferenceList.svelte';
   import {
-    eventReferencesLoadingStatus,
-    eventReferencesShouldShowLoading,
+    eventReferencesRenderPlan,
     loadEventReferences,
   } from './event-reference-hydration';
 
@@ -27,7 +26,12 @@
   let resolved = $state<readonly ResolvedReference[]>([]);
   let profiles = $state<Record<string, ProfileSummary>>({});
   let loaded = $state(false);
-  const loadingStatus = eventReferencesLoadingStatus();
+  let render = $derived(
+    eventReferencesRenderPlan({
+      loaded,
+      referenceCount: props.references.length,
+    }),
+  );
 
   onMount(() => {
     let alive = true;
@@ -52,10 +56,10 @@
   });
 </script>
 
-{#if eventReferencesShouldShowLoading(loaded, props.references.length)}
-  <p class="event-list__status">{loadingStatus}</p>
+{#if render.showLoading}
+  <p class="event-list__status">{render.loadingStatus}</p>
 {/if}
-{#if loaded}
+{#if render.showReferences}
   <EventReferenceList
     references={resolved}
     {profiles}

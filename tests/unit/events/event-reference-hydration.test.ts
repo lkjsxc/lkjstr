@@ -5,6 +5,7 @@ import type { NostrEvent } from '../../../src/lib/protocol';
 import {
   eventReferenceResolutionKey,
   eventReferencesLoadingStatus,
+  eventReferencesRenderPlan,
   eventReferencesShouldShowLoading,
   loadedEventReferencesPlan,
   mergeReferenceProfiles,
@@ -27,6 +28,30 @@ describe('event reference hydration', () => {
     expect(eventReferencesShouldShowLoading(false, 1)).toBe(true);
     expect(eventReferencesShouldShowLoading(false, 0)).toBe(false);
     expect(eventReferencesShouldShowLoading(true, 1)).toBe(false);
+  });
+
+  it('plans retained loading and reference list visibility', () => {
+    expect(
+      eventReferencesRenderPlan({ loaded: false, referenceCount: 1 }),
+    ).toEqual({
+      loadingStatus: 'Loading referenced events...',
+      showLoading: true,
+      showReferences: false,
+    });
+    expect(
+      eventReferencesRenderPlan({ loaded: false, referenceCount: 0 }),
+    ).toEqual({
+      loadingStatus: 'Loading referenced events...',
+      showLoading: false,
+      showReferences: false,
+    });
+    expect(
+      eventReferencesRenderPlan({ loaded: true, referenceCount: 0 }),
+    ).toEqual({
+      loadingStatus: 'Loading referenced events...',
+      showLoading: false,
+      showReferences: true,
+    });
   });
 
   it('plans retained reference load completion state', () => {

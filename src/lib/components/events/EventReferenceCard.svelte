@@ -27,6 +27,27 @@
   }
 </script>
 
+{#snippet cardBody()}
+  <strong class="sr-only">{plan.label}</strong>
+  {#if plan.event}
+    <EventMeta
+      event={plan.event}
+      relays={plan.relays}
+      profile={plan.profile}
+      openProfile={props.openProfile}
+      avatarInline
+    />
+    {#if plan.preview}
+      <p class="event-content">
+        <EmojifiedText text={plan.preview} emojis={customEmojis(plan.event)} />
+      </p>
+    {/if}
+    {#if plan.mediaLabel}<small>{plan.mediaLabel}</small>{/if}
+  {:else}
+    <p>{plan.unavailableText}</p>
+  {/if}
+{/snippet}
+
 {#if plan.canOpenThread}
   <div
     class="event-embed"
@@ -38,54 +59,10 @@
       eventReferenceCardKeyOpensThread(event.key) &&
       open(props.reference.id, event)}
   >
-    <strong class="sr-only">{plan.label}</strong>
-    {#if plan.event}
-      <EventMeta
-        event={plan.event}
-        relays={plan.relays}
-        profile={plan.profile}
-        openProfile={props.openProfile}
-        avatarInline
-      />
-      {#if plan.preview}
-        <p class="event-content">
-          <EmojifiedText
-            text={plan.preview}
-            emojis={customEmojis(plan.event)}
-          />
-        </p>
-      {/if}
-      {#if plan.mediaCount > 0}<small
-          >{plan.mediaCount} media attachment(s)</small
-        >{/if}
-    {:else}
-      <p>Event unavailable.</p>
-    {/if}
+    {@render cardBody()}
   </div>
 {:else}
   <div class="event-embed" data-kind={props.reference.kind}>
-    <strong class="sr-only">{plan.label}</strong>
-    {#if plan.event}
-      <EventMeta
-        event={plan.event}
-        relays={plan.relays}
-        profile={plan.profile}
-        openProfile={props.openProfile}
-        avatarInline
-      />
-      {#if plan.preview}
-        <p class="event-content">
-          <EmojifiedText
-            text={plan.preview}
-            emojis={customEmojis(plan.event)}
-          />
-        </p>
-      {/if}
-      {#if plan.mediaCount > 0}<small
-          >{plan.mediaCount} media attachment(s)</small
-        >{/if}
-    {:else}
-      <p>Event unavailable.</p>
-    {/if}
+    {@render cardBody()}
   </div>
 {/if}

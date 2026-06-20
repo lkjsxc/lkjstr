@@ -9,10 +9,12 @@ export type EventReferenceCardPlan = {
   readonly canOpenThread: boolean;
   readonly event: NostrEvent | undefined;
   readonly label: string;
+  readonly mediaLabel: string;
   readonly mediaCount: number;
   readonly preview: string;
   readonly profile: ProfileSummary | undefined;
   readonly relays: readonly string[];
+  readonly unavailableText: 'Event unavailable.';
 };
 
 type EventReferenceCardOpenEvent = {
@@ -25,14 +27,18 @@ export function planEventReferenceCard(
   openThread?: (eventId: string) => void,
 ): EventReferenceCardPlan {
   const event = reference.event?.event;
+  const mediaCount = event ? contentAttachments(event).length : 0;
+  const canOpenThread = hasOpenThreadAction(openThread);
   return {
-    canOpenThread: hasOpenThreadAction(openThread),
+    canOpenThread,
     event,
     label: eventReferenceLabel(reference),
-    mediaCount: event ? contentAttachments(event).length : 0,
+    mediaLabel: mediaCount > 0 ? `${mediaCount} media attachment(s)` : '',
+    mediaCount,
     preview: event?.content.trim().replace(/\s+/gu, ' ') ?? '',
     profile: event ? profiles[event.pubkey] : undefined,
     relays: reference.event?.relays ?? [],
+    unavailableText: 'Event unavailable.',
   };
 }
 

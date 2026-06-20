@@ -19,10 +19,12 @@ describe('event reference card plan', () => {
       canOpenThread: false,
       event: undefined,
       label: 'Quoted event',
+      mediaLabel: '',
       mediaCount: 0,
       preview: '',
       profile: undefined,
       relays: [],
+      unavailableText: 'Event unavailable.',
     });
   });
 
@@ -49,6 +51,7 @@ describe('event reference card plan', () => {
     expect(plan.canOpenThread).toBe(true);
     expect(plan.event?.pubkey).toBe(pubkey);
     expect(plan.label).toBe('Replying to');
+    expect(plan.mediaLabel).toBe('2 media attachment(s)');
     expect(plan.mediaCount).toBe(2);
     expect(plan.preview).toBe(
       'hello quoted event https://example.com/a.jpg https://example.com/page',

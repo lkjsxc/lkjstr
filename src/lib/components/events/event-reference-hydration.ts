@@ -18,6 +18,12 @@ export type EventReferencesLoadedPlan = {
   readonly resolved: readonly ResolvedReference[];
 };
 
+export type EventReferencesRenderPlan = {
+  readonly loadingStatus: ReturnType<typeof eventReferencesLoadingStatus>;
+  readonly showLoading: boolean;
+  readonly showReferences: boolean;
+};
+
 export type EventReferencesLoadCallbacks = {
   readonly apply: (plan: EventReferencesLoadedPlan) => void;
   readonly hydrateProfiles: (input: {
@@ -45,6 +51,20 @@ export function eventReferencesShouldShowLoading(
   referenceCount: number,
 ): boolean {
   return !loaded && referenceCount > 0;
+}
+
+export function eventReferencesRenderPlan(input: {
+  readonly loaded: boolean;
+  readonly referenceCount: number;
+}): EventReferencesRenderPlan {
+  return {
+    loadingStatus: eventReferencesLoadingStatus(),
+    showLoading: eventReferencesShouldShowLoading(
+      input.loaded,
+      input.referenceCount,
+    ),
+    showReferences: input.loaded,
+  };
 }
 
 export function loadedEventReferencesPlan(
