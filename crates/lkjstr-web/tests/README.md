@@ -10,7 +10,7 @@ Browser-bound WASM tests prove exported functions call real Rust code.
 - `accounts_indexed_db_test.rs`: IndexedDB account and local-secret tests.
 - `accounts_selector_test_support.rs`: shared Accounts active selector test helpers.
 - `author_context_provider_test.rs`: Rust Author Context tab rendering from host-owned SQLite event rows.
-- `author_context_tab_test.rs`: Rust Author Context tab rendering and scroll-owner proof from injected feed view-model rows.
+- `author_context_tab_test.rs`: Rust Author Context tab rendering, row Thread activation, and scroll-owner proof from injected feed rows.
 - `author_context_unavailable_tab_test.rs`: Rust Author Context browser rendering of explicit unavailable states.
 - `custom_request_nip11_tab_test.rs`: Rust Custom Request browser proof for stored NIP-11 relay limit clamps.
 - `custom_request_geometry_test.rs`: Rust Custom Request relay snapshot geometry-model proof.

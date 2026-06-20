@@ -5,7 +5,7 @@ mod feed_scroll_structure_support;
 
 use std::collections::BTreeMap;
 
-use accounts_selector_test_support::{reset_shells, wait_for_text};
+use accounts_selector_test_support::{click, reset_shells, wait_for_text};
 use feed_scroll_structure_support::{
     assert_feed_scroll_boundary, assert_tab_body_not_scroll_owner,
 };
@@ -37,6 +37,17 @@ async fn rust_author_context_tab_renders_provider_feed_rows() -> Result<(), JsVa
     wait_for_text("Cached rows").await?;
     assert!(!document_text()?.contains("The Rust Author Context body is not converted yet."));
     assert_author_context_scroll_owner()
+}
+
+#[wasm_bindgen_test(async)]
+async fn rust_author_context_event_row_click_opens_thread_tab() -> Result<(), JsValue> {
+    reset_shells()?;
+    mount_rust_workspace_shell_with_author_context_feed_provider(startup(), provider());
+
+    wait_for_text("real author context event").await?;
+    click("[data-testid='feed-open-thread-row']")?;
+    wait_for_text("No enabled relay").await?;
+    wait_for_text("Thread needs at least one enabled read relay or author route.").await
 }
 
 fn assert_author_context_scroll_owner() -> Result<(), JsValue> {
