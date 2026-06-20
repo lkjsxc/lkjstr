@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { Heart, MessageCircle, Repeat2, Send, Zap } from '@lucide/svelte';
+  import { Heart, MessageCircle, Repeat2, Zap } from '@lucide/svelte';
   import { onDestroy } from 'svelte';
   import type { ProfileSummary } from '$lib/identity/identity';
   import type { CustomEmoji, NostrEvent } from '$lib/protocol';
@@ -11,22 +11,26 @@
     publishRepost,
   } from '$lib/events/actions';
   import EmojiPaletteButton from '$lib/components/emoji/EmojiPaletteButton.svelte';
-  import EventZapPanel from './EventZapPanel.svelte';
+  import EventActionIconButton from './EventActionIconButton.svelte';
+  import EventActionInlinePanel from './EventActionInlinePanel.svelte';
+  import { planEventActionControls } from './event-actions-control-plan';
   import { loadEventActionEmojiSource } from './event-actions-emoji-source';
+  import { eventActionLabels } from './event-actions-label-plan';
+  import { planEventActionPanel } from './event-actions-panel-plan';
   import {
-    canSubmitEventActionReply,
-    eventActionLabels,
+    toggleEventActionMode,
+    type EventActionMode,
+  } from './event-actions-plan';
+  import {
     planCustomEmojiEventReaction,
     planEventActionEmojiSource,
     planUnicodeEventReaction,
-    runEventAction,
-    submitEventActionReply,
-    submitEventActionReplyShortcut,
-    toggleEventActionMode,
-    type EventActionMode,
-    type EventActionResult,
     type EventActionReactionInput,
-  } from './event-actions-plan';
+  } from './event-actions-reaction-plan';
+  import {
+    runEventAction,
+    type EventActionResult,
+  } from './event-actions-run-plan';
 
   type Props = {
     event: NostrEvent;
@@ -47,6 +51,23 @@
   let emojiLoadRequest = 0;
   let destroyed = false;
   const labels = eventActionLabels();
+  let controls = $derived(
+    planEventActionControls({
+      mode,
+      busy,
+      liked: props.liked,
+      reposted: props.reposted,
+      labels,
+    }),
+  );
+  let panel = $derived(
+    planEventActionPanel({
+      mode,
+      busy,
+      reply,
+      labels,
+    }),
+  );
   let emojiSource = $derived(
     planEventActionEmojiSource(props.activeAccountPubkey, props.relaySets),
   );
@@ -95,54 +116,46 @@
 
 <div class="event-action-zone">
   <div class="event-actions">
-    <button
-      type="button"
-      class="icon-button"
-      class:icon-button--pressed={props.liked}
-      title={labels.heart}
-      disabled={busy}
-      aria-pressed={props.liked}
+    <EventActionIconButton
+      pressed={controls.heart.pressed}
+      title={controls.heart.title}
+      disabled={controls.heart.disabled}
+      ariaPressed={controls.heart.pressed}
+      label={labels.heart}
       onclick={() => run(() => publishReaction(props.event, props.relaySets))}
     >
       <Heart size={16} />
-      <span class="sr-only">{labels.heart}</span>
-    </button>
-    <button
-      type="button"
-      class="icon-button"
-      class:icon-button--pressed={props.reposted}
-      title={labels.repost}
-      disabled={busy}
-      aria-pressed={props.reposted}
+    </EventActionIconButton>
+    <EventActionIconButton
+      pressed={controls.repost.pressed}
+      title={controls.repost.title}
+      disabled={controls.repost.disabled}
+      ariaPressed={controls.repost.pressed}
+      label={labels.repost}
       onclick={() => run(() => publishRepost(props.event, props.relaySets))}
     >
       <Repeat2 size={16} />
-      <span class="sr-only">{labels.repost}</span>
-    </button>
-    <button
-      type="button"
-      class:active={mode === 'reply'}
-      class="icon-button"
-      aria-pressed={mode === 'reply'}
-      title={labels.reply}
-      disabled={busy}
+    </EventActionIconButton>
+    <EventActionIconButton
+      active={controls.reply.active}
+      ariaPressed={controls.reply.active}
+      title={controls.reply.title}
+      disabled={controls.reply.disabled}
+      label={labels.reply}
       onclick={() => (mode = toggleEventActionMode(mode, 'reply'))}
     >
       <MessageCircle size={16} />
-      <span class="sr-only">{labels.reply}</span>
-    </button>
-    <button
-      type="button"
-      class:active={mode === 'zap'}
-      class="icon-button"
-      aria-pressed={mode === 'zap'}
-      title={labels.zap}
-      disabled={busy}
+    </EventActionIconButton>
+    <EventActionIconButton
+      active={controls.zap.active}
+      ariaPressed={controls.zap.active}
+      title={controls.zap.title}
+      disabled={controls.zap.disabled}
+      label={labels.zap}
       onclick={() => (mode = toggleEventActionMode(mode, 'zap'))}
     >
       <Zap size={16} />
-      <span class="sr-only">{labels.zap}</span>
-    </button>
+    </EventActionIconButton>
     <EmojiPaletteButton
       {customEmojis}
       disabled={busy}
@@ -150,33 +163,14 @@
       onCustom={(emoji) => submitEmoji(planCustomEmojiEventReaction(emoji))}
     />
   </div>
-  {#if mode === 'reply'}
-    <form
-      class="event-inline-action"
-      onsubmit={(event) => submitEventActionReply(event, submitReply)}
-    >
-      <textarea
-        aria-label={labels.reply}
-        bind:value={reply}
-        onkeydown={(event) =>
-          submitEventActionReplyShortcut(event, submitReply)}
-      ></textarea>
-      <button
-        class="icon-button icon-button--submit"
-        type="submit"
-        title={labels.publishReply}
-        disabled={!canSubmitEventActionReply(reply, busy)}
-      >
-        <Send size={16} />
-        <span class="sr-only">{labels.publishReply}</span>
-      </button>
-    </form>
-  {:else if mode === 'zap'}
-    <EventZapPanel
-      event={props.event}
-      profile={props.profile}
-      relaySets={props.relaySets}
-    />
-  {/if}
+  <EventActionInlinePanel
+    {panel}
+    event={props.event}
+    profile={props.profile}
+    relaySets={props.relaySets}
+    {reply}
+    setReply={(next) => (reply = next)}
+    {submitReply}
+  />
   {#if status}<p class="event-action-status" role="status">{status}</p>{/if}
 </div>

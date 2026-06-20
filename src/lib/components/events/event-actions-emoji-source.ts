@@ -1,5 +1,5 @@
 import type { CustomEmoji } from '$lib/protocol';
-import type { EventActionEmojiSourcePlan } from './event-actions-plan';
+import type { EventActionEmojiSourcePlan } from './event-actions-reaction-plan';
 
 export type EventActionEmojiLoadCallbacks = {
   readonly isCurrent: (request: number) => boolean;

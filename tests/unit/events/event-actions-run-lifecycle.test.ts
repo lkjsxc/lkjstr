@@ -1,8 +1,6 @@
 import { describe, expect, it } from 'vitest';
-import {
-  runEventAction,
-  type EventActionMode,
-} from '../../../src/lib/components/events/event-actions-plan';
+import type { EventActionMode } from '../../../src/lib/components/events/event-actions-plan';
+import { runEventAction } from '../../../src/lib/components/events/event-actions-run-plan';
 
 describe('event action run lifecycle', () => {
   it('applies retained success state and callback before settling busy state', async () => {
