@@ -1,12 +1,12 @@
 use crate::{
-    build_feed_view_model, footer_row_from_window, unavailable_state_row, EventDisplayContext,
-    FeedViewModelInput,
+    EventDisplayContext, FeedViewModelInput, build_feed_view_model, footer_row_from_window,
+    unavailable_state_row,
 };
 
 use super::{
-    state::{diagnostic_rows, user_timeline_state},
-    status::{user_timeline_status_detail, INCOMPLETE_DISCOVERY_REASON},
     UserTimelineFeedStatus, UserTimelineFeedView, UserTimelineFeedViewInput,
+    state::{diagnostic_rows, user_timeline_state},
+    status::{INCOMPLETE_DISCOVERY_REASON, user_timeline_status_detail},
 };
 
 #[must_use]

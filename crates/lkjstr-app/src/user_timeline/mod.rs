@@ -9,8 +9,8 @@ mod view;
 
 pub use defaults::default_user_timeline_feed_view;
 pub use discovery::{
-    plan_user_timeline_discovery, DiscoveryRouteGroup, DiscoveryRouteOutcome, DiscoveryRouteSource,
-    UserTimelineDiscoveryInput, UserTimelineDiscoveryPlan, UserTimelineDiscoveryState,
+    DiscoveryRouteGroup, DiscoveryRouteOutcome, DiscoveryRouteSource, UserTimelineDiscoveryInput,
+    UserTimelineDiscoveryPlan, UserTimelineDiscoveryState, plan_user_timeline_discovery,
 };
 pub use state::user_timeline_target_only_notice;
 pub use types::{

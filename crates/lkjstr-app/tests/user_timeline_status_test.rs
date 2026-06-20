@@ -1,8 +1,8 @@
 use lkjstr_app::{
-    build_user_timeline_feed_view, empty_feed_window, plan_user_timeline_discovery,
     DiscoveryRouteGroup, DiscoveryRouteOutcome, DiscoveryRouteSource, FeedFragmentConfig,
     FeedViewRow, RowGeometryModel, UserTimelineDiscoveryInput, UserTimelineFeedSourceState,
-    UserTimelineFeedStatus, UserTimelineFeedViewInput,
+    UserTimelineFeedStatus, UserTimelineFeedViewInput, build_user_timeline_feed_view,
+    empty_feed_window, plan_user_timeline_discovery,
 };
 use lkjstr_relays::DemandVisibility;
 
@@ -47,13 +47,17 @@ fn user_timeline_incomplete_detail_names_attempts_without_absence() {
     });
 
     assert_eq!(model.status, UserTimelineFeedStatus::Incomplete);
-    assert!(model
-        .status_detail
-        .contains("tried selected relays and target routes"));
+    assert!(
+        model
+            .status_detail
+            .contains("tried selected relays and target routes")
+    );
     assert!(model.status_detail.contains("target routes failed"));
-    assert!(model
-        .status_detail
-        .contains("target-only posts unavailable"));
+    assert!(
+        model
+            .status_detail
+            .contains("target-only posts unavailable")
+    );
     assert!(model.status_detail.contains("retry or add target routes"));
     assert!(!model.status_detail.contains("follows nobody"));
     assert!(model.view_model.rows.iter().any(|row| {

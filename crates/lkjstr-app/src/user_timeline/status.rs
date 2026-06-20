@@ -1,6 +1,6 @@
 use super::{
-    state::user_timeline_target_only_notice, DiscoveryRouteSource, UserTimelineFeedStatus,
-    UserTimelineFeedViewInput,
+    DiscoveryRouteSource, UserTimelineFeedStatus, UserTimelineFeedViewInput,
+    state::user_timeline_target_only_notice,
 };
 
 pub(super) const INCOMPLETE_DISCOVERY_REASON: &str = "incomplete-user-timeline-discovery";

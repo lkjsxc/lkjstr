@@ -1,5 +1,5 @@
 use leptos::prelude::*;
-use lkjstr_app::{default_user_timeline_feed_view, UserTimelineFeedStatus, UserTimelineFeedView};
+use lkjstr_app::{UserTimelineFeedStatus, UserTimelineFeedView, default_user_timeline_feed_view};
 
 #[path = "user_timeline_read.rs"]
 mod user_timeline_read;
