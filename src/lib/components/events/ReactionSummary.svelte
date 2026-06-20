@@ -1,14 +1,14 @@
 <script lang="ts">
   import { Heart, ThumbsDown } from '@lucide/svelte';
-  import Avatar from '$lib/components/identity/Avatar.svelte';
   import EmojifiedText from './EmojifiedText.svelte';
   import type { ProfileSummary } from '$lib/identity/identity';
-  import { eventProfileCanOpen } from './event-profile-activation';
   import {
     openReactionSummaryActor,
     planReactionSummary,
     toggleReactionSummary,
+    type ReactionActorPlan,
   } from './reaction-summary-plan';
+  import ReactionSummaryActorRow from './ReactionSummaryActorRow.svelte';
   import type {
     ReactionGroup,
     RepostGroup,
@@ -24,25 +24,31 @@
 
   let props: Props = $props();
   let expanded = $state('');
-  let canOpenProfile = $derived(eventProfileCanOpen(props.openProfile));
   let plan = $derived(
     planReactionSummary({
       reactions: props.reactions,
       reposts: props.reposts,
       profiles: props.profiles,
       activeAccountPubkey: props.activeAccountPubkey,
+      openProfile: props.openProfile,
       expanded,
     }),
   );
 
-  function openActor(actor: string): void {
-    openReactionSummaryActor(props.openProfile, { pubkey: actor });
+  function openActor(actor: ReactionActorPlan): void {
+    openReactionSummaryActor(props.openProfile, actor);
   }
 
   function toggle(id: string): void {
     expanded = toggleReactionSummary(expanded, id);
   }
 </script>
+
+{#snippet actorRows(actors: readonly ReactionActorPlan[])}
+  {#each actors as actor (actor.pubkey)}
+    <ReactionSummaryActorRow {actor} {openActor} />
+  {/each}
+{/snippet}
 
 {#if plan.reactions.length > 0}
   <ul class="reaction-summary" aria-label={plan.reactionsLabel}>
@@ -52,6 +58,7 @@
           type="button"
           class="reaction-summary__trigger"
           class:reaction-summary__own={reaction.own}
+          aria-label={reaction.toggleLabel}
           aria-expanded={reaction.expanded}
           aria-controls={reaction.id}
           onclick={() => toggle(reaction.id)}
@@ -73,43 +80,11 @@
             {/if}
           </span>
           <span class="sr-only">{reaction.label}</span>
-          <strong>{reaction.count}</strong>
+          <strong>{reaction.countText}</strong>
         </button>
         {#if reaction.expanded}
           <div class="reaction-summary__actors" id={reaction.id}>
-            {#each reaction.actors as actor (actor.pubkey)}
-              {#if canOpenProfile}
-                <button type="button" onclick={() => openActor(actor.pubkey)}>
-                  <Avatar
-                    pubkey={actor.pubkey}
-                    name={actor.name}
-                    src={actor.avatarUrl}
-                    size="sm"
-                  />
-                  <span
-                    ><EmojifiedText
-                      text={actor.name}
-                      emojis={actor.emojis}
-                    /></span
-                  >
-                </button>
-              {:else}
-                <span class="reaction-summary__actor">
-                  <Avatar
-                    pubkey={actor.pubkey}
-                    name={actor.name}
-                    src={actor.avatarUrl}
-                    size="sm"
-                  />
-                  <span
-                    ><EmojifiedText
-                      text={actor.name}
-                      emojis={actor.emojis}
-                    /></span
-                  >
-                </span>
-              {/if}
-            {/each}
+            {@render actorRows(reaction.actors)}
           </div>
         {/if}
       </li>
@@ -121,42 +96,17 @@
     <button
       type="button"
       class="reaction-summary__trigger"
+      aria-label={plan.reposts.toggleLabel}
       aria-expanded={plan.reposts.expanded}
       aria-controls={plan.reposts.id}
       onclick={() => toggle(plan.reposts.id)}
     >
       <span>{plan.reposts.label}</span>
-      <strong>{plan.reposts.count}</strong>
+      <strong>{plan.reposts.countText}</strong>
     </button>
     {#if plan.reposts.expanded}
       <div class="reaction-summary__actors" id={plan.reposts.id}>
-        {#each plan.reposts.actors as actor (actor.pubkey)}
-          {#if canOpenProfile}
-            <button type="button" onclick={() => openActor(actor.pubkey)}>
-              <Avatar
-                pubkey={actor.pubkey}
-                name={actor.name}
-                src={actor.avatarUrl}
-                size="sm"
-              />
-              <span
-                ><EmojifiedText text={actor.name} emojis={actor.emojis} /></span
-              >
-            </button>
-          {:else}
-            <span class="reaction-summary__actor">
-              <Avatar
-                pubkey={actor.pubkey}
-                name={actor.name}
-                src={actor.avatarUrl}
-                size="sm"
-              />
-              <span
-                ><EmojifiedText text={actor.name} emojis={actor.emojis} /></span
-              >
-            </span>
-          {/if}
-        {/each}
+        {@render actorRows(plan.reposts.actors)}
       </div>
     {/if}
   </div>

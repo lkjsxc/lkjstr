@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import type { ProfileSummary } from '../../../src/lib/identity/identity';
 import type { ReactionGroup } from '../../../src/lib/thread/thread-reactions';
 import {
+  canOpenReactionSummaryActors,
   openReactionSummaryActor,
   planReactionSummary,
   toggleReactionSummary,
@@ -22,6 +23,7 @@ describe('reaction summary plan', () => {
       ],
       profiles: { [actor]: profile(actor) },
       activeAccountPubkey: actor,
+      openProfile: () => undefined,
       expanded: 'reaction-+:https://emoji.example/party.png:30030:'.concat(
         'b'.repeat(64),
         ':party',
@@ -39,11 +41,14 @@ describe('reaction summary plan', () => {
       own: true,
       expanded: true,
       count: 1,
+      countText: '1',
+      toggleLabel: 'Hide 1 like reaction',
     });
     expect(plan.reactions[0]?.actors[0]).toMatchObject({
       pubkey: actor,
       name: 'Display',
       avatarUrl: 'https://example.com/avatar.png',
+      canOpen: true,
     });
     expect(plan.reactions[1]?.label).toBe('dislike');
     expect(plan.reactions[2]?.label).toBe(':party:');
@@ -67,7 +72,30 @@ describe('reaction summary plan', () => {
       id: 'reposts',
       label: 'repost',
       count: 1,
-      actors: [{ pubkey: actor }],
+      countText: '1',
+      toggleLabel: 'Hide 1 repost',
+      actors: [{ pubkey: actor, canOpen: false }],
+    });
+  });
+
+  it('plans count-aware collapsed reaction and repost trigger labels', () => {
+    const first = '1'.repeat(64);
+    const second = '2'.repeat(64);
+    const plan = planReactionSummary({
+      reactions: [reaction('+', [first, second])],
+      reposts: { count: 2, actors: [first, second] },
+      expanded: '',
+    });
+
+    expect(plan.reactions[0]).toMatchObject({
+      count: 2,
+      countText: '2',
+      toggleLabel: 'Show 2 like reactions',
+    });
+    expect(plan.reposts).toMatchObject({
+      count: 2,
+      countText: '2',
+      toggleLabel: 'Show 2 reposts',
     });
   });
 
@@ -81,6 +109,8 @@ describe('reaction summary plan', () => {
 
   it('opens reaction summary actors only through real profile callbacks', () => {
     const opened: string[] = [];
+    expect(canOpenReactionSummaryActors(undefined)).toBe(false);
+    expect(canOpenReactionSummaryActors(() => undefined)).toBe(true);
     expect(
       openReactionSummaryActor(
         (pubkey) => {
