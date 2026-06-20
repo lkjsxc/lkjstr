@@ -76,6 +76,21 @@ fn custom_request_run_rejects_invalid_input_without_demand() {
 }
 
 #[test]
+fn custom_request_run_rejects_invalid_explicit_relay_without_demand() {
+    let plan = plan_custom_request_run(input(
+        r#"{"filter":{"kinds":[1]},"relays":["not a relay"]}"#.to_owned(),
+        vec!["wss://selected.example/".into()],
+    ));
+
+    assert_eq!(plan.status, CustomRequestRunStatus::Invalid);
+    assert_eq!(
+        plan.error.map(|error| error.kind),
+        Some(CustomRequestErrorKind::InvalidRelayUrl)
+    );
+    assert!(plan.demand.is_none());
+}
+
+#[test]
 fn custom_request_run_requires_a_relay_before_demand() {
     let plan = plan_custom_request_run(input(r#"{"filter":{"kinds":[1]}}"#.to_owned(), Vec::new()));
 
