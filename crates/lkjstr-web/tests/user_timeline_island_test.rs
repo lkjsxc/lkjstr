@@ -3,6 +3,13 @@
 mod accounts_selector_test_support;
 
 use accounts_selector_test_support::{next_task, reset_shells, wait_for_text};
+use lkjstr_app::{
+    DiscoveryRouteGroup, DiscoveryRouteOutcome, DiscoveryRouteSource, FeedFragmentConfig,
+    RowGeometryModel, UserTimelineDiscoveryInput, UserTimelineFeedSourceState,
+    UserTimelineFeedView, UserTimelineFeedViewInput, build_user_timeline_feed_view,
+    empty_feed_window, plan_user_timeline_discovery,
+};
+use lkjstr_relays::DemandVisibility;
 use wasm_bindgen::{JsCast, prelude::JsValue};
 use wasm_bindgen_test::{wasm_bindgen_test, wasm_bindgen_test_configure};
 
@@ -34,6 +41,17 @@ async fn user_timeline_island_mounts_and_unmounts() -> Result<(), JsValue> {
     Ok(())
 }
 
+#[wasm_bindgen_test]
+fn user_timeline_stats_records_incomplete_discovery_reason() -> Result<(), JsValue> {
+    reset_shells()?;
+    lkjstr_web::reset_user_timeline_diagnostics_for_test();
+
+    lkjstr_web::record_user_timeline_model_for_test(&incomplete_model());
+
+    assert_snapshot_count("outcomes", "incomplete", 1)?;
+    assert_snapshot_count("reasons", "incomplete-user-timeline-discovery", 1)
+}
+
 fn assert_snapshot_count(group: &str, key: &str, expected: u32) -> Result<(), JsValue> {
     let snapshot = lkjstr_web::user_timeline_diagnostics_snapshot();
     let rows = js_sys::Reflect::get(&snapshot, &JsValue::from_str(group))?;
@@ -49,6 +67,43 @@ fn assert_snapshot_count(group: &str, key: &str, expected: u32) -> Result<(), Js
     Err(js_error(&format!(
         "missing User Timeline stat {group}:{key}"
     )))
+}
+
+fn incomplete_model() -> UserTimelineFeedView {
+    build_user_timeline_feed_view(UserTimelineFeedViewInput {
+        owner: "user-timeline-stats-test".to_owned(),
+        target_pubkey: Some(pubkey("a")),
+        discovery: plan_user_timeline_discovery(&UserTimelineDiscoveryInput {
+            groups: vec![DiscoveryRouteGroup {
+                source: DiscoveryRouteSource::Selected,
+                relays: vec!["wss://selected.example".to_owned()],
+                outcome: DiscoveryRouteOutcome::Attempted,
+            }],
+            cache_checked: true,
+            follow_list_found: false,
+            target_posts_reachable: false,
+            offline: false,
+        }),
+        author_set: None,
+        source_state: UserTimelineFeedSourceState::Pending,
+        selected_relays: vec!["wss://selected.example".to_owned()],
+        disabled_relays: Vec::new(),
+        author_routes: Vec::new(),
+        visibility: DemandVisibility::Visible,
+        since: None,
+        now_sec: 1_700_000_000,
+        page_size: 30,
+        window: empty_feed_window(1, 180),
+        width_px: 680,
+        font_scale: 1.0,
+        geometry_models: Vec::<RowGeometryModel>::new(),
+        fragment_config: FeedFragmentConfig::default(),
+        diagnostics: Vec::new(),
+    })
+}
+
+fn pubkey(prefix: &str) -> String {
+    prefix.repeat(64)
 }
 
 fn host_element() -> Result<web_sys::HtmlElement, JsValue> {

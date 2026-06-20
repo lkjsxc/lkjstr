@@ -1,7 +1,7 @@
 use crate::runtime_counter_state::{child_slot, increment_counter, read_counter, slot};
 use lkjstr_app::{FeedViewRow, UserTimelineFeedStatus, UserTimelineFeedView};
 use serde::Serialize;
-use wasm_bindgen::prelude::{wasm_bindgen, JsValue};
+use wasm_bindgen::prelude::{JsValue, wasm_bindgen};
 
 const SLOT: &str = "__lkjstrUserTimelineStats";
 const STATUSES: &str = "statuses";
@@ -57,6 +57,11 @@ pub(crate) fn record_model(model: &UserTimelineFeedView) {
             increment_counter(&reasons, key);
         }
     }
+}
+
+#[cfg(debug_assertions)]
+pub fn record_user_timeline_model_for_test(model: &UserTimelineFeedView) {
+    record_model(model);
 }
 
 #[wasm_bindgen]

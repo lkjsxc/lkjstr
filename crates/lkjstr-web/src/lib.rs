@@ -75,6 +75,8 @@ pub use thread_island::{ThreadIslandHandle, mount_thread_tab};
 #[cfg(target_arch = "wasm32")]
 pub use user_timeline_island::{UserTimelineIslandHandle, mount_user_timeline_tab};
 #[cfg(all(target_arch = "wasm32", debug_assertions))]
+pub use user_timeline_stats::record_user_timeline_model_for_test;
+#[cfg(all(target_arch = "wasm32", debug_assertions))]
 pub use user_timeline_stats::reset_user_timeline_diagnostics_for_test;
 #[cfg(target_arch = "wasm32")]
 pub use user_timeline_stats::user_timeline_diagnostics_snapshot;
