@@ -1,9 +1,13 @@
 use leptos::prelude::*;
 use lkjstr_app::{FolloweesStatus, FolloweesView, default_followees_view};
 
+#[path = "followees_read.rs"]
+mod followees_read;
+
+use self::followees_read::FolloweesReadController;
 use crate::workspace::followees_actions::FolloweesActions;
 use crate::workspace::followees_header::followees_header;
-use crate::workspace::followees_provider::{FolloweesLease, FolloweesProvider};
+use crate::workspace::followees_provider::FolloweesProvider;
 use crate::workspace::followees_row::{diagnostic_row, followee_row};
 
 #[component]
@@ -16,17 +20,15 @@ pub fn FolloweesTab(
     copy_status: Option<RwSignal<Option<String>>>,
 ) -> impl IntoView {
     let model = RwSignal::new(model);
-    let active_lease = RwSignal::new(None::<FolloweesLease>);
-    if provider.is_some() {
-        start_followees_read(
-            provider.clone(),
-            owner.clone(),
-            target_pubkey.clone(),
-            model,
-            active_lease,
-        );
-        on_cleanup(move || release_active_followees(active_lease));
-    }
+    let read_controller = FolloweesReadController::new();
+    read_controller.read(
+        provider.clone(),
+        owner.clone(),
+        target_pubkey.clone(),
+        Callback::new(move |next| model.set(next)),
+    );
+    let cleanup_controller = read_controller.clone();
+    on_cleanup(move || cleanup_controller.release());
     view! {
         <section class="followees-tab feed-tab" aria-label="Following">
             <div class="tab-scroll-track event-list__scroller">
@@ -40,7 +42,7 @@ pub fn FolloweesTab(
                         owner.clone(),
                         target_pubkey.clone(),
                         model,
-                        active_lease,
+                        read_controller.clone(),
                     )}
                     <div class="lkjstr-feed-rows">
                         {move || model.get().diagnostics.into_iter().map(diagnostic_row).collect_view()}
@@ -98,7 +100,7 @@ fn retry_button(
     owner: String,
     target_pubkey: Option<String>,
     model: RwSignal<FolloweesView>,
-    active_lease: RwSignal<Option<FolloweesLease>>,
+    read_controller: FolloweesReadController,
 ) -> AnyView {
     if !matches!(
         status,
@@ -108,12 +110,11 @@ fn retry_button(
         return ().into_any();
     }
     let retry = move |_| {
-        start_followees_read(
+        read_controller.read(
             provider.clone(),
             owner.clone(),
             target_pubkey.clone(),
-            model,
-            active_lease,
+            Callback::new(move |next| model.set(next)),
         );
     };
     view! {
@@ -122,32 +123,6 @@ fn retry_button(
         </button>
     }
     .into_any()
-}
-
-fn start_followees_read(
-    provider: Option<FolloweesProvider>,
-    owner: String,
-    target_pubkey: Option<String>,
-    model: RwSignal<FolloweesView>,
-    active_lease: RwSignal<Option<FolloweesLease>>,
-) {
-    release_active_followees(active_lease);
-    let Some(provider) = provider else {
-        return;
-    };
-    let lease = provider.read(
-        owner,
-        target_pubkey,
-        Callback::new(move |next| model.set(next)),
-    );
-    active_lease.set(Some(lease));
-}
-
-fn release_active_followees(active_lease: RwSignal<Option<FolloweesLease>>) {
-    if let Some(lease) = active_lease.get_untracked() {
-        lease.release();
-    }
-    active_lease.set(None);
 }
 
 #[cfg(test)]

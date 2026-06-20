@@ -35,6 +35,7 @@ New Tab chooser, and converted Rust tool bodies.
 - `feed_state_row.rs`: shared Rust feed state-row rendering.
 - `followees.rs`: narrow Rust Followees rows from real NIP-02 entries.
 - `followees_provider.rs`: async Followees view-model provider wrapper.
+- `followees_read.rs`: leased Followees initial and retry read-command helper.
 - `global.rs`: narrow Rust Global feed row rendering.
 - `global_footer.rs`: Global footer text and older-command rendering.
 - `global_older.rs`: leased Global older-load command helper.

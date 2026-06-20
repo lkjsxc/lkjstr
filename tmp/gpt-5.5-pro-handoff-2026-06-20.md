@@ -1,553 +1,501 @@
 # GPT-5.5-Pro Handoff: Shared Feed Runtime Stop Point
 
-作成/更新日時: 2026-06-20T06:45:00Z
+作成/更新日時: 2026-06-20T07:35:00Z
 リポジトリ: `/home/lkjsxc/workspace/lkjstr`
 ブランチ: `main`
 依頼: 「切りの良いところで切り上げ、GPT-5.5-Pro に解決策を考えてもらうため、現状の問題点を含めて伝えたいことを `tmp/` に Markdown でまとめ、コミットも済ませる」
 
-## まず伝えたい結論
+## 最重要結論
 
 現在の第一未完了ブロッカーは、引き続き **Shared feed runtime** です。
-SvelteKit/TypeScript の既存 runtime を壊さず、feed surface と複数 feed tab を Rust/WASM runtime へ段階移行している途中です。
 
-今回の停止点で安全に切った slice は、**User Timeline の incomplete discovery を real route evidence から説明し、Leptos 側の表示と read lease cleanup を揃える作業**です。
+このリポジトリは browser-first / local-first Nostr workspace で、 shipped product runtime はまだ `src/` 配下の SvelteKit/TypeScript を多く含みます。目標は `crates/` 配下の Rust/WASM + Leptos runtime へ slice ごとに parity を証明しながら切り替えることです。サーバー側アカウント、relay proxy、custody service、backend はありません。
 
-この slice で主張してよいこと:
+今回の停止点で安全に切った slice は、**Followees initial/retry read-command の active provider lease を controller helper に移し、replaced/provider-unavailable/unmount cleanup を focused test で証明する作業**です。
 
-- Rust app model は `UserTimelineFeedStatus::Incomplete` に対し、attempted/failed/pending route source と target-only state から具体的な `status_detail` を生成する。
-- incomplete 状態は `incomplete-user-timeline-discovery` の explicit unavailable row として view model に残る。
-- Leptos `UserTimelineTab` は enum 固定文言ではなく、Rust app model の `status_detail` を表示する。
-- Leptos `UserTimelineTab` は provider read lease を controller で所有し、次の read に差し替える時と provider unavailable になる時に前 lease を release する。
-- Web diagnostics の Stats mapping は `incomplete-user-timeline-discovery` reason を bucket に含める。
-- focused Rust tests、repo/doc/line checks、Prettier、`pnpm check:repo`、`git diff --cached --check` は pass している。
-
-まだ主張してはいけないこと:
-
-- Shared feed runtime 全体の完了。
-- User Timeline runtime parity 全体の完了。
-- TypeScript/Svelte feed surface 全体の削除完了。
-- Rust/WASM quiet gate の最新完走。
-- Docker Compose final gate の pass。
-- dirty worktree 全体の正当性。
-- `lkjstr-web` の `incomplete-user-timeline-discovery` Stats mapping が browser/wasm test で実証済み、という主張。実装は入っているが、この commit では wasm browser proof までは取っていない。
-
-## 直前の commit
-
-この作業の直前に、次の commit が既に存在します。
-
-```text
-2de87a2d Guard retained feed helpers behind Rust island ownership
-```
-
-その commit は、古い `src/lib/feed-surface/*` helper import を product import から外し、Rust island ownership と deletion/no-import guard へ寄せた stop slice です。
-
-今回の commit は、その続きとして User Timeline に限定した Rust app/UI/web/docs slice を積みます。
+この handoff file 自体は最新 commit に含めるため、正確な最新 commit hash は `git log -1 --oneline` で確認してください。
 
 ## 絶対に守る制約
 
-- `AGENTS.md` と `docs/agent/README.md` がこの repo の実行契約。
-- No fake product data。placeholder success state も不可。
-- TypeScript/Svelte product code を削除するには、Rust parity、focused tests、ledger evidence、no-import proof が必要。
-- Main-thread code は SQLite/OPFS を直接触らない。typed repository 経由のみ。
-- `src` の source files は 200 lines 以下、docs は 300 lines 以下。
-- dirty worktree の既存変更はユーザーまたは以前の作業由来として扱い、勝手に revert しない。
-- `git add -A` や `git add .` は危険。現在の worktree は複数 slice が混在しているため、次も explicit path staging が必要。
-- commit message は Lore protocol。`Tested:` と `Not-tested:` は実際の検証と一致させる。
+- `AGENTS.md` と `docs/agent/README.md` がこの repo の実行契約です。
+- No fake product data。placeholder success state も不可です。
+- TypeScript/Svelte product code を削除するには、Rust parity、focused tests、ledger evidence、no-import proof が必要です。
+- Main-thread code は SQLite/OPFS を直接開かない。product modules は typed repositories だけを呼びます。
+- `src` の source files は 200 lines 以下、docs は 300 lines 以下が通常ルールです。この `tmp/` handoff はユーザーが「どれだけ長くなっても構わない」と明示した例外です。
+- dirty worktree の既存変更はユーザーまたは過去作業由来として扱い、勝手に revert しないでください。
+- 現在の worktree は複数 slice が混在しています。**`git add -A` / `git add .` は使わないでください。**
+- commit message は Lore protocol。`Tested:` と `Not-tested:` は実際の検証と一致させてください。
+- final parity/deletion claim には Docker Compose final gate が必要です。今回そこまでは走っていません。
 
 ## まず読むべきファイル
 
-GPT-5.5-Pro はまずこの順で読んでください。
+最初にこの順で読んでください。
 
 1. `AGENTS.md`
 2. `docs/current-state.md`
 3. `docs/agent/README.md`
 4. `docs/execution/current-blockers.md`
 5. `docs/agent/skills/feed-runtime.md`
-6. Shared feed runtime 周辺の read-first docs:
-   - `docs/architecture/feeds/README.md`
-   - `docs/architecture/feeds/runtime/README.md`
-   - `docs/architecture/data/feed-surface/README.md`
-   - `docs/architecture/data/cache-first-feed-pages.md`
-   - `docs/architecture/data/feed-coverage.md`
-   - `docs/execution/tasks/shared-feed-view-model.md`
-   - `docs/execution/tasks/home-feed-slice.md`
 
-今回の User Timeline slice を見る時は追加で次を読むとよいです。
+Shared feed runtime の基本契約:
 
+- `docs/architecture/feeds/README.md`
+- `docs/architecture/feeds/runtime/README.md`
+- `docs/architecture/data/feed-surface/README.md`
+- `docs/architecture/data/cache-first-feed-pages.md`
+- `docs/architecture/data/feed-coverage.md`
+- `docs/execution/tasks/shared-feed-view-model.md`
+- `docs/execution/tasks/home-feed-slice.md`
+
+Followees/User Timeline の直近作業を見る時:
+
+- `docs/execution/tasks/followees-provider-wiring.md`
 - `docs/execution/tasks/user-timeline-provider-wiring.md`
-- `crates/lkjstr-app/src/user_timeline/mod.rs`
-- `crates/lkjstr-app/src/user_timeline/state.rs`
-- `crates/lkjstr-app/src/user_timeline/view.rs`
+- `crates/lkjstr-ui/src/workspace/followees.rs`
+- `crates/lkjstr-ui/src/workspace/followees_read.rs`
 - `crates/lkjstr-ui/src/workspace/user_timeline.rs`
-- `crates/lkjstr-web/src/user_timeline_host.rs`
-- `crates/lkjstr-web/src/user_timeline_host_model.rs`
-- `crates/lkjstr-web/src/user_timeline_host_view.rs`
-- `crates/lkjstr-web/src/user_timeline_stats.rs`
+- `crates/lkjstr-ui/src/workspace/user_timeline_read.rs`
+- `crates/lkjstr-ui/src/workspace/followees_provider.rs`
+- `crates/lkjstr-ui/src/workspace/user_timeline_provider.rs`
 
-## 今回 commit する slice
+## 直近の検証済み commit
 
-この handoff file は、下記の staged slice と同じ commit に含める前提です。
-最終 commit hash は commit 後に `git log -1 --oneline` で確認してください。
+この handoff 直前の verified commits:
+
+```text
+43f2b428 Release replaced Custom Request run leases
+556b2ddb Prove User Timeline incomplete diagnostics bucket
+7eb1189d Explain User Timeline incomplete discovery
+2de87a2d Guard retained feed helpers behind Rust island ownership
+```
+
+各 commit の意味:
+
+- `7eb1189d`:
+  - User Timeline incomplete discovery を route evidence から説明する `status_detail` を Rust app model に追加しました。
+  - `incomplete-user-timeline-discovery` unavailable row reason を追加しました。
+  - Leptos User Timeline read lease cleanup helper を追加しました。
+  - `tmp/gpt-5.5-pro-handoff-2026-06-20.md` の旧版もここで更新されていました。
+- `556b2ddb`:
+  - `incomplete-user-timeline-discovery` Stats bucket mapping を wasm/browser test で証明しました。
+  - `record_user_timeline_model_for_test` を debug/test hook として公開しました。
+- `43f2b428`:
+  - Custom Request run-command lease cleanup helper を追加しました。
+  - replaced/provider-unavailable run が active lease を release することを focused tests で証明しました。
+  - この commit では broader dirty docs/source は stage していません。
+
+この handoff と同じ commit に含める想定の slice:
+
+- Followees initial/retry read-command lease cleanup helper。
+- Followees docs の最小証跡。
+- この handoff file の全面更新。
+
+## 今回の Followees slice
 
 ### 目的
 
-User Timeline discovery が incomplete になった時、単に「incomplete」と表示するのではなく、Rust route evidence から現在の欠落理由を説明する。
-同時に、Leptos read provider の lease が差し替え時や provider unavailable 時に残らないようにする。
+Followees tab の initial read と retry read が active provider lease を `RwSignal<Option<FolloweesLease>>` で直接持つのをやめ、`FolloweesReadController` に集約します。
 
-### Staged files
+狙い:
 
-今回の staged boundary は次の 16 files です。
+- 次の read に差し替える前に前 lease を release する。
+- provider が unavailable の read でも active lease を release する。
+- component unmount cleanup でも active lease を release する。
+- User Timeline / Custom Request と同じ helper pattern に寄せ、read/run command cleanup proof を揃える。
 
-- `crates/lkjstr-app/src/user_timeline/defaults.rs`
-- `crates/lkjstr-app/src/user_timeline/mod.rs`
-- `crates/lkjstr-app/src/user_timeline/state.rs`
-- `crates/lkjstr-app/src/user_timeline/status.rs`
-- `crates/lkjstr-app/src/user_timeline/types.rs`
-- `crates/lkjstr-app/src/user_timeline/view.rs`
-- `crates/lkjstr-app/tests/README.md`
-- `crates/lkjstr-app/tests/user_timeline_status_test.rs`
-- `crates/lkjstr-ui/src/workspace/user_timeline.rs`
-- `crates/lkjstr-ui/src/workspace/user_timeline_read.rs`
-- `crates/lkjstr-web/src/user_timeline_stats.rs`
-- `docs/architecture/rust-wasm/cutover/feed-runtime.md`
-- `docs/architecture/rust-wasm/cutover/parity-ledger.md`
-- `docs/current-state.md`
-- `docs/execution/tasks/user-timeline-provider-wiring.md`
+### 変更ファイル
+
+今回 commit 対象にする source/docs:
+
+- `crates/lkjstr-ui/src/workspace/followees.rs`
+- `crates/lkjstr-ui/src/workspace/followees_read.rs`
+- `crates/lkjstr-ui/src/workspace/README.md` の `followees_read.rs` 行だけ
+- `docs/execution/tasks/followees-provider-wiring.md` の Followees read-command lease 証跡だけ
 - `tmp/gpt-5.5-pro-handoff-2026-06-20.md`
-
-重要:
-
-- `docs/current-state.md`, `docs/architecture/rust-wasm/cutover/feed-runtime.md`, `docs/architecture/rust-wasm/cutover/parity-ledger.md` は、worktree に broad unrelated edits が残っていたため、index には今回 slice の最小 staged blob だけを入れている。
-- 次の agent がこれらを再び `git add` すると、未検証の広い docs edits が混ざる可能性がある。
-- commit 後にこれらの docs が `M` として残るのは expected dirty state。
-
-### Rust app changes
-
-`crates/lkjstr-app/src/user_timeline/status.rs` を追加しました。
-
-役割:
-
-- `INCOMPLETE_DISCOVERY_REASON = "incomplete-user-timeline-discovery"` を定義する。
-- `user_timeline_status_detail(status, input)` で User Timeline status の表示文言を Rust app model 側に集約する。
-- `UserTimelineFeedStatus::Incomplete` は attempted/failed/pending discovery route sources と `target_posts_only` state から説明文を作る。
-
-例:
-
-```text
-Discovery incomplete: tried selected relays and target routes; selected relays failed; pending target routes; target-only posts unavailable from attempted routes. Selected relays may be insufficient; retry or add target routes.
-```
-
-設計上の注意:
-
-- Missing follow-list coverage は「存在しない」と証明しない。
-- そのため incomplete detail は retry/add route を促す retryable な説明にしている。
-- `source_list` は route source labels を sort/dedup して、表示の不安定さを避けている。
-
-`crates/lkjstr-app/src/user_timeline/view.rs` は次を行うようになりました。
-
-- `status_detail` を生成する。
-- status が `Incomplete` の時、`incomplete-user-timeline-discovery` の unavailable state row を追加する。
-- `UserTimelineFeedView` に `status_detail` を含める。
-
-`crates/lkjstr-app/src/user_timeline/types.rs` は `UserTimelineFeedView` に `status_detail: String` を追加しました。
-
-`defaults.rs` と `state.rs` は rustfmt による import ordering の差分が入っています。
-
-### Rust app tests
-
-`crates/lkjstr-app/tests/user_timeline_status_test.rs` を追加しました。
-
-検証していること:
-
-- incomplete discovery でも real cached rows を残す。
-- incomplete detail に attempted/failed/pending route evidence が入る。
-- incomplete state row の reason が `incomplete-user-timeline-discovery` になる。
-- target-only state を absence claim ではなく evidence-based detail として扱う。
-
-### Leptos UI changes
-
-`crates/lkjstr-ui/src/workspace/user_timeline.rs` は次のように変わりました。
-
-- `UserTimelineReadController` を使って provider read lease を所有する。
-- provider が `Some` の時だけ読んで終わりではなく、controller が active lease を管理する。
-- provider が `None` になった時も active lease を release する。
-- status text は enum match ではなく `model.status_detail` を返す。
-
-`crates/lkjstr-ui/src/workspace/user_timeline_read.rs` を追加しました。
-
-役割:
-
-- active `UserTimelineLease` を `Arc<Mutex<Option<_>>>` で持つ。
-- `read()` の先頭で既存 lease を release する。
-- provider unavailable の時は false を返し、active lease は空にする。
-- mutex poisoned 等で remember に失敗する場合も新 lease を release する。
-
-UI unit tests:
-
-- `read_releases_previous_user_timeline_lease`
-- `unavailable_provider_releases_active_user_timeline_lease`
-
-### Web diagnostics changes
-
-`crates/lkjstr-web/src/user_timeline_stats.rs` に次を追加しました。
-
-- `REASON_KEYS` に `incomplete-user-timeline-discovery` を追加。
-- unavailable row reason mapping に `incomplete-user-timeline-discovery` を追加。
 
 注意:
 
-- この module は wasm target 側で使われる。
-- native `cargo test -p lkjstr-web unavailable_key_maps_incomplete_user_timeline_discovery` は 0 tests になったため、native unit test はこの commit から削除した。
-- Stats mapping の実装は入っているが、次に browser/wasm test で explicit proof を追加するのが望ましい。
+- `crates/lkjstr-ui/src/workspace/README.md` には他の未検証 helper 行も dirty として残っています。今回 stage するのは `followees_read.rs` の 1 行だけです。
+- `docs/execution/tasks/followees-provider-wiring.md` には Follow Graph no-import wording と Next Edit の未検証 edit も残っています。今回 stage するのは read-command lease の evidence/acceptance だけです。
+- `crates/lkjstr-ui/src/workspace/mod.rs` は今回 stage しません。`followees_read.rs` は `followees.rs` 内の `#[path = "followees_read.rs"] mod followees_read;` で閉じています。
 
-### Docs/ledgers
+### 実装内容
 
-最小限の docs update:
+`crates/lkjstr-ui/src/workspace/followees_read.rs` を追加しました。
 
-- `docs/current-state.md`
-  - User Timeline が distinct query surfaces、real rows、exact cached coverage、target-only degraded rows、incomplete detail、partial status を Rust 側で持つことを反映。
-- `docs/architecture/rust-wasm/cutover/feed-runtime.md`
-  - User Timeline が incomplete status detail を real route evidence から導出することを反映。
-- `docs/architecture/rust-wasm/cutover/parity-ledger.md`
-  - incomplete status detail proof と Stats mapping の記録を追加。
-- `docs/execution/tasks/user-timeline-provider-wiring.md`
-  - provider wiring task の最新証跡を更新。
-- `crates/lkjstr-app/tests/README.md`
-  - User Timeline status test を追加。
+役割:
 
-## 実行済み verification
+- `Arc<Mutex<Option<FolloweesLease>>>` で active lease を保持。
+- `read()` の先頭で現在の lease を release。
+- provider が `None` の場合は false を返し、新しい read は dispatch しない。
+- 新 lease の remember 中に lock が壊れている場合も新 lease を release。
+- `release()` で active lease を明示 release。
 
-環境:
+`crates/lkjstr-ui/src/workspace/followees.rs` の変更:
 
-- `PATH=/tmp/codex-pnpm-shim:$HOME/.local/bin:/home/lkjsxc/.cargo/bin:$PATH`
-- pnpm は Node engine warning を出すことがある。
-- Warning 内容: project wants Node `>=24.0.0`; current environment is Node `v22.22.3`。
-- この warning の上で下記 gate は pass している。
+- `FolloweesLease` を直接 import しなくなりました。
+- `FolloweesReadController::new()` を作って initial read / retry read / cleanup を経由させます。
+- initial read は provider の有無に関係なく controller に入ります。provider が無い場合も controller が active lease を空にするため、helper の unavailable path と component call surface が一致します。
+- retry button は provider が無い場合は従来通り表示しません。
 
-### Focused Rust app tests
+### Focused tests
+
+追加/通過した Followees helper tests:
+
+- `read_releases_previous_followees_lease`
+- `unavailable_provider_releases_active_followees_lease`
+
+実行済み:
+
+```sh
+PATH=/tmp/codex-pnpm-shim:$HOME/.local/bin:/home/lkjsxc/.cargo/bin:$PATH \
+  rustfmt --edition 2024 --check --config skip_children=true \
+  crates/lkjstr-ui/src/workspace/followees.rs \
+  crates/lkjstr-ui/src/workspace/followees_read.rs
+
+PATH=/tmp/codex-pnpm-shim:$HOME/.local/bin:/home/lkjsxc/.cargo/bin:$PATH \
+  cargo test -p lkjstr-ui followees
+```
+
+結果:
+
+- rustfmt check: pass
+- `cargo test -p lkjstr-ui followees`: pass
+- lkjstr-ui unit side: 10 Followees-related tests passed
+- `tests/followees_provider_test.rs`: 3 tests passed
+
+この後、staging 後に repo/doc/line checks と `git diff --cached --check` を走らせる予定です。commit message の `Tested:` は必ず最終実行結果に合わせてください。
+
+## 既に通した verification
+
+この session で既に pass したもの:
+
+### User Timeline incomplete discovery commit
 
 ```sh
 cargo test -p lkjstr-app user_timeline
-```
-
-結果:
-
-- pass
-- app unit tests: 7 user_timeline discovery tests passed
-- integration tests:
-  - `user_timeline_discovery_test.rs`: 2 passed
-  - `user_timeline_feed_test.rs`: 4 passed
-  - `user_timeline_status_test.rs`: 1 passed
-  - `user_timeline_surface_input_test.rs`: 1 passed
-
-### Focused Rust UI tests
-
-```sh
 cargo test -p lkjstr-ui user_timeline
-```
-
-結果:
-
-- pass
-- UI unit tests: 4 passed
-- `tests/user_timeline_provider_test.rs`: 3 passed
-
-### Rustfmt
-
-対象:
-
-- `crates/lkjstr-app/src/user_timeline/defaults.rs`
-- `crates/lkjstr-app/src/user_timeline/mod.rs`
-- `crates/lkjstr-app/src/user_timeline/state.rs`
-- `crates/lkjstr-app/src/user_timeline/status.rs`
-- `crates/lkjstr-app/src/user_timeline/types.rs`
-- `crates/lkjstr-app/src/user_timeline/view.rs`
-- `crates/lkjstr-app/tests/user_timeline_status_test.rs`
-- `crates/lkjstr-ui/src/workspace/user_timeline.rs`
-- `crates/lkjstr-ui/src/workspace/user_timeline_read.rs`
-- `crates/lkjstr-web/src/user_timeline_stats.rs`
-
-結果:
-
-- `rustfmt --check ...` pass
-
-### Repo/doc/line/static checks
-
-```sh
+rustfmt --edition 2024 --check ...
+pnpm exec prettier --check ...
 cargo run -p lkjstr-xtask -- check-docs
-```
-
-結果:
-
-- `ok check-docs`
-
-```sh
 cargo run -p lkjstr-xtask -- check-lines
-```
-
-結果:
-
-- `ok check-lines`
-
-```sh
 pnpm check:repo
-```
-
-結果:
-
-- pass
-- Node engine warning は出るが gate 自体は pass
-
-```sh
+git diff --check
 git diff --cached --check
 ```
 
-結果:
-
-- pass
-
-### Prettier
+### User Timeline Stats browser proof commit
 
 ```sh
-pnpm exec prettier --check \
-  docs/current-state.md \
-  docs/architecture/rust-wasm/cutover/feed-runtime.md \
-  docs/architecture/rust-wasm/cutover/parity-ledger.md \
-  docs/execution/tasks/user-timeline-provider-wiring.md \
-  crates/lkjstr-app/tests/README.md
+rustfmt --edition 2024 --check \
+  crates/lkjstr-web/src/user_timeline_stats.rs \
+  crates/lkjstr-web/src/lib.rs \
+  crates/lkjstr-web/tests/user_timeline_island_test.rs
+
+wasm-pack test --headless --chrome \
+  --chromedriver /home/lkjsxc/.cache/.wasm-pack/chromedriver-d553f1d224c55714/chromedriver \
+  crates/lkjstr-web --test user_timeline_island_test
+
+cargo run -p lkjstr-xtask -- check-docs
+cargo run -p lkjstr-xtask -- check-lines
+pnpm check:repo
+git diff --check
+git diff --cached --check
 ```
 
-結果:
+### Custom Request run lease commit
 
-- pass
+```sh
+cargo test -p lkjstr-ui custom_request
+rustfmt --edition 2024 --check --config skip_children=true \
+  crates/lkjstr-ui/src/workspace/custom_request.rs \
+  crates/lkjstr-ui/src/workspace/custom_request_run.rs \
+  crates/lkjstr-ui/src/workspace/mod.rs
+pnpm exec prettier --check crates/lkjstr-ui/src/workspace/README.md
+cargo run -p lkjstr-xtask -- check-docs
+cargo run -p lkjstr-xtask -- check-lines
+pnpm check:repo
+git diff --cached --check
+```
 
-## 未実行/未主張
+Known caveat:
+
+- `rustfmt --check` without `--config skip_children=true` on `crates/lkjstr-ui/src/workspace/mod.rs` recursed into unrelated dirty/committed modules and reported existing import-order noise in `user_timeline.rs`.
+- pnpm emits Node engine warning: project wants Node `>=24.0.0`; environment is Node `v22.22.3`. Checks still passed under this warning.
+
+## まだ主張してはいけないこと
+
+Do not claim:
+
+- Shared feed runtime 全体の完了。
+- Followees runtime parity 全体の完了。
+- User Timeline runtime parity 全体の完了。
+- TypeScript/Svelte feed surface 全体の削除完了。
+- `src/lib/follow-graph` deletion proof 完了。
+- `src/lib/components` / shared event renderer parity 完了。
+- Rust/WASM quiet gate の最新完走。
+- Docker Compose final gate の pass。
+- dirty worktree 全体の正当性。
+
+## 現在の中心問題
+
+### 1. Shared feed runtime はまだ巨大な途中状態
+
+`docs/execution/current-blockers.md` の第一未完了 queue は Shared feed runtime です。
+
+すでに証明済みの enabling proof は非常に多いですが、残りはまだ broad です。典型的には:
+
+- shared feed rows / event rendering の parity。
+- Rust Leptos surface と retained Svelte host glue の境界。
+- older controls の real provider handler 化。
+- Search / Custom Request / Followees / User Timeline / Author Context などの read/run cleanup proof の横展開。
+- deletion ledger に進めるための no-import proof。
+- final gates。
+
+### 2. dirty worktree がかなり大きく、複数 slice が混ざっている
+
+この handoff 作成時点で、worktree には今回 Followees slice 以外に broad edits が残っています。
+
+大まかなグループ:
+
+- Rust `crates/lkjstr-ui/src/workspace/feed_event_*` の event-row/action/content 分割。
+- Rust `global_older.rs`, `notifications_older.rs`, `thread_older.rs`, `search_run.rs`, `search_older.rs` など older/query helper 系。
+- Svelte `src/lib/components/events/*` の presenter/component 分割。
+- TS tests under `tests/unit/events/*` の大規模更新。
+- cutover ledgers and task docs の広い wording update。
+- `crates/lkjstr-ui/Cargo.toml` の dependency update。
+- `tests/unit/repo-deleted-paths.test.ts` の no-import/deletion guard 拡張。
+
+これらは今回 commit しません。次の agent は最初に:
+
+```sh
+git status --short
+git diff --stat
+```
+
+を見て、1 slice ずつ explicit staging してください。
+
+### 3. docs dirty は一部だけが検証済み
+
+`docs/current-state.md`, cutover ledgers, task docs に broad edits が残っています。
+
+過去 3 commit では、必要最小 blob だけを index に入れて commit しています。そのため:
+
+- `git status` で docs がまだ `M` でも expected です。
+- `git add docs/current-state.md` のような broad add は未検証 wording を混ぜる可能性があります。
+- docs は source と同じ commit で aligned にする必要がありますが、alignment の範囲は narrow にしてください。
+
+### 4. final gates は未完走
+
+今回の verified claims は focused / repo-level checks までです。
 
 未実行:
 
-- `pnpm rust-wasm:quiet`
+- `pnpm rust-wasm:quiet` の最新全体完走
 - `pnpm verify:quiet`
 - `pnpm cloudflare:quiet`
 - Docker Compose final gate
-- dirty worktree 全体を対象にした full validation
-- Rust workspace 全体の `cargo test --workspace`
-- User Timeline Stats mapping の browser/wasm test
-- User Timeline runtime 全体の browser workflow parity
 
-理由:
+Shared runtime parity/deletion claim をするなら、`docs/operations/verification.md` の final gate に戻ってください。
 
-- ユーザー依頼は「切りの良いところで切り上げて、GPT-5.5-Pro 向けに現状をまとめ、commit する」。
-- 今回の coherent stop slice は User Timeline status/read cleanup に限定できた。
-- worktree には unrelated Rust/UI/event presenter/docs changes が大量に残っており、それらを含めた broad validation はこの stop slice の責務範囲を超える。
-- Shared feed runtime 完了 claim には broad Rust/WASM quiet と Docker final gate が必要だが、今回は完了 claim をしていない。
+### 5. Node engine mismatch がある
 
-## 現在の主な問題点
+環境では pnpm が Node engine warning を出します。
 
-### 1. Shared feed runtime は未完了
+```text
+project wants Node >=24.0.0
+current environment is Node v22.22.3
+```
 
-`docs/execution/current-blockers.md` の第一未完了 blocker は Shared feed runtime。
-今回の slice は User Timeline status/read cleanup を前進させただけです。
+`pnpm check:repo` はこの warning の上で pass していますが、browser/toolchain 差が疑わしい時は Node version を前提として疑ってください。
 
-まだ残る大きな問題:
+### 6. wasm browser tests は chromedriver path を固定すると通しやすい
 
-- feed surface 全体の Rust/WASM cutover completion。
-- Svelte/TypeScript retained runtime の完全削除。
-- Rust/WASM broad quiet の最新安定完走。
-- Docker final gate。
-- docs/current-state、implementation/parity/deletion/verification ledgers の全体整合。
+成功済み chromedriver:
 
-### 2. User Timeline incomplete semantics は前進したが、browser proof が残っている
+```text
+/home/lkjsxc/.cache/.wasm-pack/chromedriver-d553f1d224c55714/chromedriver
+```
 
-今回、Rust app model では incomplete reason と detail が明示されました。
-Leptos UI も `status_detail` を表示します。
-
-残る問題:
-
-- Web diagnostics の `incomplete-user-timeline-discovery` bucket は実装されたが、browser/wasm test で直接 proof していない。
-- User Timeline route provider/browser tests が incomplete 状態の Stats snapshot まで見ていない。
-- `crates/lkjstr-web/tests/user_timeline_island_test.rs` は missing pubkey の diagnostics proof は持つが、incomplete reason proof ではない。
-- 次に追加するなら、wasm browser test で incomplete model を実際に mount/record し、`user_timeline_diagnostics_snapshot()` の `reasons` に `incomplete-user-timeline-discovery` が出ることを確認するのがよい。
-
-### 3. dirty worktree はまだ広く汚れている
-
-今回の commit は staged scope だけを扱います。
-worktree にはまだ未ステージ変更が大量に残っています。
-
-残っている主な領域:
-
-- Rust app tests:
-  - `crates/lkjstr-app/tests/custom_request_plan_test.rs`
-  - `crates/lkjstr-app/tests/custom_request_test.rs`
-  - `crates/lkjstr-app/tests/feed_tool_input_test.rs`
-- Rust UI workspace:
-  - `crates/lkjstr-ui/Cargo.toml`
-  - `crates/lkjstr-ui/src/workspace/README.md`
-  - `crates/lkjstr-ui/src/workspace/custom_request.rs`
-  - `crates/lkjstr-ui/src/workspace/feed_event_*`
-  - `crates/lkjstr-ui/src/workspace/followees.rs`
-  - `crates/lkjstr-ui/src/workspace/global_older.rs`
-  - `crates/lkjstr-ui/src/workspace/mod.rs`
-  - `crates/lkjstr-ui/src/workspace/notifications_older.rs`
-  - `crates/lkjstr-ui/src/workspace/search.rs`
-  - `crates/lkjstr-ui/src/workspace/thread_older.rs`
-  - untracked `custom_request_run.rs`, `followees_read.rs`, `search_older.rs`, `search_run.rs`, and multiple feed event presenter helpers.
-- Rust web tests/docs:
-  - `crates/lkjstr-web/tests/README.md`
-  - `crates/lkjstr-web/tests/author_context_tab_test.rs`
-- Rust/WASM cutover docs:
-  - `docs/architecture/rust-wasm/cutover/deletion-ledger.md`
-  - `docs/architecture/rust-wasm/cutover/implementation-ledger.md`
-  - worktree versions of `feed-runtime.md`, `parity-ledger.md`, and `docs/current-state.md`
-- Task docs:
-  - `docs/execution/tasks/custom-request-provider-wiring.md`
-  - `docs/execution/tasks/followees-provider-wiring.md`
-  - `docs/execution/tasks/home-feed-provider-wiring.md`
-  - `docs/execution/tasks/profile-feed-provider-wiring.md`
-  - `docs/execution/tasks/search-feed-provider-wiring.md`
-  - `docs/execution/tasks/thread-feed-provider-wiring.md`
-- Svelte event component / presenter extraction:
-  - `src/lib/components/events/*`
-  - `tests/unit/events/*`
-  - many untracked presenter/plan/component files.
-
-これらは今回の commit では検証していません。
-次の agent は絶対に broad staging しないでください。
-
-### 4. index/worktree 差分に注意
-
-今回、複数 docs は staged index と worktree が意図的に違います。
-
-背景:
-
-- worktree には広い unrelated docs edits が含まれていた。
-- staged commit には今回の User Timeline status/read cleanup 証跡だけを入れたかった。
-- そのため index には最小 staged blob を入れている。
-
-次の agent がやるべきこと:
-
-- commit 後に `docs/current-state.md`, `docs/architecture/rust-wasm/cutover/feed-runtime.md`, `docs/architecture/rust-wasm/cutover/parity-ledger.md` が dirty として残っても慌てない。
-- 残った worktree diff を読む。
-- 次 slice に含めると決めるまでは再 staging しない。
-
-### 5. docs line cap が厳しい
-
-この repo は docs 300 lines 以下、source 200 lines 以下が重要。
-今回の staged checks では `check-lines` pass。
-ただし、以下の docs は既に上限付近になりがちです。
-
-- `docs/current-state.md`
-- `docs/execution/current-blockers.md`
-- `docs/architecture/rust-wasm/cutover/*ledger.md`
-
-次に docs を触る場合は、追記ではなく圧縮・置換を優先してください。
-
-### 6. Node engine warning は既知
-
-pnpm command で Node engine warning が出ることがあります。
-今回の verification は warning の上で pass しています。
-
-これは現状の主問題ではありませんが、CI や Docker final gate では Node version 差が別の失敗を起こす可能性はあります。
+User Timeline island test はこの path で pass しました。
 
 ## 次に GPT-5.5-Pro に考えてほしいこと
 
-### 問い 1: 残 dirty worktree をどう分割するべきか
+### A. まず worktree を「何を commit できるか」で分類する
 
-現在の最大リスクは、実装方針そのものよりも commit/verification boundary の曖昧さです。
+現状は実装アイデアがいくつも worktree に残っているように見えます。まず次の分類をしてください。
 
-次に考えるべき分割候補:
+1. 既に coherent slice になっていて focused tests を足せば commit できるもの。
+2. source と docs/tests の対応が足りず、追加実装が必要なもの。
+3. 方向性は良いが broad すぎて分割が必要なもの。
+4. ユーザー作業かもしれず触らない方がよいもの。
 
-1. User Timeline browser/wasm Stats proof slice
-2. Rust workspace feed event action/content presenter slice
-3. Svelte event component presenter extraction slice
-4. Custom Request / Followees / Search read lease cleanup slice
-5. docs/ledger reconciliation slice
-6. remaining feed runtime parity/browser proof slice
+### B. 次の安全な slice 候補
 
-各 slice は次を満たすべき:
+候補は複数ありますが、個人的には次の順で考えるとよいです。
 
-- invariant が一文で言える。
-- touched files が説明可能。
-- focused tests がある。
-- docs/ledger updates が同じ主張だけを記録している。
-- unrelated dirty files を staging していない。
+1. `global_older.rs`, `notifications_older.rs`, `thread_older.rs`, `search_older.rs`, `search_run.rs` の command helper cleanup を 1 helper / 1 surface ずつ検証して commit。
+2. `feed_event_*` Rust helper 分割を、row activation / open policy / copy status / content plan のように小さく commit。
+3. Svelte event component presenter split は大きいので、Rust shared renderer proof と関係する最小 presenter から test 付きで commit。
+4. deletion/no-import guard updates は、実際に import が消えた path だけに限定して最後に commit。
 
-### 問い 2: User Timeline incomplete Stats proof をどこで取るべきか
+ただし、dirty tree の内容は未検証です。GPT-5.5-Pro は必ず diff を読んでから判断してください。
 
-候補:
+### C. `src/lib/components/events/*` の大規模変更は特に注意
 
-- `crates/lkjstr-web/tests/user_timeline_island_test.rs` に incomplete diagnostics test を追加する。
-- `crates/lkjstr-web/tests/user_timeline_route_provider_test.rs` か target-only/cleanup 系の既存 setup を使い、実際の provider path から incomplete を起こして snapshot を見る。
-- `user_timeline_stats::record_model` を test-only export するかどうか検討する。
+現在、多数の Svelte components と TS presenter/tests が dirty です。
 
-注意:
+危険な点:
 
-- test-only export は surface を広げるので、まず既存 browser path で証明できないか見るべき。
-- native `cargo test -p lkjstr-web` では `user_timeline_stats.rs` が wasm target に gated され、直接 unit test proof にはならない。
+- UI behavior regression が出やすい。
+- source line limit 200 に触れやすい。
+- Rust shared renderer parity と Svelte retained behavior の境界が混ざりやすい。
+- tests は多いが、browser visual/interaction proof が不足しがち。
 
-### 問い 3: 次に「完了」と言える最小 blocker unit は何か
+ここを触るなら:
 
-Shared feed runtime 全体は大きい。
-次に完了主張できる最小 unit を決めてください。
+- 1 component / 1 presenter / 1 behavior proof に分割。
+- no fake data rule を守る。
+- action availability は real callback/action がある場合だけ表示する。
+- unavailable/no-op UI を silent success にしない。
 
-候補:
+### D. no-import/deletion proof は急がない
 
-- User Timeline status/read cleanup proof complete
-- User Timeline browser Stats proof complete
-- one tab island runtime proof complete
-- event row presenter parity proof complete
-- docs/ledger consistency correction
+今回の流れでは no-import guard や deletion-ledger wording が dirty に見えますが、TypeScript deletion は最後の証明です。
 
-## 次に作業する agent のための具体手順
+守るべき順序:
 
-最初に実行:
+1. Rust parity 実装
+2. Focused tests
+3. Browser/wasm proof where needed
+4. Docs/ledger evidence
+5. No-import proof
+6. Delete old TS/Svelte path
+7. Final gates
+
+この順序を飛ばして docs の「removed」や ledger の deletion status だけ進めないでください。
+
+## Handoff 作成時点の dirty worktree summary
+
+今回 commit 後も、多くの dirty files が残る想定です。
+
+主な modified files:
+
+```text
+crates/lkjstr-app/tests/custom_request_plan_test.rs
+crates/lkjstr-app/tests/custom_request_test.rs
+crates/lkjstr-app/tests/feed_tool_input_test.rs
+crates/lkjstr-ui/Cargo.toml
+crates/lkjstr-ui/src/workspace/README.md
+crates/lkjstr-ui/src/workspace/feed_event_actions.rs
+crates/lkjstr-ui/src/workspace/feed_event_actions_tests.rs
+crates/lkjstr-ui/src/workspace/feed_event_content.rs
+crates/lkjstr-ui/src/workspace/feed_event_content_tests.rs
+crates/lkjstr-ui/src/workspace/feed_event_link.rs
+crates/lkjstr-ui/src/workspace/feed_event_media.rs
+crates/lkjstr-ui/src/workspace/feed_event_open.rs
+crates/lkjstr-ui/src/workspace/feed_event_row.rs
+crates/lkjstr-ui/src/workspace/feed_event_sensitive.rs
+crates/lkjstr-ui/src/workspace/global_older.rs
+crates/lkjstr-ui/src/workspace/mod.rs
+crates/lkjstr-ui/src/workspace/notifications_older.rs
+crates/lkjstr-ui/src/workspace/search.rs
+crates/lkjstr-ui/src/workspace/thread_older.rs
+crates/lkjstr-web/tests/README.md
+crates/lkjstr-web/tests/author_context_tab_test.rs
+docs/architecture/rust-wasm/cutover/deletion-ledger.md
+docs/architecture/rust-wasm/cutover/feed-runtime.md
+docs/architecture/rust-wasm/cutover/implementation-ledger.md
+docs/architecture/rust-wasm/cutover/parity-ledger.md
+docs/architecture/workspace/ui-system/reaction-surfaces.md
+docs/current-state.md
+docs/execution/tasks/custom-request-provider-wiring.md
+docs/execution/tasks/followees-provider-wiring.md
+docs/execution/tasks/home-feed-provider-wiring.md
+docs/execution/tasks/profile-feed-provider-wiring.md
+docs/execution/tasks/search-feed-provider-wiring.md
+docs/execution/tasks/thread-feed-provider-wiring.md
+docs/product/tools/event-actions.md
+src/lib/components/events/*.svelte
+src/lib/components/events/*-plan.ts
+src/lib/tabs/notifications/notification-list-state.ts
+tests/unit/events/*.test.ts
+tests/unit/repo-deleted-paths.test.ts
+```
+
+主な untracked files:
+
+```text
+crates/lkjstr-ui/src/workspace/feed_event_action_policy.rs
+crates/lkjstr-ui/src/workspace/feed_event_content_plan.rs
+crates/lkjstr-ui/src/workspace/feed_event_content_plan_tests.rs
+crates/lkjstr-ui/src/workspace/feed_event_copy_status.rs
+crates/lkjstr-ui/src/workspace/feed_event_open_tests.rs
+crates/lkjstr-ui/src/workspace/feed_event_row_activation.rs
+crates/lkjstr-ui/src/workspace/search_older.rs
+crates/lkjstr-ui/src/workspace/search_run.rs
+src/lib/components/events/ContentTokenLink.svelte
+src/lib/components/events/EventActionIconButton.svelte
+src/lib/components/events/EventActionInlinePanel.svelte
+src/lib/components/events/EventContentWarning.svelte
+src/lib/components/events/EventRowFrame.svelte
+src/lib/components/events/EventZapInvoiceRow.svelte
+src/lib/components/events/ReactionSummaryActorRow.svelte
+src/lib/components/events/*-plan.ts
+tests/unit/events/*-presenter.test.ts
+tests/unit/events/*-plan.test.ts
+```
+
+この一覧は分類用です。正確な現状は必ず `git status --short` で再確認してください。
+
+## Recommended next commands
+
+最初の現状確認:
 
 ```sh
-git log --oneline -5
+git log --oneline -6
 git status --short
-git diff --name-status
-git diff --cached --name-status
+git diff --stat
 ```
 
-その後:
-
-1. 最新 commit が今回の User Timeline status/read cleanup commit になっていることを確認。
-2. 残 dirty worktree を領域別に読む。
-3. まず read-only mapping をする。すぐ実装しない。
-4. 次 slice の invariant と focused gate を決める。
-5. explicit path list で staging。
-6. `git diff --cached --check` と focused tests を通す。
-7. docs/ledger の line cap を守る。
-
-避ける command:
+Followees commit 後の確認:
 
 ```sh
-git add -A
-git add .
-git restore .
-git reset --hard
+git show --stat --oneline HEAD
+git show --name-only --oneline HEAD
 ```
 
-## Staging boundary の補足
+次 slice を選んだら:
 
-`tmp/` は `.gitignore` で ignored されていますが、この file は既に tracked です。
-新規 tmp file を追加する場合は `git add -f` が必要です。
-既存 tracked file の更新は通常 staging できますが、ignore の影響を避けるため明示的に扱ってください。
+```sh
+git diff -- <candidate-files>
+```
 
-## 最終 stop condition
+then run the narrowest focused tests first. Shared feed/runtime なら、必要に応じて:
 
-ここで追加実装は止めるべきです。
+```sh
+cargo test -p lkjstr-ui <surface-or-helper>
+cargo test -p lkjstr-app -- feed
+pnpm test -- tests/unit/feed-surface
+pnpm check:repo
+```
 
-今回の stop condition:
+Rust/WASM/browser proof が必要なら:
 
-- User Timeline status/read cleanup slice は focused verification 済み。
-- handoff は `tmp/gpt-5.5-pro-handoff-2026-06-20.md` に更新済み。
-- commit はこの file と staged slice を含めて作る。
-- 残 dirty worktree は意図的に残す。
-- Shared feed runtime 完了 claim はしない。
+```sh
+wasm-pack test --headless --chrome \
+  --chromedriver /home/lkjsxc/.cache/.wasm-pack/chromedriver-d553f1d224c55714/chromedriver \
+  <crate> --test <test-name>
+```
 
-## 最後に
+## Stop condition for this handoff
 
-次の判断で一番重要なのは、「どのコードを変えるか」ではなく「どの invariant を今回の commit が証明するか」です。
+この handoff の停止条件:
 
-現在のリスクは、複数の正しい方向の変更が同じ worktree に混在し、commit と verification の境界が曖昧になることです。
-GPT-5.5-Pro には、残 dirty worktree を実装内容ではなく証明可能な slice に分解する方針を考えてほしいです。
+- Followees read-command cleanup が focused tests で pass。
+- 関連 source/docs/handoff だけ explicit staging。
+- repo/doc/line/static checks を通す。
+- Lore protocol commit を作る。
+- broader dirty worktree は残すが、未検証として明記する。
+
+ここまで終わったら、GPT-5.5-Pro は次の high-level 解決策検討に入れます。

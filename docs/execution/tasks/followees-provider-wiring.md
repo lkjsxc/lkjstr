@@ -24,6 +24,9 @@ proof exist.
   metadata when supplied, and absence is not claimed before proof.
 - `crates/lkjstr-ui/src/workspace/followees.rs` renders a real Followees body
   from `FolloweesView`; `followees_header.rs` renders cached target metadata.
+- `crates/lkjstr-ui/src/workspace/followees_read.rs` owns initial and retry
+  read-command leases and releases replaced or provider-unavailable requests
+  before dispatching reads.
 - `crates/lkjstr-ui/src/workspace/followees_row.rs` renders followee rows as
   profile buttons only when a real profile callback exists; otherwise rows stay
   static, and uses `Unknown` instead of compact raw pubkey labels until real
@@ -121,6 +124,8 @@ pnpm rust-wasm:quiet
 - Cleanup closes selected-relay reads and suppresses late relay completions.
 - Selected-relay no-event reads complete to retryable diagnostics and retry
   starts a new bounded read without claiming absence.
+- Replaced or provider-unavailable Followees initial/retry commands release the
+  active provider lease before the next read state is dispatched.
 - Profile opening proof reaches the real Followees body.
 - The shipped Followees tab uses only generic Svelte lifecycle host glue for
   the Rust island and releases it on visibility changes or destruction.
