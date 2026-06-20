@@ -96,8 +96,9 @@ actions, reaction summaries, zaps, emoji, and media.
 - `EventRowFrame.svelte` renders retained full/fragmented row frame chrome,
   interactive role/tab stop, depth style, and success-highlight class from the
   focused row presentation and activation plans.
-- `EventRowAvatar.svelte` renders retained row avatar profile-open chrome from
-  the focused row presentation and profile activation plans.
+- `EventRowAvatar.svelte` renders retained row avatar profile-open chrome and
+  shared avatar body from the focused row presentation and profile activation
+  plans.
 - `event-row-activation.ts` owns retained event-row click/key open dispatch,
   local-control suppression, and success-highlight scheduling/cleanup while
   Svelte rows remain shipped.

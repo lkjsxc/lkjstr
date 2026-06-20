@@ -46,11 +46,10 @@ Keep new run evidence in the table below unless a narrative note is required.
 
 ## Recent Focused Evidence
 
-Latest focused note: on 2026-06-20, retained mention chips, reaction actors,
-media open buttons, and author metadata render duplicate Svelte chrome through
-shared snippets fed by focused plans. Focused media/metadata/mention/reaction
-tests, ESLint, formatting, Svelte check, repo/docs/line guards, whitespace,
-quiet Rust/WASM, and quiet verify passed. Docker was not rerun.
+Latest focused note: on 2026-06-20, retained mention/reaction/media/metadata/avatar
+Svelte chrome uses shared snippets. Focused tests, ESLint, formatting, Svelte
+check, repo/docs/line guards, whitespace, and quiet verify passed. Rust/WASM
+quiet hung in followees_relay_provider_test; Docker was not rerun.
 
 Previous focused note: on 2026-06-18, the Home anchor browser proofs and Docker
 final gate passed; the detailed command list is recorded below.
