@@ -1,4 +1,4 @@
-use leptos::prelude::*;
+use leptos::{ev::MouseEvent, prelude::*};
 use lkjstr_app::feed::FeedEventLink;
 
 #[derive(Clone, Debug, Eq, PartialEq)]
@@ -13,6 +13,7 @@ struct FeedEventLinkAttrs {
 
 pub(super) fn event_link(link: FeedEventLink) -> impl IntoView {
     let attrs = event_link_attrs(&link);
+    let stop_link_click = |event: MouseEvent| event.stop_propagation();
     view! {
         <a
             class="event-link"
@@ -21,6 +22,7 @@ pub(super) fn event_link(link: FeedEventLink) -> impl IntoView {
             rel=attrs.rel
             data-row-key=attrs.row_key
             data-item-index=attrs.item_index
+            on:click=stop_link_click
         >
             {attrs.text}
         </a>

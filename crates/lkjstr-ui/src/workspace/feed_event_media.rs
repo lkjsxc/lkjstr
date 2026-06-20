@@ -1,4 +1,4 @@
-use leptos::prelude::*;
+use leptos::{ev::MouseEvent, prelude::*};
 use lkjstr_app::feed::{FeedEventMediaAttachment, FeedEventMediaKind};
 
 #[derive(Clone, Debug, Eq, PartialEq)]
@@ -9,6 +9,7 @@ struct MediaAttachmentAttrs {
     kind: FeedEventMediaKind,
     aspect_ratio: Option<String>,
     loading: &'static str,
+    decoding: &'static str,
     referrer_policy: &'static str,
 }
 
@@ -32,6 +33,7 @@ pub(super) fn media_attachment(media: FeedEventMediaAttachment) -> impl IntoView
 }
 
 fn media_image(attrs: MediaAttachmentAttrs) -> impl IntoView {
+    let stop_image_click = |event: MouseEvent| event.stop_propagation();
     view! {
         <a
             class="media-embed media-embed--image-link"
@@ -40,6 +42,7 @@ fn media_image(attrs: MediaAttachmentAttrs) -> impl IntoView {
             rel="noopener noreferrer"
             data-row-key=attrs.row_key
             data-item-index=attrs.item_index
+            on:click=stop_image_click
         >
             <span
                 class="media-embed__image-box"
@@ -50,6 +53,7 @@ fn media_image(attrs: MediaAttachmentAttrs) -> impl IntoView {
                     src=attrs.url.clone()
                     alt=""
                     loading=attrs.loading
+                    decoding=attrs.decoding
                     referrerpolicy=attrs.referrer_policy
                 />
             </span>
@@ -59,6 +63,8 @@ fn media_image(attrs: MediaAttachmentAttrs) -> impl IntoView {
 
 fn media_video(attrs: MediaAttachmentAttrs) -> impl IntoView {
     let link = media_open_link_attrs(&attrs, "Open video");
+    let stop_video_click = |event: MouseEvent| event.stop_propagation();
+    let stop_link_click = |event: MouseEvent| event.stop_propagation();
     view! {
         <div
             class="media-embed media-embed--video"
@@ -66,13 +72,14 @@ fn media_video(attrs: MediaAttachmentAttrs) -> impl IntoView {
             data-row-key=attrs.row_key
             data-item-index=attrs.item_index
         >
-            <video src=attrs.url.clone() controls></video>
+            <video src=attrs.url.clone() controls on:click=stop_video_click></video>
             <a
                 href=link.url
                 target=link.target
                 rel=link.rel
                 data-row-key=link.row_key
                 data-item-index=link.item_index
+                on:click=stop_link_click
             >
                 {link.label}
             </a>
@@ -82,19 +89,22 @@ fn media_video(attrs: MediaAttachmentAttrs) -> impl IntoView {
 
 fn media_audio(attrs: MediaAttachmentAttrs) -> impl IntoView {
     let link = media_open_link_attrs(&attrs, "Open audio");
+    let stop_audio_click = |event: MouseEvent| event.stop_propagation();
+    let stop_link_click = |event: MouseEvent| event.stop_propagation();
     view! {
         <div
             class="media-embed media-embed--audio"
             data-row-key=attrs.row_key
             data-item-index=attrs.item_index
         >
-            <audio src=attrs.url.clone() controls></audio>
+            <audio src=attrs.url.clone() controls on:click=stop_audio_click></audio>
             <a
                 href=link.url
                 target=link.target
                 rel=link.rel
                 data-row-key=link.row_key
                 data-item-index=link.item_index
+                on:click=stop_link_click
             >
                 {link.label}
             </a>
@@ -110,6 +120,7 @@ fn media_attachment_attrs(media: &FeedEventMediaAttachment) -> MediaAttachmentAt
         kind: media.kind.clone(),
         aspect_ratio: media.aspect_ratio.clone(),
         loading: "lazy",
+        decoding: "async",
         referrer_policy: "no-referrer",
     }
 }
@@ -148,6 +159,7 @@ mod tests {
                 kind: FeedEventMediaKind::Image,
                 aspect_ratio: Some("4 / 3".to_owned()),
                 loading: "lazy",
+                decoding: "async",
                 referrer_policy: "no-referrer",
             }
         );

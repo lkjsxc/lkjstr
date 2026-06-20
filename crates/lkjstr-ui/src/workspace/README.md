@@ -24,6 +24,7 @@ New Tab chooser, and converted Rust tool bodies.
 - `feed_event_action_policy.rs`: shared Rust feed action click policy.
 - `feed_event_copy_status.rs`: shared Rust event-id copy status lifecycle.
 - `feed_event_content.rs`: shared Rust feed event-row content rendering.
+- `feed_event_content_plan.rs`: shared Rust feed content-row render planning.
 - `feed_event_link.rs`: shared Rust feed safe external link rendering.
 - `feed_event_menu.rs`: shared Rust feed nearby/copy event menu rendering.
 - `feed_event_media.rs`: shared Rust feed media attachment rendering.

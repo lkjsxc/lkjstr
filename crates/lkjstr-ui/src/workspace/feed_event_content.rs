@@ -3,12 +3,16 @@ use lkjstr_app::feed::{
     FeedEventContent, FeedEventContentRow, FeedEventCustomEmoji, FeedEventUnavailablePreview,
 };
 
+#[path = "feed_event_content_plan.rs"]
+mod feed_event_content_plan;
+
 use super::feed_event_link::event_link;
 use super::feed_event_media::media_attachment;
 use super::feed_event_profile_mention::profile_mention;
 use super::feed_event_reference::reference_unavailable;
 use super::feed_event_repost_target::{repost_target, repost_target_shell};
 use super::feed_event_sensitive::sensitive_warning;
+use feed_event_content_plan::{FeedEventContentRowRenderPlan, content_row_render_plan};
 
 #[derive(Clone, Debug, Eq, PartialEq)]
 struct CustomEmojiImageAttrs {
@@ -18,8 +22,10 @@ struct CustomEmojiImageAttrs {
     src: String,
     alt: String,
     title: String,
+    fallback_text: String,
     address: String,
     loading: &'static str,
+    decoding: &'static str,
     referrer_policy: &'static str,
 }
 #[derive(Clone, Debug, Eq, PartialEq)]
@@ -77,25 +83,31 @@ fn content_row(
     open_profile: Option<Callback<String>>,
     open_thread: Option<Callback<String>>,
 ) -> AnyView {
-    match row {
-        FeedEventContentRow::Text(text) => view! { <p>{text}</p> }.into_any(),
-        FeedEventContentRow::Link(link) => event_link(link).into_any(),
-        FeedEventContentRow::ProfileMention(mention) => {
-            profile_mention(mention, open_profile).into_any()
+    let plan = content_row_render_plan(row);
+    let openers = plan.openers();
+    let profile_opener = openers.profile.then_some(open_profile).flatten();
+    let thread_opener = openers.thread.then_some(open_thread).flatten();
+    match plan {
+        FeedEventContentRowRenderPlan::Text(text) => view! { <p>{text}</p> }.into_any(),
+        FeedEventContentRowRenderPlan::Link(link) => event_link(link).into_any(),
+        FeedEventContentRowRenderPlan::ProfileMention(mention) => {
+            profile_mention(mention, profile_opener).into_any()
         }
-        FeedEventContentRow::CustomEmoji(emoji) => custom_emoji(emoji).into_any(),
-        FeedEventContentRow::MediaAttachment(media) => media_attachment(media).into_any(),
-        FeedEventContentRow::RepostTarget(target) => {
-            repost_target(target, open_profile, open_thread)
+        FeedEventContentRowRenderPlan::CustomEmoji(emoji) => custom_emoji(emoji).into_any(),
+        FeedEventContentRowRenderPlan::MediaAttachment(media) => media_attachment(media).into_any(),
+        FeedEventContentRowRenderPlan::RepostTarget(target) => {
+            repost_target(target, profile_opener, thread_opener)
         }
-        FeedEventContentRow::RepostTargetShell(shell) => repost_target_shell(shell).into_any(),
-        FeedEventContentRow::MediaPreviewUnavailable(preview) => {
+        FeedEventContentRowRenderPlan::RepostTargetShell(shell) => {
+            repost_target_shell(shell).into_any()
+        }
+        FeedEventContentRowRenderPlan::MediaPreviewUnavailable(preview) => {
             unavailable_preview(preview, "Media preview unavailable").into_any()
         }
-        FeedEventContentRow::ReferenceUnavailable(reference) => {
-            reference_unavailable(reference, open_thread).into_any()
+        FeedEventContentRowRenderPlan::ReferenceUnavailable(reference) => {
+            reference_unavailable(reference, thread_opener).into_any()
         }
-        FeedEventContentRow::ReferencePreviewUnavailable(preview) => {
+        FeedEventContentRowRenderPlan::ReferencePreviewUnavailable(preview) => {
             unavailable_preview(preview, "Reference preview unavailable").into_any()
         }
     }
@@ -126,20 +138,40 @@ fn unavailable_preview_attrs(
 
 fn custom_emoji(emoji: FeedEventCustomEmoji) -> impl IntoView {
     let attrs = custom_emoji_image_attrs(&emoji);
+    let failed = RwSignal::new(false);
     view! {
         <p>
-            <img
-                class=attrs.class_name
-                src=attrs.src
-                alt=attrs.alt
-                title=attrs.title
-                data-address=attrs.address
-                data-row-key=attrs.row_key
-                data-item-index=attrs.item_index
-                loading=attrs.loading
-                referrerpolicy=attrs.referrer_policy
-            />
+            {move || {
+                if failed.get() {
+                    custom_emoji_fallback(&attrs).into_any()
+                } else {
+                    custom_emoji_image(&attrs, failed).into_any()
+                }
+            }}
         </p>
+    }
+}
+
+fn custom_emoji_fallback(attrs: &CustomEmojiImageAttrs) -> impl IntoView {
+    view! { <span class="custom-emoji-fallback">{attrs.fallback_text.clone()}</span> }
+}
+
+fn custom_emoji_image(attrs: &CustomEmojiImageAttrs, failed: RwSignal<bool>) -> impl IntoView {
+    let mark_failed = move |_| failed.set(true);
+    view! {
+        <img
+            class=attrs.class_name
+            src=attrs.src.clone()
+            alt=attrs.alt.clone()
+            title=attrs.title.clone()
+            data-address=attrs.address.clone()
+            data-row-key=attrs.row_key.clone()
+            data-item-index=attrs.item_index.clone()
+            loading=attrs.loading
+            decoding=attrs.decoding
+            referrerpolicy=attrs.referrer_policy
+            on:error=mark_failed
+        />
     }
 }
 
@@ -152,8 +184,10 @@ fn custom_emoji_image_attrs(emoji: &FeedEventCustomEmoji) -> CustomEmojiImageAtt
         src: emoji.url.clone(),
         alt: token.clone(),
         title: token,
+        fallback_text: format!(":{}:", emoji.shortcode),
         address: emoji.address.clone().unwrap_or_default(),
         loading: "lazy",
+        decoding: "async",
         referrer_policy: "no-referrer",
     }
 }
