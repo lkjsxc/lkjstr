@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest';
+import type { FeedVisualFragment } from '../../../src/lib/feed-surface/feed-visual-fragments';
 import type { EventActionState } from '../../../src/lib/events/action-state';
 import type { FlatEventTreeItem } from '../../../src/lib/events/tree';
 import type { ProfileSummary } from '../../../src/lib/identity/identity';
@@ -6,10 +7,24 @@ import type {
   ReactionSummaryMap,
   RepostSummaryMap,
 } from '../../../src/lib/thread/thread-reactions';
-import { eventTreeListRowData } from '../../../src/lib/components/events/event-tree-list-row-plan';
+import type { EventTreeListViewRow } from '../../../src/lib/components/events/event-tree-list-helpers';
+import {
+  eventTreeListRowData,
+  eventTreeListRowRenderPlan,
+} from '../../../src/lib/components/events/event-tree-list-row-plan';
 
 const pubkey = 'a'.repeat(64);
 const otherPubkey = 'b'.repeat(64);
+const hiddenContinuation = { visible: false } as const;
+const visibleContinuation = {
+  visible: true,
+  canOpenThread: false,
+  depth: 0,
+  hiddenCount: 1,
+  targetId: 'event1',
+  buttonText: 'Continue thread (1)',
+  unavailableText: '1 hidden thread item(s) unavailable.',
+} as const;
 
 describe('event tree list row plan', () => {
   it('projects profile, action, reaction, and repost state by real event identity', () => {
@@ -59,6 +74,64 @@ describe('event tree list row plan', () => {
       reposts: undefined,
     });
   });
+
+  it('plans retained row render branches without changing row state', () => {
+    expect(
+      eventTreeListRowRenderPlan({
+        row: { kind: 'leading', row: { key: 'top' } },
+        continuation: hiddenContinuation,
+      }),
+    ).toMatchObject({ kind: 'leading' });
+    expect(
+      eventTreeListRowRenderPlan({
+        row: { kind: 'terminal' },
+        continuation: hiddenContinuation,
+      }),
+    ).toEqual({ kind: 'terminal' });
+    expect(
+      eventTreeListRowRenderPlan({
+        row: { kind: 'loadingOlder' },
+        continuation: hiddenContinuation,
+      }),
+    ).toEqual({ kind: 'loadingOlder' });
+    expect(
+      eventTreeListRowRenderPlan({
+        row: { kind: 'empty', text: 'No events.' },
+        continuation: hiddenContinuation,
+      }),
+    ).toMatchObject({ kind: 'empty', row: { text: 'No events.' } });
+    expect(
+      eventTreeListRowRenderPlan({
+        row: eventRow('event1'),
+        continuation: hiddenContinuation,
+      }),
+    ).toMatchObject({ kind: 'event' });
+    expect(
+      eventTreeListRowRenderPlan({
+        row: eventRow('event1'),
+        continuation: visibleContinuation,
+      }),
+    ).toEqual({ kind: 'continuation', continuation: visibleContinuation });
+    expect(
+      eventTreeListRowRenderPlan({
+        row: eventFragmentRow('event1'),
+        continuation: hiddenContinuation,
+      }),
+    ).toMatchObject({ kind: 'eventFragment' });
+  });
+
+  it('preserves the retained no-render fallback for malformed event rows', () => {
+    expect(
+      eventTreeListRowRenderPlan({
+        row: {
+          kind: 'event',
+          node: { depth: 0 },
+          visualIndex: 0,
+        } as unknown as EventTreeListViewRow,
+        continuation: hiddenContinuation,
+      }),
+    ).toEqual({ kind: 'hidden' });
+  });
 });
 
 function node(id: string, author: string): FlatEventTreeItem {
@@ -76,6 +149,26 @@ function node(id: string, author: string): FlatEventTreeItem {
     children: [],
     depth: 0,
   } as FlatEventTreeItem;
+}
+
+function eventRow(id: string): EventTreeListViewRow {
+  return { kind: 'event', node: node(id, pubkey), visualIndex: 0 };
+}
+
+function eventFragmentRow(id: string): EventTreeListViewRow {
+  return {
+    kind: 'eventFragment',
+    node: node(id, pubkey),
+    visualIndex: 0,
+    fragment: {
+      kind: 'event-text-segment',
+      rowKey: `${id}:fragment`,
+      segmentIndex: 0,
+      text: 'chunk',
+      startsAt: 0,
+      endsAt: 5,
+    } as FeedVisualFragment,
+  };
 }
 
 function profileSummary(author: string, displayName: string): ProfileSummary {

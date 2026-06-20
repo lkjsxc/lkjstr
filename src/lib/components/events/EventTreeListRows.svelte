@@ -19,7 +19,10 @@
     continuationPlanForViewRow,
     openContinuationThread,
   } from './event-tree-list-continuation-plan';
-  import { eventTreeListRowData } from './event-tree-list-row-plan';
+  import {
+    eventTreeListRowData,
+    eventTreeListRowRenderPlan,
+  } from './event-tree-list-row-plan';
 
   type Props = {
     node: EventTreeListViewRow;
@@ -37,9 +40,6 @@
   };
 
   let props: Props = $props();
-  let eventNode = $derived(
-    props.node.kind === 'event' ? props.node.node : undefined,
-  );
   let rowData = $derived(
     props.node.kind === 'event' || props.node.kind === 'eventFragment'
       ? eventTreeListRowData({
@@ -54,40 +54,47 @@
   let continuation = $derived(
     continuationPlanForViewRow(props.node, props.openThread),
   );
+  let render = $derived(
+    eventTreeListRowRenderPlan({
+      row: props.node,
+      continuation,
+    }),
+  );
 </script>
 
-{#if props.node.kind === 'leading'}
+{#if render.kind === 'leading'}
   {#if props.leadingRow}
-    {@render props.leadingRow(props.node.row)}
+    {@render props.leadingRow(render.row.row)}
   {/if}
-{:else if props.node.kind === 'terminal'}
+{:else if render.kind === 'terminal'}
   <FeedSurfaceStatus phase="end" />
-{:else if props.node.kind === 'loadingOlder'}
+{:else if render.kind === 'loadingOlder'}
   <FeedSurfaceStatus phase="loadingOlder" />
-{:else if props.node.kind === 'empty'}
-  <p class="event-list__empty">{props.node.text}</p>
-{:else if continuation.visible}
-  {#if continuation.canOpenThread}
+{:else if render.kind === 'empty'}
+  <p class="event-list__empty">{render.row.text}</p>
+{:else if render.kind === 'continuation'}
+  {#if render.continuation.canOpenThread}
     <button
       type="button"
       class="thread-continuation"
-      style={`--event-depth: ${continuation.depth}`}
-      onclick={() => openContinuationThread(continuation, props.openThread)}
+      style={`--event-depth: ${render.continuation.depth}`}
+      onclick={() =>
+        openContinuationThread(render.continuation, props.openThread)}
     >
-      {continuation.buttonText}
+      {render.continuation.buttonText}
     </button>
   {:else}
     <p
       class="thread-continuation"
-      style={`--event-depth: ${continuation.depth}`}
+      style={`--event-depth: ${render.continuation.depth}`}
     >
-      {continuation.unavailableText}
+      {render.continuation.unavailableText}
     </p>
   {/if}
-{:else if props.node.kind === 'eventFragment'}
+{:else if render.kind === 'eventFragment'}
   <EventFragmentRow
-    node={props.node.node}
-    fragment={props.node.fragment}
+    node={render.row.node}
+    fragment={render.row.fragment}
     profile={rowData?.profile}
     relaySets={props.relaySets}
     activeAccountPubkey={props.activeAccountPubkey}
@@ -100,10 +107,10 @@
     openThread={props.openThread}
     openAuthorContext={props.openAuthorContext}
   />
-{:else if eventNode && 'event' in eventNode}
+{:else if render.kind === 'event'}
   <EventRow
-    item={eventNode}
-    depth={eventNode.depth}
+    item={render.row.node}
+    depth={render.row.node.depth}
     profile={rowData?.profile}
     relaySets={props.relaySets}
     activeAccountPubkey={props.activeAccountPubkey}
