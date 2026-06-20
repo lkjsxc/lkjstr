@@ -3,7 +3,7 @@ import {
   createEventMetaCopyStatusResetter,
   eventMetaCopyStatusResetPlan,
   type EventMetaCopyStatus,
-} from '../../../src/lib/components/events/event-meta-overflow';
+} from '../../../src/lib/components/events/event-meta-copy-status';
 
 describe('event meta copy status lifecycle', () => {
   it('keeps retained copy status reset timing explicit', () => {

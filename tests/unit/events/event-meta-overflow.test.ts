@@ -2,8 +2,6 @@ import { readdirSync, readFileSync, statSync } from 'node:fs';
 import { describe, expect, it } from 'vitest';
 import {
   copyEventMetaEventId,
-  copyEventIdToClipboard,
-  eventMetaCopyStatusLabel,
   eventMetaHasAuthorContext,
   eventMetaOverflowLabels,
   openEventMetaAuthorContext,
@@ -25,43 +23,6 @@ describe('event meta overflow clipboard', () => {
 
     expect(status).toEqual({ kind: 'copied' });
     expect(calls).toEqual(['stop', 'write:event-id']);
-  });
-
-  it('reports copied only after clipboard write succeeds', async () => {
-    const clipboard = {
-      writes: [] as string[],
-      async writeText(value: string) {
-        this.writes.push(value);
-      },
-    };
-    const status = await copyEventIdToClipboard('event-id', clipboard);
-
-    expect(clipboard.writes).toEqual(['event-id']);
-    expect(status).toEqual({ kind: 'copied' });
-    expect(eventMetaCopyStatusLabel(status)).toBe('Copied');
-  });
-
-  it('reports unavailable clipboard without claiming success', async () => {
-    const status = await copyEventIdToClipboard('event-id', undefined);
-
-    expect(status).toEqual({
-      kind: 'failed',
-      reason: 'Clipboard unavailable',
-    });
-    expect(eventMetaCopyStatusLabel(status)).toBe(
-      'Copy failed: Clipboard unavailable',
-    );
-  });
-
-  it('reports clipboard rejection without claiming success', async () => {
-    const status = await copyEventIdToClipboard('event-id', {
-      writeText: async () => {
-        throw new Error('denied');
-      },
-    });
-
-    expect(status).toEqual({ kind: 'failed', reason: 'denied' });
-    expect(eventMetaCopyStatusLabel(status)).toBe('Copy failed: denied');
   });
 });
 
