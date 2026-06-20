@@ -1,7 +1,7 @@
 <script lang="ts">
-  import { tokenizeText } from '$lib/events/content-tokens';
   import type { CustomEmoji } from '$lib/protocol';
   import CustomEmojiImage from './CustomEmojiImage.svelte';
+  import { planEmojifiedText } from './emojified-text-plan';
 
   type Props = {
     text: string;
@@ -9,13 +9,13 @@
   };
 
   let props: Props = $props();
-  let tokens = $derived(tokenizeText(props.text, new Set(), props.emojis));
+  let tokens = $derived(planEmojifiedText(props.text, props.emojis));
 </script>
 
-{#each tokens as token, index (`${index}:${token.type}`)}
-  {#if token.type === 'custom-emoji'}
-    <CustomEmojiImage emoji={token} />
+{#each tokens as item (item.key)}
+  {#if item.token.type === 'custom-emoji'}
+    <CustomEmojiImage emoji={item.token} />
   {:else}
-    {token.text}
+    {item.token.text}
   {/if}
 {/each}
