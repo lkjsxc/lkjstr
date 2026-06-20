@@ -86,12 +86,12 @@ closing gates so this concise matrix stays readable.
 
 | Clause                        | Contract                                                                   | Status      | Notes                                                   |
 | ----------------------------- | -------------------------------------------------------------------------- | ----------- | ------------------------------------------------------- |
-| IO near-end sentinel          | [feed-surface/near-end.md](../architecture/data/feed-surface/near-end.md)  | implemented | `near-end-observer.ts`, `EventTreeListNearEnd`          |
+| IO near-end sentinel          | [feed-surface/near-end.md](../architecture/data/feed-surface/near-end.md)  | implemented | `EventTreeListNearEnd` owns observer lifecycle          |
 | Scroll fallback               | [near-end.md](../architecture/data/feed-surface/near-end.md)               | implemented | `isNearEnd` in feed-window                              |
 | 2x viewport margin            | near-end.md                                                                | implemented | `nearEndThreshold` uses `viewport * 2`                  |
 | `feedPagingPhase` footer      | [footer-phase.md](../architecture/data/feed-surface/footer-phase.md)       | implemented | `footer-phase.ts`, `FeedSurfaceStatus`                  |
 | `FeedSurfaceStatus` all feeds | footer-phase.md                                                            | implemented | Including Notifications native list                     |
-| Speculative older             | [feed-surface.md](../architecture/data/feed-surface.md)                    | implemented | Search uses coordinator                                 |
+| Speculative older             | [near-end.md](../architecture/data/feed-surface/near-end.md)               | implemented | Timeline tab coordinator                                |
 | Staged row pipeline           | [staged-pipeline.md](../architecture/data/feed-surface/staged-pipeline.md) | implemented | Home/Global/Profile/Thread                              |
 | Notifications list mode       | [surface-matrix.md](../architecture/data/feed-surface/surface-matrix.md)   | implemented | Virtua flat list via `FeedScrollSurface`, shared footer |
 

@@ -7,7 +7,7 @@ import {
   pinVisibleEvents,
   pinnedEventIds,
 } from '../../../src/lib/cache/pins';
-import { notificationOpenReferenceIds } from '../../../src/lib/feed-surface/notification-view-rows';
+import { notificationOpenReferenceIds } from '../../../src/lib/notifications/notification-view-rows';
 import type { NotificationRecord } from '../../../src/lib/notifications/notification';
 
 describe('cache pins', () => {

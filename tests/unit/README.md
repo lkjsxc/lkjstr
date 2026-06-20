@@ -14,6 +14,7 @@ This directory contains Vitest unit tests grouped by source domain.
 - [custom-request/](custom-request/): custom relay request tests.
 - [emoji/](emoji/): emoji palette tests.
 - [events/](events/): event parsing and repository tests.
+- [feed/](feed/): shared feed component helpers.
 - [feed-surface/](feed-surface/): shared feed paging tests.
 - [follow-graph/](follow-graph/): target follow-list tests.
 - [fp/](fp/): shared functional helper tests.

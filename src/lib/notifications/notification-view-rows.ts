@@ -1,4 +1,4 @@
-import type { NotificationRecord } from '$lib/notifications/notification';
+import type { NotificationRecord } from './notification';
 
 export type NotificationViewRow =
   | { readonly kind: 'record'; readonly record: NotificationRecord }

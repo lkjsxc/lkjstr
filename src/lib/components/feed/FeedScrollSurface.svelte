@@ -3,14 +3,13 @@
   import { VList } from 'virtua/svelte';
   import EventTreeListNearEnd from '$lib/components/events/EventTreeListNearEnd.svelte';
   import FeedMeasuredRow from './FeedMeasuredRow.svelte';
-  import { safeFeedRowKey } from '$lib/feed-surface/feed-scroll-key';
-  import { isNearEnd } from '$lib/feed-surface/near-end';
-  import type { OlderLoadTrigger } from '$lib/feed-surface/older-load-mode';
   import {
     consumeDownwardScrollIntent,
     createFeedScrollIntent,
     markDownwardScrollInput,
-  } from '$lib/feed-surface/scroll-intent';
+  } from './feed-scroll-intent';
+  import { isNearEnd } from '$lib/feed-surface/near-end';
+  import type { OlderLoadTrigger } from '$lib/feed-surface/older-load-mode';
 
   export type FeedScrollListHandle = {
     getViewportSize?: () => number;
@@ -61,7 +60,8 @@
   let hasIntentBaseline = false;
 
   function getSafeKey(item: unknown): string {
-    return safeFeedRowKey(item, getKey);
+    if (item === undefined || item === null) return '__feed-row-missing__';
+    return getKey(item);
   }
 
   function handleScroll(offset: number): void {

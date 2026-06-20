@@ -5,6 +5,11 @@ type Problem = { file: string; message: string };
 
 const deletedFeedSurfaceHelpers = new Set([
   path.join('src', 'lib', 'feed-surface', 'feed-geometry-estimate.ts'),
+  path.join('src', 'lib', 'feed-surface', 'feed-scroll-key.ts'),
+  path.join('src', 'lib', 'feed-surface', 'near-end-observer.ts'),
+  path.join('src', 'lib', 'feed-surface', 'notification-view-rows.ts'),
+  path.join('src', 'lib', 'feed-surface', 'scroll-intent.ts'),
+  path.join('src', 'lib', 'feed-surface', 'speculative-older.ts'),
   path.join('src', 'lib', 'feed-surface', 'staged-rows.ts'),
   path.join('src', 'lib', 'feed-surface', 'row-shell.ts'),
 ]);
@@ -22,6 +27,27 @@ const deletedPatterns = [
     pattern: /feed-geometry-estimate/,
     message:
       'deleted feed-surface feed-geometry-estimate.ts must not be imported',
+  },
+  {
+    pattern: /feed-scroll-key/,
+    message: 'deleted feed-surface feed-scroll-key.ts must not be imported',
+  },
+  {
+    pattern: /near-end-observer/,
+    message: 'deleted feed-surface near-end-observer.ts must not be imported',
+  },
+  {
+    pattern: /feed-surface\/notification-view-rows/,
+    message:
+      'deleted feed-surface notification-view-rows.ts must not be imported',
+  },
+  {
+    pattern: /feed-surface\/scroll-intent/,
+    message: 'deleted feed-surface scroll-intent.ts must not be imported',
+  },
+  {
+    pattern: /speculative-older/,
+    message: 'deleted feed-surface speculative-older.ts must not be imported',
   },
 ] as const;
 

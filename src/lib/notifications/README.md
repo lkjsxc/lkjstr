@@ -20,6 +20,7 @@ Notifications tab.
 | `notification-store.ts`        | Local notification storage     |
 | `notification-ledger.ts`       | Cache ledger score and bytes   |
 | `notification-window.ts`       | 180-record window              |
+| `notification-view-rows.ts`    | Scroll rows and open ref pins  |
 | `notification-relays.ts`       | Relay selection for `#p` reads |
 | `notification-presentation.ts` | Row labels and context         |
 

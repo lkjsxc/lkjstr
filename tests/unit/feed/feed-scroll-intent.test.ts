@@ -3,7 +3,7 @@ import {
   consumeDownwardScrollIntent,
   createFeedScrollIntent,
   markDownwardScrollInput,
-} from '../../../src/lib/feed-surface/scroll-intent';
+} from '../../../src/lib/components/feed/feed-scroll-intent';
 
 describe('feed scroll intent', () => {
   it('consumes a pending downward input on the next downward scroll', () => {

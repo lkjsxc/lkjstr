@@ -55,6 +55,8 @@ list chrome inside the scroll flow.
 ## Component Ownership
 
 - `src/lib/components/feed/FeedScrollSurface.svelte` owns the scroll shell.
+- `src/lib/components/feed/feed-scroll-intent.ts` records downward user scroll
+  intent before older paging.
 - `EventTreeList` builds leading rows, tree rows, empty rows, and footer rows,
   then passes them to `FeedScrollSurface`.
 - `NotificationListScroll` maps notification records and passes them to

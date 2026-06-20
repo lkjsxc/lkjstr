@@ -1,11 +1,11 @@
 import { describe, expect, it } from 'vitest';
-import { createOlderRequestCoordinator } from '../../../src/lib/feed-surface/speculative-older';
+import { createTimelineOlderRequestCoordinator } from '../../../src/lib/tabs/timeline/timeline-tab-older-requests';
 
-describe('speculative older coordinator', () => {
+describe('timeline older request coordinator', () => {
   it('loads twice when more history remains after the first page', async () => {
     let loads = 0;
     let hasOlder = true;
-    const coordinator = createOlderRequestCoordinator(
+    const coordinator = createTimelineOlderRequestCoordinator(
       async () => {
         loads += 1;
         if (loads >= 2) hasOlder = false;
@@ -18,7 +18,7 @@ describe('speculative older coordinator', () => {
 
   it('dedupes concurrent near-end requests', async () => {
     let loads = 0;
-    const coordinator = createOlderRequestCoordinator(
+    const coordinator = createTimelineOlderRequestCoordinator(
       async () => {
         loads += 1;
         await new Promise((resolve) => setTimeout(resolve, 5));

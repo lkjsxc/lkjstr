@@ -1,195 +1,57 @@
 <script lang="ts">
-  import { onDestroy } from 'svelte';
-  import { createOlderRequestCoordinator } from '$lib/feed-surface/speculative-older';
-  import { registerTabRuntimeSnapshot } from '$lib/workspace/tab-runtime-registry';
+  import { onMount } from 'svelte';
+  import { mountSearchIsland } from '$lib/components/workspace/search-island';
   import type { TabSnapshotPayload } from '$lib/workspace/tab-snapshot';
-  import EventTreeList from '$lib/components/events/EventTreeList.svelte';
-  import { cursorPoint, feedPageSize } from '$lib/events/feed-window';
-  import type { ProfileSummary } from '$lib/identity/identity';
-  import type { FeedEvent } from '$lib/events/types';
-  import type { RelaySet } from '$lib/relays/relay-store';
-  import { sharedSubscriptionOrchestrator } from '$lib/relays/orchestration/orchestrator';
-  import { searchDiagnosticsText, searchPage } from '$lib/search/search-query';
-  import { timelineRelays } from '$lib/timeline/timeline-subscription';
-  import { loadTimelineProfiles } from '$lib/timeline/timeline-profiles';
-  import {
-    feedEventsFromProgressiveSnapshot,
-    progressiveStatusText,
-  } from '$lib/timeline/timeline-progressive';
-  import type { TabFeedAnchor } from '$lib/workspace/tab-anchor-registry';
-  import { mergeSearchItems } from './search-tab-merge';
+
+  type SearchIslandHandle = {
+    unmount: () => void;
+  };
+
   type Props = {
     tabId: string;
-    visible?: boolean;
-    restoreAnchor?: TabFeedAnchor;
     restoreSnapshot?: TabSnapshotPayload;
-    relaySets: readonly RelaySet[];
     openProfile: (pubkey: string) => void;
     openThread: (eventId: string) => void;
-    openAuthorContext?: (eventId: string, pubkey: string) => void;
+    openAuthorContext: (eventId: string, pubkey: string) => void;
   };
 
   let props: Props = $props();
-  let query = $state('');
-  let items = $state<FeedEvent[]>([]);
-  let profiles = $state<Record<string, ProfileSummary>>({});
-  let loading = $state(false);
-  let loadingOlder = $state(false);
-  let hasOlder = $state(false);
-  let error = $state<string | null>(null);
-  let relayStatusText = $state('');
-  let searched = $state(false);
-  let requestId = 0;
-  let destroyed = false;
-  const subscriptions = sharedSubscriptionOrchestrator;
-  const olderRequests = createOlderRequestCoordinator(
-    () => loadOlder(),
-    () => Boolean(hasOlder && !loadingOlder),
-  );
+  let islandRoot: HTMLElement;
+  let loadError = $state('');
 
-  $effect(() => {
-    const saved = props.restoreSnapshot;
-    if (saved?.kind === 'feed' && saved.filterState?.searchQuery)
-      query = saved.filterState.searchQuery;
-  });
-
-  $effect(() => {
-    const tabId = props.tabId;
-    return registerTabRuntimeSnapshot(tabId, () => ({
-      kind: 'feed',
-      filterState: { searchQuery: query },
-    }));
-  });
-
-  onDestroy(() => {
-    destroyed = true;
-    subscriptions.releaseOwner(props.tabId);
-  });
-
-  $effect(() => {
-    if (!props.visible) return;
-    const pubkeys = [...new Set(items.map((item) => item.event.pubkey))].filter(
-      (pubkey) => !profiles[pubkey],
-    );
-    if (pubkeys.length === 0) return;
-    const id = ++requestId;
-    void loadTimelineProfiles(
-      pubkeys.slice(0, 30),
-      timelineRelays(props.relaySets),
-      `${props.tabId}:search-profiles`,
-    ).then((loaded) => {
-      if (!destroyed && id === requestId) profiles = { ...profiles, ...loaded };
-    });
-  });
-
-  async function runSearch(): Promise<void> {
-    const term = query.trim();
-    if (!term) return;
-    searched = true;
-    loading = true;
-    relayStatusText = '';
-    error = null;
-    try {
-      const page = await searchPage({
-        query: term,
-        relays: timelineRelays(props.relaySets),
-        owner: props.tabId,
-        subscriptions,
-        limit: feedPageSize,
-        onSnapshot: (snapshot) => {
-          if (destroyed) return;
-          if (snapshot.events.length > 0)
-            items = mergeSearchItems(
-              items,
-              feedEventsFromProgressiveSnapshot(snapshot),
-            );
-          relayStatusText = progressiveStatusText(snapshot.status);
-        },
+  onMount(() => {
+    let canceled = false;
+    let handle: SearchIslandHandle | undefined;
+    void mountSearchIsland(islandRoot, {
+      tabId: props.tabId,
+      restoreSnapshot: props.restoreSnapshot,
+      openProfile: props.openProfile,
+      openThread: props.openThread,
+      openAuthorContext: props.openAuthorContext,
+    })
+      .then((mounted) => {
+        if (canceled) {
+          mounted.unmount();
+          return;
+        }
+        handle = mounted;
+      })
+      .catch((error: unknown) => {
+        if (canceled) return;
+        loadError =
+          error instanceof Error
+            ? error.message
+            : 'Rust Search bridge unavailable.';
       });
-      if (destroyed) return;
-      items = page.items;
-      hasOlder = page.hasOlder;
-      relayStatusText = searchDiagnosticsText(
-        page.diagnostics.unsupportedRelays,
-      );
-    } catch (err) {
-      if (destroyed) return;
-      error = err instanceof Error ? err.message : 'Search failed.';
-    } finally {
-      if (!destroyed) loading = false;
-    }
-  }
 
-  async function loadOlder(): Promise<void> {
-    if (loadingOlder || !hasOlder) return;
-    const before = cursorPoint(items.at(-1));
-    if (!before) return;
-    loadingOlder = true;
-    relayStatusText = '';
-    try {
-      const page = await searchPage({
-        query,
-        relays: timelineRelays(props.relaySets),
-        owner: props.tabId,
-        subscriptions,
-        limit: feedPageSize,
-        before,
-        onSnapshot: (snapshot) => {
-          if (destroyed) return;
-          if (snapshot.events.length > 0)
-            items = mergeSearchItems(
-              items,
-              feedEventsFromProgressiveSnapshot(snapshot),
-            );
-          relayStatusText = progressiveStatusText(snapshot.status);
-        },
-      });
-      if (destroyed) return;
-      items = mergeSearchItems(items, page.items);
-      hasOlder = page.hasOlder;
-      relayStatusText = searchDiagnosticsText(
-        page.diagnostics.unsupportedRelays,
-      );
-    } finally {
-      if (!destroyed) loadingOlder = false;
-    }
-  }
+    return () => {
+      canceled = true;
+      handle?.unmount();
+    };
+  });
 </script>
 
 <section class="timeline-tab feed-tab" aria-label="Search">
-  <form
-    class="toolbar"
-    onsubmit={(event) => {
-      event.preventDefault();
-      void runSearch();
-    }}
-  >
-    <input aria-label="Search query" bind:value={query} />
-    <button type="submit" disabled={loading || !query.trim()}>Search</button>
-  </form>
-  {#if error}<p role="alert">{error}</p>{/if}
-  <EventTreeList
-    tabId={props.tabId}
-    pagingEnabled={props.visible !== false}
-    restoreAnchor={props.restoreAnchor}
-    {items}
-    {profiles}
-    relaySets={props.relaySets}
-    {loading}
-    {relayStatusText}
-    emptyText={searched ? 'No matching events.' : 'Enter a search query.'}
-    {loadingOlder}
-    loadingNewer={false}
-    {hasOlder}
-    historyExhaustion={hasOlder ? 'unknown' : 'proven'}
-    hasNewer={false}
-    pagingError={error}
-    olderLoadMode="auto-near-end"
-    olderPrefetchReady={items.length > 0}
-    onNearEnd={() => olderRequests.requestFromNearEnd()}
-    onNearStart={() => undefined}
-    openProfile={props.openProfile}
-    openThread={props.openThread}
-    openAuthorContext={props.openAuthorContext}
-  />
+  <div bind:this={islandRoot}></div>
+  {#if loadError}<p role="alert">{loadError}</p>{/if}
 </section>

@@ -37,6 +37,5 @@ and must not render fake event content.
 ## Shared Modules
 
 - `src/lib/components/feed/FeedScrollSurface.svelte`
-- `src/lib/feed-surface/speculative-older.ts`
 - `src/lib/feed-surface/paging-state.ts`
 - `src/lib/components/events/FeedSurfaceStatus.svelte`

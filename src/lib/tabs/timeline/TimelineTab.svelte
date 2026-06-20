@@ -1,8 +1,8 @@
 <script lang="ts">
   import { onDestroy } from 'svelte';
   import EventTreeList from '$lib/components/events/EventTreeList.svelte';
-  import { createOlderRequestCoordinator } from '$lib/feed-surface/speculative-older';
   import { shutdownTimelineTabView } from './timeline-tab-lifecycle';
+  import { createTimelineOlderRequestCoordinator } from './timeline-tab-older-requests';
   import { createBoundTimelineTabRuntime } from './timeline-tab-runtime-create';
   import { registerTabRuntimeSnapshot } from '$lib/workspace/tab-runtime-registry';
   import { feedSnapshotSeedFromPayload } from '$lib/workspace/tab-snapshot-persist';
@@ -60,7 +60,7 @@
   let relays: string[] = [];
   let runtimeKey = '';
   let runtimeStartedAt = 0;
-  let olderRequests = createOlderRequestCoordinator(
+  let olderRequests = createTimelineOlderRequestCoordinator(
     async () => {
       await runtime?.loadOlder();
     },

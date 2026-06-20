@@ -1,176 +1,56 @@
 <script lang="ts">
-  import { onDestroy, untrack } from 'svelte';
-  import { captureStartupPromise } from '$lib/app/runtime-log';
-  import { metadataPageLimit } from '$lib/events/feed-window';
-  import { createOlderRequestCoordinator } from '$lib/feed-surface/speculative-older';
-  import {
-    createNotificationRuntime,
-    type NotificationRuntime,
-  } from '$lib/notifications/notification-runtime';
-  import type { RelaySet } from '$lib/relays/relay-store';
-  import type { FeedEvent } from '$lib/events/types';
-  import {
-    createTimelineSubId,
-    timelineRelays,
-  } from '$lib/timeline/timeline-subscription';
-  import { loadTimelineProfiles } from '$lib/timeline/timeline-profiles';
-  import NotificationListScroll from './NotificationListScroll.svelte';
-  import { registerTabRuntimeSnapshot } from '$lib/workspace/tab-runtime-registry';
-  import { feedRuntimeSnapshot } from '$lib/workspace/feed-runtime-snapshot';
-  import type { TabFeedAnchor } from '$lib/workspace/tab-anchor-registry';
-  import {
-    emptyNotificationViewState,
-    notificationPagingReady,
-    type ProfileMap,
-    shouldRenderNotificationScroll,
-  } from './notification-list-state';
+  import { onMount } from 'svelte';
+  import { mountNotificationsIsland } from '$lib/components/workspace/notifications-island';
+
+  type NotificationsIslandHandle = {
+    unmount: () => void;
+  };
 
   type Props = {
     tabId: string;
     accountPubkey?: string;
-    visible: boolean;
-    restoreAnchor?: TabFeedAnchor;
-    relaySets: readonly RelaySet[];
     openProfile: (pubkey: string) => void;
     openThread: (eventId: string) => void;
-    openAuthorContext?: (eventId: string, pubkey: string) => void;
+    openAuthorContext: (eventId: string, pubkey: string) => void;
   };
 
   let props: Props = $props();
-  let runtime: NotificationRuntime | undefined;
-  let currentProfiles: ProfileMap = {};
-  let profileRequest = 0;
-  let listElement = $state<HTMLElement | undefined>();
-  let viewState = $state(emptyNotificationViewState());
-  let itemById: Map<string, FeedEvent> = $derived(
-    new Map(viewState.items.map((item) => [item.event.id, item])),
-  );
-  let targetItemById: Map<string, FeedEvent> = $derived(
-    new Map(viewState.targetItems.map((item) => [item.event.id, item])),
-  );
-  let relays: string[] = [];
-  let runtimeKey = $derived(
-    `${props.accountPubkey ?? ''}|${timelineRelays(props.relaySets).join('\u0000')}`,
-  );
-  let olderPrefetchReady = $derived(
-    notificationPagingReady(viewState.olderCursorCreatedAt),
-  );
-  let renderList = $derived(
-    shouldRenderNotificationScroll({
-      recordCount: viewState.records.length,
-      hasOlder: viewState.hasOlder,
-      historyExhaustion: viewState.historyExhaustion,
-    }),
-  );
-  onDestroy(() => {
-    runtime?.close();
-    runtime = undefined;
-  });
+  let islandRoot: HTMLElement;
+  let loadError = $state('');
 
-  let olderRequests = createOlderRequestCoordinator(
-    async () => {
-      await runtime?.loadOlder();
-    },
-    () => Boolean(viewState.hasOlder && !viewState.loadingOlder),
-    { speculative: false },
-  );
+  onMount(() => {
+    let canceled = false;
+    let handle: NotificationsIslandHandle | undefined;
+    void mountNotificationsIsland(islandRoot, {
+      tabId: props.tabId,
+      activePubkey: props.accountPubkey,
+      openProfile: props.openProfile,
+      openThread: props.openThread,
+      openAuthorContext: props.openAuthorContext,
+    })
+      .then((mounted) => {
+        if (canceled) {
+          mounted.unmount();
+          return;
+        }
+        handle = mounted;
+      })
+      .catch((error: unknown) => {
+        if (canceled) return;
+        loadError =
+          error instanceof Error
+            ? error.message
+            : 'Rust Notifications bridge unavailable.';
+      });
 
-  $effect(() => {
-    if (!props.visible) {
-      runtime?.setVisibility?.(false);
-      return;
-    }
-    runtime?.setVisibility?.(true);
-    const key = runtimeKey;
-    if (key === undefined) return;
-    const { accountPubkey, relaySets, tabId } = untrack(() => props);
-    olderRequests.reset();
-    relays = timelineRelays(relaySets);
-    runtime = createNotificationRuntime(
-      accountPubkey,
-      relays,
-      createTimelineSubId(tabId, 'notif'),
-      tabId,
-    );
-    const unsubscribe = runtime.subscribe(
-      (next) => (viewState = { ...next, profiles: currentProfiles }),
-    );
-    captureStartupPromise(runtime.start(), {
-      code: 'notifications-runtime-start-failed',
-      surface: 'notifications',
-      kind: 'notifications',
-      tabId,
-      relayCount: relays.length,
-    });
     return () => {
-      profileRequest += 1;
-      unsubscribe();
-      runtime?.close();
-      runtime = undefined;
+      canceled = true;
+      handle?.unmount();
     };
-  });
-
-  $effect(() => {
-    const tabId = props.tabId;
-    return registerTabRuntimeSnapshot(tabId, () =>
-      feedRuntimeSnapshot({
-        ...viewState,
-        eventIds: viewState.items.map((item) => item.event.id),
-        notificationRecordIds: viewState.records.map((record) => record.id),
-      }),
-    );
-  });
-
-  $effect(() => {
-    if (!props.visible) return;
-    const authors = [
-      ...new Set([
-        ...viewState.records.map((record) => record.actorPubkey),
-        ...viewState.items.map((item) => item.event.pubkey),
-        ...viewState.targetItems.map((item) => item.event.pubkey),
-      ]),
-    ];
-    const missing = authors
-      .filter((author) => !viewState.profiles[author])
-      .slice(0, metadataPageLimit);
-    if (missing.length === 0) return;
-    const request = ++profileRequest;
-    void loadTimelineProfiles(missing, relays, `${props.tabId}:profiles`).then(
-      (loaded) => {
-        if (request !== profileRequest || !runtime) return;
-        currentProfiles = { ...loaded, ...currentProfiles };
-        viewState = { ...viewState, profiles: currentProfiles };
-      },
-    );
   });
 </script>
 
 <section class="feed-tab" aria-label="Notifications">
-  {#if viewState.loading}<p>Loading notifications...</p>{/if}
-  {#if viewState.error}<p role="alert">{viewState.error}</p>{/if}
-  {#if !viewState.loading && renderList}
-    <NotificationListScroll
-      tabId={props.tabId}
-      restoreAnchor={props.restoreAnchor}
-      records={viewState.records}
-      {itemById}
-      {targetItemById}
-      profiles={viewState.profiles}
-      relaySets={props.relaySets}
-      activeAccountPubkey={props.accountPubkey}
-      loadingOlder={viewState.loadingOlder}
-      hasOlder={viewState.hasOlder}
-      {olderPrefetchReady}
-      historyExhaustion={viewState.historyExhaustion}
-      error={viewState.error}
-      intentKey={runtimeKey}
-      onNearEnd={() => olderRequests.requestFromNearEnd()}
-      openProfile={props.openProfile}
-      openThread={props.openThread}
-      openAuthorContext={props.openAuthorContext}
-      bind:listElement
-    />
-  {:else if !viewState.loading && viewState.historyExhaustion === 'proven'}
-    <p>No notifications for the active account.</p>
-  {/if}
+  <div bind:this={islandRoot}></div>
+  {#if loadError}<p role="alert">{loadError}</p>{/if}
 </section>

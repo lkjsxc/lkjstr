@@ -1,195 +1,70 @@
 <script lang="ts">
-  import { onDestroy, untrack } from 'svelte';
-  import { captureStartupPromise } from '$lib/app/runtime-log';
-  import type { Account } from '$lib/accounts/account';
-  import EventTreeList from '$lib/components/events/EventTreeList.svelte';
-  import { createOlderRequestCoordinator } from '$lib/feed-surface/speculative-older';
-  import type { OlderLoadTrigger } from '$lib/feed-surface/older-load-mode';
-  import type { ProfileSummary } from '$lib/identity/identity';
-  import { getProfile } from '$lib/identity/profile-cache';
-  import { profileEmptyText } from '$lib/profile/profile-empty-text';
-  import { profileUpdatedEvent } from '$lib/profile/profile-metadata-draft';
-  import { encodeNprofile, encodeNpub } from '$lib/protocol/nip19';
-  import {
-    createProfileRuntime,
-    type ProfileState,
-    type ProfileRuntime,
-  } from '$lib/profile/profile-runtime';
-  import { emptyProfileState } from '$lib/profile/profile-state';
-  import { followingCount } from '$lib/profile/profile-links';
-  import type { RelaySet } from '$lib/relays/relay-store';
-  import type { EventTreeListLeadingRow } from '$lib/components/events/event-tree-list-helpers';
-  import {
-    createTimelineSubId,
-    timelineRelays,
-  } from '$lib/timeline/timeline-subscription';
-  import type { TabFeedAnchor } from '$lib/workspace/tab-anchor-registry';
-  import { registerTabRuntimeSnapshot } from '$lib/workspace/tab-runtime-registry';
-  import { feedRuntimeSnapshot } from '$lib/workspace/feed-runtime-snapshot';
-  import ProfileHeader from './ProfileHeader.svelte';
+  import { onMount } from 'svelte';
+  import { mountProfileIsland } from '$lib/components/workspace/profile-island';
+
+  type ProfileIslandHandle = {
+    unmount: () => void;
+  };
+
+  type AccountSummary = {
+    pubkey: string;
+  };
 
   type Props = {
     tabId: string;
-    visible?: boolean;
-    restoreAnchor?: TabFeedAnchor;
     pubkey: string;
-    activeAccount?: Account;
-    relaySets: readonly RelaySet[];
+    activeAccount?: AccountSummary;
     openProfile: (pubkey: string) => void;
     openFollowees: (pubkey: string) => void;
     openUserTimeline: (pubkey: string) => void;
     openThread: (eventId: string) => void;
-    openAuthorContext?: (eventId: string, pubkey: string) => void;
+    openAuthorContext: (eventId: string, pubkey: string) => void;
     openProfileEdit: () => void;
   };
 
   let props: Props = $props();
-  let state = $state<ProfileState>(emptyProfileState());
-  let profiles = $derived<Record<string, ProfileSummary>>(
-    state.profile ? { [props.pubkey]: state.profile } : {},
-  );
-  let leadingRows = $derived<EventTreeListLeadingRow[]>([
-    { key: 'profile-header', nearStart: true },
-    ...(state.error ? [{ key: 'profile-error' }] : []),
-  ]);
-  let npub = $derived(safeNpub(props.pubkey));
-  let nprofile = $derived(
-    safeNprofile(props.pubkey, timelineRelays(props.relaySets)),
-  );
-  let runtime: ProfileRuntime | undefined;
-  let runtimeCleanup: (() => void) | undefined;
-  let startedKey = '';
-  let olderRequests = createOlderRequestCoordinator<OlderLoadTrigger>(
-    async (trigger) => {
-      if (trigger === 'scroll') await runtime?.loadOlder({ preserve: 'older' });
-      else await runtime?.loadOlder();
-    },
-    () => Boolean(state.hasOlder && !state.loadingOlder),
-  );
-  let runtimeKey = $derived(
-    `${props.pubkey}|${timelineRelays(props.relaySets).join('\u0000')}`,
-  );
+  let islandRoot = $state<HTMLElement | undefined>();
+  let loadError = $state('');
 
-  $effect(() => {
-    if (!props.visible) {
-      runtime?.setVisibility?.(false);
-      return;
-    }
-    runtime?.setVisibility?.(true);
-    const key = runtimeKey;
-    if (!key || key === startedKey) return;
-    stopRuntime();
-    startedKey = key;
-    const { pubkey, relaySets, tabId } = untrack(() => props);
-    olderRequests.reset();
-    const created = createProfileRuntime(
-      pubkey,
-      timelineRelays(relaySets),
-      createTimelineSubId(tabId, 'profile'),
-      tabId,
-    );
-    runtime = created;
-    const unsubscribe = created.subscribe((next) => (state = next));
-    captureStartupPromise(created.start(), {
-      code: 'profile-runtime-start-failed',
-      surface: 'profile',
-      kind: 'profile',
-      tabId,
-      relayCount: timelineRelays(relaySets).length,
-    });
-    const refreshProfile = (event: Event) => {
-      if ((event as CustomEvent<string>).detail === pubkey)
-        state = { ...state, profile: getProfile(pubkey) ?? state.profile };
-    };
-    window.addEventListener(profileUpdatedEvent, refreshProfile);
-    runtimeCleanup = () => {
-      window.removeEventListener(profileUpdatedEvent, refreshProfile);
-      unsubscribe();
-      created.close();
-      if (runtime === created) runtime = undefined;
+  onMount(() => {
+    if (!islandRoot) return;
+
+    let canceled = false;
+    let handle: ProfileIslandHandle | undefined;
+    void mountProfileIsland(islandRoot, {
+      tabId: props.tabId,
+      pubkey: props.pubkey,
+      activePubkey: props.activeAccount?.pubkey,
+      openProfile: props.openProfile,
+      openFollowees: props.openFollowees,
+      openUserTimeline: props.openUserTimeline,
+      openProfileEdit: props.openProfileEdit,
+      openThread: props.openThread,
+      openAuthorContext: props.openAuthorContext,
+    })
+      .then((mounted) => {
+        if (canceled) {
+          mounted.unmount();
+          return;
+        }
+        handle = mounted;
+      })
+      .catch((error: unknown) => {
+        if (canceled) return;
+        loadError =
+          error instanceof Error
+            ? error.message
+            : 'Rust Profile bridge unavailable.';
+      });
+
+    return () => {
+      canceled = true;
+      handle?.unmount();
     };
   });
-
-  onDestroy(stopRuntime);
-
-  function stopRuntime(): void {
-    runtimeCleanup?.();
-    runtimeCleanup = undefined;
-  }
-
-  function safeNpub(pubkey: string): string {
-    try {
-      return encodeNpub(pubkey);
-    } catch {
-      return pubkey;
-    }
-  }
-
-  $effect(() => {
-    const tabId = props.tabId;
-    return registerTabRuntimeSnapshot(tabId, () =>
-      feedRuntimeSnapshot({
-        ...state,
-        historyExhaustion: state.hasOlder ? 'unknown' : 'proven',
-        eventIds: state.posts.map((item) => item.event.id),
-      }),
-    );
-  });
-
-  function safeNprofile(pubkey: string, relays: readonly string[]): string {
-    try {
-      return encodeNprofile({ pubkey, relays });
-    } catch {
-      return '';
-    }
-  }
 </script>
 
 <section class="profile-tab feed-tab" aria-label="Profile">
-  <EventTreeList
-    tabId={props.tabId}
-    pagingEnabled={props.visible !== false}
-    restoreAnchor={props.restoreAnchor}
-    items={state.posts}
-    {profiles}
-    relaySets={props.relaySets}
-    activeAccountPubkey={props.activeAccount?.pubkey}
-    loading={state.loading}
-    emptyText={profileEmptyText(state)}
-    loadingOlder={state.loadingOlder}
-    loadingNewer={state.loadingNewer}
-    hasOlder={state.hasOlder}
-    hasNewer={state.hasNewer}
-    historyExhaustion={state.hasOlder ? 'unknown' : 'proven'}
-    intentKey={runtimeKey}
-    olderLoadMode="fill-then-user-scroll"
-    olderPrefetchReady={Boolean(state.oldestCursor || state.newestCursor)}
-    onNearEnd={(trigger) => olderRequests.requestFromNearEnd(trigger)}
-    onNearStart={() => runtime?.loadNewer()}
-    openProfile={props.openProfile}
-    openThread={props.openThread}
-    openAuthorContext={props.openAuthorContext}
-    {leadingRows}
-  >
-    {#snippet leadingRow(row)}
-      {#if row.key === 'profile-header'}
-        <ProfileHeader
-          pubkey={props.pubkey}
-          profile={state.profile}
-          activeAccount={props.activeAccount}
-          relaySets={props.relaySets}
-          {npub}
-          {nprofile}
-          followList={state.followList}
-          followingCount={followingCount(state.followList)}
-          followListStatus={state.followListStatus}
-          openFollowees={() => props.openFollowees(props.pubkey)}
-          openUserTimeline={() => props.openUserTimeline(props.pubkey)}
-          openProfileEdit={props.openProfileEdit}
-        />
-      {:else if row.key === 'profile-error'}
-        <p role="alert">{state.error}</p>
-      {/if}
-    {/snippet}
-  </EventTreeList>
+  <div bind:this={islandRoot}></div>
+  {#if loadError}<p role="alert">{loadError}</p>{/if}
 </section>

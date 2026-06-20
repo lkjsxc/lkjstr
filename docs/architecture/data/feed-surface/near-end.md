@@ -28,10 +28,10 @@ bottom.
 - Scroll fallback runs when `IntersectionObserver` is unavailable or the
   sentinel is not mounted.
 
-## Speculative Older
+## Timeline Older Requests
 
-- When near end and `hasOlder` is true, `createOlderRequestCoordinator` may
-  request one additional older page after the first completes.
+- When near end and `hasOlder` is true, `TimelineTab` may request one
+  additional older page after the first completes.
 - Home and Global may issue an earlier safe prefetch once rows and cursors
   exist and the current scroll geometry is already inside the near-end
   threshold.
@@ -44,6 +44,7 @@ bottom.
 
 ## Implementation
 
-- `src/lib/feed-surface/near-end-observer.ts`
+- `src/lib/components/events/EventTreeListNearEnd.svelte`
+- `src/lib/tabs/timeline/timeline-tab-older-requests.ts`
 - `src/lib/events/feed-window.ts`: `isNearEnd`, `nearEndThreshold`
 - `src/lib/feed-surface/near-end.ts`: re-exports and `nearEndRootMargin`

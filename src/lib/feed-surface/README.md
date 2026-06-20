@@ -2,15 +2,14 @@
 
 ## Purpose
 
-Shared feed paging, near-end detection, speculative older prefetch, row
-planning, and geometry helpers for timeline-like tabs.
+Shared feed paging, near-end detection, row planning, and geometry helpers for
+timeline-like tabs.
 
 ## Table of Contents
 
 - [near-end.ts](near-end.ts): threshold helpers and observer margins.
 - [paging-state.ts](paging-state.ts): footer phase reducer.
 - [older-prefetch.ts](older-prefetch.ts): safe Home/Global prefetch predicate.
-- [speculative-older.ts](speculative-older.ts): deduped older-page coordinator.
 - [feed-geometry-features.ts](feed-geometry-features.ts): content-aware row features.
 - [feed-geometry-hash.ts](feed-geometry-hash.ts): Rust-compatible content-shape hashing.
 - [feed-geometry-wasm.ts](feed-geometry-wasm.ts): temporary WASM bridge wrapper.

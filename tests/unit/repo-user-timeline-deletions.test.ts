@@ -33,7 +33,7 @@ describe('repo user-timeline deletion guard', () => {
     ]);
   });
 
-  it('allows retained user-timeline runtime imports', async () => {
+  it('rejects product imports of retained user-timeline runtime modules', async () => {
     const root = await fs.mkdtemp(path.join(os.tmpdir(), 'lkjstr-user-'));
     const product = await write(
       root,
@@ -43,6 +43,35 @@ describe('repo user-timeline deletion guard', () => {
 
     await expect(
       checkUserTimelineDeletionGuard(root, [product]),
+    ).resolves.toEqual([
+      {
+        file: path.join(
+          'src',
+          'lib',
+          'workspace',
+          'retained-user-timeline-route.ts',
+        ),
+        message:
+          'retained user-timeline runtime must not be imported by product source',
+      },
+    ]);
+  });
+
+  it('allows retained internals and test-only imports until deletion proof', async () => {
+    const root = await fs.mkdtemp(path.join(os.tmpdir(), 'lkjstr-user-'));
+    const retained = await write(
+      root,
+      'src/lib/user-timeline/user-timeline-runtime.ts',
+      "import { userTimelineInitialSnapshot } from './user-timeline-state';",
+    );
+    const test = await write(
+      root,
+      'tests/unit/user-timeline/runtime.test.ts',
+      "import { runUserTimelineRuntime } from '../../../src/lib/user-timeline/user-timeline-runtime';",
+    );
+
+    await expect(
+      checkUserTimelineDeletionGuard(root, [retained, test]),
     ).resolves.toEqual([]);
   });
 });

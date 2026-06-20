@@ -8,7 +8,7 @@
   import { clearOpenReferencePins, pinOpenReferences } from '$lib/cache/pins';
   import { captureVirtualAnchor, restoreVirtualAnchor } from '$lib/events/scroll-anchor';
   import { feedSurfaceStatusProps, footerPhaseFromPaging } from '$lib/feed-surface/footer-phase';
-  import { notificationOpenReferenceIds, notificationViewRowKey, notificationViewRows, type NotificationViewRow } from '$lib/feed-surface/notification-view-rows';
+  import { notificationOpenReferenceIds, notificationViewRowKey, notificationViewRows, type NotificationViewRow } from '$lib/notifications/notification-view-rows';
   import { canRequestOlder, type OlderLoadTrigger } from '$lib/feed-surface/older-load-mode';
   import type { HistoryExhaustion } from '$lib/feed-surface/paging-state';
   import type { ProfileSummary } from '$lib/identity/identity';

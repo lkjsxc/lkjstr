@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { notificationViewRows } from '../../../src/lib/feed-surface/notification-view-rows';
+import { notificationViewRows } from '../../../src/lib/notifications/notification-view-rows';
 import {
   notificationAutoFillAttemptCap,
   shouldRenderNotificationScroll,
