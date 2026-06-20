@@ -62,6 +62,8 @@ New Tab chooser, and converted Rust tool bodies.
 - `relay_settings_provider.rs`: relay settings command provider wrapper.
 - `relay_settings_section.rs`: user/discovery relay-set sections.
 - `search.rs`: narrow Rust Search idle and partial-state feed rendering.
+- `search_run.rs`: leased Search primary query command helper.
+- `search_older.rs`: leased Search older-load command helper.
 - `settings.rs`: Rust Settings body.
 - `settings_provider.rs`: settings command provider wrapper.
 - `settings_row.rs`: row editor rendering for Settings.

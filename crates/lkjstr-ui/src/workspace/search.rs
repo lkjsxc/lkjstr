@@ -3,8 +3,13 @@ use lkjstr_app::{
     SearchFeedView, default_search_feed_view, partial_search_feed_view, pending_search_feed_view,
 };
 
+#[path = "search_run.rs"]
+mod search_run;
+
+use self::search_run::SearchRunController;
 use crate::workspace::feed_event_actions::FeedEventActions;
-use crate::workspace::search_provider::{SearchFeedLease, SearchFeedProvider};
+use crate::workspace::search_older::SearchOlderLoader;
+use crate::workspace::search_provider::SearchFeedProvider;
 use crate::workspace::search_render::{search_row, search_status_text};
 use crate::workspace::search_snapshot::SearchSnapshotHandle;
 
@@ -20,9 +25,15 @@ pub fn SearchTab(
 ) -> impl IntoView {
     let model = RwSignal::new(model);
     let query = RwSignal::new(snapshot.restored_query());
-    let active_lease = RwSignal::new(None::<SearchFeedLease>);
-    let active_older_lease = RwSignal::new(None::<SearchFeedLease>);
-    let older_command = older_command(owner.clone(), model, provider.clone(), active_older_lease);
+    let run_controller = SearchRunController::new();
+    let complete = Callback::new(move |next| model.set(next));
+    let older_loader = provider
+        .clone()
+        .filter(|provider| provider.supports_older())
+        .map(|provider| SearchOlderLoader::new(owner.clone(), provider, complete));
+    let older_command = older_loader
+        .as_ref()
+        .map(|loader| loader.command_callback(model));
     let input_snapshot = snapshot.clone();
     let input_query = move |event| {
         let value = event_target_value(&event);
@@ -32,26 +43,27 @@ pub fn SearchTab(
     let submit_owner = owner.clone();
     let submit_snapshot = snapshot.clone();
     let submit_provider = provider.clone();
+    let submit_controller = run_controller.clone();
+    let submit_older_loader = older_loader.clone();
     let submit = move |event: leptos::ev::SubmitEvent| {
         event.prevent_default();
-        release_current(active_lease);
-        release_current(active_older_lease);
+        release_older(&submit_older_loader);
         let text = query.get_untracked();
         submit_snapshot.save_query(text.clone());
         let trimmed = text.trim();
         if trimmed.is_empty() {
+            submit_controller.release();
             model.set(default_search_feed_view(&submit_owner));
             return;
         }
-        if let Some(provider) = submit_provider.clone() {
-            model.set(pending_search_feed_view(&submit_owner, trimmed));
-            let model = model;
-            let lease = provider.read(
-                submit_owner.clone(),
-                trimmed.to_owned(),
-                Callback::new(move |next| model.set(next)),
-            );
-            active_lease.set(Some(lease));
+        model.set(pending_search_feed_view(&submit_owner, trimmed));
+        let model = model;
+        if submit_controller.run(
+            submit_provider.clone(),
+            submit_owner.clone(),
+            trimmed.to_owned(),
+            Callback::new(move |next| model.set(next)),
+        ) {
             return;
         }
         model.set(partial_search_feed_view(
@@ -61,9 +73,11 @@ pub fn SearchTab(
             false,
         ));
     };
+    let cleanup_controller = run_controller.clone();
+    let cleanup_older_loader = older_loader.clone();
     on_cleanup(move || {
-        release_current(active_lease);
-        release_current(active_older_lease);
+        cleanup_controller.release();
+        release_older(&cleanup_older_loader);
     });
 
     view! {
@@ -106,39 +120,8 @@ pub fn default_search_feed(tab_id: &str) -> SearchFeedView {
     default_search_feed_view(tab_id)
 }
 
-fn release_current(active_lease: RwSignal<Option<SearchFeedLease>>) {
-    if let Some(lease) = active_lease.get_untracked() {
-        lease.release();
+fn release_older(loader: &Option<SearchOlderLoader>) {
+    if let Some(loader) = loader {
+        loader.release();
     }
-    active_lease.set(None);
-}
-
-fn older_command(
-    owner: String,
-    model: RwSignal<SearchFeedView>,
-    provider: Option<SearchFeedProvider>,
-    active_older_lease: RwSignal<Option<SearchFeedLease>>,
-) -> Option<Callback<()>> {
-    provider.and_then(|provider| {
-        if !provider.supports_older() {
-            return None;
-        }
-        Some(Callback::new(move |()| {
-            release_current(active_older_lease);
-            let current = model.get_untracked();
-            if !current.window.has_older {
-                return;
-            }
-            let Some(query) = current.submitted_query.clone() else {
-                return;
-            };
-            let lease = provider.load_older(
-                owner.clone(),
-                query,
-                current.window,
-                Callback::new(move |next| model.set(next)),
-            );
-            active_older_lease.set(lease);
-        }))
-    })
 }

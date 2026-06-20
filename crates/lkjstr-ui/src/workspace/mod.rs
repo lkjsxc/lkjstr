@@ -83,6 +83,7 @@ mod relay_settings_section;
 mod search;
 #[cfg(target_arch = "wasm32")]
 mod search_island;
+mod search_older;
 mod search_provider;
 mod search_render;
 mod search_snapshot;
@@ -174,9 +175,7 @@ pub use relay_settings_provider::{
 };
 #[cfg(target_arch = "wasm32")]
 pub use search_island::{SearchIslandActions, mount_search_island};
-pub use search_provider::{
-    SearchFeedComplete, SearchFeedProvider, SearchFeedRequest, SearchOlderRequest,
-};
+pub use search_provider::{SearchFeedProvider, SearchFeedRequest, SearchOlderRequest};
 pub use settings_provider::{SettingsCommand, SettingsComplete, SettingsProvider, SettingsResult};
 pub use settings_provider::{SettingsImportCommand, SettingsKeyCommand, SettingsValueCommand};
 pub use shell::WorkspaceShell;

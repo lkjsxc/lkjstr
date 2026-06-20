@@ -31,6 +31,11 @@ no-import proof remain open.
   cancellable provider leases, renders provider completions and older footer
   commands only when the provider exposes a real older handler, and restores
   `filterState.searchQuery` from tab snapshots.
+- `crates/lkjstr-ui/src/workspace/search_run.rs` owns primary query command
+  leases and releases replaced or provider-unavailable requests before new
+  query work is dispatched.
+- `crates/lkjstr-ui/src/workspace/search_older.rs` owns older-command leases
+  and releases replaced, blocked, or missing-query requests before dispatch.
 - `crates/lkjstr-ui/tests/search_provider_test.rs` proves both released initial
   and older Search provider requests suppress late completions.
 - `crates/lkjstr-ui/src/workspace/search_snapshot.rs` records Search
@@ -108,6 +113,10 @@ pnpm test -- tests/unit/search
   skipping same-second events across compound cursor boundaries when the
   provider supplies a real older handler.
 - Released Search older-provider leases suppress late completions.
+- Replaced or provider-unavailable primary Search query commands release their
+  active provider lease before the next command state is shown.
+- Replaced, blocked, or missing-query Search older commands release their
+  active provider lease before the next older command state is dispatched.
 - The slice does not claim broader Search parity or TypeScript deletion.
 
 ## Must Not
