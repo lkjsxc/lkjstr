@@ -1,5 +1,5 @@
 const rowLocalSelector =
-  'button,a,input,textarea,select,form,.event-action-zone';
+  'button,a,input,textarea,select,form,audio,video,.event-action-zone';
 
 type ClosestTarget = {
   closest?: (selector: string) => unknown;

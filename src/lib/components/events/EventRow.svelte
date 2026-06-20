@@ -6,18 +6,15 @@
   import EventContent from './EventContent.svelte';
   import EventMeta from './EventMeta.svelte';
   import EventActions from './EventActions.svelte';
+  import EventRowAvatar from './EventRowAvatar.svelte';
+  import EventRowFrame from './EventRowFrame.svelte';
   import ReactionSummary from './ReactionSummary.svelte';
   import {
-    eventProfileCanOpen,
-    eventProfileOpenLabel,
-    stopAndOpenEventProfile,
-  } from './event-profile-activation';
-  import {
     createEventRowSuccessHighlighter,
-    eventRowCanOpenThread,
     openEventThreadFromRowClick,
     openEventThreadFromRowKey,
   } from './event-row-activation';
+  import { planEventRowPresentation } from './event-row-presentation-plan';
   import type {
     ReactionGroup,
     RepostGroup,
@@ -54,9 +51,13 @@
   const successHighlighter = createEventRowSuccessHighlighter(
     (next) => (highlighted = next),
   );
-  const profileOpenLabel = eventProfileOpenLabel();
-  let canOpenProfile = $derived(eventProfileCanOpen(props.openProfile));
-  let canOpenThread = $derived(eventRowCanOpenThread(props.openThread));
+  let presentation = $derived(
+    planEventRowPresentation({
+      depth: props.depth,
+      openProfile: props.openProfile,
+      openThread: props.openThread,
+    }),
+  );
 
   onDestroy(() => {
     successHighlighter.destroy();
@@ -70,30 +71,26 @@
     openEventThreadFromRowKey(event, props.openThread, props.item.event.id);
   }
 
-  function openProfile(event: MouseEvent): void {
-    stopAndOpenEventProfile(event, props.openProfile, props.item.event.pubkey);
-  }
-
   function highlightAction(): void {
     successHighlighter.trigger();
   }
 </script>
 
-{#snippet rowBody()}
-  {#if canOpenProfile}
-    <button
-      type="button"
-      class="avatar-button"
-      aria-label={profileOpenLabel}
-      onclick={openProfile}
-    >
-      <EventMeta event={props.item.event} relays={[]} {profile} avatarOnly />
-    </button>
-  {:else}
-    <span class="avatar-button">
-      <EventMeta event={props.item.event} relays={[]} {profile} avatarOnly />
-    </span>
-  {/if}
+<EventRowFrame
+  depthStyle={presentation.depthStyle}
+  embedded={props.showSeparator === false}
+  {highlighted}
+  interactive={presentation.thread.openable}
+  onRowClick={openRow}
+  onRowKeydown={handleKeydown}
+  compact={props.compact}
+>
+  <EventRowAvatar
+    event={props.item.event}
+    {profile}
+    presentation={presentation.profile}
+    openProfile={props.openProfile}
+  />
   <div class="event-main">
     <EventMeta
       event={props.item.event}
@@ -130,30 +127,4 @@
       openProfile={props.openProfile}
     />
   </div>
-{/snippet}
-
-{#if canOpenThread}
-  <div
-    class="event-row event-row--interactive"
-    class:event-row--compact={props.compact}
-    class:event-row--embedded={props.showSeparator === false}
-    class:event-row--action-success={highlighted}
-    role="button"
-    tabindex="0"
-    style={`--event-depth: ${props.depth ?? 0}`}
-    onclick={openRow}
-    onkeydown={handleKeydown}
-  >
-    {@render rowBody()}
-  </div>
-{:else}
-  <div
-    class="event-row"
-    class:event-row--compact={props.compact}
-    class:event-row--embedded={props.showSeparator === false}
-    class:event-row--action-success={highlighted}
-    style={`--event-depth: ${props.depth ?? 0}`}
-  >
-    {@render rowBody()}
-  </div>
-{/if}
+</EventRowFrame>

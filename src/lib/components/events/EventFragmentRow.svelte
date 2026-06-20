@@ -16,18 +16,15 @@
   import EventActions from './EventActions.svelte';
   import EventContent from './EventContent.svelte';
   import EventMeta from './EventMeta.svelte';
+  import EventRowAvatar from './EventRowAvatar.svelte';
+  import EventRowFrame from './EventRowFrame.svelte';
   import ReactionSummary from './ReactionSummary.svelte';
   import {
-    eventProfileCanOpen,
-    eventProfileOpenLabel,
-    stopAndOpenEventProfile,
-  } from './event-profile-activation';
-  import {
     createEventRowSuccessHighlighter,
-    eventRowCanOpenThread,
     openEventThreadFromRowClick,
     openEventThreadFromRowKey,
   } from './event-row-activation';
+  import { planEventRowPresentation } from './event-row-presentation-plan';
 
   type Props = {
     node: FlatEventTreeItem;
@@ -50,12 +47,16 @@
   const successHighlighter = createEventRowSuccessHighlighter(
     (next) => (highlighted = next),
   );
-  const profileOpenLabel = eventProfileOpenLabel();
   let fragmentEvent = $derived(
     fragmentEventContent(props.node, props.fragment),
   );
-  let canOpenProfile = $derived(eventProfileCanOpen(props.openProfile));
-  let canOpenThread = $derived(eventRowCanOpenThread(props.openThread));
+  let presentation = $derived(
+    planEventRowPresentation({
+      depth: props.node.depth,
+      openProfile: props.openProfile,
+      openThread: props.openThread,
+    }),
+  );
 
   onMount(() => {
     recordFeedFragmentMounted();
@@ -74,41 +75,26 @@
     openEventThreadFromRowKey(event, props.openThread, props.node.event.id);
   }
 
-  function openProfile(event: MouseEvent): void {
-    stopAndOpenEventProfile(event, props.openProfile, props.node.event.pubkey);
-  }
-
   function highlightAction(): void {
     successHighlighter.trigger();
   }
 </script>
 
-{#snippet rowBody()}
+<EventRowFrame
+  depthStyle={presentation.depthStyle}
+  fragment
+  {highlighted}
+  interactive={presentation.thread.openable}
+  onRowClick={openRow}
+  onRowKeydown={handleKeydown}
+>
   {#if props.fragment.kind === 'event-header'}
-    {#if canOpenProfile}
-      <button
-        type="button"
-        class="avatar-button"
-        aria-label={profileOpenLabel}
-        onclick={openProfile}
-      >
-        <EventMeta
-          event={props.node.event}
-          relays={[]}
-          profile={props.profile}
-          avatarOnly
-        />
-      </button>
-    {:else}
-      <span class="avatar-button">
-        <EventMeta
-          event={props.node.event}
-          relays={[]}
-          profile={props.profile}
-          avatarOnly
-        />
-      </span>
-    {/if}
+    <EventRowAvatar
+      event={props.node.event}
+      profile={props.profile}
+      presentation={presentation.profile}
+      openProfile={props.openProfile}
+    />
     <div class="event-main">
       <EventMeta
         event={props.node.event}
@@ -150,26 +136,4 @@
       {/if}
     </div>
   {/if}
-{/snippet}
-
-{#if canOpenThread}
-  <div
-    class="event-row event-row--fragment event-row--interactive"
-    class:event-row--action-success={highlighted}
-    role="button"
-    tabindex="0"
-    style={`--event-depth: ${props.node.depth ?? 0}`}
-    onclick={openRow}
-    onkeydown={handleKeydown}
-  >
-    {@render rowBody()}
-  </div>
-{:else}
-  <div
-    class="event-row event-row--fragment"
-    class:event-row--action-success={highlighted}
-    style={`--event-depth: ${props.node.depth ?? 0}`}
-  >
-    {@render rowBody()}
-  </div>
-{/if}
+</EventRowFrame>

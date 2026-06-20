@@ -13,8 +13,16 @@ describe('event row local targets', () => {
 
     expect(eventRowTargetIsLocal(target)).toBe(true);
     expect(seenSelectors).toEqual([
-      'button,a,input,textarea,select,form,.event-action-zone',
+      'button,a,input,textarea,select,form,audio,video,.event-action-zone',
     ]);
+  });
+
+  it('treats native media controls as local row targets', () => {
+    const target = {
+      closest: (selector: string) => (selector.includes('video') ? {} : null),
+    } as unknown as EventTarget;
+
+    expect(eventRowTargetIsLocal(target)).toBe(true);
   });
 
   it('lets non-control row targets open the thread row', () => {
