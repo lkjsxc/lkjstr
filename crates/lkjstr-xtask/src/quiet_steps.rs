@@ -4,7 +4,7 @@ use crate::{
     browser_driver::chrome_driver_args,
     quiet_process::{QuietOutput, run_with_timeout},
     tool_path::{cargo_bin, prefer_rustup_cargo},
-    toolchain::{preflight_wasm_pack, wasm_pack_bin},
+    toolchain::{preflight_wasm_browser, preflight_wasm_pack, wasm_pack_bin},
 };
 
 const TAIL_BYTES: usize = 128 * 1024;
@@ -86,6 +86,7 @@ pub fn node_verify_steps() -> Vec<Step> {
 pub fn run_quiet_step(root: &Path, step: &Step) -> Result<(), String> {
     if step.name.starts_with("wasm-pack") {
         preflight_wasm_pack(root, &step.program)?;
+        preflight_wasm_browser(root, step.name)?;
     }
     let mut command = Command::new(&step.program);
     command.args(&step.args).current_dir(root);

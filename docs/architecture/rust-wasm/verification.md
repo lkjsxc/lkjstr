@@ -17,8 +17,9 @@ pnpm rust-wasm:quiet
 
 Both commands run the same matrix and print `ok rust-wasm` on success. The
 package script is a discoverable wrapper for agents already using pnpm quiet
-commands. Before browser WASM tests run, the quiet path preflights `wasm-pack`
-and fails with install or Docker instructions when it is missing.
+commands. Before browser WASM tests run, the quiet path preflights `wasm-pack`,
+Chrome, and Firefox, then fails with install or Docker instructions when a
+required dependency is missing.
 Each child step is bounded by a 30-minute timeout so browser harness hangs fail
 with a captured output tail instead of blocking the quiet command indefinitely.
 

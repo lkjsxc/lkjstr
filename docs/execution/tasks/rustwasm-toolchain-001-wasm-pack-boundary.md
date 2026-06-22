@@ -16,11 +16,12 @@ completed
   failure uses actionable diagnostics while dev bridge UI gets product-safe
   unavailable text.
 - `pnpm rust-wasm:quiet` and `lkjstr-xtask quiet rust-wasm` preflight
-  `wasm-pack` and report the install or Docker path when it is missing.
+  `wasm-pack`, Chrome, and Firefox, then report the install or Docker path when
+  a dependency is missing.
 - Timeline/feed Rust island hosts, retained island tabs, feed-surface bridge
   loaders, follow-graph, and Stats diagnostics sanitize raw toolchain messages.
 - Docker config, build, verify, Cloudflare dry-run, and app smoke passed with
-  pinned image-installed Rust/WASM tools.
+  pinned image-installed Rust/WASM tools and browsers.
 
 ## Next Edit
 

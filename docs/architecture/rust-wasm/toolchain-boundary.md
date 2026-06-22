@@ -12,9 +12,10 @@ runtime dependency. Browser code must never spawn `wasm-pack`, `cargo`, Trunk,
 or other build tools.
 
 Build, check, and verification commands own toolchain preflight. When a required
-tool is missing, those commands fail with an actionable diagnostic that names the
-missing tool and the install or Docker verification path. They must not expose raw
-Node spawn errors as the primary message.
+tool or browser is missing, those commands fail with an actionable diagnostic
+that names the missing dependency and the install or Docker verification path.
+They must not expose raw Node spawn errors or browser-driver crashes as the
+primary message.
 
 Product browser runtime only loads already-built Rust/WASM assets. If those
 assets are missing or the bridge cannot initialize, the runtime renders an
@@ -36,8 +37,9 @@ output. It only reports that local browser WASM artifacts are unavailable.
 ## Verification
 
 `pnpm rust-wasm:quiet` and `cargo run -p lkjstr-xtask -- quiet rust-wasm` must
-still run the Rust/WASM matrix when tools are present. Missing `wasm-pack` fails
-at the preflight boundary with the install and Docker instructions.
+still run the Rust/WASM matrix when tools and browsers are present. Missing
+`wasm-pack`, Chrome, or Firefox fails at the preflight boundary with install and
+Docker instructions.
 
 Docker Compose is authoritative for final verification. The Docker image installs
 pinned Rust/WASM tools and must not rely on host-installed `wasm-pack` or a
