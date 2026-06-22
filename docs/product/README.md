@@ -64,3 +64,14 @@ itself: split tiles, tabs, relay-backed data, and local state.
   content wrap inside their visible container.
 - Action-opened Profile and Thread tabs inherit the clicked tile context.
 - A clean first launch opens Welcome, not Home.
+
+## All Files
+
+```text
+`audit/README.md` `audit/product-polish.md` `audit/rust-wasm-target.md` `audit/verification-gaps.md` `backlog.md` `doc-impl-audit.md` `feeds/README.md`
+`feeds/followees.md` `feeds/global.md` `feeds/home.md` `feeds/notifications.md` `feeds/profiles.md` `feeds/public-chat.md` `feeds/threads.md`
+`feeds/user-timeline.md` `tools/README.md` `tools/accounts.md` `tools/author-context.md` `tools/cache.md` `tools/custom-request.md` `tools/event-actions.md`
+`tools/log.md` `tools/mine-npub.md` `tools/profile-edit.md` `tools/relay-management.md` `tools/search.md` `tools/settings.md` `tools/stats.md`
+`tools/tweet.md` `tools/upload-settings.md` `tools/welcome.md` `workspace/README.md` `workspace/panes.md` `workspace/scope.md` `workspace/tabs.md`
+`workspace/workflows.md` `workspace/workspace.md`
+```

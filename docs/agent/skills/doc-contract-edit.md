@@ -35,7 +35,7 @@ The change touches only Markdown under `docs/`, `README.md`, or `AGENTS.md`.
    it in present tense. Mark anything else with an explicit status:
    implemented, design-only, not implemented, out of scope, or open question.
 3. Edit the contract. Keep one topic per file, the H1 plus `Purpose` shape,
-   ASCII prose, and at most 300 lines.
+   ASCII prose, and at most 200 lines.
 4. Update every README table of contents that lists the changed files. Docs
    READMEs list descendants recursively.
 5. Keep links relative and resolving. New docs directories need a README plus

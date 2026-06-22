@@ -32,3 +32,11 @@ readiness, diagnostics, and focused gates.
 
 Run the focused gate for the area you changed, then the Docker final gate from
 [verification.md](verification.md) before claiming the repository is verified.
+
+## All Files
+
+```text
+`ci.md` `cloudflare-workers.md` `data-safety.md` `diagnostics.md` `docker.md` `feed-route-isolation-regression.md` `focused-gates.md`
+`memory-verification.md` `readiness.md` `sqlite-opfs-testing.md` `storage-pressure-verification.md` `testing-ownership.md` `timeline-notification-regression-investigation.md` `verification/README.md`
+`verification/acceptance-checks.md` `verification/docker-final-gate.md` `verification/quiet-contract.md` `verification/rust-wasm.md` `verification/sqlite-opfs.md` `verification.md`
+```

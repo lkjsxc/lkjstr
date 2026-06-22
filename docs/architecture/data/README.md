@@ -141,3 +141,19 @@ read the current live storage state in [storage/README.md](storage/README.md).
 - Long-lived memory maps declare a size, time bound, or deterministic owner.
 - Prunable browser-local cache records register in `cacheLedger` with score,
   byte estimate, owner kind, resource kind, and deletion identity.
+
+## All Files
+
+```text
+`bounded-memory.md` `cache-first-feed-pages.md` `event-surface-paging.md` `event-tree.md` `feed-coverage.md` `feed-memory.md` `feed-surface/README.md`
+`feed-surface/enrichment-height-tiers.md` `feed-surface/event-value.md` `feed-surface/feed-row-chrome.md` `feed-surface/feed-scroll-surface.md` `feed-surface/footer-phase.md` `feed-surface/geometry-model-keys.md` `feed-surface/geometry-model-persistence.md`
+`feed-surface/geometry-model.md` `feed-surface/height-reservation.md` `feed-surface/lod-tree.md` `feed-surface/long-content.md` `feed-surface/near-end.md` `feed-surface/older-load-mode.md` `feed-surface/repost-rendering.md`
+`feed-surface/scroll-regression-tests.md` `feed-surface/staged-pipeline.md` `feed-surface/surface-matrix.md` `feed-surface/unload-height-stability.md` `feed-surface.md` `heap-retention.md` `local-secret-security.md`
+`memory-prioritization.md` `relay-pages.md` `resource-ownership.md` `sqlite-opfs/README.md` `sqlite-opfs/failure-recovery.md` `sqlite-opfs/import-export.md` `sqlite-opfs/migration-map.md`
+`sqlite-opfs/query-ownership.md` `sqlite-opfs/repositories.md` `sqlite-opfs/retention.md` `sqlite-opfs/runtime.md` `sqlite-opfs/schema.md` `sqlite-opfs/storage-modes.md` `sqlite-opfs/worker-protocol.md`
+`storage/README.md` `storage/data-classes/README.md` `storage/data-classes/feed-coverage-correctness.md` `storage/data-classes/ownership-classes.md` `storage/data-classes/tab-snapshots.md` `storage/data-classes/table-manifest.md` `storage/diagnostics/README.md`
+`storage/diagnostics/inventory.md` `storage/diagnostics/pressure-states.md` `storage/diagnostics/stats.md` `storage/diagnostics/verification.md` `storage/kernel/README.md` `storage/kernel/commands/README.md` `storage/kernel/commands/diagnostics.md`
+`storage/kernel/commands/event-cache.md` `storage/kernel/commands/feed-evidence.md` `storage/kernel/commands/protected.md` `storage/kernel/commands/repair.md` `storage/kernel/commands/retention.md` `storage/kernel/commands/search.md` `storage/kernel/failure-recovery.md`
+`storage/kernel/local-secrets.md` `storage/kernel/manifest.md` `storage/kernel/operation-results.md` `storage/kernel/repositories.md` `storage/kernel/schema-steps.md` `storage/kernel/transactions.md` `storage/retention/README.md`
+`storage/retention/byte-accounting.md` `storage/retention/deletion.md` `storage/retention/dynamic-protection.md` `storage/retention/ledger.md` `storage/retention/repair.md` `storage/retention/scoring.md`
+```

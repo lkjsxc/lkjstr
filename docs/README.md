@@ -64,147 +64,69 @@ changed. Each docs directory has one README that acts as a table of contents.
 ## All Files
 
 ```text
-`README.md` `agent/README.md` `agent/work-loop.md`
-`agent/no-fake-data.md` `agent/handoff.md` `agent/skills/README.md`
-`agent/skills/doc-contract-edit.md` `agent/skills/rust-wasm-slice.md` `agent/skills/storage-kernel.md`
-`agent/skills/relay-runtime.md` `agent/skills/feed-runtime.md` `agent/skills/ui-surface.md`
-`agent/skills/deletion-proof.md` `agent/skills/security-local-keys.md` `agent/skills/agent-maintenance.md`
-`architecture/README.md` `architecture/backend/README.md`
-`architecture/backend/boundary.md` `architecture/backend/cache-budget.md` `architecture/backend/home-query-lifecycle.md`
-`architecture/backend/query-registry.md` `architecture/backend/transport-contract.md` `architecture/data/README.md`
-`architecture/data/bounded-memory.md` `architecture/data/cache-first-feed-pages.md` `architecture/data/event-surface-paging.md`
-`architecture/data/event-tree.md` `architecture/data/feed-coverage.md` `architecture/data/feed-memory.md`
-`architecture/data/feed-surface.md` `architecture/data/feed-surface/README.md` `architecture/data/feed-surface/event-value.md`
-`architecture/data/feed-surface/feed-row-chrome.md` `architecture/data/feed-surface/feed-scroll-surface.md` `architecture/data/feed-surface/footer-phase.md`
-`architecture/data/feed-surface/geometry-model.md` `architecture/data/feed-surface/height-reservation.md` `architecture/data/feed-surface/lod-tree.md`
-`architecture/data/feed-surface/long-content.md` `architecture/data/feed-surface/near-end.md` `architecture/data/feed-surface/older-load-mode.md`
-`architecture/data/feed-surface/repost-rendering.md` `architecture/data/feed-surface/unload-height-stability.md`
-`architecture/data/feed-surface/enrichment-height-tiers.md` `architecture/data/feed-surface/scroll-regression-tests.md`
-`architecture/data/feed-surface/staged-pipeline.md` `architecture/data/feed-surface/surface-matrix.md`
-`architecture/data/heap-retention.md` `architecture/data/local-secret-security.md` `architecture/data/memory-prioritization.md`
-`architecture/data/relay-pages.md` `architecture/data/resource-ownership.md` `architecture/data/sqlite-opfs/README.md`
-`architecture/data/sqlite-opfs/failure-recovery.md` `architecture/data/sqlite-opfs/import-export.md` `architecture/data/sqlite-opfs/migration-map.md`
-`architecture/data/sqlite-opfs/query-ownership.md` `architecture/data/sqlite-opfs/repositories.md` `architecture/data/sqlite-opfs/retention.md`
-`architecture/data/sqlite-opfs/runtime.md` `architecture/data/sqlite-opfs/schema.md` `architecture/data/sqlite-opfs/storage-modes.md`
-`architecture/data/sqlite-opfs/worker-protocol.md` `architecture/data/storage/README.md` `architecture/data/storage/data-classes/README.md`
-`architecture/data/storage/data-classes/feed-coverage-correctness.md` `architecture/data/storage/data-classes/ownership-classes.md` `architecture/data/storage/data-classes/tab-snapshots.md`
-`architecture/data/storage/data-classes/table-manifest.md` `architecture/data/storage/diagnostics/README.md` `architecture/data/storage/diagnostics/inventory.md`
-`architecture/data/storage/diagnostics/pressure-states.md` `architecture/data/storage/diagnostics/stats.md` `architecture/data/storage/diagnostics/verification.md`
-`architecture/data/storage/kernel/README.md` `architecture/data/storage/kernel/commands/README.md`
-`architecture/data/storage/kernel/commands/diagnostics.md` `architecture/data/storage/kernel/commands/event-cache.md`
-`architecture/data/storage/kernel/commands/feed-evidence.md` `architecture/data/storage/kernel/commands/protected.md`
-`architecture/data/storage/kernel/commands/repair.md` `architecture/data/storage/kernel/commands/retention.md`
-`architecture/data/storage/kernel/commands/search.md`
-`architecture/data/storage/kernel/failure-recovery.md` `architecture/data/storage/kernel/local-secrets.md`
-`architecture/data/storage/kernel/manifest.md` `architecture/data/storage/kernel/operation-results.md` `architecture/data/storage/kernel/repositories.md`
-`architecture/data/storage/kernel/schema-steps.md` `architecture/data/storage/kernel/transactions.md` `architecture/data/storage/retention/README.md`
-`architecture/data/storage/retention/byte-accounting.md` `architecture/data/storage/retention/deletion.md` `architecture/data/storage/retention/dynamic-protection.md`
-`architecture/data/storage/retention/ledger.md` `architecture/data/storage/retention/repair.md` `architecture/data/storage/retention/scoring.md`
-`architecture/feeds/README.md` `architecture/feeds/invariants/README.md` `architecture/feeds/invariants/event-ordering.md`
-`architecture/feeds/invariants/filter-safety.md` `architecture/feeds/invariants/paging-cursors.md` `architecture/feeds/orchestration-bridge.md`
-`architecture/feeds/runtime/README.md` `architecture/feeds/runtime/feed-runtime-core.md` `architecture/feeds/runtime/feed-surface-inputs.md`
-`architecture/feeds/runtime/feed-window-reducer.md` `architecture/feeds/runtime/merge-reducer.md` `architecture/feeds/runtime/multi-tab-ownership.md`
-`architecture/feeds/runtime/per-runtime-cursors.md` `architecture/feeds/runtime/relay-incomplete-windows.md` `architecture/feeds/sources/README.md`
-`architecture/feeds/sources/global.md` `architecture/feeds/sources/home.md` `architecture/feeds/sources/notifications.md`
-`architecture/feeds/sources/profile.md` `architecture/feeds/sources/public-chat.md` `architecture/network/README.md`
-`architecture/network/identity-rendering.md` `architecture/network/job-manager.md` `architecture/network/progressive-relay-rendering.md`
-`architecture/network/relay-optimizer/README.md` `architecture/network/relay-optimizer/failure-states.md` `architecture/network/relay-optimizer/implementation-slices.md`
-`architecture/network/relay-optimizer/measurement-ledger.md` `architecture/network/relay-optimizer/product-wiring-ledger.md` `architecture/network/relay-optimizer/relay-read-scoring.md`
-`architecture/network/relay-optimizer/relay-wait-policy.md` `architecture/network/relay-optimizer/route-evidence-trust.md` `architecture/network/relay-optimizer/scan-width-adaptation.md`
-`architecture/network/relay-optimizer/source-map.md` `architecture/network/relay-optimizer/stats-projection.md` `architecture/network/relay-optimizer/verification.md`
-`architecture/network/relay-pool.md` `architecture/network/relay-routing.md` `architecture/network/request-budget/README.md`
-`architecture/network/request-budget/effective-limits.md` `architecture/network/request-budget/intent.md` `architecture/network/request-budget/message-size.md`
-`architecture/network/request-budget/nip11.md` `architecture/network/request-budget/scoring.md` `architecture/network/request-budget/source-map.md`
-`architecture/network/request-budget/tests.md` `architecture/network/settings-store.md` `architecture/network/subscription-manager.md`
-`architecture/network/subscription-orchestration/README.md` `architecture/network/subscription-orchestration/compatibility.md` `architecture/network/subscription-orchestration/demand-intent.md`
-`architecture/network/subscription-orchestration/feed-route-isolation.md` `architecture/network/subscription-orchestration/home-integration.md` `architecture/network/subscription-orchestration/ingress.md`
-`architecture/network/subscription-orchestration/lease-key.md` `architecture/network/subscription-orchestration/live-lease.md` `architecture/network/subscription-orchestration/metrics.md`
-`architecture/network/subscription-orchestration/notifications-profile-thread-integration.md` `architecture/network/subscription-orchestration/owner-visibility.md` `architecture/network/subscription-orchestration/page-read-dedupe.md`
-`architecture/network/subscription-orchestration/relay-read-scoring.md` `architecture/network/subscription-orchestration/route-plan.md` `architecture/network/subscription-orchestration/routing-by-surface.md`
-`architecture/network/subscription-orchestration/source-map.md` `architecture/network/subscription-orchestration/tests.md` `architecture/network/system.md`
-`architecture/orchestration/README.md` `architecture/orchestration/background-work.md` `architecture/orchestration/cancellation.md`
-`architecture/orchestration/database-memory.md` `architecture/orchestration/decision-model.md` `architecture/orchestration/stats.md`
-`architecture/orchestration/surface-inputs.md` `architecture/orchestration/task-queue.md` `architecture/orchestration/verification.md`
-`architecture/runtime-ownership.md` `architecture/runtimes/README.md` `architecture/runtimes/followees-runtime.md`
-`architecture/runtimes/global-runtime.md` `architecture/runtimes/home-runtime.md` `architecture/runtimes/notifications-runtime.md`
-`architecture/runtimes/profile-runtime.md` `architecture/runtimes/public-chat-runtime.md` `architecture/runtimes/query-runtime.md`
-`architecture/runtimes/thread-runtime.md` `architecture/runtimes/tweet-runtime.md` `architecture/runtimes/user-timeline-runtime.md`
-`architecture/rust-wasm/README.md` `architecture/rust-wasm/app-boundary.md` `architecture/rust-wasm/crate-boundaries.md`
-`architecture/rust-wasm/crate-inventory.md` `architecture/rust-wasm/cutover/README.md` `architecture/rust-wasm/cutover/areas/README.md`
-`architecture/rust-wasm/cutover/areas/relay.md` `architecture/rust-wasm/cutover/areas/storage.md` `architecture/rust-wasm/cutover/build-contract.md`
-`architecture/rust-wasm/cutover/deletion-ledger.md` `architecture/rust-wasm/cutover/feed-runtime.md`
-`architecture/rust-wasm/cutover/implementation-ledger.md` `architecture/rust-wasm/cutover/parity-ledger.md`
-`architecture/rust-wasm/cutover/relay-wiring.md` `architecture/rust-wasm/cutover/root-build.md`
-`architecture/rust-wasm/cutover/storage-wiring.md`
-`architecture/rust-wasm/cutover/typescript-inventory.md` `architecture/rust-wasm/cutover/ui-surface-map.md`
-`architecture/rust-wasm/cutover/verification-ledger.md` `architecture/rust-wasm/cutover/verification-run-notes-2026-06-13.md`
-`architecture/rust-wasm/host-boundary.md` `architecture/rust-wasm/memory-ownership.md`
-`architecture/rust-wasm/protocol-kernel.md` `architecture/rust-wasm/relay-runtime.md` `architecture/rust-wasm/source-map.md`
-`architecture/rust-wasm/status.md` `architecture/rust-wasm/storage-kernel.md` `architecture/rust-wasm/surface-cutover-order.md`
-`architecture/rust-wasm/ui-runtime.md` `architecture/rust-wasm/verification.md` `architecture/source-map.md` `architecture/workspace/README.md`
-`architecture/workspace/pane-chrome-scope.md` `architecture/workspace/pane-drop-target.md` `architecture/workspace/resize.md`
-`architecture/workspace/scroll-layout.md` `architecture/workspace/scroll-surface-audit.md` `architecture/workspace/tab-body-mount.md`
-`architecture/workspace/tab-dragging.md` `architecture/workspace/tab-retention-flow.md` `architecture/workspace/tab-runtime.md`
-`architecture/workspace/tab-shell-layout.md` `architecture/workspace/tab-snapshot-fields.md` `architecture/workspace/tab-strip-gestures.md`
-`architecture/workspace/theme.md` `architecture/workspace/tile-menu.md` `architecture/workspace/tile-overlays.md`
-`architecture/workspace/ui-composition.md` `architecture/workspace/ui-system/README.md`
-`architecture/workspace/ui-system/emoji-palette.md` `architecture/workspace/ui-system/feed-shell.md`
-`architecture/workspace/ui-system/identity-surfaces.md` `architecture/workspace/ui-system/media-upload-gate.md`
-`architecture/workspace/ui-system/new-tab-menu.md` `architecture/workspace/ui-system/overflow-actions.md`
-`architecture/workspace/ui-system/profile-header-layout.md` `architecture/workspace/ui-system/reaction-surfaces.md`
-`architecture/workspace/ui-system/scroll-inset-ownership.md` `architecture/workspace/ui-system/scroll-ownership.md`
-`architecture/workspace/ui-system/scroll-alignment.md` `architecture/workspace/ui-system/hybrid-tab-shells.md`
-`architecture/workspace/ui-system/polish-backlog.md` `architecture/workspace/ui-system/surface-source-map.md`
-`architecture/workspace/workspace-layout-tree.md` `current-state.md`
-`decisions/README.md` `decisions/autonomous-decision-defaults.md` `decisions/browser-first.md`
-`decisions/protocol-kernel.md` `decisions/relay-ownership.md` `decisions/rust-wasm-client.md` `decisions/sqlite-opfs-storage.md`
-`decisions/worker-owned-storage.md` `execution/README.md` `execution/current-blockers.md`
-`execution/operating-rules.md` `execution/storage-slice.md` `execution/tasks/README.md`
-`execution/tasks/author-context-provider-wiring.md` `execution/tasks/custom-request-provider-wiring.md`
-`execution/tasks/followees-provider-wiring.md` `execution/tasks/home-feed-provider-wiring.md`
-`execution/tasks/home-feed-slice.md` `execution/tasks/profile-feed-provider-wiring.md`
-`execution/tasks/profile-feed-slice.md` `execution/tasks/profile-sparse-history-proof.md`
-`execution/tasks/relay-effect-runner.md` `execution/tasks/shared-feed-view-model.md` `execution/tasks/storage-active-selector.md`
-`execution/tasks/search-feed-provider-wiring.md` `execution/tasks/thread-feed-provider-wiring.md`
-`execution/tasks/user-timeline-provider-wiring.md`
-`execution/tasks/storage-command-metadata.md` `execution/tasks/storage-command-spec-shape.md`
-`execution/tasks/storage-feed-cache-commands.md` `execution/tasks/storage-retention-repair.md`
-`execution/tasks/storage-search-index.md` `execution/tasks/storage-stats-pressure-inventory.md`
-`operations/README.md` `operations/ci.md`
-`operations/cloudflare-workers.md` `operations/data-safety.md` `operations/diagnostics.md`
-`operations/docker.md` `operations/feed-route-isolation-regression.md` `operations/focused-gates.md`
-`operations/memory-verification.md` `operations/readiness.md` `operations/sqlite-opfs-testing.md`
-`operations/storage-pressure-verification.md` `operations/testing-ownership.md` `operations/timeline-notification-regression-investigation.md`
-`operations/verification.md` `product/README.md` `product/audit/README.md`
-`product/audit/product-polish.md` `product/audit/rust-wasm-target.md` `product/audit/verification-gaps.md`
-`product/backlog.md` `product/doc-impl-audit.md` `product/feeds/README.md`
-`product/feeds/followees.md` `product/feeds/global.md` `product/feeds/home.md`
-`product/feeds/notifications.md` `product/feeds/profiles.md` `product/feeds/public-chat.md`
-`product/feeds/threads.md` `product/feeds/user-timeline.md` `product/tools/README.md`
-`product/tools/accounts.md` `product/tools/author-context.md` `product/tools/cache.md`
-`product/tools/custom-request.md` `product/tools/event-actions.md` `product/tools/log.md`
-`product/tools/mine-npub.md` `product/tools/profile-edit.md` `product/tools/relay-management.md`
-`product/tools/search.md` `product/tools/settings.md` `product/tools/stats.md`
-`product/tools/tweet.md` `product/tools/upload-settings.md` `product/tools/welcome.md`
-`product/workspace/README.md` `product/workspace/panes.md` `product/workspace/scope.md`
-`product/workspace/tabs.md` `product/workspace/workflows.md` `product/workspace/workspace.md`
-`protocol/README.md` `protocol/custom-emoji.md` `protocol/default-relays.md`
-`protocol/event-actions.md` `protocol/events.md` `protocol/kernel.md`
-`protocol/media-upload.md` `protocol/nip-support.md` `protocol/nip29-groups.md`
-`protocol/nip89-client-tag.md` `protocol/public-chat.md` `protocol/relays.md`
-`protocol/zaps.md` `repository/README.md` `repository/commit-protocol.md`
-`repository/documentation-standards.md` `repository/functional-style.md` `repository/layout.md`
-`repository/line-limits.md` `repository/llm-maintenance.md` `repository/workflow.md`
-`research/README.md` `research/browser-storage.md` `research/nostr-client-surfaces.md`
-`research/open-questions.md` `research/relay-optimizer-audit.md` `security/README.md`
-`security/content-safety.md` `security/local-keys.md` `vision/README.md`
-`vision/north-star.md` `vision/principles.md` `vision/scope.md`
+`agent/README.md` `agent/handoff.md` `agent/no-fake-data.md` `agent/skills/README.md` `agent/skills/agent-maintenance.md` `agent/skills/deletion-proof.md` `agent/skills/doc-contract-edit.md`
+`agent/skills/feed-runtime.md` `agent/skills/relay-runtime.md` `agent/skills/rust-wasm-slice.md` `agent/skills/security-local-keys.md` `agent/skills/storage-kernel.md` `agent/skills/ui-surface.md` `agent/work-loop.md`
+`architecture/README.md` `architecture/backend/README.md` `architecture/backend/boundary.md` `architecture/backend/cache-budget.md` `architecture/backend/home-query-lifecycle.md` `architecture/backend/query-registry.md` `architecture/backend/transport-contract.md`
+`architecture/data/README.md` `architecture/data/bounded-memory.md` `architecture/data/cache-first-feed-pages.md` `architecture/data/event-surface-paging.md` `architecture/data/event-tree.md` `architecture/data/feed-coverage.md` `architecture/data/feed-memory.md`
+`architecture/data/feed-surface/README.md` `architecture/data/feed-surface/enrichment-height-tiers.md` `architecture/data/feed-surface/event-value.md` `architecture/data/feed-surface/feed-row-chrome.md` `architecture/data/feed-surface/feed-scroll-surface.md` `architecture/data/feed-surface/footer-phase.md` `architecture/data/feed-surface/geometry-model-keys.md`
+`architecture/data/feed-surface/geometry-model-persistence.md` `architecture/data/feed-surface/geometry-model.md` `architecture/data/feed-surface/height-reservation.md` `architecture/data/feed-surface/lod-tree.md` `architecture/data/feed-surface/long-content.md` `architecture/data/feed-surface/near-end.md` `architecture/data/feed-surface/older-load-mode.md`
+`architecture/data/feed-surface/repost-rendering.md` `architecture/data/feed-surface/scroll-regression-tests.md` `architecture/data/feed-surface/staged-pipeline.md` `architecture/data/feed-surface/surface-matrix.md` `architecture/data/feed-surface/unload-height-stability.md` `architecture/data/feed-surface.md` `architecture/data/heap-retention.md`
+`architecture/data/local-secret-security.md` `architecture/data/memory-prioritization.md` `architecture/data/relay-pages.md` `architecture/data/resource-ownership.md` `architecture/data/sqlite-opfs/README.md` `architecture/data/sqlite-opfs/failure-recovery.md` `architecture/data/sqlite-opfs/import-export.md`
+`architecture/data/sqlite-opfs/migration-map.md` `architecture/data/sqlite-opfs/query-ownership.md` `architecture/data/sqlite-opfs/repositories.md` `architecture/data/sqlite-opfs/retention.md` `architecture/data/sqlite-opfs/runtime.md` `architecture/data/sqlite-opfs/schema.md` `architecture/data/sqlite-opfs/storage-modes.md`
+`architecture/data/sqlite-opfs/worker-protocol.md` `architecture/data/storage/README.md` `architecture/data/storage/data-classes/README.md` `architecture/data/storage/data-classes/feed-coverage-correctness.md` `architecture/data/storage/data-classes/ownership-classes.md` `architecture/data/storage/data-classes/tab-snapshots.md` `architecture/data/storage/data-classes/table-manifest.md`
+`architecture/data/storage/diagnostics/README.md` `architecture/data/storage/diagnostics/inventory.md` `architecture/data/storage/diagnostics/pressure-states.md` `architecture/data/storage/diagnostics/stats.md` `architecture/data/storage/diagnostics/verification.md` `architecture/data/storage/kernel/README.md` `architecture/data/storage/kernel/commands/README.md`
+`architecture/data/storage/kernel/commands/diagnostics.md` `architecture/data/storage/kernel/commands/event-cache.md` `architecture/data/storage/kernel/commands/feed-evidence.md` `architecture/data/storage/kernel/commands/protected.md` `architecture/data/storage/kernel/commands/repair.md` `architecture/data/storage/kernel/commands/retention.md` `architecture/data/storage/kernel/commands/search.md`
+`architecture/data/storage/kernel/failure-recovery.md` `architecture/data/storage/kernel/local-secrets.md` `architecture/data/storage/kernel/manifest.md` `architecture/data/storage/kernel/operation-results.md` `architecture/data/storage/kernel/repositories.md` `architecture/data/storage/kernel/schema-steps.md` `architecture/data/storage/kernel/transactions.md`
+`architecture/data/storage/retention/README.md` `architecture/data/storage/retention/byte-accounting.md` `architecture/data/storage/retention/deletion.md` `architecture/data/storage/retention/dynamic-protection.md` `architecture/data/storage/retention/ledger.md` `architecture/data/storage/retention/repair.md` `architecture/data/storage/retention/scoring.md`
+`architecture/feeds/README.md` `architecture/feeds/invariants/README.md` `architecture/feeds/invariants/event-ordering.md` `architecture/feeds/invariants/filter-safety.md` `architecture/feeds/invariants/paging-cursors.md` `architecture/feeds/orchestration-bridge.md` `architecture/feeds/runtime/README.md`
+`architecture/feeds/runtime/feed-runtime-core.md` `architecture/feeds/runtime/feed-surface-inputs.md` `architecture/feeds/runtime/feed-window-reducer.md` `architecture/feeds/runtime/merge-reducer.md` `architecture/feeds/runtime/multi-tab-ownership.md` `architecture/feeds/runtime/per-runtime-cursors.md` `architecture/feeds/runtime/relay-incomplete-windows.md`
+`architecture/feeds/sources/README.md` `architecture/feeds/sources/global.md` `architecture/feeds/sources/home.md` `architecture/feeds/sources/notifications.md` `architecture/feeds/sources/profile.md` `architecture/feeds/sources/public-chat.md` `architecture/network/README.md`
+`architecture/network/identity-rendering.md` `architecture/network/job-manager.md` `architecture/network/progressive-relay-rendering.md` `architecture/network/relay-optimizer/README.md` `architecture/network/relay-optimizer/failure-states.md` `architecture/network/relay-optimizer/implementation-slices.md` `architecture/network/relay-optimizer/measurement-ledger.md`
+`architecture/network/relay-optimizer/product-wiring-ledger.md` `architecture/network/relay-optimizer/relay-read-scoring.md` `architecture/network/relay-optimizer/relay-wait-policy.md` `architecture/network/relay-optimizer/route-evidence-trust.md` `architecture/network/relay-optimizer/scan-width-adaptation.md` `architecture/network/relay-optimizer/source-map.md` `architecture/network/relay-optimizer/stats-projection.md`
+`architecture/network/relay-optimizer/verification.md` `architecture/network/relay-pool.md` `architecture/network/relay-routing.md` `architecture/network/request-budget/README.md` `architecture/network/request-budget/effective-limits.md` `architecture/network/request-budget/intent.md` `architecture/network/request-budget/message-size.md`
+`architecture/network/request-budget/nip11.md` `architecture/network/request-budget/scoring.md` `architecture/network/request-budget/source-map.md` `architecture/network/request-budget/tests.md` `architecture/network/settings-store.md` `architecture/network/subscription-manager.md` `architecture/network/subscription-orchestration/README.md`
+`architecture/network/subscription-orchestration/compatibility.md` `architecture/network/subscription-orchestration/demand-intent.md` `architecture/network/subscription-orchestration/feed-route-isolation.md` `architecture/network/subscription-orchestration/home-integration.md` `architecture/network/subscription-orchestration/ingress.md` `architecture/network/subscription-orchestration/lease-key.md` `architecture/network/subscription-orchestration/live-lease.md`
+`architecture/network/subscription-orchestration/metrics.md` `architecture/network/subscription-orchestration/notifications-profile-thread-integration.md` `architecture/network/subscription-orchestration/owner-visibility.md` `architecture/network/subscription-orchestration/page-read-dedupe.md` `architecture/network/subscription-orchestration/relay-read-scoring.md` `architecture/network/subscription-orchestration/route-plan.md` `architecture/network/subscription-orchestration/routing-by-surface.md`
+`architecture/network/subscription-orchestration/source-map.md` `architecture/network/subscription-orchestration/tests.md` `architecture/network/system.md` `architecture/orchestration/README.md` `architecture/orchestration/background-work.md` `architecture/orchestration/cancellation.md` `architecture/orchestration/database-memory.md`
+`architecture/orchestration/decision-model.md` `architecture/orchestration/stats.md` `architecture/orchestration/surface-inputs.md` `architecture/orchestration/task-queue.md` `architecture/orchestration/verification.md` `architecture/runtime-ownership.md` `architecture/runtimes/README.md`
+`architecture/runtimes/followees-runtime.md` `architecture/runtimes/global-runtime.md` `architecture/runtimes/home-runtime.md` `architecture/runtimes/notifications-runtime.md` `architecture/runtimes/profile-runtime.md` `architecture/runtimes/public-chat-runtime.md` `architecture/runtimes/query-runtime.md`
+`architecture/runtimes/thread-runtime.md` `architecture/runtimes/tweet-runtime.md` `architecture/runtimes/user-timeline-runtime.md` `architecture/rust-wasm/README.md` `architecture/rust-wasm/app-boundary.md` `architecture/rust-wasm/crate-boundaries.md` `architecture/rust-wasm/crate-inventory.md`
+`architecture/rust-wasm/cutover/README.md` `architecture/rust-wasm/cutover/areas/README.md` `architecture/rust-wasm/cutover/areas/relay.md` `architecture/rust-wasm/cutover/areas/storage.md` `architecture/rust-wasm/cutover/build-contract.md` `architecture/rust-wasm/cutover/deletion-ledger-evidence.md` `architecture/rust-wasm/cutover/deletion-ledger.md`
+`architecture/rust-wasm/cutover/feed-runtime-evidence.md` `architecture/rust-wasm/cutover/feed-runtime.md` `architecture/rust-wasm/cutover/implementation-ledger.md` `architecture/rust-wasm/cutover/parity-event-and-timeline.md` `architecture/rust-wasm/cutover/parity-feed-surface.md` `architecture/rust-wasm/cutover/parity-ledger.md` `architecture/rust-wasm/cutover/parity-storage-ledger.md`
+`architecture/rust-wasm/cutover/relay-wiring.md` `architecture/rust-wasm/cutover/root-build.md` `architecture/rust-wasm/cutover/storage-wiring-families.md` `architecture/rust-wasm/cutover/storage-wiring-protected-families.md` `architecture/rust-wasm/cutover/storage-wiring-runtime-families.md` `architecture/rust-wasm/cutover/storage-wiring.md` `architecture/rust-wasm/cutover/typescript-inventory.md`
+`architecture/rust-wasm/cutover/ui-surface-map.md` `architecture/rust-wasm/cutover/verification-ledger-feed-storage-runs.md` `architecture/rust-wasm/cutover/verification-ledger-surface-runs.md` `architecture/rust-wasm/cutover/verification-ledger.md` `architecture/rust-wasm/cutover/verification-run-notes-2026-06-13.md` `architecture/rust-wasm/host-boundary.md` `architecture/rust-wasm/memory-ownership.md`
+`architecture/rust-wasm/protocol-kernel.md` `architecture/rust-wasm/relay-runtime.md` `architecture/rust-wasm/source-map.md` `architecture/rust-wasm/status/README.md` `architecture/rust-wasm/status/active-targets.md` `architecture/rust-wasm/status/implemented-slices.md` `architecture/rust-wasm/status/next-order.md`
+`architecture/rust-wasm/status/open-foundations.md` `architecture/rust-wasm/status.md` `architecture/rust-wasm/storage-kernel.md` `architecture/rust-wasm/surface-cutover-order.md` `architecture/rust-wasm/ui-runtime.md` `architecture/rust-wasm/verification.md` `architecture/source-map.md`
+`architecture/workspace/README.md` `architecture/workspace/pane-chrome-scope.md` `architecture/workspace/pane-drop-target.md` `architecture/workspace/resize.md` `architecture/workspace/scroll-layout.md` `architecture/workspace/scroll-surface-audit.md` `architecture/workspace/tab-body-mount.md`
+`architecture/workspace/tab-dragging.md` `architecture/workspace/tab-retention-flow.md` `architecture/workspace/tab-runtime.md` `architecture/workspace/tab-shell-layout.md` `architecture/workspace/tab-snapshot-fields.md` `architecture/workspace/tab-strip-gestures.md` `architecture/workspace/theme.md`
+`architecture/workspace/tile-menu.md` `architecture/workspace/tile-overlays.md` `architecture/workspace/ui-composition.md` `architecture/workspace/ui-system/README.md` `architecture/workspace/ui-system/emoji-palette.md` `architecture/workspace/ui-system/feed-shell.md` `architecture/workspace/ui-system/hybrid-tab-shells.md`
+`architecture/workspace/ui-system/identity-surfaces.md` `architecture/workspace/ui-system/media-upload-gate.md` `architecture/workspace/ui-system/new-tab-menu.md` `architecture/workspace/ui-system/overflow-actions.md` `architecture/workspace/ui-system/polish-backlog.md` `architecture/workspace/ui-system/profile-header-layout.md` `architecture/workspace/ui-system/reaction-surfaces.md`
+`architecture/workspace/ui-system/scroll-alignment.md` `architecture/workspace/ui-system/scroll-inset-ownership.md` `architecture/workspace/ui-system/scroll-ownership.md` `architecture/workspace/ui-system/surface-source-map.md` `architecture/workspace/workspace-layout-tree.md` `current-state/README.md` `current-state/canonical-docs.md`
+`current-state/memory-retention.md` `current-state/network-runtimes.md` `current-state/open-contracts.md` `current-state/product-surfaces.md` `current-state/protocol-support.md` `current-state/storage-state.md` `current-state/workspace-feeds.md`
+`current-state.md` `decisions/README.md` `decisions/autonomous-decision-defaults.md` `decisions/browser-first.md` `decisions/protocol-kernel.md` `decisions/relay-ownership.md` `decisions/rust-wasm-client.md`
+`decisions/sqlite-opfs-storage.md` `decisions/worker-owned-storage.md` `execution/README.md` `execution/blockers/README.md` `execution/blockers/deletion-proof.md` `execution/blockers/home-leptos-feed.md` `execution/blockers/relay-effect-runner.md`
+`execution/blockers/shared-feed-runtime.md` `execution/blockers/storage-command-coverage.md` `execution/current-blockers.md` `execution/operating-rules.md` `execution/storage-slice.md` `execution/tasks/README.md` `execution/tasks/author-context-provider-wiring.md`
+`execution/tasks/custom-request-provider-wiring.md` `execution/tasks/followees-provider-wiring.md` `execution/tasks/home-feed-provider-wiring.md` `execution/tasks/home-feed-slice.md` `execution/tasks/profile-feed-provider-wiring.md` `execution/tasks/profile-feed-slice.md` `execution/tasks/profile-sparse-history-proof.md`
+`execution/tasks/relay-effect-runner.md` `execution/tasks/search-feed-provider-wiring.md` `execution/tasks/shared-feed-view-model.md` `execution/tasks/storage-active-selector.md` `execution/tasks/storage-command-metadata.md` `execution/tasks/storage-command-spec-shape.md` `execution/tasks/storage-feed-cache-commands.md`
+`execution/tasks/storage-retention-repair.md` `execution/tasks/storage-search-index.md` `execution/tasks/storage-stats-pressure-inventory.md` `execution/tasks/thread-feed-provider-wiring.md` `execution/tasks/user-timeline-provider-wiring.md` `operations/README.md` `operations/ci.md`
+`operations/cloudflare-workers.md` `operations/data-safety.md` `operations/diagnostics.md` `operations/docker.md` `operations/feed-route-isolation-regression.md` `operations/focused-gates.md` `operations/memory-verification.md`
+`operations/readiness.md` `operations/sqlite-opfs-testing.md` `operations/storage-pressure-verification.md` `operations/testing-ownership.md` `operations/timeline-notification-regression-investigation.md` `operations/verification/README.md` `operations/verification/acceptance-checks.md`
+`operations/verification/docker-final-gate.md` `operations/verification/quiet-contract.md` `operations/verification/rust-wasm.md` `operations/verification/sqlite-opfs.md` `operations/verification.md` `product/README.md` `product/audit/README.md`
+`product/audit/product-polish.md` `product/audit/rust-wasm-target.md` `product/audit/verification-gaps.md` `product/backlog.md` `product/doc-impl-audit.md` `product/feeds/README.md` `product/feeds/followees.md`
+`product/feeds/global.md` `product/feeds/home.md` `product/feeds/notifications.md` `product/feeds/profiles.md` `product/feeds/public-chat.md` `product/feeds/threads.md` `product/feeds/user-timeline.md`
+`product/tools/README.md` `product/tools/accounts.md` `product/tools/author-context.md` `product/tools/cache.md` `product/tools/custom-request.md` `product/tools/event-actions.md` `product/tools/log.md`
+`product/tools/mine-npub.md` `product/tools/profile-edit.md` `product/tools/relay-management.md` `product/tools/search.md` `product/tools/settings.md` `product/tools/stats.md` `product/tools/tweet.md`
+`product/tools/upload-settings.md` `product/tools/welcome.md` `product/workspace/README.md` `product/workspace/panes.md` `product/workspace/scope.md` `product/workspace/tabs.md` `product/workspace/workflows.md`
+`product/workspace/workspace.md` `protocol/README.md` `protocol/custom-emoji.md` `protocol/default-relays.md` `protocol/event-actions.md` `protocol/events.md` `protocol/kernel.md`
+`protocol/media-upload.md` `protocol/nip-support.md` `protocol/nip29-groups.md` `protocol/nip89-client-tag.md` `protocol/public-chat.md` `protocol/relays.md` `protocol/zaps.md`
+`repository/README.md` `repository/commit-protocol.md` `repository/documentation-standards.md` `repository/functional-style.md` `repository/layout.md` `repository/line-limits.md` `repository/llm-maintenance.md`
+`repository/workflow.md` `research/README.md` `research/browser-storage.md` `research/nostr-client-surfaces.md` `research/open-questions.md` `research/relay-optimizer-audit.md` `security/README.md`
+`security/content-safety.md` `security/local-keys.md` `vision/README.md` `vision/north-star.md` `vision/principles.md` `vision/scope.md`
 ```
-
 ## Documentation Rules
 
 - Keep docs aligned with implementation in the same change.
-- Keep each Markdown file below 300 lines.
+- Keep each Markdown file below 200 lines.
 - Keep prose ASCII-only and avoid release shorthand words.
 - Split large contracts into directories with a README and short child files.
 - Do not document fake data paths as product behavior.

@@ -20,3 +20,9 @@ that remain partial or not implemented in the concise audit.
 - Update this subtree before changing a partial implementation slice.
 - Move a row to implemented only after the named source path and gate prove it.
 - Use real source paths and real checks. Do not list placeholder owners.
+
+## All Files
+
+```text
+`product-polish.md` `rust-wasm-target.md` `verification-gaps.md`
+```

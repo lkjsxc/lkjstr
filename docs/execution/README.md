@@ -124,3 +124,13 @@ images were built and the services ran from those images.
   Search provider, local indexed rows, and relay snapshot merge proof.
 - [tasks/thread-feed-provider-wiring.md](tasks/thread-feed-provider-wiring.md):
   Thread cached root/reply/focused-reference/parent provider wiring.
+
+## All Files
+
+```text
+`blockers/README.md` `blockers/deletion-proof.md` `blockers/home-leptos-feed.md` `blockers/relay-effect-runner.md` `blockers/shared-feed-runtime.md` `blockers/storage-command-coverage.md` `current-blockers.md`
+`operating-rules.md` `storage-slice.md` `tasks/README.md` `tasks/author-context-provider-wiring.md` `tasks/custom-request-provider-wiring.md` `tasks/followees-provider-wiring.md` `tasks/home-feed-provider-wiring.md`
+`tasks/home-feed-slice.md` `tasks/profile-feed-provider-wiring.md` `tasks/profile-feed-slice.md` `tasks/profile-sparse-history-proof.md` `tasks/relay-effect-runner.md` `tasks/search-feed-provider-wiring.md` `tasks/shared-feed-view-model.md`
+`tasks/storage-active-selector.md` `tasks/storage-command-metadata.md` `tasks/storage-command-spec-shape.md` `tasks/storage-feed-cache-commands.md` `tasks/storage-retention-repair.md` `tasks/storage-search-index.md` `tasks/storage-stats-pressure-inventory.md`
+`tasks/thread-feed-provider-wiring.md` `tasks/user-timeline-provider-wiring.md`
+```

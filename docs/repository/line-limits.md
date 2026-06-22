@@ -7,7 +7,7 @@ rules, not style preferences.
 
 ## Caps
 
-- Strict Markdown: 300 lines for `README.md`, `AGENTS.md`, and every
+- Strict Markdown: 200 lines for `README.md`, `AGENTS.md`, and every
   `docs/**/*.md` file.
 - Source: 200 lines for first-party TypeScript, Svelte, JavaScript, Rust, CSS,
   HTML, and scripts checked by repository tooling.

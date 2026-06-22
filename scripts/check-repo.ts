@@ -93,7 +93,7 @@ async function checkLines(filesToCheck: string[]) {
     const ext = path.extname(rel);
     const text = await fs.readFile(file, 'utf8');
     if (isStrictDoc(rel, ext)) {
-      checkLimit(rel, text, 300, 'docs');
+      checkLimit(rel, text, 200, 'docs');
     }
     if (isSource(rel, ext)) checkLimit(rel, text, 200, 'source');
   }

@@ -66,3 +66,15 @@ host adapters with cleanup handles.
 The build cutover rule, surface ledger, deletion ledger, and autonomous
 planning defaults in [../../decisions/autonomous-decision-defaults.md](../../decisions/autonomous-decision-defaults.md)
 live under this target contract.
+
+## All Files
+
+```text
+`app-boundary.md` `crate-boundaries.md` `crate-inventory.md` `cutover/README.md` `cutover/areas/README.md` `cutover/areas/relay.md` `cutover/areas/storage.md`
+`cutover/build-contract.md` `cutover/deletion-ledger-evidence.md` `cutover/deletion-ledger.md` `cutover/feed-runtime-evidence.md` `cutover/feed-runtime.md` `cutover/implementation-ledger.md` `cutover/parity-event-and-timeline.md`
+`cutover/parity-feed-surface.md` `cutover/parity-ledger.md` `cutover/parity-storage-ledger.md` `cutover/relay-wiring.md` `cutover/root-build.md` `cutover/storage-wiring-families.md` `cutover/storage-wiring-protected-families.md`
+`cutover/storage-wiring-runtime-families.md` `cutover/storage-wiring.md` `cutover/typescript-inventory.md` `cutover/ui-surface-map.md` `cutover/verification-ledger-feed-storage-runs.md` `cutover/verification-ledger-surface-runs.md` `cutover/verification-ledger.md`
+`cutover/verification-run-notes-2026-06-13.md` `host-boundary.md` `memory-ownership.md` `protocol-kernel.md` `relay-runtime.md` `source-map.md` `status/README.md`
+`status/active-targets.md` `status/implemented-slices.md` `status/next-order.md` `status/open-foundations.md` `status.md` `storage-kernel.md` `surface-cutover-order.md`
+`ui-runtime.md` `verification.md`
+```

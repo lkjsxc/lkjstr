@@ -19,7 +19,7 @@ for that subtree.
 - Put the most useful summary near the top.
 - Keep one topic per file.
 - Link related files with relative Markdown links.
-- Keep each file at or below 300 lines.
+- Keep each file at or below 200 lines.
 - Keep source files at or below 200 lines.
 - Update docs before implementation when behavior, contracts, or workflows
   change.

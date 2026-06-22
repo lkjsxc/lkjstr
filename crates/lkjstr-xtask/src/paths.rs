@@ -40,7 +40,14 @@ pub fn rel(root: &Path, path: &Path) -> String {
 pub fn is_skipped(path: &Path) -> bool {
     path.components()
         .filter_map(|component| component.as_os_str().to_str())
-        .any(|part| SKIP_DIRS.contains(&part))
+        .enumerate()
+        .any(|(index, part)| {
+            if part == "data" {
+                index == 0 && SKIP_DIRS.contains(&part)
+            } else {
+                SKIP_DIRS.contains(&part)
+            }
+        })
 }
 
 fn walk(root: &Path, dir: &Path, files: &mut Vec<PathBuf>) -> Result<(), String> {

@@ -36,7 +36,7 @@ server-side account system, relay proxy, custody service, or backend.
   never degrade silently.
 - Keep docs and implementation aligned in the same change, including
   [docs/current-state.md](docs/current-state.md) when shipped behavior moves.
-- Keep source files at or below 200 lines and docs at or below 300 lines.
+- Keep source files at or below 200 lines and docs at or below 200 lines.
 - Use factory functions and plain data, not first-party classes, in `src`;
   see [docs/repository/functional-style.md](docs/repository/functional-style.md).
 - Relay, diagnostic, and tab runtime memory stays bounded with explicit close

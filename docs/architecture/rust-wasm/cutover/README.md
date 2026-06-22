@@ -57,3 +57,12 @@ Delete a TypeScript or Svelte product module only after the Rust equivalent has:
 - local or Docker verification evidence.
 - no placeholder UI or fake protocol result.
 - a row in [deletion-ledger.md](deletion-ledger.md).
+
+## All Files
+
+```text
+`areas/README.md` `areas/relay.md` `areas/storage.md` `build-contract.md` `deletion-ledger-evidence.md` `deletion-ledger.md` `feed-runtime-evidence.md`
+`feed-runtime.md` `implementation-ledger.md` `parity-event-and-timeline.md` `parity-feed-surface.md` `parity-ledger.md` `parity-storage-ledger.md` `relay-wiring.md`
+`root-build.md` `storage-wiring-families.md` `storage-wiring-protected-families.md` `storage-wiring-runtime-families.md` `storage-wiring.md` `typescript-inventory.md` `ui-surface-map.md`
+`verification-ledger-feed-storage-runs.md` `verification-ledger-surface-runs.md` `verification-ledger.md` `verification-run-notes-2026-06-13.md`
+```

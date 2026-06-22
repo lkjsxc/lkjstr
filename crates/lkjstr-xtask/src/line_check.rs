@@ -15,7 +15,7 @@ pub fn check(root: &Path) -> Result<(), String> {
         }
         let text = fs::read_to_string(&file).map_err(|error| format!("{rel}: {error}"))?;
         if strict_doc {
-            check_limit(&mut problems, &rel, &text, 300, "docs");
+            check_limit(&mut problems, &rel, &text, 200, "docs");
         }
         if source {
             check_limit(&mut problems, &rel, &text, 200, "source");
