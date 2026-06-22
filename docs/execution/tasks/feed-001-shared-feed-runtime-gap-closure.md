@@ -10,11 +10,14 @@ active
 
 ## Current Evidence
 
-- current blocker says shared feed runtime is the first incomplete blocker
+- current blocker says shared feed runtime is the first incomplete blocker.
+- Public Chat now has Rust shared demand-surface planning for channel discovery,
+  metadata, selected-channel messages, and own moderation reads.
 
 ## Next Edit
 
-Identify one remaining feed-surface parity gap and add source plus focused proof for that gap.
+Continue wiring retained feed-like runtimes through shared demand, coverage,
+and provider paths before deletion proof.
 
 ## Files To Read
 

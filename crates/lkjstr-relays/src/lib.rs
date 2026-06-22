@@ -32,7 +32,7 @@ pub use demand::{
 };
 pub use ingress::{
     IngressDecision, ingress_decision, is_feed_display_kind, is_notification_kind,
-    is_render_critical_for_surface,
+    is_public_chat_kind, is_render_critical_for_surface,
 };
 pub use live_lease::{
     LiveIngressOutcome, LiveLeaseCounts, LiveLeaseEffect, LiveLeaseEffectKind, LiveLeaseOutcome,

@@ -17,6 +17,7 @@ pub enum QuerySurface {
     Search,
     CustomRequest,
     AuthorContext,
+    PublicChat,
 }
 
 impl QuerySurface {
@@ -32,6 +33,7 @@ impl QuerySurface {
             Self::Search => lkjstr_relays::DemandSurface::Search,
             Self::CustomRequest => lkjstr_relays::DemandSurface::CustomRequest,
             Self::AuthorContext => lkjstr_relays::DemandSurface::AuthorContext,
+            Self::PublicChat => lkjstr_relays::DemandSurface::PublicChat,
         }
     }
 
@@ -47,6 +49,7 @@ impl QuerySurface {
             Self::Search => RoutePlanSurface::Search,
             Self::CustomRequest => RoutePlanSurface::CustomRequest,
             Self::AuthorContext => RoutePlanSurface::AuthorContext,
+            Self::PublicChat => RoutePlanSurface::PublicChat,
         }
     }
 }

@@ -31,6 +31,7 @@ pub enum DemandSurface {
     Search,
     CustomRequest,
     AuthorContext,
+    PublicChat,
 }
 
 impl DemandSurface {
@@ -46,6 +47,7 @@ impl DemandSurface {
             Self::Search => "search",
             Self::CustomRequest => "custom-request",
             Self::AuthorContext => "author-context",
+            Self::PublicChat => "public-chat",
         }
     }
 }

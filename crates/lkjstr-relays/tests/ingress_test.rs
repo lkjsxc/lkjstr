@@ -1,9 +1,10 @@
 use lkjstr_protocol::{
-    KIND_EMOJI_SET, KIND_METADATA, KIND_REACTION, KIND_REPOST, KIND_TEXT_NOTE, KIND_ZAP_RECEIPT,
+    KIND_CHANNEL_CREATE, KIND_CHANNEL_MESSAGE, KIND_EMOJI_SET, KIND_METADATA, KIND_REACTION,
+    KIND_REPOST, KIND_TEXT_NOTE, KIND_ZAP_RECEIPT,
 };
 use lkjstr_relays::{
     DemandSurface, IngressDecision, ingress_decision, is_feed_display_kind, is_notification_kind,
-    is_render_critical_for_surface,
+    is_public_chat_kind, is_render_critical_for_surface,
 };
 
 #[test]
@@ -39,6 +40,16 @@ fn tool_surfaces_accept_requested_events() {
     assert_eq!(
         ingress_decision(DemandSurface::CustomRequest, KIND_EMOJI_SET),
         IngressDecision::Accept
+    );
+}
+
+#[test]
+fn public_chat_accepts_only_nip28_kinds() {
+    assert!(is_public_chat_kind(KIND_CHANNEL_CREATE));
+    assert!(is_public_chat_kind(KIND_CHANNEL_MESSAGE));
+    assert_eq!(
+        ingress_decision(DemandSurface::PublicChat, KIND_REACTION),
+        IngressDecision::DropNonRenderCritical
     );
 }
 

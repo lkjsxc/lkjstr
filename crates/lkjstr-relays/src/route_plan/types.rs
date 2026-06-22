@@ -11,6 +11,7 @@ pub enum RoutePlanSurface {
     Search,
     CustomRequest,
     AuthorContext,
+    PublicChat,
 }
 
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]

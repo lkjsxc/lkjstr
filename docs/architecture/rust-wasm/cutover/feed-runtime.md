@@ -3,8 +3,9 @@
 ## Purpose
 
 This contract defines the shared Rust feed runtime that Home, Global, Profile,
-Thread, Notifications, Search result lists, Author Context, and User Timeline
-must use before their TypeScript feed runtimes are deleted.
+Thread, Notifications, Search result lists, Author Context, User Timeline, and
+Public Chat read demand must use before TypeScript feed-like runtimes are
+deleted.
 
 ## Detail Map
 
@@ -25,6 +26,9 @@ The shared runtime state contains:
 - scroll anchor hints, width bucket, row geometry estimate, reservation key, and
   nested-repost enrichment invalidation.
 - hydration priority queue with owner-scoped cancellation.
+
+Public Chat currently has shared Rust demand builders and Public Chat-specific
+ingress filtering, but shipped relay execution remains TypeScript-owned.
 
 ## Feed Row View Model
 
