@@ -14,6 +14,6 @@ This directory contains unit tests for event helpers and repositories.
   action presenter wiring, action label/control/panel/button/inline-panel/reply state,
   action run/completion lifecycle, emoji-source lifecycle, reaction payloads,
   row presenter/frame/presentation/avatar, row open dispatch/highlight lifecycle,
-  profile activation controls, event tree/list presenter/cache, continuation,
+  profile activation controls, runtime error text, event tree/list presenter/cache, continuation,
   near-start, near-end, paging, row-render/data rows, feed windows, repository,
   zap presenter/panel/submit/row planning, lifecycle, and zap invoice copy lifecycle coverage.

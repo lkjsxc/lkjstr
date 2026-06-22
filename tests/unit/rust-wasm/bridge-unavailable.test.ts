@@ -1,6 +1,7 @@
 import { readFileSync } from 'node:fs';
 import { describe, expect, it } from 'vitest';
 import {
+  productSafeErrorMessage,
   rustWasmArtifactMissingMessage,
   rustWasmBridgeErrorMessage,
   rustWasmDiagnosticMessage,
@@ -25,6 +26,9 @@ describe('Rust/WASM bridge-unavailable presenter', () => {
     expect(
       rustWasmBridgeErrorMessage('unrelated failure', 'Home failed.'),
     ).toBe('Home failed.');
+    expect(productSafeErrorMessage('relay failed', 'fallback')).toBe(
+      'relay failed',
+    );
   });
 
   it('is used by feed and retained island hosts instead of raw error messages', () => {

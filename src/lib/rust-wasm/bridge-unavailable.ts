@@ -30,6 +30,18 @@ export function rustWasmDiagnosticMessage(error: unknown): string {
   return rustWasmBridgeErrorMessage(error, rustWasmArtifactMissingMessage);
 }
 
+export function productSafeErrorMessage(
+  error: unknown,
+  fallback: string,
+): string {
+  const message = errorText(error);
+  if (!message) return fallback;
+  if (isToolchainLeak(message) || isArtifactUnavailable(message)) {
+    return rustWasmArtifactMissingMessage;
+  }
+  return message;
+}
+
 export function isToolchainLeak(message: string): boolean {
   return rawToolchainFragments.some((fragment) => message.includes(fragment));
 }

@@ -50,7 +50,8 @@ Latest focused note: on 2026-06-22, RUSTWASM-TOOLCHAIN-001 made Rust/WASM
 preflight deterministic and product-safe. Missing `wasm-pack`, Chrome, or
 Firefox now fails `pnpm rust-wasm:quiet` with install or Docker instructions,
 while Timeline/feed Rust islands, retained bridge tabs, feed-surface loaders,
-follow-graph, and Stats diagnostics map raw toolchain errors to explicit bridge-unavailable text.
+generic runtime error text, follow-graph, and Stats diagnostics map raw
+toolchain errors to explicit bridge-unavailable text.
 Focused Vitest, xtask toolchain, `cargo test -p lkjstr-web`,
 `cargo test -p lkjstr-app -- feed`, `cargo fmt --check`, workspace clippy,
 repo/docs/line checks, `pnpm test:quiet`, `pnpm verify:quiet`,

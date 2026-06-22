@@ -1,4 +1,6 @@
+import { productSafeErrorMessage } from '$lib/rust-wasm/bridge-unavailable';
+
 export function boundedErrorText(error: unknown): string {
-  const message = error instanceof Error ? error.message : String(error);
+  const message = productSafeErrorMessage(error, 'Operation failed.');
   return message.slice(0, 180) || 'Operation failed.';
 }
