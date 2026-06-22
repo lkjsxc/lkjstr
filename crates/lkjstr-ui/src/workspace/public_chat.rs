@@ -1,5 +1,5 @@
 use leptos::prelude::*;
-use lkjstr_domain::{PublicChatState, empty_public_chat_state};
+use lkjstr_domain::{PublicChatLoadingState, PublicChatState, empty_public_chat_state};
 
 #[component]
 pub fn EmptyPublicChatTab() -> impl IntoView {
@@ -14,13 +14,16 @@ pub fn PublicChatTab(
     read_relays: Vec<String>,
     active_pubkey: Option<String>,
 ) -> impl IntoView {
-    let relay_text = relay_status(read_relays.len());
+    let read_relay_count = read_relays.len();
+    let relay_text = relay_status(read_relay_count);
+    let channel_empty = channel_empty_text(&state, read_relay_count);
+    let message_empty = message_empty_text(&state);
     let account_status = active_pubkey
         .as_ref()
         .map(|_| "Signing account available")
         .unwrap_or("No signing account available");
     let channel_view = if state.channels.is_empty() {
-        view! { <p>"No real channels loaded."</p> }.into_any()
+        view! { <p>{channel_empty}</p> }.into_any()
     } else {
         state
             .channels
@@ -43,7 +46,7 @@ pub fn PublicChatTab(
             .into_any()
     };
     let message_view = if state.messages.is_empty() {
-        view! { <p>"No real messages loaded."</p> }.into_any()
+        view! { <p>{message_empty}</p> }.into_any()
     } else {
         state
             .messages
@@ -85,5 +88,75 @@ fn relay_status(count: usize) -> String {
         "No read relays selected.".to_owned()
     } else {
         format!("{count} read relays selected.")
+    }
+}
+
+fn channel_empty_text(state: &PublicChatState, read_relay_count: usize) -> &'static str {
+    if read_relay_count == 0 {
+        "Channel discovery unavailable because no read relays are selected."
+    } else if state.loading == PublicChatLoadingState::LoadingChannels {
+        "Channel discovery is loading."
+    } else {
+        "No real channels loaded; relay coverage is incomplete."
+    }
+}
+
+fn message_empty_text(state: &PublicChatState) -> &'static str {
+    if state.selected_channel_id.is_none() {
+        "Open a real channel to load messages."
+    } else if matches!(
+        state.loading,
+        PublicChatLoadingState::LoadingMessages { .. }
+    ) {
+        "Selected channel messages are loading."
+    } else {
+        "No real messages loaded; relay coverage is incomplete."
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::{channel_empty_text, message_empty_text};
+    use lkjstr_domain::{PublicChatLoadingState, empty_public_chat_state};
+
+    #[test]
+    fn public_chat_empty_channel_text_names_real_blocker() {
+        let mut state = empty_public_chat_state();
+        assert_eq!(
+            channel_empty_text(&state, 0),
+            "Channel discovery unavailable because no read relays are selected."
+        );
+        state.loading = PublicChatLoadingState::LoadingChannels;
+        assert_eq!(
+            channel_empty_text(&state, 2),
+            "Channel discovery is loading."
+        );
+        state.loading = PublicChatLoadingState::Idle;
+        assert_eq!(
+            channel_empty_text(&state, 2),
+            "No real channels loaded; relay coverage is incomplete."
+        );
+    }
+
+    #[test]
+    fn public_chat_empty_message_text_requires_selected_channel() {
+        let mut state = empty_public_chat_state();
+        assert_eq!(
+            message_empty_text(&state),
+            "Open a real channel to load messages."
+        );
+        state.selected_channel_id = Some("channel".to_owned());
+        state.loading = PublicChatLoadingState::LoadingMessages {
+            channel_id: "channel".to_owned(),
+        };
+        assert_eq!(
+            message_empty_text(&state),
+            "Selected channel messages are loading."
+        );
+        state.loading = PublicChatLoadingState::Idle;
+        assert_eq!(
+            message_empty_text(&state),
+            "No real messages loaded; relay coverage is incomplete."
+        );
     }
 }

@@ -19,8 +19,8 @@ async fn rust_public_chat_uses_one_scroll_owner_for_status_and_rows() -> Result<
     click("button[aria-label='New tab']")?;
     wait_for_text("Public Chat").await?;
     click("[data-testid='new-tab-option-public-chat']")?;
-    wait_for_text("No real channels loaded.").await?;
-    wait_for_text("No real messages loaded.").await?;
+    wait_for_text("Channel discovery unavailable because no read relays are selected.").await?;
+    wait_for_text("Open a real channel to load messages.").await?;
 
     assert_feed_scroll_boundary(
         ".lkjstr-public-chat",

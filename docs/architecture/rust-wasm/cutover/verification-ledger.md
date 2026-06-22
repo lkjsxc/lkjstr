@@ -46,7 +46,16 @@ Keep new run evidence in the table below unless a narrative note is required.
 
 ## Recent Focused Evidence
 
-Latest focused note: on 2026-06-20, retained mention/reaction/media/metadata/avatar
+Latest focused note: on 2026-06-22, Rust Public Chat empty states name exact
+blockers for no read relays, loading channels, no loaded channels with
+incomplete coverage, missing selected channel, loading messages, and no loaded
+messages with incomplete coverage. `cargo fmt --check`,
+`cargo test -p lkjstr-ui public_chat`, `pnpm check:repo`, docs, and line guards
+passed. `wasm-pack test --headless --chrome crates/lkjstr-web --test public_chat_scroll_test`
+compiled but failed in the browser harness because ChromeDriver exited with
+SIGKILL and the runner returned HTTP 404. Docker was not rerun.
+
+Previous focused note: on 2026-06-20, retained mention/reaction/media/metadata/avatar
 Svelte chrome uses shared snippets. Focused tests, ESLint, formatting, Svelte
 check, repo/docs/line guards, whitespace, and quiet verify passed. Targeted
 Followees/Profile WASM tests passed; broad quiet exceeded 900s. Docker was not rerun.
