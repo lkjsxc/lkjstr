@@ -61,8 +61,9 @@ exact relay request purposes. `cargo fmt --check`, `cargo test -p lkjstr-ui publ
 `cargo test -p lkjstr-app --test feed_runtime_lifecycle_test`,
 `pnpm test -- tests/unit/relays/orchestration/ingress-classify.test.ts`,
 `pnpm test -- tests/unit/public-chat/public-chat-filters.test.ts`,
-`pnpm check:repo`, docs,
-and line guards passed. Earlier
+`pnpm check:repo`, docs, line guards, and `cargo clippy -p lkjstr-app --all-targets -- -D warnings`
+passed. `pnpm rust-wasm:quiet` now reaches the browser harness but still fails
+because geckodriver exits with SIGKILL and the runner returns HTTP 500. Earlier
 `wasm-pack test --headless --chrome crates/lkjstr-web --test public_chat_scroll_test`
 compiled but failed in the browser harness because ChromeDriver exited with
 SIGKILL and the runner returned HTTP 404. Docker was not rerun for this slice.

@@ -20,34 +20,39 @@ fn channel_discovery_uses_shared_public_chat_demand_surface() {
 }
 
 #[test]
-fn selected_messages_keep_channel_identity_in_demand() {
+fn selected_messages_keep_channel_identity_in_demand() -> Result<(), String> {
     let mut input = base_input();
     input.selected_channel_id = Some("channel-event".to_owned());
-    let query = selected_channel_messages_query_input(context(), &input).unwrap();
+    let query = selected_channel_messages_query_input(context(), &input)
+        .ok_or_else(|| "missing message query".to_owned())?;
     assert_eq!(query.channel, Some("channel-event".to_owned()));
     assert_eq!(query.filters[0].kinds, Some(vec![KIND_CHANNEL_MESSAGE]));
     assert_eq!(
         query.filters[0].tags.get("e"),
         Some(&vec!["channel-event".to_owned()])
     );
+    Ok(())
 }
 
 #[test]
-fn metadata_and_moderation_demands_have_exact_filters() {
+fn metadata_and_moderation_demands_have_exact_filters() -> Result<(), String> {
     let mut input = base_input();
     input.channel_ids = vec!["channel-a".to_owned()];
     input.active_pubkey = Some("me".to_owned());
     input.loaded_message_ids = vec!["message-a".to_owned()];
-    let metadata = channel_metadata_query_input(context(), &input).unwrap();
+    let metadata = channel_metadata_query_input(context(), &input)
+        .ok_or_else(|| "missing metadata query".to_owned())?;
     assert_eq!(metadata.purpose, DemandPurpose::Metadata);
     assert_eq!(metadata.filters[0].kinds, Some(vec![KIND_CHANNEL_METADATA]));
-    let hide = own_hide_query_input(context(), &input).unwrap();
+    let hide =
+        own_hide_query_input(context(), &input).ok_or_else(|| "missing hide query".to_owned())?;
     assert_eq!(hide.purpose, DemandPurpose::EventLookup);
     assert_eq!(hide.filters[0].authors, Some(vec!["me".to_owned()]));
     assert_eq!(
         hide.filters[0].tags.get("e"),
         Some(&vec!["message-a".to_owned()])
     );
+    Ok(())
 }
 
 fn context() -> PublicChatDemandContext {
