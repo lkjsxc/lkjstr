@@ -92,7 +92,7 @@ pub fn own_mute_plan(input: &PublicChatQueryInput) -> Option<PublicChatReadPlan>
 pub fn route_relays(input: &PublicChatQueryInput) -> Vec<String> {
     let mut relays = Vec::new();
     for relay in &input.selected_read_relays {
-        if !relays.contains(relay) {
+        if !input.disabled_relays.contains(relay) && !relays.contains(relay) {
             relays.push(relay.clone());
         }
     }
@@ -101,7 +101,7 @@ pub fn route_relays(input: &PublicChatQueryInput) -> Vec<String> {
         if added_hints >= input.max_hint_relays {
             break;
         }
-        if !relays.contains(relay) {
+        if !input.disabled_relays.contains(relay) && !relays.contains(relay) {
             relays.push(relay.clone());
             added_hints += 1;
         }

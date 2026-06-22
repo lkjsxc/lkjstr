@@ -33,6 +33,17 @@ fn bounds_and_dedupes_relay_hints() {
 }
 
 #[test]
+fn excludes_disabled_selected_and_hint_relays() {
+    let mut input = PublicChatQueryInput::with_selected_read_relays(vec![
+        "wss://a/".to_owned(),
+        "wss://disabled.example/".to_owned(),
+    ]);
+    input.relay_hints = vec!["wss://disabled.example/".to_owned(), "wss://b/".to_owned()];
+    input.disabled_relays = vec!["wss://disabled.example/".to_owned()];
+    assert_eq!(route_relays(&input), vec!["wss://a/", "wss://b/"]);
+}
+
+#[test]
 fn plans_metadata_and_message_filters() -> Result<(), String> {
     let mut input = PublicChatQueryInput::with_selected_read_relays(vec!["wss://a/".to_owned()]);
     input.channel_ids = vec!["channel".to_owned()];

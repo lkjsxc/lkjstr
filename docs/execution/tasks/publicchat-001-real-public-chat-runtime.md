@@ -12,6 +12,7 @@ ready
 
 - Rust protocol, domain reducer, app query planner, and honest UI empty states exist.
 - Rust UI names exact composer, publish, relay, loading, coverage, and moderation states.
+- Rust Public Chat route planning excludes disabled selected relays and disabled metadata hint relays.
 
 ## Next Edit
 

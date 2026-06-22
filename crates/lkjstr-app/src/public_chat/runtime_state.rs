@@ -4,6 +4,7 @@ use lkjstr_protocol::NostrFilter;
 pub struct PublicChatQueryInput {
     pub selected_read_relays: Vec<String>,
     pub relay_hints: Vec<String>,
+    pub disabled_relays: Vec<String>,
     pub channel_ids: Vec<String>,
     pub selected_channel_id: Option<String>,
     pub active_pubkey: Option<String>,
@@ -26,6 +27,7 @@ impl PublicChatQueryInput {
         Self {
             selected_read_relays: relays,
             relay_hints: Vec::new(),
+            disabled_relays: Vec::new(),
             channel_ids: Vec::new(),
             selected_channel_id: None,
             active_pubkey: None,

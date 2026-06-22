@@ -49,8 +49,11 @@ Keep new run evidence in the table below unless a narrative note is required.
 Latest focused note: on 2026-06-22, Rust Public Chat state text names exact
 blockers for relay selection, channel/message loading, incomplete coverage,
 composer availability, publish status, and moderated messages without rendering
-hidden content. `cargo fmt --check`, `cargo test -p lkjstr-ui public_chat`,
-`pnpm check:repo`, docs, and line guards passed. Earlier
+hidden content. Public Chat route planning also excludes disabled selected
+relays and disabled metadata hint relays. `cargo fmt --check`,
+`cargo test -p lkjstr-ui public_chat`,
+`cargo test -p lkjstr-app --test public_chat_queries_test`, `pnpm check:repo`,
+docs, and line guards passed. Earlier
 `wasm-pack test --headless --chrome crates/lkjstr-web --test public_chat_scroll_test`
 compiled but failed in the browser harness because ChromeDriver exited with
 SIGKILL and the runner returned HTTP 404. Docker was not rerun for this slice.
