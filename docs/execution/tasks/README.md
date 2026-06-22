@@ -11,12 +11,25 @@ verification ledgers in the same change.
 
 Active queue:
 
-- Next shared-feed task comes from
-  [current-blockers.md](../current-blockers.md): continue remaining feed-surface
-  host parity and deletion prerequisites.
-- [custom-request-provider-wiring.md](custom-request-provider-wiring.md): move
-  Custom Request execution planning and host-provider wiring into Rust without
-  claiming result parity.
+- [feed-001-shared-feed-runtime-gap-closure.md](feed-001-shared-feed-runtime-gap-closure.md): current shared feed blocker.
+- [storage-001-storage-boundary-audit.md](storage-001-storage-boundary-audit.md): storage boundary audit.
+- [publicchat-001-real-public-chat-runtime.md](publicchat-001-real-public-chat-runtime.md): real NIP-28 runtime target.
+- [publish-001-rust-publish-jobs.md](publish-001-rust-publish-jobs.md): Rust publish job model.
+- [media-001-rust-upload-validation.md](media-001-rust-upload-validation.md): upload validation and auth.
+- [sec-001-passkey-capability.md](sec-001-passkey-capability.md): truthful passkey capability states.
+- [stats-001-diagnostics-integration.md](stats-001-diagnostics-integration.md): diagnostics integration.
+- [search-001-search-deletion-proof.md](search-001-search-deletion-proof.md): blocked Search deletion proof.
+- [cut-001-delete-retained-product-paths.md](cut-001-delete-retained-product-paths.md): blocked broad deletion proof.
+- [custom-request-provider-wiring.md](custom-request-provider-wiring.md): preserve Custom Request provider wiring evidence.
+
+Repository task evidence:
+
+- [doc-001-enforce-200-line-documentation-cap.md](doc-001-enforce-200-line-documentation-cap.md): closed 200-line cap task.
+- [doc-002-split-execution-verification-docs.md](doc-002-split-execution-verification-docs.md): closed execution and verification split.
+- [doc-003-current-state-routed-contract.md](doc-003-current-state-routed-contract.md): closed current-state routing.
+- [doc-004-readme-recursive-tocs.md](doc-004-readme-recursive-tocs.md): README topology task.
+- [check-001-line-limit-constants.md](check-001-line-limit-constants.md): closed checker constants task.
+- [check-002-product-fixture-import-guard.md](check-002-product-fixture-import-guard.md): closed fixture guard task.
 
 Storage evidence to preserve:
 

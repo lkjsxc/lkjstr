@@ -55,8 +55,9 @@ no-import proof allow removal.
   focused-reference hydration, bounded cached parent-chain hydration, terminal
   unavailable-parent rows, continuation rows, and cleanup proof. Preserve the
   tests; Thread parity and deletion remain blocked.
-- Current first incomplete slice: remaining Followees/User Timeline parity,
-  no-import, and deletion proof from [current-blockers.md](current-blockers.md).
+- Current first incomplete slice: shared feed runtime gap closure from
+  [current-blockers.md](current-blockers.md) and
+  [tasks/feed-001-shared-feed-runtime-gap-closure.md](tasks/feed-001-shared-feed-runtime-gap-closure.md).
 
 ## Canonical Links
 
@@ -129,8 +130,10 @@ images were built and the services ran from those images.
 
 ```text
 `blockers/README.md` `blockers/deletion-proof.md` `blockers/home-leptos-feed.md` `blockers/relay-effect-runner.md` `blockers/shared-feed-runtime.md` `blockers/storage-command-coverage.md` `current-blockers.md`
-`operating-rules.md` `storage-slice.md` `tasks/README.md` `tasks/author-context-provider-wiring.md` `tasks/custom-request-provider-wiring.md` `tasks/followees-provider-wiring.md` `tasks/home-feed-provider-wiring.md`
-`tasks/home-feed-slice.md` `tasks/profile-feed-provider-wiring.md` `tasks/profile-feed-slice.md` `tasks/profile-sparse-history-proof.md` `tasks/relay-effect-runner.md` `tasks/search-feed-provider-wiring.md` `tasks/shared-feed-view-model.md`
-`tasks/storage-active-selector.md` `tasks/storage-command-metadata.md` `tasks/storage-command-spec-shape.md` `tasks/storage-feed-cache-commands.md` `tasks/storage-retention-repair.md` `tasks/storage-search-index.md` `tasks/storage-stats-pressure-inventory.md`
-`tasks/thread-feed-provider-wiring.md` `tasks/user-timeline-provider-wiring.md`
+`operating-rules.md` `storage-slice.md` `tasks/README.md` `tasks/author-context-provider-wiring.md` `tasks/check-001-line-limit-constants.md` `tasks/check-002-product-fixture-import-guard.md` `tasks/custom-request-provider-wiring.md`
+`tasks/cut-001-delete-retained-product-paths.md` `tasks/doc-001-enforce-200-line-documentation-cap.md` `tasks/doc-002-split-execution-verification-docs.md` `tasks/doc-003-current-state-routed-contract.md` `tasks/doc-004-readme-recursive-tocs.md` `tasks/feed-001-shared-feed-runtime-gap-closure.md` `tasks/followees-provider-wiring.md`
+`tasks/home-feed-provider-wiring.md` `tasks/home-feed-slice.md` `tasks/media-001-rust-upload-validation.md` `tasks/profile-feed-provider-wiring.md` `tasks/profile-feed-slice.md` `tasks/profile-sparse-history-proof.md` `tasks/publicchat-001-real-public-chat-runtime.md`
+`tasks/publish-001-rust-publish-jobs.md` `tasks/relay-effect-runner.md` `tasks/search-001-search-deletion-proof.md` `tasks/search-feed-provider-wiring.md` `tasks/sec-001-passkey-capability.md` `tasks/shared-feed-view-model.md` `tasks/stats-001-diagnostics-integration.md`
+`tasks/storage-001-storage-boundary-audit.md` `tasks/storage-active-selector.md` `tasks/storage-command-metadata.md` `tasks/storage-command-spec-shape.md` `tasks/storage-feed-cache-commands.md` `tasks/storage-retention-repair.md` `tasks/storage-search-index.md`
+`tasks/storage-stats-pressure-inventory.md` `tasks/thread-feed-provider-wiring.md` `tasks/user-timeline-provider-wiring.md`
 ```
