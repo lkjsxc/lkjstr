@@ -6,16 +6,17 @@ Confirm product modules use typed repositories instead of direct browser storage
 
 ## Status
 
-ready
+implemented
 
 ## Current Evidence
 
-- `checkStorageBoundary` exists
-- storage boundary docs require worker-owned SQLite OPFS
+- `checkStorageBoundary` rejects raw browser storage outside approved paths.
+- SQLite OPFS imports are now limited to approved adapters, repositories, diagnostics, cache maintenance, and root host lifecycle.
+- The boundary search found no unclassified product violations after the guard update.
 
 ## Next Edit
 
-Run the search, classify every hit, and tighten guardrails only for real violations.
+Preserve the allowlist when storage ownership moves, and remove carveouts only after replacement repositories exist.
 
 ## Files To Read
 

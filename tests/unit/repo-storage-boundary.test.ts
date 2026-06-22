@@ -61,6 +61,35 @@ describe('repo storage boundary guard', () => {
       },
     ]);
   });
+
+  it('keeps SQLite OPFS imports in approved adapters and diagnostics', async () => {
+    const root = await fs.mkdtemp(path.join(os.tmpdir(), 'lkjstr-opfs-'));
+    const feature = await write(
+      root,
+      'src/lib/profile/raw.ts',
+      "import { sendSqliteStorage } from '$lib/storage/sqlite-opfs/kernel-client';",
+    );
+    const stats = await write(
+      root,
+      'src/lib/tabs/stats/Stats.svelte',
+      "import { readSqliteStorageHealth } from '$lib/storage/sqlite-opfs/storage-health';",
+    );
+    const route = await write(
+      root,
+      'src/routes/+page.svelte',
+      "import { closeSqliteStorage } from '$lib/storage/sqlite-opfs/kernel-client';",
+    );
+
+    await expect(
+      checkStorageBoundary(root, [feature, stats, route]),
+    ).resolves.toEqual([
+      {
+        file: path.join('src', 'lib', 'profile', 'raw.ts'),
+        message:
+          'SQLite OPFS imports must stay in approved adapters, repositories, or diagnostics',
+      },
+    ]);
+  });
 });
 
 async function write(root: string, rel: string, text: string): Promise<string> {
