@@ -13,6 +13,8 @@ active
 - current blocker says shared feed runtime is the first incomplete blocker.
 - Public Chat now has Rust shared demand-surface planning for channel discovery,
   metadata, selected-channel messages, and own moderation reads.
+- TypeScript orchestration also names `public-chat` and filters live ingress to
+  NIP-28 Public Chat event kinds.
 
 ## Next Edit
 

@@ -32,8 +32,10 @@ relay reads while retaining bounded visible state for fast restore.
 - Publish jobs use explicit command ids and do not share live read keys.
 
 Rust now exposes shared `PublicChat` demand builders for channel discovery,
-metadata, selected messages, and own moderation reads. Shipped relay execution
-still remains TypeScript-owned until host/provider wiring is complete.
+metadata, selected messages, and own moderation reads. TypeScript orchestration
+also names `public-chat` and accepts only NIP-28 kinds for that live surface.
+Shipped relay execution still remains TypeScript-owned until host/provider
+wiring is complete.
 
 ## Relay Responsibilities
 

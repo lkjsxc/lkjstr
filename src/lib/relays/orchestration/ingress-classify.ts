@@ -3,6 +3,7 @@ import type { NostrEvent } from '../../protocol';
 import type { DemandSurface } from './demand-types';
 
 const notificationKinds = new Set([0, 1, 6, 7, 16, 9735]);
+const publicChatKinds = new Set([40, 41, 42, 43, 44]);
 
 export function isRenderCriticalForSurface(
   surface: DemandSurface,
@@ -10,6 +11,9 @@ export function isRenderCriticalForSurface(
 ): boolean {
   if (surface === 'notifications') {
     return notificationKinds.has(event.kind);
+  }
+  if (surface === 'public-chat') {
+    return publicChatKinds.has(event.kind);
   }
   if (
     surface === 'home' ||

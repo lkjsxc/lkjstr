@@ -12,7 +12,8 @@ export type DemandSurface =
   | 'user-timeline'
   | 'search'
   | 'custom-request'
-  | 'author-context';
+  | 'author-context'
+  | 'public-chat';
 
 export type DemandVisibility = 'visible' | 'hidden';
 

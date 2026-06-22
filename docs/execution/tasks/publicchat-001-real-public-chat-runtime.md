@@ -15,6 +15,8 @@ ready
 - Rust Public Chat route planning excludes disabled selected relays and disabled metadata hint relays.
 - Rust Public Chat query builders use the shared demand planner for channel,
   metadata, selected-message, and own moderation relay reads.
+- TypeScript orchestration recognizes the `public-chat` demand surface and
+  drops non-NIP-28 ingress for live Public Chat demands.
 
 ## Next Edit
 
