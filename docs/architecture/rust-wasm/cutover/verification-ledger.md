@@ -55,7 +55,8 @@ the shared demand surface for channel, metadata, selected-message, and own
 moderation reads. `cargo fmt --check`, `cargo test -p lkjstr-ui public_chat`,
 `cargo test -p lkjstr-app --test public_chat_queries_test`,
 `cargo test -p lkjstr-app --test public_chat_demand_test`,
-`cargo test -p lkjstr-relays --test ingress_test`, `pnpm check:repo`, docs,
+`cargo test -p lkjstr-relays --test ingress_test`,
+`cargo test -p lkjstr-app --test feed_runtime_lifecycle_test`, `pnpm check:repo`, docs,
 and line guards passed. Earlier
 `wasm-pack test --headless --chrome crates/lkjstr-web --test public_chat_scroll_test`
 compiled but failed in the browser harness because ChromeDriver exited with
