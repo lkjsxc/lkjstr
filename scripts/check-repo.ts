@@ -49,6 +49,8 @@ const skipDirs = new Set([
   'tmp',
 ]);
 const sourceExts = new Set(['.css', '.html', '.js', '.svelte', '.ts']);
+const STRICT_DOC_LINE_LIMIT = 200;
+const SOURCE_LINE_LIMIT = 200;
 const problems: Problem[] = [];
 
 const files = await walk(root);
@@ -93,9 +95,9 @@ async function checkLines(filesToCheck: string[]) {
     const ext = path.extname(rel);
     const text = await fs.readFile(file, 'utf8');
     if (isStrictDoc(rel, ext)) {
-      checkLimit(rel, text, 200, 'docs');
+      checkLimit(rel, text, STRICT_DOC_LINE_LIMIT, 'docs');
     }
-    if (isSource(rel, ext)) checkLimit(rel, text, 200, 'source');
+    if (isSource(rel, ext)) checkLimit(rel, text, SOURCE_LINE_LIMIT, 'source');
   }
 }
 

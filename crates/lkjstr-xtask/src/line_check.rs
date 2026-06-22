@@ -3,6 +3,8 @@ use std::{fs, path::Path};
 use crate::paths;
 
 const SOURCE_EXTS: &[&str] = &["css", "html", "js", "rs", "svelte", "ts"];
+const STRICT_DOC_LINE_LIMIT: usize = 200;
+const SOURCE_LINE_LIMIT: usize = 200;
 
 pub fn check(root: &Path) -> Result<(), String> {
     let mut problems = Vec::new();
@@ -15,10 +17,10 @@ pub fn check(root: &Path) -> Result<(), String> {
         }
         let text = fs::read_to_string(&file).map_err(|error| format!("{rel}: {error}"))?;
         if strict_doc {
-            check_limit(&mut problems, &rel, &text, 200, "docs");
+            check_limit(&mut problems, &rel, &text, STRICT_DOC_LINE_LIMIT, "docs");
         }
         if source {
-            check_limit(&mut problems, &rel, &text, 200, "source");
+            check_limit(&mut problems, &rel, &text, SOURCE_LINE_LIMIT, "source");
         }
     }
     finish(problems)

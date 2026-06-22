@@ -38,6 +38,12 @@ Repository checks fail when a tracked strict doc or source file exceeds its cap.
 Do not silence the checker by moving product code into generated paths or
 untracked files.
 
+## Checker Constants
+
+The TypeScript checker names `STRICT_DOC_LINE_LIMIT` and `SOURCE_LINE_LIMIT`.
+The Rust checker uses the same constant names in `lkjstr-xtask`. Update both in
+the same change when this contract changes.
+
 ## Maintenance Notes
 
 When a large edit is necessary, split the file first and keep behavior unchanged
