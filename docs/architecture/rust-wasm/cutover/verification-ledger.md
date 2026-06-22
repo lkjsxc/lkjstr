@@ -46,7 +46,19 @@ Keep new run evidence in the table below unless a narrative note is required.
 
 ## Recent Focused Evidence
 
-Latest focused note: on 2026-06-22, Rust Public Chat state text names exact
+Latest focused note: on 2026-06-22, RUSTWASM-TOOLCHAIN-001 made `wasm-pack`
+preflight deterministic and product-safe. Missing `wasm-pack` now fails
+`pnpm rust-wasm:quiet` with install or Docker instructions, while Timeline/feed
+Rust islands, retained bridge tabs, feed-surface loaders, follow-graph, and
+Stats diagnostics map raw toolchain errors to explicit bridge-unavailable text.
+Focused Vitest, xtask toolchain, `cargo test -p lkjstr-web`,
+`cargo test -p lkjstr-app -- feed`, `cargo fmt --check`, workspace clippy,
+repo/docs/line checks, `pnpm test:quiet`, `pnpm verify:quiet`,
+`pnpm cloudflare:quiet`, and Docker config/build/verify/cloudflare/app-smoke
+passed. Host-local `pnpm rust-wasm:quiet` still fails after preflight at the
+existing Firefox harness blocker: geckodriver SIGKILL and HTTP 500.
+
+Previous focused note: on 2026-06-22, Rust Public Chat state text names exact
 blockers for relay selection, channel/message loading, incomplete coverage,
 composer availability, publish status, and moderated messages without rendering
 hidden content. Public Chat route planning also excludes disabled selected

@@ -8,21 +8,24 @@ product UI.
 
 ## Status
 
-active
+completed
 
 ## Current Evidence
 
-- The Vite Rust/WASM asset plugin currently calls `wasm-pack` during dev/build
-  asset generation.
-- Missing `wasm-pack` can become the virtual bridge error message and reach
-  product bridge-unavailable UI as raw `spawnSync wasm-pack ENOENT` text.
-- Docker installs pinned `wasm-pack` and Trunk, but local preflight and product
-  error mapping are incomplete.
+- The Vite Rust/WASM asset plugin preflights `wasm-pack`; production build
+  failure uses actionable diagnostics while dev bridge UI gets product-safe
+  unavailable text.
+- `pnpm rust-wasm:quiet` and `lkjstr-xtask quiet rust-wasm` preflight
+  `wasm-pack` and report the install or Docker path when it is missing.
+- Timeline/feed Rust island hosts, retained island tabs, feed-surface bridge
+  loaders, follow-graph, and Stats diagnostics sanitize raw toolchain messages.
+- Docker config, build, verify, Cloudflare dry-run, and app smoke passed with
+  pinned image-installed Rust/WASM tools.
 
 ## Next Edit
 
-Add build/check preflight diagnostics, sanitize product bridge-unavailable
-messages, and prove Rust/WASM verification still runs when tools are available.
+Continue shared feed runtime parity work now that the `wasm-pack` boundary is
+deterministic and non-leaky.
 
 ## Files To Read
 
@@ -34,13 +37,13 @@ messages, and prove Rust/WASM verification still runs when tools are available.
 
 ## Files To Touch
 
-- docs/architecture/rust-wasm/**
+- docs/architecture/rust-wasm/\*\*
 - docs/operations/verification.md
 - docs/current-state.md
-- scripts/**
-- crates/lkjstr-xtask/src/**
-- src/lib/**/wasm or bridge error handling
-- tests/unit/**
+- scripts/\*\*
+- crates/lkjstr-xtask/src/\*\*
+- src/lib/\*\*/wasm or bridge error handling
+- tests/unit/\*\*
 
 ## Focused Gate
 

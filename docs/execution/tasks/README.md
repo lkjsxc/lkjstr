@@ -11,7 +11,6 @@ verification ledgers in the same change.
 
 Active queue:
 
-- [rustwasm-toolchain-001-wasm-pack-boundary.md](rustwasm-toolchain-001-wasm-pack-boundary.md): active Rust/WASM toolchain boundary fix.
 - [feed-001-shared-feed-runtime-gap-closure.md](feed-001-shared-feed-runtime-gap-closure.md): current shared feed blocker.
 - [storage-001-storage-boundary-audit.md](storage-001-storage-boundary-audit.md): storage boundary audit.
 - [publicchat-001-real-public-chat-runtime.md](publicchat-001-real-public-chat-runtime.md): real NIP-28 runtime target.
@@ -31,6 +30,7 @@ Repository task evidence:
 - [doc-004-readme-recursive-tocs.md](doc-004-readme-recursive-tocs.md): README topology task.
 - [check-001-line-limit-constants.md](check-001-line-limit-constants.md): closed checker constants task.
 - [check-002-product-fixture-import-guard.md](check-002-product-fixture-import-guard.md): closed fixture guard task.
+- [rustwasm-toolchain-001-wasm-pack-boundary.md](rustwasm-toolchain-001-wasm-pack-boundary.md): closed Rust/WASM toolchain boundary task.
 
 Storage evidence to preserve:
 
