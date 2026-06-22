@@ -24,6 +24,12 @@ stay canonical.
   local secrets.
 - [agent-maintenance.md](agent-maintenance.md): maintain `AGENTS.md`, the
   agent manual, and skills.
+- [search-runtime.md](search-runtime.md): Search local index, NIP-50, and deletion proof.
+- [custom-request-runtime.md](custom-request-runtime.md): Custom Request parsing, relay output, and deletion proof.
+- [public-chat-runtime.md](public-chat-runtime.md): Public Chat NIP-28 runtime work.
+- [publish-runtime.md](publish-runtime.md): Tweet, Profile Edit, and event action publish jobs.
+- [media-upload.md](media-upload.md): Blossom, NIP-96, NIP-98, and upload truth.
+- [stats-diagnostics.md](stats-diagnostics.md): Stats and lkjstr Log diagnostics.
 
 ## Skill Format
 

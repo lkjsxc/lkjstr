@@ -32,6 +32,12 @@ their own subtrees; this manual links to them instead of restating them.
   accounts and local secrets.
 - [skills/agent-maintenance.md](skills/agent-maintenance.md): maintaining
   `AGENTS.md`, this manual, and the skills.
+- [skills/search-runtime.md](skills/search-runtime.md): Search runtime work.
+- [skills/custom-request-runtime.md](skills/custom-request-runtime.md): Custom Request runtime work.
+- [skills/public-chat-runtime.md](skills/public-chat-runtime.md): Public Chat runtime work.
+- [skills/publish-runtime.md](skills/publish-runtime.md): publish job work.
+- [skills/media-upload.md](skills/media-upload.md): media upload work.
+- [skills/stats-diagnostics.md](skills/stats-diagnostics.md): Stats and Log diagnostics.
 
 ## Authority
 
