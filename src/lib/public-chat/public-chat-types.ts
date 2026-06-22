@@ -1,5 +1,6 @@
 import type { NostrEvent, NostrFilter, NostrTag } from '$lib/protocol';
 import type { PublishResult } from '$lib/relays/relay-pool';
+import type { RelayRequestPurpose } from '$lib/relays/relay-request-compat';
 
 export type PublicChatMetadata = {
   readonly name?: string;
@@ -61,6 +62,7 @@ export type PublicChatReadPlan = {
   readonly key: string;
   readonly relays: readonly string[];
   readonly filters: readonly NostrFilter[];
+  readonly purpose: RelayRequestPurpose;
 };
 
 export type PublicChatPublishTemplate = {

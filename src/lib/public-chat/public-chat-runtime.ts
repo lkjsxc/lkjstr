@@ -50,7 +50,7 @@ export function createPublicChatRuntime(relaySets: readonly RelaySet[]) {
           key: plan.key,
           relays: plan.relays,
           filters: plan.filters,
-          purpose: 'feed',
+          purpose: plan.purpose,
         },
         { signal: controller.signal, timeoutMs: 6000, maxEvents: 500 },
       );
@@ -94,6 +94,7 @@ export function createPublicChatRuntime(relaySets: readonly RelaySet[]) {
         key: `public-chat:open:${channelId}`,
         relays: channelDiscoveryPlan(relaySets).relays,
         filters: [{ ids: [channelId], kinds: [40], limit: 1 }],
+        purpose: 'event-lookup',
       };
       const read = await readEvents(plan);
       return {

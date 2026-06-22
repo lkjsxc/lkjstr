@@ -53,12 +53,14 @@ hidden content. Public Chat route planning also excludes disabled selected
 relays and disabled metadata hint relays, and Rust Public Chat builders now use
 the shared demand surface for channel, metadata, selected-message, and own
 moderation reads; TypeScript orchestration also recognizes `public-chat` and
-filters live ingress to NIP-28 kinds. `cargo fmt --check`, `cargo test -p lkjstr-ui public_chat`,
+filters live ingress to NIP-28 kinds, and TypeScript Public Chat plans carry
+exact relay request purposes. `cargo fmt --check`, `cargo test -p lkjstr-ui public_chat`,
 `cargo test -p lkjstr-app --test public_chat_queries_test`,
 `cargo test -p lkjstr-app --test public_chat_demand_test`,
 `cargo test -p lkjstr-relays --test ingress_test`,
 `cargo test -p lkjstr-app --test feed_runtime_lifecycle_test`,
 `pnpm test -- tests/unit/relays/orchestration/ingress-classify.test.ts`,
+`pnpm test -- tests/unit/public-chat/public-chat-filters.test.ts`,
 `pnpm check:repo`, docs,
 and line guards passed. Earlier
 `wasm-pack test --headless --chrome crates/lkjstr-web --test public_chat_scroll_test`

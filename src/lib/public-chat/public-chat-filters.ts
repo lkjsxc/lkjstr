@@ -19,6 +19,7 @@ export function channelDiscoveryPlan(
     key: `public-chat:channels:${relays.join(',')}`,
     relays,
     filters: [{ kinds: [kinds.channelCreate], limit }],
+    purpose: 'feed',
   };
 }
 
@@ -34,6 +35,7 @@ export function channelMetadataPlan(
     key: `public-chat:metadata:${ids.join(',')}:${relays.join(',')}`,
     relays,
     filters: [{ kinds: [kinds.channelMetadata], '#e': ids, limit }],
+    purpose: 'metadata',
   };
 }
 
@@ -47,6 +49,7 @@ export function channelMessagesPlan(
     key: `public-chat:messages:${channel.id}:${relays.join(',')}`,
     relays,
     filters: [{ kinds: [kinds.channelMessage], '#e': [channel.id], limit }],
+    purpose: 'feed',
   };
 }
 
@@ -67,6 +70,7 @@ export function ownHidePlan(
         '#e': messageIds,
       },
     ],
+    purpose: 'event-lookup',
   };
 }
 
@@ -87,6 +91,7 @@ export function ownMutePlan(
         '#p': authorPubkeys,
       },
     ],
+    purpose: 'event-lookup',
   };
 }
 

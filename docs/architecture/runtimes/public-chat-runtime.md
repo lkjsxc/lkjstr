@@ -46,6 +46,8 @@ wiring is complete.
 - Add channel metadata relay hints only as bounded targeted routes.
 - Exclude disabled or removed relays from every demand.
 - Record partial relay failures without blocking successful relays.
+- Label channel discovery and messages as `feed`, metadata as `metadata`, and
+  own moderation lookups as `event-lookup`.
 
 ## Storage Responsibilities
 

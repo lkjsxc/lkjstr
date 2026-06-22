@@ -17,6 +17,8 @@ ready
   metadata, selected-message, and own moderation relay reads.
 - TypeScript orchestration recognizes the `public-chat` demand surface and
   drops non-NIP-28 ingress for live Public Chat demands.
+- TypeScript Public Chat read plans now carry exact `feed`, `metadata`, or
+  `event-lookup` relay request purposes instead of labeling every read as feed.
 
 ## Next Edit
 
