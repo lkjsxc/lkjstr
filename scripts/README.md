@@ -26,7 +26,8 @@ commands.
 - `repo-user-timeline-deletions.ts`: deleted User Timeline helper no-import
   guard.
 - `run-quiet.ts`: quiet verification runner for agents and CI.
-- `vite-lkjstr-web-wasm.ts`: optional Vite asset plugin for the Rust scan bridge.
+- `vite-lkjstr-web-wasm.ts`: Vite asset plugin for the Rust browser bridge.
+- `wasm-toolchain.ts`: wasm-pack preflight and product-safe bridge messages.
 - `vitest-quiet-reporter.ts`: minimal Vitest reporter for quiet unit runs.
 
 `pnpm check:repo` runs the class guard along with documentation, README,

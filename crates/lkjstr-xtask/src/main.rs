@@ -10,6 +10,7 @@ mod rust_style;
 mod sqlite_schema_doc;
 mod storage_manifest;
 mod tool_path;
+mod toolchain;
 
 use std::{env, process};
 

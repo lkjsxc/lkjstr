@@ -18,3 +18,4 @@ Xtask source files implement repository checks and command orchestration.
 - [sqlite_schema_doc.rs](sqlite_schema_doc.rs): SQLite schema documentation check.
 - [storage_manifest.rs](storage_manifest.rs): storage manifest docs check.
 - [tool_path.rs](tool_path.rs): Rust toolchain path preference helpers.
+- [toolchain.rs](toolchain.rs): required Rust/WASM tool preflight diagnostics.
