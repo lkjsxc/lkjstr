@@ -46,14 +46,14 @@ Keep new run evidence in the table below unless a narrative note is required.
 
 ## Recent Focused Evidence
 
-Latest focused note: on 2026-06-22, Rust Public Chat empty states name exact
-blockers for no read relays, loading channels, no loaded channels with
-incomplete coverage, missing selected channel, loading messages, and no loaded
-messages with incomplete coverage. `cargo fmt --check`,
-`cargo test -p lkjstr-ui public_chat`, `pnpm check:repo`, docs, and line guards
-passed. `wasm-pack test --headless --chrome crates/lkjstr-web --test public_chat_scroll_test`
+Latest focused note: on 2026-06-22, Rust Public Chat state text names exact
+blockers for relay selection, channel/message loading, incomplete coverage,
+composer availability, publish status, and moderated messages without rendering
+hidden content. `cargo fmt --check`, `cargo test -p lkjstr-ui public_chat`,
+`pnpm check:repo`, docs, and line guards passed. Earlier
+`wasm-pack test --headless --chrome crates/lkjstr-web --test public_chat_scroll_test`
 compiled but failed in the browser harness because ChromeDriver exited with
-SIGKILL and the runner returned HTTP 404. Docker was not rerun.
+SIGKILL and the runner returned HTTP 404. Docker was not rerun for this slice.
 
 Previous focused note: on 2026-06-20, retained mention/reaction/media/metadata/avatar
 Svelte chrome uses shared snippets. Focused tests, ESLint, formatting, Svelte

@@ -10,7 +10,8 @@ ready
 
 ## Current Evidence
 
-- Rust protocol, domain reducer, app query planner, and honest UI empty states exist
+- Rust protocol, domain reducer, app query planner, and honest UI empty states exist.
+- Rust UI names exact composer, publish, relay, loading, coverage, and moderation states.
 
 ## Next Edit
 

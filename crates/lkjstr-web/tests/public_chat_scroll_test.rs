@@ -21,6 +21,8 @@ async fn rust_public_chat_uses_one_scroll_owner_for_status_and_rows() -> Result<
     click("[data-testid='new-tab-option-public-chat']")?;
     wait_for_text("Channel discovery unavailable because no read relays are selected.").await?;
     wait_for_text("Open a real channel to load messages.").await?;
+    wait_for_text("Composer disabled because no signing account is active.").await?;
+    wait_for_text("No active publish job.").await?;
 
     assert_feed_scroll_boundary(
         ".lkjstr-public-chat",
@@ -28,6 +30,8 @@ async fn rust_public_chat_uses_one_scroll_owner_for_status_and_rows() -> Result<
         &[
             ".lkjstr-public-chat-relay-status",
             ".lkjstr-public-chat-account-status",
+            ".lkjstr-public-chat-composer-status",
+            ".lkjstr-public-chat-publish-status",
             ".lkjstr-public-chat-channels",
             ".lkjstr-public-chat-messages",
         ],
