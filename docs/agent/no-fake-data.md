@@ -39,7 +39,8 @@ not proof that data does not exist.
 
 Synthetic events, relays, and storage rows are allowed only in tests. They
 must be clearly test-only and must not leak into product semantics, default
-values, or rendered states.
+values, or rendered states. `pnpm check:repo` rejects product imports from test,
+fixture, mock, sample, or dummy data paths.
 
 ## Pre-Handoff Audit
 
