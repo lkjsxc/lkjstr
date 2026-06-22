@@ -125,6 +125,8 @@ images were built and the services ran from those images.
   Search provider, local indexed rows, and relay snapshot merge proof.
 - [tasks/thread-feed-provider-wiring.md](tasks/thread-feed-provider-wiring.md):
   Thread cached root/reply/focused-reference/parent provider wiring.
+- [tasks/rustwasm-toolchain-001-wasm-pack-boundary.md](tasks/rustwasm-toolchain-001-wasm-pack-boundary.md):
+  Rust/WASM toolchain boundary and bridge-unavailable proof.
 
 ## All Files
 
@@ -133,7 +135,7 @@ images were built and the services ran from those images.
 `operating-rules.md` `storage-slice.md` `tasks/README.md` `tasks/author-context-provider-wiring.md` `tasks/check-001-line-limit-constants.md` `tasks/check-002-product-fixture-import-guard.md` `tasks/custom-request-provider-wiring.md`
 `tasks/cut-001-delete-retained-product-paths.md` `tasks/doc-001-enforce-200-line-documentation-cap.md` `tasks/doc-002-split-execution-verification-docs.md` `tasks/doc-003-current-state-routed-contract.md` `tasks/doc-004-readme-recursive-tocs.md` `tasks/feed-001-shared-feed-runtime-gap-closure.md` `tasks/followees-provider-wiring.md`
 `tasks/home-feed-provider-wiring.md` `tasks/home-feed-slice.md` `tasks/media-001-rust-upload-validation.md` `tasks/profile-feed-provider-wiring.md` `tasks/profile-feed-slice.md` `tasks/profile-sparse-history-proof.md` `tasks/publicchat-001-real-public-chat-runtime.md`
-`tasks/publish-001-rust-publish-jobs.md` `tasks/relay-effect-runner.md` `tasks/search-001-search-deletion-proof.md` `tasks/search-feed-provider-wiring.md` `tasks/sec-001-passkey-capability.md` `tasks/shared-feed-view-model.md` `tasks/stats-001-diagnostics-integration.md`
+`tasks/publish-001-rust-publish-jobs.md` `tasks/relay-effect-runner.md` `tasks/rustwasm-toolchain-001-wasm-pack-boundary.md` `tasks/search-001-search-deletion-proof.md` `tasks/search-feed-provider-wiring.md` `tasks/sec-001-passkey-capability.md` `tasks/shared-feed-view-model.md` `tasks/stats-001-diagnostics-integration.md`
 `tasks/storage-001-storage-boundary-audit.md` `tasks/storage-active-selector.md` `tasks/storage-command-metadata.md` `tasks/storage-command-spec-shape.md` `tasks/storage-feed-cache-commands.md` `tasks/storage-retention-repair.md` `tasks/storage-search-index.md`
 `tasks/storage-stats-pressure-inventory.md` `tasks/thread-feed-provider-wiring.md` `tasks/user-timeline-provider-wiring.md`
 ```

@@ -22,6 +22,9 @@ split by ownership under [current-state/README.md](current-state/README.md).
   Context, Followees, and User Timeline have active Rust island or Rust-backed
   slices, but retained TypeScript and Svelte code may be deleted only after
   parity, focused tests, ledger evidence, and no-import proof.
+- Rust/WASM build tools are verification dependencies, not browser runtime
+  dependencies. Missing local WASM assets render explicit bridge-unavailable
+  states rather than raw Node or toolchain errors.
 
 ## Detail Map
 

@@ -32,6 +32,7 @@ This subtree defines the Rust/WASM client target.
 - [status.md](status.md): current implemented Rust slices and open foundations.
 - [storage-kernel.md](storage-kernel.md): manifest, repositories, and OPFS SQLite.
 - [surface-cutover-order.md](surface-cutover-order.md): dependency-ranked product cutover order.
+- [toolchain-boundary.md](toolchain-boundary.md): Rust/WASM build-tool and product runtime boundary.
 - [ui-runtime.md](ui-runtime.md): Leptos UI ownership.
 - [verification.md](verification.md): Rust/WASM verification matrix.
 - [cutover/verification-run-notes-2026-06-13.md](cutover/verification-run-notes-2026-06-13.md):
@@ -76,5 +77,5 @@ live under this target contract.
 `cutover/storage-wiring-runtime-families.md` `cutover/storage-wiring.md` `cutover/typescript-inventory.md` `cutover/ui-surface-map.md` `cutover/verification-ledger-feed-storage-runs.md` `cutover/verification-ledger-surface-runs.md` `cutover/verification-ledger.md`
 `cutover/verification-run-notes-2026-06-13.md` `host-boundary.md` `memory-ownership.md` `protocol-kernel.md` `relay-runtime.md` `source-map.md` `status/README.md`
 `status/active-targets.md` `status/implemented-slices.md` `status/next-order.md` `status/open-foundations.md` `status.md` `storage-kernel.md` `surface-cutover-order.md`
-`ui-runtime.md` `verification.md`
+`toolchain-boundary.md` `ui-runtime.md` `verification.md`
 ```

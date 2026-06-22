@@ -44,6 +44,7 @@ state, storage, relay orchestration, cleanup, and Rust/WASM migration.
 - [rust-wasm/cutover/root-build.md](rust-wasm/cutover/root-build.md): final Rust/Leptos static artifact.
 - [rust-wasm/cutover/ui-surface-map.md](rust-wasm/cutover/ui-surface-map.md): Leptos surface map.
 - [rust-wasm/surface-cutover-order.md](rust-wasm/surface-cutover-order.md): dependency-ranked cutover order.
+- [rust-wasm/toolchain-boundary.md](rust-wasm/toolchain-boundary.md): Rust/WASM toolchain and product runtime boundary.
 - [workspace/ui-system/README.md](workspace/ui-system/README.md): shared UI catalog.
 
 ## All Files
@@ -79,7 +80,7 @@ state, storage, relay orchestration, cleanup, and Rust/WASM migration.
 `rust-wasm/cutover/root-build.md` `rust-wasm/cutover/storage-wiring-families.md` `rust-wasm/cutover/storage-wiring-protected-families.md` `rust-wasm/cutover/storage-wiring-runtime-families.md` `rust-wasm/cutover/storage-wiring.md` `rust-wasm/cutover/typescript-inventory.md` `rust-wasm/cutover/ui-surface-map.md`
 `rust-wasm/cutover/verification-ledger-feed-storage-runs.md` `rust-wasm/cutover/verification-ledger-surface-runs.md` `rust-wasm/cutover/verification-ledger.md` `rust-wasm/cutover/verification-run-notes-2026-06-13.md` `rust-wasm/host-boundary.md` `rust-wasm/memory-ownership.md` `rust-wasm/protocol-kernel.md`
 `rust-wasm/relay-runtime.md` `rust-wasm/source-map.md` `rust-wasm/status/README.md` `rust-wasm/status/active-targets.md` `rust-wasm/status/implemented-slices.md` `rust-wasm/status/next-order.md` `rust-wasm/status/open-foundations.md`
-`rust-wasm/status.md` `rust-wasm/storage-kernel.md` `rust-wasm/surface-cutover-order.md` `rust-wasm/ui-runtime.md` `rust-wasm/verification.md` `source-map.md` `workspace/README.md`
+`rust-wasm/status.md` `rust-wasm/storage-kernel.md` `rust-wasm/surface-cutover-order.md` `rust-wasm/toolchain-boundary.md` `rust-wasm/ui-runtime.md` `rust-wasm/verification.md` `source-map.md` `workspace/README.md`
 `workspace/pane-chrome-scope.md` `workspace/pane-drop-target.md` `workspace/resize.md` `workspace/scroll-layout.md` `workspace/scroll-surface-audit.md` `workspace/tab-body-mount.md` `workspace/tab-dragging.md`
 `workspace/tab-retention-flow.md` `workspace/tab-runtime.md` `workspace/tab-shell-layout.md` `workspace/tab-snapshot-fields.md` `workspace/tab-strip-gestures.md` `workspace/theme.md` `workspace/tile-menu.md`
 `workspace/tile-overlays.md` `workspace/ui-composition.md` `workspace/ui-system/README.md` `workspace/ui-system/emoji-palette.md` `workspace/ui-system/feed-shell.md` `workspace/ui-system/hybrid-tab-shells.md` `workspace/ui-system/identity-surfaces.md`

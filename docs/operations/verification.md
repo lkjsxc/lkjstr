@@ -37,6 +37,14 @@ docker compose --progress quiet -f docker-compose.yml run --rm cloudflare
 docker compose --progress quiet -f docker-compose.yml run --rm app-smoke
 ```
 
+## Toolchain Boundary
+
+Rust/WASM tools such as `wasm-pack` are build/check dependencies, not product
+runtime dependencies. Missing required tools fail verification with actionable
+instructions; browser surfaces render explicit bridge-unavailable states instead
+of raw spawn errors. See
+[../architecture/rust-wasm/toolchain-boundary.md](../architecture/rust-wasm/toolchain-boundary.md).
+
 ## Detail Map
 
 - [verification/quiet-contract.md](verification/quiet-contract.md): quiet command behavior, local gate, and duplicate-work rules.
