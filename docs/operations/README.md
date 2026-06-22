@@ -36,7 +36,8 @@ Run the focused gate for the area you changed, then the Docker final gate from
 ## All Files
 
 ```text
-`ci.md` `cloudflare-workers.md` `data-safety.md` `diagnostics.md` `docker.md` `feed-route-isolation-regression.md` `focused-gates.md`
+`ci.md` `cloudflare-workers.md` `data-safety.md` `diagnostics.md` `docker.md` `feed-route-isolation-regression.md` `focused-gates/README.md`
+`focused-gates/feed.md` `focused-gates/memory.md` `focused-gates/relay.md` `focused-gates/rust-cutover.md` `focused-gates/storage.md` `focused-gates/ui.md` `focused-gates.md`
 `memory-verification.md` `readiness.md` `sqlite-opfs-testing.md` `storage-pressure-verification.md` `testing-ownership.md` `timeline-notification-regression-investigation.md` `verification/README.md`
 `verification/acceptance-checks.md` `verification/docker-final-gate.md` `verification/quiet-contract.md` `verification/rust-wasm.md` `verification/sqlite-opfs.md` `verification.md`
 ```
