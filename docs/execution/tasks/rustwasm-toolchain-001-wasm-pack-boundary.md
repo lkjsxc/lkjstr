@@ -21,6 +21,8 @@ completed
 - Timeline/feed Rust island hosts, retained island tabs, feed-surface bridge
   loaders, generic runtime error text, follow-graph, and Stats diagnostics
   sanitize raw toolchain messages.
+- Vite asset plugin tests prove dev virtual modules get product-safe text while
+  production builds fail with actionable missing-tool diagnostics.
 - Docker config, build, verify, Cloudflare dry-run, and app smoke passed with
   pinned image-installed Rust/WASM tools and browsers.
 

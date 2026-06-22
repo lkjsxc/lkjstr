@@ -9,3 +9,4 @@ product bridge-unavailable presenters.
 
 - [wasm-toolchain.test.ts](wasm-toolchain.test.ts): wasm-pack preflight text.
 - [bridge-unavailable.test.ts](bridge-unavailable.test.ts): product-safe bridge errors.
+- [vite-wasm-plugin.test.ts](vite-wasm-plugin.test.ts): Vite bridge asset preflight.
