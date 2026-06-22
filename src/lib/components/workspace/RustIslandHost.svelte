@@ -1,5 +1,6 @@
 <script lang="ts">
   import { onDestroy } from 'svelte';
+  import { rustWasmBridgeErrorMessage } from '$lib/rust-wasm/bridge-unavailable';
 
   export type RustIslandHandle = {
     unmount: () => void;
@@ -54,7 +55,7 @@
       activeKey = key;
     } catch (err) {
       if (generation === current) {
-        error = err instanceof Error ? err.message : props.fallbackError;
+        error = rustWasmBridgeErrorMessage(err, props.fallbackError);
       }
     }
   }

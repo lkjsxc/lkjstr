@@ -1,6 +1,7 @@
 <script lang="ts">
   import { onMount } from 'svelte';
   import { mountCustomRequestIsland } from '$lib/components/workspace/custom-request-island';
+  import { rustWasmBridgeErrorMessage } from '$lib/rust-wasm/bridge-unavailable';
   import type { TabSnapshotPayload } from '$lib/workspace/tab-snapshot';
 
   type CustomRequestIslandHandle = {
@@ -38,10 +39,10 @@
       })
       .catch((error: unknown) => {
         if (canceled) return;
-        loadError =
-          error instanceof Error
-            ? error.message
-            : 'Rust Custom Request bridge unavailable.';
+        loadError = rustWasmBridgeErrorMessage(
+          error,
+          'Rust Custom Request bridge unavailable.',
+        );
       });
 
     return () => {

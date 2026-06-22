@@ -1,6 +1,7 @@
 <script lang="ts">
   import { onMount } from 'svelte';
   import { mountProfileIsland } from '$lib/components/workspace/profile-island';
+  import { rustWasmBridgeErrorMessage } from '$lib/rust-wasm/bridge-unavailable';
 
   type ProfileIslandHandle = {
     unmount: () => void;
@@ -51,10 +52,10 @@
       })
       .catch((error: unknown) => {
         if (canceled) return;
-        loadError =
-          error instanceof Error
-            ? error.message
-            : 'Rust Profile bridge unavailable.';
+        loadError = rustWasmBridgeErrorMessage(
+          error,
+          'Rust Profile bridge unavailable.',
+        );
       });
 
     return () => {

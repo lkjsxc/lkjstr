@@ -1,6 +1,7 @@
 <script lang="ts">
   import { onMount } from 'svelte';
   import { mountThreadIsland } from '$lib/components/workspace/thread-island';
+  import { rustWasmBridgeErrorMessage } from '$lib/rust-wasm/bridge-unavailable';
 
   type ThreadIslandHandle = {
     unmount: () => void;
@@ -40,10 +41,10 @@
       })
       .catch((error: unknown) => {
         if (canceled) return;
-        loadError =
-          error instanceof Error
-            ? error.message
-            : 'Rust Thread bridge unavailable.';
+        loadError = rustWasmBridgeErrorMessage(
+          error,
+          'Rust Thread bridge unavailable.',
+        );
       });
 
     return () => {

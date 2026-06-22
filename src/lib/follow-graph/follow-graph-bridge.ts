@@ -1,4 +1,5 @@
 import type { NostrEvent } from '$lib/protocol';
+import { rustWasmDiagnosticMessage } from '$lib/rust-wasm/bridge-unavailable';
 import type { FolloweeEntry } from '$lib/profile/followees';
 
 export type FollowGraphBridgeSummary = {
@@ -66,5 +67,5 @@ function isRecord(value: unknown): value is Record<string, unknown> {
 }
 
 function errorMessage(error: unknown): string {
-  return error instanceof Error ? error.message : String(error);
+  return rustWasmDiagnosticMessage(error);
 }

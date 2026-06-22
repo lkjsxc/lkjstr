@@ -1,3 +1,4 @@
+import { rustWasmDiagnosticMessage } from '$lib/rust-wasm/bridge-unavailable';
 import type { FeedGeometryFeatures } from './feed-geometry-features';
 
 export type FeedGeometryBridgeStatus =
@@ -37,7 +38,7 @@ export function warmFeedGeometryWasmBridge(): void {
     .catch((error: unknown) => {
       bridgeStatus = {
         status: 'unavailable',
-        message: error instanceof Error ? error.message : String(error),
+        message: rustWasmDiagnosticMessage(error),
       };
     })
     .finally(() => {

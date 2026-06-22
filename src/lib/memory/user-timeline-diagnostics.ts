@@ -1,3 +1,4 @@
+import { rustWasmDiagnosticMessage } from '$lib/rust-wasm/bridge-unavailable';
 import { loadLkjstrWebWasm } from 'virtual:lkjstr-web-wasm';
 
 export type RuntimeDiagnosticCount = {
@@ -45,9 +46,7 @@ export async function readUserTimelineDiagnostics(): Promise<UserTimelineRuntime
     }
     return normalizeUserTimelineDiagnostics(read());
   } catch (error) {
-    return unavailableUserTimelineDiagnostics(
-      error instanceof Error ? error.message : String(error),
-    );
+    return unavailableUserTimelineDiagnostics(rustWasmDiagnosticMessage(error));
   }
 }
 

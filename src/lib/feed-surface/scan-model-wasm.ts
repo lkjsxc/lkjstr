@@ -1,3 +1,4 @@
+import { rustWasmDiagnosticMessage } from '$lib/rust-wasm/bridge-unavailable';
 import type { ScanBridgeFailureReason } from './scan-model-bridge-validation';
 
 export type ScanModelWasmResult<T> =
@@ -42,7 +43,7 @@ async function loadScanModelWasmPlannerUnbounded(): Promise<
     return {
       ok: false,
       reason: 'unavailable',
-      message: error instanceof Error ? error.message : String(error),
+      message: rustWasmDiagnosticMessage(error),
     };
   }
 }

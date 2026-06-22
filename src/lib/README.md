@@ -29,6 +29,7 @@ This directory contains reusable application code shared by routes and tabs.
 - [public-chat/](public-chat/): NIP-28 channel chat adapters.
 - [query/](query/): timeline query helpers.
 - [relays/](relays/): relay clients, pools, and settings.
+- [rust-wasm/](rust-wasm/): browser bridge-unavailable message helpers.
 - [search/](search/): search query parsing.
 - [settings/](settings/): flat settings schema and store.
 - [storage/](storage/): storage wrappers and OPFS SQLite worker host glue.

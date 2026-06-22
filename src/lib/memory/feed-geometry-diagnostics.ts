@@ -1,3 +1,4 @@
+import { rustWasmDiagnosticMessage } from '$lib/rust-wasm/bridge-unavailable';
 import { loadLkjstrWebWasm } from 'virtual:lkjstr-web-wasm';
 
 export type FeedGeometryRuntimeDiagnostics =
@@ -55,9 +56,7 @@ export async function readFeedGeometryDiagnostics(): Promise<FeedGeometryRuntime
     }
     return normalizeFeedGeometryDiagnostics(read());
   } catch (error) {
-    return unavailableFeedGeometryDiagnostics(
-      error instanceof Error ? error.message : String(error),
-    );
+    return unavailableFeedGeometryDiagnostics(rustWasmDiagnosticMessage(error));
   }
 }
 

@@ -16,3 +16,4 @@ Unit tests for shared feed paging helpers.
   stale-observation, and width-bucket counters.
 - [row-height-reservation-keys.test.ts](row-height-reservation-keys.test.ts):
   width buckets and materialization-tier keying.
+- [scan-model-wasm.test.ts](scan-model-wasm.test.ts): bridge-unavailable text.

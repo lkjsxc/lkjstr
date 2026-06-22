@@ -1,6 +1,7 @@
 <script lang="ts">
   import { onMount } from 'svelte';
   import { mountSearchIsland } from '$lib/components/workspace/search-island';
+  import { rustWasmBridgeErrorMessage } from '$lib/rust-wasm/bridge-unavailable';
   import type { TabSnapshotPayload } from '$lib/workspace/tab-snapshot';
 
   type SearchIslandHandle = {
@@ -38,10 +39,10 @@
       })
       .catch((error: unknown) => {
         if (canceled) return;
-        loadError =
-          error instanceof Error
-            ? error.message
-            : 'Rust Search bridge unavailable.';
+        loadError = rustWasmBridgeErrorMessage(
+          error,
+          'Rust Search bridge unavailable.',
+        );
       });
 
     return () => {

@@ -1,6 +1,7 @@
 <script lang="ts">
   import { onMount } from 'svelte';
   import { mountNotificationsIsland } from '$lib/components/workspace/notifications-island';
+  import { rustWasmBridgeErrorMessage } from '$lib/rust-wasm/bridge-unavailable';
 
   type NotificationsIslandHandle = {
     unmount: () => void;
@@ -37,10 +38,10 @@
       })
       .catch((error: unknown) => {
         if (canceled) return;
-        loadError =
-          error instanceof Error
-            ? error.message
-            : 'Rust Notifications bridge unavailable.';
+        loadError = rustWasmBridgeErrorMessage(
+          error,
+          'Rust Notifications bridge unavailable.',
+        );
       });
 
     return () => {
