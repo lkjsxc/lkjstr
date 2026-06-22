@@ -21,7 +21,6 @@ pnpm verify:quiet
 Acceptance: adaptive windows, per-relay density, cache eligibility, display
 bounds, and incomplete windows are proven with deterministic unit tests.
 
-
 ## Relay Hardening
 
 ```sh
@@ -40,7 +39,6 @@ pnpm verify:quiet
 Acceptance: partial relay failure stays diagnostic, disabled relays stay
 excluded, late events after cancellation are ignored, and limiter queues drain.
 
-
 ## Subscription Orchestration
 
 ```sh
@@ -55,7 +53,6 @@ Acceptance:
 - Bootstrap leases close on `EOSE`.
 - Matching visible Home tabs share one live lease.
 - Hidden or closed feed tabs release live demands and leases.
-
 
 ## Rust Relay Host
 

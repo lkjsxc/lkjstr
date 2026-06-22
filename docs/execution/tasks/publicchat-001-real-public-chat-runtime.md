@@ -25,10 +25,10 @@ Wire the next real channel discovery or selected-channel message slice through R
 
 ## Files To Touch
 
-- crates/lkjstr-app/src/public_chat/**
+- crates/lkjstr-app/src/public_chat/\*\*
 - crates/lkjstr-ui/src/workspace/public_chat.rs
-- crates/lkjstr-web/**
-- src/lib/public-chat/**
+- crates/lkjstr-web/\*\*
+- src/lib/public-chat/\*\*
 
 ## Focused Gate
 

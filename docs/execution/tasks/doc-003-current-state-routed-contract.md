@@ -25,7 +25,7 @@ Update the child file that owns the behavior when shipped state changes.
 ## Files To Touch
 
 - docs/current-state.md
-- docs/current-state/**/*.md
+- docs/current-state/\*_/_.md
 
 ## Focused Gate
 

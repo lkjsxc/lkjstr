@@ -25,10 +25,10 @@ Complete parity proof, then run no-import commands and update deletion ledgers b
 
 ## Files To Touch
 
-- src/lib/search/**
-- src/lib/tabs/search/**
-- crates/lkjstr-app/**
-- crates/lkjstr-ui/**
+- src/lib/search/\*\*
+- src/lib/tabs/search/\*\*
+- crates/lkjstr-app/\*\*
+- crates/lkjstr-ui/\*\*
 
 ## Focused Gate
 

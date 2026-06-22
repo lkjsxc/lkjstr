@@ -127,6 +127,7 @@ changed. Each docs directory has one README that acts as a table of contents.
 `repository/workflow.md` `research/README.md` `research/browser-storage.md` `research/nostr-client-surfaces.md` `research/open-questions.md` `research/relay-optimizer-audit.md` `security/README.md`
 `security/content-safety.md` `security/local-keys.md` `vision/README.md` `vision/north-star.md` `vision/principles.md` `vision/scope.md`
 ```
+
 ## Documentation Rules
 
 - Keep docs aligned with implementation in the same change.

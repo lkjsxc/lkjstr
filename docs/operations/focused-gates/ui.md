@@ -18,7 +18,6 @@ Acceptance: `/` returns `200` without redirect and renders the implemented
 workspace shell. If deployment access exists, also check the configured
 production host; do not invent a host.
 
-
 ## Docker Final Gate
 
 ```sh

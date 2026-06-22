@@ -25,9 +25,9 @@ Keep new gate details in child files instead of growing root maps.
 
 ## Files To Touch
 
-- docs/execution/blockers/**
-- docs/operations/verification/**
-- docs/operations/focused-gates/**
+- docs/execution/blockers/\*\*
+- docs/operations/verification/\*\*
+- docs/operations/focused-gates/\*\*
 
 ## Focused Gate
 

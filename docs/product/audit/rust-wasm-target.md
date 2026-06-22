@@ -7,8 +7,8 @@ that are partial or not implemented.
 
 ## Status Matrix
 
-| Clause                                   | Contract                                                                       | Status          | Notes                                                                |
-| ---------------------------------------- | ------------------------------------------------------------------------------ | --------------- | -------------------------------------------------------------------- |
+| Clause                                   | Contract                                                                          | Status          | Notes                                                                |
+| ---------------------------------------- | --------------------------------------------------------------------------------- | --------------- | -------------------------------------------------------------------- |
 | Rust/WASM client ownership               | [rust-wasm-client.md](../../decisions/rust-wasm-client.md)                        | partial         | active slices tracked in Rust/WASM status                            |
 | Rust/WASM architecture subtree           | [rust-wasm/README.md](../../architecture/rust-wasm/README.md)                     | partial         | status, cutover, and verification docs active                        |
 | Rust workspace checks                    | [crate-boundaries.md](../../architecture/rust-wasm/crate-boundaries.md)           | implemented     | `lkjstr-xtask` commands                                              |

@@ -37,7 +37,6 @@ Open rust foundations and runtime rule.
   Profile Edit publish, and session log capture wiring for the Rust Log body.
 - Full Leptos parity for every product surface and responsive browser QA.
 
-
 ## Runtime Rule
 
 The SvelteKit runtime remains the shipped product until a Rust surface has real

@@ -24,10 +24,10 @@ Identify one remaining feed-surface parity gap and add source plus focused proof
 
 ## Files To Touch
 
-- crates/lkjstr-app/src/feed/**
-- crates/lkjstr-ui/**
-- src/lib/feed-surface/**
-- tests/unit/feed-surface/**
+- crates/lkjstr-app/src/feed/\*\*
+- crates/lkjstr-ui/\*\*
+- src/lib/feed-surface/\*\*
+- tests/unit/feed-surface/\*\*
 
 ## Focused Gate
 

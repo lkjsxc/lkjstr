@@ -24,10 +24,10 @@ Add capability detection and unsupported/denied states before any encrypted-secr
 
 ## Files To Touch
 
-- src/lib/accounts/**
-- crates/lkjstr-web/**
-- crates/lkjstr-ui/**
-- tests/unit/accounts/**
+- src/lib/accounts/\*\*
+- crates/lkjstr-web/\*\*
+- crates/lkjstr-ui/\*\*
+- tests/unit/accounts/\*\*
 
 ## Focused Gate
 

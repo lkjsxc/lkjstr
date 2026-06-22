@@ -24,7 +24,7 @@ Choose one row that is ready, run no-import proof, update ledgers, then delete o
 
 ## Files To Touch
 
-- exact row files under src/lib/**
+- exact row files under src/lib/\*\*
 - replacement Rust paths
 - tests and ledgers
 

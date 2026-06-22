@@ -26,7 +26,9 @@ export async function checkProductFixtureImports(
 }
 
 function isProductSource(rel: string): boolean {
-  return rel.startsWith(`src${path.sep}`) && PRODUCT_EXTS.has(path.extname(rel));
+  return (
+    rel.startsWith(`src${path.sep}`) && PRODUCT_EXTS.has(path.extname(rel))
+  );
 }
 
 function importSpecifiers(text: string): string[] {
@@ -51,7 +53,11 @@ function isForbiddenSpecifier(rel: string, specifier: string): boolean {
 }
 
 function importsTests(target: string): boolean {
-  return target === 'tests' || target.startsWith('tests/') || target.includes('/tests/');
+  return (
+    target === 'tests' ||
+    target.startsWith('tests/') ||
+    target.includes('/tests/')
+  );
 }
 
 function importsFixtureSegment(target: string): boolean {

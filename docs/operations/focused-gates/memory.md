@@ -19,7 +19,6 @@ pnpm test -- tests/unit/custom-request/parse.test.ts tests/unit/settings/setting
 Acceptance: app-owned counters, cleanup paths, wait queues, and bounded maps
 return to documented idle states. Browser RSS is diagnostic only.
 
-
 ## Background Work
 
 ```sh

@@ -25,10 +25,10 @@ Pick one missing diagnostics source and render real rows with exact unavailable 
 
 ## Files To Touch
 
-- crates/lkjstr-storage/**
-- crates/lkjstr-ui/src/workspace/stats*
-- crates/lkjstr-web/**
-- src/lib/tabs/stats/**
+- crates/lkjstr-storage/\*\*
+- crates/lkjstr-ui/src/workspace/stats\*
+- crates/lkjstr-web/\*\*
+- src/lib/tabs/stats/\*\*
 
 ## Focused Gate
 

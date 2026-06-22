@@ -29,7 +29,7 @@ Preserve the allowlist when storage ownership moves, and remove carveouts only a
 
 - scripts/repo-storage-boundary.ts
 - tests/unit/repo-storage-boundary.test.ts
-- docs/architecture/data/storage/**
+- docs/architecture/data/storage/\*\*
 
 ## Focused Gate
 

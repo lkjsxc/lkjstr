@@ -22,7 +22,6 @@ Acceptance: rows stay newest-first, duplicate events merge by id, footer states
 match real coverage, top-locked live inserts stay at scroll offset `0`, and
 missing coverage never proves absence.
 
-
 ## User-Requested Reliability
 
 ```sh

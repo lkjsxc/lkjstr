@@ -26,11 +26,11 @@ Model one publish job path with event construction, signer denial, relay OK/erro
 
 ## Files To Touch
 
-- crates/lkjstr-protocol/**
-- crates/lkjstr-app/**
-- crates/lkjstr-storage/**
-- crates/lkjstr-relays/**
-- src/lib/tweet/**
+- crates/lkjstr-protocol/\*\*
+- crates/lkjstr-app/\*\*
+- crates/lkjstr-storage/\*\*
+- crates/lkjstr-relays/\*\*
+- src/lib/tweet/\*\*
 
 ## Focused Gate
 

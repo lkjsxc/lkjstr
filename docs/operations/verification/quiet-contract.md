@@ -35,7 +35,6 @@ CI must use quiet commands by default. Host-boundary Rust/WASM tests may use
 headless browsers when Node cannot represent the platform API, but they do not
 exercise tiled workspace browser flows.
 
-
 ## Local Canonical Gate
 
 Run documentation and repository checks before implementation continues after a
@@ -58,7 +57,6 @@ pnpm cloudflare:quiet
 production build. `pnpm ci:quiet` is an orchestration alias only when it does
 not repeat the same child plan. Cloudflare stays separate so adapter and
 Wrangler failures remain easy to isolate.
-
 
 ## No Duplicate Work
 

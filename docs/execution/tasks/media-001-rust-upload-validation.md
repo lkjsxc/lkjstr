@@ -25,10 +25,10 @@ Move one validation/auth helper to Rust and keep insertion gated on real upload 
 
 ## Files To Touch
 
-- crates/lkjstr-protocol/**
-- crates/lkjstr-web/**
-- src/lib/media/**
-- tests/unit/media/**
+- crates/lkjstr-protocol/\*\*
+- crates/lkjstr-web/\*\*
+- src/lib/media/\*\*
+- tests/unit/media/\*\*
 
 ## Focused Gate
 

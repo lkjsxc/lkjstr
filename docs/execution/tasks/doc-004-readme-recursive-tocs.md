@@ -23,7 +23,7 @@ When files are added, update the nearest README and `docs/README.md` all-files b
 
 ## Files To Touch
 
-- docs/**/README.md
+- docs/\*\*/README.md
 
 ## Focused Gate
 
