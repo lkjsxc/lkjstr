@@ -1,6 +1,7 @@
 import { spawn } from 'node:child_process';
+import { hasWasmMagic, parseAssetManifest } from './wasm-assets';
 
-const url = 'http://127.0.0.1:5173/';
+const origin = 'http://127.0.0.1:5173';
 const preview = spawn(
   'pnpm',
   ['preview', '--host', '0.0.0.0', '--port', '5173'],
@@ -35,11 +36,36 @@ async function waitForApp(): Promise<void> {
 }
 
 async function probe(): Promise<boolean> {
-  const response = await fetch(url);
-  if (!response.ok) return false;
-  const html = await response.text();
+  const html = await fetchText('/');
   const body = /<body[^>]*>([\s\S]*?)<\/body>/i.exec(html)?.[1] ?? '';
-  return body.trim().length > 0 && html.includes('workspace-shell');
+  if (body.trim().length === 0 || !html.includes('workspace-shell'))
+    return false;
+  const manifest = parseAssetManifest(
+    await fetchText('/lkjstr-web-wasm/asset-manifest.json'),
+  );
+  await fetchText(manifest.script.path);
+  const wasmResponse = await fetchUrl(manifest.wasm.path);
+  const wasm = new Uint8Array(await wasmResponse.arrayBuffer());
+  const contentType = wasmResponse.headers.get('content-type') ?? '';
+  return hasWasmMagic(wasm) && acceptsWasmContentType(contentType, wasm);
+}
+
+async function fetchText(pathname: string): Promise<string> {
+  const response = await fetchUrl(pathname);
+  return response.text();
+}
+
+async function fetchUrl(pathname: string): Promise<Response> {
+  const response = await fetch(new URL(pathname, origin));
+  if (!response.ok) throw new Error(`${pathname} returned ${response.status}`);
+  return response;
+}
+
+function acceptsWasmContentType(
+  contentType: string,
+  wasm: Uint8Array,
+): boolean {
+  return contentType.includes('application/wasm') || hasWasmMagic(wasm);
 }
 
 function delay(ms: number): Promise<void> {

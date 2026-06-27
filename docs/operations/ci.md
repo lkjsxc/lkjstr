@@ -17,6 +17,10 @@ authoritative final gate.
 - `publish` runs only from `main` after `docker-final` passes. It reuses the
   checked app image or the same Docker cache and target, and does not run an
   unrelated cold rebuild.
+- `deploy-cloudflare` runs only from `main` when repository variable
+  `CLOUDFLARE_DEPLOY_ENABLED` is `true`. It depends on `docker-final`, installs
+  Node 24, pnpm 11.1.2, Rust stable, the wasm32 target, and `wasm-pack 0.15.0`,
+  then runs `pnpm build`, `pnpm cloudflare:dry-run:built`, and Wrangler deploy.
 
 ## Compose Commands
 
@@ -34,7 +38,8 @@ docker compose --progress quiet -f docker-compose.yml run --rm app-smoke
   verification inside Docker on the default pull request path.
 - CI must not build the production app repeatedly unless a target needs a
   distinct artifact.
-- Cloudflare dry-run consumes the already-built app artifact inside Docker.
+- Cloudflare dry-run consumes the already-built app artifact inside Docker and
+  verifies bridge assets before Wrangler dry-run.
 - Publish should reuse the checked app image or the same build cache and target.
 - `xtask` quiet orchestration must not recurse through `pnpm` commands that call
   `xtask` again.

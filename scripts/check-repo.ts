@@ -58,6 +58,7 @@ const files = await walk(root);
 await checkLines(files);
 await checkReadmeCoverage();
 await checkForbiddenDependencyText(files);
+await checkWasmPluginBoundary();
 problems.push(...(await checkDocs(root, files, skipDirs)));
 problems.push(...(await checkComposeGuardrails(root)));
 problems.push(...(await checkSourceClasses(root, files)));
@@ -110,6 +111,20 @@ async function checkReadmeCoverage() {
     await fs.access(path.join(root, readme)).catch(() => {
       problems.push({ file: dir, message: 'missing README.md' });
     });
+  }
+}
+
+async function checkWasmPluginBoundary() {
+  const rel = path.join('scripts', 'vite-lkjstr-web-wasm.ts');
+  const text = await fs.readFile(path.join(root, rel), 'utf8');
+  const forbidden = ['node:child_process', 'spawnSync', 'wasmPackArgs'];
+  for (const item of forbidden) {
+    if (text.includes(item)) {
+      problems.push({
+        file: rel,
+        message: `Vite WASM plugin must not use ${item}`,
+      });
+    }
   }
 }
 

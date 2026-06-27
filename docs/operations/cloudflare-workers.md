@@ -19,6 +19,14 @@ Cloudflare Workers docs define the hosted build target for lkjstr.
   binding.
 - Storage uses `opfs-sahpool` by default, so the Cloudflare target does not add
   COOP/COEP headers solely for SQLite.
+- Hosted `lkjstr.com` builds require Node 24, pnpm 11.1.2, Rust stable,
+  `wasm32-unknown-unknown`, and `wasm-pack 0.15.0`.
+- The Cloudflare build path runs the explicit Rust/WASM bridge build before
+  `vite build`.
+- The dry-run path verifies bridge assets before `wrangler deploy --dry-run`.
+- A hosted build missing `wasm-pack` fails before deployment. It must not publish
+  an app shell that can only show bridge-unavailable because the build tool was
+  absent.
 - Final root build cutover changes the asset directory to the Rust/Leptos
   static artifact only after product parity and no-import proof exist.
 - An optional Rust Worker may route assets, SPA fallback, headers, and
@@ -26,20 +34,27 @@ Cloudflare Workers docs define the hosted build target for lkjstr.
   feed behavior.
 - The compatibility date is `2026-05-23`.
 - The only compatibility flag is `nodejs_als`.
-- Repository scripts provide a dry-run verification command only; publishing is
-  intentionally not scripted.
-- If the Cloudflare build image lacks `wasm-pack`, the SvelteKit build must keep
-  succeeding and the browser shows an explicit Rust/WASM scan bridge unavailable
-  state. Docker and Rust/WASM verification remain the strict gates that prove the
-  bridge compiles when the Rust toolchain is present.
+- Repository scripts provide dry-run verification; publishing requires explicit
+  operator credentials.
+
+## Deployment Settings
+
+Supported Cloudflare build and deploy modes live in
+[cloudflare-workers/build-settings.md](cloudflare-workers/build-settings.md).
+The preferred durable path is GitHub Actions or pinned Docker after the Docker
+final gate. Dashboard Workers Builds are acceptable only when they install the
+same pinned Node, pnpm, Rust target, and `wasm-pack` toolchain before `pnpm build`.
 
 ## Verification
 
 ```sh
-pnpm cloudflare:dry-run
+pnpm build
+pnpm verify:wasm-assets
+pnpm cloudflare:dry-run:built
 docker compose -f docker-compose.yml config
-docker compose -f docker-compose.yml build cloudflare
+docker compose -f docker-compose.yml build cloudflare app-smoke
 docker compose -f docker-compose.yml run --rm cloudflare
+docker compose -f docker-compose.yml run --rm app-smoke
 ```
 
 ## References

@@ -25,7 +25,7 @@ describe('wasm-pack toolchain preflight', () => {
     }
   });
 
-  it('allows rust-wasm checks to continue when wasm-pack is present', () => {
+  it('allows rust-wasm checks to continue when pinned wasm-pack is present', () => {
     const result = preflightWasmPack('wasm-pack', () => ({
       status: 0,
       stdout: 'wasm-pack 0.15.0',
@@ -33,5 +33,20 @@ describe('wasm-pack toolchain preflight', () => {
     }));
 
     expect(result).toEqual({ ok: true, version: 'wasm-pack 0.15.0' });
+  });
+
+  it('rejects unpinned wasm-pack versions before build', () => {
+    const result = preflightWasmPack('wasm-pack', () => ({
+      status: 0,
+      stdout: 'wasm-pack 0.14.0',
+      stderr: '',
+    }));
+
+    expect(result.ok).toBe(false);
+    if (!result.ok) {
+      expect(result.diagnostic).toContain(
+        'Required wasm-pack version is 0.15.0',
+      );
+    }
   });
 });

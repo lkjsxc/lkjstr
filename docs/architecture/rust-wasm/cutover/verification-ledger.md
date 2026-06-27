@@ -46,7 +46,19 @@ Keep new run evidence in the table below unless a narrative note is required.
 
 ## Recent Focused Evidence
 
-Latest focused note: on 2026-06-22, RUSTWASM-TOOLCHAIN-001 made Rust/WASM
+Latest focused note: on 2026-06-27, CLOUDFLARE-WASM-PRODUCTION-REPAIR moved
+bridge generation to `pnpm rust-wasm:build`, made the Vite plugin asset-only,
+added bridge asset verification, and made app smoke fetch the manifest,
+JavaScript asset, and WASM bytes. `pnpm test -- tests/unit/rust-wasm`,
+`pnpm check:repo`, `pnpm rust-wasm:build`, `pnpm build`,
+`pnpm verify:wasm-assets`, `pnpm cloudflare:dry-run:built`, app smoke,
+`cargo test -p lkjstr-xtask toolchain`, `pnpm test:quiet`,
+`pnpm verify:quiet`, `pnpm cloudflare:quiet`, `cargo test --workspace --quiet`,
+Docker config, Docker build for app/verify/cloudflare/app-smoke, Docker verify,
+Docker cloudflare, and Docker app-smoke passed. Host `pnpm rust-wasm:quiet`
+timed out at 300s; Docker verify remains the successful full toolchain proof.
+
+Previous focused note: on 2026-06-22, RUSTWASM-TOOLCHAIN-001 made Rust/WASM
 preflight deterministic and product-safe. Missing `wasm-pack`, Chrome, or
 Firefox now fails `pnpm rust-wasm:quiet` with install or Docker instructions,
 while Timeline/feed Rust islands, retained bridge tabs, feed-surface loaders,

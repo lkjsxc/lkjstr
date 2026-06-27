@@ -12,6 +12,7 @@ const bridgeArtifactFragments = [
   'local WASM artifact is missing',
   'lkjstr-web WASM was not built',
   'lkjstr-web WASM unavailable in tests',
+  'Rust/WASM bridge artifacts missing',
 ];
 
 export function rustWasmBridgeErrorMessage(

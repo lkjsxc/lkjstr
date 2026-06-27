@@ -7,7 +7,8 @@ commands.
 
 ## Table of Contents
 
-- `app-smoke.ts`: production preview smoke check for `/`.
+- `app-smoke.ts`: production preview smoke check for `/` and bridge assets.
+- `build-lkjstr-web-wasm.ts`: strict `wasm-pack` bridge artifact builder.
 - `check-repo.ts`: repository contract checker.
 - `repo-compose.ts`: Docker Compose guardrails.
 - `repo-author-context-deletions.ts`: deleted Author Context loader no-import
@@ -26,7 +27,9 @@ commands.
 - `repo-user-timeline-deletions.ts`: deleted User Timeline helper no-import
   guard.
 - `run-quiet.ts`: quiet verification runner for agents and CI.
-- `vite-lkjstr-web-wasm.ts`: Vite asset plugin for the Rust browser bridge.
+- `verify-built-wasm-assets.ts`: source and Cloudflare bridge asset verifier.
+- `vite-lkjstr-web-wasm.ts`: asset-only Vite plugin for the Rust bridge.
+- `wasm-assets.ts`: shared bridge asset manifest and hashing helpers.
 - `wasm-toolchain.ts`: wasm-pack preflight and product-safe bridge messages.
 - `vitest-quiet-reporter.ts`: minimal Vitest reporter for quiet unit runs.
 

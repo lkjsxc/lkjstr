@@ -15,6 +15,7 @@ readiness, diagnostics, and focused gates.
 - [docker.md](docker.md): Compose image targets and guardrails.
 - [ci.md](ci.md): CI jobs and Compose commands.
 - [cloudflare-workers.md](cloudflare-workers.md): Workers Static Assets target.
+- [cloudflare-workers/README.md](cloudflare-workers/README.md): hosted build settings for bridge assets.
 - [memory-verification.md](memory-verification.md): cleanup counters and manual
   heap diagnostics.
 - [storage-pressure-verification.md](storage-pressure-verification.md): storage
@@ -36,7 +37,7 @@ Run the focused gate for the area you changed, then the Docker final gate from
 ## All Files
 
 ```text
-`ci.md` `cloudflare-workers.md` `data-safety.md` `diagnostics.md` `docker.md` `feed-route-isolation-regression.md` `focused-gates/README.md`
+`ci.md` `cloudflare-workers.md` `cloudflare-workers/README.md` `cloudflare-workers/build-settings.md` `cloudflare-workers/hosted-checks.md` `data-safety.md` `diagnostics.md` `docker.md` `feed-route-isolation-regression.md` `focused-gates/README.md`
 `focused-gates/feed.md` `focused-gates/memory.md` `focused-gates/relay.md` `focused-gates/rust-cutover.md` `focused-gates/storage.md` `focused-gates/ui.md` `focused-gates.md`
 `memory-verification.md` `readiness.md` `sqlite-opfs-testing.md` `storage-pressure-verification.md` `testing-ownership.md` `timeline-notification-regression-investigation.md` `verification/README.md`
 `verification/acceptance-checks.md` `verification/docker-final-gate.md` `verification/quiet-contract.md` `verification/rust-wasm.md` `verification/sqlite-opfs.md` `verification.md`

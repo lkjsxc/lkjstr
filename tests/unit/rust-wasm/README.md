@@ -7,6 +7,8 @@ product bridge-unavailable presenters.
 
 ## Table of Contents
 
+- [build-lkjstr-web-wasm.test.ts](build-lkjstr-web-wasm.test.ts): strict artifact manifest helpers.
 - [wasm-toolchain.test.ts](wasm-toolchain.test.ts): wasm-pack preflight text.
 - [bridge-unavailable.test.ts](bridge-unavailable.test.ts): product-safe bridge errors.
-- [vite-wasm-plugin.test.ts](vite-wasm-plugin.test.ts): Vite bridge asset preflight.
+- [verify-built-wasm-assets.test.ts](verify-built-wasm-assets.test.ts): source and Cloudflare bridge asset verifier.
+- [vite-wasm-plugin.test.ts](vite-wasm-plugin.test.ts): asset-only Vite bridge plugin.

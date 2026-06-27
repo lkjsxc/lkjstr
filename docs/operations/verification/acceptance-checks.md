@@ -20,20 +20,25 @@ Cloudflare, and app-smoke layers:
   whenever those pure reducers exist.
 - Cloudflare dry-run builds Workers Static Assets with the `ASSETS` binding and
   no app backend, relay proxy, or account service.
-- App-smoke builds the production app, serves preview, fetches `/`, and verifies
-  a nonblank workspace shell response.
+- Bridge asset verification checks the Rust/WASM source artifact manifest, the
+  emitted Cloudflare manifest, the JavaScript bridge asset, and a non-empty WASM
+  binary with bytes `00 61 73 6d`.
+- App-smoke builds the production app, serves preview, fetches `/`, verifies a
+  nonblank workspace shell response, fetches `/lkjstr-web-wasm/asset-manifest.json`,
+  and validates every listed bridge asset.
 
 Manual diagnostics own these observations when a human or agent needs browser
 runtime evidence:
 
 - Root route remains visible when local storage, IndexedDB, or OPFS are denied.
-- Static hosting serves SQLite worker and WASM assets with required isolation
-  headers while that runtime remains active.
+- Static hosting serves SQLite worker assets and the Rust/WASM bridge manifest,
+  JavaScript, and WASM binary from the hosted asset output.
 - Long browser sessions keep UI responsive under relay churn and storage
   pressure.
 - Browser heap snapshots and Chromium RSS help investigate memory pressure;
   RSS is diagnostic only.
-- Real production hosts return expected headers when deployment access exists.
+- Real production hosts return expected headers when deployment access exists;
+  `lkjstr.com/lkjstr-web-wasm/asset-manifest.json` lists fetchable bridge assets.
 
 ## Real-Data Layout Regression Checklist
 

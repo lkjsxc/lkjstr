@@ -1,2 +1,5 @@
 # lkjstr intentionally does not set app-wide COOP/COEP headers.
 # SQLite storage uses opfs-sahpool so arbitrary Nostr media remains usable.
+
+/lkjstr-web-wasm/asset-manifest.json
+  Cache-Control: no-cache

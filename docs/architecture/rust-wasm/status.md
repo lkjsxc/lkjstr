@@ -10,7 +10,8 @@ Detailed status lives under [status/README.md](status/README.md).
 Rust/WASM is partial and actively implemented. SvelteKit and TypeScript remain
 the shipped product runtime until each Rust surface has real behavior, matching
 tests, truthful states, and no-import proof for deleted TypeScript or Svelte
-paths.
+paths. Production SvelteKit builds now require prebuilt Rust/WASM bridge assets
+and fail before deploy when those assets are absent.
 
 ## Detail Map
 

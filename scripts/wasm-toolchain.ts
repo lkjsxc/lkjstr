@@ -51,7 +51,19 @@ export function preflightWasmPack(
         .join('\n'),
     };
   }
-  return { ok: true, version: text(result.stdout).trim() };
+  const version = text(result.stdout).trim();
+  if (!version.includes(WASM_PACK_VERSION)) {
+    return {
+      ok: false,
+      productMessage: LOCAL_WASM_ARTIFACT_MISSING_MESSAGE,
+      diagnostic: [
+        `Rust/WASM tool preflight failed: ${command} reported ${version || 'unknown'}.`,
+        `Required wasm-pack version is ${WASM_PACK_VERSION}.`,
+        installHint(),
+      ].join('\n'),
+    };
+  }
+  return { ok: true, version };
 }
 
 export function missingWasmPackDiagnostic(command = 'wasm-pack'): string {

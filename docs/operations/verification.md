@@ -3,9 +3,9 @@
 ## Purpose
 
 Verification proves documentation rules, source shape, focused behavior tests,
-Rust/WASM checks, production build output, Cloudflare deployability, and the
-production root response. Browser workflow suites are not canonical gates.
-Detailed commands live in [verification/README.md](verification/README.md).
+Rust/WASM checks, production build output, Cloudflare deployability, bridge asset
+availability, and the production root response. Browser workflow suites are not
+canonical gates. Detailed commands live in [verification/README.md](verification/README.md).
 
 ## Canonical Local Gates
 
@@ -25,6 +25,22 @@ pnpm verify:quiet
 pnpm cloudflare:quiet
 ```
 
+## Bridge Asset Gates
+
+Production builds must build and verify the Rust/WASM bridge before deploy:
+
+```sh
+pnpm rust-wasm:build
+pnpm build
+pnpm verify:wasm-assets
+pnpm cloudflare:dry-run:built
+```
+
+`pnpm verify:wasm-assets` checks source artifacts under `target/lkjstr-web-wasm`
+and emitted Cloudflare assets under `.svelte-kit/cloudflare/lkjstr-web-wasm`.
+The app smoke gate fetches the manifest, JavaScript bridge asset, and WASM
+binary from the production preview server and validates the WASM magic bytes.
+
 ## Docker Final Gate
 
 Docker Compose is the authoritative final gate:
@@ -37,12 +53,16 @@ docker compose --progress quiet -f docker-compose.yml run --rm cloudflare
 docker compose --progress quiet -f docker-compose.yml run --rm app-smoke
 ```
 
+The Docker `cloudflare` service verifies bridge assets before Wrangler dry-run.
+The Docker `app-smoke` service verifies the preview root and bridge assets.
+
 ## Toolchain Boundary
 
 Rust/WASM tools such as `wasm-pack` are build/check dependencies, not product
 runtime dependencies. Missing required tools fail verification with actionable
-instructions; browser surfaces render explicit bridge-unavailable states instead
-of raw spawn errors. See
+instructions; local browser surfaces render explicit bridge-unavailable states
+instead of raw spawn errors. Hosted production builds fail before deploy when the
+bridge cannot be built or emitted. See
 [../architecture/rust-wasm/toolchain-boundary.md](../architecture/rust-wasm/toolchain-boundary.md).
 
 ## Detail Map

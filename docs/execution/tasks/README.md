@@ -11,7 +11,8 @@ verification ledgers in the same change.
 
 Active queue:
 
-- [feed-001-shared-feed-runtime-gap-closure.md](feed-001-shared-feed-runtime-gap-closure.md): current shared feed blocker.
+- [cloudflare-wasm-production-repair.md](cloudflare-wasm-production-repair.md): active hosted Rust/WASM bridge production repair.
+- [feed-001-shared-feed-runtime-gap-closure.md](feed-001-shared-feed-runtime-gap-closure.md): current shared feed blocker after bridge production repair.
 - [storage-001-storage-boundary-audit.md](storage-001-storage-boundary-audit.md): storage boundary audit.
 - [publicchat-001-real-public-chat-runtime.md](publicchat-001-real-public-chat-runtime.md): real NIP-28 runtime target.
 - [publish-001-rust-publish-jobs.md](publish-001-rust-publish-jobs.md): Rust publish job model.

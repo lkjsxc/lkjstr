@@ -7,7 +7,10 @@ Docker compose final verification commands.
 ## Details
 
 The Docker `verify` target runs `lkjstr-xtask quiet docker-verify`, which omits
-production app build because the `app` target owns that artifact.
+production app build because the `app` target owns that artifact. The `app`
+target runs strict Rust/WASM build, Svelte build, and bridge asset verification.
+The `cloudflare` and `app-smoke` targets consume that built artifact and verify
+bridge assets before dry-run or preview success.
 
 ```sh
 docker compose -f docker-compose.yml config

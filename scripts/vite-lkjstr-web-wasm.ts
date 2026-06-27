@@ -1,189 +1,180 @@
-import { spawnSync } from 'node:child_process';
 import { existsSync } from 'node:fs';
-import { mkdir, readFile } from 'node:fs/promises';
+import { readFile } from 'node:fs/promises';
 import path from 'node:path';
 import type { Plugin, ResolvedConfig } from 'vite';
 import {
-  LOCAL_WASM_ARTIFACT_MISSING_MESSAGE,
-  missingWasmPackDiagnostic,
-  preflightWasmPack,
-  wasmPackCommandFromEnv,
-} from './wasm-toolchain';
+  contentAddressedName,
+  defaultWasmArtifactDir,
+  emittedAssetManifest,
+  manifestFileNames,
+  publicWasmAssetPath,
+  readAssetManifest,
+  wasmAssetContentType,
+  WASM_ASSET_DIR_NAME,
+  WASM_MANIFEST_NAME,
+  type WasmAssetManifest,
+} from './wasm-assets';
+import { LOCAL_WASM_ARTIFACT_MISSING_MESSAGE } from './wasm-toolchain';
 
-type WasmBuildState =
-  | { readonly available: true }
-  | {
-      readonly available: false;
-      readonly message: string;
-      readonly diagnostic: string;
-    };
+type BuildRefs = {
+  readonly scriptRef: string;
+  readonly wasmRef: string;
+};
 
-const assetNames = ['lkjstr_web.js', 'lkjstr_web_bg.wasm'] as const;
+type AssetEmitter = {
+  emitFile(file: {
+    type: 'asset';
+    fileName: string;
+    source: string | Buffer;
+  }): string;
+};
+
+type ArtifactState =
+  | { readonly available: true; readonly manifest: WasmAssetManifest }
+  | { readonly available: false; readonly message: string };
 
 export function lkjstrWebWasmAssets(repoRoot: string): Plugin {
-  const outDir = path.join(repoRoot, 'node_modules/.lkjstr/lkjstr-web-wasm');
+  const artifactDir = defaultWasmArtifactDir(repoRoot);
   const testHost = process.env.VITEST === 'true';
-  let state: WasmBuildState = unavailable(
-    LOCAL_WASM_ARTIFACT_MISSING_MESSAGE,
-    'lkjstr-web WASM was not built',
-  );
-  let requireToolchain = false;
+  let config: ResolvedConfig | undefined;
+  let state: ArtifactState = unavailable();
+  let refs: BuildRefs | undefined;
   return {
     name: 'lkjstr-web-wasm-assets',
-    configResolved(config: ResolvedConfig) {
-      requireToolchain = config.command === 'build';
+    configResolved(resolved) {
+      config = resolved;
     },
     resolveId: (id) =>
       id === 'virtual:lkjstr-web-wasm' ? '\0lkjstr-web-wasm' : null,
-    load(id) {
+    async load(id) {
       if (id !== '\0lkjstr-web-wasm') return null;
       if (testHost)
         return unavailableWasmModule('lkjstr-web WASM unavailable in tests');
-      if (state.available || assetsReady(outDir)) return hostedWasmModule();
-      return unavailableWasmModule(state.message);
+      if (config?.command === 'build') {
+        if (!refs) throw new Error(missingArtifactsMessage(artifactDir));
+        return hostedWasmModule(refs);
+      }
+      state = await readArtifactState(artifactDir);
+      return state.available
+        ? devWasmModule(state.manifest)
+        : unavailableWasmModule(state.message);
     },
     async buildStart() {
       if (testHost) return;
-      state = await ensureBuilt(repoRoot, outDir, state, requireToolchain);
-      if (!state.available) this.warn(state.diagnostic);
+      state = await readArtifactState(artifactDir);
+      if (!state.available && config?.command === 'build') {
+        throw new Error(missingArtifactsMessage(artifactDir));
+      }
+      if (!state.available) {
+        this.warn(state.message);
+        return;
+      }
+      if (config?.command !== 'build') return;
+      refs = await emitBridgeAssets(this, artifactDir, state.manifest);
     },
     async configureServer(server) {
-      if (!testHost) state = await ensureBuilt(repoRoot, outDir, state, false);
+      if (testHost) return;
       server.middlewares.use(
-        '/lkjstr-web-wasm',
+        `/${WASM_ASSET_DIR_NAME}`,
         async (request, response, next) => {
           try {
-            if (!assetsReady(outDir)) return next();
             const name = new URL(
               request.url ?? '/',
               'http://localhost',
             ).pathname.replace(/^\/+/, '');
-            if (!assetNames.includes(name as (typeof assetNames)[number]))
+            const manifest = await readAssetManifest(artifactDir).catch(
+              () => null,
+            );
+            if (!manifest || !manifestFileNames(manifest).has(name))
               return next();
             response.setHeader('Cross-Origin-Resource-Policy', 'same-origin');
-            response.setHeader('Content-Type', contentType(name));
-            response.end(await readFile(path.join(outDir, name)));
+            response.setHeader('Cache-Control', 'no-cache');
+            response.setHeader('Content-Type', wasmAssetContentType(name));
+            response.end(await readFile(path.join(artifactDir, name)));
           } catch (error) {
             next(error as Error);
           }
         },
       );
     },
-    async generateBundle() {
-      if (testHost || !assetsReady(outDir)) return;
-      for (const name of assetNames) {
-        this.emitFile({
-          type: 'asset',
-          fileName: `lkjstr-web-wasm/${name}`,
-          source: await readFile(path.join(outDir, name)),
-        });
-      }
-    },
   };
 }
 
-async function ensureBuilt(
-  repoRoot: string,
-  outDir: string,
-  current: WasmBuildState,
-  requireToolchain: boolean,
-): Promise<WasmBuildState> {
-  if (current.available && assetsReady(outDir)) return current;
-  if (assetsReady(outDir)) return { available: true };
-  if (process.env.LKJSTR_SKIP_WASM_PACK === '1') {
-    return optionalFailure(
-      LOCAL_WASM_ARTIFACT_MISSING_MESSAGE,
-      requireToolchain,
-      'wasm-pack skipped by LKJSTR_SKIP_WASM_PACK',
-    );
-  }
-  const command = wasmPackCommandFromEnv();
-  const preflight = preflightWasmPack(command);
-  if (!preflight.ok) {
-    return optionalFailure(
-      preflight.productMessage,
-      requireToolchain,
-      preflight.diagnostic,
-    );
-  }
-  await mkdir(outDir, { recursive: true });
-  const result = spawnSync(command, wasmPackArgs(outDir), {
-    cwd: repoRoot,
-    encoding: 'utf8',
-    env: buildEnv(),
+async function emitBridgeAssets(
+  plugin: AssetEmitter,
+  artifactDir: string,
+  manifest: WasmAssetManifest,
+): Promise<BuildRefs> {
+  const scriptName = contentAddressedName(
+    manifest.script.name,
+    manifest.script.sha256,
+  );
+  const wasmName = contentAddressedName(
+    manifest.wasm.name,
+    manifest.wasm.sha256,
+  );
+  const scriptRef = plugin.emitFile({
+    type: 'asset',
+    fileName: `${WASM_ASSET_DIR_NAME}/${scriptName}`,
+    source: await readFile(path.join(artifactDir, manifest.script.name)),
   });
-  if (result.error) {
-    return optionalFailure(
-      LOCAL_WASM_ARTIFACT_MISSING_MESSAGE,
-      requireToolchain,
-      `wasm-pack became unavailable during build. ${missingWasmPackDiagnostic(command)}`,
-    );
-  }
-  if (result.status !== 0) {
-    return optionalFailure(
-      LOCAL_WASM_ARTIFACT_MISSING_MESSAGE,
-      requireToolchain,
-      `wasm-pack build failed: ${tail(result.stderr || result.stdout)}`,
-    );
-  }
-  return assetsReady(outDir)
-    ? { available: true }
-    : optionalFailure(
-        LOCAL_WASM_ARTIFACT_MISSING_MESSAGE,
-        requireToolchain,
-        'wasm-pack finished without emitting lkjstr-web assets',
-      );
+  const wasmRef = plugin.emitFile({
+    type: 'asset',
+    fileName: `${WASM_ASSET_DIR_NAME}/${wasmName}`,
+    source: await readFile(path.join(artifactDir, manifest.wasm.name)),
+  });
+  const emitted = await emittedAssetManifest(
+    artifactDir,
+    manifest,
+    scriptName,
+    wasmName,
+  );
+  plugin.emitFile({
+    type: 'asset',
+    fileName: `${WASM_ASSET_DIR_NAME}/${WASM_MANIFEST_NAME}`,
+    source: `${JSON.stringify(emitted, null, 2)}\n`,
+  });
+  return { scriptRef, wasmRef };
 }
 
-function optionalFailure(
-  message: string,
-  requireToolchain: boolean,
-  diagnostic: string,
-): WasmBuildState {
-  if (requireToolchain || process.env.LKJSTR_REQUIRE_WASM_PACK === '1') {
-    throw new Error(diagnostic);
-  }
-  return unavailable(message, diagnostic);
+async function readArtifactState(directory: string): Promise<ArtifactState> {
+  const manifestPath = path.join(directory, WASM_MANIFEST_NAME);
+  if (!existsSync(manifestPath)) return unavailable();
+  const manifest = await readAssetManifest(directory).catch(() => null);
+  if (!manifest) return unavailable();
+  if (!existsSync(path.join(directory, manifest.script.name)))
+    return unavailable();
+  if (!existsSync(path.join(directory, manifest.wasm.name)))
+    return unavailable();
+  return { available: true, manifest };
 }
 
-function assetsReady(outDir: string): boolean {
-  return assetNames.every((name) => existsSync(path.join(outDir, name)));
+function hostedWasmModule(refs: BuildRefs): string {
+  return wasmModule(
+    `import.meta.ROLLUP_FILE_URL_${refs.scriptRef}`,
+    `import.meta.ROLLUP_FILE_URL_${refs.wasmRef}`,
+  );
 }
 
-function wasmPackArgs(outDir: string): string[] {
-  return [
-    'build',
-    '--target',
-    'web',
-    '--out-dir',
-    outDir,
-    '--out-name',
-    'lkjstr_web',
-    '--no-typescript',
-  ];
+function devWasmModule(manifest: WasmAssetManifest): string {
+  return wasmModule(
+    JSON.stringify(publicWasmAssetPath(manifest.script.name)),
+    JSON.stringify(publicWasmAssetPath(manifest.wasm.name)),
+  );
 }
 
-function buildEnv(): NodeJS.ProcessEnv {
-  const cargoPath = `${process.env.HOME ?? ''}/.cargo/bin`;
-  return { ...process.env, PATH: `${cargoPath}:${process.env.PATH ?? ''}` };
-}
-
-function hostedWasmModule(): string {
-  return `const scriptUrl = '/lkjstr-web-wasm/lkjstr_web.js';\nconst wasmUrl = '/lkjstr-web-wasm/lkjstr_web_bg.wasm';\nlet promise;\nexport async function loadLkjstrWebWasm() {\n  promise ??= import(/* @vite-ignore */ scriptUrl).then(async (module) => {\n    await module.default(wasmUrl);\n    return module;\n  });\n  return promise;\n}\n`;
+function wasmModule(scriptUrl: string, wasmUrl: string): string {
+  return `const scriptUrl = ${scriptUrl};\nconst wasmUrl = ${wasmUrl};\nlet promise;\nexport async function loadLkjstrWebWasm() {\n  promise ??= import(/* @vite-ignore */ scriptUrl).then(async (module) => {\n    await module.default(wasmUrl);\n    return module;\n  });\n  return promise;\n}\n`;
 }
 
 function unavailableWasmModule(message: string): string {
   return `export async function loadLkjstrWebWasm() {\n  throw new Error(${JSON.stringify(message)});\n}\n`;
 }
 
-function unavailable(message: string, diagnostic: string): WasmBuildState {
-  return { available: false, message, diagnostic };
+function unavailable(): ArtifactState {
+  return { available: false, message: LOCAL_WASM_ARTIFACT_MISSING_MESSAGE };
 }
 
-function tail(text: string): string {
-  return text.slice(-4000) || 'no output';
-}
-
-function contentType(name: string): string {
-  return name.endsWith('.wasm') ? 'application/wasm' : 'text/javascript';
+function missingArtifactsMessage(directory: string): string {
+  return `Rust/WASM bridge artifacts missing in ${directory}. Run pnpm rust-wasm:build before production build.`;
 }
