@@ -48,9 +48,11 @@ Keep new run evidence in the table below unless a narrative note is required.
 
 Latest focused note: on 2026-06-27, CLOUDFLARE-WASM-PRODUCTION-REPAIR moved
 bridge generation to `pnpm rust-wasm:build`, made the Vite plugin asset-only,
-added bridge asset verification, and made app smoke fetch the manifest,
-JavaScript asset, and WASM bytes. `pnpm test -- tests/unit/rust-wasm`,
-`pnpm check:repo`, `pnpm rust-wasm:build`, `pnpm build`,
+added Workers Builds toolchain bootstrap, added bridge asset verification, and
+made app smoke fetch the manifest, JavaScript asset, and WASM bytes.
+`pnpm test -- tests/unit/rust-wasm`, `pnpm check:repo`,
+`LKJSTR_BOOTSTRAP_WASM_TOOLCHAIN=1 pnpm cloudflare:install-wasm-toolchain`,
+`pnpm rust-wasm:build`, `pnpm build`,
 `pnpm verify:wasm-assets`, `pnpm cloudflare:dry-run:built`, app smoke,
 `cargo test -p lkjstr-xtask toolchain`, `pnpm test:quiet`,
 `pnpm verify:quiet`, `pnpm cloudflare:quiet`, `cargo test --workspace --quiet`,

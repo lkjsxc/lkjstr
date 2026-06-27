@@ -10,6 +10,7 @@ commands.
 - `app-smoke.ts`: production preview smoke check for `/` and bridge assets.
 - `build-lkjstr-web-wasm.ts`: strict `wasm-pack` bridge artifact builder.
 - `check-repo.ts`: repository contract checker.
+- `install-wasm-toolchain.ts`: Cloudflare build bootstrap for pinned Rust/WASM tools.
 - `repo-compose.ts`: Docker Compose guardrails.
 - `repo-author-context-deletions.ts`: deleted Author Context loader no-import
   guard.

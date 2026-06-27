@@ -7,6 +7,7 @@
     "dev": "vite dev",
     "kit:sync": "svelte-kit sync",
     "rust-wasm:build": "tsx scripts/build-lkjstr-web-wasm.ts",
+    "cloudflare:install-wasm-toolchain": "tsx scripts/install-wasm-toolchain.ts",
     "build:svelte": "vite build",
     "build": "pnpm rust-wasm:build && pnpm build:svelte && pnpm verify:wasm-assets",
     "preview": "vite preview",

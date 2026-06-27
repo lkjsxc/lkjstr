@@ -17,9 +17,10 @@ diagnostic that names the missing dependency and the install or Docker
 verification path. They must not expose raw Node spawn errors or browser-driver
 crashes as the primary message.
 
-Production and Cloudflare builds are strict. If shipped Rust/WASM bridge
-artifacts cannot be built before Vite or emitted into the static output, the
-build fails before deploy. A hosted production build that would only show a
+Production and Cloudflare builds are strict. Workers Builds may bootstrap the
+pinned Rust/WASM toolchain before the bridge build. If shipped Rust/WASM bridge
+artifacts still cannot be built before Vite or emitted into the static output,
+the build fails before deploy. A hosted production build that would only show a
 missing-bridge state because `wasm-pack` was absent is a release blocker.
 
 The explicit Rust/WASM build owner generates bridge artifacts before Vite. The

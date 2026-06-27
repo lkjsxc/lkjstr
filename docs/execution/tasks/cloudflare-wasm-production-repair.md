@@ -21,6 +21,8 @@ credentials are available.
 - The smoke test checked only `/` and `workspace-shell`, not bridge assets.
 - `pnpm build`, `pnpm cloudflare:dry-run:built`, Docker `cloudflare`, and Docker
   `app-smoke` now verify the bridge manifest, JavaScript asset, and WASM bytes.
+- Workers Builds running `pnpm build` bootstrap Rust stable, the wasm32 target,
+  and `wasm-pack 0.15.0` before failing or compiling bridge assets.
 
 ## Next Edit
 
@@ -45,6 +47,7 @@ run the hosted manifest and WASM byte checks.
 - docs/operations/verification.md
 - docs/execution/tasks/README.md
 - scripts/build-lkjstr-web-wasm.ts
+- scripts/install-wasm-toolchain.ts
 - scripts/verify-built-wasm-assets.ts
 - scripts/vite-lkjstr-web-wasm.ts
 - scripts/app-smoke.ts

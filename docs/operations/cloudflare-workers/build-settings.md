@@ -30,18 +30,17 @@ assets.
 
 ## Supported Mode: Workers Builds Dashboard
 
-Workers Builds may deploy only if the dashboard build installs the pinned
-Rust/WASM toolchain before `pnpm build`. Recommended build command:
+Workers Builds may use the default build command:
 
 ```sh
-corepack enable && corepack prepare pnpm@11.1.2 --activate && \
-curl -sSf https://sh.rustup.rs | sh -s -- -y --profile minimal --default-toolchain stable && \
-. "$HOME/.cargo/env" && \
-rustup target add wasm32-unknown-unknown && \
-cargo install wasm-pack@0.15.0 --locked && \
-pnpm install --frozen-lockfile && \
 pnpm build
 ```
+
+`pnpm build` runs the explicit bridge builder first. In the Workers Build home,
+the builder bootstraps Rust stable, `wasm32-unknown-unknown`, and
+`wasm-pack 0.15.0` if `wasm-pack` is absent, then fails before Vite if bootstrap
+or bridge generation fails. Set `LKJSTR_BOOTSTRAP_WASM_TOOLCHAIN=0` only when the
+build image already provides the pinned Rust/WASM toolchain.
 
 Deploy command:
 
@@ -53,7 +52,6 @@ Environment and build variables:
 
 - NODE\_&#86;ERSION=24
 - PNPM\_&#86;ERSION=11.1.2
-- `SKIP_DEPENDENCY_INSTALL=1` when the build command installs dependencies
 
 ## Hosted Checks
 

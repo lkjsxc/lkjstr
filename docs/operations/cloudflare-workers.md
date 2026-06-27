@@ -24,8 +24,9 @@ Cloudflare Workers docs define the hosted build target for lkjstr.
 - The Cloudflare build path runs the explicit Rust/WASM bridge build before
   `vite build`.
 - The dry-run path verifies bridge assets before `wrangler deploy --dry-run`.
-- A hosted build missing `wasm-pack` fails before deployment. It must not publish
-  an app shell that can only show bridge-unavailable because the build tool was
+- A hosted build missing `wasm-pack` either bootstraps the pinned Rust/WASM
+  toolchain in Workers Builds or fails before deployment. It must not publish an
+  app shell that can only show bridge-unavailable because the build tool was
   absent.
 - Final root build cutover changes the asset directory to the Rust/Leptos
   static artifact only after product parity and no-import proof exist.
@@ -42,8 +43,9 @@ Cloudflare Workers docs define the hosted build target for lkjstr.
 Supported Cloudflare build and deploy modes live in
 [cloudflare-workers/build-settings.md](cloudflare-workers/build-settings.md).
 The preferred durable path is GitHub Actions or pinned Docker after the Docker
-final gate. Dashboard Workers Builds are acceptable only when they install the
-same pinned Node, pnpm, Rust target, and `wasm-pack` toolchain before `pnpm build`.
+final gate. Dashboard Workers Builds may use `pnpm build`; the checked-in build
+script detects the Workers Build home and bootstraps the pinned Rust target plus
+`wasm-pack` before compiling bridge assets.
 
 ## Verification
 

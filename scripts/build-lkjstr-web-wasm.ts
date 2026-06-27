@@ -3,6 +3,10 @@ import { rm, mkdir, readFile, writeFile } from 'node:fs/promises';
 import path from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 import {
+  addCargoBinToPath,
+  ensureWasmToolchainForBuild,
+} from './install-wasm-toolchain';
+import {
   defaultWasmArtifactDir,
   fileEvidence,
   hasWasmMagic,
@@ -31,8 +35,13 @@ export async function buildLkjstrWebWasm(
 ): Promise<WasmAssetManifest> {
   const repoRoot = options.repoRoot ?? path.resolve(scriptDir, '..');
   const artifactDir = options.artifactDir ?? defaultWasmArtifactDir(repoRoot);
+  addCargoBinToPath(process.env);
   const command = wasmPackCommandFromEnv();
-  const preflight = preflightWasmPack(command);
+  let preflight = preflightWasmPack(command);
+  if (!preflight.ok) {
+    ensureWasmToolchainForBuild(repoRoot);
+    preflight = preflightWasmPack(command);
+  }
   if (!preflight.ok) throw new Error(preflight.diagnostic);
 
   await rm(artifactDir, { recursive: true, force: true });
