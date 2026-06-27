@@ -21,6 +21,8 @@ Cloudflare Workers docs define the hosted build target for lkjstr.
   COOP/COEP headers solely for SQLite.
 - Hosted `lkjstr.com` builds require Node 24, pnpm 11.1.2, Rust stable,
   `wasm32-unknown-unknown`, and `wasm-pack 0.15.0`.
+- Browser bridge dependencies must stay pure Rust for Workers Builds and must
+  not require `clang` or another C compiler to compile production WASM.
 - The Cloudflare build path runs the explicit Rust/WASM bridge build before
   `vite build`.
 - The dry-run path verifies bridge assets before `wrangler deploy --dry-run`.

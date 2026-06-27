@@ -39,8 +39,10 @@ pnpm build
 `pnpm build` runs the explicit bridge builder first. In the Workers Build home,
 the builder bootstraps Rust stable, `wasm32-unknown-unknown`, and
 `wasm-pack 0.15.0` if `wasm-pack` is absent, then fails before Vite if bootstrap
-or bridge generation fails. Set `LKJSTR_BOOTSTRAP_WASM_TOOLCHAIN=0` only when the
-build image already provides the pinned Rust/WASM toolchain.
+or bridge generation fails. The bridge dependency graph is pure Rust for the
+hosted WASM build and must not require `clang`. Set
+`LKJSTR_BOOTSTRAP_WASM_TOOLCHAIN=0` only when the build image already provides
+the pinned Rust/WASM toolchain.
 
 Deploy command:
 

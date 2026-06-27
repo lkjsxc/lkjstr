@@ -48,13 +48,16 @@ Keep new run evidence in the table below unless a narrative note is required.
 
 Latest focused note: on 2026-06-27, CLOUDFLARE-WASM-PRODUCTION-REPAIR moved
 bridge generation to `pnpm rust-wasm:build`, made the Vite plugin asset-only,
-added Workers Builds toolchain bootstrap, added bridge asset verification, and
-made app smoke fetch the manifest, JavaScript asset, and WASM bytes.
+added Workers Builds toolchain bootstrap, moved bridge signing off
+`secp256k1-sys` so hosted WASM builds do not need `clang`, added bridge asset
+verification, and made app smoke fetch the manifest, JavaScript asset, and WASM
+bytes.
 `pnpm test -- tests/unit/rust-wasm`, `pnpm check:repo`,
 `LKJSTR_BOOTSTRAP_WASM_TOOLCHAIN=1 pnpm cloudflare:install-wasm-toolchain`,
-`pnpm rust-wasm:build`, `pnpm build`,
-`pnpm verify:wasm-assets`, `pnpm cloudflare:dry-run:built`, app smoke,
-`cargo test -p lkjstr-xtask toolchain`, `pnpm test:quiet`,
+`CC=definitely-missing-clang CARGO_TARGET_DIR=target/k256-wasm-test3 pnpm rust-wasm:build`,
+`cargo test -p lkjstr-protocol --test crypto_test`, `pnpm rust-wasm:build`,
+`pnpm build`, `pnpm verify:wasm-assets`, `pnpm cloudflare:dry-run:built`, app
+smoke, `cargo test -p lkjstr-xtask toolchain`, `pnpm test:quiet`,
 `pnpm verify:quiet`, `pnpm cloudflare:quiet`, `cargo test --workspace --quiet`,
 Docker config, Docker build for app/verify/cloudflare/app-smoke, Docker verify,
 Docker cloudflare, and Docker app-smoke passed. Host `pnpm rust-wasm:quiet`

@@ -28,6 +28,10 @@ Vite plugin is an asset consumer and emitter only: it reads existing artifacts,
 serves them in dev, emits them for static hosting, and generates the browser
 virtual module. It does not run toolchain commands.
 
+The hosted bridge dependency graph must stay compatible with Workers Builds.
+Browser WASM product crates must not require a C compiler such as `clang` for the
+Cloudflare bridge build; protocol signing uses pure Rust crypto dependencies.
+
 Product browser runtime only loads already-built Rust/WASM assets. Local
 development may render an explicit bridge-unavailable state when artifacts are
 absent. Hosted production must instead prove the bridge assets exist during

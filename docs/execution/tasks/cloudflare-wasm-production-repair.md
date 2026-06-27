@@ -23,6 +23,8 @@ credentials are available.
   `app-smoke` now verify the bridge manifest, JavaScript asset, and WASM bytes.
 - Workers Builds running `pnpm build` bootstrap Rust stable, the wasm32 target,
   and `wasm-pack 0.15.0` before failing or compiling bridge assets.
+- Bridge crypto moved off `secp256k1-sys`, so Workers Builds do not need `clang`
+  to compile the production WASM bridge.
 
 ## Next Edit
 
@@ -52,6 +54,7 @@ run the hosted manifest and WASM byte checks.
 - scripts/vite-lkjstr-web-wasm.ts
 - scripts/app-smoke.ts
 - package.json
+- crates/lkjstr-protocol/\*\*
 - tests/unit/rust-wasm/\*\*
 
 ## Focused Gate
