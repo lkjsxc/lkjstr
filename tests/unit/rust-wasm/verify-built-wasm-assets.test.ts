@@ -36,6 +36,7 @@ describe('built Rust/WASM asset verifier', () => {
       'lkjstr_web-abcdef1234567890.js',
       'lkjstr_web_bg-abcdef1234567890.wasm',
     );
+    await writeCloudflareHeaders(cloudflareDir);
 
     await expect(
       verifyBuiltWasmAssets({ repoRoot: root, sourceDir, cloudflareDir }),
@@ -58,10 +59,32 @@ describe('built Rust/WASM asset verifier', () => {
       'lkjstr_web_bg-abcdef1234567890.wasm',
       Buffer.from([1, 2, 3, 4]),
     );
+    await writeCloudflareHeaders(cloudflareDir);
 
     await expect(
       verifyBuiltWasmAssets({ repoRoot: root, sourceDir, cloudflareDir }),
     ).rejects.toThrow(/invalid WASM bytes/);
+  });
+
+  it('rejects missing manifest cache header emission', async () => {
+    const root = await tempRoot();
+    const sourceDir = path.join(root, 'target', 'lkjstr-web-wasm');
+    const cloudflareDir = path.join(
+      root,
+      '.svelte-kit',
+      'cloudflare',
+      'lkjstr-web-wasm',
+    );
+    await writeVerifiedDirectory(sourceDir, WASM_SCRIPT_NAME, WASM_BINARY_NAME);
+    await writeVerifiedDirectory(
+      cloudflareDir,
+      'lkjstr_web-abcdef1234567890.js',
+      'lkjstr_web_bg-abcdef1234567890.wasm',
+    );
+
+    await expect(
+      verifyBuiltWasmAssets({ repoRoot: root, sourceDir, cloudflareDir }),
+    ).rejects.toThrow(/_headers missing/);
   });
 });
 
@@ -69,6 +92,13 @@ async function tempRoot(): Promise<string> {
   const root = await mkdtemp(path.join(tmpdir(), 'lkjstr-wasm-verify-'));
   roots.push(root);
   return root;
+}
+
+async function writeCloudflareHeaders(cloudflareDir: string): Promise<void> {
+  await writeFile(
+    path.join(path.dirname(cloudflareDir), '_headers'),
+    '/lkjstr-web-wasm/asset-manifest.json\n  Cache-Control: no-cache\n',
+  );
 }
 
 async function writeVerifiedDirectory(

@@ -16,9 +16,9 @@ import {
 } from './wasm-assets';
 import { LOCAL_WASM_ARTIFACT_MISSING_MESSAGE } from './wasm-toolchain';
 
-type BuildRefs = {
-  readonly scriptRef: string;
-  readonly wasmRef: string;
+type BuildPaths = {
+  readonly scriptPath: string;
+  readonly wasmPath: string;
 };
 
 type AssetEmitter = {
@@ -38,7 +38,7 @@ export function lkjstrWebWasmAssets(repoRoot: string): Plugin {
   const testHost = process.env.VITEST === 'true';
   let config: ResolvedConfig | undefined;
   let state: ArtifactState = unavailable();
-  let refs: BuildRefs | undefined;
+  let paths: BuildPaths | undefined;
   return {
     name: 'lkjstr-web-wasm-assets',
     configResolved(resolved) {
@@ -51,8 +51,8 @@ export function lkjstrWebWasmAssets(repoRoot: string): Plugin {
       if (testHost)
         return unavailableWasmModule('lkjstr-web WASM unavailable in tests');
       if (config?.command === 'build') {
-        if (!refs) throw new Error(missingArtifactsMessage(artifactDir));
-        return hostedWasmModule(refs);
+        if (!paths) throw new Error(missingArtifactsMessage(artifactDir));
+        return hostedWasmModule(paths);
       }
       state = await readArtifactState(artifactDir);
       return state.available
@@ -70,7 +70,7 @@ export function lkjstrWebWasmAssets(repoRoot: string): Plugin {
         return;
       }
       if (config?.command !== 'build') return;
-      refs = await emitBridgeAssets(this, artifactDir, state.manifest);
+      paths = await emitBridgeAssets(this, artifactDir, state.manifest);
     },
     async configureServer(server) {
       if (testHost) return;
@@ -104,7 +104,7 @@ async function emitBridgeAssets(
   plugin: AssetEmitter,
   artifactDir: string,
   manifest: WasmAssetManifest,
-): Promise<BuildRefs> {
+): Promise<BuildPaths> {
   const scriptName = contentAddressedName(
     manifest.script.name,
     manifest.script.sha256,
@@ -113,12 +113,12 @@ async function emitBridgeAssets(
     manifest.wasm.name,
     manifest.wasm.sha256,
   );
-  const scriptRef = plugin.emitFile({
+  plugin.emitFile({
     type: 'asset',
     fileName: `${WASM_ASSET_DIR_NAME}/${scriptName}`,
     source: await readFile(path.join(artifactDir, manifest.script.name)),
   });
-  const wasmRef = plugin.emitFile({
+  plugin.emitFile({
     type: 'asset',
     fileName: `${WASM_ASSET_DIR_NAME}/${wasmName}`,
     source: await readFile(path.join(artifactDir, manifest.wasm.name)),
@@ -134,7 +134,10 @@ async function emitBridgeAssets(
     fileName: `${WASM_ASSET_DIR_NAME}/${WASM_MANIFEST_NAME}`,
     source: `${JSON.stringify(emitted, null, 2)}\n`,
   });
-  return { scriptRef, wasmRef };
+  return {
+    scriptPath: publicWasmAssetPath(scriptName),
+    wasmPath: publicWasmAssetPath(wasmName),
+  };
 }
 
 async function readArtifactState(directory: string): Promise<ArtifactState> {
@@ -149,10 +152,10 @@ async function readArtifactState(directory: string): Promise<ArtifactState> {
   return { available: true, manifest };
 }
 
-function hostedWasmModule(refs: BuildRefs): string {
+function hostedWasmModule(paths: BuildPaths): string {
   return wasmModule(
-    `import.meta.ROLLUP_FILE_URL_${refs.scriptRef}`,
-    `import.meta.ROLLUP_FILE_URL_${refs.wasmRef}`,
+    JSON.stringify(paths.scriptPath),
+    JSON.stringify(paths.wasmPath),
   );
 }
 

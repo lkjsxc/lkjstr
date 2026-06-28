@@ -28,9 +28,18 @@ describe('package scripts', () => {
     ).toBe(false);
   });
 
-  it('exposes Cloudflare dry-run verification without a publish script', () => {
+  it('exposes Cloudflare smoke and dry-run verification without publish', () => {
+    expect(packageJson.scripts['cloudflare:smoke:built']).toBe(
+      'tsx scripts/cloudflare-worker-smoke.ts',
+    );
+    expect(packageJson.scripts['hosted:smoke']).toBe(
+      'tsx scripts/hosted-smoke.ts',
+    );
     expect(packageJson.scripts['cloudflare:dry-run']).toBe(
-      'pnpm build && wrangler deploy --dry-run',
+      'pnpm build && pnpm cloudflare:dry-run:built',
+    );
+    expect(packageJson.scripts['cloudflare:dry-run:built']).toContain(
+      'pnpm cloudflare:smoke:built',
     );
     expect(Object.hasOwn(packageJson.scripts, 'deploy')).toBe(false);
   });

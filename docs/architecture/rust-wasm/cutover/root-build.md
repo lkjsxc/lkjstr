@@ -31,9 +31,12 @@ ledger evidence, and no-import proof exist for the exact replacement paths.
 Immediate bridge build ownership is transitional but strict:
 
 - SvelteKit remains the deployed shell.
+- The root SvelteKit page is client-rendered so Workers do not SSR browser-only
+  workspace modules.
 - `pnpm rust-wasm:build` owns `wasm-pack` preflight and bridge generation.
 - Vite consumes existing bridge artifacts and emits them with a manifest.
-- Cloudflare dry-run and app smoke fail when bridge assets are missing.
+- Cloudflare smoke, dry-run, and app smoke fail when bridge assets are missing
+  or when `/` returns a Worker `500`.
 
 ## Final State
 

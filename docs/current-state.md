@@ -7,7 +7,9 @@ split by ownership under [current-state/README.md](current-state/README.md).
 
 ## Summary
 
-- The root route opens the tiled browser workspace.
+- The root route opens the tiled browser workspace and is explicitly
+  client-rendered so Cloudflare Workers do not evaluate browser-only workspace
+  modules while serving `/`.
 - Shipped product runtime remains SvelteKit and TypeScript under `src/` while
   Rust/WASM crates take ownership slice by slice with proof.
 - Durable product storage is worker-owned SQLite OPFS with explicit temporary
@@ -25,7 +27,8 @@ split by ownership under [current-state/README.md](current-state/README.md).
 - Rust/WASM build tools are verification dependencies, not browser runtime
   dependencies. Missing local development WASM assets render explicit
   bridge-unavailable states rather than raw Node or toolchain errors. Production
-  builds must prove the bridge artifacts exist before deployment.
+  builds must prove the bridge artifacts, manifest cache headers, local Worker
+  root response, and hosted bridge bytes before deployment is considered safe.
 
 ## Detail Map
 

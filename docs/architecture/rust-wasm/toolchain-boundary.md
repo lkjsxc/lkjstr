@@ -26,7 +26,7 @@ missing-bridge state because `wasm-pack` was absent is a release blocker.
 The explicit Rust/WASM build owner generates bridge artifacts before Vite. The
 Vite plugin is an asset consumer and emitter only: it reads existing artifacts,
 serves them in dev, emits them for static hosting, and generates the browser
-virtual module. It does not run toolchain commands.
+virtual module with public asset paths. It does not run toolchain commands.
 
 The hosted bridge dependency graph must stay compatible with Workers Builds.
 Browser WASM product crates must not require a C compiler such as `clang` for the
@@ -53,8 +53,9 @@ output. It only reports that local browser WASM artifacts are unavailable.
 ## Verification
 
 `pnpm rust-wasm:build` builds the browser bridge artifacts. `pnpm build`,
-`pnpm cloudflare:dry-run`, Docker `cloudflare`, and CI fail if those artifacts
-are missing or invalid.
+`pnpm cloudflare:smoke:built`, `pnpm cloudflare:dry-run`, Docker `cloudflare`,
+and CI fail if those artifacts are missing, invalid, stale-cache-prone, or not
+servable from the built Worker.
 
 `pnpm rust-wasm:quiet` and `cargo run -p lkjstr-xtask -- quiet rust-wasm` still
 run the Rust/WASM matrix when tools and browsers are present. Missing

@@ -9,7 +9,7 @@ SvelteKit-hosted lkjstr app.
 
 - [build-settings.md](build-settings.md): supported build and deploy modes for
   pinned Rust/WASM bridge artifacts.
-- [hosted-checks.md](hosted-checks.md): live bridge asset checks after deploy.
+- [hosted-checks.md](hosted-checks.md): live root and bridge asset checks after deploy.
 
 ## Rule
 

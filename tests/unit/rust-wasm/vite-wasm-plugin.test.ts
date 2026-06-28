@@ -83,7 +83,8 @@ describe('Vite Rust/WASM asset plugin', () => {
     expect(
       emitted.some((asset) => /lkjstr_web-[a-f0-9]+\.js$/.test(asset.fileName)),
     ).toBe(true);
-    expect(code).toContain('import.meta.ROLLUP_FILE_URL_');
+    expect(code).toContain('/lkjstr-web-wasm/lkjstr_web-');
+    expect(code).not.toContain('import.meta.ROLLUP_FILE_URL_');
     expect(code).toContain('module.default(wasmUrl)');
     expect(code).not.toContain('wasm-pack');
     expect(code).not.toContain('spawnSync');

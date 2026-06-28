@@ -1,5 +1,5 @@
 import { spawn } from 'node:child_process';
-import { hasWasmMagic, parseAssetManifest } from './wasm-assets';
+import { runHostedSmoke } from './hosted-smoke-core';
 
 const origin = 'http://127.0.0.1:5173';
 const preview = spawn(
@@ -9,18 +9,15 @@ const preview = spawn(
 );
 let output = '';
 let exited = false;
-preview.stdout.on('data', (chunk) => {
-  output += chunk;
-});
-preview.stderr.on('data', (chunk) => {
-  output += chunk;
-});
+preview.stdout.on('data', pushOutput);
+preview.stderr.on('data', pushOutput);
 preview.on('exit', () => {
   exited = true;
 });
 
 try {
   await waitForApp();
+  console.log(`ok app-smoke ${origin}`);
 } finally {
   stopPreview();
 }
@@ -36,36 +33,12 @@ async function waitForApp(): Promise<void> {
 }
 
 async function probe(): Promise<boolean> {
-  const html = await fetchText('/');
-  const body = /<body[^>]*>([\s\S]*?)<\/body>/i.exec(html)?.[1] ?? '';
-  if (body.trim().length === 0 || !html.includes('workspace-shell'))
-    return false;
-  const manifest = parseAssetManifest(
-    await fetchText('/lkjstr-web-wasm/asset-manifest.json'),
-  );
-  await fetchText(manifest.script.path);
-  const wasmResponse = await fetchUrl(manifest.wasm.path);
-  const wasm = new Uint8Array(await wasmResponse.arrayBuffer());
-  const contentType = wasmResponse.headers.get('content-type') ?? '';
-  return hasWasmMagic(wasm) && acceptsWasmContentType(contentType, wasm);
+  await runHostedSmoke({ origin, requireNoCacheManifest: false });
+  return true;
 }
 
-async function fetchText(pathname: string): Promise<string> {
-  const response = await fetchUrl(pathname);
-  return response.text();
-}
-
-async function fetchUrl(pathname: string): Promise<Response> {
-  const response = await fetch(new URL(pathname, origin));
-  if (!response.ok) throw new Error(`${pathname} returned ${response.status}`);
-  return response;
-}
-
-function acceptsWasmContentType(
-  contentType: string,
-  wasm: Uint8Array,
-): boolean {
-  return contentType.includes('application/wasm') || hasWasmMagic(wasm);
+function pushOutput(chunk: Buffer): void {
+  output += String(chunk);
 }
 
 function delay(ms: number): Promise<void> {

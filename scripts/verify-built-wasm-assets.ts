@@ -7,6 +7,7 @@ import {
   readAssetManifest,
   sha256,
   WASM_ASSET_DIR_NAME,
+  WASM_MANIFEST_NAME,
   type WasmAssetManifest,
   type WasmManifestAsset,
 } from './wasm-assets';
@@ -15,6 +16,7 @@ export type VerifyWasmOptions = {
   readonly repoRoot?: string;
   readonly sourceDir?: string;
   readonly cloudflareDir?: string;
+  readonly headersPath?: string;
 };
 
 const repoRootFromScript = path.resolve(
@@ -30,10 +32,12 @@ export async function verifyBuiltWasmAssets(
     options.sourceDir ?? defaultWasmArtifactDir(repoRoot),
     'source Rust/WASM artifacts',
   );
-  await verifyDirectory(
+  const cloudflareDir =
     options.cloudflareDir ??
-      path.join(repoRoot, '.svelte-kit', 'cloudflare', WASM_ASSET_DIR_NAME),
-    'Cloudflare emitted Rust/WASM assets',
+    path.join(repoRoot, '.svelte-kit', 'cloudflare', WASM_ASSET_DIR_NAME);
+  await verifyDirectory(cloudflareDir, 'Cloudflare emitted Rust/WASM assets');
+  await verifyManifestHeaders(
+    options.headersPath ?? path.join(path.dirname(cloudflareDir), '_headers'),
   );
 }
 
@@ -82,6 +86,41 @@ async function verifyAsset(
     throw new Error(`${label} ${kind} asset digest does not match manifest.`);
   }
   return bytes;
+}
+
+export async function verifyManifestHeaders(
+  headersPath: string,
+): Promise<void> {
+  const text = await readFile(headersPath, 'utf8').catch((error) => {
+    throw new Error(`Cloudflare _headers missing. ${hint(error)}`);
+  });
+  const rule = findManifestHeaderRule(text);
+  if (!rule) {
+    throw new Error('Cloudflare _headers missing bridge manifest rule.');
+  }
+  if (!/^Cache-Control:\s*no-cache$/im.test(rule)) {
+    throw new Error(
+      'Cloudflare bridge manifest must use Cache-Control: no-cache.',
+    );
+  }
+}
+
+function findManifestHeaderRule(text: string): string | undefined {
+  const manifestPath = `/${WASM_ASSET_DIR_NAME}/${WASM_MANIFEST_NAME}`;
+  let active = false;
+  let block: string[] = [];
+  for (const line of text.split(/\r?\n/)) {
+    const trimmed = line.trim();
+    if (!trimmed || trimmed.startsWith('#')) continue;
+    if (!/^\s/.test(line)) {
+      if (active) return block.join('\n');
+      active = trimmed === manifestPath;
+      block = [];
+      continue;
+    }
+    if (active) block.push(trimmed);
+  }
+  return active ? block.join('\n') : undefined;
 }
 
 function looksLikeWasmBindgen(source: string): boolean {

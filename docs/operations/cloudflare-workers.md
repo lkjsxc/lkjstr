@@ -17,6 +17,9 @@ Cloudflare Workers docs define the hosted build target for lkjstr.
 - The Wrangler entry point is `.svelte-kit/cloudflare/_worker.js`.
 - Static assets are served from `.svelte-kit/cloudflare` through the `ASSETS`
   binding.
+- The root route is explicitly client-rendered. The Worker serves the browser
+  app shell for `/` and must not evaluate browser-only workspace modules during
+  root rendering.
 - Storage uses `opfs-sahpool` by default, so the Cloudflare target does not add
   COOP/COEP headers solely for SQLite.
 - Hosted `lkjstr.com` builds require Node 24, pnpm 11.1.2, Rust stable,
@@ -25,11 +28,18 @@ Cloudflare Workers docs define the hosted build target for lkjstr.
   not require `clang` or another C compiler to compile production WASM.
 - The Cloudflare build path runs the explicit Rust/WASM bridge build before
   `vite build`.
-- The dry-run path verifies bridge assets before `wrangler deploy --dry-run`.
+- The dry-run path verifies bridge assets, manifest cache headers, and a local
+  Worker smoke against `/` plus bridge asset routes before
+  `wrangler deploy --dry-run`.
 - A hosted build missing `wasm-pack` either bootstraps the pinned Rust/WASM
   toolchain in Workers Builds or fails before deployment. It must not publish an
   app shell that can only show bridge-unavailable because the build tool was
   absent.
+- `assets.not_found_handling` is not enabled for the current SvelteKit Worker
+  output. It may be added only with a test proving missing bridge assets are not
+  masked by root HTML fallback.
+- The bridge manifest must be emitted with `Cache-Control: no-cache` through
+  `_headers` or equivalent Worker header logic.
 - Final root build cutover changes the asset directory to the Rust/Leptos
   static artifact only after product parity and no-import proof exist.
 - An optional Rust Worker may route assets, SPA fallback, headers, and
@@ -54,6 +64,7 @@ script detects the Workers Build home and bootstraps the pinned Rust target plus
 ```sh
 pnpm build
 pnpm verify:wasm-assets
+pnpm cloudflare:smoke:built
 pnpm cloudflare:dry-run:built
 docker compose -f docker-compose.yml config
 docker compose -f docker-compose.yml build cloudflare app-smoke

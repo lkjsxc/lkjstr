@@ -5,19 +5,31 @@
 Define live checks for `lkjstr.com` after an operator deploys the verified
 Cloudflare artifact.
 
-## Checks
+## Automated Check
 
-Fetch the shell and bridge manifest:
+Run the hosted smoke against the public origin:
 
 ```sh
-curl -I https://lkjstr.com/
-curl -I https://lkjstr.com/lkjstr-web-wasm/asset-manifest.json
+pnpm hosted:smoke -- https://lkjstr.com
 ```
 
-Then fetch the manifest body, fetch the listed JavaScript and WASM paths, and
-confirm the WASM response begins with bytes `00 61 73 6d`.
+The script fetches `/`, the bridge manifest, the listed JavaScript bridge, the
+listed WASM binary, and a missing bridge asset path.
 
-## Browser Observation
+## Required Assertions
+
+- `/` returns a successful HTML app shell and not the SvelteKit `500` page.
+- The manifest returns JSON with `Cache-Control: no-cache`.
+- The manifest names content-addressed JavaScript and WASM assets under
+  `/lkjstr-web-wasm/`.
+- The JavaScript and WASM responses match manifest byte counts and SHA-256
+  digests.
+- The JavaScript bridge is a wasm-bindgen module.
+- The WASM response has `application/wasm` content type and begins with bytes
+  `00 61 73 6d`.
+- A missing bridge asset does not return `200` root HTML fallback.
+
+## Manual Check
 
 Hard refresh `https://lkjstr.com`, open developer tools, and confirm feed
 surfaces show real relay, cache, loading, unavailable, unsupported, partial, or

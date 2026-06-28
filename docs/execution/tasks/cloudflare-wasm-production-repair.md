@@ -8,8 +8,10 @@ islands.
 
 ## Status
 
-repository repair implemented. Hosted deploy remains pending until Cloudflare
-credentials are available.
+repository repair implemented for bridge assets; active root Worker `500`
+repair adds client-rendered root, local Worker smoke, strict hosted smoke, and
+manifest header proof. Hosted deploy remains pending until Cloudflare credentials
+are available.
 
 ## Current Evidence
 
@@ -21,6 +23,10 @@ credentials are available.
 - The smoke test checked only `/` and `workspace-shell`, not bridge assets.
 - `pnpm build`, `pnpm cloudflare:dry-run:built`, Docker `cloudflare`, and Docker
   `app-smoke` now verify the bridge manifest, JavaScript asset, and WASM bytes.
+- The reported hosted `500 Internal Error` is reproduced by local Wrangler root
+  rendering when the Worker evaluates browser-only root modules.
+- The root route is client-rendered, and production smoke checks assert `/` is a
+  successful app shell rather than a SvelteKit `500` page.
 - Workers Builds running `pnpm build` bootstrap Rust stable, the wasm32 target,
   and `wasm-pack 0.15.0` before failing or compiling bridge assets.
 - Bridge crypto moved off `secp256k1-sys`, so Workers Builds do not need `clang`
@@ -28,8 +34,8 @@ credentials are available.
 
 ## Next Edit
 
-Deploy from the documented Cloudflare path when credentials are available, then
-run the hosted manifest and WASM byte checks.
+Run the focused production repair gates, deploy from the documented Cloudflare
+path when credentials are available, then run the hosted root and bridge checks.
 
 ## Files To Read
 
@@ -39,6 +45,8 @@ run the hosted manifest and WASM byte checks.
 - scripts/wasm-toolchain.ts
 - scripts/vite-lkjstr-web-wasm.ts
 - scripts/app-smoke.ts
+- scripts/hosted-smoke.ts
+- scripts/cloudflare-worker-smoke.ts
 - tests/unit/rust-wasm/vite-wasm-plugin.test.ts
 
 ## Files To Touch
@@ -60,11 +68,12 @@ run the hosted manifest and WASM byte checks.
 ## Focused Gate
 
 ```sh
-pnpm test -- tests/unit/rust-wasm
+pnpm test -- tests/unit/rust-wasm tests/unit/routes
 pnpm check:repo
 pnpm rust-wasm:build
 pnpm build
 pnpm verify:wasm-assets
+pnpm cloudflare:smoke:built
 pnpm cloudflare:dry-run:built
 ```
 
@@ -72,8 +81,10 @@ pnpm cloudflare:dry-run:built
 
 Production build commands build Rust/WASM before Vite, Vite only consumes
 existing bridge assets, the emitted Cloudflare output contains a manifest,
-JavaScript bridge asset, and valid WASM binary, app smoke fails if those assets
-are missing, and Docker `cloudflare` plus `app-smoke` prove the same boundary.
+JavaScript bridge asset, valid WASM binary, and no-cache manifest header, local
+Worker smoke fails on root `500` or masked bridge assets, hosted smoke checks the
+same public paths after deploy, and Docker `cloudflare` plus `app-smoke` prove
+the same boundary.
 
 ## Must Not
 

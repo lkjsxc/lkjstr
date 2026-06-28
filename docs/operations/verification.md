@@ -33,13 +33,17 @@ Production builds must build and verify the Rust/WASM bridge before deploy:
 pnpm rust-wasm:build
 pnpm build
 pnpm verify:wasm-assets
+pnpm cloudflare:smoke:built
 pnpm cloudflare:dry-run:built
 ```
 
-`pnpm verify:wasm-assets` checks source artifacts under `target/lkjstr-web-wasm`
-and emitted Cloudflare assets under `.svelte-kit/cloudflare/lkjstr-web-wasm`.
-The app smoke gate fetches the manifest, JavaScript bridge asset, and WASM
-binary from the production preview server and validates the WASM magic bytes.
+`pnpm verify:wasm-assets` checks source artifacts under `target/lkjstr-web-wasm`,
+emitted Cloudflare assets under `.svelte-kit/cloudflare/lkjstr-web-wasm`, and
+manifest `Cache-Control: no-cache` header emission. The Cloudflare smoke gate
+starts the built Worker locally, exercises `/` through the `ASSETS` binding,
+fetches the manifest, JavaScript bridge, and WASM binary, validates content
+headers, checks digest integrity, and proves missing bridge assets are not
+masked by root HTML fallback.
 
 ## Docker Final Gate
 
@@ -53,8 +57,9 @@ docker compose --progress quiet -f docker-compose.yml run --rm cloudflare
 docker compose --progress quiet -f docker-compose.yml run --rm app-smoke
 ```
 
-The Docker `cloudflare` service verifies bridge assets before Wrangler dry-run.
-The Docker `app-smoke` service verifies the preview root and bridge assets.
+The Docker `cloudflare` service verifies bridge assets, local Worker root
+response, and asset routes before Wrangler dry-run. The Docker `app-smoke`
+service verifies the preview root and bridge assets.
 
 ## Toolchain Boundary
 

@@ -23,6 +23,7 @@ pnpm install --frozen-lockfile
 pnpm build
 pnpm cloudflare:dry-run:built
 pnpm exec wrangler deploy
+pnpm hosted:smoke -- https://lkjstr.com
 ```
 
 Do not deploy from a host environment that has not built and verified the bridge
@@ -64,5 +65,12 @@ curl -I https://lkjstr.com/
 curl -I https://lkjstr.com/lkjstr-web-wasm/asset-manifest.json
 ```
 
-Fetch the manifest, then fetch the listed JavaScript and WASM assets. The WASM
-response must begin with bytes `00 61 73 6d`.
+Then run the production-style hosted smoke:
+
+```sh
+pnpm hosted:smoke -- https://lkjstr.com
+```
+
+The script verifies root status, manifest cache headers, bridge digests,
+JavaScript bridge content, WASM content type, WASM magic bytes, and missing asset
+fallback behavior.

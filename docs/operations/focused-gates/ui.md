@@ -11,12 +11,14 @@ This file owns focused gates for root response and user-visible workspace smoke 
 ```sh
 pnpm build
 pnpm exec tsx scripts/app-smoke.ts
+pnpm cloudflare:smoke:built
 pnpm cloudflare:quiet
 ```
 
-Acceptance: `/` returns `200` without redirect and renders the implemented
-workspace shell. If deployment access exists, also check the configured
-production host; do not invent a host.
+Acceptance: `/` returns `200` without redirect as a browser app shell, the local
+Worker does not return the SvelteKit `500` page, and bridge asset checks pass. If
+deployment access exists, also check the configured production host; do not
+invent a host.
 
 ## Docker Final Gate
 

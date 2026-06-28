@@ -88,6 +88,7 @@ pnpm rust-wasm:quiet
 pnpm verify:quiet
 pnpm ci:quiet
 pnpm cloudflare:quiet
+pnpm hosted:smoke -- https://lkjstr.com
 
 cargo fmt --check
 cargo clippy --workspace --all-targets -- -D warnings
@@ -116,6 +117,7 @@ pnpm check
 pnpm test
 pnpm verify
 pnpm cloudflare:dry-run
+pnpm cloudflare:smoke:built
 ```
 
 ## Where Docs Live
