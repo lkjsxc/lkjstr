@@ -81,6 +81,7 @@ describe('event tree list presenter wiring', () => {
 
   it('keeps near-end sentinel behavior on local observer plans', () => {
     expect(nearEnd).toContain('planEventTreeListNearEnd(props)');
+    expect(nearEnd).toContain('event-tree-list-near-end-sentinel');
     expect(nearEnd).toContain('createEventTreeListNearEndSentinel({');
     expect(nearEnd).toContain('rootMargin: () => plan.rootMargin');
     expect(nearEnd).toContain('enabled: () => plan.enabled');

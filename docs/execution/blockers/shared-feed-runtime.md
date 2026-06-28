@@ -119,7 +119,9 @@ models, anchors, footer states, and unavailable states.
   Author Context, Followees, and User Timeline Svelte wrappers stay absent
   through `pnpm check:repo`.
 - Remaining completion proof: retained Svelte tree-list render/helper wiring now has
-  focused presenter/helper proof; row components avoid old menu imports, deleted
-  feed-scroll key, near-end observer, and speculative older helpers are guarded absent by `pnpm check:repo`, and broader
-  feed-surface deletion prerequisites remain open. Missing coverage never proves absence,
-  and no placeholder rows exist.
+  focused presenter/helper proof; EventTreeList near-end observer ownership is a
+  tested factory with idempotent disconnect and in-flight callback dedupe; row
+  components avoid old menu imports, deleted feed-scroll key, near-end observer,
+  and speculative older helpers are guarded absent by `pnpm check:repo`; broader
+  feed-surface deletion prerequisites remain open. Missing coverage never proves
+  absence, and no placeholder rows exist.

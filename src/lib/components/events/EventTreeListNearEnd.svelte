@@ -1,5 +1,6 @@
 <script lang="ts">
   import { planEventTreeListNearEnd } from './event-tree-list-near-end-plan';
+  import { createEventTreeListNearEndSentinel } from './event-tree-list-near-end-sentinel';
 
   type Props = {
     enabled: boolean;
@@ -25,48 +26,6 @@
     nearEndSentinel.observe();
     return () => nearEndSentinel.disconnect();
   });
-
-  function createEventTreeListNearEndSentinel(args: {
-    root: () => Element | null | undefined;
-    sentinel: () => Element | null | undefined;
-    rootMargin: () => string;
-    enabled: () => boolean;
-    onNearEnd: () => void | Promise<void>;
-  }) {
-    let observer: IntersectionObserver | undefined;
-    let firing = false;
-
-    const disconnect = (): void => {
-      observer?.disconnect();
-      observer = undefined;
-      firing = false;
-    };
-
-    const fire = (): void => {
-      if (firing || !args.enabled()) return;
-      firing = true;
-      void Promise.resolve(args.onNearEnd()).finally(() => {
-        firing = false;
-      });
-    };
-
-    const observe = (): void => {
-      disconnect();
-      if (typeof IntersectionObserver === 'undefined') return;
-      const root = args.root();
-      const sentinel = args.sentinel();
-      if (!root || !sentinel || !args.enabled()) return;
-      observer = new IntersectionObserver(
-        (entries) => {
-          if (entries.some((entry) => entry.isIntersecting)) fire();
-        },
-        { root, rootMargin: args.rootMargin(), threshold: 0 },
-      );
-      observer.observe(sentinel);
-    };
-
-    return { observe, disconnect };
-  }
 </script>
 
 <div

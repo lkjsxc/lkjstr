@@ -15,6 +15,9 @@ active
   metadata, selected-channel messages, and own moderation reads.
 - TypeScript orchestration also names `public-chat`, filters live ingress to
   NIP-28 Public Chat event kinds, and preserves exact read purposes.
+- EventTreeList near-end detection now uses a tested observer-owner factory with
+  idempotent `observe` and `disconnect`, callback in-flight dedupe, and disabled
+  or missing-element no-op behavior.
 
 ## Next Edit
 

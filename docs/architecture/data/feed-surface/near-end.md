@@ -19,7 +19,11 @@ bottom.
 - `rootMargin` uses the effective threshold so the callback fires while the
   sentinel is still below the visible viewport.
 - The sentinel disconnects when the list destroys or when `hasOlder` is false.
-- Near-end callbacks are deduped while `loadingOlder` is true.
+- The observer owner is a factory with idempotent `observe` and `disconnect`
+  methods so replaced scroll roots, disabled paging, and destroyed components
+  release the previous `IntersectionObserver` before another one can run.
+- Near-end callbacks are deduped while an observer-triggered callback is in
+  flight and while `loadingOlder` is true.
 
 ## Scroll Fallback
 
@@ -45,6 +49,7 @@ bottom.
 ## Implementation
 
 - `src/lib/components/events/EventTreeListNearEnd.svelte`
+- `src/lib/components/events/event-tree-list-near-end-sentinel.ts`
 - `src/lib/tabs/timeline/timeline-tab-older-requests.ts`
 - `src/lib/events/feed-window.ts`: `isNearEnd`, `nearEndThreshold`
 - `src/lib/feed-surface/near-end.ts`: re-exports and `nearEndRootMargin`

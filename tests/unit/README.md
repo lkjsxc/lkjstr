@@ -30,6 +30,7 @@ This directory contains Vitest unit tests grouped by source domain.
 - [query/](query/): query helper tests.
 - [protocol/](protocol/): protocol kernel tests.
 - [relays/](relays/): relay client and selection tests.
+- [routes/](routes/): SvelteKit route contract tests.
 - [rust-wasm/](rust-wasm/): Rust/WASM bridge and toolchain tests.
 - [search/](search/): search parsing and result tests.
 - [settings/](settings/): settings store tests.
