@@ -8,10 +8,8 @@ islands.
 
 ## Status
 
-repository repair implemented for bridge assets; active root Worker `500`
-repair adds client-rendered root, local Worker smoke, strict hosted smoke, and
-manifest header proof. Hosted deploy remains pending until Cloudflare credentials
-are available.
+repository repair implemented for bridge assets and the root Worker `500`
+class. Hosted deploy remains pending until Cloudflare credentials are available.
 
 ## Current Evidence
 
@@ -34,8 +32,8 @@ are available.
 
 ## Next Edit
 
-Run the focused production repair gates, deploy from the documented Cloudflare
-path when credentials are available, then run the hosted root and bridge checks.
+Deploy from the documented Cloudflare path when credentials are available, then
+run the hosted root and bridge checks.
 
 ## Files To Read
 

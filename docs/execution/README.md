@@ -55,8 +55,10 @@ no-import proof allow removal.
   focused-reference hydration, bounded cached parent-chain hydration, terminal
   unavailable-parent rows, continuation rows, and cleanup proof. Preserve the
   tests; Thread parity and deletion remain blocked.
-- Active production repair: strict Cloudflare Rust/WASM bridge artifacts from
-  [tasks/cloudflare-wasm-production-repair.md](tasks/cloudflare-wasm-production-repair.md).
+- Production repair evidence: strict Cloudflare Rust/WASM bridge artifacts and
+  root Worker smoke from
+  [tasks/cloudflare-wasm-production-repair.md](tasks/cloudflare-wasm-production-repair.md);
+  hosted deploy remains pending until credentials are available.
 - Current first incomplete slice after the repair: shared feed runtime gap
   closure from [current-blockers.md](current-blockers.md) and
   [tasks/feed-001-shared-feed-runtime-gap-closure.md](tasks/feed-001-shared-feed-runtime-gap-closure.md).
