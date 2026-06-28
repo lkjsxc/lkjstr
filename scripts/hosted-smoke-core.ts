@@ -29,7 +29,7 @@ export async function runHostedSmoke(
     assertNoCache(manifestResponse, 'manifest');
   }
   const manifestText = await manifestResponse.text();
-  const manifest = parseAssetManifest(manifestText, origin);
+  const manifest = parseAssetManifest(manifestText, origin.href);
   assertManifestAsset(
     manifest.script,
     'script',
