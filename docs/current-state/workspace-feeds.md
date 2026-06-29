@@ -59,6 +59,8 @@ Read next: [architecture/workspace/README.md](../architecture/workspace/README.m
 - Protected Home and Notifications require a real selected account before relay
   reads. Busy or unavailable account storage renders protected-account guidance,
   not `no-active-account`.
+- Shared Rust feed policy reducers gate public read route availability and
+  protected selected-relay availability before feed builders create live queries.
 - Cache-first feed display requires complete coverage evidence for every
   required relay, route group, semantic key, filter shape, and bounded interval.
   Incomplete, failed, compacted, dense, stale, or missing evidence cannot prove

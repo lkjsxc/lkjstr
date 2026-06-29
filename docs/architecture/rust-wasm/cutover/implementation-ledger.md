@@ -26,8 +26,10 @@ requires real behavior, focused tests, a no-import proof, and an updated row in
   selector-unavailable, blocked, unsupported, loading, and proven no-account
   states stay distinct. Storage-busy diagnostics can include a browser-local
   ephemeral holder id, and the page shell best-effort closes already-loaded
-  Rust/WASM SQLite stores on `pagehide`. Related rows remain `partial` until
-  parity and deletion proof finish.
+  Rust/WASM SQLite stores on `pagehide`. Shared Rust feed policy reducers now
+  gate public read routes and protected selected relays before live-query
+  creation. Related rows remain `partial` until parity and deletion proof
+  finish.
 
 ## Product Cutover Rows
 

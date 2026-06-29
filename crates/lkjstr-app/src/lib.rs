@@ -1,4 +1,3 @@
-#![doc = "Pure application composition reducers for lkjstr."]
 pub mod author_context_feed;
 pub mod cache_display;
 pub mod custom_request;
@@ -8,6 +7,7 @@ pub mod feed;
 pub mod feed_fragments;
 pub mod feed_geometry;
 pub mod feed_lod;
+pub mod feed_policy;
 pub mod feed_scan;
 pub mod feed_wait;
 pub mod follow_graph;

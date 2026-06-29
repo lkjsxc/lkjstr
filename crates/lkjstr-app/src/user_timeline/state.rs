@@ -1,3 +1,4 @@
+use crate::feed_policy::public_read_routes_available as routes_available;
 use crate::{
     FeedFooterRow, FeedFooterState, FeedLiveQueryInput, FeedStateRow, QueryDemandInput,
     UserTimelineAuthorSet, diagnostic_state_row, footer_row, target_posts_only_author_set,
@@ -18,7 +19,6 @@ pub(super) type TimelineState = (
     Option<UserTimelineAuthorSet>,
     Option<FeedFooterRow>,
 );
-#[must_use]
 pub const fn user_timeline_target_only_notice() -> &'static str {
     TARGET_ONLY_NOTICE
 }
@@ -48,7 +48,7 @@ pub(super) fn user_timeline_state(
             FeedFooterState::Loading,
         );
     }
-    if input.selected_relays.is_empty() && input.author_routes.is_empty() {
+    if !routes_available(&input.selected_relays, &input.author_routes) {
         state_rows.push(unavailable_state_row(
             "no-user-timeline-relay",
             "user-timeline",

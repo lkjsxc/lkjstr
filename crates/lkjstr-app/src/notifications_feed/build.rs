@@ -1,8 +1,8 @@
 use crate::{
     EventDisplayContext, FeedFooterState, FeedStateRow, FeedViewModelInput,
-    NotificationsLiveQueryInput, build_feed_view_model, diagnostic_state_row, footer_row,
-    footer_row_from_window, notification_state_row, notifications_live_query_input,
-    unavailable_state_row,
+    NotificationsLiveQueryInput, build_feed_view_model, diagnostic_state_row,
+    feed_policy::selected_relays_available, footer_row, footer_row_from_window,
+    notification_state_row, notifications_live_query_input, unavailable_state_row,
 };
 
 use super::{
@@ -53,7 +53,7 @@ fn notifications_state(
         Ok(pubkey) => pubkey,
         Err(block) => return blocked(block.status, feed_id, block.footer),
     };
-    if input.selected_relays.is_empty() {
+    if !selected_relays_available(&input.selected_relays) {
         state_rows.push(unavailable_state_row(
             "no-enabled-relay",
             "notifications",
