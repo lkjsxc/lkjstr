@@ -1,7 +1,21 @@
 import { createSqliteOpfsClient, type SqliteOpfsClient } from './client';
-import type { StorageOp, StorageResponse } from './types';
+import {
+  activeOwnerCooldown,
+  clearOwnerCooldown,
+  startOwnerCooldown,
+} from './kernel-cooldown';
+import {
+  acquireSqliteOpfsOwnerLease,
+  type SqliteOpfsOwnerLease,
+  type SqliteOpfsOwnerLeaseResult,
+} from './owner-lease';
+import type { StorageDiagnostics, StorageOp, StorageResponse } from './types';
 
-export type SqliteStorageClientFactory = () => SqliteOpfsClient;
+export type SqliteStorageClientFactory = (
+  lease: SqliteOpfsOwnerLease,
+) => SqliteOpfsClient;
+export type SqliteStorageOwnerLeaseFactory =
+  () => Promise<SqliteOpfsOwnerLeaseResult>;
 export type SqliteStorageSendOptions = {
   readonly deadlineMs?: number;
   readonly signal?: AbortSignal;
@@ -10,6 +24,8 @@ export type SqliteStorageSendOptions = {
 const databaseName = '/lkjstr/main.sqlite3';
 let clientFactory: SqliteStorageClientFactory =
   defaultSqliteStorageClientFactory;
+let ownerLeaseFactory: SqliteStorageOwnerLeaseFactory =
+  acquireSqliteOpfsOwnerLease;
 let client: SqliteOpfsClient | undefined;
 let openPromise: Promise<StorageResponse> | undefined;
 const schemaPromises = new Map<string, Promise<StorageResponse>>();
@@ -18,9 +34,10 @@ export async function sendSqliteStorage(
   op: StorageOp,
   options: SqliteStorageSendOptions = {},
 ): Promise<StorageResponse> {
-  const storage = sqliteStorageClient();
-  const opened = await openSqliteStorage(storage);
+  const opened = await openSqliteStorage();
   if (opened.outcome !== 'ok') return opened;
+  const storage = client;
+  if (!storage) return sqliteStorageUnavailable();
   return storage.send(op, options);
 }
 
@@ -47,72 +64,124 @@ export async function applySqliteSchema(
   return next;
 }
 
-export function sqliteStorageClient(): SqliteOpfsClient {
-  client ??= clientFactory();
-  return client;
-}
-
 export function setSqliteStorageClientFactoryForTests(
   factory?: SqliteStorageClientFactory,
 ): void {
   clientFactory = factory ?? defaultSqliteStorageClientFactory;
-  client = undefined;
-  openPromise = undefined;
-  schemaPromises.clear();
+  resetSqliteStorageClientState();
+}
+
+export function setSqliteStorageOwnerLeaseFactoryForTests(
+  factory?: SqliteStorageOwnerLeaseFactory,
+): void {
+  ownerLeaseFactory = factory ?? acquireSqliteOpfsOwnerLease;
+  resetSqliteStorageClientState();
 }
 
 export async function closeSqliteStorage(deadlineMs = 1_000): Promise<void> {
   const storage = client;
-  if (!storage) return;
+  if (!storage) {
+    resetSqliteStorageClientState();
+    return;
+  }
   await storage.close(deadlineMs).catch(() => undefined);
-  client = undefined;
-  openPromise = undefined;
-  schemaPromises.clear();
+  resetSqliteStorageClientState();
 }
 
 export function sqliteStorageUnavailable(): StorageResponse {
-  return {
-    requestId: 'sqlite-storage-unavailable',
-    outcome: 'unavailable',
-    rows: [],
-    rowsAffected: 0,
-    diagnostics: { message: 'Worker support unavailable' },
-  };
+  return localResponse('sqlite-storage-unavailable', 'unavailable', {
+    storageOwner: 'unavailable',
+    ownerReason: 'worker-open-failed',
+    message: 'Worker support unavailable',
+  });
 }
 
-function defaultSqliteStorageClientFactory(): SqliteOpfsClient {
-  return createSqliteOpfsClient({ requestPrefix: 'sqlite-storage' });
+function defaultSqliteStorageClientFactory(
+  lease: SqliteOpfsOwnerLease,
+): SqliteOpfsClient {
+  return createSqliteOpfsClient({
+    requestPrefix: 'sqlite-storage',
+    ownerLease: lease,
+  });
 }
 
-function openSqliteStorage(
-  storage: SqliteOpfsClient,
-): Promise<StorageResponse> {
+function openSqliteStorage(): Promise<StorageResponse> {
+  const active = activeOwnerCooldown();
+  if (active) return Promise.resolve(active);
   if (typeof Worker === 'undefined')
     return Promise.resolve(sqliteStorageUnavailable());
-  openPromise ??= storage
-    .send(
-      {
-        kind: 'open',
-        database: {
-          databaseName,
-          preferredVfs: 'opfs-sahpool',
-          allowSahpool: true,
-          allowOpfs: true,
-          allowTransient: true,
-          workerKind: 'dedicated',
-        },
-      },
-      { deadlineMs: 10_000 },
-    )
-    .then(
-      (response) => {
-        if (response.outcome !== 'ok') openPromise = undefined;
-        return response;
-      },
-      (error) => {
+  openPromise ??= createAndOpenSqliteStorage().then(
+    (response) => {
+      if (response.outcome !== 'ok') {
         openPromise = undefined;
-        throw error;
-      },
-    );
+        if (ownerBlocked(response)) {
+          schemaPromises.clear();
+          return startOwnerCooldown(response);
+        }
+      }
+      return response;
+    },
+    (error) => {
+      openPromise = undefined;
+      throw error;
+    },
+  );
   return openPromise;
+}
+
+async function createAndOpenSqliteStorage(): Promise<StorageResponse> {
+  const lease = await ownerLeaseFactory();
+  if (!lease.ok)
+    return localResponse(
+      'sqlite-storage-owner-denied',
+      lease.denied.outcome,
+      lease.denied.diagnostics,
+    );
+  const storage = clientFactory(lease.lease);
+  client = storage;
+  const opened = await storage.send(
+    {
+      kind: 'open',
+      database: {
+        databaseName,
+        preferredVfs: 'opfs-sahpool',
+        allowSahpool: true,
+        allowOpfs: true,
+        allowTransient: true,
+        workerKind: 'dedicated',
+        ownerReason: 'web-lock-granted',
+      },
+    },
+    { deadlineMs: 10_000 },
+  );
+  if (opened.outcome !== 'ok') {
+    storage.terminate('SQLite persistent worker open failed');
+    client = undefined;
+  }
+  return opened;
+}
+
+function ownerBlocked(response: StorageResponse): boolean {
+  return (
+    response.outcome === 'busy' ||
+    response.diagnostics.ownerReason === 'sahpool-lock-conflict' ||
+    response.diagnostics.ownerReason === 'web-lock-held' ||
+    response.diagnostics.ownerReason === 'web-lock-unavailable'
+  );
+}
+
+function localResponse(
+  requestId: string,
+  outcome: StorageResponse['outcome'],
+  diagnostics: StorageDiagnostics,
+): StorageResponse {
+  return { requestId, outcome, rows: [], rowsAffected: 0, diagnostics };
+}
+
+function resetSqliteStorageClientState(): void {
+  client?.terminate('SQLite storage client reset');
+  client = undefined;
+  openPromise = undefined;
+  clearOwnerCooldown();
+  schemaPromises.clear();
 }

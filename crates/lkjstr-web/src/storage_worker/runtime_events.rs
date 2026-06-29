@@ -49,6 +49,7 @@ impl ClientInner {
     pub(super) fn shutdown(&self) {
         self.clear_handlers();
         self.worker.terminate();
+        self.release_owner_lease();
     }
 
     pub(super) fn install_handlers(self: &Rc<Self>) {
@@ -124,6 +125,12 @@ impl ClientInner {
         Some(entry)
     }
 
+    fn release_owner_lease(&self) {
+        if let Some(lease) = self.owner_lease.borrow_mut().take() {
+            lease.release();
+        }
+    }
+
     fn clear_handlers(&self) {
         self.worker.set_onmessage(None);
         self.worker.set_onerror(None);
@@ -137,6 +144,7 @@ impl Drop for ClientInner {
     fn drop(&mut self) {
         self.clear_handlers();
         self.worker.terminate();
+        self.release_owner_lease();
     }
 }
 

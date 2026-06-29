@@ -1,3 +1,4 @@
+import type { SqliteOpfsOwnerLease } from './owner-lease';
 import type { StorageOp, StorageRequest, StorageResponse } from './types';
 
 type PendingRequest = {
@@ -11,6 +12,7 @@ export type SqliteOpfsClient = ReturnType<typeof createSqliteOpfsClient>;
 export type SqliteOpfsClientOptions = {
   readonly workerFactory?: () => Worker;
   readonly requestPrefix?: string;
+  readonly ownerLease?: SqliteOpfsOwnerLease;
 };
 
 export function createSqliteOpfsClient(options: SqliteOpfsClientOptions = {}) {
@@ -37,7 +39,7 @@ export function createSqliteOpfsClient(options: SqliteOpfsClientOptions = {}) {
 
   worker.onerror = () => {
     lateRejected += 1;
-    finishAll('unavailable', 'SQLite worker failed');
+    terminate('SQLite worker failed');
   };
 
   const send = (
@@ -69,9 +71,15 @@ export function createSqliteOpfsClient(options: SqliteOpfsClientOptions = {}) {
   const close = async (deadlineMs = 1_000): Promise<void> => {
     if (closed) return;
     await send({ kind: 'close' }, { deadlineMs }).catch(() => undefined);
+    terminate('SQLite worker closed');
+  };
+
+  const terminate = (message = 'SQLite worker terminated'): void => {
+    if (closed) return;
     closed = true;
-    finishAll('canceled', 'SQLite worker closed');
+    finishAll('canceled', message);
     worker.terminate();
+    options.ownerLease?.release();
   };
 
   const diagnostics = () => ({
@@ -117,7 +125,7 @@ export function createSqliteOpfsClient(options: SqliteOpfsClientOptions = {}) {
     pending.clear();
   };
 
-  return { send, close, diagnostics };
+  return { send, close, terminate, diagnostics };
 }
 
 function defaultWorkerFactory(): Worker {

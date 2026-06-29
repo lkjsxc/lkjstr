@@ -7,6 +7,7 @@ export async function openDatabase(sqlite3, database) {
     try {
       return await openWithVfs(sqlite3, database, vfs, warnings);
     } catch (error) {
+      if (isOpfsOwnerCollisionError(error)) throw error;
       warnings.push(`${vfs}: ${errorText(error)}`);
     }
   }
@@ -43,16 +44,27 @@ export function isRow(value) {
 export function outcomeFromError(error) {
   const text = errorText(error);
   if (/cancel/i.test(text)) return 'canceled';
-  if (
-    /busy|locked|NoModificationAllowedError|Access Handles?|Writable stream|modifications are not allowed/i.test(
-      text,
-    )
-  )
+  if (/busy|locked/i.test(text) || isOpfsOwnerCollisionError(error))
     return 'busy';
   if (/quota|full|space/i.test(text)) return 'quota';
   if (/blocked|denied|permission/i.test(text)) return 'blocked';
   if (/corrupt|malformed|schema/i.test(text)) return 'corrupt';
   return 'unavailable';
+}
+
+export function isOpfsOwnerCollisionError(error) {
+  return /NoModificationAllowedError|Access Handles?|Writable stream|modifications are not allowed|createSyncAccessHandle/i.test(
+    errorText(error),
+  );
+}
+
+export function diagnosticsFromError(error) {
+  if (!isOpfsOwnerCollisionError(error)) return {};
+  return {
+    storageOwner: 'busy',
+    ownerReason: 'sahpool-lock-conflict',
+    retryAfterMs: null,
+  };
 }
 
 export function normalizeFilename(name) {
@@ -100,10 +112,15 @@ function installSahpool(sqlite3) {
   if (!sqlite3.installOpfsSAHPoolVfs) throw new Error('SAH pool VFS missing');
   let pool = sahpoolPools.get(sqlite3);
   if (!pool) {
-    pool = sqlite3.installOpfsSAHPoolVfs({
-      name: 'lkjstr',
-      initialCapacity: sahpoolInitialCapacitySlots,
-    });
+    pool = sqlite3
+      .installOpfsSAHPoolVfs({
+        name: 'lkjstr',
+        initialCapacity: sahpoolInitialCapacitySlots,
+      })
+      .catch((error) => {
+        if (sahpoolPools.get(sqlite3) === pool) sahpoolPools.delete(sqlite3);
+        throw error;
+      });
     sahpoolPools.set(sqlite3, pool);
   }
   return pool;
@@ -126,6 +143,7 @@ function openMemory(sqlite3, database, warnings) {
 function opened(db, database, vfs, warnings) {
   const mode = vfs === 'memory' ? 'temporary-memory' : 'persistent-opfs';
   const databaseName = vfs === 'memory' ? ':memory:' : database.databaseName;
+  const storageOwner = vfs === 'memory' ? 'temporary' : 'active';
   return {
     db,
     logicalDatabaseName: normalizeFilename(database.databaseName),
@@ -135,6 +153,12 @@ function opened(db, database, vfs, warnings) {
       vfsName: vfs,
       mode,
       workerKind: database.workerKind ?? 'dedicated',
+      storageOwner,
+      ownerReason:
+        vfs === 'memory'
+          ? undefined
+          : (database.ownerReason ?? 'web-lock-granted'),
+      retryAfterMs: null,
       warnings,
     },
   };

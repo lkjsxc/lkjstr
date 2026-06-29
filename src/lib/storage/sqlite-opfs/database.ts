@@ -83,16 +83,27 @@ export function runBatch(
 export function sqliteOutcomeFromError(error: unknown): StorageOutcome {
   const text = errorText(error);
   if (/cancel/i.test(text)) return 'canceled';
-  if (
-    /busy|locked|NoModificationAllowedError|Access Handles?|Writable stream|modifications are not allowed/i.test(
-      text,
-    )
-  )
+  if (/busy|locked/i.test(text) || isOpfsOwnerCollisionError(error))
     return 'busy';
   if (/quota|full|space/i.test(text)) return 'quota';
   if (/blocked|denied|permission/i.test(text)) return 'blocked';
   if (/corrupt|malformed|schema/i.test(text)) return 'corrupt';
   return 'unavailable';
+}
+
+export function isOpfsOwnerCollisionError(error: unknown): boolean {
+  return /NoModificationAllowedError|Access Handles?|Writable stream|modifications are not allowed|createSyncAccessHandle/i.test(
+    errorText(error),
+  );
+}
+
+export function sqliteDiagnosticsFromError(error: unknown) {
+  if (!isOpfsOwnerCollisionError(error)) return {};
+  return {
+    storageOwner: 'busy' as const,
+    ownerReason: 'sahpool-lock-conflict' as const,
+    retryAfterMs: null,
+  };
 }
 
 export function errorText(error: unknown): string {

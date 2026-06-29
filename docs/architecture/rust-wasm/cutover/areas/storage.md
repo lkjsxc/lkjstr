@@ -42,12 +42,14 @@ removed.
   tags, relay provenance, feed cursors, feed coverage, cache ledger, optimizer
   rows, jobs, app log rows, pressure snapshots, retention dispatch, repair, and
   visible storage modes.
-- Storage dependency: worker-owned SQLite with OPFS or explicit temporary memory
-  mode; protected rows are never pruned.
+- Storage dependency: worker-owned SQLite with an origin-level owner lease for
+  persistent OPFS or explicit temporary memory mode; protected rows are never
+  pruned.
 - Relay dependency: route evidence, relay provenance, diagnostics, feed page
   coverage, and optimizer rows must be available to relay and feed runtimes.
-- Browser dependency: SQLite worker messages, cancellation, deadlines, close,
-  quota estimates, and old-store presence diagnostics.
+- Browser dependency: Web Locks owner lease, SQLite worker messages,
+  cancellation, deadlines, close, quota estimates, and old-store presence
+  diagnostics.
 - Tests required: `cargo test -p lkjstr-storage`, `cargo test -p lkjstr-web`,
   cache repository tests, event repository tests, scan-model repository tests,
   and `pnpm rust-wasm:quiet`.
@@ -67,10 +69,10 @@ removed.
   tag lookup metadata, event-write token batches, local indexed query adapters,
   physical repair probes, Stats browser-storage count and byte diagnostics,
   storage-owned inventory readiness classification, explicit Rust Stats
-  storage-action capability states, report-only Rust repair host action, and
-  explicit disabled compact action reason are implemented; Search app planning,
-  NIP-50 merge, mutating repair/compaction action adapters, and feed consumption
-  remain open.
+  storage-action capability states, report-only Rust repair host action,
+  explicit disabled compact action reason, and origin-level owner-lock denial
+  mapping are implemented; Search app planning, NIP-50 merge, mutating
+  repair/compaction action adapters, and feed consumption remain open.
 - Command metadata status: active selector, pressure, protected rows, event
   cache, feed evidence, relay diagnostics, notifications, jobs, app log,
   inventory snapshot, optimizer scan-model rows, retention planner rows,

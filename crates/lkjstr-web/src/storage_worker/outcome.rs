@@ -12,7 +12,8 @@ pub fn map_worker_response(
     if outcome == WorkerOutcome::Ok {
         return StorageOutcome::Ok(response);
     }
-    let problem = problem(op, reason(outcome), response.request_id.clone());
+    let reason = reason_for_response(&response, outcome);
+    let problem = problem(op, reason, response.request_id.clone());
     match outcome {
         WorkerOutcome::Ok => StorageOutcome::Ok(response),
         WorkerOutcome::Unavailable => StorageOutcome::Unavailable(problem),
@@ -60,6 +61,14 @@ pub fn problem(
     StorageProblem::new(op, STORAGE_WORKER_TABLE, reason, request_id)
 }
 
+fn reason_for_response(response: &StorageResponse, outcome: WorkerOutcome) -> &'static str {
+    match response.diagnostics.owner_reason.as_deref() {
+        Some("sahpool-lock-conflict" | "web-lock-held") => "opfs-owner-held",
+        Some("web-lock-unavailable") => "web-lock-unavailable",
+        _ => reason(outcome),
+    }
+}
+
 fn reason(outcome: WorkerOutcome) -> &'static str {
     match outcome {
         WorkerOutcome::Ok => "ok",
@@ -72,5 +81,35 @@ fn reason(outcome: WorkerOutcome) -> &'static str {
         WorkerOutcome::Canceled => "canceled",
         WorkerOutcome::LateSettled => "late-settled",
         WorkerOutcome::LateRejected => "late-rejected",
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use lkjstr_storage::{StorageOperation, StorageOutcome};
+
+    use super::*;
+    use crate::storage_worker::StorageDiagnostics;
+
+    #[test]
+    fn owner_conflict_busy_response_uses_stable_problem_reason() {
+        let outcome = map_worker_response(
+            StorageResponse {
+                request_id: "open-1".to_owned(),
+                outcome: WorkerOutcome::Busy,
+                rows: Vec::new(),
+                rows_affected: 0,
+                diagnostics: StorageDiagnostics {
+                    owner_reason: Some("sahpool-lock-conflict".to_owned()),
+                    ..Default::default()
+                },
+            },
+            StorageOperation::Transaction,
+        );
+
+        assert!(matches!(outcome, StorageOutcome::Busy(_)));
+        if let StorageOutcome::Busy(problem) = outcome {
+            assert_eq!(problem.reason, "opfs-owner-held");
+        }
     }
 }

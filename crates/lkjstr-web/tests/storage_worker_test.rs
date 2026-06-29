@@ -85,6 +85,7 @@ fn open_op(name: &str) -> StorageOp {
             allow_opfs: false,
             allow_transient: false,
             worker_kind: None,
+            owner_reason: None,
         },
     }
 }

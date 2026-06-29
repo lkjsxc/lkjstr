@@ -8,18 +8,29 @@ import {
 import { activeAccount, listAccounts } from '$lib/accounts/account-store';
 import type { Account } from '$lib/accounts/account';
 import { listRelaySets, type RelaySet } from '$lib/relays/relay-store';
+import {
+  protectedStorageStateFromError,
+  type ProtectedStorageState,
+} from '$lib/storage/protected-storage-state';
 
 export type WorkspacePageData = {
   readonly accounts: Account[];
   readonly activeAccount?: Account;
   readonly relaySets: RelaySet[];
+  readonly storageState?: ProtectedStorageState;
 };
 
 export async function loadWorkspacePageData(): Promise<WorkspacePageData> {
-  const accounts = await listAccounts();
-  const relaySets = await listRelaySets();
-  const active = await activeAccount();
-  return { accounts, activeAccount: active, relaySets };
+  try {
+    const accounts = await listAccounts();
+    const relaySets = await listRelaySets();
+    const active = await activeAccount();
+    return { accounts, activeAccount: active, relaySets };
+  } catch (error) {
+    const storageState = protectedStorageStateFromError(error);
+    if (!storageState) throw error;
+    return { accounts: [], relaySets: [], storageState };
+  }
 }
 
 export async function addReadonlyFromInput(input: string): Promise<string> {

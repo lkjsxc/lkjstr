@@ -1,17 +1,22 @@
 import { afterEach, describe, expect, test, vi } from 'vitest';
 import { createSqliteOpfsClient } from '../../../src/lib/storage/sqlite-opfs/client';
 import {
+  closeSqliteStorage,
   sendSqliteStorage,
   setSqliteStorageClientFactoryForTests,
+  setSqliteStorageOwnerLeaseFactoryForTests,
 } from '../../../src/lib/storage/sqlite-opfs/kernel-client';
+import type { SqliteOpfsOwnerLeaseResult } from '../../../src/lib/storage/sqlite-opfs/owner-lease';
 import type {
   StorageRequest,
   StorageResponse,
 } from '../../../src/lib/storage/sqlite-opfs/types';
 
 describe('SQLite OPFS client', () => {
-  afterEach(() => {
+  afterEach(async () => {
+    await closeSqliteStorage();
     setSqliteStorageClientFactoryForTests();
+    setSqliteStorageOwnerLeaseFactoryForTests();
     vi.unstubAllGlobals();
   });
   test('resolves responses and tracks late worker messages', async () => {
@@ -48,17 +53,21 @@ describe('SQLite OPFS client', () => {
   test('coalesces singleton storage open before concurrent commands', async () => {
     vi.stubGlobal('Worker', function Worker() {});
     const worker = fakeWorker();
-    setSqliteStorageClientFactoryForTests(() =>
-      createSqliteOpfsClient({ workerFactory: () => worker }),
+    setSqliteStorageOwnerLeaseFactoryForTests(activeLeaseFactory());
+    setSqliteStorageClientFactoryForTests((lease) =>
+      createSqliteOpfsClient({
+        workerFactory: () => worker,
+        ownerLease: lease,
+      }),
     );
 
     const first = sendSqliteStorage({ kind: 'estimate-storage' });
     const second = sendSqliteStorage({ kind: 'estimate-storage' });
+    await settleClient();
 
     expect(worker.requests.map((item) => item.op.kind)).toEqual(['open']);
     worker.respond(response(worker.requests[0]!.requestId, 'ok'));
-    await Promise.resolve();
-    await Promise.resolve();
+    await settleClient();
 
     expect(worker.requests.map((item) => item.op.kind)).toEqual([
       'open',
@@ -109,4 +118,22 @@ function response(
   outcome: StorageResponse['outcome'],
 ): StorageResponse {
   return { requestId, outcome, rows: [], rowsAffected: 0, diagnostics: {} };
+}
+
+async function settleClient(): Promise<void> {
+  await Promise.resolve();
+  await new Promise((resolve) => setTimeout(resolve, 0));
+}
+
+function activeLeaseFactory(release = vi.fn()) {
+  return async (): Promise<SqliteOpfsOwnerLeaseResult> => ({
+    ok: true,
+    lease: {
+      diagnostics: {
+        storageOwner: 'active',
+        ownerReason: 'web-lock-granted',
+      },
+      release,
+    },
+  });
 }

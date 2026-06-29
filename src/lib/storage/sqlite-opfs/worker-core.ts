@@ -3,6 +3,7 @@ import {
   executeSql,
   querySql,
   runBatch,
+  sqliteDiagnosticsFromError,
   sqliteOutcomeFromError,
   type SqliteModule,
 } from './database';
@@ -61,6 +62,7 @@ export function createSqliteWorkerCore(options: SqliteWorkerCoreOptions) {
     } catch (error) {
       return response(request, sqliteOutcomeFromError(error), undefined, 0, {
         ...opened?.diagnostics,
+        ...sqliteDiagnosticsFromError(error),
         message: errorText(error),
       });
     }

@@ -5,7 +5,10 @@ use wasm_bindgen_futures::JsFuture;
 use web_sys::{Worker, WorkerOptions, WorkerType};
 
 use crate::storage_worker::outcome::{local_response, operation_for, problem};
-use crate::storage_worker::runtime::{ClientInner, response_from_js, worker_client};
+use crate::storage_worker::owner_lease::acquire_persistent_owner_lease;
+use crate::storage_worker::runtime::{
+    ClientInner, response_from_js, worker_client, worker_client_with_lease,
+};
 use crate::storage_worker::{DEFAULT_WORKER_URL, StorageOp, StorageResponse, WorkerOutcome};
 
 #[derive(Clone)]
@@ -40,6 +43,24 @@ impl StorageWorkerClient {
         let options = WorkerOptions::new();
         options.set_type(WorkerType::Module);
         worker_client(Worker::new_with_options(url, &options))
+    }
+
+    pub async fn new_owned_module(url: &str) -> StorageOutcome<Self> {
+        let lease = match acquire_persistent_owner_lease().await {
+            StorageOutcome::Ok(lease) => lease,
+            StorageOutcome::Unavailable(problem) => return StorageOutcome::Unavailable(problem),
+            StorageOutcome::Timeout(problem) => return StorageOutcome::Timeout(problem),
+            StorageOutcome::Busy(problem) => return StorageOutcome::Busy(problem),
+            StorageOutcome::Blocked(problem) => return StorageOutcome::Blocked(problem),
+            StorageOutcome::Quota(problem) => return StorageOutcome::Quota(problem),
+            StorageOutcome::Corrupt(problem) => return StorageOutcome::Corrupt(problem),
+            StorageOutcome::Canceled(problem) => return StorageOutcome::Canceled(problem),
+            StorageOutcome::LateSettled(problem) => return StorageOutcome::LateSettled(problem),
+            StorageOutcome::LateRejected(problem) => return StorageOutcome::LateRejected(problem),
+        };
+        let options = WorkerOptions::new();
+        options.set_type(WorkerType::Module);
+        worker_client_with_lease(Worker::new_with_options(url, &options), Some(lease))
     }
 
     pub fn request(&self, op: StorageOp, deadline_ms: u32) -> StorageOutcome<StorageWorkerRequest> {

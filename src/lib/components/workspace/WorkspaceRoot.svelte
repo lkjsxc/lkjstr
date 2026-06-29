@@ -2,6 +2,7 @@
   import type { Account } from '$lib/accounts/account';
   import AppHeader from '$lib/components/app/AppHeader.svelte';
   import type { RelaySet } from '$lib/relays/relay-store';
+  import type { ProtectedStorageState } from '$lib/storage/protected-storage-state';
   import { onDestroy, setContext } from 'svelte';
   import type { TabKind } from '$lib/workspace/tab';
   import {
@@ -18,6 +19,7 @@
     accounts: Account[];
     activeAccount?: Account;
     relaySets: RelaySet[];
+    storageState?: ProtectedStorageState;
     ready: boolean;
     pageDataReady: boolean;
     inactiveRetentionSeconds: number;
@@ -66,6 +68,12 @@
 <main class="workspace-shell">
   <section class="workspace-main">
     <AppHeader />
+    {#if props.storageState}
+      <section class="storage-state" data-testid="storage-busy-state">
+        <strong>Storage {props.storageState.kind}</strong>
+        <span>{props.storageState.message}</span>
+      </section>
+    {/if}
     {#if props.workspace.layout}
       <SplitNode
         workspaceId={props.workspace.id}
@@ -102,3 +110,17 @@
     {/if}
   </section>
 </main>
+
+<style>
+  .storage-state {
+    margin: 0.75rem;
+    padding: 0.75rem;
+    border: 1px solid var(--color-border, #444);
+    border-radius: 0.5rem;
+    background: var(--color-panel, #111);
+  }
+  .storage-state span {
+    display: block;
+    margin-top: 0.25rem;
+  }
+</style>

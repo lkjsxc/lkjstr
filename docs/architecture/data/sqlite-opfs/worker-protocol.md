@@ -20,8 +20,8 @@ Every response carries:
   `corrupt`, `canceled`, `late-settled`, or `late-rejected`.
 - `rows`: result rows for query and inventory operations.
 - `rowsAffected`: affected row count for write operations.
-- `diagnostics`: storage mode, VFS, health, byte estimates, warnings, or a
-  bounded error message.
+- `diagnostics`: storage mode, VFS, owner state, owner reason, retry-after
+  milliseconds, health, byte estimates, warnings, or a bounded error message.
 
 The lower host adapter may carry storage-crate statement ids and bound
 parameters, but product UI code must never construct SQL text.
@@ -74,11 +74,15 @@ reaching the worker.
 
 ## Open And Schema
 
-`open` is idempotent for the already opened database. It returns current
-diagnostics without closing SQLite. An open request for a different database
-returns `busy` unless a reset or test owner has closed the current database. SAH
-pool install is one worker-lifetime single-flight operation, and its
-`initialCapacity` value is a file-slot count. The current target is 64 slots.
+The main runtime must acquire the exclusive `lkjstr.sqlite-opfs-owner` Web Lock
+before constructing a persistent dedicated worker. If the lock is held or Web
+Locks are unavailable, no persistent worker is created and the response is a
+stable busy or unavailable outcome. `open` is idempotent for the already opened
+database. It returns current diagnostics without closing SQLite. An open request
+for a different database returns `busy` unless a reset or test owner has closed
+the current database. SAH pool install is one worker-lifetime single-flight
+operation, and its `initialCapacity` value is a file-slot count. The current
+target is 64 slots.
 
 `apply-schema` is idempotent per schema hash. Later calls with an applied hash
 return `ok` without rerunning statements.
@@ -94,6 +98,8 @@ return `ok` without rerunning statements.
 - page count, page size, freelist count.
 - event, relay receipt, and tag row counts.
 - last integrity check time.
+- storage owner state and owner reason.
+- retry-after milliseconds when owner collision cooldown is active.
 - warnings and capability flags.
 
 Stats and Cache tools read this command directly through a repository.
@@ -112,7 +118,9 @@ Stats and Cache tools read this command directly through a repository.
 - `unknown`.
 
 `busy`, `cancelled`, and temporary-mode warnings are recoverable when the caller
-still has a bounded UI fallback. Protected data failures remain visible.
+still has a bounded UI fallback. `NoModificationAllowedError` and SAH-pool
+access-handle contention map to `busy/opfs-owner-held`. Protected data failures
+remain visible and must not be rendered as proven-empty rows.
 
 ## Cancellation
 

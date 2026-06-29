@@ -7,23 +7,19 @@ import {
   sqliteReadSettingOverrides,
   sqliteReplaceSettingOverrides,
 } from '../sqlite-opfs/settings-sqlite';
+import { protectedStorageStateFromError } from '../protected-storage-state';
 
 let memoryRows: SettingOverride[] = [];
-const startupReadDeadlineMs = 120;
 
 export async function readSettingOverrideRows(
   fallback: SettingOverride[],
 ): Promise<SettingOverride[]> {
-  const read = sqliteReadSettingOverrides()
+  const rows = await sqliteReadSettingOverrides()
     .then((rows) => {
       if (rows) memoryRows = rows;
       return rows;
     })
-    .catch(() => undefined);
-  const rows = await Promise.race([
-    read,
-    fallbackAfter(startupReadDeadlineMs, fallback),
-  ]);
+    .catch(undefinedUnlessProtected);
   memoryRows = rows ?? fallback;
   return memoryRows;
 }
@@ -33,7 +29,7 @@ export async function readSettingOverrideRow(
 ): Promise<SettingOverride | undefined> {
   const memory = memoryRows.find((row) => row.key === key);
   if (memory) return memory;
-  return sqliteReadSettingOverride(key).catch(() => undefined);
+  return sqliteReadSettingOverride(key).catch(undefinedUnlessProtected);
 }
 
 export async function putSettingOverrideRow(
@@ -43,12 +39,12 @@ export async function putSettingOverrideRow(
     ...memoryRows.filter((row) => row.key !== override.key),
     override,
   ];
-  await sqlitePutSettingOverride(override).catch(() => false);
+  await sqlitePutSettingOverride(override).catch(undefinedUnlessProtected);
 }
 
 export async function deleteSettingOverrideRow(key: string): Promise<void> {
   memoryRows = memoryRows.filter((row) => row.key !== key);
-  await sqliteDeleteSettingOverride(key).catch(() => false);
+  await sqliteDeleteSettingOverride(key).catch(undefinedUnlessProtected);
 }
 
 export async function deleteSettingOverrideRows(
@@ -56,18 +52,19 @@ export async function deleteSettingOverrideRows(
 ): Promise<void> {
   const remove = new Set(keys);
   memoryRows = memoryRows.filter((row) => !remove.has(row.key));
-  await sqliteDeleteSettingOverrides(keys).catch(() => false);
+  await sqliteDeleteSettingOverrides(keys).catch(undefinedUnlessProtected);
 }
 
 export async function replaceSettingOverrideRows(
   overrides: readonly SettingOverride[],
 ): Promise<void> {
   memoryRows = [...overrides];
-  await sqliteReplaceSettingOverrides(overrides).catch(() => false);
+  await sqliteReplaceSettingOverrides(overrides).catch(
+    undefinedUnlessProtected,
+  );
 }
 
-function fallbackAfter<T>(ms: number, value: T): Promise<T> {
-  return new Promise((resolve) => {
-    setTimeout(() => resolve(value), ms);
-  });
+function undefinedUnlessProtected(error: unknown): undefined {
+  if (protectedStorageStateFromError(error)) throw error;
+  return undefined;
 }

@@ -3,9 +3,9 @@ import {
   sqlitePutRelaySets,
   sqliteReadRelaySets,
 } from '../sqlite-opfs/relay-sets-sqlite';
+import { protectedStorageStateFromError } from '../protected-storage-state';
 
 let memoryRows: RelaySet[] = [];
-const startupReadDeadlineMs = 3_000;
 
 export async function readRelaySetRows(
   fallback: RelaySet[],
@@ -14,10 +14,7 @@ export async function readRelaySetRows(
     void refreshMemoryRows();
     return memoryRows.length > 0 ? memoryRows : fallback;
   }
-  const rows = await Promise.race([
-    sqliteReadRelaySets().catch(() => undefined),
-    fallbackAfter(startupReadDeadlineMs, undefined),
-  ]);
+  const rows = await sqliteReadRelaySets().catch(undefinedUnlessProtected);
   memoryRows = rows ?? fallback;
   return memoryRows;
 }
@@ -26,7 +23,7 @@ export async function putRelaySetRows(
   relaySets: readonly RelaySet[],
 ): Promise<void> {
   memoryRows = [...relaySets];
-  await sqlitePutRelaySets(relaySets).catch(() => false);
+  await sqlitePutRelaySets(relaySets).catch(undefinedUnlessProtected);
 }
 
 async function refreshMemoryRows(): Promise<void> {
@@ -34,6 +31,7 @@ async function refreshMemoryRows(): Promise<void> {
   if (rows) memoryRows = rows;
 }
 
-function fallbackAfter<T>(ms: number, value: T): Promise<T> {
-  return new Promise((resolve) => setTimeout(() => resolve(value), ms));
+function undefinedUnlessProtected(error: unknown): undefined {
+  if (protectedStorageStateFromError(error)) throw error;
+  return undefined;
 }

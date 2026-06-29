@@ -2,6 +2,7 @@
 
 mod client;
 mod outcome;
+mod owner_lease;
 mod runtime;
 mod runtime_events;
 mod types;

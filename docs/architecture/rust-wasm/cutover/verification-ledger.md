@@ -46,7 +46,23 @@ Keep new run evidence in the table below unless a narrative note is required.
 
 ## Recent Focused Evidence
 
-Latest focused note: on 2026-06-29, SQLite OPFS owner hardening serialized
+Latest focused note: on 2026-06-29, SQLite OPFS origin-owner hardening added
+an exclusive `lkjstr.sqlite-opfs-owner` Web Lock before persistent dedicated
+worker construction, mapped owner denial and SAH-pool `NoModificationAllowedError`
+to busy/unavailable outcomes with cooldown, and kept protected repositories from
+rendering empty fallback rows after owner collision. Focused proof passed:
+`pnpm test tests/unit/storage`, `cargo test -p lkjstr-storage`,
+`cargo test -p lkjstr-web`, `cargo test -p lkjstr-web storage_worker`,
+`cargo test -p lkjstr-web sqlite_host_store`, `pnpm test tests/unit/cache
+tests/unit/events/repository.test.ts`, `pnpm test
+tests/unit/feed-surface/scan-model-repository.test.ts`, `cargo run -p
+lkjstr-xtask -- check-storage-manifest-docs`, `cargo fmt --check`,
+`cargo clippy -p lkjstr-web --all-targets -- -D warnings`, `pnpm check:repo`,
+`pnpm check`, `pnpm test:quiet`, `pnpm rust-wasm:quiet`,
+`pnpm verify:quiet`, and `pnpm cloudflare:quiet`. Docker final gate was not
+rerun for this non-deletion storage-owner slice.
+
+Previous focused note: on 2026-06-29, SQLite OPFS owner hardening serialized
 static worker commands, made SAH pool install single-flight with 64 file slots,
 preserved idempotent open and shared Rust store ownership, and kept browser e2e
 suspended from quiet and Docker gates. Focused Vitest, `cargo test -p

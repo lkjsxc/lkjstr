@@ -15,8 +15,10 @@ Read next: [architecture/data/README.md](../architecture/data/README.md),
   information, relay summaries, jobs, feed/page records, diagnostics, route
   evidence, and cached events.
 - The durable product path is official SQLite WASM in a worker, using
-  `opfs-sahpool` OPFS as the hosted primary mode and explicit temporary memory
-  mode when persistent SQLite cannot open and transient storage is allowed.
+  `opfs-sahpool` OPFS as the hosted primary mode. A persistent dedicated worker
+  is constructed only while holding the exclusive `lkjstr.sqlite-opfs-owner`
+  Web Lock; denial or missing Web Locks surfaces explicit busy or unsupported
+  storage states instead of an uncoordinated writer.
 - Main-thread app code must not open SQLite or OPFS directly. Product code calls
   typed repositories; repositories talk to the worker-owned storage kernel.
 - Settings, workspace layout, tab snapshots, Accounts, local signing secrets,
@@ -63,17 +65,20 @@ Read next: [architecture/data/README.md](../architecture/data/README.md),
 - SQLite worker `open` is idempotent for the already opened database, returns
   `busy` for a different database while the owner is open, and skips schema
   statements for an already applied schema hash. Non-cancel worker commands run
-  through a serialized queue and each posts exactly one response.
+  through a serialized queue and each posts exactly one response. The owner lock
+  is held until the persistent worker closes.
 - SAH pool installation is a worker-lifetime single-flight operation. Its
   `initialCapacity` is a file-slot count, currently 64 slots, not a byte value.
-  Access-handle contention such as `NoModificationAllowedError` maps to a busy
-  storage outcome and startup does not clear OPFS or call `removeVfs()` as
-  automatic recovery.
+  Access-handle contention such as `NoModificationAllowedError` maps to
+  `busy/opfs-owner-held`, terminates the failed worker, sets a bounded retry
+  cooldown, and startup does not clear OPFS or call `removeVfs()` as automatic
+  recovery.
 - Protected records are never removed by cache cleanup: accounts, local signing
   secrets, settings, relay sets, workspace state, Tweet drafts, active tab
   snapshots, active jobs, and route blocks.
 - Recoverable cache rows are removed only through cache ledger policy. Runtime
   feed windows remain bounded; durable cached events are governed by explicit
   retention and diagnostics rather than a fixed small row count.
-- Storage failure must recover to a usable Welcome workspace. Persistent OPFS
-  mode and temporary memory mode must be visible in Stats or Settings.
+- Storage failure must recover to a usable Welcome workspace. Persistent OPFS,
+  owner busy, unsupported Web Locks, and temporary memory mode must be visible
+  in Stats, Settings, Accounts, Relay Settings, drafts, or the workspace shell.

@@ -35,6 +35,8 @@ pub struct OpenDatabase {
     pub allow_transient: bool,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub worker_kind: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub owner_reason: Option<String>,
 }
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
@@ -96,6 +98,14 @@ pub struct StorageDiagnostics {
     pub database_name: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub vfs: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub vfs_name: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub storage_owner: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub owner_reason: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub retry_after_ms: Option<u32>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub message: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]

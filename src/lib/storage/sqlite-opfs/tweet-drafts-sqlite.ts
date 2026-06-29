@@ -1,5 +1,6 @@
 import type { TweetDraft } from '../../tweet/draft-store';
 import { applySqliteSchema, sendSqliteStorage } from './kernel-client';
+import { throwIfProtectedStorageBlocked } from '../protected-storage-state';
 
 const draftSchemaHash = 'tweet-drafts-sqlite-cutover';
 const draftSchema = [
@@ -28,6 +29,7 @@ export async function sqliteReadTweetDraft(
     },
     { deadlineMs: 3_000 },
   );
+  throwIfProtectedStorageBlocked(response);
   if (response.outcome !== 'ok') return undefined;
   const row = response.rows[0];
   if (!row) return undefined;
@@ -45,6 +47,7 @@ export async function sqlitePutTweetDraft(draft: TweetDraft): Promise<boolean> {
     },
     { deadlineMs: 3_000 },
   );
+  throwIfProtectedStorageBlocked(response);
   return response.outcome === 'ok';
 }
 
@@ -58,11 +61,13 @@ export async function sqliteDeleteTweetDraft(id: string): Promise<boolean> {
     },
     { deadlineMs: 3_000 },
   );
+  throwIfProtectedStorageBlocked(response);
   return response.outcome === 'ok';
 }
 
 async function ensureDraftSchema(): Promise<boolean> {
   const response = await applySqliteSchema(draftSchemaHash, draftSchema);
+  throwIfProtectedStorageBlocked(response);
   return response.outcome === 'ok';
 }
 

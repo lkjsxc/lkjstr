@@ -1,6 +1,7 @@
 import type { Account } from '../../accounts/account';
 import type { LocalAccountSecret } from '../../accounts/local-secret-store';
 import { applySqliteSchema, sendSqliteStorage } from './kernel-client';
+import { throwIfProtectedStorageBlocked } from '../protected-storage-state';
 
 const accountSchemaHash = 'accounts-sqlite-cutover';
 const accountSchema = [
@@ -32,6 +33,7 @@ export async function sqliteReadAccounts(): Promise<Account[] | undefined> {
     },
     { deadlineMs: 10_000 },
   );
+  throwIfProtectedStorageBlocked(response);
   if (response.outcome !== 'ok') return undefined;
   return response.rows.flatMap((row) => decodeJson<Account>(row.metadata_json));
 }
@@ -54,6 +56,7 @@ export async function sqlitePutAccount(account: Account): Promise<boolean> {
     },
     { deadlineMs: 10_000 },
   );
+  throwIfProtectedStorageBlocked(response);
   return response.outcome === 'ok';
 }
 
@@ -67,6 +70,7 @@ export async function sqliteDeleteAccount(id: string): Promise<boolean> {
     },
     { deadlineMs: 10_000 },
   );
+  throwIfProtectedStorageBlocked(response);
   return response.outcome === 'ok';
 }
 
@@ -88,6 +92,7 @@ export async function sqlitePutLocalSecret(
     },
     { deadlineMs: 10_000 },
   );
+  throwIfProtectedStorageBlocked(response);
   return response.outcome === 'ok';
 }
 
@@ -105,6 +110,7 @@ export async function sqliteReadLocalSecret(
     },
     { deadlineMs: 10_000 },
   );
+  throwIfProtectedStorageBlocked(response);
   if (response.outcome !== 'ok') return undefined;
   return decodeJson<LocalAccountSecret>(response.rows[0]?.secret_payload)[0];
 }
@@ -119,11 +125,13 @@ export async function sqliteDeleteLocalSecret(id: string): Promise<boolean> {
     },
     { deadlineMs: 10_000 },
   );
+  throwIfProtectedStorageBlocked(response);
   return response.outcome === 'ok';
 }
 
 async function ensureAccountSchema(): Promise<boolean> {
   const response = await applySqliteSchema(accountSchemaHash, accountSchema);
+  throwIfProtectedStorageBlocked(response);
   return response.outcome === 'ok';
 }
 

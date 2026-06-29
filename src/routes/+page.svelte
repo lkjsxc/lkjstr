@@ -17,7 +17,10 @@
   } from '$lib/workspace/tab-snapshot-workspace';
   import type { Workspace } from '$lib/workspace/workspace';
   import { bootstrapWorkspace } from '$lib/workspace/workspace-bootstrap';
-  import { loadWorkspacePageData } from '$lib/workspace/workspace-page-data';
+  import {
+    loadWorkspacePageData,
+    type WorkspacePageData,
+  } from '$lib/workspace/workspace-page-data';
   import { createWorkspacePageActions } from '$lib/workspace/workspace-page-actions';
   import {
     loadWorkspace,
@@ -31,6 +34,7 @@
   let accounts = $state<Account[]>([]);
   let activeAccount = $state<Account>();
   let relaySets = $state<RelaySet[]>([]);
+  let storageState = $state<WorkspacePageData['storageState']>();
   let ready = $state(false);
   let workspaceLoaded = $state(false);
   let pageDataReady = $state(false);
@@ -122,7 +126,8 @@
   }
 
   async function refreshData(): Promise<void> {
-    ({ accounts, activeAccount, relaySets } = await loadWorkspacePageData());
+    ({ accounts, activeAccount, relaySets, storageState } =
+      await loadWorkspacePageData());
     pageDataReady = true;
   }
 
@@ -145,4 +150,4 @@
 <svelte:head><title>lkjstr</title></svelte:head>
 
 <!-- prettier-ignore -->
-<WorkspaceRoot {workspace} {accounts} {activeAccount} {relaySets} {ready} {pageDataReady} {inactiveRetentionSeconds} {snapshotCoordinator} focusTab={actions.focusTab} closeTab={actions.closeTab} moveTab={actions.moveTab} openNewTab={actions.openNewTab} convertTab={actions.convertTab} split={actions.split} closePane={actions.closePane} resize={actions.resize} addMinedSigning={actions.addMinedSigning} {refreshData} toggleRelay={actions.toggleRelay} removeRelay={actions.removeRelay} openProfile={actions.openProfile} openFollowees={actions.openFollowees} openUserTimeline={actions.openUserTimeline} openProfileEdit={actions.openProfileEdit} openThread={actions.openThread} openAuthorContext={actions.openAuthorContext} openTool={actions.openTool} />
+<WorkspaceRoot {workspace} {accounts} {activeAccount} {relaySets} {storageState} {ready} {pageDataReady} {inactiveRetentionSeconds} {snapshotCoordinator} focusTab={actions.focusTab} closeTab={actions.closeTab} moveTab={actions.moveTab} openNewTab={actions.openNewTab} convertTab={actions.convertTab} split={actions.split} closePane={actions.closePane} resize={actions.resize} addMinedSigning={actions.addMinedSigning} {refreshData} toggleRelay={actions.toggleRelay} removeRelay={actions.removeRelay} openProfile={actions.openProfile} openFollowees={actions.openFollowees} openUserTimeline={actions.openUserTimeline} openProfileEdit={actions.openProfileEdit} openThread={actions.openThread} openAuthorContext={actions.openAuthorContext} openTool={actions.openTool} />

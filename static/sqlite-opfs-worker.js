@@ -1,5 +1,6 @@
 import sqlite3InitModule from './sqlite/index.mjs';
 import {
+  diagnosticsFromError,
   errorText,
   isRow,
   normalizeFilename,
@@ -41,6 +42,7 @@ async function run(request) {
   } catch (error) {
     return response(request, outcomeFromError(error), [], 0, {
       ...opened?.diagnostics,
+      ...diagnosticsFromError(error),
       message: errorText(error),
     });
   }

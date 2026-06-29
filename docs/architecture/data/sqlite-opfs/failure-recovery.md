@@ -13,13 +13,18 @@ run the app shell at all.
 Storage startup order:
 
 1. Create or reuse the storage owner for `(workerUrl, databaseName)`.
-2. Route worker requests through the worker command queue.
-3. Install the SAH pool once per worker lifetime with capacity as file slots.
-4. Open persistent OPFS SQLite in the worker.
-5. Apply schema changes once for the schema hash.
-6. Read storage health.
-7. If persistent open fails and temporary mode is allowed, open `:memory:`.
-8. If both modes fail, use only process memory for the current Welcome screen
+2. Before constructing a persistent dedicated worker, acquire the exclusive
+   `lkjstr.sqlite-opfs-owner` Web Lock for the owner lifetime.
+3. If the Web Lock is unavailable or already held, do not construct the worker;
+   surface explicit unavailable, busy, or temporary-mode UI.
+4. Route worker requests through the worker command queue.
+5. Install the SAH pool once per worker lifetime with capacity as file slots.
+6. Open persistent OPFS SQLite in the worker.
+7. Apply schema changes once for the schema hash.
+8. Read storage health.
+9. If persistent open fails and temporary mode is allowed, open `:memory:` only
+   when the failure is not an owner collision.
+10. If both modes fail, use only process memory for the current Welcome screen
    and log a bounded storage error.
 
 The user must see the active storage state in Stats or Settings.
@@ -49,10 +54,13 @@ must surface through startup, Settings, Accounts, Stats, and lkjstr Log.
 `NoModificationAllowedError`, `createSyncAccessHandle` contention, and failures
 that mention another access handle or writable stream are busy storage states.
 The app must not keep spawning workers or reopening the same database in a loop.
-It should:
+`NoModificationAllowedError` maps to `busy/opfs-owner-held`, the failed worker is
+terminated, and the main runtime sets a bounded cooldown before another owner
+attempt. It should:
 
 - keep the existing owner if it already opened the requested database.
 - report `busy` when another tab or stale owner holds the persistent file.
+- hold the Web Lock for the lifetime of the successful persistent worker.
 - offer explicit temporary memory mode only when the caller allows transient
   storage and the UI can show that writes are not durable.
 - preserve bounded diagnostics without logging signing secrets.
@@ -79,6 +87,7 @@ owner. If SharedWorker is unavailable and a dedicated Worker cannot acquire the
 persistent owner, later tabs must show busy or explicit temporary mode rather
 than open a second uncoordinated writer.
 
-Account selection, relay sets, feed runtimes, Stats, and tool panes must treat
-busy or temporary storage as distinct from real empty states. A failed read does
-not mean there is no active account or no enabled relay.
+Account selection, relay sets, Settings, Tweet drafts, feed runtimes, Stats, and
+tool panes must treat busy or temporary storage as distinct from real empty
+states. A failed protected read does not mean there is no active account, no
+enabled relay, no saved setting, or no draft.

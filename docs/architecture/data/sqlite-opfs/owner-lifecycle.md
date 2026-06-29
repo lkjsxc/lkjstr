@@ -18,11 +18,15 @@ individual command.
 ## Open Lifecycle
 
 1. Create or look up the owner entry by `(workerUrl, databaseName)`.
-2. Start one open operation for the entry.
-3. Share the same opened store with all repository calls for that key.
-4. Treat a repeated open for the same database as idempotent and return current
+2. Acquire the exclusive `lkjstr.sqlite-opfs-owner` Web Lock before constructing
+   a persistent dedicated worker.
+3. If the Web Lock is unavailable or already held, do not construct the worker;
+   return a stable unavailable or busy owner outcome.
+4. Start one open operation for the entry after ownership is granted.
+5. Share the same opened store with all repository calls for that key.
+6. Treat a repeated open for the same database as idempotent and return current
    diagnostics without closing and reopening SQLite.
-5. Reject a request for a different database while an owner is open unless the
+7. Reject a request for a different database while an owner is open unless the
    caller is an explicit reset or test owner.
 
 Worker commands are serialized by one queue per worker. `cancel` records its
@@ -51,15 +55,18 @@ terminate the worker owner.
 
 SharedWorker is the preferred cross-tab owner because it lets same-origin tabs
 share one SQLite worker. If SharedWorker is unavailable, the dedicated Worker
-fallback must use an owner lock. A tab that cannot acquire ownership shows
-`busy` or enters explicit temporary memory mode when the caller allows it.
+fallback must hold the exclusive `lkjstr.sqlite-opfs-owner` Web Lock for the
+worker lifetime. A tab that cannot acquire ownership shows `busy` or enters
+explicit temporary memory mode when the caller allows it.
 
 No tab may silently open a second persistent writer for the same OPFS database.
+Web Locks unavailable is an explicit unsupported storage state, not permission
+to construct an uncoordinated persistent worker.
 
 ## Storage Modes
 
 Persistent OPFS is attempted first. Temporary memory mode is allowed only when
-the request allows transient storage, persistent open failed, and the UI exposes
-that writes are not durable. Busy, blocked, timeout, unavailable, corrupt, and
-temporary modes remain distinct in Stats, Settings, Accounts, Relay Settings,
-and app-log diagnostics.
+the request allows transient storage, persistent open failed for a non-owner
+reason, and the UI exposes that writes are not durable. Busy, blocked, timeout,
+unavailable, corrupt, and temporary modes remain distinct in Stats, Settings,
+Accounts, Relay Settings, Tweet drafts, and app-log diagnostics.

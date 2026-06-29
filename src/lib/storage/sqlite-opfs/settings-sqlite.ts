@@ -1,5 +1,6 @@
 import type { SettingOverride } from '../../settings/settings-store';
 import { applySqliteSchema, sendSqliteStorage } from './kernel-client';
+import { throwIfProtectedStorageBlocked } from '../protected-storage-state';
 import type { SqlRow } from './types';
 
 const settingsSchemaHash = 'settings-sqlite-cutover';
@@ -25,6 +26,7 @@ export async function sqliteReadSettingOverrides(): Promise<
     },
     { deadlineMs: 3_000 },
   );
+  throwIfProtectedStorageBlocked(response);
   if (response.outcome !== 'ok') return undefined;
   return response.rows.map(decodeSettingOverride);
 }
@@ -43,6 +45,7 @@ export async function sqliteReadSettingOverride(
     },
     { deadlineMs: 3_000 },
   );
+  throwIfProtectedStorageBlocked(response);
   if (response.outcome !== 'ok') return undefined;
   return response.rows[0] ? decodeSettingOverride(response.rows[0]) : undefined;
 }
@@ -60,6 +63,7 @@ export async function sqlitePutSettingOverride(
     },
     { deadlineMs: 3_000 },
   );
+  throwIfProtectedStorageBlocked(response);
   return response.outcome === 'ok';
 }
 
@@ -75,6 +79,7 @@ export async function sqliteDeleteSettingOverride(
     },
     { deadlineMs: 3_000 },
   );
+  throwIfProtectedStorageBlocked(response);
   return response.outcome === 'ok';
 }
 
@@ -94,6 +99,7 @@ export async function sqliteDeleteSettingOverrides(
     },
     { deadlineMs: 5_000 },
   );
+  throwIfProtectedStorageBlocked(response);
   return response.outcome === 'ok';
 }
 
@@ -116,11 +122,13 @@ export async function sqliteReplaceSettingOverrides(
     },
     { deadlineMs: 5_000 },
   );
+  throwIfProtectedStorageBlocked(response);
   return response.outcome === 'ok';
 }
 
 async function ensureSettingsSchema(): Promise<boolean> {
   const response = await applySqliteSchema(settingsSchemaHash, settingsSchema);
+  throwIfProtectedStorageBlocked(response);
   return response.outcome === 'ok';
 }
 

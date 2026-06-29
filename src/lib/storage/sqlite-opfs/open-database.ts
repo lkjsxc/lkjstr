@@ -1,4 +1,9 @@
-import { errorText, type SqliteDatabase, type SqliteModule } from './database';
+import {
+  errorText,
+  isOpfsOwnerCollisionError,
+  type SqliteDatabase,
+  type SqliteModule,
+} from './database';
 import type { OpenDatabase, StorageDiagnostics, VfsName } from './types';
 
 export type OpenedSqliteDatabase = {
@@ -23,6 +28,7 @@ export async function openSqliteDatabase(
     try {
       return await openWithVfs(sqlite3, request, vfs, warnings);
     } catch (error) {
+      if (isOpfsOwnerCollisionError(error)) throw error;
       warnings.push(`${vfs}: ${errorText(error)}`);
     }
   }
@@ -83,10 +89,15 @@ function installSahpool(sqlite3: SqliteModule): Promise<Sahpool> {
   if (!sqlite3.installOpfsSAHPoolVfs) throw new Error('SAH pool VFS missing');
   let pool = sahpoolPools.get(sqlite3);
   if (!pool) {
-    pool = sqlite3.installOpfsSAHPoolVfs({
-      name: 'lkjstr',
-      initialCapacity: sahpoolInitialCapacitySlots,
-    });
+    pool = sqlite3
+      .installOpfsSAHPoolVfs({
+        name: 'lkjstr',
+        initialCapacity: sahpoolInitialCapacitySlots,
+      })
+      .catch((error) => {
+        if (sahpoolPools.get(sqlite3) === pool) sahpoolPools.delete(sqlite3);
+        throw error;
+      });
     sahpoolPools.set(sqlite3, pool);
   }
   return pool;
@@ -122,6 +133,7 @@ function opened(
 ): OpenedSqliteDatabase {
   const mode = vfsName === 'memory' ? 'temporary-memory' : 'persistent-opfs';
   const databaseName = vfsName === 'memory' ? ':memory:' : request.databaseName;
+  const storageOwner = vfsName === 'memory' ? 'temporary' : 'active';
   return {
     db,
     logicalDatabaseName: normalizeDatabaseName(request.databaseName),
@@ -131,6 +143,12 @@ function opened(
       vfs: vfsName,
       vfsName,
       workerKind: request.workerKind ?? 'dedicated',
+      storageOwner,
+      ownerReason:
+        vfsName === 'memory'
+          ? undefined
+          : (request.ownerReason ?? 'web-lock-granted'),
+      retryAfterMs: null,
       warnings,
     },
   };

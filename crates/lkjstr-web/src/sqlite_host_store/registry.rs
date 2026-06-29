@@ -6,6 +6,8 @@ use futures::FutureExt;
 use futures::future::{LocalBoxFuture, Shared};
 use lkjstr_storage::StorageOutcome;
 
+use super::cooldown;
+use super::outcome_map::{map_unit_error, map_worker_error, unexpected_open_state};
 use crate::sqlite_store::SqliteStore;
 use crate::storage_worker::StorageWorkerClient;
 
@@ -30,12 +32,16 @@ pub(super) async fn store_for(
     worker_url: &str,
     deadline_ms: u32,
 ) -> StorageOutcome<SqliteStore> {
+    if let Some(outcome) = cooldown::active_owner_block(database_name, worker_url) {
+        return map_unit_error(outcome);
+    }
     let entry = match shared_entry(database_name, worker_url, deadline_ms) {
         StorageOutcome::Ok(entry) => entry,
         outcome => return map_entry_error(outcome),
     };
     let outcome = entry.store().await;
     if !outcome.is_ok() {
+        cooldown::start_if_owner_blocked(database_name, worker_url, &outcome);
         remove_entry(database_name, worker_url);
     }
     outcome
@@ -105,23 +111,22 @@ fn create_entry(
     worker_url: &str,
     deadline_ms: u32,
 ) -> StorageOutcome<Rc<RegistryEntry>> {
-    StorageWorkerClient::new_module(worker_url).map(|client| {
-        let database_name = database_name.to_owned();
-        let open = async move { SqliteStore::open(client, database_name, deadline_ms).await }
-            .boxed_local()
-            .shared();
-        Rc::new(RegistryEntry { open })
-    })
+    let database_name = database_name.to_owned();
+    let worker_url = worker_url.to_owned();
+    let open = async move {
+        match StorageWorkerClient::new_owned_module(&worker_url).await {
+            StorageOutcome::Ok(client) => SqliteStore::open(client, database_name, deadline_ms).await,
+            outcome => map_worker_error(outcome),
+        }
+    }
+    .boxed_local()
+    .shared();
+    StorageOutcome::Ok(Rc::new(RegistryEntry { open }))
 }
 
 fn map_entry_error(outcome: StorageOutcome<Rc<RegistryEntry>>) -> StorageOutcome<SqliteStore> {
     match outcome {
-        StorageOutcome::Ok(_) => StorageOutcome::Corrupt(lkjstr_storage::StorageProblem::new(
-            lkjstr_storage::StorageOperation::Transaction,
-            "sqlite_worker",
-            "unexpected-open-state",
-            "registry-entry",
-        )),
+        StorageOutcome::Ok(_) => unexpected_open_state("registry-entry"),
         StorageOutcome::Unavailable(problem) => StorageOutcome::Unavailable(problem),
         StorageOutcome::Timeout(problem) => StorageOutcome::Timeout(problem),
         StorageOutcome::Busy(problem) => StorageOutcome::Busy(problem),
@@ -150,6 +155,13 @@ mod tests {
 
         assert_eq!(entries.get(&key), Some(&1));
         assert_eq!(entries.len(), 1);
+    }
+
+    #[test]
+    fn persistent_registry_constructs_only_owned_module_workers() {
+        let source = include_str!("registry.rs");
+        assert!(source.contains("StorageWorkerClient::new_owned_module"));
+        assert!(!source.contains("StorageWorkerClient::new_module(worker_url)"));
     }
 
     #[test]

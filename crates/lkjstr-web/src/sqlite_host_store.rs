@@ -4,6 +4,8 @@ use lkjstr_storage::{StorageOperation, StorageOutcome, StorageProblem};
 
 use crate::sqlite_store::SqliteStore;
 
+mod cooldown;
+mod outcome_map;
 mod registry;
 
 const STORE_DEADLINE_MS: u32 = 5_000;

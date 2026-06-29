@@ -87,14 +87,15 @@ Storage operations return a typed outcome:
 
 UI and Stats paths continue from these states without uncaught runtime errors.
 
-The Rust SQLite worker adapter maps browser worker availability, blocked opens,
-quota failures, corrupt stored rows, timeouts, cancellations, and late responses
-into this outcome contract. Stats maps SQLite health failures through the same
-contract, so persistent OPFS, temporary memory, unavailable, timeout, blocked,
-corrupt, and canceled states are visible. Tab-state startup loading is
-best-effort: unavailable or corrupt snapshot rows do not prevent workspace
-recovery. Browser storage callers outside Rust product wiring still use the
-TypeScript operation result until their repositories are ported.
+The Rust SQLite worker adapter maps browser worker availability, owner-lock
+denial, blocked opens, quota failures, corrupt stored rows, timeouts,
+cancellations, and late responses into this outcome contract. Stats maps SQLite
+health failures through the same contract, so persistent OPFS, owner busy,
+temporary memory, unavailable, timeout, blocked, corrupt, and canceled states
+are visible. Tab-state startup loading is best-effort: unavailable or corrupt
+snapshot rows do not prevent workspace recovery. Browser storage callers outside
+Rust product wiring still use the TypeScript operation result until their
+repositories are ported.
 
 ## Repository Rule
 
@@ -117,6 +118,9 @@ closes idempotently, and exposes diagnostics. Each callback is stored in an
 owner slot and cleared on settle, cancel, timeout, or close. Late worker
 responses become typed late outcomes rather than reaching product logic.
 
-The Rust adapter exposes the same boundary through `lkjstr-web`. Protected,
-core event-cache, and diagnostics Rust repository calls now use it. Remaining
-Rust work is parity wiring, not an old browser database dependency.
+The Rust adapter exposes the same boundary through `lkjstr-web`. Persistent
+worker creation is guarded by the origin-level `lkjstr.sqlite-opfs-owner` Web
+Lock; owner denial maps to busy or unavailable storage outcomes before
+`Worker::new()`. Protected, core event-cache, and diagnostics Rust repository
+calls now use it. Remaining Rust work is parity wiring, not an old browser
+database dependency.

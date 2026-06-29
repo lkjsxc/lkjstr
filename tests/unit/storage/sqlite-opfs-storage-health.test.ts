@@ -47,6 +47,7 @@ function fakeClient(
       return response('ok', health);
     },
     close: async () => undefined,
+    terminate: () => undefined,
     diagnostics: () => ({ lateSettled: 0, lateRejected: 0, pending: 0 }),
   };
 }

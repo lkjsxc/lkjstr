@@ -49,10 +49,11 @@ ledger resource kinds, command metadata, and typed outcomes. Command metadata
 must describe batch-shaped operations by statement ids, tables, ledger policy,
 protection policy, and Stats projection instead of one-table shorthand.
 
-`lkjstr-web` sends worker messages through `StorageOp`: `open`, `apply-schema`,
-`query`, `execute`, `batch`, `get-storage-health`, `read-physical-inventory`,
-`estimate-storage`, `cancel`, and `close`. Product crates never format SQL or
-open OPFS.
+`lkjstr-web` acquires the origin-level `lkjstr.sqlite-opfs-owner` Web Lock
+before constructing a persistent dedicated worker, then sends worker messages
+through `StorageOp`: `open`, `apply-schema`, `query`, `execute`, `batch`,
+`get-storage-health`, `read-physical-inventory`, `estimate-storage`, `cancel`,
+and `close`. Product crates never format SQL or open OPFS.
 
 Accounts active selection reads and writes the protected SQLite selector row.
 The old `lkjstr.activeAccountId` localStorage key is migration-only and is
@@ -68,7 +69,9 @@ implemented at the storage and web-adapter boundary.
 Rust app retention and repair planning consumes the storage-owned readiness
 classifier. Search app planning, NIP-50 merge, and surface parity remain open.
 Pressure inventory has a storage-owned readiness classifier, while browser byte
-estimates remain open.
+estimates remain open. Owner-lock denial and SAH-pool access-handle contention
+map to busy/unavailable outcomes before protected repositories can render empty
+rows.
 
 ## Detail Map
 

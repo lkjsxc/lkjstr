@@ -11,8 +11,8 @@ The storage worker owns official SQLite WASM initialization, database open,
 schema changes, prepared statement execution, transactions, health diagnostics,
 integrity checks, reset, cancellation, and close.
 
-The main thread owns only the storage client registry, request ids,
-cancellation, UI status, and recovery when storage cannot open.
+The main thread owns only the storage client registry, origin owner lease,
+request ids, cancellation, UI status, and recovery when storage cannot open.
 
 `lkjstr-storage` owns SQL text and statement meaning. Product modules and UI
 components do not send raw SQL.
@@ -20,9 +20,11 @@ components do not send raw SQL.
 ## Logical Owner
 
 The browser keeps one logical owner per origin, worker URL, and database name.
-The product database name is `/lkjstr/main.sqlite3`. Repository operations borrow
-or clone the shared store for that key. They do not create independent workers
-and do not close the database after each command.
+The product database name is `/lkjstr/main.sqlite3`. A persistent dedicated
+worker is constructed only after the page receives the exclusive
+`lkjstr.sqlite-opfs-owner` Web Lock. Repository operations borrow or clone the
+shared store for that key. They do not create independent workers and do not
+close the database after each command.
 
 Open is idempotent for the same database. A repeated open returns the current
 owner diagnostics without closing SQLite. Opening a different database requires
@@ -67,9 +69,10 @@ app-wide cross-origin isolation unless media rendering has been verified.
 ## Worker Kind
 
 Preferred ownership is SharedWorker so multiple tabs share one storage owner.
-Dedicated Worker is allowed as a fallback only with an owner lock, explicit busy
-handling, and visible temporary mode when persistence is blocked and transient
-storage is allowed.
+Dedicated Worker is allowed as a fallback only while holding the exclusive
+`lkjstr.sqlite-opfs-owner` Web Lock. If Web Locks are unavailable or the lock is
+held by another context, the app does not construct a persistent worker and
+surfaces storage unavailable, busy, or explicit temporary mode instead.
 
 The worker reports `workerKind`, `mode`, `vfsName`, `databaseName`, warnings,
 and capability flags through storage health.
@@ -89,7 +92,8 @@ multiple UI-owned database handles.
 - missing worker support: `open-failed`.
 - OPFS API or VFS missing: `opfs-unavailable`.
 - OPFS access-handle contention, `NoModificationAllowedError`, locked files, or
-  an existing writer: `busy`.
+  an existing writer: `busy` with reason `opfs-owner-held` or
+  `sahpool-lock-conflict`.
 - browser policy, permission denial, or unavailable security feature: `blocked`.
 - deadline expiration or caller abort: `cancelled`.
 - quota failure: `sql-error` with a quota warning.
@@ -98,4 +102,6 @@ multiple UI-owned database handles.
 - unknown failure: `unknown`.
 
 Persistent open failure may fall back to temporary memory only when the caller
-allows it, and the UI must show that mode.
+allows it, the failure is not an owner collision, and the UI must show that
+mode. Owner collisions never silently become empty memory-backed protected
+storage.

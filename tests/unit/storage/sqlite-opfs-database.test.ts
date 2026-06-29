@@ -124,6 +124,32 @@ describe('SQLite OPFS database helpers', () => {
     expect(opened.diagnostics.mode).toBe('temporary-memory');
     expect(opened.diagnostics.warnings?.join(' ')).toContain('blocked');
   });
+
+  test('does not fall back or retry in one open after SAH owner collision', async () => {
+    let installCount = 0;
+    let memoryCount = 0;
+    const sqlite: SqliteModule = {
+      oo1: {
+        DB: function memoryDb() {
+          memoryCount += 1;
+          return fakeDb();
+        } as unknown as new () => SqliteDatabase,
+      },
+      installOpfsSAHPoolVfs: async () => {
+        installCount += 1;
+        throw noModificationError();
+      },
+    };
+
+    await expect(
+      openSqliteDatabase(sqlite, {
+        databaseName: '/lkjstr/main.sqlite3',
+        allowTransient: true,
+      }),
+    ).rejects.toThrow(/createSyncAccessHandle/);
+    expect(installCount).toBe(1);
+    expect(memoryCount).toBe(0);
+  });
 });
 
 function fakeDb(): SqliteDatabase {
@@ -140,4 +166,12 @@ function sqliteCtorThatThrows<T>(): new () => T {
   return function fakeSqliteConstructor() {
     throw new Error('opfs failed');
   } as unknown as new () => T;
+}
+
+function noModificationError(): Error {
+  const error = new Error(
+    'createSyncAccessHandle cannot open because another Access Handle exists',
+  );
+  error.name = 'NoModificationAllowedError';
+  return error;
 }

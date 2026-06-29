@@ -1,5 +1,6 @@
 import type { RelaySet } from '../../relays/relay-types';
 import { applySqliteSchema, sendSqliteStorage } from './kernel-client';
+import { throwIfProtectedStorageBlocked } from '../protected-storage-state';
 
 const relaySetSchemaHash = 'relay-sets-sqlite-cutover';
 const relaySetSchema = [
@@ -25,6 +26,7 @@ export async function sqliteReadRelaySets(): Promise<RelaySet[] | undefined> {
     },
     { deadlineMs: 3_000 },
   );
+  throwIfProtectedStorageBlocked(response);
   if (response.outcome !== 'ok') return undefined;
   return response.rows.flatMap((row) => decodeRelaySet(row.relays_json));
 }
@@ -52,11 +54,13 @@ export async function sqlitePutRelaySets(
     },
     { deadlineMs: 5_000 },
   );
+  throwIfProtectedStorageBlocked(response);
   return response.outcome === 'ok';
 }
 
 async function ensureRelaySetSchema(): Promise<boolean> {
   const response = await applySqliteSchema(relaySetSchemaHash, relaySetSchema);
+  throwIfProtectedStorageBlocked(response);
   return response.outcome === 'ok';
 }
 

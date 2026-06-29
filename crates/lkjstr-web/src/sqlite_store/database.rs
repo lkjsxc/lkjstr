@@ -37,6 +37,7 @@ impl SqliteStore {
             allow_opfs: true,
             allow_transient: true,
             worker_kind: Some("dedicated".to_owned()),
+            owner_reason: Some("web-lock-granted".to_owned()),
         };
         match store
             .client

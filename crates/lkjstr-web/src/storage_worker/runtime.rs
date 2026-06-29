@@ -8,6 +8,7 @@ use web_sys::{Event, MessageEvent, Worker};
 
 use crate::storage_worker::client::StorageWorkerClient;
 use crate::storage_worker::outcome::{map_worker_response, problem};
+use crate::storage_worker::owner_lease::StorageOwnerLease;
 use crate::storage_worker::{StorageOp, StorageRequest, StorageResponse};
 
 type MessageCallback = Closure<dyn FnMut(MessageEvent)>;
@@ -24,6 +25,7 @@ pub(super) struct ClientInner {
     pub(super) late_rejected: Cell<u32>,
     pub(super) on_message: MessageSlot,
     pub(super) on_error: ErrorSlot,
+    pub(super) owner_lease: RefCell<Option<StorageOwnerLease>>,
 }
 
 pub(super) struct PendingRequest {
@@ -35,9 +37,16 @@ pub(super) struct PendingRequest {
 pub(super) fn worker_client(
     result: Result<Worker, JsValue>,
 ) -> StorageOutcome<StorageWorkerClient> {
+    worker_client_with_lease(result, None)
+}
+
+pub(super) fn worker_client_with_lease(
+    result: Result<Worker, JsValue>,
+    owner_lease: Option<StorageOwnerLease>,
+) -> StorageOutcome<StorageWorkerClient> {
     match result {
         Ok(worker) => {
-            let inner = Rc::new(ClientInner::new(worker));
+            let inner = Rc::new(ClientInner::new(worker, owner_lease));
             inner.install_handlers();
             StorageOutcome::Ok(StorageWorkerClient { inner })
         }
@@ -60,7 +69,7 @@ pub(super) fn response_from_js(
 }
 
 impl ClientInner {
-    fn new(worker: Worker) -> Self {
+    fn new(worker: Worker, owner_lease: Option<StorageOwnerLease>) -> Self {
         Self {
             worker,
             pending: RefCell::new(BTreeMap::new()),
@@ -70,6 +79,7 @@ impl ClientInner {
             late_rejected: Cell::new(0),
             on_message: RefCell::new(None),
             on_error: RefCell::new(None),
+            owner_lease: RefCell::new(owner_lease),
         }
     }
 

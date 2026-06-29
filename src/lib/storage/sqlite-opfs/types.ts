@@ -16,6 +16,13 @@ export type StorageOutcome =
 
 export type BatchMode = 'readwrite' | 'readonly';
 export type StorageMode = 'persistent-opfs' | 'temporary-memory';
+export type StorageOwnerState = 'active' | 'busy' | 'unavailable' | 'temporary';
+export type StorageOwnerReason =
+  | 'web-lock-granted'
+  | 'web-lock-held'
+  | 'web-lock-unavailable'
+  | 'sahpool-lock-conflict'
+  | 'worker-open-failed';
 export type WorkerKind = 'dedicated' | 'shared' | 'unknown';
 export type VfsName = 'opfs-sahpool' | 'opfs-wl' | 'opfs' | 'memory';
 
@@ -27,6 +34,7 @@ export type OpenDatabase = {
   readonly allowTransient?: boolean;
   readonly forceMemory?: boolean;
   readonly workerKind?: WorkerKind;
+  readonly ownerReason?: StorageOwnerReason;
 };
 
 export type StorageHealth = {
@@ -92,6 +100,9 @@ export type StorageDiagnostics = {
   readonly vfsName?: VfsName;
   readonly mode?: StorageMode;
   readonly workerKind?: WorkerKind;
+  readonly storageOwner?: StorageOwnerState;
+  readonly ownerReason?: StorageOwnerReason;
+  readonly retryAfterMs?: number | null;
   readonly sqliteVersion?: string;
   readonly warnings?: readonly string[];
   readonly health?: StorageHealth;
