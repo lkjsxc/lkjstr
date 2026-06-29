@@ -24,6 +24,7 @@ This directory contains reusable application code shared by routes and tabs.
 - [memory/](memory/): runtime memory helpers and retention.
 - [media/](media/): upload settings and providers.
 - [notifications/](notifications/): notification indexing and state.
+- [privacy/](privacy/): privacy consent reducer and storage adapter.
 - [profile/](profile/): profile runtimes and stores.
 - [protocol/](protocol/): Nostr protocol kernel.
 - [public-chat/](public-chat/): NIP-28 channel chat adapters.

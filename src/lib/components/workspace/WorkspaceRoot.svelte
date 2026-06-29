@@ -72,6 +72,7 @@
       <section class="storage-state" data-testid="storage-busy-state">
         <strong>Storage {props.storageState.kind}</strong>
         <span>{props.storageState.message}</span>
+        <span>Reason: {props.storageState.reason}</span>
       </section>
     {/if}
     {#if props.workspace.layout}

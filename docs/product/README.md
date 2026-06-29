@@ -26,6 +26,10 @@ itself: split tiles, tabs, relay-backed data, and local state.
 - [feeds/public-chat.md](feeds/public-chat.md): Public Chat channel surface.
 - [feeds/threads.md](feeds/threads.md): Thread feed.
 - [feeds/user-timeline.md](feeds/user-timeline.md): public follow-graph timeline.
+- [privacy/README.md](privacy/README.md): consent, optional categories, and
+  privacy settings.
+- [privacy/consent.md](privacy/consent.md): first-run privacy banner.
+- [privacy/settings.md](privacy/settings.md): withdrawal and optional-data cleanup.
 - [tools/README.md](tools/README.md): local tools and settings surfaces.
 - [tools/accounts.md](tools/accounts.md): account records and signers.
 - [tools/author-context.md](tools/author-context.md): nearby posts by an event
@@ -70,7 +74,7 @@ itself: split tiles, tabs, relay-backed data, and local state.
 ```text
 `audit/README.md` `audit/product-polish.md` `audit/rust-wasm-target.md` `audit/verification-gaps.md` `backlog.md` `doc-impl-audit.md` `feeds/README.md`
 `feeds/followees.md` `feeds/global.md` `feeds/home.md` `feeds/notifications.md` `feeds/profiles.md` `feeds/public-chat.md` `feeds/threads.md`
-`feeds/user-timeline.md` `tools/README.md` `tools/accounts.md` `tools/author-context.md` `tools/cache.md` `tools/custom-request.md` `tools/event-actions.md`
+`feeds/user-timeline.md` `privacy/README.md` `privacy/consent.md` `privacy/settings.md` `tools/README.md` `tools/accounts.md` `tools/author-context.md` `tools/cache.md` `tools/custom-request.md` `tools/event-actions.md`
 `tools/log.md` `tools/mine-npub.md` `tools/profile-edit.md` `tools/relay-management.md` `tools/search.md` `tools/settings.md` `tools/stats.md`
 `tools/tweet.md` `tools/upload-settings.md` `tools/welcome.md` `workspace/README.md` `workspace/panes.md` `workspace/scope.md` `workspace/tabs.md`
 `workspace/workflows.md` `workspace/workspace.md`

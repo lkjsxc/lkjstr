@@ -12,6 +12,7 @@ type ProtectedStorageResponse = {
 
 export type ProtectedStorageState = {
   readonly kind: 'busy' | 'unavailable';
+  readonly reason: string;
   readonly message: string;
   readonly retryAfterMs?: number | null;
 };
@@ -73,6 +74,7 @@ function state(
 ): ProtectedStorageState {
   return {
     kind,
+    reason: diagnostics.ownerReason ?? diagnostics.storageOwner ?? kind,
     message: diagnostics.message ?? defaultMessage(kind),
     retryAfterMs: diagnostics.retryAfterMs,
   };

@@ -1,33 +1,15 @@
 use std::collections::BTreeMap;
 
 use lkjstr_app::{FeedWindowEvidence, FeedWindowFlags, empty_feed_window, reduce_feed_window};
-use lkjstr_domain::seed_relay_sets;
 use lkjstr_protocol::{KIND_FOLLOW_LIST, KIND_GENERIC_REPOST, KIND_REPOST, KIND_TEXT_NOTE};
 use lkjstr_relays::ProgressiveEvent;
 use lkjstr_storage::{StorageOutcome, StoredEventRecord};
 
 use crate::{
-    host_status::browser_now_ms,
-    relay_selection::selected_read_relays,
     sqlite_host_store::with_sqlite_store,
-    sqlite_store::{
-        SqliteStore, sqlite_event_relays, sqlite_events_by_author_kind, sqlite_relay_sets_all,
-    },
+    sqlite_store::{SqliteStore, sqlite_event_relays, sqlite_events_by_author_kind},
     user_timeline_host::{PAGE_SIZE, UserTimelineHost, WINDOW_MAX},
 };
-
-pub(crate) async fn selected_relays(host: &UserTimelineHost) -> StorageOutcome<Vec<String>> {
-    let now = browser_now_ms();
-    with_sqlite_store(&host.db_name, &host.worker_url, |store| async move {
-        match sqlite_relay_sets_all(&store).await {
-            StorageOutcome::Ok(rows) => {
-                StorageOutcome::Ok(selected_read_relays(&seed_relay_sets(&rows, now)))
-            }
-            outcome => outcome.map(|_| Vec::new()),
-        }
-    })
-    .await
-}
 
 pub(crate) async fn latest_follow_list(
     host: &UserTimelineHost,

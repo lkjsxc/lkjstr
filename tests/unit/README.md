@@ -25,6 +25,7 @@ This directory contains Vitest unit tests grouped by source domain.
 - [media/](media/): media settings tests.
 - [notifications/](notifications/): notification index tests.
 - [popover/](popover/): popover positioning tests.
+- [privacy/](privacy/): consent and optional-data cleanup tests.
 - [profile/](profile/): profile store tests.
 - [public-chat/](public-chat/): Public Chat reducer tests.
 - [query/](query/): query helper tests.

@@ -18,9 +18,10 @@ split by ownership under [current-state/README.md](current-state/README.md).
 - Product modules use typed repositories; main-thread product code must not
   open SQLite, OPFS, IndexedDB, localStorage, Cache Storage, or quota APIs
   directly unless the file is an approved host adapter or diagnostic owner.
-- Relay, storage, signer, upload, and browser feature states render real data or
-  explicit loading, unavailable, unsupported, denied, partial, or proven-empty
-  states. No fake product data or placeholder success state is allowed.
+- Relay, storage, signer, upload, privacy, and browser feature states render
+  real data or explicit loading, unavailable, unsupported, denied, partial,
+  consent-required, or proven-empty states. No fake product data or placeholder
+  success state is allowed.
 - Home, Global, Profile, Thread, Notifications, Search, Custom Request, Author
   Context, Followees, and User Timeline have active Rust island or Rust-backed
   slices, but retained TypeScript and Svelte code may be deleted only after

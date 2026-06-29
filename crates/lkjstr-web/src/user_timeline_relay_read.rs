@@ -1,6 +1,8 @@
 use std::rc::Rc;
 
-use lkjstr_protocol::{ClientMessage, NostrEvent, RelayMessage, encode_client_message};
+use lkjstr_protocol::{
+    ClientMessage, KIND_FOLLOW_LIST, NostrEvent, RelayMessage, encode_client_message,
+};
 use lkjstr_relays::request_timeout_ms;
 
 use crate::{
@@ -113,15 +115,18 @@ impl UserTimelineRelayRead {
         if !user_timeline_event_matches_read(&self.input, &event) {
             return;
         }
-        let next_count = self.events_seen.get().saturating_add(1);
+        let is_follow_list = event.kind == KIND_FOLLOW_LIST;
+        let next_count = self.events_seen.get().saturating_add(usize::from(is_follow_list));
         self.events_seen.set(next_count);
-        self.relay_done.borrow_mut().insert(relay.to_owned());
-        self.relay_outcomes
-            .borrow_mut()
-            .insert(relay.to_owned(), UserTimelineRelayOutcome::Succeeded);
+        if is_follow_list {
+            self.relay_done.borrow_mut().insert(relay.to_owned());
+            self.relay_outcomes
+                .borrow_mut()
+                .insert(relay.to_owned(), UserTimelineRelayOutcome::Succeeded);
+        }
         let outcomes = self.relay_outcomes.borrow().clone();
         publish_stored_event(self.clone(), relay.to_owned(), event, outcomes);
-        if next_count >= FOLLOW_LIST_EVENT_LIMIT {
+        if is_follow_list && next_count >= FOLLOW_LIST_EVENT_LIMIT {
             self.finish_all();
         }
     }

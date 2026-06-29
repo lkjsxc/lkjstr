@@ -4,7 +4,9 @@ use lkjstr_app::{
     FeedWindowState, RowGeometryModel, UserTimelineFeedDiagnosticInput,
     UserTimelineFeedSourceState,
 };
-use lkjstr_protocol::{KIND_FOLLOW_LIST, NostrEvent, NostrFilter};
+use lkjstr_protocol::{
+    KIND_FOLLOW_LIST, KIND_GENERIC_REPOST, KIND_REPOST, KIND_TEXT_NOTE, NostrEvent, NostrFilter,
+};
 use lkjstr_relays::AuthorRelayRoute;
 
 #[derive(Clone)]
@@ -64,19 +66,31 @@ pub(crate) fn user_timeline_relay_filters(
     if !input.relays.iter().any(|item| item == relay) {
         return Vec::new();
     }
-    vec![NostrFilter {
-        authors: Some(vec![input.target_pubkey.clone()]),
-        kinds: Some(vec![KIND_FOLLOW_LIST]),
-        limit: Some(1),
-        ..NostrFilter::default()
-    }]
+    vec![
+        NostrFilter {
+            authors: Some(vec![input.target_pubkey.clone()]),
+            kinds: Some(vec![KIND_FOLLOW_LIST]),
+            limit: Some(1),
+            ..NostrFilter::default()
+        },
+        NostrFilter {
+            authors: Some(vec![input.target_pubkey.clone()]),
+            kinds: Some(vec![KIND_TEXT_NOTE, KIND_REPOST, KIND_GENERIC_REPOST]),
+            limit: Some(crate::user_timeline_host::PAGE_SIZE),
+            ..NostrFilter::default()
+        },
+    ]
 }
 
 pub(crate) fn user_timeline_event_matches_read(
     input: &UserTimelineRelayReadInput,
     event: &NostrEvent,
 ) -> bool {
-    event.pubkey == input.target_pubkey && event.kind == KIND_FOLLOW_LIST
+    event.pubkey == input.target_pubkey
+        && matches!(
+            event.kind,
+            KIND_FOLLOW_LIST | KIND_TEXT_NOTE | KIND_REPOST | KIND_GENERIC_REPOST
+        )
 }
 
 fn unique_sorted(values: impl Iterator<Item = String>) -> Vec<String> {
@@ -117,7 +131,7 @@ mod tests {
     }
 
     #[test]
-    fn match_requires_target_follow_list() -> Result<(), &'static str> {
+    fn match_accepts_target_follow_list_and_posts() -> Result<(), &'static str> {
         let input = user_timeline_relay_input(UserTimelineRelayInputSeed {
             owner: "timeline-tab",
             target_pubkey: &pubkey("a"),
@@ -130,7 +144,7 @@ mod tests {
             &input,
             &event(KIND_FOLLOW_LIST, &pubkey("a"))
         ));
-        assert!(!user_timeline_event_matches_read(
+        assert!(user_timeline_event_matches_read(
             &input,
             &event(KIND_TEXT_NOTE, &pubkey("a"))
         ));

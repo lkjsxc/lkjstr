@@ -43,13 +43,16 @@ hash.
 
 Close is not a repository cleanup step. It is allowed only for:
 
-- controlled app shutdown.
+- controlled app shutdown, including `pagehide`.
 - explicit user reset after confirmation.
 - test reset.
 - unrecoverable owner replacement that has surfaced a storage error.
 
-Cancel releases a caller-owned request. It does not close the shared database or
-terminate the worker owner.
+Failed worker construction releases the owner lease. Worker `error` and
+`messageerror` mark the client closed, settle pending requests as unavailable,
+terminate the worker, release the owner lease, and let the registry replace the
+entry on the next open. Cancel releases a caller-owned request. It does not close
+the shared database or terminate the worker owner.
 
 ## Cross Tab Ownership
 
@@ -58,6 +61,10 @@ share one SQLite worker. If SharedWorker is unavailable, the dedicated Worker
 fallback must hold the exclusive `lkjstr.sqlite-opfs-owner` Web Lock for the
 worker lifetime. A tab that cannot acquire ownership shows `busy` or enters
 explicit temporary memory mode when the caller allows it.
+
+Hidden tabs keep the shared owner open; feed runtimes release live relay work
+without closing SQLite. Repeated opens for the same key reuse the open owner
+unless the client was closed by shutdown or worker failure.
 
 No tab may silently open a second persistent writer for the same OPFS database.
 Web Locks unavailable is an explicit unsupported storage state, not permission

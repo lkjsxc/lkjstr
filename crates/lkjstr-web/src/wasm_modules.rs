@@ -18,6 +18,7 @@ mod custom_request_relay_limits;
 mod custom_request_relay_model;
 mod custom_request_relay_read;
 mod custom_request_relay_read_tail;
+mod effective_public_relays;
 mod feed_geometry_models;
 mod followees_host;
 mod followees_island;

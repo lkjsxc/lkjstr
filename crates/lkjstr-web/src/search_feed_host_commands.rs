@@ -7,11 +7,12 @@ use lkjstr_storage::StorageOutcome;
 use lkjstr_ui::SearchOlderRequest;
 
 use crate::{
+    effective_public_relays::effective_public_read_relays,
     host_status::browser_now_ms,
     relay_read_handle::RelayReadSlot,
     search_feed_cache::search_cache_older_window,
     search_feed_geometry::search_feed_geometry_models,
-    search_feed_host::{PAGE_SIZE, SearchFeedHost, diagnostic, selected_relays, storage_problem},
+    search_feed_host::{PAGE_SIZE, SearchFeedHost, diagnostic, storage_problem},
     search_feed_relay::start_search_relay_read,
     search_feed_relay_input::{SearchRelayReadInput, SearchRelayReadPhase},
 };
@@ -45,12 +46,9 @@ struct SearchOlderLoad {
 
 async fn search_older_model(host: &SearchFeedHost, request: &SearchOlderRequest) -> SearchOlderLoad {
     let now_sec = browser_now_ms() / 1_000;
-    let relays = selected_relays(host).await;
-    let mut diagnostics = diagnostics(&relays);
-    let selected_relays = match relays {
-        StorageOutcome::Ok(relays) => relays,
-        _ => Vec::new(),
-    };
+    let relays = effective_public_read_relays(&host.db_name, &host.worker_url, browser_now_ms()).await;
+    let mut diagnostics = diagnostics(relays.diagnostic.as_deref());
+    let selected_relays = relays.relays;
     let before = request.window.oldest_cursor.clone();
     let (window, source_state) = search_older_window(host, request, &mut diagnostics).await;
     let geometry_models =
@@ -109,15 +107,9 @@ async fn search_older_window(
     }
 }
 
-fn diagnostics(relays: &StorageOutcome<Vec<String>>) -> Vec<SearchFeedDiagnosticInput> {
-    relays
-        .problem()
-        .map(|problem| {
-            vec![diagnostic(
-                "relay-settings",
-                &format!("Relay settings unavailable: {}", problem.reason),
-            )]
-        })
+fn diagnostics(message: Option<&str>) -> Vec<SearchFeedDiagnosticInput> {
+    message
+        .map(|message| vec![diagnostic("relay-settings", message)])
         .unwrap_or_default()
 }
 

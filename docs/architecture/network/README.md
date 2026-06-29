@@ -12,6 +12,8 @@ and app boundaries.
 - [relay-pool.md](relay-pool.md): relay client pool.
 - [progressive-relay-rendering.md](progressive-relay-rendering.md):
   progressive read snapshots, coverage, and UI merge contract.
+- [public-read-relays.md](public-read-relays.md): session default relays for
+  public read-only surfaces when durable relay settings are unavailable.
 - [relay-routing.md](relay-routing.md): protocol-derived read routing.
 - [relay-optimizer/README.md](relay-optimizer/README.md): measured relay
   scoring, route trust, scan hints, wait policy, and Stats projection.
@@ -95,6 +97,9 @@ and app boundaries.
   proves cache absence.
 - Selected read relays are the base and fallback; targeted reads may add
   bounded protocol-derived routes unless the URL is disabled or removed.
+- Public read-only surfaces may use documented session default read relays when
+  durable relay settings are unavailable, with visible diagnostics and no write
+  capability.
 - Session diagnostics retain relay URL, optional subscription id, kind,
   message, and timestamp.
 - No app code installs SES lockdown behavior.

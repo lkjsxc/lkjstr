@@ -14,6 +14,7 @@ This directory contains shared Svelte components grouped by product surface.
 - `notifications/`: notification rows.
 - `media/`: upload gate hint and media helpers.
 - `popover/`: tile-portaled anchored popovers.
+- `privacy/`: consent banner and privacy settings controls.
 - `settings/` and `workspace/`: reusable UI controls.
 
 Contracts: `docs/architecture/workspace/ui-system/surface-source-map.md`.

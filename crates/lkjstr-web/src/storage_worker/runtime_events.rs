@@ -160,6 +160,8 @@ fn error_callback(inner: Rc<ClientInner>) -> Closure<dyn FnMut(Event)> {
             .late_rejected
             .set(inner.late_rejected.get().saturating_add(1));
         inner.finish_all(WorkerOutcome::Unavailable);
+        inner.mark_closed();
+        inner.shutdown();
     }) as Box<dyn FnMut(_)>)
 }
 

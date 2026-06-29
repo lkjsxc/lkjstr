@@ -11,9 +11,11 @@ Profile tabs show identity metadata and authored text notes.
 - Runtime loads cached metadata and notes before relay data.
 - Metadata cache reads are latest-only and consult memory before the SQLite
   worker cache. Older metadata events must never replace newer profile metadata.
-- Selected read relays are the base and fallback. Profile may also use the
-  author's NIP-65 write relays, NIP-02 hints, event receipts, and discovery
-  evidence. Disabled or removed relays remain excluded.
+- Selected read relays are the base and fallback. If durable relay settings are
+  unreadable, public Profile reads may use documented session default read
+  relays with a visible diagnostic. Profile may also use the author's NIP-65
+  write relays, NIP-02 hints, event receipts, and discovery evidence. Disabled
+  or removed relays remain excluded when durable settings are available.
 - Profile performs split initial metadata, follow-list, and note relay reads.
   Metadata and follow-list reads keep exact filters; visible notes use bounded
   `since`/`until` scan windows, then live subscriptions use startup `since`.

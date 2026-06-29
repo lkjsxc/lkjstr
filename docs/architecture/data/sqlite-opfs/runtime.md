@@ -13,6 +13,8 @@ integrity checks, reset, cancellation, and close.
 
 The main thread owns only the storage client registry, origin owner lease,
 request ids, cancellation, UI status, and recovery when storage cannot open.
+Retained TypeScript startup reads close their page-local owner before Rust feed
+providers mount so the Rust/WASM host owns the persistent worker for feed reads.
 
 `lkjstr-storage` owns SQL text and statement meaning. Product modules and UI
 components do not send raw SQL.
@@ -27,9 +29,10 @@ shared store for that key. They do not create independent workers and do not
 close the database after each command.
 
 Open is idempotent for the same database. A repeated open returns the current
-owner diagnostics without closing SQLite. Opening a different database requires
-an explicit reset, test reset, or controlled shutdown; otherwise the worker
-returns a busy outcome.
+owner diagnostics without closing SQLite. If the worker errored or closed, the
+registry removes that entry and the next open constructs a new owner after the
+lease is released. Opening a different database requires an explicit reset, test
+reset, or controlled shutdown; otherwise the worker returns a busy outcome.
 
 Worker commands are serialized by one queue per worker. `cancel` records the
 target request immediately; every other request runs after the previous request
@@ -75,7 +78,9 @@ held by another context, the app does not construct a persistent worker and
 surfaces storage unavailable, busy, or explicit temporary mode instead.
 
 The worker reports `workerKind`, `mode`, `vfsName`, `databaseName`, warnings,
-and capability flags through storage health.
+and capability flags through storage health. `pagehide` closes the page-local
+owner. Hidden tabs do not close storage; they pause live relay work and retain
+bounded UI state.
 
 ## Transactions
 

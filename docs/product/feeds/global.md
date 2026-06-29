@@ -8,6 +8,8 @@ Global shows recent notes and reposts from the selected readable relay set.
 
 - Global opens from New Tab.
 - It does not require an active account.
+- When durable relay settings are unreadable, Global may use documented session
+  default read relays with a visible storage-unavailable diagnostic.
 - Cached notes render before relay results.
 - Relay reads request recent kinds `1`, `6`, and `16` without author filtering.
 - Global performs one initial adaptive relay scan with bounded `since`/`until`
@@ -39,7 +41,9 @@ Global shows recent notes and reposts from the selected readable relay set.
 - Loading ends when cached items exist, a relay sends notes, any relay reaches
   EOSE, or every contacted relay reaches a terminal failure state.
 - Partial relay failure stays visible in lkjstr Log but does not block the feed.
-- The Global body does not render low-level relay diagnostic rows inline.
+- The Global body may render the public-read session-default diagnostic when
+  relay settings are unavailable; it does not render low-level relay diagnostic
+  rows inline.
 - Infinite scrolling uses compound feed cursors and older or newer relay pages.
 - Near-top scroll loads newer chunks when the window prunes newer items.
 - Identity controls open or focus matching Profile tabs in the same tile.

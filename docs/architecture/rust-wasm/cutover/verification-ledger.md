@@ -57,7 +57,16 @@ Keep new run evidence in the table below unless a narrative note is required.
 
 ## Recent Focused Evidence
 
-Latest focused note: on 2026-06-29, SQLite OPFS origin-owner hardening added
+Latest focused note: on 2026-06-29, OPFS owner recovery, public read relay
+fallback, Search/User Timeline relay dispatch, and privacy consent UI passed
+`pnpm check:repo`, `pnpm check`, focused Vitest privacy/storage suites,
+`cargo test -p lkjstr-app -- search`, `cargo test -p lkjstr-app -- user_timeline`,
+`cargo clippy -p lkjstr-web --all-targets -- -D warnings`, `pnpm test:quiet`,
+`pnpm rust-wasm:quiet`, `pnpm verify:quiet`, `pnpm cloudflare:quiet`, and the
+Docker final gate (`config`, `build`, `run verify`, `run cloudflare`,
+`run app-smoke`).
+
+Previous focused note: on 2026-06-29, SQLite OPFS origin-owner hardening added
 an exclusive `lkjstr.sqlite-opfs-owner` Web Lock before persistent dedicated
 worker construction, mapped owner denial and SAH-pool `NoModificationAllowedError`
 to busy/unavailable outcomes with cooldown, and kept protected repositories from

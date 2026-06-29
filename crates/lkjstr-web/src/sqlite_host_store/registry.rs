@@ -39,7 +39,17 @@ pub(super) async fn store_for(
         StorageOutcome::Ok(entry) => entry,
         outcome => return map_entry_error(outcome),
     };
-    let outcome = entry.store().await;
+    let mut outcome = entry.store().await;
+    if let StorageOutcome::Ok(store) = &outcome
+        && store.is_closed()
+    {
+        remove_entry(database_name, worker_url);
+        let replacement = match shared_entry(database_name, worker_url, deadline_ms) {
+            StorageOutcome::Ok(entry) => entry,
+            outcome => return map_entry_error(outcome),
+        };
+        outcome = replacement.store().await;
+    }
     if !outcome.is_ok() {
         cooldown::start_if_owner_blocked(database_name, worker_url, &outcome);
         remove_entry(database_name, worker_url);

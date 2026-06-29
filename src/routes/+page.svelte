@@ -9,6 +9,7 @@
   import { installSqliteStorageTestApi } from '$lib/storage/sqlite-opfs/test-api';
   import type { Account } from '$lib/accounts/account';
   import type { RelaySet } from '$lib/relays/relay-store';
+  import PrivacyConsent from '$lib/components/privacy/PrivacyConsent.svelte';
   import WorkspaceRoot from '$lib/components/workspace/WorkspaceRoot.svelte';
   import { createTabSnapshotCoordinator } from '$lib/workspace/tab-snapshot-coordinator';
   import {
@@ -98,13 +99,13 @@
         logRuntimeError('workspace-save-failed'),
       );
     workspaceLoaded = true;
-    await refreshData().catch(logRuntimeError('workspace-refresh-failed'));
     await refreshRuntimeSettings().catch(
       logRuntimeError('settings-load-failed'),
     );
     await enforceCacheBudget('startup', {
       maxBytes: await configuredCacheMaxBytes(),
     }).catch(logRuntimeError('cache-budget-startup-failed'));
+    await refreshData().catch(logRuntimeError('workspace-refresh-failed'));
   }
 
   async function update(next: Workspace): Promise<void> {
@@ -128,6 +129,7 @@
   async function refreshData(): Promise<void> {
     ({ accounts, activeAccount, relaySets, storageState } =
       await loadWorkspacePageData());
+    await closeSqliteStorage();
     pageDataReady = true;
   }
 
@@ -151,3 +153,4 @@
 
 <!-- prettier-ignore -->
 <WorkspaceRoot {workspace} {accounts} {activeAccount} {relaySets} {storageState} {ready} {pageDataReady} {inactiveRetentionSeconds} {snapshotCoordinator} focusTab={actions.focusTab} closeTab={actions.closeTab} moveTab={actions.moveTab} openNewTab={actions.openNewTab} convertTab={actions.convertTab} split={actions.split} closePane={actions.closePane} resize={actions.resize} addMinedSigning={actions.addMinedSigning} {refreshData} toggleRelay={actions.toggleRelay} removeRelay={actions.removeRelay} openProfile={actions.openProfile} openFollowees={actions.openFollowees} openUserTimeline={actions.openUserTimeline} openProfileEdit={actions.openProfileEdit} openThread={actions.openThread} openAuthorContext={actions.openAuthorContext} openTool={actions.openTool} />
+<PrivacyConsent />

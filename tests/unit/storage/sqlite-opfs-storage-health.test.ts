@@ -48,6 +48,7 @@ function fakeClient(
     },
     close: async () => undefined,
     terminate: () => undefined,
+    closed: () => false,
     diagnostics: () => ({ lateSettled: 0, lateRejected: 0, pending: 0 }),
   };
 }

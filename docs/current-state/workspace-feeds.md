@@ -52,6 +52,9 @@ Read next: [architecture/workspace/README.md](../architecture/workspace/README.m
   until proof exists.
 - Visibility-prioritized hydration is the feed enrichment policy: visible rows,
   then near-visible rows, then active offscreen work, then hidden diagnostics.
+- Public Global, Profile, User Timeline, and Search may use documented session
+  default read relays when durable relay settings are unreadable; the UI labels
+  the storage problem and only dispatches real read-only WebSocket requests.
 - Cache-first feed display requires complete coverage evidence for every
   required relay, route group, semantic key, filter shape, and bounded interval.
   Incomplete, failed, compacted, dense, stale, or missing evidence cannot prove

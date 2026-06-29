@@ -5,7 +5,9 @@ use lkjstr_relays::AuthorRelayRoute;
 use lkjstr_storage::StorageOutcome;
 
 use crate::{
-    user_timeline_cache::{latest_follow_list, selected_relays},
+    effective_public_relays::effective_public_read_relays,
+    host_status::browser_now_ms,
+    user_timeline_cache::latest_follow_list,
     user_timeline_host::UserTimelineHost,
     user_timeline_host_cached::{cached_model, target_posts_fallback, user_timeline_no_event_view},
     user_timeline_host_view::{
@@ -38,12 +40,9 @@ async fn user_timeline_load_with_outcomes(
     let Some(target) = target_pubkey.clone() else {
         return loaded(default_user_timeline_feed_view(owner, None), None);
     };
-    let relays = selected_relays(host).await;
-    let mut diagnostics = diagnostics(&relays);
-    let selected = match relays {
-        StorageOutcome::Ok(relays) => relays,
-        _ => Vec::new(),
-    };
+    let relays = effective_public_read_relays(&host.db_name, &host.worker_url, browser_now_ms()).await;
+    let mut diagnostics = diagnostics(relays.diagnostic.as_deref());
+    let selected = relays.relays;
     let routes = author_routes(host, &target).await;
     if let Some(problem) = routes.problem() {
         diagnostics.push(diagnostic(
@@ -99,7 +98,8 @@ async fn user_timeline_load_with_outcomes(
         outcome => {
             let reason = storage_problem("Cached User Timeline follow list unavailable", outcome);
             diagnostics.push(diagnostic("cache-follow-list", &reason));
-            loaded(partial_failure_view(owner, target_pubkey, reason, diagnostics), None)
+            let relay = relay_input_with_fallback(owner, &target, &selected, &author_routes, None);
+            loaded(partial_failure_view(owner, target_pubkey, reason, diagnostics), relay)
         }
     }
 }

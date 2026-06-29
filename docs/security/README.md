@@ -11,6 +11,8 @@ relay trust rules for a browser-only Nostr workspace.
   reset rules.
 - [content-safety.md](content-safety.md): safe rendering, links, media, logs,
   and relay payload trust.
+- [../product/privacy/README.md](../product/privacy/README.md): consent and
+  privacy settings.
 
 ## Contracts
 
@@ -21,6 +23,8 @@ relay trust rules for a browser-only Nostr workspace.
   signer.
 - Relay events and media responses are untrusted input and never render as raw
   HTML.
+- Optional cookies, telemetry, and non-essential storage are disabled until
+  explicit consent and are cleared on withdrawal.
 - Security-sensitive storage changes update
   [../current-state.md](../current-state.md) and the relevant product docs.
 

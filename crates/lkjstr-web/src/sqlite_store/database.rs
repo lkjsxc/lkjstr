@@ -169,6 +169,10 @@ impl SqliteStore {
         self.client.close().await
     }
 
+    pub fn is_closed(&self) -> bool {
+        self.client.is_closed()
+    }
+
     pub fn step(&self, id: &'static str, params: Option<SqlParams>) -> StorageOutcome<SqlStep> {
         statement(id).map(|statement| SqlStep {
             statement: statement.sql.to_owned(),

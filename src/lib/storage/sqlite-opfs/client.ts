@@ -39,7 +39,7 @@ export function createSqliteOpfsClient(options: SqliteOpfsClientOptions = {}) {
 
   worker.onerror = () => {
     lateRejected += 1;
-    terminate('SQLite worker failed');
+    fail('SQLite worker failed');
   };
 
   const send = (
@@ -75,12 +75,14 @@ export function createSqliteOpfsClient(options: SqliteOpfsClientOptions = {}) {
   };
 
   const terminate = (message = 'SQLite worker terminated'): void => {
-    if (closed) return;
-    closed = true;
-    finishAll('canceled', message);
-    worker.terminate();
-    options.ownerLease?.release();
+    closeWith('canceled', message);
   };
+
+  const fail = (message: string): void => {
+    closeWith('unavailable', message);
+  };
+
+  const closedState = (): boolean => closed;
 
   const diagnostics = () => ({
     lateSettled,
@@ -125,7 +127,18 @@ export function createSqliteOpfsClient(options: SqliteOpfsClientOptions = {}) {
     pending.clear();
   };
 
-  return { send, close, terminate, diagnostics };
+  function closeWith(
+    outcome: StorageResponse['outcome'],
+    message: string,
+  ): void {
+    if (closed) return;
+    closed = true;
+    finishAll(outcome, message);
+    worker.terminate();
+    options.ownerLease?.release();
+  }
+
+  return { send, close, terminate, closed: closedState, diagnostics };
 }
 
 function defaultWorkerFactory(): Worker {

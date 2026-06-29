@@ -12,6 +12,9 @@ state, storage, relay orchestration, cleanup, and Rust/WASM migration.
 - [feeds/README.md](feeds/README.md): feed invariants, sources, and runtime.
 - [network/README.md](network/README.md): relays, routing, jobs, and budgets.
 - [orchestration/README.md](orchestration/README.md): database-backed decision memory.
+- [privacy/README.md](privacy/README.md): consent storage and optional processing gates.
+- [privacy/optional-processing.md](privacy/optional-processing.md): optional category gates.
+- [privacy/storage-boundary.md](privacy/storage-boundary.md): consent persistence and cleanup.
 - [runtime-ownership.md](runtime-ownership.md): owner map for shipped and target runtimes.
 - [source-map.md](source-map.md): repository path ownership map.
 - [rust-wasm/README.md](rust-wasm/README.md): Rust/WASM client target.
@@ -65,14 +68,14 @@ state, storage, relay orchestration, cleanup, and Rust/WASM migration.
 `feeds/invariants/README.md` `feeds/invariants/event-ordering.md` `feeds/invariants/filter-safety.md` `feeds/invariants/paging-cursors.md` `feeds/orchestration-bridge.md` `feeds/runtime/README.md` `feeds/runtime/feed-runtime-core.md`
 `feeds/runtime/feed-surface-inputs.md` `feeds/runtime/feed-window-reducer.md` `feeds/runtime/merge-reducer.md` `feeds/runtime/multi-tab-ownership.md` `feeds/runtime/per-runtime-cursors.md` `feeds/runtime/relay-incomplete-windows.md` `feeds/sources/README.md`
 `feeds/sources/global.md` `feeds/sources/home.md` `feeds/sources/notifications.md` `feeds/sources/profile.md` `feeds/sources/public-chat.md` `network/README.md` `network/identity-rendering.md`
-`network/job-manager.md` `network/progressive-relay-rendering.md` `network/relay-optimizer/README.md` `network/relay-optimizer/failure-states.md` `network/relay-optimizer/implementation-slices.md` `network/relay-optimizer/measurement-ledger.md` `network/relay-optimizer/product-wiring-ledger.md`
+`network/job-manager.md` `network/progressive-relay-rendering.md` `network/public-read-relays.md` `network/relay-optimizer/README.md` `network/relay-optimizer/failure-states.md` `network/relay-optimizer/implementation-slices.md` `network/relay-optimizer/measurement-ledger.md` `network/relay-optimizer/product-wiring-ledger.md`
 `network/relay-optimizer/relay-read-scoring.md` `network/relay-optimizer/relay-wait-policy.md` `network/relay-optimizer/route-evidence-trust.md` `network/relay-optimizer/scan-width-adaptation.md` `network/relay-optimizer/source-map.md` `network/relay-optimizer/stats-projection.md` `network/relay-optimizer/verification.md`
 `network/relay-pool.md` `network/relay-routing.md` `network/request-budget/README.md` `network/request-budget/effective-limits.md` `network/request-budget/intent.md` `network/request-budget/message-size.md` `network/request-budget/nip11.md`
 `network/request-budget/scoring.md` `network/request-budget/source-map.md` `network/request-budget/tests.md` `network/settings-store.md` `network/subscription-manager.md` `network/subscription-orchestration/README.md` `network/subscription-orchestration/compatibility.md`
 `network/subscription-orchestration/demand-intent.md` `network/subscription-orchestration/feed-route-isolation.md` `network/subscription-orchestration/home-integration.md` `network/subscription-orchestration/ingress.md` `network/subscription-orchestration/lease-key.md` `network/subscription-orchestration/live-lease.md` `network/subscription-orchestration/metrics.md`
 `network/subscription-orchestration/notifications-profile-thread-integration.md` `network/subscription-orchestration/owner-visibility.md` `network/subscription-orchestration/page-read-dedupe.md` `network/subscription-orchestration/relay-read-scoring.md` `network/subscription-orchestration/route-plan.md` `network/subscription-orchestration/routing-by-surface.md` `network/subscription-orchestration/source-map.md`
 `network/subscription-orchestration/tests.md` `network/system.md` `orchestration/README.md` `orchestration/background-work.md` `orchestration/cancellation.md` `orchestration/database-memory.md` `orchestration/decision-model.md`
-`orchestration/stats.md` `orchestration/surface-inputs.md` `orchestration/task-queue.md` `orchestration/verification.md` `runtime-ownership.md` `runtimes/README.md` `runtimes/followees-runtime.md`
+`orchestration/stats.md` `orchestration/surface-inputs.md` `orchestration/task-queue.md` `orchestration/verification.md` `privacy/README.md` `privacy/optional-processing.md` `privacy/storage-boundary.md` `runtime-ownership.md` `runtimes/README.md` `runtimes/followees-runtime.md`
 `runtimes/global-runtime.md` `runtimes/home-runtime.md` `runtimes/notifications-runtime.md` `runtimes/profile-runtime.md` `runtimes/public-chat-runtime.md` `runtimes/query-runtime.md` `runtimes/thread-runtime.md`
 `runtimes/tweet-runtime.md` `runtimes/user-timeline-runtime.md` `rust-wasm/README.md` `rust-wasm/app-boundary.md` `rust-wasm/crate-boundaries.md` `rust-wasm/crate-inventory.md` `rust-wasm/cutover/README.md`
 `rust-wasm/cutover/areas/README.md` `rust-wasm/cutover/areas/relay.md` `rust-wasm/cutover/areas/storage.md` `rust-wasm/cutover/build-contract.md` `rust-wasm/cutover/deletion-ledger-evidence.md` `rust-wasm/cutover/deletion-ledger.md` `rust-wasm/cutover/feed-runtime-evidence.md`

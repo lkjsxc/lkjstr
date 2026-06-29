@@ -135,17 +135,9 @@ pub(crate) fn user_timeline_view(input: UserTimelineModelParts<'_>) -> UserTimel
     })
 }
 
-pub(crate) fn diagnostics(
-    relays: &StorageOutcome<Vec<String>>,
-) -> Vec<UserTimelineFeedDiagnosticInput> {
-    relays
-        .problem()
-        .map(|problem| {
-            vec![diagnostic(
-                "relay-settings",
-                &format!("Relay settings unavailable: {}", problem.reason),
-            )]
-        })
+pub(crate) fn diagnostics(message: Option<&str>) -> Vec<UserTimelineFeedDiagnosticInput> {
+    message
+        .map(|message| vec![diagnostic("relay-settings", message)])
         .unwrap_or_default()
 }
 

@@ -30,6 +30,9 @@ Read next: [product/README.md](../product/README.md),
   scans for normal local search.
 - The old browser storage prompt is removed. Generic workspace tab snapshots
   and protected SQLite data remain; no special durable request feature remains.
+  The privacy banner and Privacy settings surface explain essential local-first
+  storage; optional cookies, telemetry, and non-essential storage stay disabled
+  until consent and can be withdrawn with optional-data cleanup.
 - Tweet, replies, reposts, reactions, zaps, Blossom upload, NIP-96
   compatibility upload settings, NIP-98 auth, NIP-30 custom emoji,
   sensitive-content reveal, and event reference previews are implemented.

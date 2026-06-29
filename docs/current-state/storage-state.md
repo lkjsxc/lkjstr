@@ -68,7 +68,11 @@ Read next: [architecture/data/README.md](../architecture/data/README.md),
   `busy` for a different database while the owner is open, and skips schema
   statements for an already applied schema hash. Non-cancel worker commands run
   through a serialized queue and each posts exactly one response. The owner lock
-  is held until the persistent worker closes.
+  is held until the persistent worker closes. Worker construction failure and
+  worker error paths release the owner lease; the registry replaces closed
+  owners on later opens. Retained TypeScript startup reads close before Rust
+  feed providers mount. `pagehide` closes page-local owners while hidden tabs
+  keep the owner and pause live work.
 - SAH pool installation is a worker-lifetime single-flight operation. Its
   `initialCapacity` is a file-slot count, currently 64 slots, not a byte value.
   Access-handle contention such as `NoModificationAllowedError` maps to

@@ -55,7 +55,7 @@ describe('protected storage busy states', () => {
     await expect(loadWorkspacePageData()).resolves.toMatchObject({
       accounts: [],
       relaySets: [],
-      storageState: { kind: 'busy' },
+      storageState: { kind: 'busy', reason: 'web-lock-held' },
     });
   });
 });

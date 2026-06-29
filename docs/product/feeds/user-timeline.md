@@ -57,7 +57,8 @@ miss proves the target has no public follow list.
 
 Discovery uses bounded, deduped route groups:
 
-- selected read relays.
+- selected read relays, or session default public read relays when durable relay
+  settings are unreadable.
 - relays from cached target events.
 - profile metadata provenance.
 - NIP-65 relay-list metadata for the target when available.

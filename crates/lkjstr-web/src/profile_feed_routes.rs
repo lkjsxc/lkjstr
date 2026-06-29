@@ -51,15 +51,12 @@ pub(crate) fn query_selected_relays(
 }
 
 pub(crate) fn diagnostics(
-    relays: &StorageOutcome<Vec<String>>,
+    relay_message: Option<&str>,
     routes: &StorageOutcome<Vec<AuthorRelayRoute>>,
 ) -> Vec<ProfileFeedDiagnosticInput> {
     let mut out = Vec::new();
-    if let Some(problem) = relays.problem() {
-        out.push(diagnostic(
-            "relay-settings",
-            &format!("Relay settings unavailable: {}", problem.reason),
-        ));
+    if let Some(message) = relay_message {
+        out.push(diagnostic("relay-settings", message));
     }
     if let Some(problem) = routes.problem() {
         out.push(diagnostic(

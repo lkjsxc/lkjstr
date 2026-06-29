@@ -10,6 +10,7 @@ worker.
 - `client.rs`: worker lifecycle, request ownership, deadlines, cancellation.
 - `mod.rs`: public module exports and default worker path.
 - `outcome.rs`: worker outcome mapping to storage outcomes.
+- `owner_lease/`: Web Lock owner lease helpers.
 - `runtime.rs`: worker construction, request ids, and response decoding.
 - `runtime_events.rs`: browser callbacks, timeouts, cancel, close, and drop.
 - `types.rs`: typed worker request and response envelopes.

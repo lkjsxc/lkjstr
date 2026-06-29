@@ -9,7 +9,11 @@ import {
   type SqliteOpfsOwnerLease,
   type SqliteOpfsOwnerLeaseResult,
 } from './owner-lease';
-import type { StorageDiagnostics, StorageOp, StorageResponse } from './types';
+import {
+  localResponse,
+  sqliteStorageUnavailable,
+} from './kernel-client-response';
+import type { StorageOp, StorageResponse } from './types';
 
 export type SqliteStorageClientFactory = (
   lease: SqliteOpfsOwnerLease,
@@ -38,6 +42,7 @@ export async function sendSqliteStorage(
   if (opened.outcome !== 'ok') return opened;
   const storage = client;
   if (!storage) return sqliteStorageUnavailable();
+  if (storage.closed()) return reopenAndSend(op, options);
   return storage.send(op, options);
 }
 
@@ -88,14 +93,6 @@ export async function closeSqliteStorage(deadlineMs = 1_000): Promise<void> {
   resetSqliteStorageClientState();
 }
 
-export function sqliteStorageUnavailable(): StorageResponse {
-  return localResponse('sqlite-storage-unavailable', 'unavailable', {
-    storageOwner: 'unavailable',
-    ownerReason: 'worker-open-failed',
-    message: 'Worker support unavailable',
-  });
-}
-
 function defaultSqliteStorageClientFactory(
   lease: SqliteOpfsOwnerLease,
 ): SqliteOpfsClient {
@@ -137,7 +134,13 @@ async function createAndOpenSqliteStorage(): Promise<StorageResponse> {
       lease.denied.outcome,
       lease.denied.diagnostics,
     );
-  const storage = clientFactory(lease.lease);
+  let storage: SqliteOpfsClient;
+  try {
+    storage = clientFactory(lease.lease);
+  } catch {
+    lease.lease.release();
+    return sqliteStorageUnavailable();
+  }
   client = storage;
   const opened = await storage.send(
     {
@@ -161,6 +164,16 @@ async function createAndOpenSqliteStorage(): Promise<StorageResponse> {
   return opened;
 }
 
+async function reopenAndSend(
+  op: StorageOp,
+  options: SqliteStorageSendOptions,
+): Promise<StorageResponse> {
+  resetSqliteStorageClientState();
+  const opened = await openSqliteStorage();
+  if (opened.outcome !== 'ok') return opened;
+  return client?.send(op, options) ?? sqliteStorageUnavailable();
+}
+
 function ownerBlocked(response: StorageResponse): boolean {
   return (
     response.outcome === 'busy' ||
@@ -168,14 +181,6 @@ function ownerBlocked(response: StorageResponse): boolean {
     response.diagnostics.ownerReason === 'web-lock-held' ||
     response.diagnostics.ownerReason === 'web-lock-unavailable'
   );
-}
-
-function localResponse(
-  requestId: string,
-  outcome: StorageResponse['outcome'],
-  diagnostics: StorageDiagnostics,
-): StorageResponse {
-  return { requestId, outcome, rows: [], rowsAffected: 0, diagnostics };
 }
 
 function resetSqliteStorageClientState(): void {

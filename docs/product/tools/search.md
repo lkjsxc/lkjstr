@@ -12,6 +12,8 @@ matches.
 - Search never populates the query from the active account.
 - Search only runs after the user enters text and submits the form.
 - Search does not require an active signing account.
+- When durable relay settings are unreadable, remote Search may use documented
+  session default read relays with a visible diagnostic.
 - Search query text is preserved in feed `filterState` for tab switch and
   reload restore.
 - Scroll position restores per Search tab after tab switching and reload.

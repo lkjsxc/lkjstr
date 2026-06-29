@@ -2,7 +2,6 @@ use lkjstr_app::{
     FeedDiagnosticSeverity, FeedFragmentConfig, GlobalFeedDiagnosticInput, GlobalFeedSourceState,
     GlobalFeedView, GlobalFeedViewInput, build_global_feed_view, empty_feed_window,
 };
-use lkjstr_domain::seed_relay_sets;
 use lkjstr_relays::DemandVisibility;
 use lkjstr_storage::StorageOutcome;
 use lkjstr_ui::GlobalFeedProvider;
@@ -18,11 +17,9 @@ use crate::{
         GlobalRelayInputSeed, GlobalRelayReadInput, global_base_relay_input, global_relay_input,
     },
     global_feed_relay_state::GlobalRelayState,
+    effective_public_relays::effective_public_read_relays,
     host_status::{browser_now_ms, problem_status},
     relay_read_handle::RelayReadSlot,
-    relay_selection::selected_read_relays,
-    sqlite_host_store::with_sqlite_store,
-    sqlite_store::sqlite_relay_sets_all,
 };
 
 pub(crate) const PAGE_SIZE: u64 = 30;
@@ -100,12 +97,9 @@ struct GlobalFeedLoad {
 
 async fn global_feed_model(host: &GlobalFeedHost, owner: &str) -> GlobalFeedLoad {
     let now_sec = browser_now_ms() / 1_000;
-    let relays = selected_relays(host).await;
-    let mut diagnostics = diagnostics(&relays);
-    let selected_relays = match relays {
-        StorageOutcome::Ok(relays) => relays,
-        _ => Vec::new(),
-    };
+    let relays = effective_public_read_relays(&host.db_name, &host.worker_url, browser_now_ms()).await;
+    let mut diagnostics = diagnostics(relays.diagnostic.as_deref());
+    let selected_relays = relays.relays;
     let (window, source_state) = if selected_relays.is_empty() {
         (
             empty_feed_window(1, WINDOW_MAX),
@@ -147,28 +141,9 @@ async fn global_feed_model(host: &GlobalFeedHost, owner: &str) -> GlobalFeedLoad
     GlobalFeedLoad { model, base, relay }
 }
 
-async fn selected_relays(host: &GlobalFeedHost) -> StorageOutcome<Vec<String>> {
-    let now = browser_now_ms();
-    with_sqlite_store(&host.db_name, &host.worker_url, |store| async move {
-        match sqlite_relay_sets_all(&store).await {
-            StorageOutcome::Ok(rows) => {
-                StorageOutcome::Ok(selected_read_relays(&seed_relay_sets(&rows, now)))
-            }
-            outcome => outcome.map(|_| Vec::new()),
-        }
-    })
-    .await
-}
-
-fn diagnostics(relays: &StorageOutcome<Vec<String>>) -> Vec<GlobalFeedDiagnosticInput> {
-    relays
-        .problem()
-        .map(|problem| {
-            vec![diagnostic(
-                "relay-settings",
-                &format!("Relay settings unavailable: {}", problem.reason),
-            )]
-        })
+fn diagnostics(message: Option<&str>) -> Vec<GlobalFeedDiagnosticInput> {
+    message
+        .map(|message| vec![diagnostic("relay-settings", message)])
         .unwrap_or_default()
 }
 

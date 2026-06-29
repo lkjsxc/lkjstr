@@ -7,6 +7,7 @@ use lkjstr_storage::StorageOutcome;
 use lkjstr_ui::ProfileFeedProvider;
 
 use crate::{
+    effective_public_relays::effective_public_read_relays,
     host_status::browser_now_ms,
     profile_feed_cache::profile_cache_state,
     profile_feed_header::profile_header_state,
@@ -19,7 +20,6 @@ use crate::{
     profile_feed_relay_input::{ProfileRelayInputSeed, ProfileRelayReadInput, profile_relay_input},
     profile_feed_routes::{author_routes, diagnostics, query_selected_relays, relay_sets},
     relay_read_handle::RelayReadSlot,
-    relay_selection::selected_read_relays,
 };
 
 pub(crate) const PAGE_SIZE: u64 = 30;
@@ -100,7 +100,7 @@ async fn profile_feed_model(
     let now_ms = browser_now_ms();
     let now_sec = now_ms / 1_000;
     let stored_relay_sets = relay_sets(host).await;
-    let relays = stored_relay_sets.clone().map(|sets| selected_read_relays(&sets));
+    let relay_selection = effective_public_read_relays(&host.db_name, &host.worker_url, now_ms).await;
     let relay_sets_json = match &stored_relay_sets {
         StorageOutcome::Ok(sets) => relay_sets_copy_json(sets),
         _ => "[]".to_owned(),
@@ -109,11 +109,8 @@ async fn profile_feed_model(
         Some(pubkey) => author_routes(host, pubkey, now_ms).await,
         None => StorageOutcome::Ok(Vec::new()),
     };
-    let mut diagnostics = diagnostics(&relays, &routes);
-    let selected = match relays {
-        StorageOutcome::Ok(relays) => relays,
-        _ => Vec::new(),
-    };
+    let mut diagnostics = diagnostics(relay_selection.diagnostic.as_deref(), &routes);
+    let selected = relay_selection.relays;
     let routes = match routes {
         StorageOutcome::Ok(routes) => routes,
         _ => Vec::new(),

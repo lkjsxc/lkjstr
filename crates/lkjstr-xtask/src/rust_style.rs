@@ -78,7 +78,11 @@ fn check_production_line(problems: &mut Vec<String>, rel: &str, line_number: usi
 }
 
 fn allows_global_mutable_state(rel: &str) -> bool {
-    rel == "crates/lkjstr-web/src/sqlite_host_store/registry.rs"
+    matches!(
+        rel,
+        "crates/lkjstr-web/src/sqlite_host_store/registry.rs"
+            | "crates/lkjstr-web/src/sqlite_host_store/cooldown.rs"
+    )
 }
 
 fn is_test_path(rel: &str) -> bool {

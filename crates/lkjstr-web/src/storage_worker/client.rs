@@ -105,6 +105,10 @@ impl StorageWorkerClient {
         self.inner.cancel_request(request_id)
     }
 
+    pub fn is_closed(&self) -> bool {
+        self.inner.closed()
+    }
+
     pub fn diagnostics(&self) -> StorageWorkerDiagnostics {
         StorageWorkerDiagnostics {
             late_settled: self.inner.late_settled(),
