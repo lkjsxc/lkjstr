@@ -2,7 +2,7 @@ use std::collections::BTreeSet;
 
 use lkjstr_relays::DemandVisibility;
 
-use crate::{FeedFragmentConfig, empty_feed_window};
+use crate::{FeedFragmentConfig, ProtectedAccountAvailability, empty_feed_window};
 
 use super::{
     HomeFeedSourceState, HomeFeedView, HomeFeedViewInput, HomeFollowState, build_home_feed_view,
@@ -21,7 +21,7 @@ pub fn home_authors(active_pubkey: &str, follow_pubkeys: &[String]) -> Vec<Strin
 pub fn default_home_feed_view(owner: &str, active_pubkey: Option<String>) -> HomeFeedView {
     build_home_feed_view(HomeFeedViewInput {
         owner: owner.to_owned(),
-        active_pubkey,
+        account: ProtectedAccountAvailability::initial(active_pubkey),
         follow_state: HomeFollowState::Loading,
         source_state: HomeFeedSourceState::Pending,
         selected_relays: Vec::new(),

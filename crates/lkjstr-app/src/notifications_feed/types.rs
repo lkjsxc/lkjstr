@@ -1,7 +1,8 @@
 use lkjstr_relays::{AuthorRelayRoute, DemandVisibility};
 
 use crate::{
-    FeedFragmentConfig, FeedViewModel, FeedWindowState, QueryDemandInput, RowGeometryModel,
+    FeedFragmentConfig, FeedViewModel, FeedWindowState, ProtectedAccountAvailability,
+    QueryDemandInput, RowGeometryModel,
 };
 
 #[derive(Clone, Debug, Eq, PartialEq)]
@@ -19,6 +20,9 @@ pub enum NotificationsFeedSourceState {
 pub enum NotificationsFeedStatus {
     NoActiveAccount,
     NoEnabledRelay,
+    AccountSelectorUnavailable,
+    AccountStorageBusy,
+    AccountStorageUnavailable,
     Loading,
     Ready,
     Partial,
@@ -42,7 +46,7 @@ pub struct NotificationItemInput {
 #[derive(Clone, Debug)]
 pub struct NotificationsFeedViewInput {
     pub owner: String,
-    pub active_pubkey: Option<String>,
+    pub account: ProtectedAccountAvailability,
     pub source_state: NotificationsFeedSourceState,
     pub selected_relays: Vec<String>,
     pub disabled_relays: Vec<String>,

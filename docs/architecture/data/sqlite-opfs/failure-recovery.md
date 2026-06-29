@@ -90,7 +90,9 @@ than open a second uncoordinated writer.
 Account selection, relay sets, Settings, Tweet drafts, feed runtimes, Stats, and
 tool panes must treat busy or temporary storage as distinct from real empty
 states. A failed protected read does not mean there is no active account, no
-enabled relay, no saved setting, or no draft.
+enabled relay, no saved setting, or no draft. Home and Notifications render
+protected-account busy or unavailable states and retry guidance until account
+storage is readable enough to prove no account or no selected account.
 
 Public read-only surfaces may use the documented session default read relays
 when relay settings are unreadable. They must label that state and dispatch only

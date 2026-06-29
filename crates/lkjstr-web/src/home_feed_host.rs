@@ -2,22 +2,18 @@ use lkjstr_app::{
     FeedDiagnosticSeverity, FeedFragmentConfig, HomeFeedDiagnosticInput, HomeFeedSourceState,
     HomeFeedView, HomeFeedViewInput, HomeFollowState, build_home_feed_view, empty_feed_window,
 };
-use lkjstr_domain::{Account, seed_relay_sets};
 use lkjstr_relays::DemandVisibility;
 use lkjstr_storage::StorageOutcome;
 use lkjstr_ui::HomeFeedProvider;
 
 use crate::{
-    accounts_selector_host::resolve_active_selector,
     home_feed_cache::home_cache_state,
     home_feed_geometry::home_feed_geometry_models,
+    home_feed_host_storage::{active_account, selected_relays},
     home_feed_relay::start_home_relay_read,
     home_feed_relay_input::{HomeRelayInputSeed, HomeRelayReadInput, home_relay_input},
-    host_status::{browser_now_ms, problem_status},
+    host_status::browser_now_ms,
     relay_read_handle::RelayReadSlot,
-    relay_selection::selected_read_relays,
-    sqlite_host_store::with_sqlite_store,
-    sqlite_store::{sqlite_accounts_all, sqlite_relay_sets_all},
 };
 
 pub(crate) const PAGE_SIZE: u64 = 30;
@@ -72,7 +68,7 @@ async fn home_feed_model(host: &HomeFeedHost, owner: &str) -> HomeFeedLoad {
     let now_sec = now_ms / 1_000;
     let (account, account_diagnostic) = active_account(host).await;
     let relays = selected_relays(host).await;
-    let active_pubkey = account.as_ref().map(|item| item.pubkey.clone());
+    let active_pubkey = account.active_pubkey().map(str::to_owned);
     let mut diagnostics = diagnostics(account_diagnostic, &relays);
     let selected_relays = match relays {
         StorageOutcome::Ok(relays) => relays,
@@ -112,7 +108,7 @@ async fn home_feed_model(host: &HomeFeedHost, owner: &str) -> HomeFeedLoad {
     });
     let model = build_home_feed_view(HomeFeedViewInput {
         owner: owner.to_owned(),
-        active_pubkey,
+        account,
         follow_state,
         source_state,
         selected_relays,
@@ -130,37 +126,6 @@ async fn home_feed_model(host: &HomeFeedHost, owner: &str) -> HomeFeedLoad {
         diagnostics,
     });
     HomeFeedLoad { model, relay }
-}
-
-async fn active_account(host: &HomeFeedHost) -> (Option<Account>, Option<String>) {
-    let accounts = with_sqlite_store(&host.db_name, &host.worker_url, |store| async move {
-        sqlite_accounts_all(&store).await
-    })
-    .await;
-    let accounts = match accounts {
-        StorageOutcome::Ok(accounts) => accounts,
-        outcome => {
-            return (None, Some(problem_status("Accounts unavailable", outcome)));
-        }
-    };
-    let selector = resolve_active_selector(&host.db_name, &host.worker_url, &accounts).await;
-    let account = selector
-        .active_id
-        .and_then(|id| accounts.into_iter().find(|item| item.id == id));
-    (account, selector.status)
-}
-
-async fn selected_relays(host: &HomeFeedHost) -> StorageOutcome<Vec<String>> {
-    let now = browser_now_ms();
-    with_sqlite_store(&host.db_name, &host.worker_url, |store| async move {
-        match sqlite_relay_sets_all(&store).await {
-            StorageOutcome::Ok(rows) => {
-                StorageOutcome::Ok(selected_read_relays(&seed_relay_sets(&rows, now)))
-            }
-            outcome => outcome.map(|_| Vec::new()),
-        }
-    })
-    .await
 }
 
 fn diagnostics(

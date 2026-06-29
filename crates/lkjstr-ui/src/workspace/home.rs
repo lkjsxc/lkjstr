@@ -123,6 +123,10 @@ fn home_status_text(status: HomeFeedStatus) -> &'static str {
         HomeFeedStatus::LoadingFollows => "Loading follows",
         HomeFeedStatus::LoadingFeed => "Home loading",
         HomeFeedStatus::NoEnabledRelay => "No enabled relay",
+        HomeFeedStatus::AccountSelectorUnavailable => "Account selector unavailable",
+        HomeFeedStatus::AccountStorageBusy => "Account storage busy",
+        HomeFeedStatus::AccountStorageUnavailable => "Account storage unavailable",
+        HomeFeedStatus::LoadingAccount => "Loading account",
         HomeFeedStatus::NoFollowList => "No follow list",
         HomeFeedStatus::Ready => "Home ready",
         HomeFeedStatus::Partial => "Home partial",
@@ -147,6 +151,10 @@ mod tests {
             "Home loading"
         );
         assert_eq!(home_status_text(HomeFeedStatus::Partial), "Home partial");
+        assert_eq!(
+            home_status_text(HomeFeedStatus::AccountStorageBusy),
+            "Account storage busy"
+        );
     }
 
     #[test]

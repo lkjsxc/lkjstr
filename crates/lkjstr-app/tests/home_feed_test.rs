@@ -1,8 +1,8 @@
 use lkjstr_app::{
     FeedDiagnosticSeverity, FeedFooterState, FeedFragmentConfig, FeedViewRow, FeedWindowEvidence,
     FeedWindowFlags, HomeFeedDiagnosticInput, HomeFeedSourceState, HomeFeedStatus,
-    HomeFeedViewInput, HomeFollowState, RowGeometryModel, build_home_feed_view, empty_feed_window,
-    feed_event_row_id, reduce_feed_window,
+    HomeFeedViewInput, HomeFollowState, ProtectedAccountAvailability, RowGeometryModel,
+    build_home_feed_view, empty_feed_window, feed_event_row_id, reduce_feed_window,
 };
 use lkjstr_protocol::{KIND_TEXT_NOTE, NostrEvent};
 use lkjstr_relays::{DemandVisibility, ProgressiveEvent};
@@ -139,7 +139,10 @@ fn input(
 ) -> HomeFeedViewInput {
     HomeFeedViewInput {
         owner: "tab-a".to_owned(),
-        active_pubkey,
+        account: active_pubkey.map_or(
+            ProtectedAccountAvailability::NoSelectedAccount,
+            ProtectedAccountAvailability::selected,
+        ),
         follow_state,
         source_state,
         selected_relays: vec!["wss://selected.example".to_owned()],

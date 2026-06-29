@@ -1,8 +1,8 @@
 use lkjstr_app::{
     EventDisplayContext, FeedFooterState, FeedFragmentConfig, FeedViewRow, FeedWindowEvidence,
     FeedWindowFlags, NotificationItemInput, NotificationsFeedSourceState, NotificationsFeedStatus,
-    NotificationsFeedViewInput, RowGeometryModel, build_notifications_feed_view, empty_feed_window,
-    feed::FeedEventContent, reduce_feed_window,
+    NotificationsFeedViewInput, ProtectedAccountAvailability, RowGeometryModel,
+    build_notifications_feed_view, empty_feed_window, feed::FeedEventContent, reduce_feed_window,
 };
 use lkjstr_protocol::{KIND_REACTION, KIND_REPOST, NostrEvent};
 use lkjstr_relays::{DemandVisibility, ProgressiveEvent};
@@ -140,10 +140,14 @@ fn input(
     active_pubkey: Option<String>,
     notification_rows: Vec<NotificationItemInput>,
 ) -> NotificationsFeedViewInput {
-    let account = active_pubkey.clone().unwrap_or_else(|| pubkey("a"));
+    let availability = active_pubkey.clone().map_or(
+        ProtectedAccountAvailability::NoSelectedAccount,
+        ProtectedAccountAvailability::selected,
+    );
+    let account = active_pubkey.unwrap_or_else(|| pubkey("a"));
     NotificationsFeedViewInput {
         owner: "notifications-tab".to_owned(),
-        active_pubkey,
+        account: availability,
         source_state: NotificationsFeedSourceState::CachedPartial {
             reason: "Cached notification records loaded without complete coverage proof."
                 .to_owned(),

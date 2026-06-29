@@ -1,8 +1,8 @@
 use lkjstr_app::{
     FeedFooterState, FeedFragmentConfig, FeedViewRow, FeedWindowEvidence, FeedWindowFlags,
     NotificationsFeedSourceState, NotificationsFeedStatus, NotificationsFeedViewInput,
-    RowGeometryModel, build_notifications_feed_view, empty_feed_window, feed_event_row_id,
-    reduce_feed_window,
+    ProtectedAccountAvailability, RowGeometryModel, build_notifications_feed_view,
+    empty_feed_window, feed_event_row_id, reduce_feed_window,
 };
 use lkjstr_protocol::{KIND_TEXT_NOTE, NostrEvent};
 use lkjstr_relays::{
@@ -35,7 +35,7 @@ fn notifications_feed_relay_progressive_snapshot_renders_real_rows() {
 fn input(window: lkjstr_app::FeedWindowState) -> NotificationsFeedViewInput {
     NotificationsFeedViewInput {
         owner: "notifications-tab".to_owned(),
-        active_pubkey: Some(pubkey("a")),
+        account: ProtectedAccountAvailability::selected(pubkey("a")),
         source_state: NotificationsFeedSourceState::RelayProgressive,
         selected_relays: vec!["wss://selected.example".to_owned()],
         disabled_relays: Vec::new(),

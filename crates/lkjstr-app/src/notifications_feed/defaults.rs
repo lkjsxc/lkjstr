@@ -1,6 +1,8 @@
 use lkjstr_relays::DemandVisibility;
 
-use crate::{FeedFragmentConfig, RowGeometryModel, empty_feed_window};
+use crate::{
+    FeedFragmentConfig, ProtectedAccountAvailability, RowGeometryModel, empty_feed_window,
+};
 
 use super::{
     NotificationsFeedSourceState, NotificationsFeedView, NotificationsFeedViewInput,
@@ -14,7 +16,7 @@ pub fn default_notifications_feed_view(
 ) -> NotificationsFeedView {
     build_notifications_feed_view(NotificationsFeedViewInput {
         owner: owner.to_owned(),
-        active_pubkey,
+        account: ProtectedAccountAvailability::initial(active_pubkey),
         source_state: NotificationsFeedSourceState::Pending,
         selected_relays: Vec::new(),
         disabled_relays: Vec::new(),

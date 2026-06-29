@@ -1,5 +1,6 @@
 #![doc = "Pure Home feed view-model composition."]
 
+mod account;
 mod build;
 mod defaults;
 mod types;

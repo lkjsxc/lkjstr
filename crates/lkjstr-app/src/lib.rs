@@ -1,5 +1,4 @@
 #![doc = "Pure application composition reducers for lkjstr."]
-
 pub mod author_context_feed;
 pub mod cache_display;
 pub mod custom_request;
@@ -19,6 +18,7 @@ pub mod notifications_feed;
 pub mod orchestration;
 pub mod profile_feed;
 pub mod profile_history;
+pub mod protected_account;
 pub mod public_chat;
 pub mod query;
 pub mod search_feed;
@@ -28,7 +28,6 @@ pub mod thread_feed;
 pub mod user_timeline;
 mod workspace_defaults;
 pub mod workspace_runtime;
-
 pub use author_context_feed::{
     AuthorContextFeedDiagnosticInput, AuthorContextFeedSourceState, AuthorContextFeedStatus,
     AuthorContextFeedView, AuthorContextFeedViewInput, author_context_feed_id,
@@ -161,6 +160,7 @@ pub use profile_feed::{
     relay_sets_copy_json,
 };
 pub use profile_history::{ProfileScanDecision, ProfileScanInput, plan_profile_sparse_scan};
+pub use protected_account::ProtectedAccountAvailability;
 pub use public_chat::{
     PublicChatPublishTemplate, PublicChatQueryInput, PublicChatReadPlan, channel_discovery_plan,
     channel_message_template, channel_metadata_plan, channel_reply_template,

@@ -6,8 +6,9 @@ use std::sync::{Arc, Mutex};
 use lkjstr_app::{
     FeedFooterState, FeedFragmentConfig, FeedProfileRow, FeedViewModel, FeedViewRow,
     FeedWindowEvidence, FeedWindowFlags, HomeFeedSourceState, HomeFeedStatus, HomeFeedView,
-    HomeFeedViewInput, HomeFollowState, RowGeometryModel, StartupInput, build_home_feed_view,
-    default_recovery_ids, empty_feed_window, feed_profile_row_id, footer_row, reduce_feed_window,
+    HomeFeedViewInput, HomeFollowState, ProtectedAccountAvailability, RowGeometryModel,
+    StartupInput, build_home_feed_view, default_recovery_ids, empty_feed_window,
+    feed_profile_row_id, footer_row, reduce_feed_window,
 };
 use lkjstr_protocol::{KIND_TEXT_NOTE, NostrEvent};
 use lkjstr_relays::{DemandVisibility, ProgressiveEvent};
@@ -103,7 +104,7 @@ fn profile_row(display_name: &str) -> FeedViewRow {
 fn event_rows() -> Vec<FeedViewRow> {
     build_home_feed_view(HomeFeedViewInput {
         owner: "home-profile-hydration".to_owned(),
-        active_pubkey: Some(pubkey("a")),
+        account: ProtectedAccountAvailability::selected(pubkey("a")),
         follow_state: HomeFollowState::Loaded {
             follow_pubkeys: vec![pubkey("b")],
         },

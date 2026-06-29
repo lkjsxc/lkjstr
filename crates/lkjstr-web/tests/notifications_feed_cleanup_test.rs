@@ -8,8 +8,9 @@ use std::sync::{Arc, Mutex};
 use accounts_selector_test_support::{click, reset_shells, wait_for_text};
 use lkjstr_app::{
     FeedFragmentConfig, FeedWindowEvidence, FeedWindowFlags, NotificationsFeedSourceState,
-    NotificationsFeedView, NotificationsFeedViewInput, RowGeometryModel, StartupInput,
-    build_notifications_feed_view, default_recovery_ids, empty_feed_window, reduce_feed_window,
+    NotificationsFeedView, NotificationsFeedViewInput, ProtectedAccountAvailability,
+    RowGeometryModel, StartupInput, build_notifications_feed_view, default_recovery_ids,
+    empty_feed_window, reduce_feed_window,
 };
 use lkjstr_protocol::{KIND_TEXT_NOTE, NostrEvent};
 use lkjstr_relays::{DemandVisibility, ProgressiveEvent};
@@ -146,7 +147,7 @@ fn startup() -> StartupInput {
 fn late_model() -> NotificationsFeedView {
     build_notifications_feed_view(NotificationsFeedViewInput {
         owner: "released-notifications".to_owned(),
-        active_pubkey: Some("a".repeat(64)),
+        account: ProtectedAccountAvailability::selected("a".repeat(64)),
         source_state: NotificationsFeedSourceState::RelayProgressive,
         selected_relays: vec!["wss://selected.example".to_owned()],
         disabled_relays: Vec::new(),

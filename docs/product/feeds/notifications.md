@@ -8,7 +8,9 @@ notification context header and the source event as the primary body.
 ## Contract
 
 - The tab opens from New Tab.
-- Records are scoped to the active account pubkey.
+- Records are scoped to the active account pubkey. Notifications is a protected
+  account surface and may read relays only after a real selected account pubkey
+  exists.
 - Relay filters use `#p: [activePubkey]` for targeting events at the account.
   Notification filters must not reuse Home `authors` semantics. See
   [notifications source](../../architecture/feeds/sources/notifications.md).
@@ -58,10 +60,16 @@ notification context header and the source event as the primary body.
   stripe, no screen-reader-only unread label, and no transient unread flash.
 - Opening, focusing, or viewing Notifications does not mutate notification rows
   merely to mark them read.
+- Account storage busy, account storage blocked or unsupported, selector
+  unavailable, and loading states render explicit protected-account guidance and
+  do not collapse to `no-active-account`.
 - Initial loading settles after local records load and subscription setup
   finishes, even when no notification event arrives.
 - Partial relay failure stays visible in diagnostics but does not block cached
   or reachable notification records.
+- `no-active-account` is reserved for readable account state proving no account
+  exists or no account is selected. It is not used for `opfs-owner-held`, Web
+  Lock denial, unsupported storage, or selector read failures.
 - Empty state is explicit only after no records exist and history exhaustion is
   proven.
 - Rows use a left-aligned action context header followed by the source

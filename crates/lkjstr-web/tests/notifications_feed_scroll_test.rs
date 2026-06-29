@@ -10,8 +10,8 @@ use feed_scroll_structure_support::{
 use lkjstr_app::{
     FeedFragmentConfig, FeedWindowEvidence, FeedWindowFlags, NotificationItemInput,
     NotificationsFeedSourceState, NotificationsFeedView, NotificationsFeedViewInput,
-    RowGeometryModel, StartupInput, build_notifications_feed_view, default_recovery_ids,
-    empty_feed_window, reduce_feed_window,
+    ProtectedAccountAvailability, RowGeometryModel, StartupInput, build_notifications_feed_view,
+    default_recovery_ids, empty_feed_window, reduce_feed_window,
 };
 use lkjstr_protocol::{KIND_TEXT_NOTE, NostrEvent};
 use lkjstr_relays::{DemandVisibility, ProgressiveEvent};
@@ -52,7 +52,7 @@ fn provider() -> NotificationsFeedProvider {
 fn model() -> NotificationsFeedView {
     build_notifications_feed_view(NotificationsFeedViewInput {
         owner: "notifications-scroll".to_owned(),
-        active_pubkey: Some(pubkey("a")),
+        account: ProtectedAccountAvailability::selected(pubkey("a")),
         source_state: NotificationsFeedSourceState::RelayProgressive,
         selected_relays: vec!["wss://selected.example".to_owned()],
         disabled_relays: Vec::new(),

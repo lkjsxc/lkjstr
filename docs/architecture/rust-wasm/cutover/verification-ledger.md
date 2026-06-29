@@ -57,7 +57,15 @@ Keep new run evidence in the table below unless a narrative note is required.
 
 ## Recent Focused Evidence
 
-Latest focused note: on 2026-06-29, OPFS owner recovery, public read relay
+Latest focused note: on 2026-06-29, User Timeline fallback relay retention and
+protected Home/Notifications account availability passed `cargo test -p
+lkjstr-app -- user_timeline`, `cargo test -p lkjstr-app -- home`, `cargo test
+-p lkjstr-app -- notifications`, focused `cargo test -p lkjstr-web` filters,
+`cargo fmt --check`, `cargo run -p lkjstr-xtask -- check-lines`, `cargo run
+-p lkjstr-xtask -- check-docs`, `pnpm check:repo`, `pnpm rust-wasm:quiet`, and
+`pnpm verify:quiet`. Docker final gate was not rerun for this focused slice.
+
+Previous focused note: on 2026-06-29, OPFS owner recovery, public read relay
 fallback, Search/User Timeline relay dispatch, and privacy consent UI passed
 `pnpm check:repo`, `pnpm check`, focused Vitest privacy/storage suites,
 `cargo test -p lkjstr-app -- search`, `cargo test -p lkjstr-app -- user_timeline`,

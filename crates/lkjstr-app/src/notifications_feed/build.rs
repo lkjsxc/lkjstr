@@ -7,7 +7,7 @@ use crate::{
 
 use super::{
     NotificationItemInput, NotificationsFeedSourceState, NotificationsFeedStatus,
-    NotificationsFeedView, NotificationsFeedViewInput,
+    NotificationsFeedView, NotificationsFeedViewInput, account::active_notifications_account,
 };
 
 #[must_use]
@@ -49,18 +49,9 @@ fn notifications_state(
     Option<crate::QueryDemandInput>,
     Option<crate::FeedFooterRow>,
 ) {
-    let Some(account_pubkey) = input.active_pubkey.clone() else {
-        state_rows.push(unavailable_state_row(
-            "no-active-account",
-            "notifications",
-            "Notifications need a selected account before reading account activity.",
-            false,
-        ));
-        return blocked(
-            NotificationsFeedStatus::NoActiveAccount,
-            feed_id,
-            FeedFooterState::AuthRequired,
-        );
+    let account_pubkey = match active_notifications_account(input, state_rows) {
+        Ok(pubkey) => pubkey,
+        Err(block) => return blocked(block.status, feed_id, block.footer),
     };
     if input.selected_relays.is_empty() {
         state_rows.push(unavailable_state_row(

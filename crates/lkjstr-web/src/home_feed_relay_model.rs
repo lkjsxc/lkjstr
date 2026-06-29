@@ -1,7 +1,7 @@
 use lkjstr_app::{
     FeedFragmentConfig, FeedWindowEvidence, FeedWindowFlags, HomeFeedDiagnosticInput,
-    HomeFeedSourceState, HomeFeedView, HomeFeedViewInput, HomeFollowState, build_home_feed_view,
-    reduce_feed_window,
+    HomeFeedSourceState, HomeFeedView, HomeFeedViewInput, HomeFollowState,
+    ProtectedAccountAvailability, build_home_feed_view, reduce_feed_window,
 };
 use lkjstr_relays::{DemandVisibility, ProgressiveReadSnapshot, ProgressiveReadStatus};
 
@@ -26,7 +26,7 @@ pub(crate) fn model_from_snapshot(
     );
     build_home_feed_view(HomeFeedViewInput {
         owner: input.owner.clone(),
-        active_pubkey: Some(input.active_pubkey.clone()),
+        account: ProtectedAccountAvailability::selected(input.active_pubkey.clone()),
         follow_state: HomeFollowState::Loaded {
             follow_pubkeys: input.follow_pubkeys.clone(),
         },

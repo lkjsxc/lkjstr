@@ -88,3 +88,6 @@ Read next: [architecture/data/README.md](../architecture/data/README.md),
 - Storage failure must recover to a usable Welcome workspace. Persistent OPFS,
   owner busy, unsupported Web Locks, and temporary memory mode must be visible
   in Stats, Settings, Accounts, Relay Settings, drafts, or the workspace shell.
+  Protected Home and Notifications account reads distinguish selected account,
+  no accounts, no selected account, selector unavailable, storage busy,
+  storage blocked or unsupported, and loading states.

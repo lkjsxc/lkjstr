@@ -5,8 +5,9 @@ mod accounts_selector_test_support;
 use accounts_selector_test_support::{click, next_task, reset_shells, wait_for_text};
 use lkjstr_app::{
     FeedFragmentConfig, FeedWindowEvidence, FeedWindowFlags, HomeFeedSourceState,
-    HomeFeedViewInput, HomeFollowState, RowGeometryModel, StartupInput, build_home_feed_view,
-    default_recovery_ids, empty_feed_window, reduce_feed_window,
+    HomeFeedViewInput, HomeFollowState, ProtectedAccountAvailability, RowGeometryModel,
+    StartupInput, build_home_feed_view, default_recovery_ids, empty_feed_window,
+    reduce_feed_window,
 };
 use lkjstr_protocol::{KIND_TEXT_NOTE, NostrEvent};
 use lkjstr_relays::{DemandVisibility, ProgressiveEvent};
@@ -104,7 +105,7 @@ fn paragraph_text(paragraphs: &web_sys::NodeList) -> Result<String, JsValue> {
 fn home_model() -> lkjstr_app::HomeFeedView {
     build_home_feed_view(HomeFeedViewInput {
         owner: "home-tall-text".to_owned(),
-        active_pubkey: Some(pubkey("a")),
+        account: ProtectedAccountAvailability::selected(pubkey("a")),
         follow_state: HomeFollowState::Loaded {
             follow_pubkeys: vec![pubkey("b")],
         },
@@ -194,7 +195,6 @@ fn id(value: u64) -> String {
 fn pubkey(value: &str) -> String {
     value.repeat(64)
 }
-
 fn js_error(message: &str) -> JsValue {
     js_sys::Error::new(message).into()
 }

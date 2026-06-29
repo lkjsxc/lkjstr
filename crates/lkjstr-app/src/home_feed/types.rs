@@ -1,7 +1,8 @@
 use lkjstr_relays::{AuthorRelayRoute, DemandVisibility};
 
 use crate::{
-    FeedFragmentConfig, FeedViewModel, FeedWindowState, QueryDemandInput, RowGeometryModel,
+    FeedFragmentConfig, FeedViewModel, FeedWindowState, ProtectedAccountAvailability,
+    QueryDemandInput, RowGeometryModel,
 };
 
 #[derive(Clone, Debug, Eq, PartialEq)]
@@ -37,6 +38,10 @@ pub enum HomeFeedStatus {
     NoFollowList,
     Ready,
     Partial,
+    AccountSelectorUnavailable,
+    AccountStorageBusy,
+    AccountStorageUnavailable,
+    LoadingAccount,
     Unavailable,
 }
 
@@ -51,7 +56,7 @@ pub struct HomeFeedDiagnosticInput {
 #[derive(Clone, Debug)]
 pub struct HomeFeedViewInput {
     pub owner: String,
-    pub active_pubkey: Option<String>,
+    pub account: ProtectedAccountAvailability,
     pub follow_state: HomeFollowState,
     pub source_state: HomeFeedSourceState,
     pub selected_relays: Vec<String>,

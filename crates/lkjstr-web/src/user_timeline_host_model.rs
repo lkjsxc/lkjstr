@@ -99,7 +99,17 @@ async fn user_timeline_load_with_outcomes(
             let reason = storage_problem("Cached User Timeline follow list unavailable", outcome);
             diagnostics.push(diagnostic("cache-follow-list", &reason));
             let relay = relay_input_with_fallback(owner, &target, &selected, &author_routes, None);
-            loaded(partial_failure_view(owner, target_pubkey, reason, diagnostics), relay)
+            loaded(
+                partial_failure_view(
+                    owner,
+                    target_pubkey,
+                    selected,
+                    author_routes,
+                    reason,
+                    diagnostics,
+                ),
+                relay,
+            )
         }
     }
 }

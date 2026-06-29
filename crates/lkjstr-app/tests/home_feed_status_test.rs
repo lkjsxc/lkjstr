@@ -1,6 +1,6 @@
 use lkjstr_app::{
     FeedFragmentConfig, HomeFeedSourceState, HomeFeedStatus, HomeFeedViewInput, HomeFollowState,
-    RowGeometryModel, build_home_feed_view, empty_feed_window,
+    ProtectedAccountAvailability, RowGeometryModel, build_home_feed_view, empty_feed_window,
 };
 use lkjstr_relays::DemandVisibility;
 
@@ -8,7 +8,7 @@ use lkjstr_relays::DemandVisibility;
 fn home_feed_pending_after_follows_load_is_loading_not_ready() {
     let model = build_home_feed_view(HomeFeedViewInput {
         owner: "tab-a".to_owned(),
-        active_pubkey: Some(pubkey("a")),
+        account: ProtectedAccountAvailability::selected(pubkey("a")),
         follow_state: HomeFollowState::Loaded {
             follow_pubkeys: vec![pubkey("b")],
         },

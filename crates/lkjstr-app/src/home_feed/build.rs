@@ -6,7 +6,7 @@ use crate::{
 
 use super::{
     HomeFeedSourceState, HomeFeedStatus, HomeFeedView, HomeFeedViewInput, HomeFollowState,
-    defaults::home_authors,
+    account::active_home_account, defaults::home_authors,
 };
 
 #[must_use]
@@ -58,18 +58,9 @@ fn home_state(
     feed_id: &str,
     state_rows: &mut Vec<FeedStateRow>,
 ) -> HomeBuildState {
-    let Some(active_pubkey) = input.active_pubkey.clone() else {
-        state_rows.push(unavailable_state_row(
-            "no-active-account",
-            "home",
-            "Home needs a selected account before it can read followed notes.",
-            false,
-        ));
-        return blocked(
-            HomeFeedStatus::NoActiveAccount,
-            feed_id,
-            FeedFooterState::AuthRequired,
-        );
+    let active_pubkey = match active_home_account(input, state_rows) {
+        Ok(pubkey) => pubkey,
+        Err(block) => return blocked(block.status, feed_id, block.footer),
     };
     if input.selected_relays.is_empty() {
         state_rows.push(unavailable_state_row(

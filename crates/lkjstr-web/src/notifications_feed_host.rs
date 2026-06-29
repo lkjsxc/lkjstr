@@ -106,7 +106,7 @@ async fn notifications_feed_model(
     let cursor = initial_notification_cursor(now_sec);
     let (account, account_diagnostic) = active_account(host).await;
     let relays = selected_relays(host).await;
-    let active_pubkey = account.as_ref().map(|item| item.pubkey.clone());
+    let active_pubkey = account.active_pubkey().map(str::to_owned);
     let mut diagnostics = diagnostics(account_diagnostic, &relays);
     let selected_relays = match relays {
         StorageOutcome::Ok(relays) => relays,
@@ -162,7 +162,7 @@ async fn notifications_feed_model(
     });
     let model = build_notifications_feed_view(NotificationsFeedViewInput {
         owner: owner.to_owned(),
-        active_pubkey,
+        account,
         source_state,
         selected_relays,
         disabled_relays: Vec::new(),

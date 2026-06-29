@@ -58,7 +58,8 @@ miss proves the target has no public follow list.
 Discovery uses bounded, deduped route groups:
 
 - selected read relays, or session default public read relays when durable relay
-  settings are unreadable.
+  settings are unreadable. A cached follow-list storage failure does not erase
+  these public relay routes.
 - relays from cached target events.
 - profile metadata provenance.
 - NIP-65 relay-list metadata for the target when available.
@@ -184,7 +185,9 @@ are exposed to Stats and logs.
 - Follow-list discovery in progress.
 - Public follow graph unavailable; showing this user's own public posts.
 - Follow list has no valid authors beyond the target pubkey.
-- Relay reads are unavailable, with diagnostics.
+- Relay reads are unavailable, with diagnostics. `no-user-timeline-relay` is
+  allowed only when no durable selected read relay and no allowed session
+  default public read relay or author route is present.
 - No covered events exist for the current bounded interval.
 - No public follow list was found after complete route evidence for attempted
   relays.

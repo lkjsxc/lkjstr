@@ -1,7 +1,8 @@
 use lkjstr_app::{
     FeedFragmentConfig, FeedWindowEvidence, FeedWindowFlags, NotificationsFeedDiagnosticInput,
     NotificationsFeedSourceState, NotificationsFeedView, NotificationsFeedViewInput,
-    NotificationsOlderPageInput, NotificationsOlderPageOutcome, build_notifications_feed_view,
+    NotificationsOlderPageInput, NotificationsOlderPageOutcome, ProtectedAccountAvailability,
+    build_notifications_feed_view,
     older_notification_cursor, plan_notifications_older_page, reduce_feed_window,
 };
 use lkjstr_relays::{
@@ -47,7 +48,7 @@ pub(crate) fn output_from_snapshot(
     let next_input = next_input(input, &window, &snapshot, diagnostics.clone());
     let model = build_notifications_feed_view(NotificationsFeedViewInput {
         owner: input.owner.clone(),
-        active_pubkey: Some(input.active_pubkey.clone()),
+        account: ProtectedAccountAvailability::selected(input.active_pubkey.clone()),
         source_state,
         selected_relays: input.selected_relays.clone(),
         disabled_relays: Vec::new(),

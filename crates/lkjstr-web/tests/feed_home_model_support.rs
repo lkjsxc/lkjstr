@@ -3,8 +3,9 @@
 
 use lkjstr_app::{
     FeedFragmentConfig, FeedWindowEvidence, FeedWindowFlags, HomeFeedSourceState,
-    HomeFeedViewInput, HomeFollowState, RowGeometryModel, StartupInput, build_home_feed_view,
-    default_recovery_ids, empty_feed_window, reduce_feed_window,
+    HomeFeedViewInput, HomeFollowState, ProtectedAccountAvailability, RowGeometryModel,
+    StartupInput, build_home_feed_view, default_recovery_ids, empty_feed_window,
+    reduce_feed_window,
 };
 use lkjstr_protocol::{KIND_TEXT_NOTE, NostrEvent};
 use lkjstr_relays::{DemandVisibility, ProgressiveEvent};
@@ -12,7 +13,7 @@ use lkjstr_relays::{DemandVisibility, ProgressiveEvent};
 pub fn home_model() -> lkjstr_app::HomeFeedView {
     build_home_feed_view(HomeFeedViewInput {
         owner: "browser-home".to_owned(),
-        active_pubkey: Some(pubkey("a")),
+        account: ProtectedAccountAvailability::selected(pubkey("a")),
         follow_state: HomeFollowState::Loaded {
             follow_pubkeys: vec![pubkey("b")],
         },

@@ -1,7 +1,8 @@
 use lkjstr_app::{
     FeedFooterState, FeedFragmentConfig, FeedViewRow, FeedWindowEvidence, FeedWindowFlags,
-    HomeFeedSourceState, HomeFeedStatus, HomeFeedViewInput, HomeFollowState, RowGeometryModel,
-    build_home_feed_view, empty_feed_window, feed_event_row_id, reduce_feed_window,
+    HomeFeedSourceState, HomeFeedStatus, HomeFeedViewInput, HomeFollowState,
+    ProtectedAccountAvailability, RowGeometryModel, build_home_feed_view, empty_feed_window,
+    feed_event_row_id, reduce_feed_window,
 };
 use lkjstr_protocol::{KIND_TEXT_NOTE, NostrEvent};
 use lkjstr_relays::{
@@ -34,7 +35,7 @@ fn home_feed_relay_progressive_snapshot_renders_real_rows() {
 fn input(window: lkjstr_app::FeedWindowState) -> HomeFeedViewInput {
     HomeFeedViewInput {
         owner: "tab-a".to_owned(),
-        active_pubkey: Some(pubkey("a")),
+        account: ProtectedAccountAvailability::selected(pubkey("a")),
         follow_state: HomeFollowState::Loaded {
             follow_pubkeys: vec![pubkey("b")],
         },

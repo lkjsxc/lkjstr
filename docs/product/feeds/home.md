@@ -64,8 +64,13 @@ its NIP-02 follows.
 - Live relay reads set `since = max(0, runtimeStartedAt - 30)` when the runtime starts.
 - Metadata fetches are limited to authors present in loaded items.
 - Deleted or disabled relays are not replaced by hidden public defaults.
+- Home is a protected account surface. It may start relay reads only after a
+  real selected account pubkey is available. Account storage busy, selector
+  unavailable, blocked, unsupported, or loading states render explicit retry or
+  unavailable guidance instead of `no-active-account`.
 - No active account means no relay subscription. Home must not enter
-  `no-active-account` while workspace account data is still loading.
+  `no-active-account` while workspace account data is still loading or when
+  protected storage failed before proving that no account is selected.
 - No follow list after follow-discovery completion means an empty feed with
   explicit guidance. Missing follows must be finalized only from the
   follow-list kind `3` subscription/read result across the intended relay
@@ -102,7 +107,12 @@ its NIP-02 follows.
 
 ## States
 
-- `no-active-account`: cache only; account action required.
+- `no-active-account`: storage was readable enough to prove no account exists
+  or no account is selected; no relay subscription starts.
+- `account-storage-busy`: protected account storage is busy; retry guidance and
+  storage diagnostics are visible; no relay subscription starts.
+- `account-selector-unavailable`: account rows are readable but the selector is
+  unavailable; no relay subscription starts.
 - `loading-follows`: active account exists and follow discovery or notes load.
 - `loading-feed`: follows are known and cache or relay provider work is still
   pending; this state must not render as ready before real cache or relay

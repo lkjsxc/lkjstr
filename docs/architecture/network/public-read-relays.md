@@ -36,6 +36,8 @@ The public-read resolver returns plain data:
 ## Empty-State Rule
 
 A relay-settings read failure does not render `No enabled relay` on public
-read-only surfaces while session defaults are allowed. `No enabled relay` is
-reserved for real durable relay settings where the selected user relay set has
-no enabled read relays, or for a surface whose policy forbids session defaults.
+read-only surfaces while session defaults are allowed. A later cache read
+failure must preserve the fallback relay route plan already computed for that
+surface. `No enabled relay` is reserved for real durable relay settings where
+the selected user relay set has no enabled read relays, or for a surface whose
+policy forbids session defaults.

@@ -63,20 +63,27 @@ pub(crate) fn loading_selected_model(
 pub(crate) fn partial_failure_view(
     owner: &str,
     target_pubkey: Option<String>,
+    selected_relays: Vec<String>,
+    author_routes: Vec<AuthorRelayRoute>,
     reason: String,
     diagnostics: Vec<UserTimelineFeedDiagnosticInput>,
 ) -> UserTimelineFeedView {
     user_timeline_view(UserTimelineModelParts {
         owner,
         target_pubkey,
-        discovery: discovery_plan(Vec::new(), &[], DiscoveryRouteOutcome::Succeeded, true),
+        discovery: discovery_plan(
+            selected_relays.clone(),
+            &author_routes,
+            DiscoveryRouteOutcome::Succeeded,
+            true,
+        ),
         author_set: None,
         source_state: UserTimelineFeedSourceState::Partial {
             reason,
             retry_available: true,
         },
-        selected_relays: Vec::new(),
-        author_routes: Vec::new(),
+        selected_relays,
+        author_routes,
         window: empty_feed_window(1, WINDOW_MAX),
         since: None,
         geometry_models: Vec::new(),

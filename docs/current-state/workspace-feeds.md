@@ -55,6 +55,10 @@ Read next: [architecture/workspace/README.md](../architecture/workspace/README.m
 - Public Global, Profile, User Timeline, and Search may use documented session
   default read relays when durable relay settings are unreadable; the UI labels
   the storage problem and only dispatches real read-only WebSocket requests.
+  User Timeline keeps those route plans when cached follow-list reads fail.
+- Protected Home and Notifications require a real selected account before relay
+  reads. Busy or unavailable account storage renders protected-account guidance,
+  not `no-active-account`.
 - Cache-first feed display requires complete coverage evidence for every
   required relay, route group, semantic key, filter shape, and bounded interval.
   Incomplete, failed, compacted, dense, stale, or missing evidence cannot prove
