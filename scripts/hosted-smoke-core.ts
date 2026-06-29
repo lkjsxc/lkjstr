@@ -42,6 +42,8 @@ export async function runHostedSmoke(
   );
   await assertScript(fetchImpl, origin, manifest.script);
   await assertWasm(fetchImpl, origin, manifest.wasm);
+  for (const item of manifest.imports)
+    await assertBridgeImport(fetchImpl, origin, item);
   await assertMissingBridgeAsset(fetchImpl, origin);
 }
 
@@ -89,6 +91,17 @@ async function assertWasm(
   assertAssetBytes(bytes, asset, 'WASM binary');
   if (!hasWasmMagic(bytes))
     throw new Error('WASM binary has invalid magic bytes');
+}
+
+async function assertBridgeImport(
+  fetchImpl: typeof fetch,
+  origin: URL,
+  asset: WasmManifestAsset,
+): Promise<void> {
+  const response = await fetchRequired(fetchImpl, origin, asset.path);
+  assertAnyContentType(response, ['javascript'], 'bridge import');
+  const bytes = new Uint8Array(await response.arrayBuffer());
+  assertAssetBytes(bytes, asset, 'bridge import');
 }
 
 async function assertMissingBridgeAsset(

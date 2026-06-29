@@ -34,6 +34,27 @@ describe('explicit Rust/WASM artifact builder helpers', () => {
     expect(manifest.script.bytes).toBeGreaterThan(0);
     expect(manifest.wasm.name).toBe(WASM_BINARY_NAME);
     expect(manifest.wasm.sha256).toMatch(/^[a-f0-9]{64}$/);
+    expect(manifest.imports).toEqual([]);
+  });
+
+  it('tracks wasm-bindgen snippet imports as required assets', async () => {
+    const root = await tempRoot();
+    const artifactDir = path.join(root, 'target', 'lkjstr-web-wasm');
+    await writeBridgeFiles(
+      artifactDir,
+      Buffer.from([0, 97, 115, 109, 1]),
+      true,
+    );
+
+    const manifest = await createBuildManifest(
+      root,
+      artifactDir,
+      '2026-06-27T00:00:00.000Z',
+    );
+
+    expect(manifest.imports.map((item) => item.name)).toEqual([
+      'snippets/lkjstr-web/inline0.js',
+    ]);
   });
 
   it('rejects invalid WASM bytes before writing build evidence', async () => {
@@ -56,11 +77,24 @@ async function tempRoot(): Promise<string> {
 async function writeBridgeFiles(
   artifactDir: string,
   wasm: Buffer,
+  withSnippet = false,
 ): Promise<void> {
   await mkdir(artifactDir, { recursive: true });
+  if (withSnippet) {
+    await mkdir(path.join(artifactDir, 'snippets', 'lkjstr-web'), {
+      recursive: true,
+    });
+    await writeFile(
+      path.join(artifactDir, 'snippets', 'lkjstr-web', 'inline0.js'),
+      'export function owner() { return true; }\n',
+    );
+  }
+  const snippet = withSnippet
+    ? "import './snippets/lkjstr-web/inline0.js';\n"
+    : '';
   await writeFile(
     path.join(artifactDir, WASM_SCRIPT_NAME),
-    'export default async function __wbg_init(input) { return input; }\n',
+    `${snippet}export default async function __wbg_init(input) { return input; }\n`,
   );
   await writeFile(path.join(artifactDir, WASM_BINARY_NAME), wasm);
 }

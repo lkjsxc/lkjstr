@@ -19,6 +19,7 @@ export type WasmAssetManifest = {
   readonly target: string;
   readonly script: WasmManifestAsset;
   readonly wasm: WasmManifestAsset;
+  readonly imports: readonly WasmManifestAsset[];
 };
 
 export function defaultWasmArtifactDir(repoRoot: string): string {
@@ -48,10 +49,21 @@ export function parseAssetManifest(
   source = WASM_MANIFEST_NAME,
 ): WasmAssetManifest {
   const value = JSON.parse(text) as Partial<WasmAssetManifest>;
-  if (!isAsset(value.script) || !isAsset(value.wasm) || !value.generatedAt) {
+  const imports = value.imports ?? [];
+  if (
+    !isAsset(value.script) ||
+    !isAsset(value.wasm) ||
+    !Array.isArray(imports) ||
+    !imports.every(isAsset) ||
+    !value.generatedAt
+  ) {
     throw new Error(`invalid Rust/WASM asset manifest: ${source}`);
   }
-  return { ...value, target: value.target ?? 'web' } as WasmAssetManifest;
+  return {
+    ...value,
+    target: value.target ?? 'web',
+    imports,
+  } as WasmAssetManifest;
 }
 
 export function contentAddressedName(name: string, sha: string): string {
@@ -80,11 +92,17 @@ export async function emittedAssetManifest(
     manifest.wasm.name,
     publicWasmAssetPath(wasmName),
   );
+  const imports = await Promise.all(
+    manifest.imports.map((item) =>
+      fileEvidence(directory, item.name, publicWasmAssetPath(item.name)),
+    ),
+  );
   return {
     generatedAt: manifest.generatedAt,
     target: manifest.target,
     script: { ...script, name: scriptName },
     wasm: { ...wasm, name: wasmName },
+    imports,
   };
 }
 
@@ -95,6 +113,7 @@ export function manifestFileNames(
     WASM_MANIFEST_NAME,
     manifest.script.name,
     manifest.wasm.name,
+    ...manifest.imports.map((item) => item.name),
   ]);
 }
 
@@ -106,6 +125,17 @@ export function wasmAssetContentType(name: string): string {
 
 export function sha256(bytes: Buffer | Uint8Array): string {
   return createHash('sha256').update(bytes).digest('hex');
+}
+
+export function bridgeRelativeImports(source: string): string[] {
+  const names = new Set<string>();
+  const pattern =
+    /\b(?:import|export)\b\s*(?:[^'"]*?\bfrom\s*)?["'](\.\/[^"']+)["']/g;
+  for (const match of source.matchAll(pattern)) {
+    const name = match[1]?.replace(/^\.\//, '');
+    if (name) names.add(name);
+  }
+  return [...names].sort();
 }
 
 export function hasWasmMagic(bytes: Uint8Array): boolean {

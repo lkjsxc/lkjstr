@@ -12,8 +12,9 @@ Workflow docs define the change process.
 3. Implement the narrowest matching source change.
 4. Add or update focused tests.
 5. Run local verification with quiet commands. Current product code uses
-   `pnpm verify:quiet` or `pnpm ci:quiet`; Rust/WASM slices also run cargo,
-   WASM, Trunk, and `lkjstr-xtask` checks documented in
+   `pnpm verify:quiet`; `pnpm ci:quiet` intentionally matches automatic CI and
+   runs only `pnpm check:repo`. Rust/WASM slices also run cargo, WASM, Trunk,
+   and `lkjstr-xtask` checks documented in
    [verification.md](../operations/verification.md).
 6. Run Docker Compose as the final gate when the change class requires it:
    config, image builds, then `verify`, `cloudflare`, and `app-smoke` services

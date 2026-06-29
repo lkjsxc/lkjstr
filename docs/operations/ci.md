@@ -11,6 +11,7 @@ publishing, Cloudflare deploys, browser workflow suites, Playwright, or
 
 - `repository` is the only automatic pull request and `main` push job.
 - It installs Node and pnpm dependencies, then runs `pnpm check:repo`.
+- `pnpm ci:quiet` is the same repository-only gate for local CI parity.
 - It does not build the production app, run Docker Compose, publish container
   images, run Wrangler deploy, or execute browser-backed tests.
 
@@ -23,6 +24,9 @@ The following actions are deliberately absent from `.github/workflows/ci.yml`:
 - Cloudflare deploy.
 - Playwright or browser workflow suites.
 - `wasm-pack test --headless` browser harness runs.
+- Broad quiet gates such as `pnpm verify:quiet`, `pnpm rust-wasm:quiet`,
+  `pnpm cloudflare:quiet`, or `pnpm ci:quiet` when it stops being
+  repository-only.
 
 Do not reintroduce them to automatic CI/CD while long-action suspension is
 active. If a maintainer needs release proof, run the documented local or Docker
@@ -47,5 +51,6 @@ docker compose --progress quiet -f docker-compose.yml run --rm app-smoke
 - Failure output is bounded and local to the failed step.
 - CI must stay aligned with `.github/workflows/ci.yml`: automatic CI/CD is
   repository-only until this suspension is lifted.
+- `pnpm check:repo` guards automatic workflows against reintroducing long gates.
 - Cloudflare Workers deployability is verified manually, not by automatic CI/CD,
   while this suspension is active.

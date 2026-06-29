@@ -28,6 +28,7 @@ const manifest: WasmAssetManifest = {
     bytes: wasm.length,
     sha256: sha256(wasm),
   },
+  imports: [],
 };
 
 describe('hosted smoke checks', () => {

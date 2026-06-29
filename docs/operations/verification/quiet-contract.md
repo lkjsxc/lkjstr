@@ -54,9 +54,9 @@ pnpm cloudflare:quiet
 ```
 
 `pnpm verify:quiet` runs repository checks, lint, typecheck, unit tests, and a
-production build. `pnpm ci:quiet` is an orchestration alias only when it does
-not repeat the same child plan. Cloudflare stays separate so adapter and
-Wrangler failures remain easy to isolate.
+production build. `pnpm ci:quiet` is repository-only and matches automatic CI by
+running `pnpm check:repo`. Cloudflare stays separate so adapter and Wrangler
+failures remain easy to isolate.
 
 ## No Duplicate Work
 

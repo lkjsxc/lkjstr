@@ -29,6 +29,10 @@ const verifySteps: readonly Step[] = [
   { label: 'build', command: 'pnpm', args: ['build'] },
 ];
 
+const ciSteps: readonly Step[] = [
+  { label: 'repo', command: 'pnpm', args: ['check:repo'] },
+];
+
 const plans: Record<string, readonly Step[]> = {
   'rust-wasm': [
     {
@@ -39,7 +43,7 @@ const plans: Record<string, readonly Step[]> = {
   ],
   test: [unitStep],
   verify: verifySteps,
-  ci: verifySteps,
+  ci: ciSteps,
   cloudflare: [
     { label: 'cloudflare', command: 'pnpm', args: ['cloudflare:dry-run'] },
   ],

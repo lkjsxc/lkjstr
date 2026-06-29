@@ -85,9 +85,26 @@ describe('Vite Rust/WASM asset plugin', () => {
     ).toBe(true);
     expect(code).toContain('/lkjstr-web-wasm/lkjstr_web-');
     expect(code).not.toContain('import.meta.ROLLUP_FILE_URL_');
-    expect(code).toContain('module.default(wasmUrl)');
+    expect(code).toContain('module.default({ module_or_path: wasmUrl })');
     expect(code).not.toContain('wasm-pack');
     expect(code).not.toContain('spawnSync');
+  });
+
+  it('emits tracked wasm-bindgen snippet imports', async () => {
+    const root = await tempRoot();
+    const artifactDir = path.join(root, 'target', 'lkjstr-web-wasm');
+    await writeArtifacts(root, artifactDir, true);
+    process.env.VITEST = 'false';
+    process.env.LKJSTR_WEB_WASM_DIR = artifactDir;
+    const emitted: EmittedAsset[] = [];
+    const plugin = lkjstrWebWasmAssets(root) as unknown as ViteWasmTestPlugin;
+    plugin.configResolved({ command: 'build' });
+    await plugin.buildStart.call(testContext([], emitted));
+    await rm(root, { recursive: true, force: true });
+
+    expect(emitted.map((asset) => asset.fileName)).toContain(
+      'lkjstr-web-wasm/snippets/lkjstr-web/inline0.js',
+    );
   });
 
   it('keeps the plugin source free of child process toolchain calls', async () => {
@@ -104,9 +121,22 @@ async function tempRoot(): Promise<string> {
 async function writeArtifacts(
   root: string,
   artifactDir: string,
+  withSnippet = false,
 ): Promise<void> {
   await mkdir(artifactDir, { recursive: true });
-  await writeFile(path.join(artifactDir, 'lkjstr_web.js'), wasmBindgenJs());
+  if (withSnippet) {
+    await mkdir(path.join(artifactDir, 'snippets', 'lkjstr-web'), {
+      recursive: true,
+    });
+    await writeFile(
+      path.join(artifactDir, 'snippets', 'lkjstr-web', 'inline0.js'),
+      'export function owner() { return true; }\n',
+    );
+  }
+  await writeFile(
+    path.join(artifactDir, 'lkjstr_web.js'),
+    wasmBindgenJs(withSnippet),
+  );
   await writeFile(
     path.join(artifactDir, 'lkjstr_web_bg.wasm'),
     Buffer.from([0, 97, 115, 109, 1]),
@@ -132,6 +162,9 @@ function testContext(warnings: string[], emitted: EmittedAsset[]): TestContext {
   };
 }
 
-function wasmBindgenJs(): string {
-  return 'export default async function __wbg_init(input) { return input; }\n';
+function wasmBindgenJs(withSnippet = false): string {
+  const snippet = withSnippet
+    ? "import './snippets/lkjstr-web/inline0.js';\n"
+    : '';
+  return `${snippet}export default async function __wbg_init(input) { return input; }\n`;
 }

@@ -48,12 +48,13 @@ pnpm cloudflare:dry-run:built
 ```
 
 `pnpm verify:wasm-assets` checks source artifacts under `target/lkjstr-web-wasm`,
-emitted Cloudflare assets under `.svelte-kit/cloudflare/lkjstr-web-wasm`, and
-manifest `Cache-Control: no-cache` header emission. The Cloudflare smoke gate
-starts the built Worker locally, exercises `/` through the `ASSETS` binding,
-fetches the manifest, JavaScript bridge, and WASM binary, validates content
-headers, checks digest integrity, and proves missing bridge assets are not
-masked by root HTML fallback.
+emitted Cloudflare assets under `.svelte-kit/cloudflare/lkjstr-web-wasm`,
+manifest-tracked bridge imports such as wasm-bindgen snippets, and manifest
+`Cache-Control: no-cache` header emission. The Cloudflare smoke gate starts the
+built Worker locally, exercises `/` through the `ASSETS` binding, fetches the
+manifest, JavaScript bridge, WASM binary, and manifest-tracked bridge imports,
+validates content headers, checks digest integrity, and proves missing bridge
+assets are not masked by root HTML fallback.
 
 ## Docker Final Gate
 

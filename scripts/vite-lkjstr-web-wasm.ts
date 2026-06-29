@@ -123,6 +123,13 @@ async function emitBridgeAssets(
     fileName: `${WASM_ASSET_DIR_NAME}/${wasmName}`,
     source: await readFile(path.join(artifactDir, manifest.wasm.name)),
   });
+  for (const item of manifest.imports) {
+    plugin.emitFile({
+      type: 'asset',
+      fileName: `${WASM_ASSET_DIR_NAME}/${item.name}`,
+      source: await readFile(path.join(artifactDir, item.name)),
+    });
+  }
   const emitted = await emittedAssetManifest(
     artifactDir,
     manifest,
@@ -149,6 +156,12 @@ async function readArtifactState(directory: string): Promise<ArtifactState> {
     return unavailable();
   if (!existsSync(path.join(directory, manifest.wasm.name)))
     return unavailable();
+  if (
+    !manifest.imports.every((item) =>
+      existsSync(path.join(directory, item.name)),
+    )
+  )
+    return unavailable();
   return { available: true, manifest };
 }
 
@@ -167,7 +180,7 @@ function devWasmModule(manifest: WasmAssetManifest): string {
 }
 
 function wasmModule(scriptUrl: string, wasmUrl: string): string {
-  return `const scriptUrl = ${scriptUrl};\nconst wasmUrl = ${wasmUrl};\nlet promise;\nexport async function loadLkjstrWebWasm() {\n  promise ??= import(/* @vite-ignore */ scriptUrl).then(async (module) => {\n    await module.default(wasmUrl);\n    return module;\n  });\n  return promise;\n}\n`;
+  return `const scriptUrl = ${scriptUrl};\nconst wasmUrl = ${wasmUrl};\nlet promise;\nexport async function loadLkjstrWebWasm() {\n  promise ??= import(/* @vite-ignore */ scriptUrl).then(async (module) => {\n    await module.default({ module_or_path: wasmUrl });\n    return module;\n  });\n  return promise;\n}\n`;
 }
 
 function unavailableWasmModule(message: string): string {

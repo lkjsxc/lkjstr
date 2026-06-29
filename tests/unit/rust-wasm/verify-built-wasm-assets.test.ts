@@ -66,6 +66,30 @@ describe('built Rust/WASM asset verifier', () => {
     ).rejects.toThrow(/invalid WASM bytes/);
   });
 
+  it('rejects untracked bridge imports', async () => {
+    const root = await tempRoot();
+    const sourceDir = path.join(root, 'target', 'lkjstr-web-wasm');
+    const cloudflareDir = path.join(
+      root,
+      '.svelte-kit',
+      'cloudflare',
+      'lkjstr-web-wasm',
+    );
+    await writeVerifiedDirectory(sourceDir, WASM_SCRIPT_NAME, WASM_BINARY_NAME);
+    await writeVerifiedDirectory(
+      cloudflareDir,
+      'lkjstr_web-abcdef1234567890.js',
+      'lkjstr_web_bg-abcdef1234567890.wasm',
+      Buffer.from([0, 97, 115, 109, 1]),
+      true,
+    );
+    await writeCloudflareHeaders(cloudflareDir);
+
+    await expect(
+      verifyBuiltWasmAssets({ repoRoot: root, sourceDir, cloudflareDir }),
+    ).rejects.toThrow(/untracked bridge imports/);
+  });
+
   it('rejects missing manifest cache header emission', async () => {
     const root = await tempRoot();
     const sourceDir = path.join(root, 'target', 'lkjstr-web-wasm');
@@ -106,11 +130,15 @@ async function writeVerifiedDirectory(
   scriptName: string,
   wasmName: string,
   wasm = Buffer.from([0, 97, 115, 109, 1]),
+  withUntrackedImport = false,
 ): Promise<void> {
   await mkdir(directory, { recursive: true });
+  const importLine = withUntrackedImport
+    ? "import './snippets/missing.js';\n"
+    : '';
   await writeFile(
     path.join(directory, scriptName),
-    'export default async function __wbg_init(input) { return input; }\n',
+    `${importLine}export default async function __wbg_init(input) { return input; }\n`,
   );
   await writeFile(path.join(directory, wasmName), wasm);
   const manifest: WasmAssetManifest = {
@@ -126,6 +154,7 @@ async function writeVerifiedDirectory(
       wasmName,
       `/lkjstr-web-wasm/${wasmName}`,
     ),
+    imports: [],
   };
   await writeFile(
     path.join(directory, WASM_MANIFEST_NAME),

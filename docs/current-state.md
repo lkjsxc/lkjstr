@@ -28,8 +28,9 @@ split by ownership under [current-state/README.md](current-state/README.md).
 - Rust/WASM build tools are verification dependencies, not browser runtime
   dependencies. Missing local development WASM assets render explicit
   bridge-unavailable states rather than raw Node or toolchain errors. Production
-  builds must prove the bridge artifacts, manifest cache headers, local Worker
-  root response, and hosted bridge bytes before deployment is considered safe.
+  builds must prove the bridge artifacts, manifest-tracked bridge imports,
+  manifest cache headers, local Worker root response, and hosted bridge bytes
+  before deployment is considered safe.
 
 ## Detail Map
 

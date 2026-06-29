@@ -61,7 +61,9 @@ explicit temporary memory mode when the caller allows it.
 
 No tab may silently open a second persistent writer for the same OPFS database.
 Web Locks unavailable is an explicit unsupported storage state, not permission
-to construct an uncoordinated persistent worker.
+to construct an uncoordinated persistent worker. Rust/WASM owner-lock code uses
+`web-sys`/`js-sys` reflection and must not depend on wasm-bindgen `inline_js`
+snippets for shipped storage ownership.
 
 ## Storage Modes
 

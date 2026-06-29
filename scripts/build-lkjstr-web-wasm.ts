@@ -7,6 +7,7 @@ import {
   ensureWasmToolchainForBuild,
 } from './install-wasm-toolchain';
 import {
+  bridgeRelativeImports,
   defaultWasmArtifactDir,
   fileEvidence,
   hasWasmMagic,
@@ -75,6 +76,7 @@ export async function createBuildManifest(
   artifactDir: string,
   generatedAt: string,
 ): Promise<WasmAssetManifest> {
+  const script = await readRequiredFile(artifactDir, WASM_SCRIPT_NAME);
   const wasm = await readRequiredFile(artifactDir, WASM_BINARY_NAME);
   if (!hasWasmMagic(wasm)) {
     throw new Error('wasm-pack emitted an invalid lkjstr_web_bg.wasm file');
@@ -84,6 +86,11 @@ export async function createBuildManifest(
     target: 'web',
     script: await requiredEvidence(repoRoot, artifactDir, WASM_SCRIPT_NAME),
     wasm: await requiredEvidence(repoRoot, artifactDir, WASM_BINARY_NAME),
+    imports: await importEvidence(
+      repoRoot,
+      artifactDir,
+      script.toString('utf8'),
+    ),
   };
 }
 
@@ -97,6 +104,18 @@ async function requiredEvidence(
     artifactDir,
     name,
     relativeArtifactPath(repoRoot, artifactDir, name),
+  );
+}
+
+async function importEvidence(
+  repoRoot: string,
+  artifactDir: string,
+  script: string,
+) {
+  return Promise.all(
+    bridgeRelativeImports(script).map((name) =>
+      requiredEvidence(repoRoot, artifactDir, name),
+    ),
   );
 }
 

@@ -12,6 +12,17 @@ A focused gate proves the edited slice. The final gate proves the repository
 artifact. Do not mark a row ready unless the named focused checks pass after the
 change and Docker Compose verification is either run or recorded as not run.
 
+## Recent Evidence
+
+2026-06-29 storage/WASM startup proof: automatic CI was kept repository-only;
+product Rust no longer uses `wasm_bindgen(inline_js)` for owner locking; the
+WASM bridge loader uses object-form init; asset manifests track bridge imports;
+`pnpm ci:quiet`, `pnpm rust-wasm:quiet`, `pnpm verify:quiet`,
+`pnpm cloudflare:quiet`, `cargo test -p lkjstr-storage`,
+`cargo test -p lkjstr-web`, host and wasm32 `cargo clippy -p lkjstr-web
+--all-targets -- -D warnings`, and focused Vitest storage/WASM guard suites
+passed. Docker final gate was not rerun for this slice.
+
 ## Focused Checks By Area
 
 | Area                            | Focused checks                                                                                                                                                                                                                                   | Final gate                           | Notes                                                                   |

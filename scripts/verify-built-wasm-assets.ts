@@ -2,6 +2,7 @@ import { readFile } from 'node:fs/promises';
 import path from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 import {
+  bridgeRelativeImports,
   defaultWasmArtifactDir,
   hasWasmMagic,
   readAssetManifest,
@@ -60,6 +61,7 @@ export async function verifyDirectory(
   if (!looksLikeWasmBindgen(script)) {
     throw new Error(`${label} JavaScript bridge is not a wasm-bindgen module.`);
   }
+  await verifyBridgeImports(directory, manifest, script, label);
   return manifest;
 }
 
@@ -86,6 +88,25 @@ async function verifyAsset(
     throw new Error(`${label} ${kind} asset digest does not match manifest.`);
   }
   return bytes;
+}
+
+async function verifyBridgeImports(
+  directory: string,
+  manifest: WasmAssetManifest,
+  script: string,
+  label: string,
+): Promise<void> {
+  const imports = bridgeRelativeImports(script);
+  const tracked = new Set(manifest.imports.map((item) => item.name));
+  const missing = imports.filter((name) => !tracked.has(name));
+  if (missing.length > 0) {
+    throw new Error(
+      `${label} has untracked bridge imports: ${missing.join(', ')}`,
+    );
+  }
+  for (const item of manifest.imports) {
+    await verifyAsset(directory, item, label, 'bridge import');
+  }
 }
 
 export async function verifyManifestHeaders(

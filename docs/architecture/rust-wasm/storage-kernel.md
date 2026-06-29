@@ -120,7 +120,7 @@ responses become typed late outcomes rather than reaching product logic.
 
 The Rust adapter exposes the same boundary through `lkjstr-web`. Persistent
 worker creation is guarded by the origin-level `lkjstr.sqlite-opfs-owner` Web
-Lock; owner denial maps to busy or unavailable storage outcomes before
-`Worker::new()`. Protected, core event-cache, and diagnostics Rust repository
-calls now use it. Remaining Rust work is parity wiring, not an old browser
-database dependency.
+Lock through JS reflection, not wasm-bindgen `inline_js`; owner denial maps to
+busy or unavailable storage outcomes before `Worker::new()`. Protected, core
+event-cache, and diagnostics Rust repository calls now use it. Remaining Rust
+work is parity wiring, not an old browser database dependency.
