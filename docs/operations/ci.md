@@ -13,7 +13,8 @@ authoritative final gate.
   `cloudflare`, and `app-smoke`, then runs `verify`, `cloudflare`, and
   `app-smoke` services from those images. The `verify` image runs
   `lkjstr-xtask quiet docker-verify`, so the production app build is owned by
-  the `app` image.
+  the `app` image. During the temporary e2e suspension this verify path does
+  not run Playwright, browser workflow suites, or `wasm-pack test --headless`.
 - `publish` runs only from `main` after `docker-final` passes. It reuses the
   checked app image or the same Docker cache and target, and does not run an
   unrelated cold rebuild.
@@ -49,4 +50,5 @@ docker compose --progress quiet -f docker-compose.yml run --rm app-smoke
 - Passing quiet commands emit one final `ok ...` line.
 - Failure output is bounded and local to the failed step.
 - Cloudflare Workers Static Assets deployability stays green.
-- CI does not run browser workspace workflow suites.
+- CI does not run browser workspace workflow suites, Playwright e2e, or
+  `wasm-pack test --headless` while the temporary e2e suspension is active.

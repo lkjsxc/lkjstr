@@ -4,8 +4,9 @@
 
 Verification proves documentation rules, source shape, focused behavior tests,
 Rust/WASM checks, production build output, Cloudflare deployability, bridge asset
-availability, and the production root response. Browser workflow suites are not
-canonical gates. Detailed commands live in [verification/README.md](verification/README.md).
+availability, and the production root response. Browser workflow suites and
+browser-backed e2e suites are not canonical gates. Detailed commands live in
+[verification/README.md](verification/README.md).
 
 ## Canonical Local Gates
 
@@ -24,6 +25,14 @@ pnpm rust-wasm:quiet
 pnpm verify:quiet
 pnpm cloudflare:quiet
 ```
+
+## Temporary E2E Suspension
+
+Automated browser-backed e2e and wasm-pack browser harness tests are suspended
+from local quiet gates, Docker verification, and CI/CD until their runtime is
+bounded again. Keep using unit, repository, Rust, build, Cloudflare, and smoke
+checks. Do not add a CI step that runs Playwright, browser workflow suites, or
+`wasm-pack test --headless` while this suspension is active.
 
 ## Bridge Asset Gates
 

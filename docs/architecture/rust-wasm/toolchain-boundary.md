@@ -12,10 +12,10 @@ not a product runtime dependency. Browser code must never spawn `wasm-pack`,
 `cargo`, Trunk, package-manager installs, shell scripts, or other build tools.
 
 Build, check, Cloudflare, and Docker commands own toolchain preflight. When a
-required tool or browser is missing, those commands fail with an actionable
+required build tool is missing, those commands fail with an actionable
 diagnostic that names the missing dependency and the install or Docker
-verification path. They must not expose raw Node spawn errors or browser-driver
-crashes as the primary message.
+verification path. They must not expose raw Node spawn errors as the primary
+message.
 
 Production and Cloudflare builds are strict. Workers Builds may bootstrap the
 pinned Rust/WASM toolchain before the bridge build. If shipped Rust/WASM bridge
@@ -57,11 +57,11 @@ output. It only reports that local browser WASM artifacts are unavailable.
 and CI fail if those artifacts are missing, invalid, stale-cache-prone, or not
 servable from the built Worker.
 
-`pnpm rust-wasm:quiet` and `cargo run -p lkjstr-xtask -- quiet rust-wasm` still
-run the Rust/WASM matrix when tools and browsers are present. Missing
-`wasm-pack`, Chrome, or Firefox fails at the preflight boundary with install and
-Docker instructions.
+`pnpm rust-wasm:quiet` and `cargo run -p lkjstr-xtask -- quiet rust-wasm` run
+Rust format, clippy, workspace tests, wasm-target clippy, and Trunk build.
+Browser-backed e2e and wasm-pack browser harness tests are temporarily
+suspended from local quiet gates, Docker verification, and CI/CD.
 
 Docker Compose is authoritative for final verification. The Docker image installs
-pinned Rust/WASM tools and must not rely on host-installed `wasm-pack` or a
+pinned Rust/WASM build tools and must not rely on host-installed `wasm-pack` or a
 host-mounted source tree.

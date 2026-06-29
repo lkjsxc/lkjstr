@@ -16,7 +16,7 @@ Read next: [architecture/data/README.md](../architecture/data/README.md),
   evidence, and cached events.
 - The durable product path is official SQLite WASM in a worker, using
   `opfs-sahpool` OPFS as the hosted primary mode and explicit temporary memory
-  mode when persistence cannot open.
+  mode when persistent SQLite cannot open and transient storage is allowed.
 - Main-thread app code must not open SQLite or OPFS directly. Product code calls
   typed repositories; repositories talk to the worker-owned storage kernel.
 - Settings, workspace layout, tab snapshots, Accounts, local signing secrets,
@@ -25,7 +25,8 @@ Read next: [architecture/data/README.md](../architecture/data/README.md),
   information, relay suggestions, author routes, route blocks, notifications,
   jobs, cache ledger summaries, cache metadata, active account selectors,
   pressure snapshots, protection snapshots, and retention deletion use the
-  SQLite worker with memory fallback when workers are unavailable.
+  SQLite worker with explicit temporary memory fallback when persistent SQLite
+  cannot open.
 - The Rust Leptos startup path, protected tool hosts, and first feed hosts use
   the SQLite worker for workspace recovery, workspace persistence, Settings,
   Accounts, Relay Settings, Upload Settings, Tweet drafts, Stats inventory,
@@ -56,6 +57,13 @@ Read next: [architecture/data/README.md](../architecture/data/README.md),
   worker init, temporary memory fallback, repair, decode, active account
   selector, pressure snapshot decode, optimizer record decode, pressure stop
   reasons, quota, and write failure diagnostics.
+- Rust/WASM host storage uses a page-local shared store registry keyed by
+  database name and worker URL. `with_sqlite_store` borrows the shared store and
+  no longer closes the product database after each repository operation.
+- SQLite worker `open` is idempotent for the already opened database, returns
+  `busy` for a different database while the owner is open, and skips schema
+  statements for an already applied schema hash. Access-handle contention such
+  as `NoModificationAllowedError` maps to a busy storage outcome.
 - Protected records are never removed by cache cleanup: accounts, local signing
   secrets, settings, relay sets, workspace state, Tweet drafts, active tab
   snapshots, active jobs, and route blocks.

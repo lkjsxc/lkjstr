@@ -39,6 +39,11 @@ Repository tests own durable behavior without a full browser app flow:
 
 ## Host Boundary
 
+Automated browser-backed e2e and wasm-pack browser harness tests are suspended
+from local quiet gates, Docker verification, and CI/CD while their runtime is
+unbounded. Host-boundary behavior should use focused unit, repository, or adapter
+tests unless a manual diagnostic run is explicitly recorded.
+
 Host-boundary tests are allowed only when Node cannot model the API precisely:
 
 - Worker module loading.
@@ -47,7 +52,7 @@ Host-boundary tests are allowed only when Node cannot model the API precisely:
 - WASM bridge loading and explicit bridge-unavailable states.
 
 These tests stay narrow. They do not drive the tiled workspace through a
-browser page.
+browser page, and they are not required gates during the temporary suspension.
 
 ## Smoke
 

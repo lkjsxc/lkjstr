@@ -82,7 +82,9 @@ fn open_op(name: &str) -> StorageOp {
             database_name: name.to_owned(),
             preferred_vfs: None,
             allow_sahpool: false,
+            allow_opfs: false,
             allow_transient: false,
+            worker_kind: None,
         },
     }
 }

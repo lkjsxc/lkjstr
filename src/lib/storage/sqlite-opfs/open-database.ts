@@ -4,6 +4,7 @@ import type { OpenDatabase, StorageDiagnostics, VfsName } from './types';
 export type OpenedSqliteDatabase = {
   readonly db: SqliteDatabase;
   readonly diagnostics: StorageDiagnostics;
+  readonly logicalDatabaseName: string;
 };
 
 const sahpoolCapacityBytes = 64 * 1024 * 1024;
@@ -43,7 +44,7 @@ function vfsOrder(request: OpenDatabase): VfsName[] {
 
 function allowed(vfs: VfsName, request: OpenDatabase): boolean {
   if (vfs === 'opfs-sahpool') return request.allowSahpool !== false;
-  if (vfs === 'opfs') return request.allowOpfs !== false;
+  if (vfs === 'opfs') return request.allowOpfs === true;
   if (vfs === 'memory') return request.allowTransient === true;
   return false;
 }
@@ -71,7 +72,7 @@ async function openSahpool(
     initialCapacity: sahpoolCapacityBytes,
   });
   const db = new pool.OpfsSAHPoolDb(
-    normalizeFilename(request.databaseName),
+    normalizeDatabaseName(request.databaseName),
     'c',
   );
   return opened(db, request, 'opfs-sahpool', warnings);
@@ -84,7 +85,7 @@ function openOpfs(
 ): OpenedSqliteDatabase {
   if (!sqlite3.oo1.OpfsDb) throw new Error('OPFS VFS missing');
   const db = new sqlite3.oo1.OpfsDb(
-    normalizeFilename(request.databaseName),
+    normalizeDatabaseName(request.databaseName),
     'c',
   );
   return opened(db, request, 'opfs', warnings);
@@ -109,6 +110,7 @@ function opened(
   const databaseName = vfsName === 'memory' ? ':memory:' : request.databaseName;
   return {
     db,
+    logicalDatabaseName: normalizeDatabaseName(request.databaseName),
     diagnostics: {
       databaseName,
       mode,
@@ -120,6 +122,6 @@ function opened(
   };
 }
 
-function normalizeFilename(name: string): string {
+export function normalizeDatabaseName(name: string): string {
   return name.startsWith('/') ? name : `/${name}`;
 }

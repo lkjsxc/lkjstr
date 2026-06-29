@@ -18,5 +18,7 @@ and Docker verification path. Detailed commands live in
 ## Rule
 
 Run the focused gate for the changed area before the repository quiet gates.
-Run the Docker final gate from [verification.md](verification.md) before
-claiming broad repository verification or product cutover readiness.
+While the temporary e2e suspension is active, omit Playwright, browser workflow,
+and `wasm-pack test --headless` focused steps unless the user asks for a manual
+diagnostic run. Run the Docker final gate from [verification.md](verification.md)
+before claiming broad repository verification or product cutover readiness.

@@ -34,7 +34,9 @@ impl SqliteStore {
             database_name,
             preferred_vfs: Some("opfs-sahpool".to_owned()),
             allow_sahpool: true,
+            allow_opfs: true,
             allow_transient: true,
+            worker_kind: Some("dedicated".to_owned()),
         };
         match store
             .client

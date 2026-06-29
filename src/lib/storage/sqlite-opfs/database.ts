@@ -83,9 +83,14 @@ export function runBatch(
 export function sqliteOutcomeFromError(error: unknown): StorageOutcome {
   const text = errorText(error);
   if (/cancel/i.test(text)) return 'canceled';
-  if (/busy|locked/i.test(text)) return 'busy';
+  if (
+    /busy|locked|NoModificationAllowedError|Access Handles?|Writable stream|modifications are not allowed/i.test(
+      text,
+    )
+  )
+    return 'busy';
   if (/quota|full|space/i.test(text)) return 'quota';
-  if (/blocked/i.test(text)) return 'blocked';
+  if (/blocked|denied|permission/i.test(text)) return 'blocked';
   if (/corrupt|malformed|schema/i.test(text)) return 'corrupt';
   return 'unavailable';
 }

@@ -8,6 +8,8 @@ export type SqliteStorageSendOptions = {
 };
 
 const databaseName = '/lkjstr/main.sqlite3';
+let clientFactory: SqliteStorageClientFactory =
+  defaultSqliteStorageClientFactory;
 let client: SqliteOpfsClient | undefined;
 let openPromise: Promise<StorageResponse> | undefined;
 const schemaPromises = new Map<string, Promise<StorageResponse>>();
@@ -46,8 +48,17 @@ export async function applySqliteSchema(
 }
 
 export function sqliteStorageClient(): SqliteOpfsClient {
-  client ??= createSqliteOpfsClient({ requestPrefix: 'sqlite-storage' });
+  client ??= clientFactory();
   return client;
+}
+
+export function setSqliteStorageClientFactoryForTests(
+  factory?: SqliteStorageClientFactory,
+): void {
+  clientFactory = factory ?? defaultSqliteStorageClientFactory;
+  client = undefined;
+  openPromise = undefined;
+  schemaPromises.clear();
 }
 
 export async function closeSqliteStorage(deadlineMs = 1_000): Promise<void> {
@@ -67,6 +78,10 @@ export function sqliteStorageUnavailable(): StorageResponse {
     rowsAffected: 0,
     diagnostics: { message: 'Worker support unavailable' },
   };
+}
+
+function defaultSqliteStorageClientFactory(): SqliteOpfsClient {
+  return createSqliteOpfsClient({ requestPrefix: 'sqlite-storage' });
 }
 
 function openSqliteStorage(

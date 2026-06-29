@@ -1,11 +1,19 @@
-import { describe, expect, test } from 'vitest';
+import { afterEach, describe, expect, test, vi } from 'vitest';
 import { createSqliteOpfsClient } from '../../../src/lib/storage/sqlite-opfs/client';
+import {
+  sendSqliteStorage,
+  setSqliteStorageClientFactoryForTests,
+} from '../../../src/lib/storage/sqlite-opfs/kernel-client';
 import type {
   StorageRequest,
   StorageResponse,
 } from '../../../src/lib/storage/sqlite-opfs/types';
 
 describe('SQLite OPFS client', () => {
+  afterEach(() => {
+    setSqliteStorageClientFactoryForTests();
+    vi.unstubAllGlobals();
+  });
   test('resolves responses and tracks late worker messages', async () => {
     const worker = fakeWorker();
     const client = createSqliteOpfsClient({ workerFactory: () => worker });
@@ -35,6 +43,32 @@ describe('SQLite OPFS client', () => {
       true,
     );
     await client.close();
+  });
+
+  test('coalesces singleton storage open before concurrent commands', async () => {
+    vi.stubGlobal('Worker', function Worker() {});
+    const worker = fakeWorker();
+    setSqliteStorageClientFactoryForTests(() =>
+      createSqliteOpfsClient({ workerFactory: () => worker }),
+    );
+
+    const first = sendSqliteStorage({ kind: 'estimate-storage' });
+    const second = sendSqliteStorage({ kind: 'estimate-storage' });
+
+    expect(worker.requests.map((item) => item.op.kind)).toEqual(['open']);
+    worker.respond(response(worker.requests[0]!.requestId, 'ok'));
+    await Promise.resolve();
+    await Promise.resolve();
+
+    expect(worker.requests.map((item) => item.op.kind)).toEqual([
+      'open',
+      'estimate-storage',
+      'estimate-storage',
+    ]);
+    worker.respond(response(worker.requests[1]!.requestId, 'ok'));
+    worker.respond(response(worker.requests[2]!.requestId, 'ok'));
+    await expect(first).resolves.toMatchObject({ outcome: 'ok' });
+    await expect(second).resolves.toMatchObject({ outcome: 'ok' });
   });
 });
 

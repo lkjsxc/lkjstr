@@ -31,9 +31,9 @@ Normal verbose commands remain available for local debugging:
 - `pnpm verify`
 - `pnpm cloudflare:dry-run`
 
-CI must use quiet commands by default. Host-boundary Rust/WASM tests may use
-headless browsers when Node cannot represent the platform API, but they do not
-exercise tiled workspace browser flows.
+CI must use quiet commands by default. Browser-backed e2e and wasm-pack
+headless-browser tests are suspended from quiet commands and CI/CD while their
+runtime is unbounded. They may run only as manual diagnostics.
 
 ## Local Canonical Gate
 

@@ -12,6 +12,7 @@ crate-type = ["cdylib", "rlib"]
 workspace = true
 
 [dependencies]
+futures = "0.3.31"
 js-sys = "0.3.82"
 lkjstr-app = { path = "../lkjstr-app" }
 lkjstr-domain = { path = "../lkjstr-domain" }

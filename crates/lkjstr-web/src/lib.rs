@@ -121,6 +121,12 @@ pub async fn indexed_db_available() -> JsValue {
 
 #[cfg(target_arch = "wasm32")]
 #[wasm_bindgen]
+pub async fn close_sqlite_storage_for_reset() -> u32 {
+    sqlite_host_store::close_all_sqlite_stores().await as u32
+}
+
+#[cfg(target_arch = "wasm32")]
+#[wasm_bindgen]
 pub async fn put_workspace_record_json(json: &str) -> JsValue {
     indexed_db::workspace_put_json_response(json).await
 }

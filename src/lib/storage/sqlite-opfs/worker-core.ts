@@ -6,8 +6,13 @@ import {
   sqliteOutcomeFromError,
   type SqliteModule,
 } from './database';
+import { response, parseRequest } from './worker-envelope';
 import { createStorageHealth } from './worker-health';
-import { openSqliteDatabase, type OpenedSqliteDatabase } from './open-database';
+import {
+  normalizeDatabaseName,
+  openSqliteDatabase,
+  type OpenedSqliteDatabase,
+} from './open-database';
 import { readPhysicalInventoryRows } from './physical-inventory';
 import type {
   OpenDatabase,
@@ -103,11 +108,15 @@ export function createSqliteWorkerCore(options: SqliteWorkerCoreOptions) {
     return response(request, 'corrupt', undefined, 0, current.diagnostics);
   };
 
-  const open = async (
-    request: StorageRequest,
-    database: OpenDatabase,
-  ): Promise<StorageResponse> => {
-    if (opened) opened.db.close();
+  const open = async (request: StorageRequest, database: OpenDatabase) => {
+    const requestedName = normalizeDatabaseName(database.databaseName);
+    if (opened?.logicalDatabaseName === requestedName)
+      return response(request, 'ok', undefined, 0, opened.diagnostics);
+    if (opened)
+      return response(request, 'busy', undefined, 0, {
+        ...opened.diagnostics,
+        message: 'SQLite storage owner is already open',
+      });
     sqlitePromise ??= options.initSqlite();
     sqliteModule = await sqlitePromise;
     opened = await openSqliteDatabase(sqliteModule, database);
@@ -119,8 +128,10 @@ export function createSqliteWorkerCore(options: SqliteWorkerCoreOptions) {
     current: OpenedSqliteDatabase,
     op: Extract<StorageOp, { kind: 'apply-schema' }>,
   ): StorageResponse => {
-    for (const statement of op.statements) current.db.exec(statement);
-    appliedSchemaChanges.add(op.schemaHash);
+    if (!appliedSchemaChanges.has(op.schemaHash)) {
+      for (const statement of op.statements) current.db.exec(statement);
+      appliedSchemaChanges.add(op.schemaHash);
+    }
     return response(request, 'ok', undefined, 0, current.diagnostics);
   };
 
@@ -155,6 +166,7 @@ export function createSqliteWorkerCore(options: SqliteWorkerCoreOptions) {
   const close = (request: StorageRequest): StorageResponse => {
     opened?.db.close();
     opened = undefined;
+    appliedSchemaChanges.clear();
     canceled.clear();
     return response(request, 'ok');
   };
@@ -163,32 +175,4 @@ export function createSqliteWorkerCore(options: SqliteWorkerCoreOptions) {
     response(request, 'ok', undefined, 0, await options.estimateStorage());
 
   return { handle };
-}
-
-function response(
-  request: StorageRequest,
-  outcome: StorageResponse['outcome'],
-  rows: StorageResponse['rows'] = [],
-  rowsAffected = 0,
-  diagnostics: StorageDiagnostics = {},
-): StorageResponse {
-  return {
-    requestId: request.requestId,
-    outcome,
-    rows,
-    rowsAffected,
-    diagnostics,
-  };
-}
-
-function parseRequest(value: unknown): StorageRequest | undefined {
-  if (!record(value)) return undefined;
-  if (typeof value.requestId !== 'string') return undefined;
-  if (typeof value.deadlineMs !== 'number') return undefined;
-  if (!record(value.op) || typeof value.op.kind !== 'string') return undefined;
-  return value as StorageRequest;
-}
-
-function record(value: unknown): value is Record<string, unknown> {
-  return typeof value === 'object' && value !== null;
 }

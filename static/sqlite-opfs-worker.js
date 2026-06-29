@@ -2,6 +2,7 @@ import sqlite3InitModule from './sqlite/index.mjs';
 import {
   errorText,
   isRow,
+  normalizeFilename,
   openDatabase,
   outcomeFromError,
   parseRequest,
@@ -66,7 +67,16 @@ async function runOp(request) {
 }
 
 async function open(request, database) {
-  if (opened) opened.db.close();
+  const requestedName = normalizeFilename(database.databaseName);
+  if (opened?.logicalDatabaseName === requestedName) {
+    return response(request, 'ok', [], 0, opened.diagnostics);
+  }
+  if (opened) {
+    return response(request, 'busy', [], 0, {
+      ...opened.diagnostics,
+      message: 'SQLite storage owner is already open',
+    });
+  }
   sqlitePromise ??= sqlite3InitModule();
   sqliteModule = await sqlitePromise;
   opened = await openDatabase(sqliteModule, database);
@@ -76,6 +86,7 @@ async function open(request, database) {
 function close(request) {
   opened?.db.close();
   opened = undefined;
+  appliedSchemaChanges.clear();
   canceled.clear();
   return response(request, 'ok');
 }
@@ -89,8 +100,10 @@ async function estimate(request) {
 }
 
 function applySchema(request, current, op) {
-  for (const statement of op.statements) current.db.exec(statement);
-  appliedSchemaChanges.add(op.schemaHash);
+  if (!appliedSchemaChanges.has(op.schemaHash)) {
+    for (const statement of op.statements) current.db.exec(statement);
+    appliedSchemaChanges.add(op.schemaHash);
+  }
   return response(request, 'ok', [], 0, current.diagnostics);
 }
 

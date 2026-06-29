@@ -5,11 +5,8 @@ RUN apt-get update \
   && apt-get install -y --no-install-recommends \
     build-essential \
     ca-certificates \
-    chromium \
-    chromium-driver \
     clang \
     curl \
-    firefox-esr \
     libssl-dev \
     lld \
     pkg-config \

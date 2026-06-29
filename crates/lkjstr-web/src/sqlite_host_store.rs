@@ -2,18 +2,14 @@ use std::future::Future;
 
 use lkjstr_storage::{StorageOperation, StorageOutcome, StorageProblem};
 
-use crate::{sqlite_store::SqliteStore, storage_worker::StorageWorkerClient};
+use crate::sqlite_store::SqliteStore;
+
+mod registry;
 
 const STORE_DEADLINE_MS: u32 = 5_000;
 
 pub async fn open_sqlite_store(db_name: &str, worker_url: &str) -> StorageOutcome<SqliteStore> {
-    let client = match StorageWorkerClient::new_module(worker_url) {
-        StorageOutcome::Ok(client) => client,
-        outcome => {
-            return outcome.map(|client| SqliteStore::from_client(client, STORE_DEADLINE_MS));
-        }
-    };
-    SqliteStore::open(client, db_name.to_owned(), STORE_DEADLINE_MS).await
+    registry::store_for(db_name, worker_url, STORE_DEADLINE_MS).await
 }
 
 pub async fn with_sqlite_store<T, F, Fut>(
@@ -29,9 +25,11 @@ where
         StorageOutcome::Ok(store) => store,
         outcome => return map_open_error(outcome),
     };
-    let result = operation(store.clone()).await;
-    let _closed = store.close().await;
-    result
+    operation(store.clone()).await
+}
+
+pub async fn close_all_sqlite_stores() -> usize {
+    registry::close_all().await
 }
 
 fn map_open_error<T>(outcome: StorageOutcome<SqliteStore>) -> StorageOutcome<T> {

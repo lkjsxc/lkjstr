@@ -2,6 +2,7 @@ use std::{ffi::OsString, path::Path, process::Command, time::Duration};
 
 use crate::{
     browser_driver::chrome_driver_args,
+    e2e_gate,
     quiet_process::{QuietOutput, run_with_timeout},
     tool_path::{cargo_bin, prefer_rustup_cargo},
     toolchain::{preflight_wasm_browser, preflight_wasm_pack, wasm_pack_bin},
@@ -19,7 +20,7 @@ pub struct Step {
 
 pub fn rust_wasm_steps() -> Vec<Step> {
     let cargo = cargo_bin();
-    vec![
+    let mut steps = vec![
         step("cargo fmt", cargo.clone(), vec!["fmt", "--check"]),
         step(
             "cargo clippy workspace",
@@ -49,23 +50,26 @@ pub fn rust_wasm_steps() -> Vec<Step> {
             ],
         ),
         step("cargo test", cargo, vec!["test", "--workspace"]),
-        step_os(
-            "wasm-pack chrome",
-            wasm_pack_bin(),
-            wasm_pack_args("--chrome"),
-        ),
-        step_os(
-            "wasm-pack firefox",
-            wasm_pack_bin(),
-            wasm_pack_args("--firefox"),
-        ),
         Step {
             name: "trunk build",
             program: OsString::from("trunk"),
             args: os_args(vec!["build", "--release"]),
             clear_no_color: true,
         },
-    ]
+    ];
+    if e2e_gate::enabled() {
+        steps.push(step_os(
+            "wasm-pack chrome",
+            wasm_pack_bin(),
+            wasm_pack_args("--chrome"),
+        ));
+        steps.push(step_os(
+            "wasm-pack firefox",
+            wasm_pack_bin(),
+            wasm_pack_args("--firefox"),
+        ));
+    }
+    steps
 }
 
 pub fn node_check_steps() -> Vec<Step> {

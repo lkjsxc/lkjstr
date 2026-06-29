@@ -46,6 +46,7 @@ unwrap_used = "deny"
 workspace = true
 
 [dependencies]
+futures = "0.3.31"
 js-sys = "0.3.82"
 lkjstr-app = { path = "crates/lkjstr-app" }
 lkjstr-domain = { path = "crates/lkjstr-domain" }

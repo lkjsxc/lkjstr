@@ -2,6 +2,7 @@ mod browser_driver;
 mod command;
 mod doc_check;
 mod doc_shape;
+mod e2e_gate;
 mod line_check;
 mod paths;
 mod quiet_process;

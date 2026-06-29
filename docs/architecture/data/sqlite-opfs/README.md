@@ -8,6 +8,7 @@ browser-owned data.
 ## Table of Contents
 
 - [runtime.md](runtime.md): worker runtime, VFS order, and multi-tab behavior.
+- [owner-lifecycle.md](owner-lifecycle.md): logical owner lifecycle and close rules.
 - [storage-modes.md](storage-modes.md): persistent OPFS and temporary memory modes.
 - [schema.md](schema.md): canonical SQLite table groups, indexes, and owners.
 - [worker-protocol.md](worker-protocol.md): typed request and response protocol.

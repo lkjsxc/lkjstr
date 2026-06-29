@@ -10,32 +10,43 @@ worker-owned SQLite storage kernel.
 Every request carries:
 
 - `requestId`: caller-generated stable id.
-- `command`: one discriminated storage command.
+- `deadlineMs`: caller deadline in milliseconds.
+- `op`: one discriminated storage operation.
 
-Every response is either:
+Every response carries:
 
-- `{ requestId, ok: true, value }`.
-- `{ requestId, ok: false, error }`.
-
-Errors carry `kind`, `message`, optional cause fields, and `recoverable`.
-
-## Command Families
-
-Product repositories use typed commands, not raw SQL:
-
-- open, close, health, integrity check, compact, reset.
-- settings load, save, delete, and replace.
-- workspace and tab-state load, save, delete, and cleanup.
-- accounts, active-account selectors, local secrets, relay sets, and Tweet drafts.
-- event batch ingestion, event lookup, timelines, profile events, threads,
-  action-state evidence, and local search.
-- notifications derive, query, and mark read.
-- relay information, diagnostics, suggestions, author routes, and route blocks.
-- jobs and app log records.
-- cache ledger, inventory, retention, repair, import, and export.
+- `requestId`: the matching request id.
+- `outcome`: `ok`, `unavailable`, `timeout`, `busy`, `blocked`, `quota`,
+  `corrupt`, `canceled`, `late-settled`, or `late-rejected`.
+- `rows`: result rows for query and inventory operations.
+- `rowsAffected`: affected row count for write operations.
+- `diagnostics`: storage mode, VFS, health, byte estimates, warnings, or a
+  bounded error message.
 
 The lower host adapter may carry storage-crate statement ids and bound
 parameters, but product UI code must never construct SQL text.
+
+## Host Operations
+
+The worker protocol currently carries these host operations:
+
+- `open` with `databaseName`, preferred VFS, transient-memory permission, and
+  worker-kind hints.
+- `apply-schema` with `schemaHash` and ordered SQL statements.
+- `execute` with statement text from storage-owned metadata and bound params.
+- `query` with statement text from storage-owned metadata, params, and row
+  limit.
+- `batch` with ordered bounded SQL steps and read/write mode.
+- `get-storage-health`.
+- `read-physical-inventory`.
+- `estimate-storage`.
+- `cancel` with `targetRequestId`.
+- `close` for explicit reset, tests, and controlled shutdown only.
+
+Repository command families such as settings, accounts, relay sets, feed cache,
+notifications, jobs, app log, retention, and repair are typed above this host
+envelope. They map to storage-owned statement records or batch records before
+reaching the worker.
 
 ## Required Storage Tool Commands
 
@@ -52,6 +63,15 @@ parameters, but product UI code must never construct SQL text.
 | `appendAppLog` | redacted log row | stored row id and retention result | Stores no local secrets, raw relay payloads, filters, tab ids, request ids, subscription ids, or owner handles. |
 | `listAppLog` | `limit`, optional `beforeMs` | newest redacted rows | Returns durable rows in reverse chronological order. |
 | `clearRecoverableAppLog` | optional age or count policy | deleted count | Deletes only recoverable diagnostic rows. |
+
+## Open And Schema
+
+`open` is idempotent for the already opened database. It returns current
+diagnostics without closing SQLite. An open request for a different database
+returns `busy` unless a reset or test owner has closed the current database.
+
+`apply-schema` is idempotent per schema hash. Later calls with an applied hash
+return `ok` without rerunning statements.
 
 ## Health Command
 
@@ -77,6 +97,7 @@ Stats and Cache tools read this command directly through a repository.
 - `decode-failed`.
 - `cancelled`.
 - `busy`.
+- `blocked`.
 - `temporary-mode`.
 - `unknown`.
 
