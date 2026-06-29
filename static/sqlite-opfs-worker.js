@@ -8,6 +8,7 @@ import {
   parseRequest,
   response,
 } from './sqlite-opfs-worker-core.js';
+import { createCommandQueue } from './sqlite-opfs-worker-queue.js';
 import { createStorageHealth } from './sqlite-opfs-worker-health.js';
 
 let sqlitePromise, sqliteModule;
@@ -16,20 +17,17 @@ const appliedSchemaChanges = new Set();
 const lastIntegrityCheckAt = null;
 const canceled = new Set();
 
-self.onmessage = (event) => {
-  void handle(event.data);
-};
+const enqueue = createCommandQueue({
+  parseRequest,
+  run,
+  post: (message) => self.postMessage(message),
+  response,
+  canceled,
+});
 
-async function handle(message) {
-  const request = parseRequest(message);
-  if (!request) return;
-  if (request.op.kind === 'cancel') {
-    canceled.add(request.op.targetRequestId);
-    self.postMessage(response(request, 'ok'));
-    return;
-  }
-  self.postMessage(await run(request));
-}
+self.onmessage = (event) => {
+  void enqueue(event.data);
+};
 
 async function run(request) {
   if (canceled.delete(request.requestId)) return response(request, 'canceled');

@@ -46,7 +46,16 @@ Keep new run evidence in the table below unless a narrative note is required.
 
 ## Recent Focused Evidence
 
-Latest focused note: on 2026-06-27, CLOUDFLARE-WASM-PRODUCTION-REPAIR moved
+Latest focused note: on 2026-06-29, SQLite OPFS owner hardening serialized
+static worker commands, made SAH pool install single-flight with 64 file slots,
+preserved idempotent open and shared Rust store ownership, and kept browser e2e
+suspended from quiet and Docker gates. Focused Vitest, `cargo test -p
+lkjstr-web`, `cargo test -p lkjstr-storage`, repo/docs/line/style checks,
+`pnpm test:quiet`, `pnpm rust-wasm:quiet`, `pnpm verify:quiet`,
+`pnpm cloudflare:quiet`, and Docker config/build/verify/cloudflare/app-smoke
+passed.
+
+Previous focused note: on 2026-06-27, CLOUDFLARE-WASM-PRODUCTION-REPAIR moved
 bridge generation to `pnpm rust-wasm:build`, made the Vite plugin asset-only,
 added Workers Builds toolchain bootstrap, moved bridge signing off
 `secp256k1-sys` so hosted WASM builds do not need `clang`, added bridge asset

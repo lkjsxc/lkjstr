@@ -1,4 +1,5 @@
-const sahpoolCapacityBytes = 64 * 1024 * 1024;
+export const sahpoolInitialCapacitySlots = 64;
+const sahpoolPools = new WeakMap();
 
 export async function openDatabase(sqlite3, database) {
   const warnings = [];
@@ -87,16 +88,25 @@ async function openWithVfs(sqlite3, database, vfs, warnings) {
 }
 
 async function openSahpool(sqlite3, database, warnings) {
-  if (!sqlite3.installOpfsSAHPoolVfs) throw new Error('SAH pool VFS missing');
-  const pool = await sqlite3.installOpfsSAHPoolVfs({
-    name: 'lkjstr',
-    initialCapacity: sahpoolCapacityBytes,
-  });
+  const pool = await installSahpool(sqlite3);
   const db = new pool.OpfsSAHPoolDb(
     normalizeFilename(database.databaseName),
     'c',
   );
   return opened(db, database, 'opfs-sahpool', warnings);
+}
+
+function installSahpool(sqlite3) {
+  if (!sqlite3.installOpfsSAHPoolVfs) throw new Error('SAH pool VFS missing');
+  let pool = sahpoolPools.get(sqlite3);
+  if (!pool) {
+    pool = sqlite3.installOpfsSAHPoolVfs({
+      name: 'lkjstr',
+      initialCapacity: sahpoolInitialCapacitySlots,
+    });
+    sahpoolPools.set(sqlite3, pool);
+  }
+  return pool;
 }
 
 function openOpfs(sqlite3, database, warnings) {

@@ -66,6 +66,7 @@ Source files expose Rust application behavior to the browser through
 - `settings_host.rs`: SQLite-backed Settings command provider.
 - `stats_actions_host.rs`: report-only Rust Stats storage action callback.
 - `sqlite_host_store.rs`: owned open, close, and scoped SQLite store helper.
+- `sqlite_host_store/`: page-local shared SQLite store owner registry.
 - `sqlite_store/`: worker-backed SQLite repository calls.
 - `storage_worker/`: Rust host adapter for the SQLite storage worker.
 - `tweet_host.rs`: SQLite-backed Tweet draft command provider.

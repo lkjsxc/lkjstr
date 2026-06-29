@@ -7,7 +7,12 @@ export type OpenedSqliteDatabase = {
   readonly logicalDatabaseName: string;
 };
 
-const sahpoolCapacityBytes = 64 * 1024 * 1024;
+type Sahpool = Awaited<
+  ReturnType<NonNullable<SqliteModule['installOpfsSAHPoolVfs']>>
+>;
+
+export const sahpoolInitialCapacitySlots = 64;
+const sahpoolPools = new WeakMap<SqliteModule, Promise<Sahpool>>();
 
 export async function openSqliteDatabase(
   sqlite3: SqliteModule,
@@ -66,16 +71,25 @@ async function openSahpool(
   request: OpenDatabase,
   warnings: readonly string[],
 ): Promise<OpenedSqliteDatabase> {
-  if (!sqlite3.installOpfsSAHPoolVfs) throw new Error('SAH pool VFS missing');
-  const pool = await sqlite3.installOpfsSAHPoolVfs({
-    name: 'lkjstr',
-    initialCapacity: sahpoolCapacityBytes,
-  });
+  const pool = await installSahpool(sqlite3);
   const db = new pool.OpfsSAHPoolDb(
     normalizeDatabaseName(request.databaseName),
     'c',
   );
   return opened(db, request, 'opfs-sahpool', warnings);
+}
+
+function installSahpool(sqlite3: SqliteModule): Promise<Sahpool> {
+  if (!sqlite3.installOpfsSAHPoolVfs) throw new Error('SAH pool VFS missing');
+  let pool = sahpoolPools.get(sqlite3);
+  if (!pool) {
+    pool = sqlite3.installOpfsSAHPoolVfs({
+      name: 'lkjstr',
+      initialCapacity: sahpoolInitialCapacitySlots,
+    });
+    sahpoolPools.set(sqlite3, pool);
+  }
+  return pool;
 }
 
 function openOpfs(

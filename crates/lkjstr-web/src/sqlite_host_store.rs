@@ -51,3 +51,19 @@ fn map_open_error<T>(outcome: StorageOutcome<SqliteStore>) -> StorageOutcome<T> 
         StorageOutcome::LateRejected(problem) => StorageOutcome::LateRejected(problem),
     }
 }
+
+#[cfg(test)]
+mod tests {
+    #[test]
+    fn with_sqlite_store_does_not_close_after_operation() -> Result<(), String> {
+        let source = include_str!("sqlite_host_store.rs");
+        let start = source
+            .find("pub async fn with_sqlite_store")
+            .ok_or_else(|| "missing with_sqlite_store".to_owned())?;
+        let end = source
+            .find("pub async fn close_all_sqlite_stores")
+            .ok_or_else(|| "missing close_all_sqlite_stores".to_owned())?;
+        assert!(!source[start..end].contains(".close()"));
+        Ok(())
+    }
+}

@@ -25,6 +25,12 @@ individual command.
 5. Reject a request for a different database while an owner is open unless the
    caller is an explicit reset or test owner.
 
+Worker commands are serialized by one queue per worker. `cancel` records its
+target immediately; all other commands wait their turn and post one response.
+
+SAH pool install is a worker-lifetime single-flight operation. Its
+`initialCapacity` is a file-slot count; the current target is 64 slots.
+
 Schema application is keyed by schema hash. The owner runs a schema hash once
 per logical store and returns the existing result for later calls with the same
 hash.

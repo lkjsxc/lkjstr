@@ -29,6 +29,10 @@ owner diagnostics without closing SQLite. Opening a different database requires
 an explicit reset, test reset, or controlled shutdown; otherwise the worker
 returns a busy outcome.
 
+Worker commands are serialized by one queue per worker. `cancel` records the
+target request immediately; every other request runs after the previous request
+settles and posts exactly one response.
+
 Schema application is keyed by schema hash and runs once per logical owner.
 Later requests for an already applied hash return success without rerunning the
 statements.
@@ -46,7 +50,9 @@ Preferred order:
 
 1. `opfs-sahpool`: normal browser mode because it is worker-only, fast, and does
    not require cross-origin isolation headers. This is the current hosted
-   primary mode.
+   primary mode. SAH pool install is a worker-lifetime single-flight operation,
+   and `initialCapacity` is a file-slot count, not bytes; the target slot count
+   is 64.
 2. `opfs-wl`: allowed after browser support and media rendering are verified.
 3. `opfs`: allowed only behind an explicit mode switch when cross-origin
    isolation is safe for the deployment.
@@ -74,8 +80,9 @@ Use short transactions. Relay event batches commit as one bounded transaction:
 validate caps, validate events, upsert events, upsert relay receipts, insert tag
 rows, update feed evidence, and return inserted, duplicate, and rejected counts.
 
-Do not enable WAL by default. Browser OPFS concurrency is governed by the VFS
-and the worker ownership model, not by multiple UI-owned database handles.
+Do not enable WAL by default. Browser OPFS concurrency is governed by the VFS,
+the serialized worker command queue, and the worker ownership model, not by
+multiple UI-owned database handles.
 
 ## Failure Mapping
 

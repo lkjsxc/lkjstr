@@ -7,7 +7,10 @@ import {
   type SqliteDatabase,
   type SqliteModule,
 } from '../../../src/lib/storage/sqlite-opfs/database';
-import { openSqliteDatabase } from '../../../src/lib/storage/sqlite-opfs/open-database';
+import {
+  openSqliteDatabase,
+  sahpoolInitialCapacitySlots,
+} from '../../../src/lib/storage/sqlite-opfs/open-database';
 
 const memoryRequest = {
   databaseName: 'unit.sqlite3',
@@ -81,6 +84,29 @@ describe('SQLite OPFS database helpers', () => {
     });
     expect(opened.diagnostics.mode).toBe('persistent-opfs');
     expect(opened.diagnostics.vfsName).toBe('opfs-sahpool');
+  });
+
+  test('installs SAH pool once with file-slot capacity', async () => {
+    const db = fakeDb();
+    const options: unknown[] = [];
+    let installCount = 0;
+    const sqlite: SqliteModule = {
+      oo1: { DB: sqliteCtor(db) },
+      installOpfsSAHPoolVfs: async (value) => {
+        installCount += 1;
+        options.push(value);
+        return { OpfsSAHPoolDb: sqliteCtor(db) };
+      },
+    };
+
+    await openSqliteDatabase(sqlite, { databaseName: '/one.sqlite3' });
+    await openSqliteDatabase(sqlite, { databaseName: '/two.sqlite3' });
+
+    expect(installCount).toBe(1);
+    expect(options).toEqual([
+      { name: 'lkjstr', initialCapacity: sahpoolInitialCapacitySlots },
+    ]);
+    expect(sahpoolInitialCapacitySlots).toBe(64);
   });
 
   test('reports explicit memory fallback warnings', async () => {

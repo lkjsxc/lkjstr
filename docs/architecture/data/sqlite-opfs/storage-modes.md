@@ -18,10 +18,12 @@ Preferred VFS order:
 3. `opfs`, only behind an explicit mode switch when cross-origin isolation is
    safe for the current deployment.
 
-The worker should reserve enough SAH pool capacity for the main database,
-journal files, metadata, and temporary query work. The initial target is 64 MiB,
-with diagnostics when usage approaches the pool limit. App hosting should not
-set COOP/COEP only for storage while `opfs-sahpool` is the normal path.
+The worker should reserve enough SAH pool file slots for the main database,
+journal files, metadata, and temporary query work. SQLite SAH pool
+`initialCapacity` is a file-slot count, not bytes; the initial target is 64
+slots. The worker installs the SAH pool once per worker lifetime through a
+single-flight promise and reuses the pool for later opens. App hosting should
+not set COOP/COEP only for storage while `opfs-sahpool` is the normal path.
 Standard OPFS VFS modes that require `SharedArrayBuffer` are not the hosted
 default.
 

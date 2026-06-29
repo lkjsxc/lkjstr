@@ -62,8 +62,13 @@ Read next: [architecture/data/README.md](../architecture/data/README.md),
   no longer closes the product database after each repository operation.
 - SQLite worker `open` is idempotent for the already opened database, returns
   `busy` for a different database while the owner is open, and skips schema
-  statements for an already applied schema hash. Access-handle contention such
-  as `NoModificationAllowedError` maps to a busy storage outcome.
+  statements for an already applied schema hash. Non-cancel worker commands run
+  through a serialized queue and each posts exactly one response.
+- SAH pool installation is a worker-lifetime single-flight operation. Its
+  `initialCapacity` is a file-slot count, currently 64 slots, not a byte value.
+  Access-handle contention such as `NoModificationAllowedError` maps to a busy
+  storage outcome and startup does not clear OPFS or call `removeVfs()` as
+  automatic recovery.
 - Protected records are never removed by cache cleanup: accounts, local signing
   secrets, settings, relay sets, workspace state, Tweet drafts, active tab
   snapshots, active jobs, and route blocks.

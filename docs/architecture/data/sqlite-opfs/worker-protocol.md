@@ -26,6 +26,14 @@ Every response carries:
 The lower host adapter may carry storage-crate statement ids and bound
 parameters, but product UI code must never construct SQL text.
 
+## Ordering
+
+The worker serializes every non-cancel request through one command queue. A
+request starts only after the previous non-cancel request has posted its
+response. `cancel` records its `targetRequestId` immediately and posts its own
+acknowledgement without waiting for the queue. Each queued request posts exactly
+one response: success, timeout, cancellation, busy, or another typed outcome.
+
 ## Host Operations
 
 The worker protocol currently carries these host operations:
@@ -68,7 +76,9 @@ reaching the worker.
 
 `open` is idempotent for the already opened database. It returns current
 diagnostics without closing SQLite. An open request for a different database
-returns `busy` unless a reset or test owner has closed the current database.
+returns `busy` unless a reset or test owner has closed the current database. SAH
+pool install is one worker-lifetime single-flight operation, and its
+`initialCapacity` value is a file-slot count. The current target is 64 slots.
 
 `apply-schema` is idempotent per schema hash. Later calls with an applied hash
 return `ok` without rerunning statements.

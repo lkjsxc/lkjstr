@@ -13,11 +13,13 @@ run the app shell at all.
 Storage startup order:
 
 1. Create or reuse the storage owner for `(workerUrl, databaseName)`.
-2. Open persistent OPFS SQLite in the worker.
-3. Apply schema changes once for the schema hash.
-4. Read storage health.
-5. If persistent open fails and temporary mode is allowed, open `:memory:`.
-6. If both modes fail, use only process memory for the current Welcome screen
+2. Route worker requests through the worker command queue.
+3. Install the SAH pool once per worker lifetime with capacity as file slots.
+4. Open persistent OPFS SQLite in the worker.
+5. Apply schema changes once for the schema hash.
+6. Read storage health.
+7. If persistent open fails and temporary mode is allowed, open `:memory:`.
+8. If both modes fail, use only process memory for the current Welcome screen
    and log a bounded storage error.
 
 The user must see the active storage state in Stats or Settings.
@@ -56,8 +58,9 @@ It should:
 - preserve bounded diagnostics without logging signing secrets.
 
 Failed cleanup such as `removeVfs()` or `removeEntry()` must not become silent
-success. It stays a busy or blocked diagnostic until a real reset or owner close
-is completed.
+success. Startup recovery must not clear OPFS or call `removeVfs()`
+automatically. The failure stays a busy or blocked diagnostic until a real reset
+or owner close is completed.
 
 ## Corruption And Reset
 
