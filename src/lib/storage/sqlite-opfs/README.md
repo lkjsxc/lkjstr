@@ -34,6 +34,7 @@ storage target.
 - `jobs-sqlite.ts`: durable job repository calls.
 - `worker.ts`: dedicated module worker entry point.
 - `client.ts`: browser client with deadlines, cancellation, and cleanup.
+- `owner-coordination.ts`: BroadcastChannel holder hints for owner-busy UI.
 - `kernel-client.ts`: shared open/apply/send helper for product repositories.
 - `accounts-sqlite.ts`: account and local secret repositories.
 - `storage-health.ts`: Stats-facing health reader for the SQLite worker.

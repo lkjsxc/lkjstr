@@ -79,8 +79,9 @@ Read next: [architecture/data/README.md](../architecture/data/README.md),
   `initialCapacity` is a file-slot count, currently 64 slots, not a byte value.
   Access-handle contention such as `NoModificationAllowedError` maps to
   `busy/opfs-owner-held`, terminates the failed worker, sets a bounded retry
-  cooldown, and startup does not clear OPFS or call `removeVfs()` as automatic
-  recovery.
+  cooldown, can include an ephemeral `owner-*` holder id from browser-local
+  coordination, and startup does not clear OPFS or call `removeVfs()` as
+  automatic recovery.
 - Protected records are never removed by cache cleanup: accounts, local signing
   secrets, settings, relay sets, workspace state, Tweet drafts, active tab
   snapshots, active jobs, and route blocks.

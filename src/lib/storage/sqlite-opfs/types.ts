@@ -102,6 +102,7 @@ export type StorageDiagnostics = {
   readonly workerKind?: WorkerKind;
   readonly storageOwner?: StorageOwnerState;
   readonly ownerReason?: StorageOwnerReason;
+  readonly ownerHolderId?: string;
   readonly retryAfterMs?: number | null;
   readonly sqliteVersion?: string;
   readonly warnings?: readonly string[];

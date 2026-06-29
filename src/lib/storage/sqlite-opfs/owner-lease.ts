@@ -1,3 +1,7 @@
+import {
+  announceSqliteOwnerHeld,
+  lookupSqliteOwnerHolder,
+} from './owner-coordination';
 import type { StorageDiagnostics, StorageOutcome } from './types';
 
 export const sqliteOwnerLockName = 'lkjstr.sqlite-opfs-owner';
@@ -43,9 +47,11 @@ export function acquireSqliteOpfsOwnerLease(): Promise<SqliteOpfsOwnerLeaseResul
         { mode: 'exclusive', ifAvailable: true },
         (lock) => {
           if (!lock) {
-            settle(denied('busy', 'web-lock-held'));
-            return undefined;
+            return lookupSqliteOwnerHolder().then((holderId) => {
+              settle(denied('busy', 'web-lock-held', holderId));
+            });
           }
+          const coordination = announceSqliteOwnerHeld();
           let released = false;
           settle({
             ok: true,
@@ -54,10 +60,12 @@ export function acquireSqliteOpfsOwnerLease(): Promise<SqliteOpfsOwnerLeaseResul
                 storageOwner: 'active',
                 ownerReason: 'web-lock-granted',
                 retryAfterMs: null,
+                ownerHolderId: coordination.holderId,
               },
               release: () => {
                 if (released) return;
                 released = true;
+                coordination.close();
                 releaseHeld();
               },
             },
@@ -72,6 +80,7 @@ export function acquireSqliteOpfsOwnerLease(): Promise<SqliteOpfsOwnerLeaseResul
 function denied(
   outcome: SqliteOpfsOwnerLeaseDenied['outcome'],
   reason: NonNullable<StorageDiagnostics['ownerReason']>,
+  holderId?: string,
 ): SqliteOpfsOwnerLeaseResult {
   return {
     ok: false,
@@ -81,7 +90,8 @@ function denied(
         storageOwner: outcome === 'busy' ? 'busy' : 'unavailable',
         ownerReason: reason,
         retryAfterMs: sqliteOwnerCooldownMs,
-        message: ownerMessage(reason),
+        ownerHolderId: holderId,
+        message: ownerMessage(reason, holderId),
       },
     },
   };
@@ -89,9 +99,12 @@ function denied(
 
 function ownerMessage(
   reason: NonNullable<StorageDiagnostics['ownerReason']>,
+  holderId?: string,
 ): string {
   if (reason === 'web-lock-held')
-    return 'SQLite OPFS storage is open in another tab.';
+    return holderId
+      ? `SQLite OPFS storage is open in another tab (${holderId}).`
+      : 'SQLite OPFS storage is open in another tab.';
   if (reason === 'web-lock-unavailable')
     return 'Web Locks are unavailable for SQLite OPFS ownership.';
   return 'SQLite OPFS owner lease could not be acquired.';

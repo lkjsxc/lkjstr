@@ -1,6 +1,7 @@
 type ProtectedStorageDiagnostics = {
   readonly storageOwner?: string;
   readonly ownerReason?: string;
+  readonly ownerHolderId?: string;
   readonly retryAfterMs?: number | null;
   readonly message?: string;
 };
@@ -15,6 +16,7 @@ export type ProtectedStorageState = {
   readonly reason: string;
   readonly message: string;
   readonly retryAfterMs?: number | null;
+  readonly ownerHolderId?: string;
 };
 
 export type ProtectedStorageError = Error & {
@@ -77,6 +79,7 @@ function state(
     reason: diagnostics.ownerReason ?? diagnostics.storageOwner ?? kind,
     message: diagnostics.message ?? defaultMessage(kind),
     retryAfterMs: diagnostics.retryAfterMs,
+    ownerHolderId: diagnostics.ownerHolderId,
   };
 }
 

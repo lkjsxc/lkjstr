@@ -61,6 +61,8 @@ attempt. It should:
 - keep the existing owner if it already opened the requested database.
 - report `busy` when another tab or stale owner holds the persistent file.
 - hold the Web Lock for the lifetime of the successful persistent worker.
+- include bounded retry timing and an ephemeral browser-local holder id when a
+  same-origin owner responds, without recording secrets or durable traces.
 - offer explicit temporary memory mode only when the caller allows transient
   storage and the UI can show that writes are not durable.
 - preserve bounded diagnostics without logging signing secrets.

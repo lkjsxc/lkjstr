@@ -58,9 +58,24 @@ describe('protected storage busy states', () => {
       storageState: { kind: 'busy', reason: 'web-lock-held' },
     });
   });
+
+  test('protected busy state preserves browser-local holder diagnostics', async () => {
+    vi.stubGlobal('Worker', function Worker() {});
+    setSqliteStorageOwnerLeaseFactoryForTests(deniedLeaseFactory('owner-test'));
+    const { loadWorkspacePageData } =
+      await import('../../../src/lib/workspace/workspace-page-data');
+
+    await expect(loadWorkspacePageData()).resolves.toMatchObject({
+      storageState: {
+        kind: 'busy',
+        ownerHolderId: 'owner-test',
+        message: 'SQLite OPFS storage is open in another tab (owner-test).',
+      },
+    });
+  });
 });
 
-function deniedLeaseFactory() {
+function deniedLeaseFactory(ownerHolderId?: string) {
   return async (): Promise<SqliteOpfsOwnerLeaseResult> => ({
     ok: false,
     denied: {
@@ -68,8 +83,11 @@ function deniedLeaseFactory() {
       diagnostics: {
         storageOwner: 'busy',
         ownerReason: 'web-lock-held',
+        ownerHolderId,
         retryAfterMs: 2_000,
-        message: 'SQLite OPFS storage is open in another tab.',
+        message: ownerHolderId
+          ? `SQLite OPFS storage is open in another tab (${ownerHolderId}).`
+          : 'SQLite OPFS storage is open in another tab.',
       },
     },
   });

@@ -72,8 +72,11 @@ unless the client was closed by shutdown or worker failure.
 
 No tab may silently open a second persistent writer for the same OPFS database.
 Web Locks unavailable is an explicit unsupported storage state, not permission
-to construct an uncoordinated persistent worker. Rust/WASM owner-lock code uses
-`web-sys`/`js-sys` reflection and must not depend on wasm-bindgen `inline_js`
+to construct an uncoordinated persistent worker. Active page owners answer
+browser-local `BroadcastChannel` holder pings with an ephemeral `owner-*` id;
+busy diagnostics may show that holder id and retry delay, never secrets.
+Rust/WASM owner-lock code uses `web-sys`/`js-sys` reflection and must not depend
+on wasm-bindgen `inline_js`
 snippets for shipped storage ownership.
 
 ## Storage Modes

@@ -59,4 +59,71 @@ describe('SQLite OPFS Web Locks owner lease', () => {
       },
     });
   });
+
+  test('adds browser-local holder diagnostics when a tab responds', async () => {
+    vi.stubGlobal('BroadcastChannel', fakeBroadcastChannel());
+    let calls = 0;
+    vi.stubGlobal('navigator', {
+      locks: {
+        request: async (
+          _name: string,
+          _options: unknown,
+          callback: (lock: unknown) => unknown,
+        ) => {
+          calls += 1;
+          await callback(calls === 1 ? { name: sqliteOwnerLockName } : null);
+        },
+      },
+    });
+
+    const held = await acquireSqliteOpfsOwnerLease();
+    const blocked = await acquireSqliteOpfsOwnerLease();
+
+    expect(held.ok).toBe(true);
+    expect(blocked).toMatchObject({
+      ok: false,
+      denied: { diagnostics: { ownerReason: 'web-lock-held' } },
+    });
+    if (!blocked.ok) {
+      expect(blocked.denied.diagnostics.ownerHolderId).toMatch(/^owner-/);
+      expect(blocked.denied.diagnostics.message).toContain(
+        blocked.denied.diagnostics.ownerHolderId,
+      );
+    }
+    if (held.ok) held.lease.release();
+  });
 });
+
+type FakeChannel = {
+  name: string;
+  onmessage: ((event: MessageEvent<unknown>) => void) | null;
+  closed: boolean;
+  postMessage(message: unknown): void;
+  close(): void;
+};
+
+function fakeBroadcastChannel() {
+  const channels: FakeChannel[] = [];
+  function FakeChannel(this: FakeChannel, name: string) {
+    this.name = name;
+    this.onmessage = null;
+    this.closed = false;
+    channels.push(this);
+  }
+  FakeChannel.prototype.postMessage = function (
+    this: FakeChannel,
+    message: unknown,
+  ) {
+    for (const channel of channels) {
+      if (channel === this || channel.closed || channel.name !== this.name)
+        continue;
+      queueMicrotask(() =>
+        channel.onmessage?.({ data: message } as MessageEvent),
+      );
+    }
+  };
+  FakeChannel.prototype.close = function (this: FakeChannel) {
+    this.closed = true;
+  };
+  return FakeChannel;
+}
