@@ -15,9 +15,12 @@ Workflow docs define the change process.
    `pnpm verify:quiet` or `pnpm ci:quiet`; Rust/WASM slices also run cargo,
    WASM, Trunk, and `lkjstr-xtask` checks documented in
    [verification.md](../operations/verification.md).
-6. Run Docker Compose as the final gate: config, image builds, then `verify`,
-   `cloudflare`, and `app-smoke` services with `--progress quiet`.
-7. Keep CI behavior aligned with quiet local and Docker Compose verification.
+6. Run Docker Compose as the final gate when the change class requires it:
+   config, image builds, then `verify`, `cloudflare`, and `app-smoke` services
+   with `--progress quiet`.
+7. Keep CI behavior aligned with [../operations/ci.md](../operations/ci.md):
+   automatic GitHub Actions are repository-only while long-action suspension is
+   active.
 
 ## Commit Slices
 

@@ -30,9 +30,10 @@ pnpm cloudflare:quiet
 
 Automated browser-backed e2e and wasm-pack browser harness tests are suspended
 from local quiet gates, Docker verification, and CI/CD until their runtime is
-bounded again. Keep using unit, repository, Rust, build, Cloudflare, and smoke
-checks. Do not add a CI step that runs Playwright, browser workflow suites, or
-`wasm-pack test --headless` while this suspension is active.
+bounded again. Automatic GitHub Actions are repository-only during long-action
+suspension and must not run Docker final gates, publishing, deploys, Playwright,
+browser workflow suites, or `wasm-pack test --headless`. Keep using unit,
+repository, Rust, build, Cloudflare, and smoke checks locally or manually.
 
 ## Bridge Asset Gates
 

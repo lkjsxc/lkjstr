@@ -2,28 +2,36 @@
 
 ## Purpose
 
-Continuous integration runs a deduplicated graph with Docker Compose as the
-authoritative final gate.
+Continuous integration is intentionally cheap while long GitHub Actions are
+suspended. Automatic CI/CD must not run Docker final gates, production image
+publishing, Cloudflare deploys, browser workflow suites, Playwright, or
+`wasm-pack test --headless` until this document is changed with matching proof.
 
-## Job Graph
+## Automatic Job Graph
 
-- `repository` is cheap host feedback. It runs `pnpm check:repo` and does not
-  build the production app.
-- `docker-final` validates Compose config, builds `app`, `verify`,
-  `cloudflare`, and `app-smoke`, then runs `verify`, `cloudflare`, and
-  `app-smoke` services from those images. The `verify` image runs
-  `lkjstr-xtask quiet docker-verify`, so the production app build is owned by
-  the `app` image. During the temporary e2e suspension this verify path does
-  not run Playwright, browser workflow suites, or `wasm-pack test --headless`.
-- `publish` runs only from `main` after `docker-final` passes. It reuses the
-  checked app image or the same Docker cache and target, and does not run an
-  unrelated cold rebuild.
-- `deploy-cloudflare` runs only from `main` when repository variable
-  `CLOUDFLARE_DEPLOY_ENABLED` is `true`. It depends on `docker-final`, installs
-  Node 24, pnpm 11.1.2, Rust stable, the wasm32 target, and `wasm-pack 0.15.0`,
-  then runs `pnpm build`, `pnpm cloudflare:dry-run:built`, and Wrangler deploy.
+- `repository` is the only automatic pull request and `main` push job.
+- It installs Node and pnpm dependencies, then runs `pnpm check:repo`.
+- It does not build the production app, run Docker Compose, publish container
+  images, run Wrangler deploy, or execute browser-backed tests.
 
-## Compose Commands
+## Disabled Long Actions
+
+The following actions are deliberately absent from `.github/workflows/ci.yml`:
+
+- Docker final gate builds and service runs.
+- GHCR publish.
+- Cloudflare deploy.
+- Playwright or browser workflow suites.
+- `wasm-pack test --headless` browser harness runs.
+
+Do not reintroduce them to automatic CI/CD while long-action suspension is
+active. If a maintainer needs release proof, run the documented local or Docker
+commands outside automatic GitHub Actions and record the evidence in handoff.
+
+## Manual Verification Commands
+
+Docker Compose remains the authoritative final gate for local or manually
+started verification:
 
 ```sh
 docker compose -f docker-compose.yml config
@@ -33,22 +41,11 @@ docker compose --progress quiet -f docker-compose.yml run --rm cloudflare
 docker compose --progress quiet -f docker-compose.yml run --rm app-smoke
 ```
 
-## No Duplicate Work
-
-- CI must not run full host verification and then repeat the same full
-  verification inside Docker on the default pull request path.
-- CI must not build the production app repeatedly unless a target needs a
-  distinct artifact.
-- Cloudflare dry-run consumes the already-built app artifact inside Docker and
-  verifies bridge assets before Wrangler dry-run.
-- Publish should reuse the checked app image or the same build cache and target.
-- `xtask` quiet orchestration must not recurse through `pnpm` commands that call
-  `xtask` again.
-
 ## Rules
 
 - Passing quiet commands emit one final `ok ...` line.
 - Failure output is bounded and local to the failed step.
-- Cloudflare Workers Static Assets deployability stays green.
-- CI does not run browser workspace workflow suites, Playwright e2e, or
-  `wasm-pack test --headless` while the temporary e2e suspension is active.
+- CI must stay aligned with `.github/workflows/ci.yml`: automatic CI/CD is
+  repository-only until this suspension is lifted.
+- Cloudflare Workers deployability is verified manually, not by automatic CI/CD,
+  while this suspension is active.
