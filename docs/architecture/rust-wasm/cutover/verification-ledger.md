@@ -14,6 +14,10 @@ change and Docker Compose verification is either run or recorded as not run.
 
 ## Recent Evidence
 
+2026-06-29 public/protected feed availability proof: User Timeline keeps
+fallback relays through cache failure; Home/Notifications storage-busy account
+states, focused tests, quiet gates, and Docker final gate passed.
+
 2026-06-29 storage/WASM startup proof: automatic CI was kept repository-only;
 product Rust no longer uses `wasm_bindgen(inline_js)` for owner locking; the
 WASM bridge loader uses object-form init; asset manifests track bridge imports;
@@ -57,13 +61,10 @@ Keep new run evidence in the table below unless a narrative note is required.
 
 ## Recent Focused Evidence
 
-Latest focused note: on 2026-06-29, User Timeline fallback relay retention and
-protected Home/Notifications account availability passed `cargo test -p
-lkjstr-app -- user_timeline`, `cargo test -p lkjstr-app -- home`, `cargo test
--p lkjstr-app -- notifications`, focused `cargo test -p lkjstr-web` filters,
-`cargo fmt --check`, `cargo run -p lkjstr-xtask -- check-lines`, `cargo run
--p lkjstr-xtask -- check-docs`, `pnpm check:repo`, `pnpm rust-wasm:quiet`, and
-`pnpm verify:quiet`. Docker final gate was not rerun for this focused slice.
+Latest focused note: on 2026-06-29, User Timeline fallback relay retention,
+protected account availability, and Rust/WASM pagehide SQLite close passed
+focused app/web/rust-wasm tests, check, docs, line, repo, `rust-wasm:quiet`,
+and `verify:quiet`. Docker final gate was not rerun for these focused slices.
 
 Previous focused note: on 2026-06-29, OPFS owner recovery, public read relay
 fallback, Search/User Timeline relay dispatch, and privacy consent UI passed

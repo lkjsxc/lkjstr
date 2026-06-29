@@ -78,7 +78,8 @@ held by another context, the app does not construct a persistent worker and
 surfaces storage unavailable, busy, or explicit temporary mode instead.
 
 The worker reports `workerKind`, `mode`, `vfsName`, `databaseName`, warnings,
-and capability flags through storage health. `pagehide` closes the page-local
+and capability flags through storage health. `pagehide` closes retained
+TypeScript storage and best-effort closes any already-loaded Rust/WASM SQLite
 owner. Hidden tabs do not close storage; they pause live relay work and retain
 bounded UI state.
 

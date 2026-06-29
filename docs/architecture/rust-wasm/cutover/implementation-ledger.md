@@ -24,8 +24,9 @@ requires real behavior, focused tests, a no-import proof, and an updated row in
   route plans when cached follow-list storage is unavailable. Home and
   Notifications use typed protected account availability so storage-busy,
   selector-unavailable, blocked, unsupported, loading, and proven no-account
-  states stay distinct. Related rows remain `partial` until parity and deletion
-  proof finish.
+  states stay distinct. The page shell best-effort closes already-loaded
+  Rust/WASM SQLite stores on `pagehide`. Related rows remain `partial` until
+  parity and deletion proof finish.
 
 ## Product Cutover Rows
 

@@ -42,4 +42,5 @@ declare module 'virtual:lkjstr-web-wasm' {
   } & Record<string, unknown>;
 
   export function loadLkjstrWebWasm(): Promise<LkjstrWebWasmModule>;
+  export function closeLkjstrWebWasmStorageIfLoaded(): Promise<number>;
 }

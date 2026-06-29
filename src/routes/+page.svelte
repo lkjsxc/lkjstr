@@ -1,5 +1,6 @@
 <script lang="ts">
   import { onMount } from 'svelte';
+  import { closeLkjstrWebWasmStorageIfLoaded } from 'virtual:lkjstr-web-wasm';
   import { installMemoryDebugExport } from '$lib/app/memory-debug';
   import { logRuntimeError } from '$lib/app/runtime-log';
   import { enforceCacheBudget } from '$lib/cache/cache-budget-enforcement';
@@ -57,7 +58,12 @@
     let disposed = false;
     // prettier-ignore
     const refreshSettings = () => { if (!disposed) void refreshRuntimeSettings().catch(logRuntimeError('settings-load-failed')); };
-    const closeStorage = () => void closeSqliteStorage();
+    const closeStorage = () => {
+      void closeSqliteStorage();
+      void closeLkjstrWebWasmStorageIfLoaded().catch(
+        logRuntimeError('rust-sqlite-pagehide-close-failed'),
+      );
+    };
     window.addEventListener('pagehide', closeStorage);
     const disposeSnapshots = installWorkspaceSnapshotLifecycle({
       refreshSettings,

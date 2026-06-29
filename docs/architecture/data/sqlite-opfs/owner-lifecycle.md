@@ -48,6 +48,10 @@ Close is not a repository cleanup step. It is allowed only for:
 - test reset.
 - unrecoverable owner replacement that has surfaced a storage error.
 
+The page shell closes retained TypeScript storage and asks an already-loaded
+Rust/WASM bridge to close its SQLite stores on `pagehide`. This best-effort
+shutdown must not lazy-load the bridge just to close it.
+
 Failed worker construction releases the owner lease. Worker `error` and
 `messageerror` mark the client closed, settle pending requests as unavailable,
 terminate the worker, release the owner lease, and let the registry replace the

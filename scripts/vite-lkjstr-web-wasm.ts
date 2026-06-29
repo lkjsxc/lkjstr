@@ -180,11 +180,11 @@ function devWasmModule(manifest: WasmAssetManifest): string {
 }
 
 function wasmModule(scriptUrl: string, wasmUrl: string): string {
-  return `const scriptUrl = ${scriptUrl};\nconst wasmUrl = ${wasmUrl};\nlet promise;\nexport async function loadLkjstrWebWasm() {\n  promise ??= import(/* @vite-ignore */ scriptUrl).then(async (module) => {\n    await module.default({ module_or_path: wasmUrl });\n    return module;\n  });\n  return promise;\n}\n`;
+  return `const scriptUrl = ${scriptUrl};\nconst wasmUrl = ${wasmUrl};\nlet promise;\nexport async function loadLkjstrWebWasm() {\n  promise ??= import(/* @vite-ignore */ scriptUrl).then(async (module) => {\n    await module.default({ module_or_path: wasmUrl });\n    return module;\n  });\n  return promise;\n}\nexport async function closeLkjstrWebWasmStorageIfLoaded() {\n  if (!promise) return 0;\n  const module = await promise;\n  return typeof module.close_sqlite_storage_for_reset === 'function' ? await module.close_sqlite_storage_for_reset() : 0;\n}\n`;
 }
 
 function unavailableWasmModule(message: string): string {
-  return `export async function loadLkjstrWebWasm() {\n  throw new Error(${JSON.stringify(message)});\n}\n`;
+  return `export async function loadLkjstrWebWasm() {\n  throw new Error(${JSON.stringify(message)});\n}\nexport async function closeLkjstrWebWasmStorageIfLoaded() {\n  return 0;\n}\n`;
 }
 
 function unavailable(): ArtifactState {

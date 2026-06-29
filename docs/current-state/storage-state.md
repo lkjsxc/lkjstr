@@ -63,7 +63,9 @@ Read next: [architecture/data/README.md](../architecture/data/README.md),
   database name and worker URL. `with_sqlite_store` borrows the shared store and
   no longer closes the product database after each repository operation. The
   Rust owner lock uses JS reflection instead of wasm-bindgen `inline_js`, so
-  storage startup does not depend on untracked snippet assets.
+  storage startup does not depend on untracked snippet assets. The page shell
+  best-effort closes already-loaded Rust/WASM SQLite stores on `pagehide`
+  without lazy-loading the bridge.
 - SQLite worker `open` is idempotent for the already opened database, returns
   `busy` for a different database while the owner is open, and skips schema
   statements for an already applied schema hash. Non-cancel worker commands run
