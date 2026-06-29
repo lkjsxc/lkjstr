@@ -61,11 +61,11 @@ Keep new run evidence in the table below unless a narrative note is required.
 
 ## Recent Focused Evidence
 
-Latest focused note: on 2026-06-29, User Timeline fallback relay retention,
-protected account availability, pagehide SQLite close, holder diagnostics, and
-shared feed policy reducers passed focused app/web/rust-wasm/storage tests,
-check, docs, line, repo, `rust-wasm:quiet`, and `verify:quiet`. Docker final
-gate was not rerun.
+Latest focused note: on 2026-06-29, User Timeline fallback retention,
+protected account states, pagehide close, holder diagnostics, and shared feed
+policy passed focused app/web/storage tests, docs/line/repo checks,
+`rust-wasm:quiet`, `verify:quiet`, and Docker final gate (`config`, `build`,
+`run verify`, `run cloudflare`, `run app-smoke`).
 
 Previous focused note: on 2026-06-29, OPFS owner recovery, public read relay
 fallback, Search/User Timeline relay dispatch, and privacy consent UI passed
