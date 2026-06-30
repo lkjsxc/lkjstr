@@ -62,7 +62,9 @@ notification context header and the source event as the primary body.
   merely to mark them read.
 - Account storage busy, account storage blocked or unsupported, selector
   unavailable, and loading states render explicit protected-account guidance and
-  do not collapse to `no-active-account`.
+  do not collapse to `no-active-account`. If the page shell already supplied the
+  active account pubkey, Notifications may continue with that real pubkey while
+  keeping the Rust storage failure as a diagnostic.
 - Initial loading settles after local records load and subscription setup
   finishes, even when no notification event arrives.
 - Partial relay failure stays visible in diagnostics but does not block cached

@@ -43,9 +43,10 @@ pub fn mount_home_tab(
     open_thread: Function,
     open_author_context: Function,
 ) -> HomeIslandHandle {
-    let provider = home_feed_host::home_feed_provider_with_worker_url(
+    let provider = home_feed_host::home_feed_provider_with_page_account(
         PRODUCT_DATABASE_NAME.to_owned(),
         PRODUCT_WORKER_URL.to_owned(),
+        optional_string(active_pubkey.clone()),
     );
     let unmount = lkjstr_ui::mount_home_island(
         parent,

@@ -25,12 +25,22 @@ const VIEW_FONT_SCALE: f32 = 1.0;
 pub(crate) struct HomeFeedHost {
     pub(crate) db_name: String,
     pub(crate) worker_url: String,
+    pub(crate) page_active_pubkey: Option<String>,
 }
 
 pub fn home_feed_provider_with_worker_url(db_name: String, worker_url: String) -> HomeFeedProvider {
+    home_feed_provider_with_page_account(db_name, worker_url, None)
+}
+
+pub(crate) fn home_feed_provider_with_page_account(
+    db_name: String,
+    worker_url: String,
+    page_active_pubkey: Option<String>,
+) -> HomeFeedProvider {
     let host = HomeFeedHost {
         db_name,
         worker_url,
+        page_active_pubkey,
     };
     HomeFeedProvider::new(move |request| {
         let host = host.clone();
@@ -92,9 +102,14 @@ async fn home_feed_model(host: &HomeFeedHost, owner: &str) -> HomeFeedLoad {
             HomeFeedSourceState::Pending,
         ),
     };
-    let geometry_models =
-        home_feed_geometry_models(host, &window, &mut diagnostics, VIEW_WIDTH_PX, VIEW_FONT_SCALE)
-            .await;
+    let geometry_models = home_feed_geometry_models(
+        host,
+        &window,
+        &mut diagnostics,
+        VIEW_WIDTH_PX,
+        VIEW_FONT_SCALE,
+    )
+    .await;
     let relay = home_relay_input(HomeRelayInputSeed {
         owner,
         active_pubkey: &active_pubkey,

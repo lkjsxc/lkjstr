@@ -23,8 +23,11 @@ provider resolves to one of these states:
 Stats must not show indefinite text such as storage health has not been read.
 The Rust UI bounds provider reads with a timeout snapshot while worker calls
 keep their typed deadlines. Timeout and unavailable states are explicit
-diagnostic rows. Pressure fields come from a real pressure snapshot row or an
-explicit unavailable reason; Stats must not invent byte counts.
+diagnostic rows. The Svelte Stats surface also renders the latest startup
+storage probes for broker visibility, key match, health, accounts, active
+selector, relay settings, and profile-header cache rows. Pressure fields come
+from a real pressure snapshot row or an explicit unavailable reason; Stats must
+not invent byte counts.
 Rust Stats renders pressure byte-summary rows for browser usage, site target,
 protected, prunable, unknown or unowned, and residual overhead classes. Missing
 pressure data keeps those rows visible as unavailable instead of showing zero.

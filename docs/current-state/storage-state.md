@@ -99,7 +99,11 @@ Read next: [architecture/data/README.md](../architecture/data/README.md),
 - Storage failure must recover to a usable Welcome workspace. Persistent OPFS,
   owner busy, unsupported Web Locks, worker construction failure, SQLite-open
   failure, and temporary memory mode must be visible in Stats, Settings,
-  Accounts, Relay Settings, drafts, or the workspace shell. Protected Home and
-  Notifications account reads distinguish selected account, no accounts, no
-  selected account, selector unavailable, storage busy, storage blocked or
-  unsupported, and loading states.
+  Accounts, Relay Settings, drafts, or the workspace shell. Startup diagnostics
+  probe the broker, health, accounts, active selector, relay settings, and kind
+  `0` profile-header cache rows, then log each startup failure reason once.
+  Protected Home and Notifications account reads distinguish selected account,
+  no accounts, no selected account, selector unavailable, storage busy,
+  storage blocked or unsupported, and loading states. If the Svelte page shell
+  supplies a real active account while a Rust island account read is blocked,
+  the island may use that pubkey and keep the storage failure as a diagnostic.

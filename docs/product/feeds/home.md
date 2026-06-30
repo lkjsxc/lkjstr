@@ -67,7 +67,9 @@ its NIP-02 follows.
 - Home is a protected account surface. It may start relay reads only after a
   real selected account pubkey is available. Account storage busy, selector
   unavailable, blocked, unsupported, or loading states render explicit retry or
-  unavailable guidance instead of `no-active-account`.
+  unavailable guidance instead of `no-active-account`. If the page shell already
+  supplied the active account pubkey, Home may continue with that real pubkey
+  while keeping the Rust storage failure as a diagnostic.
 - No active account means no relay subscription. Home must not enter
   `no-active-account` while workspace account data is still loading or when
   protected storage failed before proving that no account is selected.

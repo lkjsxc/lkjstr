@@ -3,11 +3,18 @@ import {
   sendSqliteStorage,
   type SqliteStorageSendOptions,
 } from './kernel-client';
+import {
+  sqliteOpfsBrokerGlobalName,
+  sqliteProductDatabaseName,
+  sqliteProductWorkerUrl,
+} from './product-key';
 import type { StorageOp, StorageResponse } from './types';
 
-export const sqliteOpfsBrokerGlobalName = '__lkjstrSqliteOpfsBroker';
-export const sqliteProductDatabaseName = '/lkjstr/main.sqlite3';
-export const sqliteProductWorkerUrl = '/sqlite-opfs-worker.js';
+export {
+  sqliteOpfsBrokerGlobalName,
+  sqliteProductDatabaseName,
+  sqliteProductWorkerUrl,
+} from './product-key';
 
 export type SqliteOpfsAppBroker = {
   readonly kind: 'lkjstr-sqlite-opfs-broker';

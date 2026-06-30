@@ -96,6 +96,7 @@ mod profile_feed_routes;
 mod profile_feed_sparse;
 mod product_storage_key;
 mod protected_account_availability;
+mod protected_account_page_fallback;
 pub mod relay_host;
 mod relay_selection;
 mod relay_settings_host;

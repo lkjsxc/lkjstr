@@ -7,6 +7,7 @@
   import { defaultCacheMaxBytes } from '$lib/cache/storage-quota';
   import { loadSettings } from '$lib/settings/settings-store';
   import '$lib/storage/sqlite-opfs/app-broker';
+  import { refreshStartupStorageDiagnostics } from '$lib/storage/sqlite-opfs/startup-diagnostics';
   import { closeSqliteStorage } from '$lib/storage/sqlite-opfs/kernel-client';
   import { installSqliteStorageTestApi } from '$lib/storage/sqlite-opfs/test-api';
   import type { Account } from '$lib/accounts/account';
@@ -56,6 +57,9 @@
   onMount(() => {
     installMemoryDebugExport();
     installSqliteStorageTestApi();
+    void refreshStartupStorageDiagnostics().catch(
+      logRuntimeError('storage-startup-diagnostics-failed'),
+    );
     let disposed = false;
     // prettier-ignore
     const refreshSettings = () => { if (!disposed) void refreshRuntimeSettings().catch(logRuntimeError('settings-load-failed')); };

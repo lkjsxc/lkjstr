@@ -34,15 +34,25 @@ const VIEW_FONT_SCALE: f32 = 1.0;
 pub(crate) struct NotificationsFeedHost {
     pub(crate) db_name: String,
     pub(crate) worker_url: String,
+    pub(crate) page_active_pubkey: Option<String>,
 }
 
 pub fn notifications_feed_provider_with_worker_url(
     db_name: String,
     worker_url: String,
 ) -> NotificationsFeedProvider {
+    notifications_feed_provider_with_page_account(db_name, worker_url, None)
+}
+
+pub(crate) fn notifications_feed_provider_with_page_account(
+    db_name: String,
+    worker_url: String,
+    page_active_pubkey: Option<String>,
+) -> NotificationsFeedProvider {
     let host = NotificationsFeedHost {
         db_name,
         worker_url,
+        page_active_pubkey,
     };
     let relay_state = NotificationsRelayState::default();
     let read_state = relay_state.clone();
@@ -53,13 +63,11 @@ pub fn notifications_feed_provider_with_worker_url(
             let release_state = read_state.clone();
             let relay_slot = RelayReadSlot::default();
             let release_slot = relay_slot.clone();
-            request
-                .lease()
-                .on_release(release_notifications_owner(
-                    release_state,
-                    release_owner,
-                    release_slot,
-                ));
+            request.lease().on_release(release_notifications_owner(
+                release_state,
+                release_owner,
+                release_slot,
+            ));
             let state = read_state.clone();
             wasm_bindgen_futures::spawn_local(async move {
                 let owner = request.owner.clone();

@@ -30,6 +30,11 @@ mount. The broker is published on `globalThis.__lkjstrSqliteOpfsBroker` with:
   product open path.
 - `close(deadlineMs)`, which is reserved for page shutdown, reset, and tests.
 
+Startup diagnostics use the same broker entry to probe broker visibility,
+product-key match, storage health, accounts, active selector, relay settings,
+and kind `0` profile-header cache rows. Stats renders the latest probe result,
+and lkjstr Log records each failed startup probe reason once.
+
 The global object is a host adapter, not a product repository. Product modules
 continue to call typed repositories. Rust/WASM host code discovers the broker by
 JS reflection and sends the same typed worker operations through it.

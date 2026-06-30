@@ -14,10 +14,10 @@ change and Docker Compose verification is either run or recorded as not run.
 
 ## Recent Evidence
 
-2026-06-30 storage broker/startup reason proof: shared broker callers preserve
-broker, owner-lock, worker, browser, timeout, and SQLite-open labels. Focused
-storage, repo, docs, line, fmt, clippy, Rust/WASM, test, and verify gates
-passed; Docker was not rerun.
+2026-06-30 storage broker/startup proof: shared broker callers preserve exact
+failure labels, Stats/Log show startup probes, and page active-account pubkeys
+can bridge Rust island account-read failures with diagnostics. Focused storage,
+repo, docs, line, fmt, clippy, Rust/WASM, test, and verify gates passed.
 
 2026-06-29 public/protected feed availability proof passed focused tests, quiet
 gates, and Docker final gate.
@@ -55,12 +55,12 @@ gate was not rerun.
 
 ## Recent Focused Evidence
 
-Latest focused note: on 2026-06-30, startup storage reason proof preserved
-`broker-missing`, `broker-key-mismatch`, owner-lock, browser unsupported,
-worker construction/open, blocked, timeout, and `sqlite-open-failed` labels for
-Rust/WASM hosts and TypeScript protected repository state. Passed the focused
-storage/Vitest, web storage, Rust/WASM, fmt, wasm-target clippy, repo,
-docs/line, full test, verify, and Docker config gates. Docker final gate was not rerun.
+Latest focused note: on 2026-06-30, startup diagnostics preserved broker,
+owner-lock, worker/open, blocked, timeout, and SQLite-open labels, exposed
+broker/health/account/selector/relay/profile probes in Stats and Log, and let
+Home/Notifications use the page active pubkey when Rust account reads fail.
+Passed focused storage/app Vitest, web storage, Rust/WASM, fmt, wasm clippy,
+repo, docs/line, full test, check, verify, and Docker config gates; Docker was not rerun.
 
 Previous focused note: on 2026-06-29, User Timeline fallback retention,
 protected account states, pagehide close, holder diagnostics, and shared feed

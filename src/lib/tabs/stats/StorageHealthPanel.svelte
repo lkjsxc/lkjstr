@@ -1,8 +1,10 @@
 <script lang="ts">
   import type { SqliteStorageHealthStatus } from '$lib/storage/sqlite-opfs/storage-health';
+  import type { StartupStorageDiagnostics } from '$lib/storage/sqlite-opfs/startup-diagnostics';
 
   type Props = {
     status: SqliteStorageHealthStatus | null;
+    startup: StartupStorageDiagnostics;
   };
 
   let props: Props = $props();
@@ -56,4 +58,21 @@
   <p>SQLite storage health unavailable: {props.status.message}</p>
 {:else}
   <p>SQLite storage health has not been read yet.</p>
+{/if}
+
+<h4>Startup storage checks</h4>
+{#if props.startup.updatedAt > 0}
+  <table class="stats-table">
+    <tbody>
+      {#each props.startup.rows as row (row.key)}
+        <tr>
+          <th>{row.label}</th>
+          <td>{row.status}</td>
+          <td>{row.detail ?? row.reason}</td>
+        </tr>
+      {/each}
+    </tbody>
+  </table>
+{:else}
+  <p>Startup storage diagnostics have not run yet.</p>
 {/if}

@@ -43,9 +43,10 @@ pub fn mount_notifications_tab(
     open_thread: Function,
     open_author_context: Function,
 ) -> NotificationsIslandHandle {
-    let provider = notifications_feed_host::notifications_feed_provider_with_worker_url(
+    let provider = notifications_feed_host::notifications_feed_provider_with_page_account(
         PRODUCT_DATABASE_NAME.to_owned(),
         PRODUCT_WORKER_URL.to_owned(),
+        optional_string(active_pubkey.clone()),
     );
     let unmount = lkjstr_ui::mount_notifications_island(
         parent,

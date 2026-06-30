@@ -21,6 +21,10 @@
     readSqliteStorageHealth,
     type SqliteStorageHealthStatus,
   } from '$lib/storage/sqlite-opfs/storage-health';
+  import {
+    startupStorageDiagnostics,
+    type StartupStorageDiagnostics,
+  } from '$lib/storage/sqlite-opfs/startup-diagnostics';
   import JobHealthPanel from './JobHealthPanel.svelte';
   import NetworkStatsTables from './NetworkStatsTables.svelte';
   import RuntimeCounters from './RuntimeCounters.svelte';
@@ -43,6 +47,9 @@
   let jobHealth = $state<JobHealthSummary | null>(null);
   let cache = $state<CacheMetadata | null>(null);
   let storageHealth = $state<SqliteStorageHealthStatus | null>(null);
+  let storageStartup = $state<StartupStorageDiagnostics>(
+    startupStorageDiagnostics(),
+  );
   let optimizerScores = $state(relayReadScoreSnapshot());
   let scanHints = $state(feedScanHintSnapshot());
   let scanDebug = $state<ScanOptimizerDebugSnapshot | null>(null);
@@ -65,6 +72,7 @@
     memory = currentMemory;
     optimizerScores = relayReadScoreSnapshot();
     scanHints = feedScanHintSnapshot();
+    storageStartup = startupStorageDiagnostics();
     await new Promise((resolve) => setTimeout(resolve, 100));
     if (disposed || seq !== refreshSeq) return;
     const next = await Promise.all([
@@ -127,7 +135,7 @@
   <NetworkStatsTables {snapshots} {summaries} />
   <JobHealthPanel {jobHealth} />
   <CacheStatusPanel {cache} />
-  <StorageHealthPanel status={storageHealth} />
+  <StorageHealthPanel status={storageHealth} startup={storageStartup} />
   <OptimizerPanel scores={optimizerScores} hints={scanHints} {scanDebug} />
   <RuntimeCounters />
   <RuntimeMemoryPanel {memory} />

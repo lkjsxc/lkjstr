@@ -3,18 +3,20 @@ use lkjstr_domain::seed_relay_sets;
 use lkjstr_storage::StorageOutcome;
 
 use crate::{
-    home_feed_host::HomeFeedHost,
-    host_status::browser_now_ms,
+    home_feed_host::HomeFeedHost, host_status::browser_now_ms,
     protected_account_availability::resolve_protected_account,
-    relay_selection::selected_read_relays,
-    sqlite_host_store::with_sqlite_store,
+    protected_account_page_fallback::page_active_account_fallback,
+    relay_selection::selected_read_relays, sqlite_host_store::with_sqlite_store,
     sqlite_store::sqlite_relay_sets_all,
 };
 
 pub(crate) async fn active_account(
     host: &HomeFeedHost,
 ) -> (ProtectedAccountAvailability, Option<String>) {
-    let account = resolve_protected_account(&host.db_name, &host.worker_url).await;
+    let account = page_active_account_fallback(
+        resolve_protected_account(&host.db_name, &host.worker_url).await,
+        host.page_active_pubkey.as_deref(),
+    );
     (account.availability, account.diagnostic)
 }
 
