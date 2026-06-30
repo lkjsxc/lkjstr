@@ -71,10 +71,12 @@ export function createRelayClient(
   const scheduleReconnect = () => { if (!shouldReconnect() || reconnectTimer) return; const delay = reconnectDelayMs + Math.floor(Math.random() * 100); reconnectDelayMs = Math.min(reconnectDelayMs * 2, 15_000); reconnectTimer = setTimeout(() => { reconnectTimer = undefined; socket = undefined; handle.connect(); }, delay); incMemoryCounter('active-timers'); };
   // prettier-ignore
   const clampFilters = (filters: readonly NostrFilter[]): NostrFilter[] => { const maxLimit = relayLimits(url).maxLimit; return filters.map((filter) => maxLimit && filter.limit && filter.limit > maxLimit ? { ...filter, limit: maxLimit } : filter); };
+  // prettier-ignore
+  const canSendSocket = () => socket && (socket.readyState === undefined || socket.readyState === (WebSocket.OPEN ?? 1));
   const sendEncoded = (encoded: string) => {
     if (finallyClosed) return;
     const bytes = utf8ByteLengthWithin(encoded, Number.MAX_SAFE_INTEGER).bytes;
-    if (state === 'open') {
+    if (state === 'open' && canSendSocket()) {
       stats.addSentBytes(bytes);
       socket?.send(encoded);
     } else if (queue.enqueue(encoded)) {
@@ -86,7 +88,7 @@ export function createRelayClient(
   // prettier-ignore
   const send = (message: ClientMessage) => { if (finallyClosed) return; handle.connect(); sendEncoded(encodeClientMessage(message)); };
   // prettier-ignore
-  const sendIfConnected = (message: ClientMessage) => { if (finallyClosed || !socket || state === 'closed' || state === 'idle') return; sendEncoded(encodeClientMessage(message)); };
+  const sendIfConnected = (message: ClientMessage) => { if (finallyClosed || state !== 'open' || !canSendSocket()) return; const encoded = encodeClientMessage(message); stats.addSentBytes(utf8ByteLengthWithin(encoded, Number.MAX_SAFE_INTEGER).bytes); socket?.send(encoded); };
   // prettier-ignore
   const startSubscription = (id: string, filters: readonly NostrFilter[], options: RelaySubscribeOptions, restore = false) => { if (finallyClosed) return; const limits = relayLimits(url); const wireId = aliases.wireId(id, limits.maxSubscriptionIdLength); const message: ClientMessage = ['REQ', wireId, ...filters]; const encoded = encodeClientMessage(message); const maxBytes = Math.min(limits.maxMessageLength ?? appRequestBudgetCaps.maxReqMessageBytes, appRequestBudgetCaps.maxReqMessageBytes); if (!utf8ByteLengthWithin(encoded, maxBytes).within) { addDiagnostic('request-too-large', 'REQ exceeds relay message limit', id); releaseReq(id); return; } if (!restore) { eoseBySub[id] = false; filtersBySub.set(id, filters); optionsBySub.set(id, options); if (options.idleCloseMs) deadlineBySub.set(id, Date.now() + options.idleCloseMs); delete closedBySub[id]; } stats.addSubscription(id, options.descriptor); incMemoryCounter('active-relay-subscriptions'); handle.connect(); sendEncoded(encoded); };
   // prettier-ignore
@@ -180,7 +182,7 @@ export function createRelayClient(
       // prettier-ignore
       socket.onclose = () => { clearConnectTimer(); socket = undefined; if (!intentionalClose && state !== 'error') { lastError = 'websocket closed'; addDiagnostic('closed', 'websocket closed'); } setState('closed'); scheduleReconnect(); };
       // prettier-ignore
-      socket.onerror = () => { clearConnectTimer(); lastError = 'websocket error'; setState('error'); socket = undefined; scheduleReconnect(); };
+      socket.onerror = () => { clearConnectTimer(); lastError = 'websocket error'; addDiagnostic('socket-error', 'websocket error'); setState('error'); socket = undefined; scheduleReconnect(); };
       socket.onmessage = (message) => receive(message.data);
     },
     // prettier-ignore

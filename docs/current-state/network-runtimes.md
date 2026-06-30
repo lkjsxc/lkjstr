@@ -35,6 +35,6 @@ Read next: [architecture/network/README.md](../architecture/network/README.md),
   storage pressure, feed geometry reservation, anchor compensation, memory
   counters, and Rust-owned User Timeline diagnostic aggregates when available.
 - Relay publish waiters, paged read leases, deduped read abort listeners, relay
-  final-close state, idle pool eviction, and background tasks have cleanup
-  tests.
+  final-close state, idle pool eviction, closing-socket send suppression, and
+  background tasks have cleanup tests.
 - Runtime counters use static aggregate keys only.

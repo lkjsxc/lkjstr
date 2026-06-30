@@ -21,6 +21,7 @@ class FakeWebSocket {
   onclose: ((event: CloseEvent) => void) | null = null;
   onerror: ((event: Event) => void) | null = null;
   onmessage: ((event: MessageEvent) => void) | null = null;
+  readyState = 0;
   readonly sent: string[] = [];
 
   constructor(readonly url: string) {
@@ -28,19 +29,19 @@ class FakeWebSocket {
   }
 
   send(data: string): void {
+    if (this.readyState !== 1)
+      throw new Error('already in CLOSING or CLOSED state');
     this.sent.push(data);
   }
 
   close(): void {
+    this.readyState = 3;
     this.onclose?.({} as CloseEvent);
   }
 
   open(): void {
+    this.readyState = 1;
     this.onopen?.({} as Event);
-  }
-
-  error(): void {
-    this.onerror?.({} as Event);
   }
 
   receive(data: unknown): void {

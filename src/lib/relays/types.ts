@@ -12,7 +12,8 @@ export type RelayDiagnosticKind =
   | 'filter-mismatch'
   | 'request-too-large'
   | 'request-queue-drop'
-  | 'send-queue-full';
+  | 'send-queue-full'
+  | 'socket-error';
 
 export type RelayDiagnostic = {
   readonly relay: string;
