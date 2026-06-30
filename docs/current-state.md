@@ -13,8 +13,9 @@ split by ownership under [current-state/README.md](current-state/README.md).
 - Shipped product runtime remains SvelteKit and TypeScript under `src/` while
   Rust/WASM crates take ownership slice by slice with proof.
 - Durable product storage is worker-owned SQLite OPFS with an origin-level
-  owner lease for persistent dedicated workers and explicit busy, unsupported,
-  or temporary states when persistence cannot open.
+  owner lease for persistent dedicated workers, a shared app-broker key
+  `/lkjstr/main.sqlite3`, and explicit busy, unsupported, or temporary states
+  when persistence cannot open.
 - Product modules use typed repositories; main-thread product code must not
   open SQLite, OPFS, IndexedDB, localStorage, Cache Storage, or quota APIs
   directly unless the file is an approved host adapter or diagnostic owner.

@@ -5,23 +5,22 @@ use crate::{
     accounts_host, accounts_selector_host, app_log_host, author_context_host, browser_inventory,
     custom_request_host, followees_host, global_feed_host, home_feed_host,
     host_status::browser_now_ms,
-    notifications_feed_host, profile_clipboard_host, profile_feed_host, profile_follow_host,
-    relay_settings_host, search_feed_host, settings_host,
+    notifications_feed_host,
+    product_storage_key::{PRODUCT_DATABASE_NAME, PRODUCT_WORKER_URL},
+    profile_clipboard_host, profile_feed_host, profile_follow_host, relay_settings_host,
+    search_feed_host, settings_host,
     sqlite_host_store::with_sqlite_store,
     sqlite_store::{sqlite_accounts_all, sqlite_storage_stats_snapshot},
     stats_actions_host::stats_actions_provider,
-    storage_worker::DEFAULT_WORKER_URL,
     thread_feed_host, tweet_host, upload_settings_host, user_timeline_host, workspace_host,
 };
 
-const DEFAULT_DB_NAME: &str = "/lkjstr/main.sqlite3";
-
 pub fn mount_rust_workspace_shell() {
-    mount_rust_workspace_shell_from_db(DEFAULT_DB_NAME.to_owned());
+    mount_rust_workspace_shell_from_db(PRODUCT_DATABASE_NAME.to_owned());
 }
 
 pub fn mount_rust_workspace_shell_from_db(db_name: String) {
-    mount_rust_workspace_shell_from_db_with_worker(db_name, DEFAULT_WORKER_URL.to_owned());
+    mount_rust_workspace_shell_from_db_with_worker(db_name, PRODUCT_WORKER_URL.to_owned());
 }
 
 pub fn mount_rust_workspace_shell_from_db_with_worker(db_name: String, worker_url: String) {

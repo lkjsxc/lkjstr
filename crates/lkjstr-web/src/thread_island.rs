@@ -3,9 +3,10 @@ use lkjstr_ui::Callback;
 use wasm_bindgen::prelude::{JsValue, wasm_bindgen};
 use web_sys::HtmlElement;
 
-use crate::{storage_worker::DEFAULT_WORKER_URL, thread_feed_host};
-
-const DEFAULT_DB_NAME: &str = "lkjstr";
+use crate::{
+    product_storage_key::{PRODUCT_DATABASE_NAME, PRODUCT_WORKER_URL},
+    thread_feed_host,
+};
 
 #[wasm_bindgen]
 pub struct ThreadIslandHandle {
@@ -43,8 +44,8 @@ pub fn mount_thread_tab(
     open_author_context: Function,
 ) -> ThreadIslandHandle {
     let provider = thread_feed_host::thread_feed_provider_with_worker_url(
-        DEFAULT_DB_NAME.to_owned(),
-        DEFAULT_WORKER_URL.to_owned(),
+        PRODUCT_DATABASE_NAME.to_owned(),
+        PRODUCT_WORKER_URL.to_owned(),
     );
     let open_thread = string_callback(open_thread);
     let unmount = lkjstr_ui::mount_thread_island(

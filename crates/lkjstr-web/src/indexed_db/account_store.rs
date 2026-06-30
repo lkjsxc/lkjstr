@@ -1,11 +1,11 @@
 use lkjstr_domain::normalize_account;
 use lkjstr_storage::{AccountRecord, LocalAccountSecretRecord, StorageOutcome, account_record_id};
 
-use crate::indexed_db::database::{ACCOUNTS_TABLE, DEFAULT_DB_NAME, LOCAL_ACCOUNT_SECRETS_TABLE};
+use crate::indexed_db::database::{ACCOUNTS_TABLE, LEGACY_INDEXED_DB_NAME, LOCAL_ACCOUNT_SECRETS_TABLE};
 use crate::indexed_db::{record_requests, record_write, transaction};
 
 pub async fn default_accounts_all() -> StorageOutcome<Vec<AccountRecord>> {
-    accounts_all(DEFAULT_DB_NAME).await
+    accounts_all(LEGACY_INDEXED_DB_NAME).await
 }
 
 pub async fn account_put(db_name: &str, row: &AccountRecord) -> StorageOutcome<()> {

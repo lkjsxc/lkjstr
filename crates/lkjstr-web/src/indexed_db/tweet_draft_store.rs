@@ -1,10 +1,10 @@
 use lkjstr_storage::{StorageOutcome, TweetDraftRecord, tweet_draft_record_id};
 
-use crate::indexed_db::database::{DEFAULT_DB_NAME, TWEET_DRAFTS_TABLE};
+use crate::indexed_db::database::{LEGACY_INDEXED_DB_NAME, TWEET_DRAFTS_TABLE};
 use crate::indexed_db::{record_requests, record_write};
 
 pub async fn default_tweet_draft_get(id: &str) -> StorageOutcome<Option<TweetDraftRecord>> {
-    tweet_draft_get(DEFAULT_DB_NAME, id).await
+    tweet_draft_get(LEGACY_INDEXED_DB_NAME, id).await
 }
 
 pub async fn tweet_draft_put(db_name: &str, row: &TweetDraftRecord) -> StorageOutcome<()> {

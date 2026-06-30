@@ -52,19 +52,20 @@ gate was not rerun.
 | Cloudflare static hosting       | `pnpm cloudflare:quiet`                                                                                                                                                                                                                          | `docker compose run --rm cloudflare` | Cloudflare remains static hosting only.                                 |
 | App smoke                       | `pnpm verify:quiet`                                                                                                                                                                                                                              | `docker compose run --rm app-smoke`  | Proves nonblank root workspace response.                                |
 
-## Current Run Notes
-
-Detailed 2026-06-13 run notes moved to
-[verification-run-notes-2026-06-13.md](verification-run-notes-2026-06-13.md).
-Keep new run evidence in the table below unless a narrative note is required.
-
 ## Recent Focused Evidence
 
-Latest focused note: on 2026-06-29, User Timeline fallback retention,
+Latest focused note: on 2026-06-30, Rust island SQLite broker key
+centralization replaced per-island `lkjstr` literals with the shared product
+key, added source guards, and split missing-broker from key-mismatch diagnostics.
+Passed focused Vitest app-broker/source guard, `cargo test -p lkjstr-web`,
+`cargo fmt --check`, web clippy, `pnpm check:repo`, docs/line checks,
+`pnpm rust-wasm:quiet`, and `pnpm verify:quiet`; direct wasm-pack broker test
+hit ChromeDriver SIGKILL/HTTP 404 after compile.
+
+Previous focused note: on 2026-06-29, User Timeline fallback retention,
 protected account states, pagehide close, holder diagnostics, and shared feed
 policy passed focused app/web/storage tests, docs/line/repo checks,
-`rust-wasm:quiet`, `verify:quiet`, and Docker final gate (`config`, `build`,
-`run verify`, `run cloudflare`, `run app-smoke`).
+`rust-wasm:quiet`, `verify:quiet`, and Docker final gate (`config`, `build`, `run verify`, `run cloudflare`, `run app-smoke`).
 
 Previous focused note: on 2026-06-29, OPFS owner recovery, public read relay
 fallback, Search/User Timeline relay dispatch, and privacy consent UI passed

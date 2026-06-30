@@ -1,11 +1,11 @@
 use lkjstr_storage::{SettingOverrideRecord, StorageOperation, StorageOutcome, setting_record_key};
 use serde::Serialize;
 
-use crate::indexed_db::database::{self, DEFAULT_DB_NAME, SETTINGS_TABLE};
+use crate::indexed_db::database::{self, LEGACY_INDEXED_DB_NAME, SETTINGS_TABLE};
 use crate::indexed_db::settings_requests;
 
 pub async fn default_setting_put(row: &SettingOverrideRecord) -> StorageOutcome<()> {
-    setting_put(DEFAULT_DB_NAME, row).await
+    setting_put(LEGACY_INDEXED_DB_NAME, row).await
 }
 
 pub async fn setting_put(db_name: &str, row: &SettingOverrideRecord) -> StorageOutcome<()> {

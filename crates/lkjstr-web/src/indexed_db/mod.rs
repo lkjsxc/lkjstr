@@ -30,7 +30,7 @@ struct Availability {
 
 pub async fn indexed_db_available_response() -> JsValue {
     let outcome = database::open_database(
-        database::DEFAULT_DB_NAME,
+        database::LEGACY_INDEXED_DB_NAME,
         StorageOperation::Read,
         database::WORKSPACES_TABLE,
         "idb-probe",
@@ -50,14 +50,14 @@ pub async fn workspace_put_json_response(json: &str) -> JsValue {
         Ok(row) => row,
         Err(error) => return response::error("corrupt", error.to_string()),
     };
-    match workspace_store::workspace_put(database::DEFAULT_DB_NAME, &row).await {
+    match workspace_store::workspace_put(database::LEGACY_INDEXED_DB_NAME, &row).await {
         StorageOutcome::Ok(()) => response::ok(Availability { available: true }),
         other => outcome_error(other),
     }
 }
 
 pub async fn workspace_get_json_response(id: &str) -> JsValue {
-    match workspace_store::workspace_get(database::DEFAULT_DB_NAME, id).await {
+    match workspace_store::workspace_get(database::LEGACY_INDEXED_DB_NAME, id).await {
         StorageOutcome::Ok(row) => response::ok(row),
         other => outcome_error(other),
     }
@@ -68,14 +68,14 @@ pub async fn setting_put_json_response(json: &str) -> JsValue {
         Ok(row) => row,
         Err(error) => return response::error("corrupt", error.to_string()),
     };
-    match settings_store::setting_put(database::DEFAULT_DB_NAME, &row).await {
+    match settings_store::setting_put(database::LEGACY_INDEXED_DB_NAME, &row).await {
         StorageOutcome::Ok(()) => response::ok(Availability { available: true }),
         other => outcome_error(other),
     }
 }
 
 pub async fn setting_get_json_response(key: &str) -> JsValue {
-    match settings_store::setting_get(database::DEFAULT_DB_NAME, key).await {
+    match settings_store::setting_get(database::LEGACY_INDEXED_DB_NAME, key).await {
         StorageOutcome::Ok(row) => response::ok(row),
         other => outcome_error(other),
     }
@@ -86,14 +86,14 @@ pub async fn tweet_draft_put_json_response(json: &str) -> JsValue {
         Ok(row) => row,
         Err(error) => return response::error("corrupt", error.to_string()),
     };
-    match tweet_draft_store::tweet_draft_put(database::DEFAULT_DB_NAME, &row).await {
+    match tweet_draft_store::tweet_draft_put(database::LEGACY_INDEXED_DB_NAME, &row).await {
         StorageOutcome::Ok(()) => response::ok(Availability { available: true }),
         other => outcome_error(other),
     }
 }
 
 pub async fn tweet_draft_get_json_response(id: &str) -> JsValue {
-    match tweet_draft_store::tweet_draft_get(database::DEFAULT_DB_NAME, id).await {
+    match tweet_draft_store::tweet_draft_get(database::LEGACY_INDEXED_DB_NAME, id).await {
         StorageOutcome::Ok(row) => response::ok(row),
         other => outcome_error(other),
     }

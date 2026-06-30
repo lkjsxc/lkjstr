@@ -7,11 +7,11 @@ use wasm_bindgen::prelude::JsValue;
 use web_sys::IdbTransactionMode;
 
 use crate::indexed_db::callbacks;
-use crate::indexed_db::database::{self, DEFAULT_DB_NAME, WORKSPACES_TABLE};
+use crate::indexed_db::database::{self, LEGACY_INDEXED_DB_NAME, WORKSPACES_TABLE};
 use crate::indexed_db::tab_state_store;
 
 pub async fn default_workspace_startup_input(now: u64) -> StartupInput {
-    workspace_startup_input(DEFAULT_DB_NAME, now).await
+    workspace_startup_input(LEGACY_INDEXED_DB_NAME, now).await
 }
 
 pub async fn workspace_startup_input(db_name: &str, now: u64) -> StartupInput {

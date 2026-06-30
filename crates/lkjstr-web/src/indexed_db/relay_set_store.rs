@@ -1,11 +1,11 @@
 use lkjstr_domain::sorted_relay_sets;
 use lkjstr_storage::{RelaySetRecord, StorageOutcome, relay_set_record_id};
 
-use crate::indexed_db::database::{DEFAULT_DB_NAME, RELAY_SETS_TABLE};
+use crate::indexed_db::database::{LEGACY_INDEXED_DB_NAME, RELAY_SETS_TABLE};
 use crate::indexed_db::{record_requests, record_write};
 
 pub async fn default_relay_sets_all() -> StorageOutcome<Vec<RelaySetRecord>> {
-    relay_sets_all(DEFAULT_DB_NAME).await
+    relay_sets_all(LEGACY_INDEXED_DB_NAME).await
 }
 
 pub async fn relay_set_put(db_name: &str, row: &RelaySetRecord) -> StorageOutcome<()> {

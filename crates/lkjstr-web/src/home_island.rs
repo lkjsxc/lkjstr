@@ -3,9 +3,10 @@ use lkjstr_ui::Callback;
 use wasm_bindgen::prelude::{JsValue, wasm_bindgen};
 use web_sys::HtmlElement;
 
-use crate::{home_feed_host, storage_worker::DEFAULT_WORKER_URL};
-
-const DEFAULT_DB_NAME: &str = "lkjstr";
+use crate::{
+    home_feed_host,
+    product_storage_key::{PRODUCT_DATABASE_NAME, PRODUCT_WORKER_URL},
+};
 
 #[wasm_bindgen]
 pub struct HomeIslandHandle {
@@ -43,8 +44,8 @@ pub fn mount_home_tab(
     open_author_context: Function,
 ) -> HomeIslandHandle {
     let provider = home_feed_host::home_feed_provider_with_worker_url(
-        DEFAULT_DB_NAME.to_owned(),
-        DEFAULT_WORKER_URL.to_owned(),
+        PRODUCT_DATABASE_NAME.to_owned(),
+        PRODUCT_WORKER_URL.to_owned(),
     );
     let unmount = lkjstr_ui::mount_home_island(
         parent,

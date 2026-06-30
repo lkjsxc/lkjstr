@@ -3,9 +3,10 @@ use lkjstr_ui::Callback;
 use wasm_bindgen::prelude::{JsValue, wasm_bindgen};
 use web_sys::HtmlElement;
 
-use crate::{search_feed_host, storage_worker::DEFAULT_WORKER_URL};
-
-const DEFAULT_DB_NAME: &str = "lkjstr";
+use crate::{
+    product_storage_key::{PRODUCT_DATABASE_NAME, PRODUCT_WORKER_URL},
+    search_feed_host,
+};
 
 #[wasm_bindgen]
 pub struct SearchIslandHandle {
@@ -44,8 +45,8 @@ pub fn mount_search_tab(
     open_author_context: Function,
 ) -> SearchIslandHandle {
     let provider = search_feed_host::search_feed_provider_with_worker_url(
-        DEFAULT_DB_NAME.to_owned(),
-        DEFAULT_WORKER_URL.to_owned(),
+        PRODUCT_DATABASE_NAME.to_owned(),
+        PRODUCT_WORKER_URL.to_owned(),
     );
     let unmount = lkjstr_ui::mount_search_island(
         parent,

@@ -14,9 +14,11 @@ The product broker key is `(origin, workerUrl, databaseName)`.
 - `workerUrl`: `/sqlite-opfs-worker.js`.
 - `databaseName`: `/lkjstr/main.sqlite3`.
 
-There is at most one open broker entry for this key in a page. Same-page
-callers borrow that entry; they must not request another exclusive Web Lock or
-construct another persistent SQLite worker.
+Rust/WASM product hosts import the centralized product storage key; individual
+islands do not define database-name literals. There is at most one open broker
+entry for this key in a page. Same-page callers borrow that entry; they must not
+request another exclusive Web Lock or construct another persistent SQLite
+worker.
 
 ## Host Shape
 
@@ -52,9 +54,10 @@ broker entry instead of acquiring a second lease.
 
 Owner denial, Web Lock absence, SAH-pool access-handle contention,
 `NoModificationAllowedError`, and `createSyncAccessHandle` conflicts return
-stable busy, blocked, or unavailable diagnostics. Failed worker opens terminate
-the worker, release any partial lease, and enter a bounded cooldown before the
-next owner attempt.
+stable busy, blocked, or unavailable diagnostics. Missing app broker lookup
+surfaces `broker-missing`; a worker URL or database key mismatch surfaces
+`broker-key-mismatch`. Failed worker opens terminate the worker, release any
+partial lease, and enter a bounded cooldown before the next owner attempt.
 
 Owner collisions never silently fall back to temporary memory for protected
 data. Automatic recovery must not call `removeVfs()`, delete OPFS files, or clear

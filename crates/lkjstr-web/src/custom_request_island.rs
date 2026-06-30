@@ -3,9 +3,10 @@ use lkjstr_ui::Callback;
 use wasm_bindgen::prelude::{JsValue, wasm_bindgen};
 use web_sys::HtmlElement;
 
-use crate::{custom_request_host, storage_worker::DEFAULT_WORKER_URL};
-
-const DEFAULT_DB_NAME: &str = "lkjstr";
+use crate::{
+    custom_request_host,
+    product_storage_key::{PRODUCT_DATABASE_NAME, PRODUCT_WORKER_URL},
+};
 const DEFAULT_INPUT: &str = r#"{"kinds":[1],"limit":30}"#;
 
 #[derive(serde::Deserialize)]
@@ -52,8 +53,8 @@ pub fn mount_custom_request_tab(
 ) -> CustomRequestIslandHandle {
     let restored_state = restored_request_state(&restored_state);
     let provider = custom_request_host::custom_request_provider_with_worker_url(
-        DEFAULT_DB_NAME.to_owned(),
-        DEFAULT_WORKER_URL.to_owned(),
+        PRODUCT_DATABASE_NAME.to_owned(),
+        PRODUCT_WORKER_URL.to_owned(),
     );
     let unmount = lkjstr_ui::mount_custom_request_island(
         parent,

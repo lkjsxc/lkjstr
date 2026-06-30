@@ -2,11 +2,11 @@ use lkjstr_storage::{
     CacheLedgerRecord, StorageOperation, StorageOutcome, TabStateRecord, tab_state_ledger_record,
 };
 
-use crate::indexed_db::database::{CACHE_LEDGER_TABLE, DEFAULT_DB_NAME, TAB_STATES_TABLE};
+use crate::indexed_db::database::{CACHE_LEDGER_TABLE, LEGACY_INDEXED_DB_NAME, TAB_STATES_TABLE};
 use crate::indexed_db::{database, record_requests, transaction};
 
 pub async fn default_tab_state_get(id: &str) -> StorageOutcome<Option<TabStateRecord>> {
-    tab_state_get(DEFAULT_DB_NAME, id).await
+    tab_state_get(LEGACY_INDEXED_DB_NAME, id).await
 }
 
 pub async fn tab_state_put(db_name: &str, row: &TabStateRecord) -> StorageOutcome<()> {

@@ -154,11 +154,11 @@ fn to_js(op: &StorageOp) -> StorageOutcome<JsValue> {
     )
 }
 
-fn unavailable<T>(operation_id: &'static str) -> StorageOutcome<T> {
+fn unavailable<T>(reason: &'static str) -> StorageOutcome<T> {
     StorageOutcome::Unavailable(problem(
         StorageOperation::Transaction,
-        "broker-unavailable",
-        operation_id,
+        reason,
+        reason,
     ))
 }
 

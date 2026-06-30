@@ -3,9 +3,10 @@ use lkjstr_ui::Callback;
 use wasm_bindgen::prelude::{JsValue, wasm_bindgen};
 use web_sys::HtmlElement;
 
-use crate::{author_context_host, storage_worker::DEFAULT_WORKER_URL};
-
-const DEFAULT_DB_NAME: &str = "lkjstr";
+use crate::{
+    author_context_host,
+    product_storage_key::{PRODUCT_DATABASE_NAME, PRODUCT_WORKER_URL},
+};
 
 #[wasm_bindgen]
 pub struct AuthorContextIslandHandle {
@@ -44,8 +45,8 @@ pub fn mount_author_context_tab(
     open_author_context: Function,
 ) -> AuthorContextIslandHandle {
     let provider = author_context_host::author_context_feed_provider_with_worker_url(
-        DEFAULT_DB_NAME.to_owned(),
-        DEFAULT_WORKER_URL.to_owned(),
+        PRODUCT_DATABASE_NAME.to_owned(),
+        PRODUCT_WORKER_URL.to_owned(),
     );
     let unmount = lkjstr_ui::mount_author_context_island(
         parent,

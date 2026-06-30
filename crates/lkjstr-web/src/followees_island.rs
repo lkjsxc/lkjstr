@@ -3,9 +3,10 @@ use lkjstr_ui::Callback;
 use wasm_bindgen::prelude::{JsValue, wasm_bindgen};
 use web_sys::HtmlElement;
 
-use crate::{followees_host, storage_worker::DEFAULT_WORKER_URL};
-
-const DEFAULT_DB_NAME: &str = "lkjstr";
+use crate::{
+    followees_host,
+    product_storage_key::{PRODUCT_DATABASE_NAME, PRODUCT_WORKER_URL},
+};
 
 #[wasm_bindgen]
 pub struct FolloweesIslandHandle {
@@ -43,8 +44,8 @@ pub fn mount_followees_tab(
     copy_npub: Function,
 ) -> FolloweesIslandHandle {
     let provider = followees_host::followees_provider_with_worker_url(
-        DEFAULT_DB_NAME.to_owned(),
-        DEFAULT_WORKER_URL.to_owned(),
+        PRODUCT_DATABASE_NAME.to_owned(),
+        PRODUCT_WORKER_URL.to_owned(),
     );
     let unmount = lkjstr_ui::mount_followees_island(
         parent,

@@ -1,4 +1,4 @@
-import { readFile } from 'node:fs/promises';
+import { readdir, readFile } from 'node:fs/promises';
 import { afterEach, describe, expect, test, vi } from 'vitest';
 import { createSqliteOpfsClient } from '../../../src/lib/storage/sqlite-opfs/client';
 import {
@@ -50,6 +50,14 @@ describe('SQLite OPFS app broker', () => {
       'crates/lkjstr-web/src/host_providers.rs',
       'utf8',
     );
+    const productKey = await readFile(
+      'crates/lkjstr-web/src/product_storage_key.rs',
+      'utf8',
+    );
+    const wasmModules = await readFile(
+      'crates/lkjstr-web/src/wasm_modules.rs',
+      'utf8',
+    );
     const kernel = await readFile(
       'src/lib/storage/sqlite-opfs/kernel-client.ts',
       'utf8',
@@ -59,10 +67,33 @@ describe('SQLite OPFS app broker', () => {
     expect(registry).not.toContain(owned);
     expect(page).toContain("import '$lib/storage/sqlite-opfs/app-broker';");
     expect(page).not.toContain('await closeSqliteStorage();');
-    expect(host).toContain(
-      'const DEFAULT_DB_NAME: &str = "/lkjstr/main.sqlite3";',
+    expect(productKey).toContain(
+      'pub const PRODUCT_DATABASE_NAME: &str = "/lkjstr/main.sqlite3";',
     );
+    expect(productKey).toContain('pub const PRODUCT_WORKER_URL: &str');
+    expect(wasmModules).toContain('mod product_storage_key;');
+    expect(host).toContain('PRODUCT_DATABASE_NAME.to_owned()');
+    expect(host).not.toContain('const DEFAULT_DB_NAME');
+    expect(host).not.toContain('"/lkjstr/main.sqlite3"');
     expect(kernel).toContain("const databaseName = '/lkjstr/main.sqlite3';");
+  });
+
+  test('Rust feed islands import the centralized product storage key', async () => {
+    const dir = 'crates/lkjstr-web/src';
+    const islandFiles = (await readdir(dir)).filter((file) =>
+      file.endsWith('_island.rs'),
+    );
+
+    expect(islandFiles.length).toBeGreaterThan(0);
+    for (const file of islandFiles) {
+      const source = await readFile(`${dir}/${file}`, 'utf8');
+      expect(source, file).toContain('PRODUCT_DATABASE_NAME');
+      expect(source, file).toContain('PRODUCT_WORKER_URL');
+      expect(source, file).not.toContain('DEFAULT_WORKER_URL');
+      expect(source, file).not.toContain('const DEFAULT_DB_NAME');
+      expect(source, file).not.toContain('= "lkjstr";');
+      expect(source, file).not.toContain('"/lkjstr/main.sqlite3"');
+    }
   });
 
   test('shares one opened owner between TypeScript and Rust-style callers', async () => {

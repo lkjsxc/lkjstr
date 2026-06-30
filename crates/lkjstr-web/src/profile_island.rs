@@ -6,9 +6,10 @@ use wasm_bindgen::{
 };
 use web_sys::HtmlElement;
 
-use crate::{profile_feed_host, profile_follow_host, storage_worker::DEFAULT_WORKER_URL};
-
-const DEFAULT_DB_NAME: &str = "lkjstr";
+use crate::{
+    product_storage_key::{PRODUCT_DATABASE_NAME, PRODUCT_WORKER_URL},
+    profile_feed_host, profile_follow_host,
+};
 
 #[wasm_bindgen]
 pub struct ProfileIslandHandle {
@@ -51,12 +52,12 @@ pub fn mount_profile_tab(
     let open_thread = function_field(&actions, "openThread")?;
     let open_author_context = function_field(&actions, "openAuthorContext")?;
     let provider = profile_feed_host::profile_feed_provider_with_worker_url(
-        DEFAULT_DB_NAME.to_owned(),
-        DEFAULT_WORKER_URL.to_owned(),
+        PRODUCT_DATABASE_NAME.to_owned(),
+        PRODUCT_WORKER_URL.to_owned(),
     );
     let follow_profile = profile_follow_host::profile_follow_provider_with_worker_url(
-        DEFAULT_DB_NAME.to_owned(),
-        DEFAULT_WORKER_URL.to_owned(),
+        PRODUCT_DATABASE_NAME.to_owned(),
+        PRODUCT_WORKER_URL.to_owned(),
     );
     let unmount = lkjstr_ui::mount_profile_island(
         parent,
