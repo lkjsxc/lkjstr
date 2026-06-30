@@ -11,7 +11,8 @@ export type FeedPagingInput = {
 
 export function feedPagingPhase(input: FeedPagingInput): FeedPagingPhase {
   if (input.error) return 'error';
-  if (input.loadingOlder && input.hasOlder) return 'loadingOlder';
+  if (input.loadingOlder && input.historyExhaustion !== 'proven')
+    return 'loadingOlder';
   if (input.historyExhaustion === 'proven' && input.rowCount > 0) return 'end';
   return 'idle';
 }

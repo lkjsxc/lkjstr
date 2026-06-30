@@ -12,6 +12,17 @@ describe('feed paging phase', () => {
     ).toBe('loadingOlder');
   });
 
+  it('keeps in-flight older requests visible when hasOlder is temporarily false', () => {
+    expect(
+      feedPagingPhase({
+        loadingOlder: true,
+        hasOlder: false,
+        historyExhaustion: 'unknown',
+        rowCount: 3,
+      }),
+    ).toBe('loadingOlder');
+  });
+
   it('reports end when history is exhausted', () => {
     expect(
       feedPagingPhase({

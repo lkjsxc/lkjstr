@@ -23,7 +23,9 @@ Read next: [architecture/workspace/README.md](../architecture/workspace/README.m
 - Home, Global, Public Chat, Profile, Thread, Notifications, Search,
   Author Context, Followees, User Timeline, and Custom Request expose scroll-owner shells; Home
   provider updates, live inserts, media/pane-width resize, and event LOD/profile/notification/repost-target
-  shell dematerialization preserve anchors. Feed surfaces keep sentinels, footers, viewport-fill, and older-load gates.
+  shell dematerialization preserve anchors. Feed surfaces keep sentinels,
+  footers, viewport-fill, and older-load gates; in-flight older requests keep
+  the loading footer visible until terminal proof or failure.
 - The shipped Rust Home island requests protected SQLite account, relay, follow-list,
   cached event, and feed-coverage evidence, then renders cached rows, exact
   cache-ready proof, durable row-height model estimates for cached rows,

@@ -99,8 +99,9 @@ This file owns current Rust feed runtime evidence by surface.
   stored author-route relays when the anchor is uncached. Missing event id,
   author pubkey, relay/route input, and anchor timestamp are explicit
   unavailable states. Pending provider work renders loading instead of ready
-  until real cache, relay, or terminal evidence exists. Converted Rust feed
-  surfaces share event body, common state-row rendering, and footer shell
+  until real cache, relay, or terminal evidence exists. The shared footer phase
+  keeps in-flight older loads visible even when `hasOlder` is temporarily false.
+  Converted Rust feed surfaces share event body, common state-row rendering, and footer shell
   rendering. Event rows open Thread from non-local clicks or Enter when a real
   opener exists. Generic feed rows now receive real Profile, Thread, Author
   Context, and copy openers. Row action, link, media, and sensitive-reveal

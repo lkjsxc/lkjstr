@@ -93,7 +93,8 @@ models, anchors, footer states, and unavailable states.
   link/media open-button isolation, profile/event mention/reference proof,
   reaction/repost actor-row chrome, notification repost event rows, shared
   author metadata/avatar chrome, sensitive-warning propagation proof, common state-row rendering,
-  shared footer shell rendering across converted feed rows, retained Svelte copy
+  shared footer shell rendering across converted feed rows, in-flight older
+  footer visibility when `hasOlder` is temporarily false, retained Svelte copy
   actions with explicit clipboard failure states, and retained optional Svelte
   event/profile actions plus Rust-island hosts suppress unavailable no-op
   actions, empty Rust action menus, unavailable Thread continuation buttons,

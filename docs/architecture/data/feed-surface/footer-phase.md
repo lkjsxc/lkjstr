@@ -11,13 +11,14 @@ All feed-like tabs share one footer phase reducer and one status component.
 | Phase | Condition |
 | ----- | --------- |
 | `idle` | Not loading older; `hasOlder` may be true |
-| `loadingOlder` | `loadingOlder`, `hasOlder`, and exhaustion is not proven |
+| `loadingOlder` | `loadingOlder` is true and exhaustion is not proven |
 | `end` | `historyExhaustion === 'proven'` and `rowCount > 0` |
 | `error` | Terminal `error` string set |
 
 `hasOlder` means another older request is allowed. It is not a proof that no
-older history exists when false. Only `historyExhaustion: 'proven'` may render
-the terminal `End of known history.` row.
+older history exists when false, and it must not hide an in-flight older request.
+Only `historyExhaustion: 'proven'` may render the terminal `End of known
+history.` row.
 
 ## Component
 
