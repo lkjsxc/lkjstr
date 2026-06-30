@@ -90,6 +90,34 @@ mod tests {
     use lkjstr_app::{empty_feed_window, ProfileFeedSourceState};
 
     #[test]
+    fn cache_unavailable_profile_keeps_public_relay_input() -> Result<(), String> {
+        let source_state = ProfileFeedSourceState::Partial {
+            reason: "Cached Profile events unavailable".to_owned(),
+            retry_available: true,
+        };
+        let Some(input) = profile_relay_input(ProfileRelayInputSeed {
+            owner: "profile-tab",
+            profile_pubkey: &Some(pubkey()),
+            source_state: &source_state,
+            selected_relays: &["wss://selected.example".to_owned()],
+            profile_hint_relays: &["wss://selected.example".to_owned()],
+            relay_sets_json: "[]",
+            author_routes: &[],
+            profile_header: &None,
+            window: &empty_feed_window(1, 180),
+            geometry_models: &[],
+            diagnostics: &[],
+            now_sec: 1_700_000_000,
+        }) else {
+            return Err("expected relay input after cache failure".to_owned());
+        };
+
+        assert_eq!(input.selected_relays, vec!["wss://selected.example"]);
+        assert_eq!((input.since, input.until), (1_699_999_970, 1_700_000_000));
+        Ok(())
+    }
+
+    #[test]
     fn sparse_profile_relay_input_uses_planned_older_interval() -> Result<(), String> {
         let source_state = ProfileFeedSourceState::SearchingOlder {
             since: 100,

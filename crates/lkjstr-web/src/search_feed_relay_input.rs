@@ -69,3 +69,35 @@ fn event_before_cursor(event: &NostrEvent, before: &FeedWindowCursor) -> bool {
     event.created_at < before.created_at
         || (event.created_at == before.created_at && event.id > before.event_id)
 }
+
+#[cfg(test)]
+mod tests {
+    use lkjstr_app::{SearchFeedSourceState, empty_feed_window};
+
+    use super::*;
+
+    #[test]
+    fn local_index_unavailable_search_keeps_relay_input() -> Result<(), String> {
+        let source_state = SearchFeedSourceState::Partial {
+            reason: "Local Search index unavailable".to_owned(),
+            retry_available: true,
+        };
+        let Some(input) = search_relay_input(SearchRelayInputSeed {
+            owner: "search-tab",
+            query: "nostr",
+            source_state: &source_state,
+            selected_relays: &["wss://search.example".to_owned()],
+            window: &empty_feed_window(1, 180),
+            geometry_models: &[],
+            diagnostics: &[],
+            now_sec: 1_700_000_000,
+        }) else {
+            return Err("expected relay input after local index failure".to_owned());
+        };
+
+        assert_eq!(input.query, "nostr");
+        assert_eq!(input.selected_relays, vec!["wss://search.example"]);
+        assert_eq!(input.phase, SearchRelayReadPhase::Initial);
+        Ok(())
+    }
+}

@@ -79,3 +79,33 @@ fn event_before_cursor(event: &NostrEvent, before: &FeedWindowCursor) -> bool {
     event.created_at < before.created_at
         || (event.created_at == before.created_at && event.id > before.event_id)
 }
+
+#[cfg(test)]
+mod tests {
+    use lkjstr_app::{GlobalFeedSourceState, empty_feed_window};
+
+    use super::*;
+
+    #[test]
+    fn cache_unavailable_global_keeps_public_relay_input() -> Result<(), String> {
+        let source_state = GlobalFeedSourceState::Partial {
+            reason: "Global cache unavailable".to_owned(),
+            retry_available: true,
+        };
+        let Some(input) = global_relay_input(GlobalRelayInputSeed {
+            owner: "global-tab",
+            source_state: &source_state,
+            selected_relays: &["wss://default.example".to_owned()],
+            window: &empty_feed_window(1, 180),
+            geometry_models: &[],
+            diagnostics: &[],
+            now_sec: 1_700_000_000,
+        }) else {
+            return Err("expected relay input after cache failure".to_owned());
+        };
+
+        assert_eq!(input.selected_relays, vec!["wss://default.example"]);
+        assert_eq!(input.phase, GlobalRelayReadPhase::Initial);
+        Ok(())
+    }
+}

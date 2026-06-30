@@ -54,13 +54,13 @@ gate was not rerun.
 
 ## Recent Focused Evidence
 
-Latest focused note: on 2026-06-30, Rust island SQLite broker key
-centralization replaced per-island `lkjstr` literals with the shared product
-key, added source guards, and split missing-broker from key-mismatch diagnostics.
-Passed focused Vitest app-broker/source guard, `cargo test -p lkjstr-web`,
-`cargo fmt --check`, web clippy, `pnpm check:repo`, docs/line checks,
-`pnpm rust-wasm:quiet`, and `pnpm verify:quiet`; direct wasm-pack broker test
-hit ChromeDriver SIGKILL/HTTP 404 after compile.
+Latest focused note: on 2026-06-30, Rust island broker-key centralization and
+public feed recovery proof landed. Broker source guards reject per-island
+`lkjstr` literals; Profile, Global, and Search relay inputs stay alive after
+cache or local-index failures, and Profile renders a real relay row with the
+cache diagnostic. Passed focused app-broker Vitest, web/app feed cargo tests,
+wasm check, `cargo fmt --check`, web clippy, repo/docs/line checks,
+`pnpm rust-wasm:quiet`, and `pnpm verify:quiet`; direct wasm-pack broker test hit ChromeDriver SIGKILL/HTTP 404 after compile.
 
 Previous focused note: on 2026-06-29, User Timeline fallback retention,
 protected account states, pagehide close, holder diagnostics, and shared feed

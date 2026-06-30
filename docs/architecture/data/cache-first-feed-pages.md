@@ -32,6 +32,8 @@ contacting relays.
   covered interval.
 - Missing proof uses the normal bounded relay scan and records new coverage
   evidence before the segment is treated as durable cache evidence.
+- Public feed cache or local-index failures keep the relay route plan alive;
+  the failure is a diagnostic and never proves there are no posts.
 - Initial feed load attempts local cached display before relay bootstrap when
   cached rows exist. Relay bootstrap may still refresh or fill uncovered gaps.
 - Relay updates may replace or extend a staged page after uncovered reads finish;
