@@ -3,10 +3,8 @@ use lkjstr_domain::Account;
 use lkjstr_storage::StorageOutcome;
 
 use crate::{
-    accounts_selector_host::resolve_active_selector,
-    host_status::problem_status,
-    sqlite_host_store::with_sqlite_store,
-    sqlite_store::sqlite_accounts_all,
+    accounts_selector_host::resolve_active_selector, host_status::problem_status,
+    sqlite_host_store::with_sqlite_store, sqlite_store::sqlite_accounts_all,
 };
 
 pub(crate) struct ProtectedAccountResolution {
@@ -69,9 +67,9 @@ fn storage_resolution<T>(label: &str, outcome: StorageOutcome<T>) -> ProtectedAc
             reason: reason.clone(),
             retry_available: true,
         },
-        AccountProblemKind::Unsupported => {
-            ProtectedAccountAvailability::StorageUnsupported { reason: reason.clone() }
-        }
+        AccountProblemKind::Unsupported => ProtectedAccountAvailability::StorageUnsupported {
+            reason: reason.clone(),
+        },
         AccountProblemKind::Blocked => ProtectedAccountAvailability::StorageBlocked {
             reason: reason.clone(),
             retry_available: false,
@@ -97,6 +95,7 @@ fn outcome_kind(reason: &str) -> AccountProblemKind {
         return AccountProblemKind::Busy;
     }
     if reason.contains("unavailable-browser-capability")
+        || reason.contains("browser-unsupported")
         || reason.contains("web-lock-unavailable")
     {
         return AccountProblemKind::Unsupported;

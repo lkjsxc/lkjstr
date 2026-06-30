@@ -12,7 +12,7 @@ pub fn map_worker_response(
     if outcome == WorkerOutcome::Ok {
         return StorageOutcome::Ok(response);
     }
-    let reason = reason_for_response(&response, outcome);
+    let reason = reason_for_response(&response, outcome, op);
     let problem = problem(op, reason, response.request_id.clone());
     match outcome {
         WorkerOutcome::Ok => StorageOutcome::Ok(response),
@@ -61,12 +61,61 @@ pub fn problem(
     StorageProblem::new(op, STORAGE_WORKER_TABLE, reason, request_id)
 }
 
-fn reason_for_response(response: &StorageResponse, outcome: WorkerOutcome) -> &'static str {
-    match response.diagnostics.owner_reason.as_deref() {
-        Some("sahpool-lock-conflict" | "web-lock-held") => "opfs-owner-held",
-        Some("web-lock-unavailable") => "web-lock-unavailable",
-        _ => reason(outcome),
+fn reason_for_response(
+    response: &StorageResponse,
+    outcome: WorkerOutcome,
+    op: StorageOperation,
+) -> &'static str {
+    if let Some(reason) = owner_reason(response.diagnostics.owner_reason.as_deref()) {
+        return reason;
     }
+    if let Some(reason) = message_reason(response.diagnostics.message.as_deref(), op) {
+        return reason;
+    }
+    reason(outcome)
+}
+
+fn owner_reason(reason: Option<&str>) -> Option<&'static str> {
+    match reason {
+        Some("sahpool-lock-conflict" | "web-lock-held") => Some("opfs-owner-held"),
+        Some("web-lock-unavailable") => Some("web-lock-unavailable"),
+        Some("browser-unsupported") => Some("browser-unsupported"),
+        Some("worker-construction-failed") => Some("worker-construction-failed"),
+        Some("worker-open-failed") => Some("worker-open-failed"),
+        Some("sqlite-open-failed") => Some("sqlite-open-failed"),
+        Some("storage-blocked") => Some("storage-blocked"),
+        _ => None,
+    }
+}
+
+fn message_reason(message: Option<&str>, op: StorageOperation) -> Option<&'static str> {
+    let message = message?;
+    if message.contains("Worker unsupported") {
+        return Some("browser-unsupported");
+    }
+    if message.contains("Worker construction failed") {
+        return Some("worker-construction-failed");
+    }
+    if message.contains("SQLite worker failed") {
+        return Some("worker-open-failed");
+    }
+    if op == StorageOperation::Transaction && looks_like_sqlite_open_failure(message) {
+        return Some("sqlite-open-failed");
+    }
+    if message.contains("NoModificationAllowedError") || message.contains("Access Handle") {
+        return Some("opfs-owner-held");
+    }
+    let lower = message.to_ascii_lowercase();
+    if lower.contains("blocked") || lower.contains("denied") || lower.contains("permission") {
+        return Some("storage-blocked");
+    }
+    None
+}
+
+fn looks_like_sqlite_open_failure(message: &str) -> bool {
+    message.contains("OPFS SQLite storage is unavailable")
+        || message.contains("SQLite database is not open")
+        || message.contains("VFS missing")
 }
 
 fn reason(outcome: WorkerOutcome) -> &'static str {
@@ -93,23 +142,58 @@ mod tests {
 
     #[test]
     fn owner_conflict_busy_response_uses_stable_problem_reason() {
-        let outcome = map_worker_response(
-            StorageResponse {
-                request_id: "open-1".to_owned(),
-                outcome: WorkerOutcome::Busy,
-                rows: Vec::new(),
-                rows_affected: 0,
-                diagnostics: StorageDiagnostics {
-                    owner_reason: Some("sahpool-lock-conflict".to_owned()),
-                    ..Default::default()
-                },
+        let outcome = mapped_with_diagnostics(
+            WorkerOutcome::Busy,
+            StorageDiagnostics {
+                owner_reason: Some("sahpool-lock-conflict".to_owned()),
+                ..Default::default()
             },
-            StorageOperation::Transaction,
         );
 
         assert!(matches!(outcome, StorageOutcome::Busy(_)));
-        if let StorageOutcome::Busy(problem) = outcome {
-            assert_eq!(problem.reason, "opfs-owner-held");
-        }
+        assert_eq!(problem_reason(&outcome), "opfs-owner-held");
+    }
+
+    #[test]
+    fn worker_failure_uses_precise_owner_reason() {
+        let outcome = mapped_with_diagnostics(
+            WorkerOutcome::Unavailable,
+            StorageDiagnostics {
+                owner_reason: Some("worker-construction-failed".to_owned()),
+                ..Default::default()
+            },
+        );
+
+        assert_eq!(problem_reason(&outcome), "worker-construction-failed");
+    }
+
+    #[test]
+    fn sqlite_open_failure_message_gets_stable_reason() {
+        let outcome = mapped_with_diagnostics(
+            WorkerOutcome::Unavailable,
+            StorageDiagnostics {
+                message: Some("OPFS SQLite storage is unavailable: VFS missing".to_owned()),
+                ..Default::default()
+            },
+        );
+
+        assert_eq!(problem_reason(&outcome), "sqlite-open-failed");
+    }
+
+    fn mapped_with_diagnostics(
+        outcome: WorkerOutcome,
+        diagnostics: StorageDiagnostics,
+    ) -> StorageOutcome<StorageResponse> {
+        map_worker_response(
+            StorageResponse {
+                diagnostics,
+                ..local_response("open-1", outcome)
+            },
+            StorageOperation::Transaction,
+        )
+    }
+
+    fn problem_reason(outcome: &StorageOutcome<StorageResponse>) -> &'static str {
+        outcome.problem().map_or("ok", |problem| problem.reason)
     }
 }

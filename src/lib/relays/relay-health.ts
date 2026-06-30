@@ -1,4 +1,5 @@
 import { normalizeRelayUrl } from '../protocol';
+import { protectedStorageStateFromError } from '../storage/protected-storage-state';
 import { listRelaySets, saveRelaySets, type RelaySet } from './relay-store';
 
 export type RelayHealthEvidence = {
@@ -13,14 +14,23 @@ export async function recordRelayHealthEvidence(
   evidence: RelayHealthEvidence,
 ): Promise<RelaySet[]> {
   const url = normalizeRelayUrl(inputUrl);
-  if (!url) return listRelaySets();
+  if (!url) return safeListRelaySets();
   const now = Date.now();
-  const relaySets = await listRelaySets();
+  const relaySets = await safeListRelaySets();
   let changed = false;
   const next = relaySets.map((set) => updateSetHealth(set, url, evidence, now));
   changed = next.some((set, index) => set !== relaySets[index]);
   if (changed) await saveRelaySets(next);
   return changed ? next : relaySets;
+}
+
+async function safeListRelaySets(): Promise<RelaySet[]> {
+  try {
+    return await listRelaySets();
+  } catch (error) {
+    if (protectedStorageStateFromError(error)) return [];
+    throw error;
+  }
 }
 
 function updateSetHealth(

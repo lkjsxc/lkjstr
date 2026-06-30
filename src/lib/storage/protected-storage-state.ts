@@ -64,27 +64,45 @@ function protectedStorageStateFromResponse(
 ): ProtectedStorageState | undefined {
   const diagnostics = response.diagnostics;
   if (response.outcome === 'busy' || diagnostics.storageOwner === 'busy')
-    return state('busy', diagnostics);
-  if (diagnostics.ownerReason === 'web-lock-unavailable')
-    return state('unavailable', diagnostics);
+    return state('busy', diagnostics, response.outcome);
+  if (response.outcome === 'ok') return undefined;
+  if (isProtectedFailureReason(diagnostics.ownerReason))
+    return state('unavailable', diagnostics, response.outcome);
+  if (response.outcome === 'blocked' || response.outcome === 'timeout')
+    return state('unavailable', diagnostics, response.outcome);
   return undefined;
+}
+
+function isProtectedFailureReason(reason: string | undefined): boolean {
+  return (
+    reason === 'web-lock-unavailable' ||
+    reason === 'worker-construction-failed' ||
+    reason === 'worker-open-failed' ||
+    reason === 'sqlite-open-failed' ||
+    reason === 'storage-blocked'
+  );
 }
 
 function state(
   kind: ProtectedStorageState['kind'],
   diagnostics: ProtectedStorageDiagnostics,
+  outcome: string,
 ): ProtectedStorageState {
+  const reason = diagnostics.ownerReason ?? outcome;
   return {
     kind,
-    reason: diagnostics.ownerReason ?? diagnostics.storageOwner ?? kind,
-    message: diagnostics.message ?? defaultMessage(kind),
+    reason,
+    message: diagnostics.message ?? defaultMessage(kind, reason),
     retryAfterMs: diagnostics.retryAfterMs,
     ownerHolderId: diagnostics.ownerHolderId,
   };
 }
 
-function defaultMessage(kind: ProtectedStorageState['kind']): string {
+function defaultMessage(
+  kind: ProtectedStorageState['kind'],
+  reason: string,
+): string {
   return kind === 'busy'
     ? 'Protected storage is busy in another tab.'
-    : 'Protected storage is unavailable in this browser.';
+    : `Protected storage is unavailable: ${reason}.`;
 }

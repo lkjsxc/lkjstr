@@ -66,7 +66,9 @@ Read next: [architecture/data/README.md](../architecture/data/README.md),
   repositories and Rust/WASM host storage borrow the same broker entry, so
   same-page callers do not request a second Web Lock or construct another
   persistent worker. Broker lookup reports `broker-missing` for a missing global
-  and `broker-key-mismatch` for worker URL or database-name mismatches.
+  and `broker-key-mismatch` for worker URL or database-name mismatches. Worker
+  construction, browser support, owner lock, timeout, and SQLite-open failures
+  keep stable problem labels instead of collapsing to `unavailable`.
   `with_sqlite_store` borrows the shared store and no longer closes the product
   database after each repository operation. The Rust broker lookup uses JS
   reflection instead of wasm-bindgen `inline_js`, so storage startup does not
@@ -95,8 +97,9 @@ Read next: [architecture/data/README.md](../architecture/data/README.md),
   feed windows remain bounded; durable cached events are governed by explicit
   retention and diagnostics rather than a fixed small row count.
 - Storage failure must recover to a usable Welcome workspace. Persistent OPFS,
-  owner busy, unsupported Web Locks, and temporary memory mode must be visible
-  in Stats, Settings, Accounts, Relay Settings, drafts, or the workspace shell.
-  Protected Home and Notifications account reads distinguish selected account,
-  no accounts, no selected account, selector unavailable, storage busy,
-  storage blocked or unsupported, and loading states.
+  owner busy, unsupported Web Locks, worker construction failure, SQLite-open
+  failure, and temporary memory mode must be visible in Stats, Settings,
+  Accounts, Relay Settings, drafts, or the workspace shell. Protected Home and
+  Notifications account reads distinguish selected account, no accounts, no
+  selected account, selector unavailable, storage busy, storage blocked or
+  unsupported, and loading states.

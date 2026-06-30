@@ -22,7 +22,11 @@ export type StorageOwnerReason =
   | 'web-lock-held'
   | 'web-lock-unavailable'
   | 'sahpool-lock-conflict'
-  | 'worker-open-failed';
+  | 'browser-unsupported'
+  | 'worker-construction-failed'
+  | 'worker-open-failed'
+  | 'sqlite-open-failed'
+  | 'storage-blocked';
 export type WorkerKind = 'dedicated' | 'shared' | 'unknown';
 export type VfsName = 'opfs-sahpool' | 'opfs-wl' | 'opfs' | 'memory';
 

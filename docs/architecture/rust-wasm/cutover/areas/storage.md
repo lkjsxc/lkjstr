@@ -70,8 +70,9 @@ removed.
   physical repair probes, Stats browser-storage count and byte diagnostics,
   storage-owned inventory readiness classification, explicit Rust Stats
   storage-action capability states, report-only Rust repair host action,
-  explicit disabled compact action reason, and origin-level owner-lock denial
-  mapping are implemented; Search app planning, NIP-50 merge, mutating
+  explicit disabled compact action reason, origin-level owner-lock denial
+  mapping, and exact broker, worker, browser, timeout, and SQLite-open startup
+  reason labels are implemented; Search app planning, NIP-50 merge, mutating
   repair/compaction action adapters, and feed consumption remain open.
 - Command metadata status: active selector, pressure, protected rows, event
   cache, feed evidence, relay diagnostics, notifications, jobs, app log,

@@ -1,11 +1,27 @@
 import type { StorageDiagnostics, StorageResponse } from './types';
 
-export function sqliteStorageUnavailable(): StorageResponse {
+type UnavailableReason = NonNullable<StorageDiagnostics['ownerReason']>;
+
+export function sqliteStorageUnavailable(
+  ownerReason: UnavailableReason = 'worker-open-failed',
+  message = 'Worker support unavailable',
+): StorageResponse {
   return localResponse('sqlite-storage-unavailable', 'unavailable', {
     storageOwner: 'unavailable',
-    ownerReason: 'worker-open-failed',
-    message: 'Worker support unavailable',
+    ownerReason,
+    message,
   });
+}
+
+export function sqliteOpenUnavailable(
+  response: StorageResponse,
+): StorageResponse {
+  if (response.diagnostics.ownerReason || response.outcome !== 'unavailable')
+    return response;
+  return {
+    ...response,
+    diagnostics: { ...response.diagnostics, ownerReason: 'sqlite-open-failed' },
+  };
 }
 
 export function localResponse(

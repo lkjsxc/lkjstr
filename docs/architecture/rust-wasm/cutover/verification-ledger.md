@@ -14,9 +14,10 @@ change and Docker Compose verification is either run or recorded as not run.
 
 ## Recent Evidence
 
-2026-06-30 storage broker proof: TypeScript repositories and Rust/WASM storage
-hosts share one app-wide SQLite OPFS broker; focused storage, CI, WASM loader,
-repo, Rust/WASM, verify, Cloudflare, and Docker final gates passed.
+2026-06-30 storage broker/startup reason proof: shared broker callers preserve
+broker, owner-lock, worker, browser, timeout, and SQLite-open labels. Focused
+storage, repo, docs, line, fmt, clippy, Rust/WASM, test, and verify gates
+passed; Docker was not rerun.
 
 2026-06-29 public/protected feed availability proof passed focused tests, quiet
 gates, and Docker final gate.
@@ -54,13 +55,12 @@ gate was not rerun.
 
 ## Recent Focused Evidence
 
-Latest focused note: on 2026-06-30, Rust island broker-key, public feed
-recovery, and protected-account proof landed. Source guards reject per-island
-`lkjstr`; Profile, Global, and Search relay inputs survive cache/local-index
-failures; Home and Notifications keep no-account, selector, storage, and
-selected states distinct. Passed app-broker Vitest, web/app feed/protected cargo
-tests, wasm check, fmt, app/web clippy, repo/docs/line, quiet gates, and Docker
-final gate. Direct wasm-pack broker test hit ChromeDriver SIGKILL/HTTP 404.
+Latest focused note: on 2026-06-30, startup storage reason proof preserved
+`broker-missing`, `broker-key-mismatch`, owner-lock, browser unsupported,
+worker construction/open, blocked, timeout, and `sqlite-open-failed` labels for
+Rust/WASM hosts and TypeScript protected repository state. Passed the focused
+storage/Vitest, web storage, Rust/WASM, fmt, wasm-target clippy, repo,
+docs/line, full test, verify, and Docker config gates. Docker final gate was not rerun.
 
 Previous focused note: on 2026-06-29, User Timeline fallback retention,
 protected account states, pagehide close, holder diagnostics, and shared feed

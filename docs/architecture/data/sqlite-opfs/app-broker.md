@@ -56,8 +56,13 @@ Owner denial, Web Lock absence, SAH-pool access-handle contention,
 `NoModificationAllowedError`, and `createSyncAccessHandle` conflicts return
 stable busy, blocked, or unavailable diagnostics. Missing app broker lookup
 surfaces `broker-missing`; a worker URL or database key mismatch surfaces
-`broker-key-mismatch`. Failed worker opens terminate the worker, release any
-partial lease, and enter a bounded cooldown before the next owner attempt.
+`broker-key-mismatch`. Browser worker absence, worker construction failure,
+owner-lock contention, timeout, blocked storage, and SQLite-open failure keep
+stable reason labels in TypeScript kernel responses, TypeScript protected
+repository states when storage was previously considered protected-blocking,
+and Rust/WASM host adapters instead of collapsing to generic `unavailable`.
+Failed worker opens terminate the worker, release any partial lease, and enter a
+bounded cooldown before the next owner attempt.
 
 Owner collisions never silently fall back to temporary memory for protected
 data. Automatic recovery must not call `removeVfs()`, delete OPFS files, or clear

@@ -1,6 +1,7 @@
 import { enforceCacheBudget } from './cache-budget-enforcement';
 import { defaultCacheMaxBytes } from './storage-quota';
 import { loadSettings } from '../settings/settings-store';
+import { protectedStorageStateFromError } from '../storage/protected-storage-state';
 
 export const cacheCompactionWriteThreshold = 25;
 const maxCompactionRounds = 3;
@@ -49,9 +50,11 @@ function scheduleNow(): void {
 }
 
 async function configuredCacheMaxBytes(): Promise<number> {
-  const setting = (await loadSettings()).find(
-    (item) => item.key === 'cache.maxBytes',
-  );
+  const settings = await loadSettings().catch((error: unknown) => {
+    if (protectedStorageStateFromError(error)) return [];
+    throw error;
+  });
+  const setting = settings.find((item) => item.key === 'cache.maxBytes');
   return typeof setting?.value === 'number'
     ? setting.value
     : defaultCacheMaxBytes;

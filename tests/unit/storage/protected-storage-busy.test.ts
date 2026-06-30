@@ -1,10 +1,13 @@
 import { afterEach, describe, expect, test, vi } from 'vitest';
 import {
   closeSqliteStorage,
+  sendSqliteStorage,
   setSqliteStorageClientFactoryForTests,
   setSqliteStorageOwnerLeaseFactoryForTests,
 } from '../../../src/lib/storage/sqlite-opfs/kernel-client';
+import type { SqliteOpfsClient } from '../../../src/lib/storage/sqlite-opfs/client';
 import type { SqliteOpfsOwnerLeaseResult } from '../../../src/lib/storage/sqlite-opfs/owner-lease';
+import type { StorageResponse } from '../../../src/lib/storage/sqlite-opfs/types';
 
 describe('protected storage busy states', () => {
   afterEach(async () => {
@@ -43,6 +46,30 @@ describe('protected storage busy states', () => {
     ).rejects.toMatchObject({
       name: 'ProtectedStorageError',
       state: { kind: 'busy' },
+    });
+  });
+
+  test('kernel response names unsupported worker storage explicitly', async () => {
+    vi.stubGlobal('Worker', undefined);
+
+    await expect(
+      sendSqliteStorage({ kind: 'estimate-storage' }),
+    ).resolves.toMatchObject({
+      outcome: 'unavailable',
+      diagnostics: { ownerReason: 'browser-unsupported' },
+    });
+  });
+
+  test('protected repositories reject sqlite open failure explicitly', async () => {
+    vi.stubGlobal('Worker', function Worker() {});
+    setSqliteStorageOwnerLeaseFactoryForTests(activeLeaseFactory());
+    setSqliteStorageClientFactoryForTests(() => sqliteOpenFailureClient());
+    const accounts =
+      await import('../../../src/lib/storage/repositories/accounts-store');
+
+    await expect(accounts.readAccountRows([])).rejects.toMatchObject({
+      name: 'ProtectedStorageError',
+      state: { kind: 'unavailable', reason: 'sqlite-open-failed' },
     });
   });
 
@@ -91,4 +118,31 @@ function deniedLeaseFactory(ownerHolderId?: string) {
       },
     },
   });
+}
+
+function activeLeaseFactory(release = vi.fn()) {
+  return async (): Promise<SqliteOpfsOwnerLeaseResult> => ({
+    ok: true,
+    lease: {
+      diagnostics: { storageOwner: 'active', ownerReason: 'web-lock-granted' },
+      release,
+    },
+  });
+}
+
+function sqliteOpenFailureClient(): SqliteOpfsClient {
+  const response: StorageResponse = {
+    requestId: 'open-failed',
+    outcome: 'unavailable',
+    rows: [],
+    rowsAffected: 0,
+    diagnostics: {},
+  };
+  return {
+    send: async () => response,
+    close: async () => undefined,
+    terminate: vi.fn(),
+    closed: () => false,
+    diagnostics: () => ({ lateSettled: 0, lateRejected: 0, pending: 0 }),
+  };
 }

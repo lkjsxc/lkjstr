@@ -11,6 +11,7 @@ import {
 } from './owner-lease';
 import {
   localResponse,
+  sqliteOpenUnavailable,
   sqliteStorageUnavailable,
 } from './kernel-client-response';
 import type { StorageOp, StorageResponse } from './types';
@@ -106,7 +107,9 @@ function openSqliteStorage(): Promise<StorageResponse> {
   const active = activeOwnerCooldown();
   if (active) return Promise.resolve(active);
   if (typeof Worker === 'undefined')
-    return Promise.resolve(sqliteStorageUnavailable());
+    return Promise.resolve(
+      sqliteStorageUnavailable('browser-unsupported', 'Worker unsupported'),
+    );
   openPromise ??= createAndOpenSqliteStorage().then(
     (response) => {
       if (response.outcome !== 'ok') {
@@ -139,7 +142,10 @@ async function createAndOpenSqliteStorage(): Promise<StorageResponse> {
     storage = clientFactory(lease.lease);
   } catch {
     lease.lease.release();
-    return sqliteStorageUnavailable();
+    return sqliteStorageUnavailable(
+      'worker-construction-failed',
+      'Worker construction failed',
+    );
   }
   client = storage;
   const opened = await storage.send(
@@ -160,6 +166,7 @@ async function createAndOpenSqliteStorage(): Promise<StorageResponse> {
   if (opened.outcome !== 'ok') {
     storage.terminate('SQLite persistent worker open failed');
     client = undefined;
+    return sqliteOpenUnavailable(opened);
   }
   return opened;
 }

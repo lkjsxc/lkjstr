@@ -21,8 +21,9 @@ split by ownership under [current-state/README.md](current-state/README.md).
   directly unless the file is an approved host adapter or diagnostic owner.
 - Relay, storage, signer, upload, privacy, and browser feature states render
   real data or explicit loading, unavailable, unsupported, denied, partial,
-  consent-required, or proven-empty states. No fake product data or placeholder
-  success state is allowed.
+  consent-required, or proven-empty states. Storage startup keeps exact broker,
+  worker, owner-lock, timeout, and SQLite-open reasons visible. No fake product
+  data or placeholder success state is allowed.
 - Home, Global, Profile, Thread, Notifications, Search, Custom Request, Author
   Context, Followees, and User Timeline have active Rust island or Rust-backed
   slices, but retained TypeScript and Svelte code may be deleted only after
