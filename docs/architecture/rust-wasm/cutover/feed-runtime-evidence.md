@@ -50,7 +50,8 @@ This file owns current Rust feed runtime evidence by surface.
   `feed.loadOlder`, and the Rust
   Notifications host retains relay output state so the explicit footer command
   and a downward near-end scroll gesture start the next bounded older relay read
-  through the shared planner. Deletion proof remains open.
+  through the shared planner. Empty or `+` reaction content now renders the
+  canonical heart summary. Deletion proof remains open.
 - First Profile rendering slice: `crates/lkjstr-app/src/profile_feed/**` and
   `crates/lkjstr-ui/src/workspace/profile.rs` render `ProfileFeedView` rows from
   the shared row view model. Browser proof opens My Profile and renders injected

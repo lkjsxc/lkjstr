@@ -9,6 +9,8 @@ mod content_media_tests;
 #[cfg(test)]
 mod content_profile_mention_tests;
 #[cfg(test)]
+mod content_reaction_tests;
+#[cfg(test)]
 mod content_reference_tests;
 mod content_row;
 #[cfg(test)]

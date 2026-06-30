@@ -92,8 +92,8 @@ models, anchors, footer states, and unavailable states.
   openers, normalized event/profile relay hints, custom emoji async/fallback
   rows, row dispatch/activation, opener parity, Author Context reuse,
   link/media open-button isolation, profile/event mention/reference proof,
-  reaction/repost actor-row chrome, notification repost event rows, shared
-  author metadata/avatar chrome, sensitive-warning propagation proof, common state-row rendering,
+  reaction/repost actor-row chrome, notification repost event rows, Notifications heart reaction summaries,
+  shared author metadata/avatar chrome, sensitive-warning propagation proof, common state-row rendering,
   shared footer shell rendering across converted feed rows, in-flight older
   footer visibility when `hasOlder` is temporarily false, retained Svelte copy
   actions with explicit clipboard failure states, and retained optional Svelte

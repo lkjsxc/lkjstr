@@ -182,10 +182,12 @@ fn visible_event_content(event: &SemanticFeedEvent) -> String {
 
 fn reaction_summary(content: &str) -> String {
     let content = content.trim();
-    if content.is_empty() {
-        return "Reaction target unavailable".to_owned();
-    }
-    format!("Reacted with {content}")
+    let display = if content.is_empty() || content == "+" {
+        "❤️"
+    } else {
+        content
+    };
+    format!("Reacted with {display}")
 }
 
 fn unavailable_preview(row: &EventIndexedRow) -> FeedEventUnavailablePreview {

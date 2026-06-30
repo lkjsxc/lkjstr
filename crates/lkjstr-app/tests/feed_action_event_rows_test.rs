@@ -23,7 +23,7 @@ fn feed_view_model_replaces_action_event_bodies_with_bounded_rows() -> Result<()
             r#"{"kind":30023,"tags":[["e","target"]]}"#.to_owned(),
             "Reposted target unavailable",
         ),
-        (KIND_REACTION, "+".to_owned(), "Reacted with +"),
+        (KIND_REACTION, "+".to_owned(), "Reacted with ❤️"),
         (
             KIND_ZAP_RECEIPT,
             r#"{"bolt11":"lnbc..."}"#.to_owned(),

@@ -100,7 +100,7 @@ fn action_events_render_bounded_protocol_summary_rows() {
             120,
             &FeedFragmentConfig::default(),
         )),
-        vec!["Reacted with +".to_owned()]
+        vec!["Reacted with ❤️".to_owned()]
     );
     assert_eq!(
         content_texts(plan_feed_event_content(
