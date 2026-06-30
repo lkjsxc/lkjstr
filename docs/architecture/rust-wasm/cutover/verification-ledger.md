@@ -54,13 +54,13 @@ gate was not rerun.
 
 ## Recent Focused Evidence
 
-Latest focused note: on 2026-06-30, Rust island broker-key centralization and
-public feed recovery proof landed. Broker source guards reject per-island
-`lkjstr` literals; Profile, Global, and Search relay inputs stay alive after
-cache or local-index failures, and Profile renders a real relay row with the
-cache diagnostic. Passed focused app-broker Vitest, web/app feed cargo tests,
-wasm check, `cargo fmt --check`, web clippy, repo/docs/line checks,
-`pnpm rust-wasm:quiet`, and `pnpm verify:quiet`; direct wasm-pack broker test hit ChromeDriver SIGKILL/HTTP 404 after compile.
+Latest focused note: on 2026-06-30, Rust island broker-key, public feed
+recovery, and protected-account proof landed. Source guards reject per-island
+`lkjstr`; Profile, Global, and Search relay inputs survive cache/local-index
+failures; Home and Notifications keep no-account, selector, storage, and
+selected states distinct. Passed app-broker Vitest, web/app feed/protected cargo
+tests, wasm check, fmt, app/web clippy, repo/docs/line, quiet gates, and Docker
+final gate. Direct wasm-pack broker test hit ChromeDriver SIGKILL/HTTP 404.
 
 Previous focused note: on 2026-06-29, User Timeline fallback retention,
 protected account states, pagehide close, holder diagnostics, and shared feed
