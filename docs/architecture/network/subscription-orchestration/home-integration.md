@@ -22,11 +22,11 @@ Home runtime
 
 ## Channels
 
-| Channel | Phase     | Purpose                          |
-| ------- | --------- | -------------------------------- |
-| follows | bootstrap | kind 3 latest for active account |
-| notes   | live      | kind 1 from followed authors     |
-| meta    | live      | kind 0 for visible profiles      |
+| Channel | Phase     | Purpose                                                      |
+| ------- | --------- | ------------------------------------------------------------ |
+| follows | bootstrap | latest kind 3 for active account; runs when cache is missing |
+| notes   | live      | kind 1 from followed authors after follows are known         |
+| meta    | live      | kind 0 for visible profiles                                  |
 
 ## Route refresh
 

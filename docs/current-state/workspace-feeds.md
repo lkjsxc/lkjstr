@@ -60,7 +60,9 @@ Read next: [architecture/workspace/README.md](../architecture/workspace/README.m
   User Timeline keeps those route plans when cached follow-list reads fail.
 - Protected Home and Notifications require a real selected account before relay
   reads. Busy or unavailable account storage renders protected-account guidance,
-  not `no-active-account`.
+  not `no-active-account`. Home now treats a missing cached kind `3` follow list
+  as follow discovery work and only plans note reads after a real follow list
+  arrives or intended relay evidence finishes.
 - Shared Rust feed policy reducers gate public read route availability and
   protected selected-relay availability before feed builders create live queries.
 - Cache-first feed display requires complete coverage evidence for every

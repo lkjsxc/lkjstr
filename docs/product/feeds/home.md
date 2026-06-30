@@ -80,7 +80,8 @@ its NIP-02 follows.
   self-only relay scan as a silent fallback.
   See [home source](../../architecture/feeds/sources/home.md).
 - While follows are loading, Home must not issue notes filters with only the
-  active pubkey.
+  active pubkey. If the latest kind `3` is not cached, Home runs bounded
+  selected-relay follow discovery before planning note filters.
 - Loading ends when cached or initial relay data exists, contacted relays finish
   or fail, or a live relay produces matching events.
 - A failed relay remains diagnostic and must not block other relays.

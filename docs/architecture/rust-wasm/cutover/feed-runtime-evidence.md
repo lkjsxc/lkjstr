@@ -19,9 +19,10 @@ This file owns current Rust feed runtime evidence by surface.
   `crates/lkjstr-ui/src/workspace/home.rs` render `HomeFeedView` rows, with
   browser proof through injected and host-provider real event rows. The host
   provider promotes cache-complete only from exact route, relay, filter, feed,
-  and interval proof, then starts a bounded selected-relay read after partial
-  proof and publishes real relay event snapshots into the same view model. Home
-  pending provider work after loaded follows renders loading instead of ready.
+  and interval proof, runs bounded selected-relay follow discovery when the
+  latest kind `3` is not cached, then starts a bounded selected-relay note read
+  only after follows are known. Relay snapshots publish real events into the
+  same view model. Home pending provider work after loaded follows renders loading instead of ready.
   Tab cleanup releases the provider lease and cancels the owner relay read.
   Broader shared lease cleanup and feed-surface host wiring remain open.
 - First Global rendering slice: `crates/lkjstr-app/src/global_feed/**` and

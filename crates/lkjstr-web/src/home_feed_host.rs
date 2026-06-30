@@ -9,9 +9,9 @@ use lkjstr_ui::HomeFeedProvider;
 use crate::{
     home_feed_cache::home_cache_state,
     home_feed_geometry::home_feed_geometry_models,
+    home_feed_host_relay::start_home_relay_command,
     home_feed_host_storage::{active_account, selected_relays},
-    home_feed_relay::start_home_relay_read,
-    home_feed_relay_input::{HomeRelayInputSeed, HomeRelayReadInput, home_relay_input},
+    home_feed_relay_input::{HomeRelayCommand, HomeRelayInputSeed, home_relay_input},
     host_status::browser_now_ms,
     relay_read_handle::RelayReadSlot,
 };
@@ -59,10 +59,8 @@ pub(crate) fn home_feed_provider_with_page_account(
             request.complete(load.model);
             if let Some(relay) = load.relay
                 && !request.is_released()
-                && let Some(handle) =
-                    start_home_relay_read(relay, move |model| request.complete(model))
             {
-                relay_slot.replace(handle);
+                start_home_relay_command(relay, request, relay_slot);
             }
         });
     })
@@ -70,7 +68,7 @@ pub(crate) fn home_feed_provider_with_page_account(
 
 struct HomeFeedLoad {
     model: HomeFeedView,
-    relay: Option<HomeRelayReadInput>,
+    relay: Option<HomeRelayCommand>,
 }
 
 async fn home_feed_model(host: &HomeFeedHost, owner: &str) -> HomeFeedLoad {

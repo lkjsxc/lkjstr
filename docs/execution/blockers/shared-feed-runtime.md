@@ -42,7 +42,8 @@ models, anchors, footer states, and unavailable states.
   relay snapshot wiring, Global one-scroll-owner row-flow proof, Global
   explicit/scroll/viewport-fill older request proof with compound older relay cursors,
   feed regressions, protocol events,
-  Home and Global browser cleanup, first Notifications cached provider proof,
+  Home and Global browser cleanup, Home missing cached follow-list relay
+  discovery before note filters, first Notifications cached provider proof,
   Notifications
   browser cleanup, exact Notifications account coverage, bounded Notifications
   relay snapshot wiring, cache-complete initial-read suppression plus empty

@@ -37,7 +37,7 @@ pub(crate) async fn home_cache_state(
             .map(|entry| entry.pubkey)
             .collect::<Vec<_>>(),
         StorageOutcome::Ok(None) => {
-            return unavailable_follow("Cached follow list is unavailable.");
+            return loading_follow();
         }
         outcome => return unavailable_follow(&problem_status("Follow list unavailable", outcome)),
     };
@@ -124,6 +124,18 @@ fn window_from_events(events: Vec<ProgressiveEvent>) -> lkjstr_app::FeedWindowSt
             events,
             flags: FeedWindowFlags::default(),
         },
+    )
+}
+
+fn loading_follow() -> (
+    HomeFollowState,
+    lkjstr_app::FeedWindowState,
+    HomeFeedSourceState,
+) {
+    (
+        HomeFollowState::Loading,
+        empty_feed_window(1, WINDOW_MAX),
+        HomeFeedSourceState::Pending,
     )
 }
 
