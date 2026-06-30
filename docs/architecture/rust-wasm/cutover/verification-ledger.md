@@ -14,6 +14,12 @@ change and Docker Compose verification is either run or recorded as not run.
 
 ## Recent Evidence
 
+2026-06-30 post-display repair proof: startup diagnostics, relay socket
+hardening, shared footer visibility, Home follow discovery, Profile about links,
+and Notifications heart reactions passed focused gates, quiet gates, Cloudflare,
+and Docker final gate (`config`, `build`, `run verify`, `run cloudflare`,
+`run app-smoke`).
+
 2026-06-30 storage broker/startup proof: shared broker callers preserve exact
 failure labels, Stats/Log show startup probes, and page active-account pubkeys
 can bridge Rust island account-read failures with diagnostics. Focused storage,
@@ -186,14 +192,6 @@ discovery exhausts without kind `3`, renders the target-posts-only notice,
 preserves relay diagnostics, and keeps existing User Timeline cache/coverage and
 retry behavior. Canonical Rust/WASM quiet and Docker final-gate proof are
 recorded below; User Timeline no-import proof remains open.
-2026-06-18 feed-surface Stats diagnostics proof: focused Vitest covered
-row-height anchor delta, stale observation, width-bucket, visible-fragment, and
-oversized semantic-row counters; `pnpm check:repo`, `pnpm test:quiet`,
-`pnpm verify:quiet`, docs, line, and whitespace guards passed with the existing
-Node engine warning. Docker final gate was not rerun for this focused proof.
-2026-06-19 retained Svelte event helper proof:
-ESLint/Vitest/UI leases: tree-list 8/29; UI older 23; custom request 14; search 13; followees 13; user timeline 7; rust-wasm ok.
-
 The full recent evidence table is split by row group:
 
 - [verification-ledger-surface-runs.md](verification-ledger-surface-runs.md): recent surface and helper focused runs.
