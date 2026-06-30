@@ -6,7 +6,7 @@ use lkjstr_storage::{StorageOperation, StorageOutcome};
 use wasm_bindgen::{closure::Closure, prelude::JsValue};
 use web_sys::{Event, MessageEvent, Worker};
 
-use crate::storage_worker::client::StorageWorkerClient;
+use crate::storage_worker::client::{StorageWorkerClient, StorageWorkerClientInner};
 use crate::storage_worker::outcome::{map_worker_response, problem};
 use crate::storage_worker::owner_lease::StorageOwnerLease;
 use crate::storage_worker::{StorageOp, StorageRequest, StorageResponse};
@@ -48,7 +48,9 @@ pub(super) fn worker_client_with_lease(
         Ok(worker) => {
             let inner = Rc::new(ClientInner::new(worker, owner_lease));
             inner.install_handlers();
-            StorageOutcome::Ok(StorageWorkerClient { inner })
+            StorageOutcome::Ok(StorageWorkerClient {
+                inner: StorageWorkerClientInner::Worker(inner),
+            })
         }
         Err(_error) => StorageOutcome::Unavailable(problem(
             StorageOperation::Transaction,

@@ -14,18 +14,17 @@ change and Docker Compose verification is either run or recorded as not run.
 
 ## Recent Evidence
 
-2026-06-29 public/protected feed availability proof: User Timeline keeps
-fallback relays through cache failure; Home/Notifications storage-busy account
-states, focused tests, quiet gates, and Docker final gate passed.
+2026-06-30 storage broker proof: TypeScript repositories and Rust/WASM storage
+hosts share one app-wide SQLite OPFS broker; focused storage, CI, WASM loader,
+repo, Rust/WASM, verify, Cloudflare, and Docker final gates passed.
 
-2026-06-29 storage/WASM startup proof: automatic CI was kept repository-only;
-product Rust no longer uses `wasm_bindgen(inline_js)` for owner locking; the
-WASM bridge loader uses object-form init; asset manifests track bridge imports;
-`pnpm ci:quiet`, `pnpm rust-wasm:quiet`, `pnpm verify:quiet`,
-`pnpm cloudflare:quiet`, `cargo test -p lkjstr-storage`,
-`cargo test -p lkjstr-web`, host and wasm32 `cargo clippy -p lkjstr-web
---all-targets -- -D warnings`, and focused Vitest storage/WASM guard suites
-passed. Docker final gate was not rerun for this slice.
+2026-06-29 public/protected feed availability proof passed focused tests, quiet
+gates, and Docker final gate.
+
+2026-06-29 storage/WASM startup proof: repository-only CI, no
+`wasm_bindgen(inline_js)` owner locking, object-form WASM init, bridge import
+manifests, focused storage/WASM suites, and quiet gates passed. Docker final
+gate was not rerun.
 
 ## Focused Checks By Area
 

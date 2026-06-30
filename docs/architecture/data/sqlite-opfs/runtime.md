@@ -11,10 +11,11 @@ The storage worker owns official SQLite WASM initialization, database open,
 schema changes, prepared statement execution, transactions, health diagnostics,
 integrity checks, reset, cancellation, and close.
 
-The main thread owns only the storage client registry, origin owner lease,
-request ids, cancellation, UI status, and recovery when storage cannot open.
-Retained TypeScript startup reads close their page-local owner before Rust feed
-providers mount so the Rust/WASM host owns the persistent worker for feed reads.
+The main thread owns only the app-wide storage broker, origin owner lease,
+request ids, cancellation, UI status, and recovery when storage cannot open. The
+broker is keyed by `(origin, workerUrl, databaseName)` and is shared by retained
+TypeScript repositories and Rust/WASM host adapters. Rust islands borrow the
+broker instead of constructing a second persistent worker.
 
 `lkjstr-storage` owns SQL text and statement meaning. Product modules and UI
 components do not send raw SQL.
@@ -23,10 +24,10 @@ components do not send raw SQL.
 
 The browser keeps one logical owner per origin, worker URL, and database name.
 The product database name is `/lkjstr/main.sqlite3`. A persistent dedicated
-worker is constructed only after the page receives the exclusive
+worker is constructed only after the broker receives the exclusive
 `lkjstr.sqlite-opfs-owner` Web Lock. Repository operations borrow or clone the
-shared store for that key. They do not create independent workers and do not
-close the database after each command.
+shared store for that key through the broker. They do not create independent
+workers and do not close the database after each command.
 
 Open is idempotent for the same database. A repeated open returns the current
 owner diagnostics without closing SQLite. If the worker errored or closed, the

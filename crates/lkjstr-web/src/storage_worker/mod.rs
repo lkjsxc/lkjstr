@@ -1,6 +1,9 @@
 #![doc = "SQLite storage worker host adapter."]
 
+#[cfg(target_arch = "wasm32")]
+mod broker;
 mod client;
+mod client_lifecycle;
 mod outcome;
 mod owner_lease;
 mod runtime;

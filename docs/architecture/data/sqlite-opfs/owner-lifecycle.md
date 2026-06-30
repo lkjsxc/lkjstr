@@ -11,19 +11,22 @@ state across Accounts, Relay Settings, feeds, Stats, and tool panes.
 There is one logical storage owner per browser origin, worker URL, and database
 name. The product database name is `/lkjstr/main.sqlite3`.
 
-All repository calls borrow that owner. They must not create independent worker
-owners for the same key, and they must not close the product database after an
+All repository calls borrow that owner through the app-wide broker described in
+[app-broker.md](app-broker.md). They must not create independent worker owners
+for the same key, and they must not close the product database after an
 individual command.
 
 ## Open Lifecycle
 
-1. Create or look up the owner entry by `(workerUrl, databaseName)`.
+1. Create or look up the broker owner entry by `(origin, workerUrl,
+   databaseName)`.
 2. Acquire the exclusive `lkjstr.sqlite-opfs-owner` Web Lock before constructing
    a persistent dedicated worker.
 3. If the Web Lock is unavailable or already held, do not construct the worker;
    return a stable unavailable or busy owner outcome.
 4. Start one open operation for the entry after ownership is granted.
-5. Share the same opened store with all repository calls for that key.
+5. Share the same opened store with all TypeScript and Rust/WASM repository
+   calls for that key.
 6. Treat a repeated open for the same database as idempotent and return current
    diagnostics without closing and reopening SQLite.
 7. Reject a request for a different database while an owner is open unless the
@@ -75,9 +78,10 @@ Web Locks unavailable is an explicit unsupported storage state, not permission
 to construct an uncoordinated persistent worker. Active page owners answer
 browser-local `BroadcastChannel` holder pings with an ephemeral `owner-*` id;
 busy diagnostics may show that holder id and retry delay, never secrets.
-Rust/WASM owner-lock code uses `web-sys`/`js-sys` reflection and must not depend
-on wasm-bindgen `inline_js`
-snippets for shipped storage ownership.
+Rust/WASM storage host code uses `web-sys`/`js-sys` reflection to borrow the
+page broker and must not acquire a fresh Web Lock for the product database.
+Rust/WASM owner-lock code must not depend on wasm-bindgen `inline_js` snippets
+for shipped storage ownership.
 
 ## Storage Modes
 

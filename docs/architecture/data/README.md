@@ -55,6 +55,7 @@ read the current live storage state in [storage/README.md](storage/README.md).
   each resource.
 - [storage/README.md](storage/README.md): storage kernel entry point.
 - [sqlite-opfs/README.md](sqlite-opfs/README.md): OPFS SQLite storage target.
+- [sqlite-opfs/app-broker.md](sqlite-opfs/app-broker.md): app-wide SQLite owner broker.
 - [sqlite-opfs/runtime.md](sqlite-opfs/runtime.md): worker runtime and VFS behavior.
 - [sqlite-opfs/owner-lifecycle.md](sqlite-opfs/owner-lifecycle.md): storage owner lifecycle.
 - [sqlite-opfs/storage-modes.md](sqlite-opfs/storage-modes.md): persistent and temporary modes.
@@ -150,7 +151,7 @@ read the current live storage state in [storage/README.md](storage/README.md).
 `feed-surface/enrichment-height-tiers.md` `feed-surface/event-value.md` `feed-surface/feed-row-chrome.md` `feed-surface/feed-scroll-surface.md` `feed-surface/footer-phase.md` `feed-surface/geometry-model-keys.md` `feed-surface/geometry-model-persistence.md`
 `feed-surface/geometry-model.md` `feed-surface/height-reservation.md` `feed-surface/lod-tree.md` `feed-surface/long-content.md` `feed-surface/near-end.md` `feed-surface/older-load-mode.md` `feed-surface/repost-rendering.md`
 `feed-surface/scroll-regression-tests.md` `feed-surface/staged-pipeline.md` `feed-surface/surface-matrix.md` `feed-surface/unload-height-stability.md` `feed-surface.md` `heap-retention.md` `local-secret-security.md`
-`memory-prioritization.md` `relay-pages.md` `resource-ownership.md` `sqlite-opfs/README.md` `sqlite-opfs/failure-recovery.md` `sqlite-opfs/import-export.md` `sqlite-opfs/migration-map.md` `sqlite-opfs/owner-lifecycle.md`
+`memory-prioritization.md` `relay-pages.md` `resource-ownership.md` `sqlite-opfs/README.md` `sqlite-opfs/app-broker.md` `sqlite-opfs/failure-recovery.md` `sqlite-opfs/import-export.md` `sqlite-opfs/migration-map.md` `sqlite-opfs/owner-lifecycle.md`
 `sqlite-opfs/query-ownership.md` `sqlite-opfs/repositories.md` `sqlite-opfs/retention.md` `sqlite-opfs/runtime.md` `sqlite-opfs/schema.md` `sqlite-opfs/storage-modes.md` `sqlite-opfs/worker-protocol.md`
 `storage/README.md` `storage/data-classes/README.md` `storage/data-classes/feed-coverage-correctness.md` `storage/data-classes/ownership-classes.md` `storage/data-classes/tab-snapshots.md` `storage/data-classes/table-manifest.md` `storage/diagnostics/README.md`
 `storage/diagnostics/inventory.md` `storage/diagnostics/pressure-states.md` `storage/diagnostics/stats.md` `storage/diagnostics/verification.md` `storage/kernel/README.md` `storage/kernel/commands/README.md` `storage/kernel/commands/diagnostics.md`

@@ -74,7 +74,7 @@ reaching the worker.
 
 ## Open And Schema
 
-The main runtime must acquire the exclusive `lkjstr.sqlite-opfs-owner` Web Lock
+The app broker must acquire the exclusive `lkjstr.sqlite-opfs-owner` Web Lock
 before constructing a persistent dedicated worker. If the lock is held or Web
 Locks are unavailable, no persistent worker is created and the response is a
 stable busy or unavailable outcome. `open` is idempotent for the already opened

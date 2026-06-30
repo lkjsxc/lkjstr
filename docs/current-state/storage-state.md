@@ -59,13 +59,15 @@ Read next: [architecture/data/README.md](../architecture/data/README.md),
   worker init, temporary memory fallback, repair, decode, active account
   selector, pressure snapshot decode, optimizer record decode, pressure stop
   reasons, quota, and write failure diagnostics.
-- Rust/WASM host storage uses a page-local shared store registry keyed by
-  database name and worker URL. `with_sqlite_store` borrows the shared store and
-  no longer closes the product database after each repository operation. The
-  Rust owner lock uses JS reflection instead of wasm-bindgen `inline_js`, so
-  storage startup does not depend on untracked snippet assets. The page shell
-  best-effort closes already-loaded Rust/WASM SQLite stores on `pagehide`
-  without lazy-loading the bridge.
+- Product SQLite opens through an app-wide JavaScript broker keyed by origin,
+  worker URL, and database name. Retained TypeScript repositories and Rust/WASM
+  host storage borrow the same broker entry, so same-page callers do not request
+  a second Web Lock or construct another persistent worker. `with_sqlite_store`
+  borrows the shared store and no longer closes the product database after each
+  repository operation. The Rust broker lookup uses JS reflection instead of
+  wasm-bindgen `inline_js`, so storage startup does not depend on untracked
+  snippet assets. The page shell best-effort closes already-loaded SQLite stores
+  on `pagehide` without lazy-loading the bridge.
 - SQLite worker `open` is idempotent for the already opened database, returns
   `busy` for a different database while the owner is open, and skips schema
   statements for an already applied schema hash. Non-cancel worker commands run

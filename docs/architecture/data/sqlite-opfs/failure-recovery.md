@@ -12,9 +12,9 @@ run the app shell at all.
 
 Storage startup order:
 
-1. Create or reuse the storage owner for `(workerUrl, databaseName)`.
-2. Before constructing a persistent dedicated worker, acquire the exclusive
-   `lkjstr.sqlite-opfs-owner` Web Lock for the owner lifetime.
+1. Create or reuse the app broker owner for `(origin, workerUrl, databaseName)`.
+2. Before constructing a persistent dedicated worker, the broker acquires the
+   exclusive `lkjstr.sqlite-opfs-owner` Web Lock for the owner lifetime.
 3. If the Web Lock is unavailable or already held, do not construct the worker;
    surface explicit unavailable, busy, or temporary-mode UI.
 4. Route worker requests through the worker command queue.

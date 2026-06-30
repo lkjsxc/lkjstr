@@ -14,7 +14,7 @@ use crate::{
     thread_feed_host, tweet_host, upload_settings_host, user_timeline_host, workspace_host,
 };
 
-const DEFAULT_DB_NAME: &str = "lkjstr";
+const DEFAULT_DB_NAME: &str = "/lkjstr/main.sqlite3";
 
 pub fn mount_rust_workspace_shell() {
     mount_rust_workspace_shell_from_db(DEFAULT_DB_NAME.to_owned());

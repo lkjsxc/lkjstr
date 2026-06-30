@@ -49,9 +49,11 @@ ledger resource kinds, command metadata, and typed outcomes. Command metadata
 must describe batch-shaped operations by statement ids, tables, ledger policy,
 protection policy, and Stats projection instead of one-table shorthand.
 
-`lkjstr-web` acquires the origin-level `lkjstr.sqlite-opfs-owner` Web Lock
-before constructing a persistent dedicated worker, then sends worker messages
-through `StorageOp`: `open`, `apply-schema`, `query`, `execute`, `batch`,
+`lkjstr-web` borrows the JavaScript app broker for the product database instead
+of acquiring a fresh Web Lock or constructing a persistent worker per Rust
+island. The broker owns the origin-level `lkjstr.sqlite-opfs-owner` Web Lock
+before persistent worker construction, then sends worker messages through
+`StorageOp`: `open`, `apply-schema`, `query`, `execute`, `batch`,
 `get-storage-health`, `read-physical-inventory`, `estimate-storage`, `cancel`,
 and `close`. Product crates never format SQL or open OPFS.
 
@@ -69,7 +71,7 @@ implemented at the storage and web-adapter boundary.
 Rust app retention and repair planning consumes the storage-owned readiness
 classifier. Search app planning, NIP-50 merge, and surface parity remain open.
 Pressure inventory has a storage-owned readiness classifier, while browser byte
-estimates remain open. Owner-lock denial and SAH-pool access-handle contention
+estimates remain open. Broker owner denial and SAH-pool access-handle contention
 map to busy/unavailable outcomes before protected repositories can render empty
 rows.
 

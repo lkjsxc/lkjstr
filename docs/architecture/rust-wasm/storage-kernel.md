@@ -118,9 +118,10 @@ closes idempotently, and exposes diagnostics. Each callback is stored in an
 owner slot and cleared on settle, cancel, timeout, or close. Late worker
 responses become typed late outcomes rather than reaching product logic.
 
-The Rust adapter exposes the same boundary through `lkjstr-web`. Persistent
-worker creation is guarded by the origin-level `lkjstr.sqlite-opfs-owner` Web
-Lock through JS reflection, not wasm-bindgen `inline_js`; owner denial maps to
-busy or unavailable storage outcomes before `Worker::new()`. Protected, core
-event-cache, and diagnostics Rust repository calls now use it. Remaining Rust
-work is parity wiring, not an old browser database dependency.
+The Rust adapter exposes the same boundary through `lkjstr-web`. Product Rust
+storage calls borrow the JavaScript app broker for `(origin, workerUrl,
+databaseName)` through JS reflection, not wasm-bindgen `inline_js`; owner denial
+maps to busy or unavailable storage outcomes in the broker before any persistent
+worker is constructed. Protected, core event-cache, and diagnostics Rust
+repository calls now use it. Remaining Rust work is parity wiring, not an old
+browser database dependency.

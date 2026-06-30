@@ -6,6 +6,7 @@
   import { enforceCacheBudget } from '$lib/cache/cache-budget-enforcement';
   import { defaultCacheMaxBytes } from '$lib/cache/storage-quota';
   import { loadSettings } from '$lib/settings/settings-store';
+  import '$lib/storage/sqlite-opfs/app-broker';
   import { closeSqliteStorage } from '$lib/storage/sqlite-opfs/kernel-client';
   import { installSqliteStorageTestApi } from '$lib/storage/sqlite-opfs/test-api';
   import type { Account } from '$lib/accounts/account';
@@ -135,7 +136,6 @@
   async function refreshData(): Promise<void> {
     ({ accounts, activeAccount, relaySets, storageState } =
       await loadWorkspacePageData());
-    await closeSqliteStorage();
     pageDataReady = true;
   }
 

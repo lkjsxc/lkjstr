@@ -60,6 +60,25 @@ jobs:
 
     await expect(checkAutomaticCiWorkflowGuard(root)).resolves.toEqual([]);
   });
+
+  it('keeps the checked-in CI workflow repository-only', async () => {
+    await expect(checkAutomaticCiWorkflowGuard(process.cwd())).resolves.toEqual(
+      [],
+    );
+  });
+
+  it('keeps pnpm ci:quiet scoped to the repository gate', async () => {
+    const packageJson = JSON.parse(await fs.readFile('package.json', 'utf8'));
+    const quiet = await fs.readFile('scripts/run-quiet.ts', 'utf8');
+    const ciSection = quiet.slice(
+      quiet.indexOf('const ciSteps'),
+      quiet.indexOf('const plans'),
+    );
+
+    expect(packageJson.scripts['ci:quiet']).toBe('tsx scripts/run-quiet.ts ci');
+    expect(ciSection).toContain("args: ['check:repo']");
+    expect(ciSection).not.toMatch(/verify|build|test|rust-wasm|cloudflare/);
+  });
 });
 
 async function fixture(workflow: string): Promise<string> {
