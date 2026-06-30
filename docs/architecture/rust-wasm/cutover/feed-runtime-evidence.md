@@ -110,6 +110,8 @@ This file owns current Rust feed runtime evidence by surface.
   matching Author Context tabs. Fast UI provider proof covers request-level
   release guards and late-completion suppression. Deletion proof remains open.
 - Cached and relay-refreshed Profile header metadata/follow-count proof exists.
+  Rust Profile about text renders safe HTTP, HTTPS, and domain-like links with
+  external-link isolation while preserving unsafe schemes as text.
   The known following-count action opens converted Followees, the Profile header
   action opens converted User Timeline, own-profile actions open Profile Edit, the copy
   menu uses host-backed npub/nprofile/follow-list/relay-set JSON, and

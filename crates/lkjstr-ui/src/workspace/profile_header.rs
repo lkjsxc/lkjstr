@@ -1,6 +1,11 @@
 use leptos::{ev::MouseEvent, prelude::*};
 use lkjstr_app::ProfileHeaderView;
 
+#[path = "profile_about.rs"]
+mod profile_about;
+
+use profile_about::profile_about;
+
 use crate::workspace::profile_clipboard_provider::ProfileCopyProvider;
 use crate::workspace::profile_copy_menu::{
     ProfileCopyMenuInput, profile_copy_menu, profile_copy_status,
@@ -73,7 +78,7 @@ pub(crate) fn profile_header(
                     <p>{subtitle}</p>
                     <small>{npub}</small>
                 </div>
-                {about.map(|text| view! { <p class="profile-card__about">{text}</p> })}
+                {about.map(profile_about)}
                 {profile_facts(website, copy_status)}
             </div>
         </header>

@@ -16,8 +16,8 @@ Top to bottom inside `.profile-card`:
 5. Subtitle (NIP-05 or fallback).
 6. Full `npub` (`small`).
 7. About text (`ProfileAbout`).
-8. Facts row (website link, copy confirmation). Website links use
-   `noopener noreferrer` when they open a new browsing context.
+8. Facts row (website link, copy confirmation). Website and safe about-text
+   links use `noopener noreferrer` when they open a new browsing context.
 
 ## Spacing
 
@@ -45,6 +45,8 @@ Top to bottom inside `.profile-card`:
 ## Source
 
 - `src/lib/tabs/profile/ProfileHeader.svelte`
+- `crates/lkjstr-ui/src/workspace/profile_header.rs`
+- `crates/lkjstr-ui/src/workspace/profile_about.rs`
 - `src/styles/identity.css`
 
 ## Related

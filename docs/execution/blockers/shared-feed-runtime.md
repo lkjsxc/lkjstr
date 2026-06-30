@@ -55,7 +55,7 @@ models, anchors, footer states, and unavailable states.
   Profile metadata/follow-count rendering, Profile relay header refresh,
   Profile Followees/User Timeline/Profile Edit/copy-npub/nprofile/follow-list/relay-set JSON actions,
   Profile Follow/Unfollow state loading plus local and NIP-07 publish without fake success,
-  Profile sparse-history empty proof, first Rust Followees NIP-02 row rendering,
+  Profile safe about-link rendering, Profile sparse-history empty proof, first Rust Followees NIP-02 row rendering,
   default cached plus selected-relay/stored-route/disabled-route Followees
   host-provider, one-scroll-owner proof, cleanup, read-command cleanup, retry diagnostics, root row
   actions with explicit copy status, and Rust island host proof,

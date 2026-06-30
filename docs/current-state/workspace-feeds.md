@@ -40,9 +40,11 @@ Read next: [architecture/workspace/README.md](../architecture/workspace/README.m
   or author-route cache, exact coverage, bounded reads, cleanup, header/follow
   proof, sparse-empty proof, and rejects the retained TypeScript runtime entry.
   The shipped Rust Thread island reads cached root/reply/focused, parent,
-  unavailable, continuation, older, and live rows, and rejects its retained runtime entry. Converted Rust rows
-  share menus, action/repost rows, non-local Thread row activation, isolated local
-  controls, long-token wrapping, User Timeline proof, and cached kind `0` Followees labels/subtitles/avatars with `Unknown` fallback.
+  unavailable, continuation, older, and live rows, and rejects its retained
+  runtime entry. Converted Rust rows share menus, action/repost rows,
+  non-local Thread row activation, isolated local controls, long-token wrapping,
+  Rust Profile about-link rendering, User Timeline proof, and cached kind `0`
+  Followees labels/subtitles/avatars with `Unknown` fallback.
 - Live inserts use top-anchor policy: top users see new rows immediately; away
   users keep the visible anchor and see newer-available state.
 - Profile following counts/actions are explicit: unknown states never render zero;
