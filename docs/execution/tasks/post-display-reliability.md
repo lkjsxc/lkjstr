@@ -64,19 +64,19 @@ empty copy solely because durable storage is unavailable.
 
 ## Degraded-Storage Matrix
 
-| Surface | Real fact that keeps reads alive | Disallowed replacement state |
-| --- | --- | --- |
-| Home | page active pubkey plus real follow proof or kind `3` discovery | `no-enabled-relay` or empty feed from storage failure |
-| Notifications | page active pubkey | `no-active-account`, `no-enabled-relay`, or empty notifications without exhaustion proof |
-| Profile | route profile pubkey | header unavailable blocking note rows |
-| Thread | route event id or pointer | empty thread from missing cache or failed relay |
-| Search | submitted query | fake search success or empty from local-index failure |
-| Global | allowed public read plan | empty global feed from relay settings failure |
-| Followees | target pubkey | `0 following` before real kind `3` proof |
-| User Timeline | target pubkey | empty target timeline from missing follow-list cache |
-| Author Context | anchor event id or author pubkey | hidden context rows from missing anchor cache |
-| Custom Request | explicit user filters | success rows not backed by relay or cache events |
-| Public Chat | channel id or channel-list request | placeholder channel messages |
+| Surface        | Real fact that keeps reads alive                                | Disallowed replacement state                                                             |
+| -------------- | --------------------------------------------------------------- | ---------------------------------------------------------------------------------------- |
+| Home           | page active pubkey plus real follow proof or kind `3` discovery | `no-enabled-relay` or empty feed from storage failure                                    |
+| Notifications  | page active pubkey                                              | `no-active-account`, `no-enabled-relay`, or empty notifications without exhaustion proof |
+| Profile        | route profile pubkey                                            | header unavailable blocking note rows                                                    |
+| Thread         | route event id or pointer                                       | empty thread from missing cache or failed relay                                          |
+| Search         | submitted query                                                 | fake search success or empty from local-index failure                                    |
+| Global         | allowed public read plan                                        | empty global feed from relay settings failure                                            |
+| Followees      | target pubkey                                                   | `0 following` before real kind `3` proof                                                 |
+| User Timeline  | target pubkey                                                   | empty target timeline from missing follow-list cache                                     |
+| Author Context | anchor event id or author pubkey                                | hidden context rows from missing anchor cache                                            |
+| Custom Request | explicit user filters                                           | success rows not backed by relay or cache events                                         |
+| Public Chat    | channel id or channel-list request                              | placeholder channel messages                                                             |
 
 ## Files To Read
 
