@@ -65,11 +65,16 @@ Settings.` and opens Upload Settings on click instead of failing silently on
   `imeta` tags.
 - Publishing derives profile mention, event mention, quote, and custom emoji
   tags from the note body without duplicating existing media or warning tags.
-- Publish controls show active signing work without persistent success text or
-  relay-count status. After signing, local storage, and relay queueing succeed,
-  Tweet clears content, media, custom emoji, sensitive state, tab draft and old
-  `main` draft, then focuses the editor. Late diagnostics are shown only when
-  every relay rejects the event or relay publishing fails.
+- Publish controls show active signing work and always exit that state with a
+  signed event, denied/unavailable signer, no-write-relay, relay failure, or
+  storage-busy draft/archive diagnostic. Text-only publishing does not require
+  media upload settings.
+- After signing and relay queueing succeed, Tweet clears content, media, custom
+  emoji, sensitive state, tab draft and old `main` draft, then focuses the
+  editor. If local archive fails after signing, Tweet keeps relay delivery alive
+  and shows an archive warning instead of a generic publish failure. Late
+  diagnostics are shown only when every relay rejects the event or relay
+  publishing fails.
 - Tweet does not bypass relay settings or bundle a public media host.
 
 ## Layout Acceptance

@@ -30,7 +30,8 @@ notification context header and the source event as the primary body.
 - Notification tabs keep a `180` record window. Windowing is based on
   notification records, not the number of resolved source events.
 - The tab scans a bounded recent relay window on open. If the first window has
-  zero records, the scroll surface remains mounted and can continue older scans.
+  zero records, the scroll surface remains mounted and shows older-read or
+  relay-reading status so older scans can continue.
 - No automatic deep backfill on tab open: viewport-fill stops once the list
   becomes scrollable, history is proven exhausted, or the bounded attempt cap is
   reached. After that, older requests require a downward scroll-owner gesture or
@@ -74,8 +75,8 @@ notification context header and the source event as the primary body.
 - `no-active-account` is reserved for readable account state proving no account
   exists or no account is selected. It is not used for `opfs-owner-held`, Web
   Lock denial, unsupported storage, or selector read failures.
-- Empty state is explicit only after no records exist and history exhaustion is
-  proven.
+- Empty state is explicit only after no records exist and account, cache, relay,
+  and bounded history exhaustion are proven.
 - Rows use a left-aligned action context header followed by the source
   notification event rendered with the canonical Timeline `EventRow`.
 - The outer actor chip is hidden when the loaded source event already shows

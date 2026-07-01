@@ -78,7 +78,7 @@ fn window_flags(
 ) -> FeedWindowFlags {
     match input.phase {
         NotificationsRelayReadPhase::Initial => FeedWindowFlags {
-            has_older: merged_oldest_created_at(input, snapshot).is_some(),
+            has_older: true,
             ..FeedWindowFlags::default()
         },
         NotificationsRelayReadPhase::Older { cursor_created_at } => FeedWindowFlags {

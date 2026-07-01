@@ -70,6 +70,9 @@ pub fn footer_row_from_window(feed_id: &str, window: &FeedWindowState) -> FeedFo
     let state = match feed_window_empty_ready(window) {
         crate::FeedWindowStatus::PendingEmpty => FeedFooterState::Loading,
         crate::FeedWindowStatus::PendingWithRows => FeedFooterState::ReadingRelays,
+        crate::FeedWindowStatus::TerminalEmpty if window.has_older => {
+            FeedFooterState::OlderLoadReady
+        }
         crate::FeedWindowStatus::TerminalEmpty => FeedFooterState::TerminalEmpty,
         crate::FeedWindowStatus::TerminalWithRows if window.has_older => {
             FeedFooterState::OlderLoadReady

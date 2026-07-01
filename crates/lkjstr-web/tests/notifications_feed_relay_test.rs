@@ -2,7 +2,7 @@
 
 use lkjstr_app::FeedFooterState;
 use lkjstr_web::notifications_feed_relay_output_test_api::{
-    cache_complete_probe, initial_complete_output_probe,
+    cache_complete_probe, initial_complete_empty_output_probe, initial_complete_output_probe,
 };
 use lkjstr_web::notifications_feed_relay_test_api::{
     notification_match_probe, older_complete_empty_footer_probe,
@@ -58,6 +58,16 @@ fn notifications_older_empty_incomplete_stays_partial() {
 #[wasm_bindgen_test]
 fn notifications_initial_complete_retains_older_cursor() -> Result<(), JsValue> {
     let probe = initial_complete_output_probe().ok_or_else(|| js_error("missing output"))?;
+
+    assert_eq!(probe.footer, Some(FeedFooterState::OlderLoadReady));
+    assert_eq!(probe.older_since, 1_940);
+    assert_eq!(probe.older_until, 1_999);
+    Ok(())
+}
+
+#[wasm_bindgen_test]
+fn notifications_initial_empty_complete_keeps_older_footer() -> Result<(), JsValue> {
+    let probe = initial_complete_empty_output_probe().ok_or_else(|| js_error("missing output"))?;
 
     assert_eq!(probe.footer, Some(FeedFooterState::OlderLoadReady));
     assert_eq!(probe.older_since, 1_940);

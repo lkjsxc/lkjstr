@@ -10,6 +10,7 @@ browser-owned data.
 - [runtime.md](runtime.md): worker runtime, VFS order, and multi-tab behavior.
 - [owner-lifecycle.md](owner-lifecycle.md): logical owner lifecycle and close rules.
 - [app-broker.md](app-broker.md): app-wide broker shared by TypeScript and Rust/WASM callers.
+- [cross-tab-owner-proxy.md](cross-tab-owner-proxy.md): design-only proxy plan.
 - [storage-modes.md](storage-modes.md): persistent OPFS and temporary memory modes.
 - [schema.md](schema.md): canonical SQLite table groups, indexes, and owners.
 - [worker-protocol.md](worker-protocol.md): typed request and response protocol.

@@ -14,8 +14,8 @@ split by ownership under [current-state/README.md](current-state/README.md).
   Rust/WASM crates take ownership slice by slice with proof.
 - Durable product storage is worker-owned SQLite OPFS with an origin-level
   owner lease for persistent dedicated workers, a shared app-broker key
-  `/lkjstr/main.sqlite3`, and explicit busy, unsupported, or temporary states
-  when persistence cannot open.
+  `/lkjstr/main.sqlite3`, bounded owner-busy cooldown diagnostics, and explicit
+  busy, unsupported, or temporary states when persistence cannot open.
 - Product modules use typed repositories; main-thread product code must not
   open SQLite, OPFS, IndexedDB, localStorage, Cache Storage, or quota APIs
   directly unless the file is an approved host adapter or diagnostic owner.
@@ -30,8 +30,12 @@ split by ownership under [current-state/README.md](current-state/README.md).
   read settings or policy-forbidden fallback. Home treats cached follow-list
   storage failure as incomplete evidence, keeps the diagnostic visible, and runs
   bounded relay kind `3` discovery when read relays are allowed. Notifications
-  and Profile keep storage/header diagnostics visible while real cache or relay
-  rows render. No fake product data or placeholder success state is allowed.
+  keep an initial empty relay window in older-read or relay-reading status until
+  account, cache, relay, and bounded-history evidence prove emptiness. Profile
+  keeps storage/header diagnostics visible while real cache or relay rows render.
+  Tweet publish exits active work on draft, signer, relay, or archive failures
+  with exact diagnostics and keeps relay delivery alive when only local archive
+  storage fails. No fake product data or placeholder success state is allowed.
 - Home, Global, Profile, Thread, Notifications, Search, Custom Request, Author
   Context, Followees, and User Timeline have active Rust island or Rust-backed
   slices, but retained TypeScript and Svelte code may be deleted only after

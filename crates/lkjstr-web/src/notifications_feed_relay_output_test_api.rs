@@ -47,6 +47,19 @@ pub fn initial_complete_output_probe() -> Option<NotificationsRelayOutputProbe> 
         &input(),
         snapshot(ProgressiveReadStatus::Complete, vec![progressive(2_000)]),
     );
+    output_probe(output)
+}
+
+pub fn initial_complete_empty_output_probe() -> Option<NotificationsRelayOutputProbe> {
+    output_probe(output_from_snapshot(
+        &input(),
+        snapshot(ProgressiveReadStatus::Complete, Vec::new()),
+    ))
+}
+
+fn output_probe(
+    output: crate::notifications_feed_relay_model::NotificationsRelayReadOutput,
+) -> Option<NotificationsRelayOutputProbe> {
     let older = notifications_older_relay_input_from_state(&output.input)?;
     Some(NotificationsRelayOutputProbe {
         footer: footer_state(output.model),

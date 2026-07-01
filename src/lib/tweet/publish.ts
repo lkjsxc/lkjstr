@@ -1,11 +1,16 @@
 import { kinds, type NostrTag } from '../protocol';
 import {
+  publishErrorMessage,
   signAndStartPublishing,
   type EventQueuedPublishStatus,
 } from '../events/publish-event';
 import type { RelaySet } from '../relays/relay-store';
 
 export type TweetPublishStatus = EventQueuedPublishStatus;
+
+export function tweetPublishFailureMessage(error: unknown): string {
+  return publishErrorMessage(error, 'Tweet publish failed.');
+}
 
 export async function publishTweet(
   content: string,

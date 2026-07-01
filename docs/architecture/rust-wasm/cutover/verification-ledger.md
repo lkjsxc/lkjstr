@@ -2,9 +2,7 @@
 
 ## Purpose
 
-This ledger maps Rust-first cutover areas to focused checks and the final Docker
-Compose gate. Use it with [implementation-ledger.md](implementation-ledger.md)
-before claiming parity or deleting TypeScript and Svelte product code.
+Maps Rust-first cutover focused checks and Docker final gate. Use [implementation-ledger.md](implementation-ledger.md) before parity or deletion claims.
 
 ## Gate Rule
 
@@ -14,6 +12,7 @@ change and Docker Compose verification is either run or recorded as not run.
 
 ## Recent Evidence
 
+2026-07-01 notifications/publish proof: empty Notifications windows keep older-read evidence; Tweet exits storage/signer/archive failures. Docker not rerun.
 2026-07-01 post-display startup policy proof: surface policy,
 Notifications/Profile degraded-read tests, focused post-display gate, wasm
 compile, touched-crate clippy, repo/docs/line/fmt checks, matching Vitest
