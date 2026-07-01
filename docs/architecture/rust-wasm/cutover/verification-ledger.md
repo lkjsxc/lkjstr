@@ -16,8 +16,8 @@ change and Docker Compose verification is either run or recorded as not run.
 
 2026-07-01 post-display startup policy proof: surface policy,
 Notifications/Profile degraded-read tests, focused post-display gate, wasm
-compile, touched-crate clippy, repo/docs/line/fmt checks, and matching Vitest
-suites passed. Docker final gate was not rerun for this non-deletion slice.
+compile, touched-crate clippy, repo/docs/line/fmt checks, matching Vitest
+suites, and Docker config/build/verify/cloudflare/app-smoke passed.
 
 2026-06-30 post-display repair proof: startup diagnostics, relay socket
 hardening, shared footer visibility, Home follow discovery, Profile about links,
