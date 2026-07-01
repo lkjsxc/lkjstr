@@ -3,6 +3,7 @@ use std::collections::BTreeSet;
 use lkjstr_app::{
     FeedFragmentConfig, ProfileFeedDiagnosticInput, ProfileFeedSourceState, ProfileFeedView,
     ProfileFeedViewInput, ProfileHeaderView, RowGeometryModel, build_profile_feed_view,
+    read_availability::EffectiveReadRelays,
 };
 use lkjstr_protocol::{
     KIND_FOLLOW_LIST, KIND_METADATA, KIND_RELAY_LIST_METADATA, NostrEvent, NostrFilter,
@@ -26,6 +27,7 @@ pub(crate) struct ProfileHeaderRelayReadInput {
     pub(crate) cache_window: lkjstr_app::FeedWindowState,
     pub(crate) geometry_models: Vec<RowGeometryModel>,
     pub(crate) source_state: ProfileFeedSourceState,
+    pub(crate) read_plan: EffectiveReadRelays,
     pub(crate) diagnostics: Vec<ProfileFeedDiagnosticInput>,
     pub(crate) now_sec: u64,
 }
@@ -41,6 +43,7 @@ pub(crate) struct ProfileHeaderRelayInputSeed<'a> {
     pub(crate) window: &'a lkjstr_app::FeedWindowState,
     pub(crate) geometry_models: &'a [RowGeometryModel],
     pub(crate) source_state: &'a ProfileFeedSourceState,
+    pub(crate) read_plan: &'a EffectiveReadRelays,
     pub(crate) diagnostics: &'a [ProfileFeedDiagnosticInput],
     pub(crate) now_sec: u64,
 }
@@ -68,6 +71,7 @@ pub(crate) fn profile_header_relay_input(
         cache_window: seed.window.clone(),
         geometry_models: seed.geometry_models.to_vec(),
         source_state: seed.source_state.clone(),
+        read_plan: seed.read_plan.clone(),
         diagnostics: seed.diagnostics.to_vec(),
         now_sec: seed.now_sec,
     })
@@ -118,6 +122,7 @@ pub(crate) fn profile_header_model(
         profile_pubkey: Some(input.profile_pubkey.clone()),
         profile_header: profile_header.or_else(|| input.profile_header.clone()),
         source_state: input.source_state.clone(),
+        read_plan: input.read_plan.clone(),
         selected_relays: input.view_selected_relays.clone(),
         profile_hint_relays: input.profile_hint_relays.clone(),
         relay_sets_json: input.relay_sets_json.clone(),

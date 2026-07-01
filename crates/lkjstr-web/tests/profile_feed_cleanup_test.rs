@@ -17,6 +17,7 @@ use lkjstr_ui::{ProfileFeedProvider, ProfileFeedRequest};
 use wasm_bindgen::{JsCast, closure::Closure, prelude::JsValue};
 use wasm_bindgen_futures::JsFuture;
 use wasm_bindgen_test::{wasm_bindgen_test, wasm_bindgen_test_configure};
+mod read_plan_support;
 
 wasm_bindgen_test_configure!(run_in_browser);
 
@@ -152,6 +153,7 @@ fn late_model() -> ProfileFeedView {
         profile_pubkey: Some("a".repeat(64)),
         profile_header: None,
         source_state: ProfileFeedSourceState::CacheComplete,
+        read_plan: read_plan_support::selected(),
         selected_relays: vec!["wss://selected.example".to_owned()],
         profile_hint_relays: vec!["wss://selected.example".to_owned()],
         relay_sets_json: "[]".to_owned(),

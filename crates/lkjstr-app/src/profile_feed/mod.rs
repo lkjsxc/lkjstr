@@ -3,6 +3,7 @@
 mod build;
 mod defaults;
 mod header;
+mod policy;
 mod relay_sets_json;
 mod types;
 

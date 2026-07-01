@@ -1,5 +1,6 @@
 use lkjstr_app::{
     ProfileFeedDiagnosticInput, ProfileFeedSourceState, ProfileHeaderView, RowGeometryModel,
+    read_availability::EffectiveReadRelays,
 };
 use lkjstr_protocol::{KIND_GENERIC_REPOST, KIND_REPOST, KIND_TEXT_NOTE, NostrEvent};
 use lkjstr_relays::AuthorRelayRoute;
@@ -8,6 +9,7 @@ use lkjstr_relays::AuthorRelayRoute;
 pub(crate) struct ProfileRelayReadInput {
     pub(crate) owner: String,
     pub(crate) profile_pubkey: String,
+    pub(crate) read_plan: EffectiveReadRelays,
     pub(crate) selected_relays: Vec<String>,
     pub(crate) profile_hint_relays: Vec<String>,
     pub(crate) relay_sets_json: String,
@@ -24,6 +26,7 @@ pub(crate) struct ProfileRelayInputSeed<'a> {
     pub(crate) owner: &'a str,
     pub(crate) profile_pubkey: &'a Option<String>,
     pub(crate) source_state: &'a ProfileFeedSourceState,
+    pub(crate) read_plan: &'a EffectiveReadRelays,
     pub(crate) selected_relays: &'a [String],
     pub(crate) profile_hint_relays: &'a [String],
     pub(crate) relay_sets_json: &'a str,
@@ -51,6 +54,7 @@ pub(crate) fn profile_relay_input(
     Some(ProfileRelayReadInput {
         owner: seed.owner.to_owned(),
         profile_pubkey: seed.profile_pubkey.clone()?,
+        read_plan: seed.read_plan.clone(),
         selected_relays: seed.selected_relays.to_vec(),
         profile_hint_relays: seed.profile_hint_relays.to_vec(),
         relay_sets_json: seed.relay_sets_json.to_owned(),
@@ -99,6 +103,7 @@ mod tests {
             owner: "profile-tab",
             profile_pubkey: &Some(pubkey()),
             source_state: &source_state,
+            read_plan: &read_plan(),
             selected_relays: &["wss://selected.example".to_owned()],
             profile_hint_relays: &["wss://selected.example".to_owned()],
             relay_sets_json: "[]",
@@ -128,6 +133,7 @@ mod tests {
             owner: "profile-tab",
             profile_pubkey: &Some(pubkey()),
             source_state: &source_state,
+            read_plan: &read_plan(),
             selected_relays: &["wss://selected.example".to_owned()],
             profile_hint_relays: &["wss://selected.example".to_owned()],
             relay_sets_json: "[]",
@@ -145,6 +151,10 @@ mod tests {
         assert!(profile_event_matches_read(&input, &event(159)));
         assert!(!profile_event_matches_read(&input, &event(160)));
         Ok(())
+    }
+
+    fn read_plan() -> EffectiveReadRelays {
+        EffectiveReadRelays::from_durable_settings(vec!["wss://selected.example".to_owned()])
     }
 
     fn event(created_at: u64) -> lkjstr_protocol::NostrEvent {

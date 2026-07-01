@@ -8,17 +8,21 @@ is missing.
 
 ## Status
 
-Current Home and relay-socket slice implemented. Typed read availability covers
-the Home and Notifications case where a real page active pubkey exists and relay
-settings storage is unavailable. Shared feed runtime parity and the remaining
-post-display surfaces remain open.
+Current Home, Notifications/Profile startup-policy, and relay-socket slices are
+implemented. Typed read availability covers Home and Notifications when a real
+page active pubkey exists and covers public Profile when a real profile pubkey
+exists while relay settings storage is unavailable. Shared feed runtime parity
+and remaining post-display surfaces remain open.
 
 ## Current Evidence
 
 - Home and Notifications read plans can use diagnosed read-only session default
   public relays when relay settings are unavailable.
+- Profile read plans can use diagnosed session default public read relays for a
+  real profile pubkey while header or cache failures remain diagnostics.
 - Focused Rust tests cover durable-empty, allowed fallback, forbidden fallback,
-  and Home/Notifications loading instead of `no-enabled-relay`.
+  Home/Notifications/Profile loading instead of `no-enabled-relay`, and the
+  pure surface startup policy.
 - Focused TypeScript tests cover workspace page data preserving the active
   account while relay settings are unavailable.
 
@@ -34,6 +38,9 @@ post-display surfaces remain open.
   detach `CONNECTING` sockets without app-close.
 - `home_feed_relay_provider_test` uses synthetic relay protocol frames to prove
   cache-unavailable Home can render a real relay note with the diagnostic.
+- `surface_startup_policy_test`, `notifications_feed_relay_test`, and
+  `profile_feed_recovery_test` prove degraded storage keeps relay/content
+  rendering alive with diagnostics instead of `no-enabled-relay`.
 
 ## Next Edit
 

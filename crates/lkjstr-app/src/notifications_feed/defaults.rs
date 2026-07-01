@@ -2,6 +2,7 @@ use lkjstr_relays::DemandVisibility;
 
 use crate::{
     FeedFragmentConfig, ProtectedAccountAvailability, RowGeometryModel, empty_feed_window,
+    read_availability::EffectiveReadRelays,
 };
 
 use super::{
@@ -18,6 +19,7 @@ pub fn default_notifications_feed_view(
         owner: owner.to_owned(),
         account: ProtectedAccountAvailability::initial(active_pubkey),
         source_state: NotificationsFeedSourceState::Pending,
+        read_plan: EffectiveReadRelays::from_durable_settings(Vec::new()),
         selected_relays: Vec::new(),
         disabled_relays: Vec::new(),
         author_routes: Vec::new(),

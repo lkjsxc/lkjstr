@@ -1,4 +1,7 @@
-use lkjstr_app::{FeedFooterState, FeedViewRow, empty_feed_window, reduce_feed_window};
+use lkjstr_app::{
+    FeedFooterState, FeedViewRow, empty_feed_window, read_availability::EffectiveReadRelays,
+    reduce_feed_window,
+};
 use lkjstr_protocol::{KIND_TEXT_NOTE, NostrEvent};
 use lkjstr_relays::{
     PageReadSurface, ProgressiveEvent, ProgressiveReadSnapshot, ProgressiveReadStatus,
@@ -61,6 +64,7 @@ fn relay_input_for_cache_complete(
         owner: &input.owner,
         active_pubkey: &active_pubkey,
         source_state: &source_state,
+        read_plan: &input.read_plan,
         selected_relays: &input.selected_relays,
         window: &input.cache_window,
         notification_rows: &input.notification_rows,
@@ -83,6 +87,7 @@ fn input() -> NotificationsRelayReadInput {
     NotificationsRelayReadInput {
         owner: "notifications-tab".to_owned(),
         active_pubkey: pubkey("a"),
+        read_plan: read_plan(),
         selected_relays: vec!["wss://selected.example".to_owned()],
         cache_window: reduce_feed_window(
             empty_feed_window(1, 180),
@@ -100,6 +105,10 @@ fn input() -> NotificationsRelayReadInput {
         until: 2_120,
         phase: NotificationsRelayReadPhase::Initial,
     }
+}
+
+fn read_plan() -> EffectiveReadRelays {
+    EffectiveReadRelays::from_durable_settings(vec!["wss://selected.example".to_owned()])
 }
 
 fn snapshot(

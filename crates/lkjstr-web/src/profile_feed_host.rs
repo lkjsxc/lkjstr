@@ -110,7 +110,7 @@ async fn profile_feed_model(
         None => StorageOutcome::Ok(Vec::new()),
     };
     let mut diagnostics = diagnostics(relay_selection.diagnostic.as_deref(), &routes);
-    let selected = relay_selection.relays;
+    let selected = relay_selection.relays.clone();
     let routes = match routes {
         StorageOutcome::Ok(routes) => routes,
         _ => Vec::new(),
@@ -144,6 +144,7 @@ async fn profile_feed_model(
         owner,
         profile_pubkey: &profile_pubkey,
         source_state: &source_state,
+        read_plan: &relay_selection,
         selected_relays: &query_relays,
         profile_hint_relays: &selected,
         relay_sets_json: &relay_sets_json,
@@ -165,6 +166,7 @@ async fn profile_feed_model(
         window: &window,
         geometry_models: &geometry_models,
         source_state: &source_state,
+        read_plan: &relay_selection,
         diagnostics: &diagnostics,
         now_sec,
     });
@@ -173,6 +175,7 @@ async fn profile_feed_model(
         profile_pubkey,
         profile_header,
         source_state,
+        read_plan: relay_selection,
         selected_relays: query_relays,
         profile_hint_relays: selected,
         relay_sets_json,

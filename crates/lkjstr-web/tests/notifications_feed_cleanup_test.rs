@@ -20,6 +20,7 @@ use lkjstr_ui::{
 use wasm_bindgen::{JsCast, closure::Closure, prelude::JsValue};
 use wasm_bindgen_futures::JsFuture;
 use wasm_bindgen_test::{wasm_bindgen_test, wasm_bindgen_test_configure};
+mod read_plan_support;
 
 wasm_bindgen_test_configure!(run_in_browser);
 
@@ -149,6 +150,7 @@ fn late_model() -> NotificationsFeedView {
         owner: "released-notifications".to_owned(),
         account: ProtectedAccountAvailability::selected("a".repeat(64)),
         source_state: NotificationsFeedSourceState::RelayProgressive,
+        read_plan: read_plan_support::selected(),
         selected_relays: vec!["wss://selected.example".to_owned()],
         disabled_relays: Vec::new(),
         author_routes: Vec::new(),

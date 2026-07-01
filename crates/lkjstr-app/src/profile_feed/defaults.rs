@@ -1,6 +1,8 @@
 use lkjstr_relays::DemandVisibility;
 
-use crate::{FeedFragmentConfig, RowGeometryModel, empty_feed_window};
+use crate::{
+    FeedFragmentConfig, RowGeometryModel, empty_feed_window, read_availability::EffectiveReadRelays,
+};
 
 use super::{
     ProfileFeedSourceState, ProfileFeedView, ProfileFeedViewInput, build_profile_feed_view,
@@ -13,6 +15,7 @@ pub fn default_profile_feed_view(owner: &str, profile_pubkey: Option<String>) ->
         profile_pubkey,
         profile_header: None,
         source_state: ProfileFeedSourceState::Pending,
+        read_plan: EffectiveReadRelays::from_durable_settings(Vec::new()),
         selected_relays: Vec::new(),
         profile_hint_relays: Vec::new(),
         relay_sets_json: "[]".to_owned(),

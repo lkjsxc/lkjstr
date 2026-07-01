@@ -1,4 +1,6 @@
-use lkjstr_app::{ProfileFeedSourceState, empty_feed_window};
+use lkjstr_app::{
+    ProfileFeedSourceState, empty_feed_window, read_availability::EffectiveReadRelays,
+};
 use lkjstr_protocol::{
     KIND_FOLLOW_LIST, KIND_METADATA, KIND_RELAY_LIST_METADATA, KIND_TEXT_NOTE, NostrEvent,
 };
@@ -133,9 +135,14 @@ fn input(
         window: &empty_feed_window(1, 180),
         geometry_models: &[],
         source_state: &ProfileFeedSourceState::Pending,
+        read_plan: &read_plan(selected),
         diagnostics: &[],
         now_sec: 2_000,
     })
+}
+
+fn read_plan(selected: &[String]) -> EffectiveReadRelays {
+    EffectiveReadRelays::from_durable_settings(selected.to_vec())
 }
 
 fn filter_kinds(input: &ProfileHeaderRelayReadInput, relay: &str) -> Vec<u64> {

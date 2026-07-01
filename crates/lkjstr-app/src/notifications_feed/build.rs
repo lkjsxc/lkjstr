@@ -1,8 +1,12 @@
 use crate::{
     EventDisplayContext, FeedFooterState, FeedStateRow, FeedViewModelInput,
-    NotificationsLiveQueryInput, build_feed_view_model, diagnostic_state_row,
-    feed_policy::selected_relays_available, footer_row, footer_row_from_window,
-    notification_state_row, notifications_live_query_input, unavailable_state_row,
+    NotificationsLiveQueryInput, build_feed_view_model, diagnostic_state_row, footer_row,
+    footer_row_from_window, notification_state_row, notifications_live_query_input,
+    read_availability::surface_startup_policy::{
+        SurfaceStartupAccount, SurfaceStartupAction, SurfaceStartupCacheState, SurfaceStartupInput,
+        SurfaceStartupRelayState, surface_startup_policy,
+    },
+    unavailable_state_row,
 };
 
 use super::{
@@ -53,7 +57,7 @@ fn notifications_state(
         Ok(pubkey) => pubkey,
         Err(block) => return blocked(block.status, feed_id, block.footer),
     };
-    if !selected_relays_available(&input.selected_relays) {
+    if startup_action(input) == SurfaceStartupAction::Blocked {
         state_rows.push(unavailable_state_row(
             "no-enabled-relay",
             "notifications",
@@ -127,6 +131,43 @@ fn ready_state(
         NotificationsFeedSourceState::RelayProgressive => {
             (NotificationsFeedStatus::Ready, live_query, None)
         }
+    }
+}
+
+fn startup_action(input: &NotificationsFeedViewInput) -> SurfaceStartupAction {
+    surface_startup_policy(SurfaceStartupInput {
+        account: SurfaceStartupAccount::Protected(input.account.clone()),
+        read_plan: input.read_plan.clone(),
+        author_route_count: input.author_routes.len(),
+        cache_state: cache_state(&input.source_state),
+        relay_state: relay_state(&input.source_state),
+        content_present: !input.window.visible_events().is_empty()
+            || !input.notification_rows.is_empty(),
+    })
+    .action
+}
+
+fn cache_state(source: &NotificationsFeedSourceState) -> SurfaceStartupCacheState {
+    match source {
+        NotificationsFeedSourceState::Pending | NotificationsFeedSourceState::RelayProgressive => {
+            SurfaceStartupCacheState::Pending
+        }
+        NotificationsFeedSourceState::CacheComplete => SurfaceStartupCacheState::Complete {
+            empty_is_proven: false,
+        },
+        NotificationsFeedSourceState::CachedPartial {
+            retry_available, ..
+        } => SurfaceStartupCacheState::Partial {
+            retry_available: *retry_available,
+        },
+    }
+}
+
+fn relay_state(source: &NotificationsFeedSourceState) -> SurfaceStartupRelayState {
+    if source == &NotificationsFeedSourceState::RelayProgressive {
+        SurfaceStartupRelayState::Progressive
+    } else {
+        SurfaceStartupRelayState::NotStarted
     }
 }
 

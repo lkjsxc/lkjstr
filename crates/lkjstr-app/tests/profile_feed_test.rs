@@ -114,6 +114,7 @@ fn input(
         profile_pubkey,
         profile_header: None,
         source_state,
+        read_plan: read_plan(selected_relays.clone()),
         selected_relays: selected_relays.clone(),
         profile_hint_relays: selected_relays,
         relay_sets_json: "[]".to_owned(),
@@ -130,6 +131,10 @@ fn input(
         fragment_config: FeedFragmentConfig::default(),
         diagnostics: Vec::new(),
     }
+}
+
+fn read_plan(relays: Vec<String>) -> lkjstr_app::read_availability::EffectiveReadRelays {
+    lkjstr_app::read_availability::EffectiveReadRelays::from_durable_settings(relays)
 }
 
 fn window_with_event(value: u64) -> lkjstr_app::FeedWindowState {

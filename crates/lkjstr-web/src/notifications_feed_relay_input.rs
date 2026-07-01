@@ -1,6 +1,6 @@
 use lkjstr_app::{
     NotificationItemInput, NotificationsFeedDiagnosticInput, NotificationsFeedSourceState,
-    RowGeometryModel, older_notification_cursor,
+    RowGeometryModel, older_notification_cursor, read_availability::EffectiveReadRelays,
 };
 use lkjstr_protocol::NostrEvent;
 
@@ -14,6 +14,7 @@ pub(crate) enum NotificationsRelayReadPhase {
 pub(crate) struct NotificationsRelayReadInput {
     pub(crate) owner: String,
     pub(crate) active_pubkey: String,
+    pub(crate) read_plan: EffectiveReadRelays,
     pub(crate) selected_relays: Vec<String>,
     pub(crate) cache_window: lkjstr_app::FeedWindowState,
     pub(crate) notification_rows: Vec<NotificationItemInput>,
@@ -29,6 +30,7 @@ pub(crate) struct NotificationsRelayInputSeed<'a> {
     pub(crate) owner: &'a str,
     pub(crate) active_pubkey: &'a Option<String>,
     pub(crate) source_state: &'a NotificationsFeedSourceState,
+    pub(crate) read_plan: &'a EffectiveReadRelays,
     pub(crate) selected_relays: &'a [String],
     pub(crate) window: &'a lkjstr_app::FeedWindowState,
     pub(crate) notification_rows: &'a [NotificationItemInput],
@@ -58,6 +60,7 @@ pub(crate) fn notifications_initial_relay_input(
     Some(NotificationsRelayReadInput {
         owner: seed.owner.to_owned(),
         active_pubkey: seed.active_pubkey.clone()?,
+        read_plan: seed.read_plan.clone(),
         selected_relays: seed.selected_relays.to_vec(),
         cache_window: seed.window.clone(),
         notification_rows: seed.notification_rows.to_vec(),

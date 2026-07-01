@@ -39,6 +39,7 @@ fn input(source_state: ProfileFeedSourceState) -> ProfileFeedViewInput {
         profile_pubkey: Some("a".repeat(64)),
         profile_header: None,
         source_state,
+        read_plan: read_plan(),
         selected_relays: vec!["wss://selected.example".to_owned()],
         profile_hint_relays: vec!["wss://selected.example".to_owned()],
         relay_sets_json: "[]".to_owned(),
@@ -55,4 +56,10 @@ fn input(source_state: ProfileFeedSourceState) -> ProfileFeedViewInput {
         fragment_config: FeedFragmentConfig::default(),
         diagnostics: Vec::new(),
     }
+}
+
+fn read_plan() -> lkjstr_app::read_availability::EffectiveReadRelays {
+    lkjstr_app::read_availability::EffectiveReadRelays::from_durable_settings(vec![
+        "wss://selected.example".to_owned(),
+    ])
 }

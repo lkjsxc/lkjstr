@@ -1,5 +1,8 @@
 #![doc = "Typed effective read-relay availability for feed surfaces."]
 
+#[path = "surface_startup_policy.rs"]
+pub mod surface_startup_policy;
+
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
 pub enum SessionDefaultReadPolicy {
     Allowed,

@@ -14,6 +14,11 @@ change and Docker Compose verification is either run or recorded as not run.
 
 ## Recent Evidence
 
+2026-07-01 post-display startup policy proof: surface policy,
+Notifications/Profile degraded-read tests, focused post-display gate, wasm
+compile, touched-crate clippy, repo/docs/line/fmt checks, and matching Vitest
+suites passed. Docker final gate was not rerun for this non-deletion slice.
+
 2026-06-30 post-display repair proof: startup diagnostics, relay socket
 hardening, shared footer visibility, Home follow discovery, Profile about links,
 and Notifications heart reactions passed focused gates, quiet gates, Cloudflare,
@@ -27,11 +32,6 @@ repo, docs, line, fmt, clippy, Rust/WASM, test, and verify gates passed.
 
 2026-06-29 public/protected feed availability proof passed focused tests, quiet
 gates, and Docker final gate.
-
-2026-06-29 storage/WASM startup proof: repository-only CI, no
-`wasm_bindgen(inline_js)` owner locking, object-form WASM init, bridge import
-manifests, focused storage/WASM suites, and quiet gates passed. Docker final
-gate was not rerun.
 
 ## Focused Checks By Area
 

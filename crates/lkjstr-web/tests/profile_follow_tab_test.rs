@@ -18,6 +18,7 @@ use lkjstr_ui::{
 mod accounts_selector_test_support;
 mod profile_copy_support;
 mod profile_follow_host_support;
+mod read_plan_support;
 use accounts_selector_test_support::{
     WORKER_URL, clear_legacy, test_db_name, wait_for_text as wait_for_host_text,
 };
@@ -154,6 +155,7 @@ fn profile_model() -> lkjstr_app::ProfileFeedView {
         profile_pubkey: Some(pubkey("b")),
         profile_header: Some(profile_header()),
         source_state: ProfileFeedSourceState::Pending,
+        read_plan: read_plan_support::selected(),
         selected_relays: vec!["wss://selected.example".to_owned()],
         profile_hint_relays: vec!["wss://selected.example".to_owned()],
         relay_sets_json: "[]".to_owned(),

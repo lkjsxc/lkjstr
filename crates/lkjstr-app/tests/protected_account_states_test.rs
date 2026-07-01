@@ -144,6 +144,7 @@ fn notifications_input(account: ProtectedAccountAvailability) -> NotificationsFe
         owner: "notifications-tab".to_owned(),
         account,
         source_state: NotificationsFeedSourceState::Pending,
+        read_plan: read_plan(),
         selected_relays: relays(),
         disabled_relays: Vec::new(),
         author_routes: Vec::new(),
@@ -169,6 +170,10 @@ fn has_unavailable(rows: &[FeedViewRow], reason: &str, retry_available: bool) ->
 
 fn relays() -> Vec<String> {
     vec!["wss://selected.example".to_owned()]
+}
+
+fn read_plan() -> lkjstr_app::read_availability::EffectiveReadRelays {
+    lkjstr_app::read_availability::EffectiveReadRelays::from_durable_settings(relays())
 }
 
 fn account_pubkey() -> String {

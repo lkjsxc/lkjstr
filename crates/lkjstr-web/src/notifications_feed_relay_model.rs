@@ -50,6 +50,7 @@ pub(crate) fn output_from_snapshot(
         owner: input.owner.clone(),
         account: ProtectedAccountAvailability::selected(input.active_pubkey.clone()),
         source_state,
+        read_plan: input.read_plan.clone(),
         selected_relays: input.selected_relays.clone(),
         disabled_relays: Vec::new(),
         author_routes: Vec::new(),

@@ -77,6 +77,7 @@ fn notifications_input(account: ProtectedAccountAvailability) -> NotificationsFe
         owner: "notifications-tab".to_owned(),
         account,
         source_state: NotificationsFeedSourceState::Pending,
+        read_plan: read_plan(),
         selected_relays: vec!["wss://selected.example".to_owned()],
         disabled_relays: Vec::new(),
         author_routes: Vec::new(),
@@ -92,6 +93,12 @@ fn notifications_input(account: ProtectedAccountAvailability) -> NotificationsFe
         fragment_config: FeedFragmentConfig::default(),
         diagnostics: Vec::new(),
     }
+}
+
+fn read_plan() -> lkjstr_app::read_availability::EffectiveReadRelays {
+    lkjstr_app::read_availability::EffectiveReadRelays::from_durable_settings(vec![
+        "wss://selected.example".to_owned(),
+    ])
 }
 
 fn has_unavailable(rows: &[FeedViewRow], reason: &str, retry_available: bool) -> bool {

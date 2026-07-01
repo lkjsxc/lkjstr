@@ -30,6 +30,7 @@ pub(crate) fn model_from_snapshot(
         profile_pubkey: Some(input.profile_pubkey.clone()),
         profile_header: input.profile_header.clone(),
         source_state,
+        read_plan: input.read_plan.clone(),
         selected_relays: input.selected_relays.clone(),
         profile_hint_relays: input.profile_hint_relays.clone(),
         relay_sets_json: input.relay_sets_json.clone(),
@@ -100,6 +101,9 @@ mod tests {
         let input = ProfileRelayReadInput {
             owner: "profile-tab".to_owned(),
             profile_pubkey: pubkey(),
+            read_plan: lkjstr_app::read_availability::EffectiveReadRelays::from_durable_settings(
+                vec!["wss://selected.example".to_owned()],
+            ),
             selected_relays: vec!["wss://selected.example".to_owned()],
             profile_hint_relays: vec!["wss://selected.example".to_owned()],
             relay_sets_json: "[]".to_owned(),

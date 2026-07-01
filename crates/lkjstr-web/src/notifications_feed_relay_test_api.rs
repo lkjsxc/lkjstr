@@ -1,6 +1,6 @@
 use lkjstr_app::{
     FeedFooterState, FeedViewRow, FeedWindowEvidence, FeedWindowFlags, NotificationRelayCursor,
-    empty_feed_window, reduce_feed_window,
+    empty_feed_window, read_availability::EffectiveReadRelays, reduce_feed_window,
 };
 use lkjstr_protocol::{KIND_TEXT_NOTE, NostrEvent};
 use lkjstr_relays::{
@@ -88,6 +88,7 @@ fn input(
     NotificationsRelayReadInput {
         owner: "notifications-tab".to_owned(),
         active_pubkey: pubkey("a"),
+        read_plan: read_plan(),
         selected_relays: vec!["wss://selected.example".to_owned()],
         cache_window: reduce_feed_window(
             empty_feed_window(1, 180),
@@ -113,6 +114,10 @@ fn older_input(cursor_created_at: u64, since: u64, until: u64) -> NotificationsR
         since,
         until,
     )
+}
+
+fn read_plan() -> EffectiveReadRelays {
+    EffectiveReadRelays::from_durable_settings(vec!["wss://selected.example".to_owned()])
 }
 
 fn snapshot(

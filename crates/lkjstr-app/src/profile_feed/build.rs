@@ -4,7 +4,10 @@ use crate::{
     profile_live_query_input, unavailable_state_row,
 };
 
-use super::{ProfileFeedSourceState, ProfileFeedStatus, ProfileFeedView, ProfileFeedViewInput};
+use super::{
+    ProfileFeedSourceState, ProfileFeedStatus, ProfileFeedView, ProfileFeedViewInput,
+    policy::profile_startup_decision,
+};
 
 type ProfileStateResult = (
     ProfileFeedStatus,
@@ -69,7 +72,9 @@ fn profile_state(
             FeedFooterState::ConfigurationUnavailable,
         );
     };
-    if input.selected_relays.is_empty() && input.author_routes.is_empty() {
+    if profile_startup_decision(input).action
+        == crate::read_availability::surface_startup_policy::SurfaceStartupAction::Blocked
+    {
         state_rows.push(unavailable_state_row(
             "no-enabled-relay",
             &profile_pubkey,

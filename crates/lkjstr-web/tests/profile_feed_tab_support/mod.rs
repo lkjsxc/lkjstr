@@ -1,7 +1,9 @@
 mod fixture;
+mod graph_fixture;
 
 pub use fixture::profile_model;
-use fixture::{followees_provider, startup, user_timeline_provider};
+use fixture::startup;
+use graph_fixture::{followees_provider, user_timeline_provider};
 use lkjstr_app::ProfileFeedView;
 use wasm_bindgen::{JsCast, closure::Closure, prelude::JsValue};
 use wasm_bindgen_futures::JsFuture;

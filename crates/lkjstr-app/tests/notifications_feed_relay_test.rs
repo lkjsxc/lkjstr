@@ -1,8 +1,10 @@
 use lkjstr_app::{
-    FeedFooterState, FeedFragmentConfig, FeedViewRow, FeedWindowEvidence, FeedWindowFlags,
-    NotificationsFeedSourceState, NotificationsFeedStatus, NotificationsFeedViewInput,
-    ProtectedAccountAvailability, RowGeometryModel, build_notifications_feed_view,
-    empty_feed_window, feed_event_row_id, reduce_feed_window,
+    FeedDiagnosticSeverity, FeedFooterState, FeedFragmentConfig, FeedViewRow, FeedWindowEvidence,
+    FeedWindowFlags, NotificationsFeedDiagnosticInput, NotificationsFeedSourceState,
+    NotificationsFeedStatus, NotificationsFeedViewInput, ProtectedAccountAvailability,
+    RowGeometryModel, build_notifications_feed_view, empty_feed_window, feed_event_row_id,
+    read_availability::{EffectiveReadRelays, SessionDefaultReadPolicy},
+    reduce_feed_window,
 };
 use lkjstr_protocol::{KIND_TEXT_NOTE, NostrEvent};
 use lkjstr_relays::{
@@ -26,6 +28,8 @@ fn notifications_feed_relay_progressive_snapshot_renders_real_rows() {
     assert_eq!(model.status, NotificationsFeedStatus::Ready);
     assert!(model.live_query.is_some());
     assert_eq!(model.view_model.rows[0].row_id(), feed_event_row_id(&id(3)));
+    assert!(has_diagnostic(&model.view_model.rows, "relay-settings"));
+    assert!(!has_unavailable(&model.view_model.rows, "no-enabled-relay"));
     assert!(matches!(
         model.view_model.rows.last(),
         Some(FeedViewRow::Footer(row)) if row.state == FeedFooterState::ReadingRelays
@@ -37,6 +41,7 @@ fn input(window: lkjstr_app::FeedWindowState) -> NotificationsFeedViewInput {
         owner: "notifications-tab".to_owned(),
         account: ProtectedAccountAvailability::selected(pubkey("a")),
         source_state: NotificationsFeedSourceState::RelayProgressive,
+        read_plan: read_plan(),
         selected_relays: vec!["wss://selected.example".to_owned()],
         disabled_relays: Vec::new(),
         author_routes: Vec::new(),
@@ -50,8 +55,31 @@ fn input(window: lkjstr_app::FeedWindowState) -> NotificationsFeedViewInput {
         font_scale: 1.0,
         geometry_models: Vec::<RowGeometryModel>::new(),
         fragment_config: FeedFragmentConfig::default(),
-        diagnostics: Vec::new(),
+        diagnostics: vec![NotificationsFeedDiagnosticInput {
+            scope: "notifications-provider".to_owned(),
+            id: "relay-settings".to_owned(),
+            severity: FeedDiagnosticSeverity::Warning,
+            message: "Relay settings unavailable: opfs-owner-held; using session default public read relays.".to_owned(),
+        }],
     }
+}
+
+fn read_plan() -> EffectiveReadRelays {
+    EffectiveReadRelays::from_unavailable(
+        "opfs-owner-held",
+        SessionDefaultReadPolicy::Allowed,
+        vec!["wss://selected.example".to_owned()],
+    )
+}
+
+fn has_diagnostic(rows: &[FeedViewRow], id: &str) -> bool {
+    rows.iter()
+        .any(|row| matches!(row, FeedViewRow::Diagnostic(item) if item.diagnostic_id == id))
+}
+
+fn has_unavailable(rows: &[FeedViewRow], reason: &str) -> bool {
+    rows.iter()
+        .any(|row| matches!(row, FeedViewRow::Unavailable(item) if item.reason == reason))
 }
 
 fn snapshot(events: Vec<ProgressiveEvent>) -> ProgressiveReadSnapshot {

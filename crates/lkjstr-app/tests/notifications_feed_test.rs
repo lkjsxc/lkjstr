@@ -6,6 +6,7 @@ use lkjstr_app::{
 };
 use lkjstr_protocol::{KIND_REACTION, KIND_REPOST, NostrEvent};
 use lkjstr_relays::{DemandVisibility, ProgressiveEvent};
+mod read_plan_support;
 
 #[test]
 fn notifications_feed_requires_active_account() {
@@ -153,6 +154,7 @@ fn input(
                 .to_owned(),
             retry_available: true,
         },
+        read_plan: read_plan_support::selected(),
         selected_relays: vec!["wss://selected.example".to_owned()],
         disabled_relays: Vec::new(),
         author_routes: Vec::new(),

@@ -115,7 +115,7 @@ async fn notifications_feed_model(
     let relay_plan = selected_relays(host).await;
     let active_pubkey = account.active_pubkey().map(str::to_owned);
     let mut diagnostics = diagnostics(account_diagnostic, relay_plan.diagnostic.as_deref());
-    let selected_relays = relay_plan.relays;
+    let selected_relays = relay_plan.relays.clone();
     let cached = match active_pubkey.as_deref() {
         Some(pubkey) if !selected_relays.is_empty() => {
             cached_notifications(host, pubkey, selected_relays.clone()).await
@@ -155,6 +155,7 @@ async fn notifications_feed_model(
         owner,
         active_pubkey: &active_pubkey,
         source_state: &source_state,
+        read_plan: &relay_plan,
         selected_relays: &selected_relays,
         window: &window,
         notification_rows: &notification_rows,
@@ -168,6 +169,7 @@ async fn notifications_feed_model(
         owner: owner.to_owned(),
         account,
         source_state,
+        read_plan: relay_plan,
         selected_relays,
         disabled_relays: Vec::new(),
         author_routes: Vec::new(),

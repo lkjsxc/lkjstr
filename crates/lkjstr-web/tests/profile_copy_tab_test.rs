@@ -103,6 +103,7 @@ fn profile_model() -> lkjstr_app::ProfileFeedView {
         profile_pubkey: Some("a".repeat(64)),
         profile_header: Some(profile_header()),
         source_state: ProfileFeedSourceState::Pending,
+        read_plan: read_plan(),
         selected_relays: vec!["wss://selected.example".to_owned()],
         profile_hint_relays: vec!["wss://selected.example".to_owned()],
         relay_sets_json: RELAY_SETS_JSON.to_owned(),
@@ -119,6 +120,12 @@ fn profile_model() -> lkjstr_app::ProfileFeedView {
         fragment_config: FeedFragmentConfig::default(),
         diagnostics: Vec::new(),
     })
+}
+
+fn read_plan() -> lkjstr_app::read_availability::EffectiveReadRelays {
+    lkjstr_app::read_availability::EffectiveReadRelays::from_durable_settings(vec![
+        "wss://selected.example".to_owned(),
+    ])
 }
 
 fn profile_header() -> ProfileHeaderView {

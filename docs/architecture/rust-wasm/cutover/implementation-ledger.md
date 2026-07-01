@@ -20,6 +20,13 @@ requires real behavior, focused tests, a no-import proof, and an updated row in
 
 ## Recent Implementation Evidence
 
+- 2026-07-01: Surface startup policy now consumes protected account state,
+  effective read plans, cache state, relay state, and content evidence so
+  Notifications and Profile keep storage diagnostics subordinate to real rows.
+  Focused app tests prove session-default public reads do not become
+  `no-enabled-relay`, and relay snapshots with real rows render with
+  diagnostics. Related rows remain `partial` until parity and deletion proof
+  finish.
 - 2026-07-01: Home cache-unavailable latest kind `3` lookup remains diagnostic
   and keeps bounded relay follow discovery alive; a synthetic relay regression
   proves a real follow event can unlock real note rows. Rust/WASM and retained

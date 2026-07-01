@@ -69,10 +69,15 @@ fn relay_input(
         window,
         geometry_models,
         source_state: &ProfileFeedSourceState::Pending,
+        read_plan: &read_plan(),
         diagnostics: &[],
         now_sec: 10,
     })
     .ok_or("expected relay input")
+}
+
+fn read_plan() -> EffectiveReadRelays {
+    EffectiveReadRelays::from_durable_settings(vec!["wss://selected.example".to_owned()])
 }
 
 fn filter_kinds(input: &ProfileHeaderRelayReadInput, relay: &str) -> Vec<u64> {
