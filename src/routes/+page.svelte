@@ -23,6 +23,7 @@
   import { bootstrapWorkspace } from '$lib/workspace/workspace-bootstrap';
   import {
     loadWorkspacePageData,
+    pageActiveAccount,
     type WorkspacePageData,
   } from '$lib/workspace/workspace-page-data';
   import { createWorkspacePageActions } from '$lib/workspace/workspace-page-actions';
@@ -138,8 +139,11 @@
   }
 
   async function refreshData(): Promise<void> {
-    ({ accounts, activeAccount, relaySets, storageState } =
-      await loadWorkspacePageData());
+    const data = await loadWorkspacePageData();
+    accounts = data.accounts;
+    activeAccount = pageActiveAccount(activeAccount, data);
+    relaySets = data.relaySets;
+    storageState = data.storageState;
     pageDataReady = true;
   }
 

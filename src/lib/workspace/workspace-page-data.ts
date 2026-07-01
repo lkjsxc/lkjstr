@@ -23,6 +23,8 @@ export type WorkspacePageData = {
   readonly activeAccount?: Account;
   readonly relaySets: RelaySet[];
   readonly relayReadPlan: EffectiveReadRelays;
+  readonly accountStorageState?: ProtectedStorageState;
+  readonly relayStorageState?: ProtectedStorageState;
   readonly storageState?: ProtectedStorageState;
 };
 
@@ -48,8 +50,19 @@ export async function loadWorkspacePageData(): Promise<WorkspacePageData> {
     activeAccount: account.activeAccount,
     relaySets: relay.relaySets,
     relayReadPlan: relay.relayReadPlan,
+    accountStorageState: account.storageState,
+    relayStorageState: relay.storageState,
     storageState: account.storageState ?? relay.storageState,
   };
+}
+
+export function pageActiveAccount(
+  previous: Account | undefined,
+  data: WorkspacePageData,
+): Account | undefined {
+  return (
+    data.activeAccount ?? (data.accountStorageState ? previous : undefined)
+  );
 }
 
 async function loadAccountData(): Promise<AccountLoad> {

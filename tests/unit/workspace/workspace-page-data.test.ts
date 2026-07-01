@@ -38,17 +38,40 @@ describe('workspace page data', () => {
     expect(data.relayReadPlan.relays.length).toBeGreaterThan(0);
     expect(data.relayReadPlan.writeAllowed).toBe(false);
   });
+
+  it('keeps the previous real page account during account storage failure', async () => {
+    const previous = createAccount('b'.repeat(64), 'readonly');
+    const { pageActiveAccount } =
+      await import('../../../src/lib/workspace/workspace-page-data');
+    const data = {
+      accounts: [],
+      relaySets: [],
+      relayReadPlan: {
+        source: 'session-default-public-read' as const,
+        relays: ['wss://relay.example/'],
+        writeAllowed: false,
+      },
+      accountStorageState: storageState('web-lock-held'),
+      storageState: storageState('web-lock-held'),
+    };
+
+    expect(pageActiveAccount(previous, data)?.pubkey).toBe(previous.pubkey);
+  });
 });
 
 function protectedStorageError(reason: string) {
-  const state: ProtectedStorageState = {
-    kind: 'busy',
-    reason,
-    message: `Protected storage is unavailable: ${reason}.`,
-  };
+  const state = storageState(reason);
   return Object.assign(new Error(state.message), {
     name: 'ProtectedStorageError' as const,
     state,
     response: { outcome: 'busy', diagnostics: { ownerReason: reason } },
   });
+}
+
+function storageState(reason: string): ProtectedStorageState {
+  return {
+    kind: 'busy',
+    reason,
+    message: `Protected storage is unavailable: ${reason}.`,
+  };
 }
