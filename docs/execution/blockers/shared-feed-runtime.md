@@ -109,7 +109,8 @@ models, anchors, footer states, and unavailable states.
   removed, Rust geometry runtime counters plus row-height key/tier helpers, injected row-height, scan
   optimizer count proof, and grouped hint-status Stats rows are exposed, split
   Rust/WASM browser plus release gates, canonical Rust/WASM quiet wrapper proof,
-  and Docker final-gate proof. Generic feed-host selection now has focused
+  Docker final-gate proof, and typed Home/Notifications read-availability
+  fallback proof. Generic feed-host selection now has focused
   mount-key proof, and `pnpm check:repo` guards product source from re-importing
   retained Svelte feed tab bodies, TimelineTab support files, deleted feed tab wrappers,
   retired Author Context loaders, removed feed-surface staging/key/intent/notification-row helpers, Profile/Thread/Search/Custom Request imports,

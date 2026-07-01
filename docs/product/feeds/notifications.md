@@ -17,9 +17,11 @@ notification context header and the source event as the primary body.
 - Mentions, replies, reactions, reposts, quotes, profile references, and zap
   receipts are indexed.
 - Profile references are indexed when metadata points at the active account.
-- Selected read relays are the base and fallback. Notifications may also use
-  the active account's NIP-65 read relays for `#p` reads and selected fallback
-  for context.
+- Selected read relays are the durable base and fallback. If relay settings are
+  unavailable and a real active pubkey is supplied by the page shell,
+  Notifications may use documented session default public relays in read-only
+  mode with a visible diagnostic. Notifications may also use the active account's
+  NIP-65 read relays for `#p` reads and selected fallback for context.
 - Notification events are written through the shared repository.
 - Notifications tab initial and older pages request `30` records.
 - Notification relay sync starts when the Notifications tab is opened.
@@ -67,8 +69,8 @@ notification context header and the source event as the primary body.
   keeping the Rust storage failure as a diagnostic.
 - Initial loading settles after local records load and subscription setup
   finishes, even when no notification event arrives.
-- Partial relay failure stays visible in diagnostics but does not block cached
-  or reachable notification records.
+- Partial relay failure and session-default fallback diagnostics stay visible
+  but do not block cached or reachable notification records.
 - `no-active-account` is reserved for readable account state proving no account
   exists or no account is selected. It is not used for `opfs-owner-held`, Web
   Lock denial, unsupported storage, or selector read failures.

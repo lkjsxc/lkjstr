@@ -1,18 +1,14 @@
 use lkjstr_app::{FeedDiagnosticSeverity, NotificationsFeedDiagnosticInput};
-use lkjstr_storage::StorageOutcome;
 
 pub(crate) fn diagnostics(
     account: Option<String>,
-    relays: &StorageOutcome<Vec<String>>,
+    relay_message: Option<&str>,
 ) -> Vec<NotificationsFeedDiagnosticInput> {
     let mut out = account
         .map(|message| vec![diagnostic("active-account", &message)])
         .unwrap_or_default();
-    if let Some(problem) = relays.problem() {
-        out.push(diagnostic(
-            "relay-settings",
-            &format!("Relay settings unavailable: {}", problem.reason),
-        ));
+    if let Some(message) = relay_message {
+        out.push(diagnostic("relay-settings", message));
     }
     out
 }

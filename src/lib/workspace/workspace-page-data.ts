@@ -7,6 +7,11 @@ import {
 } from '$lib/accounts/account-manager';
 import { activeAccount, listAccounts } from '$lib/accounts/account-store';
 import type { Account } from '$lib/accounts/account';
+import {
+  durableRelayReadPlan,
+  unavailableRelayReadPlan,
+  type EffectiveReadRelays,
+} from '$lib/relays/read-availability';
 import { listRelaySets, type RelaySet } from '$lib/relays/relay-store';
 import {
   protectedStorageStateFromError,
@@ -17,19 +22,77 @@ export type WorkspacePageData = {
   readonly accounts: Account[];
   readonly activeAccount?: Account;
   readonly relaySets: RelaySet[];
+  readonly relayReadPlan: EffectiveReadRelays;
   readonly storageState?: ProtectedStorageState;
 };
 
+type AccountLoad = {
+  accounts: Account[];
+  activeAccount?: Account;
+  storageState?: ProtectedStorageState;
+};
+
+type RelayLoad = {
+  relaySets: RelaySet[];
+  relayReadPlan: EffectiveReadRelays;
+  storageState?: ProtectedStorageState;
+};
+
 export async function loadWorkspacePageData(): Promise<WorkspacePageData> {
+  const [account, relay] = await Promise.all([
+    loadAccountData(),
+    loadRelayData(),
+  ]);
+  return {
+    accounts: account.accounts,
+    activeAccount: account.activeAccount,
+    relaySets: relay.relaySets,
+    relayReadPlan: relay.relayReadPlan,
+    storageState: account.storageState ?? relay.storageState,
+  };
+}
+
+async function loadAccountData(): Promise<AccountLoad> {
   try {
     const accounts = await listAccounts();
-    const relaySets = await listRelaySets();
-    const active = await activeAccount();
-    return { accounts, activeAccount: active, relaySets };
+    const active = await loadActiveAccount();
+    return {
+      accounts,
+      activeAccount: active.account,
+      storageState: active.state,
+    };
   } catch (error) {
     const storageState = protectedStorageStateFromError(error);
     if (!storageState) throw error;
-    return { accounts: [], relaySets: [], storageState };
+    return { accounts: [], storageState };
+  }
+}
+
+async function loadActiveAccount(): Promise<{
+  account?: Account;
+  state?: ProtectedStorageState;
+}> {
+  try {
+    return { account: await activeAccount() };
+  } catch (error) {
+    const state = protectedStorageStateFromError(error);
+    if (!state) throw error;
+    return { state };
+  }
+}
+
+async function loadRelayData(): Promise<RelayLoad> {
+  try {
+    const relaySets = await listRelaySets();
+    return { relaySets, relayReadPlan: durableRelayReadPlan(relaySets) };
+  } catch (error) {
+    const storageState = protectedStorageStateFromError(error);
+    if (!storageState) throw error;
+    return {
+      relaySets: [],
+      relayReadPlan: unavailableRelayReadPlan(storageState.reason, 'allowed'),
+      storageState,
+    };
   }
 }
 

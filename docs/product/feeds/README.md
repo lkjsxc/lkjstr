@@ -11,6 +11,7 @@ Feed surface docs define relay-backed read tabs and action-opened read tabs.
 - [home.md](home.md): account-follow feed behavior.
 - [notifications.md](notifications.md): account activity behavior.
 - [profiles.md](profiles.md): profile opening and authored notes.
+- [post-display.md](post-display.md): shared real-post row display contract.
 - [public-chat.md](public-chat.md): NIP-28 channel chat behavior.
 - [threads.md](threads.md): event thread opening and rendering.
 - [user-timeline.md](user-timeline.md): public timeline for another user's follow graph.
@@ -20,7 +21,7 @@ Feed surface docs define relay-backed read tabs and action-opened read tabs.
 - Event-backed tabs use shared near-end thresholds and bottom status rows. See
   [event-surface-paging.md](../../architecture/data/event-surface-paging.md).
 - Event rows render avatar, display name, secondary identity fallback,
-  timestamp, and wrapped content consistently.
+  timestamp, and wrapped content consistently; see [post-display.md](post-display.md).
 - Identity actions open Profile tabs in the same tile.
 - Profile following counts open Followees tabs in the same tile when a real
   follow list is known.

@@ -21,6 +21,7 @@ pub mod profile_history;
 pub mod protected_account;
 pub mod public_chat;
 pub mod query;
+pub mod read_availability;
 pub mod search_feed;
 mod startup_snapshots;
 pub mod storage_maintenance;
@@ -197,4 +198,3 @@ pub use workspace_runtime::{
     close_runtime_tab, convert_runtime_tab, default_recovery_ids, focus_runtime_tab,
     open_configured_runtime_tab, open_runtime_tab, record_tab_snapshot, start_workspace,
 };
-pub const CRATE_OWNER: &str = "app";

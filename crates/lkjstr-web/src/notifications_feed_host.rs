@@ -4,7 +4,6 @@ use lkjstr_app::{
     initial_notification_cursor,
 };
 use lkjstr_relays::DemandVisibility;
-use lkjstr_storage::StorageOutcome;
 use lkjstr_ui::NotificationsFeedProvider;
 
 use crate::{
@@ -113,13 +112,10 @@ async fn notifications_feed_model(
     let now_sec = browser_now_ms() / 1_000;
     let cursor = initial_notification_cursor(now_sec);
     let (account, account_diagnostic) = active_account(host).await;
-    let relays = selected_relays(host).await;
+    let relay_plan = selected_relays(host).await;
     let active_pubkey = account.active_pubkey().map(str::to_owned);
-    let mut diagnostics = diagnostics(account_diagnostic, &relays);
-    let selected_relays = match relays {
-        StorageOutcome::Ok(relays) => relays,
-        _ => Vec::new(),
-    };
+    let mut diagnostics = diagnostics(account_diagnostic, relay_plan.diagnostic.as_deref());
+    let selected_relays = relay_plan.relays;
     let cached = match active_pubkey.as_deref() {
         Some(pubkey) if !selected_relays.is_empty() => {
             cached_notifications(host, pubkey, selected_relays.clone()).await

@@ -22,6 +22,7 @@ itself: split tiles, tabs, relay-backed data, and local state.
 - [feeds/global.md](feeds/global.md): Global feed.
 - [feeds/home.md](feeds/home.md): Home feed.
 - [feeds/notifications.md](feeds/notifications.md): Notifications feed.
+- [feeds/post-display.md](feeds/post-display.md): shared real-post row display.
 - [feeds/profiles.md](feeds/profiles.md): Profile feed.
 - [feeds/public-chat.md](feeds/public-chat.md): Public Chat channel surface.
 - [feeds/threads.md](feeds/threads.md): Thread feed.
@@ -73,7 +74,7 @@ itself: split tiles, tabs, relay-backed data, and local state.
 
 ```text
 `audit/README.md` `audit/product-polish.md` `audit/rust-wasm-target.md` `audit/verification-gaps.md` `backlog.md` `doc-impl-audit.md` `feeds/README.md`
-`feeds/followees.md` `feeds/global.md` `feeds/home.md` `feeds/notifications.md` `feeds/profiles.md` `feeds/public-chat.md` `feeds/threads.md`
+`feeds/followees.md` `feeds/global.md` `feeds/home.md` `feeds/notifications.md` `feeds/post-display.md` `feeds/profiles.md` `feeds/public-chat.md` `feeds/threads.md`
 `feeds/user-timeline.md` `privacy/README.md` `privacy/consent.md` `privacy/settings.md` `tools/README.md` `tools/accounts.md` `tools/author-context.md` `tools/cache.md` `tools/custom-request.md` `tools/event-actions.md`
 `tools/log.md` `tools/mine-npub.md` `tools/profile-edit.md` `tools/relay-management.md` `tools/search.md` `tools/settings.md` `tools/stats.md`
 `tools/tweet.md` `tools/upload-settings.md` `tools/welcome.md` `workspace/README.md` `workspace/panes.md` `workspace/scope.md` `workspace/tabs.md`

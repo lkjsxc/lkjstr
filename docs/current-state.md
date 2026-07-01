@@ -22,8 +22,12 @@ split by ownership under [current-state/README.md](current-state/README.md).
 - Relay, storage, signer, upload, privacy, and browser feature states render
   real data or explicit loading, unavailable, unsupported, denied, partial,
   consent-required, or proven-empty states. Storage startup keeps exact broker,
-  worker, owner-lock, timeout, and SQLite-open reasons visible. No fake product
-  data or placeholder success state is allowed.
+  worker, owner-lock, timeout, and SQLite-open reasons visible. Home and
+  Notifications use typed read availability so relay-settings unavailability can
+  fall back to diagnosed read-only session default public relays when a real
+  page active pubkey exists; `no-enabled-relay` remains reserved for durable
+  empty read settings or policy-forbidden fallback. No fake product data or
+  placeholder success state is allowed.
 - Home, Global, Profile, Thread, Notifications, Search, Custom Request, Author
   Context, Followees, and User Timeline have active Rust island or Rust-backed
   slices, but retained TypeScript and Svelte code may be deleted only after

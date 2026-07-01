@@ -3,7 +3,6 @@ use lkjstr_app::{
     HomeFeedView, HomeFeedViewInput, HomeFollowState, build_home_feed_view, empty_feed_window,
 };
 use lkjstr_relays::DemandVisibility;
-use lkjstr_storage::StorageOutcome;
 use lkjstr_ui::HomeFeedProvider;
 
 use crate::{
@@ -75,13 +74,10 @@ async fn home_feed_model(host: &HomeFeedHost, owner: &str) -> HomeFeedLoad {
     let now_ms = browser_now_ms();
     let now_sec = now_ms / 1_000;
     let (account, account_diagnostic) = active_account(host).await;
-    let relays = selected_relays(host).await;
+    let relay_plan = selected_relays(host).await;
     let active_pubkey = account.active_pubkey().map(str::to_owned);
-    let mut diagnostics = diagnostics(account_diagnostic, &relays);
-    let selected_relays = match relays {
-        StorageOutcome::Ok(relays) => relays,
-        _ => Vec::new(),
-    };
+    let mut diagnostics = diagnostics(account_diagnostic, relay_plan.diagnostic.as_deref());
+    let selected_relays = relay_plan.relays;
     let (follow_state, window, source_state) = match active_pubkey.as_deref() {
         Some(pubkey) if !selected_relays.is_empty() => {
             home_cache_state(
@@ -143,16 +139,13 @@ async fn home_feed_model(host: &HomeFeedHost, owner: &str) -> HomeFeedLoad {
 
 fn diagnostics(
     account: Option<String>,
-    relays: &StorageOutcome<Vec<String>>,
+    relay_message: Option<&str>,
 ) -> Vec<HomeFeedDiagnosticInput> {
     let mut out = account
         .map(|message| vec![diagnostic("active-account", &message)])
         .unwrap_or_default();
-    if let Some(problem) = relays.problem() {
-        out.push(diagnostic(
-            "relay-settings",
-            &format!("Relay settings unavailable: {}", problem.reason),
-        ));
+    if let Some(message) = relay_message {
+        out.push(diagnostic("relay-settings", message));
     }
     out
 }

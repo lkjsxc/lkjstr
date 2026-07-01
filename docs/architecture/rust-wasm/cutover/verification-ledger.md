@@ -61,12 +61,13 @@ gate was not rerun.
 
 ## Recent Focused Evidence
 
-Latest focused note: on 2026-06-30, startup diagnostics preserved broker,
-owner-lock, worker/open, blocked, timeout, and SQLite-open labels, exposed
-broker/health/account/selector/relay/profile probes in Stats and Log, and let
-Home/Notifications use the page active pubkey when Rust account reads fail.
-Passed focused storage/app Vitest, web storage, Rust/WASM, fmt, wasm clippy,
-repo, docs/line, full test, check, verify, and Docker config gates; Docker was not rerun.
+Latest focused note: on 2026-07-01, typed read availability split durable
+empty relay settings from settings-unavailable fallback and let Home and
+Notifications use diagnosed read-only session default relays when a real page
+active pubkey exists. Passed fmt, app read-availability/protected/Home/
+Notifications tests, exact Vitest, `check:repo`, `test:quiet`,
+`rust-wasm:quiet`, `verify:quiet`, `cloudflare:quiet`, and Docker
+config/build/verify/cloudflare/app-smoke.
 
 Previous focused note: on 2026-06-29, User Timeline fallback retention,
 protected account states, pagehide close, holder diagnostics, and shared feed

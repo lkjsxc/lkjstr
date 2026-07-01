@@ -1,13 +1,12 @@
-use lkjstr_app::ProtectedAccountAvailability;
-use lkjstr_domain::seed_relay_sets;
-use lkjstr_storage::StorageOutcome;
+use lkjstr_app::{
+    ProtectedAccountAvailability,
+    read_availability::{EffectiveReadRelays, SessionDefaultReadPolicy},
+};
 
 use crate::{
-    home_feed_host::HomeFeedHost, host_status::browser_now_ms,
-    protected_account_availability::resolve_protected_account,
+    effective_public_relays::effective_read_relays, home_feed_host::HomeFeedHost,
+    host_status::browser_now_ms, protected_account_availability::resolve_protected_account,
     protected_account_page_fallback::page_active_account_fallback,
-    relay_selection::selected_read_relays, sqlite_host_store::with_sqlite_store,
-    sqlite_store::sqlite_relay_sets_all,
 };
 
 pub(crate) async fn active_account(
@@ -20,15 +19,12 @@ pub(crate) async fn active_account(
     (account.availability, account.diagnostic)
 }
 
-pub(crate) async fn selected_relays(host: &HomeFeedHost) -> StorageOutcome<Vec<String>> {
-    let now = browser_now_ms();
-    with_sqlite_store(&host.db_name, &host.worker_url, |store| async move {
-        match sqlite_relay_sets_all(&store).await {
-            StorageOutcome::Ok(rows) => {
-                StorageOutcome::Ok(selected_read_relays(&seed_relay_sets(&rows, now)))
-            }
-            outcome => outcome.map(|_| Vec::new()),
-        }
-    })
+pub(crate) async fn selected_relays(host: &HomeFeedHost) -> EffectiveReadRelays {
+    effective_read_relays(
+        &host.db_name,
+        &host.worker_url,
+        browser_now_ms(),
+        SessionDefaultReadPolicy::Allowed,
+    )
     .await
 }

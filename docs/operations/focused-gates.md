@@ -9,6 +9,7 @@ and Docker verification path. Detailed commands live in
 ## Gate Map
 
 - [focused-gates/feed.md](focused-gates/feed.md): feed regression and user-requested reliability checks.
+- [focused-gates/post-display.md](focused-gates/post-display.md): read availability and real-post display checks.
 - [focused-gates/relay.md](focused-gates/relay.md): relay paging, hardening, orchestration, and Rust relay host checks.
 - [focused-gates/storage.md](focused-gates/storage.md): storage and cache checks.
 - [focused-gates/memory.md](focused-gates/memory.md): memory and background work checks.

@@ -24,9 +24,12 @@ its NIP-02 follows.
   latest-only kind `3` lookup for the active pubkey.
 - Home displays event kinds `1`, `6`, and `16`; cache queries and relay
   filters must not include other feed kinds.
-- Selected read relays are the base and fallback. Home may also use NIP-65
-  author write relays, NIP-02 follow hints, relay receipts, and discovery
-  evidence. Disabled or removed relays remain excluded.
+- Selected read relays are the durable base and fallback. If relay settings are
+  unavailable and a real active pubkey is supplied by the page shell, Home may
+  use documented session default public relays in read-only mode with a visible
+  diagnostic. Home may also use NIP-65 author write relays, NIP-02 follow hints,
+  relay receipts, and discovery evidence. Disabled or removed relays remain
+  excluded when durable settings are available.
 - Relay reads go through the subscription orchestrator (route plan, shared leases,
   semantic page dedupe); the manager multiplexes wire traffic below the planner.
 - Events and relay provenance are written through the shared repository.
@@ -63,7 +66,9 @@ its NIP-02 follows.
   relays render once with merged relay provenance.
 - Live relay reads set `since = max(0, runtimeStartedAt - 30)` when the runtime starts.
 - Metadata fetches are limited to authors present in loaded items.
-- Deleted or disabled relays are not replaced by hidden public defaults.
+- Deleted or disabled relays are not replaced by hidden public defaults when
+  durable relay settings are loaded. Session defaults are allowed only when
+  relay settings are unavailable and the read-only fallback is diagnosed.
 - Home is a protected account surface. It may start relay reads only after a
   real selected account pubkey is available. Account storage busy, selector
   unavailable, blocked, unsupported, or loading states render explicit retry or
@@ -122,7 +127,8 @@ its NIP-02 follows.
   evidence arrives.
 - `no-follow-list`: latest kind `3` is absent; empty feed with guidance and a
   **Check relays again** control; no self-only relay scan.
-- `no-enabled-relay`: selected set has no enabled read relay.
+- `no-enabled-relay`: durable relay settings loaded and the selected set has no
+  enabled read relay, or fallback policy forbids session defaults.
 - `auth-required`: a relay sent `AUTH`.
 - `subscription-closed`: a relay sent `CLOSED`.
 - `relay-failed`: selected relays are unreachable.
