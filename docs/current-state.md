@@ -25,11 +25,13 @@ split by ownership under [current-state/README.md](current-state/README.md).
   worker, owner-lock, timeout, and SQLite-open reasons visible. Home and
   Notifications use typed read availability so relay-settings unavailability can
   fall back to diagnosed read-only session default public relays when a real
-  page active pubkey exists; `no-enabled-relay` remains reserved for durable
-  empty read settings or policy-forbidden fallback. Home treats cached
-  follow-list storage failure as incomplete evidence, keeps the diagnostic
-  visible, and runs bounded relay kind `3` discovery when read relays are
-  allowed. No fake product data or placeholder success state is allowed.
+  page active pubkey exists; Profile uses the same public read fallback for a
+  real profile pubkey. `no-enabled-relay` remains reserved for durable empty
+  read settings or policy-forbidden fallback. Home treats cached follow-list
+  storage failure as incomplete evidence, keeps the diagnostic visible, and runs
+  bounded relay kind `3` discovery when read relays are allowed. Notifications
+  and Profile keep storage/header diagnostics visible while real cache or relay
+  rows render. No fake product data or placeholder success state is allowed.
 - Home, Global, Profile, Thread, Notifications, Search, Custom Request, Author
   Context, Followees, and User Timeline have active Rust island or Rust-backed
   slices, but retained TypeScript and Svelte code may be deleted only after
