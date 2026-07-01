@@ -21,7 +21,10 @@ its NIP-02 follows.
   routes, then keeps live subscriptions bounded with startup `since`.
 - Account home authors are the active account plus `p` tags from the latest
   kind `3` follow list. Cache reads for the follow list use an indexed
-  latest-only kind `3` lookup for the active pubkey.
+  latest-only kind `3` lookup for the active pubkey. A cache or follow-list
+  storage failure is incomplete evidence: with a real active pubkey and allowed
+  read relays, Home keeps a visible diagnostic and runs bounded kind `3` relay
+  discovery before `no-follow-list` or a terminal unavailable state.
 - Home displays event kinds `1`, `6`, and `16`; cache queries and relay
   filters must not include other feed kinds.
 - Selected read relays are the durable base and fallback. If relay settings are

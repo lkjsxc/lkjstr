@@ -67,7 +67,9 @@ impl GlobalRelayRead {
         let close = encode_client_message(&ClientMessage::Close(self.sub_id.clone())).ok();
         let sockets = std::mem::take(&mut *self.sockets.borrow_mut());
         for (_relay, mut socket) in sockets {
-            if let Some(frame) = &close {
+            if socket.can_wire_close()
+                && let Some(frame) = &close
+            {
                 let _result = socket.send_text(frame);
             }
             let _result = socket.close();

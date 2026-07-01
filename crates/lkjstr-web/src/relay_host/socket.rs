@@ -1,27 +1,14 @@
-use std::cell::RefCell;
-use std::rc::Rc;
-
 use lkjstr_protocol::EventFramePolicy;
 use wasm_bindgen::{JsCast, closure::Closure};
 use web_sys::{Event, MessageEvent, WebSocket};
 
 use crate::relay_host::{
-    RelayHostProblem, RelayHostProblemKind, RelayHostResult, RelaySocketMessage, parse_socket_text,
+    RelayHostProblem, RelayHostProblemKind, RelayHostResult, parse_socket_text,
 };
 
-type UnitCallback = Rc<RefCell<Box<dyn FnMut()>>>;
-type MessageCallback = Rc<RefCell<Box<dyn FnMut(RelaySocketMessage)>>>;
-type EventCallback = Rc<RefCell<Box<dyn FnMut(RelaySocketEvent)>>>;
-type EventClosure = Closure<dyn FnMut(Event)>;
-type MessageClosure = Closure<dyn FnMut(MessageEvent)>;
-
-pub struct RelaySocketCallbacks {
-    on_open: UnitCallback,
-    on_message: MessageCallback,
-    on_error: EventCallback,
-    on_close: EventCallback,
-    policy: Option<EventFramePolicy>,
-}
+use super::socket_callbacks::{
+    EventCallback, EventClosure, MessageCallback, MessageClosure, RelaySocketCallbacks, UnitCallback,
+};
 
 #[derive(Clone, Debug, Eq, PartialEq)]
 pub struct RelaySocketEvent {
@@ -37,49 +24,9 @@ pub struct RelaySocketHandle {
     on_message: Option<MessageClosure>,
 }
 
-impl RelaySocketCallbacks {
-    pub fn new(
-        on_open: impl FnMut() + 'static,
-        on_message: impl FnMut(RelaySocketMessage) + 'static,
-        on_error: impl FnMut(RelaySocketEvent) + 'static,
-        on_close: impl FnMut(RelaySocketEvent) + 'static,
-    ) -> Self {
-        Self::with_optional_policy(None, on_open, on_message, on_error, on_close)
-    }
-
-    pub fn with_policy(
-        policy: EventFramePolicy,
-        on_open: impl FnMut() + 'static,
-        on_message: impl FnMut(RelaySocketMessage) + 'static,
-        on_error: impl FnMut(RelaySocketEvent) + 'static,
-        on_close: impl FnMut(RelaySocketEvent) + 'static,
-    ) -> Self {
-        Self::with_optional_policy(Some(policy), on_open, on_message, on_error, on_close)
-    }
-
-    fn with_optional_policy(
-        policy: Option<EventFramePolicy>,
-        on_open: impl FnMut() + 'static,
-        on_message: impl FnMut(RelaySocketMessage) + 'static,
-        on_error: impl FnMut(RelaySocketEvent) + 'static,
-        on_close: impl FnMut(RelaySocketEvent) + 'static,
-    ) -> Self {
-        Self {
-            on_open: Rc::new(RefCell::new(Box::new(on_open))),
-            on_message: Rc::new(RefCell::new(Box::new(on_message))),
-            on_error: Rc::new(RefCell::new(Box::new(on_error))),
-            on_close: Rc::new(RefCell::new(Box::new(on_close))),
-            policy,
-        }
-    }
-}
-
 impl RelaySocketEvent {
     fn new(kind: &'static str, reason: impl Into<String>) -> Self {
-        Self {
-            kind,
-            reason: reason.into(),
-        }
+        Self { kind, reason: reason.into() }
     }
 }
 
@@ -103,24 +50,36 @@ impl RelaySocketHandle {
         self.socket.as_ref().map(WebSocket::ready_state)
     }
 
+    pub fn is_open(&self) -> bool {
+        self.ready_state() == Some(WebSocket::OPEN)
+    }
+
+    pub fn can_wire_close(&self) -> bool {
+        self.is_open()
+    }
+
     pub fn send_text(&self, message: &str) -> RelayHostResult<()> {
-        let Some(socket) = &self.socket else {
-            return Err(RelayHostProblem::new(
-                RelayHostProblemKind::Canceled,
+        match &self.socket {
+            Some(socket) if socket.ready_state() == WebSocket::OPEN => socket
+                .send_with_str(message)
+                .map_err(|error| RelayHostProblem::js(RelayHostProblemKind::SendFailed, "websocket-send", error)),
+            _ => Err(RelayHostProblem::new(
+                RelayHostProblemKind::SendFailed,
                 "websocket-send",
-                "closed",
-            ));
-        };
-        socket.send_with_str(message).map_err(|error| {
-            RelayHostProblem::js(RelayHostProblemKind::SendFailed, "websocket-send", error)
-        })
+                "socket-not-open",
+            )),
+        }
     }
 
     pub fn close(&mut self) -> RelayHostResult<()> {
+        let should_close = self.is_open();
         self.detach();
         let Some(socket) = self.socket.take() else {
             return Ok(());
         };
+        if !should_close {
+            return Ok(());
+        }
         socket.close().map_err(|error| {
             RelayHostProblem::js(RelayHostProblemKind::Canceled, "websocket-close", error)
         })

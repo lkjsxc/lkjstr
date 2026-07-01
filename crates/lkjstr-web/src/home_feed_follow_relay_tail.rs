@@ -134,7 +134,9 @@ impl HomeFollowRead {
         }
         let close = encode_client_message(&ClientMessage::Close(self.sub_id.clone())).ok();
         for (_relay, mut socket) in std::mem::take(&mut *self.sockets.borrow_mut()) {
-            if let Some(frame) = &close {
+            if socket.can_wire_close()
+                && let Some(frame) = &close
+            {
                 let _result = socket.send_text(frame);
             }
             let _result = socket.close();

@@ -11,6 +11,7 @@ class ClosingSocket {
   onerror: ((event: Event) => void) | null = null;
   onmessage: ((event: MessageEvent) => void) | null = null;
   readyState = 0;
+  closeCount = 0;
   readonly sent: string[] = [];
 
   constructor(readonly url: string) {
@@ -24,6 +25,7 @@ class ClosingSocket {
   }
 
   close(): void {
+    this.closeCount += 1;
     this.readyState = ClosingSocket.CLOSING;
     this.onclose?.({} as CloseEvent);
   }
@@ -50,5 +52,17 @@ describe('relay client closing socket sends', () => {
 
     expect(() => client.closeSubscription('sub')).not.toThrow();
     expect(sockets[0]?.sent).toEqual(['["REQ","sub",{"kinds":[1]}]']);
+  });
+
+  it('detaches a connecting socket without app-close on client close', () => {
+    const client = createRelayClient('wss://relay.example/');
+    client.subscribe('sub', [{ kinds: [1] }]);
+
+    client.close();
+
+    expect(sockets[0]?.readyState).toBe(0);
+    expect(sockets[0]?.closeCount).toBe(0);
+    expect(sockets[0]?.onopen).toBeNull();
+    expect(sockets[0]?.onclose).toBeNull();
   });
 });

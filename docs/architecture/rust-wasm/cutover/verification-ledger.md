@@ -61,13 +61,14 @@ gate was not rerun.
 
 ## Recent Focused Evidence
 
-Latest focused note: on 2026-07-01, typed read availability split durable
-empty relay settings from settings-unavailable fallback and let Home and
-Notifications use diagnosed read-only session default relays when a real page
-active pubkey exists. Passed fmt, app read-availability/protected/Home/
-Notifications tests, exact Vitest, `check:repo`, `test:quiet`,
-`rust-wasm:quiet`, `verify:quiet`, `cloudflare:quiet`, and Docker
-config/build/verify/cloudflare/app-smoke.
+Latest focused note: on 2026-07-01, Home cache-unavailable follow-list lookup
+stays diagnostic and performs relay discovery; a synthetic relay browser test
+proves real note recovery. Rust/WASM and retained TypeScript relay clients
+avoid app-owned `CONNECTING` closes and gate wire frames on `OPEN`. Passed app
+read-availability tests, lkjstr-web cargo gates, wasm Chrome Home/socket/lib
+filters, exact Vitest, fmt, clippy, workspace tests, `check:repo`,
+`test:quiet`, `rust-wasm:quiet`, `verify:quiet`, `cloudflare:quiet`, and
+Docker config/build/verify/cloudflare/app-smoke.
 
 Previous focused note: on 2026-06-29, User Timeline fallback retention,
 protected account states, pagehide close, holder diagnostics, and shared feed

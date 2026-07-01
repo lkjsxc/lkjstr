@@ -5,6 +5,7 @@ mod effect_runner;
 mod message;
 mod problem;
 mod socket;
+mod socket_callbacks;
 mod timer;
 
 pub use effect_action::{
@@ -13,5 +14,6 @@ pub use effect_action::{
 pub use effect_runner::RelayEffectRunner;
 pub use message::{RelaySocketMessage, parse_socket_text};
 pub use problem::{RelayHostProblem, RelayHostProblemKind, RelayHostResult};
-pub use socket::{RelaySocketCallbacks, RelaySocketEvent, RelaySocketHandle};
+pub use socket::{RelaySocketEvent, RelaySocketHandle};
+pub use socket_callbacks::RelaySocketCallbacks;
 pub use timer::BrowserTimeout;

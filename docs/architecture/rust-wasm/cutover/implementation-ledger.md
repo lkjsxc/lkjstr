@@ -20,6 +20,12 @@ requires real behavior, focused tests, a no-import proof, and an updated row in
 
 ## Recent Implementation Evidence
 
+- 2026-07-01: Home cache-unavailable latest kind `3` lookup remains diagnostic
+  and keeps bounded relay follow discovery alive; a synthetic relay regression
+  proves a real follow event can unlock real note rows. Rust/WASM and retained
+  TypeScript relay clients now avoid app-owned `CONNECTING` socket close calls
+  and gate wire sends on `OPEN`. Related rows remain `partial` until parity and
+  deletion proof finish.
 - 2026-06-29: User Timeline preserves allowed public-read session default
   route plans when cached follow-list storage is unavailable. Home and
   Notifications use typed protected account availability so storage-busy,

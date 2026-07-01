@@ -8,10 +8,10 @@ is missing.
 
 ## Status
 
-Partial. Typed read availability now covers the Home and Notifications case
-where a real page active pubkey exists and relay settings storage is
-unavailable. Broader post-display parity remains in the shared feed runtime
-blocker.
+Current Home and relay-socket slice implemented. Typed read availability covers
+the Home and Notifications case where a real page active pubkey exists and relay
+settings storage is unavailable. Shared feed runtime parity and the remaining
+post-display surfaces remain open.
 
 ## Current Evidence
 
@@ -22,11 +22,24 @@ blocker.
 - Focused TypeScript tests cover workspace page data preserving the active
   account while relay settings are unavailable.
 
+## Current Acceptance Evidence
+
+- `home_feed_cache_tests` proves unavailable latest kind `3` cache lookup stays
+  diagnostic and returns the follow-loading signal.
+- `home_feed_relay_input_tests` proves follow-loading plans relay follow reads,
+  and loaded follows plan note reads for the active account and real follows.
+- `relay_host_socket_test` proves Rust/WASM sockets do not wire-send unless
+  `OPEN` and detach `CONNECTING` sockets on app-owned close.
+- `relay-client-closing-socket.test.ts` proves retained TypeScript relay clients
+  detach `CONNECTING` sockets without app-close.
+- `home_feed_relay_provider_test` uses synthetic relay protocol frames to prove
+  cache-unavailable Home can render a real relay note with the diagnostic.
+
 ## Next Edit
 
-Continue through the shared feed runtime blocker: expand the effective read plan
-to any remaining host-provider entry points and keep post display on shared rows
-for repost targets, notification source events, and long content.
+Expand the degraded-storage relay-display matrix across Notifications, Profile,
+Thread, Search, Global, Followees, User Timeline, Author Context, and Custom
+Request without claiming parity until each surface has focused evidence.
 
 ## Screenshot Reproduction Inputs
 
@@ -49,10 +62,12 @@ because durable relay settings are unavailable.
 
 ## Files To Touch
 
-- `crates/lkjstr-app/src/read_availability.rs`.
-- `crates/lkjstr-web/src/effective_public_relays.rs`.
-- `crates/lkjstr-web/src/home_feed_host*` and `notifications_feed_host*`.
-- `src/lib/relays/read-availability.ts` and workspace page-data tests.
+- `crates/lkjstr-web/src/home_feed_cache.rs`.
+- `crates/lkjstr-web/src/home_feed_relay_input.rs`.
+- `crates/lkjstr-web/src/relay_host/socket.rs` and Rust read close helpers.
+- `src/lib/relays/relay-client.ts`.
+- Focused Rust and TypeScript tests for Home discovery, socket cancellation,
+  and degraded-state post display.
 
 ## Focused Gate
 
@@ -60,13 +75,17 @@ because durable relay settings are unavailable.
 cargo test -p lkjstr-app --test read_availability_test
 cargo test -p lkjstr-app --test read_availability_feed_test
 cargo test -p lkjstr-app --test protected_account_states_test
-pnpm test tests/unit/workspace/workspace-page-data.test.ts tests/unit/relays/read-availability.test.ts
+cargo test -p lkjstr-web --test relay_host_socket_test
+cargo test -p lkjstr-web --test home_feed_relay_provider_test
+pnpm test tests/unit/workspace/workspace-page-data.test.ts tests/unit/relays/read-availability.test.ts tests/unit/relays/relay-client-closing-socket.test.ts
 ```
 
 ## Acceptance
 
 - `no-enabled-relay` is reserved for durable settings loaded with no enabled
   read relays or policy-forbidden fallback.
+- Cached follow-list storage failure is incomplete evidence, not absence proof;
+  Home keeps relay follow discovery alive when read relays are allowed.
 - Public and allowed protected read-only surfaces can use real session default
   public relays with diagnostics.
 - Writes require durable signer and enabled write-relay evidence.

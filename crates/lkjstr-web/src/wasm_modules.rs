@@ -40,6 +40,8 @@ mod global_feed_relay_read;
 mod global_feed_relay_read_tail;
 mod global_feed_relay_state;
 mod home_feed_cache;
+#[cfg(test)]
+mod home_feed_cache_tests;
 mod home_feed_cache_events;
 mod home_feed_cache_filter;
 mod home_feed_coverage;
@@ -52,6 +54,8 @@ mod home_feed_host_storage;
 mod home_island;
 mod home_feed_relay;
 mod home_feed_relay_input;
+#[cfg(test)]
+mod home_feed_relay_input_tests;
 mod home_feed_relay_model;
 mod home_feed_relay_read;
 mod home_feed_relay_read_tail;
@@ -167,6 +171,9 @@ pub mod followees_relay_test_api;
 #[cfg(debug_assertions)]
 #[doc(hidden)]
 pub mod global_feed_relay_test_api;
+#[cfg(debug_assertions)]
+#[doc(hidden)]
+pub mod home_feed_provider_test_api;
 #[cfg(debug_assertions)]
 #[doc(hidden)]
 pub mod notifications_feed_relay_output_test_api;

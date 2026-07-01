@@ -9,10 +9,13 @@ const event = finalizeEvent(
 const sockets: FakeWebSocket[] = [];
 
 class FakeWebSocket {
+  static readonly OPEN = 1;
+  static readonly CLOSED = 3;
   onopen: ((event: Event) => void) | null = null;
   onclose: ((event: CloseEvent) => void) | null = null;
   onerror: ((event: Event) => void) | null = null;
   onmessage: ((event: MessageEvent) => void) | null = null;
+  readyState = 0;
   readonly sent: string[] = [];
 
   constructor(readonly url: string) {
@@ -20,11 +23,19 @@ class FakeWebSocket {
   }
 
   send(data: string): void {
+    if (this.readyState !== FakeWebSocket.OPEN)
+      throw new Error('socket not open');
     this.sent.push(data);
   }
 
   close(): void {
+    this.readyState = FakeWebSocket.CLOSED;
     this.onclose?.({} as CloseEvent);
+  }
+
+  open(): void {
+    this.readyState = FakeWebSocket.OPEN;
+    this.onopen?.({} as Event);
   }
 
   receive(data: unknown): void {
@@ -51,7 +62,7 @@ describe('relay pool publish', () => {
       event,
     );
 
-    sockets[0]?.onopen?.({} as Event);
+    sockets[0]?.open();
     expect(sockets).toHaveLength(1);
     expect(sockets[0]?.sent).toHaveLength(1);
 
@@ -65,7 +76,7 @@ describe('relay pool publish', () => {
     const pool = createRelayPool();
     const published = pool.publish(['relay.example'], event, 25);
 
-    sockets[0]?.onopen?.({} as Event);
+    sockets[0]?.open();
     sockets[0]?.receive(JSON.stringify(['OK', event.id, true, 'saved']));
     await vi.advanceTimersByTimeAsync(25);
 
@@ -79,7 +90,7 @@ describe('relay pool publish', () => {
     const first = pool.publish(['relay.example'], event, 5000);
     const second = pool.publish(['wss://relay.example/'], event, 5000);
 
-    sockets[0]?.onopen?.({} as Event);
+    sockets[0]?.open();
     expect(sockets).toHaveLength(1);
     expect(sockets[0]?.sent).toHaveLength(1);
 

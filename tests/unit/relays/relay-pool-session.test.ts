@@ -6,9 +6,12 @@ import type { RelaySnapshot } from '../../../src/lib/relays/types';
 const sockets: FakeWebSocket[] = [];
 
 class FakeWebSocket {
+  static readonly OPEN = 1;
+  static readonly CLOSED = 3;
   onopen: ((event: Event) => void) | null = null;
   onclose: ((event: CloseEvent) => void) | null = null;
   onmessage: ((event: MessageEvent) => void) | null = null;
+  readyState = 0;
   readonly sent: string[] = [];
 
   constructor(readonly url: string) {
@@ -16,14 +19,18 @@ class FakeWebSocket {
   }
 
   send(data: string): void {
+    if (this.readyState !== FakeWebSocket.OPEN)
+      throw new Error('socket not open');
     this.sent.push(data);
   }
 
   close(): void {
+    this.readyState = FakeWebSocket.CLOSED;
     this.onclose?.({} as CloseEvent);
   }
 
   open(): void {
+    this.readyState = FakeWebSocket.OPEN;
     this.onopen?.({} as Event);
   }
 

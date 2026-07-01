@@ -7,6 +7,7 @@ use lkjstr_web::relay_host::{
 };
 use wasm_bindgen::prelude::JsValue;
 use wasm_bindgen_test::{wasm_bindgen_test, wasm_bindgen_test_configure};
+use web_sys::WebSocket;
 
 wasm_bindgen_test_configure!(run_in_browser);
 
@@ -31,6 +32,31 @@ fn relay_socket_close_is_idempotent() -> Result<(), JsValue> {
     assert!(handle.ready_state().is_some());
 
     relay_result(handle.close())?;
+    relay_result(handle.close())?;
+    assert_eq!(handle.ready_state(), None);
+    Ok(())
+}
+
+#[wasm_bindgen_test]
+fn relay_socket_send_on_connecting_returns_send_failed() -> Result<(), JsValue> {
+    let mut handle = relay_result(RelaySocketHandle::connect("ws://127.0.0.1:9", callbacks()))?;
+    assert_eq!(handle.ready_state(), Some(WebSocket::CONNECTING));
+    match handle.send_text(r#"["REQ","sub",{}]"#) {
+        Err(problem) => {
+            assert_eq!(problem.kind, RelayHostProblemKind::SendFailed);
+            assert_eq!(problem.operation, "websocket-send");
+        }
+        Ok(()) => return Err(js_error("CONNECTING socket accepted send")),
+    }
+    relay_result(handle.close())
+}
+
+#[wasm_bindgen_test]
+fn relay_socket_close_on_connecting_detaches_without_wire_close() -> Result<(), JsValue> {
+    let mut handle = relay_result(RelaySocketHandle::connect("ws://127.0.0.1:9", callbacks()))?;
+    assert_eq!(handle.ready_state(), Some(WebSocket::CONNECTING));
+    assert!(!handle.can_wire_close());
+
     relay_result(handle.close())?;
     assert_eq!(handle.ready_state(), None);
     Ok(())

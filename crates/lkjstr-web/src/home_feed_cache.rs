@@ -30,16 +30,8 @@ pub(crate) async fn home_cache_state(
     HomeFeedSourceState,
 ) {
     let follow = latest_follow_list(host, active_pubkey).await;
-    let follow_pubkeys = match follow {
-        StorageOutcome::Ok(Some(event)) => summarize_follow_list(&event.event)
-            .entries
-            .into_iter()
-            .map(|entry| entry.pubkey)
-            .collect::<Vec<_>>(),
-        StorageOutcome::Ok(None) => {
-            return loading_follow();
-        }
-        outcome => return unavailable_follow(&problem_status("Follow list unavailable", outcome)),
+    let Some(follow_pubkeys) = follow_pubkeys_from_latest(follow, diagnostics) else {
+        return loading_follow();
     };
     let authors = home_authors(active_pubkey, &follow_pubkeys);
     let source_state = cache_source_state(
@@ -68,6 +60,29 @@ pub(crate) async fn home_cache_state(
         window,
         source_state,
     )
+}
+
+pub(super) fn follow_pubkeys_from_latest(
+    follow: StorageOutcome<Option<StoredEventRecord>>,
+    diagnostics: &mut Vec<HomeFeedDiagnosticInput>,
+) -> Option<Vec<String>> {
+    match follow {
+        StorageOutcome::Ok(Some(event)) => Some(
+            summarize_follow_list(&event.event)
+                .entries
+                .into_iter()
+                .map(|entry| entry.pubkey)
+                .collect::<Vec<_>>(),
+        ),
+        StorageOutcome::Ok(None) => None,
+        outcome => {
+            diagnostics.push(diagnostic(
+                "follow-list-cache",
+                &problem_status("Follow list cache unavailable", outcome),
+            ));
+            None
+        }
+    }
 }
 
 async fn latest_follow_list(
@@ -134,23 +149,6 @@ fn loading_follow() -> (
 ) {
     (
         HomeFollowState::Loading,
-        empty_feed_window(1, WINDOW_MAX),
-        HomeFeedSourceState::Pending,
-    )
-}
-
-fn unavailable_follow(
-    reason: &str,
-) -> (
-    HomeFollowState,
-    lkjstr_app::FeedWindowState,
-    HomeFeedSourceState,
-) {
-    (
-        HomeFollowState::Unavailable {
-            reason: reason.to_owned(),
-            retry_available: true,
-        },
         empty_feed_window(1, WINDOW_MAX),
         HomeFeedSourceState::Pending,
     )

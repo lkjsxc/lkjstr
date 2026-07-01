@@ -44,6 +44,12 @@ events, publish acknowledgements, and relay snapshots.
 - Do not require relay connections during workspace shell render.
 - Do not overwrite user relay settings from runtime health data.
 - Failed relays must not stop other relays in the same subscription.
+- `REQ`, `EVENT`, and Nostr `CLOSE` frames are sent only while the browser
+  WebSocket ready state is `OPEN`.
+- Application-owned cancellation of a `CONNECTING` WebSocket detaches callbacks,
+  tombstones the owner, and releases the handle without calling browser
+  `close()`. Browser and WASM relay hosts use this same rule so ordinary tab
+  churn does not create app-owned connection-establishment close errors.
 - A socket that has entered `CLOSING` or `CLOSED` is never sent another `CLOSE`
   or `REQ`; relay diagnostics record the close or socket error and other relays
   continue.
