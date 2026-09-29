@@ -60,9 +60,39 @@ browser-test suspension in local quiet gates, Docker gates, and CI is unchanged.
 
 ## Artifact and Deployment Boundary
 
-The complete Rust quiet gate and Docker artifact gates have not yet been
-recorded for this slice. The running preview remains the previous verified
-`172594f0` artifact until the new artifact is verified and explicitly replaced.
+The frozen implementation source is `31369fd6a767fc9ae73287d9b08f38dd206745d4`
+(tree `64dde0625151deb5fd7da36170aa04367a5896c9`). Later reporting changes are
+documentation-only.
+
+The following complete gates passed on that source:
+
+- `pnpm check:repo`, formatting, and `pnpm rust-wasm:quiet`.
+- Docker Compose configuration and builds of `app`, `verify`, `cloudflare`,
+  and `app-smoke`, followed by successful runs of all three verification services.
+- Cloudflare emitted-WASM checks, the real local Worker smoke, and Wrangler
+  deployment dry-run. The dry-run did not publish a Worker.
+- The `self-hosted` Docker target and its Rust asset-tree check, including the
+  final image carrying the exact source revision label.
+
+The final local image ID is
+`sha256:83252d62f571ddb1f9624c98704afe5eecd1032e3c2c0864a0c69c4f4f50af56`.
+A separate loopback candidate on port 18880 passed the Rust readiness probe,
+manifest-listed bridge checks, SQLite WASM validation, identity/gzip/Brotli,
+404/405/HEAD semantics, and fresh Chromium startup/privacy-choice reload.
+The browser reported no page exceptions or local HTTP errors. These diagnostics
+used fresh ephemeral contexts and did not sign accounts or publish Nostr events.
+
+The existing `lkjstr-selfhost` Compose preview was then updated by the exact
+local image ID, without changing its loopback port 18879. Compose health waiting
+and a Rust readiness probe passed, and container image/revision/health/port were
+re-read successfully. The previous verified `lkjstr:172594f0` image is retained
+for rollback. The image has not been published to a registry.
+
+A second HTTP/browser diagnostic was launched against the updated port 18879.
+The subsequent combined result-read and Coder HTTPS check was blocked by the
+tool safety check. Its outcome is not claimed as passed. Candidate browser
+success and post-switch process readiness are distinct from a confirmed
+post-switch browser or authenticated Coder-proxy session.
 
 The production domain and both known management-host addresses timed out from
 the Coder workspace. No DNS, TLS, firewall, proxy, or infrastructure state was
@@ -71,8 +101,9 @@ work and was not used as a deployment shortcut.
 
 ## Remaining Work
 
-NIP-65 older author routing, older cache-coverage proof, automatic scroll paging,
-and healthy persistent-cache browser integration remain outside this proof.
+NIP-65 older author routing, per-relay gap refill, older cache-coverage proof,
+automatic scroll paging, and healthy persistent-cache Home browser integration
+remain outside this proof.
 Dense same-second relay limits may prevent forward cursor progress; this slice
 reports that boundary instead of skipping unseen tied events. Full browser Rust
 migration, retained-code deletion, and public-domain deployment remain open.

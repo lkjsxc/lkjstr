@@ -86,7 +86,16 @@ firewall, private GitOps state, or live edge configuration was changed by that
 check. Public-domain readiness must be established separately, not inferred
 from a local container test.
 
-## September 29, 2026 verification record
+## Current Home-history preview
+
+The later Home-history implementation `31369fd6` passed the complete Rust quiet
+and Docker artifact gates and a separate candidate HTTP/browser diagnostic.
+The existing loopback preview was updated to its exact local image ID and
+passed the post-switch Rust readiness probe. Public-domain deployment remains
+uncompleted. The [Home history record](verification/home-history.md) gives the
+image identity, scope, rollback boundary, and blocked final diagnostic follow-up.
+
+## Initial September 29, 2026 verification record
 
 The implementation candidate is `172594f0605b7c34a527abffa8ce507b7ceb84ab`
 (tree `1185ff553e5a88cb82e2ee8345143e5b63353f27`).
@@ -120,10 +129,11 @@ tracked host source/test directories. Those navigation-only issues were fixed
 in `12b6af1b`, and tracked repository checks passed. The verification image was
 rebuilt with that correction and completed
 `cargo run -p lkjstr-xtask -- quiet docker-verify` successfully (exit zero).
-Application source, dependencies and build configuration remain unchanged from
-`172594f0`; later commits only correct navigation or record verification.
+At that initial checkpoint, application source, dependencies and build
+configuration were unchanged from `172594f0`; the following commits only
+corrected navigation or recorded verification.
 
-The preview runs `lkjstr:172594f0` with its OCI revision label matching the
+That preview ran `lkjstr:172594f0` with its OCI revision label matching the
 candidate above. The local Docker image ID is
 `sha256:020464aabc8cd691f73f9fc48718f727ce2631e5f394abf9f2fa6ff001e1da21`.
 It was rebuilt from the committed source and the live checks were repeated after
