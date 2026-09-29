@@ -39,18 +39,18 @@ pub fn intended_filter_limit(input: &RequestBudgetInput) -> u64 {
         return 0;
     }
     if input.exact_event_lookup {
-        return input.page_size.map_or(1, |page| page);
+        return input.page_size.unwrap_or(1);
     }
     if input.purpose == Some(RequestBudgetPurpose::Metadata) {
-        return input.page_size.map_or(20, |page| page);
+        return input.page_size.unwrap_or(20);
     }
     if input.purpose == Some(RequestBudgetPurpose::RouteDiscovery) {
-        return input.page_size.map_or(20, |page| page);
+        return input.page_size.unwrap_or(20);
     }
     if input.has_search_filter || input.purpose == Some(RequestBudgetPurpose::Search) {
-        return input.page_size.map_or(max_search_limit(), |page| page);
+        return input.page_size.unwrap_or(max_search_limit());
     }
-    input.page_size.map_or(50, |page| page)
+    input.page_size.unwrap_or(50)
 }
 
 #[must_use]

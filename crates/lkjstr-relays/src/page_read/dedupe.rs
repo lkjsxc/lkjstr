@@ -79,11 +79,11 @@ pub fn read_dedupe_key(request: &RelayReadRequest, options: ReadDedupeOptions) -
         &subscription_key(request),
         &options
             .timeout_ms
-            .map_or(request_timeout_ms(), |timeout| timeout)
+            .unwrap_or(request_timeout_ms())
             .to_string(),
         &options
             .max_events
-            .map_or(default_read_page_max_events(), |max| max)
+            .unwrap_or(default_read_page_max_events())
             .to_string(),
     ])
 }

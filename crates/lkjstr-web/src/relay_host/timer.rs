@@ -77,5 +77,5 @@ impl Drop for BrowserTimeoutInner {
 }
 
 fn clamp_timeout(delay_ms: u32) -> i32 {
-    i32::try_from(delay_ms).map_or(i32::MAX, |delay| delay)
+    i32::try_from(delay_ms).unwrap_or(i32::MAX)
 }

@@ -15,9 +15,7 @@ pub fn normalized_demand_filters(demand: &Demand, now_sec: u64) -> Vec<NostrFilt
     if demand.phase != DemandPhase::Live {
         return demand.filters.clone();
     }
-    let since = demand
-        .since
-        .map_or(now_sec.saturating_sub(30), |value| value);
+    let since = demand.since.unwrap_or(now_sec.saturating_sub(30));
     demand
         .filters
         .iter()

@@ -27,7 +27,7 @@ pub fn derive_request_budget(input: &RequestBudgetInput) -> RequestBudget {
             .relay_limits
             .as_ref()
             .and_then(|limits| limits.max_subscriptions)
-            .map_or(usize::MAX, |max_subscriptions| max_subscriptions),
+            .unwrap_or(usize::MAX),
         max_subscription_id_length: max_subscription_id_length(input.relay_limits.as_ref()),
         warnings,
     }
@@ -81,14 +81,14 @@ fn derive_filter_limit(
 
 fn derive_max_events(input: &RequestBudgetInput, filter_limit: Option<u64>, intended: u64) -> u64 {
     let filters = usize_to_u64(input.filter_count).max(1);
-    let page = input.page_size.map_or(intended, |page| page).max(1);
+    let page = input.page_size.unwrap_or(intended).max(1);
     if input.phase == RequestBudgetPhase::Live {
         return default_read_page_max_events();
     }
     if input.exact_event_lookup {
         return default_read_page_max_events().min(page.max(intended));
     }
-    let per_filter = filter_limit.map_or(intended, |limit| limit);
+    let per_filter = filter_limit.unwrap_or(intended);
     let requested = per_filter.saturating_mul(filters).saturating_add(page);
     default_read_page_max_events().min(page.max(requested))
 }
