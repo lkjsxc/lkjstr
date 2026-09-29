@@ -14,6 +14,7 @@ readiness, diagnostics, and focused gates.
 - [testing-ownership.md](testing-ownership.md): unit, repository,
   host-boundary, smoke, and manual ownership.
 - [docker.md](docker.md): Compose image targets and guardrails.
+- [self-hosting.md](self-hosting.md): native Rust server and private GitOps handoff.
 - [ci.md](ci.md): CI jobs and Compose commands.
 - [cloudflare-workers.md](cloudflare-workers.md): Workers Static Assets target.
 - [cloudflare-workers/README.md](cloudflare-workers/README.md): hosted build settings for bridge assets.

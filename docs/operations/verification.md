@@ -50,7 +50,10 @@ pnpm cloudflare:dry-run:built
 `pnpm verify:wasm-assets` checks source artifacts under `target/lkjstr-web-wasm`,
 emitted Cloudflare assets under `.svelte-kit/cloudflare/lkjstr-web-wasm`,
 manifest-tracked bridge imports such as wasm-bindgen snippets, and manifest
-`Cache-Control: no-cache` header emission. The Cloudflare smoke gate starts the
+`Cache-Control: no-cache` header emission. With `LKJSTR_ADAPTER=static`, it
+checks `build/lkjstr-web-wasm` instead; the Rust host tests own HTTP headers.
+See [self-hosting](self-hosting.md) for that deployment target.
+The Cloudflare smoke gate starts the
 built Worker locally, exercises `/` through the `ASSETS` binding, fetches the
 manifest, JavaScript bridge, WASM binary, and manifest-tracked bridge imports,
 validates content headers, checks digest integrity, and proves missing bridge

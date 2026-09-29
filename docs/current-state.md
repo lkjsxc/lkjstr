@@ -10,8 +10,11 @@ split by ownership under [current-state/README.md](current-state/README.md).
 - The root route opens the tiled browser workspace and is explicitly
   client-rendered so Cloudflare Workers do not evaluate browser-only workspace
   modules while serving `/`.
-- Shipped product runtime remains SvelteKit and TypeScript under `src/` while
-  Rust/WASM crates take ownership slice by slice with proof.
+- Shipped browser runtime remains SvelteKit and TypeScript under `src/` while
+  Rust/WASM crates take ownership slice by slice with proof. The optional
+  [self-hosted target](operations/self-hosting.md) uses a Rust HTTP server and
+  a verified static SPA; Node is not a production server dependency. This is
+  not a claim of browser Rust parity or completed public-domain deployment.
 - Durable product storage is worker-owned SQLite OPFS with an origin-level
   owner lease for persistent dedicated workers, a shared app-broker key
   `/lkjstr/main.sqlite3`, bounded owner-busy cooldown diagnostics, and explicit

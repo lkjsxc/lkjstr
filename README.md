@@ -76,6 +76,13 @@ pnpm build
 pnpm preview
 ```
 
+### Self-hosting
+
+The Rust HTTP runtime and static browser build are described in
+[docs/operations/self-hosting.md](docs/operations/self-hosting.md).
+Build the `self-hosted` Docker target for deployment; `pnpm preview` remains a
+development tool. The default Cloudflare target is unchanged.
+
 ## How to Verify
 
 Canonical quiet commands print one success line on pass and bounded output on

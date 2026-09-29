@@ -33,13 +33,24 @@ export async function verifyBuiltWasmAssets(
     options.sourceDir ?? defaultWasmArtifactDir(repoRoot),
     'source Rust/WASM artifacts',
   );
+  const staticBuild = process.env.LKJSTR_ADAPTER === 'static';
+  const outputRoot = staticBuild
+    ? path.join(repoRoot, 'build')
+    : path.join(repoRoot, '.svelte-kit', 'cloudflare');
   const cloudflareDir =
-    options.cloudflareDir ??
-    path.join(repoRoot, '.svelte-kit', 'cloudflare', WASM_ASSET_DIR_NAME);
-  await verifyDirectory(cloudflareDir, 'Cloudflare emitted Rust/WASM assets');
-  await verifyManifestHeaders(
-    options.headersPath ?? path.join(path.dirname(cloudflareDir), '_headers'),
+    options.cloudflareDir ?? path.join(outputRoot, WASM_ASSET_DIR_NAME);
+  await verifyDirectory(
+    cloudflareDir,
+    staticBuild
+      ? 'Static emitted Rust/WASM assets'
+      : 'Cloudflare emitted Rust/WASM assets',
   );
+  // The Rust host, not a platform _headers file, owns static HTTP headers.
+  if (!staticBuild || options.headersPath) {
+    await verifyManifestHeaders(
+      options.headersPath ?? path.join(path.dirname(cloudflareDir), '_headers'),
+    );
+  }
 }
 
 export async function verifyDirectory(

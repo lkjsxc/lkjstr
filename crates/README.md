@@ -13,4 +13,5 @@ Rust crates own the Rust/WASM application target.
 - [lkjstr-storage/](lkjstr-storage/): storage manifest, ledger, and outcomes.
 - [lkjstr-ui/](lkjstr-ui/): Leptos workspace shell components.
 - [lkjstr-web/](lkjstr-web/): WASM browser entry and host adapters.
+- [lkjstr-host/](lkjstr-host/): native HTTP server for verified self-hosted assets.
 - [lkjstr-xtask/](lkjstr-xtask/): repository checks and command orchestration.

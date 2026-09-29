@@ -15,6 +15,7 @@ members = [
   ".",
   "crates/lkjstr-app",
   "crates/lkjstr-domain",
+  "crates/lkjstr-host",
   "crates/lkjstr-protocol",
   "crates/lkjstr-relays",
   "crates/lkjstr-storage",
