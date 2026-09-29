@@ -79,6 +79,10 @@ The resumed native app/relay/storage run passed 558 tests with no failures or
 ignored tests. Native and WASM all-target Clippy passed with warnings denied.
 Repository checks first identified documentation line/prose limits and a missing
 Purpose heading; those were corrected and the repository check passed.
+The three manual Chrome checks were rerun after the overlapping-filter guard
+and passed. The complete `pnpm rust-wasm:quiet` gate also finished successfully.
+An earlier synchronous tool connection closed before returning that gate's
+result; only the later logged run with final exit zero is counted.
 
 ## Boundaries and Next Work
 
@@ -98,7 +102,53 @@ of this slice.
 
 ## Artifact Gates
 
-The post-implementation artifact gate results and immutable source revision
-will be recorded after those commands finish. Earlier slice artifact results
-remain in [home-history.md](home-history.md); they are not reused as proof of
-this candidate.
+The implementation is `c56e460eded307b144afaa5e8144e7d58d7a68f5`
+(tree `79ac8736d02a0237a13ff18e2c561fcd41da0ff9`). Its first Docker build passed,
+but the verification container found missing references to this document in
+three documentation indexes. The documentation-only correction is the frozen
+artifact source `48a2f8f2625837f2b08c6cb9b4bf3c5662e43b1e`
+(tree `cca8890e3f5df5b620ab9116ac0042ac157bf95e`). Product code, tests, dependencies,
+Docker configuration, and workflows are unchanged between those commits.
+
+All these commands completed successfully on that corrected source:
+
+- Docker Compose configuration and builds of `app`, `verify`, `cloudflare`,
+  and `app-smoke`, followed by runs of all three verification services.
+- The Docker verification plan: repository/documentation checks, Rust formatting,
+  native/WASM Clippy, workspace Rust tests, release Trunk build, and the retained
+  Node repository, lint, type-check, and Vitest gates.
+- Emitted-WASM asset checks, a real local Cloudflare Worker smoke, and Wrangler
+  deployment dry-run. No Worker was published.
+- The `self-hosted` target, build-time and final-image Rust asset-tree checks,
+  and an independently read image source-revision label.
+
+The local image tag is `lkjstr:home-frontier-48a2f8f2`. Its image ID is
+`sha256:6257bfd71cb7124d5a323e70d2098e2996de8022bfcad3c96dc4559711829ac9`.
+It carries the exact corrected-source revision above and was not published to a
+registry. Later evidence-report changes are documentation-only.
+
+## Candidate Runtime Proof
+
+A separate candidate was started by that image ID with a read-only root,
+dropped capabilities, and a randomly assigned loopback port (`32768` for this
+run). Rust readiness and `pnpm hosted:smoke` passed. Additional HTTP diagnostics
+passed identity/gzip/Brotli delivery, manifest-listed bridge imports, SQLite
+WASM validation, content headers, and 404/405/HEAD behavior.
+
+A fresh Chromium context loaded the actual application and WASM assets without
+page exceptions or local HTTP failures. Rejecting optional privacy processing
+persisted across reload. This is startup/storage-choice evidence, not a signed
+account workflow or real-public-relay Home history proof. The three controlled
+Home provider/UI diagnostics above remain the history-specific browser evidence.
+Browser suites remain manual and suspended in canonical quiet/Docker/CI gates.
+
+The candidate container was removed after verification. The existing preview's
+container ID, image ID, healthy state, and `127.0.0.1:18879` mapping were compared
+before and after and remained identical. No public DNS, TLS, proxy, GitOps,
+account, signing, publishing, or preview deployment state was changed.
+
+Local logs are retained as `/tmp/lkjstr-home-frontier-validation-20260930.log`,
+`/tmp/lkjstr-home-frontier-artifacts-c56e460e.log` (initial failed gate),
+`/tmp/lkjstr-home-frontier-artifacts-48a2f8f2.log`, and
+`/tmp/lkjstr-home-frontier-candidate-48a2f8f2.log`. The resumed validation,
+corrected artifact, and candidate logs each contain `FINAL_RESULT: 0`.
