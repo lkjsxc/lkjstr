@@ -5,16 +5,17 @@
 Serve the verified static Nostr browser application without a Node server.
 This native crate is separate from the Rust/WASM browser migration.
 
-## Ownership
+## Table of Contents
 
-- `src/assets.rs`: bounded startup checks for the immutable asset tree and WASM manifest.
-- `src/lib.rs`: HTTP routes, file service, response policy, and headers.
-- `src/main.rs`: serve/check/probe commands and graceful shutdown.
-- `tests/`: native HTTP and invalid-deployment regression tests.
+- [Cargo.toml](Cargo.toml): native runtime and test dependencies.
+- [src/](src/): asset validation, HTTP service and command-line entry.
+- [tests/](tests/): native HTTP and invalid-deployment regression tests.
 
-The process never owns accounts, signing keys, user storage, or relay connections.
+## Contract
+
+The process never owns accounts, signing keys, user storage or relay connections.
 The existing edge owns HTTPS. Do not add blanket COOP/COEP headers or a successful
-HTML fallback for missing JS/WASM files.
+HTML fallback for missing JavaScript or WASM files.
 
-See [self-hosting](../../docs/operations/self-hosting.md) for the build,
-container, GitOps boundary, and verification commands.
+See [self-hosting](../../docs/operations/self-hosting.md) for build, container,
+private GitOps boundaries and verification commands.

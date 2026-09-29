@@ -4,6 +4,12 @@
 
 Describe the isolated application service, not the host's infrastructure state.
 
+## Table of Contents
+
+- [compose.yaml](compose.yaml): isolated application service and readiness probe.
+
+## Runtime
+
 `compose.yaml` runs a verified `LKJSTR_IMAGE` with a read-only filesystem,
 unprivileged user, loopback port, bounded resources, and a Rust readiness probe.
 The image is built using the root Dockerfile's `self-hosted` target.

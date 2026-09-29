@@ -9,6 +9,8 @@ system.
 
 ## Table of Contents
 
+- [deploy/](deploy/): isolated Rust-hosted application deployment.
+
 - [Screenshot](#screenshot)
 - [What lkjstr Is](#what-lkjstr-is)
 - [What It Does](#what-it-does)
