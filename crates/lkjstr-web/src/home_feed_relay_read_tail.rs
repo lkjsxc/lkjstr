@@ -4,7 +4,7 @@ use lkjstr_protocol::{ClientMessage, encode_client_message};
 use lkjstr_relays::{ProgressiveReadEvidence, progressive_read_snapshot, reduce_progressive_read};
 
 use crate::{
-    home_feed_relay_model::model_from_snapshot,
+    home_feed_relay_model::output_from_snapshot,
     home_feed_relay_read::HomeRelayRead,
     home_feed_relay_status::{RelayEnd, relay_status, relay_terminal},
     host_status::browser_now_ms,
@@ -57,7 +57,7 @@ impl HomeRelayRead {
 
     pub(super) fn publish(&self, reason: &str) {
         let snapshot = progressive_read_snapshot(&self.state.borrow(), reason, browser_now_ms());
-        (self.complete)(model_from_snapshot(&self.input, snapshot));
+        (self.complete)(output_from_snapshot(&self.input, snapshot));
     }
 
     pub(super) fn close_all(&self) {

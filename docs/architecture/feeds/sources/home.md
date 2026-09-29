@@ -43,6 +43,28 @@ set:
   filter key, and interval before network reads. Complete proof skips relay I/O;
   partial proof queries only uncovered route requirements.
 
+## Rust explicit older-read slice
+
+The Rust Home island provides an explicit older command.
+It retains the selected account, loaded follow set, selected read relays, and a
+bounded owner-local event window. The command is unavailable without a real
+provider, a loaded follow set, or a compound timestamp/event-id cursor.
+
+The initial bounded read asks for the latest 30 matching events up to now,
+not just events from the last 30 seconds. Its live-query model remains separate.
+Older requests keep the cursor second inclusive on the wire and reject events
+outside the requested authors, kinds, time range, or compound boundary locally.
+They preserve event-id deduplication and relay provenance. The visible window
+stays bounded while moving toward older rows; repeated commands must not create
+concurrent reads. Releasing or replacing the owner cancels its requests and
+rejects late results. Empty, failed, or capped replies are not evidence of global
+history exhaustion and must leave an explicit diagnostic rather than fake
+success. No automatic older loop is introduced in this slice.
+
+This does not complete route-group/cache-coverage parity or remove the retained
+TypeScript implementation. NIP-65 routing, older cache coverage, automatic scroll
+paging, and broader Home deletion proof remain separate work.
+
 ## Status
 
 | Rule                                           | Status      |

@@ -3,6 +3,7 @@
 mod account;
 mod build;
 mod defaults;
+pub mod paging;
 mod types;
 
 pub use build::{build_home_feed_view, home_feed_id};

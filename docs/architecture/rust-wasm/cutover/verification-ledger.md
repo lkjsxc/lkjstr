@@ -6,11 +6,12 @@ Maps Rust-first cutover focused checks and Docker final gate. Use [implementatio
 
 ## Gate Rule
 
-A focused gate proves the edited slice. The final gate proves the repository
-artifact. Do not mark a row ready unless the named focused checks pass after the
-change and Docker Compose verification is either run or recorded as not run.
+Focused checks prove the edited slice; the final gate proves the repository artifact.
+Readiness requires passing focused checks and a run or explicit omission of Docker verification.
 
 ## Recent Evidence
+
+2026-09-29: [Home history proof](../../../operations/verification/home-history.md) records 9 native and 2 manual Chrome checks and artifact status.
 
 2026-07-01 notifications/publish proof: empty Notifications windows keep older-read evidence. Tweet exits storage/signer/archive failures. Docker passed.
 2026-07-01 post-display startup policy proof: surface policy,

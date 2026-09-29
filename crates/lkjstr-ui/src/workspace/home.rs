@@ -8,10 +8,11 @@ mod feed_scroll_anchor;
 
 use crate::workspace::feed_event_actions::FeedEventActions;
 use crate::workspace::feed_event_menu::event_row_with_nearby_menu;
-use crate::workspace::feed_footer_row::state_footer;
-use crate::workspace::feed_footer_text::FooterAuthLabel;
 use crate::workspace::feed_state_row;
+#[path = "home_older.rs"]
+mod home_older;
 use crate::workspace::home_provider::HomeFeedProvider;
+use home_older::HomeOlderLoader;
 
 #[component]
 pub fn HomeTab(
@@ -27,13 +28,18 @@ pub fn HomeTab(
         let resize_batch = resize_batch.clone();
         move |_| resize_batch.record_scroll_top(scroll_node)
     };
+    let complete = Callback::new(move |next| {
+        feed_scroll_anchor::set_preserving_anchor(scroll_node, model, next);
+    });
+    let older = provider
+        .as_ref()
+        .filter(|provider| provider.supports_older())
+        .map(|provider| HomeOlderLoader::new(owner.clone(), provider.clone(), complete));
+    if let Some(older) = older.clone() {
+        on_cleanup(move || older.release());
+    }
     if let Some(provider) = provider {
-        let lease = provider.read(
-            owner,
-            Callback::new(move |next| {
-                feed_scroll_anchor::set_preserving_anchor(scroll_node, model, next);
-            }),
-        );
+        let lease = provider.read(owner, complete);
         on_cleanup(move || lease.release());
     }
     view! {
@@ -57,12 +63,14 @@ pub fn HomeTab(
                                 .into_iter()
                                 .map({
                                     let resize_batch = resize_batch.clone();
+                                    let older = older.clone();
                                     move |row| {
                                         observed_home_row(
                                             row,
                                             resize_batch.clone(),
                                             scroll_node,
                                             actions.clone(),
+                                            older.clone(),
                                         )
                                     }
                                 })
@@ -85,18 +93,23 @@ fn observed_home_row(
     resize_batch: feed_resize_anchor::ResizeAnchorBatch,
     scroll_node: NodeRef<Div>,
     actions: FeedEventActions,
+    older: Option<HomeOlderLoader>,
 ) -> impl IntoView {
     let row_id = row.row_id().to_owned();
     let row_node = NodeRef::<Div>::new();
     feed_resize_anchor::observe_row_resize(resize_batch, scroll_node, row_node);
     view! {
         <div class="lkjstr-feed-row-observer" data-observed-row-id=row_id node_ref=row_node>
-            {home_row(row, actions)}
+            {home_row(row, actions, older)}
         </div>
     }
 }
 
-fn home_row(row: FeedViewRow, actions: FeedEventActions) -> impl IntoView {
+fn home_row(
+    row: FeedViewRow,
+    actions: FeedEventActions,
+    older: Option<HomeOlderLoader>,
+) -> impl IntoView {
     match row {
         FeedViewRow::Event(row) => event_row_with_nearby_menu(
             row,
@@ -109,9 +122,7 @@ fn home_row(row: FeedViewRow, actions: FeedEventActions) -> impl IntoView {
         FeedViewRow::Diagnostic(row) => feed_state_row::diagnostic(row).into_any(),
         FeedViewRow::Continuation(row) => feed_state_row::plain_continuation(row).into_any(),
         FeedViewRow::Shell(row) => feed_state_row::shell(row).into_any(),
-        FeedViewRow::Footer(row) => {
-            state_footer(row.row_id, row.state, FooterAuthLabel::Account).into_any()
-        }
+        FeedViewRow::Footer(row) => home_older::footer_row(row, older).into_any(),
         FeedViewRow::Profile(row) => feed_state_row::profile(row).into_any(),
         FeedViewRow::Notification(row) => feed_state_row::notification(row).into_any(),
     }
@@ -137,7 +148,7 @@ fn home_status_text(status: HomeFeedStatus) -> &'static str {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::workspace::feed_footer_text::footer_state_text;
+    use crate::workspace::feed_footer_text::{FooterAuthLabel, footer_state_text};
     use lkjstr_app::FeedFooterState;
 
     #[test]

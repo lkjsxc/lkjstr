@@ -4,6 +4,14 @@
 
 Current shared feed runtime blocker details.
 
+## Current Increment
+
+Rust Home now supports explicit older reads and a bounded moving window, with
+compound-cursor admission and owner-bound cancellation. See the
+[Home history proof](../../operations/verification/home-history.md). This closes
+the missing explicit command, not the shared-feed blocker: routing/cache proof,
+automatic paging, and broader retained-code deletion remain open.
+
 ## Details
 
 Build shared feed runtime from strict cache proof, relay snapshots, row view

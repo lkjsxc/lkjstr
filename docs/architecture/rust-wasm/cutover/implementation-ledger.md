@@ -12,6 +12,15 @@ A row marked `partial` does not allow TypeScript or Svelte deletion. Deletion
 requires real behavior, focused tests, a no-import proof, and an updated row in
 [deletion-ledger.md](deletion-ledger.md).
 
+## Recent Slice
+
+2026-09-29: Rust Home now owns an explicit older-read command, inclusive compound
+cursor admission, a rolling 180-event window, and owner-bound request cleanup.
+The initial bounded read requests 30 events rather than a 30-second live range.
+See [focused proof and remaining boundaries](../../../operations/verification/home-history.md).
+Shared-feed and Home rows remain partial: routing/cache parity, automatic paging,
+and retained TypeScript/Svelte deletion have not been completed.
+
 ## Area Details
 
 - [areas/storage.md](areas/storage.md): protected storage plus event cache and

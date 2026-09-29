@@ -1,7 +1,8 @@
 use lkjstr_app::{
-    FeedFragmentConfig, FeedWindowEvidence, FeedWindowFlags, HomeFeedDiagnosticInput,
+    FeedFragmentConfig, HomeFeedDiagnosticInput,
     HomeFeedSourceState, HomeFeedView, HomeFeedViewInput, HomeFollowState,
-    ProtectedAccountAvailability, build_home_feed_view, reduce_feed_window,
+    ProtectedAccountAvailability, build_home_feed_view,
+    home_feed::paging::home_window_from_snapshot,
 };
 use lkjstr_relays::{DemandVisibility, ProgressiveReadSnapshot, ProgressiveReadStatus};
 
@@ -10,21 +11,29 @@ use crate::{
     home_feed_relay_input::HomeRelayReadInput,
 };
 
-pub(crate) fn model_from_snapshot(
+pub(crate) struct HomeRelayReadOutput {
+    pub(crate) input: HomeRelayReadInput,
+    pub(crate) model: HomeFeedView,
+    pub(crate) finished: bool,
+}
+
+pub(crate) fn output_from_snapshot(
     input: &HomeRelayReadInput,
     snapshot: ProgressiveReadSnapshot,
-) -> HomeFeedView {
-    let source_state = source_state(&snapshot);
-    let diagnostics = relay_diagnostics(input, &snapshot);
-    let window = reduce_feed_window(
-        input.cache_window.clone(),
-        FeedWindowEvidence::Snapshot {
-            generation: 1,
-            snapshot,
-            flags: FeedWindowFlags::default(),
-        },
-    );
-    build_home_feed_view(HomeFeedViewInput {
+) -> HomeRelayReadOutput {
+    let mut source_state = source_state(&snapshot);
+    let mut diagnostics = relay_diagnostics(input, &snapshot);
+    let window = home_window_from_snapshot(&input.cache_window, snapshot, input.before.as_ref());
+    let finished = window.terminal;
+    if input.before.is_some() && finished
+        && window.oldest_cursor == input.cache_window.oldest_cursor
+    {
+        let reason = "Selected relays did not advance the bounded Home history read; older history remains unproven.";
+        diagnostics.push(diagnostic("older-no-progress", reason));
+        source_state = HomeFeedSourceState::Partial { reason: reason.to_owned(), retry_available: true };
+    }
+    let next_input = HomeRelayReadInput { cache_window: window.clone(), ..input.clone() };
+    let model = build_home_feed_view(HomeFeedViewInput {
         owner: input.owner.clone(),
         account: ProtectedAccountAvailability::selected(input.active_pubkey.clone()),
         follow_state: HomeFollowState::Loaded {
@@ -44,7 +53,8 @@ pub(crate) fn model_from_snapshot(
         geometry_models: input.geometry_models.clone(),
         fragment_config: FeedFragmentConfig::default(),
         diagnostics,
-    })
+    });
+    HomeRelayReadOutput { input: next_input, model, finished }
 }
 
 fn source_state(snapshot: &ProgressiveReadSnapshot) -> HomeFeedSourceState {

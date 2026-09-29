@@ -60,6 +60,7 @@ mod home_feed_relay_model;
 mod home_feed_relay_read;
 mod home_feed_relay_read_tail;
 mod home_feed_relay_status;
+mod home_feed_relay_state;
 mod host_providers;
 mod host_status;
 pub mod indexed_db;

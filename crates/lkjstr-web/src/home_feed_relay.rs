@@ -1,17 +1,18 @@
 use lkjstr_app::{
-    FeedLiveQueryInput, HomeFeedView, home_authors, home_live_query_input, plan_query_demand,
+    FeedLiveQueryInput, home_authors, home_live_query_input, plan_query_demand,
 };
 use lkjstr_relays::{DemandVisibility, initial_relay_subscription_id};
 
 use crate::{
     home_feed_host::PAGE_SIZE, home_feed_relay_input::HomeRelayReadInput,
     home_feed_relay_read::start_read,
+    home_feed_relay_model::HomeRelayReadOutput,
     relay_read_handle::RelayReadHandle,
 };
 
 pub(crate) fn start_home_relay_read(
     input: HomeRelayReadInput,
-    complete: impl Fn(HomeFeedView) + 'static,
+    complete: impl Fn(HomeRelayReadOutput) + 'static,
 ) -> Option<RelayReadHandle> {
     let authors = home_authors(&input.active_pubkey, &input.follow_pubkeys);
     let query = home_live_query_input(FeedLiveQueryInput {
@@ -21,7 +22,7 @@ pub(crate) fn start_home_relay_read(
         authors,
         author_routes: Vec::new(),
         disabled_relays: Vec::new(),
-        since: Some(input.now_sec.saturating_sub(30)),
+        since: None,
         now_sec: input.now_sec,
         page_size: PAGE_SIZE,
     });
@@ -35,6 +36,11 @@ pub(crate) fn start_home_relay_read(
     for filter in &mut filters {
         filter.until = Some(input.now_sec);
         filter.limit = Some(PAGE_SIZE);
+        if let Some(before) = &input.before {
+            filter.since = None;
+            filter.until = Some(before.created_at);
+            filter.limit = Some(crate::home_feed_host::WINDOW_MAX as u64);
+        }
     }
     Some(start_read(input, sub_id, filters, relays, complete))
 }

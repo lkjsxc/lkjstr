@@ -43,6 +43,7 @@ impl HomeFollowRead {
             follow_pubkeys: follow_pubkeys.clone(),
         }));
         (self.follow_loaded)(HomeRelayReadInput {
+            before: None,
             owner: self.input.owner.clone(),
             active_pubkey: self.input.active_pubkey.clone(),
             follow_pubkeys,

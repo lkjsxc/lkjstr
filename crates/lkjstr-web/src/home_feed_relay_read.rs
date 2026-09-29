@@ -2,7 +2,8 @@ use std::cell::{Cell, RefCell};
 use std::collections::BTreeMap;
 use std::rc::Rc;
 
-use lkjstr_app::HomeFeedView;
+use lkjstr_app::home_feed::paging::home_event_before_cursor;
+use crate::home_feed_relay_model::HomeRelayReadOutput;
 use lkjstr_protocol::{ClientMessage, NostrFilter, RelayMessage, encode_client_message};
 use lkjstr_relays::{
     InitialProgressiveRead, PageReadSurface, ProgressiveEvent, ProgressiveReadEvidence,
@@ -24,7 +25,7 @@ pub(crate) fn start_read(
     sub_id: String,
     filters: Vec<NostrFilter>,
     relays: Vec<String>,
-    complete: impl Fn(HomeFeedView) + 'static,
+    complete: impl Fn(HomeRelayReadOutput) + 'static,
 ) -> RelayReadHandle {
     let read = Rc::new(HomeRelayRead {
         input,
@@ -57,7 +58,7 @@ pub(super) struct HomeRelayRead {
     pub(super) sockets: RefCell<BTreeMap<String, RelaySocketHandle>>,
     pub(super) timeout: RefCell<Option<BrowserTimeout>>,
     pub(super) done: Cell<bool>,
-    pub(super) complete: Box<dyn Fn(HomeFeedView)>,
+    pub(super) complete: Box<dyn Fn(HomeRelayReadOutput)>,
 }
 
 fn install_timeout(read: Rc<HomeRelayRead>) {
@@ -116,7 +117,10 @@ impl HomeRelayRead {
     }
 
     fn event(&self, relay: &str, event: lkjstr_protocol::NostrEvent) {
-        if self.done.get() {
+        if self.done.get() || self.relay_done(relay)
+            || !lkjstr_protocol::matches_any_filter(&event, &self.filters)
+            || self.input.before.as_ref().is_some_and(|before| !home_event_before_cursor(&event, before))
+        {
             return;
         }
         self.reduce(ProgressiveReadEvidence::RelayEvents(vec![

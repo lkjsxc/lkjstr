@@ -24,6 +24,7 @@ pub(crate) struct HomeRelayReadInput {
     pub(crate) owner: String,
     pub(crate) active_pubkey: String,
     pub(crate) follow_pubkeys: Vec<String>,
+    pub(crate) before: Option<lkjstr_app::FeedWindowCursor>,
     pub(crate) selected_relays: Vec<String>,
     pub(crate) cache_window: lkjstr_app::FeedWindowState,
     pub(crate) geometry_models: Vec<RowGeometryModel>,
@@ -31,6 +32,7 @@ pub(crate) struct HomeRelayReadInput {
     pub(crate) now_sec: u64,
 }
 
+#[derive(Clone, Copy)]
 pub(crate) struct HomeRelayInputSeed<'a> {
     pub(crate) owner: &'a str,
     pub(crate) active_pubkey: &'a Option<String>,
@@ -41,6 +43,15 @@ pub(crate) struct HomeRelayInputSeed<'a> {
     pub(crate) geometry_models: &'a [RowGeometryModel],
     pub(crate) diagnostics: &'a [HomeFeedDiagnosticInput],
     pub(crate) now_sec: u64,
+}
+
+pub(crate) fn home_base_relay_input(seed: HomeRelayInputSeed<'_>) -> Option<HomeRelayReadInput> {
+    match home_relay_input(HomeRelayInputSeed {
+        source_state: &HomeFeedSourceState::Pending, ..seed
+    }) {
+        Some(HomeRelayCommand::Notes(input)) => Some(input),
+        _ => None,
+    }
 }
 
 pub(crate) fn home_relay_input(seed: HomeRelayInputSeed<'_>) -> Option<HomeRelayCommand> {
@@ -54,6 +65,7 @@ pub(crate) fn home_relay_input(seed: HomeRelayInputSeed<'_>) -> Option<HomeRelay
                 owner: seed.owner.to_owned(),
                 active_pubkey,
                 follow_pubkeys: follow_pubkeys.clone(),
+                before: None,
                 selected_relays: seed.selected_relays.to_vec(),
                 cache_window: seed.window.clone(),
                 geometry_models: seed.geometry_models.to_vec(),

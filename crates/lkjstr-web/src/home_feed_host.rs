@@ -8,9 +8,10 @@ use lkjstr_ui::HomeFeedProvider;
 use crate::{
     home_feed_cache::home_cache_state,
     home_feed_geometry::home_feed_geometry_models,
-    home_feed_host_relay::start_home_relay_command,
+    home_feed_host_relay::{start_home_relay_command, start_home_older_request},
     home_feed_host_storage::{active_account, selected_relays},
-    home_feed_relay_input::{HomeRelayCommand, HomeRelayInputSeed, home_relay_input},
+    home_feed_relay_input::{HomeRelayCommand, HomeRelayReadInput, HomeRelayInputSeed, home_base_relay_input, home_relay_input},
+    home_feed_relay_state::HomeRelayState,
     host_status::browser_now_ms,
     relay_read_handle::RelayReadSlot,
 };
@@ -41,11 +42,19 @@ pub(crate) fn home_feed_provider_with_page_account(
         worker_url,
         page_active_pubkey,
     };
-    HomeFeedProvider::new(move |request| {
+    let relay_state = HomeRelayState::default();
+    let read_state = relay_state.clone();
+    HomeFeedProvider::with_older(move |request| {
+        let state = read_state.clone();
         let host = host.clone();
         let relay_slot = RelayReadSlot::default();
-        let release_slot = relay_slot.clone();
-        request.lease().on_release(move || release_slot.cancel());
+        let Some(generation) = state.open(&request.owner, relay_slot.clone()) else {
+            request.lease().release();
+            return;
+        };
+        let release_state = state.clone();
+        let release_owner = request.owner.clone();
+        request.lease().on_release(move || release_state.forget(&release_owner, generation));
         wasm_bindgen_futures::spawn_local(async move {
             let owner = request.owner.clone();
             if request.is_released() {
@@ -55,18 +64,23 @@ pub(crate) fn home_feed_provider_with_page_account(
             if request.is_released() {
                 return;
             }
+            if !state.is_current(&owner, generation) { return; }
+            if let Some(base) = load.base {
+                state.remember(generation, base, load.relay.is_some());
+            }
             request.complete(load.model);
             if let Some(relay) = load.relay
                 && !request.is_released()
             {
-                start_home_relay_command(relay, request, relay_slot);
+                start_home_relay_command(relay, request, relay_slot, state, generation);
             }
         });
-    })
+    }, move |request| start_home_older_request(relay_state.clone(), request))
 }
 
 struct HomeFeedLoad {
     model: HomeFeedView,
+    base: Option<HomeRelayReadInput>,
     relay: Option<HomeRelayCommand>,
 }
 
@@ -104,7 +118,7 @@ async fn home_feed_model(host: &HomeFeedHost, owner: &str) -> HomeFeedLoad {
         VIEW_FONT_SCALE,
     )
     .await;
-    let relay = home_relay_input(HomeRelayInputSeed {
+    let seed = HomeRelayInputSeed {
         owner,
         active_pubkey: &active_pubkey,
         follow_state: &follow_state,
@@ -114,7 +128,9 @@ async fn home_feed_model(host: &HomeFeedHost, owner: &str) -> HomeFeedLoad {
         geometry_models: &geometry_models,
         diagnostics: &diagnostics,
         now_sec,
-    });
+    };
+    let base = home_base_relay_input(seed);
+    let relay = home_relay_input(seed);
     let model = build_home_feed_view(HomeFeedViewInput {
         owner: owner.to_owned(),
         account,
@@ -134,7 +150,7 @@ async fn home_feed_model(host: &HomeFeedHost, owner: &str) -> HomeFeedLoad {
         fragment_config: FeedFragmentConfig::default(),
         diagnostics,
     });
-    HomeFeedLoad { model, relay }
+    HomeFeedLoad { model, base, relay }
 }
 
 fn diagnostics(

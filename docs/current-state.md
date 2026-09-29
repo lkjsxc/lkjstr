@@ -43,6 +43,12 @@ split by ownership under [current-state/README.md](current-state/README.md).
   Context, Followees, and User Timeline have active Rust island or Rust-backed
   slices, but retained TypeScript and Svelte code may be deleted only after
   parity, focused tests, ledger evidence, and no-import proof.
+- Rust Home supports explicit older reads with inclusive timestamp/id boundaries,
+  selected author/relay scope, deduplication, a rolling 180-event window, and
+  owner-bound cancellation. Nonadvancing replies remain diagnosed and retryable.
+  Initial relay history is a latest-30-event read, not a last-30-second scan.
+  [Home history proof](operations/verification/home-history.md) records the exact
+  boundary; routing/cache parity and automatic older scrolling remain open.
 - Rust/WASM build tools are verification dependencies, not browser runtime
   dependencies. Missing local development WASM assets render explicit
   bridge-unavailable states rather than raw Node or toolchain errors. Production

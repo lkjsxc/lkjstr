@@ -8,6 +8,7 @@ use crate::workspace::local_lease::LocalLease;
 #[derive(Clone)]
 pub struct HomeFeedProvider {
     read: Arc<dyn Fn(HomeFeedRequest) + Send + Sync>,
+    older: Option<Arc<dyn Fn(HomeFeedRequest) + Send + Sync>>,
 }
 
 #[derive(Clone)]
@@ -78,7 +79,39 @@ impl HomeFeedProvider {
     pub fn new(read: impl Fn(HomeFeedRequest) + Send + Sync + 'static) -> Self {
         Self {
             read: Arc::new(read),
+            older: None,
         }
+    }
+
+    #[must_use]
+    pub fn with_older(
+        read: impl Fn(HomeFeedRequest) + Send + Sync + 'static,
+        older: impl Fn(HomeFeedRequest) + Send + Sync + 'static,
+    ) -> Self {
+        Self {
+            read: Arc::new(read),
+            older: Some(Arc::new(older)),
+        }
+    }
+
+    #[must_use]
+    pub fn supports_older(&self) -> bool {
+        self.older.is_some()
+    }
+
+    pub fn load_older(
+        &self,
+        owner: String,
+        complete: Callback<HomeFeedView>,
+    ) -> Option<HomeFeedLease> {
+        let older = self.older.as_ref()?;
+        let lease = HomeFeedLease::new();
+        older(HomeFeedRequest {
+            owner,
+            complete: HomeFeedComplete { complete },
+            lease: lease.clone(),
+        });
+        Some(lease)
     }
 
     pub fn read(&self, owner: String, complete: Callback<HomeFeedView>) -> HomeFeedLease {

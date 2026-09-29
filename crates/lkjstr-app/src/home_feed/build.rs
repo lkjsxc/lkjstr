@@ -20,6 +20,7 @@ pub fn build_home_feed_view(input: HomeFeedViewInput) -> HomeFeedView {
         }
     };
     let footer = footer_state.unwrap_or_else(|| footer_row_from_window(&feed_id, &input.window));
+    let footer = super::paging::home_older_footer(&input, footer, live_query.is_some());
     let view_model = build_feed_view_model(FeedViewModelInput {
         feed_id,
         display_context: EventDisplayContext::Timeline,
