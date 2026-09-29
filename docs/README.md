@@ -17,6 +17,7 @@ changed. Each docs directory has one README that acts as a table of contents.
 - [architecture/privacy/README.md](architecture/privacy/README.md): consent storage and optional processing.
 - [operations/README.md](operations/README.md): checks, Docker, and safety.
 - [operations/self-hosting.md](operations/self-hosting.md): Rust HTTP runtime and private deployment boundary.
+- [Home history frontier](operations/verification/home-history-frontier.md): bounded continuation evidence and limits.
 - [execution/README.md](execution/README.md): execution queue and blockers.
 - [repository/README.md](repository/README.md): workflow and style rules.
 - [security/README.md](security/README.md): local keys and content safety.
