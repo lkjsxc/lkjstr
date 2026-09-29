@@ -2,7 +2,6 @@ use std::cell::{Cell, RefCell};
 use std::collections::BTreeMap;
 use std::rc::Rc;
 
-use lkjstr_app::home_feed::paging::home_event_before_cursor;
 use crate::home_feed_relay_model::HomeRelayReadOutput;
 use lkjstr_protocol::{ClientMessage, NostrFilter, RelayMessage, encode_client_message};
 use lkjstr_relays::{
@@ -119,7 +118,6 @@ impl HomeRelayRead {
     fn event(&self, relay: &str, event: lkjstr_protocol::NostrEvent) {
         if self.done.get() || self.relay_done(relay)
             || !lkjstr_protocol::matches_any_filter(&event, &self.filters)
-            || self.input.before.as_ref().is_some_and(|before| !home_event_before_cursor(&event, before))
         {
             return;
         }

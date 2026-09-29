@@ -57,7 +57,8 @@ impl HomeRelayRead {
 
     pub(super) fn publish(&self, reason: &str) {
         let snapshot = progressive_read_snapshot(&self.state.borrow(), reason, browser_now_ms());
-        (self.complete)(output_from_snapshot(&self.input, snapshot));
+        let relays = self.state.borrow().relays.clone();
+        (self.complete)(output_from_snapshot(&self.input, snapshot, &relays, &self.filters));
     }
 
     pub(super) fn close_all(&self) {

@@ -33,14 +33,14 @@ pub(crate) fn start_home_relay_read(
     }
     let sub_id = initial_relay_subscription_id("home", Some(&plan.fingerprint));
     let mut filters = plan.demand.filters;
+    let scopes = relays.len().saturating_mul(filters.len()).max(1);
+    let budget = crate::home_feed_host::WINDOW_MAX.saturating_sub(1) / scopes;
+    let target = if input.older { crate::home_feed_host::WINDOW_MAX as u64 } else { PAGE_SIZE };
+    let limit = (budget.max(1) as u64).min(target);
     for filter in &mut filters {
-        filter.until = Some(input.now_sec);
-        filter.limit = Some(PAGE_SIZE);
-        if let Some(before) = &input.before {
-            filter.since = None;
-            filter.until = Some(before.created_at);
-            filter.limit = Some(crate::home_feed_host::WINDOW_MAX as u64);
-        }
+        filter.since = None;
+        filter.until = Some(input.before.as_ref().map_or(input.now_sec, |before| before.created_at));
+        filter.limit = Some(limit);
     }
     Some(start_read(input, sub_id, filters, relays, complete))
 }

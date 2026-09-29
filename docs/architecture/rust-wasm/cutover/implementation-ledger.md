@@ -16,8 +16,11 @@ requires real behavior, focused tests, a no-import proof, and an updated row in
 
 2026-09-29: Rust Home now owns an explicit older-read command, inclusive compound
 cursor admission, a rolling 180-event window, and owner-bound request cleanup.
-The initial bounded read requests 30 events rather than a 30-second live range.
-See [focused proof and remaining boundaries](../../../operations/verification/home-history.md).
+The initial read targets at most 30 events per scope within a shared budget,
+not a 30-second live range. A separate common relay/filter frontier now prevents
+sparse-tail skips; gap refill keeps its nearest prefix and pins incomplete or
+stationary scope evidence. See [continuation proof and limits](../../../operations/verification/home-history-frontier.md)
+and the [earlier explicit-history slice](../../../operations/verification/home-history.md).
 Shared-feed and Home rows remain partial: routing/cache parity, automatic paging,
 and retained TypeScript/Svelte deletion have not been completed.
 

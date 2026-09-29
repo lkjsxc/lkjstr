@@ -54,7 +54,8 @@ impl HomeRelayState {
         let entry = state.entries.get_mut(&request.owner)?;
         if entry.busy || request.is_released() { return None; }
         let mut input = entry.input.clone()?;
-        input.before = Some(input.cache_window.oldest_cursor.clone()?);
+        input.cache_window.oldest_cursor.as_ref()?;
+        input.older = true;
         entry.busy = true;
         entry.older = Some(request.clone());
         Some((entry.generation, input, entry.slot.clone()))

@@ -2,7 +2,7 @@ use lkjstr_app::{
     FeedFragmentConfig, HomeFeedDiagnosticInput,
     HomeFeedSourceState, HomeFeedView, HomeFeedViewInput, HomeFollowState,
     ProtectedAccountAvailability, build_home_feed_view,
-    home_feed::paging::home_window_from_snapshot,
+    home_feed::paging::{home_history_cursor, home_window_from_snapshot},
 };
 use lkjstr_relays::{DemandVisibility, ProgressiveReadSnapshot, ProgressiveReadStatus};
 
@@ -20,19 +20,22 @@ pub(crate) struct HomeRelayReadOutput {
 pub(crate) fn output_from_snapshot(
     input: &HomeRelayReadInput,
     snapshot: ProgressiveReadSnapshot,
+    relays: &[String],
+    filters: &[lkjstr_protocol::NostrFilter],
 ) -> HomeRelayReadOutput {
     let mut source_state = source_state(&snapshot);
     let mut diagnostics = relay_diagnostics(input, &snapshot);
-    let window = home_window_from_snapshot(&input.cache_window, snapshot, input.before.as_ref());
+    let window = home_window_from_snapshot(&input.cache_window, snapshot.clone(), input.before.as_ref());
+    let before = home_history_cursor(&snapshot, relays, filters, input.before.as_ref(), window.oldest_cursor.as_ref());
     let finished = window.terminal;
-    if input.before.is_some() && finished
-        && window.oldest_cursor == input.cache_window.oldest_cursor
+    if input.older && finished
+        && before == input.before
     {
         let reason = "Selected relays did not advance the bounded Home history read; older history remains unproven.";
         diagnostics.push(diagnostic("older-no-progress", reason));
         source_state = HomeFeedSourceState::Partial { reason: reason.to_owned(), retry_available: true };
     }
-    let next_input = HomeRelayReadInput { cache_window: window.clone(), ..input.clone() };
+    let next_input = HomeRelayReadInput { before, cache_window: window.clone(), ..input.clone() };
     let model = build_home_feed_view(HomeFeedViewInput {
         owner: input.owner.clone(),
         account: ProtectedAccountAvailability::selected(input.active_pubkey.clone()),

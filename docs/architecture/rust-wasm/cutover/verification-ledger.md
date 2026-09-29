@@ -11,7 +11,7 @@ Readiness requires passing focused checks and a run or explicit omission of Dock
 
 ## Recent Evidence
 
-2026-09-29: [Home history proof](../../../operations/verification/home-history.md) records 9 native and 2 manual Chrome checks and artifact status.
+2026-09-29: [Home history continuation proof](../../../operations/verification/home-history-frontier.md) records checks, artifacts, and limits.
 
 2026-07-01 notifications/publish proof: empty Notifications windows keep older-read evidence. Tweet exits storage/signer/archive failures. Docker passed.
 2026-07-01 post-display startup policy proof: surface policy,

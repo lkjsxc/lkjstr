@@ -43,7 +43,7 @@ async fn explicit_history_preserves_scope_ties_and_cleanup() -> Result<(), JsVal
     wait_for_text("history initial note").await?;
     wait_for_text("Load older").await?;
     check(
-        "__homeHistory.requests.length > 0 && __homeHistory.requests.every(r => r.filters.every(f => f.limit === 30 && f.since === undefined && f.until > 100 && f.authors.join(',') === ['a'.repeat(64), 'b'.repeat(64)].join(',')))",
+        "__homeHistory.requests.length > 0 && __homeHistory.requests.every(r => r.filters.every(f => f.limit === Math.min(30, Math.max(1, Math.floor(179 / __homeHistory.requests.length))) && f.since === undefined && f.until > 100 && f.authors.join(',') === ['a'.repeat(64), 'b'.repeat(64)].join(',')))",
     )?;
     js_sys::eval("__homeHistory.initialCount = __homeHistory.requests.length")?;
     click("[data-testid='home-load-older']")?;
@@ -52,7 +52,7 @@ async fn explicit_history_preserves_scope_ties_and_cleanup() -> Result<(), JsVal
     check("document.querySelector('[data-testid=home-load-older]').disabled")?;
     check("__homeHistory.requests.length === __homeHistory.initialCount * 2")?;
     check(
-        "__homeHistory.requests.slice(__homeHistory.initialCount).every(r => __homeHistory.requests.slice(0, __homeHistory.initialCount).some(initial => initial.url === r.url) && r.filters.every(f => f.until === 100 && f.since === undefined && f.limit === 180 && f.authors.join(',') === ['a'.repeat(64), 'b'.repeat(64)].join(',')))",
+        "__homeHistory.requests.slice(__homeHistory.initialCount).every(r => __homeHistory.requests.slice(0, __homeHistory.initialCount).some(initial => initial.url === r.url) && r.filters.every(f => f.until === 100 && f.since === undefined && f.limit === Math.floor(179 / __homeHistory.initialCount) && f.authors.join(',') === ['a'.repeat(64), 'b'.repeat(64)].join(',')))",
     )?;
     js_sys::eval("__homeHistory.flush(false)")?;
     wait_for_text("history older note").await?;
@@ -80,6 +80,77 @@ async fn explicit_history_preserves_scope_ties_and_cleanup() -> Result<(), JsVal
     next_task().await?;
     assert!(cleanup.parent.text_content().unwrap_or_default().is_empty());
     Ok(())
+}
+
+#[wasm_bindgen_test(async)]
+async fn relay_frontier_prevents_sparse_tail_skips_and_pins_failed_or_tied_reads()
+-> Result<(), JsValue> {
+    let document = web_sys::window()
+        .and_then(|w| w.document())
+        .ok_or("document")?;
+    let parent = document
+        .create_element("div")?
+        .dyn_into::<web_sys::HtmlElement>()?;
+    document.body().ok_or("body")?.append_child(&parent)?;
+    install()?;
+    js_sys::eval("__homeHistory.sparse = true")?;
+    let unmount = mount_home_island(
+        parent.clone(),
+        "gap-owner".to_owned(),
+        Some("a".repeat(64)),
+        provider_with_page_account(
+            "home-gap-proof".to_owned(),
+            "http://%".to_owned(),
+            "a".repeat(64),
+        ),
+        HomeIslandActions {
+            open_profile: None,
+            open_thread: None,
+            open_author_context: None,
+            copy_event_id: None,
+        },
+    );
+    let mut cleanup = Cleanup {
+        unmount: Box::new(unmount),
+        parent,
+    };
+    wait_for_text("history initial note").await?;
+    wait_for_text("sparse initial tail").await?;
+    wait_for_text("Load older").await?;
+    js_sys::eval("__homeHistory.initialCount = __homeHistory.requests.length")?;
+    check("__homeHistory.initialCount > 1")?;
+    request_until(100).await?;
+    check(
+        "__homeHistory.requests.slice(-__homeHistory.initialCount).flatMap(r => r.filters).reduce((n, f) => n + f.limit, 0) <= 179",
+    )?;
+    js_sys::eval("__homeHistory.flushGap()")?;
+    wait_for_text("dense history gap").await?;
+    request_until(90).await?;
+    js_sys::eval("__homeHistory.flushGap('fail')")?;
+    wait_for_text("dense failed-read row").await?;
+    wait_for_text("older history remains unproven").await?;
+    request_until(90).await?;
+    js_sys::eval("__homeHistory.flushGap('tied')")?;
+    wait_for_text("sparse tied-boundary row").await?;
+    wait_for_text("older history remains unproven").await?;
+    request_until(90).await?;
+    (cleanup.unmount)();
+    next_task().await?;
+    check("__homeHistory.sockets.every(socket => socket.readyState === 3)")?;
+    js_sys::eval("__homeHistory.flushGap()")?;
+    next_task().await?;
+    assert!(cleanup.parent.text_content().unwrap_or_default().is_empty());
+    Ok(())
+}
+
+async fn request_until(until: u64) -> Result<(), JsValue> {
+    next_task().await?;
+    check("!document.querySelector('[data-testid=home-load-older]').disabled")?;
+    click("[data-testid='home-load-older']")?;
+    wait_pending().await?;
+    check(&format!(
+        "__homeHistory.requests.slice(-__homeHistory.initialCount).every(r => r.filters.every(f => f.until === {until}))"
+    ))
 }
 
 async fn wait_pending() -> Result<(), JsValue> {

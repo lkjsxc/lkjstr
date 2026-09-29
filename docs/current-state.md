@@ -46,9 +46,12 @@ split by ownership under [current-state/README.md](current-state/README.md).
 - Rust Home supports explicit older reads with inclusive timestamp/id boundaries,
   selected author/relay scope, deduplication, a rolling 180-event window, and
   owner-bound cancellation. Nonadvancing replies remain diagnosed and retryable.
-  Initial relay history is a latest-30-event read, not a last-30-second scan.
-  [Home history proof](operations/verification/home-history.md) records the exact
-  boundary; routing/cache parity and automatic older scrolling remain open.
+  Initial history targets at most 30 events per scope within a shared read
+  budget, not a last-30-second scan. A separate relay/filter continuation
+  prevents sparse displayed tails from skipping dense history; bounded gap
+  refill retains the nearest prefix. [Continuation proof and limits](operations/verification/home-history-frontier.md)
+  distinguish this conservative cursor from independent scope scheduling,
+  cache coverage, routing parity, and automatic older scrolling.
 - Rust/WASM build tools are verification dependencies, not browser runtime
   dependencies. Missing local development WASM assets render explicit
   bridge-unavailable states rather than raw Node or toolchain errors. Production

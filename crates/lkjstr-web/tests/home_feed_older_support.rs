@@ -13,6 +13,17 @@ pub fn install() -> Result<(), JsValue> {
     follow.tags = [['p', 'b'.repeat(64)]];
     const initial = event('2', 100, 'history initial note');
     const history = window.__homeHistory = { requests: [], pending: [], sockets: [] };
+    history.flushGap = (mode = 'advance') => {
+      for (const {socket, sub} of history.pending.splice(0)) {
+        const dense = socket.url === history.requests[0].url;
+        const items = dense
+          ? [mode === 'fail' ? event('6', 80, 'dense failed-read row') : event('4', 90, 'dense history gap')]
+          : [mode === 'tied' ? event('7', 8, 'sparse tied-boundary row') : event('5', 9, 'sparse history tail')];
+        for (const item of items) socket.onmessage?.({data: JSON.stringify(['EVENT', sub, item])});
+        const end = !dense && mode === 'fail' ? ['CLOSED', sub, 'fixture error'] : ['EOSE', sub];
+        socket.onmessage?.({data: JSON.stringify(end)});
+      }
+    };
     history.flush = (empty) => {
       const events = empty ? [] : [
         initial, event('1', 100, 'rejected lower tied id'),
@@ -42,12 +53,14 @@ pub fn install() -> Result<(), JsValue> {
         const sub = frame[1], filters = frame.slice(2);
         const isFollow = filters.some(f => f.kinds?.includes(3));
         if (!isFollow) history.requests.push({url: this.url, filters});
-        if (!isFollow && filters.some(f => f.limit === 180)) {
+        if (!isFollow && filters.some(f => f.until <= 100)) {
           history.pending.push({socket: this, sub});
           return;
         }
         setTimeout(() => {
-          this.onmessage?.({data: JSON.stringify(['EVENT', sub, isFollow ? follow : initial])});
+          const note = history.sparse && this.url !== history.requests[0]?.url
+            ? event('9', 10, 'sparse initial tail') : initial;
+          this.onmessage?.({data: JSON.stringify(['EVENT', sub, isFollow ? follow : note])});
           this.onmessage?.({data: JSON.stringify(['EOSE', sub])});
         }, 0);
       }
