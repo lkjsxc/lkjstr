@@ -289,6 +289,142 @@ async function run(browser: Browser): Promise<void> {
     (await link.locator('.profile').evaluate((e) => getComputedStyle(e).position)) === 'static',
   );
   await link.context().close();
+  await reading(browser, still);
+}
+
+/** The filter bar that stays away, the media tab, the emoji picker, the notification toggles. */
+async function reading(browser: Browser, still: Record<string, unknown>): Promise<void> {
+  const page = await open(browser, '/', still);
+  const home = '.pane:has(.tab.active[data-view="home"])';
+  const feed = '.view[data-kind="home"]';
+  fact('no filter bar until asked', (await count(page, `${feed} .rbar`)) === 0);
+  await page.locator(`${home} .strip > .icon`).first().click();
+  const item = page.locator('.menu button').first();
+  fact('the tile menu offers the filter', (await item.innerText()).includes('Filter'));
+  await page.keyboard.press('Escape');
+  await page.keyboard.press('/');
+  fact(
+    '"/" shows the filter with the keyboard in it',
+    await page.evaluate(() => document.activeElement?.matches('.rbar input') === true),
+  );
+  await page.keyboard.type('zzzz');
+  await page.waitForTimeout(400);
+  await page.keyboard.press('Escape');
+  await page.keyboard.press('Escape');
+  fact('a narrowing filter stays in view', (await count(page, `${feed} .rbar`)) === 1);
+  await page.locator(`${feed} .rbar input`).fill('');
+  await page.waitForTimeout(400);
+  await page.keyboard.press('Escape');
+  fact('Escape puts an empty filter away', (await count(page, `${feed} .rbar`)) === 0);
+  await page.locator(`${feed} .note`).first().waitFor();
+  const times = await page.locator(`${feed} .day ~ .note time`).allInnerTexts();
+  fact(
+    'older notes carry their date',
+    times.every((x) => /^\d{4}\/\d\d\/\d\d \d\d:\d\d$/.test(x)),
+    times.slice(0, 3),
+  );
+
+  // A picture opens as a tab in the neighbouring tile; Escape closes it and the keyboard is back on the picture.
+  const panes = await count(page, '.pane');
+  const box = page.locator(`${feed} .mbox`).first();
+  await box.scrollIntoViewIfNeeded();
+  const top = await page.locator(feed).evaluate((e) => e.scrollTop);
+  await box.click();
+  await page.locator('.mstage img').waitFor();
+  fact(
+    'media opens beside, as a tab, with the keyboard',
+    (await count(page, '.pane')) === panes &&
+      (await count(page, '.layer > *')) === 0 &&
+      (await count(page, `${home} .tab[data-view^="media"]`)) === 0 &&
+      (await count(page, '.tab.active[data-view^="media"]')) === 1 &&
+      (await page.evaluate(() => document.activeElement?.matches('.mview') === true)),
+  );
+  const scale = (): Promise<string> => page.locator('.mscale').innerText();
+  const fitted = await scale();
+  const stage = await center(page, '.mstage');
+  await page.mouse.move(stage.x, stage.y);
+  await page.mouse.wheel(0, -400);
+  fact('the wheel zooms', (await scale()) !== fitted, [fitted, await scale()]);
+  await page.keyboard.press('Escape');
+  fact(
+    'Escape closes the media tab and returns to the picture',
+    (await count(page, '.tab[data-view^="media"]')) === 0 &&
+      (await page.evaluate(() => document.activeElement?.matches('.mbox') === true)) &&
+      (await page.locator(feed).evaluate((e) => e.scrollTop)) === top,
+  );
+
+  // The picker: search in either language, the choice becomes the reader's reaction, the row keeps its place.
+  await page.locator(feed).evaluate((e) => (e.scrollTop = 0));
+  const note = page.locator(`${feed} .note`).nth(2);
+  const smile = note.locator('.a-smile');
+  const y = (await smile.boundingBox())?.y;
+  await smile.click();
+  await page.locator('.epick').waitFor();
+  await page.locator('.ecell img').first().waitFor(); // the account's custom emoji arrive from the engine
+  await page.keyboard.type('ねこ');
+  await page.keyboard.press('Enter');
+  await note.locator('.rchip.on').waitFor();
+  fact(
+    'a picked emoji is the reaction; the action row did not move',
+    (await count(page, '.epick')) === 0 &&
+      (await note.locator('.rchip.on').innerText()).includes('🐱') &&
+      (await note.locator('.a-smile').boundingBox())?.y === y,
+  );
+  await note.locator('.a-smile').click();
+  fact('the latest emoji comes first', (await page.locator('.ecell').first().innerText()) === '🐱');
+  await page.keyboard.press('Escape');
+
+  const notes = '.view[data-kind="notifications"]';
+  fact('five notification toggles', (await count(page, `${notes} .ntype`)) === 5);
+  await page.locator(`${notes} .ntype`).nth(3).click();
+  await page.waitForTimeout(300);
+  fact(
+    'a toggle narrows notifications to its kind',
+    (await count(page, `${notes} .notif`)) > 0 &&
+      (await count(page, `${notes} .notif`)) ===
+        (await count(page, `${notes} .notif:has(.k-zap)`)) &&
+      (await count(page, `${notes} .note`)) === 0,
+  );
+  await page.reload();
+  await page.locator(`${notes} .ntype.on`).waitFor();
+  fact('the toggle is remembered', (await count(page, `${notes} .ntype.on`)) === 1);
+  await page.context().close();
+
+  // A phone: one tile, so the media tab opens in it; a finger gets 40px.
+  const ctx = await browser.newContext({
+    viewport: { width: 390, height: 844 },
+    hasTouch: true,
+    isMobile: true,
+  });
+  await ctx.addInitScript(() => localStorage.setItem('lkjstr:mock', '{"live":false}'));
+  const phone = await ctx.newPage();
+  phone.on('pageerror', (e) => failures.push(`pageerror: ${e.message}`));
+  await phone.goto(base);
+  await phone.locator('.mbox').first().scrollIntoViewIfNeeded();
+  const small = await phone
+    .locator('.note .act, .strip > .icon')
+    .evaluateAll(
+      (els) =>
+        els.map((e) => e.getBoundingClientRect()).filter((r) => r.width < 40 || r.height < 32)
+          .length,
+    );
+  fact('touch targets are finger sized', small === 0, small);
+  await phone.locator('.mbox').first().tap();
+  await phone.locator('.mstage img').waitFor();
+  const bar = await phone.locator('.mbar a.icon').boundingBox();
+  fact(
+    'phone: media is a tab in the one tile',
+    (await count(phone, '.pane')) === 1 &&
+      (bar?.height ?? 0) >= 40 &&
+      (await phone.evaluate(() => document.documentElement.scrollWidth <= innerWidth)),
+  );
+  if (shot) await phone.screenshot({ path: shot.replace(/\.png$/, '-media-390.png') });
+  await phone.locator('.tab.active .x').tap();
+  fact(
+    'phone: closing returns to the feed',
+    (await count(phone, '.tab.active[data-view="home"]')) === 1,
+  );
+  await ctx.close();
 }
 
 if (!existsSync(`${here}../dist/index.html`)) throw new Error('build first: pnpm build');

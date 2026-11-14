@@ -1,5 +1,6 @@
 // The filter of a feed: part of the tab and saved with it. A bar of ▶ and a text field (as in ytenrich's lists);
-// ▶ opens the rest: replies, reposts, media, period.
+// ▶ opens the rest: replies, reposts, media, period. The bar is out of the way until it is asked for (the tile's
+// menu, or "/"), and stays in view for as long as it narrows anything.
 import type { Query } from '../engine/protocol.ts';
 import { h } from '../shared/h.ts';
 import { type Key, t } from '../shared/i18n.ts';
@@ -11,6 +12,8 @@ export type Filter = {
   media?: 'only' | 'none';
   range?: 'day' | 'week';
   open?: boolean;
+  /** The reader asked for the bar. */
+  shown?: boolean;
 };
 
 /** The query fields a filter stands for. Pure, tested. */
@@ -25,11 +28,15 @@ export function filterQuery(f: Filter, now: number): Partial<Query> {
 }
 export const filterActive = (f: Filter): boolean =>
   f.replies === false || f.reposts === false || Boolean(f.media) || Boolean(f.range);
+/** Whether the feed is narrowed at all: then the bar is in view whether it was asked for or not. */
+export const filterNarrows = (f: Filter): boolean => filterActive(f) || Boolean(f.text?.trim());
 
 export function filterBar(
   f: Filter,
   placeholder: Key,
   change: (next: Filter, typing: boolean) => void,
+  /** Escape in an empty field. */
+  leave: () => void,
 ): HTMLElement {
   const seg = <T>(
     label: Key,
@@ -120,6 +127,9 @@ export function filterBar(
   input.addEventListener('input', () => {
     clearTimeout(timer);
     timer = setTimeout(() => change({ ...f, text: input.value }, true), 250);
+  });
+  input.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape' && !input.value) e.preventDefault(), leave();
   });
   return h('div', { class: 'fbar' }, h('div', { class: 'rbar' }, toggle, input), panel);
 }

@@ -33,7 +33,9 @@ export function createWmController(env: BaseEnv, host: Host, at: Space): Wm {
   let root: L.LayoutNode = load(at.stored) ?? preset();
   let rendered: Rendered | undefined;
   let disposed = false;
-  let touched = ''; // the pane last pressed or opened into
+  let touched = ''; // the pane last pressed, focused or opened into
+  /** For a tab opened beside its reader: the tab that was in front there and what had the keyboard. */
+  const back = new Map<string, { view: string; el?: HTMLElement }>(); // bound: one per such open tab
 
   const used = (): Set<string> => new Set(L.views(root));
   const set = (next: L.LayoutNode | null, save = true): void => {
@@ -47,8 +49,15 @@ export function createWmController(env: BaseEnv, host: Host, at: Space): Wm {
     const p = L.paneOfView(root, view);
     const i = p?.tabs.indexOf(view) ?? -1;
     const beside = p && p.active === view ? (p.tabs[i + 1] ?? p.tabs[i - 1]) : undefined;
+    const from = back.get(view);
+    back.delete(view);
+    // A tab opened from a note gives its place back to what was in front before it, and the keyboard to the reader.
+    const prior = from && p?.tabs.includes(from.view) && p.active === view ? from.view : beside;
     const next = L.removeView(root, view);
-    set(next && beside ? L.activate(next, beside) : next);
+    set(next && prior ? L.activate(next, prior) : next);
+    if (!from?.el?.isConnected) return;
+    from.el.focus({ preventScroll: true });
+    mark(from.el.closest('.pane')?.getAttribute('data-pane') ?? touched);
   };
   /** A new tab right after `from` in its tile, in front (`split`: in a new tile beside; `background`: behind). */
   const openFrom =
@@ -61,7 +70,14 @@ export function createWmController(env: BaseEnv, host: Host, at: Space): Wm {
       touched = p.id;
       if (opts.split) return set(L.addView(root, p.id, tab, 'right'));
       const at = p.tabs.includes(from) ? p.tabs.indexOf(from) + 1 : p.tabs.length;
-      const next = L.moveView(root, tab, p.id, 'center', at);
+      const all = L.panes(root);
+      const i = all.findIndex((x) => x.id === p.id);
+      const q = opts.beside ? (all[i + 1] ?? all[i - 1]) : undefined;
+      if (opts.beside) back.set(tab, { view: (q ?? p).active, el: opts.from });
+      if (q) touched = q.id;
+      const next = q
+        ? L.moveView(root, tab, q.id, 'center', q.tabs.length)
+        : L.moveView(root, tab, p.id, 'center', at);
       set(opts.background ? L.activate(next, p.active) : next);
     };
 
@@ -124,6 +140,7 @@ export function createWmController(env: BaseEnv, host: Host, at: Space): Wm {
     onPaneMenu(p: L.PaneNode, button: HTMLElement) {
       const splitTo = (zone: L.Zone) => () => set(L.moveView(root, p.active, p.id, zone));
       openMenu(host.layer, button, [
+        ...own.menu(p.active),
         { label: t('pane.splitRight'), run: splitTo('right'), disabled: p.tabs.length < 2 },
         { label: t('pane.splitDown'), run: splitTo('bottom'), disabled: p.tabs.length < 2 },
         { label: t('pane.close'), run: () => set(L.closePane(root, p.id)) },
@@ -140,9 +157,19 @@ export function createWmController(env: BaseEnv, host: Host, at: Space): Wm {
     },
   };
 
+  /** The tile keys go to (`.cur`): the one last pressed or focused. */
+  const mark = (id: string): void => {
+    const all = L.panes(root);
+    touched = all.some((x) => x.id === id) ? id : (all[0]?.id ?? '');
+    for (const [pid, el] of rendered?.panes ?? []) el.classList.toggle('cur', pid === touched);
+  };
   function render(): void {
     if (disposed) return;
     own.stash();
+    // Rebuilding the tiles detaches every view for a moment: what had the keyboard gets it back.
+    const focused = host.root.contains(document.activeElement)
+      ? (document.activeElement as HTMLElement)
+      : null;
     rendered = renderLayout(root, ctx);
     host.root.replaceChildren(rendered.el);
     for (const [view, body] of rendered.bodies) {
@@ -150,11 +177,14 @@ export function createWmController(env: BaseEnv, host: Host, at: Space): Wm {
       if (el) body.append(el);
     }
     own.sync(used());
+    mark(touched);
+    if (focused?.isConnected && !host.root.contains(document.activeElement))
+      focused.focus({ preventScroll: true });
   }
-  const onPress = (e: Event): void => {
-    touched = (e.target as Element).closest?.('.pane')?.getAttribute('data-pane') ?? touched;
-  };
+  const onPress = (e: Event): void =>
+    mark((e.target as Element).closest?.('.pane')?.getAttribute('data-pane') ?? touched);
   host.root.addEventListener('pointerdown', onPress, true);
+  host.root.addEventListener('focusin', onPress);
 
   // Follow layout changes made elsewhere (a reset from Settings, an edit in another browser tab).
   const offStore = at.watch((value) => {
@@ -169,6 +199,7 @@ export function createWmController(env: BaseEnv, host: Host, at: Space): Wm {
       disposed = true;
       offStore();
       host.root.removeEventListener('pointerdown', onPress, true);
+      host.root.removeEventListener('focusin', onPress);
       own.dispose();
       host.root.replaceChildren();
     },

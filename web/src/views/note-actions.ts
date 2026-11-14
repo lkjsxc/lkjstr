@@ -1,11 +1,12 @@
-// What can be done with a note: the reaction chips and the icon row (reply, repost or quote, react, zap,
-// bookmark, more). Every action shows at once (the engine patches the row) and reports a failure in words.
+// What can be done with a note: the icon row (reply, repost or quote, any emoji, like, zap, bookmark, more) and
+// under it the reaction chips, so the row never moves when the first reaction arrives. Every action shows at once (the engine patches the row) and reports a failure in words.
 import type { Action, NoteRow } from '../engine/protocol.ts';
 import { countText } from '../shared/format.ts';
 import { h } from '../shared/h.ts';
 import { getLang, type Key, t } from '../shared/i18n.ts';
 import { type IconName, icon } from '../shared/icons.ts';
 import { openMenu } from '../wm/menus.ts';
+import { openEmojiPicker } from './emoji-picker.ts';
 import { copy, emojiImg, plainName, toast } from './parts.ts';
 import type { ViewEnv } from './registry.ts';
 
@@ -48,6 +49,7 @@ export function reactionChips(row: NoteRow, env: ViewEnv): HTMLElement | null {
         {
           class: r.mine ? 'rchip on' : 'rchip',
           title: r.emoji,
+          'data-emoji': r.emoji,
           'aria-pressed': r.mine,
           onclick: (e) => (e.stopPropagation(), react(env, row, r.emoji, r.url, !r.mine)),
         },
@@ -102,6 +104,9 @@ export function actionRow(row: NoteRow, env: ViewEnv): HTMLElement {
           : { label: t('act.repost'), run: publish({ k: 'repost', id: row.id }) },
         { label: t('act.quote'), run: () => env.open('compose', quote) },
       ]),
+    ),
+    button('smile', 'emoji.pick', '', false, (el) =>
+      openEmojiPicker(env, el, (p) => react(env, row, p.emoji, p.url, true)),
     ),
     button('heart', 'act.react', n(row.counts.reactions), Boolean(mine), () =>
       react(env, row, mine?.emoji ?? DEFAULT_REACTION, mine?.url, !mine),

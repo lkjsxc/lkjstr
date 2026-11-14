@@ -28,16 +28,12 @@ export function relativeTime(ms: number, now: number, lang: Lang): string {
   return dayOf(ms);
 }
 
-export type TimeStyle = {
-  readonly relative: boolean;
-  readonly lang: Lang;
-  /** A date divider above already names the day: the time of day is enough. */
-  readonly dated: boolean;
-};
-/** The time on a note: `HH:mm` within the day (or under a date divider), the date and time for an older one. */
+export type TimeStyle = { readonly relative: boolean; readonly lang: Lang };
+/** The time on a note: `HH:mm` today; the date and the time for anything older, wherever it is drawn (a note
+ * read far below its date divider still says which day it is from). */
 export function noteTime(ms: number, now: number, style: TimeStyle): string {
   if (style.relative) return relativeTime(ms, now, style.lang);
-  return style.dated || dayOf(ms) === dayOf(now) ? clockOf(ms) : `${dayOf(ms)} ${clockOf(ms)}`;
+  return dayOf(ms) === dayOf(now) ? clockOf(ms) : `${dayOf(ms)} ${clockOf(ms)}`;
 }
 
 /** A count: exact below 1000, then shortened (`1.2k`, `3.4M`; `1.2万` in Japanese). `partial` adds `+`. */

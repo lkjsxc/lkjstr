@@ -1,11 +1,14 @@
 import { describe, expect, it } from 'vitest';
+import { findGlyphs, isEmoji } from '../src/shared/emoji-data.ts';
 import { clockOf, countText, dayOf, noteTime } from '../src/shared/format.ts';
 import { both, resolveLang } from '../src/shared/i18n.ts';
 import { keyLabel } from '../src/shared/platform.ts';
 import { DEFAULT_SETTINGS, parseSettings, SETTINGS_SCHEMA } from '../src/shared/settings.ts';
 import { en } from '../src/shared/strings-en.ts';
 import { ja } from '../src/shared/strings-ja.ts';
-import { filterActive, filterQuery } from '../src/views/filter-bar.ts';
+import { withRecent } from '../src/views/emoji-picker.ts';
+import { typesQuery } from '../src/views/feed-bar.ts';
+import { filterActive, filterNarrows, filterQuery } from '../src/views/filter-bar.ts';
 import { freshTab, kindOf, VIEWS } from '../src/views/registry.ts';
 import { matchesWords } from '../src/wm/launcher.ts';
 import * as L from '../src/wm/layout.ts';
@@ -109,16 +112,11 @@ describe('formats', () => {
   it('dates are absolute: yyyy/mm/dd, HH:mm within the day', () => {
     expect(dayOf(at)).toBe('2026/11/14');
     expect(clockOf(at)).toBe('09:05');
-    expect(noteTime(at, now, { relative: false, lang: 'en', dated: false })).toBe('09:05');
-    expect(noteTime(at - 86_400_000, now, { relative: false, lang: 'ja', dated: false })).toBe(
+    expect(noteTime(at, now, { relative: false, lang: 'en' })).toBe('09:05');
+    expect(noteTime(at - 86_400_000, now, { relative: false, lang: 'ja' })).toBe(
       '2026/11/13 09:05',
     );
-    expect(noteTime(at - 86_400_000, now, { relative: false, lang: 'ja', dated: true })).toBe(
-      '09:05',
-    );
-    expect(noteTime(now - 180_000, now, { relative: true, lang: 'ja', dated: false })).toBe(
-      '3分前',
-    );
+    expect(noteTime(now - 180_000, now, { relative: true, lang: 'ja' })).toBe('3分前');
   });
   it('counts shorten, and say when they are lower bounds', () => {
     expect(countText(12, true, 'en')).toBe('12+');
@@ -132,6 +130,22 @@ describe('formats', () => {
     ).toEqual({ text: '猫', replies: false, media: 'only', since: 0 });
     expect(filterActive({ text: 'x' })).toBe(false);
     expect(filterActive({ reposts: false })).toBe(true);
+    expect(filterNarrows({ text: 'x' })).toBe(true);
+    expect(filterNarrows({ shown: true, open: true, text: ' ' })).toBe(false);
+  });
+  it('notification toggles: nothing picked is everything; replies bring mentions', () => {
+    expect(typesQuery([])).toBeUndefined();
+    expect(typesQuery(['reply', 'zap'])).toEqual(['reply', 'mention', 'zap']);
+  });
+  it('emoji are found in both languages, and the latest used comes first, once', () => {
+    expect(findGlyphs('cat').map((g) => g.emoji)).toContain('🐱');
+    expect(findGlyphs('ねこ')[0]?.emoji).toBe('🐱');
+    expect(findGlyphs('').length).toBeGreaterThan(120);
+    expect(isEmoji('🫠') && isEmoji('👍🏽') && !isEmoji('ab')).toBe(true);
+    expect(withRecent([{ emoji: 'a' }, { emoji: 'b' }], { emoji: 'b' })).toEqual([
+      { emoji: 'b' },
+      { emoji: 'a' },
+    ]);
   });
   it('settings keep only valid stored values', () => {
     expect(parseSettings({ textSize: 19, theme: 'neon', uiScale: 9 })).toEqual({

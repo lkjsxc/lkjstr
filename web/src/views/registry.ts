@@ -3,11 +3,20 @@ import type { Engine } from '../engine/client.ts';
 import type { Key } from '../shared/i18n.ts';
 import type { SettingsStore } from '../shared/settings.ts';
 import type { Disposer, Signal } from '../shared/signal.ts';
+import type { MenuItem } from '../wm/menus.ts';
 import { mountCompose } from './compose.ts';
 import { mountFeed } from './feed.ts';
+import { mountMedia } from './media.ts';
 import { mountSettings } from './settings.ts';
 
-export type OpenOpts = { readonly split?: boolean; readonly background?: boolean };
+export type OpenOpts = {
+  readonly split?: boolean;
+  readonly background?: boolean;
+  /** In the neighbouring tile (the same one when it is the only tile), so what was being read stays in view. */
+  readonly beside?: boolean;
+  /** What gets the keyboard back when the opened tab closes. */
+  readonly from?: HTMLElement;
+};
 export type ViewEnv = {
   readonly engine: Engine;
   readonly settings: SettingsStore;
@@ -23,6 +32,8 @@ export type ViewEnv = {
   readonly open: (kind: string, state?: object, opts?: OpenOpts) => void;
   /** Closes this tab. */
   readonly close: () => void;
+  /** What this tab adds to its tile's "…" menu, asked each time the menu opens. */
+  readonly menu: (items: () => readonly MenuItem[]) => void;
   /** Forgets every saved layout. */
   readonly resetLayouts: () => void;
 };
@@ -58,6 +69,13 @@ export const VIEWS: readonly ViewDef[] = [
   feed('profile', false),
   feed('following', false),
   feed('followers', false),
+  {
+    id: 'media',
+    title: 'view.media',
+    hint: 'view.media.hint',
+    launch: false,
+    mount: mountMedia,
+  },
   {
     id: 'compose',
     title: 'view.compose',

@@ -160,7 +160,7 @@ export function renderPerson(row: PersonRow, env: ViewEnv): HTMLElement {
 /** "A and B reacted to your note": each person opens their profile, the excerpt opens the reader's note. */
 export function renderNotification(row: NotificationRow, env: ViewEnv): HTMLElement {
   if (row.note && (row.type === 'mention' || row.type === 'reply')) {
-    const el = renderNote(row.note, env, { dated: false });
+    const el = renderNote(row.note, env);
     if (row.unread) el.classList.add('unread');
     return el;
   }
@@ -192,7 +192,6 @@ export function renderNotification(row: NotificationRow, env: ViewEnv): HTMLElem
           noteTime(row.at, Date.now(), {
             relative: env.settings.get().relativeTime,
             lang: getLang(),
-            dated: false,
           }),
         ),
       ),

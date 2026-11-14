@@ -1,13 +1,15 @@
 /* Feeds, the filter bar, the composer. */
 .feed { position: relative; }
-.fbar { position: sticky; top: 0; z-index: 3; padding: 6px 8px; border-bottom: 1px solid var(--line); background: var(--bg); }
+.fslot { position: sticky; top: 0; z-index: 3; }
+.view:focus { outline: none; }
+.fbar { padding: 6px 8px; border-bottom: 1px solid var(--line); background: var(--bg); }
 .fbar .rbar { position: static; margin: 0; padding: 0; }
 .fbar .rpanel { margin: 6px 0 0; }
 .rtoggle, .rbar input { height: 28px; }
 .rtoggle { flex: 0 0 30px; font-size: 11px; }
 .rtoggle.set { color: var(--accent); border-color: var(--accent); }
 .prow > .muted:first-child { flex: 0 0 76px; }
-.fresh { position: sticky; top: 46px; z-index: 4; display: flex; align-items: center; gap: 4px; width: fit-content; height: 26px; margin: 0 auto -26px; padding: 0 12px; border-radius: 13px; background: var(--seal); color: #fff; font-size: 12.5px; font-weight: 600; box-shadow: 0 2px 10px rgba(0, 0, 0, 0.25); }
+.fresh { position: absolute; top: calc(100% + 8px); left: 50%; transform: translateX(-50%); display: flex; align-items: center; gap: 4px; width: max-content; height: 26px; padding: 0 12px; border-radius: 13px; background: var(--seal); color: #fff; font-size: 12.5px; font-weight: 600; box-shadow: 0 2px 10px rgba(0, 0, 0, 0.25); }
 .fresh .i { width: 13px; height: 13px; }
 .fstate { padding: 14px 12px 28px; font-size: 12.5px; text-align: center; }
 .fstate:empty { display: none; }
@@ -32,3 +34,54 @@
 .cresult { font-size: 12.5px; color: var(--muted); }
 .cresult:empty { display: none; }
 @media (prefers-reduced-motion: reduce) { * { transition: none !important; scroll-behavior: auto !important; } }
+/* Notifications: one quiet toggle per kind of news. Nothing picked shows everything. */
+.ntypes { display: flex; gap: 2px; padding: 3px 8px; }
+.ntype { display: grid; place-items: center; width: 34px; height: 28px; border-radius: 6px; color: var(--faint); }
+.ntype:hover { background: var(--hover); color: var(--fg); }
+.ntype.on { background: var(--wash); color: var(--accent); }
+.menu button { display: flex; align-items: center; }
+.menu kbd { margin-left: auto; padding-left: 18px; color: var(--faint); font: inherit; font-size: 12px; }
+/* The media tab: the picture fills the stage and is moved with a transform, so nothing reflows while zooming. */
+.view.mview { display: flex; flex-direction: column; overflow: hidden; background: var(--paper); }
+.mstage { position: relative; flex: 1; min-height: 0; overflow: hidden; user-select: none; }
+.mstage.k-image { cursor: zoom-in; touch-action: none; }
+.mstage.pan { cursor: grab; }
+.mstage img { position: absolute; top: 0; left: 0; max-width: none; transform-origin: 0 0; will-change: transform; }
+.mstage video { display: block; width: 100%; height: 100%; object-fit: contain; background: #000; }
+.mstage.k-audio { display: grid; place-items: center; padding: 0 12px; }
+.mbar { flex: none; display: flex; align-items: center; gap: 2px; min-width: 0; height: 36px; padding: 0 6px; border-top: 1px solid var(--line); background: var(--bg); }
+.mbar .icon { display: grid; place-items: center; flex: none; width: 30px; height: 30px; }
+.mbar .icon:disabled { opacity: 0.3; background: none; cursor: default; }
+.mcount { padding: 0 4px; color: var(--muted); font-size: 12.5px; font-variant-numeric: tabular-nums; white-space: nowrap; }
+.malt { flex: 1; padding: 0 8px; font-size: 12.5px; }
+.mscale { flex: none; min-width: 48px; height: 28px; padding: 0 6px; border-radius: 4px; color: var(--muted); font-size: 12.5px; font-variant-numeric: tabular-nums; }
+.mscale:hover { background: var(--hover); color: var(--fg); }
+/* The emoji picker: one size whatever it holds, so it never moves after it has opened. */
+.epick { position: absolute; z-index: 10; box-sizing: border-box; width: min(292px, calc(100vw - 8px)); padding: 6px; border: 1px solid var(--line); border-radius: 8px; background: var(--raised); box-shadow: 0 6px 24px rgba(0, 0, 0, 0.3); }
+.epick input { box-sizing: border-box; width: 100%; height: 30px; padding: 0 8px; border-radius: 6px; background: var(--bg); }
+.egrid { height: 216px; margin-top: 6px; overflow-y: auto; overscroll-behavior: contain; scrollbar-width: thin; scrollbar-color: var(--sep) transparent; }
+.egroup { display: grid; grid-template-columns: repeat(auto-fill, minmax(34px, 1fr)); }
+.egroup + .egroup { margin-top: 4px; padding-top: 4px; border-top: 1px solid var(--line); }
+.ecell { display: grid; place-items: center; height: 34px; padding: 0; border-radius: 6px; font-size: 20px; line-height: 1; }
+.ecell:hover, .ecell:focus-visible { background: var(--hover); outline: none; }
+.ecell img { width: 22px; height: 22px; object-fit: contain; }
+.enone { padding: 12px 6px; font-size: 12.5px; }
+/* A finger needs 40px: the controls of notes, bars, menus and the picker grow; a mouse keeps the dense ones. */
+@media (pointer: coarse) {
+  .act { gap: 3px; min-width: 40px; height: 40px; padding: 0 5px; }
+  .act.a-more, .act.a-bookmark, .act.a-smile { flex-basis: 40px; justify-content: center; }
+  .acts { margin-left: -5px; }
+  .rchip { height: 34px; padding: 0 11px; border-radius: 17px; }
+  .chips { gap: 6px; }
+  .strip > .icon { flex: none; width: 40px; height: 32px; }
+  .cbar .icon, .mbar .icon { width: 40px; height: 40px; }
+  .mbar { height: 44px; }
+  .mscale { height: 40px; }
+  .menu button { padding: 11px 14px; }
+  .ntype { width: 44px; height: 40px; }
+  .ecell { height: 40px; }
+  .egroup { grid-template-columns: repeat(auto-fill, minmax(40px, 1fr)); }
+  .epick input, .rtoggle, .rbar input { height: 40px; }
+  .rtoggle { flex-basis: 40px; }
+  .seg-ctl .chip { padding: 9px 12px; }
+}

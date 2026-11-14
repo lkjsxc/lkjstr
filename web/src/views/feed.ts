@@ -9,7 +9,8 @@ import { h } from '../shared/h.ts';
 import { type Key, t } from '../shared/i18n.ts';
 import { icon } from '../shared/icons.ts';
 import { loadViewState, saveViewState } from '../shared/view-state.ts';
-import { type Filter, filterBar, filterQuery } from './filter-bar.ts';
+import { type BarState, mountFeedBar, typesQuery } from './feed-bar.ts';
+import { filterQuery } from './filter-bar.ts';
 import { bodySig, fitNote, patchNote, renderNote } from './note.ts';
 import { plainName } from './parts.ts';
 import type { ViewEnv } from './registry.ts';
@@ -18,14 +19,12 @@ import { renderNotification, renderPerson, renderProfile } from './rows.ts';
 const PAGE = 60; // rows asked for beyond what is on screen
 const KEEP = 120; // rows kept on the far side when the window slides
 const NEAR_PX = 1400;
-type State = {
+type State = BarState & {
   title?: string;
   pubkey?: string;
   id?: string;
   ref?: string;
   tag?: string;
-  text?: string;
-  filter?: Filter;
 };
 const FILTERED = new Set(['home', 'global', 'hashtag', 'bookmarks', 'search', 'profile']);
 const DATED = new Set(['home', 'global', 'hashtag', 'bookmarks', 'search', 'profile']);
@@ -55,6 +54,7 @@ export function mountFeed(el: HTMLElement, env: ViewEnv, kind: string): () => vo
     ref: state.ref,
     tag: state.tag,
     ...(kind === 'search' ? { text: state.text ?? '' } : {}),
+    ...(kind === 'notifications' ? { types: typesQuery(state.only) } : {}),
     ...(FILTERED.has(kind)
       ? filterQuery(
           { ...state.filter, ...(kind === 'search' ? { text: state.text } : {}) },
@@ -68,7 +68,7 @@ export function mountFeed(el: HTMLElement, env: ViewEnv, kind: string): () => vo
   };
 
   const render = (row: Row): HTMLElement | null => {
-    if (row.kind === 'note') return renderNote(row, env, { dated: DATED.has(kind) });
+    if (row.kind === 'note') return renderNote(row, env);
     if (row.kind === 'profile') return renderProfile(row, env);
     if (row.kind === 'person') return renderPerson(row, env);
     if (row.kind === 'notification') return renderNotification(row, env);
@@ -226,26 +226,18 @@ export function mountFeed(el: HTMLElement, env: ViewEnv, kind: string): () => vo
   };
   pill.addEventListener('click', () => el.scrollTo({ top: 0 }));
 
-  const bar = (): void => {
-    if (!FILTERED.has(kind) || kind === 'profile') return;
-    const f: Filter = { ...state.filter, ...(kind === 'search' ? { text: state.text } : {}) };
-    barSlot.replaceChildren(
-      filterBar(f, kind === 'search' ? 'filter.search' : 'filter.contains', (next, typing) => {
-        if (kind === 'search') state.text = next.text;
-        state.filter = kind === 'search' ? { ...next, text: undefined } : next;
-        save();
-        const narrowed = JSON.stringify(filterQuery(next, 0)) !== JSON.stringify(filterQuery(f, 0));
-        if (!typing) bar();
-        if (narrowed || typing) open(), title();
-      }),
-    );
-    if (kind === 'search' && !state.text)
-      barSlot.querySelector('input')?.focus({ preventScroll: true });
-  };
-
   el.classList.add('feed');
-  el.replaceChildren(barSlot, pill, list, status);
-  bar();
+  el.replaceChildren(h('div', { class: 'fslot' }, barSlot, pill), list, status);
+  const bar = mountFeedBar({
+    kind,
+    el,
+    slot: barSlot,
+    state,
+    env,
+    save,
+    reopen: () => (open(), title()),
+  });
+
   if (state.title) env.setTitle(state.title);
   open();
   const offVisible = env.visible.subscribe((on) => {
@@ -261,6 +253,7 @@ export function mountFeed(el: HTMLElement, env: ViewEnv, kind: string): () => vo
     offVisible();
     offAccounts();
     offSettings();
+    bar();
     sub?.close();
   };
 }

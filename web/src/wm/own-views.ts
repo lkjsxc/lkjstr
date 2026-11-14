@@ -6,6 +6,7 @@ import { createSignal, type Signal } from '../shared/signal.ts';
 import { dropViewState, loadViewState, saveViewState } from '../shared/view-state.ts';
 import { freshTab, kindOf, type ViewEnv, viewOf } from '../views/registry.ts';
 import { type Launcher, type LauncherApi, mountLauncher, NEW_TAB } from './launcher.ts';
+import type { MenuItem } from './menus.ts';
 
 type Mounted = {
   el: HTMLElement;
@@ -13,11 +14,14 @@ type Mounted = {
   launcher?: Launcher;
   visible: Signal<boolean>;
   top: number;
+  menu?: () => readonly MenuItem[];
 };
 export type OwnViews = {
   /** Element of a tab (mounted on first use). */
   el(tab: string): HTMLElement | undefined;
   title(tab: string): string;
+  /** What the tab adds to its tile's menu. */
+  menu(tab: string): readonly MenuItem[];
   /** A tab id for another instance of `kind`, with no state left over from a closed one; `state` is what it starts with. */
   fresh(kind: string, used: ReadonlySet<string>, state?: object): string;
   /** Before a render: remembers where every mounted view is scrolled. */
@@ -27,7 +31,10 @@ export type OwnViews = {
   focus(tab: string): void;
   dispose(): void;
 };
-export type BaseEnv = Omit<ViewEnv, 'instance' | 'setTitle' | 'open' | 'visible' | 'close'>;
+export type BaseEnv = Omit<
+  ViewEnv,
+  'instance' | 'setTitle' | 'open' | 'visible' | 'close' | 'menu'
+>;
 
 export function createOwnViews(
   env: BaseEnv,
@@ -60,6 +67,7 @@ export function createOwnViews(
             titles.set(tab, title);
             onTitle(tab, title);
           };
+          const made: Mounted = { el, dispose: () => undefined, visible, top: 0 };
           const dispose = def?.mount(el, {
             ...env,
             instance: instance(tab),
@@ -67,8 +75,10 @@ export function createOwnViews(
             visible,
             open: open(tab),
             close: () => close(tab),
+            menu: (items) => void (made.menu = items),
           });
-          m = { el, dispose: dispose ?? (() => undefined), visible, top: 0 };
+          if (dispose) made.dispose = dispose;
+          m = made;
         }
         mounts.set(tab, m);
       }
@@ -84,6 +94,7 @@ export function createOwnViews(
       }
       return titles.get(tab) ?? tab;
     },
+    menu: (tab) => mounts.get(tab)?.menu?.() ?? [],
     fresh(kind, used, state) {
       const tab = freshTab(kind, used);
       dropViewState(instance(tab));

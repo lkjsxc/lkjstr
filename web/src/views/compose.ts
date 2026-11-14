@@ -1,11 +1,12 @@
 // The composer: a tab like any other. The draft is saved as it is typed and survives a reload. Pictures arrive by
 // paste, drop or the button and show their progress. Below it, the result of the latest post only.
-import type { Delivery, Uploaded } from '../engine/protocol.ts';
+import type { Delivery, Emoji, Uploaded } from '../engine/protocol.ts';
 import { h, replaceChildren } from '../shared/h.ts';
 import { type Key, t } from '../shared/i18n.ts';
 import { icon } from '../shared/icons.ts';
 import { keyLabel } from '../shared/platform.ts';
 import { loadViewState, saveViewState } from '../shared/view-state.ts';
+import { openEmojiPicker } from './emoji-picker.ts';
 import { avatar, displayName } from './parts.ts';
 import type { ViewEnv } from './registry.ts';
 
@@ -17,6 +18,8 @@ type State = {
   quote?: string;
   quoteOf?: Ref;
   title?: string;
+  /** Custom emoji put into the text with the picker. */
+  emoji?: Emoji[];
 };
 type Item = { name: string; el: HTMLElement; done?: Uploaded };
 
@@ -51,6 +54,27 @@ export function mountCompose(el: HTMLElement, env: ViewEnv): () => void {
       onclick: () => file.click(),
     },
     icon('image'),
+  );
+  /** Puts text where the caret is and leaves the caret after it, as typing would. */
+  const insert = (text: string): void => {
+    const at = area.selectionStart ?? area.value.length;
+    area.setRangeText(text, at, area.selectionEnd ?? at, 'end');
+    area.focus({ preventScroll: true });
+    area.dispatchEvent(new Event('input'));
+  };
+  const emoji: HTMLElement = h(
+    'button',
+    { class: 'icon', title: t('compose.emoji'), 'aria-label': t('compose.emoji') },
+    icon('smile'),
+  );
+  emoji.addEventListener('click', () =>
+    openEmojiPicker(env, emoji, (p) => {
+      if (p.url) {
+        const code = p.emoji.slice(1, -1);
+        state.emoji = [...(state.emoji ?? []).filter((e) => e.code !== code), { code, url: p.url }];
+      }
+      insert(p.emoji);
+    }),
   );
   const post = h(
     'button',
@@ -197,7 +221,13 @@ export function mountCompose(el: HTMLElement, env: ViewEnv): () => void {
         as: env.engine.me(),
         what: {
           k: 'note',
-          draft: { text: area.value, replyTo: state.replyTo, quote: state.quote, media },
+          draft: {
+            text: area.value,
+            replyTo: state.replyTo,
+            quote: state.quote,
+            media,
+            emoji: (state.emoji ?? []).filter((e) => area.value.includes(`:${e.code}:`)),
+          },
         },
       },
       { delivery: (relays) => showDelivery(relays, false) },
@@ -207,7 +237,7 @@ export function mountCompose(el: HTMLElement, env: ViewEnv): () => void {
       showDelivery(r.delivery ?? [], true);
       area.value = '';
       state.text = '';
-      state.replyTo = state.replyOf = state.quote = state.quoteOf = undefined;
+      state.replyTo = state.replyOf = state.quote = state.quoteOf = state.emoji = undefined;
       save();
       items = [];
       thumbs.replaceChildren();
@@ -251,7 +281,7 @@ export function mountCompose(el: HTMLElement, env: ViewEnv): () => void {
     head,
     area,
     thumbs,
-    h('div', { class: 'cbar' }, who, attach, file, post),
+    h('div', { class: 'cbar' }, who, emoji, attach, file, post),
     result,
   );
   drawHead();

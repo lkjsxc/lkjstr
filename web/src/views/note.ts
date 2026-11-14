@@ -9,33 +9,51 @@ import { actionRow, reactionChips } from './note-actions.ts';
 import { avatar, displayName, how, nameButton, plainName, segments } from './parts.ts';
 import type { ViewEnv } from './registry.ts';
 
-export type NoteStyle = { readonly dated: boolean };
+const timeOf = (at: number, env: ViewEnv): string =>
+  noteTime(at, Date.now(), { relative: env.settings.get().relativeTime, lang: getLang() });
 
-const timeOf = (at: number, env: ViewEnv, dated: boolean): string =>
-  noteTime(at, Date.now(), { relative: env.settings.get().relativeTime, lang: getLang(), dated });
-
-/** Pictures in boxes whose shape is known before they load, so nothing below ever moves. */
-export function mediaGrid(media: readonly Media[]): HTMLElement | null {
+/** Pictures in boxes whose shape is known before they load, so nothing below ever moves. A press opens the media
+ * tab beside the note (the address is still a real link: a middle click opens the file itself). */
+export function mediaGrid(
+  media: readonly Media[],
+  env: ViewEnv,
+  title: string,
+): HTMLElement | null {
   if (!media.length) return null;
   const one = media.length === 1;
-  const cell = (m: Media): HTMLElement => {
+  const cell = (m: Media, index: number): HTMLElement => {
     const ratio = one && m.w && m.h ? `${m.w} / ${m.h}` : one ? '16 / 9' : '1 / 1';
-    const box = h('a', {
+    const style = `aspect-ratio:${ratio};background:${m.color ?? 'var(--raised)'}`;
+    if (m.type === 'audio')
+      return h(
+        'div',
+        { class: 'mbox audio' },
+        h('audio', { src: m.url, controls: true, preload: 'none' }),
+      );
+    const box: HTMLElement = h('a', {
       class: 'mbox',
       href: m.url,
       target: '_blank',
       rel: 'noopener noreferrer',
-      style: `aspect-ratio:${ratio};background:${m.color ?? 'var(--raised)'}`,
+      style,
       title: m.alt ?? '',
-      onclick: (e) => e.stopPropagation(),
+      'aria-label': m.alt || t('media.view'),
+    });
+    box.addEventListener('click', (e) => {
+      e.stopPropagation();
+      if (e.ctrlKey || e.metaKey) return; // the browser's own "open in a new tab"
+      e.preventDefault();
+      env.open('media', { media, index, title }, { beside: true, split: e.shiftKey, from: box });
     });
     if (m.type === 'image')
       box.append(
         h('img', { src: m.thumb ?? m.url, alt: m.alt ?? '', loading: 'lazy', decoding: 'async' }),
       );
-    else if (m.type === 'video')
-      box.append(h('video', { src: m.url, controls: true, preload: 'none' }));
-    else box.append(h('audio', { src: m.url, controls: true, preload: 'none' }));
+    else
+      box.append(
+        h('video', { src: m.url, preload: 'metadata', muted: true, playsinline: true }),
+        h('span', { class: 'mplay' }, icon('play')),
+      );
     return box;
   };
   return h(
@@ -56,7 +74,7 @@ function quoteCard(q: Quote, env: ViewEnv): HTMLElement {
       { class: 'qhead' },
       avatar(q.author, 'av sm'),
       nameButton(q.author, env),
-      h('time', { title: fullTime(q.at) }, timeOf(q.at, env, false)),
+      h('time', { title: fullTime(q.at) }, timeOf(q.at, env)),
     ),
     q.cw !== undefined
       ? h('div', { class: 'muted' }, t('note.cw', { reason: q.cw }))
@@ -84,7 +102,7 @@ function fold(text: HTMLElement): void {
   text.after(more);
 }
 
-export function renderNote(row: NoteRow, env: ViewEnv, style: NoteStyle): HTMLElement {
+export function renderNote(row: NoteRow, env: ViewEnv): HTMLElement {
   if (row.hidden) {
     const el = h(
       'div',
@@ -100,7 +118,7 @@ export function renderNote(row: NoteRow, env: ViewEnv, style: NoteStyle): HTMLEl
       ),
     );
     const fresh = (r: NoteRow): HTMLElement => {
-      const n = renderNote(r, env, style);
+      const n = renderNote(r, env);
       requestAnimationFrame(() => fitNote(n));
       return n;
     };
@@ -152,7 +170,7 @@ export function renderNote(row: NoteRow, env: ViewEnv, style: NoteStyle): HTMLEl
     'div',
     { class: 'content' },
     row.segments.length ? text : null,
-    mediaGrid(row.media),
+    mediaGrid(row.media, env, plainName(row.author)),
     row.quotes.map((q) => quoteCard(q, env)),
   );
   let body: HTMLElement = content;
@@ -209,12 +227,12 @@ export function renderNote(row: NoteRow, env: ViewEnv, style: NoteStyle): HTMLEl
           h(
             'time',
             { title: fullTime(row.at) },
-            row.pending ? t('note.sending') : timeOf(row.at, env, style.dated),
+            row.pending ? t('note.sending') : timeOf(row.at, env),
           ),
         ),
         body,
-        reactionChips(row, env),
         actionRow(row, env),
+        reactionChips(row, env),
       ),
     ),
   );
@@ -233,12 +251,22 @@ export const bodySig = (row: NoteRow): string =>
 export function patchNote(el: HTMLElement, row: NoteRow, env: ViewEnv): void {
   const main = el.querySelector(':scope > .nrow > .nmain');
   if (!main) return;
+  // The button that was pressed is drawn again: the keyboard stays on its successor.
+  const held = document.activeElement?.closest('.acts, .chips')?.parentElement === main;
+  const mark = held ? heldMark(document.activeElement) : '';
   main.querySelector(':scope > .chips')?.remove();
-  main.querySelector(':scope > .acts')?.remove();
+  const acts = actionRow(row, env);
+  main.querySelector(':scope > .acts')?.replaceWith(acts);
   const chips = reactionChips(row, env);
-  if (chips) main.append(chips);
-  main.append(actionRow(row, env));
+  if (chips) acts.after(chips);
+  if (mark) main.querySelector<HTMLElement>(mark)?.focus({ preventScroll: true });
 }
+
+const heldMark = (el: Element | null): string => {
+  const act = [...(el?.classList ?? [])].find((c) => c.startsWith('a-'));
+  const emoji = el?.getAttribute('data-emoji');
+  return act ? `.acts > .${act}` : emoji ? `.chips > [data-emoji="${CSS.escape(emoji)}"]` : '';
+};
 
 /** After a note is in the document: fold what is too long. */
 export function fitNote(el: HTMLElement): void {
