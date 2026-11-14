@@ -41,23 +41,9 @@ pub struct Summary {
 impl Rt {
     pub fn progress(&self, want: WantId) -> Progress {
         if let Some(progress) = self.expired.get(&want) {
-            return *progress;
+            return progress.progress;
         }
-        let mut out = Progress::default();
-        for sub in self
-            .net
-            .subs
-            .values()
-            .filter(|s| s.planned.wants.contains(&want))
-        {
-            out.total += 1;
-            match sub.state {
-                SubState::Live | SubState::Done => out.answered += 1,
-                SubState::Failed(_) => out.failed += 1,
-                SubState::Queued | SubState::Waiting => {}
-            }
-        }
-        out
+        lkjstr_core::requests::progress(&self.net.subs, want)
     }
 
     /// Missing references share their prefetch want's completion state.

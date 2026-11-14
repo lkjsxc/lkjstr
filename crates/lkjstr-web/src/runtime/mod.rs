@@ -53,7 +53,7 @@ pub struct Rt {
     next_want: WantId,
     /// Both maps are bounded by current visible wants and released on drop.
     deadlines: BTreeMap<WantId, TimeoutHandle>,
-    expired: BTreeMap<WantId, lkjstr_core::requests::Progress>,
+    expired: BTreeMap<WantId, lkjstr_core::requests::Deadline>,
     incoming: VecDeque<(String, NostrEvent)>,
     unsaved: lkjstr_core::persistence::PendingEvents,
     flags: Flags,

@@ -68,7 +68,7 @@ pub fn Reactions(event: Event) -> impl IntoView {
         ui.app.session_rev.track();
         ui.app.with(|rt| {
             lkjstr_core::reactions::chips(
-                &rt.store.referencing(&event.with_value(|e| e.id.clone())),
+                &rt.store.reactions(&event.with_value(|e| e.id.clone())),
                 rt.session.active.as_deref(),
             )
         })

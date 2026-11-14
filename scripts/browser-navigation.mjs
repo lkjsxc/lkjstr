@@ -37,6 +37,10 @@ export async function browserNavigation(browser, url, check) {
     await focused().locator('.thread .note.focused').waitFor();
     check('detail opens in neighbour and preserves source feed', await page.locator(`.pane[data-pane="${sourceId}"] .body.shown .feed`).isVisible());
     check('single click creates italic preview tab', await page.locator('.pane.focused .tab.active.preview').count() === 1);
+    await page.locator('.pane.focused .tab:has-text("Notifications")').click();
+    await root.click({ position: { x: 4, y: 12 } });
+    await focused().locator('.thread .note.focused').waitFor();
+    check('clicking the same note reactivates its hidden neighbour preview', await page.locator('.pane.focused .tab.active.preview').count() === 1 && await page.locator('.tab').count() === before + 1);
     await root.locator('.name').click();
     await focused().locator('.profile-head').waitFor();
     check('next detail replaces the neighbour preview', await page.locator('.tab').count() === before + 1);

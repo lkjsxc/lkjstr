@@ -69,6 +69,13 @@ Checks cover:
   quotes with relay hints, live remote deletions in feeds/threads, and extension
   event substitution. Native tests also cover bounded persistence, every signer
   field, invalid IDs/signatures, quote/mention edges and large text spans.
+- Foundation-review regressions in `scripts/browser-foundation-review.mjs`:
+  a healthy live feed receives new signed events after silent peers time out;
+  image retry sends a second request and loads it, surviving the next deadline;
+  ancestor tags affect neither reaction chips, Like selection nor repost target.
+  Native `request_deadline_test` covers shared requests, reconnects and release;
+  `review_foundation_test` covers unchanged preview activation, target ownership
+  and pane recovery at the 32-entry cap, including grouped layout undo.
 
 `browser-relay.mjs` bounds fake relay events, publications, searches and
 subscriptions. `lkjstr-protocol/examples/browser-fixtures.rs` generates a
@@ -79,6 +86,14 @@ non-zero. Browser checks are separate from the quiet gates because Chromium
 must be present.
 
 ## Record
+
+2026-11-14, foundation review:
+
+- All 90 release browser smoke checks pass, including the new regressions.
+  Report: `tmp/smoke-foundation-review/report.json`.
+- Five new native regression tests pass; all four quiet gates pass.
+- Docker verify is excluded by the worktree-only write restriction: image
+  builds write to daemon storage. No existing services were stopped or restarted.
 
 2026-11-14, Phase A foundation:
 

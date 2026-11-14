@@ -17,7 +17,8 @@ impl App {
                     }
                     let p = rt.progress(id);
                     if p.total > 0 && !p.settled() {
-                        rt.expired.insert(id, p.timed_out());
+                        let deadline = lkjstr_core::requests::Deadline::expire(&rt.net.subs, id);
+                        rt.expired.insert(id, deadline);
                         rt.schedule_replan(1);
                     }
                 });
@@ -46,7 +47,13 @@ impl App {
                 .net
                 .subs
                 .iter()
-                .filter(|(_, s)| s.planned.wants.contains(&id))
+                .filter(|(_, s)| {
+                    s.planned.wants.contains(&id)
+                        && !matches!(
+                            s.state,
+                            super::net::SubState::Live | super::net::SubState::Done
+                        )
+                })
                 .map(|(k, _)| k.clone())
                 .collect();
             for key in keys {

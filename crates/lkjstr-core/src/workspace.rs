@@ -171,6 +171,12 @@ impl Workspace {
         }
         let before = serde_json::to_string(self).unwrap_or_default();
         self.checkpoint();
+        self.remove_tab(tab);
+        self.remember_closed(before, vec![tab]);
+    }
+
+    /// Mutate without recording: a pane closure is one recovery/undo action.
+    fn remove_tab(&mut self, tab: TabId) {
         let holder = layout::pane_of_tab(&self.root, tab).map(|pane| pane.id);
         self.tabs.remove(&tab);
         self.navigation.histories.remove(&tab);
@@ -182,19 +188,20 @@ impl Workspace {
         if holder == Some(self.focus) && layout::find_pane(&self.root, self.focus).is_none() {
             self.focus = layout::panes(&self.root)[0].id;
         }
-        self.remember_closed(before, vec![tab]);
     }
 
     pub fn close_pane(&mut self, pane_id: NodeId) {
-        let before = serde_json::to_string(self).unwrap_or_default();
-        let closed = self.navigation.closed.len();
         let doomed: Vec<TabId> = layout::find_pane(&self.root, pane_id)
             .map(|pane| pane.tabs.clone())
             .unwrap_or_default();
-        for tab in &doomed {
-            self.close_tab(*tab);
+        if doomed.is_empty() {
+            return;
         }
-        self.navigation.closed.truncate(closed);
+        let before = serde_json::to_string(self).unwrap_or_default();
+        self.checkpoint();
+        for tab in &doomed {
+            self.remove_tab(*tab);
+        }
         self.remember_closed(before, doomed);
     }
 

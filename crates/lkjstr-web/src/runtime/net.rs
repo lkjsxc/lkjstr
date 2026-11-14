@@ -58,7 +58,7 @@ impl Rt {
         };
         let close = requests::reconcile(
             &mut self.net.subs,
-            plan(&wants, &ctx),
+            requests::Deadline::plan(plan(&wants, &ctx), self.expired.values()),
             &mut self.net.next_sub,
         );
         for (relay, sub_id) in close {

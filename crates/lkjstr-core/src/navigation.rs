@@ -158,6 +158,7 @@ impl Workspace {
             return;
         };
         if current == view {
+            self.activate(tab);
             return;
         }
         let history = self.navigation.histories.entry(tab).or_default();

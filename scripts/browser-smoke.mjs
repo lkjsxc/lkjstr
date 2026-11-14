@@ -10,6 +10,7 @@ import { fakeRelay } from './browser-relay.mjs';
 import { browserFlows } from './browser-flows.mjs';
 import { browserNavigation } from './browser-navigation.mjs';
 import { browserReview } from './browser-review.mjs';
+import { browserFoundationReview } from './browser-foundation-review.mjs';
 
 const root = resolve(process.env.LKJSTR_DIST ?? 'dist');
 const out = resolve(process.argv[2] ?? 'tmp/smoke');
@@ -131,6 +132,7 @@ try {
   await browserFlows(page, fake, check, shot);
   await browserReview(browser, url, stored.find((e) => e.kind === 1), check);
   await browserNavigation(browser, url, check);
+  await browserFoundationReview(browser, url, check);
 
   await page.setViewportSize({ width: 390, height: 800 });
   await page.waitForTimeout(300);

@@ -64,6 +64,16 @@ impl Store {
             .unwrap_or_default()
     }
 
+    /// Reactions to this note, excluding ancestor and quote references.
+    pub fn reactions(&self, id: &str) -> Vec<Event> {
+        self.referencing(id)
+            .into_iter()
+            .filter(|e| {
+                e.kind == 7 && lkjstr_protocol::reaction_target_event_id(e).as_deref() == Some(id)
+            })
+            .collect()
+    }
+
     /// Every stored note in the conversation around `focus`, oldest first.
     pub fn thread(&self, root: &str) -> Vec<Event> {
         let mut seen = HashSet::new();

@@ -53,9 +53,12 @@ pub fn Image(url: String) -> impl IntoView {
                 <p class="error" role="status">{move || ui.tr("Image did not load.")}</p>
                 <button on:click=move |_| retry.update(|n| *n += 1)>{move || ui.tr("Try again")}</button>
             </Show>
-            {move || { retry.track(); view! {
-                <img class="image-target" src=url.clone() alt="Image" referrerpolicy="no-referrer" hidden=move || failed.get() on:load=move |_| loading.set(false) on:error=move |_| { loading.set(false); failed.set(true); }/>
-            } }}
+            <For each=move || [retry.get()] key=|attempt| *attempt children=move |attempt| {
+                let current = move || retry.get_untracked() == attempt;
+                view! {
+                    <img class="image-target" src=url.clone() alt="Image" referrerpolicy="no-referrer" hidden=move || failed.get() on:load=move |_| { if current() { loading.set(false); } } on:error=move |_| { if current() { loading.set(false); failed.set(true); } }/>
+                }
+            }/>
         </div>
     }
 }

@@ -68,13 +68,34 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         ),
         vec![],
     )?);
-    events.push(sign(
+    let reply = sign(
         1,
         1,
         now - 120,
         "Beautiful light. この青、とてもきれい。Where was this taken?".into(),
         reply_tags(&root),
-    )?);
+    )?;
+    events.push(reply.clone());
+    let ancestral_reaction = sign(
+        1,
+        7,
+        now - 45,
+        "+".into(),
+        vec![
+            vec!["e".into(), root.id.clone()],
+            vec!["e".into(), reply.id.clone()],
+        ],
+    )?;
+    let ancestral_repost = sign(
+        2,
+        6,
+        now - 40,
+        String::new(),
+        vec![
+            vec!["e".into(), root.id.clone()],
+            vec!["e".into(), reply.id.clone()],
+        ],
+    )?;
     events.push(sign(
         2,
         6,
@@ -106,7 +127,9 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     events.push(sign(1, 1, now - 86_400, "Yesterday's field notes: offline-first is a promise you have to keep, especially on the train.\n昨日のメモ。電車の中でも読めること。 #localfirst".into(), vec![])?);
     println!(
         "{}",
-        json!({ "events": events, "root": root.id, "pubkey": root.pubkey })
+        json!({ "events": events, "root": root.id, "pubkey": root.pubkey,
+            "ancestral_reaction": ancestral_reaction, "ancestral_repost": ancestral_repost,
+            "reaction_target": reply.id })
     );
     Ok(())
 }

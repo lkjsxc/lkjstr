@@ -14,7 +14,8 @@ edits are pure functions with tests in `crates/lkjstr-core/tests/`.
 Opening a note or person uses a preview in the pane to the right. With no
 neighbour, it splits only if both halves retain 360px; otherwise it adds a tab
 here. The next preview replaces the previous preview, retaining back/forward
-history. Ctrl/Cmd-click keeps a detail; double-clicking a tab or pressing Enter
+history. Reopening the same preview activates it without adding history.
+Ctrl/Cmd-click keeps a detail; double-clicking a tab or pressing Enter
 twice keeps a preview. Editing also keeps it. Identical views always open
 independently. Closing the last tab leaves a New tab page.
 
@@ -23,6 +24,7 @@ and browser Back navigate the focused tab. The URL hash contains only public
 view data, including search text; every view can be linked. Closed tabs/tiles
 reopen with Ctrl/Cmd+Shift+T. Alt+Z restores a layout snapshot. Recovery is
 bounded to 32 snapshots and lasts for this page lifetime.
+Closing a tile records one recovery and undo action before applying that cap.
 
 ## Gestures
 

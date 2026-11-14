@@ -3,6 +3,10 @@ use std::collections::HashMap;
 
 use crate::plan::Planned;
 
+#[path = "request_deadline.rs"]
+mod deadline;
+pub use deadline::{Deadline, progress};
+
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub enum SubState {
     Queued,

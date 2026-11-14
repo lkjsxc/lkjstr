@@ -47,9 +47,9 @@ pub(super) fn like(ui: Ui, event: &Event) {
     let me = ui.app.with(|rt| rt.session.active.clone());
     let mine = ui.app.with(|rt| {
         rt.store
-            .referencing(&event.id)
+            .reactions(&event.id)
             .into_iter()
-            .find(|e| e.kind == 7 && Some(&e.pubkey) == me.as_ref())
+            .find(|e| Some(&e.pubkey) == me.as_ref())
     });
     match mine {
         Some(reaction) => act(
@@ -78,9 +78,14 @@ pub fn Note(
 ) -> impl IntoView {
     let ui = Ui::get();
     let reposter = (event.kind == 6).then(|| event.pubkey.clone());
-    let target = lkjstr_protocol::tags::tag_values(&event, "e")
-        .into_iter()
-        .next();
+    let target = if event.kind == 6 {
+        lkjstr_protocol::event_references(&event)
+            .into_iter()
+            .next()
+            .map(|reference| reference.id)
+    } else {
+        None
+    };
     let target_id_for_missing = StoredValue::new(target.clone());
     let shown = Memo::new(move |_| {
         ui.app.rev.track();
@@ -113,9 +118,9 @@ fn NoteBody(shown: Event, reposter: Option<String>, focused: bool, depth: usize)
                 let me = rt.session.active.clone();
                 let liked = rt
                     .store
-                    .referencing(&id)
+                    .reactions(&id)
                     .iter()
-                    .any(|e| e.kind == 7 && Some(&e.pubkey) == me.as_ref());
+                    .any(|e| Some(&e.pubkey) == me.as_ref());
                 (rt.store.counts(&id), liked)
             })
         })

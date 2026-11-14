@@ -66,8 +66,10 @@ signals (`rev`, `net_rev`, `session_rev`). Rule: never call `App::with` inside
 narrow flag, help flag, page visibility) and handles global keys.
 `ui/frame.rs` owns desktop/phone navigation and account/search overlays.
 `ui/navigation.rs` connects the focused tab to the address bar and browser Back.
-`runtime/deadline.rs` cancels expired relay wants and preserves their terminal
-progress. Dropping a want clears its deadline; explicit retry plans it afresh.
+`requests::Deadline` retains answered requests when a want times out, merging
+shared memberships into later plans so healthy streams and reconnects survive.
+`runtime/deadline.rs` cancels unanswered work and preserves terminal progress.
+Dropping a want releases retained requests; retry replans unanswered work.
 `ui/tiles.rs` renders the layout tree keyed by node id so tab bodies survive
 unrelated edits. `ui/pane.rs` draws strips and keeps inactive bodies mounted
 but hidden (scroll survives), passing `visible` so their wants are released.
