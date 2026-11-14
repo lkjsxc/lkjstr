@@ -61,7 +61,7 @@ textarea, select { max-width: 100%; }
   .profile-head { width: 36%; max-height: 100%; border-right: 1px solid var(--hairline); }
 }
 @container tile (height < 240px) {
-  .feed > .date-divider, .search > .people, .profile-head .banner, .profile-head .about { display: none; }
+  .feed > .date-divider, .welcome-banner, .filter-row, .search > .people, .profile-head .banner, .profile-head .about { display: none; }
   .compose textarea { height: 28px; min-height: 28px; }
   .compose textarea:focus { height: 76px; }
   .compose:not(:focus-within) .compose-bar { margin: 0; }

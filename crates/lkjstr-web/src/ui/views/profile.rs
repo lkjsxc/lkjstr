@@ -8,7 +8,7 @@ use crate::host::copy_text;
 use crate::ui::Ui;
 use crate::ui::feed::{Feed, Source, hold_want};
 use crate::ui::note_parts::{Avatar, name_of};
-use crate::ui::text::{npub, plural, short_npub};
+use crate::ui::text::{npub, short_npub};
 
 /// Follows or unfollows `target` by republishing the active account's
 /// kind 3. Refuses when that list has not been loaded (it would be wiped).
@@ -101,14 +101,14 @@ pub fn Profile(
                         Some("you") => view! { <span class="pill">{move || ui.tr("This is you")}</span> }.into_any(),
                         Some(state) => {
                             let label = if state == "following" { "Unfollow" } else { "Follow" };
-                            view! { <button on:click=move |_| toggle_follow(ui, key.get_value())>{label}</button> }.into_any()
+                            view! { <button on:click=move |_| toggle_follow(ui, key.get_value())>{move || ui.tr(label)}</button> }.into_any()
                         }
                         None => ().into_any(),
                     }}
                 </div>
                 <p class="about">{move || profile.get().map(|p| p.about.clone()).unwrap_or_default()}</p>
                 <p class="muted small">
-                    {move || following.get().map(|n| format!("Follows {} · ", plural(n, "account", "accounts")))}
+                    {move || following.get().map(|n| ui.fmt("Follows {0} · ", &[&n.to_string()]))}
                     <button class="link" title=full.clone() on:click=move |_| copy_text(&copy)>{move || ui.tr("Copy npub")}</button>
                     {move || profile.get().filter(|p| !p.website.is_empty()).map(|p| view! {
                         " · " <a href=p.website.clone() target="_blank" rel="noopener noreferrer nofollow">{p.website.clone()}</a>

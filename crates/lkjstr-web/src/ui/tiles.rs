@@ -62,7 +62,7 @@ fn SplitView(id: NodeId) -> impl IntoView {
                         format!("flex: {size} 1 0px")
                     };
                     let label = move || {
-                        if dir.get() == Dir::Row { "Resize columns" } else { "Resize rows" }
+                        ui.tr(if dir.get() == Dir::Row { "Resize columns" } else { "Resize rows" })
                     };
                     view! {
                         <div class="cell" style=grow>

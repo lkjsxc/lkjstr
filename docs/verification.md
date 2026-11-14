@@ -159,36 +159,34 @@ must be present.
 - Docker verify is excluded by the worktree-only write restriction: image
   builds write to daemon storage. No existing services were stopped or restarted.
 
-2026-11-14, Phase A foundation:
+## Phase C corrections
 
-- The expanded smoke passes 80 checks on a Trunk release, including previews,
-  independent tabs, neighbour placement, keeping a preview, per-tab and browser
-  history, layout undo, reopening, Unicode deep links and silent-relay timeout.
-  Report: `tmp/smoke-foundation/report.json`.
-- `scripts/browser-foundation.mjs` seeds signed Japanese/English notes, data URL
-  avatars, imeta-sized images, replies, reposts, quotes, custom reactions, long
-  text and content warnings. Both themes at 1440x900 and 390x844 are captured
-  under `tmp/screens/`. It asserts phone width and independent duplicate tabs.
-  The complete PNG list and check results are in `tmp/screens/report.json`.
-  `tmp/screens/INDEX.md` groups the captures by view, size and theme.
-- Native regressions cover independent launcher/detail tabs, preview history,
-  the split width floor, per-tab history bounds, layout undo, reopening after
-  later edits, route parsing, data-image safety, reaction groups and exact
-  theme tokens with AA contrast for readable text pairs.
-- The external `docs/design.md` is preserved verbatim. Its non-ASCII text,
-  missing Purpose section and 304 lines are a specific repository-check
-  exception required by the owner; other documentation keeps the usual rules.
-- Release WASM: 13572292 bytes (1238684 bytes gzip). The README build command
-  produced `tmp/lkjstr-dist.tar.gz`; all 80 smoke checks pass on its extracted
-  contents. All four quiet gates pass.
-- Docker verify remains excluded by the worktree-only write restriction.
+All four quiet gates pass. The release and extracted archive each pass 117 smoke
+checks; the design
+suite passes 629 checks with 166 PNG captures. Reports are in
+`tmp/smoke-phase-c/report.json` and `tmp/screens/report.json`. Browser suites use
+signed mixed Japanese/English content, data URL avatars, image dimensions,
+replies, reposts, quotes, custom reactions, long notes and content warnings.
+Captures include all existing views in both themes at 1440x900 and 390x844,
+Japanese-browser views, and 200/320/520/900/1400px width samples.
 
-Previous revive verification:
+The size suite checks every existing view at 160, 200, 320, 520, 900 and 1400px
+width and 160px height, horizontal overflow, available text measure and inactive
+close visibility. The tab suite exercises closing, focus order, duplicate views,
+pinning, rapid closing, Escape drag cancellation, arrow keys and 40px resizing.
 
-- The earlier 33/51/61-check smoke runs passed with fake sockets and blocked
-  external HTTP. The cache discrepancy was a test race: explicit polling now
-  waits for committed IndexedDB events before reload. Native regressions cover
-  account feed reset, signer fields, persistence bounds and protocol edges.
-- Gates passed; Docker was excluded by the worktree-only write rule. Prior
-  public-relay checks predate these isolated suites. Real signer extensions,
-  key backup, large IndexedDB pruning and scroll restore remain unverified.
+Keyboard review covers named controls on each view, palette navigation, tab
+focus and closing, detail navigation, workspace shortcuts and Alt+Enter zoom.
+Settings is also captured at 200 percent with reduced motion. Full modal focus
+trapping, palette arrow selection, long-press menus, complete touch targets and
+screen-reader testing with a real assistive-technology session remain open.
+The 56px tab/44px touch-target conflict is in [design-review.md](design-review.md).
+
+The address suite checks root/default behavior, ignored old hashes, focused
+public paths, titles, replace/push history, layout-preserving deep links,
+unsupported routes and refusal to search secret keys. Native tests enforce the
+language table boundary, independent previews and physical resize constraints.
+
+Docker Compose verification cannot run under the explicit instruction to write
+only inside this worktree: it writes image and container data to daemon storage.
+No service was stopped/restarted, no commit made, and no deployment performed.

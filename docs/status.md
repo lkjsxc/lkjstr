@@ -23,30 +23,41 @@ asked for a WASM-first client with no backward compatibility. What remains:
 Stored data from the old app (SQLite OPFS, old IndexedDB layout) is ignored.
 The incompatible WASM schema uses `lkjstr-wasm`, leaving previous `lkjstr` alone.
 
-## Phase A foundation (2026-11-14)
+## Foundation (2026-11-14)
 
-The authoritative [design](design.md) is copied verbatim. Exact theme tokens,
-readable contrast tests, system type, hairlines, plain tabs, SVG note actions,
-reaction chips, rounded-square avatars, date dividers, density and motion rules
-are implemented. The frame has an avatar menu and search/command entry. The
-phone frame fills 390px, with scrolling tabs, bottom navigation and More.
+The [design](design.md) is copied verbatim. Themes, tiled workspaces, local
+storage and shared relay planning are implemented. Protocol signing and
+verification use `lkjstr-nips`. The previous resolved merge is retained in
+`tmp/phase-a-merge.git`; original Git metadata is read-only outside this tree.
+No commit or deployment was made.
 
-Identical views open independently, including launchers and reply drafts.
-Details use neighbour previews or a split with a 360px minimum per half;
-kept tabs, per-tab history, public view URLs, layout undo and reopening are
-implemented. History retains 64 entries per tab; recovery retains 32 layouts.
-Image links open image tiles. Website tiles offer an external-browser action.
-Visible relay wants have cancellable 12-second deadlines and retry actions;
-storage promises have 15-second deadlines, signer promises 30 seconds.
-Mixed relay deadlines retain answered live streams and cancel unanswered work;
-explicit retry preserves live streams and requeues completed lookups.
-An unchanged preview reactivates without adding history. Image retry sends a
-fresh request. Reactions/reposts use protocol targets; pane recovery records once.
+## Phase C corrections (2026-11-14)
 
-The NIP branch is integrated in source; signing and signature verification use
-`lkjstr-nips`. Original linked-worktree Git metadata is read-only outside this
-worktree. The resolved, uncommitted merge is in `tmp/phase-a-merge.git`; the
-orchestrator must record it in the original metadata. No commit was made.
+This phase is partial. The [parity inventory](parity.md) records mainstream
+capabilities honestly. The art director's prerequisite corrections took priority;
+no new account, messaging, payment or sync features were started.
+
+Clean public addresses and focused document titles replace JSON hashes.
+Focus changes replace history; in-tab navigation pushes it. Explicit addresses
+add a tab to the saved desk; reload resumes that tab's saved history. Malformed
+or unsupported routes have an honest Nothing here view. Old hashes are ignored.
+Welcome is removed from the model, presets and launcher; the feed banner stays.
+
+Japanese labels, tooltips, hints, states, time labels and formatting use core
+string tables. A native build guard rejects direct literal UI prose and missing
+translation entries. Settings retains storage status and retry feedback. Secret
+searches never enter public view persistence, URLs or relay queries; signer
+exceptions cannot echo arbitrary text into errors.
+
+Identical preview details now open independently. Tabs have named, linked ARIA
+panels, roving focus and arrow navigation. Account and tab menus restore focus and close on Escape.
+Exact 40px keyboard resizing respects subtree minima and retains feed anchors.
+The remaining view/action width caps are removed; short tiles hide feed banners
+and filters. Sliver More menus retain Reply and Repost. See [details.md](details.md)
+for the daily-use review and [design-review.md](design-review.md) for ambiguities.
+
+The steward directory and the remote site branch did not exist at inspection.
+No ADR files or separate static pages were available to merge or package.
 
 ## Phase B progress (2026-11-14)
 
@@ -65,7 +76,7 @@ fixed or fit widths, stable closing widths, menu duplication/pinning/movement,
 Escape drag cancellation, workspace-chip drops, draft-kept Undo and background
 middle-click details. Container rules cover all current views down to 160px,
 stack relay rows, simplify short tiles, equalise handles and zoom with Alt+Enter.
-Exact 40px resize steps, complete touch gestures and all menu shortcuts remain.
+Complete touch gestures and all menu shortcuts remain.
 
 Reading adds two-column reserved image galleries, whole-line text folds,
 click-to-load audio/video, validated custom emoji names/notification reactions,
@@ -73,12 +84,11 @@ actor targets inside reposts and quotes, updating relative time, batched bounded
 activity counts, offline status and data saver. The detail review is in
 [details.md](details.md); source comparison is in [repost.md](repost.md).
 
-Not implemented: clean-path addresses (links still use JSON hashes), the
-literal-string build guard, NIP-23 article tiles, collapsed thread runs, feed windowing,
+Not implemented: NIP-23 article tiles, collapsed thread runs, feed windowing,
 reliable reload/read markers, the emoji picker/set browser, complete reaction
 optimism, redesigned composer, send hold/Undo, quote creation, uploads, own-note
 deletion UI, worker verification, focus prefetch, noise expansion, translation,
-phone swipes/pull and complete Japanese strings. Existing posts and reactions
+phone swipes/pull. Existing posts and reactions
 still use the account selected globally, not an independent voice per tile.
 
 ## Implemented
@@ -106,16 +116,12 @@ Which of these were exercised in a real browser, and how, is recorded in
 
 ## Current verification
 
-The workspace-review build passes all four quiet gates and 107 fake-relay
-browser smoke checks (`tmp/smoke-workspace-review/report.json`). The earlier
-Phase B archive passed 98 smoke and 439 design/size checks. Its 92 screenshots
-are indexed in `tmp/screens/INDEX.md`; that archive is `tmp/lkjstr-dist.tar.gz`.
-These checks verify the partial scope above, not unfinished Phase B promises.
-
-See [verification.md](verification.md) for the release fake-relay checks,
-quiet gates, screenshot evidence and remaining limits. No public relay is
-used by the browser suites. Docker image verification remains excluded by
-the worktree-only write rule. Packaging follows [README.md](../README.md#build).
+All four quiet gates pass, along with 117 smoke and 629 design/browser checks.
+The final release tarball is `tmp/lkjstr-dist.tar.gz`; 166 PNGs are indexed below.
+See [verification.md](verification.md) for the final quiet gates, fake-relay
+results and limitations. Screenshots are indexed in `tmp/screens/INDEX.md`.
+Packaging follows [README.md](../README.md#build). Docker image verification is
+excluded by the worktree-only write rule. No public relays are used by tests.
 
 ## Orchestration: implemented versus planned
 

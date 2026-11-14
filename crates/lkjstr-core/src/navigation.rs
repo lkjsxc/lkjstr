@@ -159,6 +159,7 @@ impl Workspace {
     }
 
     pub fn navigate(&mut self, tab: TabId, view: View) {
+        let view = crate::addresses::public_view(view);
         let Some(current) = self.tabs.get(&tab).cloned() else {
             return;
         };
@@ -209,8 +210,12 @@ impl Workspace {
                 })
                 .copied()
         {
-            self.navigate(preview, view);
-            return preview;
+            if self.tabs.get(&preview) == Some(&view) {
+                self.keep(preview);
+            } else {
+                self.navigate(preview, view);
+                return preview;
+            }
         }
         let tab = self.open(view, how);
         if !kept {

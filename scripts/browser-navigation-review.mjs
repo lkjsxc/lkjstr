@@ -1,3 +1,4 @@
+import { navigateView, viewPath } from './browser-addresses.mjs';
 // Reloaded history and explicit retry of completed lookups, with local relays.
 import { fakeRelay } from './browser-relay.mjs';
 
@@ -10,7 +11,7 @@ export async function browserNavigationReview(browser, url, data, check) {
       await context.route('**/*', (r) => r.request().url().startsWith(url) ? r.continue() : r.abort());
       const page = await context.newPage();
       page.on('pageerror', (e) => errors.push(String(e)));
-      await page.goto(url + '#view=' + encodeURIComponent(JSON.stringify(view)));
+      await navigateView(page, url, view);
       await page.locator('.pane').first().waitFor();
       await run(page, () => page.locator('.pane.focused .body.shown'));
     } finally { await context.close(); }
@@ -19,7 +20,7 @@ export async function browserNavigationReview(browser, url, data, check) {
     const submit = async (query) => {
       await focused().locator('input[type=search]').fill(query);
       await focused().locator('input[type=search]').press('Enter');
-      await page.waitForFunction((q) => JSON.parse(decodeURIComponent(location.hash.slice(6))).query === q, query);
+      await page.waitForFunction((q) => new URLSearchParams(location.search).get('q') === q, query);
     };
     await submit('history-two');
     await submit('history-three');
@@ -44,7 +45,7 @@ export async function browserNavigationReview(browser, url, data, check) {
     for (const [direction, query] of [['back', 'history-two'], ['back', 'history-one'], ['forward', 'history-two'], ['forward', 'history-three']]) {
       await (direction === 'back' ? page.goBack() : page.goForward());
       await page.waitForFunction((q) => document.querySelector('.pane.focused .body.shown input[type=search]')?.value === q, query, { timeout: 3000 });
-      check(`browser ${direction} after reload restores ${query} and its URL`, await page.evaluate((q) => JSON.parse(decodeURIComponent(location.hash.slice(6))).query === q, query));
+      check(`browser ${direction} after reload restores ${query} and its URL`, await page.evaluate((q) => new URLSearchParams(location.search).get('q') === q, query));
     }
   });
   const event = data.events.find((e) => e.id === data.root);

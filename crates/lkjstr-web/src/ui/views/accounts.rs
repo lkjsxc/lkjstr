@@ -21,7 +21,10 @@ pub fn Accounts() -> impl IntoView {
     let revealed = RwSignal::new(None::<(String, String)>);
     let report = move |result: Result<String, String>, done: &str| match result {
         Ok(pubkey) => {
-            let _ = message.try_set(Some((true, format!("{done} {}", short_npub(&pubkey)))));
+            let _ = message.try_set(Some((
+                true,
+                format!("{} {}", ui.tr(done), short_npub(&pubkey)),
+            )));
         }
         Err(error) => {
             let _ = message.try_set(Some((false, error)));
@@ -60,15 +63,15 @@ pub fn Accounts() -> impl IntoView {
                             <li class:active=move || active.get()>
                                 <Avatar pubkey=pubkey.clone() class="avatar small"/>
                                 <div class="grow">
-                                    <strong>{move || name_of(ui, &key_name)}</strong>
-                                    <div class="small muted">{short_npub(&pubkey)} " · " {kind}</div>
+                                    <strong data-active-label=move || ui.tr("active")>{move || name_of(ui, &key_name)}</strong>
+                                    <div class="small muted">{short_npub(&pubkey)} " · " {move || ui.tr(kind)}</div>
                                 </div>
                                 {
                                     let key = pubkey.clone();
                                     move || (!active.get()).then(|| { let key = key.clone(); view! { <button on:click=move |_| { let key = key.clone(); leptos::task::spawn_local(async move { if let Err(e) = app.switch_account(&key).await { report(Err(e), ""); } }); }>{move || ui.tr("Use")}</button> } })
                                 }
                                 {(account.signer == Signer::Local).then(|| view! {
-                                    <button title="Show the secret key so you can back it up" on:click=move |_| {
+                                    <button title=move || ui.tr("Show the secret key so you can back it up") on:click=move |_| {
                                         revealed.set(app.reveal_nsec(&key_reveal).map(|nsec| (key_reveal.clone(), nsec)));
                                     }>{move || ui.tr("Back up key")}</button>
                                 })}
@@ -78,10 +81,10 @@ pub fn Accounts() -> impl IntoView {
                     }
                 </For>
             </ul>
-            {move || accounts.with(|(list, _)| list.is_empty()).then(|| view! { <p class="muted">"No account yet. Create a key, import one, or use a signer extension. You can browse without one."</p> })}
+            {move || accounts.with(|(list, _)| list.is_empty()).then(|| view! { <p class="muted">{move || ui.tr("No account yet. Create a key, import one, or use a signer extension. You can browse without one.")}</p> })}
             {move || revealed.get().map(|(_, nsec)| view! {
                 <div class="secret" role="alert">
-                    <p><strong>"Your secret key."</strong> " Anyone who sees it controls this account. Store it in a password manager, then hide it."</p>
+                    <p><strong>{move || ui.tr("Your secret key.")}</strong> {move || ui.tr(" Anyone who sees it controls this account. Store it in a password manager, then hide it.")}</p>
                     <code>{nsec}</code>
                     <button on:click=move |_| revealed.set(None)>{move || ui.tr("Hide")}</button>
                 </div>
@@ -89,15 +92,15 @@ pub fn Accounts() -> impl IntoView {
             <h3>{move || ui.tr("Add an account")}</h3>
             <div class="row-actions">
                 <button on:click=move |_| { leptos::task::spawn_local(async move { report(app.generate_account().await, "Created a new key for"); }); }>{move || ui.tr("Create a new key")}</button>
-                <button disabled=move || !nip07::available() on:click=extension title="Uses window.nostr (NIP-07)">{move || ui.tr("Use signer extension")}</button>
+                <button disabled=move || !nip07::available() on:click=extension title=move || ui.tr("Uses window.nostr (NIP-07)")>{move || ui.tr("Use signer extension")}</button>
             </div>
             <form class="search-bar" on:submit=move |ev| { ev.prevent_default(); import(()); }>
-                <input type="password" autocomplete="off" placeholder="nsec1… to sign, or npub1… to read only" aria-label="Key to import"
+                <input type="password" autocomplete="off" placeholder=move || ui.tr("nsec1… to sign, or npub1… to read only") aria-label=move || ui.tr("Key to import")
                     prop:value=move || input.get() on:input=move |ev| input.set(event_target_value(&ev))/>
                 <button type="submit">{move || ui.tr("Import")}</button>
             </form>
-            {move || message.get().map(|(ok, text)| view! { <p class:error=!ok role="status">{text}</p> })}
-            <p class="small muted">"Keys created or imported here are stored unencrypted in this browser's storage for this site. A signer extension keeps the key out of the page."</p>
+            {move || message.get().map(|(ok, text)| view! { <p class:error=!ok role="status">{ui.tr(&text)}</p> })}
+            <p class="small muted">{move || ui.tr("Keys created or imported here are stored unencrypted in this browser's storage for this site. A signer extension keeps the key out of the page.")}</p>
         </div>
     }
 }

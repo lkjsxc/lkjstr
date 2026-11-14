@@ -6,6 +6,7 @@ Index of lkjstr's documentation. Start with [status.md](status.md).
 
 ## Table of Contents
 
+- [parity.md](parity.md): audited client capability inventory.
 - [details.md](details.md): observed Phase B frictions and fixes.
 - [repost.md](repost.md): public-source repost comparison and implementation limits.
 

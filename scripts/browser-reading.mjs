@@ -1,3 +1,4 @@
+import { publicCode } from './browser-addresses.mjs';
 // Reading checks use public signed fixtures and intercepted local media only.
 export async function browserReading(page,check,prefix,data) {
   const open=async label=>{ await page.locator('.brand').click(); await page.keyboard.press('Control+k'); await page.getByRole('dialog').getByRole('button',{name:label,exact:true}).first().click(); };
@@ -30,13 +31,13 @@ export async function browserReading(page,check,prefix,data) {
   check(`${prefix} notification custom reaction renders an image`,await custom.locator('header img.emoji').count()===1);
   const actor=await custom.locator('.name').getAttribute('data-profile');
   await custom.locator('.name').click();
-  check(`${prefix} notification actor name opens actor profile`,decodeURIComponent(new URL(page.url()).hash).includes(actor));
+  check(`${prefix} notification actor name opens actor profile`,new URL(page.url()).pathname.endsWith(publicCode('npub',actor)));
   await open('Global');
   const repost=page.locator('.pane.focused .body.shown .reposted button').first();
   await repost.scrollIntoViewIfNeeded();
   const reposter=await repost.getAttribute('data-profile');
   await repost.click();
-  check(`${prefix} repost attribution opens reposter profile`,decodeURIComponent(new URL(page.url()).hash).includes(reposter));
+  check(`${prefix} repost attribution opens reposter profile`,new URL(page.url()).pathname.endsWith(publicCode('npub',reposter)));
   await open('Global');
   await root().scrollIntoViewIfNeeded();
   const selected=await page.locator('.pane.focused .tab.active').getAttribute('data-tab');

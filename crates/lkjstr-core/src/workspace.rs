@@ -44,7 +44,7 @@ impl Workspace {
         let views = [
             View::Home,
             View::Global,
-            View::Welcome,
+            View::Settings,
             View::Notifications,
             View::Search {
                 query: String::new(),
@@ -134,6 +134,7 @@ impl Workspace {
 
     /// Always opens an independent tab, including identical views.
     pub fn open(&mut self, view: View, how: Open) -> TabId {
+        let view = crate::addresses::public_view(view);
         self.checkpoint();
         let tab = self.alloc();
         self.tabs.insert(tab, view);
@@ -236,3 +237,4 @@ impl Workspace {
 #[path = "workspace_keys.rs"]
 mod keys;
 pub use keys::Command;
+pub(crate) use keys::parent_of;

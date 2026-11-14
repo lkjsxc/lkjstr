@@ -24,12 +24,12 @@ pub fn TopBar() -> impl IntoView {
     };
     view! {
         <header class="topbar">
-            <span class="brand">"lkjstr"</span>
-            <button class="status" title="Relays" on:click=move |_| { ui.open(View::Relays, Open::Here); }>{status}</button>
+            <span class="brand">{move || ui.tr("lkjstr")}</span>
+            <button class="status" title=move || ui.tr("Relays") on:click=move |_| { ui.open(View::Relays, Open::Here); }>{status}</button>
             <super::spaces::Switcher/>
             <span class="spacer"></span>
-            <button class="palette-trigger desktop-actions" on:click=move |_| ui.palette.set(true) aria-label=move || ui.tr("Search or open a view") title="Search or open a view (Ctrl/Cmd+K)">
-                <Icon name="search"/><span class="grow">{move || ui.tr("Search")}</span><kbd>"⌘K"</kbd>
+            <button class="palette-trigger desktop-actions" on:click=move |_| ui.palette.set(true) aria-label=move || ui.tr("Search or open a view") title=move || ui.tr("Search or open a view (Ctrl/Cmd+K)")>
+                <Icon name="search"/><span class="grow">{move || ui.tr("Search")}</span><kbd>{move || ui.tr("⌘K")}</kbd>
             </button>
             <button class="account desktop-actions" title=move || ui.tr("Accounts") aria-label=move || ui.tr("Accounts") aria-expanded=move || menu.get().to_string() on:click=move |_| menu.update(|m| *m = !*m)>
                 {move || match account.get() {
@@ -46,6 +46,7 @@ pub fn TopBar() -> impl IntoView {
 #[component]
 fn AccountMenu(shown: RwSignal<bool>, #[prop(default = false)] phone: bool) -> impl IntoView {
     let ui = Ui::get();
+    super::focus::close_on_escape(shown);
     let go = move |view| {
         shown.set(false);
         ui.open(view, Open::Here);
@@ -79,7 +80,7 @@ pub fn PhoneBar() -> impl IntoView {
         ("notifications", "Notifications", View::Notifications),
     ];
     view! {
-        <nav class="bottom-bar" aria-label="Navigation">
+        <nav class="bottom-bar" aria-label=move || ui.tr("Navigation")>
             {buttons.into_iter().map(|(icon, label, view)| view! {
                 <button title=move || ui.tr(label) aria-label=move || ui.tr(label) on:click=move |_| { more.set(false); ui.open(view.clone(), Open::Here); }><Icon name=icon/></button>
             }).collect_view()}
@@ -92,6 +93,7 @@ pub fn PhoneBar() -> impl IntoView {
 #[component]
 fn Palette() -> impl IntoView {
     let ui = Ui::get();
+    super::focus::return_on_close();
     let query = RwSignal::new(String::new());
     let input = NodeRef::<leptos::html::Input>::new();
     Effect::new(move |_| {
@@ -113,7 +115,7 @@ fn Palette() -> impl IntoView {
             <div class="sheet palette" role="dialog" aria-label=move || ui.tr("Search or open a view") on:click=|ev| ev.stop_propagation()>
                 <input node_ref=input class="wide" type="search" aria-label=move || ui.tr("Search or open a view") placeholder=move || ui.tr("Search or open a view") on:input=move |ev| query.set(event_target_value(&ev)) on:keydown=move |ev: web_sys::KeyboardEvent| { if ev.key() == "Enter" { open_search(); } }/>
                 <div class="palette-choices">
-                    {move || ui.spaces.get().names.into_iter().enumerate().filter(|(i,name)| { let q=query.get().to_lowercase(); !q.is_empty() && (name.to_lowercase().contains(&q) || (i+1).to_string()==q) }).map(|(index,name)| view! { <button on:click=move |_| { super::spaces::select(ui,index); ui.palette.set(false); }>{format!("{} · {}",index+1,name)}</button> }).collect_view()}
+                    {move || ui.spaces.get().names.into_iter().enumerate().filter(|(i,name)| { let q=query.get().to_lowercase(); !q.is_empty() && (name.to_lowercase().contains(&q) || (i+1).to_string()==q) }).map(|(index,name)| view! { <button on:click=move |_| { super::spaces::select(ui,index); ui.palette.set(false); }>{format!("{} · {}",index+1,ui.tr(&name))}</button> }).collect_view()}
                     {move || launcher_choices().into_iter().filter(|c| ui.tr(c.title).to_lowercase().contains(&query.get().to_lowercase())).map(|c| view! {
                         <button on:click=move |_| { ui.open(c.view.clone(), Open::Here); ui.palette.set(false); }>{ui.tr(c.title)}</button>
                     }).collect_view()}

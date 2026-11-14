@@ -35,14 +35,17 @@ export async function browserReview2({ isolated, workspace, data, root, check })
         return r;
       };
     } }, async (page) => {
-      // Keep Welcome mounted to observe the actual storage state.
+      // Keep Settings mounted to observe the actual storage state.
+      await page.locator('.brand').click();
+      await page.keyboard.press('Control+k');
+      await page.getByRole('dialog').getByRole('button',{name:'Settings',exact:true}).click();
       await page.locator('.tab:has-text("Global")').click();
       await page.locator('.note:has-text("remote-only-needle")').first().waitFor();
-      await page.getByText('Local storage write failed', { exact: false }).waitFor({ state: 'attached' });
+      await page.getByText('Local storage write failed', { exact: false }).first().waitFor({ state: 'attached' });
       const first = await page.evaluate(() => window.eventWriteAttempts);
       await page.evaluate(() => { window.failEventWrites = false; });
       await page.waitForFunction((first) => window.eventWriteAttempts > first, first);
-      await page.getByText('Local storage ready', { exact: false }).waitFor({ state: 'attached' });
+      await page.getByText('Local storage ready', { exact: false }).first().waitFor({ state: 'attached' });
       const cached = await page.evaluate(async (id) => {
         const db = await new Promise((ok) => { const r = indexedDB.open('lkjstr-wasm'); r.onsuccess = () => ok(r.result); });
         const row = await new Promise((ok) => { const r = db.transaction('events').objectStore('events').get(id); r.onsuccess = () => ok(r.result); });

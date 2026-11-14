@@ -171,8 +171,8 @@ fn NoteBody(shown: Event, reposter: Option<String>, focused: bool, depth: usize)
     let handle_key = author.clone();
     view! {
         <article class="note" class:focused=focused tabindex="0" data-id=id.clone() style=format!("--depth: {depth}") on:keydown=keydown on:click=click_note on:dblclick=move |_| { if let Some(tab) = preview.get_value() { ui.ws.update(|ws| ws.keep(tab)); } }>
-            {reposter.map(|who| { let key = who.clone(); let data = who.clone(); view! { <div class="reposted"><super::icons::Icon name="repost"/>" Reposted by "<button data-profile=data on:click=move |ev| { ev.stop_propagation(); ui.detail(View::Profile { pubkey: key.clone() },Some(&ev)); }>{move || name_of(ui,&who)}</button></div> } })}
-            <button class="avatar-button" data-profile=author.clone() aria-label="Open profile" title="Open profile (p)" on:click=move |ev| { ev.stop_propagation(); preview.set_value(Some(ui.detail(View::Profile { pubkey: this.with_value(|e| e.pubkey.clone()) }, Some(&ev)))); }>
+            {reposter.map(|who| { let key = who.clone(); let data = who.clone(); view! { <div class="reposted"><super::icons::Icon name="repost"/>{move || ui.tr(" Reposted by ")}<button data-profile=data on:click=move |ev| { ev.stop_propagation(); ui.detail(View::Profile { pubkey: key.clone() },Some(&ev)); }>{move || name_of(ui,&who)}</button></div> } })}
+            <button class="avatar-button" data-profile=author.clone() aria-label=move || ui.tr("Open profile") title=move || ui.tr("Open profile (p)") on:click=move |ev| { ev.stop_propagation(); preview.set_value(Some(ui.detail(View::Profile { pubkey: this.with_value(|e| e.pubkey.clone()) }, Some(&ev)))); }>
                 <Avatar pubkey=author.clone()/>
             </button>
             <div class="note-main">
@@ -207,8 +207,8 @@ fn ReplyContext(id: String) -> impl IntoView {
     view! {
         <button class="reply-context" on:click=move |ev| { ev.stop_propagation(); ui.open_thread(&target, vec![]); }>
             {move || match parent.get() {
-                Some(pubkey) => format!("Replying to {}", name_of(ui, &pubkey)),
-                None => "Reply in a thread".to_owned(),
+                Some(pubkey) => ui.fmt("Replying to {0}", &[&name_of(ui, &pubkey)]),
+                None => ui.tr("Reply in a thread"),
             }}
         </button>
     }

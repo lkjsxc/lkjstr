@@ -7,7 +7,6 @@ use lkjstr_core::{Open, View};
 
 use super::Ui;
 use super::feed::{Source, hold_want};
-use super::text::plural;
 
 /// Asks for missing profiles and referenced notes of rendered rows.
 pub fn prefetch(ui: Ui, visible: Signal<bool>, rows: Signal<Vec<Event>>) {
@@ -85,10 +84,9 @@ pub fn EmptyState(
         if count.get() > 0 {
             return progress.filter(|p| !p.settled()).map(|p| {
                 (
-                    format!(
-                        "Syncing · {} of {} answered",
-                        p.answered,
-                        plural(p.total, "relay", "relays")
+                    ui.fmt(
+                        "Syncing · {0} of {1} answered",
+                        &[&p.answered.to_string(), &p.total.to_string()],
                     ),
                     None,
                 )
@@ -113,10 +111,9 @@ pub fn EmptyState(
         }
         if !progress.settled() {
             return Some((
-                format!(
-                    "Loading · {} of {} answered",
-                    progress.answered,
-                    plural(progress.total, "relay", "relays")
+                ui.fmt(
+                    "Loading · {0} of {1} answered",
+                    &[&progress.answered.to_string(), &progress.total.to_string()],
                 ),
                 None,
             ));
@@ -145,12 +142,12 @@ pub fn EmptyState(
             let rows = count.get() > 0;
             view! {
                 <div class=if rows { "feed-foot" } else { "empty" } role="status">
-                    <p>{text}</p>
+                    <p>{ui.tr(&text)}</p>
                     {(action.is_none() && !rows && progress.get().is_some_and(|p| p.settled())).then(|| view! {
                         <button on:click=move |_| { if let Some(id) = live.get_untracked() { app.retry(id); } }>{move || ui.tr("Try again")}</button>
                     })}
                     {action.map(|(label, view)| view! {
-                        <button on:click=move |_| { ui.open(view.clone(), Open::Here); }>{label}</button>
+                        <button on:click=move |_| { ui.open(view.clone(), Open::Here); }>{move || ui.tr(label)}</button>
                     })}
                 </div>
             }

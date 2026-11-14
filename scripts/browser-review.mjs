@@ -3,6 +3,7 @@ import { fakeRelay, fixtures } from './browser-relay.mjs';
 import { browserReview2 } from './browser-review-2.mjs';
 
 async function workspace(page, views) {
+  await page.waitForTimeout(650);
   await page.evaluate(async (views) => {
     const db = await new Promise((ok, fail) => {
       const r = indexedDB.open('lkjstr-wasm'); r.onsuccess = () => ok(r.result); r.onerror = fail;
@@ -11,11 +12,13 @@ async function workspace(page, views) {
     const ws = { root: { type: 'pane', id: 1, tabs: views.map((_, i) => i + 10), active: 10 }, tabs, focus: 1, next_id: 40 };
     await new Promise((ok, fail) => {
       const tx = db.transaction('kv', 'readwrite');
+      tx.objectStore('kv').delete('spaces');
       tx.objectStore('kv').put(JSON.stringify(ws), 'workspace');
       tx.oncomplete = ok; tx.onabort = fail;
     });
     db.close();
     history.replaceState(null, "", "/");
+    window.addEventListener("pagehide", e=>e.stopImmediatePropagation(), {capture:true,once:true});
   }, views);
   await page.reload();
   await page.waitForSelector('.pane');
@@ -45,7 +48,7 @@ export async function browserReview(browser, url, root, check) {
       try { await run(page); }
       catch (error) {
         const frame = error.stack?.split('\n').find((line) => line.includes('browser-review'));
-        throw new Error(`${String(error).split('\n')[0]} ${frame?.trim() ?? ''}`);
+        throw new Error(`${String(error).split('\n')[0]} ${frame?.trim() ?? ''} | isolated: ${(await page.locator('.pane.focused .body.shown').innerText()).slice(0,350)}`);
       }
     } finally { await context.close(); }
   }
@@ -87,9 +90,11 @@ export async function browserReview(browser, url, root, check) {
   }
 
   const deferred = [];
+  let released = false;
   const fake = fakeRelay({ request: (ws, sub, filters) => {
     if (filters.some((f) => f.ids?.includes(data.remote.id))) {
-      if (deferred.length < 50) deferred.push([ws, sub]);
+      if (released) ws.send(JSON.stringify(['EOSE',sub]));
+      else if (deferred.length < 50) deferred.push([ws, sub]);
       return true;
     }
     return false;
@@ -99,6 +104,7 @@ export async function browserReview(browser, url, root, check) {
     await workspace(page, [{ kind: 'global' }]);
     await page.locator('.note-missing:has-text("Looking for this note")').waitFor();
     await waitUntil(page, () => deferred.length >= 3);
+    released = true;
     for (const [ws, sub] of deferred) ws.send(JSON.stringify(['EOSE', sub]));
     await page.locator('.note-missing:has-text("Note not found")').waitFor();
     check('missing repost lookup settles after EOSE', true);

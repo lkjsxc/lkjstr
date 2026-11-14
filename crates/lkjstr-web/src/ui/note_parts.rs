@@ -123,7 +123,7 @@ pub fn Content(event: Event, #[prop(default = false)] compact: bool) -> impl Int
             {warning.map(|reason| view! {
                 <Show when=move || !revealed.get()>
                     <button class="veil" on:click=move |ev| { ev.stop_propagation(); revealed.set(true); }>
-                        {if reason.is_empty() { "Sensitive content · show".to_owned() } else { format!("{reason} · show") }}
+                        {if reason.is_empty() { ui.tr("Sensitive content · show") } else { format!("{reason} · {}", ui.tr("Show")) }}
                     </button>
                 </Show>
             })}
@@ -142,7 +142,7 @@ fn render_segment(ui: Ui, segment: Segment, event: &Event, compact: bool) -> Any
             Segment::Image(url) if !compact => { let style=aspect(event,&url).unwrap_or_default(); view! { <super::media::Picture url=url style=style/> }.into_any() },
             Segment::Video(url) if !compact => view! { <super::media::Playable url=url audio=false/> }.into_any(),
             Segment::Audio(url) if !compact => view! { <super::media::Playable url=url audio=true/> }.into_any(),
-            Segment::Image(url) | Segment::Video(url) | Segment::Audio(url) => view! { <a href=url rel="nofollow" on:click=|ev| ev.stop_propagation()>"[media]"</a> }.into_any(),
+            Segment::Image(url) | Segment::Video(url) | Segment::Audio(url) => view! { <a href=url rel="nofollow" on:click=|ev| ev.stop_propagation()>{move || ui.tr("[media]")}</a> }.into_any(),
             Segment::Mention(pubkey) => {
                 let key = pubkey.clone();
                 let profile_data=pubkey.clone();
@@ -155,7 +155,7 @@ fn render_segment(ui: Ui, segment: Segment, event: &Event, compact: bool) -> Any
             }
             Segment::Quote { id, relays } if !compact => view! { <super::reference::Quote id=id relays=relays/> }.into_any(),
             Segment::Quote { id, relays } => view! {
-                <button class="mention" on:click=move |ev| { ev.stop_propagation(); ui.open_thread(&id, relays.clone()); }>"[quoted note]"</button>
+                <button class="mention" on:click=move |ev| { ev.stop_propagation(); ui.open_thread(&id, relays.clone()); }>{move || ui.tr("[quoted note]")}</button>
             }
             .into_any(),
             Segment::Hashtag(tag) => {

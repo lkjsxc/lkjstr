@@ -38,9 +38,11 @@ async fn call(name: &str, arg: Option<JsValue>) -> Result<JsValue, String> {
     )
     .await
     .map_err(|error| {
-        error
-            .as_string()
-            .unwrap_or_else(|| "The signer extension refused.".to_owned())
+        if error.as_string().as_deref() == Some("The signer did not answer. Try again.") {
+            "The signer did not answer. Try again.".to_owned()
+        } else {
+            "The signer extension refused.".to_owned()
+        }
     })
 }
 

@@ -26,7 +26,7 @@
 .emoji { height: 1.3em; vertical-align: -0.25em; }
 .quote { margin: 8px 0; padding: 8px 12px; border: 1px solid var(--hairline); border-radius: 6px; background: var(--raised); font-size: 13.5px; }
 .quote-head { display: flex; gap: 8px; align-items: center; font-weight: 600; }
-.actions { display: flex; justify-content: space-between; gap: 4px; margin-top: 8px; margin-left: -4px; max-width: 400px; }
+.actions { display: flex; justify-content: space-between; gap: 4px; margin-top: 8px; margin-left: -4px; }
 .actions button { display: inline-flex; align-items: center; gap: 4px; border: none; background: none; color: var(--ink-2); font-size: 12.5px; padding: 4px; font-variant-numeric: tabular-nums; }
 .actions button:hover { color: var(--ink); }
 .actions button.on { color: var(--indigo); background: var(--indigo-wash); }

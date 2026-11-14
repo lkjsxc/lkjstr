@@ -7,6 +7,7 @@ mod profile;
 mod relays;
 mod search;
 mod simple;
+mod storage;
 mod thread;
 
 use leptos::prelude::*;
@@ -31,7 +32,7 @@ pub fn TabBody(tab: TabId, visible: Signal<bool>) -> impl IntoView {
         };
         match view {
             View::Launcher => view! { <simple::Launcher tab=tab/> }.into_any(),
-            View::Welcome => view! { <simple::Welcome/> }.into_any(),
+            View::NotFound => view! { <simple::NothingHere/> }.into_any(),
             View::Home => view! { <Feed source=Source::Home visible=visible tab=tab/> }.into_any(),
             View::Global => {
                 view! { <Feed source=Source::Global visible=visible tab=tab/> }.into_any()

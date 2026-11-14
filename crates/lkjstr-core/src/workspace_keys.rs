@@ -142,7 +142,7 @@ impl Workspace {
     }
 }
 
-fn parent_of(root: &layout::Node, pane: NodeId) -> Option<(&layout::Split, usize)> {
+pub(crate) fn parent_of(root: &layout::Node, pane: NodeId) -> Option<(&layout::Split, usize)> {
     let layout::Node::Split(split) = root else {
         return None;
     };

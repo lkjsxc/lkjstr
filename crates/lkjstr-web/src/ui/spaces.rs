@@ -29,13 +29,13 @@ pub fn move_tab(ui: Ui, tab: u32, index: usize) {
 pub fn Switcher() -> impl IntoView {
     let ui = Ui::get();
     view! {
-        <nav class="workspaces" aria-label="Workspaces">
+        <nav class="workspaces" aria-label=move || ui.tr("Workspaces")>
             {(0..9).map(|index| view! {
                 <button class:active=move || ui.spaces.with(|s| s.active==index)
                     data-workspace=index
-                    aria-label=move || ui.spaces.with(|s| s.names[index].clone())
-                    title=move || format!("{} (Alt+Shift+{})",ui.spaces.with(|s| s.names[index].clone()),index+1)
-                    on:click=move |_| select(ui,index)>{index+1}<Show when=move || unseen(ui,index)><span class="unseen-dot" aria-label="Unseen activity"></span></Show></button>
+                    aria-label=move || ui.tr(&ui.spaces.with(|s| s.names[index].clone()))
+                    title=move || format!("{} (Alt+Shift+{})",ui.tr(&ui.spaces.with(|s| s.names[index].clone())),index+1)
+                    on:click=move |_| select(ui,index)>{index+1}<Show when=move || unseen(ui,index)><span class="unseen-dot" aria-label=move || ui.tr("Unseen activity")></span></Show></button>
             }).collect_view()}
         </nav>
     }

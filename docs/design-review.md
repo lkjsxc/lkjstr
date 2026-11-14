@@ -47,13 +47,22 @@ The design itself is preserved verbatim; this file does not amend it.
   languages, or Japanese from all Han-script text. Language labels need this
   limitation; a protocol language tag would provide better evidence.
 
-## Design source update during this run
+## Phase C review
 
-The upstream document changed at 12:55 UTC, adding Addresses and Language and
-removing the wide-tile measure cap. The final copy includes those changes and
-wide content now fills its tile. Clean paths, document titles and the build
-rule rejecting literal interface strings remain unimplemented. Existing JSON
-hash routing remains visible and is explicitly not compliant with Addresses.
+- Addresses and live document titles now follow the focused tab. Image and
+  website tiles stay unaddressed; sharing them as app state would need a new
+  path scheme. Unsupported article/hashtag/message routes open Nothing here.
+- The requested note text width "tile minus padding" conflicts with the note
+  diagram's avatar gutter. Text fills the entire available content column;
+  the width checks account for the avatar and gutter, without a measure cap.
+- The static host must serve the app shell for extensionless paths. The browser
+  suites emulate that host rule. Dotted missing files remain HTTP failures.
+- The language guard covers direct view text and accessible labels, and checks
+  table membership for translation calls. Dynamic text from relays, profiles,
+  posts and browser exceptions is data; it is not machine-translated. The
+  no-script HTML fallback remains English because no browser code can run there.
+- The design does not specify a shortcut scheme for every tab-menu action,
+  palette arrow navigation or a modal focus-trap policy. Those remain open.
 
 ## Remaining work
 

@@ -66,12 +66,63 @@ visible in the final captures. Open means the friction is still reproducible.
 | 49 | Scrolling far enough still reaches the 600-row cap. | open |
 | 50 | The composer does not show whose voice it will use. | open |
 | 51 | Uploading by paste, drop or button is unavailable. | open |
-| 52 | Settings still contains English explanatory text in Japanese mode. | open |
-| 53 | Alt+period/comma still resize proportionally, not by exactly 40px. | open |
-| 54 | Sliver action reduction hides Reply without adding it to More. | open |
+| 52 | Settings still contains English explanatory text in Japanese mode. | fixed |
+| 53 | Alt+period/comma still resize proportionally, not by exactly 40px. | fixed |
+| 54 | Sliver action reduction hides Reply without adding it to More. | fixed |
 | 55 | A 56px icon tab cannot also hold a 44px touch close target comfortably. | open |
 | 56 | No on-device Translate action appears in the tested Chromium. | open |
 | 57 | Workspace switching remounts view bodies rather than keeping all mounted. | open |
 | 58 | Global's script filter resets when its tab is remounted. | open |
 | 59 | The tab menu has no explicit key binding for every bulk action. | open |
 | 60 | Closing a tab offers Undo, but bulk close only reopens the last tab. | open |
+
+## Phase C daily-use review
+
+Reviewed from 13:55 through 14:07 UTC on 2026-11-14, using the running release,
+local signed fixtures and the desktop/phone captures. Walkthroughs covered
+reading, actors, long notes, image tiles, compose, accounts, search, relay rows,
+Settings, closing runs, workspace switching and keyboard navigation. The table
+mixes corrected regressions with frictions still visible in this release.
+
+| # | Friction observed in the walkthrough or its captures | State |
+| --- | --- | --- |
+| 61 | An identical note click reused the hidden neighbour preview. | fixed |
+| 62 | Changing tabs added browser Back entries unrelated to reading history. | fixed |
+| 63 | A nested clean address requested the favicon relative to that path. | fixed |
+| 64 | Welcome remained among the initial inactive tabs. | fixed |
+| 65 | Japanese Settings had English accessible names on its controls. | fixed |
+| 66 | Composer's Japanese mode still said Post and What's happening. | fixed |
+| 67 | Relay rows kept English state labels in Japanese mode. | fixed |
+| 68 | Notification verbs and minute labels stayed English. | fixed |
+| 69 | Tab close and profile tooltips kept English prose. | fixed |
+| 70 | Default workspace names were English in Japanese tooltips. | fixed |
+| 71 | Active-account text came from English CSS rather than the word table. | fixed |
+| 72 | Storage feedback disappeared with the old Welcome content. | fixed |
+| 73 | Keyboard resizing changed a fraction rather than a predictable distance. | fixed |
+| 74 | Short feed banners and filter controls used the content area. | fixed |
+| 75 | Sliver notes hid Reply without offering it in More. | fixed |
+| 76 | The action row stopped widening while its note continued widening. | fixed |
+| 77 | Opening from the palette could leave focus on the document body. | fixed |
+| 78 | The account menu did not dismiss with Escape. | fixed |
+| 79 | Tabs required an Alt chord rather than ordinary arrow navigation. | fixed |
+| 80 | Arrow handling also consumed Alt+Left/Right history keys. | fixed |
+| 81 | A crowded strip loses most titles and becomes a run of similar icons. | open |
+| 82 | Three strip controls leave little room for tabs in a 160px tile. | open |
+| 83 | All tabs does not focus its filter automatically. | open |
+| 84 | Duplicate and bulk-close menu items have no keyboard hints. | open |
+| 85 | Palette choices have no arrow selection or per-choice shortcut hint. | open |
+| 86 | The Japanese phone composer has a large blank area below its six lines. | open |
+| 87 | Its content-warning checkbox and send button sit far apart. | open |
+| 88 | The composer still gives no avatar identifying the sending voice. | open |
+| 89 | Reply notifications render as full notes among compact activity rows. | open |
+| 90 | Opening Notifications gives no visible read-position feedback. | open |
+| 91 | The Global script filter resets after a workspace remount. | open |
+| 92 | Account creation has no persistent reminder to back up the new key. | open |
+| 93 | A read-only account still sees the generic sign-in account-menu wording. | open |
+| 94 | The Settings Data section counts notes but gives no byte estimate. | open |
+| 95 | A lower tile's long menu can extend beyond the visible window. | open |
+| 96 | Dialogs lack a complete Tab focus trap. | open |
+| 97 | Notification excerpts can end in an ellipsis inside a Japanese sentence. | open |
+| 98 | Image tiles have no visible fit/original-size choice. | open |
+| 99 | Help shows physical key names that remain English in Japanese mode. | open |
+| 100 | Small account action targets still need a complete touch review. | open |

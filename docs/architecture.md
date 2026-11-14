@@ -17,7 +17,8 @@ How lkjstr is put together, for anyone changing it.
 
 `lkjstr-core::appearance`, `words` and `reactions` hold deterministic display
 choices and shared English/Japanese words. `navigation` owns bounded tab
-history, previews and layout recovery; `route` validates public view links.
+history, previews and layout recovery; `addresses` validates public paths.
+`route` serializes internal view state for persistence and feed anchors.
 `lkjstr-core` is where decisions live; it has native tests. `requests` owns
 plan reconciliation, queue eligibility, authentication retries and lookup
 states; `actions` guards publication inputs and verifies external signer responses; `pagination` tracks raw pages.

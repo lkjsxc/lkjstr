@@ -2,6 +2,7 @@
 // in-process fake relay, so nothing reaches public relays and results are
 // repeatable. Usage: node scripts/browser-smoke.mjs [out-dir]
 // Prints one JSON object of checks; exits 1 if any check fails.
+import { browserAddressReview } from './browser-address-review.mjs';
 import { createServer } from 'node:http';
 import { readFile, mkdir, readdir, writeFile } from 'node:fs/promises';
 import { extname, join, resolve } from 'node:path';
@@ -25,7 +26,7 @@ const server = createServer(async (req, res) => {
     res.writeHead(200, { 'content-type': types[extname(file)] ?? 'application/octet-stream' });
     res.end(body);
   } catch {
-    res.writeHead(404).end();
+    if (!extname(new URL(req.url, 'http://x').pathname)) { res.writeHead(200, {'content-type':'text/html'}); res.end(await readFile(join(root,'index.html'))); } else res.writeHead(404).end();
   }
 });
 await new Promise((ok) => server.listen(0, '127.0.0.1', ok));
@@ -63,7 +64,7 @@ try {
   await page.goto(url);
   await page.waitForSelector('.pane', { timeout: 20000 });
   check('boot shows tiled workspace', (await panes()) >= 3);
-  await shot('01-welcome');
+  await shot('01-first-run');
 
   await page.click('.topbar .account');
   await page.getByRole('menuitem', { name: 'Sign in or create a key', exact: true }).click();
@@ -131,6 +132,7 @@ try {
   await page.waitForSelector('.body.shown >> text=No replies, mentions or reactions yet.', { timeout: 10000 });
   check('notifications ask relays and settle honestly', true);
   await browserFlows(page, fake, check, shot);
+  await browserAddressReview(browser, url, check);
   await browserReview(browser, url, stored.find((e) => e.kind === 1), check);
   await browserNavigation(browser, url, check);
   await browserFoundationReview(browser, url, check);

@@ -42,14 +42,14 @@ pub fn Actions(event: Event, counts: Memo<((usize, usize, usize), bool)>) -> imp
     };
     view! {
         <footer class="actions" on:click=|ev| ev.stop_propagation()>
-            <button title="Reply (r)" aria-label=move || ui.tr("Reply") on:click=reply><Icon name="reply"/>{move || nonzero(counts.get().0.0, lower.get())}</button>
-            <button title="Repost" aria-label=move || ui.tr("Repost") aria-expanded=move || repost_menu.get().to_string() on:click=move |_| repost_menu.update(|m| *m = !*m)><Icon name="repost"/>{move || nonzero(counts.get().0.1, lower.get())}</button>
-            <button title="Like (l)" aria-label=move || ui.tr("Like") class:on=move || counts.get().1 on:click=move |_| like(ui, &event.get_value())><Icon name="react"/>{move || nonzero(counts.get().0.2, lower.get())}</button>
-            <button title="Zap" aria-label=move || ui.tr("Zap") on:click=move |_| {
+            <button title=move || ui.tr("Reply (r)") aria-label=move || ui.tr("Reply") on:click=move |_| reply(())><Icon name="reply"/>{move || nonzero(counts.get().0.0, lower.get())}</button>
+            <button title=move || ui.tr("Repost") aria-label=move || ui.tr("Repost") aria-expanded=move || repost_menu.get().to_string() on:click=move |_| repost_menu.update(|m| *m = !*m)><Icon name="repost"/>{move || nonzero(counts.get().0.1, lower.get())}</button>
+            <button title=move || ui.tr("Like (l)") aria-label=move || ui.tr("Like") class:on=move || counts.get().1 on:click=move |_| like(ui, &event.get_value())><Icon name="react"/>{move || nonzero(counts.get().0.2, lower.get())}</button>
+            <button title=move || ui.tr("Zap") aria-label=move || ui.tr("Zap") on:click=move |_| {
                 ui.app.update(|rt| rt.notice = Some(ui.tr("Zap sending is not available yet.")));
                 ui.app.session_rev.update(|r| *r += 1);
             }><Icon name="zap"/>{move || nonzero(zap.get() as usize, lower.get())}</button>
-            <button title="More" aria-label=move || ui.tr("More") aria-expanded=move || menu.get().to_string() on:click=move |_| menu.update(|m| *m = !*m)><Icon name="more"/></button>
+            <button title=move || ui.tr("More") aria-label=move || ui.tr("More") aria-expanded=move || menu.get().to_string() on:click=move |_| menu.update(|m| *m = !*m)><Icon name="more"/></button>
             <Show when=move || repost_menu.get()>
                 <div class="menu" role="menu">
                     <button role="menuitem" on:click=move |_| { repost_menu.set(false); repost(ui, &event.get_value()); }>{move || ui.tr("Repost")}</button>
@@ -58,6 +58,8 @@ pub fn Actions(event: Event, counts: Memo<((usize, usize, usize), bool)>) -> imp
             </Show>
             <Show when=move || menu.get()>
                 <div class="menu" role="menu">
+                    <button role="menuitem" on:click=move |_| { menu.set(false); reply(()); }>{move || ui.tr("Reply")}<kbd>{move || ui.tr("r")}</kbd></button>
+                    <button role="menuitem" on:click=move |_| { menu.set(false); repost(ui, &event.get_value()); }>{move || ui.tr("Repost")}</button>
                     <button role="menuitem" on:click=move |_| { copy_text(&nevent(ui, &event.get_value())); menu.set(false); }>{move || ui.tr("Copy link")}</button>
                     <button role="menuitem" on:click=move |_| { copy_text(&event.with_value(|e| e.id.clone())); menu.set(false); }>{move || ui.tr("Copy id")}</button>
                     <button role="menuitem" on:click=move |_| { copy_text(&event.with_value(|e| e.content.clone())); menu.set(false); }>{move || ui.tr("Copy text")}</button>

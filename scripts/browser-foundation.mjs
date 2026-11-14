@@ -1,4 +1,6 @@
+import { navigateView, viewPath } from './browser-addresses.mjs';
 // Signed mixed-language design review; all HTTP/WS remain local or intercepted.
+import { browserJapanese } from './browser-japanese.mjs';
 import { chromium } from 'playwright-core';
 import { createServer } from 'node:http';
 import { readFile, readdir, mkdir, writeFile } from 'node:fs/promises';
@@ -19,8 +21,8 @@ const root = resolve(process.env.LKJSTR_DIST ?? 'dist');
 const types = { '.html': 'text/html', '.js': 'text/javascript', '.wasm': 'application/wasm', '.css': 'text/css', '.svg': 'image/svg+xml' };
 const server = createServer(async (req, res) => {
   const file = join(root, new URL(req.url, 'http://x').pathname === '/' ? 'index.html' : new URL(req.url, 'http://x').pathname);
-  try { res.writeHead(200, { 'content-type': types[extname(file)] ?? 'application/octet-stream' }); res.end(await readFile(file)); }
-  catch { res.writeHead(404).end(); }
+  try { const body = await readFile(file); res.writeHead(200, { 'content-type': types[extname(file)] ?? 'application/octet-stream' }); res.end(body); }
+  catch { if (!extname(new URL(req.url, 'http://x').pathname)) { res.writeHead(200, {'content-type':'text/html'}); res.end(await readFile(join(root,'index.html'))); } else res.writeHead(404).end(); }
 });
 await new Promise((ok) => server.listen(0, '127.0.0.1', ok));
 const url = `http://127.0.0.1:${server.address().port}/`;
@@ -72,8 +74,6 @@ try {
         await page.keyboard.press('Control+k');
         await page.getByRole('dialog').getByRole('button', { name: label, exact: true }).first().click();
       };
-      await open('Welcome');
-      await shot('welcome');
       await open('Global');
       await page.locator('.pane.focused .body.shown .note').first().waitFor();
       if (size === 'phone') {
@@ -92,7 +92,7 @@ try {
       await shot('image');
       await open('Global');
       // A public URL can also be restored directly from the address bar.
-      await page.goto(url + '#view=' + encodeURIComponent(JSON.stringify({ kind: 'link', url: 'https://example.org/reading-notes' })));
+      await navigateView(page, url, { kind: 'link', url: 'https://example.org/reading-notes' });
       await page.locator('.pane.focused .body.shown a').filter({ hasText: 'Open website' }).waitFor();
       await shot('website');
       await open('Global');
@@ -122,7 +122,7 @@ try {
       await page.locator('.pane.focused .body.shown h2').filter({ hasText: '設定' }).waitFor();
       check(`${size} ${theme} Japanese settings labels render`, await page.locator('.pane.focused .body.shown').getByText('表示密度', { exact: true }).isVisible());
       await shot('settings-japanese');
-      await page.locator('.pane.focused .body.shown').getByRole('combobox', { name: 'Language', exact: true }).selectOption('en');
+      await page.locator('.pane.focused .body.shown').getByRole('combobox', { name: '言語', exact: true }).selectOption('en');
       await page.locator('.pane.focused .body.shown').getByLabel('Compact', { exact: true }).check();
       await open('Global');
       const avatarWidth = await page.locator('.pane.focused .body.shown .note:not(.compact) .avatar').first().evaluate((el) => el.getBoundingClientRect().width);
@@ -151,6 +151,13 @@ try {
       await context.close();
     }
   }
+  await browserJapanese(browser,url,data,check,async(page,name)=>{await page.waitForTimeout(180);const file=`${name}.png`;await page.screenshot({path:join(out,file)});screenshots.push(file);},route=>{
+    const target=route.request().url();
+    if(target.startsWith(url))return route.continue();
+    if(['https://media.fixture.invalid/harbor.svg','https://media.fixture.invalid/detail.svg'].includes(target))return route.fulfill({contentType:'image/svg+xml',body:harbor});
+    if(target==='https://media.fixture.invalid/coffee.svg')return route.fulfill({contentType:'image/svg+xml',body:coffee});
+    return route.abort();
+  });
   check('no page errors', errors.length === 0);
 } finally {
   await browser.close();

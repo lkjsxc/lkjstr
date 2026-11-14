@@ -2,7 +2,7 @@ use lkjstr_core::{Open, View, Workspace, layout, reactions, store::Store};
 use lkjstr_protocol::{EventTemplate, finalize_event, generate_secret_key};
 
 #[test]
-fn unchanged_neighbour_preview_reactivates_without_changing_history() {
+fn identical_neighbour_details_open_independently_without_changing_old_history() {
     let mut ws = Workspace::preset(true);
     let source = ws.focus;
     let preview = ws.open_detail(View::Global, 1440.0, false, false);
@@ -17,11 +17,12 @@ fn unchanged_neighbour_preview_reactivates_without_changing_history() {
     );
     ws.activate(other);
     ws.focus = source;
-    assert_eq!(ws.open_detail(View::Global, 1440.0, false, false), preview);
-    assert_eq!(ws.focused_tab(), Some(preview));
+    let second = ws.open_detail(View::Global, 1440.0, false, false);
+    assert_ne!(second, preview);
+    assert_eq!(ws.focused_tab(), Some(second));
     assert_eq!(
         layout::pane_of_tab(&ws.root, preview).map(|p| p.active),
-        Some(preview)
+        Some(second)
     );
     assert_eq!(ws.navigation.histories[&preview], history);
 }

@@ -6,10 +6,12 @@ mod feed;
 mod feed_memory;
 mod feed_source;
 mod feed_state;
+mod focus;
 mod fold;
 mod frame;
 mod icons;
 mod keys;
+mod language;
 mod media;
 mod names;
 mod navigation;
@@ -115,22 +117,6 @@ impl Ui {
         expect_context::<Ui>()
     }
 
-    pub fn tr(&self, text: &str) -> String {
-        let language = self.settings.with(|s| s.language).unwrap_or_else(|| {
-            let languages = web_sys::window()
-                .map(|w| {
-                    w.navigator()
-                        .languages()
-                        .iter()
-                        .filter_map(|v| v.as_string())
-                        .collect::<Vec<_>>()
-                })
-                .unwrap_or_default();
-            lkjstr_core::appearance::language(&languages)
-        });
-        lkjstr_core::words::text(language, text).to_owned()
-    }
-
     pub fn open(&self, view: View, how: Open) -> TabId {
         let narrow = self.narrow.get_untracked();
         let how = if narrow
@@ -152,6 +138,9 @@ impl Ui {
         };
         let mut tab = 0;
         self.ws.update(|ws| tab = ws.open(view, how));
+        crate::host::after(0, || {
+            crate::host::focus_selector(".pane.focused .tab.active")
+        });
         tab
     }
 
@@ -178,6 +167,11 @@ impl Ui {
                 ws.focus = focus;
             }
         });
+        if !background {
+            crate::host::after(0, || {
+                crate::host::focus_selector(".pane.focused .tab.active")
+            });
+        }
         tab
     }
 

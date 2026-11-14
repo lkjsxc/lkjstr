@@ -44,6 +44,19 @@ impl Ui {
     }
     pub fn command(&self, command: Command) {
         match command {
+            Command::Grow(steps) => {
+                if let Some(rect) = web_sys::window()
+                    .and_then(|w| w.document())
+                    .and_then(|d| d.query_selector(".desk").ok().flatten())
+                    .map(|e| e.get_bounding_client_rect())
+                {
+                    let anchors = super::feed_memory::resize_anchors();
+                    self.ws
+                        .update(|ws| ws.grow_pixels(steps, rect.width(), rect.height()));
+                    crate::host::after(0, move || super::feed_memory::keep_anchors(&anchors));
+                }
+                return;
+            }
             Command::Split(zone) if !self.can_split(zone) => return,
             Command::MoveTab(zone)
                 if !self.can_split(zone)
@@ -94,7 +107,7 @@ pub fn ClosedTab() -> impl IntoView {
     let ui = Ui::get();
     view! {
         <Show when=move || ui.closed.get().is_some()>
-            <div class="tab-undo" role="status"><span>{move || if ui.closed.get().is_some_and(|(_,draft)| draft) { "Tab closed. Draft kept on this device." } else { "Tab closed." }}</span><button title="Undo (Ctrl/Cmd+Shift+T)" on:click=move |_| { ui.recover(true); ui.closed.set(None); crate::host::after(0, || crate::host::focus_selector(".pane.focused .tab.active")); }>"Undo"<kbd>"⇧⌘T"</kbd></button></div>
+            <div class="tab-undo" role="status"><span>{move || ui.tr(if ui.closed.get().is_some_and(|(_,draft)| draft) { "Tab closed. Draft kept on this device." } else { "Tab closed." })}</span><button title=move || ui.tr("Undo (Ctrl/Cmd+Shift+T)") on:click=move |_| { ui.recover(true); ui.closed.set(None); crate::host::after(0, || crate::host::focus_selector(".pane.focused .tab.active")); }>{move || ui.tr("Undo")}<kbd>{move || ui.tr("⇧⌘T")}</kbd></button></div>
         </Show>
     }
 }

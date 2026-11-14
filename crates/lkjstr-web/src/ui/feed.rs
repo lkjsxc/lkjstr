@@ -219,14 +219,14 @@ pub fn Feed(
             <Show when=move || src.with_value(|s| *s == Source::Global) && me.get().is_none() && !ui.settings.get().welcome_dismissed>
                 <div class="welcome-banner"><span>{move || ui.tr("Read without an account. Your cache stays on this device.")}</span><button class="link" on:click=move |_| { ui.open(lkjstr_core::View::Accounts,lkjstr_core::Open::Here); }>{move || ui.tr("Add a key")}</button><button class="link" on:click=move |_| ui.settings.update(|s| s.welcome_dismissed=true)>{move || ui.tr("Browse")}</button><button class="link" on:click=move |_| { ui.open(lkjstr_core::View::Relays,lkjstr_core::Open::Here); }>{move || ui.tr("See relays")}</button></div>
             </Show>
-            <Show when=move || language_filter.get()><div class="filter-row"><button title="Local script heuristic; show all languages" on:click=move |_| language_filter.set(false)>{move || ui.tr(if japanese { "Japanese notes · show all" } else { "English notes · show all" })}</button></div></Show>
+            <Show when=move || language_filter.get()><div class="filter-row"><button title=move || ui.tr("Local script heuristic; show all languages") on:click=move |_| language_filter.set(false)>{move || ui.tr(if japanese { "Japanese notes · show all" } else { "English notes · show all" })}</button></div></Show>
             <Show when=move || rows.with(|r| r.1 > 0)>
                 <button class="new-marker" aria-live="polite" on:click=move |ev| {
                     reveal();
                     if let Some(el) = ev.target().and_then(|t| t.dyn_into::<web_sys::Element>().ok()).and_then(|e| e.parent_element()) {
                         el.set_scroll_top(0);
                     }
-                }>{move || format!("{} new · show", rows.with(|r| r.1))}</button>
+                }>{move || ui.fmt("{0} new · show", &[&rows.with(|r| r.1).to_string()])}</button>
             </Show>
             <For each=move || rows.get().0 key=|event| event.id.clone() let:event>
                 {let row_id = event.id.clone(); let at = event.created_at; view! { <Show when=move || rows.with(|r| r.0.iter().position(|e| e.id == row_id).is_some_and(|i| (i == 0 && at / 86_400 != crate::host::now_secs() / 86_400) || (i > 0 && r.0[i - 1].created_at / 86_400 != r.0[i].created_at / 86_400)))>

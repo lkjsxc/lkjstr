@@ -75,6 +75,14 @@ pub fn Shell() -> impl IntoView {
     super::navigation::install(ui, booted);
     Effect::new(move |_| {
         let settings = ui.settings.get();
+        set_root_attr(
+            "lang",
+            if ui.language() == lkjstr_core::appearance::Language::Japanese {
+                "ja"
+            } else {
+                "en"
+            },
+        );
         let theme = match settings.theme {
             Theme::System => "system",
             Theme::Light => "light",
@@ -152,10 +160,10 @@ pub fn Shell() -> impl IntoView {
     view! {
         <div class="app" class:narrow=move || ui.narrow.get()>
             <super::frame::TopBar/>
-            <main class="desk" class:zooming=move || ui.zoom.get().is_some() aria-label="Workspace">
+            <main class="desk" class:zooming=move || ui.zoom.get().is_some() aria-label=move || ui.tr("Workspace")>
                 <Show
                     when=move || booted.get()
-                    fallback=|| view! { <p class="boot">"Opening local data…"</p> }
+                    fallback=move || view! { <p class="boot">{move || ui.tr("Opening local data…")}</p> }
                 >
                     {tiles::Desk}
                 </Show>
@@ -217,7 +225,7 @@ fn Toast() -> impl IntoView {
         notice.get().map(|text| {
             view! {
                 <div class="toast" role="alert">
-                    <span>{text}</span>
+                    <span>{ui.tr(&text)}</span>
                     <button class="ghost" on:click=dismiss>{move || ui.tr("Dismiss")}</button>
                 </div>
             }

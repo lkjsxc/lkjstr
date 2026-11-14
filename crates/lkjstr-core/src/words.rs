@@ -155,6 +155,41 @@ pub fn text(language: Language, source: &str) -> &str {
     }
     WORDS
         .iter()
+        .chain(crate::words_extra::WORDS.iter())
+        .chain(crate::words_format::WORDS.iter())
+        .chain(crate::words_errors::WORDS.iter())
         .find(|(en, _)| *en == source)
         .map_or(source, |(_, ja)| *ja)
+}
+
+/// Numbered slots keep user content out of translation keys.
+pub fn format(language: Language, source: &str, values: &[&str]) -> String {
+    let template = text(language, source);
+    let mut result = String::new();
+    let mut rest = template;
+    while let Some(start) = rest.find('{') {
+        result.push_str(&rest[..start]);
+        let Some(end) = rest[start..].find('}') else {
+            break;
+        };
+        let end = start + end;
+        let index = rest[start + 1..end].parse::<usize>().ok();
+        result.push_str(
+            index
+                .and_then(|i| values.get(i).copied())
+                .unwrap_or(&rest[start..=end]),
+        );
+        rest = &rest[end + 1..];
+    }
+    result.push_str(rest);
+    result
+}
+
+pub fn contains(source: &str) -> bool {
+    WORDS
+        .iter()
+        .chain(crate::words_extra::WORDS)
+        .chain(crate::words_format::WORDS)
+        .chain(crate::words_errors::WORDS)
+        .any(|(en, _)| *en == source)
 }

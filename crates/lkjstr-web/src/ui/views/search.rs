@@ -21,6 +21,15 @@ pub fn Search(tab: TabId, query: String, visible: Signal<bool>) -> impl IntoView
     let active = RwSignal::new(query);
     let submit = move || {
         let text = draft.get_untracked().trim().to_owned();
+        if !lkjstr_core::addresses::safe_query(&text) {
+            draft.set(String::new());
+            app.update(|rt| {
+                rt.notice =
+                    Some(ui.tr("Secret keys cannot be searched. Open Accounts to import a key."))
+            });
+            app.session_rev.update(|r| *r += 1);
+            return;
+        }
         active.set(text.clone());
         ui.ws.update(|ws| {
             ws.navigate(tab, View::Search { query: text });
@@ -43,12 +52,15 @@ pub fn Search(tab: TabId, query: String, visible: Signal<bool>) -> impl IntoView
             _ => return None,
         })
     });
+    let secret = Memo::new(move |_| !lkjstr_core::addresses::safe_query(&active.get()));
     let live = hold_want(ui, visible, move || {
         let text = active.get();
-        (text.chars().count() >= 2 && direct.get().is_none()).then_some(Want::Search {
-            query: text,
-            limit: 50,
-        })
+        (!secret.get() && text.chars().count() >= 2 && direct.get().is_none()).then_some(
+            Want::Search {
+                query: text,
+                limit: 50,
+            },
+        )
     });
     let progress = Memo::new(move |_| {
         app.net_rev.track();
@@ -67,13 +79,13 @@ pub fn Search(tab: TabId, query: String, visible: Signal<bool>) -> impl IntoView
     view! {
         <div class="search">
             <form class="search-bar" on:submit=move |ev| { ev.prevent_default(); submit(); }>
-                <input type="search" placeholder="Words, #tags, npub or note links" aria-label="Search"
+                <input type="search" placeholder=move || ui.tr("Words, #tags, npub or note links") aria-label=move || ui.tr("Search")
                     prop:value=move || draft.get() on:input=move |ev| draft.set(event_target_value(&ev))/>
                 <button type="submit">{move || ui.tr("Search")}</button>
             </form>
             <div class="feed">
                 {move || direct.get().map(|(label, view)| view! {
-                    <div class="empty"><button on:click=move |_| { ui.detail(view.clone(), None); }>{label}</button></div>
+                    <div class="empty"><button on:click=move |_| { ui.detail(view.clone(), None); }>{move || ui.tr(label)}</button></div>
                 })}
                 <Show when=move || !people.with(Vec::is_empty)>
                     <h3 class="section">{move || ui.tr("People")}</h3>
@@ -97,7 +109,9 @@ pub fn Search(tab: TabId, query: String, visible: Signal<bool>) -> impl IntoView
                 {move || {
                     let text = active.get();
                     let empty = notes.with(Vec::is_empty) && people.with(Vec::is_empty) && direct.get().is_none();
-                    let hint = if text.is_empty() {
+                    let hint = if secret.get() {
+                        "Secret keys cannot be searched. Open Accounts to import a key."
+                    } else if text.is_empty() {
                         "Search notes cached on this device and on search relays."
                     } else if text.chars().count() < 2 {
                         "Enter at least two characters to ask search relays."
@@ -110,7 +124,7 @@ pub fn Search(tab: TabId, query: String, visible: Signal<bool>) -> impl IntoView
                             Some(_) => "No matches on this device or the relays we asked.",
                         }
                     };
-                    empty.then(|| view! { <div class="empty" role="status"><p>{hint}</p>
+                    empty.then(|| view! { <div class="empty" role="status"><p>{ui.tr(hint)}</p>
                         <Show when=move || progress.get().is_some_and(|p| p.settled())>
                             <button on:click=move |_| { if let Some(id) = live.get_untracked() { app.retry(id); } }>{move || ui.tr("Try again")}</button>
                         </Show>

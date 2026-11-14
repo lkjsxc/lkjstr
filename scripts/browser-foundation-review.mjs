@@ -1,3 +1,4 @@
+import { navigateView, viewPath } from './browser-addresses.mjs';
 // Regression checks for mixed relay deadlines and real image request retries.
 import { spawnSync } from 'node:child_process';
 import { fakeRelay } from './browser-relay.mjs';
@@ -30,7 +31,7 @@ export async function browserFoundationReview(browser, url, check) {
     await page.clock.install();
     // Start with no cached/fixture events: the first deadline must see one
     // answered relay and silent peers on the same live Global want.
-    await page.goto(url + '#view=' + encodeURIComponent(JSON.stringify({ kind: 'global' })));
+    await navigateView(page, url, { kind: 'global' });
     await page.locator('.pane.focused .body.shown .empty').filter({ hasText: /Loading · 1 of/ }).waitFor();
     await page.waitForTimeout(300);
     await page.clock.fastForward(13_000);
@@ -47,7 +48,7 @@ export async function browserFoundationReview(browser, url, check) {
     const second = data.events.find((e) => e.kind === 1 && e.id !== first.id);
     healthy.add(second);
     check('live feed remains subscribed across later deadlines and replans', await page.locator(`.pane.focused .body.shown .note[data-id="${second.id}"]`).first().waitFor({ timeout: 3000 }).then(() => true, () => false));
-    await page.goto(url + '#view=' + encodeURIComponent(JSON.stringify({ kind: 'image', url: 'https://retry.fixture.invalid/image.svg' })));
+    await navigateView(page, url, { kind: 'image', url: 'https://retry.fixture.invalid/image.svg' });
     const imagePage = page.locator('.pane.focused .body.shown .image-page');
     await imagePage.locator('.error').waitFor();
     await imagePage.locator('.image-target').evaluate((img) => { window.failedImage = img; });
@@ -77,7 +78,7 @@ export async function browserFoundationReview(browser, url, check) {
     healthy.add(reply);
     healthy.add(data.ancestral_reaction);
     healthy.add(data.ancestral_repost);
-    await page.goto(url + '#view=' + encodeURIComponent(JSON.stringify({ kind: 'global' })));
+    await navigateView(page, url, { kind: 'global' });
     await page.reload();
     const ancestor = page.locator(`.pane.focused .body.shown .note[data-id="${data.root}"]`).first();
     const target = page.locator(`.pane.focused .body.shown .note[data-id="${data.reaction_target}"]`).first();

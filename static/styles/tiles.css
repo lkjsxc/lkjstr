@@ -44,7 +44,8 @@
 .narrow .topbar .desktop-actions { display: none; }
 .narrow .strip { height: 44px; }
 .narrow .bottom-bar { display: flex; flex: none; justify-content: space-around; align-items: center; border-top: 1px solid var(--hairline); background: var(--paper); padding: 4px 8px calc(4px + env(safe-area-inset-bottom)); }
-.bottom-bar button { border: 0; min-width: 52px; min-height: 44px; }
+.bottom-bar { flex-wrap: wrap; }
+.bottom-bar button { flex: 1 1 44px; border: 0; min-width: 44px; min-height: 44px; }
 .more-sheet { position: fixed; bottom: 60px; right: 8px; top: auto; width: min(320px, calc(100vw - 16px)); }
 @keyframes menu-in { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: translateY(0); } }
 .tab.preview > span { font-style: italic; }

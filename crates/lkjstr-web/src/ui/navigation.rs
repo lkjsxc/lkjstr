@@ -1,31 +1,37 @@
 //! Browser address bar and Back integrate with the focused tab's own history.
 use super::Ui;
 use leptos::{ev, prelude::*};
-use lkjstr_core::{Open, View, route};
+use lkjstr_core::{Open, View, addresses};
 
-fn hash(view: &View) -> String {
-    format!(
-        "#view={}",
-        js_sys::encode_uri_component(&route::encode(view))
-            .as_string()
-            .unwrap_or_default()
-    )
+fn address(ui: Ui, _tab: Option<u32>, view: &View) -> String {
+    if ui.spaces.with_untracked(|s| s.active == 0)
+        && (matches!(view, View::Home) && ui.app.with(|rt| rt.session.active.is_some())
+            || matches!(view, View::Global) && ui.app.with(|rt| rt.session.active.is_none()))
+    {
+        "/".into()
+    } else {
+        addresses::path(view)
+    }
 }
 
 pub fn restore(ui: Ui) {
-    let view = web_sys::window()
-        .and_then(|w| w.location().hash().ok())
-        .and_then(|s| {
-            s.strip_prefix("#view=")
-                .and_then(|s| js_sys::decode_uri_component(s).ok())
-                .and_then(|s| s.as_string())
-        })
-        .and_then(|s| route::decode(&s));
+    let view = web_sys::window().and_then(|w| {
+        addresses::parse(&w.location().pathname().ok()?, &w.location().search().ok()?)
+    });
     if let Some(view) = view {
+        let resumed = web_sys::window()
+            .and_then(|w| w.history().ok())
+            .and_then(|h| h.state().ok())
+            .is_some_and(|s| s.as_f64().is_some());
+        if resumed
+            && ui
+                .ws
+                .with_untracked(|ws| ws.focused_tab().and_then(|t| ws.tabs.get(&t)) == Some(&view))
+        {
+            return;
+        }
         ui.ws.update(|ws| {
-            if ws.focused_tab().and_then(|tab| ws.tabs.get(&tab)) != Some(&view) {
-                ws.open(view, Open::Here);
-            }
+            ws.open(view, Open::Here);
         });
     }
 }
@@ -42,6 +48,7 @@ pub fn install(ui: Ui, booted: RwSignal<bool>) {
     );
     let from_browser = StoredValue::new(false);
     let started = StoredValue::new(false);
+    let previous = StoredValue::new(None::<u32>);
     let focused = Memo::new(move |_| {
         ui.ws.with(|ws| {
             ws.focused_tab()
@@ -53,7 +60,7 @@ pub fn install(ui: Ui, booted: RwSignal<bool>) {
         if !booted.get() {
             return;
         }
-        let Some((_, view)) = focused.get() else {
+        let Some((tab, view)) = focused.get() else {
             return;
         };
         let Some(window) = web_sys::window() else {
@@ -62,14 +69,22 @@ pub fn install(ui: Ui, booted: RwSignal<bool>) {
         let Ok(history) = window.history() else {
             return;
         };
-        let url = hash(&view);
-        if !started.get_value() || from_browser.get_value() {
+        let url = address(ui, tab, &view);
+        if !started.get_value() || from_browser.get_value() || previous.get_value() != tab {
             let _ = history.replace_state_with_url(&position.get_value().into(), "", Some(&url));
             started.set_value(true);
             from_browser.set_value(false);
         } else {
             position.update_value(|n| *n += 1.0);
             let _ = history.push_state_with_url(&position.get_value().into(), "", Some(&url));
+        }
+        previous.set_value(tab);
+    });
+    Effect::new(move |_| {
+        if let Some((Some(tab), _)) = focused.get()
+            && let Some(document) = web_sys::window().and_then(|w| w.document())
+        {
+            document.set_title(&format!("{} · lkjstr", super::pane::tab_title(ui, tab)));
         }
     });
     let back = window_event_listener(ev::popstate, move |event| {
@@ -86,11 +101,11 @@ pub fn install(ui: Ui, booted: RwSignal<bool>) {
         ui.ws.update(|ws| changed = ws.travel(direction));
         if !changed {
             from_browser.set_value(false);
-            if let Some((_, view)) = focused.get_untracked()
+            if let Some((tab, view)) = focused.get_untracked()
                 && let Some(w) = web_sys::window()
                 && let Ok(h) = w.history()
             {
-                let _ = h.replace_state_with_url(&next.into(), "", Some(&hash(&view)));
+                let _ = h.replace_state_with_url(&next.into(), "", Some(&address(ui, tab, &view)));
             }
         }
     });

@@ -6,7 +6,7 @@
   "description": "Command aliases only. The app is Rust/WASM; see AGENTS.md.",
   "scripts": {
     "dev": "PATH=\"$HOME/.cargo/bin:$PATH\" env -u NO_COLOR trunk serve --port 8417",
-    "build": "PATH=\"$HOME/.cargo/bin:$PATH\" env -u NO_COLOR trunk build --release && pnpm check:dist",
+    "build": "PATH=\"$HOME/.cargo/bin:$PATH\" cargo test -q -p lkjstr-core --test language_guard_test && PATH=\"$HOME/.cargo/bin:$PATH\" env -u NO_COLOR trunk build --release && pnpm check:dist",
     "check:dist": "PATH=\"$HOME/.cargo/bin:$PATH\" cargo run -q -p lkjstr-xtask -- check-dist",
     "check:repo": "PATH=\"$HOME/.cargo/bin:$PATH\" cargo run -q -p lkjstr-xtask -- quiet repo",
     "test:quiet": "PATH=\"$HOME/.cargo/bin:$PATH\" cargo run -q -p lkjstr-xtask -- quiet test",

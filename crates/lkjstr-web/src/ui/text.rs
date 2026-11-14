@@ -35,16 +35,19 @@ fn civil(days: i64) -> (i64, usize, i64) {
 
 /// "now", "5m", "3h", "2d", then "Mar 4" this year or "Mar 4, 2023".
 pub fn ago(at: u64, now: u64) -> String {
+    let ui = super::Ui::get();
     let delta = now.saturating_sub(at);
     match delta {
-        0..60 => "now".to_owned(),
-        60..3_600 => format!("{}m", delta / 60),
-        3_600..86_400 => format!("{}h", delta / 3_600),
-        86_400..604_800 => format!("{}d", delta / 86_400),
+        0..60 => ui.tr("now"),
+        60..3_600 => ui.fmt("{0}m", &[&(delta / 60).to_string()]),
+        3_600..86_400 => ui.fmt("{0}h", &[&(delta / 3_600).to_string()]),
+        86_400..604_800 => ui.fmt("{0}d", &[&(delta / 86_400).to_string()]),
         _ => {
             let (year, month, day) = civil((at / 86_400) as i64);
             let (this_year, _, _) = civil((now / 86_400) as i64);
-            if year == this_year {
+            if ui.language() == lkjstr_core::appearance::Language::Japanese {
+                format!("{year}/{}/{day}", month + 1)
+            } else if year == this_year {
                 format!("{} {day}", MONTHS[month])
             } else {
                 format!("{} {day}, {year}", MONTHS[month])
@@ -63,14 +66,6 @@ pub fn stamp(at: u64) -> String {
         secs / 3_600,
         secs % 3_600 / 60
     )
-}
-
-pub fn plural(count: usize, one: &str, many: &str) -> String {
-    if count == 1 {
-        format!("1 {one}")
-    } else {
-        format!("{count} {many}")
-    }
 }
 
 pub fn date_label(ui: super::Ui, at: u64) -> String {

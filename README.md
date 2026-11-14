@@ -40,7 +40,8 @@ mkdir -p tmp
 tar -C dist -czf tmp/lkjstr-dist.tar.gz .
 ```
 
-`pnpm build` runs `trunk build --release` and validates the output. The tarball
+`pnpm build` checks interface strings, runs `trunk build --release` and
+validates the output. The tarball
 contains the complete static site with `index.html` at its root. Extract it
 into the static host's document root and serve over HTTPS, with `.wasm` files
 served as `application/wasm`. This build uses `/` as its public URL. No backend

@@ -60,4 +60,15 @@ export async function browserTabs(page, check, prefix = '') {
   await pane.getByRole('searchbox', { name: 'Filter tabs' }).fill('Settings');
   check(`${prefix} all tabs filters titles`, await pane.locator('.all-tabs').getByRole('menuitem').count() >= 1);
   await pane.locator('.all-tabs').getByRole('menuitem').first().click();
+  await active().focus();
+  await page.keyboard.press('ArrowLeft');
+  const arrowFocused = await page.waitForFunction(()=>document.activeElement===document.querySelector(".pane.focused .tab.active"),null,{timeout:3000}).then(()=>true,()=>false);
+  check(`${prefix} arrow key moves tab focus`,arrowFocused);
+  if (!(await page.locator('.app').getAttribute('class')).includes('narrow')) {
+    const before=await page.locator('.pane.focused').boundingBox();
+    await page.keyboard.press('Alt+Period');
+    const after=await page.locator('.pane.focused').boundingBox();
+    check(`${prefix} keyboard resize steps by forty pixels`,Math.abs(Math.max(after.width-before.width,after.height-before.height)-40)<1);
+    await page.keyboard.press('Alt+Comma');
+  }
 }

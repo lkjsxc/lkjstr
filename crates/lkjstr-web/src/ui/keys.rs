@@ -210,17 +210,18 @@ fn step_note(delta: i32) {
 #[component]
 pub fn Help() -> impl IntoView {
     let ui = Ui::get();
+    super::focus::return_on_close();
     view! {
         <div class="overlay" on:click=move |_| ui.help.set(false)>
-            <div class="sheet" role="dialog" aria-label="Keyboard shortcuts" on:click=|ev| ev.stop_propagation()>
+            <div class="sheet" role="dialog" aria-label=move || ui.tr("Keyboard shortcuts") on:click=|ev| ev.stop_propagation()>
                 <h2>{move || ui.tr("Keyboard shortcuts")}</h2>
                 <table class="keys">
                     {SHORTCUTS
                         .iter()
-                        .map(|(keys, what)| view! { <tr><td><kbd>{*keys}</kbd></td><td>{*what}</td></tr> })
+                        .map(|(keys, what)| view! { <tr><td><kbd>{*keys}</kbd></td><td>{move || ui.tr(what)}</td></tr> })
                         .collect_view()}
                 </table>
-                <p class="muted">"Drag a tab onto a tile's edge to split, onto its body to stack, or along a tab strip to reorder. Drag the gaps between tiles to resize."</p>
+                <p class="muted">{move || ui.tr("Drag a tab onto a tile's edge to split, onto its body to stack, or along a tab strip to reorder. Drag the gaps between tiles to resize.")}</p>
                 <button on:click=move |_| ui.help.set(false)>{move || ui.tr("Close")}</button>
             </div>
         </div>

@@ -32,7 +32,7 @@ pub fn Notification(event: Event) -> impl IntoView {
         }
         .to_owned(),
         9735 => match zap_receipt_amount_msats(&event) {
-            Some(msats) => format!("zapped {} sats", msats / 1000),
+            Some(msats) => ui.fmt("zapped {0} sats", &[&(msats / 1000).to_string()]),
             None => "zapped".to_owned(),
         },
         _ => "mentioned you".to_owned(),
@@ -80,14 +80,14 @@ pub fn Notification(event: Event) -> impl IntoView {
     };
     view! {
         <article class="note compact" tabindex="0">
-            <button class="avatar-button" data-profile=actor.clone() aria-label="Open profile" title="Open profile (p)" on:click=profile><Avatar pubkey=actor.clone() class="avatar small"/></button>
+            <button class="avatar-button" data-profile=actor.clone() aria-label=move || ui.tr("Open profile") title=move || ui.tr("Open profile (p)") on:click=profile><Avatar pubkey=actor.clone() class="avatar small"/></button>
             <div class="note-main">
                 <header>
-                    <button class="name" data-profile=who_data title="Open profile (p)" on:click=profile><super::names::Name pubkey=who/></button>
-                    <span class="notification-verb">{verb}</span>{reaction.map(|r| r.emoji.map(|e| view! { <img class="emoji" src=e.url alt=r.display.clone()/> }.into_any()).unwrap_or_else(|| r.display.into_any()))}
+                    <button class="name" data-profile=who_data title=move || ui.tr("Open profile (p)") on:click=profile><super::names::Name pubkey=who/></button>
+                    <span class="notification-verb">{move || ui.tr(&verb)}</span>{reaction.map(|r| r.emoji.map(|e| view! { <img class="emoji" src=e.url alt=r.display.clone()/> }.into_any()).unwrap_or_else(|| r.display.into_any()))}
                     <time>{move || ago(event.created_at, ui.now.get())}</time>
                 </header>
-                <button class="quote-line excerpt-button" data-thread=target_for_excerpt title="Open note" on:click=open>{move || target_text.get().unwrap_or_else(|| "your note".to_owned())}</button>
+                <button class="quote-line excerpt-button" data-thread=target_for_excerpt title=move || ui.tr("Open note") on:click=open>{move || target_text.get().unwrap_or_else(|| ui.tr("your note"))}</button>
             </div>
         </article>
     }

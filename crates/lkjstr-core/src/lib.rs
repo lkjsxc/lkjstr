@@ -30,3 +30,11 @@ pub mod spaces;
 pub mod tab_policy;
 
 mod identities;
+
+pub mod addresses;
+
+mod words_extra;
+
+mod words_format;
+
+mod words_errors;

@@ -7,7 +7,7 @@ use serde::{Deserialize, Serialize};
 pub enum View {
     /// The `+` page: choose what this tab becomes.
     Launcher,
-    Welcome,
+    NotFound,
     Home,
     Global,
     Notifications,
@@ -50,7 +50,7 @@ impl View {
     pub fn title(&self) -> &'static str {
         match self {
             View::Launcher => "New tab",
-            View::Welcome => "Welcome",
+            View::NotFound => "Nothing here",
             View::Home => "Home",
             View::Global => "Global",
             View::Notifications => "Notifications",
@@ -116,7 +116,6 @@ pub fn launcher_choices() -> Vec<LauncherChoice> {
         choice(View::Relays, "Relays", "Connections and relay lists"),
         choice(View::Accounts, "Accounts", "Keys and signers"),
         choice(View::Settings, "Settings", "Theme and reading"),
-        choice(View::Welcome, "Welcome", "Getting started and shortcuts"),
     ]
 }
 

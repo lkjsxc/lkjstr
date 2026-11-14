@@ -4,6 +4,27 @@
 
 Durable decisions, newest first, with the reason for each.
 
+## 2026-11-14: Public addresses and language boundaries
+
+- `addresses` owns validated, public paths in the core. JSON view serialization
+  stays internal to persistence and feed anchors; it never enters public URLs.
+- Focus changes replace browser state; navigation within a tab pushes it.
+  A saved focused view resumes its history on reload. Explicit addresses add
+  independent tabs to the saved desk. Unsupported addresses offer a way home.
+- Search keys containing an nsec prefix are refused before relay requests or
+  public workspace persistence. Signer exceptions are reduced to known messages
+  so an extension cannot echo a secret in an error.
+- Interface words and numbered formatting templates live in bounded core tables.
+  A native source guard rejects literal view prose/accessibility text and missing
+  table entries. The normal build runs that guard before producing the artifact.
+- Identical neighbour details are independent too. A different detail may still
+  replace a preview according to the neighbour rule; identical opens keep the
+  old preview and create a fresh one.
+- Physical keyboard resizing is pure core policy. Browser measurements supply
+  desk dimensions; the core clamps 40px steps to subtree minima.
+- The requested steward notes, review and ADR directory did not exist when this
+  phase began. No external ADR records were available to import.
+
 ## 2026-11-14: Rust/WASM only, no compatibility
 
 - The SvelteKit app and the Rust island crates were deleted rather than ported:

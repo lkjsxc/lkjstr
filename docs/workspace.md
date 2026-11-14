@@ -14,7 +14,7 @@ edits are pure functions with tests in `crates/lkjstr-core/tests/`.
 Opening a note or person uses a preview in the pane to the right. With no
 neighbour, it splits only if both halves retain 360px; otherwise it adds a tab
 here. The next preview replaces the previous preview, retaining back/forward
-history. Reopening the same preview activates it without adding history.
+history. Opening an identical preview keeps the old tab and creates an independent one.
 Ctrl/Cmd-click keeps a detail; double-clicking a tab or pressing Enter
 twice keeps a preview. Editing also keeps it. Identical views always open
 independently. Closing the last tab removes its tile; the final remaining tile
@@ -25,8 +25,8 @@ disabled. Pin moves a tab first and protects it from bulk closure. Duplicate
 copies its view and navigation history, with an independent draft key.
 
 Each tab retains up to 64 history entries. Alt+Left/Right, mouse side buttons
-and browser Back navigate the focused tab. The URL hash contains only public
-view data, including search text; every view can be linked. Closed tabs/tiles
+and browser Back navigate the focused tab. Clean public paths describe the focused tab; searches alone use a query string.
+Unaddressed image and website tiles retain their state only in the saved desk. Closed tabs/tiles
 reopen with Ctrl/Cmd+Shift+T. Alt+Z restores a layout snapshot. Recovery is
 bounded to 32 snapshots and lasts for this page lifetime.
 Closing a tile records one recovery and undo action before applying that cap.
@@ -111,4 +111,5 @@ Short tiles hide secondary rows. The tab list scrolls independently of its
 New tab, All tabs and menu controls. Settings stores tab width, scale and
 middle-click preference per device. Resizing clamps to 160px wide or 96px high;
 new explicit splits are refused when both halves cannot retain those minima.
-Exact 40px keyboard resize steps and complete touch conventions remain open.
+Keyboard resize uses exact 40px steps clamped to subtree minima. Complete touch
+conventions and menu shortcut coverage remain open.

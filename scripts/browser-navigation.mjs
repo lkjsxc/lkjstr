@@ -1,3 +1,4 @@
+import { navigateView, viewPath } from './browser-addresses.mjs';
 // Navigation/recovery and finite loading, with signed fixtures and no upstreams.
 import { spawnSync } from 'node:child_process';
 import { fakeRelay } from './browser-relay.mjs';
@@ -41,10 +42,10 @@ export async function browserNavigation(browser, url, check) {
     await page.locator('.pane.focused .tab:has-text("Notifications")').click();
     await root.click({ position: { x: 4, y: 12 } });
     await focused().locator('.thread .note.focused').waitFor();
-    check('clicking the same note reactivates its hidden neighbour preview', await page.locator('.pane.focused .tab.active.preview').count() === 1 && await page.locator('.tab').count() === before + 1);
+    check('clicking the same note opens an independent neighbour preview', await page.locator('.pane.focused .tab.active.preview').count() === 1 && await page.locator('.tab').count() === before + 2);
     await root.locator('.name').click();
     await focused().locator('.profile-head').waitFor();
-    check('next detail replaces the neighbour preview', await page.locator('.tab').count() === before + 1);
+    check('next detail replaces the neighbour preview', await page.locator('.tab').count() === before + 2);
     await page.keyboard.press('Alt+ArrowLeft');
     await focused().locator('.thread').waitFor();
     check('Alt+Left uses per-tab history', true);
@@ -58,7 +59,7 @@ export async function browserNavigation(browser, url, check) {
     check('double click keeps preview tab', await page.locator('.pane.focused .tab.active.preview').count() === 0);
     await root.click({ position: { x: 4, y: 12 }, modifiers: ['Control'] });
     await focused().locator('.thread').waitFor();
-    check('Ctrl click opens independent kept detail', await page.locator('.tab').count() === before + 2 && await page.locator('.pane.focused .tab.active.preview').count() === 0);
+    check('Ctrl click opens independent kept detail', await page.locator('.tab').count() === before + 3 && await page.locator('.pane.focused .tab.active.preview').count() === 0);
     const count = await page.locator('.pane').count();
     await page.keyboard.press('Alt+Backslash');
     await page.waitForFunction((n) => document.querySelectorAll('.pane').length === n + 1, count);
@@ -69,15 +70,15 @@ export async function browserNavigation(browser, url, check) {
     const search = focused().locator('input[type=search]');
     await search.fill('日本語 history-marker');
     await search.press('Enter');
-    await page.waitForFunction(() => decodeURIComponent(location.hash).includes('history-marker'));
-    const route = await page.evaluate(() => location.hash);
+    await page.waitForFunction(() => decodeURIComponent(location.pathname + location.search).includes('history-marker'));
+    const route = await page.evaluate(() => location.pathname + location.search);
     const tabs = await page.locator('.tab').count();
     await page.locator('.brand').click();
     await page.keyboard.press('Alt+w');
     await page.keyboard.press('Control+Shift+t');
     await focused().locator('input[type=search]').waitFor();
     check('closed tab reopens with its search state', await focused().locator('input[type=search]').inputValue() === '日本語 history-marker' && await page.locator('.tab').count() === tabs);
-    await page.goto(url + route);
+    await page.goto(new URL(route, url).href);
     await page.locator('.pane').first().waitFor();
     await focused().locator('input[type=search]').waitFor();
     check('address link restores view and Unicode query', await focused().locator('input[type=search]').inputValue() === '日本語 history-marker');
@@ -105,7 +106,7 @@ export async function browserNavigation(browser, url, check) {
     await pending.page.clock.fastForward(13_000);
     await pending.page.locator('.pane.focused .body.shown .empty').filter({ hasText: 'Search relays failed' }).waitFor();
     check('silent search settles into error and retry action', await pending.page.locator('.pane.focused .body.shown .empty button').count() === 1);
-    await pending.page.goto(url + '#view=' + encodeURIComponent(JSON.stringify({ kind: 'thread', id: 'f'.repeat(64), relays: [] })));
+    await navigateView(pending.page, url, { kind: 'thread', id: 'f'.repeat(64), relays: [] });
     await pending.page.locator('.pane.focused .body.shown .thread').waitFor();
     await pending.page.waitForTimeout(200);
     await pending.page.clock.fastForward(13_000);
@@ -115,7 +116,7 @@ export async function browserNavigation(browser, url, check) {
     await pending.page.locator('.pane.focused .body.shown .thread .empty').getByRole('button', { name: 'Try again', exact: true }).click();
     await pending.page.locator('.pane.focused .body.shown .thread .empty').filter({ hasText: 'Note not found' }).waitFor();
     check('retry makes a new request and reports counted not-found', /[1-9]\d* relays asked/.test(await pending.page.locator('.pane.focused .body.shown .thread .empty').innerText()));
-    await pending.page.goto(url + '#view=' + encodeURIComponent(JSON.stringify({ kind: 'image', url: 'https://blocked.example/photo.png' })));
+    await navigateView(pending.page, url, { kind: 'image', url: 'https://blocked.example/photo.png' });
     await pending.page.locator('.pane.focused .body.shown .image-page .error').waitFor();
     check('failed image has one retry action', await pending.page.locator('.pane.focused .body.shown .image-page button').count() === 1);
   } finally { await pending.context.close(); }
@@ -142,9 +143,10 @@ export async function browserNavigation(browser, url, check) {
         await page.locator('.boot').waitFor();
         await page.clock.fastForward(16_000);
         await page.locator('.pane').first().waitFor();
-        await page.locator('.tab').filter({ hasText: 'Welcome' }).click();
-        await page.locator('.storage-state').filter({ hasText: 'Local storage unavailable' }).waitFor();
-        check('blocked storage boot settles into failure and retry', await page.locator('.storage-state button').count() === 1);
+        await page.keyboard.press('Control+k');
+        await page.getByRole('dialog').getByRole('button', {name:'Settings',exact:true}).click();
+        await page.locator('.pane.focused .body.shown .storage-state').filter({ hasText: 'Local storage unavailable' }).waitFor();
+        check('blocked storage boot settles into failure and retry', await page.locator('.pane.focused .body.shown .storage-state button').count() === 1);
       } else {
         await page.locator('.pane').first().waitFor();
         await page.locator('.topbar .account').click();

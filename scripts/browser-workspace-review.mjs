@@ -74,7 +74,7 @@ export async function browserWorkspaceReview(browser, url, check) {
     await load.first().click();
     await load.first().click();
     check('manual quote and repost loads register unanswered requests', await poll(() => outstanding() > 0));
-    await page.locator('.pane.focused .tab').filter({ hasText: /^Welcome$/ }).click();
+    await page.locator('.pane.focused .tab').filter({ hasText: /^Settings$/ }).click();
     check('hiding the owning tab closes manual reference requests before their deadline', await poll(() => outstanding() === 0));
     const before = requests;
     await page.locator(`.tab[data-tab="${tab}"]`).click();

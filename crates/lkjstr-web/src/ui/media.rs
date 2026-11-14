@@ -41,7 +41,7 @@ pub fn Picture(url: String, style: String) -> impl IntoView {
     view! {
         <Show when=move || pressed.get() || !ui.data_saver() fallback=move || view! { <button class="media load-media" style=style.get_value() on:click=move |ev| { ev.stop_propagation(); pressed.set(true); }>{move || ui.tr("Load image")}</button> }>
             <a class="media" href=url.get_value() style=style.get_value() on:click=move |ev| { ev.prevent_default(); ev.stop_propagation(); ui.detail(lkjstr_core::View::Image { url:url.get_value() },Some(&ev)); }>
-                <img src=url.get_value() alt="Image" loading="lazy" decoding="async" referrerpolicy="no-referrer"/>
+                <img src=url.get_value() alt=move || ui.tr("Image") loading="lazy" decoding="async" referrerpolicy="no-referrer"/>
             </a>
         </Show>
     }

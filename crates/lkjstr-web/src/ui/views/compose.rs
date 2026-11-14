@@ -10,7 +10,6 @@ use crate::runtime::{PubState, Publish};
 use crate::ui::Ui;
 use crate::ui::feed::hold_want;
 use crate::ui::note::Note;
-use crate::ui::text::plural;
 
 fn hashtags(content: &str) -> Vec<Vec<String>> {
     content
@@ -22,20 +21,23 @@ fn hashtags(content: &str) -> Vec<Vec<String>> {
         .collect()
 }
 
-fn publish_line(publish: &Publish) -> String {
+fn publish_line(ui: Ui, publish: &Publish) -> String {
     let total = publish.relays.len();
     let accepted = publish.accepted();
     let pending = publish.pending();
     if total == 0 {
-        return "Saved locally; no relay to send to.".to_owned();
+        return ui.tr("Saved locally; no relay to send to.");
     }
     match (accepted, pending) {
-        (0, 0) => "No relay accepted it. Check Relays and try again.".to_owned(),
-        (a, 0) => format!(
-            "Sent · accepted by {a} of {}",
-            plural(total, "relay", "relays")
+        (0, 0) => ui.tr("No relay accepted it. Check Relays and try again."),
+        (a, 0) => ui.fmt(
+            "Sent · accepted by {0} of {1} relays",
+            &[&a.to_string(), &total.to_string()],
         ),
-        (a, p) => format!("Sending · {a} accepted, {p} waiting"),
+        (a, p) => ui.fmt(
+            "Sending · {0} accepted, {1} waiting",
+            &[&a.to_string(), &p.to_string()],
+        ),
     }
 }
 
@@ -125,8 +127,8 @@ pub fn Compose(tab: TabId, reply_to: Option<String>, visible: Signal<bool>) -> i
             {move || (reply_to.is_some() && parent.get().is_none()).then(|| view! { <p class="muted"><crate::ui::reference::Missing id=parent_id.get_value()/></p> })}
             <textarea
                 rows="6"
-                placeholder=if parent_id.get_value().is_some() { "Write your reply" } else { "What's happening?" }
-                aria-label="Note text"
+                placeholder=move || ui.tr(if parent_id.get_value().is_some() { "Write your reply" } else { "What's happening?" })
+                aria-label=move || ui.tr("Note text")
                 prop:value=move || text.get()
                 on:input=move |ev| {
                     let value = event_target_value(&ev);
@@ -144,37 +146,37 @@ pub fn Compose(tab: TabId, reply_to: Option<String>, visible: Signal<bool>) -> i
                 <label class="check">
                     <input type="checkbox" prop:checked=move || warning.get().is_some()
                         on:change=move |ev| warning.set(event_target_checked(&ev).then(String::new))/>{move || ui.tr("Content warning")}</label>
-                <span class="muted">{move || if text.get().is_empty() { String::new() } else { format!("{} characters", text.get().chars().count()) }}</span>
+                <span class="muted">{move || if text.get().is_empty() { String::new() } else { ui.fmt("{0} characters", &[&text.get().chars().count().to_string()]) }}</span>
                 <span class="strip-fill"></span>
                 <button class="primary" disabled=move || !can_sign.get() || busy.get() || text.get().trim().is_empty() || (parent_id.get_value().is_some() && parent.get().is_none())
-                    title="Post (Ctrl+Enter)" on:click=move |_| post()>
-                    {move || if busy.get() { "Signing…" } else if parent_id.get_value().is_some() { "Reply" } else { "Post" }}
+                    title=move || ui.tr("Post (Ctrl+Enter)") on:click=move |_| post()>
+                    {move || ui.tr(if busy.get() { "Signing…" } else if parent_id.get_value().is_some() { "Reply" } else { "Post" })}
                 </button>
             </div>
             <Show when=move || warning.get().is_some()>
-                <input class="wide" placeholder="Reason (optional)" prop:value=move || warning.get().unwrap_or_default()
+                <input class="wide" placeholder=move || ui.tr("Reason (optional)") prop:value=move || warning.get().unwrap_or_default()
                     on:input=move |ev| warning.set(Some(event_target_value(&ev)))/>
             </Show>
-            {move || (!can_sign.get()).then(|| view! { <p class="muted">"To post, " <button class="link" on:click=move |_| { ui.open(lkjstr_core::View::Accounts,lkjstr_core::Open::Here); }>"Add a key"</button></p> })}
-            {move || error.get().map(|e| view! { <p class="error" role="alert">{e}</p> })}
+            {move || (!can_sign.get()).then(|| view! { <p class="muted">{move || ui.tr("To post, ")} <button class="link" on:click=move |_| { ui.open(lkjstr_core::View::Accounts,lkjstr_core::Open::Here); }>{move || ui.tr("Add a key")}</button></p> })}
+            {move || error.get().map(|e| view! { <p class="error" role="alert">{ui.tr(&e)}</p> })}
             <ul class="publishes">
                 <For each=move || mine.get() key=|p| (p.event.id.clone(), p.accepted(), p.pending()) let:publish>
                     <li>
                         <span>{match publish.event.kind {
                             1 => publish.event.content.chars().take(60).collect::<String>(),
-                            3 => "Follow list".to_owned(),
-                            5 => "Undo (deletion request)".to_owned(),
-                            6 => "Repost".to_owned(),
-                            7 => "Like".to_owned(),
-                            other => format!("Event of kind {other}"),
+                            3 => ui.tr("Follow list"),
+                            5 => ui.tr("Undo (deletion request)"),
+                            6 => ui.tr("Repost"),
+                            7 => ui.tr("Like"),
+                            other => ui.fmt("Event of kind {0}", &[&other.to_string()]),
                         }}</span>
-                        <span class="muted">{publish_line(&publish)}</span>
+                        <span class="muted">{publish_line(ui, &publish)}</span>
                         <details><summary>{move || ui.tr("Relays")}</summary>
                             {publish.relays.iter().map(|(url, state)| view! {
                                 <div class="small">{url.clone()} " · " {match state {
-                                    PubState::Sending => "waiting".to_owned(),
-                                    PubState::Accepted => "accepted".to_owned(),
-                                    PubState::Rejected(why) => format!("refused: {why}"),
+                                    PubState::Sending => ui.tr("waiting"),
+                                    PubState::Accepted => ui.tr("accepted"),
+                                    PubState::Rejected(why) => ui.fmt("refused: {0}", &[why]),
                                 }}</div>
                             }).collect_view()}
                         </details>

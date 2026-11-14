@@ -56,7 +56,7 @@ pub fn Image(url: String) -> impl IntoView {
             <For each=move || [retry.get()] key=|attempt| *attempt children=move |attempt| {
                 let current = move || retry.get_untracked() == attempt;
                 view! {
-                    <img class="image-target" src=url.clone() alt="Image" referrerpolicy="no-referrer" hidden=move || failed.get() on:load=move |_| { if current() { loading.set(false); } } on:error=move |_| { if current() { loading.set(false); failed.set(true); } }/>
+                    <img class="image-target" src=url.clone() alt=move || ui.tr("Image") referrerpolicy="no-referrer" hidden=move || failed.get() on:load=move |_| { if current() { loading.set(false); } } on:error=move |_| { if current() { loading.set(false); failed.set(true); } }/>
                 }
             }/>
         </div>
