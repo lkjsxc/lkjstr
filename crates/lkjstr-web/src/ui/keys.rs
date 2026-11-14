@@ -101,6 +101,9 @@ pub fn handle(ui: Ui, ev: &KeyboardEvent) {
             ui.open(View::Compose { reply_to: None }, Open::Beside);
             after(30, || focus_selector(".pane.focused .body.shown textarea"));
         }
+        digit if digit.len() == 1 && ('1'..='9').contains(&digit.chars().next().unwrap_or('0')) => {
+            launch(ui, digit.parse::<usize>().unwrap_or(1) - 1);
+        }
         "/" => {
             ev.prevent_default();
             ui.open(
@@ -114,6 +117,18 @@ pub fn handle(ui: Ui, ev: &KeyboardEvent) {
             });
         }
         _ => (),
+    }
+}
+
+/// On a New tab page, a digit picks that launcher entry.
+fn launch(ui: Ui, index: usize) {
+    let target = ui.ws.with_untracked(|ws| {
+        let tab = ws.focused_tab()?;
+        (ws.tabs.get(&tab) == Some(&View::Launcher)).then_some(tab)
+    });
+    let choice = lkjstr_core::launcher_choices().into_iter().nth(index);
+    if let (Some(tab), Some(choice)) = (target, choice) {
+        ui.ws.update(|ws| ws.replace_view(tab, choice.view));
     }
 }
 

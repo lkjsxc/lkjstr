@@ -87,6 +87,7 @@ pub fn Shell() -> impl IntoView {
             <Show when=move || ui.help.get()>
                 <keys::Help/>
             </Show>
+            <Toast/>
         </div>
     }
 }
@@ -164,5 +165,29 @@ fn status_text(summary: Summary) -> String {
         format!("● {relays} · syncing")
     } else {
         format!("● {relays}")
+    }
+}
+
+/// The last failed action, until dismissed.
+#[component]
+fn Toast() -> impl IntoView {
+    let app = Ui::get().app;
+    let notice = Memo::new(move |_| {
+        app.session_rev.track();
+        app.with(|rt| rt.notice.clone())
+    });
+    let dismiss = move |_| {
+        app.update(|rt| rt.notice = None);
+        app.session_rev.update(|rev| *rev += 1);
+    };
+    move || {
+        notice.get().map(|text| {
+            view! {
+                <div class="toast" role="alert">
+                    <span>{text}</span>
+                    <button class="ghost" on:click=dismiss>"Dismiss"</button>
+                </div>
+            }
+        })
     }
 }

@@ -87,7 +87,11 @@ pub fn Profile(pubkey: String, visible: Signal<bool>) -> impl IntoView {
                     <Avatar pubkey=pubkey.clone() class="avatar large"/>
                     <div>
                         <h2>{move || name_of(ui, &key.get_value())}</h2>
-                        <p class="muted">{move || profile.get().map(|p| p.nip05.clone()).filter(|n| !n.is_empty()).unwrap_or_else(|| short_npub(&key.get_value()))}</p>
+                        <p class="muted">{move || {
+                            let nip05 = profile.get().map(|p| p.nip05.clone()).unwrap_or_default();
+                            let named = profile.get().is_some_and(|p| p.label().is_some());
+                            if !nip05.is_empty() { nip05 } else if named { short_npub(&key.get_value()) } else { String::new() }
+                        }}</p>
                     </div>
                     <span class="strip-fill"></span>
                     {move || match relation.get() {

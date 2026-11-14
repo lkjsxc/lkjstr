@@ -50,12 +50,23 @@
 }
 
 .note .name {
+  flex: 0 1 auto;
+  min-width: 0;
   padding: 0;
   border: none;
   background: none;
   font-weight: 600;
   overflow: hidden;
   text-overflow: ellipsis;
+}
+
+.note .handle {
+  flex: 0 1 auto;
+  min-width: 3em;
+}
+
+.note time {
+  flex: none;
 }
 
 .note .handle,
@@ -221,9 +232,15 @@
   box-shadow: 0 4px 14px rgba(0, 0, 0, 0.2);
 }
 
-.empty,
-.feed-foot,
 .note-missing {
+  padding: 0.5rem 1rem 0.5rem 4.35rem;
+  border-bottom: 1px solid var(--line);
+  font-size: 0.85em;
+  color: var(--muted);
+}
+
+.empty,
+.feed-foot {
   padding: 2rem 1.25rem;
   text-align: center;
   color: var(--muted);

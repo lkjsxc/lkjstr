@@ -11,6 +11,7 @@ use lkjstr_core::timeline::Timeline;
 use wasm_bindgen::JsCast;
 
 use super::Ui;
+use super::feed_memory;
 use super::feed_state::{EmptyState, prefetch};
 use super::note::Note;
 use super::notify::Notification;
@@ -120,7 +121,11 @@ pub fn hold_want(
 }
 
 #[component]
-pub fn Feed(source: Source, visible: Signal<bool>) -> impl IntoView {
+pub fn Feed(
+    source: Source,
+    visible: Signal<bool>,
+    #[prop(optional)] tab: Option<lkjstr_core::layout::TabId>,
+) -> impl IntoView {
     let ui = Ui::get();
     let app = ui.app;
     let me = Memo::new(move |_| {
@@ -182,7 +187,16 @@ pub fn Feed(source: Source, visible: Signal<bool>) -> impl IntoView {
         timeline.update_value(Timeline::reveal);
         tick.update(|t| *t += 1);
     };
+    let container = NodeRef::<leptos::html::Div>::new();
+    let saving = StoredValue::new(false);
+    feed_memory::restore(
+        ui,
+        tab,
+        container,
+        Signal::derive(move || rows.with(|r| r.0.clone())),
+    );
     let on_scroll = move |ev: web_sys::Event| {
+        feed_memory::remember(ui, tab, container, saving);
         let Some(el) = ev
             .target()
             .and_then(|t| t.dyn_into::<web_sys::Element>().ok())
@@ -204,7 +218,7 @@ pub fn Feed(source: Source, visible: Signal<bool>) -> impl IntoView {
     };
     let is_notifications = source == Source::Notifications;
     view! {
-        <div class="feed" on:scroll=on_scroll>
+        <div class="feed" node_ref=container on:scroll=on_scroll>
             <Show when=move || rows.with(|r| r.1 > 0)>
                 <button class="new-marker" on:click=move |ev| {
                     reveal();

@@ -82,13 +82,21 @@ Implemented:
 - Prefetch: profiles, reply parents, quotes and repost targets of the first 60
   rendered rows of each visible tile.
 
+Built but not working or not verified:
+
+- Scroll memory per feed tab: the top visible note is saved (checked in
+  IndexedDB), but restoring it after a reload did not work in a browser check
+  on Global; a probe also saw fewer cached rows than expected right after
+  reload. Investigate `ui/feed_memory.rs` and the first Global render first.
+- IndexedDB pruning (oldest rows beyond 60000, down to 50000, 20 s after
+  boot) is implemented but not exercised in a browser.
+
 Planned (not built):
 
 - Parsing and verification in a Web Worker running the same WASM core.
 - Hover or focus warming of threads and profiles; idle-time budgets.
 - `since` on re-subscription to avoid re-fetching after a replan.
 - Scroll position restore across reloads; per-tab feed state persistence.
-- IndexedDB pruning (the events store grows without bound today).
 
 ## Does not work yet
 
@@ -97,6 +105,9 @@ Planned (not built):
 - No DMs (NIP-04, NIP-17), zap sending, media upload, relay list editing,
   mute lists, custom emoji picker, profile editing.
 - Virtualisation is `content-visibility` plus a 600-row cap, not windowing.
+- Release WASM is 9.4 MB (1.0 MB gzip) because wasm-opt is off
+  (`data-wasm-opt="0"` avoids a download); enable it for size.
+- Docker `verify` was not run on this branch.
 - Notification read state is not tracked.
 
 ## Next steps, in order
@@ -106,5 +117,5 @@ Planned (not built):
 3. Relay list editing (publish kind 10002) and mute lists (kind 10000).
 4. DMs via NIP-17 once `lkjstr-nips` lands; plug its scoring and outbox
    selection behind `plan::Directory` and `relays::Scores`.
-5. IndexedDB pruning and scroll restore.
+5. Fix scroll restore after reload; verify pruning.
 6. Adapt `lkjstr-host` to Trunk's `dist/` and restore the self-hosted image.

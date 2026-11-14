@@ -9,6 +9,9 @@ use crate::host::{after, idb};
 /// Events reloaded at startup, newest first.
 const BOOT_EVENTS: usize = 8_000;
 const FLUSH_MS: u64 = 1_500;
+/// Rows kept in IndexedDB; above `PRUNE_AT` the oldest go at startup.
+const KEEP_STORED: u32 = 50_000;
+const PRUNE_AT: u32 = 60_000;
 const SCORES_MS: u64 = 30_000;
 
 /// Raw stored UI state handed to the shell after boot.
@@ -55,6 +58,7 @@ impl App {
                         rt.session.restore(session.as_deref(), secrets);
                     });
                     self.save_scores_later();
+                    self.prune_later();
                 }
                 Err(error) => self.update(|rt| rt.storage = Storage::Unavailable(error)),
             }
@@ -76,6 +80,22 @@ impl App {
             if let Some(db) = &rt.db {
                 let _ = idb::kv_put(db, key, value);
             }
+        });
+    }
+
+    /// Bounds the on-disk cache after startup work has settled.
+    fn prune_later(self) {
+        after(20_000, move || {
+            let Some(db) = self.with(|rt| rt.db.clone()) else {
+                return;
+            };
+            leptos::task::spawn_local(async move {
+                if let Ok(count) = idb::count_events(&db).await
+                    && count > PRUNE_AT
+                {
+                    let _ = idb::delete_oldest(&db, count - KEEP_STORED).await;
+                }
+            });
         });
     }
 

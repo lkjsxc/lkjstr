@@ -26,10 +26,12 @@ pub fn TabBody(tab: TabId, visible: Signal<bool>) -> impl IntoView {
         match view {
             View::Launcher => view! { <simple::Launcher tab=tab/> }.into_any(),
             View::Welcome => view! { <simple::Welcome/> }.into_any(),
-            View::Home => view! { <Feed source=Source::Home visible=visible/> }.into_any(),
-            View::Global => view! { <Feed source=Source::Global visible=visible/> }.into_any(),
+            View::Home => view! { <Feed source=Source::Home visible=visible tab=tab/> }.into_any(),
+            View::Global => {
+                view! { <Feed source=Source::Global visible=visible tab=tab/> }.into_any()
+            }
             View::Notifications => {
-                view! { <Feed source=Source::Notifications visible=visible/> }.into_any()
+                view! { <Feed source=Source::Notifications visible=visible tab=tab/> }.into_any()
             }
             View::Thread { id, relays } => {
                 view! { <thread::Thread id=id relays=relays visible=visible/> }.into_any()

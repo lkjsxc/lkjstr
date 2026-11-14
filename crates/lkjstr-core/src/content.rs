@@ -123,10 +123,15 @@ fn custom_emoji(rest: &str, emoji: &[(String, String)]) -> Option<Segment> {
     })
 }
 
-/// Long unbroken runs of base64/hex: encrypted or binary payloads posted as
-/// notes. Global hides them; they are unreadable to people.
+/// Machine payloads posted as notes: JSON documents, or long unbroken runs of
+/// base64/hex (encrypted or binary data). Global hides them.
 pub fn looks_like_noise(content: &str) -> bool {
     let text = content.trim();
+    let json_like = (text.starts_with('{') && text.ends_with('}'))
+        || (text.starts_with('[') && text.ends_with(']'));
+    if json_like && serde_json::from_str::<serde_json::Value>(text).is_ok() {
+        return true;
+    }
     if text.len() < 120 || text.contains(char::is_whitespace) {
         return false;
     }

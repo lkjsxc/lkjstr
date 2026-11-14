@@ -176,6 +176,42 @@ pub async fn newest_events(db: &IdbDatabase, limit: usize) -> Result<Vec<String>
     Ok(out)
 }
 
+/// Deletes the `count` oldest event rows (by `created_at`).
+pub async fn delete_oldest(db: &IdbDatabase, count: u32) -> Result<(), String> {
+    let tx = db
+        .transaction_with_str_and_mode("events", IdbTransactionMode::Readwrite)
+        .map_err(err)?;
+    let index = tx
+        .object_store("events")
+        .map_err(err)?
+        .index("created_at")
+        .map_err(err)?;
+    let request = index.open_cursor().map_err(err)?;
+    let left = Rc::new(RefCell::new(count));
+    let slot: Rc<RefCell<Option<Step>>> = Rc::default();
+    let done = Promise::new(&mut |resolve, _reject| {
+        let cursor_request = request.clone();
+        let release = slot.clone();
+        let left = left.clone();
+        let step = Step::new(move |_| {
+            let cursor = cursor_request.result().unwrap_or(JsValue::NULL);
+            if cursor.is_null() || *left.borrow() == 0 {
+                let _ = resolve.call0(&JsValue::NULL);
+                release.borrow_mut().take();
+                return;
+            }
+            let cursor: web_sys::IdbCursorWithValue = cursor.unchecked_into();
+            let _ = cursor.delete();
+            *left.borrow_mut() -= 1;
+            let _ = cursor.continue_();
+        });
+        request.set_onsuccess(Some(step.as_ref().unchecked_ref()));
+        *slot.borrow_mut() = Some(step);
+    });
+    JsFuture::from(done).await.map_err(err)?;
+    Ok(())
+}
+
 /// Total rows in the events store.
 pub async fn count_events(db: &IdbDatabase) -> Result<u32, String> {
     let tx = db.transaction_with_str("events").map_err(err)?;

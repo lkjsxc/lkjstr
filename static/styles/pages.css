@@ -156,6 +156,15 @@ fieldset {
   border-radius: 999px;
 }
 
+.table-wrap {
+  overflow-x: auto;
+}
+
+table.relays td.url {
+  overflow-wrap: anywhere;
+  min-width: 10rem;
+}
+
 table.relays {
   width: 100%;
   border-collapse: collapse;

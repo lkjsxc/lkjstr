@@ -3,6 +3,7 @@
 
 mod drag;
 mod feed;
+mod feed_memory;
 mod feed_state;
 mod keys;
 mod note;

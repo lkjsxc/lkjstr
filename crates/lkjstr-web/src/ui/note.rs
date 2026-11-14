@@ -91,7 +91,11 @@ pub fn Note(
         (event.clone(), None)
     };
     if event.kind == 6 && reposter.is_none() {
-        return view! { <div class="note-missing">"Repost of a note that has not arrived yet."</div> }.into_any();
+        let who = event.pubkey.clone();
+        return view! {
+            <div class="note-missing">"↻ " {move || name_of(ui, &who)} " reposted a note that is still loading"</div>
+        }
+        .into_any();
     }
     let id = shown.id.clone();
     let author = shown.pubkey.clone();
@@ -140,7 +144,7 @@ pub fn Note(
         .with(|rt| rt.store.profile(&author).map(|p| p.nip05.clone()))
         .unwrap_or_default();
     view! {
-        <article class="note" class:focused=focused tabindex="0" style=format!("--depth: {depth}") on:keydown=keydown on:click=move |_| open()>
+        <article class="note" class:focused=focused tabindex="0" data-id=id.clone() style=format!("--depth: {depth}") on:keydown=keydown on:click=move |_| open()>
             {reposter.map(|who| view! { <div class="reposted">"↻ " {move || name_of(ui, &who)} " reposted"</div> })}
             <button class="avatar-button" aria-label="Open profile" on:click=move |ev| { ev.stop_propagation(); profile(); }>
                 <Avatar pubkey=author.clone()/>

@@ -46,3 +46,11 @@ Browser checks are evidence, not a canonical gate: Chromium must be present.
   events rendered, Relays view showed state, latency and counts.
 - `pnpm smoke:browser` against a debug build: all 14 checks passed. It found
   and now guards a want-id collision that left Notifications unplanned.
+- `pnpm verify:quiet` (repo checks, fmt, clippy native and wasm32, tests,
+  `trunk build --release`, dist check) passed before the scroll-memory and
+  pruning change; after it: clippy wasm32, debug build and smoke (15 of 15,
+  twice) passed.
+- Public relays, read only: Thread and Profile open beside Global with real
+  content, images keep reserved space, the "new" marker appears when scrolled.
+- Scroll restore after reload: failed in a browser check (see status.md).
+- Docker verify: not run.

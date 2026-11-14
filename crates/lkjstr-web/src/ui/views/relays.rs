@@ -48,7 +48,7 @@ pub fn Relays() -> impl IntoView {
                 )
             }}</p>
             <p class="small muted">"lkjstr picks relays per author from their published relay lists (outbox), prefers relays that answer fast and return new notes, asks a second relay when one is slow, and backs off from failing relays."</p>
-            <table class="relays">
+            <div class="table-wrap"><table class="relays">
                 <thead><tr><th>"Relay"</th><th>"State"</th><th>"Requests"</th><th>"Latency"</th><th>"Events"</th><th>"Score"</th></tr></thead>
                 <tbody>
                     <For each=move || rows.get() key=|row| (row.url.clone(), format!("{:?}{}{}{:?}", row.link, row.requests, row.events, row.latency_ms.map(|l| l as u64))) let:row>
@@ -70,7 +70,7 @@ pub fn Relays() -> impl IntoView {
                         }
                     </For>
                 </tbody>
-            </table>
+            </table></div>
             <h3>"Your relay list"</h3>
             {move || match own.get() {
                 Some(list) if !list.is_empty() => view! {
