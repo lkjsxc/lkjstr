@@ -1,0 +1,235 @@
+/* Timelines and notes: reading first. */
+.feed {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  position: relative;
+}
+
+.note {
+  display: grid;
+  grid-template-columns: 2.6rem 1fr;
+  gap: 0 0.75rem;
+  padding: 0.75rem 1rem 0.5rem calc(1rem + var(--depth, 0) * 1.1rem);
+  border-bottom: 1px solid var(--line);
+  cursor: pointer;
+  content-visibility: auto;
+  contain-intrinsic-size: auto 9rem;
+}
+
+.note:hover {
+  background: var(--raised);
+}
+
+.note.focused {
+  background: var(--accent-soft);
+}
+
+.note:focus-visible {
+  outline-offset: -2px;
+}
+
+.note .reposted {
+  grid-column: 2;
+  font-size: 0.85em;
+  color: var(--muted);
+}
+
+.note-main {
+  min-width: 0;
+  max-width: 42rem;
+}
+
+.note header {
+  display: flex;
+  align-items: baseline;
+  gap: 0.4rem;
+  white-space: nowrap;
+  overflow: hidden;
+}
+
+.note .name {
+  padding: 0;
+  border: none;
+  background: none;
+  font-weight: 600;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.note .handle,
+.note time {
+  color: var(--muted);
+  font-size: 0.85em;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.note time::before {
+  content: "· ";
+}
+
+.avatar-button {
+  padding: 0;
+  border: none;
+  background: none;
+  align-self: start;
+}
+
+.avatar {
+  display: inline-grid;
+  place-items: center;
+  width: 2.6rem;
+  height: 2.6rem;
+  border-radius: 50%;
+  overflow: hidden;
+  flex: none;
+  font-weight: 600;
+  color: #fff;
+  background: hsl(var(--hue, 220) 45% 52%);
+}
+
+.avatar img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.avatar.small {
+  width: 1.6rem;
+  height: 1.6rem;
+  font-size: 0.75em;
+}
+
+.avatar.large {
+  width: 4.5rem;
+  height: 4.5rem;
+  font-size: 1.6em;
+}
+
+.content .text {
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  line-height: 1.55;
+}
+
+.content.veiled .text {
+  filter: blur(10px);
+  pointer-events: none;
+  max-height: 6rem;
+  overflow: hidden;
+}
+
+.veil {
+  margin: 0.3rem 0;
+  font-size: 0.85em;
+}
+
+.mention,
+.tag,
+.reply-context {
+  padding: 0;
+  border: none;
+  background: none;
+  color: var(--accent);
+}
+
+.reply-context {
+  font-size: 0.85em;
+  color: var(--muted);
+}
+
+.media {
+  display: block;
+  margin: 0.5rem 0;
+  width: 100%;
+  max-width: 34rem;
+  aspect-ratio: var(--ar, 16 / 10);
+  max-height: 26rem;
+  border-radius: var(--radius);
+  overflow: hidden;
+  background: var(--raised);
+  border: 1px solid var(--line);
+}
+
+.media img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+
+.emoji {
+  height: 1.3em;
+  vertical-align: -0.25em;
+}
+
+.quote {
+  margin: 0.5rem 0;
+  padding: 0.5rem 0.75rem;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  font-size: 0.95em;
+}
+
+.quote-head {
+  display: flex;
+  gap: 0.4rem;
+  align-items: center;
+  font-weight: 600;
+}
+
+.actions {
+  display: flex;
+  gap: 0.25rem;
+  margin-top: 0.3rem;
+  margin-left: -0.5rem;
+}
+
+.actions button {
+  border: none;
+  background: none;
+  color: var(--muted);
+  font-size: 0.85em;
+  padding: 0.2em 0.5em;
+}
+
+.actions button:hover,
+.actions button.on {
+  color: var(--accent);
+}
+
+.note.compact {
+  grid-template-columns: 1.6rem 1fr;
+  padding-block: 0.5rem;
+}
+
+.note.compact p {
+  margin: 0;
+}
+
+.new-marker {
+  position: sticky;
+  top: 0.5rem;
+  z-index: 5;
+  display: block;
+  margin: 0.5rem auto -2.4rem;
+  border-radius: 999px;
+  background: var(--accent);
+  border-color: var(--accent);
+  color: #fff;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.2);
+}
+
+.empty,
+.feed-foot,
+.note-missing {
+  padding: 2rem 1.25rem;
+  text-align: center;
+  color: var(--muted);
+}
+
+.feed-foot {
+  padding: 1rem;
+  font-size: 0.85em;
+}

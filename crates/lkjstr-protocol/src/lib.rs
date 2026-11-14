@@ -80,7 +80,9 @@ pub use event_references::{
 };
 pub use event_sign::{EventTemplate, SignError, finalize_event, sign_event_with_secret_hex};
 pub use event_verify::{VerificationCode, VerificationResult, verify_event};
-pub use filter::{NostrFilter, matches_any_filter, matches_filter, parse_filter_value};
+pub use filter::{
+    NostrFilter, filter_to_value, matches_any_filter, matches_filter, parse_filter_value,
+};
 pub use follow_list::{
     FollowEntry, dedupe_follow_entries, follow_entries_from_event, following_count,
 };

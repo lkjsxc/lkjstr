@@ -1,26 +1,14 @@
 services:
-  app:
-    build:
-      context: .
-      target: app
-    image: lkjstr:local
-    ports:
-      - '5173:5173'
-
   verify:
     build:
       context: .
       target: verify
     image: lkjstr-verify:local
 
-  app-smoke:
+  app:
     build:
       context: .
-      target: app-smoke
-    image: lkjstr-app-smoke:local
-
-  cloudflare:
-    build:
-      context: .
-      target: cloudflare
-    image: lkjstr-cloudflare:local
+      target: app
+    image: lkjstr:local
+    ports:
+      - '127.0.0.1:8418:8080'

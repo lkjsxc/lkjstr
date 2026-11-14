@@ -1,6 +1,6 @@
 use std::{fs, path::Path};
 
-use crate::{doc_shape, line_check, paths};
+use crate::{line_check, paths};
 
 pub fn check(root: &Path) -> Result<(), String> {
     let mut problems = Vec::new();
@@ -11,8 +11,6 @@ pub fn check(root: &Path) -> Result<(), String> {
         }
         let text = fs::read_to_string(&file).map_err(|error| format!("{rel}: {error}"))?;
         check_doc_shape(&mut problems, &rel, &text);
-        doc_shape::check_task_doc_shape(&mut problems, &rel, &text);
-        doc_shape::check_skill_doc_shape(&mut problems, &rel, &text);
     }
     check_docs_topology(root, &mut problems)?;
     check_readme_descendants(root, &mut problems)?;

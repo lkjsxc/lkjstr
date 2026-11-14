@@ -14,14 +14,9 @@ permissions:
   contents: read
 
 jobs:
-  repository:
+  verify:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v6
-      - uses: pnpm/action-setup@v6
-      - uses: actions/setup-node@v6
-        with:
-          node-version: 24
-          cache: pnpm
-      - run: pnpm install --frozen-lockfile
-      - run: pnpm check:repo
+      - run: docker compose --progress quiet -f docker-compose.yml build verify
+      - run: docker compose --progress quiet -f docker-compose.yml run --rm verify

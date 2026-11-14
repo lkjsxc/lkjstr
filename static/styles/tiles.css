@@ -1,0 +1,245 @@
+/* Shell, tiles, tab strips, resize handles, drag previews, narrow mode. */
+.app {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  height: 100dvh;
+}
+
+.topbar {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0 0.75rem;
+  height: 2.6rem;
+  border-bottom: 1px solid var(--line);
+  background: var(--surface);
+}
+
+.brand {
+  font-weight: 700;
+  letter-spacing: 0.02em;
+}
+
+.topbar .status {
+  border-radius: 999px;
+  font-size: 0.85em;
+  color: var(--muted);
+  padding: 0.15em 0.8em;
+}
+
+.topbar .account {
+  max-width: 14rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.desk {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+}
+
+.boot {
+  margin: auto;
+  color: var(--muted);
+}
+
+.tiles,
+.split,
+.cell {
+  display: flex;
+  flex: 1;
+  min-width: 0;
+  min-height: 0;
+}
+
+.split.col,
+.cell:has(> .split.col) {
+  flex-direction: column;
+}
+
+.split.row > .cell {
+  flex-direction: row;
+}
+
+.split.col > .cell {
+  flex-direction: column;
+}
+
+.handle {
+  flex: 0 0 6px;
+  background: var(--bg);
+  touch-action: none;
+  transition: background 0.15s;
+}
+
+.split.row > .cell > .handle {
+  cursor: col-resize;
+}
+
+.split.col > .cell > .handle {
+  cursor: row-resize;
+}
+
+.handle:hover,
+.handle.active {
+  background: var(--accent-soft);
+}
+
+.pane {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-width: 0;
+  min-height: 0;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  position: relative;
+}
+
+.pane.focused {
+  border-color: color-mix(in srgb, var(--accent) 45%, var(--line));
+}
+
+.strip {
+  display: flex;
+  align-items: stretch;
+  gap: 2px;
+  height: 2.25rem;
+  padding: 0 0.25rem;
+  border-bottom: 1px solid var(--line);
+  background: var(--raised);
+  overflow-x: auto;
+  scrollbar-width: none;
+  flex: none;
+}
+
+.tab {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+  max-width: 14rem;
+  padding: 0 0.3rem 0 0.7rem;
+  color: var(--muted);
+  border-bottom: 2px solid transparent;
+  cursor: pointer;
+  user-select: none;
+  touch-action: none;
+  white-space: nowrap;
+}
+
+.tab span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.tab.active {
+  color: var(--text-color);
+}
+
+.pane.focused .tab.active {
+  border-bottom-color: var(--accent);
+}
+
+.tab .x {
+  border: none;
+  background: none;
+  padding: 0 0.3em;
+  opacity: 0;
+  color: var(--muted);
+}
+
+.tab:hover .x,
+.tab.active .x,
+.tab:focus-visible .x {
+  opacity: 1;
+}
+
+.strip .icon {
+  color: var(--muted);
+  padding: 0 0.6em;
+}
+
+.menu {
+  position: absolute;
+  right: 0.4rem;
+  top: 2.2rem;
+  z-index: 20;
+  display: flex;
+  flex-direction: column;
+  min-width: 13rem;
+  padding: 0.3rem;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.18);
+}
+
+.menu button {
+  display: flex;
+  justify-content: space-between;
+  border: none;
+  background: none;
+  text-align: left;
+}
+
+.menu button:hover {
+  background: var(--accent-soft);
+}
+
+.bodies {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+}
+
+.body {
+  display: none;
+  flex: 1;
+  min-width: 0;
+  min-height: 0;
+  flex-direction: column;
+}
+
+.body.shown {
+  display: flex;
+}
+
+.drop-preview {
+  position: fixed;
+  z-index: 50;
+  pointer-events: none;
+  background: var(--accent-soft);
+  border: 2px solid var(--accent);
+  border-radius: var(--radius);
+}
+
+.drop-preview.caret {
+  width: 3px;
+  border: none;
+  background: var(--accent);
+}
+
+.drag-ghost {
+  position: fixed;
+  left: 0;
+  top: 0;
+  z-index: 51;
+  pointer-events: none;
+  padding: 0.2em 0.7em;
+  border-radius: var(--radius);
+  background: var(--accent);
+  color: #fff;
+  font-size: 0.85em;
+}
+
+.narrow .handle,
+.narrow .cell:not(:has(.pane.focused)) {
+  display: none;
+}
+
+.narrow .pane {
+  border: none;
+}

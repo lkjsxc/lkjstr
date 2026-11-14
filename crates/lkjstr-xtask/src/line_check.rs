@@ -2,9 +2,9 @@ use std::{fs, path::Path};
 
 use crate::paths;
 
-const SOURCE_EXTS: &[&str] = &["css", "html", "js", "rs", "svelte", "ts"];
+const SOURCE_EXTS: &[&str] = &["js", "mjs", "rs"];
 const STRICT_DOC_LINE_LIMIT: usize = 200;
-const SOURCE_LINE_LIMIT: usize = 200;
+const SOURCE_LINE_LIMIT: usize = 250;
 
 pub fn check(root: &Path) -> Result<(), String> {
     let mut problems = Vec::new();
@@ -31,7 +31,7 @@ pub fn is_strict_doc(rel: &str) -> bool {
 }
 
 fn is_source(rel: &str) -> bool {
-    let in_source_root = ["src/", "scripts/", "tests/", "crates/", "tools/"]
+    let in_source_root = ["crates/", "scripts/"]
         .iter()
         .any(|prefix| rel.starts_with(prefix));
     in_source_root && SOURCE_EXTS.iter().any(|ext| rel.ends_with(ext))

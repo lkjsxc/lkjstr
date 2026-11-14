@@ -75,7 +75,7 @@ pub fn matches_any_filter(event: &NostrEvent, filters: &[NostrFilter]) -> bool {
     filters.iter().any(|filter| matches_filter(event, filter))
 }
 
-pub(crate) fn filter_to_value(filter: &NostrFilter) -> Value {
+pub fn filter_to_value(filter: &NostrFilter) -> Value {
     let mut map = Map::new();
     insert_array(&mut map, "ids", &filter.ids);
     insert_array(&mut map, "authors", &filter.authors);
