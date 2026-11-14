@@ -7,23 +7,25 @@ impl Engine {
         target: String,
         value: bool,
     ) -> Result<(), &'static str> {
-        // Absence in a bounded cache is never proof of an empty remote list.
-        let previous = self
-            .store
-            .replaceable(&e.pubkey, e.kind)
-            .ok_or("list-not-loaded")?;
-        if !value
-            && !previous.content.is_empty()
-            && !previous
-                .tags
-                .iter()
-                .any(|t| t.first().is_some_and(|k| k == key) && t.get(1) == Some(&target))
-        {
-            return Err("private-list-edit-unsupported");
+        // Cache absence needs successful, untruncated relay lookups as evidence.
+        let previous = self.store.replaceable(&e.pubkey, e.kind);
+        if previous.is_none() && !self.network.list_loaded(&self.store, &e.pubkey, e.kind) {
+            return Err("list-not-loaded");
         }
-        e.tags = previous.tags.clone();
-        e.content = previous.content.clone();
-        e.created_at = e.created_at.max(previous.created_at.saturating_add(1));
+        if let Some(previous) = previous {
+            if !value
+                && !previous.content.is_empty()
+                && !previous
+                    .tags
+                    .iter()
+                    .any(|t| t.first().is_some_and(|k| k == key) && t.get(1) == Some(&target))
+            {
+                return Err("private-list-edit-unsupported");
+            }
+            e.tags = previous.tags.clone();
+            e.content = previous.content.clone();
+            e.created_at = e.created_at.max(previous.created_at.saturating_add(1));
+        }
         e.tags
             .retain(|t| !(t.first().is_some_and(|s| s == key) && t.get(1) == Some(&target)));
         if value {

@@ -36,7 +36,12 @@ Implemented:
   addresses and naddr resolution; notification types, grouping and persisted
   seen watermarks. Local-key NIP-44 private people/bookmark/mute entries can be
   projected without altering signed events. Public edits preserve opaque data;
-  private removals are refused instead of claiming success.
+  private removals are refused instead of claiming success. Decrypted entries
+  also govern feed/notification hiding, profile mute flags and nested quotes.
+- First follow/mute/bookmark edits can create a list after successful,
+  untruncated owner lookups confirm absence; pending, refused and unverified
+  results remain protected. Search selects its best two eligible read relays.
+  Replacing a bunker signer clears its durable remote credentials.
 - SharedWorker heartbeat expiry/detach and reconnect signals; Web Locks plus
   BroadcastChannel dedicated fallback. Browser checks prove one socket across
   two pages and follower query reopening after leader loss. No leader lease.
@@ -80,6 +85,11 @@ use fresh ports/data, loopback WebSockets and intercepted HTTP only.
 Docker Compose remains excluded by the explicit worktree-only write rule:
 image/container storage is outside this worktree. No commit, deployment,
 production access, CI edit or existing-service restart is performed.
+
+The branch-review fixes add five native regression tests for first-list guards,
+cache eviction, search routing, signer replacement and decrypted mute policy.
+All four quiet gates pass; the rebuilt Worker passes 53 local browser checks
+using the existing fetched contract. Report: tmp/engine-harness/report.json.
 
 ## Retained application
 

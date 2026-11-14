@@ -13,7 +13,9 @@ pub(super) fn notifications(q: &Query, e: &Engine) -> Vec<Value> {
     let seen = e.seen.get(account).copied().unwrap_or(0);
     let mut groups: Vec<Value> = vec![];
     for event in query::events(&e.store, &converted) {
-        if event.pubkey == account || query::hidden(&e.store, &converted, &event).is_some() {
+        if event.pubkey == account
+            || query::hidden_with_lists(&e.store, &converted, &event, &e.private_lists).is_some()
+        {
             continue;
         }
         let parent = p::reply_parent(&event);
@@ -75,7 +77,7 @@ pub(super) fn notifications(q: &Query, e: &Engine) -> Vec<Value> {
         let mut row = json!({"kind":"notification","key":group,"type":kind,"actors":[actor],"others":0,"at":at,"unread":at>seen});
         if event.kind == 1 {
             row["note"] = note::note(
-                &rows::row(&e.store, &event, Some(account), 0),
+                &rows::row_with_lists(&e.store, &event, Some(account), 0, &e.private_lists),
                 &e.store,
                 Some(account),
             );

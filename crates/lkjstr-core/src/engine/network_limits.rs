@@ -106,3 +106,32 @@ impl Network {
         !requests.is_empty() && requests.iter().all(|r| r.eose)
     }
 }
+
+impl Network {
+    /// Only an untruncated, successful owner-list lookup proves absence.
+    pub fn list_loaded(&self, store: &crate::store::Store, account: &str, kind: u64) -> bool {
+        let requests: Vec<_> = self
+            .requests
+            .values()
+            .filter(|r| {
+                r.filter.authors.as_deref() == Some(&[account.to_owned()])
+                    && r.filter.kinds.as_ref().is_some_and(|ks| ks.contains(&kind))
+                    && r.filter.ids.is_none()
+                    && r.filter.tags.is_empty()
+                    && r.filter.since.is_none()
+                    && r.filter.until.is_none()
+                    && r.filter.search.is_none()
+            })
+            .collect();
+        !self.verifying
+            && !requests.is_empty()
+            && requests.iter().all(|r| {
+                r.asked
+                    && r.eose
+                    && r.received.len() < r.page_limit
+                    && r.received
+                        .iter()
+                        .all(|id| store.get(id).is_some_and(|e| e.kind != kind))
+            })
+    }
+}

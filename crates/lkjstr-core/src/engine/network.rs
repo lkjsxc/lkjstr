@@ -128,7 +128,7 @@ impl Network {
                 *url,
             )
         });
-        let preferred: Vec<_> = ranked.into_iter().take(2).map(|(u, _)| u.clone()).collect();
+        let preferred: Vec<_> = ranked.into_iter().map(|(u, _)| u.clone()).collect();
         if self.relays.is_empty() {
             for (sub, _, _) in &wants {
                 if self.reported.get(sub).is_none_or(|s| s != "error") {
@@ -156,6 +156,7 @@ impl Network {
                     .filter(|u| {
                         q.source != Source::Search || self.known.get(*u).is_none_or(|r| r.search)
                     })
+                    .take(2)
                     .cloned()
                     .collect()
             };

@@ -24,12 +24,12 @@ impl Session {
             "media-servers"=>q.account.as_deref().and_then(|a|store.replaceable(a,10063)).map(|event| lkjstr_protocol::tags::tag_values(&event,"server").into_iter().map(|url|json!({"kind":"server","key":url,"url":url,"protocol":e.servers.get(&url).map(|v|v.0.as_str()).unwrap_or("unknown"),"ok":e.servers.get(&url).is_some_and(|v|v.1)})).collect()).unwrap_or_default(),
             "emoji"=>q.account.as_deref().and_then(|a|store.replaceable(a,10030)).map(|event|lkjstr_protocol::custom_emojis(&event).into_iter().map(|e|json!({"kind":"emoji","key":format!("emoji:{}",e.shortcode),"set":"","code":e.shortcode,"url":e.url})).collect()).unwrap_or_default(),
             "notifications"=>super::notifications::notifications(q,e),
-            "bookmarks"=>q.account.as_deref().and_then(|a|store.replaceable(a,10003)).map(|list|e.list_tags(&list).iter().filter(|t|t.first().is_some_and(|k|k=="e")).filter_map(|t|store.get(t.get(1)?)).map(|event|super::note::note(&rows::row(store,&event,q.account.as_deref(),0),store,q.account.as_deref())).collect()).unwrap_or_default(),
+            "bookmarks"=>q.account.as_deref().and_then(|a|store.replaceable(a,10003)).map(|list|e.list_tags(&list).iter().filter(|t|t.first().is_some_and(|k|k=="e")).filter_map(|t|store.get(t.get(1)?)).map(|event|super::note::note(&rows::row_with_lists(store,&event,q.account.as_deref(),0,&e.private_lists),store,q.account.as_deref())).collect()).unwrap_or_default(),
             "list"=>{
                 q.convert().map(|converted|query::events(store,&converted).into_iter().next().map(|event|e.list_tags(&event).iter().filter(|t|t.first().is_some_and(|k|k=="p")).filter_map(|t|t.get(1)).map(|p|person(e,p,q.account.as_deref())).collect()).unwrap_or_default()).unwrap_or_default()
             }
-            _=>q.convert().map(|converted|query::events(store,&converted).into_iter().take(6000).filter(|event|!rows::row(store,event,q.account.as_deref(),0).own.muted)
-                .map(|event|{let mut v=super::note::note(&rows::row(store,&event,q.account.as_deref(),0),store,q.account.as_deref());if q.source=="thread" {v["thread"]=json!({"role":if q.id.as_ref()==Some(&event.id){"focus"}else{"reply"},"depth":if q.id.as_ref()==Some(&event.id){0}else{1}});}v}).collect()).unwrap_or_default(),
+            _=>q.convert().map(|converted|query::events(store,&converted).into_iter().take(6000).filter(|event|query::hidden_with_lists(store,&converted,event,&e.private_lists).is_none())
+                .map(|event|{let mut v=super::note::note(&rows::row_with_lists(store,&event,q.account.as_deref(),0,&e.private_lists),store,q.account.as_deref());if q.source=="thread" {v["thread"]=json!({"role":if q.id.as_ref()==Some(&event.id){"focus"}else{"reply"},"depth":if q.id.as_ref()==Some(&event.id){0}else{1}});}v}).collect()).unwrap_or_default(),
         };
         if q.source == "profile" {
             out.insert(0, profile(e, target, q.account.as_deref()));
@@ -95,7 +95,14 @@ fn profile(e: &Engine, p: &str, account: Option<&str>) -> Value {
             .len()
     );
     result["partial"] = json!(true);
-    result["muted"] = json!(rows::list_has(store, account, 10000, "p", p));
+    result["muted"] = json!(crate::engine::settings::list_has(
+        store,
+        &e.private_lists,
+        account,
+        10000,
+        "p",
+        p
+    ));
     result["relays"] = json!(
         store
             .relay_list(p)

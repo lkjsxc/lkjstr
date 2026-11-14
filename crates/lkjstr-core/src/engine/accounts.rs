@@ -49,6 +49,7 @@ impl Accounts {
             if signer != "none" {
                 old.signer = signer.into();
                 old.secret = secret;
+                old.remote = None;
             }
         } else {
             self.entries.push(Account {

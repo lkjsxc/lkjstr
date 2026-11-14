@@ -25,11 +25,7 @@ pub fn valid_server(url: &str) -> bool {
 }
 impl Engine {
     pub fn list_tags(&self, event: &lkjstr_protocol::NostrEvent) -> Vec<Vec<String>> {
-        let mut tags = event.tags.clone();
-        if let Some(private) = self.private_lists.get(&event.id) {
-            tags.extend(private.clone());
-        }
-        tags
+        list_tags(event, &self.private_lists)
     }
 
     pub fn refuse_sign(&mut self, req: String, code: &str) {
@@ -107,4 +103,30 @@ impl Engine {
         });
         rows
     }
+}
+
+/// At most 128 decrypted lists, supplied by the account host; keyed by signed ID.
+pub type PrivateLists = std::collections::BTreeMap<String, Vec<Vec<String>>>;
+pub fn list_tags(event: &lkjstr_protocol::NostrEvent, private: &PrivateLists) -> Vec<Vec<String>> {
+    let mut tags = event.tags.clone();
+    if let Some(entries) = private.get(&event.id) {
+        tags.extend(entries.clone());
+    }
+    tags
+}
+pub fn list_has(
+    store: &crate::store::Store,
+    private: &PrivateLists,
+    account: Option<&str>,
+    kind: u64,
+    tag: &str,
+    value: &str,
+) -> bool {
+    account
+        .and_then(|a| store.replaceable(a, kind))
+        .is_some_and(|e| {
+            list_tags(&e, private).iter().any(|t| {
+                t.first().is_some_and(|t| t == tag) && t.get(1).is_some_and(|t| t == value)
+            })
+        })
 }

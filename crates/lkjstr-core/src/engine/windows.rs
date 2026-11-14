@@ -27,8 +27,16 @@ impl Engine {
         let items: Vec<_> = events[start.min(end)..end]
             .iter()
             .map(|e| {
-                let mut r = rows::row(&self.store, e, v.query.account.as_deref(), 0);
-                r.hidden_reason = query::hidden(&self.store, &v.query, e).or(r.hidden_reason);
+                let mut r = rows::row_with_lists(
+                    &self.store,
+                    e,
+                    v.query.account.as_deref(),
+                    0,
+                    &self.private_lists,
+                );
+                r.hidden_reason =
+                    query::hidden_with_lists(&self.store, &v.query, e, &self.private_lists)
+                        .or(r.hidden_reason);
                 r
             })
             .collect();

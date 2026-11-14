@@ -45,6 +45,15 @@ pub fn author(store: &Store, pubkey: &str) -> Author {
     }
 }
 pub fn row(store: &Store, event: &NostrEvent, account: Option<&str>, depth: usize) -> Row {
+    row_with_lists(store, event, account, depth, &Default::default())
+}
+pub fn row_with_lists(
+    store: &Store,
+    event: &NostrEvent,
+    account: Option<&str>,
+    depth: usize,
+    private: &super::settings::PrivateLists,
+) -> Row {
     let emoji = custom_emojis(event)
         .into_iter()
         .map(|e| (e.shortcode, e.url))
@@ -86,7 +95,7 @@ pub fn row(store: &Store, event: &NostrEvent, account: Option<&str>, depth: usiz
                 row: if depth < 2 {
                     store
                         .get(&id)
-                        .map(|e| Box::new(row(store, &e, account, depth + 1)))
+                        .map(|e| Box::new(row_with_lists(store, &e, account, depth + 1, private)))
                 } else {
                     None
                 },
@@ -125,8 +134,8 @@ pub fn row(store: &Store, event: &NostrEvent, account: Option<&str>, depth: usiz
     reposts.dedup_by(|a, b| a.pubkey == b.pubkey);
     let own = Own {
         reposted: reposts.iter().any(|a| Some(a.pubkey.as_str()) == account),
-        bookmarked: list_has(store, account, 10003, "e", &event.id),
-        muted: list_has(store, account, 10000, "p", &event.pubkey),
+        bookmarked: super::settings::list_has(store, private, account, 10003, "e", &event.id),
+        muted: super::settings::list_has(store, private, account, 10000, "p", &event.pubkey),
     };
     Row {
         id: event.id.clone(),
@@ -155,13 +164,7 @@ pub fn row(store: &Store, event: &NostrEvent, account: Option<&str>, depth: usiz
     }
 }
 pub fn list_has(store: &Store, account: Option<&str>, kind: u64, tag: &str, value: &str) -> bool {
-    account
-        .and_then(|a| store.replaceable(a, kind))
-        .is_some_and(|e| {
-            e.tags.iter().any(|t| {
-                t.first().is_some_and(|t| t == tag) && t.get(1).is_some_and(|t| t == value)
-            })
-        })
+    super::settings::list_has(store, &Default::default(), account, kind, tag, value)
 }
 fn media(event: &NostrEvent, url: String, kind: &str) -> Segment {
     let tag = event.tags.iter().find(|t| {
