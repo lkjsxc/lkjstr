@@ -1,7 +1,7 @@
 #![allow(dead_code, clippy::unwrap_used)]
 use super::{key, tag};
 use bech32::{Bech32, Fe32, Fe32IterExt, Hrp};
-use k256::ecdsa::SigningKey;
+use k256::ecdsa::{Signature, SigningKey};
 use lkjstr_nips::event::{Event, UnsignedEvent};
 use sha2::{Digest, Sha256};
 
@@ -32,6 +32,15 @@ pub fn invoice_with_routes(
     amount: &str,
     explicit_payee: bool,
     routes: usize,
+) -> String {
+    invoice_with_signature(description, amount, explicit_payee, routes, false)
+}
+pub fn invoice_with_signature(
+    description: &str,
+    amount: &str,
+    explicit_payee: bool,
+    routes: usize,
+    high_s: bool,
 ) -> String {
     let signer = SigningKey::from_bytes(key(5).as_bytes().into()).unwrap();
     let hrp = Hrp::parse(amount).unwrap();
@@ -72,8 +81,18 @@ pub fn invoice_with_routes(
     digest.update(hrp.as_str().as_bytes());
     digest.update(packed);
     let (signature, recovery) = signer.sign_prehash_recoverable(&digest.finalize()).unwrap();
+    assert!(signature.normalize_s().is_none());
+    let (signature, recovery) = if high_s {
+        (
+            Signature::from_scalars(signature.r().to_bytes(), (-signature.s()).to_bytes()).unwrap(),
+            recovery.to_byte() ^ 1,
+        )
+    } else {
+        (signature, recovery.to_byte())
+    };
+    assert_eq!(signature.normalize_s().is_some(), high_s);
     let mut signature = signature.to_bytes().to_vec();
-    signature.push(recovery.to_byte());
+    signature.push(recovery);
     data.extend(words(&signature));
     encode_words(amount, &data)
 }

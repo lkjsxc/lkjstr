@@ -106,3 +106,48 @@ fn silent_deadline_cancels_all_work_and_retry_can_plan_it_afresh() {
     assert_eq!(subs[&planned.key()].state, SubState::Queued);
     assert_eq!(next, 2);
 }
+
+#[test]
+fn explicit_retry_requeues_completed_and_unanswered_work_but_keeps_live_streams() {
+    let mut subs = HashMap::new();
+    let mut next = 0;
+    let live = request("live", true, &[1, 2]);
+    let done = request("done", false, &[1, 2]);
+    let waiting = request("waiting", false, &[1]);
+    let queued = request("queued", false, &[1]);
+    let failed = request("failed", false, &[1]);
+    let unrelated = request("unrelated", false, &[2]);
+    let planned = vec![
+        live.clone(),
+        done.clone(),
+        waiting.clone(),
+        queued.clone(),
+        failed.clone(),
+        unrelated.clone(),
+    ];
+    requests::reconcile(&mut subs, planned.clone(), &mut next);
+    set_state(&mut subs, &live, SubState::Live);
+    set_state(&mut subs, &done, SubState::Done);
+    set_state(&mut subs, &waiting, SubState::Waiting);
+    set_state(&mut subs, &failed, SubState::Failed("refused".into()));
+    set_state(&mut subs, &unrelated, SubState::Done);
+    let old_ids: HashMap<_, _> = subs
+        .iter()
+        .map(|(k, s)| (k.clone(), s.sub_id.clone()))
+        .collect();
+    assert_eq!(
+        requests::retry(&mut subs, 1),
+        vec![("waiting".into(), old_ids[&waiting.key()].clone())]
+    );
+    assert_eq!(subs.len(), 2);
+    requests::reconcile(&mut subs, planned, &mut next);
+    for p in [done, waiting, queued, failed] {
+        assert_eq!(subs[&p.key()].state, SubState::Queued);
+        assert_ne!(subs[&p.key()].sub_id, old_ids[&p.key()]);
+    }
+    assert_eq!(subs[&live.key()].state, SubState::Live);
+    assert_eq!(subs[&live.key()].sub_id, old_ids[&live.key()]);
+    assert_eq!(subs[&live.key()].planned.wants, [1, 2].into());
+    assert_eq!(subs[&unrelated.key()].state, SubState::Done);
+    assert_eq!(subs[&unrelated.key()].sub_id, old_ids[&unrelated.key()]);
+}

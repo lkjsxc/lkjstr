@@ -73,7 +73,12 @@ Checks cover:
   a healthy live feed receives new signed events after silent peers time out;
   image retry sends a second request and loads it, surviving the next deadline;
   ancestor tags affect neither reaction chips, Like selection nor repost target.
-  Native `request_deadline_test` covers shared requests, reconnects and release;
+  Native `request_deadline_test` covers shared requests, reconnects and release.
+  Explicit retry also requeues completed and shared one-shot lookups, retaining
+  healthy live subscriptions and unrelated requests. `invoice_signature` checks
+  low/high-S invoices with explicit/recovered payees, tampering and zap receipts.
+  `browser-navigation-review.mjs` checks Back/Forward after reload and discovery
+  of later search/thread results on explicit retry after empty EOSE completion.
   `review_foundation_test` covers unchanged preview activation, target ownership
   and pane recovery at the 32-entry cap, including grouped layout undo.
 
@@ -86,6 +91,18 @@ non-zero. Browser checks are separate from the quiet gates because Chromium
 must be present.
 
 ## Record
+
+2026-11-14, history/retry/invoice review:
+
+- All 98 release browser smoke checks pass, including eight new history/retry
+  checks. Report: `tmp/smoke-navigation-review/report.json`.
+- Four new native regressions pass: retry state/membership preservation,
+  low/high-S invoice payees, high-S zap receipts and tampered high-S signatures.
+- Before fixes, the added browser checks reproduced lost reload position and
+  both inert retries; native tests reproduced completed-request retention and
+  explicit-payee high-S rejection. The related call paths were audited too.
+- All four quiet gates pass. Docker verify remains excluded by the worktree-only
+  write rule because Docker image builds write to daemon storage.
 
 2026-11-14, foundation review:
 

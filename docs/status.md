@@ -52,9 +52,9 @@ Image links open image tiles. Website tiles offer an external-browser action.
 Visible relay wants have cancellable 12-second deadlines and retry actions;
 storage promises have 15-second deadlines, signer promises 30 seconds.
 Mixed relay deadlines retain answered live streams and cancel unanswered work;
-retry preserves healthy subscriptions. Reopening an unchanged preview activates
-it without changing history. Image retries create a fresh request. Reactions
-and reposts use protocol targets. Pane recovery records one closure.
+explicit retry preserves live streams and requeues completed lookups.
+An unchanged preview reactivates without adding history. Image retry sends a
+fresh request. Reactions/reposts use protocol targets; pane recovery records once.
 
 The NIP branch is integrated in source; signing and signature verification use
 `lkjstr-nips`. Original linked-worktree Git metadata is read-only outside this
@@ -65,7 +65,6 @@ Not finished: nine workspaces, first-run Global/banner/language filter,
 complete Japanese strings, emoji picker, full note menus, phone gestures,
 advanced tab gestures/settings, container-size rules, and all modifier paths.
 Scroll restoration after reload still needs a dedicated browser regression.
-The source document's experience promises are not all complete.
 
 ## Implemented
 
@@ -92,7 +91,7 @@ Which of these were exercised in a real browser, and how, is recorded in
 
 ## Current verification (2026-11-14)
 
-The foundation fake-relay browser smoke passes 90 checks on a release build. The earlier 51-check suite passed debug and release builds.
+The foundation fake-relay browser smoke passes 98 checks on a release build. The earlier 51-check suite passed debug and release builds.
 It covers generated local accounts, invalid and read-only imports, account
 switching and removal, signing, compose, threads, profiles, empty and populated
 notifications, local and relay search, and direct NIP-19 navigation. It verifies
@@ -115,7 +114,9 @@ use the same backoff/replan path as connection loss. Displayed notes have live
 deletion watches; quote and mention references do not count as replies.
 Content-only note/nevent quotes prefetch their targets and relay hints.
 Plain text, invalid markup and trailing punctuation are scanned linearly.
-Quiet gates print one success line; build aliases handle `NO_COLOR=1`.
+Browser history positions survive reloads. Invoice verification accepts high-S
+signatures with explicit or recovered payees. Quiet gates print one success
+line; build aliases handle `NO_COLOR=1`.
 
 `pnpm check:repo`, `pnpm test:quiet`, `pnpm rust-wasm:quiet` and
 `pnpm verify:quiet` pass.

@@ -1,7 +1,7 @@
 //! Pure request lifecycle decisions; collections are bounded by the current plan.
 use std::collections::HashMap;
 
-use crate::plan::Planned;
+use crate::plan::{Planned, WantId};
 
 #[path = "request_deadline.rs"]
 mod deadline;
@@ -68,6 +68,22 @@ pub fn reconcile(
             }
         }
     }
+    close
+}
+
+/// Explicit retry discards completed/unanswered work; healthy streams survive.
+/// Return active CLOSEs before reconciliation creates fresh subscription ids.
+pub fn retry(subs: &mut HashMap<String, Sub>, want: WantId) -> Vec<(String, String)> {
+    let mut close = Vec::new();
+    subs.retain(|_, sub| {
+        if !sub.planned.wants.contains(&want) || sub.state == SubState::Live {
+            return true;
+        }
+        if sub.state.active() {
+            close.push((sub.planned.relay.clone(), sub.sub_id.clone()));
+        }
+        false
+    });
     close
 }
 

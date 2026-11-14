@@ -122,19 +122,19 @@ impl Invoice {
         if has_description == h.is_some() || !has_secret {
             return Err(Error::Invalid);
         }
+        // k256 verifies low-S only; preserve recovery semantics for high-S.
+        let sig = if let Some(low) = sig.normalize_s() {
+            recovery = RecoveryId::new(!recovery.is_y_odd(), recovery.is_x_reduced());
+            low
+        } else {
+            sig
+        };
         let key = if let Some(payee) = n {
             let key = VerifyingKey::from_sec1_bytes(&payee).map_err(|_| Error::Key)?;
             key.verify_prehash(&hash, &sig)
                 .map_err(|_| Error::Signature)?;
             key
         } else {
-            // k256 verifies low-S only; preserve recovery semantics for high-S.
-            let sig = if let Some(low) = sig.normalize_s() {
-                recovery = RecoveryId::new(!recovery.is_y_odd(), recovery.is_x_reduced());
-                low
-            } else {
-                sig
-            };
             VerifyingKey::recover_from_prehash(&hash, &sig, recovery)
                 .map_err(|_| Error::Signature)?
         };

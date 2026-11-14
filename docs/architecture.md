@@ -69,7 +69,8 @@ narrow flag, help flag, page visibility) and handles global keys.
 `requests::Deadline` retains answered requests when a want times out, merging
 shared memberships into later plans so healthy streams and reconnects survive.
 `runtime/deadline.rs` cancels unanswered work and preserves terminal progress.
-Dropping a want releases retained requests; retry replans unanswered work.
+Dropping a want releases retained requests; explicit retry replans completed
+and unanswered work while preserving healthy live subscriptions.
 `ui/tiles.rs` renders the layout tree keyed by node id so tab bodies survive
 unrelated edits. `ui/pane.rs` draws strips and keeps inactive bodies mounted
 but hidden (scroll survives), passing `visible` so their wants are released.

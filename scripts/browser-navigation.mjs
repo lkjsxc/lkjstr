@@ -1,6 +1,7 @@
 // Navigation/recovery and finite loading, with signed fixtures and no upstreams.
 import { spawnSync } from 'node:child_process';
 import { fakeRelay } from './browser-relay.mjs';
+import { browserNavigationReview } from './browser-navigation-review.mjs';
 
 export async function browserNavigation(browser, url, check) {
   const fixture = spawnSync('cargo', ['run', '-q', '-p', 'lkjstr-protocol', '--example', 'design-fixtures'], { encoding: 'utf8' });
@@ -81,6 +82,8 @@ export async function browserNavigation(browser, url, check) {
     await focused().locator('input[type=search]').waitFor();
     check('address link restores view and Unicode query', await focused().locator('input[type=search]').inputValue() === '日本語 history-marker');
   } finally { await context.close(); }
+
+  await browserNavigationReview(browser, url, data, check);
 
   // A silent relay never answers REQ; advance only this fresh browser's clock.
   let silence = true;

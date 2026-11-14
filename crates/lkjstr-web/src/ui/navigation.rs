@@ -31,7 +31,15 @@ pub fn restore(ui: Ui) {
 }
 
 pub fn install(ui: Ui, booted: RwSignal<bool>) {
-    let position = StoredValue::new(0f64);
+    // Reload keeps history.state; older entries use the same position scale.
+    let position = StoredValue::new(
+        web_sys::window()
+            .and_then(|w| w.history().ok())
+            .and_then(|h| h.state().ok())
+            .and_then(|state| state.as_f64())
+            .filter(|n| n.is_finite())
+            .unwrap_or(0.0),
+    );
     let from_browser = StoredValue::new(false);
     let started = StoredValue::new(false);
     let focused = Memo::new(move |_| {

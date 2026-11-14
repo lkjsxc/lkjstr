@@ -43,25 +43,8 @@ impl App {
     pub fn retry(self, id: WantId) {
         self.update(|rt| {
             rt.expired.remove(&id);
-            let keys: Vec<_> = rt
-                .net
-                .subs
-                .iter()
-                .filter(|(_, s)| {
-                    s.planned.wants.contains(&id)
-                        && !matches!(
-                            s.state,
-                            super::net::SubState::Live | super::net::SubState::Done
-                        )
-                })
-                .map(|(k, _)| k.clone())
-                .collect();
-            for key in keys {
-                if let Some(sub) = rt.net.subs.remove(&key)
-                    && sub.state.active()
-                {
-                    rt.send(&sub.planned.relay, &ClientMessage::Close(sub.sub_id));
-                }
+            for (relay, sub_id) in lkjstr_core::requests::retry(&mut rt.net.subs, id) {
+                rt.send(&relay, &ClientMessage::Close(sub_id));
             }
             rt.schedule_replan(1);
         });
