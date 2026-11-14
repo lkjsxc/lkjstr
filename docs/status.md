@@ -43,7 +43,8 @@ Which of these were exercised in a real browser, and how, is recorded in
 - Tiled workspace: split, stack, resize, drag tabs to edges or strips, close,
   New tab launcher, keyboard focus and movement, layout saved per device.
 - Single-column mode under 760px: only the focused tile shows.
-- Global, Home (follows of the active account), Notifications (mentions,
+- Global, Home (follows of the active account plus your own notes; without
+  a follow list it shows your notes and says so), Notifications (mentions,
   replies, reactions, reposts, zaps), Profile (header plus notes), Thread
   (root, replies, indentation, focused note), Search (local cache plus NIP-50
   relays; npub, nprofile, note and nevent open directly).
@@ -100,8 +101,7 @@ Planned (not built):
 
 ## Next steps, in order
 
-1. Browser smoke against a scripted fake relay in CI (publish, reload,
-   persistence) using `scripts/browser-smoke.mjs`.
+1. Run `scripts/browser-smoke.mjs` in CI (needs Chromium in the image).
 2. Worker-side ingest (verification and indexing) with the same core crate.
 3. Relay list editing (publish kind 10002) and mute lists (kind 10000).
 4. DMs via NIP-17 once `lkjstr-nips` lands; plug its scoring and outbox

@@ -31,7 +31,8 @@ impl Source {
         match self {
             Source::Home => {
                 let me = me.clone()?;
-                let mut follows = ui.app.with(|rt| rt.store.follows(&me))?;
+                // Without a follow list yet, Home still shows your own notes.
+                let mut follows = ui.app.with(|rt| rt.store.follows(&me)).unwrap_or_default();
                 follows.push(me);
                 Some(follows)
             }
@@ -215,7 +216,7 @@ pub fn Feed(source: Source, visible: Signal<bool>) -> impl IntoView {
             <For each=move || rows.get().0 key=|event| event.id.clone() let:event>
                 {if is_notifications { view! { <Notification event=event/> }.into_any() } else { view! { <Note event=event/> }.into_any() }}
             </For>
-            <EmptyState source=source.clone() live=live count=Signal::derive(move || rows.with(|r| r.0.len())) authors_known=Signal::derive(move || authors.with(Option::is_some))/>
+            <EmptyState source=source.clone() live=live count=Signal::derive(move || rows.with(|r| r.0.len())) authors_known=Signal::derive(move || { app.rev.track(); me.get().is_some_and(|me| app.with(|rt| rt.store.follows(&me).is_some())) })/>
         </div>
     }
 }

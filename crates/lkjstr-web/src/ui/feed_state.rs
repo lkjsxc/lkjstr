@@ -106,9 +106,6 @@ pub fn EmptyState(
             return Some((hint.to_owned(), Some(("Open Accounts", View::Accounts))));
         }
         let Some(progress) = progress else {
-            if is_home && !authors_known.get() {
-                return Some(("Looking for your follow list…".to_owned(), None));
-            }
             return Some(("Waiting for relays…".to_owned(), None));
         };
         if progress.total == 0 {
@@ -134,6 +131,9 @@ pub fn EmptyState(
             ));
         }
         let text = match source {
+            Source::Home if !authors_known.get() => {
+                "No follow list found for this account yet. Follow people from their profiles, or browse Global."
+            }
             Source::Home => {
                 "Nothing from the people you follow yet. Follow people from their profiles, or browse Global."
             }

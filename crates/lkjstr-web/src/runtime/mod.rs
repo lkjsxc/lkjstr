@@ -136,8 +136,7 @@ impl App {
     /// Registers a want and returns its id; replanning is debounced.
     pub fn want(&self, want: Want) -> WantId {
         self.update(|rt| {
-            let id = rt.next_want;
-            rt.next_want += 1;
+            let id = rt.alloc_want();
             rt.wants.insert(id, want);
             rt.schedule_replan(30);
             id
@@ -171,6 +170,13 @@ impl Default for App {
 impl Rt {
     fn app(&self) -> Option<App> {
         self.app
+    }
+
+    /// The only place want ids are handed out (tiles and the session share it).
+    fn alloc_want(&mut self) -> WantId {
+        let id = self.next_want;
+        self.next_want += 1;
+        id
     }
 
     pub fn wants(&self) -> &BTreeMap<WantId, Want> {

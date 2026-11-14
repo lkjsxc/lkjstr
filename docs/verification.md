@@ -28,8 +28,15 @@ The `app` target serves the release build on `127.0.0.1:8418` for previews.
 
 ## Browser checks
 
-A Playwright script (planned under `scripts/`) will drive Chromium through Playwright against
-`dist/`. Browser checks are evidence, not a canonical gate: public relays vary.
+`pnpm smoke:browser [out-dir]` serves `dist/` on a free port and drives
+Chromium (Playwright) with every WebSocket routed to an in-process fake relay,
+so nothing is published to public relays. It creates a local key, posts,
+opens the thread, replies, likes, splits and moves focus by keyboard, reloads
+(layout, account and cached notes must persist), checks Notifications settles,
+and checks the single-tile narrow mode. It prints JSON and exits non-zero on
+any failed check. Set `LKJSTR_CHROME` to choose the browser binary.
+
+Browser checks are evidence, not a canonical gate: Chromium must be present.
 
 ## Record
 
@@ -37,3 +44,5 @@ A Playwright script (planned under `scripts/`) will drive Chromium through Playw
 
 - Global from public relays in Chromium: five relays connected, verified
   events rendered, Relays view showed state, latency and counts.
+- `pnpm smoke:browser` against a debug build: all 14 checks passed. It found
+  and now guards a want-id collision that left Notifications unplanned.

@@ -116,10 +116,7 @@ impl Rt {
                 pubkeys: vec![active],
                 contacts: true,
             };
-            let id = self.session.want.unwrap_or_else(|| {
-                self.next_want += 1;
-                self.next_want
-            });
+            let id = self.session.want.unwrap_or_else(|| self.alloc_want());
             self.wants.insert(id, want);
             self.session.want = Some(id);
         } else if let Some(id) = self.session.want.take() {

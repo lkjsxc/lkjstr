@@ -156,7 +156,14 @@ pub fn Compose(tab: TabId, reply_to: Option<String>, visible: Signal<bool>) -> i
             <ul class="publishes">
                 <For each=move || mine.get() key=|p| (p.event.id.clone(), p.accepted(), p.pending()) let:publish>
                     <li>
-                        <span>{publish.event.content.chars().take(60).collect::<String>()}</span>
+                        <span>{match publish.event.kind {
+                            1 => publish.event.content.chars().take(60).collect::<String>(),
+                            3 => "Follow list".to_owned(),
+                            5 => "Undo (deletion request)".to_owned(),
+                            6 => "Repost".to_owned(),
+                            7 => "Like".to_owned(),
+                            other => format!("Event of kind {other}"),
+                        }}</span>
                         <span class="muted">{publish_line(&publish)}</span>
                         <details><summary>"Relays"</summary>
                             {publish.relays.iter().map(|(url, state)| view! {

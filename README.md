@@ -50,6 +50,7 @@ Details: [docs/verification.md](docs/verification.md).
 - `crates/`: [protocol, core, web, host, xtask](crates/README.md).
 - `static/`: stylesheets and icons.
 - `docs/`: [documentation index](docs/README.md).
+- `scripts/browser-smoke.mjs`: browser smoke with a fake relay (`pnpm smoke:browser`).
 
 ## License
 
