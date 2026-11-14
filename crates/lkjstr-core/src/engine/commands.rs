@@ -130,13 +130,26 @@ impl Engine {
             Action::RelaysSave { relays } => {
                 e.kind = 10002;
                 for r in relays {
-                    e.tags.push(vec![
+                    let mut tag = vec![
                         "r".into(),
-                        normalize_relay_url(&r).ok_or("invalid-relay")?,
-                    ]);
+                        normalize_relay_url(&r.url).ok_or("invalid-relay")?,
+                    ];
+                    match (r.read, r.write) {
+                        (true, true) => {}
+                        (true, false) => tag.push("read".into()),
+                        (false, true) => tag.push("write".into()),
+                        (false, false) => return Err("unsupported"),
+                    }
+                    e.tags.push(tag);
                 }
             }
             Action::Upload { .. } => return Err("upload-not-implemented"),
+        }
+        if e.kind == 1 {
+            e.tags = lkjstr_protocol::content_derived_tags(&e.content, &[], &e.tags);
+            if e.tags.len() > 1000 {
+                return Err("event-too-large");
+            }
         }
         Ok(e)
     }

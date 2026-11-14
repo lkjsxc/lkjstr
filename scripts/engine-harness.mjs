@@ -82,7 +82,7 @@ try {
   const resumedUnsigned={pubkey:note.pubkey,created_at:Math.floor(Date.now()/1000)+3*60*60,kind:1,tags:[],content:'after simulated idle resume'};
   signer.stdin.write(`${JSON.stringify(resumedUnsigned)}\n`);
   const resumed=JSON.parse((await lines.next()).value);fake.add(resumed);
-  await wait(id=>window.messages.some(m=>m.t==='patch'&&m.ops.some(op=>op.row?.id===id||op.rows?.some(r=>r.id===id))),resumed.id);
+  await wait(id=>window.messages.some(m=>(m.t==='rows'&&m.rows.some(r=>r.id===id))||(m.t==='patch'&&m.ops.some(op=>op.row?.id===id||op.rows?.some(r=>r.id===id)))),resumed.id);
   check('a fresh signed note arrives after the hours-long idle',true);
   let stored=0;
   for(let n=0;n<100&&!stored;n++){
@@ -97,9 +97,10 @@ try {
   await wait(()=>window.messages.some((m)=>(m.t==='patch'||m.t==='rows')&&m.sub==='cached'&&(m.rows?.length||m.ops?.length)));
   check('cache restarts without relay replay',true);
   await send({t:'test.relays',relays:[origin.replace('http:','ws:')]});
-  await send({t:'act',req:'publish',action:{a:'publish',as:note.pubkey,what:{k:'note',draft:{text:'published through sign bridge'}}}});
+  await send({t:'act',req:'publish',action:{a:'publish',as:note.pubkey,what:{k:'note',draft:{text:'published through sign bridge #Nostr'}}}});
   await wait(()=>window.messages.some((m)=>m.t==='sign'&&m.req==='publish'));
   const unsigned=await page.evaluate(()=>window.messages.find((m)=>m.t==='sign').event);
+  check('finished publication derives hashtag tags before signing',JSON.parse(unsigned).tags.some(t=>t[0]==='t'&&t[1]==='nostr'));
   signer.stdin.write(`${unsigned}\n`);
   const signed=JSON.parse((await lines.next()).value);
   await send({t:'signed',req:'publish',event:JSON.stringify(signed)});
@@ -118,6 +119,8 @@ try {
   }
   for(let n=0;n<100&&fake.connections()!==1;n++)await page.waitForTimeout(25);
   check('two tabs share one engine and relay socket',fake.connections()===1);
+  for(const p of [page,other]) await p.waitForFunction(()=>window.sharedMessages.some(m=>m.t==='state'&&m.sub==='same'&&m.state.relaysAsked===1&&m.state.relaysAnswered===1));
+  check('shared progress retains internal membership through client routing',true);
   await page.evaluate(()=>window.shared.port.postMessage({t:'hint',hint:{visibleSubs:[],pageHidden:true,idle:false,saveData:false}}));await page.waitForTimeout(100);
   check('hiding one tab preserves the other tab wants',fake.connections()===1);
   await other.evaluate(()=>window.shared.port.postMessage({t:'hint',hint:{visibleSubs:[],pageHidden:true,idle:false,saveData:false}}));

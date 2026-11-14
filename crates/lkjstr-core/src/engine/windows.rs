@@ -22,16 +22,8 @@ impl Engine {
             return;
         }
         let events = query::events(&self.store, &v.query);
-        let anchor = v
-            .anchor
-            .as_ref()
-            .and_then(|id| events.iter().position(|e| e.id == *id));
-        let at = anchor.unwrap_or(0);
-        let start = at.saturating_sub(v.before);
-        let end = at
-            .saturating_add(v.after)
-            .saturating_add(1)
-            .min(events.len());
+        let range = range(v, &events);
+        let (start, end) = (range.start, range.end);
         let items: Vec<_> = events[start.min(end)..end]
             .iter()
             .map(|e| {
@@ -40,12 +32,14 @@ impl Engine {
                 r
             })
             .collect();
-        if full {
+        v.source_exhausted = super::history::exhausted(&self.network, &self.store, v);
+        let at_bottom = end == events.len() && v.source_exhausted;
+        if full || at_bottom != v.at_bottom {
             self.outgoing.push(Output::Rows {
                 sub: sub.into(),
                 items: items.clone(),
                 at_top: start == 0,
-                at_bottom: end == events.len(),
+                at_bottom,
             });
         } else {
             let mut ops: Vec<_> = v
@@ -62,19 +56,41 @@ impl Engine {
                     });
                 }
             }
-            if !ops.is_empty() {
+            if !ops.is_empty()
+                || matches!(
+                    v.query.source,
+                    Source::Profile
+                        | Source::Followers
+                        | Source::Following
+                        | Source::Mutes
+                        | Source::List
+                        | Source::Notifications
+                )
+            {
                 self.outgoing.push(Output::Patch {
                     sub: sub.into(),
                     ops,
                 });
             }
-            if v.anchor.is_some() && start > 0 {
-                self.outgoing.push(Output::Fresh {
-                    sub: sub.into(),
-                    count: start,
-                });
-            }
         }
+        self.outgoing.push(Output::Fresh {
+            sub: sub.into(),
+            count: start,
+        });
+        v.at_bottom = at_bottom;
         v.rows = items;
     }
+}
+
+pub(super) fn range(v: &super::View, events: &[crate::store::Event]) -> std::ops::Range<usize> {
+    let at = v
+        .anchor
+        .as_ref()
+        .and_then(|id| events.iter().position(|e| e.id == *id))
+        .unwrap_or(0);
+    let end = at
+        .saturating_add(v.after)
+        .saturating_add(1)
+        .min(events.len());
+    at.saturating_sub(v.before).min(end)..end
 }

@@ -31,6 +31,7 @@ impl Session {
                 }
                 let mut next = old.clone();
                 for (index, row) in internal {
+                    next.retain(|r| r["key"].as_str() != Some(&row.id));
                     let row = self.rows(&sub, &[row], engine).into_iter().next();
                     if let Some(row) = row {
                         let key = row["key"].clone();
@@ -103,9 +104,10 @@ impl Session {
                 sub,
                 state,
                 asked_relays,
+                answered_relays,
             } => {
                 let ops=self.settled_quote_patch(&sub,engine);
-                let (_,answered)=engine.network.request_progress(&sub);
+                let answered = answered_relays;
                 let mut out=vec![Output::State{sub:sub.clone(),state:json!({"phase":match state.as_str(){"data"=>"live","not-found"=>"done",_=>"failed"},"relaysAsked":asked_relays,"relaysAnswered":answered})}];
                 if !ops.is_empty(){out.push(Output::Patch{sub,ops});}out
             },

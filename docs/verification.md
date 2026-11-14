@@ -191,9 +191,10 @@ Prior layout/navigation review: 129 browser checks passed (2026-11-14).
 
 ## Worker engine (2026-11-14)
 
-Twenty new native engine tests pass, plus 16 headless protocol checks against
-an actual loopback WebSocket: WASM verification, IndexedDB/cache boot, NIP-07,
-visibility, SharedWorker isolation and a new note after three simulated idle
-hours. Reports: tmp/engine-harness/report.json and docs/engine-performance.md.
-Final verify:quiet passes, including fmt, native/WASM clippy, workspace tests,
-Trunk release build and output checks. Docker remains excluded as above.
+All 33 native engine tests pass, including 13 review regressions. All 18
+headless Worker checks pass against a fresh loopback WebSocket, including
+content-derived signing tags and SharedWorker answered-relay progress.
+Report: tmp/engine-harness/report.json. Final verify:quiet passes (fmt,
+native/WASM clippy, workspace tests, release build and output checks), with
+jobs/threads capped at four and caches inside the worktree. Docker remains
+excluded by the worktree-only write restriction.

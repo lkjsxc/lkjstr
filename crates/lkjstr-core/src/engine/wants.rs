@@ -1,9 +1,5 @@
 //! Bound hydration to visible rows and share the resulting request filters.
-use super::{
-    Engine,
-    protocol::{Query, Source},
-    query,
-};
+use super::{Engine, protocol::Source, query};
 use lkjstr_protocol::{NostrFilter, tags::tag_values};
 impl Engine {
     pub(super) fn replan(&mut self, now: u64) {
@@ -12,15 +8,17 @@ impl Engine {
             if matches!(v.query.source, Source::Relays | Source::Diagnostics) {
                 continue;
             }
-            for f in requests(&self.store, &v.query) {
+            for f in requests(&self.store, v) {
                 wants.push((sub.clone(), f, v.query.clone()));
             }
         }
         self.network.plan(wants, now);
     }
 }
-fn requests(store: &crate::store::Store, q: &Query) -> Vec<NostrFilter> {
+fn requests(store: &crate::store::Store, v: &super::View) -> Vec<NostrFilter> {
+    let q = &v.query;
     let mut result = vec![query::filter(store, q)];
+    result.extend(v.history.clone());
     if q.source == Source::Thread
         && let Some(id) = &q.target
     {
@@ -51,7 +49,8 @@ fn requests(store: &crate::store::Store, q: &Query) -> Vec<NostrFilter> {
         people.push(target.clone());
     }
     let events = query::events(store, q);
-    let prefetch = crate::prefetch::collect(&events, store);
+    let range = super::windows::range(v, &events);
+    let prefetch = crate::prefetch::collect_window(&events[range], store);
     people.extend(prefetch.people);
     people.sort();
     people.dedup();

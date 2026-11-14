@@ -32,13 +32,19 @@ Internal scheduler types remain separate from the transport contract.
 
 `open` delivers cached rows and registers wants. `window` holds an anchor with
 bounded surrounding rows; top windows follow arrivals. Patches batch every
-75 ms. `close` and visibility hints release wants. Specialized rows cover
+75 ms. Hydration follows the current bounded window. Advancing its cached tail
+requests one older inclusive `until` page alongside the live head; only short
+EOSE pages from every selected relay establish the remote end. Full pages with
+nonadvancing tied timestamps remain unknown. `close` and visibility hints
+release wants, historical pages and connecting sockets. Specialized rows cover
 profiles, people, notifications, mutes, relays and diagnostics. Read-only lists
 currently support public people entries; private list decryption is pending.
 
 NIP-07 signatures must match every requested field, ID and signature. Requests
 expire after 60 s. Publications report per-relay delivery and one final result.
 Loaded-list edits preserve opaque private content and unknown public tags.
+Relay-list saves preserve read/write markers and reject disabled entries.
+Finished note content derives hashtag and NIP-19 mention tags before signing.
 An absent cached list never authorizes overwriting a remote list.
 Unsupported actions return explicit failures, including uploads and account
 creation/import; local and remote signer lifecycle remains outside this run.

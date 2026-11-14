@@ -2,6 +2,7 @@
 pub mod bench;
 pub mod clients;
 mod commands;
+mod history;
 mod identities;
 pub mod metrics;
 pub mod network;
@@ -29,6 +30,10 @@ pub struct View {
     rows: Vec<Row>,
     visible: bool,
     dirty: bool,
+    // One current historical request per view; released with visibility/close.
+    history: Option<lkjstr_protocol::NostrFilter>,
+    at_bottom: bool,
+    source_exhausted: bool,
 }
 struct Signing {
     event: UnsignedNostrEvent,
@@ -89,6 +94,9 @@ impl Engine {
                         rows: vec![],
                         visible: true,
                         dirty: true,
+                        history: None,
+                        at_bottom: false,
+                        source_exhausted: false,
                     },
                 );
                 self.render(&sub, true);
@@ -108,6 +116,8 @@ impl Engine {
                     v.anchor = anchor;
                     v.before = before.min(100);
                     v.after = after.min(200);
+                    self.advance_history(&sub);
+                    self.replan(now);
                     self.render(&sub, true);
                 }
             }
@@ -182,6 +192,11 @@ impl Engine {
             self.replan(now);
         }
         self.network.tick(now);
+        for v in self.views.values_mut() {
+            if v.source_exhausted != history::exhausted(&self.network, &self.store, v) {
+                v.dirty = true;
+            }
+        }
         let expired: Vec<_> = self
             .signing
             .iter()

@@ -63,3 +63,33 @@ impl Network {
         (asked, answered)
     }
 }
+
+impl Network {
+    pub fn page_exhausted(&self, filter: &lkjstr_protocol::NostrFilter) -> bool {
+        let requests: Vec<_> = self
+            .requests
+            .values()
+            .filter(|r| r.filter == *filter)
+            .collect();
+        !requests.is_empty()
+            && requests
+                .iter()
+                .all(|r| r.eose && r.received.len() < r.page_limit)
+    }
+    /// The shallowest full relay page advances without skipping another relay's tail.
+    pub fn page_cursor(&self, filter: &lkjstr_protocol::NostrFilter) -> Option<u64> {
+        self.requests
+            .values()
+            .filter(|r| r.filter == *filter && r.received.len() >= r.page_limit)
+            .filter_map(|r| r.oldest)
+            .max()
+    }
+    pub fn page_finished(&self, filter: &lkjstr_protocol::NostrFilter) -> bool {
+        let requests: Vec<_> = self
+            .requests
+            .values()
+            .filter(|r| r.filter == *filter)
+            .collect();
+        !requests.is_empty() && requests.iter().all(|r| r.eose)
+    }
+}

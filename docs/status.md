@@ -65,7 +65,7 @@ Still required:
 See [verification.md](verification.md) for the repository gates and restrictions.
 Engine tests drive serde messages, held anchors, signer substitution, queue
 bounds, shared ownership, missing responses and a three-hour idle/reconnect.
-The 20 native engine tests and 16 headless checks pass. Final verify:quiet
+The initial 20 native engine tests and 16 headless checks passed. Final verify:quiet
 passes, including the Trunk release build. The harness uses fresh local data
 and a loopback fake relay.
 [Performance](engine-performance.md) records the measured workload: 100 sparse
@@ -75,6 +75,26 @@ run (1.88 ms immediately after the isolated index optimization).
 Docker Compose verification remains excluded by the explicit worktree-only
 write rule because Docker image/container storage is outside the worktree.
 No commit, deployment, production access or running-service restart is made.
+
+
+## Engine review corrections
+
+The 13 review findings are corrected with native regressions: relay capability
+flags and finished-content tags survive signing; unsent work remains eligible;
+rate limits retry after cooldown; pending handshakes release and time out.
+Muted replacements remove delivered rows, note-free specialized models invalidate,
+and closed subscriptions release their transport window state. Shared-client
+progress is captured with internal IDs before routing back to frontend IDs.
+
+Hydration follows bounded displayed windows and replans on anchor movement.
+Threads include cached or newly hydrated ancestors. Returning to the head or
+removing preceding rows clears fresh counts. Advancing the cached tail requests
+an inclusive historical page; remote exhaustion requires short EOSE pages from
+all selected relays. Full pages with nonadvancing tied timestamps stay unknown.
+Only one historical page per view and at most 200 response IDs per request are
+retained. Hiding or closing a view releases its historical request too.
+All 33 native engine tests and 18 headless Worker checks pass, including 13 new
+native regressions. `verify:quiet` passes; Docker remains excluded as above.
 
 ## Retained application
 

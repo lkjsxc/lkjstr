@@ -78,6 +78,11 @@ impl Store {
                 continue;
             }
             if let Some(event) = self.get(&id).filter(|event| event.kind == 1) {
+                queue.extend(
+                    [reply_parent(&event), reply_root(&event)]
+                        .into_iter()
+                        .flatten(),
+                );
                 out.push(event);
             }
             for child in self.by_tag_e.get(&id).into_iter().flatten() {

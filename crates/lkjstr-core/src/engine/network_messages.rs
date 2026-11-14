@@ -16,9 +16,16 @@ impl Network {
                 subscription_id,
                 event,
             } => {
-                if self.requests.get(&subscription_id).is_some_and(|r| {
+                if let Some(r) = self.requests.get_mut(&subscription_id).filter(|r| {
                     r.relay == relay && r.sent && lkjstr_protocol::matches_filter(&event, &r.filter)
                 }) {
+                    r.oldest = Some(
+                        r.oldest
+                            .map_or(event.created_at, |at| at.min(event.created_at)),
+                    );
+                    if r.received.len() < r.page_limit {
+                        r.received.insert(event.id.clone());
+                    }
                     return Some(event);
                 }
             }
@@ -56,8 +63,9 @@ impl Network {
                     .filter(|r| r.relay == relay)
                 {
                     r.deadline = now;
-                    r.complete = true;
+                    r.complete = !message.starts_with("rate-limited:");
                     r.sent = false;
+                    r.ready_at = if r.complete { now } else { now + 30000 };
                     if message.starts_with("rate-limited:")
                         && let Some(relay) = self.relays.get_mut(relay)
                     {
@@ -154,7 +162,9 @@ impl Network {
                 .values()
                 .filter(|r| r.members.contains(&sub))
                 .collect();
-            let done = rs.iter().all(|r| r.eose || now >= r.deadline);
+            let done = rs
+                .iter()
+                .all(|r| r.eose || r.complete || (r.sent && now >= r.deadline));
             if done {
                 let state = if rs.iter().any(|r| r.last_event.is_some()) {
                     "data"
@@ -167,6 +177,7 @@ impl Network {
                     self.output.push(Output::Status {
                         sub: sub.clone(),
                         state: state.into(),
+                        answered_relays: self.request_progress(&sub).1,
                         asked_relays: rs
                             .iter()
                             .filter(|r| r.asked)
@@ -181,12 +192,12 @@ impl Network {
         let timed_out: Vec<_> = self
             .requests
             .iter()
-            .filter(|(_, r)| !r.eose && !r.complete && now >= r.deadline && (r.sent || !r.asked))
+            .filter(|(_, r)| !r.eose && !r.complete && r.sent && now >= r.deadline)
             .map(|(id, _)| id.clone())
             .collect();
         for id in timed_out {
             if let Some(r) = self.requests.get_mut(&id) {
-                r.complete = !r.live || !r.asked;
+                r.complete = !r.live;
                 r.ready_at = now + r.retry_delay;
                 r.retry_delay = (r.retry_delay * 2).min(30000);
                 let was_sent = r.sent;

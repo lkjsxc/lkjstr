@@ -19,6 +19,9 @@ impl Session {
                 save_data: hint.save_data,
             }],
             Input::Open { sub, query } => {
+                if self.queries.len() >= 128 && !self.queries.contains_key(&sub) {
+                    return Err((None, "subscription-limit"));
+                }
                 let converted = query.convert().ok_or((None, "unsupported"))?;
                 self.queries.insert(sub.clone(), query);
                 vec![p::Input::Open {
@@ -29,6 +32,7 @@ impl Session {
             Input::Close { sub } => {
                 self.queries.remove(&sub);
                 self.delivered.remove(&sub);
+                self.windows.remove(&sub);
                 vec![p::Input::Close { sub }]
             }
             Input::Window {
@@ -37,6 +41,9 @@ impl Session {
                 before,
                 after,
             } => {
+                if !self.queries.contains_key(&sub) {
+                    return Err((None, "unknown-subscription"));
+                }
                 let anchor = match anchor {
                     Anchor::Top(_) => None,
                     Anchor::Key { key } => Some(key),
@@ -101,7 +108,14 @@ impl Session {
                     A::RelaysSave { account, relays } => (
                         account,
                         p::Action::RelaysSave {
-                            relays: relays.into_iter().map(|r| r.url).collect(),
+                            relays: relays
+                                .into_iter()
+                                .map(|r| p::RelayEntry {
+                                    url: r.url,
+                                    read: r.read,
+                                    write: r.write,
+                                })
+                                .collect(),
                         },
                     ),
                     _ => return Err((Some(req), "unsupported")),

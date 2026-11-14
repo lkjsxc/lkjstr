@@ -50,7 +50,7 @@ fn structured_messages_roundtrip_and_bad_input_is_rejected() {
         output.first(),
         Some(Output::Rows {
             at_top: true,
-            at_bottom: true,
+            at_bottom: false,
             ..
         })
     ));

@@ -85,6 +85,12 @@ pub struct Filters {
     pub text: Option<String>,
 }
 #[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct RelayEntry {
+    pub url: String,
+    pub read: bool,
+    pub write: bool,
+}
+#[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(tag = "type", rename_all = "camelCase")]
 pub enum Action {
     Publish {
@@ -113,7 +119,7 @@ pub enum Action {
     },
     #[serde(rename = "relays.save")]
     RelaysSave {
-        relays: Vec<String>,
+        relays: Vec<RelayEntry>,
     },
     Upload {
         url: String,
@@ -159,6 +165,7 @@ pub enum Output {
         state: String,
         #[serde(rename = "askedRelays")]
         asked_relays: usize,
+        answered_relays: usize,
     },
     Diagnostics {
         sub: String,

@@ -3,6 +3,8 @@ use super::protocol::{Output, Query, Source};
 use lkjstr_protocol::{NostrEvent, NostrFilter, filter_to_value, normalize_relay_url};
 use serde_json::{Value, json};
 use std::collections::{BTreeMap, BTreeSet};
+#[path = "network_lifecycle.rs"]
+mod lifecycle;
 #[path = "network_messages.rs"]
 mod messages;
 #[path = "network_tick.rs"]
@@ -17,6 +19,7 @@ pub enum Effect {
 #[derive(Default)]
 pub struct Relay {
     pub online: bool,
+    pub connecting: bool,
     pub last_rx: u64,
     pub retry_at: u64,
     pub failures: u32,
@@ -43,6 +46,10 @@ pub(super) struct Request {
     pub live: bool,
     pub asked: bool,
     pub ready_at: u64,
+    // At most the transmitted page limit (<= 200) distinct IDs.
+    pub received: BTreeSet<String>,
+    pub page_limit: usize,
+    pub oldest: Option<u64>,
     pub retry_delay: u64,
 }
 pub(super) struct Publication {
@@ -93,6 +100,8 @@ impl Network {
         }
     }
     pub fn plan(&mut self, wants: Vec<(String, NostrFilter, Query)>, now: u64) {
+        self.reported
+            .retain(|sub, _| wants.iter().any(|(id, _, _)| id == sub));
         let mut ranked: Vec<_> = self.relays.iter().collect();
         ranked.sort_by_key(|(url, r)| {
             (
@@ -108,6 +117,7 @@ impl Network {
                         sub: sub.clone(),
                         state: "error".into(),
                         asked_relays: 0,
+                        answered_relays: 0,
                     });
                     self.reported.insert(sub.clone(), "error".into());
                 }
@@ -151,7 +161,7 @@ impl Network {
                         members,
                         sent: false,
                         eose: false,
-                        deadline: now + 15000,
+                        deadline: u64::MAX,
                         last_event: None,
                         sent_at: 0,
                         last_rx: now,
@@ -159,6 +169,9 @@ impl Network {
                         live: filter_live(&filter),
                         asked: false,
                         ready_at: now,
+                        received: BTreeSet::new(),
+                        page_limit: 200,
+                        oldest: None,
                         retry_delay: 1000,
                     },
                 );
@@ -178,41 +191,6 @@ impl Network {
             }
         }
         self.tick(now);
-    }
-    pub fn connected(&mut self, relay: &str, now: u64) {
-        if let Some(r) = self.relays.get_mut(relay) {
-            r.online = true;
-            r.last_rx = now;
-        }
-        self.tick(now);
-    }
-    pub fn disconnected(&mut self, relay: &str, now: u64) {
-        self.effects.push(Effect::Disconnect(relay.into()));
-        if let Some(r) = self.relays.get_mut(relay) {
-            r.online = false;
-            r.failures = r.failures.saturating_add(1);
-            r.retry_at = now + 1000 * (1u64 << r.failures.min(6)) + (r.received % 997);
-        }
-        for r in self.requests.values_mut().filter(|r| r.relay == relay) {
-            if !r.complete {
-                r.sent = false;
-                r.eose = false;
-            }
-        }
-    }
-    pub fn event(&mut self, relay: &str, e: &NostrEvent, now: u64) {
-        if let Some(r) = self.relays.get_mut(relay) {
-            r.last_rx = now;
-            r.useful += 1;
-        }
-        for r in self
-            .requests
-            .values_mut()
-            .filter(|r| r.relay == relay && lkjstr_protocol::matches_filter(e, &r.filter))
-        {
-            r.last_rx = now;
-            r.last_event = Some(r.last_event.unwrap_or(0).max(e.created_at));
-        }
     }
     fn send(&mut self, relay: &str, value: Value) {
         if let Some(r) = self.relays.get_mut(relay) {
