@@ -3,70 +3,69 @@
 ## Purpose
 
 lkjstr is a local-first Nostr client that lives in tiles. Timelines, threads,
-profiles, notifications, search, compose, relays and accounts are tabs you can
-split, stack, resize and move, with the keyboard or the pointer. It is written
-in Rust and runs in the browser as WebAssembly; there is no lkjstr server.
+profiles, notifications, search, the composer, media, relays and settings are
+tabs you can split, stack, resize and move, with the keyboard or the pointer.
+It runs entirely in the browser; there is no lkjstr server.
 
-## What it does
+## Parts
 
-- Reads Home (people you follow), Global, Notifications, Profiles, Threads and
-  Search, rendering from the local cache first and then from relays.
-- Plans relay requests for you: each author's own relays (NIP-65 outbox),
-  shared requests across tiles, scored and backed-off relays.
-- Signs with a key kept in this browser, or a NIP-07 signer extension; posts,
-  replies, likes, reposts and follows show at once and report each relay's answer.
-- Keeps your layout, accounts, drafts, relay scores and recent events on this
-  device (IndexedDB).
+- `web/`: the interface. TypeScript with no framework, built like ytenrich.
+  It draws; it never parses an event or opens a socket.
+- `crates/`: the engine, Rust compiled to WebAssembly and run in a Worker:
+  relays, request planning, the event store, signatures, publishing. See
+  [crates/README.md](crates/README.md).
+- `web/src/engine/protocol.ts`: the messages between the two.
 
-Current state, limits and next steps: [docs/status.md](docs/status.md).
+The interface currently ships with a mock engine so its feel can be finished
+first. `crates/lkjstr-web`, the earlier Leptos interface built by Trunk from
+the root `index.html`, stays in the tree while the engine is cut out of it.
 
-## Run
+## Frontend: run, build, verify
+
+Requirements: Node 24 and pnpm 11.
+
+```sh
+cd web
+pnpm install
+pnpm dev      # rebuilds ../dist on change
+pnpm serve    # http://127.0.0.1:8417, with the production headers
+pnpm check    # repo rules, tsc, biome, vitest: prints "ok check"
+pnpm build    # the static site in ../dist: prints "ok build"
+pnpm smoke    # drives Chromium against the build: prints "ok smoke"
+pnpm shots    # screenshots of every view to ../tmp/screens
+```
+
+`dist/` is a complete static site. What the host has to do with it (routing,
+content types, headers, caching) is in
+[docs/hosting-needs.md](docs/hosting-needs.md).
+
+Details: [docs/frontend.md](docs/frontend.md) and
+[docs/design.md](docs/design.md).
+
+## Engine and the earlier interface
 
 Requirements: the Rust toolchain in `rust-toolchain.toml` (with the
-`wasm32-unknown-unknown` target), Trunk 0.21.14, Node 24 and pnpm 11 for the
-command aliases.
-
-```sh
-pnpm dev          # trunk serve on http://127.0.0.1:8417
-```
-
-## BUILD
-
-From the repository root, with the requirements above installed:
-
-```sh
-CARGO_BUILD_JOBS=4 pnpm build
-mkdir -p tmp
-tar -C dist -czf tmp/lkjstr-dist.tar.gz .
-```
-
-`pnpm build` checks interface strings, runs `trunk build --release` and
-validates the output. The tarball
-contains the complete static site with `index.html` at its root. Extract it
-into the static host's document root and serve over HTTPS, with `.wasm` files
-served as `application/wasm`. This build uses `/` as its public URL. No backend
-or runtime Node process is needed.
-
-## Verify
+`wasm32-unknown-unknown` target) and Trunk 0.21.14. From the repository root:
 
 ```sh
 pnpm check:repo
 pnpm test:quiet
 pnpm rust-wasm:quiet
 pnpm verify:quiet
-docker compose --progress quiet -f docker-compose.yml build verify
-docker compose --progress quiet -f docker-compose.yml run --rm verify
 ```
 
-Details: [docs/verification.md](docs/verification.md).
+`pnpm dev` and `pnpm build` at the root still build the Leptos interface
+with Trunk into the same `dist/`; do not run them over a frontend build you
+mean to publish. State and gates: [docs/status.md](docs/status.md) and
+[docs/verification.md](docs/verification.md).
 
 ## Repository map
 
-- `index.html`: Trunk entry; `Cargo.toml`: the browser app package and workspace.
+- `web/`: the frontend (`src/`, `scripts/`, `tests/`).
 - `crates/`: [protocol, core, web, host, xtask](crates/README.md).
-- `static/`: stylesheets and icons.
+- `index.html`, `static/`, `Cargo.toml`: the Trunk entry, stylesheets and
+  icons of the earlier interface (the icons are also copied by `web/`).
 - `docs/`: [documentation index](docs/README.md).
-- `scripts/browser-smoke.mjs`: browser smoke with a fake relay (`pnpm smoke:browser`).
 
 ## License
 

@@ -6,18 +6,48 @@ Entry point for coding agents working on lkjstr.
 
 ## What lkjstr is
 
-A browser-only, local-first Nostr client with a tiled workspace, written in
-Rust and compiled to WebAssembly (Leptos UI, built by Trunk). No server-side
-accounts, relay proxy or backend.
+A browser-only, local-first Nostr client with a tiled workspace. No
+server-side accounts, relay proxy or backend. Two parts:
+
+- **Frontend** in `web/`: TypeScript with no framework, built like ytenrich.
+  It draws and nothing else. Today it runs against a mock engine.
+- **Engine** in `crates/`: Rust compiled to WebAssembly, running in a Worker.
+  It owns relays, the event store, parsing, signing and publishing.
+
+`crates/lkjstr-web` is the earlier Leptos interface. The engine work still
+builds from it, so leave it in place; do not extend it as the interface.
 
 ## Read order
 
+Frontend work:
+
+1. [docs/frontend.md](docs/frontend.md): structure of `web/`, the engine
+   boundary, commands.
+2. [docs/design.md](docs/design.md): the look and the interaction rules.
+3. [docs/hosting-needs.md](docs/hosting-needs.md) when the build output or
+   its headers change.
+
+Engine work:
+
 1. [docs/status.md](docs/status.md): what works, what does not, next steps.
 2. [docs/architecture.md](docs/architecture.md): where things live.
-3. [docs/workspace.md](docs/workspace.md) for UI and layout work.
-4. [docs/verification.md](docs/verification.md) before finishing.
+3. [docs/verification.md](docs/verification.md) before finishing.
 
-## Rules
+## Frontend rules
+
+- Work in `web/`. The gate is `pnpm check`, then `pnpm build` and
+  `pnpm smoke`; each prints one `ok ...` line.
+- The main thread never parses an event, opens a socket or touches the event
+  store. Everything goes through `web/src/engine/protocol.ts`, which changes
+  only on the frontend side; the engine side proposes changes in
+  `docs/engine-proposals.md`.
+- Source files at most 300 lines, `create*` factories instead of classes, DOM
+  through `h()`, no HTML strings.
+- Every visible string is in both string tables; Japanese is written as
+  Japanese.
+- Judge visual changes with `pnpm shots`, and keep docs/design.md true.
+
+## Engine rules
 
 - Decisions belong in `crates/lkjstr-core` with native tests; browser effects
   belong in `crates/lkjstr-web`. Keep JavaScript to what Trunk generates.
@@ -36,7 +66,9 @@ accounts, relay proxy or backend.
 
 ## Verification
 
-Quiet gates print one `ok ...` line: `pnpm check:repo`, `pnpm test:quiet`,
+Frontend: in `web/`, `pnpm check`, `pnpm build`, `pnpm smoke`.
+
+Engine, from the repository root, quiet gates print one `ok ...` line: `pnpm check:repo`, `pnpm test:quiet`,
 `pnpm rust-wasm:quiet`, `pnpm verify:quiet`. Docker Compose `verify` is the
 final gate. Cap parallel jobs on shared hosts (`CARGO_BUILD_JOBS=4`).
 
