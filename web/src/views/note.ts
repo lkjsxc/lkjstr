@@ -229,6 +229,12 @@ export function renderNote(row: NoteRow, env: ViewEnv): HTMLElement {
             { title: fullTime(row.at) },
             row.pending ? t('note.sending') : timeOf(row.at, env),
           ),
+          // Where the tile is too narrow for a bookmark button, a set bookmark is this mark instead.
+          h(
+            'span',
+            { class: 'bmark', title: t('note.bookmarked'), hidden: !row.mine.bookmarked },
+            icon('bookmark'),
+          ),
         ),
         body,
         actionRow(row, env),
@@ -236,10 +242,12 @@ export function renderNote(row: NoteRow, env: ViewEnv): HTMLElement {
       ),
     ),
   );
-  el.addEventListener('click', (e) => {
-    if ((e.target as Element).closest('button, a, input, textarea, video, audio')) return;
-    openThread(e);
-  });
+  const plain = (e: Event): boolean =>
+    !(e.target as Element).closest('button, a, input, textarea, video, audio, .quote');
+  el.addEventListener('click', (e) => void (plain(e) && openThread(e)));
+  // A middle click opens the thread behind (and never starts the browser's autoscroll).
+  el.addEventListener('mousedown', (e) => void (e.button === 1 && plain(e) && e.preventDefault()));
+  el.addEventListener('auxclick', (e) => void (e.button === 1 && plain(e) && openThread(e)));
   return el;
 }
 
@@ -251,6 +259,7 @@ export const bodySig = (row: NoteRow): string =>
 export function patchNote(el: HTMLElement, row: NoteRow, env: ViewEnv): void {
   const main = el.querySelector(':scope > .nrow > .nmain');
   if (!main) return;
+  main.querySelector(':scope > .nhead > .bmark')?.toggleAttribute('hidden', !row.mine.bookmarked);
   // The button that was pressed is drawn again: the keyboard stays on its successor.
   const held = document.activeElement?.closest('.acts, .chips')?.parentElement === main;
   const mark = held ? heldMark(document.activeElement) : '';

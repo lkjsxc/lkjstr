@@ -23,20 +23,29 @@ export async function act(env: ViewEnv, make: (as: string) => Action): Promise<b
   }
   return r.ok;
 }
-const react = (
+/** A reaction is public the moment it is sent, so a wrong press can be taken back at once. */
+async function react(
   env: ViewEnv,
   row: NoteRow,
   emoji: string,
   url: string | undefined,
   on: boolean,
-): void =>
-  void act(env, (as) => ({
+  quiet = false,
+): Promise<void> {
+  const ok = await act(env, (as) => ({
     a: 'publish',
     as,
     what: on
       ? { k: 'reaction', id: row.id, emoji, url }
       : { k: 'delete', id: row.id, of: 'reaction', emoji },
   }));
+  if (ok && on && !quiet)
+    toast(
+      env.layer,
+      t('undo.reacted', { emoji: url ? `:${emoji.replace(/:/g, '')}:` : emoji }),
+      () => void react(env, row, emoji, url, false),
+    );
+}
 
 export function reactionChips(row: NoteRow, env: ViewEnv): HTMLElement | null {
   if (!row.reactions.length) return null;
@@ -51,7 +60,7 @@ export function reactionChips(row: NoteRow, env: ViewEnv): HTMLElement | null {
           title: r.emoji,
           'data-emoji': r.emoji,
           'aria-pressed': r.mine,
-          onclick: (e) => (e.stopPropagation(), react(env, row, r.emoji, r.url, !r.mine)),
+          onclick: (e) => (e.stopPropagation(), void react(env, row, r.emoji, r.url, !r.mine)),
         },
         r.url ? emojiImg(r.emoji, r.url) : r.emoji,
         h('span', null, countText(r.count, false, getLang())),
@@ -93,8 +102,17 @@ export function actionRow(row: NoteRow, env: ViewEnv): HTMLElement {
   const folded = (el: HTMLElement): boolean => getComputedStyle(el).display === 'none';
   const zapRun = (): void => toast(env.layer, t('act.zapSoon'));
   const markLabel: Key = row.mine.bookmarked ? 'act.unbookmark' : 'act.bookmark';
-  const markRun = (): void =>
-    void act(env, (as) => ({ a: 'bookmark', as, id: row.id, on: !row.mine.bookmarked }));
+  const marked = (on: boolean): Promise<boolean> =>
+    act(env, (as) => ({ a: 'bookmark', as, id: row.id, on }));
+  const markRun = async (): Promise<void> => {
+    const was = row.mine.bookmarked;
+    if ((await marked(!was)) && was)
+      toast(env.layer, t('undo.unbookmarked'), () => void marked(true));
+  };
+  const repost = async (): Promise<void> => {
+    if (await act(env, (as) => ({ a: 'publish', as, what: { k: 'repost', id: row.id } })))
+      toast(env.layer, t('undo.reposted'), publish({ k: 'delete', id: row.id, of: 'repost' }));
+  };
   const zap = button(
     'zap',
     'act.zap',
@@ -102,7 +120,7 @@ export function actionRow(row: NoteRow, env: ViewEnv): HTMLElement {
     false,
     zapRun,
   );
-  const mark = button('bookmark', markLabel, '', row.mine.bookmarked, markRun);
+  const mark = button('bookmark', markLabel, '', row.mine.bookmarked, () => void markRun());
   return h(
     'div',
     { class: 'acts' },
@@ -116,21 +134,25 @@ export function actionRow(row: NoteRow, env: ViewEnv): HTMLElement {
       openMenu(env.layer, el, [
         row.mine.reposted
           ? { label: t('act.unrepost'), run: publish({ k: 'delete', id: row.id, of: 'repost' }) }
-          : { label: t('act.repost'), run: publish({ k: 'repost', id: row.id }) },
+          : { label: t('act.repost'), run: () => void repost() },
         { label: t('act.quote'), run: () => env.open('compose', quote) },
       ]),
     ),
     button('smile', 'emoji.pick', '', false, (el) =>
-      openEmojiPicker(env, el, (p) => react(env, row, p.emoji, p.url, true)),
+      openEmojiPicker(env, el, (p) => void react(env, row, p.emoji, p.url, true)),
     ),
-    button('heart', 'act.react', n(row.counts.reactions), Boolean(mine), () =>
-      react(env, row, mine?.emoji ?? DEFAULT_REACTION, mine?.url, !mine),
+    button(
+      'heart',
+      'act.react',
+      n(row.counts.reactions),
+      Boolean(mine),
+      () => void react(env, row, mine?.emoji ?? DEFAULT_REACTION, mine?.url, !mine),
     ),
     zap,
     mark,
     button('more', 'act.more', '', false, (el) =>
       openMenu(env.layer, el, [
-        ...(folded(mark) ? [{ label: t(markLabel), run: markRun }] : []),
+        ...(folded(mark) ? [{ label: t(markLabel), run: () => void markRun() }] : []),
         ...(folded(zap) ? [{ label: t('act.zap'), run: zapRun }] : []),
         { label: t('menu.copyText'), run: () => void copy(env, fullText(row)) },
         {

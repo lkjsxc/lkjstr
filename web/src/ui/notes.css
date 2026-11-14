@@ -2,6 +2,8 @@
    --media-h, --fold). Nothing here changes size after it is drawn: media boxes have their shape before they load. */
 .note { padding: 9px 12px 4px; border-bottom: 1px solid var(--line); font-size: var(--text, 15px); line-height: 1.6; line-break: strict; overflow-wrap: anywhere; }
 .note.unread, .notif.unread { box-shadow: inset 2px 0 var(--seal); }
+/* The row the note keys act on: a quiet bar and a breath of tint, never an outline that jumps from note to note. */
+.list > .sel { background: color-mix(in srgb, var(--wash) 60%, transparent); box-shadow: inset 3px 0 var(--accent); }
 .note.pending { opacity: 0.7; }
 .note.hid { padding: 6px 12px; font-size: 12.5px; }
 .nrow { display: grid; grid-template-columns: var(--avatar, 36px) minmax(0, 1fr); gap: 0 10px; }
@@ -15,7 +17,7 @@
 .name { flex: 0 1 auto; min-width: 0; padding: 0; overflow: hidden; font-weight: 600; text-align: left; text-overflow: ellipsis; white-space: nowrap; }
 .name:hover { text-decoration: underline; }
 .name.quiet { font-weight: 500; }
-.emo { height: 1.25em; width: auto; vertical-align: -0.25em; }
+.emo { height: 1.25em; width: auto; min-width: 1em; object-fit: contain; vertical-align: -0.25em; }
 .nip { display: inline-flex; align-items: center; gap: 2px; flex: 0 10 auto; min-width: 0; overflow: hidden; color: var(--faint); font-size: 12.5px; text-overflow: ellipsis; white-space: nowrap; }
 .nip .i { width: 12px; height: 12px; color: var(--ok); }
 .nhead time, .qhead time, .nfaces time { flex: none; margin-left: auto; color: var(--faint); font-size: 12.5px; font-variant-numeric: tabular-nums; }
@@ -59,8 +61,13 @@
 .act.a-more, .act.a-bookmark, .act.a-smile { flex: 0 0 30px; min-width: 30px; }
 .act.a-smile { justify-content: flex-end; }
 .act > span { white-space: nowrap; }
-/* By the tile's width, not the window's: a narrow tile keeps the bookmark only where it is set, then drops the zap. Both stay in the "…" menu. */
-@container (max-width: 440px) { .act.a-bookmark:not(.on) { display: none; } }
+/* By the tile's width, not the window's: a narrow tile always shows the same six buttons, then drops the zap. The bookmark and the zap stay in the "…" menu, and a set bookmark is a small mark beside the time. */
+.bmark { display: none; flex: none; align-self: center; color: var(--accent); }
+.bmark .i { display: block; width: 12px; height: 12px; fill: currentColor; }
+@container (max-width: 440px) {
+  .act.a-bookmark { display: none; }
+  .bmark:not([hidden]) { display: block; }
+}
 @container (max-width: 330px) { .act.a-zap { display: none; } }
 .act:hover { background: var(--hover); color: var(--fg); }
 .act.on { color: var(--accent); }
